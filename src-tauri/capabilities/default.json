@@ -1,0 +1,21 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Default permissions for the main Loop Vault window",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "dialog:default",
+    "opener:default",
+    "fs:default",
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        { "path": "$APPDATA/loopvault" },
+        { "path": "$APPDATA/loopvault/**" },
+        { "path": "$LOCALDATA/loopvault" },
+        { "path": "$LOCALDATA/loopvault/**" }
+      ]
+    }
+  ]
+}
