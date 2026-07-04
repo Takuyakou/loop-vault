@@ -1,0 +1,99 @@
+import { describe, expect, it } from "vitest";
+import { parseVaultFileJson, vaultFileSchema } from "./schema";
+import type { SongIdea, VaultFile } from "./types";
+
+const timestamp = "2026-07-04T00:00:00.000Z";
+
+function idea(overrides: Partial<SongIdea> = {}): SongIdea {
+  return {
+    id: "11111111-1111-4111-8111-111111111111",
+    title: "Night Drive",
+    bpm: 74,
+    key: "F",
+    genre: "future garage",
+    moods: ["late night"],
+    status: "loop",
+    nextAction: {
+      text: "Make two drum variations",
+      updatedAt: timestamp,
+    },
+    chordMemo: "Fmaj7 - Am7 - Gm7 - C7",
+    references: [
+      {
+        title: "Reference",
+        url: "https://example.com/reference",
+        memo: "Snare texture",
+      },
+    ],
+    assets: [
+      {
+        id: "22222222-2222-4222-8222-222222222222",
+        type: "flp",
+        path: "C:\\Music\\night-drive.flp",
+      },
+    ],
+    statusHistory: [{ status: "idea", at: timestamp }],
+    createdAt: timestamp,
+    updatedAt: timestamp,
+    ...overrides,
+  };
+}
+
+function vault(overrides: Partial<VaultFile> = {}): VaultFile {
+  return {
+    app: "loopvault",
+    fileVersion: 1,
+    settings: { monthlyGoal: 1 },
+    ideas: [idea()],
+    ...overrides,
+  };
+}
+
+describe("vaultFileSchema", () => {
+  it("accepts a valid VaultFile matching spec 3.5", () => {
+    expect(vaultFileSchema.safeParse(vault()).success).toBe(true);
+  });
+});
+
+describe("parseVaultFileJson", () => {
+  it("parses a valid JSON vault", () => {
+    const result = parseVaultFileJson(JSON.stringify(vault()));
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+    expect(result.vault.ideas).toHaveLength(1);
+    expect(result.quarantine).toHaveLength(0);
+  });
+
+  it("reports JSON syntax damage without creating an empty vault", () => {
+    const result = parseVaultFileJson("{ not json");
+
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      return;
+    }
+    expect(result.error.kind).toBe("invalid-json");
+  });
+
+  it("quarantines invalid records while keeping valid records", () => {
+    const validIdea = idea();
+    const invalidIdea = idea({
+      id: "33333333-3333-4333-8333-333333333333",
+      bpm: 10,
+    });
+    const result = parseVaultFileJson(
+      JSON.stringify(vault({ ideas: [validIdea, invalidIdea] })),
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+    expect(result.vault.ideas).toHaveLength(1);
+    expect(result.vault.ideas[0]?.id).toBe(validIdea.id);
+    expect(result.quarantine).toHaveLength(1);
+    expect(result.quarantine[0]?.index).toBe(1);
+  });
+});
