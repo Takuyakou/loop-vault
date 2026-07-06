@@ -1,4 +1,8 @@
-import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
+import { appDataDir } from "@tauri-apps/api/path";
+import {
+  open as openFileDialog,
+  save as saveFileDialog,
+} from "@tauri-apps/plugin-dialog";
 import { openPath, revealItemInDir } from "@tauri-apps/plugin-opener";
 import { FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "zustand";
@@ -53,6 +57,11 @@ function App() {
   const error = useStore(defaultVaultStore, (state) => state.error);
   const initialize = useStore(defaultVaultStore, (state) => state.initialize);
   const restoreBackup = useStore(defaultVaultStore, (state) => state.restoreBackup);
+  const backups = useStore(defaultVaultStore, (state) => state.backups);
+  const setMonthlyGoal = useStore(defaultVaultStore, (state) => state.setMonthlyGoal);
+  const refreshBackups = useStore(defaultVaultStore, (state) => state.refreshBackups);
+  const exportVault = useStore(defaultVaultStore, (state) => state.exportVault);
+  const importVault = useStore(defaultVaultStore, (state) => state.importVault);
   const createIdea = useStore(defaultVaultStore, (state) => state.createIdea);
   const updateIdea = useStore(defaultVaultStore, (state) => state.updateIdea);
   const deleteIdea = useStore(defaultVaultStore, (state) => state.deleteIdea);
@@ -62,6 +71,7 @@ function App() {
   const [view, setView] = useState<View>("home");
   const [selectedId, setSelectedId] = useState<string>();
   const [isCreateOpen, setCreateOpen] = useState(false);
+  const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [toast, setToast] = useState<string>();
   const [pendingDelete, setPendingDelete] = useState<SongIdea>();
   const deleteTimer = useRef<ReturnType<typeof setTimeout>>();
@@ -136,6 +146,10 @@ function App() {
       view={view}
       setView={setView}
       openCreate={() => setCreateOpen(true)}
+      openSettings={() => {
+        setSettingsOpen(true);
+        void refreshBackups();
+      }}
       saveLabel={saving ? "Saving" : unsaved ? "Pending" : "Saved"}
     />
   );
@@ -194,6 +208,20 @@ function App() {
           onClose={() => setCreateOpen(false)}
         />
       ) : null}
+      {isSettingsOpen ? (
+        <SettingsDialog
+          monthlyGoal={settings.monthlyGoal}
+          backups={backups}
+          error={error}
+          setMonthlyGoal={setMonthlyGoal}
+          refreshBackups={refreshBackups}
+          restoreBackup={restoreBackup}
+          exportVault={exportVault}
+          importVault={importVault}
+          setToast={setToast}
+          onClose={() => setSettingsOpen(false)}
+        />
+      ) : null}
       {pendingDelete ? (
         <div className="fixed bottom-4 left-1/2 z-40 w-[min(92vw,440px)] -translate-x-1/2 border border-stone-700 bg-stone-900 p-3 shadow-2xl">
           <div className="flex items-center justify-between gap-3">
@@ -217,11 +245,13 @@ function AppShell({
   view,
   setView,
   openCreate,
+  openSettings,
   saveLabel,
 }: {
   view: View;
   setView: (view: View) => void;
   openCreate: () => void;
+  openSettings: () => void;
   saveLabel: string;
 }) {
   return (
@@ -233,10 +263,146 @@ function AppShell({
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <button className={tabClass(view === "home")} onClick={() => setView("home")}>Home</button>
         <button className={tabClass(view === "library")} onClick={() => setView("library")}>Library</button>
+        <button className="rounded border border-stone-700 px-3 py-2 text-stone-300 hover:bg-stone-900" onClick={openSettings}>Settings</button>
         <button className="rounded bg-teal-400 px-3 py-2 font-semibold text-stone-950" onClick={openCreate}>New</button>
         <span className="min-w-20 rounded border border-stone-800 px-3 py-2 text-center text-stone-300">{saveLabel}</span>
       </div>
     </header>
+  );
+}
+
+function SettingsDialog({
+  monthlyGoal,
+  backups,
+  error,
+  setMonthlyGoal,
+  refreshBackups,
+  restoreBackup,
+  exportVault,
+  importVault,
+  setToast,
+  onClose,
+}: {
+  monthlyGoal: number;
+  backups: ReturnType<typeof defaultVaultStore.getState>["backups"];
+  error?: string;
+  setMonthlyGoal: (goal: number) => void;
+  refreshBackups: () => Promise<void>;
+  restoreBackup: (backupName: string) => Promise<void>;
+  exportVault: (path: string) => Promise<void>;
+  importVault: (path: string, mode: "replace" | "merge") => Promise<void>;
+  setToast: (toast: string) => void;
+  onClose: () => void;
+}) {
+  const [dataPath, setDataPath] = useState("Desktop app data directory");
+  const [importMode, setImportMode] = useState<"replace" | "merge">("merge");
+
+  useEffect(() => {
+    if (!("__TAURI_INTERNALS__" in window)) return;
+    void appDataDir().then((path) => setDataPath(`${path}loopvault/data.json`));
+  }, []);
+
+  async function exportData() {
+    if (!("__TAURI_INTERNALS__" in window)) {
+      setToast("Export is available in the Tauri desktop app.");
+      return;
+    }
+    const target = await saveFileDialog({
+      defaultPath: `loopvault-export-${timestampForFile(new Date())}.json`,
+      filters: [{ name: "JSON", extensions: ["json"] }],
+    });
+    if (!target) return;
+    await exportVault(target);
+    setToast("Export complete.");
+  }
+
+  async function importData() {
+    if (!("__TAURI_INTERNALS__" in window)) {
+      setToast("Import is available in the Tauri desktop app.");
+      return;
+    }
+    const target = await openFileDialog({
+      multiple: false,
+      filters: [{ name: "JSON", extensions: ["json"] }],
+    });
+    if (typeof target !== "string") return;
+    await importVault(target, importMode);
+    setToast("Import complete.");
+  }
+
+  async function openDataFolder() {
+    if (!("__TAURI_INTERNALS__" in window)) {
+      setToast("Folder reveal is available in the Tauri desktop app.");
+      return;
+    }
+    await revealItemInDir(await appDataDir());
+  }
+
+  async function restore(name: string) {
+    if (!window.confirm(`Restore ${name}? Current data will be replaced.`)) return;
+    await restoreBackup(name);
+    await refreshBackups();
+    setToast("Backup restored.");
+  }
+
+  return (
+    <div className="fixed inset-0 z-40 grid place-items-center overflow-y-auto bg-black/70 px-4 py-6">
+      <div className="w-full max-w-3xl border border-stone-700 bg-stone-900 p-5 shadow-2xl">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-xl font-semibold">Settings</h2>
+          <button className="rounded px-2 py-1 text-stone-400" onClick={onClose}>Close</button>
+        </div>
+        <div className="mt-5 grid gap-5 md:grid-cols-2">
+          <section>
+            <h3 className="font-semibold">Data</h3>
+            <p className="mt-2 break-all text-sm text-stone-400">{dataPath}</p>
+            <button className="mt-3 rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => void openDataFolder()}>Open folder</button>
+          </section>
+          <section>
+            <h3 className="font-semibold">Monthly goal</h3>
+            <input
+              className={`${inputClass} mt-2`}
+              min={1}
+              type="number"
+              value={monthlyGoal}
+              onChange={(event) => setMonthlyGoal(Number(event.target.value))}
+            />
+          </section>
+          <section>
+            <h3 className="font-semibold">Export</h3>
+            <p className="mt-2 text-sm text-stone-400">Write a validated JSON copy wherever you choose.</p>
+            <button className="mt-3 rounded bg-teal-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => void exportData()}>Export JSON</button>
+          </section>
+          <section>
+            <h3 className="font-semibold">Import</h3>
+            <select className={`${inputClass} mt-2`} value={importMode} onChange={(event) => setImportMode(event.target.value as "replace" | "merge")}>
+              <option value="merge">Merge, newer updatedAt wins</option>
+              <option value="replace">Replace everything</option>
+            </select>
+            <button className="mt-3 rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => void importData()}>Import JSON</button>
+            {error ? <p className="mt-2 text-sm text-red-200">{error}</p> : null}
+          </section>
+        </div>
+        <section className="mt-6">
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="font-semibold">Backups</h3>
+            <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => void refreshBackups()}>Refresh</button>
+          </div>
+          <div className="mt-3 max-h-64 space-y-2 overflow-y-auto">
+            {backups.length === 0 ? <p className="text-sm text-stone-400">No backups yet.</p> : null}
+            {backups.map((backup) => (
+              <div key={backup.name} className="flex flex-wrap items-center justify-between gap-3 border border-stone-800 p-3 text-sm">
+                <div>
+                  <p className="font-medium">{backup.name}</p>
+                  <p className="text-stone-500">{backup.createdAt}</p>
+                </div>
+                <button className="rounded border border-stone-700 px-3 py-2" onClick={() => void restore(backup.name)}>Restore</button>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    </div>
   );
 }
 
@@ -790,6 +956,15 @@ function hashString(value: string): number {
   let hash = 0;
   for (const char of value) hash = (hash * 31 + char.charCodeAt(0)) | 0;
   return hash;
+}
+
+function timestampForFile(date: Date): string {
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const day = date.getDate().toString().padStart(2, "0");
+  const hour = date.getHours().toString().padStart(2, "0");
+  const minute = date.getMinutes().toString().padStart(2, "0");
+  return `${year}${month}${day}-${hour}${minute}`;
 }
 
 export default App;
