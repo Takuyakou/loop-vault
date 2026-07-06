@@ -3,6 +3,7 @@ import {
   createEmptyVault,
   VaultRepositoryError,
   type VaultBackup,
+  type VaultImportMode,
   type VaultLoadResult,
   type VaultRepository,
 } from "../domain/repository";
@@ -18,6 +19,9 @@ class FakeRepository implements VaultRepository {
   };
   loadError?: Error;
   restoreResult?: VaultLoadResult;
+  importResult?: VaultLoadResult;
+  exportedPath?: string;
+  importedMode?: VaultImportMode;
   backups: VaultBackup[] = [];
   saved: VaultFile[] = [];
 
@@ -32,12 +36,19 @@ class FakeRepository implements VaultRepository {
     this.saved.push(structuredClone(vault));
   }
 
-  async exportTo(): Promise<void> {
-    throw new Error("Not implemented");
+  async exportTo(path: string): Promise<void> {
+    this.exportedPath = path;
   }
 
-  async importFrom(): Promise<VaultLoadResult> {
-    throw new Error("Not implemented");
+  async importFrom(
+    _path: string,
+    options: { mode?: VaultImportMode } = {},
+  ): Promise<VaultLoadResult> {
+    this.importedMode = options.mode;
+    if (!this.importResult) {
+      throw new Error("Not implemented");
+    }
+    return this.importResult;
   }
 
   async listBackups(): Promise<VaultBackup[]> {
@@ -229,5 +240,40 @@ describe("vault store", () => {
     expect(store.getState().loadStatus).toBe("ready");
     expect(store.getState().ideas).toEqual([restoredIdea]);
     expect(store.getState().recovery).toBeUndefined();
+  });
+
+  it("flushes pending changes before export", async () => {
+    const repository = new FakeRepository();
+    const store = createVaultStore({
+      repository,
+      idFactory: () => generatedId,
+      now: () => now,
+    });
+    await store.getState().initialize();
+    store.getState().createIdea("Export me");
+
+    await store.getState().exportVault("C:/loopvault-export.json");
+
+    expect(repository.saved).toHaveLength(1);
+    expect(repository.exportedPath).toBe("C:/loopvault-export.json");
+    expect(store.getState().unsaved).toBe(false);
+  });
+
+  it("imports a vault with the requested mode", async () => {
+    const repository = new FakeRepository();
+    const importedIdea = makeIdea({ id: generatedId, title: "Imported" });
+    repository.importResult = {
+      vault: { ...createEmptyVault(), ideas: [importedIdea] },
+      quarantine: [],
+      created: false,
+    };
+    const store = createVaultStore({ repository });
+    await store.getState().initialize();
+
+    await store.getState().importVault("C:/import.json", "merge");
+
+    expect(repository.importedMode).toBe("merge");
+    expect(store.getState().ideas).toEqual([importedIdea]);
+    expect(store.getState().loadStatus).toBe("ready");
   });
 });

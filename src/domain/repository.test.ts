@@ -7,6 +7,7 @@ import {
   backupFileName,
   corruptFileName,
   createEmptyVault,
+  mergeVaults,
   serializeVault,
   VaultRepositoryError,
   type VaultStorage,
@@ -191,5 +192,71 @@ describe("JsonVaultRepository", () => {
     expect(
       storage.operations.some((operation) => operation.type === "copyFile"),
     ).toBe(false);
+  });
+
+  it("merges imported vaults using newer updatedAt on id collisions", async () => {
+    const currentNewer = makeIdea({
+      id: "55555555-5555-4555-8555-555555555555",
+      title: "Current Newer",
+      updatedAt: "2026-07-20T00:00:00.000Z",
+    });
+    const incomingOlder = makeIdea({
+      id: currentNewer.id,
+      title: "Incoming Older",
+      updatedAt: "2026-07-19T00:00:00.000Z",
+    });
+    const incomingNew = makeIdea({
+      id: "66666666-6666-4666-8666-666666666666",
+      title: "Incoming New",
+      updatedAt: "2026-07-21T00:00:00.000Z",
+    });
+
+    const merged = mergeVaults(
+      { ...createEmptyVault(), ideas: [currentNewer] },
+      { ...createEmptyVault(), ideas: [incomingOlder, incomingNew] },
+    );
+
+    expect(merged.ideas.map((idea) => idea.title)).toEqual([
+      "Incoming New",
+      "Current Newer",
+    ]);
+  });
+
+  it("imports with merge mode and saves only after validation", async () => {
+    const storage = new MemoryVaultStorage();
+    const current = makeIdea({
+      id: "77777777-7777-4777-8777-777777777777",
+      title: "Current",
+      updatedAt: "2026-07-20T00:00:00.000Z",
+    });
+    const incoming = makeIdea({
+      id: "88888888-8888-4888-8888-888888888888",
+      title: "Incoming",
+      updatedAt: "2026-07-21T00:00:00.000Z",
+    });
+    storage.files.set(DATA_PATH, serializeVault({ ...createEmptyVault(), ideas: [current] }));
+    storage.files.set("C:/export.json", serializeVault({ ...createEmptyVault(), ideas: [incoming] }));
+    const repo = new JsonVaultRepository(storage);
+
+    const result = await repo.importFrom("C:/export.json", { mode: "merge" });
+
+    expect(result.vault.ideas.map((idea) => idea.id).sort()).toEqual([
+      current.id,
+      incoming.id,
+    ].sort());
+    expect(storage.files.get(DATA_PATH)).toBe(serializeVault(result.vault));
+  });
+
+  it("does not touch data.json when import JSON is invalid", async () => {
+    const storage = new MemoryVaultStorage();
+    const original = serializeVault(createEmptyVault());
+    storage.files.set(DATA_PATH, original);
+    storage.files.set("C:/broken.json", "{ nope");
+    const repo = new JsonVaultRepository(storage);
+
+    await expect(repo.importFrom("C:/broken.json")).rejects.toMatchObject({
+      kind: "invalid-json",
+    });
+    expect(storage.files.get(DATA_PATH)).toBe(original);
   });
 });

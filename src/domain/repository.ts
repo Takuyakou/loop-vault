@@ -27,9 +27,15 @@ export interface VaultRepository {
   load(): Promise<VaultLoadResult>;
   save(vault: VaultFile): Promise<void>;
   exportTo(path: string): Promise<void>;
-  importFrom(path: string): Promise<VaultLoadResult>;
+  importFrom(path: string, options?: VaultImportOptions): Promise<VaultLoadResult>;
   listBackups(): Promise<VaultBackup[]>;
   restore(backupName: string): Promise<VaultLoadResult>;
+}
+
+export type VaultImportMode = "replace" | "merge";
+
+export interface VaultImportOptions {
+  mode?: VaultImportMode;
 }
 
 export interface VaultStorage {
@@ -137,10 +143,23 @@ export class JsonVaultRepository implements VaultRepository {
     });
   }
 
-  async importFrom(path: string): Promise<VaultLoadResult> {
+  async importFrom(
+    path: string,
+    options: VaultImportOptions = {},
+  ): Promise<VaultLoadResult> {
     const raw = await this.storage.readText(path, { external: true });
+    const imported = this.parseLoadedVault(raw);
+    const mode = options.mode ?? "replace";
+    const vault =
+      mode === "merge"
+        ? mergeVaults(
+            (await this.load()).vault,
+            imported.vault,
+          )
+        : imported.vault;
     const loadResult = {
-      ...this.parseLoadedVault(raw),
+      vault,
+      quarantine: imported.quarantine,
       created: false,
     };
     await this.save(loadResult.vault);
@@ -242,6 +261,34 @@ export function createEmptyVault(): VaultFile {
 
 export function serializeVault(vault: VaultFile): string {
   return `${JSON.stringify(vaultFileSchema.parse(vault), null, 2)}\n`;
+}
+
+export function mergeVaults(current: VaultFile, incoming: VaultFile): VaultFile {
+  const ideasById = new Map(current.ideas.map((idea) => [idea.id, idea]));
+
+  for (const incomingIdea of incoming.ideas) {
+    const currentIdea = ideasById.get(incomingIdea.id);
+    if (!currentIdea) {
+      ideasById.set(incomingIdea.id, incomingIdea);
+      continue;
+    }
+
+    if (
+      new Date(incomingIdea.updatedAt).getTime() >
+      new Date(currentIdea.updatedAt).getTime()
+    ) {
+      ideasById.set(incomingIdea.id, incomingIdea);
+    }
+  }
+
+  return {
+    app: "loopvault",
+    fileVersion: 1,
+    settings: incoming.settings ?? current.settings,
+    ideas: [...ideasById.values()].sort((a, b) =>
+      b.updatedAt.localeCompare(a.updatedAt),
+    ),
+  };
 }
 
 export function backupFileName(date: Date): string {

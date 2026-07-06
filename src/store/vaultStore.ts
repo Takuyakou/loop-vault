@@ -3,6 +3,7 @@ import {
   createEmptyVault,
   VaultRepositoryError,
   type VaultBackup,
+  type VaultImportMode,
   type VaultRepository,
 } from "../domain/repository";
 import { transition, type TransitionResult } from "../domain/transition";
@@ -40,6 +41,7 @@ export interface VaultStoreState {
   unsaved: boolean;
   saving: boolean;
   lastSavedAt?: string;
+  backups: VaultBackup[];
   error?: string;
   initialize: () => Promise<void>;
   createIdea: (title: string, status?: Status) => string | undefined;
@@ -48,6 +50,9 @@ export interface VaultStoreState {
   transitionIdea: (id: string, to: Status, now?: Date) => TransitionResult;
   updateNextAction: (id: string, text: string, now?: Date) => void;
   setMonthlyGoal: (goal: number) => void;
+  refreshBackups: () => Promise<void>;
+  exportVault: (path: string) => Promise<void>;
+  importVault: (path: string, mode: VaultImportMode) => Promise<void>;
   restoreBackup: (backupName: string) => Promise<void>;
   flush: () => Promise<void>;
 }
@@ -127,6 +132,7 @@ export function createVaultStore(
         try {
           const result = await options.repository.load();
           setVault(result.vault, result.quarantine);
+          void get().refreshBackups();
         } catch (error) {
           if (
             error instanceof VaultRepositoryError &&
@@ -265,11 +271,48 @@ export function createVaultStore(
         }));
       },
 
+      async refreshBackups() {
+        set({ backups: await safeListBackups(options.repository) });
+      },
+
+      async exportVault(path) {
+        await get().flush();
+        set({ error: undefined });
+        try {
+          await options.repository.exportTo(path);
+        } catch (error) {
+          set({
+            error:
+              error instanceof Error
+                ? error.message
+                : "Vault could not be exported.",
+          });
+        }
+      },
+
+      async importVault(path, mode) {
+        set({ loadStatus: "loading", error: undefined });
+        try {
+          const result = await options.repository.importFrom(path, { mode });
+          setVault(result.vault, result.quarantine);
+          await get().refreshBackups();
+        } catch (error) {
+          set({
+            loadStatus: "ready",
+            error:
+              error instanceof Error
+                ? error.message
+                : "Vault could not be imported.",
+          });
+        }
+      },
+
       async restoreBackup(backupName) {
         set({ loadStatus: "loading", error: undefined });
         try {
           const result = await options.repository.restore(backupName);
           setVault(result.vault, result.quarantine);
+          await get().refreshBackups();
         } catch (error) {
           set({
             loadStatus: "recovery",
@@ -321,6 +364,7 @@ export function initialState(): Pick<
   | "readonly"
   | "unsaved"
   | "saving"
+  | "backups"
   | "error"
 > {
   return {
@@ -332,6 +376,7 @@ export function initialState(): Pick<
     readonly: undefined,
     unsaved: false,
     saving: false,
+    backups: [],
     error: undefined,
   };
 }
