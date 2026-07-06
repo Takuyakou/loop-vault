@@ -5,10 +5,13 @@ import {
   JsonVaultRepository,
   TEMP_DATA_PATH,
   backupFileName,
+  corruptFileName,
   createEmptyVault,
   serializeVault,
+  VaultRepositoryError,
   type VaultStorage,
 } from "./repository";
+import { makeIdea } from "./testFactory";
 
 class MemoryVaultStorage implements VaultStorage {
   readonly files = new Map<string, string>();
@@ -126,5 +129,67 @@ describe("JsonVaultRepository", () => {
     expect(result.created).toBe(true);
     expect(result.vault).toEqual(createEmptyVault());
     expect(result.quarantine).toHaveLength(0);
+    expect(storage.files.get(DATA_PATH)).toBe(serializeVault(createEmptyVault()));
+  });
+
+  it("moves syntax-damaged JSON to a corrupt file without writing an empty vault", async () => {
+    const storage = new MemoryVaultStorage();
+    const now = new Date(2026, 6, 22, 10, 11, 12);
+    const corruptPath = `loopvault/${corruptFileName(now)}`;
+    storage.files.set(DATA_PATH, "{ not json");
+    const repo = new JsonVaultRepository(storage, { now: () => now });
+
+    await expect(repo.load()).rejects.toMatchObject({
+      kind: "invalid-json",
+      details: expect.objectContaining({ corruptPath }),
+    });
+
+    expect(storage.files.has(DATA_PATH)).toBe(false);
+    expect(storage.files.get(corruptPath)).toBe("{ not json");
+    expect(storage.files.has(TEMP_DATA_PATH)).toBe(false);
+  });
+
+  it("quarantines only invalid records while loading the valid records", async () => {
+    const storage = new MemoryVaultStorage();
+    const validIdea = makeIdea({
+      id: "33333333-3333-4333-8333-333333333333",
+    });
+    const invalidIdea = makeIdea({
+      id: "44444444-4444-4444-8444-444444444444",
+      bpm: 10,
+    });
+    storage.files.set(
+      DATA_PATH,
+      JSON.stringify({
+        ...createEmptyVault(),
+        ideas: [validIdea, invalidIdea],
+      }),
+    );
+    const repo = new JsonVaultRepository(storage);
+
+    const result = await repo.load();
+
+    expect(result.vault.ideas).toEqual([validIdea]);
+    expect(result.quarantine).toHaveLength(1);
+    expect(result.quarantine[0]?.index).toBe(1);
+  });
+
+  it("reports future fileVersion without modifying data.json", async () => {
+    const storage = new MemoryVaultStorage();
+    const futureVault = JSON.stringify({
+      ...createEmptyVault(),
+      fileVersion: 2,
+    });
+    storage.files.set(DATA_PATH, futureVault);
+    const repo = new JsonVaultRepository(storage);
+
+    await expect(repo.load()).rejects.toBeInstanceOf(VaultRepositoryError);
+    await expect(repo.load()).rejects.toMatchObject({
+      kind: "future-version",
+    });
+    expect(storage.files.get(DATA_PATH)).toBe(futureVault);
+    expect(
+      storage.operations.some((operation) => operation.type === "copyFile"),
+    ).toBe(false);
   });
 });

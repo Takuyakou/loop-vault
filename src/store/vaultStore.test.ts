@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createEmptyVault,
+  VaultRepositoryError,
   type VaultBackup,
   type VaultLoadResult,
   type VaultRepository,
@@ -15,9 +16,15 @@ class FakeRepository implements VaultRepository {
     quarantine: [],
     created: false,
   };
+  loadError?: Error;
+  restoreResult?: VaultLoadResult;
+  backups: VaultBackup[] = [];
   saved: VaultFile[] = [];
 
   async load(): Promise<VaultLoadResult> {
+    if (this.loadError) {
+      throw this.loadError;
+    }
     return this.loadResult;
   }
 
@@ -34,11 +41,15 @@ class FakeRepository implements VaultRepository {
   }
 
   async listBackups(): Promise<VaultBackup[]> {
-    return [];
+    return this.backups;
   }
 
   async restore(): Promise<VaultLoadResult> {
-    throw new Error("Not implemented");
+    if (!this.restoreResult) {
+      throw new Error("Not implemented");
+    }
+
+    return this.restoreResult;
   }
 }
 
@@ -158,5 +169,65 @@ describe("vault store", () => {
     expect(store.getState().unsaved).toBe(false);
     await vi.advanceTimersByTimeAsync(500);
     expect(repository.saved).toHaveLength(0);
+  });
+
+  it("enters recovery mode for corrupt JSON and lists backups", async () => {
+    const repository = new FakeRepository();
+    repository.loadError = new VaultRepositoryError("invalid-json", "Bad JSON", {
+      corruptPath: "loopvault/data.corrupt-20260720-120000.json",
+    });
+    repository.backups = [
+      {
+        name: "data-20260719-1200.json",
+        path: "loopvault/backups/data-20260719-1200.json",
+        createdAt: "2026-07-19T12:00:00.000Z",
+      },
+    ];
+    const store = createVaultStore({ repository });
+
+    await store.getState().initialize();
+
+    expect(store.getState().loadStatus).toBe("recovery");
+    expect(store.getState().recovery?.corruptPath).toBe(
+      "loopvault/data.corrupt-20260720-120000.json",
+    );
+    expect(store.getState().recovery?.backups).toEqual(repository.backups);
+    expect(store.getState().unsaved).toBe(false);
+    expect(repository.saved).toHaveLength(0);
+  });
+
+  it("enters readonly mode for future fileVersion", async () => {
+    const repository = new FakeRepository();
+    repository.loadError = new VaultRepositoryError(
+      "future-version",
+      "Vault fileVersion 2 is newer than this app supports.",
+      { fileVersion: 2 },
+    );
+    const store = createVaultStore({ repository });
+
+    await store.getState().initialize();
+
+    expect(store.getState().loadStatus).toBe("readonly");
+    expect(store.getState().readonly?.fileVersion).toBe(2);
+    expect(store.getState().unsaved).toBe(false);
+  });
+
+  it("restores a selected backup and returns to ready mode", async () => {
+    const repository = new FakeRepository();
+    const restoredIdea = makeIdea({ id: generatedId, title: "Restored" });
+    repository.loadError = new VaultRepositoryError("invalid-json", "Bad JSON");
+    repository.restoreResult = {
+      vault: { ...createEmptyVault(), ideas: [restoredIdea] },
+      quarantine: [],
+      created: false,
+    };
+    const store = createVaultStore({ repository });
+
+    await store.getState().initialize();
+    await store.getState().restoreBackup("data-20260719-1200.json");
+
+    expect(store.getState().loadStatus).toBe("ready");
+    expect(store.getState().ideas).toEqual([restoredIdea]);
+    expect(store.getState().recovery).toBeUndefined();
   });
 });

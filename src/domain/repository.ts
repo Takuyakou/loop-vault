@@ -50,6 +50,7 @@ export interface VaultStorage {
 type RepositoryErrorKind =
   | "invalid-json"
   | "invalid-vault"
+  | "future-version"
   | "backup-not-found";
 
 export class VaultRepositoryError extends Error {
@@ -84,18 +85,40 @@ export class JsonVaultRepository implements VaultRepository {
     await this.ensureVaultDirs();
 
     if (!(await this.storage.exists(DATA_PATH))) {
+      const vault = createEmptyVault();
+      await this.save(vault);
       return {
-        vault: createEmptyVault(),
+        vault,
         quarantine: [],
         created: true,
       };
     }
 
+    const raw = await this.storage.readText(DATA_PATH);
+    let parsed: Omit<VaultLoadResult, "created">;
+
+    try {
+      parsed = this.parseLoadedVault(raw);
+    } catch (error) {
+      if (
+        error instanceof VaultRepositoryError &&
+        error.kind === "invalid-json"
+      ) {
+        const corruptPath = await this.moveCorruptDataFile();
+        throw new VaultRepositoryError(
+          "invalid-json",
+          error.message,
+          { ...(isRecord(error.details) ? error.details : {}), corruptPath },
+        );
+      }
+
+      throw error;
+    }
+
     await this.createStartupBackup();
 
-    const raw = await this.storage.readText(DATA_PATH);
     return {
-      ...(this.parseLoadedVault(raw)),
+      ...parsed,
       created: false,
     };
   }
@@ -175,6 +198,12 @@ export class JsonVaultRepository implements VaultRepository {
     await this.rotateBackups();
   }
 
+  private async moveCorruptDataFile(): Promise<string> {
+    const corruptPath = joinVaultPath(VAULT_DIR, corruptFileName(this.now()));
+    await this.storage.rename(DATA_PATH, corruptPath);
+    return corruptPath;
+  }
+
   private async rotateBackups(): Promise<void> {
     const backups = await this.listBackups();
     const excess = backups.slice(this.maxBackups);
@@ -190,9 +219,7 @@ export class JsonVaultRepository implements VaultRepository {
     if (!result.ok) {
       throw new VaultRepositoryError(
         result.error.kind,
-        result.error.kind === "invalid-json"
-          ? result.error.message
-          : "Vault file failed schema validation",
+        repositoryErrorMessage(result.error),
         result.error,
       );
     }
@@ -226,6 +253,16 @@ export function backupFileName(date: Date): string {
   return `data-${year}${month}${day}-${hour}${minute}.json`;
 }
 
+export function corruptFileName(date: Date): string {
+  const year = date.getFullYear();
+  const month = pad2(date.getMonth() + 1);
+  const day = pad2(date.getDate());
+  const hour = pad2(date.getHours());
+  const minute = pad2(date.getMinutes());
+  const second = pad2(date.getSeconds());
+  return `data.corrupt-${year}${month}${day}-${hour}${minute}${second}.json`;
+}
+
 function backupNameToIso(name: string): string {
   const match = /^data-(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})\.json$/.exec(
     name,
@@ -255,4 +292,22 @@ function joinVaultPath(...parts: string[]): string {
 
 function pad2(value: number): string {
   return value.toString().padStart(2, "0");
+}
+
+function repositoryErrorMessage(
+  error: Exclude<ReturnType<typeof parseVaultFileJson>, { ok: true }>["error"],
+): string {
+  if (error.kind === "invalid-json") {
+    return error.message;
+  }
+
+  if (error.kind === "future-version") {
+    return `Vault fileVersion ${error.fileVersion} is newer than this app supports.`;
+  }
+
+  return "Vault file failed schema validation";
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object";
 }

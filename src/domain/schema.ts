@@ -103,6 +103,10 @@ export type VaultParseIssue =
       message: string;
     }
   | {
+      kind: "future-version";
+      fileVersion: number;
+    }
+  | {
       kind: "invalid-vault";
       issues: z.ZodIssue[];
     };
@@ -134,6 +138,16 @@ export function parseVaultFileJson(raw: string): VaultParseResult {
   }
 
   const envelope = vaultEnvelopeSchema.safeParse(parsed);
+
+  if (!envelope.success) {
+    const futureVersion = futureFileVersion(parsed);
+    if (futureVersion !== undefined) {
+      return {
+        ok: false,
+        error: { kind: "future-version", fileVersion: futureVersion },
+      };
+    }
+  }
 
   if (!envelope.success) {
     return {
@@ -169,4 +183,21 @@ export function parseVaultFileJson(raw: string): VaultParseResult {
     },
     quarantine,
   };
+}
+
+function futureFileVersion(value: unknown): number | undefined {
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+
+  const record = value as Record<string, unknown>;
+  if (record.app !== "loopvault") {
+    return undefined;
+  }
+
+  if (typeof record.fileVersion !== "number") {
+    return undefined;
+  }
+
+  return record.fileVersion > 1 ? record.fileVersion : undefined;
 }

@@ -1,16 +1,42 @@
 import { createStore, type StoreApi } from "zustand/vanilla";
-import { createEmptyVault, type VaultRepository } from "../domain/repository";
+import {
+  createEmptyVault,
+  VaultRepositoryError,
+  type VaultBackup,
+  type VaultRepository,
+} from "../domain/repository";
 import { transition, type TransitionResult } from "../domain/transition";
 import type { QuarantinedRecord } from "../domain/schema";
 import type { SongIdea, Status, VaultFile } from "../domain/types";
 
-export type LoadStatus = "idle" | "loading" | "ready" | "error";
+export type LoadStatus =
+  | "idle"
+  | "loading"
+  | "ready"
+  | "recovery"
+  | "readonly"
+  | "error";
+
+export interface RecoveryState {
+  kind: "corrupt-json";
+  message: string;
+  corruptPath?: string;
+  backups: VaultBackup[];
+}
+
+export interface ReadonlyState {
+  kind: "future-version";
+  message: string;
+  fileVersion?: number;
+}
 
 export interface VaultStoreState {
   ideas: SongIdea[];
   settings: VaultFile["settings"];
   loadStatus: LoadStatus;
   quarantine: QuarantinedRecord[];
+  recovery?: RecoveryState;
+  readonly?: ReadonlyState;
   unsaved: boolean;
   saving: boolean;
   lastSavedAt?: string;
@@ -22,6 +48,7 @@ export interface VaultStoreState {
   transitionIdea: (id: string, to: Status, now?: Date) => TransitionResult;
   updateNextAction: (id: string, text: string, now?: Date) => void;
   setMonthlyGoal: (goal: number) => void;
+  restoreBackup: (backupName: string) => Promise<void>;
   flush: () => Promise<void>;
 }
 
@@ -64,6 +91,8 @@ export function createVaultStore(
         unsaved: false,
         saving: false,
         error: undefined,
+        recovery: undefined,
+        readonly: undefined,
       });
     }
 
@@ -88,12 +117,54 @@ export function createVaultStore(
 
       async initialize() {
         clearSaveTimer();
-        set({ loadStatus: "loading", error: undefined });
+        set({
+          loadStatus: "loading",
+          error: undefined,
+          recovery: undefined,
+          readonly: undefined,
+        });
 
         try {
           const result = await options.repository.load();
           setVault(result.vault, result.quarantine);
         } catch (error) {
+          if (
+            error instanceof VaultRepositoryError &&
+            error.kind === "invalid-json"
+          ) {
+            set({
+              loadStatus: "recovery",
+              recovery: {
+                kind: "corrupt-json",
+                message: error.message,
+                corruptPath: corruptPathFromDetails(error.details),
+                backups: await safeListBackups(options.repository),
+              },
+              unsaved: false,
+              saving: false,
+              error: undefined,
+            });
+            return;
+          }
+
+          if (
+            error instanceof VaultRepositoryError &&
+            error.kind === "future-version"
+          ) {
+            set({
+              loadStatus: "readonly",
+              readonly: {
+                kind: "future-version",
+                message: error.message,
+                fileVersion: futureVersionFromDetails(error.details),
+              },
+              unsaved: false,
+              saving: false,
+              error: undefined,
+            });
+            return;
+          }
+
           set({
             loadStatus: "error",
             error:
@@ -194,6 +265,22 @@ export function createVaultStore(
         }));
       },
 
+      async restoreBackup(backupName) {
+        set({ loadStatus: "loading", error: undefined });
+        try {
+          const result = await options.repository.restore(backupName);
+          setVault(result.vault, result.quarantine);
+        } catch (error) {
+          set({
+            loadStatus: "recovery",
+            error:
+              error instanceof Error
+                ? error.message
+                : "Backup could not be restored.",
+          });
+        }
+      },
+
       async flush() {
         clearSaveTimer();
         const state = get();
@@ -230,6 +317,8 @@ export function initialState(): Pick<
   | "settings"
   | "loadStatus"
   | "quarantine"
+  | "recovery"
+  | "readonly"
   | "unsaved"
   | "saving"
   | "error"
@@ -239,10 +328,40 @@ export function initialState(): Pick<
     settings: createEmptyVault().settings,
     loadStatus: "idle",
     quarantine: [],
+    recovery: undefined,
+    readonly: undefined,
     unsaved: false,
     saving: false,
     error: undefined,
   };
+}
+
+async function safeListBackups(
+  repository: VaultRepository,
+): Promise<VaultBackup[]> {
+  try {
+    return await repository.listBackups();
+  } catch {
+    return [];
+  }
+}
+
+function corruptPathFromDetails(details: unknown): string | undefined {
+  if (!details || typeof details !== "object") {
+    return undefined;
+  }
+
+  const corruptPath = (details as Record<string, unknown>).corruptPath;
+  return typeof corruptPath === "string" ? corruptPath : undefined;
+}
+
+function futureVersionFromDetails(details: unknown): number | undefined {
+  if (!details || typeof details !== "object") {
+    return undefined;
+  }
+
+  const fileVersion = (details as Record<string, unknown>).fileVersion;
+  return typeof fileVersion === "number" ? fileVersion : undefined;
 }
 
 function currentVault(state: VaultStoreState): VaultFile {
