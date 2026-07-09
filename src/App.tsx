@@ -14,6 +14,7 @@ import {
 import { filterAndSortIdeas, type IdeaFilters } from "./domain/libraryFilters";
 import { monthlyStats } from "./domain/monthlyStats";
 import { pickFocus } from "./domain/focus";
+import { formatProgressionText } from "./domain/progressionText";
 import type { TransitionResult } from "./domain/transition";
 import type {
   AssetType,
@@ -698,11 +699,13 @@ function ProgressionBlockCard({
   block,
   onPreview,
   onRemove,
+  onCopyProgression,
   copy,
 }: {
   block: SavedProgressionBlock;
   onPreview: () => void;
   onRemove: () => void;
+  onCopyProgression: () => void;
   copy: AppCopy;
 }) {
   return (
@@ -716,6 +719,9 @@ function ProgressionBlockCard({
         </div>
         <button className="rounded border border-cyan-500/60 px-2 py-1 text-cyan-100" onClick={onPreview}>
           {copy.common.preview}
+        </button>
+        <button className="rounded border border-teal-500/60 px-2 py-1 text-teal-100" onClick={onCopyProgression}>
+          {copy.capture.copyProgression}
         </button>
         <button className="rounded border border-stone-700 px-2 py-1 text-stone-300" onClick={onRemove}>
           {copy.common.delete}
@@ -897,6 +903,15 @@ function DetailView({
     }
   }
 
+  async function copySavedBlock(block: SavedProgressionBlock) {
+    try {
+      await writeClipboardText(formatProgressionText(block.chords));
+      setToast(language === "ja" ? "Chord Drip形式でコピーしました。" : "Copied progression text.");
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : (language === "ja" ? "コピーできませんでした。" : "Could not copy progression."));
+    }
+  }
+
   return (
     <div className="grid gap-5 py-5 lg:grid-cols-[0.9fr_1.1fr]">
       <section className="space-y-5">
@@ -948,6 +963,7 @@ function DetailView({
                   key={block.id}
                   block={block}
                   onPreview={() => void previewSavedBlock(block)}
+                  onCopyProgression={() => void copySavedBlock(block)}
                   onRemove={() => removeProgressionBlock(idea.id, block.id)}
                   copy={copy}
                 />
@@ -1205,6 +1221,13 @@ async function previewTimeline(
 ): Promise<void> {
   const { previewChordTimeline } = await import("./audio/chordPreview");
   await previewChordTimeline(chords, bpm);
+}
+
+async function writeClipboardText(text: string): Promise<void> {
+  if (!navigator.clipboard?.writeText) {
+    throw new Error("Clipboard is not available.");
+  }
+  await navigator.clipboard.writeText(text);
 }
 
 function splitList(value: string): string[] {
