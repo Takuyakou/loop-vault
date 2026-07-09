@@ -8,13 +8,29 @@
     "dialog:default",
     "opener:default",
     "fs:default",
+    "fs:allow-read",
+    "fs:allow-exists",
+    "fs:allow-read-dir",
+    "fs:allow-read-text-file",
+    "fs:allow-write-text-file",
+    "fs:allow-rename",
+    "fs:allow-copy-file",
+    "fs:allow-remove",
     {
       "identifier": "fs:scope",
       "allow": [
         { "path": "$APPDATA/loopvault" },
         { "path": "$APPDATA/loopvault/**" },
+        { "path": "$APPDATA/com.takuyakou.loopvault" },
+        { "path": "$APPDATA/com.takuyakou.loopvault/**" },
         { "path": "$LOCALDATA/loopvault" },
-        { "path": "$LOCALDATA/loopvault/**" }
+        { "path": "$LOCALDATA/loopvault/**" },
+        { "path": "$LOCALDATA/com.takuyakou.loopvault" },
+        { "path": "$LOCALDATA/com.takuyakou.loopvault/**" },
+        { "path": "$AUDIO/**" },
+        { "path": "$DESKTOP/**" },
+        { "path": "$DOCUMENT/**" },
+        { "path": "$DOWNLOAD/**" }
       ]
     }
   ]

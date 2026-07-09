@@ -7,7 +7,8 @@ import {
   type VaultLoadResult,
   type VaultRepository,
 } from "../domain/repository";
-import type { VaultFile } from "../domain/types";
+import { pickFocus } from "../domain/focus";
+import type { ProgressionBlockCandidate, VaultFile } from "../domain/types";
 import { makeIdea } from "../domain/testFactory";
 import { createVaultStore } from "./vaultStore";
 
@@ -20,6 +21,7 @@ class FakeRepository implements VaultRepository {
   loadError?: Error;
   restoreResult?: VaultLoadResult;
   importResult?: VaultLoadResult;
+  saveError?: Error;
   exportedPath?: string;
   importedMode?: VaultImportMode;
   backups: VaultBackup[] = [];
@@ -33,6 +35,9 @@ class FakeRepository implements VaultRepository {
   }
 
   async save(vault: VaultFile): Promise<void> {
+    if (this.saveError) {
+      throw this.saveError;
+    }
     this.saved.push(structuredClone(vault));
   }
 
@@ -275,5 +280,172 @@ describe("vault store", () => {
     expect(repository.importedMode).toBe("merge");
     expect(store.getState().ideas).toEqual([importedIdea]);
     expect(store.getState().loadStatus).toBe("ready");
+  });
+
+  it("keeps unsaved changes when save fails", async () => {
+    const repository = new FakeRepository();
+    repository.saveError = new Error("Disk full");
+    const store = createVaultStore({
+      repository,
+      idFactory: () => generatedId,
+      now: () => now,
+    });
+    await store.getState().initialize();
+
+    store.getState().createIdea("Unsaved");
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(store.getState().unsaved).toBe(true);
+    expect(store.getState().error).toBe("Disk full");
+    expect(repository.saved).toHaveLength(0);
+  });
+
+  it("keeps current ideas when import fails", async () => {
+    const repository = new FakeRepository();
+    const currentIdea = makeIdea({ id: generatedId, title: "Current" });
+    repository.loadResult = {
+      vault: { ...createEmptyVault(), ideas: [currentIdea] },
+      quarantine: [],
+      created: false,
+    };
+    const store = createVaultStore({ repository });
+    await store.getState().initialize();
+
+    await store.getState().importVault("C:/broken.json", "replace");
+
+    expect(store.getState().ideas).toEqual([currentIdea]);
+    expect(store.getState().loadStatus).toBe("ready");
+    expect(store.getState().error).toBe("Not implemented");
+  });
+
+  it("keeps MIDI analysis transient and persists only appended progression blocks", async () => {
+    const repository = new FakeRepository();
+    const idea = makeIdea({ id: generatedId, progressionBlocks: [] });
+    repository.loadResult = {
+      vault: { ...createEmptyVault(), ideas: [idea] },
+      quarantine: [],
+      created: false,
+    };
+    const store = createVaultStore({
+      repository,
+      idFactory: () => "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+      now: () => now,
+    });
+    const candidate: ProgressionBlockCandidate = {
+      id: "candidate-1",
+      startBar: 1,
+      endBar: 4,
+      lengthBars: 4,
+      chords: [
+        {
+          bar: 1,
+          beat: 1,
+          durationBeats: 4,
+          chord: {
+            root: 0,
+            quality: "maj",
+            tensions: [],
+            label: "C",
+          },
+          confidence: 0.9,
+          alternatives: [],
+          warnings: [],
+        },
+      ],
+      summaryText: "C",
+      confidence: 0.9,
+      labels: ["C"],
+      warnings: [],
+    };
+    await store.getState().initialize();
+
+    store.getState().appendBlockToIdea(generatedId, candidate, {
+      fileName: "capture.mid",
+      totalBars: 4,
+      bpm: 120,
+      timeSignature: "4/4",
+      fullTimeline: candidate.chords,
+      blockCandidates: [candidate],
+      analyzedAt: "1970-01-01T00:00:00.000Z",
+      analyzerVersion: "1.0.0",
+    });
+    await store.getState().flush();
+
+    expect(repository.saved).toHaveLength(1);
+    expect(repository.saved[0]).not.toHaveProperty("analysis");
+    expect(repository.saved[0]?.ideas[0]?.progressionBlocks).toHaveLength(1);
+    expect(repository.saved[0]?.ideas[0]?.progressionBlocks?.[0]).toMatchObject({
+      sourceFileName: "capture.mid",
+      summaryText: "C",
+      analyzerVersion: "1.0.0",
+    });
+  });
+
+  it("supports the weekly workflow from capture to done", async () => {
+    const repository = new FakeRepository();
+    const store = createVaultStore({
+      repository,
+      idFactory: () => generatedId,
+      now: () => now,
+    });
+    await store.getState().initialize();
+
+    const createdId = store.getState().createIdea("Night Drive");
+    expect(createdId).toBe(generatedId);
+
+    store.getState().updateNextAction(generatedId, "Print the bass stem", now);
+    const loopAt = new Date("2026-07-21T12:00:00.000Z");
+    expect(store.getState().transitionIdea(generatedId, "loop", loopAt).ok).toBe(
+      true,
+    );
+
+    const staleAt = new Date("2026-07-29T12:00:00.000Z");
+    const staleIdea = store.getState().ideas[0];
+    expect(staleIdea).toBeDefined();
+    const focusBeforeHold = pickFocus([staleIdea!], staleAt);
+    expect(focusBeforeHold.stale[0]).toMatchObject({
+      idleDays: 8,
+      suggestHold: false,
+    });
+
+    expect(
+      store.getState().transitionIdea(generatedId, "hold", staleAt).ok,
+    ).toBe(true);
+    expect(store.getState().ideas[0]?.prevStatus).toBe("loop");
+
+    const restoreAt = new Date("2026-07-30T12:00:00.000Z");
+    expect(
+      store.getState().transitionIdea(generatedId, "loop", restoreAt).ok,
+    ).toBe(true);
+    store.getState().updateNextAction(
+      generatedId,
+      "Balance the hook layers",
+      restoreAt,
+    );
+
+    expect(
+      store
+        .getState()
+        .transitionIdea(generatedId, "arrange", new Date("2026-07-31T12:00:00.000Z"))
+        .ok,
+    ).toBe(true);
+    expect(
+      store
+        .getState()
+        .transitionIdea(generatedId, "mix", new Date("2026-08-01T12:00:00.000Z"))
+        .ok,
+    ).toBe(true);
+    const doneAt = new Date("2026-08-02T12:00:00.000Z");
+    expect(store.getState().transitionIdea(generatedId, "done", doneAt).ok).toBe(
+      true,
+    );
+
+    expect(store.getState().ideas[0]).toMatchObject({
+      status: "done",
+      completedAt: doneAt.toISOString(),
+      nextAction: {
+        text: "Balance the hook layers",
+      },
+    });
   });
 });

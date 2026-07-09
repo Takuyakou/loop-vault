@@ -1,5 +1,5 @@
-import { confirm } from "@tauri-apps/plugin-dialog";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { confirm } from "@tauri-apps/plugin-dialog";
 import type { StoreApi } from "zustand/vanilla";
 import type { VaultStoreState } from "./vaultStore";
 
@@ -31,14 +31,13 @@ export async function registerTauriCloseGuard(
   }
 
   return getCurrentWindow().onCloseRequested(async (event) => {
-    const state = store.getState();
-    if (!shouldBlockClose(state)) {
+    if (!shouldBlockClose(store.getState())) {
       return;
     }
 
     event.preventDefault();
     const shouldClose = await confirm(
-      "未保存の変更があります。保存して終了しますか？",
+      "Unsaved changes are still being saved. Save before closing?",
       { title: "Loop Vault", kind: "warning" },
     );
 

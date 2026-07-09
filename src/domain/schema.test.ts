@@ -96,4 +96,16 @@ describe("parseVaultFileJson", () => {
     expect(result.quarantine).toHaveLength(1);
     expect(result.quarantine[0]?.index).toBe(1);
   });
+
+  it("loads legacy ideas without progressionBlocks by defaulting to an empty array", () => {
+    const legacyIdea = idea();
+    const result = parseVaultFileJson(JSON.stringify(vault({ ideas: [legacyIdea] })));
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+
+    expect(result.vault.ideas[0]?.progressionBlocks).toEqual([]);
+  });
 });

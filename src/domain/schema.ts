@@ -13,6 +13,32 @@ export const statusSchema = z.enum([
 
 export const assetTypeSchema = z.enum(["midi", "audio", "flp", "other"]);
 
+export const chordQualitySchema = z.enum([
+  "maj",
+  "min",
+  "dim",
+  "aug",
+  "maj7",
+  "min7",
+  "dom7",
+  "min7b5",
+  "dim7",
+  "maj9",
+  "min9",
+  "dom9",
+  "min11",
+  "dom13",
+  "sus2",
+  "sus4",
+  "dom7sus4",
+  "add9",
+  "six",
+  "min6",
+  "sixNine",
+]);
+
+export const tensionSchema = z.enum(["9", "b9", "#9", "11", "#11", "13", "b13"]);
+
 const isoDateSchema = z.string().datetime({ offset: true });
 
 export const referenceSchema = z
@@ -40,6 +66,56 @@ export const statusHistoryEntrySchema = z
   })
   .strict();
 
+export const chordSymbolSchema = z
+  .object({
+    root: z.number().int().min(0).max(11),
+    quality: chordQualitySchema,
+    tensions: z.array(tensionSchema),
+    bass: z.number().int().min(0).max(11).optional(),
+    label: z.string().min(1),
+  })
+  .strict();
+
+export const chordTimelineItemSchema = z
+  .object({
+    bar: z.number().int().min(1),
+    beat: z.number().min(1),
+    durationBeats: z.number().positive(),
+    chord: chordSymbolSchema,
+    confidence: z.number().min(0).max(1),
+    alternatives: z
+      .array(
+        z
+          .object({
+            chord: chordSymbolSchema,
+            confidence: z.number().min(0).max(1),
+          })
+          .strict(),
+      )
+      .max(2),
+    warnings: z.array(z.string()),
+  })
+  .strict();
+
+export const savedProgressionBlockSchema = z
+  .object({
+    id: z.string().uuid(),
+    sourceAssetId: z.string().uuid().optional(),
+    sourceFileName: z.string().optional(),
+    startBar: z.number().int().min(1).optional(),
+    endBar: z.number().int().min(1).optional(),
+    lengthBars: z.number().int().positive().optional(),
+    summaryText: z.string(),
+    chords: z.array(chordTimelineItemSchema),
+    detectedKey: z.string().optional(),
+    bpm: z.number().positive().optional(),
+    memo: z.string().optional(),
+    tags: z.array(z.string()),
+    capturedAt: isoDateSchema,
+    analyzerVersion: z.string().min(1),
+  })
+  .strict();
+
 export const songIdeaSchema: z.ZodType<SongIdea> = z
   .object({
     id: z.string().uuid(),
@@ -60,6 +136,7 @@ export const songIdeaSchema: z.ZodType<SongIdea> = z
     references: z.array(referenceSchema),
     assets: z.array(assetSchema),
     chordDrip: z.unknown().optional(),
+    progressionBlocks: z.array(savedProgressionBlockSchema).default([]),
     statusHistory: z.array(statusHistoryEntrySchema),
     createdAt: isoDateSchema,
     updatedAt: isoDateSchema,
