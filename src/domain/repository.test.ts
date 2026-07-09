@@ -170,7 +170,7 @@ describe("JsonVaultRepository", () => {
 
     const result = await repo.load();
 
-    expect(result.vault.ideas).toEqual([validIdea]);
+    expect(result.vault.ideas).toEqual([{ ...validIdea, progressionBlocks: [] }]);
     expect(result.quarantine).toHaveLength(1);
     expect(result.quarantine[0]?.index).toBe(1);
   });

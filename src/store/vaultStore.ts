@@ -6,9 +6,18 @@ import {
   type VaultImportMode,
   type VaultRepository,
 } from "../domain/repository";
+import { analyzeMidi } from "../domain/midi";
 import { transition, type TransitionResult } from "../domain/transition";
 import type { QuarantinedRecord } from "../domain/schema";
-import type { SongIdea, Status, VaultFile } from "../domain/types";
+import type {
+  MidiProgressionAnalysis,
+  ProgressionBlockCandidate,
+  SavedProgressionBlock,
+  SongIdea,
+  Status,
+  VaultFile,
+} from "../domain/types";
+import type { AnalyzeMidiOptions } from "../domain/midi/types";
 
 export type LoadStatus =
   | "idle"
@@ -31,9 +40,31 @@ export interface ReadonlyState {
   fileVersion?: number;
 }
 
+export type AnalysisStatus = "idle" | "analyzing" | "done" | "error";
+
+export interface AnalysisState {
+  status: AnalysisStatus;
+  result?: MidiProgressionAnalysis;
+  error?: string;
+}
+
+export interface SongIdeaDraft {
+  title: string;
+  status?: Status;
+  bpm?: number;
+  key?: string;
+  genre?: string;
+  moods?: string[];
+  chordMemo?: string;
+  nextAction?: string;
+  progressionBlock?: SavedProgressionBlock | ProgressionBlockCandidate;
+  progressionAnalysis?: MidiProgressionAnalysis;
+}
+
 export interface VaultStoreState {
   ideas: SongIdea[];
   settings: VaultFile["settings"];
+  analysis: AnalysisState;
   loadStatus: LoadStatus;
   quarantine: QuarantinedRecord[];
   recovery?: RecoveryState;
@@ -45,14 +76,26 @@ export interface VaultStoreState {
   error?: string;
   initialize: () => Promise<void>;
   createIdea: (title: string, status?: Status) => string | undefined;
+  createIdeaFromDraft: (draft: SongIdeaDraft) => string | undefined;
   updateIdea: (id: string, changes: Partial<SongIdea>) => void;
   deleteIdea: (id: string) => void;
+  appendBlockToIdea: (
+    ideaId: string,
+    block: SavedProgressionBlock | ProgressionBlockCandidate,
+    analysis?: MidiProgressionAnalysis,
+  ) => void;
+  removeProgressionBlock: (ideaId: string, blockId: string) => void;
   transitionIdea: (id: string, to: Status, now?: Date) => TransitionResult;
   updateNextAction: (id: string, text: string, now?: Date) => void;
+  analyzeMidiBytes: (
+    bytes: Uint8Array,
+    options?: AnalyzeMidiOptions,
+  ) => MidiProgressionAnalysis | undefined;
+  clearAnalysis: () => void;
   setMonthlyGoal: (goal: number) => void;
   refreshBackups: () => Promise<void>;
-  exportVault: (path: string) => Promise<void>;
-  importVault: (path: string, mode: VaultImportMode) => Promise<void>;
+  exportVault: (path: string) => Promise<boolean>;
+  importVault: (path: string, mode: VaultImportMode) => Promise<boolean>;
   restoreBackup: (backupName: string) => Promise<void>;
   flush: () => Promise<void>;
 }
@@ -182,22 +225,37 @@ export function createVaultStore(
       },
 
       createIdea(title, status = "idea") {
-        const trimmedTitle = title.trim();
+        return get().createIdeaFromDraft({ title, status });
+      },
+
+      createIdeaFromDraft(draft) {
+        const trimmedTitle = draft.title.trim();
         if (!trimmedTitle) {
           return undefined;
         }
 
         const createdAt = now().toISOString();
+        const status = draft.status ?? "idea";
         const id = idFactory();
+        const progressionBlock = draft.progressionBlock
+          ? toSavedProgressionBlock(draft.progressionBlock, draft.progressionAnalysis, {
+              idFactory,
+              now,
+            })
+          : undefined;
         const idea: SongIdea = {
           id,
           title: trimmedTitle.slice(0, 80),
-          moods: [],
+          ...(draft.bpm ? { bpm: draft.bpm } : {}),
+          ...(draft.key ? { key: draft.key } : {}),
+          ...(draft.genre ? { genre: draft.genre } : {}),
+          moods: draft.moods ?? [],
           status,
-          nextAction: { text: "", updatedAt: createdAt },
-          chordMemo: "",
+          nextAction: { text: draft.nextAction ?? "", updatedAt: createdAt },
+          chordMemo: draft.chordMemo ?? "",
           references: [],
           assets: [],
+          progressionBlocks: progressionBlock ? [progressionBlock] : [],
           statusHistory: [{ status, at: createdAt }],
           createdAt,
           updatedAt: createdAt,
@@ -221,6 +279,50 @@ export function createVaultStore(
         applyVaultChange((vault) => ({
           ...vault,
           ideas: vault.ideas.filter((idea) => idea.id !== id),
+        }));
+      },
+
+      appendBlockToIdea(ideaId, block, analysis) {
+        const savedBlock = toSavedProgressionBlock(block, analysis, {
+          idFactory,
+          now,
+        });
+        applyVaultChange((vault) => ({
+          ...vault,
+          ideas: vault.ideas.map((idea) =>
+            idea.id === ideaId
+              ? {
+                  ...idea,
+                  progressionBlocks: [
+                    ...(idea.progressionBlocks ?? []),
+                    savedBlock,
+                  ],
+                  bpm: idea.bpm ?? savedBlock.bpm,
+                  key: idea.key ?? savedBlock.detectedKey,
+                  chordMemo: idea.chordMemo.trim()
+                    ? idea.chordMemo
+                    : savedBlock.summaryText,
+                  updatedAt: now().toISOString(),
+                }
+              : idea,
+          ),
+        }));
+      },
+
+      removeProgressionBlock(ideaId, blockId) {
+        applyVaultChange((vault) => ({
+          ...vault,
+          ideas: vault.ideas.map((idea) =>
+            idea.id === ideaId
+              ? {
+                  ...idea,
+                  progressionBlocks: (idea.progressionBlocks ?? []).filter(
+                    (block) => block.id !== blockId,
+                  ),
+                  updatedAt: now().toISOString(),
+                }
+              : idea,
+          ),
         }));
       },
 
@@ -263,6 +365,24 @@ export function createVaultStore(
         }));
       },
 
+      analyzeMidiBytes(bytes, analyzeOptions = {}) {
+        set({ analysis: { status: "analyzing" }, error: undefined });
+        try {
+          const result = analyzeMidi(bytes, analyzeOptions);
+          set({ analysis: { status: "done", result } });
+          return result;
+        } catch (error) {
+          const message =
+            error instanceof Error ? error.message : "MIDI could not be analyzed.";
+          set({ analysis: { status: "error", error: message }, error: message });
+          return undefined;
+        }
+      },
+
+      clearAnalysis() {
+        set({ analysis: emptyAnalysisState() });
+      },
+
       setMonthlyGoal(goal) {
         const monthlyGoal = Math.max(1, Math.trunc(goal));
         applyVaultChange((vault) => ({
@@ -280,6 +400,7 @@ export function createVaultStore(
         set({ error: undefined });
         try {
           await options.repository.exportTo(path);
+          return true;
         } catch (error) {
           set({
             error:
@@ -287,6 +408,7 @@ export function createVaultStore(
                 ? error.message
                 : "Vault could not be exported.",
           });
+          return false;
         }
       },
 
@@ -296,6 +418,7 @@ export function createVaultStore(
           const result = await options.repository.importFrom(path, { mode });
           setVault(result.vault, result.quarantine);
           await get().refreshBackups();
+          return true;
         } catch (error) {
           set({
             loadStatus: "ready",
@@ -304,6 +427,7 @@ export function createVaultStore(
                 ? error.message
                 : "Vault could not be imported.",
           });
+          return false;
         }
       },
 
@@ -358,6 +482,7 @@ export function initialState(): Pick<
   VaultStoreState,
   | "ideas"
   | "settings"
+  | "analysis"
   | "loadStatus"
   | "quarantine"
   | "recovery"
@@ -370,6 +495,7 @@ export function initialState(): Pick<
   return {
     ideas: [],
     settings: createEmptyVault().settings,
+    analysis: emptyAnalysisState(),
     loadStatus: "idle",
     quarantine: [],
     recovery: undefined,
@@ -379,6 +505,10 @@ export function initialState(): Pick<
     backups: [],
     error: undefined,
   };
+}
+
+function emptyAnalysisState(): AnalysisState {
+  return { status: "idle" };
 }
 
 async function safeListBackups(
@@ -415,5 +545,32 @@ function currentVault(state: VaultStoreState): VaultFile {
     fileVersion: 1,
     settings: state.settings,
     ideas: state.ideas,
+  };
+}
+
+function toSavedProgressionBlock(
+  block: SavedProgressionBlock | ProgressionBlockCandidate,
+  analysis: MidiProgressionAnalysis | undefined,
+  context: { idFactory: () => string; now: () => Date },
+): SavedProgressionBlock {
+  if ("capturedAt" in block) {
+    return block;
+  }
+
+  return {
+    id: context.idFactory(),
+    ...(analysis?.sourceAssetId ? { sourceAssetId: analysis.sourceAssetId } : {}),
+    ...(analysis?.fileName ? { sourceFileName: analysis.fileName } : {}),
+    startBar: block.startBar,
+    endBar: block.endBar,
+    lengthBars: block.lengthBars,
+    summaryText: block.summaryText,
+    chords: block.chords,
+    ...(analysis?.detectedKey ? { detectedKey: analysis.detectedKey } : {}),
+    ...(analysis?.bpm ? { bpm: analysis.bpm } : {}),
+    memo: block.warnings.length > 0 ? block.warnings.join("; ") : undefined,
+    tags: [],
+    capturedAt: context.now().toISOString(),
+    analyzerVersion: analysis?.analyzerVersion ?? "unknown",
   };
 }

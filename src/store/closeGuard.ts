@@ -1,10 +1,10 @@
-import { confirm } from "@tauri-apps/plugin-dialog";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { confirm } from "@tauri-apps/plugin-dialog";
 import type { StoreApi } from "zustand/vanilla";
 import type { VaultStoreState } from "./vaultStore";
 
 export function shouldBlockClose(state: VaultStoreState): boolean {
-  return state.unsaved || state.saving;
+  return state.unsaved;
 }
 
 export function registerBrowserCloseGuard(
@@ -30,15 +30,20 @@ export async function registerTauriCloseGuard(
     return () => undefined;
   }
 
+  let closeInProgress = false;
+
   return getCurrentWindow().onCloseRequested(async (event) => {
-    const state = store.getState();
-    if (!shouldBlockClose(state)) {
+    if (closeInProgress) {
+      return;
+    }
+
+    if (!shouldBlockClose(store.getState())) {
       return;
     }
 
     event.preventDefault();
     const shouldClose = await confirm(
-      "未保存の変更があります。保存して終了しますか？",
+      "未保存の変更があります。保存して閉じますか？",
       { title: "Loop Vault", kind: "warning" },
     );
 
@@ -46,7 +51,14 @@ export async function registerTauriCloseGuard(
       return;
     }
 
+    closeInProgress = true;
     await store.getState().flush();
-    await getCurrentWindow().close();
+
+    if (store.getState().unsaved) {
+      closeInProgress = false;
+      return;
+    }
+
+    await getCurrentWindow().destroy();
   });
 }
