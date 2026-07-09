@@ -16,6 +16,7 @@ import type { AnalysisState } from "../store/vaultStore";
 import type { AppCopy, AppLanguage } from "../i18n";
 import { ProgressionGrid, timelineStartBeat } from "../ui/ProgressionGrid";
 import { chordProgressFraction } from "../ui/playbackProgress";
+import { confidenceLabel, shouldShowConfidence, warningLabel } from "./captureLabels";
 
 interface CaptureViewProps {
   ideas: SongIdea[];
@@ -329,7 +330,7 @@ function TimelineDetails({
   );
 }
 
-function ProgressionCandidateCard({
+export function ProgressionCandidateCard({
   candidate,
   candidateIndex,
   bpm,
@@ -359,6 +360,7 @@ function ProgressionCandidateCard({
   const [title, setTitle] = useState(`${language === "ja" ? "コード進行" : "Progression"} ${candidate.labels.slice(0, 4).join(" - ")}`);
   const [chords, setChords] = useState(candidate.chords);
   const [labelError, setLabelError] = useState<string>();
+  const [isEditing, setIsEditing] = useState(false);
   const [selectedChordIndex, setSelectedChordIndex] = useState(0);
   const [playingChordIndex, setPlayingChordIndex] = useState<number | null>(null);
   const [previewStartedAt, setPreviewStartedAt] = useState<number | null>(null);
@@ -376,6 +378,7 @@ function ProgressionCandidateCard({
     setTitle(`${language === "ja" ? "コード進行" : "Progression"} ${candidate.labels.slice(0, 4).join(" - ")}`);
     setChords(candidate.chords);
     setLabelError(undefined);
+    setIsEditing(false);
     setSelectedChordIndex(0);
     stopVisualPreview();
     return stopVisualPreview;
@@ -422,6 +425,14 @@ function ProgressionCandidateCard({
     void stopPreviewAudio();
   }
 
+  function resetEdits() {
+    setSummary(candidate.summaryText);
+    setTitle(`${language === "ja" ? "コード進行" : "Progression"} ${candidate.labels.slice(0, 4).join(" - ")}`);
+    setChords(candidate.chords);
+    setLabelError(undefined);
+    setSelectedChordIndex(0);
+  }
+
   async function previewWholeCandidate() {
     stopVisualPreview();
     const baseBeat = firstTimelineBeat(chords);
@@ -466,6 +477,8 @@ function ProgressionCandidateCard({
           elapsedSeconds,
         );
   const selectedChord = chords[selectedChordIndex] ?? chords[0];
+  const visibleWarnings = candidate.warnings.map((warning) => warningLabel(warning, language));
+  const shouldDisplayConfidence = shouldShowConfidence(candidate.confidence);
 
   return (
     <div className="border border-stone-800 bg-stone-950 p-4">
@@ -475,10 +488,15 @@ function ProgressionCandidateCard({
             {language === "ja" ? `候補 ${candidateIndex + 1}` : `Candidate ${candidateIndex + 1}`}
           </p>
           <p className="mt-2 font-semibold">{language === "ja" ? `${candidate.startBar}-${candidate.endBar}小節` : `Bars ${candidate.startBar}-${candidate.endBar}`} ({candidate.lengthBars})</p>
-          <p className="mt-1 text-sm text-stone-400">{confidenceLabel(candidate.confidence, language)}</p>
+          {shouldDisplayConfidence ? (
+            <p className="mt-1 text-sm text-amber-200">
+              {language === "ja" ? "信頼度" : "Confidence"}: {confidenceLabel(candidate.confidence, language)}
+            </p>
+          ) : null}
         </div>
         <span className="rounded bg-stone-800 px-2 py-1 text-xs text-teal-200">{candidate.labels.join(" - ")}</span>
       </div>
+      {summary.trim() ? <p className="mt-3 text-sm text-stone-300">{summary}</p> : null}
       <div className="mt-4">
         <ProgressionGrid
           chords={chords}
@@ -489,26 +507,53 @@ function ProgressionCandidateCard({
           onChordSelect={(index) => void selectChord(index)}
         />
       </div>
-      <textarea className={`${inputClass} mt-3 min-h-20`} value={summary} onChange={(event) => setSummary(event.target.value)} />
-      {selectedChord ? (
-        <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
-          <input
-            key={`${selectedChord.bar}-${selectedChord.beat}-${selectedChordIndex}`}
-            className={inputClass}
-            defaultValue={selectedChord.chord.label}
-            onBlur={(event) => updateChordLabel(selectedChordIndex, event.target.value)}
-            aria-label={language === "ja" ? `Bar ${selectedChord.bar} のコード` : `Chord at bar ${selectedChord.bar}`}
-          />
-          <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => void selectChord(selectedChordIndex)}>
-            ▶ {copy.capture.selectedChord}
+      {visibleWarnings.length > 0 ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {visibleWarnings.map((warning) => (
+            <span key={warning} className="rounded border border-amber-400/40 bg-amber-400/10 px-2 py-1 text-xs text-amber-100">
+              {language === "ja" ? "要確認" : "Review"}: {warning}
+            </span>
+          ))}
+        </div>
+      ) : null}
+
+      {isEditing ? (
+        <div className="mt-4 border border-stone-800 bg-stone-900/50 p-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm font-semibold">{language === "ja" ? `編集中: 候補 ${candidateIndex + 1}` : `Editing Candidate ${candidateIndex + 1}`}</p>
+            <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => setIsEditing(false)}>
+              {language === "ja" ? "編集を閉じる" : "Close editor"}
+            </button>
+          </div>
+          <label className="mt-3 block text-xs font-semibold uppercase tracking-[0.12em] text-stone-500">
+            {language === "ja" ? "保存タイトル" : "Save title"}
+          </label>
+          <input className={`${inputClass} mt-2`} value={title} onChange={(event) => setTitle(event.target.value)} placeholder={copy.capture.newIdeaTitle} />
+          <label className="mt-3 block text-xs font-semibold uppercase tracking-[0.12em] text-stone-500">
+            Summary
+          </label>
+          <textarea className={`${inputClass} mt-2 min-h-20`} value={summary} onChange={(event) => setSummary(event.target.value)} />
+          {selectedChord ? (
+            <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
+              <input
+                key={`${selectedChord.bar}-${selectedChord.beat}-${selectedChordIndex}`}
+                className={inputClass}
+                defaultValue={selectedChord.chord.label}
+                onBlur={(event) => updateChordLabel(selectedChordIndex, event.target.value)}
+                aria-label={language === "ja" ? `Bar ${selectedChord.bar} のコード` : `Chord at bar ${selectedChord.bar}`}
+              />
+              <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => void selectChord(selectedChordIndex)}>
+                ▶ {copy.capture.selectedChord}
+              </button>
+            </div>
+          ) : null}
+          {labelError ? <p className="mt-2 text-xs text-red-200">{labelError}</p> : null}
+          <button className="mt-3 rounded border border-stone-700 px-3 py-2 text-sm" onClick={resetEdits}>
+            {language === "ja" ? "元に戻す" : "Reset edits"}
           </button>
         </div>
       ) : null}
-      {labelError ? <p className="mt-2 text-xs text-red-200">{labelError}</p> : null}
-      <input className={`${inputClass} mt-2`} value={title} onChange={(event) => setTitle(event.target.value)} placeholder={copy.capture.newIdeaTitle} />
-      {candidate.warnings.length > 0 ? (
-        <p className="mt-2 text-xs text-amber-200">{candidate.warnings.map((warning) => warningLabel(warning, language)).join(" / ")}</p>
-      ) : null}
+
       <div className="mt-3 flex flex-wrap gap-2">
         <button className="rounded bg-cyan-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => void previewWholeCandidate()}>
           {copy.common.preview}
@@ -518,6 +563,9 @@ function ProgressionCandidateCard({
             {copy.common.stop}
           </button>
         ) : null}
+        <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => setIsEditing((value) => !value)}>
+          {isEditing ? (language === "ja" ? "編集を閉じる" : "Close editor") : (language === "ja" ? "編集" : "Edit")}
+        </button>
         <button className="rounded bg-teal-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => onCreate(editedCandidate, title)}>
           {copy.capture.createIdea}
         </button>
@@ -539,30 +587,6 @@ function Metric({ label, value }: { label: string; value: string }) {
       <p className="mt-1 font-semibold text-stone-100">{value}</p>
     </div>
   );
-}
-
-function confidenceLabel(value: number, language: AppLanguage): string {
-  if (value >= 0.8) return language === "ja" ? "信頼度: 高" : "Confidence: High";
-  if (value >= 0.5) return language === "ja" ? "信頼度: 中" : "Confidence: Medium";
-  return language === "ja" ? "信頼度: 要確認" : "Confidence: Needs review";
-}
-
-function warningLabel(warning: string, language: AppLanguage): string {
-  const ja: Record<string, string> = {
-    "ambiguous-bass": "低音の解釈に注意",
-    "low-confidence": "コード候補が不安定",
-    "melody-heavy": "メロディ混在の可能性",
-    "sparse-notes": "音数が少ないため要確認",
-    "slash-chord-possible": "分数コードの可能性",
-  };
-  const en: Record<string, string> = {
-    "ambiguous-bass": "Bass note may be ambiguous",
-    "low-confidence": "Chord candidate needs review",
-    "melody-heavy": "Melody notes may be mixed in",
-    "sparse-notes": "Sparse notes; review recommended",
-    "slash-chord-possible": "Slash chord may fit",
-  };
-  return (language === "ja" ? ja[warning] : en[warning]) ?? warning;
 }
 
 function fileNameFromPath(path: string): string {
