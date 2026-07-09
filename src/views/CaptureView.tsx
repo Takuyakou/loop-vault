@@ -1,8 +1,10 @@
+import { getCurrentWebview } from "@tauri-apps/api/webview";
 import {
   open as openFileDialog,
 } from "@tauri-apps/plugin-dialog";
 import { readFile } from "@tauri-apps/plugin-fs";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { DragEvent } from "react";
 import { parseChordLabel } from "../domain/chords";
 import { formatProgressionText } from "../domain/progressionText";
 import type {
@@ -62,6 +64,98 @@ export function CaptureView({
   copy,
   language,
 }: CaptureViewProps) {
+  const [isDraggingMidi, setIsDraggingMidi] = useState(false);
+  const result = analysis.result;
+
+  const analyzeMidiBytesWithToast = useCallback(
+    (bytes: Uint8Array, fileName: string) => {
+      const analyzed = analyzeMidiBytes(bytes, { fileName });
+      setToast(analyzed ? copy.toast.midiAnalyzed : copy.toast.midiFailed);
+    },
+    [analyzeMidiBytes, copy.toast.midiAnalyzed, copy.toast.midiFailed, setToast],
+  );
+
+  const analyzeMidiPath = useCallback(
+    async (path: string) => {
+      if (!isMidiFileName(path)) {
+        setToast(copy.toast.midiDropInvalid);
+        return;
+      }
+
+      try {
+        const bytes = await readFile(path);
+        analyzeMidiBytesWithToast(bytes, fileNameFromPath(path));
+      } catch (error) {
+        setToast(error instanceof Error ? error.message : copy.toast.midiReadFailed);
+      }
+    },
+    [analyzeMidiBytesWithToast, copy.toast.midiDropInvalid, copy.toast.midiReadFailed, setToast],
+  );
+
+  const analyzeDroppedFile = useCallback(
+    async (file: File) => {
+      if (!isMidiFileName(file.name)) {
+        setToast(copy.toast.midiDropInvalid);
+        return;
+      }
+
+      try {
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        analyzeMidiBytesWithToast(bytes, file.name);
+      } catch (error) {
+        setToast(error instanceof Error ? error.message : copy.toast.midiReadFailed);
+      }
+    },
+    [analyzeMidiBytesWithToast, copy.toast.midiDropInvalid, copy.toast.midiReadFailed, setToast],
+  );
+
+  useEffect(() => {
+    if (!("__TAURI_INTERNALS__" in window)) {
+      return undefined;
+    }
+
+    let disposed = false;
+    let unlisten: (() => void) | undefined;
+
+    void getCurrentWebview()
+      .onDragDropEvent((event) => {
+        if (event.payload.type === "enter" || event.payload.type === "over") {
+          setIsDraggingMidi(true);
+          return;
+        }
+
+        if (event.payload.type === "leave") {
+          setIsDraggingMidi(false);
+          return;
+        }
+
+        setIsDraggingMidi(false);
+        const path = event.payload.paths.find(isMidiFileName);
+        if (!path) {
+          setToast(copy.toast.midiDropInvalid);
+          return;
+        }
+
+        void analyzeMidiPath(path);
+      })
+      .then((listener) => {
+        if (disposed) {
+          listener();
+          return;
+        }
+
+        unlisten = listener;
+      })
+      .catch(() => {
+        setIsDraggingMidi(false);
+      });
+
+    return () => {
+      disposed = true;
+      unlisten?.();
+    };
+  }, [analyzeMidiPath, copy.toast.midiDropInvalid, setToast]);
+
   async function chooseMidi() {
     if (!("__TAURI_INTERNALS__" in window)) {
       setToast(copy.toast.desktopMidiOnly);
@@ -76,14 +170,58 @@ export function CaptureView({
       return;
     }
 
-    try {
-      const bytes = await readFile(path);
-      const result = analyzeMidiBytes(bytes, { fileName: fileNameFromPath(path) });
-      setToast(result ? copy.toast.midiAnalyzed : copy.toast.midiFailed);
-    } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.midiReadFailed);
-    }
+    await analyzeMidiPath(path);
   }
+
+  function handleDragEnter(event: DragEvent<HTMLDivElement>) {
+    if (!hasDroppedFiles(event)) {
+      return;
+    }
+
+    event.preventDefault();
+    setIsDraggingMidi(true);
+  }
+
+  function handleDragOver(event: DragEvent<HTMLDivElement>) {
+    if (!hasDroppedFiles(event)) {
+      return;
+    }
+
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+    setIsDraggingMidi(true);
+  }
+
+  function handleDragLeave(event: DragEvent<HTMLDivElement>) {
+    if (event.currentTarget.contains(event.relatedTarget as Node | null)) {
+      return;
+    }
+
+    setIsDraggingMidi(false);
+  }
+
+  function handleDrop(event: DragEvent<HTMLDivElement>) {
+    if (!hasDroppedFiles(event)) {
+      return;
+    }
+
+    event.preventDefault();
+    setIsDraggingMidi(false);
+    const file = Array.from(event.dataTransfer.files).find((item) => isMidiFileName(item.name));
+    if (!file) {
+      setToast(copy.toast.midiDropInvalid);
+      return;
+    }
+
+    void analyzeDroppedFile(file);
+  }
+
+  const dropHandlers = {
+    onDragEnter: handleDragEnter,
+    onDragOver: handleDragOver,
+    onDragLeave: handleDragLeave,
+    onDrop: handleDrop,
+  };
 
   function saveNew(candidate: ProgressionBlockCandidate, title: string, nextAction: string) {
     const id = createIdeaFromDraft({
@@ -147,15 +285,14 @@ export function CaptureView({
     }
   }
 
-  const result = analysis.result;
-
   if (!result) {
     return (
-      <div className="py-5">
+      <div className="py-5" {...dropHandlers}>
         <CaptureEmptyState
           status={analysis.status}
           error={analysis.error}
           onChooseMidi={() => void chooseMidi()}
+          isDraggingMidi={isDraggingMidi}
           copy={copy}
           language={language}
         />
@@ -164,7 +301,8 @@ export function CaptureView({
   }
 
   return (
-    <div className="grid gap-5 py-5">
+    <div className="grid gap-5 py-5" {...dropHandlers}>
+      {isDraggingMidi ? <DropOverlay copy={copy} /> : null}
       <section className="border border-stone-800 bg-stone-950/70 p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -240,17 +378,19 @@ function CaptureEmptyState({
   status,
   error,
   onChooseMidi,
+  isDraggingMidi,
   copy,
   language,
 }: {
   status: AnalysisState["status"];
   error?: string;
   onChooseMidi: () => void;
+  isDraggingMidi: boolean;
   copy: AppCopy;
   language: AppLanguage;
 }) {
   return (
-    <section className="grid min-h-[32rem] place-items-center border border-stone-800 bg-stone-950/70 p-6 text-center">
+    <section className={`grid min-h-[32rem] place-items-center border p-6 text-center transition-colors ${isDraggingMidi ? "border-teal-300 bg-teal-400/10" : "border-stone-800 bg-stone-950/70"}`}>
       <div className="max-w-2xl">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-teal-300">
           {language === "ja" ? "MIDI Capture" : "MIDI Capture"}
@@ -261,6 +401,12 @@ function CaptureEmptyState({
           <StepCard index="1" text={copy.capture.emptyStepTimeline} />
           <StepCard index="2" text={copy.capture.emptyStepCandidates} />
           <StepCard index="3" text={copy.capture.emptyStepSave} />
+        </div>
+        <div className={`mt-7 border border-dashed p-5 ${isDraggingMidi ? "border-teal-300 bg-teal-400/10 text-teal-50" : "border-stone-700 bg-stone-950 text-stone-300"}`}>
+          <p className="text-lg font-semibold">
+            {isDraggingMidi ? copy.capture.dropActive : copy.capture.dropMidi}
+          </p>
+          <p className="mt-2 text-sm text-stone-400">{copy.capture.dropHelp}</p>
         </div>
         <button className="mt-7 rounded bg-teal-400 px-5 py-3 text-sm font-semibold text-stone-950" onClick={onChooseMidi}>
           {copy.capture.loadMidi}
@@ -280,6 +426,17 @@ function CaptureEmptyState({
         ) : null}
       </div>
     </section>
+  );
+}
+
+function DropOverlay({ copy }: { copy: AppCopy }) {
+  return (
+    <div className="pointer-events-none fixed inset-6 z-50 grid place-items-center border-2 border-dashed border-teal-300 bg-stone-950/90 p-8 text-center text-teal-50 shadow-2xl">
+      <div>
+        <p className="text-2xl font-semibold">{copy.capture.dropActive}</p>
+        <p className="mt-2 text-sm text-stone-300">{copy.capture.dropHelp}</p>
+      </div>
+    </div>
   );
 }
 
@@ -752,6 +909,14 @@ function Metric({ label, value }: { label: string; value: string }) {
 function fileNameFromPath(path: string): string {
   const normalized = path.replace(/\\/g, "/");
   return normalized.split("/").pop() || "midi.mid";
+}
+
+export function isMidiFileName(fileName: string): boolean {
+  return /\.(mid|midi)$/i.test(fileName);
+}
+
+function hasDroppedFiles(event: DragEvent<HTMLDivElement>): boolean {
+  return Array.from(event.dataTransfer.types).includes("Files");
 }
 
 async function previewSingleChord(chord: ChordSymbol): Promise<void> {
