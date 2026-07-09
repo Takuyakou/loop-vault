@@ -89,7 +89,7 @@ describe("vault store", () => {
       vault: {
         ...createEmptyVault(),
         ideas: [idea],
-        settings: { monthlyGoal: 2 },
+        settings: { monthlyGoal: 2, language: "ja" },
       },
       quarantine: [],
       created: false,
@@ -101,6 +101,18 @@ describe("vault store", () => {
     expect(store.getState().ideas).toEqual([idea]);
     expect(store.getState().settings.monthlyGoal).toBe(2);
     expect(store.getState().loadStatus).toBe("ready");
+  });
+
+  it("updates the UI language setting through autosave", async () => {
+    const repository = new FakeRepository();
+    const store = createVaultStore({ repository });
+    await store.getState().initialize();
+
+    store.getState().setLanguage("en");
+    await store.getState().flush();
+
+    expect(store.getState().settings.language).toBe("en");
+    expect(repository.saved[0]?.settings.language).toBe("en");
   });
 
   it("debounces autosave for edits", async () => {

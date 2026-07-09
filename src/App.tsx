@@ -26,6 +26,7 @@ import type {
   SongIdea,
   Status,
 } from "./domain/types";
+import { appCopy, type AppCopy, type AppLanguage } from "./i18n";
 import {
   registerBrowserCloseGuard,
   registerTauriCloseGuard,
@@ -73,6 +74,7 @@ function App() {
   const restoreBackup = useStore(defaultVaultStore, (state) => state.restoreBackup);
   const backups = useStore(defaultVaultStore, (state) => state.backups);
   const setMonthlyGoal = useStore(defaultVaultStore, (state) => state.setMonthlyGoal);
+  const setLanguage = useStore(defaultVaultStore, (state) => state.setLanguage);
   const refreshBackups = useStore(defaultVaultStore, (state) => state.refreshBackups);
   const exportVault = useStore(defaultVaultStore, (state) => state.exportVault);
   const importVault = useStore(defaultVaultStore, (state) => state.importVault);
@@ -96,6 +98,8 @@ function App() {
   const deleteTimer = useRef<ReturnType<typeof setTimeout>>();
 
   const selectedIdea = ideas.find((idea) => idea.id === selectedId) ?? ideas[0];
+  const language = settings.language;
+  const copy = appCopy[language];
 
   useEffect(() => {
     void initialize();
@@ -141,7 +145,7 @@ function App() {
 
 async function analyzeMidiPath(path: string) {
     if (!("__TAURI_INTERNALS__" in window)) {
-      setToast("MIDI解析はデスクトップ版で使えます。");
+      setToast(copy.toast.desktopMidiOnly);
       return;
     }
 
@@ -149,14 +153,14 @@ async function analyzeMidiPath(path: string) {
       const bytes = await readFile(path);
       const result = analyzeMidiBytes(bytes, { fileName: fileNameFromPath(path) });
       setView("capture");
-      setToast(result ? "MIDIを解析しました。" : "MIDI解析に失敗しました。");
+      setToast(result ? copy.toast.midiAnalyzed : copy.toast.midiFailed);
     } catch (error) {
-      setToast(error instanceof Error ? error.message : "MIDIファイルを読み込めませんでした。");
+      setToast(error instanceof Error ? error.message : copy.toast.midiReadFailed);
     }
   }
 
   function requestDelete(idea: SongIdea) {
-    if (!window.confirm(`「${idea.title}」を削除しますか？`)) {
+    if (!window.confirm(language === "ja" ? `「${idea.title}」を削除しますか？` : `Delete "${idea.title}"?`)) {
       return;
     }
 
@@ -185,7 +189,8 @@ async function analyzeMidiPath(path: string) {
         setSettingsOpen(true);
         void refreshBackups();
       }}
-      saveLabel={saving ? "保存中" : unsaved ? "未保存" : "保存済み"}
+      copy={copy}
+      saveLabel={saving ? copy.save.saving : unsaved ? copy.save.unsaved : copy.save.saved}
     />
   );
 
@@ -195,11 +200,13 @@ async function analyzeMidiPath(path: string) {
         {shell}
         {loadStatus === "ready" ? (
           <>
-            <QuarantineNotice count={quarantine.length} />
+            <QuarantineNotice count={quarantine.length} copy={copy} />
             {view === "home" ? (
               <HomeView
                 ideas={ideas}
                 monthlyGoal={settings.monthlyGoal}
+                copy={copy}
+                language={language}
                 openDetail={openDetail}
                 updateNextAction={updateNextAction}
                 transitionIdea={transitionIdea}
@@ -211,6 +218,8 @@ async function analyzeMidiPath(path: string) {
                 ideas={pendingDelete ? ideas.filter((idea) => idea.id !== pendingDelete.id) : ideas}
                 openDetail={openDetail}
                 openCreate={() => setCreateOpen(true)}
+                copy={copy}
+                language={language}
               />
             ) : null}
             {view === "capture" ? (
@@ -229,6 +238,8 @@ async function analyzeMidiPath(path: string) {
                 appendBlockToIdea={appendBlockToIdea}
                 updateIdea={updateIdea}
                 setToast={setToast}
+                copy={copy}
+                language={language}
               />
             ) : null}
             {view === "detail" && selectedIdea ? (
@@ -241,10 +252,12 @@ async function analyzeMidiPath(path: string) {
                 transitionIdea={transitionIdea}
                 requestDelete={requestDelete}
                 setToast={setToast}
+                copy={copy}
+                language={language}
               />
             ) : null}
             {view === "detail" && !selectedIdea ? (
-              <EmptyState openCreate={() => setCreateOpen(true)} />
+              <EmptyState openCreate={() => setCreateOpen(true)} copy={copy} />
             ) : null}
           </>
         ) : (
@@ -253,7 +266,9 @@ async function analyzeMidiPath(path: string) {
             recovery={recovery}
             readonly={readonly}
             error={error}
+            language={language}
             restoreBackup={restoreBackup}
+            copy={copy}
           />
         )}
       </section>
@@ -261,28 +276,33 @@ async function analyzeMidiPath(path: string) {
         <CreateDialog
           onCreate={handleCreate}
           onClose={() => setCreateOpen(false)}
+          copy={copy}
+          language={language}
         />
       ) : null}
       {isSettingsOpen ? (
         <SettingsDialog
           monthlyGoal={settings.monthlyGoal}
+          language={language}
           backups={backups}
           error={error}
           setMonthlyGoal={setMonthlyGoal}
+          setLanguage={setLanguage}
           refreshBackups={refreshBackups}
           restoreBackup={restoreBackup}
           exportVault={exportVault}
           importVault={importVault}
           setToast={setToast}
+          copy={copy}
           onClose={() => setSettingsOpen(false)}
         />
       ) : null}
       {pendingDelete ? (
         <div className="fixed bottom-4 left-1/2 z-40 w-[min(92vw,440px)] -translate-x-1/2 border border-stone-700 bg-stone-900 p-3 shadow-2xl">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-sm text-stone-200">「{pendingDelete.title}」を削除します</p>
+            <p className="text-sm text-stone-200">{language === "ja" ? `「${pendingDelete.title}」を削除します` : `Deleting "${pendingDelete.title}"`}</p>
             <button className="rounded bg-teal-500 px-3 py-2 text-sm font-semibold text-stone-950" onClick={undoDelete}>
-              元に戻す
+              {language === "ja" ? "元に戻す" : "Undo"}
             </button>
           </div>
         </div>
@@ -301,26 +321,28 @@ function AppShell({
   setView,
   openCreate,
   openSettings,
+  copy,
   saveLabel,
 }: {
   view: View;
   setView: (view: View) => void;
   openCreate: () => void;
   openSettings: () => void;
+  copy: AppCopy;
   saveLabel: string;
 }) {
   return (
     <header className="flex flex-col gap-4 border-b border-stone-800 pb-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <p className="text-xs uppercase tracking-[0.2em] text-teal-300">Loop Vault</p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-normal sm:text-3xl">次に鳴らすLoopを選ぶ。</h1>
+        <h1 className="mt-1 text-2xl font-semibold tracking-normal sm:text-3xl">{copy.hero}</h1>
       </div>
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <button className={tabClass(view === "home")} onClick={() => setView("home")}>ホーム</button>
-        <button className={tabClass(view === "capture")} onClick={() => setView("capture")}>MIDI解析</button>
-        <button className={tabClass(view === "library")} onClick={() => setView("library")}>ライブラリ</button>
-        <button className="rounded border border-stone-700 px-3 py-2 text-stone-300 hover:bg-stone-900" onClick={openSettings}>設定</button>
-        <button className="rounded bg-teal-400 px-3 py-2 font-semibold text-stone-950" onClick={openCreate}>新規</button>
+        <button className={tabClass(view === "home")} onClick={() => setView("home")}>{copy.nav.home}</button>
+        <button className={tabClass(view === "capture")} onClick={() => setView("capture")}>{copy.nav.capture}</button>
+        <button className={tabClass(view === "library")} onClick={() => setView("library")}>{copy.nav.library}</button>
+        <button className="rounded border border-stone-700 px-3 py-2 text-stone-300 hover:bg-stone-900" onClick={openSettings}>{copy.nav.settings}</button>
+        <button className="rounded bg-teal-400 px-3 py-2 font-semibold text-stone-950" onClick={openCreate}>{copy.nav.new}</button>
         <span className="min-w-20 rounded border border-stone-800 px-3 py-2 text-center text-stone-300">{saveLabel}</span>
       </div>
     </header>
@@ -329,38 +351,47 @@ function AppShell({
 
 function SettingsDialog({
   monthlyGoal,
+  language,
   backups,
   error,
   setMonthlyGoal,
+  setLanguage,
   refreshBackups,
   restoreBackup,
   exportVault,
   importVault,
   setToast,
+  copy,
   onClose,
 }: {
   monthlyGoal: number;
+  language: AppLanguage;
   backups: ReturnType<typeof defaultVaultStore.getState>["backups"];
   error?: string;
   setMonthlyGoal: (goal: number) => void;
+  setLanguage: (language: AppLanguage) => void;
   refreshBackups: () => Promise<void>;
   restoreBackup: (backupName: string) => Promise<void>;
   exportVault: (path: string) => Promise<boolean>;
   importVault: (path: string, mode: "replace" | "merge") => Promise<boolean>;
   setToast: (toast: string) => void;
+  copy: AppCopy;
   onClose: () => void;
 }) {
-  const [dataPath, setDataPath] = useState("デスクトップアプリのデータ保存場所");
+  const [dataPath, setDataPath] = useState<string>(copy.settings.dataPathFallback);
   const [importMode, setImportMode] = useState<"replace" | "merge">("merge");
 
   useEffect(() => {
-    if (!("__TAURI_INTERNALS__" in window)) return;
+    if (!("__TAURI_INTERNALS__" in window)) {
+      setDataPath(copy.settings.dataPathFallback);
+      return;
+    }
     void appDataDir().then((path) => setDataPath(`${path}loopvault/data.json`));
-  }, []);
+  }, [copy.settings.dataPathFallback]);
 
   async function exportData() {
     if (!("__TAURI_INTERNALS__" in window)) {
-      setToast("Exportはデスクトップ版で使えます。");
+      setToast(copy.toast.exportDesktopOnly);
       return;
     }
     const target = await saveFileDialog({
@@ -369,12 +400,12 @@ function SettingsDialog({
     });
     if (!target) return;
     const ok = await exportVault(target);
-    setToast(ok ? "Exportしました。" : "Exportに失敗しました。");
+    setToast(ok ? copy.toast.exported : copy.toast.exportFailed);
   }
 
   async function importData() {
     if (!("__TAURI_INTERNALS__" in window)) {
-      setToast("Importはデスクトップ版で使えます。");
+      setToast(copy.toast.importDesktopOnly);
       return;
     }
     const target = await openFileDialog({
@@ -383,39 +414,51 @@ function SettingsDialog({
     });
     if (typeof target !== "string") return;
     const ok = await importVault(target, importMode);
-    setToast(ok ? "Importしました。" : "Importに失敗しました。");
+    setToast(ok ? copy.toast.imported : copy.toast.importFailed);
   }
 
   async function openDataFolder() {
     if (!("__TAURI_INTERNALS__" in window)) {
-      setToast("Folder reveal is available in the Tauri desktop app.");
+      setToast(copy.toast.folderDesktopOnly);
       return;
     }
     await revealItemInDir(await appDataDir());
   }
 
   async function restore(name: string) {
-    if (!window.confirm(`${name} を復元しますか？現在のデータは置き換わります。`)) return;
+    if (!window.confirm(copy.settings.restoreConfirm(name))) return;
     await restoreBackup(name);
     await refreshBackups();
-    setToast("バックアップを復元しました。");
+    setToast(copy.toast.restoreDone);
   }
 
   return (
     <div className="fixed inset-0 z-40 grid place-items-center overflow-y-auto bg-black/70 px-4 py-6">
       <div className="w-full max-w-3xl border border-stone-700 bg-stone-900 p-5 shadow-2xl">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-xl font-semibold">設定</h2>
-          <button className="rounded px-2 py-1 text-stone-400" onClick={onClose}>閉じる</button>
+          <h2 className="text-xl font-semibold">{copy.settings.title}</h2>
+          <button className="rounded px-2 py-1 text-stone-400" onClick={onClose}>{copy.common.close}</button>
         </div>
         <div className="mt-5 grid gap-5 md:grid-cols-2">
           <section>
-            <h3 className="font-semibold">データ</h3>
-            <p className="mt-2 break-all text-sm text-stone-400">{dataPath}</p>
-            <button className="mt-3 rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => void openDataFolder()}>フォルダを開く</button>
+            <h3 className="font-semibold">{copy.settings.language}</h3>
+            <p className="mt-2 text-sm text-stone-400">{copy.settings.languageHelp}</p>
+            <select
+              className={`${inputClass} mt-3`}
+              value={language}
+              onChange={(event) => setLanguage(event.target.value as AppLanguage)}
+            >
+              <option value="ja">{copy.settings.japanese}</option>
+              <option value="en">{copy.settings.english}</option>
+            </select>
           </section>
           <section>
-            <h3 className="font-semibold">月間ゴール</h3>
+            <h3 className="font-semibold">{copy.settings.data}</h3>
+            <p className="mt-2 break-all text-sm text-stone-400">{dataPath}</p>
+            <button className="mt-3 rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => void openDataFolder()}>{copy.settings.openFolder}</button>
+          </section>
+          <section>
+            <h3 className="font-semibold">{copy.settings.monthlyGoal}</h3>
             <input
               className={`${inputClass} mt-2`}
               min={1}
@@ -425,34 +468,34 @@ function SettingsDialog({
             />
           </section>
           <section>
-            <h3 className="font-semibold">Export</h3>
-            <p className="mt-2 text-sm text-stone-400">検証済みJSONを指定した場所へ書き出します。</p>
-            <button className="mt-3 rounded bg-teal-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => void exportData()}>JSONを書き出す</button>
+            <h3 className="font-semibold">{copy.settings.exportTitle}</h3>
+            <p className="mt-2 text-sm text-stone-400">{copy.settings.exportDescription}</p>
+            <button className="mt-3 rounded bg-teal-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => void exportData()}>{copy.settings.exportButton}</button>
           </section>
           <section>
-            <h3 className="font-semibold">Import</h3>
+            <h3 className="font-semibold">{copy.settings.importTitle}</h3>
             <select className={`${inputClass} mt-2`} value={importMode} onChange={(event) => setImportMode(event.target.value as "replace" | "merge")}>
-              <option value="merge">マージする（新しい更新を優先）</option>
-              <option value="replace">すべて置き換える</option>
+              <option value="merge">{copy.settings.importMerge}</option>
+              <option value="replace">{copy.settings.importReplace}</option>
             </select>
-            <button className="mt-3 rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => void importData()}>JSONを読み込む</button>
+            <button className="mt-3 rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => void importData()}>{copy.settings.importButton}</button>
             {error ? <p className="mt-2 text-sm text-red-200">{error}</p> : null}
           </section>
         </div>
         <section className="mt-6">
           <div className="flex items-center justify-between gap-3">
-            <h3 className="font-semibold">バックアップ</h3>
-            <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => void refreshBackups()}>更新</button>
+            <h3 className="font-semibold">{copy.settings.backups}</h3>
+            <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => void refreshBackups()}>{copy.common.update}</button>
           </div>
           <div className="mt-3 max-h-64 space-y-2 overflow-y-auto">
-            {backups.length === 0 ? <p className="text-sm text-stone-400">まだバックアップはありません。</p> : null}
+            {backups.length === 0 ? <p className="text-sm text-stone-400">{copy.settings.noBackups}</p> : null}
             {backups.map((backup) => (
               <div key={backup.name} className="flex flex-wrap items-center justify-between gap-3 border border-stone-800 p-3 text-sm">
                 <div>
                   <p className="font-medium">{backup.name}</p>
                   <p className="text-stone-500">{backup.createdAt}</p>
                 </div>
-                <button className="rounded border border-stone-700 px-3 py-2" onClick={() => void restore(backup.name)}>復元</button>
+                <button className="rounded border border-stone-700 px-3 py-2" onClick={() => void restore(backup.name)}>{copy.common.restore}</button>
               </div>
             ))}
           </div>
@@ -465,6 +508,8 @@ function SettingsDialog({
 function HomeView({
   ideas,
   monthlyGoal,
+  copy,
+  language,
   openDetail,
   updateNextAction,
   transitionIdea,
@@ -472,6 +517,8 @@ function HomeView({
 }: {
   ideas: SongIdea[];
   monthlyGoal: number;
+  copy: AppCopy;
+  language: AppLanguage;
   openDetail: (id: string) => void;
   updateNextAction: (id: string, text: string, now?: Date) => void;
   transitionIdea: (id: string, to: Status, now?: Date) => TransitionResult;
@@ -489,7 +536,7 @@ function HomeView({
 
   function completeNext(idea: SongIdea) {
     updateNextAction(idea.id, "", new Date());
-    setToast("Next Actionを完了しました。Detailで次の一手を入れられます。");
+    setToast(copy.toast.nextCompleted);
   }
 
   return (
@@ -499,49 +546,49 @@ function HomeView({
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-sm text-stone-400">{stats.year}-{stats.month.toString().padStart(2, "0")}</p>
-              <h2 className="mt-1 text-2xl font-semibold">今月の完成数</h2>
+              <h2 className="mt-1 text-2xl font-semibold">{copy.home.monthlyFinish}</h2>
             </div>
             <p className="text-2xl font-semibold">{stats.doneCount}/{stats.goal}</p>
           </div>
           <div className="mt-4 h-3 overflow-hidden rounded bg-stone-800">
             <div className="h-full bg-teal-400" style={{ width: `${progress}%` }} />
           </div>
-          <p className="mt-3 text-sm text-stone-400">残り {stats.remainingDays} 日</p>
+          <p className="mt-3 text-sm text-stone-400">{copy.home.daysLeft(stats.remainingDays)}</p>
         </Panel>
 
         <Panel>
-          <h2 className="text-xl font-semibold">今日のLoop</h2>
+          <h2 className="text-xl font-semibold">{copy.home.today}</h2>
           {focus.focus ? (
             <div className="mt-4 border border-stone-800 bg-stone-950 p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="text-lg font-semibold">{focus.focus.title}</p>
                   <p className="mt-1 text-sm text-stone-400">
-                    {labelStatus(focus.focus.status)} {focus.focus.bpm ? ` · ${focus.focus.bpm} bpm` : ""} {focus.focus.key ? ` · ${focus.focus.key}` : ""}
+                    {labelStatus(focus.focus.status, language)} {focus.focus.bpm ? ` · ${focus.focus.bpm} bpm` : ""} {focus.focus.key ? ` · ${focus.focus.key}` : ""}
                   </p>
                 </div>
-                <StatusBadge status={focus.focus.status} />
+                <StatusBadge status={focus.focus.status} language={language} />
               </div>
-              <p className="mt-4 text-sm text-stone-300">Next: {focus.focus.nextAction.text}</p>
+              <p className="mt-4 text-sm text-stone-300">{copy.home.nextAction}: {focus.focus.nextAction.text}</p>
               <div className="mt-4 flex flex-wrap gap-2">
-                <button className="rounded bg-stone-800 px-3 py-2 text-sm" onClick={() => openDetail(focus.focus!.id)}>Detailを開く</button>
-                <button className="rounded bg-teal-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => completeNext(focus.focus!)}>Next完了</button>
+                <button className="rounded bg-stone-800 px-3 py-2 text-sm" onClick={() => openDetail(focus.focus!.id)}>{language === "ja" ? "Detailを開く" : "Open Detail"}</button>
+                <button className="rounded bg-teal-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => completeNext(focus.focus!)}>{language === "ja" ? "Next完了" : "Complete Next"}</button>
               </div>
             </div>
           ) : (
-            <p className="mt-3 text-stone-400">まだFocus候補がありません。動いているIdeaにNext Actionを入れてください。</p>
+            <p className="mt-3 text-stone-400">{copy.home.noFocus}</p>
           )}
         </Panel>
       </section>
 
       <aside className="space-y-5">
         <Panel>
-          <h2 className="text-lg font-semibold">パイプライン</h2>
+          <h2 className="text-lg font-semibold">{copy.home.pipeline}</h2>
           <div className="mt-4 space-y-3">
             {pipeline.map((status) => (
               <div key={status}>
                 <div className="flex justify-between text-sm">
-                  <span>{labelStatus(status)}</span>
+                  <span>{labelStatus(status, language)}</span>
                   <span className="text-stone-400">{stats.pipelineCounts[status]}</span>
                 </div>
                 <div className="mt-1 h-2 rounded bg-stone-800">
@@ -552,23 +599,23 @@ function HomeView({
           </div>
         </Panel>
         <Panel>
-          <h2 className="text-lg font-semibold">Next Action待ち</h2>
-          <IdeaList ideas={focus.needsNextAction} openDetail={openDetail} empty="動いているIdeaにはすべて次の一手があります。" />
+          <h2 className="text-lg font-semibold">{copy.home.needsNextAction}</h2>
+          <IdeaList ideas={focus.needsNextAction} openDetail={openDetail} empty={copy.home.allHaveNextAction} language={language} />
         </Panel>
         <Panel>
-          <h2 className="text-lg font-semibold">停滞中</h2>
+          <h2 className="text-lg font-semibold">{copy.home.stale}</h2>
           <div className="mt-3 space-y-2">
-            {focus.stale.length === 0 ? <p className="text-sm text-stone-400">7日以上止まっているIdeaはありません。</p> : null}
+            {focus.stale.length === 0 ? <p className="text-sm text-stone-400">{copy.home.noStale}</p> : null}
             {focus.stale.map((entry) => (
               <div key={entry.idea.id} className="border border-stone-800 p-3">
                 <button className="text-left font-medium" onClick={() => openDetail(entry.idea.id)}>{entry.idea.title}</button>
-                <p className="mt-1 text-sm text-stone-400">{entry.idleDays}日停止 {entry.suggestHold ? " · Hold推奨" : ""}</p>
+                <p className="mt-1 text-sm text-stone-400">{language === "ja" ? `${entry.idleDays}日停止` : `${entry.idleDays} days idle`} {entry.suggestHold ? ` · ${language === "ja" ? "Hold推奨" : "Hold suggested"}` : ""}</p>
                 {entry.suggestHold ? (
                   <button className="mt-2 rounded border border-stone-700 px-2 py-1 text-xs" onClick={() => {
                     const result = transitionIdea(entry.idea.id, "hold", new Date());
                     if (!result.ok) setToast(result.error.message);
                   }}>
-                    Holdへ移動
+                    {copy.home.suggestHold}
                   </button>
                 ) : null}
               </div>
@@ -584,10 +631,14 @@ function LibraryView({
   ideas,
   openDetail,
   openCreate,
+  copy,
+  language,
 }: {
   ideas: SongIdea[];
   openDetail: (id: string) => void;
   openCreate: () => void;
+  copy: AppCopy;
+  language: AppLanguage;
 }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<Status | "all">("all");
@@ -605,40 +656,40 @@ function LibraryView({
   return (
     <div className="py-5">
       <div className="grid gap-2 border-b border-stone-800 pb-4 md:grid-cols-[1.4fr_0.7fr_0.8fr_0.8fr_0.8fr]">
-        <input className={inputClass} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="タイトル・コード・Next Actionを検索" />
+        <input className={inputClass} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={language === "ja" ? "タイトル・コード・Next Actionを検索" : "Search title, chords, or Next Action"} />
         <select className={inputClass} value={status} onChange={(event) => setStatus(event.target.value as Status | "all")}>
-          <option value="all">すべてのStatus</option>
-          {statuses.map((entry) => <option key={entry} value={entry}>{labelStatus(entry)}</option>)}
+          <option value="all">{language === "ja" ? "すべてのStatus" : "All statuses"}</option>
+          {statuses.map((entry) => <option key={entry} value={entry}>{labelStatus(entry, language)}</option>)}
         </select>
-        <input className={inputClass} value={genre} onChange={(event) => setGenre(event.target.value)} placeholder="Genre" />
-        <input className={inputClass} value={mood} onChange={(event) => setMood(event.target.value)} placeholder="Mood" />
+        <input className={inputClass} value={genre} onChange={(event) => setGenre(event.target.value)} placeholder={copy.library.genre} />
+        <input className={inputClass} value={mood} onChange={(event) => setMood(event.target.value)} placeholder={copy.library.mood} />
         <select className={inputClass} value={sort} onChange={(event) => setSort(event.target.value as SortKey)}>
-          <option value="updatedAt">更新日</option>
-          <option value="createdAt">作成日</option>
-          <option value="bpm">BPM</option>
+          <option value="updatedAt">{copy.library.updated}</option>
+          <option value="createdAt">{copy.library.created}</option>
+          <option value="bpm">{copy.library.bpm}</option>
         </select>
       </div>
       {visible.length === 0 ? (
-        <EmptyState openCreate={openCreate} />
+        <EmptyState openCreate={openCreate} copy={copy} />
       ) : (
         <div className="grid gap-3 py-5 md:grid-cols-2 xl:grid-cols-3">
           {visible.map((idea) => (
             <button key={idea.id} className="border border-stone-800 bg-stone-900 p-4 text-left hover:border-teal-400" onClick={() => openDetail(idea.id)}>
               <div className="flex items-start justify-between gap-3">
                 <h2 className="text-lg font-semibold">{idea.title}</h2>
-                <StatusBadge status={idea.status} />
+                <StatusBadge status={idea.status} language={language} />
               </div>
-              <p className="mt-2 text-sm text-stone-400">{idea.bpm ? `${idea.bpm} bpm` : "BPM未設定"} {idea.key ? ` · ${idea.key}` : ""}</p>
-              <p className="mt-4 line-clamp-2 text-sm text-stone-300">{idea.nextAction.text || "Next Action待ち"}</p>
+              <p className="mt-2 text-sm text-stone-400">{idea.bpm ? `${idea.bpm} bpm` : copy.library.bpmUnset} {idea.key ? ` · ${idea.key}` : ""}</p>
+              <p className="mt-4 line-clamp-2 text-sm text-stone-300">{idea.nextAction.text || copy.library.noNextAction}</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                {!idea.nextAction.text.trim() ? <span className="inline-block rounded bg-amber-400 px-2 py-1 text-xs font-semibold text-stone-950">Next待ち</span> : null}
+                {!idea.nextAction.text.trim() ? <span className="inline-block rounded bg-amber-400 px-2 py-1 text-xs font-semibold text-stone-950">{copy.library.noNextAction}</span> : null}
                 {(idea.progressionBlocks ?? []).length > 0 ? (
                   <span className="inline-block rounded bg-cyan-400 px-2 py-1 text-xs font-semibold text-stone-950">
                     {(idea.progressionBlocks ?? []).length} block
                   </span>
                 ) : null}
               </div>
-              <p className="mt-4 text-xs text-stone-500">更新 {formatDate(idea.updatedAt)}</p>
+              <p className="mt-4 text-xs text-stone-500">{language === "ja" ? "更新" : "Updated"} {formatDate(idea.updatedAt)}</p>
             </button>
           ))}
         </div>
@@ -656,6 +707,8 @@ function CaptureView({
   appendBlockToIdea,
   updateIdea,
   setToast,
+  copy,
+  language,
 }: {
   ideas: SongIdea[];
   analysis: ReturnType<typeof defaultVaultStore.getState>["analysis"];
@@ -681,12 +734,14 @@ function CaptureView({
   ) => void;
   updateIdea: (id: string, changes: Partial<SongIdea>) => void;
   setToast: (toast: string) => void;
+  copy: AppCopy;
+  language: AppLanguage;
 }) {
   const [selectedIdeaId, setSelectedIdeaId] = useState("");
 
   async function chooseMidi() {
     if (!("__TAURI_INTERNALS__" in window)) {
-      setToast("MIDI解析はデスクトップ版で使えます。");
+      setToast(copy.toast.desktopMidiOnly);
       return;
     }
 
@@ -701,9 +756,9 @@ function CaptureView({
     try {
       const bytes = await readFile(path);
       const result = analyzeMidiBytes(bytes, { fileName: fileNameFromPath(path) });
-      setToast(result ? "MIDIを解析しました。" : "MIDI解析に失敗しました。");
+      setToast(result ? copy.toast.midiAnalyzed : copy.toast.midiFailed);
     } catch (error) {
-      setToast(error instanceof Error ? error.message : "MIDIファイルを読み込めませんでした。");
+      setToast(error instanceof Error ? error.message : copy.toast.midiReadFailed);
     }
   }
 
@@ -718,34 +773,34 @@ function CaptureView({
       progressionBlock: candidate,
       progressionAnalysis: analysis.result,
     });
-    setToast(id ? "コード進行からIdeaを作成しました。" : "Ideaを作成できませんでした。");
+    setToast(id ? (language === "ja" ? "コード進行からIdeaを作成しました。" : "Created an idea from the progression.") : (language === "ja" ? "Ideaを作成できませんでした。" : "Could not create the idea."));
   }
 
   function appendExisting(candidate: ProgressionBlockCandidate) {
     if (!selectedIdeaId) {
-      setToast("先にIdeaを選んでください。");
+      setToast(language === "ja" ? "先にIdeaを選んでください。" : "Choose an idea first.");
       return;
     }
 
     appendBlockToIdea(selectedIdeaId, candidate, analysis.result);
-    setToast("コード進行ブロックをIdeaへ保存しました。");
+    setToast(copy.toast.blockSaved);
   }
 
   function copyMemo(candidate: ProgressionBlockCandidate) {
     if (!selectedIdeaId) {
-      setToast("先にIdeaを選んでください。");
+      setToast(language === "ja" ? "先にIdeaを選んでください。" : "Choose an idea first.");
       return;
     }
 
     updateIdea(selectedIdeaId, { chordMemo: candidate.summaryText });
-    setToast("コード進行をChord Memoへコピーしました。");
+    setToast(copy.toast.blockCopied);
   }
 
   async function previewCandidate(candidate: ProgressionBlockCandidate) {
     try {
       await previewTimeline(candidate.chords, analysis.result?.bpm);
     } catch (error) {
-      setToast(error instanceof Error ? error.message : "コードを再生できませんでした。");
+      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
     }
   }
 
@@ -756,7 +811,7 @@ function CaptureView({
         await previewSingleChord(chord);
       }
     } catch (error) {
-      setToast(error instanceof Error ? error.message : "コードを再生できませんでした。");
+      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
     }
   }
 
@@ -768,40 +823,40 @@ function CaptureView({
         <Panel>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-2xl font-semibold">MIDI解析</h2>
+              <h2 className="text-2xl font-semibold">{copy.capture.title}</h2>
               <p className="mt-2 text-sm text-stone-400">
-                MIDIからコードタイムラインと再利用できる候補ブロックを作ります。
+                {language === "ja" ? "MIDIからコードタイムラインと再利用できる候補ブロックを作ります。" : "Build a chord timeline and reusable block candidates from a MIDI file."}
               </p>
             </div>
             <div className="flex gap-2">
               <button className="rounded bg-teal-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => void chooseMidi()}>
-                MIDIを開く
+                {copy.capture.loadMidi}
               </button>
               <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={clearAnalysis}>
-                クリア
+                {copy.capture.clear}
               </button>
             </div>
           </div>
-          {analysis.status === "analyzing" ? <p className="mt-4 text-sm text-stone-300">Analyzing...</p> : null}
+          {analysis.status === "analyzing" ? <p className="mt-4 text-sm text-stone-300">{copy.capture.analyzing}</p> : null}
           {analysis.status === "error" ? <p className="mt-4 text-sm text-red-200">{analysis.error}</p> : null}
           {result ? (
             <div className="mt-5 grid gap-3 text-sm sm:grid-cols-4">
-              <Metric label="ファイル" value={result.fileName ?? "MIDI"} />
-              <Metric label="小節数" value={result.totalBars.toString()} />
+              <Metric label={copy.capture.file} value={result.fileName ?? "MIDI"} />
+              <Metric label={copy.capture.bars} value={result.totalBars.toString()} />
               <Metric label="BPM" value={result.bpm ? Math.round(result.bpm).toString() : "Unknown"} />
-              <Metric label="拍子" value={result.timeSignature ?? "不明"} />
+              <Metric label={copy.capture.timeSignature} value={result.timeSignature ?? (language === "ja" ? "不明" : "Unknown")} />
             </div>
           ) : null}
         </Panel>
 
         <Panel>
-          <h2 className="text-xl font-semibold">コードタイムライン</h2>
+          <h2 className="text-xl font-semibold">{copy.capture.timeline}</h2>
           {result ? (
             <div className="mt-4 max-h-[30rem] overflow-y-auto pr-1">
               <div className="grid gap-2">
                 {result.fullTimeline.map((item, index) => (
                   <div key={`${item.bar}-${item.beat}-${index}`} className="grid grid-cols-[5.5rem_1fr_4rem] items-center gap-3 border border-stone-800 p-2 text-sm">
-                    <span className="text-stone-400">{item.bar}小節.{formatBeat(item.beat)}</span>
+                    <span className="text-stone-400">{language === "ja" ? `${item.bar}小節` : `Bar ${item.bar}`}.{formatBeat(item.beat)}</span>
                     <span className="font-semibold text-stone-100">{item.chord.label}</span>
                     <span className="text-right text-stone-400">{Math.round(item.confidence * 100)}%</span>
                   </div>
@@ -809,16 +864,16 @@ function CaptureView({
               </div>
             </div>
           ) : (
-            <p className="mt-3 text-sm text-stone-400">MIDIを開くと、全体のコードタイムラインが表示されます。</p>
+            <p className="mt-3 text-sm text-stone-400">{copy.capture.noTimeline}</p>
           )}
         </Panel>
       </section>
 
       <section className="space-y-5">
         <Panel>
-          <h2 className="text-xl font-semibold">保存先</h2>
+          <h2 className="text-xl font-semibold">{copy.capture.destination}</h2>
           <select className={`${inputClass} mt-3`} value={selectedIdeaId} onChange={(event) => setSelectedIdeaId(event.target.value)}>
-            <option value="">既存Ideaを選ぶ</option>
+            <option value="">{language === "ja" ? "既存Ideaを選ぶ" : "Choose an existing idea"}</option>
             {ideas.map((idea) => (
               <option key={idea.id} value={idea.id}>{idea.title}</option>
             ))}
@@ -827,8 +882,8 @@ function CaptureView({
 
         <Panel>
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-xl font-semibold">候補ブロック</h2>
-            {result ? <span className="text-sm text-stone-400">{result.blockCandidates.length}件</span> : null}
+            <h2 className="text-xl font-semibold">{copy.capture.candidates}</h2>
+            {result ? <span className="text-sm text-stone-400">{language === "ja" ? `${result.blockCandidates.length}件` : `${result.blockCandidates.length} items`}</span> : null}
           </div>
           {result ? (
             <div className="mt-4 space-y-3">
@@ -842,11 +897,13 @@ function CaptureView({
                   onCopyMemo={copyMemo}
                   onPreview={previewCandidate}
                   onPreviewChord={previewCandidateChord}
+                  copy={copy}
+                  language={language}
                 />
               ))}
             </div>
           ) : (
-            <p className="mt-3 text-sm text-stone-400">4/8/16小節の候補がここに表示されます。</p>
+            <p className="mt-3 text-sm text-stone-400">{language === "ja" ? "4/8/16小節の候補がここに表示されます。" : "4/8/16-bar candidates will appear here."}</p>
           )}
         </Panel>
       </section>
@@ -862,6 +919,8 @@ function ProgressionCandidateCard({
   onCopyMemo,
   onPreview,
   onPreviewChord,
+  copy,
+  language,
 }: {
   candidate: ProgressionBlockCandidate;
   bpm: number;
@@ -873,9 +932,11 @@ function ProgressionCandidateCard({
     candidate: ProgressionBlockCandidate,
     chordIndex: number,
   ) => void | Promise<void>;
+  copy: AppCopy;
+  language: AppLanguage;
 }) {
   const [summary, setSummary] = useState(candidate.summaryText);
-  const [title, setTitle] = useState(`コード進行 ${candidate.labels.slice(0, 4).join(" - ")}`);
+  const [title, setTitle] = useState(`${language === "ja" ? "コード進行" : "Progression"} ${candidate.labels.slice(0, 4).join(" - ")}`);
   const [chords, setChords] = useState(candidate.chords);
   const [labelError, setLabelError] = useState<string>();
   const [selectedChordIndex, setSelectedChordIndex] = useState(0);
@@ -892,7 +953,7 @@ function ProgressionCandidateCard({
 
   useEffect(() => {
     setSummary(candidate.summaryText);
-    setTitle(`コード進行 ${candidate.labels.slice(0, 4).join(" - ")}`);
+    setTitle(`${language === "ja" ? "コード進行" : "Progression"} ${candidate.labels.slice(0, 4).join(" - ")}`);
     setChords(candidate.chords);
     setLabelError(undefined);
     setSelectedChordIndex(0);
@@ -915,7 +976,7 @@ function ProgressionCandidateCard({
   function updateChordLabel(index: number, label: string) {
     const parsed = parseChordLabel(label);
     if (!parsed) {
-      setLabelError(`未対応のコード表記です: ${label}`);
+      setLabelError(language === "ja" ? `未対応のコード表記です: ${label}` : `Unsupported chord label: ${label}`);
       return;
     }
 
@@ -990,8 +1051,8 @@ function ProgressionCandidateCard({
     <div className="border border-stone-800 bg-stone-950 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="font-semibold">{candidate.startBar}-{candidate.endBar}小節 ({candidate.lengthBars})</p>
-          <p className="mt-1 text-sm text-stone-400">信頼度 {Math.round(candidate.confidence * 100)}%</p>
+          <p className="font-semibold">{language === "ja" ? `${candidate.startBar}-${candidate.endBar}小節` : `Bars ${candidate.startBar}-${candidate.endBar}`} ({candidate.lengthBars})</p>
+          <p className="mt-1 text-sm text-stone-400">{language === "ja" ? "信頼度" : "Confidence"} {Math.round(candidate.confidence * 100)}%</p>
         </div>
         <span className="rounded bg-stone-800 px-2 py-1 text-xs text-teal-200">{candidate.labels.join(" - ")}</span>
       </div>
@@ -1013,35 +1074,35 @@ function ProgressionCandidateCard({
             className={inputClass}
             defaultValue={selectedChord.chord.label}
             onBlur={(event) => updateChordLabel(selectedChordIndex, event.target.value)}
-            aria-label={`Bar ${selectedChord.bar} のコード`}
+            aria-label={language === "ja" ? `Bar ${selectedChord.bar} のコード` : `Chord at bar ${selectedChord.bar}`}
           />
           <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => void selectChord(selectedChordIndex)}>
-            ▶ 選択コード
+            ▶ {copy.capture.selectedChord}
           </button>
         </div>
       ) : null}
       {labelError ? <p className="mt-2 text-xs text-red-200">{labelError}</p> : null}
-      <input className={`${inputClass} mt-2`} value={title} onChange={(event) => setTitle(event.target.value)} placeholder="新規Ideaのタイトル" />
+      <input className={`${inputClass} mt-2`} value={title} onChange={(event) => setTitle(event.target.value)} placeholder={copy.capture.newIdeaTitle} />
       {candidate.warnings.length > 0 ? (
         <p className="mt-2 text-xs text-amber-200">{candidate.warnings.join("; ")}</p>
       ) : null}
       <div className="mt-3">
         <button className="rounded bg-cyan-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => void previewWholeCandidate()}>
-          試聴
+          {copy.common.preview}
         </button>
         {previewStartedAt !== null ? (
           <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={stopCandidatePreview}>
-            停止
+            {copy.common.stop}
           </button>
         ) : null}
         <button className="rounded bg-teal-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => onCreate(editedCandidate, title)}>
-          新規Idea
+          {copy.capture.createIdea}
         </button>
         <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => onAppend(editedCandidate)}>
-          選択中に追加
+          {copy.capture.appendIdea}
         </button>
         <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => onCopyMemo(editedCandidate)}>
-          メモへコピー
+          {copy.capture.copyMemo}
         </button>
       </div>
     </div>
@@ -1052,10 +1113,12 @@ function ProgressionBlockCard({
   block,
   onPreview,
   onRemove,
+  copy,
 }: {
   block: SavedProgressionBlock;
   onPreview: () => void;
   onRemove: () => void;
+  copy: AppCopy;
 }) {
   return (
     <div className="border border-stone-800 bg-stone-950 p-3 text-sm">
@@ -1067,10 +1130,10 @@ function ProgressionBlockCard({
           </p>
         </div>
         <button className="rounded border border-cyan-500/60 px-2 py-1 text-cyan-100" onClick={onPreview}>
-          試聴
+          {copy.common.preview}
         </button>
         <button className="rounded border border-stone-700 px-2 py-1 text-stone-300" onClick={onRemove}>
-          削除
+          {copy.common.delete}
         </button>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
@@ -1104,6 +1167,8 @@ function DetailView({
   transitionIdea,
   requestDelete,
   setToast,
+  copy,
+  language,
 }: {
   idea: SongIdea;
   updateIdea: (id: string, changes: Partial<SongIdea>) => void;
@@ -1113,6 +1178,8 @@ function DetailView({
   transitionIdea: (id: string, to: Status, now?: Date) => TransitionResult;
   requestDelete: (idea: SongIdea) => void;
   setToast: (toast: string) => void;
+  copy: AppCopy;
+  language: AppLanguage;
 }) {
   const [nextDraft, setNextDraft] = useState(idea.nextAction.text);
   const [referenceDraft, setReferenceDraft] = useState<Reference>({ title: "", url: "", memo: "" });
@@ -1128,7 +1195,7 @@ function DetailView({
   function completeNext() {
     updateNextAction(idea.id, "", new Date());
     setNextDraft("");
-    setToast("Next Actionを完了しました。次が見えたらまた追加できます。");
+    setToast(copy.toast.nextCompleted);
   }
 
   function updateMeta(changes: Partial<SongIdea>) {
@@ -1136,17 +1203,17 @@ function DetailView({
   }
 
   function moveStatus(to: Status) {
-    if (to === "abandoned" && !window.confirm("このIdeaを破棄しますか？")) return;
-    if (to === "hold") window.prompt("Hold理由（任意）");
+    if (to === "abandoned" && !window.confirm(language === "ja" ? "このIdeaを破棄しますか？" : "Abandon this idea?")) return;
+    if (to === "hold") window.prompt(language === "ja" ? "Hold理由（任意）" : "Hold reason (optional)");
     if (pipeline.includes(to) && idea.nextAction.text.trim() && to !== idea.status) {
-      const keep = window.confirm("現在のNext Actionを次のステージへ持ち越しますか？");
+      const keep = window.confirm(language === "ja" ? "現在のNext Actionを次のステージへ持ち越しますか？" : "Carry the current Next Action into the next stage?");
       if (!keep) {
         updateNextAction(idea.id, "", new Date());
       }
     }
     const result = transitionIdea(idea.id, to, new Date());
     if (!result.ok) setToast(result.error.message);
-    if (result.ok && to === "done") setToast("Done。完成として記録しました。");
+    if (result.ok && to === "done") setToast(language === "ja" ? "Done。完成として記録しました。" : "Done. Marked as finished.");
   }
 
   function addReference(event: FormEvent) {
@@ -1162,7 +1229,7 @@ function DetailView({
 
   async function chooseAssetPath() {
     if (!("__TAURI_INTERNALS__" in window)) {
-      setToast("ファイル選択はデスクトップ版で使えます。");
+      setToast(copy.toast.fileChooseDesktopOnly);
       return;
     }
     const path = await openFileDialog({
@@ -1199,25 +1266,25 @@ function DetailView({
   async function openAsset(asset: Asset) {
     if (!asset.path) return;
     if (!canOpenAssetPath(asset.path)) {
-      setToast("この拡張子は直接開けません。フォルダ表示を使ってください。");
+      setToast(copy.detail.unsupportedExtension);
       return;
     }
     if (!("__TAURI_INTERNALS__" in window)) {
-      setToast("ファイルを開く操作はデスクトップ版で使えます。");
+      setToast(copy.toast.fileOpenDesktopOnly);
       return;
     }
     try {
       await openPath(asset.path);
     } catch {
       updateMeta({ assets: idea.assets.map((entry) => entry.id === asset.id ? { ...entry, missing: true } : entry) });
-      setToast("ファイルを開けませんでした。missingとして記録しました。");
+      setToast(copy.toast.assetMissing);
     }
   }
 
   async function showAsset(asset: Asset) {
     if (!asset.path) return;
     if (!("__TAURI_INTERNALS__" in window)) {
-      setToast("フォルダ表示はデスクトップ版で使えます。");
+      setToast(copy.toast.folderDesktopOnly);
       return;
     }
     await revealItemInDir(asset.path);
@@ -1225,7 +1292,7 @@ function DetailView({
 
   async function replaceAssetPath(asset: Asset) {
     if (!("__TAURI_INTERNALS__" in window)) {
-      setToast("ファイル選択はデスクトップ版で使えます。");
+      setToast(copy.toast.fileChooseDesktopOnly);
       return;
     }
 
@@ -1242,7 +1309,7 @@ function DetailView({
     });
     if (typeof path === "string") {
       updateAsset(asset.id, { path, missing: false });
-      setToast("Assetのパスを更新しました。");
+      setToast(copy.toast.assetPathUpdated);
     }
   }
 
@@ -1250,7 +1317,7 @@ function DetailView({
     try {
       await previewTimeline(block.chords, block.bpm ?? idea.bpm);
     } catch (error) {
-      setToast(error instanceof Error ? error.message : "コードを再生できませんでした。");
+      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
     }
   }
 
@@ -1260,44 +1327,44 @@ function DetailView({
         <Panel>
           <div className="flex items-start justify-between gap-4">
             <input className="w-full bg-transparent text-2xl font-semibold outline-none" value={idea.title} onChange={(event) => updateMeta({ title: event.target.value.slice(0, 80) })} />
-            <StatusBadge status={idea.status} />
+            <StatusBadge status={idea.status} language={language} />
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             {statuses.map((status) => (
               <button key={status} className={statusButtonClass(status === idea.status)} onClick={() => moveStatus(status)}>
-                {labelStatus(status)}
+                {labelStatus(status, language)}
               </button>
             ))}
           </div>
-          <button className="mt-5 rounded border border-red-500/50 px-3 py-2 text-sm text-red-200" onClick={() => requestDelete(idea)}>削除</button>
+          <button className="mt-5 rounded border border-red-500/50 px-3 py-2 text-sm text-red-200" onClick={() => requestDelete(idea)}>{copy.common.delete}</button>
         </Panel>
 
         <Panel>
-          <h2 className="text-xl font-semibold">Next Action</h2>
+          <h2 className="text-xl font-semibold">{copy.detail.nextAction}</h2>
           <textarea className={`${inputClass} mt-3 min-h-28`} value={nextDraft} onChange={(event) => setNextDraft(event.target.value)} onBlur={saveNext} placeholder={placeholder} />
           <div className="mt-3 flex gap-2">
-            <button className="rounded bg-teal-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={saveNext}>更新</button>
-            <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={completeNext}>完了</button>
+            <button className="rounded bg-teal-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={saveNext}>{copy.common.update}</button>
+            <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={completeNext}>{copy.common.done}</button>
           </div>
-          {!idea.nextAction.text.trim() ? <p className="mt-3 text-sm text-amber-200">次にやることを1つだけ入れてください。</p> : null}
+          {!idea.nextAction.text.trim() ? <p className="mt-3 text-sm text-amber-200">{copy.detail.nextActionHint}</p> : null}
         </Panel>
 
         <Panel>
-          <h2 className="text-xl font-semibold">メタ情報</h2>
+          <h2 className="text-xl font-semibold">{copy.detail.metadata}</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <input className={inputClass} type="number" min={40} max={300} value={idea.bpm ?? ""} onChange={(event) => updateMeta({ bpm: event.target.value ? Number(event.target.value) : undefined })} placeholder="BPM" />
             <input className={inputClass} list="key-options" value={idea.key ?? ""} onChange={(event) => updateMeta({ key: event.target.value || undefined })} placeholder="Key" />
             <datalist id="key-options">{keySuggestions.map((key) => <option key={key} value={key} />)}</datalist>
             <input className={inputClass} value={idea.genre ?? ""} onChange={(event) => updateMeta({ genre: event.target.value || undefined })} placeholder="Genre" />
-            <input className={inputClass} value={idea.moods.join(", ")} onChange={(event) => updateMeta({ moods: splitList(event.target.value) })} placeholder="Mood（カンマ区切り）" />
+            <input className={inputClass} value={idea.moods.join(", ")} onChange={(event) => updateMeta({ moods: splitList(event.target.value) })} placeholder={language === "ja" ? "Mood（カンマ区切り）" : "Mood (comma separated)"} />
           </div>
-          <textarea className={`${inputClass} mt-3 min-h-28`} value={idea.chordMemo} onChange={(event) => updateMeta({ chordMemo: event.target.value })} placeholder="コード進行メモ" />
+          <textarea className={`${inputClass} mt-3 min-h-28`} value={idea.chordMemo} onChange={(event) => updateMeta({ chordMemo: event.target.value })} placeholder={language === "ja" ? "コード進行メモ" : "Chord progression memo"} />
         </Panel>
 
         <Panel>
-          <h2 className="text-xl font-semibold">保存したコード進行</h2>
+          <h2 className="text-xl font-semibold">{copy.detail.progressionBlocks}</h2>
           {(idea.progressionBlocks ?? []).length === 0 ? (
-            <p className="mt-3 text-sm text-stone-400">まだMIDIから保存したコード進行はありません。</p>
+            <p className="mt-3 text-sm text-stone-400">{copy.detail.noProgressionBlocks}</p>
           ) : (
             <div className="mt-4 space-y-3">
               {(idea.progressionBlocks ?? []).map((block) => (
@@ -1306,6 +1373,7 @@ function DetailView({
                   block={block}
                   onPreview={() => void previewSavedBlock(block)}
                   onRemove={() => removeProgressionBlock(idea.id, block.id)}
+                  copy={copy}
                 />
               ))}
             </div>
@@ -1315,19 +1383,19 @@ function DetailView({
 
       <section className="space-y-5">
         <Panel>
-          <h2 className="text-xl font-semibold">参考曲・参照</h2>
+          <h2 className="text-xl font-semibold">{copy.detail.references}</h2>
           <form className="mt-3 grid gap-2" onSubmit={addReference}>
             <input className={inputClass} value={referenceDraft.title} onChange={(event) => setReferenceDraft({ ...referenceDraft, title: event.target.value })} placeholder="Title" />
             <input className={inputClass} value={referenceDraft.url ?? ""} onChange={(event) => setReferenceDraft({ ...referenceDraft, url: event.target.value })} placeholder="URL" />
             <input className={inputClass} value={referenceDraft.memo ?? ""} onChange={(event) => setReferenceDraft({ ...referenceDraft, memo: event.target.value })} placeholder="Memo" />
-            <button className="rounded bg-stone-800 px-3 py-2 text-sm" type="submit">参考を追加</button>
+            <button className="rounded bg-stone-800 px-3 py-2 text-sm" type="submit">{copy.detail.addReference}</button>
           </form>
           <div className="mt-4 space-y-2">
             {idea.references.map((reference, index) => (
               <div key={`${reference.title}-${index}`} className="border border-stone-800 p-3 text-sm">
                 <div className="flex justify-between gap-3">
                   <p className="font-medium">{reference.title}</p>
-                  <button className="text-stone-400" onClick={() => removeReference(index)}>削除</button>
+                  <button className="text-stone-400" onClick={() => removeReference(index)}>{copy.common.delete}</button>
                 </div>
                 {reference.url ? <p className="mt-1 break-all text-stone-400">{reference.url}</p> : null}
                 {reference.memo ? <p className="mt-1 text-stone-300">{reference.memo}</p> : null}
@@ -1337,7 +1405,7 @@ function DetailView({
         </Panel>
 
         <Panel>
-          <h2 className="text-xl font-semibold">Assets</h2>
+          <h2 className="text-xl font-semibold">{copy.detail.assets}</h2>
           <form className="mt-3 grid gap-2" onSubmit={addAsset}>
             <div className="grid gap-2 sm:grid-cols-[0.4fr_1fr_auto]">
               <select className={inputClass} value={assetDraft.type} onChange={(event) => setAssetDraft({ ...assetDraft, type: event.target.value as AssetType })}>
@@ -1346,11 +1414,11 @@ function DetailView({
                 <option value="audio">Audio</option>
                 <option value="other">Other</option>
               </select>
-              <input className={inputClass} value={assetDraft.path ?? ""} onChange={(event) => setAssetDraft({ ...assetDraft, path: event.target.value })} placeholder="絶対パス" />
-              <button className="rounded border border-stone-700 px-3 py-2 text-sm" type="button" onClick={() => void chooseAssetPath()}>選択</button>
+              <input className={inputClass} value={assetDraft.path ?? ""} onChange={(event) => setAssetDraft({ ...assetDraft, path: event.target.value })} placeholder={copy.detail.absolutePath} />
+              <button className="rounded border border-stone-700 px-3 py-2 text-sm" type="button" onClick={() => void chooseAssetPath()}>{copy.common.choose}</button>
             </div>
             <input className={inputClass} value={assetDraft.memo ?? ""} onChange={(event) => setAssetDraft({ ...assetDraft, memo: event.target.value })} placeholder="Memo" />
-            <button className="rounded bg-stone-800 px-3 py-2 text-sm" type="submit">Assetを追加</button>
+            <button className="rounded bg-stone-800 px-3 py-2 text-sm" type="submit">{copy.detail.addAsset}</button>
           </form>
           <div className="mt-4 space-y-2">
             {idea.assets.map((asset) => (
@@ -1360,7 +1428,7 @@ function DetailView({
                   <div className="flex gap-2">
                     {asset.type === "midi" && asset.path ? (
                       <button className="rounded border border-cyan-500/60 px-2 py-1 text-cyan-100" onClick={() => void analyzeMidiPath(asset.path!)}>
-                        解析
+                        {copy.common.analyze}
                       </button>
                     ) : null}
                     <button
@@ -1368,20 +1436,20 @@ function DetailView({
                       disabled={!canOpenAssetPath(asset.path)}
                       onClick={() => void openAsset(asset)}
                     >
-                      開く
+                      {copy.common.open}
                     </button>
-                    <button className="rounded border border-stone-700 px-2 py-1" onClick={() => void showAsset(asset)}>フォルダ</button>
+                    <button className="rounded border border-stone-700 px-2 py-1" onClick={() => void showAsset(asset)}>{copy.common.folder}</button>
                     {asset.missing ? (
                       <button className="rounded border border-amber-500/60 px-2 py-1 text-amber-100" onClick={() => void replaceAssetPath(asset)}>
-                        パス修正
+                        {copy.detail.fixPath}
                       </button>
                     ) : null}
-                    <button className="rounded border border-stone-700 px-2 py-1" onClick={() => removeAsset(asset.id)}>削除</button>
+                    <button className="rounded border border-stone-700 px-2 py-1" onClick={() => removeAsset(asset.id)}>{copy.common.delete}</button>
                   </div>
                 </div>
-                <p className="mt-2 break-all text-stone-400">{asset.path || "パス未設定"}</p>
-                {!canOpenAssetPath(asset.path) && asset.path ? <p className="mt-2 text-xs text-amber-200">この拡張子は直接Openできません。フォルダから確認してください。</p> : null}
-                {asset.missing ? <p className="mt-2 text-xs text-red-200">ファイルを開けませんでした。パスを修正するか削除してください。</p> : null}
+                <p className="mt-2 break-all text-stone-400">{asset.path || copy.common.pathUnset}</p>
+                {!canOpenAssetPath(asset.path) && asset.path ? <p className="mt-2 text-xs text-amber-200">{copy.detail.unsupportedExtension}</p> : null}
+                {asset.missing ? <p className="mt-2 text-xs text-red-200">{copy.detail.missingAsset}</p> : null}
                 {asset.memo ? <p className="mt-2 text-stone-300">{asset.memo}</p> : null}
               </div>
             ))}
@@ -1389,11 +1457,11 @@ function DetailView({
         </Panel>
 
         <Panel>
-          <h2 className="text-xl font-semibold">履歴</h2>
+          <h2 className="text-xl font-semibold">{copy.detail.history}</h2>
           <div className="mt-3 space-y-2">
             {idea.statusHistory.map((entry, index) => (
               <div key={`${entry.status}-${entry.at}-${index}`} className="flex justify-between border-b border-stone-800 pb-2 text-sm">
-                <span>{labelStatus(entry.status)}</span>
+                <span>{labelStatus(entry.status, language)}</span>
                 <span className="text-stone-400">{formatDate(entry.at)}</span>
               </div>
             ))}
@@ -1407,9 +1475,13 @@ function DetailView({
 function CreateDialog({
   onCreate,
   onClose,
+  copy,
+  language,
 }: {
   onCreate: (title: string, status: Status) => void;
   onClose: () => void;
+  copy: AppCopy;
+  language: AppLanguage;
 }) {
   const [title, setTitle] = useState("");
   const [status, setStatus] = useState<Status>("idea");
@@ -1423,14 +1495,14 @@ function CreateDialog({
     <div className="fixed inset-0 z-40 grid place-items-center bg-black/70 px-4">
       <form className="w-full max-w-md border border-stone-700 bg-stone-900 p-5 shadow-2xl" onSubmit={submit}>
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">新規Idea</h2>
-          <button type="button" className="rounded px-2 py-1 text-stone-400" onClick={onClose}>閉じる</button>
+          <h2 className="text-xl font-semibold">{copy.create.title}</h2>
+          <button type="button" className="rounded px-2 py-1 text-stone-400" onClick={onClose}>{copy.common.close}</button>
         </div>
-        <input autoFocus className={`${inputClass} mt-4`} value={title} onChange={(event) => setTitle(event.target.value)} placeholder="タイトル" />
+        <input autoFocus className={`${inputClass} mt-4`} value={title} onChange={(event) => setTitle(event.target.value)} placeholder={copy.common.title} />
         <select className={`${inputClass} mt-3`} value={status} onChange={(event) => setStatus(event.target.value as Status)}>
-          {pipeline.map((entry) => <option key={entry} value={entry}>{labelStatus(entry)}</option>)}
+          {pipeline.map((entry) => <option key={entry} value={entry}>{labelStatus(entry, language)}</option>)}
         </select>
-        <button className="mt-4 w-full rounded bg-teal-400 px-3 py-2 font-semibold text-stone-950" type="submit">作成</button>
+        <button className="mt-4 w-full rounded bg-teal-400 px-3 py-2 font-semibold text-stone-950" type="submit">{copy.create.submit}</button>
       </form>
     </div>
   );
@@ -1442,65 +1514,69 @@ function StartupState({
   readonly,
   error,
   restoreBackup,
+  copy,
+  language,
 }: {
   loadStatus: string;
   recovery: ReturnType<typeof defaultVaultStore.getState>["recovery"];
   readonly: ReturnType<typeof defaultVaultStore.getState>["readonly"];
   error?: string;
   restoreBackup: (backupName: string) => Promise<void>;
+  copy: AppCopy;
+  language: AppLanguage;
 }) {
   return (
     <div className="grid flex-1 place-items-center py-10">
       <Panel className="w-full max-w-2xl">
-        {loadStatus === "loading" || loadStatus === "idle" ? <StatusPanel title="Vaultを読み込み中" body="ローカルのdata.jsonを確認しています。" /> : null}
+        {loadStatus === "loading" || loadStatus === "idle" ? <StatusPanel title={copy.startup.loadingTitle} body={copy.startup.loadingBody} /> : null}
         {loadStatus === "recovery" && recovery ? (
           <div>
-            <StatusPanel title="データ復旧が必要です" body="壊れたファイルは退避しました。空データで上書きしていません。" />
+            <StatusPanel title={copy.startup.recoveryTitle} body={copy.startup.recoveryBody} />
             {recovery.corruptPath ? <p className="mt-3 break-all text-sm text-stone-400">{recovery.corruptPath}</p> : null}
             <div className="mt-5 space-y-2">
               {recovery.backups.length > 0 ? recovery.backups.map((backup) => (
                 <button key={backup.name} className="block w-full rounded border border-stone-700 px-3 py-2 text-left text-sm hover:bg-stone-800" onClick={() => void restoreBackup(backup.name)}>
-                  {backup.name} を復元
+                  {language === "ja" ? `${backup.name} を復元` : `Restore ${backup.name}`}
                 </button>
-              )) : <p className="text-sm text-stone-400">利用できるバックアップはまだありません。</p>}
+              )) : <p className="text-sm text-stone-400">{copy.startup.noBackups}</p>}
             </div>
           </div>
         ) : null}
-        {loadStatus === "readonly" && readonly ? <StatusPanel title="Loop Vaultを更新してください" body={readonly.fileVersion ? `このdata.jsonは fileVersion ${readonly.fileVersion} です。このアプリより新しい形式です。` : readonly.message} /> : null}
-        {loadStatus === "error" ? <StatusPanel title="Vaultを読み込めませんでした" body={error ?? "不明な起動エラーです。"} /> : null}
+        {loadStatus === "readonly" && readonly ? <StatusPanel title={copy.startup.readonlyTitle} body={readonly.fileVersion ? (language === "ja" ? `このdata.jsonは fileVersion ${readonly.fileVersion} です。このアプリより新しい形式です。` : `This data.json is fileVersion ${readonly.fileVersion}, newer than this app supports.`) : readonly.message} /> : null}
+        {loadStatus === "error" ? <StatusPanel title={copy.startup.errorTitle} body={error ?? copy.startup.unknownError} /> : null}
       </Panel>
     </div>
   );
 }
 
-function QuarantineNotice({ count }: { count: number }) {
+function QuarantineNotice({ count, copy }: { count: number; copy: AppCopy }) {
   if (count === 0) return null;
   return (
     <div className="mt-4 border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-100">
-      不正なレコード {count} 件を隔離しました。正常なIdeaは読み込まれています。
+      {copy.startup.quarantine(count)}
     </div>
   );
 }
 
-function EmptyState({ openCreate }: { openCreate: () => void }) {
+function EmptyState({ openCreate, copy }: { openCreate: () => void; copy: AppCopy }) {
   return (
     <div className="grid min-h-96 place-items-center py-10">
       <div className="max-w-md text-center">
-        <h2 className="text-2xl font-semibold">まだIdeaがありません</h2>
-        <button className="mt-5 rounded bg-teal-400 px-4 py-2 font-semibold text-stone-950" onClick={openCreate}>Ideaを作成</button>
+        <h2 className="text-2xl font-semibold">{copy.startup.emptyTitle}</h2>
+        <button className="mt-5 rounded bg-teal-400 px-4 py-2 font-semibold text-stone-950" onClick={openCreate}>{copy.startup.emptyButton}</button>
       </div>
     </div>
   );
 }
 
-function IdeaList({ ideas, openDetail, empty }: { ideas: SongIdea[]; openDetail: (id: string) => void; empty: string }) {
+function IdeaList({ ideas, openDetail, empty, language }: { ideas: SongIdea[]; openDetail: (id: string) => void; empty: string; language: AppLanguage }) {
   if (ideas.length === 0) return <p className="mt-3 text-sm text-stone-400">{empty}</p>;
   return (
     <div className="mt-3 space-y-2">
       {ideas.map((idea) => (
         <button key={idea.id} className="block w-full border border-stone-800 p-3 text-left hover:border-teal-400" onClick={() => openDetail(idea.id)}>
           <span className="font-medium">{idea.title}</span>
-          <span className="ml-2 text-sm text-stone-400">{labelStatus(idea.status)}</span>
+          <span className="ml-2 text-sm text-stone-400">{labelStatus(idea.status, language)}</span>
         </button>
       ))}
     </div>
@@ -1520,21 +1596,12 @@ function Panel({ children, className = "" }: { children: ReactNode; className?: 
   return <section className={`border border-stone-800 bg-stone-900 p-4 ${className}`}>{children}</section>;
 }
 
-function StatusBadge({ status }: { status: Status }) {
-  return <span className="shrink-0 rounded bg-stone-800 px-2 py-1 text-xs font-semibold uppercase text-teal-200">{labelStatus(status)}</span>;
+function StatusBadge({ status, language }: { status: Status; language: AppLanguage }) {
+  return <span className="shrink-0 rounded bg-stone-800 px-2 py-1 text-xs font-semibold uppercase text-teal-200">{labelStatus(status, language)}</span>;
 }
 
-function labelStatus(status: Status): string {
-  const labels: Record<Status, string> = {
-    idea: "Idea",
-    loop: "Loop",
-    arrange: "Arrange",
-    mix: "Mix",
-    done: "Done",
-    hold: "保留",
-    abandoned: "破棄",
-  };
-  return labels[status];
+function labelStatus(status: Status, language: AppLanguage): string {
+  return appCopy[language].status[status];
 }
 
 function tabClass(active: boolean): string {
