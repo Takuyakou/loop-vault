@@ -1,8 +1,9 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import type { ChordTimelineItem, ProgressionBlockCandidate } from "../domain/types";
+import { makeIdea } from "../domain/testFactory";
 import { appCopy } from "../i18n";
-import { ProgressionCandidateCard } from "./CaptureView";
+import { ProgressionCandidateCard, ProgressionSaveDialog } from "./CaptureView";
 
 function chord(label: string, bar: number): ChordTimelineItem {
   return {
@@ -43,6 +44,7 @@ describe("ProgressionCandidateCard", () => {
         candidate={candidate()}
         candidateIndex={0}
         bpm={96}
+        ideas={[makeIdea()]}
         onCreate={vi.fn()}
         onAppend={vi.fn()}
         onCopyMemo={vi.fn()}
@@ -57,10 +59,12 @@ describe("ProgressionCandidateCard", () => {
     expect(markup).toContain("Cmaj7");
     expect(markup).toContain("低音の解釈に注意");
     expect(markup).toContain("編集");
+    expect(markup).toContain("保存");
     expect(markup).not.toContain("<textarea");
     expect(markup).not.toContain("保存タイトル");
     expect(markup).not.toContain("ambiguous-bass");
     expect(markup).not.toContain("信頼度");
+    expect(markup).not.toContain("既存Ideaへ追加");
   });
 
   it("shows rounded confidence only when review is useful", () => {
@@ -69,6 +73,7 @@ describe("ProgressionCandidateCard", () => {
         candidate={candidate({ confidence: 0.55 })}
         candidateIndex={0}
         bpm={96}
+        ideas={[makeIdea()]}
         onCreate={vi.fn()}
         onAppend={vi.fn()}
         onCopyMemo={vi.fn()}
@@ -81,5 +86,51 @@ describe("ProgressionCandidateCard", () => {
 
     expect(markup).toContain("信頼度: 中");
     expect(markup).not.toContain("55%");
+  });
+
+  it("renders the save dialog with save methods and default next action", () => {
+    const markup = renderToStaticMarkup(
+      <ProgressionSaveDialog
+        candidate={candidate()}
+        title="Progression main"
+        ideas={[makeIdea({ title: "Existing idea" })]}
+        onTitleChange={vi.fn()}
+        onClose={vi.fn()}
+        onCreate={vi.fn()}
+        onAppend={vi.fn()}
+        onCopyMemo={vi.fn()}
+        copy={appCopy.ja}
+        language="ja"
+      />,
+    );
+
+    expect(markup).toContain("この進行を保存");
+    expect(markup).toContain("新しいIdeaとして保存");
+    expect(markup).toContain("既存Ideaへ追加");
+    expect(markup).toContain("Chord Memoへコピー");
+    expect(markup).toContain("採集したコード進行からループを作る");
+    expect(markup).not.toContain("disabled=\"\"");
+  });
+
+  it("requires an idea when saving into an existing idea", () => {
+    const markup = renderToStaticMarkup(
+      <ProgressionSaveDialog
+        candidate={candidate()}
+        title="Progression main"
+        ideas={[makeIdea({ title: "Existing idea" })]}
+        onTitleChange={vi.fn()}
+        onClose={vi.fn()}
+        onCreate={vi.fn()}
+        onAppend={vi.fn()}
+        onCopyMemo={vi.fn()}
+        copy={appCopy.ja}
+        language="ja"
+        initialMode="append"
+      />,
+    );
+
+    expect(markup).toContain("追加先Idea");
+    expect(markup).toContain("Existing idea");
+    expect(markup).toContain("disabled=\"\"");
   });
 });
