@@ -31,6 +31,8 @@ import {
   registerTauriCloseGuard,
 } from "./store/closeGuard";
 import { defaultVaultStore } from "./store/defaultVaultStore";
+import { ProgressionGrid, timelineStartBeat } from "./ui/ProgressionGrid";
+import { chordProgressFraction } from "./ui/playbackProgress";
 
 type View = "home" | "capture" | "library" | "detail";
 type SortKey = "updatedAt" | "createdAt" | "bpm";
@@ -758,6 +760,8 @@ function CaptureView({
     }
   }
 
+  const result = analysis.result;
+
   return (
     <div className="grid gap-5 py-5 xl:grid-cols-[0.85fr_1.15fr]">
       <section className="space-y-5">
@@ -780,22 +784,22 @@ function CaptureView({
           </div>
           {analysis.status === "analyzing" ? <p className="mt-4 text-sm text-stone-300">Analyzing...</p> : null}
           {analysis.status === "error" ? <p className="mt-4 text-sm text-red-200">{analysis.error}</p> : null}
-          {analysis.result ? (
+          {result ? (
             <div className="mt-5 grid gap-3 text-sm sm:grid-cols-4">
-              <Metric label="ファイル" value={analysis.result.fileName ?? "MIDI"} />
-              <Metric label="小節数" value={analysis.result.totalBars.toString()} />
-              <Metric label="BPM" value={analysis.result.bpm ? Math.round(analysis.result.bpm).toString() : "Unknown"} />
-              <Metric label="拍子" value={analysis.result.timeSignature ?? "不明"} />
+              <Metric label="ファイル" value={result.fileName ?? "MIDI"} />
+              <Metric label="小節数" value={result.totalBars.toString()} />
+              <Metric label="BPM" value={result.bpm ? Math.round(result.bpm).toString() : "Unknown"} />
+              <Metric label="拍子" value={result.timeSignature ?? "不明"} />
             </div>
           ) : null}
         </Panel>
 
         <Panel>
           <h2 className="text-xl font-semibold">コードタイムライン</h2>
-          {analysis.result ? (
+          {result ? (
             <div className="mt-4 max-h-[30rem] overflow-y-auto pr-1">
               <div className="grid gap-2">
-                {analysis.result.fullTimeline.map((item, index) => (
+                {result.fullTimeline.map((item, index) => (
                   <div key={`${item.bar}-${item.beat}-${index}`} className="grid grid-cols-[5.5rem_1fr_4rem] items-center gap-3 border border-stone-800 p-2 text-sm">
                     <span className="text-stone-400">{item.bar}小節.{formatBeat(item.beat)}</span>
                     <span className="font-semibold text-stone-100">{item.chord.label}</span>
@@ -824,14 +828,15 @@ function CaptureView({
         <Panel>
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-xl font-semibold">候補ブロック</h2>
-            {analysis.result ? <span className="text-sm text-stone-400">{analysis.result.blockCandidates.length}件</span> : null}
+            {result ? <span className="text-sm text-stone-400">{result.blockCandidates.length}件</span> : null}
           </div>
-          {analysis.result ? (
+          {result ? (
             <div className="mt-4 space-y-3">
-              {analysis.result.blockCandidates.map((candidate) => (
+              {result.blockCandidates.map((candidate) => (
                 <ProgressionCandidateCard
                   key={candidate.id}
                   candidate={candidate}
+                  bpm={result.bpm ?? 96}
                   onCreate={saveNew}
                   onAppend={appendExisting}
                   onCopyMemo={copyMemo}
@@ -851,6 +856,7 @@ function CaptureView({
 
 function ProgressionCandidateCard({
   candidate,
+  bpm,
   onCreate,
   onAppend,
   onCopyMemo,
@@ -858,6 +864,7 @@ function ProgressionCandidateCard({
   onPreviewChord,
 }: {
   candidate: ProgressionBlockCandidate;
+  bpm: number;
   onCreate: (candidate: ProgressionBlockCandidate, title: string) => void;
   onAppend: (candidate: ProgressionBlockCandidate) => void;
   onCopyMemo: (candidate: ProgressionBlockCandidate) => void;
@@ -871,6 +878,11 @@ function ProgressionCandidateCard({
   const [title, setTitle] = useState(`コード進行 ${candidate.labels.slice(0, 4).join(" - ")}`);
   const [chords, setChords] = useState(candidate.chords);
   const [labelError, setLabelError] = useState<string>();
+  const [selectedChordIndex, setSelectedChordIndex] = useState(0);
+  const [playingChordIndex, setPlayingChordIndex] = useState<number | null>(null);
+  const [previewStartedAt, setPreviewStartedAt] = useState<number | null>(null);
+  const [, forcePlaybackTick] = useState(0);
+  const visualTimers = useRef<number[]>([]);
   const editedCandidate = {
     ...candidate,
     summaryText: summary,
@@ -883,7 +895,22 @@ function ProgressionCandidateCard({
     setTitle(`コード進行 ${candidate.labels.slice(0, 4).join(" - ")}`);
     setChords(candidate.chords);
     setLabelError(undefined);
+    setSelectedChordIndex(0);
+    stopVisualPreview();
+    return stopVisualPreview;
   }, [candidate]);
+
+  useEffect(() => {
+    if (previewStartedAt === null) {
+      return undefined;
+    }
+
+    const interval = window.setInterval(() => {
+      forcePlaybackTick((value) => value + 1);
+    }, 100);
+
+    return () => window.clearInterval(interval);
+  }, [previewStartedAt]);
 
   function updateChordLabel(index: number, label: string) {
     const parsed = parseChordLabel(label);
@@ -900,6 +927,65 @@ function ProgressionCandidateCard({
     );
   }
 
+  function stopVisualPreview() {
+    for (const timer of visualTimers.current) {
+      window.clearTimeout(timer);
+    }
+    visualTimers.current = [];
+    setPlayingChordIndex(null);
+    setPreviewStartedAt(null);
+  }
+
+  function stopCandidatePreview() {
+    stopVisualPreview();
+    void stopPreviewAudio();
+  }
+
+  async function previewWholeCandidate() {
+    stopVisualPreview();
+    const baseBeat = firstTimelineBeat(chords);
+    const beatSeconds = 60 / bpm;
+    setPreviewStartedAt(window.performance.now());
+
+    for (const [index, chord] of chords.entries()) {
+      const delayMs = Math.max(0, (timelineStartBeat(chord) - baseBeat) * beatSeconds * 1000);
+      visualTimers.current.push(
+        window.setTimeout(() => {
+          setPlayingChordIndex(index);
+          setSelectedChordIndex(index);
+        }, delayMs),
+      );
+    }
+
+    const last = chords[chords.length - 1];
+    const totalMs = last
+      ? (timelineStartBeat(last) - baseBeat + last.durationBeats) * beatSeconds * 1000
+      : 0;
+    visualTimers.current.push(window.setTimeout(stopVisualPreview, totalMs + 120));
+    await onPreview(editedCandidate);
+  }
+
+  async function selectChord(index: number) {
+    setSelectedChordIndex(index);
+    await onPreviewChord(editedCandidate, index);
+  }
+
+  const playingChord = playingChordIndex === null ? undefined : chords[playingChordIndex];
+  const elapsedSeconds =
+    previewStartedAt === null ? 0 : (window.performance.now() - previewStartedAt) / 1000;
+  const playingProgress =
+    previewStartedAt === null || playingChord === undefined
+      ? null
+      : chordProgressFraction(
+          {
+            startBeat: timelineStartBeat(playingChord) - firstTimelineBeat(chords),
+            durationBeats: playingChord.durationBeats,
+          },
+          bpm,
+          elapsedSeconds,
+        );
+  const selectedChord = chords[selectedChordIndex] ?? chords[0];
+
   return (
     <div className="border border-stone-800 bg-stone-950 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -909,31 +995,45 @@ function ProgressionCandidateCard({
         </div>
         <span className="rounded bg-stone-800 px-2 py-1 text-xs text-teal-200">{candidate.labels.join(" - ")}</span>
       </div>
-      <textarea className={`${inputClass} mt-3 min-h-20`} value={summary} onChange={(event) => setSummary(event.target.value)} />
-      <div className="mt-3 grid gap-2 sm:grid-cols-2">
-        {chords.map((item, index) => (
-          <div key={`${item.bar}-${item.beat}-${index}`} className="grid grid-cols-[1fr_auto] gap-2">
-            <input
-              className={inputClass}
-              defaultValue={item.chord.label}
-              onBlur={(event) => updateChordLabel(index, event.target.value)}
-              aria-label={`Bar ${item.bar} のコード`}
-            />
-            <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => void onPreviewChord(editedCandidate, index)}>
-              ▶
-            </button>
-          </div>
-        ))}
+      <div className="mt-4">
+        <ProgressionGrid
+          chords={chords}
+          currentBar={playingChord?.bar ?? null}
+          selectedChordIndex={selectedChordIndex}
+          playingChordIndex={playingChordIndex}
+          playingProgress={playingProgress}
+          onChordSelect={(index) => void selectChord(index)}
+        />
       </div>
+      <textarea className={`${inputClass} mt-3 min-h-20`} value={summary} onChange={(event) => setSummary(event.target.value)} />
+      {selectedChord ? (
+        <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
+          <input
+            key={`${selectedChord.bar}-${selectedChord.beat}-${selectedChordIndex}`}
+            className={inputClass}
+            defaultValue={selectedChord.chord.label}
+            onBlur={(event) => updateChordLabel(selectedChordIndex, event.target.value)}
+            aria-label={`Bar ${selectedChord.bar} のコード`}
+          />
+          <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => void selectChord(selectedChordIndex)}>
+            ▶ 選択コード
+          </button>
+        </div>
+      ) : null}
       {labelError ? <p className="mt-2 text-xs text-red-200">{labelError}</p> : null}
       <input className={`${inputClass} mt-2`} value={title} onChange={(event) => setTitle(event.target.value)} placeholder="新規Ideaのタイトル" />
       {candidate.warnings.length > 0 ? (
         <p className="mt-2 text-xs text-amber-200">{candidate.warnings.join("; ")}</p>
       ) : null}
-      <div className="mt-3 flex flex-wrap gap-2">
-        <button className="rounded bg-cyan-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => void onPreview(editedCandidate)}>
+      <div className="mt-3">
+        <button className="rounded bg-cyan-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => void previewWholeCandidate()}>
           試聴
         </button>
+        {previewStartedAt !== null ? (
+          <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={stopCandidatePreview}>
+            停止
+          </button>
+        ) : null}
         <button className="rounded bg-teal-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => onCreate(editedCandidate, title)}>
           新規Idea
         </button>
@@ -974,11 +1074,12 @@ function ProgressionBlockCard({
         </button>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
-        {block.chords.map((item, index) => (
-          <span key={`${item.bar}-${item.beat}-${index}`} className="rounded bg-stone-800 px-2 py-1 text-xs text-stone-200">
-            {item.chord.label}
-          </span>
-        ))}
+        <ProgressionGrid
+          chords={block.chords}
+          currentBar={null}
+          selectedChordIndex={undefined}
+          playingChordIndex={null}
+        />
       </div>
       {block.memo ? <p className="mt-3 text-xs text-amber-200">{block.memo}</p> : null}
     </div>
@@ -1470,6 +1571,15 @@ async function previewTimeline(
 ): Promise<void> {
   const { previewChordTimeline } = await import("./audio/chordPreview");
   await previewChordTimeline(chords, bpm);
+}
+
+async function stopPreviewAudio(): Promise<void> {
+  const { stopPreview } = await import("./audio/chordPreview");
+  stopPreview();
+}
+
+function firstTimelineBeat(chords: readonly ChordTimelineItem[]): number {
+  return chords.length === 0 ? 0 : Math.min(...chords.map(timelineStartBeat));
 }
 
 function splitList(value: string): string[] {
