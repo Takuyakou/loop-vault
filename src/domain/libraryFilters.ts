@@ -114,7 +114,14 @@ function normalize(value: string): string {
 }
 
 function searchText(idea: SongIdea): string {
+  const progressionText = (idea.progressionBlocks ?? [])
+    .flatMap((block) => [
+      block.summaryText,
+      ...block.chords.map((item) => item.chord.label),
+    ])
+    .join(" ");
+
   return normalize(
-    [idea.title, idea.chordMemo, idea.nextAction.text].filter(Boolean).join(" "),
+    [idea.title, idea.chordMemo, idea.nextAction.text, progressionText].filter(Boolean).join(" "),
   );
 }

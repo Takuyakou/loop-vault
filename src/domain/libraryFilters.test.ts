@@ -139,4 +139,41 @@ describe("library filters", () => {
       olderLoop.id,
     ]);
   });
+
+  it("matches progression block summary and chord labels", () => {
+    const target = makeIdea({
+      id: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+      title: "Progression Vault",
+      chordMemo: "",
+      nextAction: { text: "", updatedAt: "2026-07-01T00:00:00.000Z" },
+      progressionBlocks: [
+        {
+          id: "block-1",
+          summaryText: "warm turnaround",
+          chords: [
+            {
+              bar: 1,
+              beat: 1,
+              durationBeats: 4,
+              chord: { root: 0, quality: "maj9", tensions: [], label: "Dmaj9" },
+              confidence: 0.9,
+              alternatives: [],
+              warnings: [],
+            },
+          ],
+          tags: [],
+          capturedAt: "2026-07-01T00:00:00.000Z",
+          analyzerVersion: "test",
+        },
+      ],
+    });
+    const other = makeIdea({
+      id: "ffffffff-ffff-4fff-8fff-ffffffffffff",
+      title: "Plain Idea",
+      chordMemo: "",
+    });
+
+    expect(filterIdeas([target, other], { query: "turnaround" }).map((idea) => idea.id)).toEqual([target.id]);
+    expect(filterIdeas([target, other], { query: "Dmaj9" }).map((idea) => idea.id)).toEqual([target.id]);
+  });
 });

@@ -670,25 +670,42 @@ function LibraryView({
         <EmptyState openCreate={openCreate} copy={copy} />
       ) : (
         <div className="grid gap-3 py-5 md:grid-cols-2 xl:grid-cols-3">
-          {visible.map((idea) => (
-            <button key={idea.id} className="border border-stone-800 bg-stone-900 p-4 text-left hover:border-teal-400" onClick={() => openDetail(idea.id)}>
-              <div className="flex items-start justify-between gap-3">
-                <h2 className="text-lg font-semibold">{idea.title}</h2>
-                <StatusBadge status={idea.status} language={language} />
-              </div>
-              <p className="mt-2 text-sm text-stone-400">{idea.bpm ? `${idea.bpm} bpm` : copy.library.bpmUnset} {idea.key ? ` · ${idea.key}` : ""}</p>
-              <p className="mt-4 line-clamp-2 text-sm text-stone-300">{idea.nextAction.text || copy.library.noNextAction}</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {!idea.nextAction.text.trim() ? <span className="inline-block rounded bg-amber-400 px-2 py-1 text-xs font-semibold text-stone-950">{copy.library.noNextAction}</span> : null}
-                {(idea.progressionBlocks ?? []).length > 0 ? (
-                  <span className="inline-block rounded bg-cyan-400 px-2 py-1 text-xs font-semibold text-stone-950">
-                    {(idea.progressionBlocks ?? []).length} block
-                  </span>
+          {visible.map((idea) => {
+            const progressionBlocks = idea.progressionBlocks ?? [];
+            const firstBlock = progressionBlocks[0];
+            const extraBlockCount = Math.max(0, progressionBlocks.length - 1);
+            const progressionPreview = firstBlock
+              ? formatProgressionText(firstBlock.chords).split("\n")[0]
+              : "";
+
+            return (
+              <button key={idea.id} className="border border-stone-800 bg-stone-900 p-4 text-left hover:border-teal-400" onClick={() => openDetail(idea.id)}>
+                <div className="flex items-start justify-between gap-3">
+                  <h2 className="text-lg font-semibold">{idea.title}</h2>
+                  <StatusBadge status={idea.status} language={language} />
+                </div>
+                <p className="mt-2 text-sm text-stone-400">{idea.bpm ? `${idea.bpm} bpm` : copy.library.bpmUnset} {idea.key ? ` · ${idea.key}` : ""}</p>
+                {firstBlock ? (
+                  <div className="mt-4 border border-stone-800 bg-stone-950 p-3">
+                    <p className="line-clamp-1 text-xs font-semibold uppercase tracking-[0.12em] text-cyan-300">
+                      {firstBlock.summaryText || (language === "ja" ? "保存したコード進行" : "Saved progression")}
+                    </p>
+                    <p className="mt-2 line-clamp-2 font-mono text-sm text-stone-200">{progressionPreview}</p>
+                  </div>
                 ) : null}
-              </div>
-              <p className="mt-4 text-xs text-stone-500">{language === "ja" ? "更新" : "Updated"} {formatDate(idea.updatedAt)}</p>
-            </button>
-          ))}
+                <p className="mt-4 line-clamp-2 text-sm text-stone-300">{idea.nextAction.text || copy.library.noNextAction}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {!idea.nextAction.text.trim() ? <span className="inline-block rounded bg-amber-400 px-2 py-1 text-xs font-semibold text-stone-950">{copy.library.noNextAction}</span> : null}
+                  {progressionBlocks.length > 0 ? (
+                    <span className="inline-block rounded bg-cyan-400 px-2 py-1 text-xs font-semibold text-stone-950">
+                      {progressionBlocks.length} block{extraBlockCount > 0 ? ` · +${extraBlockCount}` : ""}
+                    </span>
+                  ) : null}
+                </div>
+                <p className="mt-4 text-xs text-stone-500">{language === "ja" ? "更新" : "Updated"} {formatDate(idea.updatedAt)}</p>
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
