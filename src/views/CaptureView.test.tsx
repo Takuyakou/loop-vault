@@ -48,6 +48,7 @@ describe("ProgressionCandidateCard", () => {
         onCreate={vi.fn()}
         onAppend={vi.fn()}
         onCopyMemo={vi.fn()}
+        onCopyProgression={vi.fn()}
         onPreview={vi.fn()}
         onPreviewChord={vi.fn()}
         copy={appCopy.ja}
@@ -60,6 +61,7 @@ describe("ProgressionCandidateCard", () => {
     expect(markup).toContain("低音の解釈に注意");
     expect(markup).toContain("編集");
     expect(markup).toContain("保存");
+    expect(markup).toContain("Chord Drip形式でコピー");
     expect(markup).not.toContain("<textarea");
     expect(markup).not.toContain("保存タイトル");
     expect(markup).not.toContain("ambiguous-bass");
@@ -77,6 +79,7 @@ describe("ProgressionCandidateCard", () => {
         onCreate={vi.fn()}
         onAppend={vi.fn()}
         onCopyMemo={vi.fn()}
+        onCopyProgression={vi.fn()}
         onPreview={vi.fn()}
         onPreviewChord={vi.fn()}
         copy={appCopy.ja}

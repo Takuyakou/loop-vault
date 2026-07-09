@@ -4,6 +4,7 @@ import {
 import { readFile } from "@tauri-apps/plugin-fs";
 import { useEffect, useRef, useState } from "react";
 import { parseChordLabel } from "../domain/chords";
+import { formatProgressionText } from "../domain/progressionText";
 import type {
   ChordSymbol,
   ChordTimelineItem,
@@ -118,6 +119,15 @@ export function CaptureView({
     setToast(copy.toast.blockCopied);
   }
 
+  async function copyProgression(candidate: ProgressionBlockCandidate) {
+    try {
+      await writeClipboardText(formatProgressionText(candidate.chords));
+      setToast(language === "ja" ? "Chord Drip形式でコピーしました。" : "Copied progression text.");
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : (language === "ja" ? "コピーできませんでした。" : "Could not copy progression."));
+    }
+  }
+
   async function previewCandidate(candidate: ProgressionBlockCandidate) {
     try {
       await previewTimeline(candidate.chords, analysis.result?.bpm);
@@ -208,6 +218,7 @@ export function CaptureView({
                 onCreate={saveNew}
                 onAppend={appendExisting}
                 onCopyMemo={copyMemo}
+                onCopyProgression={copyProgression}
                 onPreview={previewCandidate}
                 onPreviewChord={previewCandidateChord}
                 copy={copy}
@@ -323,6 +334,7 @@ export function ProgressionCandidateCard({
   onCreate,
   onAppend,
   onCopyMemo,
+  onCopyProgression,
   onPreview,
   onPreviewChord,
   copy,
@@ -335,6 +347,7 @@ export function ProgressionCandidateCard({
   onCreate: (candidate: ProgressionBlockCandidate, title: string, nextAction: string) => void;
   onAppend: (candidate: ProgressionBlockCandidate, ideaId: string) => void;
   onCopyMemo: (candidate: ProgressionBlockCandidate, ideaId: string) => void;
+  onCopyProgression: (candidate: ProgressionBlockCandidate) => void | Promise<void>;
   onPreview: (candidate: ProgressionBlockCandidate) => void | Promise<void>;
   onPreviewChord: (
     candidate: ProgressionBlockCandidate,
@@ -558,6 +571,9 @@ export function ProgressionCandidateCard({
         <button className="rounded bg-teal-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => setIsSaveOpen(true)}>
           {language === "ja" ? "保存" : "Save"}
         </button>
+        <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => void onCopyProgression(editedCandidate)}>
+          {copy.capture.copyProgression}
+        </button>
       </div>
       {isSaveOpen ? (
         <ProgressionSaveDialog
@@ -754,6 +770,13 @@ async function previewTimeline(
 async function stopPreviewAudio(): Promise<void> {
   const { stopPreview } = await import("../audio/chordPreview");
   stopPreview();
+}
+
+async function writeClipboardText(text: string): Promise<void> {
+  if (!navigator.clipboard?.writeText) {
+    throw new Error("Clipboard is not available.");
+  }
+  await navigator.clipboard.writeText(text);
 }
 
 function firstTimelineBeat(chords: readonly ChordTimelineItem[]): number {
