@@ -43,7 +43,7 @@ function vault(overrides: Partial<VaultFile> = {}): VaultFile {
   return {
     app: "loopvault",
     fileVersion: 1,
-    settings: { monthlyGoal: 1 },
+    settings: { monthlyGoal: 1, language: "ja" },
     ideas: [idea()],
     ...overrides,
   };
@@ -107,5 +107,22 @@ describe("parseVaultFileJson", () => {
     }
 
     expect(result.vault.ideas[0]?.progressionBlocks).toEqual([]);
+  });
+
+  it("loads legacy settings without language by defaulting to Japanese", () => {
+    const legacyVault = {
+      app: "loopvault",
+      fileVersion: 1,
+      settings: { monthlyGoal: 1 },
+      ideas: [idea()],
+    };
+    const result = parseVaultFileJson(JSON.stringify(legacyVault));
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+
+    expect(result.vault.settings.language).toBe("ja");
   });
 });

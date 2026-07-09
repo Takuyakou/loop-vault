@@ -16,6 +16,7 @@ import type {
   SongIdea,
   Status,
   VaultFile,
+  AppLanguage,
 } from "../domain/types";
 import type { AnalyzeMidiOptions } from "../domain/midi/types";
 
@@ -93,6 +94,7 @@ export interface VaultStoreState {
   ) => MidiProgressionAnalysis | undefined;
   clearAnalysis: () => void;
   setMonthlyGoal: (goal: number) => void;
+  setLanguage: (language: AppLanguage) => void;
   refreshBackups: () => Promise<void>;
   exportVault: (path: string) => Promise<boolean>;
   importVault: (path: string, mode: VaultImportMode) => Promise<boolean>;
@@ -388,6 +390,13 @@ export function createVaultStore(
         applyVaultChange((vault) => ({
           ...vault,
           settings: { ...vault.settings, monthlyGoal },
+        }));
+      },
+
+      setLanguage(language) {
+        applyVaultChange((vault) => ({
+          ...vault,
+          settings: { ...vault.settings, language },
         }));
       },
 

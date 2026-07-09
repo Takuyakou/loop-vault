@@ -5,7 +5,7 @@ import { isTauriRuntime, shouldBlockClose } from "./closeGuard";
 function state(overrides: Partial<VaultStoreState>): VaultStoreState {
   return {
     ideas: [],
-    settings: { monthlyGoal: 1 },
+    settings: { monthlyGoal: 1, language: "ja" },
     analysis: { status: "idle" },
     loadStatus: "ready",
     quarantine: [],
@@ -27,6 +27,7 @@ function state(overrides: Partial<VaultStoreState>): VaultStoreState {
     analyzeMidiBytes: () => undefined,
     clearAnalysis: () => undefined,
     setMonthlyGoal: () => undefined,
+    setLanguage: () => undefined,
     refreshBackups: async () => undefined,
     exportVault: async () => false,
     importVault: async () => false,

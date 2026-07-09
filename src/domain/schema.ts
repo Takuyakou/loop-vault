@@ -12,6 +12,7 @@ export const statusSchema = z.enum([
 ]);
 
 export const assetTypeSchema = z.enum(["midi", "audio", "flp", "other"]);
+export const appLanguageSchema = z.enum(["ja", "en"]);
 
 export const chordQualitySchema = z.enum([
   "maj",
@@ -147,10 +148,11 @@ export const songIdeaSchema: z.ZodType<SongIdea> = z
 export const vaultSettingsSchema = z
   .object({
     monthlyGoal: z.number().int().min(1),
+    language: appLanguageSchema.default("ja"),
   })
   .strict();
 
-export const vaultFileSchema: z.ZodType<VaultFile> = z
+export const vaultFileSchema: z.ZodType<VaultFile, z.ZodTypeDef, unknown> = z
   .object({
     app: z.literal("loopvault"),
     fileVersion: z.literal(1),

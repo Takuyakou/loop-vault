@@ -8,6 +8,7 @@ export type Status =
   | "abandoned";
 
 export type AssetType = "midi" | "audio" | "flp" | "other";
+export type AppLanguage = "ja" | "en";
 
 export type ChordQuality =
   | "maj" | "min" | "dim" | "aug" | "maj7" | "min7" | "dom7" | "min7b5" | "dim7"
@@ -109,6 +110,6 @@ export interface SongIdea {
 export interface VaultFile {
   app: "loopvault";
   fileVersion: 1;
-  settings: { monthlyGoal: number };
+  settings: { monthlyGoal: number; language: AppLanguage };
   ideas: SongIdea[];
 }
