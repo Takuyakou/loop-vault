@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { VaultStoreState } from "./vaultStore";
-import { shouldBlockClose } from "./closeGuard";
+import { isTauriRuntime, shouldBlockClose } from "./closeGuard";
 
 function state(overrides: Partial<VaultStoreState>): VaultStoreState {
   return {
@@ -43,5 +43,15 @@ describe("shouldBlockClose", () => {
 
   it("does not block close for saving status alone", () => {
     expect(shouldBlockClose(state({ saving: true, unsaved: false }))).toBe(false);
+  });
+});
+
+describe("isTauriRuntime", () => {
+  it("detects the Tauri runtime marker", () => {
+    expect(isTauriRuntime({ __TAURI_INTERNALS__: {} })).toBe(true);
+  });
+
+  it("returns false without the Tauri runtime marker", () => {
+    expect(isTauriRuntime({})).toBe(false);
   });
 });
