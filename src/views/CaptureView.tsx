@@ -61,8 +61,6 @@ export function CaptureView({
   copy,
   language,
 }: CaptureViewProps) {
-  const [selectedIdeaId, setSelectedIdeaId] = useState("");
-
   async function chooseMidi() {
     if (!("__TAURI_INTERNALS__" in window)) {
       setToast(copy.toast.desktopMidiOnly);
@@ -86,37 +84,37 @@ export function CaptureView({
     }
   }
 
-  function saveNew(candidate: ProgressionBlockCandidate, title: string) {
+  function saveNew(candidate: ProgressionBlockCandidate, title: string, nextAction: string) {
     const id = createIdeaFromDraft({
       title,
       status: "idea",
       bpm: analysis.result?.bpm,
       key: analysis.result?.detectedKey,
       chordMemo: candidate.summaryText,
-      nextAction: language === "ja" ? "採集したコード進行からループを作る" : "Build a loop from the captured progression",
+      nextAction,
       progressionBlock: candidate,
       progressionAnalysis: analysis.result,
     });
     setToast(id ? (language === "ja" ? "コード進行からIdeaを作成しました。" : "Created an idea from the progression.") : (language === "ja" ? "Ideaを作成できませんでした。" : "Could not create the idea."));
   }
 
-  function appendExisting(candidate: ProgressionBlockCandidate) {
-    if (!selectedIdeaId) {
+  function appendExisting(candidate: ProgressionBlockCandidate, ideaId: string) {
+    if (!ideaId) {
       setToast(language === "ja" ? "追加先のIdeaを選んでください。" : "Choose an idea first.");
       return;
     }
 
-    appendBlockToIdea(selectedIdeaId, candidate, analysis.result);
+    appendBlockToIdea(ideaId, candidate, analysis.result);
     setToast(copy.toast.blockSaved);
   }
 
-  function copyMemo(candidate: ProgressionBlockCandidate) {
-    if (!selectedIdeaId) {
+  function copyMemo(candidate: ProgressionBlockCandidate, ideaId: string) {
+    if (!ideaId) {
       setToast(language === "ja" ? "追加先のIdeaを選んでください。" : "Choose an idea first.");
       return;
     }
 
-    updateIdea(selectedIdeaId, { chordMemo: candidate.summaryText });
+    updateIdea(ideaId, { chordMemo: candidate.summaryText });
     setToast(copy.toast.blockCopied);
   }
 
@@ -198,20 +196,6 @@ export function CaptureView({
           </span>
         </div>
 
-        {ideas.length > 0 ? (
-          <details className="mt-4 border border-stone-800 bg-stone-950 p-3">
-            <summary className="cursor-pointer text-sm font-semibold text-stone-200">
-              {language === "ja" ? "既存Ideaへ追加する場合の追加先" : "Destination for appending to an existing idea"}
-            </summary>
-            <select className={`${inputClass} mt-3`} value={selectedIdeaId} onChange={(event) => setSelectedIdeaId(event.target.value)}>
-              <option value="">{language === "ja" ? "既存Ideaを選ぶ" : "Choose an existing idea"}</option>
-              {ideas.map((idea) => (
-                <option key={idea.id} value={idea.id}>{idea.title}</option>
-              ))}
-            </select>
-          </details>
-        ) : null}
-
         <div className="mt-5 space-y-4">
           {result.blockCandidates.length > 0 ? (
             result.blockCandidates.map((candidate, index) => (
@@ -220,6 +204,7 @@ export function CaptureView({
                 candidate={candidate}
                 candidateIndex={index}
                 bpm={result.bpm ?? 96}
+                ideas={ideas}
                 onCreate={saveNew}
                 onAppend={appendExisting}
                 onCopyMemo={copyMemo}
@@ -334,6 +319,7 @@ export function ProgressionCandidateCard({
   candidate,
   candidateIndex,
   bpm,
+  ideas,
   onCreate,
   onAppend,
   onCopyMemo,
@@ -345,9 +331,10 @@ export function ProgressionCandidateCard({
   candidate: ProgressionBlockCandidate;
   candidateIndex: number;
   bpm: number;
-  onCreate: (candidate: ProgressionBlockCandidate, title: string) => void;
-  onAppend: (candidate: ProgressionBlockCandidate) => void;
-  onCopyMemo: (candidate: ProgressionBlockCandidate) => void;
+  ideas: SongIdea[];
+  onCreate: (candidate: ProgressionBlockCandidate, title: string, nextAction: string) => void;
+  onAppend: (candidate: ProgressionBlockCandidate, ideaId: string) => void;
+  onCopyMemo: (candidate: ProgressionBlockCandidate, ideaId: string) => void;
   onPreview: (candidate: ProgressionBlockCandidate) => void | Promise<void>;
   onPreviewChord: (
     candidate: ProgressionBlockCandidate,
@@ -361,6 +348,7 @@ export function ProgressionCandidateCard({
   const [chords, setChords] = useState(candidate.chords);
   const [labelError, setLabelError] = useState<string>();
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaveOpen, setIsSaveOpen] = useState(false);
   const [selectedChordIndex, setSelectedChordIndex] = useState(0);
   const [playingChordIndex, setPlayingChordIndex] = useState<number | null>(null);
   const [previewStartedAt, setPreviewStartedAt] = useState<number | null>(null);
@@ -379,6 +367,7 @@ export function ProgressionCandidateCard({
     setChords(candidate.chords);
     setLabelError(undefined);
     setIsEditing(false);
+    setIsSaveOpen(false);
     setSelectedChordIndex(0);
     stopVisualPreview();
     return stopVisualPreview;
@@ -566,17 +555,172 @@ export function ProgressionCandidateCard({
         <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => setIsEditing((value) => !value)}>
           {isEditing ? (language === "ja" ? "編集を閉じる" : "Close editor") : (language === "ja" ? "編集" : "Edit")}
         </button>
-        <button className="rounded bg-teal-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => onCreate(editedCandidate, title)}>
-          {copy.capture.createIdea}
+        <button className="rounded bg-teal-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => setIsSaveOpen(true)}>
+          {language === "ja" ? "保存" : "Save"}
         </button>
-        <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => onAppend(editedCandidate)}>
-          {copy.capture.appendIdea}
+      </div>
+      {isSaveOpen ? (
+        <ProgressionSaveDialog
+          candidate={editedCandidate}
+          title={title}
+          ideas={ideas}
+          onTitleChange={setTitle}
+          onClose={() => setIsSaveOpen(false)}
+          onCreate={(saveTitle, nextAction) => {
+            onCreate(editedCandidate, saveTitle, nextAction);
+            setIsSaveOpen(false);
+          }}
+          onAppend={(ideaId) => {
+            onAppend(editedCandidate, ideaId);
+            setIsSaveOpen(false);
+          }}
+          onCopyMemo={(ideaId) => {
+            onCopyMemo(editedCandidate, ideaId);
+            setIsSaveOpen(false);
+          }}
+          copy={copy}
+          language={language}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+type SaveMode = "new" | "append" | "memo";
+
+export function ProgressionSaveDialog({
+  candidate,
+  title,
+  ideas,
+  onTitleChange,
+  onClose,
+  onCreate,
+  onAppend,
+  onCopyMemo,
+  copy,
+  language,
+  initialMode = "new",
+}: {
+  candidate: ProgressionBlockCandidate;
+  title: string;
+  ideas: SongIdea[];
+  onTitleChange: (title: string) => void;
+  onClose: () => void;
+  onCreate: (title: string, nextAction: string) => void;
+  onAppend: (ideaId: string) => void;
+  onCopyMemo: (ideaId: string) => void;
+  copy: AppCopy;
+  language: AppLanguage;
+  initialMode?: SaveMode;
+}) {
+  const [mode, setMode] = useState<SaveMode>(initialMode);
+  const [ideaId, setIdeaId] = useState("");
+  const [nextAction, setNextAction] = useState(
+    language === "ja" ? "採集したコード進行からループを作る" : "Build a loop from the captured progression",
+  );
+  const needsIdea = mode !== "new";
+  const canSave = mode === "new" ? title.trim().length > 0 : ideaId.length > 0;
+  const chordText = candidate.chords.map((item) => item.chord.label).join(" | ");
+
+  function save() {
+    if (!canSave) return;
+    if (mode === "new") {
+      onCreate(title.trim(), nextAction.trim());
+      return;
+    }
+    if (mode === "append") {
+      onAppend(ideaId);
+      return;
+    }
+    onCopyMemo(ideaId);
+  }
+
+  return (
+    <div className="mt-4 border border-teal-400/40 bg-stone-900 p-4 shadow-[0_0_0_1px_rgba(45,212,191,0.18)]">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="text-lg font-semibold">{language === "ja" ? "この進行を保存" : "Save this progression"}</h3>
+          <p className="mt-1 text-sm text-stone-400">{chordText}</p>
+        </div>
+        <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={onClose}>
+          {copy.common.close}
         </button>
-        <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => onCopyMemo(editedCandidate)}>
-          {copy.capture.copyMemo}
+      </div>
+
+      <fieldset className="mt-4 grid gap-2 sm:grid-cols-3">
+        <legend className="sr-only">{language === "ja" ? "保存方法" : "Save method"}</legend>
+        <SaveModeOption
+          checked={mode === "new"}
+          label={copy.capture.createIdea}
+          onChange={() => setMode("new")}
+        />
+        <SaveModeOption
+          checked={mode === "append"}
+          label={copy.capture.appendIdea}
+          onChange={() => setMode("append")}
+        />
+        <SaveModeOption
+          checked={mode === "memo"}
+          label={copy.capture.copyMemo}
+          onChange={() => setMode("memo")}
+        />
+      </fieldset>
+
+      {mode === "new" ? (
+        <div className="mt-4 grid gap-3">
+          <label className="text-xs font-semibold uppercase tracking-[0.12em] text-stone-500">
+            {language === "ja" ? "タイトル" : "Title"}
+            <input className={`${inputClass} mt-2`} value={title} onChange={(event) => onTitleChange(event.target.value)} />
+          </label>
+          <label className="text-xs font-semibold uppercase tracking-[0.12em] text-stone-500">
+            Next Action
+            <input className={`${inputClass} mt-2`} value={nextAction} onChange={(event) => setNextAction(event.target.value)} />
+          </label>
+        </div>
+      ) : null}
+
+      {needsIdea ? (
+        <label className="mt-4 block text-xs font-semibold uppercase tracking-[0.12em] text-stone-500">
+          {language === "ja" ? "追加先Idea" : "Destination idea"}
+          <select className={`${inputClass} mt-2`} value={ideaId} onChange={(event) => setIdeaId(event.target.value)}>
+            <option value="">{language === "ja" ? "既存Ideaを選ぶ" : "Choose an existing idea"}</option>
+            {ideas.map((idea) => (
+              <option key={idea.id} value={idea.id}>{idea.title}</option>
+            ))}
+          </select>
+        </label>
+      ) : null}
+
+      <div className="mt-4 flex flex-wrap justify-end gap-2">
+        <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={onClose}>
+          {language === "ja" ? "キャンセル" : "Cancel"}
+        </button>
+        <button
+          className="rounded bg-teal-400 px-3 py-2 text-sm font-semibold text-stone-950 disabled:cursor-not-allowed disabled:bg-stone-700 disabled:text-stone-400"
+          disabled={!canSave}
+          onClick={save}
+        >
+          {language === "ja" ? "保存" : "Save"}
         </button>
       </div>
     </div>
+  );
+}
+
+function SaveModeOption({
+  checked,
+  label,
+  onChange,
+}: {
+  checked: boolean;
+  label: string;
+  onChange: () => void;
+}) {
+  return (
+    <label className={`flex cursor-pointer items-center gap-2 border px-3 py-2 text-sm ${checked ? "border-teal-400 bg-teal-400/10 text-teal-100" : "border-stone-800 bg-stone-950 text-stone-300"}`}>
+      <input type="radio" checked={checked} onChange={onChange} />
+      {label}
+    </label>
   );
 }
 
