@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { ChordTimelineItem, ProgressionBlockCandidate } from "../domain/types";
 import { makeIdea } from "../domain/testFactory";
 import { appCopy } from "../i18n";
-import { ProgressionCandidateCard, ProgressionSaveDialog } from "./CaptureView";
+import { isMidiFileName, ProgressionCandidateCard, ProgressionSaveDialog } from "./CaptureView";
 
 function chord(label: string, bar: number): ChordTimelineItem {
   return {
@@ -135,5 +135,18 @@ describe("ProgressionCandidateCard", () => {
     expect(markup).toContain("追加先Idea");
     expect(markup).toContain("Existing idea");
     expect(markup).toContain("disabled=\"\"");
+  });
+});
+
+describe("isMidiFileName", () => {
+  it("accepts .mid and .midi files case-insensitively", () => {
+    expect(isMidiFileName("idea.mid")).toBe(true);
+    expect(isMidiFileName("Idea.MIDI")).toBe(true);
+    expect(isMidiFileName("C:\\loops\\hook.Mid")).toBe(true);
+  });
+
+  it("rejects non-MIDI files", () => {
+    expect(isMidiFileName("bounce.wav")).toBe(false);
+    expect(isMidiFileName("notes.mid.txt")).toBe(false);
   });
 });
