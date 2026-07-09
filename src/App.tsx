@@ -11,17 +11,13 @@ import {
   canOpenAssetPath,
   openableAssetExtensions,
 } from "./domain/assetSecurity";
-import { parseChordLabel } from "./domain/chords";
 import { filterAndSortIdeas, type IdeaFilters } from "./domain/libraryFilters";
 import { monthlyStats } from "./domain/monthlyStats";
 import { pickFocus } from "./domain/focus";
 import type { TransitionResult } from "./domain/transition";
 import type {
   AssetType,
-  ChordSymbol,
   ChordTimelineItem,
-  MidiProgressionAnalysis,
-  ProgressionBlockCandidate,
   SavedProgressionBlock,
   SongIdea,
   Status,
@@ -32,8 +28,8 @@ import {
   registerTauriCloseGuard,
 } from "./store/closeGuard";
 import { defaultVaultStore } from "./store/defaultVaultStore";
-import { ProgressionGrid, timelineStartBeat } from "./ui/ProgressionGrid";
-import { chordProgressFraction } from "./ui/playbackProgress";
+import { ProgressionGrid } from "./ui/ProgressionGrid";
+import { CaptureView } from "./views/CaptureView";
 
 type View = "home" | "capture" | "library" | "detail";
 type SortKey = "updatedAt" | "createdAt" | "bpm";
@@ -698,417 +694,6 @@ function LibraryView({
   );
 }
 
-function CaptureView({
-  ideas,
-  analysis,
-  analyzeMidiBytes,
-  clearAnalysis,
-  createIdeaFromDraft,
-  appendBlockToIdea,
-  updateIdea,
-  setToast,
-  copy,
-  language,
-}: {
-  ideas: SongIdea[];
-  analysis: ReturnType<typeof defaultVaultStore.getState>["analysis"];
-  analyzeMidiBytes: (
-    bytes: Uint8Array,
-    options?: { fileName?: string; sourceAssetId?: string },
-  ) => MidiProgressionAnalysis | undefined;
-  clearAnalysis: () => void;
-  createIdeaFromDraft: (draft: {
-    title: string;
-    status?: Status;
-    bpm?: number;
-    key?: string;
-    chordMemo?: string;
-    nextAction?: string;
-    progressionBlock?: ProgressionBlockCandidate;
-    progressionAnalysis?: MidiProgressionAnalysis;
-  }) => string | undefined;
-  appendBlockToIdea: (
-    ideaId: string,
-    block: ProgressionBlockCandidate,
-    analysis?: MidiProgressionAnalysis,
-  ) => void;
-  updateIdea: (id: string, changes: Partial<SongIdea>) => void;
-  setToast: (toast: string) => void;
-  copy: AppCopy;
-  language: AppLanguage;
-}) {
-  const [selectedIdeaId, setSelectedIdeaId] = useState("");
-
-  async function chooseMidi() {
-    if (!("__TAURI_INTERNALS__" in window)) {
-      setToast(copy.toast.desktopMidiOnly);
-      return;
-    }
-
-    const path = await openFileDialog({
-      multiple: false,
-      filters: [{ name: "MIDI", extensions: ["mid", "midi"] }],
-    });
-    if (typeof path !== "string") {
-      return;
-    }
-
-    try {
-      const bytes = await readFile(path);
-      const result = analyzeMidiBytes(bytes, { fileName: fileNameFromPath(path) });
-      setToast(result ? copy.toast.midiAnalyzed : copy.toast.midiFailed);
-    } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.midiReadFailed);
-    }
-  }
-
-  function saveNew(candidate: ProgressionBlockCandidate, title: string) {
-    const id = createIdeaFromDraft({
-      title,
-      status: "idea",
-      bpm: analysis.result?.bpm,
-      key: analysis.result?.detectedKey,
-      chordMemo: candidate.summaryText,
-      nextAction: "Build a loop from the captured progression",
-      progressionBlock: candidate,
-      progressionAnalysis: analysis.result,
-    });
-    setToast(id ? (language === "ja" ? "コード進行からIdeaを作成しました。" : "Created an idea from the progression.") : (language === "ja" ? "Ideaを作成できませんでした。" : "Could not create the idea."));
-  }
-
-  function appendExisting(candidate: ProgressionBlockCandidate) {
-    if (!selectedIdeaId) {
-      setToast(language === "ja" ? "先にIdeaを選んでください。" : "Choose an idea first.");
-      return;
-    }
-
-    appendBlockToIdea(selectedIdeaId, candidate, analysis.result);
-    setToast(copy.toast.blockSaved);
-  }
-
-  function copyMemo(candidate: ProgressionBlockCandidate) {
-    if (!selectedIdeaId) {
-      setToast(language === "ja" ? "先にIdeaを選んでください。" : "Choose an idea first.");
-      return;
-    }
-
-    updateIdea(selectedIdeaId, { chordMemo: candidate.summaryText });
-    setToast(copy.toast.blockCopied);
-  }
-
-  async function previewCandidate(candidate: ProgressionBlockCandidate) {
-    try {
-      await previewTimeline(candidate.chords, analysis.result?.bpm);
-    } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
-    }
-  }
-
-  async function previewCandidateChord(candidate: ProgressionBlockCandidate, chordIndex: number) {
-    try {
-      const chord = candidate.chords[chordIndex]?.chord;
-      if (chord) {
-        await previewSingleChord(chord);
-      }
-    } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
-    }
-  }
-
-  const result = analysis.result;
-
-  return (
-    <div className="grid gap-5 py-5 xl:grid-cols-[0.85fr_1.15fr]">
-      <section className="space-y-5">
-        <Panel>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-2xl font-semibold">{copy.capture.title}</h2>
-              <p className="mt-2 text-sm text-stone-400">
-                {language === "ja" ? "MIDIからコードタイムラインと再利用できる候補ブロックを作ります。" : "Build a chord timeline and reusable block candidates from a MIDI file."}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <button className="rounded bg-teal-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => void chooseMidi()}>
-                {copy.capture.loadMidi}
-              </button>
-              <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={clearAnalysis}>
-                {copy.capture.clear}
-              </button>
-            </div>
-          </div>
-          {analysis.status === "analyzing" ? <p className="mt-4 text-sm text-stone-300">{copy.capture.analyzing}</p> : null}
-          {analysis.status === "error" ? <p className="mt-4 text-sm text-red-200">{analysis.error}</p> : null}
-          {result ? (
-            <div className="mt-5 grid gap-3 text-sm sm:grid-cols-4">
-              <Metric label={copy.capture.file} value={result.fileName ?? "MIDI"} />
-              <Metric label={copy.capture.bars} value={result.totalBars.toString()} />
-              <Metric label="BPM" value={result.bpm ? Math.round(result.bpm).toString() : "Unknown"} />
-              <Metric label={copy.capture.timeSignature} value={result.timeSignature ?? (language === "ja" ? "不明" : "Unknown")} />
-            </div>
-          ) : null}
-        </Panel>
-
-        <Panel>
-          <h2 className="text-xl font-semibold">{copy.capture.timeline}</h2>
-          {result ? (
-            <div className="mt-4 max-h-[30rem] overflow-y-auto pr-1">
-              <div className="grid gap-2">
-                {result.fullTimeline.map((item, index) => (
-                  <div key={`${item.bar}-${item.beat}-${index}`} className="grid grid-cols-[5.5rem_1fr_4rem] items-center gap-3 border border-stone-800 p-2 text-sm">
-                    <span className="text-stone-400">{language === "ja" ? `${item.bar}小節` : `Bar ${item.bar}`}.{formatBeat(item.beat)}</span>
-                    <span className="font-semibold text-stone-100">{item.chord.label}</span>
-                    <span className="text-right text-stone-400">{Math.round(item.confidence * 100)}%</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <p className="mt-3 text-sm text-stone-400">{copy.capture.noTimeline}</p>
-          )}
-        </Panel>
-      </section>
-
-      <section className="space-y-5">
-        <Panel>
-          <h2 className="text-xl font-semibold">{copy.capture.destination}</h2>
-          <select className={`${inputClass} mt-3`} value={selectedIdeaId} onChange={(event) => setSelectedIdeaId(event.target.value)}>
-            <option value="">{language === "ja" ? "既存Ideaを選ぶ" : "Choose an existing idea"}</option>
-            {ideas.map((idea) => (
-              <option key={idea.id} value={idea.id}>{idea.title}</option>
-            ))}
-          </select>
-        </Panel>
-
-        <Panel>
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-xl font-semibold">{copy.capture.candidates}</h2>
-            {result ? <span className="text-sm text-stone-400">{language === "ja" ? `${result.blockCandidates.length}件` : `${result.blockCandidates.length} items`}</span> : null}
-          </div>
-          {result ? (
-            <div className="mt-4 space-y-3">
-              {result.blockCandidates.map((candidate) => (
-                <ProgressionCandidateCard
-                  key={candidate.id}
-                  candidate={candidate}
-                  bpm={result.bpm ?? 96}
-                  onCreate={saveNew}
-                  onAppend={appendExisting}
-                  onCopyMemo={copyMemo}
-                  onPreview={previewCandidate}
-                  onPreviewChord={previewCandidateChord}
-                  copy={copy}
-                  language={language}
-                />
-              ))}
-            </div>
-          ) : (
-            <p className="mt-3 text-sm text-stone-400">{language === "ja" ? "4/8/16小節の候補がここに表示されます。" : "4/8/16-bar candidates will appear here."}</p>
-          )}
-        </Panel>
-      </section>
-    </div>
-  );
-}
-
-function ProgressionCandidateCard({
-  candidate,
-  bpm,
-  onCreate,
-  onAppend,
-  onCopyMemo,
-  onPreview,
-  onPreviewChord,
-  copy,
-  language,
-}: {
-  candidate: ProgressionBlockCandidate;
-  bpm: number;
-  onCreate: (candidate: ProgressionBlockCandidate, title: string) => void;
-  onAppend: (candidate: ProgressionBlockCandidate) => void;
-  onCopyMemo: (candidate: ProgressionBlockCandidate) => void;
-  onPreview: (candidate: ProgressionBlockCandidate) => void | Promise<void>;
-  onPreviewChord: (
-    candidate: ProgressionBlockCandidate,
-    chordIndex: number,
-  ) => void | Promise<void>;
-  copy: AppCopy;
-  language: AppLanguage;
-}) {
-  const [summary, setSummary] = useState(candidate.summaryText);
-  const [title, setTitle] = useState(`${language === "ja" ? "コード進行" : "Progression"} ${candidate.labels.slice(0, 4).join(" - ")}`);
-  const [chords, setChords] = useState(candidate.chords);
-  const [labelError, setLabelError] = useState<string>();
-  const [selectedChordIndex, setSelectedChordIndex] = useState(0);
-  const [playingChordIndex, setPlayingChordIndex] = useState<number | null>(null);
-  const [previewStartedAt, setPreviewStartedAt] = useState<number | null>(null);
-  const [, forcePlaybackTick] = useState(0);
-  const visualTimers = useRef<number[]>([]);
-  const editedCandidate = {
-    ...candidate,
-    summaryText: summary,
-    chords,
-    labels: [...new Set(chords.map((item) => item.chord.label))],
-  };
-
-  useEffect(() => {
-    setSummary(candidate.summaryText);
-    setTitle(`${language === "ja" ? "コード進行" : "Progression"} ${candidate.labels.slice(0, 4).join(" - ")}`);
-    setChords(candidate.chords);
-    setLabelError(undefined);
-    setSelectedChordIndex(0);
-    stopVisualPreview();
-    return stopVisualPreview;
-  }, [candidate]);
-
-  useEffect(() => {
-    if (previewStartedAt === null) {
-      return undefined;
-    }
-
-    const interval = window.setInterval(() => {
-      forcePlaybackTick((value) => value + 1);
-    }, 100);
-
-    return () => window.clearInterval(interval);
-  }, [previewStartedAt]);
-
-  function updateChordLabel(index: number, label: string) {
-    const parsed = parseChordLabel(label);
-    if (!parsed) {
-      setLabelError(language === "ja" ? `未対応のコード表記です: ${label}` : `Unsupported chord label: ${label}`);
-      return;
-    }
-
-    setLabelError(undefined);
-    setChords((items) =>
-      items.map((item, itemIndex) =>
-        itemIndex === index ? { ...item, chord: parsed } : item,
-      ),
-    );
-  }
-
-  function stopVisualPreview() {
-    for (const timer of visualTimers.current) {
-      window.clearTimeout(timer);
-    }
-    visualTimers.current = [];
-    setPlayingChordIndex(null);
-    setPreviewStartedAt(null);
-  }
-
-  function stopCandidatePreview() {
-    stopVisualPreview();
-    void stopPreviewAudio();
-  }
-
-  async function previewWholeCandidate() {
-    stopVisualPreview();
-    const baseBeat = firstTimelineBeat(chords);
-    const beatSeconds = 60 / bpm;
-    setPreviewStartedAt(window.performance.now());
-
-    for (const [index, chord] of chords.entries()) {
-      const delayMs = Math.max(0, (timelineStartBeat(chord) - baseBeat) * beatSeconds * 1000);
-      visualTimers.current.push(
-        window.setTimeout(() => {
-          setPlayingChordIndex(index);
-          setSelectedChordIndex(index);
-        }, delayMs),
-      );
-    }
-
-    const last = chords[chords.length - 1];
-    const totalMs = last
-      ? (timelineStartBeat(last) - baseBeat + last.durationBeats) * beatSeconds * 1000
-      : 0;
-    visualTimers.current.push(window.setTimeout(stopVisualPreview, totalMs + 120));
-    await onPreview(editedCandidate);
-  }
-
-  async function selectChord(index: number) {
-    setSelectedChordIndex(index);
-    await onPreviewChord(editedCandidate, index);
-  }
-
-  const playingChord = playingChordIndex === null ? undefined : chords[playingChordIndex];
-  const elapsedSeconds =
-    previewStartedAt === null ? 0 : (window.performance.now() - previewStartedAt) / 1000;
-  const playingProgress =
-    previewStartedAt === null || playingChord === undefined
-      ? null
-      : chordProgressFraction(
-          {
-            startBeat: timelineStartBeat(playingChord) - firstTimelineBeat(chords),
-            durationBeats: playingChord.durationBeats,
-          },
-          bpm,
-          elapsedSeconds,
-        );
-  const selectedChord = chords[selectedChordIndex] ?? chords[0];
-
-  return (
-    <div className="border border-stone-800 bg-stone-950 p-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="font-semibold">{language === "ja" ? `${candidate.startBar}-${candidate.endBar}小節` : `Bars ${candidate.startBar}-${candidate.endBar}`} ({candidate.lengthBars})</p>
-          <p className="mt-1 text-sm text-stone-400">{language === "ja" ? "信頼度" : "Confidence"} {Math.round(candidate.confidence * 100)}%</p>
-        </div>
-        <span className="rounded bg-stone-800 px-2 py-1 text-xs text-teal-200">{candidate.labels.join(" - ")}</span>
-      </div>
-      <div className="mt-4">
-        <ProgressionGrid
-          chords={chords}
-          currentBar={playingChord?.bar ?? null}
-          selectedChordIndex={selectedChordIndex}
-          playingChordIndex={playingChordIndex}
-          playingProgress={playingProgress}
-          onChordSelect={(index) => void selectChord(index)}
-        />
-      </div>
-      <textarea className={`${inputClass} mt-3 min-h-20`} value={summary} onChange={(event) => setSummary(event.target.value)} />
-      {selectedChord ? (
-        <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
-          <input
-            key={`${selectedChord.bar}-${selectedChord.beat}-${selectedChordIndex}`}
-            className={inputClass}
-            defaultValue={selectedChord.chord.label}
-            onBlur={(event) => updateChordLabel(selectedChordIndex, event.target.value)}
-            aria-label={language === "ja" ? `Bar ${selectedChord.bar} のコード` : `Chord at bar ${selectedChord.bar}`}
-          />
-          <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => void selectChord(selectedChordIndex)}>
-            ▶ {copy.capture.selectedChord}
-          </button>
-        </div>
-      ) : null}
-      {labelError ? <p className="mt-2 text-xs text-red-200">{labelError}</p> : null}
-      <input className={`${inputClass} mt-2`} value={title} onChange={(event) => setTitle(event.target.value)} placeholder={copy.capture.newIdeaTitle} />
-      {candidate.warnings.length > 0 ? (
-        <p className="mt-2 text-xs text-amber-200">{candidate.warnings.join("; ")}</p>
-      ) : null}
-      <div className="mt-3">
-        <button className="rounded bg-cyan-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => void previewWholeCandidate()}>
-          {copy.common.preview}
-        </button>
-        {previewStartedAt !== null ? (
-          <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={stopCandidatePreview}>
-            {copy.common.stop}
-          </button>
-        ) : null}
-        <button className="rounded bg-teal-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => onCreate(editedCandidate, title)}>
-          {copy.capture.createIdea}
-        </button>
-        <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => onAppend(editedCandidate)}>
-          {copy.capture.appendIdea}
-        </button>
-        <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => onCopyMemo(editedCandidate)}>
-          {copy.capture.copyMemo}
-        </button>
-      </div>
-    </div>
-  );
-}
-
 function ProgressionBlockCard({
   block,
   onPreview,
@@ -1145,15 +730,6 @@ function ProgressionBlockCard({
         />
       </div>
       {block.memo ? <p className="mt-3 text-xs text-amber-200">{block.memo}</p> : null}
-    </div>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="border border-stone-800 bg-stone-950 p-3">
-      <p className="text-xs uppercase tracking-[0.12em] text-stone-500">{label}</p>
-      <p className="mt-1 font-semibold text-stone-100">{value}</p>
     </div>
   );
 }
@@ -1618,18 +1194,9 @@ function formatDate(value: string): string {
   return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value));
 }
 
-function formatBeat(value: number): string {
-  return Number.isInteger(value) ? value.toString() : value.toFixed(2);
-}
-
 function fileNameFromPath(path: string): string {
   const normalized = path.replace(/\\/g, "/");
   return normalized.split("/").pop() || "midi.mid";
-}
-
-async function previewSingleChord(chord: ChordSymbol): Promise<void> {
-  const { previewChord } = await import("./audio/chordPreview");
-  await previewChord(chord);
 }
 
 async function previewTimeline(
@@ -1638,15 +1205,6 @@ async function previewTimeline(
 ): Promise<void> {
   const { previewChordTimeline } = await import("./audio/chordPreview");
   await previewChordTimeline(chords, bpm);
-}
-
-async function stopPreviewAudio(): Promise<void> {
-  const { stopPreview } = await import("./audio/chordPreview");
-  stopPreview();
-}
-
-function firstTimelineBeat(chords: readonly ChordTimelineItem[]): number {
-  return chords.length === 0 ? 0 : Math.min(...chords.map(timelineStartBeat));
 }
 
 function splitList(value: string): string[] {
