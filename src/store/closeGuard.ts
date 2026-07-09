@@ -1,5 +1,6 @@
+import { invoke, isTauri } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { confirm } from "@tauri-apps/plugin-dialog";
+import { message } from "@tauri-apps/plugin-dialog";
 import type { StoreApi } from "zustand/vanilla";
 import type { VaultStoreState } from "./vaultStore";
 
@@ -7,9 +8,17 @@ export function shouldBlockClose(state: VaultStoreState): boolean {
   return state.unsaved;
 }
 
+export function isTauriRuntime(checkRuntime: () => boolean = isTauri): boolean {
+  return checkRuntime();
+}
+
 export function registerBrowserCloseGuard(
   store: StoreApi<VaultStoreState>,
 ): () => void {
+  if (isTauriRuntime()) {
+    return () => undefined;
+  }
+
   const handler = (event: BeforeUnloadEvent) => {
     if (!shouldBlockClose(store.getState())) {
       return;
@@ -26,39 +35,38 @@ export function registerBrowserCloseGuard(
 export async function registerTauriCloseGuard(
   store: StoreApi<VaultStoreState>,
 ): Promise<() => void> {
-  if (!("__TAURI_INTERNALS__" in window)) {
+  if (!isTauriRuntime()) {
     return () => undefined;
   }
 
   let closeInProgress = false;
 
   return getCurrentWindow().onCloseRequested(async (event) => {
+    event.preventDefault();
+
     if (closeInProgress) {
       return;
     }
 
-    if (!shouldBlockClose(store.getState())) {
-      return;
-    }
-
-    event.preventDefault();
-    const shouldClose = await confirm(
-      "未保存の変更があります。保存して閉じますか？",
-      { title: "Loop Vault", kind: "warning" },
-    );
-
-    if (!shouldClose) {
-      return;
-    }
-
     closeInProgress = true;
-    await store.getState().flush();
 
-    if (store.getState().unsaved) {
-      closeInProgress = false;
-      return;
+    if (shouldBlockClose(store.getState())) {
+      await store.getState().flush();
+
+      if (store.getState().unsaved) {
+        closeInProgress = false;
+        await message(
+          "変更を保存できなかったため、Loop Vaultを閉じませんでした。保存先や権限を確認してください。",
+          { title: "Loop Vault", kind: "error" },
+        );
+        return;
+      }
     }
 
-    await getCurrentWindow().destroy();
+    await exitDesktopApp();
   });
+}
+
+export async function exitDesktopApp(): Promise<void> {
+  await invoke("exit_app");
 }
