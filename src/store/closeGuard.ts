@@ -1,3 +1,4 @@
+import { invoke, isTauri } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { message } from "@tauri-apps/plugin-dialog";
 import type { StoreApi } from "zustand/vanilla";
@@ -7,8 +8,8 @@ export function shouldBlockClose(state: VaultStoreState): boolean {
   return state.unsaved;
 }
 
-export function isTauriRuntime(targetWindow: object = window): boolean {
-  return "__TAURI_INTERNALS__" in targetWindow;
+export function isTauriRuntime(checkRuntime: () => boolean = isTauri): boolean {
+  return checkRuntime();
 }
 
 export function registerBrowserCloseGuard(
@@ -38,31 +39,34 @@ export async function registerTauriCloseGuard(
     return () => undefined;
   }
 
-  const appWindow = getCurrentWindow();
   let closeInProgress = false;
 
-  return appWindow.onCloseRequested(async (event) => {
+  return getCurrentWindow().onCloseRequested(async (event) => {
+    event.preventDefault();
+
     if (closeInProgress) {
       return;
     }
 
-    if (!shouldBlockClose(store.getState())) {
-      return;
-    }
-
-    event.preventDefault();
     closeInProgress = true;
-    await store.getState().flush();
 
-    if (store.getState().unsaved) {
-      closeInProgress = false;
-      await message(
-        "変更を保存できなかったため、Loop Vaultを閉じませんでした。保存先や権限を確認してください。",
-        { title: "Loop Vault", kind: "error" },
-      );
-      return;
+    if (shouldBlockClose(store.getState())) {
+      await store.getState().flush();
+
+      if (store.getState().unsaved) {
+        closeInProgress = false;
+        await message(
+          "変更を保存できなかったため、Loop Vaultを閉じませんでした。保存先や権限を確認してください。",
+          { title: "Loop Vault", kind: "error" },
+        );
+        return;
+      }
     }
 
-    await appWindow.close();
+    await exitDesktopApp();
   });
+}
+
+export async function exitDesktopApp(): Promise<void> {
+  await invoke("exit_app");
 }

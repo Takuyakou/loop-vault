@@ -47,11 +47,11 @@ describe("shouldBlockClose", () => {
 });
 
 describe("isTauriRuntime", () => {
-  it("detects the Tauri runtime marker", () => {
-    expect(isTauriRuntime({ __TAURI_INTERNALS__: {} })).toBe(true);
+  it("uses the Tauri runtime predicate", () => {
+    expect(isTauriRuntime(() => true)).toBe(true);
   });
 
-  it("returns false without the Tauri runtime marker", () => {
-    expect(isTauriRuntime({})).toBe(false);
+  it("returns false when the Tauri predicate is false", () => {
+    expect(isTauriRuntime(() => false)).toBe(false);
   });
 });
