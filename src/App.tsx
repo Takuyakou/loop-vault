@@ -7,6 +7,8 @@ import { readFile } from "@tauri-apps/plugin-fs";
 import { openPath, revealItemInDir } from "@tauri-apps/plugin-opener";
 import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { useStore } from "zustand";
+import { AppShell, type AppView } from "./components/AppShell";
+import { Toast } from "./components/Toast";
 import {
   canOpenAssetPath,
   openableAssetExtensions,
@@ -33,7 +35,7 @@ import { defaultVaultStore } from "./store/defaultVaultStore";
 import { ProgressionGrid } from "./ui/ProgressionGrid";
 import { CaptureView } from "./views/CaptureView";
 
-type View = "home" | "capture" | "library" | "detail";
+type View = AppView;
 type SortKey = "updatedAt" | "createdAt" | "bpm";
 type Reference = SongIdea["references"][number];
 type Asset = SongIdea["assets"][number];
@@ -315,51 +317,9 @@ async function analyzeMidiPath(path: string) {
         </div>
       ) : null}
       {toast ? (
-        <div className="fixed right-4 top-4 z-50 max-w-sm border border-stone-700 bg-stone-900 px-4 py-3 text-sm text-stone-100 shadow-xl">
-          {toast}
-        </div>
+        <Toast message={toast} />
       ) : null}
     </main>
-  );
-}
-
-function AppShell({
-  view,
-  setView,
-  openCreate,
-  openSettings,
-  copy,
-  saveLabel,
-}: {
-  view: View;
-  setView: (view: View) => void;
-  openCreate: () => void;
-  openSettings: () => void;
-  copy: AppCopy;
-  saveLabel: string;
-}) {
-  return (
-    <header className="flex flex-col gap-4 border-b border-stone-800 pb-4 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <p className="text-xs uppercase tracking-[0.2em] text-teal-300">Loop Vault</p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-normal sm:text-3xl">{copy.hero}</h1>
-      </div>
-      <div className="flex flex-wrap items-center gap-2 text-sm">
-        <button className={tabClass(view === "home")} onClick={() => setView("home")}>{copy.nav.home}</button>
-        <button className={tabClass(view === "capture")} onClick={() => setView("capture")}>{copy.nav.capture}</button>
-        <button className={tabClass(view === "library")} onClick={() => setView("library")}>{copy.nav.library}</button>
-        <button className="rounded bg-teal-400 px-3 py-2 font-semibold text-stone-950" onClick={openCreate}>{copy.nav.new}</button>
-        <span className="min-w-20 px-2 py-2 text-center text-xs text-stone-400" aria-live="polite">{saveLabel}</span>
-        <button
-          className="grid h-9 w-9 place-items-center rounded border border-stone-700 text-lg text-stone-300 hover:border-teal-300 hover:bg-stone-900"
-          onClick={openSettings}
-          aria-label={copy.nav.settings}
-          title={copy.nav.settings}
-        >
-          ⚙
-        </button>
-      </div>
-    </header>
   );
 }
 
@@ -1312,12 +1272,6 @@ function StatusBadge({ status, language }: { status: Status; language: AppLangua
 
 function labelStatus(status: Status, language: AppLanguage): string {
   return statusLabel(status, language);
-}
-
-function tabClass(active: boolean): string {
-  return active
-    ? "border-b-2 border-teal-300 px-3 py-2 text-stone-50"
-    : "border-b-2 border-transparent px-3 py-2 text-stone-300 hover:border-stone-600 hover:text-stone-50";
 }
 
 function statusButtonClass(active: boolean): string {
