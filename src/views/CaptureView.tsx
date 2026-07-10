@@ -67,6 +67,8 @@ export function CaptureView({
   language,
 }: CaptureViewProps) {
   const [isDraggingMidi, setIsDraggingMidi] = useState(false);
+  const [expandedCandidateId, setExpandedCandidateId] = useState<string>();
+  const [saveDraft, setSaveDraft] = useState<{ candidate: ProgressionBlockCandidate; title: string }>();
   const result = analysis.result;
 
   const analyzeMidiBytesWithToast = useCallback(
@@ -346,29 +348,60 @@ export function CaptureView({
           </span>
         </div>
 
-        <div className="mt-5 space-y-4">
-          {result.blockCandidates.length > 0 ? (
-            result.blockCandidates.map((candidate, index) => (
-              <ProgressionCandidateCard
-                key={candidate.id}
-                candidate={candidate}
-                candidateIndex={index}
-                bpm={result.bpm ?? 96}
-                detectedKey={result.detectedKey}
+        <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
+          <div className="space-y-3">
+            {result.blockCandidates.length > 0 ? (
+              result.blockCandidates.map((candidate, index) => (
+                <ProgressionCandidateCard
+                  key={candidate.id}
+                  candidate={candidate}
+                  candidateIndex={index}
+                  bpm={result.bpm ?? 96}
+                  detectedKey={result.detectedKey}
+                  onCopyProgression={copyProgression}
+                  onPreview={previewCandidate}
+                  onPreviewChord={previewCandidateChord}
+                  copy={copy}
+                  language={language}
+                  isExpanded={expandedCandidateId === candidate.id}
+                  onSelect={() => setExpandedCandidateId(candidate.id)}
+                  onSave={(editedCandidate, title) => setSaveDraft({ candidate: editedCandidate, title })}
+                />
+              ))
+            ) : (
+              <p className="text-sm text-stone-400">{language === "ja" ? "使えそうな進行候補は見つかりませんでした。" : "No reusable progression candidates were found."}</p>
+            )}
+          </div>
+          <aside className="h-fit border border-teal-400/30 bg-stone-900 p-4 xl:sticky xl:top-4">
+            {saveDraft ? (
+              <ProgressionSaveDialog
+                candidate={saveDraft.candidate}
+                title={saveDraft.title}
                 ideas={ideas}
-                onCreate={saveNew}
-                onAppend={appendExisting}
-                onCopyMemo={copyMemo}
-                onCopyProgression={copyProgression}
-                onPreview={previewCandidate}
-                onPreviewChord={previewCandidateChord}
+                onTitleChange={(title) => setSaveDraft((draft) => draft ? { ...draft, title } : draft)}
+                onClose={() => setSaveDraft(undefined)}
+                onCreate={(title, nextAction) => {
+                  saveNew(saveDraft.candidate, title, nextAction);
+                  setSaveDraft(undefined);
+                }}
+                onAppend={(ideaId) => {
+                  appendExisting(saveDraft.candidate, ideaId);
+                  setSaveDraft(undefined);
+                }}
+                onCopyMemo={(ideaId) => {
+                  copyMemo(saveDraft.candidate, ideaId);
+                  setSaveDraft(undefined);
+                }}
                 copy={copy}
                 language={language}
               />
-            ))
-          ) : (
-            <p className="text-sm text-stone-400">{language === "ja" ? "使えそうな進行候補は見つかりませんでした。" : "No reusable progression candidates were found."}</p>
-          )}
+            ) : (
+              <div>
+                <h3 className="font-semibold">{language === "ja" ? "この進行を保存" : "Save this progression"}</h3>
+                <p className="mt-2 text-sm leading-6 text-stone-400">{language === "ja" ? "候補を選び、保存を押すとここで保存方法を選べます。" : "Select a candidate and choose Save to pick how to keep it."}</p>
+              </div>
+            )}
+          </aside>
         </div>
       </section>
 
@@ -491,24 +524,23 @@ export function ProgressionCandidateCard({
   candidateIndex,
   bpm,
   detectedKey,
-  ideas,
-  onCreate,
-  onAppend,
-  onCopyMemo,
   onCopyProgression,
   onPreview,
   onPreviewChord,
   copy,
   language,
+  isExpanded = true,
+  onSelect,
+  onSave,
 }: {
   candidate: ProgressionBlockCandidate;
   candidateIndex: number;
   bpm: number;
   detectedKey?: string;
-  ideas: SongIdea[];
-  onCreate: (candidate: ProgressionBlockCandidate, title: string, nextAction: string) => void;
-  onAppend: (candidate: ProgressionBlockCandidate, ideaId: string) => void;
-  onCopyMemo: (candidate: ProgressionBlockCandidate, ideaId: string) => void;
+  ideas?: SongIdea[];
+  onCreate?: (candidate: ProgressionBlockCandidate, title: string, nextAction: string) => void;
+  onAppend?: (candidate: ProgressionBlockCandidate, ideaId: string) => void;
+  onCopyMemo?: (candidate: ProgressionBlockCandidate, ideaId: string) => void;
   onCopyProgression: (candidate: ProgressionBlockCandidate) => void | Promise<void>;
   onPreview: (candidate: ProgressionBlockCandidate) => void | Promise<void>;
   onPreviewChord: (
@@ -517,13 +549,15 @@ export function ProgressionCandidateCard({
   ) => void | Promise<void>;
   copy: AppCopy;
   language: AppLanguage;
+  isExpanded?: boolean;
+  onSelect?: () => void;
+  onSave?: (candidate: ProgressionBlockCandidate, title: string) => void;
 }) {
   const [summary, setSummary] = useState(candidate.summaryText);
   const [title, setTitle] = useState(`${language === "ja" ? "コード進行" : "Progression"} ${candidate.labels.slice(0, 4).join(" - ")}`);
   const [chords, setChords] = useState(candidate.chords);
   const [labelError, setLabelError] = useState<string>();
   const [isEditing, setIsEditing] = useState(false);
-  const [isSaveOpen, setIsSaveOpen] = useState(false);
   const [selectedChordIndex, setSelectedChordIndex] = useState(0);
   const [playingChordIndex, setPlayingChordIndex] = useState<number | null>(null);
   const [previewStartedAt, setPreviewStartedAt] = useState<number | null>(null);
@@ -542,7 +576,6 @@ export function ProgressionCandidateCard({
     setChords(candidate.chords);
     setLabelError(undefined);
     setIsEditing(false);
-    setIsSaveOpen(false);
     setSelectedChordIndex(0);
     stopVisualPreview();
     return stopVisualPreview;
@@ -648,9 +681,9 @@ export function ProgressionCandidateCard({
   const shouldDisplayConfidence = shouldShowConfidence(candidate.confidence);
 
   return (
-    <div className="border border-stone-800 bg-stone-950 p-4">
+    <div className={`border bg-stone-950 p-4 transition-colors ${isExpanded ? "border-teal-400/50" : "border-stone-800 hover:border-stone-600"}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
+        <button className="min-w-0 text-left" onClick={onSelect} aria-expanded={isExpanded}>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-teal-300">
             {language === "ja" ? `候補 ${candidateIndex + 1}` : `Candidate ${candidateIndex + 1}`}
           </p>
@@ -660,27 +693,15 @@ export function ProgressionCandidateCard({
               {language === "ja" ? "信頼度" : "Confidence"}: {confidenceLabel(candidate.confidence, language)}
             </p>
           ) : null}
-        </div>
+        </button>
         <span className="rounded bg-stone-800 px-2 py-1 text-xs text-teal-200">{candidateLabelList(candidate.labels, language).join(" · ")}</span>
       </div>
       {summary.trim() ? <p className="mt-3 text-sm text-stone-300">{summary}</p> : null}
-      <div className="mt-4">
-        <ProgressionGrid
-          chords={chords}
-          currentBar={playingChord?.bar ?? null}
-          selectedChordIndex={selectedChordIndex}
-          playingChordIndex={playingChordIndex}
-          playingProgress={playingProgress}
-          onChordSelect={(index) => void selectChord(index)}
-        />
-      </div>
-      {selectedRomanHint ? (
-        <p className="mt-2 text-xs text-stone-500">
-          {selectedRomanHint.label}{selectedRomanHint.detail ? ` · ${selectedRomanHint.detail}` : ""}
-          {selectedRomanHint.confidence !== "high" ? (language === "ja" ? "（参考）" : " (reference)") : ""}
-        </p>
+      {isExpanded ? <div className="mt-4"><ProgressionGrid chords={chords} currentBar={playingChord?.bar ?? null} selectedChordIndex={selectedChordIndex} playingChordIndex={playingChordIndex} playingProgress={playingProgress} onChordSelect={(index) => void selectChord(index)} /></div> : <p className="mt-3 line-clamp-1 font-mono text-sm text-teal-100">{chords.map((item) => item.chord.label).join(" | ")}</p>}
+      {isExpanded && selectedRomanHint ? (
+        <p className="mt-2 text-xs text-stone-500">{selectedRomanHint.label}{selectedRomanHint.detail ? ` · ${selectedRomanHint.detail}` : ""}{selectedRomanHint.confidence !== "high" ? (language === "ja" ? "（参考）" : " (reference)") : ""}</p>
       ) : null}
-      {visibleWarnings.length > 0 ? (
+      {isExpanded && visibleWarnings.length > 0 ? (
         <div className="mt-3 flex flex-wrap gap-2">
           {visibleWarnings.map((warning) => (
             <span key={warning} className="rounded border border-amber-400/40 bg-amber-400/10 px-2 py-1 text-xs text-amber-100">
@@ -690,7 +711,7 @@ export function ProgressionCandidateCard({
         </div>
       ) : null}
 
-      {isEditing ? (
+      {isExpanded && isEditing ? (
         <div className="mt-4 border border-stone-800 bg-stone-900/50 p-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm font-semibold">{language === "ja" ? `編集中: 候補 ${candidateIndex + 1}` : `Editing Candidate ${candidateIndex + 1}`}</p>
@@ -736,39 +757,16 @@ export function ProgressionCandidateCard({
             ■
           </button>
         ) : null}
-        <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => setIsEditing((value) => !value)}>
+        <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => { onSelect?.(); setIsEditing((value) => !value); }}>
           {isEditing ? (language === "ja" ? "編集を閉じる" : "Close editor") : (language === "ja" ? "編集" : "Edit")}
         </button>
-        <button className="rounded bg-teal-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => setIsSaveOpen(true)}>
+        <button className="rounded bg-teal-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => { onSelect?.(); onSave?.(editedCandidate, title); }}>
           {language === "ja" ? "保存" : "Save"}
         </button>
         <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => void onCopyProgression(editedCandidate)}>
           {copy.capture.copyProgression}
         </button>
       </div>
-      {isSaveOpen ? (
-        <ProgressionSaveDialog
-          candidate={editedCandidate}
-          title={title}
-          ideas={ideas}
-          onTitleChange={setTitle}
-          onClose={() => setIsSaveOpen(false)}
-          onCreate={(saveTitle, nextAction) => {
-            onCreate(editedCandidate, saveTitle, nextAction);
-            setIsSaveOpen(false);
-          }}
-          onAppend={(ideaId) => {
-            onAppend(editedCandidate, ideaId);
-            setIsSaveOpen(false);
-          }}
-          onCopyMemo={(ideaId) => {
-            onCopyMemo(editedCandidate, ideaId);
-            setIsSaveOpen(false);
-          }}
-          copy={copy}
-          language={language}
-        />
-      ) : null}
     </div>
   );
 }
