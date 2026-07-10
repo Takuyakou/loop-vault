@@ -770,7 +770,7 @@ function LibraryView({
                   ) : null}
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {firstBlock ? <button className="grid h-8 w-8 place-items-center rounded border border-cyan-400/60 text-cyan-100" onClick={() => void previewTimeline(firstBlock.chords, firstBlock.bpm ?? idea.bpm)} aria-label={copy.common.preview} title={copy.common.preview}>▶</button> : <button className="rounded border border-stone-700 px-3 py-1 text-xs" onClick={openCapture}>{language === "ja" ? "MIDIから追加" : "Add from MIDI"}</button>}
+                  {firstBlock ? <><button className="grid h-8 w-8 place-items-center rounded border border-cyan-400/60 text-cyan-100" onClick={() => void previewTimeline(firstBlock.chords, firstBlock.bpm ?? idea.bpm)} aria-label={copy.common.preview} title={copy.common.preview}>▶</button><button className="grid h-8 w-8 place-items-center rounded border border-stone-700 text-stone-300" onClick={() => void stopPreviewTimeline()} aria-label={copy.common.stop} title={copy.common.stop}>■</button></> : <button className="rounded border border-stone-700 px-3 py-1 text-xs" onClick={openCapture}>{language === "ja" ? "MIDIから追加" : "Add from MIDI"}</button>}
                   <button className="rounded border border-stone-700 px-3 py-1 text-xs" onClick={() => openDetail(idea.id)}>{copy.common.open}</button>
                   {firstBlock ? <button className="rounded border border-stone-700 px-3 py-1 text-xs" onClick={() => void copyProgression(firstBlock)}>{copy.capture.copyProgression}</button> : null}
                 </div>
@@ -781,7 +781,7 @@ function LibraryView({
         </div>
       ) : null}
       {mode === "progression" ? (
-        progressions.length ? <div className="grid gap-3 py-5 md:grid-cols-2 xl:grid-cols-3">{progressions.map(({ idea, block }) => <article key={block.id} className="border border-stone-800 bg-stone-900 p-4"><p className="font-semibold">{block.summaryText || (language === "ja" ? "保存したコード進行" : "Saved progression")}</p><button className="mt-1 text-left text-xs text-teal-200 hover:underline" onClick={() => openDetail(idea.id)}>{idea.title}</button><p className="mt-3 font-mono text-sm text-stone-100">{formatProgressionText(block.chords).split("\n")[0]}</p><p className="mt-2 text-xs text-stone-500">{idea.bpm ? `${idea.bpm} BPM` : copy.library.bpmUnset}{idea.key ? ` · ${displayKey(idea.key, language)}` : ""}{block.startBar ? ` · ${language === "ja" ? `${block.startBar}-${block.endBar}小節` : `Bars ${block.startBar}-${block.endBar}`}` : ""}</p><div className="mt-4 flex gap-2"><button className="grid h-8 w-8 place-items-center rounded border border-cyan-400/60 text-cyan-100" onClick={() => void previewTimeline(block.chords, block.bpm ?? idea.bpm)} aria-label={copy.common.preview} title={copy.common.preview}>▶</button><button className="rounded border border-stone-700 px-3 py-1 text-xs" onClick={() => openDetail(idea.id)}>{language === "ja" ? "親Ideaを開く" : "Open parent Idea"}</button><button className="rounded border border-stone-700 px-3 py-1 text-xs" onClick={() => void copyProgression(block)}>{copy.capture.copyProgression}</button></div></article>)}</div> : <div className="py-14 text-center"><p className="text-stone-400">{language === "ja" ? "保存済みの進行はまだありません。" : "No saved progressions yet."}</p><button className="mt-4 rounded bg-teal-400 px-4 py-2 text-sm font-semibold text-stone-950" onClick={openCapture}>{language === "ja" ? "コード採集を始める" : "Start capture"}</button></div>
+        progressions.length ? <div className="grid gap-3 py-5 md:grid-cols-2 xl:grid-cols-3">{progressions.map(({ idea, block }) => <article key={block.id} className="border border-stone-800 bg-stone-900 p-4"><p className="font-semibold">{block.summaryText || (language === "ja" ? "保存したコード進行" : "Saved progression")}</p><button className="mt-1 text-left text-xs text-teal-200 hover:underline" onClick={() => openDetail(idea.id)}>{idea.title}</button><p className="mt-3 font-mono text-sm text-stone-100">{formatProgressionText(block.chords).split("\n")[0]}</p><p className="mt-2 text-xs text-stone-500">{idea.bpm ? `${idea.bpm} BPM` : copy.library.bpmUnset}{idea.key ? ` · ${displayKey(idea.key, language)}` : ""}{block.startBar ? ` · ${language === "ja" ? `${block.startBar}-${block.endBar}小節` : `Bars ${block.startBar}-${block.endBar}`}` : ""}</p><div className="mt-4 flex gap-2"><button className="grid h-8 w-8 place-items-center rounded border border-cyan-400/60 text-cyan-100" onClick={() => void previewTimeline(block.chords, block.bpm ?? idea.bpm)} aria-label={copy.common.preview} title={copy.common.preview}>▶</button><button className="grid h-8 w-8 place-items-center rounded border border-stone-700 text-stone-300" onClick={() => void stopPreviewTimeline()} aria-label={copy.common.stop} title={copy.common.stop}>■</button><button className="rounded border border-stone-700 px-3 py-1 text-xs" onClick={() => openDetail(idea.id)}>{language === "ja" ? "親Ideaを開く" : "Open parent Idea"}</button><button className="rounded border border-stone-700 px-3 py-1 text-xs" onClick={() => void copyProgression(block)}>{copy.capture.copyProgression}</button></div></article>)}</div> : <div className="py-14 text-center"><p className="text-stone-400">{language === "ja" ? "保存済みの進行はまだありません。" : "No saved progressions yet."}</p><button className="mt-4 rounded bg-teal-400 px-4 py-2 text-sm font-semibold text-stone-950" onClick={openCapture}>{language === "ja" ? "コード採集を始める" : "Start capture"}</button></div>
       ) : null}
     </div>
   );
@@ -1295,6 +1295,11 @@ async function previewTimeline(
 ): Promise<void> {
   const { previewChordTimeline } = await import("./audio/chordPreview");
   await previewChordTimeline(chords, bpm);
+}
+
+async function stopPreviewTimeline(): Promise<void> {
+  const { stopPreview } = await import("./audio/chordPreview");
+  stopPreview();
 }
 
 async function writeClipboardText(text: string): Promise<void> {
