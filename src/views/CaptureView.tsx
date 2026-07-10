@@ -6,6 +6,8 @@ import { readFile } from "@tauri-apps/plugin-fs";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { DragEvent } from "react";
 import { parseChordLabel } from "../domain/chords";
+import { candidateLabelList } from "../domain/displayLabels";
+import { romanNumeralHint } from "../domain/harmony/romanNumerals";
 import { formatProgressionText } from "../domain/progressionText";
 import type {
   ChordSymbol,
@@ -260,7 +262,7 @@ export function CaptureView({
   async function copyProgression(candidate: ProgressionBlockCandidate) {
     try {
       await writeClipboardText(formatProgressionText(candidate.chords));
-      setToast(language === "ja" ? "Chord Drip形式でコピーしました。" : "Copied progression text.");
+      setToast(language === "ja" ? "Chord Dripで使えるコード進行をコピーしました。" : "Copied progression text.");
     } catch (error) {
       setToast(error instanceof Error ? error.message : (language === "ja" ? "コピーできませんでした。" : "Could not copy progression."));
     }
@@ -352,6 +354,7 @@ export function CaptureView({
                 candidate={candidate}
                 candidateIndex={index}
                 bpm={result.bpm ?? 96}
+                detectedKey={result.detectedKey}
                 ideas={ideas}
                 onCreate={saveNew}
                 onAppend={appendExisting}
@@ -487,6 +490,7 @@ export function ProgressionCandidateCard({
   candidate,
   candidateIndex,
   bpm,
+  detectedKey,
   ideas,
   onCreate,
   onAppend,
@@ -500,6 +504,7 @@ export function ProgressionCandidateCard({
   candidate: ProgressionBlockCandidate;
   candidateIndex: number;
   bpm: number;
+  detectedKey?: string;
   ideas: SongIdea[];
   onCreate: (candidate: ProgressionBlockCandidate, title: string, nextAction: string) => void;
   onAppend: (candidate: ProgressionBlockCandidate, ideaId: string) => void;
@@ -636,6 +641,9 @@ export function ProgressionCandidateCard({
           elapsedSeconds,
         );
   const selectedChord = chords[selectedChordIndex] ?? chords[0];
+  const selectedRomanHint = selectedChord
+    ? romanNumeralHint(selectedChord.chord, detectedKey)
+    : undefined;
   const visibleWarnings = candidate.warnings.map((warning) => warningLabel(warning, language));
   const shouldDisplayConfidence = shouldShowConfidence(candidate.confidence);
 
@@ -653,7 +661,7 @@ export function ProgressionCandidateCard({
             </p>
           ) : null}
         </div>
-        <span className="rounded bg-stone-800 px-2 py-1 text-xs text-teal-200">{candidate.labels.join(" - ")}</span>
+        <span className="rounded bg-stone-800 px-2 py-1 text-xs text-teal-200">{candidateLabelList(candidate.labels, language).join(" · ")}</span>
       </div>
       {summary.trim() ? <p className="mt-3 text-sm text-stone-300">{summary}</p> : null}
       <div className="mt-4">
@@ -666,6 +674,12 @@ export function ProgressionCandidateCard({
           onChordSelect={(index) => void selectChord(index)}
         />
       </div>
+      {selectedRomanHint ? (
+        <p className="mt-2 text-xs text-stone-500">
+          {selectedRomanHint.label}{selectedRomanHint.detail ? ` · ${selectedRomanHint.detail}` : ""}
+          {selectedRomanHint.confidence !== "high" ? (language === "ja" ? "（参考）" : " (reference)") : ""}
+        </p>
+      ) : null}
       {visibleWarnings.length > 0 ? (
         <div className="mt-3 flex flex-wrap gap-2">
           {visibleWarnings.map((warning) => (
@@ -714,12 +728,12 @@ export function ProgressionCandidateCard({
       ) : null}
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <button className="rounded bg-cyan-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => void previewWholeCandidate()}>
-          {copy.common.preview}
+        <button className="grid h-9 w-9 place-items-center rounded bg-cyan-400 text-sm font-semibold text-stone-950" onClick={() => void previewWholeCandidate()} aria-label={copy.common.preview} title={copy.common.preview}>
+          ▶
         </button>
         {previewStartedAt !== null ? (
-          <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={stopCandidatePreview}>
-            {copy.common.stop}
+          <button className="grid h-9 w-9 place-items-center rounded border border-stone-700 text-sm" onClick={stopCandidatePreview} aria-label={copy.common.stop} title={copy.common.stop}>
+            ■
           </button>
         ) : null}
         <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => setIsEditing((value) => !value)}>
