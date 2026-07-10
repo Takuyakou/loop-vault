@@ -149,6 +149,7 @@ export const vaultSettingsSchema = z
   .object({
     monthlyGoal: z.number().int().min(1),
     language: appLanguageSchema.default("ja"),
+    showRomanNumerals: z.boolean().default(true),
   })
   .strict();
 
