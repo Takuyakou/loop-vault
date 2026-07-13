@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { degreeSequence, matchProgression, normalizeQuery } from "../domain/harmony/degrees";
 import { formatProgressionText } from "../domain/progressionText";
 import type { SavedProgressionBlock, SongIdea } from "../domain/types";
@@ -27,6 +27,7 @@ export function VaultView({
   const [sort, setSort] = useState<SortField>("capturedAt");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [playingId, setPlayingId] = useState<string>();
+  const searchRef = useRef<HTMLInputElement>(null);
   const entries = useMemo(() => ideas.flatMap((idea) =>
     (idea.progressionBlocks ?? []).map((block) => ({ idea, block }))), [ideas]);
   const parsedQuery = useMemo(() => normalizeQuery(query), [query]);
@@ -51,6 +52,36 @@ export function VaultView({
   useEffect(() => {
     setSelectedIndex((value) => Math.min(value, Math.max(0, visible.length - 1)));
   }, [visible.length]);
+
+  useEffect(() => {
+    function handleKey(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      if (target?.matches("input, textarea, select") || target?.isContentEditable) return;
+      if (event.key === "/") {
+        event.preventDefault();
+        searchRef.current?.focus();
+        return;
+      }
+      const active = visible[selectedIndex];
+      if (!active || mode !== "progression") return;
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        setSelectedIndex((value) => Math.max(0, Math.min(visible.length - 1,
+          value + (event.key === "ArrowDown" ? 1 : -1))));
+      } else if (event.key === " ") {
+        event.preventDefault();
+        void togglePlayback(active);
+      } else if (event.key === "Enter") {
+        openDetail(active.idea.id);
+      } else if (event.key.toLowerCase() === "c") {
+        void copyProgression(active.block);
+      } else if (event.key.toLowerCase() === "s") {
+        togglePin(active);
+      }
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [mode, playingId, selectedIndex, visible]);
 
   async function togglePlayback(entry: ProgressionEntry) {
     if (playingId === entry.block.id) {
@@ -94,7 +125,7 @@ export function VaultView({
       </div>
       {mode === "progression" ? <>
         <div className="grid gap-2 border-y border-[var(--lv-border)] py-3 md:grid-cols-[minmax(0,1fr)_auto_auto]">
-          <input className="border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm outline-none focus:border-[var(--lv-accent)]" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={language === "ja" ? "4-5-3-6 / IVmaj7 / Fmaj9 / タグで検索" : "4-5-3-6 / IVmaj7 / Fmaj9 / Search tags"} />
+          <input ref={searchRef} className="border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm outline-none focus:border-[var(--lv-accent)]" value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") { setQuery(""); event.currentTarget.blur(); } }} placeholder={language === "ja" ? "4-5-3-6 / IVmaj7 / Fmaj9 / タグで検索" : "4-5-3-6 / IVmaj7 / Fmaj9 / Search tags"} />
           <div className="flex gap-1">{(["all", "4", "8", "16"] as const).map((value) => <button key={value} className={lengthBars === value ? "bg-[var(--lv-surface-raised)] px-2 text-xs" : "px-2 text-xs text-[var(--lv-text-muted)]"} onClick={() => setLengthBars(value)}>{value === "all" ? "All" : `${value} bars`}</button>)}</div>
           <select className="border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-2 text-xs" value={sort} onChange={(event) => setSort(event.target.value as SortField)}><option value="capturedAt">{language === "ja" ? "採集日" : "Captured"}</option><option value="updatedAt">{language === "ja" ? "更新日" : "Updated"}</option><option value="key">Key</option><option value="bpm">BPM</option></select>
         </div>
@@ -102,6 +133,7 @@ export function VaultView({
         {visible.length ? <div className="mt-4 overflow-hidden border border-[var(--lv-border)]">
           {visible.map((entry, index) => <ProgressionRow key={entry.block.id} entry={entry} selected={index === selectedIndex} playing={entry.block.id === playingId} showDegrees={showRomanNumerals} copy={copy} onSelect={() => setSelectedIndex(index)} onPreview={() => void togglePlayback(entry)} onOpen={() => openDetail(entry.idea.id)} onPin={() => togglePin(entry)} onCopy={() => void copyProgression(entry.block)} />)}
         </div> : <EmptyState language={language} openCreate={openCreate} />}
+        <p className="mt-3 text-xs text-[var(--lv-text-muted)]">↑↓ {language === "ja" ? "移動" : "move"} · Space {language === "ja" ? "試聴/停止" : "preview/stop"} · Enter {language === "ja" ? "Ideaを開く" : "open"} · C {language === "ja" ? "コピー" : "copy"} · S ★ · / {language === "ja" ? "検索" : "search"} · Esc {language === "ja" ? "クリア" : "clear"}</p>
       </> : <IdeaList ideas={ideas} openDetail={openDetail} language={language} />}
     </div>
   );
