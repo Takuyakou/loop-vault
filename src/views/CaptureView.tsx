@@ -314,9 +314,10 @@ export function CaptureView(props: CaptureViewProps) {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-300">
-              {language === "ja" ? "採集結果" : "Capture Result"}
+              {language === "ja" ? "コード採集" : "Progression capture"}
             </p>
-            <h2 className="mt-2 text-2xl font-semibold">{result.fileName ?? "MIDI"}</h2>
+            <h2 className="mt-2 text-2xl font-semibold">{copy.capture.title}</h2>
+            <p className="mt-2 text-sm text-teal-200">{result.fileName ?? "MIDI"}</p>
             <p className="mt-2 max-w-2xl text-sm text-stone-400">
               {language === "ja"
                 ? "候補を聴いて、使えそうなコード進行だけLoop Vaultへ保存してください。"
