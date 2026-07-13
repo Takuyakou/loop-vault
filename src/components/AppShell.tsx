@@ -28,5 +28,7 @@ export function AppShell({ view, setView, openCreate, openSettings, copy, saveLa
 }
 
 function tabClass(active: boolean): string {
-  return active ? "border-b-2 border-teal-300 px-3 py-2 text-[var(--lv-text)]" : "border-b-2 border-transparent px-3 py-2 text-[var(--lv-text-secondary)] hover:border-stone-600 hover:text-[var(--lv-text)]";
+  return active
+    ? "rounded bg-[var(--lv-surface-raised)] px-3 py-2 text-[var(--lv-text)]"
+    : "rounded px-3 py-2 text-[var(--lv-text-secondary)] hover:bg-[var(--lv-surface)] hover:text-[var(--lv-text)]";
 }

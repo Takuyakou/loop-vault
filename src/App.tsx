@@ -169,6 +169,7 @@ async function analyzeMidiPath(path: string) {
                 monthlyGoal={settings.monthlyGoal}
                 copy={copy}
                 language={language}
+                showRomanNumerals={settings.showRomanNumerals ?? true}
                 openDetail={openDetail}
                 openCapture={() => setView("capture")}
                 openCreate={() => setCreateOpen(true)}
