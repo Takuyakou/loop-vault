@@ -662,6 +662,7 @@ export function ProgressionCandidateCard({
   }
 
   async function selectChord(index: number) {
+    onSelect?.();
     setSelectedChordIndex(index);
     await onPreviewChord(editedCandidate, index);
   }
@@ -704,8 +705,8 @@ export function ProgressionCandidateCard({
         <span className="rounded bg-stone-800 px-2 py-1 text-xs text-teal-200">{candidateLabelList(candidate.labels, language).join(" · ")}</span>
       </div>
       {summary.trim() ? <p className="mt-3 text-sm text-stone-300">{summary}</p> : null}
-      {isExpanded ? <div className="mt-4"><ProgressionGrid chords={chords} currentBar={playingChord?.bar ?? null} selectedChordIndex={selectedChordIndex} playingChordIndex={playingChordIndex} playingProgress={playingProgress} onChordSelect={(index) => void selectChord(index)} /></div> : <p className="mt-3 line-clamp-1 font-mono text-sm text-teal-100">{chords.map((item) => item.chord.label).join(" | ")}</p>}
-      {isExpanded && showRomanNumerals && selectedRomanHint ? (
+      <div className="mt-4"><ProgressionGrid chords={chords} currentBar={playingChord?.bar ?? null} selectedChordIndex={selectedChordIndex} playingChordIndex={playingChordIndex} playingProgress={playingProgress} onChordSelect={(index) => void selectChord(index)} /></div>
+      {showRomanNumerals && selectedRomanHint ? (
         <p className="mt-2 text-xs text-stone-500">{selectedRomanHint.label}{selectedRomanHint.detail ? ` · ${selectedRomanHint.detail}` : ""}{selectedRomanHint.confidence !== "high" ? (language === "ja" ? "（参考）" : " (reference)") : ""}</p>
       ) : null}
       {isExpanded && visibleWarnings.length > 0 ? (

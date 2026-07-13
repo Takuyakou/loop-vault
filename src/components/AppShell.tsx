@@ -14,7 +14,6 @@ export function AppShell({ view, setView, openCreate, openSettings, copy, saveLa
     <header className="flex flex-col gap-4 border-b border-stone-800 pb-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <p className="text-xs uppercase tracking-[0.2em] text-teal-300">Loop Vault</p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-normal sm:text-3xl">{copy.hero}</h1>
       </div>
       <nav className="flex flex-wrap items-center gap-2 text-sm" aria-label="Main navigation">
         <button className={tabClass(view === "home")} onClick={() => setView("home")}>{copy.nav.home}</button>
