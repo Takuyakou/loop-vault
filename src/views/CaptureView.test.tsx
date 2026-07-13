@@ -61,7 +61,7 @@ describe("ProgressionCandidateCard", () => {
     expect(markup).toContain("低音の解釈に注意");
     expect(markup).toContain("編集");
     expect(markup).toContain("保存");
-    expect(markup).toContain("Chord Drip形式でコピー");
+    expect(markup).toContain("コード進行をコピー");
     expect(markup).not.toContain("<textarea");
     expect(markup).not.toContain("保存タイトル");
     expect(markup).not.toContain("ambiguous-bass");
@@ -110,7 +110,7 @@ describe("ProgressionCandidateCard", () => {
     expect(markup).toContain("この進行を保存");
     expect(markup).toContain("新しいIdeaとして保存");
     expect(markup).toContain("既存Ideaへ追加");
-    expect(markup).toContain("Chord Memoへコピー");
+    expect(markup).toContain("コードだけメモに追記");
     expect(markup).toContain("採集したコード進行からループを作る");
     expect(markup).not.toContain("disabled=\"\"");
   });
