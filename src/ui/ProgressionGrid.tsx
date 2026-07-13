@@ -39,7 +39,7 @@ export function ProgressionGrid({
   if (chords.length === 0) {
     return (
       <section
-        className="grid min-h-24 place-items-center border border-stone-800 bg-stone-950 text-sm text-stone-500"
+        className="grid min-h-24 place-items-center border border-[var(--lv-border)] bg-[var(--lv-bg)] text-sm text-[var(--lv-text)]0"
         aria-label="コード進行"
       >
         コードがありません
@@ -62,12 +62,12 @@ export function ProgressionGrid({
 
         return (
           <article
-            className={`grid min-h-28 grid-cols-[2.25rem_minmax(0,1fr)] overflow-hidden rounded border bg-stone-950 ${
-              currentBar === bar ? "border-cyan-300 shadow-[0_0_0_1px_rgba(103,232,249,0.75)]" : "border-stone-800"
+            className={`grid min-h-28 grid-cols-[2.25rem_minmax(0,1fr)] overflow-hidden rounded border bg-[var(--lv-bg)] ${
+              currentBar === bar ? "border-cyan-300 shadow-[0_0_0_1px_rgba(103,232,249,0.75)]" : "border-[var(--lv-border)]"
             }`}
             key={bar}
           >
-            <div className="grid place-items-center bg-stone-900 text-xs font-extrabold text-stone-500">
+            <div className="grid place-items-center bg-[var(--lv-surface)] text-xs font-extrabold text-[var(--lv-text)]0">
               {bar}
             </div>
             <div className="flex min-w-0">
@@ -78,8 +78,8 @@ export function ProgressionGrid({
                 return (
                   <button
                     aria-pressed={selectedChordIndex === chordIndex}
-                    className={`relative grid min-w-0 content-center gap-1 overflow-hidden border-l border-stone-800 px-3 py-3 text-left transition hover:bg-stone-900 ${
-                      selectedChordIndex === chordIndex ? "bg-stone-900 outline outline-2 -outline-offset-2 outline-amber-200" : ""
+                    className={`relative grid min-w-0 content-center gap-1 overflow-hidden border-l border-[var(--lv-border)] px-3 py-3 text-left transition hover:bg-[var(--lv-surface)] ${
+                      selectedChordIndex === chordIndex ? "bg-[var(--lv-surface)] outline outline-2 -outline-offset-2 outline-amber-200" : ""
                     }`}
                     key={`${chordIndex}-${chord.bar}-${chord.beat}-${chord.chord.label}`}
                     type="button"
@@ -93,13 +93,13 @@ export function ProgressionGrid({
                         style={{ width: `${progress * 100}%` }}
                       />
                     )}
-                    <span className="relative text-[0.7rem] font-extrabold uppercase text-stone-500">
+                    <span className="relative text-[0.7rem] font-extrabold uppercase text-[var(--lv-text)]0">
                       {chord.bar}.{formatBeat(chord.beat)}
                     </span>
-                    <strong className="relative text-lg leading-tight text-stone-100 [overflow-wrap:anywhere]">
+                    <strong className="relative text-lg leading-tight text-[var(--lv-text)] [overflow-wrap:anywhere]">
                       {chord.chord.label}
                     </strong>
-                    <span className="relative text-[0.68rem] text-stone-500">
+                    <span className="relative text-[0.68rem] text-[var(--lv-text)]0">
                       {Math.round(chord.confidence * 100)}%
                     </span>
                   </button>

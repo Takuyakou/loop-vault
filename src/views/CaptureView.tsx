@@ -53,7 +53,7 @@ interface CaptureViewProps {
   showRomanNumerals: boolean;
 }
 
-const inputClass = "w-full rounded border border-stone-700 bg-stone-950 px-3 py-2 text-sm text-stone-100 outline-none focus:border-teal-400";
+const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
 
 export function CaptureView(props: CaptureViewProps) {
   const {
@@ -310,25 +310,25 @@ export function CaptureView(props: CaptureViewProps) {
   return (
     <div className="grid gap-5 py-5" {...dropHandlers}>
       {isDraggingMidi ? <DropOverlay copy={copy} /> : null}
-      <section className="border border-stone-800 bg-stone-950/70 p-5">
+      <section className="border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-300">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--lv-accent)]">
               {language === "ja" ? "コード採集" : "Progression capture"}
             </p>
             <h2 className="mt-2 text-2xl font-semibold">{copy.capture.title}</h2>
             <p className="mt-2 text-sm text-teal-200">{result.fileName ?? "MIDI"}</p>
-            <p className="mt-2 max-w-2xl text-sm text-stone-400">
+            <p className="mt-2 max-w-2xl text-sm text-[var(--lv-text-muted)]">
               {language === "ja"
                 ? "候補を聴いて、使えそうなコード進行だけLoop Vaultへ保存してください。"
                 : "Preview the candidates and save only the progressions worth keeping."}
             </p>
           </div>
           <div className="flex gap-2">
-            <button className="rounded bg-teal-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => void chooseMidi()}>
+            <button className="rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => void chooseMidi()}>
               {copy.capture.chooseAnother}
             </button>
-            <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={clearAnalysis}>
+            <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={clearAnalysis}>
               {copy.capture.clear}
             </button>
           </div>
@@ -341,13 +341,13 @@ export function CaptureView(props: CaptureViewProps) {
         </div>
       </section>
 
-      <section className="border border-stone-800 bg-stone-950/70 p-5">
+      <section className="border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="text-2xl font-semibold">{copy.capture.candidates}</h2>
-            <p className="mt-2 text-sm text-stone-400">{copy.capture.candidateHint}</p>
+            <p className="mt-2 text-sm text-[var(--lv-text-muted)]">{copy.capture.candidateHint}</p>
           </div>
-          <span className="rounded bg-stone-800 px-3 py-1 text-sm text-teal-200">
+          <span className="rounded bg-[var(--lv-surface-raised)] px-3 py-1 text-sm text-teal-200">
             {language === "ja" ? `${result.blockCandidates.length}件` : `${result.blockCandidates.length} items`}
           </span>
         </div>
@@ -374,10 +374,10 @@ export function CaptureView(props: CaptureViewProps) {
                 />
               ))
             ) : (
-              <p className="text-sm text-stone-400">{language === "ja" ? "使えそうな進行候補は見つかりませんでした。" : "No reusable progression candidates were found."}</p>
+              <p className="text-sm text-[var(--lv-text-muted)]">{language === "ja" ? "使えそうな進行候補は見つかりませんでした。" : "No reusable progression candidates were found."}</p>
             )}
           </div>
-          <aside className="h-fit border border-teal-400/30 bg-stone-900 p-4 xl:sticky xl:top-4">
+          <aside className="h-fit border border-teal-400/30 bg-[var(--lv-surface)] p-4 xl:sticky xl:top-4">
             {saveDraft ? (
               <ProgressionSaveDialog
                 candidate={saveDraft.candidate}
@@ -403,7 +403,7 @@ export function CaptureView(props: CaptureViewProps) {
             ) : (
               <div>
                 <h3 className="font-semibold">{language === "ja" ? "この進行を保存" : "Save this progression"}</h3>
-                <p className="mt-2 text-sm leading-6 text-stone-400">{language === "ja" ? "候補を選び、保存を押すとここで保存方法を選べます。" : "Select a candidate and choose Save to pick how to keep it."}</p>
+                <p className="mt-2 text-sm leading-6 text-[var(--lv-text-muted)]">{language === "ja" ? "候補を選び、保存を押すとここで保存方法を選べます。" : "Select a candidate and choose Save to pick how to keep it."}</p>
               </div>
             )}
           </aside>
@@ -431,28 +431,28 @@ function CaptureEmptyState({
   language: AppLanguage;
 }) {
   return (
-    <section className={`grid min-h-[32rem] place-items-center border p-6 text-center transition-colors ${isDraggingMidi ? "border-teal-300 bg-teal-400/10" : "border-stone-800 bg-stone-950/70"}`}>
+    <section className={`grid min-h-[32rem] place-items-center border p-6 text-center transition-colors ${isDraggingMidi ? "border-teal-300 bg-[var(--lv-accent)]/10" : "border-[var(--lv-border)] bg-[var(--lv-bg)]/70"}`}>
       <div className="max-w-2xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-teal-300">
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--lv-accent)]">
           {language === "ja" ? "MIDI Capture" : "MIDI Capture"}
         </p>
         <h2 className="mt-3 text-3xl font-semibold">{copy.capture.title}</h2>
-        <p className="mt-3 text-sm leading-6 text-stone-400">{copy.capture.emptyDescription}</p>
+        <p className="mt-3 text-sm leading-6 text-[var(--lv-text-muted)]">{copy.capture.emptyDescription}</p>
         <div className="mt-6 grid gap-3 text-left sm:grid-cols-3">
           <StepCard index="1" text={copy.capture.emptyStepTimeline} />
           <StepCard index="2" text={copy.capture.emptyStepCandidates} />
           <StepCard index="3" text={copy.capture.emptyStepSave} />
         </div>
-        <div className={`mt-7 border border-dashed p-5 ${isDraggingMidi ? "border-teal-300 bg-teal-400/10 text-teal-50" : "border-stone-700 bg-stone-950 text-stone-300"}`}>
+        <div className={`mt-7 border border-dashed p-5 ${isDraggingMidi ? "border-teal-300 bg-[var(--lv-accent)]/10 text-teal-50" : "border-[var(--lv-border-strong)] bg-[var(--lv-bg)] text-[var(--lv-text-secondary)]"}`}>
           <p className="text-lg font-semibold">
             {isDraggingMidi ? copy.capture.dropActive : copy.capture.dropMidi}
           </p>
-          <p className="mt-2 text-sm text-stone-400">{copy.capture.dropHelp}</p>
+          <p className="mt-2 text-sm text-[var(--lv-text-muted)]">{copy.capture.dropHelp}</p>
         </div>
-        <button className="mt-7 rounded bg-teal-400 px-5 py-3 text-sm font-semibold text-stone-950" onClick={onChooseMidi}>
+        <button className="mt-7 rounded bg-[var(--lv-accent)] px-5 py-3 text-sm font-semibold text-stone-950" onClick={onChooseMidi}>
           {copy.capture.loadMidi}
         </button>
-        <p className="mt-3 text-xs text-stone-500">{language === "ja" ? ".mid / .midi に対応" : ".mid / .midi supported"}</p>
+        <p className="mt-3 text-xs text-[var(--lv-text)]0">{language === "ja" ? ".mid / .midi に対応" : ".mid / .midi supported"}</p>
         {status === "analyzing" ? (
           <div className="mt-6 border border-cyan-500/30 bg-cyan-500/10 p-4 text-left text-sm text-cyan-100">
             <p className="font-semibold">{copy.capture.analyzing}</p>
@@ -472,10 +472,10 @@ function CaptureEmptyState({
 
 function DropOverlay({ copy }: { copy: AppCopy }) {
   return (
-    <div className="pointer-events-none fixed inset-6 z-50 grid place-items-center border-2 border-dashed border-teal-300 bg-stone-950/90 p-8 text-center text-teal-50 shadow-2xl">
+    <div className="pointer-events-none fixed inset-6 z-50 grid place-items-center border-2 border-dashed border-teal-300 bg-[var(--lv-bg)]/90 p-8 text-center text-teal-50 shadow-2xl">
       <div>
         <p className="text-2xl font-semibold">{copy.capture.dropActive}</p>
-        <p className="mt-2 text-sm text-stone-300">{copy.capture.dropHelp}</p>
+        <p className="mt-2 text-sm text-[var(--lv-text-secondary)]">{copy.capture.dropHelp}</p>
       </div>
     </div>
   );
@@ -483,9 +483,9 @@ function DropOverlay({ copy }: { copy: AppCopy }) {
 
 function StepCard({ index, text }: { index: string; text: string }) {
   return (
-    <div className="border border-stone-800 bg-stone-950 p-4">
-      <p className="text-xs font-semibold text-teal-300">{index}</p>
-      <p className="mt-2 text-sm text-stone-200">{text}</p>
+    <div className="border border-[var(--lv-border)] bg-[var(--lv-bg)] p-4">
+      <p className="text-xs font-semibold text-[var(--lv-accent)]">{index}</p>
+      <p className="mt-2 text-sm text-[var(--lv-text-secondary)]">{text}</p>
     </div>
   );
 }
@@ -500,11 +500,11 @@ function TimelineDetails({
   language: AppLanguage;
 }) {
   return (
-    <details className="border border-stone-800 bg-stone-950/70 p-5">
-      <summary className="cursor-pointer text-lg font-semibold text-stone-100">
+    <details className="border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-5">
+      <summary className="cursor-pointer text-lg font-semibold text-[var(--lv-text)]">
         {copy.capture.timeline}
       </summary>
-      <p className="mt-3 text-sm text-stone-400">{copy.capture.timelineDescription}</p>
+      <p className="mt-3 text-sm text-[var(--lv-text-muted)]">{copy.capture.timelineDescription}</p>
       <div className="mt-5">
         {result.fullTimeline.length > 0 ? (
           <ProgressionGrid
@@ -514,10 +514,10 @@ function TimelineDetails({
             playingChordIndex={null}
           />
         ) : (
-          <p className="text-sm text-stone-400">{copy.capture.noTimeline}</p>
+          <p className="text-sm text-[var(--lv-text-muted)]">{copy.capture.noTimeline}</p>
         )}
       </div>
-      <p className="mt-4 text-xs text-stone-500">
+      <p className="mt-4 text-xs text-[var(--lv-text)]0">
         {language === "ja" ? "候補ブロックに含まれない部分も確認できます。" : "This also shows chords outside the reusable candidate blocks."}
       </p>
     </details>
@@ -689,10 +689,10 @@ export function ProgressionCandidateCard({
   const shouldDisplayConfidence = shouldShowConfidence(candidate.confidence);
 
   return (
-    <div className={`border bg-stone-950 p-4 transition-colors ${isExpanded ? "border-teal-400/50" : "border-stone-800 hover:border-stone-600"}`}>
+    <div className={`border bg-[var(--lv-bg)] p-4 transition-colors ${isExpanded ? "border-teal-400/50" : "border-[var(--lv-border)] hover:border-stone-600"}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <button className="min-w-0 text-left" onClick={onSelect} aria-expanded={isExpanded}>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-teal-300">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--lv-accent)]">
             {language === "ja" ? `候補 ${candidateIndex + 1}` : `Candidate ${candidateIndex + 1}`}
           </p>
           <p className="mt-2 font-semibold">{language === "ja" ? `${candidate.startBar}-${candidate.endBar}小節` : `Bars ${candidate.startBar}-${candidate.endBar}`} ({candidate.lengthBars})</p>
@@ -702,12 +702,12 @@ export function ProgressionCandidateCard({
             </p>
           ) : null}
         </button>
-        <span className="rounded bg-stone-800 px-2 py-1 text-xs text-teal-200">{candidateLabelList(candidate.labels, language).join(" · ")}</span>
+        <span className="rounded bg-[var(--lv-surface-raised)] px-2 py-1 text-xs text-teal-200">{candidateLabelList(candidate.labels, language).join(" · ")}</span>
       </div>
-      {summary.trim() ? <p className="mt-3 text-sm text-stone-300">{summary}</p> : null}
+      {summary.trim() ? <p className="mt-3 text-sm text-[var(--lv-text-secondary)]">{summary}</p> : null}
       <div className="mt-4"><ProgressionGrid chords={chords} currentBar={playingChord?.bar ?? null} selectedChordIndex={selectedChordIndex} playingChordIndex={playingChordIndex} playingProgress={playingProgress} onChordSelect={(index) => void selectChord(index)} /></div>
       {showRomanNumerals && selectedRomanHint ? (
-        <p className="mt-2 text-xs text-stone-500">{selectedRomanHint.label}{selectedRomanHint.detail ? ` · ${selectedRomanHint.detail}` : ""}{selectedRomanHint.confidence !== "high" ? (language === "ja" ? "（参考）" : " (reference)") : ""}</p>
+        <p className="mt-2 text-xs text-[var(--lv-text)]0">{selectedRomanHint.label}{selectedRomanHint.detail ? ` · ${selectedRomanHint.detail}` : ""}{selectedRomanHint.confidence !== "high" ? (language === "ja" ? "（参考）" : " (reference)") : ""}</p>
       ) : null}
       {isExpanded && visibleWarnings.length > 0 ? (
         <div className="mt-3 flex flex-wrap gap-2">
@@ -720,18 +720,18 @@ export function ProgressionCandidateCard({
       ) : null}
 
       {isExpanded && isEditing ? (
-        <div className="mt-4 border border-stone-800 bg-stone-900/50 p-3">
+        <div className="mt-4 border border-[var(--lv-border)] bg-[var(--lv-surface)]/50 p-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm font-semibold">{language === "ja" ? `編集中: 候補 ${candidateIndex + 1}` : `Editing Candidate ${candidateIndex + 1}`}</p>
-            <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => setIsEditing(false)}>
+            <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => setIsEditing(false)}>
               {language === "ja" ? "編集を閉じる" : "Close editor"}
             </button>
           </div>
-          <label className="mt-3 block text-xs font-semibold uppercase tracking-[0.12em] text-stone-500">
+          <label className="mt-3 block text-xs font-semibold uppercase tracking-[0.12em] text-[var(--lv-text)]0">
             {language === "ja" ? "保存タイトル" : "Save title"}
           </label>
           <input className={`${inputClass} mt-2`} value={title} onChange={(event) => setTitle(event.target.value)} placeholder={copy.capture.newIdeaTitle} />
-          <label className="mt-3 block text-xs font-semibold uppercase tracking-[0.12em] text-stone-500">
+          <label className="mt-3 block text-xs font-semibold uppercase tracking-[0.12em] text-[var(--lv-text)]0">
             Summary
           </label>
           <textarea className={`${inputClass} mt-2 min-h-20`} value={summary} onChange={(event) => setSummary(event.target.value)} />
@@ -744,13 +744,13 @@ export function ProgressionCandidateCard({
                 onBlur={(event) => updateChordLabel(selectedChordIndex, event.target.value)}
                 aria-label={language === "ja" ? `Bar ${selectedChord.bar} のコード` : `Chord at bar ${selectedChord.bar}`}
               />
-              <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => void selectChord(selectedChordIndex)}>
+              <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => void selectChord(selectedChordIndex)}>
                 ▶ {copy.capture.selectedChord}
               </button>
             </div>
           ) : null}
           {labelError ? <p className="mt-2 text-xs text-red-200">{labelError}</p> : null}
-          <button className="mt-3 rounded border border-stone-700 px-3 py-2 text-sm" onClick={resetEdits}>
+          <button className="mt-3 rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={resetEdits}>
             {language === "ja" ? "元に戻す" : "Reset edits"}
           </button>
         </div>
@@ -761,17 +761,17 @@ export function ProgressionCandidateCard({
           ▶
         </button>
         {previewStartedAt !== null ? (
-          <button className="grid h-9 w-9 place-items-center rounded border border-stone-700 text-sm" onClick={stopCandidatePreview} aria-label={copy.common.stop} title={copy.common.stop}>
+          <button className="grid h-9 w-9 place-items-center rounded border border-[var(--lv-border-strong)] text-sm" onClick={stopCandidatePreview} aria-label={copy.common.stop} title={copy.common.stop}>
             ■
           </button>
         ) : null}
-        <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => { onSelect?.(); setIsEditing((value) => !value); }}>
+        <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => { onSelect?.(); setIsEditing((value) => !value); }}>
           {isEditing ? (language === "ja" ? "編集を閉じる" : "Close editor") : (language === "ja" ? "編集" : "Edit")}
         </button>
-        <button className="rounded bg-teal-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => { onSelect?.(); onSave?.(editedCandidate, title); }}>
+        <button className="rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => { onSelect?.(); onSave?.(editedCandidate, title); }}>
           {language === "ja" ? "保存" : "Save"}
         </button>
-        <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => void onCopyProgression(editedCandidate)}>
+        <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => void onCopyProgression(editedCandidate)}>
           {copy.capture.copyProgression}
         </button>
       </div>
@@ -829,13 +829,13 @@ export function ProgressionSaveDialog({
   }
 
   return (
-    <div className="mt-4 border border-teal-400/40 bg-stone-900 p-4 shadow-[0_0_0_1px_rgba(45,212,191,0.18)]">
+    <div className="mt-4 border border-teal-400/40 bg-[var(--lv-surface)] p-4 shadow-[0_0_0_1px_rgba(45,212,191,0.18)]">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-lg font-semibold">{language === "ja" ? "この進行を保存" : "Save this progression"}</h3>
-          <p className="mt-1 text-sm text-stone-400">{chordText}</p>
+          <p className="mt-1 text-sm text-[var(--lv-text-muted)]">{chordText}</p>
         </div>
-        <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={onClose}>
+        <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={onClose}>
           {copy.common.close}
         </button>
       </div>
@@ -861,11 +861,11 @@ export function ProgressionSaveDialog({
 
       {mode === "new" ? (
         <div className="mt-4 grid gap-3">
-          <label className="text-xs font-semibold uppercase tracking-[0.12em] text-stone-500">
+          <label className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--lv-text)]0">
             {language === "ja" ? "タイトル" : "Title"}
             <input className={`${inputClass} mt-2`} value={title} onChange={(event) => onTitleChange(event.target.value)} />
           </label>
-          <label className="text-xs font-semibold uppercase tracking-[0.12em] text-stone-500">
+          <label className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--lv-text)]0">
             Next Action
             <input className={`${inputClass} mt-2`} value={nextAction} onChange={(event) => setNextAction(event.target.value)} />
           </label>
@@ -873,7 +873,7 @@ export function ProgressionSaveDialog({
       ) : null}
 
       {needsIdea ? (
-        <label className="mt-4 block text-xs font-semibold uppercase tracking-[0.12em] text-stone-500">
+        <label className="mt-4 block text-xs font-semibold uppercase tracking-[0.12em] text-[var(--lv-text)]0">
           {language === "ja" ? "追加先Idea" : "Destination idea"}
           <select className={`${inputClass} mt-2`} value={ideaId} onChange={(event) => setIdeaId(event.target.value)}>
             <option value="">{language === "ja" ? "既存Ideaを選ぶ" : "Choose an existing idea"}</option>
@@ -885,11 +885,11 @@ export function ProgressionSaveDialog({
       ) : null}
 
       <div className="mt-4 flex flex-wrap justify-end gap-2">
-        <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={onClose}>
+        <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={onClose}>
           {language === "ja" ? "キャンセル" : "Cancel"}
         </button>
         <button
-          className="rounded bg-teal-400 px-3 py-2 text-sm font-semibold text-stone-950 disabled:cursor-not-allowed disabled:bg-stone-700 disabled:text-stone-400"
+          className="rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950 disabled:cursor-not-allowed disabled:bg-stone-700 disabled:text-[var(--lv-text-muted)]"
           disabled={!canSave}
           onClick={save}
         >
@@ -910,7 +910,7 @@ function SaveModeOption({
   onChange: () => void;
 }) {
   return (
-    <label className={`flex cursor-pointer items-center gap-2 border px-3 py-2 text-sm ${checked ? "border-teal-400 bg-teal-400/10 text-teal-100" : "border-stone-800 bg-stone-950 text-stone-300"}`}>
+    <label className={`flex cursor-pointer items-center gap-2 border px-3 py-2 text-sm ${checked ? "border-teal-400 bg-[var(--lv-accent)]/10 text-teal-100" : "border-[var(--lv-border)] bg-[var(--lv-bg)] text-[var(--lv-text-secondary)]"}`}>
       <input type="radio" checked={checked} onChange={onChange} />
       {label}
     </label>
@@ -919,9 +919,9 @@ function SaveModeOption({
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border border-stone-800 bg-stone-950 p-3">
-      <p className="text-xs uppercase tracking-[0.12em] text-stone-500">{label}</p>
-      <p className="mt-1 font-semibold text-stone-100">{value}</p>
+    <div className="border border-[var(--lv-border)] bg-[var(--lv-bg)] p-3">
+      <p className="text-xs uppercase tracking-[0.12em] text-[var(--lv-text)]0">{label}</p>
+      <p className="mt-1 font-semibold text-[var(--lv-text)]">{value}</p>
     </div>
   );
 }
