@@ -110,6 +110,6 @@ export interface SongIdea {
 export interface VaultFile {
   app: "loopvault";
   fileVersion: 1;
-  settings: { monthlyGoal: number; language: AppLanguage };
+  settings: { monthlyGoal: number; language: AppLanguage; showRomanNumerals?: boolean };
   ideas: SongIdea[];
 }

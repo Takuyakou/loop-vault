@@ -254,7 +254,7 @@ export function createEmptyVault(): VaultFile {
   return {
     app: "loopvault",
     fileVersion: 1,
-    settings: { monthlyGoal: 1, language: "ja" },
+    settings: { monthlyGoal: 1, language: "ja", showRomanNumerals: true },
     ideas: [],
   };
 }

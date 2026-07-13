@@ -50,22 +50,25 @@ interface CaptureViewProps {
   setToast: (toast: string) => void;
   copy: AppCopy;
   language: AppLanguage;
+  showRomanNumerals: boolean;
 }
 
 const inputClass = "w-full rounded border border-stone-700 bg-stone-950 px-3 py-2 text-sm text-stone-100 outline-none focus:border-teal-400";
 
-export function CaptureView({
-  ideas,
-  analysis,
-  analyzeMidiBytes,
-  clearAnalysis,
-  createIdeaFromDraft,
-  appendBlockToIdea,
-  updateIdea,
-  setToast,
-  copy,
-  language,
-}: CaptureViewProps) {
+export function CaptureView(props: CaptureViewProps) {
+  const {
+    ideas,
+    analysis,
+    analyzeMidiBytes,
+    clearAnalysis,
+    createIdeaFromDraft,
+    appendBlockToIdea,
+    updateIdea,
+    setToast,
+    copy,
+    language,
+    showRomanNumerals,
+  } = props;
   const [isDraggingMidi, setIsDraggingMidi] = useState(false);
   const [expandedCandidateId, setExpandedCandidateId] = useState<string>();
   const [saveDraft, setSaveDraft] = useState<{ candidate: ProgressionBlockCandidate; title: string }>();
@@ -366,6 +369,7 @@ export function CaptureView({
                   isExpanded={expandedCandidateId === candidate.id}
                   onSelect={() => setExpandedCandidateId(candidate.id)}
                   onSave={(editedCandidate, title) => setSaveDraft({ candidate: editedCandidate, title })}
+                  showRomanNumerals={showRomanNumerals}
                 />
               ))
             ) : (
@@ -532,6 +536,7 @@ export function ProgressionCandidateCard({
   isExpanded = true,
   onSelect,
   onSave,
+  showRomanNumerals = true,
 }: {
   candidate: ProgressionBlockCandidate;
   candidateIndex: number;
@@ -552,6 +557,7 @@ export function ProgressionCandidateCard({
   isExpanded?: boolean;
   onSelect?: () => void;
   onSave?: (candidate: ProgressionBlockCandidate, title: string) => void;
+  showRomanNumerals?: boolean;
 }) {
   const [summary, setSummary] = useState(candidate.summaryText);
   const [title, setTitle] = useState(`${language === "ja" ? "コード進行" : "Progression"} ${candidate.labels.slice(0, 4).join(" - ")}`);
@@ -698,7 +704,7 @@ export function ProgressionCandidateCard({
       </div>
       {summary.trim() ? <p className="mt-3 text-sm text-stone-300">{summary}</p> : null}
       {isExpanded ? <div className="mt-4"><ProgressionGrid chords={chords} currentBar={playingChord?.bar ?? null} selectedChordIndex={selectedChordIndex} playingChordIndex={playingChordIndex} playingProgress={playingProgress} onChordSelect={(index) => void selectChord(index)} /></div> : <p className="mt-3 line-clamp-1 font-mono text-sm text-teal-100">{chords.map((item) => item.chord.label).join(" | ")}</p>}
-      {isExpanded && selectedRomanHint ? (
+      {isExpanded && showRomanNumerals && selectedRomanHint ? (
         <p className="mt-2 text-xs text-stone-500">{selectedRomanHint.label}{selectedRomanHint.detail ? ` · ${selectedRomanHint.detail}` : ""}{selectedRomanHint.confidence !== "high" ? (language === "ja" ? "（参考）" : " (reference)") : ""}</p>
       ) : null}
       {isExpanded && visibleWarnings.length > 0 ? (

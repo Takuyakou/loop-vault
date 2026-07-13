@@ -73,6 +73,7 @@ function App() {
   const backups = useStore(defaultVaultStore, (state) => state.backups);
   const setMonthlyGoal = useStore(defaultVaultStore, (state) => state.setMonthlyGoal);
   const setLanguage = useStore(defaultVaultStore, (state) => state.setLanguage);
+  const setShowRomanNumerals = useStore(defaultVaultStore, (state) => state.setShowRomanNumerals);
   const refreshBackups = useStore(defaultVaultStore, (state) => state.refreshBackups);
   const exportVault = useStore(defaultVaultStore, (state) => state.exportVault);
   const importVault = useStore(defaultVaultStore, (state) => state.importVault);
@@ -243,6 +244,7 @@ async function analyzeMidiPath(path: string) {
                 setToast={setToast}
                 copy={copy}
                 language={language}
+                showRomanNumerals={settings.showRomanNumerals ?? true}
               />
             ) : null}
             {view === "detail" && selectedIdea ? (
@@ -291,6 +293,8 @@ async function analyzeMidiPath(path: string) {
           error={error}
           setMonthlyGoal={setMonthlyGoal}
           setLanguage={setLanguage}
+          showRomanNumerals={settings.showRomanNumerals ?? true}
+          setShowRomanNumerals={setShowRomanNumerals ?? (() => undefined)}
           refreshBackups={refreshBackups}
           restoreBackup={restoreBackup}
           exportVault={exportVault}
@@ -362,10 +366,12 @@ function AppShell({
 function SettingsDialog({
   monthlyGoal,
   language,
+  showRomanNumerals,
   backups,
   error,
   setMonthlyGoal,
   setLanguage,
+  setShowRomanNumerals,
   refreshBackups,
   restoreBackup,
   exportVault,
@@ -376,10 +382,12 @@ function SettingsDialog({
 }: {
   monthlyGoal: number;
   language: AppLanguage;
+  showRomanNumerals: boolean;
   backups: ReturnType<typeof defaultVaultStore.getState>["backups"];
   error?: string;
   setMonthlyGoal: (goal: number) => void;
   setLanguage: (language: AppLanguage) => void;
+  setShowRomanNumerals: (show: boolean) => void;
   refreshBackups: () => Promise<void>;
   restoreBackup: (backupName: string) => Promise<void>;
   exportVault: (path: string) => Promise<boolean>;
@@ -390,6 +398,7 @@ function SettingsDialog({
 }) {
   const [dataPath, setDataPath] = useState<string>(copy.settings.dataPathFallback);
   const [importMode, setImportMode] = useState<"replace" | "merge">("merge");
+  const [showAllBackups, setShowAllBackups] = useState(false);
 
   useEffect(() => {
     if (!("__TAURI_INTERNALS__" in window)) {
@@ -435,6 +444,15 @@ function SettingsDialog({
     await revealItemInDir(await appDataDir());
   }
 
+  async function copyDataPath() {
+    try {
+      await writeClipboardText(dataPath);
+      setToast(language === "ja" ? "データ保存先をコピーしました。" : "Copied the data location.");
+    } catch (copyError) {
+      setToast(copyError instanceof Error ? copyError.message : (language === "ja" ? "保存先をコピーできませんでした。" : "Could not copy the data location."));
+    }
+  }
+
   async function restore(name: string) {
     if (!window.confirm(copy.settings.restoreConfirm(name))) return;
     await restoreBackup(name);
@@ -444,15 +462,16 @@ function SettingsDialog({
 
   return (
     <div className="fixed inset-0 z-40 grid place-items-center overflow-y-auto bg-black/70 px-4 py-6">
-      <div className="w-full max-w-3xl border border-stone-700 bg-stone-900 p-5 shadow-2xl">
+      <div className="w-full max-w-4xl border border-stone-700 bg-stone-900 p-5 shadow-2xl">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-xl font-semibold">{copy.settings.title}</h2>
           <button className="rounded px-2 py-1 text-stone-400" onClick={onClose}>{copy.common.close}</button>
         </div>
-        <div className="mt-5 grid gap-5 md:grid-cols-2">
-          <section>
-            <h3 className="font-semibold">{copy.settings.language}</h3>
-            <p className="mt-2 text-sm text-stone-400">{copy.settings.languageHelp}</p>
+        <div className="mt-5 grid gap-5 lg:grid-cols-2">
+          <section className="border border-stone-800 bg-stone-950 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-teal-300">{language === "ja" ? "一般" : "General"}</p>
+            <h3 className="mt-2 font-semibold">{copy.settings.language}</h3>
+            <p className="mt-1 text-sm text-stone-400">{copy.settings.languageHelp}</p>
             <select
               className={`${inputClass} mt-3`}
               value={language}
@@ -462,13 +481,10 @@ function SettingsDialog({
               <option value="en">{copy.settings.english}</option>
             </select>
           </section>
-          <section>
-            <h3 className="font-semibold">{copy.settings.data}</h3>
-            <p className="mt-2 break-all text-sm text-stone-400">{dataPath}</p>
-            <button className="mt-3 rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => void openDataFolder()}>{copy.settings.openFolder}</button>
-          </section>
-          <section>
+          <section className="border border-stone-800 bg-stone-950 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-teal-300">{language === "ja" ? "制作" : "Creation"}</p>
             <h3 className="font-semibold">{copy.settings.monthlyGoal}</h3>
+            <p className="mt-1 text-sm text-stone-400">{language === "ja" ? "ステータスを「完成」にしたネタを月ごとにカウントします。" : "Counts ideas moved to Done each month."}</p>
             <input
               className={`${inputClass} mt-2`}
               min={1}
@@ -476,14 +492,21 @@ function SettingsDialog({
               value={monthlyGoal}
               onChange={(event) => setMonthlyGoal(Number(event.target.value))}
             />
+            <label className="mt-4 flex cursor-pointer items-start gap-3 border-t border-stone-800 pt-4 text-sm">
+              <input className="mt-1" type="checkbox" checked={showRomanNumerals} onChange={(event) => setShowRomanNumerals(event.target.checked)} />
+              <span><strong className="block text-stone-200">{language === "ja" ? "コードカードに度数を表示" : "Show degrees on chord cards"}</strong><span className="mt-1 block text-stone-400">{language === "ja" ? "キーが分かる場合、コード名の下に I / ii / V などの相対度数を表示します。" : "When a key is available, show relative degrees such as I, ii, and V."}</span></span>
+            </label>
           </section>
-          <section>
-            <h3 className="font-semibold">{copy.settings.exportTitle}</h3>
-            <p className="mt-2 text-sm text-stone-400">{copy.settings.exportDescription}</p>
-            <button className="mt-3 rounded bg-teal-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => void exportData()}>{copy.settings.exportButton}</button>
+          <section className="border border-stone-800 bg-stone-950 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-teal-300">{copy.settings.data}</p>
+            <h3 className="mt-2 font-semibold">{language === "ja" ? "データ保存先" : "Data location"}</h3>
+            <p className="mt-2 break-all text-sm text-stone-400">{dataPath}</p>
+            <div className="mt-3 flex flex-wrap gap-2"><button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => void openDataFolder()}>{copy.settings.openFolder}</button><button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => void copyDataPath()}>{language === "ja" ? "パスをコピー" : "Copy path"}</button></div>
+            <div className="mt-5 border-t border-stone-800 pt-4"><h4 className="font-medium">{copy.settings.exportTitle}</h4><p className="mt-1 text-sm text-stone-400">{copy.settings.exportDescription}</p><button className="mt-3 rounded bg-teal-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => void exportData()}>{copy.settings.exportButton}</button></div>
           </section>
-          <section>
+          <section className="border border-stone-800 bg-stone-950 p-4">
             <h3 className="font-semibold">{copy.settings.importTitle}</h3>
+            <p className="mt-1 text-sm text-stone-400">{language === "ja" ? "バックアップファイルを読み込みます。置き換えは現在のデータをすべて入れ替えます。" : "Load a backup file. Replace swaps out the current vault."}</p>
             <select className={`${inputClass} mt-2`} value={importMode} onChange={(event) => setImportMode(event.target.value as "replace" | "merge")}>
               <option value="merge">{copy.settings.importMerge}</option>
               <option value="replace">{copy.settings.importReplace}</option>
@@ -492,14 +515,14 @@ function SettingsDialog({
             {error ? <p className="mt-2 text-sm text-red-200">{error}</p> : null}
           </section>
         </div>
-        <section className="mt-6">
+        <section className="mt-5 border border-stone-800 bg-stone-950 p-4">
           <div className="flex items-center justify-between gap-3">
             <h3 className="font-semibold">{copy.settings.backups}</h3>
             <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => void refreshBackups()}>{copy.common.update}</button>
           </div>
-          <div className="mt-3 max-h-64 space-y-2 overflow-y-auto">
+          <div className="mt-3 space-y-2">
             {backups.length === 0 ? <p className="text-sm text-stone-400">{copy.settings.noBackups}</p> : null}
-            {backups.map((backup) => (
+            {(showAllBackups ? backups : backups.slice(0, 5)).map((backup) => (
               <div key={backup.name} className="flex flex-wrap items-center justify-between gap-3 border border-stone-800 p-3 text-sm">
                 <div>
                   <p className="font-medium">{backup.name}</p>
@@ -509,6 +532,11 @@ function SettingsDialog({
               </div>
             ))}
           </div>
+          {backups.length > 5 ? <button className="mt-3 text-sm text-teal-200 hover:underline" onClick={() => setShowAllBackups((value) => !value)}>{showAllBackups ? (language === "ja" ? "最新5件のみ表示" : "Show latest 5") : (language === "ja" ? "すべて表示" : "Show all")}</button> : null}
+        </section>
+        <section className="mt-5 border border-stone-800 bg-stone-950 p-4 text-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-teal-300">{language === "ja" ? "情報" : "Info"}</p>
+          <div className="mt-3 grid gap-2 text-stone-400 sm:grid-cols-3"><p>Loop Vault</p><p>{language === "ja" ? "アプリ形式: 1" : "App format: 1"}</p><p>{language === "ja" ? "データ形式: 1" : "Data format: 1"}</p></div>
         </section>
       </div>
     </div>

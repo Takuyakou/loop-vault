@@ -124,5 +124,6 @@ describe("parseVaultFileJson", () => {
     }
 
     expect(result.vault.settings.language).toBe("ja");
+    expect(result.vault.settings.showRomanNumerals).toBe(true);
   });
 });

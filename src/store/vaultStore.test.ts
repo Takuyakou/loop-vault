@@ -115,6 +115,18 @@ describe("vault store", () => {
     expect(repository.saved[0]?.settings.language).toBe("en");
   });
 
+  it("persists the chord degree display preference", async () => {
+    const repository = new FakeRepository();
+    const store = createVaultStore({ repository });
+    await store.getState().initialize();
+
+    store.getState().setShowRomanNumerals?.(false);
+    await store.getState().flush();
+
+    expect(store.getState().settings.showRomanNumerals).toBe(false);
+    expect(repository.saved[0]?.settings.showRomanNumerals).toBe(false);
+  });
+
   it("debounces autosave for edits", async () => {
     const repository = new FakeRepository();
     const store = createVaultStore({
