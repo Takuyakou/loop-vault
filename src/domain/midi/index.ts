@@ -10,7 +10,7 @@ export {
   matchWindow,
   smoothTimeline,
 } from "./analysis";
-export { analyzeMidiHybrid, buildHybridPipeline } from "./hybrid";
+export { analyzeMidiHybrid, buildHybridPipeline, defaultHybridFeatures, timelineFromHybridPipeline } from "./hybrid";
 export type { HybridPipelineResult } from "./hybrid";
 export { beatGridSignature, extractHybridBlocks } from "./blocks";
 export { parseMidi } from "./parser";
@@ -24,7 +24,7 @@ export { canonicalChord, chordTemplates, scoreChordCandidates, scoreSegments } f
 export { chordKeyCompatibility, estimateKeyCandidates } from "./keyPrior";
 export { decodeChordPath, decodeGreedy, decodeTwoPass, defaultDecoderWeights } from "./decoder";
 export { confidenceForDecoded, confidenceLevel, uniqueAlternatives } from "./confidence";
-export { mergeDecodedSegments } from "./merge";
+export { materializeDecodedSegments, mergeDecodedSegments } from "./merge";
 export { buildCorrectionEvents, fingerprintMidiBytes } from "./feedback";
 export type {
   AnalyzeMidiOptions,
@@ -38,6 +38,7 @@ export type {
   TimedNote,
   TrackRole,
   MidiAnalyzerMode,
+  HybridFeatureFlags,
 } from "./types";
 export type { AnalyzerWeights, NoteFeatures } from "./weights";
 export type { HybridTrackRole, TrackFeatures, TrackRoleProfile } from "./trackRoles";

@@ -1,6 +1,7 @@
 import { Midi } from "@tonejs/midi";
 import { describe, expect, it } from "vitest";
 import { analyzeMidi } from "./analysis";
+import { buildHybridPipeline, timelineFromHybridPipeline } from "./hybrid";
 
 function bytes(): Uint8Array {
   const midi = new Midi();
@@ -25,5 +26,16 @@ describe("hybrid MIDI analyzer", () => {
     expect(result.fullTimeline.length).toBeGreaterThan(0);
     expect(result.fullTimeline[0].alternatives.length).toBeGreaterThan(0);
     expect(result.blockCandidates[0]?.lengthBars).toBe(4);
+  });
+
+  it("can disable each hybrid feature deterministically", () => {
+    const options = { features: {
+      trackRoleEstimation: false, ornamentSuppression: false, adaptiveSegmentation: false,
+      keyPrior: false, twoPassDecoding: false, adjacentMerge: false,
+    } };
+    const first = timelineFromHybridPipeline(buildHybridPipeline(bytes(), options));
+    const second = timelineFromHybridPipeline(buildHybridPipeline(bytes(), options));
+    expect(first).toEqual(second);
+    expect(first.length).toBeGreaterThan(0);
   });
 });

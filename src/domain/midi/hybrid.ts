@@ -1,17 +1,17 @@
 import type { ChordTimelineItem, MidiProgressionAnalysis } from "../types";
 import { extractHybridBlocks } from "./blocks";
 import { scoreChordCandidates, type ScoredSegment } from "./candidates";
-import { decodeTwoPass } from "./decoder";
+import { decodeChordPath, decodeTwoPass } from "./decoder";
 import { estimateKeyCandidates } from "./keyPrior";
 import { analyzeMidi as analyzeMidiLegacy } from "./legacy";
-import { mergeDecodedSegments } from "./merge";
+import { materializeDecodedSegments, mergeDecodedSegments } from "./merge";
 import { normalizeNotes } from "./normalize";
 import { extractOrnamentFeatures } from "./ornaments";
 import { parseMidi } from "./parser";
 import { buildCumulativePitchFeatures, buildWeightedPitchProfile, profileFromCumulative } from "./profiles";
 import { buildSegmentLattice, generateBoundaries } from "./segmentation";
 import { inferTrackRoleProfiles } from "./trackRoles";
-import type { AnalyzeMidiOptions } from "./types";
+import type { AnalyzeMidiOptions, HybridFeatureFlags } from "./types";
 import { defaultAnalyzerWeights, type AnalyzerWeights } from "./weights";
 import type { BoundaryCandidate } from "./segmentation";
 import type { DecodedSegment } from "./decoder";
@@ -20,6 +20,14 @@ import type { MergedDecodedSegment } from "./merge";
 import type { MidiSongData } from "./types";
 
 export const hybridAnalyzerVersion = "hybrid-symbolic-v1";
+export const defaultHybridFeatures: Readonly<HybridFeatureFlags> = {
+  trackRoleEstimation: true,
+  ornamentSuppression: true,
+  adaptiveSegmentation: true,
+  keyPrior: true,
+  twoPassDecoding: true,
+  adjacentMerge: true,
+};
 const pitchNames = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
 
 export interface HybridPipelineResult {
@@ -67,25 +75,57 @@ export function analyzeMidiHybrid(bytes: Uint8Array, options: AnalyzeMidiOptions
 export function buildHybridPipeline(bytes: Uint8Array, options: AnalyzeMidiOptions = {}): HybridPipelineResult {
   const data = parseMidi(bytes);
   const weights: AnalyzerWeights = { ...defaultAnalyzerWeights, ...options.weights };
+  const features: HybridFeatureFlags = { ...defaultHybridFeatures, ...options.features };
   const notes = normalizeNotes(data);
   const beatsPerBar = parseBeatsPerBar(data.timeSignature);
   const totalBeats = data.totalBars * beatsPerBar;
-  const roles = inferTrackRoleProfiles(data, notes, weights);
-  const ornaments = extractOrnamentFeatures(notes, weights);
-  const boundaries = generateBoundaries(notes, { beatsPerBar, totalBeats });
+  const roles = features.trackRoleEstimation
+    ? inferTrackRoleProfiles(data, notes, weights)
+    : neutralTrackRoles(data, notes);
+  const ornaments = features.ornamentSuppression ? extractOrnamentFeatures(notes, weights) : new Map();
+  const generatedBoundaries = generateBoundaries(notes, { beatsPerBar, totalBeats });
+  const boundaries = features.adaptiveSegmentation
+    ? generatedBoundaries
+    : generatedBoundaries.filter((boundary) => boundary.reasons.some((reason) => reason === "bar-start" || reason === "beat-start"));
   const lattice = buildSegmentLattice(notes, boundaries, { beatsPerBar, totalBeats });
   const boundaryBeats = boundaries.map((entry) => entry.beat);
   const cumulative = buildCumulativePitchFeatures(notes, boundaryBeats, roles, ornaments, beatsPerBar, weights);
   const wholeProfile = buildWeightedPitchProfile(notes, { startBeat: 0, endBeat: totalBeats }, roles, ornaments, beatsPerBar, weights);
-  const key = estimateKeyCandidates(wholeProfile, 0, totalBeats)[0];
+  const key = features.keyPrior ? estimateKeyCandidates(wholeProfile, 0, totalBeats)[0] : undefined;
   const scored: ScoredSegment[] = lattice.map((segment) => {
     const startIndex = boundaryBeats.indexOf(segment.startBeat);
     const endIndex = boundaryBeats.indexOf(segment.endBeat);
     return { segment, candidates: scoreChordCandidates(profileFromCumulative(cumulative, startIndex, endIndex), key) };
   });
-  const decoded = decodeTwoPass(scored, beatsPerBar);
-  const merged = mergeDecodedSegments(decoded);
+  const decoded = features.twoPassDecoding ? decodeTwoPass(scored, beatsPerBar) : decodeChordPath(scored, beatsPerBar);
+  const merged = features.adjacentMerge ? mergeDecodedSegments(decoded) : materializeDecodedSegments(decoded);
   return { data, beatsPerBar, boundaries, scored, decoded, merged, ...(key ? { key } : {}) };
+}
+
+export function timelineFromHybridPipeline(pipeline: HybridPipelineResult): ChordTimelineItem[] {
+  return pipeline.merged.map((segment) => ({
+    bar: Math.floor(segment.startBeat / pipeline.beatsPerBar) + 1,
+    beat: segment.startBeat % pipeline.beatsPerBar + 1,
+    durationBeats: segment.endBeat - segment.startBeat,
+    chord: segment.candidate.chord,
+    confidence: segment.confidence,
+    alternatives: segment.alternatives.map((candidate) => ({ chord: candidate.chord, confidence: 0 })),
+    warnings: segment.warnings,
+  }));
+}
+
+function neutralTrackRoles(data: MidiSongData, notes: ReturnType<typeof normalizeNotes>) {
+  return new Map(data.tracks.map((track) => {
+    const isDrum = notes.some((note) => note.trackIndex === track.index && note.isDrum);
+    return [track.index, {
+      trackIndex: track.index,
+      role: isDrum ? "drums" as const : "unknown" as const,
+      qualityWeight: isDrum ? 0 : 1,
+      rootWeight: isDrum ? 0 : 1,
+      confidence: 1,
+      reasons: ["ablation:neutral-role"],
+    }];
+  }));
 }
 
 function analyzeEmpty(data: ReturnType<typeof parseMidi>, options: AnalyzeMidiOptions): MidiProgressionAnalysis {
