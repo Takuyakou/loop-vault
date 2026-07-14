@@ -10,7 +10,8 @@ export {
   matchWindow,
   smoothTimeline,
 } from "./analysis";
-export { analyzeMidiHybrid } from "./hybrid";
+export { analyzeMidiHybrid, buildHybridPipeline } from "./hybrid";
+export type { HybridPipelineResult } from "./hybrid";
 export { beatGridSignature, extractHybridBlocks } from "./blocks";
 export { parseMidi } from "./parser";
 export { normalizeNotes, overlapWithSegment } from "./normalize";
