@@ -2,6 +2,7 @@ node_modules/
 dist/
 target/
 src-tauri/target/
+src-tauri/target-*/
 .env
 .env.*
 *.log
@@ -12,3 +13,5 @@ docs/loop-vault-evaluation-corpus/
 artifacts/midi-evaluation/
 artifacts/midi-failure-analysis/
 artifacts/midi-ablation/
+artifacts/midi-reranker-tuning/
+artifacts/midi-dataset-evaluation/
