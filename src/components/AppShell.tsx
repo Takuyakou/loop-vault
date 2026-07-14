@@ -12,7 +12,8 @@ export function AppShell({ view, setView, openCreate, openSettings, copy, saveLa
 }) {
   return (
     <header className="flex flex-col gap-4 border-b border-[var(--lv-border)] pb-4 sm:flex-row sm:items-center sm:justify-between">
-      <div>
+      <div className="flex items-center gap-2.5">
+        <img src="/loop-vault-icon.svg" alt="" className="h-8 w-8" />
         <p className="text-xs uppercase tracking-[0.2em] text-[var(--lv-accent)]">Loop Vault</p>
       </div>
       <nav className="flex flex-wrap items-center gap-2 text-sm" aria-label="Main navigation">
