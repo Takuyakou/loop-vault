@@ -1,0 +1,40 @@
+{
+  "id": "bass-root-up",
+  "weights": {
+    "overlapExponent": 0.5,
+    "downbeatWeight": 1.35,
+    "strongBeatWeight": 1.18,
+    "beatWeight": 1.08,
+    "offbeatWeight": 0.86,
+    "subdivisionWeight": 0.72,
+    "chordRoleWeight": 1.25,
+    "padRoleWeight": 1.18,
+    "arpeggioRoleWeight": 1.12,
+    "bassRoleQualityWeight": 0.55,
+    "bassRoleRootWeight": 1.5,
+    "melodyRoleWeight": 0.48,
+    "leadRoleWeight": 0.42,
+    "counterRoleWeight": 0.68,
+    "unknownRoleWeight": 0.9,
+    "stableNoteBonus": 1.12,
+    "repeatedPitchClassBonus": 1.08,
+    "passingTonePenalty": 0.58,
+    "chromaticApproachPenalty": 0.52,
+    "shortUpperVoicePenalty": 0.64,
+    "suspensionPenalty": 0.75
+  },
+  "tuneMetrics": {
+    "caseCount": 80,
+    "durationBeats": 3008,
+    "rootAccuracy": 0.553191,
+    "qualityAccuracy": 0.591755,
+    "tetradAccuracy": 0.373005,
+    "exactAccuracy": 0.129654,
+    "top3Accuracy": 0.186835,
+    "boundaryPrecision": 0.749382,
+    "boundaryRecall": 0.908424,
+    "overSegmentationRate": 0.273277,
+    "underSegmentationRate": 0.01724,
+    "correctionCost": 764
+  }
+}

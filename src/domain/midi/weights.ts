@@ -29,7 +29,7 @@ export const defaultAnalyzerWeights: Readonly<AnalyzerWeights> = {
   downbeatWeight: 1.35, strongBeatWeight: 1.18, beatWeight: 1.08,
   offbeatWeight: 0.86, subdivisionWeight: 0.72,
   chordRoleWeight: 1.25, padRoleWeight: 1.18, arpeggioRoleWeight: 1.12,
-  bassRoleQualityWeight: 0.62, bassRoleRootWeight: 1.35,
+  bassRoleQualityWeight: 0.55, bassRoleRootWeight: 1.5,
   melodyRoleWeight: 0.48, leadRoleWeight: 0.42, counterRoleWeight: 0.68,
   unknownRoleWeight: 0.9,
   stableNoteBonus: 1.12, repeatedPitchClassBonus: 1.08,
