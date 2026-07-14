@@ -7,3 +7,6 @@ src-tauri/target/
 *.log
 *.tmp
 demo-data/*.json
+docs/loop-vault-evaluation-corpus/
+.local-evaluation/
+artifacts/midi-evaluation/
