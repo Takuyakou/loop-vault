@@ -62,7 +62,7 @@ export function buildSegmentLattice(
   notes: readonly NormalizedTimedNote[], boundaries: readonly BoundaryCandidate[], options: SegmentationOptions,
 ): SegmentCandidate[] {
   const maxEnds = options.maxEndsPerStart ?? 8;
-  const maxLength = options.maxSegmentBeats ?? options.beatsPerBar * 2;
+  const maxLength = options.maxSegmentBeats ?? options.beatsPerBar;
   const segments: SegmentCandidate[] = [];
   boundaries.forEach((start, startIndex) => {
     let ends = 0;

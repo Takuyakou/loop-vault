@@ -13,6 +13,7 @@
     "seed:demo": "node scripts/seed-demo.mjs",
     "eval:midi": "vite-node scripts/evaluate-midi-analysis.ts",
     "eval:midi:compare": "vite-node scripts/evaluate-midi-analysis.ts --compare",
+    "eval:midi:inspect": "vite-node scripts/inspect-midi-analysis.ts",
     "tauri": "tauri"
   },
   "dependencies": {

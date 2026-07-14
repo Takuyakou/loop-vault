@@ -1,4 +1,5 @@
 import type { MidiProgressionAnalysis } from "../types";
+import type { AnalyzerWeights } from "./weights";
 
 export type TrackRole = "bass" | "harmony" | "mixed" | "melody" | "percussion";
 
@@ -54,10 +55,15 @@ export interface NoteSegmentOverlap {
   overlapRatio: number;
 }
 
+export type MidiAnalyzerMode = "legacy" | "hybrid-v1";
+
 export interface AnalyzeMidiOptions {
   sourceAssetId?: string;
   fileName?: string;
   beatsPerWindow?: 1 | 2 | 4;
+  mode?: MidiAnalyzerMode;
+  weights?: Partial<AnalyzerWeights>;
+  debug?: boolean;
 }
 
 export type AnalyzeMidiResult = MidiProgressionAnalysis;

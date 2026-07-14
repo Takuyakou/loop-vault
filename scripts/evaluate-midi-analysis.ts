@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { argv, cwd, stdout } from "node:process";
-import { analyzeMidi, analyzerVersion } from "../src/domain/midi/analysis";
+import { analyzeMidi, hybridAnalyzerVersion, legacyAnalyzerVersion } from "../src/domain/midi/analysis";
 import { evaluateAnalyzer } from "../src/domain/midi/evaluation/evaluate";
 import { adaptChordDripManifest, type ChordDripCorpusManifest } from "../src/domain/midi/evaluation/manifest";
 import { comparisonMarkdown } from "../src/domain/midi/evaluation/report";
@@ -19,16 +19,17 @@ const cases = await Promise.all(definitions.map(async (definition) => ({
 await mkdir(outputDir, { recursive: true });
 
 const baseline = evaluateAnalyzer(cases, (bytes) => analyzeMidi(bytes), {
-  analyzerMode: "legacy", analyzerVersion, datasetId: manifest.recipeSha256,
+  analyzerMode: "legacy", analyzerVersion: legacyAnalyzerVersion, datasetId: manifest.recipeSha256,
 });
 await writeFile(resolve(outputDir, "baseline.json"), `${JSON.stringify(baseline, null, 2)}\n`, "utf8");
 
 if (args.includes("--compare")) {
-  const candidate = evaluateAnalyzer(cases, (bytes) => analyzeMidi(bytes), {
-    analyzerMode: "candidate", analyzerVersion, datasetId: manifest.recipeSha256,
+  const candidate = evaluateAnalyzer(cases, (bytes) => analyzeMidi(bytes, { mode: "hybrid-v1" }), {
+    analyzerMode: "hybrid-v1", analyzerVersion: hybridAnalyzerVersion, datasetId: manifest.recipeSha256,
   });
   await writeFile(resolve(outputDir, "hybrid-v1.json"), `${JSON.stringify(candidate, null, 2)}\n`, "utf8");
   await writeFile(resolve(outputDir, "comparison.md"), comparisonMarkdown(baseline, candidate), "utf8");
+  stdout.write(`Hybrid root ${(candidate.metrics.rootAccuracy * 100).toFixed(2)}%, exact ${(candidate.metrics.exactAccuracy * 100).toFixed(2)}%\n`);
 }
 
 stdout.write(`Evaluated ${cases.length} cases: root ${(baseline.metrics.rootAccuracy * 100).toFixed(2)}%, exact ${(baseline.metrics.exactAccuracy * 100).toFixed(2)}%\n`);
