@@ -55,7 +55,7 @@ export interface NoteSegmentOverlap {
   overlapRatio: number;
 }
 
-export type MidiAnalyzerMode = "legacy" | "hybrid-v1";
+export type MidiAnalyzerMode = "legacy" | "hybrid-v1" | "legacy-boundary-rerank";
 
 export interface HybridFeatureFlags {
   trackRoleEstimation: boolean;

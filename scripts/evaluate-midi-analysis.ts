@@ -5,6 +5,7 @@ import { analyzeMidi, hybridAnalyzerVersion, legacyAnalyzerVersion } from "../sr
 import { evaluateAnalyzer } from "../src/domain/midi/evaluation/evaluate";
 import { adaptChordDripManifest, type ChordDripCorpusManifest } from "../src/domain/midi/evaluation/manifest";
 import { comparisonMarkdown } from "../src/domain/midi/evaluation/report";
+import { analyzeMidiLegacyBoundaryRerank, defaultLegacyBoundaryRerankerThresholds } from "../src/domain/midi/legacyBoundaryReranker";
 
 const args = argv.slice(2);
 const datasetArg = valueOf("--dataset") ?? "docs/loop-vault-evaluation-corpus/manifest.json";
@@ -30,6 +31,19 @@ if (args.includes("--compare")) {
   await writeFile(resolve(outputDir, "hybrid-v1.json"), `${JSON.stringify(candidate, null, 2)}\n`, "utf8");
   await writeFile(resolve(outputDir, "comparison.md"), comparisonMarkdown(baseline, candidate), "utf8");
   stdout.write(`Hybrid root ${(candidate.metrics.rootAccuracy * 100).toFixed(2)}%, exact ${(candidate.metrics.exactAccuracy * 100).toFixed(2)}%\n`);
+}
+
+if (args.includes("--rerank")) {
+  const minimumScoreLead = Number(valueOf("--minimum-score-lead") ?? defaultLegacyBoundaryRerankerThresholds.minimumScoreLead);
+  const candidate = evaluateAnalyzer(cases, (bytes) => analyzeMidiLegacyBoundaryRerank(bytes, {}, {
+    ...defaultLegacyBoundaryRerankerThresholds,
+    minimumScoreLead,
+  }), {
+    analyzerMode: "legacy-boundary-rerank", analyzerVersion: "legacy-boundary-rerank-v1", datasetId: manifest.recipeSha256,
+  });
+  await writeFile(resolve(outputDir, "legacy-boundary-rerank.json"), `${JSON.stringify(candidate, null, 2)}\n`, "utf8");
+  await writeFile(resolve(outputDir, "legacy-boundary-rerank-comparison.md"), comparisonMarkdown(baseline, candidate), "utf8");
+  stdout.write(`Rerank lead ${minimumScoreLead}: root ${(candidate.metrics.rootAccuracy * 100).toFixed(2)}%, quality ${(candidate.metrics.qualityAccuracy * 100).toFixed(2)}%, exact ${(candidate.metrics.exactAccuracy * 100).toFixed(2)}%, Top-3 ${(candidate.metrics.top3Accuracy * 100).toFixed(2)}%\n`);
 }
 
 stdout.write(`Evaluated ${cases.length} cases: root ${(baseline.metrics.rootAccuracy * 100).toFixed(2)}%, exact ${(baseline.metrics.exactAccuracy * 100).toFixed(2)}%\n`);
