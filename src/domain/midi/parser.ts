@@ -1,5 +1,5 @@
 import { Midi } from "@tonejs/midi";
-import type { MidiSongData, MidiTrackInfo, TimedNote, TrackRole } from "./types";
+import type { MidiControlChange, MidiSongData, MidiTrackInfo, TimedNote, TrackRole } from "./types";
 
 export function parseMidi(bytes: Uint8Array): MidiSongData {
   const midi = new Midi(bytes);
@@ -9,11 +9,13 @@ export function parseMidi(bytes: Uint8Array): MidiSongData {
   const tempo = midi.header.tempos[0]?.bpm;
   const tracks: MidiTrackInfo[] = [];
   const notes: TimedNote[] = [];
+  const controlChanges: MidiControlChange[] = [];
 
   midi.tracks.forEach((track, trackIndex) => {
     const firstNote = track.notes[0] as { channel?: number } | undefined;
     const channel = firstNote?.channel;
     const name = track.name ?? "";
+    const program = track.instrument?.number;
     const roleHint = roleFromName(name);
     const isPercussion =
       channel === 9 ||
@@ -24,8 +26,14 @@ export function parseMidi(bytes: Uint8Array): MidiSongData {
       index: trackIndex,
       name,
       ...(channel !== undefined ? { channel } : {}),
+      ...(program !== undefined ? { program } : {}),
       ...(roleHint ? { roleHint } : {}),
     });
+
+    const sustainEvents = (track.controlChanges?.[64] ?? []) as Array<{ ticks: number; value: number }>;
+    for (const event of sustainEvents) {
+      controlChanges.push({ trackIndex, number: 64, tick: Math.round(event.ticks), value: event.value });
+    }
 
     if (isPercussion) {
       return;
@@ -58,6 +66,7 @@ export function parseMidi(bytes: Uint8Array): MidiSongData {
     ticksPerBeat,
     totalBars,
     tracks,
+    controlChanges: controlChanges.sort((a, b) => a.tick - b.tick || a.trackIndex - b.trackIndex),
   };
 }
 
