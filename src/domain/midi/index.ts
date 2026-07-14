@@ -14,6 +14,8 @@ export { extractTrackFeatures, inferTrackRoleProfiles } from "./trackRoles";
 export { extractOrnamentFeatures } from "./ornaments";
 export { buildSegmentLattice, generateBoundaries } from "./segmentation";
 export { buildCumulativePitchFeatures, buildWeightedPitchProfile, profileFromCumulative } from "./profiles";
+export { canonicalChord, chordTemplates, scoreChordCandidates, scoreSegments } from "./candidates";
+export { chordKeyCompatibility, estimateKeyCandidates } from "./keyPrior";
 export type {
   AnalyzeMidiOptions,
   AnalyzeMidiResult,
@@ -31,3 +33,5 @@ export type { HybridTrackRole, TrackFeatures, TrackRoleProfile } from "./trackRo
 export type { OrnamentFeatures } from "./ornaments";
 export type { BoundaryCandidate, BoundaryReason, SegmentCandidate, SegmentationOptions } from "./segmentation";
 export type { CumulativePitchFeatures, WeightedPitchProfile } from "./profiles";
+export type { ChordCandidateScore, ChordEvidence, ChordTemplate, ScoredSegment } from "./candidates";
+export type { KeyRegionCandidate } from "./keyPrior";
