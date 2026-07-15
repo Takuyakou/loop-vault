@@ -1,0 +1,59 @@
+import { z } from "zod";
+import { chordQualitySchema } from "../../schema";
+import type { RealMidiEvaluationCase } from "./types";
+
+const expectedChordSegmentSchema = z.object({
+  startBeat: z.number().nonnegative(),
+  endBeat: z.number().positive(),
+  primary: z.string().min(1),
+  root: z.number().int().min(0).max(11),
+  quality: chordQualitySchema,
+  bass: z.number().int().min(0).max(11).optional(),
+  acceptableAlternatives: z.array(z.string().min(1)).optional(),
+}).strict().refine((value) => value.endBeat > value.startBeat, "endBeat must be after startBeat");
+
+const expectedAlternativeSchema = z.object({
+  chord: z.string().min(1),
+  strength: z.enum(["strong", "weak"]),
+  reason: z.enum(["tension-reduction", "omitted-fifth", "enharmonic", "equivalent-pitch-set", "manual"]),
+}).strict();
+
+export const realMidiEvaluationCaseSchema: z.ZodType<RealMidiEvaluationCase> = z.object({
+  schemaVersion: z.literal(1),
+  id: z.string().min(1),
+  source: z.object({
+    fingerprint: z.string().regex(/^(sha256-[a-f0-9]{64}|fnv1a32-[a-f0-9]{8})$/),
+    assetId: z.string().optional(),
+    fileName: z.string().optional(),
+  }).strict(),
+  range: z.object({
+    startBeat: z.number().nonnegative(),
+    endBeat: z.number().positive(),
+    startBar: z.number().int().min(1).optional(),
+    endBar: z.number().int().min(1).optional(),
+  }).strict().refine((value) => value.endBeat > value.startBeat, "endBeat must be after startBeat"),
+  expected: z.object({
+    primary: z.array(expectedChordSegmentSchema).min(1),
+    alternatives: z.array(z.object({
+      startBeat: z.number().nonnegative(),
+      endBeat: z.number().positive(),
+      alternatives: z.array(expectedAlternativeSchema),
+    }).strict()).optional(),
+  }).strict(),
+  label: z.object({
+    strength: z.enum(["gold", "silver", "bronze"]),
+    origin: z.enum(["stored-progression", "manual-correction", "difference-review", "implicit-save", "manual-import"]),
+    reviewedAt: z.string().datetime({ offset: true }).optional(),
+    reviewer: z.literal("local-user").optional(),
+  }).strict(),
+  context: z.object({
+    key: z.string().optional(),
+    previousChord: z.string().optional(),
+    nextChord: z.string().optional(),
+    category: z.array(z.string()).optional(),
+  }).strict().optional(),
+  analyzerContext: z.object({
+    sourceAnalyzerVersion: z.string().optional(),
+    sourceWeightsVersion: z.string().optional(),
+  }).strict().optional(),
+}).strict();
