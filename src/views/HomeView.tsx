@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
+import { PlayToggle } from "../components/PlayToggle";
 import { displayKey, statusLabel } from "../domain/displayLabels";
 import { pickFocus } from "../domain/focus";
 import { degreeSequence } from "../domain/harmony/degrees";
 import { monthlyStats } from "../domain/monthlyStats";
 import { formatProgressionText } from "../domain/progressionText";
 import type { TransitionResult } from "../domain/transition";
-import type { ChordTimelineItem, SongIdea, Status } from "../domain/types";
+import type { SongIdea, Status } from "../domain/types";
 import type { AppCopy, AppLanguage } from "../i18n";
 
 const pipeline: Status[] = ["idea", "loop", "arrange", "mix", "done"];
 function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <section className={"border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4 " + className}>{children}</section>; }
 function StatusBadge({ status, language }: { status: Status; language: AppLanguage }) { return <span className="shrink-0 rounded bg-[var(--lv-surface-raised)] px-2 py-1 text-xs font-semibold uppercase text-teal-200">{statusLabel(status, language)}</span>; }
 function labelStatus(status: Status, language: AppLanguage): string { return statusLabel(status, language); }
-async function previewTimeline(chords: readonly ChordTimelineItem[], bpm?: number): Promise<void> { const { previewChordTimeline } = await import("../audio/chordPreview"); await previewChordTimeline(chords, bpm); }
 
 export function HomeView({
   ideas,
@@ -92,7 +92,15 @@ export function HomeView({
             <p className="mt-5 text-sm text-[var(--lv-text-secondary)]"><span className="text-[var(--lv-text)]">{copy.home.nextAction}：</span>{focus.focus.nextAction.text}</p>
             <div className="mt-5 flex flex-wrap gap-2">
               {focusBlock ? (
-                <button className="lv-button-ghost grid h-10 w-10 place-items-center" onClick={() => void previewTimeline(focusBlock.chords, focusBlock.bpm ?? focus.focus!.bpm)} aria-label={copy.common.preview} title={copy.common.preview}>▶</button>
+                <PlayToggle
+                  source={{ kind: "home", id: `idea:${focus.focus.id}:block:${focusBlock.id}` }}
+                  request={{ type: "timeline", timeline: focusBlock.chords, bpm: focusBlock.bpm ?? focus.focus.bpm }}
+                  playLabel={copy.common.preview}
+                  stopLabel={copy.common.stop}
+                  className="lv-button-ghost grid h-10 w-10 place-items-center"
+                  showLabel={false}
+                  onError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed)}
+                />
               ) : null}
               <button className="lv-button-ghost px-4 py-2 text-sm font-medium" onClick={() => openDetail(focus.focus!.id)}>{language === "ja" ? "詳細を開く" : "Open details"}</button>
               <button className="lv-button-primary px-4 py-2 text-sm font-semibold" onClick={() => completeNext(focus.focus!)}>{language === "ja" ? "次の一手を完了" : "Complete next step"}</button>
@@ -140,7 +148,15 @@ export function HomeView({
                   <p className="mt-1 text-xs text-[var(--lv-text-muted)]">{idea.title}</p>
                   <p className="mt-4 line-clamp-2 font-mono text-xs text-teal-100">{formatProgressionText(block.chords).split("\n")[0]}</p>
                   <div className="mt-4 flex gap-2">
-                    <button className="grid h-8 w-8 place-items-center rounded border border-cyan-400/60 text-cyan-100" onClick={() => void previewTimeline(block.chords, block.bpm ?? idea.bpm)} aria-label={copy.common.preview} title={copy.common.preview}>▶</button>
+                    <PlayToggle
+                      source={{ kind: "home", id: `idea:${idea.id}:block:${block.id}` }}
+                      request={{ type: "timeline", timeline: block.chords, bpm: block.bpm ?? idea.bpm }}
+                      playLabel={copy.common.preview}
+                      stopLabel={copy.common.stop}
+                      className="grid h-8 w-8 place-items-center rounded border border-cyan-400/60 text-cyan-100"
+                      showLabel={false}
+                      onError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed)}
+                    />
                     <button className="rounded border border-[var(--lv-border-strong)] px-3 py-1 text-xs" onClick={() => openDetail(idea.id)}>{language === "ja" ? "Vaultで開く" : "Open in Vault"}</button>
                   </div>
                 </article>

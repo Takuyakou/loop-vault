@@ -1,6 +1,10 @@
 import { readFile } from "@tauri-apps/plugin-fs";
 import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { useStore } from "zustand";
+import {
+  playbackController,
+  type PlaybackController,
+} from "./audio/playbackController";
 import { AppShell, type AppView } from "./components/AppShell";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { Modal } from "./components/Modal";
@@ -129,11 +133,13 @@ async function analyzeMidiPath(path: string) {
       return;
     }
 
+    stopIdeaPlayback(idea.id);
+
     setPendingDelete(idea);
     setSelectedId(undefined);
     setView("library");
     deleteTimer.current = setTimeout(() => {
-      deleteIdea(idea.id);
+      finalizeIdeaDelete(idea.id, deleteIdea);
       setPendingDelete(undefined);
     }, 5000);
   }
@@ -304,6 +310,25 @@ async function analyzeMidiPath(path: string) {
       ) : null}
     </main>
   );
+}
+
+export function stopIdeaPlayback(
+  ideaId: string,
+  controller: Pick<PlaybackController, "getState" | "stop"> = playbackController,
+): void {
+  const playingSource = controller.getState().source;
+  if (playingSource?.id.startsWith(`idea:${ideaId}:`)) {
+    controller.stop();
+  }
+}
+
+export function finalizeIdeaDelete(
+  ideaId: string,
+  deleteIdea: (id: string) => void,
+  controller: Pick<PlaybackController, "getState" | "stop"> = playbackController,
+): void {
+  stopIdeaPlayback(ideaId, controller);
+  deleteIdea(ideaId);
 }
 
 

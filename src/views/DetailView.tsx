@@ -1,31 +1,37 @@
 import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
 import { openPath, revealItemInDir } from "@tauri-apps/plugin-opener";
 import { type FormEvent, useEffect, useRef, useState } from "react";
+import { playbackController, type PlayingSource } from "../audio/playbackController";
 import { Modal } from "../components/Modal";
+import { PlayToggle } from "../components/PlayToggle";
 import { canOpenAssetPath, openableAssetExtensions } from "../domain/assetSecurity";
 import { statusLabel } from "../domain/displayLabels";
 import { formatProgressionText } from "../domain/progressionText";
 import type { TransitionOptions, TransitionResult } from "../domain/transition";
-import type { AssetType, ChordTimelineItem, SavedProgressionBlock, SongIdea, Status } from "../domain/types";
+import type { AssetType, SavedProgressionBlock, SongIdea, Status } from "../domain/types";
 import type { AppCopy, AppLanguage } from "../i18n";
 import { ProgressionGrid } from "../ui/ProgressionGrid";
 
 type Reference = SongIdea["references"][number]; type Asset = SongIdea["assets"][number];
 const statuses: Status[] = ["idea", "loop", "arrange", "mix", "done", "hold", "abandoned"]; const pipeline: Status[] = ["idea", "loop", "arrange", "mix", "done"]; const keySuggestions = ["C", "Cm", "D", "Dm", "E", "Em", "F", "Fm", "G", "Gm", "A", "Am", "B", "Bm"]; const nextPlaceholders = ["Replace the bass", "Try the B section chords", "Make two drum variations", "Bounce a rough hook"]; const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
-function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <section className={"border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4 " + className}>{children}</section>; } function StatusBadge({ status, language }: { status: Status; language: AppLanguage }) { return <span className="shrink-0 rounded bg-[var(--lv-surface-raised)] px-2 py-1 text-xs font-semibold uppercase text-teal-200">{statusLabel(status, language)}</span>; } function statusButtonClass(active: boolean): string { return active ? "rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" : "rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm text-[var(--lv-text-secondary)]"; } function formatDate(value: string): string { return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value)); } function splitList(value: string): string[] { return value.split(",").map((entry) => entry.trim()).filter(Boolean); } function hashString(value: string): number { let hash = 0; for (const char of value) hash = (hash * 31 + char.charCodeAt(0)) | 0; return hash; } const defaultAssetId = () => crypto.randomUUID(); async function writeClipboardText(text: string): Promise<void> { if (!navigator.clipboard?.writeText) throw new Error("Clipboard is not available."); await navigator.clipboard.writeText(text); } async function previewTimeline(chords: readonly ChordTimelineItem[], bpm?: number): Promise<void> { const { previewChordTimeline } = await import("../audio/chordPreview"); await previewChordTimeline(chords, bpm); }
+function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <section className={"border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4 " + className}>{children}</section>; } function StatusBadge({ status, language }: { status: Status; language: AppLanguage }) { return <span className="shrink-0 rounded bg-[var(--lv-surface-raised)] px-2 py-1 text-xs font-semibold uppercase text-teal-200">{statusLabel(status, language)}</span>; } function statusButtonClass(active: boolean): string { return active ? "rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" : "rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm text-[var(--lv-text-secondary)]"; } function formatDate(value: string): string { return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value)); } function splitList(value: string): string[] { return value.split(",").map((entry) => entry.trim()).filter(Boolean); } function hashString(value: string): number { let hash = 0; for (const char of value) hash = (hash * 31 + char.charCodeAt(0)) | 0; return hash; } const defaultAssetId = () => crypto.randomUUID(); async function writeClipboardText(text: string): Promise<void> { if (!navigator.clipboard?.writeText) throw new Error("Clipboard is not available."); await navigator.clipboard.writeText(text); }
 function labelStatus(status: Status, language: AppLanguage): string { return statusLabel(status, language); }
 
 function ProgressionBlockCard({
   block,
-  onPreview,
+  source,
+  bpm,
   onRemove,
   onCopyProgression,
+  onPreviewError,
   copy,
 }: {
   block: SavedProgressionBlock;
-  onPreview: () => void;
+  source: PlayingSource;
+  bpm?: number;
   onRemove: () => void;
   onCopyProgression: () => void;
+  onPreviewError: (error: unknown) => void;
   copy: AppCopy;
 }) {
   return (
@@ -37,9 +43,7 @@ function ProgressionBlockCard({
             {block.sourceFileName ?? "Captured MIDI"} {block.startBar ? `Bar ${block.startBar}-${block.endBar}` : ""}
           </p>
         </div>
-        <button className="rounded border border-cyan-500/60 px-2 py-1 text-cyan-100" onClick={onPreview}>
-          {copy.common.preview}
-        </button>
+        <PlayToggle source={source} request={{ type: "timeline", timeline: block.chords, bpm }} playLabel={copy.common.preview} stopLabel={copy.common.stop} className="rounded border border-cyan-500/60 px-2 py-1 text-cyan-100" onError={onPreviewError} />
         <button className="rounded border border-teal-500/60 px-2 py-1 text-teal-100" onClick={onCopyProgression}>
           {copy.capture.copyProgression}
         </button>
@@ -272,14 +276,6 @@ export function DetailView({
     }
   }
 
-  async function previewSavedBlock(block: SavedProgressionBlock) {
-    try {
-      await previewTimeline(block.chords, block.bpm ?? idea.bpm);
-    } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
-    }
-  }
-
   async function copySavedBlock(block: SavedProgressionBlock) {
     try {
       await writeClipboardText(formatProgressionText(block.chords));
@@ -340,9 +336,17 @@ export function DetailView({
                 <ProgressionBlockCard
                   key={block.id}
                   block={block}
-                  onPreview={() => void previewSavedBlock(block)}
+                  source={{ kind: "detail", id: `idea:${idea.id}:block:${block.id}` }}
+                  bpm={block.bpm ?? idea.bpm}
+                  onPreviewError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed)}
                   onCopyProgression={() => void copySavedBlock(block)}
-                  onRemove={() => removeProgressionBlock(idea.id, block.id)}
+                  onRemove={() => {
+                    const sourceId = `idea:${idea.id}:block:${block.id}`;
+                    if (playbackController.getState().source?.id === sourceId) {
+                      playbackController.stop();
+                    }
+                    removeProgressionBlock(idea.id, block.id);
+                  }}
                   copy={copy}
                 />
               ))}

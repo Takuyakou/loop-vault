@@ -6,6 +6,13 @@ import type {
 } from "../../domain/progressionEditing";
 import type { ChordSymbol } from "../../domain/types";
 import { progressionEditorCopy, type AppLanguage } from "../../i18n";
+import type { PreviewSound } from "../../audio/chordPreview";
+import {
+  playbackController,
+  type PlaybackController,
+  type PlayingSource,
+} from "../../audio/playbackController";
+import { PlayToggle } from "../PlayToggle";
 import { ChordAlternativeList } from "./ChordAlternativeList";
 import { ChordStructureEditor } from "./ChordStructureEditor";
 
@@ -13,6 +20,11 @@ interface ChordInspectorProps {
   slot?: EditableChordSlot;
   language: AppLanguage;
   onPreview: (chord: ChordSymbol) => void;
+  playbackSource?: PlayingSource;
+  previewSound?: PreviewSound;
+  stopLabel?: string;
+  onPreviewError?: (error: unknown) => void;
+  controller?: PlaybackController;
   onApply: (
     chord: ChordSymbol,
     source: Extract<ProgressionEditSource, "manual-label" | "alternative" | "structure-editor">,
@@ -26,12 +38,18 @@ interface ChordInspectorProps {
   onMergePrevious?: () => void;
   onMergeNext?: () => void;
   onDelete?: () => void;
+  onEditStart?: () => void;
 }
 
 export function ChordInspector({
   slot,
   language,
   onPreview,
+  playbackSource,
+  previewSound,
+  stopLabel = language === "ja" ? "停止" : "Stop",
+  onPreviewError,
+  controller = playbackController,
   onApply,
   onReset,
   canSplit = false,
@@ -42,6 +60,7 @@ export function ChordInspector({
   onMergePrevious,
   onMergeNext,
   onDelete,
+  onEditStart,
 }: ChordInspectorProps) {
   const text = progressionEditorCopy[language];
   const [draftLabel, setDraftLabel] = useState(slot?.currentChord.label ?? "");
@@ -66,7 +85,10 @@ export function ChordInspector({
     );
   }
 
+  const sourceBase = playbackSource ?? { kind: "capture", id: "chord-inspector" };
+
   function updateLabel(label: string) {
+    onEditStart?.();
     setDraftLabel(label);
     setDraftSource("manual-label");
     const parsed = parseChordLabel(label.trim());
@@ -75,6 +97,7 @@ export function ChordInspector({
   }
 
   function selectAlternative(chord: ChordSymbol) {
+    onEditStart?.();
     setDraftLabel(chord.label);
     setDraftChord(chord);
     setDraftSource("alternative");
@@ -94,15 +117,29 @@ export function ChordInspector({
         <InspectorValue
           label={text.original}
           value={slot.originalChord.label}
-          actionLabel={text.previewOriginal}
-          onAction={() => onPreview(slot.originalChord)}
+          preview={{
+            source: inspectorPlaybackSource(sourceBase, slot.id, "original"),
+            chord: slot.originalChord,
+            playLabel: text.previewOriginal,
+            stopLabel,
+            sound: previewSound,
+            onError: onPreviewError,
+            controller,
+          }}
         />
         <InspectorValue
           label={text.current}
           value={slot.currentChord.label}
           emphasized
-          actionLabel={text.previewCurrent}
-          onAction={() => onPreview(slot.currentChord)}
+          preview={{
+            source: inspectorPlaybackSource(sourceBase, slot.id, "current"),
+            chord: slot.currentChord,
+            playLabel: text.previewCurrent,
+            stopLabel,
+            sound: previewSound,
+            onError: onPreviewError,
+            controller,
+          }}
         />
         {slot.confidence !== undefined ? (
           <InspectorValue
@@ -132,6 +169,7 @@ export function ChordInspector({
           id={`chord-label-${slot.id}`}
           className="mt-2 w-full border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm outline-none focus:border-teal-300"
           value={draftLabel}
+          onFocus={onEditStart}
           onChange={(event) => updateLabel(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === "Enter" && draftChord) {
@@ -149,6 +187,7 @@ export function ChordInspector({
             chord={draftChord}
             language={language}
             onChange={(chord) => {
+              onEditStart?.();
               setDraftChord(chord);
               setDraftLabel(chord.label);
               setDraftSource("structure-editor");
@@ -157,14 +196,25 @@ export function ChordInspector({
           />
         ) : null}
         <div className="mt-3 flex flex-wrap gap-2">
-          <button
-            type="button"
-            className="border border-[var(--lv-border-strong)] px-3 py-2 text-sm disabled:opacity-40"
-            disabled={!draftChord}
-            onClick={() => draftChord && onPreview(draftChord)}
-          >
-            {text.preview}
-          </button>
+          {draftChord ? (
+            <PlayToggle
+              source={inspectorPlaybackSource(sourceBase, slot.id, "draft")}
+              request={{ type: "chord", chord: draftChord, sound: previewSound }}
+              playLabel={text.preview}
+              stopLabel={stopLabel}
+              className="inline-flex items-center gap-2 border border-[var(--lv-border-strong)] px-3 py-2 text-sm"
+              onError={onPreviewError}
+              controller={controller}
+            />
+          ) : (
+            <button
+              type="button"
+              className="border border-[var(--lv-border-strong)] px-3 py-2 text-sm opacity-40"
+              disabled
+            >
+              {text.preview}
+            </button>
+          )}
           <button
             type="button"
             className="bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950 disabled:opacity-40"
@@ -213,14 +263,12 @@ function InspectorValue({
   label,
   value,
   emphasized = false,
-  actionLabel,
-  onAction,
+  preview,
 }: {
   label: string;
   value: string;
   emphasized?: boolean;
-  actionLabel?: string;
-  onAction?: () => void;
+  preview?: InspectorPreview;
 }) {
   return (
     <div>
@@ -229,18 +277,40 @@ function InspectorValue({
         <span className={emphasized ? "text-lg font-semibold text-teal-100" : "text-sm text-[var(--lv-text)]"}>
           {value}
         </span>
-        {onAction ? (
-          <button
-            type="button"
+        {preview ? (
+          <PlayToggle
+            source={preview.source}
+            request={{ type: "chord", chord: preview.chord, sound: preview.sound }}
+            playLabel={preview.playLabel}
+            stopLabel={preview.stopLabel}
             className="grid h-8 w-8 place-items-center border border-[var(--lv-border-strong)] text-xs"
-            onClick={onAction}
-            aria-label={actionLabel}
-            title={actionLabel}
-          >
-            ▶
-          </button>
+            showLabel={false}
+            onError={preview.onError}
+            controller={preview.controller}
+          />
         ) : null}
       </dd>
     </div>
   );
+}
+
+interface InspectorPreview {
+  source: PlayingSource;
+  chord: ChordSymbol;
+  playLabel: string;
+  stopLabel: string;
+  sound?: PreviewSound;
+  onError?: (error: unknown) => void;
+  controller: PlaybackController;
+}
+
+export function inspectorPlaybackSource(
+  base: PlayingSource,
+  slotId: string,
+  control: "original" | "current" | "draft",
+): PlayingSource {
+  return {
+    kind: base.kind,
+    id: `${base.id}:inspector:${slotId}:${control}`,
+  };
 }
