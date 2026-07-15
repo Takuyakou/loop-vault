@@ -756,21 +756,12 @@ export function TimelineDetails({
           <button
             className="lv-button-primary inline-flex min-h-10 items-center gap-2 px-4"
             type="button"
-            onClick={() => void previewFullTimeline()}
-            aria-label={copy.capture.previewFullTimeline}
+            onClick={isPlaying ? stopTimelinePreview : () => void previewFullTimeline()}
+            aria-label={isPlaying ? copy.common.stop : copy.capture.previewFullTimeline}
+            title={isPlaying ? copy.common.stop : copy.capture.previewFullTimeline}
           >
-            <span aria-hidden="true">▶</span>
-            {copy.capture.previewFullTimeline}
-          </button>
-          <button
-            className="lv-button-ghost grid h-10 w-10 place-items-center"
-            type="button"
-            onClick={stopTimelinePreview}
-            aria-label={copy.common.stop}
-            title={copy.common.stop}
-            disabled={!isPlaying}
-          >
-            ■
+            <span aria-hidden="true">{isPlaying ? "■" : "▶"}</span>
+            {isPlaying ? copy.common.stop : copy.capture.previewFullTimeline}
           </button>
           <PreviewSoundSelector
             value={previewSound}
