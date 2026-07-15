@@ -39,7 +39,7 @@ export function ProgressionGrid({
   if (chords.length === 0) {
     return (
       <section
-        className="grid min-h-24 place-items-center border border-[var(--lv-border)] bg-[var(--lv-bg)] text-sm text-[var(--lv-text)]0"
+        className="grid min-h-24 place-items-center border border-[var(--lv-border)] bg-[var(--lv-bg)] text-sm text-[var(--lv-text-muted)]"
         aria-label="コード進行"
       >
         コードがありません
@@ -67,7 +67,7 @@ export function ProgressionGrid({
             }`}
             key={bar}
           >
-            <div className="grid place-items-center bg-[var(--lv-surface)] text-xs font-extrabold text-[var(--lv-text)]0">
+            <div className="grid place-items-center bg-[var(--lv-surface)] text-xs font-extrabold text-[var(--lv-text-muted)]">
               {bar}
             </div>
             <div className="flex min-w-0">
@@ -93,13 +93,13 @@ export function ProgressionGrid({
                         style={{ width: `${progress * 100}%` }}
                       />
                     )}
-                    <span className="relative text-[0.7rem] font-extrabold uppercase text-[var(--lv-text)]0">
+                    <span className="relative text-[0.7rem] font-extrabold uppercase text-[var(--lv-text-muted)]">
                       {chord.bar}.{formatBeat(chord.beat)}
                     </span>
                     <strong className="relative text-lg leading-tight text-[var(--lv-text)] [overflow-wrap:anywhere]">
                       {chord.chord.label}
                     </strong>
-                    <span className="relative text-[0.68rem] text-[var(--lv-text)]0">
+                    <span className="relative text-[0.68rem] text-[var(--lv-text-muted)]">
                       {Math.round(chord.confidence * 100)}%
                     </span>
                   </button>

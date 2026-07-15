@@ -217,7 +217,7 @@ export function SettingsDialog({
               <div key={backup.name} className="flex flex-wrap items-center justify-between gap-3 border border-[var(--lv-border)] p-3 text-sm">
                 <div>
                   <p className="font-medium">{backup.name}</p>
-                  <p className="text-[var(--lv-text)]0">{backup.createdAt}</p>
+                  <p className="text-[var(--lv-text-muted)]">{backup.createdAt}</p>
                 </div>
                 <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2" onClick={() => void restore(backup.name)}>{copy.common.restore}</button>
               </div>

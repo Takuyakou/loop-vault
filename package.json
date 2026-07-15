@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "lint": "eslint .",
+    "lint": "eslint . && npm run lint:classes",
+    "lint:classes": "node scripts/lint-tailwind-classes.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",

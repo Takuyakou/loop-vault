@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { parseVaultFileJson, vaultFileSchema } from "./schema";
+import {
+  parseVaultFileJson,
+  statusHistoryEntrySchema,
+  vaultFileSchema,
+} from "./schema";
 import type { SongIdea, VaultFile } from "./types";
 
 const timestamp = "2026-07-04T00:00:00.000Z";
@@ -53,6 +57,40 @@ describe("vaultFileSchema", () => {
   it("accepts a valid VaultFile matching spec 3.5", () => {
     expect(vaultFileSchema.safeParse(vault()).success).toBe(true);
   });
+
+  it("accepts and trims an optional status history reason", () => {
+    const result = statusHistoryEntrySchema.safeParse({
+      status: "hold",
+      at: timestamp,
+      reason: "  Waiting for a vocalist  ",
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.reason).toBe("Waiting for a vocalist");
+    }
+  });
+
+  it("rejects status history reasons longer than 500 characters", () => {
+    expect(statusHistoryEntrySchema.safeParse({
+      status: "hold",
+      at: timestamp,
+      reason: "x".repeat(501),
+    }).success).toBe(false);
+  });
+
+  it.each(["idea", "loop", "arrange", "mix", "done"] as const)(
+    "rejects a reason for %s status history",
+    (status) => {
+      const result = statusHistoryEntrySchema.safeParse({
+        status,
+        at: timestamp,
+        reason: "Only inactive statuses may store this",
+      });
+
+      expect(result.success).toBe(false);
+    },
+  );
 });
 
 describe("parseVaultFileJson", () => {
@@ -65,6 +103,46 @@ describe("parseVaultFileJson", () => {
     }
     expect(result.vault.ideas).toHaveLength(1);
     expect(result.quarantine).toHaveLength(0);
+  });
+
+  it("keeps fileVersion 1 and loads legacy status history without reasons", () => {
+    const result = parseVaultFileJson(JSON.stringify(vault()));
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+    expect(result.vault.fileVersion).toBe(1);
+    expect(result.vault.ideas[0]?.statusHistory).toEqual([
+      { status: "idea", at: timestamp },
+    ]);
+  });
+
+  it("quarantines imported ideas with a reason on a non-inactive status", () => {
+    const invalidIdea = idea({
+      statusHistory: [
+        {
+          status: "loop",
+          at: timestamp,
+          reason: "This reason must not be imported",
+        },
+      ],
+    });
+    const result = parseVaultFileJson(
+      JSON.stringify(vault({ ideas: [invalidIdea] })),
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+    expect(result.vault.ideas).toHaveLength(0);
+    expect(result.quarantine).toHaveLength(1);
+    expect(result.quarantine[0]?.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ path: ["statusHistory", 0, "reason"] }),
+      ]),
+    );
   });
 
   it("reports JSON syntax damage without creating an empty vault", () => {

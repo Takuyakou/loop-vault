@@ -7,7 +7,11 @@ import {
   type VaultRepository,
 } from "../domain/repository";
 import { analyzeMidi } from "../domain/midi";
-import { transition, type TransitionResult } from "../domain/transition";
+import {
+  transition,
+  type TransitionOptions,
+  type TransitionResult,
+} from "../domain/transition";
 import type { QuarantinedRecord } from "../domain/schema";
 import type {
   MidiProgressionAnalysis,
@@ -94,7 +98,12 @@ export interface VaultStoreState {
     metadata?: ProgressionSaveMetadata,
   ) => boolean;
   removeProgressionBlock: (ideaId: string, blockId: string) => void;
-  transitionIdea: (id: string, to: Status, now?: Date) => TransitionResult;
+  transitionIdea: (
+    id: string,
+    to: Status,
+    now?: Date,
+    options?: TransitionOptions,
+  ) => TransitionResult;
   updateNextAction: (id: string, text: string, now?: Date) => void;
   analyzeMidiBytes: (
     bytes: Uint8Array,
@@ -361,7 +370,7 @@ export function createVaultStore(
         }));
       },
 
-      transitionIdea(id, to, transitionNow = now()) {
+      transitionIdea(id, to, transitionNow = now(), transitionOptions = {}) {
         const idea = get().ideas.find((entry) => entry.id === id);
         if (!idea) {
           return {
@@ -370,7 +379,7 @@ export function createVaultStore(
           };
         }
 
-        const result = transition(idea, to, transitionNow);
+        const result = transition(idea, to, transitionNow, transitionOptions);
         if (!result.ok) {
           return result;
         }

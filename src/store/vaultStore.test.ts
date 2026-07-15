@@ -226,6 +226,43 @@ describe("vault store", () => {
     expect(repository.saved).toHaveLength(0);
   });
 
+  it("autosaves Hold reasons only in status history", async () => {
+    const repository = new FakeRepository();
+    const originalMemo = "Fmaj7 - Am7 - Gm7 - C7";
+    repository.loadResult = {
+      vault: {
+        ...createEmptyVault(),
+        ideas: [makeIdea({ id: generatedId, chordMemo: originalMemo })],
+      },
+      quarantine: [],
+      created: false,
+    };
+    const store = createVaultStore({ repository, now: () => now });
+    await store.getState().initialize();
+
+    const result = store.getState().transitionIdea(generatedId, "hold", now, {
+      reason: "  Arrangement direction is undecided  ",
+    });
+
+    expect(result.ok).toBe(true);
+    expect(store.getState().unsaved).toBe(true);
+    expect(store.getState().ideas[0]?.chordMemo).toBe(originalMemo);
+    const currentHistory = store.getState().ideas[0]?.statusHistory ?? [];
+    expect(currentHistory[currentHistory.length - 1]).toEqual({
+      status: "hold",
+      at: now.toISOString(),
+      reason: "Arrangement direction is undecided",
+    });
+
+    await store.getState().flush();
+    expect(repository.saved[0]?.fileVersion).toBe(1);
+    expect(repository.saved[0]?.ideas[0]?.chordMemo).toBe(originalMemo);
+    const savedHistory = repository.saved[0]?.ideas[0]?.statusHistory ?? [];
+    expect(savedHistory[savedHistory.length - 1]?.reason).toBe(
+      "Arrangement direction is undecided",
+    );
+  });
+
   it("enters recovery mode for corrupt JSON and lists backups", async () => {
     const repository = new FakeRepository();
     repository.loadError = new VaultRepositoryError("invalid-json", "Bad JSON", {

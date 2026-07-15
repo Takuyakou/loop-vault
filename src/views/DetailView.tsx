@@ -4,7 +4,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import { canOpenAssetPath, openableAssetExtensions } from "../domain/assetSecurity";
 import { statusLabel } from "../domain/displayLabels";
 import { formatProgressionText } from "../domain/progressionText";
-import type { TransitionResult } from "../domain/transition";
+import type { TransitionOptions, TransitionResult } from "../domain/transition";
 import type { AssetType, ChordTimelineItem, SavedProgressionBlock, SongIdea, Status } from "../domain/types";
 import type { AppCopy, AppLanguage } from "../i18n";
 import { ProgressionGrid } from "../ui/ProgressionGrid";
@@ -32,7 +32,7 @@ function ProgressionBlockCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="font-semibold">{block.summaryText || block.chords.map((item) => item.chord.label).join(" - ")}</p>
-          <p className="mt-1 text-[var(--lv-text)]0">
+          <p className="mt-1 text-[var(--lv-text-muted)]">
             {block.sourceFileName ?? "Captured MIDI"} {block.startBar ? `Bar ${block.startBar}-${block.endBar}` : ""}
           </p>
         </div>
@@ -76,7 +76,12 @@ export function DetailView({
   updateNextAction: (id: string, text: string, now?: Date) => void;
   removeProgressionBlock: (ideaId: string, blockId: string) => void;
   analyzeMidiPath: (path: string) => Promise<void>;
-  transitionIdea: (id: string, to: Status, now?: Date) => TransitionResult;
+  transitionIdea: (
+    id: string,
+    to: Status,
+    now?: Date,
+    options?: TransitionOptions,
+  ) => TransitionResult;
   requestDelete: (idea: SongIdea) => void;
   setToast: (toast: string) => void;
   copy: AppCopy;
@@ -85,9 +90,15 @@ export function DetailView({
   const [nextDraft, setNextDraft] = useState(idea.nextAction.text);
   const [referenceDraft, setReferenceDraft] = useState<Reference>({ title: "", url: "", memo: "" });
   const [assetDraft, setAssetDraft] = useState<Asset>({ id: "", type: "flp", path: "", memo: "" });
+  const [pendingInactiveStatus, setPendingInactiveStatus] = useState<"hold" | "abandoned" | null>(null);
+  const [statusReason, setStatusReason] = useState("");
   const placeholder = nextPlaceholders[Math.abs(hashString(idea.id)) % nextPlaceholders.length];
 
   useEffect(() => setNextDraft(idea.nextAction.text), [idea.id, idea.nextAction.text]);
+  useEffect(() => {
+    setPendingInactiveStatus(null);
+    setStatusReason("");
+  }, [idea.id]);
 
   function saveNext() {
     updateNextAction(idea.id, nextDraft, new Date());
@@ -104,17 +115,41 @@ export function DetailView({
   }
 
   function moveStatus(to: Status) {
-    if (to === "abandoned" && !window.confirm(language === "ja" ? "このIdeaを破棄しますか？" : "Abandon this idea?")) return;
-    if (to === "hold") window.prompt(language === "ja" ? "Hold理由（任意）" : "Hold reason (optional)");
+    if (to === idea.status) {
+      return;
+    }
+
+    if (to === "hold" || to === "abandoned") {
+      setPendingInactiveStatus(to);
+      setStatusReason("");
+      return;
+    }
+
+    commitStatus(to);
+  }
+
+  function commitStatus(to: Status, options: TransitionOptions = {}) {
     if (pipeline.includes(to) && idea.nextAction.text.trim() && to !== idea.status) {
       const keep = window.confirm(language === "ja" ? "現在のNext Actionを次のステージへ持ち越しますか？" : "Carry the current Next Action into the next stage?");
       if (!keep) {
         updateNextAction(idea.id, "", new Date());
       }
     }
-    const result = transitionIdea(idea.id, to, new Date());
+    const result = transitionIdea(idea.id, to, new Date(), options);
     if (!result.ok) setToast(result.error.message);
     if (result.ok && to === "done") setToast(language === "ja" ? "Done。完成として記録しました。" : "Done. Marked as finished.");
+    return result.ok;
+  }
+
+  function submitInactiveStatus(event: FormEvent) {
+    event.preventDefault();
+    if (!pendingInactiveStatus) return;
+
+    const moved = commitStatus(pendingInactiveStatus, { reason: statusReason });
+    if (moved) {
+      setPendingInactiveStatus(null);
+      setStatusReason("");
+    }
   }
 
   function addReference(event: FormEvent) {
@@ -246,6 +281,41 @@ export function DetailView({
               </button>
             ))}
           </div>
+          {pendingInactiveStatus ? (
+            <form className="mt-4 border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] p-4" onSubmit={submitInactiveStatus}>
+              <label className="block text-sm font-semibold" htmlFor="status-reason">
+                {labelStatus(pendingInactiveStatus, language)}: {copy.detail.statusReason}
+              </label>
+              <p className="mt-1 text-xs text-[var(--lv-text-muted)]">{copy.detail.statusReasonHelp}</p>
+              <textarea
+                id="status-reason"
+                className={`${inputClass} mt-3 min-h-24`}
+                value={statusReason}
+                maxLength={500}
+                onChange={(event) => setStatusReason(event.target.value)}
+                placeholder={copy.detail.statusReasonPlaceholder}
+                autoFocus
+              />
+              <div className="mt-2 flex items-center justify-between gap-3">
+                <span className="text-xs text-[var(--lv-text-muted)]">{statusReason.length}/500</span>
+                <div className="flex gap-2">
+                  <button
+                    className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm"
+                    type="button"
+                    onClick={() => {
+                      setPendingInactiveStatus(null);
+                      setStatusReason("");
+                    }}
+                  >
+                    {copy.common.cancel}
+                  </button>
+                  <button className="rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" type="submit">
+                    {copy.detail.confirmStatus(labelStatus(pendingInactiveStatus, language))}
+                  </button>
+                </div>
+              </div>
+            </form>
+          ) : null}
           <button className="mt-5 rounded border border-red-500/50 px-3 py-2 text-sm text-red-200" onClick={() => requestDelete(idea)}>{copy.common.delete}</button>
         </Panel>
 
@@ -371,9 +441,12 @@ export function DetailView({
           <h2 className="text-xl font-semibold">{copy.detail.history}</h2>
           <div className="mt-3 space-y-2">
             {idea.statusHistory.map((entry, index) => (
-              <div key={`${entry.status}-${entry.at}-${index}`} className="flex justify-between border-b border-[var(--lv-border)] pb-2 text-sm">
-                <span>{labelStatus(entry.status, language)}</span>
-                <span className="text-[var(--lv-text-muted)]">{formatDate(entry.at)}</span>
+              <div key={`${entry.status}-${entry.at}-${index}`} className="border-b border-[var(--lv-border)] pb-2 text-sm">
+                <div className="flex justify-between gap-3">
+                  <span>{labelStatus(entry.status, language)}</span>
+                  <span className="text-[var(--lv-text-muted)]">{formatDate(entry.at)}</span>
+                </div>
+                {entry.reason ? <p className="mt-1 whitespace-pre-wrap break-words text-[var(--lv-text-secondary)]">{entry.reason}</p> : null}
               </div>
             ))}
           </div>

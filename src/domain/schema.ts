@@ -64,8 +64,22 @@ export const statusHistoryEntrySchema = z
   .object({
     status: statusSchema,
     at: isoDateSchema,
+    reason: z.string().trim().max(500).optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((entry, context) => {
+    if (
+      entry.reason !== undefined
+      && entry.status !== "hold"
+      && entry.status !== "abandoned"
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["reason"],
+        message: "Status reasons are only allowed for Hold or Abandoned.",
+      });
+    }
+  });
 
 export const chordSymbolSchema = z
   .object({

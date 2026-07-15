@@ -10,6 +10,12 @@ export type Status =
 export type AssetType = "midi" | "audio" | "flp" | "other";
 export type AppLanguage = "ja" | "en";
 
+export interface StatusHistoryEntry {
+  status: Status;
+  at: string;
+  reason?: string;
+}
+
 export type ChordQuality =
   | "maj" | "min" | "dim" | "aug" | "maj7" | "min7" | "dom7" | "min7b5" | "dim7"
   | "maj9" | "min9" | "dom9" | "min11" | "dom13" | "sus2" | "sus4" | "dom7sus4"
@@ -110,7 +116,7 @@ export interface SongIdea {
   }[];
   chordDrip?: unknown;
   progressionBlocks?: SavedProgressionBlock[];
-  statusHistory: { status: Status; at: string }[];
+  statusHistory: StatusHistoryEntry[];
   createdAt: string;
   updatedAt: string;
   completedAt?: string;
