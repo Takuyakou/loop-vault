@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { chordQualitySchema } from "../../schema";
-import type { RealMidiEvaluationCase } from "./types";
+import { parseChordLabel } from "../../chords";
+import type { MidiDifferenceReview, RealMidiEvaluationCase } from "./types";
 
 const expectedChordSegmentSchema = z.object({
   startBeat: z.number().nonnegative(),
@@ -57,3 +58,33 @@ export const realMidiEvaluationCaseSchema: z.ZodType<RealMidiEvaluationCase> = z
     sourceWeightsVersion: z.string().optional(),
   }).strict().optional(),
 }).strict();
+
+const chordLabelSnapshotSchema = z.object({
+  primary: z.string().min(1),
+  alternatives: z.array(z.string().min(1)),
+  confidence: z.number().min(0).max(1).optional(),
+  warnings: z.array(z.string()).optional(),
+}).strict();
+
+export const midiDifferenceReviewSchema: z.ZodType<MidiDifferenceReview> = z.object({
+  schemaVersion: z.literal(1),
+  id: z.string().min(1),
+  sourceFingerprint: z.string().regex(/^(sha256-[a-f0-9]{64}|fnv1a32-[a-f0-9]{8})$/),
+  range: z.object({
+    startBeat: z.number().nonnegative(),
+    endBeat: z.number().positive(),
+  }).strict(),
+  legacy: chordLabelSnapshotSchema,
+  reranker: chordLabelSnapshotSchema,
+  alternatives: z.array(chordLabelSnapshotSchema),
+  judgment: z.enum(["legacy", "reranker", "both-acceptable", "neither", "skip"]),
+  correctedChord: z.string().optional(),
+  reviewedAt: z.string().datetime({ offset: true }),
+}).strict().superRefine((value, context) => {
+  if (value.judgment === "neither" && !value.correctedChord) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["correctedChord"], message: "correctedChord is required" });
+  }
+  if (value.correctedChord && !parseChordLabel(value.correctedChord)) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["correctedChord"], message: "invalid chord label" });
+  }
+});

@@ -11,9 +11,9 @@ import {
   compareStoredProgression,
   enumerateStoredProgressions,
   resolveStoredProgressionRange,
-  type StoredProgressionComparisonItem,
 } from "../src/domain/midi/realEvaluation/storedProgressions";
 import type { RealMidiEvaluationCase } from "../src/domain/midi/realEvaluation/types";
+import type { StoredProgressionMismatchRecord } from "../src/domain/midi/realEvaluation/differenceReview";
 
 type MissingReason =
   | "source-asset-id-missing"
@@ -30,14 +30,6 @@ interface MissingSource {
   reason: MissingReason;
 }
 
-interface MismatchRecord {
-  caseId: string;
-  sourceFingerprint: string;
-  assetId?: string;
-  range: RealMidiEvaluationCase["range"];
-  segments: StoredProgressionComparisonItem[];
-}
-
 const args = process.argv.slice(2);
 const vaultPath = resolve(optionValue("--vault") ?? defaultVaultPath());
 const outputDir = resolve(optionValue("--output") ?? "artifacts/stored-progressions");
@@ -52,7 +44,7 @@ const references = enumerateStoredProgressions(parsed.vault)
   .sort((left, right) => left.block.id.localeCompare(right.block.id));
 const cases: RealMidiEvaluationCase[] = [];
 const missing: MissingSource[] = [];
-const mismatches: MismatchRecord[] = [];
+const mismatches: StoredProgressionMismatchRecord[] = [];
 let comparedSegments = 0;
 let legacyMatches = 0;
 let rerankerMatches = 0;

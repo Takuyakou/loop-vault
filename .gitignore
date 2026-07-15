@@ -16,3 +16,4 @@ artifacts/midi-ablation/
 artifacts/midi-reranker-tuning/
 artifacts/midi-dataset-evaluation/
 artifacts/stored-progressions/
+artifacts/midi-difference-review/

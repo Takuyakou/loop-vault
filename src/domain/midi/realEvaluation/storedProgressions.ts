@@ -17,6 +17,12 @@ export interface StoredProgressionComparisonItem {
   saved: string;
   legacy?: string;
   reranker?: string;
+  legacyAlternatives?: string[];
+  rerankerAlternatives?: string[];
+  legacyConfidence?: number;
+  rerankerConfidence?: number;
+  legacyWarnings?: string[];
+  rerankerWarnings?: string[];
   legacyMatches: boolean;
   rerankerMatches: boolean;
 }
@@ -94,14 +100,26 @@ export function compareStoredProgression(
   beatsPerBar = DEFAULT_BEATS_PER_BAR,
 ): StoredProgressionComparisonItem[] {
   return expected.map((segment) => {
-    const legacyLabel = bestOverlappingLabel(segment, legacy, beatsPerBar);
-    const rerankerLabel = bestOverlappingLabel(segment, reranker, beatsPerBar);
+    const legacyItem = bestOverlappingItem(segment, legacy, beatsPerBar);
+    const rerankerItem = bestOverlappingItem(segment, reranker, beatsPerBar);
+    const legacyLabel = legacyItem?.chord.label;
+    const rerankerLabel = rerankerItem?.chord.label;
     return {
       startBeat: segment.startBeat,
       endBeat: segment.endBeat,
       saved: segment.primary,
       ...(legacyLabel ? { legacy: legacyLabel } : {}),
       ...(rerankerLabel ? { reranker: rerankerLabel } : {}),
+      ...(legacyItem ? {
+        legacyAlternatives: legacyItem.alternatives.map((item) => item.chord.label),
+        legacyConfidence: legacyItem.confidence,
+        legacyWarnings: legacyItem.warnings,
+      } : {}),
+      ...(rerankerItem ? {
+        rerankerAlternatives: rerankerItem.alternatives.map((item) => item.chord.label),
+        rerankerConfidence: rerankerItem.confidence,
+        rerankerWarnings: rerankerItem.warnings,
+      } : {}),
       legacyMatches: legacyLabel === segment.primary,
       rerankerMatches: rerankerLabel === segment.primary,
     };
@@ -122,22 +140,22 @@ function toExpectedSegment(item: ChordTimelineItem, beatsPerBar: number): Expect
   };
 }
 
-function bestOverlappingLabel(
+function bestOverlappingItem(
   expected: Pick<ExpectedChordSegment, "startBeat" | "endBeat">,
   timeline: readonly ChordTimelineItem[],
   beatsPerBar: number,
-): string | undefined {
+): ChordTimelineItem | undefined {
   return timeline
     .map((item) => {
       const range = timelineRange(item, beatsPerBar);
       return {
-        label: item.chord.label,
+        item,
         startBeat: range.startBeat,
         overlap: Math.max(0, Math.min(expected.endBeat, range.endBeat) - Math.max(expected.startBeat, range.startBeat)),
       };
     })
     .filter((item) => item.overlap > 0)
-    .sort((left, right) => right.overlap - left.overlap || left.startBeat - right.startBeat)[0]?.label;
+    .sort((left, right) => right.overlap - left.overlap || left.startBeat - right.startBeat)[0]?.item;
 }
 
 function timelineRange(item: ChordTimelineItem, beatsPerBar: number) {

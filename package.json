@@ -18,6 +18,7 @@
     "eval:midi:datasets": "vite-node scripts/evaluate-midi-datasets.ts",
     "eval:midi:inspect": "vite-node scripts/inspect-midi-analysis.ts",
     "eval:stored-progressions": "vite-node scripts/evaluate-stored-progressions.ts",
+    "eval:review-differences": "vite-node scripts/review-midi-differences.ts",
     "tune:midi-weights": "vite-node scripts/tune-midi-weights.ts",
     "benchmark:midi": "vite-node scripts/benchmark-midi-analysis.ts",
     "diagnose:midi-failures": "vite-node scripts/analyze-midi-failures.ts",
