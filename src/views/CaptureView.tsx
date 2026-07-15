@@ -1073,8 +1073,27 @@ export function ProgressionCandidateCard({
             </p>
           ) : null}
         </button>
-        <span className="rounded bg-[var(--lv-surface-raised)] px-2 py-1 text-xs text-teal-200">{candidateLabelList(candidate.labels, language).join(" · ")}</span>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <button className="grid h-9 w-9 place-items-center rounded bg-cyan-400 text-sm font-semibold text-stone-950" onClick={() => void previewWholeCandidate()} aria-label={copy.common.preview} title={copy.common.preview}>
+            ▶
+          </button>
+          {previewStartedAt !== null ? (
+            <button className="grid h-9 w-9 place-items-center rounded border border-[var(--lv-border-strong)] text-sm" onClick={stopCandidatePreview} aria-label={copy.common.stop} title={copy.common.stop}>
+              ■
+            </button>
+          ) : null}
+          <button className="rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => { onSelect?.(); onQuickSave?.(editedCandidate, title, editable); }}>
+            {editorCopy.saveToVault}
+          </button>
+          <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => { onSelect?.(); onSave?.(editedCandidate, title, editable); }}>
+            {language === "ja" ? "保存方法" : "Save options"}
+          </button>
+          <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => void onCopyProgression(editedCandidate)}>
+            {copy.capture.copyProgression}
+          </button>
+        </div>
       </div>
+      <span className="mt-3 inline-flex rounded bg-[var(--lv-surface-raised)] px-2 py-1 text-xs text-teal-200">{candidateLabelList(candidate.labels, language).join(" · ")}</span>
       {candidate.summaryText.trim() ? <p className="mt-3 text-sm text-[var(--lv-text-secondary)]">{candidate.summaryText}</p> : null}
       <div className={`mt-4 ${isExpanded ? "grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]" : ""}`}>
         <div>
@@ -1152,25 +1171,6 @@ export function ProgressionCandidateCard({
         />
       ) : null}
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        <button className="grid h-9 w-9 place-items-center rounded bg-cyan-400 text-sm font-semibold text-stone-950" onClick={() => void previewWholeCandidate()} aria-label={copy.common.preview} title={copy.common.preview}>
-          ▶
-        </button>
-        {previewStartedAt !== null ? (
-          <button className="grid h-9 w-9 place-items-center rounded border border-[var(--lv-border-strong)] text-sm" onClick={stopCandidatePreview} aria-label={copy.common.stop} title={copy.common.stop}>
-            ■
-          </button>
-        ) : null}
-        <button className="rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => { onSelect?.(); onQuickSave?.(editedCandidate, title, editable); }}>
-          {editorCopy.saveToVault}
-        </button>
-        <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => { onSelect?.(); onSave?.(editedCandidate, title, editable); }}>
-          {language === "ja" ? "保存方法" : "Save options"}
-        </button>
-        <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => void onCopyProgression(editedCandidate)}>
-          {copy.capture.copyProgression}
-        </button>
-      </div>
     </div>
   );
 }
