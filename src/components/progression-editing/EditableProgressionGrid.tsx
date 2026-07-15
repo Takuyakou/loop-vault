@@ -1,5 +1,5 @@
 import type { EditableProgression } from "../../domain/progressionEditing";
-import type { AppLanguage } from "../../i18n";
+import { progressionEditorCopy, type AppLanguage } from "../../i18n";
 import { EditableChordCard } from "./EditableChordCard";
 
 interface EditableProgressionGridProps {
@@ -17,11 +17,12 @@ export function EditableProgressionGrid({
   onSelect,
   language,
 }: EditableProgressionGridProps) {
+  const text = progressionEditorCopy[language];
   return (
     <div
       className="grid grid-cols-[repeat(auto-fit,minmax(8.5rem,1fr))] gap-2"
       role="listbox"
-      aria-label={language === "ja" ? "編集するコードを選択" : "Select a chord to edit"}
+      aria-label={text.selectChord}
     >
       {editable.slots.map((slot, index) => (
         <EditableChordCard

@@ -1,6 +1,6 @@
 import { makeChordSymbol } from "../../domain/chords";
 import type { ChordQuality, ChordSymbol } from "../../domain/types";
-import type { AppLanguage } from "../../i18n";
+import { progressionEditorCopy, type AppLanguage } from "../../i18n";
 
 const noteNames = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"] as const;
 const qualityOptions: Array<{ value: ChordQuality; label: string }> = [
@@ -38,6 +38,7 @@ export function ChordStructureEditor({
   onChange,
   language,
 }: ChordStructureEditorProps) {
+  const text = progressionEditorCopy[language];
   function update(root: number, quality: ChordQuality, bass: number | undefined) {
     onChange(makeChordSymbol(root, quality, [...chord.tensions], bass));
   }
@@ -45,7 +46,7 @@ export function ChordStructureEditor({
   return (
     <fieldset className="mt-4 border-t border-[var(--lv-border)] pt-4">
       <legend className="text-xs text-[var(--lv-text-muted)]">
-        {language === "ja" ? "コードの構成" : "Chord structure"}
+        {text.chordStructure}
       </legend>
       <div className="mt-2 grid grid-cols-3 gap-2">
         <StructureSelect
@@ -65,7 +66,7 @@ export function ChordStructureEditor({
           value={chord.bass === undefined ? "root" : String(chord.bass)}
           onChange={(value) => update(chord.root, chord.quality, value === "root" ? undefined : Number(value))}
           options={[
-            { value: "root", label: language === "ja" ? "Root" : "Root" },
+            { value: "root", label: "Root" },
             ...noteNames.map((label, value) => ({ value: String(value), label })),
           ]}
         />

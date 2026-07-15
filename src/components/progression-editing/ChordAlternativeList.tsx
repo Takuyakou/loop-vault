@@ -1,6 +1,6 @@
 import type { ChordAlternative } from "../../domain/progressionEditing";
 import type { ChordSymbol } from "../../domain/types";
-import type { AppLanguage } from "../../i18n";
+import { progressionEditorCopy, type AppLanguage } from "../../i18n";
 
 interface ChordAlternativeListProps {
   alternatives: ChordAlternative[];
@@ -15,13 +15,14 @@ export function ChordAlternativeList({
   onSelect,
   language,
 }: ChordAlternativeListProps) {
+  const text = progressionEditorCopy[language];
   if (alternatives.length === 0) {
     return null;
   }
   return (
     <div>
       <p className="text-xs text-[var(--lv-text-muted)]">
-        {language === "ja" ? "解析候補" : "Alternatives"}
+        {text.alternatives}
       </p>
       <div className="mt-2 flex flex-wrap gap-2">
         {alternatives.map((alternative) => {
