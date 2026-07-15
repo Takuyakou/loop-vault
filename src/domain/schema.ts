@@ -118,7 +118,8 @@ export const savedProgressionBlockSchema = z
     tags: z.array(z.string()),
     capturedAt: isoDateSchema,
     analyzerVersion: z.string().min(1),
-    weightsVersion: z.string().min(1).optional(),
+    sourceAnalyzerVersion: z.string().min(1).optional(),
+    sourceWeightsVersion: z.string().min(1).optional(),
     userEdited: z.boolean().optional(),
     userVerified: z.boolean().optional(),
   })

@@ -253,6 +253,7 @@ async function analyzeMidiPath(path: string) {
       ) : null}
       {isSettingsOpen ? (
         <SettingsDialog
+          ideas={ideas}
           monthlyGoal={settings.monthlyGoal}
           language={language}
           backups={backups}

@@ -60,6 +60,13 @@ export interface SongIdeaDraft {
   nextAction?: string;
   progressionBlock?: SavedProgressionBlock | ProgressionBlockCandidate;
   progressionAnalysis?: MidiProgressionAnalysis;
+  progressionMetadata?: ProgressionSaveMetadata;
+}
+
+export interface ProgressionSaveMetadata {
+  sourcePath?: string;
+  userEdited?: boolean;
+  userVerified?: boolean;
 }
 
 export interface VaultStoreState {
@@ -84,6 +91,7 @@ export interface VaultStoreState {
     ideaId: string,
     block: SavedProgressionBlock | ProgressionBlockCandidate,
     analysis?: MidiProgressionAnalysis,
+    metadata?: ProgressionSaveMetadata,
   ) => void;
   removeProgressionBlock: (ideaId: string, blockId: string) => void;
   transitionIdea: (id: string, to: Status, now?: Date) => TransitionResult;
@@ -240,11 +248,17 @@ export function createVaultStore(
         const createdAt = now().toISOString();
         const status = draft.status ?? "idea";
         const id = idFactory();
+        const sourceAssetId = draft.progressionMetadata?.sourcePath
+          ? idFactory()
+          : draft.progressionAnalysis?.sourceAssetId;
+        const progressionAnalysis = sourceAssetId
+          ? { ...draft.progressionAnalysis, sourceAssetId } as MidiProgressionAnalysis
+          : draft.progressionAnalysis;
         const progressionBlock = draft.progressionBlock
-          ? toSavedProgressionBlock(draft.progressionBlock, draft.progressionAnalysis, {
+          ? toSavedProgressionBlock(draft.progressionBlock, progressionAnalysis, {
               idFactory,
               now,
-            })
+            }, draft.progressionMetadata)
           : undefined;
         const idea: SongIdea = {
           id,
@@ -257,7 +271,9 @@ export function createVaultStore(
           nextAction: { text: draft.nextAction ?? "", updatedAt: createdAt },
           chordMemo: draft.chordMemo ?? "",
           references: [],
-          assets: [],
+          assets: draft.progressionMetadata?.sourcePath && sourceAssetId
+            ? [{ id: sourceAssetId, type: "midi", path: draft.progressionMetadata.sourcePath }]
+            : [],
           progressionBlocks: progressionBlock ? [progressionBlock] : [],
           statusHistory: [{ status, at: createdAt }],
           createdAt,
@@ -285,11 +301,17 @@ export function createVaultStore(
         }));
       },
 
-      appendBlockToIdea(ideaId, block, analysis) {
-        const savedBlock = toSavedProgressionBlock(block, analysis, {
+      appendBlockToIdea(ideaId, block, analysis, metadata) {
+        const currentIdea = get().ideas.find((idea) => idea.id === ideaId);
+        const existingAsset = metadata?.sourcePath
+          ? currentIdea?.assets.find((asset) => asset.type === "midi" && asset.path === metadata.sourcePath)
+          : undefined;
+        const sourceAssetId = existingAsset?.id ?? (metadata?.sourcePath ? idFactory() : analysis?.sourceAssetId);
+        const effectiveAnalysis = sourceAssetId ? { ...analysis, sourceAssetId } as MidiProgressionAnalysis : analysis;
+        const savedBlock = toSavedProgressionBlock(block, effectiveAnalysis, {
           idFactory,
           now,
-        });
+        }, metadata);
         applyVaultChange((vault) => ({
           ...vault,
           ideas: vault.ideas.map((idea) =>
@@ -300,6 +322,9 @@ export function createVaultStore(
                     ...(idea.progressionBlocks ?? []),
                     savedBlock,
                   ],
+                  assets: metadata?.sourcePath && sourceAssetId && !existingAsset
+                    ? [...idea.assets, { id: sourceAssetId, type: "midi" as const, path: metadata.sourcePath }]
+                    : idea.assets,
                   bpm: idea.bpm ?? savedBlock.bpm,
                   key: idea.key ?? savedBlock.detectedKey,
                   chordMemo: idea.chordMemo.trim()
@@ -569,15 +594,22 @@ function toSavedProgressionBlock(
   block: SavedProgressionBlock | ProgressionBlockCandidate,
   analysis: MidiProgressionAnalysis | undefined,
   context: { idFactory: () => string; now: () => Date },
+  metadata: ProgressionSaveMetadata = {},
 ): SavedProgressionBlock {
   if ("capturedAt" in block) {
     return block;
   }
 
+  const sourceRange = block.chords.length > 0 ? {
+    sourceStartBeat: Math.min(...block.chords.map((item) => (item.bar - 1) * 4 + item.beat - 1)),
+    sourceEndBeat: Math.max(...block.chords.map((item) => (item.bar - 1) * 4 + item.beat - 1 + item.durationBeats)),
+  } : undefined;
   return {
     id: context.idFactory(),
     ...(analysis?.sourceAssetId ? { sourceAssetId: analysis.sourceAssetId } : {}),
     ...(analysis?.fileName ? { sourceFileName: analysis.fileName } : {}),
+    ...(analysis?.sourceFingerprint ? { sourceFingerprint: analysis.sourceFingerprint } : {}),
+    ...sourceRange,
     startBar: block.startBar,
     endBar: block.endBar,
     lengthBars: block.lengthBars,
@@ -589,5 +621,9 @@ function toSavedProgressionBlock(
     tags: [],
     capturedAt: context.now().toISOString(),
     analyzerVersion: analysis?.analyzerVersion ?? "unknown",
+    ...(analysis?.analyzerVersion ? { sourceAnalyzerVersion: analysis.analyzerVersion } : {}),
+    sourceWeightsVersion: "phase3.6-v1",
+    userEdited: metadata.userEdited ?? false,
+    userVerified: metadata.userVerified ?? false,
   };
 }

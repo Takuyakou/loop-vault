@@ -385,6 +385,7 @@ describe("vault store", () => {
 
     store.getState().appendBlockToIdea(generatedId, candidate, {
       fileName: "capture.mid",
+      sourceFingerprint: `sha256-${"a".repeat(64)}`,
       totalBars: 4,
       bpm: 120,
       timeSignature: "4/4",
@@ -392,6 +393,10 @@ describe("vault store", () => {
       blockCandidates: [candidate],
       analyzedAt: "1970-01-01T00:00:00.000Z",
       analyzerVersion: "1.0.0",
+    }, {
+      sourcePath: "D:/music/capture.mid",
+      userEdited: true,
+      userVerified: true,
     });
     await store.getState().flush();
 
@@ -400,9 +405,19 @@ describe("vault store", () => {
     expect(repository.saved[0]?.ideas[0]?.progressionBlocks).toHaveLength(1);
     expect(repository.saved[0]?.ideas[0]?.progressionBlocks?.[0]).toMatchObject({
       sourceFileName: "capture.mid",
+      sourceFingerprint: `sha256-${"a".repeat(64)}`,
+      sourceStartBeat: 0,
+      sourceEndBeat: 4,
       summaryText: "C",
       analyzerVersion: "1.0.0",
+      sourceAnalyzerVersion: "1.0.0",
+      sourceWeightsVersion: "phase3.6-v1",
+      userEdited: true,
+      userVerified: true,
     });
+    expect(repository.saved[0]?.ideas[0]?.assets).toEqual([
+      expect.objectContaining({ type: "midi", path: "D:/music/capture.mid" }),
+    ]);
   });
 
   it("supports the weekly workflow from capture to done", async () => {
