@@ -21,3 +21,15 @@ body {
 button {
   font: inherit;
 }
+
+.lv-summary-no-marker {
+  list-style: none;
+}
+
+.lv-summary-no-marker::marker {
+  content: "";
+}
+
+.lv-summary-no-marker::-webkit-details-marker {
+  display: none;
+}

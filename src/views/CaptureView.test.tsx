@@ -558,6 +558,7 @@ describe("TimelineDetails", () => {
     );
 
     expect(markup).toContain("曲全体を再生");
+    expect(markup).toContain("lv-summary-no-marker");
     expect(markup).toContain('aria-label="停止"');
     expect(markup).toContain('role="group"');
     expect(markup).toContain('aria-label="試聴音色"');

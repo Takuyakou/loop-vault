@@ -747,7 +747,7 @@ export function TimelineDetails({
 
   return (
     <details className="border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-5">
-      <summary className="cursor-pointer text-lg font-semibold text-[var(--lv-text)]">
+      <summary className="lv-summary-no-marker cursor-pointer text-lg font-semibold text-[var(--lv-text)]">
         {copy.capture.timeline}
       </summary>
       <p className="mt-3 text-sm text-[var(--lv-text-muted)]">{copy.capture.timelineDescription}</p>
