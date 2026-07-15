@@ -1,0 +1,75 @@
+import { describe, expect, it } from "vitest";
+import {
+  applyEditableProgression,
+  createEditableProgression,
+  hasProgressionEdits,
+  progressionEditSummary,
+  replaceEditableChord,
+  resetAllEditableChords,
+  resetEditableChord,
+} from ".";
+import { gMajor, makeCandidate } from "./testFixtures";
+
+describe("editable progression", () => {
+  it("creates deterministic slots without sharing candidate chord data", () => {
+    const candidate = makeCandidate();
+    const first = createEditableProgression(candidate);
+    const second = createEditableProgression(candidate);
+
+    expect(first).toEqual(second);
+    expect(first.slots.map((slot) => slot.id)).toEqual([
+      "candidate-1:1:1:0",
+      "candidate-1:1:3:1",
+    ]);
+    expect(first.slots[0]?.originalChord).not.toBe(candidate.chords[0]?.chord);
+    expect(first.slots[0]?.currentChord).not.toBe(first.slots[0]?.originalChord);
+  });
+
+  it("replaces and resets a chord while keeping the source candidate immutable", () => {
+    const candidate = makeCandidate();
+    const editable = createEditableProgression(candidate);
+    const slotId = editable.slots[0]!.id;
+    const changed = replaceEditableChord(editable, slotId, gMajor, "manual-label");
+
+    expect(changed.slots[0]).toMatchObject({
+      currentChord: gMajor,
+      edited: true,
+      editSource: "manual-label",
+    });
+    expect(candidate.chords[0]!.chord.label).toBe("C");
+    expect(progressionEditSummary(changed)).toEqual([
+      expect.objectContaining({ original: "C", current: "G" }),
+    ]);
+
+    const reset = resetEditableChord(changed, slotId);
+    expect(reset.slots[0]?.currentChord.label).toBe("C");
+    expect(hasProgressionEdits(reset)).toBe(false);
+  });
+
+  it("applies only current chords to a cloned candidate", () => {
+    const candidate = makeCandidate();
+    const editable = createEditableProgression(candidate);
+    const changed = replaceEditableChord(
+      editable,
+      editable.slots[1]!.id,
+      gMajor,
+      "alternative",
+    );
+    const applied = applyEditableProgression(candidate, changed);
+
+    expect(applied.chords.map((item) => item.chord.label)).toEqual(["C", "G"]);
+    expect(applied.chords[1]?.chord).not.toBe(gMajor);
+    expect(candidate.chords[1]?.chord.label).toBe("C");
+  });
+
+  it("resets all edited slots in one history operation", () => {
+    const editable = createEditableProgression(makeCandidate());
+    const first = replaceEditableChord(editable, editable.slots[0]!.id, gMajor, "alternative");
+    const second = replaceEditableChord(first, first.slots[1]!.id, gMajor, "structure-editor");
+    const reset = resetAllEditableChords(second);
+
+    expect(reset.slots.every((slot) => !slot.edited)).toBe(true);
+    expect(reset.history).toHaveLength(3);
+    expect(reset.history[2]).toMatchObject({ type: "replace", editSource: "reset" });
+  });
+});
