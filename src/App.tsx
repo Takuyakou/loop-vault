@@ -1,5 +1,5 @@
 import { readFile } from "@tauri-apps/plugin-fs";
-import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
+import { FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "zustand";
 import {
   playbackController,
@@ -13,8 +13,17 @@ import { HomeView } from "./views/HomeView";
 import { SettingsDialog } from "./views/SettingsDialog";
 import { VaultView } from "./views/VaultView";
 import { Toast } from "./components/Toast";
+import { UndoToast } from "./components/UndoToast";
 import { statusLabel } from "./domain/displayLabels";
 import type { SongIdea, Status } from "./domain/types";
+import {
+  applyPendingDeletions,
+  createUndoSnapshot,
+  ideaAnchor,
+  isPendingDeletion,
+  type PendingDeletion,
+  type PendingIdeaDeletion,
+} from "./domain/undoDeletion";
 import { appCopy, type AppCopy, type AppLanguage } from "./i18n";
 import {
   registerBrowserCloseGuard,
@@ -22,6 +31,8 @@ import {
 } from "./store/closeGuard";
 import { defaultVaultStore } from "./store/defaultVaultStore";
 import { CaptureView } from "./views/CaptureView";
+import { useUndoQueue } from "./hooks/useUndoQueue";
+import type { UndoRequest } from "./hooks/useUndoQueue";
 
 type View = AppView;
 const pipeline: Status[] = ["idea", "loop", "arrange", "mix", "done"];
@@ -36,6 +47,7 @@ function App() {
   const unsaved = useStore(defaultVaultStore, (state) => state.unsaved);
   const saving = useStore(defaultVaultStore, (state) => state.saving);
   const error = useStore(defaultVaultStore, (state) => state.error);
+  const vaultEpoch = useStore(defaultVaultStore, (state) => state.vaultEpoch);
   const analysis = useStore(defaultVaultStore, (state) => state.analysis);
   const initialize = useStore(defaultVaultStore, (state) => state.initialize);
   const restoreBackup = useStore(defaultVaultStore, (state) => state.restoreBackup);
@@ -52,6 +64,8 @@ function App() {
   const deleteIdea = useStore(defaultVaultStore, (state) => state.deleteIdea);
   const appendBlockToIdea = useStore(defaultVaultStore, (state) => state.appendBlockToIdea);
   const removeProgressionBlock = useStore(defaultVaultStore, (state) => state.removeProgressionBlock);
+  const removeReference = useStore(defaultVaultStore, (state) => state.removeReference);
+  const unlinkAsset = useStore(defaultVaultStore, (state) => state.unlinkAsset);
   const transitionIdea = useStore(defaultVaultStore, (state) => state.transitionIdea);
   const updateNextAction = useStore(defaultVaultStore, (state) => state.updateNextAction);
   const analyzeMidiBytes = useStore(defaultVaultStore, (state) => state.analyzeMidiBytes);
@@ -62,11 +76,23 @@ function App() {
   const [isCreateOpen, setCreateOpen] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [toast, setToast] = useState<string>();
-  const [pendingDelete, setPendingDelete] = useState<SongIdea>();
   const [startupRestoreName, setStartupRestoreName] = useState<string>();
-  const deleteTimer = useRef<ReturnType<typeof setTimeout>>();
+  const undoFallbackFocusRef = useRef<HTMLHeadingElement>(null);
+  const undoQueue = useUndoQueue();
+  const undoEpochRef = useRef(vaultEpoch);
+  const pendingDeletions = useMemo(
+    () => undoQueue.actions
+      .map((action) => action.payload)
+      .filter(isPendingDeletion),
+    [undoQueue.actions],
+  );
+  const visibleIdeas = useMemo(
+    () => applyPendingDeletions(ideas, pendingDeletions, vaultEpoch),
+    [ideas, pendingDeletions, vaultEpoch],
+  );
 
-  const selectedIdea = ideas.find((idea) => idea.id === selectedId) ?? ideas[0];
+  const selectedIdea = visibleIdeas.find((idea) => idea.id === selectedId) ?? visibleIdeas[0];
+  const storedSelectedIdea = ideas.find((idea) => idea.id === selectedIdea?.id);
   const language = settings.language;
   const copy = appCopy[language];
 
@@ -82,11 +108,13 @@ function App() {
     return () => {
       unlistenBrowser();
       unlistenTauri?.();
-      if (deleteTimer.current) {
-        clearTimeout(deleteTimer.current);
-      }
     };
   }, [initialize]);
+
+  useEffect(() => {
+    if (undoEpochRef.current !== vaultEpoch) undoQueue.clearAll();
+    undoEpochRef.current = vaultEpoch;
+  }, [undoQueue.clearAll, vaultEpoch]);
 
   useEffect(() => {
     if (toast) {
@@ -129,26 +157,17 @@ async function analyzeMidiPath(path: string) {
   }
 
   function requestDelete(idea: SongIdea) {
-    if (!window.confirm(language === "ja" ? `「${idea.title}」を削除しますか？` : `Delete "${idea.title}"?`)) {
-      return;
-    }
-
-    stopIdeaPlayback(idea.id);
-
-    setPendingDelete(idea);
+    const deleted = deleteIdeaForUndo({
+      idea,
+      ideas,
+      vaultEpoch,
+      label: copy.undo.ideaDeleted(idea.title),
+      deleteIdea,
+      enqueueUndo: undoQueue.enqueue,
+    });
+    if (!deleted) return;
     setSelectedId(undefined);
     setView("library");
-    deleteTimer.current = setTimeout(() => {
-      finalizeIdeaDelete(idea.id, deleteIdea);
-      setPendingDelete(undefined);
-    }, 5000);
-  }
-
-  function undoDelete() {
-    if (deleteTimer.current) {
-      clearTimeout(deleteTimer.current);
-    }
-    setPendingDelete(undefined);
   }
 
   const shell = (
@@ -168,13 +187,16 @@ async function analyzeMidiPath(path: string) {
   return (
     <main className="min-h-screen bg-[var(--lv-bg)] text-[var(--lv-text)]">
       <section className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-5 sm:px-6">
+        <h1 ref={undoFallbackFocusRef} tabIndex={-1} className="sr-only">
+          Loop Vault
+        </h1>
         {shell}
         {loadStatus === "ready" ? (
           <>
             <QuarantineNotice count={quarantine.length} copy={copy} />
             {view === "home" ? (
               <HomeView
-                ideas={ideas}
+                ideas={visibleIdeas}
                 monthlyGoal={settings.monthlyGoal}
                 copy={copy}
                 language={language}
@@ -190,7 +212,8 @@ async function analyzeMidiPath(path: string) {
             ) : null}
             {view === "library" ? (
               <VaultView
-                ideas={pendingDelete ? ideas.filter((idea) => idea.id !== pendingDelete.id) : ideas}
+                ideas={visibleIdeas}
+                storedIdeas={ideas}
                 openDetail={openDetail}
                 openCreate={() => setCreateOpen(true)}
                 openCapture={() => setView("capture")}
@@ -203,7 +226,7 @@ async function analyzeMidiPath(path: string) {
             ) : null}
             {view === "capture" ? (
               <CaptureView
-                ideas={ideas}
+                ideas={visibleIdeas}
                 analysis={analysis}
                 analyzeMidiBytes={analyzeMidiBytes}
                 clearAnalysis={clearAnalysis}
@@ -225,9 +248,14 @@ async function analyzeMidiPath(path: string) {
             {view === "detail" && selectedIdea ? (
               <DetailView
                 idea={selectedIdea}
+                storedIdea={storedSelectedIdea}
                 updateIdea={updateIdea}
                 updateNextAction={updateNextAction}
                 removeProgressionBlock={removeProgressionBlock}
+                removeReference={removeReference}
+                unlinkAsset={unlinkAsset}
+                enqueueUndo={undoQueue.enqueue}
+                vaultEpoch={vaultEpoch}
                 analyzeMidiPath={analyzeMidiPath}
                 transitionIdea={transitionIdea}
                 requestDelete={requestDelete}
@@ -262,7 +290,7 @@ async function analyzeMidiPath(path: string) {
       ) : null}
       {isSettingsOpen ? (
         <SettingsDialog
-          ideas={ideas}
+          ideas={visibleIdeas}
           monthlyGoal={settings.monthlyGoal}
           language={language}
           backups={backups}
@@ -272,9 +300,15 @@ async function analyzeMidiPath(path: string) {
           showRomanNumerals={settings.showRomanNumerals ?? true}
           setShowRomanNumerals={setShowRomanNumerals ?? (() => undefined)}
           refreshBackups={refreshBackups}
-          restoreBackup={restoreBackup}
+          restoreBackup={async (name) => {
+            undoQueue.clearAll();
+            await restoreBackup(name);
+          }}
           exportVault={exportVault}
-          importVault={importVault}
+          importVault={async (path, mode) => {
+            undoQueue.clearAll();
+            return importVault(path, mode);
+          }}
           setToast={setToast}
           copy={copy}
           onClose={() => setSettingsOpen(false)}
@@ -291,20 +325,17 @@ async function analyzeMidiPath(path: string) {
           if (!startupRestoreName) return;
           const name = startupRestoreName;
           setStartupRestoreName(undefined);
+          undoQueue.clearAll();
           void restoreBackup(name);
         }}
         tone="danger"
       />
-      {pendingDelete ? (
-        <div className="fixed bottom-4 left-1/2 z-40 w-[min(92vw,440px)] -translate-x-1/2 border border-[var(--lv-border-strong)] bg-[var(--lv-surface)] p-3 shadow-2xl">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-sm text-[var(--lv-text-secondary)]">{language === "ja" ? `「${pendingDelete.title}」を削除します` : `Deleting "${pendingDelete.title}"`}</p>
-            <button className="rounded bg-teal-500 px-3 py-2 text-sm font-semibold text-stone-950" onClick={undoDelete}>
-              {language === "ja" ? "元に戻す" : "Undo"}
-            </button>
-          </div>
-        </div>
-      ) : null}
+      <UndoToast
+        actions={undoQueue.actions}
+        undoLabel={copy.undo.action}
+        onUndo={undoQueue.undo}
+        fallbackFocusRef={undoFallbackFocusRef}
+      />
       {toast ? (
         <Toast message={toast} />
       ) : null}
@@ -322,14 +353,41 @@ export function stopIdeaPlayback(
   }
 }
 
-export function finalizeIdeaDelete(
-  ideaId: string,
-  deleteIdea: (id: string) => void,
-  controller: Pick<PlaybackController, "getState" | "stop"> = playbackController,
-): void {
-  stopIdeaPlayback(ideaId, controller);
-  deleteIdea(ideaId);
+export function deleteIdeaForUndo({
+  idea,
+  ideas,
+  vaultEpoch,
+  label,
+  deleteIdea,
+  enqueueUndo,
+  controller = playbackController,
+}: {
+  idea: SongIdea;
+  ideas: SongIdea[];
+  vaultEpoch: number;
+  label: string;
+  deleteIdea: (deletion: PendingIdeaDeletion) => boolean;
+  enqueueUndo: (request: UndoRequest<PendingDeletion>) => string;
+  controller?: Pick<PlaybackController, "getState" | "stop">;
+}): boolean {
+  stopIdeaPlayback(idea.id, controller);
+  const snapshot = createUndoSnapshot(
+    ideas,
+    ideas.findIndex((entry) => entry.id === idea.id),
+    "vault",
+    ideaAnchor,
+  );
+  if (!snapshot) return false;
+  const deletion: PendingIdeaDeletion = { kind: "idea", vaultEpoch, snapshot };
+  enqueueUndo({
+    label,
+    payload: deletion,
+    undo: () => true,
+    commit: () => deleteIdea(deletion),
+  });
+  return true;
 }
+
 
 
 

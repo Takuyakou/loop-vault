@@ -17,6 +17,13 @@ export const appCopy = {
       unsaved: "未保存",
       saved: "保存済み",
     },
+    undo: {
+      action: "元に戻す",
+      ideaDeleted: (title: string) => `「${title}」を削除しました`,
+      blockDeleted: "保存したコード進行を削除しました",
+      referenceDeleted: "参考曲・参考資料を削除しました",
+      assetUnlinked: "Assetの関連付けを解除しました",
+    },
     common: {
       cancel: "キャンセル",
       close: "閉じる",
@@ -203,6 +210,13 @@ export const appCopy = {
       saving: "Saving",
       unsaved: "Unsaved",
       saved: "Saved",
+    },
+    undo: {
+      action: "Undo",
+      ideaDeleted: (title: string) => `Deleted "${title}"`,
+      blockDeleted: "Deleted the saved progression",
+      referenceDeleted: "Deleted the reference",
+      assetUnlinked: "Unlinked the asset",
     },
     common: {
       cancel: "Cancel",
