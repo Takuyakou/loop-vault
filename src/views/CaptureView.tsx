@@ -239,7 +239,13 @@ export function CaptureView(props: CaptureViewProps) {
     onDrop: handleDrop,
   };
 
-  function saveNew(candidate: ProgressionBlockCandidate, title: string, nextAction: string, userVerified: boolean) {
+  function saveNew(
+    candidate: ProgressionBlockCandidate,
+    title: string,
+    nextAction: string,
+    userVerified: boolean,
+    userEdited: boolean,
+  ) {
     const id = createIdeaFromDraft({
       title,
       status: "idea",
@@ -249,9 +255,23 @@ export function CaptureView(props: CaptureViewProps) {
       nextAction,
       progressionBlock: candidate,
       progressionAnalysis: analysis.result,
-      progressionMetadata: { sourcePath, userEdited: saveDraft?.userEdited, userVerified },
+      progressionMetadata: { sourcePath, userEdited, userVerified },
     });
-    setToast(id ? (language === "ja" ? "コード進行からIdeaを作成しました。" : "Created an idea from the progression.") : (language === "ja" ? "Ideaを作成できませんでした。" : "Could not create the idea."));
+    setToast(id ? (language === "ja" ? "コード進行をVaultに保存しました。" : "Saved the progression to the Vault.") : (language === "ja" ? "Ideaを作成できませんでした。" : "Could not create the idea."));
+  }
+
+  function recordCorrections(
+    original: ProgressionBlockCandidate,
+    edited: ProgressionBlockCandidate,
+  ): boolean {
+    if (!analysis.result) {
+      return false;
+    }
+
+    const corrections = buildCorrectionEvents(original, edited, analysis.result);
+    void appendAnalysisFeedback(corrections)
+      .catch((error) => setToast(error instanceof Error ? error.message : "Could not save analysis feedback."));
+    return corrections.length > 0;
   }
 
   function appendExisting(candidate: ProgressionBlockCandidate, ideaId: string, userVerified: boolean) {
@@ -415,11 +435,19 @@ export function CaptureView(props: CaptureViewProps) {
                   language={language}
                   isExpanded={expandedCandidateId === candidate.id}
                   onSelect={() => setExpandedCandidateId(candidate.id)}
+                  onQuickSave={(editedCandidate, title) => {
+                    const userEdited = recordCorrections(candidate, editedCandidate);
+                    saveNew(
+                      editedCandidate,
+                      title,
+                      defaultCaptureNextAction(language),
+                      false,
+                      userEdited,
+                    );
+                  }}
                   onSave={(editedCandidate, title) => {
-                    const corrections = buildCorrectionEvents(candidate, editedCandidate, result);
-                    void appendAnalysisFeedback(corrections)
-                      .catch((error) => setToast(error instanceof Error ? error.message : "Could not save analysis feedback."));
-                    setSaveDraft({ candidate: editedCandidate, title, userEdited: corrections.length > 0 });
+                    const userEdited = recordCorrections(candidate, editedCandidate);
+                    setSaveDraft({ candidate: editedCandidate, title, userEdited });
                   }}
                   showRomanNumerals={showRomanNumerals}
                 />
@@ -437,7 +465,7 @@ export function CaptureView(props: CaptureViewProps) {
                 onTitleChange={(title) => setSaveDraft((draft) => draft ? { ...draft, title } : draft)}
                 onClose={() => setSaveDraft(undefined)}
                 onCreate={(title, nextAction, userVerified) => {
-                  saveNew(saveDraft.candidate, title, nextAction, userVerified);
+                  saveNew(saveDraft.candidate, title, nextAction, userVerified, saveDraft.userEdited);
                   setSaveDraft(undefined);
                 }}
                 onAppend={(ideaId, userVerified) => {
@@ -717,6 +745,7 @@ export function ProgressionCandidateCard({
   language,
   isExpanded = true,
   onSelect,
+  onQuickSave,
   onSave,
   showRomanNumerals = true,
 }: {
@@ -738,6 +767,7 @@ export function ProgressionCandidateCard({
   language: AppLanguage;
   isExpanded?: boolean;
   onSelect?: () => void;
+  onQuickSave?: (candidate: ProgressionBlockCandidate, title: string) => void;
   onSave?: (candidate: ProgressionBlockCandidate, title: string) => void;
   showRomanNumerals?: boolean;
 }) {
@@ -949,8 +979,11 @@ export function ProgressionCandidateCard({
         <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => { onSelect?.(); setIsEditing((value) => !value); }}>
           {isEditing ? (language === "ja" ? "編集を閉じる" : "Close editor") : (language === "ja" ? "編集" : "Edit")}
         </button>
-        <button className="rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => { onSelect?.(); onSave?.(editedCandidate, title); }}>
-          {language === "ja" ? "保存" : "Save"}
+        <button className="rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => { onSelect?.(); onQuickSave?.(editedCandidate, title); }}>
+          {language === "ja" ? "Vaultに保存" : "Save to Vault"}
+        </button>
+        <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => { onSelect?.(); onSave?.(editedCandidate, title); }}>
+          {language === "ja" ? "保存方法" : "Save options"}
         </button>
         <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => void onCopyProgression(editedCandidate)}>
           {copy.capture.copyProgression}
@@ -990,7 +1023,7 @@ export function ProgressionSaveDialog({
   const [mode, setMode] = useState<SaveMode>(initialMode);
   const [ideaId, setIdeaId] = useState("");
   const [nextAction, setNextAction] = useState(
-    language === "ja" ? "採集したコード進行からループを作る" : "Build a loop from the captured progression",
+    defaultCaptureNextAction(language),
   );
   const [userVerified, setUserVerified] = useState(false);
   const needsIdea = mode !== "new";
@@ -1166,4 +1199,10 @@ async function writeClipboardText(text: string): Promise<void> {
 
 function firstTimelineBeat(chords: readonly ChordTimelineItem[]): number {
   return chords.length === 0 ? 0 : Math.min(...chords.map(timelineStartBeat));
+}
+
+function defaultCaptureNextAction(language: AppLanguage): string {
+  return language === "ja"
+    ? "採集したコード進行からループを作る"
+    : "Build a loop from the captured progression";
 }
