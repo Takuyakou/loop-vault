@@ -7,7 +7,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { ChordTimelineItem, MidiProgressionAnalysis, ProgressionBlockCandidate } from "../domain/types";
 import { makeIdea } from "../domain/testFactory";
 import { appCopy } from "../i18n";
-import { CaptureView, isMidiFileName, ProgressionCandidateCard, ProgressionSaveDialog, TimelineDetails } from "./CaptureView";
+import { CaptureView, isEditableKeyboardTarget, isMidiFileName, ProgressionCandidateCard, ProgressionSaveDialog, TimelineDetails } from "./CaptureView";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
   .IS_REACT_ACT_ENVIRONMENT = true;
@@ -145,6 +145,58 @@ describe("ProgressionCandidateCard", () => {
     expect(container.querySelector("aside")?.textContent).toContain("Am7");
     expect(options[1]?.getAttribute("aria-pressed")).toBe("true");
     await act(async () => root.unmount());
+  });
+
+  it("previews an analyzer alternative and applies it to the selected card", async () => {
+    const alternative = {
+      root: 7,
+      quality: "dom7" as const,
+      tensions: [],
+      label: "G7",
+    };
+    const first = chord("Cmaj7", 1);
+    first.alternatives = [{ chord: alternative, confidence: 0.72 }];
+    const onPreviewChord = vi.fn();
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(
+        <ProgressionCandidateCard
+          candidate={candidate({ chords: [first, chord("Am7", 2)] })}
+          candidateIndex={0}
+          bpm={96}
+          onCopyProgression={vi.fn()}
+          onPreview={vi.fn()}
+          onPreviewChord={onPreviewChord}
+          copy={appCopy.ja}
+          language="ja"
+          isExpanded
+        />,
+      );
+    });
+
+    const alternativeButton = [...container.querySelectorAll("button")]
+      .find((button) => button.textContent?.includes("G7"));
+    await act(async () => alternativeButton?.click());
+    expect(onPreviewChord).toHaveBeenCalledTimes(1);
+
+    const applyButton = [...container.querySelectorAll("button")]
+      .find((button) => button.textContent === "適用");
+    await act(async () => applyButton?.click());
+
+    expect(container.querySelector('[role="option"]')?.textContent).toContain("G7");
+    expect(container.querySelector('[aria-label="編集済み"]')).not.toBeNull();
+    await act(async () => root.unmount());
+  });
+
+  it("recognizes text editing targets for shortcut guards", () => {
+    expect(isEditableKeyboardTarget(document.createElement("input"))).toBe(true);
+    expect(isEditableKeyboardTarget(document.createElement("textarea"))).toBe(true);
+    expect(isEditableKeyboardTarget(document.createElement("select"))).toBe(true);
+    const editable = document.createElement("div");
+    editable.contentEditable = "true";
+    expect(isEditableKeyboardTarget(editable)).toBe(true);
+    expect(isEditableKeyboardTarget(document.createElement("button"))).toBe(false);
   });
 
   it("renders the save dialog with save methods and default next action", () => {

@@ -8,10 +8,16 @@ import type { DragEvent } from "react";
 import { parseChordLabel } from "../domain/chords";
 import {
   applyEditableProgression,
+  canRedoProgressionEdit,
+  canUndoProgressionEdit,
   createEditableProgression,
+  hasProgressionEdits,
+  redoProgressionEdit,
   replaceEditableChord,
   resetAllEditableChords,
+  resetEditableChord,
   selectEditableSlot,
+  undoProgressionEdit,
 } from "../domain/progressionEditing";
 import { buildCorrectionEvents } from "../domain/midi";
 import { candidateLabelList } from "../domain/displayLabels";
@@ -34,6 +40,7 @@ import { appendAnalysisFeedback } from "../storage/analysisFeedbackStorage";
 import type { PreviewSound } from "../audio/chordPreview";
 import { ChordInspector } from "../components/progression-editing/ChordInspector";
 import { EditableProgressionGrid } from "../components/progression-editing/EditableProgressionGrid";
+import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
 
 interface CaptureViewProps {
   ideas: SongIdea[];
@@ -822,6 +829,41 @@ export function ProgressionCandidateCard({
     return () => window.clearInterval(interval);
   }, [previewStartedAt]);
 
+  useEffect(() => {
+    if (!isExpanded) {
+      return undefined;
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.isComposing || isEditableKeyboardTarget(event.target)) {
+        return;
+      }
+      if (event.ctrlKey && event.key.toLowerCase() === "z") {
+        event.preventDefault();
+        setEditable((current) => event.shiftKey
+          ? redoProgressionEdit(current)
+          : undoProgressionEdit(current));
+        return;
+      }
+      if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+        event.preventDefault();
+        const direction = event.key === "ArrowLeft" ? -1 : 1;
+        const nextIndex = Math.max(0, Math.min(editable.slots.length - 1, selectedChordIndex + direction));
+        setSelectedChordIndex(nextIndex);
+        const nextSlot = editable.slots[nextIndex];
+        if (nextSlot) {
+          setEditable((current) => selectEditableSlot(current, nextSlot.id));
+        }
+        return;
+      }
+      if (event.key === " ") {
+        event.preventDefault();
+        void selectChord(selectedChordIndex);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [editable.slots, isExpanded, selectedChordIndex]);
+
   function updateChordLabel(index: number, label: string) {
     const parsed = parseChordLabel(label);
     if (!parsed) {
@@ -892,6 +934,13 @@ export function ProgressionCandidateCard({
     await onPreviewChord(editedCandidate, index);
   }
 
+  async function previewChord(chord: ChordSymbol) {
+    const previewChords = chords.map((item, index) =>
+      index === selectedChordIndex ? { ...item, chord } : item,
+    );
+    await onPreviewChord({ ...editedCandidate, chords: previewChords }, selectedChordIndex);
+  }
+
   const playingChord = playingChordIndex === null ? undefined : chords[playingChordIndex];
   const elapsedSeconds =
     previewStartedAt === null ? 0 : (window.performance.now() - previewStartedAt) / 1000;
@@ -931,17 +980,43 @@ export function ProgressionCandidateCard({
       </div>
       {summary.trim() ? <p className="mt-3 text-sm text-[var(--lv-text-secondary)]">{summary}</p> : null}
       <div className={`mt-4 ${isExpanded ? "grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]" : ""}`}>
-        <EditableProgressionGrid
-          editable={editable}
-          playingSlotId={playingChordIndex === null ? undefined : editable.slots[playingChordIndex]?.id}
-          playingProgress={playingProgress}
-          onSelect={(_slotId, index) => void selectChord(index)}
-          language={language}
-        />
+        <div>
+          {isExpanded ? (
+            <ProgressionEditorToolbar
+              canUndo={canUndoProgressionEdit(editable)}
+              canRedo={canRedoProgressionEdit(editable)}
+              dirty={hasProgressionEdits(editable)}
+              onUndo={() => setEditable((current) => undoProgressionEdit(current))}
+              onRedo={() => setEditable((current) => redoProgressionEdit(current))}
+              onResetAll={() => setEditable((current) => resetAllEditableChords(current))}
+              language={language}
+            />
+          ) : null}
+          <EditableProgressionGrid
+            editable={editable}
+            playingSlotId={playingChordIndex === null ? undefined : editable.slots[playingChordIndex]?.id}
+            playingProgress={playingProgress}
+            onSelect={(_slotId, index) => void selectChord(index)}
+            language={language}
+          />
+        </div>
         {isExpanded ? (
           <ChordInspector
             slot={editable.slots.find((slot) => slot.id === editable.selectedSlotId)}
             language={language}
+            onPreview={(chord) => void previewChord(chord)}
+            onApply={(chord, source) => {
+              const slotId = editable.selectedSlotId;
+              if (slotId) {
+                setEditable((current) => replaceEditableChord(current, slotId, chord, source));
+              }
+            }}
+            onReset={() => {
+              const slotId = editable.selectedSlotId;
+              if (slotId) {
+                setEditable((current) => resetEditableChord(current, slotId));
+              }
+            }}
           />
         ) : null}
       </div>
@@ -1227,6 +1302,19 @@ async function writeClipboardText(text: string): Promise<void> {
 
 function firstTimelineBeat(chords: readonly ChordTimelineItem[]): number {
   return chords.length === 0 ? 0 : Math.min(...chords.map(timelineStartBeat));
+}
+
+export function isEditableKeyboardTarget(target: EventTarget | null): boolean {
+  const element = target instanceof HTMLElement ? target : null;
+  if (!element) {
+    return false;
+  }
+  return element.isContentEditable
+    || element.contentEditable === "true"
+    || element.getAttribute("contenteditable") === "true"
+    || element.tagName === "INPUT"
+    || element.tagName === "TEXTAREA"
+    || element.tagName === "SELECT";
 }
 
 function defaultCaptureNextAction(language: AppLanguage): string {
