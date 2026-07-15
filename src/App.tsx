@@ -2,6 +2,8 @@ import { readFile } from "@tauri-apps/plugin-fs";
 import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { useStore } from "zustand";
 import { AppShell, type AppView } from "./components/AppShell";
+import { ConfirmDialog } from "./components/ConfirmDialog";
+import { Modal } from "./components/Modal";
 import { DetailView } from "./views/DetailView";
 import { HomeView } from "./views/HomeView";
 import { SettingsDialog } from "./views/SettingsDialog";
@@ -57,6 +59,7 @@ function App() {
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [toast, setToast] = useState<string>();
   const [pendingDelete, setPendingDelete] = useState<SongIdea>();
+  const [startupRestoreName, setStartupRestoreName] = useState<string>();
   const deleteTimer = useRef<ReturnType<typeof setTimeout>>();
 
   const selectedIdea = ideas.find((idea) => idea.id === selectedId) ?? ideas[0];
@@ -238,7 +241,7 @@ async function analyzeMidiPath(path: string) {
             readonly={readonly}
             error={error}
             language={language}
-            restoreBackup={restoreBackup}
+            requestRestoreBackup={setStartupRestoreName}
             copy={copy}
           />
         )}
@@ -271,6 +274,21 @@ async function analyzeMidiPath(path: string) {
           onClose={() => setSettingsOpen(false)}
         />
       ) : null}
+      <ConfirmDialog
+        open={Boolean(startupRestoreName)}
+        title={language === "ja" ? "バックアップを復元" : "Restore backup"}
+        description={startupRestoreName ? copy.settings.restoreConfirm(startupRestoreName) : ""}
+        confirmLabel={copy.common.restore}
+        cancelLabel={copy.common.cancel}
+        onCancel={() => setStartupRestoreName(undefined)}
+        onConfirm={() => {
+          if (!startupRestoreName) return;
+          const name = startupRestoreName;
+          setStartupRestoreName(undefined);
+          void restoreBackup(name);
+        }}
+        tone="danger"
+      />
       {pendingDelete ? (
         <div className="fixed bottom-4 left-1/2 z-40 w-[min(92vw,440px)] -translate-x-1/2 border border-[var(--lv-border-strong)] bg-[var(--lv-surface)] p-3 shadow-2xl">
           <div className="flex items-center justify-between gap-3">
@@ -311,6 +329,8 @@ function CreateDialog({
 }) {
   const [title, setTitle] = useState("");
   const [status, setStatus] = useState<Status>("idea");
+  const titleRef = useRef<HTMLInputElement>(null);
+  const dirty = title.length > 0 || status !== "idea";
 
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -318,19 +338,25 @@ function CreateDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-40 grid place-items-center bg-black/70 px-4">
-      <form className="w-full max-w-md border border-[var(--lv-border-strong)] bg-[var(--lv-surface)] p-5 shadow-2xl" onSubmit={submit}>
+    <Modal
+      ariaLabelledBy="create-idea-title"
+      initialFocusRef={titleRef}
+      onClose={onClose}
+      closeOnBackdrop={!dirty}
+      panelClassName="w-full max-w-md p-5"
+    >
+      <form onSubmit={submit}>
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">{copy.create.title}</h2>
+          <h2 id="create-idea-title" className="text-xl font-semibold">{copy.create.title}</h2>
           <button type="button" className="rounded px-2 py-1 text-[var(--lv-text-muted)]" onClick={onClose}>{copy.common.close}</button>
         </div>
-        <input autoFocus className={`${inputClass} mt-4`} value={title} onChange={(event) => setTitle(event.target.value)} placeholder={copy.common.title} />
+        <input ref={titleRef} className={`${inputClass} mt-4`} value={title} onChange={(event) => setTitle(event.target.value)} placeholder={copy.common.title} />
         <select className={`${inputClass} mt-3`} value={status} onChange={(event) => setStatus(event.target.value as Status)}>
           {pipeline.map((entry) => <option key={entry} value={entry}>{labelStatus(entry, language)}</option>)}
         </select>
         <button className="mt-4 w-full rounded bg-[var(--lv-accent)] px-3 py-2 font-semibold text-stone-950" type="submit">{copy.create.submit}</button>
       </form>
-    </div>
+    </Modal>
   );
 }
 
@@ -339,7 +365,7 @@ function StartupState({
   recovery,
   readonly,
   error,
-  restoreBackup,
+  requestRestoreBackup,
   copy,
   language,
 }: {
@@ -347,7 +373,7 @@ function StartupState({
   recovery: ReturnType<typeof defaultVaultStore.getState>["recovery"];
   readonly: ReturnType<typeof defaultVaultStore.getState>["readonly"];
   error?: string;
-  restoreBackup: (backupName: string) => Promise<void>;
+  requestRestoreBackup: (backupName: string) => void;
   copy: AppCopy;
   language: AppLanguage;
 }) {
@@ -361,7 +387,7 @@ function StartupState({
             {recovery.corruptPath ? <p className="mt-3 break-all text-sm text-[var(--lv-text-muted)]">{recovery.corruptPath}</p> : null}
             <div className="mt-5 space-y-2">
               {recovery.backups.length > 0 ? recovery.backups.map((backup) => (
-                <button key={backup.name} className="block w-full rounded border border-[var(--lv-border-strong)] px-3 py-2 text-left text-sm hover:bg-[var(--lv-surface-raised)]" onClick={() => void restoreBackup(backup.name)}>
+                <button key={backup.name} className="block w-full rounded border border-[var(--lv-border-strong)] px-3 py-2 text-left text-sm hover:bg-[var(--lv-surface-raised)]" onClick={() => requestRestoreBackup(backup.name)}>
                   {language === "ja" ? `${backup.name} を復元` : `Restore ${backup.name}`}
                 </button>
               )) : <p className="text-sm text-[var(--lv-text-muted)]">{copy.startup.noBackups}</p>}

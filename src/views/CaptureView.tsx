@@ -45,6 +45,8 @@ import { confidenceLabel, shouldShowConfidence, warningLabel } from "./captureLa
 import { appendAnalysisFeedback } from "../storage/analysisFeedbackStorage";
 import type { PreviewSound } from "../audio/chordPreview";
 import { ChordInspector } from "../components/progression-editing/ChordInspector";
+import { ConfirmDialog } from "../components/ConfirmDialog";
+import { Modal } from "../components/Modal";
 import { EditableProgressionGrid } from "../components/progression-editing/EditableProgressionGrid";
 import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
 import { ProgressionEditSummary } from "../components/progression-editing/ProgressionEditSummary";
@@ -100,6 +102,7 @@ export function CaptureView(props: CaptureViewProps) {
   const [isDraggingMidi, setIsDraggingMidi] = useState(false);
   const [expandedCandidateId, setExpandedCandidateId] = useState<string>();
   const [dirtyCandidateIds, setDirtyCandidateIds] = useState<Set<string>>(() => new Set());
+  const [pendingCandidateSelection, setPendingCandidateSelection] = useState<{ candidateId: string | undefined }>();
   const [saveDraft, setSaveDraft] = useState<{
     candidate: ProgressionBlockCandidate;
     original: ProgressionBlockCandidate;
@@ -125,10 +128,14 @@ export function CaptureView(props: CaptureViewProps) {
       expandedCandidateId
       && expandedCandidateId !== candidateId
       && dirtyCandidateIds.has(expandedCandidateId)
-      && !window.confirm(copy.capture.unsavedCandidateConfirm)
     ) {
+      setPendingCandidateSelection({ candidateId });
       return;
     }
+    applyCandidateSelection(candidateId);
+  }
+
+  function applyCandidateSelection(candidateId: string | undefined) {
     void stopPreviewAudio();
     setExpandedCandidateId(candidateId);
   }
@@ -447,7 +454,8 @@ export function CaptureView(props: CaptureViewProps) {
   }
 
   return (
-    <div className="grid gap-5 py-5" {...dropHandlers}>
+    <>
+      <div className="grid gap-5 py-5" {...dropHandlers}>
       {isDraggingMidi ? <DropOverlay copy={copy} /> : null}
       <section className="border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -541,37 +549,8 @@ export function CaptureView(props: CaptureViewProps) {
             )}
           </div>
           <aside className="h-fit border border-teal-400/30 bg-[var(--lv-surface)] p-4 xl:sticky xl:top-4">
-            {saveDraft ? (
-              <ProgressionSaveDialog
-                candidate={saveDraft.candidate}
-                title={saveDraft.title}
-                editSummary={progressionEditSummary(saveDraft.editable)}
-                ideas={ideas}
-                onTitleChange={(title) => setSaveDraft((draft) => draft ? { ...draft, title } : draft)}
-                onClose={() => setSaveDraft(undefined)}
-                onCreate={(title, nextAction, userVerified) => {
-                  if (saveNew(saveDraft.candidate, title, nextAction, userVerified, saveDraft.original, saveDraft.editable)) {
-                    setSaveDraft(undefined);
-                  }
-                }}
-                onAppend={(ideaId, userVerified) => {
-                  if (appendExisting(saveDraft.candidate, saveDraft.original, saveDraft.editable, ideaId, userVerified)) {
-                    setSaveDraft(undefined);
-                  }
-                }}
-                onCopyMemo={(ideaId) => {
-                  copyMemo(saveDraft.candidate, ideaId);
-                  setSaveDraft(undefined);
-                }}
-                copy={copy}
-                language={language}
-              />
-            ) : (
-              <div>
-                <h3 className="font-semibold">{language === "ja" ? "この進行を保存" : "Save this progression"}</h3>
-                <p className="mt-2 text-sm leading-6 text-[var(--lv-text-muted)]">{language === "ja" ? "候補を選び、保存を押すとここで保存方法を選べます。" : "Select a candidate and choose Save to pick how to keep it."}</p>
-              </div>
-            )}
+            <h3 className="font-semibold">{language === "ja" ? "この進行を保存" : "Save this progression"}</h3>
+            <p className="mt-2 text-sm leading-6 text-[var(--lv-text-muted)]">{language === "ja" ? "候補を選び、保存を押すと保存方法を選べます。" : "Select a candidate and choose Save to pick how to keep it."}</p>
           </aside>
         </div>
       </section>
@@ -589,7 +568,55 @@ export function CaptureView(props: CaptureViewProps) {
         onPreviewChord={previewSongChord}
         onStop={stopPreviewAudio}
       />
-    </div>
+      </div>
+      {saveDraft ? (
+        <Modal
+          ariaLabelledBy="progression-save-dialog-title"
+          onClose={() => setSaveDraft(undefined)}
+          panelClassName="w-full max-w-2xl p-5"
+          layerClassName="z-[70]"
+        >
+          <ProgressionSaveDialog
+            candidate={saveDraft.candidate}
+            title={saveDraft.title}
+            editSummary={progressionEditSummary(saveDraft.editable)}
+            ideas={ideas}
+            onTitleChange={(title) => setSaveDraft((draft) => draft ? { ...draft, title } : draft)}
+            onClose={() => setSaveDraft(undefined)}
+            onCreate={(title, nextAction, userVerified) => {
+              if (saveNew(saveDraft.candidate, title, nextAction, userVerified, saveDraft.original, saveDraft.editable)) {
+                setSaveDraft(undefined);
+              }
+            }}
+            onAppend={(ideaId, userVerified) => {
+              if (appendExisting(saveDraft.candidate, saveDraft.original, saveDraft.editable, ideaId, userVerified)) {
+                setSaveDraft(undefined);
+              }
+            }}
+            onCopyMemo={(ideaId) => {
+              copyMemo(saveDraft.candidate, ideaId);
+              setSaveDraft(undefined);
+            }}
+            copy={copy}
+            language={language}
+          />
+        </Modal>
+      ) : null}
+      <ConfirmDialog
+        open={Boolean(pendingCandidateSelection)}
+        title={language === "ja" ? "未保存の候補を閉じますか？" : "Close the unsaved candidate?"}
+        description={copy.capture.unsavedCandidateConfirm}
+        confirmLabel={language === "ja" ? "閉じる" : "Close"}
+        cancelLabel={copy.common.cancel}
+        onCancel={() => setPendingCandidateSelection(undefined)}
+        onConfirm={() => {
+          if (!pendingCandidateSelection) return;
+          applyCandidateSelection(pendingCandidateSelection.candidateId);
+          setPendingCandidateSelection(undefined);
+        }}
+        tone="danger"
+      />
+    </>
   );
 }
 
@@ -1219,13 +1246,13 @@ export function ProgressionSaveDialog({
   }
 
   return (
-    <div className="mt-4 border border-teal-400/40 bg-[var(--lv-surface)] p-4 shadow-[0_0_0_1px_rgba(45,212,191,0.18)]">
+    <div>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold">{language === "ja" ? "この進行を保存" : "Save this progression"}</h3>
+          <h2 id="progression-save-dialog-title" className="text-lg font-semibold">{language === "ja" ? "この進行を保存" : "Save this progression"}</h2>
           <p className="mt-1 text-sm text-[var(--lv-text-muted)]">{chordText}</p>
         </div>
-        <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={onClose}>
+        <button data-autofocus className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={onClose}>
           {copy.common.close}
         </button>
       </div>

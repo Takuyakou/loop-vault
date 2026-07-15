@@ -367,8 +367,8 @@ describe("CaptureView saving", () => {
       analyzedAt: "2026-07-15T00:00:00.000Z",
       analyzerVersion: "test",
     };
-    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
     const container = document.createElement("div");
+    document.body.append(container);
     const root = createRoot(container);
 
     await act(async () => {
@@ -401,18 +401,23 @@ describe("CaptureView saving", () => {
     headers = container.querySelectorAll<HTMLButtonElement>('button[aria-expanded]');
     await act(async () => headers[1]?.click());
     headers = container.querySelectorAll<HTMLButtonElement>('button[aria-expanded]');
-    expect(confirm).toHaveBeenCalledTimes(1);
+    expect(document.querySelector('[role="dialog"]')?.textContent).toContain("未保存の候補を閉じますか？");
     expect(headers[0]?.getAttribute("aria-expanded")).toBe("true");
     expect(headers[1]?.getAttribute("aria-expanded")).toBe("false");
 
-    confirm.mockReturnValue(true);
+    const cancel = [...document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')]
+      .find((button) => button.textContent === "キャンセル");
+    await act(async () => cancel?.click());
     await act(async () => headers[1]?.click());
+    const close = [...document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')]
+      .find((button) => button.textContent === "閉じる");
+    await act(async () => close?.click());
     headers = container.querySelectorAll<HTMLButtonElement>('button[aria-expanded]');
     expect(headers[0]?.getAttribute("aria-expanded")).toBe("false");
     expect(headers[1]?.getAttribute("aria-expanded")).toBe("true");
 
-    confirm.mockRestore();
     await act(async () => root.unmount());
+    container.remove();
   });
 
   it("saves a candidate to the Vault from the primary button in one click", async () => {
@@ -466,6 +471,66 @@ describe("CaptureView saving", () => {
     expect(feedbackSpies.append).not.toHaveBeenCalled();
 
     await act(async () => root.unmount());
+  });
+
+  it("opens save options in the shared modal and keeps the aside as a placeholder", async () => {
+    const capturedCandidate = candidate();
+    const result: MidiProgressionAnalysis = {
+      fileName: "song.mid",
+      totalBars: 4,
+      bpm: 100,
+      fullTimeline: capturedCandidate.chords,
+      blockCandidates: [capturedCandidate],
+      analyzedAt: "2026-07-15T00:00:00.000Z",
+      analyzerVersion: "test",
+    };
+    const createIdeaFromDraft = vi.fn(() => "11111111-1111-4111-8111-111111111111");
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <CaptureView
+          ideas={[]}
+          analysis={{ status: "done", result }}
+          analyzeMidiBytes={vi.fn()}
+          clearAnalysis={vi.fn()}
+          createIdeaFromDraft={createIdeaFromDraft}
+          appendBlockToIdea={vi.fn()}
+          updateIdea={vi.fn()}
+          setToast={vi.fn()}
+          copy={appCopy.ja}
+          language="ja"
+          showRomanNumerals
+        />,
+      );
+    });
+
+    const saveOptions = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent?.trim() === "保存方法");
+    await act(async () => saveOptions?.click());
+
+    const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
+    const saveAside = [...container.querySelectorAll<HTMLElement>("aside")]
+      .find((aside) => aside.textContent?.includes("この進行を保存"));
+    expect(dialog?.getAttribute("aria-modal")).toBe("true");
+    expect(dialog?.textContent).toContain("新しいIdeaとして保存");
+    expect(saveAside?.textContent).toContain("保存方法を選べます");
+    expect(saveAside?.textContent).not.toContain("Next Action");
+
+    const save = [...dialog!.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent === "保存");
+    await act(async () => save?.click());
+
+    expect(createIdeaFromDraft).toHaveBeenCalledWith(expect.objectContaining({
+      title: "コード進行 main - intro-like",
+      nextAction: "採集したコード進行からループを作る",
+    }));
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+
+    await act(async () => root.unmount());
+    container.remove();
   });
 
   it("appends final correction feedback only after an edited save succeeds", async () => {
