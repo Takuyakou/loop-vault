@@ -4,6 +4,8 @@ export type { CorrectionConflict, CorrectionPromotionResult } from "./correction
 export { deriveAcceptableAlternatives } from "./acceptableAlternatives";
 export { buildActiveReviewQueue } from "./reviewQueue";
 export type { ReviewQueueOptions } from "./reviewQueue";
+export { evaluateBronzeCases, evaluateGoldCases, evaluateSilverCases } from "./realMetrics";
+export type { AnalyzedRealMidiCase, BronzeMetrics, GoldMetrics, SilverMetrics } from "./realMetrics";
 export {
   buildDifferenceReviewCases,
   chordLabelsEquivalent,

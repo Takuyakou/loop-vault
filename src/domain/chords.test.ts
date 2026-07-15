@@ -18,4 +18,9 @@ describe("chord symbols", () => {
   it("returns null for labels outside the supported vocabulary", () => {
     expect(parseChordLabel("Hmaj7")).toBeNull();
   });
+
+  it("parses extended qualities before separating explicit tensions", () => {
+    expect(parseChordLabel("Cmaj9")).toMatchObject({ quality: "maj9", tensions: [] });
+    expect(parseChordLabel("C7b9")).toMatchObject({ quality: "dom7", tensions: ["b9"] });
+  });
 });

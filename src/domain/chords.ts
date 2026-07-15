@@ -96,14 +96,16 @@ export function parseChordLabel(label: string): ChordSymbol | null {
   const qualityText = match[2].trim();
   const tensions: Tension[] = [];
   let remaining = qualityText;
-  for (const tension of ["b13", "#11", "b9", "#9", "13", "11", "9"] as const) {
-    if (remaining.includes(tension)) {
-      tensions.push(tension);
-      remaining = remaining.replace(tension, "");
+  let quality = parseQuality(remaining);
+  if (!quality) {
+    for (const tension of ["b13", "#11", "b9", "#9", "13", "11", "9"] as const) {
+      if (remaining.includes(tension)) {
+        tensions.push(tension);
+        remaining = remaining.replace(tension, "");
+      }
     }
+    quality = parseQuality(remaining);
   }
-
-  const quality = parseQuality(remaining);
   if (!quality) {
     return null;
   }
