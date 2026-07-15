@@ -112,9 +112,46 @@ describe("useUndoQueue", () => {
     expect(stack?.className).toContain("z-40");
     expect(stack?.className).toContain("xl:left-4");
     expect(stack?.style.bottom).toContain("safe-area-inset-bottom");
+    expect(stack?.className).toContain("overflow-y-auto");
+    expect(stack?.style.maxHeight).toContain("100vh");
+    expect(stack?.style.maxHeight).toContain("--lv-sticky-inspector-height");
     expect(document.activeElement).toBe(
       mounted.container.querySelector('[data-undo-action-id="positioned"]'),
     );
+    await mounted.unmount();
+  });
+
+  it("keeps every Undo action reachable in a viewport-constrained stack", async () => {
+    let nextId = 0;
+    const undoCallbacks = Array.from({ length: 6 }, () => vi.fn());
+    const mounted = await mountQueue(() => `stack-${++nextId}`);
+
+    await act(async () => {
+      undoCallbacks.forEach((undo, index) => {
+        mounted.api().enqueue({
+          label: `Deleted ${index + 1}`,
+          payload: null,
+          undo,
+        });
+      });
+    });
+
+    const stack = mounted.container.querySelector<HTMLElement>("[data-undo-toast-stack]");
+    expect(stack?.querySelectorAll("[data-undo-action-id]")).toHaveLength(6);
+    expect(stack?.className).toContain("overflow-y-auto");
+    expect(stack?.className).toContain("overscroll-contain");
+    expect(stack?.style.maxHeight).toBe(
+      "calc(100vh - var(--lv-sticky-inspector-height, 0px) - env(safe-area-inset-bottom, 0px) - 2rem)",
+    );
+    expect(document.activeElement).toBe(
+      stack?.querySelector('[data-undo-action-id="stack-6"]'),
+    );
+
+    const oldestUndo = stack?.querySelector<HTMLButtonElement>('[data-undo-action-id="stack-1"]');
+    await act(async () => oldestUndo?.click());
+    expect(undoCallbacks[0]).toHaveBeenCalledOnce();
+    expect(stack?.querySelector('[data-undo-action-id="stack-1"]')).toBeNull();
+
     await mounted.unmount();
   });
 

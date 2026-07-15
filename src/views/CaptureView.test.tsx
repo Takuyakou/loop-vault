@@ -150,6 +150,7 @@ describe("ProgressionCandidateCard", () => {
     expect(markup).toContain("元の検出値");
     expect(markup).toContain("現在のコード");
     expect(markup).toContain("編集するコードを選択");
+    expect(markup).not.toContain("xl:grid-cols-[minmax(0,1fr)_20rem]");
   });
 
   it("renders the progression editor controls in English", () => {
@@ -228,7 +229,7 @@ describe("ProgressionCandidateCard", () => {
       );
     });
 
-    const alternativeButton = [...container.querySelectorAll("button")]
+    const alternativeButton = [...container.querySelectorAll<HTMLButtonElement>("[data-chord-inspector] button")]
       .find((button) => button.textContent?.includes("G7"));
     await act(async () => alternativeButton?.click());
     expect(onPreviewChord).toHaveBeenCalledTimes(1);
@@ -281,7 +282,7 @@ describe("ProgressionCandidateCard", () => {
       );
     });
 
-    const alternativeButton = [...container.querySelectorAll("button")]
+    const alternativeButton = [...container.querySelectorAll<HTMLButtonElement>("[data-chord-inspector] button")]
       .find((button) => button.textContent?.includes("G7"));
     await act(async () => alternativeButton?.click());
     const applyButton = [...container.querySelectorAll("button")]
@@ -439,7 +440,7 @@ describe("ProgressionCandidateCard", () => {
       );
     });
 
-    const alternativeButton = [...container.querySelectorAll("button")]
+    const alternativeButton = [...container.querySelectorAll<HTMLButtonElement>("[data-chord-inspector] button")]
       .find((button) => button.textContent?.includes("G7"));
     await act(async () => alternativeButton?.click());
     const applyButton = [...container.querySelectorAll("button")]
@@ -512,7 +513,7 @@ describe("ProgressionCandidateCard", () => {
       );
     });
 
-    const alternativeButton = [...container.querySelectorAll("button")]
+    const alternativeButton = [...container.querySelectorAll<HTMLButtonElement>("[data-chord-inspector] button")]
       .find((button) => button.textContent?.includes("G7"));
     await act(async () => alternativeButton?.click());
     const applyButton = [...container.querySelectorAll("button")]
@@ -573,6 +574,226 @@ describe("ProgressionCandidateCard", () => {
 });
 
 describe("CaptureView saving", () => {
+  it("keeps one portaled inspector mounted and cleans up responsive height tracking", async () => {
+    const first = chord("Cmaj7", 1);
+    first.alternatives = [{
+      chord: { root: 7, quality: "dom7", tensions: [], label: "G7" },
+      confidence: 0.72,
+    }];
+    const firstCandidate = candidate({ chords: [first, chord("Am7", 2)] });
+    const secondCandidate = candidate({
+      id: "candidate-2",
+      startBar: 5,
+      endBar: 8,
+      chords: [chord("Fmaj7", 5), chord("Dm7", 6)],
+    });
+    const result: MidiProgressionAnalysis = {
+      totalBars: 8,
+      bpm: 100,
+      fullTimeline: [...firstCandidate.chords, ...secondCandidate.chords],
+      blockCandidates: [firstCandidate, secondCandidate],
+      analyzedAt: "2026-07-16T00:00:00.000Z",
+      analyzerVersion: "test",
+    };
+    const observe = vi.fn();
+    const disconnect = vi.fn();
+    const originalResizeObserver = globalThis.ResizeObserver;
+    const originalMatchMedia = window.matchMedia;
+    const originalWidth = window.innerWidth;
+    class TestResizeObserver {
+      constructor(_callback: ResizeObserverCallback) {}
+      observe = observe;
+      unobserve = vi.fn();
+      disconnect = disconnect;
+    }
+    Object.defineProperty(globalThis, "ResizeObserver", { configurable: true, value: TestResizeObserver });
+    Object.defineProperty(window, "matchMedia", { configurable: true, value: undefined });
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 768 });
+
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    try {
+      await act(async () => {
+        root.render(
+          <CaptureView
+            ideas={[]}
+            analysis={{ status: "done", result }}
+            analyzeMidiBytes={vi.fn()}
+            clearAnalysis={vi.fn()}
+            createIdeaFromDraft={vi.fn()}
+            appendBlockToIdea={vi.fn()}
+            updateIdea={vi.fn()}
+            setToast={vi.fn()}
+            copy={appCopy.ja}
+            language="ja"
+            showRomanNumerals
+          />,
+        );
+      });
+
+      const host = container.querySelector<HTMLElement>("[data-responsive-inspector-host]");
+      expect(host).not.toBeNull();
+      Object.defineProperty(host, "getBoundingClientRect", {
+        configurable: true,
+        value: () => DOMRect.fromRect({ width: 768, height: 196 }),
+      });
+
+      let headers = container.querySelectorAll<HTMLButtonElement>("[data-candidate-toggle]");
+      await act(async () => headers[0]?.click());
+      expect(observe).toHaveBeenCalledWith(host);
+      expect(document.documentElement.style.getPropertyValue("--lv-sticky-inspector-height")).toBe("196px");
+      expect(host?.querySelectorAll("[data-chord-inspector]")).toHaveLength(1);
+      expect(container.querySelectorAll("[data-chord-inspector]")).toHaveLength(1);
+      expect(host?.querySelector("[data-chord-inspector]")?.getAttribute("data-inspector-state")).toBe("collapsed");
+
+      const expand = [...host!.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent === "展開");
+      await act(async () => expand?.click());
+      expect(host?.querySelector("[data-chord-inspector]")?.getAttribute("data-inspector-state")).toBe("expanded");
+
+      const input = host?.querySelector<HTMLInputElement>("input");
+      await act(async () => {
+        if (!input) return;
+        input.value = "F#m9";
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+      Object.defineProperty(window, "innerWidth", { configurable: true, value: 1280 });
+      await act(async () => window.dispatchEvent(new Event("resize")));
+      expect(document.documentElement.style.getPropertyValue("--lv-sticky-inspector-height")).toBe("");
+      expect(host?.querySelector<HTMLInputElement>("input")?.value).toBe("F#m9");
+      Object.defineProperty(window, "innerWidth", { configurable: true, value: 768 });
+      await act(async () => window.dispatchEvent(new Event("resize")));
+      expect(document.documentElement.style.getPropertyValue("--lv-sticky-inspector-height")).toBe("196px");
+
+      const chordOptions = container.querySelectorAll<HTMLButtonElement>('[role="option"]');
+      await act(async () => chordOptions[1]?.click());
+      expect(host?.querySelector("[data-chord-inspector]")?.getAttribute("data-inspector-state")).toBe("expanded");
+
+      headers = container.querySelectorAll<HTMLButtonElement>("[data-candidate-toggle]");
+      await act(async () => headers[1]?.click());
+      expect(host?.querySelector("[data-chord-inspector]")?.getAttribute("data-inspector-state")).toBe("collapsed");
+
+      const secondExpand = [...host!.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent === "展開");
+      await act(async () => secondExpand?.click());
+      const structureSelect = host?.querySelector<HTMLSelectElement>("select");
+      structureSelect?.focus();
+      await act(async () => structureSelect?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+      expect(host?.querySelector("[data-chord-inspector]")?.getAttribute("data-inspector-state")).toBe("collapsed");
+      expect(document.activeElement).toBe(host?.querySelector("[data-inspector-toggle]"));
+
+      await act(async () => secondExpand?.click());
+      const directInput = host?.querySelector<HTMLInputElement>("input");
+      directInput?.focus();
+      await act(async () => directInput?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+      expect(host?.querySelector("[data-chord-inspector]")?.getAttribute("data-inspector-state")).toBe("collapsed");
+      expect(document.activeElement).toBe(host?.querySelector("[data-inspector-toggle]"));
+
+      headers = container.querySelectorAll<HTMLButtonElement>("[data-candidate-toggle]");
+      expect(headers[1]?.getAttribute("aria-expanded")).toBe("true");
+      await act(async () => host?.querySelector<HTMLButtonElement>("[data-inspector-toggle]")
+        ?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+      expect(headers[1]?.getAttribute("aria-expanded")).toBe("false");
+      expect(document.activeElement).toBe(headers[1]);
+      expect(document.documentElement.style.getPropertyValue("--lv-sticky-inspector-height")).toBe("");
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+      document.documentElement.style.removeProperty("--lv-sticky-inspector-height");
+      Object.defineProperty(globalThis, "ResizeObserver", { configurable: true, value: originalResizeObserver });
+      Object.defineProperty(window, "matchMedia", { configurable: true, value: originalMatchMedia });
+      Object.defineProperty(window, "innerWidth", { configurable: true, value: originalWidth });
+    }
+
+    expect(disconnect).toHaveBeenCalled();
+  });
+
+  it("consumes Escape one layer at a time and restores focus without opening the dirty modal early", async () => {
+    const first = chord("Cmaj7", 1);
+    first.alternatives = [{
+      chord: { root: 7, quality: "dom7", tensions: [], label: "G7" },
+      confidence: 0.75,
+    }];
+    const capturedCandidate = candidate({ chords: [first, chord("Am7", 2)] });
+    const result: MidiProgressionAnalysis = {
+      totalBars: 4,
+      bpm: 100,
+      fullTimeline: capturedCandidate.chords,
+      blockCandidates: [capturedCandidate],
+      analyzedAt: "2026-07-16T00:00:00.000Z",
+      analyzerVersion: "test",
+    };
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <CaptureView
+          ideas={[]}
+          analysis={{ status: "done", result }}
+          analyzeMidiBytes={vi.fn()}
+          clearAnalysis={vi.fn()}
+          createIdeaFromDraft={vi.fn()}
+          appendBlockToIdea={vi.fn()}
+          updateIdea={vi.fn()}
+          setToast={vi.fn()}
+          copy={appCopy.ja}
+          language="ja"
+          showRomanNumerals
+        />,
+      );
+    });
+
+    const candidateHeader = container.querySelector<HTMLButtonElement>("[data-candidate-toggle]");
+    await act(async () => candidateHeader?.click());
+    const host = container.querySelector<HTMLElement>("[data-responsive-inspector-host]");
+    const inspectorToggle = host?.querySelector<HTMLButtonElement>("[data-inspector-toggle]");
+    await act(async () => inspectorToggle?.click());
+
+    const alternative = [...host!.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent?.includes("G7"));
+    await act(async () => alternative?.click());
+    const apply = [...host!.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent === "適用");
+    await act(async () => apply?.click());
+
+    const saveButton = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent === "Vaultに保存");
+    await act(async () => saveButton?.click());
+    const popoverInput = container.querySelector<HTMLInputElement>('form[role="dialog"] input');
+    expect(document.activeElement).toBe(popoverInput);
+
+    await act(async () => popoverInput?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+    expect(container.querySelector('form[role="dialog"]')).toBeNull();
+    expect(document.querySelector('[aria-modal="true"]')).toBeNull();
+    expect(candidateHeader?.getAttribute("aria-expanded")).toBe("true");
+    expect(host?.querySelector("[data-chord-inspector]")?.getAttribute("data-inspector-state")).toBe("expanded");
+    expect(document.activeElement).toBe(saveButton);
+
+    await act(async () => saveButton?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+    expect(document.querySelector('[aria-modal="true"]')).toBeNull();
+    expect(candidateHeader?.getAttribute("aria-expanded")).toBe("true");
+    expect(host?.querySelector("[data-chord-inspector]")?.getAttribute("data-inspector-state")).toBe("collapsed");
+    expect(document.activeElement).toBe(inspectorToggle);
+
+    await act(async () => inspectorToggle?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+    expect(document.querySelectorAll('[role="dialog"]')).toHaveLength(1);
+    expect(document.querySelector('[aria-modal="true"]')?.textContent).toContain("未保存の候補を閉じますか？");
+    expect(candidateHeader?.getAttribute("aria-expanded")).toBe("true");
+
+    const close = [...document.querySelectorAll<HTMLButtonElement>('[aria-modal="true"] button')]
+      .find((button) => button.textContent === "閉じる");
+    await act(async () => close?.click());
+    expect(candidateHeader?.getAttribute("aria-expanded")).toBe("false");
+    expect(document.activeElement).toBe(candidateHeader);
+
+    await act(async () => root.unmount());
+    container.remove();
+  });
+
   it("does not open another candidate's save popover before dirty selection is confirmed", async () => {
     const firstChord = chord("Cmaj7", 1);
     firstChord.alternatives = [{
@@ -621,7 +842,7 @@ describe("CaptureView saving", () => {
 
     let headers = container.querySelectorAll<HTMLButtonElement>('[data-candidate-toggle]');
     await act(async () => headers[0]?.click());
-    const alternativeButton = [...container.querySelectorAll("button")]
+    const alternativeButton = [...container.querySelectorAll<HTMLButtonElement>("[data-chord-inspector] button")]
       .find((button) => button.textContent?.includes("G7"));
     await act(async () => alternativeButton?.click());
     const applyButton = [...container.querySelectorAll("button")]
@@ -803,6 +1024,7 @@ describe("CaptureView saving", () => {
     await act(async () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
     expect(container.querySelector('[role="menu"]')).toBeNull();
     expect(document.activeElement).toBe(saveOptions);
+    expect(container.querySelector('[data-candidate-toggle]')?.getAttribute("aria-expanded")).toBe("true");
 
     await act(async () => saveOptions?.click());
     await act(async () => document.body.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true })));
@@ -859,7 +1081,7 @@ describe("CaptureView saving", () => {
 
     let headers = container.querySelectorAll<HTMLButtonElement>('[data-candidate-toggle]');
     await act(async () => headers[0]?.click());
-    const alternativeButton = [...container.querySelectorAll("button")]
+    const alternativeButton = [...container.querySelectorAll<HTMLButtonElement>("[data-chord-inspector] button")]
       .find((button) => button.textContent?.includes("G7"));
     await act(async () => alternativeButton?.click());
     const applyButton = [...container.querySelectorAll("button")]
@@ -937,7 +1159,7 @@ describe("CaptureView saving", () => {
 
     const candidateHeader = container.querySelector<HTMLButtonElement>('[data-candidate-toggle][aria-expanded="false"]');
     await act(async () => candidateHeader?.click());
-    const alternativeButton = [...container.querySelectorAll("button")]
+    const alternativeButton = [...container.querySelectorAll<HTMLButtonElement>("[data-chord-inspector] button")]
       .find((button) => button.textContent?.includes("G7"));
     await act(async () => alternativeButton?.click());
     const applyButton = [...container.querySelectorAll("button")]

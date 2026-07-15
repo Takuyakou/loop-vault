@@ -16,13 +16,13 @@ describe("ChordStructureEditor", () => {
     const root = createRoot(container);
     await act(async () => root.render(<Harness />));
 
-    await changeSelect(container, "Root", "2");
+    await changeSelect(container, "ルート", "2");
     expect(container.querySelector("output")?.textContent).toBe("Dmaj7");
 
-    await changeSelect(container, "Quality", "min7");
+    await changeSelect(container, "種類", "min7");
     expect(container.querySelector("output")?.textContent).toBe("Dm7");
 
-    await changeSelect(container, "Bass", "6");
+    await changeSelect(container, "ベース", "6");
     expect(container.querySelector("output")?.textContent).toBe("Dm7/F#");
 
     await act(async () => root.unmount());
