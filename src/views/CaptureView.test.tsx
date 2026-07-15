@@ -1,9 +1,9 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import type { ChordTimelineItem, ProgressionBlockCandidate } from "../domain/types";
+import type { ChordTimelineItem, MidiProgressionAnalysis, ProgressionBlockCandidate } from "../domain/types";
 import { makeIdea } from "../domain/testFactory";
 import { appCopy } from "../i18n";
-import { isMidiFileName, ProgressionCandidateCard, ProgressionSaveDialog } from "./CaptureView";
+import { isMidiFileName, ProgressionCandidateCard, ProgressionSaveDialog, TimelineDetails } from "./CaptureView";
 
 function chord(label: string, bar: number): ChordTimelineItem {
   return {
@@ -137,6 +137,39 @@ describe("ProgressionCandidateCard", () => {
     expect(markup).toContain("追加先Idea");
     expect(markup).toContain("Existing idea");
     expect(markup).toContain("disabled=\"\"");
+  });
+});
+
+describe("TimelineDetails", () => {
+  it("offers full playback, stop, piano sound feedback, and clickable chords", () => {
+    const result: MidiProgressionAnalysis = {
+      fileName: "song.mid",
+      totalBars: 2,
+      bpm: 100,
+      fullTimeline: [chord("Cmaj7", 1), chord("Am7", 2)],
+      blockCandidates: [],
+      analyzedAt: "2026-07-15T00:00:00.000Z",
+      analyzerVersion: "test",
+    };
+
+    const markup = renderToStaticMarkup(
+      <TimelineDetails
+        result={result}
+        copy={appCopy.ja}
+        language="ja"
+        previewSound="piano"
+        onPreview={vi.fn()}
+        onPreviewChord={vi.fn()}
+        onStop={vi.fn()}
+      />,
+    );
+
+    expect(markup).toContain("曲全体を再生");
+    expect(markup).toContain('aria-label="停止"');
+    expect(markup).toContain("試聴音色: ピアノ");
+    expect(markup).toContain("Cmaj7");
+    expect(markup).toContain("Am7");
+    expect(markup).toContain("<button");
   });
 });
 

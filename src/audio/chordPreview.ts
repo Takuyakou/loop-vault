@@ -13,12 +13,29 @@ interface PreviewInstrument {
   dispose(): void;
 }
 
+export type PreviewSound = "piano" | "electric-piano";
+
+const PIANO_SAMPLE_URLS = {
+  A0: "A0.mp3",
+  C1: "C1.mp3",
+  C2: "C2.mp3",
+  C3: "C3.mp3",
+  C4: "C4.mp3",
+  C5: "C5.mp3",
+  C6: "C6.mp3",
+  C7: "C7.mp3",
+} as const;
+
 let instrument: PreviewInstrument | undefined;
+let instrumentSound: PreviewSound | undefined;
 let scheduledTimers: number[] = [];
 
-export async function previewChord(symbol: ChordSymbol): Promise<void> {
-  await startPreviewAudio();
+export async function previewChord(
+  symbol: ChordSymbol,
+  sound: PreviewSound = "electric-piano",
+): Promise<void> {
   stopPreview();
+  await startPreviewAudio(sound);
   const notes = voiceChordForPreview(symbol).notes.map(midiToNoteName);
   instrument?.triggerAttackRelease(notes, 1.35, undefined, 0.72);
 }
@@ -26,9 +43,10 @@ export async function previewChord(symbol: ChordSymbol): Promise<void> {
 export async function previewChordTimeline(
   timeline: readonly ChordTimelineItem[],
   bpm = 96,
+  sound: PreviewSound = "electric-piano",
 ): Promise<void> {
-  await startPreviewAudio();
   stopPreview();
+  await startPreviewAudio(sound);
 
   const beatSeconds = 60 / bpm;
   const ordered = [...timeline].sort(
@@ -63,11 +81,117 @@ export function stopPreview(): void {
   instrument?.releaseAll();
 }
 
-async function startPreviewAudio(): Promise<void> {
+async function startPreviewAudio(sound: PreviewSound): Promise<void> {
   await Tone.start();
-  if (!instrument) {
-    instrument = createElectricPianoInstrument();
+  if (instrument && instrumentSound !== sound) {
+    instrument.dispose();
+    instrument = undefined;
   }
+
+  if (!instrument) {
+    instrument = sound === "piano"
+      ? await createPianoInstrument()
+      : createElectricPianoInstrument();
+    instrumentSound = sound;
+  }
+}
+
+async function createPianoInstrument(): Promise<PreviewInstrument> {
+  const sampler = new Tone.Sampler({
+    urls: PIANO_SAMPLE_URLS,
+    baseUrl: "https://tonejs.github.io/audio/salamander/",
+    release: 1,
+  }).toDestination();
+
+  try {
+    await waitForPianoSamples(6_000);
+    return wrapInstrument(sampler);
+  } catch {
+    sampler.dispose();
+    return createPianoFallbackInstrument();
+  }
+}
+
+function createPianoFallbackInstrument(): PreviewInstrument {
+  const highpass = new Tone.Filter({ frequency: 55, type: "highpass" });
+  const lowpass = new Tone.Filter({
+    frequency: 5200,
+    type: "lowpass",
+    Q: 0.5,
+    rolloff: -24,
+  });
+  const compressor = new Tone.Compressor({ threshold: -18, ratio: 3 });
+  const reverb = new Tone.Freeverb(0.18, 3200);
+  reverb.wet.value = 0.1;
+
+  const synth = new Tone.PolySynth(Tone.Synth, {
+    oscillator: { type: "triangle" },
+    envelope: {
+      attack: 0.003,
+      decay: 1.25,
+      sustain: 0.05,
+      release: 0.8,
+    },
+  }).chain(highpass, lowpass, compressor, reverb, Tone.getDestination());
+  synth.volume.value = -7;
+
+  return {
+    triggerAttackRelease(notes, duration, time, velocity) {
+      synth.triggerAttackRelease(notes, duration, time, velocity);
+    },
+    releaseAll() {
+      synth.releaseAll();
+    },
+    dispose() {
+      synth.dispose();
+      highpass.dispose();
+      lowpass.dispose();
+      compressor.dispose();
+      reverb.dispose();
+    },
+  };
+}
+
+function wrapInstrument(source: {
+  triggerAttackRelease(
+    notes: string | string[],
+    duration: number,
+    time?: number,
+    velocity?: number,
+  ): unknown;
+  releaseAll?(): unknown;
+  dispose(): unknown;
+}): PreviewInstrument {
+  return {
+    triggerAttackRelease(notes, duration, time, velocity) {
+      source.triggerAttackRelease(notes, duration, time, velocity);
+    },
+    releaseAll() {
+      source.releaseAll?.();
+    },
+    dispose() {
+      source.dispose();
+    },
+  };
+}
+
+function waitForPianoSamples(timeoutMs: number): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timeout = globalThis.setTimeout(() => {
+      reject(new Error("Piano samples did not load before timeout."));
+    }, timeoutMs);
+
+    Tone.loaded().then(
+      () => {
+        globalThis.clearTimeout(timeout);
+        resolve();
+      },
+      (error) => {
+        globalThis.clearTimeout(timeout);
+        reject(error);
+      },
+    );
+  });
 }
 
 function createElectricPianoInstrument(): PreviewInstrument {
