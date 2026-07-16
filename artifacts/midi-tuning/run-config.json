@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "datasetId": "7991f80e29b76717af3fbeee5840a158a83cc387d73f9b73fdf2731afc70f3a6",
+  "tuneCases": 80,
+  "holdoutCases": 20,
+  "candidateIds": [
+    "default",
+    "bass-root-up",
+    "ornament-strict"
+  ]
+}

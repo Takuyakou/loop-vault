@@ -14,6 +14,8 @@
     "eval:midi": "vite-node scripts/evaluate-midi-analysis.ts",
     "eval:midi:compare": "vite-node scripts/evaluate-midi-analysis.ts --compare",
     "eval:midi:inspect": "vite-node scripts/inspect-midi-analysis.ts",
+    "tune:midi-weights": "vite-node scripts/tune-midi-weights.ts",
+    "benchmark:midi": "vite-node scripts/benchmark-midi-analysis.ts",
     "tauri": "tauri"
   },
   "dependencies": {
