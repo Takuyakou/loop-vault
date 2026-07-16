@@ -53,7 +53,8 @@ export interface SavedProgressionBlock {
   tags: string[];
   capturedAt: string;
   analyzerVersion: string;
-  weightsVersion?: string;
+  sourceAnalyzerVersion?: string;
+  sourceWeightsVersion?: string;
   userEdited?: boolean;
   userVerified?: boolean;
 }

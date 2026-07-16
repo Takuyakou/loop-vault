@@ -112,6 +112,8 @@ describe("ProgressionCandidateCard", () => {
     expect(markup).toContain("既存Ideaへ追加");
     expect(markup).toContain("コードだけメモに追記");
     expect(markup).toContain("採集したコード進行からループを作る");
+    expect(markup).toContain("この進行を確認済みとして保存");
+    expect(markup).not.toContain("type=\"checkbox\" checked=\"\"");
     expect(markup).not.toContain("disabled=\"\"");
   });
 

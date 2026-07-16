@@ -87,8 +87,8 @@ export function buildStoredProgressionCase(
     },
     ...(block.detectedKey ? { context: { key: block.detectedKey } } : {}),
     analyzerContext: {
-      sourceAnalyzerVersion: block.analyzerVersion,
-      ...(block.weightsVersion ? { sourceWeightsVersion: block.weightsVersion } : {}),
+      sourceAnalyzerVersion: block.sourceAnalyzerVersion ?? block.analyzerVersion,
+      ...(block.sourceWeightsVersion ? { sourceWeightsVersion: block.sourceWeightsVersion } : {}),
     },
   };
 }

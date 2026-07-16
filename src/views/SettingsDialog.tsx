@@ -9,6 +9,14 @@ import {
   isAnalysisFeedbackEnabled,
   setAnalysisFeedbackEnabled,
 } from "../storage/analysisFeedbackStorage";
+import type { SongIdea } from "../domain/types";
+import {
+  deleteDifferenceReviews,
+  deletePromotedCorrections,
+  deleteRealEvaluationData,
+  openRealEvaluationFolder,
+  rebuildLocalMidiSourceIndex,
+} from "../storage/realEvaluationStorage";
 
 const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
 async function writeClipboardText(text: string): Promise<void> { if (!navigator.clipboard?.writeText) throw new Error("Clipboard is not available."); await navigator.clipboard.writeText(text); }
@@ -18,6 +26,7 @@ export function SettingsDialog({
   monthlyGoal,
   language,
   showRomanNumerals,
+  ideas,
   backups,
   error,
   setMonthlyGoal,
@@ -34,6 +43,7 @@ export function SettingsDialog({
   monthlyGoal: number;
   language: AppLanguage;
   showRomanNumerals: boolean;
+  ideas: SongIdea[];
   backups: ReturnType<typeof defaultVaultStore.getState>["backups"];
   error?: string;
   setMonthlyGoal: (goal: number) => void;
@@ -121,6 +131,24 @@ export function SettingsDialog({
     if (!window.confirm(language === "ja" ? "このPCに保存した解析修正ログを削除しますか？" : "Delete the analysis correction log stored on this PC?")) return;
     await deleteAnalysisFeedback();
     setToast(language === "ja" ? "解析修正ログを削除しました。" : "Deleted the analysis correction log.");
+  }
+
+  async function runEvaluationAction(action: () => Promise<void>, successJa: string, successEn: string) {
+    try {
+      await action();
+      setToast(language === "ja" ? successJa : successEn);
+    } catch (actionError) {
+      setToast(actionError instanceof Error ? actionError.message : (language === "ja" ? "操作に失敗しました。" : "The operation failed."));
+    }
+  }
+
+  async function rebuildSourceIndex() {
+    try {
+      const count = await rebuildLocalMidiSourceIndex(ideas);
+      setToast(language === "ja" ? `source indexを再構築しました（${count}件）。` : `Rebuilt the source index (${count} entries).`);
+    } catch (actionError) {
+      setToast(actionError instanceof Error ? actionError.message : (language === "ja" ? "source indexを再構築できませんでした。" : "Could not rebuild the source index."));
+    }
   }
 
   return (
@@ -225,6 +253,21 @@ export function SettingsDialog({
           >
             {language === "ja" ? "修正ログを削除" : "Delete correction log"}
           </button>
+        </section>
+        <section className="mt-5 border border-[var(--lv-border)] bg-[var(--lv-bg)] p-4 text-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--lv-accent)]">
+            {language === "ja" ? "実MIDI評価（開発用）" : "Real MIDI evaluation (developer)"}
+          </p>
+          <p className="mt-2 text-[var(--lv-text-muted)]">
+            {language === "ja" ? "評価ケースとレビュー履歴はVault本体とは別のローカル領域に保存されます。" : "Evaluation cases and review history are stored locally, separately from the Vault."}
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2" onClick={() => void runEvaluationAction(openRealEvaluationFolder, "評価データの保存先を開きました。", "Opened the evaluation data folder.")}>{language === "ja" ? "保存先を開く" : "Open folder"}</button>
+            <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2" onClick={() => void rebuildSourceIndex()}>{language === "ja" ? "source indexを再構築" : "Rebuild source index"}</button>
+            <button className="rounded border border-red-400/50 px-3 py-2 text-red-100" onClick={() => void runEvaluationAction(deleteDifferenceReviews, "差分レビュー履歴を削除しました。", "Deleted difference review history.")}>{language === "ja" ? "レビュー履歴を削除" : "Delete reviews"}</button>
+            <button className="rounded border border-red-400/50 px-3 py-2 text-red-100" onClick={() => void runEvaluationAction(deletePromotedCorrections, "修正ログ昇格データを削除しました。", "Deleted promoted correction data.")}>{language === "ja" ? "昇格データを削除" : "Delete promoted data"}</button>
+            <button className="rounded border border-red-400/50 px-3 py-2 text-red-100" onClick={() => void runEvaluationAction(deleteRealEvaluationData, "実MIDI評価データを削除しました。", "Deleted real MIDI evaluation data.")}>{language === "ja" ? "評価データを削除" : "Delete evaluation data"}</button>
+          </div>
         </section>
         <section className="mt-5 border border-[var(--lv-border)] bg-[var(--lv-bg)] p-4 text-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--lv-accent)]">{language === "ja" ? "情報" : "Info"}</p>

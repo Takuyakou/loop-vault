@@ -18,7 +18,7 @@ import type {
   SongIdea,
   Status,
 } from "../domain/types";
-import type { AnalysisState } from "../store/vaultStore";
+import type { AnalysisState, ProgressionSaveMetadata } from "../store/vaultStore";
 import type { AppCopy, AppLanguage } from "../i18n";
 import { ProgressionGrid, timelineStartBeat } from "../ui/ProgressionGrid";
 import { chordProgressFraction } from "../ui/playbackProgress";
@@ -42,11 +42,13 @@ interface CaptureViewProps {
     nextAction?: string;
     progressionBlock?: ProgressionBlockCandidate;
     progressionAnalysis?: MidiProgressionAnalysis;
+    progressionMetadata?: ProgressionSaveMetadata;
   }) => string | undefined;
   appendBlockToIdea: (
     ideaId: string,
     block: ProgressionBlockCandidate,
     analysis?: MidiProgressionAnalysis,
+    metadata?: ProgressionSaveMetadata,
   ) => void;
   updateIdea: (id: string, changes: Partial<SongIdea>) => void;
   setToast: (toast: string) => void;
@@ -73,7 +75,8 @@ export function CaptureView(props: CaptureViewProps) {
   } = props;
   const [isDraggingMidi, setIsDraggingMidi] = useState(false);
   const [expandedCandidateId, setExpandedCandidateId] = useState<string>();
-  const [saveDraft, setSaveDraft] = useState<{ candidate: ProgressionBlockCandidate; title: string }>();
+  const [saveDraft, setSaveDraft] = useState<{ candidate: ProgressionBlockCandidate; title: string; userEdited: boolean }>();
+  const [sourcePath, setSourcePath] = useState<string>();
   const result = analysis.result;
 
   const analyzeMidiBytesWithToast = useCallback(
@@ -93,6 +96,7 @@ export function CaptureView(props: CaptureViewProps) {
 
       try {
         const bytes = await readFile(path);
+        setSourcePath(path);
         analyzeMidiBytesWithToast(bytes, fileNameFromPath(path));
       } catch (error) {
         setToast(error instanceof Error ? error.message : copy.toast.midiReadFailed);
@@ -110,6 +114,7 @@ export function CaptureView(props: CaptureViewProps) {
 
       try {
         const bytes = new Uint8Array(await file.arrayBuffer());
+        setSourcePath(undefined);
         analyzeMidiBytesWithToast(bytes, file.name);
       } catch (error) {
         setToast(error instanceof Error ? error.message : copy.toast.midiReadFailed);
@@ -232,7 +237,7 @@ export function CaptureView(props: CaptureViewProps) {
     onDrop: handleDrop,
   };
 
-  function saveNew(candidate: ProgressionBlockCandidate, title: string, nextAction: string) {
+  function saveNew(candidate: ProgressionBlockCandidate, title: string, nextAction: string, userVerified: boolean) {
     const id = createIdeaFromDraft({
       title,
       status: "idea",
@@ -242,17 +247,22 @@ export function CaptureView(props: CaptureViewProps) {
       nextAction,
       progressionBlock: candidate,
       progressionAnalysis: analysis.result,
+      progressionMetadata: { sourcePath, userEdited: saveDraft?.userEdited, userVerified },
     });
     setToast(id ? (language === "ja" ? "コード進行からIdeaを作成しました。" : "Created an idea from the progression.") : (language === "ja" ? "Ideaを作成できませんでした。" : "Could not create the idea."));
   }
 
-  function appendExisting(candidate: ProgressionBlockCandidate, ideaId: string) {
+  function appendExisting(candidate: ProgressionBlockCandidate, ideaId: string, userVerified: boolean) {
     if (!ideaId) {
       setToast(language === "ja" ? "追加先のIdeaを選んでください。" : "Choose an idea first.");
       return;
     }
 
-    appendBlockToIdea(ideaId, candidate, analysis.result);
+    appendBlockToIdea(ideaId, candidate, analysis.result, {
+      sourcePath,
+      userEdited: saveDraft?.userEdited,
+      userVerified,
+    });
     setToast(copy.toast.blockSaved);
   }
 
@@ -330,7 +340,7 @@ export function CaptureView(props: CaptureViewProps) {
             <button className="rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => void chooseMidi()}>
               {copy.capture.chooseAnother}
             </button>
-            <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={clearAnalysis}>
+            <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => { clearAnalysis(); setSourcePath(undefined); }}>
               {copy.capture.clear}
             </button>
           </div>
@@ -372,9 +382,10 @@ export function CaptureView(props: CaptureViewProps) {
                   isExpanded={expandedCandidateId === candidate.id}
                   onSelect={() => setExpandedCandidateId(candidate.id)}
                   onSave={(editedCandidate, title) => {
-                    void appendAnalysisFeedback(buildCorrectionEvents(candidate, editedCandidate, result))
+                    const corrections = buildCorrectionEvents(candidate, editedCandidate, result);
+                    void appendAnalysisFeedback(corrections)
                       .catch((error) => setToast(error instanceof Error ? error.message : "Could not save analysis feedback."));
-                    setSaveDraft({ candidate: editedCandidate, title });
+                    setSaveDraft({ candidate: editedCandidate, title, userEdited: corrections.length > 0 });
                   }}
                   showRomanNumerals={showRomanNumerals}
                 />
@@ -391,12 +402,12 @@ export function CaptureView(props: CaptureViewProps) {
                 ideas={ideas}
                 onTitleChange={(title) => setSaveDraft((draft) => draft ? { ...draft, title } : draft)}
                 onClose={() => setSaveDraft(undefined)}
-                onCreate={(title, nextAction) => {
-                  saveNew(saveDraft.candidate, title, nextAction);
+                onCreate={(title, nextAction, userVerified) => {
+                  saveNew(saveDraft.candidate, title, nextAction, userVerified);
                   setSaveDraft(undefined);
                 }}
-                onAppend={(ideaId) => {
-                  appendExisting(saveDraft.candidate, ideaId);
+                onAppend={(ideaId, userVerified) => {
+                  appendExisting(saveDraft.candidate, ideaId, userVerified);
                   setSaveDraft(undefined);
                 }}
                 onCopyMemo={(ideaId) => {
@@ -805,8 +816,8 @@ export function ProgressionSaveDialog({
   ideas: SongIdea[];
   onTitleChange: (title: string) => void;
   onClose: () => void;
-  onCreate: (title: string, nextAction: string) => void;
-  onAppend: (ideaId: string) => void;
+  onCreate: (title: string, nextAction: string, userVerified: boolean) => void;
+  onAppend: (ideaId: string, userVerified: boolean) => void;
   onCopyMemo: (ideaId: string) => void;
   copy: AppCopy;
   language: AppLanguage;
@@ -817,6 +828,7 @@ export function ProgressionSaveDialog({
   const [nextAction, setNextAction] = useState(
     language === "ja" ? "採集したコード進行からループを作る" : "Build a loop from the captured progression",
   );
+  const [userVerified, setUserVerified] = useState(false);
   const needsIdea = mode !== "new";
   const canSave = mode === "new" ? title.trim().length > 0 : ideaId.length > 0;
   const chordText = candidate.chords.map((item) => item.chord.label).join(" | ");
@@ -824,11 +836,11 @@ export function ProgressionSaveDialog({
   function save() {
     if (!canSave) return;
     if (mode === "new") {
-      onCreate(title.trim(), nextAction.trim());
+      onCreate(title.trim(), nextAction.trim(), userVerified);
       return;
     }
     if (mode === "append") {
-      onAppend(ideaId);
+      onAppend(ideaId, userVerified);
       return;
     }
     onCopyMemo(ideaId);
@@ -887,6 +899,20 @@ export function ProgressionSaveDialog({
               <option key={idea.id} value={idea.id}>{idea.title}</option>
             ))}
           </select>
+        </label>
+      ) : null}
+
+      {mode !== "memo" ? (
+        <label className="mt-4 flex cursor-pointer items-start gap-3 border border-[var(--lv-border)] bg-[var(--lv-bg)] p-3 text-sm">
+          <input className="mt-1" type="checkbox" checked={userVerified} onChange={(event) => setUserVerified(event.target.checked)} />
+          <span>
+            <strong className="block text-[var(--lv-text-secondary)]">
+              {language === "ja" ? "この進行を確認済みとして保存" : "Save as manually verified"}
+            </strong>
+            <span className="mt-1 block text-[var(--lv-text-muted)]">
+              {language === "ja" ? "コード名を自分で確認した場合だけオンにしてください。" : "Enable only after you have checked the chord labels yourself."}
+            </span>
+          </span>
         </label>
       ) : null}
 
