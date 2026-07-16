@@ -17,6 +17,8 @@ export { buildCumulativePitchFeatures, buildWeightedPitchProfile, profileFromCum
 export { canonicalChord, chordTemplates, scoreChordCandidates, scoreSegments } from "./candidates";
 export { chordKeyCompatibility, estimateKeyCandidates } from "./keyPrior";
 export { decodeChordPath, decodeGreedy, decodeTwoPass, defaultDecoderWeights } from "./decoder";
+export { confidenceForDecoded, confidenceLevel, uniqueAlternatives } from "./confidence";
+export { mergeDecodedSegments } from "./merge";
 export type {
   AnalyzeMidiOptions,
   AnalyzeMidiResult,
@@ -37,3 +39,5 @@ export type { CumulativePitchFeatures, WeightedPitchProfile } from "./profiles";
 export type { ChordCandidateScore, ChordEvidence, ChordTemplate, ScoredSegment } from "./candidates";
 export type { KeyRegionCandidate } from "./keyPrior";
 export type { DecodedSegment, DecoderWeights } from "./decoder";
+export type { ConfidenceFeatures, ConfidenceLevel, ConfidenceResult } from "./confidence";
+export type { MergedDecodedSegment } from "./merge";
