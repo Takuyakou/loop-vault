@@ -2,7 +2,7 @@
 
 - Status: failed-strict-guard
 - Overall guard: FAILED
-- Strict exit: report-only
+- Strict exit: enabled
 - Guard failure: dirty category regressed: combined (regressed)
 - Guard failure: dirty category regressed: drums (mixed)
 - Guard failure: dirty category regressed: jitter (mixed)
@@ -12,6 +12,14 @@
 - Guard failure: dirty category regressed: sustain (mixed)
 - Guard failure: dirty category regressed: type0 (mixed)
 - Guard failure: dirty improvement requirement not met
+- Guard failure: required dirty category did not improve: drums
+- Guard failure: required dirty metric did not improve: drums Root@3
+- Guard failure: required dirty metric did not improve: drums Exact@1
+- Guard failure: required dirty cost did not decrease: drums correction proxy/case
+- Guard failure: required dirty category did not improve: type0
+- Guard failure: required dirty metric did not improve: type0 Root@3
+- Guard failure: required dirty metric did not improve: type0 Exact@1
+- Guard failure: required dirty cost did not decrease: type0 correction proxy/case
 - Default analyzer: legacy (unchanged)
 - Clean cases: 100
 - Dirty cases: 1100
@@ -19,7 +27,7 @@
 - Clean guard: PASS
 - Determinism: PASS (26 cases)
 - Real MIDI Gold: not-evaluable (0 cases)
-- Total runtime: 42.2 s
+- Total runtime: 45.6 s
 
 ## Accuracy and legacy delta
 
@@ -57,33 +65,33 @@ combined | voice-aware-rerank-v1 | regressed | 100 | 52.37% | +0.00pp | 58.35% |
 
 Category | Analyzer | Guard | Correction/case | Delta | Boundary P | Delta | Boundary R | Delta | Legacy boundary identical | Primary changes | Runtime ms
 --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---:
-clean | legacy | reference | 9.1800 | +0.0000 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 0 | 646.0
-clean | legacy-boundary-rerank | reference | 9.1700 | -0.0100 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 30 | 1570.8
-clean | voice-aware-rerank-v1 | pass | 9.1800 | +0.0000 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 56 | 1580.3
-type0 | legacy | reference | 9.1900 | +0.0000 | 76.99% | +0.00pp | 90.09% | +0.00pp | yes | 0 | 684.9
-type0 | legacy-boundary-rerank | reference | 9.1900 | +0.0000 | 76.99% | +0.00pp | 90.09% | +0.00pp | yes | 24 | 1509.8
-type0 | voice-aware-rerank-v1 | mixed | 9.1900 | +0.0000 | 76.99% | +0.00pp | 90.09% | +0.00pp | yes | 54 | 1665.1
-drums | legacy | reference | 9.1800 | +0.0000 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 0 | 709.5
-drums | legacy-boundary-rerank | reference | 9.1700 | -0.0100 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 30 | 1171.9
-drums | voice-aware-rerank-v1 | mixed | 9.1800 | +0.0000 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 56 | 1366.2
-melody | legacy | reference | 9.5500 | +0.0000 | 65.94% | +0.00pp | 96.27% | +0.00pp | yes | 0 | 518.4
-melody | legacy-boundary-rerank | reference | 9.5400 | -0.0100 | 65.94% | +0.00pp | 96.27% | +0.00pp | yes | 16 | 1333.7
-melody | voice-aware-rerank-v1 | mixed | 9.5400 | -0.0100 | 65.94% | +0.00pp | 96.27% | +0.00pp | yes | 60 | 1416.9
-metadata-missing | legacy | reference | 9.1800 | +0.0000 | 76.54% | +0.00pp | 90.05% | +0.00pp | yes | 0 | 1815.2
-metadata-missing | legacy-boundary-rerank | reference | 9.1733 | -0.0067 | 76.54% | +0.00pp | 90.05% | +0.00pp | yes | 88 | 3848.2
-metadata-missing | voice-aware-rerank-v1 | mixed | 9.1800 | +0.0000 | 76.54% | +0.00pp | 90.05% | +0.00pp | yes | 167 | 4498.5
-sustain | legacy | reference | 9.1800 | +0.0000 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 0 | 697.6
-sustain | legacy-boundary-rerank | reference | 9.1900 | +0.0100 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 53 | 1232.4
-sustain | voice-aware-rerank-v1 | mixed | 9.1800 | +0.0000 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 56 | 1202.3
-jitter | legacy | reference | 9.2200 | +0.0000 | 74.14% | +0.00pp | 93.02% | +0.00pp | yes | 0 | 541.5
-jitter | legacy-boundary-rerank | reference | 9.2300 | +0.0100 | 74.14% | +0.00pp | 93.02% | +0.00pp | yes | 32 | 1157.5
-jitter | voice-aware-rerank-v1 | mixed | 9.2300 | +0.0100 | 74.14% | +0.00pp | 93.02% | +0.00pp | yes | 59 | 1440.6
-same-channel-mixed | legacy | reference | 9.7900 | +0.0000 | 67.79% | +0.00pp | 86.88% | +0.00pp | yes | 0 | 1437.9
-same-channel-mixed | legacy-boundary-rerank | reference | 9.7900 | +0.0000 | 67.79% | +0.00pp | 86.88% | +0.00pp | yes | 51 | 2522.9
-same-channel-mixed | voice-aware-rerank-v1 | mixed | 9.7850 | -0.0050 | 67.79% | +0.00pp | 86.88% | +0.00pp | yes | 73 | 2889.2
-combined | legacy | reference | 9.8000 | +0.0000 | 59.06% | +0.00pp | 95.41% | +0.00pp | yes | 0 | 584.8
-combined | legacy-boundary-rerank | reference | 9.8000 | +0.0000 | 59.06% | +0.00pp | 95.41% | +0.00pp | yes | 2 | 1393.3
-combined | voice-aware-rerank-v1 | regressed | 9.8000 | +0.0000 | 59.06% | +0.00pp | 95.41% | +0.00pp | yes | 4 | 1369.1
+clean | legacy | reference | 9.1800 | +0.0000 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 0 | 796.5
+clean | legacy-boundary-rerank | reference | 9.1700 | -0.0100 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 30 | 1825.4
+clean | voice-aware-rerank-v1 | pass | 9.1800 | +0.0000 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 56 | 1636.4
+type0 | legacy | reference | 9.1900 | +0.0000 | 76.99% | +0.00pp | 90.09% | +0.00pp | yes | 0 | 833.4
+type0 | legacy-boundary-rerank | reference | 9.1900 | +0.0000 | 76.99% | +0.00pp | 90.09% | +0.00pp | yes | 24 | 1457.6
+type0 | voice-aware-rerank-v1 | mixed | 9.1900 | +0.0000 | 76.99% | +0.00pp | 90.09% | +0.00pp | yes | 54 | 1597.3
+drums | legacy | reference | 9.1800 | +0.0000 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 0 | 729.8
+drums | legacy-boundary-rerank | reference | 9.1700 | -0.0100 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 30 | 1467.4
+drums | voice-aware-rerank-v1 | mixed | 9.1800 | +0.0000 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 56 | 1342.9
+melody | legacy | reference | 9.5500 | +0.0000 | 65.94% | +0.00pp | 96.27% | +0.00pp | yes | 0 | 694.6
+melody | legacy-boundary-rerank | reference | 9.5400 | -0.0100 | 65.94% | +0.00pp | 96.27% | +0.00pp | yes | 16 | 1568.9
+melody | voice-aware-rerank-v1 | mixed | 9.5400 | -0.0100 | 65.94% | +0.00pp | 96.27% | +0.00pp | yes | 60 | 1627.2
+metadata-missing | legacy | reference | 9.1800 | +0.0000 | 76.54% | +0.00pp | 90.05% | +0.00pp | yes | 0 | 2115.2
+metadata-missing | legacy-boundary-rerank | reference | 9.1733 | -0.0067 | 76.54% | +0.00pp | 90.05% | +0.00pp | yes | 88 | 4567.0
+metadata-missing | voice-aware-rerank-v1 | mixed | 9.1800 | +0.0000 | 76.54% | +0.00pp | 90.05% | +0.00pp | yes | 167 | 4628.8
+sustain | legacy | reference | 9.1800 | +0.0000 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 0 | 818.9
+sustain | legacy-boundary-rerank | reference | 9.1900 | +0.0100 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 53 | 1371.6
+sustain | voice-aware-rerank-v1 | mixed | 9.1800 | +0.0000 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 56 | 1489.2
+jitter | legacy | reference | 9.2200 | +0.0000 | 74.14% | +0.00pp | 93.02% | +0.00pp | yes | 0 | 694.8
+jitter | legacy-boundary-rerank | reference | 9.2300 | +0.0100 | 74.14% | +0.00pp | 93.02% | +0.00pp | yes | 32 | 1361.8
+jitter | voice-aware-rerank-v1 | mixed | 9.2300 | +0.0100 | 74.14% | +0.00pp | 93.02% | +0.00pp | yes | 59 | 1526.2
+same-channel-mixed | legacy | reference | 9.7900 | +0.0000 | 67.79% | +0.00pp | 86.88% | +0.00pp | yes | 0 | 1354.4
+same-channel-mixed | legacy-boundary-rerank | reference | 9.7900 | +0.0000 | 67.79% | +0.00pp | 86.88% | +0.00pp | yes | 51 | 2655.2
+same-channel-mixed | voice-aware-rerank-v1 | mixed | 9.7850 | -0.0050 | 67.79% | +0.00pp | 86.88% | +0.00pp | yes | 73 | 2921.1
+combined | legacy | reference | 9.8000 | +0.0000 | 59.06% | +0.00pp | 95.41% | +0.00pp | yes | 0 | 605.5
+combined | legacy-boundary-rerank | reference | 9.8000 | +0.0000 | 59.06% | +0.00pp | 95.41% | +0.00pp | yes | 2 | 1559.1
+combined | voice-aware-rerank-v1 | regressed | 9.8000 | +0.0000 | 59.06% | +0.00pp | 95.41% | +0.00pp | yes | 4 | 1687.2
 
 ## Candidate diversity
 

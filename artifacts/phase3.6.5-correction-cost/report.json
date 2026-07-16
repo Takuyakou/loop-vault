@@ -14,10 +14,18 @@
       "dirty category regressed: same-channel-mixed (mixed)",
       "dirty category regressed: sustain (mixed)",
       "dirty category regressed: type0 (mixed)",
-      "dirty improvement requirement not met"
+      "dirty improvement requirement not met",
+      "required dirty category did not improve: drums",
+      "required dirty metric did not improve: drums Root@3",
+      "required dirty metric did not improve: drums Exact@1",
+      "required dirty cost did not decrease: drums correction proxy/case",
+      "required dirty category did not improve: type0",
+      "required dirty metric did not improve: type0 Root@3",
+      "required dirty metric did not improve: type0 Exact@1",
+      "required dirty cost did not decrease: type0 correction proxy/case"
     ]
   },
-  "strictExitEnforced": false,
+  "strictExitEnforced": true,
   "defaultAnalyzerMode": "legacy",
   "sourceCaseCount": 100,
   "dirtyCaseCount": 1100,
@@ -41,7 +49,7 @@
         "boundaryPrecision": 0.765475,
         "boundaryRecall": 0.900864
       },
-      "runtimeMs": 645.9623,
+      "runtimeMs": 796.5267,
       "boundaryMatchesLegacy": true,
       "primaryChangesFromLegacy": 0,
       "deltaFromLegacy": {
@@ -103,7 +111,7 @@
         "boundaryPrecision": 0.765475,
         "boundaryRecall": 0.900864
       },
-      "runtimeMs": 1570.7966,
+      "runtimeMs": 1825.4181,
       "boundaryMatchesLegacy": true,
       "primaryChangesFromLegacy": 30,
       "deltaFromLegacy": {
@@ -165,7 +173,7 @@
         "boundaryPrecision": 0.765475,
         "boundaryRecall": 0.900864
       },
-      "runtimeMs": 1580.2999,
+      "runtimeMs": 1636.3754,
       "boundaryMatchesLegacy": true,
       "primaryChangesFromLegacy": 56,
       "deltaFromLegacy": {
@@ -227,7 +235,7 @@
         "boundaryPrecision": 0.769948,
         "boundaryRecall": 0.900864
       },
-      "runtimeMs": 684.8803,
+      "runtimeMs": 833.3588,
       "boundaryMatchesLegacy": true,
       "primaryChangesFromLegacy": 0,
       "deltaFromLegacy": {
@@ -289,7 +297,7 @@
         "boundaryPrecision": 0.769948,
         "boundaryRecall": 0.900864
       },
-      "runtimeMs": 1509.7749,
+      "runtimeMs": 1457.5842,
       "boundaryMatchesLegacy": true,
       "primaryChangesFromLegacy": 24,
       "deltaFromLegacy": {
@@ -351,7 +359,7 @@
         "boundaryPrecision": 0.769948,
         "boundaryRecall": 0.900864
       },
-      "runtimeMs": 1665.0776,
+      "runtimeMs": 1597.3446,
       "boundaryMatchesLegacy": true,
       "primaryChangesFromLegacy": 54,
       "deltaFromLegacy": {
@@ -413,7 +421,7 @@
         "boundaryPrecision": 0.765475,
         "boundaryRecall": 0.900864
       },
-      "runtimeMs": 709.5257,
+      "runtimeMs": 729.7951,
       "boundaryMatchesLegacy": true,
       "primaryChangesFromLegacy": 0,
       "deltaFromLegacy": {
@@ -475,7 +483,7 @@
         "boundaryPrecision": 0.765475,
         "boundaryRecall": 0.900864
       },
-      "runtimeMs": 1171.868,
+      "runtimeMs": 1467.3808,
       "boundaryMatchesLegacy": true,
       "primaryChangesFromLegacy": 30,
       "deltaFromLegacy": {
@@ -537,7 +545,7 @@
         "boundaryPrecision": 0.765475,
         "boundaryRecall": 0.900864
       },
-      "runtimeMs": 1366.1511,
+      "runtimeMs": 1342.9232,
       "boundaryMatchesLegacy": true,
       "primaryChangesFromLegacy": 56,
       "deltaFromLegacy": {
@@ -599,7 +607,7 @@
         "boundaryPrecision": 0.659427,
         "boundaryRecall": 0.962669
       },
-      "runtimeMs": 518.3855,
+      "runtimeMs": 694.6397,
       "boundaryMatchesLegacy": true,
       "primaryChangesFromLegacy": 0,
       "deltaFromLegacy": {
@@ -661,7 +669,7 @@
         "boundaryPrecision": 0.659427,
         "boundaryRecall": 0.962669
       },
-      "runtimeMs": 1333.6674,
+      "runtimeMs": 1568.8807,
       "boundaryMatchesLegacy": true,
       "primaryChangesFromLegacy": 16,
       "deltaFromLegacy": {
@@ -723,7 +731,7 @@
         "boundaryPrecision": 0.659427,
         "boundaryRecall": 0.962669
       },
-      "runtimeMs": 1416.8809,
+      "runtimeMs": 1627.1695,
       "boundaryMatchesLegacy": true,
       "primaryChangesFromLegacy": 60,
       "deltaFromLegacy": {
@@ -785,7 +793,7 @@
         "boundaryPrecision": 0.765396,
         "boundaryRecall": 0.900545
       },
-      "runtimeMs": 1815.1507,
+      "runtimeMs": 2115.1711,
       "boundaryMatchesLegacy": true,
       "primaryChangesFromLegacy": 0,
       "deltaFromLegacy": {
@@ -847,7 +855,7 @@
         "boundaryPrecision": 0.765396,
         "boundaryRecall": 0.900545
       },
-      "runtimeMs": 3848.2052,
+      "runtimeMs": 4567.0063,
       "boundaryMatchesLegacy": true,
       "primaryChangesFromLegacy": 88,
       "deltaFromLegacy": {
@@ -909,7 +917,7 @@
         "boundaryPrecision": 0.765396,
         "boundaryRecall": 0.900545
       },
-      "runtimeMs": 4498.4661,
+      "runtimeMs": 4628.7871,
       "boundaryMatchesLegacy": true,
       "primaryChangesFromLegacy": 167,
       "deltaFromLegacy": {
@@ -971,7 +979,7 @@
         "boundaryPrecision": 0.765475,
         "boundaryRecall": 0.900864
       },
-      "runtimeMs": 697.5716,
+      "runtimeMs": 818.8706,
       "boundaryMatchesLegacy": true,
       "primaryChangesFromLegacy": 0,
       "deltaFromLegacy": {
@@ -1033,7 +1041,7 @@
         "boundaryPrecision": 0.765475,
         "boundaryRecall": 0.900864
       },
-      "runtimeMs": 1232.4292,
+      "runtimeMs": 1371.5699,
       "boundaryMatchesLegacy": true,
       "primaryChangesFromLegacy": 53,
       "deltaFromLegacy": {
@@ -1095,7 +1103,7 @@
         "boundaryPrecision": 0.765475,
         "boundaryRecall": 0.900864
       },
-      "runtimeMs": 1202.295,
+      "runtimeMs": 1489.157,
       "boundaryMatchesLegacy": true,
       "primaryChangesFromLegacy": 56,
       "deltaFromLegacy": {
@@ -1157,7 +1165,7 @@
         "boundaryPrecision": 0.741421,
         "boundaryRecall": 0.930208
       },
-      "runtimeMs": 541.5075,
+      "runtimeMs": 694.7751,
       "boundaryMatchesLegacy": true,
       "primaryChangesFromLegacy": 0,
       "deltaFromLegacy": {
@@ -1219,7 +1227,7 @@
         "boundaryPrecision": 0.741421,
         "boundaryRecall": 0.930208
       },
-      "runtimeMs": 1157.5372,
+      "runtimeMs": 1361.8376,
       "boundaryMatchesLegacy": true,
       "primaryChangesFromLegacy": 32,
       "deltaFromLegacy": {
@@ -1281,7 +1289,7 @@
         "boundaryPrecision": 0.741421,
         "boundaryRecall": 0.930208
       },
-      "runtimeMs": 1440.634,
+      "runtimeMs": 1526.2476,
       "boundaryMatchesLegacy": true,
       "primaryChangesFromLegacy": 59,
       "deltaFromLegacy": {
@@ -1343,7 +1351,7 @@
         "boundaryPrecision": 0.677949,
         "boundaryRecall": 0.868769
       },
-      "runtimeMs": 1437.9079,
+      "runtimeMs": 1354.3539,
       "boundaryMatchesLegacy": true,
       "primaryChangesFromLegacy": 0,
       "deltaFromLegacy": {
@@ -1405,7 +1413,7 @@
         "boundaryPrecision": 0.677949,
         "boundaryRecall": 0.868769
       },
-      "runtimeMs": 2522.9322,
+      "runtimeMs": 2655.168,
       "boundaryMatchesLegacy": true,
       "primaryChangesFromLegacy": 51,
       "deltaFromLegacy": {
@@ -1467,7 +1475,7 @@
         "boundaryPrecision": 0.677949,
         "boundaryRecall": 0.868769
       },
-      "runtimeMs": 2889.1604,
+      "runtimeMs": 2921.1167,
       "boundaryMatchesLegacy": true,
       "primaryChangesFromLegacy": 73,
       "deltaFromLegacy": {
@@ -1529,7 +1537,7 @@
         "boundaryPrecision": 0.590649,
         "boundaryRecall": 0.954131
       },
-      "runtimeMs": 584.8289,
+      "runtimeMs": 605.4987,
       "boundaryMatchesLegacy": true,
       "primaryChangesFromLegacy": 0,
       "deltaFromLegacy": {
@@ -1591,7 +1599,7 @@
         "boundaryPrecision": 0.590649,
         "boundaryRecall": 0.954131
       },
-      "runtimeMs": 1393.2707,
+      "runtimeMs": 1559.0967,
       "boundaryMatchesLegacy": true,
       "primaryChangesFromLegacy": 2,
       "deltaFromLegacy": {
@@ -1653,7 +1661,7 @@
         "boundaryPrecision": 0.590649,
         "boundaryRecall": 0.954131
       },
-      "runtimeMs": 1369.1442,
+      "runtimeMs": 1687.1655,
       "boundaryMatchesLegacy": true,
       "primaryChangesFromLegacy": 4,
       "deltaFromLegacy": {
@@ -1723,5 +1731,5 @@
     "status": "not-evaluable",
     "caseCount": 0
   },
-  "totalRuntimeMs": 42166.3227
+  "totalRuntimeMs": 45610.0652
 }
