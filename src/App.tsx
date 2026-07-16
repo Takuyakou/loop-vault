@@ -157,7 +157,7 @@ async function analyzeMidiPath(path: string) {
   );
 
   return (
-    <main className="min-h-screen bg-stone-950 text-stone-50">
+    <main className="min-h-screen bg-[var(--lv-bg)] text-[var(--lv-text)]">
       <section className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-5 sm:px-6">
         {shell}
         {loadStatus === "ready" ? (
@@ -268,9 +268,9 @@ async function analyzeMidiPath(path: string) {
         />
       ) : null}
       {pendingDelete ? (
-        <div className="fixed bottom-4 left-1/2 z-40 w-[min(92vw,440px)] -translate-x-1/2 border border-stone-700 bg-stone-900 p-3 shadow-2xl">
+        <div className="fixed bottom-4 left-1/2 z-40 w-[min(92vw,440px)] -translate-x-1/2 border border-[var(--lv-border-strong)] bg-[var(--lv-surface)] p-3 shadow-2xl">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-sm text-stone-200">{language === "ja" ? `「${pendingDelete.title}」を削除します` : `Deleting "${pendingDelete.title}"`}</p>
+            <p className="text-sm text-[var(--lv-text-secondary)]">{language === "ja" ? `「${pendingDelete.title}」を削除します` : `Deleting "${pendingDelete.title}"`}</p>
             <button className="rounded bg-teal-500 px-3 py-2 text-sm font-semibold text-stone-950" onClick={undoDelete}>
               {language === "ja" ? "元に戻す" : "Undo"}
             </button>
@@ -315,16 +315,16 @@ function CreateDialog({
 
   return (
     <div className="fixed inset-0 z-40 grid place-items-center bg-black/70 px-4">
-      <form className="w-full max-w-md border border-stone-700 bg-stone-900 p-5 shadow-2xl" onSubmit={submit}>
+      <form className="w-full max-w-md border border-[var(--lv-border-strong)] bg-[var(--lv-surface)] p-5 shadow-2xl" onSubmit={submit}>
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">{copy.create.title}</h2>
-          <button type="button" className="rounded px-2 py-1 text-stone-400" onClick={onClose}>{copy.common.close}</button>
+          <button type="button" className="rounded px-2 py-1 text-[var(--lv-text-muted)]" onClick={onClose}>{copy.common.close}</button>
         </div>
         <input autoFocus className={`${inputClass} mt-4`} value={title} onChange={(event) => setTitle(event.target.value)} placeholder={copy.common.title} />
         <select className={`${inputClass} mt-3`} value={status} onChange={(event) => setStatus(event.target.value as Status)}>
           {pipeline.map((entry) => <option key={entry} value={entry}>{labelStatus(entry, language)}</option>)}
         </select>
-        <button className="mt-4 w-full rounded bg-teal-400 px-3 py-2 font-semibold text-stone-950" type="submit">{copy.create.submit}</button>
+        <button className="mt-4 w-full rounded bg-[var(--lv-accent)] px-3 py-2 font-semibold text-stone-950" type="submit">{copy.create.submit}</button>
       </form>
     </div>
   );
@@ -354,13 +354,13 @@ function StartupState({
         {loadStatus === "recovery" && recovery ? (
           <div>
             <StatusPanel title={copy.startup.recoveryTitle} body={copy.startup.recoveryBody} />
-            {recovery.corruptPath ? <p className="mt-3 break-all text-sm text-stone-400">{recovery.corruptPath}</p> : null}
+            {recovery.corruptPath ? <p className="mt-3 break-all text-sm text-[var(--lv-text-muted)]">{recovery.corruptPath}</p> : null}
             <div className="mt-5 space-y-2">
               {recovery.backups.length > 0 ? recovery.backups.map((backup) => (
-                <button key={backup.name} className="block w-full rounded border border-stone-700 px-3 py-2 text-left text-sm hover:bg-stone-800" onClick={() => void restoreBackup(backup.name)}>
+                <button key={backup.name} className="block w-full rounded border border-[var(--lv-border-strong)] px-3 py-2 text-left text-sm hover:bg-[var(--lv-surface-raised)]" onClick={() => void restoreBackup(backup.name)}>
                   {language === "ja" ? `${backup.name} を復元` : `Restore ${backup.name}`}
                 </button>
-              )) : <p className="text-sm text-stone-400">{copy.startup.noBackups}</p>}
+              )) : <p className="text-sm text-[var(--lv-text-muted)]">{copy.startup.noBackups}</p>}
             </div>
           </div>
         ) : null}
@@ -385,7 +385,7 @@ function EmptyState({ openCreate, copy }: { openCreate: () => void; copy: AppCop
     <div className="grid min-h-96 place-items-center py-10">
       <div className="max-w-md text-center">
         <h2 className="text-2xl font-semibold">{copy.startup.emptyTitle}</h2>
-        <button className="mt-5 rounded bg-teal-400 px-4 py-2 font-semibold text-stone-950" onClick={openCreate}>{copy.startup.emptyButton}</button>
+        <button className="mt-5 rounded bg-[var(--lv-accent)] px-4 py-2 font-semibold text-stone-950" onClick={openCreate}>{copy.startup.emptyButton}</button>
       </div>
     </div>
   );
@@ -395,20 +395,20 @@ function StatusPanel({ title, body }: { title: string; body: string }) {
   return (
     <div>
       <h2 className="text-2xl font-semibold">{title}</h2>
-      <p className="mt-3 text-stone-300">{body}</p>
+      <p className="mt-3 text-[var(--lv-text-secondary)]">{body}</p>
     </div>
   );
 }
 
 function Panel({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <section className={`border border-stone-800 bg-stone-900 p-4 ${className}`}>{children}</section>;
+  return <section className={`border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4 ${className}`}>{children}</section>;
 }
 
 function labelStatus(status: Status, language: AppLanguage): string {
   return statusLabel(status, language);
 }
 
-const inputClass = "w-full rounded border border-stone-700 bg-stone-950 px-3 py-2 text-sm text-stone-100 outline-none focus:border-teal-400";
+const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
 
 function fileNameFromPath(path: string): string {
   const normalized = path.replace(/\\/g, "/");

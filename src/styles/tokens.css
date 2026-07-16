@@ -1,0 +1,58 @@
+:root {
+  --lv-bg: #0b0e14;
+  --lv-surface: #11161f;
+  --lv-surface-raised: #171d28;
+  --lv-border: #2a3342;
+  --lv-border-strong: #3a4658;
+  --lv-accent: #46dfc7;
+  --lv-accent-strong: #20bfa9;
+  --lv-warning: #e6ae4a;
+  --lv-text: #f5f7fa;
+  --lv-text-secondary: #c0c8d4;
+  --lv-text-muted: #8792a4;
+  --lv-space-1: 4px;
+  --lv-space-2: 8px;
+  --lv-space-3: 12px;
+  --lv-space-4: 16px;
+  --lv-space-6: 24px;
+  --lv-radius-sm: 8px;
+  --lv-radius-md: 12px;
+}
+
+@layer base {
+  body {
+    background: var(--lv-bg);
+    color: var(--lv-text);
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    border-radius: var(--lv-radius-sm);
+  }
+}
+
+@layer components {
+  .lv-button-primary {
+    background: var(--lv-accent);
+    border-radius: var(--lv-radius-sm);
+    color: #06110f;
+  }
+
+  .lv-button-secondary {
+    border: 1px solid var(--lv-border-strong);
+    border-radius: var(--lv-radius-sm);
+    color: var(--lv-text-secondary);
+  }
+
+  .lv-button-ghost {
+    border-radius: var(--lv-radius-sm);
+    color: var(--lv-text-secondary);
+  }
+
+  .lv-button-ghost:hover {
+    background: var(--lv-surface-raised);
+    color: var(--lv-text);
+  }
+}

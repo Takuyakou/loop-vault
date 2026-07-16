@@ -10,8 +10,8 @@ import type { AppCopy, AppLanguage } from "../i18n";
 import { ProgressionGrid } from "../ui/ProgressionGrid";
 
 type Reference = SongIdea["references"][number]; type Asset = SongIdea["assets"][number];
-const statuses: Status[] = ["idea", "loop", "arrange", "mix", "done", "hold", "abandoned"]; const pipeline: Status[] = ["idea", "loop", "arrange", "mix", "done"]; const keySuggestions = ["C", "Cm", "D", "Dm", "E", "Em", "F", "Fm", "G", "Gm", "A", "Am", "B", "Bm"]; const nextPlaceholders = ["Replace the bass", "Try the B section chords", "Make two drum variations", "Bounce a rough hook"]; const inputClass = "w-full rounded border border-stone-700 bg-stone-950 px-3 py-2 text-sm text-stone-100 outline-none focus:border-teal-400";
-function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <section className={"border border-stone-800 bg-stone-900 p-4 " + className}>{children}</section>; } function StatusBadge({ status, language }: { status: Status; language: AppLanguage }) { return <span className="shrink-0 rounded bg-stone-800 px-2 py-1 text-xs font-semibold uppercase text-teal-200">{statusLabel(status, language)}</span>; } function statusButtonClass(active: boolean): string { return active ? "rounded bg-teal-400 px-3 py-2 text-sm font-semibold text-stone-950" : "rounded border border-stone-700 px-3 py-2 text-sm text-stone-300"; } function formatDate(value: string): string { return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value)); } function splitList(value: string): string[] { return value.split(",").map((entry) => entry.trim()).filter(Boolean); } function hashString(value: string): number { let hash = 0; for (const char of value) hash = (hash * 31 + char.charCodeAt(0)) | 0; return hash; } const defaultAssetId = () => crypto.randomUUID(); async function writeClipboardText(text: string): Promise<void> { if (!navigator.clipboard?.writeText) throw new Error("Clipboard is not available."); await navigator.clipboard.writeText(text); } async function previewTimeline(chords: readonly ChordTimelineItem[], bpm?: number): Promise<void> { const { previewChordTimeline } = await import("../audio/chordPreview"); await previewChordTimeline(chords, bpm); }
+const statuses: Status[] = ["idea", "loop", "arrange", "mix", "done", "hold", "abandoned"]; const pipeline: Status[] = ["idea", "loop", "arrange", "mix", "done"]; const keySuggestions = ["C", "Cm", "D", "Dm", "E", "Em", "F", "Fm", "G", "Gm", "A", "Am", "B", "Bm"]; const nextPlaceholders = ["Replace the bass", "Try the B section chords", "Make two drum variations", "Bounce a rough hook"]; const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
+function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <section className={"border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4 " + className}>{children}</section>; } function StatusBadge({ status, language }: { status: Status; language: AppLanguage }) { return <span className="shrink-0 rounded bg-[var(--lv-surface-raised)] px-2 py-1 text-xs font-semibold uppercase text-teal-200">{statusLabel(status, language)}</span>; } function statusButtonClass(active: boolean): string { return active ? "rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" : "rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm text-[var(--lv-text-secondary)]"; } function formatDate(value: string): string { return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value)); } function splitList(value: string): string[] { return value.split(",").map((entry) => entry.trim()).filter(Boolean); } function hashString(value: string): number { let hash = 0; for (const char of value) hash = (hash * 31 + char.charCodeAt(0)) | 0; return hash; } const defaultAssetId = () => crypto.randomUUID(); async function writeClipboardText(text: string): Promise<void> { if (!navigator.clipboard?.writeText) throw new Error("Clipboard is not available."); await navigator.clipboard.writeText(text); } async function previewTimeline(chords: readonly ChordTimelineItem[], bpm?: number): Promise<void> { const { previewChordTimeline } = await import("../audio/chordPreview"); await previewChordTimeline(chords, bpm); }
 function labelStatus(status: Status, language: AppLanguage): string { return statusLabel(status, language); }
 
 function ProgressionBlockCard({
@@ -28,11 +28,11 @@ function ProgressionBlockCard({
   copy: AppCopy;
 }) {
   return (
-    <div className="border border-stone-800 bg-stone-950 p-3 text-sm">
+    <div className="border border-[var(--lv-border)] bg-[var(--lv-bg)] p-3 text-sm">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="font-semibold">{block.summaryText || block.chords.map((item) => item.chord.label).join(" - ")}</p>
-          <p className="mt-1 text-stone-500">
+          <p className="mt-1 text-[var(--lv-text)]0">
             {block.sourceFileName ?? "Captured MIDI"} {block.startBar ? `Bar ${block.startBar}-${block.endBar}` : ""}
           </p>
         </div>
@@ -42,7 +42,7 @@ function ProgressionBlockCard({
         <button className="rounded border border-teal-500/60 px-2 py-1 text-teal-100" onClick={onCopyProgression}>
           {copy.capture.copyProgression}
         </button>
-        <button className="rounded border border-stone-700 px-2 py-1 text-stone-300" onClick={onRemove}>
+        <button className="rounded border border-[var(--lv-border-strong)] px-2 py-1 text-[var(--lv-text-secondary)]" onClick={onRemove}>
           {copy.common.delete}
         </button>
       </div>
@@ -253,8 +253,8 @@ export function DetailView({
           <h2 className="text-xl font-semibold">{copy.detail.nextAction}</h2>
           <textarea className={`${inputClass} mt-3 min-h-28`} value={nextDraft} onChange={(event) => setNextDraft(event.target.value)} onBlur={saveNext} placeholder={placeholder} />
           <div className="mt-3 flex gap-2">
-            <button className="rounded bg-teal-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={saveNext}>{copy.common.update}</button>
-            <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={completeNext}>{copy.common.done}</button>
+            <button className="rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" onClick={saveNext}>{copy.common.update}</button>
+            <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={completeNext}>{copy.common.done}</button>
           </div>
           {!idea.nextAction.text.trim() ? <p className="mt-3 text-sm text-amber-200">{copy.detail.nextActionHint}</p> : null}
         </Panel>
@@ -274,7 +274,7 @@ export function DetailView({
         <Panel>
           <h2 className="text-xl font-semibold">{copy.detail.progressionBlocks}</h2>
           {(idea.progressionBlocks ?? []).length === 0 ? (
-            <p className="mt-3 text-sm text-stone-400">{copy.detail.noProgressionBlocks}</p>
+            <p className="mt-3 text-sm text-[var(--lv-text-muted)]">{copy.detail.noProgressionBlocks}</p>
           ) : (
             <div className="mt-4 space-y-3">
               {(idea.progressionBlocks ?? []).map((block) => (
@@ -299,17 +299,17 @@ export function DetailView({
             <input className={inputClass} value={referenceDraft.title} onChange={(event) => setReferenceDraft({ ...referenceDraft, title: event.target.value })} placeholder="Title" />
             <input className={inputClass} value={referenceDraft.url ?? ""} onChange={(event) => setReferenceDraft({ ...referenceDraft, url: event.target.value })} placeholder="URL" />
             <input className={inputClass} value={referenceDraft.memo ?? ""} onChange={(event) => setReferenceDraft({ ...referenceDraft, memo: event.target.value })} placeholder="Memo" />
-            <button className="rounded bg-stone-800 px-3 py-2 text-sm" type="submit">{copy.detail.addReference}</button>
+            <button className="rounded bg-[var(--lv-surface-raised)] px-3 py-2 text-sm" type="submit">{copy.detail.addReference}</button>
           </form>
           <div className="mt-4 space-y-2">
             {idea.references.map((reference, index) => (
-              <div key={`${reference.title}-${index}`} className="border border-stone-800 p-3 text-sm">
+              <div key={`${reference.title}-${index}`} className="border border-[var(--lv-border)] p-3 text-sm">
                 <div className="flex justify-between gap-3">
                   <p className="font-medium">{reference.title}</p>
-                  <button className="text-stone-400" onClick={() => removeReference(index)}>{copy.common.delete}</button>
+                  <button className="text-[var(--lv-text-muted)]" onClick={() => removeReference(index)}>{copy.common.delete}</button>
                 </div>
-                {reference.url ? <p className="mt-1 break-all text-stone-400">{reference.url}</p> : null}
-                {reference.memo ? <p className="mt-1 text-stone-300">{reference.memo}</p> : null}
+                {reference.url ? <p className="mt-1 break-all text-[var(--lv-text-muted)]">{reference.url}</p> : null}
+                {reference.memo ? <p className="mt-1 text-[var(--lv-text-secondary)]">{reference.memo}</p> : null}
               </div>
             ))}
           </div>
@@ -326,16 +326,16 @@ export function DetailView({
                 <option value="other">Other</option>
               </select>
               <input className={inputClass} value={assetDraft.path ?? ""} onChange={(event) => setAssetDraft({ ...assetDraft, path: event.target.value })} placeholder={copy.detail.absolutePath} />
-              <button className="rounded border border-stone-700 px-3 py-2 text-sm" type="button" onClick={() => void chooseAssetPath()}>{copy.common.choose}</button>
+              <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" type="button" onClick={() => void chooseAssetPath()}>{copy.common.choose}</button>
             </div>
             <input className={inputClass} value={assetDraft.memo ?? ""} onChange={(event) => setAssetDraft({ ...assetDraft, memo: event.target.value })} placeholder="Memo" />
-            <button className="rounded bg-stone-800 px-3 py-2 text-sm" type="submit">{copy.detail.addAsset}</button>
+            <button className="rounded bg-[var(--lv-surface-raised)] px-3 py-2 text-sm" type="submit">{copy.detail.addAsset}</button>
           </form>
           <div className="mt-4 space-y-2">
             {idea.assets.map((asset) => (
-              <div key={asset.id} className={`border p-3 text-sm ${asset.missing ? "border-red-500/60 bg-red-950/20" : "border-stone-800"}`}>
+              <div key={asset.id} className={`border p-3 text-sm ${asset.missing ? "border-red-500/60 bg-red-950/20" : "border-[var(--lv-border)]"}`}>
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="font-medium uppercase text-stone-300">{asset.type}</p>
+                  <p className="font-medium uppercase text-[var(--lv-text-secondary)]">{asset.type}</p>
                   <div className="flex gap-2">
                     {asset.type === "midi" && asset.path ? (
                       <button className="rounded border border-cyan-500/60 px-2 py-1 text-cyan-100" onClick={() => void analyzeMidiPath(asset.path!)}>
@@ -343,25 +343,25 @@ export function DetailView({
                       </button>
                     ) : null}
                     <button
-                      className="rounded border border-stone-700 px-2 py-1 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded border border-[var(--lv-border-strong)] px-2 py-1 disabled:cursor-not-allowed disabled:opacity-50"
                       disabled={!canOpenAssetPath(asset.path)}
                       onClick={() => void openAsset(asset)}
                     >
                       {copy.common.open}
                     </button>
-                    <button className="rounded border border-stone-700 px-2 py-1" onClick={() => void showAsset(asset)}>{copy.common.folder}</button>
+                    <button className="rounded border border-[var(--lv-border-strong)] px-2 py-1" onClick={() => void showAsset(asset)}>{copy.common.folder}</button>
                     {asset.missing ? (
                       <button className="rounded border border-amber-500/60 px-2 py-1 text-amber-100" onClick={() => void replaceAssetPath(asset)}>
                         {copy.detail.fixPath}
                       </button>
                     ) : null}
-                    <button className="rounded border border-stone-700 px-2 py-1" onClick={() => removeAsset(asset.id)}>{copy.common.delete}</button>
+                    <button className="rounded border border-[var(--lv-border-strong)] px-2 py-1" onClick={() => removeAsset(asset.id)}>{copy.common.delete}</button>
                   </div>
                 </div>
-                <p className="mt-2 break-all text-stone-400">{asset.path || copy.common.pathUnset}</p>
+                <p className="mt-2 break-all text-[var(--lv-text-muted)]">{asset.path || copy.common.pathUnset}</p>
                 {!canOpenAssetPath(asset.path) && asset.path ? <p className="mt-2 text-xs text-amber-200">{copy.detail.unsupportedExtension}</p> : null}
                 {asset.missing ? <p className="mt-2 text-xs text-red-200">{copy.detail.missingAsset}</p> : null}
-                {asset.memo ? <p className="mt-2 text-stone-300">{asset.memo}</p> : null}
+                {asset.memo ? <p className="mt-2 text-[var(--lv-text-secondary)]">{asset.memo}</p> : null}
               </div>
             ))}
           </div>
@@ -371,9 +371,9 @@ export function DetailView({
           <h2 className="text-xl font-semibold">{copy.detail.history}</h2>
           <div className="mt-3 space-y-2">
             {idea.statusHistory.map((entry, index) => (
-              <div key={`${entry.status}-${entry.at}-${index}`} className="flex justify-between border-b border-stone-800 pb-2 text-sm">
+              <div key={`${entry.status}-${entry.at}-${index}`} className="flex justify-between border-b border-[var(--lv-border)] pb-2 text-sm">
                 <span>{labelStatus(entry.status, language)}</span>
-                <span className="text-stone-400">{formatDate(entry.at)}</span>
+                <span className="text-[var(--lv-text-muted)]">{formatDate(entry.at)}</span>
               </div>
             ))}
           </div>

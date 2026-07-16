@@ -8,8 +8,8 @@ import type { ChordTimelineItem, SongIdea, Status } from "../domain/types";
 import type { AppCopy, AppLanguage } from "../i18n";
 
 const pipeline: Status[] = ["idea", "loop", "arrange", "mix", "done"];
-function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <section className={"border border-stone-800 bg-stone-900 p-4 " + className}>{children}</section>; }
-function StatusBadge({ status, language }: { status: Status; language: AppLanguage }) { return <span className="shrink-0 rounded bg-stone-800 px-2 py-1 text-xs font-semibold uppercase text-teal-200">{statusLabel(status, language)}</span>; }
+function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <section className={"border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4 " + className}>{children}</section>; }
+function StatusBadge({ status, language }: { status: Status; language: AppLanguage }) { return <span className="shrink-0 rounded bg-[var(--lv-surface-raised)] px-2 py-1 text-xs font-semibold uppercase text-teal-200">{statusLabel(status, language)}</span>; }
 function labelStatus(status: Status, language: AppLanguage): string { return statusLabel(status, language); }
 async function previewTimeline(chords: readonly ChordTimelineItem[], bpm?: number): Promise<void> { const { previewChordTimeline } = await import("../audio/chordPreview"); await previewChordTimeline(chords, bpm); }
 
@@ -64,18 +64,18 @@ export function HomeView({
   return (
     <div className="space-y-5 py-5">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-300">Home</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--lv-accent)]">Home</p>
         <h2 className="mt-2 text-2xl font-semibold sm:text-3xl">{language === "ja" ? "次に鳴らすLoopを選ぶ。" : "Choose the loop to play next."}</h2>
       </div>
 
       <Panel className="border-teal-400/30 bg-[linear-gradient(135deg,rgba(20,23,21,0.96),rgba(8,10,9,0.96))] p-5 sm:p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-300">{copy.home.today}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--lv-accent)]">{copy.home.today}</p>
         {focus.focus ? (
           <div className="mt-3">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h3 className="text-2xl font-semibold">{focus.focus.title}</h3>
-                <p className="mt-2 text-sm text-stone-400">
+                <p className="mt-2 text-sm text-[var(--lv-text-muted)]">
                   {focus.focus.bpm ? `${focus.focus.bpm} BPM` : language === "ja" ? "BPM未設定" : "BPM unset"}
                   {focus.focus.key ? ` · ${displayKey(focus.focus.key, language)}` : ""}
                   {` · ${labelStatus(focus.focus.status, language)}`}
@@ -83,23 +83,23 @@ export function HomeView({
               </div>
               <StatusBadge status={focus.focus.status} language={language} />
             </div>
-            {focusPreview ? <p className="mt-5 overflow-x-auto border-y border-stone-800 py-4 font-mono text-sm text-teal-100">{focusPreview}</p> : null}
-            <p className="mt-5 text-sm text-stone-200"><span className="text-stone-500">{copy.home.nextAction}：</span>{focus.focus.nextAction.text}</p>
+            {focusPreview ? <p className="mt-5 overflow-x-auto border-y border-[var(--lv-border)] py-4 font-mono text-sm text-teal-100">{focusPreview}</p> : null}
+            <p className="mt-5 text-sm text-[var(--lv-text-secondary)]"><span className="text-[var(--lv-text)]0">{copy.home.nextAction}：</span>{focus.focus.nextAction.text}</p>
             <div className="mt-5 flex flex-wrap gap-2">
               {focusBlock ? (
                 <button className="grid h-10 w-10 place-items-center rounded bg-cyan-400 font-semibold text-stone-950" onClick={() => void previewTimeline(focusBlock.chords, focusBlock.bpm ?? focus.focus!.bpm)} aria-label={copy.common.preview} title={copy.common.preview}>▶</button>
               ) : null}
-              <button className="rounded border border-stone-700 px-4 py-2 text-sm font-medium hover:border-teal-300" onClick={() => openDetail(focus.focus!.id)}>{language === "ja" ? "詳細を開く" : "Open details"}</button>
-              <button className="rounded bg-teal-400 px-4 py-2 text-sm font-semibold text-stone-950" onClick={() => completeNext(focus.focus!)}>{language === "ja" ? "次の一手を完了" : "Complete next step"}</button>
+              <button className="rounded border border-[var(--lv-border-strong)] px-4 py-2 text-sm font-medium hover:border-teal-300" onClick={() => openDetail(focus.focus!.id)}>{language === "ja" ? "詳細を開く" : "Open details"}</button>
+              <button className="rounded bg-[var(--lv-accent)] px-4 py-2 text-sm font-semibold text-stone-950" onClick={() => completeNext(focus.focus!)}>{language === "ja" ? "次の一手を完了" : "Complete next step"}</button>
             </div>
           </div>
         ) : (
           <div className="mt-4 max-w-xl">
-            <p className="text-stone-300">{copy.home.noFocus}</p>
+            <p className="text-[var(--lv-text-secondary)]">{copy.home.noFocus}</p>
             <div className="mt-5 flex flex-wrap gap-2">
-              <button className="rounded bg-teal-400 px-4 py-2 text-sm font-semibold text-stone-950" onClick={openCapture}>{language === "ja" ? "コード採集を始める" : "Start capture"}</button>
-              <button className="rounded border border-stone-700 px-4 py-2 text-sm" onClick={openCreate}>{language === "ja" ? "新しいIdea" : "New Idea"}</button>
-              <button className="rounded border border-stone-700 px-4 py-2 text-sm" onClick={openVault}>{language === "ja" ? "Vaultを開く" : "Open Vault"}</button>
+              <button className="rounded bg-[var(--lv-accent)] px-4 py-2 text-sm font-semibold text-stone-950" onClick={openCapture}>{language === "ja" ? "コード採集を始める" : "Start capture"}</button>
+              <button className="rounded border border-[var(--lv-border-strong)] px-4 py-2 text-sm" onClick={openCreate}>{language === "ja" ? "新しいIdea" : "New Idea"}</button>
+              <button className="rounded border border-[var(--lv-border-strong)] px-4 py-2 text-sm" onClick={openVault}>{language === "ja" ? "Vaultを開く" : "Open Vault"}</button>
             </div>
           </div>
         )}
@@ -107,20 +107,20 @@ export function HomeView({
 
       <div className="grid gap-3 md:grid-cols-3">
         <Panel>
-          <p className="text-sm text-stone-400">{copy.home.monthlyFinish}</p>
-          <p className="mt-2 text-3xl font-semibold">{stats.doneCount} <span className="text-lg text-stone-500">/ {stats.goal}</span></p>
-          <div className="mt-4 h-2 overflow-hidden rounded bg-stone-800"><div className="h-full bg-teal-400" style={{ width: `${progress}%` }} /></div>
-          <p className="mt-3 text-xs text-stone-400">{language === "ja" ? `完成にしたネタ：${stats.doneCount}件 · 月間ゴール：${stats.goal}件 · ${copy.home.daysLeft(stats.remainingDays)}` : `${stats.doneCount} completed · Goal ${stats.goal} · ${copy.home.daysLeft(stats.remainingDays)}`}</p>
+          <p className="text-sm text-[var(--lv-text-muted)]">{copy.home.monthlyFinish}</p>
+          <p className="mt-2 text-3xl font-semibold">{stats.doneCount} <span className="text-lg text-[var(--lv-text)]0">/ {stats.goal}</span></p>
+          <div className="mt-4 h-2 overflow-hidden rounded bg-[var(--lv-surface-raised)]"><div className="h-full bg-[var(--lv-accent)]" style={{ width: `${progress}%` }} /></div>
+          <p className="mt-3 text-xs text-[var(--lv-text-muted)]">{language === "ja" ? `完成にしたネタ：${stats.doneCount}件 · 月間ゴール：${stats.goal}件 · ${copy.home.daysLeft(stats.remainingDays)}` : `${stats.doneCount} completed · Goal ${stats.goal} · ${copy.home.daysLeft(stats.remainingDays)}`}</p>
         </Panel>
         <Panel>
-          <p className="text-sm text-stone-400">{copy.home.needsNextAction}</p>
-          <p className="mt-2 text-3xl font-semibold">{focus.needsNextAction.length}<span className="ml-1 text-sm text-stone-500">{language === "ja" ? "件" : "items"}</span></p>
-          <p className="mt-3 text-xs text-stone-400">{focus.needsNextAction.length ? (language === "ja" ? "次の一手を追加できます" : "Add the next step") : copy.home.allHaveNextAction}</p>
+          <p className="text-sm text-[var(--lv-text-muted)]">{copy.home.needsNextAction}</p>
+          <p className="mt-2 text-3xl font-semibold">{focus.needsNextAction.length}<span className="ml-1 text-sm text-[var(--lv-text)]0">{language === "ja" ? "件" : "items"}</span></p>
+          <p className="mt-3 text-xs text-[var(--lv-text-muted)]">{focus.needsNextAction.length ? (language === "ja" ? "次の一手を追加できます" : "Add the next step") : copy.home.allHaveNextAction}</p>
         </Panel>
         <Panel>
-          <p className="text-sm text-stone-400">{copy.home.stale}</p>
-          <p className="mt-2 text-3xl font-semibold">{focus.stale.length}<span className="ml-1 text-sm text-stone-500">{language === "ja" ? "件" : "items"}</span></p>
-          <p className="mt-3 text-xs text-stone-400">{focus.stale.length ? (language === "ja" ? "7日以上動きがないネタ" : "No activity for 7+ days") : copy.home.noStale}</p>
+          <p className="text-sm text-[var(--lv-text-muted)]">{copy.home.stale}</p>
+          <p className="mt-2 text-3xl font-semibold">{focus.stale.length}<span className="ml-1 text-sm text-[var(--lv-text)]0">{language === "ja" ? "件" : "items"}</span></p>
+          <p className="mt-3 text-xs text-[var(--lv-text-muted)]">{focus.stale.length ? (language === "ja" ? "7日以上動きがないネタ" : "No activity for 7+ days") : copy.home.noStale}</p>
         </Panel>
       </div>
 
@@ -130,27 +130,27 @@ export function HomeView({
           {recentProgressions.length ? (
             <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {recentProgressions.map(({ idea, block }) => (
-                <article key={block.id} className="border border-stone-800 bg-stone-950 p-4">
+                <article key={block.id} className="border border-[var(--lv-border)] bg-[var(--lv-bg)] p-4">
                   <p className="line-clamp-1 font-medium">{block.summaryText || (language === "ja" ? "保存したコード進行" : "Saved progression")}</p>
-                  <p className="mt-1 text-xs text-stone-500">{idea.title}</p>
+                  <p className="mt-1 text-xs text-[var(--lv-text)]0">{idea.title}</p>
                   <p className="mt-4 line-clamp-2 font-mono text-xs text-teal-100">{formatProgressionText(block.chords).split("\n")[0]}</p>
                   <div className="mt-4 flex gap-2">
                     <button className="grid h-8 w-8 place-items-center rounded border border-cyan-400/60 text-cyan-100" onClick={() => void previewTimeline(block.chords, block.bpm ?? idea.bpm)} aria-label={copy.common.preview} title={copy.common.preview}>▶</button>
-                    <button className="rounded border border-stone-700 px-3 py-1 text-xs" onClick={() => openDetail(idea.id)}>{language === "ja" ? "Vaultで開く" : "Open in Vault"}</button>
+                    <button className="rounded border border-[var(--lv-border-strong)] px-3 py-1 text-xs" onClick={() => openDetail(idea.id)}>{language === "ja" ? "Vaultで開く" : "Open in Vault"}</button>
                   </div>
                 </article>
               ))}
             </div>
-          ) : <p className="mt-3 text-sm text-stone-400">{language === "ja" ? "保存済みの進行はまだありません。" : "No saved progressions yet."}</p>}
+          ) : <p className="mt-3 text-sm text-[var(--lv-text-muted)]">{language === "ja" ? "保存済みの進行はまだありません。" : "No saved progressions yet."}</p>}
         </section>
         <aside className="space-y-4">
           <Panel>
             <h3 className="font-semibold">{copy.home.pipeline}</h3>
             <div className="mt-4 space-y-3">
-              {pipeline.map((status) => <div key={status}><div className="flex justify-between text-sm"><span>{labelStatus(status, language)}</span><span className="text-stone-400">{stats.pipelineCounts[status]}</span></div><div className="mt-1 h-1.5 rounded bg-stone-800"><div className="h-full rounded bg-cyan-400" style={{ width: `${Math.min(100, stats.pipelineCounts[status] * 18)}%` }} /></div></div>)}
+              {pipeline.map((status) => <div key={status}><div className="flex justify-between text-sm"><span>{labelStatus(status, language)}</span><span className="text-[var(--lv-text-muted)]">{stats.pipelineCounts[status]}</span></div><div className="mt-1 h-1.5 rounded bg-[var(--lv-surface-raised)]"><div className="h-full rounded bg-cyan-400" style={{ width: `${Math.min(100, stats.pipelineCounts[status] * 18)}%` }} /></div></div>)}
             </div>
           </Panel>
-          {focus.stale.length ? <Panel><h3 className="font-semibold">{copy.home.stale}</h3><div className="mt-3 space-y-2">{focus.stale.map((entry) => <div key={entry.idea.id} className="flex items-center justify-between gap-3 border-t border-stone-800 pt-2"><button className="text-left text-sm font-medium" onClick={() => openDetail(entry.idea.id)}>{entry.idea.title}</button>{entry.suggestHold ? <button className="rounded border border-stone-700 px-2 py-1 text-xs" onClick={() => { const result = transitionIdea(entry.idea.id, "hold", new Date()); if (!result.ok) setToast(result.error.message); }}>{copy.home.suggestHold}</button> : null}</div>)}</div></Panel> : null}
+          {focus.stale.length ? <Panel><h3 className="font-semibold">{copy.home.stale}</h3><div className="mt-3 space-y-2">{focus.stale.map((entry) => <div key={entry.idea.id} className="flex items-center justify-between gap-3 border-t border-[var(--lv-border)] pt-2"><button className="text-left text-sm font-medium" onClick={() => openDetail(entry.idea.id)}>{entry.idea.title}</button>{entry.suggestHold ? <button className="rounded border border-[var(--lv-border-strong)] px-2 py-1 text-xs" onClick={() => { const result = transitionIdea(entry.idea.id, "hold", new Date()); if (!result.ok) setToast(result.error.message); }}>{copy.home.suggestHold}</button> : null}</div>)}</div></Panel> : null}
         </aside>
       </div>
     </div>
