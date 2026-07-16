@@ -177,6 +177,32 @@ describe("raw SMF Voice model", () => {
     expect(upperVoice).toMatchObject({ lowestVoiceShare: 0, highestVoiceShare: 1 });
   });
 
+  it("updates sounding boundaries when notes end and begin at the same tick", () => {
+    const data: MidiSongData = {
+      notes: [
+        { pitch: 36, startTick: 0, durationTick: 480, velocity: 1, trackIndex: 0, channel: 0 },
+        { pitch: 60, startTick: 0, durationTick: 960, velocity: 1, trackIndex: 1, channel: 1 },
+        { pitch: 48, startTick: 480, durationTick: 480, velocity: 1, trackIndex: 0, channel: 0 },
+        { pitch: 24, startTick: 480, durationTick: 480, velocity: 1, trackIndex: 2, channel: 9 },
+      ],
+      ticksPerBeat: 480,
+      totalBars: 1,
+      tracks: [{ index: 0, name: "Bass" }, { index: 1, name: "Keys" }, { index: 2, name: "Drums" }],
+      controlChanges: [],
+    };
+
+    const voices = buildVoices(data);
+
+    expect(voices.find((voice) => voice.id === "0:0")).toMatchObject({
+      lowestVoiceShare: 1,
+      highestVoiceShare: 0,
+    });
+    expect(voices.find((voice) => voice.id === "1:1")).toMatchObject({
+      lowestVoiceShare: 0,
+      highestVoiceShare: 1,
+    });
+  });
+
   it("uses denominator-aware bar lengths for 6/8", () => {
     const bytes = smf(0, [[
       timeSignature(6, 8),

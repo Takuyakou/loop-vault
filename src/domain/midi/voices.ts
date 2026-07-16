@@ -9,11 +9,17 @@ export function buildVoices(data: MidiSongData): Voice[] {
       continue;
     }
     const id = voiceId(note.trackIndex, note.channel);
-    notesByVoice.set(id, [...(notesByVoice.get(id) ?? []), note]);
+    const notes = notesByVoice.get(id);
+    if (notes) {
+      notes.push(note);
+    } else {
+      notesByVoice.set(id, [note]);
+    }
   }
+  const boundariesByOnset = soundingBoundariesByOnset(data.notes);
 
   return [...notesByVoice.entries()]
-    .map(([id, notes]) => buildVoice(id, notes, data))
+    .map(([id, notes]) => buildVoice(id, notes, data, boundariesByOnset))
     .sort((a, b) => a.trackIndex - b.trackIndex || a.channel - b.channel);
 }
 
@@ -29,7 +35,12 @@ export function selectChordEvidenceNotes(notes: readonly TimedNote[]): TimedNote
   return notes.filter((note) => !isPercussionEvidence(note));
 }
 
-function buildVoice(id: string, notes: TimedNote[], data: MidiSongData): Voice {
+function buildVoice(
+  id: string,
+  notes: TimedNote[],
+  data: MidiSongData,
+  boundariesByOnset: ReadonlyMap<number, SoundingBoundaries>,
+): Voice {
   const sortedNotes = [...notes].sort(
     (a, b) => a.startTick - b.startTick || a.pitch - b.pitch || a.durationTick - b.durationTick,
   );
@@ -57,8 +68,8 @@ function buildVoice(id: string, notes: TimedNote[], data: MidiSongData): Voice {
     noteDensity: noteDensity(sortedNotes, data.ticksPerBeat),
     maxPolyphony: maxPolyphony(sortedNotes),
     simultaneousOnsetRatio: simultaneousOnsetRatio(sortedNotes),
-    lowestVoiceShare: boundaryVoiceShare(sortedNotes, data.notes, "lowest"),
-    highestVoiceShare: boundaryVoiceShare(sortedNotes, data.notes, "highest"),
+    lowestVoiceShare: boundaryVoiceShare(sortedNotes, boundariesByOnset, "lowest"),
+    highestVoiceShare: boundaryVoiceShare(sortedNotes, boundariesByOnset, "highest"),
     inferredRole: percussion ? "percussion" : "mixed",
     roleConfidence: percussion ? 1 : 0,
     roleEvidence: neutralRoleEvidence(percussion),
@@ -144,22 +155,57 @@ function simultaneousOnsetRatio(notes: TimedNote[]): number {
 
 function boundaryVoiceShare(
   voiceNotes: TimedNote[],
-  allNotes: TimedNote[],
+  boundariesByOnset: ReadonlyMap<number, SoundingBoundaries>,
   boundary: "lowest" | "highest",
 ): number {
   const matches = voiceNotes.filter((note) => {
     if (note.channel === 9) {
       return false;
     }
-    const pitches = allNotes
-      .filter((candidate) => candidate.channel !== 9
-        && candidate.startTick <= note.startTick
-        && candidate.startTick + candidate.durationTick > note.startTick)
-      .map((candidate) => candidate.pitch);
-    const target = boundary === "lowest" ? Math.min(...pitches) : Math.max(...pitches);
+    const boundaries = boundariesByOnset.get(note.startTick);
+    const target = boundaries?.[boundary];
     return note.pitch === target;
   }).length;
   return matches / voiceNotes.length;
+}
+
+interface SoundingBoundaries {
+  lowest: number;
+  highest: number;
+}
+
+function soundingBoundariesByOnset(notes: readonly TimedNote[]): Map<number, SoundingBoundaries> {
+  const events = notes
+    .filter((note) => note.channel !== 9)
+    .flatMap((note) => [
+      { tick: note.startTick, pitch: note.pitch, delta: 1 },
+      { tick: note.startTick + note.durationTick, pitch: note.pitch, delta: -1 },
+    ])
+    .sort((left, right) => left.tick - right.tick || left.delta - right.delta || left.pitch - right.pitch);
+  const activePitchCounts = new Uint32Array(128);
+  const boundaries = new Map<number, SoundingBoundaries>();
+  let index = 0;
+  while (index < events.length) {
+    const tick = events[index].tick;
+    let hasOnset = false;
+    while (index < events.length && events[index].tick === tick && events[index].delta < 0) {
+      const event = events[index];
+      if (activePitchCounts[event.pitch] > 0) activePitchCounts[event.pitch] -= 1;
+      index += 1;
+    }
+    while (index < events.length && events[index].tick === tick) {
+      const event = events[index];
+      activePitchCounts[event.pitch] += 1;
+      hasOnset = true;
+      index += 1;
+    }
+    if (!hasOnset) continue;
+    const lowest = activePitchCounts.findIndex((count) => count > 0);
+    let highest = activePitchCounts.length - 1;
+    while (highest >= 0 && activePitchCounts[highest] === 0) highest -= 1;
+    if (lowest >= 0 && highest >= 0) boundaries.set(tick, { lowest, highest });
+  }
+  return boundaries;
 }
 
 function neutralRoleEvidence(percussion: boolean): VoiceRoleEvidence {
