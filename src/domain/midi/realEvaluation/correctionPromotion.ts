@@ -1,6 +1,7 @@
 import { parseChordLabel } from "../../chords";
 import type { MidiChordCorrectionEvent } from "../feedback";
 import type { LocalMidiSourceIndexEntry, RealMidiEvaluationCase } from "./types";
+import { deriveAcceptableAlternatives } from "./acceptableAlternatives";
 
 export interface CorrectionConflict {
   sourceFingerprint: string;
@@ -67,6 +68,7 @@ export function promoteCorrectionEvents(
     if (!selected) return;
     const chord = parseChordLabel(selected.corrected);
     if (!chord) return;
+    const alternatives = deriveAcceptableAlternatives(chord, { includeWeak: true });
     promoted.push({
       schemaVersion: 1,
       id: correctionCaseId(selected, chord.label),
@@ -83,7 +85,9 @@ export function promoteCorrectionEvents(
           root: chord.root,
           quality: chord.quality,
           ...(chord.bass !== undefined ? { bass: chord.bass } : {}),
+          ...(alternatives.length > 0 ? { acceptableAlternatives: alternatives.map((item) => item.chord) } : {}),
         }],
+        ...(alternatives.length > 0 ? { alternatives: [{ ...selected.segment, alternatives }] } : {}),
       },
       label: { strength: "gold", origin: "manual-correction", reviewer: "local-user" },
       context: {

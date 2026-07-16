@@ -1,6 +1,7 @@
 export { midiChordCorrectionEventSchema, midiDifferenceReviewSchema, realMidiEvaluationCaseSchema } from "./schema";
 export { promoteCorrectionEvents } from "./correctionPromotion";
 export type { CorrectionConflict, CorrectionPromotionResult } from "./correctionPromotion";
+export { deriveAcceptableAlternatives } from "./acceptableAlternatives";
 export {
   buildDifferenceReviewCases,
   chordLabelsEquivalent,
