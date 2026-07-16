@@ -12,9 +12,10 @@ type ProgressionEntry = { idea: SongIdea; block: SavedProgressionBlock };
 type SortField = "capturedAt" | "updatedAt" | "key" | "bpm";
 
 export function VaultView({
-  ideas, openDetail, openCreate, openCapture, updateIdea, setToast, copy, language, showRomanNumerals,
+  ideas, storedIdeas = ideas, openDetail, openCreate, openCapture, updateIdea, setToast, copy, language, showRomanNumerals,
 }: {
   ideas: SongIdea[];
+  storedIdeas?: SongIdea[];
   openDetail: (id: string) => void;
   openCreate: () => void;
   openCapture: () => void;
@@ -57,11 +58,13 @@ export function VaultView({
   }, [copy.toast.chordPreviewFailed, setToast]);
 
   const togglePin = useCallback((entry: ProgressionEntry) => {
+    const storedIdea = storedIdeas.find((idea) => idea.id === entry.idea.id);
+    if (!storedIdea) return;
     updateIdea(entry.idea.id, {
-      progressionBlocks: (entry.idea.progressionBlocks ?? []).map((block) =>
+      progressionBlocks: (storedIdea.progressionBlocks ?? []).map((block) =>
         block.id === entry.block.id ? { ...block, pinned: !block.pinned } : block),
     });
-  }, [updateIdea]);
+  }, [storedIdeas, updateIdea]);
 
   const copyProgression = useCallback(async (block: SavedProgressionBlock) => {
     try {

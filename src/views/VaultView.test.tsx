@@ -41,6 +41,46 @@ afterEach(() => {
 });
 
 describe("VaultView keyboard shortcuts", () => {
+  it("pins from the stored block array while another block is pending deletion", async () => {
+    const pendingBlock = { ...progressionBlock, id: "pending-block" };
+    const visibleBlock = { ...progressionBlock, id: "visible-block", pinned: false };
+    const visibleIdea = makeIdea({ progressionBlocks: [visibleBlock] });
+    const storedIdea = makeIdea({
+      id: visibleIdea.id,
+      progressionBlocks: [pendingBlock, visibleBlock],
+    });
+    const updateIdea = vi.fn();
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <VaultView
+          ideas={[visibleIdea]}
+          storedIdeas={[storedIdea]}
+          openDetail={vi.fn()}
+          openCreate={vi.fn()}
+          openCapture={vi.fn()}
+          updateIdea={updateIdea}
+          setToast={vi.fn()}
+          copy={appCopy.en}
+          language="en"
+          showRomanNumerals={false}
+        />,
+      );
+    });
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>('[aria-label="Pin"]')?.click();
+    });
+
+    expect(updateIdea).toHaveBeenCalledWith(visibleIdea.id, {
+      progressionBlocks: [pendingBlock, { ...visibleBlock, pinned: true }],
+    });
+    await act(async () => root.unmount());
+  });
+
   it("uses the latest language for a Space playback failure", async () => {
     const setToast = vi.fn();
     vi.spyOn(playbackController, "toggle").mockRejectedValue(undefined);

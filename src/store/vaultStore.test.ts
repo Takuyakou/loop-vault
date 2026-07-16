@@ -8,8 +8,18 @@ import {
   type VaultRepository,
 } from "../domain/repository";
 import { pickFocus } from "../domain/focus";
-import type { ProgressionBlockCandidate, VaultFile } from "../domain/types";
+import type {
+  ProgressionBlockCandidate,
+  SavedProgressionBlock,
+  VaultFile,
+} from "../domain/types";
 import { makeIdea } from "../domain/testFactory";
+import {
+  assetAnchor,
+  createUndoSnapshot,
+  ideaAnchor,
+  progressionBlockAnchor,
+} from "../domain/undoDeletion";
 import { createVaultStore } from "./vaultStore";
 
 class FakeRepository implements VaultRepository {
@@ -26,6 +36,7 @@ class FakeRepository implements VaultRepository {
   importedMode?: VaultImportMode;
   backups: VaultBackup[] = [];
   saved: VaultFile[] = [];
+  saveImplementation?: (vault: VaultFile) => Promise<void>;
 
   async load(): Promise<VaultLoadResult> {
     if (this.loadError) {
@@ -37,6 +48,10 @@ class FakeRepository implements VaultRepository {
   async save(vault: VaultFile): Promise<void> {
     if (this.saveError) {
       throw this.saveError;
+    }
+    if (this.saveImplementation) {
+      await this.saveImplementation(structuredClone(vault));
+      return;
     }
     this.saved.push(structuredClone(vault));
   }
@@ -226,6 +241,205 @@ describe("vault store", () => {
     expect(repository.saved).toHaveLength(0);
   });
 
+  it("commits every delayed deletion from its exact snapshot", async () => {
+    const repository = new FakeRepository();
+    const blocks: SavedProgressionBlock[] = ["block-1", "block-2", "block-3"].map(
+      (id) => ({
+        id,
+        summaryText: id,
+        chords: [],
+        tags: [],
+        capturedAt: now.toISOString(),
+        analyzerVersion: "test",
+      }),
+    );
+    const target = makeIdea({
+      id: "idea-2",
+      progressionBlocks: blocks,
+      references: [
+        { title: "Reference 1" },
+        { title: "Reference 2" },
+        { title: "Reference 3" },
+      ],
+      assets: [
+        { id: "asset-1", type: "midi" },
+        { id: "asset-2", type: "audio" },
+        { id: "asset-3", type: "flp" },
+      ],
+    });
+    repository.loadResult = {
+      vault: {
+        ...createEmptyVault(),
+        ideas: [
+          makeIdea({ id: "idea-1" }),
+          target,
+          makeIdea({ id: "idea-3" }),
+        ],
+      },
+      quarantine: [],
+      created: false,
+    };
+    const store = createVaultStore({ repository, now: () => now });
+    await store.getState().initialize();
+
+    const vaultEpoch = store.getState().vaultEpoch;
+    const blockSnapshot = createUndoSnapshot(
+      blocks,
+      1,
+      target.id,
+      progressionBlockAnchor,
+    )!;
+    expect(store.getState().removeProgressionBlock({
+      kind: "progressionBlock",
+      vaultEpoch,
+      snapshot: blockSnapshot,
+    })).toBe(true);
+    expect(store.getState().ideas[1]?.progressionBlocks?.map((block) => block.id)).toEqual([
+      "block-1",
+      "block-3",
+    ]);
+
+    const referenceSnapshot = createUndoSnapshot(target.references, 1, target.id)!;
+    expect(store.getState().removeReference({
+      kind: "reference",
+      vaultEpoch,
+      snapshot: referenceSnapshot,
+    })).toBe(true);
+    expect(store.getState().ideas[1]?.references.map((reference) => reference.title)).toEqual([
+      "Reference 1",
+      "Reference 3",
+    ]);
+
+    const assetSnapshot = createUndoSnapshot(target.assets, 1, target.id, assetAnchor)!;
+    expect(store.getState().unlinkAsset({
+      kind: "asset",
+      vaultEpoch,
+      snapshot: assetSnapshot,
+    })).toBe(true);
+    expect(store.getState().ideas[1]?.assets.map((asset) => asset.id)).toEqual([
+      "asset-1",
+      "asset-3",
+    ]);
+
+    const ideaSnapshot = createUndoSnapshot(
+      store.getState().ideas,
+      1,
+      "vault",
+      ideaAnchor,
+    )!;
+    expect(store.getState().deleteIdea({
+      kind: "idea",
+      vaultEpoch,
+      snapshot: ideaSnapshot,
+    })).toBe(true);
+    expect(store.getState().ideas.map((idea) => idea.id)).toEqual(["idea-1", "idea-3"]);
+  });
+
+  it("treats a child commit after its parent commit as already deleted", async () => {
+    const repository = new FakeRepository();
+    const child = {
+      id: "block-1",
+      summaryText: "Child",
+      chords: [],
+      tags: [],
+      capturedAt: now.toISOString(),
+      analyzerVersion: "test",
+    };
+    const idea = makeIdea({ id: generatedId, progressionBlocks: [child] });
+    repository.loadResult = {
+      vault: { ...createEmptyVault(), ideas: [idea] },
+      quarantine: [],
+      created: false,
+    };
+    const store = createVaultStore({ repository, now: () => now });
+    await store.getState().initialize();
+    const vaultEpoch = store.getState().vaultEpoch;
+    const parent = {
+      kind: "idea" as const,
+      vaultEpoch,
+      snapshot: createUndoSnapshot([idea], 0, "vault", ideaAnchor)!,
+    };
+    const pendingChild = {
+      kind: "progressionBlock" as const,
+      vaultEpoch,
+      snapshot: createUndoSnapshot([child], 0, idea.id, progressionBlockAnchor)!,
+    };
+
+    expect(store.getState().deleteIdea(parent)).toBe(true);
+    expect(store.getState().removeProgressionBlock(pendingChild)).toBe(true);
+    expect(store.getState().ideas).toEqual([]);
+  });
+
+  it("does not mark a newer change saved when an older flush completes", async () => {
+    const repository = new FakeRepository();
+    const idea = makeIdea({ id: generatedId, title: "Original" });
+    repository.loadResult = {
+      vault: { ...createEmptyVault(), ideas: [idea] },
+      quarantine: [],
+      created: false,
+    };
+    let releaseFirstSave!: () => void;
+    const firstSaveGate = new Promise<void>((resolve) => {
+      releaseFirstSave = resolve;
+    });
+    repository.saveImplementation = async (vault) => {
+      repository.saved.push(vault);
+      if (repository.saved.length === 1) await firstSaveGate;
+    };
+    const store = createVaultStore({ repository, now: () => now });
+    await store.getState().initialize();
+
+    store.getState().updateIdea(generatedId, { title: "First edit" });
+    const firstFlush = store.getState().flush();
+    await Promise.resolve();
+    expect(repository.saved).toHaveLength(1);
+    store.getState().updateIdea(generatedId, { title: "Undo or later edit" });
+
+    releaseFirstSave();
+    await firstFlush;
+
+    expect(store.getState().unsaved).toBe(true);
+    expect(repository.saved[0]?.ideas[0]?.title).toBe("First edit");
+    await store.getState().flush();
+    expect(repository.saved[1]?.ideas[0]?.title).toBe("Undo or later edit");
+    expect(store.getState().unsaved).toBe(false);
+  });
+
+  it("serializes concurrent flushes and saves the latest revision", async () => {
+    const repository = new FakeRepository();
+    const idea = makeIdea({ id: generatedId, title: "Original" });
+    repository.loadResult = {
+      vault: { ...createEmptyVault(), ideas: [idea] },
+      quarantine: [],
+      created: false,
+    };
+    let releaseFirstSave!: () => void;
+    const firstSaveGate = new Promise<void>((resolve) => {
+      releaseFirstSave = resolve;
+    });
+    repository.saveImplementation = async (vault) => {
+      repository.saved.push(vault);
+      if (repository.saved.length === 1) await firstSaveGate;
+    };
+    const store = createVaultStore({ repository, now: () => now });
+    await store.getState().initialize();
+
+    store.getState().updateIdea(generatedId, { title: "First edit" });
+    const firstFlush = store.getState().flush();
+    await Promise.resolve();
+    expect(repository.saved).toHaveLength(1);
+    store.getState().updateIdea(generatedId, { title: "Latest edit" });
+    const secondFlush = store.getState().flush();
+    releaseFirstSave();
+    await Promise.all([firstFlush, secondFlush]);
+
+    expect(repository.saved.map((vault) => vault.ideas[0]?.title)).toEqual([
+      "First edit",
+      "Latest edit",
+    ]);
+    expect(store.getState().unsaved).toBe(false);
+  });
+
   it("autosaves Hold reasons only in status history", async () => {
     const repository = new FakeRepository();
     const originalMemo = "Fmaj7 - Am7 - Gm7 - C7";
@@ -356,6 +570,72 @@ describe("vault store", () => {
     expect(repository.importedMode).toBe("merge");
     expect(store.getState().ideas).toEqual([importedIdea]);
     expect(store.getState().loadStatus).toBe("ready");
+  });
+
+  it("waits for an active autosave before replacing the Vault", async () => {
+    const repository = new FakeRepository();
+    const currentIdea = makeIdea({ id: generatedId, title: "Current" });
+    const importedIdea = makeIdea({ id: generatedId, title: "Imported" });
+    repository.loadResult = {
+      vault: { ...createEmptyVault(), ideas: [currentIdea] },
+      quarantine: [],
+      created: false,
+    };
+    repository.importResult = {
+      vault: { ...createEmptyVault(), ideas: [importedIdea] },
+      quarantine: [],
+      created: false,
+    };
+    let releaseSave!: () => void;
+    const saveGate = new Promise<void>((resolve) => { releaseSave = resolve; });
+    repository.saveImplementation = async (vault) => {
+      repository.saved.push(vault);
+      await saveGate;
+    };
+    const store = createVaultStore({ repository });
+    await store.getState().initialize();
+    store.getState().updateIdea(generatedId, { title: "Saving" });
+    const flush = store.getState().flush();
+    await Promise.resolve();
+
+    const importing = store.getState().importVault("C:/import.json", "replace");
+    await Promise.resolve();
+    expect(repository.importedMode).toBeUndefined();
+
+    releaseSave();
+    await Promise.all([flush, importing]);
+    expect(repository.importedMode).toBe("replace");
+    expect(store.getState().ideas[0]?.title).toBe("Imported");
+    expect(store.getState().unsaved).toBe(false);
+    expect(store.getState().saving).toBe(false);
+  });
+
+  it("ignores a pending deletion captured from the Vault before import", async () => {
+    const repository = new FakeRepository();
+    const oldIdea = makeIdea({ id: generatedId, title: "Old" });
+    const newIdea = makeIdea({ id: generatedId, title: "New" });
+    repository.loadResult = {
+      vault: { ...createEmptyVault(), ideas: [oldIdea] },
+      quarantine: [],
+      created: false,
+    };
+    repository.importResult = {
+      vault: { ...createEmptyVault(), ideas: [newIdea] },
+      quarantine: [],
+      created: false,
+    };
+    const store = createVaultStore({ repository });
+    await store.getState().initialize();
+    const pending = {
+      kind: "idea" as const,
+      vaultEpoch: store.getState().vaultEpoch,
+      snapshot: createUndoSnapshot([oldIdea], 0, "vault", ideaAnchor)!,
+    };
+
+    await store.getState().importVault("C:/import.json", "replace");
+    expect(store.getState().deleteIdea(pending)).toBe(true);
+    expect(store.getState().ideas).toEqual([newIdea]);
+    expect(store.getState().unsaved).toBe(false);
   });
 
   it("keeps unsaved changes when save fails", async () => {

@@ -9,7 +9,16 @@ import { statusLabel } from "../domain/displayLabels";
 import { formatProgressionText } from "../domain/progressionText";
 import type { TransitionOptions, TransitionResult } from "../domain/transition";
 import type { AssetType, SavedProgressionBlock, SongIdea, Status } from "../domain/types";
+import {
+  assetAnchor,
+  createUndoSnapshot,
+  progressionBlockAnchor,
+  type PendingAssetDeletion,
+  type PendingProgressionBlockDeletion,
+  type PendingReferenceDeletion,
+} from "../domain/undoDeletion";
 import type { AppCopy, AppLanguage } from "../i18n";
+import type { UndoRequest } from "../hooks/useUndoQueue";
 import { ProgressionGrid } from "../ui/ProgressionGrid";
 
 type Reference = SongIdea["references"][number]; type Asset = SongIdea["assets"][number];
@@ -66,9 +75,14 @@ function ProgressionBlockCard({
 
 export function DetailView({
   idea,
+  storedIdea = idea,
   updateIdea,
   updateNextAction,
   removeProgressionBlock,
+  removeReference = () => false,
+  unlinkAsset = () => false,
+  enqueueUndo = () => "",
+  vaultEpoch = 0,
   analyzeMidiPath,
   transitionIdea,
   requestDelete,
@@ -77,9 +91,16 @@ export function DetailView({
   language,
 }: {
   idea: SongIdea;
+  storedIdea?: SongIdea;
   updateIdea: (id: string, changes: Partial<SongIdea>) => void;
   updateNextAction: (id: string, text: string, now?: Date) => void;
-  removeProgressionBlock: (ideaId: string, blockId: string) => void;
+  removeProgressionBlock: (
+    deletion: PendingProgressionBlockDeletion,
+  ) => boolean;
+  removeReference?: (deletion: PendingReferenceDeletion) => boolean;
+  unlinkAsset?: (deletion: PendingAssetDeletion) => boolean;
+  enqueueUndo?: <T>(request: UndoRequest<T>) => string;
+  vaultEpoch?: number;
   analyzeMidiPath: (path: string) => Promise<void>;
   transitionIdea: (
     id: string,
@@ -182,12 +203,25 @@ export function DetailView({
   function addReference(event: FormEvent) {
     event.preventDefault();
     if (!referenceDraft.title.trim()) return;
-    updateMeta({ references: [...idea.references, { ...referenceDraft, title: referenceDraft.title.trim() }] });
+    updateMeta({ references: [...storedIdea.references, { ...referenceDraft, title: referenceDraft.title.trim() }] });
     setReferenceDraft({ title: "", url: "", memo: "" });
   }
 
-  function removeReference(index: number) {
-    updateMeta({ references: idea.references.filter((_, itemIndex) => itemIndex !== index) });
+  function requestReferenceRemoval(index: number) {
+    stopPlaybackForIdea();
+    const snapshot = createUndoSnapshot(idea.references, index, idea.id);
+    if (!snapshot) return;
+    const deletion: PendingReferenceDeletion = {
+      kind: "reference",
+      vaultEpoch,
+      snapshot,
+    };
+    enqueueUndo({
+      label: copy.undo.referenceDeleted,
+      payload: deletion,
+      undo: () => true,
+      commit: () => removeReference(deletion),
+    });
   }
 
   async function chooseAssetPath() {
@@ -210,20 +244,44 @@ export function DetailView({
       path: assetDraft.path?.trim() || undefined,
       memo: assetDraft.memo?.trim() || undefined,
     };
-    updateMeta({ assets: [...idea.assets, asset] });
+    updateMeta({ assets: [...storedIdea.assets, asset] });
     setAssetDraft({ id: "", type: "flp", path: "", memo: "" });
   }
 
-  function removeAsset(id: string) {
-    updateMeta({ assets: idea.assets.filter((asset) => asset.id !== id) });
+  function requestAssetRemoval(id: string) {
+    stopPlaybackForIdea();
+    const snapshot = createUndoSnapshot(
+      idea.assets,
+      idea.assets.findIndex((asset) => asset.id === id),
+      idea.id,
+      assetAnchor,
+    );
+    if (!snapshot) return;
+    const deletion: PendingAssetDeletion = {
+      kind: "asset",
+      vaultEpoch,
+      snapshot,
+    };
+    enqueueUndo({
+      label: copy.undo.assetUnlinked,
+      payload: deletion,
+      undo: () => true,
+      commit: () => unlinkAsset(deletion),
+    });
   }
 
   function updateAsset(assetId: string, changes: Partial<Asset>) {
     updateMeta({
-      assets: idea.assets.map((entry) =>
+      assets: storedIdea.assets.map((entry) =>
         entry.id === assetId ? { ...entry, ...changes } : entry,
       ),
     });
+  }
+
+  function stopPlaybackForIdea() {
+    if (playbackController.getState().source?.id.startsWith(`idea:${idea.id}:`)) {
+      playbackController.stop();
+    }
   }
 
   async function openAsset(asset: Asset) {
@@ -239,7 +297,7 @@ export function DetailView({
     try {
       await openPath(asset.path);
     } catch {
-      updateMeta({ assets: idea.assets.map((entry) => entry.id === asset.id ? { ...entry, missing: true } : entry) });
+      updateMeta({ assets: storedIdea.assets.map((entry) => entry.id === asset.id ? { ...entry, missing: true } : entry) });
       setToast(copy.toast.assetMissing);
     }
   }
@@ -341,11 +399,26 @@ export function DetailView({
                   onPreviewError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed)}
                   onCopyProgression={() => void copySavedBlock(block)}
                   onRemove={() => {
-                    const sourceId = `idea:${idea.id}:block:${block.id}`;
-                    if (playbackController.getState().source?.id === sourceId) {
-                      playbackController.stop();
-                    }
-                    removeProgressionBlock(idea.id, block.id);
+                    stopPlaybackForIdea();
+                    const blocks = idea.progressionBlocks ?? [];
+                    const snapshot = createUndoSnapshot(
+                      blocks,
+                      blocks.findIndex((entry) => entry.id === block.id),
+                      idea.id,
+                      progressionBlockAnchor,
+                    );
+                    if (!snapshot) return;
+                    const deletion: PendingProgressionBlockDeletion = {
+                      kind: "progressionBlock",
+                      vaultEpoch,
+                      snapshot,
+                    };
+                    enqueueUndo({
+                      label: copy.undo.blockDeleted,
+                      payload: deletion,
+                      undo: () => true,
+                      commit: () => removeProgressionBlock(deletion),
+                    });
                   }}
                   copy={copy}
                 />
@@ -369,7 +442,7 @@ export function DetailView({
               <div key={`${reference.title}-${index}`} className="border border-[var(--lv-border)] p-3 text-sm">
                 <div className="flex justify-between gap-3">
                   <p className="font-medium">{reference.title}</p>
-                  <button className="text-[var(--lv-text-muted)]" onClick={() => removeReference(index)}>{copy.common.delete}</button>
+                  <button className="text-[var(--lv-text-muted)]" onClick={() => requestReferenceRemoval(index)}>{copy.common.delete}</button>
                 </div>
                 {reference.url ? <p className="mt-1 break-all text-[var(--lv-text-muted)]">{reference.url}</p> : null}
                 {reference.memo ? <p className="mt-1 text-[var(--lv-text-secondary)]">{reference.memo}</p> : null}
@@ -418,7 +491,7 @@ export function DetailView({
                         {copy.detail.fixPath}
                       </button>
                     ) : null}
-                    <button className="rounded border border-[var(--lv-border-strong)] px-2 py-1" onClick={() => removeAsset(asset.id)}>{copy.common.delete}</button>
+                    <button className="rounded border border-[var(--lv-border-strong)] px-2 py-1" onClick={() => requestAssetRemoval(asset.id)}>{copy.common.delete}</button>
                   </div>
                 </div>
                 <p className="mt-2 break-all text-[var(--lv-text-muted)]">{asset.path || copy.common.pathUnset}</p>

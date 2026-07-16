@@ -23,6 +23,17 @@ import type {
   AppLanguage,
 } from "../domain/types";
 import type { AnalyzeMidiOptions } from "../domain/midi/types";
+import {
+  assetAnchor,
+  ideaAnchor,
+  progressionBlockAnchor,
+  removeUndoSnapshot,
+  resolveUndoSnapshotIndex,
+  type PendingAssetDeletion,
+  type PendingIdeaDeletion,
+  type PendingProgressionBlockDeletion,
+  type PendingReferenceDeletion,
+} from "../domain/undoDeletion";
 
 export type LoadStatus =
   | "idle"
@@ -85,19 +96,28 @@ export interface VaultStoreState {
   saving: boolean;
   lastSavedAt?: string;
   backups: VaultBackup[];
+  vaultEpoch: number;
   error?: string;
   initialize: () => Promise<void>;
   createIdea: (title: string, status?: Status) => string | undefined;
   createIdeaFromDraft: (draft: SongIdeaDraft) => string | undefined;
   updateIdea: (id: string, changes: Partial<SongIdea>) => void;
-  deleteIdea: (id: string) => void;
+  deleteIdea: (deletion: PendingIdeaDeletion) => boolean;
   appendBlockToIdea: (
     ideaId: string,
     block: SavedProgressionBlock | ProgressionBlockCandidate,
     analysis?: MidiProgressionAnalysis,
     metadata?: ProgressionSaveMetadata,
   ) => boolean;
-  removeProgressionBlock: (ideaId: string, blockId: string) => void;
+  removeProgressionBlock: (
+    deletion: PendingProgressionBlockDeletion,
+  ) => boolean;
+  removeReference: (
+    deletion: PendingReferenceDeletion,
+  ) => boolean;
+  unlinkAsset: (
+    deletion: PendingAssetDeletion,
+  ) => boolean;
   transitionIdea: (
     id: string,
     to: Status,
@@ -134,6 +154,10 @@ export function createVaultStore(
   const now = options.now ?? (() => new Date());
   const idFactory = options.idFactory ?? (() => crypto.randomUUID());
   let saveTimer: ReturnType<typeof setTimeout> | undefined;
+  let changeRevision = 0;
+  let savedRevision = 0;
+  let vaultGeneration = 0;
+  let activeFlush: { generation: number; promise: Promise<void> } | undefined;
 
   const store = createStore<VaultStoreState>((set, get) => {
     function clearSaveTimer() {
@@ -151,6 +175,10 @@ export function createVaultStore(
     }
 
     function setVault(vault: VaultFile, quarantine: QuarantinedRecord[] = []) {
+      clearSaveTimer();
+      vaultGeneration += 1;
+      changeRevision = 0;
+      savedRevision = 0;
       set({
         ideas: vault.ideas,
         settings: vault.settings,
@@ -158,6 +186,8 @@ export function createVaultStore(
         loadStatus: "ready",
         unsaved: false,
         saving: false,
+        lastSavedAt: undefined,
+        vaultEpoch: get().vaultEpoch + 1,
         error: undefined,
         recovery: undefined,
         readonly: undefined,
@@ -171,6 +201,7 @@ export function createVaultStore(
       }
 
       const vault = mutator(currentVault(state));
+      changeRevision += 1;
       set({
         ideas: vault.ideas,
         settings: vault.settings,
@@ -186,6 +217,7 @@ export function createVaultStore(
 
       async initialize() {
         clearSaveTimer();
+        if (activeFlush) await activeFlush.promise;
         set({
           loadStatus: "loading",
           error: undefined,
@@ -307,10 +339,14 @@ export function createVaultStore(
         }));
       },
 
-      deleteIdea(id) {
-        applyVaultChange((vault) => ({
+      deleteIdea(deletion) {
+        if (deletion.vaultEpoch !== get().vaultEpoch) return true;
+        const { snapshot } = deletion;
+        if (snapshot.parentId !== "vault") return false;
+        if (resolveUndoSnapshotIndex(get().ideas, snapshot, ideaAnchor) < 0) return true;
+        return applyVaultChange((vault) => ({
           ...vault,
-          ideas: vault.ideas.filter((idea) => idea.id !== id),
+          ideas: removeUndoSnapshot(vault.ideas, snapshot, ideaAnchor),
         }));
       },
 
@@ -353,19 +389,84 @@ export function createVaultStore(
         }));
       },
 
-      removeProgressionBlock(ideaId, blockId) {
-        applyVaultChange((vault) => ({
+      removeProgressionBlock(deletion) {
+        if (deletion.vaultEpoch !== get().vaultEpoch) return true;
+        const { snapshot } = deletion;
+        const idea = get().ideas.find(
+          (entry) => entry.id === snapshot.parentId,
+        );
+        const blocks = idea?.progressionBlocks ?? [];
+        if (!idea) return true;
+        if (resolveUndoSnapshotIndex(
+          blocks,
+          snapshot,
+          progressionBlockAnchor,
+        ) < 0) return true;
+        return applyVaultChange((vault) => ({
           ...vault,
           ideas: vault.ideas.map((idea) =>
-            idea.id === ideaId
+            idea.id === snapshot.parentId
               ? {
                   ...idea,
-                  progressionBlocks: (idea.progressionBlocks ?? []).filter(
-                    (block) => block.id !== blockId,
+                  progressionBlocks: removeUndoSnapshot(
+                    idea.progressionBlocks ?? [],
+                    snapshot,
+                    progressionBlockAnchor,
                   ),
                   updatedAt: now().toISOString(),
                 }
               : idea,
+          ),
+        }));
+      },
+
+      removeReference(deletion) {
+        if (deletion.vaultEpoch !== get().vaultEpoch) return true;
+        const { snapshot } = deletion;
+        const idea = get().ideas.find(
+          (entry) => entry.id === snapshot.parentId,
+        );
+        if (!idea) return true;
+        if (resolveUndoSnapshotIndex(idea.references, snapshot) < 0) return true;
+        return applyVaultChange((vault) => ({
+          ...vault,
+          ideas: vault.ideas.map((entry) =>
+            entry.id === snapshot.parentId
+              ? {
+                  ...entry,
+                  references: removeUndoSnapshot(
+                    entry.references,
+                    snapshot,
+                  ),
+                  updatedAt: now().toISOString(),
+                }
+              : entry,
+          ),
+        }));
+      },
+
+      unlinkAsset(deletion) {
+        if (deletion.vaultEpoch !== get().vaultEpoch) return true;
+        const { snapshot } = deletion;
+        const idea = get().ideas.find(
+          (entry) => entry.id === snapshot.parentId,
+        );
+        if (!idea) return true;
+        if (resolveUndoSnapshotIndex(idea.assets, snapshot, assetAnchor) < 0) return true;
+        return applyVaultChange((vault) => ({
+          ...vault,
+          ideas: vault.ideas.map((entry) =>
+            entry.id === snapshot.parentId
+              ? {
+                  ...entry,
+                  assets: removeUndoSnapshot(
+                    entry.assets,
+                    snapshot,
+                    assetAnchor,
+                  ),
+                  updatedAt: now().toISOString(),
+                }
+              : entry,
           ),
         }));
       },
@@ -471,6 +572,7 @@ export function createVaultStore(
       },
 
       async importVault(path, mode) {
+        await get().flush();
         set({ loadStatus: "loading", error: undefined });
         try {
           const result = await options.repository.importFrom(path, { mode });
@@ -490,6 +592,7 @@ export function createVaultStore(
       },
 
       async restoreBackup(backupName) {
+        await get().flush();
         set({ loadStatus: "loading", error: undefined });
         try {
           const result = await options.repository.restore(backupName);
@@ -508,26 +611,46 @@ export function createVaultStore(
 
       async flush() {
         clearSaveTimer();
-        const state = get();
-        if (!state.unsaved) {
+        if (activeFlush) {
+          await activeFlush.promise;
+          if (changeRevision > savedRevision) {
+            await get().flush();
+          }
           return;
         }
 
+        const revisionToSave = changeRevision;
+        if (revisionToSave <= savedRevision) return;
+        const generationToSave = vaultGeneration;
+        const vaultToSave = currentVault(get());
+
         set({ saving: true, error: undefined });
+        const flush = (async () => {
+          try {
+            await options.repository.save(vaultToSave);
+            if (generationToSave !== vaultGeneration) return;
+            savedRevision = Math.max(savedRevision, revisionToSave);
+            set({
+              unsaved: changeRevision > savedRevision,
+              saving: false,
+              lastSavedAt: now().toISOString(),
+            });
+          } catch (error) {
+            if (generationToSave !== vaultGeneration) return;
+            set({
+              saving: false,
+              unsaved: true,
+              error:
+                error instanceof Error ? error.message : "Vault could not be saved.",
+            });
+          }
+        })();
+        const active = { generation: generationToSave, promise: flush };
+        activeFlush = active;
         try {
-          await options.repository.save(currentVault(get()));
-          set({
-            unsaved: false,
-            saving: false,
-            lastSavedAt: now().toISOString(),
-          });
-        } catch (error) {
-          set({
-            saving: false,
-            unsaved: true,
-            error:
-              error instanceof Error ? error.message : "Vault could not be saved.",
-          });
+          await flush;
+        } finally {
+          if (activeFlush === active) activeFlush = undefined;
         }
       },
     };
@@ -548,6 +671,7 @@ export function initialState(): Pick<
   | "unsaved"
   | "saving"
   | "backups"
+  | "vaultEpoch"
   | "error"
 > {
   return {
@@ -561,6 +685,7 @@ export function initialState(): Pick<
     unsaved: false,
     saving: false,
     backups: [],
+    vaultEpoch: 0,
     error: undefined,
   };
 }

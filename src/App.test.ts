@@ -2,7 +2,8 @@
 
 import { describe, expect, it, vi } from "vitest";
 import type { PlaybackState } from "./audio/playbackController";
-import { finalizeIdeaDelete, stopIdeaPlayback } from "./App";
+import { deleteIdeaForUndo, stopIdeaPlayback } from "./App";
+import { makeIdea } from "./domain/testFactory";
 
 function playbackStub(state: PlaybackState) {
   return {
@@ -34,18 +35,54 @@ describe("stopIdeaPlayback", () => {
     expect(controller.stop).not.toHaveBeenCalled();
   });
 
-  it("stops playback immediately before the deferred delete is finalized", () => {
+  it("hides through a pending payload, stops playback, and deletes only on commit", () => {
+    const idea = makeIdea({ id: "idea-1", title: "Night Drive" });
     const calls: string[] = [];
     const controller = playbackStub({
       status: "playing",
       source: { kind: "detail", id: "idea:idea-1:block:block-1" },
     });
     controller.stop.mockImplementation(() => calls.push("stop"));
-    const deleteIdea = vi.fn(() => calls.push("delete"));
+    const deleteIdea = vi.fn(() => {
+      calls.push("delete");
+      return true;
+    });
+    const enqueueUndo = vi.fn((request: { undo(): boolean | void; commit?(): boolean | void }) => {
+      void request;
+      return "undo-1";
+    });
 
-    finalizeIdeaDelete("idea-1", deleteIdea, controller);
+    expect(deleteIdeaForUndo({
+      idea,
+      ideas: [makeIdea({ id: "idea-0" }), idea, makeIdea({ id: "idea-2" })],
+      vaultEpoch: 4,
+      label: "Deleted Night Drive",
+      deleteIdea,
+      enqueueUndo,
+      controller,
+    })).toBe(true);
 
-    expect(calls).toEqual(["stop", "delete"]);
-    expect(deleteIdea).toHaveBeenCalledWith("idea-1");
+    expect(calls).toEqual(["stop"]);
+    expect(enqueueUndo).toHaveBeenCalledWith(expect.objectContaining({
+      label: "Deleted Night Drive",
+      payload: expect.objectContaining({
+        kind: "idea",
+        vaultEpoch: 4,
+        snapshot: expect.objectContaining({
+          parentId: "vault",
+          index: 1,
+          value: idea,
+          targetAnchor: idea.id,
+        }),
+      }),
+    }));
+    const request = enqueueUndo.mock.calls[0]?.[0];
+    expect(request?.undo()).toBe(true);
+    expect(deleteIdea).not.toHaveBeenCalled();
+    expect(request?.commit?.()).toBe(true);
+    expect(deleteIdea).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: "idea", vaultEpoch: 4 }),
+    );
   });
+
 });
