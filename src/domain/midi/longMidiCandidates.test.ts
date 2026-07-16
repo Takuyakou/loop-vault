@@ -30,6 +30,7 @@ describe("long MIDI candidate coverage", () => {
     expect(new Set(result.blockCandidates.map((candidate) => candidate.lengthBars)))
       .toEqual(new Set([4, 8, 16]));
     expect(second.blockCandidates).toEqual(result.blockCandidates);
+    expect(JSON.stringify(result)).not.toContain("rankingScore");
     expect(miniMapLayout).toHaveLength(result.blockCandidates.length);
     expect(miniMapLayout.some(({ candidate }) => candidate.endBar === 240)).toBe(true);
   });
