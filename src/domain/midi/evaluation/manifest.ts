@@ -1,14 +1,27 @@
 import type { ChordQuality } from "../../types";
+import type { DirtyCorpusCategory, MidiDegradationId } from "./degrade";
 import type { MidiEvaluationCase, MidiEvaluationCategory } from "./types";
 
-interface ChordDripFile {
+export interface ChordDripFile {
   caseId: string;
   midiFile: string;
+  midiSha256?: string;
+  midiByteLength?: number;
+  renderedNoteCount?: number;
+  clipLengthTicks?: number;
+  sourceCaseId?: string;
+  degradation?: {
+    id: MidiDegradationId;
+    reportCategory: DirtyCorpusCategory;
+    seed: number;
+    transforms: MidiDegradationId[];
+  };
   generationRecord: {
     presetId: string;
     voicingId: string;
     patternId: string;
     bars: number;
+    [key: string]: unknown;
   };
   chordTimeline: Array<{
     startBeat: number;
@@ -19,9 +32,18 @@ interface ChordDripFile {
 
 export interface ChordDripCorpusManifest {
   schemaVersion: 1;
+  generatorId?: string;
   generatorVersion: string;
+  groundTruthSource?: string;
   recipeSha256: string;
+  sourceRecipeSha256?: string;
+  dirtyCorpus?: {
+    schemaVersion: 1;
+    globalSeed: number;
+    generatedCaseCount: number;
+  };
   files: ChordDripFile[];
+  [key: string]: unknown;
 }
 
 export function adaptChordDripManifest(manifest: ChordDripCorpusManifest): MidiEvaluationCase[] {

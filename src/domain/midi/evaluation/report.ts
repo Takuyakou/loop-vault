@@ -1,7 +1,7 @@
 import type { EvaluationReport } from "./types";
 
 export function comparisonMarkdown(baseline: EvaluationReport, candidate: EvaluationReport): string {
-  const rows = ["rootAccuracy", "qualityAccuracy", "tetradAccuracy", "exactAccuracy", "top3Accuracy", "boundaryPrecision", "boundaryRecall", "overSegmentationRate", "underSegmentationRate"] as const;
+  const rows = ["rootAccuracy", "rootTop3Accuracy", "qualityAccuracy", "qualityTop3Accuracy", "tetradAccuracy", "exactAccuracy", "exactTop3Accuracy", "boundaryPrecision", "boundaryRecall", "overSegmentationRate", "underSegmentationRate"] as const;
   return [
     "# MIDI Analyzer Comparison", "", `Dataset: ${candidate.datasetId}`, "",
     "| Metric | Legacy | Candidate | Delta |", "|---|---:|---:|---:|",

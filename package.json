@@ -27,6 +27,7 @@
     "benchmark:midi": "vite-node scripts/benchmark-midi-analysis.ts",
     "diagnose:midi-failures": "vite-node scripts/analyze-midi-failures.ts",
     "ablate:midi": "vite-node scripts/ablate-midi-analysis.ts",
+    "eval:degrade": "vite-node scripts/generate-degraded-midi.ts --run-cli",
     "tauri": "tauri"
   },
   "dependencies": {
