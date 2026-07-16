@@ -19,6 +19,7 @@ import {
   openRealEvaluationFolder,
   rebuildLocalMidiSourceIndex,
 } from "../storage/realEvaluationStorage";
+import { Copy, Download, FolderOpen, RotateCcw, Trash2, Upload } from "lucide-react";
 
 const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
 
@@ -288,15 +289,15 @@ export function SettingsDialog({
             <h4 className="font-semibold">{ui.dataLocation}</h4>
             <p className="mt-2 break-all text-sm text-[var(--lv-text-muted)]">{dataPath}</p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => void openDataFolder()}>{ui.openFolder}</button>
-              <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => void copyDataPath()}>{ui.copyPath}</button>
+              <button className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => void openDataFolder()}><FolderOpen aria-hidden="true" size={16} />{ui.openFolder}</button>
+              <button className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => void copyDataPath()}><Copy aria-hidden="true" size={16} />{ui.copyPath}</button>
             </div>
           </div>
           <div className="mt-5 grid gap-5 border-t border-[var(--lv-border)] pt-4 md:grid-cols-2">
             <div>
               <h4 className="font-semibold">{ui.exportTitle}</h4>
               <p className="mt-1 text-sm text-[var(--lv-text-muted)]">{ui.exportDescription}</p>
-              <button className="mt-3 rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => void exportData()}>{ui.exportButton}</button>
+              <button className="mt-3 inline-flex items-center gap-2 rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => void exportData()}><Download aria-hidden="true" size={16} />{ui.exportButton}</button>
             </div>
             <div>
               <h4 className="font-semibold">{ui.importTitle}</h4>
@@ -305,7 +306,7 @@ export function SettingsDialog({
                 <option value="merge">{ui.importMerge}</option>
                 <option value="replace">{ui.importReplace}</option>
               </select>
-              <button className="mt-3 rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => void importData()}>{ui.importButton}</button>
+              <button className="mt-3 inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => void importData()}><Upload aria-hidden="true" size={16} />{ui.importButton}</button>
               {error ? <p className="mt-2 text-sm text-red-200">{error}</p> : null}
             </div>
           </div>
@@ -319,7 +320,7 @@ export function SettingsDialog({
               {(showAllBackups ? backups : backups.slice(0, 5)).map((backup) => (
                 <div key={backup.name} className="flex flex-wrap items-center justify-between gap-3 border border-[var(--lv-border)] p-3 text-sm">
                   <div><p className="font-medium">{backup.name}</p><p className="text-[var(--lv-text-muted)]">{backup.createdAt}</p></div>
-                  <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2" onClick={() => restore(backup.name)}>{ui.restore}</button>
+                  <button className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2" onClick={() => restore(backup.name)}><RotateCcw aria-hidden="true" size={16} />{ui.restore}</button>
                 </div>
               ))}
             </div>
@@ -354,7 +355,7 @@ export function SettingsDialog({
                   <input className="mt-1" type="checkbox" checked={feedbackEnabled} onChange={(event) => updateFeedbackEnabled(event.target.checked)} />
                   <span><strong className="block text-[var(--lv-text-secondary)]">{ui.correctionStore}</strong><span className="mt-1 block text-[var(--lv-text-muted)]">{ui.correctionStoreHelp}</span></span>
                 </label>
-                <button className="mt-4 rounded border border-red-400/50 px-3 py-2 text-red-100" onClick={clearFeedback}>{ui.deleteCorrectionLog}</button>
+                <button className="mt-4 inline-flex items-center gap-2 rounded border border-red-400/50 px-3 py-2 text-red-100" onClick={clearFeedback}><Trash2 aria-hidden="true" size={16} />{ui.deleteCorrectionLog}</button>
               </div>
               <div className="mt-5 border-t border-amber-400/20 pt-4">
                 <h4 className="font-semibold">{ui.evaluationTitle}</h4>
@@ -362,9 +363,9 @@ export function SettingsDialog({
                 <div className="mt-4 flex flex-wrap gap-2">
                   <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2" onClick={() => void runEvaluationAction(openRealEvaluationFolder, ui.evaluationFolderOpened)}>{ui.openEvaluationFolder}</button>
                   <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2" onClick={() => void rebuildSourceIndex()}>{ui.rebuildSourceIndex}</button>
-                  <button className="rounded border border-red-400/50 px-3 py-2 text-red-100" onClick={() => confirmEvaluationDeletion(deleteDifferenceReviews, ui.deleteReviewsTitle, ui.reviewsDeleted)}>{ui.deleteReviews}</button>
-                  <button className="rounded border border-red-400/50 px-3 py-2 text-red-100" onClick={() => confirmEvaluationDeletion(deletePromotedCorrections, ui.deletePromotedTitle, ui.promotedDeleted)}>{ui.deletePromoted}</button>
-                  <button className="rounded border border-red-400/50 px-3 py-2 text-red-100" onClick={() => confirmEvaluationDeletion(deleteRealEvaluationData, ui.deleteEvaluationTitle, ui.evaluationDeleted)}>{ui.deleteEvaluation}</button>
+                  <button className="inline-flex items-center gap-2 rounded border border-red-400/50 px-3 py-2 text-red-100" onClick={() => confirmEvaluationDeletion(deleteDifferenceReviews, ui.deleteReviewsTitle, ui.reviewsDeleted)}><Trash2 aria-hidden="true" size={16} />{ui.deleteReviews}</button>
+                  <button className="inline-flex items-center gap-2 rounded border border-red-400/50 px-3 py-2 text-red-100" onClick={() => confirmEvaluationDeletion(deletePromotedCorrections, ui.deletePromotedTitle, ui.promotedDeleted)}><Trash2 aria-hidden="true" size={16} />{ui.deletePromoted}</button>
+                  <button className="inline-flex items-center gap-2 rounded border border-red-400/50 px-3 py-2 text-red-100" onClick={() => confirmEvaluationDeletion(deleteRealEvaluationData, ui.deleteEvaluationTitle, ui.evaluationDeleted)}><Trash2 aria-hidden="true" size={16} />{ui.deleteEvaluation}</button>
                 </div>
               </div>
             </div>

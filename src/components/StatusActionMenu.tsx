@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import type { Status } from "../domain/types";
+import { MoreHorizontal } from "lucide-react";
 
 export interface StatusMenuAction {
   label: string;
@@ -119,7 +120,7 @@ export function StatusActionMenu({
       <button
         ref={triggerRef}
         type="button"
-        className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm text-[var(--lv-text-secondary)]"
+        className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm text-[var(--lv-text-secondary)]"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
@@ -132,6 +133,7 @@ export function StatusActionMenu({
         }}
         onKeyDown={handleTriggerKeyDown}
       >
+        <MoreHorizontal aria-hidden="true" size={16} />
         {label}
       </button>
       {open ? (

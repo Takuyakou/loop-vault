@@ -1,4 +1,5 @@
 import { progressionEditorCopy, type AppLanguage } from "../../i18n";
+import { Redo2, Undo2 } from "lucide-react";
 
 interface ProgressionEditorToolbarProps {
   canUndo: boolean;
@@ -31,7 +32,7 @@ export function ProgressionEditorToolbar({
           aria-label={text.undo}
           title={text.undo}
         >
-          ↶
+          <Undo2 aria-hidden="true" size={16} />
         </button>
         <button
           type="button"
@@ -41,7 +42,7 @@ export function ProgressionEditorToolbar({
           aria-label={text.redo}
           title={text.redo}
         >
-          ↷
+          <Redo2 aria-hidden="true" size={16} />
         </button>
       </div>
       {dirty ? (

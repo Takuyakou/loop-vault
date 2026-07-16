@@ -15,6 +15,7 @@ import {
 import { PlayToggle } from "../PlayToggle";
 import { ChordAlternativeList } from "./ChordAlternativeList";
 import { ChordStructureEditor } from "./ChordStructureEditor";
+import { Trash2, TriangleAlert } from "lucide-react";
 
 interface ChordInspectorProps {
   slot?: EditableChordSlot;
@@ -229,7 +230,8 @@ export function ChordInspector({
       </dl>
 
       {slot.warnings.length > 0 ? (
-        <div className="mt-4 border-l-2 border-amber-300 pl-3 text-xs text-amber-100">
+        <div className="mt-4 flex items-start gap-2 border-l-2 border-amber-300 pl-3 text-xs text-amber-100">
+          <TriangleAlert aria-hidden="true" className="mt-0.5 shrink-0" size={16} />
           {slot.warnings.join(" / ")}
         </div>
       ) : null}
@@ -326,7 +328,8 @@ export function ChordInspector({
               {text.mergeNext}
             </button>
           </div>
-          <button type="button" className="px-3 py-2 text-left text-sm text-red-200 disabled:opacity-40" disabled={!canDelete} onClick={onDelete}>
+          <button type="button" className="inline-flex items-center gap-2 px-3 py-2 text-left text-sm text-red-200 disabled:opacity-40" disabled={!canDelete} onClick={onDelete}>
+            <Trash2 aria-hidden="true" size={16} />
             {text.deleteChord}
           </button>
         </div>

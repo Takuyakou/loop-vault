@@ -7,6 +7,7 @@ import { formatProgressionText } from "../domain/progressionText";
 import type { SavedProgressionBlock, SongIdea } from "../domain/types";
 import type { AppCopy, AppLanguage } from "../i18n";
 import { usePlaybackState } from "../hooks/usePlaybackState";
+import { ChevronRight, Copy, Star } from "lucide-react";
 
 type ProgressionEntry = { idea: SongIdea; block: SavedProgressionBlock };
 type SortField = "capturedAt" | "updatedAt" | "key" | "bpm";
@@ -128,7 +129,10 @@ export function VaultView({
           <select className="border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-2 text-xs" value={sort} onChange={(event) => setSort(event.target.value as SortField)}><option value="capturedAt">{copy.library.captured}</option><option value="updatedAt">{copy.library.updated}</option><option value="key">Key</option><option value="bpm">BPM</option></select>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <button className={onlyPinned ? "bg-[var(--lv-surface-raised)] px-3 py-1 text-xs text-[var(--lv-warning)]" : "border border-[var(--lv-border)] px-3 py-1 text-xs text-[var(--lv-text-muted)]"} onClick={() => setOnlyPinned((value) => !value)}>★ {copy.library.onlyFavorites}</button>
+          <button className={onlyPinned ? "inline-flex items-center gap-1.5 bg-[var(--lv-surface-raised)] px-3 py-1 text-xs text-[var(--lv-warning)]" : "inline-flex items-center gap-1.5 border border-[var(--lv-border)] px-3 py-1 text-xs text-[var(--lv-text-muted)]"} onClick={() => setOnlyPinned((value) => !value)}>
+            <Star aria-hidden="true" size={16} fill={onlyPinned ? "currentColor" : "none"} />
+            {copy.library.onlyFavorites}
+          </button>
           <FilterSelect label="Key" allLabel={copy.library.all} value={keyFilter} values={keys} onChange={setKeyFilter} />
           <FilterSelect label={copy.library.source} allLabel={copy.library.all} value={sourceFilter} values={sources} onChange={setSourceFilter} />
           <FilterSelect label={copy.library.tag} allLabel={copy.library.all} value={tagFilter} values={tags} onChange={setTagFilter} />
@@ -181,14 +185,14 @@ function ProgressionRow({ entry, selected, showDegrees, copy, onSelect, onOpen, 
         onClick={(event) => { event.stopPropagation(); onPin(); }}
         aria-label={entry.block.pinned ? copy.library.removeFavorite : copy.library.addFavorite}
         title={entry.block.pinned ? copy.library.removeFavorite : copy.library.addFavorite}
-      >★</button>
+      ><Star aria-hidden="true" size={16} fill={entry.block.pinned ? "currentColor" : "none"} /></button>
       <button
         type="button"
         className="lv-button-ghost grid h-8 w-8 shrink-0 place-items-center text-xs"
         onClick={(event) => { event.stopPropagation(); onCopy(); }}
         aria-label={copy.library.copyProgression}
         title={copy.library.copyProgression}
-      >C</button>
+      ><Copy aria-hidden="true" size={16} /></button>
       <button
         type="button"
         className="lv-button-ghost grid h-8 w-8 shrink-0 place-items-center text-lg"
@@ -201,7 +205,7 @@ function ProgressionRow({ entry, selected, showDegrees, copy, onSelect, onOpen, 
         aria-label={copy.library.openIdea}
         title={copy.library.openIdea}
       >
-        <span aria-hidden="true">›</span>
+        <ChevronRight aria-hidden="true" size={20} />
       </button>
     </div>
   </div>;

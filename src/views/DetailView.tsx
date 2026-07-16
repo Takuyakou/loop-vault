@@ -22,6 +22,7 @@ import type { AppCopy, AppLanguage } from "../i18n";
 import { type DraftParseResult, useDraftSave } from "../hooks/useDraftSave";
 import type { UndoRequest } from "../hooks/useUndoQueue";
 import { ProgressionGrid } from "../ui/ProgressionGrid";
+import { Copy, ExternalLink, FolderOpen, Trash2, TriangleAlert } from "lucide-react";
 
 type Reference = SongIdea["references"][number]; type Asset = SongIdea["assets"][number];
 const keySuggestions = ["C", "Cm", "D", "Dm", "E", "Em", "F", "Fm", "G", "Gm", "A", "Am", "B", "Bm"]; const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
@@ -71,10 +72,12 @@ function ProgressionBlockCard({
           </p>
         </div>
         <PlayToggle source={source} request={{ type: "timeline", timeline: block.chords, bpm }} playLabel={copy.common.preview} stopLabel={copy.common.stop} className="rounded border border-cyan-500/60 px-2 py-1 text-cyan-100" onError={onPreviewError} />
-        <button className="rounded border border-teal-500/60 px-2 py-1 text-teal-100" onClick={onCopyProgression}>
+        <button className="inline-flex items-center gap-2 rounded border border-teal-500/60 px-2 py-1 text-teal-100" onClick={onCopyProgression}>
+          <Copy aria-hidden="true" size={16} />
           {copy.capture.copyProgression}
         </button>
-        <button className="rounded border border-[var(--lv-border-strong)] px-2 py-1 text-[var(--lv-text-secondary)]" onClick={onRemove}>
+        <button className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-2 py-1 text-[var(--lv-text-secondary)]" onClick={onRemove}>
+          <Trash2 aria-hidden="true" size={16} />
           {copy.common.delete}
         </button>
       </div>
@@ -464,7 +467,10 @@ export function DetailView({
             copy={copy.detail.statusControl}
             onMoveStatus={moveStatus}
           />
-          <button className="mt-5 rounded border border-red-500/50 px-3 py-2 text-sm text-red-200" onClick={() => requestDelete(idea)}>{copy.common.delete}</button>
+          <button className="mt-5 inline-flex items-center gap-2 rounded border border-red-500/50 px-3 py-2 text-sm text-red-200" onClick={() => requestDelete(idea)}>
+            <Trash2 aria-hidden="true" size={16} />
+            {copy.common.delete}
+          </button>
         </Panel>
 
         <Panel>
@@ -573,7 +579,10 @@ export function DetailView({
               <div key={`${reference.title}-${index}`} className="border border-[var(--lv-border)] p-3 text-sm">
                 <div className="flex justify-between gap-3">
                   <p className="font-medium">{reference.title}</p>
-                  <button className="text-[var(--lv-text-muted)]" onClick={() => requestReferenceRemoval(index)}>{copy.common.delete}</button>
+                  <button className="inline-flex items-center gap-1.5 text-[var(--lv-text-muted)]" onClick={() => requestReferenceRemoval(index)}>
+                    <Trash2 aria-hidden="true" size={16} />
+                    {copy.common.delete}
+                  </button>
                 </div>
                 {reference.url ? <p className="mt-1 break-all text-[var(--lv-text-muted)]">{reference.url}</p> : null}
                 {reference.memo ? <p className="mt-1 text-[var(--lv-text-secondary)]">{reference.memo}</p> : null}
@@ -610,24 +619,32 @@ export function DetailView({
                       </button>
                     ) : null}
                     <button
-                      className="rounded border border-[var(--lv-border-strong)] px-2 py-1 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 rounded border border-[var(--lv-border-strong)] px-2 py-1 disabled:cursor-not-allowed disabled:opacity-50"
                       disabled={!canOpenAssetPath(asset.path)}
                       onClick={() => void openAsset(asset)}
                     >
+                      <ExternalLink aria-hidden="true" size={16} />
                       {copy.common.open}
                     </button>
-                    <button className="rounded border border-[var(--lv-border-strong)] px-2 py-1" onClick={() => void showAsset(asset)}>{copy.common.folder}</button>
+                    <button className="inline-flex items-center gap-1.5 rounded border border-[var(--lv-border-strong)] px-2 py-1" onClick={() => void showAsset(asset)}>
+                      <FolderOpen aria-hidden="true" size={16} />
+                      {copy.common.folder}
+                    </button>
                     {asset.missing ? (
-                      <button className="rounded border border-amber-500/60 px-2 py-1 text-amber-100" onClick={() => void replaceAssetPath(asset)}>
+                      <button className="inline-flex items-center gap-1.5 rounded border border-amber-500/60 px-2 py-1 text-amber-100" onClick={() => void replaceAssetPath(asset)}>
+                        <TriangleAlert aria-hidden="true" size={16} />
                         {copy.detail.fixPath}
                       </button>
                     ) : null}
-                    <button className="rounded border border-[var(--lv-border-strong)] px-2 py-1" onClick={() => requestAssetRemoval(asset.id)}>{copy.common.delete}</button>
+                    <button className="inline-flex items-center gap-1.5 rounded border border-[var(--lv-border-strong)] px-2 py-1" onClick={() => requestAssetRemoval(asset.id)}>
+                      <Trash2 aria-hidden="true" size={16} />
+                      {copy.common.delete}
+                    </button>
                   </div>
                 </div>
                 <p className="mt-2 break-all text-[var(--lv-text-muted)]">{asset.path || copy.common.pathUnset}</p>
-                {!canOpenAssetPath(asset.path) && asset.path ? <p className="mt-2 text-xs text-amber-200">{copy.detail.unsupportedExtension}</p> : null}
-                {asset.missing ? <p className="mt-2 text-xs text-red-200">{copy.detail.missingAsset}</p> : null}
+                {!canOpenAssetPath(asset.path) && asset.path ? <p className="mt-2 flex items-center gap-1.5 text-xs text-amber-200"><TriangleAlert aria-hidden="true" size={16} />{copy.detail.unsupportedExtension}</p> : null}
+                {asset.missing ? <p className="mt-2 flex items-center gap-1.5 text-xs text-red-200"><TriangleAlert aria-hidden="true" size={16} />{copy.detail.missingAsset}</p> : null}
                 {asset.memo ? <p className="mt-2 text-[var(--lv-text-secondary)]">{asset.memo}</p> : null}
               </div>
             ))}
