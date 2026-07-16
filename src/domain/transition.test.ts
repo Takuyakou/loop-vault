@@ -85,4 +85,58 @@ describe("transition", () => {
     });
     expect(result.idea.updatedAt).toBe(now.toISOString());
   });
+
+  it("records a trimmed reason only when moving to Hold or Abandoned", () => {
+    const original = makeIdea({ chordMemo: "Keep this memo unchanged" });
+    const held = transition(original, "hold", now, {
+      reason: "  Arrangement direction is undecided  ",
+    });
+
+    expect(held.ok).toBe(true);
+    if (!held.ok) {
+      return;
+    }
+    expect(held.idea.statusHistory[held.idea.statusHistory.length - 1]).toEqual({
+      status: "hold",
+      at: now.toISOString(),
+      reason: "Arrangement direction is undecided",
+    });
+    expect(held.idea.chordMemo).toBe("Keep this memo unchanged");
+
+    const abandoned = transition(makeIdea({ status: "loop" }), "abandoned", now, {
+      reason: "No longer fits the project",
+    });
+    expect(abandoned.ok && abandoned.idea.statusHistory[abandoned.idea.statusHistory.length - 1]?.reason).toBe(
+      "No longer fits the project",
+    );
+  });
+
+  it("does not record a reason for pipeline transitions", () => {
+    const result = transition(makeIdea({ status: "loop" }), "arrange", now, {
+      reason: "This must not be persisted",
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+    expect(result.idea.statusHistory[result.idea.statusHistory.length - 1]).toEqual({
+      status: "arrange",
+      at: now.toISOString(),
+    });
+  });
+
+  it("rejects inactive-status reasons longer than 500 characters", () => {
+    const result = transition(makeIdea(), "hold", now, {
+      reason: "x".repeat(501),
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        code: "reason-too-long",
+        message: "Status reason must be 500 characters or fewer.",
+      },
+    });
+  });
 });

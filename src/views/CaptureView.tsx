@@ -630,7 +630,7 @@ function CaptureEmptyState({
         <button className="mt-7 rounded bg-[var(--lv-accent)] px-5 py-3 text-sm font-semibold text-stone-950" onClick={onChooseMidi}>
           {copy.capture.loadMidi}
         </button>
-        <p className="mt-3 text-xs text-[var(--lv-text)]0">{language === "ja" ? ".mid / .midi に対応" : ".mid / .midi supported"}</p>
+        <p className="mt-3 text-xs text-[var(--lv-text-muted)]">{language === "ja" ? ".mid / .midi に対応" : ".mid / .midi supported"}</p>
         {status === "analyzing" ? (
           <div className="mt-6 border border-cyan-500/30 bg-cyan-500/10 p-4 text-left text-sm text-cyan-100">
             <p className="font-semibold">{copy.capture.analyzing}</p>
@@ -783,7 +783,7 @@ export function TimelineDetails({
           <p className="text-sm text-[var(--lv-text-muted)]">{copy.capture.noTimeline}</p>
         )}
       </div>
-      <p className="mt-4 text-xs text-[var(--lv-text)]0">
+      <p className="mt-4 text-xs text-[var(--lv-text-muted)]">
         {language === "ja" ? "候補ブロックに含まれない部分も確認できます。" : "This also shows chords outside the reusable candidate blocks."}
       </p>
     </details>
@@ -1136,7 +1136,7 @@ export function ProgressionCandidateCard({
         ) : null}
       </div>
       {showRomanNumerals && selectedRomanHint ? (
-        <p className="mt-2 text-xs text-[var(--lv-text)]0">{selectedRomanHint.label}{selectedRomanHint.detail ? ` · ${selectedRomanHint.detail}` : ""}{selectedRomanHint.confidence !== "high" ? (language === "ja" ? "（参考）" : " (reference)") : ""}</p>
+        <p className="mt-2 text-xs text-[var(--lv-text-muted)]">{selectedRomanHint.label}{selectedRomanHint.detail ? ` · ${selectedRomanHint.detail}` : ""}{selectedRomanHint.confidence !== "high" ? (language === "ja" ? "（参考）" : " (reference)") : ""}</p>
       ) : null}
       {isExpanded && visibleWarnings.length > 0 ? (
         <div className="mt-3 flex flex-wrap gap-2">
@@ -1252,11 +1252,11 @@ export function ProgressionSaveDialog({
 
       {mode === "new" ? (
         <div className="mt-4 grid gap-3">
-          <label className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--lv-text)]0">
+          <label className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--lv-text-muted)]">
             {language === "ja" ? "タイトル" : "Title"}
             <input className={`${inputClass} mt-2`} value={title} onChange={(event) => onTitleChange(event.target.value)} />
           </label>
-          <label className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--lv-text)]0">
+          <label className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--lv-text-muted)]">
             Next Action
             <input className={`${inputClass} mt-2`} value={nextAction} onChange={(event) => setNextAction(event.target.value)} />
           </label>
@@ -1264,7 +1264,7 @@ export function ProgressionSaveDialog({
       ) : null}
 
       {needsIdea ? (
-        <label className="mt-4 block text-xs font-semibold uppercase tracking-[0.12em] text-[var(--lv-text)]0">
+        <label className="mt-4 block text-xs font-semibold uppercase tracking-[0.12em] text-[var(--lv-text-muted)]">
           {language === "ja" ? "追加先Idea" : "Destination idea"}
           <select className={`${inputClass} mt-2`} value={ideaId} onChange={(event) => setIdeaId(event.target.value)}>
             <option value="">{language === "ja" ? "既存Ideaを選ぶ" : "Choose an existing idea"}</option>
@@ -1325,7 +1325,7 @@ function SaveModeOption({
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div className="border border-[var(--lv-border)] bg-[var(--lv-bg)] p-3">
-      <p className="text-xs uppercase tracking-[0.12em] text-[var(--lv-text)]0">{label}</p>
+      <p className="text-xs uppercase tracking-[0.12em] text-[var(--lv-text-muted)]">{label}</p>
       <p className="mt-1 font-semibold text-[var(--lv-text)]">{value}</p>
     </div>
   );

@@ -1,4 +1,4 @@
-import type { SongIdea, Status } from "./types";
+import type { SongIdea, Status, StatusHistoryEntry } from "./types";
 
 const pipelineStatuses = ["idea", "loop", "arrange", "mix", "done"] as const;
 const inactiveStatuses = ["hold", "abandoned"] as const;
@@ -10,7 +10,12 @@ export type TransitionErrorCode =
   | "already-in-status"
   | "invalid-jump"
   | "missing-restore-target"
-  | "invalid-restore-target";
+  | "invalid-restore-target"
+  | "reason-too-long";
+
+export interface TransitionOptions {
+  reason?: string;
+}
 
 export type TransitionResult =
   | { ok: true; idea: SongIdea }
@@ -26,6 +31,7 @@ export function transition(
   idea: SongIdea,
   to: Status,
   now: Date,
+  options: TransitionOptions = {},
 ): TransitionResult {
   if (idea.status === to) {
     return transitionError(
@@ -56,8 +62,21 @@ export function transition(
   }
 
   const at = now.toISOString();
+  const reason = isInactiveStatus(to) ? options.reason?.trim() : undefined;
+  if (reason && reason.length > 500) {
+    return transitionError(
+      "reason-too-long",
+      "Status reason must be 500 characters or fewer.",
+    );
+  }
+
   const completedAt =
     to === "done" ? (idea.completedAt ?? at) : idea.completedAt;
+  const historyEntry: StatusHistoryEntry = {
+    status: to,
+    at,
+    ...(reason ? { reason } : {}),
+  };
 
   return {
     ok: true,
@@ -67,7 +86,7 @@ export function transition(
       prevStatus: nextPrevStatus(idea, to),
       completedAt,
       updatedAt: at,
-      statusHistory: [...idea.statusHistory, { status: to, at }],
+      statusHistory: [...idea.statusHistory, historyEntry],
     }),
   };
 }
