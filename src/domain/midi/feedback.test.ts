@@ -30,5 +30,6 @@ describe("MIDI correction feedback", () => {
     expect(buildCorrectionEvents(candidate, edited, analysis, ["structure-editor"])).toMatchObject([
       { corrected: "Dm", editMethod: "structure-editor" },
     ]);
+    expect(buildCorrectionEvents(candidate, edited, analysis, ["split"])).toEqual([]);
   });
 });

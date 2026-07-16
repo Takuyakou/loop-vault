@@ -207,6 +207,38 @@ describe("ProgressionCandidateCard", () => {
     expect(isEditableKeyboardTarget(document.createElement("button"))).toBe(false);
   });
 
+  it("splits, merges, and deletes chord slots while keeping the editor usable", async () => {
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(
+        <ProgressionCandidateCard
+          candidate={candidate()}
+          candidateIndex={0}
+          bpm={96}
+          onCopyProgression={vi.fn()}
+          onPreview={vi.fn()}
+          onPreviewChord={vi.fn()}
+          copy={appCopy.ja}
+          language="ja"
+          isExpanded
+        />,
+      );
+    });
+
+    const findButton = (label: string) => [...container.querySelectorAll("button")]
+      .find((button) => button.textContent?.trim() === label);
+    expect(container.querySelectorAll('[role="option"]')).toHaveLength(2);
+    await act(async () => findButton("コードを分割")?.click());
+    expect(container.querySelectorAll('[role="option"]')).toHaveLength(3);
+    await act(async () => findButton("次と結合")?.click());
+    expect(container.querySelectorAll('[role="option"]')).toHaveLength(2);
+    await act(async () => findButton("コードを削除")?.click());
+    expect(container.querySelectorAll('[role="option"]')).toHaveLength(1);
+
+    await act(async () => root.unmount());
+  });
+
   it("renders the save dialog with save methods and default next action", () => {
     const markup = renderToStaticMarkup(
       <ProgressionSaveDialog

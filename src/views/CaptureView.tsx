@@ -9,15 +9,20 @@ import { parseChordLabel } from "../domain/chords";
 import {
   applyEditableProgression,
   canRedoProgressionEdit,
+  canMergeEditableChords,
+  canSplitEditableChord,
   canUndoProgressionEdit,
   createEditableProgression,
+  deleteEditableChord,
   hasProgressionEdits,
   progressionEditSummary,
+  mergeEditableChords,
   redoProgressionEdit,
   replaceEditableChord,
   resetAllEditableChords,
   resetEditableChord,
   selectEditableSlot,
+  splitEditableChord,
   undoProgressionEdit,
 } from "../domain/progressionEditing";
 import type { EditableProgression, ProgressionEditSummaryItem } from "../domain/progressionEditing";
@@ -899,6 +904,14 @@ export function ProgressionCandidateCard({
       if (event.key === " ") {
         event.preventDefault();
         void selectChord(selectedChordIndex);
+        return;
+      }
+      if (event.key === "Delete") {
+        const slot = editable.slots[selectedChordIndex];
+        if (slot && editable.slots.length > 1) {
+          event.preventDefault();
+          commitStructuralChange(deleteEditableChord(editable, slot.id));
+        }
       }
     }
     window.addEventListener("keydown", handleKeyDown);
@@ -982,6 +995,16 @@ export function ProgressionCandidateCard({
     await onPreviewChord({ ...editedCandidate, chords: previewChords }, selectedChordIndex);
   }
 
+  function commitStructuralChange(next: EditableProgression) {
+    if (next === editable) {
+      return;
+    }
+    stopCandidatePreview();
+    setEditable(next);
+    const nextIndex = next.slots.findIndex((slot) => slot.id === next.selectedSlotId);
+    setSelectedChordIndex(Math.max(0, nextIndex));
+  }
+
   const playingChord = playingChordIndex === null ? undefined : chords[playingChordIndex];
   const elapsedSeconds =
     previewStartedAt === null ? 0 : (window.performance.now() - previewStartedAt) / 1000;
@@ -997,6 +1020,10 @@ export function ProgressionCandidateCard({
           elapsedSeconds,
         );
   const selectedChord = chords[selectedChordIndex] ?? chords[0];
+  const selectedSlotIndex = editable.slots.findIndex((slot) => slot.id === editable.selectedSlotId);
+  const selectedSlot = selectedSlotIndex >= 0 ? editable.slots[selectedSlotIndex] : undefined;
+  const previousSlot = selectedSlotIndex > 0 ? editable.slots[selectedSlotIndex - 1] : undefined;
+  const nextSlot = selectedSlotIndex >= 0 ? editable.slots[selectedSlotIndex + 1] : undefined;
   const selectedRomanHint = selectedChord
     ? romanNumeralHint(selectedChord.chord, detectedKey)
     : undefined;
@@ -1043,7 +1070,7 @@ export function ProgressionCandidateCard({
         </div>
         {isExpanded ? (
           <ChordInspector
-            slot={editable.slots.find((slot) => slot.id === editable.selectedSlotId)}
+            slot={selectedSlot}
             language={language}
             onPreview={(chord) => void previewChord(chord)}
             onApply={(chord, source) => {
@@ -1058,6 +1085,14 @@ export function ProgressionCandidateCard({
                 setEditable((current) => resetEditableChord(current, slotId));
               }
             }}
+            canSplit={Boolean(selectedSlot && canSplitEditableChord(editable, selectedSlot.id))}
+            canMergePrevious={Boolean(previousSlot && selectedSlot && canMergeEditableChords(editable, previousSlot.id, selectedSlot.id))}
+            canMergeNext={Boolean(selectedSlot && nextSlot && canMergeEditableChords(editable, selectedSlot.id, nextSlot.id))}
+            canDelete={editable.slots.length > 1}
+            onSplit={() => selectedSlot && commitStructuralChange(splitEditableChord(editable, selectedSlot.id))}
+            onMergePrevious={() => previousSlot && selectedSlot && commitStructuralChange(mergeEditableChords(editable, previousSlot.id, selectedSlot.id, "second"))}
+            onMergeNext={() => selectedSlot && nextSlot && commitStructuralChange(mergeEditableChords(editable, selectedSlot.id, nextSlot.id, "first"))}
+            onDelete={() => selectedSlot && commitStructuralChange(deleteEditableChord(editable, selectedSlot.id))}
           />
         ) : null}
       </div>

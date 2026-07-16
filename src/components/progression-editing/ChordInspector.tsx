@@ -18,6 +18,14 @@ interface ChordInspectorProps {
     source: Extract<ProgressionEditSource, "manual-label" | "alternative" | "structure-editor">,
   ) => void;
   onReset: () => void;
+  canSplit?: boolean;
+  canMergePrevious?: boolean;
+  canMergeNext?: boolean;
+  canDelete?: boolean;
+  onSplit?: () => void;
+  onMergePrevious?: () => void;
+  onMergeNext?: () => void;
+  onDelete?: () => void;
 }
 
 export function ChordInspector({
@@ -26,6 +34,14 @@ export function ChordInspector({
   onPreview,
   onApply,
   onReset,
+  canSplit = false,
+  canMergePrevious = false,
+  canMergeNext = false,
+  canDelete = false,
+  onSplit,
+  onMergePrevious,
+  onMergeNext,
+  onDelete,
 }: ChordInspectorProps) {
   const [draftLabel, setDraftLabel] = useState(slot?.currentChord.label ?? "");
   const [draftChord, setDraftChord] = useState<ChordSymbol | undefined>(slot?.currentChord);
@@ -169,6 +185,27 @@ export function ChordInspector({
               {language === "ja" ? "元に戻す" : "Reset"}
             </button>
           ) : null}
+        </div>
+      </div>
+      <div className="mt-5 border-t border-[var(--lv-border)] pt-4">
+        <p className="text-xs text-[var(--lv-text-muted)]">
+          {language === "ja" ? "区間を編集" : "Edit timing"}
+        </p>
+        <div className="mt-2 grid gap-2">
+          <button type="button" className="border border-[var(--lv-border-strong)] px-3 py-2 text-left text-sm disabled:opacity-40" disabled={!canSplit} onClick={onSplit}>
+            {language === "ja" ? "コードを分割" : "Split chord"}
+          </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" className="border border-[var(--lv-border-strong)] px-2 py-2 text-sm disabled:opacity-40" disabled={!canMergePrevious} onClick={onMergePrevious}>
+              {language === "ja" ? "前と結合" : "Merge previous"}
+            </button>
+            <button type="button" className="border border-[var(--lv-border-strong)] px-2 py-2 text-sm disabled:opacity-40" disabled={!canMergeNext} onClick={onMergeNext}>
+              {language === "ja" ? "次と結合" : "Merge next"}
+            </button>
+          </div>
+          <button type="button" className="px-3 py-2 text-left text-sm text-red-200 disabled:opacity-40" disabled={!canDelete} onClick={onDelete}>
+            {language === "ja" ? "コードを削除" : "Delete chord"}
+          </button>
         </div>
       </div>
     </aside>
