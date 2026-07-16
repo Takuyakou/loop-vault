@@ -78,7 +78,7 @@ export function VaultView({
 
   const handleKey = useCallback((event: KeyboardEvent) => {
     const target = event.target as HTMLElement | null;
-    if (target?.matches("input, textarea, select") || target?.isContentEditable) return;
+    if (target?.closest("input, textarea, select, button, a, [role='button']") || target?.isContentEditable) return;
     if (event.key === "/") {
       event.preventDefault();
       searchRef.current?.focus();
@@ -145,12 +145,62 @@ function ProgressionRow({ entry, selected, showDegrees, copy, onSelect, onOpen, 
   const playback = usePlaybackState();
   const source = sourceOf(entry);
   const playing = playback.status !== "idle" && samePlaybackSource(playback.source, source);
-  return <div className={`grid min-h-14 grid-cols-[32px_minmax(0,1fr)_70px_74px_minmax(50px,auto)_58px] items-center gap-2 border-b border-[var(--lv-border)] px-2 text-sm ${selected ? "bg-[var(--lv-surface-raised)]" : "hover:bg-[var(--lv-surface)]"} ${playing ? "border-l-2 border-l-[var(--lv-accent)]" : ""}`} onClick={onSelect}>
-    <PlayToggle source={source} request={requestOf(entry)} playLabel={copy.common.preview} stopLabel={copy.common.stop} className="lv-button-ghost grid h-8 w-8 place-items-center" showLabel={false} onError={onPreviewError} />
-    <button className="min-w-0 text-left" onDoubleClick={onOpen}><p className="truncate font-mono">{entry.block.chords.map((item) => item.chord.label).join(" · ")}</p><p className="mt-1 truncate text-xs text-[var(--lv-text-muted)]">{showDegrees && degrees.length ? degrees.join(" · ") : entry.idea.title}{keyOf(entry) ? ` · ${keyOf(entry)}` : ""}</p></button>
-    <span className="text-xs text-[var(--lv-text-muted)]">{bpmOf(entry) || "-"} BPM</span><span className="text-xs text-[var(--lv-text-muted)]">{formatDate(entry.block.capturedAt)}</span>
-    <span className="truncate text-xs text-[var(--lv-text-muted)]">{entry.block.tags.join(" · ") || "-"}</span>
-    <div className="flex items-center gap-2"><button className={entry.block.pinned ? "text-[var(--lv-warning)]" : "text-[var(--lv-text-muted)]"} onClick={onPin} aria-label="Pin">★</button><button className="lv-button-ghost text-xs" onClick={onCopy} aria-label="Copy">C</button></div>
+  return <div className={`lv-vault-row min-h-14 border-b border-[var(--lv-border)] px-2 py-2 text-sm ${selected ? "bg-[var(--lv-surface-raised)]" : "hover:bg-[var(--lv-surface)]"} ${playing ? "border-l-2 border-l-[var(--lv-accent)]" : ""}`} onClick={onSelect}>
+    <div className="lv-vault-play" onClick={(event) => event.stopPropagation()} onDoubleClick={(event) => event.stopPropagation()}>
+      <PlayToggle source={source} request={requestOf(entry)} playLabel={copy.common.preview} stopLabel={copy.common.stop} className="lv-button-ghost grid h-8 w-8 place-items-center" showLabel={false} onError={onPreviewError} />
+    </div>
+    <button
+      type="button"
+      className="lv-vault-progression min-w-0 text-left"
+      onKeyDown={(event) => {
+        if (event.key !== "Enter") return;
+        event.preventDefault();
+        event.stopPropagation();
+        onOpen();
+      }}
+      onDoubleClick={(event) => { event.stopPropagation(); onOpen(); }}
+    >
+      <p className="lv-vault-progression-primary font-mono">{entry.block.chords.map((item) => item.chord.label).join(" · ")}</p>
+      <p className="lv-vault-progression-secondary mt-1 text-xs text-[var(--lv-text-muted)]">
+        {entry.idea.title}{showDegrees && degrees.length ? ` · ${degrees.join(" · ")}` : ""}
+      </p>
+    </button>
+    <div className="lv-vault-metadata text-xs text-[var(--lv-text-muted)]">
+      <span>{keyOf(entry) ? `Key ${keyOf(entry)}` : "Key -"}</span>
+      <span>{bpmOf(entry) || "-"} BPM</span>
+      <span>{formatDate(entry.block.capturedAt)}</span>
+      <span className="lv-vault-tags">{entry.block.tags.join(" · ") || "-"}</span>
+    </div>
+    <div className="lv-vault-actions flex items-center gap-1">
+      <button
+        type="button"
+        className={`grid h-8 w-8 shrink-0 place-items-center ${entry.block.pinned ? "text-[var(--lv-warning)]" : "text-[var(--lv-text-muted)]"}`}
+        onClick={(event) => { event.stopPropagation(); onPin(); }}
+        aria-label={entry.block.pinned ? copy.library.removeFavorite : copy.library.addFavorite}
+        title={entry.block.pinned ? copy.library.removeFavorite : copy.library.addFavorite}
+      >★</button>
+      <button
+        type="button"
+        className="lv-button-ghost grid h-8 w-8 shrink-0 place-items-center text-xs"
+        onClick={(event) => { event.stopPropagation(); onCopy(); }}
+        aria-label={copy.library.copyProgression}
+        title={copy.library.copyProgression}
+      >C</button>
+      <button
+        type="button"
+        className="lv-button-ghost grid h-8 w-8 shrink-0 place-items-center text-lg"
+        onClick={(event) => {
+          event.stopPropagation();
+          if (event.detail > 1) return;
+          onOpen();
+        }}
+        onDoubleClick={(event) => event.stopPropagation()}
+        aria-label={copy.library.openIdea}
+        title={copy.library.openIdea}
+      >
+        <span aria-hidden="true">›</span>
+      </button>
+    </div>
   </div>;
 }
 

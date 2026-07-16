@@ -22,6 +22,54 @@ button {
   font: inherit;
 }
 
+.lv-vault-row {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  grid-template-areas:
+    "play progression actions"
+    ". metadata metadata";
+  align-items: center;
+  column-gap: 0.5rem;
+  row-gap: 0.5rem;
+}
+
+.lv-vault-play {
+  grid-area: play;
+}
+
+.lv-vault-progression {
+  grid-area: progression;
+  overflow-wrap: anywhere;
+}
+
+.lv-vault-progression-primary,
+.lv-vault-progression-secondary {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.lv-vault-metadata {
+  grid-area: metadata;
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.375rem 1rem;
+}
+
+.lv-vault-metadata > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.lv-vault-tags {
+  flex: 1 1 12rem;
+}
+
+.lv-vault-actions {
+  grid-area: actions;
+}
+
 .lv-capture-content {
   padding-bottom: calc(var(--lv-sticky-inspector-height, 0px) + 1.25rem);
 }
@@ -49,6 +97,24 @@ button {
   .lv-responsive-inspector-host {
     padding-right: 1.5rem;
     padding-left: 1.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .lv-vault-row {
+    grid-template-columns: 2rem minmax(0, 1fr) minmax(22.5rem, auto) auto;
+    grid-template-areas: "play progression metadata actions";
+    row-gap: 0;
+  }
+
+  .lv-vault-metadata {
+    display: grid;
+    grid-template-columns: 4.5rem 4.5rem 4.75rem minmax(5rem, 1fr);
+    gap: 0.5rem;
+  }
+
+  .lv-vault-tags {
+    overflow-wrap: anywhere;
   }
 }
 
