@@ -5,7 +5,7 @@ import type {
   ProgressionEditSource,
 } from "../../domain/progressionEditing";
 import type { ChordSymbol } from "../../domain/types";
-import type { AppLanguage } from "../../i18n";
+import { progressionEditorCopy, type AppLanguage } from "../../i18n";
 import { ChordAlternativeList } from "./ChordAlternativeList";
 import { ChordStructureEditor } from "./ChordStructureEditor";
 
@@ -43,6 +43,7 @@ export function ChordInspector({
   onMergeNext,
   onDelete,
 }: ChordInspectorProps) {
+  const text = progressionEditorCopy[language];
   const [draftLabel, setDraftLabel] = useState(slot?.currentChord.label ?? "");
   const [draftChord, setDraftChord] = useState<ChordSymbol | undefined>(slot?.currentChord);
   const [draftSource, setDraftSource] = useState<"manual-label" | "alternative" | "structure-editor">("manual-label");
@@ -59,7 +60,7 @@ export function ChordInspector({
     return (
       <aside className="border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4">
         <p className="text-sm text-[var(--lv-text-muted)]">
-          {language === "ja" ? "コードを選択してください" : "Select a chord"}
+          {text.selectPrompt}
         </p>
       </aside>
     );
@@ -70,11 +71,7 @@ export function ChordInspector({
     setDraftSource("manual-label");
     const parsed = parseChordLabel(label.trim());
     setDraftChord(parsed ?? undefined);
-    setError(parsed || label.trim().length === 0
-      ? undefined
-      : language === "ja"
-        ? "コード名を認識できません。例: Cmaj7, F#m9, G13/B"
-        : "Chord name was not recognized. Try Cmaj7, F#m9, or G13/B.");
+    setError(parsed || label.trim().length === 0 ? undefined : text.invalidChord);
   }
 
   function selectAlternative(chord: ChordSymbol) {
@@ -88,28 +85,28 @@ export function ChordInspector({
   return (
     <aside className="h-fit border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4 xl:sticky xl:top-4">
       <p className="text-xs font-semibold uppercase text-[var(--lv-text-muted)]">
-        {language === "ja" ? "選択中のコード" : "Selected chord"}
+        {text.selectedChord}
       </p>
       <p className="mt-2 text-sm text-[var(--lv-text-secondary)]">
-        {language === "ja" ? `${slot.position.bar}小節 ${slot.position.beat}拍` : `Bar ${slot.position.bar}, beat ${slot.position.beat}`}
+        {text.position(slot.position.bar, slot.position.beat)}
       </p>
       <dl className="mt-4 grid gap-3">
         <InspectorValue
-          label={language === "ja" ? "元の検出値" : "Original detection"}
+          label={text.original}
           value={slot.originalChord.label}
-          actionLabel={language === "ja" ? "元の検出値を試聴" : "Preview original"}
+          actionLabel={text.previewOriginal}
           onAction={() => onPreview(slot.originalChord)}
         />
         <InspectorValue
-          label={language === "ja" ? "現在のコード" : "Current chord"}
+          label={text.current}
           value={slot.currentChord.label}
           emphasized
-          actionLabel={language === "ja" ? "現在のコードを試聴" : "Preview current"}
+          actionLabel={text.previewCurrent}
           onAction={() => onPreview(slot.currentChord)}
         />
         {slot.confidence !== undefined ? (
           <InspectorValue
-            label={language === "ja" ? "信頼度" : "Confidence"}
+            label={text.confidence}
             value={`${Math.round(slot.confidence * 100)}%`}
           />
         ) : null}
@@ -129,7 +126,7 @@ export function ChordInspector({
           language={language}
         />
         <label className="mt-4 block text-xs text-[var(--lv-text-muted)]" htmlFor={`chord-label-${slot.id}`}>
-          {language === "ja" ? "コード名を入力" : "Chord label"}
+          {text.chordLabel}
         </label>
         <input
           id={`chord-label-${slot.id}`}
@@ -166,7 +163,7 @@ export function ChordInspector({
             disabled={!draftChord}
             onClick={() => draftChord && onPreview(draftChord)}
           >
-            {language === "ja" ? "試聴" : "Preview"}
+            {text.preview}
           </button>
           <button
             type="button"
@@ -174,7 +171,7 @@ export function ChordInspector({
             disabled={!draftChord || draftChord.label === slot.currentChord.label}
             onClick={() => draftChord && onApply(draftChord, draftSource)}
           >
-            {language === "ja" ? "適用" : "Apply"}
+            {text.apply}
           </button>
           {slot.edited ? (
             <button
@@ -182,29 +179,29 @@ export function ChordInspector({
               className="px-2 py-2 text-sm text-[var(--lv-text-secondary)]"
               onClick={onReset}
             >
-              {language === "ja" ? "元に戻す" : "Reset"}
+              {text.reset}
             </button>
           ) : null}
         </div>
       </div>
       <div className="mt-5 border-t border-[var(--lv-border)] pt-4">
         <p className="text-xs text-[var(--lv-text-muted)]">
-          {language === "ja" ? "区間を編集" : "Edit timing"}
+          {text.timing}
         </p>
         <div className="mt-2 grid gap-2">
           <button type="button" className="border border-[var(--lv-border-strong)] px-3 py-2 text-left text-sm disabled:opacity-40" disabled={!canSplit} onClick={onSplit}>
-            {language === "ja" ? "コードを分割" : "Split chord"}
+            {text.split}
           </button>
           <div className="grid grid-cols-2 gap-2">
             <button type="button" className="border border-[var(--lv-border-strong)] px-2 py-2 text-sm disabled:opacity-40" disabled={!canMergePrevious} onClick={onMergePrevious}>
-              {language === "ja" ? "前と結合" : "Merge previous"}
+              {text.mergePrevious}
             </button>
             <button type="button" className="border border-[var(--lv-border-strong)] px-2 py-2 text-sm disabled:opacity-40" disabled={!canMergeNext} onClick={onMergeNext}>
-              {language === "ja" ? "次と結合" : "Merge next"}
+              {text.mergeNext}
             </button>
           </div>
           <button type="button" className="px-3 py-2 text-left text-sm text-red-200 disabled:opacity-40" disabled={!canDelete} onClick={onDelete}>
-            {language === "ja" ? "コードを削除" : "Delete chord"}
+            {text.deleteChord}
           </button>
         </div>
       </div>

@@ -5,7 +5,6 @@ import {
 import { readFile } from "@tauri-apps/plugin-fs";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { DragEvent } from "react";
-import { parseChordLabel } from "../domain/chords";
 import {
   applyEditableProgression,
   canRedoProgressionEdit,
@@ -39,7 +38,7 @@ import type {
   Status,
 } from "../domain/types";
 import type { AnalysisState, ProgressionSaveMetadata } from "../store/vaultStore";
-import type { AppCopy, AppLanguage } from "../i18n";
+import { progressionEditorCopy, type AppCopy, type AppLanguage } from "../i18n";
 import { ProgressionGrid, timelineStartBeat } from "../ui/ProgressionGrid";
 import { chordProgressFraction } from "../ui/playbackProgress";
 import { confidenceLabel, shouldShowConfidence, warningLabel } from "./captureLabels";
@@ -100,6 +99,7 @@ export function CaptureView(props: CaptureViewProps) {
   } = props;
   const [isDraggingMidi, setIsDraggingMidi] = useState(false);
   const [expandedCandidateId, setExpandedCandidateId] = useState<string>();
+  const [dirtyCandidateIds, setDirtyCandidateIds] = useState<Set<string>>(() => new Set());
   const [saveDraft, setSaveDraft] = useState<{
     candidate: ProgressionBlockCandidate;
     original: ProgressionBlockCandidate;
@@ -109,6 +109,29 @@ export function CaptureView(props: CaptureViewProps) {
   const [sourcePath, setSourcePath] = useState<string>();
   const [previewSound, setPreviewSound] = useState<PreviewSound>("piano");
   const result = analysis.result;
+
+  const markCandidateDirty = useCallback((candidateId: string, dirty: boolean) => {
+    setDirtyCandidateIds((current) => {
+      if (current.has(candidateId) === dirty) return current;
+      const next = new Set(current);
+      if (dirty) next.add(candidateId);
+      else next.delete(candidateId);
+      return next;
+    });
+  }, []);
+
+  function selectExpandedCandidate(candidateId: string | undefined) {
+    if (
+      expandedCandidateId
+      && expandedCandidateId !== candidateId
+      && dirtyCandidateIds.has(expandedCandidateId)
+      && !window.confirm(copy.capture.unsavedCandidateConfirm)
+    ) {
+      return;
+    }
+    void stopPreviewAudio();
+    setExpandedCandidateId(candidateId);
+  }
 
   const analyzeMidiBytesWithToast = useCallback(
     (bytes: Uint8Array, fileName: string) => {
@@ -494,7 +517,9 @@ export function CaptureView(props: CaptureViewProps) {
                   copy={copy}
                   language={language}
                   isExpanded={expandedCandidateId === candidate.id}
-                  onSelect={() => setExpandedCandidateId(candidate.id)}
+                  onSelect={() => selectExpandedCandidate(candidate.id)}
+                  onCollapse={() => selectExpandedCandidate(undefined)}
+                  onDirtyChange={markCandidateDirty}
                   onQuickSave={(editedCandidate, title, editable) => {
                     saveNew(
                       editedCandidate,
@@ -807,6 +832,8 @@ export function ProgressionCandidateCard({
   language,
   isExpanded = false,
   onSelect,
+  onCollapse,
+  onDirtyChange,
   onQuickSave,
   onSave,
   showRomanNumerals = true,
@@ -829,15 +856,15 @@ export function ProgressionCandidateCard({
   language: AppLanguage;
   isExpanded?: boolean;
   onSelect?: () => void;
+  onCollapse?: () => void;
+  onDirtyChange?: (candidateId: string, dirty: boolean) => void;
   onQuickSave?: (candidate: ProgressionBlockCandidate, title: string, editable: EditableProgression) => void;
   onSave?: (candidate: ProgressionBlockCandidate, title: string, editable: EditableProgression) => void;
   showRomanNumerals?: boolean;
 }) {
-  const [summary, setSummary] = useState(candidate.summaryText);
-  const [title, setTitle] = useState(`${language === "ja" ? "コード進行" : "Progression"} ${candidate.labels.slice(0, 4).join(" - ")}`);
+  const editorCopy = progressionEditorCopy[language];
+  const title = editorCopy.progressionTitle(candidate.labels.slice(0, 4));
   const [editable, setEditable] = useState(() => createEditableProgression(candidate));
-  const [labelError, setLabelError] = useState<string>();
-  const [isEditing, setIsEditing] = useState(false);
   const [selectedChordIndex, setSelectedChordIndex] = useState(0);
   const [playingChordIndex, setPlayingChordIndex] = useState<number | null>(null);
   const [previewStartedAt, setPreviewStartedAt] = useState<number | null>(null);
@@ -847,17 +874,13 @@ export function ProgressionCandidateCard({
   const chords = currentCandidate.chords;
   const editedCandidate = {
     ...currentCandidate,
-    summaryText: summary,
+    summaryText: candidate.summaryText,
     chords,
     labels: [...new Set(chords.map((item) => item.chord.label))],
   };
 
   useEffect(() => {
-    setSummary(candidate.summaryText);
-    setTitle(`${language === "ja" ? "コード進行" : "Progression"} ${candidate.labels.slice(0, 4).join(" - ")}`);
     setEditable(createEditableProgression(candidate));
-    setLabelError(undefined);
-    setIsEditing(false);
     setSelectedChordIndex(0);
     stopVisualPreview();
     return stopVisualPreview;
@@ -876,6 +899,10 @@ export function ProgressionCandidateCard({
   }, [previewStartedAt]);
 
   useEffect(() => {
+    onDirtyChange?.(candidate.id, hasProgressionEdits(editable));
+  }, [candidate.id, editable, onDirtyChange]);
+
+  useEffect(() => {
     if (!isExpanded) {
       return undefined;
     }
@@ -890,15 +917,29 @@ export function ProgressionCandidateCard({
           : undoProgressionEdit(current));
         return;
       }
-      if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+      if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
         event.preventDefault();
-        const direction = event.key === "ArrowLeft" ? -1 : 1;
+        const direction = event.key === "ArrowLeft" || event.key === "ArrowUp" ? -1 : 1;
         const nextIndex = Math.max(0, Math.min(editable.slots.length - 1, selectedChordIndex + direction));
         setSelectedChordIndex(nextIndex);
         const nextSlot = editable.slots[nextIndex];
         if (nextSlot) {
           setEditable((current) => selectEditableSlot(current, nextSlot.id));
         }
+        return;
+      }
+      if (event.key === "Enter") {
+        event.preventDefault();
+        const slotId = editable.selectedSlotId;
+        if (slotId) {
+          document.getElementById(`chord-label-${slotId}`)?.focus();
+        }
+        return;
+      }
+      if (event.key === "Escape") {
+        event.preventDefault();
+        stopCandidatePreview();
+        onCollapse?.();
         return;
       }
       if (event.key === " ") {
@@ -916,21 +957,7 @@ export function ProgressionCandidateCard({
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [editable.slots, isExpanded, selectedChordIndex]);
-
-  function updateChordLabel(index: number, label: string) {
-    const parsed = parseChordLabel(label);
-    if (!parsed) {
-      setLabelError(language === "ja" ? `未対応のコード表記です: ${label}` : `Unsupported chord label: ${label}`);
-      return;
-    }
-
-    setLabelError(undefined);
-    const slot = editable.slots[index];
-    if (slot) {
-      setEditable((current) => replaceEditableChord(current, slot.id, parsed, "manual-label"));
-    }
-  }
+  }, [editable.selectedSlotId, editable.slots, isExpanded, onCollapse, selectedChordIndex]);
 
   function stopVisualPreview() {
     for (const timer of visualTimers.current) {
@@ -944,14 +971,6 @@ export function ProgressionCandidateCard({
   function stopCandidatePreview() {
     stopVisualPreview();
     void stopPreviewAudio();
-  }
-
-  function resetEdits() {
-    setSummary(candidate.summaryText);
-    setTitle(`${language === "ja" ? "コード進行" : "Progression"} ${candidate.labels.slice(0, 4).join(" - ")}`);
-    setEditable((current) => resetAllEditableChords(current));
-    setLabelError(undefined);
-    setSelectedChordIndex(0);
   }
 
   async function previewWholeCandidate() {
@@ -1035,18 +1054,20 @@ export function ProgressionCandidateCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <button className="min-w-0 text-left" onClick={onSelect} aria-expanded={isExpanded}>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--lv-accent)]">
-            {language === "ja" ? `候補 ${candidateIndex + 1}` : `Candidate ${candidateIndex + 1}`}
+            {editorCopy.candidate(candidateIndex + 1)}
           </p>
-          <p className="mt-2 font-semibold">{language === "ja" ? `${candidate.startBar}-${candidate.endBar}小節` : `Bars ${candidate.startBar}-${candidate.endBar}`} ({candidate.lengthBars})</p>
+          <p className="mt-2 font-semibold">
+            {editorCopy.candidateBars(candidate.startBar, candidate.endBar, candidate.lengthBars)}
+          </p>
           {shouldDisplayConfidence ? (
             <p className="mt-1 text-sm text-amber-200">
-              {language === "ja" ? "信頼度" : "Confidence"}: {confidenceLabel(candidate.confidence, language)}
+              {editorCopy.confidence}: {confidenceLabel(candidate.confidence, language)}
             </p>
           ) : null}
         </button>
         <span className="rounded bg-[var(--lv-surface-raised)] px-2 py-1 text-xs text-teal-200">{candidateLabelList(candidate.labels, language).join(" · ")}</span>
       </div>
-      {summary.trim() ? <p className="mt-3 text-sm text-[var(--lv-text-secondary)]">{summary}</p> : null}
+      {candidate.summaryText.trim() ? <p className="mt-3 text-sm text-[var(--lv-text-secondary)]">{candidate.summaryText}</p> : null}
       <div className={`mt-4 ${isExpanded ? "grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]" : ""}`}>
         <div>
           {isExpanded ? (
@@ -1123,43 +1144,6 @@ export function ProgressionCandidateCard({
         />
       ) : null}
 
-      {isExpanded && isEditing ? (
-        <div className="mt-4 border border-[var(--lv-border)] bg-[var(--lv-surface)]/50 p-3">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm font-semibold">{language === "ja" ? `編集中: 候補 ${candidateIndex + 1}` : `Editing Candidate ${candidateIndex + 1}`}</p>
-            <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => setIsEditing(false)}>
-              {language === "ja" ? "編集を閉じる" : "Close editor"}
-            </button>
-          </div>
-          <label className="mt-3 block text-xs font-semibold uppercase tracking-[0.12em] text-[var(--lv-text)]0">
-            {language === "ja" ? "保存タイトル" : "Save title"}
-          </label>
-          <input className={`${inputClass} mt-2`} value={title} onChange={(event) => setTitle(event.target.value)} placeholder={copy.capture.newIdeaTitle} />
-          <label className="mt-3 block text-xs font-semibold uppercase tracking-[0.12em] text-[var(--lv-text)]0">
-            Summary
-          </label>
-          <textarea className={`${inputClass} mt-2 min-h-20`} value={summary} onChange={(event) => setSummary(event.target.value)} />
-          {selectedChord ? (
-            <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
-              <input
-                key={`${selectedChord.bar}-${selectedChord.beat}-${selectedChordIndex}`}
-                className={inputClass}
-                defaultValue={selectedChord.chord.label}
-                onBlur={(event) => updateChordLabel(selectedChordIndex, event.target.value)}
-                aria-label={language === "ja" ? `Bar ${selectedChord.bar} のコード` : `Chord at bar ${selectedChord.bar}`}
-              />
-              <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => void selectChord(selectedChordIndex)}>
-                ▶ {copy.capture.selectedChord}
-              </button>
-            </div>
-          ) : null}
-          {labelError ? <p className="mt-2 text-xs text-red-200">{labelError}</p> : null}
-          <button className="mt-3 rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={resetEdits}>
-            {language === "ja" ? "元に戻す" : "Reset edits"}
-          </button>
-        </div>
-      ) : null}
-
       <div className="mt-3 flex flex-wrap gap-2">
         <button className="grid h-9 w-9 place-items-center rounded bg-cyan-400 text-sm font-semibold text-stone-950" onClick={() => void previewWholeCandidate()} aria-label={copy.common.preview} title={copy.common.preview}>
           ▶
@@ -1169,11 +1153,8 @@ export function ProgressionCandidateCard({
             ■
           </button>
         ) : null}
-        <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => { onSelect?.(); setIsEditing((value) => !value); }}>
-          {isEditing ? (language === "ja" ? "編集を閉じる" : "Close editor") : (language === "ja" ? "編集" : "Edit")}
-        </button>
         <button className="rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => { onSelect?.(); onQuickSave?.(editedCandidate, title, editable); }}>
-          {language === "ja" ? "Vaultに保存" : "Save to Vault"}
+          {editorCopy.saveToVault}
         </button>
         <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => { onSelect?.(); onSave?.(editedCandidate, title, editable); }}>
           {language === "ja" ? "保存方法" : "Save options"}

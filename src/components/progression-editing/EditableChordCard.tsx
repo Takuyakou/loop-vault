@@ -1,5 +1,5 @@
 import type { EditableChordSlot } from "../../domain/progressionEditing";
-import type { AppLanguage } from "../../i18n";
+import { progressionEditorCopy, type AppLanguage } from "../../i18n";
 
 interface EditableChordCardProps {
   slot: EditableChordSlot;
@@ -18,6 +18,7 @@ export function EditableChordCard({
   onSelect,
   language,
 }: EditableChordCardProps) {
+  const text = progressionEditorCopy[language];
   const needsReview = (slot.confidence ?? 1) < 0.7 || slot.warnings.length > 0;
   return (
     <button
@@ -38,14 +39,14 @@ export function EditableChordCard({
           {slot.currentChord.label}
         </span>
         {slot.edited ? (
-          <span className="text-xs text-teal-200" aria-label={language === "ja" ? "編集済み" : "Edited"}>
+          <span className="text-xs text-teal-200" aria-label={text.edited}>
             ✎
           </span>
         ) : null}
       </span>
       {needsReview ? (
         <span className="mt-2 inline-block text-xs text-amber-200">
-          {language === "ja" ? "要確認" : "Review"}
+          {text.review}
         </span>
       ) : null}
       {playing && playingProgress !== null && playingProgress !== undefined ? (

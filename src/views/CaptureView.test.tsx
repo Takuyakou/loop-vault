@@ -128,6 +128,27 @@ describe("ProgressionCandidateCard", () => {
     expect(markup).toContain("編集するコードを選択");
   });
 
+  it("renders the progression editor controls in English", () => {
+    const markup = renderToStaticMarkup(
+      <ProgressionCandidateCard
+        candidate={candidate()}
+        candidateIndex={0}
+        bpm={96}
+        onCopyProgression={vi.fn()}
+        onPreview={vi.fn()}
+        onPreviewChord={vi.fn()}
+        copy={appCopy.en}
+        language="en"
+        isExpanded
+      />,
+    );
+
+    expect(markup).toContain("Selected chord");
+    expect(markup).toContain("Chord structure");
+    expect(markup).toContain("Split chord");
+    expect(markup).toContain("Save to Vault");
+  });
+
   it("updates the inspector when a chord card is selected", async () => {
     const container = document.createElement("div");
     const root = createRoot(container);
@@ -239,6 +260,38 @@ describe("ProgressionCandidateCard", () => {
     await act(async () => root.unmount());
   });
 
+  it("focuses direct input with Enter and closes the inspector with Escape", async () => {
+    const onCollapse = vi.fn();
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(
+        <ProgressionCandidateCard
+          candidate={candidate()}
+          candidateIndex={0}
+          bpm={96}
+          onCopyProgression={vi.fn()}
+          onPreview={vi.fn()}
+          onPreviewChord={vi.fn()}
+          copy={appCopy.ja}
+          language="ja"
+          isExpanded
+          onCollapse={onCollapse}
+        />,
+      );
+    });
+
+    await act(async () => window.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })));
+    expect(document.activeElement?.tagName).toBe("INPUT");
+    (document.activeElement as HTMLElement).blur();
+    await act(async () => window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+    expect(onCollapse).toHaveBeenCalledTimes(1);
+
+    await act(async () => root.unmount());
+    container.remove();
+  });
+
   it("renders the save dialog with save methods and default next action", () => {
     const markup = renderToStaticMarkup(
       <ProgressionSaveDialog
@@ -289,6 +342,78 @@ describe("ProgressionCandidateCard", () => {
 });
 
 describe("CaptureView saving", () => {
+  it("keeps an edited candidate open when the user cancels the switch warning", async () => {
+    const firstChord = chord("Cmaj7", 1);
+    firstChord.alternatives = [{
+      chord: { root: 7, quality: "dom7", tensions: [], label: "G7" },
+      confidence: 0.75,
+    }];
+    const firstCandidate = candidate({
+      id: "candidate-1",
+      chords: [firstChord, chord("Am7", 2)],
+    });
+    const secondCandidate = candidate({
+      id: "candidate-2",
+      startBar: 5,
+      endBar: 8,
+      chords: [chord("Fmaj7", 5), chord("G7", 6)],
+    });
+    const result: MidiProgressionAnalysis = {
+      totalBars: 8,
+      bpm: 100,
+      fullTimeline: [...firstCandidate.chords, ...secondCandidate.chords],
+      blockCandidates: [firstCandidate, secondCandidate],
+      analyzedAt: "2026-07-15T00:00:00.000Z",
+      analyzerVersion: "test",
+    };
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    const container = document.createElement("div");
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <CaptureView
+          ideas={[]}
+          analysis={{ status: "done", result }}
+          analyzeMidiBytes={vi.fn()}
+          clearAnalysis={vi.fn()}
+          createIdeaFromDraft={vi.fn()}
+          appendBlockToIdea={vi.fn()}
+          updateIdea={vi.fn()}
+          setToast={vi.fn()}
+          copy={appCopy.ja}
+          language="ja"
+          showRomanNumerals
+        />,
+      );
+    });
+
+    let headers = container.querySelectorAll<HTMLButtonElement>('button[aria-expanded]');
+    await act(async () => headers[0]?.click());
+    const alternativeButton = [...container.querySelectorAll("button")]
+      .find((button) => button.textContent?.includes("G7"));
+    await act(async () => alternativeButton?.click());
+    const applyButton = [...container.querySelectorAll("button")]
+      .find((button) => button.textContent === "適用");
+    await act(async () => applyButton?.click());
+
+    headers = container.querySelectorAll<HTMLButtonElement>('button[aria-expanded]');
+    await act(async () => headers[1]?.click());
+    headers = container.querySelectorAll<HTMLButtonElement>('button[aria-expanded]');
+    expect(confirm).toHaveBeenCalledTimes(1);
+    expect(headers[0]?.getAttribute("aria-expanded")).toBe("true");
+    expect(headers[1]?.getAttribute("aria-expanded")).toBe("false");
+
+    confirm.mockReturnValue(true);
+    await act(async () => headers[1]?.click());
+    headers = container.querySelectorAll<HTMLButtonElement>('button[aria-expanded]');
+    expect(headers[0]?.getAttribute("aria-expanded")).toBe("false");
+    expect(headers[1]?.getAttribute("aria-expanded")).toBe("true");
+
+    confirm.mockRestore();
+    await act(async () => root.unmount());
+  });
+
   it("saves a candidate to the Vault from the primary button in one click", async () => {
     feedbackSpies.append.mockClear();
     const capturedCandidate = candidate();
