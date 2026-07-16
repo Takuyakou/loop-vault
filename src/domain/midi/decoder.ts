@@ -12,7 +12,7 @@ export interface DecoderWeights {
 export const defaultDecoderWeights: Readonly<DecoderWeights> = {
   chordChangePenalty: 0.12,
   weakBeatChangePenalty: 0.1,
-  shortSegmentPenalty: 0.55,
+  shortSegmentPenalty: 0.95,
   repeatedChordReward: 0.08,
   sameRootReward: 0.04,
   keyPriorWeight: 0.08,
@@ -43,7 +43,7 @@ export function decodeChordPath(
     for (const edge of edges) {
       for (const candidate of edge.candidates) {
         for (const previous of previousStates) {
-          const score = (previous?.score ?? 0) + edgeScore(edge, candidate, beatsPerBar, weights)
+          const score = (previous?.score ?? 0) + edgeScore(edge, candidate, Math.min(beatsPerBar, lastBeat - firstBeat), weights)
             + transitionScore(previous?.candidate, candidate, edge.segment.startBeat, beatsPerBar, weights)
             + (context?.get(edge.segment.startBeat) === canonicalChord(candidate.chord) ? 0.025 : 0);
           const decoded: DecodedSegment = { scored: edge, candidate, pathScore: score };
@@ -83,8 +83,10 @@ export function decodeGreedy(scoredSegments: readonly ScoredSegment[]): DecodedS
   return path;
 }
 
-function edgeScore(edge: ScoredSegment, candidate: ChordCandidateScore, beatsPerBar: number, weights: DecoderWeights): number {
-  const shortPenalty = edge.segment.durationBeats < Math.min(1.5, beatsPerBar / 2) ? weights.shortSegmentPenalty : 0;
+function edgeScore(edge: ScoredSegment, candidate: ChordCandidateScore, referenceBeats: number, weights: DecoderWeights): number {
+  const shortPenalty = edge.segment.durationBeats < referenceBeats
+    ? weights.shortSegmentPenalty * (referenceBeats - edge.segment.durationBeats) / referenceBeats
+    : 0;
   return candidate.totalScore + candidate.keyCompatibilityScore * weights.keyPriorWeight
     + (edge.segment.startBoundaryStrength + edge.segment.endBoundaryStrength) * 0.025 - shortPenalty;
 }

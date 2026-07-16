@@ -1,0 +1,29 @@
+import { Midi } from "@tonejs/midi";
+import { describe, expect, it } from "vitest";
+import { analyzeMidi } from "./analysis";
+
+function bytes(): Uint8Array {
+  const midi = new Midi();
+  midi.header.setTempo(100);
+  const track = midi.addTrack();
+  track.name = "Rhodes chords";
+  [[60, 64, 67], [65, 69, 72], [67, 71, 74], [60, 64, 67]].forEach((chord, bar) =>
+    chord.forEach((pitch) => track.addNote({ midi: pitch, ticks: bar * 1920, durationTicks: 1920, velocity: 0.8 })));
+  return new Uint8Array(midi.toArray());
+}
+
+describe("hybrid MIDI analyzer", () => {
+  it("is deterministic and retains the legacy mode", () => {
+    const hybrid = analyzeMidi(bytes(), { mode: "hybrid-v1" });
+    expect(hybrid).toEqual(analyzeMidi(bytes(), { mode: "hybrid-v1" }));
+    expect(hybrid.analyzerVersion).toBe("hybrid-symbolic-v1");
+    expect(analyzeMidi(bytes(), { mode: "legacy" }).analyzerVersion).toBe("legacy-v1");
+  });
+
+  it("produces a full timeline, alternatives, and block candidates", () => {
+    const result = analyzeMidi(bytes(), { mode: "hybrid-v1" });
+    expect(result.fullTimeline.length).toBeGreaterThan(0);
+    expect(result.fullTimeline[0].alternatives.length).toBeGreaterThan(0);
+    expect(result.blockCandidates[0]?.lengthBars).toBe(4);
+  });
+});

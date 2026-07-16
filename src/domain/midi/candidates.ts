@@ -49,6 +49,7 @@ export function scoreChordCandidates(
   profile: WeightedPitchProfile, key?: KeyRegionCandidate, topK = 8,
 ): ChordCandidateScore[] {
   const total = Math.max(1e-9, profile.qualityPcs.reduce((sum, value) => sum + value, 0));
+  const rootTotal = Math.max(1e-9, profile.rootPcs.reduce((sum, value) => sum + value, 0));
   const bassPc = maxIndex(profile.bassPcs);
   const scored: ChordCandidateScore[] = [];
   for (let root = 0; root < 12; root += 1) {
@@ -58,19 +59,22 @@ export function scoreChordCandidates(
       const optional = chordTemplate.optional.map((interval) => normalizePc(root + interval));
       const allowed = [...new Set([...required, ...important, ...optional])];
       const coreCoverageScore = required.reduce((sum, pc) => sum + profile.qualityPcs[pc], 0) / total;
+      const rootEvidence = profile.rootPcs[root] / rootTotal;
       const importantCoverage = important.reduce((sum, pc) => sum + profile.qualityPcs[pc], 0) / total;
       const extensionCoverageScore = optional.reduce((sum, pc) => sum + profile.qualityPcs[pc], 0) / total;
       const foreignNotePenalty = profile.qualityPcs.reduce((sum, value, pc) => sum + (allowed.includes(pc) ? 0 : value), 0) / total * 0.42;
       const missing = required.filter((pc) => profile.qualityPcs[pc] / total < 0.035).length;
       const missingCoreTonePenalty = missing / Math.max(1, required.length) * 0.5;
       const bassInChord = allowed.includes(bassPc);
-      const bassCompatibilityScore = bassPc === root ? 0.14 : bassInChord ? 0.07 : -0.08;
+      const bassCompatibilityScore = bassPc === root ? 0.22 : bassInChord ? 0.06 : -0.1;
       const slashCompatibilityScore = bassPc !== root && bassInChord ? 0.035 : 0;
       const keyCompatibilityScore = chordKeyCompatibility(root, chordTemplate.quality, key);
       const conflictingWeight = chordTemplate.conflicting.map((interval) => normalizePc(root + interval))
         .reduce((sum, pc) => sum + profile.qualityPcs[pc], 0) / total;
-      const ambiguityPenalty = conflictingWeight * 0.35;
-      const templateScore = coreCoverageScore * 0.9 + importantCoverage * 0.3 + extensionCoverageScore * 0.18;
+      const complexityPenalty = Math.max(0, allowed.length - 4) * 0.04;
+      const ambiguityPenalty = conflictingWeight * 0.35 + complexityPenalty;
+      const templateScore = coreCoverageScore * 0.82 + importantCoverage * 0.28
+        + extensionCoverageScore * 0.18 + rootEvidence * 0.32;
       const totalScore = templateScore + bassCompatibilityScore + slashCompatibilityScore + keyCompatibilityScore
         - foreignNotePenalty - missingCoreTonePenalty - ambiguityPenalty;
       const bass = bassPc !== root && bassInChord ? bassPc : undefined;
@@ -80,6 +84,7 @@ export function scoreChordCandidates(
         foreignNotePenalty, missingCoreTonePenalty, ambiguityPenalty, totalScore,
         evidence: [
           { kind: "core-coverage", value: coreCoverageScore },
+          { kind: "root-evidence", pitchClass: root, value: rootEvidence },
           { kind: "bass", pitchClass: bassPc, value: bassCompatibilityScore },
           { kind: "foreign", value: foreignNotePenalty },
         ] });

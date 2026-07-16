@@ -6,6 +6,7 @@ import { readFile } from "@tauri-apps/plugin-fs";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { DragEvent } from "react";
 import { parseChordLabel } from "../domain/chords";
+import { buildCorrectionEvents } from "../domain/midi";
 import { candidateLabelList } from "../domain/displayLabels";
 import { romanNumeralHint } from "../domain/harmony/romanNumerals";
 import { formatProgressionText } from "../domain/progressionText";
@@ -22,6 +23,7 @@ import type { AppCopy, AppLanguage } from "../i18n";
 import { ProgressionGrid, timelineStartBeat } from "../ui/ProgressionGrid";
 import { chordProgressFraction } from "../ui/playbackProgress";
 import { confidenceLabel, shouldShowConfidence, warningLabel } from "./captureLabels";
+import { appendAnalysisFeedback } from "../storage/analysisFeedbackStorage";
 
 interface CaptureViewProps {
   ideas: SongIdea[];
@@ -369,7 +371,11 @@ export function CaptureView(props: CaptureViewProps) {
                   language={language}
                   isExpanded={expandedCandidateId === candidate.id}
                   onSelect={() => setExpandedCandidateId(candidate.id)}
-                  onSave={(editedCandidate, title) => setSaveDraft({ candidate: editedCandidate, title })}
+                  onSave={(editedCandidate, title) => {
+                    void appendAnalysisFeedback(buildCorrectionEvents(candidate, editedCandidate, result))
+                      .catch((error) => setToast(error instanceof Error ? error.message : "Could not save analysis feedback."));
+                    setSaveDraft({ candidate: editedCandidate, title });
+                  }}
                   showRomanNumerals={showRomanNumerals}
                 />
               ))

@@ -4,6 +4,11 @@ import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { useEffect, useState } from "react";
 import type { AppCopy, AppLanguage } from "../i18n";
 import { defaultVaultStore } from "../store/defaultVaultStore";
+import {
+  deleteAnalysisFeedback,
+  isAnalysisFeedbackEnabled,
+  setAnalysisFeedbackEnabled,
+} from "../storage/analysisFeedbackStorage";
 
 const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
 async function writeClipboardText(text: string): Promise<void> { if (!navigator.clipboard?.writeText) throw new Error("Clipboard is not available."); await navigator.clipboard.writeText(text); }
@@ -45,6 +50,7 @@ export function SettingsDialog({
   const [dataPath, setDataPath] = useState<string>(copy.settings.dataPathFallback);
   const [importMode, setImportMode] = useState<"replace" | "merge">("merge");
   const [showAllBackups, setShowAllBackups] = useState(false);
+  const [feedbackEnabled, setFeedbackEnabled] = useState(isAnalysisFeedbackEnabled);
 
   useEffect(() => {
     if (!("__TAURI_INTERNALS__" in window)) {
@@ -104,6 +110,17 @@ export function SettingsDialog({
     await restoreBackup(name);
     await refreshBackups();
     setToast(copy.toast.restoreDone);
+  }
+
+  function updateFeedbackEnabled(enabled: boolean) {
+    setFeedbackEnabled(enabled);
+    setAnalysisFeedbackEnabled(enabled);
+  }
+
+  async function clearFeedback() {
+    if (!window.confirm(language === "ja" ? "このPCに保存した解析修正ログを削除しますか？" : "Delete the analysis correction log stored on this PC?")) return;
+    await deleteAnalysisFeedback();
+    setToast(language === "ja" ? "解析修正ログを削除しました。" : "Deleted the analysis correction log.");
   }
 
   return (
@@ -179,6 +196,35 @@ export function SettingsDialog({
             ))}
           </div>
           {backups.length > 5 ? <button className="mt-3 text-sm text-teal-200 hover:underline" onClick={() => setShowAllBackups((value) => !value)}>{showAllBackups ? (language === "ja" ? "最新5件のみ表示" : "Show latest 5") : (language === "ja" ? "すべて表示" : "Show all")}</button> : null}
+        </section>
+        <section className="mt-5 border border-[var(--lv-border)] bg-[var(--lv-bg)] p-4 text-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--lv-accent)]">
+            {language === "ja" ? "MIDI解析" : "MIDI analysis"}
+          </p>
+          <label className="mt-3 flex cursor-pointer items-start gap-3">
+            <input
+              className="mt-1"
+              type="checkbox"
+              checked={feedbackEnabled}
+              onChange={(event) => updateFeedbackEnabled(event.target.checked)}
+            />
+            <span>
+              <strong className="block text-[var(--lv-text-secondary)]">
+                {language === "ja" ? "解析修正ログをローカル保存" : "Store analysis corrections locally"}
+              </strong>
+              <span className="mt-1 block text-[var(--lv-text-muted)]">
+                {language === "ja"
+                  ? "コード検出を直した履歴だけをこのPC内に保存します。MIDI本体、ファイルパス、アイデア名、メモは保存しません。"
+                  : "Stores only explicit chord corrections on this PC. MIDI data, file paths, idea titles, and notes are not stored."}
+              </span>
+            </span>
+          </label>
+          <button
+            className="mt-4 rounded border border-red-400/50 px-3 py-2 text-red-100"
+            onClick={() => void clearFeedback()}
+          >
+            {language === "ja" ? "修正ログを削除" : "Delete correction log"}
+          </button>
         </section>
         <section className="mt-5 border border-[var(--lv-border)] bg-[var(--lv-bg)] p-4 text-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--lv-accent)]">{language === "ja" ? "情報" : "Info"}</p>

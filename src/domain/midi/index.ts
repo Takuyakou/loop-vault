@@ -1,12 +1,17 @@
 export {
   analyzeMidi,
   analyzerVersion,
+  defaultAnalyzerMode,
+  hybridAnalyzerVersion,
+  legacyAnalyzerVersion,
   buildWeightedWindows,
   extractBlockCandidates,
   inferTrackRoles,
   matchWindow,
   smoothTimeline,
 } from "./analysis";
+export { analyzeMidiHybrid } from "./hybrid";
+export { beatGridSignature, extractHybridBlocks } from "./blocks";
 export { parseMidi } from "./parser";
 export { normalizeNotes, overlapWithSegment } from "./normalize";
 export { beatStrength, defaultAnalyzerWeights, noteFeatures } from "./weights";
@@ -19,6 +24,7 @@ export { chordKeyCompatibility, estimateKeyCandidates } from "./keyPrior";
 export { decodeChordPath, decodeGreedy, decodeTwoPass, defaultDecoderWeights } from "./decoder";
 export { confidenceForDecoded, confidenceLevel, uniqueAlternatives } from "./confidence";
 export { mergeDecodedSegments } from "./merge";
+export { buildCorrectionEvents, fingerprintMidiBytes } from "./feedback";
 export type {
   AnalyzeMidiOptions,
   AnalyzeMidiResult,
@@ -30,6 +36,7 @@ export type {
   SegmentRange,
   TimedNote,
   TrackRole,
+  MidiAnalyzerMode,
 } from "./types";
 export type { AnalyzerWeights, NoteFeatures } from "./weights";
 export type { HybridTrackRole, TrackFeatures, TrackRoleProfile } from "./trackRoles";
@@ -41,3 +48,4 @@ export type { KeyRegionCandidate } from "./keyPrior";
 export type { DecodedSegment, DecoderWeights } from "./decoder";
 export type { ConfidenceFeatures, ConfidenceLevel, ConfidenceResult } from "./confidence";
 export type { MergedDecodedSegment } from "./merge";
+export type { MidiChordCorrectionEvent } from "./feedback";

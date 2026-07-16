@@ -68,6 +68,7 @@ export interface ProgressionBlockCandidate {
 export interface MidiProgressionAnalysis {
   sourceAssetId?: string;
   fileName?: string;
+  sourceFingerprint?: string;
   totalBars: number;
   bpm?: number;
   timeSignature?: string;
