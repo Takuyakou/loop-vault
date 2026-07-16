@@ -4,10 +4,10 @@ import { basename, resolve } from "node:path";
 import { parseVaultFileJson } from "../src/domain/schema";
 import type { SongIdea } from "../src/domain/types";
 import { fingerprintMidiBytes, legacyFingerprintMidiBytes } from "../src/domain/midi/fingerprint";
-import type { MidiChordCorrectionEvent } from "../src/domain/midi/feedback";
 import { promoteCorrectionEvents } from "../src/domain/midi/realEvaluation/correctionPromotion";
-import { midiChordCorrectionEventSchema, realMidiEvaluationCaseSchema } from "../src/domain/midi/realEvaluation/schema";
+import { realMidiEvaluationCaseSchema } from "../src/domain/midi/realEvaluation/schema";
 import type { LocalMidiSourceIndexEntry } from "../src/domain/midi/realEvaluation/types";
+import { readPromotionFeedback } from "./promotionFeedback";
 
 const args = process.argv.slice(2);
 const appData = process.env.APPDATA ?? resolve(homedir(), "AppData/Roaming");
@@ -21,7 +21,7 @@ const vaultRaw = await readFile(vaultPath, "utf8");
 const parsedVault = parseVaultFileJson(vaultRaw);
 if (!parsedVault.ok) throw new Error(`Vault could not be read: ${parsedVault.error.kind}`);
 
-const { events, rejected } = await readFeedback(feedbackPath);
+const { events, skippedPropagation, rejected } = await readFeedback(feedbackPath);
 const sourceIndex = await buildSourceIndex(parsedVault.vault.ideas);
 const result = promoteCorrectionEvents(events, sourceIndex);
 const promoted = result.promoted.map((item) => realMidiEvaluationCaseSchema.parse(item));
@@ -38,6 +38,7 @@ await Promise.all([
 ]);
 
 console.log(`Feedback events: ${events.length}`);
+console.log(`Propagation feedback skipped: ${skippedPropagation}`);
 console.log(`Promoted Gold cases: ${promoted.length}`);
 console.log(`Orphans: ${result.orphans.length}`);
 console.log(`Conflicts: ${result.conflicts.length}`);
@@ -50,28 +51,17 @@ function optionValue(name: string): string | undefined {
 }
 
 async function readFeedback(path: string): Promise<{
-  events: MidiChordCorrectionEvent[];
-  rejected: { line: number; reason: string }[];
+  events: ReturnType<typeof readPromotionFeedback>["events"];
+  skippedPropagation: number;
+  rejected: ReturnType<typeof readPromotionFeedback>["rejected"];
 }> {
   let raw: string;
   try {
     raw = await readFile(path, "utf8");
   } catch {
-    return { events: [], rejected: [] };
+    return { events: [], skippedPropagation: 0, rejected: [] };
   }
-  const events: MidiChordCorrectionEvent[] = [];
-  const rejected: { line: number; reason: string }[] = [];
-  raw.split(/\r?\n/).forEach((line, index) => {
-    if (!line.trim()) return;
-    try {
-      const result = midiChordCorrectionEventSchema.safeParse(JSON.parse(line));
-      if (result.success) events.push(result.data);
-      else rejected.push({ line: index + 1, reason: "schema-validation" });
-    } catch {
-      rejected.push({ line: index + 1, reason: "invalid-json" });
-    }
-  });
-  return { events, rejected };
+  return readPromotionFeedback(raw);
 }
 
 async function buildSourceIndex(
@@ -112,6 +102,7 @@ function summaryMarkdown(): string {
   return `# Correction Promotion\n\n`
     + `- Valid feedback events: ${events.length}\n`
     + `- Rejected lines: ${rejected.length}\n`
+    + `- Propagation feedback skipped: ${skippedPropagation}\n`
     + `- Source index fingerprints: ${sourceIndex.length}\n`
     + `- Promoted Gold cases: ${promoted.length}\n`
     + `- Orphan corrections: ${result.orphans.length}\n`

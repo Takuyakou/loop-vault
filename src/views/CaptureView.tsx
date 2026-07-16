@@ -12,21 +12,37 @@ import {
   canMergeEditableChords,
   canSplitEditableChord,
   canUndoProgressionEdit,
+  buildSimilarityContext,
+  chordsEqual,
   createEditableProgression,
   deleteEditableChord,
+  findSimilarSegments,
   hasProgressionEdits,
   progressionEditSummary,
   mergeEditableChords,
   redoProgressionEdit,
   replaceEditableChord,
+  replaceEditableChords,
   resetAllEditableChords,
   resetEditableChord,
   selectEditableSlot,
   splitEditableChord,
   undoProgressionEdit,
+  SIMILAR_SEGMENT_THRESHOLD,
 } from "../domain/progressionEditing";
-import type { EditableProgression } from "../domain/progressionEditing";
+import type {
+  EditableChordSlot,
+  EditableProgression,
+  SimilarSegmentCandidate,
+  SimilarityContext,
+  SimilarityVoiceContext,
+} from "../domain/progressionEditing";
 import { beatsPerBar as beatsPerBarFor, buildCorrectionEvents } from "../domain/midi";
+import type { AnalysisInput } from "../domain/midi/types";
+import type {
+  CorrectionPropagationFeedbackEvent,
+  PersistedAnalysisFeedbackEvent,
+} from "../domain/midi/analysisFeedback";
 import { candidateLabelList } from "../domain/displayLabels";
 import { romanNumeralHint } from "../domain/harmony/romanNumerals";
 import { formatProgressionText } from "../domain/progressionText";
@@ -93,6 +109,7 @@ interface CaptureViewProps {
   language: AppLanguage;
   showRomanNumerals: boolean;
   controller?: PlaybackController;
+  analysisInput?: AnalysisInput;
 }
 
 export function CaptureView(props: CaptureViewProps) {
@@ -109,6 +126,7 @@ export function CaptureView(props: CaptureViewProps) {
     language,
     showRomanNumerals,
     controller = playbackController,
+    analysisInput,
   } = props;
   const [isDraggingMidi, setIsDraggingMidi] = useState(false);
   const [expandedCandidateId, setExpandedCandidateId] = useState<string>();
@@ -351,6 +369,7 @@ export function CaptureView(props: CaptureViewProps) {
     userVerified: boolean,
     original: ProgressionBlockCandidate,
     editable: EditableProgression,
+    propagationEvents: readonly CorrectionPropagationFeedbackEvent[],
   ): boolean {
     const corrections = correctionEvents(original, candidate, editable);
     const userEdited = hasProgressionEdits(editable);
@@ -366,7 +385,7 @@ export function CaptureView(props: CaptureViewProps) {
       progressionMetadata: { sourcePath, userEdited, userVerified },
     });
     if (id) {
-      persistCorrectionEvents(corrections);
+      persistCorrectionEvents([...corrections, ...propagationEvents]);
       setToast(copy.capture.savedToVault);
       return true;
     }
@@ -390,7 +409,7 @@ export function CaptureView(props: CaptureViewProps) {
     );
   }
 
-  function persistCorrectionEvents(events: ReturnType<typeof buildCorrectionEvents>) {
+  function persistCorrectionEvents(events: readonly PersistedAnalysisFeedbackEvent[]) {
     if (events.length === 0) {
       return;
     }
@@ -404,6 +423,7 @@ export function CaptureView(props: CaptureViewProps) {
     editable: EditableProgression,
     ideaId: string,
     userVerified: boolean,
+    propagationEvents: readonly CorrectionPropagationFeedbackEvent[],
   ): boolean {
     if (!ideaId) {
       setToast(copy.capture.chooseIdeaFirst);
@@ -416,7 +436,10 @@ export function CaptureView(props: CaptureViewProps) {
       userVerified,
     });
     if (appended) {
-      persistCorrectionEvents(correctionEvents(original, candidate, editable));
+      persistCorrectionEvents([
+        ...correctionEvents(original, candidate, editable),
+        ...propagationEvents,
+      ]);
       setToast(copy.toast.blockSaved);
       return true;
     }
@@ -576,6 +599,9 @@ export function CaptureView(props: CaptureViewProps) {
                   bpm={result.bpm ?? 96}
                   beatsPerBar={beatsPerBarFor(result.timeSignature)}
                   detectedKey={result.detectedKey}
+                  sourceFingerprint={result.sourceFingerprint}
+                  analyzerVersion={result.analyzerVersion}
+                  analysisInput={analysisInput}
                   sourceFileName={result.fileName}
                   ideas={ideas}
                   onCopyProgression={copyProgression}
@@ -594,11 +620,11 @@ export function CaptureView(props: CaptureViewProps) {
                   onCollapse={() => selectExpandedCandidate(undefined)}
                   onInspectorExpandedChange={setInspectorExpanded}
                   onDirtyChange={markCandidateDirty}
-                  onCreate={(editedCandidate, title, nextAction, userVerified, editable) => (
-                    saveNew(editedCandidate, title, nextAction, userVerified, candidate, editable)
+                  onCreate={(editedCandidate, title, nextAction, userVerified, editable, propagationEvents) => (
+                    saveNew(editedCandidate, title, nextAction, userVerified, candidate, editable, propagationEvents)
                   )}
-                  onAppend={(editedCandidate, ideaId, userVerified, editable) => (
-                    appendExisting(editedCandidate, candidate, editable, ideaId, userVerified)
+                  onAppend={(editedCandidate, ideaId, userVerified, editable, propagationEvents) => (
+                    appendExisting(editedCandidate, candidate, editable, ideaId, userVerified, propagationEvents)
                   )}
                   onCopyMemo={(editedCandidate, ideaId) => {
                     return copyMemo(editedCandidate, ideaId);
@@ -892,6 +918,9 @@ export function ProgressionCandidateCard({
   bpm,
   beatsPerBar = 4,
   detectedKey,
+  sourceFingerprint,
+  analyzerVersion = "unknown",
+  analysisInput,
   sourceFileName,
   ideas = [],
   onCopyProgression,
@@ -919,6 +948,9 @@ export function ProgressionCandidateCard({
   bpm: number;
   beatsPerBar?: number;
   detectedKey?: string;
+  sourceFingerprint?: string;
+  analyzerVersion?: string;
+  analysisInput?: AnalysisInput;
   sourceFileName?: string;
   ideas?: SongIdea[];
   onCreate?: (
@@ -927,12 +959,14 @@ export function ProgressionCandidateCard({
     nextAction: string,
     userVerified: boolean,
     editable: EditableProgression,
+    propagationEvents: readonly CorrectionPropagationFeedbackEvent[],
   ) => boolean;
   onAppend?: (
     candidate: ProgressionBlockCandidate,
     ideaId: string,
     userVerified: boolean,
     editable: EditableProgression,
+    propagationEvents: readonly CorrectionPropagationFeedbackEvent[],
   ) => boolean;
   onCopyMemo?: (
     candidate: ProgressionBlockCandidate,
@@ -964,6 +998,8 @@ export function ProgressionCandidateCard({
   const [editable, setEditable] = useState(() => createEditableProgression(candidate, beatsPerBar));
   const [savedSignature, setSavedSignature] = useState(() => progressionSignature(candidate.chords));
   const [selectedChordIndex, setSelectedChordIndex] = useState(0);
+  const [propagationProposal, setPropagationProposal] = useState<PropagationProposal>();
+  const [propagationFeedback, setPropagationFeedback] = useState<PendingPropagationFeedback[]>([]);
   const [, forcePlaybackTick] = useState(0);
   const currentCandidate = applyEditableProgression(candidate, editable);
   const chords = currentCandidate.chords;
@@ -983,7 +1019,16 @@ export function ProgressionCandidateCard({
     setEditable(createEditableProgression(candidate, beatsPerBar));
     setSavedSignature(progressionSignature(candidate.chords));
     setSelectedChordIndex(0);
+    setPropagationProposal(undefined);
+    setPropagationFeedback([]);
   }, [beatsPerBar, candidate, language]);
+
+  useEffect(() => {
+    if (!isExpanded) {
+      setPropagationProposal(undefined);
+      setPropagationFeedback((current) => current.length > 0 ? [] : current);
+    }
+  }, [isExpanded]);
 
   useEffect(() => {
     if (!candidatePlaying || playback.status !== "playing") {
@@ -1078,6 +1123,9 @@ export function ProgressionCandidateCard({
     onSelect?.();
     setSelectedChordIndex(index);
     const slot = editable.slots[index];
+    if (slot?.id !== propagationProposal?.sourceSlotId) {
+      setPropagationProposal(undefined);
+    }
     if (slot) {
       setEditable((current) => selectEditableSlot(current, slot.id));
     }
@@ -1096,6 +1144,7 @@ export function ProgressionCandidateCard({
       return;
     }
     stopCandidatePreview();
+    setPropagationProposal(undefined);
     setEditable(next);
     const nextIndex = next.slots.findIndex((slot) => slot.id === next.selectedSlotId);
     setSelectedChordIndex(Math.max(0, nextIndex));
@@ -1151,13 +1200,30 @@ export function ProgressionCandidateCard({
             copy={copy}
             requestOpen={() => onSelect?.() !== false}
             onCreate={(title, nextAction, userVerified) => (
-              onCreate?.(editedCandidate, title, nextAction, userVerified, editable) ?? false
+              onCreate?.(
+                editedCandidate,
+                title,
+                nextAction,
+                userVerified,
+                editable,
+                activePropagationEvents(editable, propagationFeedback),
+              ) ?? false
             )}
             onAppend={(ideaId, userVerified) => (
-              onAppend?.(editedCandidate, ideaId, userVerified, editable) ?? false
+              onAppend?.(
+                editedCandidate,
+                ideaId,
+                userVerified,
+                editable,
+                activePropagationEvents(editable, propagationFeedback),
+              ) ?? false
             )}
             onCopyMemo={(ideaId) => onCopyMemo?.(editedCandidate, ideaId, editable) ?? false}
-            onSaved={() => setSavedSignature(currentSignature)}
+            onSaved={() => {
+              setSavedSignature(currentSignature);
+              setPropagationProposal(undefined);
+              setPropagationFeedback([]);
+            }}
           />
           <button className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => void onCopyProgression(editedCandidate)}>
             <Copy aria-hidden="true" size={16} />
@@ -1174,9 +1240,9 @@ export function ProgressionCandidateCard({
               canUndo={canUndoProgressionEdit(editable)}
               canRedo={canRedoProgressionEdit(editable)}
               dirty={hasProgressionEdits(editable)}
-              onUndo={() => { stopCandidatePreview(); setEditable((current) => undoProgressionEdit(current)); }}
-              onRedo={() => { stopCandidatePreview(); setEditable((current) => redoProgressionEdit(current)); }}
-              onResetAll={() => { stopCandidatePreview(); setEditable((current) => resetAllEditableChords(current)); }}
+              onUndo={() => { stopCandidatePreview(); setPropagationProposal(undefined); setEditable((current) => undoProgressionEdit(current)); }}
+              onRedo={() => { stopCandidatePreview(); setPropagationProposal(undefined); setEditable((current) => redoProgressionEdit(current)); }}
+              onResetAll={() => { stopCandidatePreview(); setPropagationProposal(undefined); setEditable((current) => resetAllEditableChords(current)); }}
               language={language}
             />
           ) : null}
@@ -1204,11 +1270,19 @@ export function ProgressionCandidateCard({
               stopCandidatePreview();
               const slotId = editable.selectedSlotId;
               if (slotId) {
-                setEditable((current) => replaceEditableChord(current, slotId, chord, source));
+                const next = replaceEditableChord(editable, slotId, chord, source);
+                setEditable(next);
+                setPropagationProposal(proposalFor(
+                  next,
+                  slotId,
+                  chord,
+                  captureSimilarityContext(next, detectedKey, analysisInput),
+                ));
               }
             }}
             onReset={() => {
               stopCandidatePreview();
+              setPropagationProposal(undefined);
               const slotId = editable.selectedSlotId;
               if (slotId) {
                 setEditable((current) => resetEditableChord(current, slotId));
@@ -1223,6 +1297,45 @@ export function ProgressionCandidateCard({
             onMergeNext={() => selectedSlot && nextSlot && commitStructuralChange(mergeEditableChords(editable, selectedSlot.id, nextSlot.id, "first"))}
             onDelete={() => selectedSlot && commitStructuralChange(deleteEditableChord(editable, selectedSlot.id))}
             onEditStart={stopCandidatePreview}
+            propagation={propagationProposal && propagationProposal.sourceSlotId === selectedSlot?.id
+              ? { ...propagationProposal, slots: editable.slots }
+              : undefined}
+            onApplyPropagation={(segmentIds) => {
+              if (!propagationProposal || segmentIds.length === 0) return;
+              stopCandidatePreview();
+              const next = replaceEditableChords(
+                editable,
+                segmentIds,
+                propagationProposal.chord,
+                "propagation",
+              );
+              if (next === editable) return;
+              setEditable(next);
+              const feedback = buildPropagationFeedbackEvent({
+                sourceFingerprint,
+                analyzerVersion,
+                sourceSlot: next.slots.find((slot) => slot.id === propagationProposal.sourceSlotId),
+                shownCandidates: propagationProposal.candidates,
+                acceptedSegmentIds: segmentIds,
+                beatsPerBar,
+              });
+              if (feedback) {
+                setPropagationFeedback((current) => [
+                  ...current,
+                  {
+                    event: feedback,
+                    historyIndex: next.historyIndex,
+                    chord: propagationProposal.chord,
+                  },
+                ]);
+              }
+              setPropagationProposal(proposalFor(
+                next,
+                propagationProposal.sourceSlotId,
+                propagationProposal.chord,
+                captureSimilarityContext(next, detectedKey, analysisInput),
+              ));
+            }}
           />,
           inspectorHost,
         ) : null}
@@ -1248,6 +1361,9 @@ export function ProgressionCandidateCard({
           onSelect={(slotId) => {
             const index = editable.slots.findIndex((slot) => slot.id === slotId);
             if (index >= 0) {
+              if (slotId !== propagationProposal?.sourceSlotId) {
+                setPropagationProposal(undefined);
+              }
               setSelectedChordIndex(index);
               setEditable((current) => selectEditableSlot(current, slotId));
             }
@@ -1257,6 +1373,126 @@ export function ProgressionCandidateCard({
 
     </div>
   );
+}
+
+interface PropagationProposal {
+  sourceSlotId: string;
+  chord: ChordSymbol;
+  candidates: SimilarSegmentCandidate[];
+}
+
+interface PendingPropagationFeedback {
+  event: CorrectionPropagationFeedbackEvent;
+  historyIndex: number;
+  chord: ChordSymbol;
+}
+
+function proposalFor(
+  editable: EditableProgression,
+  sourceSlotId: string,
+  chord: ChordSymbol,
+  context: SimilarityContext,
+): PropagationProposal | undefined {
+  const sourceSlot = editable.slots.find((slot) => slot.id === sourceSlotId);
+  if (!sourceSlot) return undefined;
+  const candidates = findSimilarSegments(editable.slots, sourceSlot, context);
+  return candidates.length > 0 ? { sourceSlotId, chord, candidates } : undefined;
+}
+
+export function captureSimilarityContext(
+  editable: EditableProgression,
+  detectedKey?: string,
+  analysisInput?: AnalysisInput,
+): SimilarityContext {
+  const voiceContext = analysisInput
+    ? similarityVoiceContext(analysisInput)
+    : undefined;
+  return buildSimilarityContext(editable.slots, {
+    ...(detectedKey !== undefined ? { key: detectedKey } : {}),
+    ...(voiceContext ? { voiceContext } : {}),
+  });
+}
+
+function similarityVoiceContext(analysisInput: AnalysisInput): SimilarityVoiceContext {
+  const enabledVoiceIds = [...new Set(analysisInput.enabledVoiceIds)].sort(asciiCompare);
+  const voices = new Map(analysisInput.voices.map((voice) => [voice.id, voice]));
+  const roleProfiles = Object.fromEntries(enabledVoiceIds.map((voiceId) => {
+    const voice = voices.get(voiceId);
+    const override = analysisInput.roleOverrides[voiceId];
+    return [voiceId, {
+      role: override ?? voice?.inferredRole ?? "mixed",
+      confidence: override ? 1 : voice?.roleConfidence ?? 0,
+    }];
+  }));
+  return { enabledVoiceIds, roleProfiles };
+}
+
+function asciiCompare(left: string, right: string): number {
+  return left < right ? -1 : left > right ? 1 : 0;
+}
+
+function activePropagationEvents(
+  editable: EditableProgression,
+  pending: readonly PendingPropagationFeedback[],
+): CorrectionPropagationFeedbackEvent[] {
+  return pending.flatMap((entry) => {
+    if (entry.historyIndex > editable.historyIndex) return [];
+    const operation = editable.history[entry.historyIndex - 1];
+    if (operation?.type !== "replace" || operation.editSource !== "propagation") return [];
+    const accepted = entry.event.acceptedSegmentIds;
+    const acceptedSet = new Set(accepted);
+    if (
+      operation.slotIds.length !== accepted.length
+      || operation.slotIds.some((id) => !acceptedSet.has(id))
+      || accepted.some((id) => {
+        const slot = editable.slots.find((candidate) => candidate.id === id);
+        return !slot || !chordsEqual(slot.currentChord, entry.chord);
+      })
+    ) {
+      return [];
+    }
+    return [entry.event];
+  });
+}
+
+export function buildPropagationFeedbackEvent({
+  sourceFingerprint,
+  analyzerVersion,
+  sourceSlot,
+  shownCandidates,
+  acceptedSegmentIds,
+  beatsPerBar,
+}: {
+  sourceFingerprint?: string;
+  analyzerVersion: string;
+  sourceSlot?: EditableChordSlot;
+  shownCandidates: readonly SimilarSegmentCandidate[];
+  acceptedSegmentIds: readonly string[];
+  beatsPerBar: number;
+}): CorrectionPropagationFeedbackEvent | undefined {
+  if (!sourceFingerprint || !sourceSlot || shownCandidates.length === 0) return undefined;
+  const shownSegmentIds = shownCandidates.map((candidate) => candidate.segmentId);
+  const shownSet = new Set(shownSegmentIds);
+  const acceptedSet = new Set(acceptedSegmentIds.filter((id) => shownSet.has(id)));
+  if (acceptedSet.size === 0) return undefined;
+  const startBeat = (sourceSlot.position.bar - 1) * beatsPerBar
+    + sourceSlot.position.beat - 1;
+
+  return {
+    schemaVersion: 1,
+    eventType: "correction-propagation",
+    sourceFingerprint,
+    analyzerVersion,
+    sourceSegment: {
+      id: sourceSlot.id,
+      startBeat,
+      endBeat: startBeat + sourceSlot.position.durationBeats,
+    },
+    shownSegmentIds,
+    acceptedSegmentIds: shownSegmentIds.filter((id) => acceptedSet.has(id)),
+    rejectedSegmentIds: shownSegmentIds.filter((id) => !acceptedSet.has(id)),
+    threshold: SIMILAR_SEGMENT_THRESHOLD,
+  };
 }
 
 function Metric({ label, value }: { label: string; value: string }) {

@@ -5,6 +5,7 @@ export { fingerprintMidiBytes, legacyFingerprintMidiBytes } from "./fingerprint"
 
 export interface MidiChordCorrectionEvent {
   schemaVersion: 1;
+  eventType?: "chord-correction";
   sourceFingerprint: string;
   analyzerVersion: string;
   weightsVersion: string;
@@ -43,6 +44,7 @@ export function buildCorrectionEvents(
     const startBeat = (detected.bar - 1) * barLengthBeats + detected.beat - 1;
     return [{
       schemaVersion: 1 as const,
+      eventType: "chord-correction" as const,
       sourceFingerprint,
       analyzerVersion: analysis.analyzerVersion,
       weightsVersion: "phase3.6-v1",

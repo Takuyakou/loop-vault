@@ -3,11 +3,16 @@ import type {
   ChordTimelineItem,
   ProgressionBlockCandidate,
 } from "../types";
+import { operationSnapshots, recordEditOperation } from "./editHistory";
 import type {
   EditableChordSlot,
   EditableProgression,
+  ProgressionEditSource,
   ProgressionEditSnapshot,
+  ReplaceChordOperation,
 } from "./types";
+
+export * from "./similarSegments";
 
 export function createEditableProgression(
   candidate: ProgressionBlockCandidate,
@@ -61,6 +66,48 @@ export function selectEditableSlot(
     return editable;
   }
   return { ...editable, selectedSlotId: slotId };
+}
+
+type BatchReplacementSource = Extract<
+  ProgressionEditSource,
+  "manual-label" | "alternative" | "structure-editor" | "propagation"
+>;
+
+export function replaceEditableChords(
+  editable: EditableProgression,
+  slotIds: readonly string[],
+  chord: ChordSymbol,
+  editSource: BatchReplacementSource,
+): EditableProgression {
+  const requestedIds = new Set(slotIds);
+  const changedIds = editable.slots
+    .filter((slot) => requestedIds.has(slot.id) && !chordSymbolsEqual(slot.currentChord, chord))
+    .map((slot) => slot.id);
+  if (changedIds.length === 0) {
+    return editable;
+  }
+
+  const changedIdSet = new Set(changedIds);
+  const slots = editable.slots.map((slot) => {
+    if (!changedIdSet.has(slot.id)) {
+      return cloneSlot(slot);
+    }
+    const currentChord = cloneChord(chord);
+    return {
+      ...cloneSlot(slot),
+      currentChord,
+      edited: !chordSymbolsEqual(slot.originalChord, currentChord),
+      editSource,
+    };
+  });
+  const next = { slots, selectedSlotId: editable.selectedSlotId };
+  const operation: ReplaceChordOperation = {
+    type: "replace",
+    slotIds: changedIds,
+    editSource,
+    ...operationSnapshots(editable, next),
+  };
+  return recordEditOperation(editable, operation);
 }
 
 export function cloneChord(chord: ChordSymbol): ChordSymbol {
@@ -131,5 +178,13 @@ function slotId(
   index: number,
 ): string {
   return `${candidateId}:${item.bar}:${item.beat}:${index}`;
+}
+
+function chordSymbolsEqual(left: ChordSymbol, right: ChordSymbol): boolean {
+  return left.root === right.root
+    && left.quality === right.quality
+    && left.bass === right.bass
+    && left.tensions.length === right.tensions.length
+    && left.tensions.every((tension, index) => tension === right.tensions[index]);
 }
 

@@ -5,8 +5,10 @@ import {
   hasProgressionEdits,
   progressionEditSummary,
   replaceEditableChord,
+  replaceEditableChords,
   resetAllEditableChords,
   resetEditableChord,
+  undoProgressionEdit,
 } from ".";
 import { gMajor, makeCandidate } from "./testFixtures";
 
@@ -71,5 +73,38 @@ describe("editable progression", () => {
     expect(reset.slots.every((slot) => !slot.edited)).toBe(true);
     expect(reset.history).toHaveLength(3);
     expect(reset.history[2]).toMatchObject({ type: "replace", editSource: "reset" });
+  });
+
+  it("replaces multiple slots as one propagation operation and undoes them together", () => {
+    const editable = createEditableProgression(makeCandidate());
+    const slotIds = editable.slots.map((slot) => slot.id);
+    const changed = replaceEditableChords(
+      editable,
+      [slotIds[1]!, slotIds[0]!, slotIds[1]!, "missing"],
+      gMajor,
+      "propagation",
+    );
+
+    expect(changed.slots.map((slot) => slot.currentChord.label)).toEqual(["G", "G"]);
+    expect(changed.slots.map((slot) => slot.editSource)).toEqual([
+      "propagation",
+      "propagation",
+    ]);
+    expect(changed.history).toHaveLength(1);
+    expect(changed.history[0]).toMatchObject({
+      type: "replace",
+      slotIds,
+      editSource: "propagation",
+    });
+
+    const undone = undoProgressionEdit(changed);
+    expect(undone.slots.map((slot) => slot.currentChord.label)).toEqual(["C", "C"]);
+    expect(undone.historyIndex).toBe(0);
+  });
+
+  it("keeps batch no-ops referentially stable", () => {
+    const editable = createEditableProgression(makeCandidate());
+    expect(replaceEditableChords(editable, [], gMajor, "propagation")).toBe(editable);
+    expect(replaceEditableChords(editable, ["missing"], gMajor, "propagation")).toBe(editable);
   });
 });

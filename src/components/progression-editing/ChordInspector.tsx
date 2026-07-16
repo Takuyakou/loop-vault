@@ -3,6 +3,7 @@ import { parseChordLabel } from "../../domain/chords";
 import type {
   EditableChordSlot,
   ProgressionEditSource,
+  SimilarSegmentCandidate,
 } from "../../domain/progressionEditing";
 import type { ChordSymbol } from "../../domain/types";
 import { progressionEditorCopy, type AppLanguage } from "../../i18n";
@@ -15,6 +16,7 @@ import {
 import { PlayToggle } from "../PlayToggle";
 import { ChordAlternativeList } from "./ChordAlternativeList";
 import { ChordStructureEditor } from "./ChordStructureEditor";
+import { CorrectionPropagationPanel } from "./CorrectionPropagationPanel";
 import { Trash2, TriangleAlert } from "lucide-react";
 
 interface ChordInspectorProps {
@@ -42,6 +44,13 @@ interface ChordInspectorProps {
   onMergeNext?: () => void;
   onDelete?: () => void;
   onEditStart?: () => void;
+  propagation?: {
+    sourceSlotId: string;
+    chord: ChordSymbol;
+    candidates: readonly SimilarSegmentCandidate[];
+    slots: readonly EditableChordSlot[];
+  };
+  onApplyPropagation?: (segmentIds: string[]) => void;
 }
 
 export function ChordInspector({
@@ -66,6 +75,8 @@ export function ChordInspector({
   onMergeNext,
   onDelete,
   onEditStart,
+  propagation,
+  onApplyPropagation,
 }: ChordInspectorProps) {
   const text = progressionEditorCopy[language];
   const resolvedStopLabel = stopLabel ?? text.stop;
@@ -312,6 +323,21 @@ export function ChordInspector({
           ) : null}
         </div>
       </div>
+      {propagation && onApplyPropagation ? (
+        <CorrectionPropagationPanel
+          sourceSlotId={propagation.sourceSlotId}
+          chord={propagation.chord}
+          candidates={propagation.candidates}
+          slots={propagation.slots}
+          language={language}
+          playbackSource={sourceBase}
+          previewSound={previewSound}
+          stopLabel={resolvedStopLabel}
+          onPreviewError={onPreviewError}
+          controller={controller}
+          onApply={onApplyPropagation}
+        />
+      ) : null}
       <div className="mt-5 border-t border-[var(--lv-border)] pt-4">
         <p className="text-xs text-[var(--lv-text-muted)]">
           {text.timing}

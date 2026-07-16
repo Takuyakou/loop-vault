@@ -1,5 +1,5 @@
 import { BaseDirectory, exists, mkdir, remove, writeTextFile } from "@tauri-apps/plugin-fs";
-import type { MidiChordCorrectionEvent } from "../domain/midi/feedback";
+import type { PersistedAnalysisFeedbackEvent } from "../domain/midi/analysisFeedback";
 
 const feedbackPath = "loopvault/analysis-feedback.jsonl";
 const enabledKey = "loopvault.analysisFeedbackEnabled";
@@ -13,7 +13,7 @@ export function setAnalysisFeedbackEnabled(enabled: boolean): void {
   localStorage.setItem(enabledKey, String(enabled));
 }
 
-export async function appendAnalysisFeedback(events: readonly MidiChordCorrectionEvent[]): Promise<void> {
+export async function appendAnalysisFeedback(events: readonly PersistedAnalysisFeedbackEvent[]): Promise<void> {
   if (!events.length || !isAnalysisFeedbackEnabled() || !("__TAURI_INTERNALS__" in window)) return;
   await mkdir("loopvault", { ...appData, recursive: true });
   await writeTextFile(feedbackPath, `${events.map((event) => JSON.stringify(event)).join("\n")}\n`, {
