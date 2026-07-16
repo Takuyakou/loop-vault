@@ -60,6 +60,7 @@ describe("voice-aware evaluation guard", () => {
     const cleanGuard = { passed: true, failures: [] };
     const result = strictOverallGuard(cleanGuard, true, {
       type0: "improved",
+      drums: "improved",
       jitter: "regressed",
       sustain: "mixed",
     });
@@ -97,13 +98,36 @@ describe("voice-aware evaluation guard", () => {
     expect(result).toMatchObject({
       status: "failed",
       passed: false,
-      failures: ["dirty improvement requirement not met"],
+      failures: [
+        "dirty improvement requirement not met",
+        "required dirty category did not improve: drums",
+        "required dirty category did not improve: type0",
+      ],
+    });
+  });
+
+  it("requires both drums and type0 to improve", () => {
+    expect(strictOverallGuard({ passed: true, failures: [] }, true, {
+      drums: "unchanged",
+      type0: "improved",
+    })).toMatchObject({
+      passed: false,
+      failures: ["required dirty category did not improve: drums"],
+    });
+
+    expect(strictOverallGuard({ passed: true, failures: [] }, true, {
+      drums: "improved",
+      type0: "unchanged",
+    })).toMatchObject({
+      passed: false,
+      failures: ["required dirty category did not improve: type0"],
     });
   });
 
   it("passes only with clean, deterministic, non-regressing dirty improvement", () => {
     const result = strictOverallGuard({ passed: true, failures: [] }, true, {
       type0: "improved",
+      drums: "improved",
       combined: "unchanged",
     });
 

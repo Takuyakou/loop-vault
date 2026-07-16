@@ -150,6 +150,11 @@ export function strictOverallGuard(
   if (!entries.some(([, status]) => status === "improved")) {
     failures.push("dirty improvement requirement not met");
   }
+  for (const category of ["drums", "type0"]) {
+    if (dirtyStatus[category] !== "improved") {
+      failures.push(`required dirty category did not improve: ${category}`);
+    }
+  }
   return {
     status: failures.length === 0 ? "passed" : "failed",
     passed: failures.length === 0,
