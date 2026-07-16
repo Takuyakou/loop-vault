@@ -104,6 +104,9 @@ export const savedProgressionBlockSchema = z
     pinned: z.boolean().default(false),
     sourceAssetId: z.string().uuid().optional(),
     sourceFileName: z.string().optional(),
+    sourceFingerprint: z.string().optional(),
+    sourceStartBeat: z.number().nonnegative().optional(),
+    sourceEndBeat: z.number().positive().optional(),
     startBar: z.number().int().min(1).optional(),
     endBar: z.number().int().min(1).optional(),
     lengthBars: z.number().int().positive().optional(),
@@ -115,6 +118,9 @@ export const savedProgressionBlockSchema = z
     tags: z.array(z.string()),
     capturedAt: isoDateSchema,
     analyzerVersion: z.string().min(1),
+    weightsVersion: z.string().min(1).optional(),
+    userEdited: z.boolean().optional(),
+    userVerified: z.boolean().optional(),
   })
   .strict();
 

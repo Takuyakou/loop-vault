@@ -1,4 +1,5 @@
 import type { MidiProgressionAnalysis, ProgressionBlockCandidate } from "../types";
+export { fingerprintMidiBytes, legacyFingerprintMidiBytes } from "./fingerprint";
 
 export interface MidiChordCorrectionEvent {
   schemaVersion: 1;
@@ -18,15 +19,6 @@ export interface MidiChordCorrectionEvent {
   keyContext?: string;
   previousChord?: string;
   nextChord?: string;
-}
-
-export function fingerprintMidiBytes(bytes: Uint8Array): string {
-  let hash = 0x811c9dc5;
-  for (const value of bytes) {
-    hash ^= value;
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return `fnv1a32-${(hash >>> 0).toString(16).padStart(8, "0")}`;
 }
 
 export function buildCorrectionEvents(

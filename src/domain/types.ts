@@ -39,6 +39,9 @@ export interface SavedProgressionBlock {
   pinned?: boolean;
   sourceAssetId?: string;
   sourceFileName?: string;
+  sourceFingerprint?: string;
+  sourceStartBeat?: number;
+  sourceEndBeat?: number;
   startBar?: number;
   endBar?: number;
   lengthBars?: number;
@@ -50,6 +53,9 @@ export interface SavedProgressionBlock {
   tags: string[];
   capturedAt: string;
   analyzerVersion: string;
+  weightsVersion?: string;
+  userEdited?: boolean;
+  userVerified?: boolean;
 }
 
 export interface ProgressionBlockCandidate {
