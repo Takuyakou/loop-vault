@@ -24,8 +24,8 @@ import type { UndoRequest } from "../hooks/useUndoQueue";
 import { ProgressionGrid } from "../ui/ProgressionGrid";
 
 type Reference = SongIdea["references"][number]; type Asset = SongIdea["assets"][number];
-const keySuggestions = ["C", "Cm", "D", "Dm", "E", "Em", "F", "Fm", "G", "Gm", "A", "Am", "B", "Bm"]; const nextPlaceholders = ["Replace the bass", "Try the B section chords", "Make two drum variations", "Bounce a rough hook"]; const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
-function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <section className={"border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4 " + className}>{children}</section>; } function StatusBadge({ status, language }: { status: Status; language: AppLanguage }) { return <span className="shrink-0 rounded bg-[var(--lv-surface-raised)] px-2 py-1 text-xs font-semibold uppercase text-teal-200">{statusLabel(status, language)}</span>; } function formatDate(value: string): string { return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value)); } function splitList(value: string): string[] { return value.split(",").map((entry) => entry.trim()).filter(Boolean); } function hashString(value: string): number { let hash = 0; for (const char of value) hash = (hash * 31 + char.charCodeAt(0)) | 0; return hash; } const defaultAssetId = () => crypto.randomUUID(); async function writeClipboardText(text: string): Promise<void> { if (!navigator.clipboard?.writeText) throw new Error("Clipboard is not available."); await navigator.clipboard.writeText(text); }
+const keySuggestions = ["C", "Cm", "D", "Dm", "E", "Em", "F", "Fm", "G", "Gm", "A", "Am", "B", "Bm"]; const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
+function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <section className={"border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4 " + className}>{children}</section>; } function StatusBadge({ status, language }: { status: Status; language: AppLanguage }) { return <span className="shrink-0 rounded bg-[var(--lv-surface-raised)] px-2 py-1 text-xs font-semibold uppercase text-teal-200">{statusLabel(status, language)}</span>; } function formatDate(value: string): string { return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value)); } function splitList(value: string): string[] { return value.split(",").map((entry) => entry.trim()).filter(Boolean); } function hashString(value: string): number { let hash = 0; for (const char of value) hash = (hash * 31 + char.charCodeAt(0)) | 0; return hash; } const defaultAssetId = () => crypto.randomUUID(); async function writeClipboardText(text: string): Promise<boolean> { if (!navigator.clipboard?.writeText) return false; await navigator.clipboard.writeText(text); return true; }
 function labelStatus(status: Status, language: AppLanguage): string { return statusLabel(status, language); }
 function validDraft<T>(value: T, displayValue?: string): DraftParseResult<T> { return { ok: true, value, displayValue }; }
 function invalidDraft<T>(): DraftParseResult<T> { return { ok: false }; }
@@ -67,7 +67,7 @@ function ProgressionBlockCard({
         <div>
           <p className="font-semibold">{block.summaryText || block.chords.map((item) => item.chord.label).join(" - ")}</p>
           <p className="mt-1 text-[var(--lv-text-muted)]">
-            {block.sourceFileName ?? "Captured MIDI"} {block.startBar ? `Bar ${block.startBar}-${block.endBar}` : ""}
+            {block.sourceFileName ?? copy.detail.capturedMidi}{block.startBar ? ` · ${copy.detail.barRange(block.startBar, block.endBar ?? block.startBar)}` : ""}
           </p>
         </div>
         <PlayToggle source={source} request={{ type: "timeline", timeline: block.chords, bpm }} playLabel={copy.common.preview} stopLabel={copy.common.stop} className="rounded border border-cyan-500/60 px-2 py-1 text-cyan-100" onError={onPreviewError} />
@@ -139,7 +139,7 @@ export function DetailView({
   const statusReasonRef = useRef<HTMLTextAreaElement>(null);
   const pipelineCancelRef = useRef<HTMLButtonElement>(null);
   const completeNextRef = useRef<HTMLButtonElement>(null);
-  const placeholder = nextPlaceholders[Math.abs(hashString(idea.id)) % nextPlaceholders.length];
+  const placeholder = copy.detail.nextActionPlaceholders[Math.abs(hashString(idea.id)) % copy.detail.nextActionPlaceholders.length];
 
   const titleField = useDraftSave<string>({
     scopeKey: idea.id,
@@ -423,10 +423,14 @@ export function DetailView({
 
   async function copySavedBlock(block: SavedProgressionBlock) {
     try {
-      await writeClipboardText(formatProgressionText(block.chords));
-      setToast(language === "ja" ? "Chord Drip形式でコピーしました。" : "Copied progression text.");
-    } catch (error) {
-      setToast(error instanceof Error ? error.message : (language === "ja" ? "コピーできませんでした。" : "Could not copy progression."));
+      const copied = await writeClipboardText(formatProgressionText(block.chords));
+      if (!copied) {
+        setToast(copy.detail.copyFailed);
+        return;
+      }
+      setToast(copy.detail.copiedProgression);
+    } catch {
+      setToast(copy.detail.copyFailed);
     }
   }
 
@@ -487,26 +491,26 @@ export function DetailView({
           <h2 className="text-xl font-semibold">{copy.detail.metadata}</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <div className="relative">
-              <input className={`${inputClass} pr-9`} type="number" min={40} max={300} step={1} value={bpmField.draft} aria-label={copy.detail.fields.bpm} aria-invalid={bpmField.invalid} aria-errormessage={bpmField.invalid ? "detail-bpm-error" : undefined} title={copy.detail.fields.bpm} onChange={(event) => bpmField.setDraft(event.target.value)} placeholder="BPM" {...bpmField.inputProps} />
+              <input className={`${inputClass} pr-9`} type="number" min={40} max={300} step={1} value={bpmField.draft} aria-label={copy.detail.fields.bpm} aria-invalid={bpmField.invalid} aria-errormessage={bpmField.invalid ? "detail-bpm-error" : undefined} title={copy.detail.fields.bpm} onChange={(event) => bpmField.setDraft(event.target.value)} placeholder={copy.detail.placeholders.bpm} {...bpmField.inputProps} />
               <SaveFlash visible={bpmField.saved} label={copy.detail.saveAccepted} />
               <span id="detail-bpm-error" className="sr-only">{copy.detail.validation.bpm}</span>
             </div>
             <div className="relative">
-              <input className={`${inputClass} pr-9`} list="key-options" value={keyField.draft} aria-label={copy.detail.fields.key} title={copy.detail.fields.key} onChange={(event) => keyField.setDraft(event.target.value)} placeholder="Key" {...keyField.inputProps} />
+              <input className={`${inputClass} pr-9`} list="key-options" value={keyField.draft} aria-label={copy.detail.fields.key} title={copy.detail.fields.key} onChange={(event) => keyField.setDraft(event.target.value)} placeholder={copy.detail.placeholders.key} {...keyField.inputProps} />
               <SaveFlash visible={keyField.saved} label={copy.detail.saveAccepted} />
             </div>
             <datalist id="key-options">{keySuggestions.map((key) => <option key={key} value={key} />)}</datalist>
             <div className="relative">
-              <input className={`${inputClass} pr-9`} value={genreField.draft} aria-label={copy.detail.fields.genre} title={copy.detail.fields.genre} onChange={(event) => genreField.setDraft(event.target.value)} placeholder="Genre" {...genreField.inputProps} />
+              <input className={`${inputClass} pr-9`} value={genreField.draft} aria-label={copy.detail.fields.genre} title={copy.detail.fields.genre} onChange={(event) => genreField.setDraft(event.target.value)} placeholder={copy.detail.placeholders.genre} {...genreField.inputProps} />
               <SaveFlash visible={genreField.saved} label={copy.detail.saveAccepted} />
             </div>
             <div className="relative">
-              <input className={`${inputClass} pr-9`} value={moodField.draft} aria-label={copy.detail.fields.mood} title={copy.detail.fields.mood} onChange={(event) => moodField.setDraft(event.target.value)} placeholder={language === "ja" ? "Mood（カンマ区切り）" : "Mood (comma separated)"} {...moodField.inputProps} />
+              <input className={`${inputClass} pr-9`} value={moodField.draft} aria-label={copy.detail.fields.mood} title={copy.detail.fields.mood} onChange={(event) => moodField.setDraft(event.target.value)} placeholder={copy.detail.placeholders.mood} {...moodField.inputProps} />
               <SaveFlash visible={moodField.saved} label={copy.detail.saveAccepted} />
             </div>
           </div>
           <div className="relative mt-3">
-            <textarea className={`${inputClass} min-h-28 pr-9`} value={memoField.draft} aria-label={copy.detail.fields.memo} title={copy.detail.fields.memo} onChange={(event) => memoField.setDraft(event.target.value)} placeholder={language === "ja" ? "コード進行メモ" : "Chord progression memo"} {...memoField.inputProps} />
+            <textarea className={`${inputClass} min-h-28 pr-9`} value={memoField.draft} aria-label={copy.detail.fields.memo} title={copy.detail.fields.memo} onChange={(event) => memoField.setDraft(event.target.value)} placeholder={copy.detail.placeholders.chordMemo} {...memoField.inputProps} />
             <SaveFlash visible={memoField.saved} label={copy.detail.saveAccepted} />
           </div>
         </Panel>
@@ -559,9 +563,9 @@ export function DetailView({
         <Panel>
           <h2 className="text-xl font-semibold">{copy.detail.references}</h2>
           <form className="mt-3 grid gap-2" onSubmit={addReference}>
-            <input className={inputClass} value={referenceDraft.title} onChange={(event) => setReferenceDraft({ ...referenceDraft, title: event.target.value })} placeholder="Title" />
-            <input className={inputClass} value={referenceDraft.url ?? ""} onChange={(event) => setReferenceDraft({ ...referenceDraft, url: event.target.value })} placeholder="URL" />
-            <input className={inputClass} value={referenceDraft.memo ?? ""} onChange={(event) => setReferenceDraft({ ...referenceDraft, memo: event.target.value })} placeholder="Memo" />
+            <input className={inputClass} value={referenceDraft.title} onChange={(event) => setReferenceDraft({ ...referenceDraft, title: event.target.value })} placeholder={copy.detail.placeholders.title} />
+            <input className={inputClass} value={referenceDraft.url ?? ""} onChange={(event) => setReferenceDraft({ ...referenceDraft, url: event.target.value })} placeholder={copy.detail.placeholders.url} />
+            <input className={inputClass} value={referenceDraft.memo ?? ""} onChange={(event) => setReferenceDraft({ ...referenceDraft, memo: event.target.value })} placeholder={copy.detail.placeholders.memo} />
             <button className="rounded bg-[var(--lv-surface-raised)] px-3 py-2 text-sm" type="submit">{copy.detail.addReference}</button>
           </form>
           <div className="mt-4 space-y-2">
@@ -591,7 +595,7 @@ export function DetailView({
               <input className={inputClass} value={assetDraft.path ?? ""} onChange={(event) => setAssetDraft({ ...assetDraft, path: event.target.value })} placeholder={copy.detail.absolutePath} />
               <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" type="button" onClick={() => void chooseAssetPath()}>{copy.common.choose}</button>
             </div>
-            <input className={inputClass} value={assetDraft.memo ?? ""} onChange={(event) => setAssetDraft({ ...assetDraft, memo: event.target.value })} placeholder="Memo" />
+            <input className={inputClass} value={assetDraft.memo ?? ""} onChange={(event) => setAssetDraft({ ...assetDraft, memo: event.target.value })} placeholder={copy.detail.placeholders.memo} />
             <button className="rounded bg-[var(--lv-surface-raised)] px-3 py-2 text-sm" type="submit">{copy.detail.addAsset}</button>
           </form>
           <div className="mt-4 space-y-2">

@@ -51,7 +51,7 @@ export function ChordInspector({
   onPreview,
   playbackSource,
   previewSound,
-  stopLabel = language === "ja" ? "停止" : "Stop",
+  stopLabel,
   onPreviewError,
   controller = playbackController,
   onApply,
@@ -67,6 +67,7 @@ export function ChordInspector({
   onEditStart,
 }: ChordInspectorProps) {
   const text = progressionEditorCopy[language];
+  const resolvedStopLabel = stopLabel ?? text.stop;
   const [draftLabel, setDraftLabel] = useState(slot?.currentChord.label ?? "");
   const [draftChord, setDraftChord] = useState<ChordSymbol | undefined>(slot?.currentChord);
   const [draftSource, setDraftSource] = useState<"manual-label" | "alternative" | "structure-editor">("manual-label");
@@ -168,7 +169,7 @@ export function ChordInspector({
                 source={inspectorPlaybackSource(sourceBase, slot.id, "alternative")}
                 request={{ type: "chord", chord: firstAlternative.chord, sound: previewSound }}
                 playLabel={text.preview}
-                stopLabel={stopLabel}
+                stopLabel={resolvedStopLabel}
                 className="border border-[var(--lv-border-strong)] px-3 py-2 text-sm"
                 onError={onPreviewError}
                 controller={controller}
@@ -199,7 +200,7 @@ export function ChordInspector({
             source: inspectorPlaybackSource(sourceBase, slot.id, "original"),
             chord: slot.originalChord,
             playLabel: text.previewOriginal,
-            stopLabel,
+            stopLabel: resolvedStopLabel,
             sound: previewSound,
             onError: onPreviewError,
             controller,
@@ -213,7 +214,7 @@ export function ChordInspector({
             source: inspectorPlaybackSource(sourceBase, slot.id, "current"),
             chord: slot.currentChord,
             playLabel: text.previewCurrent,
-            stopLabel,
+            stopLabel: resolvedStopLabel,
             sound: previewSound,
             onError: onPreviewError,
             controller,
@@ -276,7 +277,7 @@ export function ChordInspector({
               source={inspectorPlaybackSource(sourceBase, slot.id, "draft")}
               request={{ type: "chord", chord: draftChord, sound: previewSound }}
               playLabel={text.preview}
-              stopLabel={stopLabel}
+              stopLabel={resolvedStopLabel}
               className="inline-flex items-center gap-2 border border-[var(--lv-border-strong)] px-3 py-2 text-sm"
               onError={onPreviewError}
               controller={controller}

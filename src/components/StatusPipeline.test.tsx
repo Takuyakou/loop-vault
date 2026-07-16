@@ -30,7 +30,7 @@ describe("getStatusControlActions", () => {
       expected: {
         primary: { status: "arrange", label: "展開へ進む" },
         menu: [
-          { status: "idea", label: "アイデアへ戻す" },
+          { status: "idea", label: "Ideaへ戻す" },
           { status: "hold", label: "保留" },
           { status: "abandoned", label: "没" },
         ],
@@ -102,7 +102,7 @@ describe("getStatusControlActions", () => {
     "offers only the Idea repair fallback for prevStatus=$s",
     (prevStatus) => {
       expect(getStatusControlActions("hold", prevStatus, labels, copy)).toEqual({
-        menu: [{ status: "idea", label: "アイデアへ復帰" }],
+        menu: [{ status: "idea", label: "Ideaへ復帰" }],
       });
     },
   );

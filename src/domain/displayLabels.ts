@@ -2,7 +2,7 @@ import type { AppLanguage, Status } from "./types";
 
 const statusLabels: Record<AppLanguage, Record<Status, string>> = {
   ja: {
-    idea: "アイデア",
+    idea: "Idea",
     loop: "ループ",
     arrange: "展開",
     mix: "ミックス",

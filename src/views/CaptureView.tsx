@@ -347,10 +347,10 @@ export function CaptureView(props: CaptureViewProps) {
     });
     if (id) {
       persistCorrectionEvents(corrections);
-      setToast(language === "ja" ? "コード進行をVaultに保存しました。" : "Saved the progression to the Vault.");
+      setToast(copy.capture.savedToVault);
       return true;
     }
-    setToast(language === "ja" ? "Ideaを作成できませんでした。" : "Could not create the idea.");
+    setToast(copy.capture.createFailed);
     return false;
   }
 
@@ -375,7 +375,7 @@ export function CaptureView(props: CaptureViewProps) {
       return;
     }
     void appendAnalysisFeedback(events)
-      .catch((error) => setToast(error instanceof Error ? error.message : "Could not save analysis feedback."));
+      .catch((error) => setToast(error instanceof Error ? error.message : copy.capture.feedbackSaveFailed));
   }
 
   function appendExisting(
@@ -386,7 +386,7 @@ export function CaptureView(props: CaptureViewProps) {
     userVerified: boolean,
   ): boolean {
     if (!ideaId) {
-      setToast(language === "ja" ? "追加先のIdeaを選んでください。" : "Choose an idea first.");
+      setToast(copy.capture.chooseIdeaFirst);
       return false;
     }
 
@@ -400,14 +400,14 @@ export function CaptureView(props: CaptureViewProps) {
       setToast(copy.toast.blockSaved);
       return true;
     }
-    setToast(language === "ja" ? "コード進行を追加できませんでした。" : "Could not append the progression.");
+    setToast(copy.capture.appendFailed);
     return false;
   }
 
   function copyMemo(candidate: ProgressionBlockCandidate, ideaId: string): boolean {
     const idea = ideas.find((entry) => entry.id === ideaId);
     if (!idea) {
-      setToast(language === "ja" ? "追加先のIdeaを選んでください。" : "Choose an idea first.");
+      setToast(copy.capture.chooseIdeaFirst);
       return false;
     }
 
@@ -421,9 +421,9 @@ export function CaptureView(props: CaptureViewProps) {
   async function copyProgression(candidate: ProgressionBlockCandidate) {
     try {
       await writeClipboardText(formatProgressionText(candidate.chords));
-      setToast(language === "ja" ? "Chord Dripで使えるコード進行をコピーしました。" : "Copied progression text.");
-    } catch (error) {
-      setToast(error instanceof Error ? error.message : (language === "ja" ? "コピーできませんでした。" : "Could not copy progression."));
+      setToast(copy.capture.copiedProgression);
+    } catch {
+      setToast(copy.capture.copyFailed);
     }
   }
 
@@ -464,7 +464,6 @@ export function CaptureView(props: CaptureViewProps) {
           onChooseMidi={() => void chooseMidi()}
           isDraggingMidi={isDraggingMidi}
           copy={copy}
-          language={language}
         />
       </div>
     );
@@ -478,14 +477,12 @@ export function CaptureView(props: CaptureViewProps) {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--lv-accent)]">
-              {language === "ja" ? "コード採集" : "Progression capture"}
+              {copy.capture.eyebrow}
             </p>
             <h2 className="mt-2 text-2xl font-semibold">{copy.capture.title}</h2>
             <p className="mt-2 text-sm text-teal-200">{result.fileName ?? "MIDI"}</p>
             <p className="mt-2 max-w-2xl text-sm text-[var(--lv-text-muted)]">
-              {language === "ja"
-                ? "候補を聴いて、使えそうなコード進行だけLoop Vaultへ保存してください。"
-                : "Preview the candidates and save only the progressions worth keeping."}
+              {copy.capture.resultDescription}
             </p>
           </div>
           <div className="flex gap-2">
@@ -500,8 +497,8 @@ export function CaptureView(props: CaptureViewProps) {
         <div className="mt-5 grid gap-3 text-sm sm:grid-cols-4">
           <Metric label={copy.capture.file} value={result.fileName ?? "MIDI"} />
           <Metric label={copy.capture.bars} value={result.totalBars.toString()} />
-          <Metric label="BPM" value={result.bpm ? Math.round(result.bpm).toString() : "Unknown"} />
-          <Metric label={copy.capture.timeSignature} value={result.timeSignature ?? (language === "ja" ? "不明" : "Unknown")} />
+          <Metric label="BPM" value={result.bpm ? Math.round(result.bpm).toString() : copy.capture.unknown} />
+          <Metric label={copy.capture.timeSignature} value={result.timeSignature ?? copy.capture.unknown} />
         </div>
       </section>
 
@@ -522,7 +519,7 @@ export function CaptureView(props: CaptureViewProps) {
               copy={copy}
             />
             <span className="rounded bg-[var(--lv-surface-raised)] px-3 py-1 text-sm text-teal-200">
-              {language === "ja" ? `${result.blockCandidates.length}件` : `${result.blockCandidates.length} items`}
+              {copy.capture.itemCount(result.blockCandidates.length)}
             </span>
           </div>
         </div>
@@ -568,7 +565,7 @@ export function CaptureView(props: CaptureViewProps) {
                 />
               ))
             ) : (
-              <p className="text-sm text-[var(--lv-text-muted)]">{language === "ja" ? "使えそうな進行候補は見つかりませんでした。" : "No reusable progression candidates were found."}</p>
+              <p className="text-sm text-[var(--lv-text-muted)]">{copy.capture.noCandidates}</p>
             )}
           </div>
         </div>
@@ -585,7 +582,6 @@ export function CaptureView(props: CaptureViewProps) {
       <TimelineDetails
         result={result}
         copy={copy}
-        language={language}
         previewSound={previewSound}
         onPreviewSoundChange={(sound) => {
           stopCapturePlayback(controller);
@@ -597,9 +593,9 @@ export function CaptureView(props: CaptureViewProps) {
       </div>
       <ConfirmDialog
         open={Boolean(pendingCandidateSelection)}
-        title={language === "ja" ? "未保存の候補を閉じますか？" : "Close the unsaved candidate?"}
+        title={copy.capture.closeUnsavedTitle}
         description={copy.capture.unsavedCandidateConfirm}
-        confirmLabel={language === "ja" ? "閉じる" : "Close"}
+        confirmLabel={copy.common.close}
         cancelLabel={copy.common.cancel}
         onCancel={() => setPendingCandidateSelection(undefined)}
         onConfirm={() => {
@@ -619,20 +615,18 @@ function CaptureEmptyState({
   onChooseMidi,
   isDraggingMidi,
   copy,
-  language,
 }: {
   status: AnalysisState["status"];
   error?: string;
   onChooseMidi: () => void;
   isDraggingMidi: boolean;
   copy: AppCopy;
-  language: AppLanguage;
 }) {
   return (
     <section className={`grid min-h-[32rem] place-items-center border p-6 text-center transition-colors ${isDraggingMidi ? "border-teal-300 bg-[var(--lv-accent)]/10" : "border-[var(--lv-border)] bg-[var(--lv-bg)]/70"}`}>
       <div className="max-w-2xl">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--lv-accent)]">
-          {language === "ja" ? "MIDI Capture" : "MIDI Capture"}
+          {copy.capture.eyebrow}
         </p>
         <h2 className="mt-3 text-3xl font-semibold">{copy.capture.title}</h2>
         <p className="mt-3 text-sm leading-6 text-[var(--lv-text-muted)]">{copy.capture.emptyDescription}</p>
@@ -650,7 +644,7 @@ function CaptureEmptyState({
         <button className="mt-7 rounded bg-[var(--lv-accent)] px-5 py-3 text-sm font-semibold text-stone-950" onClick={onChooseMidi}>
           {copy.capture.loadMidi}
         </button>
-        <p className="mt-3 text-xs text-[var(--lv-text-muted)]">{language === "ja" ? ".mid / .midi に対応" : ".mid / .midi supported"}</p>
+        <p className="mt-3 text-xs text-[var(--lv-text-muted)]">{copy.capture.supportedFormats}</p>
         {status === "analyzing" ? (
           <div className="mt-6 border border-cyan-500/30 bg-cyan-500/10 p-4 text-left text-sm text-cyan-100">
             <p className="font-semibold">{copy.capture.analyzing}</p>
@@ -659,7 +653,7 @@ function CaptureEmptyState({
         ) : null}
         {status === "error" ? (
           <div className="mt-6 border border-red-500/30 bg-red-500/10 p-4 text-left text-sm text-red-100">
-            <p className="font-semibold">{language === "ja" ? "読み込めませんでした" : "Could not load the MIDI"}</p>
+            <p className="font-semibold">{copy.capture.loadFailed}</p>
             <p className="mt-2 text-red-100/80">{error}</p>
           </div>
         ) : null}
@@ -691,7 +685,6 @@ function StepCard({ index, text }: { index: string; text: string }) {
 export function TimelineDetails({
   result,
   copy,
-  language,
   previewSound,
   onPreviewSoundChange,
   onPlaybackError,
@@ -699,7 +692,7 @@ export function TimelineDetails({
 }: {
   result: MidiProgressionAnalysis;
   copy: AppCopy;
-  language: AppLanguage;
+  language?: AppLanguage;
   previewSound: PreviewSound;
   onPreviewSoundChange: (sound: PreviewSound) => void;
   onPlaybackError?: (error: unknown) => void;
@@ -779,7 +772,7 @@ export function TimelineDetails({
         )}
       </div>
       <p className="mt-4 text-xs text-[var(--lv-text-muted)]">
-        {language === "ja" ? "候補ブロックに含まれない部分も確認できます。" : "This also shows chords outside the reusable candidate blocks."}
+        {copy.capture.outsideCandidates}
       </p>
     </details>
   );
@@ -1153,13 +1146,13 @@ export function ProgressionCandidateCard({
         ) : null}
       </div>
       {showRomanNumerals && selectedRomanHint ? (
-        <p className="mt-2 text-xs text-[var(--lv-text-muted)]">{selectedRomanHint.label}{selectedRomanHint.detail ? ` · ${selectedRomanHint.detail}` : ""}{selectedRomanHint.confidence !== "high" ? (language === "ja" ? "（参考）" : " (reference)") : ""}</p>
+        <p className="mt-2 text-xs text-[var(--lv-text-muted)]">{selectedRomanHint.label}{selectedRomanHint.detail ? ` · ${selectedRomanHint.detail}` : ""}{selectedRomanHint.confidence !== "high" ? copy.capture.reference : ""}</p>
       ) : null}
       {isExpanded && visibleWarnings.length > 0 ? (
         <div className="mt-3 flex flex-wrap gap-2">
           {visibleWarnings.map((warning) => (
             <span key={warning} className="rounded border border-amber-400/40 bg-amber-400/10 px-2 py-1 text-xs text-amber-100">
-              {language === "ja" ? "要確認" : "Review"}: {warning}
+              {copy.capture.reviewPrefix}: {warning}
             </span>
           ))}
         </div>
@@ -1207,7 +1200,7 @@ function hasDroppedFiles(event: DragEvent<HTMLDivElement>): boolean {
 
 async function writeClipboardText(text: string): Promise<void> {
   if (!navigator.clipboard?.writeText) {
-    throw new Error("Clipboard is not available.");
+    throw new Error("clipboard-unavailable");
   }
   await navigator.clipboard.writeText(text);
 }
@@ -1341,11 +1334,9 @@ export function captureSaveTitle(
   sourceFileName: string | undefined,
   detectedKey: string | undefined,
   copy: AppCopy,
-  language: AppLanguage,
+  _language: AppLanguage,
 ): string {
-  const range = language === "ja"
-    ? `${candidate.startBar}–${candidate.endBar}小節`
-    : `Bars ${candidate.startBar}–${candidate.endBar}`;
+  const range = copy.capture.barRange(candidate.startBar, candidate.endBar);
   const fileName = sourceFileName?.trim();
   if (fileName) return `${fileName} · ${range}`;
 

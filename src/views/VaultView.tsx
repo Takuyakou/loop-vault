@@ -12,7 +12,7 @@ type ProgressionEntry = { idea: SongIdea; block: SavedProgressionBlock };
 type SortField = "capturedAt" | "updatedAt" | "key" | "bpm";
 
 export function VaultView({
-  ideas, storedIdeas = ideas, openDetail, openCreate, openCapture, updateIdea, setToast, copy, language, showRomanNumerals,
+  ideas, storedIdeas = ideas, openDetail, openCreate, openCapture, updateIdea, setToast, copy, showRomanNumerals,
 }: {
   ideas: SongIdea[];
   storedIdeas?: SongIdea[];
@@ -67,14 +67,17 @@ export function VaultView({
   }, [storedIdeas, updateIdea]);
 
   const copyProgression = useCallback(async (block: SavedProgressionBlock) => {
-    try {
-      if (!navigator.clipboard?.writeText) throw new Error("Clipboard is not available.");
-      await navigator.clipboard.writeText(formatProgressionText(block.chords));
-      setToast(language === "ja" ? "コード進行をコピーしました。" : "Copied progression.");
-    } catch {
-      setToast(language === "ja" ? "コピーできませんでした。" : "Could not copy progression.");
+    if (!navigator.clipboard?.writeText) {
+      setToast(copy.library.copyFailed);
+      return;
     }
-  }, [language, setToast]);
+    try {
+      await navigator.clipboard.writeText(formatProgressionText(block.chords));
+      setToast(copy.library.copiedProgression);
+    } catch {
+      setToast(copy.library.copyFailed);
+    }
+  }, [copy.library.copiedProgression, copy.library.copyFailed, setToast]);
 
   const handleKey = useCallback((event: KeyboardEvent) => {
     const target = event.target as HTMLElement | null;
@@ -111,31 +114,31 @@ export function VaultView({
     <div className="py-5">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
         <div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--lv-accent)]">Vault</p>
-          <h2 className="mt-2 text-2xl font-semibold">{language === "ja" ? "進行をすばやく取り出す" : "Retrieve progressions quickly"}</h2></div>
-        <button className="lv-button-primary px-4 py-2 text-sm font-semibold" onClick={openCapture}>{language === "ja" ? "コード採集" : "Capture"}</button>
+          <h2 className="mt-2 text-2xl font-semibold">{copy.library.subtitle}</h2></div>
+        <button className="lv-button-primary px-4 py-2 text-sm font-semibold" onClick={openCapture}>{copy.library.capture}</button>
       </div>
       <div className="mb-3 flex gap-1 text-sm">
-        <button className={mode === "progression" ? "bg-[var(--lv-surface-raised)] px-3 py-2" : "px-3 py-2 text-[var(--lv-text-muted)]"} onClick={() => setMode("progression")}>Progression</button>
-        <button className={mode === "idea" ? "bg-[var(--lv-surface-raised)] px-3 py-2" : "px-3 py-2 text-[var(--lv-text-muted)]"} onClick={() => setMode("idea")}>Idea</button>
+        <button className={mode === "progression" ? "bg-[var(--lv-surface-raised)] px-3 py-2" : "px-3 py-2 text-[var(--lv-text-muted)]"} onClick={() => setMode("progression")}>{copy.library.progression}</button>
+        <button className={mode === "idea" ? "bg-[var(--lv-surface-raised)] px-3 py-2" : "px-3 py-2 text-[var(--lv-text-muted)]"} onClick={() => setMode("idea")}>{copy.library.idea}</button>
       </div>
       {mode === "progression" ? <>
         <div className="grid gap-2 border-y border-[var(--lv-border)] py-3 md:grid-cols-[minmax(0,1fr)_auto_auto]">
-          <input ref={searchRef} className="border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm outline-none focus:border-[var(--lv-accent)]" value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") { setQuery(""); event.currentTarget.blur(); } }} placeholder={language === "ja" ? "4-5-3-6 / IVmaj7 / Fmaj9 / タグで検索" : "4-5-3-6 / IVmaj7 / Fmaj9 / Search tags"} />
-          <div className="flex gap-1">{(["all", "4", "8", "16"] as const).map((value) => <button key={value} className={lengthBars === value ? "bg-[var(--lv-surface-raised)] px-2 text-xs" : "px-2 text-xs text-[var(--lv-text-muted)]"} onClick={() => setLengthBars(value)}>{value === "all" ? "All" : `${value} bars`}</button>)}</div>
-          <select className="border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-2 text-xs" value={sort} onChange={(event) => setSort(event.target.value as SortField)}><option value="capturedAt">{language === "ja" ? "採集日" : "Captured"}</option><option value="updatedAt">{language === "ja" ? "更新日" : "Updated"}</option><option value="key">Key</option><option value="bpm">BPM</option></select>
+          <input ref={searchRef} className="border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm outline-none focus:border-[var(--lv-accent)]" value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") { setQuery(""); event.currentTarget.blur(); } }} placeholder={copy.library.searchPlaceholder} />
+          <div className="flex gap-1">{(["all", "4", "8", "16"] as const).map((value) => <button key={value} className={lengthBars === value ? "bg-[var(--lv-surface-raised)] px-2 text-xs" : "px-2 text-xs text-[var(--lv-text-muted)]"} onClick={() => setLengthBars(value)}>{value === "all" ? copy.library.all : copy.library.bars(Number(value))}</button>)}</div>
+          <select className="border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-2 text-xs" value={sort} onChange={(event) => setSort(event.target.value as SortField)}><option value="capturedAt">{copy.library.captured}</option><option value="updatedAt">{copy.library.updated}</option><option value="key">Key</option><option value="bpm">BPM</option></select>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <button className={onlyPinned ? "bg-[var(--lv-surface-raised)] px-3 py-1 text-xs text-[var(--lv-warning)]" : "border border-[var(--lv-border)] px-3 py-1 text-xs text-[var(--lv-text-muted)]"} onClick={() => setOnlyPinned((value) => !value)}>★ {language === "ja" ? "のみ" : "only"}</button>
-          <FilterSelect label="Key" value={keyFilter} values={keys} onChange={setKeyFilter} />
-          <FilterSelect label={language === "ja" ? "元MIDI" : "Source"} value={sourceFilter} values={sources} onChange={setSourceFilter} />
-          <FilterSelect label={language === "ja" ? "タグ" : "Tag"} value={tagFilter} values={tags} onChange={setTagFilter} />
-          <span className="text-xs text-[var(--lv-text-muted)]">{visible.length} {language === "ja" ? "件" : "items"}</span>
+          <button className={onlyPinned ? "bg-[var(--lv-surface-raised)] px-3 py-1 text-xs text-[var(--lv-warning)]" : "border border-[var(--lv-border)] px-3 py-1 text-xs text-[var(--lv-text-muted)]"} onClick={() => setOnlyPinned((value) => !value)}>★ {copy.library.onlyFavorites}</button>
+          <FilterSelect label="Key" allLabel={copy.library.all} value={keyFilter} values={keys} onChange={setKeyFilter} />
+          <FilterSelect label={copy.library.source} allLabel={copy.library.all} value={sourceFilter} values={sources} onChange={setSourceFilter} />
+          <FilterSelect label={copy.library.tag} allLabel={copy.library.all} value={tagFilter} values={tags} onChange={setTagFilter} />
+          <span className="text-xs text-[var(--lv-text-muted)]">{copy.library.itemCount(visible.length)}</span>
         </div>
         {visible.length ? <div className="mt-4 overflow-hidden border border-[var(--lv-border)]">
           {visible.map((entry, index) => <ProgressionRow key={entry.block.id} entry={entry} selected={index === selectedIndex} showDegrees={showRomanNumerals} copy={copy} onSelect={() => setSelectedIndex(index)} onOpen={() => openDetail(entry.idea.id)} onPin={() => togglePin(entry)} onCopy={() => void copyProgression(entry.block)} onPreviewError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed)} />)}
-        </div> : <EmptyState language={language} openCreate={openCreate} />}
-        <p className="mt-3 text-xs text-[var(--lv-text-muted)]">↑↓ {language === "ja" ? "移動" : "move"} · Space {language === "ja" ? "試聴/停止" : "preview/stop"} · Enter {language === "ja" ? "Ideaを開く" : "open"} · C {language === "ja" ? "コピー" : "copy"} · S ★ · / {language === "ja" ? "検索" : "search"} · Esc {language === "ja" ? "クリア" : "clear"}</p>
-      </> : <IdeaList ideas={ideas} openDetail={openDetail} language={language} />}
+        </div> : <EmptyState copy={copy} openCreate={openCreate} />}
+        <p className="mt-3 text-xs text-[var(--lv-text-muted)]">{copy.library.shortcuts}</p>
+      </> : <IdeaList ideas={ideas} openDetail={openDetail} copy={copy} />}
     </div>
   );
 }
@@ -204,12 +207,12 @@ function ProgressionRow({ entry, selected, showDegrees, copy, onSelect, onOpen, 
   </div>;
 }
 
-function IdeaList({ ideas, openDetail, language }: { ideas: SongIdea[]; openDetail: (id: string) => void; language: AppLanguage }) {
-  return <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-4">{ideas.map((idea) => <button key={idea.id} className="min-h-24 border border-[var(--lv-border)] bg-[var(--lv-surface)] p-3 text-left hover:border-[var(--lv-accent)]" onClick={() => openDetail(idea.id)}><p className="truncate font-semibold">{idea.title}</p><p className="mt-2 text-xs text-[var(--lv-text-muted)]">{idea.bpm ?? "-"} BPM · {idea.key ?? "Key -"}</p><p className="mt-2 truncate text-xs text-[var(--lv-text-secondary)]">{idea.nextAction.text || (language === "ja" ? "次の一手なし" : "No next step")}</p></button>)}</div>;
+function IdeaList({ ideas, openDetail, copy }: { ideas: SongIdea[]; openDetail: (id: string) => void; copy: AppCopy }) {
+  return <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-4">{ideas.map((idea) => <button key={idea.id} className="min-h-24 border border-[var(--lv-border)] bg-[var(--lv-surface)] p-3 text-left hover:border-[var(--lv-accent)]" onClick={() => openDetail(idea.id)}><p className="truncate font-semibold">{idea.title}</p><p className="mt-2 text-xs text-[var(--lv-text-muted)]">{idea.bpm ?? "-"} BPM · {idea.key ?? "Key -"}</p><p className="mt-2 truncate text-xs text-[var(--lv-text-secondary)]">{idea.nextAction.text || copy.library.noNextAction}</p></button>)}</div>;
 }
 
-function EmptyState({ language, openCreate }: { language: AppLanguage; openCreate: () => void }) { return <div className="py-16 text-center"><p className="text-[var(--lv-text-muted)]">{language === "ja" ? "条件に合う進行はありません。" : "No matching progressions."}</p><button className="lv-button-secondary mt-4 px-3 py-2 text-sm" onClick={openCreate}>{language === "ja" ? "新しいIdea" : "New idea"}</button></div>; }
-function FilterSelect({ label, value, values, onChange }: { label: string; value: string; values: string[]; onChange: (value: string) => void }) { return <select className="border border-[var(--lv-border)] bg-[var(--lv-bg)] px-2 py-1 text-xs text-[var(--lv-text-secondary)]" aria-label={label} value={value} onChange={(event) => onChange(event.target.value)}><option value="">{label}: All</option>{values.map((entry) => <option key={entry} value={entry}>{entry}</option>)}</select>; }
+function EmptyState({ copy, openCreate }: { copy: AppCopy; openCreate: () => void }) { return <div className="py-16 text-center"><p className="text-[var(--lv-text-muted)]">{copy.library.noMatchingProgressions}</p><button className="lv-button-secondary mt-4 px-3 py-2 text-sm" onClick={openCreate}>{copy.library.newIdea}</button></div>; }
+function FilterSelect({ label, allLabel, value, values, onChange }: { label: string; allLabel: string; value: string; values: string[]; onChange: (value: string) => void }) { return <select className="border border-[var(--lv-border)] bg-[var(--lv-bg)] px-2 py-1 text-xs text-[var(--lv-text-secondary)]" aria-label={label} value={value} onChange={(event) => onChange(event.target.value)}><option value="">{label}: {allLabel}</option>{values.map((entry) => <option key={entry} value={entry}>{entry}</option>)}</select>; }
 function keyOf(entry: ProgressionEntry): string { return entry.block.detectedKey ?? entry.idea.key ?? ""; }
 function bpmOf(entry: ProgressionEntry): number { return entry.block.bpm ?? entry.idea.bpm ?? 0; }
 function formatDate(value: string): string { return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value)); }
