@@ -1026,7 +1026,6 @@ export function ProgressionCandidateCard({
   useEffect(() => {
     if (!isExpanded) {
       setPropagationProposal(undefined);
-      setPropagationFeedback((current) => current.length > 0 ? [] : current);
     }
   }, [isExpanded]);
 
