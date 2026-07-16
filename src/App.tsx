@@ -180,7 +180,7 @@ async function analyzeMidiPath(path: string) {
         void refreshBackups();
       }}
       copy={copy}
-      saveLabel={saving ? copy.save.saving : unsaved ? copy.save.unsaved : copy.save.saved}
+      saveStatus={saving ? "saving" : unsaved ? "unsaved" : "saved"}
     />
   );
 
