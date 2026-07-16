@@ -6,7 +6,7 @@ import {
   type VaultImportMode,
   type VaultRepository,
 } from "../domain/repository";
-import { analyzeMidi } from "../domain/midi";
+import { analyzeMidi, beatsPerBar } from "../domain/midi";
 import {
   transition,
   type TransitionOptions,
@@ -741,9 +741,10 @@ function toSavedProgressionBlock(
     return block;
   }
 
+  const barLengthBeats = beatsPerBar(analysis?.timeSignature);
   const sourceRange = block.chords.length > 0 ? {
-    sourceStartBeat: Math.min(...block.chords.map((item) => (item.bar - 1) * 4 + item.beat - 1)),
-    sourceEndBeat: Math.max(...block.chords.map((item) => (item.bar - 1) * 4 + item.beat - 1 + item.durationBeats)),
+    sourceStartBeat: Math.min(...block.chords.map((item) => (item.bar - 1) * barLengthBeats + item.beat - 1)),
+    sourceEndBeat: Math.max(...block.chords.map((item) => (item.bar - 1) * barLengthBeats + item.beat - 1 + item.durationBeats)),
   } : undefined;
   return {
     id: context.idFactory(),
@@ -758,6 +759,7 @@ function toSavedProgressionBlock(
     chords: block.chords,
     ...(analysis?.detectedKey ? { detectedKey: analysis.detectedKey } : {}),
     ...(analysis?.bpm ? { bpm: analysis.bpm } : {}),
+    ...(analysis?.timeSignature ? { timeSignature: analysis.timeSignature } : {}),
     memo: block.warnings.length > 0 ? block.warnings.join("; ") : undefined,
     tags: [],
     capturedAt: context.now().toISOString(),

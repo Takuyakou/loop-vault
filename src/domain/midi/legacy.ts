@@ -7,7 +7,9 @@ import type {
   ProgressionBlockCandidate,
 } from "../types";
 import { parseMidi } from "./parser";
+import { beatsPerBar } from "./timing";
 import type { AnalyzeMidiOptions, MidiSongData, TimedNote, TrackRole } from "./types";
+import { selectChordEvidenceNotes } from "./voices";
 
 export const analyzerVersion = "legacy-v1";
 
@@ -50,20 +52,24 @@ const templates: ChordTemplate[] = [
   { quality: "dom13", intervals: [0, 2, 4, 7, 10, 21] },
 ];
 
-const beatsPerBar = 4;
-
 export function analyzeMidi(
   bytes: Uint8Array,
   options: AnalyzeMidiOptions = {},
 ): MidiProgressionAnalysis {
   const data = parseMidi(bytes);
-  const roles = inferTrackRoles(data);
-  const windows = buildWeightedWindows(data, roles, options.beatsPerWindow ?? 2);
+  const evidenceNotes = selectChordEvidenceNotes(data.notes);
+  const evidenceData = { ...data, notes: evidenceNotes };
+  if (evidenceNotes.length === 0) {
+    return emptyAnalysis(data, options);
+  }
+  const barLengthBeats = beatsPerBar(data.timeSignature);
+  const roles = inferTrackRoles(evidenceData);
+  const windows = buildWeightedWindows(evidenceData, roles, options.beatsPerWindow ?? 2);
   const rawTimeline: ChordTimelineItem[] = [];
   for (const window of windows) {
     rawTimeline.push(matchWindow(window, rawTimeline[rawTimeline.length - 1]?.chord));
   }
-  const fullTimeline = smoothTimeline(rawTimeline);
+  const fullTimeline = smoothTimeline(rawTimeline, barLengthBeats);
   const blockCandidates = extractBlockCandidates(fullTimeline, data.totalBars);
 
   return {
@@ -72,7 +78,7 @@ export function analyzeMidi(
     totalBars: data.totalBars,
     ...(data.tempo ? { bpm: Math.round(data.tempo) } : {}),
     ...(data.timeSignature ? { timeSignature: data.timeSignature } : {}),
-    detectedKey: detectKey(data.notes),
+    detectedKey: detectKey(evidenceNotes),
     fullTimeline,
     blockCandidates,
     analyzedAt: "1970-01-01T00:00:00.000Z",
@@ -126,7 +132,8 @@ export function buildWeightedWindows(
   roles: Map<number, TrackRole>,
   durationBeats: 1 | 2 | 4 = 2,
 ): WeightedWindow[] {
-  const totalBeats = data.totalBars * beatsPerBar;
+  const barLengthBeats = beatsPerBar(data.timeSignature);
+  const totalBeats = data.totalBars * barLengthBeats;
   const windows: WeightedWindow[] = [];
 
   for (let startBeat = 0; startBeat < totalBeats; startBeat += durationBeats) {
@@ -153,7 +160,7 @@ export function buildWeightedWindows(
       const overlapBeats = Math.max(0, overlapTick / data.ticksPerBeat);
       const weight =
         overlapBeats *
-        beatPositionFactor(startBeat) *
+        beatPositionFactor(startBeat, barLengthBeats) *
         rangeFactor(note.pitch) *
         velocityFactor(note.velocity) *
         roleFactor(role) *
@@ -171,8 +178,8 @@ export function buildWeightedWindows(
     }
 
     windows.push({
-      bar: Math.floor(startBeat / beatsPerBar) + 1,
-      beat: (startBeat % beatsPerBar) + 1,
+      bar: Math.floor(startBeat / barLengthBeats) + 1,
+      beat: (startBeat % barLengthBeats) + 1,
       durationBeats,
       histogram,
       bassHistogram,
@@ -218,7 +225,7 @@ export function matchWindow(window: WeightedWindow, previous?: ChordSymbol): Cho
   };
 }
 
-export function smoothTimeline(items: ChordTimelineItem[]): ChordTimelineItem[] {
+export function smoothTimeline(items: ChordTimelineItem[], barLengthBeats = 4): ChordTimelineItem[] {
   const adjusted = items.map((item) => ({ ...item }));
 
   for (let index = 1; index < adjusted.length - 1; index += 1) {
@@ -244,8 +251,8 @@ export function smoothTimeline(items: ChordTimelineItem[]): ChordTimelineItem[] 
     if (
       previous &&
       previous.chord.label === item.chord.label &&
-      absoluteBeat(previous.bar, previous.beat) + previous.durationBeats >=
-        absoluteBeat(item.bar, item.beat)
+      absoluteBeat(previous.bar, previous.beat, barLengthBeats) + previous.durationBeats >=
+        absoluteBeat(item.bar, item.beat, barLengthBeats)
     ) {
       previous.durationBeats += item.durationBeats;
       previous.confidence = clamp((previous.confidence + item.confidence) / 2);
@@ -413,8 +420,8 @@ function overlaps(note: TimedNote, startTick: number, endTick: number): boolean 
   return note.startTick < endTick && note.startTick + note.durationTick > startTick;
 }
 
-function beatPositionFactor(startBeat: number): number {
-  if (startBeat % beatsPerBar === 0) {
+function beatPositionFactor(startBeat: number, barLengthBeats: number): number {
+  if (startBeat % barLengthBeats === 0) {
     return 1.5;
   }
   if (Number.isInteger(startBeat)) {
@@ -423,8 +430,22 @@ function beatPositionFactor(startBeat: number): number {
   return 0.8;
 }
 
-function absoluteBeat(bar: number, beat: number): number {
-  return (bar - 1) * beatsPerBar + (beat - 1);
+function absoluteBeat(bar: number, beat: number, barLengthBeats: number): number {
+  return (bar - 1) * barLengthBeats + (beat - 1);
+}
+
+function emptyAnalysis(data: MidiSongData, options: AnalyzeMidiOptions): MidiProgressionAnalysis {
+  return {
+    ...(options.sourceAssetId ? { sourceAssetId: options.sourceAssetId } : {}),
+    ...(options.fileName ? { fileName: options.fileName } : {}),
+    totalBars: data.totalBars,
+    ...(data.tempo ? { bpm: Math.round(data.tempo) } : {}),
+    ...(data.timeSignature ? { timeSignature: data.timeSignature } : {}),
+    fullTimeline: [],
+    blockCandidates: [],
+    analyzedAt: "1970-01-01T00:00:00.000Z",
+    analyzerVersion,
+  };
 }
 
 function rangeFactor(pitch: number): number {

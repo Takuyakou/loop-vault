@@ -3,6 +3,7 @@ import { PlayToggle } from "../components/PlayToggle";
 import { displayKey, statusLabel } from "../domain/displayLabels";
 import { pickFocus } from "../domain/focus";
 import { degreeSequence } from "../domain/harmony/degrees";
+import { beatsPerBar } from "../domain/midi";
 import { monthlyStats } from "../domain/monthlyStats";
 import { formatProgressionText } from "../domain/progressionText";
 import type { TransitionResult } from "../domain/transition";
@@ -89,7 +90,12 @@ export function HomeView({
               {focusBlock ? (
                 <PlayToggle
                   source={{ kind: "home", id: `idea:${focus.focus.id}:block:${focusBlock.id}` }}
-                  request={{ type: "timeline", timeline: focusBlock.chords, bpm: focusBlock.bpm ?? focus.focus.bpm }}
+                  request={{
+                    type: "timeline",
+                    timeline: focusBlock.chords,
+                    bpm: focusBlock.bpm ?? focus.focus.bpm,
+                    beatsPerBar: beatsPerBar(focusBlock.timeSignature),
+                  }}
                   playLabel={copy.common.preview}
                   stopLabel={copy.common.stop}
                   className="lv-button-ghost grid h-10 w-10 place-items-center"
@@ -145,7 +151,12 @@ export function HomeView({
                   <div className="mt-4 flex gap-2">
                     <PlayToggle
                       source={{ kind: "home", id: `idea:${idea.id}:block:${block.id}` }}
-                      request={{ type: "timeline", timeline: block.chords, bpm: block.bpm ?? idea.bpm }}
+                      request={{
+                        type: "timeline",
+                        timeline: block.chords,
+                        bpm: block.bpm ?? idea.bpm,
+                        beatsPerBar: beatsPerBar(block.timeSignature),
+                      }}
                       playLabel={copy.common.preview}
                       stopLabel={copy.common.stop}
                       className="grid h-8 w-8 place-items-center rounded border border-cyan-400/60 text-cyan-100"

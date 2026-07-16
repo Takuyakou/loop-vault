@@ -6,25 +6,26 @@ export interface ProgressionGridProps {
   selectedChordIndex?: number;
   playingChordIndex?: number | null;
   playingProgress?: number | null;
+  beatsPerBar?: number;
   onChordSelect?(chordIndex: number): void;
 }
 
-function barChords(chords: readonly ChordTimelineItem[], bar: number) {
-  const barStart = (bar - 1) * 4;
-  const barEnd = barStart + 4;
+function barChords(chords: readonly ChordTimelineItem[], bar: number, beatsPerBar: number) {
+  const barStart = (bar - 1) * beatsPerBar;
+  const barEnd = barStart + beatsPerBar;
 
   return chords
     .map((chord, chordIndex) => ({ chord, chordIndex }))
     .filter(({ chord }) => {
-      const start = absoluteBeat(chord);
+      const start = absoluteBeat(chord, beatsPerBar);
       return start < barEnd && start + chord.durationBeats > barStart;
     });
 }
 
-function segmentStyle(chord: ChordTimelineItem) {
+function segmentStyle(chord: ChordTimelineItem, beatsPerBar: number) {
   return {
     flexGrow: chord.durationBeats,
-    flexBasis: `${(chord.durationBeats / 4) * 100}%`,
+    flexBasis: `${(chord.durationBeats / beatsPerBar) * 100}%`,
   };
 }
 
@@ -34,6 +35,7 @@ export function ProgressionGrid({
   selectedChordIndex,
   playingChordIndex,
   playingProgress,
+  beatsPerBar = 4,
   onChordSelect,
 }: ProgressionGridProps) {
   if (chords.length === 0) {
@@ -50,7 +52,7 @@ export function ProgressionGrid({
   const firstBar = Math.min(...chords.map((chord) => chord.bar));
   const lastBar = Math.max(
     ...chords.map((chord) =>
-      Math.max(chord.bar, Math.ceil((absoluteBeat(chord) + chord.durationBeats) / 4)),
+      Math.max(chord.bar, Math.ceil((absoluteBeat(chord, beatsPerBar) + chord.durationBeats) / beatsPerBar)),
     ),
   );
 
@@ -58,7 +60,7 @@ export function ProgressionGrid({
     <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4" aria-label="コード進行">
       {Array.from({ length: lastBar - firstBar + 1 }, (_, offset) => {
         const bar = firstBar + offset;
-        const entries = barChords(chords, bar);
+        const entries = barChords(chords, bar, beatsPerBar);
 
         return (
           <article
@@ -84,7 +86,7 @@ export function ProgressionGrid({
                     }`}
                     key={`${chordIndex}-${chord.bar}-${chord.beat}-${chord.chord.label}`}
                     type="button"
-                    style={segmentStyle(chord)}
+                    style={segmentStyle(chord, beatsPerBar)}
                     onClick={() => onChordSelect?.(chordIndex)}
                   >
                     {progress === null ? null : (
@@ -114,12 +116,12 @@ export function ProgressionGrid({
   );
 }
 
-export function timelineStartBeat(chord: ChordTimelineItem): number {
-  return absoluteBeat(chord);
+export function timelineStartBeat(chord: ChordTimelineItem, beatsPerBar = 4): number {
+  return absoluteBeat(chord, beatsPerBar);
 }
 
-function absoluteBeat(chord: ChordTimelineItem): number {
-  return (chord.bar - 1) * 4 + (chord.beat - 1);
+function absoluteBeat(chord: ChordTimelineItem, beatsPerBar: number): number {
+  return (chord.bar - 1) * beatsPerBar + (chord.beat - 1);
 }
 
 function formatBeat(value: number): string {

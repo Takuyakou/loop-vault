@@ -12,8 +12,10 @@ import { extractOrnamentFeatures } from "./ornaments";
 import { parseMidi } from "./parser";
 import { buildWeightedPitchProfile } from "./profiles";
 import { inferTrackRoleProfiles } from "./trackRoles";
+import { beatsPerBar } from "./timing";
 import type { AnalyzeMidiOptions } from "./types";
 import { defaultAnalyzerWeights, type AnalyzerWeights } from "./weights";
+import { selectChordEvidenceNotes } from "./voices";
 
 export const legacyBoundaryRerankerVersion = "legacy-boundary-rerank-v1";
 
@@ -78,17 +80,21 @@ export function analyzeMidiLegacyBoundaryRerank(
 ): MidiProgressionAnalysis {
   const data = parseMidi(bytes);
   const weights: AnalyzerWeights = { ...defaultAnalyzerWeights, ...options.weights };
-  const notes = normalizeNotes(data);
-  const beatsPerBar = beatsPerBarFor(data.timeSignature);
-  const totalBeats = data.totalBars * beatsPerBar;
-  const roles = inferTrackRoleProfiles(data, notes, weights);
+  const evidenceData = { ...data, notes: selectChordEvidenceNotes(data.notes) };
+  if (evidenceData.notes.length === 0) {
+    return emptyAnalysis(data, options);
+  }
+  const notes = normalizeNotes(evidenceData);
+  const barLengthBeats = beatsPerBar(data.timeSignature);
+  const totalBeats = data.totalBars * barLengthBeats;
+  const roles = inferTrackRoleProfiles(evidenceData, notes, weights);
   const ornaments = extractOrnamentFeatures(notes, weights);
-  const wholeProfile = buildWeightedPitchProfile(notes, { startBeat: 0, endBeat: totalBeats }, roles, ornaments, beatsPerBar, weights);
+  const wholeProfile = buildWeightedPitchProfile(notes, { startBeat: 0, endBeat: totalBeats }, roles, ornaments, barLengthBeats, weights);
   const key = estimateKeyCandidates(wholeProfile, 0, totalBeats)[0];
   const legacy = analyzeMidiLegacy(bytes, options);
   const fullTimeline = legacy.fullTimeline.map((item) => {
-    const startBeat = (item.bar - 1) * beatsPerBar + item.beat - 1;
-    const profile = buildWeightedPitchProfile(notes, { startBeat, endBeat: startBeat + item.durationBeats }, roles, ornaments, beatsPerBar, weights);
+    const startBeat = (item.bar - 1) * barLengthBeats + item.beat - 1;
+    const profile = buildWeightedPitchProfile(notes, { startBeat, endBeat: startBeat + item.durationBeats }, roles, ornaments, barLengthBeats, weights);
     const hybridCandidates = scoreChordCandidates(profile, undefined);
     const legacyCandidate = scoreStructuredChordCandidate(profile, item.chord, undefined);
     return timelineItem(item, chooseLegacyBoundaryCandidate(legacyCandidate, hybridCandidates, thresholds));
@@ -101,7 +107,21 @@ export function analyzeMidiLegacyBoundaryRerank(
     ...(data.timeSignature ? { timeSignature: data.timeSignature } : {}),
     ...(key ? { detectedKey: `${pitchName(key.tonicPitchClass)} ${key.mode}` } : {}),
     fullTimeline,
-    blockCandidates: extractHybridBlocks(fullTimeline, data.totalBars),
+    blockCandidates: extractHybridBlocks(fullTimeline, data.totalBars, barLengthBeats),
+    analyzedAt: "1970-01-01T00:00:00.000Z",
+    analyzerVersion: legacyBoundaryRerankerVersion,
+  };
+}
+
+function emptyAnalysis(data: ReturnType<typeof parseMidi>, options: AnalyzeMidiOptions): MidiProgressionAnalysis {
+  return {
+    ...(options.sourceAssetId ? { sourceAssetId: options.sourceAssetId } : {}),
+    ...(options.fileName ? { fileName: options.fileName } : {}),
+    totalBars: data.totalBars,
+    ...(data.tempo ? { bpm: Math.round(data.tempo) } : {}),
+    ...(data.timeSignature ? { timeSignature: data.timeSignature } : {}),
+    fullTimeline: [],
+    blockCandidates: [],
     analyzedAt: "1970-01-01T00:00:00.000Z",
     analyzerVersion: legacyBoundaryRerankerVersion,
   };
@@ -132,11 +152,6 @@ function distinctCandidates(candidates: readonly ChordCandidateScore[]): ChordCa
     seen.add(candidate.chord.label);
     return true;
   });
-}
-
-function beatsPerBarFor(timeSignature?: string): number {
-  const value = Number(timeSignature?.split("/")[0]);
-  return Number.isFinite(value) && value > 0 ? value : 4;
 }
 
 function pitchName(pitchClass: number): string {

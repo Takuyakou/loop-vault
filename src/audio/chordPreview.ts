@@ -69,10 +69,11 @@ export async function previewChordTimeline(
   bpm = 96,
   sound: PreviewSound = "electric-piano",
   callbacks: PreviewLifecycleCallbacks = {},
+  beatsPerBar = 4,
 ): Promise<void> {
   const ordered = [...timeline].sort(
     (left, right) =>
-      absoluteBeat(left.bar, left.beat) - absoluteBeat(right.bar, right.beat),
+      absoluteBeat(left.bar, left.beat, beatsPerBar) - absoluteBeat(right.bar, right.beat, beatsPerBar),
   );
   const session = beginPreview(callbacks);
   if (ordered.length === 0) {
@@ -88,12 +89,12 @@ export async function previewChordTimeline(
   const beatSeconds = 60 / bpm;
   callbacks.onStarted?.();
 
-  const firstBeat = absoluteBeat(ordered[0].bar, ordered[0].beat);
+  const firstBeat = absoluteBeat(ordered[0].bar, ordered[0].beat, beatsPerBar);
   let completionDelayMs = 0;
   for (const item of ordered) {
     const delayMs = Math.max(
       0,
-      (absoluteBeat(item.bar, item.beat) - firstBeat) * beatSeconds * 1000,
+      (absoluteBeat(item.bar, item.beat, beatsPerBar) - firstBeat) * beatSeconds * 1000,
     );
     const durationSeconds = Math.max(0.4, item.durationBeats * beatSeconds * 0.9);
     completionDelayMs = Math.max(completionDelayMs, delayMs + durationSeconds * 1000);
@@ -347,6 +348,6 @@ function midiToNoteName(note: number): string {
   return `${names[pc]}${octave}`;
 }
 
-function absoluteBeat(bar: number, beat: number): number {
-  return (bar - 1) * 4 + (beat - 1);
+function absoluteBeat(bar: number, beat: number, beatsPerBar: number): number {
+  return (bar - 1) * beatsPerBar + (beat - 1);
 }

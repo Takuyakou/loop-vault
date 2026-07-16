@@ -55,6 +55,7 @@ export interface SavedProgressionBlock {
   chords: ChordTimelineItem[];
   detectedKey?: string;
   bpm?: number;
+  timeSignature?: string;
   memo?: string;
   tags: string[];
   capturedAt: string;

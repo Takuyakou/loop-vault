@@ -22,4 +22,17 @@ describe("MIDI evaluation", () => {
     const cases = adaptChordDripManifest(manifest);
     expect(new Set(cases.map((entry) => entry.split)).size).toBe(1);
   });
+
+  it("uses the corpus-defined 4/4 coordinate grid", () => {
+    const definition = {
+      id: "bar-two", title: "bar two", midiPath: "bar-two.mid", recipeFamily: "family", split: "holdout" as const,
+      category: ["chord-only" as const], difficulty: "easy" as const,
+      expected: { chordTimeline: [{ startBeat: 4, endBeat: 8, primary: "C", root: 0, quality: "maj" as const }] },
+    };
+    const chord = makeChordSymbol(0, "maj");
+
+    expect(evaluateCase(definition, [{
+      bar: 2, beat: 1, durationBeats: 4, chord, confidence: 1, alternatives: [], warnings: [],
+    }]).exactAccuracy).toBe(1);
+  });
 });

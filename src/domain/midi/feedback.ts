@@ -1,5 +1,6 @@
 import type { MidiProgressionAnalysis, ProgressionBlockCandidate } from "../types";
 import type { ProgressionEditSource } from "../progressionEditing/types";
+import { beatsPerBar } from "./timing";
 export { fingerprintMidiBytes, legacyFingerprintMidiBytes } from "./fingerprint";
 
 export interface MidiChordCorrectionEvent {
@@ -30,7 +31,7 @@ export function buildCorrectionEvents(
 ): MidiChordCorrectionEvent[] {
   const sourceFingerprint = analysis.sourceFingerprint;
   if (!sourceFingerprint) return [];
-  const beatsPerBar = Number(analysis.timeSignature?.split("/")[0]) || 4;
+  const barLengthBeats = beatsPerBar(analysis.timeSignature);
 
   return original.chords.flatMap((detected, index) => {
     const corrected = edited.chords[index];
@@ -39,7 +40,7 @@ export function buildCorrectionEvents(
     if (editSources && editSource !== "manual-label" && editSource !== "alternative" && editSource !== "structure-editor") {
       return [];
     }
-    const startBeat = (detected.bar - 1) * beatsPerBar + detected.beat - 1;
+    const startBeat = (detected.bar - 1) * barLengthBeats + detected.beat - 1;
     return [{
       schemaVersion: 1 as const,
       sourceFingerprint,

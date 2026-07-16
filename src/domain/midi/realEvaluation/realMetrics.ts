@@ -157,9 +157,12 @@ export function evaluateBronzeCases(cases: readonly AnalyzedRealMidiCase[]): Bro
   };
 }
 
+// Real-evaluation JSONL ranges are defined by the current 4/4 corpus schema.
+const CORPUS_BEATS_PER_BAR = 4;
+
 function bestPrediction(expected: ExpectedChordSegment, timeline: readonly ChordTimelineItem[]) {
   return timeline.map((item) => {
-    const startBeat = (item.bar - 1) * 4 + item.beat - 1;
+    const startBeat = (item.bar - 1) * CORPUS_BEATS_PER_BAR + item.beat - 1;
     return { item, overlap: Math.max(0, Math.min(expected.endBeat, startBeat + item.durationBeats) - Math.max(expected.startBeat, startBeat)) };
   }).filter((entry) => entry.overlap > 0)
     .sort((left, right) => right.overlap - left.overlap)[0]?.item;
@@ -175,7 +178,7 @@ function acceptedLabels(definition: RealMidiEvaluationCase, expected: ExpectedCh
 
 function boundaryCounts(definition: RealMidiEvaluationCase, timeline: readonly ChordTimelineItem[]) {
   const expected = definition.expected.primary.slice(1).map((item) => item.startBeat);
-  const predicted = timeline.map((item) => (item.bar - 1) * 4 + item.beat - 1)
+  const predicted = timeline.map((item) => (item.bar - 1) * CORPUS_BEATS_PER_BAR + item.beat - 1)
     .filter((beat) => beat > definition.range.startBeat && beat < definition.range.endBeat);
   const matched = expected.filter((beat) => predicted.some((candidate) => Math.abs(candidate - beat) <= 0.25)).length;
   return { expected: expected.length, predicted: predicted.length, matched };

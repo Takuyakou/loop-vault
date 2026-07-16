@@ -38,7 +38,10 @@ export function splitEditableChord(
     return editable;
   }
   const durationBeats = slot.position.durationBeats / 2;
-  const rightPosition = positionFromStartBeat(slotStartBeat(slot) + durationBeats);
+  const rightPosition = positionFromStartBeat(
+    slotStartBeat(slot, editable.beatsPerBar) + durationBeats,
+    editable.beatsPerBar,
+  );
   const suffix = editable.historyIndex;
   const left: EditableChordSlot = {
     ...cloneSlot(slot),
@@ -60,7 +63,7 @@ export function splitEditableChord(
     right,
     ...editable.slots.slice(index + 1).map(cloneSlot),
   ];
-  if (!validStructuralChange(editable.slots, slots)) {
+  if (!validStructuralChange(editable.slots, slots, editable.beatsPerBar)) {
     return editable;
   }
   const next = { slots, selectedSlotId: left.id };
@@ -77,12 +80,14 @@ export function canMergeEditableChords(
   firstSlotId: string,
   secondSlotId: string,
 ): boolean {
-  const ordered = [...editable.slots].sort((left, right) => slotStartBeat(left) - slotStartBeat(right));
+  const ordered = [...editable.slots].sort(
+    (left, right) => slotStartBeat(left, editable.beatsPerBar) - slotStartBeat(right, editable.beatsPerBar),
+  );
   const firstIndex = ordered.findIndex((slot) => slot.id === firstSlotId);
   const secondIndex = ordered.findIndex((slot) => slot.id === secondSlotId);
   return firstIndex >= 0
     && secondIndex === firstIndex + 1
-    && slotsAreAdjacent(ordered[firstIndex]!, ordered[secondIndex]!);
+    && slotsAreAdjacent(ordered[firstIndex]!, ordered[secondIndex]!, editable.beatsPerBar);
 }
 
 export function mergeEditableChords(
@@ -95,7 +100,7 @@ export function mergeEditableChords(
     return editable;
   }
   const ordered = [...editable.slots]
-    .sort((left, right) => slotStartBeat(left) - slotStartBeat(right))
+    .sort((left, right) => slotStartBeat(left, editable.beatsPerBar) - slotStartBeat(right, editable.beatsPerBar))
     .map(cloneSlot);
   const firstIndex = ordered.findIndex((slot) => slot.id === firstSlotId);
   const first = ordered[firstIndex]!;
@@ -119,7 +124,7 @@ export function mergeEditableChords(
     merged,
     ...ordered.slice(firstIndex + 2),
   ];
-  if (!validStructuralChange(editable.slots, slots)) {
+  if (!validStructuralChange(editable.slots, slots, editable.beatsPerBar)) {
     return editable;
   }
   const next = { slots, selectedSlotId: merged.id };
@@ -140,7 +145,7 @@ export function deleteEditableChord(
     return editable;
   }
   const ordered = [...editable.slots]
-    .sort((left, right) => slotStartBeat(left) - slotStartBeat(right))
+    .sort((left, right) => slotStartBeat(left, editable.beatsPerBar) - slotStartBeat(right, editable.beatsPerBar))
     .map(cloneSlot);
   const index = ordered.findIndex((slot) => slot.id === slotId);
   const removed = ordered[index];
@@ -166,7 +171,7 @@ export function deleteEditableChord(
   }
   continuation.edited = true;
   continuation.editSource = "delete";
-  if (!validStructuralChange(editable.slots, slots)) {
+  if (!validStructuralChange(editable.slots, slots, editable.beatsPerBar)) {
     return editable;
   }
   const next = { slots, selectedSlotId: continuation.id };
@@ -181,8 +186,9 @@ export function deleteEditableChord(
 function validStructuralChange(
   before: readonly EditableChordSlot[],
   after: readonly EditableChordSlot[],
+  beatsPerBar: number,
 ): boolean {
-  return validateEditableProgression({ slots: after }).length === 0
-    && preservesProgressionSpan(before, after);
+  return validateEditableProgression({ slots: after, beatsPerBar }).length === 0
+    && preservesProgressionSpan(before, after, beatsPerBar);
 }
 

@@ -32,6 +32,7 @@ export interface EditableChordSlot {
 
 export interface EditableProgression {
   candidateId: string;
+  beatsPerBar: number;
   slots: EditableChordSlot[];
   selectedSlotId?: string;
   history: ProgressionEditOperation[];

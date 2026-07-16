@@ -10,6 +10,14 @@ export interface TimedNote {
   velocity: number;
   trackIndex: number;
   channel?: number;
+  program?: number;
+  programExplicit?: boolean;
+}
+
+export interface ParsedTimedNote extends TimedNote {
+  channel: number;
+  program: number;
+  programExplicit: boolean;
 }
 
 export interface MidiTrackInfo {
@@ -22,14 +30,21 @@ export interface MidiTrackInfo {
 
 export interface MidiControlChange {
   trackIndex: number;
+  channel?: number;
   number: number;
   tick: number;
   value: number;
 }
 
+export interface MidiTempoChange {
+  tick: number;
+  bpm: number;
+}
+
 export interface MidiSongData {
   notes: TimedNote[];
   tempo?: number;
+  tempoChanges?: MidiTempoChange[];
   timeSignature?: string;
   ticksPerBeat: number;
   totalBars: number;
@@ -77,3 +92,48 @@ export interface AnalyzeMidiOptions {
 }
 
 export type AnalyzeMidiResult = MidiProgressionAnalysis;
+
+export type VoiceRole = "bass" | "harmony" | "pad" | "melody" | "percussion" | "mixed";
+
+export interface VoiceRoleEvidence {
+  channelRule?: {
+    role: VoiceRole;
+    confidence: number;
+  };
+  program?: {
+    role: VoiceRole;
+    confidence: number;
+    explicit: boolean;
+  };
+  trackName?: {
+    role: VoiceRole;
+    confidence: number;
+  };
+  measured: Record<VoiceRole, number>;
+}
+
+export interface Voice {
+  id: string;
+  trackIndex: number;
+  channel: number;
+  trackName?: string;
+  explicitPrograms: {
+    program: number;
+    noteCount: number;
+    durationTicks: number;
+  }[];
+  dominantProgram?: number;
+  dominantProgramExplicit: boolean;
+  noteCount: number;
+  pitchRange: [number, number];
+  medianPitch: number;
+  avgDurationTick: number;
+  noteDensity: number;
+  maxPolyphony: number;
+  simultaneousOnsetRatio: number;
+  lowestVoiceShare: number;
+  highestVoiceShare: number;
+  inferredRole: VoiceRole;
+  roleConfidence: number;
+  roleEvidence: VoiceRoleEvidence;
+}

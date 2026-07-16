@@ -15,7 +15,10 @@ export { analyzeMidiHybrid, buildHybridPipeline, defaultHybridFeatures, timeline
 export type { HybridPipelineResult } from "./hybrid";
 export { beatGridSignature, extractHybridBlocks } from "./blocks";
 export { parseMidi } from "./parser";
+export { parseRawSmf } from "./rawSmf";
 export { normalizeNotes, overlapWithSegment } from "./normalize";
+export { beatsPerBar, tickToSeconds } from "./timing";
+export { buildVoices, isPercussionEvidence, selectChordEvidenceNotes, voiceId } from "./voices";
 export { beatStrength, defaultAnalyzerWeights, noteFeatures } from "./weights";
 export { extractTrackFeatures, inferTrackRoleProfiles } from "./trackRoles";
 export { extractOrnamentFeatures } from "./ornaments";
@@ -35,11 +38,16 @@ export type {
   MidiSongData,
   MidiTrackInfo,
   MidiControlChange,
+  MidiTempoChange,
   NormalizedTimedNote,
   NoteSegmentOverlap,
   SegmentRange,
   TimedNote,
+  ParsedTimedNote,
   TrackRole,
+  Voice,
+  VoiceRole,
+  VoiceRoleEvidence,
   MidiAnalyzerMode,
   HybridFeatureFlags,
 } from "./types";

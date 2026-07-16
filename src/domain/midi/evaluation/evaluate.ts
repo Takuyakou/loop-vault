@@ -10,6 +10,9 @@ const emptyMetrics = (): EvaluationMetrics => ({
   boundaryRecall: 0, overSegmentationRate: 0, underSegmentationRate: 0, correctionCost: 0,
 });
 
+// Chord Drip evaluation manifests define expected beat ranges on a 4/4 grid.
+const CORPUS_BEATS_PER_BAR = 4;
+
 export function evaluateAnalyzer(
   cases: readonly EvaluationCaseInput[], analyzer: AnalyzerForEvaluation,
   metadata: { analyzerMode: string; analyzerVersion: string; datasetId: string },
@@ -30,11 +33,10 @@ export function evaluateAnalyzer(
 export function evaluateCase(
   definition: EvaluationCaseInput["definition"], predicted: readonly ChordTimelineItem[],
 ): EvaluationCaseResult {
-  const beatsPerBar = 4;
   const expected = definition.expected.chordTimeline;
   const predictedRanges = predicted.map((item) => ({
-    startBeat: (item.bar - 1) * beatsPerBar + item.beat - 1,
-    endBeat: (item.bar - 1) * beatsPerBar + item.beat - 1 + item.durationBeats,
+    startBeat: (item.bar - 1) * CORPUS_BEATS_PER_BAR + item.beat - 1,
+    endBeat: (item.bar - 1) * CORPUS_BEATS_PER_BAR + item.beat - 1 + item.durationBeats,
     item,
   }));
   let duration = 0;

@@ -10,6 +10,7 @@ import { extractOrnamentFeatures } from "./ornaments";
 import { parseMidi } from "./parser";
 import { buildCumulativePitchFeatures, buildWeightedPitchProfile, profileFromCumulative } from "./profiles";
 import { buildSegmentLattice, generateBoundaries } from "./segmentation";
+import { beatsPerBar as beatsPerBarFor } from "./timing";
 import { inferTrackRoleProfiles } from "./trackRoles";
 import type { AnalyzeMidiOptions, HybridFeatureFlags } from "./types";
 import { defaultAnalyzerWeights, type AnalyzerWeights } from "./weights";
@@ -18,6 +19,7 @@ import type { DecodedSegment } from "./decoder";
 import type { KeyRegionCandidate } from "./keyPrior";
 import type { MergedDecodedSegment } from "./merge";
 import type { MidiSongData } from "./types";
+import { selectChordEvidenceNotes } from "./voices";
 
 export const hybridAnalyzerVersion = "hybrid-symbolic-v1";
 export const defaultHybridFeatures: Readonly<HybridFeatureFlags> = {
@@ -66,7 +68,7 @@ export function analyzeMidiHybrid(bytes: Uint8Array, options: AnalyzeMidiOptions
     ...(data.timeSignature ? { timeSignature: data.timeSignature } : {}),
     ...(key ? { detectedKey: `${pitchNames[key.tonicPitchClass]} ${key.mode}` } : {}),
     fullTimeline,
-    blockCandidates: extractHybridBlocks(fullTimeline, data.totalBars),
+    blockCandidates: extractHybridBlocks(fullTimeline, data.totalBars, beatsPerBar),
     analyzedAt: "1970-01-01T00:00:00.000Z",
     analyzerVersion: hybridAnalyzerVersion,
   };
@@ -76,12 +78,17 @@ export function buildHybridPipeline(bytes: Uint8Array, options: AnalyzeMidiOptio
   const data = parseMidi(bytes);
   const weights: AnalyzerWeights = { ...defaultAnalyzerWeights, ...options.weights };
   const features: HybridFeatureFlags = { ...defaultHybridFeatures, ...options.features };
-  const notes = normalizeNotes(data);
-  const beatsPerBar = parseBeatsPerBar(data.timeSignature);
+  const evidenceData = { ...data, notes: selectChordEvidenceNotes(data.notes) };
+  const beatsPerBar = beatsPerBarFor(data.timeSignature);
+  if (evidenceData.notes.length === 0) {
+    return { data, beatsPerBar, boundaries: [], scored: [], decoded: [], merged: [] };
+  }
+
+  const notes = normalizeNotes(evidenceData);
   const totalBeats = data.totalBars * beatsPerBar;
   const roles = features.trackRoleEstimation
-    ? inferTrackRoleProfiles(data, notes, weights)
-    : neutralTrackRoles(data, notes);
+    ? inferTrackRoleProfiles(evidenceData, notes, weights)
+    : neutralTrackRoles(evidenceData, notes);
   const ornaments = features.ornamentSuppression ? extractOrnamentFeatures(notes, weights) : new Map();
   const generatedBoundaries = generateBoundaries(notes, { beatsPerBar, totalBeats });
   const boundaries = features.adaptiveSegmentation
@@ -129,14 +136,10 @@ function neutralTrackRoles(data: MidiSongData, notes: ReturnType<typeof normaliz
 }
 
 function analyzeEmpty(data: ReturnType<typeof parseMidi>, options: AnalyzeMidiOptions): MidiProgressionAnalysis {
-  return { ...(options.fileName ? { fileName: options.fileName } : {}), totalBars: data.totalBars,
+  return { ...(options.sourceAssetId ? { sourceAssetId: options.sourceAssetId } : {}),
+    ...(options.fileName ? { fileName: options.fileName } : {}), totalBars: data.totalBars,
     ...(data.tempo ? { bpm: Math.round(data.tempo) } : {}), ...(data.timeSignature ? { timeSignature: data.timeSignature } : {}),
     fullTimeline: [], blockCandidates: [], analyzedAt: "1970-01-01T00:00:00.000Z", analyzerVersion: hybridAnalyzerVersion };
-}
-
-function parseBeatsPerBar(timeSignature?: string): number {
-  const value = Number(timeSignature?.split("/")[0]);
-  return Number.isFinite(value) && value > 0 ? value : 4;
 }
 
 function decodedSegmentAtBeat(segments: ReturnType<typeof mergeDecodedSegments>, beat: number) {
