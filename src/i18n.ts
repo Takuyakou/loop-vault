@@ -89,6 +89,10 @@ export const appCopy = {
       bpm: "BPM順",
       empty: "まだ条件に合うIdeaがありません。",
       bpmUnset: "BPM未設定",
+      openIdea: "Ideaを開く",
+      addFavorite: "お気に入りに追加",
+      removeFavorite: "お気に入りから削除",
+      copyProgression: "コード進行をコピー",
       noNextAction: "次の一手なし",
     },
     capture: {
@@ -320,6 +324,10 @@ export const appCopy = {
       bpm: "BPM",
       empty: "No ideas match the current filters.",
       bpmUnset: "BPM unset",
+      openIdea: "Open idea",
+      addFavorite: "Add to favorites",
+      removeFavorite: "Remove from favorites",
+      copyProgression: "Copy progression",
       noNextAction: "No Next Action",
     },
     capture: {
