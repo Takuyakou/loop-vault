@@ -399,7 +399,7 @@ export function deleteIdeaForUndo({
 
 
 
-function CreateDialog({
+export function CreateDialog({
   onCreate,
   onClose,
   copy,
@@ -428,7 +428,15 @@ function CreateDialog({
       closeOnBackdrop={!dirty}
       panelClassName="w-full max-w-md p-5"
     >
-      <form onSubmit={submit}>
+      <form
+        onSubmit={submit}
+        onKeyDown={(event) => {
+          if (
+            event.key === "Enter"
+            && (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229)
+          ) event.preventDefault();
+        }}
+      >
         <div className="flex items-center justify-between">
           <h2 id="create-idea-title" className="text-xl font-semibold">{copy.create.title}</h2>
           <button type="button" className="rounded px-2 py-1 text-[var(--lv-text-muted)]" onClick={onClose}>{copy.common.close}</button>

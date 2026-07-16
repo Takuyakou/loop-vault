@@ -135,8 +135,12 @@ export function SaveProgressionPopover({
   }
 
   function handleFormKeyDown(event: ReactKeyboardEvent<HTMLFormElement>) {
-    if (!event.ctrlKey || event.key !== "Enter") return;
-    if (event.nativeEvent.isComposing || event.keyCode === 229) return;
+    if (event.key !== "Enter") return;
+    if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) {
+      event.preventDefault();
+      return;
+    }
+    if (!event.ctrlKey) return;
     event.preventDefault();
     save();
   }

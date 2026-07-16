@@ -1,9 +1,15 @@
 // @vitest-environment jsdom
 
+import { act, createElement } from "react";
+import { createRoot } from "react-dom/client";
 import { describe, expect, it, vi } from "vitest";
 import type { PlaybackState } from "./audio/playbackController";
-import { deleteIdeaForUndo, stopIdeaPlayback } from "./App";
+import { CreateDialog, deleteIdeaForUndo, stopIdeaPlayback } from "./App";
 import { makeIdea } from "./domain/testFactory";
+import { appCopy } from "./i18n";
+
+(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
+  .IS_REACT_ACT_ENVIRONMENT = true;
 
 function playbackStub(state: PlaybackState) {
   return {
@@ -86,3 +92,63 @@ describe("stopIdeaPlayback", () => {
   });
 
 });
+
+describe("CreateDialog IME handling", () => {
+  it("does not create on composing Enter or keyCode 229, then allows normal Enter", async () => {
+    const onCreate = vi.fn();
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => root.render(createElement(CreateDialog, {
+      onCreate,
+      onClose: vi.fn(),
+      copy: appCopy.en,
+      language: "en",
+    })));
+    const input = document.querySelector<HTMLInputElement>('input[placeholder="Title"]');
+    const form = input?.closest("form");
+    expect(input).not.toBeNull();
+    expect(form).not.toBeNull();
+    await changeInput(input!, "Composed title");
+
+    await pressEnterAndSubmitIfAllowed(input!, form!, { isComposing: true });
+    await pressEnterAndSubmitIfAllowed(input!, form!, { keyCode: 229 });
+    expect(onCreate).not.toHaveBeenCalled();
+
+    await pressEnterAndSubmitIfAllowed(input!, form!);
+    expect(onCreate).toHaveBeenCalledTimes(1);
+    expect(onCreate).toHaveBeenCalledWith("Composed title", "idea");
+    await act(async () => root.unmount());
+    container.remove();
+  });
+});
+
+async function changeInput(input: HTMLInputElement, value: string) {
+  const valueSetter = Object.getOwnPropertyDescriptor(
+    HTMLInputElement.prototype,
+    "value",
+  )?.set;
+  await act(async () => {
+    valueSetter?.call(input, value);
+    input.dispatchEvent(new InputEvent("input", { bubbles: true, data: value }));
+  });
+}
+
+async function pressEnterAndSubmitIfAllowed(
+  input: HTMLInputElement,
+  form: HTMLFormElement,
+  options: { isComposing?: boolean; keyCode?: number } = {},
+) {
+  const event = new KeyboardEvent("keydown", {
+    key: "Enter",
+    bubbles: true,
+    cancelable: true,
+    isComposing: options.isComposing,
+  });
+  if (options.keyCode !== undefined) {
+    Object.defineProperty(event, "keyCode", { value: options.keyCode });
+  }
+  await act(async () => {
+    if (input.dispatchEvent(event)) form.requestSubmit();
+  });
+}
