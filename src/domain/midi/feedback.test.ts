@@ -26,12 +26,12 @@ describe("MIDI correction feedback", () => {
     const edited = { ...candidate, chords: [{ ...candidate.chords[0], chord: dm }] };
     expect(buildCorrectionEvents(candidate, edited, analysis)).toMatchObject([
       {
-        eventType: "chord-correction",
         detected: { primary: "C", alternatives: ["Dm"] },
         corrected: "Dm",
         editMethod: "alternative-selection",
       },
     ]);
+    expect(buildCorrectionEvents(candidate, edited, analysis)[0]).not.toHaveProperty("eventType");
     expect(buildCorrectionEvents(candidate, edited, analysis, ["structure-editor"])).toMatchObject([
       { corrected: "Dm", editMethod: "structure-editor" },
     ]);
