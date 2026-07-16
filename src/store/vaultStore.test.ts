@@ -694,9 +694,9 @@ describe("vault store", () => {
       lengthBars: 4,
       chords: [
         {
-          bar: 1,
+          bar: 2,
           beat: 1,
-          durationBeats: 4,
+          durationBeats: 3,
           chord: {
             root: 0,
             quality: "maj",
@@ -720,7 +720,7 @@ describe("vault store", () => {
       sourceFingerprint: `sha256-${"a".repeat(64)}`,
       totalBars: 4,
       bpm: 120,
-      timeSignature: "4/4",
+      timeSignature: "6/8",
       fullTimeline: candidate.chords,
       blockCandidates: [candidate],
       analyzedAt: "1970-01-01T00:00:00.000Z",
@@ -740,8 +740,9 @@ describe("vault store", () => {
     expect(repository.saved[0]?.ideas[0]?.progressionBlocks?.[0]).toMatchObject({
       sourceFileName: "capture.mid",
       sourceFingerprint: `sha256-${"a".repeat(64)}`,
-      sourceStartBeat: 0,
-      sourceEndBeat: 4,
+      sourceStartBeat: 3,
+      sourceEndBeat: 6,
+      timeSignature: "6/8",
       summaryText: "C",
       analyzerVersion: "1.0.0",
       sourceAnalyzerVersion: "1.0.0",

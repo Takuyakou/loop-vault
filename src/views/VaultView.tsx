@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { playbackController, samePlaybackSource, type PlayingSource } from "../audio/playbackController";
 import { PlayToggle } from "../components/PlayToggle";
 import { degreeSequence } from "../domain/harmony/degrees";
+import { beatsPerBar } from "../domain/midi";
 import { filterAndSortProgressions } from "../domain/progressionFilters";
 import { formatProgressionText } from "../domain/progressionText";
 import type { SavedProgressionBlock, SongIdea } from "../domain/types";
@@ -221,4 +222,11 @@ function keyOf(entry: ProgressionEntry): string { return entry.block.detectedKey
 function bpmOf(entry: ProgressionEntry): number { return entry.block.bpm ?? entry.idea.bpm ?? 0; }
 function formatDate(value: string): string { return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value)); }
 function sourceOf(entry: ProgressionEntry): PlayingSource { return { kind: "vault", id: `idea:${entry.idea.id}:block:${entry.block.id}` }; }
-function requestOf(entry: ProgressionEntry) { return { type: "timeline" as const, timeline: entry.block.chords, bpm: entry.block.bpm ?? entry.idea.bpm }; }
+function requestOf(entry: ProgressionEntry) {
+  return {
+    type: "timeline" as const,
+    timeline: entry.block.chords,
+    bpm: entry.block.bpm ?? entry.idea.bpm,
+    beatsPerBar: beatsPerBar(entry.block.timeSignature),
+  };
+}

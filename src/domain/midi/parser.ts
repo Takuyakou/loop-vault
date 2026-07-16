@@ -1,72 +1,47 @@
-import { Midi } from "@tonejs/midi";
-import type { MidiControlChange, MidiSongData, MidiTrackInfo, TimedNote, TrackRole } from "./types";
+import { parseRawSmf } from "./rawSmf";
+import { beatsPerBar } from "./timing";
+import type { MidiSongData, MidiTrackInfo, TrackRole } from "./types";
 
 export function parseMidi(bytes: Uint8Array): MidiSongData {
-  const midi = new Midi(bytes);
-  const ticksPerBeat = midi.header.ppq || 480;
-  const timeSignatureParts = midi.header.timeSignatures[0]?.timeSignature ?? [4, 4];
-  const beatsPerBar = timeSignatureParts[0] || 4;
-  const tempo = midi.header.tempos[0]?.bpm;
-  const tracks: MidiTrackInfo[] = [];
-  const notes: TimedNote[] = [];
-  const controlChanges: MidiControlChange[] = [];
-
-  midi.tracks.forEach((track, trackIndex) => {
-    const firstNote = track.notes[0] as { channel?: number } | undefined;
-    const channel = firstNote?.channel;
-    const name = track.name ?? "";
-    const program = track.instrument?.number;
-    const roleHint = roleFromName(name);
-    const isPercussion =
-      channel === 9 ||
-      roleHint === "percussion" ||
-      /drum|perc|kick|snare|hat/i.test(name);
-
-    tracks.push({
-      index: trackIndex,
-      name,
-      ...(channel !== undefined ? { channel } : {}),
-      ...(program !== undefined ? { program } : {}),
+  const raw = parseRawSmf(bytes);
+  const timeSignatureParts = raw.timeSignature;
+  const barLengthBeats = beatsPerBar(timeSignatureParts);
+  const tracks: MidiTrackInfo[] = raw.tracks.map((track) => {
+    const roleHint = roleFromName(track.name);
+    const trackNotes = raw.notes.filter((note) => note.trackIndex === track.index);
+    const commonExplicitProgram = trackNotes.length > 0
+      && trackNotes.every(
+        (note) => note.programExplicit === true && note.program === trackNotes[0].program,
+      )
+      ? trackNotes[0].program
+      : undefined;
+    return {
+      index: track.index,
+      name: track.name,
+      ...(track.channels.length === 1 ? { channel: track.channels[0] } : {}),
+      ...(commonExplicitProgram !== undefined
+        ? { program: commonExplicitProgram }
+        : {}),
       ...(roleHint ? { roleHint } : {}),
-    });
-
-    const sustainEvents = (track.controlChanges?.[64] ?? []) as Array<{ ticks: number; value: number }>;
-    for (const event of sustainEvents) {
-      controlChanges.push({ trackIndex, number: 64, tick: Math.round(event.ticks), value: event.value });
-    }
-
-    if (isPercussion) {
-      return;
-    }
-
-    for (const note of track.notes) {
-      const noteChannel = (note as { channel?: number }).channel;
-      notes.push({
-        pitch: note.midi,
-        startTick: Math.round(note.ticks),
-        durationTick: Math.max(1, Math.round(note.durationTicks)),
-        velocity: note.velocity,
-        trackIndex,
-        ...(noteChannel !== undefined ? { channel: noteChannel } : {}),
-      });
-    }
+    };
   });
 
-  const lastTick = notes.reduce(
+  const lastTick = raw.notes.reduce(
     (max, note) => Math.max(max, note.startTick + note.durationTick),
     0,
   );
-  const totalBeats = lastTick / ticksPerBeat;
-  const totalBars = Math.max(1, Math.ceil(totalBeats / beatsPerBar));
+  const totalBeats = lastTick / raw.ticksPerBeat;
+  const totalBars = Math.max(1, Math.ceil(totalBeats / barLengthBeats));
 
   return {
-    notes: notes.sort((a, b) => a.startTick - b.startTick || a.pitch - b.pitch),
-    ...(tempo ? { tempo } : {}),
+    notes: raw.notes,
+    ...(raw.tempo !== undefined ? { tempo: raw.tempo } : {}),
+    tempoChanges: raw.tempoChanges,
     timeSignature: `${timeSignatureParts[0]}/${timeSignatureParts[1]}`,
-    ticksPerBeat,
+    ticksPerBeat: raw.ticksPerBeat,
     totalBars,
     tracks,
-    controlChanges: controlChanges.sort((a, b) => a.tick - b.tick || a.trackIndex - b.trackIndex),
+    controlChanges: raw.controlChanges,
   };
 }
 

@@ -128,6 +128,7 @@ export const savedProgressionBlockSchema = z
     chords: z.array(chordTimelineItemSchema),
     detectedKey: z.string().optional(),
     bpm: z.number().positive().optional(),
+    timeSignature: z.string().regex(/^\d+\/\d+$/).optional(),
     memo: z.string().optional(),
     tags: z.array(z.string()),
     capturedAt: isoDateSchema,

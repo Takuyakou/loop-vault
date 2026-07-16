@@ -26,7 +26,7 @@ import {
   undoProgressionEdit,
 } from "../domain/progressionEditing";
 import type { EditableProgression } from "../domain/progressionEditing";
-import { buildCorrectionEvents } from "../domain/midi";
+import { beatsPerBar as beatsPerBarFor, buildCorrectionEvents } from "../domain/midi";
 import { candidateLabelList } from "../domain/displayLabels";
 import { romanNumeralHint } from "../domain/harmony/romanNumerals";
 import { formatProgressionText } from "../domain/progressionText";
@@ -451,7 +451,13 @@ export function CaptureView(props: CaptureViewProps) {
     try {
       await controller.toggle(
         captureCandidateSource(result, candidate.id),
-        { type: "timeline", timeline: candidate.chords, bpm: result?.bpm, sound: previewSound },
+        {
+          type: "timeline",
+          timeline: candidate.chords,
+          bpm: result?.bpm,
+          sound: previewSound,
+          beatsPerBar: beatsPerBarFor(result?.timeSignature),
+        },
       );
     } catch (error) {
       setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
@@ -568,6 +574,7 @@ export function CaptureView(props: CaptureViewProps) {
                   candidate={candidate}
                   candidateIndex={index}
                   bpm={result.bpm ?? 96}
+                  beatsPerBar={beatsPerBarFor(result.timeSignature)}
                   detectedKey={result.detectedKey}
                   sourceFileName={result.fileName}
                   ideas={ideas}
@@ -788,6 +795,8 @@ export function TimelineDetails({
         result.fullTimeline,
         result.bpm ?? 96,
         playback.startedAt,
+        undefined,
+        beatsPerBarFor(result.timeSignature),
       )
     : undefined;
 
@@ -806,7 +815,13 @@ export function TimelineDetails({
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <PlayToggle
             source={source}
-            request={{ type: "timeline", timeline: result.fullTimeline, bpm: result.bpm, sound: previewSound }}
+            request={{
+              type: "timeline",
+              timeline: result.fullTimeline,
+              bpm: result.bpm,
+              sound: previewSound,
+              beatsPerBar: beatsPerBarFor(result.timeSignature),
+            }}
             playLabel={copy.capture.previewFullTimeline}
             stopLabel={copy.common.stop}
             className="lv-button-primary inline-flex min-h-10 items-center gap-2 px-4"
@@ -824,6 +839,7 @@ export function TimelineDetails({
         {result.fullTimeline.length > 0 ? (
           <ProgressionGrid
             chords={result.fullTimeline}
+            beatsPerBar={beatsPerBarFor(result.timeSignature)}
             currentBar={null}
             selectedChordIndex={selectedChordIndex}
             playingChordIndex={position?.index ?? null}
@@ -874,6 +890,7 @@ export function ProgressionCandidateCard({
   candidate,
   candidateIndex,
   bpm,
+  beatsPerBar = 4,
   detectedKey,
   sourceFileName,
   ideas = [],
@@ -900,6 +917,7 @@ export function ProgressionCandidateCard({
   candidate: ProgressionBlockCandidate;
   candidateIndex: number;
   bpm: number;
+  beatsPerBar?: number;
   detectedKey?: string;
   sourceFileName?: string;
   ideas?: SongIdea[];
@@ -943,7 +961,7 @@ export function ProgressionCandidateCard({
   showRomanNumerals?: boolean;
 }) {
   const editorCopy = progressionEditorCopy[language];
-  const [editable, setEditable] = useState(() => createEditableProgression(candidate));
+  const [editable, setEditable] = useState(() => createEditableProgression(candidate, beatsPerBar));
   const [savedSignature, setSavedSignature] = useState(() => progressionSignature(candidate.chords));
   const [selectedChordIndex, setSelectedChordIndex] = useState(0);
   const [, forcePlaybackTick] = useState(0);
@@ -962,10 +980,10 @@ export function ProgressionCandidateCard({
     && samePlaybackSource(playback.source, source);
 
   useEffect(() => {
-    setEditable(createEditableProgression(candidate));
+    setEditable(createEditableProgression(candidate, beatsPerBar));
     setSavedSignature(progressionSignature(candidate.chords));
     setSelectedChordIndex(0);
-  }, [candidate, language]);
+  }, [beatsPerBar, candidate, language]);
 
   useEffect(() => {
     if (!candidatePlaying || playback.status !== "playing") {
@@ -1084,7 +1102,7 @@ export function ProgressionCandidateCard({
   }
 
   const playbackPosition = candidatePlaying && playback.status === "playing"
-    ? timelinePlaybackPosition(chords, bpm, playback.startedAt)
+    ? timelinePlaybackPosition(chords, bpm, playback.startedAt, undefined, beatsPerBar)
     : undefined;
   const playingChordIndex = playbackPosition?.index ?? null;
   const playingProgress = playbackPosition?.progress ?? null;
@@ -1118,7 +1136,7 @@ export function ProgressionCandidateCard({
         <div className="flex flex-wrap items-center justify-end gap-2">
           <PlayToggle
             source={source}
-            request={{ type: "timeline", timeline: editedCandidate.chords, bpm, sound: previewSound }}
+            request={{ type: "timeline", timeline: editedCandidate.chords, bpm, sound: previewSound, beatsPerBar }}
             playLabel={copy.common.preview}
             stopLabel={copy.common.stop}
             className="grid h-9 w-9 place-items-center rounded bg-cyan-400 text-sm font-semibold text-stone-950"
@@ -1270,10 +1288,6 @@ async function writeClipboardText(text: string): Promise<void> {
   await navigator.clipboard.writeText(text);
 }
 
-function firstTimelineBeat(chords: readonly ChordTimelineItem[]): number {
-  return chords.length === 0 ? 0 : Math.min(...chords.map(timelineStartBeat));
-}
-
 function renderInspector(inspector: ReactNode, host: HTMLElement | null | undefined) {
   if (host === null) return null;
   return host === undefined ? inspector : createPortal(inspector, host);
@@ -1358,13 +1372,14 @@ export function timelinePlaybackPosition(
   bpm: number,
   startedAt: number | undefined,
   now = globalThis.performance?.now() ?? Date.now(),
+  beatsPerBar = 4,
 ): { index: number; progress: number } | undefined {
   if (startedAt === undefined || chords.length === 0 || bpm <= 0) return undefined;
   const elapsedSeconds = Math.max(0, (now - startedAt) / 1000);
-  const firstBeat = firstTimelineBeat(chords);
+  const firstBeat = firstTimelineBeatFor(chords, beatsPerBar);
 
   for (const [index, chord] of chords.entries()) {
-    const startBeat = timelineStartBeat(chord) - firstBeat;
+    const startBeat = timelineStartBeat(chord, beatsPerBar) - firstBeat;
     const startSeconds = startBeat * (60 / bpm);
     const endSeconds = (startBeat + chord.durationBeats) * (60 / bpm);
     if (elapsedSeconds >= startSeconds && elapsedSeconds < endSeconds) {
@@ -1379,6 +1394,12 @@ export function timelinePlaybackPosition(
     }
   }
   return undefined;
+}
+
+function firstTimelineBeatFor(chords: readonly ChordTimelineItem[], beatsPerBar: number): number {
+  return chords.length === 0
+    ? 0
+    : Math.min(...chords.map((chord) => timelineStartBeat(chord, beatsPerBar)));
 }
 
 export function isEditableKeyboardTarget(target: EventTarget | null): boolean {

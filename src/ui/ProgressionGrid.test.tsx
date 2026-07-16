@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { ChordTimelineItem } from "../domain/types";
-import { ProgressionGrid } from "./ProgressionGrid";
+import { ProgressionGrid, timelineStartBeat } from "./ProgressionGrid";
 
 function chord(label: string, bar: number, beat: number): ChordTimelineItem {
   return {
@@ -37,5 +37,21 @@ describe("ProgressionGrid", () => {
     expect(markup).toContain("width:50%");
     expect(markup).toContain('data-progression-bar="1"');
     expect(markup).toContain("shadow-[0_0_0_1px_rgba(103,232,249,0.75)]");
+  });
+
+  it("places and sizes 6/8 bars using three quarter-note beats", () => {
+    const first = { ...chord("C", 1, 1), durationBeats: 3 };
+    const second = { ...chord("F", 2, 1), durationBeats: 3 };
+    const markup = renderToStaticMarkup(
+      <ProgressionGrid
+        chords={[first, second]}
+        currentBar={null}
+        beatsPerBar={3}
+      />,
+    );
+
+    expect(timelineStartBeat(second, 3)).toBe(3);
+    expect(markup).toContain('data-progression-bar="2"');
+    expect(markup).toContain("flex-basis:100%");
   });
 });

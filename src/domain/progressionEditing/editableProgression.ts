@@ -11,6 +11,7 @@ import type {
 
 export function createEditableProgression(
   candidate: ProgressionBlockCandidate,
+  beatsPerBar = 4,
 ): EditableProgression {
   const slots = candidate.chords.map((item, index) => ({
     id: slotId(candidate.id, item, index),
@@ -32,6 +33,7 @@ export function createEditableProgression(
 
   return {
     candidateId: candidate.id,
+    beatsPerBar,
     slots,
     selectedSlotId: slots[0]?.id,
     history: [],
@@ -46,7 +48,7 @@ export function applyEditableProgression(
   return {
     ...candidate,
     chords: [...editable.slots]
-      .sort((left, right) => slotStartBeat(left) - slotStartBeat(right))
+      .sort((left, right) => slotStartBeat(left, editable.beatsPerBar) - slotStartBeat(right, editable.beatsPerBar))
       .map(slotToTimelineItem),
   };
 }
@@ -93,18 +95,18 @@ export function snapshotOf(editable: EditableProgression): ProgressionEditSnapsh
   });
 }
 
-export function slotStartBeat(slot: EditableChordSlot): number {
-  return positionStartBeat(slot.position.bar, slot.position.beat);
+export function slotStartBeat(slot: EditableChordSlot, beatsPerBar = 4): number {
+  return positionStartBeat(slot.position.bar, slot.position.beat, beatsPerBar);
 }
 
-export function positionStartBeat(bar: number, beat: number): number {
-  return (bar - 1) * 4 + beat - 1;
+export function positionStartBeat(bar: number, beat: number, beatsPerBar = 4): number {
+  return (bar - 1) * beatsPerBar + beat - 1;
 }
 
-export function positionFromStartBeat(startBeat: number): { bar: number; beat: number } {
+export function positionFromStartBeat(startBeat: number, beatsPerBar = 4): { bar: number; beat: number } {
   return {
-    bar: Math.floor(startBeat / 4) + 1,
-    beat: (startBeat % 4) + 1,
+    bar: Math.floor(startBeat / beatsPerBar) + 1,
+    beat: (startBeat % beatsPerBar) + 1,
   };
 }
 

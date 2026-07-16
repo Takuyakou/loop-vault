@@ -25,6 +25,7 @@ export type PlaybackRequest =
       timeline: readonly ChordTimelineItem[];
       bpm?: number;
       sound?: PreviewSound;
+      beatsPerBar?: number;
     };
 
 export type PlaybackStatus = "idle" | "starting" | "playing";
@@ -56,6 +57,7 @@ export interface PlaybackAudioDriver {
     bpm: number | undefined,
     sound: PreviewSound | undefined,
     callbacks: PreviewLifecycleCallbacks,
+    beatsPerBar?: number,
   ): Promise<void>;
   stop(): void;
 }
@@ -66,8 +68,8 @@ const defaultAudioDriver: PlaybackAudioDriver = {
   playChord(chord, sound, callbacks) {
     return previewChord(chord, sound, callbacks);
   },
-  playTimeline(timeline, bpm, sound, callbacks) {
-    return previewChordTimeline(timeline, bpm, sound, callbacks);
+  playTimeline(timeline, bpm, sound, callbacks, beatsPerBar) {
+    return previewChordTimeline(timeline, bpm, sound, callbacks, beatsPerBar);
   },
   stop: stopPreview,
 };
@@ -117,12 +119,17 @@ export function createPlaybackController(
       if (request.type === "chord") {
         await driver.playChord(request.chord, request.sound, callbacks);
       } else {
-        await driver.playTimeline(
-          request.timeline,
-          request.bpm,
-          request.sound,
-          callbacks,
-        );
+        if (request.beatsPerBar === undefined) {
+          await driver.playTimeline(request.timeline, request.bpm, request.sound, callbacks);
+        } else {
+          await driver.playTimeline(
+            request.timeline,
+            request.bpm,
+            request.sound,
+            callbacks,
+            request.beatsPerBar,
+          );
+        }
       }
     } catch (error) {
       if (generation !== requestGeneration) return;

@@ -1,11 +1,12 @@
 import type {
   MidiSongData, NormalizedTimedNote, NoteSegmentOverlap, SegmentRange, TimedNote,
 } from "./types";
+import { beatsPerBar } from "./timing";
 
 export function normalizeNotes(data: MidiSongData): NormalizedTimedNote[] {
   const byTrackPitch = new Map<string, TimedNote[]>();
   for (const note of data.notes) {
-    const key = `${note.trackIndex}:${note.pitch}`;
+    const key = noteIdentity(note);
     byTrackPitch.set(key, [...(byTrackPitch.get(key) ?? []), note]);
   }
   const deduplicated = [...byTrackPitch.values()].flatMap((notes) => deduplicate(notes));
@@ -14,10 +15,15 @@ export function normalizeNotes(data: MidiSongData): NormalizedTimedNote[] {
     const track = data.tracks.find((entry) => entry.index === note.trackIndex);
     const startBeat = note.startTick / data.ticksPerBeat;
     const endBeat = (note.startTick + note.durationTick) / data.ticksPerBeat;
-    const nextOnset = (byTrackPitch.get(`${note.trackIndex}:${note.pitch}`) ?? [])
+    const nextOnset = (byTrackPitch.get(noteIdentity(note)) ?? [])
       .filter((entry) => entry.startTick > note.startTick)
       .sort((a, b) => a.startTick - b.startTick)[0]?.startTick;
-    const releaseTick = sustainReleaseTick(data, note.trackIndex, note.startTick + note.durationTick);
+    const releaseTick = sustainReleaseTick(
+      data,
+      note.trackIndex,
+      note.channel,
+      note.startTick + note.durationTick,
+    );
     const sustainedTick = Math.min(
       releaseTick ?? note.startTick + note.durationTick,
       nextOnset ?? Number.POSITIVE_INFINITY,
@@ -33,7 +39,10 @@ export function normalizeNotes(data: MidiSongData): NormalizedTimedNote[] {
       endBeat,
       sustainedEndBeat: Math.max(endBeat, sustainedTick / data.ticksPerBeat),
     };
-  }).sort((a, b) => a.startBeat - b.startBeat || a.pitch - b.pitch || a.trackIndex - b.trackIndex);
+  }).sort((a, b) => a.startBeat - b.startBeat
+    || a.pitch - b.pitch
+    || a.trackIndex - b.trackIndex
+    || (a.channel ?? -1) - (b.channel ?? -1));
 }
 
 export function overlapWithSegment(note: NormalizedTimedNote, segment: SegmentRange): NoteSegmentOverlap {
@@ -48,9 +57,16 @@ export function overlapWithSegment(note: NormalizedTimedNote, segment: SegmentRa
   };
 }
 
-function sustainReleaseTick(data: MidiSongData, trackIndex: number, noteEndTick: number): number | undefined {
+function sustainReleaseTick(
+  data: MidiSongData,
+  trackIndex: number,
+  channel: number | undefined,
+  noteEndTick: number,
+): number | undefined {
   const events = data.controlChanges
-    .filter((event) => event.trackIndex === trackIndex && event.number === 64)
+    .filter((event) => event.trackIndex === trackIndex
+      && event.channel === channel
+      && event.number === 64)
     .sort((a, b) => a.tick - b.tick);
   const priorEvents = events.filter((event) => event.tick <= noteEndTick);
   const active = priorEvents[priorEvents.length - 1];
@@ -63,7 +79,6 @@ function deduplicate(notes: TimedNote[]): TimedNote[] {
     .filter((note, index, sorted) => index === 0 || Math.abs(note.startTick - sorted[index - 1].startTick) > 1);
 }
 
-function beatsPerBar(timeSignature?: string): number {
-  const numerator = Number(timeSignature?.split("/")[0]);
-  return Number.isFinite(numerator) && numerator > 0 ? numerator : 4;
+function noteIdentity(note: TimedNote): string {
+  return `${note.trackIndex}:${note.channel ?? "unknown"}:${note.pitch}`;
 }

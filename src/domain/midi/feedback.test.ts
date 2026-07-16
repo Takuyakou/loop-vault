@@ -32,4 +32,15 @@ describe("MIDI correction feedback", () => {
     ]);
     expect(buildCorrectionEvents(candidate, edited, analysis, ["split"])).toEqual([]);
   });
+
+  it("uses quarter-note meter units for 6/8 correction ranges", () => {
+    const detected = { ...candidate.chords[0], bar: 2, durationBeats: 3 };
+    const original = { ...candidate, chords: [detected] };
+    const edited = { ...candidate, chords: [{ ...detected, chord: dm }] };
+
+    expect(buildCorrectionEvents(original, edited, {
+      ...analysis,
+      timeSignature: "6/8",
+    })[0]?.segment).toEqual({ startBeat: 3, endBeat: 6 });
+  });
 });
