@@ -55,6 +55,7 @@ import { ChordInspector } from "../components/progression-editing/ChordInspector
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PlayToggle } from "../components/PlayToggle";
 import { SaveProgressionPopover } from "../components/SaveProgressionPopover";
+import { SongMiniMap } from "../components/SongMiniMap";
 import { EditableProgressionGrid } from "../components/progression-editing/EditableProgressionGrid";
 import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
 import { ProgressionEditSummary } from "../components/progression-editing/ProgressionEditSummary";
@@ -114,7 +115,12 @@ export function CaptureView(props: CaptureViewProps) {
   const [isInspectorExpanded, setInspectorExpanded] = useState(false);
   const [inspectorHost, setInspectorHost] = useState<HTMLDivElement | null>(null);
   const [dirtyCandidateIds, setDirtyCandidateIds] = useState<Set<string>>(() => new Set());
-  const [pendingCandidateSelection, setPendingCandidateSelection] = useState<{ candidateId: string | undefined }>();
+  const [pendingCandidateSelection, setPendingCandidateSelection] = useState<{
+    candidateId: string | undefined;
+    revealTimeline?: boolean;
+  }>();
+  const [isTimelineOpen, setTimelineOpen] = useState(false);
+  const [timelineScrollBar, setTimelineScrollBar] = useState<number>();
   const [sourcePath, setSourcePath] = useState<string>();
   const [previewSound, setPreviewSound] = useState<PreviewSound>("piano");
   const candidateHeaderFocusIdRef = useRef<string>();
@@ -141,17 +147,30 @@ export function CaptureView(props: CaptureViewProps) {
     });
   }, []);
 
-  function selectExpandedCandidate(candidateId: string | undefined): boolean {
+  function selectExpandedCandidate(
+    candidateId: string | undefined,
+    options?: { revealTimeline?: boolean },
+  ): boolean {
     if (
       expandedCandidateId
       && expandedCandidateId !== candidateId
       && dirtyCandidateIds.has(expandedCandidateId)
     ) {
-      setPendingCandidateSelection({ candidateId });
+      setPendingCandidateSelection({ candidateId, revealTimeline: options?.revealTimeline });
       return false;
     }
     applyCandidateSelection(candidateId);
+    if (candidateId && options?.revealTimeline) {
+      revealCandidateInTimeline(candidateId);
+    }
     return true;
+  }
+
+  function revealCandidateInTimeline(candidateId: string) {
+    const candidate = result?.blockCandidates.find((item) => item.id === candidateId);
+    if (!candidate) return;
+    setTimelineOpen(true);
+    setTimelineScrollBar(candidate.startBar);
   }
 
   function applyCandidateSelection(candidateId: string | undefined) {
@@ -503,6 +522,21 @@ export function CaptureView(props: CaptureViewProps) {
         </div>
       </section>
 
+      <SongMiniMap
+        totalBars={result.totalBars}
+        candidates={result.blockCandidates}
+        activeCandidateId={expandedCandidateId}
+        copy={{
+          title: copy.capture.songMiniMap,
+          description: copy.capture.songMiniMapDescription,
+          empty: copy.capture.songMiniMapEmpty,
+          candidateLabel: copy.capture.songMiniMapCandidate,
+        }}
+        onCandidateSelect={(candidateId) => {
+          selectExpandedCandidate(candidateId, { revealTimeline: true });
+        }}
+      />
+
       <div className={`grid gap-5 ${expandedCandidateId ? "xl:grid-cols-[minmax(0,1fr)_20rem] xl:items-start" : ""}`}>
       <section className="min-w-0 border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -590,6 +624,9 @@ export function CaptureView(props: CaptureViewProps) {
         }}
         onPlaybackError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed)}
         controller={controller}
+        open={isTimelineOpen}
+        onOpenChange={setTimelineOpen}
+        scrollToBar={timelineScrollBar}
       />
       </div>
       <ConfirmDialog
@@ -602,6 +639,9 @@ export function CaptureView(props: CaptureViewProps) {
         onConfirm={() => {
           if (!pendingCandidateSelection) return;
           applyCandidateSelection(pendingCandidateSelection.candidateId);
+          if (pendingCandidateSelection.candidateId && pendingCandidateSelection.revealTimeline) {
+            revealCandidateInTimeline(pendingCandidateSelection.candidateId);
+          }
           setPendingCandidateSelection(undefined);
         }}
         tone="danger"
@@ -690,6 +730,9 @@ export function TimelineDetails({
   onPreviewSoundChange,
   onPlaybackError,
   controller = playbackController,
+  open,
+  onOpenChange,
+  scrollToBar,
 }: {
   result: MidiProgressionAnalysis;
   copy: AppCopy;
@@ -698,8 +741,12 @@ export function TimelineDetails({
   onPreviewSoundChange: (sound: PreviewSound) => void;
   onPlaybackError?: (error: unknown) => void;
   controller?: PlaybackController;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  scrollToBar?: number;
 }) {
   const [selectedChordIndex, setSelectedChordIndex] = useState<number>();
+  const detailsRef = useRef<HTMLDetailsElement>(null);
   const playback = usePlaybackState(controller);
   const source = captureFullTimelineSource(result);
   const playing = playback.status !== "idle" && samePlaybackSource(playback.source, source);
@@ -710,6 +757,16 @@ export function TimelineDetails({
     const interval = window.setInterval(() => forcePlaybackTick((value) => value + 1), 100);
     return () => window.clearInterval(interval);
   }, [playback.status, playing]);
+
+  useEffect(() => {
+    if (!open || scrollToBar === undefined) return;
+    const target = detailsRef.current?.querySelector<HTMLElement>(
+      `[data-progression-bar="${scrollToBar}"]`,
+    );
+    target?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+    const chordIndex = result.fullTimeline.findIndex((chord) => chord.bar >= scrollToBar);
+    if (chordIndex >= 0) setSelectedChordIndex(chordIndex);
+  }, [open, result.fullTimeline, scrollToBar]);
 
   async function previewTimelineChord(index: number) {
     setSelectedChordIndex(index);
@@ -735,7 +792,12 @@ export function TimelineDetails({
     : undefined;
 
   return (
-    <details className="border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-5">
+    <details
+      ref={detailsRef}
+      open={open}
+      onToggle={(event) => onOpenChange?.(event.currentTarget.open)}
+      className="border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-5"
+    >
       <summary className="cursor-pointer text-lg font-semibold text-[var(--lv-text)]">
         {copy.capture.timeline}
       </summary>
