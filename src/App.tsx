@@ -184,9 +184,11 @@ async function analyzeMidiPath(path: string) {
                 openDetail={openDetail}
                 openCreate={() => setCreateOpen(true)}
                 openCapture={() => setView("capture")}
+                updateIdea={updateIdea}
                 setToast={setToast}
                 copy={copy}
                 language={language}
+                showRomanNumerals={settings.showRomanNumerals ?? true}
               />
             ) : null}
             {view === "capture" ? (

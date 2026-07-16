@@ -109,6 +109,23 @@ describe("parseVaultFileJson", () => {
     expect(result.vault.ideas[0]?.progressionBlocks).toEqual([]);
   });
 
+  it("loads legacy progression blocks without pinned as unpinned", () => {
+    const legacyIdea = idea({
+      progressionBlocks: [{
+        id: "91d92f3c-fc9d-4fe5-8cc9-4bec2d7fb887",
+        summaryText: "legacy",
+        chords: [],
+        tags: [],
+        capturedAt: "2026-01-01T00:00:00.000Z",
+        analyzerVersion: "legacy",
+      }],
+    });
+    const result = parseVaultFileJson(JSON.stringify(vault({ ideas: [legacyIdea] })));
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.vault.ideas[0]?.progressionBlocks?.[0]?.pinned).toBe(false);
+  });
+
   it("loads legacy settings without language by defaulting to Japanese", () => {
     const legacyVault = {
       app: "loopvault",

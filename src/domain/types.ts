@@ -36,6 +36,7 @@ export interface ChordTimelineItem {
 
 export interface SavedProgressionBlock {
   id: string;
+  pinned?: boolean;
   sourceAssetId?: string;
   sourceFileName?: string;
   startBar?: number;

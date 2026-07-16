@@ -1,158 +1,128 @@
-import { useState } from "react";
-import { displayKey, statusLabel } from "../domain/displayLabels";
-import { filterAndSortIdeas, type IdeaFilters } from "../domain/libraryFilters";
+import { useEffect, useMemo, useState } from "react";
+import { degreeSequence, matchProgression, normalizeQuery } from "../domain/harmony/degrees";
 import { formatProgressionText } from "../domain/progressionText";
-import type { ChordTimelineItem, SavedProgressionBlock, SongIdea, Status } from "../domain/types";
+import type { SavedProgressionBlock, SongIdea } from "../domain/types";
 import type { AppCopy, AppLanguage } from "../i18n";
 
-type SortKey = "updatedAt" | "createdAt" | "bpm";
-const statuses: Status[] = ["idea", "loop", "arrange", "mix", "done", "hold", "abandoned"];
-const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
-function StatusBadge({ status, language }: { status: Status; language: AppLanguage }) { return <span className="shrink-0 rounded bg-[var(--lv-surface-raised)] px-2 py-1 text-xs font-semibold uppercase text-teal-200">{statusLabel(status, language)}</span>; }
-function labelStatus(status: Status, language: AppLanguage): string { return statusLabel(status, language); }
-function formatDate(value: string): string { return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value)); }
-function EmptyState({ openCreate, copy }: { openCreate: () => void; copy: AppCopy }) { return <div className="grid min-h-96 place-items-center py-10"><div className="max-w-md text-center"><h2 className="text-2xl font-semibold">{copy.startup.emptyTitle}</h2><button className="mt-5 rounded bg-[var(--lv-accent)] px-4 py-2 font-semibold text-stone-950" onClick={openCreate}>{copy.startup.emptyButton}</button></div></div>; }
-async function writeClipboardText(text: string): Promise<void> { if (!navigator.clipboard?.writeText) throw new Error("Clipboard is not available."); await navigator.clipboard.writeText(text); }
-async function previewTimeline(chords: readonly ChordTimelineItem[], bpm?: number): Promise<void> { const { previewChordTimeline } = await import("../audio/chordPreview"); await previewChordTimeline(chords, bpm); }
-async function stopPreviewTimeline(): Promise<void> { const { stopPreview } = await import("../audio/chordPreview"); stopPreview(); }
-function matchesProgressionQuery(idea: SongIdea, query: string): boolean { const needle = query.trim().toLocaleLowerCase(); if (!needle) return true; return [idea.title, idea.chordMemo, idea.nextAction.text].some((value) => value.toLocaleLowerCase().includes(needle)) || (idea.progressionBlocks ?? []).some((block) => [block.summaryText, block.tags.join(" "), block.chords.map((item) => item.chord.label).join(" ")].some((value) => value.toLocaleLowerCase().includes(needle))); }
+type ProgressionEntry = { idea: SongIdea; block: SavedProgressionBlock };
+type SortField = "capturedAt" | "updatedAt" | "key" | "bpm";
 
 export function VaultView({
-  ideas,
-  openDetail,
-  openCreate,
-  openCapture,
-  setToast,
-  copy,
-  language,
+  ideas, openDetail, openCreate, openCapture, updateIdea, setToast, copy, language, showRomanNumerals,
 }: {
   ideas: SongIdea[];
   openDetail: (id: string) => void;
   openCreate: () => void;
   openCapture: () => void;
+  updateIdea: (id: string, changes: Partial<SongIdea>) => void;
   setToast: (toast: string) => void;
   copy: AppCopy;
   language: AppLanguage;
+  showRomanNumerals: boolean;
 }) {
+  const [mode, setMode] = useState<"progression" | "idea">("progression");
   const [query, setQuery] = useState("");
-  const [status, setStatus] = useState<Status | "all">("all");
-  const [genre, setGenre] = useState("");
-  const [mood, setMood] = useState("");
-  const [sort, setSort] = useState<SortKey>("updatedAt");
-  const [mode, setMode] = useState<"idea" | "progression">("idea");
-  const [quickFilter, setQuickFilter] = useState<"all" | "with-progression" | "without-progression" | "no-next" | "recent">("all");
-  const filters: IdeaFilters = {
-    query: "",
-    statuses: status === "all" ? [] : [status],
-    genres: genre ? [genre] : [],
-    moods: mood ? [mood] : [],
-  };
-  const visible = filterAndSortIdeas(ideas, filters, { field: sort, direction: sort === "bpm" ? "asc" : "desc" })
-    .filter((idea) => !query.trim() || matchesProgressionQuery(idea, query))
-    .filter((idea) => {
-      const blocks = idea.progressionBlocks ?? [];
-      if (quickFilter === "with-progression") return blocks.length > 0;
-      if (quickFilter === "without-progression") return blocks.length === 0;
-      if (quickFilter === "no-next") return !idea.nextAction.text.trim();
-      if (quickFilter === "recent") return blocks.some((block) => Date.now() - new Date(block.capturedAt).getTime() < 30 * 24 * 60 * 60 * 1000);
-      return true;
+  const [onlyPinned, setOnlyPinned] = useState(false);
+  const [lengthBars, setLengthBars] = useState<"all" | "4" | "8" | "16">("all");
+  const [sort, setSort] = useState<SortField>("capturedAt");
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [playingId, setPlayingId] = useState<string>();
+  const entries = useMemo(() => ideas.flatMap((idea) =>
+    (idea.progressionBlocks ?? []).map((block) => ({ idea, block }))), [ideas]);
+  const parsedQuery = useMemo(() => normalizeQuery(query), [query]);
+  const visible = useMemo(() => entries
+    .filter(({ block }) => !onlyPinned || block.pinned)
+    .filter(({ block }) => lengthBars === "all" || block.lengthBars === Number(lengthBars))
+    .filter(({ idea, block }) => {
+      if (parsedQuery.kind !== "text") return matchProgression(block, parsedQuery);
+      if (!parsedQuery.normalized) return true;
+      return [idea.title, idea.genre ?? "", idea.moods.join(" "), idea.chordMemo,
+        block.summaryText, block.memo ?? "", block.tags.join(" "), block.sourceFileName ?? ""]
+        .join(" ").toLocaleLowerCase().includes(parsedQuery.normalized);
+    })
+    .sort((left, right) => {
+      if (Boolean(left.block.pinned) !== Boolean(right.block.pinned)) return right.block.pinned ? 1 : -1;
+      if (sort === "key") return keyOf(left).localeCompare(keyOf(right));
+      if (sort === "bpm") return bpmOf(left) - bpmOf(right);
+      const leftDate = sort === "updatedAt" ? left.idea.updatedAt : left.block.capturedAt;
+      const rightDate = sort === "updatedAt" ? right.idea.updatedAt : right.block.capturedAt;
+      return new Date(rightDate).getTime() - new Date(leftDate).getTime();
+    }), [entries, lengthBars, onlyPinned, parsedQuery, sort]);
+  useEffect(() => {
+    setSelectedIndex((value) => Math.min(value, Math.max(0, visible.length - 1)));
+  }, [visible.length]);
+
+  async function togglePlayback(entry: ProgressionEntry) {
+    if (playingId === entry.block.id) {
+      const { stopPreview } = await import("../audio/chordPreview");
+      stopPreview();
+      setPlayingId(undefined);
+      return;
+    }
+    const { previewChordTimeline } = await import("../audio/chordPreview");
+    await previewChordTimeline(entry.block.chords, entry.block.bpm ?? entry.idea.bpm);
+    setPlayingId(entry.block.id);
+  }
+
+  function togglePin(entry: ProgressionEntry) {
+    updateIdea(entry.idea.id, {
+      progressionBlocks: (entry.idea.progressionBlocks ?? []).map((block) =>
+        block.id === entry.block.id ? { ...block, pinned: !block.pinned } : block),
     });
-  const progressions = visible
-    .flatMap((idea) => (idea.progressionBlocks ?? []).map((block) => ({ idea, block })))
-    .sort((left, right) => new Date(right.block.capturedAt).getTime() - new Date(left.block.capturedAt).getTime());
+  }
 
   async function copyProgression(block: SavedProgressionBlock) {
     try {
-      await writeClipboardText(formatProgressionText(block.chords));
-      setToast(language === "ja" ? "Chord Dripで使えるコード進行をコピーしました。" : "Copied progression text.");
-    } catch (error) {
-      setToast(error instanceof Error ? error.message : (language === "ja" ? "コピーできませんでした。" : "Could not copy progression."));
+      if (!navigator.clipboard?.writeText) throw new Error("Clipboard is not available.");
+      await navigator.clipboard.writeText(formatProgressionText(block.chords));
+      setToast(language === "ja" ? "コード進行をコピーしました。" : "Copied progression.");
+    } catch {
+      setToast(language === "ja" ? "コピーできませんでした。" : "Could not copy progression.");
     }
   }
 
   return (
     <div className="py-5">
-      <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--lv-accent)]">Vault</p>
-          <h2 className="mt-2 text-2xl font-semibold sm:text-3xl">{language === "ja" ? "採集した進行を探す" : "Find captured progressions"}</h2>
-        </div>
-        <div className="flex rounded border border-[var(--lv-border-strong)] p-1 text-sm">
-          <button className={mode === "idea" ? "rounded bg-[var(--lv-accent)] px-3 py-1.5 font-semibold text-stone-950" : "rounded px-3 py-1.5 text-[var(--lv-text-secondary)]"} onClick={() => setMode("idea")}>Idea</button>
-          <button className={mode === "progression" ? "rounded bg-[var(--lv-accent)] px-3 py-1.5 font-semibold text-stone-950" : "rounded px-3 py-1.5 text-[var(--lv-text-secondary)]"} onClick={() => setMode("progression")}>Progression</button>
-        </div>
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
+        <div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--lv-accent)]">Vault</p>
+          <h2 className="mt-2 text-2xl font-semibold">{language === "ja" ? "進行をすばやく取り出す" : "Retrieve progressions quickly"}</h2></div>
+        <button className="lv-button-primary px-4 py-2 text-sm font-semibold" onClick={openCapture}>{language === "ja" ? "コード採集" : "Capture"}</button>
       </div>
-      <div className="grid gap-2 border-b border-[var(--lv-border)] pb-4 md:grid-cols-[1.4fr_0.7fr_0.8fr_0.8fr_0.8fr]">
-        <input className={inputClass} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={language === "ja" ? "タイトル・コード進行・次の一手を検索" : "Search titles, progressions, or next steps"} />
-        <select className={inputClass} value={status} onChange={(event) => setStatus(event.target.value as Status | "all")}>
-          <option value="all">{language === "ja" ? "すべてのStatus" : "All statuses"}</option>
-          {statuses.map((entry) => <option key={entry} value={entry}>{labelStatus(entry, language)}</option>)}
-        </select>
-        <input className={inputClass} value={genre} onChange={(event) => setGenre(event.target.value)} placeholder={copy.library.genre} />
-        <input className={inputClass} value={mood} onChange={(event) => setMood(event.target.value)} placeholder={copy.library.mood} />
-        <select className={inputClass} value={sort} onChange={(event) => setSort(event.target.value as SortKey)}>
-          <option value="updatedAt">{copy.library.updated}</option>
-          <option value="createdAt">{copy.library.created}</option>
-          <option value="bpm">{copy.library.bpm}</option>
-        </select>
+      <div className="mb-3 flex gap-1 text-sm">
+        <button className={mode === "progression" ? "bg-[var(--lv-surface-raised)] px-3 py-2" : "px-3 py-2 text-[var(--lv-text-muted)]"} onClick={() => setMode("progression")}>Progression</button>
+        <button className={mode === "idea" ? "bg-[var(--lv-surface-raised)] px-3 py-2" : "px-3 py-2 text-[var(--lv-text-muted)]"} onClick={() => setMode("idea")}>Idea</button>
       </div>
-      <div className="mt-3 flex flex-wrap gap-2">
-        {(["all", "with-progression", "without-progression", "no-next", "recent"] as const).map((entry) => (
-          <button key={entry} className={quickFilter === entry ? "rounded bg-stone-700 px-3 py-1.5 text-xs text-[var(--lv-text)]" : "rounded border border-[var(--lv-border)] px-3 py-1.5 text-xs text-[var(--lv-text-muted)]"} onClick={() => setQuickFilter(entry)}>
-            {language === "ja" ? ({ all: "すべて", "with-progression": "進行あり", "without-progression": "進行なし", "no-next": "次の一手なし", recent: "最近採集" }[entry]) : ({ all: "All", "with-progression": "With progression", "without-progression": "No progression", "no-next": "No next step", recent: "Recently captured" }[entry])}
-          </button>
-        ))}
-      </div>
-      {mode === "idea" && visible.length === 0 ? (
-        <EmptyState openCreate={openCreate} copy={copy} />
-      ) : null}
-      {mode === "idea" && visible.length > 0 ? (
-        <div className="grid gap-3 py-5 md:grid-cols-2 xl:grid-cols-3">
-          {visible.map((idea) => {
-            const progressionBlocks = idea.progressionBlocks ?? [];
-            const firstBlock = progressionBlocks[0];
-            const extraBlockCount = Math.max(0, progressionBlocks.length - 1);
-            const progressionPreview = firstBlock
-              ? formatProgressionText(firstBlock.chords).split("\n")[0]
-              : "";
-
-            return (
-              <article key={idea.id} className="border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4 hover:border-teal-400">
-                <div className="flex items-start justify-between gap-3">
-                  <button className="text-left text-lg font-semibold" onClick={() => openDetail(idea.id)}>{idea.title}</button>
-                  <StatusBadge status={idea.status} language={language} />
-                </div>
-                <p className="mt-2 text-sm text-[var(--lv-text-muted)]">{idea.bpm ? `${idea.bpm} BPM` : copy.library.bpmUnset} {idea.key ? ` · ${displayKey(idea.key, language)}` : ""}</p>
-                {firstBlock ? (
-                  <div className="mt-4 border border-[var(--lv-border)] bg-[var(--lv-bg)] p-3">
-                    <p className="line-clamp-1 text-xs font-semibold uppercase tracking-[0.12em] text-cyan-300">
-                      {firstBlock.summaryText || (language === "ja" ? "保存したコード進行" : "Saved progression")}
-                    </p>
-                    <p className="mt-2 line-clamp-2 font-mono text-sm text-[var(--lv-text-secondary)]">{progressionPreview}</p>
-                  </div>
-                ) : <div className="mt-4 border border-dashed border-[var(--lv-border-strong)] p-3 text-sm text-[var(--lv-text-muted)]">{language === "ja" ? "コード進行はまだありません" : "No progression yet"}</div>}
-                <p className="mt-4 line-clamp-2 text-sm text-[var(--lv-text-secondary)]">{idea.nextAction.text ? `${copy.home.nextAction}：${idea.nextAction.text}` : copy.library.noNextAction}</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {progressionBlocks.length > 0 ? (
-                    <span className="inline-block rounded bg-cyan-400 px-2 py-1 text-xs font-semibold text-stone-950">
-                      {language === "ja" ? `進行 ${progressionBlocks.length}件` : `${progressionBlocks.length} progression${progressionBlocks.length === 1 ? "" : "s"}`}{extraBlockCount > 0 ? ` · +${extraBlockCount}` : ""}
-                    </span>
-                  ) : null}
-                </div>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {firstBlock ? <><button className="grid h-8 w-8 place-items-center rounded border border-cyan-400/60 text-cyan-100" onClick={() => void previewTimeline(firstBlock.chords, firstBlock.bpm ?? idea.bpm)} aria-label={copy.common.preview} title={copy.common.preview}>▶</button><button className="grid h-8 w-8 place-items-center rounded border border-[var(--lv-border-strong)] text-[var(--lv-text-secondary)]" onClick={() => void stopPreviewTimeline()} aria-label={copy.common.stop} title={copy.common.stop}>■</button></> : <button className="rounded border border-[var(--lv-border-strong)] px-3 py-1 text-xs" onClick={openCapture}>{language === "ja" ? "MIDIから追加" : "Add from MIDI"}</button>}
-                  <button className="rounded border border-[var(--lv-border-strong)] px-3 py-1 text-xs" onClick={() => openDetail(idea.id)}>{copy.common.open}</button>
-                  {firstBlock ? <button className="rounded border border-[var(--lv-border-strong)] px-3 py-1 text-xs" onClick={() => void copyProgression(firstBlock)}>{copy.capture.copyProgression}</button> : null}
-                </div>
-                <p className="mt-4 text-xs text-[var(--lv-text)]0">{language === "ja" ? "更新" : "Updated"} {formatDate(idea.updatedAt)}</p>
-              </article>
-            );
-          })}
+      {mode === "progression" ? <>
+        <div className="grid gap-2 border-y border-[var(--lv-border)] py-3 md:grid-cols-[minmax(0,1fr)_auto_auto]">
+          <input className="border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm outline-none focus:border-[var(--lv-accent)]" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={language === "ja" ? "4-5-3-6 / IVmaj7 / Fmaj9 / タグで検索" : "4-5-3-6 / IVmaj7 / Fmaj9 / Search tags"} />
+          <div className="flex gap-1">{(["all", "4", "8", "16"] as const).map((value) => <button key={value} className={lengthBars === value ? "bg-[var(--lv-surface-raised)] px-2 text-xs" : "px-2 text-xs text-[var(--lv-text-muted)]"} onClick={() => setLengthBars(value)}>{value === "all" ? "All" : `${value} bars`}</button>)}</div>
+          <select className="border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-2 text-xs" value={sort} onChange={(event) => setSort(event.target.value as SortField)}><option value="capturedAt">{language === "ja" ? "採集日" : "Captured"}</option><option value="updatedAt">{language === "ja" ? "更新日" : "Updated"}</option><option value="key">Key</option><option value="bpm">BPM</option></select>
         </div>
-      ) : null}
-      {mode === "progression" ? (
-        progressions.length ? <div className="grid gap-3 py-5 md:grid-cols-2 xl:grid-cols-3">{progressions.map(({ idea, block }) => <article key={block.id} className="border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4"><p className="font-semibold">{block.summaryText || (language === "ja" ? "保存したコード進行" : "Saved progression")}</p><button className="mt-1 text-left text-xs text-teal-200 hover:underline" onClick={() => openDetail(idea.id)}>{idea.title}</button><p className="mt-3 font-mono text-sm text-[var(--lv-text)]">{formatProgressionText(block.chords).split("\n")[0]}</p><p className="mt-2 text-xs text-[var(--lv-text)]0">{idea.bpm ? `${idea.bpm} BPM` : copy.library.bpmUnset}{idea.key ? ` · ${displayKey(idea.key, language)}` : ""}{block.startBar ? ` · ${language === "ja" ? `${block.startBar}-${block.endBar}小節` : `Bars ${block.startBar}-${block.endBar}`}` : ""}</p><div className="mt-4 flex gap-2"><button className="grid h-8 w-8 place-items-center rounded border border-cyan-400/60 text-cyan-100" onClick={() => void previewTimeline(block.chords, block.bpm ?? idea.bpm)} aria-label={copy.common.preview} title={copy.common.preview}>▶</button><button className="grid h-8 w-8 place-items-center rounded border border-[var(--lv-border-strong)] text-[var(--lv-text-secondary)]" onClick={() => void stopPreviewTimeline()} aria-label={copy.common.stop} title={copy.common.stop}>■</button><button className="rounded border border-[var(--lv-border-strong)] px-3 py-1 text-xs" onClick={() => openDetail(idea.id)}>{language === "ja" ? "親Ideaを開く" : "Open parent Idea"}</button><button className="rounded border border-[var(--lv-border-strong)] px-3 py-1 text-xs" onClick={() => void copyProgression(block)}>{copy.capture.copyProgression}</button></div></article>)}</div> : <div className="py-14 text-center"><p className="text-[var(--lv-text-muted)]">{language === "ja" ? "保存済みの進行はまだありません。" : "No saved progressions yet."}</p><button className="mt-4 rounded bg-[var(--lv-accent)] px-4 py-2 text-sm font-semibold text-stone-950" onClick={openCapture}>{language === "ja" ? "コード採集を始める" : "Start capture"}</button></div>
-      ) : null}
+        <div className="mt-3 flex items-center gap-2"><button className={onlyPinned ? "bg-[var(--lv-surface-raised)] px-3 py-1 text-xs text-[var(--lv-warning)]" : "border border-[var(--lv-border)] px-3 py-1 text-xs text-[var(--lv-text-muted)]"} onClick={() => setOnlyPinned((value) => !value)}>★ {language === "ja" ? "のみ" : "only"}</button><span className="text-xs text-[var(--lv-text-muted)]">{visible.length} {language === "ja" ? "件" : "items"}</span></div>
+        {visible.length ? <div className="mt-4 overflow-hidden border border-[var(--lv-border)]">
+          {visible.map((entry, index) => <ProgressionRow key={entry.block.id} entry={entry} selected={index === selectedIndex} playing={entry.block.id === playingId} showDegrees={showRomanNumerals} copy={copy} onSelect={() => setSelectedIndex(index)} onPreview={() => void togglePlayback(entry)} onOpen={() => openDetail(entry.idea.id)} onPin={() => togglePin(entry)} onCopy={() => void copyProgression(entry.block)} />)}
+        </div> : <EmptyState language={language} openCreate={openCreate} />}
+      </> : <IdeaList ideas={ideas} openDetail={openDetail} language={language} />}
     </div>
   );
 }
+
+function ProgressionRow({ entry, selected, playing, showDegrees, copy, onSelect, onPreview, onOpen, onPin, onCopy }: { entry: ProgressionEntry; selected: boolean; playing: boolean; showDegrees: boolean; copy: AppCopy; onSelect: () => void; onPreview: () => void; onOpen: () => void; onPin: () => void; onCopy: () => void }) {
+  const degrees = degreeSequence(entry.block);
+  return <div className={`grid min-h-14 grid-cols-[32px_minmax(0,1fr)_70px_74px_minmax(50px,auto)_58px] items-center gap-2 border-b border-[var(--lv-border)] px-2 text-sm ${selected ? "bg-[var(--lv-surface-raised)]" : "hover:bg-[var(--lv-surface)]"} ${playing ? "border-l-2 border-l-[var(--lv-accent)]" : ""}`} onClick={onSelect}>
+    <button className="lv-button-ghost grid h-8 w-8 place-items-center" onClick={onPreview} aria-label={playing ? copy.common.stop : copy.common.preview}>{playing ? "■" : "▶"}</button>
+    <button className="min-w-0 text-left" onDoubleClick={onOpen}><p className="truncate font-mono">{entry.block.chords.map((item) => item.chord.label).join(" · ")}</p><p className="mt-1 truncate text-xs text-[var(--lv-text-muted)]">{showDegrees && degrees.length ? degrees.join(" · ") : entry.idea.title}{keyOf(entry) ? ` · ${keyOf(entry)}` : ""}</p></button>
+    <span className="text-xs text-[var(--lv-text-muted)]">{bpmOf(entry) || "-"} BPM</span><span className="text-xs text-[var(--lv-text-muted)]">{formatDate(entry.block.capturedAt)}</span>
+    <span className="truncate text-xs text-[var(--lv-text-muted)]">{entry.block.tags.join(" · ") || "-"}</span>
+    <div className="flex items-center gap-2"><button className={entry.block.pinned ? "text-[var(--lv-warning)]" : "text-[var(--lv-text-muted)]"} onClick={onPin} aria-label="Pin">★</button><button className="lv-button-ghost text-xs" onClick={onCopy} aria-label="Copy">C</button></div>
+  </div>;
+}
+
+function IdeaList({ ideas, openDetail, language }: { ideas: SongIdea[]; openDetail: (id: string) => void; language: AppLanguage }) {
+  return <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-4">{ideas.map((idea) => <button key={idea.id} className="min-h-24 border border-[var(--lv-border)] bg-[var(--lv-surface)] p-3 text-left hover:border-[var(--lv-accent)]" onClick={() => openDetail(idea.id)}><p className="truncate font-semibold">{idea.title}</p><p className="mt-2 text-xs text-[var(--lv-text-muted)]">{idea.bpm ?? "-"} BPM · {idea.key ?? "Key -"}</p><p className="mt-2 truncate text-xs text-[var(--lv-text-secondary)]">{idea.nextAction.text || (language === "ja" ? "次の一手なし" : "No next step")}</p></button>)}</div>;
+}
+
+function EmptyState({ language, openCreate }: { language: AppLanguage; openCreate: () => void }) { return <div className="py-16 text-center"><p className="text-[var(--lv-text-muted)]">{language === "ja" ? "条件に合う進行はありません。" : "No matching progressions."}</p><button className="lv-button-secondary mt-4 px-3 py-2 text-sm" onClick={openCreate}>{language === "ja" ? "新しいIdea" : "New idea"}</button></div>; }
+function keyOf(entry: ProgressionEntry): string { return entry.block.detectedKey ?? entry.idea.key ?? ""; }
+function bpmOf(entry: ProgressionEntry): number { return entry.block.bpm ?? entry.idea.bpm ?? 0; }
+function formatDate(value: string): string { return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value)); }
