@@ -261,8 +261,9 @@ Vite buildには約765KBのchunk size warningが残るが、ビルド失敗で�
 | [#101](https://github.com/Takuyakou/loop-vault/pull/101) | `fix/p3-6-5-16-real-midi-input-guard` | Real MIDI入力健全性guard |
 | [#102](https://github.com/Takuyakou/loop-vault/pull/102) | `test/p3-6-5-17-voice-aware-benchmark` | Voice-aware性能計測 |
 | [#103](https://github.com/Takuyakou/loop-vault/pull/103) | `data/p3-6-5-18-final-evaluation` | 最終評価artifact更新 |
+| [#104](https://github.com/Takuyakou/loop-vault/pull/104) | `docs/p3-6-5-19-final-report` | 最終QA作業報告書 |
 
-最終QAと本報告書は`docs/p3-6-5-19-final-report`から、#103をbaseにした最終PRとして追加する。
+最終QAと本報告書は`docs/p3-6-5-19-final-report`から、#103をbaseにしたPR #104として追加した。
 
 ## 7. 既知の課題と次の条件
 
