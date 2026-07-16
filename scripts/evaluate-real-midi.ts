@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import { parseChordLabel } from "../src/domain/chords";
 import { analyzeMidi } from "../src/domain/midi/analysis";
 import { deriveAcceptableAlternatives } from "../src/domain/midi/realEvaluation/acceptableAlternatives";
+import { goldGuardFailures } from "../src/domain/midi/realEvaluation/guards";
 import { evaluateBronzeCases, evaluateGoldCases, evaluateSilverCases, type AnalyzedRealMidiCase } from "../src/domain/midi/realEvaluation/realMetrics";
 import { midiDifferenceReviewSchema, realMidiEvaluationCaseSchema } from "../src/domain/midi/realEvaluation/schema";
 import type { LocalMidiSourceIndexEntry, MidiDifferenceReview, RealMidiEvaluationCase } from "../src/domain/midi/realEvaluation/types";
@@ -164,19 +165,6 @@ function mergeCases(values: readonly RealMidiEvaluationCase[]): RealMidiEvaluati
     if (!existing || strength[item.label.strength] >= strength[existing.label.strength]) byId.set(item.id, item);
   });
   return [...byId.values()].sort((left, right) => left.id.localeCompare(right.id));
-}
-
-function goldGuardFailures(legacy: ReturnType<typeof evaluateGoldCases>, reranker: ReturnType<typeof evaluateGoldCases>): string[] {
-  const failures: string[] = [];
-  if (reranker.rootAccuracy < legacy.rootAccuracy) failures.push("root-accuracy-regressed");
-  if (reranker.qualityAccuracy < legacy.qualityAccuracy) failures.push("quality-accuracy-regressed");
-  if (reranker.boundaryPrecision < legacy.boundaryPrecision) failures.push("boundary-precision-regressed");
-  if (reranker.boundaryRecall < legacy.boundaryRecall) failures.push("boundary-recall-regressed");
-  if (reranker.correctionCost > legacy.correctionCost) failures.push("correction-cost-increased");
-  if (reranker.operationCorrectionCost.mean > legacy.operationCorrectionCost.mean) {
-    failures.push("operation-correction-cost-increased");
-  }
-  return failures;
 }
 
 function jsonLines(values: readonly unknown[]): string {
