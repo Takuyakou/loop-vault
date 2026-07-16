@@ -73,6 +73,7 @@ describe("ProgressionCandidateCard", () => {
 
     expect(markup).toContain("候補 1");
     expect(markup).toContain("Cmaj7");
+    expect(markup.indexOf("Vaultに保存")).toBeLessThan(markup.indexOf("メイン"));
     expect(markup).not.toContain("低音の解釈に注意");
     expect(markup).toContain("編集");
     expect(markup).toContain("Vaultに保存");
