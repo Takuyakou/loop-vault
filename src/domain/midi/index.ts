@@ -16,6 +16,7 @@ export { buildSegmentLattice, generateBoundaries } from "./segmentation";
 export { buildCumulativePitchFeatures, buildWeightedPitchProfile, profileFromCumulative } from "./profiles";
 export { canonicalChord, chordTemplates, scoreChordCandidates, scoreSegments } from "./candidates";
 export { chordKeyCompatibility, estimateKeyCandidates } from "./keyPrior";
+export { decodeChordPath, decodeGreedy, decodeTwoPass, defaultDecoderWeights } from "./decoder";
 export type {
   AnalyzeMidiOptions,
   AnalyzeMidiResult,
@@ -35,3 +36,4 @@ export type { BoundaryCandidate, BoundaryReason, SegmentCandidate, SegmentationO
 export type { CumulativePitchFeatures, WeightedPitchProfile } from "./profiles";
 export type { ChordCandidateScore, ChordEvidence, ChordTemplate, ScoredSegment } from "./candidates";
 export type { KeyRegionCandidate } from "./keyPrior";
+export type { DecodedSegment, DecoderWeights } from "./decoder";
