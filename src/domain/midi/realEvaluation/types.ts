@@ -91,6 +91,33 @@ export interface MidiDifferenceReview {
   reviewedAt: string;
 }
 
+export type ReviewReason =
+  | "analyzer-disagreement"
+  | "low-confidence"
+  | "small-top1-top2-margin"
+  | "slash-chord"
+  | "tension-chord"
+  | "rootless-candidate"
+  | "frequent-correction-family"
+  | "unseen-chord-quality"
+  | "saved-label-mismatch"
+  | "boundary-mismatch";
+
+export interface ReviewPriority {
+  score: number;
+  reasons: ReviewReason[];
+}
+
+export interface MidiDifferenceReviewCase {
+  id: string;
+  sourceFingerprint: string;
+  range: { startBeat: number; endBeat: number };
+  saved: ChordLabelSnapshot;
+  legacy: ChordLabelSnapshot;
+  reranker: ChordLabelSnapshot;
+  priority: ReviewPriority;
+}
+
 export interface LocalMidiSourceIndexEntry {
   fingerprint: string;
   assetId?: string;

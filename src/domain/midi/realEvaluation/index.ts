@@ -1,4 +1,12 @@
-export { realMidiEvaluationCaseSchema } from "./schema";
+export { midiDifferenceReviewSchema, realMidiEvaluationCaseSchema } from "./schema";
+export {
+  buildDifferenceReviewCases,
+  chordLabelsEquivalent,
+  defaultReviewPriorityWeights,
+  normalizeChordLabel,
+  reviewPriority,
+} from "./differenceReview";
+export type { StoredProgressionMismatchRecord } from "./differenceReview";
 export {
   buildStoredProgressionCase,
   compareStoredProgression,
@@ -19,5 +27,8 @@ export type {
   LocalMidiSourceIndexEntry,
   MidiDifferenceJudgment,
   MidiDifferenceReview,
+  MidiDifferenceReviewCase,
   RealMidiEvaluationCase,
+  ReviewPriority,
+  ReviewReason,
 } from "./types";
