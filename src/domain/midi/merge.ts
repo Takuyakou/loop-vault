@@ -13,18 +13,10 @@ export interface MergedDecodedSegment {
 }
 
 export function mergeDecodedSegments(path: readonly DecodedSegment[]): MergedDecodedSegment[] {
+  const source = materializeDecodedSegments(path);
   const merged: MergedDecodedSegment[] = [];
-  path.forEach((decoded, index) => {
-    const confidence = confidenceForDecoded(path, index);
-    const current: MergedDecodedSegment = {
-      startBeat: decoded.scored.segment.startBeat,
-      endBeat: decoded.scored.segment.endBeat,
-      candidate: decoded.candidate,
-      alternatives: uniqueAlternatives(decoded.scored.candidates, decoded.candidate),
-      confidence: confidence.value,
-      confidenceLevel: confidence.level,
-      warnings: confidence.level === "review" ? ["review-recommended"] : [],
-    };
+  source.forEach((current, index) => {
+    const decoded = path[index];
     const previous = merged[merged.length - 1];
     if (previous && mergeable(previous, current, decoded.scored.segment.startBoundaryStrength)) {
       previous.endBeat = current.endBeat;
@@ -37,6 +29,21 @@ export function mergeDecodedSegments(path: readonly DecodedSegment[]): MergedDec
     }
   });
   return merged;
+}
+
+export function materializeDecodedSegments(path: readonly DecodedSegment[]): MergedDecodedSegment[] {
+  return path.map((decoded, index) => {
+    const confidence = confidenceForDecoded(path, index);
+    return {
+      startBeat: decoded.scored.segment.startBeat,
+      endBeat: decoded.scored.segment.endBeat,
+      candidate: decoded.candidate,
+      alternatives: uniqueAlternatives(decoded.scored.candidates, decoded.candidate),
+      confidence: confidence.value,
+      confidenceLevel: confidence.level,
+      warnings: confidence.level === "review" ? ["review-recommended"] : [],
+    };
+  });
 }
 
 function mergeable(left: MergedDecodedSegment, right: MergedDecodedSegment, boundaryStrength: number): boolean {

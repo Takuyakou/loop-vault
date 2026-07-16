@@ -57,6 +57,15 @@ export interface NoteSegmentOverlap {
 
 export type MidiAnalyzerMode = "legacy" | "hybrid-v1";
 
+export interface HybridFeatureFlags {
+  trackRoleEstimation: boolean;
+  ornamentSuppression: boolean;
+  adaptiveSegmentation: boolean;
+  keyPrior: boolean;
+  twoPassDecoding: boolean;
+  adjacentMerge: boolean;
+}
+
 export interface AnalyzeMidiOptions {
   sourceAssetId?: string;
   fileName?: string;
@@ -64,6 +73,7 @@ export interface AnalyzeMidiOptions {
   mode?: MidiAnalyzerMode;
   weights?: Partial<AnalyzerWeights>;
   debug?: boolean;
+  features?: Partial<HybridFeatureFlags>;
 }
 
 export type AnalyzeMidiResult = MidiProgressionAnalysis;
