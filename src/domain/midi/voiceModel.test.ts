@@ -122,6 +122,39 @@ describe("raw SMF Voice model", () => {
     expect(voice).toMatchObject({ dominantProgram: 5, dominantProgramExplicit: true });
   });
 
+  it("applies channel Program Change chronology across Type 1 tracks", () => {
+    const bytes = smf(1, [
+      [programChange(0, 32), endOfTrack(960)],
+      [noteOn(0, 36, 480), noteOff(0, 36, 480), endOfTrack()],
+    ]);
+
+    const song = parseMidi(bytes);
+
+    expect(song.notes).toEqual([
+      expect.objectContaining({
+        trackIndex: 1,
+        channel: 0,
+        startTick: 480,
+        program: 32,
+        programExplicit: true,
+      }),
+    ]);
+  });
+
+  it("orders simultaneous cross-track Program Changes deterministically", () => {
+    const bytes = smf(1, [
+      [programChange(0, 32), endOfTrack(480)],
+      [programChange(0, 40), endOfTrack(480)],
+      [noteOn(0, 60), noteOff(0, 60, 480), endOfTrack()],
+    ]);
+
+    expect(parseMidi(bytes).notes[0]).toMatchObject({
+      trackIndex: 2,
+      program: 40,
+      programExplicit: true,
+    });
+  });
+
   it("does not project a later explicit Program onto earlier implicit notes", () => {
     const bytes = smf(0, [[
       noteOn(0, 60),
