@@ -169,6 +169,9 @@ export const appCopy = {
       startCapture: "コード採集を始める",
       newIdea: "新しいIdea",
       openVault: "Vaultを開く",
+      overviewLabel: "進捗概要",
+      overviewSummary: (done: number, goal: number, needsNextAction: number, stale: number) =>
+        `今月 ${done}/${goal} · 次の一手なし ${needsNextAction}件 · 停滞 ${stale}件`,
       monthlySummary: (done: number, goal: number, remaining: string) => `完成 ${done}件 · 月間ゴール ${goal}件 · ${remaining}`,
       addNextAction: "次の一手を追加できます",
       staleDescription: "7日以上動きがないIdea",
@@ -547,7 +550,7 @@ export const appCopy = {
       headline: "Choose the loop to play next.",
       monthlyFinish: "Monthly finish",
       daysLeft: (days: number) => `${days} days left`,
-      today: "Today",
+      today: "Today's Loop",
       noFocus: "No idea has a next step yet. Add one or capture a new progression.",
       nextAction: "Next Action",
       complete: "Complete",
@@ -563,6 +566,9 @@ export const appCopy = {
       startCapture: "Start capture",
       newIdea: "New Idea",
       openVault: "Open Vault",
+      overviewLabel: "Progress overview",
+      overviewSummary: (done: number, goal: number, needsNextAction: number, stale: number) =>
+        `This month ${done}/${goal} · No next step ${needsNextAction} · Stale ${stale}`,
       monthlySummary: (done: number, goal: number, remaining: string) => `${done} completed · Goal ${goal} · ${remaining}`,
       addNextAction: "Add the next step",
       staleDescription: "No activity for 7+ days",

@@ -10,7 +10,7 @@ import type { SongIdea, Status } from "../domain/types";
 import type { AppCopy, AppLanguage } from "../i18n";
 
 const pipeline: Status[] = ["idea", "loop", "arrange", "mix", "done"];
-function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <section className={"border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4 " + className}>{children}</section>; }
+function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <section className={"border border-[var(--lv-border)] bg-[var(--lv-surface)] " + className}>{children}</section>; }
 function StatusBadge({ status, language }: { status: Status; language: AppLanguage }) { return <span className="shrink-0 rounded bg-[var(--lv-surface-raised)] px-2 py-1 text-xs font-semibold uppercase text-teal-200">{statusLabel(status, language)}</span>; }
 function labelStatus(status: Status, language: AppLanguage): string { return statusLabel(status, language); }
 
@@ -67,13 +67,8 @@ export function HomeView({
 
   return (
     <div className="space-y-5 py-5">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--lv-accent)]">{copy.home.eyebrow}</p>
-        <h2 className="mt-2 text-2xl font-semibold sm:text-3xl">{copy.home.headline}</h2>
-      </div>
-
-      <Panel className="border-teal-400/30 bg-[linear-gradient(135deg,rgba(20,23,21,0.96),rgba(8,10,9,0.96))] p-5 sm:p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--lv-accent)]">{copy.home.today}</p>
+      <Panel className="border-teal-400/40 bg-[var(--lv-surface)] p-5 sm:p-6">
+        <h2 className="text-xl font-semibold text-[var(--lv-accent)] sm:text-2xl">{copy.home.today}</h2>
         {focus.focus ? (
           <div className="mt-3">
             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -118,28 +113,28 @@ export function HomeView({
         )}
       </Panel>
 
-      <div className="grid gap-3 md:grid-cols-3">
-        <Panel>
-          <p className="text-[13px] text-[var(--lv-text-muted)]">{copy.home.monthlyFinish}</p>
-          <p className="mt-2 text-2xl font-semibold">{stats.doneCount} <span className="text-base text-[var(--lv-text-muted)]">/ {stats.goal}</span></p>
-          <div className="mt-4 h-2 overflow-hidden rounded bg-[var(--lv-surface-raised)]"><div className="h-full bg-[var(--lv-accent)]" style={{ width: `${progress}%` }} /></div>
-          <p className="mt-3 text-xs text-[var(--lv-text-muted)]">{copy.home.monthlySummary(stats.doneCount, stats.goal, copy.home.daysLeft(stats.remainingDays))}</p>
-        </Panel>
-        <Panel>
-          <p className="text-[13px] text-[var(--lv-text-muted)]">{copy.home.needsNextAction}</p>
-          <p className="mt-2 text-2xl font-semibold">{copy.common.itemCount(focus.needsNextAction.length)}</p>
-          <p className="mt-3 text-xs text-[var(--lv-text-muted)]">{focus.needsNextAction.length ? copy.home.addNextAction : copy.home.allHaveNextAction}</p>
-        </Panel>
-        <Panel>
-          <p className="text-[13px] text-[var(--lv-text-muted)]">{copy.home.stale}</p>
-          <p className="mt-2 text-2xl font-semibold">{copy.common.itemCount(focus.stale.length)}</p>
-          <p className="mt-3 text-xs text-[var(--lv-text-muted)]">{focus.stale.length ? copy.home.staleDescription : copy.home.noStale}</p>
-        </Panel>
-      </div>
+      <section aria-label={copy.home.overviewLabel} className="border-y border-[var(--lv-border)] py-3">
+        <p data-testid="home-overview-summary" className="text-sm font-medium text-[var(--lv-text-secondary)]">
+          {copy.home.overviewSummary(stats.doneCount, stats.goal, focus.needsNextAction.length, focus.stale.length)}
+        </p>
+        <div className="mt-2 flex items-center gap-3">
+          <div
+            aria-label={copy.home.monthlyFinish}
+            aria-valuemax={stats.goal}
+            aria-valuemin={0}
+            aria-valuenow={stats.doneCount}
+            className="h-1.5 min-w-0 flex-1 overflow-hidden rounded bg-[var(--lv-surface-raised)]"
+            role="progressbar"
+          >
+            <div className="h-full bg-[var(--lv-accent)]" style={{ width: `${progress}%` }} />
+          </div>
+          <span className="shrink-0 text-xs text-[var(--lv-text-muted)]">{copy.home.daysLeft(stats.remainingDays)}</span>
+        </div>
+      </section>
 
       <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
         <section>
-          <h3 className="text-lg font-semibold">{copy.home.recentProgressions}</h3>
+          <h3 className="text-base font-semibold">{copy.home.recentProgressions}</h3>
           {recentProgressions.length ? (
             <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {recentProgressions.map(({ idea, block }) => (
@@ -164,14 +159,14 @@ export function HomeView({
             </div>
           ) : <p className="mt-3 text-sm text-[var(--lv-text-muted)]">{copy.home.noSavedProgressions}</p>}
         </section>
-        <aside className="space-y-4">
-          <Panel>
-            <h3 className="font-semibold">{copy.home.pipeline}</h3>
-            <div className="mt-4 space-y-3">
-              {pipeline.map((status) => <div key={status}><div className="flex justify-between text-sm"><span>{labelStatus(status, language)}</span><span className="text-[var(--lv-text-muted)]">{stats.pipelineCounts[status]}</span></div><div className="mt-1 h-1.5 rounded bg-[var(--lv-surface-raised)]"><div className="h-full rounded bg-cyan-400" style={{ width: `${Math.min(100, stats.pipelineCounts[status] * 18)}%` }} /></div></div>)}
+        <aside className="space-y-3 text-sm">
+          <Panel className="p-3">
+            <h3 className="text-sm font-medium text-[var(--lv-text-secondary)]">{copy.home.pipeline}</h3>
+            <div className="mt-3 space-y-2.5">
+              {pipeline.map((status) => <div key={status}><div className="flex justify-between text-xs"><span>{labelStatus(status, language)}</span><span className="text-[var(--lv-text-muted)]">{stats.pipelineCounts[status]}</span></div><div className="mt-1 h-1 rounded bg-[var(--lv-surface-raised)]"><div className="h-full rounded bg-cyan-400" style={{ width: `${Math.min(100, stats.pipelineCounts[status] * 18)}%` }} /></div></div>)}
             </div>
           </Panel>
-          {focus.stale.length ? <Panel><h3 className="font-semibold">{copy.home.stale}</h3><div className="mt-3 space-y-2">{focus.stale.map((entry) => <div key={entry.idea.id} className="flex items-center justify-between gap-3 border-t border-[var(--lv-border)] pt-2"><button className="text-left text-sm font-medium" onClick={() => openDetail(entry.idea.id)}>{entry.idea.title}</button>{entry.suggestHold ? <button className="rounded border border-[var(--lv-border-strong)] px-2 py-1 text-xs" onClick={() => { const result = transitionIdea(entry.idea.id, "hold", new Date()); if (!result.ok) setToast(result.error.message); }}>{copy.home.suggestHold}</button> : null}</div>)}</div></Panel> : null}
+          {focus.stale.length ? <Panel className="p-3"><h3 className="text-sm font-medium text-[var(--lv-text-secondary)]">{copy.home.stale}</h3><div className="mt-2 space-y-2">{focus.stale.map((entry) => <div key={entry.idea.id} className="flex items-center justify-between gap-3 border-t border-[var(--lv-border)] pt-2"><button className="text-left text-xs font-medium" onClick={() => openDetail(entry.idea.id)}>{entry.idea.title}</button>{entry.suggestHold ? <button className="rounded border border-[var(--lv-border-strong)] px-2 py-1 text-xs" onClick={() => { const result = transitionIdea(entry.idea.id, "hold", new Date()); if (!result.ok) setToast(result.error.message); }}>{copy.home.suggestHold}</button> : null}</div>)}</div></Panel> : null}
         </aside>
       </div>
     </div>
