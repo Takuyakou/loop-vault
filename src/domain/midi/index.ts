@@ -44,6 +44,21 @@ export { canonicalChord, chordTemplates, scoreChordCandidates, scoreSegments, sc
 export { chordPitchSet, selectDiverseAlternatives } from "./candidateDiversity";
 export type { CandidateDiversityOptions } from "./candidateDiversity";
 export {
+  operationCorrectionCost,
+  operationCorrectionCostFromEditMethod,
+  operationCorrectionCostResult,
+  structureEditorCanReach,
+  summarizeOperationCorrectionCosts,
+} from "./correctionCost";
+export type {
+  CorrectionFeedbackEditMethod,
+  DetectedChordCandidates,
+  OperationCorrectionCategory,
+  OperationCorrectionCost,
+  OperationCorrectionCostResult,
+  OperationCorrectionCostSummary,
+} from "./correctionCost";
+export {
   analyzeMidiLegacyBoundaryRerank,
   chooseLegacyBoundaryCandidate,
   defaultLegacyBoundaryRerankerThresholds,

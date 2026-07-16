@@ -31,6 +31,8 @@
     "eval:midi:voice-aware": "vite-node scripts/evaluate-voice-aware-reranker.ts --run-cli",
     "eval:midi:diversity": "vite-node scripts/evaluate-voice-aware-reranker.ts --run-cli --report artifacts/phase3.6.5-candidate-diversity",
     "eval:midi:diversity:report": "vite-node scripts/evaluate-voice-aware-reranker.ts --run-cli --report artifacts/phase3.6.5-candidate-diversity --report-only",
+    "eval:midi:correction-cost": "vite-node scripts/evaluate-voice-aware-reranker.ts --run-cli --report artifacts/phase3.6.5-correction-cost",
+    "eval:midi:correction-cost:report": "vite-node scripts/evaluate-voice-aware-reranker.ts --run-cli --report artifacts/phase3.6.5-correction-cost --report-only",
     "tauri": "tauri"
   },
   "dependencies": {

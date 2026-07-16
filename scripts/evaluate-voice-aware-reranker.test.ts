@@ -20,16 +20,17 @@ const baseline = {
   exactAt3: 0.3,
   correctionProxyPerCase: 4,
   correctionProxyTotal: 40,
+  operationCorrectionCostMean: 2,
   boundaryPrecision: 1,
   boundaryRecall: 1,
 };
 
 describe("voice-aware evaluation guard", () => {
-  it("passes only when clean top-1, boundaries, and correction proxy do not regress", () => {
+  it("passes only when clean top-1, boundaries, and both correction metrics do not regress", () => {
     expect(cleanRegressionGuard(baseline, baseline, true)).toEqual({ passed: true, failures: [] });
     expect(cleanRegressionGuard(
       baseline,
-      { ...baseline, rootAt1: 0.49, correctionProxyPerCase: 4.1 },
+      { ...baseline, rootAt1: 0.49, correctionProxyPerCase: 4.1, operationCorrectionCostMean: 2.1 },
       false,
     )).toEqual({
       passed: false,
@@ -37,6 +38,7 @@ describe("voice-aware evaluation guard", () => {
         "clean Root@1 regressed",
         "clean boundaries differ from legacy",
         "clean correction proxy/case regressed",
+        "clean operation correction cost regressed",
       ],
     });
   });
@@ -46,6 +48,8 @@ describe("voice-aware evaluation guard", () => {
     expect(dirtyImprovementStatus(baseline, baseline)).toBe("unchanged");
     expect(dirtyImprovementStatus(baseline, { ...baseline, qualityAt1: 0.59 })).toBe("regressed");
     expect(dirtyImprovementStatus(baseline, { ...baseline, rootAt3: 0.69 })).toBe("regressed");
+    expect(dirtyImprovementStatus(baseline, { ...baseline, operationCorrectionCostMean: 1.9 })).toBe("improved");
+    expect(dirtyImprovementStatus(baseline, { ...baseline, operationCorrectionCostMean: 2.1 })).toBe("regressed");
     expect(dirtyImprovementStatus(
       baseline,
       { ...baseline, rootAt1: 0.51, qualityAt1: 0.59 },
@@ -72,6 +76,16 @@ describe("voice-aware evaluation guard", () => {
     expect(shouldFailStrictExit(result, true)).toBe(false);
     expect(evaluationExitCode(result, false)).toBe(1);
     expect(evaluationExitCode(result, true)).toBe(0);
+  });
+
+  it("returns a failing exit code by default and suppresses it only for report generation", () => {
+    const failed = {
+      status: "failed" as const,
+      passed: false,
+      failures: ["operation correction cost regressed"],
+    };
+    expect(evaluationExitCode(failed, false)).toBe(1);
+    expect(evaluationExitCode(failed, true)).toBe(0);
   });
 
   it("fails when dirty evaluation has no improved category", () => {
