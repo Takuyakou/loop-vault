@@ -7,6 +7,10 @@ import type {
   ProgressionBlockCandidate,
 } from "../types";
 import { parseMidi } from "./parser";
+import {
+  selectProgressionCandidates,
+  type CandidateSelectionEntry,
+} from "./candidateSelection";
 import { beatsPerBar } from "./timing";
 import type { AnalyzeMidiOptions, MidiSongData, TimedNote, TrackRole } from "./types";
 import { selectChordEvidenceNotes } from "./voices";
@@ -270,7 +274,7 @@ export function extractBlockCandidates(
   totalBars: number,
 ): ProgressionBlockCandidate[] {
   const byBar = chordLabelsByBar(timeline, totalBars);
-  const raw: ProgressionBlockCandidate[] = [];
+  const raw: CandidateSelectionEntry[] = [];
 
   for (const lengthBars of [4, 8, 16] as const) {
     if (totalBars < lengthBars) {
@@ -290,31 +294,25 @@ export function extractBlockCandidates(
         confidence + Math.min(0.25, repeatCount * 0.08) + Math.min(0.15, uniqueCount * 0.03);
 
       raw.push({
-        id: `bars-${start}-${start + lengthBars - 1}`,
-        startBar: start,
-        endBar: start + lengthBars - 1,
-        lengthBars,
-        chords,
-        summaryText,
-        confidence: clamp(score),
-        ...(repeatCount > 1 ? { repeatCount } : {}),
-        labels: blockLabels(start, lengthBars, repeatCount, score),
-        warnings: [...new Set(chords.flatMap((item) => item.warnings))],
+        dedupeKey: summaryText,
+        selectionScore: score,
+        candidate: {
+          id: `bars-${start}-${start + lengthBars - 1}`,
+          startBar: start,
+          endBar: start + lengthBars - 1,
+          lengthBars,
+          chords,
+          summaryText,
+          confidence: clamp(score),
+          ...(repeatCount > 1 ? { repeatCount } : {}),
+          labels: blockLabels(start, lengthBars, repeatCount, score),
+          warnings: [...new Set(chords.flatMap((item) => item.warnings))],
+        },
       });
     }
   }
 
-  const seen = new Set<string>();
-  return raw
-    .sort((a, b) => b.confidence - a.confidence || a.startBar - b.startBar)
-    .filter((candidate) => {
-      if (seen.has(candidate.summaryText)) {
-        return false;
-      }
-      seen.add(candidate.summaryText);
-      return true;
-    })
-    .slice(0, 6);
+  return selectProgressionCandidates(raw, totalBars);
 }
 
 function scoreTemplates(histogram: number[], bassPc: number, previous?: ChordSymbol) {

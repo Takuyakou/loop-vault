@@ -1,11 +1,15 @@
 import type { ChordTimelineItem, ProgressionBlockCandidate } from "../types";
+import {
+  selectProgressionCandidates,
+  type CandidateSelectionEntry,
+} from "./candidateSelection";
 
 export function extractHybridBlocks(
   timeline: readonly ChordTimelineItem[],
   totalBars: number,
   beatsPerBar = 4,
 ): ProgressionBlockCandidate[] {
-  const raw: ProgressionBlockCandidate[] = [];
+  const raw: CandidateSelectionEntry[] = [];
   for (const lengthBars of [4, 8, 16] as const) {
     for (let startBar = 1; startBar + lengthBars - 1 <= totalBars; startBar += 1) {
       const endBar = startBar + lengthBars - 1;
@@ -14,29 +18,33 @@ export function extractHybridBlocks(
       const signature = beatGridSignature(chords, startBar, lengthBars, beatsPerBar);
       const repeatCount = countSimilarRepeats(timeline, totalBars, signature, lengthBars, beatsPerBar);
       const confidence = average(chords.map((item) => item.confidence));
-      raw.push({ id: `hybrid-bars-${startBar}-${endBar}`, startBar, endBar, lengthBars, chords: [...chords],
-        summaryText: `| ${Array.from(
+      const summaryText = `| ${Array.from(
           { length: lengthBars },
           (_, index) => signature[Math.round(index * beatsPerBar)] ?? "N.C.",
-        ).join(" | ")} |`,
-        confidence: clamp(confidence + Math.min(0.16, Math.max(0, repeatCount - 1) * 0.05)),
-        ...(repeatCount > 1 ? { repeatCount } : {}),
-        labels: repeatCount > 1 ? ["main", ...(lengthBars === 4 ? ["turnaround"] : [])] : [lengthBars === 4 ? "turnaround" : "variation"],
-        warnings: [...new Set(chords.flatMap((item) => item.warnings))] });
+        ).join(" | ")} |`;
+      const selectionScore = confidence
+        + Math.min(0.16, Math.max(0, repeatCount - 1) * 0.05);
+      raw.push({
+        dedupeKey: signature.join("|"),
+        selectionScore,
+        candidate: {
+          id: `hybrid-bars-${startBar}-${endBar}`,
+          startBar,
+          endBar,
+          lengthBars,
+          chords: [...chords],
+          summaryText,
+          confidence: clamp(selectionScore),
+          ...(repeatCount > 1 ? { repeatCount } : {}),
+          labels: repeatCount > 1
+            ? ["main", ...(lengthBars === 4 ? ["turnaround"] : [])]
+            : [lengthBars === 4 ? "turnaround" : "variation"],
+          warnings: [...new Set(chords.flatMap((item) => item.warnings))],
+        },
+      });
     }
   }
-  const seen = new Set<string>();
-  return raw.sort((a, b) => b.confidence - a.confidence || a.startBar - b.startBar).filter((candidate) => {
-    const key = beatGridSignature(
-      candidate.chords,
-      candidate.startBar,
-      candidate.lengthBars,
-      beatsPerBar,
-    ).join("|");
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  }).slice(0, 6);
+  return selectProgressionCandidates(raw, totalBars);
 }
 
 export function beatGridSignature(
