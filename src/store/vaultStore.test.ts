@@ -150,6 +150,21 @@ describe("vault store", () => {
     expect(store.getState().unsaved).toBe(false);
   });
 
+  it("does not report a successful creation before the Vault is writable", () => {
+    const repository = new FakeRepository();
+    const store = createVaultStore({
+      repository,
+      idFactory: () => generatedId,
+      now: () => now,
+    });
+
+    const createdId = store.getState().createIdea("Too early");
+
+    expect(createdId).toBeUndefined();
+    expect(store.getState().ideas).toHaveLength(0);
+    expect(store.getState().unsaved).toBe(false);
+  });
+
   it("flushes pending changes immediately", async () => {
     const repository = new FakeRepository();
     const store = createVaultStore({

@@ -158,7 +158,7 @@ export function createVaultStore(
     function applyVaultChange(mutator: (vault: VaultFile) => VaultFile) {
       const state = get();
       if (state.loadStatus !== "ready") {
-        return;
+        return false;
       }
 
       const vault = mutator(currentVault(state));
@@ -169,6 +169,7 @@ export function createVaultStore(
         error: undefined,
       });
       scheduleSave();
+      return true;
     }
 
     return {
@@ -280,8 +281,11 @@ export function createVaultStore(
           updatedAt: createdAt,
         };
 
-        applyVaultChange((vault) => ({ ...vault, ideas: [...vault.ideas, idea] }));
-        return id;
+        const applied = applyVaultChange((vault) => ({
+          ...vault,
+          ideas: [...vault.ideas, idea],
+        }));
+        return applied ? id : undefined;
       },
 
       updateIdea(id, changes) {
