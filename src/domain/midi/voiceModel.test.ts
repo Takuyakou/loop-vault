@@ -155,6 +155,22 @@ describe("raw SMF Voice model", () => {
     });
   });
 
+  it("pairs overlapping same-channel notes within their source tracks", () => {
+    const bytes = smf(1, [
+      [noteOn(0, 60), noteOff(0, 60, 960), endOfTrack()],
+      [noteOn(0, 60, 480), noteOff(0, 60, 240), endOfTrack()],
+    ]);
+
+    expect(parseMidi(bytes).notes.map((note) => ({
+      trackIndex: note.trackIndex,
+      startTick: note.startTick,
+      durationTick: note.durationTick,
+    }))).toEqual([
+      { trackIndex: 0, startTick: 0, durationTick: 960 },
+      { trackIndex: 1, startTick: 480, durationTick: 240 },
+    ]);
+  });
+
   it("does not project a later explicit Program onto earlier implicit notes", () => {
     const bytes = smf(0, [[
       noteOn(0, 60),
