@@ -32,6 +32,7 @@ describe("voice-aware legacy-boundary reranker", () => {
         item.chord.label === legacyLabel
           || item.alternatives.some((alternative) => alternative.chord.label === legacyLabel),
       ).toBe(true);
+      expect(item.alternatives.length).toBeLessThanOrEqual(4);
     });
   });
 

@@ -5,6 +5,7 @@ import {
   scoreStructuredChordCandidate,
   type ChordCandidateScore,
 } from "./candidates";
+import { selectDiverseAlternatives } from "./candidateDiversity";
 import { estimateKeyCandidates } from "./keyPrior";
 import { analyzeMidi as analyzeMidiLegacy } from "./legacy";
 import { normalizeNotes } from "./normalize";
@@ -42,16 +43,18 @@ export interface RerankDecision {
   replacedLegacy: boolean;
   scoreLead: number;
   reasons: string[];
+  bassPitchClass?: number;
 }
 
 export function chooseLegacyBoundaryCandidate(
   legacy: ChordCandidateScore,
   candidates: readonly ChordCandidateScore[],
   thresholds: LegacyBoundaryRerankerThresholds = defaultLegacyBoundaryRerankerThresholds,
+  bassPitchClass?: number,
 ): RerankDecision {
   const candidateSet = distinctCandidates([legacy, ...candidates]);
   const bestHybrid = candidates.find((candidate) => candidate.chord.label !== legacy.chord.label);
-  if (!bestHybrid) return { selected: legacy, legacy, candidates: candidateSet, replacedLegacy: false, scoreLead: 0, reasons: ["no-hybrid-alternative"] };
+  if (!bestHybrid) return { selected: legacy, legacy, candidates: candidateSet, replacedLegacy: false, scoreLead: 0, reasons: ["no-hybrid-alternative"], ...(bassPitchClass !== undefined ? { bassPitchClass } : {}) };
   const scoreLead = bestHybrid.totalScore - legacy.totalScore;
   const rootEvidence = bestHybrid.evidence.find((entry) => entry.kind === "root-evidence")?.value ?? 0;
   const checks = [
@@ -70,6 +73,7 @@ export function chooseLegacyBoundaryCandidate(
     replacedLegacy,
     scoreLead,
     reasons: replacedLegacy ? ["hybrid-clear-advantage"] : failed,
+    ...(bassPitchClass !== undefined ? { bassPitchClass } : {}),
   };
 }
 
@@ -99,7 +103,7 @@ export function analyzeMidiLegacyBoundaryRerank(
     const legacyCandidate = scoreStructuredChordCandidate(profile, item.chord, undefined);
     return materializeRerankedTimelineItem(
       item,
-      chooseLegacyBoundaryCandidate(legacyCandidate, hybridCandidates, thresholds),
+      chooseLegacyBoundaryCandidate(legacyCandidate, hybridCandidates, thresholds, dominantPitchClass(profile.bassPcs)),
     );
   });
   return {
@@ -141,19 +145,19 @@ export function materializeRerankedTimelineItem(
     retained: "legacy-boundary-retained",
   },
 ): ChordTimelineItem {
-  const alternatives = decision.candidates
-    .filter((candidate) => candidate.chord.label !== decision.selected.chord.label)
-    .sort((left, right) => {
-      if (left.chord.label === legacy.chord.label) return -1;
-      if (right.chord.label === legacy.chord.label) return 1;
-      return right.totalScore - left.totalScore || left.chord.label.localeCompare(right.chord.label);
-    })
-    .slice(0, 2);
+  const alternatives = selectDiverseAlternatives(decision.candidates, {
+    primary: decision.selected,
+    limit: 4,
+    ...(decision.bassPitchClass !== undefined ? { bassPitchClass: decision.bassPitchClass } : {}),
+  });
   return {
     ...legacy,
     chord: decision.selected.chord,
     confidence: decision.replacedLegacy ? Math.min(0.89, 0.68 + decision.scoreLead * 0.3) : legacy.confidence,
-    alternatives: alternatives.map((candidate, index) => ({ chord: candidate.chord, confidence: index === 0 ? 0.6 : 0.48 })),
+    alternatives: alternatives.map((candidate, index) => ({
+      chord: candidate.chord,
+      confidence: Math.max(0.36, 0.6 - index * 0.08),
+    })),
     warnings: [...new Set([
       ...legacy.warnings,
       decision.replacedLegacy ? warningLabels.replaced : warningLabels.retained,
@@ -164,10 +168,22 @@ export function materializeRerankedTimelineItem(
 function distinctCandidates(candidates: readonly ChordCandidateScore[]): ChordCandidateScore[] {
   const seen = new Set<string>();
   return candidates.filter((candidate) => {
-    if (seen.has(candidate.chord.label)) return false;
-    seen.add(candidate.chord.label);
+    const key = canonicalKey(candidate);
+    if (seen.has(key)) return false;
+    seen.add(key);
     return true;
   });
+}
+
+function canonicalKey(candidate: ChordCandidateScore): string {
+  const { chord } = candidate;
+  return `${chord.root}:${chord.quality}:${chord.tensions.join(",")}:${chord.bass ?? ""}`;
+}
+
+function dominantPitchClass(values: readonly number[]): number | undefined {
+  const total = values.reduce((sum, value) => sum + value, 0);
+  if (total <= 0) return undefined;
+  return values.reduce((best, value, index) => value > values[best] ? index : best, 0);
 }
 
 function pitchName(pitchClass: number): string {

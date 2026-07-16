@@ -1,0 +1,22 @@
+import { describe, expect, it, vi } from "vitest";
+import { renderToStaticMarkup } from "react-dom/server";
+import { makeChordSymbol } from "../../domain/chords";
+import { ChordAlternativeList } from "./ChordAlternativeList";
+
+describe("ChordAlternativeList", () => {
+  it("wraps and renders at most four alternatives", () => {
+    const markup = renderToStaticMarkup(<ChordAlternativeList
+      alternatives={[0, 2, 4, 5, 7].map((root, index) => ({
+        chord: makeChordSymbol(root, "maj"),
+        confidence: 0.8 - index * 0.1,
+      }))}
+      onSelect={vi.fn()}
+      language="en"
+    />);
+
+    expect(markup).toContain("flex-wrap");
+    expect(markup).toContain('data-alternative-count="4"');
+    expect((markup.match(/<button/g) ?? [])).toHaveLength(4);
+    expect(markup).not.toContain(">G<");
+  });
+});

@@ -16,6 +16,7 @@ import type {
   EvaluationCaseInput,
   EvaluationMetrics,
 } from "../src/domain/midi/evaluation/types";
+import type { MidiProgressionAnalysis } from "../src/domain/types";
 
 const DEFAULT_CLEAN = "docs/loop-vault-evaluation-corpus/manifest.json";
 const DEFAULT_DIRTY = ".local-evaluation/phase3.6.5-dirty/manifest.json";
@@ -67,6 +68,15 @@ interface EvaluationResult {
   boundaryMatchesLegacy: boolean;
   primaryChangesFromLegacy: number;
   deltaFromLegacy: Omit<MetricsSnapshot, "correctionProxyTotal">;
+  candidateDiversity: CandidateDiversitySnapshot;
+}
+
+export interface CandidateDiversitySnapshot {
+  candidateCoverage: number;
+  duplicateRootRatio: number;
+  manualInputProxyPerCase: number;
+  averageDisplayedCandidateCount: number;
+  exactTop3MinusTop1Gap: number;
 }
 
 interface GuardResult {
@@ -147,6 +157,13 @@ export function shouldFailStrictExit(
   return !overallGuard.passed && !reportOnly;
 }
 
+export function evaluationExitCode(
+  overallGuard: OverallGuardResult,
+  reportOnly: boolean,
+): 0 | 1 {
+  return shouldFailStrictExit(overallGuard, reportOnly) ? 1 : 0;
+}
+
 async function main(): Promise<void> {
   const options = parseCliOptions(process.argv.slice(2));
   const started = performance.now();
@@ -207,6 +224,7 @@ async function main(): Promise<void> {
         boundaryMatchesLegacy,
         primaryChangesFromLegacy,
         deltaFromLegacy: subtract(metrics, legacyResult?.metrics ?? metrics),
+        candidateDiversity: candidateDiversitySnapshot(cases, analyses, metrics),
       });
       process.stdout.write(`Evaluated ${analyzer.mode}/${category}: ${cases.length} cases.\n`);
     }
@@ -236,7 +254,9 @@ async function main(): Promise<void> {
   const realGoldCaseCount = await readRealGoldCaseCount();
   const artifact = {
     schemaVersion: 1,
-    phase: "3.6.5-stage-a4",
+    phase: options.reportDirectory.includes("candidate-diversity")
+      ? "3.6.5-stage-b1"
+      : "3.6.5-stage-a4",
     status: overallGuard.passed ? "passed" : "failed-strict-guard",
     overallGuard,
     strictExitEnforced: !options.reportOnly,
@@ -259,7 +279,7 @@ async function main(): Promise<void> {
   await writeFile(resolve(options.reportDirectory, "report.json"), stableJson(artifact), "utf8");
   await writeFile(resolve(options.reportDirectory, "report.md"), markdown(artifact), "utf8");
   process.stdout.write(`Report: ${resolve(options.reportDirectory)}\nStatus: ${artifact.status}\n`);
-  if (shouldFailStrictExit(overallGuard, options.reportOnly)) process.exitCode = 1;
+  process.exitCode = evaluationExitCode(overallGuard, options.reportOnly);
 }
 
 async function loadManifestCases(path: string): Promise<{
@@ -311,6 +331,57 @@ function snapshot(metrics: EvaluationMetrics): MetricsSnapshot {
     correctionProxyTotal: metrics.correctionCost,
     boundaryPrecision: metrics.boundaryPrecision,
     boundaryRecall: metrics.boundaryRecall,
+  };
+}
+
+export function candidateDiversitySnapshot(
+  cases: readonly EvaluationCaseInput[],
+  analyses: ReadonlyMap<Uint8Array, MidiProgressionAnalysis>,
+  metrics: MetricsSnapshot,
+): CandidateDiversitySnapshot {
+  let expectedDuration = 0;
+  let coveredDuration = 0;
+  let manualInputs = 0;
+  let displayedCandidates = 0;
+  let timelineItems = 0;
+  let duplicateRoots = 0;
+  let alternativeCount = 0;
+
+  for (const input of cases) {
+    const analysis = requiredAnalysis(analyses, input.bytes);
+    for (const item of analysis.fullTimeline) {
+      const candidates = [item.chord, ...item.alternatives.map((alternative) => alternative.chord)].slice(0, 5);
+      displayedCandidates += candidates.length;
+      timelineItems += 1;
+      const roots = new Set<number>();
+      candidates.forEach((candidate, index) => {
+        if (index > 0) {
+          alternativeCount += 1;
+          if (roots.has(candidate.root)) duplicateRoots += 1;
+        }
+        roots.add(candidate.root);
+      });
+    }
+    for (const expected of input.definition.expected.chordTimeline) {
+      const duration = expected.endBeat - expected.startBeat;
+      const prediction = bestTimelineOverlap(expected.startBeat, expected.endBeat, analysis);
+      const labels = prediction
+        ? [prediction.chord.label, ...prediction.alternatives.map((alternative) => alternative.chord.label)].slice(0, 5)
+        : [];
+      const accepted = [expected.primary, ...(expected.acceptableAlternatives ?? [])];
+      const covered = labels.some((label) => accepted.includes(label));
+      expectedDuration += duration;
+      if (covered) coveredDuration += duration;
+      else manualInputs += 1;
+    }
+  }
+
+  return {
+    candidateCoverage: ratio(coveredDuration, expectedDuration),
+    duplicateRootRatio: ratio(duplicateRoots, alternativeCount),
+    manualInputProxyPerCase: cases.length > 0 ? rounded(manualInputs / cases.length) : 0,
+    averageDisplayedCandidateCount: timelineItems > 0 ? rounded(displayedCandidates / timelineItems) : 0,
+    exactTop3MinusTop1Gap: rounded(metrics.exactAt3 - metrics.exactAt1),
   };
 }
 
@@ -421,6 +492,7 @@ function representativeSubset<T>(values: readonly T[], limit: number | undefined
 }
 
 function markdown(artifact: {
+  phase?: string;
   status: string;
   overallGuard: OverallGuardResult;
   strictExitEnforced: boolean;
@@ -466,8 +538,19 @@ function markdown(artifact: {
     entry.primaryChangesFromLegacy,
     entry.runtimeMs.toFixed(1),
   ].join(" | "));
+  const diversityRows = artifact.results.map((entry) => [
+    entry.category,
+    entry.mode,
+    percent(entry.candidateDiversity.candidateCoverage),
+    percent(entry.candidateDiversity.duplicateRootRatio),
+    entry.candidateDiversity.manualInputProxyPerCase.toFixed(4),
+    entry.candidateDiversity.averageDisplayedCandidateCount.toFixed(2),
+    signedPercent(entry.candidateDiversity.exactTop3MinusTop1Gap),
+  ].join(" | "));
   return [
-    "# Phase 3.6.5 Stage A4 Voice-Aware Evaluation",
+    artifact.phase === "3.6.5-stage-b1"
+      ? "# Phase 3.6.5 Stage B1 Candidate Diversity Evaluation"
+      : "# Phase 3.6.5 Stage A4 Voice-Aware Evaluation",
     "",
     `- Status: ${artifact.status}`,
     `- Overall guard: ${artifact.overallGuard.status.toUpperCase()}`,
@@ -484,15 +567,21 @@ function markdown(artifact: {
     "",
     "## Accuracy and legacy delta",
     "",
-    "Category | Analyzer | Guard | Cases | Root@1 | Δ | Root@3 | Δ | Quality@1 | Δ | Quality@3 | Δ | Exact@1 | Δ | Exact@3 | Δ",
+    "Category | Analyzer | Guard | Cases | Root@1 | Delta | Root@3 | Delta | Quality@1 | Delta | Quality@3 | Delta | Exact@1 | Delta | Exact@3 | Delta",
     "--- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---:",
     ...accuracyRows,
     "",
     "## Boundary, correction, and runtime",
     "",
-    "Category | Analyzer | Guard | Correction/case | Δ | Boundary P | Δ | Boundary R | Δ | Legacy boundary identical | Primary changes | Runtime ms",
+    "Category | Analyzer | Guard | Correction/case | Delta | Boundary P | Delta | Boundary R | Delta | Legacy boundary identical | Primary changes | Runtime ms",
     "--- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---:",
     ...boundaryRows,
+    "",
+    "## Candidate diversity",
+    "",
+    "Category | Analyzer | Candidate coverage | Duplicate-root ratio | Manual input proxy/case | Avg displayed candidates | Exact @3-@1",
+    "--- | --- | ---: | ---: | ---: | ---: | ---:",
+    ...diversityRows,
     "",
     "## Dirty status",
     "",
@@ -501,6 +590,23 @@ function markdown(artifact: {
     "Correction proxy is the existing wrong-primary-segment proxy, not Stage B2 operation cost.",
     "",
   ].join("\n");
+}
+
+function bestTimelineOverlap(
+  startBeat: number,
+  endBeat: number,
+  analysis: MidiProgressionAnalysis,
+) {
+  return analysis.fullTimeline.map((item) => {
+    const itemStart = (item.bar - 1) * 4 + item.beat - 1;
+    const overlap = Math.max(0, Math.min(endBeat, itemStart + item.durationBeats) - Math.max(startBeat, itemStart));
+    return { item, overlap, itemStart };
+  }).filter((entry) => entry.overlap > 0)
+    .sort((left, right) => right.overlap - left.overlap || left.itemStart - right.itemStart)[0]?.item;
+}
+
+function ratio(value: number, total: number): number {
+  return total <= 0 ? 0 : rounded(value / total);
 }
 
 function rowGuardStatus(

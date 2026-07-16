@@ -29,6 +29,8 @@
     "ablate:midi": "vite-node scripts/ablate-midi-analysis.ts",
     "eval:degrade": "vite-node scripts/generate-degraded-midi.ts --run-cli",
     "eval:midi:voice-aware": "vite-node scripts/evaluate-voice-aware-reranker.ts --run-cli",
+    "eval:midi:diversity": "vite-node scripts/evaluate-voice-aware-reranker.ts --run-cli --report artifacts/phase3.6.5-candidate-diversity",
+    "eval:midi:diversity:report": "vite-node scripts/evaluate-voice-aware-reranker.ts --run-cli --report artifacts/phase3.6.5-candidate-diversity --report-only",
     "tauri": "tauri"
   },
   "dependencies": {

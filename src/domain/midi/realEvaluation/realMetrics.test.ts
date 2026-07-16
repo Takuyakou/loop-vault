@@ -31,6 +31,25 @@ describe("real MIDI metrics", () => {
     expect(reranker.strongAlternativeAccuracy).toBe(1);
   });
 
+  it("computes independent Root, Quality and Exact Top-3 from only three displayed candidates", () => {
+    const reranker = timeline("Dm");
+    reranker[0].alternatives = [
+      { chord: parseChordLabel("C")!, confidence: 0.8 },
+      { chord: parseChordLabel("Fmaj7")!, confidence: 0.7 },
+      { chord: parseChordLabel("Cmaj7")!, confidence: 0.6 },
+    ];
+    const metrics = evaluateGoldCases([{
+      definition: definition("gold"),
+      legacy: timeline("Dm"),
+      reranker,
+    }], "reranker");
+
+    expect(metrics.rootTop3Accuracy).toBe(1);
+    expect(metrics.qualityTop3Accuracy).toBe(1);
+    expect(metrics.exactTop3Accuracy).toBe(0);
+    expect(metrics.top3Accuracy).toBe(0);
+  });
+
   it("reports Silver improvements and regressions without calling them accuracy", () => {
     const analyzed = [{ definition: definition("silver"), legacy: timeline("Dm"), reranker: timeline("Cmaj7") }];
     const metrics = evaluateSilverCases(analyzed);

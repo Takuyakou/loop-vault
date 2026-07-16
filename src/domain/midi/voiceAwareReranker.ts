@@ -102,7 +102,12 @@ export function analyzeMidiVoiceAwareRerank(
         const legacyCandidate = scoreVoiceAwareStructuredChordCandidate(profile, item.chord);
         return materializeRerankedTimelineItem(
           item,
-          chooseLegacyBoundaryCandidate(legacyCandidate, candidates, thresholds),
+          chooseLegacyBoundaryCandidate(
+            legacyCandidate,
+            candidates,
+            thresholds,
+            dominantPitchClass(profile.bassEvidence),
+          ),
           {
             replaced: "voice-aware-reranked",
             retained: "legacy-boundary-retained",
@@ -192,4 +197,10 @@ function retainedLegacyItem(item: ChordTimelineItem): ChordTimelineItem {
     ...item,
     warnings: [...new Set([...item.warnings, "legacy-boundary-retained"])],
   };
+}
+
+function dominantPitchClass(values: readonly number[]): number | undefined {
+  const total = values.reduce((sum, value) => sum + value, 0);
+  if (total <= 0) return undefined;
+  return values.reduce((best, value, index) => value > values[best] ? index : best, 0);
 }
