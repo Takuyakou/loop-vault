@@ -24,6 +24,7 @@ import { ProgressionGrid, timelineStartBeat } from "../ui/ProgressionGrid";
 import { chordProgressFraction } from "../ui/playbackProgress";
 import { confidenceLabel, shouldShowConfidence, warningLabel } from "./captureLabels";
 import { appendAnalysisFeedback } from "../storage/analysisFeedbackStorage";
+import type { PreviewSound } from "../audio/chordPreview";
 
 interface CaptureViewProps {
   ideas: SongIdea[];
@@ -77,6 +78,7 @@ export function CaptureView(props: CaptureViewProps) {
   const [expandedCandidateId, setExpandedCandidateId] = useState<string>();
   const [saveDraft, setSaveDraft] = useState<{ candidate: ProgressionBlockCandidate; title: string; userEdited: boolean }>();
   const [sourcePath, setSourcePath] = useState<string>();
+  const [previewSound, setPreviewSound] = useState<PreviewSound>("piano");
   const result = analysis.result;
 
   const analyzeMidiBytesWithToast = useCallback(
@@ -287,7 +289,7 @@ export function CaptureView(props: CaptureViewProps) {
 
   async function previewCandidate(candidate: ProgressionBlockCandidate) {
     try {
-      await previewTimeline(candidate.chords, analysis.result?.bpm);
+      await previewTimeline(candidate.chords, analysis.result?.bpm, previewSound);
     } catch (error) {
       setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
     }
@@ -297,10 +299,32 @@ export function CaptureView(props: CaptureViewProps) {
     try {
       const chord = candidate.chords[chordIndex]?.chord;
       if (chord) {
-        await previewSingleChord(chord);
+        await previewSingleChord(chord, previewSound);
       }
     } catch (error) {
       setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
+    }
+  }
+
+  async function previewSongTimeline() {
+    if (!analysis.result) {
+      return;
+    }
+
+    try {
+      await previewTimeline(analysis.result.fullTimeline, analysis.result.bpm, previewSound);
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
+      throw error;
+    }
+  }
+
+  async function previewSongChord(chord: ChordSymbol) {
+    try {
+      await previewSingleChord(chord, previewSound);
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
+      throw error;
     }
   }
 
@@ -359,9 +383,19 @@ export function CaptureView(props: CaptureViewProps) {
             <h2 className="text-2xl font-semibold">{copy.capture.candidates}</h2>
             <p className="mt-2 text-sm text-[var(--lv-text-muted)]">{copy.capture.candidateHint}</p>
           </div>
-          <span className="rounded bg-[var(--lv-surface-raised)] px-3 py-1 text-sm text-teal-200">
-            {language === "ja" ? `${result.blockCandidates.length}件` : `${result.blockCandidates.length} items`}
-          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <PreviewSoundSelector
+              value={previewSound}
+              onChange={(sound) => {
+                void stopPreviewAudio();
+                setPreviewSound(sound);
+              }}
+              copy={copy}
+            />
+            <span className="rounded bg-[var(--lv-surface-raised)] px-3 py-1 text-sm text-teal-200">
+              {language === "ja" ? `${result.blockCandidates.length}件` : `${result.blockCandidates.length} items`}
+            </span>
+          </div>
         </div>
 
         <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
@@ -427,7 +461,15 @@ export function CaptureView(props: CaptureViewProps) {
         </div>
       </section>
 
-      <TimelineDetails result={result} copy={copy} language={language} />
+      <TimelineDetails
+        result={result}
+        copy={copy}
+        language={language}
+        previewSound={previewSound}
+        onPreview={previewSongTimeline}
+        onPreviewChord={previewSongChord}
+        onStop={stopPreviewAudio}
+      />
     </div>
   );
 }
@@ -507,28 +549,121 @@ function StepCard({ index, text }: { index: string; text: string }) {
   );
 }
 
-function TimelineDetails({
+export function TimelineDetails({
   result,
   copy,
   language,
+  previewSound,
+  onPreview,
+  onPreviewChord,
+  onStop,
 }: {
   result: MidiProgressionAnalysis;
   copy: AppCopy;
   language: AppLanguage;
+  previewSound: PreviewSound;
+  onPreview: () => void | Promise<void>;
+  onPreviewChord: (chord: ChordSymbol) => void | Promise<void>;
+  onStop: () => void | Promise<void>;
 }) {
+  const [selectedChordIndex, setSelectedChordIndex] = useState<number>();
+  const [isPlaying, setIsPlaying] = useState(false);
+  const playbackTimer = useRef<number>();
+
+  useEffect(() => () => {
+    if (playbackTimer.current !== undefined) {
+      window.clearTimeout(playbackTimer.current);
+    }
+    void onStop();
+  }, [onStop]);
+
+  function stopTimelinePreview() {
+    if (playbackTimer.current !== undefined) {
+      window.clearTimeout(playbackTimer.current);
+      playbackTimer.current = undefined;
+    }
+    setIsPlaying(false);
+    void onStop();
+  }
+
+  async function previewFullTimeline() {
+    stopTimelinePreview();
+    setIsPlaying(true);
+    try {
+      await onPreview();
+    } catch {
+      setIsPlaying(false);
+      return;
+    }
+
+    const first = result.fullTimeline[0];
+    const last = result.fullTimeline[result.fullTimeline.length - 1];
+    if (!first || !last) {
+      setIsPlaying(false);
+      return;
+    }
+
+    const beatSeconds = 60 / (result.bpm || 96);
+    const durationBeats = timelineStartBeat(last) - timelineStartBeat(first) + last.durationBeats;
+    playbackTimer.current = window.setTimeout(() => {
+      playbackTimer.current = undefined;
+      setIsPlaying(false);
+    }, durationBeats * beatSeconds * 1000 + 120);
+  }
+
+  async function previewTimelineChord(index: number) {
+    stopTimelinePreview();
+    setSelectedChordIndex(index);
+    const chord = result.fullTimeline[index]?.chord;
+    if (chord) {
+      try {
+        await onPreviewChord(chord);
+      } catch {
+        return;
+      }
+    }
+  }
+
   return (
     <details className="border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-5">
       <summary className="cursor-pointer text-lg font-semibold text-[var(--lv-text)]">
         {copy.capture.timeline}
       </summary>
       <p className="mt-3 text-sm text-[var(--lv-text-muted)]">{copy.capture.timelineDescription}</p>
+      {result.fullTimeline.length > 0 ? (
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <button
+            className="lv-button-primary inline-flex min-h-10 items-center gap-2 px-4"
+            type="button"
+            onClick={() => void previewFullTimeline()}
+            aria-label={copy.capture.previewFullTimeline}
+          >
+            <span aria-hidden="true">▶</span>
+            {copy.capture.previewFullTimeline}
+          </button>
+          <button
+            className="lv-button-ghost grid h-10 w-10 place-items-center"
+            type="button"
+            onClick={stopTimelinePreview}
+            aria-label={copy.common.stop}
+            title={copy.common.stop}
+            disabled={!isPlaying}
+          >
+            ■
+          </button>
+          <span className="text-xs text-[var(--lv-text-muted)]">
+            {copy.capture.previewSound}: {previewSound === "piano" ? copy.capture.piano : copy.capture.electricPiano}
+          </span>
+        </div>
+      ) : null}
       <div className="mt-5">
         {result.fullTimeline.length > 0 ? (
           <ProgressionGrid
             chords={result.fullTimeline}
             currentBar={null}
-            selectedChordIndex={undefined}
+            selectedChordIndex={selectedChordIndex}
             playingChordIndex={null}
+            onChordSelect={(index) => void previewTimelineChord(index)}
           />
         ) : (
           <p className="text-sm text-[var(--lv-text-muted)]">{copy.capture.noTimeline}</p>
@@ -538,6 +673,35 @@ function TimelineDetails({
         {language === "ja" ? "候補ブロックに含まれない部分も確認できます。" : "This also shows chords outside the reusable candidate blocks."}
       </p>
     </details>
+  );
+}
+
+function PreviewSoundSelector({
+  value,
+  onChange,
+  copy,
+}: {
+  value: PreviewSound;
+  onChange: (sound: PreviewSound) => void;
+  copy: AppCopy;
+}) {
+  return (
+    <div className="flex items-center gap-1" role="group" aria-label={copy.capture.previewSound}>
+      <span className="mr-2 text-xs font-semibold text-[var(--lv-text-muted)]">
+        {copy.capture.previewSound}
+      </span>
+      {(["piano", "electric-piano"] as const).map((sound) => (
+        <button
+          key={sound}
+          type="button"
+          className={`min-h-9 rounded px-3 text-sm ${value === sound ? "bg-[var(--lv-accent)] font-semibold text-stone-950" : "border border-[var(--lv-border-strong)] text-[var(--lv-text-secondary)]"}`}
+          aria-pressed={value === sound}
+          onClick={() => onChange(sound)}
+        >
+          {sound === "piano" ? copy.capture.piano : copy.capture.electricPiano}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -971,17 +1135,21 @@ function hasDroppedFiles(event: DragEvent<HTMLDivElement>): boolean {
   return Array.from(event.dataTransfer.types).includes("Files");
 }
 
-async function previewSingleChord(chord: ChordSymbol): Promise<void> {
+async function previewSingleChord(
+  chord: ChordSymbol,
+  sound?: PreviewSound,
+): Promise<void> {
   const { previewChord } = await import("../audio/chordPreview");
-  await previewChord(chord);
+  await previewChord(chord, sound);
 }
 
 async function previewTimeline(
   chords: readonly ChordTimelineItem[],
   bpm?: number,
+  sound?: PreviewSound,
 ): Promise<void> {
   const { previewChordTimeline } = await import("../audio/chordPreview");
-  await previewChordTimeline(chords, bpm);
+  await previewChordTimeline(chords, bpm, sound);
 }
 
 async function stopPreviewAudio(): Promise<void> {
