@@ -65,7 +65,7 @@ describe("ProgressionCandidateCard", () => {
 
     expect(markup).toContain("候補 1");
     expect(markup).toContain("Cmaj7");
-    expect(markup).toContain("低音の解釈に注意");
+    expect(markup).not.toContain("低音の解釈に注意");
     expect(markup).toContain("編集");
     expect(markup).toContain("Vaultに保存");
     expect(markup).toContain("保存方法");
@@ -97,6 +97,54 @@ describe("ProgressionCandidateCard", () => {
 
     expect(markup).toContain("信頼度: 中");
     expect(markup).not.toContain("55%");
+  });
+
+  it("shows original and current chords in the inspector only when expanded", () => {
+    const markup = renderToStaticMarkup(
+      <ProgressionCandidateCard
+        candidate={candidate()}
+        candidateIndex={0}
+        bpm={96}
+        onCopyProgression={vi.fn()}
+        onPreview={vi.fn()}
+        onPreviewChord={vi.fn()}
+        copy={appCopy.ja}
+        language="ja"
+        isExpanded
+      />,
+    );
+
+    expect(markup).toContain("選択中のコード");
+    expect(markup).toContain("元の検出値");
+    expect(markup).toContain("現在のコード");
+    expect(markup).toContain("編集するコードを選択");
+  });
+
+  it("updates the inspector when a chord card is selected", async () => {
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(
+        <ProgressionCandidateCard
+          candidate={candidate()}
+          candidateIndex={0}
+          bpm={96}
+          onCopyProgression={vi.fn()}
+          onPreview={vi.fn()}
+          onPreviewChord={vi.fn()}
+          copy={appCopy.ja}
+          language="ja"
+          isExpanded
+        />,
+      );
+    });
+
+    const options = container.querySelectorAll<HTMLButtonElement>('[role="option"]');
+    await act(async () => options[1]?.click());
+
+    expect(container.querySelector("aside")?.textContent).toContain("Am7");
+    expect(options[1]?.getAttribute("aria-pressed")).toBe("true");
+    await act(async () => root.unmount());
   });
 
   it("renders the save dialog with save methods and default next action", () => {

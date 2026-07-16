@@ -6,6 +6,13 @@ import { readFile } from "@tauri-apps/plugin-fs";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { DragEvent } from "react";
 import { parseChordLabel } from "../domain/chords";
+import {
+  applyEditableProgression,
+  createEditableProgression,
+  replaceEditableChord,
+  resetAllEditableChords,
+  selectEditableSlot,
+} from "../domain/progressionEditing";
 import { buildCorrectionEvents } from "../domain/midi";
 import { candidateLabelList } from "../domain/displayLabels";
 import { romanNumeralHint } from "../domain/harmony/romanNumerals";
@@ -25,6 +32,8 @@ import { chordProgressFraction } from "../ui/playbackProgress";
 import { confidenceLabel, shouldShowConfidence, warningLabel } from "./captureLabels";
 import { appendAnalysisFeedback } from "../storage/analysisFeedbackStorage";
 import type { PreviewSound } from "../audio/chordPreview";
+import { ChordInspector } from "../components/progression-editing/ChordInspector";
+import { EditableProgressionGrid } from "../components/progression-editing/EditableProgressionGrid";
 
 interface CaptureViewProps {
   ideas: SongIdea[];
@@ -743,7 +752,7 @@ export function ProgressionCandidateCard({
   onPreviewChord,
   copy,
   language,
-  isExpanded = true,
+  isExpanded = false,
   onSelect,
   onQuickSave,
   onSave,
@@ -773,7 +782,7 @@ export function ProgressionCandidateCard({
 }) {
   const [summary, setSummary] = useState(candidate.summaryText);
   const [title, setTitle] = useState(`${language === "ja" ? "コード進行" : "Progression"} ${candidate.labels.slice(0, 4).join(" - ")}`);
-  const [chords, setChords] = useState(candidate.chords);
+  const [editable, setEditable] = useState(() => createEditableProgression(candidate));
   const [labelError, setLabelError] = useState<string>();
   const [isEditing, setIsEditing] = useState(false);
   const [selectedChordIndex, setSelectedChordIndex] = useState(0);
@@ -781,8 +790,10 @@ export function ProgressionCandidateCard({
   const [previewStartedAt, setPreviewStartedAt] = useState<number | null>(null);
   const [, forcePlaybackTick] = useState(0);
   const visualTimers = useRef<number[]>([]);
+  const currentCandidate = applyEditableProgression(candidate, editable);
+  const chords = currentCandidate.chords;
   const editedCandidate = {
-    ...candidate,
+    ...currentCandidate,
     summaryText: summary,
     chords,
     labels: [...new Set(chords.map((item) => item.chord.label))],
@@ -791,7 +802,7 @@ export function ProgressionCandidateCard({
   useEffect(() => {
     setSummary(candidate.summaryText);
     setTitle(`${language === "ja" ? "コード進行" : "Progression"} ${candidate.labels.slice(0, 4).join(" - ")}`);
-    setChords(candidate.chords);
+    setEditable(createEditableProgression(candidate));
     setLabelError(undefined);
     setIsEditing(false);
     setSelectedChordIndex(0);
@@ -819,11 +830,10 @@ export function ProgressionCandidateCard({
     }
 
     setLabelError(undefined);
-    setChords((items) =>
-      items.map((item, itemIndex) =>
-        itemIndex === index ? { ...item, chord: parsed } : item,
-      ),
-    );
+    const slot = editable.slots[index];
+    if (slot) {
+      setEditable((current) => replaceEditableChord(current, slot.id, parsed, "manual-label"));
+    }
   }
 
   function stopVisualPreview() {
@@ -843,7 +853,7 @@ export function ProgressionCandidateCard({
   function resetEdits() {
     setSummary(candidate.summaryText);
     setTitle(`${language === "ja" ? "コード進行" : "Progression"} ${candidate.labels.slice(0, 4).join(" - ")}`);
-    setChords(candidate.chords);
+    setEditable((current) => resetAllEditableChords(current));
     setLabelError(undefined);
     setSelectedChordIndex(0);
   }
@@ -875,6 +885,10 @@ export function ProgressionCandidateCard({
   async function selectChord(index: number) {
     onSelect?.();
     setSelectedChordIndex(index);
+    const slot = editable.slots[index];
+    if (slot) {
+      setEditable((current) => selectEditableSlot(current, slot.id));
+    }
     await onPreviewChord(editedCandidate, index);
   }
 
@@ -916,7 +930,21 @@ export function ProgressionCandidateCard({
         <span className="rounded bg-[var(--lv-surface-raised)] px-2 py-1 text-xs text-teal-200">{candidateLabelList(candidate.labels, language).join(" · ")}</span>
       </div>
       {summary.trim() ? <p className="mt-3 text-sm text-[var(--lv-text-secondary)]">{summary}</p> : null}
-      <div className="mt-4"><ProgressionGrid chords={chords} currentBar={playingChord?.bar ?? null} selectedChordIndex={selectedChordIndex} playingChordIndex={playingChordIndex} playingProgress={playingProgress} onChordSelect={(index) => void selectChord(index)} /></div>
+      <div className={`mt-4 ${isExpanded ? "grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]" : ""}`}>
+        <EditableProgressionGrid
+          editable={editable}
+          playingSlotId={playingChordIndex === null ? undefined : editable.slots[playingChordIndex]?.id}
+          playingProgress={playingProgress}
+          onSelect={(_slotId, index) => void selectChord(index)}
+          language={language}
+        />
+        {isExpanded ? (
+          <ChordInspector
+            slot={editable.slots.find((slot) => slot.id === editable.selectedSlotId)}
+            language={language}
+          />
+        ) : null}
+      </div>
       {showRomanNumerals && selectedRomanHint ? (
         <p className="mt-2 text-xs text-[var(--lv-text)]0">{selectedRomanHint.label}{selectedRomanHint.detail ? ` · ${selectedRomanHint.detail}` : ""}{selectedRomanHint.confidence !== "high" ? (language === "ja" ? "（参考）" : " (reference)") : ""}</p>
       ) : null}
