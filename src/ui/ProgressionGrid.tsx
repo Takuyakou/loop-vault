@@ -62,6 +62,7 @@ export function ProgressionGrid({
 
         return (
           <article
+            data-progression-bar={bar}
             className={`grid min-h-28 grid-cols-[2.25rem_minmax(0,1fr)] overflow-hidden rounded border bg-[var(--lv-bg)] ${
               currentBar === bar ? "border-cyan-300 shadow-[0_0_0_1px_rgba(103,232,249,0.75)]" : "border-[var(--lv-border)]"
             }`}

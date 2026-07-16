@@ -6,7 +6,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import type { ChordTimelineItem, MidiProgressionAnalysis, ProgressionBlockCandidate } from "../domain/types";
 import { makeIdea } from "../domain/testFactory";
-import { appCopy } from "../i18n";
+import { appCopy, progressionEditorCopy } from "../i18n";
 import {
   createPlaybackController,
   type PlaybackAudioDriver,
@@ -1189,6 +1189,173 @@ describe("CaptureView saving", () => {
     expect(feedbackSpies.append).toHaveBeenCalledWith([
       expect.objectContaining({ corrected: "G7", editMethod: "alternative-selection" }),
     ]);
+    await act(async () => root.unmount());
+    container.remove();
+  });
+});
+
+describe("CaptureView song mini map", () => {
+  function analysisWithCandidates(): MidiProgressionAnalysis {
+    const firstChord = chord("Cmaj7", 1);
+    firstChord.alternatives = [{
+      chord: { root: 7, quality: "dom7", tensions: [], label: "G7" },
+      confidence: 0.75,
+    }];
+    const firstCandidate = candidate({
+      id: "candidate-1",
+      chords: [firstChord, chord("Am7", 2)],
+    });
+    const secondCandidate = candidate({
+      id: "candidate-2",
+      startBar: 5,
+      endBar: 8,
+      chords: [chord("Fmaj7", 5), chord("G7", 6)],
+    });
+    return {
+      totalBars: 8,
+      bpm: 100,
+      fullTimeline: [...firstCandidate.chords, ...secondCandidate.chords],
+      blockCandidates: [firstCandidate, secondCandidate],
+      analyzedAt: "2026-07-16T00:00:00.000Z",
+      analyzerVersion: "test",
+    };
+  }
+
+  async function renderCapture(result: MidiProgressionAnalysis, language: "ja" | "en" = "en") {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(
+        <CaptureView
+          ideas={[]}
+          analysis={{ status: "done", result }}
+          analyzeMidiBytes={vi.fn()}
+          clearAnalysis={vi.fn()}
+          createIdeaFromDraft={vi.fn()}
+          appendBlockToIdea={vi.fn()}
+          updateIdea={vi.fn()}
+          setToast={vi.fn()}
+          copy={appCopy[language]}
+          language={language}
+          showRomanNumerals
+        />,
+      );
+    });
+    return { container, root };
+  }
+
+  it("places the map between the file overview and candidate list, then opens and scrolls the timeline", async () => {
+    const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value: scrollIntoView,
+    });
+    const { container, root } = await renderCapture(analysisWithCandidates());
+
+    try {
+      const miniMap = container.querySelector<HTMLElement>("[data-song-minimap]");
+      const overview = miniMap?.previousElementSibling;
+      const candidateHeader = container.querySelector<HTMLElement>("[data-candidate-toggle]");
+      expect(miniMap).not.toBeNull();
+      expect(candidateHeader).not.toBeNull();
+      expect(overview?.tagName).toBe("SECTION");
+      expect(Boolean(miniMap!.compareDocumentPosition(candidateHeader!) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
+
+      const secondRange = container.querySelector<HTMLButtonElement>(
+        '[data-song-minimap-candidate="candidate-2"]',
+      );
+      expect(secondRange?.getAttribute("aria-label")).toBe("Candidate 2: bars 5-8");
+      await act(async () => secondRange?.click());
+
+      const details = container.querySelector<HTMLDetailsElement>("details");
+      const headers = container.querySelectorAll<HTMLElement>("[data-candidate-toggle]");
+      const targetBar = container.querySelector<HTMLElement>('[data-progression-bar="5"]');
+      expect(details?.open).toBe(true);
+      expect(headers[1]?.getAttribute("aria-expanded")).toBe("true");
+      expect(secondRange?.getAttribute("aria-pressed")).toBe("true");
+      expect(scrollIntoView).toHaveBeenCalledTimes(1);
+      expect(scrollIntoView.mock.instances[0]).toBe(targetBar);
+      expect(targetBar?.querySelector('button[aria-pressed="true"]')).not.toBeNull();
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+      Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+        configurable: true,
+        value: originalScrollIntoView,
+      });
+    }
+  });
+
+  it("waits for dirty confirmation before selecting or scrolling, and leaves state unchanged on cancel", async () => {
+    const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value: scrollIntoView,
+    });
+    const { container, root } = await renderCapture(analysisWithCandidates());
+
+    try {
+      const firstRange = container.querySelector<HTMLButtonElement>(
+        '[data-song-minimap-candidate="candidate-1"]',
+      );
+      const secondRange = container.querySelector<HTMLButtonElement>(
+        '[data-song-minimap-candidate="candidate-2"]',
+      );
+      await act(async () => firstRange?.click());
+      const alternativeButton = [...container.querySelectorAll<HTMLButtonElement>("[data-chord-inspector] button")]
+        .find((button) => button.textContent?.includes("G7"));
+      await act(async () => alternativeButton?.click());
+      const applyButton = [...container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent === progressionEditorCopy.en.apply);
+      await act(async () => applyButton?.click());
+      scrollIntoView.mockClear();
+
+      await act(async () => secondRange?.click());
+      let dialog = document.querySelector<HTMLElement>('[role="dialog"]');
+      expect(dialog).not.toBeNull();
+      expect(firstRange?.getAttribute("aria-pressed")).toBe("true");
+      expect(secondRange?.getAttribute("aria-pressed")).toBe("false");
+      expect(scrollIntoView).not.toHaveBeenCalled();
+
+      const cancelButton = dialog?.querySelectorAll<HTMLButtonElement>("button")[0];
+      await act(async () => cancelButton?.click());
+      expect(document.querySelector('[role="dialog"]')).toBeNull();
+      expect(firstRange?.getAttribute("aria-pressed")).toBe("true");
+      expect(scrollIntoView).not.toHaveBeenCalled();
+
+      await act(async () => secondRange?.click());
+      dialog = document.querySelector<HTMLElement>('[role="dialog"]');
+      const confirmButton = dialog?.querySelectorAll<HTMLButtonElement>("button")[1];
+      await act(async () => confirmButton?.click());
+      expect(secondRange?.getAttribute("aria-pressed")).toBe("true");
+      expect(container.querySelector<HTMLDetailsElement>("details")?.open).toBe(true);
+      expect(scrollIntoView).toHaveBeenCalledTimes(1);
+      expect(scrollIntoView.mock.instances[0]).toBe(
+        container.querySelector('[data-progression-bar="5"]'),
+      );
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+      Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+        configurable: true,
+        value: originalScrollIntoView,
+      });
+    }
+  });
+
+  it("keeps an empty zero-bar analysis renderable", async () => {
+    const { container, root } = await renderCapture({
+      totalBars: 0,
+      fullTimeline: [],
+      blockCandidates: [],
+      analyzedAt: "2026-07-16T00:00:00.000Z",
+      analyzerVersion: "test",
+    });
+    expect(container.querySelector("[data-song-minimap-track]")).toBeNull();
+    expect(container.textContent).toContain(appCopy.en.capture.songMiniMapEmpty);
     await act(async () => root.unmount());
     container.remove();
   });

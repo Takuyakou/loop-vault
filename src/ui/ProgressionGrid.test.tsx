@@ -35,6 +35,7 @@ describe("ProgressionGrid", () => {
     expect(markup).toContain("Cmaj7");
     expect(markup).toContain("aria-pressed=\"true\"");
     expect(markup).toContain("width:50%");
+    expect(markup).toContain('data-progression-bar="1"');
     expect(markup).toContain("shadow-[0_0_0_1px_rgba(103,232,249,0.75)]");
   });
 });
