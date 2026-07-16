@@ -7,6 +7,7 @@ import type {
 import type { ChordSymbol } from "../../domain/types";
 import type { AppLanguage } from "../../i18n";
 import { ChordAlternativeList } from "./ChordAlternativeList";
+import { ChordStructureEditor } from "./ChordStructureEditor";
 
 interface ChordInspectorProps {
   slot?: EditableChordSlot;
@@ -14,7 +15,7 @@ interface ChordInspectorProps {
   onPreview: (chord: ChordSymbol) => void;
   onApply: (
     chord: ChordSymbol,
-    source: Extract<ProgressionEditSource, "manual-label" | "alternative">,
+    source: Extract<ProgressionEditSource, "manual-label" | "alternative" | "structure-editor">,
   ) => void;
   onReset: () => void;
 }
@@ -28,7 +29,7 @@ export function ChordInspector({
 }: ChordInspectorProps) {
   const [draftLabel, setDraftLabel] = useState(slot?.currentChord.label ?? "");
   const [draftChord, setDraftChord] = useState<ChordSymbol | undefined>(slot?.currentChord);
-  const [draftSource, setDraftSource] = useState<"manual-label" | "alternative">("manual-label");
+  const [draftSource, setDraftSource] = useState<"manual-label" | "alternative" | "structure-editor">("manual-label");
   const [error, setError] = useState<string>();
 
   useEffect(() => {
@@ -130,6 +131,18 @@ export function ChordInspector({
           aria-invalid={Boolean(error)}
         />
         {error ? <p className="mt-2 text-xs text-red-200">{error}</p> : null}
+        {draftChord ? (
+          <ChordStructureEditor
+            chord={draftChord}
+            language={language}
+            onChange={(chord) => {
+              setDraftChord(chord);
+              setDraftLabel(chord.label);
+              setDraftSource("structure-editor");
+              setError(undefined);
+            }}
+          />
+        ) : null}
         <div className="mt-3 flex flex-wrap gap-2">
           <button
             type="button"
