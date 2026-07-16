@@ -56,7 +56,7 @@ export function analyzeMidiHybrid(bytes: Uint8Array, options: AnalyzeMidiOptions
       ...legacy,
       alternatives: [...new Map(alternatives.map((chord) => [chord.label, chord])).values()]
         .filter((chord) => chord.label !== legacy.chord.label)
-        .slice(0, 2).map((chord, index) => ({ chord, confidence: index === 0 ? 0.58 : 0.48 })),
+        .slice(0, 4).map((chord, index) => ({ chord, confidence: Math.max(0.34, 0.58 - index * 0.08) })),
       warnings: [...new Set([...legacy.warnings, ...segment.warnings, "legacy-primary"])]
     };
   });

@@ -19,13 +19,14 @@ export function ChordAlternativeList({
   if (alternatives.length === 0) {
     return null;
   }
+  const displayedAlternatives = alternatives.slice(0, 4);
   return (
     <div>
       <p className="text-xs text-[var(--lv-text-muted)]">
         {text.alternatives}
       </p>
-      <div className="mt-2 flex flex-wrap gap-2">
-        {alternatives.map((alternative) => {
+      <div className="mt-2 flex flex-wrap gap-2" data-alternative-count={displayedAlternatives.length}>
+        {displayedAlternatives.map((alternative) => {
           const active = selected?.label === alternative.chord.label;
           return (
             <button

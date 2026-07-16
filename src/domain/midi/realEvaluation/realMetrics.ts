@@ -14,9 +14,12 @@ export interface GoldMetrics {
   caseCount: number;
   durationBeats: number;
   rootAccuracy: number;
+  rootTop3Accuracy: number;
   qualityAccuracy: number;
+  qualityTop3Accuracy: number;
   tetradAccuracy: number;
   exactAccuracy: number;
+  exactTop3Accuracy: number;
   strongAlternativeAccuracy: number;
   weakAlternativeAccuracy: number;
   top3Accuracy: number;
@@ -54,7 +57,9 @@ export function evaluateGoldCases(
 ): GoldMetrics {
   let duration = 0;
   let root = 0;
+  let rootTop3 = 0;
   let quality = 0;
+  let qualityTop3 = 0;
   let tetrad = 0;
   let exact = 0;
   let strong = 0;
@@ -81,7 +86,11 @@ export function evaluateGoldCases(
       if (matchesAny(label, [expected.primary, ...sets.strong])) strong += weight;
       if (matchesAny(label, [expected.primary, ...sets.strong, ...sets.weak])) weak += weight;
       const candidates = [label, ...prediction.alternatives.map((alternative) => alternative.chord.label)];
-      if (candidates.some((candidate) => matchesAny(candidate, [expected.primary, ...sets.strong, ...sets.weak]))) top3 += weight;
+      const topThree = candidates.slice(0, 3);
+      const parsedTopThree = topThree.map((candidate) => parseChordLabel(candidate)).filter(Boolean);
+      if (parsedTopThree.some((candidate) => candidate?.root === expected.root)) rootTop3 += weight;
+      if (parsedTopThree.some((candidate) => candidate?.quality === expected.quality)) qualityTop3 += weight;
+      if (topThree.some((candidate) => matchesAny(candidate, [expected.primary, ...sets.strong, ...sets.weak]))) top3 += weight;
       if (!chordLabelsEquivalent(label, expected.primary)) corrections += 1;
     }
     const boundaries = boundaryCounts(item.definition, timeline);
@@ -93,9 +102,12 @@ export function evaluateGoldCases(
     caseCount: cases.length,
     durationBeats: duration,
     rootAccuracy: ratio(root, duration),
+    rootTop3Accuracy: ratio(rootTop3, duration),
     qualityAccuracy: ratio(quality, duration),
+    qualityTop3Accuracy: ratio(qualityTop3, duration),
     tetradAccuracy: ratio(tetrad, duration),
     exactAccuracy: ratio(exact, duration),
+    exactTop3Accuracy: ratio(top3, duration),
     strongAlternativeAccuracy: ratio(strong, duration),
     weakAlternativeAccuracy: ratio(weak, duration),
     top3Accuracy: ratio(top3, duration),
@@ -185,7 +197,7 @@ function boundaryCounts(definition: RealMidiEvaluationCase, timeline: readonly C
 }
 
 function top3Labels(item: ChordTimelineItem): string[] {
-  return [item.chord.label, ...item.alternatives.map((alternative) => alternative.chord.label)];
+  return [item.chord.label, ...item.alternatives.map((alternative) => alternative.chord.label)].slice(0, 3);
 }
 
 function matchesAny(label: string, accepted: readonly string[]): boolean {

@@ -1,5 +1,6 @@
 import type { ChordCandidateScore } from "./candidates";
-import { confidenceForDecoded, uniqueAlternatives, type ConfidenceLevel } from "./confidence";
+import { selectDiverseAlternatives } from "./candidateDiversity";
+import { confidenceForDecoded, type ConfidenceLevel } from "./confidence";
 import type { DecodedSegment } from "./decoder";
 
 export interface MergedDecodedSegment {
@@ -22,7 +23,10 @@ export function mergeDecodedSegments(path: readonly DecodedSegment[]): MergedDec
       previous.endBeat = current.endBeat;
       previous.confidence = Math.min(previous.confidence, current.confidence);
       previous.confidenceLevel = lower(previous.confidenceLevel, current.confidenceLevel);
-      previous.alternatives = distinct([...previous.alternatives, current.candidate, ...current.alternatives], previous.candidate);
+      previous.alternatives = selectDiverseAlternatives(
+        [...previous.alternatives, current.candidate, ...current.alternatives],
+        { primary: previous.candidate, limit: 4, bassPitchClass: previous.candidate.chord.bass },
+      );
       previous.warnings = [...new Set([...previous.warnings, ...current.warnings])];
     } else {
       merged.push(current);
@@ -38,7 +42,11 @@ export function materializeDecodedSegments(path: readonly DecodedSegment[]): Mer
       startBeat: decoded.scored.segment.startBeat,
       endBeat: decoded.scored.segment.endBeat,
       candidate: decoded.candidate,
-      alternatives: uniqueAlternatives(decoded.scored.candidates, decoded.candidate),
+      alternatives: selectDiverseAlternatives(decoded.scored.candidates, {
+        primary: decoded.candidate,
+        limit: 4,
+        bassPitchClass: decoded.candidate.chord.bass,
+      }),
       confidence: confidence.value,
       confidenceLevel: confidence.level,
       warnings: confidence.level === "review" ? ["review-recommended"] : [],
@@ -60,15 +68,6 @@ function qualityFamily(quality: string): string {
   if (quality === "dom7" || quality === "dom9" || quality === "dom13") return "dominant";
   if (quality.startsWith("maj") || quality === "add9" || quality === "six" || quality === "sixNine") return "major";
   return quality;
-}
-
-function distinct(candidates: ChordCandidateScore[], primary: ChordCandidateScore): ChordCandidateScore[] {
-  const seen = new Set([primary.chord.label]);
-  return candidates.filter((candidate) => {
-    if (seen.has(candidate.chord.label)) return false;
-    seen.add(candidate.chord.label);
-    return true;
-  }).slice(0, 2);
 }
 
 function lower(left: ConfidenceLevel, right: ConfidenceLevel): ConfidenceLevel {

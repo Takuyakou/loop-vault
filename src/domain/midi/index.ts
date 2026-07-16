@@ -41,6 +41,8 @@ export { extractOrnamentFeatures } from "./ornaments";
 export { buildSegmentLattice, generateBoundaries } from "./segmentation";
 export { buildCumulativePitchFeatures, buildWeightedPitchProfile, profileFromCumulative } from "./profiles";
 export { canonicalChord, chordTemplates, scoreChordCandidates, scoreSegments, scoreStructuredChordCandidate } from "./candidates";
+export { chordPitchSet, selectDiverseAlternatives } from "./candidateDiversity";
+export type { CandidateDiversityOptions } from "./candidateDiversity";
 export {
   analyzeMidiLegacyBoundaryRerank,
   chooseLegacyBoundaryCandidate,

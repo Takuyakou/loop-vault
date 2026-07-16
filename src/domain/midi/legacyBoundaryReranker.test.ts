@@ -23,6 +23,17 @@ describe("legacy-boundary hybrid reranker", () => {
     expect(decision.candidates[0].chord.label).toBe("C");
   });
 
+  it("retains legacy in the internal candidate set when eight higher-scored candidates exist", () => {
+    const legacy = score("C", -1);
+    const candidates = ["Db", "D", "Eb", "E", "F", "Gb", "G", "Ab"]
+      .map((label, index) => score(label, 2 - index * 0.01));
+    const decision = chooseLegacyBoundaryCandidate(legacy, candidates);
+
+    expect(decision.candidates).toHaveLength(9);
+    expect(decision.candidates.some((candidate) => candidate.chord.label === "C")).toBe(true);
+    expect(decision.legacy).toBe(legacy);
+  });
+
   it("preserves every legacy boundary and duration", () => {
     const input = midiBytes();
     const legacy = analyzeMidi(input, { mode: "legacy" });
@@ -31,6 +42,7 @@ describe("legacy-boundary hybrid reranker", () => {
     reranked.fullTimeline.forEach((item, index) => {
       const legacyLabel = legacy.fullTimeline[index].chord.label;
       expect(item.chord.label === legacyLabel || item.alternatives.some((alternative) => alternative.chord.label === legacyLabel)).toBe(true);
+      expect(item.alternatives.length).toBeLessThanOrEqual(4);
     });
   });
 });

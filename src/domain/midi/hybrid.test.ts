@@ -26,6 +26,7 @@ describe("hybrid MIDI analyzer", () => {
     const result = analyzeMidi(bytes(), { mode: "hybrid-v1" });
     expect(result.fullTimeline.length).toBeGreaterThan(0);
     expect(result.fullTimeline[0].alternatives.length).toBeGreaterThan(0);
+    expect(result.fullTimeline.every((item) => item.alternatives.length <= 4)).toBe(true);
     expect(result.blockCandidates[0]?.lengthBars).toBe(4);
   });
 
