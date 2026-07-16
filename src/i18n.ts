@@ -139,6 +139,20 @@ export const appCopy = {
     detail: {
       nextAction: "次の一手",
       nextActionHint: "次にやることを1つだけ入れてください。",
+      saveAccepted: "保存しました",
+      fields: {
+        title: "タイトルを編集",
+        bpm: "BPMを編集",
+        key: "Keyを編集",
+        genre: "ジャンルを編集",
+        mood: "ムードを編集",
+        memo: "コード進行メモを編集",
+        nextAction: "次の一手を編集",
+      },
+      validation: {
+        title: "タイトルは必須です。",
+        bpm: "BPMは40から300の整数で入力してください。空欄にもできます。",
+      },
       metadata: "メタ情報",
       progressionBlocks: "保存したコード進行",
       noProgressionBlocks: "まだMIDIから保存したコード進行はありません。",
@@ -356,6 +370,20 @@ export const appCopy = {
     detail: {
       nextAction: "Next Action",
       nextActionHint: "Add exactly one next step.",
+      saveAccepted: "Saved",
+      fields: {
+        title: "Edit title",
+        bpm: "Edit BPM",
+        key: "Edit key",
+        genre: "Edit genre",
+        mood: "Edit mood",
+        memo: "Edit chord progression memo",
+        nextAction: "Edit Next Action",
+      },
+      validation: {
+        title: "A title is required.",
+        bpm: "Enter a whole-number BPM from 40 to 300, or leave it blank.",
+      },
       metadata: "Metadata",
       progressionBlocks: "Saved Progressions",
       noProgressionBlocks: "No MIDI progression blocks have been saved yet.",

@@ -19,6 +19,7 @@ import {
   type PendingReferenceDeletion,
 } from "../domain/undoDeletion";
 import type { AppCopy, AppLanguage } from "../i18n";
+import { type DraftParseResult, useDraftSave } from "../hooks/useDraftSave";
 import type { UndoRequest } from "../hooks/useUndoQueue";
 import { ProgressionGrid } from "../ui/ProgressionGrid";
 
@@ -26,6 +27,22 @@ type Reference = SongIdea["references"][number]; type Asset = SongIdea["assets"]
 const keySuggestions = ["C", "Cm", "D", "Dm", "E", "Em", "F", "Fm", "G", "Gm", "A", "Am", "B", "Bm"]; const nextPlaceholders = ["Replace the bass", "Try the B section chords", "Make two drum variations", "Bounce a rough hook"]; const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
 function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <section className={"border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4 " + className}>{children}</section>; } function StatusBadge({ status, language }: { status: Status; language: AppLanguage }) { return <span className="shrink-0 rounded bg-[var(--lv-surface-raised)] px-2 py-1 text-xs font-semibold uppercase text-teal-200">{statusLabel(status, language)}</span>; } function formatDate(value: string): string { return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value)); } function splitList(value: string): string[] { return value.split(",").map((entry) => entry.trim()).filter(Boolean); } function hashString(value: string): number { let hash = 0; for (const char of value) hash = (hash * 31 + char.charCodeAt(0)) | 0; return hash; } const defaultAssetId = () => crypto.randomUUID(); async function writeClipboardText(text: string): Promise<void> { if (!navigator.clipboard?.writeText) throw new Error("Clipboard is not available."); await navigator.clipboard.writeText(text); }
 function labelStatus(status: Status, language: AppLanguage): string { return statusLabel(status, language); }
+function validDraft<T>(value: T, displayValue?: string): DraftParseResult<T> { return { ok: true, value, displayValue }; }
+function invalidDraft<T>(): DraftParseResult<T> { return { ok: false }; }
+function optionalTextDraft(value: string): DraftParseResult<string | undefined> { const trimmed = value.trim(); return validDraft(trimmed || undefined, trimmed); }
+function equalStringLists(left: string[], right: string[]): boolean { return left.length === right.length && left.every((value, index) => value === right[index]); }
+
+function SaveFlash({ visible, label }: { visible: boolean; label: string }) {
+  return (
+    <span
+      className={`pointer-events-none absolute right-3 top-2 text-xs font-semibold text-teal-300 transition-opacity ${visible ? "opacity-100" : "opacity-0"}`}
+      aria-live="polite"
+      title={visible ? label : undefined}
+    >
+      {visible ? <span aria-label={label}>✓</span> : null}
+    </span>
+  );
+}
 
 function ProgressionBlockCard({
   block,
@@ -114,7 +131,6 @@ export function DetailView({
   copy: AppCopy;
   language: AppLanguage;
 }) {
-  const [nextDraft, setNextDraft] = useState(idea.nextAction.text);
   const [referenceDraft, setReferenceDraft] = useState<Reference>({ title: "", url: "", memo: "" });
   const [assetDraft, setAssetDraft] = useState<Asset>({ id: "", type: "flp", path: "", memo: "" });
   const [pendingInactiveStatus, setPendingInactiveStatus] = useState<"hold" | "abandoned" | null>(null);
@@ -122,21 +138,91 @@ export function DetailView({
   const [pendingPipelineTransition, setPendingPipelineTransition] = useState<{ to: Status; options: TransitionOptions }>();
   const statusReasonRef = useRef<HTMLTextAreaElement>(null);
   const pipelineCancelRef = useRef<HTMLButtonElement>(null);
+  const completeNextRef = useRef<HTMLButtonElement>(null);
   const placeholder = nextPlaceholders[Math.abs(hashString(idea.id)) % nextPlaceholders.length];
 
-  useEffect(() => setNextDraft(idea.nextAction.text), [idea.id, idea.nextAction.text]);
+  const titleField = useDraftSave<string>({
+    scopeKey: idea.id,
+    value: idea.title,
+    format: (fieldValue) => fieldValue,
+    parse: (fieldValue) => {
+      const trimmed = fieldValue.trim().slice(0, 80);
+      return trimmed ? validDraft(trimmed, trimmed) : invalidDraft();
+    },
+    onCommit: (id, title) => updateIdea(id, { title }),
+    commitOnEnter: true,
+  });
+  const bpmField = useDraftSave<number | undefined>({
+    scopeKey: idea.id,
+    value: idea.bpm,
+    format: (fieldValue) => fieldValue?.toString() ?? "",
+    parse: (fieldValue) => {
+      const trimmed = fieldValue.trim();
+      if (!trimmed) return validDraft(undefined, "");
+      if (!/^\d+$/.test(trimmed)) return invalidDraft();
+      const bpm = Number(trimmed);
+      return bpm >= 40 && bpm <= 300 ? validDraft(bpm, bpm.toString()) : invalidDraft();
+    },
+    onCommit: (id, bpm) => updateIdea(id, { bpm }),
+    commitOnEnter: true,
+  });
+  const keyField = useDraftSave<string | undefined>({
+    scopeKey: idea.id,
+    value: idea.key,
+    format: (fieldValue) => fieldValue ?? "",
+    parse: optionalTextDraft,
+    onCommit: (id, key) => updateIdea(id, { key }),
+    commitOnEnter: true,
+  });
+  const genreField = useDraftSave<string | undefined>({
+    scopeKey: idea.id,
+    value: idea.genre,
+    format: (fieldValue) => fieldValue ?? "",
+    parse: optionalTextDraft,
+    onCommit: (id, genre) => updateIdea(id, { genre }),
+    commitOnEnter: true,
+  });
+  const moodField = useDraftSave<string[]>({
+    scopeKey: idea.id,
+    value: idea.moods,
+    format: (fieldValue) => fieldValue.join(", "),
+    parse: (fieldValue) => {
+      const moods = splitList(fieldValue);
+      return validDraft(moods, moods.join(", "));
+    },
+    onCommit: (id, moods) => updateIdea(id, { moods }),
+    equals: equalStringLists,
+    commitOnEnter: true,
+  });
+  const memoField = useDraftSave<string>({
+    scopeKey: idea.id,
+    value: idea.chordMemo,
+    format: (fieldValue) => fieldValue,
+    parse: (fieldValue) => validDraft(fieldValue),
+    onCommit: (id, chordMemo) => updateIdea(id, { chordMemo }),
+    debounceMs: 500,
+    flushOnUnmount: true,
+  });
+  const nextField = useDraftSave<string>({
+    scopeKey: idea.id,
+    value: idea.nextAction.text,
+    format: (fieldValue) => fieldValue,
+    parse: (fieldValue) => validDraft(fieldValue.trim(), fieldValue.trim()),
+    onCommit: (id, text) => updateNextAction(id, text, new Date()),
+    commitOnEnter: true,
+    shouldCommitOnBlur: (event) => event.relatedTarget !== completeNextRef.current,
+  });
+
   useEffect(() => {
     setPendingInactiveStatus(null);
     setStatusReason("");
   }, [idea.id]);
 
-  function saveNext() {
-    updateNextAction(idea.id, nextDraft, new Date());
-  }
-
   function completeNext() {
-    updateNextAction(idea.id, "", new Date());
-    setNextDraft("");
+    if (idea.nextAction.text || nextField.draft.trim()) {
+      updateNextAction(idea.id, "", new Date());
+    }
+    nextField.setDraft("");
     setToast(copy.toast.nextCompleted);
   }
 
@@ -350,7 +436,21 @@ export function DetailView({
       <section className="space-y-5">
         <Panel>
           <div className="flex items-start justify-between gap-4">
-            <input className="w-full bg-transparent text-2xl font-semibold outline-none" value={idea.title} onChange={(event) => updateMeta({ title: event.target.value.slice(0, 80) })} />
+            <div className="relative w-full">
+              <input
+                className="w-full bg-transparent pr-9 text-2xl font-semibold outline-none"
+                value={titleField.draft}
+                maxLength={80}
+                aria-label={copy.detail.fields.title}
+                aria-invalid={titleField.invalid}
+                aria-errormessage={titleField.invalid ? "detail-title-error" : undefined}
+                title={copy.detail.fields.title}
+                onChange={(event) => titleField.setDraft(event.target.value)}
+                {...titleField.inputProps}
+              />
+              <SaveFlash visible={titleField.saved} label={copy.detail.saveAccepted} />
+              <span id="detail-title-error" className="sr-only">{copy.detail.validation.title}</span>
+            </div>
             <StatusBadge status={idea.status} language={language} />
           </div>
           <StatusPipeline
@@ -365,10 +465,20 @@ export function DetailView({
 
         <Panel>
           <h2 className="text-xl font-semibold">{copy.detail.nextAction}</h2>
-          <textarea className={`${inputClass} mt-3 min-h-28`} value={nextDraft} onChange={(event) => setNextDraft(event.target.value)} onBlur={saveNext} placeholder={placeholder} />
+          <div className="relative mt-3">
+            <textarea
+              className={`${inputClass} min-h-28 pr-9`}
+              value={nextField.draft}
+              aria-label={copy.detail.fields.nextAction}
+              title={copy.detail.fields.nextAction}
+              onChange={(event) => nextField.setDraft(event.target.value)}
+              placeholder={placeholder}
+              {...nextField.inputProps}
+            />
+            <SaveFlash visible={nextField.saved} label={copy.detail.saveAccepted} />
+          </div>
           <div className="mt-3 flex gap-2">
-            <button className="rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" onClick={saveNext}>{copy.common.update}</button>
-            <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={completeNext}>{copy.common.done}</button>
+            <button ref={completeNextRef} className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={completeNext}>{copy.common.done}</button>
           </div>
           {!idea.nextAction.text.trim() ? <p className="mt-3 text-sm text-amber-200">{copy.detail.nextActionHint}</p> : null}
         </Panel>
@@ -376,13 +486,29 @@ export function DetailView({
         <Panel>
           <h2 className="text-xl font-semibold">{copy.detail.metadata}</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <input className={inputClass} type="number" min={40} max={300} value={idea.bpm ?? ""} onChange={(event) => updateMeta({ bpm: event.target.value ? Number(event.target.value) : undefined })} placeholder="BPM" />
-            <input className={inputClass} list="key-options" value={idea.key ?? ""} onChange={(event) => updateMeta({ key: event.target.value || undefined })} placeholder="Key" />
+            <div className="relative">
+              <input className={`${inputClass} pr-9`} type="number" min={40} max={300} step={1} value={bpmField.draft} aria-label={copy.detail.fields.bpm} aria-invalid={bpmField.invalid} aria-errormessage={bpmField.invalid ? "detail-bpm-error" : undefined} title={copy.detail.fields.bpm} onChange={(event) => bpmField.setDraft(event.target.value)} placeholder="BPM" {...bpmField.inputProps} />
+              <SaveFlash visible={bpmField.saved} label={copy.detail.saveAccepted} />
+              <span id="detail-bpm-error" className="sr-only">{copy.detail.validation.bpm}</span>
+            </div>
+            <div className="relative">
+              <input className={`${inputClass} pr-9`} list="key-options" value={keyField.draft} aria-label={copy.detail.fields.key} title={copy.detail.fields.key} onChange={(event) => keyField.setDraft(event.target.value)} placeholder="Key" {...keyField.inputProps} />
+              <SaveFlash visible={keyField.saved} label={copy.detail.saveAccepted} />
+            </div>
             <datalist id="key-options">{keySuggestions.map((key) => <option key={key} value={key} />)}</datalist>
-            <input className={inputClass} value={idea.genre ?? ""} onChange={(event) => updateMeta({ genre: event.target.value || undefined })} placeholder="Genre" />
-            <input className={inputClass} value={idea.moods.join(", ")} onChange={(event) => updateMeta({ moods: splitList(event.target.value) })} placeholder={language === "ja" ? "Mood（カンマ区切り）" : "Mood (comma separated)"} />
+            <div className="relative">
+              <input className={`${inputClass} pr-9`} value={genreField.draft} aria-label={copy.detail.fields.genre} title={copy.detail.fields.genre} onChange={(event) => genreField.setDraft(event.target.value)} placeholder="Genre" {...genreField.inputProps} />
+              <SaveFlash visible={genreField.saved} label={copy.detail.saveAccepted} />
+            </div>
+            <div className="relative">
+              <input className={`${inputClass} pr-9`} value={moodField.draft} aria-label={copy.detail.fields.mood} title={copy.detail.fields.mood} onChange={(event) => moodField.setDraft(event.target.value)} placeholder={language === "ja" ? "Mood（カンマ区切り）" : "Mood (comma separated)"} {...moodField.inputProps} />
+              <SaveFlash visible={moodField.saved} label={copy.detail.saveAccepted} />
+            </div>
           </div>
-          <textarea className={`${inputClass} mt-3 min-h-28`} value={idea.chordMemo} onChange={(event) => updateMeta({ chordMemo: event.target.value })} placeholder={language === "ja" ? "コード進行メモ" : "Chord progression memo"} />
+          <div className="relative mt-3">
+            <textarea className={`${inputClass} min-h-28 pr-9`} value={memoField.draft} aria-label={copy.detail.fields.memo} title={copy.detail.fields.memo} onChange={(event) => memoField.setDraft(event.target.value)} placeholder={language === "ja" ? "コード進行メモ" : "Chord progression memo"} {...memoField.inputProps} />
+            <SaveFlash visible={memoField.saved} label={copy.detail.saveAccepted} />
+          </div>
         </Panel>
 
         <Panel>
