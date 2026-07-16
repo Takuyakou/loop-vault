@@ -45,7 +45,7 @@ describe("DetailView status reasons", () => {
       );
     });
 
-    await clickButton(container, "保留");
+    await selectStatusAction(container, "保留");
     expect(transitionIdea).not.toHaveBeenCalled();
     expect(document.body.textContent).toContain("保留: 理由（任意）");
 
@@ -93,7 +93,7 @@ describe("DetailView status reasons", () => {
       );
     });
 
-    await clickButton(container, "没");
+    await selectStatusAction(container, "没");
     expect(document.body.textContent).toContain("没: 理由（任意）");
     await clickButton(document.body, "没にする");
     expect(transitionIdea).toHaveBeenCalledWith(
@@ -107,12 +107,20 @@ describe("DetailView status reasons", () => {
   });
 
   it.each([
-    { status: "hold", label: "保留" },
-    { status: "abandoned", label: "没" },
+    {
+      status: "hold",
+      prevStatus: "arrange",
+      actionLabel: "展開へ復帰",
+    },
+    {
+      status: "abandoned",
+      prevStatus: "loop",
+      actionLabel: "ループへ復帰",
+    },
   ] as const)(
-    "ignores the current $status status button",
-    async ({ status, label }) => {
-      const idea = makeIdea({ status });
+    "restores $status through moveStatus to prevStatus",
+    async ({ status, prevStatus, actionLabel }) => {
+      const idea = makeIdea({ status, prevStatus });
       const transitionIdea = vi.fn(() => ({ ok: true as const, idea }));
       const container = document.createElement("div");
       document.body.append(container);
@@ -135,14 +143,45 @@ describe("DetailView status reasons", () => {
         );
       });
 
-      await clickButton(container, label);
-
-      expect(document.querySelector("#status-reason")).toBeNull();
+      await selectStatusAction(container, actionLabel);
       expect(transitionIdea).not.toHaveBeenCalled();
+      await clickButton(document.body, "持ち越して移動");
+
+      expect(transitionIdea).toHaveBeenCalledWith(
+        idea.id,
+        prevStatus,
+        expect.any(Date),
+        {},
+      );
       await act(async () => root.unmount());
       container.remove();
     },
   );
+
+  it.each([
+    { kind: "missing", prevStatus: undefined },
+    { kind: "invalid", prevStatus: "abandoned" as const },
+  ])("offers only the Idea repair for $kind prevStatus", async ({ prevStatus }) => {
+    const idea = makeIdea({ status: "hold", prevStatus });
+    const transitionIdea = vi.fn(() => ({ ok: true as const, idea }));
+    const mounted = await renderDetail(idea, { transitionIdea });
+
+    await clickButton(mounted.container, "その他");
+    const menuItems = [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')]
+      .map((item) => item.textContent);
+    expect(menuItems).toEqual(["アイデアへ復帰"]);
+
+    await clickButton(mounted.container, "アイデアへ復帰");
+    expect(transitionIdea).not.toHaveBeenCalled();
+    await clickButton(document.body, "持ち越して移動");
+    expect(transitionIdea).toHaveBeenCalledWith(
+      idea.id,
+      "idea",
+      expect.any(Date),
+      {},
+    );
+    await mounted.unmount();
+  });
 
   it("shows a saved reason in status history without changing the memo", () => {
     const markup = renderToStaticMarkup(
@@ -198,18 +237,19 @@ describe("DetailView status reasons", () => {
       );
     });
 
-    await clickButton(container, "ループ");
+    await clickButton(container, "ループへ進む");
     expect(transitionIdea).not.toHaveBeenCalled();
-    expect(document.querySelector('[role="dialog"]')?.textContent).toContain("Next Actionを持ち越しますか？");
+    expect(document.querySelector('[role="dialog"]')?.textContent)
+      .toContain("移動後も次の一手を持ち越しますか？");
     expect(document.activeElement?.textContent).toBe(appCopy.ja.common.cancel);
 
     await clickButton(document.body, appCopy.ja.common.cancel);
     expect(transitionIdea).not.toHaveBeenCalled();
     expect(updateNextAction).not.toHaveBeenCalled();
 
-    await clickButton(container, "ループ");
+    await clickButton(container, "ループへ進む");
 
-    await clickButton(document.body, "空にして進む");
+    await clickButton(document.body, "空にして移動");
     expect(updateNextAction).toHaveBeenCalledWith(idea.id, "", expect.any(Date));
     expect(transitionIdea).toHaveBeenCalledWith(idea.id, "loop", expect.any(Date), {});
     expect(transitionIdea.mock.invocationCallOrder[0]).toBeLessThan(
@@ -226,8 +266,8 @@ describe("DetailView status reasons", () => {
     const updateNextAction = vi.fn();
     const mounted = await renderDetail(idea, { transitionIdea, updateNextAction });
 
-    await clickButton(mounted.container, "ループ");
-    await clickButton(document.body, "持ち越して進む");
+    await clickButton(mounted.container, "ループへ進む");
+    await clickButton(document.body, "持ち越して移動");
 
     expect(transitionIdea).toHaveBeenCalledWith(idea.id, "loop", expect.any(Date), {});
     expect(updateNextAction).not.toHaveBeenCalled();
@@ -244,12 +284,43 @@ describe("DetailView status reasons", () => {
     const setToast = vi.fn();
     const mounted = await renderDetail(idea, { transitionIdea, updateNextAction, setToast });
 
-    await clickButton(mounted.container, "ループ");
-    await clickButton(document.body, "空にして進む");
+    await clickButton(mounted.container, "ループへ進む");
+    await clickButton(document.body, "空にして移動");
 
     expect(transitionIdea).toHaveBeenCalledTimes(1);
     expect(updateNextAction).not.toHaveBeenCalled();
     expect(setToast).toHaveBeenCalledWith("invalid");
+    await mounted.unmount();
+  });
+
+  it("routes completion removal through the menu and Next Action confirmation", async () => {
+    const idea = makeIdea({
+      status: "done",
+      completedAt: "2026-07-01T00:00:00.000Z",
+      nextAction: {
+        text: "Prepare the remaster",
+        updatedAt: "2026-07-15T00:00:00.000Z",
+      },
+    });
+    const transitionIdea = vi.fn(() => ({ ok: true as const, idea }));
+    const updateNextAction = vi.fn();
+    const mounted = await renderDetail(idea, { transitionIdea, updateNextAction });
+
+    expect([...mounted.container.querySelectorAll("button")]
+      .some((button) => button.textContent === "完成を解除してミックスへ")).toBe(false);
+    await selectStatusAction(mounted.container, "完成を解除してミックスへ");
+    expect(transitionIdea).not.toHaveBeenCalled();
+    expect(document.querySelector('[role="dialog"]')?.textContent)
+      .toContain("移動後も次の一手を持ち越しますか？");
+
+    await clickButton(document.body, "持ち越して移動");
+    expect(transitionIdea).toHaveBeenCalledWith(
+      idea.id,
+      "mix",
+      expect.any(Date),
+      {},
+    );
+    expect(updateNextAction).not.toHaveBeenCalled();
     await mounted.unmount();
   });
 
@@ -449,6 +520,11 @@ async function clickButton(container: HTMLElement, label: string) {
     .find((candidate) => candidate.textContent === label);
   expect(button).toBeDefined();
   await act(async () => button?.click());
+}
+
+async function selectStatusAction(container: HTMLElement, label: string) {
+  await clickButton(container, appCopy.ja.detail.statusControl.other);
+  await clickButton(container, label);
 }
 
 async function changeTextarea(textarea: HTMLTextAreaElement, value: string) {

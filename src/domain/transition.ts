@@ -44,7 +44,18 @@ export function transition(
     if (isInactiveStatus(idea.status) && !idea.prevStatus) {
       return transitionError(
         "missing-restore-target",
-        `"${idea.title}" cannot restore without prevStatus.`,
+        `"${idea.title}" can only repair to idea without prevStatus.`,
+      );
+    }
+
+    if (
+      isInactiveStatus(idea.status)
+      && idea.prevStatus
+      && !isPipelineStatus(idea.prevStatus)
+    ) {
+      return transitionError(
+        "invalid-restore-target",
+        `"${idea.title}" can only repair to idea with invalid prevStatus.`,
       );
     }
 
@@ -92,12 +103,15 @@ export function transition(
 }
 
 function canTransition(idea: SongIdea, to: Status): boolean {
-  if (isInactiveStatus(to)) {
-    return true;
+  if (isInactiveStatus(idea.status)) {
+    if (!idea.prevStatus || !isPipelineStatus(idea.prevStatus)) {
+      return to === "idea";
+    }
+    return isInactiveStatus(to) || idea.prevStatus === to;
   }
 
-  if (isInactiveStatus(idea.status)) {
-    return idea.prevStatus === to;
+  if (isInactiveStatus(to)) {
+    return true;
   }
 
   return isAdjacentPipelineMove(idea.status, to);
