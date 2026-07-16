@@ -59,6 +59,7 @@ import { EditableProgressionGrid } from "../components/progression-editing/Edita
 import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
 import { ProgressionEditSummary } from "../components/progression-editing/ProgressionEditSummary";
 import { usePlaybackState } from "../hooks/usePlaybackState";
+import { Copy, TriangleAlert } from "lucide-react";
 
 interface CaptureViewProps {
   ideas: SongIdea[];
@@ -1078,7 +1079,8 @@ export function ProgressionCandidateCard({
             onCopyMemo={(ideaId) => onCopyMemo?.(editedCandidate, ideaId, editable) ?? false}
             onSaved={() => setSavedSignature(currentSignature)}
           />
-          <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => void onCopyProgression(editedCandidate)}>
+          <button className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => void onCopyProgression(editedCandidate)}>
+            <Copy aria-hidden="true" size={16} />
             {copy.capture.copyProgression}
           </button>
         </div>
@@ -1151,7 +1153,8 @@ export function ProgressionCandidateCard({
       {isExpanded && visibleWarnings.length > 0 ? (
         <div className="mt-3 flex flex-wrap gap-2">
           {visibleWarnings.map((warning) => (
-            <span key={warning} className="rounded border border-amber-400/40 bg-amber-400/10 px-2 py-1 text-xs text-amber-100">
+            <span key={warning} className="inline-flex items-center gap-1.5 rounded border border-amber-400/40 bg-amber-400/10 px-2 py-1 text-xs text-amber-100">
+              <TriangleAlert aria-hidden="true" size={16} />
               {copy.capture.reviewPrefix}: {warning}
             </span>
           ))}

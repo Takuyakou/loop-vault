@@ -1,5 +1,6 @@
 import { useId, useRef } from "react";
 import { Modal } from "./Modal";
+import { TriangleAlert } from "lucide-react";
 
 export interface ConfirmDialogProps {
   open: boolean;
@@ -47,7 +48,10 @@ export function ConfirmDialog({
       panelClassName="w-full max-w-md p-5"
       layerClassName="z-[70]"
     >
-      <h2 id={titleId} className="text-xl font-semibold">{title}</h2>
+      <h2 id={titleId} className="flex items-center gap-2 text-xl font-semibold">
+        {tone === "danger" ? <TriangleAlert aria-hidden="true" size={20} /> : null}
+        {title}
+      </h2>
       <p id={descriptionId} className="mt-3 text-sm leading-6 text-[var(--lv-text-secondary)]">
         {description}
       </p>

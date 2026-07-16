@@ -1,5 +1,6 @@
 import type { EditableChordSlot } from "../../domain/progressionEditing";
 import { progressionEditorCopy, type AppLanguage } from "../../i18n";
+import { Pencil, TriangleAlert } from "lucide-react";
 
 interface EditableChordCardProps {
   slot: EditableChordSlot;
@@ -40,12 +41,13 @@ export function EditableChordCard({
         </span>
         {slot.edited ? (
           <span className="text-xs text-teal-200" aria-label={text.edited}>
-            ✎
+            <Pencil aria-hidden="true" size={16} />
           </span>
         ) : null}
       </span>
       {needsReview ? (
-        <span className="mt-2 inline-block text-xs text-amber-200">
+        <span className="mt-2 inline-flex items-center gap-1.5 text-xs text-amber-200">
+          <TriangleAlert aria-hidden="true" size={16} />
           {text.review}
         </span>
       ) : null}

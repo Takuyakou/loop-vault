@@ -6,6 +6,7 @@ import {
   type PlayingSource,
 } from "../audio/playbackController";
 import { usePlaybackState } from "../hooks/usePlaybackState";
+import { Play, Square } from "lucide-react";
 
 export function PlayToggle({
   source,
@@ -40,7 +41,7 @@ export function PlayToggle({
       aria-busy={active && state.status === "starting"}
       title={label}
     >
-      <span aria-hidden="true">{active ? "■" : "▶"}</span>
+      {active ? <Square aria-hidden="true" size={16} /> : <Play aria-hidden="true" size={16} />}
       {showLabel ? <span>{label}</span> : null}
     </button>
   );

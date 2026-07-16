@@ -1,6 +1,7 @@
 import type { AppCopy } from "../i18n";
 import { playbackController, type PlaybackController } from "../audio/playbackController";
 import { usePlaybackState } from "../hooks/usePlaybackState";
+import { Music, Settings } from "lucide-react";
 
 export type AppView = "home" | "capture" | "library" | "detail";
 export type SaveStatus = "saved" | "saving" | "unsaved";
@@ -33,7 +34,7 @@ export function AppShell({ view, setView, openCreate, openSettings, copy, saveSt
         <button className="whitespace-nowrap rounded bg-[var(--lv-accent)] px-2.5 py-2 text-sm font-semibold text-stone-950 md:px-3" onClick={openCreate}>{copy.nav.new}</button>
         {playback.status !== "idle" ? (
           <button className="lv-button-ghost inline-flex h-9 min-w-9 items-center justify-center gap-2 px-2 text-xs lg:px-3" onClick={() => controller.stop()} aria-label={copy.nav.stopPlaying} title={copy.nav.stopPlaying}>
-            <span aria-hidden="true">♪</span>
+            <Music aria-hidden="true" size={16} />
             <span className="hidden lg:inline">{copy.nav.playing}</span>
           </button>
         ) : null}
@@ -42,7 +43,7 @@ export function AppShell({ view, setView, openCreate, openSettings, copy, saveSt
           <span className="hidden whitespace-nowrap lg:inline">{saveLabel}</span>
         </span>
         <button className="ml-1 grid h-9 w-9 shrink-0 place-items-center rounded border border-[var(--lv-border-strong)] text-lg text-[var(--lv-text-secondary)] hover:border-teal-300 hover:bg-[var(--lv-surface)] md:ml-2" onClick={openSettings} aria-label={copy.nav.settings} title={copy.nav.settings}>
-          <span aria-hidden="true">⚙</span>
+          <Settings aria-hidden="true" size={20} />
         </button>
       </div>
     </header>

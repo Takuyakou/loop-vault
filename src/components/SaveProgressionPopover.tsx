@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import type { SongIdea } from "../domain/types";
 import type { AppCopy } from "../i18n";
+import { ChevronDown, Save } from "lucide-react";
 
 type SavePanel = "new" | "append" | "memo";
 
@@ -160,12 +161,13 @@ export function SaveProgressionPopover({
       <button
         ref={primaryButtonRef}
         type="button"
-        className="rounded-l bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950"
+        className="inline-flex items-center gap-2 rounded-l bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950"
         aria-haspopup="dialog"
         aria-controls={primaryExpanded ? panelId : undefined}
         aria-expanded={primaryExpanded}
         onClick={openNew}
       >
+        <Save aria-hidden="true" size={16} />
         {copy.capture.saveToVault}
       </button>
       <button
@@ -173,6 +175,7 @@ export function SaveProgressionPopover({
         type="button"
         className="rounded-r border-l border-stone-950/30 bg-[var(--lv-accent)] px-2 py-2 text-sm font-semibold text-stone-950"
         aria-label={copy.capture.saveMenu}
+        title={copy.capture.saveMenu}
         aria-haspopup={secondaryPanelOpen ? "dialog" : "menu"}
         aria-controls={menuOpen ? menuId : secondaryPanelOpen ? panelId : undefined}
         aria-expanded={secondaryExpanded}
@@ -184,7 +187,7 @@ export function SaveProgressionPopover({
           }
         }}
       >
-        ▾
+        <ChevronDown aria-hidden="true" size={16} />
       </button>
 
       {menuOpen ? (
@@ -275,8 +278,9 @@ export function SaveProgressionPopover({
             <button
               type="submit"
               disabled={!canSave}
-              className="rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950 disabled:cursor-not-allowed disabled:bg-stone-700 disabled:text-[var(--lv-text-muted)]"
+              className="inline-flex items-center gap-2 rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950 disabled:cursor-not-allowed disabled:bg-stone-700 disabled:text-[var(--lv-text-muted)]"
             >
+              <Save aria-hidden="true" size={16} />
               {copy.capture.save}
             </button>
           </div>

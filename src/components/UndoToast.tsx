@@ -1,5 +1,6 @@
 import type { UndoableAction } from "../hooks/useUndoQueue";
 import { useEffect, useRef, useState, type RefObject } from "react";
+import { Undo2 } from "lucide-react";
 
 export function UndoToast({
   actions,
@@ -87,9 +88,10 @@ export function UndoToast({
                 }}
                 type="button"
                 data-undo-action-id={action.id}
-                className="shrink-0 rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950"
+                className="inline-flex shrink-0 items-center gap-2 rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950"
                 onClick={() => onUndo(action.id)}
               >
+                <Undo2 aria-hidden="true" size={16} />
                 {undoLabel}
               </button>
             </div>
