@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   openFileDialog: vi.fn(),
   saveFileDialog: vi.fn(),
   appDataDir: vi.fn(async () => "C:/LoopVault/"),
+  revealItemInDir: vi.fn(async () => undefined),
   deleteAnalysisFeedback: vi.fn(async () => undefined),
   deleteDifferenceReviews: vi.fn(async () => undefined),
   deletePromotedCorrections: vi.fn(async () => undefined),
@@ -23,7 +24,7 @@ vi.mock("@tauri-apps/plugin-dialog", () => ({
   open: mocks.openFileDialog,
   save: mocks.saveFileDialog,
 }));
-vi.mock("@tauri-apps/plugin-opener", () => ({ revealItemInDir: vi.fn() }));
+vi.mock("@tauri-apps/plugin-opener", () => ({ revealItemInDir: mocks.revealItemInDir }));
 vi.mock("../storage/analysisFeedbackStorage", () => ({
   deleteAnalysisFeedback: mocks.deleteAnalysisFeedback,
   isAnalysisFeedbackEnabled: () => true,
@@ -51,21 +52,85 @@ afterEach(() => {
   document.body.style.overflow = "";
 });
 
+describe("SettingsDialog sections", () => {
+  it("shows the three Japanese sections and keeps developer analysis collapsed initially", async () => {
+    const mounted = await renderSettings();
+    const headings = [...dialogs()[0]!.querySelectorAll("h3")].map((heading) => heading.textContent);
+    for (const heading of [
+      appCopy.ja.settingsUi.general,
+      appCopy.ja.settingsUi.data,
+      appCopy.ja.settingsUi.analysis,
+    ]) {
+      expect(headings.some((text) => text?.startsWith(heading))).toBe(true);
+    }
+
+    const disclosure = findButton(appCopy.ja.settingsUi.analysis, dialogs()[0]);
+    expect(disclosure?.getAttribute("aria-expanded")).toBe("false");
+    expect(dialogs()[0]?.textContent).not.toContain(appCopy.ja.settingsUi.correctionTitle);
+    await click(disclosure);
+    expect(disclosure?.getAttribute("aria-expanded")).toBe("true");
+    expect(dialogs()[0]?.textContent).toContain(appCopy.ja.settingsUi.correctionTitle);
+    await mounted.unmount();
+  });
+
+  it("renders the same three-section hierarchy in English", async () => {
+    const mounted = await renderSettings({ language: "en", copy: appCopy.en });
+    const text = dialogs()[0]?.textContent;
+    expect(text).toContain(appCopy.en.settingsUi.general);
+    expect(text).toContain(appCopy.en.settingsUi.data);
+    expect(text).toContain(appCopy.en.settingsUi.analysis);
+    expect(text).toContain(appCopy.en.settingsUi.monthlyGoal);
+    await mounted.unmount();
+  });
+
+  it("keeps general setting callbacks connected", async () => {
+    const setLanguage = vi.fn();
+    const setMonthlyGoal = vi.fn();
+    const setShowRomanNumerals = vi.fn();
+    const mounted = await renderSettings({ setLanguage, setMonthlyGoal, setShowRomanNumerals });
+
+    await changeSelect(document.querySelector<HTMLSelectElement>("#settings-language"), "en");
+    await changeInput(document.querySelector<HTMLInputElement>("#settings-monthly-goal"), "4");
+    const degreeToggle = document.querySelector<HTMLInputElement>('input[type="checkbox"]');
+    await click(degreeToggle);
+
+    expect(setLanguage).toHaveBeenCalledWith("en");
+    expect(setMonthlyGoal).toHaveBeenCalledWith(4);
+    expect(setShowRomanNumerals).toHaveBeenCalledWith(false);
+    await mounted.unmount();
+  });
+
+  it("shows only the latest five backups until all are requested", async () => {
+    const backups = Array.from({ length: 6 }, (_, index) => ({
+      name: `data-backup-${index + 1}.json`,
+      path: `C:/LoopVault/data-backup-${index + 1}.json`,
+      createdAt: `2026-07-${String(index + 1).padStart(2, "0")}T00:00:00.000Z`,
+    }));
+    const mounted = await renderSettings({ backups });
+
+    expect(dialogs()[0]?.textContent).not.toContain("data-backup-6.json");
+    await clickButton(appCopy.ja.settingsUi.showAll, dialogs()[0]);
+    expect(dialogs()[0]?.textContent).toContain("data-backup-6.json");
+    await clickButton(appCopy.ja.settingsUi.showLatestFive, dialogs()[0]);
+    expect(dialogs()[0]?.textContent).not.toContain("data-backup-6.json");
+    await mounted.unmount();
+  });
+});
+
 describe("SettingsDialog confirmations", () => {
   it("does not replace the Vault until the shared confirmation is accepted", async () => {
     mocks.openFileDialog.mockResolvedValue("C:/backup.json");
     const importVault = vi.fn(async () => true);
     const mounted = await renderSettings({ importVault });
-    const selects = [...document.querySelectorAll<HTMLSelectElement>('select')];
-    const importMode = selects.find((select) => [...select.options].some((option) => option.value === "replace"));
-    expect(importMode).toBeDefined();
+    const importMode = [...document.querySelectorAll<HTMLSelectElement>("select")]
+      .find((select) => [...select.options].some((option) => option.value === "replace"));
     await changeSelect(importMode, "replace");
 
-    await clickButton(appCopy.ja.settings.importButton);
+    await clickButton(appCopy.ja.settingsUi.importButton);
     expect(importVault).not.toHaveBeenCalled();
-    expect(dialogs()[1]?.textContent).toContain("Vaultを置き換え");
+    expect(dialogs()[1]?.textContent).toContain(appCopy.ja.settingsUi.replaceTitle);
 
-    await clickButton("置き換える", dialogs()[1]);
+    await clickButton(appCopy.ja.settingsUi.replaceConfirm, dialogs()[1]);
     expect(importVault).toHaveBeenCalledWith("C:/backup.json", "replace");
     await mounted.unmount();
   });
@@ -75,15 +140,16 @@ describe("SettingsDialog confirmations", () => {
     const refreshBackups = vi.fn(async () => undefined);
     const mounted = await renderSettings({ restoreBackup, refreshBackups });
 
-    await clickButton(appCopy.ja.common.restore, dialogs()[0]);
+    await clickButton(appCopy.ja.settingsUi.restore, dialogs()[0]);
     expect(restoreBackup).not.toHaveBeenCalled();
-    await clickButton(appCopy.ja.common.restore, dialogs()[1]);
+    await clickButton(appCopy.ja.settingsUi.restore, dialogs()[1]);
     expect(restoreBackup).toHaveBeenCalledWith("data-backup.json");
     expect(refreshBackups).toHaveBeenCalled();
 
-    await clickButton("評価データを削除", dialogs()[0]);
+    await click(findButton(appCopy.ja.settingsUi.analysis, dialogs()[0]));
+    await clickButton(appCopy.ja.settingsUi.deleteEvaluation, dialogs()[0]);
     expect(mocks.deleteRealEvaluationData).not.toHaveBeenCalled();
-    await clickButton(appCopy.ja.common.delete, dialogs()[1]);
+    await clickButton(appCopy.ja.settingsUi.delete, dialogs()[1]);
     expect(mocks.deleteRealEvaluationData).toHaveBeenCalledTimes(1);
     await mounted.unmount();
   });
@@ -95,11 +161,8 @@ describe("SettingsDialog confirmations", () => {
     }));
     const mounted = await renderSettings({ restoreBackup });
 
-    await clickButton(appCopy.ja.common.restore, dialogs()[0]);
-    const confirmButton = [...dialogs()[1]!.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent === appCopy.ja.common.restore);
-    expect(confirmButton).toBeDefined();
-
+    await clickButton(appCopy.ja.settingsUi.restore, dialogs()[0]);
+    const confirmButton = findButton(appCopy.ja.settingsUi.restore, dialogs()[1]);
     await act(async () => {
       confirmButton?.click();
       confirmButton?.click();
@@ -149,18 +212,36 @@ function dialogs() {
   return [...document.querySelectorAll<HTMLElement>('[role="dialog"]')];
 }
 
-async function clickButton(label: string, scope: ParentNode = document) {
-  const button = [...scope.querySelectorAll<HTMLButtonElement>("button")]
-    .find((candidate) => candidate.textContent === label);
-  expect(button).toBeDefined();
-  await act(async () => button?.click());
+function findButton(label: string, scope: ParentNode = document) {
+  return [...scope.querySelectorAll<HTMLButtonElement>("button")]
+    .find((candidate) => candidate.textContent?.includes(label));
 }
 
-async function changeSelect(select: HTMLSelectElement | undefined, value: string) {
+async function clickButton(label: string, scope: ParentNode = document) {
+  const button = findButton(label, scope);
+  expect(button).toBeDefined();
+  await click(button);
+}
+
+async function click(element: HTMLElement | undefined | null) {
+  expect(element).toBeDefined();
+  await act(async () => element?.click());
+}
+
+async function changeSelect(select: HTMLSelectElement | undefined | null, value: string) {
   expect(select).toBeDefined();
   const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value")?.set;
   await act(async () => {
     setter?.call(select, value);
     select?.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+}
+
+async function changeInput(input: HTMLInputElement | undefined | null, value: string) {
+  expect(input).toBeDefined();
+  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+  await act(async () => {
+    setter?.call(input, value);
+    input?.dispatchEvent(new Event("change", { bubbles: true }));
   });
 }
