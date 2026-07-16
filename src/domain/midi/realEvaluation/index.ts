@@ -2,6 +2,8 @@ export { midiChordCorrectionEventSchema, midiDifferenceReviewSchema, realMidiEva
 export { promoteCorrectionEvents } from "./correctionPromotion";
 export type { CorrectionConflict, CorrectionPromotionResult } from "./correctionPromotion";
 export { deriveAcceptableAlternatives } from "./acceptableAlternatives";
+export { buildActiveReviewQueue } from "./reviewQueue";
+export type { ReviewQueueOptions } from "./reviewQueue";
 export {
   buildDifferenceReviewCases,
   chordLabelsEquivalent,
