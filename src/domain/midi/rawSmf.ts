@@ -37,6 +37,13 @@ interface TimedMeta<T> {
   value: T;
 }
 
+interface TimedChannelEvent {
+  tick: number;
+  trackIndex: number;
+  eventIndex: number;
+  event: Extract<MidiEvent, { channel: number }>;
+}
+
 export function parseRawSmf(bytes: Uint8Array): RawSmfSong {
   const midi = parseMidiFile(bytes);
   if (midi.header.format === 2) {
@@ -50,14 +57,14 @@ export function parseRawSmf(bytes: Uint8Array): RawSmfSong {
   const controlChanges: MidiControlChange[] = [];
   const tempos: TimedMeta<number>[] = [];
   const timeSignatures: TimedMeta<[number, number]>[] = [];
+  const channelEvents: TimedChannelEvent[] = [];
+  const trackEndTicks = new Map<number, number>();
 
   const tracks = midi.tracks.map((events, trackIndex) => {
     let tick = 0;
     let name = "";
     const channels = new Set<number>();
     const explicitPrograms = new Set<number>();
-    const programs = new Map<number, { program: number; explicit: boolean }>();
-    const activeNotes = new Map<string, ActiveNote[]>();
 
     events.forEach((event, eventIndex) => {
       tick += event.deltaTime;
@@ -90,42 +97,12 @@ export function parseRawSmf(bytes: Uint8Array): RawSmfSong {
 
       channels.add(event.channel);
       if (event.type === "programChange") {
-        programs.set(event.channel, { program: event.programNumber, explicit: true });
         explicitPrograms.add(event.programNumber);
-        return;
       }
-      if (event.type === "controller") {
-        controlChanges.push({
-          trackIndex,
-          channel: event.channel,
-          number: event.controllerType,
-          tick,
-          value: event.value / 127,
-        });
-        return;
-      }
-      if (event.type === "noteOn" && event.velocity > 0) {
-        const state = programs.get(event.channel) ?? { program: 0, explicit: false };
-        const key = noteKey(event.channel, event.noteNumber);
-        const queue = activeNotes.get(key) ?? [];
-        queue.push({
-          pitch: event.noteNumber,
-          startTick: tick,
-          velocity: event.velocity / 127,
-          trackIndex,
-          channel: event.channel,
-          program: state.program,
-          programExplicit: state.explicit,
-        });
-        activeNotes.set(key, queue);
-        return;
-      }
-      if (event.type === "noteOff" || (event.type === "noteOn" && event.velocity === 0)) {
-        finishNote(activeNotes, notes, event.channel, event.noteNumber, tick);
-      }
+      channelEvents.push({ tick, trackIndex, eventIndex, event });
     });
 
-    closeDanglingNotes(activeNotes, notes, tick);
+    trackEndTicks.set(trackIndex, tick);
 
     return {
       index: trackIndex,
@@ -134,6 +111,45 @@ export function parseRawSmf(bytes: Uint8Array): RawSmfSong {
       explicitPrograms: [...explicitPrograms].sort((a, b) => a - b),
     };
   });
+
+  const programs = new Map<number, { program: number; explicit: boolean }>();
+  const activeNotes = new Map<string, ActiveNote[]>();
+  for (const { tick, trackIndex, event } of orderTimed(channelEvents)) {
+    if (event.type === "programChange") {
+      programs.set(event.channel, { program: event.programNumber, explicit: true });
+      continue;
+    }
+    if (event.type === "controller") {
+      controlChanges.push({
+        trackIndex,
+        channel: event.channel,
+        number: event.controllerType,
+        tick,
+        value: event.value / 127,
+      });
+      continue;
+    }
+    if (event.type === "noteOn" && event.velocity > 0) {
+      const state = programs.get(event.channel) ?? { program: 0, explicit: false };
+      const key = noteKey(event.channel, event.noteNumber);
+      const queue = activeNotes.get(key) ?? [];
+      queue.push({
+        pitch: event.noteNumber,
+        startTick: tick,
+        velocity: event.velocity / 127,
+        trackIndex,
+        channel: event.channel,
+        program: state.program,
+        programExplicit: state.explicit,
+      });
+      activeNotes.set(key, queue);
+      continue;
+    }
+    if (event.type === "noteOff" || (event.type === "noteOn" && event.velocity === 0)) {
+      finishNote(activeNotes, notes, event.channel, event.noteNumber, tick);
+    }
+  }
+  closeDanglingNotes(activeNotes, notes, trackEndTicks);
 
   const orderedTempos = orderTimed(tempos);
   const tempo = orderedTempos[0]?.value;
@@ -192,12 +208,13 @@ function finishNote(
 function closeDanglingNotes(
   activeNotes: Map<string, ActiveNote[]>,
   notes: ParsedTimedNote[],
-  trackEndTick: number,
+  trackEndTicks: ReadonlyMap<number, number>,
 ): void {
   const dangling = [...activeNotes.values()].flat().sort(
     (a, b) => a.channel - b.channel || a.pitch - b.pitch || a.startTick - b.startTick,
   );
   for (const active of dangling) {
+    const trackEndTick = trackEndTicks.get(active.trackIndex) ?? active.startTick + 1;
     notes.push({
       pitch: active.pitch,
       startTick: active.startTick,
@@ -224,7 +241,7 @@ function firstTimedValue<T>(values: TimedMeta<T>[]): T | undefined {
   return orderTimed(values)[0]?.value;
 }
 
-function orderTimed<T>(values: TimedMeta<T>[]): TimedMeta<T>[] {
+function orderTimed<T extends { tick: number; trackIndex: number; eventIndex: number }>(values: T[]): T[] {
   return [...values].sort(
     (a, b) => a.tick - b.tick || a.trackIndex - b.trackIndex || a.eventIndex - b.eventIndex,
   );
