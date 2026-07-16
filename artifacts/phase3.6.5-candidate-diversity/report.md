@@ -2,7 +2,7 @@
 
 - Status: failed-strict-guard
 - Overall guard: FAILED
-- Strict exit: report-only
+- Strict exit: enabled
 - Guard failure: dirty category regressed: combined (regressed)
 - Guard failure: dirty category regressed: drums (mixed)
 - Guard failure: dirty category regressed: jitter (mixed)
@@ -12,6 +12,14 @@
 - Guard failure: dirty category regressed: sustain (mixed)
 - Guard failure: dirty category regressed: type0 (mixed)
 - Guard failure: dirty improvement requirement not met
+- Guard failure: required dirty category did not improve: drums
+- Guard failure: required dirty metric did not improve: drums Root@3
+- Guard failure: required dirty metric did not improve: drums Exact@1
+- Guard failure: required dirty cost did not decrease: drums correction proxy/case
+- Guard failure: required dirty category did not improve: type0
+- Guard failure: required dirty metric did not improve: type0 Root@3
+- Guard failure: required dirty metric did not improve: type0 Exact@1
+- Guard failure: required dirty cost did not decrease: type0 correction proxy/case
 - Default analyzer: legacy (unchanged)
 - Clean cases: 100
 - Dirty cases: 1100
@@ -19,7 +27,7 @@
 - Clean guard: PASS
 - Determinism: PASS (26 cases)
 - Real MIDI Gold: not-evaluable (0 cases)
-- Total runtime: 37.8 s
+- Total runtime: 47.4 s
 
 ## Accuracy and legacy delta
 
@@ -57,33 +65,33 @@ combined | voice-aware-rerank-v1 | regressed | 100 | 52.37% | +0.00pp | 58.35% |
 
 Category | Analyzer | Guard | Correction/case | Delta | Boundary P | Delta | Boundary R | Delta | Legacy boundary identical | Primary changes | Runtime ms
 --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---:
-clean | legacy | reference | 9.1800 | +0.0000 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 0 | 666.9
-clean | legacy-boundary-rerank | reference | 9.1700 | -0.0100 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 30 | 1413.4
-clean | voice-aware-rerank-v1 | pass | 9.1800 | +0.0000 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 56 | 1390.7
-type0 | legacy | reference | 9.1900 | +0.0000 | 76.99% | +0.00pp | 90.09% | +0.00pp | yes | 0 | 559.6
-type0 | legacy-boundary-rerank | reference | 9.1900 | +0.0000 | 76.99% | +0.00pp | 90.09% | +0.00pp | yes | 24 | 1180.0
-type0 | voice-aware-rerank-v1 | mixed | 9.1900 | +0.0000 | 76.99% | +0.00pp | 90.09% | +0.00pp | yes | 54 | 1185.1
-drums | legacy | reference | 9.1800 | +0.0000 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 0 | 548.8
-drums | legacy-boundary-rerank | reference | 9.1700 | -0.0100 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 30 | 1269.3
-drums | voice-aware-rerank-v1 | mixed | 9.1800 | +0.0000 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 56 | 1217.8
-melody | legacy | reference | 9.5500 | +0.0000 | 65.94% | +0.00pp | 96.27% | +0.00pp | yes | 0 | 632.5
-melody | legacy-boundary-rerank | reference | 9.5400 | -0.0100 | 65.94% | +0.00pp | 96.27% | +0.00pp | yes | 16 | 1289.4
-melody | voice-aware-rerank-v1 | mixed | 9.5400 | -0.0100 | 65.94% | +0.00pp | 96.27% | +0.00pp | yes | 60 | 1307.0
-metadata-missing | legacy | reference | 9.1800 | +0.0000 | 76.54% | +0.00pp | 90.05% | +0.00pp | yes | 0 | 1974.9
-metadata-missing | legacy-boundary-rerank | reference | 9.1733 | -0.0067 | 76.54% | +0.00pp | 90.05% | +0.00pp | yes | 88 | 3640.0
-metadata-missing | voice-aware-rerank-v1 | mixed | 9.1800 | +0.0000 | 76.54% | +0.00pp | 90.05% | +0.00pp | yes | 167 | 3724.8
-sustain | legacy | reference | 9.1800 | +0.0000 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 0 | 546.0
-sustain | legacy-boundary-rerank | reference | 9.1900 | +0.0100 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 53 | 1153.8
-sustain | voice-aware-rerank-v1 | mixed | 9.1800 | +0.0000 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 56 | 1254.8
-jitter | legacy | reference | 9.2200 | +0.0000 | 74.14% | +0.00pp | 93.02% | +0.00pp | yes | 0 | 553.1
-jitter | legacy-boundary-rerank | reference | 9.2300 | +0.0100 | 74.14% | +0.00pp | 93.02% | +0.00pp | yes | 32 | 1169.1
-jitter | voice-aware-rerank-v1 | mixed | 9.2300 | +0.0100 | 74.14% | +0.00pp | 93.02% | +0.00pp | yes | 59 | 1163.6
-same-channel-mixed | legacy | reference | 9.7900 | +0.0000 | 67.79% | +0.00pp | 86.88% | +0.00pp | yes | 0 | 1097.0
-same-channel-mixed | legacy-boundary-rerank | reference | 9.7900 | +0.0000 | 67.79% | +0.00pp | 86.88% | +0.00pp | yes | 51 | 2651.3
-same-channel-mixed | voice-aware-rerank-v1 | mixed | 9.7850 | -0.0050 | 67.79% | +0.00pp | 86.88% | +0.00pp | yes | 73 | 2385.9
-combined | legacy | reference | 9.8000 | +0.0000 | 59.06% | +0.00pp | 95.41% | +0.00pp | yes | 0 | 572.9
-combined | legacy-boundary-rerank | reference | 9.8000 | +0.0000 | 59.06% | +0.00pp | 95.41% | +0.00pp | yes | 2 | 1327.3
-combined | voice-aware-rerank-v1 | regressed | 9.8000 | +0.0000 | 59.06% | +0.00pp | 95.41% | +0.00pp | yes | 4 | 1308.6
+clean | legacy | reference | 9.1800 | +0.0000 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 0 | 925.5
+clean | legacy-boundary-rerank | reference | 9.1700 | -0.0100 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 30 | 1811.8
+clean | voice-aware-rerank-v1 | pass | 9.1800 | +0.0000 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 56 | 1671.8
+type0 | legacy | reference | 9.1900 | +0.0000 | 76.99% | +0.00pp | 90.09% | +0.00pp | yes | 0 | 764.1
+type0 | legacy-boundary-rerank | reference | 9.1900 | +0.0000 | 76.99% | +0.00pp | 90.09% | +0.00pp | yes | 24 | 1375.5
+type0 | voice-aware-rerank-v1 | mixed | 9.1900 | +0.0000 | 76.99% | +0.00pp | 90.09% | +0.00pp | yes | 54 | 1545.9
+drums | legacy | reference | 9.1800 | +0.0000 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 0 | 702.8
+drums | legacy-boundary-rerank | reference | 9.1700 | -0.0100 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 30 | 1362.9
+drums | voice-aware-rerank-v1 | mixed | 9.1800 | +0.0000 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 56 | 1613.3
+melody | legacy | reference | 9.5500 | +0.0000 | 65.94% | +0.00pp | 96.27% | +0.00pp | yes | 0 | 757.6
+melody | legacy-boundary-rerank | reference | 9.5400 | -0.0100 | 65.94% | +0.00pp | 96.27% | +0.00pp | yes | 16 | 1580.7
+melody | voice-aware-rerank-v1 | mixed | 9.5400 | -0.0100 | 65.94% | +0.00pp | 96.27% | +0.00pp | yes | 60 | 1580.7
+metadata-missing | legacy | reference | 9.1800 | +0.0000 | 76.54% | +0.00pp | 90.05% | +0.00pp | yes | 0 | 2105.7
+metadata-missing | legacy-boundary-rerank | reference | 9.1733 | -0.0067 | 76.54% | +0.00pp | 90.05% | +0.00pp | yes | 88 | 4701.2
+metadata-missing | voice-aware-rerank-v1 | mixed | 9.1800 | +0.0000 | 76.54% | +0.00pp | 90.05% | +0.00pp | yes | 167 | 4476.6
+sustain | legacy | reference | 9.1800 | +0.0000 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 0 | 772.0
+sustain | legacy-boundary-rerank | reference | 9.1900 | +0.0100 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 53 | 1595.2
+sustain | voice-aware-rerank-v1 | mixed | 9.1800 | +0.0000 | 76.55% | +0.00pp | 90.09% | +0.00pp | yes | 56 | 1425.3
+jitter | legacy | reference | 9.2200 | +0.0000 | 74.14% | +0.00pp | 93.02% | +0.00pp | yes | 0 | 707.3
+jitter | legacy-boundary-rerank | reference | 9.2300 | +0.0100 | 74.14% | +0.00pp | 93.02% | +0.00pp | yes | 32 | 1523.6
+jitter | voice-aware-rerank-v1 | mixed | 9.2300 | +0.0100 | 74.14% | +0.00pp | 93.02% | +0.00pp | yes | 59 | 1722.1
+same-channel-mixed | legacy | reference | 9.7900 | +0.0000 | 67.79% | +0.00pp | 86.88% | +0.00pp | yes | 0 | 1585.5
+same-channel-mixed | legacy-boundary-rerank | reference | 9.7900 | +0.0000 | 67.79% | +0.00pp | 86.88% | +0.00pp | yes | 51 | 3076.0
+same-channel-mixed | voice-aware-rerank-v1 | mixed | 9.7850 | -0.0050 | 67.79% | +0.00pp | 86.88% | +0.00pp | yes | 73 | 3215.1
+combined | legacy | reference | 9.8000 | +0.0000 | 59.06% | +0.00pp | 95.41% | +0.00pp | yes | 0 | 604.6
+combined | legacy-boundary-rerank | reference | 9.8000 | +0.0000 | 59.06% | +0.00pp | 95.41% | +0.00pp | yes | 2 | 1695.1
+combined | voice-aware-rerank-v1 | regressed | 9.8000 | +0.0000 | 59.06% | +0.00pp | 95.41% | +0.00pp | yes | 4 | 1819.5
 
 ## Candidate diversity
 
@@ -117,6 +125,38 @@ combined | legacy | 15.79% | 65.87% | 8.9400 | 3.00 | +8.24pp
 combined | legacy-boundary-rerank | 10.45% | 71.11% | 9.5100 | 5.00 | +1.83pp
 combined | voice-aware-rerank-v1 | 9.70% | 73.90% | 9.5900 | 5.00 | +1.35pp
 
+## Operation correction cost (Stage B2)
+
+Category | Analyzer | Segments | Total | Mean | Median | P90 | Cost 0 | Cost 1 | Cost 2 | Cost 3 | Cost 4
+--- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---:
+clean | legacy | 1058 | 2905 | 2.7457 | 4.00 | 4.00 | 164 | 67 | 177 | 116 | 534
+clean | legacy-boundary-rerank | 1058 | 2865 | 2.7079 | 4.00 | 4.00 | 165 | 105 | 138 | 116 | 534
+clean | voice-aware-rerank-v1 | 1058 | 2863 | 2.7060 | 4.00 | 4.00 | 165 | 107 | 136 | 116 | 534
+type0 | legacy | 1058 | 2903 | 2.7439 | 4.00 | 4.00 | 164 | 69 | 175 | 116 | 534
+type0 | legacy-boundary-rerank | 1058 | 2869 | 2.7117 | 4.00 | 4.00 | 165 | 101 | 142 | 116 | 534
+type0 | voice-aware-rerank-v1 | 1058 | 2863 | 2.7060 | 4.00 | 4.00 | 165 | 107 | 136 | 116 | 534
+drums | legacy | 1058 | 2905 | 2.7457 | 4.00 | 4.00 | 164 | 67 | 177 | 116 | 534
+drums | legacy-boundary-rerank | 1058 | 2865 | 2.7079 | 4.00 | 4.00 | 165 | 105 | 138 | 116 | 534
+drums | voice-aware-rerank-v1 | 1058 | 2863 | 2.7060 | 4.00 | 4.00 | 165 | 107 | 136 | 116 | 534
+melody | legacy | 1058 | 2941 | 2.7798 | 4.00 | 4.00 | 128 | 103 | 177 | 116 | 534
+melody | legacy-boundary-rerank | 1058 | 2920 | 2.7599 | 4.00 | 4.00 | 129 | 122 | 157 | 116 | 534
+melody | voice-aware-rerank-v1 | 1058 | 2918 | 2.7580 | 4.00 | 4.00 | 129 | 124 | 155 | 116 | 534
+metadata-missing | legacy | 3174 | 8716 | 2.7461 | 4.00 | 4.00 | 492 | 200 | 532 | 348 | 1602
+metadata-missing | legacy-boundary-rerank | 3174 | 8597 | 2.7086 | 4.00 | 4.00 | 494 | 315 | 415 | 348 | 1602
+metadata-missing | voice-aware-rerank-v1 | 3174 | 8589 | 2.7060 | 4.00 | 4.00 | 495 | 321 | 408 | 348 | 1602
+sustain | legacy | 1058 | 2905 | 2.7457 | 4.00 | 4.00 | 164 | 67 | 177 | 116 | 534
+sustain | legacy-boundary-rerank | 1058 | 2948 | 2.7864 | 4.00 | 4.00 | 164 | 24 | 220 | 116 | 534
+sustain | voice-aware-rerank-v1 | 1058 | 2948 | 2.7864 | 4.00 | 4.00 | 164 | 24 | 220 | 116 | 534
+jitter | legacy | 1058 | 2905 | 2.7457 | 4.00 | 4.00 | 161 | 73 | 174 | 116 | 534
+jitter | legacy-boundary-rerank | 1058 | 2878 | 2.7202 | 4.00 | 4.00 | 160 | 102 | 146 | 116 | 534
+jitter | voice-aware-rerank-v1 | 1058 | 2876 | 2.7183 | 4.00 | 4.00 | 160 | 104 | 144 | 116 | 534
+same-channel-mixed | legacy | 2116 | 6129 | 2.8965 | 4.00 | 4.00 | 178 | 115 | 523 | 232 | 1068
+same-channel-mixed | legacy-boundary-rerank | 2116 | 6101 | 2.8833 | 4.00 | 4.00 | 178 | 143 | 495 | 232 | 1068
+same-channel-mixed | voice-aware-rerank-v1 | 2116 | 6022 | 2.8459 | 4.00 | 4.00 | 179 | 220 | 417 | 232 | 1068
+combined | legacy | 1058 | 3006 | 2.8412 | 4.00 | 4.00 | 101 | 92 | 215 | 116 | 534
+combined | legacy-boundary-rerank | 1058 | 3065 | 2.8970 | 4.00 | 4.00 | 101 | 33 | 274 | 116 | 534
+combined | voice-aware-rerank-v1 | 1058 | 3075 | 2.9064 | 4.00 | 4.00 | 101 | 23 | 284 | 116 | 534
+
 ## Dirty status
 
 - type0: mixed
@@ -128,4 +168,4 @@ combined | voice-aware-rerank-v1 | 9.70% | 73.90% | 9.5900 | 5.00 | +1.35pp
 - same-channel-mixed: mixed
 - combined: regressed
 
-Correction proxy is the existing wrong-primary-segment proxy, not Stage B2 operation cost.
+Correction proxy remains the existing wrong-primary-segment proxy. Operation correction cost is reported separately and does not change the old field.
