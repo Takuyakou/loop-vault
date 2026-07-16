@@ -15,7 +15,15 @@ export interface MidiTrackInfo {
   index: number;
   name: string;
   channel?: number;
+  program?: number;
   roleHint?: TrackRole;
+}
+
+export interface MidiControlChange {
+  trackIndex: number;
+  number: number;
+  tick: number;
+  value: number;
 }
 
 export interface MidiSongData {
@@ -25,6 +33,25 @@ export interface MidiSongData {
   ticksPerBeat: number;
   totalBars: number;
   tracks: MidiTrackInfo[];
+  controlChanges: MidiControlChange[];
+}
+
+export interface NormalizedTimedNote extends TimedNote {
+  sourceTrackIndex: number;
+  program?: number;
+  trackName?: string;
+  isDrum: boolean;
+  startBeat: number;
+  endBeat: number;
+  sustainedEndBeat: number;
+}
+
+export interface SegmentRange { startBeat: number; endBeat: number }
+
+export interface NoteSegmentOverlap {
+  note: NormalizedTimedNote;
+  overlapBeats: number;
+  overlapRatio: number;
 }
 
 export interface AnalyzeMidiOptions {
