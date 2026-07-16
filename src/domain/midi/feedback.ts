@@ -35,6 +35,10 @@ export function buildCorrectionEvents(
   return original.chords.flatMap((detected, index) => {
     const corrected = edited.chords[index];
     if (!corrected || corrected.chord.label === detected.chord.label) return [];
+    const editSource = editSources?.[index];
+    if (editSources && editSource !== "manual-label" && editSource !== "alternative" && editSource !== "structure-editor") {
+      return [];
+    }
     const startBeat = (detected.bar - 1) * beatsPerBar + detected.beat - 1;
     return [{
       schemaVersion: 1 as const,
@@ -48,7 +52,7 @@ export function buildCorrectionEvents(
       },
       corrected: corrected.chord.label,
       editMethod: correctionMethod(
-        editSources?.[index],
+        editSource,
         detected.alternatives.some((item) => item.chord.label === corrected.chord.label),
       ),
       ...(analysis.detectedKey ? { keyContext: analysis.detectedKey } : {}),
