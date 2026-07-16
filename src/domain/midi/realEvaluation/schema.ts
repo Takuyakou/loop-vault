@@ -2,6 +2,7 @@ import { z } from "zod";
 import { chordQualitySchema } from "../../schema";
 import { parseChordLabel } from "../../chords";
 import type { MidiDifferenceReview, RealMidiEvaluationCase } from "./types";
+import type { MidiChordCorrectionEvent } from "../feedback";
 
 const expectedChordSegmentSchema = z.object({
   startBeat: z.number().nonnegative(),
@@ -87,4 +88,27 @@ export const midiDifferenceReviewSchema: z.ZodType<MidiDifferenceReview> = z.obj
   if (value.correctedChord && !parseChordLabel(value.correctedChord)) {
     context.addIssue({ code: z.ZodIssueCode.custom, path: ["correctedChord"], message: "invalid chord label" });
   }
+});
+
+export const midiChordCorrectionEventSchema: z.ZodType<MidiChordCorrectionEvent> = z.object({
+  schemaVersion: z.literal(1),
+  sourceFingerprint: z.string().regex(/^(sha256-[a-f0-9]{64}|fnv1a32-[a-f0-9]{8})$/),
+  analyzerVersion: z.string().min(1),
+  weightsVersion: z.string().min(1),
+  segment: z.object({
+    startBeat: z.number().nonnegative(),
+    endBeat: z.number().positive(),
+  }).strict(),
+  detected: z.object({
+    primary: z.string().min(1),
+    alternatives: z.array(z.string().min(1)),
+  }).strict(),
+  corrected: z.string().min(1),
+  editMethod: z.enum(["manual-label", "alternative-selection"]),
+  keyContext: z.string().optional(),
+  previousChord: z.string().optional(),
+  nextChord: z.string().optional(),
+}).strict().refine((value) => value.segment.endBeat > value.segment.startBeat, {
+  path: ["segment", "endBeat"],
+  message: "endBeat must be after startBeat",
 });
