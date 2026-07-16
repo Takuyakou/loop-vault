@@ -35,4 +35,24 @@ describe("MIDI evaluation", () => {
       bar: 2, beat: 1, durationBeats: 4, chord, confidence: 1, alternatives: [], warnings: [],
     }]).exactAccuracy).toBe(1);
   });
+
+  it("reports independent Root, Quality and Exact Top-3 using only three candidates", () => {
+    const definition = {
+      id: "top-three", title: "top three", midiPath: "top-three.mid", recipeFamily: "family", split: "holdout" as const,
+      category: ["chord-only" as const], difficulty: "hard" as const,
+      expected: { chordTimeline: [{ startBeat: 0, endBeat: 4, primary: "Dm7", root: 2, quality: "min7" as const }] },
+    };
+    const result = evaluateCase(definition, [{
+      bar: 1, beat: 1, durationBeats: 4, chord: makeChordSymbol(0, "maj"), confidence: 1, warnings: [],
+      alternatives: [
+        { chord: makeChordSymbol(2, "maj"), confidence: 0.8 },
+        { chord: makeChordSymbol(5, "min7"), confidence: 0.7 },
+        { chord: makeChordSymbol(2, "min7"), confidence: 0.6 },
+      ],
+    }]);
+    expect(result.rootTop3Accuracy).toBe(1);
+    expect(result.qualityTop3Accuracy).toBe(1);
+    expect(result.exactTop3Accuracy).toBe(0);
+    expect(result.top3Accuracy).toBe(0);
+  });
 });

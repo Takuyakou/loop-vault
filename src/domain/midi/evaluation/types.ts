@@ -36,9 +36,13 @@ export interface EvaluationMetrics {
   caseCount: number;
   durationBeats: number;
   rootAccuracy: number;
+  rootTop3Accuracy: number;
   qualityAccuracy: number;
+  qualityTop3Accuracy: number;
   tetradAccuracy: number;
   exactAccuracy: number;
+  exactTop3Accuracy: number;
+  /** @deprecated Use exactTop3Accuracy. Kept for report compatibility. */
   top3Accuracy: number;
   boundaryPrecision: number;
   boundaryRecall: number;

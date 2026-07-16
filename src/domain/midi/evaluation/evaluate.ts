@@ -6,7 +6,8 @@ import type {
 
 const emptyMetrics = (): EvaluationMetrics => ({
   caseCount: 0, durationBeats: 0, rootAccuracy: 0, qualityAccuracy: 0,
-  tetradAccuracy: 0, exactAccuracy: 0, top3Accuracy: 0, boundaryPrecision: 0,
+  rootTop3Accuracy: 0, qualityTop3Accuracy: 0, tetradAccuracy: 0,
+  exactAccuracy: 0, exactTop3Accuracy: 0, top3Accuracy: 0, boundaryPrecision: 0,
   boundaryRecall: 0, overSegmentationRate: 0, underSegmentationRate: 0, correctionCost: 0,
 });
 
@@ -41,7 +42,9 @@ export function evaluateCase(
   }));
   let duration = 0;
   let root = 0;
+  let rootTop3 = 0;
   let quality = 0;
+  let qualityTop3 = 0;
   let tetrad = 0;
   let exact = 0;
   let top3 = 0;
@@ -55,8 +58,12 @@ export function evaluateCase(
     if (qualityFamily(match.item.chord.quality) === qualityFamily(target.quality)) quality += targetDuration;
     if (tetradFamily(match.item.chord.quality) === tetradFamily(target.quality)) tetrad += targetDuration;
     if (accepted(target, match.item.chord.label)) exact += targetDuration;
-    const candidates = [match.item.chord.label, ...match.item.alternatives.map((entry) => entry.chord.label)];
-    if (candidates.some((label) => accepted(target, label))) top3 += targetDuration;
+    const candidates = [match.item.chord, ...match.item.alternatives.map((entry) => entry.chord)].slice(0, 3);
+    if (candidates.some((candidate) => candidate.root === target.root)) rootTop3 += targetDuration;
+    if (candidates.some((candidate) => qualityFamily(candidate.quality) === qualityFamily(target.quality))) {
+      qualityTop3 += targetDuration;
+    }
+    if (candidates.some((candidate) => accepted(target, candidate.label))) top3 += targetDuration;
     if (!accepted(target, match.item.chord.label)) corrections += 1;
   }
   const expectedBoundaries = expected.slice(1).map((segment) => segment.startBeat);
@@ -67,9 +74,12 @@ export function evaluateCase(
     caseCount: 1,
     durationBeats: duration,
     rootAccuracy: ratio(root, duration),
+    rootTop3Accuracy: ratio(rootTop3, duration),
     qualityAccuracy: ratio(quality, duration),
+    qualityTop3Accuracy: ratio(qualityTop3, duration),
     tetradAccuracy: ratio(tetrad, duration),
     exactAccuracy: ratio(exact, duration),
+    exactTop3Accuracy: ratio(top3, duration),
     top3Accuracy: ratio(top3, duration),
     boundaryPrecision: ratio(matchedBoundaries, predictedBoundaries.length),
     boundaryRecall: ratio(matchedBoundaries, expectedBoundaries.length),
@@ -90,9 +100,12 @@ export function aggregate(results: readonly EvaluationCaseResult[]): EvaluationM
     caseCount: results.length,
     durationBeats: duration,
     rootAccuracy: weighted("rootAccuracy"),
+    rootTop3Accuracy: weighted("rootTop3Accuracy"),
     qualityAccuracy: weighted("qualityAccuracy"),
+    qualityTop3Accuracy: weighted("qualityTop3Accuracy"),
     tetradAccuracy: weighted("tetradAccuracy"),
     exactAccuracy: weighted("exactAccuracy"),
+    exactTop3Accuracy: weighted("exactTop3Accuracy"),
     top3Accuracy: weighted("top3Accuracy"),
     boundaryPrecision: weighted("boundaryPrecision"),
     boundaryRecall: weighted("boundaryRecall"),

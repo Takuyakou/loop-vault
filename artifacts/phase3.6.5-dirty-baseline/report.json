@@ -1,0 +1,976 @@
+{
+  "schemaVersion": 1,
+  "phase": "3.6.5-stage-a3",
+  "sourceManifest": "docs/loop-vault-evaluation-corpus/manifest.json",
+  "dirtyManifest": ".local-evaluation/phase3.6.5-dirty/manifest.json",
+  "sourceCaseCount": 100,
+  "dirtyCaseCount": 1100,
+  "evaluatedCaseLimitPerCategory": null,
+  "globalSeed": 365,
+  "analyzers": [
+    {
+      "mode": "legacy",
+      "version": "legacy-v1"
+    },
+    {
+      "mode": "legacy-boundary-rerank",
+      "version": "legacy-boundary-rerank-v1"
+    },
+    {
+      "mode": "hybrid-v1",
+      "version": "hybrid-symbolic-v1"
+    }
+  ],
+  "results": [
+    {
+      "analyzerMode": "legacy",
+      "analyzerVersion": "legacy-v1",
+      "category": "clean",
+      "caseCount": 100,
+      "metrics": {
+        "rootAt1": 0.577586,
+        "rootAt3": 0.647629,
+        "qualityAt1": 0.608297,
+        "qualityAt3": 0.747845,
+        "exactAt1": 0.136853,
+        "exactAt3": 0.196659,
+        "correctionProxyPerCase": 9.18,
+        "correctionProxyTotal": 918
+      },
+      "runtimeMs": 843.835,
+      "deltaFromClean": {
+        "rootAt1": 0,
+        "rootAt3": 0,
+        "qualityAt1": 0,
+        "qualityAt3": 0,
+        "exactAt1": 0,
+        "exactAt3": 0,
+        "correctionProxyPerCase": 0
+      },
+      "deltaFromLegacy": {
+        "rootAt1": 0,
+        "rootAt3": 0,
+        "qualityAt1": 0,
+        "qualityAt3": 0,
+        "exactAt1": 0,
+        "exactAt3": 0,
+        "correctionProxyPerCase": 0
+      }
+    },
+    {
+      "analyzerMode": "legacy",
+      "analyzerVersion": "legacy-v1",
+      "category": "type0",
+      "caseCount": 100,
+      "metrics": {
+        "rootAt1": 0.577047,
+        "rootAt3": 0.655711,
+        "qualityAt1": 0.606142,
+        "qualityAt3": 0.753772,
+        "exactAt1": 0.135776,
+        "exactAt3": 0.198276,
+        "correctionProxyPerCase": 9.19,
+        "correctionProxyTotal": 919
+      },
+      "runtimeMs": 676.177,
+      "deltaFromClean": {
+        "rootAt1": -0.000539,
+        "rootAt3": 0.008082,
+        "qualityAt1": -0.002155,
+        "qualityAt3": 0.005927,
+        "exactAt1": -0.001077,
+        "exactAt3": 0.001617,
+        "correctionProxyPerCase": 0.01
+      },
+      "deltaFromLegacy": {
+        "rootAt1": 0,
+        "rootAt3": 0,
+        "qualityAt1": 0,
+        "qualityAt3": 0,
+        "exactAt1": 0,
+        "exactAt3": 0,
+        "correctionProxyPerCase": 0
+      }
+    },
+    {
+      "analyzerMode": "legacy",
+      "analyzerVersion": "legacy-v1",
+      "category": "drums",
+      "caseCount": 100,
+      "metrics": {
+        "rootAt1": 0.577586,
+        "rootAt3": 0.647629,
+        "qualityAt1": 0.608297,
+        "qualityAt3": 0.747845,
+        "exactAt1": 0.136853,
+        "exactAt3": 0.196659,
+        "correctionProxyPerCase": 9.18,
+        "correctionProxyTotal": 918
+      },
+      "runtimeMs": 800.664,
+      "deltaFromClean": {
+        "rootAt1": 0,
+        "rootAt3": 0,
+        "qualityAt1": 0,
+        "qualityAt3": 0,
+        "exactAt1": 0,
+        "exactAt3": 0,
+        "correctionProxyPerCase": 0
+      },
+      "deltaFromLegacy": {
+        "rootAt1": 0,
+        "rootAt3": 0,
+        "qualityAt1": 0,
+        "qualityAt3": 0,
+        "exactAt1": 0,
+        "exactAt3": 0,
+        "correctionProxyPerCase": 0
+      }
+    },
+    {
+      "analyzerMode": "legacy",
+      "analyzerVersion": "legacy-v1",
+      "category": "melody",
+      "caseCount": 100,
+      "metrics": {
+        "rootAt1": 0.580819,
+        "rootAt3": 0.653017,
+        "qualityAt1": 0.573815,
+        "qualityAt3": 0.735991,
+        "exactAt1": 0.099138,
+        "exactAt3": 0.192349,
+        "correctionProxyPerCase": 9.55,
+        "correctionProxyTotal": 955
+      },
+      "runtimeMs": 689.813,
+      "deltaFromClean": {
+        "rootAt1": 0.003233,
+        "rootAt3": 0.005388,
+        "qualityAt1": -0.034482,
+        "qualityAt3": -0.011854,
+        "exactAt1": -0.037715,
+        "exactAt3": -0.00431,
+        "correctionProxyPerCase": 0.37
+      },
+      "deltaFromLegacy": {
+        "rootAt1": 0,
+        "rootAt3": 0,
+        "qualityAt1": 0,
+        "qualityAt3": 0,
+        "exactAt1": 0,
+        "exactAt3": 0,
+        "correctionProxyPerCase": 0
+      }
+    },
+    {
+      "analyzerMode": "legacy",
+      "analyzerVersion": "legacy-v1",
+      "category": "metadata-missing",
+      "caseCount": 300,
+      "metrics": {
+        "rootAt1": 0.576868,
+        "rootAt3": 0.647091,
+        "qualityAt1": 0.608477,
+        "qualityAt3": 0.748024,
+        "exactAt1": 0.136853,
+        "exactAt3": 0.196659,
+        "correctionProxyPerCase": 9.18,
+        "correctionProxyTotal": 2754
+      },
+      "runtimeMs": 2182.168,
+      "deltaFromClean": {
+        "rootAt1": -0.000718,
+        "rootAt3": -0.000538,
+        "qualityAt1": 0.00018,
+        "qualityAt3": 0.000179,
+        "exactAt1": 0,
+        "exactAt3": 0,
+        "correctionProxyPerCase": 0
+      },
+      "deltaFromLegacy": {
+        "rootAt1": 0,
+        "rootAt3": 0,
+        "qualityAt1": 0,
+        "qualityAt3": 0,
+        "exactAt1": 0,
+        "exactAt3": 0,
+        "correctionProxyPerCase": 0
+      }
+    },
+    {
+      "analyzerMode": "legacy",
+      "analyzerVersion": "legacy-v1",
+      "category": "sustain",
+      "caseCount": 100,
+      "metrics": {
+        "rootAt1": 0.577586,
+        "rootAt3": 0.647629,
+        "qualityAt1": 0.608297,
+        "qualityAt3": 0.747845,
+        "exactAt1": 0.136853,
+        "exactAt3": 0.196659,
+        "correctionProxyPerCase": 9.18,
+        "correctionProxyTotal": 918
+      },
+      "runtimeMs": 766.43,
+      "deltaFromClean": {
+        "rootAt1": 0,
+        "rootAt3": 0,
+        "qualityAt1": 0,
+        "qualityAt3": 0,
+        "exactAt1": 0,
+        "exactAt3": 0,
+        "correctionProxyPerCase": 0
+      },
+      "deltaFromLegacy": {
+        "rootAt1": 0,
+        "rootAt3": 0,
+        "qualityAt1": 0,
+        "qualityAt3": 0,
+        "exactAt1": 0,
+        "exactAt3": 0,
+        "correctionProxyPerCase": 0
+      }
+    },
+    {
+      "analyzerMode": "legacy",
+      "analyzerVersion": "legacy-v1",
+      "category": "jitter",
+      "caseCount": 100,
+      "metrics": {
+        "rootAt1": 0.579203,
+        "rootAt3": 0.646013,
+        "qualityAt1": 0.610453,
+        "qualityAt3": 0.753233,
+        "exactAt1": 0.132004,
+        "exactAt3": 0.199353,
+        "correctionProxyPerCase": 9.22,
+        "correctionProxyTotal": 922
+      },
+      "runtimeMs": 738.332,
+      "deltaFromClean": {
+        "rootAt1": 0.001617,
+        "rootAt3": -0.001616,
+        "qualityAt1": 0.002156,
+        "qualityAt3": 0.005388,
+        "exactAt1": -0.004849,
+        "exactAt3": 0.002694,
+        "correctionProxyPerCase": 0.04
+      },
+      "deltaFromLegacy": {
+        "rootAt1": 0,
+        "rootAt3": 0,
+        "qualityAt1": 0,
+        "qualityAt3": 0,
+        "exactAt1": 0,
+        "exactAt3": 0,
+        "correctionProxyPerCase": 0
+      }
+    },
+    {
+      "analyzerMode": "legacy",
+      "analyzerVersion": "legacy-v1",
+      "category": "same-channel-mixed",
+      "caseCount": 200,
+      "metrics": {
+        "rootAt1": 0.476024,
+        "rootAt3": 0.558998,
+        "qualityAt1": 0.51347,
+        "qualityAt3": 0.720366,
+        "exactAt1": 0.076509,
+        "exactAt3": 0.12958,
+        "correctionProxyPerCase": 9.79,
+        "correctionProxyTotal": 1958
+      },
+      "runtimeMs": 1339.911,
+      "deltaFromClean": {
+        "rootAt1": -0.101562,
+        "rootAt3": -0.088631,
+        "qualityAt1": -0.094827,
+        "qualityAt3": -0.027479,
+        "exactAt1": -0.060344,
+        "exactAt3": -0.067079,
+        "correctionProxyPerCase": 0.61
+      },
+      "deltaFromLegacy": {
+        "rootAt1": 0,
+        "rootAt3": 0,
+        "qualityAt1": 0,
+        "qualityAt3": 0,
+        "exactAt1": 0,
+        "exactAt3": 0,
+        "correctionProxyPerCase": 0
+      }
+    },
+    {
+      "analyzerMode": "legacy",
+      "analyzerVersion": "legacy-v1",
+      "category": "combined",
+      "caseCount": 100,
+      "metrics": {
+        "rootAt1": 0.523707,
+        "rootAt3": 0.632543,
+        "qualityAt1": 0.554418,
+        "qualityAt3": 0.778556,
+        "exactAt1": 0.075431,
+        "exactAt3": 0.157866,
+        "correctionProxyPerCase": 9.8,
+        "correctionProxyTotal": 980
+      },
+      "runtimeMs": 694.459,
+      "deltaFromClean": {
+        "rootAt1": -0.053879,
+        "rootAt3": -0.015086,
+        "qualityAt1": -0.053879,
+        "qualityAt3": 0.030711,
+        "exactAt1": -0.061422,
+        "exactAt3": -0.038793,
+        "correctionProxyPerCase": 0.62
+      },
+      "deltaFromLegacy": {
+        "rootAt1": 0,
+        "rootAt3": 0,
+        "qualityAt1": 0,
+        "qualityAt3": 0,
+        "exactAt1": 0,
+        "exactAt3": 0,
+        "correctionProxyPerCase": 0
+      }
+    },
+    {
+      "analyzerMode": "legacy-boundary-rerank",
+      "analyzerVersion": "legacy-boundary-rerank-v1",
+      "category": "clean",
+      "caseCount": 100,
+      "metrics": {
+        "rootAt1": 0.579741,
+        "rootAt3": 0.633082,
+        "qualityAt1": 0.614763,
+        "qualityAt3": 0.766164,
+        "exactAt1": 0.137931,
+        "exactAt3": 0.215517,
+        "correctionProxyPerCase": 9.17,
+        "correctionProxyTotal": 917
+      },
+      "runtimeMs": 1612.388,
+      "deltaFromClean": {
+        "rootAt1": 0,
+        "rootAt3": 0,
+        "qualityAt1": 0,
+        "qualityAt3": 0,
+        "exactAt1": 0,
+        "exactAt3": 0,
+        "correctionProxyPerCase": 0
+      },
+      "deltaFromLegacy": {
+        "rootAt1": 0.002155,
+        "rootAt3": -0.014547,
+        "qualityAt1": 0.006466,
+        "qualityAt3": 0.018319,
+        "exactAt1": 0.001078,
+        "exactAt3": 0.018858,
+        "correctionProxyPerCase": -0.01
+      }
+    },
+    {
+      "analyzerMode": "legacy-boundary-rerank",
+      "analyzerVersion": "legacy-boundary-rerank-v1",
+      "category": "type0",
+      "caseCount": 100,
+      "metrics": {
+        "rootAt1": 0.582435,
+        "rootAt3": 0.630388,
+        "qualityAt1": 0.608297,
+        "qualityAt3": 0.762931,
+        "exactAt1": 0.135776,
+        "exactAt3": 0.216056,
+        "correctionProxyPerCase": 9.19,
+        "correctionProxyTotal": 919
+      },
+      "runtimeMs": 1239.605,
+      "deltaFromClean": {
+        "rootAt1": 0.002694,
+        "rootAt3": -0.002694,
+        "qualityAt1": -0.006466,
+        "qualityAt3": -0.003233,
+        "exactAt1": -0.002155,
+        "exactAt3": 0.000539,
+        "correctionProxyPerCase": 0.02
+      },
+      "deltaFromLegacy": {
+        "rootAt1": 0.005388,
+        "rootAt3": -0.025323,
+        "qualityAt1": 0.002155,
+        "qualityAt3": 0.009159,
+        "exactAt1": 0,
+        "exactAt3": 0.01778,
+        "correctionProxyPerCase": 0
+      }
+    },
+    {
+      "analyzerMode": "legacy-boundary-rerank",
+      "analyzerVersion": "legacy-boundary-rerank-v1",
+      "category": "drums",
+      "caseCount": 100,
+      "metrics": {
+        "rootAt1": 0.579741,
+        "rootAt3": 0.633082,
+        "qualityAt1": 0.614763,
+        "qualityAt3": 0.766164,
+        "exactAt1": 0.137931,
+        "exactAt3": 0.215517,
+        "correctionProxyPerCase": 9.17,
+        "correctionProxyTotal": 917
+      },
+      "runtimeMs": 1534.653,
+      "deltaFromClean": {
+        "rootAt1": 0,
+        "rootAt3": 0,
+        "qualityAt1": 0,
+        "qualityAt3": 0,
+        "exactAt1": 0,
+        "exactAt3": 0,
+        "correctionProxyPerCase": 0
+      },
+      "deltaFromLegacy": {
+        "rootAt1": 0.002155,
+        "rootAt3": -0.014547,
+        "qualityAt1": 0.006466,
+        "qualityAt3": 0.018319,
+        "exactAt1": 0.001078,
+        "exactAt3": 0.018858,
+        "correctionProxyPerCase": -0.01
+      }
+    },
+    {
+      "analyzerMode": "legacy-boundary-rerank",
+      "analyzerVersion": "legacy-boundary-rerank-v1",
+      "category": "melody",
+      "caseCount": 100,
+      "metrics": {
+        "rootAt1": 0.580819,
+        "rootAt3": 0.635776,
+        "qualityAt1": 0.574892,
+        "qualityAt3": 0.698815,
+        "exactAt1": 0.100216,
+        "exactAt3": 0.196659,
+        "correctionProxyPerCase": 9.54,
+        "correctionProxyTotal": 954
+      },
+      "runtimeMs": 1614.162,
+      "deltaFromClean": {
+        "rootAt1": 0.001078,
+        "rootAt3": 0.002694,
+        "qualityAt1": -0.039871,
+        "qualityAt3": -0.067349,
+        "exactAt1": -0.037715,
+        "exactAt3": -0.018858,
+        "correctionProxyPerCase": 0.37
+      },
+      "deltaFromLegacy": {
+        "rootAt1": 0,
+        "rootAt3": -0.017241,
+        "qualityAt1": 0.001077,
+        "qualityAt3": -0.037176,
+        "exactAt1": 0.001078,
+        "exactAt3": 0.00431,
+        "correctionProxyPerCase": -0.01
+      }
+    },
+    {
+      "analyzerMode": "legacy-boundary-rerank",
+      "analyzerVersion": "legacy-boundary-rerank-v1",
+      "category": "metadata-missing",
+      "caseCount": 300,
+      "metrics": {
+        "rootAt1": 0.580101,
+        "rootAt3": 0.633261,
+        "qualityAt1": 0.613865,
+        "qualityAt3": 0.766703,
+        "exactAt1": 0.137572,
+        "exactAt3": 0.215338,
+        "correctionProxyPerCase": 9.173333,
+        "correctionProxyTotal": 2752
+      },
+      "runtimeMs": 4332.136,
+      "deltaFromClean": {
+        "rootAt1": 0.00036,
+        "rootAt3": 0.000179,
+        "qualityAt1": -0.000898,
+        "qualityAt3": 0.000539,
+        "exactAt1": -0.000359,
+        "exactAt3": -0.000179,
+        "correctionProxyPerCase": 0.003333
+      },
+      "deltaFromLegacy": {
+        "rootAt1": 0.003233,
+        "rootAt3": -0.01383,
+        "qualityAt1": 0.005388,
+        "qualityAt3": 0.018679,
+        "exactAt1": 0.000719,
+        "exactAt3": 0.018679,
+        "correctionProxyPerCase": -0.006667
+      }
+    },
+    {
+      "analyzerMode": "legacy-boundary-rerank",
+      "analyzerVersion": "legacy-boundary-rerank-v1",
+      "category": "sustain",
+      "caseCount": 100,
+      "metrics": {
+        "rootAt1": 0.570043,
+        "rootAt3": 0.628772,
+        "qualityAt1": 0.602909,
+        "qualityAt3": 0.803341,
+        "exactAt1": 0.136853,
+        "exactAt3": 0.154095,
+        "correctionProxyPerCase": 9.19,
+        "correctionProxyTotal": 919
+      },
+      "runtimeMs": 1465.59,
+      "deltaFromClean": {
+        "rootAt1": -0.009698,
+        "rootAt3": -0.00431,
+        "qualityAt1": -0.011854,
+        "qualityAt3": 0.037177,
+        "exactAt1": -0.001078,
+        "exactAt3": -0.061422,
+        "correctionProxyPerCase": 0.02
+      },
+      "deltaFromLegacy": {
+        "rootAt1": -0.007543,
+        "rootAt3": -0.018857,
+        "qualityAt1": -0.005388,
+        "qualityAt3": 0.055496,
+        "exactAt1": 0,
+        "exactAt3": -0.042564,
+        "correctionProxyPerCase": 0.01
+      }
+    },
+    {
+      "analyzerMode": "legacy-boundary-rerank",
+      "analyzerVersion": "legacy-boundary-rerank-v1",
+      "category": "jitter",
+      "caseCount": 100,
+      "metrics": {
+        "rootAt1": 0.579203,
+        "rootAt3": 0.634159,
+        "qualityAt1": 0.609375,
+        "qualityAt3": 0.760237,
+        "exactAt1": 0.131466,
+        "exactAt3": 0.211207,
+        "correctionProxyPerCase": 9.23,
+        "correctionProxyTotal": 923
+      },
+      "runtimeMs": 1517.601,
+      "deltaFromClean": {
+        "rootAt1": -0.000538,
+        "rootAt3": 0.001077,
+        "qualityAt1": -0.005388,
+        "qualityAt3": -0.005927,
+        "exactAt1": -0.006465,
+        "exactAt3": -0.00431,
+        "correctionProxyPerCase": 0.06
+      },
+      "deltaFromLegacy": {
+        "rootAt1": 0,
+        "rootAt3": -0.011854,
+        "qualityAt1": -0.001078,
+        "qualityAt3": 0.007004,
+        "exactAt1": -0.000538,
+        "exactAt3": 0.011854,
+        "correctionProxyPerCase": 0.01
+      }
+    },
+    {
+      "analyzerMode": "legacy-boundary-rerank",
+      "analyzerVersion": "legacy-boundary-rerank-v1",
+      "category": "same-channel-mixed",
+      "caseCount": 200,
+      "metrics": {
+        "rootAt1": 0.476293,
+        "rootAt3": 0.551185,
+        "qualityAt1": 0.510237,
+        "qualityAt3": 0.67861,
+        "exactAt1": 0.076509,
+        "exactAt3": 0.127694,
+        "correctionProxyPerCase": 9.79,
+        "correctionProxyTotal": 1958
+      },
+      "runtimeMs": 3032.294,
+      "deltaFromClean": {
+        "rootAt1": -0.103448,
+        "rootAt3": -0.081897,
+        "qualityAt1": -0.104526,
+        "qualityAt3": -0.087554,
+        "exactAt1": -0.061422,
+        "exactAt3": -0.087823,
+        "correctionProxyPerCase": 0.62
+      },
+      "deltaFromLegacy": {
+        "rootAt1": 0.000269,
+        "rootAt3": -0.007813,
+        "qualityAt1": -0.003233,
+        "qualityAt3": -0.041756,
+        "exactAt1": 0,
+        "exactAt3": -0.001886,
+        "correctionProxyPerCase": 0
+      }
+    },
+    {
+      "analyzerMode": "legacy-boundary-rerank",
+      "analyzerVersion": "legacy-boundary-rerank-v1",
+      "category": "combined",
+      "caseCount": 100,
+      "metrics": {
+        "rootAt1": 0.522629,
+        "rootAt3": 0.596983,
+        "qualityAt1": 0.555496,
+        "qualityAt3": 0.768858,
+        "exactAt1": 0.075431,
+        "exactAt3": 0.092672,
+        "correctionProxyPerCase": 9.8,
+        "correctionProxyTotal": 980
+      },
+      "runtimeMs": 1452.548,
+      "deltaFromClean": {
+        "rootAt1": -0.057112,
+        "rootAt3": -0.036099,
+        "qualityAt1": -0.059267,
+        "qualityAt3": 0.002694,
+        "exactAt1": -0.0625,
+        "exactAt3": -0.122845,
+        "correctionProxyPerCase": 0.63
+      },
+      "deltaFromLegacy": {
+        "rootAt1": -0.001078,
+        "rootAt3": -0.03556,
+        "qualityAt1": 0.001078,
+        "qualityAt3": -0.009698,
+        "exactAt1": 0,
+        "exactAt3": -0.065194,
+        "correctionProxyPerCase": 0
+      }
+    },
+    {
+      "analyzerMode": "hybrid-v1",
+      "analyzerVersion": "hybrid-symbolic-v1",
+      "category": "clean",
+      "caseCount": 100,
+      "metrics": {
+        "rootAt1": 0.577586,
+        "rootAt3": 0.620151,
+        "qualityAt1": 0.608297,
+        "qualityAt3": 0.769935,
+        "exactAt1": 0.136853,
+        "exactAt3": 0.209591,
+        "correctionProxyPerCase": 9.18,
+        "correctionProxyTotal": 918
+      },
+      "runtimeMs": 28815.67,
+      "deltaFromClean": {
+        "rootAt1": 0,
+        "rootAt3": 0,
+        "qualityAt1": 0,
+        "qualityAt3": 0,
+        "exactAt1": 0,
+        "exactAt3": 0,
+        "correctionProxyPerCase": 0
+      },
+      "deltaFromLegacy": {
+        "rootAt1": 0,
+        "rootAt3": -0.027478,
+        "qualityAt1": 0,
+        "qualityAt3": 0.02209,
+        "exactAt1": 0,
+        "exactAt3": 0.012932,
+        "correctionProxyPerCase": 0
+      }
+    },
+    {
+      "analyzerMode": "hybrid-v1",
+      "analyzerVersion": "hybrid-symbolic-v1",
+      "category": "type0",
+      "caseCount": 100,
+      "metrics": {
+        "rootAt1": 0.577047,
+        "rootAt3": 0.621228,
+        "qualityAt1": 0.606142,
+        "qualityAt3": 0.764009,
+        "exactAt1": 0.135776,
+        "exactAt3": 0.206358,
+        "correctionProxyPerCase": 9.19,
+        "correctionProxyTotal": 919
+      },
+      "runtimeMs": 31519.235,
+      "deltaFromClean": {
+        "rootAt1": -0.000539,
+        "rootAt3": 0.001077,
+        "qualityAt1": -0.002155,
+        "qualityAt3": -0.005926,
+        "exactAt1": -0.001077,
+        "exactAt3": -0.003233,
+        "correctionProxyPerCase": 0.01
+      },
+      "deltaFromLegacy": {
+        "rootAt1": 0,
+        "rootAt3": -0.034483,
+        "qualityAt1": 0,
+        "qualityAt3": 0.010237,
+        "exactAt1": 0,
+        "exactAt3": 0.008082,
+        "correctionProxyPerCase": 0
+      }
+    },
+    {
+      "analyzerMode": "hybrid-v1",
+      "analyzerVersion": "hybrid-symbolic-v1",
+      "category": "drums",
+      "caseCount": 100,
+      "metrics": {
+        "rootAt1": 0.577586,
+        "rootAt3": 0.620151,
+        "qualityAt1": 0.608297,
+        "qualityAt3": 0.769935,
+        "exactAt1": 0.136853,
+        "exactAt3": 0.209591,
+        "correctionProxyPerCase": 9.18,
+        "correctionProxyTotal": 918
+      },
+      "runtimeMs": 26954.764,
+      "deltaFromClean": {
+        "rootAt1": 0,
+        "rootAt3": 0,
+        "qualityAt1": 0,
+        "qualityAt3": 0,
+        "exactAt1": 0,
+        "exactAt3": 0,
+        "correctionProxyPerCase": 0
+      },
+      "deltaFromLegacy": {
+        "rootAt1": 0,
+        "rootAt3": -0.027478,
+        "qualityAt1": 0,
+        "qualityAt3": 0.02209,
+        "exactAt1": 0,
+        "exactAt3": 0.012932,
+        "correctionProxyPerCase": 0
+      }
+    },
+    {
+      "analyzerMode": "hybrid-v1",
+      "analyzerVersion": "hybrid-symbolic-v1",
+      "category": "melody",
+      "caseCount": 100,
+      "metrics": {
+        "rootAt1": 0.580819,
+        "rootAt3": 0.639547,
+        "qualityAt1": 0.573815,
+        "qualityAt3": 0.716595,
+        "exactAt1": 0.099138,
+        "exactAt3": 0.1875,
+        "correctionProxyPerCase": 9.55,
+        "correctionProxyTotal": 955
+      },
+      "runtimeMs": 25505.125,
+      "deltaFromClean": {
+        "rootAt1": 0.003233,
+        "rootAt3": 0.019396,
+        "qualityAt1": -0.034482,
+        "qualityAt3": -0.05334,
+        "exactAt1": -0.037715,
+        "exactAt3": -0.022091,
+        "correctionProxyPerCase": 0.37
+      },
+      "deltaFromLegacy": {
+        "rootAt1": 0,
+        "rootAt3": -0.01347,
+        "qualityAt1": 0,
+        "qualityAt3": -0.019396,
+        "exactAt1": 0,
+        "exactAt3": -0.004849,
+        "correctionProxyPerCase": 0
+      }
+    },
+    {
+      "analyzerMode": "hybrid-v1",
+      "analyzerVersion": "hybrid-symbolic-v1",
+      "category": "metadata-missing",
+      "caseCount": 300,
+      "metrics": {
+        "rootAt1": 0.576868,
+        "rootAt3": 0.620151,
+        "qualityAt1": 0.608477,
+        "qualityAt3": 0.769935,
+        "exactAt1": 0.136853,
+        "exactAt3": 0.209231,
+        "correctionProxyPerCase": 9.18,
+        "correctionProxyTotal": 2754
+      },
+      "runtimeMs": 69500.874,
+      "deltaFromClean": {
+        "rootAt1": -0.000718,
+        "rootAt3": 0,
+        "qualityAt1": 0.00018,
+        "qualityAt3": 0,
+        "exactAt1": 0,
+        "exactAt3": -0.00036,
+        "correctionProxyPerCase": 0
+      },
+      "deltaFromLegacy": {
+        "rootAt1": 0,
+        "rootAt3": -0.02694,
+        "qualityAt1": 0,
+        "qualityAt3": 0.021911,
+        "exactAt1": 0,
+        "exactAt3": 0.012572,
+        "correctionProxyPerCase": 0
+      }
+    },
+    {
+      "analyzerMode": "hybrid-v1",
+      "analyzerVersion": "hybrid-symbolic-v1",
+      "category": "sustain",
+      "caseCount": 100,
+      "metrics": {
+        "rootAt1": 0.577586,
+        "rootAt3": 0.634159,
+        "qualityAt1": 0.608297,
+        "qualityAt3": 0.816272,
+        "exactAt1": 0.136853,
+        "exactAt3": 0.149784,
+        "correctionProxyPerCase": 9.18,
+        "correctionProxyTotal": 918
+      },
+      "runtimeMs": 19553.585,
+      "deltaFromClean": {
+        "rootAt1": 0,
+        "rootAt3": 0.014008,
+        "qualityAt1": 0,
+        "qualityAt3": 0.046337,
+        "exactAt1": 0,
+        "exactAt3": -0.059807,
+        "correctionProxyPerCase": 0
+      },
+      "deltaFromLegacy": {
+        "rootAt1": 0,
+        "rootAt3": -0.01347,
+        "qualityAt1": 0,
+        "qualityAt3": 0.068427,
+        "exactAt1": 0,
+        "exactAt3": -0.046875,
+        "correctionProxyPerCase": 0
+      }
+    },
+    {
+      "analyzerMode": "hybrid-v1",
+      "analyzerVersion": "hybrid-symbolic-v1",
+      "category": "jitter",
+      "caseCount": 100,
+      "metrics": {
+        "rootAt1": 0.579203,
+        "rootAt3": 0.636853,
+        "qualityAt1": 0.610453,
+        "qualityAt3": 0.772091,
+        "exactAt1": 0.132004,
+        "exactAt3": 0.206358,
+        "correctionProxyPerCase": 9.22,
+        "correctionProxyTotal": 922
+      },
+      "runtimeMs": 29775.595,
+      "deltaFromClean": {
+        "rootAt1": 0.001617,
+        "rootAt3": 0.016702,
+        "qualityAt1": 0.002156,
+        "qualityAt3": 0.002156,
+        "exactAt1": -0.004849,
+        "exactAt3": -0.003233,
+        "correctionProxyPerCase": 0.04
+      },
+      "deltaFromLegacy": {
+        "rootAt1": 0,
+        "rootAt3": -0.00916,
+        "qualityAt1": 0,
+        "qualityAt3": 0.018858,
+        "exactAt1": 0,
+        "exactAt3": 0.007005,
+        "correctionProxyPerCase": 0
+      }
+    },
+    {
+      "analyzerMode": "hybrid-v1",
+      "analyzerVersion": "hybrid-symbolic-v1",
+      "category": "same-channel-mixed",
+      "caseCount": 200,
+      "metrics": {
+        "rootAt1": 0.476024,
+        "rootAt3": 0.551724,
+        "qualityAt1": 0.51347,
+        "qualityAt3": 0.697468,
+        "exactAt1": 0.076509,
+        "exactAt3": 0.120959,
+        "correctionProxyPerCase": 9.79,
+        "correctionProxyTotal": 1958
+      },
+      "runtimeMs": 53374.895,
+      "deltaFromClean": {
+        "rootAt1": -0.101562,
+        "rootAt3": -0.068427,
+        "qualityAt1": -0.094827,
+        "qualityAt3": -0.072467,
+        "exactAt1": -0.060344,
+        "exactAt3": -0.088632,
+        "correctionProxyPerCase": 0.61
+      },
+      "deltaFromLegacy": {
+        "rootAt1": 0,
+        "rootAt3": -0.007274,
+        "qualityAt1": 0,
+        "qualityAt3": -0.022898,
+        "exactAt1": 0,
+        "exactAt3": -0.008621,
+        "correctionProxyPerCase": 0
+      }
+    },
+    {
+      "analyzerMode": "hybrid-v1",
+      "analyzerVersion": "hybrid-symbolic-v1",
+      "category": "combined",
+      "caseCount": 100,
+      "metrics": {
+        "rootAt1": 0.523707,
+        "rootAt3": 0.594828,
+        "qualityAt1": 0.554418,
+        "qualityAt3": 0.78125,
+        "exactAt1": 0.075431,
+        "exactAt3": 0.08944,
+        "correctionProxyPerCase": 9.8,
+        "correctionProxyTotal": 980
+      },
+      "runtimeMs": 22501.855,
+      "deltaFromClean": {
+        "rootAt1": -0.053879,
+        "rootAt3": -0.025323,
+        "qualityAt1": -0.053879,
+        "qualityAt3": 0.011315,
+        "exactAt1": -0.061422,
+        "exactAt3": -0.120151,
+        "correctionProxyPerCase": 0.62
+      },
+      "deltaFromLegacy": {
+        "rootAt1": 0,
+        "rootAt3": -0.037715,
+        "qualityAt1": 0,
+        "qualityAt3": 0.002694,
+        "exactAt1": 0,
+        "exactAt3": -0.068426,
+        "correctionProxyPerCase": 0
+      }
+    }
+  ],
+  "notEvaluated": {
+    "voiceAwareRerankV1": "Stage A4 is not implemented yet.",
+    "allInstrumentsMidi": "all_instruments.mid is not available.",
+    "realGold": "Real MIDI Gold cases: 0."
+  }
+}
