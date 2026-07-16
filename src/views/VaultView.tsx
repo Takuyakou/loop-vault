@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { degreeSequence, matchProgression, normalizeQuery } from "../domain/harmony/degrees";
+import { degreeSequence } from "../domain/harmony/degrees";
+import { filterAndSortProgressions } from "../domain/progressionFilters";
 import { formatProgressionText } from "../domain/progressionText";
 import type { SavedProgressionBlock, SongIdea } from "../domain/types";
 import type { AppCopy, AppLanguage } from "../i18n";
@@ -24,31 +25,23 @@ export function VaultView({
   const [query, setQuery] = useState("");
   const [onlyPinned, setOnlyPinned] = useState(false);
   const [lengthBars, setLengthBars] = useState<"all" | "4" | "8" | "16">("all");
+  const [keyFilter, setKeyFilter] = useState("");
+  const [sourceFilter, setSourceFilter] = useState("");
+  const [tagFilter, setTagFilter] = useState("");
   const [sort, setSort] = useState<SortField>("capturedAt");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [playingId, setPlayingId] = useState<string>();
   const searchRef = useRef<HTMLInputElement>(null);
-  const entries = useMemo(() => ideas.flatMap((idea) =>
-    (idea.progressionBlocks ?? []).map((block) => ({ idea, block }))), [ideas]);
-  const parsedQuery = useMemo(() => normalizeQuery(query), [query]);
-  const visible = useMemo(() => entries
-    .filter(({ block }) => !onlyPinned || block.pinned)
-    .filter(({ block }) => lengthBars === "all" || block.lengthBars === Number(lengthBars))
-    .filter(({ idea, block }) => {
-      if (parsedQuery.kind !== "text") return matchProgression(block, parsedQuery);
-      if (!parsedQuery.normalized) return true;
-      return [idea.title, idea.genre ?? "", idea.moods.join(" "), idea.chordMemo,
-        block.summaryText, block.memo ?? "", block.tags.join(" "), block.sourceFileName ?? ""]
-        .join(" ").toLocaleLowerCase().includes(parsedQuery.normalized);
-    })
-    .sort((left, right) => {
-      if (Boolean(left.block.pinned) !== Boolean(right.block.pinned)) return right.block.pinned ? 1 : -1;
-      if (sort === "key") return keyOf(left).localeCompare(keyOf(right));
-      if (sort === "bpm") return bpmOf(left) - bpmOf(right);
-      const leftDate = sort === "updatedAt" ? left.idea.updatedAt : left.block.capturedAt;
-      const rightDate = sort === "updatedAt" ? right.idea.updatedAt : right.block.capturedAt;
-      return new Date(rightDate).getTime() - new Date(leftDate).getTime();
-    }), [entries, lengthBars, onlyPinned, parsedQuery, sort]);
+  const allBlocks = useMemo(() => ideas.flatMap((idea) => idea.progressionBlocks ?? []), [ideas]);
+  const keys = useMemo(() => [...new Set(ideas.flatMap((idea) => (idea.progressionBlocks ?? []).map((block) => block.detectedKey ?? idea.key).filter((value): value is string => Boolean(value))))].sort(), [ideas]);
+  const sources = useMemo(() => [...new Set(allBlocks.map((block) => block.sourceFileName).filter((value): value is string => Boolean(value)))].sort(), [allBlocks]);
+  const tags = useMemo(() => [...new Set(allBlocks.flatMap((block) => block.tags))].sort(), [allBlocks]);
+  const visible = useMemo(() => filterAndSortProgressions(ideas, {
+    query, pinnedOnly: onlyPinned, keys: keyFilter ? [keyFilter] : [],
+    lengths: lengthBars === "all" ? [] : [Number(lengthBars)],
+    sources: sourceFilter ? [sourceFilter] : [], tags: tagFilter ? [tagFilter] : [],
+  }, { field: sort, direction: sort === "key" || sort === "bpm" ? "asc" : "desc" }),
+  [ideas, keyFilter, lengthBars, onlyPinned, query, sort, sourceFilter, tagFilter]);
   useEffect(() => {
     setSelectedIndex((value) => Math.min(value, Math.max(0, visible.length - 1)));
   }, [visible.length]);
@@ -129,7 +122,13 @@ export function VaultView({
           <div className="flex gap-1">{(["all", "4", "8", "16"] as const).map((value) => <button key={value} className={lengthBars === value ? "bg-[var(--lv-surface-raised)] px-2 text-xs" : "px-2 text-xs text-[var(--lv-text-muted)]"} onClick={() => setLengthBars(value)}>{value === "all" ? "All" : `${value} bars`}</button>)}</div>
           <select className="border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-2 text-xs" value={sort} onChange={(event) => setSort(event.target.value as SortField)}><option value="capturedAt">{language === "ja" ? "採集日" : "Captured"}</option><option value="updatedAt">{language === "ja" ? "更新日" : "Updated"}</option><option value="key">Key</option><option value="bpm">BPM</option></select>
         </div>
-        <div className="mt-3 flex items-center gap-2"><button className={onlyPinned ? "bg-[var(--lv-surface-raised)] px-3 py-1 text-xs text-[var(--lv-warning)]" : "border border-[var(--lv-border)] px-3 py-1 text-xs text-[var(--lv-text-muted)]"} onClick={() => setOnlyPinned((value) => !value)}>★ {language === "ja" ? "のみ" : "only"}</button><span className="text-xs text-[var(--lv-text-muted)]">{visible.length} {language === "ja" ? "件" : "items"}</span></div>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <button className={onlyPinned ? "bg-[var(--lv-surface-raised)] px-3 py-1 text-xs text-[var(--lv-warning)]" : "border border-[var(--lv-border)] px-3 py-1 text-xs text-[var(--lv-text-muted)]"} onClick={() => setOnlyPinned((value) => !value)}>★ {language === "ja" ? "のみ" : "only"}</button>
+          <FilterSelect label="Key" value={keyFilter} values={keys} onChange={setKeyFilter} />
+          <FilterSelect label={language === "ja" ? "元MIDI" : "Source"} value={sourceFilter} values={sources} onChange={setSourceFilter} />
+          <FilterSelect label={language === "ja" ? "タグ" : "Tag"} value={tagFilter} values={tags} onChange={setTagFilter} />
+          <span className="text-xs text-[var(--lv-text-muted)]">{visible.length} {language === "ja" ? "件" : "items"}</span>
+        </div>
         {visible.length ? <div className="mt-4 overflow-hidden border border-[var(--lv-border)]">
           {visible.map((entry, index) => <ProgressionRow key={entry.block.id} entry={entry} selected={index === selectedIndex} playing={entry.block.id === playingId} showDegrees={showRomanNumerals} copy={copy} onSelect={() => setSelectedIndex(index)} onPreview={() => void togglePlayback(entry)} onOpen={() => openDetail(entry.idea.id)} onPin={() => togglePin(entry)} onCopy={() => void copyProgression(entry.block)} />)}
         </div> : <EmptyState language={language} openCreate={openCreate} />}
@@ -155,6 +154,7 @@ function IdeaList({ ideas, openDetail, language }: { ideas: SongIdea[]; openDeta
 }
 
 function EmptyState({ language, openCreate }: { language: AppLanguage; openCreate: () => void }) { return <div className="py-16 text-center"><p className="text-[var(--lv-text-muted)]">{language === "ja" ? "条件に合う進行はありません。" : "No matching progressions."}</p><button className="lv-button-secondary mt-4 px-3 py-2 text-sm" onClick={openCreate}>{language === "ja" ? "新しいIdea" : "New idea"}</button></div>; }
+function FilterSelect({ label, value, values, onChange }: { label: string; value: string; values: string[]; onChange: (value: string) => void }) { return <select className="border border-[var(--lv-border)] bg-[var(--lv-bg)] px-2 py-1 text-xs text-[var(--lv-text-secondary)]" aria-label={label} value={value} onChange={(event) => onChange(event.target.value)}><option value="">{label}: All</option>{values.map((entry) => <option key={entry} value={entry}>{entry}</option>)}</select>; }
 function keyOf(entry: ProgressionEntry): string { return entry.block.detectedKey ?? entry.idea.key ?? ""; }
 function bpmOf(entry: ProgressionEntry): number { return entry.block.bpm ?? entry.idea.bpm ?? 0; }
 function formatDate(value: string): string { return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value)); }
