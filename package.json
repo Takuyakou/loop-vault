@@ -11,6 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "seed:demo": "node scripts/seed-demo.mjs",
+    "eval:midi": "vite-node scripts/evaluate-midi-analysis.ts",
+    "eval:midi:compare": "vite-node scripts/evaluate-midi-analysis.ts --compare",
     "tauri": "tauri"
   },
   "dependencies": {
