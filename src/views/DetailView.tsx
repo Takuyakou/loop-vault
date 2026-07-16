@@ -4,6 +4,7 @@ import { type FormEvent, useEffect, useRef, useState } from "react";
 import { playbackController, type PlayingSource } from "../audio/playbackController";
 import { Modal } from "../components/Modal";
 import { PlayToggle } from "../components/PlayToggle";
+import { pipelineStatuses, StatusPipeline } from "../components/StatusPipeline";
 import { canOpenAssetPath, openableAssetExtensions } from "../domain/assetSecurity";
 import { statusLabel } from "../domain/displayLabels";
 import { formatProgressionText } from "../domain/progressionText";
@@ -22,8 +23,8 @@ import type { UndoRequest } from "../hooks/useUndoQueue";
 import { ProgressionGrid } from "../ui/ProgressionGrid";
 
 type Reference = SongIdea["references"][number]; type Asset = SongIdea["assets"][number];
-const statuses: Status[] = ["idea", "loop", "arrange", "mix", "done", "hold", "abandoned"]; const pipeline: Status[] = ["idea", "loop", "arrange", "mix", "done"]; const keySuggestions = ["C", "Cm", "D", "Dm", "E", "Em", "F", "Fm", "G", "Gm", "A", "Am", "B", "Bm"]; const nextPlaceholders = ["Replace the bass", "Try the B section chords", "Make two drum variations", "Bounce a rough hook"]; const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
-function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <section className={"border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4 " + className}>{children}</section>; } function StatusBadge({ status, language }: { status: Status; language: AppLanguage }) { return <span className="shrink-0 rounded bg-[var(--lv-surface-raised)] px-2 py-1 text-xs font-semibold uppercase text-teal-200">{statusLabel(status, language)}</span>; } function statusButtonClass(active: boolean): string { return active ? "rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" : "rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm text-[var(--lv-text-secondary)]"; } function formatDate(value: string): string { return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value)); } function splitList(value: string): string[] { return value.split(",").map((entry) => entry.trim()).filter(Boolean); } function hashString(value: string): number { let hash = 0; for (const char of value) hash = (hash * 31 + char.charCodeAt(0)) | 0; return hash; } const defaultAssetId = () => crypto.randomUUID(); async function writeClipboardText(text: string): Promise<void> { if (!navigator.clipboard?.writeText) throw new Error("Clipboard is not available."); await navigator.clipboard.writeText(text); }
+const keySuggestions = ["C", "Cm", "D", "Dm", "E", "Em", "F", "Fm", "G", "Gm", "A", "Am", "B", "Bm"]; const nextPlaceholders = ["Replace the bass", "Try the B section chords", "Make two drum variations", "Bounce a rough hook"]; const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
+function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <section className={"border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4 " + className}>{children}</section>; } function StatusBadge({ status, language }: { status: Status; language: AppLanguage }) { return <span className="shrink-0 rounded bg-[var(--lv-surface-raised)] px-2 py-1 text-xs font-semibold uppercase text-teal-200">{statusLabel(status, language)}</span>; } function formatDate(value: string): string { return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value)); } function splitList(value: string): string[] { return value.split(",").map((entry) => entry.trim()).filter(Boolean); } function hashString(value: string): number { let hash = 0; for (const char of value) hash = (hash * 31 + char.charCodeAt(0)) | 0; return hash; } const defaultAssetId = () => crypto.randomUUID(); async function writeClipboardText(text: string): Promise<void> { if (!navigator.clipboard?.writeText) throw new Error("Clipboard is not available."); await navigator.clipboard.writeText(text); }
 function labelStatus(status: Status, language: AppLanguage): string { return statusLabel(status, language); }
 
 function ProgressionBlockCard({
@@ -158,7 +159,7 @@ export function DetailView({
   }
 
   function commitStatus(to: Status, options: TransitionOptions = {}) {
-    if (pipeline.includes(to) && idea.nextAction.text.trim() && to !== idea.status) {
+    if (isPipelineStatus(to) && idea.nextAction.text.trim() && to !== idea.status) {
       setPendingPipelineTransition({ to, options });
       return false;
     }
@@ -168,7 +169,7 @@ export function DetailView({
   function performStatusTransition(to: Status, options: TransitionOptions = {}) {
     const result = transitionIdea(idea.id, to, new Date(), options);
     if (!result.ok) setToast(result.error.message);
-    if (result.ok && to === "done") setToast(language === "ja" ? "Done。完成として記録しました。" : "Done. Marked as finished.");
+    if (result.ok && to === "done") setToast(copy.toast.statusDone);
     return result.ok;
   }
 
@@ -352,13 +353,13 @@ export function DetailView({
             <input className="w-full bg-transparent text-2xl font-semibold outline-none" value={idea.title} onChange={(event) => updateMeta({ title: event.target.value.slice(0, 80) })} />
             <StatusBadge status={idea.status} language={language} />
           </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {statuses.map((status) => (
-              <button key={status} className={statusButtonClass(status === idea.status)} onClick={() => moveStatus(status)}>
-                {labelStatus(status, language)}
-              </button>
-            ))}
-          </div>
+          <StatusPipeline
+            status={idea.status}
+            prevStatus={idea.prevStatus}
+            labels={copy.status}
+            copy={copy.detail.statusControl}
+            onMoveStatus={moveStatus}
+          />
           <button className="mt-5 rounded border border-red-500/50 px-3 py-2 text-sm text-red-200" onClick={() => requestDelete(idea)}>{copy.common.delete}</button>
         </Panel>
 
@@ -566,10 +567,10 @@ export function DetailView({
           layerClassName="z-[70]"
         >
           <h2 id="pipeline-transition-title" className="text-xl font-semibold">
-            {language === "ja" ? "Next Actionを持ち越しますか？" : "Carry the Next Action?"}
+            {copy.detail.statusControl.carryTitle}
           </h2>
           <p id="pipeline-transition-description" className="mt-3 text-sm leading-6 text-[var(--lv-text-secondary)]">
-            {language === "ja" ? "現在のNext Actionを次のステージでも続けるか選んでください。" : "Choose whether to keep the current Next Action in the next stage."}
+            {copy.detail.statusControl.carryDescription}
           </p>
           <div className="mt-6 flex flex-wrap justify-end gap-2">
             <button
@@ -585,18 +586,22 @@ export function DetailView({
               className="rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950"
               onClick={() => resolvePipelineTransition(true)}
             >
-              {language === "ja" ? "持ち越して進む" : "Keep and continue"}
+              {copy.detail.statusControl.keepAndContinue}
             </button>
             <button
               type="button"
               className="rounded border border-red-400/50 px-3 py-2 text-sm text-red-100"
               onClick={() => resolvePipelineTransition(false)}
             >
-              {language === "ja" ? "空にして進む" : "Clear and continue"}
+              {copy.detail.statusControl.clearAndContinue}
             </button>
           </div>
         </Modal>
       ) : null}
     </>
   );
+}
+
+function isPipelineStatus(status: Status): boolean {
+  return pipelineStatuses.includes(status as (typeof pipelineStatuses)[number]);
 }

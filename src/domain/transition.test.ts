@@ -1,10 +1,68 @@
 import { describe, expect, it } from "vitest";
+import type { Status } from "./types";
 import { makeIdea } from "./testFactory";
 import { transition } from "./transition";
 
 const now = new Date("2026-07-10T09:30:00.000Z");
+const statuses: Status[] = [
+  "idea",
+  "loop",
+  "arrange",
+  "mix",
+  "done",
+  "hold",
+  "abandoned",
+];
+const pipelineStatuses: Status[] = ["idea", "loop", "arrange", "mix", "done"];
+const inactiveStatuses: Status[] = ["hold", "abandoned"];
+const transitionMatrix = statuses.flatMap((from) => statuses.map((to) => ({
+  from,
+  to,
+  allowed: expectedNormalTransition(from, to),
+})));
+const repairMatrix = ([undefined, "hold", "abandoned"] as const).flatMap(
+  (prevStatus) => statuses.map((to) => ({
+    prevStatus,
+    prevStatusLabel: prevStatus ?? "missing",
+    to,
+    allowed: to === "idea",
+  })),
+);
 
 describe("transition", () => {
+  it.each(transitionMatrix)(
+    "$from -> $to allowed=$allowed for valid data",
+    ({ from, to, allowed }) => {
+      const result = transition(
+        makeIdea({
+          status: from,
+          prevStatus: inactiveStatuses.includes(from) ? "loop" : undefined,
+        }),
+        to,
+        now,
+      );
+
+      expect(result.ok).toBe(allowed);
+    },
+  );
+
+  it.each(repairMatrix)(
+    "Hold with $prevStatusLabel prevStatus -> $to allowed=$allowed",
+    ({ prevStatus, to, allowed }) => {
+      const result = transition(
+        makeIdea({ status: "hold", prevStatus }),
+        to,
+        now,
+      );
+
+      expect(result.ok).toBe(allowed);
+      if (result.ok) {
+        expect(result.idea.status).toBe("idea");
+        expect(result.idea.prevStatus).toBeUndefined();
+      }
+    },
+  );
+
   it("rejects skipped pipeline jumps", () => {
     const result = transition(makeIdea({ status: "idea" }), "mix", now);
 
@@ -47,6 +105,38 @@ describe("transition", () => {
     }
     expect(result.idea.status).toBe("loop");
     expect(result.idea.prevStatus).toBeUndefined();
+  });
+
+  it("reports invalid restore targets without blocking the Idea repair", () => {
+    const result = transition(
+      makeIdea({ status: "hold", prevStatus: "abandoned" }),
+      "loop",
+      now,
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        code: "invalid-restore-target",
+        message: expect.stringContaining("only repair to idea"),
+      },
+    });
+  });
+
+  it("preserves prevStatus while switching between Hold and Abandoned", () => {
+    const abandoned = transition(
+      makeIdea({ status: "hold", prevStatus: "mix" }),
+      "abandoned",
+      now,
+    );
+
+    expect(abandoned.ok).toBe(true);
+    if (!abandoned.ok) return;
+    expect(abandoned.idea.prevStatus).toBe("mix");
+
+    const restored = transition(abandoned.idea, "mix", now);
+    expect(restored.ok && restored.idea.status).toBe("mix");
+    expect(restored.ok && restored.idea.prevStatus).toBeUndefined();
   });
 
   it("keeps completedAt unchanged when Done is revisited", () => {
@@ -140,3 +230,14 @@ describe("transition", () => {
     });
   });
 });
+
+function expectedNormalTransition(from: Status, to: Status): boolean {
+  if (from === to) return false;
+  if (inactiveStatuses.includes(from)) {
+    return inactiveStatuses.includes(to) || to === "loop";
+  }
+  if (inactiveStatuses.includes(to)) return true;
+  return Math.abs(
+    pipelineStatuses.indexOf(from) - pipelineStatuses.indexOf(to),
+  ) === 1;
+}
