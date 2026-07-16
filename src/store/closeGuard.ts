@@ -3,6 +3,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { message } from "@tauri-apps/plugin-dialog";
 import type { StoreApi } from "zustand/vanilla";
 import type { VaultStoreState } from "./vaultStore";
+import { playbackController } from "../audio/playbackController";
 
 export function shouldBlockClose(state: VaultStoreState): boolean {
   return state.unsaved;
@@ -19,7 +20,7 @@ export function registerBrowserCloseGuard(
     return () => undefined;
   }
 
-  const handler = (event: BeforeUnloadEvent) => {
+  const beforeUnloadHandler = (event: BeforeUnloadEvent) => {
     if (!shouldBlockClose(store.getState())) {
       return;
     }
@@ -28,8 +29,25 @@ export function registerBrowserCloseGuard(
     event.returnValue = "";
   };
 
-  window.addEventListener("beforeunload", handler);
-  return () => window.removeEventListener("beforeunload", handler);
+  let playbackStopped = false;
+  const stopPlaybackOnce = () => {
+    if (playbackStopped) return;
+    playbackStopped = true;
+    playbackController.stop();
+  };
+  const pageHideHandler = (event: PageTransitionEvent) => {
+    if (!event.persisted) stopPlaybackOnce();
+  };
+  const unloadHandler = () => stopPlaybackOnce();
+
+  window.addEventListener("beforeunload", beforeUnloadHandler);
+  window.addEventListener("pagehide", pageHideHandler);
+  window.addEventListener("unload", unloadHandler);
+  return () => {
+    window.removeEventListener("beforeunload", beforeUnloadHandler);
+    window.removeEventListener("pagehide", pageHideHandler);
+    window.removeEventListener("unload", unloadHandler);
+  };
 }
 
 export async function registerTauriCloseGuard(
@@ -68,5 +86,6 @@ export async function registerTauriCloseGuard(
 }
 
 export async function exitDesktopApp(): Promise<void> {
+  playbackController.stop();
   await invoke("exit_app");
 }

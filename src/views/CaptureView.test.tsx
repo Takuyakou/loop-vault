@@ -7,7 +7,20 @@ import { describe, expect, it, vi } from "vitest";
 import type { ChordTimelineItem, MidiProgressionAnalysis, ProgressionBlockCandidate } from "../domain/types";
 import { makeIdea } from "../domain/testFactory";
 import { appCopy } from "../i18n";
-import { CaptureView, isEditableKeyboardTarget, isMidiFileName, ProgressionCandidateCard, ProgressionSaveDialog, TimelineDetails } from "./CaptureView";
+import {
+  createPlaybackController,
+  type PlaybackAudioDriver,
+} from "../audio/playbackController";
+import {
+  captureAnalysisIdentity,
+  CaptureView,
+  isEditableKeyboardTarget,
+  isMidiFileName,
+  ProgressionCandidateCard,
+  ProgressionSaveDialog,
+  timelinePlaybackPosition,
+  TimelineDetails,
+} from "./CaptureView";
 
 const feedbackSpies = vi.hoisted(() => ({
   append: vi.fn(async () => undefined),
@@ -50,6 +63,15 @@ function candidate(overrides: Partial<ProgressionBlockCandidate> = {}): Progress
     warnings: ["ambiguous-bass"],
     ...overrides,
   };
+}
+
+function playbackHarness() {
+  const driver: PlaybackAudioDriver = {
+    playChord: vi.fn(async (_chord, _sound, callbacks) => callbacks.onStarted?.()),
+    playTimeline: vi.fn(async (_timeline, _bpm, _sound, callbacks) => callbacks.onStarted?.()),
+    stop: vi.fn(),
+  };
+  return { controller: createPlaybackController(driver), driver };
 }
 
 describe("ProgressionCandidateCard", () => {
@@ -227,6 +249,80 @@ describe("ProgressionCandidateCard", () => {
     editable.contentEditable = "true";
     expect(isEditableKeyboardTarget(editable)).toBe(true);
     expect(isEditableKeyboardTarget(document.createElement("button"))).toBe(false);
+  });
+
+  it("stops candidate playback before keyboard undo and redo", async () => {
+    const first = chord("Cmaj7", 1);
+    first.alternatives = [{
+      chord: { root: 7, quality: "dom7", tensions: [], label: "G7" },
+      confidence: 0.72,
+    }];
+    const { controller, driver } = playbackHarness();
+    const source = { kind: "capture" as const, id: "analysis:test:candidate:candidate-1" };
+    const container = document.createElement("div");
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <ProgressionCandidateCard
+          candidate={candidate({ chords: [first, chord("Am7", 2)] })}
+          candidateIndex={0}
+          bpm={96}
+          onCopyProgression={vi.fn()}
+          onPreview={vi.fn()}
+          onPreviewChord={vi.fn()}
+          playbackSource={source}
+          controller={controller}
+          copy={appCopy.en}
+          language="en"
+          isExpanded
+        />,
+      );
+    });
+
+    const alternativeButton = [...container.querySelectorAll("button")]
+      .find((button) => button.textContent?.includes("G7"));
+    await act(async () => alternativeButton?.click());
+    const applyButton = [...container.querySelectorAll("button")]
+      .find((button) => button.textContent === "Apply");
+    await act(async () => applyButton?.click());
+
+    await act(async () => {
+      await controller.play(
+        { kind: "capture", id: `${source.id}:inspector:slot:original` },
+        { type: "chord", chord: first.chord },
+      );
+    });
+    vi.mocked(driver.stop).mockClear();
+    await act(async () => {
+      window.dispatchEvent(new KeyboardEvent("keydown", {
+        key: "z",
+        ctrlKey: true,
+        bubbles: true,
+      }));
+    });
+    expect(driver.stop).toHaveBeenCalledTimes(1);
+    expect(controller.getState().status).toBe("idle");
+
+    await act(async () => {
+      await controller.play(
+        { kind: "capture", id: `${source.id}:chord:0:G7` },
+        { type: "chord", chord: first.chord },
+      );
+    });
+    vi.mocked(driver.stop).mockClear();
+    await act(async () => {
+      window.dispatchEvent(new KeyboardEvent("keydown", {
+        key: "z",
+        ctrlKey: true,
+        shiftKey: true,
+        bubbles: true,
+      }));
+    });
+    expect(driver.stop).toHaveBeenCalledTimes(1);
+    expect(controller.getState().status).toBe("idle");
+
+    await act(async () => root.unmount());
   });
 
   it("splits, merges, and deletes chord slots while keeping the editor usable", async () => {
@@ -597,7 +693,121 @@ describe("CaptureView saving", () => {
   });
 });
 
+describe("Capture playback isolation", () => {
+  it("stops sound changes only for Capture playback in both selectors", async () => {
+    const capturedCandidate = candidate();
+    const result: MidiProgressionAnalysis = {
+      fileName: "song.mid",
+      totalBars: 4,
+      bpm: 100,
+      fullTimeline: capturedCandidate.chords,
+      blockCandidates: [capturedCandidate],
+      analyzedAt: "2026-07-15T00:00:00.000Z",
+      analyzerVersion: "test",
+    };
+    const { controller, driver } = playbackHarness();
+    const container = document.createElement("div");
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <CaptureView
+          ideas={[]}
+          analysis={{ status: "done", result }}
+          analyzeMidiBytes={vi.fn()}
+          clearAnalysis={vi.fn()}
+          createIdeaFromDraft={vi.fn()}
+          appendBlockToIdea={vi.fn()}
+          updateIdea={vi.fn()}
+          setToast={vi.fn()}
+          copy={appCopy.en}
+          language="en"
+          showRomanNumerals
+          controller={controller}
+        />,
+      );
+    });
+
+    const clickSound = async (groupIndex: number, label: string) => {
+      const groups = container.querySelectorAll<HTMLElement>('[role="group"][aria-label="Preview sound"]');
+      const button = [...(groups[groupIndex]?.querySelectorAll("button") ?? [])]
+        .find((item) => item.textContent?.trim() === label);
+      await act(async () => button?.click());
+    };
+    const play = async (kind: "home" | "capture", id: string) => {
+      await act(async () => {
+        await controller.play(
+          { kind, id },
+          { type: "chord", chord: capturedCandidate.chords[0]!.chord },
+        );
+      });
+      vi.mocked(driver.stop).mockClear();
+    };
+
+    await play("home", "today-focus");
+    await clickSound(0, "Electric piano");
+    expect(driver.stop).not.toHaveBeenCalled();
+    expect(controller.getState().source).toEqual({ kind: "home", id: "today-focus" });
+
+    await act(async () => controller.stop());
+    await play("capture", "candidate-preview");
+    await clickSound(0, "Piano");
+    expect(driver.stop).toHaveBeenCalledTimes(1);
+    expect(controller.getState().status).toBe("idle");
+
+    await play("home", "vault-focus");
+    await clickSound(1, "Electric piano");
+    expect(driver.stop).not.toHaveBeenCalled();
+    expect(controller.getState().source).toEqual({ kind: "home", id: "vault-focus" });
+
+    await act(async () => controller.stop());
+    await play("capture", "full-timeline");
+    await clickSound(1, "Piano");
+    expect(driver.stop).toHaveBeenCalledTimes(1);
+    expect(controller.getState().status).toBe("idle");
+
+    await act(async () => root.unmount());
+  });
+
+  it("builds a collision-resistant fallback identity for legacy analyses", () => {
+    const base: MidiProgressionAnalysis = {
+      fileName: "song.mid",
+      sourceAssetId: "11111111-1111-4111-8111-111111111111",
+      totalBars: 4,
+      fullTimeline: [],
+      blockCandidates: [],
+      analyzedAt: "2026-07-15T00:00:00.000Z",
+      analyzerVersion: "legacy",
+    };
+
+    expect(captureAnalysisIdentity(base)).not.toBe(captureAnalysisIdentity({
+      ...base,
+      analyzedAt: "2026-07-15T00:01:00.000Z",
+    }));
+    expect(captureAnalysisIdentity(base)).not.toBe(captureAnalysisIdentity({
+      ...base,
+      sourceAssetId: "22222222-2222-4222-8222-222222222222",
+    }));
+    expect(captureAnalysisIdentity({
+      ...base,
+      sourceFingerprint: "sha256-stable",
+    })).toBe("fingerprint:sha256-stable");
+  });
+});
+
 describe("TimelineDetails", () => {
+  it("derives the active chord and progress from controller time", () => {
+    const chords = [chord("Cmaj7", 1), chord("Am7", 2)];
+    expect(timelinePlaybackPosition(chords, 120, 1_000, 1_250)).toEqual({
+      index: 0,
+      progress: 0.125,
+    });
+    expect(timelinePlaybackPosition(chords, 120, 1_000, 3_250)).toEqual({
+      index: 1,
+      progress: 0.125,
+    });
+  });
+
   it("offers full playback, stop, piano sound feedback, and clickable chords", () => {
     const result: MidiProgressionAnalysis = {
       fileName: "song.mid",
@@ -609,6 +819,7 @@ describe("TimelineDetails", () => {
       analyzerVersion: "test",
     };
 
+    const { controller } = playbackHarness();
     const markup = renderToStaticMarkup(
       <TimelineDetails
         result={result}
@@ -616,9 +827,7 @@ describe("TimelineDetails", () => {
         language="ja"
         previewSound="piano"
         onPreviewSoundChange={vi.fn()}
-        onPreview={vi.fn()}
-        onPreviewChord={vi.fn()}
-        onStop={vi.fn()}
+        controller={controller}
       />,
     );
 
@@ -644,8 +853,7 @@ describe("TimelineDetails", () => {
       analyzedAt: "2026-07-15T00:00:00.000Z",
       analyzerVersion: "test",
     };
-    const onPreview = vi.fn(async () => undefined);
-    const onStop = vi.fn();
+    const { controller, driver } = playbackHarness();
     const container = document.createElement("div");
     const root = createRoot(container);
 
@@ -657,22 +865,20 @@ describe("TimelineDetails", () => {
           language="ja"
           previewSound="piano"
           onPreviewSoundChange={vi.fn()}
-          onPreview={onPreview}
-          onPreviewChord={vi.fn()}
-          onStop={onStop}
+          controller={controller}
         />,
       );
     });
 
     const playbackButton = () => container.querySelector<HTMLButtonElement>("button.lv-button-primary");
     await act(async () => playbackButton()?.click());
-    expect(onPreview).toHaveBeenCalledTimes(1);
+    expect(driver.playTimeline).toHaveBeenCalledTimes(1);
     expect(playbackButton()?.textContent).toContain("停止");
     expect(container.querySelectorAll("button.lv-button-ghost")).toHaveLength(0);
 
     await act(async () => playbackButton()?.click());
     expect(playbackButton()?.textContent).toContain("曲全体を再生");
-    expect(onStop).toHaveBeenCalledTimes(2);
+    expect(driver.stop).toHaveBeenCalledTimes(2);
 
     await act(async () => root.unmount());
   });
@@ -688,6 +894,7 @@ describe("TimelineDetails", () => {
       analyzerVersion: "test",
     };
     const onPreviewSoundChange = vi.fn();
+    const { controller } = playbackHarness();
     const container = document.createElement("div");
     const root = createRoot(container);
 
@@ -699,9 +906,7 @@ describe("TimelineDetails", () => {
           language="ja"
           previewSound="piano"
           onPreviewSoundChange={onPreviewSoundChange}
-          onPreview={vi.fn()}
-          onPreviewChord={vi.fn()}
-          onStop={vi.fn()}
+          controller={controller}
         />,
       );
     });

@@ -3,7 +3,7 @@ import {
   open as openFileDialog,
 } from "@tauri-apps/plugin-dialog";
 import { readFile } from "@tauri-apps/plugin-fs";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { DragEvent } from "react";
 import {
   applyEditableProgression,
@@ -44,12 +44,20 @@ import { chordProgressFraction } from "../ui/playbackProgress";
 import { confidenceLabel, shouldShowConfidence, warningLabel } from "./captureLabels";
 import { appendAnalysisFeedback } from "../storage/analysisFeedbackStorage";
 import type { PreviewSound } from "../audio/chordPreview";
+import {
+  playbackController,
+  samePlaybackSource,
+  type PlaybackController,
+  type PlayingSource,
+} from "../audio/playbackController";
 import { ChordInspector } from "../components/progression-editing/ChordInspector";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { Modal } from "../components/Modal";
+import { PlayToggle } from "../components/PlayToggle";
 import { EditableProgressionGrid } from "../components/progression-editing/EditableProgressionGrid";
 import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
 import { ProgressionEditSummary } from "../components/progression-editing/ProgressionEditSummary";
+import { usePlaybackState } from "../hooks/usePlaybackState";
 
 interface CaptureViewProps {
   ideas: SongIdea[];
@@ -81,6 +89,7 @@ interface CaptureViewProps {
   copy: AppCopy;
   language: AppLanguage;
   showRomanNumerals: boolean;
+  controller?: PlaybackController;
 }
 
 const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
@@ -98,6 +107,7 @@ export function CaptureView(props: CaptureViewProps) {
     copy,
     language,
     showRomanNumerals,
+    controller = playbackController,
   } = props;
   const [isDraggingMidi, setIsDraggingMidi] = useState(false);
   const [expandedCandidateId, setExpandedCandidateId] = useState<string>();
@@ -136,16 +146,17 @@ export function CaptureView(props: CaptureViewProps) {
   }
 
   function applyCandidateSelection(candidateId: string | undefined) {
-    void stopPreviewAudio();
+    stopCapturePlayback(controller);
     setExpandedCandidateId(candidateId);
   }
 
   const analyzeMidiBytesWithToast = useCallback(
     (bytes: Uint8Array, fileName: string) => {
+      stopCapturePlayback(controller);
       const analyzed = analyzeMidiBytes(bytes, { fileName });
       setToast(analyzed ? copy.toast.midiAnalyzed : copy.toast.midiFailed);
     },
-    [analyzeMidiBytes, copy.toast.midiAnalyzed, copy.toast.midiFailed, setToast],
+    [analyzeMidiBytes, controller, copy.toast.midiAnalyzed, copy.toast.midiFailed, setToast],
   );
 
   const analyzeMidiPath = useCallback(
@@ -232,6 +243,7 @@ export function CaptureView(props: CaptureViewProps) {
   }, [analyzeMidiPath, copy.toast.midiDropInvalid, setToast]);
 
   async function chooseMidi() {
+    stopCapturePlayback(controller);
     if (!("__TAURI_INTERNALS__" in window)) {
       setToast(copy.toast.desktopMidiOnly);
       return;
@@ -399,7 +411,10 @@ export function CaptureView(props: CaptureViewProps) {
 
   async function previewCandidate(candidate: ProgressionBlockCandidate) {
     try {
-      await previewTimeline(candidate.chords, analysis.result?.bpm, previewSound);
+      await controller.toggle(
+        captureCandidateSource(result, candidate.id),
+        { type: "timeline", timeline: candidate.chords, bpm: result?.bpm, sound: previewSound },
+      );
     } catch (error) {
       setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
     }
@@ -409,32 +424,16 @@ export function CaptureView(props: CaptureViewProps) {
     try {
       const chord = candidate.chords[chordIndex]?.chord;
       if (chord) {
-        await previewSingleChord(chord, previewSound);
+        await controller.toggle(
+          {
+            kind: "capture",
+            id: `${captureCandidateSource(result, candidate.id).id}:chord:${chordIndex}:${chord.label}`,
+          },
+          { type: "chord", chord, sound: previewSound },
+        );
       }
     } catch (error) {
       setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
-    }
-  }
-
-  async function previewSongTimeline() {
-    if (!analysis.result) {
-      return;
-    }
-
-    try {
-      await previewTimeline(analysis.result.fullTimeline, analysis.result.bpm, previewSound);
-    } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
-      throw error;
-    }
-  }
-
-  async function previewSongChord(chord: ChordSymbol) {
-    try {
-      await previewSingleChord(chord, previewSound);
-    } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
-      throw error;
     }
   }
 
@@ -475,7 +474,7 @@ export function CaptureView(props: CaptureViewProps) {
             <button className="rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => void chooseMidi()}>
               {copy.capture.chooseAnother}
             </button>
-            <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => { clearAnalysis(); setSourcePath(undefined); }}>
+            <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => { stopCapturePlayback(controller); clearAnalysis(); setSourcePath(undefined); }}>
               {copy.capture.clear}
             </button>
           </div>
@@ -498,7 +497,7 @@ export function CaptureView(props: CaptureViewProps) {
             <PreviewSoundSelector
               value={previewSound}
               onChange={(sound) => {
-                void stopPreviewAudio();
+                stopCapturePlayback(controller);
                 setPreviewSound(sound);
               }}
               copy={copy}
@@ -522,6 +521,10 @@ export function CaptureView(props: CaptureViewProps) {
                   onCopyProgression={copyProgression}
                   onPreview={previewCandidate}
                   onPreviewChord={previewCandidateChord}
+                  playbackSource={captureCandidateSource(result, candidate.id)}
+                  previewSound={previewSound}
+                  controller={controller}
+                  onPreviewError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed)}
                   copy={copy}
                   language={language}
                   isExpanded={expandedCandidateId === candidate.id}
@@ -561,12 +564,11 @@ export function CaptureView(props: CaptureViewProps) {
         language={language}
         previewSound={previewSound}
         onPreviewSoundChange={(sound) => {
-          void stopPreviewAudio();
+          stopCapturePlayback(controller);
           setPreviewSound(sound);
         }}
-        onPreview={previewSongTimeline}
-        onPreviewChord={previewSongChord}
-        onStop={stopPreviewAudio}
+        onPlaybackError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed)}
+        controller={controller}
       />
       </div>
       {saveDraft ? (
@@ -701,76 +703,51 @@ export function TimelineDetails({
   language,
   previewSound,
   onPreviewSoundChange,
-  onPreview,
-  onPreviewChord,
-  onStop,
+  onPlaybackError,
+  controller = playbackController,
 }: {
   result: MidiProgressionAnalysis;
   copy: AppCopy;
   language: AppLanguage;
   previewSound: PreviewSound;
   onPreviewSoundChange: (sound: PreviewSound) => void;
-  onPreview: () => void | Promise<void>;
-  onPreviewChord: (chord: ChordSymbol) => void | Promise<void>;
-  onStop: () => void | Promise<void>;
+  onPlaybackError?: (error: unknown) => void;
+  controller?: PlaybackController;
 }) {
   const [selectedChordIndex, setSelectedChordIndex] = useState<number>();
-  const [isPlaying, setIsPlaying] = useState(false);
-  const playbackTimer = useRef<number>();
+  const playback = usePlaybackState(controller);
+  const source = captureFullTimelineSource(result);
+  const playing = playback.status !== "idle" && samePlaybackSource(playback.source, source);
+  const [, forcePlaybackTick] = useState(0);
 
-  useEffect(() => () => {
-    if (playbackTimer.current !== undefined) {
-      window.clearTimeout(playbackTimer.current);
-    }
-    void onStop();
-  }, [onStop]);
-
-  function stopTimelinePreview() {
-    if (playbackTimer.current !== undefined) {
-      window.clearTimeout(playbackTimer.current);
-      playbackTimer.current = undefined;
-    }
-    setIsPlaying(false);
-    void onStop();
-  }
-
-  async function previewFullTimeline() {
-    stopTimelinePreview();
-    setIsPlaying(true);
-    try {
-      await onPreview();
-    } catch {
-      setIsPlaying(false);
-      return;
-    }
-
-    const first = result.fullTimeline[0];
-    const last = result.fullTimeline[result.fullTimeline.length - 1];
-    if (!first || !last) {
-      setIsPlaying(false);
-      return;
-    }
-
-    const beatSeconds = 60 / (result.bpm || 96);
-    const durationBeats = timelineStartBeat(last) - timelineStartBeat(first) + last.durationBeats;
-    playbackTimer.current = window.setTimeout(() => {
-      playbackTimer.current = undefined;
-      setIsPlaying(false);
-    }, durationBeats * beatSeconds * 1000 + 120);
-  }
+  useEffect(() => {
+    if (!playing || playback.status !== "playing") return undefined;
+    const interval = window.setInterval(() => forcePlaybackTick((value) => value + 1), 100);
+    return () => window.clearInterval(interval);
+  }, [playback.status, playing]);
 
   async function previewTimelineChord(index: number) {
-    stopTimelinePreview();
     setSelectedChordIndex(index);
     const chord = result.fullTimeline[index]?.chord;
     if (chord) {
       try {
-        await onPreviewChord(chord);
-      } catch {
-        return;
+        await controller.toggle(
+          { kind: "capture", id: `${source.id}:chord:${index}:${chord.label}` },
+          { type: "chord", chord, sound: previewSound },
+        );
+      } catch (error) {
+        onPlaybackError?.(error);
       }
     }
   }
+
+  const position = playing && playback.status === "playing"
+    ? timelinePlaybackPosition(
+        result.fullTimeline,
+        result.bpm ?? 96,
+        playback.startedAt,
+      )
+    : undefined;
 
   return (
     <details className="border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-5">
@@ -780,16 +757,15 @@ export function TimelineDetails({
       <p className="mt-3 text-sm text-[var(--lv-text-muted)]">{copy.capture.timelineDescription}</p>
       {result.fullTimeline.length > 0 ? (
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <button
+          <PlayToggle
+            source={source}
+            request={{ type: "timeline", timeline: result.fullTimeline, bpm: result.bpm, sound: previewSound }}
+            playLabel={copy.capture.previewFullTimeline}
+            stopLabel={copy.common.stop}
             className="lv-button-primary inline-flex min-h-10 items-center gap-2 px-4"
-            type="button"
-            onClick={isPlaying ? stopTimelinePreview : () => void previewFullTimeline()}
-            aria-label={isPlaying ? copy.common.stop : copy.capture.previewFullTimeline}
-            title={isPlaying ? copy.common.stop : copy.capture.previewFullTimeline}
-          >
-            <span aria-hidden="true">{isPlaying ? "■" : "▶"}</span>
-            {isPlaying ? copy.common.stop : copy.capture.previewFullTimeline}
-          </button>
+            onError={onPlaybackError}
+            controller={controller}
+          />
           <PreviewSoundSelector
             value={previewSound}
             onChange={onPreviewSoundChange}
@@ -803,7 +779,8 @@ export function TimelineDetails({
             chords={result.fullTimeline}
             currentBar={null}
             selectedChordIndex={selectedChordIndex}
-            playingChordIndex={null}
+            playingChordIndex={position?.index ?? null}
+            playingProgress={position?.progress ?? null}
             onChordSelect={(index) => void previewTimelineChord(index)}
           />
         ) : (
@@ -852,8 +829,11 @@ export function ProgressionCandidateCard({
   bpm,
   detectedKey,
   onCopyProgression,
-  onPreview,
   onPreviewChord,
+  playbackSource,
+  previewSound = "piano",
+  onPreviewError,
+  controller = playbackController,
   copy,
   language,
   isExpanded = false,
@@ -873,11 +853,15 @@ export function ProgressionCandidateCard({
   onAppend?: (candidate: ProgressionBlockCandidate, ideaId: string) => void;
   onCopyMemo?: (candidate: ProgressionBlockCandidate, ideaId: string) => void;
   onCopyProgression: (candidate: ProgressionBlockCandidate) => void | Promise<void>;
-  onPreview: (candidate: ProgressionBlockCandidate) => void | Promise<void>;
+  onPreview?: (candidate: ProgressionBlockCandidate) => void | Promise<void>;
   onPreviewChord: (
     candidate: ProgressionBlockCandidate,
     chordIndex: number,
   ) => void | Promise<void>;
+  playbackSource?: PlayingSource;
+  previewSound?: PreviewSound;
+  onPreviewError?: (error: unknown) => void;
+  controller?: PlaybackController;
   copy: AppCopy;
   language: AppLanguage;
   isExpanded?: boolean;
@@ -892,10 +876,7 @@ export function ProgressionCandidateCard({
   const title = editorCopy.progressionTitle(candidate.labels.slice(0, 4));
   const [editable, setEditable] = useState(() => createEditableProgression(candidate));
   const [selectedChordIndex, setSelectedChordIndex] = useState(0);
-  const [playingChordIndex, setPlayingChordIndex] = useState<number | null>(null);
-  const [previewStartedAt, setPreviewStartedAt] = useState<number | null>(null);
   const [, forcePlaybackTick] = useState(0);
-  const visualTimers = useRef<number[]>([]);
   const currentCandidate = applyEditableProgression(candidate, editable);
   const chords = currentCandidate.chords;
   const editedCandidate = {
@@ -904,16 +885,18 @@ export function ProgressionCandidateCard({
     chords,
     labels: [...new Set(chords.map((item) => item.chord.label))],
   };
+  const source = playbackSource ?? { kind: "capture", id: `candidate:${candidate.id}` };
+  const playback = usePlaybackState(controller);
+  const candidatePlaying = playback.status !== "idle"
+    && samePlaybackSource(playback.source, source);
 
   useEffect(() => {
     setEditable(createEditableProgression(candidate));
     setSelectedChordIndex(0);
-    stopVisualPreview();
-    return stopVisualPreview;
   }, [candidate, language]);
 
   useEffect(() => {
-    if (previewStartedAt === null) {
+    if (!candidatePlaying || playback.status !== "playing") {
       return undefined;
     }
 
@@ -922,7 +905,7 @@ export function ProgressionCandidateCard({
     }, 100);
 
     return () => window.clearInterval(interval);
-  }, [previewStartedAt]);
+  }, [candidatePlaying, playback.status]);
 
   useEffect(() => {
     onDirtyChange?.(candidate.id, hasProgressionEdits(editable));
@@ -938,6 +921,7 @@ export function ProgressionCandidateCard({
       }
       if (event.ctrlKey && event.key.toLowerCase() === "z") {
         event.preventDefault();
+        stopCandidatePreview();
         setEditable((current) => event.shiftKey
           ? redoProgressionEdit(current)
           : undoProgressionEdit(current));
@@ -983,44 +967,16 @@ export function ProgressionCandidateCard({
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [editable.selectedSlotId, editable.slots, isExpanded, onCollapse, selectedChordIndex]);
-
-  function stopVisualPreview() {
-    for (const timer of visualTimers.current) {
-      window.clearTimeout(timer);
-    }
-    visualTimers.current = [];
-    setPlayingChordIndex(null);
-    setPreviewStartedAt(null);
-  }
+  }, [controller, editable.selectedSlotId, editable.slots, isExpanded, onCollapse, selectedChordIndex, source]);
 
   function stopCandidatePreview() {
-    stopVisualPreview();
-    void stopPreviewAudio();
-  }
-
-  async function previewWholeCandidate() {
-    stopVisualPreview();
-    const baseBeat = firstTimelineBeat(chords);
-    const beatSeconds = 60 / bpm;
-    setPreviewStartedAt(window.performance.now());
-
-    for (const [index, chord] of chords.entries()) {
-      const delayMs = Math.max(0, (timelineStartBeat(chord) - baseBeat) * beatSeconds * 1000);
-      visualTimers.current.push(
-        window.setTimeout(() => {
-          setPlayingChordIndex(index);
-          setSelectedChordIndex(index);
-        }, delayMs),
-      );
+    const activeSource = controller.getState().source;
+    if (
+      activeSource?.kind === source.kind
+      && (activeSource.id === source.id || activeSource.id.startsWith(`${source.id}:`))
+    ) {
+      controller.stop();
     }
-
-    const last = chords[chords.length - 1];
-    const totalMs = last
-      ? (timelineStartBeat(last) - baseBeat + last.durationBeats) * beatSeconds * 1000
-      : 0;
-    visualTimers.current.push(window.setTimeout(stopVisualPreview, totalMs + 120));
-    await onPreview(editedCandidate);
   }
 
   async function selectChord(index: number) {
@@ -1050,20 +1006,11 @@ export function ProgressionCandidateCard({
     setSelectedChordIndex(Math.max(0, nextIndex));
   }
 
-  const playingChord = playingChordIndex === null ? undefined : chords[playingChordIndex];
-  const elapsedSeconds =
-    previewStartedAt === null ? 0 : (window.performance.now() - previewStartedAt) / 1000;
-  const playingProgress =
-    previewStartedAt === null || playingChord === undefined
-      ? null
-      : chordProgressFraction(
-          {
-            startBeat: timelineStartBeat(playingChord) - firstTimelineBeat(chords),
-            durationBeats: playingChord.durationBeats,
-          },
-          bpm,
-          elapsedSeconds,
-        );
+  const playbackPosition = candidatePlaying && playback.status === "playing"
+    ? timelinePlaybackPosition(chords, bpm, playback.startedAt)
+    : undefined;
+  const playingChordIndex = playbackPosition?.index ?? null;
+  const playingProgress = playbackPosition?.progress ?? null;
   const selectedChord = chords[selectedChordIndex] ?? chords[0];
   const selectedSlotIndex = editable.slots.findIndex((slot) => slot.id === editable.selectedSlotId);
   const selectedSlot = selectedSlotIndex >= 0 ? editable.slots[selectedSlotIndex] : undefined;
@@ -1092,14 +1039,16 @@ export function ProgressionCandidateCard({
           ) : null}
         </button>
         <div className="flex flex-wrap items-center justify-end gap-2">
-          <button className="grid h-9 w-9 place-items-center rounded bg-cyan-400 text-sm font-semibold text-stone-950" onClick={() => void previewWholeCandidate()} aria-label={copy.common.preview} title={copy.common.preview}>
-            ▶
-          </button>
-          {previewStartedAt !== null ? (
-            <button className="grid h-9 w-9 place-items-center rounded border border-[var(--lv-border-strong)] text-sm" onClick={stopCandidatePreview} aria-label={copy.common.stop} title={copy.common.stop}>
-              ■
-            </button>
-          ) : null}
+          <PlayToggle
+            source={source}
+            request={{ type: "timeline", timeline: editedCandidate.chords, bpm, sound: previewSound }}
+            playLabel={copy.common.preview}
+            stopLabel={copy.common.stop}
+            className="grid h-9 w-9 place-items-center rounded bg-cyan-400 text-sm font-semibold text-stone-950"
+            showLabel={false}
+            onError={onPreviewError}
+            controller={controller}
+          />
           <button className="rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => { onSelect?.(); onQuickSave?.(editedCandidate, title, editable); }}>
             {editorCopy.saveToVault}
           </button>
@@ -1120,9 +1069,9 @@ export function ProgressionCandidateCard({
               canUndo={canUndoProgressionEdit(editable)}
               canRedo={canRedoProgressionEdit(editable)}
               dirty={hasProgressionEdits(editable)}
-              onUndo={() => setEditable((current) => undoProgressionEdit(current))}
-              onRedo={() => setEditable((current) => redoProgressionEdit(current))}
-              onResetAll={() => setEditable((current) => resetAllEditableChords(current))}
+              onUndo={() => { stopCandidatePreview(); setEditable((current) => undoProgressionEdit(current)); }}
+              onRedo={() => { stopCandidatePreview(); setEditable((current) => redoProgressionEdit(current)); }}
+              onResetAll={() => { stopCandidatePreview(); setEditable((current) => resetAllEditableChords(current)); }}
               language={language}
             />
           ) : null}
@@ -1139,13 +1088,20 @@ export function ProgressionCandidateCard({
             slot={selectedSlot}
             language={language}
             onPreview={(chord) => void previewChord(chord)}
+            playbackSource={source}
+            previewSound={previewSound}
+            stopLabel={copy.common.stop}
+            onPreviewError={onPreviewError}
+            controller={controller}
             onApply={(chord, source) => {
+              stopCandidatePreview();
               const slotId = editable.selectedSlotId;
               if (slotId) {
                 setEditable((current) => replaceEditableChord(current, slotId, chord, source));
               }
             }}
             onReset={() => {
+              stopCandidatePreview();
               const slotId = editable.selectedSlotId;
               if (slotId) {
                 setEditable((current) => resetEditableChord(current, slotId));
@@ -1159,6 +1115,7 @@ export function ProgressionCandidateCard({
             onMergePrevious={() => previousSlot && selectedSlot && commitStructuralChange(mergeEditableChords(editable, previousSlot.id, selectedSlot.id, "second"))}
             onMergeNext={() => selectedSlot && nextSlot && commitStructuralChange(mergeEditableChords(editable, selectedSlot.id, nextSlot.id, "first"))}
             onDelete={() => selectedSlot && commitStructuralChange(deleteEditableChord(editable, selectedSlot.id))}
+            onEditStart={stopCandidatePreview}
           />
         ) : null}
       </div>
@@ -1371,28 +1328,6 @@ function hasDroppedFiles(event: DragEvent<HTMLDivElement>): boolean {
   return Array.from(event.dataTransfer.types).includes("Files");
 }
 
-async function previewSingleChord(
-  chord: ChordSymbol,
-  sound?: PreviewSound,
-): Promise<void> {
-  const { previewChord } = await import("../audio/chordPreview");
-  await previewChord(chord, sound);
-}
-
-async function previewTimeline(
-  chords: readonly ChordTimelineItem[],
-  bpm?: number,
-  sound?: PreviewSound,
-): Promise<void> {
-  const { previewChordTimeline } = await import("../audio/chordPreview");
-  await previewChordTimeline(chords, bpm, sound);
-}
-
-async function stopPreviewAudio(): Promise<void> {
-  const { stopPreview } = await import("../audio/chordPreview");
-  stopPreview();
-}
-
 async function writeClipboardText(text: string): Promise<void> {
   if (!navigator.clipboard?.writeText) {
     throw new Error("Clipboard is not available.");
@@ -1402,6 +1337,69 @@ async function writeClipboardText(text: string): Promise<void> {
 
 function firstTimelineBeat(chords: readonly ChordTimelineItem[]): number {
   return chords.length === 0 ? 0 : Math.min(...chords.map(timelineStartBeat));
+}
+
+export function stopCapturePlayback(controller: PlaybackController = playbackController): void {
+  if (controller.getState().source?.kind === "capture") {
+    controller.stop();
+  }
+}
+
+export function captureAnalysisIdentity(result: MidiProgressionAnalysis | undefined): string {
+  if (!result) return "analysis";
+  if (result.sourceFingerprint) return `fingerprint:${encodeURIComponent(result.sourceFingerprint)}`;
+
+  return [
+    result.sourceAssetId ? `asset:${encodeURIComponent(result.sourceAssetId)}` : undefined,
+    result.fileName ? `file:${encodeURIComponent(result.fileName)}` : undefined,
+    `analyzed:${encodeURIComponent(result.analyzedAt)}`,
+    `analyzer:${encodeURIComponent(result.analyzerVersion)}`,
+  ].filter(Boolean).join("|");
+}
+
+function captureCandidateSource(
+  result: MidiProgressionAnalysis | undefined,
+  candidateId: string,
+): PlayingSource {
+  return {
+    kind: "capture",
+    id: `analysis:${captureAnalysisIdentity(result)}:candidate:${candidateId}`,
+  };
+}
+
+function captureFullTimelineSource(result: MidiProgressionAnalysis): PlayingSource {
+  return {
+    kind: "capture",
+    id: `analysis:${captureAnalysisIdentity(result)}:full-timeline`,
+  };
+}
+
+export function timelinePlaybackPosition(
+  chords: readonly ChordTimelineItem[],
+  bpm: number,
+  startedAt: number | undefined,
+  now = globalThis.performance?.now() ?? Date.now(),
+): { index: number; progress: number } | undefined {
+  if (startedAt === undefined || chords.length === 0 || bpm <= 0) return undefined;
+  const elapsedSeconds = Math.max(0, (now - startedAt) / 1000);
+  const firstBeat = firstTimelineBeat(chords);
+
+  for (const [index, chord] of chords.entries()) {
+    const startBeat = timelineStartBeat(chord) - firstBeat;
+    const startSeconds = startBeat * (60 / bpm);
+    const endSeconds = (startBeat + chord.durationBeats) * (60 / bpm);
+    if (elapsedSeconds >= startSeconds && elapsedSeconds < endSeconds) {
+      return {
+        index,
+        progress: chordProgressFraction(
+          { startBeat, durationBeats: chord.durationBeats },
+          bpm,
+          elapsedSeconds,
+        ) ?? 0,
+      };
+    }
+  }
+  return undefined;
 }
 
 export function isEditableKeyboardTarget(target: EventTarget | null): boolean {

@@ -69,7 +69,7 @@ vi.mock("tone", () => ({
   start: tone.start,
 }));
 
-import { previewChord } from "./chordPreview";
+import { previewChord, stopPreview } from "./chordPreview";
 
 const chord = {
   root: 0,
@@ -92,5 +92,40 @@ describe("chord preview instruments", () => {
 
     expect(tone.samplers).toHaveLength(2);
     expect(tone.voices).toEqual([tone.FMSynth, tone.Synth]);
+    stopPreview();
+  });
+
+  it("cancels a request while audio startup is pending", async () => {
+    let resolveStart: (() => void) | undefined;
+    tone.start.mockImplementationOnce(() => new Promise<void>((resolve) => {
+      resolveStart = resolve;
+    }));
+    const started = vi.fn();
+    const ended = vi.fn();
+    const triggerCount = [...tone.samplers]
+      .reduce((count, sampler) => count + sampler.triggerAttackRelease.mock.calls.length, 0);
+
+    const pending = previewChord(chord, "piano", { onStarted: started, onEnded: ended });
+    stopPreview();
+    resolveStart?.();
+    await pending;
+
+    const nextTriggerCount = [...tone.samplers]
+      .reduce((count, sampler) => count + sampler.triggerAttackRelease.mock.calls.length, 0);
+    expect(started).not.toHaveBeenCalled();
+    expect(ended).toHaveBeenCalledWith("stopped");
+    expect(nextTriggerCount).toBe(triggerCount);
+  });
+
+  it("notifies natural completion exactly once", async () => {
+    vi.useFakeTimers();
+    const ended = vi.fn();
+    await previewChord(chord, "electric-piano", { onEnded: ended });
+    await vi.advanceTimersByTimeAsync(1_350);
+    expect(ended).toHaveBeenCalledTimes(1);
+    expect(ended).toHaveBeenCalledWith("completed");
+    stopPreview();
+    expect(ended).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
   });
 });

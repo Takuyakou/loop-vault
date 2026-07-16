@@ -1,9 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { playbackController, samePlaybackSource, type PlayingSource } from "../audio/playbackController";
+import { PlayToggle } from "../components/PlayToggle";
 import { degreeSequence } from "../domain/harmony/degrees";
 import { filterAndSortProgressions } from "../domain/progressionFilters";
 import { formatProgressionText } from "../domain/progressionText";
 import type { SavedProgressionBlock, SongIdea } from "../domain/types";
 import type { AppCopy, AppLanguage } from "../i18n";
+import { usePlaybackState } from "../hooks/usePlaybackState";
 
 type ProgressionEntry = { idea: SongIdea; block: SavedProgressionBlock };
 type SortField = "capturedAt" | "updatedAt" | "key" | "bpm";
@@ -30,7 +33,6 @@ export function VaultView({
   const [tagFilter, setTagFilter] = useState("");
   const [sort, setSort] = useState<SortField>("capturedAt");
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [playingId, setPlayingId] = useState<string>();
   const searchRef = useRef<HTMLInputElement>(null);
   const allBlocks = useMemo(() => ideas.flatMap((idea) => idea.progressionBlocks ?? []), [ideas]);
   const keys = useMemo(() => [...new Set(ideas.flatMap((idea) => (idea.progressionBlocks ?? []).map((block) => block.detectedKey ?? idea.key).filter((value): value is string => Boolean(value))))].sort(), [ideas]);
@@ -46,56 +48,22 @@ export function VaultView({
     setSelectedIndex((value) => Math.min(value, Math.max(0, visible.length - 1)));
   }, [visible.length]);
 
-  useEffect(() => {
-    function handleKey(event: KeyboardEvent) {
-      const target = event.target as HTMLElement | null;
-      if (target?.matches("input, textarea, select") || target?.isContentEditable) return;
-      if (event.key === "/") {
-        event.preventDefault();
-        searchRef.current?.focus();
-        return;
-      }
-      const active = visible[selectedIndex];
-      if (!active || mode !== "progression") return;
-      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-        event.preventDefault();
-        setSelectedIndex((value) => Math.max(0, Math.min(visible.length - 1,
-          value + (event.key === "ArrowDown" ? 1 : -1))));
-      } else if (event.key === " ") {
-        event.preventDefault();
-        void togglePlayback(active);
-      } else if (event.key === "Enter") {
-        openDetail(active.idea.id);
-      } else if (event.key.toLowerCase() === "c") {
-        void copyProgression(active.block);
-      } else if (event.key.toLowerCase() === "s") {
-        togglePin(active);
-      }
+  const togglePlayback = useCallback(async (entry: ProgressionEntry) => {
+    try {
+      await playbackController.toggle(sourceOf(entry), requestOf(entry));
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
     }
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [mode, playingId, selectedIndex, visible]);
+  }, [copy.toast.chordPreviewFailed, setToast]);
 
-  async function togglePlayback(entry: ProgressionEntry) {
-    if (playingId === entry.block.id) {
-      const { stopPreview } = await import("../audio/chordPreview");
-      stopPreview();
-      setPlayingId(undefined);
-      return;
-    }
-    const { previewChordTimeline } = await import("../audio/chordPreview");
-    await previewChordTimeline(entry.block.chords, entry.block.bpm ?? entry.idea.bpm);
-    setPlayingId(entry.block.id);
-  }
-
-  function togglePin(entry: ProgressionEntry) {
+  const togglePin = useCallback((entry: ProgressionEntry) => {
     updateIdea(entry.idea.id, {
       progressionBlocks: (entry.idea.progressionBlocks ?? []).map((block) =>
         block.id === entry.block.id ? { ...block, pinned: !block.pinned } : block),
     });
-  }
+  }, [updateIdea]);
 
-  async function copyProgression(block: SavedProgressionBlock) {
+  const copyProgression = useCallback(async (block: SavedProgressionBlock) => {
     try {
       if (!navigator.clipboard?.writeText) throw new Error("Clipboard is not available.");
       await navigator.clipboard.writeText(formatProgressionText(block.chords));
@@ -103,7 +71,38 @@ export function VaultView({
     } catch {
       setToast(language === "ja" ? "コピーできませんでした。" : "Could not copy progression.");
     }
-  }
+  }, [language, setToast]);
+
+  const handleKey = useCallback((event: KeyboardEvent) => {
+    const target = event.target as HTMLElement | null;
+    if (target?.matches("input, textarea, select") || target?.isContentEditable) return;
+    if (event.key === "/") {
+      event.preventDefault();
+      searchRef.current?.focus();
+      return;
+    }
+    const active = visible[selectedIndex];
+    if (!active || mode !== "progression") return;
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      setSelectedIndex((value) => Math.max(0, Math.min(visible.length - 1,
+        value + (event.key === "ArrowDown" ? 1 : -1))));
+    } else if (event.key === " ") {
+      event.preventDefault();
+      void togglePlayback(active);
+    } else if (event.key === "Enter") {
+      openDetail(active.idea.id);
+    } else if (event.key.toLowerCase() === "c") {
+      void copyProgression(active.block);
+    } else if (event.key.toLowerCase() === "s") {
+      togglePin(active);
+    }
+  }, [copyProgression, mode, openDetail, selectedIndex, togglePin, togglePlayback, visible]);
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [handleKey]);
 
   return (
     <div className="py-5">
@@ -130,7 +129,7 @@ export function VaultView({
           <span className="text-xs text-[var(--lv-text-muted)]">{visible.length} {language === "ja" ? "件" : "items"}</span>
         </div>
         {visible.length ? <div className="mt-4 overflow-hidden border border-[var(--lv-border)]">
-          {visible.map((entry, index) => <ProgressionRow key={entry.block.id} entry={entry} selected={index === selectedIndex} playing={entry.block.id === playingId} showDegrees={showRomanNumerals} copy={copy} onSelect={() => setSelectedIndex(index)} onPreview={() => void togglePlayback(entry)} onOpen={() => openDetail(entry.idea.id)} onPin={() => togglePin(entry)} onCopy={() => void copyProgression(entry.block)} />)}
+          {visible.map((entry, index) => <ProgressionRow key={entry.block.id} entry={entry} selected={index === selectedIndex} showDegrees={showRomanNumerals} copy={copy} onSelect={() => setSelectedIndex(index)} onOpen={() => openDetail(entry.idea.id)} onPin={() => togglePin(entry)} onCopy={() => void copyProgression(entry.block)} onPreviewError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed)} />)}
         </div> : <EmptyState language={language} openCreate={openCreate} />}
         <p className="mt-3 text-xs text-[var(--lv-text-muted)]">↑↓ {language === "ja" ? "移動" : "move"} · Space {language === "ja" ? "試聴/停止" : "preview/stop"} · Enter {language === "ja" ? "Ideaを開く" : "open"} · C {language === "ja" ? "コピー" : "copy"} · S ★ · / {language === "ja" ? "検索" : "search"} · Esc {language === "ja" ? "クリア" : "clear"}</p>
       </> : <IdeaList ideas={ideas} openDetail={openDetail} language={language} />}
@@ -138,10 +137,13 @@ export function VaultView({
   );
 }
 
-function ProgressionRow({ entry, selected, playing, showDegrees, copy, onSelect, onPreview, onOpen, onPin, onCopy }: { entry: ProgressionEntry; selected: boolean; playing: boolean; showDegrees: boolean; copy: AppCopy; onSelect: () => void; onPreview: () => void; onOpen: () => void; onPin: () => void; onCopy: () => void }) {
+function ProgressionRow({ entry, selected, showDegrees, copy, onSelect, onOpen, onPin, onCopy, onPreviewError }: { entry: ProgressionEntry; selected: boolean; showDegrees: boolean; copy: AppCopy; onSelect: () => void; onOpen: () => void; onPin: () => void; onCopy: () => void; onPreviewError: (error: unknown) => void }) {
   const degrees = degreeSequence(entry.block);
+  const playback = usePlaybackState();
+  const source = sourceOf(entry);
+  const playing = playback.status !== "idle" && samePlaybackSource(playback.source, source);
   return <div className={`grid min-h-14 grid-cols-[32px_minmax(0,1fr)_70px_74px_minmax(50px,auto)_58px] items-center gap-2 border-b border-[var(--lv-border)] px-2 text-sm ${selected ? "bg-[var(--lv-surface-raised)]" : "hover:bg-[var(--lv-surface)]"} ${playing ? "border-l-2 border-l-[var(--lv-accent)]" : ""}`} onClick={onSelect}>
-    <button className="lv-button-ghost grid h-8 w-8 place-items-center" onClick={onPreview} aria-label={playing ? copy.common.stop : copy.common.preview}>{playing ? "■" : "▶"}</button>
+    <PlayToggle source={source} request={requestOf(entry)} playLabel={copy.common.preview} stopLabel={copy.common.stop} className="lv-button-ghost grid h-8 w-8 place-items-center" showLabel={false} onError={onPreviewError} />
     <button className="min-w-0 text-left" onDoubleClick={onOpen}><p className="truncate font-mono">{entry.block.chords.map((item) => item.chord.label).join(" · ")}</p><p className="mt-1 truncate text-xs text-[var(--lv-text-muted)]">{showDegrees && degrees.length ? degrees.join(" · ") : entry.idea.title}{keyOf(entry) ? ` · ${keyOf(entry)}` : ""}</p></button>
     <span className="text-xs text-[var(--lv-text-muted)]">{bpmOf(entry) || "-"} BPM</span><span className="text-xs text-[var(--lv-text-muted)]">{formatDate(entry.block.capturedAt)}</span>
     <span className="truncate text-xs text-[var(--lv-text-muted)]">{entry.block.tags.join(" · ") || "-"}</span>
@@ -158,3 +160,5 @@ function FilterSelect({ label, value, values, onChange }: { label: string; value
 function keyOf(entry: ProgressionEntry): string { return entry.block.detectedKey ?? entry.idea.key ?? ""; }
 function bpmOf(entry: ProgressionEntry): number { return entry.block.bpm ?? entry.idea.bpm ?? 0; }
 function formatDate(value: string): string { return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value)); }
+function sourceOf(entry: ProgressionEntry): PlayingSource { return { kind: "vault", id: `idea:${entry.idea.id}:block:${entry.block.id}` }; }
+function requestOf(entry: ProgressionEntry) { return { type: "timeline" as const, timeline: entry.block.chords, bpm: entry.block.bpm ?? entry.idea.bpm }; }

@@ -15,6 +15,13 @@ interface PreviewInstrument {
 
 export type PreviewSound = "piano" | "electric-piano";
 
+export type PreviewEndReason = "completed" | "stopped";
+
+export interface PreviewLifecycleCallbacks {
+  onStarted?(): void;
+  onEnded?(reason: PreviewEndReason): void;
+}
+
 const PIANO_SAMPLE_URLS = {
   A0: "A0.mp3",
   C1: "C1.mp3",
@@ -28,71 +35,156 @@ const PIANO_SAMPLE_URLS = {
 
 let instrument: PreviewInstrument | undefined;
 let instrumentSound: PreviewSound | undefined;
-let scheduledTimers: number[] = [];
+let scheduledTimers: ReturnType<typeof globalThis.setTimeout>[] = [];
+let previewGeneration = 0;
+let activeSession: PreviewSession | undefined;
+
+interface PreviewSession {
+  id: number;
+  callbacks: PreviewLifecycleCallbacks;
+  ended: boolean;
+}
 
 export async function previewChord(
   symbol: ChordSymbol,
   sound: PreviewSound = "electric-piano",
+  callbacks: PreviewLifecycleCallbacks = {},
 ): Promise<void> {
-  stopPreview();
-  await startPreviewAudio(sound);
+  const session = beginPreview(callbacks);
+  const target = await preparePreviewAudio(sound, session);
+  if (!target || !isActive(session)) {
+    return;
+  }
+
   const notes = voiceChordForPreview(symbol).notes.map(midiToNoteName);
-  instrument?.triggerAttackRelease(notes, 1.35, undefined, 0.72);
+  callbacks.onStarted?.();
+  target.triggerAttackRelease(notes, 1.35, undefined, 0.72);
+  scheduledTimers.push(
+    globalThis.setTimeout(() => finishPreview(session, "completed"), 1_350),
+  );
 }
 
 export async function previewChordTimeline(
   timeline: readonly ChordTimelineItem[],
   bpm = 96,
   sound: PreviewSound = "electric-piano",
+  callbacks: PreviewLifecycleCallbacks = {},
 ): Promise<void> {
-  stopPreview();
-  await startPreviewAudio(sound);
-
-  const beatSeconds = 60 / bpm;
   const ordered = [...timeline].sort(
     (left, right) =>
       absoluteBeat(left.bar, left.beat) - absoluteBeat(right.bar, right.beat),
   );
+  const session = beginPreview(callbacks);
   if (ordered.length === 0) {
+    finishPreview(session, "completed");
     return;
   }
 
+  const target = await preparePreviewAudio(sound, session);
+  if (!target || !isActive(session)) {
+    return;
+  }
+
+  const beatSeconds = 60 / bpm;
+  callbacks.onStarted?.();
+
   const firstBeat = absoluteBeat(ordered[0].bar, ordered[0].beat);
+  let completionDelayMs = 0;
   for (const item of ordered) {
     const delayMs = Math.max(
       0,
       (absoluteBeat(item.bar, item.beat) - firstBeat) * beatSeconds * 1000,
     );
     const durationSeconds = Math.max(0.4, item.durationBeats * beatSeconds * 0.9);
+    completionDelayMs = Math.max(completionDelayMs, delayMs + durationSeconds * 1000);
     const notes = voiceChordForPreview(item.chord).notes.map(midiToNoteName);
     scheduledTimers.push(
-      window.setTimeout(() => {
-        instrument?.triggerAttackRelease(notes, durationSeconds, undefined, 0.7);
+      globalThis.setTimeout(() => {
+        if (isActive(session)) {
+          target.triggerAttackRelease(notes, durationSeconds, undefined, 0.7);
+        }
       }, delayMs),
     );
   }
+  scheduledTimers.push(
+    globalThis.setTimeout(
+      () => finishPreview(session, "completed"),
+      completionDelayMs,
+    ),
+  );
 }
 
 export function stopPreview(): void {
+  previewGeneration += 1;
   for (const timer of scheduledTimers) {
-    window.clearTimeout(timer);
+    globalThis.clearTimeout(timer);
   }
   scheduledTimers = [];
   instrument?.releaseAll();
+  if (activeSession) {
+    finishPreview(activeSession, "stopped", true);
+  }
 }
 
-async function startPreviewAudio(sound: PreviewSound): Promise<void> {
-  await Tone.start();
-  if (instrument && instrumentSound !== sound) {
-    instrument.dispose();
-    instrument = undefined;
-  }
+function beginPreview(callbacks: PreviewLifecycleCallbacks): PreviewSession {
+  stopPreview();
+  const session = { id: previewGeneration, callbacks, ended: false };
+  activeSession = session;
+  return session;
+}
 
-  if (!instrument) {
-    instrument = sound === "piano"
+function isActive(session: PreviewSession): boolean {
+  return activeSession === session
+    && previewGeneration === session.id
+    && !session.ended;
+}
+
+function finishPreview(
+  session: PreviewSession,
+  reason: PreviewEndReason,
+  forced = false,
+): void {
+  if (session.ended || (!forced && !isActive(session))) {
+    return;
+  }
+  session.ended = true;
+  if (activeSession === session) {
+    activeSession = undefined;
+  }
+  session.callbacks.onEnded?.(reason);
+}
+
+async function preparePreviewAudio(
+  sound: PreviewSound,
+  session: PreviewSession,
+): Promise<PreviewInstrument | undefined> {
+  try {
+    await Tone.start();
+    if (!isActive(session)) {
+      return undefined;
+    }
+
+    if (instrument && instrumentSound === sound) {
+      return instrument;
+    }
+
+    const nextInstrument = sound === "piano"
       ? await createPianoInstrument()
       : createElectricPianoInstrument();
+    if (!isActive(session)) {
+      nextInstrument.dispose();
+      return undefined;
+    }
+
+    instrument?.dispose();
+    instrument = nextInstrument;
     instrumentSound = sound;
+    return instrument;
+  } catch (error) {
+    if (isActive(session)) {
+      stopPreview();
+    }
+    throw error;
   }
 }
 
