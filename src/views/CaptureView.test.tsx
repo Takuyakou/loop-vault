@@ -1331,6 +1331,14 @@ describe("CaptureView saving", () => {
     const applyReplacementPropagation = [...container.querySelectorAll<HTMLButtonElement>("button")]
       .find((button) => button.textContent?.includes("選択した区間へ適用"));
     await act(async () => applyReplacementPropagation?.click());
+    const expandedCandidateHeader = container.querySelector<HTMLButtonElement>("[data-candidate-toggle]");
+    const inspectorToggle = container.querySelector<HTMLButtonElement>("[data-inspector-toggle]");
+    await act(async () => inspectorToggle?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+    await act(async () => inspectorToggle?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+    const confirmClose = [...document.querySelectorAll<HTMLButtonElement>('[aria-modal="true"] button')]
+      .find((button) => button.textContent === "閉じる");
+    await act(async () => confirmClose?.click());
+    expect(expandedCandidateHeader?.getAttribute("aria-expanded")).toBe("false");
     const saveButton = [...container.querySelectorAll("button")]
       .find((button) => button.textContent?.trim() === "Vaultに保存");
     expect(saveButton).toBeDefined();
