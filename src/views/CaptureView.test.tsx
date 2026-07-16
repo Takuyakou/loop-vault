@@ -5,6 +5,11 @@ import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import type { ChordTimelineItem, MidiProgressionAnalysis, ProgressionBlockCandidate } from "../domain/types";
+import type { AnalysisInput } from "../domain/midi/types";
+import {
+  createEditableProgression,
+  LEGACY_SIMILARITY_VOICE_ID,
+} from "../domain/progressionEditing";
 import { makeIdea } from "../domain/testFactory";
 import { appCopy, progressionEditorCopy } from "../i18n";
 import {
@@ -13,6 +18,7 @@ import {
 } from "../audio/playbackController";
 import {
   appendProgressionMemo,
+  captureSimilarityContext,
   captureAnalysisIdentity,
   captureSaveTitle,
   CaptureView,
@@ -76,6 +82,66 @@ function playbackHarness() {
 }
 
 describe("ProgressionCandidateCard", () => {
+  it("builds production similarity context from the key and optional AnalysisInput", () => {
+    const editable = createEditableProgression(candidate({
+      chords: [chord("Cmaj7", 1), chord("Cmaj7", 2)],
+    }));
+    const legacy = captureSimilarityContext(editable, "C major");
+    const sourceId = editable.slots[0]!.id;
+    const targetId = editable.slots[1]!.id;
+
+    expect(legacy.segments?.[sourceId]).toMatchObject({
+      key: "C major",
+      enabledVoiceIds: [LEGACY_SIMILARITY_VOICE_ID],
+      roleProfiles: {
+        [LEGACY_SIMILARITY_VOICE_ID]: { role: "mixed", confidence: 1 },
+      },
+      weightedPcp: expect.any(Array),
+      bassProfile: expect.any(Array),
+    });
+    expect(legacy.segments?.[sourceId].nextChord).toEqual(editable.slots[1]!.originalChord);
+    expect(legacy.segments?.[targetId].previousChord).toEqual(editable.slots[0]!.originalChord);
+
+    const analysisInput: AnalysisInput = {
+      voices: [{
+        id: "0:2",
+        trackIndex: 0,
+        channel: 2,
+        explicitPrograms: [],
+        dominantProgramExplicit: false,
+        noteCount: 8,
+        pitchRange: [48, 72],
+        medianPitch: 60,
+        avgDurationTick: 480,
+        noteDensity: 1,
+        maxPolyphony: 4,
+        simultaneousOnsetRatio: 1,
+        lowestVoiceShare: 0.5,
+        highestVoiceShare: 0.5,
+        inferredRole: "harmony",
+        roleConfidence: 0.6,
+        roleEvidence: {
+          measured: {
+            bass: 0,
+            harmony: 1,
+            pad: 0,
+            melody: 0,
+            percussion: 0,
+            mixed: 0,
+          },
+        },
+      }],
+      enabledVoiceIds: ["0:2"],
+      roleOverrides: { "0:2": "bass" },
+    };
+    const voiceAware = captureSimilarityContext(editable, "F minor", analysisInput);
+    expect(voiceAware.segments?.[sourceId]).toMatchObject({
+      key: "F minor",
+      enabledVoiceIds: ["0:2"],
+      roleProfiles: { "0:2": { role: "bass", confidence: 1 } },
+    });
+  });
+
   it("keeps editing fields out of the default card view", () => {
     const markup = renderToStaticMarkup(
       <ProgressionCandidateCard
@@ -240,6 +306,70 @@ describe("ProgressionCandidateCard", () => {
 
     expect(container.querySelector('[role="option"]')?.textContent).toContain("G7");
     expect(container.querySelector('[aria-label="編集済み"]')).not.toBeNull();
+    await act(async () => root.unmount());
+  });
+
+  it("does not auto-apply propagation and undoes a selected batch in one step", async () => {
+    const first = chord("Cmaj7", 1);
+    first.alternatives = [{
+      chord: { root: 7, quality: "dom7", tensions: [], label: "G7" },
+      confidence: 0.72,
+    }];
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(
+        <ProgressionCandidateCard
+          candidate={candidate({ chords: [first, chord("Cmaj7", 2), chord("Cmaj7", 3)] })}
+          candidateIndex={0}
+          bpm={96}
+          onCopyProgression={vi.fn()}
+          onPreviewChord={vi.fn()}
+          copy={appCopy.ja}
+          language="ja"
+          isExpanded
+        />,
+      );
+    });
+
+    const alternative = [...container.querySelectorAll<HTMLButtonElement>("[data-chord-inspector] button")]
+      .find((button) => button.textContent?.includes("G7"));
+    await act(async () => alternative?.click());
+    const apply = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent === "適用");
+    await act(async () => apply?.click());
+
+    let chordCards = container.querySelectorAll<HTMLButtonElement>('[role="option"]');
+    expect([...chordCards].map((card) => card.textContent)).toEqual([
+      expect.stringContaining("G7"),
+      expect.stringContaining("Cmaj7"),
+      expect.stringContaining("Cmaj7"),
+    ]);
+
+    const checkboxes = container.querySelectorAll<HTMLInputElement>(
+      '[data-correction-propagation] input[type="checkbox"]',
+    );
+    await act(async () => checkboxes[0]?.click());
+    const applyPropagation = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent?.includes("選択した区間へ適用"));
+    await act(async () => applyPropagation?.click());
+
+    chordCards = container.querySelectorAll<HTMLButtonElement>('[role="option"]');
+    expect([...chordCards].map((card) => card.textContent)).toEqual([
+      expect.stringContaining("G7"),
+      expect.stringContaining("G7"),
+      expect.stringContaining("Cmaj7"),
+    ]);
+
+    const undo = container.querySelector<HTMLButtonElement>('button[aria-label="元に戻す"]');
+    await act(async () => undo?.click());
+    chordCards = container.querySelectorAll<HTMLButtonElement>('[role="option"]');
+    expect([...chordCards].map((card) => card.textContent)).toEqual([
+      expect.stringContaining("G7"),
+      expect.stringContaining("Cmaj7"),
+      expect.stringContaining("Cmaj7"),
+    ]);
+
     await act(async () => root.unmount());
   });
 
@@ -473,6 +603,7 @@ describe("ProgressionCandidateCard", () => {
       idea.id,
       false,
       expect.any(Object),
+      [],
     );
     expect(onDirtyChange).toHaveBeenLastCalledWith("candidate-1", false);
 
@@ -1118,13 +1249,21 @@ describe("CaptureView saving", () => {
   it("appends final correction feedback only after an edited save succeeds", async () => {
     feedbackSpies.append.mockClear();
     const first = chord("Cmaj7", 1);
-    first.alternatives = [{
-      chord: { root: 7, quality: "dom7", tensions: [], label: "G7" },
-      confidence: 0.75,
-    }];
-    const capturedCandidate = candidate({ chords: [first, chord("Am7", 2)] });
+    first.alternatives = [
+      {
+        chord: { root: 7, quality: "dom7", tensions: [], label: "G7" },
+        confidence: 0.75,
+      },
+      {
+        chord: { root: 5, quality: "dom7", tensions: [], label: "F7" },
+        confidence: 0.7,
+      },
+    ];
+    const capturedCandidate = candidate({
+      chords: [first, chord("Cmaj7", 2), chord("Cmaj7", 3)],
+    });
     const result: MidiProgressionAnalysis = {
-      sourceFingerprint: "fnv1a32-save-failure",
+      sourceFingerprint: "fnv1a32-deadbeef",
       totalBars: 4,
       bpm: 100,
       fullTimeline: capturedCandidate.chords,
@@ -1159,12 +1298,39 @@ describe("CaptureView saving", () => {
 
     const candidateHeader = container.querySelector<HTMLButtonElement>('[data-candidate-toggle][aria-expanded="false"]');
     await act(async () => candidateHeader?.click());
-    const alternativeButton = [...container.querySelectorAll<HTMLButtonElement>("[data-chord-inspector] button")]
-      .find((button) => button.textContent?.includes("G7"));
-    await act(async () => alternativeButton?.click());
+    const expandInspector = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent === "展開");
+    await act(async () => expandInspector?.click());
+    const firstAlternative = [...container.querySelectorAll<HTMLButtonElement>("[data-chord-inspector] button")]
+      .find((button) => button.textContent?.includes("F7"));
+    await act(async () => firstAlternative?.click());
     const applyButton = [...container.querySelectorAll("button")]
       .find((button) => button.textContent === "適用");
     await act(async () => applyButton?.click());
+    expect(container.textContent).toContain("同じ修正を適用できそうな区間が2件あります");
+    const propagationCheckboxes = container.querySelectorAll<HTMLInputElement>(
+      '[data-correction-propagation] input[type="checkbox"]',
+    );
+    await act(async () => propagationCheckboxes[0]?.click());
+    const applyPropagation = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent?.includes("選択した区間へ適用"));
+    await act(async () => applyPropagation?.click());
+
+    const undo = container.querySelector<HTMLButtonElement>('button[aria-label="元に戻す"]');
+    await act(async () => undo?.click());
+    const alternativeButton = [...container.querySelectorAll<HTMLButtonElement>("[data-chord-inspector] button")]
+      .find((button) => button.textContent?.includes("G7"));
+    await act(async () => alternativeButton?.click());
+    const applyReplacement = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent === "適用");
+    await act(async () => applyReplacement?.click());
+    const replacementCheckboxes = container.querySelectorAll<HTMLInputElement>(
+      '[data-correction-propagation] input[type="checkbox"]',
+    );
+    await act(async () => replacementCheckboxes[0]?.click());
+    const applyReplacementPropagation = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent?.includes("選択した区間へ適用"));
+    await act(async () => applyReplacementPropagation?.click());
     const saveButton = [...container.querySelectorAll("button")]
       .find((button) => button.textContent?.trim() === "Vaultに保存");
     expect(saveButton).toBeDefined();
@@ -1188,6 +1354,17 @@ describe("CaptureView saving", () => {
     expect(feedbackSpies.append).toHaveBeenCalledTimes(1);
     expect(feedbackSpies.append).toHaveBeenCalledWith([
       expect.objectContaining({ corrected: "G7", editMethod: "alternative-selection" }),
+      expect.objectContaining({
+        eventType: "correction-propagation",
+        analyzerVersion: "test",
+        shownSegmentIds: expect.arrayContaining([
+          expect.stringContaining(":2:1:"),
+          expect.stringContaining(":3:1:"),
+        ]),
+        acceptedSegmentIds: [expect.stringContaining(":2:1:")],
+        rejectedSegmentIds: [expect.stringContaining(":3:1:")],
+        threshold: 0.86,
+      }),
     ]);
     await act(async () => root.unmount());
     container.remove();

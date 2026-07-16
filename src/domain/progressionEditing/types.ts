@@ -9,6 +9,7 @@ export type ProgressionEditSource =
   | "manual-label"
   | "alternative"
   | "structure-editor"
+  | "propagation"
   | "split"
   | "merge"
   | "delete"
@@ -54,7 +55,7 @@ export interface ReplaceChordOperation extends BaseProgressionEditOperation {
   slotIds: string[];
   editSource: Extract<
     ProgressionEditSource,
-    "manual-label" | "alternative" | "structure-editor" | "reset"
+    "manual-label" | "alternative" | "structure-editor" | "propagation" | "reset"
   >;
 }
 
@@ -89,3 +90,62 @@ export interface ProgressionEditSummaryItem {
   editSource?: ProgressionEditSource;
 }
 
+
+export type SimilarSegmentReasonCode =
+  | "weighted-pcp-match"
+  | "bass-profile-match"
+  | "original-root-match"
+  | "chord-family-match"
+  | "duration-match"
+  | "metric-position-match"
+  | "key-context-match"
+  | "previous-chord-match"
+  | "next-chord-match"
+  | "enabled-voices-match"
+  | "role-profiles-match"
+  | "chord-symbol-fallback";
+
+export interface SimilarSegmentCandidate {
+  segmentId: string;
+  similarity: number;
+  reasons: SimilarSegmentReasonCode[];
+}
+
+export interface SimilarityRoleProfile {
+  role: string;
+  confidence?: number;
+  rootWeight?: number;
+  qualityWeight?: number;
+}
+
+export interface SimilaritySegmentContext {
+  weightedPcp?: readonly number[];
+  bassProfile?: readonly number[];
+  originalRoot?: number;
+  family?: string;
+  durationBeats?: number;
+  metricPosition?: number;
+  key?: string;
+  previousChord?: ChordSymbol;
+  nextChord?: ChordSymbol;
+  enabledVoiceIds?: readonly string[];
+  roleProfiles?: Readonly<Record<string, SimilarityRoleProfile>>;
+}
+
+/**
+ * Analysis features keyed by EditableChordSlot.id. Missing features are
+ * deterministically derived from the slot's ChordSymbol and timeline context.
+ */
+export interface SimilarityContext {
+  segments?: Readonly<Record<string, SimilaritySegmentContext>>;
+}
+
+export interface SimilarityVoiceContext {
+  enabledVoiceIds: readonly string[];
+  roleProfiles: Readonly<Record<string, SimilarityRoleProfile>>;
+}
+
+export interface SimilarityContextBuildOptions {
+  key?: string;
+  voiceContext?: SimilarityVoiceContext;
+}

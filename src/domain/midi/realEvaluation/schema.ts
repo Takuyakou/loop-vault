@@ -3,6 +3,9 @@ import { chordQualitySchema } from "../../schema";
 import { parseChordLabel } from "../../chords";
 import type { MidiDifferenceReview, RealMidiEvaluationCase } from "./types";
 import type { MidiChordCorrectionEvent } from "../feedback";
+import type {
+  CorrectionPropagationFeedbackEvent,
+} from "../analysisFeedback";
 
 const expectedChordSegmentSchema = z.object({
   startBeat: z.number().nonnegative(),
@@ -90,15 +93,21 @@ export const midiDifferenceReviewSchema: z.ZodType<MidiDifferenceReview> = z.obj
   }
 });
 
-export const midiChordCorrectionEventSchema: z.ZodType<MidiChordCorrectionEvent> = z.object({
+const correctionSegmentSchema = z.object({
+  startBeat: z.number().nonnegative(),
+  endBeat: z.number().positive(),
+}).strict().refine((value) => value.endBeat > value.startBeat, {
+  path: ["endBeat"],
+  message: "endBeat must be after startBeat",
+});
+
+const midiChordCorrectionEventObjectSchema = z.object({
   schemaVersion: z.literal(1),
+  eventType: z.literal("chord-correction").optional(),
   sourceFingerprint: z.string().regex(/^(sha256-[a-f0-9]{64}|fnv1a32-[a-f0-9]{8})$/),
   analyzerVersion: z.string().min(1),
   weightsVersion: z.string().min(1),
-  segment: z.object({
-    startBeat: z.number().nonnegative(),
-    endBeat: z.number().positive(),
-  }).strict(),
+  segment: correctionSegmentSchema,
   detected: z.object({
     primary: z.string().min(1),
     alternatives: z.array(z.string().min(1)),
@@ -108,7 +117,101 @@ export const midiChordCorrectionEventSchema: z.ZodType<MidiChordCorrectionEvent>
   keyContext: z.string().optional(),
   previousChord: z.string().optional(),
   nextChord: z.string().optional(),
-}).strict().refine((value) => value.segment.endBeat > value.segment.startBeat, {
-  path: ["segment", "endBeat"],
-  message: "endBeat must be after startBeat",
+}).strict();
+
+export const midiChordCorrectionEventSchema: z.ZodType<MidiChordCorrectionEvent> =
+  midiChordCorrectionEventObjectSchema;
+
+const taggedMidiChordCorrectionEventSchema = midiChordCorrectionEventObjectSchema.extend({
+  eventType: z.literal("chord-correction"),
 });
+
+const segmentIdArraySchema = z.array(z.string().min(1)).refine(
+  (ids) => new Set(ids).size === ids.length,
+  "segment ids must be unique",
+);
+
+const correctionPropagationFeedbackEventObjectSchema = z.object({
+  schemaVersion: z.literal(1),
+  eventType: z.literal("correction-propagation"),
+  sourceFingerprint: z.string().regex(/^(sha256-[a-f0-9]{64}|fnv1a32-[a-f0-9]{8})$/),
+  analyzerVersion: z.string().min(1),
+  sourceSegment: z.object({
+    id: z.string().min(1),
+    startBeat: z.number().nonnegative(),
+    endBeat: z.number().positive(),
+  }).strict().refine((value) => value.endBeat > value.startBeat, {
+    path: ["endBeat"],
+    message: "endBeat must be after startBeat",
+  }),
+  shownSegmentIds: segmentIdArraySchema,
+  acceptedSegmentIds: segmentIdArraySchema,
+  rejectedSegmentIds: segmentIdArraySchema,
+  threshold: z.number().min(0).max(1),
+}).strict();
+
+function validatePropagationRouting(
+  value: CorrectionPropagationFeedbackEvent,
+  context: z.RefinementCtx,
+): void {
+  const shown = new Set(value.shownSegmentIds);
+  value.acceptedSegmentIds.forEach((id, index) => {
+    if (!shown.has(id)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["acceptedSegmentIds", index],
+        message: "accepted segment must have been shown",
+      });
+    }
+  });
+  const accepted = new Set(value.acceptedSegmentIds);
+  const routed = new Set(value.acceptedSegmentIds);
+  value.rejectedSegmentIds.forEach((id, index) => {
+    if (!shown.has(id)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["rejectedSegmentIds", index],
+        message: "rejected segment must have been shown",
+      });
+    }
+    if (accepted.has(id)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["rejectedSegmentIds", index],
+        message: "segment cannot be both accepted and rejected",
+      });
+    }
+    routed.add(id);
+  });
+  value.shownSegmentIds.forEach((id, index) => {
+    if (!routed.has(id)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["shownSegmentIds", index],
+        message: "shown segment must be accepted or rejected",
+      });
+    }
+  });
+}
+
+export const correctionPropagationFeedbackEventSchema: z.ZodType<CorrectionPropagationFeedbackEvent> =
+  correctionPropagationFeedbackEventObjectSchema.superRefine(validatePropagationRouting);
+
+const analysisFeedbackEventDiscriminatedSchema = z.discriminatedUnion("eventType", [
+  taggedMidiChordCorrectionEventSchema,
+  correctionPropagationFeedbackEventObjectSchema,
+]).superRefine((value, context) => {
+  if (value.eventType === "correction-propagation") validatePropagationRouting(value, context);
+});
+
+export const analysisFeedbackEventSchema = z.preprocess((value) => {
+    if (
+      typeof value === "object"
+      && value !== null
+      && !Array.isArray(value)
+      && !Object.prototype.hasOwnProperty.call(value, "eventType")
+    ) {
+      return { ...value, eventType: "chord-correction" };
+    }
+    return value;
+}, analysisFeedbackEventDiscriminatedSchema);
