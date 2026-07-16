@@ -5,6 +5,7 @@ export {
   hybridAnalyzerVersion,
   legacyAnalyzerVersion,
   legacyBoundaryRerankerVersion,
+  voiceAwareRerankerVersion,
   buildWeightedWindows,
   extractBlockCandidates,
   inferTrackRoles,
@@ -40,8 +41,19 @@ export { extractOrnamentFeatures } from "./ornaments";
 export { buildSegmentLattice, generateBoundaries } from "./segmentation";
 export { buildCumulativePitchFeatures, buildWeightedPitchProfile, profileFromCumulative } from "./profiles";
 export { canonicalChord, chordTemplates, scoreChordCandidates, scoreSegments, scoreStructuredChordCandidate } from "./candidates";
-export { analyzeMidiLegacyBoundaryRerank, chooseLegacyBoundaryCandidate, defaultLegacyBoundaryRerankerThresholds } from "./legacyBoundaryReranker";
+export {
+  analyzeMidiLegacyBoundaryRerank,
+  chooseLegacyBoundaryCandidate,
+  defaultLegacyBoundaryRerankerThresholds,
+  materializeRerankedTimelineItem,
+} from "./legacyBoundaryReranker";
 export type { LegacyBoundaryRerankerThresholds, RerankDecision } from "./legacyBoundaryReranker";
+export {
+  analyzeMidiVoiceAwareRerank,
+  scoreVoiceAwareChordCandidates,
+  scoreVoiceAwareStructuredChordCandidate,
+} from "./voiceAwareReranker";
+export type { VoiceAwareRerankerOptions } from "./voiceAwareReranker";
 export { chordKeyCompatibility, estimateKeyCandidates } from "./keyPrior";
 export { decodeChordPath, decodeGreedy, decodeTwoPass, defaultDecoderWeights } from "./decoder";
 export { confidenceForDecoded, confidenceLevel, uniqueAlternatives } from "./confidence";

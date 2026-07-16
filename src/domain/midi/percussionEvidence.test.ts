@@ -10,6 +10,10 @@ import {
   analyzeMidiLegacyBoundaryRerank,
   legacyBoundaryRerankerVersion,
 } from "./legacyBoundaryReranker";
+import {
+  analyzeMidiVoiceAwareRerank,
+  voiceAwareRerankerVersion,
+} from "./voiceAwareReranker";
 
 describe("production analyzer percussion exclusion", () => {
   it("produces identical chord evidence with or without a channel 9 note", () => {
@@ -19,6 +23,7 @@ describe("production analyzer percussion exclusion", () => {
       analyzeMidiLegacy,
       analyzeMidiHybrid,
       analyzeMidiLegacyBoundaryRerank,
+      analyzeMidiVoiceAwareRerank,
     ];
 
     for (const analyze of analyzers) {
@@ -39,6 +44,10 @@ describe("production analyzer percussion exclusion", () => {
       {
         analyze: analyzeMidiLegacyBoundaryRerank,
         analyzerVersion: legacyBoundaryRerankerVersion,
+      },
+      {
+        analyze: analyzeMidiVoiceAwareRerank,
+        analyzerVersion: voiceAwareRerankerVersion,
       },
     ]) {
       const result = analyze(percussionOnly, options);

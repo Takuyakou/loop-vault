@@ -70,7 +70,11 @@ export interface NoteSegmentOverlap {
   overlapRatio: number;
 }
 
-export type MidiAnalyzerMode = "legacy" | "hybrid-v1" | "legacy-boundary-rerank";
+export type MidiAnalyzerMode =
+  | "legacy"
+  | "hybrid-v1"
+  | "legacy-boundary-rerank"
+  | "voice-aware-rerank-v1";
 
 export interface HybridFeatureFlags {
   trackRoleEstimation: boolean;
@@ -89,6 +93,7 @@ export interface AnalyzeMidiOptions {
   weights?: Partial<AnalyzerWeights>;
   debug?: boolean;
   features?: Partial<HybridFeatureFlags>;
+  analysisInput?: AnalysisInput;
 }
 
 export type AnalyzeMidiResult = MidiProgressionAnalysis;
