@@ -8,22 +8,28 @@ export function extractHybridBlocks(
   timeline: readonly ChordTimelineItem[],
   totalBars: number,
   beatsPerBar = 4,
+  rankingScores?: readonly number[],
 ): ProgressionBlockCandidate[] {
   const raw: CandidateSelectionEntry[] = [];
   for (const lengthBars of [4, 8, 16] as const) {
     for (let startBar = 1; startBar + lengthBars - 1 <= totalBars; startBar += 1) {
       const endBar = startBar + lengthBars - 1;
-      const chords = timeline.filter((item) => item.bar >= startBar && item.bar <= endBar);
+      const rankedChords = timeline.flatMap((item, index) =>
+        item.bar >= startBar && item.bar <= endBar
+          ? [{ item, rankingScore: rankingScoreAt(rankingScores, index, item.confidence) }]
+          : []);
+      const chords = rankedChords.map(({ item }) => item);
       if (!chords.length) continue;
       const signature = beatGridSignature(chords, startBar, lengthBars, beatsPerBar);
       const repeatCount = countSimilarRepeats(timeline, totalBars, signature, lengthBars, beatsPerBar);
       const confidence = average(chords.map((item) => item.confidence));
+      const rankingScore = average(rankedChords.map((entry) => entry.rankingScore));
       const summaryText = `| ${Array.from(
           { length: lengthBars },
           (_, index) => signature[Math.round(index * beatsPerBar)] ?? "N.C.",
         ).join(" | ")} |`;
-      const selectionScore = confidence
-        + Math.min(0.16, Math.max(0, repeatCount - 1) * 0.05);
+      const repeatBonus = Math.min(0.16, Math.max(0, repeatCount - 1) * 0.05);
+      const selectionScore = rankingScore + repeatBonus;
       raw.push({
         dedupeKey: signature.join("|"),
         selectionScore,
@@ -34,7 +40,7 @@ export function extractHybridBlocks(
           lengthBars,
           chords: [...chords],
           summaryText,
-          confidence: clamp(selectionScore),
+          confidence: clamp(confidence + repeatBonus),
           ...(repeatCount > 1 ? { repeatCount } : {}),
           labels: repeatCount > 1
             ? ["main", ...(lengthBars === 4 ? ["turnaround"] : [])]
@@ -45,6 +51,17 @@ export function extractHybridBlocks(
     }
   }
   return selectProgressionCandidates(raw, totalBars);
+}
+
+function rankingScoreAt(
+  rankingScores: readonly number[] | undefined,
+  index: number,
+  fallback: number,
+): number {
+  const rankingScore = rankingScores?.[index];
+  return rankingScore !== undefined && Number.isFinite(rankingScore)
+    ? rankingScore
+    : fallback;
 }
 
 export function beatGridSignature(

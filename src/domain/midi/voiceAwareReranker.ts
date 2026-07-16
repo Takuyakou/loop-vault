@@ -13,7 +13,7 @@ import {
   materializeRerankedTimelineItem,
   type LegacyBoundaryRerankerThresholds,
 } from "./legacyBoundaryReranker";
-import { analyzeMidi as analyzeMidiLegacy } from "./legacy";
+import { analyzeMidiWithRankingScores } from "./legacy";
 import { normalizeNotes } from "./normalize";
 import { extractOrnamentFeatures } from "./ornaments";
 import { parseMidi } from "./parser";
@@ -48,7 +48,8 @@ export function analyzeMidiVoiceAwareRerank(
   rerankerOptions: VoiceAwareRerankerOptions = {},
 ): MidiProgressionAnalysis {
   const data = parseMidi(bytes);
-  const legacy = analyzeMidiLegacy(bytes, options);
+  const legacyInternal = analyzeMidiWithRankingScores(bytes, options);
+  const legacy = legacyInternal.analysis;
   const normalizedNotes = normalizeNotes(data);
   const builtVoices = buildVoices(data);
   const suppliedInput = rerankerOptions.analysisInput ?? options.analysisInput;
@@ -118,7 +119,12 @@ export function analyzeMidiVoiceAwareRerank(
   return {
     ...legacy,
     fullTimeline,
-    blockCandidates: extractHybridBlocks(fullTimeline, legacy.totalBars, barLengthBeats),
+    blockCandidates: extractHybridBlocks(
+      fullTimeline,
+      legacy.totalBars,
+      barLengthBeats,
+      legacyInternal.timelineRankingScores,
+    ),
     analyzerVersion: voiceAwareRerankerVersion,
   };
 }
