@@ -581,6 +581,10 @@ export function CaptureView(props: CaptureViewProps) {
         copy={copy}
         language={language}
         previewSound={previewSound}
+        onPreviewSoundChange={(sound) => {
+          void stopPreviewAudio();
+          setPreviewSound(sound);
+        }}
         onPreview={previewSongTimeline}
         onPreviewChord={previewSongChord}
         onStop={stopPreviewAudio}
@@ -669,6 +673,7 @@ export function TimelineDetails({
   copy,
   language,
   previewSound,
+  onPreviewSoundChange,
   onPreview,
   onPreviewChord,
   onStop,
@@ -677,6 +682,7 @@ export function TimelineDetails({
   copy: AppCopy;
   language: AppLanguage;
   previewSound: PreviewSound;
+  onPreviewSoundChange: (sound: PreviewSound) => void;
   onPreview: () => void | Promise<void>;
   onPreviewChord: (chord: ChordSymbol) => void | Promise<void>;
   onStop: () => void | Promise<void>;
@@ -766,9 +772,11 @@ export function TimelineDetails({
           >
             ■
           </button>
-          <span className="text-xs text-[var(--lv-text-muted)]">
-            {copy.capture.previewSound}: {previewSound === "piano" ? copy.capture.piano : copy.capture.electricPiano}
-          </span>
+          <PreviewSoundSelector
+            value={previewSound}
+            onChange={onPreviewSoundChange}
+            copy={copy}
+          />
         </div>
       ) : null}
       <div className="mt-5">

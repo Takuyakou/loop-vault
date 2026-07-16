@@ -549,6 +549,7 @@ describe("TimelineDetails", () => {
         copy={appCopy.ja}
         language="ja"
         previewSound="piano"
+        onPreviewSoundChange={vi.fn()}
         onPreview={vi.fn()}
         onPreviewChord={vi.fn()}
         onStop={vi.fn()}
@@ -557,10 +558,51 @@ describe("TimelineDetails", () => {
 
     expect(markup).toContain("曲全体を再生");
     expect(markup).toContain('aria-label="停止"');
-    expect(markup).toContain("試聴音色: ピアノ");
+    expect(markup).toContain('role="group"');
+    expect(markup).toContain('aria-label="試聴音色"');
+    expect(markup).toContain('aria-pressed="true"');
+    expect(markup).toContain("ピアノ");
+    expect(markup).toContain("エレピ");
     expect(markup).toContain("Cmaj7");
     expect(markup).toContain("Am7");
     expect(markup).toContain("<button");
+  });
+
+  it("uses the same preview sound selector as progression candidates", async () => {
+    const result: MidiProgressionAnalysis = {
+      fileName: "song.mid",
+      totalBars: 2,
+      bpm: 100,
+      fullTimeline: [chord("Cmaj7", 1), chord("Am7", 2)],
+      blockCandidates: [],
+      analyzedAt: "2026-07-15T00:00:00.000Z",
+      analyzerVersion: "test",
+    };
+    const onPreviewSoundChange = vi.fn();
+    const container = document.createElement("div");
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <TimelineDetails
+          result={result}
+          copy={appCopy.ja}
+          language="ja"
+          previewSound="piano"
+          onPreviewSoundChange={onPreviewSoundChange}
+          onPreview={vi.fn()}
+          onPreviewChord={vi.fn()}
+          onStop={vi.fn()}
+        />,
+      );
+    });
+
+    const electricPianoButton = [...container.querySelectorAll("button")]
+      .find((button) => button.textContent?.trim() === "エレピ");
+    await act(async () => electricPianoButton?.click());
+
+    expect(onPreviewSoundChange).toHaveBeenCalledWith("electric-piano");
+    await act(async () => root.unmount());
   });
 });
 
