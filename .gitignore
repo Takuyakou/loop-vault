@@ -10,3 +10,4 @@ demo-data/*.json
 docs/loop-vault-evaluation-corpus/
 .local-evaluation/
 artifacts/midi-evaluation/
+artifacts/midi-failure-analysis/
