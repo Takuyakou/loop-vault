@@ -7,6 +7,10 @@ import type {
   ProgressionBlockCandidate,
 } from "../types";
 import { parseMidi } from "./parser";
+import {
+  selectProgressionCandidates,
+  type CandidateSelectionEntry,
+} from "./candidateSelection";
 import { beatsPerBar } from "./timing";
 import type { AnalyzeMidiOptions, MidiSongData, TimedNote, TrackRole } from "./types";
 import { selectChordEvidenceNotes } from "./voices";
@@ -21,6 +25,19 @@ interface WeightedWindow {
   bassHistogram: number[];
   totalWeight: number;
   melodyWeight: number;
+}
+
+interface RankedTimelineItem {
+  item: ChordTimelineItem;
+  rankingScore: number;
+}
+
+// Keep above-clamp ordering without letting the raw matcher scale overpower block bonuses.
+const rankingResolution = 1e-6;
+
+export interface LegacyAnalysisInternal {
+  analysis: MidiProgressionAnalysis;
+  timelineRankingScores: number[];
 }
 
 interface ChordTemplate {
@@ -56,33 +73,52 @@ export function analyzeMidi(
   bytes: Uint8Array,
   options: AnalyzeMidiOptions = {},
 ): MidiProgressionAnalysis {
+  return analyzeMidiWithRankingScores(bytes, options).analysis;
+}
+
+export function analyzeMidiWithRankingScores(
+  bytes: Uint8Array,
+  options: AnalyzeMidiOptions = {},
+): LegacyAnalysisInternal {
   const data = parseMidi(bytes);
   const evidenceNotes = selectChordEvidenceNotes(data.notes);
   const evidenceData = { ...data, notes: evidenceNotes };
   if (evidenceNotes.length === 0) {
-    return emptyAnalysis(data, options);
+    return { analysis: emptyAnalysis(data, options), timelineRankingScores: [] };
   }
   const barLengthBeats = beatsPerBar(data.timeSignature);
   const roles = inferTrackRoles(evidenceData);
   const windows = buildWeightedWindows(evidenceData, roles, options.beatsPerWindow ?? 2);
-  const rawTimeline: ChordTimelineItem[] = [];
+  const rankedTimeline: RankedTimelineItem[] = [];
   for (const window of windows) {
-    rawTimeline.push(matchWindow(window, rawTimeline[rawTimeline.length - 1]?.chord));
+    rankedTimeline.push(matchWindowWithRankingScore(
+      window,
+      rankedTimeline[rankedTimeline.length - 1]?.item.chord,
+    ));
   }
-  const fullTimeline = smoothTimeline(rawTimeline, barLengthBeats);
-  const blockCandidates = extractBlockCandidates(fullTimeline, data.totalBars);
+  const smoothedTimeline = smoothTimelineWithRankingScores(rankedTimeline, barLengthBeats);
+  const fullTimeline = smoothedTimeline.map(({ item }) => item);
+  const timelineRankingScores = smoothedTimeline.map(({ rankingScore }) => rankingScore);
+  const blockCandidates = extractBlockCandidates(
+    fullTimeline,
+    data.totalBars,
+    timelineRankingScores,
+  );
 
   return {
-    ...(options.sourceAssetId ? { sourceAssetId: options.sourceAssetId } : {}),
-    ...(options.fileName ? { fileName: options.fileName } : {}),
-    totalBars: data.totalBars,
-    ...(data.tempo ? { bpm: Math.round(data.tempo) } : {}),
-    ...(data.timeSignature ? { timeSignature: data.timeSignature } : {}),
-    detectedKey: detectKey(evidenceNotes),
-    fullTimeline,
-    blockCandidates,
-    analyzedAt: "1970-01-01T00:00:00.000Z",
-    analyzerVersion,
+    analysis: {
+      ...(options.sourceAssetId ? { sourceAssetId: options.sourceAssetId } : {}),
+      ...(options.fileName ? { fileName: options.fileName } : {}),
+      totalBars: data.totalBars,
+      ...(data.tempo ? { bpm: Math.round(data.tempo) } : {}),
+      ...(data.timeSignature ? { timeSignature: data.timeSignature } : {}),
+      detectedKey: detectKey(evidenceNotes),
+      fullTimeline,
+      blockCandidates,
+      analyzedAt: "1970-01-01T00:00:00.000Z",
+      analyzerVersion,
+    },
+    timelineRankingScores,
   };
 }
 
@@ -192,6 +228,13 @@ export function buildWeightedWindows(
 }
 
 export function matchWindow(window: WeightedWindow, previous?: ChordSymbol): ChordTimelineItem {
+  return matchWindowWithRankingScore(window, previous).item;
+}
+
+function matchWindowWithRankingScore(
+  window: WeightedWindow,
+  previous?: ChordSymbol,
+): RankedTimelineItem {
   const bassPc = maxIndex(window.bassHistogram);
   const scored = scoreTemplates(window.histogram, bassPc, previous)
     .sort((a, b) => b.confidence - a.confidence || a.chord.label.localeCompare(b.chord.label));
@@ -212,65 +255,36 @@ export function matchWindow(window: WeightedWindow, previous?: ChordSymbol): Cho
   }
 
   return {
-    bar: window.bar,
-    beat: window.beat,
-    durationBeats: window.durationBeats,
-    chord: best.chord,
-    confidence: clamp(best.confidence),
-    alternatives: scored.slice(1, 3).map((entry) => ({
-      chord: entry.chord,
-      confidence: clamp(entry.confidence),
-    })),
-    warnings,
+    item: {
+      bar: window.bar,
+      beat: window.beat,
+      durationBeats: window.durationBeats,
+      chord: best.chord,
+      confidence: clamp(best.confidence),
+      alternatives: scored.slice(1, 3).map((entry) => ({
+        chord: entry.chord,
+        confidence: clamp(entry.confidence),
+      })),
+      warnings,
+    },
+    rankingScore: rankingScoreFor(best.confidence),
   };
 }
 
 export function smoothTimeline(items: ChordTimelineItem[], barLengthBeats = 4): ChordTimelineItem[] {
-  const adjusted = items.map((item) => ({ ...item }));
-
-  for (let index = 1; index < adjusted.length - 1; index += 1) {
-    const prev = adjusted[index - 1];
-    const current = adjusted[index];
-    const next = adjusted[index + 1];
-    if (
-      prev.chord.label === next.chord.label &&
-      current.chord.label !== prev.chord.label &&
-      current.confidence < prev.confidence + 0.08
-    ) {
-      adjusted[index] = {
-        ...current,
-        chord: prev.chord,
-        confidence: Math.max(current.confidence, prev.confidence * 0.92),
-      };
-    }
-  }
-
-  const merged: ChordTimelineItem[] = [];
-  for (const item of adjusted) {
-    const previous = merged[merged.length - 1];
-    if (
-      previous &&
-      previous.chord.label === item.chord.label &&
-      absoluteBeat(previous.bar, previous.beat, barLengthBeats) + previous.durationBeats >=
-        absoluteBeat(item.bar, item.beat, barLengthBeats)
-    ) {
-      previous.durationBeats += item.durationBeats;
-      previous.confidence = clamp((previous.confidence + item.confidence) / 2);
-      previous.warnings = [...new Set([...previous.warnings, ...item.warnings])];
-      continue;
-    }
-    merged.push({ ...item });
-  }
-
-  return merged;
+  return smoothTimelineWithRankingScores(
+    items.map((item) => ({ item, rankingScore: item.confidence })),
+    barLengthBeats,
+  ).map(({ item }) => item);
 }
 
 export function extractBlockCandidates(
   timeline: ChordTimelineItem[],
   totalBars: number,
+  rankingScores?: readonly number[],
 ): ProgressionBlockCandidate[] {
   const byBar = chordLabelsByBar(timeline, totalBars);
-  const raw: ProgressionBlockCandidate[] = [];
+  const raw: CandidateSelectionEntry[] = [];
 
   for (const lengthBars of [4, 8, 16] as const) {
     if (totalBars < lengthBars) {
@@ -281,40 +295,110 @@ export function extractBlockCandidates(
       const labels = byBar.slice(start - 1, start - 1 + lengthBars);
       const summaryText = summaryFromLabels(labels);
       const repeatCount = countRepeats(byBar, labels);
-      const chords = timeline.filter(
-        (item) => item.bar >= start && item.bar < start + lengthBars,
-      );
+      const rankedChords = timeline.flatMap((item, index) =>
+        item.bar >= start && item.bar < start + lengthBars
+          ? [{ item, rankingScore: rankingScoreAt(rankingScores, index, item.confidence) }]
+          : []);
+      const chords = rankedChords.map(({ item }) => item);
       const confidence = average(chords.map((item) => item.confidence));
+      const rankingScore = average(rankedChords.map((entry) => entry.rankingScore));
       const uniqueCount = new Set(labels).size;
-      const score =
-        confidence + Math.min(0.25, repeatCount * 0.08) + Math.min(0.15, uniqueCount * 0.03);
+      const repeatBonus = Math.min(0.25, repeatCount * 0.08);
+      const diversityBonus = Math.min(0.15, uniqueCount * 0.03);
+      const score = rankingScore + repeatBonus + diversityBonus;
+      const displayConfidence = confidence + repeatBonus + diversityBonus;
 
       raw.push({
-        id: `bars-${start}-${start + lengthBars - 1}`,
-        startBar: start,
-        endBar: start + lengthBars - 1,
-        lengthBars,
-        chords,
-        summaryText,
-        confidence: clamp(score),
-        ...(repeatCount > 1 ? { repeatCount } : {}),
-        labels: blockLabels(start, lengthBars, repeatCount, score),
-        warnings: [...new Set(chords.flatMap((item) => item.warnings))],
+        dedupeKey: summaryText,
+        selectionScore: score,
+        candidate: {
+          id: `bars-${start}-${start + lengthBars - 1}`,
+          startBar: start,
+          endBar: start + lengthBars - 1,
+          lengthBars,
+          chords,
+          summaryText,
+          confidence: clamp(displayConfidence),
+          ...(repeatCount > 1 ? { repeatCount } : {}),
+          labels: blockLabels(start, lengthBars, repeatCount, displayConfidence),
+          warnings: [...new Set(chords.flatMap((item) => item.warnings))],
+        },
       });
     }
   }
 
-  const seen = new Set<string>();
-  return raw
-    .sort((a, b) => b.confidence - a.confidence || a.startBar - b.startBar)
-    .filter((candidate) => {
-      if (seen.has(candidate.summaryText)) {
-        return false;
-      }
-      seen.add(candidate.summaryText);
-      return true;
-    })
-    .slice(0, 6);
+  return selectProgressionCandidates(raw, totalBars);
+}
+
+function smoothTimelineWithRankingScores(
+  items: readonly RankedTimelineItem[],
+  barLengthBeats: number,
+): RankedTimelineItem[] {
+  const adjusted = items.map((entry) => ({
+    ...entry,
+    item: { ...entry.item },
+  }));
+
+  for (let index = 1; index < adjusted.length - 1; index += 1) {
+    const previous = adjusted[index - 1].item;
+    const current = adjusted[index].item;
+    const next = adjusted[index + 1].item;
+    if (
+      previous.chord.label === next.chord.label
+      && current.chord.label !== previous.chord.label
+      && current.confidence < previous.confidence + 0.08
+    ) {
+      adjusted[index] = {
+        ...adjusted[index],
+        item: {
+          ...current,
+          chord: previous.chord,
+          confidence: Math.max(current.confidence, previous.confidence * 0.92),
+        },
+      };
+    }
+  }
+
+  const merged: RankedTimelineItem[] = [];
+  for (const current of adjusted) {
+    const previous = merged[merged.length - 1];
+    if (
+      previous
+      && previous.item.chord.label === current.item.chord.label
+      && absoluteBeat(previous.item.bar, previous.item.beat, barLengthBeats)
+        + previous.item.durationBeats
+        >= absoluteBeat(current.item.bar, current.item.beat, barLengthBeats)
+    ) {
+      previous.item.durationBeats += current.item.durationBeats;
+      previous.item.confidence = clamp(
+        (previous.item.confidence + current.item.confidence) / 2,
+      );
+      previous.item.warnings = [
+        ...new Set([...previous.item.warnings, ...current.item.warnings]),
+      ];
+      previous.rankingScore = (previous.rankingScore + current.rankingScore) / 2;
+      continue;
+    }
+    merged.push({ ...current, item: { ...current.item } });
+  }
+
+  return merged;
+}
+
+function rankingScoreAt(
+  rankingScores: readonly number[] | undefined,
+  index: number,
+  fallback: number,
+): number {
+  const rankingScore = rankingScores?.[index];
+  return rankingScore !== undefined && Number.isFinite(rankingScore)
+    ? rankingScore
+    : fallback;
+}
+
+function rankingScoreFor(rawMatchScore: number): number {
+  if (rawMatchScore <= 1) return rawMatchScore;
+  return 1 + rawMatchScore * rankingResolution;
 }
 
 function scoreTemplates(histogram: number[], bassPc: number, previous?: ChordSymbol) {

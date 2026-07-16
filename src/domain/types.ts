@@ -74,6 +74,7 @@ export interface ProgressionBlockCandidate {
   chords: ChordTimelineItem[];
   summaryText: string;
   confidence: number;
+  selectionScore?: number;
   repeatCount?: number;
   labels: string[];
   warnings: string[];

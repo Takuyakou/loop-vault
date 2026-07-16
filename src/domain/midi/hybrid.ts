@@ -3,7 +3,7 @@ import { extractHybridBlocks } from "./blocks";
 import { scoreChordCandidates, type ScoredSegment } from "./candidates";
 import { decodeChordPath, decodeTwoPass } from "./decoder";
 import { estimateKeyCandidates } from "./keyPrior";
-import { analyzeMidi as analyzeMidiLegacy } from "./legacy";
+import { analyzeMidiWithRankingScores } from "./legacy";
 import { materializeDecodedSegments, mergeDecodedSegments } from "./merge";
 import { normalizeNotes } from "./normalize";
 import { extractOrnamentFeatures } from "./ornaments";
@@ -46,7 +46,8 @@ export function analyzeMidiHybrid(bytes: Uint8Array, options: AnalyzeMidiOptions
   const pipeline = buildHybridPipeline(bytes, options);
   const { data, beatsPerBar, key, merged } = pipeline;
   if (!merged.length) return analyzeEmpty(data, options);
-  const legacyTimeline = analyzeMidiLegacy(bytes, options).fullTimeline;
+  const legacyInternal = analyzeMidiWithRankingScores(bytes, options);
+  const legacyTimeline = legacyInternal.analysis.fullTimeline;
   const fullTimeline: ChordTimelineItem[] = legacyTimeline.map((legacy) => {
     const startBeat = (legacy.bar - 1) * beatsPerBar + legacy.beat - 1;
     const segment = decodedSegmentAtBeat(merged, startBeat);
@@ -68,7 +69,12 @@ export function analyzeMidiHybrid(bytes: Uint8Array, options: AnalyzeMidiOptions
     ...(data.timeSignature ? { timeSignature: data.timeSignature } : {}),
     ...(key ? { detectedKey: `${pitchNames[key.tonicPitchClass]} ${key.mode}` } : {}),
     fullTimeline,
-    blockCandidates: extractHybridBlocks(fullTimeline, data.totalBars, beatsPerBar),
+    blockCandidates: extractHybridBlocks(
+      fullTimeline,
+      data.totalBars,
+      beatsPerBar,
+      legacyInternal.timelineRankingScores,
+    ),
     analyzedAt: "1970-01-01T00:00:00.000Z",
     analyzerVersion: hybridAnalyzerVersion,
   };

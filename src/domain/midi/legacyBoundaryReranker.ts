@@ -7,7 +7,7 @@ import {
 } from "./candidates";
 import { selectDiverseAlternatives } from "./candidateDiversity";
 import { estimateKeyCandidates } from "./keyPrior";
-import { analyzeMidi as analyzeMidiLegacy } from "./legacy";
+import { analyzeMidiWithRankingScores } from "./legacy";
 import { normalizeNotes } from "./normalize";
 import { extractOrnamentFeatures } from "./ornaments";
 import { parseMidi } from "./parser";
@@ -95,7 +95,8 @@ export function analyzeMidiLegacyBoundaryRerank(
   const ornaments = extractOrnamentFeatures(notes, weights);
   const wholeProfile = buildWeightedPitchProfile(notes, { startBeat: 0, endBeat: totalBeats }, roles, ornaments, barLengthBeats, weights);
   const key = estimateKeyCandidates(wholeProfile, 0, totalBeats)[0];
-  const legacy = analyzeMidiLegacy(bytes, options);
+  const legacyInternal = analyzeMidiWithRankingScores(bytes, options);
+  const legacy = legacyInternal.analysis;
   const fullTimeline = legacy.fullTimeline.map((item) => {
     const startBeat = (item.bar - 1) * barLengthBeats + item.beat - 1;
     const profile = buildWeightedPitchProfile(notes, { startBeat, endBeat: startBeat + item.durationBeats }, roles, ornaments, barLengthBeats, weights);
@@ -114,7 +115,12 @@ export function analyzeMidiLegacyBoundaryRerank(
     ...(data.timeSignature ? { timeSignature: data.timeSignature } : {}),
     ...(key ? { detectedKey: `${pitchName(key.tonicPitchClass)} ${key.mode}` } : {}),
     fullTimeline,
-    blockCandidates: extractHybridBlocks(fullTimeline, data.totalBars, barLengthBeats),
+    blockCandidates: extractHybridBlocks(
+      fullTimeline,
+      data.totalBars,
+      barLengthBeats,
+      legacyInternal.timelineRankingScores,
+    ),
     analyzedAt: "1970-01-01T00:00:00.000Z",
     analyzerVersion: legacyBoundaryRerankerVersion,
   };

@@ -15,6 +15,15 @@ export {
 export { analyzeMidiHybrid, buildHybridPipeline, defaultHybridFeatures, timelineFromHybridPipeline } from "./hybrid";
 export type { HybridPipelineResult } from "./hybrid";
 export { beatGridSignature, extractHybridBlocks } from "./blocks";
+export {
+  candidateIntervalIou,
+  candidateLimitForBars,
+  candidateOverlapIouThreshold,
+  candidateRegionCountForBars,
+  candidateRegionIndex,
+  selectProgressionCandidates,
+} from "./candidateSelection";
+export type { CandidateSelectionEntry } from "./candidateSelection";
 export { parseMidi } from "./parser";
 export { parseRawSmf } from "./rawSmf";
 export { normalizeNotes, overlapWithSegment } from "./normalize";
