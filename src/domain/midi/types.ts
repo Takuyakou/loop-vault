@@ -137,3 +137,40 @@ export interface Voice {
   roleConfidence: number;
   roleEvidence: VoiceRoleEvidence;
 }
+
+export interface VoiceFeatureInput {
+  voice: Voice;
+  avgDurationBeats: number;
+  stepwiseMotionRatio: number;
+  repeatedPitchClassRatio: number;
+  sustainRatio: number;
+}
+
+export interface VoiceRoleInference {
+  role: VoiceRole;
+  confidence: number;
+  scores: Record<VoiceRole, number>;
+  reasons: string[];
+}
+
+export interface VoiceContributionWeights {
+  root: number;
+  bass: number;
+  quality: number;
+  tension: number;
+}
+
+export interface VoiceEvidenceProfiles {
+  rootEvidence: number[];
+  bassEvidence: number[];
+  qualityEvidence: number[];
+  tensionEvidence: number[];
+}
+
+export interface AnalysisInput {
+  voices: Voice[];
+  enabledVoiceIds: string[];
+  roleOverrides: Record<string, VoiceRole>;
+}
+
+export type VoiceSelectionPreset = "auto" | "harmony-and-bass" | "exclude-melody" | "all";

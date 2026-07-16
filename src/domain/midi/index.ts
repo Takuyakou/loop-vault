@@ -19,6 +19,21 @@ export { parseRawSmf } from "./rawSmf";
 export { normalizeNotes, overlapWithSegment } from "./normalize";
 export { beatsPerBar, tickToSeconds } from "./timing";
 export { buildVoices, isPercussionEvidence, selectChordEvidenceNotes, voiceId } from "./voices";
+export { gmProgramRole, isGmPercussionProgram } from "./gmRoles";
+export {
+  annotateVoiceRoles,
+  buildVoiceFeatureInputs,
+  defaultVoiceRoleInferenceThresholds,
+  extractVoiceFeatures,
+  inferVoiceRole,
+  resolveVoiceRole,
+  voiceRoleEvidence,
+} from "./voiceRoles";
+export {
+  buildVoiceAwarePitchProfile,
+  buildVoiceRoleProfiles,
+  contributionWeightsForRole,
+} from "./voiceProfiles";
 export { beatStrength, defaultAnalyzerWeights, noteFeatures } from "./weights";
 export { extractTrackFeatures, inferTrackRoleProfiles } from "./trackRoles";
 export { extractOrnamentFeatures } from "./ornaments";
@@ -48,9 +63,17 @@ export type {
   Voice,
   VoiceRole,
   VoiceRoleEvidence,
+  VoiceFeatureInput,
+  VoiceRoleInference,
+  VoiceContributionWeights,
+  VoiceEvidenceProfiles,
+  AnalysisInput,
+  VoiceSelectionPreset,
   MidiAnalyzerMode,
   HybridFeatureFlags,
 } from "./types";
+export type { GmRoleEvidence } from "./gmRoles";
+export type { VoiceRoleProfile } from "./voiceProfiles";
 export type { AnalyzerWeights, NoteFeatures } from "./weights";
 export type { HybridTrackRole, TrackFeatures, TrackRoleProfile } from "./trackRoles";
 export type { OrnamentFeatures } from "./ornaments";
