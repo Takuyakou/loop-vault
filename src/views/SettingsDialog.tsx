@@ -1,0 +1,190 @@
+import { appDataDir } from "@tauri-apps/api/path";
+import { open as openFileDialog, save as saveFileDialog } from "@tauri-apps/plugin-dialog";
+import { revealItemInDir } from "@tauri-apps/plugin-opener";
+import { useEffect, useState } from "react";
+import type { AppCopy, AppLanguage } from "../i18n";
+import { defaultVaultStore } from "../store/defaultVaultStore";
+
+const inputClass = "w-full rounded border border-stone-700 bg-stone-950 px-3 py-2 text-sm text-stone-100 outline-none focus:border-teal-400";
+async function writeClipboardText(text: string): Promise<void> { if (!navigator.clipboard?.writeText) throw new Error("Clipboard is not available."); await navigator.clipboard.writeText(text); }
+function timestampForFile(date: Date): string { const year = date.getFullYear(); const month = (date.getMonth() + 1).toString().padStart(2, "0"); const day = date.getDate().toString().padStart(2, "0"); const hour = date.getHours().toString().padStart(2, "0"); const minute = date.getMinutes().toString().padStart(2, "0"); return year + month + day + "-" + hour + minute; }
+
+export function SettingsDialog({
+  monthlyGoal,
+  language,
+  showRomanNumerals,
+  backups,
+  error,
+  setMonthlyGoal,
+  setLanguage,
+  setShowRomanNumerals,
+  refreshBackups,
+  restoreBackup,
+  exportVault,
+  importVault,
+  setToast,
+  copy,
+  onClose,
+}: {
+  monthlyGoal: number;
+  language: AppLanguage;
+  showRomanNumerals: boolean;
+  backups: ReturnType<typeof defaultVaultStore.getState>["backups"];
+  error?: string;
+  setMonthlyGoal: (goal: number) => void;
+  setLanguage: (language: AppLanguage) => void;
+  setShowRomanNumerals: (show: boolean) => void;
+  refreshBackups: () => Promise<void>;
+  restoreBackup: (backupName: string) => Promise<void>;
+  exportVault: (path: string) => Promise<boolean>;
+  importVault: (path: string, mode: "replace" | "merge") => Promise<boolean>;
+  setToast: (toast: string) => void;
+  copy: AppCopy;
+  onClose: () => void;
+}) {
+  const [dataPath, setDataPath] = useState<string>(copy.settings.dataPathFallback);
+  const [importMode, setImportMode] = useState<"replace" | "merge">("merge");
+  const [showAllBackups, setShowAllBackups] = useState(false);
+
+  useEffect(() => {
+    if (!("__TAURI_INTERNALS__" in window)) {
+      setDataPath(copy.settings.dataPathFallback);
+      return;
+    }
+    void appDataDir().then((path) => setDataPath(`${path}loopvault/data.json`));
+  }, [copy.settings.dataPathFallback]);
+
+  async function exportData() {
+    if (!("__TAURI_INTERNALS__" in window)) {
+      setToast(copy.toast.exportDesktopOnly);
+      return;
+    }
+    const target = await saveFileDialog({
+      defaultPath: `loopvault-export-${timestampForFile(new Date())}.json`,
+      filters: [{ name: "JSON", extensions: ["json"] }],
+    });
+    if (!target) return;
+    const ok = await exportVault(target);
+    setToast(ok ? copy.toast.exported : copy.toast.exportFailed);
+  }
+
+  async function importData() {
+    if (!("__TAURI_INTERNALS__" in window)) {
+      setToast(copy.toast.importDesktopOnly);
+      return;
+    }
+    const target = await openFileDialog({
+      multiple: false,
+      filters: [{ name: "JSON", extensions: ["json"] }],
+    });
+    if (typeof target !== "string") return;
+    const ok = await importVault(target, importMode);
+    setToast(ok ? copy.toast.imported : copy.toast.importFailed);
+  }
+
+  async function openDataFolder() {
+    if (!("__TAURI_INTERNALS__" in window)) {
+      setToast(copy.toast.folderDesktopOnly);
+      return;
+    }
+    await revealItemInDir(await appDataDir());
+  }
+
+  async function copyDataPath() {
+    try {
+      await writeClipboardText(dataPath);
+      setToast(language === "ja" ? "データ保存先をコピーしました。" : "Copied the data location.");
+    } catch (copyError) {
+      setToast(copyError instanceof Error ? copyError.message : (language === "ja" ? "保存先をコピーできませんでした。" : "Could not copy the data location."));
+    }
+  }
+
+  async function restore(name: string) {
+    if (!window.confirm(copy.settings.restoreConfirm(name))) return;
+    await restoreBackup(name);
+    await refreshBackups();
+    setToast(copy.toast.restoreDone);
+  }
+
+  return (
+    <div className="fixed inset-0 z-40 grid place-items-center overflow-y-auto bg-black/70 px-4 py-6">
+      <div className="w-full max-w-4xl border border-stone-700 bg-stone-900 p-5 shadow-2xl">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-xl font-semibold">{copy.settings.title}</h2>
+          <button className="rounded px-2 py-1 text-stone-400" onClick={onClose}>{copy.common.close}</button>
+        </div>
+        <div className="mt-5 grid gap-5 lg:grid-cols-2">
+          <section className="border border-stone-800 bg-stone-950 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-teal-300">{language === "ja" ? "一般" : "General"}</p>
+            <h3 className="mt-2 font-semibold">{copy.settings.language}</h3>
+            <p className="mt-1 text-sm text-stone-400">{copy.settings.languageHelp}</p>
+            <select
+              className={`${inputClass} mt-3`}
+              value={language}
+              onChange={(event) => setLanguage(event.target.value as AppLanguage)}
+            >
+              <option value="ja">{copy.settings.japanese}</option>
+              <option value="en">{copy.settings.english}</option>
+            </select>
+          </section>
+          <section className="border border-stone-800 bg-stone-950 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-teal-300">{language === "ja" ? "制作" : "Creation"}</p>
+            <h3 className="font-semibold">{copy.settings.monthlyGoal}</h3>
+            <p className="mt-1 text-sm text-stone-400">{language === "ja" ? "ステータスを「完成」にしたネタを月ごとにカウントします。" : "Counts ideas moved to Done each month."}</p>
+            <input
+              className={`${inputClass} mt-2`}
+              min={1}
+              type="number"
+              value={monthlyGoal}
+              onChange={(event) => setMonthlyGoal(Number(event.target.value))}
+            />
+            <label className="mt-4 flex cursor-pointer items-start gap-3 border-t border-stone-800 pt-4 text-sm">
+              <input className="mt-1" type="checkbox" checked={showRomanNumerals} onChange={(event) => setShowRomanNumerals(event.target.checked)} />
+              <span><strong className="block text-stone-200">{language === "ja" ? "コードカードに度数を表示" : "Show degrees on chord cards"}</strong><span className="mt-1 block text-stone-400">{language === "ja" ? "キーが分かる場合、コード名の下に I / ii / V などの相対度数を表示します。" : "When a key is available, show relative degrees such as I, ii, and V."}</span></span>
+            </label>
+          </section>
+          <section className="border border-stone-800 bg-stone-950 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-teal-300">{copy.settings.data}</p>
+            <h3 className="mt-2 font-semibold">{language === "ja" ? "データ保存先" : "Data location"}</h3>
+            <p className="mt-2 break-all text-sm text-stone-400">{dataPath}</p>
+            <div className="mt-3 flex flex-wrap gap-2"><button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => void openDataFolder()}>{copy.settings.openFolder}</button><button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => void copyDataPath()}>{language === "ja" ? "パスをコピー" : "Copy path"}</button></div>
+            <div className="mt-5 border-t border-stone-800 pt-4"><h4 className="font-medium">{copy.settings.exportTitle}</h4><p className="mt-1 text-sm text-stone-400">{copy.settings.exportDescription}</p><button className="mt-3 rounded bg-teal-400 px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => void exportData()}>{copy.settings.exportButton}</button></div>
+          </section>
+          <section className="border border-stone-800 bg-stone-950 p-4">
+            <h3 className="font-semibold">{copy.settings.importTitle}</h3>
+            <p className="mt-1 text-sm text-stone-400">{language === "ja" ? "バックアップファイルを読み込みます。置き換えは現在のデータをすべて入れ替えます。" : "Load a backup file. Replace swaps out the current vault."}</p>
+            <select className={`${inputClass} mt-2`} value={importMode} onChange={(event) => setImportMode(event.target.value as "replace" | "merge")}>
+              <option value="merge">{copy.settings.importMerge}</option>
+              <option value="replace">{copy.settings.importReplace}</option>
+            </select>
+            <button className="mt-3 rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => void importData()}>{copy.settings.importButton}</button>
+            {error ? <p className="mt-2 text-sm text-red-200">{error}</p> : null}
+          </section>
+        </div>
+        <section className="mt-5 border border-stone-800 bg-stone-950 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="font-semibold">{copy.settings.backups}</h3>
+            <button className="rounded border border-stone-700 px-3 py-2 text-sm" onClick={() => void refreshBackups()}>{copy.common.update}</button>
+          </div>
+          <div className="mt-3 space-y-2">
+            {backups.length === 0 ? <p className="text-sm text-stone-400">{copy.settings.noBackups}</p> : null}
+            {(showAllBackups ? backups : backups.slice(0, 5)).map((backup) => (
+              <div key={backup.name} className="flex flex-wrap items-center justify-between gap-3 border border-stone-800 p-3 text-sm">
+                <div>
+                  <p className="font-medium">{backup.name}</p>
+                  <p className="text-stone-500">{backup.createdAt}</p>
+                </div>
+                <button className="rounded border border-stone-700 px-3 py-2" onClick={() => void restore(backup.name)}>{copy.common.restore}</button>
+              </div>
+            ))}
+          </div>
+          {backups.length > 5 ? <button className="mt-3 text-sm text-teal-200 hover:underline" onClick={() => setShowAllBackups((value) => !value)}>{showAllBackups ? (language === "ja" ? "最新5件のみ表示" : "Show latest 5") : (language === "ja" ? "すべて表示" : "Show all")}</button> : null}
+        </section>
+        <section className="mt-5 border border-stone-800 bg-stone-950 p-4 text-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-teal-300">{language === "ja" ? "情報" : "Info"}</p>
+          <div className="mt-3 grid gap-2 text-stone-400 sm:grid-cols-3"><p>Loop Vault</p><p>{language === "ja" ? "アプリ形式: 1" : "App format: 1"}</p><p>{language === "ja" ? "データ形式: 1" : "Data format: 1"}</p></div>
+        </section>
+      </div>
+    </div>
+  );
+}
