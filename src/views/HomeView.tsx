@@ -68,8 +68,8 @@ export function HomeView({
   return (
     <div className="space-y-5 py-5">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--lv-accent)]">Home</p>
-        <h2 className="mt-2 text-2xl font-semibold sm:text-3xl">{language === "ja" ? "次に鳴らすLoopを選ぶ。" : "Choose the loop to play next."}</h2>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--lv-accent)]">{copy.home.eyebrow}</p>
+        <h2 className="mt-2 text-2xl font-semibold sm:text-3xl">{copy.home.headline}</h2>
       </div>
 
       <Panel className="border-teal-400/30 bg-[linear-gradient(135deg,rgba(20,23,21,0.96),rgba(8,10,9,0.96))] p-5 sm:p-6">
@@ -80,7 +80,7 @@ export function HomeView({
               <div>
                 <h3 className="text-2xl font-semibold">{focus.focus.title}</h3>
                 <p className="mt-2 text-sm text-[var(--lv-text-muted)]">
-                  {focus.focus.bpm ? `${focus.focus.bpm} BPM` : language === "ja" ? "BPM未設定" : "BPM unset"}
+                  {focus.focus.bpm ? `${focus.focus.bpm} BPM` : copy.home.bpmUnset}
                   {focus.focus.key ? ` · ${displayKey(focus.focus.key, language)}` : ""}
                   {` · ${labelStatus(focus.focus.status, language)}`}
                 </p>
@@ -102,17 +102,17 @@ export function HomeView({
                   onError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed)}
                 />
               ) : null}
-              <button className="lv-button-ghost px-4 py-2 text-sm font-medium" onClick={() => openDetail(focus.focus!.id)}>{language === "ja" ? "詳細を開く" : "Open details"}</button>
-              <button className="lv-button-primary px-4 py-2 text-sm font-semibold" onClick={() => completeNext(focus.focus!)}>{language === "ja" ? "次の一手を完了" : "Complete next step"}</button>
+              <button className="lv-button-ghost px-4 py-2 text-sm font-medium" onClick={() => openDetail(focus.focus!.id)}>{copy.home.openDetails}</button>
+              <button className="lv-button-primary px-4 py-2 text-sm font-semibold" onClick={() => completeNext(focus.focus!)}>{copy.home.completeNextAction}</button>
             </div>
           </div>
         ) : (
           <div className="mt-4 max-w-xl">
             <p className="text-[var(--lv-text-secondary)]">{copy.home.noFocus}</p>
             <div className="mt-5 flex flex-wrap gap-2">
-              <button className="lv-button-primary px-4 py-2 text-sm font-semibold" onClick={openCapture}>{language === "ja" ? "コード採集を始める" : "Start capture"}</button>
-              <button className="lv-button-ghost px-4 py-2 text-sm" onClick={openCreate}>{language === "ja" ? "新しいIdea" : "New Idea"}</button>
-              <button className="lv-button-ghost px-4 py-2 text-sm" onClick={openVault}>{language === "ja" ? "Vaultを開く" : "Open Vault"}</button>
+              <button className="lv-button-primary px-4 py-2 text-sm font-semibold" onClick={openCapture}>{copy.home.startCapture}</button>
+              <button className="lv-button-ghost px-4 py-2 text-sm" onClick={openCreate}>{copy.home.newIdea}</button>
+              <button className="lv-button-ghost px-4 py-2 text-sm" onClick={openVault}>{copy.home.openVault}</button>
             </div>
           </div>
         )}
@@ -123,28 +123,28 @@ export function HomeView({
           <p className="text-[13px] text-[var(--lv-text-muted)]">{copy.home.monthlyFinish}</p>
           <p className="mt-2 text-2xl font-semibold">{stats.doneCount} <span className="text-base text-[var(--lv-text-muted)]">/ {stats.goal}</span></p>
           <div className="mt-4 h-2 overflow-hidden rounded bg-[var(--lv-surface-raised)]"><div className="h-full bg-[var(--lv-accent)]" style={{ width: `${progress}%` }} /></div>
-          <p className="mt-3 text-xs text-[var(--lv-text-muted)]">{language === "ja" ? `完成にしたネタ：${stats.doneCount}件 · 月間ゴール：${stats.goal}件 · ${copy.home.daysLeft(stats.remainingDays)}` : `${stats.doneCount} completed · Goal ${stats.goal} · ${copy.home.daysLeft(stats.remainingDays)}`}</p>
+          <p className="mt-3 text-xs text-[var(--lv-text-muted)]">{copy.home.monthlySummary(stats.doneCount, stats.goal, copy.home.daysLeft(stats.remainingDays))}</p>
         </Panel>
         <Panel>
           <p className="text-[13px] text-[var(--lv-text-muted)]">{copy.home.needsNextAction}</p>
-          <p className="mt-2 text-2xl font-semibold">{focus.needsNextAction.length}<span className="ml-1 text-sm text-[var(--lv-text-muted)]">{language === "ja" ? "件" : "items"}</span></p>
-          <p className="mt-3 text-xs text-[var(--lv-text-muted)]">{focus.needsNextAction.length ? (language === "ja" ? "次の一手を追加できます" : "Add the next step") : copy.home.allHaveNextAction}</p>
+          <p className="mt-2 text-2xl font-semibold">{copy.common.itemCount(focus.needsNextAction.length)}</p>
+          <p className="mt-3 text-xs text-[var(--lv-text-muted)]">{focus.needsNextAction.length ? copy.home.addNextAction : copy.home.allHaveNextAction}</p>
         </Panel>
         <Panel>
           <p className="text-[13px] text-[var(--lv-text-muted)]">{copy.home.stale}</p>
-          <p className="mt-2 text-2xl font-semibold">{focus.stale.length}<span className="ml-1 text-sm text-[var(--lv-text-muted)]">{language === "ja" ? "件" : "items"}</span></p>
-          <p className="mt-3 text-xs text-[var(--lv-text-muted)]">{focus.stale.length ? (language === "ja" ? "7日以上動きがないネタ" : "No activity for 7+ days") : copy.home.noStale}</p>
+          <p className="mt-2 text-2xl font-semibold">{copy.common.itemCount(focus.stale.length)}</p>
+          <p className="mt-3 text-xs text-[var(--lv-text-muted)]">{focus.stale.length ? copy.home.staleDescription : copy.home.noStale}</p>
         </Panel>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
         <section>
-          <h3 className="text-lg font-semibold">{language === "ja" ? "最近採集した進行" : "Recently captured progressions"}</h3>
+          <h3 className="text-lg font-semibold">{copy.home.recentProgressions}</h3>
           {recentProgressions.length ? (
             <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {recentProgressions.map(({ idea, block }) => (
                 <article key={block.id} className="border border-[var(--lv-border)] bg-[var(--lv-bg)] p-4">
-                  <p className="line-clamp-1 font-medium">{block.summaryText || (language === "ja" ? "保存したコード進行" : "Saved progression")}</p>
+                  <p className="line-clamp-1 font-medium">{block.summaryText || copy.home.savedProgression}</p>
                   <p className="mt-1 text-xs text-[var(--lv-text-muted)]">{idea.title}</p>
                   <p className="mt-4 line-clamp-2 font-mono text-xs text-teal-100">{formatProgressionText(block.chords).split("\n")[0]}</p>
                   <div className="mt-4 flex gap-2">
@@ -157,12 +157,12 @@ export function HomeView({
                       showLabel={false}
                       onError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed)}
                     />
-                    <button className="rounded border border-[var(--lv-border-strong)] px-3 py-1 text-xs" onClick={() => openDetail(idea.id)}>{language === "ja" ? "Vaultで開く" : "Open in Vault"}</button>
+                    <button className="rounded border border-[var(--lv-border-strong)] px-3 py-1 text-xs" onClick={() => openDetail(idea.id)}>{copy.home.openInVault}</button>
                   </div>
                 </article>
               ))}
             </div>
-          ) : <p className="mt-3 text-sm text-[var(--lv-text-muted)]">{language === "ja" ? "保存済みの進行はまだありません。" : "No saved progressions yet."}</p>}
+          ) : <p className="mt-3 text-sm text-[var(--lv-text-muted)]">{copy.home.noSavedProgressions}</p>}
         </section>
         <aside className="space-y-4">
           <Panel>

@@ -169,9 +169,9 @@ describe("DetailView status reasons", () => {
     await clickButton(mounted.container, "その他");
     const menuItems = [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')]
       .map((item) => item.textContent);
-    expect(menuItems).toEqual(["アイデアへ復帰"]);
+    expect(menuItems).toEqual(["Ideaへ復帰"]);
 
-    await clickButton(mounted.container, "アイデアへ復帰");
+    await clickButton(mounted.container, "Ideaへ復帰");
     expect(transitionIdea).not.toHaveBeenCalled();
     await clickButton(document.body, "持ち越して移動");
     expect(transitionIdea).toHaveBeenCalledWith(
@@ -479,6 +479,51 @@ describe("DetailView status reasons", () => {
     });
     delete (window as Window & { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__;
     await mounted.unmount();
+  });
+
+  it("switches field placeholders and section labels with the selected language", async () => {
+    const japanese = await renderDetail(makeIdea());
+    expect(japanese.container.querySelector<HTMLInputElement>(`input[placeholder="${appCopy.ja.detail.placeholders.genre}"]`)).not.toBeNull();
+    expect(japanese.container.querySelector<HTMLInputElement>(`input[placeholder="${appCopy.ja.detail.placeholders.mood}"]`)).not.toBeNull();
+    expect(japanese.container.textContent).toContain(appCopy.ja.detail.assets);
+    expect(appCopy.ja.detail.nextActionPlaceholders).toContain(
+      japanese.container.querySelector<HTMLTextAreaElement>(`textarea[aria-label="${appCopy.ja.detail.fields.nextAction}"]`)?.placeholder,
+    );
+    await japanese.unmount();
+
+    const english = await renderDetail(makeIdea(), { copy: appCopy.en, language: "en" });
+    expect(english.container.querySelector<HTMLInputElement>(`input[placeholder="${appCopy.en.detail.placeholders.genre}"]`)).not.toBeNull();
+    expect(english.container.querySelector<HTMLInputElement>(`input[placeholder="${appCopy.en.detail.placeholders.mood}"]`)).not.toBeNull();
+    expect(english.container.textContent).toContain(appCopy.en.detail.assets);
+    expect(appCopy.en.detail.nextActionPlaceholders).toContain(
+      english.container.querySelector<HTMLTextAreaElement>(`textarea[aria-label="${appCopy.en.detail.fields.nextAction}"]`)?.placeholder,
+    );
+    await english.unmount();
+  });
+
+  it("localizes the saved MIDI fallback and clipboard-unavailable toast", async () => {
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: undefined });
+    const block = {
+      id: "localized-block",
+      summaryText: "Test progression",
+      chords: [],
+      tags: [],
+      capturedAt: "2026-07-15T00:00:00.000Z",
+      analyzerVersion: "test",
+      startBar: 2,
+      endBar: 5,
+    };
+    const idea = makeIdea({ progressionBlocks: [block] });
+    const setToast = vi.fn();
+    const japanese = await renderDetail(idea, { setToast });
+    expect(japanese.container.textContent).toContain("採集したMIDI · 2–5小節");
+    await clickButton(japanese.container, appCopy.ja.capture.copyProgression);
+    expect(setToast).toHaveBeenLastCalledWith(appCopy.ja.detail.copyFailed);
+    await japanese.unmount();
+
+    const english = await renderDetail(idea, { copy: appCopy.en, language: "en" });
+    expect(english.container.textContent).toContain("Captured MIDI · Bars 2–5");
+    await english.unmount();
   });
 });
 

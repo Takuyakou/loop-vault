@@ -238,6 +238,8 @@ describe("VaultView keyboard shortcuts", () => {
     };
 
     await render("en");
+    expect(container.querySelector<HTMLInputElement>("input")?.placeholder).toBe(appCopy.en.library.searchPlaceholder);
+    expect(container.textContent).toContain(appCopy.en.library.all);
     const favorite = container.querySelectorAll<HTMLButtonElement>(`[aria-label="${appCopy.en.library.addFavorite}"]`)[1]!;
     const copyButton = container.querySelectorAll<HTMLButtonElement>(`[aria-label="${appCopy.en.library.copyProgression}"]`)[1]!;
     expect(favorite.title).toBe(appCopy.en.library.addFavorite);
@@ -257,6 +259,9 @@ describe("VaultView keyboard shortcuts", () => {
     expect(openDetail).toHaveBeenLastCalledWith(firstIdea.id);
 
     await render("ja");
+    expect(container.querySelector<HTMLInputElement>("input")?.placeholder).toBe(appCopy.ja.library.searchPlaceholder);
+    expect(container.textContent).toContain(appCopy.ja.library.all);
+    expect(container.textContent).not.toContain("All");
     expect(container.querySelector(`[aria-label="${appCopy.ja.library.addFavorite}"][title="${appCopy.ja.library.addFavorite}"]`)).not.toBeNull();
     expect(container.querySelector(`[aria-label="${appCopy.ja.library.copyProgression}"][title="${appCopy.ja.library.copyProgression}"]`)).not.toBeNull();
 
@@ -347,6 +352,35 @@ describe("VaultView keyboard shortcuts", () => {
     expect(setToast).toHaveBeenCalledWith(appCopy.en.toast.chordPreviewFailed);
     expect(setToast).not.toHaveBeenCalledWith(appCopy.ja.toast.chordPreviewFailed);
 
+    await act(async () => root.unmount());
+  });
+
+  it("uses localized copy failure text when the Clipboard API is unavailable", async () => {
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: undefined });
+    const setToast = vi.fn();
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(
+        <VaultView
+          ideas={[makeIdea({ progressionBlocks: [progressionBlock] })]}
+          openDetail={vi.fn()}
+          openCreate={vi.fn()}
+          openCapture={vi.fn()}
+          updateIdea={vi.fn()}
+          setToast={setToast}
+          copy={appCopy.ja}
+          language="ja"
+          showRomanNumerals={false}
+        />,
+      );
+    });
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>(`[aria-label="${appCopy.ja.library.copyProgression}"]`)?.click();
+    });
+    expect(setToast).toHaveBeenLastCalledWith(appCopy.ja.library.copyFailed);
     await act(async () => root.unmount());
   });
 });

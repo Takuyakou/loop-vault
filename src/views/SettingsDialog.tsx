@@ -151,8 +151,8 @@ export function SettingsDialog({
     try {
       await writeClipboardText(dataPath);
       setToast(ui.copiedPath);
-    } catch (copyError) {
-      setToast(copyError instanceof Error ? copyError.message : ui.copyPathFailed);
+    } catch {
+      setToast(ui.copyPathFailed);
     }
   }
 

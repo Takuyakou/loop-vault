@@ -3,6 +3,7 @@ import { candidateLabel, displayKey, statusLabel } from "./displayLabels";
 
 describe("display labels", () => {
   it("uses Japanese status labels without exposing internal values", () => {
+    expect(statusLabel("idea", "ja")).toBe("Idea");
     expect(statusLabel("arrange", "ja")).toBe("展開");
     expect(statusLabel("abandoned", "ja")).toBe("没");
   });

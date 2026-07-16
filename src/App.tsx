@@ -274,7 +274,6 @@ async function analyzeMidiPath(path: string) {
             recovery={recovery}
             readonly={readonly}
             error={error}
-            language={language}
             requestRestoreBackup={setStartupRestoreName}
             copy={copy}
           />
@@ -316,7 +315,7 @@ async function analyzeMidiPath(path: string) {
       ) : null}
       <ConfirmDialog
         open={Boolean(startupRestoreName)}
-        title={language === "ja" ? "バックアップを復元" : "Restore backup"}
+        title={copy.startup.restoreBackupTitle}
         description={startupRestoreName ? copy.settings.restoreConfirm(startupRestoreName) : ""}
         confirmLabel={copy.common.restore}
         cancelLabel={copy.common.cancel}
@@ -458,7 +457,6 @@ function StartupState({
   error,
   requestRestoreBackup,
   copy,
-  language,
 }: {
   loadStatus: string;
   recovery: ReturnType<typeof defaultVaultStore.getState>["recovery"];
@@ -466,7 +464,6 @@ function StartupState({
   error?: string;
   requestRestoreBackup: (backupName: string) => void;
   copy: AppCopy;
-  language: AppLanguage;
 }) {
   return (
     <div className="grid flex-1 place-items-center py-10">
@@ -479,13 +476,13 @@ function StartupState({
             <div className="mt-5 space-y-2">
               {recovery.backups.length > 0 ? recovery.backups.map((backup) => (
                 <button key={backup.name} className="block w-full rounded border border-[var(--lv-border-strong)] px-3 py-2 text-left text-sm hover:bg-[var(--lv-surface-raised)]" onClick={() => requestRestoreBackup(backup.name)}>
-                  {language === "ja" ? `${backup.name} を復元` : `Restore ${backup.name}`}
+                  {copy.startup.restoreBackup(backup.name)}
                 </button>
               )) : <p className="text-sm text-[var(--lv-text-muted)]">{copy.startup.noBackups}</p>}
             </div>
           </div>
         ) : null}
-        {loadStatus === "readonly" && readonly ? <StatusPanel title={copy.startup.readonlyTitle} body={readonly.fileVersion ? (language === "ja" ? `このdata.jsonは fileVersion ${readonly.fileVersion} です。このアプリより新しい形式です。` : `This data.json is fileVersion ${readonly.fileVersion}, newer than this app supports.`) : readonly.message} /> : null}
+        {loadStatus === "readonly" && readonly ? <StatusPanel title={copy.startup.readonlyTitle} body={readonly.fileVersion ? copy.startup.newerVersion(readonly.fileVersion) : readonly.message} /> : null}
         {loadStatus === "error" ? <StatusPanel title={copy.startup.errorTitle} body={error ?? copy.startup.unknownError} /> : null}
       </Panel>
     </div>
