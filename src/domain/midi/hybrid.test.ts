@@ -1,6 +1,6 @@
 import { Midi } from "@tonejs/midi";
 import { describe, expect, it } from "vitest";
-import { analyzeMidi } from "./analysis";
+import { analyzeMidi, defaultAnalyzerMode } from "./analysis";
 import { buildHybridPipeline, timelineFromHybridPipeline } from "./hybrid";
 
 function bytes(): Uint8Array {
@@ -18,6 +18,7 @@ describe("hybrid MIDI analyzer", () => {
     const hybrid = analyzeMidi(bytes(), { mode: "hybrid-v1" });
     expect(hybrid).toEqual(analyzeMidi(bytes(), { mode: "hybrid-v1" }));
     expect(hybrid.analyzerVersion).toBe("hybrid-symbolic-v1");
+    expect(defaultAnalyzerMode).toBe("legacy");
     expect(analyzeMidi(bytes(), { mode: "legacy" }).analyzerVersion).toBe("legacy-v1");
   });
 
