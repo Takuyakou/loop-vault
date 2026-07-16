@@ -4,6 +4,7 @@ export {
   defaultAnalyzerMode,
   hybridAnalyzerVersion,
   legacyAnalyzerVersion,
+  legacyBoundaryRerankerVersion,
   buildWeightedWindows,
   extractBlockCandidates,
   inferTrackRoles,
@@ -20,7 +21,9 @@ export { extractTrackFeatures, inferTrackRoleProfiles } from "./trackRoles";
 export { extractOrnamentFeatures } from "./ornaments";
 export { buildSegmentLattice, generateBoundaries } from "./segmentation";
 export { buildCumulativePitchFeatures, buildWeightedPitchProfile, profileFromCumulative } from "./profiles";
-export { canonicalChord, chordTemplates, scoreChordCandidates, scoreSegments } from "./candidates";
+export { canonicalChord, chordTemplates, scoreChordCandidates, scoreSegments, scoreStructuredChordCandidate } from "./candidates";
+export { analyzeMidiLegacyBoundaryRerank, chooseLegacyBoundaryCandidate, defaultLegacyBoundaryRerankerThresholds } from "./legacyBoundaryReranker";
+export type { LegacyBoundaryRerankerThresholds, RerankDecision } from "./legacyBoundaryReranker";
 export { chordKeyCompatibility, estimateKeyCandidates } from "./keyPrior";
 export { decodeChordPath, decodeGreedy, decodeTwoPass, defaultDecoderWeights } from "./decoder";
 export { confidenceForDecoded, confidenceLevel, uniqueAlternatives } from "./confidence";
