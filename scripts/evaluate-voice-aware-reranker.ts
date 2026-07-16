@@ -89,6 +89,11 @@ interface GuardResult {
 
 export type DirtyImprovementStatus = "improved" | "unchanged" | "regressed" | "mixed";
 
+export interface DirtyMetricPair {
+  legacy: MetricsSnapshot;
+  voiceAware: MetricsSnapshot;
+}
+
 export interface OverallGuardResult extends GuardResult {
   status: "passed" | "failed";
 }
@@ -137,6 +142,7 @@ export function strictOverallGuard(
   cleanGuard: GuardResult,
   determinismPassed: boolean,
   dirtyStatus: Readonly<Record<string, DirtyImprovementStatus>>,
+  dirtyMetrics: Readonly<Record<string, DirtyMetricPair>>,
 ): OverallGuardResult {
   const failures = [...cleanGuard.failures];
   if (!determinismPassed) failures.push("determinism check failed");
@@ -154,12 +160,57 @@ export function strictOverallGuard(
     if (dirtyStatus[category] !== "improved") {
       failures.push(`required dirty category did not improve: ${category}`);
     }
+    const metrics = dirtyMetrics[category];
+    if (!metrics) {
+      failures.push(`required dirty metrics missing: ${category}`);
+      continue;
+    }
+    requireDirtyMetricImprovement(failures, category, "Root@1", metrics.legacy.rootAt1, metrics.voiceAware.rootAt1);
+    requireDirtyMetricImprovement(failures, category, "Root@3", metrics.legacy.rootAt3, metrics.voiceAware.rootAt3);
+    requireDirtyMetricImprovement(failures, category, "Quality@1", metrics.legacy.qualityAt1, metrics.voiceAware.qualityAt1);
+    requireDirtyMetricImprovement(failures, category, "Quality@3", metrics.legacy.qualityAt3, metrics.voiceAware.qualityAt3);
+    requireDirtyMetricImprovement(failures, category, "Exact@1", metrics.legacy.exactAt1, metrics.voiceAware.exactAt1);
+    requireDirtyMetricImprovement(failures, category, "Exact@3", metrics.legacy.exactAt3, metrics.voiceAware.exactAt3);
+    requireDirtyCostReduction(
+      failures,
+      category,
+      "correction proxy/case",
+      metrics.legacy.correctionProxyPerCase,
+      metrics.voiceAware.correctionProxyPerCase,
+    );
+    requireDirtyCostReduction(
+      failures,
+      category,
+      "operation correction cost",
+      metrics.legacy.operationCorrectionCostMean,
+      metrics.voiceAware.operationCorrectionCostMean,
+    );
   }
   return {
     status: failures.length === 0 ? "passed" : "failed",
     passed: failures.length === 0,
     failures,
   };
+}
+
+function requireDirtyMetricImprovement(
+  failures: string[],
+  category: string,
+  metric: string,
+  legacy: number,
+  voiceAware: number,
+): void {
+  if (voiceAware <= legacy) failures.push(`required dirty metric did not improve: ${category} ${metric}`);
+}
+
+function requireDirtyCostReduction(
+  failures: string[],
+  category: string,
+  metric: string,
+  legacy: number,
+  voiceAware: number,
+): void {
+  if (voiceAware >= legacy) failures.push(`required dirty cost did not decrease: ${category} ${metric}`);
 }
 
 export function shouldFailStrictExit(
@@ -255,6 +306,11 @@ async function main(): Promise<void> {
     const voiceAware = requiredResult(results, "voice-aware-rerank-v1", category);
     return [category, dirtyImprovementStatus(legacy.metrics, voiceAware.metrics)];
   })) as Record<string, DirtyImprovementStatus>;
+  const dirtyMetrics = Object.fromEntries(categories.slice(1).map((category) => {
+    const legacy = requiredResult(results, "legacy", category);
+    const voiceAware = requiredResult(results, "voice-aware-rerank-v1", category);
+    return [category, { legacy: legacy.metrics, voiceAware: voiceAware.metrics }];
+  })) as Record<string, DirtyMetricPair>;
   const improvedCategoryCount = Object.values(dirtyStatus).filter((status) => status === "improved").length;
   const regressedCategoryCount = Object.values(dirtyStatus).filter(
     (status) => status === "regressed" || status === "mixed",
@@ -263,7 +319,7 @@ async function main(): Promise<void> {
     ...representativeSubset(grouped.get("clean") ?? [], 10),
     ...categories.slice(1).flatMap((category) => representativeSubset(grouped.get(category) ?? [], 2)),
   ]);
-  const overallGuard = strictOverallGuard(cleanGuard, determinism.passed, dirtyStatus);
+  const overallGuard = strictOverallGuard(cleanGuard, determinism.passed, dirtyStatus, dirtyMetrics);
   const realGoldCaseCount = await readRealGoldCaseCount();
   const artifact = {
     schemaVersion: 1,
