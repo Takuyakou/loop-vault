@@ -62,6 +62,7 @@ export function SaveProgressionPopover({
       if (event.key !== "Escape") return;
       if (event.isComposing || event.keyCode === 229) return;
       event.preventDefault();
+      event.stopPropagation();
       close(true);
     }
 

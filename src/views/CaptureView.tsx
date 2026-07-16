@@ -3,8 +3,9 @@ import {
   open as openFileDialog,
 } from "@tauri-apps/plugin-dialog";
 import { readFile } from "@tauri-apps/plugin-fs";
-import { useCallback, useEffect, useState } from "react";
-import type { DragEvent } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { DragEvent, ReactNode } from "react";
+import { createPortal } from "react-dom";
 import {
   applyEditableProgression,
   canRedoProgressionEdit,
@@ -109,11 +110,25 @@ export function CaptureView(props: CaptureViewProps) {
   } = props;
   const [isDraggingMidi, setIsDraggingMidi] = useState(false);
   const [expandedCandidateId, setExpandedCandidateId] = useState<string>();
+  const [isInspectorExpanded, setInspectorExpanded] = useState(false);
+  const [inspectorHost, setInspectorHost] = useState<HTMLDivElement | null>(null);
   const [dirtyCandidateIds, setDirtyCandidateIds] = useState<Set<string>>(() => new Set());
   const [pendingCandidateSelection, setPendingCandidateSelection] = useState<{ candidateId: string | undefined }>();
   const [sourcePath, setSourcePath] = useState<string>();
   const [previewSound, setPreviewSound] = useState<PreviewSound>("piano");
+  const candidateHeaderFocusIdRef = useRef<string>();
   const result = analysis.result;
+
+  useStickyInspectorHeight(inspectorHost, Boolean(expandedCandidateId));
+
+  useEffect(() => {
+    const candidateId = candidateHeaderFocusIdRef.current;
+    if (expandedCandidateId || !candidateId) return;
+    const header = [...document.querySelectorAll<HTMLButtonElement>("[data-candidate-toggle]")]
+      .find((button) => button.dataset.candidateId === candidateId);
+    header?.focus();
+    candidateHeaderFocusIdRef.current = undefined;
+  }, [expandedCandidateId]);
 
   const markCandidateDirty = useCallback((candidateId: string, dirty: boolean) => {
     setDirtyCandidateIds((current) => {
@@ -140,6 +155,12 @@ export function CaptureView(props: CaptureViewProps) {
 
   function applyCandidateSelection(candidateId: string | undefined) {
     stopCapturePlayback(controller);
+    if (!candidateId && expandedCandidateId) {
+      candidateHeaderFocusIdRef.current = expandedCandidateId;
+    }
+    if (candidateId !== expandedCandidateId) {
+      setInspectorExpanded(false);
+    }
     setExpandedCandidateId(candidateId);
   }
 
@@ -451,7 +472,7 @@ export function CaptureView(props: CaptureViewProps) {
 
   return (
     <>
-      <div className="grid gap-5 py-5" {...dropHandlers}>
+      <div className="lv-capture-content grid gap-5 py-5" {...dropHandlers}>
       {isDraggingMidi ? <DropOverlay copy={copy} /> : null}
       <section className="border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -484,7 +505,8 @@ export function CaptureView(props: CaptureViewProps) {
         </div>
       </section>
 
-      <section className="border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-5">
+      <div className={`grid gap-5 ${expandedCandidateId ? "xl:grid-cols-[minmax(0,1fr)_20rem] xl:items-start" : ""}`}>
+      <section className="min-w-0 border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="text-2xl font-semibold">{copy.capture.candidates}</h2>
@@ -527,8 +549,11 @@ export function CaptureView(props: CaptureViewProps) {
                   copy={copy}
                   language={language}
                   isExpanded={expandedCandidateId === candidate.id}
+                  inspectorExpanded={isInspectorExpanded}
+                  inspectorHost={inspectorHost}
                   onSelect={() => selectExpandedCandidate(candidate.id)}
                   onCollapse={() => selectExpandedCandidate(undefined)}
+                  onInspectorExpandedChange={setInspectorExpanded}
                   onDirtyChange={markCandidateDirty}
                   onCreate={(editedCandidate, title, nextAction, userVerified, editable) => (
                     saveNew(editedCandidate, title, nextAction, userVerified, candidate, editable)
@@ -548,6 +573,14 @@ export function CaptureView(props: CaptureViewProps) {
           </div>
         </div>
       </section>
+
+      <div
+        ref={setInspectorHost}
+        data-responsive-inspector-host
+        data-active={Boolean(expandedCandidateId)}
+        className="lv-responsive-inspector-host"
+      />
+      </div>
 
       <TimelineDetails
         result={result}
@@ -797,8 +830,11 @@ export function ProgressionCandidateCard({
   copy,
   language,
   isExpanded = false,
+  inspectorExpanded = true,
+  inspectorHost,
   onSelect,
   onCollapse,
+  onInspectorExpandedChange,
   onDirtyChange,
   onCreate,
   onAppend,
@@ -842,8 +878,11 @@ export function ProgressionCandidateCard({
   copy: AppCopy;
   language: AppLanguage;
   isExpanded?: boolean;
+  inspectorExpanded?: boolean;
+  inspectorHost?: HTMLElement | null;
   onSelect?: () => boolean | void;
   onCollapse?: () => void;
+  onInspectorExpandedChange?: (expanded: boolean) => void;
   onDirtyChange?: (candidateId: string, dirty: boolean) => void;
   showRomanNumerals?: boolean;
 }) {
@@ -893,9 +932,20 @@ export function ProgressionCandidateCard({
       return undefined;
     }
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.isComposing || isEditableKeyboardTarget(event.target)) {
+      if (event.defaultPrevented || event.isComposing) {
         return;
       }
+      if (event.key === "Escape") {
+        event.preventDefault();
+        stopCandidatePreview();
+        if (inspectorExpanded && onInspectorExpandedChange) {
+          onInspectorExpandedChange(false);
+        } else {
+          onCollapse?.();
+        }
+        return;
+      }
+      if (isEditableKeyboardTarget(event.target)) return;
       if (event.ctrlKey && event.key.toLowerCase() === "z") {
         event.preventDefault();
         stopCandidatePreview();
@@ -923,12 +973,6 @@ export function ProgressionCandidateCard({
         }
         return;
       }
-      if (event.key === "Escape") {
-        event.preventDefault();
-        stopCandidatePreview();
-        onCollapse?.();
-        return;
-      }
       if (event.key === " ") {
         event.preventDefault();
         void selectChord(selectedChordIndex);
@@ -944,7 +988,7 @@ export function ProgressionCandidateCard({
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [controller, editable.selectedSlotId, editable.slots, isExpanded, onCollapse, selectedChordIndex, source]);
+  }, [controller, editable.selectedSlotId, editable.slots, inspectorExpanded, isExpanded, onCollapse, onInspectorExpandedChange, selectedChordIndex, source]);
 
   function stopCandidatePreview() {
     const activeSource = controller.getState().source;
@@ -1002,7 +1046,7 @@ export function ProgressionCandidateCard({
   return (
     <div className={`border bg-[var(--lv-bg)] p-4 transition-colors ${isExpanded ? "border-teal-400/50" : "border-[var(--lv-border)] hover:border-stone-600"}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <button data-candidate-toggle className="min-w-0 text-left" onClick={onSelect} aria-expanded={isExpanded}>
+        <button data-candidate-toggle data-candidate-id={candidate.id} className="min-w-0 text-left" onClick={onSelect} aria-expanded={isExpanded}>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--lv-accent)]">
             {editorCopy.candidate(candidateIndex + 1)}
           </p>
@@ -1048,7 +1092,7 @@ export function ProgressionCandidateCard({
       </div>
       <span className="mt-3 inline-flex rounded bg-[var(--lv-surface-raised)] px-2 py-1 text-xs text-teal-200">{candidateLabelList(candidate.labels, language).join(" · ")}</span>
       {candidate.summaryText.trim() ? <p className="mt-3 text-sm text-[var(--lv-text-secondary)]">{candidate.summaryText}</p> : null}
-      <div className={`mt-4 ${isExpanded ? "grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]" : ""}`}>
+      <div className="mt-4">
         <div>
           {isExpanded ? (
             <ProgressionEditorToolbar
@@ -1069,10 +1113,12 @@ export function ProgressionCandidateCard({
             language={language}
           />
         </div>
-        {isExpanded ? (
+        {isExpanded ? renderInspector(
           <ChordInspector
             slot={selectedSlot}
             language={language}
+            expanded={inspectorExpanded}
+            onExpandedChange={onInspectorExpandedChange}
             onPreview={(chord) => void previewChord(chord)}
             playbackSource={source}
             previewSound={previewSound}
@@ -1102,7 +1148,8 @@ export function ProgressionCandidateCard({
             onMergeNext={() => selectedSlot && nextSlot && commitStructuralChange(mergeEditableChords(editable, selectedSlot.id, nextSlot.id, "first"))}
             onDelete={() => selectedSlot && commitStructuralChange(deleteEditableChord(editable, selectedSlot.id))}
             onEditStart={stopCandidatePreview}
-          />
+          />,
+          inspectorHost,
         ) : null}
       </div>
       {showRomanNumerals && selectedRomanHint ? (
@@ -1167,6 +1214,50 @@ async function writeClipboardText(text: string): Promise<void> {
 
 function firstTimelineBeat(chords: readonly ChordTimelineItem[]): number {
   return chords.length === 0 ? 0 : Math.min(...chords.map(timelineStartBeat));
+}
+
+function renderInspector(inspector: ReactNode, host: HTMLElement | null | undefined) {
+  if (host === null) return null;
+  return host === undefined ? inspector : createPortal(inspector, host);
+}
+
+export function useStickyInspectorHeight(
+  host: HTMLElement | null,
+  active: boolean,
+): void {
+  useEffect(() => {
+    const property = "--lv-sticky-inspector-height";
+    const root = document.documentElement;
+    if (!host || !active) {
+      root.style.removeProperty(property);
+      return undefined;
+    }
+
+    const desktopQuery = window.matchMedia?.("(min-width: 1280px)");
+    const updateHeight = () => {
+      const desktop = desktopQuery?.matches ?? window.innerWidth >= 1280;
+      if (desktop) {
+        root.style.removeProperty(property);
+        return;
+      }
+      root.style.setProperty(property, `${Math.ceil(host.getBoundingClientRect().height)}px`);
+    };
+
+    const observer = typeof ResizeObserver === "undefined"
+      ? undefined
+      : new ResizeObserver(updateHeight);
+    observer?.observe(host);
+    window.addEventListener("resize", updateHeight);
+    desktopQuery?.addEventListener?.("change", updateHeight);
+    updateHeight();
+
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", updateHeight);
+      desktopQuery?.removeEventListener?.("change", updateHeight);
+      root.style.removeProperty(property);
+    };
+  }, [active, host]);
 }
 
 export function stopCapturePlayback(controller: PlaybackController = playbackController): void {

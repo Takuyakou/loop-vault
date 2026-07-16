@@ -74,4 +74,50 @@ describe("ChordInspector playback", () => {
     expect(driver.playChord).toHaveBeenCalledTimes(3);
     await act(async () => root.unmount());
   });
+
+  it("offers the first alternative and expansion controls while collapsed", async () => {
+    const alternative = { root: 7, quality: "dom7" as const, tensions: [], label: "G7" };
+    const slot: EditableChordSlot = {
+      id: "slot-collapsed",
+      position: { bar: 2, beat: 1, durationBeats: 4 },
+      originalChord: { root: 0, quality: "maj7", tensions: [], label: "Cmaj7" },
+      currentChord: { root: 0, quality: "maj7", tensions: [], label: "Cmaj7" },
+      alternatives: [{ chord: alternative, confidence: 0.72 }],
+      warnings: [],
+      edited: false,
+    };
+    const onApply = vi.fn();
+    const onExpandedChange = vi.fn();
+    const container = document.createElement("div");
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <ChordInspector
+          slot={slot}
+          language="ja"
+          expanded={false}
+          onExpandedChange={onExpandedChange}
+          onPreview={vi.fn()}
+          onApply={onApply}
+          onReset={vi.fn()}
+        />,
+      );
+    });
+
+    expect(container.querySelector("[data-collapsed-inspector]")?.textContent).toContain("G7");
+    expect(container.querySelector("[data-expanded-inspector]")?.hasAttribute("hidden")).toBe(true);
+    const apply = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent === "先頭候補を適用");
+    await act(async () => apply?.click());
+    expect(onApply).toHaveBeenCalledWith(alternative, "alternative");
+
+    const expand = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent === "展開");
+    expect(expand?.getAttribute("aria-expanded")).toBe("false");
+    await act(async () => expand?.click());
+    expect(onExpandedChange).toHaveBeenCalledWith(true);
+
+    await act(async () => root.unmount());
+  });
 });

@@ -21,3 +21,54 @@ body {
 button {
   font: inherit;
 }
+
+.lv-capture-content {
+  padding-bottom: calc(var(--lv-sticky-inspector-height, 0px) + 1.25rem);
+}
+
+.lv-responsive-inspector-host {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 30;
+  padding: 0 1rem max(1rem, env(safe-area-inset-bottom, 0px));
+}
+
+.lv-responsive-inspector-host[data-active="false"] {
+  display: none;
+}
+
+.lv-chord-inspector {
+  max-height: min(72vh, calc(100vh - 5rem));
+  overflow-y: auto;
+  box-shadow: 0 -12px 32px rgb(0 0 0 / 45%);
+}
+
+@media (min-width: 640px) {
+  .lv-responsive-inspector-host {
+    padding-right: 1.5rem;
+    padding-left: 1.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .lv-capture-content {
+    padding-bottom: 1.25rem;
+  }
+
+  .lv-responsive-inspector-host {
+    position: sticky;
+    top: 1rem;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    z-index: auto;
+    padding: 0;
+  }
+
+  .lv-chord-inspector {
+    max-height: calc(100vh - 2rem);
+    box-shadow: none;
+  }
+}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { parseChordLabel } from "../../domain/chords";
 import type {
   EditableChordSlot,
@@ -19,6 +19,8 @@ import { ChordStructureEditor } from "./ChordStructureEditor";
 interface ChordInspectorProps {
   slot?: EditableChordSlot;
   language: AppLanguage;
+  expanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
   onPreview: (chord: ChordSymbol) => void;
   playbackSource?: PlayingSource;
   previewSound?: PreviewSound;
@@ -44,6 +46,8 @@ interface ChordInspectorProps {
 export function ChordInspector({
   slot,
   language,
+  expanded = true,
+  onExpandedChange,
   onPreview,
   playbackSource,
   previewSound,
@@ -67,6 +71,8 @@ export function ChordInspector({
   const [draftChord, setDraftChord] = useState<ChordSymbol | undefined>(slot?.currentChord);
   const [draftSource, setDraftSource] = useState<"manual-label" | "alternative" | "structure-editor">("manual-label");
   const [error, setError] = useState<string>();
+  const toggleButtonRef = useRef<HTMLButtonElement>(null);
+  const wasExpandedRef = useRef(expanded);
 
   useEffect(() => {
     setDraftLabel(slot?.currentChord.label ?? "");
@@ -75,9 +81,16 @@ export function ChordInspector({
     setError(undefined);
   }, [slot?.id, slot?.currentChord]);
 
+  useEffect(() => {
+    if (wasExpandedRef.current && !expanded) {
+      toggleButtonRef.current?.focus();
+    }
+    wasExpandedRef.current = expanded;
+  }, [expanded]);
+
   if (!slot) {
     return (
-      <aside className="border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4">
+      <aside data-chord-inspector className="lv-chord-inspector border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4">
         <p className="text-sm text-[var(--lv-text-muted)]">
           {text.selectPrompt}
         </p>
@@ -86,6 +99,8 @@ export function ChordInspector({
   }
 
   const sourceBase = playbackSource ?? { kind: "capture", id: "chord-inspector" };
+  const firstAlternative = slot.alternatives[0];
+  const detailsId = `chord-inspector-details-${slot.id}`;
 
   function updateLabel(label: string) {
     onEditStart?.();
@@ -106,13 +121,76 @@ export function ChordInspector({
   }
 
   return (
-    <aside className="h-fit border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4 xl:sticky xl:top-4">
-      <p className="text-xs font-semibold uppercase text-[var(--lv-text-muted)]">
-        {text.selectedChord}
-      </p>
-      <p className="mt-2 text-sm text-[var(--lv-text-secondary)]">
-        {text.position(slot.position.bar, slot.position.beat)}
-      </p>
+    <aside
+      data-chord-inspector
+      data-inspector-state={expanded ? "expanded" : "collapsed"}
+      className="lv-chord-inspector h-fit border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4"
+      aria-label={text.inspector}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase text-[var(--lv-text-muted)]">
+            {text.selectedChord}
+          </p>
+          <p className="mt-1 truncate text-lg font-semibold text-teal-100">
+            {slot.currentChord.label}
+          </p>
+          <p className="mt-1 text-xs text-[var(--lv-text-secondary)]">
+            {text.position(slot.position.bar, slot.position.beat)}
+          </p>
+        </div>
+        {onExpandedChange ? (
+          <button
+            ref={toggleButtonRef}
+            type="button"
+            data-inspector-toggle
+            className="shrink-0 border border-[var(--lv-border-strong)] px-3 py-2 text-sm"
+            aria-expanded={expanded}
+            aria-controls={detailsId}
+            onClick={() => onExpandedChange(!expanded)}
+          >
+            {expanded ? text.collapse : text.expand}
+          </button>
+        ) : null}
+      </div>
+
+      {!expanded ? (
+        <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3" data-collapsed-inspector>
+          <div className="min-w-0">
+            <p className="text-xs text-[var(--lv-text-muted)]">{text.firstAlternative}</p>
+            <p className="mt-1 truncate text-sm font-semibold text-[var(--lv-text)]">
+              {firstAlternative?.chord.label ?? text.noAlternative}
+            </p>
+          </div>
+          <div className="flex flex-wrap justify-end gap-2">
+            {firstAlternative ? (
+              <PlayToggle
+                source={inspectorPlaybackSource(sourceBase, slot.id, "alternative")}
+                request={{ type: "chord", chord: firstAlternative.chord, sound: previewSound }}
+                playLabel={text.preview}
+                stopLabel={stopLabel}
+                className="border border-[var(--lv-border-strong)] px-3 py-2 text-sm"
+                onError={onPreviewError}
+                controller={controller}
+              />
+            ) : (
+              <button type="button" className="border border-[var(--lv-border-strong)] px-3 py-2 text-sm opacity-40" disabled>
+                {text.preview}
+              </button>
+            )}
+            <button
+              type="button"
+              className="bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950 disabled:opacity-40"
+              disabled={!firstAlternative || firstAlternative.chord.label === slot.currentChord.label}
+              onClick={() => firstAlternative && onApply(firstAlternative.chord, "alternative")}
+            >
+              {text.applyAlternative}
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      <div id={detailsId} hidden={!expanded} data-expanded-inspector>
       <dl className="mt-4 grid gap-3">
         <InspectorValue
           label={text.original}
@@ -174,9 +252,6 @@ export function ChordInspector({
           onKeyDown={(event) => {
             if (event.key === "Enter" && draftChord) {
               onApply(draftChord, draftSource);
-            }
-            if (event.key === "Escape") {
-              updateLabel(slot.currentChord.label);
             }
           }}
           aria-invalid={Boolean(error)}
@@ -255,6 +330,7 @@ export function ChordInspector({
           </button>
         </div>
       </div>
+      </div>
     </aside>
   );
 }
@@ -307,7 +383,7 @@ interface InspectorPreview {
 export function inspectorPlaybackSource(
   base: PlayingSource,
   slotId: string,
-  control: "original" | "current" | "draft",
+  control: "original" | "current" | "draft" | "alternative",
 ): PlayingSource {
   return {
     kind: base.kind,

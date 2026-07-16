@@ -50,23 +50,23 @@ export function ChordStructureEditor({
       </legend>
       <div className="mt-2 grid grid-cols-3 gap-2">
         <StructureSelect
-          label="Root"
+          label={text.root}
           value={String(chord.root)}
           onChange={(value) => update(Number(value), chord.quality, chord.bass)}
           options={noteNames.map((label, value) => ({ value: String(value), label }))}
         />
         <StructureSelect
-          label="Quality"
+          label={text.quality}
           value={chord.quality}
           onChange={(value) => update(chord.root, value as ChordQuality, chord.bass)}
           options={qualityOptions}
         />
         <StructureSelect
-          label="Bass"
+          label={text.bass}
           value={chord.bass === undefined ? "root" : String(chord.bass)}
           onChange={(value) => update(chord.root, chord.quality, value === "root" ? undefined : Number(value))}
           options={[
-            { value: "root", label: "Root" },
+            { value: "root", label: text.rootBass },
             ...noteNames.map((label, value) => ({ value: String(value), label })),
           ]}
         />

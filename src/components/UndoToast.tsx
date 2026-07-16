@@ -66,9 +66,10 @@ export function UndoToast({
       {actions.length > 0 ? (
         <div
           data-undo-toast-stack
-          className="fixed left-1/2 z-40 flex w-[min(92vw,480px)] -translate-x-1/2 flex-col gap-2 xl:left-4 xl:w-[min(36vw,480px)] xl:translate-x-0"
+          className="fixed left-1/2 z-40 flex w-[min(92vw,480px)] -translate-x-1/2 flex-col gap-2 overflow-y-auto overscroll-contain xl:left-4 xl:w-[min(36vw,480px)] xl:translate-x-0"
           style={{
-            bottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)",
+            bottom: "calc(var(--lv-sticky-inspector-height, 0px) + env(safe-area-inset-bottom, 0px) + 1rem)",
+            maxHeight: "calc(100vh - var(--lv-sticky-inspector-height, 0px) - env(safe-area-inset-bottom, 0px) - 2rem)",
           }}
         >
           {actions.map((action) => (
