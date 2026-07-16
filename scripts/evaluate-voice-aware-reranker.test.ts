@@ -25,6 +25,23 @@ const baseline = {
   boundaryRecall: 1,
 };
 
+const improved = {
+  ...baseline,
+  rootAt1: baseline.rootAt1 + 0.01,
+  rootAt3: baseline.rootAt3 + 0.01,
+  qualityAt1: baseline.qualityAt1 + 0.01,
+  qualityAt3: baseline.qualityAt3 + 0.01,
+  exactAt1: baseline.exactAt1 + 0.01,
+  exactAt3: baseline.exactAt3 + 0.01,
+  correctionProxyPerCase: baseline.correctionProxyPerCase - 0.1,
+  operationCorrectionCostMean: baseline.operationCorrectionCostMean - 0.1,
+};
+
+const passingDirtyMetrics = {
+  drums: { legacy: baseline, voiceAware: improved },
+  type0: { legacy: baseline, voiceAware: improved },
+};
+
 describe("voice-aware evaluation guard", () => {
   it("passes only when clean top-1, boundaries, and both correction metrics do not regress", () => {
     expect(cleanRegressionGuard(baseline, baseline, true)).toEqual({ passed: true, failures: [] });
@@ -63,7 +80,7 @@ describe("voice-aware evaluation guard", () => {
       drums: "improved",
       jitter: "regressed",
       sustain: "mixed",
-    });
+    }, passingDirtyMetrics);
 
     expect(result).toEqual({
       status: "failed",
@@ -93,7 +110,7 @@ describe("voice-aware evaluation guard", () => {
     const result = strictOverallGuard({ passed: true, failures: [] }, true, {
       combined: "unchanged",
       jitter: "unchanged",
-    });
+    }, {});
 
     expect(result).toMatchObject({
       status: "failed",
@@ -101,7 +118,9 @@ describe("voice-aware evaluation guard", () => {
       failures: [
         "dirty improvement requirement not met",
         "required dirty category did not improve: drums",
+        "required dirty metrics missing: drums",
         "required dirty category did not improve: type0",
+        "required dirty metrics missing: type0",
       ],
     });
   });
@@ -110,7 +129,7 @@ describe("voice-aware evaluation guard", () => {
     expect(strictOverallGuard({ passed: true, failures: [] }, true, {
       drums: "unchanged",
       type0: "improved",
-    })).toMatchObject({
+    }, passingDirtyMetrics)).toMatchObject({
       passed: false,
       failures: ["required dirty category did not improve: drums"],
     });
@@ -118,10 +137,25 @@ describe("voice-aware evaluation guard", () => {
     expect(strictOverallGuard({ passed: true, failures: [] }, true, {
       drums: "improved",
       type0: "unchanged",
-    })).toMatchObject({
+    }, passingDirtyMetrics)).toMatchObject({
       passed: false,
       failures: ["required dirty category did not improve: type0"],
     });
+  });
+
+  it("requires every dirty accuracy metric and both correction costs to improve", () => {
+    const unchangedExact = { ...improved, exactAt1: baseline.exactAt1 };
+    const unchangedCost = { ...improved, operationCorrectionCostMean: baseline.operationCorrectionCostMean };
+    const result = strictOverallGuard({ passed: true, failures: [] }, true, {
+      drums: "improved",
+      type0: "improved",
+    }, {
+      drums: { legacy: baseline, voiceAware: unchangedExact },
+      type0: { legacy: baseline, voiceAware: unchangedCost },
+    });
+
+    expect(result.failures).toContain("required dirty metric did not improve: drums Exact@1");
+    expect(result.failures).toContain("required dirty cost did not decrease: type0 operation correction cost");
   });
 
   it("passes only with clean, deterministic, non-regressing dirty improvement", () => {
@@ -129,7 +163,7 @@ describe("voice-aware evaluation guard", () => {
       type0: "improved",
       drums: "improved",
       combined: "unchanged",
-    });
+    }, passingDirtyMetrics);
 
     expect(result).toEqual({ status: "passed", passed: true, failures: [] });
     expect(shouldFailStrictExit(result, false)).toBe(false);
