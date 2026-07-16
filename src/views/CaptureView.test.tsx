@@ -558,7 +558,7 @@ describe("TimelineDetails", () => {
     );
 
     expect(markup).toContain("曲全体を再生");
-    expect(markup).toContain('aria-label="停止"');
+    expect(markup).not.toContain('aria-label="停止"');
     expect(markup).toContain('role="group"');
     expect(markup).toContain('aria-label="試聴音色"');
     expect(markup).toContain('aria-pressed="true"');
@@ -567,6 +567,49 @@ describe("TimelineDetails", () => {
     expect(markup).toContain("Cmaj7");
     expect(markup).toContain("Am7");
     expect(markup).toContain("<button");
+  });
+
+  it("uses the main playback button to stop without a separate square button", async () => {
+    const result: MidiProgressionAnalysis = {
+      fileName: "song.mid",
+      totalBars: 2,
+      bpm: 100,
+      fullTimeline: [chord("Cmaj7", 1), chord("Am7", 2)],
+      blockCandidates: [],
+      analyzedAt: "2026-07-15T00:00:00.000Z",
+      analyzerVersion: "test",
+    };
+    const onPreview = vi.fn(async () => undefined);
+    const onStop = vi.fn();
+    const container = document.createElement("div");
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <TimelineDetails
+          result={result}
+          copy={appCopy.ja}
+          language="ja"
+          previewSound="piano"
+          onPreviewSoundChange={vi.fn()}
+          onPreview={onPreview}
+          onPreviewChord={vi.fn()}
+          onStop={onStop}
+        />,
+      );
+    });
+
+    const playbackButton = () => container.querySelector<HTMLButtonElement>("button.lv-button-primary");
+    await act(async () => playbackButton()?.click());
+    expect(onPreview).toHaveBeenCalledTimes(1);
+    expect(playbackButton()?.textContent).toContain("停止");
+    expect(container.querySelectorAll("button.lv-button-ghost")).toHaveLength(0);
+
+    await act(async () => playbackButton()?.click());
+    expect(playbackButton()?.textContent).toContain("曲全体を再生");
+    expect(onStop).toHaveBeenCalledTimes(2);
+
+    await act(async () => root.unmount());
   });
 
   it("uses the same preview sound selector as progression candidates", async () => {
