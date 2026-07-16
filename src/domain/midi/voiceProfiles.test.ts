@@ -36,16 +36,12 @@ describe("Voice evidence profiles", () => {
     expect(evidence.tensionEvidence[7]).toBe(0);
   });
 
-  it("gives channel 9 and explicit GM percussive notes zero contribution", () => {
-    const roles = new Map<string, VoiceRoleProfile>([
-      ["0:0", profile("harmony")],
-      ["0:9", profile("harmony")],
-    ]);
-    const gmPercussion = { ...note(60, 0, 1), program: 112, programExplicit: true };
+  it("gives channel 9 zero contribution even when its resolved role is harmony", () => {
+    const roles = new Map<string, VoiceRoleProfile>([["0:9", profile("harmony")]]);
     const channelNine = note(36, 0, 1, 9);
 
     const evidence = buildVoiceAwarePitchProfile(
-      [gmPercussion, channelNine],
+      [channelNine],
       { startBeat: 0, endBeat: 1 },
       roles,
       new Map(),
@@ -53,6 +49,58 @@ describe("Voice evidence profiles", () => {
     );
 
     expect(Object.values(evidence).flat().every((value) => value === 0)).toBe(true);
+  });
+
+  it("lets a non-channel-9 GM percussion Voice re-enter evidence through a role override", () => {
+    const voice: Voice = {
+      ...makeVoice(),
+      explicitPrograms: [{ program: 112, noteCount: 1, durationTicks: 480 }],
+      dominantProgram: 112,
+      dominantProgramExplicit: true,
+    };
+    const input: VoiceFeatureInput = {
+      voice,
+      avgDurationBeats: 1,
+      stepwiseMotionRatio: 0,
+      repeatedPitchClassRatio: 0,
+      sustainRatio: 0,
+    };
+    const gmPercussion = {
+      ...note(60, 0, 1),
+      program: 112,
+      programExplicit: true,
+    };
+    const automaticRoles = buildVoiceRoleProfiles([voice], new Map([[voice.id, input]]));
+    const overriddenRoles = buildVoiceRoleProfiles(
+      [voice],
+      new Map([[voice.id, input]]),
+      { [voice.id]: "harmony" },
+    );
+    const automaticEvidence = buildVoiceAwarePitchProfile(
+      [gmPercussion],
+      { startBeat: 0, endBeat: 1 },
+      automaticRoles,
+      new Map(),
+      4,
+    );
+    const overriddenEvidence = buildVoiceAwarePitchProfile(
+      [gmPercussion],
+      { startBeat: 0, endBeat: 1 },
+      overriddenRoles,
+      new Map(),
+      4,
+    );
+
+    expect(automaticRoles.get(voice.id)).toMatchObject({
+      inference: { role: "percussion" },
+      contribution: contributionWeightsForRole("percussion"),
+    });
+    expect(Object.values(automaticEvidence).flat().every((value) => value === 0)).toBe(true);
+    expect(overriddenRoles.get(voice.id)).toMatchObject({
+      inference: { role: "harmony", confidence: 1 },
+      contribution: contributionWeightsForRole("harmony"),
+    });
+    expect(overriddenEvidence.qualityEvidence[0]).toBeGreaterThan(0);
   });
 
   it("builds deterministic profiles and applies non-percussion overrides", () => {

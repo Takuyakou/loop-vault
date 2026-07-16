@@ -1,5 +1,4 @@
 import { normalizePc } from "../chords";
-import { isGmPercussionProgram } from "./gmRoles";
 import { overlapWithSegment } from "./normalize";
 import type { OrnamentFeatures } from "./ornaments";
 import type {
@@ -59,7 +58,6 @@ export function buildVoiceAwarePitchProfile(
   const profile = emptyEvidenceProfile();
   for (const note of notes) {
     if (note.channel === undefined || note.channel === 9) continue;
-    if (note.programExplicit === true && isGmPercussionProgram(note.program)) continue;
     const overlap = overlapWithSegment(note, segment);
     if (overlap.overlapBeats <= 0) continue;
 

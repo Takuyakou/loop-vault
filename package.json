@@ -28,6 +28,7 @@
     "diagnose:midi-failures": "vite-node scripts/analyze-midi-failures.ts",
     "ablate:midi": "vite-node scripts/ablate-midi-analysis.ts",
     "eval:degrade": "vite-node scripts/generate-degraded-midi.ts --run-cli",
+    "eval:midi:voice-aware": "vite-node scripts/evaluate-voice-aware-reranker.ts --run-cli",
     "tauri": "tauri"
   },
   "dependencies": {

@@ -97,7 +97,10 @@ export function analyzeMidiLegacyBoundaryRerank(
     const profile = buildWeightedPitchProfile(notes, { startBeat, endBeat: startBeat + item.durationBeats }, roles, ornaments, barLengthBeats, weights);
     const hybridCandidates = scoreChordCandidates(profile, undefined);
     const legacyCandidate = scoreStructuredChordCandidate(profile, item.chord, undefined);
-    return timelineItem(item, chooseLegacyBoundaryCandidate(legacyCandidate, hybridCandidates, thresholds));
+    return materializeRerankedTimelineItem(
+      item,
+      chooseLegacyBoundaryCandidate(legacyCandidate, hybridCandidates, thresholds),
+    );
   });
   return {
     ...(options.sourceAssetId ? { sourceAssetId: options.sourceAssetId } : {}),
@@ -127,7 +130,17 @@ function emptyAnalysis(data: ReturnType<typeof parseMidi>, options: AnalyzeMidiO
   };
 }
 
-function timelineItem(legacy: ChordTimelineItem, decision: RerankDecision): ChordTimelineItem {
+export function materializeRerankedTimelineItem(
+  legacy: ChordTimelineItem,
+  decision: RerankDecision,
+  warningLabels: {
+    replaced: string;
+    retained: string;
+  } = {
+    replaced: "hybrid-reranked",
+    retained: "legacy-boundary-retained",
+  },
+): ChordTimelineItem {
   const alternatives = decision.candidates
     .filter((candidate) => candidate.chord.label !== decision.selected.chord.label)
     .sort((left, right) => {
@@ -141,7 +154,10 @@ function timelineItem(legacy: ChordTimelineItem, decision: RerankDecision): Chor
     chord: decision.selected.chord,
     confidence: decision.replacedLegacy ? Math.min(0.89, 0.68 + decision.scoreLead * 0.3) : legacy.confidence,
     alternatives: alternatives.map((candidate, index) => ({ chord: candidate.chord, confidence: index === 0 ? 0.6 : 0.48 })),
-    warnings: [...new Set([...legacy.warnings, decision.replacedLegacy ? "hybrid-reranked" : "legacy-boundary-retained"])],
+    warnings: [...new Set([
+      ...legacy.warnings,
+      decision.replacedLegacy ? warningLabels.replaced : warningLabels.retained,
+    ])],
   };
 }
 
