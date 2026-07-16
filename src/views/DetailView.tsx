@@ -1,6 +1,7 @@
 import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
 import { openPath, revealItemInDir } from "@tauri-apps/plugin-opener";
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
+import { Modal } from "../components/Modal";
 import { canOpenAssetPath, openableAssetExtensions } from "../domain/assetSecurity";
 import { statusLabel } from "../domain/displayLabels";
 import { formatProgressionText } from "../domain/progressionText";
@@ -92,6 +93,9 @@ export function DetailView({
   const [assetDraft, setAssetDraft] = useState<Asset>({ id: "", type: "flp", path: "", memo: "" });
   const [pendingInactiveStatus, setPendingInactiveStatus] = useState<"hold" | "abandoned" | null>(null);
   const [statusReason, setStatusReason] = useState("");
+  const [pendingPipelineTransition, setPendingPipelineTransition] = useState<{ to: Status; options: TransitionOptions }>();
+  const statusReasonRef = useRef<HTMLTextAreaElement>(null);
+  const pipelineCancelRef = useRef<HTMLButtonElement>(null);
   const placeholder = nextPlaceholders[Math.abs(hashString(idea.id)) % nextPlaceholders.length];
 
   useEffect(() => setNextDraft(idea.nextAction.text), [idea.id, idea.nextAction.text]);
@@ -130,15 +134,34 @@ export function DetailView({
 
   function commitStatus(to: Status, options: TransitionOptions = {}) {
     if (pipeline.includes(to) && idea.nextAction.text.trim() && to !== idea.status) {
-      const keep = window.confirm(language === "ja" ? "現在のNext Actionを次のステージへ持ち越しますか？" : "Carry the current Next Action into the next stage?");
-      if (!keep) {
-        updateNextAction(idea.id, "", new Date());
-      }
+      setPendingPipelineTransition({ to, options });
+      return false;
     }
+    return performStatusTransition(to, options);
+  }
+
+  function performStatusTransition(to: Status, options: TransitionOptions = {}) {
     const result = transitionIdea(idea.id, to, new Date(), options);
     if (!result.ok) setToast(result.error.message);
     if (result.ok && to === "done") setToast(language === "ja" ? "Done。完成として記録しました。" : "Done. Marked as finished.");
     return result.ok;
+  }
+
+  function resolvePipelineTransition(keepNextAction: boolean) {
+    if (!pendingPipelineTransition) return;
+    const moved = performStatusTransition(
+      pendingPipelineTransition.to,
+      pendingPipelineTransition.options,
+    );
+    if (moved && !keepNextAction) {
+      updateNextAction(idea.id, "", new Date());
+    }
+    setPendingPipelineTransition(undefined);
+  }
+
+  function closeInactiveStatusDialog() {
+    setPendingInactiveStatus(null);
+    setStatusReason("");
   }
 
   function submitInactiveStatus(event: FormEvent) {
@@ -267,7 +290,8 @@ export function DetailView({
   }
 
   return (
-    <div className="grid gap-5 py-5 lg:grid-cols-[0.9fr_1.1fr]">
+    <>
+      <div className="grid gap-5 py-5 lg:grid-cols-[0.9fr_1.1fr]">
       <section className="space-y-5">
         <Panel>
           <div className="flex items-start justify-between gap-4">
@@ -281,41 +305,6 @@ export function DetailView({
               </button>
             ))}
           </div>
-          {pendingInactiveStatus ? (
-            <form className="mt-4 border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] p-4" onSubmit={submitInactiveStatus}>
-              <label className="block text-sm font-semibold" htmlFor="status-reason">
-                {labelStatus(pendingInactiveStatus, language)}: {copy.detail.statusReason}
-              </label>
-              <p className="mt-1 text-xs text-[var(--lv-text-muted)]">{copy.detail.statusReasonHelp}</p>
-              <textarea
-                id="status-reason"
-                className={`${inputClass} mt-3 min-h-24`}
-                value={statusReason}
-                maxLength={500}
-                onChange={(event) => setStatusReason(event.target.value)}
-                placeholder={copy.detail.statusReasonPlaceholder}
-                autoFocus
-              />
-              <div className="mt-2 flex items-center justify-between gap-3">
-                <span className="text-xs text-[var(--lv-text-muted)]">{statusReason.length}/500</span>
-                <div className="flex gap-2">
-                  <button
-                    className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm"
-                    type="button"
-                    onClick={() => {
-                      setPendingInactiveStatus(null);
-                      setStatusReason("");
-                    }}
-                  >
-                    {copy.common.cancel}
-                  </button>
-                  <button className="rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" type="submit">
-                    {copy.detail.confirmStatus(labelStatus(pendingInactiveStatus, language))}
-                  </button>
-                </div>
-              </div>
-            </form>
-          ) : null}
           <button className="mt-5 rounded border border-red-500/50 px-3 py-2 text-sm text-red-200" onClick={() => requestDelete(idea)}>{copy.common.delete}</button>
         </Panel>
 
@@ -452,6 +441,85 @@ export function DetailView({
           </div>
         </Panel>
       </section>
-    </div>
+      </div>
+      {pendingInactiveStatus ? (
+        <Modal
+          ariaLabelledBy="status-reason-title"
+          ariaDescribedBy="status-reason-help"
+          initialFocusRef={statusReasonRef}
+          onClose={closeInactiveStatusDialog}
+          closeOnBackdrop={!statusReason.trim()}
+          panelClassName="w-full max-w-md p-5"
+        >
+          <form onSubmit={submitInactiveStatus}>
+            <h2 id="status-reason-title" className="text-xl font-semibold">
+              {labelStatus(pendingInactiveStatus, language)}: {copy.detail.statusReason}
+            </h2>
+            <p id="status-reason-help" className="mt-2 text-sm text-[var(--lv-text-muted)]">{copy.detail.statusReasonHelp}</p>
+            <textarea
+              ref={statusReasonRef}
+              id="status-reason"
+              className={`${inputClass} mt-4 min-h-28`}
+              value={statusReason}
+              maxLength={500}
+              onChange={(event) => setStatusReason(event.target.value)}
+              placeholder={copy.detail.statusReasonPlaceholder}
+            />
+            <div className="mt-3 flex items-center justify-between gap-3">
+              <span className="text-xs text-[var(--lv-text-muted)]">{statusReason.length}/500</span>
+              <div className="flex gap-2">
+                <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" type="button" onClick={closeInactiveStatusDialog}>
+                  {copy.common.cancel}
+                </button>
+                <button className="rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" type="submit">
+                  {copy.detail.confirmStatus(labelStatus(pendingInactiveStatus, language))}
+                </button>
+              </div>
+            </div>
+          </form>
+        </Modal>
+      ) : null}
+      {pendingPipelineTransition ? (
+        <Modal
+          ariaLabelledBy="pipeline-transition-title"
+          ariaDescribedBy="pipeline-transition-description"
+          initialFocusRef={pipelineCancelRef}
+          onClose={() => setPendingPipelineTransition(undefined)}
+          panelClassName="w-full max-w-md p-5"
+          layerClassName="z-[70]"
+        >
+          <h2 id="pipeline-transition-title" className="text-xl font-semibold">
+            {language === "ja" ? "Next Actionを持ち越しますか？" : "Carry the Next Action?"}
+          </h2>
+          <p id="pipeline-transition-description" className="mt-3 text-sm leading-6 text-[var(--lv-text-secondary)]">
+            {language === "ja" ? "現在のNext Actionを次のステージでも続けるか選んでください。" : "Choose whether to keep the current Next Action in the next stage."}
+          </p>
+          <div className="mt-6 flex flex-wrap justify-end gap-2">
+            <button
+              ref={pipelineCancelRef}
+              type="button"
+              className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm"
+              onClick={() => setPendingPipelineTransition(undefined)}
+            >
+              {copy.common.cancel}
+            </button>
+            <button
+              type="button"
+              className="rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950"
+              onClick={() => resolvePipelineTransition(true)}
+            >
+              {language === "ja" ? "持ち越して進む" : "Keep and continue"}
+            </button>
+            <button
+              type="button"
+              className="rounded border border-red-400/50 px-3 py-2 text-sm text-red-100"
+              onClick={() => resolvePipelineTransition(false)}
+            >
+              {language === "ja" ? "空にして進む" : "Clear and continue"}
+            </button>
+          </div>
+        </Modal>
+      ) : null}
+    </>
   );
 }

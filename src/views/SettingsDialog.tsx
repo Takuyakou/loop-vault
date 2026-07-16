@@ -1,7 +1,9 @@
 import { appDataDir } from "@tauri-apps/api/path";
 import { open as openFileDialog, save as saveFileDialog } from "@tauri-apps/plugin-dialog";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ConfirmDialog } from "../components/ConfirmDialog";
+import { Modal } from "../components/Modal";
 import type { AppCopy, AppLanguage } from "../i18n";
 import { defaultVaultStore } from "../store/defaultVaultStore";
 import {
@@ -21,6 +23,13 @@ import {
 const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
 async function writeClipboardText(text: string): Promise<void> { if (!navigator.clipboard?.writeText) throw new Error("Clipboard is not available."); await navigator.clipboard.writeText(text); }
 function timestampForFile(date: Date): string { const year = date.getFullYear(); const month = (date.getMonth() + 1).toString().padStart(2, "0"); const day = date.getDate().toString().padStart(2, "0"); const hour = date.getHours().toString().padStart(2, "0"); const minute = date.getMinutes().toString().padStart(2, "0"); return year + month + day + "-" + hour + minute; }
+
+interface PendingConfirmation {
+  title: string;
+  description: string;
+  confirmLabel: string;
+  action: () => Promise<void>;
+}
 
 export function SettingsDialog({
   monthlyGoal,
@@ -61,6 +70,10 @@ export function SettingsDialog({
   const [importMode, setImportMode] = useState<"replace" | "merge">("merge");
   const [showAllBackups, setShowAllBackups] = useState(false);
   const [feedbackEnabled, setFeedbackEnabled] = useState(isAnalysisFeedbackEnabled);
+  const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation>();
+  const [confirmationBusy, setConfirmationBusy] = useState(false);
+  const confirmationLockRef = useRef(false);
+  const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!("__TAURI_INTERNALS__" in window)) {
@@ -94,8 +107,22 @@ export function SettingsDialog({
       filters: [{ name: "JSON", extensions: ["json"] }],
     });
     if (typeof target !== "string") return;
-    const ok = await importVault(target, importMode);
-    setToast(ok ? copy.toast.imported : copy.toast.importFailed);
+    const runImport = async () => {
+      const ok = await importVault(target, importMode);
+      setToast(ok ? copy.toast.imported : copy.toast.importFailed);
+    };
+    if (importMode === "replace") {
+      setPendingConfirmation({
+        title: language === "ja" ? "Vaultを置き換え" : "Replace Vault",
+        description: language === "ja"
+          ? "現在のVaultを選択したファイルの内容で置き換えます。この操作を続けますか？"
+          : "Replace the current Vault with the selected file?",
+        confirmLabel: language === "ja" ? "置き換える" : "Replace",
+        action: runImport,
+      });
+      return;
+    }
+    await runImport();
   }
 
   async function openDataFolder() {
@@ -115,11 +142,17 @@ export function SettingsDialog({
     }
   }
 
-  async function restore(name: string) {
-    if (!window.confirm(copy.settings.restoreConfirm(name))) return;
-    await restoreBackup(name);
-    await refreshBackups();
-    setToast(copy.toast.restoreDone);
+  function restore(name: string) {
+    setPendingConfirmation({
+      title: language === "ja" ? "バックアップを復元" : "Restore backup",
+      description: copy.settings.restoreConfirm(name),
+      confirmLabel: copy.common.restore,
+      action: async () => {
+        await restoreBackup(name);
+        await refreshBackups();
+        setToast(copy.toast.restoreDone);
+      },
+    });
   }
 
   function updateFeedbackEnabled(enabled: boolean) {
@@ -127,10 +160,16 @@ export function SettingsDialog({
     setAnalysisFeedbackEnabled(enabled);
   }
 
-  async function clearFeedback() {
-    if (!window.confirm(language === "ja" ? "このPCに保存した解析修正ログを削除しますか？" : "Delete the analysis correction log stored on this PC?")) return;
-    await deleteAnalysisFeedback();
-    setToast(language === "ja" ? "解析修正ログを削除しました。" : "Deleted the analysis correction log.");
+  function clearFeedback() {
+    setPendingConfirmation({
+      title: language === "ja" ? "修正ログを削除" : "Delete correction log",
+      description: language === "ja" ? "このPCに保存した解析修正ログを削除しますか？" : "Delete the analysis correction log stored on this PC?",
+      confirmLabel: copy.common.delete,
+      action: async () => {
+        await deleteAnalysisFeedback();
+        setToast(language === "ja" ? "解析修正ログを削除しました。" : "Deleted the analysis correction log.");
+      },
+    });
   }
 
   async function runEvaluationAction(action: () => Promise<void>, successJa: string, successEn: string) {
@@ -139,6 +178,37 @@ export function SettingsDialog({
       setToast(language === "ja" ? successJa : successEn);
     } catch (actionError) {
       setToast(actionError instanceof Error ? actionError.message : (language === "ja" ? "操作に失敗しました。" : "The operation failed."));
+    }
+  }
+
+  function confirmEvaluationDeletion(
+    action: () => Promise<void>,
+    titleJa: string,
+    titleEn: string,
+    successJa: string,
+    successEn: string,
+  ) {
+    const title = language === "ja" ? titleJa : titleEn;
+    setPendingConfirmation({
+      title,
+      description: language === "ja" ? `${title}。この操作は元に戻せません。続けますか？` : `${title}. This cannot be undone. Continue?`,
+      confirmLabel: copy.common.delete,
+      action: () => runEvaluationAction(action, successJa, successEn),
+    });
+  }
+
+  async function confirmPendingAction() {
+    if (!pendingConfirmation || confirmationLockRef.current) return;
+    confirmationLockRef.current = true;
+    setConfirmationBusy(true);
+    try {
+      await pendingConfirmation.action();
+      setPendingConfirmation(undefined);
+    } catch (actionError) {
+      setToast(actionError instanceof Error ? actionError.message : (language === "ja" ? "操作に失敗しました。" : "The operation failed."));
+    } finally {
+      confirmationLockRef.current = false;
+      setConfirmationBusy(false);
     }
   }
 
@@ -152,11 +222,16 @@ export function SettingsDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-40 grid place-items-center overflow-y-auto bg-black/70 px-4 py-6">
-      <div className="w-full max-w-4xl border border-[var(--lv-border-strong)] bg-[var(--lv-surface)] p-5 shadow-2xl">
+    <>
+      <Modal
+        ariaLabelledBy="settings-dialog-title"
+        initialFocusRef={closeRef}
+        onClose={onClose}
+        panelClassName="w-full max-w-4xl p-5"
+      >
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-xl font-semibold">{copy.settings.title}</h2>
-          <button className="rounded px-2 py-1 text-[var(--lv-text-muted)]" onClick={onClose}>{copy.common.close}</button>
+          <h2 id="settings-dialog-title" className="text-xl font-semibold">{copy.settings.title}</h2>
+          <button ref={closeRef} className="rounded px-2 py-1 text-[var(--lv-text-muted)]" onClick={onClose}>{copy.common.close}</button>
         </div>
         <div className="mt-5 grid gap-5 lg:grid-cols-2">
           <section className="border border-[var(--lv-border)] bg-[var(--lv-bg)] p-4">
@@ -264,16 +339,27 @@ export function SettingsDialog({
           <div className="mt-4 flex flex-wrap gap-2">
             <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2" onClick={() => void runEvaluationAction(openRealEvaluationFolder, "評価データの保存先を開きました。", "Opened the evaluation data folder.")}>{language === "ja" ? "保存先を開く" : "Open folder"}</button>
             <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2" onClick={() => void rebuildSourceIndex()}>{language === "ja" ? "source indexを再構築" : "Rebuild source index"}</button>
-            <button className="rounded border border-red-400/50 px-3 py-2 text-red-100" onClick={() => void runEvaluationAction(deleteDifferenceReviews, "差分レビュー履歴を削除しました。", "Deleted difference review history.")}>{language === "ja" ? "レビュー履歴を削除" : "Delete reviews"}</button>
-            <button className="rounded border border-red-400/50 px-3 py-2 text-red-100" onClick={() => void runEvaluationAction(deletePromotedCorrections, "修正ログ昇格データを削除しました。", "Deleted promoted correction data.")}>{language === "ja" ? "昇格データを削除" : "Delete promoted data"}</button>
-            <button className="rounded border border-red-400/50 px-3 py-2 text-red-100" onClick={() => void runEvaluationAction(deleteRealEvaluationData, "実MIDI評価データを削除しました。", "Deleted real MIDI evaluation data.")}>{language === "ja" ? "評価データを削除" : "Delete evaluation data"}</button>
+            <button className="rounded border border-red-400/50 px-3 py-2 text-red-100" onClick={() => confirmEvaluationDeletion(deleteDifferenceReviews, "差分レビュー履歴を削除", "Delete difference reviews", "差分レビュー履歴を削除しました。", "Deleted difference review history.")}>{language === "ja" ? "レビュー履歴を削除" : "Delete reviews"}</button>
+            <button className="rounded border border-red-400/50 px-3 py-2 text-red-100" onClick={() => confirmEvaluationDeletion(deletePromotedCorrections, "修正ログ昇格データを削除", "Delete promoted corrections", "修正ログ昇格データを削除しました。", "Deleted promoted correction data.")}>{language === "ja" ? "昇格データを削除" : "Delete promoted data"}</button>
+            <button className="rounded border border-red-400/50 px-3 py-2 text-red-100" onClick={() => confirmEvaluationDeletion(deleteRealEvaluationData, "実MIDI評価データを削除", "Delete real MIDI evaluation data", "実MIDI評価データを削除しました。", "Deleted real MIDI evaluation data.")}>{language === "ja" ? "評価データを削除" : "Delete evaluation data"}</button>
           </div>
         </section>
         <section className="mt-5 border border-[var(--lv-border)] bg-[var(--lv-bg)] p-4 text-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--lv-accent)]">{language === "ja" ? "情報" : "Info"}</p>
           <div className="mt-3 grid gap-2 text-[var(--lv-text-muted)] sm:grid-cols-3"><p>Loop Vault</p><p>{language === "ja" ? "アプリ形式: 1" : "App format: 1"}</p><p>{language === "ja" ? "データ形式: 1" : "Data format: 1"}</p></div>
         </section>
-      </div>
-    </div>
+      </Modal>
+      <ConfirmDialog
+        open={Boolean(pendingConfirmation)}
+        title={pendingConfirmation?.title ?? ""}
+        description={pendingConfirmation?.description ?? ""}
+        confirmLabel={pendingConfirmation?.confirmLabel ?? copy.common.update}
+        cancelLabel={copy.common.cancel}
+        onCancel={() => setPendingConfirmation(undefined)}
+        onConfirm={() => void confirmPendingAction()}
+        tone="danger"
+        busy={confirmationBusy}
+      />
+    </>
   );
 }
