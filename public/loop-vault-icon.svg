@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title">
+  <title id="title">Loop Vault</title>
+  <rect width="1024" height="1024" rx="224" fill="#0b0e14"/>
+  <rect x="44" y="44" width="936" height="936" rx="184" fill="none" stroke="#26303e" stroke-width="28"/>
+
+  <circle cx="512" cy="512" r="330" fill="#11161f" stroke="#26303e" stroke-width="54"/>
+  <circle cx="512" cy="512" r="330" fill="none" stroke="#46dfc7" stroke-width="46"/>
+
+  <path d="M774 234l104 15-63 84z" fill="#46dfc7"/>
+  <path d="M250 790l-104-15 63-84z" fill="#46dfc7"/>
+
+  <rect x="285" y="246" width="126" height="72" rx="24" fill="#f5f7fa"/>
+  <rect x="628" y="706" width="126" height="72" rx="24" fill="#f5f7fa"/>
+  <rect x="713" y="354" width="72" height="126" rx="24" fill="#e6ae4a"/>
+  <rect x="239" y="544" width="72" height="126" rx="24" fill="#46dfc7"/>
+
+  <circle cx="512" cy="512" r="204" fill="#171d28" stroke="#3a4658" stroke-width="30"/>
+  <circle cx="512" cy="512" r="128" fill="#0b0e14" stroke="#46dfc7" stroke-width="22"/>
+  <circle cx="512" cy="478" r="38" fill="#e6ae4a"/>
+  <path d="M487 500h50l25 112H462z" fill="#e6ae4a"/>
+
+  <circle cx="512" cy="512" r="286" fill="none" stroke="#8792a4" stroke-width="12" stroke-dasharray="12 52" opacity="0.62"/>
+</svg>
