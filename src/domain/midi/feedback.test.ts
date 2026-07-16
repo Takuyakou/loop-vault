@@ -27,5 +27,8 @@ describe("MIDI correction feedback", () => {
     expect(buildCorrectionEvents(candidate, edited, analysis)).toMatchObject([
       { detected: { primary: "C", alternatives: ["Dm"] }, corrected: "Dm", editMethod: "alternative-selection" },
     ]);
+    expect(buildCorrectionEvents(candidate, edited, analysis, ["structure-editor"])).toMatchObject([
+      { corrected: "Dm", editMethod: "structure-editor" },
+    ]);
   });
 });

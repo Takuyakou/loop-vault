@@ -1,4 +1,5 @@
 import type { MidiProgressionAnalysis, ProgressionBlockCandidate } from "../types";
+import type { ProgressionEditSource } from "../progressionEditing/types";
 export { fingerprintMidiBytes, legacyFingerprintMidiBytes } from "./fingerprint";
 
 export interface MidiChordCorrectionEvent {
@@ -15,7 +16,7 @@ export interface MidiChordCorrectionEvent {
     alternatives: string[];
   };
   corrected: string;
-  editMethod: "manual-label" | "alternative-selection";
+  editMethod: "manual-label" | "alternative-selection" | "structure-editor";
   keyContext?: string;
   previousChord?: string;
   nextChord?: string;
@@ -25,6 +26,7 @@ export function buildCorrectionEvents(
   original: ProgressionBlockCandidate,
   edited: ProgressionBlockCandidate,
   analysis: MidiProgressionAnalysis,
+  editSources?: readonly (ProgressionEditSource | undefined)[],
 ): MidiChordCorrectionEvent[] {
   const sourceFingerprint = analysis.sourceFingerprint;
   if (!sourceFingerprint) return [];
@@ -45,12 +47,22 @@ export function buildCorrectionEvents(
         alternatives: detected.alternatives.map((item) => item.chord.label),
       },
       corrected: corrected.chord.label,
-      editMethod: detected.alternatives.some((item) => item.chord.label === corrected.chord.label)
-        ? "alternative-selection" as const
-        : "manual-label" as const,
+      editMethod: correctionMethod(
+        editSources?.[index],
+        detected.alternatives.some((item) => item.chord.label === corrected.chord.label),
+      ),
       ...(analysis.detectedKey ? { keyContext: analysis.detectedKey } : {}),
       ...(original.chords[index - 1] ? { previousChord: original.chords[index - 1].chord.label } : {}),
       ...(original.chords[index + 1] ? { nextChord: original.chords[index + 1].chord.label } : {}),
     }];
   });
+}
+
+function correctionMethod(
+  source: ProgressionEditSource | undefined,
+  matchesAlternative: boolean,
+): MidiChordCorrectionEvent["editMethod"] {
+  if (source === "structure-editor") return "structure-editor";
+  if (source === "alternative") return "alternative-selection";
+  return matchesAlternative ? "alternative-selection" : "manual-label";
 }

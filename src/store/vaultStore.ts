@@ -92,7 +92,7 @@ export interface VaultStoreState {
     block: SavedProgressionBlock | ProgressionBlockCandidate,
     analysis?: MidiProgressionAnalysis,
     metadata?: ProgressionSaveMetadata,
-  ) => void;
+  ) => boolean;
   removeProgressionBlock: (ideaId: string, blockId: string) => void;
   transitionIdea: (id: string, to: Status, now?: Date) => TransitionResult;
   updateNextAction: (id: string, text: string, now?: Date) => void;
@@ -307,6 +307,9 @@ export function createVaultStore(
 
       appendBlockToIdea(ideaId, block, analysis, metadata) {
         const currentIdea = get().ideas.find((idea) => idea.id === ideaId);
+        if (!currentIdea) {
+          return false;
+        }
         const existingAsset = metadata?.sourcePath
           ? currentIdea?.assets.find((asset) => asset.type === "midi" && asset.path === metadata.sourcePath)
           : undefined;
@@ -316,7 +319,7 @@ export function createVaultStore(
           idFactory,
           now,
         }, metadata);
-        applyVaultChange((vault) => ({
+        return applyVaultChange((vault) => ({
           ...vault,
           ideas: vault.ideas.map((idea) =>
             idea.id === ideaId
@@ -424,14 +427,14 @@ export function createVaultStore(
       },
 
       setLanguage(language) {
-        applyVaultChange((vault) => ({
+        return applyVaultChange((vault) => ({
           ...vault,
           settings: { ...vault.settings, language },
         }));
       },
 
       setShowRomanNumerals(showRomanNumerals) {
-        applyVaultChange((vault) => ({
+        return applyVaultChange((vault) => ({
           ...vault,
           settings: { ...vault.settings, showRomanNumerals },
         }));

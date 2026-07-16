@@ -398,7 +398,7 @@ describe("vault store", () => {
     };
     await store.getState().initialize();
 
-    store.getState().appendBlockToIdea(generatedId, candidate, {
+    const appended = store.getState().appendBlockToIdea(generatedId, candidate, {
       fileName: "capture.mid",
       sourceFingerprint: `sha256-${"a".repeat(64)}`,
       totalBars: 4,
@@ -413,6 +413,8 @@ describe("vault store", () => {
       userEdited: true,
       userVerified: true,
     });
+    expect(appended).toBe(true);
+    expect(store.getState().appendBlockToIdea("missing-idea", candidate)).toBe(false);
     await store.getState().flush();
 
     expect(repository.saved).toHaveLength(1);

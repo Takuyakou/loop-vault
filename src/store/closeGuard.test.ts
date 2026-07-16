@@ -17,7 +17,7 @@ function state(overrides: Partial<VaultStoreState>): VaultStoreState {
     createIdeaFromDraft: () => undefined,
     updateIdea: () => undefined,
     deleteIdea: () => undefined,
-    appendBlockToIdea: () => undefined,
+    appendBlockToIdea: () => false,
     removeProgressionBlock: () => undefined,
     transitionIdea: () => ({
       ok: false,

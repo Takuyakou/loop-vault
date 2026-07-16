@@ -12,6 +12,7 @@ import {
   canUndoProgressionEdit,
   createEditableProgression,
   hasProgressionEdits,
+  progressionEditSummary,
   redoProgressionEdit,
   replaceEditableChord,
   resetAllEditableChords,
@@ -19,6 +20,7 @@ import {
   selectEditableSlot,
   undoProgressionEdit,
 } from "../domain/progressionEditing";
+import type { EditableProgression, ProgressionEditSummaryItem } from "../domain/progressionEditing";
 import { buildCorrectionEvents } from "../domain/midi";
 import { candidateLabelList } from "../domain/displayLabels";
 import { romanNumeralHint } from "../domain/harmony/romanNumerals";
@@ -41,6 +43,7 @@ import type { PreviewSound } from "../audio/chordPreview";
 import { ChordInspector } from "../components/progression-editing/ChordInspector";
 import { EditableProgressionGrid } from "../components/progression-editing/EditableProgressionGrid";
 import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
+import { ProgressionEditSummary } from "../components/progression-editing/ProgressionEditSummary";
 
 interface CaptureViewProps {
   ideas: SongIdea[];
@@ -66,7 +69,7 @@ interface CaptureViewProps {
     block: ProgressionBlockCandidate,
     analysis?: MidiProgressionAnalysis,
     metadata?: ProgressionSaveMetadata,
-  ) => void;
+  ) => boolean;
   updateIdea: (id: string, changes: Partial<SongIdea>) => void;
   setToast: (toast: string) => void;
   copy: AppCopy;
@@ -92,7 +95,12 @@ export function CaptureView(props: CaptureViewProps) {
   } = props;
   const [isDraggingMidi, setIsDraggingMidi] = useState(false);
   const [expandedCandidateId, setExpandedCandidateId] = useState<string>();
-  const [saveDraft, setSaveDraft] = useState<{ candidate: ProgressionBlockCandidate; title: string; userEdited: boolean }>();
+  const [saveDraft, setSaveDraft] = useState<{
+    candidate: ProgressionBlockCandidate;
+    original: ProgressionBlockCandidate;
+    editable: EditableProgression;
+    title: string;
+  }>();
   const [sourcePath, setSourcePath] = useState<string>();
   const [previewSound, setPreviewSound] = useState<PreviewSound>("piano");
   const result = analysis.result;
@@ -260,8 +268,11 @@ export function CaptureView(props: CaptureViewProps) {
     title: string,
     nextAction: string,
     userVerified: boolean,
-    userEdited: boolean,
-  ) {
+    original: ProgressionBlockCandidate,
+    editable: EditableProgression,
+  ): boolean {
+    const corrections = correctionEvents(original, candidate, editable);
+    const userEdited = hasProgressionEdits(editable);
     const id = createIdeaFromDraft({
       title,
       status: "idea",
@@ -273,35 +284,63 @@ export function CaptureView(props: CaptureViewProps) {
       progressionAnalysis: analysis.result,
       progressionMetadata: { sourcePath, userEdited, userVerified },
     });
-    setToast(id ? (language === "ja" ? "コード進行をVaultに保存しました。" : "Saved the progression to the Vault.") : (language === "ja" ? "Ideaを作成できませんでした。" : "Could not create the idea."));
+    if (id) {
+      persistCorrectionEvents(corrections);
+      setToast(language === "ja" ? "コード進行をVaultに保存しました。" : "Saved the progression to the Vault.");
+      return true;
+    }
+    setToast(language === "ja" ? "Ideaを作成できませんでした。" : "Could not create the idea.");
+    return false;
   }
 
-  function recordCorrections(
+  function correctionEvents(
     original: ProgressionBlockCandidate,
     edited: ProgressionBlockCandidate,
-  ): boolean {
+    editable: EditableProgression,
+  ) {
     if (!analysis.result) {
+      return [];
+    }
+    return buildCorrectionEvents(
+      original,
+      edited,
+      analysis.result,
+      editable.slots.map((slot) => slot.editSource),
+    );
+  }
+
+  function persistCorrectionEvents(events: ReturnType<typeof buildCorrectionEvents>) {
+    if (events.length === 0) {
+      return;
+    }
+    void appendAnalysisFeedback(events)
+      .catch((error) => setToast(error instanceof Error ? error.message : "Could not save analysis feedback."));
+  }
+
+  function appendExisting(
+    candidate: ProgressionBlockCandidate,
+    original: ProgressionBlockCandidate,
+    editable: EditableProgression,
+    ideaId: string,
+    userVerified: boolean,
+  ): boolean {
+    if (!ideaId) {
+      setToast(language === "ja" ? "追加先のIdeaを選んでください。" : "Choose an idea first.");
       return false;
     }
 
-    const corrections = buildCorrectionEvents(original, edited, analysis.result);
-    void appendAnalysisFeedback(corrections)
-      .catch((error) => setToast(error instanceof Error ? error.message : "Could not save analysis feedback."));
-    return corrections.length > 0;
-  }
-
-  function appendExisting(candidate: ProgressionBlockCandidate, ideaId: string, userVerified: boolean) {
-    if (!ideaId) {
-      setToast(language === "ja" ? "追加先のIdeaを選んでください。" : "Choose an idea first.");
-      return;
-    }
-
-    appendBlockToIdea(ideaId, candidate, analysis.result, {
+    const appended = appendBlockToIdea(ideaId, candidate, analysis.result, {
       sourcePath,
-      userEdited: saveDraft?.userEdited,
+      userEdited: hasProgressionEdits(editable),
       userVerified,
     });
-    setToast(copy.toast.blockSaved);
+    if (appended) {
+      persistCorrectionEvents(correctionEvents(original, candidate, editable));
+      setToast(copy.toast.blockSaved);
+      return true;
+    }
+    setToast(language === "ja" ? "コード進行を追加できませんでした。" : "Could not append the progression.");
+    return false;
   }
 
   function copyMemo(candidate: ProgressionBlockCandidate, ideaId: string) {
@@ -451,19 +490,18 @@ export function CaptureView(props: CaptureViewProps) {
                   language={language}
                   isExpanded={expandedCandidateId === candidate.id}
                   onSelect={() => setExpandedCandidateId(candidate.id)}
-                  onQuickSave={(editedCandidate, title) => {
-                    const userEdited = recordCorrections(candidate, editedCandidate);
+                  onQuickSave={(editedCandidate, title, editable) => {
                     saveNew(
                       editedCandidate,
                       title,
                       defaultCaptureNextAction(language),
                       false,
-                      userEdited,
+                      candidate,
+                      editable,
                     );
                   }}
-                  onSave={(editedCandidate, title) => {
-                    const userEdited = recordCorrections(candidate, editedCandidate);
-                    setSaveDraft({ candidate: editedCandidate, title, userEdited });
+                  onSave={(editedCandidate, title, editable) => {
+                    setSaveDraft({ candidate: editedCandidate, original: candidate, editable, title });
                   }}
                   showRomanNumerals={showRomanNumerals}
                 />
@@ -477,16 +515,19 @@ export function CaptureView(props: CaptureViewProps) {
               <ProgressionSaveDialog
                 candidate={saveDraft.candidate}
                 title={saveDraft.title}
+                editSummary={progressionEditSummary(saveDraft.editable)}
                 ideas={ideas}
                 onTitleChange={(title) => setSaveDraft((draft) => draft ? { ...draft, title } : draft)}
                 onClose={() => setSaveDraft(undefined)}
                 onCreate={(title, nextAction, userVerified) => {
-                  saveNew(saveDraft.candidate, title, nextAction, userVerified, saveDraft.userEdited);
-                  setSaveDraft(undefined);
+                  if (saveNew(saveDraft.candidate, title, nextAction, userVerified, saveDraft.original, saveDraft.editable)) {
+                    setSaveDraft(undefined);
+                  }
                 }}
                 onAppend={(ideaId, userVerified) => {
-                  appendExisting(saveDraft.candidate, ideaId, userVerified);
-                  setSaveDraft(undefined);
+                  if (appendExisting(saveDraft.candidate, saveDraft.original, saveDraft.editable, ideaId, userVerified)) {
+                    setSaveDraft(undefined);
+                  }
                 }}
                 onCopyMemo={(ideaId) => {
                   copyMemo(saveDraft.candidate, ideaId);
@@ -783,8 +824,8 @@ export function ProgressionCandidateCard({
   language: AppLanguage;
   isExpanded?: boolean;
   onSelect?: () => void;
-  onQuickSave?: (candidate: ProgressionBlockCandidate, title: string) => void;
-  onSave?: (candidate: ProgressionBlockCandidate, title: string) => void;
+  onQuickSave?: (candidate: ProgressionBlockCandidate, title: string, editable: EditableProgression) => void;
+  onSave?: (candidate: ProgressionBlockCandidate, title: string, editable: EditableProgression) => void;
   showRomanNumerals?: boolean;
 }) {
   const [summary, setSummary] = useState(candidate.summaryText);
@@ -1033,6 +1074,20 @@ export function ProgressionCandidateCard({
         </div>
       ) : null}
 
+      {isExpanded ? (
+        <ProgressionEditSummary
+          items={progressionEditSummary(editable)}
+          language={language}
+          onSelect={(slotId) => {
+            const index = editable.slots.findIndex((slot) => slot.id === slotId);
+            if (index >= 0) {
+              setSelectedChordIndex(index);
+              setEditable((current) => selectEditableSlot(current, slotId));
+            }
+          }}
+        />
+      ) : null}
+
       {isExpanded && isEditing ? (
         <div className="mt-4 border border-[var(--lv-border)] bg-[var(--lv-surface)]/50 p-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1082,10 +1137,10 @@ export function ProgressionCandidateCard({
         <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => { onSelect?.(); setIsEditing((value) => !value); }}>
           {isEditing ? (language === "ja" ? "編集を閉じる" : "Close editor") : (language === "ja" ? "編集" : "Edit")}
         </button>
-        <button className="rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => { onSelect?.(); onQuickSave?.(editedCandidate, title); }}>
+        <button className="rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => { onSelect?.(); onQuickSave?.(editedCandidate, title, editable); }}>
           {language === "ja" ? "Vaultに保存" : "Save to Vault"}
         </button>
-        <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => { onSelect?.(); onSave?.(editedCandidate, title); }}>
+        <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => { onSelect?.(); onSave?.(editedCandidate, title, editable); }}>
           {language === "ja" ? "保存方法" : "Save options"}
         </button>
         <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => void onCopyProgression(editedCandidate)}>
@@ -1101,6 +1156,7 @@ type SaveMode = "new" | "append" | "memo";
 export function ProgressionSaveDialog({
   candidate,
   title,
+  editSummary = [],
   ideas,
   onTitleChange,
   onClose,
@@ -1113,6 +1169,7 @@ export function ProgressionSaveDialog({
 }: {
   candidate: ProgressionBlockCandidate;
   title: string;
+  editSummary?: ProgressionEditSummaryItem[];
   ideas: SongIdea[];
   onTitleChange: (title: string) => void;
   onClose: () => void;
@@ -1157,6 +1214,7 @@ export function ProgressionSaveDialog({
           {copy.common.close}
         </button>
       </div>
+      <ProgressionEditSummary items={editSummary} language={language} />
 
       <fieldset className="mt-4 grid gap-2 sm:grid-cols-3">
         <legend className="sr-only">{language === "ja" ? "保存方法" : "Save method"}</legend>

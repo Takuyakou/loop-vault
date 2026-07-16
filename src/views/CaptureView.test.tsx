@@ -9,6 +9,14 @@ import { makeIdea } from "../domain/testFactory";
 import { appCopy } from "../i18n";
 import { CaptureView, isEditableKeyboardTarget, isMidiFileName, ProgressionCandidateCard, ProgressionSaveDialog, TimelineDetails } from "./CaptureView";
 
+const feedbackSpies = vi.hoisted(() => ({
+  append: vi.fn(async () => undefined),
+}));
+
+vi.mock("../storage/analysisFeedbackStorage", () => ({
+  appendAnalysisFeedback: feedbackSpies.append,
+}));
+
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
   .IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -250,6 +258,7 @@ describe("ProgressionCandidateCard", () => {
 
 describe("CaptureView saving", () => {
   it("saves a candidate to the Vault from the primary button in one click", async () => {
+    feedbackSpies.append.mockClear();
     const capturedCandidate = candidate();
     const result: MidiProgressionAnalysis = {
       fileName: "song.mid",
@@ -296,7 +305,71 @@ describe("CaptureView saving", () => {
       progressionBlock: expect.objectContaining({ id: "candidate-1" }),
       nextAction: "採集したコード進行からループを作る",
     }));
+    expect(feedbackSpies.append).not.toHaveBeenCalled();
 
+    await act(async () => root.unmount());
+  });
+
+  it("appends final correction feedback only after an edited save succeeds", async () => {
+    feedbackSpies.append.mockClear();
+    const first = chord("Cmaj7", 1);
+    first.alternatives = [{
+      chord: { root: 7, quality: "dom7", tensions: [], label: "G7" },
+      confidence: 0.75,
+    }];
+    const capturedCandidate = candidate({ chords: [first, chord("Am7", 2)] });
+    const result: MidiProgressionAnalysis = {
+      sourceFingerprint: "fnv1a32-save-failure",
+      totalBars: 4,
+      bpm: 100,
+      fullTimeline: capturedCandidate.chords,
+      blockCandidates: [capturedCandidate],
+      analyzedAt: "2026-07-15T00:00:00.000Z",
+      analyzerVersion: "test",
+    };
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    let saveSucceeds = false;
+    const createIdeaFromDraft = vi.fn(() => saveSucceeds
+      ? "22222222-2222-4222-8222-222222222222"
+      : undefined);
+    await act(async () => {
+      root.render(
+        <CaptureView
+          ideas={[]}
+          analysis={{ status: "done", result }}
+          analyzeMidiBytes={vi.fn()}
+          clearAnalysis={vi.fn()}
+          createIdeaFromDraft={createIdeaFromDraft}
+          appendBlockToIdea={vi.fn(() => false)}
+          updateIdea={vi.fn()}
+          setToast={vi.fn()}
+          copy={appCopy.ja}
+          language="ja"
+          showRomanNumerals
+        />,
+      );
+    });
+
+    const candidateHeader = container.querySelector<HTMLButtonElement>('button[aria-expanded="false"]');
+    await act(async () => candidateHeader?.click());
+    const alternativeButton = [...container.querySelectorAll("button")]
+      .find((button) => button.textContent?.includes("G7"));
+    await act(async () => alternativeButton?.click());
+    const applyButton = [...container.querySelectorAll("button")]
+      .find((button) => button.textContent === "適用");
+    await act(async () => applyButton?.click());
+    const saveButton = [...container.querySelectorAll("button")]
+      .find((button) => button.textContent?.trim() === "Vaultに保存");
+    await act(async () => saveButton?.click());
+
+    expect(feedbackSpies.append).not.toHaveBeenCalled();
+    saveSucceeds = true;
+    await act(async () => saveButton?.click());
+    expect(feedbackSpies.append).toHaveBeenCalledTimes(1);
+    expect(feedbackSpies.append).toHaveBeenCalledWith([
+      expect.objectContaining({ corrected: "G7", editMethod: "alternative-selection" }),
+    ]);
     await act(async () => root.unmount());
   });
 });
