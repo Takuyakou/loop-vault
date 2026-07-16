@@ -131,7 +131,7 @@ export function parseRawSmf(bytes: Uint8Array): RawSmfSong {
     }
     if (event.type === "noteOn" && event.velocity > 0) {
       const state = programs.get(event.channel) ?? { program: 0, explicit: false };
-      const key = noteKey(event.channel, event.noteNumber);
+      const key = noteKey(trackIndex, event.channel, event.noteNumber);
       const queue = activeNotes.get(key) ?? [];
       queue.push({
         pitch: event.noteNumber,
@@ -146,7 +146,7 @@ export function parseRawSmf(bytes: Uint8Array): RawSmfSong {
       continue;
     }
     if (event.type === "noteOff" || (event.type === "noteOn" && event.velocity === 0)) {
-      finishNote(activeNotes, notes, event.channel, event.noteNumber, tick);
+      finishNote(activeNotes, notes, trackIndex, event.channel, event.noteNumber, tick);
     }
   }
   closeDanglingNotes(activeNotes, notes, trackEndTicks);
@@ -173,18 +173,19 @@ function isChannelEvent(event: MidiEvent): event is Extract<MidiEvent, { channel
   return "channel" in event;
 }
 
-function noteKey(channel: number, pitch: number): string {
-  return `${channel}:${pitch}`;
+function noteKey(trackIndex: number, channel: number, pitch: number): string {
+  return `${trackIndex}:${channel}:${pitch}`;
 }
 
 function finishNote(
   activeNotes: Map<string, ActiveNote[]>,
   notes: ParsedTimedNote[],
+  trackIndex: number,
   channel: number,
   pitch: number,
   endTick: number,
 ): void {
-  const key = noteKey(channel, pitch);
+  const key = noteKey(trackIndex, channel, pitch);
   const queue = activeNotes.get(key);
   const active = queue?.shift();
   if (!active) {
