@@ -13,3 +13,11 @@ export function goldGuardFailures(legacy: GoldMetrics, candidate: GoldMetrics): 
   }
   return failures;
 }
+
+export function realMidiEvaluationExitCode(
+  guardFailures: readonly string[],
+  voiceAwareGuardFailures: readonly string[],
+  missingSourceCount: number,
+): 0 | 1 {
+  return guardFailures.length > 0 || voiceAwareGuardFailures.length > 0 || missingSourceCount > 0 ? 1 : 0;
+}

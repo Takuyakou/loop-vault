@@ -4,7 +4,8 @@ import { resolve } from "node:path";
 import { parseChordLabel } from "../src/domain/chords";
 import { analyzeMidi } from "../src/domain/midi/analysis";
 import { deriveAcceptableAlternatives } from "../src/domain/midi/realEvaluation/acceptableAlternatives";
-import { goldGuardFailures } from "../src/domain/midi/realEvaluation/guards";
+import { goldGuardFailures, realMidiEvaluationExitCode } from "../src/domain/midi/realEvaluation/guards";
+import { parseJsonLines } from "../src/domain/midi/realEvaluation/jsonl";
 import { evaluateBronzeCases, evaluateGoldCases, evaluateSilverCases, type AnalyzedRealMidiCase } from "../src/domain/midi/realEvaluation/realMetrics";
 import { midiDifferenceReviewSchema, realMidiEvaluationCaseSchema } from "../src/domain/midi/realEvaluation/schema";
 import type { LocalMidiSourceIndexEntry, MidiDifferenceReview, RealMidiEvaluationCase } from "../src/domain/midi/realEvaluation/types";
@@ -96,7 +97,7 @@ console.log(`Gold / Silver / Bronze: ${gold.length} / ${silver.length} / ${bronz
 console.log(`Missing sources: ${missing.length}`);
 console.log(`Gold guard failures: ${guardFailures.length}`);
 console.log(`Voice-aware Gold guard failures: ${voiceAwareGuardFailures.length}`);
-if (guardFailures.length > 0 || voiceAwareGuardFailures.length > 0) process.exitCode = 1;
+process.exitCode = realMidiEvaluationExitCode(guardFailures, voiceAwareGuardFailures, missing.length);
 
 function optionValue(name: string): string | undefined {
   const index = args.indexOf(name);
@@ -112,11 +113,14 @@ async function readReviews(path: string): Promise<MidiDifferenceReview[]> {
 }
 
 async function readJsonLines(path: string): Promise<unknown[]> {
+  let raw: string;
   try {
-    return (await readFile(path, "utf8")).split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
-  } catch {
-    return [];
+    raw = await readFile(path, "utf8");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+    throw error;
   }
+  return parseJsonLines(raw, path);
 }
 
 async function readJson<T>(path: string, fallback: T): Promise<T> {

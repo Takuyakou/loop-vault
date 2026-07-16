@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { GoldMetrics } from "./realMetrics";
-import { goldGuardFailures } from "./guards";
+import { goldGuardFailures, realMidiEvaluationExitCode } from "./guards";
 
 const baseline: GoldMetrics = {
   caseCount: 1,
@@ -43,5 +43,11 @@ describe("goldGuardFailures", () => {
   it("reports Exact@1 regression independently", () => {
     expect(goldGuardFailures(baseline, { ...baseline, exactAccuracy: 0.59 }))
       .toContain("exact-accuracy-regressed");
+  });
+
+  it("fails evaluation when any registered source is unresolved", () => {
+    expect(realMidiEvaluationExitCode([], [], 0)).toBe(0);
+    expect(realMidiEvaluationExitCode([], [], 1)).toBe(1);
+    expect(realMidiEvaluationExitCode(["regressed"], [], 0)).toBe(1);
   });
 });
