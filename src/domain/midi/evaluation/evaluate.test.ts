@@ -14,6 +14,7 @@ describe("MIDI evaluation", () => {
     const result = evaluateCase(definition, [{ bar: 1, beat: 1, durationBeats: 4, chord, confidence: 0.8, alternatives: [], warnings: [] }]);
     expect(result.rootAccuracy).toBe(1);
     expect(result.exactAccuracy).toBe(1);
+    expect(result.operationCorrectionCost).toMatchObject({ total: 0, mean: 0, byCost: { 0: 1 } });
   });
 
   it("keeps recipe families in only one deterministic split", () => {
@@ -54,5 +55,31 @@ describe("MIDI evaluation", () => {
     expect(result.qualityTop3Accuracy).toBe(1);
     expect(result.exactTop3Accuracy).toBe(0);
     expect(result.top3Accuracy).toBe(0);
+    expect(result.operationCorrectionCost).toMatchObject({
+      total: 1,
+      mean: 1,
+      byCategory: { alternative: 1 },
+    });
+  });
+
+  it("reports editor, manual-input, and unrepresentable operation costs independently from the old proxy", () => {
+    const definition = {
+      id: "operation-cost", title: "operation cost", midiPath: "operation.mid", recipeFamily: "family", split: "holdout" as const,
+      category: ["chord-only" as const], difficulty: "hard" as const,
+      expected: { chordTimeline: [
+        { startBeat: 0, endBeat: 1, primary: "Dmaj7", root: 2, quality: "maj7" as const },
+        { startBeat: 1, endBeat: 2, primary: "C7b9", root: 0, quality: "dom7" as const },
+        { startBeat: 2, endBeat: 3, primary: "not-a-chord", root: 0, quality: "maj" as const },
+      ] },
+    };
+    const result = evaluateCase(definition, [{
+      bar: 1, beat: 1, durationBeats: 2, chord: makeChordSymbol(0, "maj7"), confidence: 1, alternatives: [], warnings: [],
+    }]);
+    expect(result.correctionCost).toBe(3);
+    expect(result.operationCorrectionCost).toMatchObject({
+      segmentCount: 3,
+      total: 9,
+      byCost: { 2: 1, 3: 1, 4: 1 },
+    });
   });
 });

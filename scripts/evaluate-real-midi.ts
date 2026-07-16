@@ -30,7 +30,11 @@ await writeFile(resolve(evaluationDir, "real-midi-cases.jsonl"), jsonLines(cases
 
 const analyzed: AnalyzedRealMidiCase[] = [];
 const missing: { caseId: string; fingerprint: string; reason: string }[] = [];
-const cache = new Map<string, { legacy: ReturnType<typeof analyzeMidi>; reranker: ReturnType<typeof analyzeMidi> }>();
+const cache = new Map<string, {
+  legacy: ReturnType<typeof analyzeMidi>;
+  reranker: ReturnType<typeof analyzeMidi>;
+  voiceAware: ReturnType<typeof analyzeMidi>;
+}>();
 for (const definition of cases) {
   const source = sources.get(definition.source.fingerprint);
   if (!source?.lastKnownPath) {
@@ -44,6 +48,7 @@ for (const definition of cases) {
       result = {
         legacy: analyzeMidi(bytes, { mode: "legacy", fileName: source.fileName }),
         reranker: analyzeMidi(bytes, { mode: "legacy-boundary-rerank", fileName: source.fileName }),
+        voiceAware: analyzeMidi(bytes, { mode: "voice-aware-rerank-v1", fileName: source.fileName }),
       };
       cache.set(definition.source.fingerprint, result);
     } catch {
@@ -51,7 +56,12 @@ for (const definition of cases) {
       continue;
     }
   }
-  analyzed.push({ definition, legacy: result.legacy.fullTimeline, reranker: result.reranker.fullTimeline });
+  analyzed.push({
+    definition,
+    legacy: result.legacy.fullTimeline,
+    reranker: result.reranker.fullTimeline,
+    voiceAware: result.voiceAware.fullTimeline,
+  });
 }
 
 const gold = analyzed.filter((item) => item.definition.label.strength === "gold");
@@ -63,6 +73,7 @@ const report = {
     realMidiGold: {
       legacy: evaluateGoldCases(gold, "legacy"),
       reranker: evaluateGoldCases(gold, "reranker"),
+      voiceAware: evaluateGoldCases(gold, "voiceAware"),
     },
     realMidiSilver: evaluateSilverCases(silver),
     realMidiBronze: evaluateBronzeCases(bronze),
@@ -70,17 +81,21 @@ const report = {
   },
 };
 const guardFailures = gold.length ? goldGuardFailures(report.datasets.realMidiGold.legacy, report.datasets.realMidiGold.reranker) : [];
+const voiceAwareGuardFailures = gold.length
+  ? goldGuardFailures(report.datasets.realMidiGold.legacy, report.datasets.realMidiGold.voiceAware)
+  : [];
 
 await mkdir(outputDir, { recursive: true });
 await Promise.all([
-  writeFile(resolve(outputDir, "report.json"), `${JSON.stringify({ ...report, guardFailures }, null, 2)}\n`, "utf8"),
+  writeFile(resolve(outputDir, "report.json"), `${JSON.stringify({ ...report, guardFailures, voiceAwareGuardFailures }, null, 2)}\n`, "utf8"),
   writeFile(resolve(outputDir, "summary.md"), summaryMarkdown(), "utf8"),
   writeFile(resolve(outputDir, "missing-sources.json"), `${JSON.stringify(missing, null, 2)}\n`, "utf8"),
 ]);
 console.log(`Gold / Silver / Bronze: ${gold.length} / ${silver.length} / ${bronze.length}`);
 console.log(`Missing sources: ${missing.length}`);
 console.log(`Gold guard failures: ${guardFailures.length}`);
-if (guardFailures.length > 0) process.exitCode = 1;
+console.log(`Voice-aware Gold guard failures: ${voiceAwareGuardFailures.length}`);
+if (guardFailures.length > 0 || voiceAwareGuardFailures.length > 0) process.exitCode = 1;
 
 function optionValue(name: string): string | undefined {
   const index = args.indexOf(name);
@@ -158,6 +173,9 @@ function goldGuardFailures(legacy: ReturnType<typeof evaluateGoldCases>, reranke
   if (reranker.boundaryPrecision < legacy.boundaryPrecision) failures.push("boundary-precision-regressed");
   if (reranker.boundaryRecall < legacy.boundaryRecall) failures.push("boundary-recall-regressed");
   if (reranker.correctionCost > legacy.correctionCost) failures.push("correction-cost-increased");
+  if (reranker.operationCorrectionCost.mean > legacy.operationCorrectionCost.mean) {
+    failures.push("operation-correction-cost-increased");
+  }
   return failures;
 }
 
@@ -169,6 +187,7 @@ function summaryMarkdown(): string {
   return `# Real MIDI Evaluation\n\n`
     + `## Gold (accuracy and hard guard)\n\n\`\`\`json\n${JSON.stringify(report.datasets.realMidiGold, null, 2)}\n\`\`\`\n\n`
     + `Guard failures: ${guardFailures.length ? guardFailures.join(", ") : "none"}\n\n`
+    + `Voice-aware guard failures: ${voiceAwareGuardFailures.length ? voiceAwareGuardFailures.join(", ") : "none"}\n\n`
     + `## Silver (saved-label agreement; not official accuracy)\n\n\`\`\`json\n${JSON.stringify(report.datasets.realMidiSilver, null, 2)}\n\`\`\`\n\n`
     + `## Bronze (agreement and review demand only)\n\n\`\`\`json\n${JSON.stringify(report.datasets.realMidiBronze, null, 2)}\n\`\`\`\n\n`
     + `## Unlabeled\n\nCase count: 0\n`;

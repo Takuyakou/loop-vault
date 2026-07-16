@@ -45,8 +45,10 @@ const qualityLabels: Record<ChordQuality, string> = {
 };
 
 const labelQualities: Array<[RegExp, ChordQuality]> = [
-  [/^(maj9|M9)$/i, "maj9"],
-  [/^(maj7|M7|△7)$/i, "maj7"],
+  [/^maj9$/i, "maj9"],
+  [/^M9$/, "maj9"],
+  [/^maj7$/i, "maj7"],
+  [/^(M7|△7)$/, "maj7"],
   [/^(m7b5|ø)$/i, "min7b5"],
   [/^(min11|m11)$/i, "min11"],
   [/^(min9|m9)$/i, "min9"],

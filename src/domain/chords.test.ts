@@ -23,4 +23,20 @@ describe("chord symbols", () => {
     expect(parseChordLabel("Cmaj9")).toMatchObject({ quality: "maj9", tensions: [] });
     expect(parseChordLabel("C7b9")).toMatchObject({ quality: "dom7", tensions: ["b9"] });
   });
+
+  it("keeps lowercase minor seventh and ninth labels distinct from major labels", () => {
+    expect(parseChordLabel("Dm7")).toMatchObject({ quality: "min7", label: "Dm7" });
+    expect(parseChordLabel("Dm9")).toMatchObject({ quality: "min9", label: "Dm9" });
+    expect(parseChordLabel("DM7")).toMatchObject({ quality: "maj7", label: "Dmaj7" });
+    expect(parseChordLabel("DM9")).toMatchObject({ quality: "maj9", label: "Dmaj9" });
+  });
+
+  it("accepts case-insensitive long major suffixes without treating short lowercase m as major", () => {
+    expect(parseChordLabel("DMAJ7")).toMatchObject({ quality: "maj7", label: "Dmaj7" });
+    expect(parseChordLabel("DMaj7")).toMatchObject({ quality: "maj7", label: "Dmaj7" });
+    expect(parseChordLabel("DMAJ9")).toMatchObject({ quality: "maj9", label: "Dmaj9" });
+    expect(parseChordLabel("DMaj9")).toMatchObject({ quality: "maj9", label: "Dmaj9" });
+    expect(parseChordLabel("Dm7")).toMatchObject({ quality: "min7" });
+    expect(parseChordLabel("Dm9")).toMatchObject({ quality: "min9" });
+  });
 });

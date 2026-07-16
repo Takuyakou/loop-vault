@@ -16,6 +16,7 @@ import type {
   EvaluationCaseInput,
   EvaluationMetrics,
 } from "../src/domain/midi/evaluation/types";
+import type { OperationCorrectionCostSummary } from "../src/domain/midi/correctionCost";
 import type { MidiProgressionAnalysis } from "../src/domain/types";
 
 const DEFAULT_CLEAN = "docs/loop-vault-evaluation-corpus/manifest.json";
@@ -54,6 +55,7 @@ interface MetricsSnapshot {
   exactAt3: number;
   correctionProxyPerCase: number;
   correctionProxyTotal: number;
+  operationCorrectionCostMean: number;
   boundaryPrecision: number;
   boundaryRecall: number;
 }
@@ -69,6 +71,7 @@ interface EvaluationResult {
   primaryChangesFromLegacy: number;
   deltaFromLegacy: Omit<MetricsSnapshot, "correctionProxyTotal">;
   candidateDiversity: CandidateDiversitySnapshot;
+  operationCorrectionCost: OperationCorrectionCostSummary;
 }
 
 export interface CandidateDiversitySnapshot {
@@ -102,6 +105,9 @@ export function cleanRegressionGuard(
   if (voiceAware.correctionProxyPerCase > legacy.correctionProxyPerCase) {
     failures.push("clean correction proxy/case regressed");
   }
+  if (voiceAware.operationCorrectionCostMean > legacy.operationCorrectionCostMean) {
+    failures.push("clean operation correction cost regressed");
+  }
   return { passed: failures.length === 0, failures };
 }
 
@@ -117,6 +123,7 @@ export function dirtyImprovementStatus(
     voiceAware.exactAt1 - legacy.exactAt1,
     voiceAware.exactAt3 - legacy.exactAt3,
     legacy.correctionProxyPerCase - voiceAware.correctionProxyPerCase,
+    legacy.operationCorrectionCostMean - voiceAware.operationCorrectionCostMean,
   ];
   const improved = deltas.some((value) => value > 0);
   const regressed = deltas.some((value) => value < 0);
@@ -225,6 +232,7 @@ async function main(): Promise<void> {
         primaryChangesFromLegacy,
         deltaFromLegacy: subtract(metrics, legacyResult?.metrics ?? metrics),
         candidateDiversity: candidateDiversitySnapshot(cases, analyses, metrics),
+        operationCorrectionCost: report.metrics.operationCorrectionCost,
       });
       process.stdout.write(`Evaluated ${analyzer.mode}/${category}: ${cases.length} cases.\n`);
     }
@@ -254,9 +262,11 @@ async function main(): Promise<void> {
   const realGoldCaseCount = await readRealGoldCaseCount();
   const artifact = {
     schemaVersion: 1,
-    phase: options.reportDirectory.includes("candidate-diversity")
-      ? "3.6.5-stage-b1"
-      : "3.6.5-stage-a4",
+    phase: options.reportDirectory.includes("correction-cost")
+      ? "3.6.5-stage-b2"
+      : options.reportDirectory.includes("candidate-diversity")
+        ? "3.6.5-stage-b1"
+        : "3.6.5-stage-a4",
     status: overallGuard.passed ? "passed" : "failed-strict-guard",
     overallGuard,
     strictExitEnforced: !options.reportOnly,
@@ -329,6 +339,7 @@ function snapshot(metrics: EvaluationMetrics): MetricsSnapshot {
       ? rounded(metrics.correctionCost / metrics.caseCount)
       : 0,
     correctionProxyTotal: metrics.correctionCost,
+    operationCorrectionCostMean: metrics.operationCorrectionCost.mean,
     boundaryPrecision: metrics.boundaryPrecision,
     boundaryRecall: metrics.boundaryRecall,
   };
@@ -397,6 +408,9 @@ function subtract(
     exactAt1: rounded(value.exactAt1 - baseline.exactAt1),
     exactAt3: rounded(value.exactAt3 - baseline.exactAt3),
     correctionProxyPerCase: rounded(value.correctionProxyPerCase - baseline.correctionProxyPerCase),
+    operationCorrectionCostMean: rounded(
+      value.operationCorrectionCostMean - baseline.operationCorrectionCostMean,
+    ),
     boundaryPrecision: rounded(value.boundaryPrecision - baseline.boundaryPrecision),
     boundaryRecall: rounded(value.boundaryRecall - baseline.boundaryRecall),
   };
@@ -547,10 +561,26 @@ function markdown(artifact: {
     entry.candidateDiversity.averageDisplayedCandidateCount.toFixed(2),
     signedPercent(entry.candidateDiversity.exactTop3MinusTop1Gap),
   ].join(" | "));
+  const operationCostRows = artifact.results.map((entry) => [
+    entry.category,
+    entry.mode,
+    entry.operationCorrectionCost.segmentCount,
+    entry.operationCorrectionCost.total,
+    entry.operationCorrectionCost.mean.toFixed(4),
+    entry.operationCorrectionCost.median.toFixed(2),
+    entry.operationCorrectionCost.p90.toFixed(2),
+    entry.operationCorrectionCost.byCost[0],
+    entry.operationCorrectionCost.byCost[1],
+    entry.operationCorrectionCost.byCost[2],
+    entry.operationCorrectionCost.byCost[3],
+    entry.operationCorrectionCost.byCost[4],
+  ].join(" | "));
   return [
-    artifact.phase === "3.6.5-stage-b1"
-      ? "# Phase 3.6.5 Stage B1 Candidate Diversity Evaluation"
-      : "# Phase 3.6.5 Stage A4 Voice-Aware Evaluation",
+    artifact.phase === "3.6.5-stage-b2"
+      ? "# Phase 3.6.5 Stage B2 Correction Cost Evaluation"
+      : artifact.phase === "3.6.5-stage-b1"
+        ? "# Phase 3.6.5 Stage B1 Candidate Diversity Evaluation"
+        : "# Phase 3.6.5 Stage A4 Voice-Aware Evaluation",
     "",
     `- Status: ${artifact.status}`,
     `- Overall guard: ${artifact.overallGuard.status.toUpperCase()}`,
@@ -583,11 +613,17 @@ function markdown(artifact: {
     "--- | --- | ---: | ---: | ---: | ---: | ---:",
     ...diversityRows,
     "",
+    "## Operation correction cost (Stage B2)",
+    "",
+    "Category | Analyzer | Segments | Total | Mean | Median | P90 | Cost 0 | Cost 1 | Cost 2 | Cost 3 | Cost 4",
+    "--- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---:",
+    ...operationCostRows,
+    "",
     "## Dirty status",
     "",
     ...Object.entries(artifact.dirtyStatus).map(([category, status]) => `- ${category}: ${status}`),
     "",
-    "Correction proxy is the existing wrong-primary-segment proxy, not Stage B2 operation cost.",
+    "Correction proxy remains the existing wrong-primary-segment proxy. Operation correction cost is reported separately and does not change the old field.",
     "",
   ].join("\n");
 }

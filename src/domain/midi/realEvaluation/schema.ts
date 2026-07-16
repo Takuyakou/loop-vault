@@ -104,7 +104,7 @@ export const midiChordCorrectionEventSchema: z.ZodType<MidiChordCorrectionEvent>
     alternatives: z.array(z.string().min(1)),
   }).strict(),
   corrected: z.string().min(1),
-  editMethod: z.enum(["manual-label", "alternative-selection"]),
+  editMethod: z.enum(["manual-label", "alternative-selection", "structure-editor"]),
   keyContext: z.string().optional(),
   previousChord: z.string().optional(),
   nextChord: z.string().optional(),

@@ -1,4 +1,5 @@
 import type { ChordQuality, MidiProgressionAnalysis } from "../../types";
+import type { OperationCorrectionCostSummary } from "../correctionCost";
 
 export type MidiEvaluationCategory =
   | "chord-only" | "melody-mixed" | "bass-separated" | "no-bass" | "arpeggio"
@@ -49,6 +50,7 @@ export interface EvaluationMetrics {
   overSegmentationRate: number;
   underSegmentationRate: number;
   correctionCost: number;
+  operationCorrectionCost: OperationCorrectionCostSummary;
 }
 
 export interface EvaluationCaseResult extends EvaluationMetrics {

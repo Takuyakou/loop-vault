@@ -1,5 +1,11 @@
 import { parseChordLabel } from "../../chords";
 import type { ChordTimelineItem } from "../../types";
+import {
+  operationCorrectionCostResult,
+  summarizeOperationCorrectionCosts,
+  type OperationCorrectionCostResult,
+  type OperationCorrectionCostSummary,
+} from "../correctionCost";
 import { chordLabelsEquivalent } from "./differenceReview";
 import type { ExpectedChordSegment } from "../evaluation/types";
 import type { RealMidiEvaluationCase } from "./types";
@@ -8,6 +14,7 @@ export interface AnalyzedRealMidiCase {
   definition: RealMidiEvaluationCase;
   legacy: readonly ChordTimelineItem[];
   reranker: readonly ChordTimelineItem[];
+  voiceAware?: readonly ChordTimelineItem[];
 }
 
 export interface GoldMetrics {
@@ -26,6 +33,7 @@ export interface GoldMetrics {
   boundaryPrecision: number;
   boundaryRecall: number;
   correctionCost: number;
+  operationCorrectionCost: OperationCorrectionCostSummary;
 }
 
 export interface SilverMetrics {
@@ -53,7 +61,7 @@ export interface BronzeMetrics {
 
 export function evaluateGoldCases(
   cases: readonly AnalyzedRealMidiCase[],
-  analyzer: "legacy" | "reranker",
+  analyzer: "legacy" | "reranker" | "voiceAware",
 ): GoldMetrics {
   let duration = 0;
   let root = 0;
@@ -66,21 +74,37 @@ export function evaluateGoldCases(
   let weak = 0;
   let top3 = 0;
   let corrections = 0;
+  const operationCosts: OperationCorrectionCostResult[] = [];
   let expectedBoundaries = 0;
   let predictedBoundaries = 0;
   let matchedBoundaries = 0;
   for (const item of cases) {
     const timeline = item[analyzer];
+    if (!timeline) continue;
     for (const expected of item.definition.expected.primary) {
       const weight = expected.endBeat - expected.startBeat;
       const prediction = bestPrediction(expected, timeline);
       duration += weight;
-      if (!prediction) { corrections += 1; continue; }
+      const sets = acceptedLabels(item.definition, expected);
+      const acceptableLabels = [
+        expected.primary,
+        ...(expected.acceptableAlternatives ?? []),
+        ...sets.strong,
+        ...sets.weak,
+      ];
+      if (!prediction) {
+        corrections += 1;
+        operationCosts.push(operationCorrectionCostResult(undefined, acceptableLabels));
+        continue;
+      }
+      operationCosts.push(operationCorrectionCostResult({
+        primary: prediction.chord,
+        alternatives: prediction.alternatives.map((alternative) => alternative.chord),
+      }, acceptableLabels));
       const predictedChord = parseChordLabel(prediction.chord.label);
       if (predictedChord?.root === expected.root) root += weight;
       if (predictedChord?.quality === expected.quality) quality += weight;
       if (predictedChord && tetradFamily(predictedChord.quality) === tetradFamily(expected.quality)) tetrad += weight;
-      const sets = acceptedLabels(item.definition, expected);
       const label = prediction.chord.label;
       if (chordLabelsEquivalent(label, expected.primary)) exact += weight;
       if (matchesAny(label, [expected.primary, ...sets.strong])) strong += weight;
@@ -114,6 +138,7 @@ export function evaluateGoldCases(
     boundaryPrecision: ratio(matchedBoundaries, predictedBoundaries),
     boundaryRecall: ratio(matchedBoundaries, expectedBoundaries),
     correctionCost: corrections,
+    operationCorrectionCost: summarizeOperationCorrectionCosts(operationCosts),
   };
 }
 

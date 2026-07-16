@@ -29,6 +29,7 @@ describe("real MIDI metrics", () => {
     const reranker = evaluateGoldCases(analyzed, "reranker");
     expect(reranker.exactAccuracy).toBe(0);
     expect(reranker.strongAlternativeAccuracy).toBe(1);
+    expect(reranker.operationCorrectionCost.total).toBe(0);
   });
 
   it("computes independent Root, Quality and Exact Top-3 from only three displayed candidates", () => {
@@ -48,6 +49,20 @@ describe("real MIDI metrics", () => {
     expect(metrics.qualityTop3Accuracy).toBe(1);
     expect(metrics.exactTop3Accuracy).toBe(0);
     expect(metrics.top3Accuracy).toBe(0);
+    expect(metrics.operationCorrectionCost).toMatchObject({ total: 1, byCost: { 1: 1 } });
+  });
+
+  it("evaluates the optional voice-aware Gold timeline", () => {
+    const analyzed = [{
+      definition: definition("gold"),
+      legacy: timeline("Dm"),
+      reranker: timeline("Dm"),
+      voiceAware: timeline("Cmaj7"),
+    }];
+    expect(evaluateGoldCases(analyzed, "voiceAware")).toMatchObject({
+      exactAccuracy: 1,
+      operationCorrectionCost: { total: 0, byCost: { 0: 1 } },
+    });
   });
 
   it("reports Silver improvements and regressions without calling them accuracy", () => {

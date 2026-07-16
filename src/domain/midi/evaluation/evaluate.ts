@@ -1,4 +1,10 @@
 import type { ChordQuality, ChordTimelineItem } from "../../types";
+import {
+  operationCorrectionCostResult,
+  summarizeOperationCorrectionCosts,
+  type OperationCorrectionCost,
+  type OperationCorrectionCostResult,
+} from "../correctionCost";
 import type {
   AnalyzerForEvaluation, EvaluationCaseInput, EvaluationCaseResult, EvaluationMetrics,
   EvaluationReport, ExpectedChordSegment, MidiEvaluationCategory,
@@ -9,6 +15,7 @@ const emptyMetrics = (): EvaluationMetrics => ({
   rootTop3Accuracy: 0, qualityTop3Accuracy: 0, tetradAccuracy: 0,
   exactAccuracy: 0, exactTop3Accuracy: 0, top3Accuracy: 0, boundaryPrecision: 0,
   boundaryRecall: 0, overSegmentationRate: 0, underSegmentationRate: 0, correctionCost: 0,
+  operationCorrectionCost: summarizeOperationCorrectionCosts([]),
 });
 
 // Chord Drip evaluation manifests define expected beat ranges on a 4/4 grid.
@@ -49,11 +56,21 @@ export function evaluateCase(
   let exact = 0;
   let top3 = 0;
   let corrections = 0;
+  const operationCosts: OperationCorrectionCostResult[] = [];
   for (const target of expected) {
     const targetDuration = target.endBeat - target.startBeat;
     const match = bestOverlap(target, predictedRanges);
     duration += targetDuration;
-    if (!match) { corrections += 1; continue; }
+    const acceptableLabels = [target.primary, ...(target.acceptableAlternatives ?? [])];
+    if (!match) {
+      corrections += 1;
+      operationCosts.push(operationCorrectionCostResult(undefined, acceptableLabels));
+      continue;
+    }
+    operationCosts.push(operationCorrectionCostResult({
+      primary: match.item.chord,
+      alternatives: match.item.alternatives.map((entry) => entry.chord),
+    }, acceptableLabels));
     if (match.item.chord.root === target.root) root += targetDuration;
     if (qualityFamily(match.item.chord.quality) === qualityFamily(target.quality)) quality += targetDuration;
     if (tetradFamily(match.item.chord.quality) === tetradFamily(target.quality)) tetrad += targetDuration;
@@ -86,6 +103,7 @@ export function evaluateCase(
     overSegmentationRate: ratio(Math.max(0, predicted.length - expected.length), expected.length),
     underSegmentationRate: ratio(Math.max(0, expected.length - predicted.length), expected.length),
     correctionCost: corrections,
+    operationCorrectionCost: summarizeOperationCorrectionCosts(operationCosts),
   };
   return { id: definition.id, split: definition.split, category: definition.category, ...metrics };
 }
@@ -112,7 +130,18 @@ export function aggregate(results: readonly EvaluationCaseResult[]): EvaluationM
     overSegmentationRate: weighted("overSegmentationRate"),
     underSegmentationRate: weighted("underSegmentationRate"),
     correctionCost: results.reduce((sum, item) => sum + item.correctionCost, 0),
+    operationCorrectionCost: summarizeOperationCorrectionCosts(
+      results.flatMap((item) => expandOperationCosts(item.operationCorrectionCost.byCost)),
+    ),
   };
+}
+
+function expandOperationCosts(
+  byCost: Readonly<Record<OperationCorrectionCost, number>>,
+): OperationCorrectionCost[] {
+  return ([0, 1, 2, 3, 4] as const).flatMap(
+    (cost) => Array.from({ length: byCost[cost] }, () => cost),
+  );
 }
 
 function bestOverlap(target: ExpectedChordSegment, predicted: Array<{ startBeat: number; endBeat: number; item: ChordTimelineItem }>) {
