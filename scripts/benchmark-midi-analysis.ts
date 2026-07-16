@@ -7,13 +7,16 @@ const bytes = buildThreeMinuteMidi();
 const legacy = measure(() => analyzeMidi(bytes, { mode: "legacy" }));
 const hybrid = measure(() => analyzeMidi(bytes, { mode: "hybrid-v1" }));
 const reranker = measure(() => analyzeMidi(bytes, { mode: "legacy-boundary-rerank" }));
+const voiceAware = measure(() => analyzeMidi(bytes, { mode: "voice-aware-rerank-v1" }));
 
 stdout.write(`Synthetic MIDI: 180 seconds, ${bytes.byteLength} bytes\n`);
 stdout.write(`Legacy: ${legacy.elapsedMs.toFixed(1)} ms, heap delta ${legacy.heapDeltaMb.toFixed(2)} MB\n`);
 stdout.write(`Hybrid: ${hybrid.elapsedMs.toFixed(1)} ms, heap delta ${hybrid.heapDeltaMb.toFixed(2)} MB\n`);
 stdout.write(`Legacy-boundary reranker: ${reranker.elapsedMs.toFixed(1)} ms, heap delta ${reranker.heapDeltaMb.toFixed(2)} MB\n`);
+stdout.write(`Voice-aware reranker: ${voiceAware.elapsedMs.toFixed(1)} ms, heap delta ${voiceAware.heapDeltaMb.toFixed(2)} MB\n`);
 stdout.write(`Ratio: ${(hybrid.elapsedMs / Math.max(legacy.elapsedMs, 0.01)).toFixed(2)}x\n`);
 stdout.write(`Reranker ratio: ${(reranker.elapsedMs / Math.max(legacy.elapsedMs, 0.01)).toFixed(2)}x\n`);
+stdout.write(`Voice-aware ratio: ${(voiceAware.elapsedMs / Math.max(legacy.elapsedMs, 0.01)).toFixed(2)}x\n`);
 
 function measure(run: () => unknown) {
   run();
