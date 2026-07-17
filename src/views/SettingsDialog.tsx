@@ -3,6 +3,7 @@ import { open as openFileDialog, save as saveFileDialog } from "@tauri-apps/plug
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { LiveMidiSettingsSection } from "../components/LiveMidiSettingsSection";
 import { Modal } from "../components/Modal";
 import type { SongIdea } from "../domain/types";
 import type { AppCopy, AppLanguage } from "../i18n";
@@ -20,6 +21,8 @@ import {
   rebuildLocalMidiSourceIndex,
 } from "../storage/realEvaluationStorage";
 import { Copy, Download, FolderOpen, RotateCcw, Trash2, Upload } from "lucide-react";
+import type { StoreApi } from "zustand/vanilla";
+import type { LiveMidiStoreState } from "../liveMidi/liveMidiStore";
 
 const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
 
@@ -61,6 +64,7 @@ interface SettingsDialogProps {
   setToast: (toast: string) => void;
   copy: AppCopy;
   onClose: () => void;
+  liveMidiStore?: StoreApi<LiveMidiStoreState>;
 }
 
 export function SettingsDialog({
@@ -80,6 +84,7 @@ export function SettingsDialog({
   setToast,
   copy,
   onClose,
+  liveMidiStore,
 }: SettingsDialogProps) {
   const ui = copy.settingsUi;
   const [dataPath, setDataPath] = useState<string>(ui.dataPathFallback);
@@ -282,6 +287,8 @@ export function SettingsDialog({
             <span>Loop Vault</span><span>{ui.appFormat}</span><span>{ui.dataFormat}</span>
           </div>
         </section>
+
+        <LiveMidiSettingsSection copy={ui} store={liveMidiStore} />
 
         <section aria-labelledby="settings-data-title" className="mt-5 border border-[var(--lv-border)] bg-[var(--lv-bg)] p-4">
           <h3 id="settings-data-title" className="text-sm font-semibold text-[var(--lv-accent)]">{ui.data}</h3>

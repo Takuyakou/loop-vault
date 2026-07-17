@@ -64,4 +64,48 @@ describe("Live MIDI store", () => {
     expect(store.getState().notes.held.size).toBe(0);
     expect(mock.value.stop).toHaveBeenCalled();
   });
+
+  it("stores a preferred device from settings without opening it", async () => {
+    const mock = service();
+    const saved = vi.fn();
+    const store = createLiveMidiStore({
+      service: mock.value,
+      loadPreferences: () => ({ showHistory: false }),
+      savePreferences: saved,
+    });
+
+    await store.getState().refreshDevices();
+    store.getState().setPreferredDevice("one");
+
+    expect(saved).toHaveBeenCalledWith(expect.objectContaining({
+      preferredInput: { backendId: "one", name: "Keyboard", previousIndex: 0 },
+    }));
+    expect(mock.value.start).not.toHaveBeenCalled();
+  });
+
+  it("tests a configured device and preserves the backend failure detail", async () => {
+    const start = vi.fn(async () => false);
+    const stop = vi.fn(async () => undefined);
+    const failedService: LiveMidiServicePort = {
+      getSnapshot: () => ({ devices: [device], selected: device, status: "error", error: "Device is busy." }),
+      subscribe: () => () => undefined,
+      subscribeBatches: () => () => undefined,
+      refreshDevices: vi.fn(async () => [device]),
+      start,
+      stop,
+    };
+    const store = createLiveMidiStore({
+      service: failedService,
+      loadPreferences: () => ({}),
+      savePreferences: vi.fn(),
+    });
+
+    await store.getState().refreshDevices();
+    const result = await store.getState().testDevice("one");
+
+    expect(result).toEqual({ ok: false, error: "Device is busy." });
+    expect(store.getState().error).toBe("Device is busy.");
+    expect(start).toHaveBeenCalledWith(device);
+    expect(stop).toHaveBeenCalled();
+  });
 });
