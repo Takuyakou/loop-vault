@@ -36,12 +36,16 @@ export interface LiveChordDetection {
   notes: number[];
   noteNames: string[];
   bass?: number;
+  topScore?: number;
+  scoreMargin?: number;
 }
 
 export interface LiveChordStabilizerState {
-  displayed: LiveChordDetection;
+  confirmed: LiveChordDetection;
+  provisional?: LiveChordDetection;
   pending?: LiveChordDetection;
   pendingSinceMs?: number;
+  nextDeadlineMs?: number;
 }
 
 export interface LiveChordHistoryEntry {

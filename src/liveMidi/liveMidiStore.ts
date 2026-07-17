@@ -5,9 +5,12 @@ import {
   createLiveNoteState,
   detectLiveChord,
   emptyLiveChordDetection,
+  liveChordHistoryDeadline,
+  provisionalChordReadyAt,
   reduceLiveNoteState,
   stabilizeLiveChord,
   updateLiveChordHistory,
+  detectionKey,
   type LiveChordDetection,
   type LiveChordHistoryEntry,
   type LiveChordHistoryState,
@@ -16,6 +19,10 @@ import {
 } from "../domain/liveMidi";
 import { preferredInputFromDevice, resolvePreferredInput } from "./deviceSelection";
 import { liveMidiService, type LiveMidiServiceSnapshot } from "./liveMidiService";
+import {
+  LiveMidiLatencyTracker,
+  type LiveMidiLatencyReport,
+} from "./latencyMetrics";
 import {
   loadLiveMidiPreferences,
   saveLiveMidiPreferences,
@@ -41,9 +48,12 @@ export interface LiveMidiStoreState {
   preferences: LiveMidiPreferences;
   notes: LiveNoteState;
   stabilizer: LiveChordStabilizerState;
-  current: LiveChordDetection;
+  instant: LiveChordDetection;
+  provisionalChord?: LiveChordDetection;
+  confirmedChord: LiveChordDetection;
   historyState: LiveChordHistoryState;
   history: LiveChordHistoryEntry[];
+  latency: LiveMidiLatencyReport;
   activate: () => Promise<void>;
   deactivate: () => Promise<void>;
   refreshDevices: () => Promise<void>;
@@ -52,6 +62,7 @@ export interface LiveMidiStoreState {
   testDevice: (backendId: string) => Promise<LiveMidiDeviceTestResult>;
   setShowHistory: (show: boolean) => void;
   clearSession: () => void;
+  resetLatencyMetrics: () => void;
 }
 
 export interface LiveMidiDeviceTestResult {
@@ -62,26 +73,35 @@ export interface LiveMidiDeviceTestResult {
 export interface CreateLiveMidiStoreOptions {
   service?: LiveMidiServicePort;
   now?: () => number;
+  epochNow?: () => number;
   loadPreferences?: () => LiveMidiPreferences;
   savePreferences?: (preferences: LiveMidiPreferences) => void;
   setInterval?: typeof globalThis.setInterval;
   clearInterval?: typeof globalThis.clearInterval;
+  setTimeout?: typeof globalThis.setTimeout;
+  clearTimeout?: typeof globalThis.clearTimeout;
 }
 
 export function createLiveMidiStore(options: CreateLiveMidiStoreOptions = {}): StoreApi<LiveMidiStoreState> {
   const service = options.service ?? liveMidiService;
   const now = options.now ?? (() => performance.now());
+  const epochNow = options.epochNow ?? (() => performance.timeOrigin + performance.now());
   const loadPreferences = options.loadPreferences ?? (() => loadLiveMidiPreferences());
   const savePreferences = options.savePreferences ?? ((preferences) => saveLiveMidiPreferences(preferences));
-  const schedule = options.setInterval ?? globalThis.setInterval;
-  const cancel = options.clearInterval ?? globalThis.clearInterval;
+  const scheduleInterval = options.setInterval ?? globalThis.setInterval;
+  const cancelInterval = options.clearInterval ?? globalThis.clearInterval;
+  const scheduleTimeout = options.setTimeout ?? globalThis.setTimeout;
+  const cancelTimeout = options.clearTimeout ?? globalThis.clearTimeout;
   let unlistenSnapshot: (() => void) | undefined;
   let unlistenBatches: (() => void) | undefined;
-  let tickTimer: ReturnType<typeof globalThis.setInterval> | undefined;
+  let deadlineTimer: ReturnType<typeof globalThis.setTimeout> | undefined;
   let deviceTimer: ReturnType<typeof globalThis.setInterval> | undefined;
   let lastEventTimestampMs = 0;
   let lastBatchReceivedAt = 0;
   let historySequence = 0;
+  let lastCandidateKey: string | undefined;
+  let candidateOriginReceivedAtMs: number | undefined;
+  const latencyTracker = new LiveMidiLatencyTracker();
 
   const store = createStore<LiveMidiStoreState>((set, get) => ({
     active: false,
@@ -90,9 +110,11 @@ export function createLiveMidiStore(options: CreateLiveMidiStoreOptions = {}): S
     preferences: { alwaysOnTop: true, showHistory: true },
     notes: createLiveNoteState(),
     stabilizer: createLiveChordStabilizerState(),
-    current: emptyLiveChordDetection(),
+    instant: emptyLiveChordDetection(),
+    confirmedChord: emptyLiveChordDetection(),
     historyState: createLiveChordHistoryState(),
     history: [],
+    latency: latencyTracker.report(),
 
     async activate() {
       if (get().active) return;
@@ -105,11 +127,10 @@ export function createLiveMidiStore(options: CreateLiveMidiStoreOptions = {}): S
           status: snapshot.status,
           error: snapshot.error,
         });
-        if (snapshot.status === "disconnected" || snapshot.status === "error") resetNotes(set, get);
+        if (snapshot.status === "disconnected" || snapshot.status === "error") resetRuntimeNotes(set, get);
       });
       unlistenBatches = service.subscribeBatches((batch) => processBatch(batch, set, get));
-      tickTimer = schedule(() => advance(sessionNow(), set, get), 40);
-      deviceTimer = schedule(() => { void get().refreshDevices(); }, 2000);
+      deviceTimer = scheduleInterval(() => { void get().refreshDevices(); }, 2000);
       await get().refreshDevices();
       if (!get().active) return;
       const preferred = resolvePreferredInput(get().devices, preferences.preferredInput);
@@ -119,16 +140,16 @@ export function createLiveMidiStore(options: CreateLiveMidiStoreOptions = {}): S
     async deactivate() {
       if (!get().active) return;
       set({ active: false });
-      if (tickTimer !== undefined) cancel(tickTimer);
-      if (deviceTimer !== undefined) cancel(deviceTimer);
-      tickTimer = undefined;
+      if (deadlineTimer !== undefined) cancelTimeout(deadlineTimer);
+      if (deviceTimer !== undefined) cancelInterval(deviceTimer);
+      deadlineTimer = undefined;
       deviceTimer = undefined;
       unlistenSnapshot?.();
       unlistenBatches?.();
       unlistenSnapshot = undefined;
       unlistenBatches = undefined;
       await service.stop();
-      resetNotes(set, get);
+      resetRuntimeNotes(set, get);
       set({ status: "idle", selected: undefined });
     },
 
@@ -141,7 +162,7 @@ export function createLiveMidiStore(options: CreateLiveMidiStoreOptions = {}): S
     async selectDevice(backendId) {
       const device = get().devices.find((entry) => entry.backendId === backendId);
       if (!device) return;
-      resetNotes(set, get);
+      resetRuntimeNotes(set, get);
       const opened = await service.start(device);
       if (!opened || !get().active) return;
       const preferences = { ...get().preferences, preferredInput: preferredInputFromDevice(device) };
@@ -182,6 +203,11 @@ export function createLiveMidiStore(options: CreateLiveMidiStoreOptions = {}): S
       historySequence = 0;
       set({ historyState: createLiveChordHistoryState(), history: [] });
     },
+
+    resetLatencyMetrics() {
+      latencyTracker.reset();
+      set({ latency: latencyTracker.report() });
+    },
   }));
 
   function processBatch(
@@ -192,11 +218,29 @@ export function createLiveMidiStore(options: CreateLiveMidiStoreOptions = {}): S
     if (!get().active) return;
     lastBatchReceivedAt = now();
     for (const event of batch.events) {
+      if (event.receivedAtMs !== undefined) {
+        latencyTracker.record("rustMidiReceived", 0);
+        if (batch.emittedAtMs !== undefined) {
+          latencyTracker.record("rustBatchEmitted", batch.emittedAtMs - event.receivedAtMs);
+        }
+        if (batch.frontendReceivedAtMs !== undefined) {
+          latencyTracker.record(
+            "frontendBatchReceived",
+            batch.frontendReceivedAtMs - event.receivedAtMs,
+          );
+        }
+      }
+    }
+    for (const event of batch.events) {
       lastEventTimestampMs = Math.max(lastEventTimestampMs, event.timestampMs);
       const notes = reduceLiveNoteState(get().notes, event);
       set({ notes });
-      advance(event.timestampMs, set, get);
+      if (event.receivedAtMs !== undefined) {
+        latencyTracker.record("noteStateUpdated", epochNow() - event.receivedAtMs);
+      }
+      advance(event.timestampMs, set, get, event.receivedAtMs);
     }
+    scheduleNextDeadline(set, get);
   }
 
   function sessionNow(): number {
@@ -207,19 +251,100 @@ export function createLiveMidiStore(options: CreateLiveMidiStoreOptions = {}): S
     timestampMs: number,
     set: StoreApi<LiveMidiStoreState>["setState"],
     get: StoreApi<LiveMidiStoreState>["getState"],
+    inputReceivedAtMs?: number,
   ) {
     if (!get().active) return;
     const detection = detectLiveChord(get().notes);
-    const stabilizer = stabilizeLiveChord(get().stabilizer, detection, timestampMs);
+    const nextCandidateKey = detectionKey(detection);
+    if (nextCandidateKey !== lastCandidateKey) {
+      lastCandidateKey = nextCandidateKey;
+      candidateOriginReceivedAtMs = inputReceivedAtMs;
+      if (detection.kind === "chord" && inputReceivedAtMs !== undefined) {
+        latencyTracker.record(
+          "provisionalCandidateGenerated",
+          epochNow() - inputReceivedAtMs,
+        );
+      }
+    }
+    const previousProvisional = get().stabilizer.provisional;
+    const previousProvisionalKey = previousProvisional
+      ? detectionKey(previousProvisional)
+      : undefined;
+    const previousConfirmedKey = detectionKey(get().stabilizer.confirmed);
+    const stabilizer = stabilizeLiveChord(
+      get().stabilizer,
+      detection,
+      timestampMs,
+      provisionalChordReadyAt(get().notes, detection),
+    );
     const beforeCount = get().historyState.entries.length;
     const historyState = updateLiveChordHistory(
       get().historyState,
-      stabilizer.displayed,
+      stabilizer.confirmed,
       timestampMs,
       `live-${historySequence + 1}`,
     );
     if (historyState.entries.length > beforeCount) historySequence += 1;
-    set({ stabilizer, current: stabilizer.displayed, historyState, history: historyState.entries });
+    if (
+      stabilizer.provisional
+      && detectionKey(stabilizer.provisional) !== previousProvisionalKey
+      && candidateOriginReceivedAtMs !== undefined
+    ) {
+      latencyTracker.record(
+        "provisionalChordDisplayed",
+        epochNow() - candidateOriginReceivedAtMs,
+      );
+    }
+    if (
+      stabilizer.confirmed.kind === "chord"
+      && detectionKey(stabilizer.confirmed) !== previousConfirmedKey
+      && candidateOriginReceivedAtMs !== undefined
+    ) {
+      latencyTracker.record(
+        "confirmedChordDisplayed",
+        epochNow() - candidateOriginReceivedAtMs,
+      );
+    }
+    set({
+      stabilizer,
+      instant: detection,
+      provisionalChord: stabilizer.provisional,
+      confirmedChord: stabilizer.confirmed,
+      historyState,
+      history: historyState.entries,
+      latency: latencyTracker.report(),
+    });
+  }
+
+  function scheduleNextDeadline(
+    set: StoreApi<LiveMidiStoreState>["setState"],
+    get: StoreApi<LiveMidiStoreState>["getState"],
+  ) {
+    if (deadlineTimer !== undefined) cancelTimeout(deadlineTimer);
+    deadlineTimer = undefined;
+    const deadlines = [
+      get().stabilizer.nextDeadlineMs,
+      liveChordHistoryDeadline(get().historyState),
+    ].filter((value): value is number => value !== undefined);
+    const deadlineMs = deadlines.length > 0 ? Math.min(...deadlines) : undefined;
+    if (!get().active || deadlineMs === undefined) return;
+    const delayMs = Math.max(0, deadlineMs - sessionNow());
+    deadlineTimer = scheduleTimeout(() => {
+      deadlineTimer = undefined;
+      advance(sessionNow(), set, get);
+      scheduleNextDeadline(set, get);
+    }, delayMs);
+  }
+
+  function resetRuntimeNotes(
+    set: StoreApi<LiveMidiStoreState>["setState"],
+    get: StoreApi<LiveMidiStoreState>["getState"],
+  ) {
+    if (deadlineTimer !== undefined) cancelTimeout(deadlineTimer);
+    deadlineTimer = undefined;
+    lastCandidateKey = undefined;
+    candidateOriginReceivedAtMs = undefined;
+    resetNotes(set, get);
   }
 
   return store;
@@ -232,7 +357,10 @@ function resetNotes(
   set({
     notes: createLiveNoteState(),
     stabilizer: createLiveChordStabilizerState(),
-    current: emptyLiveChordDetection(),
+    instant: emptyLiveChordDetection(),
+    provisionalChord: undefined,
+    confirmedChord: emptyLiveChordDetection(),
     historyState: { entries: get().historyState.entries },
+    latency: get().latency,
   });
 }

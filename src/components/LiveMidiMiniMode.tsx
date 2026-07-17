@@ -13,12 +13,15 @@ export function LiveMidiMiniMode({ copy, onBack }: {
   const selected = useStore(defaultLiveMidiStore, (state) => state.selected);
   const status = useStore(defaultLiveMidiStore, (state) => state.status);
   const error = useStore(defaultLiveMidiStore, (state) => state.error);
-  const current = useStore(defaultLiveMidiStore, (state) => state.current);
+  const instant = useStore(defaultLiveMidiStore, (state) => state.instant);
+  const provisionalChord = useStore(defaultLiveMidiStore, (state) => state.provisionalChord);
+  const confirmedChord = useStore(defaultLiveMidiStore, (state) => state.confirmedChord);
   const history = useStore(defaultLiveMidiStore, (state) => state.history);
   const showHistory = useStore(defaultLiveMidiStore, (state) => state.preferences.showHistory ?? true);
   const selectDevice = useStore(defaultLiveMidiStore, (state) => state.selectDevice);
   const refreshDevices = useStore(defaultLiveMidiStore, (state) => state.refreshDevices);
   const setShowHistory = useStore(defaultLiveMidiStore, (state) => state.setShowHistory);
+  const displayedChord = provisionalChord ?? confirmedChord;
 
   return (
     <main className="flex h-screen min-h-40 min-w-[280px] flex-col overflow-hidden bg-[var(--lv-bg)] p-3 text-[var(--lv-text)]">
@@ -54,13 +57,13 @@ export function LiveMidiMiniMode({ copy, onBack }: {
         <div className="flex items-center gap-2" aria-live="polite" aria-atomic="true">
           <Piano aria-hidden="true" className="shrink-0 text-[var(--lv-accent)]" size={20} />
           <strong className="max-w-[calc(100vw-4rem)] overflow-hidden text-ellipsis whitespace-nowrap text-4xl font-semibold leading-none sm:text-[2.65rem]">
-            {current.label}
+            {displayedChord.label}
           </strong>
         </div>
         <p className="mt-2 max-w-full truncate text-xs text-[var(--lv-text-secondary)]">
-          {copy.notes}: {current.noteNames.length > 0 ? current.noteNames.join(" · ") : "—"}
+          {copy.notes}: {instant.noteNames.length > 0 ? instant.noteNames.join(" · ") : "—"}
           <span className="mx-2 text-[var(--lv-border-strong)]">|</span>
-          {copy.bass}: {current.bass === undefined ? "—" : noteNameFromPitchClass(current.bass)}
+          {copy.bass}: {instant.bass === undefined ? "—" : noteNameFromPitchClass(instant.bass)}
         </p>
         {error ? (
           <div role="alert" className="mt-1 max-w-full text-xs text-red-300">

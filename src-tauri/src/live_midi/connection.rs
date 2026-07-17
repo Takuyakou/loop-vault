@@ -12,7 +12,7 @@ use tauri::AppHandle;
 
 use super::{
     event_batch::spawn_batch_worker,
-    types::{LiveMidiDevice, RawLiveMidiEvent},
+    types::{unix_time_ms, LiveMidiDevice, RawLiveMidiEvent},
 };
 
 pub struct ActiveLiveMidiConnection {
@@ -51,7 +51,11 @@ impl ActiveLiveMidiConnection {
                 "Loop Vault Live MIDI input",
                 move |_midir_timestamp, message, _| {
                     if let Some(event) =
-                        normalize_message(started_at.elapsed().as_secs_f64() * 1000.0, message)
+                        normalize_message(
+                            started_at.elapsed().as_secs_f64() * 1000.0,
+                            unix_time_ms(),
+                            message,
+                        )
                     {
                         let _ = sender.send(event);
                     }
@@ -78,7 +82,11 @@ impl Drop for ActiveLiveMidiConnection {
     }
 }
 
-fn normalize_message(timestamp_ms: f64, message: &[u8]) -> Option<RawLiveMidiEvent> {
+fn normalize_message(
+    timestamp_ms: f64,
+    received_at_ms: f64,
+    message: &[u8],
+) -> Option<RawLiveMidiEvent> {
     let status_byte = *message.first()?;
     if !(0x80..=0xef).contains(&status_byte) {
         return None;
@@ -86,6 +94,7 @@ fn normalize_message(timestamp_ms: f64, message: &[u8]) -> Option<RawLiveMidiEve
 
     Some(RawLiveMidiEvent {
         timestamp_ms,
+        received_at_ms,
         status: status_byte & 0xf0,
         channel: status_byte & 0x0f,
         data1: message.get(1).copied().unwrap_or(0),
@@ -99,11 +108,12 @@ mod tests {
 
     #[test]
     fn normalizes_channel_messages_and_ignores_system_messages() {
-        let event = normalize_message(12.5, &[0x92, 60, 100]).expect("note event");
+        let event = normalize_message(12.5, 1_000.0, &[0x92, 60, 100]).expect("note event");
         assert_eq!(event.status, 0x90);
         assert_eq!(event.channel, 2);
         assert_eq!(event.data1, 60);
         assert_eq!(event.data2, 100);
-        assert!(normalize_message(0.0, &[0xf8]).is_none());
+        assert_eq!(event.received_at_ms, 1_000.0);
+        assert!(normalize_message(0.0, 1_001.0, &[0xf8]).is_none());
     }
 }

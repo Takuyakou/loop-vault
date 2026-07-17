@@ -3,26 +3,49 @@ import { emptyLiveChordDetection } from "./liveChordDetector";
 import type { LiveChordDetection, LiveChordStabilizerState } from "./types";
 
 export function createLiveChordStabilizerState(): LiveChordStabilizerState {
-  return { displayed: emptyLiveChordDetection() };
+  return { confirmed: emptyLiveChordDetection() };
 }
 
 export function stabilizeLiveChord(
   state: LiveChordStabilizerState,
   candidate: LiveChordDetection,
   timestampMs: number,
+  provisionalReadyAtMs?: number,
 ): LiveChordStabilizerState {
-  if (detectionKey(candidate) === detectionKey(state.displayed)) {
-    return { displayed: candidate.kind === "empty" ? state.displayed : candidate };
+  if (detectionKey(candidate) === detectionKey(state.confirmed)) {
+    return {
+      confirmed: candidate.kind === "empty" ? state.confirmed : candidate,
+    };
   }
 
   const pendingSinceMs = state.pending && detectionKey(state.pending) === detectionKey(candidate)
     ? state.pendingSinceMs ?? timestampMs
     : timestampMs;
-  const delay = switchDelay(state.displayed, candidate);
-  if (timestampMs - pendingSinceMs < delay) {
-    return { ...state, pending: candidate, pendingSinceMs };
+  const confirmedAtMs = pendingSinceMs + switchDelay(state.confirmed, candidate);
+  if (timestampMs >= confirmedAtMs) {
+    return { confirmed: candidate };
   }
-  return { displayed: candidate };
+
+  const canShowProvisional = candidate.kind === "chord"
+    && provisionalReadyAtMs !== undefined
+    && timestampMs >= provisionalReadyAtMs;
+  const provisional = canShowProvisional
+    ? candidate
+    : state.provisional && detectionKey(state.provisional) === detectionKey(candidate)
+      ? candidate
+      : undefined;
+  const deadlines = [confirmedAtMs];
+  if (provisionalReadyAtMs !== undefined && provisionalReadyAtMs > timestampMs) {
+    deadlines.push(provisionalReadyAtMs);
+  }
+
+  return {
+    confirmed: state.confirmed,
+    ...(provisional ? { provisional } : {}),
+    pending: candidate,
+    pendingSinceMs,
+    nextDeadlineMs: Math.min(...deadlines),
+  };
 }
 
 export function detectionKey(value: LiveChordDetection): string {

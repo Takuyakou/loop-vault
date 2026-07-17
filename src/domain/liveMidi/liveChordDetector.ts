@@ -24,6 +24,8 @@ export function detectLiveChord(state: LiveNoteState): LiveChordDetection {
     notes,
     noteNames,
     bass,
+    topScore: best.score,
+    scoreMargin: best.score - (alternatives[1]?.score ?? best.score),
   };
 }
 

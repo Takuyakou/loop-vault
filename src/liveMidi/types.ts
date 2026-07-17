@@ -6,6 +6,7 @@ export interface LiveMidiDevice {
 
 export interface RawLiveMidiEvent {
   timestampMs: number;
+  receivedAtMs?: number;
   status: number;
   channel: number;
   data1: number;
@@ -14,6 +15,8 @@ export interface RawLiveMidiEvent {
 
 export interface RawLiveMidiEventBatch {
   connectionId: string;
+  emittedAtMs?: number;
+  frontendReceivedAtMs?: number;
   events: RawLiveMidiEvent[];
 }
 
