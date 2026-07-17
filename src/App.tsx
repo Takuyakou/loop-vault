@@ -43,6 +43,12 @@ import { historyToSavedProgressionBlock, type LiveChordHistoryEntry } from "./do
 type View = AppView;
 const pipeline: Status[] = ["idea", "loop", "arrange", "mix", "done"];
 
+export function errorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string" && error.trim()) return error;
+  return fallback;
+}
+
 function App() {
   const loadStatus = useStore(defaultVaultStore, (state) => state.loadStatus);
   const ideas = useStore(defaultVaultStore, (state) => state.ideas);
@@ -190,7 +196,7 @@ async function analyzeMidiPath(path: string) {
       setLiveMidiMode(true);
       await defaultLiveMidiStore.getState().activate();
     } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.liveMidi.openFailed);
+      setToast(errorMessage(error, copy.liveMidi.miniModeFailed));
       setLiveMidiMode(false);
     }
   }

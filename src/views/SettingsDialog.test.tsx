@@ -4,7 +4,11 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { appCopy } from "../i18n";
+import { createLiveMidiStore, type LiveMidiServicePort } from "../liveMidi/liveMidiStore";
+import type { LiveMidiDevice } from "../liveMidi/types";
 import { SettingsDialog } from "./SettingsDialog";
+
+const midiDevice: LiveMidiDevice = { backendId: "roland", name: "Roland Digital Piano", index: 2 };
 
 const mocks = vi.hoisted(() => ({
   openFileDialog: vi.fn(),
@@ -53,11 +57,12 @@ afterEach(() => {
 });
 
 describe("SettingsDialog sections", () => {
-  it("shows the three Japanese sections and keeps developer analysis collapsed initially", async () => {
+  it("shows the four Japanese sections and keeps developer analysis collapsed initially", async () => {
     const mounted = await renderSettings();
     const headings = [...dialogs()[0]!.querySelectorAll("h3")].map((heading) => heading.textContent);
     for (const heading of [
       appCopy.ja.settingsUi.general,
+      appCopy.ja.settingsUi.liveMidiTitle,
       appCopy.ja.settingsUi.data,
       appCopy.ja.settingsUi.analysis,
     ]) {
@@ -73,13 +78,32 @@ describe("SettingsDialog sections", () => {
     await mounted.unmount();
   });
 
-  it("renders the same three-section hierarchy in English", async () => {
+  it("renders the same four-section hierarchy in English", async () => {
     const mounted = await renderSettings({ language: "en", copy: appCopy.en });
     const text = dialogs()[0]?.textContent;
     expect(text).toContain(appCopy.en.settingsUi.general);
+    expect(text).toContain(appCopy.en.settingsUi.liveMidiTitle);
     expect(text).toContain(appCopy.en.settingsUi.data);
     expect(text).toContain(appCopy.en.settingsUi.analysis);
     expect(text).toContain(appCopy.en.settingsUi.monthlyGoal);
+    await mounted.unmount();
+  });
+
+  it("selects and tests the default MIDI input from settings", async () => {
+    const midi = settingsMidiStore();
+    const mounted = await renderSettings({ liveMidiStore: midi.store });
+    const select = document.querySelector<HTMLSelectElement>("#settings-live-midi-device");
+
+    await changeSelect(select, midiDevice.backendId);
+    expect(midi.saved).toHaveBeenCalledWith(expect.objectContaining({
+      preferredInput: { backendId: "roland", name: "Roland Digital Piano", previousIndex: 2 },
+    }));
+    expect(midi.start).not.toHaveBeenCalled();
+
+    await clickButton(appCopy.ja.settingsUi.liveMidiTest, dialogs()[0]);
+    expect(midi.start).toHaveBeenCalledWith(midiDevice);
+    expect(midi.stop).toHaveBeenCalled();
+    expect(dialogs()[0]?.textContent).toContain(appCopy.ja.settingsUi.liveMidiTestSucceeded);
     await mounted.unmount();
   });
 
@@ -178,6 +202,7 @@ async function renderSettings(overrides: Partial<React.ComponentProps<typeof Set
   const host = document.createElement("div");
   document.body.append(host);
   const root = createRoot(host);
+  const midi = settingsMidiStore();
   await act(async () => {
     root.render(
       <SettingsDialog
@@ -196,15 +221,37 @@ async function renderSettings(overrides: Partial<React.ComponentProps<typeof Set
         setToast={vi.fn()}
         copy={appCopy.ja}
         onClose={vi.fn()}
+        liveMidiStore={midi.store}
         {...overrides}
       />,
     );
+    await Promise.resolve();
   });
   return {
     unmount: async () => {
       await act(async () => root.unmount());
       host.remove();
     },
+  };
+}
+
+function settingsMidiStore() {
+  const start = vi.fn(async () => true);
+  const stop = vi.fn(async () => undefined);
+  const saved = vi.fn();
+  const service: LiveMidiServicePort = {
+    getSnapshot: () => ({ devices: [midiDevice], status: "idle" }),
+    subscribe: () => () => undefined,
+    subscribeBatches: () => () => undefined,
+    refreshDevices: vi.fn(async () => [midiDevice]),
+    start,
+    stop,
+  };
+  return {
+    store: createLiveMidiStore({ service, loadPreferences: () => ({}), savePreferences: saved }),
+    start,
+    stop,
+    saved,
   };
 }
 

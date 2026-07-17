@@ -62,7 +62,12 @@ export function LiveMidiMiniMode({ copy, onBack }: {
           <span className="mx-2 text-[var(--lv-border-strong)]">|</span>
           {copy.bass}: {current.bass === undefined ? "—" : noteNameFromPitchClass(current.bass)}
         </p>
-        {error ? <p role="alert" className="mt-1 line-clamp-2 text-xs text-red-300">{copy.openFailed}</p> : null}
+        {error ? (
+          <div role="alert" className="mt-1 max-w-full text-xs text-red-300">
+            <p>{copy.openFailed}</p>
+            <p className="truncate" title={error}>{error}</p>
+          </div>
+        ) : null}
       </section>
 
       {showHistory ? (

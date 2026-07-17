@@ -48,8 +48,15 @@ export interface LiveMidiStoreState {
   deactivate: () => Promise<void>;
   refreshDevices: () => Promise<void>;
   selectDevice: (backendId: string) => Promise<void>;
+  setPreferredDevice: (backendId: string) => void;
+  testDevice: (backendId: string) => Promise<LiveMidiDeviceTestResult>;
   setShowHistory: (show: boolean) => void;
   clearSession: () => void;
+}
+
+export interface LiveMidiDeviceTestResult {
+  ok: boolean;
+  error?: string;
 }
 
 export interface CreateLiveMidiStoreOptions {
@@ -127,7 +134,8 @@ export function createLiveMidiStore(options: CreateLiveMidiStoreOptions = {}): S
 
     async refreshDevices() {
       const devices = await service.refreshDevices();
-      if (get().active) set({ devices });
+      const preferences = get().active ? get().preferences : loadPreferences();
+      set({ devices, preferences });
     },
 
     async selectDevice(backendId) {
@@ -139,6 +147,29 @@ export function createLiveMidiStore(options: CreateLiveMidiStoreOptions = {}): S
       const preferences = { ...get().preferences, preferredInput: preferredInputFromDevice(device) };
       set({ preferences });
       savePreferences(preferences);
+    },
+
+    setPreferredDevice(backendId) {
+      const device = get().devices.find((entry) => entry.backendId === backendId);
+      const preferences = {
+        ...get().preferences,
+        preferredInput: device ? preferredInputFromDevice(device) : undefined,
+      };
+      set({ preferences, error: undefined });
+      savePreferences(preferences);
+    },
+
+    async testDevice(backendId) {
+      const device = get().devices.find((entry) => entry.backendId === backendId);
+      if (!device) return { ok: false, error: "Selected MIDI input is no longer available." };
+      if (get().active) return { ok: false, error: "Live MIDI is already active." };
+
+      set({ status: "connecting", error: undefined });
+      const opened = await service.start(device);
+      const error = service.getSnapshot().error;
+      await service.stop();
+      set({ status: opened ? "idle" : "error", selected: undefined, error });
+      return opened ? { ok: true } : { ok: false, error };
     },
 
     setShowHistory(show) {
