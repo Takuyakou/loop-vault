@@ -13,6 +13,7 @@ import { HomeView } from "./views/HomeView";
 import { SettingsDialog } from "./views/SettingsDialog";
 import { VaultView } from "./views/VaultView";
 import { Toast } from "./components/Toast";
+import { LiveMidiMiniMode } from "./components/LiveMidiMiniMode";
 import { UndoToast } from "./components/UndoToast";
 import { statusLabel } from "./domain/displayLabels";
 import type { SongIdea, Status } from "./domain/types";
@@ -33,6 +34,9 @@ import { defaultVaultStore } from "./store/defaultVaultStore";
 import { CaptureView } from "./views/CaptureView";
 import { useUndoQueue } from "./hooks/useUndoQueue";
 import type { UndoRequest } from "./hooks/useUndoQueue";
+import { defaultLiveMidiStore } from "./liveMidi/defaultLiveMidiStore";
+import { createTauriMiniWindowAdapter, MiniWindowController } from "./liveMidi/miniWindowController";
+import { loadLiveMidiPreferences, saveLiveMidiPreferences } from "./liveMidi/preferences";
 
 type View = AppView;
 const pipeline: Status[] = ["idea", "loop", "arrange", "mix", "done"];
@@ -76,8 +80,10 @@ function App() {
   const [isCreateOpen, setCreateOpen] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [toast, setToast] = useState<string>();
+  const [liveMidiMode, setLiveMidiMode] = useState(false);
   const [startupRestoreName, setStartupRestoreName] = useState<string>();
   const undoFallbackFocusRef = useRef<HTMLHeadingElement>(null);
+  const miniWindowControllerRef = useRef<MiniWindowController | undefined>(undefined);
   const undoQueue = useUndoQueue();
   const undoEpochRef = useRef(vaultEpoch);
   const pendingDeletions = useMemo(
@@ -125,6 +131,18 @@ function App() {
     return undefined;
   }, [toast]);
 
+  useEffect(() => {
+    if (!liveMidiMode) return undefined;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        void leaveLiveMidiMode();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [liveMidiMode]);
+
   function openDetail(id: string) {
     setSelectedId(id);
     setView("detail");
@@ -156,6 +174,34 @@ async function analyzeMidiPath(path: string) {
     }
   }
 
+  async function enterLiveMidiMode() {
+    if (liveMidiMode) return;
+    try {
+      const preferences = loadLiveMidiPreferences();
+      const adapter = createTauriMiniWindowAdapter();
+      if (adapter) {
+        const controller = new MiniWindowController(adapter);
+        miniWindowControllerRef.current = controller;
+        await controller.enter(preferences.miniBounds, preferences.alwaysOnTop ?? true);
+      }
+      setLiveMidiMode(true);
+      await defaultLiveMidiStore.getState().activate();
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : copy.liveMidi.openFailed);
+      setLiveMidiMode(false);
+    }
+  }
+
+  async function leaveLiveMidiMode() {
+    await defaultLiveMidiStore.getState().deactivate();
+    const miniBounds = await miniWindowControllerRef.current?.exit();
+    miniWindowControllerRef.current = undefined;
+    if (miniBounds) {
+      saveLiveMidiPreferences({ ...defaultLiveMidiStore.getState().preferences, miniBounds });
+    }
+    setLiveMidiMode(false);
+  }
+
   function requestDelete(idea: SongIdea) {
     const deleted = deleteIdeaForUndo({
       idea,
@@ -175,6 +221,7 @@ async function analyzeMidiPath(path: string) {
       view={view}
       setView={setView}
       openCreate={() => setCreateOpen(true)}
+      openLiveMidi={() => { void enterLiveMidiMode(); }}
       openSettings={() => {
         setSettingsOpen(true);
         void refreshBackups();
@@ -183,6 +230,10 @@ async function analyzeMidiPath(path: string) {
       saveStatus={saving ? "saving" : unsaved ? "unsaved" : "saved"}
     />
   );
+
+  if (liveMidiMode) {
+    return <LiveMidiMiniMode copy={copy.liveMidi} onBack={() => { void leaveLiveMidiMode(); }} />;
+  }
 
   return (
     <main className="min-h-screen bg-[var(--lv-bg)] text-[var(--lv-text)]">

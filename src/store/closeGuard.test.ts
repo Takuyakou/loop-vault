@@ -143,8 +143,8 @@ describe("close guards", () => {
     vi.spyOn(playbackController, "stop").mockImplementation(() => {
       order.push("stop");
     });
-    tauriMocks.invoke.mockImplementation(async () => {
-      order.push("exit");
+    tauriMocks.invoke.mockImplementation(async (command: string) => {
+      order.push(command === "exit_app" ? "exit" : "midi-stop");
     });
     let currentState = state({ unsaved: true });
     const flush = vi.fn(async () => {
@@ -156,7 +156,8 @@ describe("close guards", () => {
     await closeHandler?.({ preventDefault: vi.fn() });
 
     expect(flush).toHaveBeenCalledOnce();
-    expect(order).toEqual(["stop", "exit"]);
+    expect(order).toEqual(["stop", "midi-stop", "exit"]);
+    expect(tauriMocks.invoke).toHaveBeenCalledWith("close_live_midi_input");
     expect(tauriMocks.invoke).toHaveBeenCalledWith("exit_app");
   });
 });

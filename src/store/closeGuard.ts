@@ -4,6 +4,7 @@ import { message } from "@tauri-apps/plugin-dialog";
 import type { StoreApi } from "zustand/vanilla";
 import type { VaultStoreState } from "./vaultStore";
 import { playbackController } from "../audio/playbackController";
+import { liveMidiService } from "../liveMidi/liveMidiService";
 
 export function shouldBlockClose(state: VaultStoreState): boolean {
   return state.unsaved;
@@ -87,5 +88,6 @@ export async function registerTauriCloseGuard(
 
 export async function exitDesktopApp(): Promise<void> {
   playbackController.stop();
+  await liveMidiService.stop();
   await invoke("exit_app");
 }
