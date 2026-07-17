@@ -34,6 +34,7 @@ async function renderShell({
       view={view}
       setView={setView}
       openCreate={vi.fn()}
+      openLiveMidi={vi.fn()}
       openSettings={openSettings}
       copy={appCopy.en}
       saveStatus={saveStatus}

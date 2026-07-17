@@ -1,15 +1,16 @@
 import type { AppCopy } from "../i18n";
 import { playbackController, type PlaybackController } from "../audio/playbackController";
 import { usePlaybackState } from "../hooks/usePlaybackState";
-import { Music, Settings } from "lucide-react";
+import { Music, Piano, Settings } from "lucide-react";
 
 export type AppView = "home" | "capture" | "library" | "detail";
 export type SaveStatus = "saved" | "saving" | "unsaved";
 
-export function AppShell({ view, setView, openCreate, openSettings, copy, saveStatus, controller = playbackController }: {
+export function AppShell({ view, setView, openCreate, openLiveMidi, openSettings, copy, saveStatus, controller = playbackController }: {
   view: AppView;
   setView: (view: AppView) => void;
   openCreate: () => void;
+  openLiveMidi: () => void;
   openSettings: () => void;
   copy: AppCopy;
   saveStatus: SaveStatus;
@@ -42,6 +43,9 @@ export function AppShell({ view, setView, openCreate, openSettings, copy, saveSt
           <span aria-hidden="true">{saveSymbol}</span>
           <span className="hidden whitespace-nowrap lg:inline">{saveLabel}</span>
         </span>
+        <button className="lv-button-ghost grid h-9 w-9 place-items-center" onClick={openLiveMidi} aria-label={copy.nav.liveMidi} title={copy.nav.liveMidi}>
+          <Piano aria-hidden="true" size={19} />
+        </button>
         <button className="ml-1 grid h-9 w-9 shrink-0 place-items-center rounded border border-[var(--lv-border-strong)] text-lg text-[var(--lv-text-secondary)] hover:border-teal-300 hover:bg-[var(--lv-surface)] md:ml-2" onClick={openSettings} aria-label={copy.nav.settings} title={copy.nav.settings}>
           <Settings aria-hidden="true" size={20} />
         </button>
