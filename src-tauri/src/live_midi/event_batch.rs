@@ -10,7 +10,7 @@ use std::{
 
 use tauri::{AppHandle, Emitter};
 
-use super::types::{RawLiveMidiEvent, RawLiveMidiEventBatch};
+use super::types::{unix_time_ms, RawLiveMidiEvent, RawLiveMidiEventBatch};
 
 pub const LIVE_MIDI_BATCH_EVENT: &str = "live-midi-event-batch";
 
@@ -37,6 +37,7 @@ pub fn spawn_batch_worker(
                 LIVE_MIDI_BATCH_EVENT,
                 RawLiveMidiEventBatch {
                     connection_id: connection_id.clone(),
+                    emitted_at_ms: unix_time_ms(),
                     events,
                 },
             );

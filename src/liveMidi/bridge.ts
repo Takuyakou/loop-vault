@@ -27,13 +27,16 @@ export const tauriLiveMidiBridge: LiveMidiBridge = {
   async listenBatches(handler) {
     if (!isTauri()) return () => undefined;
     return listen<RawLiveMidiEventBatch>(LIVE_MIDI_BATCH_EVENT, (event) => {
-      const batch = normalizeBatch(event.payload);
+      const batch = normalizeBatch(event.payload, epochNow());
       if (batch) handler(batch);
     });
   },
 };
 
-export function normalizeBatch(value: unknown): RawLiveMidiEventBatch | undefined {
+export function normalizeBatch(
+  value: unknown,
+  frontendReceivedAtMs = epochNow(),
+): RawLiveMidiEventBatch | undefined {
   if (!isRecord(value) || typeof value.connectionId !== "string" || !Array.isArray(value.events)) {
     return undefined;
   }
@@ -43,13 +46,27 @@ export function normalizeBatch(value: unknown): RawLiveMidiEventBatch | undefine
     if (!fields.every((field) => typeof field === "number" && Number.isFinite(field))) return [];
     return [{
       timestampMs: event.timestampMs as number,
+      ...(typeof event.receivedAtMs === "number" && Number.isFinite(event.receivedAtMs)
+        ? { receivedAtMs: event.receivedAtMs }
+        : {}),
       status: event.status as number,
       channel: event.channel as number,
       data1: event.data1 as number,
       data2: event.data2 as number,
     }];
   });
-  return { connectionId: value.connectionId, events };
+  return {
+    connectionId: value.connectionId,
+    ...(typeof value.emittedAtMs === "number" && Number.isFinite(value.emittedAtMs)
+      ? { emittedAtMs: value.emittedAtMs }
+      : {}),
+    frontendReceivedAtMs,
+    events,
+  };
+}
+
+function epochNow(): number {
+  return performance.timeOrigin + performance.now();
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

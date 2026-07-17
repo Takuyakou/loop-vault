@@ -8,6 +8,7 @@ import {
   reduceLiveNoteState,
   stabilizeLiveChord,
   updateLiveChordHistory,
+  detectionKey,
   type LiveChordDetection,
   type LiveChordHistoryEntry,
   type LiveChordHistoryState,
@@ -16,6 +17,10 @@ import {
 } from "../domain/liveMidi";
 import { preferredInputFromDevice, resolvePreferredInput } from "./deviceSelection";
 import { liveMidiService, type LiveMidiServiceSnapshot } from "./liveMidiService";
+import {
+  LiveMidiLatencyTracker,
+  type LiveMidiLatencyReport,
+} from "./latencyMetrics";
 import {
   loadLiveMidiPreferences,
   saveLiveMidiPreferences,
@@ -44,6 +49,7 @@ export interface LiveMidiStoreState {
   current: LiveChordDetection;
   historyState: LiveChordHistoryState;
   history: LiveChordHistoryEntry[];
+  latency: LiveMidiLatencyReport;
   activate: () => Promise<void>;
   deactivate: () => Promise<void>;
   refreshDevices: () => Promise<void>;
@@ -52,6 +58,7 @@ export interface LiveMidiStoreState {
   testDevice: (backendId: string) => Promise<LiveMidiDeviceTestResult>;
   setShowHistory: (show: boolean) => void;
   clearSession: () => void;
+  resetLatencyMetrics: () => void;
 }
 
 export interface LiveMidiDeviceTestResult {
@@ -62,6 +69,7 @@ export interface LiveMidiDeviceTestResult {
 export interface CreateLiveMidiStoreOptions {
   service?: LiveMidiServicePort;
   now?: () => number;
+  epochNow?: () => number;
   loadPreferences?: () => LiveMidiPreferences;
   savePreferences?: (preferences: LiveMidiPreferences) => void;
   setInterval?: typeof globalThis.setInterval;
@@ -71,6 +79,7 @@ export interface CreateLiveMidiStoreOptions {
 export function createLiveMidiStore(options: CreateLiveMidiStoreOptions = {}): StoreApi<LiveMidiStoreState> {
   const service = options.service ?? liveMidiService;
   const now = options.now ?? (() => performance.now());
+  const epochNow = options.epochNow ?? (() => performance.timeOrigin + performance.now());
   const loadPreferences = options.loadPreferences ?? (() => loadLiveMidiPreferences());
   const savePreferences = options.savePreferences ?? ((preferences) => saveLiveMidiPreferences(preferences));
   const schedule = options.setInterval ?? globalThis.setInterval;
@@ -82,6 +91,9 @@ export function createLiveMidiStore(options: CreateLiveMidiStoreOptions = {}): S
   let lastEventTimestampMs = 0;
   let lastBatchReceivedAt = 0;
   let historySequence = 0;
+  let lastCandidateKey: string | undefined;
+  let candidateOriginReceivedAtMs: number | undefined;
+  const latencyTracker = new LiveMidiLatencyTracker();
 
   const store = createStore<LiveMidiStoreState>((set, get) => ({
     active: false,
@@ -93,6 +105,7 @@ export function createLiveMidiStore(options: CreateLiveMidiStoreOptions = {}): S
     current: emptyLiveChordDetection(),
     historyState: createLiveChordHistoryState(),
     history: [],
+    latency: latencyTracker.report(),
 
     async activate() {
       if (get().active) return;
@@ -182,6 +195,11 @@ export function createLiveMidiStore(options: CreateLiveMidiStoreOptions = {}): S
       historySequence = 0;
       set({ historyState: createLiveChordHistoryState(), history: [] });
     },
+
+    resetLatencyMetrics() {
+      latencyTracker.reset();
+      set({ latency: latencyTracker.report() });
+    },
   }));
 
   function processBatch(
@@ -192,10 +210,27 @@ export function createLiveMidiStore(options: CreateLiveMidiStoreOptions = {}): S
     if (!get().active) return;
     lastBatchReceivedAt = now();
     for (const event of batch.events) {
+      if (event.receivedAtMs !== undefined) {
+        latencyTracker.record("rustMidiReceived", 0);
+        if (batch.emittedAtMs !== undefined) {
+          latencyTracker.record("rustBatchEmitted", batch.emittedAtMs - event.receivedAtMs);
+        }
+        if (batch.frontendReceivedAtMs !== undefined) {
+          latencyTracker.record(
+            "frontendBatchReceived",
+            batch.frontendReceivedAtMs - event.receivedAtMs,
+          );
+        }
+      }
+    }
+    for (const event of batch.events) {
       lastEventTimestampMs = Math.max(lastEventTimestampMs, event.timestampMs);
       const notes = reduceLiveNoteState(get().notes, event);
       set({ notes });
-      advance(event.timestampMs, set, get);
+      if (event.receivedAtMs !== undefined) {
+        latencyTracker.record("noteStateUpdated", epochNow() - event.receivedAtMs);
+      }
+      advance(event.timestampMs, set, get, event.receivedAtMs);
     }
   }
 
@@ -207,9 +242,22 @@ export function createLiveMidiStore(options: CreateLiveMidiStoreOptions = {}): S
     timestampMs: number,
     set: StoreApi<LiveMidiStoreState>["setState"],
     get: StoreApi<LiveMidiStoreState>["getState"],
+    inputReceivedAtMs?: number,
   ) {
     if (!get().active) return;
     const detection = detectLiveChord(get().notes);
+    const nextCandidateKey = detectionKey(detection);
+    if (nextCandidateKey !== lastCandidateKey) {
+      lastCandidateKey = nextCandidateKey;
+      candidateOriginReceivedAtMs = inputReceivedAtMs;
+      if (detection.kind === "chord" && inputReceivedAtMs !== undefined) {
+        latencyTracker.record(
+          "provisionalCandidateGenerated",
+          epochNow() - inputReceivedAtMs,
+        );
+      }
+    }
+    const previousDisplayedKey = detectionKey(get().stabilizer.displayed);
     const stabilizer = stabilizeLiveChord(get().stabilizer, detection, timestampMs);
     const beforeCount = get().historyState.entries.length;
     const historyState = updateLiveChordHistory(
@@ -219,7 +267,22 @@ export function createLiveMidiStore(options: CreateLiveMidiStoreOptions = {}): S
       `live-${historySequence + 1}`,
     );
     if (historyState.entries.length > beforeCount) historySequence += 1;
-    set({ stabilizer, current: stabilizer.displayed, historyState, history: historyState.entries });
+    if (
+      detectionKey(stabilizer.displayed) !== previousDisplayedKey
+      && candidateOriginReceivedAtMs !== undefined
+    ) {
+      latencyTracker.record(
+        "confirmedChordDisplayed",
+        epochNow() - candidateOriginReceivedAtMs,
+      );
+    }
+    set({
+      stabilizer,
+      current: stabilizer.displayed,
+      historyState,
+      history: historyState.entries,
+      latency: latencyTracker.report(),
+    });
   }
 
   return store;
@@ -234,5 +297,6 @@ function resetNotes(
     stabilizer: createLiveChordStabilizerState(),
     current: emptyLiveChordDetection(),
     historyState: { entries: get().historyState.entries },
+    latency: get().latency,
   });
 }
