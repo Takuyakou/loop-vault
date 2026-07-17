@@ -14,6 +14,7 @@ import { SettingsDialog } from "./views/SettingsDialog";
 import { VaultView } from "./views/VaultView";
 import { Toast } from "./components/Toast";
 import { LiveMidiMiniMode } from "./components/LiveMidiMiniMode";
+import { LiveMidiImportDialog, type LiveMidiImportRequest } from "./components/LiveMidiImportDialog";
 import { UndoToast } from "./components/UndoToast";
 import { statusLabel } from "./domain/displayLabels";
 import type { SongIdea, Status } from "./domain/types";
@@ -37,6 +38,7 @@ import type { UndoRequest } from "./hooks/useUndoQueue";
 import { defaultLiveMidiStore } from "./liveMidi/defaultLiveMidiStore";
 import { createTauriMiniWindowAdapter, MiniWindowController } from "./liveMidi/miniWindowController";
 import { loadLiveMidiPreferences, saveLiveMidiPreferences } from "./liveMidi/preferences";
+import { historyToSavedProgressionBlock, type LiveChordHistoryEntry } from "./domain/liveMidi";
 
 type View = AppView;
 const pipeline: Status[] = ["idea", "loop", "arrange", "mix", "done"];
@@ -81,6 +83,7 @@ function App() {
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [toast, setToast] = useState<string>();
   const [liveMidiMode, setLiveMidiMode] = useState(false);
+  const [pendingLiveMidiHistory, setPendingLiveMidiHistory] = useState<LiveChordHistoryEntry[]>();
   const [startupRestoreName, setStartupRestoreName] = useState<string>();
   const undoFallbackFocusRef = useRef<HTMLHeadingElement>(null);
   const miniWindowControllerRef = useRef<MiniWindowController | undefined>(undefined);
@@ -200,6 +203,33 @@ async function analyzeMidiPath(path: string) {
       saveLiveMidiPreferences({ ...defaultLiveMidiStore.getState().preferences, miniBounds });
     }
     setLiveMidiMode(false);
+    const history = defaultLiveMidiStore.getState().history;
+    if (history.length > 0) setPendingLiveMidiHistory([...history]);
+  }
+
+  function discardLiveMidiHistory() {
+    setPendingLiveMidiHistory(undefined);
+    defaultLiveMidiStore.getState().clearSession();
+  }
+
+  function importLiveMidiHistory(request: LiveMidiImportRequest) {
+    if (!pendingLiveMidiHistory) return;
+    const ideaId = request.ideaId ?? (request.newIdeaTitle
+      ? createIdeaFromDraft({ title: request.newIdeaTitle, status: "idea" })
+      : undefined);
+    const block = historyToSavedProgressionBlock(
+      pendingLiveMidiHistory,
+      request.startIndex,
+      request.endIndex,
+      { id: crypto.randomUUID(), capturedAt: new Date().toISOString() },
+    );
+    if (!ideaId || !block || !appendBlockToIdea(ideaId, block, undefined, { userVerified: false })) {
+      setToast(copy.liveMidi.importFailed);
+      return;
+    }
+    discardLiveMidiHistory();
+    setToast(copy.liveMidi.imported);
+    openDetail(ideaId);
   }
 
   function requestDelete(idea: SongIdea) {
@@ -362,6 +392,15 @@ async function analyzeMidiPath(path: string) {
           setToast={setToast}
           copy={copy}
           onClose={() => setSettingsOpen(false)}
+        />
+      ) : null}
+      {pendingLiveMidiHistory ? (
+        <LiveMidiImportDialog
+          history={pendingLiveMidiHistory}
+          ideas={visibleIdeas}
+          copy={copy.liveMidi}
+          onCancel={discardLiveMidiHistory}
+          onSave={importLiveMidiHistory}
         />
       ) : null}
       <ConfirmDialog

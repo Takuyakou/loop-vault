@@ -42,6 +42,8 @@ export interface ChordTimelineItem {
 
 export interface SavedProgressionBlock {
   id: string;
+  origin?: "live-midi";
+  confidence?: number;
   pinned?: boolean;
   sourceAssetId?: string;
   sourceFileName?: string;

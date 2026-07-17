@@ -5,6 +5,8 @@ export { detectLiveBass } from "./liveBass";
 export { detectLiveChord, emptyLiveChordDetection } from "./liveChordDetector";
 export { createLiveChordStabilizerState, detectionKey, stabilizeLiveChord } from "./chordStabilizer";
 export { createLiveChordHistoryState, updateLiveChordHistory } from "./chordHistory";
+export { historyToSavedProgressionBlock } from "./historyImport";
+export type { LiveHistoryImportContext } from "./historyImport";
 export type {
   HeldNoteState,
   LiveChordAlternative,
