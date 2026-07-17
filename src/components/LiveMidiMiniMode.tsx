@@ -39,10 +39,10 @@ export function LiveMidiMiniMode({ copy, onBack }: {
           </select>
         </label>
         <button className="lv-button-ghost grid h-8 w-8 place-items-center" onClick={() => { void refreshDevices(); }} aria-label={copy.refreshDevices} title={copy.refreshDevices}>
-          <RefreshCw aria-hidden="true" size={15} />
+          <RefreshCw aria-hidden="true" size={16} />
         </button>
         <button className="lv-button-ghost grid h-8 w-8 place-items-center" onClick={() => setShowHistory(!showHistory)} aria-label={copy.history} title={copy.history} aria-pressed={showHistory}>
-          <History aria-hidden="true" size={15} />
+          <History aria-hidden="true" size={16} />
         </button>
       </header>
 
@@ -52,7 +52,7 @@ export function LiveMidiMiniMode({ copy, onBack }: {
           {statusLabel(status, copy)}
         </div>
         <div className="flex items-center gap-2" aria-live="polite" aria-atomic="true">
-          <Piano aria-hidden="true" className="shrink-0 text-[var(--lv-accent)]" size={24} />
+          <Piano aria-hidden="true" className="shrink-0 text-[var(--lv-accent)]" size={20} />
           <strong className="max-w-[calc(100vw-4rem)] overflow-hidden text-ellipsis whitespace-nowrap text-4xl font-semibold leading-none sm:text-[2.65rem]">
             {current.label}
           </strong>

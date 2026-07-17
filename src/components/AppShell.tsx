@@ -44,7 +44,7 @@ export function AppShell({ view, setView, openCreate, openLiveMidi, openSettings
           <span className="hidden whitespace-nowrap lg:inline">{saveLabel}</span>
         </span>
         <button className="lv-button-ghost grid h-9 w-9 place-items-center" onClick={openLiveMidi} aria-label={copy.nav.liveMidi} title={copy.nav.liveMidi}>
-          <Piano aria-hidden="true" size={19} />
+          <Piano aria-hidden="true" size={20} />
         </button>
         <button className="ml-1 grid h-9 w-9 shrink-0 place-items-center rounded border border-[var(--lv-border-strong)] text-lg text-[var(--lv-text-secondary)] hover:border-teal-300 hover:bg-[var(--lv-surface)] md:ml-2" onClick={openSettings} aria-label={copy.nav.settings} title={copy.nav.settings}>
           <Settings aria-hidden="true" size={20} />
