@@ -4,7 +4,7 @@ import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { describe, expect, it, vi } from "vitest";
 import type { PlaybackState } from "./audio/playbackController";
-import { CreateDialog, deleteIdeaForUndo, stopIdeaPlayback } from "./App";
+import { CreateDialog, deleteIdeaForUndo, errorMessage, stopIdeaPlayback } from "./App";
 import { makeIdea } from "./domain/testFactory";
 import { appCopy } from "./i18n";
 
@@ -17,6 +17,17 @@ function playbackStub(state: PlaybackState) {
     stop: vi.fn(),
   };
 }
+
+describe("errorMessage", () => {
+  it("preserves string errors returned by Tauri commands", () => {
+    expect(errorMessage("Command plugin:window|set_min_size not allowed by ACL", "fallback"))
+      .toBe("Command plugin:window|set_min_size not allowed by ACL");
+  });
+
+  it("falls back for non-message values", () => {
+    expect(errorMessage({ code: "UNKNOWN" }, "fallback")).toBe("fallback");
+  });
+});
 
 describe("stopIdeaPlayback", () => {
   it("stops playback belonging to the idea being deleted", () => {

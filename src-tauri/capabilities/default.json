@@ -12,6 +12,7 @@
     "core:window:allow-set-fullscreen",
     "core:window:allow-set-position",
     "core:window:allow-set-resizable",
+    "core:window:allow-set-min-size",
     "core:window:allow-set-size",
     "core:window:allow-set-size-constraints",
     "dialog:default",
