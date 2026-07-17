@@ -22,4 +22,13 @@ describe("LiveMidiLatencyTracker", () => {
     expect(tracker.report().noteStateUpdated).toEqual({ count: 0 });
     expect(tracker.report().confirmedChordDisplayed).toEqual({ count: 0 });
   });
+
+  it("keeps only the latest 256 samples per stage", () => {
+    const tracker = new LiveMidiLatencyTracker();
+    for (let value = 0; value < 300; value += 1) {
+      tracker.record("noteStateUpdated", value);
+    }
+
+    expect(tracker.report().noteStateUpdated.count).toBe(256);
+  });
 });
