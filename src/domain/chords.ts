@@ -153,6 +153,8 @@ function parseQuality(value: string): ChordQuality | null {
   return null;
 }
 
-function pcToName(value: number): NoteName {
+export function noteNameFromPitchClass(value: number): NoteName {
   return noteNames[normalizePc(value)];
 }
+
+const pcToName = noteNameFromPitchClass;
