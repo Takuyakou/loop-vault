@@ -21,7 +21,10 @@ function service() {
   };
   return {
     value,
-    batch: (events: RawLiveMidiEventBatch["events"]) => batchHandler?.({ connectionId: "new", events }),
+    batch: (
+      events: RawLiveMidiEventBatch["events"],
+      timing: Pick<RawLiveMidiEventBatch, "emittedAtMs" | "frontendReceivedAtMs"> = {},
+    ) => batchHandler?.({ connectionId: "new", ...timing, events }),
   };
 }
 
@@ -59,10 +62,71 @@ describe("Live MIDI store", () => {
       { timestampMs: 20, status: 0x90, channel: 0, data1: 67, data2: 100 },
       { timestampMs: 140, status: 0xb0, channel: 0, data1: 1, data2: 0 },
     ]);
-    expect(store.getState().current.label).toBe("C");
+    expect(store.getState().confirmedChord.label).toBe("C");
     await store.getState().deactivate();
     expect(store.getState().notes.held.size).toBe(0);
     expect(mock.value.stop).toHaveBeenCalled();
+  });
+
+  it("updates notes immediately and uses one-shot deadlines for provisional and confirmed chords", async () => {
+    const mock = service();
+    let monotonicMs = 0;
+    let epochMs = 1_002;
+    let scheduled: { callback: () => void; delayMs: number } | undefined;
+    const store = createLiveMidiStore({
+      service: mock.value,
+      now: () => monotonicMs,
+      epochNow: () => epochMs,
+      loadPreferences: () => ({}),
+      savePreferences: vi.fn(),
+      setInterval: (() => 1) as never,
+      clearInterval: vi.fn(),
+      setTimeout: ((callback: () => void, delayMs: number) => {
+        scheduled = { callback, delayMs };
+        return 2;
+      }) as never,
+      clearTimeout: vi.fn(),
+    });
+    await store.getState().activate();
+    await store.getState().selectDevice("one");
+
+    mock.batch([
+      { timestampMs: 0, receivedAtMs: 1_000, status: 0x90, channel: 0, data1: 60, data2: 100 },
+      { timestampMs: 0, receivedAtMs: 1_000, status: 0x90, channel: 0, data1: 64, data2: 100 },
+      { timestampMs: 0, receivedAtMs: 1_000, status: 0x90, channel: 0, data1: 67, data2: 100 },
+    ], { emittedAtMs: 1_001, frontendReceivedAtMs: 1_002 });
+
+    expect(store.getState().instant).toMatchObject({ label: "C", bass: 60 });
+    expect(store.getState().provisionalChord).toBeUndefined();
+    expect(store.getState().confirmedChord.kind).toBe("empty");
+    expect(scheduled?.delayMs).toBe(40);
+
+    monotonicMs = 40;
+    epochMs = 1_040;
+    scheduled?.callback();
+    expect(store.getState().provisionalChord?.label).toBe("C");
+    expect(store.getState().confirmedChord.kind).toBe("empty");
+    expect(scheduled?.delayMs).toBe(10);
+
+    monotonicMs = 50;
+    epochMs = 1_050;
+    scheduled?.callback();
+    expect(store.getState().provisionalChord).toBeUndefined();
+    expect(store.getState().confirmedChord.label).toBe("C");
+    expect(store.getState().latency).toMatchObject({
+      rustBatchEmitted: { p50Ms: 1, p90Ms: 1 },
+      frontendBatchReceived: { p50Ms: 2, p90Ms: 2 },
+      noteStateUpdated: { p50Ms: 2, p90Ms: 2 },
+      provisionalCandidateGenerated: { p50Ms: 2, p90Ms: 2 },
+      provisionalChordDisplayed: { p50Ms: 40, p90Ms: 40 },
+      confirmedChordDisplayed: { p50Ms: 50, p90Ms: 50 },
+    });
+    expect(scheduled?.delayMs).toBe(400);
+
+    monotonicMs = 450;
+    epochMs = 1_450;
+    scheduled?.callback();
+    expect(store.getState().history.map((entry) => entry.label)).toEqual(["C"]);
   });
 
   it("stores a preferred device from settings without opening it", async () => {

@@ -42,3 +42,16 @@ export function updateLiveChordHistory(
     committedCandidateKey: key,
   };
 }
+
+export function liveChordHistoryDeadline(
+  state: LiveChordHistoryState,
+): number | undefined {
+  if (
+    !state.candidateKey
+    || state.candidateSinceMs === undefined
+    || state.committedCandidateKey === state.candidateKey
+  ) {
+    return undefined;
+  }
+  return state.candidateSinceMs + LIVE_CHORD_TIMING.historyCommitMs;
+}
