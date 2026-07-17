@@ -115,6 +115,8 @@ export const chordTimelineItemSchema = z
 export const savedProgressionBlockSchema = z
   .object({
     id: z.string().uuid(),
+    origin: z.literal("live-midi").optional(),
+    confidence: z.number().min(0).max(1).optional(),
     pinned: z.boolean().default(false),
     sourceAssetId: z.string().uuid().optional(),
     sourceFileName: z.string().optional(),
