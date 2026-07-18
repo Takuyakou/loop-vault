@@ -5,13 +5,14 @@ import type { ChordCandidateScore } from "./candidates";
 import { chordPitchSet, selectDiverseAlternatives } from "./candidateDiversity";
 
 describe("candidate diversity", () => {
-  it("uses all four alternative slots for root, quality, bass-root and equivalent pitch-set categories", () => {
+  it("uses five alternative slots while preserving root, quality, bass-root and pitch-set diversity", () => {
     const primary = score(0, "six", 10);
     const candidates = [
       score(5, "maj", 9.9),
       score(0, "maj7", 9.8),
       score(7, "dom7", 9.7),
       score(9, "min7", 9.6, 0),
+      score(11, "dim", 9.5),
       primary,
     ];
 
@@ -20,9 +21,9 @@ describe("candidate diversity", () => {
       bassPitchClass: 7,
     });
 
-    expect(result.map((candidate) => candidate.chord.label)).toEqual(["F", "Cmaj7", "G7", "Am7/C"]);
-    expect(result).toHaveLength(4);
-    expect([primary, ...result]).toHaveLength(5);
+    expect(result.map((candidate) => candidate.chord.label)).toEqual(["F", "Cmaj7", "G7", "Am7/C", "Bdim"]);
+    expect(result).toHaveLength(5);
+    expect([primary, ...result]).toHaveLength(6);
   });
 
   it("deduplicates canonical chords, limits the internal pool to Top-8 and uses stable tie order", () => {
@@ -45,7 +46,7 @@ describe("candidate diversity", () => {
     expect(new Set(result.map((candidate) => `${candidate.chord.root}:${candidate.chord.quality}`)).size)
       .toBe(result.length);
     expect(result[0].chord.label).toBe("A");
-    expect(result).toHaveLength(4);
+    expect(result).toHaveLength(5);
   });
 
   it("recognizes equivalent pitch sets and slash-bass hypotheses such as C6 and Am7/C", () => {

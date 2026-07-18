@@ -1,10 +1,11 @@
 import { normalizePc } from "../chords";
+import { QUICK_CHORD_ALTERNATIVE_LIMIT } from "../chordAlternatives";
 import type { ChordSymbol, Tension } from "../types";
 import { canonicalChord, chordTemplates, type ChordCandidateScore } from "./candidates";
 
 export interface CandidateDiversityOptions {
   primary: ChordCandidateScore;
-  /** Alternatives only. The UI shows primary plus at most four alternatives. */
+  /** Alternatives only. Quick editing shows at most five alternatives. */
   limit?: number;
   bassPitchClass?: number;
 }
@@ -23,7 +24,10 @@ export function selectDiverseAlternatives(
   candidates: readonly ChordCandidateScore[],
   options: CandidateDiversityOptions,
 ): ChordCandidateScore[] {
-  const limit = Math.max(0, Math.min(4, options.limit ?? 4));
+  const limit = Math.max(0, Math.min(
+    QUICK_CHORD_ALTERNATIVE_LIMIT,
+    options.limit ?? QUICK_CHORD_ALTERNATIVE_LIMIT,
+  ));
   if (limit === 0) return [];
 
   const primaryKey = canonicalChord(options.primary.chord);

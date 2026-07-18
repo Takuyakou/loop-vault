@@ -1,4 +1,5 @@
 import type { ChordTimelineItem, MidiProgressionAnalysis } from "../types";
+import { selectQuickChordAlternatives } from "../chordAlternatives";
 import { extractHybridBlocks } from "./blocks";
 import { scoreChordCandidates, type ScoredSegment } from "./candidates";
 import { decodeChordPath, decodeTwoPass } from "./decoder";
@@ -52,12 +53,19 @@ export function analyzeMidiHybrid(bytes: Uint8Array, options: AnalyzeMidiOptions
     const startBeat = (legacy.bar - 1) * beatsPerBar + legacy.beat - 1;
     const segment = decodedSegmentAtBeat(merged, startBeat);
     if (!segment) return legacy;
-    const alternatives = [segment.candidate.chord, ...segment.alternatives.map((candidate) => candidate.chord)];
+    const alternatives = selectQuickChordAlternatives(legacy.chord, [
+      { chord: segment.candidate.chord, confidence: segment.candidate.totalScore },
+      ...segment.alternatives.map((candidate) => ({
+        chord: candidate.chord,
+        confidence: candidate.totalScore,
+      })),
+    ]);
     return {
       ...legacy,
-      alternatives: [...new Map(alternatives.map((chord) => [chord.label, chord])).values()]
-        .filter((chord) => chord.label !== legacy.chord.label)
-        .slice(0, 4).map((chord, index) => ({ chord, confidence: Math.max(0.34, 0.58 - index * 0.08) })),
+      alternatives: alternatives.map((alternative, index) => ({
+        chord: alternative.chord,
+        confidence: Math.max(0.34, 0.58 - index * 0.08),
+      })),
       warnings: [...new Set([...legacy.warnings, ...segment.warnings, "legacy-primary"])]
     };
   });

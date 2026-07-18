@@ -42,7 +42,7 @@ describe("legacy-boundary hybrid reranker", () => {
     reranked.fullTimeline.forEach((item, index) => {
       const legacyLabel = legacy.fullTimeline[index].chord.label;
       expect(item.chord.label === legacyLabel || item.alternatives.some((alternative) => alternative.chord.label === legacyLabel)).toBe(true);
-      expect(item.alternatives.length).toBeLessThanOrEqual(4);
+      expect(item.alternatives.length).toBeLessThanOrEqual(5);
     });
   });
 });

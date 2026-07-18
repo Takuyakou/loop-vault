@@ -1,4 +1,5 @@
 import { parseChordLabel } from "../chords";
+import { QUICK_CHORD_ALTERNATIVE_LIMIT } from "../chordAlternatives";
 import type { ChordSymbol, Tension } from "../types";
 
 export type OperationCorrectionCost = 0 | 1 | 2 | 3 | 4;
@@ -37,8 +38,6 @@ export type CorrectionFeedbackEditMethod =
   | "manual-label"
   | "manual-input";
 
-const DISPLAYED_ALTERNATIVE_LIMIT = 4;
-
 export function operationCorrectionCost(
   detected: DetectedChordCandidates | undefined,
   acceptableLabels: readonly string[],
@@ -56,7 +55,7 @@ export function operationCorrectionCostResult(
 
   const primary = chordSymbol(detected.primary);
   const displayedAlternatives = detected.alternatives
-    .slice(0, DISPLAYED_ALTERNATIVE_LIMIT)
+    .slice(0, QUICK_CHORD_ALTERNATIVE_LIMIT)
     .map(chordSymbol)
     .filter((chord): chord is ChordSymbol => chord !== undefined);
   const startingChords = [primary, ...displayedAlternatives]

@@ -1,4 +1,5 @@
 import type { ChordAlternative } from "../../domain/progressionEditing";
+import { selectQuickChordAlternatives } from "../../domain/chordAlternatives";
 import type { ChordSymbol } from "../../domain/types";
 import { progressionEditorCopy, type AppLanguage } from "../../i18n";
 
@@ -19,7 +20,7 @@ export function ChordAlternativeList({
   if (alternatives.length === 0) {
     return null;
   }
-  const displayedAlternatives = alternatives.slice(0, 4);
+  const displayedAlternatives = selectQuickChordAlternatives(undefined, alternatives);
   return (
     <div>
       <p className="text-xs text-[var(--lv-text-muted)]">
