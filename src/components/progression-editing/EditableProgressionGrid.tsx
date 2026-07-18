@@ -77,7 +77,7 @@ export function EditableProgressionGrid({
   function openQuickEditor(slotId: string, index: number, anchorElement: HTMLElement) {
     if (!quickEditor) return;
     if (quickEditor.onOpen) quickEditor.onOpen(slotId, index);
-    else onSelect(slotId, index);
+    else (onNavigate ?? onSelect)(slotId, index);
     setQuickEdit({ slotId, index, anchorElement });
   }
 

@@ -3,6 +3,7 @@ import { slotStartBeat } from "./editableProgression";
 import {
   analyzerQuickCandidates,
   composeQuickChordCandidates,
+  composeRepairQuickChordCandidates,
   type QuickChordCandidate,
 } from "./quickCandidates";
 import { generateSmoothCandidates } from "./smoothCandidates";
@@ -56,12 +57,18 @@ export function quickCandidatesForSlot({
         keySignature,
       })
     : [];
-  return composeQuickChordCandidates({
-    currentChord: slot.currentChord,
-    analyzerCandidates,
-    smoothCandidates,
-    styleCandidates,
-  });
+  return analyzerCandidates.length > 0
+    ? composeQuickChordCandidates({
+        currentChord: slot.currentChord,
+        analyzerCandidates,
+        smoothCandidates,
+        styleCandidates,
+      })
+    : composeRepairQuickChordCandidates({
+        currentChord: slot.currentChord,
+        smoothCandidates,
+        styleCandidates,
+      });
 }
 
 export function insertionQuickCandidates({
@@ -99,9 +106,8 @@ export function insertionQuickCandidates({
         keySignature,
       })
     : [];
-  return composeQuickChordCandidates({
+  return composeRepairQuickChordCandidates({
     currentChord: previousChord,
-    analyzerCandidates: [],
     smoothCandidates,
     styleCandidates,
   });

@@ -38,7 +38,7 @@ describe("progression structural editing", () => {
       editable: inserted,
       slotId: inserted.slots[2]!.id,
       keySignature: "C major",
-    }).length).toBeGreaterThan(0);
+    }).length).toBeGreaterThan(1);
     expect(inserted.selectedSlotId).toBe(inserted.slots[2]!.id);
     expect(validateEditableProgression(inserted)).toEqual([]);
 
@@ -72,7 +72,7 @@ describe("progression structural editing", () => {
       editable: inserted,
       slotId: inserted.slots[1]!.id,
       keySignature: "C major",
-    }).length).toBeGreaterThan(0);
+    }).length).toBeGreaterThan(1);
   });
 
   it("splits at the midpoint and preserves the progression span", () => {

@@ -79,6 +79,36 @@ export function composeQuickChordCandidates({
   return selected.slice(0, cappedLimit);
 }
 
+export function composeRepairQuickChordCandidates({
+  currentChord,
+  smoothCandidates = [],
+  styleCandidates = [],
+  limit = QUICK_CHORD_CANDIDATE_LIMIT,
+}: Omit<ComposeQuickChordCandidateInput, "analyzerCandidates">): QuickChordCandidate[] {
+  const cappedLimit = Math.max(0, Math.min(QUICK_CHORD_CANDIDATE_LIMIT, limit));
+  if (cappedLimit === 0) return [];
+  const currentKey = canonicalChordAlternative(currentChord);
+  const smooth = rankWithinSource(smoothCandidates, "smoothConnection", currentKey);
+  const style = rankWithinSource(styleCandidates, "authorReferenceFit", currentKey);
+  const selected: QuickChordCandidate[] = [];
+  const selectedByKey = new Map<string, number>();
+  const place = (candidate: QuickChordCandidate | undefined) => {
+    if (!candidate || selected.length >= cappedLimit) return;
+    const existingIndex = selectedByKey.get(candidate.normalizedKey);
+    if (existingIndex !== undefined) {
+      selected[existingIndex] = mergeCandidates(selected[existingIndex]!, candidate);
+      return;
+    }
+    selectedByKey.set(candidate.normalizedKey, selected.length);
+    selected.push(cloneCandidate(candidate));
+  };
+
+  place(smooth[0]);
+  place(style[0]);
+  smooth.slice(1).forEach(place);
+  return selected.slice(0, cappedLimit);
+}
+
 export function analyzerQuickCandidates(
   alternatives: readonly { chord: ChordSymbol; confidence: number }[],
 ): QuickChordCandidate[] {
