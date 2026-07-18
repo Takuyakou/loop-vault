@@ -67,10 +67,14 @@ describe("VaultView keyboard shortcuts", () => {
 
     await render();
     const modeButtons = [...container.querySelectorAll<HTMLButtonElement>("[role='group'] button")];
-    expect(modeButtons.map((button) => button.textContent)).toEqual(["Library", "List"]);
+    expect(modeButtons.map((button) => button.textContent)).toEqual(["Library", "List", "Idea"]);
     expect(modeButtons[0]?.getAttribute("aria-pressed")).toBe("true");
 
+    await act(async () => modeButtons[2]!.click());
+    expect(modeButtons[2]?.getAttribute("aria-pressed")).toBe("true");
+
     await act(async () => modeButtons[1]!.click());
+
     expect(modeButtons[1]?.getAttribute("aria-pressed")).toBe("true");
     expect(window.sessionStorage.getItem("loop-vault.progression-view-mode")).toBe("list");
 

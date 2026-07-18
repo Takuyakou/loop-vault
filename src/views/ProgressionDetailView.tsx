@@ -299,7 +299,7 @@ export function ProgressionDetailView({
           </button>
         </section>
 
-        <div className="lv-responsive-inspector-host" data-active="true">
+        <div className="lv-progression-detail-inspector min-w-0" data-progression-detail-inspector>
           <ChordInspector
             slot={selectedSlot}
             language={language}

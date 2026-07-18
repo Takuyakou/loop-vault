@@ -76,6 +76,8 @@ describe("ProgressionDetailView", () => {
     expect(container.textContent).toContain(progressionDetailCopy.ja.savedChord);
     expect(container.textContent).toContain(progressionDetailCopy.ja.editingChord);
     expect(container.textContent).toContain(appCopy.ja.capture.piano);
+    expect(container.querySelectorAll("[role='option']")).toHaveLength(1);
+    expect(container.querySelector("[data-progression-detail-inspector]")?.classList.contains("lv-responsive-inspector-host")).toBe(false);
 
     await act(async () => root.unmount());
   });
