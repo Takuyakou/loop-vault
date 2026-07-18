@@ -263,7 +263,7 @@ describe("ProgressionCandidateCard", () => {
     await act(async () => options[1]?.click());
 
     expect(container.querySelector("aside")?.textContent).toContain("Am7");
-    expect(options[1]?.getAttribute("aria-pressed")).toBe("true");
+    expect(options[1]?.getAttribute("aria-selected")).toBe("true");
     await act(async () => root.unmount());
   });
 

@@ -1110,6 +1110,15 @@ export function ProgressionCandidateCard({
     await onPreviewChord({ ...editedCandidate, chords: previewChords }, selectedChordIndex);
   }
 
+  async function previewQuickChord(slotId: string, chord: ChordSymbol) {
+    const index = editable.slots.findIndex((slot) => slot.id === slotId);
+    if (index < 0) return;
+    const previewChords = chords.map((item, chordIndex) => (
+      chordIndex === index ? { ...item, chord } : item
+    ));
+    await onPreviewChord({ ...editedCandidate, chords: previewChords }, index);
+  }
+
   function commitStructuralChange(next: EditableProgression) {
     if (next === editable) {
       return;
@@ -1223,6 +1232,36 @@ export function ProgressionCandidateCard({
             playingProgress={playingProgress}
             onSelect={(_slotId, index) => void selectChord(index)}
             language={language}
+            quickEditor={{
+              onOpen: (slotId, index) => {
+                setSelectedChordIndex(index);
+                setEditable((current) => selectEditableSlot(current, slotId));
+              },
+              onPreview: (slotId, chord) => void previewQuickChord(slotId, chord),
+              onApply: (slotId, chord, source) => {
+                stopCandidatePreview();
+                const selected = selectEditableSlot(editable, slotId);
+                const next = replaceEditableChord(selected, slotId, chord, source);
+                setEditable(next);
+                setSelectedChordIndex(Math.max(0, next.slots.findIndex((slot) => slot.id === slotId)));
+                setPropagationProposal(proposalFor(
+                  next,
+                  slotId,
+                  chord,
+                  captureSimilarityContext(next, detectedKey, analysisInput),
+                ));
+              },
+              onReset: (slotId) => {
+                stopCandidatePreview();
+                setPropagationProposal(undefined);
+                setEditable((current) => resetEditableChord(current, slotId));
+              },
+              onOpenInspector: (slotId, index) => {
+                setSelectedChordIndex(index);
+                setEditable((current) => selectEditableSlot(current, slotId));
+                onInspectorExpandedChange?.(true);
+              },
+            }}
           />
         </div>
         {isExpanded ? renderInspector(

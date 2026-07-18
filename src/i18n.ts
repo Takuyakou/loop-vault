@@ -899,6 +899,7 @@ export const progressionEditorCopy = {
     candidateBars: (startBar: number, endBar: number, lengthBars: number) => `${startBar}-${endBar}小節 (${lengthBars})`,
     progressionTitle: (labels: string[]) => `コード進行 ${labels.join(" - ")}`,
     selectChord: "編集するコードを選択",
+    quickEdit: "すばやく編集",
     selectedChord: "選択中のコード",
     inspector: "コードInspector",
     expand: "展開",
@@ -948,6 +949,7 @@ export const progressionEditorCopy = {
     candidateBars: (startBar: number, endBar: number, lengthBars: number) => `Bars ${startBar}-${endBar} (${lengthBars})`,
     progressionTitle: (labels: string[]) => `Progression ${labels.join(" - ")}`,
     selectChord: "Select a chord to edit",
+    quickEdit: "Quick edit",
     selectedChord: "Selected chord",
     inspector: "Chord inspector",
     expand: "Expand",
@@ -1044,6 +1046,35 @@ export const progressionDetailCopy = {
     noTags: "No tags",
     barCount: (count: number) => `${count} bars`,
     barRange: (start: number, end: number) => `Bars ${start}-${end}`,
+  },
+} as const;
+
+export const quickChordEditorCopy = {
+  ja: {
+    title: "コードをすばやく編集",
+    candidates: "候補",
+    preview: "試聴",
+    apply: "適用",
+    close: "閉じる",
+    reset: "保存済みに戻す",
+    originalReset: "元の検出に戻す",
+    detail: "詳細編集",
+    previousRoot: "ルートを半音下げる",
+    nextRoot: "ルートを半音上げる",
+    edit: "すばやく編集",
+  },
+  en: {
+    title: "Quick chord edit",
+    candidates: "Candidates",
+    preview: "Preview",
+    apply: "Apply",
+    close: "Close",
+    reset: "Restore saved",
+    originalReset: "Restore original detection",
+    detail: "Detailed edit",
+    previousRoot: "Move root down one semitone",
+    nextRoot: "Move root up one semitone",
+    edit: "Quick edit",
   },
 } as const;
 

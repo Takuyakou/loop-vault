@@ -252,6 +252,19 @@ export function ProgressionDetailView({
             editable={editable}
             onSelect={(slotId) => setEditable((current) => selectEditableSlot(current, slotId))}
             language={language}
+            quickEditor={{
+              onPreview: (_slotId, chord) => void previewChord(chord),
+              onApply: (slotId, chord, source) => setEditable((current) => (
+                replaceEditableChord(
+                  selectEditableSlot(current, slotId),
+                  slotId,
+                  chord,
+                  source,
+                )
+              )),
+              onReset: (slotId) => setEditable((current) => resetEditableChord(current, slotId)),
+              onOpenInspector: (slotId) => setEditable((current) => selectEditableSlot(current, slotId)),
+            }}
           />
 
           <div className="mt-6 grid gap-4 border-t border-[var(--lv-border)] pt-4 md:grid-cols-2">
