@@ -40,6 +40,11 @@ export interface ChordTimelineItem {
   warnings: string[];
 }
 
+export interface SuppressedAutoTag {
+  tagId: string;
+  taxonomyVersion: number;
+}
+
 export interface SavedProgressionBlock {
   id: string;
   origin?: "live-midi";
@@ -60,6 +65,7 @@ export interface SavedProgressionBlock {
   timeSignature?: string;
   memo?: string;
   tags: string[];
+  suppressedAutoTags?: SuppressedAutoTag[];
   capturedAt: string;
   analyzerVersion: string;
   sourceAnalyzerVersion?: string;

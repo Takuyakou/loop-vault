@@ -133,6 +133,10 @@ export const savedProgressionBlockSchema = z
     timeSignature: z.string().regex(/^\d+\/\d+$/).optional(),
     memo: z.string().optional(),
     tags: z.array(z.string()),
+    suppressedAutoTags: z.array(z.object({
+      tagId: z.string().regex(/^[a-z][a-z0-9-]*\.[a-z0-9][a-z0-9-]*$/).max(80),
+      taxonomyVersion: z.number().int().positive(),
+    }).strict()).max(100).default([]),
     capturedAt: isoDateSchema,
     analyzerVersion: z.string().min(1),
     sourceAnalyzerVersion: z.string().min(1).optional(),

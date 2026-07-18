@@ -440,6 +440,7 @@ export function createVaultStore(
             warnings: [...item.warnings],
           })),
           tags: [...block.tags],
+          suppressedAutoTags: block.suppressedAutoTags?.map((tag) => ({ ...tag })),
           capturedAt,
         };
         const applied = applyVaultChange((vault) => ({
