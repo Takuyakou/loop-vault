@@ -4,6 +4,7 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { playbackController } from "../audio/playbackController";
+import type { PlaybackController } from "../audio/playbackController";
 import { makeIdea } from "../domain/testFactory";
 import type { SavedProgressionBlock } from "../domain/types";
 import { appCopy, progressionDetailCopy } from "../i18n";
@@ -78,6 +79,55 @@ describe("ProgressionDetailView", () => {
     expect(container.textContent).toContain(appCopy.ja.capture.piano);
     expect(container.querySelectorAll("[role='option']")).toHaveLength(1);
     expect(container.querySelector("[data-progression-detail-inspector]")?.classList.contains("lv-responsive-inspector-host")).toBe(false);
+
+    await act(async () => root.unmount());
+  });
+
+  it("previews a clicked chord card with the selected preview sound", async () => {
+    const idea = makeIdea({ id: "idea-preview", progressionBlocks: [block] });
+    const toggle = vi.fn().mockResolvedValue(undefined);
+    const idleState = { status: "idle" as const };
+    const controller: PlaybackController = {
+      getState: () => idleState,
+      play: vi.fn(),
+      stop: vi.fn(),
+      toggle,
+      isPlaying: () => false,
+      subscribe: () => () => undefined,
+    };
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <ProgressionDetailView
+          idea={idea}
+          block={block}
+          updateProgressionBlock={vi.fn(() => true)}
+          duplicateProgressionBlock={vi.fn()}
+          openProgression={vi.fn()}
+          openIdea={vi.fn()}
+          openVault={vi.fn()}
+          requestDelete={vi.fn()}
+          setToast={vi.fn()}
+          copy={appCopy.en}
+          language="en"
+          controller={controller}
+        />,
+      );
+    });
+
+    const electricPiano = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent === appCopy.en.capture.electricPiano)!;
+    await act(async () => electricPiano.click());
+
+    const card = container.querySelector<HTMLElement>("[role='option']")!;
+    await act(async () => card.click());
+    expect(toggle).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: "detail", id: expect.stringContaining(":chord:") }),
+      expect.objectContaining({ type: "chord", chord: block.chords[0]!.chord, sound: "electric-piano" }),
+    );
 
     await act(async () => root.unmount());
   });
