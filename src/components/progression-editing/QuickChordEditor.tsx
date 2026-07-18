@@ -396,6 +396,8 @@ function CandidateGroup({
             <button
               key={`${candidate.normalizedKey}-${index}`}
               type="button"
+              data-quick-candidate
+              data-candidate-source={candidate.primarySource}
               className={`border px-2 py-2 text-left text-sm ${draftChord.label === candidate.chord.label ? "border-teal-300 bg-teal-300/10" : "border-[var(--lv-border-strong)]"}`}
               onClick={() => onChoose(candidate)}
               title={descriptions.join(" / ")}

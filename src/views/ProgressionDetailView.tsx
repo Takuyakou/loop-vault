@@ -244,7 +244,7 @@ export function ProgressionDetailView({
           }}
           playLabel={copy.common.preview}
           stopLabel={copy.common.stop}
-          className="lv-button-primary min-h-9 px-3 text-sm font-semibold"
+          className="lv-button-primary lv-progression-preview-toggle inline-flex min-h-9 shrink-0 items-center justify-center gap-2 whitespace-nowrap px-3 text-sm font-semibold"
           onError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed)}
           controller={controller}
         />

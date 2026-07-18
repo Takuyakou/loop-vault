@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { makeChordSymbol } from "../chords";
 import {
   composeQuickChordCandidates,
+  composeRepairQuickChordCandidates,
   quickChordCandidate,
   type QuickCandidateSource,
 } from "./quickCandidates";
@@ -77,5 +78,19 @@ describe("quick chord candidate composer", () => {
       smoothCandidates: [candidate(5, "smoothConnection", 0)],
     };
     expect(composeQuickChordCandidates(input)).toEqual(composeQuickChordCandidates(input));
+  });
+
+  it("fills analyzer-free editing slots with multiple ranked repair candidates", () => {
+    const result = composeRepairQuickChordCandidates({
+      currentChord: current,
+      smoothCandidates: Array.from({ length: 6 }, (_, index) => (
+        candidate(index + 1, "smoothConnection", index)
+      )),
+      styleCandidates: [candidate(9, "authorReferenceFit", 0)],
+    });
+    expect(result).toHaveLength(5);
+    expect(result[0]?.primarySource).toBe("smoothConnection");
+    expect(result[1]?.primarySource).toBe("authorReferenceFit");
+    expect(result.slice(2).every((item) => item.primarySource === "smoothConnection")).toBe(true);
   });
 });

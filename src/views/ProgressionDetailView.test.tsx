@@ -77,6 +77,9 @@ describe("ProgressionDetailView", () => {
     expect(container.textContent).toContain(progressionDetailCopy.ja.savedChord);
     expect(container.textContent).toContain(progressionDetailCopy.ja.editingChord);
     expect(container.textContent).toContain(appCopy.ja.capture.piano);
+    const previewToggle = container.querySelector(".lv-progression-preview-toggle");
+    expect(previewToggle?.classList.contains("inline-flex")).toBe(true);
+    expect(previewToggle?.classList.contains("whitespace-nowrap")).toBe(true);
     expect(container.querySelectorAll("[role='option']")).toHaveLength(1);
     expect(container.querySelector("[data-alternative-count]")).not.toBeNull();
     expect(container.querySelector("[data-progression-detail-inspector]")?.classList.contains("lv-responsive-inspector-host")).toBe(false);
@@ -130,6 +133,13 @@ describe("ProgressionDetailView", () => {
       expect.objectContaining({ type: "chord", chord: block.chords[0]!.chord, sound: "electric-piano" }),
     );
 
+    toggle.mockClear();
+    await act(async () => {
+      card.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));
+    });
+    expect(toggle).not.toHaveBeenCalled();
+    expect(document.querySelector("[data-quick-chord-editor]")).not.toBeNull();
+
     await act(async () => root.unmount());
   });
 
@@ -170,6 +180,11 @@ describe("ProgressionDetailView", () => {
     expect(cards[1]?.getAttribute("aria-selected")).toBe("true");
     expect(cards[1]?.textContent).not.toContain("Cmaj7");
     expect(container.querySelector("[data-alternative-count]")).not.toBeNull();
+
+    await act(async () => {
+      cards[1]!.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));
+    });
+    expect(document.querySelectorAll("[data-quick-candidate]").length).toBeGreaterThan(1);
 
     const save = [...container.querySelectorAll<HTMLButtonElement>("button")]
       .find((button) => button.textContent?.trim() === progressionDetailCopy.ja.saveChanges)!;
