@@ -1076,6 +1076,41 @@ export const progressionTagsCopy = {
   },
 } as const;
 
+export const smartLibraryCopy = {
+  ja: {
+    list: "一覧",
+    library: "ライブラリ",
+    filters: "ライブラリ分類",
+    closeFilters: "分類を閉じる",
+    all: "すべて",
+    favorites: "お気に入り",
+    recent: "最近追加",
+    clear: "分類をクリア",
+    feature: "和声特徴",
+    use: "用途",
+    mood: "Mood",
+    source: "出自",
+    collection: "コレクション",
+    selectedFilters: "選択中の分類",
+  },
+  en: {
+    list: "List",
+    library: "Library",
+    filters: "Library filters",
+    closeFilters: "Close filters",
+    all: "All",
+    favorites: "Favorites",
+    recent: "Recently added",
+    clear: "Clear categories",
+    feature: "Harmonic features",
+    use: "Use",
+    mood: "Mood",
+    source: "Source",
+    collection: "Collections",
+    selectedFilters: "Selected categories",
+  },
+} as const;
+
 export const quickChordEditorCopy = {
   ja: {
     title: "コードをすばやく編集",
