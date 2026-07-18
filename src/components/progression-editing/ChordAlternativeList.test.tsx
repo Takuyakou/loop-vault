@@ -1,15 +1,16 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { makeChordSymbol } from "../../domain/chords";
+import { analyzerQuickCandidates } from "../../domain/progressionEditing";
 import { ChordAlternativeList } from "./ChordAlternativeList";
 
 describe("ChordAlternativeList", () => {
   it("wraps and renders at most five alternatives", () => {
     const markup = renderToStaticMarkup(<ChordAlternativeList
-      alternatives={[0, 2, 4, 5, 7, 9].map((root, index) => ({
+      candidates={analyzerQuickCandidates([0, 2, 4, 5, 7, 9].map((root, index) => ({
         chord: makeChordSymbol(root, "maj"),
         confidence: 0.8 - index * 0.1,
-      }))}
+      })))}
       onSelect={vi.fn()}
       language="en"
     />);

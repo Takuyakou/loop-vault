@@ -7,11 +7,14 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { makeChordSymbol } from "../../domain/chords";
-import { selectQuickChordAlternatives } from "../../domain/chordAlternatives";
 import {
+  analyzerQuickCandidates,
   chordsEqual,
+  quickCandidateSelectionMetadata,
   type EditableChordSlot,
   type ProgressionEditSource,
+  type QuickCandidateSelectionMetadata,
+  type QuickChordCandidate,
 } from "../../domain/progressionEditing";
 import type { ChordSymbol } from "../../domain/types";
 import {
@@ -32,8 +35,13 @@ interface QuickChordEditorProps {
   anchorElement: HTMLElement;
   language: AppLanguage;
   resetLabel?: string;
+  candidates?: readonly QuickChordCandidate[];
   onPreview: (chord: ChordSymbol) => void;
-  onApply: (chord: ChordSymbol, source: QuickApplySource) => void;
+  onApply: (
+    chord: ChordSymbol,
+    source: QuickApplySource,
+    selection?: QuickCandidateSelectionMetadata,
+  ) => void;
   onReset: () => void;
   onOpenInspector: () => void;
   onClose: () => void;
@@ -44,6 +52,7 @@ export function QuickChordEditor({
   anchorElement,
   language,
   resetLabel,
+  candidates: providedCandidates,
   onPreview,
   onApply,
   onReset,
@@ -54,9 +63,10 @@ export function QuickChordEditor({
   const panelRef = useRef<HTMLDivElement>(null);
   const [draftChord, setDraftChord] = useState(() => cloneChord(slot.currentChord));
   const [source, setSource] = useState<QuickApplySource>("structure-editor");
+  const [selectedCandidate, setSelectedCandidate] = useState<QuickChordCandidate>();
   const [position, setPosition] = useState({ left: 8, top: 8, width: 320 });
   const [closeConfirmationOpen, setCloseConfirmationOpen] = useState(false);
-  const alternatives = selectQuickChordAlternatives(slot.currentChord, slot.alternatives);
+  const candidates = providedCandidates ?? analyzerQuickCandidates(slot.alternatives);
   const hasDraftChanges = !chordsEqual(draftChord, slot.currentChord);
 
   useLayoutEffect(() => {
@@ -111,13 +121,25 @@ export function QuickChordEditor({
   }
 
   function applyAndClose() {
-    onApply(draftChord, source);
+    const selectedIndex = selectedCandidate
+      ? candidates.findIndex((candidate) => (
+          candidate.normalizedKey === selectedCandidate.normalizedKey
+          && candidate.primarySource === selectedCandidate.primarySource
+        ))
+      : -1;
+    const selection = source === "alternative" && selectedCandidate && selectedIndex >= 0
+      ? quickCandidateSelectionMetadata(selectedCandidate, selectedIndex, candidates.length)
+      : undefined;
+    if (selection) onApply(draftChord, source, selection);
+    else onApply(draftChord, source);
     onClose();
   }
 
-  function chooseCandidate(chord: ChordSymbol) {
-    setDraftChord(cloneChord(chord));
+  function chooseCandidate(candidate: QuickChordCandidate) {
+    setDraftChord(cloneChord(candidate.chord));
     setSource("alternative");
+    setSelectedCandidate(candidate);
+    onPreview(candidate.chord);
   }
 
   function shiftRoot(direction: -1 | 1) {
@@ -128,6 +150,7 @@ export function QuickChordEditor({
       current.bass,
     ));
     setSource("structure-editor");
+    setSelectedCandidate(undefined);
   }
 
   function handleKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
@@ -144,10 +167,10 @@ export function QuickChordEditor({
 
     const number = Number(event.key);
     if (number >= 1 && number <= 5) {
-      const alternative = alternatives[number - 1];
-      if (alternative) {
+      const candidate = candidates[number - 1];
+      if (candidate) {
         event.preventDefault();
-        chooseCandidate(alternative.chord);
+        chooseCandidate(candidate);
       }
       return;
     }
@@ -170,8 +193,7 @@ export function QuickChordEditor({
       onClose();
     } else if (event.key === "Enter") {
       event.preventDefault();
-      onApply(draftChord, source);
-      onClose();
+      applyAndClose();
     }
   }
 
@@ -203,22 +225,28 @@ export function QuickChordEditor({
         </button>
       </div>
 
-      {alternatives.length > 0 ? (
+      {candidates.length > 0 ? (
         <div className="mt-4">
-          <p className="text-xs text-[var(--lv-text-muted)]">{text.candidates}</p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {alternatives.map((alternative, index) => (
-              <button
-                key={`${alternative.chord.label}-${index}`}
-                type="button"
-                className={`border px-2 py-2 text-sm ${draftChord.label === alternative.chord.label ? "border-teal-300 bg-teal-300/10" : "border-[var(--lv-border-strong)]"}`}
-                onClick={() => chooseCandidate(alternative.chord)}
-              >
-                <span className="mr-1 text-[var(--lv-text-muted)]">{index + 1}</span>
-                {alternative.chord.label}
-              </button>
+          <CandidateGroup
+            title={text.detectionCandidates}
+            candidates={candidates}
+            indexes={candidates.flatMap((candidate, index) => (
+              candidate.primarySource === "analyzer" ? [index] : []
             ))}
-          </div>
+            draftChord={draftChord}
+            language={language}
+            onChoose={chooseCandidate}
+          />
+          <CandidateGroup
+            title={text.repairSuggestions}
+            candidates={candidates}
+            indexes={candidates.flatMap((candidate, index) => (
+              candidate.primarySource !== "analyzer" ? [index] : []
+            ))}
+            draftChord={draftChord}
+            language={language}
+            onChoose={chooseCandidate}
+          />
         </div>
       ) : null}
 
@@ -250,6 +278,7 @@ export function QuickChordEditor({
         onChange={(chord) => {
           setDraftChord(chord);
           setSource("structure-editor");
+          setSelectedCandidate(undefined);
         }}
       />
 
@@ -337,6 +366,69 @@ export function QuickChordEditor({
       ) : null}
     </>
   );
+}
+
+function CandidateGroup({
+  title,
+  candidates,
+  indexes,
+  draftChord,
+  language,
+  onChoose,
+}: {
+  title: string;
+  candidates: readonly QuickChordCandidate[];
+  indexes: readonly number[];
+  draftChord: ChordSymbol;
+  language: AppLanguage;
+  onChoose: (candidate: QuickChordCandidate) => void;
+}) {
+  if (indexes.length === 0) return null;
+  const text = quickChordEditorCopy[language];
+  return (
+    <div className="mt-3">
+      <p className="text-xs text-[var(--lv-text-muted)]">{title}</p>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {indexes.map((index) => {
+          const candidate = candidates[index]!;
+          const descriptions = candidate.sources.map((source) => sourceDescription(source, text));
+          return (
+            <button
+              key={`${candidate.normalizedKey}-${index}`}
+              type="button"
+              className={`border px-2 py-2 text-left text-sm ${draftChord.label === candidate.chord.label ? "border-teal-300 bg-teal-300/10" : "border-[var(--lv-border-strong)]"}`}
+              onClick={() => onChoose(candidate)}
+              title={descriptions.join(" / ")}
+            >
+              <span className="mr-1 text-[var(--lv-text-muted)]">{index + 1}</span>
+              {candidate.chord.label}
+              <span className="ml-2 text-[10px] text-teal-200">
+                {candidate.sources.map((source) => sourceLabel(source, text)).join("+")}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function sourceLabel(
+  source: QuickChordCandidate["primarySource"],
+  text: typeof quickChordEditorCopy[AppLanguage],
+): string {
+  if (source === "smoothConnection") return text.smoothSource;
+  if (source === "authorReferenceFit") return text.styleSource;
+  return text.analyzerSource;
+}
+
+function sourceDescription(
+  source: QuickChordCandidate["primarySource"],
+  text: typeof quickChordEditorCopy[AppLanguage],
+): string {
+  if (source === "smoothConnection") return text.smoothDescription;
+  if (source === "authorReferenceFit") return text.styleDescription;
+  return text.analyzerDescription;
 }
 
 function cloneChord(chord: ChordSymbol): ChordSymbol {

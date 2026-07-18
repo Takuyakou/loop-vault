@@ -81,7 +81,7 @@ export function suggestNextChordAlternatives(
     }));
 }
 
-function contextualChordPool(reference: ChordSymbol, keySignature?: string): ChordSymbol[] {
+export function contextualChordPool(reference: ChordSymbol, keySignature?: string): ChordSymbol[] {
   const key = parseKeySignature(keySignature);
   if (key) {
     const pool = diatonicChordPool(key.root, key.minor);
@@ -109,7 +109,7 @@ function diatonicChordPool(root: number, minor: boolean): ChordSymbol[] {
   return recipes.map(([interval, quality]) => makeChordSymbol(root + interval, quality));
 }
 
-function parseKeySignature(value: string | undefined): { root: number; minor: boolean } | undefined {
+export function parseKeySignature(value: string | undefined): { root: number; minor: boolean } | undefined {
   if (!value) return undefined;
   const match = /^([A-G](?:#|b)?)(?:\s*(major|minor)|\s*(m))?$/i.exec(value.trim());
   if (!match) return undefined;

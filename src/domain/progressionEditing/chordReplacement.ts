@@ -7,6 +7,7 @@ import type {
   ReplaceChordOperation,
   ResetProgressionOperation,
 } from "./types";
+import type { QuickCandidateSelectionMetadata } from "./quickCandidates";
 
 type ReplacementSource = Extract<
   ProgressionEditSource,
@@ -18,6 +19,7 @@ export function replaceEditableChord(
   slotId: string,
   chord: ChordSymbol,
   editSource: ReplacementSource,
+  quickCandidateSelection?: QuickCandidateSelectionMetadata,
 ): EditableProgression {
   const slot = editable.slots.find((candidate) => candidate.id === slotId);
   if (!slot || chordsEqual(slot.currentChord, chord)) {
@@ -34,6 +36,9 @@ export function replaceEditableChord(
       currentChord,
       edited: !chordsEqual(candidate.originalChord, currentChord),
       editSource,
+      ...(quickCandidateSelection
+        ? { quickCandidateSelection: { ...quickCandidateSelection } }
+        : { quickCandidateSelection: undefined }),
     };
   });
   const next = { slots, selectedSlotId: slotId };
@@ -61,6 +66,7 @@ export function resetEditableChord(
           currentChord: cloneChord(candidate.originalChord),
           edited: false,
           editSource: "reset" as const,
+          quickCandidateSelection: undefined,
         }
       : cloneSlot(candidate),
   );
@@ -90,6 +96,7 @@ export function resetAllEditableChords(editable: EditableProgression): EditableP
           currentChord: cloneChord(slot.originalChord),
           edited: false,
           editSource: "reset" as const,
+          quickCandidateSelection: undefined,
         })),
         selectedSlotId: editable.selectedSlotId,
       };

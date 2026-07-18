@@ -4,6 +4,8 @@ import {
   createEditableProgression,
   deleteEditableChord,
   appendSuggestedEditableChord,
+  insertSuggestedEditableChordAfter,
+  quickCandidatesForSlot,
   hasProgressionEdits,
   mergeEditableChords,
   progressionSpan,
@@ -17,7 +19,7 @@ import {
 import { makeCandidate } from "./testFixtures";
 
 describe("progression structural editing", () => {
-  it("appends the top contextual suggestion and keeps five alternatives", () => {
+  it("appends the top generated suggestion and exposes follow-up candidates", () => {
     const editable = createEditableProgression(makeCandidate());
     const inserted = appendSuggestedEditableChord(editable, "C major");
 
@@ -28,12 +30,15 @@ describe("progression structural editing", () => {
       [2, 1],
     ]);
     expect(inserted.slots[2]).toMatchObject({
-      currentChord: expect.objectContaining({ label: "Fmaj7" }),
       edited: true,
       editSource: "insert",
     });
     expect(inserted.slots[2]!.currentChord.label).not.toBe(editable.slots[1]!.currentChord.label);
-    expect(inserted.slots[2]!.alternatives).toHaveLength(5);
+    expect(quickCandidatesForSlot({
+      editable: inserted,
+      slotId: inserted.slots[2]!.id,
+      keySignature: "C major",
+    }).length).toBeGreaterThan(0);
     expect(inserted.selectedSlotId).toBe(inserted.slots[2]!.id);
     expect(validateEditableProgression(inserted)).toEqual([]);
 
@@ -44,6 +49,30 @@ describe("progression structural editing", () => {
     const reset = resetAllEditableChords(inserted);
     expect(reset.slots).toHaveLength(2);
     expect(hasProgressionEdits(reset)).toBe(false);
+  });
+
+  it("inserts after any slot, shifts later timing, and selects a generated chord", () => {
+    const editable = createEditableProgression(makeCandidate());
+    const first = editable.slots[0]!;
+    const second = editable.slots[1]!;
+    const inserted = insertSuggestedEditableChordAfter(editable, first.id, "C major");
+
+    expect(inserted.slots).toHaveLength(3);
+    expect(inserted.slots[1]!.editSource).toBe("insert");
+    expect(inserted.slots[1]!.currentChord.label).not.toBe(first.currentChord.label);
+    expect(inserted.slots[2]!.id).toBe(second.id);
+    expect(inserted.slots[2]!.position).toEqual({
+      bar: 2,
+      beat: 1,
+      durationBeats: second.position.durationBeats,
+    });
+    expect(inserted.selectedSlotId).toBe(inserted.slots[1]!.id);
+    expect(validateEditableProgression(inserted)).toEqual([]);
+    expect(quickCandidatesForSlot({
+      editable: inserted,
+      slotId: inserted.slots[1]!.id,
+      keySignature: "C major",
+    }).length).toBeGreaterThan(0);
   });
 
   it("splits at the midpoint and preserves the progression span", () => {

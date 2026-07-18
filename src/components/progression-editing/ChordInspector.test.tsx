@@ -110,7 +110,11 @@ describe("ChordInspector playback", () => {
     const apply = [...container.querySelectorAll<HTMLButtonElement>("button")]
       .find((button) => button.textContent === "先頭候補を適用");
     await act(async () => apply?.click());
-    expect(onApply).toHaveBeenCalledWith(alternative, "alternative");
+    expect(onApply).toHaveBeenCalledWith(alternative, "alternative", {
+      source: "analyzer",
+      candidateRank: 0,
+      displayedCandidateCount: 1,
+    });
 
     const expand = [...container.querySelectorAll<HTMLButtonElement>("button")]
       .find((button) => button.textContent === "展開");

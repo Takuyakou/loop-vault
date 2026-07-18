@@ -13,17 +13,18 @@ import { EditableProgressionGrid } from "../components/progression-editing/Edita
 import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
 import {
   applyEditableProgressionToSavedBlock,
-  appendSuggestedEditableChord,
+  buildAuthorReferenceIndex,
   canMergeEditableChords,
   canRedoProgressionEdit,
   canSplitEditableChord,
   canUndoProgressionEdit,
   createEditableProgression,
-  contextualAlternativesForSlot,
   deleteEditableChord,
+  insertSuggestedEditableChordAfter,
   hasProgressionEdits,
   markEditableProgressionSaved,
   mergeEditableChords,
+  quickCandidatesForSlot,
   redoProgressionEdit,
   replaceEditableChord,
   resetAllEditableChords,
@@ -33,9 +34,10 @@ import {
   splitEditableChord,
   undoProgressionEdit,
 } from "../domain/progressionEditing";
-import { beatsPerBar } from "../domain/midi";
+import { beatsPerBar, buildCorrectionEvents } from "../domain/midi";
 import { formatProgressionText } from "../domain/progressionText";
 import type { SavedProgressionBlock, SongIdea } from "../domain/types";
+import { appendAnalysisFeedback } from "../storage/analysisFeedbackStorage";
 import {
   progressionDetailCopy,
   type AppCopy,
@@ -51,6 +53,7 @@ import {
 
 interface ProgressionDetailViewProps {
   idea: SongIdea;
+  ideas?: readonly SongIdea[];
   block: SavedProgressionBlock;
   updateProgressionBlock: (
     ideaId: string,
@@ -70,6 +73,7 @@ interface ProgressionDetailViewProps {
 
 export function ProgressionDetailView({
   idea,
+  ideas = [idea],
   block,
   updateProgressionBlock,
   duplicateProgressionBlock,
@@ -93,9 +97,18 @@ export function ProgressionDetailView({
   );
   const selectedIndex = selectedEditableSlotIndex(editable);
   const keySignature = block.detectedKey ?? idea.key;
+  const authorReferenceIndex = useMemo(() => buildAuthorReferenceIndex(ideas), [ideas]);
   const selectedSlot = selectedIndex === undefined
     ? undefined
-    : contextualAlternativesForSlot(editable, editable.slots[selectedIndex]!.id, keySignature);
+    : editable.slots[selectedIndex];
+  const selectedQuickCandidates = selectedSlot
+    ? quickCandidatesForSlot({
+        editable,
+        slotId: selectedSlot.id,
+        keySignature,
+        authorReferenceIndex,
+      })
+    : [];
   const previousSlot = selectedIndex !== undefined && selectedIndex > 0
     ? editable.slots[selectedIndex - 1]
     : undefined;
@@ -110,6 +123,22 @@ export function ProgressionDetailView({
     if (!saved) {
       setToast(text.saveFailed);
       return;
+    }
+    const correctionEvents = buildCorrectionEvents(
+      block,
+      editingBlock,
+      {
+        sourceFingerprint: block.sourceFingerprint,
+        analyzerVersion: block.sourceAnalyzerVersion ?? block.analyzerVersion,
+        timeSignature: block.timeSignature,
+        detectedKey: block.detectedKey ?? idea.key,
+      },
+      editable.slots.map((slot) => slot.editSource),
+      editable.slots.map((slot) => slot.quickCandidateSelection),
+    );
+    if (correctionEvents.length > 0) {
+      void appendAnalysisFeedback(correctionEvents)
+        .catch(() => setToast(copy.capture.feedbackSaveFailed));
     }
     setEditable((current) => markEditableProgressionSaved(current));
     setToast(text.savedToast);
@@ -270,17 +299,26 @@ export function ProgressionDetailView({
               setEditable((current) => selectEditableSlot(current, slotId));
               void previewChord(chord, slotId);
             }}
-            onAppend={() => setEditable((current) => appendSuggestedEditableChord(current, keySignature))}
+            onInsertAfter={(slotId) => setEditable((current) => (
+              insertSuggestedEditableChordAfter(
+                current,
+                slotId,
+                keySignature,
+                authorReferenceIndex,
+              )
+            ))}
             keySignature={keySignature}
+            authorReferenceIndex={authorReferenceIndex}
             language={language}
             quickEditor={{
               onPreview: (slotId, chord) => void previewChord(chord, slotId),
-              onApply: (slotId, chord, source) => setEditable((current) => (
+              onApply: (slotId, chord, source, selection) => setEditable((current) => (
                 replaceEditableChord(
                   selectEditableSlot(current, slotId),
                   slotId,
                   chord,
                   source,
+                  selection,
                 )
               )),
               onReset: (slotId) => setEditable((current) => resetEditableChord(current, slotId)),
@@ -316,6 +354,7 @@ export function ProgressionDetailView({
         <div className="lv-progression-detail-inspector min-w-0" data-progression-detail-inspector>
           <ChordInspector
             slot={selectedSlot}
+            quickCandidates={selectedQuickCandidates}
             language={language}
             onPreview={(chord) => void previewChord(chord)}
             playbackSource={playbackSource}
@@ -325,9 +364,11 @@ export function ProgressionDetailView({
             controller={controller}
             originalLabel={text.savedChord}
             currentLabel={text.editingChord}
-            onApply={(chord, source) => setEditable((current) => {
+            onApply={(chord, source, selection) => setEditable((current) => {
               const slotId = current.selectedSlotId;
-              return slotId ? replaceEditableChord(current, slotId, chord, source) : current;
+              return slotId
+                ? replaceEditableChord(current, slotId, chord, source, selection)
+                : current;
             })}
             onReset={() => setEditable((current) => {
               const slotId = current.selectedSlotId;

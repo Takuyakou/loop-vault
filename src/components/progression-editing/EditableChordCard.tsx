@@ -1,6 +1,6 @@
 import type { EditableChordSlot } from "../../domain/progressionEditing";
 import { progressionEditorCopy, type AppLanguage } from "../../i18n";
-import { Pencil, SquarePen, TriangleAlert } from "lucide-react";
+import { Pencil, Plus, SquarePen, TriangleAlert } from "lucide-react";
 
 interface EditableChordCardProps {
   slot: EditableChordSlot;
@@ -11,6 +11,7 @@ interface EditableChordCardProps {
   onNavigate?: (direction: -1 | 1) => void;
   onPreview?: () => void;
   onQuickEdit?: (anchorElement: HTMLElement) => void;
+  onInsertAfter?: () => void;
   buttonRef?: (element: HTMLButtonElement | null) => void;
   language: AppLanguage;
 }
@@ -24,6 +25,7 @@ export function EditableChordCard({
   onNavigate,
   onPreview,
   onQuickEdit,
+  onInsertAfter,
   buttonRef,
   language,
 }: EditableChordCardProps) {
@@ -50,7 +52,7 @@ export function EditableChordCard({
       <button
         ref={buttonRef}
         type="button"
-        className="min-h-20 w-full px-3 py-3 pr-11 text-left"
+        className="min-h-20 w-full px-3 py-3 pr-20 text-left"
         onKeyDown={(event) => {
           if (event.nativeEvent.isComposing) return;
           if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
@@ -109,6 +111,21 @@ export function EditableChordCard({
           title={text.quickEdit}
         >
           <SquarePen aria-hidden="true" size={16} />
+        </button>
+      ) : null}
+      {onInsertAfter ? (
+        <button
+          type="button"
+          data-insert-chord-after
+          className="absolute right-11 top-2 grid h-8 w-8 place-items-center border border-[var(--lv-border-strong)] bg-[var(--lv-surface)] text-[var(--lv-text-secondary)] opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
+          onClick={(event) => {
+            event.stopPropagation();
+            onInsertAfter();
+          }}
+          aria-label={text.insertAfterChord}
+          title={text.insertAfterChord}
+        >
+          <Plus aria-hidden="true" size={16} />
         </button>
       ) : null}
     </div>
