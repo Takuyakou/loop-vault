@@ -4,9 +4,9 @@ import { makeChordSymbol } from "../../domain/chords";
 import { ChordAlternativeList } from "./ChordAlternativeList";
 
 describe("ChordAlternativeList", () => {
-  it("wraps and renders at most four alternatives", () => {
+  it("wraps and renders at most five alternatives", () => {
     const markup = renderToStaticMarkup(<ChordAlternativeList
-      alternatives={[0, 2, 4, 5, 7].map((root, index) => ({
+      alternatives={[0, 2, 4, 5, 7, 9].map((root, index) => ({
         chord: makeChordSymbol(root, "maj"),
         confidence: 0.8 - index * 0.1,
       }))}
@@ -15,8 +15,9 @@ describe("ChordAlternativeList", () => {
     />);
 
     expect(markup).toContain("flex-wrap");
-    expect(markup).toContain('data-alternative-count="4"');
-    expect((markup.match(/<button/g) ?? [])).toHaveLength(4);
-    expect(markup).not.toContain(">G<");
+    expect(markup).toContain('data-alternative-count="5"');
+    expect((markup.match(/<button/g) ?? [])).toHaveLength(5);
+    expect(markup).toContain(">G<");
+    expect(markup).not.toContain(">A<");
   });
 });

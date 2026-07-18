@@ -7,6 +7,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { makeChordSymbol } from "../../domain/chords";
+import { selectQuickChordAlternatives } from "../../domain/chordAlternatives";
 import type {
   EditableChordSlot,
   ProgressionEditSource,
@@ -52,6 +53,7 @@ export function QuickChordEditor({
   const [draftChord, setDraftChord] = useState(() => cloneChord(slot.currentChord));
   const [source, setSource] = useState<QuickApplySource>("structure-editor");
   const [position, setPosition] = useState({ left: 8, top: 8, width: 320 });
+  const alternatives = selectQuickChordAlternatives(slot.currentChord, slot.alternatives);
 
   useLayoutEffect(() => {
     function updatePosition() {
@@ -109,7 +111,7 @@ export function QuickChordEditor({
 
     const number = Number(event.key);
     if (number >= 1 && number <= 5) {
-      const alternative = slot.alternatives[number - 1];
+      const alternative = alternatives[number - 1];
       if (alternative) {
         event.preventDefault();
         chooseCandidate(alternative.chord);
@@ -168,11 +170,11 @@ export function QuickChordEditor({
         </button>
       </div>
 
-      {slot.alternatives.length > 0 ? (
+      {alternatives.length > 0 ? (
         <div className="mt-4">
           <p className="text-xs text-[var(--lv-text-muted)]">{text.candidates}</p>
           <div className="mt-2 flex flex-wrap gap-2">
-            {slot.alternatives.slice(0, 5).map((alternative, index) => (
+            {alternatives.map((alternative, index) => (
               <button
                 key={`${alternative.chord.label}-${index}`}
                 type="button"

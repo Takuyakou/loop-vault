@@ -25,7 +25,7 @@ export function mergeDecodedSegments(path: readonly DecodedSegment[]): MergedDec
       previous.confidenceLevel = lower(previous.confidenceLevel, current.confidenceLevel);
       previous.alternatives = selectDiverseAlternatives(
         [...previous.alternatives, current.candidate, ...current.alternatives],
-        { primary: previous.candidate, limit: 4, bassPitchClass: previous.candidate.chord.bass },
+        { primary: previous.candidate, limit: 5, bassPitchClass: previous.candidate.chord.bass },
       );
       previous.warnings = [...new Set([...previous.warnings, ...current.warnings])];
     } else {
@@ -44,7 +44,7 @@ export function materializeDecodedSegments(path: readonly DecodedSegment[]): Mer
       candidate: decoded.candidate,
       alternatives: selectDiverseAlternatives(decoded.scored.candidates, {
         primary: decoded.candidate,
-        limit: 4,
+        limit: 5,
         bassPitchClass: decoded.candidate.chord.bass,
       }),
       confidence: confidence.value,

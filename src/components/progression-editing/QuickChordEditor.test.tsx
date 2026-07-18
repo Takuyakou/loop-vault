@@ -150,6 +150,59 @@ describe("QuickChordEditor", () => {
 
     await act(async () => root.unmount());
   });
+
+  it("deduplicates and exposes at most five diverse candidates to keys 1 through 5", async () => {
+    const onPreview = vi.fn();
+    const onApply = vi.fn();
+    const anchor = document.createElement("button");
+    document.body.append(anchor);
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const manyAlternatives: EditableChordSlot = {
+      ...slot,
+      alternatives: [
+        { chord: { root: 7, quality: "dom7", tensions: [], label: "G7" }, confidence: 0.95 },
+        { chord: { ...slot.currentChord, label: "C major seven" }, confidence: 0.94 },
+        { chord: { root: 2, quality: "min9", tensions: [], label: "Dm9" }, confidence: 0.9 },
+        { chord: { root: 0, quality: "min7", tensions: [], label: "Cm7" }, confidence: 0.85 },
+        { chord: { root: 5, quality: "maj7", tensions: [], label: "Fmaj7" }, confidence: 0.8 },
+        { chord: { root: 9, quality: "min7", tensions: [], bass: 0, label: "Am7/C" }, confidence: 0.75 },
+        { chord: { root: 10, quality: "dom7", tensions: [], label: "Bb7" }, confidence: 0.7 },
+      ],
+    };
+
+    await act(async () => {
+      root.render(
+        <QuickChordEditor
+          slot={manyAlternatives}
+          anchorElement={anchor}
+          language="en"
+          onPreview={onPreview}
+          onApply={onApply}
+          onReset={vi.fn()}
+          onOpenInspector={vi.fn()}
+          onClose={vi.fn()}
+        />,
+      );
+    });
+
+    const panel = document.querySelector<HTMLElement>("[data-quick-chord-editor]")!;
+    const candidateButtons = [...panel.querySelectorAll<HTMLButtonElement>("button")]
+      .filter((button) => /^[1-5]/.test(button.textContent?.trim() ?? ""));
+    expect(candidateButtons).toHaveLength(5);
+    expect(candidateButtons.map((button) => button.textContent)).not.toContain("C major seven");
+
+    await act(async () => {
+      panel.dispatchEvent(new KeyboardEvent("keydown", { key: "5", bubbles: true }));
+    });
+    await act(async () => {
+      panel.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true }));
+    });
+    expect(onPreview).toHaveBeenCalledWith(expect.objectContaining({ label: "Fmaj7" }));
+    expect(onApply).not.toHaveBeenCalled();
+    await act(async () => root.unmount());
+  });
 });
 
 function rect(left: number, top: number, right: number, bottom: number): DOMRect {

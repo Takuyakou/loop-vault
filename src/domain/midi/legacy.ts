@@ -1,4 +1,5 @@
 import { labelFromSymbol, makeChordSymbol, normalizePc } from "../chords";
+import { selectQuickChordAlternatives } from "../chordAlternatives";
 import type {
   ChordQuality,
   ChordSymbol,
@@ -261,10 +262,10 @@ function matchWindowWithRankingScore(
       durationBeats: window.durationBeats,
       chord: best.chord,
       confidence: clamp(best.confidence),
-      alternatives: scored.slice(1, 3).map((entry) => ({
-        chord: entry.chord,
-        confidence: clamp(entry.confidence),
-      })),
+      alternatives: selectQuickChordAlternatives(
+        best.chord,
+        scored.slice(1).map((entry) => ({ chord: entry.chord, confidence: entry.confidence })),
+      ).map((entry) => ({ chord: entry.chord, confidence: clamp(entry.confidence) })),
       warnings,
     },
     rankingScore: rankingScoreFor(best.confidence),

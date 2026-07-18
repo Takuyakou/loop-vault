@@ -10,7 +10,7 @@ describe("operation correction cost", () => {
     };
     expect(operationCorrectionCost(detected, ["Cmaj7"])).toBe(0);
     expect(operationCorrectionCost(detected, ["Am7"])).toBe(1);
-    expect(operationCorrectionCost(detected, ["Em7"])).toBe(2);
+    expect(operationCorrectionCost(detected, ["Em7"])).toBe(1);
     expect(operationCorrectionCost(detected, ["C7b9"])).toBe(3);
     expect(operationCorrectionCost(detected, ["not-a-chord"])).toBe(4);
     expect(operationCorrectionCost(undefined, ["C"])).toBe(4);
@@ -26,11 +26,11 @@ describe("operation correction cost", () => {
     expect(operationCorrectionCost({ primary: "C7b9", alternatives: [] }, ["D7b9/F#"])).toBe(2);
   });
 
-  it("only treats the four alternatives displayed by Stage B1 as chips", () => {
+  it("treats all five Quick Editor alternatives as direct selections", () => {
     expect(operationCorrectionCost({
       primary: "C7b9",
       alternatives: ["D7b9", "E7b9", "F7b9", "G7b9", "A7b9"],
-    }, ["A7b9"])).toBe(2);
+    }, ["A7b9"])).toBe(1);
   });
 
   it("accepts structured ChordSymbol candidates from analyzer timelines", () => {

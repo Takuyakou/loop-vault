@@ -153,7 +153,7 @@ export function materializeRerankedTimelineItem(
 ): ChordTimelineItem {
   const alternatives = selectDiverseAlternatives(decision.candidates, {
     primary: decision.selected,
-    limit: 4,
+    limit: 5,
     ...(decision.bassPitchClass !== undefined ? { bassPitchClass: decision.bassPitchClass } : {}),
   });
   return {
