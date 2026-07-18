@@ -83,6 +83,39 @@ export function selectEditableSlot(
   return { ...editable, selectedSlotId: slotId };
 }
 
+export function selectedEditableSlotIndex(
+  editable: Pick<EditableProgression, "slots" | "selectedSlotId">,
+): number | undefined {
+  if (!editable.selectedSlotId) return undefined;
+  const index = editable.slots.findIndex((slot) => slot.id === editable.selectedSlotId);
+  return index >= 0 ? index : undefined;
+}
+
+export function markEditableProgressionSaved(
+  editable: EditableProgression,
+): EditableProgression {
+  const selectedSlotId = editable.selectedSlotId
+    && editable.slots.some((slot) => slot.id === editable.selectedSlotId)
+    ? editable.selectedSlotId
+    : editable.slots[0]?.id;
+  const slots = editable.slots.map((slot) => {
+    const { editSource: _editSource, ...saved } = cloneSlot(slot);
+    return {
+      ...saved,
+      originalChord: cloneChord(slot.currentChord),
+      currentChord: cloneChord(slot.currentChord),
+      edited: false,
+    };
+  });
+  return {
+    ...editable,
+    slots,
+    ...(selectedSlotId ? { selectedSlotId } : { selectedSlotId: undefined }),
+    history: [],
+    historyIndex: 0,
+  };
+}
+
 type BatchReplacementSource = Extract<
   ProgressionEditSource,
   "manual-label" | "alternative" | "structure-editor" | "propagation"

@@ -4,11 +4,14 @@ import {
   applyEditableProgressionToSavedBlock,
   createEditableProgression,
   hasProgressionEdits,
+  markEditableProgressionSaved,
   progressionEditSummary,
   replaceEditableChord,
   replaceEditableChords,
   resetAllEditableChords,
   resetEditableChord,
+  selectedEditableSlotIndex,
+  selectEditableSlot,
   undoProgressionEdit,
 } from ".";
 import { gMajor, makeCandidate } from "./testFixtures";
@@ -134,5 +137,31 @@ describe("editable progression", () => {
     const editable = createEditableProgression(makeCandidate());
     expect(replaceEditableChords(editable, [], gMajor, "propagation")).toBe(editable);
     expect(replaceEditableChords(editable, ["missing"], gMajor, "propagation")).toBe(editable);
+  });
+
+  it("rebases a saved edit without losing the selected slot", () => {
+    const editable = createEditableProgression(makeCandidate());
+    const secondId = editable.slots[1]!.id;
+    const selected = selectEditableSlot(editable, secondId);
+    const changed = replaceEditableChord(selected, secondId, gMajor, "alternative");
+    const saved = markEditableProgressionSaved(changed);
+
+    expect(saved.selectedSlotId).toBe(secondId);
+    expect(selectedEditableSlotIndex(saved)).toBe(1);
+    expect(saved.slots[1]).toMatchObject({
+      originalChord: gMajor,
+      currentChord: gMajor,
+      edited: false,
+    });
+    expect(saved.slots[1]).not.toHaveProperty("editSource");
+    expect(saved.history).toEqual([]);
+    expect(saved.historyIndex).toBe(0);
+    expect(hasProgressionEdits(saved)).toBe(false);
+  });
+
+  it("does not disguise a missing selection as the first slot", () => {
+    const editable = createEditableProgression(makeCandidate());
+    expect(selectedEditableSlotIndex({ ...editable, selectedSlotId: "missing" })).toBeUndefined();
+    expect(selectedEditableSlotIndex({ ...editable, selectedSlotId: undefined })).toBeUndefined();
   });
 });
