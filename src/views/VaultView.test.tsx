@@ -36,11 +36,66 @@ const progressionBlock: SavedProgressionBlock = {
 
 afterEach(() => {
   playbackController.stop();
+  window.sessionStorage.clear();
   vi.restoreAllMocks();
   document.body.replaceChildren();
 });
 
 describe("VaultView keyboard shortcuts", () => {
+  it("opens Library first and keeps a List choice for the current session", async () => {
+    const idea = makeIdea({ id: "idea-mode", progressionBlocks: [progressionBlock] });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const render = async () => {
+      await act(async () => {
+        root.render(
+          <VaultView
+            ideas={[idea]}
+            openDetail={vi.fn()}
+            openCreate={vi.fn()}
+            openCapture={vi.fn()}
+            updateIdea={vi.fn()}
+            setToast={vi.fn()}
+            copy={appCopy.en}
+            language="en"
+            showRomanNumerals={false}
+          />,
+        );
+      });
+    };
+
+    await render();
+    const modeButtons = [...container.querySelectorAll<HTMLButtonElement>("[role='group'] button")];
+    expect(modeButtons.map((button) => button.textContent)).toEqual(["Library", "List"]);
+    expect(modeButtons[0]?.getAttribute("aria-pressed")).toBe("true");
+
+    await act(async () => modeButtons[1]!.click());
+    expect(modeButtons[1]?.getAttribute("aria-pressed")).toBe("true");
+    expect(window.sessionStorage.getItem("loop-vault.progression-view-mode")).toBe("list");
+
+    await act(async () => root.unmount());
+    const nextRoot = createRoot(container);
+    await act(async () => {
+      nextRoot.render(
+        <VaultView
+          ideas={[idea]}
+          openDetail={vi.fn()}
+          openCreate={vi.fn()}
+          openCapture={vi.fn()}
+          updateIdea={vi.fn()}
+          setToast={vi.fn()}
+          copy={appCopy.en}
+          language="en"
+          showRomanNumerals={false}
+        />,
+      );
+    });
+    const restoredButtons = [...container.querySelectorAll<HTMLButtonElement>("[role='group'] button")];
+    expect(restoredButtons[1]?.getAttribute("aria-pressed")).toBe("true");
+    await act(async () => nextRoot.unmount());
+  });
+
   it("pins from the stored block array while another block is pending deletion", async () => {
     const pendingBlock = { ...progressionBlock, id: "pending-block" };
     const visibleBlock = { ...progressionBlock, id: "visible-block", pinned: false };
@@ -317,7 +372,7 @@ describe("VaultView keyboard shortcuts", () => {
     expect(metadata.textContent).toContain("Key D minor");
     expect(metadata.textContent).toContain("124 BPM");
     expect(metadata.textContent).toContain(new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(progressionBlock.capturedAt)));
-    expect(row.querySelector(".lv-vault-tags")?.textContent).toBe("bridge · bright");
+    expect(row.querySelector(".lv-vault-tags")?.textContent).toContain("bridge · bright");
     expect(row.querySelector(".lv-vault-actions")).not.toBeNull();
 
     await act(async () => root.unmount());

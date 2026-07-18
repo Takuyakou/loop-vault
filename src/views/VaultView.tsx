@@ -23,6 +23,9 @@ import { ChevronRight, Copy, SlidersHorizontal, Star, X } from "lucide-react";
 
 type ProgressionEntry = { idea: SongIdea; block: SavedProgressionBlock };
 type SortField = "capturedAt" | "updatedAt" | "key" | "bpm";
+type ProgressionViewMode = "list" | "library";
+
+const progressionViewModeSessionKey = "loop-vault.progression-view-mode";
 
 export function VaultView({
   ideas, storedIdeas = ideas, openDetail, openProgression, openCreate, openCapture, updateIdea, setToast, copy, language, showRomanNumerals,
@@ -40,7 +43,7 @@ export function VaultView({
   showRomanNumerals: boolean;
 }) {
   const [mode, setMode] = useState<"progression" | "idea">("progression");
-  const [progressionView, setProgressionView] = useState<"list" | "library">("list");
+  const [progressionView, setProgressionView] = useState<ProgressionViewMode>(readProgressionViewMode);
   const [libraryScope, setLibraryScope] = useState<ProgressionLibraryScope>("all");
   const [selectedLibraryTags, setSelectedLibraryTags] = useState<string[]>([]);
   const [libraryDrawerOpen, setLibraryDrawerOpen] = useState(false);
@@ -95,6 +98,11 @@ export function VaultView({
       setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
     }
   }, [copy.toast.chordPreviewFailed, setToast]);
+
+  function changeProgressionView(next: ProgressionViewMode) {
+    setProgressionView(next);
+    writeProgressionViewMode(next);
+  }
 
   const openProgressionDetail = useCallback((entry: ProgressionEntry) => {
     if (openProgression) {
@@ -172,19 +180,19 @@ export function VaultView({
         <div className="mb-3 inline-flex border border-[var(--lv-border)] p-0.5 text-sm" role="group" aria-label={copy.library.progression}>
           <button
             type="button"
-            className={progressionView === "list" ? "bg-[var(--lv-surface-raised)] px-3 py-1.5" : "px-3 py-1.5 text-[var(--lv-text-muted)]"}
-            onClick={() => setProgressionView("list")}
-            aria-pressed={progressionView === "list"}
-          >
-            {libraryText.list}
-          </button>
-          <button
-            type="button"
             className={progressionView === "library" ? "bg-[var(--lv-surface-raised)] px-3 py-1.5" : "px-3 py-1.5 text-[var(--lv-text-muted)]"}
-            onClick={() => setProgressionView("library")}
+            onClick={() => changeProgressionView("library")}
             aria-pressed={progressionView === "library"}
           >
             {libraryText.library}
+          </button>
+          <button
+            type="button"
+            className={progressionView === "list" ? "bg-[var(--lv-surface-raised)] px-3 py-1.5" : "px-3 py-1.5 text-[var(--lv-text-muted)]"}
+            onClick={() => changeProgressionView("list")}
+            aria-pressed={progressionView === "list"}
+          >
+            {libraryText.list}
           </button>
         </div>
         <div className="grid gap-2 border-y border-[var(--lv-border)] py-3 md:grid-cols-[minmax(0,1fr)_auto_auto]">
@@ -524,4 +532,21 @@ function requestOf(entry: ProgressionEntry) {
     bpm: entry.block.bpm ?? entry.idea.bpm,
     beatsPerBar: beatsPerBar(entry.block.timeSignature),
   };
+}
+
+function readProgressionViewMode(): ProgressionViewMode {
+  try {
+    const stored = window.sessionStorage.getItem(progressionViewModeSessionKey);
+    return stored === "list" || stored === "library" ? stored : "library";
+  } catch {
+    return "library";
+  }
+}
+
+function writeProgressionViewMode(mode: ProgressionViewMode): void {
+  try {
+    window.sessionStorage.setItem(progressionViewModeSessionKey, mode);
+  } catch {
+    // UI preferences must never block the Vault.
+  }
 }
