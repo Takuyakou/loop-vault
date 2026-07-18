@@ -408,6 +408,7 @@ async function analyzeMidiPath(path: string) {
               <ProgressionDetailView
                 key={`${progressionIdea.id}:${progressionBlock.id}`}
                 idea={progressionIdea}
+                ideas={ideas}
                 block={progressionBlock}
                 updateProgressionBlock={updateProgressionBlock}
                 duplicateProgressionBlock={duplicateProgressionBlock}

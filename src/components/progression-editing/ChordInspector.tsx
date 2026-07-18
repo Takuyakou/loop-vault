@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { parseChordLabel } from "../../domain/chords";
-import type {
-  EditableChordSlot,
-  ProgressionEditSource,
-  SimilarSegmentCandidate,
+import {
+  analyzerQuickCandidates,
+  quickCandidateSelectionMetadata,
+  type QuickCandidateSelectionMetadata,
+  type QuickChordCandidate,
+  type EditableChordSlot,
+  type ProgressionEditSource,
+  type SimilarSegmentCandidate,
 } from "../../domain/progressionEditing";
 import type { ChordSymbol } from "../../domain/types";
 import { progressionEditorCopy, type AppLanguage } from "../../i18n";
@@ -30,9 +34,11 @@ interface ChordInspectorProps {
   stopLabel?: string;
   onPreviewError?: (error: unknown) => void;
   controller?: PlaybackController;
+  quickCandidates?: readonly QuickChordCandidate[];
   onApply: (
     chord: ChordSymbol,
     source: Extract<ProgressionEditSource, "manual-label" | "alternative" | "structure-editor">,
+    selection?: QuickCandidateSelectionMetadata,
   ) => void;
   onReset: () => void;
   canSplit?: boolean;
@@ -66,6 +72,7 @@ export function ChordInspector({
   stopLabel,
   onPreviewError,
   controller = playbackController,
+  quickCandidates: providedQuickCandidates,
   onApply,
   onReset,
   canSplit = false,
@@ -83,10 +90,13 @@ export function ChordInspector({
   currentLabel,
 }: ChordInspectorProps) {
   const text = progressionEditorCopy[language];
+  const quickCandidates = providedQuickCandidates
+    ?? analyzerQuickCandidates(slot?.alternatives ?? []);
   const resolvedStopLabel = stopLabel ?? text.stop;
   const [draftLabel, setDraftLabel] = useState(slot?.currentChord.label ?? "");
   const [draftChord, setDraftChord] = useState<ChordSymbol | undefined>(slot?.currentChord);
   const [draftSource, setDraftSource] = useState<"manual-label" | "alternative" | "structure-editor">("manual-label");
+  const [selectedCandidate, setSelectedCandidate] = useState<QuickChordCandidate>();
   const [error, setError] = useState<string>();
   const toggleButtonRef = useRef<HTMLButtonElement>(null);
   const wasExpandedRef = useRef(expanded);
@@ -95,6 +105,7 @@ export function ChordInspector({
     setDraftLabel(slot?.currentChord.label ?? "");
     setDraftChord(slot?.currentChord);
     setDraftSource("manual-label");
+    setSelectedCandidate(undefined);
     setError(undefined);
   }, [slot?.id, slot?.currentChord]);
 
@@ -116,25 +127,43 @@ export function ChordInspector({
   }
 
   const sourceBase = playbackSource ?? { kind: "capture", id: "chord-inspector" };
-  const firstAlternative = slot.alternatives[0];
+  const firstAlternative = quickCandidates[0];
   const detailsId = `chord-inspector-details-${slot.id}`;
 
   function updateLabel(label: string) {
     onEditStart?.();
     setDraftLabel(label);
     setDraftSource("manual-label");
+    setSelectedCandidate(undefined);
     const parsed = parseChordLabel(label.trim());
     setDraftChord(parsed ?? undefined);
     setError(parsed || label.trim().length === 0 ? undefined : text.invalidChord);
   }
 
-  function selectAlternative(chord: ChordSymbol) {
+  function selectAlternative(candidate: QuickChordCandidate) {
     onEditStart?.();
-    setDraftLabel(chord.label);
-    setDraftChord(chord);
+    setDraftLabel(candidate.chord.label);
+    setDraftChord(candidate.chord);
     setDraftSource("alternative");
+    setSelectedCandidate(candidate);
     setError(undefined);
-    onPreview(chord);
+    onPreview(candidate.chord);
+  }
+
+  function applyDraft(chord: ChordSymbol) {
+    const index = selectedCandidate
+      ? quickCandidates.findIndex((candidate) => (
+          candidate.normalizedKey === selectedCandidate.normalizedKey
+          && candidate.primarySource === selectedCandidate.primarySource
+        ))
+      : -1;
+    onApply(
+      chord,
+      draftSource,
+      draftSource === "alternative" && selectedCandidate && index >= 0
+        ? quickCandidateSelectionMetadata(selectedCandidate, index, quickCandidates.length)
+        : undefined,
+    );
   }
 
   return (
@@ -199,7 +228,14 @@ export function ChordInspector({
               type="button"
               className="bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950 disabled:opacity-40"
               disabled={!firstAlternative || firstAlternative.chord.label === slot.currentChord.label}
-              onClick={() => firstAlternative && onApply(firstAlternative.chord, "alternative")}
+              onClick={() => {
+                if (!firstAlternative) return;
+                onApply(
+                  firstAlternative.chord,
+                  "alternative",
+                  quickCandidateSelectionMetadata(firstAlternative, 0, quickCandidates.length),
+                );
+              }}
             >
               {text.applyAlternative}
             </button>
@@ -253,7 +289,7 @@ export function ChordInspector({
 
       <div className="mt-5 border-t border-[var(--lv-border)] pt-4">
         <ChordAlternativeList
-          alternatives={slot.alternatives}
+          candidates={quickCandidates}
           selected={draftSource === "alternative" ? draftChord : undefined}
           onSelect={selectAlternative}
           language={language}
@@ -269,7 +305,7 @@ export function ChordInspector({
           onChange={(event) => updateLabel(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === "Enter" && draftChord) {
-              onApply(draftChord, draftSource);
+              applyDraft(draftChord);
             }
           }}
           aria-invalid={Boolean(error)}
@@ -284,6 +320,7 @@ export function ChordInspector({
               setDraftChord(chord);
               setDraftLabel(chord.label);
               setDraftSource("structure-editor");
+              setSelectedCandidate(undefined);
               setError(undefined);
             }}
           />
@@ -312,7 +349,7 @@ export function ChordInspector({
             type="button"
             className="bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950 disabled:opacity-40"
             disabled={!draftChord || draftChord.label === slot.currentChord.label}
-            onClick={() => draftChord && onApply(draftChord, draftSource)}
+            onClick={() => draftChord && applyDraft(draftChord)}
           >
             {text.apply}
           </button>

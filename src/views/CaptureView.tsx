@@ -3,7 +3,7 @@ import {
   open as openFileDialog,
 } from "@tauri-apps/plugin-dialog";
 import { readFile } from "@tauri-apps/plugin-fs";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DragEvent, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -13,12 +13,14 @@ import {
   canSplitEditableChord,
   canUndoProgressionEdit,
   buildSimilarityContext,
+  buildAuthorReferenceIndex,
   chordsEqual,
   createEditableProgression,
   deleteEditableChord,
   findSimilarSegments,
   hasProgressionEdits,
   progressionEditSummary,
+  quickCandidatesForSlot,
   mergeEditableChords,
   redoProgressionEdit,
   replaceEditableChord,
@@ -34,6 +36,7 @@ import {
 import type {
   EditableChordSlot,
   EditableProgression,
+  AuthorReferenceIndex,
   SimilarSegmentCandidate,
   SimilarityContext,
   SimilarityVoiceContext,
@@ -145,6 +148,7 @@ export function CaptureView(props: CaptureViewProps) {
   const [previewSound, setPreviewSound] = useState<PreviewSound>("piano");
   const candidateHeaderFocusIdRef = useRef<string>();
   const result = analysis.result;
+  const authorReferenceIndex = useMemo(() => buildAuthorReferenceIndex(ideas), [ideas]);
 
   useStickyInspectorHeight(inspectorHost, Boolean(expandedCandidateId));
 
@@ -408,6 +412,7 @@ export function CaptureView(props: CaptureViewProps) {
       edited,
       analysis.result,
       editable.slots.map((slot) => slot.editSource),
+      editable.slots.map((slot) => slot.quickCandidateSelection),
     );
   }
 
@@ -606,6 +611,7 @@ export function CaptureView(props: CaptureViewProps) {
                   analysisInput={analysisInput}
                   sourceFileName={result.fileName}
                   ideas={ideas}
+                  authorReferenceIndex={authorReferenceIndex}
                   onCopyProgression={copyProgression}
                   onPreview={previewCandidate}
                   onPreviewChord={previewCandidateChord}
@@ -896,6 +902,7 @@ export function ProgressionCandidateCard({
   analysisInput,
   sourceFileName,
   ideas = [],
+  authorReferenceIndex: providedAuthorReferenceIndex,
   onCopyProgression,
   onPreviewChord,
   playbackSource,
@@ -926,6 +933,7 @@ export function ProgressionCandidateCard({
   analysisInput?: AnalysisInput;
   sourceFileName?: string;
   ideas?: SongIdea[];
+  authorReferenceIndex?: AuthorReferenceIndex;
   onCreate?: (
     candidate: ProgressionBlockCandidate,
     title: string,
@@ -1140,6 +1148,18 @@ export function ProgressionCandidateCard({
   const playingProgress = playbackPosition?.progress ?? null;
   const selectedChord = chords[selectedChordIndex] ?? chords[0];
   const selectedSlot = selectedSlotIndex === undefined ? undefined : editable.slots[selectedSlotIndex];
+  const authorReferenceIndex = useMemo(
+    () => providedAuthorReferenceIndex ?? buildAuthorReferenceIndex(ideas),
+    [ideas, providedAuthorReferenceIndex],
+  );
+  const selectedQuickCandidates = selectedSlot
+    ? quickCandidatesForSlot({
+        editable,
+        slotId: selectedSlot.id,
+        keySignature: detectedKey,
+        authorReferenceIndex,
+      })
+    : [];
   const previousSlot = selectedSlotIndex !== undefined && selectedSlotIndex > 0
     ? editable.slots[selectedSlotIndex - 1]
     : undefined;
@@ -1237,16 +1257,18 @@ export function ProgressionCandidateCard({
             onSelect={(_slotId, index) => void selectChord(index)}
             onNavigate={(_slotId, index) => { selectSlot(index); }}
             onPreviewSlot={(_slotId, _chord, index) => void selectChord(index)}
+            keySignature={detectedKey}
+            authorReferenceIndex={authorReferenceIndex}
             language={language}
             quickEditor={{
               onOpen: (slotId, _index) => {
                 setEditable((current) => selectEditableSlot(current, slotId));
               },
               onPreview: (slotId, chord) => void previewQuickChord(slotId, chord),
-              onApply: (slotId, chord, source) => {
+              onApply: (slotId, chord, source, selection) => {
                 stopCandidatePreview();
                 const selected = selectEditableSlot(editable, slotId);
-                const next = replaceEditableChord(selected, slotId, chord, source);
+                const next = replaceEditableChord(selected, slotId, chord, source, selection);
                 setEditable(next);
                 setPropagationProposal(proposalFor(
                   next,
@@ -1270,6 +1292,7 @@ export function ProgressionCandidateCard({
         {isExpanded ? renderInspector(
           <ChordInspector
             slot={selectedSlot}
+            quickCandidates={selectedQuickCandidates}
             language={language}
             expanded={inspectorExpanded}
             onExpandedChange={onInspectorExpandedChange}
@@ -1279,11 +1302,11 @@ export function ProgressionCandidateCard({
             stopLabel={copy.common.stop}
             onPreviewError={onPreviewError}
             controller={controller}
-            onApply={(chord, source) => {
+            onApply={(chord, source, selection) => {
               stopCandidatePreview();
               const slotId = editable.selectedSlotId;
               if (slotId) {
-                const next = replaceEditableChord(editable, slotId, chord, source);
+                const next = replaceEditableChord(editable, slotId, chord, source, selection);
                 setEditable(next);
                 setPropagationProposal(proposalFor(
                   next,

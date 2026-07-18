@@ -895,6 +895,7 @@ export const appCopy = {
 
 export const progressionEditorCopy = {
   ja: {
+    insertAfterChord: "このコードの後に追加",
     candidate: (index: number) => `候補 ${index}`,
     candidateBars: (startBar: number, endBar: number, lengthBars: number) => `${startBar}-${endBar}小節 (${lengthBars})`,
     progressionTitle: (labels: string[]) => `コード進行 ${labels.join(" - ")}`,
@@ -947,6 +948,7 @@ export const progressionEditorCopy = {
   },
   en: {
     candidate: (index: number) => `Candidate ${index}`,
+    insertAfterChord: "Insert chord after",
     candidateBars: (startBar: number, endBar: number, lengthBars: number) => `Bars ${startBar}-${endBar} (${lengthBars})`,
     progressionTitle: (labels: string[]) => `Progression ${labels.join(" - ")}`,
     selectChord: "Select a chord to edit",
@@ -1115,6 +1117,14 @@ export const smartLibraryCopy = {
 
 export const quickChordEditorCopy = {
   ja: {
+    detectionCandidates: "検出候補",
+    repairSuggestions: "修正提案",
+    analyzerSource: "検出",
+    smoothSource: "スムーズ",
+    styleSource: "スタイル",
+    analyzerDescription: "MIDI解析上の代替候補",
+    smoothDescription: "前後を自然につなぐ候補",
+    styleDescription: "確認済み進行や過去の修正傾向に近い候補",
     title: "コードをすばやく編集",
     candidates: "候補",
     preview: "試聴",
@@ -1133,6 +1143,14 @@ export const quickChordEditorCopy = {
     continueEditing: "編集に戻る",
   },
   en: {
+    detectionCandidates: "Detection candidates",
+    repairSuggestions: "Repair suggestions",
+    analyzerSource: "Detection",
+    smoothSource: "Smooth",
+    styleSource: "Style",
+    analyzerDescription: "An alternative suggested by MIDI analysis",
+    smoothDescription: "A candidate that connects naturally to its neighbors",
+    styleDescription: "A candidate close to verified progressions and accepted edits",
     title: "Quick chord edit",
     candidates: "Candidates",
     preview: "Preview",

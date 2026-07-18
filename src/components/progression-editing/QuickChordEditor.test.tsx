@@ -68,6 +68,11 @@ describe("QuickChordEditor", () => {
     expect(onApply).toHaveBeenCalledWith(
       expect.objectContaining({ label: "Dm9" }),
       "alternative",
+      {
+        source: "analyzer",
+        candidateRank: 1,
+        displayedCandidateCount: 2,
+      },
     );
 
     await act(async () => root.unmount());

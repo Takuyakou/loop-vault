@@ -1,45 +1,54 @@
-import type { ChordAlternative } from "../../domain/progressionEditing";
-import { selectQuickChordAlternatives } from "../../domain/chordAlternatives";
+import type { QuickChordCandidate } from "../../domain/progressionEditing";
 import type { ChordSymbol } from "../../domain/types";
-import { progressionEditorCopy, type AppLanguage } from "../../i18n";
+import { quickChordEditorCopy, progressionEditorCopy, type AppLanguage } from "../../i18n";
 
 interface ChordAlternativeListProps {
-  alternatives: ChordAlternative[];
+  candidates: readonly QuickChordCandidate[];
   selected?: ChordSymbol;
-  onSelect: (chord: ChordSymbol) => void;
+  onSelect: (candidate: QuickChordCandidate, index: number) => void;
   language: AppLanguage;
 }
 
 export function ChordAlternativeList({
-  alternatives,
+  candidates,
   selected,
   onSelect,
   language,
 }: ChordAlternativeListProps) {
   const text = progressionEditorCopy[language];
-  if (alternatives.length === 0) {
+  const candidateText = quickChordEditorCopy[language];
+  if (candidates.length === 0) {
     return null;
   }
-  const displayedAlternatives = selectQuickChordAlternatives(undefined, alternatives);
+  const displayedCandidates = candidates.slice(0, 5);
   return (
     <div>
       <p className="text-xs text-[var(--lv-text-muted)]">
         {text.alternatives}
       </p>
-      <div className="mt-2 flex flex-wrap gap-2" data-alternative-count={displayedAlternatives.length}>
-        {displayedAlternatives.map((alternative) => {
-          const active = selected?.label === alternative.chord.label;
+      <div className="mt-2 flex flex-wrap gap-2" data-alternative-count={displayedCandidates.length}>
+        {displayedCandidates.map((candidate, index) => {
+          const active = selected?.label === candidate.chord.label;
           return (
             <button
               type="button"
-              key={`${alternative.chord.label}-${alternative.confidence}`}
+              key={`${candidate.normalizedKey}-${index}`}
               className={`border px-3 py-2 text-sm ${active ? "border-teal-300 bg-teal-300/10 text-teal-100" : "border-[var(--lv-border-strong)] text-[var(--lv-text-secondary)]"}`}
-              onClick={() => onSelect(alternative.chord)}
+              onClick={() => onSelect(candidate, index)}
               aria-pressed={active}
+              title={candidate.sources.map((source) => source === "smoothConnection"
+                ? candidateText.smoothDescription
+                : source === "authorReferenceFit"
+                  ? candidateText.styleDescription
+                  : candidateText.analyzerDescription).join(" / ")}
             >
-              {alternative.chord.label}
-              <span className="ml-2 text-xs text-[var(--lv-text-muted)]">
-                {Math.round(alternative.confidence * 100)}%
+              {candidate.chord.label}
+              <span className="ml-2 text-[10px] text-teal-200">
+                {candidate.sources.map((source) => source === "smoothConnection"
+                  ? candidateText.smoothSource
+                  : source === "authorReferenceFit"
+                    ? candidateText.styleSource
+                    : candidateText.analyzerSource).join("+")}
               </span>
             </button>
           );

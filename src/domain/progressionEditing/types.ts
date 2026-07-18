@@ -1,4 +1,5 @@
 import type { ChordSymbol } from "../types";
+import type { QuickCandidateSelectionMetadata } from "./quickCandidates";
 
 export interface ChordAlternative {
   chord: ChordSymbol;
@@ -30,6 +31,7 @@ export interface EditableChordSlot {
   warnings: string[];
   edited: boolean;
   editSource?: ProgressionEditSource;
+  quickCandidateSelection?: QuickCandidateSelectionMetadata;
 }
 
 export interface EditableProgression {

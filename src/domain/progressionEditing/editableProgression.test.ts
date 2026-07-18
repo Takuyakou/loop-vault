@@ -82,7 +82,13 @@ describe("editable progression", () => {
       analyzerVersion: "test",
     };
     const editable = createEditableProgression(block);
-    const changed = replaceEditableChord(editable, editable.slots[0]!.id, gMajor, "structure-editor");
+    const changed = replaceEditableChord(
+      editable,
+      editable.slots[0]!.id,
+      gMajor,
+      "alternative",
+      { source: "smoothConnection", candidateRank: 3, displayedCandidateCount: 5 },
+    );
     const saved = applyEditableProgressionToSavedBlock(block, changed);
 
     expect(saved).toMatchObject({
@@ -93,6 +99,8 @@ describe("editable progression", () => {
       userEdited: true,
     });
     expect(saved.chords.map((item) => item.chord.label)).toEqual(["G", "C"]);
+    expect(JSON.stringify(saved)).not.toContain("quickCandidateSelection");
+    expect(JSON.stringify(saved)).not.toContain("smoothConnection");
     expect(block.summaryText).toBe(candidate.summaryText);
   });
 

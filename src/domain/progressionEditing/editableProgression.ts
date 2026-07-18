@@ -121,7 +121,11 @@ export function markEditableProgressionSaved(
     ? editable.selectedSlotId
     : editable.slots[0]?.id;
   const slots = editable.slots.map((slot) => {
-    const { editSource: _editSource, ...saved } = cloneSlot(slot);
+    const {
+      editSource: _editSource,
+      quickCandidateSelection: _quickCandidateSelection,
+      ...saved
+    } = cloneSlot(slot);
     return {
       ...saved,
       originalChord: cloneChord(slot.currentChord),
@@ -195,6 +199,16 @@ export function cloneSlot(slot: EditableChordSlot): EditableChordSlot {
       confidence: alternative.confidence,
     })),
     warnings: [...slot.warnings],
+    ...(slot.quickCandidateSelection
+      ? {
+          quickCandidateSelection: {
+            ...slot.quickCandidateSelection,
+            ...(slot.quickCandidateSelection.sources
+              ? { sources: [...slot.quickCandidateSelection.sources] }
+              : {}),
+          },
+        }
+      : {}),
   };
 }
 

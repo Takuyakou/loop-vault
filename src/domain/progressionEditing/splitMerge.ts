@@ -4,7 +4,8 @@ import {
   positionFromStartBeat,
   slotStartBeat,
 } from "./editableProgression";
-import { suggestNextChordAlternatives } from "./chordSuggestions";
+import { insertionQuickCandidates } from "./slotQuickCandidates";
+import type { AuthorReferenceIndex } from "./styleCandidates";
 import { operationSnapshots, recordEditOperation } from "./editHistory";
 import type {
   DeleteChordOperation,
@@ -26,13 +27,36 @@ export function appendSuggestedEditableChord(
   editable: EditableProgression,
   keySignature?: string,
 ): EditableProgression {
+  const ordered = [...editable.slots].sort(
+    (left, right) => slotStartBeat(left, editable.beatsPerBar)
+      - slotStartBeat(right, editable.beatsPerBar),
+  );
+  const last = ordered[ordered.length - 1];
+  return last ? insertSuggestedEditableChordAfter(editable, last.id, keySignature) : editable;
+}
+
+export function insertSuggestedEditableChordAfter(
+  editable: EditableProgression,
+  afterSlotId: string,
+  keySignature?: string,
+  authorReferenceIndex?: AuthorReferenceIndex,
+): EditableProgression {
   const ordered = [...editable.slots]
     .sort((left, right) => slotStartBeat(left, editable.beatsPerBar) - slotStartBeat(right, editable.beatsPerBar))
     .map(cloneSlot);
-  const anchor = ordered[ordered.length - 1];
+  const anchorIndex = ordered.findIndex((slot) => slot.id === afterSlotId);
+  const anchor = ordered[anchorIndex];
   if (!anchor) return editable;
 
-  const suggestions = suggestNextChordAlternatives(anchor.currentChord, keySignature);
+  const suggestions = insertionQuickCandidates({
+    previousChord: anchor.currentChord,
+    nextChord: ordered[anchorIndex + 1]?.currentChord,
+    progression: ordered.map((slot) => slot.currentChord),
+    targetIndex: anchorIndex + 1,
+    keySignature,
+    durationBeats: anchor.position.durationBeats,
+    authorReferenceIndex,
+  });
   const selectedSuggestion = suggestions[0];
   if (!selectedSuggestion) return editable;
   const durationBeats = anchor.position.durationBeats;
@@ -43,16 +67,26 @@ export function appendSuggestedEditableChord(
     position: { ...insertedPosition, durationBeats },
     originalChord: cloneChord(selectedSuggestion.chord),
     currentChord: cloneChord(selectedSuggestion.chord),
-    alternatives: suggestions.slice(1).map((suggestion) => ({
-      chord: cloneChord(suggestion.chord),
-      confidence: suggestion.confidence,
-    })),
-    confidence: selectedSuggestion.confidence,
+    alternatives: [],
     warnings: [],
     edited: true,
     editSource: "insert",
   };
-  const slots = [...ordered, inserted];
+  const shifted = ordered.slice(anchorIndex + 1).map((slot) => {
+    const startBeat = slotStartBeat(slot, editable.beatsPerBar) + durationBeats;
+    return {
+      ...cloneSlot(slot),
+      position: {
+        ...positionFromStartBeat(startBeat, editable.beatsPerBar),
+        durationBeats: slot.position.durationBeats,
+      },
+    };
+  });
+  const slots = [
+    ...ordered.slice(0, anchorIndex + 1),
+    inserted,
+    ...shifted,
+  ];
   if (validateEditableProgression({ slots, beatsPerBar: editable.beatsPerBar }).length > 0) {
     return editable;
   }

@@ -7,7 +7,7 @@ import { playbackController } from "../audio/playbackController";
 import type { PlaybackController } from "../audio/playbackController";
 import { makeIdea } from "../domain/testFactory";
 import type { SavedProgressionBlock } from "../domain/types";
-import { appCopy, progressionDetailCopy } from "../i18n";
+import { appCopy, progressionDetailCopy, progressionEditorCopy } from "../i18n";
 import { ProgressionDetailView } from "./ProgressionDetailView";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
@@ -78,7 +78,7 @@ describe("ProgressionDetailView", () => {
     expect(container.textContent).toContain(progressionDetailCopy.ja.editingChord);
     expect(container.textContent).toContain(appCopy.ja.capture.piano);
     expect(container.querySelectorAll("[role='option']")).toHaveLength(1);
-    expect(container.querySelector("[data-alternative-count='5']")).not.toBeNull();
+    expect(container.querySelector("[data-alternative-count]")).not.toBeNull();
     expect(container.querySelector("[data-progression-detail-inspector]")?.classList.contains("lv-responsive-inspector-host")).toBe(false);
 
     await act(async () => root.unmount());
@@ -133,9 +133,13 @@ describe("ProgressionDetailView", () => {
     await act(async () => root.unmount());
   });
 
-  it("appends the top contextual candidate from the trailing plus card and saves it", async () => {
+  it("inserts a generated candidate after a chord card and saves it", async () => {
     const idea = makeIdea({ id: "idea-add", progressionBlocks: [block] });
-    const updateProgressionBlock = vi.fn(() => true);
+    const updateProgressionBlock = vi.fn((
+      _ideaId: string,
+      _blockId: string,
+      _changes: Partial<SavedProgressionBlock>,
+    ) => true);
     const container = document.createElement("div");
     document.body.append(container);
     const root = createRoot(container);
@@ -158,28 +162,23 @@ describe("ProgressionDetailView", () => {
       );
     });
 
-    const addChord = container.querySelector<HTMLButtonElement>("[data-add-chord]")!;
-    expect(addChord.getAttribute("aria-label")).toBe("コードを追加");
+    const addChord = container.querySelector<HTMLButtonElement>("[data-insert-chord-after]")!;
+    expect(addChord.getAttribute("aria-label")).toBe(progressionEditorCopy.ja.insertAfterChord);
     await act(async () => addChord.click());
     const cards = [...container.querySelectorAll<HTMLElement>("[role='option']")];
     expect(cards).toHaveLength(2);
     expect(cards[1]?.getAttribute("aria-selected")).toBe("true");
-    expect(cards[1]?.textContent).toContain("Fmaj7");
-    expect(container.querySelector("[data-alternative-count='5']")).not.toBeNull();
+    expect(cards[1]?.textContent).not.toContain("Cmaj7");
+    expect(container.querySelector("[data-alternative-count]")).not.toBeNull();
 
     const save = [...container.querySelectorAll<HTMLButtonElement>("button")]
       .find((button) => button.textContent?.trim() === progressionDetailCopy.ja.saveChanges)!;
     await act(async () => save.click());
-    expect(updateProgressionBlock).toHaveBeenCalledWith(
-      idea.id,
-      block.id,
-      expect.objectContaining({
-        chords: expect.arrayContaining([
-          expect.objectContaining({ chord: expect.objectContaining({ label: "Cmaj7" }) }),
-          expect.objectContaining({ chord: expect.objectContaining({ label: "Fmaj7" }) }),
-        ]),
-      }),
-    );
+    expect(updateProgressionBlock).toHaveBeenCalledOnce();
+    const saved = updateProgressionBlock.mock.calls[0]![2];
+    expect(saved.chords).toHaveLength(2);
+    expect(saved.chords?.[0]?.chord.label).toBe("Cmaj7");
+    expect(saved.chords?.[1]?.chord.label).not.toBe("Cmaj7");
 
     await act(async () => root.unmount());
   });

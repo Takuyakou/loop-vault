@@ -1,5 +1,6 @@
 import type { MidiProgressionAnalysis, ProgressionBlockCandidate } from "../types";
 import type { ProgressionEditSource } from "../progressionEditing/types";
+import type { QuickCandidateSelectionMetadata } from "../progressionEditing/quickCandidates";
 import { beatsPerBar } from "./timing";
 export { fingerprintMidiBytes, legacyFingerprintMidiBytes } from "./fingerprint";
 
@@ -22,13 +23,18 @@ export interface MidiChordCorrectionEvent {
   keyContext?: string;
   previousChord?: string;
   nextChord?: string;
+  quickCandidateSelection?: QuickCandidateSelectionMetadata;
 }
 
 export function buildCorrectionEvents(
-  original: ProgressionBlockCandidate,
-  edited: ProgressionBlockCandidate,
-  analysis: MidiProgressionAnalysis,
+  original: Pick<ProgressionBlockCandidate, "chords">,
+  edited: Pick<ProgressionBlockCandidate, "chords">,
+  analysis: Pick<
+    MidiProgressionAnalysis,
+    "sourceFingerprint" | "timeSignature" | "analyzerVersion" | "detectedKey"
+  >,
   editSources?: readonly (ProgressionEditSource | undefined)[],
+  quickCandidateSelections?: readonly (QuickCandidateSelectionMetadata | undefined)[],
 ): MidiChordCorrectionEvent[] {
   const sourceFingerprint = analysis.sourceFingerprint;
   if (!sourceFingerprint) return [];
@@ -60,6 +66,9 @@ export function buildCorrectionEvents(
       ...(analysis.detectedKey ? { keyContext: analysis.detectedKey } : {}),
       ...(original.chords[index - 1] ? { previousChord: original.chords[index - 1].chord.label } : {}),
       ...(original.chords[index + 1] ? { nextChord: original.chords[index + 1].chord.label } : {}),
+      ...(quickCandidateSelections?.[index]
+        ? { quickCandidateSelection: { ...quickCandidateSelections[index]! } }
+        : {}),
     }];
   });
 }
