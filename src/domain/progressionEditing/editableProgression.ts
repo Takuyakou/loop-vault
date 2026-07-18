@@ -51,6 +51,10 @@ export function applyEditableProgressionToSavedBlock(
   block: SavedProgressionBlock,
   editable: EditableProgression,
 ): SavedProgressionBlock {
+  const hasActiveInsert = editable.history
+    .slice(0, editable.historyIndex)
+    .some((operation) => operation.type === "insert");
+  const timing = hasActiveInsert ? progressionTiming(editable) : undefined;
   return {
     ...block,
     chords: [...editable.slots]
@@ -58,6 +62,24 @@ export function applyEditableProgressionToSavedBlock(
       .map(slotToTimelineItem),
     summaryText: editable.slots.map((slot) => slot.currentChord.label).join(" - "),
     userEdited: editable.slots.some((slot) => slot.edited) || block.userEdited,
+    ...(timing ?? {}),
+  };
+}
+
+function progressionTiming(
+  editable: EditableProgression,
+): Pick<SavedProgressionBlock, "startBar" | "endBar" | "lengthBars"> {
+  const starts = editable.slots.map((slot) => slotStartBeat(slot, editable.beatsPerBar));
+  const startBeat = Math.min(...starts);
+  const endBeat = Math.max(...editable.slots.map((slot, index) => (
+    starts[index]! + slot.position.durationBeats
+  )));
+  const startBar = Math.floor(startBeat / editable.beatsPerBar) + 1;
+  const endBar = Math.max(startBar, Math.ceil(endBeat / editable.beatsPerBar));
+  return {
+    startBar,
+    endBar,
+    lengthBars: Math.max(1, Math.ceil((endBeat - startBeat) / editable.beatsPerBar)),
   };
 }
 

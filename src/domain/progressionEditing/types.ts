@@ -12,6 +12,7 @@ export type ProgressionEditSource =
   | "propagation"
   | "split"
   | "merge"
+  | "insert"
   | "delete"
   | "reset";
 
@@ -75,11 +76,23 @@ export interface DeleteChordOperation extends BaseProgressionEditOperation {
   slotId: string;
 }
 
+export interface InsertChordOperation extends BaseProgressionEditOperation {
+  type: "insert";
+  slotId: string;
+  afterSlotId: string;
+}
+
+export interface ResetProgressionOperation extends BaseProgressionEditOperation {
+  type: "reset";
+}
+
 export type ProgressionEditOperation =
   | ReplaceChordOperation
   | SplitChordOperation
   | MergeChordOperation
-  | DeleteChordOperation;
+  | DeleteChordOperation
+  | InsertChordOperation
+  | ResetProgressionOperation;
 
 export interface ProgressionEditSummaryItem {
   slotId: string;

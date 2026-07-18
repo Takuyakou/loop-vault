@@ -4,6 +4,7 @@ import {
   applyEditableProgressionToSavedBlock,
   createEditableProgression,
   hasProgressionEdits,
+  insertEditableChordAfter,
   markEditableProgressionSaved,
   progressionEditSummary,
   replaceEditableChord,
@@ -95,6 +96,27 @@ describe("editable progression", () => {
     expect(block.summaryText).toBe(candidate.summaryText);
   });
 
+  it("updates saved timing metadata after inserting a chord", () => {
+    const candidate = makeCandidate();
+    const block: SavedProgressionBlock = {
+      id: candidate.id,
+      summaryText: candidate.summaryText,
+      chords: candidate.chords,
+      lengthBars: 1,
+      startBar: 1,
+      endBar: 1,
+      tags: [],
+      capturedAt: "2026-07-18T00:00:00.000Z",
+      analyzerVersion: "test",
+    };
+    const editable = createEditableProgression(block);
+    const inserted = insertEditableChordAfter(editable, editable.slots[0]!.id);
+    const saved = applyEditableProgressionToSavedBlock(block, inserted);
+
+    expect(saved.chords).toHaveLength(3);
+    expect(saved).toMatchObject({ startBar: 1, endBar: 2, lengthBars: 2 });
+  });
+
   it("resets all edited slots in one history operation", () => {
     const editable = createEditableProgression(makeCandidate());
     const first = replaceEditableChord(editable, editable.slots[0]!.id, gMajor, "alternative");
@@ -103,7 +125,7 @@ describe("editable progression", () => {
 
     expect(reset.slots.every((slot) => !slot.edited)).toBe(true);
     expect(reset.history).toHaveLength(3);
-    expect(reset.history[2]).toMatchObject({ type: "replace", editSource: "reset" });
+    expect(reset.history[2]).toMatchObject({ type: "reset" });
   });
 
   it("replaces multiple slots as one propagation operation and undoes them together", () => {

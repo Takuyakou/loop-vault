@@ -23,6 +23,21 @@ export function progressionEditSummary(
 }
 
 export function hasProgressionEdits(editable: EditableProgression): boolean {
-  return progressionEditSummary(editable).length > 0;
+  return progressionEditSummary(editable).length > 0
+    || progressionStructureChanged(editable);
+}
+
+function progressionStructureChanged(editable: EditableProgression): boolean {
+  const baseline = editable.history[0]?.before.slots;
+  if (!baseline) return false;
+  if (baseline.length !== editable.slots.length) return true;
+  return baseline.some((slot, index) => {
+    const current = editable.slots[index];
+    return !current
+      || slot.id !== current.id
+      || slot.position.bar !== current.position.bar
+      || slot.position.beat !== current.position.beat
+      || slot.position.durationBeats !== current.position.durationBeats;
+  });
 }
 
