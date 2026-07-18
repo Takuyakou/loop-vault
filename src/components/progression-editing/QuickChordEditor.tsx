@@ -8,9 +8,10 @@ import {
 import { createPortal } from "react-dom";
 import { makeChordSymbol } from "../../domain/chords";
 import { selectQuickChordAlternatives } from "../../domain/chordAlternatives";
-import type {
-  EditableChordSlot,
-  ProgressionEditSource,
+import {
+  chordsEqual,
+  type EditableChordSlot,
+  type ProgressionEditSource,
 } from "../../domain/progressionEditing";
 import type { ChordSymbol } from "../../domain/types";
 import {
@@ -18,6 +19,7 @@ import {
   type AppLanguage,
 } from "../../i18n";
 import { ArrowLeft, ArrowRight, Play, X } from "lucide-react";
+import { Modal } from "../Modal";
 import { ChordStructureEditor } from "./ChordStructureEditor";
 
 type QuickApplySource = Extract<
@@ -53,7 +55,9 @@ export function QuickChordEditor({
   const [draftChord, setDraftChord] = useState(() => cloneChord(slot.currentChord));
   const [source, setSource] = useState<QuickApplySource>("structure-editor");
   const [position, setPosition] = useState({ left: 8, top: 8, width: 320 });
+  const [closeConfirmationOpen, setCloseConfirmationOpen] = useState(false);
   const alternatives = selectQuickChordAlternatives(slot.currentChord, slot.alternatives);
+  const hasDraftChanges = !chordsEqual(draftChord, slot.currentChord);
 
   useLayoutEffect(() => {
     function updatePosition() {
@@ -82,6 +86,35 @@ export function QuickChordEditor({
     return () => anchorElement.focus();
   }, [anchorElement]);
 
+  useEffect(() => {
+    function handleOutsideMouseDown(event: MouseEvent) {
+      if (closeConfirmationOpen || panelRef.current?.contains(event.target as Node)) return;
+      if (hasDraftChanges) {
+        event.preventDefault();
+        event.stopPropagation();
+        setCloseConfirmationOpen(true);
+        return;
+      }
+      onClose();
+    }
+
+    document.addEventListener("mousedown", handleOutsideMouseDown, true);
+    return () => document.removeEventListener("mousedown", handleOutsideMouseDown, true);
+  }, [closeConfirmationOpen, hasDraftChanges, onClose]);
+
+  function requestClose() {
+    if (hasDraftChanges) {
+      setCloseConfirmationOpen(true);
+      return;
+    }
+    onClose();
+  }
+
+  function applyAndClose() {
+    onApply(draftChord, source);
+    onClose();
+  }
+
   function chooseCandidate(chord: ChordSymbol) {
     setDraftChord(cloneChord(chord));
     setSource("alternative");
@@ -100,7 +133,7 @@ export function QuickChordEditor({
   function handleKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
     if (event.key === "Escape") {
       event.preventDefault();
-      onClose();
+      requestClose();
       return;
     }
     if (event.key === "Tab") {
@@ -162,7 +195,7 @@ export function QuickChordEditor({
         <button
           type="button"
           className="grid h-8 w-8 place-items-center"
-          onClick={onClose}
+          onClick={requestClose}
           aria-label={text.close}
           title={text.close}
         >
@@ -232,10 +265,7 @@ export function QuickChordEditor({
         <button
           type="button"
           className="lv-button-primary px-3 py-2 text-sm font-semibold"
-          onClick={() => {
-            onApply(draftChord, source);
-            onClose();
-          }}
+          onClick={applyAndClose}
         >
           {text.apply}
         </button>
@@ -263,7 +293,50 @@ export function QuickChordEditor({
     </div>
   );
 
-  return createPortal(panel, document.body);
+  return (
+    <>
+      {createPortal(panel, document.body)}
+      {closeConfirmationOpen ? (
+        <Modal
+          ariaLabel={text.unsavedTitle}
+          onClose={() => setCloseConfirmationOpen(false)}
+          panelClassName="w-full max-w-md p-5"
+          layerClassName="z-[70]"
+        >
+          <h2 className="text-xl font-semibold">{text.unsavedTitle}</h2>
+          <p className="mt-3 text-sm leading-6 text-[var(--lv-text-secondary)]">
+            {text.unsavedDescription}
+          </p>
+          <div className="mt-6 flex flex-wrap justify-end gap-2">
+            <button
+              type="button"
+              className="px-3 py-2 text-sm text-red-200"
+              onClick={() => {
+                setCloseConfirmationOpen(false);
+                onClose();
+              }}
+            >
+              {text.discardAndClose}
+            </button>
+            <button
+              type="button"
+              className="lv-button-secondary px-3 py-2 text-sm"
+              onClick={() => setCloseConfirmationOpen(false)}
+            >
+              {text.continueEditing}
+            </button>
+            <button
+              type="button"
+              className="lv-button-primary px-3 py-2 text-sm font-semibold"
+              onClick={applyAndClose}
+            >
+              {text.applyAndClose}
+            </button>
+          </div>
+        </Modal>
+      ) : null}
+    </>
+  );
 }
 
 function cloneChord(chord: ChordSymbol): ChordSymbol {

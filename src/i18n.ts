@@ -1124,6 +1124,11 @@ export const quickChordEditorCopy = {
     previousRoot: "ルートを半音下げる",
     nextRoot: "ルートを半音上げる",
     edit: "すばやく編集",
+    unsavedTitle: "編集したコードをどうしますか？",
+    unsavedDescription: "変更を進行へ適用して閉じるか、破棄して閉じるかを選んでください。",
+    applyAndClose: "適用して閉じる",
+    discardAndClose: "破棄して閉じる",
+    continueEditing: "編集に戻る",
   },
   en: {
     title: "Quick chord edit",
@@ -1137,6 +1142,11 @@ export const quickChordEditorCopy = {
     previousRoot: "Move root down one semitone",
     nextRoot: "Move root up one semitone",
     edit: "Quick edit",
+    unsavedTitle: "Keep this chord edit?",
+    unsavedDescription: "Apply the change to the progression, or discard it before closing.",
+    applyAndClose: "Apply and close",
+    discardAndClose: "Discard and close",
+    continueEditing: "Continue editing",
   },
 } as const;
 

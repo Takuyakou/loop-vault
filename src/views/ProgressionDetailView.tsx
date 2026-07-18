@@ -133,10 +133,13 @@ export function ProgressionDetailView({
     }
   }
 
-  async function previewChord(chord: SavedProgressionBlock["chords"][number]["chord"]) {
+  async function previewChord(
+    chord: SavedProgressionBlock["chords"][number]["chord"],
+    slotId = "draft",
+  ) {
     try {
       await controller.toggle(
-        { kind: "detail", id: `${playbackSource.id}:chord` },
+        { kind: "detail", id: `${playbackSource.id}:chord:${slotId}:${chordPreviewKey(chord)}` },
         { type: "chord", chord, sound: previewSound },
       );
     } catch (error) {
@@ -252,15 +255,19 @@ export function ProgressionDetailView({
           />
           <EditableProgressionGrid
             editable={editable}
-            onSelect={(slotId) => setEditable((current) => selectEditableSlot(current, slotId))}
+            onSelect={(slotId, index) => {
+              setEditable((current) => selectEditableSlot(current, slotId));
+              const slot = editable.slots[index];
+              if (slot) void previewChord(slot.currentChord, slot.id);
+            }}
             onNavigate={(slotId) => setEditable((current) => selectEditableSlot(current, slotId))}
             onPreviewSlot={(slotId, chord) => {
               setEditable((current) => selectEditableSlot(current, slotId));
-              void previewChord(chord);
+              void previewChord(chord, slotId);
             }}
             language={language}
             quickEditor={{
-              onPreview: (_slotId, chord) => void previewChord(chord),
+              onPreview: (slotId, chord) => void previewChord(chord, slotId),
               onApply: (slotId, chord, source) => setEditable((current) => (
                 replaceEditableChord(
                   selectEditableSlot(current, slotId),
@@ -338,6 +345,10 @@ function progressionBarCount(block: SavedProgressionBlock): number {
   if (block.chords.length === 0) return 0;
   const bars = block.chords.map((item) => item.bar);
   return Math.max(...bars) - Math.min(...bars) + 1;
+}
+
+function chordPreviewKey(chord: SavedProgressionBlock["chords"][number]["chord"]): string {
+  return [chord.root, chord.quality, chord.bass ?? "root", ...chord.tensions].join("-");
 }
 
 function MetadataBadge({ label, value }: { label: string; value: string }) {

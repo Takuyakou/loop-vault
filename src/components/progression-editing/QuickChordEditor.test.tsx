@@ -73,7 +73,7 @@ describe("QuickChordEditor", () => {
     await act(async () => root.unmount());
   });
 
-  it("moves the root by semitone and restores focus after Escape closes the editor", async () => {
+  it("asks to apply a root change before Escape closes the editor", async () => {
     const onPreview = vi.fn();
     const onApply = vi.fn();
     const onClose = vi.fn();
@@ -89,7 +89,7 @@ describe("QuickChordEditor", () => {
         <QuickChordEditor
           slot={slot}
           anchorElement={anchor}
-          language="ja"
+          language="en"
           onPreview={onPreview}
           onApply={onApply}
           onReset={vi.fn()}
@@ -113,9 +113,62 @@ describe("QuickChordEditor", () => {
     await act(async () => {
       panel.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
     });
+    expect(onClose).not.toHaveBeenCalled();
+    expect(document.body.textContent).toContain("Keep this chord edit?");
+    const applyAndClose = [...document.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent === "Apply and close")!;
+    await act(async () => applyAndClose.click());
+    expect(onApply).toHaveBeenCalledWith(
+      expect.objectContaining({ root: 1 }),
+      "structure-editor",
+    );
     expect(onClose).toHaveBeenCalledOnce();
     await act(async () => root.unmount());
     expect(document.activeElement).toBe(anchor);
+  });
+
+  it("closes on an outside click and asks before discarding a changed draft", async () => {
+    const onApply = vi.fn();
+    const onClose = vi.fn();
+    const anchor = document.createElement("button");
+    document.body.append(anchor);
+    const outside = document.createElement("button");
+    document.body.append(outside);
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <QuickChordEditor
+          slot={slot}
+          anchorElement={anchor}
+          language="en"
+          onPreview={vi.fn()}
+          onApply={onApply}
+          onReset={vi.fn()}
+          onOpenInspector={vi.fn()}
+          onClose={onClose}
+        />,
+      );
+    });
+    const panel = document.querySelector<HTMLElement>("[data-quick-chord-editor]")!;
+    await act(async () => {
+      panel.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    });
+    await act(async () => {
+      outside.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+    });
+    expect(onClose).not.toHaveBeenCalled();
+    expect(document.body.textContent).toContain("Keep this chord edit?");
+
+    const discard = [...document.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent === "Discard and close")!;
+    await act(async () => discard.click());
+    expect(onApply).not.toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalledOnce();
+
+    await act(async () => root.unmount());
   });
 
   it("uses U for the same reset command as the visible reset button", async () => {
