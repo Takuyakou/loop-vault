@@ -3,7 +3,7 @@ import {
   canMergeEditableChords,
   createEditableProgression,
   deleteEditableChord,
-  insertEditableChordAfter,
+  appendSuggestedEditableChord,
   hasProgressionEdits,
   mergeEditableChords,
   progressionSpan,
@@ -17,9 +17,9 @@ import {
 import { makeCandidate } from "./testFixtures";
 
 describe("progression structural editing", () => {
-  it("inserts a selected copy after the active slot and shifts later slots", () => {
+  it("appends the top contextual suggestion and keeps five alternatives", () => {
     const editable = createEditableProgression(makeCandidate());
-    const inserted = insertEditableChordAfter(editable, editable.slots[0]!.id);
+    const inserted = appendSuggestedEditableChord(editable, "C major");
 
     expect(inserted.slots).toHaveLength(3);
     expect(inserted.slots.map((slot) => [slot.position.bar, slot.position.beat])).toEqual([
@@ -27,18 +27,20 @@ describe("progression structural editing", () => {
       [1, 3],
       [2, 1],
     ]);
-    expect(inserted.slots[1]).toMatchObject({
-      currentChord: editable.slots[0]!.currentChord,
+    expect(inserted.slots[2]).toMatchObject({
+      currentChord: expect.objectContaining({ label: "Fmaj7" }),
       edited: true,
       editSource: "insert",
     });
-    expect(inserted.selectedSlotId).toBe(inserted.slots[1]!.id);
+    expect(inserted.slots[2]!.currentChord.label).not.toBe(editable.slots[1]!.currentChord.label);
+    expect(inserted.slots[2]!.alternatives).toHaveLength(5);
+    expect(inserted.selectedSlotId).toBe(inserted.slots[2]!.id);
     expect(validateEditableProgression(inserted)).toEqual([]);
 
     const undone = undoProgressionEdit(inserted);
     expect(undone.slots).toHaveLength(2);
     expect(redoProgressionEdit(undone).slots).toHaveLength(3);
-    expect(hasProgressionEdits(resetEditableChord(inserted, inserted.slots[1]!.id))).toBe(true);
+    expect(hasProgressionEdits(resetEditableChord(inserted, inserted.slots[2]!.id))).toBe(true);
     const reset = resetAllEditableChords(inserted);
     expect(reset.slots).toHaveLength(2);
     expect(hasProgressionEdits(reset)).toBe(false);

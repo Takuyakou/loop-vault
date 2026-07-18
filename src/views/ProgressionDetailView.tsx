@@ -13,14 +13,15 @@ import { EditableProgressionGrid } from "../components/progression-editing/Edita
 import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
 import {
   applyEditableProgressionToSavedBlock,
+  appendSuggestedEditableChord,
   canMergeEditableChords,
   canRedoProgressionEdit,
   canSplitEditableChord,
   canUndoProgressionEdit,
   createEditableProgression,
+  contextualAlternativesForSlot,
   deleteEditableChord,
   hasProgressionEdits,
-  insertEditableChordAfter,
   markEditableProgressionSaved,
   mergeEditableChords,
   redoProgressionEdit,
@@ -91,7 +92,10 @@ export function ProgressionDetailView({
     [block, editable],
   );
   const selectedIndex = selectedEditableSlotIndex(editable);
-  const selectedSlot = selectedIndex === undefined ? undefined : editable.slots[selectedIndex];
+  const keySignature = block.detectedKey ?? idea.key;
+  const selectedSlot = selectedIndex === undefined
+    ? undefined
+    : contextualAlternativesForSlot(editable, editable.slots[selectedIndex]!.id, keySignature);
   const previousSlot = selectedIndex !== undefined && selectedIndex > 0
     ? editable.slots[selectedIndex - 1]
     : undefined;
@@ -251,7 +255,6 @@ export function ProgressionDetailView({
             dirty={dirty}
             onUndo={() => setEditable((current) => undoProgressionEdit(current))}
             onRedo={() => setEditable((current) => redoProgressionEdit(current))}
-            onAddAfter={() => setEditable((current) => insertEditableChordAfter(current))}
             onResetAll={() => setEditable((current) => resetAllEditableChords(current))}
             language={language}
           />
@@ -267,6 +270,8 @@ export function ProgressionDetailView({
               setEditable((current) => selectEditableSlot(current, slotId));
               void previewChord(chord, slotId);
             }}
+            onAppend={() => setEditable((current) => appendSuggestedEditableChord(current, keySignature))}
+            keySignature={keySignature}
             language={language}
             quickEditor={{
               onPreview: (slotId, chord) => void previewChord(chord, slotId),

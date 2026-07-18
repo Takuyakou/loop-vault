@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import type { EditableProgression } from "../../domain/progressionEditing";
+import {
+  contextualAlternativesForSlot,
+  type EditableProgression,
+} from "../../domain/progressionEditing";
 import type { ChordSymbol } from "../../domain/types";
 import { progressionEditorCopy, type AppLanguage } from "../../i18n";
+import { Plus } from "lucide-react";
 import { EditableChordCard } from "./EditableChordCard";
 import { QuickChordEditor } from "./QuickChordEditor";
 
@@ -25,6 +29,8 @@ interface EditableProgressionGridProps {
   onSelect: (slotId: string, index: number) => void;
   onNavigate?: (slotId: string, index: number) => void;
   onPreviewSlot?: (slotId: string, chord: ChordSymbol, index: number) => void;
+  onAppend?: () => void;
+  keySignature?: string;
   language: AppLanguage;
   quickEditor?: QuickChordEditorControls;
 }
@@ -36,6 +42,8 @@ export function EditableProgressionGrid({
   onSelect,
   onNavigate,
   onPreviewSlot,
+  onAppend,
+  keySignature,
   language,
   quickEditor,
 }: EditableProgressionGridProps) {
@@ -47,7 +55,7 @@ export function EditableProgressionGrid({
     anchorElement: HTMLElement;
   }>();
   const quickSlot = quickEdit
-    ? editable.slots.find((slot) => slot.id === quickEdit.slotId)
+    ? contextualAlternativesForSlot(editable, quickEdit.slotId, keySignature)
     : undefined;
 
   useEffect(() => {
@@ -71,30 +79,40 @@ export function EditableProgressionGrid({
 
   return (
     <>
-      <div
-        className="grid grid-cols-[repeat(auto-fit,minmax(8.5rem,1fr))] gap-2"
-        role="listbox"
-        aria-label={text.selectChord}
-      >
-        {editable.slots.map((slot, index) => (
-          <EditableChordCard
-            key={slot.id}
-            slot={slot}
-            selected={editable.selectedSlotId === slot.id}
-            playing={playingSlotId === slot.id}
-            playingProgress={playingSlotId === slot.id ? playingProgress : null}
-            onSelect={() => onSelect(slot.id, index)}
-            onNavigate={(direction) => moveSelection(index, direction)}
-            onPreview={onPreviewSlot
-              ? () => onPreviewSlot(slot.id, slot.currentChord, index)
-              : undefined}
-            onQuickEdit={quickEditor
-              ? (anchorElement) => openQuickEditor(slot.id, index, anchorElement)
-              : undefined}
-            buttonRef={(element) => { cardButtons.current[index] = element; }}
-            language={language}
-          />
-        ))}
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(8.5rem,1fr))] gap-2">
+        <div className="contents" role="listbox" aria-label={text.selectChord}>
+          {editable.slots.map((slot, index) => (
+            <EditableChordCard
+              key={slot.id}
+              slot={slot}
+              selected={editable.selectedSlotId === slot.id}
+              playing={playingSlotId === slot.id}
+              playingProgress={playingSlotId === slot.id ? playingProgress : null}
+              onSelect={() => onSelect(slot.id, index)}
+              onNavigate={(direction) => moveSelection(index, direction)}
+              onPreview={onPreviewSlot
+                ? () => onPreviewSlot(slot.id, slot.currentChord, index)
+                : undefined}
+              onQuickEdit={quickEditor
+                ? (anchorElement) => openQuickEditor(slot.id, index, anchorElement)
+                : undefined}
+              buttonRef={(element) => { cardButtons.current[index] = element; }}
+              language={language}
+            />
+          ))}
+        </div>
+        {onAppend ? (
+          <button
+            type="button"
+            data-add-chord
+            className="grid min-h-20 place-items-center border border-dashed border-[var(--lv-border-strong)] bg-[var(--lv-surface)] text-[var(--lv-text-secondary)] transition-colors hover:border-teal-300 hover:text-teal-200"
+            onClick={onAppend}
+            aria-label={text.addChord}
+            title={text.addChord}
+          >
+            <Plus aria-hidden="true" size={20} />
+          </button>
+        ) : null}
       </div>
       {quickEditor && quickEdit && quickSlot ? (
         <QuickChordEditor
