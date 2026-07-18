@@ -36,14 +36,14 @@ export const progressionTaxonomy: readonly ProgressionTagDefinition[] = [
   tag("use.chorus", "use", "コーラス", "Chorus", false),
   tag("use.bridge", "use", "ブリッジ", "Bridge", false),
   tag("use.ending", "use", "エンディング", "Ending", false),
-  tag("mood.bright", "mood", "明るい", "Bright", false),
-  tag("mood.dark", "mood", "暗い", "Dark", false),
-  tag("mood.dreamy", "mood", "夢幻的", "Dreamy", false),
-  tag("mood.warm", "mood", "温かい", "Warm", false),
-  tag("mood.tense", "mood", "緊張感", "Tense", false),
-  tag("mood.mysterious", "mood", "ミステリアス", "Mysterious", false),
-  tag("mood.floating", "mood", "浮遊感", "Floating", false),
-  tag("mood.dramatic", "mood", "ドラマチック", "Dramatic", false),
+  tag("mood.bright", "mood", "明るい", "Bright", true),
+  tag("mood.dark", "mood", "暗い", "Dark", true),
+  tag("mood.dreamy", "mood", "夢幻的", "Dreamy", true),
+  tag("mood.warm", "mood", "温かい", "Warm", true),
+  tag("mood.tense", "mood", "緊張感", "Tense", true),
+  tag("mood.mysterious", "mood", "ミステリアス", "Mysterious", true),
+  tag("mood.floating", "mood", "浮遊感", "Floating", true),
+  tag("mood.dramatic", "mood", "ドラマチック", "Dramatic", true),
 ];
 
 const taxonomyById = new Map(progressionTaxonomy.map((definition) => [definition.id, definition]));
