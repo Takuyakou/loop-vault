@@ -527,6 +527,8 @@ describe("VaultView keyboard shortcuts", () => {
     });
 
     expect(container.querySelector("[data-virtualized='true']")).not.toBeNull();
+    expect(container.querySelector("[data-virtualized='true']")?.getAttribute("data-row-height")).toBe("96");
+    expect(container.querySelector(".lv-vault-row")?.classList.contains("h-24")).toBe(true);
     expect(container.querySelectorAll(".lv-vault-row").length).toBeLessThan(205);
     expect(container.textContent).toContain("205 items");
     await act(async () => root.unmount());
