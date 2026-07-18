@@ -40,7 +40,9 @@ export function ChordAlternativeList({
                 ? candidateText.smoothDescription
                 : source === "authorReferenceFit"
                   ? candidateText.styleDescription
-                  : candidateText.analyzerDescription).join(" / ")}
+                  : source === "harmonicContext"
+                    ? candidateText.contextDescription
+                    : candidateText.analyzerDescription).join(" / ")}
             >
               {candidate.chord.label}
               <span className="ml-2 text-[10px] text-teal-200">
@@ -48,7 +50,9 @@ export function ChordAlternativeList({
                   ? candidateText.smoothSource
                   : source === "authorReferenceFit"
                     ? candidateText.styleSource
-                    : candidateText.analyzerSource).join("+")}
+                    : source === "harmonicContext"
+                      ? candidateText.contextSource
+                      : candidateText.analyzerSource).join("+")}
               </span>
             </button>
           );

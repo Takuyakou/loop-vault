@@ -1,4 +1,5 @@
 import type { ChordSymbol } from "../types";
+import { generateContextCandidates } from "./contextCandidates";
 import { slotStartBeat } from "./editableProgression";
 import {
   analyzerQuickCandidates,
@@ -37,6 +38,12 @@ export function quickCandidatesForSlot({
   if (!slot) return [];
   const progression = ordered.map((item) => item.currentChord);
   const analyzerCandidates = analyzerQuickCandidates(slot.alternatives);
+  const contextCandidates = generateContextCandidates({
+    currentChord: slot.currentChord,
+    previousChord: ordered[index - 1]?.currentChord,
+    nextChord: ordered[index + 1]?.currentChord,
+    keySignature,
+  });
   const smoothCandidates = generateSmoothCandidates({
     previousChord: ordered[index - 1]?.currentChord,
     currentChord: slot.currentChord,
@@ -61,11 +68,13 @@ export function quickCandidatesForSlot({
     ? composeQuickChordCandidates({
         currentChord: slot.currentChord,
         analyzerCandidates,
+        contextCandidates,
         smoothCandidates,
         styleCandidates,
       })
     : composeRepairQuickChordCandidates({
         currentChord: slot.currentChord,
+        contextCandidates,
         smoothCandidates,
         styleCandidates,
       });
@@ -97,6 +106,12 @@ export function insertionQuickCandidates({
     keySignature,
     durationBeats,
   });
+  const contextCandidates = generateContextCandidates({
+    currentChord: previousChord,
+    previousChord,
+    nextChord,
+    keySignature,
+  });
   const styleCandidates = authorReferenceIndex
     ? generateStyleCandidates({
         index: authorReferenceIndex,
@@ -108,6 +123,7 @@ export function insertionQuickCandidates({
     : [];
   return composeRepairQuickChordCandidates({
     currentChord: previousChord,
+    contextCandidates,
     smoothCandidates,
     styleCandidates,
   });

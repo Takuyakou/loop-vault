@@ -81,7 +81,7 @@ describe("ProgressionDetailView", () => {
     expect(previewToggle?.classList.contains("inline-flex")).toBe(true);
     expect(previewToggle?.classList.contains("whitespace-nowrap")).toBe(true);
     expect(container.querySelectorAll("[role='option']")).toHaveLength(1);
-    expect(container.querySelector("[data-alternative-count]")).not.toBeNull();
+    expect(container.querySelector("[data-alternative-count]")?.getAttribute("data-alternative-count")).toBe("5");
     expect(container.querySelector("[data-progression-detail-inspector]")?.classList.contains("lv-responsive-inspector-host")).toBe(false);
 
     await act(async () => root.unmount());
@@ -139,6 +139,10 @@ describe("ProgressionDetailView", () => {
     });
     expect(toggle).not.toHaveBeenCalled();
     expect(document.querySelector("[data-quick-chord-editor]")).not.toBeNull();
+    expect(document.querySelectorAll("[data-quick-candidate]")).toHaveLength(5);
+    expect(document.querySelector("[data-candidate-source='harmonicContext']")).not.toBeNull();
+    expect(document.querySelector("[data-style-candidate-unavailable]")?.textContent)
+      .toBe("Style candidates appear after more progressions or accepted edits are verified.");
 
     await act(async () => root.unmount());
   });
@@ -184,7 +188,10 @@ describe("ProgressionDetailView", () => {
     await act(async () => {
       cards[1]!.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));
     });
-    expect(document.querySelectorAll("[data-quick-candidate]").length).toBeGreaterThan(1);
+    expect(document.querySelectorAll("[data-quick-candidate]")).toHaveLength(5);
+    expect(document.querySelectorAll("[data-candidate-source='harmonicContext']").length)
+      .toBeGreaterThanOrEqual(3);
+    expect(document.querySelector("[data-candidate-sources*='smoothConnection']")).not.toBeNull();
 
     const save = [...container.querySelectorAll<HTMLButtonElement>("button")]
       .find((button) => button.textContent?.trim() === progressionDetailCopy.ja.saveChanges)!;

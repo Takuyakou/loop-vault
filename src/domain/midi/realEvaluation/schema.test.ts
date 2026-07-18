@@ -44,6 +44,20 @@ describe("real evaluation schemas", () => {
     }).success).toBe(false);
   });
 
+  it("accepts harmonic context candidate selection metadata", () => {
+    const quickCandidateSelection = {
+      source: "harmonicContext" as const,
+      sources: ["harmonicContext", "smoothConnection"] as const,
+      candidateRank: 1,
+      displayedCandidateCount: 5,
+    };
+    expect(midiChordCorrectionEventSchema.parse({
+      ...correctionEvent,
+      editMethod: "alternative-selection",
+      quickCandidateSelection,
+    }).quickCandidateSelection).toEqual(quickCandidateSelection);
+  });
+
   it("accepts strict propagation feedback", () => {
     expect(correctionPropagationFeedbackEventSchema.parse(propagationEvent)).toEqual(propagationEvent);
     expect(correctionPropagationFeedbackEventSchema.safeParse({
