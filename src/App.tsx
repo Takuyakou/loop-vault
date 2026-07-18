@@ -12,19 +12,22 @@ import { DetailView } from "./views/DetailView";
 import { HomeView } from "./views/HomeView";
 import { SettingsDialog } from "./views/SettingsDialog";
 import { VaultView } from "./views/VaultView";
+import { ProgressionDetailView } from "./views/ProgressionDetailView";
 import { Toast } from "./components/Toast";
 import { LiveMidiMiniMode } from "./components/LiveMidiMiniMode";
 import { LiveMidiImportDialog, type LiveMidiImportRequest } from "./components/LiveMidiImportDialog";
 import { UndoToast } from "./components/UndoToast";
 import { statusLabel } from "./domain/displayLabels";
-import type { SongIdea, Status } from "./domain/types";
+import type { SavedProgressionBlock, SongIdea, Status } from "./domain/types";
 import {
   applyPendingDeletions,
   createUndoSnapshot,
   ideaAnchor,
+  progressionBlockAnchor,
   isPendingDeletion,
   type PendingDeletion,
   type PendingIdeaDeletion,
+  type PendingProgressionBlockDeletion,
 } from "./domain/undoDeletion";
 import { appCopy, type AppCopy, type AppLanguage } from "./i18n";
 import {
@@ -75,6 +78,8 @@ function App() {
   const updateIdea = useStore(defaultVaultStore, (state) => state.updateIdea);
   const deleteIdea = useStore(defaultVaultStore, (state) => state.deleteIdea);
   const appendBlockToIdea = useStore(defaultVaultStore, (state) => state.appendBlockToIdea);
+  const updateProgressionBlock = useStore(defaultVaultStore, (state) => state.updateProgressionBlock);
+  const duplicateProgressionBlock = useStore(defaultVaultStore, (state) => state.duplicateProgressionBlock);
   const removeProgressionBlock = useStore(defaultVaultStore, (state) => state.removeProgressionBlock);
   const removeReference = useStore(defaultVaultStore, (state) => state.removeReference);
   const unlinkAsset = useStore(defaultVaultStore, (state) => state.unlinkAsset);
@@ -85,6 +90,7 @@ function App() {
 
   const [view, setView] = useState<View>("home");
   const [selectedId, setSelectedId] = useState<string>();
+  const [selectedProgression, setSelectedProgression] = useState<{ ideaId: string; blockId: string }>();
   const [isCreateOpen, setCreateOpen] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [toast, setToast] = useState<string>();
@@ -108,6 +114,12 @@ function App() {
 
   const selectedIdea = visibleIdeas.find((idea) => idea.id === selectedId) ?? visibleIdeas[0];
   const storedSelectedIdea = ideas.find((idea) => idea.id === selectedIdea?.id);
+  const progressionIdea = selectedProgression
+    ? visibleIdeas.find((idea) => idea.id === selectedProgression.ideaId)
+    : undefined;
+  const progressionBlock = progressionIdea?.progressionBlocks?.find(
+    (block) => block.id === selectedProgression?.blockId,
+  );
   const language = settings.language;
   const copy = appCopy[language];
 
@@ -132,6 +144,12 @@ function App() {
   }, [undoQueue.clearAll, vaultEpoch]);
 
   useEffect(() => {
+    if (view === "progression-detail" && (!progressionIdea || !progressionBlock)) {
+      setView("library");
+    }
+  }, [progressionBlock, progressionIdea, view]);
+
+  useEffect(() => {
     if (toast) {
       const timer = setTimeout(() => setToast(undefined), 3200);
       return () => clearTimeout(timer);
@@ -153,8 +171,15 @@ function App() {
   }, [liveMidiMode]);
 
   function openDetail(id: string) {
+    setSelectedProgression(undefined);
     setSelectedId(id);
     setView("detail");
+  }
+
+  function openProgression(ideaId: string, blockId: string) {
+    setSelectedId(ideaId);
+    setSelectedProgression({ ideaId, blockId });
+    setView("progression-detail");
   }
 
   function handleCreate(title: string, status: Status) {
@@ -252,6 +277,32 @@ async function analyzeMidiPath(path: string) {
     setView("library");
   }
 
+  function requestProgressionDelete(idea: SongIdea, block: SavedProgressionBlock) {
+    stopIdeaPlayback(idea.id);
+    const storedIdea = ideas.find((entry) => entry.id === idea.id);
+    const blocks = storedIdea?.progressionBlocks ?? [];
+    const snapshot = createUndoSnapshot(
+      blocks,
+      blocks.findIndex((entry) => entry.id === block.id),
+      idea.id,
+      progressionBlockAnchor,
+    );
+    if (!snapshot) return;
+    const deletion: PendingProgressionBlockDeletion = {
+      kind: "progressionBlock",
+      vaultEpoch,
+      snapshot,
+    };
+    undoQueue.enqueue({
+      label: copy.undo.blockDeleted,
+      payload: deletion,
+      undo: () => true,
+      commit: () => removeProgressionBlock(deletion),
+    });
+    setSelectedProgression(undefined);
+    setView("library");
+  }
+
   const shell = (
     <AppShell
       view={view}
@@ -302,6 +353,7 @@ async function analyzeMidiPath(path: string) {
                 ideas={visibleIdeas}
                 storedIdeas={ideas}
                 openDetail={openDetail}
+                openProgression={openProgression}
                 openCreate={() => setCreateOpen(true)}
                 openCapture={() => setView("capture")}
                 updateIdea={updateIdea}
@@ -339,6 +391,7 @@ async function analyzeMidiPath(path: string) {
                 updateIdea={updateIdea}
                 updateNextAction={updateNextAction}
                 removeProgressionBlock={removeProgressionBlock}
+                openProgression={openProgression}
                 removeReference={removeReference}
                 unlinkAsset={unlinkAsset}
                 enqueueUndo={undoQueue.enqueue}
@@ -346,6 +399,22 @@ async function analyzeMidiPath(path: string) {
                 analyzeMidiPath={analyzeMidiPath}
                 transitionIdea={transitionIdea}
                 requestDelete={requestDelete}
+                setToast={setToast}
+                copy={copy}
+                language={language}
+              />
+            ) : null}
+            {view === "progression-detail" && progressionIdea && progressionBlock ? (
+              <ProgressionDetailView
+                key={`${progressionIdea.id}:${progressionBlock.id}`}
+                idea={progressionIdea}
+                block={progressionBlock}
+                updateProgressionBlock={updateProgressionBlock}
+                duplicateProgressionBlock={duplicateProgressionBlock}
+                openProgression={openProgression}
+                openIdea={openDetail}
+                openVault={() => setView("library")}
+                requestDelete={requestProgressionDelete}
                 setToast={setToast}
                 copy={copy}
                 language={language}

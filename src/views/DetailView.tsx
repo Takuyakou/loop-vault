@@ -51,6 +51,7 @@ function ProgressionBlockCard({
   source,
   bpm,
   onRemove,
+  onOpen,
   onCopyProgression,
   onPreviewError,
   copy,
@@ -59,6 +60,7 @@ function ProgressionBlockCard({
   source: PlayingSource;
   bpm?: number;
   onRemove: () => void;
+  onOpen: () => void;
   onCopyProgression: () => void;
   onPreviewError: (error: unknown) => void;
   copy: AppCopy;
@@ -66,12 +68,12 @@ function ProgressionBlockCard({
   return (
     <div className="border border-[var(--lv-border)] bg-[var(--lv-bg)] p-3 text-sm">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
+        <button type="button" className="min-w-0 text-left" onClick={onOpen}>
           <p className="font-semibold">{block.summaryText || block.chords.map((item) => item.chord.label).join(" - ")}</p>
           <p className="mt-1 text-[var(--lv-text-muted)]">
             {block.sourceFileName ?? copy.detail.capturedMidi}{block.startBar ? ` · ${copy.detail.barRange(block.startBar, block.endBar ?? block.startBar)}` : ""}
           </p>
-        </div>
+        </button>
         <PlayToggle source={source} request={{ type: "timeline", timeline: block.chords, bpm, beatsPerBar: beatsPerBar(block.timeSignature) }} playLabel={copy.common.preview} stopLabel={copy.common.stop} className="rounded border border-cyan-500/60 px-2 py-1 text-cyan-100" onError={onPreviewError} />
         <button className="inline-flex items-center gap-2 rounded border border-teal-500/60 px-2 py-1 text-teal-100" onClick={onCopyProgression}>
           <Copy aria-hidden="true" size={16} />
@@ -102,6 +104,7 @@ export function DetailView({
   updateIdea,
   updateNextAction,
   removeProgressionBlock,
+  openProgression = () => undefined,
   removeReference = () => false,
   unlinkAsset = () => false,
   enqueueUndo = () => "",
@@ -120,6 +123,7 @@ export function DetailView({
   removeProgressionBlock: (
     deletion: PendingProgressionBlockDeletion,
   ) => boolean;
+  openProgression?: (ideaId: string, blockId: string) => void;
   removeReference?: (deletion: PendingReferenceDeletion) => boolean;
   unlinkAsset?: (deletion: PendingAssetDeletion) => boolean;
   enqueueUndo?: <T>(request: UndoRequest<T>) => string;
@@ -536,6 +540,7 @@ export function DetailView({
                   source={{ kind: "detail", id: `idea:${idea.id}:block:${block.id}` }}
                   bpm={block.bpm ?? idea.bpm}
                   onPreviewError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed)}
+                  onOpen={() => openProgression(idea.id, block.id)}
                   onCopyProgression={() => void copySavedBlock(block)}
                   onRemove={() => {
                     stopPlaybackForIdea();

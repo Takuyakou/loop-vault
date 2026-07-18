@@ -3,7 +3,7 @@ import { playbackController, type PlaybackController } from "../audio/playbackCo
 import { usePlaybackState } from "../hooks/usePlaybackState";
 import { Music, Piano, Settings } from "lucide-react";
 
-export type AppView = "home" | "capture" | "library" | "detail";
+export type AppView = "home" | "capture" | "library" | "detail" | "progression-detail";
 export type SaveStatus = "saved" | "saving" | "unsaved";
 
 export function AppShell({ view, setView, openCreate, openLiveMidi, openSettings, copy, saveStatus, controller = playbackController }: {
@@ -29,7 +29,7 @@ export function AppShell({ view, setView, openCreate, openLiveMidi, openSettings
       <nav className="flex min-w-0 shrink items-center gap-1 text-sm md:gap-2" aria-label={copy.nav.mainNavigation}>
         <button className={tabClass(view === "home")} aria-current={view === "home" ? "page" : undefined} onClick={() => setView("home")}>{copy.nav.home}</button>
         <button className={tabClass(view === "capture")} aria-current={view === "capture" ? "page" : undefined} onClick={() => setView("capture")}>{copy.nav.capture}</button>
-        <button className={tabClass(view === "library" || view === "detail")} aria-current={view === "library" || view === "detail" ? "page" : undefined} onClick={() => setView("library")}>{copy.nav.library}</button>
+        <button className={tabClass(view === "library" || view === "detail" || view === "progression-detail")} aria-current={view === "library" || view === "detail" || view === "progression-detail" ? "page" : undefined} onClick={() => setView("library")}>{copy.nav.library}</button>
       </nav>
       <div className="ml-auto flex min-w-0 shrink-0 items-center gap-1 md:gap-2">
         <button className="whitespace-nowrap rounded bg-[var(--lv-accent)] px-2.5 py-2 text-sm font-semibold text-stone-950 md:px-3" onClick={openCreate}>{copy.nav.new}</button>

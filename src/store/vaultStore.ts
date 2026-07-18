@@ -109,6 +109,15 @@ export interface VaultStoreState {
     analysis?: MidiProgressionAnalysis,
     metadata?: ProgressionSaveMetadata,
   ) => boolean;
+  updateProgressionBlock: (
+    ideaId: string,
+    blockId: string,
+    changes: Partial<SavedProgressionBlock>,
+  ) => boolean;
+  duplicateProgressionBlock: (
+    ideaId: string,
+    blockId: string,
+  ) => string | undefined;
   removeProgressionBlock: (
     deletion: PendingProgressionBlockDeletion,
   ) => boolean;
@@ -387,6 +396,63 @@ export function createVaultStore(
               : idea,
           ),
         }));
+      },
+
+      updateProgressionBlock(ideaId, blockId, changes) {
+        const idea = get().ideas.find((entry) => entry.id === ideaId);
+        const block = idea?.progressionBlocks?.find((entry) => entry.id === blockId);
+        if (!idea || !block) {
+          return false;
+        }
+        const updatedAt = now().toISOString();
+        return applyVaultChange((vault) => ({
+          ...vault,
+          ideas: vault.ideas.map((entry) => entry.id === ideaId
+            ? {
+                ...entry,
+                progressionBlocks: (entry.progressionBlocks ?? []).map((candidate) => candidate.id === blockId
+                  ? { ...candidate, ...changes, id: candidate.id }
+                  : candidate),
+                updatedAt,
+              }
+            : entry),
+        }));
+      },
+
+      duplicateProgressionBlock(ideaId, blockId) {
+        const idea = get().ideas.find((entry) => entry.id === ideaId);
+        const block = idea?.progressionBlocks?.find((entry) => entry.id === blockId);
+        if (!idea || !block) {
+          return undefined;
+        }
+        const id = idFactory();
+        const capturedAt = now().toISOString();
+        const duplicate: SavedProgressionBlock = {
+          ...block,
+          id,
+          chords: block.chords.map((item) => ({
+            ...item,
+            chord: { ...item.chord, tensions: [...item.chord.tensions] },
+            alternatives: item.alternatives.map((alternative) => ({
+              ...alternative,
+              chord: { ...alternative.chord, tensions: [...alternative.chord.tensions] },
+            })),
+            warnings: [...item.warnings],
+          })),
+          tags: [...block.tags],
+          capturedAt,
+        };
+        const applied = applyVaultChange((vault) => ({
+          ...vault,
+          ideas: vault.ideas.map((entry) => entry.id === ideaId
+            ? {
+                ...entry,
+                progressionBlocks: [...(entry.progressionBlocks ?? []), duplicate],
+                updatedAt: capturedAt,
+              }
+            : entry),
+        }));
+        return applied ? id : undefined;
       },
 
       removeProgressionBlock(deletion) {

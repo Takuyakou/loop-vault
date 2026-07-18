@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   applyEditableProgression,
+  applyEditableProgressionToSavedBlock,
   createEditableProgression,
   hasProgressionEdits,
   progressionEditSummary,
@@ -11,6 +12,7 @@ import {
   undoProgressionEdit,
 } from ".";
 import { gMajor, makeCandidate } from "./testFixtures";
+import type { SavedProgressionBlock } from "../types";
 
 describe("editable progression", () => {
   it("creates deterministic slots without sharing candidate chord data", () => {
@@ -62,6 +64,32 @@ describe("editable progression", () => {
     expect(applied.chords.map((item) => item.chord.label)).toEqual(["C", "G"]);
     expect(applied.chords[1]?.chord).not.toBe(gMajor);
     expect(candidate.chords[1]?.chord.label).toBe("C");
+  });
+
+  it("applies edits to a saved block without mutating its source metadata", () => {
+    const candidate = makeCandidate();
+    const block: SavedProgressionBlock = {
+      id: candidate.id,
+      summaryText: candidate.summaryText,
+      chords: candidate.chords,
+      sourceFileName: "song.mid",
+      tags: ["main"],
+      capturedAt: "2026-07-18T00:00:00.000Z",
+      analyzerVersion: "test",
+    };
+    const editable = createEditableProgression(block);
+    const changed = replaceEditableChord(editable, editable.slots[0]!.id, gMajor, "structure-editor");
+    const saved = applyEditableProgressionToSavedBlock(block, changed);
+
+    expect(saved).toMatchObject({
+      id: block.id,
+      sourceFileName: "song.mid",
+      tags: ["main"],
+      summaryText: "G - C",
+      userEdited: true,
+    });
+    expect(saved.chords.map((item) => item.chord.label)).toEqual(["G", "C"]);
+    expect(block.summaryText).toBe(candidate.summaryText);
   });
 
   it("resets all edited slots in one history operation", () => {

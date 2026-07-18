@@ -14,11 +14,12 @@ type ProgressionEntry = { idea: SongIdea; block: SavedProgressionBlock };
 type SortField = "capturedAt" | "updatedAt" | "key" | "bpm";
 
 export function VaultView({
-  ideas, storedIdeas = ideas, openDetail, openCreate, openCapture, updateIdea, setToast, copy, showRomanNumerals,
+  ideas, storedIdeas = ideas, openDetail, openProgression, openCreate, openCapture, updateIdea, setToast, copy, showRomanNumerals,
 }: {
   ideas: SongIdea[];
   storedIdeas?: SongIdea[];
   openDetail: (id: string) => void;
+  openProgression?: (ideaId: string, blockId: string) => void;
   openCreate: () => void;
   openCapture: () => void;
   updateIdea: (id: string, changes: Partial<SongIdea>) => void;
@@ -58,6 +59,14 @@ export function VaultView({
       setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
     }
   }, [copy.toast.chordPreviewFailed, setToast]);
+
+  const openProgressionDetail = useCallback((entry: ProgressionEntry) => {
+    if (openProgression) {
+      openProgression(entry.idea.id, entry.block.id);
+      return;
+    }
+    openDetail(entry.idea.id);
+  }, [openDetail, openProgression]);
 
   const togglePin = useCallback((entry: ProgressionEntry) => {
     const storedIdea = storedIdeas.find((idea) => idea.id === entry.idea.id);
@@ -99,13 +108,13 @@ export function VaultView({
       event.preventDefault();
       void togglePlayback(active);
     } else if (event.key === "Enter") {
-      openDetail(active.idea.id);
+      openProgressionDetail(active);
     } else if (event.key.toLowerCase() === "c") {
       void copyProgression(active.block);
     } else if (event.key.toLowerCase() === "s") {
       togglePin(active);
     }
-  }, [copyProgression, mode, openDetail, selectedIndex, togglePin, togglePlayback, visible]);
+  }, [copyProgression, mode, openProgressionDetail, selectedIndex, togglePin, togglePlayback, visible]);
 
   useEffect(() => {
     window.addEventListener("keydown", handleKey);
@@ -140,7 +149,7 @@ export function VaultView({
           <span className="text-xs text-[var(--lv-text-muted)]">{copy.library.itemCount(visible.length)}</span>
         </div>
         {visible.length ? <div className="mt-4 overflow-hidden border border-[var(--lv-border)]">
-          {visible.map((entry, index) => <ProgressionRow key={entry.block.id} entry={entry} selected={index === selectedIndex} showDegrees={showRomanNumerals} copy={copy} onSelect={() => setSelectedIndex(index)} onOpen={() => openDetail(entry.idea.id)} onPin={() => togglePin(entry)} onCopy={() => void copyProgression(entry.block)} onPreviewError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed)} />)}
+          {visible.map((entry, index) => <ProgressionRow key={entry.block.id} entry={entry} selected={index === selectedIndex} showDegrees={showRomanNumerals} copy={copy} onSelect={() => setSelectedIndex(index)} onOpen={() => openProgressionDetail(entry)} onPin={() => togglePin(entry)} onCopy={() => void copyProgression(entry.block)} onPreviewError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed)} />)}
         </div> : <EmptyState copy={copy} openCreate={openCreate} />}
         <p className="mt-3 text-xs text-[var(--lv-text-muted)]">{copy.library.shortcuts}</p>
       </> : <IdeaList ideas={ideas} openDetail={openDetail} copy={copy} />}
@@ -203,8 +212,8 @@ function ProgressionRow({ entry, selected, showDegrees, copy, onSelect, onOpen, 
           onOpen();
         }}
         onDoubleClick={(event) => event.stopPropagation()}
-        aria-label={copy.library.openIdea}
-        title={copy.library.openIdea}
+        aria-label={copy.library.openProgression}
+        title={copy.library.openProgression}
       >
         <ChevronRight aria-hidden="true" size={20} />
       </button>

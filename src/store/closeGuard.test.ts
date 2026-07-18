@@ -48,6 +48,8 @@ function state(overrides: Partial<VaultStoreState>): VaultStoreState {
     updateIdea: () => undefined,
     deleteIdea: () => false,
     appendBlockToIdea: () => false,
+    updateProgressionBlock: () => false,
+    duplicateProgressionBlock: () => undefined,
     removeProgressionBlock: () => false,
     removeReference: () => false,
     unlinkAsset: () => false,
