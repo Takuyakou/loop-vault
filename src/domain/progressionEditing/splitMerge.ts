@@ -155,6 +155,7 @@ export function deleteEditableChord(
   const slots = ordered.filter((slot) => slot.id !== slotId);
   const continuationIndex = index === 0 ? 0 : index - 1;
   const continuation = slots[continuationIndex];
+  const nextSelection = slots[index] ?? slots[index - 1];
   if (!continuation) {
     return editable;
   }
@@ -174,7 +175,7 @@ export function deleteEditableChord(
   if (!validStructuralChange(editable.slots, slots, editable.beatsPerBar)) {
     return editable;
   }
-  const next = { slots, selectedSlotId: continuation.id };
+  const next = { slots, selectedSlotId: nextSelection?.id };
   const operation: DeleteChordOperation = {
     type: "delete",
     slotId,

@@ -25,6 +25,7 @@ import {
   replaceEditableChords,
   resetAllEditableChords,
   resetEditableChord,
+  selectedEditableSlotIndex,
   selectEditableSlot,
   splitEditableChord,
   undoProgressionEdit,
@@ -969,12 +970,13 @@ export function ProgressionCandidateCard({
   const editorCopy = progressionEditorCopy[language];
   const [editable, setEditable] = useState(() => createEditableProgression(candidate, beatsPerBar));
   const [savedSignature, setSavedSignature] = useState(() => progressionSignature(candidate.chords));
-  const [selectedChordIndex, setSelectedChordIndex] = useState(0);
   const [propagationProposal, setPropagationProposal] = useState<PropagationProposal>();
   const [propagationFeedback, setPropagationFeedback] = useState<PendingPropagationFeedback[]>([]);
   const [, forcePlaybackTick] = useState(0);
   const currentCandidate = applyEditableProgression(candidate, editable);
   const chords = currentCandidate.chords;
+  const selectedSlotIndex = selectedEditableSlotIndex(editable);
+  const selectedChordIndex = selectedSlotIndex ?? 0;
   const editedCandidate = {
     ...currentCandidate,
     summaryText: formatProgressionText(chords),
@@ -990,10 +992,9 @@ export function ProgressionCandidateCard({
   useEffect(() => {
     setEditable(createEditableProgression(candidate, beatsPerBar));
     setSavedSignature(progressionSignature(candidate.chords));
-    setSelectedChordIndex(0);
     setPropagationProposal(undefined);
     setPropagationFeedback([]);
-  }, [beatsPerBar, candidate, language]);
+  }, [beatsPerBar, candidate.id]);
 
   useEffect(() => {
     if (!isExpanded) {
@@ -1048,7 +1049,6 @@ export function ProgressionCandidateCard({
         event.preventDefault();
         const direction = event.key === "ArrowLeft" || event.key === "ArrowUp" ? -1 : 1;
         const nextIndex = Math.max(0, Math.min(editable.slots.length - 1, selectedChordIndex + direction));
-        setSelectedChordIndex(nextIndex);
         const nextSlot = editable.slots[nextIndex];
         if (nextSlot) {
           setEditable((current) => selectEditableSlot(current, nextSlot.id));
@@ -1092,7 +1092,6 @@ export function ProgressionCandidateCard({
 
   async function selectChord(index: number) {
     onSelect?.();
-    setSelectedChordIndex(index);
     const slot = editable.slots[index];
     if (slot?.id !== propagationProposal?.sourceSlotId) {
       setPropagationProposal(undefined);
@@ -1126,8 +1125,6 @@ export function ProgressionCandidateCard({
     stopCandidatePreview();
     setPropagationProposal(undefined);
     setEditable(next);
-    const nextIndex = next.slots.findIndex((slot) => slot.id === next.selectedSlotId);
-    setSelectedChordIndex(Math.max(0, nextIndex));
   }
 
   const playbackPosition = candidatePlaying && playback.status === "playing"
@@ -1136,10 +1133,11 @@ export function ProgressionCandidateCard({
   const playingChordIndex = playbackPosition?.index ?? null;
   const playingProgress = playbackPosition?.progress ?? null;
   const selectedChord = chords[selectedChordIndex] ?? chords[0];
-  const selectedSlotIndex = editable.slots.findIndex((slot) => slot.id === editable.selectedSlotId);
-  const selectedSlot = selectedSlotIndex >= 0 ? editable.slots[selectedSlotIndex] : undefined;
-  const previousSlot = selectedSlotIndex > 0 ? editable.slots[selectedSlotIndex - 1] : undefined;
-  const nextSlot = selectedSlotIndex >= 0 ? editable.slots[selectedSlotIndex + 1] : undefined;
+  const selectedSlot = selectedSlotIndex === undefined ? undefined : editable.slots[selectedSlotIndex];
+  const previousSlot = selectedSlotIndex !== undefined && selectedSlotIndex > 0
+    ? editable.slots[selectedSlotIndex - 1]
+    : undefined;
+  const nextSlot = selectedSlotIndex === undefined ? undefined : editable.slots[selectedSlotIndex + 1];
   const selectedRomanHint = selectedChord
     ? romanNumeralHint(selectedChord.chord, detectedKey)
     : undefined;
@@ -1233,8 +1231,7 @@ export function ProgressionCandidateCard({
             onSelect={(_slotId, index) => void selectChord(index)}
             language={language}
             quickEditor={{
-              onOpen: (slotId, index) => {
-                setSelectedChordIndex(index);
+              onOpen: (slotId, _index) => {
                 setEditable((current) => selectEditableSlot(current, slotId));
               },
               onPreview: (slotId, chord) => void previewQuickChord(slotId, chord),
@@ -1243,7 +1240,6 @@ export function ProgressionCandidateCard({
                 const selected = selectEditableSlot(editable, slotId);
                 const next = replaceEditableChord(selected, slotId, chord, source);
                 setEditable(next);
-                setSelectedChordIndex(Math.max(0, next.slots.findIndex((slot) => slot.id === slotId)));
                 setPropagationProposal(proposalFor(
                   next,
                   slotId,
@@ -1256,8 +1252,7 @@ export function ProgressionCandidateCard({
                 setPropagationProposal(undefined);
                 setEditable((current) => resetEditableChord(current, slotId));
               },
-              onOpenInspector: (slotId, index) => {
-                setSelectedChordIndex(index);
+              onOpenInspector: (slotId, _index) => {
                 setEditable((current) => selectEditableSlot(current, slotId));
                 onInspectorExpandedChange?.(true);
               },
@@ -1374,7 +1369,6 @@ export function ProgressionCandidateCard({
               if (slotId !== propagationProposal?.sourceSlotId) {
                 setPropagationProposal(undefined);
               }
-              setSelectedChordIndex(index);
               setEditable((current) => selectEditableSlot(current, slotId));
             }
           }}

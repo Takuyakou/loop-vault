@@ -134,4 +134,96 @@ describe("ProgressionDetailView", () => {
 
     await act(async () => root.unmount());
   });
+
+  it("keeps the clicked slot selected through editing and saving", async () => {
+    const secondAlternative = {
+      root: 5,
+      quality: "dom7" as const,
+      tensions: [],
+      label: "F7",
+    };
+    const multiBlock: SavedProgressionBlock = {
+      ...block,
+      summaryText: "Cmaj7 - Dm7 - G7",
+      chords: [
+        block.chords[0]!,
+        {
+          bar: 2,
+          beat: 1,
+          durationBeats: 4,
+          chord: { root: 2, quality: "min7", tensions: [], label: "Dm7" },
+          confidence: 0.8,
+          alternatives: [{ chord: secondAlternative, confidence: 0.7 }],
+          warnings: [],
+        },
+        {
+          bar: 3,
+          beat: 1,
+          durationBeats: 4,
+          chord: { root: 7, quality: "dom7", tensions: [], label: "G7" },
+          confidence: 0.85,
+          alternatives: [],
+          warnings: [],
+        },
+      ],
+    };
+    const idea = makeIdea({ id: "idea-1", progressionBlocks: [multiBlock] });
+    const updateProgressionBlock = vi.fn(() => true);
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <ProgressionDetailView
+          idea={idea}
+          block={multiBlock}
+          updateProgressionBlock={updateProgressionBlock}
+          duplicateProgressionBlock={vi.fn()}
+          openProgression={vi.fn()}
+          openIdea={vi.fn()}
+          openVault={vi.fn()}
+          requestDelete={vi.fn()}
+          setToast={vi.fn()}
+          copy={appCopy.en}
+          language="en"
+        />,
+      );
+    });
+
+    const cards = [...container.querySelectorAll<HTMLElement>("[role='option']")];
+    expect(cards).toHaveLength(3);
+    expect(cards[0]?.getAttribute("aria-selected")).toBe("true");
+
+    await act(async () => cards[1]!.click());
+    expect(cards[1]?.getAttribute("aria-selected")).toBe("true");
+    expect(cards[0]?.getAttribute("aria-selected")).toBe("false");
+
+    const buttons = () => [...container.querySelectorAll<HTMLButtonElement>("button")];
+    await act(async () => {
+      buttons().find((button) => button.textContent?.trim().startsWith("F7"))?.click();
+    });
+    await act(async () => {
+      buttons().find((button) => button.textContent?.trim() === "Apply")?.click();
+    });
+    expect(cards[1]?.getAttribute("aria-selected")).toBe("true");
+
+    const save = buttons().find((button) => button.textContent?.trim() === progressionDetailCopy.en.saveChanges)!;
+    await act(async () => save.click());
+
+    expect(updateProgressionBlock).toHaveBeenCalledWith(
+      idea.id,
+      multiBlock.id,
+      expect.objectContaining({
+        chords: [
+          expect.objectContaining({ chord: expect.objectContaining({ label: "Cmaj7" }) }),
+          expect.objectContaining({ chord: expect.objectContaining({ label: "F7" }) }),
+          expect.objectContaining({ chord: expect.objectContaining({ label: "G7" }) }),
+        ],
+      }),
+    );
+    expect(cards[1]?.getAttribute("aria-selected")).toBe("true");
+
+    await act(async () => root.unmount());
+  });
 });

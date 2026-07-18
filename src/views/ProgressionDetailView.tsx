@@ -20,11 +20,13 @@ import {
   createEditableProgression,
   deleteEditableChord,
   hasProgressionEdits,
+  markEditableProgressionSaved,
   mergeEditableChords,
   redoProgressionEdit,
   replaceEditableChord,
   resetAllEditableChords,
   resetEditableChord,
+  selectedEditableSlotIndex,
   selectEditableSlot,
   splitEditableChord,
   undoProgressionEdit,
@@ -87,13 +89,12 @@ export function ProgressionDetailView({
     () => applyEditableProgressionToSavedBlock(block, editable),
     [block, editable],
   );
-  const selectedIndex = Math.max(
-    0,
-    editable.slots.findIndex((slot) => slot.id === editable.selectedSlotId),
-  );
-  const selectedSlot = editable.slots[selectedIndex];
-  const previousSlot = selectedIndex > 0 ? editable.slots[selectedIndex - 1] : undefined;
-  const nextSlot = editable.slots[selectedIndex + 1];
+  const selectedIndex = selectedEditableSlotIndex(editable);
+  const selectedSlot = selectedIndex === undefined ? undefined : editable.slots[selectedIndex];
+  const previousSlot = selectedIndex !== undefined && selectedIndex > 0
+    ? editable.slots[selectedIndex - 1]
+    : undefined;
+  const nextSlot = selectedIndex === undefined ? undefined : editable.slots[selectedIndex + 1];
   const playbackSource: PlayingSource = {
     kind: "detail",
     id: `idea:${idea.id}:progression:${block.id}`,
@@ -105,7 +106,7 @@ export function ProgressionDetailView({
       setToast(text.saveFailed);
       return;
     }
-    setEditable(createEditableProgression(editingBlock, meter));
+    setEditable((current) => markEditableProgressionSaved(current));
     setToast(text.savedToast);
   }
 

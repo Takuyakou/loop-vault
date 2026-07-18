@@ -50,6 +50,21 @@ describe("progression structural editing", () => {
     expect(validateEditableProgression(withoutLast)).toEqual([]);
   });
 
+  it("selects the next slot after a middle deletion, then falls back to the previous slot", () => {
+    const editable = createEditableProgression(makeCandidate());
+    const split = splitEditableChord(editable, editable.slots[0]!.id);
+    const middleId = split.slots[1]!.id;
+    const afterMiddleDelete = deleteEditableChord(split, middleId);
+
+    expect(afterMiddleDelete.selectedSlotId).toBe(afterMiddleDelete.slots[1]!.id);
+
+    const lastId = afterMiddleDelete.slots[afterMiddleDelete.slots.length - 1]!.id;
+    const afterLastDelete = deleteEditableChord(afterMiddleDelete, lastId);
+    expect(afterLastDelete.selectedSlotId).toBe(
+      afterLastDelete.slots[afterLastDelete.slots.length - 1]!.id,
+    );
+  });
+
   it("does not delete the last remaining slot", () => {
     const editable = createEditableProgression(makeCandidate());
     const merged = mergeEditableChords(
