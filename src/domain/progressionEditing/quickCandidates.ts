@@ -4,12 +4,14 @@ import type { ChordSymbol } from "../types";
 export const QUICK_CHORD_CANDIDATE_LIMIT = 5;
 const SOURCE_ORDER: readonly QuickCandidateSource[] = [
   "analyzer",
+  "harmonicContext",
   "smoothConnection",
   "authorReferenceFit",
 ];
 
 export type QuickCandidateSource =
   | "analyzer"
+  | "harmonicContext"
   | "smoothConnection"
   | "authorReferenceFit";
 
@@ -39,6 +41,7 @@ export interface QuickCandidateSelectionMetadata {
 export interface ComposeQuickChordCandidateInput {
   currentChord: ChordSymbol;
   analyzerCandidates: readonly QuickChordCandidate[];
+  contextCandidates?: readonly QuickChordCandidate[];
   smoothCandidates?: readonly QuickChordCandidate[];
   styleCandidates?: readonly QuickChordCandidate[];
   limit?: number;
@@ -47,6 +50,7 @@ export interface ComposeQuickChordCandidateInput {
 export function composeQuickChordCandidates({
   currentChord,
   analyzerCandidates,
+  contextCandidates = [],
   smoothCandidates = [],
   styleCandidates = [],
   limit = QUICK_CHORD_CANDIDATE_LIMIT,
@@ -55,6 +59,7 @@ export function composeQuickChordCandidates({
   if (cappedLimit === 0) return [];
   const currentKey = canonicalChordAlternative(currentChord);
   const analyzer = rankWithinSource(analyzerCandidates, "analyzer", currentKey);
+  const context = rankWithinSource(contextCandidates, "harmonicContext", currentKey);
   const smooth = rankWithinSource(smoothCandidates, "smoothConnection", currentKey);
   const style = rankWithinSource(styleCandidates, "authorReferenceFit", currentKey);
   const selected: QuickChordCandidate[] = [];
@@ -71,16 +76,17 @@ export function composeQuickChordCandidates({
     selected.push(cloneCandidate(candidate));
   };
 
-  analyzer.slice(0, 3).forEach(place);
+  placeUntil([...analyzer.slice(0, 3), ...context], 3, place, selected);
   place(smooth[0]);
   place(style[0]);
-  analyzer.slice(3).forEach(place);
+  [...analyzer.slice(3), ...context, ...smooth.slice(1), ...style.slice(1)].forEach(place);
 
   return selected.slice(0, cappedLimit);
 }
 
 export function composeRepairQuickChordCandidates({
   currentChord,
+  contextCandidates = [],
   smoothCandidates = [],
   styleCandidates = [],
   limit = QUICK_CHORD_CANDIDATE_LIMIT,
@@ -88,6 +94,7 @@ export function composeRepairQuickChordCandidates({
   const cappedLimit = Math.max(0, Math.min(QUICK_CHORD_CANDIDATE_LIMIT, limit));
   if (cappedLimit === 0) return [];
   const currentKey = canonicalChordAlternative(currentChord);
+  const context = rankWithinSource(contextCandidates, "harmonicContext", currentKey);
   const smooth = rankWithinSource(smoothCandidates, "smoothConnection", currentKey);
   const style = rankWithinSource(styleCandidates, "authorReferenceFit", currentKey);
   const selected: QuickChordCandidate[] = [];
@@ -103,10 +110,23 @@ export function composeRepairQuickChordCandidates({
     selected.push(cloneCandidate(candidate));
   };
 
+  placeUntil(context, 3, place, selected);
   place(smooth[0]);
   place(style[0]);
-  smooth.slice(1).forEach(place);
+  [...context.slice(3), ...smooth.slice(1), ...style.slice(1)].forEach(place);
   return selected.slice(0, cappedLimit);
+}
+
+function placeUntil(
+  candidates: readonly QuickChordCandidate[],
+  targetCount: number,
+  place: (candidate: QuickChordCandidate | undefined) => void,
+  selected: readonly QuickChordCandidate[],
+): void {
+  for (const candidate of candidates) {
+    if (selected.length >= targetCount) return;
+    place(candidate);
+  }
 }
 
 export function analyzerQuickCandidates(

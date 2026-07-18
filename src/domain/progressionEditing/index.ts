@@ -6,6 +6,7 @@ export * from "./editSummary";
 export * from "./splitMerge";
 export * from "./validation";
 export * from "./chordSuggestions";
+export * from "./contextCandidates";
 export * from "./quickCandidates";
 export * from "./smoothCandidates";
 export * from "./styleCandidates";

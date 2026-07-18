@@ -247,6 +247,11 @@ export function QuickChordEditor({
             language={language}
             onChoose={chooseCandidate}
           />
+          {!candidates.some((candidate) => candidate.sources.includes("authorReferenceFit")) ? (
+            <p className="mt-2 text-xs leading-5 text-[var(--lv-text-muted)]" data-style-candidate-unavailable>
+              {text.styleUnavailable}
+            </p>
+          ) : null}
         </div>
       ) : null}
 
@@ -398,6 +403,7 @@ function CandidateGroup({
               type="button"
               data-quick-candidate
               data-candidate-source={candidate.primarySource}
+              data-candidate-sources={candidate.sources.join(",")}
               className={`border px-2 py-2 text-left text-sm ${draftChord.label === candidate.chord.label ? "border-teal-300 bg-teal-300/10" : "border-[var(--lv-border-strong)]"}`}
               onClick={() => onChoose(candidate)}
               title={descriptions.join(" / ")}
@@ -421,6 +427,7 @@ function sourceLabel(
 ): string {
   if (source === "smoothConnection") return text.smoothSource;
   if (source === "authorReferenceFit") return text.styleSource;
+  if (source === "harmonicContext") return text.contextSource;
   return text.analyzerSource;
 }
 
@@ -430,6 +437,7 @@ function sourceDescription(
 ): string {
   if (source === "smoothConnection") return text.smoothDescription;
   if (source === "authorReferenceFit") return text.styleDescription;
+  if (source === "harmonicContext") return text.contextDescription;
   return text.analyzerDescription;
 }
 

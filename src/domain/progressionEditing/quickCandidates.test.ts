@@ -33,6 +33,24 @@ describe("quick chord candidate composer", () => {
     ]);
   });
 
+  it("fills missing Analyzer slots with Context before Smooth and Style", () => {
+    const result = composeQuickChordCandidates({
+      currentChord: current,
+      analyzerCandidates: [candidate(2, "analyzer", 0)],
+      contextCandidates: [
+        candidate(4, "harmonicContext", 0),
+        candidate(5, "harmonicContext", 1),
+        candidate(6, "harmonicContext", 2),
+      ],
+      smoothCandidates: [candidate(7, "smoothConnection", 0)],
+      styleCandidates: [candidate(9, "authorReferenceFit", 0)],
+    });
+    expect(result).toHaveLength(5);
+    expect(result.map((item) => item.primarySource)).toEqual([
+      "analyzer", "harmonicContext", "harmonicContext", "smoothConnection", "authorReferenceFit",
+    ]);
+  });
+
   it("does not invent missing source candidates and uses Analyzer fallback", () => {
     const result = composeQuickChordCandidates({
       currentChord: current,
@@ -80,17 +98,33 @@ describe("quick chord candidate composer", () => {
     expect(composeQuickChordCandidates(input)).toEqual(composeQuickChordCandidates(input));
   });
 
-  it("fills analyzer-free editing slots with multiple ranked repair candidates", () => {
+  it("fills analyzer-free editing slots with Context 3 + Smooth 1 + Style 1", () => {
     const result = composeRepairQuickChordCandidates({
       currentChord: current,
-      smoothCandidates: Array.from({ length: 6 }, (_, index) => (
-        candidate(index + 1, "smoothConnection", index)
+      contextCandidates: Array.from({ length: 4 }, (_, index) => (
+        candidate(index + 1, "harmonicContext", index)
       )),
-      styleCandidates: [candidate(9, "authorReferenceFit", 0)],
+      smoothCandidates: Array.from({ length: 6 }, (_, index) => (
+        candidate(index + 7, "smoothConnection", index)
+      )),
+      styleCandidates: [candidate(6, "authorReferenceFit", 0)],
     });
     expect(result).toHaveLength(5);
-    expect(result[0]?.primarySource).toBe("smoothConnection");
-    expect(result[1]?.primarySource).toBe("authorReferenceFit");
-    expect(result.slice(2).every((item) => item.primarySource === "smoothConnection")).toBe(true);
+    expect(result.map((item) => item.primarySource)).toEqual([
+      "harmonicContext", "harmonicContext", "harmonicContext", "smoothConnection", "authorReferenceFit",
+    ]);
+  });
+
+  it("fills all five slots without pretending an unavailable Style candidate exists", () => {
+    const result = composeRepairQuickChordCandidates({
+      currentChord: current,
+      contextCandidates: Array.from({ length: 5 }, (_, index) => (
+        candidate(index + 1, "harmonicContext", index)
+      )),
+      smoothCandidates: [candidate(7, "smoothConnection", 0)],
+    });
+    expect(result).toHaveLength(5);
+    expect(result.some((item) => item.primarySource === "smoothConnection")).toBe(true);
+    expect(result.some((item) => item.primarySource === "authorReferenceFit")).toBe(false);
   });
 });

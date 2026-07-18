@@ -118,8 +118,8 @@ const midiChordCorrectionEventObjectSchema = z.object({
   previousChord: z.string().optional(),
   nextChord: z.string().optional(),
   quickCandidateSelection: z.object({
-    source: z.enum(["analyzer", "smoothConnection", "authorReferenceFit"]),
-    sources: z.array(z.enum(["analyzer", "smoothConnection", "authorReferenceFit"])).optional(),
+    source: z.enum(["analyzer", "harmonicContext", "smoothConnection", "authorReferenceFit"]),
+    sources: z.array(z.enum(["analyzer", "harmonicContext", "smoothConnection", "authorReferenceFit"])).optional(),
     candidateRank: z.number().int().nonnegative(),
     displayedCandidateCount: z.number().int().min(1).max(5),
   }).strict().optional(),
