@@ -389,4 +389,95 @@ describe("VaultView keyboard shortcuts", () => {
     expect(setToast).toHaveBeenLastCalledWith(appCopy.ja.library.copyFailed);
     await act(async () => root.unmount());
   });
+
+  it("keeps search state while Smart Library filters by derived categories", async () => {
+    const plain = { ...progressionBlock, id: "plain", sourceFileName: "plain.mid" };
+    const slash = {
+      ...progressionBlock,
+      id: "slash",
+      sourceFileName: "slash.mid",
+      chords: [{
+        ...progressionBlock.chords[0],
+        chord: { ...progressionBlock.chords[0].chord, bass: 4, label: "Cmaj7/E" },
+      }],
+    };
+    const idea = makeIdea({ id: "idea-library", title: "Library search", progressionBlocks: [plain, slash] });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(
+        <VaultView
+          ideas={[idea]}
+          openDetail={vi.fn()}
+          openCreate={vi.fn()}
+          openCapture={vi.fn()}
+          updateIdea={vi.fn()}
+          setToast={vi.fn()}
+          copy={appCopy.en}
+          language="en"
+          showRomanNumerals={false}
+        />,
+      );
+    });
+
+    const search = container.querySelector<HTMLInputElement>("input")!;
+    await setInputValue(search, "Library");
+    await act(async () => {
+      [...container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent === "Library")?.click();
+    });
+    expect(search.value).toBe("Library");
+    const slashFilter = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent?.includes("Slash Bass"));
+    await act(async () => slashFilter?.click());
+    expect(container.querySelectorAll(".lv-vault-row")).toHaveLength(1);
+    expect(container.querySelector(".lv-vault-progression-primary")?.textContent).toContain("Cmaj7/E");
+
+    await act(async () => {
+      [...container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent === "List")?.click();
+    });
+    expect(search.value).toBe("Library");
+    await act(async () => root.unmount());
+  });
+
+  it("virtualizes progression rows after the 200-entry threshold", async () => {
+    const blocks = Array.from({ length: 205 }, (_, index) => ({
+      ...progressionBlock,
+      id: `block-${index}`,
+    }));
+    const idea = makeIdea({ id: "idea-large", progressionBlocks: blocks });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(
+        <VaultView
+          ideas={[idea]}
+          openDetail={vi.fn()}
+          openCreate={vi.fn()}
+          openCapture={vi.fn()}
+          updateIdea={vi.fn()}
+          setToast={vi.fn()}
+          copy={appCopy.en}
+          language="en"
+          showRomanNumerals={false}
+        />,
+      );
+    });
+
+    expect(container.querySelector("[data-virtualized='true']")).not.toBeNull();
+    expect(container.querySelectorAll(".lv-vault-row").length).toBeLessThan(205);
+    expect(container.textContent).toContain("205 items");
+    await act(async () => root.unmount());
+  });
 });
+
+async function setInputValue(input: HTMLInputElement, value: string) {
+  await act(async () => {
+    const valueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+    valueSetter?.call(input, value);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+}

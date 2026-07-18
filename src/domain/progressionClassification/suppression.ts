@@ -29,5 +29,7 @@ export function restoreAutoTag(
 
 export function canonicalManualTag(tag: string): string {
   const normalized = tag.trim().toLocaleLowerCase().replace(/^([a-z][a-z0-9-]*):/, "$1.");
-  return isKnownProgressionTagId(normalized) ? normalized : tag.trim();
+  return /^(source|feature|use|mood|collection)\.[a-z0-9][a-z0-9-]*$/.test(normalized)
+    ? normalized
+    : tag.trim();
 }

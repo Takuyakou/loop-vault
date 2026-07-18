@@ -120,7 +120,8 @@ function progressionBars(block: SavedProgressionBlock): number | undefined {
 function groupTagsByCategory(tagIds: readonly string[]): Map<string, string[]> {
   const groups = new Map<string, string[]>();
   for (const tagId of tagIds) {
-    const category = getProgressionTagDefinition(tagId)?.category ?? `manual:${tagId}`;
+    const namespace = /^(source|feature|use|mood|collection)\./.exec(tagId)?.[1];
+    const category = getProgressionTagDefinition(tagId)?.category ?? namespace ?? `manual:${tagId}`;
     groups.set(category, [...(groups.get(category) ?? []), tagId]);
   }
   return groups;
