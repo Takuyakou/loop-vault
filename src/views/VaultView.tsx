@@ -398,7 +398,7 @@ function VirtualizedProgressionRows({
   selectedIndex: number;
   renderRow: (entry: ProgressionEntry, index: number) => ReactNode;
 }) {
-  const rowHeight = 64;
+  const rowHeight = 96;
   const viewportHeight = 560;
   const overscan = 6;
   const [scrollTop, setScrollTop] = useState(0);
@@ -427,6 +427,7 @@ function VirtualizedProgressionRows({
       style={{ height: viewportHeight }}
       onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
       data-virtualized="true"
+      data-row-height={rowHeight}
     >
       <div className="relative" style={{ height: entries.length * rowHeight }}>
         {entries.slice(start, end).map((entry, offset) => {
@@ -434,7 +435,7 @@ function VirtualizedProgressionRows({
           return (
             <div
               key={progressionEntryId(entry)}
-              className="absolute inset-x-0 h-16"
+              className="absolute inset-x-0 h-24"
               style={{ top: index * rowHeight }}
             >
               {renderRow(entry, index)}
@@ -451,7 +452,7 @@ function ProgressionRow({ entry, selected, showDegrees, copy, displayTags, onSel
   const playback = usePlaybackState();
   const source = sourceOf(entry);
   const playing = playback.status !== "idle" && samePlaybackSource(playback.source, source);
-  return <div className={`lv-vault-row h-16 overflow-hidden border-b border-[var(--lv-border)] px-2 py-2 text-sm ${selected ? "bg-[var(--lv-surface-raised)]" : "hover:bg-[var(--lv-surface)]"} ${playing ? "border-l-2 border-l-[var(--lv-accent)]" : ""}`} onClick={onSelect}>
+  return <div className={`lv-vault-row h-24 overflow-hidden border-b border-[var(--lv-border)] px-2 py-2 text-sm ${selected ? "bg-[var(--lv-surface-raised)]" : "hover:bg-[var(--lv-surface)]"} ${playing ? "border-l-2 border-l-[var(--lv-accent)]" : ""}`} onClick={onSelect}>
     <div className="lv-vault-play" onClick={(event) => event.stopPropagation()} onDoubleClick={(event) => event.stopPropagation()}>
       <PlayToggle source={source} request={requestOf(entry)} playLabel={copy.common.preview} stopLabel={copy.common.stop} className="lv-button-ghost grid h-8 w-8 place-items-center" showLabel={false} onError={onPreviewError} />
     </div>
