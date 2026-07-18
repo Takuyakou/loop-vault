@@ -161,7 +161,7 @@ export function ProgressionDetailView({
           <p className="mt-4 text-xs font-semibold uppercase text-[var(--lv-accent)]">
             {text.progression}
           </p>
-          <h2 className="mt-1 text-2xl font-semibold text-[var(--lv-text)]">
+          <h2 className="mt-1 text-lg font-semibold text-[var(--lv-text)]">
             {block.summaryText || text.untitled}
           </h2>
         </div>
@@ -239,7 +239,7 @@ export function ProgressionDetailView({
         </button>
       </div>
 
-      <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]" data-progression-detail-editor>
         <section className="min-w-0">
           <ProgressionEditorToolbar
             canUndo={canUndoProgressionEdit(editable)}
@@ -253,6 +253,11 @@ export function ProgressionDetailView({
           <EditableProgressionGrid
             editable={editable}
             onSelect={(slotId) => setEditable((current) => selectEditableSlot(current, slotId))}
+            onNavigate={(slotId) => setEditable((current) => selectEditableSlot(current, slotId))}
+            onPreviewSlot={(slotId, chord) => {
+              setEditable((current) => selectEditableSlot(current, slotId));
+              void previewChord(chord);
+            }}
             language={language}
             quickEditor={{
               onPreview: (_slotId, chord) => void previewChord(chord),

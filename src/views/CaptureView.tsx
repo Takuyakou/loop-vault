@@ -1092,6 +1092,12 @@ export function ProgressionCandidateCard({
 
   async function selectChord(index: number) {
     onSelect?.();
+    const slot = selectSlot(index);
+    await onPreviewChord(editedCandidate, index);
+    return slot;
+  }
+
+  function selectSlot(index: number) {
     const slot = editable.slots[index];
     if (slot?.id !== propagationProposal?.sourceSlotId) {
       setPropagationProposal(undefined);
@@ -1099,7 +1105,7 @@ export function ProgressionCandidateCard({
     if (slot) {
       setEditable((current) => selectEditableSlot(current, slot.id));
     }
-    await onPreviewChord(editedCandidate, index);
+    return slot;
   }
 
   async function previewChord(chord: ChordSymbol) {
@@ -1229,6 +1235,8 @@ export function ProgressionCandidateCard({
             playingSlotId={playingChordIndex === null ? undefined : editable.slots[playingChordIndex]?.id}
             playingProgress={playingProgress}
             onSelect={(_slotId, index) => void selectChord(index)}
+            onNavigate={(_slotId, index) => { selectSlot(index); }}
+            onPreviewSlot={(_slotId, _chord, index) => void selectChord(index)}
             language={language}
             quickEditor={{
               onOpen: (slotId, _index) => {

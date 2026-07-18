@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { EditableProgression } from "../../domain/progressionEditing";
 import type { ChordSymbol } from "../../domain/types";
 import { progressionEditorCopy, type AppLanguage } from "../../i18n";
@@ -23,6 +23,8 @@ interface EditableProgressionGridProps {
   playingSlotId?: string;
   playingProgress?: number | null;
   onSelect: (slotId: string, index: number) => void;
+  onNavigate?: (slotId: string, index: number) => void;
+  onPreviewSlot?: (slotId: string, chord: ChordSymbol, index: number) => void;
   language: AppLanguage;
   quickEditor?: QuickChordEditorControls;
 }
@@ -32,10 +34,13 @@ export function EditableProgressionGrid({
   playingSlotId,
   playingProgress,
   onSelect,
+  onNavigate,
+  onPreviewSlot,
   language,
   quickEditor,
 }: EditableProgressionGridProps) {
   const text = progressionEditorCopy[language];
+  const cardButtons = useRef<Array<HTMLButtonElement | null>>([]);
   const [quickEdit, setQuickEdit] = useState<{
     slotId: string;
     index: number;
@@ -56,6 +61,14 @@ export function EditableProgressionGrid({
     setQuickEdit({ slotId, index, anchorElement });
   }
 
+  function moveSelection(index: number, direction: -1 | 1) {
+    const nextIndex = Math.max(0, Math.min(editable.slots.length - 1, index + direction));
+    const nextSlot = editable.slots[nextIndex];
+    if (!nextSlot) return;
+    (onNavigate ?? onSelect)(nextSlot.id, nextIndex);
+    cardButtons.current[nextIndex]?.focus();
+  }
+
   return (
     <>
       <div
@@ -71,9 +84,14 @@ export function EditableProgressionGrid({
             playing={playingSlotId === slot.id}
             playingProgress={playingSlotId === slot.id ? playingProgress : null}
             onSelect={() => onSelect(slot.id, index)}
+            onNavigate={(direction) => moveSelection(index, direction)}
+            onPreview={onPreviewSlot
+              ? () => onPreviewSlot(slot.id, slot.currentChord, index)
+              : undefined}
             onQuickEdit={quickEditor
               ? (anchorElement) => openQuickEditor(slot.id, index, anchorElement)
               : undefined}
+            buttonRef={(element) => { cardButtons.current[index] = element; }}
             language={language}
           />
         ))}
