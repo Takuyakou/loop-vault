@@ -4,6 +4,7 @@ import {
   positionFromStartBeat,
   slotStartBeat,
 } from "./editableProgression";
+import { suggestNextChordAlternatives } from "./chordSuggestions";
 import { operationSnapshots, recordEditOperation } from "./editHistory";
 import type {
   DeleteChordOperation,
@@ -21,39 +22,37 @@ import {
 
 const MIN_SPLIT_DURATION = 0.5;
 
-export function insertEditableChordAfter(
+export function appendSuggestedEditableChord(
   editable: EditableProgression,
-  afterSlotId = editable.selectedSlotId,
+  keySignature?: string,
 ): EditableProgression {
-  if (!afterSlotId) return editable;
   const ordered = [...editable.slots]
     .sort((left, right) => slotStartBeat(left, editable.beatsPerBar) - slotStartBeat(right, editable.beatsPerBar))
     .map(cloneSlot);
-  const index = ordered.findIndex((slot) => slot.id === afterSlotId);
-  const anchor = ordered[index];
+  const anchor = ordered[ordered.length - 1];
   if (!anchor) return editable;
 
+  const suggestions = suggestNextChordAlternatives(anchor.currentChord, keySignature);
+  const selectedSuggestion = suggestions[0];
+  if (!selectedSuggestion) return editable;
   const durationBeats = anchor.position.durationBeats;
   const insertionStartBeat = slotStartBeat(anchor, editable.beatsPerBar) + durationBeats;
   const insertedPosition = positionFromStartBeat(insertionStartBeat, editable.beatsPerBar);
   const inserted: EditableChordSlot = {
     id: `${anchor.id}:insert:${editable.historyIndex}`,
     position: { ...insertedPosition, durationBeats },
-    originalChord: cloneChord(anchor.currentChord),
-    currentChord: cloneChord(anchor.currentChord),
-    alternatives: [],
+    originalChord: cloneChord(selectedSuggestion.chord),
+    currentChord: cloneChord(selectedSuggestion.chord),
+    alternatives: suggestions.slice(1).map((suggestion) => ({
+      chord: cloneChord(suggestion.chord),
+      confidence: suggestion.confidence,
+    })),
+    confidence: selectedSuggestion.confidence,
     warnings: [],
     edited: true,
     editSource: "insert",
   };
-  const shifted = ordered.slice(index + 1).map((slot) => {
-    const position = positionFromStartBeat(
-      slotStartBeat(slot, editable.beatsPerBar) + durationBeats,
-      editable.beatsPerBar,
-    );
-    return { ...slot, position: { ...position, durationBeats: slot.position.durationBeats } };
-  });
-  const slots = [...ordered.slice(0, index + 1), inserted, ...shifted];
+  const slots = [...ordered, inserted];
   if (validateEditableProgression({ slots, beatsPerBar: editable.beatsPerBar }).length > 0) {
     return editable;
   }
@@ -61,7 +60,7 @@ export function insertEditableChordAfter(
   const operation: InsertChordOperation = {
     type: "insert",
     slotId: inserted.id,
-    afterSlotId,
+    afterSlotId: anchor.id,
     ...operationSnapshots(editable, next),
   };
   return recordEditOperation(editable, operation);

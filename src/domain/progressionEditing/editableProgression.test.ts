@@ -4,7 +4,7 @@ import {
   applyEditableProgressionToSavedBlock,
   createEditableProgression,
   hasProgressionEdits,
-  insertEditableChordAfter,
+  appendSuggestedEditableChord,
   markEditableProgressionSaved,
   progressionEditSummary,
   replaceEditableChord,
@@ -110,7 +110,7 @@ describe("editable progression", () => {
       analyzerVersion: "test",
     };
     const editable = createEditableProgression(block);
-    const inserted = insertEditableChordAfter(editable, editable.slots[0]!.id);
+    const inserted = appendSuggestedEditableChord(editable, "C major");
     const saved = applyEditableProgressionToSavedBlock(block, inserted);
 
     expect(saved.chords).toHaveLength(3);
