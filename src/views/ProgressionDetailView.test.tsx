@@ -132,6 +132,55 @@ describe("ProgressionDetailView", () => {
     await act(async () => root.unmount());
   });
 
+  it("adds a chord after the selected card and saves it through the existing action", async () => {
+    const idea = makeIdea({ id: "idea-add", progressionBlocks: [block] });
+    const updateProgressionBlock = vi.fn(() => true);
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <ProgressionDetailView
+          idea={idea}
+          block={block}
+          updateProgressionBlock={updateProgressionBlock}
+          duplicateProgressionBlock={vi.fn()}
+          openProgression={vi.fn()}
+          openIdea={vi.fn()}
+          openVault={vi.fn()}
+          requestDelete={vi.fn()}
+          setToast={vi.fn()}
+          copy={appCopy.ja}
+          language="ja"
+        />,
+      );
+    });
+
+    const addChord = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent?.trim() === "コードを追加")!;
+    await act(async () => addChord.click());
+    const cards = [...container.querySelectorAll<HTMLElement>("[role='option']")];
+    expect(cards).toHaveLength(2);
+    expect(cards[1]?.getAttribute("aria-selected")).toBe("true");
+
+    const save = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent?.trim() === progressionDetailCopy.ja.saveChanges)!;
+    await act(async () => save.click());
+    expect(updateProgressionBlock).toHaveBeenCalledWith(
+      idea.id,
+      block.id,
+      expect.objectContaining({
+        chords: expect.arrayContaining([
+          expect.objectContaining({ chord: expect.objectContaining({ label: "Cmaj7" }) }),
+          expect.objectContaining({ chord: expect.objectContaining({ label: "Cmaj7" }) }),
+        ]),
+      }),
+    );
+
+    await act(async () => root.unmount());
+  });
+
   it("applies an alternative and saves the edited block through the supplied store action", async () => {
     const idea = makeIdea({ id: "idea-1", progressionBlocks: [block] });
     const updateProgressionBlock = vi.fn(() => true);

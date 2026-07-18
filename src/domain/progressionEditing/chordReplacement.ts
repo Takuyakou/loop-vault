@@ -5,6 +5,7 @@ import type {
   EditableProgression,
   ProgressionEditSource,
   ReplaceChordOperation,
+  ResetProgressionOperation,
 } from "./types";
 
 type ReplacementSource = Extract<
@@ -80,17 +81,20 @@ export function resetAllEditableChords(editable: EditableProgression): EditableP
   if (changed.length === 0) {
     return editable;
   }
-  const slots = editable.slots.map((slot) => ({
-    ...cloneSlot(slot),
-    currentChord: cloneChord(slot.originalChord),
-    edited: false,
-    editSource: "reset" as const,
-  }));
-  const next = { slots, selectedSlotId: editable.selectedSlotId };
-  const operation: ReplaceChordOperation = {
-    type: "replace",
-    slotIds: changed.map((slot) => slot.id),
-    editSource: "reset",
+  const baseline = editable.historyIndex > 0 ? editable.history[0]?.before : undefined;
+  const next = baseline
+    ? { slots: baseline.slots, selectedSlotId: baseline.selectedSlotId }
+    : {
+        slots: editable.slots.map((slot) => ({
+          ...cloneSlot(slot),
+          currentChord: cloneChord(slot.originalChord),
+          edited: false,
+          editSource: "reset" as const,
+        })),
+        selectedSlotId: editable.selectedSlotId,
+      };
+  const operation: ResetProgressionOperation = {
+    type: "reset",
     ...operationSnapshots(editable, next),
   };
   return recordEditOperation(editable, operation);

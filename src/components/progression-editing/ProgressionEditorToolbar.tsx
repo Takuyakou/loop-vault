@@ -1,5 +1,5 @@
 import { progressionEditorCopy, type AppLanguage } from "../../i18n";
-import { Redo2, Undo2 } from "lucide-react";
+import { Plus, Redo2, Undo2 } from "lucide-react";
 
 interface ProgressionEditorToolbarProps {
   canUndo: boolean;
@@ -7,6 +7,7 @@ interface ProgressionEditorToolbarProps {
   dirty: boolean;
   onUndo: () => void;
   onRedo: () => void;
+  onAddAfter?: () => void;
   onResetAll: () => void;
   language: AppLanguage;
 }
@@ -17,6 +18,7 @@ export function ProgressionEditorToolbar({
   dirty,
   onUndo,
   onRedo,
+  onAddAfter,
   onResetAll,
   language,
 }: ProgressionEditorToolbarProps) {
@@ -44,6 +46,16 @@ export function ProgressionEditorToolbar({
         >
           <Redo2 aria-hidden="true" size={16} />
         </button>
+        {onAddAfter ? (
+          <button
+            type="button"
+            className="lv-button-secondary inline-flex min-h-9 items-center gap-2 px-3 text-sm"
+            onClick={onAddAfter}
+          >
+            <Plus aria-hidden="true" size={16} />
+            {text.addChord}
+          </button>
+        ) : null}
       </div>
       {dirty ? (
         <button

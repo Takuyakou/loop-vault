@@ -3,8 +3,13 @@ import {
   canMergeEditableChords,
   createEditableProgression,
   deleteEditableChord,
+  insertEditableChordAfter,
+  hasProgressionEdits,
   mergeEditableChords,
   progressionSpan,
+  redoProgressionEdit,
+  resetAllEditableChords,
+  resetEditableChord,
   splitEditableChord,
   undoProgressionEdit,
   validateEditableProgression,
@@ -12,6 +17,33 @@ import {
 import { makeCandidate } from "./testFixtures";
 
 describe("progression structural editing", () => {
+  it("inserts a selected copy after the active slot and shifts later slots", () => {
+    const editable = createEditableProgression(makeCandidate());
+    const inserted = insertEditableChordAfter(editable, editable.slots[0]!.id);
+
+    expect(inserted.slots).toHaveLength(3);
+    expect(inserted.slots.map((slot) => [slot.position.bar, slot.position.beat])).toEqual([
+      [1, 1],
+      [1, 3],
+      [2, 1],
+    ]);
+    expect(inserted.slots[1]).toMatchObject({
+      currentChord: editable.slots[0]!.currentChord,
+      edited: true,
+      editSource: "insert",
+    });
+    expect(inserted.selectedSlotId).toBe(inserted.slots[1]!.id);
+    expect(validateEditableProgression(inserted)).toEqual([]);
+
+    const undone = undoProgressionEdit(inserted);
+    expect(undone.slots).toHaveLength(2);
+    expect(redoProgressionEdit(undone).slots).toHaveLength(3);
+    expect(hasProgressionEdits(resetEditableChord(inserted, inserted.slots[1]!.id))).toBe(true);
+    const reset = resetAllEditableChords(inserted);
+    expect(reset.slots).toHaveLength(2);
+    expect(hasProgressionEdits(reset)).toBe(false);
+  });
+
   it("splits at the midpoint and preserves the progression span", () => {
     const editable = createEditableProgression(makeCandidate());
     const before = progressionSpan(editable.slots);

@@ -20,6 +20,7 @@ import {
   createEditableProgression,
   deleteEditableChord,
   hasProgressionEdits,
+  insertEditableChordAfter,
   markEditableProgressionSaved,
   mergeEditableChords,
   redoProgressionEdit,
@@ -250,6 +251,7 @@ export function ProgressionDetailView({
             dirty={dirty}
             onUndo={() => setEditable((current) => undoProgressionEdit(current))}
             onRedo={() => setEditable((current) => redoProgressionEdit(current))}
+            onAddAfter={() => setEditable((current) => insertEditableChordAfter(current))}
             onResetAll={() => setEditable((current) => resetAllEditableChords(current))}
             language={language}
           />
