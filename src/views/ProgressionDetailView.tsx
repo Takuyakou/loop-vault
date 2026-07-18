@@ -7,6 +7,7 @@ import {
 } from "../audio/playbackController";
 import { PlayToggle } from "../components/PlayToggle";
 import { PreviewSoundSelector } from "../components/PreviewSoundSelector";
+import { ProgressionTagsEditor } from "../components/ProgressionTagsEditor";
 import { ChordInspector } from "../components/progression-editing/ChordInspector";
 import { EditableProgressionGrid } from "../components/progression-editing/EditableProgressionGrid";
 import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
@@ -267,15 +268,16 @@ export function ProgressionDetailView({
             }}
           />
 
-          <div className="mt-6 grid gap-4 border-t border-[var(--lv-border)] pt-4 md:grid-cols-2">
-            <div>
-              <p className="text-xs font-semibold uppercase text-[var(--lv-text-muted)]">{text.manualTags}</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {block.tags.length > 0
-                  ? block.tags.map((tag) => <span key={tag} className="bg-[var(--lv-surface-raised)] px-2 py-1 text-xs">{tag}</span>)
-                  : <span className="text-sm text-[var(--lv-text-muted)]">{text.noTags}</span>}
-              </div>
-            </div>
+          <div className="mt-6 border-t border-[var(--lv-border)] pt-4">
+            <ProgressionTagsEditor
+              block={editingBlock}
+              keySignature={block.detectedKey ?? idea.key}
+              language={language}
+              onChange={(changes) => {
+                const updated = updateProgressionBlock(idea.id, block.id, changes);
+                if (!updated) setToast(text.saveFailed);
+              }}
+            />
             <dl className="grid gap-2 text-sm">
               <MetadataRow label={text.source} value={block.sourceFileName ?? block.origin ?? "Manual"} />
               <MetadataRow label={text.parentIdea} value={idea.title} />

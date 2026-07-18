@@ -202,6 +202,7 @@ describe("parseVaultFileJson", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.vault.ideas[0]?.progressionBlocks?.[0]?.pinned).toBe(false);
+    expect(result.vault.ideas[0]?.progressionBlocks?.[0]?.suppressedAutoTags).toEqual([]);
   });
 
   it("loads legacy settings without language by defaulting to Japanese", () => {

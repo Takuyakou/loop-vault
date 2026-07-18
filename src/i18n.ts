@@ -1049,6 +1049,33 @@ export const progressionDetailCopy = {
   },
 } as const;
 
+export const progressionTagsCopy = {
+  ja: {
+    manualTitle: "手動タグ",
+    autoTitle: "自動タグ",
+    suppressedTitle: "非表示の自動タグ",
+    placeholder: "タグを追加",
+    add: "タグを追加",
+    remove: (tag: string) => `${tag}を削除`,
+    suppress: (tag: string) => `${tag}を非表示`,
+    restore: (tag: string) => `${tag}を再表示`,
+    noManualTags: "手動タグなし",
+    noAutoTags: "該当する自動タグなし",
+  },
+  en: {
+    manualTitle: "Manual tags",
+    autoTitle: "Auto tags",
+    suppressedTitle: "Hidden auto tags",
+    placeholder: "Add a tag",
+    add: "Add tag",
+    remove: (tag: string) => `Remove ${tag}`,
+    suppress: (tag: string) => `Hide ${tag}`,
+    restore: (tag: string) => `Show ${tag} again`,
+    noManualTags: "No manual tags",
+    noAutoTags: "No matching auto tags",
+  },
+} as const;
+
 export const quickChordEditorCopy = {
   ja: {
     title: "コードをすばやく編集",
