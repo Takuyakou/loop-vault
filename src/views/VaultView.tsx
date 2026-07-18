@@ -23,7 +23,8 @@ import { ChevronRight, Copy, SlidersHorizontal, Star, X } from "lucide-react";
 
 type ProgressionEntry = { idea: SongIdea; block: SavedProgressionBlock };
 type SortField = "capturedAt" | "updatedAt" | "key" | "bpm";
-type ProgressionViewMode = "list" | "library";
+type VaultMode = "library" | "list" | "idea";
+type ProgressionViewMode = Exclude<VaultMode, "idea">;
 
 const progressionViewModeSessionKey = "loop-vault.progression-view-mode";
 
@@ -42,8 +43,7 @@ export function VaultView({
   language: AppLanguage;
   showRomanNumerals: boolean;
 }) {
-  const [mode, setMode] = useState<"progression" | "idea">("progression");
-  const [progressionView, setProgressionView] = useState<ProgressionViewMode>(readProgressionViewMode);
+  const [mode, setMode] = useState<VaultMode>(readProgressionViewMode);
   const [libraryScope, setLibraryScope] = useState<ProgressionLibraryScope>("all");
   const [selectedLibraryTags, setSelectedLibraryTags] = useState<string[]>([]);
   const [libraryDrawerOpen, setLibraryDrawerOpen] = useState(false);
@@ -68,14 +68,14 @@ export function VaultView({
   const tags = useMemo(() => [...new Set(allBlocks.flatMap((block) => block.tags))].sort(), [allBlocks]);
   const visible = useMemo(() => {
     const sorted = filterAndSortProgressions(ideas, {
-      query: progressionView === "library" ? "" : query,
+      query: mode === "library" ? "" : query,
       pinnedOnly: onlyPinned,
       keys: keyFilter ? [keyFilter] : [],
       lengths: lengthBars === "all" ? [] : [Number(lengthBars)],
       sources: sourceFilter ? [sourceFilter] : [],
       tags: tagFilter ? [tagFilter] : [],
     }, { field: sort, direction: sort === "key" || sort === "bpm" ? "asc" : "desc" });
-    if (progressionView !== "library") return sorted;
+    if (mode !== "library") return sorted;
     const libraryMatches = filterProgressionIndex(progressionIndex, {
       query,
       tagIds: selectedLibraryTags,
@@ -86,7 +86,7 @@ export function VaultView({
     });
     const allowed = new Set(libraryMatches.map((entry) => entry.id));
     return sorted.filter((entry) => allowed.has(progressionEntryId(entry)));
-  }, [ideas, keyFilter, lengthBars, libraryScope, onlyPinned, progressionIndex, progressionView, query, selectedLibraryTags, sort, sourceFilter, tagFilter]);
+  }, [ideas, keyFilter, lengthBars, libraryScope, mode, onlyPinned, progressionIndex, query, selectedLibraryTags, sort, sourceFilter, tagFilter]);
   useEffect(() => {
     setSelectedIndex((value) => Math.min(value, Math.max(0, visible.length - 1)));
   }, [visible.length]);
@@ -99,9 +99,9 @@ export function VaultView({
     }
   }, [copy.toast.chordPreviewFailed, setToast]);
 
-  function changeProgressionView(next: ProgressionViewMode) {
-    setProgressionView(next);
-    writeProgressionViewMode(next);
+  function changeMode(next: VaultMode) {
+    setMode(next);
+    if (next !== "idea") writeProgressionViewMode(next);
   }
 
   const openProgressionDetail = useCallback((entry: ProgressionEntry) => {
@@ -143,7 +143,7 @@ export function VaultView({
       return;
     }
     const active = visible[selectedIndex];
-    if (!active || mode !== "progression") return;
+    if (!active || mode === "idea") return;
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();
       setSelectedIndex((value) => Math.max(0, Math.min(visible.length - 1,
@@ -172,29 +172,33 @@ export function VaultView({
           <h2 className="mt-2 text-2xl font-semibold">{copy.library.subtitle}</h2></div>
         <button className="lv-button-primary px-4 py-2 text-sm font-semibold" onClick={openCapture}>{copy.library.capture}</button>
       </div>
-      <div className="mb-3 flex gap-1 text-sm">
-        <button className={mode === "progression" ? "bg-[var(--lv-surface-raised)] px-3 py-2" : "px-3 py-2 text-[var(--lv-text-muted)]"} onClick={() => setMode("progression")}>{copy.library.progression}</button>
-        <button className={mode === "idea" ? "bg-[var(--lv-surface-raised)] px-3 py-2" : "px-3 py-2 text-[var(--lv-text-muted)]"} onClick={() => setMode("idea")}>{copy.library.idea}</button>
+      <div className="mb-3 inline-flex border border-[var(--lv-border)] p-0.5 text-sm" role="group" aria-label="Vault">
+        <button
+          type="button"
+          className={mode === "library" ? "bg-[var(--lv-surface-raised)] px-3 py-1.5" : "px-3 py-1.5 text-[var(--lv-text-muted)]"}
+          onClick={() => changeMode("library")}
+          aria-pressed={mode === "library"}
+        >
+          {libraryText.library}
+        </button>
+        <button
+          type="button"
+          className={mode === "list" ? "bg-[var(--lv-surface-raised)] px-3 py-1.5" : "px-3 py-1.5 text-[var(--lv-text-muted)]"}
+          onClick={() => changeMode("list")}
+          aria-pressed={mode === "list"}
+        >
+          {libraryText.list}
+        </button>
+        <button
+          type="button"
+          className={mode === "idea" ? "bg-[var(--lv-surface-raised)] px-3 py-1.5" : "px-3 py-1.5 text-[var(--lv-text-muted)]"}
+          onClick={() => changeMode("idea")}
+          aria-pressed={mode === "idea"}
+        >
+          {copy.library.idea}
+        </button>
       </div>
-      {mode === "progression" ? <>
-        <div className="mb-3 inline-flex border border-[var(--lv-border)] p-0.5 text-sm" role="group" aria-label={copy.library.progression}>
-          <button
-            type="button"
-            className={progressionView === "library" ? "bg-[var(--lv-surface-raised)] px-3 py-1.5" : "px-3 py-1.5 text-[var(--lv-text-muted)]"}
-            onClick={() => changeProgressionView("library")}
-            aria-pressed={progressionView === "library"}
-          >
-            {libraryText.library}
-          </button>
-          <button
-            type="button"
-            className={progressionView === "list" ? "bg-[var(--lv-surface-raised)] px-3 py-1.5" : "px-3 py-1.5 text-[var(--lv-text-muted)]"}
-            onClick={() => changeProgressionView("list")}
-            aria-pressed={progressionView === "list"}
-          >
-            {libraryText.list}
-          </button>
-        </div>
+      {mode !== "idea" ? <>
         <div className="grid gap-2 border-y border-[var(--lv-border)] py-3 md:grid-cols-[minmax(0,1fr)_auto_auto]">
           <input ref={searchRef} className="border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm outline-none focus:border-[var(--lv-accent)]" value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") { setQuery(""); event.currentTarget.blur(); } }} placeholder={copy.library.searchPlaceholder} />
           <div className="flex gap-1">{(["all", "4", "8", "16"] as const).map((value) => <button key={value} className={lengthBars === value ? "bg-[var(--lv-surface-raised)] px-2 text-xs" : "px-2 text-xs text-[var(--lv-text-muted)]"} onClick={() => setLengthBars(value)}>{value === "all" ? copy.library.all : copy.library.bars(Number(value))}</button>)}</div>
@@ -203,7 +207,7 @@ export function VaultView({
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <button className={onlyPinned ? "inline-flex items-center gap-1.5 bg-[var(--lv-surface-raised)] px-3 py-1 text-xs text-[var(--lv-warning)]" : "inline-flex items-center gap-1.5 border border-[var(--lv-border)] px-3 py-1 text-xs text-[var(--lv-text-muted)]"} onClick={() => setOnlyPinned((value) => {
             const next = !value;
-            if (progressionView === "library") setLibraryScope(next ? "favorites" : "all");
+            if (mode === "library") setLibraryScope(next ? "favorites" : "all");
             return next;
           })}>
             <Star aria-hidden="true" size={16} fill={onlyPinned ? "currentColor" : "none"} />
@@ -213,7 +217,7 @@ export function VaultView({
           <FilterSelect label={copy.library.source} allLabel={copy.library.all} value={sourceFilter} values={sources} onChange={setSourceFilter} />
           <FilterSelect label={copy.library.tag} allLabel={copy.library.all} value={tagFilter} values={tags} onChange={setTagFilter} />
           <span className="text-xs text-[var(--lv-text-muted)]">{copy.library.itemCount(visible.length)}</span>
-          {progressionView === "library" ? (
+          {mode === "library" ? (
             <button
               type="button"
               className="lv-button-secondary ml-auto inline-flex items-center gap-2 px-3 py-1 text-xs lg:hidden"
@@ -224,7 +228,7 @@ export function VaultView({
             </button>
           ) : null}
         </div>
-        {progressionView === "library" && selectedLibraryTags.length > 0 ? (
+        {mode === "library" && selectedLibraryTags.length > 0 ? (
           <div className="mt-3 flex flex-wrap items-center gap-2" aria-label={libraryText.selectedFilters}>
             {selectedLibraryTags.map((tagId) => (
               <button
@@ -246,7 +250,7 @@ export function VaultView({
             </button>
           </div>
         ) : null}
-        {progressionView === "library" ? (
+        {mode === "library" ? (
           <div className="mt-4 grid gap-4 lg:grid-cols-[15rem_minmax(0,1fr)]">
             <aside className="hidden border-r border-[var(--lv-border)] pr-4 lg:block">
               <ProgressionLibraryRail
@@ -289,7 +293,7 @@ export function VaultView({
             onPreviewError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed)}
           />
         ) : <EmptyState copy={copy} openCreate={openCreate} />}
-        {progressionView === "library" && visible.length === 0 ? <EmptyState copy={copy} openCreate={openCreate} /> : null}
+        {mode === "library" && visible.length === 0 ? <EmptyState copy={copy} openCreate={openCreate} /> : null}
         {libraryDrawerOpen ? (
           <div className="fixed inset-0 z-50 lg:hidden">
             <button

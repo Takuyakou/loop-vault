@@ -93,6 +93,11 @@ button {
   box-shadow: 0 -12px 32px rgb(0 0 0 / 45%);
 }
 
+.lv-progression-detail-inspector .lv-chord-inspector {
+  max-height: none;
+  box-shadow: none;
+}
+
 @media (min-width: 640px) {
   .lv-responsive-inspector-host {
     padding-right: 1.5rem;
@@ -136,5 +141,15 @@ button {
   .lv-chord-inspector {
     max-height: calc(100vh - 2rem);
     box-shadow: none;
+  }
+
+  .lv-progression-detail-inspector {
+    position: sticky;
+    top: 1rem;
+    align-self: start;
+  }
+
+  .lv-progression-detail-inspector .lv-chord-inspector {
+    max-height: calc(100vh - 2rem);
   }
 }
