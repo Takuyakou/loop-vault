@@ -1,6 +1,7 @@
 import { degreeSequence } from "../harmony/degrees";
 import type { SavedProgressionBlock } from "../types";
 import { deriveFeatureTags } from "./deriveFeatureTags";
+import { deriveMoodTags } from "./deriveMoodTags";
 import { deriveSourceTags } from "./deriveSourceTags";
 import { deriveUseTags } from "./deriveUseTags";
 import { applyAutoTagSuppression, canonicalManualTag } from "./suppression";
@@ -22,7 +23,7 @@ export function classifyProgression(
     sourceTags: applyAutoTagSuppression(deriveSourceTags(input), suppressed),
     featureTags: applyAutoTagSuppression(deriveFeatureTags(input), suppressed),
     useTags: applyAutoTagSuppression(deriveUseTags(input), suppressed),
-    moodTags: [],
+    moodTags: applyAutoTagSuppression(deriveMoodTags(input), suppressed),
   };
 }
 

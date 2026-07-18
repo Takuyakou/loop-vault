@@ -46,15 +46,15 @@ async function renderShell({
 
 describe("AppShell", () => {
   it.each([
-    ["saved", "Saved", "✓"],
-    ["saving", "Saving…", "●"],
-    ["unsaved", "Unsaved", "!"],
-  ] as const)("renders %s with full and compact status content", async (saveStatus, label, symbol) => {
+    ["saved", "Saved", "lucide-check"],
+    ["saving", "Saving…", "lucide-loader-circle"],
+    ["unsaved", "Unsaved", "lucide-circle-alert"],
+  ] as const)("renders %s with full and compact status content", async (saveStatus, label, iconClass) => {
     const { container, root } = await renderShell({ saveStatus });
     const status = container.querySelector(`[data-save-status="${saveStatus}"]`);
     expect(status?.getAttribute("aria-label")).toBe(label);
     expect(status?.getAttribute("title")).toBe(label);
-    expect(status?.firstElementChild?.textContent).toBe(symbol);
+    expect(status?.querySelector(`.${iconClass}`)).not.toBeNull();
     expect(status?.querySelector(".lg\\:inline")?.textContent).toBe(label);
     await act(async () => root.unmount());
   });
@@ -71,6 +71,10 @@ describe("AppShell", () => {
       "Capture",
       "Vault",
     ]);
+    const createButton = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.title === "+ Idea");
+    expect(createButton).toBeDefined();
+    expect(createButton?.textContent).toContain("Idea");
 
     const settings = container.querySelector<HTMLButtonElement>('button[aria-label="Settings"]');
     expect(settings?.title).toBe("Settings");

@@ -10,7 +10,7 @@
 - 手動タグと、自動タグの抑制情報だけを保存します。
 - Keyが必要な分類は、Key不明時に付与しません。
 - Verse / Chorus / Bridge / Endingは自動判定しません。
-- MoodはPhase 3.7.1 S5で品質を評価するまで自動判定しません。
+- Moodは3コード以上かつ信頼度0.78以上の強い特徴だけを最大2件まで自動判定します。
 
 ## Source
 
@@ -33,7 +33,7 @@
 
 ## Mood
 
-`mood.bright`、`mood.dark`、`mood.dreamy`、`mood.warm`、`mood.tense`、`mood.mysterious`、`mood.floating`、`mood.dramatic`を予約します。v1のS3では自動付与しません。
+`mood.bright`、`mood.dark`、`mood.dreamy`、`mood.warm`、`mood.tense`、`mood.mysterious`、`mood.floating`、`mood.dramatic`を定義します。コード品質の構成比が閾値を超えた場合だけ付与し、各結果へconfidenceと判定理由を添えます。
 
 ## Suppression
 

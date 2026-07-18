@@ -5,6 +5,7 @@ export {
   removeIdeaFromProgressionIndex,
   replaceIdeaInProgressionIndex,
 } from "./index";
+export { deriveMoodTags, MOOD_CONFIDENCE_THRESHOLD } from "./deriveMoodTags";
 export {
   applyAutoTagSuppression,
   canonicalManualTag,
