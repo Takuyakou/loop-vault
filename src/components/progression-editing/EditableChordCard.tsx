@@ -8,7 +8,10 @@ interface EditableChordCardProps {
   playing: boolean;
   playingProgress?: number | null;
   onSelect: () => void;
+  onNavigate?: (direction: -1 | 1) => void;
+  onPreview?: () => void;
   onQuickEdit?: (anchorElement: HTMLElement) => void;
+  buttonRef?: (element: HTMLButtonElement | null) => void;
   language: AppLanguage;
 }
 
@@ -18,7 +21,10 @@ export function EditableChordCard({
   playing,
   playingProgress,
   onSelect,
+  onNavigate,
+  onPreview,
   onQuickEdit,
+  buttonRef,
   language,
 }: EditableChordCardProps) {
   const text = progressionEditorCopy[language];
@@ -42,9 +48,23 @@ export function EditableChordCard({
       }}
     >
       <button
+        ref={buttonRef}
         type="button"
         className="min-h-20 w-full px-3 py-3 pr-11 text-left"
         onKeyDown={(event) => {
+          if (event.nativeEvent.isComposing) return;
+          if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
+            event.preventDefault();
+            event.stopPropagation();
+            onNavigate?.(event.key === "ArrowLeft" || event.key === "ArrowUp" ? -1 : 1);
+            return;
+          }
+          if (event.key === " " && onPreview) {
+            event.preventDefault();
+            event.stopPropagation();
+            onPreview();
+            return;
+          }
           if (!onQuickEdit) return;
           if (event.key === "Enter" || (event.shiftKey && event.key === "F10")) {
             event.preventDefault();

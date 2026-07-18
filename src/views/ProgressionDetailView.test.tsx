@@ -195,6 +195,23 @@ describe("ProgressionDetailView", () => {
     expect(cards).toHaveLength(3);
     expect(cards[0]?.getAttribute("aria-selected")).toBe("true");
 
+    const firstCardButton = cards[0]!.querySelector<HTMLButtonElement>("button")!;
+    await act(async () => {
+      firstCardButton.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    });
+    expect(cards[1]?.getAttribute("aria-selected")).toBe("true");
+    expect(document.activeElement).toBe(cards[1]!.querySelector("button"));
+
+    await act(async () => {
+      cards[2]!.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));
+    });
+    expect(cards[2]?.getAttribute("aria-selected")).toBe("true");
+    const quickEditor = document.querySelector<HTMLElement>("[data-quick-chord-editor]")!;
+    expect(quickEditor).not.toBeNull();
+    await act(async () => {
+      quickEditor.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    });
+
     await act(async () => cards[1]!.click());
     expect(cards[1]?.getAttribute("aria-selected")).toBe("true");
     expect(cards[0]?.getAttribute("aria-selected")).toBe("false");

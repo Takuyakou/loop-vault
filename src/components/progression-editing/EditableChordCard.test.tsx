@@ -42,6 +42,8 @@ async function renderCard() {
   document.body.append(container);
   const root = createRoot(container);
   const onSelect = vi.fn();
+  const onNavigate = vi.fn();
+  const onPreview = vi.fn();
   const onQuickEdit = vi.fn();
   await act(async () => {
     root.render(
@@ -50,12 +52,14 @@ async function renderCard() {
         selected={false}
         playing={false}
         onSelect={onSelect}
+        onNavigate={onNavigate}
+        onPreview={onPreview}
         onQuickEdit={onQuickEdit}
         language="en"
       />,
     );
   });
-  return { container, root, onSelect, onQuickEdit };
+  return { container, root, onSelect, onNavigate, onPreview, onQuickEdit };
 }
 
 describe("EditableChordCard", () => {
@@ -94,6 +98,22 @@ describe("EditableChordCard", () => {
     await act(async () => editButton.click());
     expect(onQuickEdit).toHaveBeenLastCalledWith(editButton);
     expect(onSelect).not.toHaveBeenCalled();
+    await act(async () => root.unmount());
+  });
+
+  it("moves between cards with arrows and previews with Space", async () => {
+    const { container, root, onNavigate, onPreview } = await renderCard();
+    const mainButton = container.querySelector<HTMLButtonElement>("button")!;
+
+    await act(async () => {
+      mainButton.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+      mainButton.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true }));
+      mainButton.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true }));
+    });
+
+    expect(onNavigate).toHaveBeenNthCalledWith(1, 1);
+    expect(onNavigate).toHaveBeenNthCalledWith(2, -1);
+    expect(onPreview).toHaveBeenCalledOnce();
     await act(async () => root.unmount());
   });
 });
