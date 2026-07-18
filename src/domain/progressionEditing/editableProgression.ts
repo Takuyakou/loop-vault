@@ -2,6 +2,7 @@ import type {
   ChordSymbol,
   ChordTimelineItem,
   ProgressionBlockCandidate,
+  SavedProgressionBlock,
 } from "../types";
 import { operationSnapshots, recordEditOperation } from "./editHistory";
 import type {
@@ -15,7 +16,7 @@ import type {
 export * from "./similarSegments";
 
 export function createEditableProgression(
-  candidate: ProgressionBlockCandidate,
+  candidate: Pick<ProgressionBlockCandidate, "id" | "chords">,
   beatsPerBar = 4,
 ): EditableProgression {
   const slots = candidate.chords.map((item, index) => ({
@@ -43,6 +44,20 @@ export function createEditableProgression(
     selectedSlotId: slots[0]?.id,
     history: [],
     historyIndex: 0,
+  };
+}
+
+export function applyEditableProgressionToSavedBlock(
+  block: SavedProgressionBlock,
+  editable: EditableProgression,
+): SavedProgressionBlock {
+  return {
+    ...block,
+    chords: [...editable.slots]
+      .sort((left, right) => slotStartBeat(left, editable.beatsPerBar) - slotStartBeat(right, editable.beatsPerBar))
+      .map(slotToTimelineItem),
+    summaryText: editable.slots.map((slot) => slot.currentChord.label).join(" - "),
+    userEdited: editable.slots.some((slot) => slot.edited) || block.userEdited,
   };
 }
 

@@ -822,4 +822,82 @@ describe("vault store", () => {
       },
     });
   });
+
+  it("updates one saved progression through the debounced vault save path", async () => {
+    const repository = new FakeRepository();
+    const block: SavedProgressionBlock = {
+      id: "block-1",
+      summaryText: "Cmaj7",
+      chords: [],
+      tags: [],
+      capturedAt: now.toISOString(),
+      analyzerVersion: "test",
+    };
+    repository.loadResult = {
+      vault: {
+        ...createEmptyVault(),
+        ideas: [makeIdea({ id: "idea-1", progressionBlocks: [block] })],
+      },
+      quarantine: [],
+      created: false,
+    };
+    const store = createVaultStore({ repository, now: () => now });
+    await store.getState().initialize();
+
+    expect(store.getState().updateProgressionBlock("idea-1", "missing", { summaryText: "x" })).toBe(false);
+    expect(store.getState().unsaved).toBe(false);
+    expect(store.getState().updateProgressionBlock("idea-1", block.id, {
+      id: "must-not-replace-id",
+      summaryText: "Dm9 - G13",
+      userEdited: true,
+    })).toBe(true);
+    expect(store.getState().ideas[0]?.progressionBlocks?.[0]).toMatchObject({
+      id: block.id,
+      summaryText: "Dm9 - G13",
+      userEdited: true,
+    });
+    expect(store.getState().unsaved).toBe(true);
+
+    await vi.advanceTimersByTimeAsync(500);
+    expect(repository.saved).toHaveLength(1);
+    expect(repository.saved[0]?.ideas[0]?.progressionBlocks?.[0]?.summaryText).toBe("Dm9 - G13");
+  });
+
+  it("duplicates a saved progression with a new id and cloned chord arrays", async () => {
+    const repository = new FakeRepository();
+    const block: SavedProgressionBlock = {
+      id: "block-1",
+      summaryText: "Cmaj7",
+      chords: [{
+        bar: 1,
+        beat: 1,
+        durationBeats: 4,
+        chord: { root: 0, quality: "maj7", tensions: ["9"], label: "Cmaj9" },
+        confidence: 0.9,
+        alternatives: [],
+        warnings: [],
+      }],
+      tags: ["main"],
+      capturedAt: "2026-07-01T00:00:00.000Z",
+      analyzerVersion: "test",
+    };
+    repository.loadResult = {
+      vault: {
+        ...createEmptyVault(),
+        ideas: [makeIdea({ id: "idea-1", progressionBlocks: [block] })],
+      },
+      quarantine: [],
+      created: false,
+    };
+    const store = createVaultStore({ repository, idFactory: () => generatedId, now: () => now });
+    await store.getState().initialize();
+
+    expect(store.getState().duplicateProgressionBlock("idea-1", block.id)).toBe(generatedId);
+    const blocks = store.getState().ideas[0]?.progressionBlocks ?? [];
+    expect(blocks).toHaveLength(2);
+    expect(blocks[1]).toMatchObject({ id: generatedId, summaryText: block.summaryText, capturedAt: now.toISOString() });
+    expect(blocks[1]?.chords).not.toBe(block.chords);
+    expect(blocks[1]?.chords[0]?.chord.tensions).not.toBe(block.chords[0]?.chord.tensions);
+    expect(blocks[1]?.tags).not.toBe(block.tags);
+  });
 });

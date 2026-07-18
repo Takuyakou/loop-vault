@@ -91,6 +91,7 @@ describe("VaultView keyboard shortcuts", () => {
       progressionBlocks: [{ ...progressionBlock, id: "block-second" }],
     });
     const openDetail = vi.fn();
+    const openProgression = vi.fn();
     const container = document.createElement("div");
     document.body.append(container);
     const root = createRoot(container);
@@ -100,6 +101,7 @@ describe("VaultView keyboard shortcuts", () => {
         <VaultView
           ideas={[firstIdea, secondIdea]}
           openDetail={openDetail}
+          openProgression={openProgression}
           openCreate={vi.fn()}
           openCapture={vi.fn()}
           updateIdea={vi.fn()}
@@ -111,24 +113,25 @@ describe("VaultView keyboard shortcuts", () => {
       );
     });
 
-    const openButtons = container.querySelectorAll<HTMLButtonElement>('[aria-label="Open idea"]');
+    const openButtons = container.querySelectorAll<HTMLButtonElement>('[aria-label="Open progression"]');
     expect(openButtons).toHaveLength(2);
-    expect(openButtons[1].title).toBe("Open idea");
+    expect(openButtons[1].title).toBe("Open progression");
     await act(async () => openButtons[1].click());
-    expect(openDetail).toHaveBeenCalledTimes(1);
-    expect(openDetail).toHaveBeenLastCalledWith("idea-second");
+    expect(openProgression).toHaveBeenCalledTimes(1);
+    expect(openProgression).toHaveBeenLastCalledWith("idea-second", "block-second");
 
     await act(async () => {
       document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
     });
-    expect(openDetail).toHaveBeenCalledTimes(2);
-    expect(openDetail).toHaveBeenLastCalledWith("idea-first");
+    expect(openProgression).toHaveBeenCalledTimes(2);
+    expect(openProgression).toHaveBeenLastCalledWith("idea-first", "block-first");
 
     await act(async () => {
       root.render(
         <VaultView
           ideas={[firstIdea, secondIdea]}
           openDetail={openDetail}
+          openProgression={openProgression}
           openCreate={vi.fn()}
           openCapture={vi.fn()}
           updateIdea={vi.fn()}
@@ -139,8 +142,8 @@ describe("VaultView keyboard shortcuts", () => {
         />,
       );
     });
-    const localizedOpen = container.querySelector<HTMLButtonElement>('[aria-label="Ideaを開く"]');
-    expect(localizedOpen?.title).toBe("Ideaを開く");
+    const localizedOpen = container.querySelector<HTMLButtonElement>('[aria-label="進行を開く"]');
+    expect(localizedOpen?.title).toBe("進行を開く");
 
     await act(async () => root.unmount());
   });
@@ -148,6 +151,7 @@ describe("VaultView keyboard shortcuts", () => {
   it("keeps double-click and Enter open shortcuts without duplicate button activation", async () => {
     const idea = makeIdea({ id: "idea-shortcuts", progressionBlocks: [progressionBlock] });
     const openDetail = vi.fn();
+    const openProgression = vi.fn();
     const container = document.createElement("div");
     document.body.append(container);
     const root = createRoot(container);
@@ -157,6 +161,7 @@ describe("VaultView keyboard shortcuts", () => {
         <VaultView
           ideas={[idea]}
           openDetail={openDetail}
+          openProgression={openProgression}
           openCreate={vi.fn()}
           openCapture={vi.fn()}
           updateIdea={vi.fn()}
@@ -173,28 +178,29 @@ describe("VaultView keyboard shortcuts", () => {
     await act(async () => {
       progression.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
     });
-    expect(openDetail).toHaveBeenCalledTimes(1);
+    expect(openProgression).toHaveBeenCalledTimes(1);
+    expect(openProgression).toHaveBeenLastCalledWith(idea.id, progressionBlock.id);
 
-    openDetail.mockClear();
+    openProgression.mockClear();
     await act(async () => {
       progression.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
     });
-    expect(openDetail).toHaveBeenCalledTimes(1);
+    expect(openProgression).toHaveBeenCalledTimes(1);
 
-    openDetail.mockClear();
-    const openButton = container.querySelector<HTMLButtonElement>('[aria-label="Open idea"]')!;
+    openProgression.mockClear();
+    const openButton = container.querySelector<HTMLButtonElement>('[aria-label="Open progression"]')!;
     await act(async () => {
       openButton.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
       openButton.click();
       openButton.dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 2 }));
     });
-    expect(openDetail).toHaveBeenCalledTimes(1);
+    expect(openProgression).toHaveBeenCalledTimes(1);
 
-    openDetail.mockClear();
+    openProgression.mockClear();
     await act(async () => {
       document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
     });
-    expect(openDetail).toHaveBeenCalledTimes(1);
+    expect(openProgression).toHaveBeenCalledTimes(1);
 
     await act(async () => root.unmount());
   });

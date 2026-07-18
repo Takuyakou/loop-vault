@@ -51,6 +51,8 @@ interface ChordInspectorProps {
     slots: readonly EditableChordSlot[];
   };
   onApplyPropagation?: (segmentIds: string[]) => void;
+  originalLabel?: string;
+  currentLabel?: string;
 }
 
 export function ChordInspector({
@@ -77,6 +79,8 @@ export function ChordInspector({
   onEditStart,
   propagation,
   onApplyPropagation,
+  originalLabel,
+  currentLabel,
 }: ChordInspectorProps) {
   const text = progressionEditorCopy[language];
   const resolvedStopLabel = stopLabel ?? text.stop;
@@ -206,7 +210,7 @@ export function ChordInspector({
       <div id={detailsId} hidden={!expanded} data-expanded-inspector>
       <dl className="mt-4 grid gap-3">
         <InspectorValue
-          label={text.original}
+          label={originalLabel ?? text.original}
           value={slot.originalChord.label}
           preview={{
             source: inspectorPlaybackSource(sourceBase, slot.id, "original"),
@@ -219,7 +223,7 @@ export function ChordInspector({
           }}
         />
         <InspectorValue
-          label={text.current}
+          label={currentLabel ?? text.current}
           value={slot.currentChord.label}
           emphasized
           preview={{
