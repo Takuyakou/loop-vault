@@ -2,6 +2,7 @@ pub mod commands;
 pub mod errors;
 pub mod keychain;
 pub mod local_provider;
+pub mod openai_provider;
 pub mod provider;
 pub mod retry;
 pub mod types;

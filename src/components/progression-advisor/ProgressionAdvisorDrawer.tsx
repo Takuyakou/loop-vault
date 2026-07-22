@@ -7,6 +7,7 @@ import { cancelAdvisorRun, isCurrentAdvisorResponse, requestAdvisorSuggestions, 
 import { loadLlmPreferences } from "../../llm/preferences";
 import { AdvisorErrorState } from "./AdvisorErrorState";
 import { AdvisorSuggestionCard } from "./AdvisorSuggestionCard";
+import { ConfirmDialog } from "../ConfirmDialog";
 
 interface Props {
   open: boolean;
@@ -31,6 +32,7 @@ export function ProgressionAdvisorDrawer({ open, block, title, keySignature, bpm
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<AdvisorRunResult>();
   const [error, setError] = useState<string>();
+  const [paidConfirmation, setPaidConfirmation] = useState(false);
   const activeRequestId = useRef<string>();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const request = useMemo(() => buildAdvisorRequest(block, { title, key: keySignature, bpm, instruction, tagIds: [...block.tags, ...selectedTagIds], derivedTagIds, context: referenceContext }), [block, bpm, derivedTagIds, instruction, keySignature, referenceContext, selectedTagIds, title]);
@@ -56,9 +58,13 @@ export function ProgressionAdvisorDrawer({ open, block, title, keySignature, bpm
     onClose();
   }
 
-  async function run() {
+  async function run(paidConfirmed = false) {
     if (running) return;
     const preferences = { ...loadLlmPreferences(), language };
+    if (preferences.provider === "openai" && preferences.openai.confirmBeforePaidRequest && !paidConfirmed) {
+      setPaidConfirmation(true);
+      return;
+    }
     const requestId = crypto.randomUUID();
     const fingerprint = advisorRequestFingerprint(request);
     activeRequestId.current = requestId;
@@ -91,6 +97,7 @@ export function ProgressionAdvisorDrawer({ open, block, title, keySignature, bpm
   }
 
   return (
+    <>
     <div className="fixed inset-0 z-[70] flex justify-end bg-black/55" onMouseDown={(event) => { if (event.target === event.currentTarget) close(); }}>
       <aside role="dialog" aria-modal="true" aria-labelledby="progression-advisor-title" className="h-full w-full max-w-2xl overflow-y-auto border-l border-[var(--lv-border-strong)] bg-[var(--lv-surface)] p-5 shadow-2xl">
         <div className="flex items-center justify-between gap-4 border-b border-[var(--lv-border)] pb-4">
@@ -129,6 +136,16 @@ export function ProgressionAdvisorDrawer({ open, block, title, keySignature, bpm
         ) : null}
       </aside>
     </div>
+    <ConfirmDialog
+      open={paidConfirmation}
+      title={ja ? "OpenAI APIを実行" : "Run OpenAI API"}
+      description={ja ? "OpenAI APIは従量課金です。利用料金はOpenAIアカウントへ請求されます。" : "OpenAI API usage is billed to your OpenAI account."}
+      confirmLabel={ja ? "料金を確認して実行" : "Confirm and run"}
+      cancelLabel={ja ? "キャンセル" : "Cancel"}
+      onCancel={() => setPaidConfirmation(false)}
+      onConfirm={() => { setPaidConfirmation(false); void run(true); }}
+    />
+    </>
   );
 }
 

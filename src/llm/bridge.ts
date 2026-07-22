@@ -20,6 +20,10 @@ export function testLocalLlmConnection(settings: LlmPreferences["local"]): Promi
   return invoke("test_local_llm_connection", { settings });
 }
 
+export function testOpenAiLlmConnection(model: string): Promise<ProviderHealth> {
+  return invoke("test_openai_llm_connection", { model });
+}
+
 export function getOpenAiApiKeyStatus(): Promise<ApiKeyStatus> {
   return invoke("openai_api_key_status");
 }
@@ -42,6 +46,7 @@ export function invokeAdvisorSuggestion(requestId: string, request: AdvisorReque
     request,
     provider: preferences.provider,
     localSettings: preferences.local,
+    openaiModel: preferences.openai.model,
   });
 }
 
