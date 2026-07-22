@@ -46,7 +46,7 @@ export function ProgressionAdvisorDrawer({ open, block, title, keySignature, bpm
     const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") close(); };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  });
+  }, [open]);
 
   if (!open) return null;
 
