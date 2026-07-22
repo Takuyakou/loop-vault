@@ -1,6 +1,6 @@
 import { LoaderCircle, Sparkles, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { buildAdvisorRequest, advisorRequestFingerprint, type AdvisorSuggestion } from "../../domain/progressionAdvisor";
+import { buildAdvisorRequest, advisorRequestFingerprint, type AdvisorReferenceContext, type AdvisorSuggestion } from "../../domain/progressionAdvisor";
 import { progressionTaxonomy } from "../../domain/progressionClassification/taxonomy";
 import type { AppLanguage, SavedProgressionBlock } from "../../domain/types";
 import { cancelAdvisorRun, isCurrentAdvisorResponse, requestAdvisorSuggestions, type AdvisorRunResult, AdvisorServiceError } from "../../llm/advisorService";
@@ -20,9 +20,11 @@ interface Props {
   onSave: (suggestion: AdvisorSuggestion) => void;
   onApplyTags: (tagIds: string[]) => void;
   setToast: (message: string) => void;
+  referenceContext?: readonly AdvisorReferenceContext[];
+  derivedTagIds?: readonly string[];
 }
 
-export function ProgressionAdvisorDrawer({ open, block, title, keySignature, bpm, language, onClose, onAppend, onSave, onApplyTags, setToast }: Props) {
+export function ProgressionAdvisorDrawer({ open, block, title, keySignature, bpm, language, onClose, onAppend, onSave, onApplyTags, setToast, referenceContext = [], derivedTagIds = [] }: Props) {
   const ja = language === "ja";
   const [instruction, setInstruction] = useState("");
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
@@ -31,7 +33,7 @@ export function ProgressionAdvisorDrawer({ open, block, title, keySignature, bpm
   const [error, setError] = useState<string>();
   const activeRequestId = useRef<string>();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const request = useMemo(() => buildAdvisorRequest(block, { title, key: keySignature, bpm, instruction, tagIds: [...block.tags, ...selectedTagIds] }), [block, bpm, instruction, keySignature, selectedTagIds, title]);
+  const request = useMemo(() => buildAdvisorRequest(block, { title, key: keySignature, bpm, instruction, tagIds: [...block.tags, ...selectedTagIds], derivedTagIds, context: referenceContext }), [block, bpm, derivedTagIds, instruction, keySignature, referenceContext, selectedTagIds, title]);
   const latestFingerprint = useRef(advisorRequestFingerprint(request));
   latestFingerprint.current = advisorRequestFingerprint(request);
   const selectableTags = progressionTaxonomy.filter((tag) => tag.category === "mood" || tag.category === "use");
@@ -112,6 +114,7 @@ export function ProgressionAdvisorDrawer({ open, block, title, keySignature, bpm
           <button type="button" disabled={running} className="lv-button-primary inline-flex min-h-10 items-center gap-2 px-4 text-sm font-semibold disabled:opacity-50" onClick={() => void run()}>{running ? <LoaderCircle aria-hidden="true" className="animate-spin" size={16} /> : <Sparkles aria-hidden="true" size={16} />}{running ? (ja ? "生成中…" : "Generating…") : (ja ? "3つの案を生成" : "Generate 3 ideas")}</button>
           {running ? <button type="button" className="lv-button-secondary px-3 py-2 text-sm" onClick={() => { const id = activeRequestId.current; if (id) void cancelAdvisorRun(id); }}>{ja ? "キャンセル" : "Cancel"}</button> : null}
           <span className="text-xs text-[var(--lv-text-muted)]">{loadLlmPreferences().provider === "local" ? (ja ? "ローカルLLM" : "Local LLM") : "OpenAI API"}</span>
+          <span className="text-xs text-[var(--lv-text-muted)]">{ja ? `参照 ${referenceContext.length}件` : `${referenceContext.length} references`}</span>
         </div>
 
         {error ? <AdvisorErrorState message={error} /> : null}
