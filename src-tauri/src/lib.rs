@@ -22,6 +22,7 @@ pub fn run() {
             llm::commands::cancel_advisor_request,
             llm::commands::list_local_llm_models,
             llm::commands::test_local_llm_connection,
+            llm::commands::suggest_progression,
             llm::keychain::openai_api_key_status,
             llm::keychain::set_openai_api_key,
             llm::keychain::delete_openai_api_key,

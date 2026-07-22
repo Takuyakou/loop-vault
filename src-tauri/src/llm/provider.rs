@@ -1,6 +1,6 @@
 use super::{
     errors::LlmError,
-    types::{AdvisorRequest, AdvisorResponse, ProviderHealth},
+    types::{AdvisorRequest, ProviderHealth, ProviderResult},
 };
 use async_trait::async_trait;
 use tokio_util::sync::CancellationToken;
@@ -11,7 +11,7 @@ pub trait LlmProvider: Send + Sync {
         &self,
         request: AdvisorRequest,
         cancellation: CancellationToken,
-    ) -> Result<AdvisorResponse, LlmError>;
+    ) -> Result<ProviderResult, LlmError>;
 
     async fn test_connection(&self) -> Result<ProviderHealth, LlmError>;
 }
@@ -31,7 +31,7 @@ mod tests {
             &self,
             _request: AdvisorRequest,
             cancellation: CancellationToken,
-        ) -> Result<AdvisorResponse, LlmError> {
+        ) -> Result<ProviderResult, LlmError> {
             cancellation.cancelled().await;
             Err(LlmError::Cancelled)
         }

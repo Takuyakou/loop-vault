@@ -412,6 +412,7 @@ async function analyzeMidiPath(path: string) {
                 block={progressionBlock}
                 updateProgressionBlock={updateProgressionBlock}
                 duplicateProgressionBlock={duplicateProgressionBlock}
+                appendBlockToIdea={appendBlockToIdea}
                 openProgression={openProgression}
                 openIdea={openDetail}
                 openVault={() => setView("library")}

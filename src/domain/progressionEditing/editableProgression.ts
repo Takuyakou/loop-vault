@@ -53,7 +53,7 @@ export function applyEditableProgressionToSavedBlock(
 ): SavedProgressionBlock {
   const hasActiveInsert = editable.history
     .slice(0, editable.historyIndex)
-    .some((operation) => operation.type === "insert");
+    .some((operation) => operation.type === "insert" || operation.type === "advisor-append");
   const timing = hasActiveInsert ? progressionTiming(editable) : undefined;
   return {
     ...block,

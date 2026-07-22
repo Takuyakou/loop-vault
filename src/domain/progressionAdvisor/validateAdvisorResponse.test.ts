@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { advisorSuggestionToCandidate } from "./advisorDraft";
+import { advisorSuggestionToCandidate, appendAdvisorSuggestionToEditableProgression } from "./advisorDraft";
+import { createEditableProgression, undoProgressionEdit } from "../progressionEditing";
 import { summarizeAdvisorEvaluations } from "./evaluation";
 import { validateAdvisorResponse } from "./validateAdvisorResponse";
 import type { AdvisorResponse, AdvisorStrategy } from "./types";
@@ -121,5 +122,16 @@ describe("Progression Advisor response validation", () => {
     const invalid = validateAdvisorResponse({});
 
     expect(summarizeAdvisorEvaluations([valid, invalid])).toEqual({ total: 2, accepted: 1, rejected: 1, acceptanceRate: 0.5 });
+  });
+
+  it("appends a proposal to the editing draft and supports undo", () => {
+    const candidate = advisorSuggestionToCandidate(response().suggestions[1]!);
+    const editable = createEditableProgression({ id: "base", chords: candidate.chords.slice(0, 1) });
+    const appended = appendAdvisorSuggestionToEditableProgression(editable, response().suggestions[0]!);
+
+    expect(appended.slots).toHaveLength(9);
+    expect(appended.slots[1]!.position.bar).toBe(2);
+    expect(appended.history[appended.history.length - 1]?.type).toBe("advisor-append");
+    expect(undoProgressionEdit(appended).slots).toHaveLength(1);
   });
 });

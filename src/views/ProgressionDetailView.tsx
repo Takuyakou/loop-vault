@@ -8,6 +8,8 @@ import {
 import { PlayToggle } from "../components/PlayToggle";
 import { PreviewSoundSelector } from "../components/PreviewSoundSelector";
 import { ProgressionTagsEditor } from "../components/ProgressionTagsEditor";
+import { ProgressionAdvisorButton } from "../components/progression-advisor/ProgressionAdvisorButton";
+import { ProgressionAdvisorDrawer } from "../components/progression-advisor/ProgressionAdvisorDrawer";
 import { ChordInspector } from "../components/progression-editing/ChordInspector";
 import { EditableProgressionGrid } from "../components/progression-editing/EditableProgressionGrid";
 import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
@@ -37,6 +39,7 @@ import {
 import { beatsPerBar, buildCorrectionEvents } from "../domain/midi";
 import { formatProgressionText } from "../domain/progressionText";
 import type { SavedProgressionBlock, SongIdea } from "../domain/types";
+import { advisorSuggestionToCandidate, appendAdvisorSuggestionToEditableProgression } from "../domain/progressionAdvisor";
 import { appendAnalysisFeedback } from "../storage/analysisFeedbackStorage";
 import {
   progressionDetailCopy,
@@ -61,6 +64,12 @@ interface ProgressionDetailViewProps {
     changes: Partial<SavedProgressionBlock>,
   ) => boolean;
   duplicateProgressionBlock: (ideaId: string, blockId: string) => string | undefined;
+  appendBlockToIdea?: (
+    ideaId: string,
+    block: ReturnType<typeof advisorSuggestionToCandidate>,
+    analysis?: undefined,
+    metadata?: { userEdited?: boolean; userVerified?: boolean },
+  ) => boolean;
   openProgression: (ideaId: string, blockId: string) => void;
   openIdea: (ideaId: string) => void;
   openVault: () => void;
@@ -77,6 +86,7 @@ export function ProgressionDetailView({
   block,
   updateProgressionBlock,
   duplicateProgressionBlock,
+  appendBlockToIdea,
   openProgression,
   openIdea,
   openVault,
@@ -90,6 +100,7 @@ export function ProgressionDetailView({
   const meter = beatsPerBar(block.timeSignature);
   const [editable, setEditable] = useState(() => createEditableProgression(block, meter));
   const [previewSound, setPreviewSound] = useState<PreviewSound>("piano");
+  const [advisorOpen, setAdvisorOpen] = useState(false);
   const dirty = hasProgressionEdits(editable);
   const editingBlock = useMemo(
     () => applyEditableProgressionToSavedBlock(block, editable),
@@ -203,6 +214,7 @@ export function ProgressionDetailView({
           </h2>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
+          <ProgressionAdvisorButton language={language} onClick={() => setAdvisorOpen(true)} />
           <button
             type="button"
             className="lv-button-ghost inline-flex min-h-9 items-center gap-2 px-3 text-sm"
@@ -231,6 +243,25 @@ export function ProgressionDetailView({
           </button>
         </div>
       </div>
+      <ProgressionAdvisorDrawer
+        open={advisorOpen}
+        block={editingBlock}
+        title={idea.title}
+        keySignature={keySignature}
+        bpm={block.bpm ?? idea.bpm}
+        language={language}
+        onClose={() => setAdvisorOpen(false)}
+        onAppend={(suggestion) => setEditable((current) => appendAdvisorSuggestionToEditableProgression(current, suggestion))}
+        onSave={(suggestion) => {
+          const saved = appendBlockToIdea?.(idea.id, advisorSuggestionToCandidate(suggestion), undefined, { userEdited: true, userVerified: false }) ?? false;
+          if (!saved) setToast(text.saveFailed);
+        }}
+        onApplyTags={(tagIds) => {
+          const updated = updateProgressionBlock(idea.id, block.id, { tags: [...new Set([...editingBlock.tags, ...tagIds])] });
+          if (!updated) setToast(text.saveFailed);
+        }}
+        setToast={setToast}
+      />
 
       <div className="flex flex-wrap items-center gap-3 border-b border-[var(--lv-border)] py-4">
         <PlayToggle
