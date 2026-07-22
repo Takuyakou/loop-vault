@@ -186,6 +186,6 @@ invalid fixtureには、案数、未知strategy、additional property、長文�
 5. `#143` A4 Advisor UI / Local Provider
 6. `#144` A5 Local Structured Context
 7. `#145` A6 OpenAI Provider
-8. A7 Evals / QA（本報告書と最終評価。PR番号は作成後に確定）
+8. `#146` A7 Evals / QA（本報告書と最終評価）
 
 各PRは直前Stageのbranchをbaseにする。mainへのmergeはこの報告書作成時点では行っていない。
