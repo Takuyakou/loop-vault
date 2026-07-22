@@ -266,10 +266,12 @@ export function ProgressionDetailView({
         onSave={(suggestion) => {
           const saved = appendBlockToIdea?.(idea.id, advisorSuggestionToCandidate(suggestion), undefined, { userEdited: true, userVerified: false }) ?? false;
           if (!saved) setToast(text.saveFailed);
+          return saved;
         }}
         onApplyTags={(tagIds) => {
           const updated = updateProgressionBlock(idea.id, block.id, { tags: [...new Set([...editingBlock.tags, ...tagIds])] });
           if (!updated) setToast(text.saveFailed);
+          return updated;
         }}
         setToast={setToast}
         referenceContext={advisorReferenceContext}

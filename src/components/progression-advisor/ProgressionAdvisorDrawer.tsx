@@ -18,8 +18,8 @@ interface Props {
   language: AppLanguage;
   onClose: () => void;
   onAppend: (suggestion: AdvisorSuggestion) => void;
-  onSave: (suggestion: AdvisorSuggestion) => void;
-  onApplyTags: (tagIds: string[]) => void;
+  onSave: (suggestion: AdvisorSuggestion) => boolean;
+  onApplyTags: (tagIds: string[]) => boolean;
   setToast: (message: string) => void;
   referenceContext?: readonly AdvisorReferenceContext[];
   derivedTagIds?: readonly string[];
@@ -117,6 +117,12 @@ export function ProgressionAdvisorDrawer({ open, block, title, keySignature, bpm
           </div>
         </fieldset>
 
+        <details className="mt-4 border-t border-[var(--lv-border)] pt-4 text-sm text-[var(--lv-text-secondary)]">
+          <summary className="cursor-pointer font-semibold text-[var(--lv-text)]">{ja ? "AIへ送る内容" : "Data sent to AI"}</summary>
+          <p className="mt-2 leading-6">{ja ? "現在のコード進行、任意指示、選択タグ、構造化した参照進行（最大3件）" : "Current chords, optional instruction, selected tags, and up to three structured references"}</p>
+          <p className="mt-1 truncate font-mono text-xs">| {request.progression.events.map((event) => event.chord).join(" | ")} |</p>
+        </details>
+
         <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-[var(--lv-border)] pt-4">
           <button type="button" disabled={running} className="lv-button-primary inline-flex min-h-10 items-center gap-2 px-4 text-sm font-semibold disabled:opacity-50" onClick={() => void run()}>{running ? <LoaderCircle aria-hidden="true" className="animate-spin" size={16} /> : <Sparkles aria-hidden="true" size={16} />}{running ? (ja ? "生成中…" : "Generating…") : (ja ? "3つの案を生成" : "Generate 3 ideas")}</button>
           {running ? <button type="button" className="lv-button-secondary px-3 py-2 text-sm" onClick={() => { const id = activeRequestId.current; if (id) void cancelAdvisorRun(id); }}>{ja ? "キャンセル" : "Cancel"}</button> : null}
@@ -130,7 +136,7 @@ export function ProgressionAdvisorDrawer({ open, block, title, keySignature, bpm
             <p className="text-sm leading-6 text-[var(--lv-text-secondary)]">{result.response.analysis}</p>
             <p className="mt-2 text-xs text-[var(--lv-text-muted)]">{result.model} · {result.latencyMs} ms{result.retryCount ? ` · retry ${result.retryCount}` : ""}</p>
             <div className="mt-4 space-y-4">
-              {result.response.suggestions.map((suggestion) => <AdvisorSuggestionCard key={suggestion.id} suggestion={suggestion} language={language} onAppend={() => { onAppend(suggestion); setToast(ja ? "下書きへ追加しました。保存するまでVaultは変わりません" : "Added to draft. Vault is unchanged until you save"); }} onSave={() => { onSave(suggestion); setToast(ja ? "新しい進行として保存しました" : "Saved as a new progression"); }} onCopy={() => void copySuggestion(suggestion)} onApplyTags={() => { onApplyTags([...new Set([...result.response.suggestedTagIds, ...suggestion.suggestedTagIds])]); setToast(ja ? "タグを適用しました" : "Tags applied"); }} />)}
+              {result.response.suggestions.map((suggestion) => <AdvisorSuggestionCard key={suggestion.id} suggestion={suggestion} language={language} onAppend={() => { onAppend(suggestion); setToast(ja ? "下書きへ追加しました。保存するまでVaultは変わりません" : "Added to draft. Vault is unchanged until you save"); }} onSave={() => { if (onSave(suggestion)) setToast(ja ? "新しい進行として保存しました" : "Saved as a new progression"); }} onCopy={() => void copySuggestion(suggestion)} onApplyTags={() => { if (onApplyTags([...new Set([...result.response.suggestedTagIds, ...suggestion.suggestedTagIds])])) setToast(ja ? "タグを適用しました" : "Tags applied"); }} />)}
             </div>
           </div>
         ) : null}
