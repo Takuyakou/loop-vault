@@ -30,6 +30,7 @@ export type {
   KeyboardRange,
   NoteAccidentalStyle,
   PianoKeyboardGeometry,
+  PianoGuideHand,
   PianoKeyGeometry,
   PianoKeyVisualState,
 } from "./types";

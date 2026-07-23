@@ -16,6 +16,8 @@ export interface PianoKeyboardVisualizerProps {
   minMidiNote: number;
   maxMidiNote: number;
   guideNotes: readonly number[];
+  leftHandGuideNotes?: readonly number[];
+  rightHandGuideNotes?: readonly number[];
   heldNotes: readonly number[];
   sustainedNotes: readonly number[];
   allowedPitchClasses: readonly number[];
@@ -33,6 +35,8 @@ export interface PianoKeyboardVisualizerProps {
 const copy = {
   ja: {
     guide: "お手本",
+    leftGuide: "左手の目安",
+    rightGuide: "右手の目安",
     held: "押鍵中",
     foreign: "構成外",
     sustain: "ペダル保持",
@@ -42,6 +46,8 @@ const copy = {
   },
   en: {
     guide: "Guide",
+    leftGuide: "Left-hand guide",
+    rightGuide: "Right-hand guide",
     held: "Held",
     foreign: "Foreign",
     sustain: "Sustain",
@@ -55,6 +61,8 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
   minMidiNote,
   maxMidiNote,
   guideNotes,
+  leftHandGuideNotes = [],
+  rightHandGuideNotes = [],
   heldNotes,
   sustainedNotes,
   allowedPitchClasses,
@@ -84,6 +92,8 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
     [allowedPitchClasses, guideNotes, heldNotes, showGuide, sustainedNotes],
   );
   const guide = useMemo(() => new Set(display.guideNotes), [display.guideNotes]);
+  const leftGuide = useMemo(() => new Set(leftHandGuideNotes), [leftHandGuideNotes]);
+  const rightGuide = useMemo(() => new Set(rightHandGuideNotes), [rightHandGuideNotes]);
   const held = useMemo(() => new Set(display.heldNotes), [display.heldNotes]);
   const sustained = useMemo(() => new Set(display.sustainedNotes), [display.sustainedNotes]);
   const allowed = useMemo(
@@ -147,6 +157,13 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
                 showCLabel={showCLabels}
                 guideBass={showGuide && guideBassNote === key.note}
                 heldBass={heldBassNote === key.note}
+                guideHand={showGuide
+                  ? leftGuide.has(key.note)
+                    ? "left"
+                    : rightGuide.has(key.note)
+                      ? "right"
+                      : undefined
+                  : undefined}
                 accidentalStyle={accidentalStyle}
               />
             ))}
@@ -165,6 +182,13 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
                 showCLabel={showCLabels}
                 guideBass={showGuide && guideBassNote === key.note}
                 heldBass={heldBassNote === key.note}
+                guideHand={showGuide
+                  ? leftGuide.has(key.note)
+                    ? "left"
+                    : rightGuide.has(key.note)
+                      ? "right"
+                      : undefined
+                  : undefined}
                 accidentalStyle={accidentalStyle}
               />
             ))}
@@ -172,7 +196,18 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
         </svg>
       </div>
       <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-xs text-[var(--lv-text-muted)]">
-        {showGuide ? <Legend visualState="guide" label={text.guide} /> : null}
+        {showGuide && (leftHandGuideNotes.length > 0 || rightHandGuideNotes.length > 0) ? (
+          <>
+            {leftHandGuideNotes.length > 0 ? (
+              <Legend visualState="guide" label={text.leftGuide} guideHand="left" />
+            ) : null}
+            {rightHandGuideNotes.length > 0 ? (
+              <Legend visualState="guide" label={text.rightGuide} guideHand="right" />
+            ) : null}
+          </>
+        ) : showGuide ? (
+          <Legend visualState="guide" label={text.guide} />
+        ) : null}
         <Legend visualState="held-correct" label={text.held} />
         <Legend visualState="held-foreign" label={text.foreign} />
         <Legend visualState="sustained" label={text.sustain} />
@@ -209,12 +244,16 @@ function OutsideIndicator({
 function Legend({
   visualState,
   label,
+  guideHand,
 }: {
   visualState: PianoKeyVisualState;
   label: string;
+  guideHand?: "left" | "right";
 }) {
   const className = visualState === "guide"
-    ? "border-2 border-teal-700 bg-teal-800"
+    ? guideHand === "right"
+      ? "border-2 border-teal-200 bg-teal-300/30"
+      : "border-2 border-teal-700 bg-teal-800/30"
     : visualState === "held-correct"
       ? "border-2 border-teal-100 bg-teal-300"
       : visualState === "held-foreign"

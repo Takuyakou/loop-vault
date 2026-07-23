@@ -71,6 +71,23 @@ describe("PianoKeyboardVisualizer", () => {
       .toBe("guide-and-sustained");
   });
 
+  it("distinguishes left and right hand guide notes", () => {
+    const container = renderKeyboard({
+      guideNotes: [60, 64, 67],
+      leftHandGuideNotes: [60],
+      rightHandGuideNotes: [64, 67],
+      heldNotes: [],
+      sustainedNotes: [],
+    });
+
+    expect(container.querySelector('[data-midi-note="60"]')?.getAttribute("data-guide-hand"))
+      .toBe("left");
+    expect(container.querySelector('[data-midi-note="64"]')?.getAttribute("data-guide-hand"))
+      .toBe("right");
+    expect(container.textContent).toContain("左手の目安");
+    expect(container.textContent).toContain("右手の目安");
+  });
+
   it("hides guide state and legend for L2 and L3 while keeping live input visible", () => {
     const container = renderKeyboard({ showGuide: false, heldNotes: [64] });
 
