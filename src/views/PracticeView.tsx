@@ -12,6 +12,10 @@ import {
   Square,
 } from "lucide-react";
 import { playbackController } from "../audio/playbackController";
+import {
+  computePracticeKeyboardRange,
+  formatMidiNoteForDisplay,
+} from "../components/music-keyboard";
 import { PracticeKeyboard } from "../components/practice/PracticeKeyboard";
 import { voiceChordForPreview } from "../domain/chordVoicing";
 import { degreeOf } from "../domain/harmony/degrees";
@@ -95,6 +99,7 @@ const copy = {
     guide: "お手本",
     generated: "自動生成",
     source: "元MIDI",
+    sourceInferred: "元MIDIから推定",
     practice: "鍵盤で記録",
     held: "押している音",
     bass: "Bass",
@@ -102,7 +107,7 @@ const copy = {
     match: "合っています",
     wrong: "構成外の音があります",
     ready: "準備完了",
-    clean: "クリーン周",
+    clean: "クリーン",
     round: (value: number) => `${value}周目`,
     bpm: "BPM",
     targetTempo: (value: number) => `段位目標 ${value} BPM`,
@@ -158,6 +163,7 @@ const copy = {
     guide: "Guide",
     generated: "Generated",
     source: "Source MIDI",
+    sourceInferred: "Inferred from MIDI",
     practice: "Keyboard capture",
     held: "Held notes",
     bass: "Bass",
@@ -165,7 +171,7 @@ const copy = {
     match: "Matched",
     wrong: "A foreign tone is held",
     ready: "Ready",
-    clean: "Clean rounds",
+    clean: "Clean",
     round: (value: number) => `Round ${value}`,
     bpm: "BPM",
     targetTempo: (value: number) => `Level target ${value} BPM`,
@@ -277,13 +283,19 @@ export function PracticeView({
     [block?.chords, requirements],
   );
   const currentRequirement = requirements[session?.currentEventIndex ?? 0];
-  const guide = currentTarget
-    ? resolveVoicingForUse(
-        currentTarget.chord,
-        currentTarget.voicingMemory,
-        voiceChordForPreview(currentTarget.chord).notes,
-      )
-    : undefined;
+  const resolvedGuides = useMemo(
+    () => block?.chords.map((event) => resolveVoicingForUse(
+      event.chord,
+      event.voicingMemory,
+      voiceChordForPreview(event.chord).notes,
+    )) ?? [],
+    [block?.chords],
+  );
+  const guide = resolvedGuides[session?.currentEventIndex ?? 0];
+  const keyboardRange = useMemo(
+    () => computePracticeKeyboardRange(resolvedGuides.map((resolved) => resolved.midiNotes)),
+    [resolvedGuides],
+  );
   const filtered = recommendations.filter((item) => matchesQueueFilter(item, filter, localDate));
   const running = session?.status === "running";
   const paused = session?.status === "paused";
@@ -649,54 +661,58 @@ export function PracticeView({
                           : currentTarget.chord.label
                         : "-"}
                     </p>
-                    <p className="mt-2 text-sm text-[var(--lv-text-muted)]">
-                      {text.next}: {nextTarget
+                    <div className="mt-3 flex items-baseline gap-2 text-sm text-[var(--lv-text-muted)]">
+                      <span className="text-xs font-semibold uppercase">{text.next}</span>
+                      <span>{nextTarget
                         ? level === 3
                           ? degreeOf(nextTarget.chord, keySignature)?.label ?? "-"
                           : nextTarget.chord.label
-                        : "-"}
-                    </p>
+                        : "-"}</span>
+                    </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-3 text-sm">
-                    <span>{text.round(session?.roundNumber ?? 1)}</span>
+                  <div className="flex h-fit flex-wrap items-center gap-x-3 gap-y-1 border-l border-[var(--lv-border)] pl-4 text-sm">
+                    <span className="font-semibold">{text.round(session?.roundNumber ?? 1)}</span>
                     {mode === "flow" ? <span>{text.bpm} {bpm} · Beat {beat}</span> : null}
-                    <span>{text.clean}: {session?.consecutiveCleanFlowRounds ?? 0}/2</span>
+                    <span className="text-[var(--lv-text-muted)]">{text.clean} {session?.consecutiveCleanFlowRounds ?? 0}/2</span>
                   </div>
                 </div>
 
                 {level === 1 && guide ? (
-                  <div className="mt-4 border border-[var(--lv-border)] bg-[var(--lv-surface)] p-3">
+                  <div className="mt-4 border border-[var(--lv-border)] bg-[var(--lv-surface)] px-3 py-2.5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="text-xs font-semibold text-[var(--lv-text-muted)]">{text.guide}</p>
-                      <span className="text-xs text-[var(--lv-text-muted)]">
+                      <span className="border border-[var(--lv-border)] px-2 py-1 text-xs text-[var(--lv-text-muted)]">
                         {guide.origin === "practice-override"
                           ? text.practice
-                          : guide.origin.startsWith("source")
+                          : guide.origin === "source-verified"
                             ? text.source
+                            : guide.origin === "source-auto"
+                              ? text.sourceInferred
                             : text.generated}
                       </span>
                     </div>
-                    <p className="mt-2 font-mono text-sm">{guide.midiNotes.join(" · ")}</p>
+                    <p className="mt-1.5 text-sm">
+                      {guide.midiNotes
+                        .map((note) => formatMidiNoteForDisplay(note, "fl-studio", "flat"))
+                        .join(" · ")}
+                    </p>
                   </div>
                 ) : null}
 
                 <div className="mt-4">
                   <PracticeKeyboard
-                    guideNotes={level === 1 ? guide?.midiNotes ?? [] : []}
-                    heldNotes={session?.lastInput?.heldMidiNotes ?? []}
-                    sustainedNotes={session?.lastInput?.sustainedMidiNotes ?? []}
-                    foreignPitchClasses={session?.lastMatch?.foreignPitchClasses ?? []}
+                    range={keyboardRange}
+                    guideNotes={guide?.midiNotes ?? []}
+                    allowedPitchClasses={currentRequirement?.allowedPitchClasses ?? []}
+                    requiredPitchClasses={currentRequirement?.requiredPitchClasses ?? []}
+                    level={level}
+                    language={language}
+                    matchState={session?.lastMatch?.state}
                   />
                 </div>
 
-                <div className="mt-4 flex min-h-12 items-center gap-3 border-y border-[var(--lv-border)] py-3">
+                <div className="mt-3 flex min-h-10 items-center gap-3 border-y border-[var(--lv-border)] py-2.5">
                   <MatchState state={session?.lastMatch?.state} text={text} />
-                  {session?.lastInput?.heldMidiNotes.length ? (
-                    <span className="ml-auto text-xs text-[var(--lv-text-muted)]">
-                      {text.held}: {session.lastInput.heldMidiNotes.join(", ")}
-                      {" · "}{text.bass}: {Math.min(...session.lastInput.heldMidiNotes)}
-                    </span>
-                  ) : null}
                 </div>
 
                 <div className="mt-4 flex flex-wrap items-end gap-3">

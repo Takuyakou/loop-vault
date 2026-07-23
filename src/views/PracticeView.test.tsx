@@ -88,7 +88,9 @@ describe("PracticeView", () => {
     expect(container.textContent).toContain("Test Keys");
     expect(container.textContent).toContain("お手本");
     expect(container.textContent).toContain("自動生成");
-    expect(container.querySelector('[aria-label="Practice keyboard"]')).not.toBeNull();
+    expect(container.querySelector('[role="img"][aria-label*="ピアノ鍵盤"]')).not.toBeNull();
+    expect(container.textContent).toContain("C5");
+    expect(container.textContent).not.toContain("60 ·");
 
     await act(async () => root.unmount());
   });
