@@ -4,6 +4,7 @@ import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { LiveMidiSettingsSection } from "../components/LiveMidiSettingsSection";
+import { LlmSettingsSection } from "../components/progression-advisor/LlmSettingsSection";
 import { Modal } from "../components/Modal";
 import type { SongIdea } from "../domain/types";
 import type { AppCopy, AppLanguage } from "../i18n";
@@ -289,6 +290,8 @@ export function SettingsDialog({
         </section>
 
         <LiveMidiSettingsSection copy={ui} store={liveMidiStore} />
+
+        <LlmSettingsSection language={language} setToast={setToast} />
 
         <section aria-labelledby="settings-data-title" className="mt-5 border border-[var(--lv-border)] bg-[var(--lv-bg)] p-4">
           <h3 id="settings-data-title" className="text-sm font-semibold text-[var(--lv-accent)]">{ui.data}</h3>

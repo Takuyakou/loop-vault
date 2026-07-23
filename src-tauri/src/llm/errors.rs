@@ -18,6 +18,7 @@ pub enum LlmError {
     InvalidStructuredOutput,
     DomainValidationFailed,
     ResponseTooLarge,
+    SecretStoreUnavailable,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -84,6 +85,11 @@ impl LlmError {
             Self::ResponseTooLarge => (
                 "response_too_large",
                 "The AI provider response exceeded the allowed size.",
+                false,
+            ),
+            Self::SecretStoreUnavailable => (
+                "secret_store_unavailable",
+                "The operating system credential store is unavailable.",
                 false,
             ),
         };

@@ -1,5 +1,7 @@
 pub mod commands;
 pub mod errors;
+pub mod keychain;
+pub mod local_provider;
 pub mod provider;
 pub mod retry;
 pub mod types;
@@ -7,9 +9,18 @@ pub mod types;
 use std::{collections::HashMap, sync::Mutex};
 use tokio_util::sync::CancellationToken;
 
-#[derive(Default)]
 pub struct LlmState {
     cancellations: Mutex<HashMap<String, CancellationToken>>,
+    pub client: reqwest::Client,
+}
+
+impl Default for LlmState {
+    fn default() -> Self {
+        Self {
+            cancellations: Mutex::new(HashMap::new()),
+            client: reqwest::Client::new(),
+        }
+    }
 }
 
 impl LlmState {

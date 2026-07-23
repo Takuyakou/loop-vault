@@ -20,6 +20,11 @@ pub fn run() {
             live_midi::commands::open_live_midi_input,
             live_midi::commands::close_live_midi_input,
             llm::commands::cancel_advisor_request,
+            llm::commands::list_local_llm_models,
+            llm::commands::test_local_llm_connection,
+            llm::keychain::openai_api_key_status,
+            llm::keychain::set_openai_api_key,
+            llm::keychain::delete_openai_api_key,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Loop Vault");
