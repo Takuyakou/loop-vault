@@ -68,6 +68,7 @@ Chord Dojoの既定動作をPhase 3.8.5の保存ボイシングResolverのまま
 - コードカード選択と「いま」、現在位置、左右の鍵盤Guideを同じイベントへ連動
 - 練習実行中は判定対象との不一致を避けるためコードカード試聴を無効化
 - ピアノVisualizerの高さを `clamp(7.5rem, 16vw, 10rem)` へ縮小
+- L3「度数で弾く」では現在コードの横に進行のKeyを表示し、度数名の基準音を確認可能
 
 ## 4. 非永続化境界
 
@@ -96,7 +97,7 @@ Loop VaultからChord Drip repositoryへのruntime import、seed tie-break、フ
 |---|---|
 | `npm run lint` | PASS |
 | `npx tsc --noEmit` | PASS |
-| `npm test -- --run` | 137 files / 760 tests PASS |
+| `npm test -- --run` | 137 files / 761 tests PASS |
 | `cargo test` | 24 tests PASS |
 | `npm run build` | PASS |
 | `npm run tauri build` | PASS |

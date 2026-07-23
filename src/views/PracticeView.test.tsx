@@ -267,6 +267,37 @@ describe("PracticeView", () => {
     await act(async () => root.unmount());
   });
 
+  it("shows the progression key beside the current chord in degree mode", async () => {
+    const idea = makeIdea({
+      id: "00000000-0000-4000-8000-000000000104",
+      title: "Degree Context",
+      progressionBlocks: [block],
+    });
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={[idea]}
+        language="en"
+        updateProgressionBlock={vi.fn(() => true)}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={vi.fn()}
+      />,
+    ));
+
+    const degreeMode = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent === "L3 Play by degree");
+    await act(async () => degreeMode?.click());
+
+    expect(container.querySelector('[data-testid="practice-current-chord"]')?.textContent)
+      .toContain("I");
+    expect(container.querySelector('[data-testid="practice-degree-key"]')?.textContent)
+      .toBe("Key C major");
+
+    await act(async () => root.unmount());
+  });
+
   it("never writes practice progress for a style session, including close preparation", async () => {
     const idea = makeIdea({
       id: "00000000-0000-4000-8000-000000000097",

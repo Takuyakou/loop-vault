@@ -134,6 +134,7 @@ const copy = {
     progressionOverview: "進行全体",
     progressionPosition: (current: number, total: number) => `${current} / ${total}`,
     previewChord: (label: string) => `${label}を試聴`,
+    degreeKey: (key: string) => `Key ${key}`,
     barLabel: (bar: number) => `${bar}小節`,
     stepCurrent: "いま",
     stepComplete: "完了",
@@ -217,6 +218,7 @@ const copy = {
     progressionOverview: "Full progression",
     progressionPosition: (current: number, total: number) => `${current} / ${total}`,
     previewChord: (label: string) => `Preview ${label}`,
+    degreeKey: (key: string) => `Key ${key}`,
     barLabel: (bar: number) => `Bar ${bar}`,
     stepCurrent: "Now",
     stepComplete: "Complete",
@@ -1021,12 +1023,22 @@ export function PracticeView({
                 <div className="grid gap-5 lg:grid-cols-[minmax(7rem,0.65fr)_minmax(18rem,2fr)_auto]">
                   <div>
                     <p className="text-xs font-semibold uppercase text-[var(--lv-accent)]">{text.current}</p>
-                    <p
-                      className="mt-2 text-3xl font-semibold"
-                      data-testid="practice-current-chord"
-                    >
-                      {practiceChordLabel(currentTarget, level, keySignature)}
-                    </p>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <p
+                        className="text-3xl font-semibold"
+                        data-testid="practice-current-chord"
+                      >
+                        {practiceChordLabel(currentTarget, level, keySignature)}
+                      </p>
+                      {level === 3 && keySignature ? (
+                        <span
+                          className="border border-[var(--lv-border-strong)] px-2 py-1 text-xs font-semibold text-[var(--lv-text-muted)]"
+                          data-testid="practice-degree-key"
+                        >
+                          {text.degreeKey(keySignature)}
+                        </span>
+                      ) : null}
+                    </div>
                     {styleMode && guide ? (
                       <span
                         className="mt-2 inline-flex border border-teal-700 px-2 py-1 text-xs font-semibold text-teal-200"
