@@ -25,11 +25,15 @@ export function practiceProgressState(
   const progress = block.practice;
   if (!progress) return "unstarted";
   if (progress.progressionFingerprint !== progressionFingerprint(block)) return "stale";
-  if (progress.confirmedLevel) return "confirmed";
-  if (!progress.provisional) return "unstarted";
-  return progress.provisional.clearedOnLocalDate === localDate
-    ? "provisional"
-    : "confirmation-due";
+  if (
+    progress.provisional
+    && (!progress.confirmedLevel || progress.provisional.level > progress.confirmedLevel)
+  ) {
+    return progress.provisional.clearedOnLocalDate === localDate
+      ? "provisional"
+      : "confirmation-due";
+  }
+  return progress.confirmedLevel ? "confirmed" : "unstarted";
 }
 
 export function resetPracticeProgress(
@@ -65,7 +69,9 @@ export function recordPracticeRound(
     };
   }
 
-  const canProvisional = reachedTarget && input.consecutiveCleanFlowRounds >= 2;
+  const canProvisional = reachedTarget
+    && input.consecutiveCleanFlowRounds >= 2
+    && (!current.confirmedLevel || input.level > current.confirmedLevel);
   return {
     ...current,
     schemaVersion: 1,
@@ -90,4 +96,3 @@ function maxLevel(
 ): ProgressionPracticeProgress["confirmedLevel"] {
   return current === undefined || next > current ? next : current;
 }
-

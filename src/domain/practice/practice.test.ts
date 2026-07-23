@@ -190,6 +190,22 @@ describe("practice progress", () => {
     expect(practiceProgressState(edited, "2026-07-20")).toBe("stale");
     expect(edited.practice).toEqual(practice);
   });
+
+  it("shows a higher provisional level ahead of a lower confirmed level", () => {
+    const block = progression([makeChordSymbol(0, "maj7")]);
+    block.practice = {
+      ...resetPracticeProgress(block),
+      confirmedLevel: 1,
+      provisional: {
+        level: 2,
+        clearedAt: "2026-07-20T10:00:00.000Z",
+        clearedOnLocalDate: "2026-07-20",
+        targetTempo: 70,
+      },
+    };
+    expect(practiceProgressState(block, "2026-07-20")).toBe("provisional");
+    expect(practiceProgressState(block, "2026-07-21")).toBe("confirmation-due");
+  });
 });
 
 describe("practice recommendation", () => {
@@ -267,4 +283,3 @@ function ideaWith(blocks: SavedProgressionBlock[]): SongIdea {
     updatedAt: capturedAt,
   };
 }
-

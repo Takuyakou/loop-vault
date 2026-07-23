@@ -243,6 +243,30 @@ describe("parseVaultFileJson", () => {
     expect(result.vault.ideas[0]?.progressionBlocks?.[0]?.chords[0]?.eventId).toBe("event-1");
   });
 
+  it("loads optional practice progress while old blocks remain valid at fileVersion 1", () => {
+    const withPractice = idea({
+      progressionBlocks: [{
+        id: "91d92f3c-fc9d-4fe5-8cc9-4bec2d7fb887",
+        summaryText: "Cmaj7",
+        chords: [],
+        tags: [],
+        capturedAt: "2026-01-01T00:00:00.000Z",
+        analyzerVersion: "legacy",
+        practice: {
+          schemaVersion: 1,
+          progressionFingerprint: "practice-v1-12345678",
+          confirmedLevel: 2,
+          lastPracticedAt: "2026-07-23T00:00:00.000Z",
+        },
+      }],
+    });
+    const result = parseVaultFileJson(JSON.stringify(vault({ ideas: [withPractice] })));
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.vault.fileVersion).toBe(1);
+    expect(result.vault.ideas[0]?.progressionBlocks?.[0]?.practice?.confirmedLevel).toBe(2);
+  });
+
   it("loads legacy settings without language by defaulting to Japanese", () => {
     const legacyVault = {
       app: "loopvault",

@@ -9,6 +9,7 @@ import {
 import { PlayToggle } from "../components/PlayToggle";
 import { PreviewSoundSelector } from "../components/PreviewSoundSelector";
 import { ProgressionTagsEditor } from "../components/ProgressionTagsEditor";
+import { PracticeProgressBadge } from "../components/practice/PracticeProgressBadge";
 import { ProgressionAdvisorButton } from "../components/progression-advisor/ProgressionAdvisorButton";
 import { ProgressionAdvisorDrawer } from "../components/progression-advisor/ProgressionAdvisorDrawer";
 import { ChordInspector } from "../components/progression-editing/ChordInspector";
@@ -67,6 +68,7 @@ import {
   ExternalLink,
   Save,
   Trash2,
+  Dumbbell,
 } from "lucide-react";
 
 interface ProgressionDetailViewProps {
@@ -89,6 +91,7 @@ interface ProgressionDetailViewProps {
   openIdea: (ideaId: string) => void;
   openVault: () => void;
   requestDelete: (idea: SongIdea, block: SavedProgressionBlock) => void;
+  openPractice?: () => void;
   setToast: (message: string) => void;
   copy: AppCopy;
   language: AppLanguage;
@@ -107,6 +110,7 @@ export function ProgressionDetailView({
   openIdea,
   openVault,
   requestDelete,
+  openPractice,
   setToast,
   copy,
   language,
@@ -333,8 +337,21 @@ export function ProgressionDetailView({
           <h2 className="mt-1 text-lg font-semibold text-[var(--lv-text)]">
             {block.summaryText || text.untitled}
           </h2>
+          <span className="mt-2 inline-flex">
+            <PracticeProgressBadge block={block} language={language} />
+          </span>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
+          {openPractice ? (
+            <button
+              type="button"
+              className="lv-button-primary inline-flex min-h-9 items-center gap-2 px-3 text-sm font-semibold"
+              onClick={openPractice}
+            >
+              <Dumbbell aria-hidden="true" size={16} />
+              {language === "ja" ? "練習する" : "Practice"}
+            </button>
+          ) : null}
           <ProgressionAdvisorButton language={language} onClick={() => setAdvisorOpen(true)} />
           <button
             type="button"

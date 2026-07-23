@@ -852,17 +852,31 @@ describe("vault store", () => {
       id: "must-not-replace-id",
       summaryText: "Dm9 - G13",
       userEdited: true,
+      practice: {
+        schemaVersion: 1,
+        progressionFingerprint: "practice-v1-test",
+        provisional: {
+          level: 1,
+          clearedAt: now.toISOString(),
+          clearedOnLocalDate: "2026-07-15",
+          targetTempo: 60,
+        },
+      },
     })).toBe(true);
     expect(store.getState().ideas[0]?.progressionBlocks?.[0]).toMatchObject({
       id: block.id,
       summaryText: "Dm9 - G13",
       userEdited: true,
+      practice: {
+        progressionFingerprint: "practice-v1-test",
+      },
     });
     expect(store.getState().unsaved).toBe(true);
 
     await vi.advanceTimersByTimeAsync(500);
     expect(repository.saved).toHaveLength(1);
     expect(repository.saved[0]?.ideas[0]?.progressionBlocks?.[0]?.summaryText).toBe("Dm9 - G13");
+    expect(repository.saved[0]?.ideas[0]?.progressionBlocks?.[0]?.practice?.provisional?.level).toBe(1);
   });
 
   it("duplicates a saved progression with a new id and cloned chord arrays", async () => {
