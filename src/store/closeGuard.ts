@@ -5,6 +5,9 @@ import type { StoreApi } from "zustand/vanilla";
 import type { VaultStoreState } from "./vaultStore";
 import { playbackController } from "../audio/playbackController";
 import { liveMidiService } from "../liveMidi/liveMidiService";
+import { runClosePreparations } from "./closePreparation";
+
+const MAX_CLOSE_FLUSH_ATTEMPTS = 2;
 
 export function shouldBlockClose(state: VaultStoreState): boolean {
   return state.unsaved;
@@ -22,6 +25,13 @@ export function registerBrowserCloseGuard(
   }
 
   const beforeUnloadHandler = (event: BeforeUnloadEvent) => {
+    try {
+      runClosePreparations();
+    } catch {
+      event.preventDefault();
+      event.returnValue = "";
+      return;
+    }
     if (!shouldBlockClose(store.getState())) {
       return;
     }
@@ -69,21 +79,41 @@ export async function registerTauriCloseGuard(
 
     closeInProgress = true;
 
-    if (shouldBlockClose(store.getState())) {
-      await store.getState().flush();
+    try {
+      runClosePreparations();
+      await flushPendingChangesBeforeClose(store);
+    } catch {
+      closeInProgress = false;
+      await showCloseSaveError();
+      return;
+    }
 
-      if (store.getState().unsaved) {
-        closeInProgress = false;
-        await message(
-          "変更を保存できなかったため、Loop Vaultを閉じませんでした。保存先や権限を確認してください。",
-          { title: "Loop Vault", kind: "error" },
-        );
-        return;
-      }
+    if (store.getState().unsaved) {
+      closeInProgress = false;
+      await showCloseSaveError();
+      return;
     }
 
     await exitDesktopApp();
   });
+}
+
+async function flushPendingChangesBeforeClose(
+  store: StoreApi<VaultStoreState>,
+): Promise<void> {
+  let attempt = 0;
+  while (shouldBlockClose(store.getState()) && attempt < MAX_CLOSE_FLUSH_ATTEMPTS) {
+    attempt += 1;
+    await store.getState().flush();
+    await Promise.resolve();
+  }
+}
+
+async function showCloseSaveError(): Promise<void> {
+  await message(
+    "変更を保存できなかったため、Loop Vaultを閉じませんでした。保存先や権限を確認してください。",
+    { title: "Loop Vault", kind: "error" },
+  );
 }
 
 export async function exitDesktopApp(): Promise<void> {

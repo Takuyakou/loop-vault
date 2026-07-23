@@ -8,6 +8,7 @@ import { createLiveNoteState } from "../domain/liveMidi";
 import { makeIdea } from "../domain/testFactory";
 import type { SavedProgressionBlock } from "../domain/types";
 import { defaultLiveMidiStore } from "../liveMidi/defaultLiveMidiStore";
+import { runClosePreparations } from "../store/closePreparation";
 import { PracticeView } from "./PracticeView";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
@@ -159,5 +160,35 @@ describe("PracticeView", () => {
         }),
       }),
     );
+  });
+
+  it("prepares pending practice progress before app close without duplicating it on unmount", async () => {
+    const idea = makeIdea({
+      id: "00000000-0000-4000-8000-000000000095",
+      title: "Close Prepare",
+      progressionBlocks: [block],
+    });
+    const updateProgressionBlock = vi.fn(() => true);
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={[idea]}
+        language="ja"
+        updateProgressionBlock={updateProgressionBlock}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={vi.fn()}
+      />,
+    ));
+    const start = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent?.includes("練習を開始"));
+    await act(async () => start?.click());
+
+    act(() => runClosePreparations());
+    expect(updateProgressionBlock).toHaveBeenCalledOnce();
+
+    await act(async () => root.unmount());
+    expect(updateProgressionBlock).toHaveBeenCalledOnce();
   });
 });

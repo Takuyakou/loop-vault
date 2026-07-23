@@ -39,6 +39,7 @@ import type { AppLanguage, SavedProgressionBlock, SongIdea } from "../domain/typ
 import { resolveVoicingForUse } from "../domain/voicing";
 import { defaultLiveMidiStore } from "../liveMidi/defaultLiveMidiStore";
 import { PracticeClock } from "../practice/PracticeClock";
+import { registerClosePreparation } from "../store/closePreparation";
 
 interface PracticeTarget {
   ideaId: string;
@@ -221,6 +222,7 @@ export function PracticeView({
   const latestSessionRef = useRef<PracticeSessionState>();
   const latestBlockRef = useRef<SavedProgressionBlock>();
   const latestSelectedRef = useRef<PracticeRecommendation>();
+  const lastPersistedSessionRef = useRef<PracticeSessionState>();
   const active = useStore(defaultLiveMidiStore, (state) => state.active);
   const midiStatus = useStore(defaultLiveMidiStore, (state) => state.status);
   const selectedDevice = useStore(defaultLiveMidiStore, (state) => state.selected);
@@ -234,31 +236,42 @@ export function PracticeView({
   useEffect(() => {
     ownsMidiRef.current = !defaultLiveMidiStore.getState().active;
     if (ownsMidiRef.current) void defaultLiveMidiStore.getState().activate();
+    const unregisterClosePreparation = registerClosePreparation(() => {
+      persistPendingSession();
+    });
     return () => {
+      unregisterClosePreparation();
       clockRef.current.stop();
-      const current = latestSessionRef.current;
-      const currentBlock = latestBlockRef.current;
-      const currentSelected = latestSelectedRef.current;
-      if (
-        current
-        && current.status !== "completed"
-        && currentBlock
-        && currentSelected
-      ) {
-        updateProgressionBlock(currentSelected.ideaId, currentBlock.id, {
-          practice: recordPracticeRound(currentBlock, {
-            level: current.level,
-            bpm: current.bpm,
-            targetTempo: current.targetTempo,
-            consecutiveCleanFlowRounds: current.consecutiveCleanFlowRounds,
-            nowIso: new Date().toISOString(),
-            localDate: localDateString(new Date()),
-          }),
-        });
-      }
+      persistPendingSession();
       if (ownsMidiRef.current) void defaultLiveMidiStore.getState().deactivate();
     };
   }, [updateProgressionBlock]);
+
+  function persistPendingSession(): void {
+    const current = latestSessionRef.current;
+    const currentBlock = latestBlockRef.current;
+    const currentSelected = latestSelectedRef.current;
+    if (
+      !current
+      || current.status === "completed"
+      || !currentBlock
+      || !currentSelected
+      || lastPersistedSessionRef.current === current
+    ) {
+      return;
+    }
+    const updated = updateProgressionBlock(currentSelected.ideaId, currentBlock.id, {
+      practice: recordPracticeRound(currentBlock, {
+        level: current.level,
+        bpm: current.bpm,
+        targetTempo: current.targetTempo,
+        consecutiveCleanFlowRounds: current.consecutiveCleanFlowRounds,
+        nowIso: new Date().toISOString(),
+        localDate: localDateString(new Date()),
+      }),
+    });
+    if (updated) lastPersistedSessionRef.current = current;
+  }
 
   const selected = recommendations.find(
     (item) => item.ideaId === target?.ideaId && item.block.id === target.blockId,

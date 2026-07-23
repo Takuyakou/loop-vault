@@ -10,6 +10,7 @@ import {
   registerTauriCloseGuard,
   shouldBlockClose,
 } from "./closeGuard";
+import { registerClosePreparation } from "./closePreparation";
 
 type CloseRequestHandler = (event: { preventDefault(): void }) => Promise<void> | void;
 
@@ -128,7 +129,7 @@ describe("close guards", () => {
     await closeHandler?.({ preventDefault });
 
     expect(preventDefault).toHaveBeenCalledOnce();
-    expect(flush).toHaveBeenCalledOnce();
+    expect(flush).toHaveBeenCalledTimes(2);
     expect(tauriMocks.message).toHaveBeenCalledOnce();
     expect(stop).not.toHaveBeenCalled();
     expect(tauriMocks.invoke).not.toHaveBeenCalled();
@@ -160,6 +161,60 @@ describe("close guards", () => {
     expect(flush).toHaveBeenCalledOnce();
     expect(order).toEqual(["stop", "midi-stop", "exit"]);
     expect(tauriMocks.invoke).toHaveBeenCalledWith("close_live_midi_input");
+    expect(tauriMocks.invoke).toHaveBeenCalledWith("exit_app");
+  });
+
+  it("commits mounted view changes before flushing and closing", async () => {
+    tauriMocks.isTauri.mockReturnValue(true);
+    let closeHandler: CloseRequestHandler | undefined;
+    tauriMocks.onCloseRequested.mockImplementation(async (handler: CloseRequestHandler) => {
+      closeHandler = handler;
+      return () => undefined;
+    });
+    vi.spyOn(playbackController, "stop").mockImplementation(() => undefined);
+    const order: string[] = [];
+    let currentState = state({ unsaved: false });
+    const flush = vi.fn(async () => {
+      order.push("flush");
+      currentState = state({ unsaved: false, flush });
+    });
+    currentState = state({ unsaved: false, flush });
+    const unregister = registerClosePreparation(() => {
+      order.push("prepare");
+      currentState = state({ unsaved: true, flush });
+    });
+    await registerTauriCloseGuard(storeFrom(() => currentState));
+
+    await closeHandler?.({ preventDefault: vi.fn() });
+
+    expect(order.slice(0, 2)).toEqual(["prepare", "flush"]);
+    expect(flush).toHaveBeenCalledOnce();
+    expect(tauriMocks.message).not.toHaveBeenCalled();
+    expect(tauriMocks.invoke).toHaveBeenCalledWith("exit_app");
+    unregister();
+  });
+
+  it("flushes one late revision instead of reporting a storage failure", async () => {
+    tauriMocks.isTauri.mockReturnValue(true);
+    let closeHandler: CloseRequestHandler | undefined;
+    tauriMocks.onCloseRequested.mockImplementation(async (handler: CloseRequestHandler) => {
+      closeHandler = handler;
+      return () => undefined;
+    });
+    vi.spyOn(playbackController, "stop").mockImplementation(() => undefined);
+    let flushCount = 0;
+    let currentState = state({ unsaved: true });
+    const flush = vi.fn(async () => {
+      flushCount += 1;
+      currentState = state({ unsaved: flushCount === 1, flush });
+    });
+    currentState = state({ unsaved: true, flush });
+    await registerTauriCloseGuard(storeFrom(() => currentState));
+
+    await closeHandler?.({ preventDefault: vi.fn() });
+
+    expect(flush).toHaveBeenCalledTimes(2);
+    expect(tauriMocks.message).not.toHaveBeenCalled();
     expect(tauriMocks.invoke).toHaveBeenCalledWith("exit_app");
   });
 });
