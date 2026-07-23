@@ -59,6 +59,7 @@ interface ChordInspectorProps {
   onApplyPropagation?: (segmentIds: string[]) => void;
   originalLabel?: string;
   currentLabel?: string;
+  currentExplicitMidiNotes?: readonly number[];
 }
 
 export function ChordInspector({
@@ -88,6 +89,7 @@ export function ChordInspector({
   onApplyPropagation,
   originalLabel,
   currentLabel,
+  currentExplicitMidiNotes,
 }: ChordInspectorProps) {
   const text = progressionEditorCopy[language];
   const quickCandidates = providedQuickCandidates
@@ -270,6 +272,7 @@ export function ChordInspector({
             sound: previewSound,
             onError: onPreviewError,
             controller,
+            explicitMidiNotes: currentExplicitMidiNotes,
           }}
         />
         {slot.confidence !== undefined ? (
@@ -427,7 +430,12 @@ function InspectorValue({
         {preview ? (
           <PlayToggle
             source={preview.source}
-            request={{ type: "chord", chord: preview.chord, sound: preview.sound }}
+            request={{
+              type: "chord",
+              chord: preview.chord,
+              sound: preview.sound,
+              explicitMidiNotes: preview.explicitMidiNotes,
+            }}
             playLabel={preview.playLabel}
             stopLabel={preview.stopLabel}
             className="grid h-8 w-8 place-items-center border border-[var(--lv-border-strong)] text-xs"
@@ -449,6 +457,7 @@ interface InspectorPreview {
   sound?: PreviewSound;
   onError?: (error: unknown) => void;
   controller: PlaybackController;
+  explicitMidiNotes?: readonly number[];
 }
 
 export function inspectorPlaybackSource(

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import type { PreviewSound } from "../audio/chordPreview";
+import { voiceChordForPreview } from "../domain/chordVoicing";
 import {
   playbackController,
   type PlaybackController,
@@ -13,6 +14,7 @@ import { ProgressionAdvisorDrawer } from "../components/progression-advisor/Prog
 import { ChordInspector } from "../components/progression-editing/ChordInspector";
 import { EditableProgressionGrid } from "../components/progression-editing/EditableProgressionGrid";
 import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
+import { VoicingPanel } from "../components/voicing/VoicingPanel";
 import {
   applyEditableProgressionToSavedBlock,
   buildAuthorReferenceIndex,
@@ -33,14 +35,25 @@ import {
   resetEditableChord,
   selectedEditableSlotIndex,
   selectEditableSlot,
+  setEditableVoicingMemories,
+  setEditableVoicingMemory,
   splitEditableChord,
   undoProgressionEdit,
 } from "../domain/progressionEditing";
-import { beatsPerBar, buildCorrectionEvents } from "../domain/midi";
+import {
+  annotateVoiceRoles,
+  beatsPerBar,
+  buildCorrectionEvents,
+  buildVoiceFeatureInputs,
+  buildVoices,
+  normalizeNotes,
+} from "../domain/midi";
+import type { MidiSongData } from "../domain/midi/types";
 import { degreeSequence } from "../domain/harmony/degrees";
 import { buildProgressionIndex } from "../domain/progressionClassification/mod";
 import { formatProgressionText } from "../domain/progressionText";
 import type { SavedProgressionBlock, SongIdea } from "../domain/types";
+import { extractVoicing, resolveVoicingForUse } from "../domain/voicing";
 import { advisorSuggestionToCandidate, appendAdvisorSuggestionToEditableProgression, selectAdvisorReferenceContexts } from "../domain/progressionAdvisor";
 import { appendAnalysisFeedback } from "../storage/analysisFeedbackStorage";
 import {
@@ -80,6 +93,7 @@ interface ProgressionDetailViewProps {
   copy: AppCopy;
   language: AppLanguage;
   controller?: PlaybackController;
+  loadMidiSource?: (path: string) => Promise<MidiSongData>;
 }
 
 export function ProgressionDetailView({
@@ -97,12 +111,14 @@ export function ProgressionDetailView({
   copy,
   language,
   controller = playbackController,
+  loadMidiSource,
 }: ProgressionDetailViewProps) {
   const text = progressionDetailCopy[language];
   const meter = beatsPerBar(block.timeSignature);
   const [editable, setEditable] = useState(() => createEditableProgression(block, meter));
   const [previewSound, setPreviewSound] = useState<PreviewSound>("piano");
   const [advisorOpen, setAdvisorOpen] = useState(false);
+  const [reextracting, setReextracting] = useState(false);
   const dirty = hasProgressionEdits(editable);
   const editingBlock = useMemo(
     () => applyEditableProgressionToSavedBlock(block, editable),
@@ -139,6 +155,30 @@ export function ProgressionDetailView({
     kind: "detail",
     id: `idea:${idea.id}:progression:${block.id}`,
   };
+  const sourceAsset = idea.assets.find((asset) => (
+    asset.type === "midi"
+    && (
+      asset.id === block.sourceAssetId
+      || (
+        !block.sourceAssetId
+        && block.sourceFileName !== undefined
+        && fileNameFromPath(asset.path) === block.sourceFileName
+      )
+    )
+  ));
+  const explicitMidiNotesByEventId = useMemo(() => Object.fromEntries(
+    editingBlock.chords.flatMap((item) => {
+      if (!item.eventId) return [];
+      return [[
+        item.eventId,
+        resolveVoicingForUse(
+          item.chord,
+          item.voicingMemory,
+          voiceChordForPreview(item.chord).notes,
+        ).midiNotes,
+      ]];
+    }),
+  ), [editingBlock.chords]);
 
   function saveChanges() {
     const saved = updateProgressionBlock(idea.id, block.id, editingBlock);
@@ -192,14 +232,84 @@ export function ProgressionDetailView({
   async function previewChord(
     chord: SavedProgressionBlock["chords"][number]["chord"],
     slotId = "draft",
+    useSavedVoicing = false,
   ) {
+    const slot = useSavedVoicing
+      ? editable.slots.find((candidate) => candidate.id === slotId)
+      : undefined;
+    const explicitMidiNotes = slot
+      ? resolveVoicingForUse(
+          chord,
+          slot.voicingMemory,
+          voiceChordForPreview(chord).notes,
+        ).midiNotes
+      : undefined;
     try {
       await controller.toggle(
         { kind: "detail", id: `${playbackSource.id}:chord:${slotId}:${chordPreviewKey(chord)}` },
-        { type: "chord", chord, sound: previewSound },
+        { type: "chord", chord, sound: previewSound, explicitMidiNotes },
       );
     } catch (error) {
       setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
+    }
+  }
+
+  async function reextractSourceVoicings() {
+    if (!sourceAsset?.path || !loadMidiSource) {
+      setToast(language === "ja"
+        ? "元MIDIファイルを見つけられませんでした。"
+        : "The source MIDI file could not be found.");
+      return;
+    }
+    if (
+      editable.slots.some((slot) => slot.voicingMemory?.sourceVoicing)
+      && !globalThis.confirm(language === "ja"
+        ? `現在の進行 ${editable.slots.length} コードの元MIDIボイシングを再取得します。続けますか？`
+        : `Re-extract source voicings for ${editable.slots.length} chords?`)
+    ) {
+      return;
+    }
+    setReextracting(true);
+    try {
+      const sourceData = await loadMidiSource(sourceAsset.path);
+      const normalized = normalizeNotes(sourceData);
+      const baseVoices = buildVoices(sourceData);
+      const voices = annotateVoiceRoles(
+        baseVoices,
+        buildVoiceFeatureInputs(baseVoices, normalized),
+      );
+      const updates = editable.slots.flatMap((slot) => {
+        const startBeat = (slot.position.bar - 1) * editable.beatsPerBar + slot.position.beat - 1;
+        const result = extractVoicing({
+          chord: slot.currentChord,
+          segment: {
+            startBeat,
+            endBeat: startBeat + slot.position.durationBeats,
+          },
+          notes: sourceData.notes,
+          ticksPerBeat: sourceData.ticksPerBeat,
+          voices,
+        });
+        return result.snapshot
+          ? [{
+              slotId: slot.id,
+              memory: {
+                ...slot.voicingMemory,
+                sourceVoicing: result.snapshot,
+              },
+            }]
+          : [];
+      });
+      setEditable((current) => setEditableVoicingMemories(current, updates));
+      setToast(language === "ja"
+        ? `${updates.length}/${editable.slots.length} コードのボイシングを取得しました。保存すると反映されます。`
+        : `Extracted voicings for ${updates.length}/${editable.slots.length} chords. Save to keep them.`);
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : (
+        language === "ja" ? "元MIDIから取得できませんでした。" : "Could not extract from source MIDI."
+      ));
+    } finally {
+      setReextracting(false);
     }
   }
 
@@ -287,6 +397,7 @@ export function ProgressionDetailView({
             bpm: block.bpm ?? idea.bpm,
             sound: previewSound,
             beatsPerBar: meter,
+            explicitMidiNotesByEventId,
           }}
           playLabel={copy.common.preview}
           stopLabel={copy.common.stop}
@@ -338,12 +449,12 @@ export function ProgressionDetailView({
             onSelect={(slotId, index) => {
               setEditable((current) => selectEditableSlot(current, slotId));
               const slot = editable.slots[index];
-              if (slot) void previewChord(slot.currentChord, slot.id);
+              if (slot) void previewChord(slot.currentChord, slot.id, true);
             }}
             onNavigate={(slotId) => setEditable((current) => selectEditableSlot(current, slotId))}
             onPreviewSlot={(slotId, chord) => {
               setEditable((current) => selectEditableSlot(current, slotId));
-              void previewChord(chord, slotId);
+              void previewChord(chord, slotId, true);
             }}
             onInsertAfter={(slotId) => setEditable((current) => (
               insertSuggestedEditableChordAfter(
@@ -410,6 +521,13 @@ export function ProgressionDetailView({
             controller={controller}
             originalLabel={text.savedChord}
             currentLabel={text.editingChord}
+            currentExplicitMidiNotes={selectedSlot
+              ? resolveVoicingForUse(
+                  selectedSlot.currentChord,
+                  selectedSlot.voicingMemory,
+                  voiceChordForPreview(selectedSlot.currentChord).notes,
+                ).midiNotes
+              : undefined}
             onApply={(chord, source, selection) => setEditable((current) => {
               const slotId = current.selectedSlotId;
               return slotId
@@ -429,10 +547,30 @@ export function ProgressionDetailView({
             onMergeNext={() => selectedSlot && nextSlot && setEditable(mergeEditableChords(editable, selectedSlot.id, nextSlot.id, "first"))}
             onDelete={() => selectedSlot && setEditable(deleteEditableChord(editable, selectedSlot.id))}
           />
+          {selectedSlot ? (
+            <div className="mt-4 border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4">
+              <VoicingPanel
+                chord={selectedSlot.currentChord}
+                memory={selectedSlot.voicingMemory}
+                generatedNotes={voiceChordForPreview(selectedSlot.currentChord).notes}
+                language={language}
+                sourceAvailable={Boolean(sourceAsset?.path && loadMidiSource)}
+                reextracting={reextracting}
+                onMemoryChange={(memory) => setEditable((current) => (
+                  setEditableVoicingMemory(current, selectedSlot.id, memory)
+                ))}
+                onReextract={() => void reextractSourceVoicings()}
+              />
+            </div>
+          ) : null}
         </div>
       </div>
     </div>
   );
+}
+
+function fileNameFromPath(path: string | undefined): string | undefined {
+  return path?.split(/[\\/]/).pop();
 }
 
 function progressionBarCount(block: SavedProgressionBlock): number {

@@ -8,6 +8,7 @@ import {
 } from "../components/ProgressionLibraryRail";
 import { degreeSequence } from "../domain/harmony/degrees";
 import { beatsPerBar } from "../domain/midi";
+import { resolveTimelineVoicings } from "../domain/voicing";
 import {
   buildProgressionIndex,
   filterProgressionIndex,
@@ -536,6 +537,7 @@ function requestOf(entry: ProgressionEntry) {
     timeline: entry.block.chords,
     bpm: entry.block.bpm ?? entry.idea.bpm,
     beatsPerBar: beatsPerBar(entry.block.timeSignature),
+    explicitMidiNotesByEventId: resolveTimelineVoicings(entry.block.chords),
   };
 }
 

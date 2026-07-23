@@ -49,6 +49,7 @@ export async function previewChord(
   symbol: ChordSymbol,
   sound: PreviewSound = "electric-piano",
   callbacks: PreviewLifecycleCallbacks = {},
+  explicitMidiNotes?: readonly number[],
 ): Promise<void> {
   const session = beginPreview(callbacks);
   const target = await preparePreviewAudio(sound, session);
@@ -56,7 +57,7 @@ export async function previewChord(
     return;
   }
 
-  const notes = voiceChordForPreview(symbol).notes.map(midiToNoteName);
+  const notes = (explicitMidiNotes ?? voiceChordForPreview(symbol).notes).map(midiToNoteName);
   callbacks.onStarted?.();
   target.triggerAttackRelease(notes, 1.35, undefined, 0.72);
   scheduledTimers.push(
@@ -70,6 +71,7 @@ export async function previewChordTimeline(
   sound: PreviewSound = "electric-piano",
   callbacks: PreviewLifecycleCallbacks = {},
   beatsPerBar = 4,
+  explicitMidiNotesByEventId?: Readonly<Record<string, readonly number[]>>,
 ): Promise<void> {
   const ordered = [...timeline].sort(
     (left, right) =>
@@ -98,7 +100,10 @@ export async function previewChordTimeline(
     );
     const durationSeconds = Math.max(0.4, item.durationBeats * beatSeconds * 0.9);
     completionDelayMs = Math.max(completionDelayMs, delayMs + durationSeconds * 1000);
-    const notes = voiceChordForPreview(item.chord).notes.map(midiToNoteName);
+    const explicit = item.eventId
+      ? explicitMidiNotesByEventId?.[item.eventId]
+      : undefined;
+    const notes = (explicit ?? voiceChordForPreview(item.chord).notes).map(midiToNoteName);
     scheduledTimers.push(
       globalThis.setTimeout(() => {
         if (isActive(session)) {
