@@ -11,6 +11,7 @@ import {
   Settings,
   Square,
 } from "lucide-react";
+import type { PreviewSound } from "../audio/chordPreview";
 import { playbackController } from "../audio/playbackController";
 import {
   computePracticeKeyboardRange,
@@ -132,6 +133,7 @@ const copy = {
     next: "つぎ",
     progressionOverview: "進行全体",
     progressionPosition: (current: number, total: number) => `${current} / ${total}`,
+    previewChord: (label: string) => `${label}を試聴`,
     barLabel: (bar: number) => `${bar}小節`,
     stepCurrent: "いま",
     stepComplete: "完了",
@@ -214,6 +216,7 @@ const copy = {
     next: "Next",
     progressionOverview: "Full progression",
     progressionPosition: (current: number, total: number) => `${current} / ${total}`,
+    previewChord: (label: string) => `Preview ${label}`,
     barLabel: (bar: number) => `Bar ${bar}`,
     stepCurrent: "Now",
     stepComplete: "Complete",
@@ -285,6 +288,8 @@ export function PracticeView({
   const [bpm, setBpm] = useState(60);
   const [session, setSession] = useState<PracticeSessionState>();
   const [beat, setBeat] = useState(1);
+  const [auditionEventIndex, setAuditionEventIndex] = useState<number>();
+  const [previewSound, setPreviewSound] = useState<PreviewSound>("piano");
   const [targetSource, setTargetSource] = useState<PracticeTargetSource>({
     type: "resolved-voicing",
   });
@@ -314,6 +319,7 @@ export function PracticeView({
     setTargetSource({ type: "resolved-voicing" });
     setStyleMatchMode("exact-pitch");
     setAllowUnsupportedFallback(false);
+    setAuditionEventIndex(undefined);
     setSession(undefined);
   }, [initialTarget]);
 
@@ -365,9 +371,13 @@ export function PracticeView({
     ? ideas.find((idea) => idea.id === selected.ideaId)
     : undefined;
   const block = selected?.block;
-  const currentTarget = block?.chords[session?.currentEventIndex ?? 0];
+  const practiceEventIndex = session?.currentEventIndex ?? 0;
+  const displayedEventIndex = session?.status === "running"
+    ? practiceEventIndex
+    : auditionEventIndex ?? practiceEventIndex;
+  const currentTarget = block?.chords[displayedEventIndex];
   const nextTarget = block && block.chords.length > 1
-    ? block.chords[((session?.currentEventIndex ?? 0) + 1) % block.chords.length]
+    ? block.chords[(displayedEventIndex + 1) % block.chords.length]
     : undefined;
   const keySignature = block?.detectedKey ?? selectedIdea?.key;
   const l3Available = Boolean(keySignature);
@@ -480,8 +490,8 @@ export function PracticeView({
     }),
     [block?.chords, requirements, styleMatchInput],
   );
-  const currentRequirement = requirements[session?.currentEventIndex ?? 0];
-  const guide = activeGuides[session?.currentEventIndex ?? 0];
+  const currentRequirement = requirements[displayedEventIndex];
+  const guide = activeGuides[displayedEventIndex];
   const keyboardRange = useMemo(
     () => computePracticeKeyboardRange(
       activeGuides.flatMap((resolved) => resolved ? [resolved.midiNotes] : []),
@@ -512,7 +522,7 @@ export function PracticeView({
     || activeGuides.length !== block.chords.length
     || activeGuides.some((item) => !item);
   const activeEventIndex = block?.chords.length
-    ? Math.max(0, Math.min(block.chords.length - 1, session?.currentEventIndex ?? 0))
+    ? Math.max(0, Math.min(block.chords.length - 1, displayedEventIndex))
     : 0;
 
   useEffect(() => {
@@ -607,6 +617,7 @@ export function PracticeView({
     setTargetSource({ type: "resolved-voicing" });
     setStyleMatchMode("exact-pitch");
     setAllowUnsupportedFallback(false);
+    setAuditionEventIndex(undefined);
     const confirmed = item.block.practice?.confirmedLevel;
     const suggested = confirmed && confirmed < 3 ? (confirmed + 1) as DojoPracticeLevel : 1;
     setLevel(item.stale ? 1 : suggested);
@@ -633,6 +644,7 @@ export function PracticeView({
       await defaultLiveMidiStore.getState().activate();
     }
     playbackController.stop();
+    setAuditionEventIndex(undefined);
     const next = createPracticeSessionState({
       blockId: block.id,
       progressionFingerprint: progressionFingerprint(block),
@@ -761,8 +773,38 @@ export function PracticeView({
           type: "timeline",
           timeline,
           bpm,
+          sound: previewSound,
           beatsPerBar: beatsPerBar(block.timeSignature),
           explicitMidiNotesByEventId,
+        },
+      );
+    } catch {
+      setToast(text.previewFailed);
+    }
+  }
+
+  function changePreviewSound(sound: PreviewSound): void {
+    playbackController.stop();
+    setPreviewSound(sound);
+  }
+
+  async function previewChordAt(index: number): Promise<void> {
+    if (!block || running) return;
+    const event = block.chords[index];
+    const eventGuide = activeGuides[index];
+    if (!event || !eventGuide) return;
+    setAuditionEventIndex(index);
+    try {
+      await playbackController.toggle(
+        {
+          kind: "practice",
+          id: `${previewSourceId}:event:${practiceEventId(event, index)}`,
+        },
+        {
+          type: "chord",
+          chord: event.chord,
+          sound: previewSound,
+          explicitMidiNotes: eventGuide.midiNotes,
         },
       );
     } catch {
@@ -937,10 +979,12 @@ export function PracticeView({
                 running={Boolean(running)}
                 previewing={previewing}
                 previewDisabled={previewDisabled}
+                previewSound={previewSound}
                 onTargetSourceChange={changeTargetSource}
                 onPreferencesChange={changeVoicingPreferences}
                 onMatchModeChange={changeStyleMatchMode}
                 onAllowUnsupportedFallbackChange={changeUnsupportedFallback}
+                onPreviewSoundChange={changePreviewSound}
                 onPreview={() => void toggleVoicingPreview()}
               />
 
@@ -977,7 +1021,10 @@ export function PracticeView({
                 <div className="grid gap-5 lg:grid-cols-[minmax(7rem,0.65fr)_minmax(18rem,2fr)_auto]">
                   <div>
                     <p className="text-xs font-semibold uppercase text-[var(--lv-accent)]">{text.current}</p>
-                    <p className="mt-2 text-3xl font-semibold">
+                    <p
+                      className="mt-2 text-3xl font-semibold"
+                      data-testid="practice-current-chord"
+                    >
                       {practiceChordLabel(currentTarget, level, keySignature)}
                     </p>
                     {styleMode && guide ? (
@@ -1003,6 +1050,9 @@ export function PracticeView({
                     level={level}
                     keySignature={keySignature}
                     text={text}
+                    previewDisabled={Boolean(running)}
+                    previewableEvents={activeGuides.map(Boolean)}
+                    onPreviewChord={(index) => void previewChordAt(index)}
                   />
                   <div className="flex h-fit flex-wrap items-center gap-x-3 gap-y-1 text-sm lg:border-l lg:border-[var(--lv-border)] lg:pl-4">
                     <span className="font-semibold">{text.round(session?.roundNumber ?? 1)}</span>
@@ -1207,6 +1257,9 @@ function ProgressionOverview({
   level,
   keySignature,
   text,
+  previewDisabled,
+  previewableEvents,
+  onPreviewChord,
 }: {
   events: readonly ChordTimelineItem[];
   eventResults: ReadonlyArray<"pending" | "match" | "miss">;
@@ -1214,6 +1267,9 @@ function ProgressionOverview({
   level: DojoPracticeLevel;
   keySignature?: string;
   text: typeof copy.ja | typeof copy.en;
+  previewDisabled: boolean;
+  previewableEvents: readonly boolean[];
+  onPreviewChord: (index: number) => void;
 }) {
   const total = events.length;
   const progress = total > 0 ? ((currentIndex + 1) / total) * 100 : 0;
@@ -1259,12 +1315,16 @@ function ProgressionOverview({
                 ? text.stepMissed
                 : text.stepUpcoming;
           return (
-            <div
+            <button
               key={event.eventId ?? `${event.bar}:${event.beat}:${index}`}
-              className={progressionStepClass(current, result)}
+              type="button"
+              className={`${progressionStepClass(current, result)} text-left transition-colors enabled:hover:border-teal-500 disabled:cursor-default`}
               data-progression-index={index}
               data-progression-state={current ? "current" : result}
               aria-current={current ? "step" : undefined}
+              aria-label={text.previewChord(practiceChordLabel(event, level, keySignature))}
+              disabled={previewDisabled || !previewableEvents[index]}
+              onClick={() => onPreviewChord(index)}
             >
               <div className="flex items-center justify-between gap-2 text-[10px] text-[var(--lv-text-muted)]">
                 <span>{String(index + 1).padStart(2, "0")}</span>
@@ -1282,7 +1342,7 @@ function ProgressionOverview({
               }`}>
                 {status}
               </p>
-            </div>
+            </button>
           );
         })}
       </div>

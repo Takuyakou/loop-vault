@@ -58,6 +58,8 @@ describe("PianoKeyboardVisualizer", () => {
     expect(container.querySelector('[data-c-label="C5"]')).not.toBeNull();
     expect(container.querySelector('[data-c-label="C#5"]')).toBeNull();
     expect(container.querySelector('[data-key-layer="black"]')).not.toBeNull();
+    expect(container.querySelector("svg")?.getAttribute("class"))
+      .toContain("h-[clamp(7.5rem,16vw,10rem)]");
   });
 
   it("uses foreign precedence and distinguishes guide overlap and sustain", () => {

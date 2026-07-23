@@ -3,6 +3,7 @@ import {
   Play,
   Square,
 } from "lucide-react";
+import type { PreviewSound } from "../../audio/chordPreview";
 import type { AppLanguage } from "../../domain/types";
 import type {
   GeneratedStyleVoicingPlan,
@@ -10,6 +11,8 @@ import type {
   StyleVoicingMatchMode,
   VoicingPracticePreferences,
 } from "../../domain/voicingPractice";
+import { appCopy } from "../../i18n";
+import { PreviewSoundSelector } from "../PreviewSoundSelector";
 
 interface VoicingPracticeControlsProps {
   language: AppLanguage;
@@ -22,10 +25,12 @@ interface VoicingPracticeControlsProps {
   running: boolean;
   previewing: boolean;
   previewDisabled: boolean;
+  previewSound: PreviewSound;
   onTargetSourceChange(source: PracticeTargetSource): void;
   onPreferencesChange(preferences: VoicingPracticePreferences): void;
   onMatchModeChange(mode: StyleVoicingMatchMode): void;
   onAllowUnsupportedFallbackChange(value: boolean): void;
+  onPreviewSoundChange(sound: PreviewSound): void;
   onPreview(): void;
 }
 
@@ -103,10 +108,12 @@ export function VoicingPracticeControls({
   running,
   previewing,
   previewDisabled,
+  previewSound,
   onTargetSourceChange,
   onPreferencesChange,
   onMatchModeChange,
   onAllowUnsupportedFallbackChange,
+  onPreviewSoundChange,
   onPreview,
 }: VoicingPracticeControlsProps) {
   const text = copy[language];
@@ -151,17 +158,24 @@ export function VoicingPracticeControls({
             </div>
           ) : null}
         </div>
-        <button
-          type="button"
-          className="lv-button-ghost inline-flex h-10 items-center gap-2 px-3 text-sm"
-          disabled={previewDisabled}
-          onClick={onPreview}
-        >
-          {previewing
-            ? <Square aria-hidden="true" size={16} />
-            : <Play aria-hidden="true" size={16} />}
-          {previewing ? text.stop : text.preview}
-        </button>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <PreviewSoundSelector
+            value={previewSound}
+            onChange={onPreviewSoundChange}
+            copy={appCopy[language]}
+          />
+          <button
+            type="button"
+            className="lv-button-ghost inline-flex h-10 items-center gap-2 px-3 text-sm"
+            disabled={previewDisabled}
+            onClick={onPreview}
+          >
+            {previewing
+              ? <Square aria-hidden="true" size={16} />
+              : <Play aria-hidden="true" size={16} />}
+            {previewing ? text.stop : text.preview}
+          </button>
+        </div>
       </div>
 
       {styleMode ? (

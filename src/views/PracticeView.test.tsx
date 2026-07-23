@@ -428,6 +428,9 @@ describe("PracticeView", () => {
       selector.value = "open-17";
       selector.dispatchEvent(new Event("change", { bubbles: true }));
     });
+    const electricPiano = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent === "Electric piano");
+    await act(async () => electricPiano?.click());
     const preview = [...container.querySelectorAll<HTMLButtonElement>("button")]
       .find((button) => button.textContent?.includes("Preview progression"));
     await act(async () => preview?.click());
@@ -436,11 +439,63 @@ describe("PracticeView", () => {
       expect.objectContaining({ kind: "practice" }),
       expect.objectContaining({
         type: "timeline",
+        sound: "electric-piano",
         explicitMidiNotesByEventId: expect.objectContaining({
           "dojo-event-0": expect.any(Array),
         }),
       }),
     );
+    await act(async () => root.unmount());
+  });
+
+  it("previews a clicked progression card and links its voicing to the piano guide", async () => {
+    const idea = makeIdea({
+      id: "00000000-0000-4000-8000-000000000103",
+      title: "Chord Card Preview",
+      progressionBlocks: [block],
+    });
+    const toggle = vi.spyOn(playbackController, "toggle").mockResolvedValue();
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={[idea]}
+        language="ja"
+        updateProgressionBlock={vi.fn(() => true)}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={vi.fn()}
+      />,
+    ));
+    const selector = container.querySelector<HTMLSelectElement>(
+      '[data-testid="practice-target-source"]',
+    );
+    await act(async () => {
+      if (!selector) return;
+      selector.value = "open-17";
+      selector.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    const secondCard = container.querySelector<HTMLButtonElement>(
+      '[data-progression-index="1"]',
+    );
+    await act(async () => secondCard?.click());
+
+    expect(secondCard?.getAttribute("aria-current")).toBe("step");
+    expect(container.querySelector('[data-testid="practice-current-chord"]')?.textContent)
+      .toContain(block.chords[1].chord.label);
+    const visibleGuideNotes = [
+      ...container.querySelectorAll<SVGGElement>("[data-guide-hand]"),
+    ]
+      .map((key) => Number(key.getAttribute("data-midi-note")))
+      .sort((left, right) => left - right);
+    const request = toggle.mock.calls[toggle.mock.calls.length - 1]?.[1];
+    expect(request).toEqual(expect.objectContaining({
+      type: "chord",
+      chord: block.chords[1].chord,
+      sound: "piano",
+      explicitMidiNotes: visibleGuideNotes,
+    }));
+
     await act(async () => root.unmount());
   });
 });

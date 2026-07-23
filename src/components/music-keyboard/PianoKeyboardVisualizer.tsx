@@ -139,7 +139,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
           viewBox={`0 0 ${geometry.width} ${KEYBOARD_HEIGHT}`}
           width={geometry.width}
           height={KEYBOARD_HEIGHT}
-          className="block h-[clamp(9rem,22vw,13rem)] max-w-none"
+          className="block h-[clamp(7.5rem,16vw,10rem)] max-w-none"
           style={{ minWidth: `${geometry.width}px` }}
           preserveAspectRatio="none"
         >

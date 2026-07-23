@@ -61,6 +61,14 @@ Chord Dojoの既定動作をPhase 3.8.5の保存ボイシングResolverのまま
 
 `src/components/music-keyboard/PianoKeyboardVisualizer.tsx` と `PianoKey.tsx` は、左手Guideをdeep teal、右手Guideをmintで区別する。実際にどちらの手で押したかは判定しない。
 
+### 実機確認後のUI修正
+
+- 「進行を試聴」の横へ、既存画面と同じピアノ／エレピ音色セレクタを追加
+- 進行全体のコードカードをクリック可能にし、現在のStyle／保存ボイシングで単音試聴
+- コードカード選択と「いま」、現在位置、左右の鍵盤Guideを同じイベントへ連動
+- 練習実行中は判定対象との不一致を避けるためコードカード試聴を無効化
+- ピアノVisualizerの高さを `clamp(7.5rem, 16vw, 10rem)` へ縮小
+
 ## 4. 非永続化境界
 
 Style練習では `recordPracticeRound()` を呼ばない。
@@ -88,13 +96,13 @@ Loop VaultからChord Drip repositoryへのruntime import、seed tie-break、フ
 |---|---|
 | `npm run lint` | PASS |
 | `npx tsc --noEmit` | PASS |
-| `npm test -- --run` | 137 files / 759 tests PASS |
+| `npm test -- --run` | 137 files / 760 tests PASS |
 | `cargo test` | 24 tests PASS |
 | `npm run build` | PASS |
 | `npm run tauri build` | PASS |
 | `git diff --check` | PASS |
 
-追加テストはCatalog、対応判定、span、Low Interval Limit、決定性、A/B、進行最適化、exact pitch、pitch class、カスタムmatcher、左右Guide、L2/L3非表示、未対応fallback、Style試聴、Style進捗非保存を対象とする。
+追加テストはCatalog、対応判定、span、Low Interval Limit、決定性、A/B、進行最適化、exact pitch、pitch class、カスタムmatcher、左右Guide、L2/L3非表示、未対応fallback、音色切替、コードカードと鍵盤の連動、Style試聴、Style進捗非保存を対象とする。
 
 ### 32イベント生成時間
 
@@ -122,4 +130,3 @@ Loop VaultからChord Drip repositoryへのruntime import、seed tie-break、フ
 - rootless固定A／固定B選択、Drop 2、Quartal、1-5-10、Style EditorはPhase対象外。
 - Styleごとの練習履歴や段位は意図的に保存しない。
 - Webビルドには既存の約983 kB JavaScriptチャンク警告が残る。今回の機能の失敗ではないが、将来のcode splitting候補。
-
