@@ -6,3 +6,4 @@ export * from "./advisorDraft";
 export * from "./evaluation";
 export * from "./requestBuilder";
 export * from "./referenceContext";
+export * from "./evaluationFixtures";

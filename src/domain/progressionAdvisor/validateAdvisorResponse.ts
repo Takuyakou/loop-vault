@@ -1,12 +1,12 @@
 import { parseChordLabel } from "../chords";
 import { advisorResponseSchema } from "./schema";
 import { normalizeAdvisorResponse } from "./normalizeAdvisorResponse";
-import type { AdvisorResponse, AdvisorValidationIssue, AdvisorValidationResult } from "./types";
+import type { AdvisorChordEvent, AdvisorResponse, AdvisorValidationIssue, AdvisorValidationResult } from "./types";
 
 const expectedStrategies = new Set(["close_development", "contrast", "experimental"]);
 const epsilon = 0.001;
 
-export function validateAdvisorResponse(input: unknown): AdvisorValidationResult {
+export function validateAdvisorResponse(input: unknown, sourceEvents: readonly AdvisorChordEvent[] = []): AdvisorValidationResult {
   const parsed = advisorResponseSchema.safeParse(input);
   if (!parsed.success) {
     return {
@@ -56,8 +56,23 @@ export function validateAdvisorResponse(input: unknown): AdvisorValidationResult
   if (new Set(canonical).size !== canonical.length) {
     issues.push({ path: "suggestions", code: "duplicate", message: "Advisor suggestions must contain distinct progressions." });
   }
+  if (sourceEvents.length) {
+    const sourceCanonical = canonicalEvents(sourceEvents);
+    response.suggestions.forEach((suggestion, suggestionIndex) => {
+      if (canonicalEvents(suggestion.events) === sourceCanonical) {
+        issues.push({ path: `suggestions.${suggestionIndex}`, code: "duplicate", message: "An advisor suggestion must not be a complete copy of the source progression." });
+      }
+    });
+  }
 
   return issues.length ? { success: false, issues } : { success: true, response };
+}
+
+function canonicalEvents(events: readonly AdvisorChordEvent[]): string {
+  return [...events]
+    .sort((left, right) => left.bar - right.bar || left.startBeat - right.startBeat || left.durationBeats - right.durationBeats || left.chord.localeCompare(right.chord))
+    .map((event) => `${event.bar}:${event.startBeat}:${event.durationBeats}:${event.chord.trim().toLowerCase()}`)
+    .join("|");
 }
 
 function schemaCode(message: string): AdvisorValidationIssue["code"] {

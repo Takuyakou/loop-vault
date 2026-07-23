@@ -41,6 +41,20 @@ describe("Progression Advisor response validation", () => {
     if (result.success) expect(result.response.suggestions).toHaveLength(3);
   });
 
+  it("normalizes nullable optional fields from strict provider schemas", () => {
+    const value = response() as unknown as { suggestions: Array<{ key: string | null; mode: string | null }> };
+    value.suggestions[0]!.key = null;
+    value.suggestions[0]!.mode = null;
+
+    const result = validateAdvisorResponse(value);
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.response.suggestions[0]).not.toHaveProperty("key");
+      expect(result.response.suggestions[0]).not.toHaveProperty("mode");
+    }
+  });
+
   it("rejects unknown fields and wrong suggestion counts", () => {
     expect(validateAdvisorResponse({ ...response(), hidden: true }).success).toBe(false);
     expect(validateAdvisorResponse({ ...response(), suggestions: response().suggestions.slice(0, 2) }).success).toBe(false);
@@ -92,6 +106,14 @@ describe("Progression Advisor response validation", () => {
     const result = validateAdvisorResponse(duplicate);
     expect(result.success).toBe(false);
     if (!result.success) expect(result.issues.some((issue) => issue.code === "duplicate")).toBe(true);
+  });
+
+  it("rejects a proposal that completely copies the source progression", () => {
+    const value = response();
+    const result = validateAdvisorResponse(value, value.suggestions[0]!.events);
+
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.issues.some((issue) => issue.message.includes("source progression"))).toBe(true);
   });
 
   it("normalizes event order and duplicate tags deterministically", () => {

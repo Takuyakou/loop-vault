@@ -5,13 +5,13 @@ export function normalizeAdvisorResponse(response: AdvisorResponse): AdvisorResp
     ...response,
     analysis: response.analysis.trim(),
     suggestedTagIds: unique(response.suggestedTagIds),
-    suggestions: response.suggestions.map((suggestion) => ({
+    suggestions: response.suggestions.map(({ key, mode, ...suggestion }) => ({
       ...suggestion,
       id: suggestion.id.trim(),
       label: suggestion.label.trim(),
       intent: suggestion.intent.trim(),
-      ...(suggestion.key ? { key: suggestion.key.trim() } : {}),
-      ...(suggestion.mode ? { mode: suggestion.mode.trim() } : {}),
+      ...(key ? { key: key.trim() } : {}),
+      ...(mode ? { mode: mode.trim() } : {}),
       events: [...suggestion.events]
         .map((event) => ({ ...event, chord: event.chord.trim() }))
         .sort((left, right) => left.bar - right.bar || left.startBeat - right.startBeat || left.chord.localeCompare(right.chord)),
