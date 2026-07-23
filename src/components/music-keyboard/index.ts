@@ -21,6 +21,8 @@ export {
   createKeyboardDisplayState,
   pianoKeyVisualState,
 } from "./keyVisualState";
+export { PianoKeyboardVisualizer } from "./PianoKeyboardVisualizer";
+export type { PianoKeyboardVisualizerProps } from "./PianoKeyboardVisualizer";
 export type {
   KeyboardDisplayState,
   KeyboardOctaveConvention,
