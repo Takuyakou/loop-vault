@@ -264,6 +264,14 @@ mod tests {
         assert_eq!(body["store"], false);
         assert_eq!(body["text"]["format"]["type"], "json_schema");
         assert_eq!(body["text"]["format"]["strict"], true);
+        assert_eq!(
+            body["text"]["format"]["schema"]["additionalProperties"],
+            false
+        );
+        assert_eq!(
+            body["text"]["format"]["schema"]["properties"]["schemaVersion"]["const"],
+            1
+        );
         assert!(body.get("api_key").is_none());
     }
 

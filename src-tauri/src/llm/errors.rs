@@ -7,6 +7,9 @@ pub enum LlmError {
     ApiKeyMissing,
     LocalServerUnavailable,
     ModelUnavailable,
+    ModelNotFound,
+    ProviderBadRequest,
+    StructuredOutputUnsupported,
     AuthenticationFailed,
     RateLimited,
     Timeout,
@@ -50,6 +53,21 @@ impl LlmError {
             Self::ModelUnavailable => (
                 "model_unavailable",
                 "The selected model is not available.",
+                false,
+            ),
+            Self::ModelNotFound => (
+                "model_not_found",
+                "The selected model was not found by the local provider.",
+                false,
+            ),
+            Self::ProviderBadRequest => (
+                "provider_bad_request",
+                "The local LLM provider rejected the request.",
+                false,
+            ),
+            Self::StructuredOutputUnsupported => (
+                "structured_output_unsupported",
+                "The local LLM provider could not initialize the requested output format.",
                 false,
             ),
             Self::AuthenticationFailed => (
@@ -130,5 +148,18 @@ mod tests {
         assert_eq!(value["code"], "authentication_failed");
         assert_eq!(value["retryable"], false);
         assert!(value.get("rawResponse").is_none());
+    }
+
+    #[test]
+    fn local_bad_requests_are_terminal_and_safe() {
+        for error in [
+            LlmError::ProviderBadRequest,
+            LlmError::StructuredOutputUnsupported,
+            LlmError::ModelNotFound,
+        ] {
+            let value = serde_json::to_value(error).unwrap();
+            assert_eq!(value["retryable"], false);
+            assert!(value.get("rawResponse").is_none());
+        }
     }
 }
