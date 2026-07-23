@@ -750,6 +750,8 @@ describe("vault store", () => {
       userEdited: true,
       userVerified: true,
     });
+    expect(repository.saved[0]?.ideas[0]?.progressionBlocks?.[0]?.chords[0]?.eventId)
+      .toBe("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb");
     expect(repository.saved[0]?.ideas[0]?.assets).toEqual([
       expect.objectContaining({ type: "midi", path: "D:/music/capture.mid" }),
     ]);
@@ -869,6 +871,7 @@ describe("vault store", () => {
       id: "block-1",
       summaryText: "Cmaj7",
       chords: [{
+        eventId: "old-event",
         bar: 1,
         beat: 1,
         durationBeats: 4,
@@ -876,6 +879,16 @@ describe("vault store", () => {
         confidence: 0.9,
         alternatives: [],
         warnings: [],
+        voicingMemory: {
+          sourceVoicing: {
+            schemaVersion: 1,
+            source: "midi-extracted",
+            representation: "simultaneous-voicing",
+            midiNotes: [48, 52, 55, 59],
+            bassNote: 48,
+            capturedForChordKey: "0:maj7:9:-",
+          },
+        },
       }],
       tags: ["main"],
       capturedAt: "2026-07-01T00:00:00.000Z",
@@ -897,6 +910,10 @@ describe("vault store", () => {
     expect(blocks).toHaveLength(2);
     expect(blocks[1]).toMatchObject({ id: generatedId, summaryText: block.summaryText, capturedAt: now.toISOString() });
     expect(blocks[1]?.chords).not.toBe(block.chords);
+    expect(blocks[1]?.chords[0]?.eventId).toBe(generatedId);
+    expect(blocks[1]?.chords[0]?.eventId).not.toBe(block.chords[0]?.eventId);
+    expect(blocks[1]?.chords[0]?.voicingMemory?.sourceVoicing?.midiNotes)
+      .not.toBe(block.chords[0]?.voicingMemory?.sourceVoicing?.midiNotes);
     expect(blocks[1]?.chords[0]?.chord.tensions).not.toBe(block.chords[0]?.chord.tensions);
     expect(blocks[1]?.tags).not.toBe(block.tags);
   });
