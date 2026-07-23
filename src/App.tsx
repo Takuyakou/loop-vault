@@ -13,6 +13,7 @@ import { HomeView } from "./views/HomeView";
 import { SettingsDialog } from "./views/SettingsDialog";
 import { VaultView } from "./views/VaultView";
 import { ProgressionDetailView } from "./views/ProgressionDetailView";
+import { PracticeView } from "./views/PracticeView";
 import { Toast } from "./components/Toast";
 import { LiveMidiMiniMode } from "./components/LiveMidiMiniMode";
 import { LiveMidiImportDialog, type LiveMidiImportRequest } from "./components/LiveMidiImportDialog";
@@ -92,6 +93,7 @@ function App() {
   const [view, setView] = useState<View>("home");
   const [selectedId, setSelectedId] = useState<string>();
   const [selectedProgression, setSelectedProgression] = useState<{ ideaId: string; blockId: string }>();
+  const [practiceTarget, setPracticeTarget] = useState<{ ideaId: string; blockId: string }>();
   const [isCreateOpen, setCreateOpen] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [toast, setToast] = useState<string>();
@@ -181,6 +183,11 @@ function App() {
     setSelectedId(ideaId);
     setSelectedProgression({ ideaId, blockId });
     setView("progression-detail");
+  }
+
+  function openPractice(ideaId: string, blockId: string) {
+    setPracticeTarget({ ideaId, blockId });
+    setView("practice");
   }
 
   function handleCreate(title: string, status: Status) {
@@ -422,10 +429,25 @@ async function analyzeMidiPath(path: string) {
                 openIdea={openDetail}
                 openVault={() => setView("library")}
                 requestDelete={requestProgressionDelete}
+                openPractice={() => openPractice(progressionIdea.id, progressionBlock.id)}
                 setToast={setToast}
                 copy={copy}
                 language={language}
                 loadMidiSource={loadMidiSource}
+              />
+            ) : null}
+            {view === "practice" ? (
+              <PracticeView
+                ideas={visibleIdeas}
+                initialTarget={practiceTarget}
+                language={language}
+                updateProgressionBlock={updateProgressionBlock}
+                openProgression={openProgression}
+                openSettings={() => {
+                  setSettingsOpen(true);
+                  void refreshBackups();
+                }}
+                setToast={setToast}
               />
             ) : null}
             {view === "detail" && !selectedIdea ? (

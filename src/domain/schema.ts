@@ -161,6 +161,33 @@ export const chordTimelineItemSchema = z
   })
   .strict();
 
+export const practiceLevelSchema = z.union([
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+  z.literal(4),
+  z.literal(5),
+]);
+
+export const practiceProvisionalClearSchema = z
+  .object({
+    level: practiceLevelSchema,
+    clearedAt: isoDateSchema,
+    clearedOnLocalDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    targetTempo: z.number().int().min(40).max(300),
+  })
+  .strict();
+
+export const progressionPracticeProgressSchema = z
+  .object({
+    schemaVersion: z.literal(1),
+    progressionFingerprint: z.string().min(1),
+    confirmedLevel: practiceLevelSchema.optional(),
+    provisional: practiceProvisionalClearSchema.optional(),
+    lastPracticedAt: isoDateSchema.optional(),
+  })
+  .strict();
+
 export const savedProgressionBlockSchema = z
   .object({
     id: z.string().uuid(),
@@ -192,6 +219,7 @@ export const savedProgressionBlockSchema = z
     sourceWeightsVersion: z.string().min(1).optional(),
     userEdited: z.boolean().optional(),
     userVerified: z.boolean().optional(),
+    practice: progressionPracticeProgressSchema.optional(),
   })
   .strict();
 

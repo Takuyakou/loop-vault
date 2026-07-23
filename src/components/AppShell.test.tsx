@@ -70,6 +70,7 @@ describe("AppShell", () => {
       "Home",
       "Capture",
       "Vault",
+      "Practice",
     ]);
     const createButton = [...container.querySelectorAll<HTMLButtonElement>("button")]
       .find((button) => button.title === "+ Idea");

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { playbackController, samePlaybackSource, type PlayingSource } from "../audio/playbackController";
 import { PlayToggle } from "../components/PlayToggle";
+import { PracticeProgressBadge } from "../components/practice/PracticeProgressBadge";
 import {
   isRecent,
   ProgressionLibraryRail,
@@ -272,6 +273,7 @@ export function VaultView({
               entries={visible}
               selectedIndex={selectedIndex}
               showDegrees={showRomanNumerals}
+              language={language}
               copy={copy}
               displayTags={(entry) => libraryTags(progressionIndexById.get(progressionEntryId(entry)), language)}
               onSelect={setSelectedIndex}
@@ -286,6 +288,7 @@ export function VaultView({
             entries={visible}
             selectedIndex={selectedIndex}
             showDegrees={showRomanNumerals}
+            language={language}
             copy={copy}
             onSelect={setSelectedIndex}
             onOpen={openProgressionDetail}
@@ -342,6 +345,7 @@ function ProgressionRows({
   entries,
   selectedIndex,
   showDegrees,
+  language,
   copy,
   displayTags,
   onSelect,
@@ -353,6 +357,7 @@ function ProgressionRows({
   entries: ProgressionEntry[];
   selectedIndex: number;
   showDegrees: boolean;
+  language: AppLanguage;
   copy: AppCopy;
   displayTags?: (entry: ProgressionEntry) => string[];
   onSelect: (index: number) => void;
@@ -367,6 +372,7 @@ function ProgressionRows({
       entry={entry}
       selected={index === selectedIndex}
       showDegrees={showDegrees}
+      language={language}
       copy={copy}
       displayTags={displayTags?.(entry)}
       onSelect={() => onSelect(index)}
@@ -448,7 +454,7 @@ function VirtualizedProgressionRows({
   );
 }
 
-function ProgressionRow({ entry, selected, showDegrees, copy, displayTags, onSelect, onOpen, onPin, onCopy, onPreviewError }: { entry: ProgressionEntry; selected: boolean; showDegrees: boolean; copy: AppCopy; displayTags?: string[]; onSelect: () => void; onOpen: () => void; onPin: () => void; onCopy: () => void; onPreviewError: (error: unknown) => void }) {
+function ProgressionRow({ entry, selected, showDegrees, language, copy, displayTags, onSelect, onOpen, onPin, onCopy, onPreviewError }: { entry: ProgressionEntry; selected: boolean; showDegrees: boolean; language: AppLanguage; copy: AppCopy; displayTags?: string[]; onSelect: () => void; onOpen: () => void; onPin: () => void; onCopy: () => void; onPreviewError: (error: unknown) => void }) {
   const degrees = degreeSequence(entry.block);
   const playback = usePlaybackState();
   const source = sourceOf(entry);
@@ -472,6 +478,7 @@ function ProgressionRow({ entry, selected, showDegrees, copy, displayTags, onSel
       <p className="lv-vault-progression-secondary mt-1 text-xs text-[var(--lv-text-muted)]">
         {entry.idea.title}{showDegrees && degrees.length ? ` · ${degrees.join(" · ")}` : ""}
       </p>
+      <PracticeProgressBadge block={entry.block} language={language} compact />
     </button>
     <div className="lv-vault-metadata text-xs text-[var(--lv-text-muted)]">
       <span>{keyOf(entry) ? `Key ${keyOf(entry)}` : "Key -"}</span>

@@ -1,9 +1,9 @@
 import type { AppCopy } from "../i18n";
 import { playbackController, type PlaybackController } from "../audio/playbackController";
 import { usePlaybackState } from "../hooks/usePlaybackState";
-import { Check, CircleAlert, LoaderCircle, Music, Piano, Plus, Settings } from "lucide-react";
+import { Check, CircleAlert, Dumbbell, LoaderCircle, Music, Piano, Plus, Settings } from "lucide-react";
 
-export type AppView = "home" | "capture" | "library" | "detail" | "progression-detail";
+export type AppView = "home" | "capture" | "library" | "detail" | "progression-detail" | "practice";
 export type SaveStatus = "saved" | "saving" | "unsaved";
 
 export function AppShell({ view, setView, openCreate, openLiveMidi, openSettings, copy, saveStatus, controller = playbackController }: {
@@ -29,6 +29,10 @@ export function AppShell({ view, setView, openCreate, openLiveMidi, openSettings
         <button className={tabClass(view === "home")} aria-current={view === "home" ? "page" : undefined} onClick={() => setView("home")}>{copy.nav.home}</button>
         <button className={tabClass(view === "capture")} aria-current={view === "capture" ? "page" : undefined} onClick={() => setView("capture")}>{copy.nav.capture}</button>
         <button className={tabClass(view === "library" || view === "detail" || view === "progression-detail")} aria-current={view === "library" || view === "detail" || view === "progression-detail" ? "page" : undefined} onClick={() => setView("library")}>{copy.nav.library}</button>
+        <button className={tabClass(view === "practice")} aria-current={view === "practice" ? "page" : undefined} onClick={() => setView("practice")}>
+          <Dumbbell aria-hidden="true" className="mr-1 inline-block" size={16} />
+          {copy.nav.practice}
+        </button>
       </nav>
       <div className="ml-auto flex w-full min-w-0 shrink-0 items-center justify-end gap-1 border-t border-[var(--lv-border)] pt-2 sm:w-auto sm:border-t-0 sm:pt-0 md:gap-2">
         <button

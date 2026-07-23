@@ -7,7 +7,7 @@ import {
 } from "./chordPreview";
 import type { ChordSymbol, ChordTimelineItem } from "../domain/types";
 
-export type PlaybackSourceKind = "home" | "capture" | "vault" | "detail";
+export type PlaybackSourceKind = "home" | "capture" | "vault" | "detail" | "practice";
 
 export interface PlayingSource {
   kind: PlaybackSourceKind;

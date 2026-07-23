@@ -1,3 +1,5 @@
+import type { ProgressionPracticeProgress } from "./practice/types";
+
 export type Status =
   | "idea"
   | "loop"
@@ -102,6 +104,7 @@ export interface SavedProgressionBlock {
   sourceWeightsVersion?: string;
   userEdited?: boolean;
   userVerified?: boolean;
+  practice?: ProgressionPracticeProgress;
 }
 
 export interface ProgressionBlockCandidate {
