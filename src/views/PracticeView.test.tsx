@@ -92,6 +92,16 @@ describe("PracticeView", () => {
     expect(container.querySelector('[role="img"][aria-label*="ピアノ鍵盤"]')).not.toBeNull();
     expect(container.textContent).toContain("C5");
     expect(container.textContent).not.toContain("60 ·");
+    expect(container.querySelector('[data-testid="practice-layout"]')?.className)
+      .toContain("lg:overflow-hidden");
+    expect(container.querySelector('[data-testid="practice-queue-scroll"]')?.className)
+      .toContain("overflow-y-auto");
+    expect(container.querySelector('[data-testid="practice-queue-scroll"]')?.className)
+      .toContain("lg:overscroll-contain");
+    expect(container.querySelector('[data-testid="practice-workspace-scroll"]')?.className)
+      .toContain("lg:overflow-y-auto");
+    expect(container.querySelector('[data-testid="practice-workspace-scroll"]')?.className)
+      .toContain("lg:overscroll-contain");
 
     await act(async () => root.unmount());
   });

@@ -335,8 +335,12 @@ async function analyzeMidiPath(path: string) {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--lv-bg)] text-[var(--lv-text)]">
-      <section className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-5 sm:px-6">
+    <main className={`min-h-screen bg-[var(--lv-bg)] text-[var(--lv-text)] ${
+      view === "practice" ? "lg:h-screen lg:overflow-hidden" : ""
+    }`}>
+      <section className={`mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-5 sm:px-6 ${
+        view === "practice" ? "lg:h-screen" : ""
+      }`}>
         <h1 ref={undoFallbackFocusRef} tabIndex={-1} className="sr-only">
           Loop Vault
         </h1>

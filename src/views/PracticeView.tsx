@@ -507,15 +507,18 @@ export function PracticeView({
   }
 
   return (
-    <div className="py-5">
-      <div className="border-b border-[var(--lv-border)] pb-4">
+    <div className="py-5 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+      <div className="shrink-0 border-b border-[var(--lv-border)] pb-4">
         <p className="text-xs font-semibold uppercase text-[var(--lv-accent)]">{text.eyebrow}</p>
         <h2 className="mt-1 text-xl font-semibold text-[var(--lv-text)]">{text.title}</h2>
       </div>
 
-      <div className="grid min-h-[36rem] gap-0 border-x border-b border-[var(--lv-border)] lg:grid-cols-[17rem_minmax(0,1fr)]">
-        <aside className="border-b border-[var(--lv-border)] bg-[var(--lv-surface)] lg:border-b-0 lg:border-r">
-          <div className="border-b border-[var(--lv-border)] p-3">
+      <div
+        className="grid min-h-[36rem] gap-0 border-x border-b border-[var(--lv-border)] lg:min-h-0 lg:flex-1 lg:grid-cols-[17rem_minmax(0,1fr)] lg:overflow-hidden"
+        data-testid="practice-layout"
+      >
+        <aside className="border-b border-[var(--lv-border)] bg-[var(--lv-surface)] lg:flex lg:min-h-0 lg:flex-col lg:border-b-0 lg:border-r">
+          <div className="shrink-0 border-b border-[var(--lv-border)] p-3">
             <div className="flex items-center gap-2">
               <Dumbbell aria-hidden="true" size={16} className="text-[var(--lv-accent)]" />
               <h3 className="text-sm font-semibold">{text.queue}</h3>
@@ -535,7 +538,10 @@ export function PracticeView({
               <option value="l3">L3</option>
             </select>
           </div>
-          <div className="max-h-[37rem] overflow-y-auto">
+          <div
+            className="max-h-[37rem] overflow-y-auto lg:min-h-0 lg:flex-1 lg:max-h-none lg:overscroll-contain"
+            data-testid="practice-queue-scroll"
+          >
             {recommendations.length === 0 ? (
               <p className="p-4 text-sm text-[var(--lv-text-muted)]">{text.noProgressions}</p>
             ) : filtered.length === 0 ? (
@@ -553,7 +559,10 @@ export function PracticeView({
           </div>
         </aside>
 
-        <section className="min-w-0 bg-[var(--lv-bg)] p-4 sm:p-6">
+        <section
+          className="min-w-0 bg-[var(--lv-bg)] p-4 sm:p-6 lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain"
+          data-testid="practice-workspace-scroll"
+        >
           {!selected || !block ? (
             <div className="grid min-h-80 place-items-center text-sm text-[var(--lv-text-muted)]">
               {text.selectPrompt}
