@@ -267,7 +267,7 @@ describe("PracticeView", () => {
     await act(async () => root.unmount());
   });
 
-  it("shows the progression key beside the current chord in degree mode", async () => {
+  it("shows the progression key beside the current chord in every level", async () => {
     const idea = makeIdea({
       id: "00000000-0000-4000-8000-000000000104",
       title: "Degree Context",
@@ -286,14 +286,20 @@ describe("PracticeView", () => {
       />,
     ));
 
-    const degreeMode = [...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent === "L3 Play by degree");
-    await act(async () => degreeMode?.click());
+    expect(container.querySelector('[data-testid="practice-current-key"]')?.textContent)
+      .toBe("Key C major");
+
+    const levels = ["L2 Play by name", "L3 Play by degree"];
+    for (const label of levels) {
+      const levelButton = [...container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent === label);
+      await act(async () => levelButton?.click());
+      expect(container.querySelector('[data-testid="practice-current-key"]')?.textContent)
+        .toBe("Key C major");
+    }
 
     expect(container.querySelector('[data-testid="practice-current-chord"]')?.textContent)
       .toContain("I");
-    expect(container.querySelector('[data-testid="practice-degree-key"]')?.textContent)
-      .toBe("Key C major");
 
     await act(async () => root.unmount());
   });

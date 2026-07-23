@@ -134,7 +134,7 @@ const copy = {
     progressionOverview: "進行全体",
     progressionPosition: (current: number, total: number) => `${current} / ${total}`,
     previewChord: (label: string) => `${label}を試聴`,
-    degreeKey: (key: string) => `Key ${key}`,
+    currentKey: (key: string) => `Key ${key}`,
     barLabel: (bar: number) => `${bar}小節`,
     stepCurrent: "いま",
     stepComplete: "完了",
@@ -218,7 +218,7 @@ const copy = {
     progressionOverview: "Full progression",
     progressionPosition: (current: number, total: number) => `${current} / ${total}`,
     previewChord: (label: string) => `Preview ${label}`,
-    degreeKey: (key: string) => `Key ${key}`,
+    currentKey: (key: string) => `Key ${key}`,
     barLabel: (bar: number) => `Bar ${bar}`,
     stepCurrent: "Now",
     stepComplete: "Complete",
@@ -1030,12 +1030,12 @@ export function PracticeView({
                       >
                         {practiceChordLabel(currentTarget, level, keySignature)}
                       </p>
-                      {level === 3 && keySignature ? (
+                      {keySignature ? (
                         <span
                           className="border border-[var(--lv-border-strong)] px-2 py-1 text-xs font-semibold text-[var(--lv-text-muted)]"
-                          data-testid="practice-degree-key"
+                          data-testid="practice-current-key"
                         >
-                          {text.degreeKey(keySignature)}
+                          {text.currentKey(keySignature)}
                         </span>
                       ) : null}
                     </div>
