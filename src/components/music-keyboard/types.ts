@@ -1,6 +1,7 @@
 export type KeyboardOctaveConvention = "fl-studio";
 
 export type NoteAccidentalStyle = "sharp" | "flat";
+export type PianoGuideHand = "left" | "right";
 
 export interface KeyboardRange {
   minMidiNote: number;

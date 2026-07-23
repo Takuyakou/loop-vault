@@ -3,6 +3,7 @@
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { playbackController } from "../audio/playbackController";
 import { makeChordSymbol } from "../domain/chords";
 import { createLiveNoteState } from "../domain/liveMidi";
 import { makeIdea } from "../domain/testFactory";
@@ -41,6 +42,7 @@ const block: SavedProgressionBlock = {
 };
 
 beforeEach(() => {
+  window.localStorage.clear();
   defaultLiveMidiStore.setState({
     active: true,
     status: "connected",
@@ -213,5 +215,324 @@ describe("PracticeView", () => {
 
     await act(async () => root.unmount());
     expect(updateProgressionBlock).toHaveBeenCalledOnce();
+  });
+
+  it("uses resolved voicing by default and renders left/right guides for style practice", async () => {
+    const idea = makeIdea({
+      id: "00000000-0000-4000-8000-000000000096",
+      title: "Style Guide",
+      progressionBlocks: [block],
+    });
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={[idea]}
+        language="ja"
+        updateProgressionBlock={vi.fn(() => true)}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={vi.fn()}
+      />,
+    ));
+
+    const selector = container.querySelector<HTMLSelectElement>(
+      '[data-testid="practice-target-source"]',
+    );
+    expect(selector?.value).toBe("resolved-voicing");
+    await act(async () => {
+      if (!selector) return;
+      selector.value = "shell-17";
+      selector.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    expect(container.querySelector('[data-testid="voicing-practice-controls"]')
+      ?.getAttribute("data-style-practice")).toBe("true");
+    expect(container.textContent).toContain("スタイル練習");
+    expect(container.textContent).toContain("段位対象外");
+    expect(container.querySelector('[data-testid="practice-left-hand-guide"]')?.textContent)
+      .toContain("左手の目安");
+    expect(container.querySelector('[data-testid="practice-right-hand-guide"]')?.textContent)
+      .toContain("右手の目安");
+    expect(container.querySelectorAll('[data-guide-hand="left"]').length).toBeGreaterThan(0);
+    expect(container.querySelectorAll('[data-guide-hand="right"]').length).toBeGreaterThan(0);
+
+    const l2 = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent === "L2 名前で弾く");
+    await act(async () => l2?.click());
+    expect(container.querySelector('[data-testid="practice-left-hand-guide"]')).toBeNull();
+    expect(container.querySelector('[data-testid="practice-right-hand-guide"]')).toBeNull();
+    expect(container.textContent).toContain("音の形");
+
+    await act(async () => root.unmount());
+  });
+
+  it("shows the progression key beside the current chord in every level", async () => {
+    const idea = makeIdea({
+      id: "00000000-0000-4000-8000-000000000104",
+      title: "Degree Context",
+      progressionBlocks: [block],
+    });
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={[idea]}
+        language="en"
+        updateProgressionBlock={vi.fn(() => true)}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={vi.fn()}
+      />,
+    ));
+
+    expect(container.querySelector('[data-testid="practice-current-key"]')?.textContent)
+      .toBe("Key C major");
+
+    const levels = ["L2 Play by name", "L3 Play by degree"];
+    for (const label of levels) {
+      const levelButton = [...container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent === label);
+      await act(async () => levelButton?.click());
+      expect(container.querySelector('[data-testid="practice-current-key"]')?.textContent)
+        .toBe("Key C major");
+    }
+
+    expect(container.querySelector('[data-testid="practice-current-chord"]')?.textContent)
+      .toContain("I");
+
+    await act(async () => root.unmount());
+  });
+
+  it("never writes practice progress for a style session, including close preparation", async () => {
+    const idea = makeIdea({
+      id: "00000000-0000-4000-8000-000000000097",
+      title: "Unranked Style",
+      progressionBlocks: [block],
+    });
+    const updateProgressionBlock = vi.fn(() => true);
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={[idea]}
+        language="ja"
+        updateProgressionBlock={updateProgressionBlock}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={vi.fn()}
+      />,
+    ));
+    const selector = container.querySelector<HTMLSelectElement>(
+      '[data-testid="practice-target-source"]',
+    );
+    await act(async () => {
+      if (!selector) return;
+      selector.value = "generated-close";
+      selector.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    const start = container.querySelector<HTMLButtonElement>('[data-testid="practice-start"]');
+    expect(start?.disabled).toBe(false);
+    await act(async () => start?.click());
+
+    act(() => runClosePreparations());
+    await act(async () => root.unmount());
+
+    expect(updateProgressionBlock).not.toHaveBeenCalled();
+  });
+
+  it("returns to resolved voicing when another progression is selected", async () => {
+    const secondBlock: SavedProgressionBlock = {
+      ...block,
+      id: "00000000-0000-4000-8000-000000000098",
+      summaryText: "Second progression",
+      pinned: true,
+    };
+    const idea = makeIdea({
+      id: "00000000-0000-4000-8000-000000000099",
+      title: "Target Reset",
+      progressionBlocks: [block, secondBlock],
+    });
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={[idea]}
+        initialTarget={{ ideaId: idea.id, blockId: block.id }}
+        language="en"
+        updateProgressionBlock={vi.fn(() => true)}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={vi.fn()}
+      />,
+    ));
+    const selector = container.querySelector<HTMLSelectElement>(
+      '[data-testid="practice-target-source"]',
+    );
+    await act(async () => {
+      if (!selector) return;
+      selector.value = "open-17";
+      selector.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    expect(selector?.value).toBe("open-17");
+
+    const second = [
+      ...container.querySelectorAll<HTMLButtonElement>(
+        '[data-testid="practice-queue-scroll"] button',
+      ),
+    ].find((button) => button.className.includes("hover:bg-[var(--lv-surface-raised)]"));
+    expect(second).toBeDefined();
+    await act(async () => second?.click());
+
+    expect(selector?.value).toBe("resolved-voicing");
+    await act(async () => root.unmount());
+  });
+
+  it("blocks unsupported style practice until the user explicitly enables fallback", async () => {
+    const triadBlock: SavedProgressionBlock = {
+      ...block,
+      id: "00000000-0000-4000-8000-000000000100",
+      chords: [makeChordSymbol(0, "maj")].map((chord, index) => ({
+        ...block.chords[index],
+        eventId: `unsupported-event-${index}`,
+        chord,
+      })),
+    };
+    const idea = makeIdea({
+      id: "00000000-0000-4000-8000-000000000101",
+      title: "Unsupported Style",
+      progressionBlocks: [triadBlock],
+    });
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={[idea]}
+        language="en"
+        updateProgressionBlock={vi.fn(() => true)}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={vi.fn()}
+      />,
+    ));
+    const selector = container.querySelector<HTMLSelectElement>(
+      '[data-testid="practice-target-source"]',
+    );
+    await act(async () => {
+      if (!selector) return;
+      selector.value = "rootless-ab";
+      selector.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain("unsupported by the selected style");
+    expect(container.querySelector<HTMLButtonElement>('[data-testid="practice-start"]')?.disabled)
+      .toBe(true);
+    const fallback = container.querySelector<HTMLInputElement>(
+      '[data-testid="practice-unsupported-fallback"]',
+    );
+    await act(async () => fallback?.click());
+
+    expect(container.querySelector<HTMLButtonElement>('[data-testid="practice-start"]')?.disabled)
+      .toBe(false);
+    expect(container.textContent).toContain("Automatic");
+    await act(async () => root.unmount());
+  });
+
+  it("previews the selected style with explicit generated MIDI notes", async () => {
+    const idea = makeIdea({
+      id: "00000000-0000-4000-8000-000000000102",
+      title: "Style Preview",
+      progressionBlocks: [block],
+    });
+    const toggle = vi.spyOn(playbackController, "toggle").mockResolvedValue();
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={[idea]}
+        language="en"
+        updateProgressionBlock={vi.fn(() => true)}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={vi.fn()}
+      />,
+    ));
+    const selector = container.querySelector<HTMLSelectElement>(
+      '[data-testid="practice-target-source"]',
+    );
+    await act(async () => {
+      if (!selector) return;
+      selector.value = "open-17";
+      selector.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    const electricPiano = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent === "Electric piano");
+    await act(async () => electricPiano?.click());
+    const preview = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent?.includes("Preview progression"));
+    await act(async () => preview?.click());
+
+    expect(toggle).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: "practice" }),
+      expect.objectContaining({
+        type: "timeline",
+        sound: "electric-piano",
+        explicitMidiNotesByEventId: expect.objectContaining({
+          "dojo-event-0": expect.any(Array),
+        }),
+      }),
+    );
+    await act(async () => root.unmount());
+  });
+
+  it("previews a clicked progression card and links its voicing to the piano guide", async () => {
+    const idea = makeIdea({
+      id: "00000000-0000-4000-8000-000000000103",
+      title: "Chord Card Preview",
+      progressionBlocks: [block],
+    });
+    const toggle = vi.spyOn(playbackController, "toggle").mockResolvedValue();
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={[idea]}
+        language="ja"
+        updateProgressionBlock={vi.fn(() => true)}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={vi.fn()}
+      />,
+    ));
+    const selector = container.querySelector<HTMLSelectElement>(
+      '[data-testid="practice-target-source"]',
+    );
+    await act(async () => {
+      if (!selector) return;
+      selector.value = "open-17";
+      selector.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    const secondCard = container.querySelector<HTMLButtonElement>(
+      '[data-progression-index="1"]',
+    );
+    await act(async () => secondCard?.click());
+
+    expect(secondCard?.getAttribute("aria-current")).toBe("step");
+    expect(container.querySelector('[data-testid="practice-current-chord"]')?.textContent)
+      .toContain(block.chords[1].chord.label);
+    const visibleGuideNotes = [
+      ...container.querySelectorAll<SVGGElement>("[data-guide-hand]"),
+    ]
+      .map((key) => Number(key.getAttribute("data-midi-note")))
+      .sort((left, right) => left - right);
+    const request = toggle.mock.calls[toggle.mock.calls.length - 1]?.[1];
+    expect(request).toEqual(expect.objectContaining({
+      type: "chord",
+      chord: block.chords[1].chord,
+      sound: "piano",
+      explicitMidiNotes: visibleGuideNotes,
+    }));
+
+    await act(async () => root.unmount());
   });
 });

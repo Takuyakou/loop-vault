@@ -11,14 +11,17 @@ import {
   Settings,
   Square,
 } from "lucide-react";
+import type { PreviewSound } from "../audio/chordPreview";
 import { playbackController } from "../audio/playbackController";
 import {
   computePracticeKeyboardRange,
   formatMidiNoteForDisplay,
 } from "../components/music-keyboard";
 import { PracticeKeyboard } from "../components/practice/PracticeKeyboard";
+import { VoicingPracticeControls } from "../components/practice/VoicingPracticeControls";
 import { voiceChordForPreview } from "../domain/chordVoicing";
 import { degreeOf } from "../domain/harmony/degrees";
+import { beatsPerBar } from "../domain/midi/timing";
 import {
   buildPracticeChordRequirements,
   createPracticeSessionState,
@@ -42,13 +45,39 @@ import type {
   SongIdea,
 } from "../domain/types";
 import { resolveVoicingForUse } from "../domain/voicing";
+import {
+  DEFAULT_OCTAVE_SHIFT_CANDIDATES,
+  generateStyleVoicingPlan,
+  matchExactPitch,
+  matchPitchClasses,
+  type GeneratedStyleVoicing,
+  type PracticeTargetSource,
+  type StyleVoicingMatchMode,
+  type VoicingPracticePreferences,
+} from "../domain/voicingPractice";
+import { usePlaybackState } from "../hooks/usePlaybackState";
 import { defaultLiveMidiStore } from "../liveMidi/defaultLiveMidiStore";
 import { PracticeClock } from "../practice/PracticeClock";
 import { registerClosePreparation } from "../store/closePreparation";
+import {
+  loadVoicingPracticePreferences,
+  saveVoicingPracticePreferences,
+} from "../voicingPractice/preferences";
 
 interface PracticeTarget {
   ideaId: string;
   blockId: string;
+}
+
+interface PracticeVoicingGuide {
+  midiNotes: number[];
+  leftHandNotes: number[];
+  rightHandNotes: number[];
+  origin?: "practice-override" | "source-verified" | "source-auto" | "generated";
+  styleId?: GeneratedStyleVoicing["styleId"];
+  variant?: string;
+  addedColorIntervals: string[];
+  fallback: boolean;
 }
 
 interface PracticeViewProps {
@@ -104,6 +133,8 @@ const copy = {
     next: "つぎ",
     progressionOverview: "進行全体",
     progressionPosition: (current: number, total: number) => `${current} / ${total}`,
+    previewChord: (label: string) => `${label}を試聴`,
+    currentKey: (key: string) => `Key ${key}`,
     barLabel: (bar: number) => `${bar}小節`,
     stepCurrent: "いま",
     stepComplete: "完了",
@@ -138,6 +169,17 @@ const copy = {
     saveFailed: "練習進捗を保存できませんでした。",
     flowSuggestion: "1周完了。フローで弾いてみますか？",
     miniSummaryEmpty: "コード情報なし",
+    styleChangeConfirm: "一時停止してボイシングを変更しますか？現在の周回は破棄されます。",
+    styleStartBlocked: "未対応コードがあります。自動フォールバックを許可するか、別のボイシングを選んでください。",
+    previewFailed: "ボイシングの試聴を開始できませんでした。",
+    leftGuide: "左手の目安",
+    rightGuide: "右手の目安",
+    shape: (count: number) => `${count}音の形`,
+    styleShell: "シェル 1-7",
+    styleOpen: "オープン 1-7",
+    styleRootless: (variant?: string) => `ルートレス ${variant ?? "A/B"}`,
+    styleClose: "自動",
+    addedColor: (intervals: readonly string[]) => `響きを補う音: ${intervals.join("・")}`,
   },
   en: {
     eyebrow: "CHORD DOJO",
@@ -175,6 +217,8 @@ const copy = {
     next: "Next",
     progressionOverview: "Full progression",
     progressionPosition: (current: number, total: number) => `${current} / ${total}`,
+    previewChord: (label: string) => `Preview ${label}`,
+    currentKey: (key: string) => `Key ${key}`,
     barLabel: (bar: number) => `Bar ${bar}`,
     stepCurrent: "Now",
     stepComplete: "Complete",
@@ -209,6 +253,17 @@ const copy = {
     saveFailed: "Could not save practice progress.",
     flowSuggestion: "Round complete. Try it in Flow mode?",
     miniSummaryEmpty: "No chord data",
+    styleChangeConfirm: "Pause and change the voicing? The current round will be discarded.",
+    styleStartBlocked: "Unsupported chords remain. Allow automatic fallback or choose another voicing.",
+    previewFailed: "Could not start the voicing preview.",
+    leftGuide: "Left-hand guide",
+    rightGuide: "Right-hand guide",
+    shape: (count: number) => `${count}-note shape`,
+    styleShell: "Shell 1-7",
+    styleOpen: "Open 1-7",
+    styleRootless: (variant?: string) => `Rootless ${variant ?? "A/B"}`,
+    styleClose: "Automatic",
+    addedColor: (intervals: readonly string[]) => `Added color tones: ${intervals.join(", ")}`,
   },
 } as const;
 
@@ -235,6 +290,16 @@ export function PracticeView({
   const [bpm, setBpm] = useState(60);
   const [session, setSession] = useState<PracticeSessionState>();
   const [beat, setBeat] = useState(1);
+  const [auditionEventIndex, setAuditionEventIndex] = useState<number>();
+  const [previewSound, setPreviewSound] = useState<PreviewSound>("piano");
+  const [targetSource, setTargetSource] = useState<PracticeTargetSource>({
+    type: "resolved-voicing",
+  });
+  const [styleMatchMode, setStyleMatchMode] = useState<StyleVoicingMatchMode>("exact-pitch");
+  const [allowUnsupportedFallback, setAllowUnsupportedFallback] = useState(false);
+  const [voicingPreferences, setVoicingPreferences] = useState<VoicingPracticePreferences>(
+    loadVoicingPracticePreferences,
+  );
   const clockRef = useRef(new PracticeClock());
   const ownsMidiRef = useRef(false);
   const persistedRoundRef = useRef(0);
@@ -242,14 +307,22 @@ export function PracticeView({
   const latestBlockRef = useRef<SavedProgressionBlock>();
   const latestSelectedRef = useRef<PracticeRecommendation>();
   const lastPersistedSessionRef = useRef<PracticeSessionState>();
+  const styleModeRef = useRef(false);
   const active = useStore(defaultLiveMidiStore, (state) => state.active);
   const midiStatus = useStore(defaultLiveMidiStore, (state) => state.status);
   const selectedDevice = useStore(defaultLiveMidiStore, (state) => state.selected);
   const liveNotes = useStore(defaultLiveMidiStore, (state) => state.notes);
   const midiError = useStore(defaultLiveMidiStore, (state) => state.error);
+  const playbackState = usePlaybackState();
 
   useEffect(() => {
-    if (initialTarget) setTarget(initialTarget);
+    if (!initialTarget) return;
+    setTarget(initialTarget);
+    setTargetSource({ type: "resolved-voicing" });
+    setStyleMatchMode("exact-pitch");
+    setAllowUnsupportedFallback(false);
+    setAuditionEventIndex(undefined);
+    setSession(undefined);
   }, [initialTarget]);
 
   useEffect(() => {
@@ -267,6 +340,7 @@ export function PracticeView({
   }, [updateProgressionBlock]);
 
   function persistPendingSession(): void {
+    if (styleModeRef.current) return;
     const current = latestSessionRef.current;
     const currentBlock = latestBlockRef.current;
     const currentSelected = latestSelectedRef.current;
@@ -299,22 +373,22 @@ export function PracticeView({
     ? ideas.find((idea) => idea.id === selected.ideaId)
     : undefined;
   const block = selected?.block;
-  const currentTarget = block?.chords[session?.currentEventIndex ?? 0];
+  const practiceEventIndex = session?.currentEventIndex ?? 0;
+  const displayedEventIndex = session?.status === "running"
+    ? practiceEventIndex
+    : auditionEventIndex ?? practiceEventIndex;
+  const currentTarget = block?.chords[displayedEventIndex];
   const nextTarget = block && block.chords.length > 1
-    ? block.chords[((session?.currentEventIndex ?? 0) + 1) % block.chords.length]
+    ? block.chords[(displayedEventIndex + 1) % block.chords.length]
     : undefined;
   const keySignature = block?.detectedKey ?? selectedIdea?.key;
   const l3Available = Boolean(keySignature);
   const flowAvailable = !block?.timeSignature || block.timeSignature === "4/4";
-  const requirements = useMemo(
+  const styleMode = targetSource.type !== "resolved-voicing";
+  const standardRequirements = useMemo(
     () => block?.chords.map((event) => buildPracticeChordRequirements(event.chord, leniency)) ?? [],
     [block, leniency],
   );
-  const sessionContext = useMemo(
-    () => ({ events: block?.chords ?? [], requirements }),
-    [block?.chords, requirements],
-  );
-  const currentRequirement = requirements[session?.currentEventIndex ?? 0];
   const resolvedGuides = useMemo(
     () => block?.chords.map((event) => resolveVoicingForUse(
       event.chord,
@@ -323,17 +397,139 @@ export function PracticeView({
     )) ?? [],
     [block?.chords],
   );
-  const guide = resolvedGuides[session?.currentEventIndex ?? 0];
-  const keyboardRange = useMemo(
-    () => computePracticeKeyboardRange(resolvedGuides.map((resolved) => resolved.midiNotes)),
-    [resolvedGuides],
+  const generatedStylePlan = useMemo(() => {
+    if (!block || targetSource.type === "resolved-voicing") return undefined;
+    const styleId = targetSource.type === "generated-close"
+      ? "generated-close"
+      : targetSource.styleId;
+    return generateStyleVoicingPlan(block.chords, styleId, {
+      maxLeftHandSpanSemitones: voicingPreferences.maxLeftHandSpanSemitones,
+      maxRightHandSpanSemitones: voicingPreferences.maxRightHandSpanSemitones,
+      allowUnsupportedFallback,
+    });
+  }, [
+    allowUnsupportedFallback,
+    block,
+    targetSource,
+    voicingPreferences.maxLeftHandSpanSemitones,
+    voicingPreferences.maxRightHandSpanSemitones,
+  ]);
+  const generatedGuides = useMemo(() => {
+    const byEventId = new Map(
+      generatedStylePlan?.events.map((event) => [event.eventId, event]) ?? [],
+    );
+    return block?.chords.map((event, index): PracticeVoicingGuide | undefined => {
+      const generated = byEventId.get(practiceEventId(event, index));
+      if (!generated) return undefined;
+      return {
+        midiNotes: [...generated.allNotes],
+        leftHandNotes: [...generated.leftHandNotes],
+        rightHandNotes: [...generated.rightHandNotes],
+        styleId: generated.styleId,
+        variant: generated.variant,
+        addedColorIntervals: [...generated.addedColorIntervals],
+        fallback: generated.warnings.includes("fallback-close"),
+      };
+    }) ?? [];
+  }, [block?.chords, generatedStylePlan]);
+  const activeGuides = useMemo(
+    (): Array<PracticeVoicingGuide | undefined> => styleMode
+      ? generatedGuides
+      : resolvedGuides.map((resolved) => ({
+          midiNotes: [...resolved.midiNotes],
+          leftHandNotes: [],
+          rightHandNotes: [],
+          origin: resolved.origin,
+          addedColorIntervals: [],
+          fallback: false,
+        })),
+    [generatedGuides, resolvedGuides, styleMode],
   );
+  const requirements = useMemo(
+    () => styleMode
+      ? activeGuides.map((guide, index) => {
+          const pitchClasses = uniquePitchClasses(guide?.midiNotes ?? []);
+          return {
+            requiredPitchClasses: pitchClasses,
+            optionalPitchClasses: [],
+            allowedPitchClasses: pitchClasses,
+            chordKey: standardRequirements[index]?.chordKey ?? "",
+          };
+        })
+      : standardRequirements,
+    [activeGuides, standardRequirements, styleMode],
+  );
+  const styleMatchInput = useMemo(
+    () => styleMode
+      ? (
+          _requirements: (typeof requirements)[number],
+          input: Parameters<typeof matchExactPitch>[1],
+          requiredAttackRevision: number,
+          eventIndex: number,
+        ) => {
+          const targetNotes = activeGuides[eventIndex]?.midiNotes ?? [];
+          return styleMatchMode === "exact-pitch"
+            ? matchExactPitch(targetNotes, input, requiredAttackRevision, {
+                allowGlobalOctaveShift: voicingPreferences.allowGlobalOctaveShift,
+                octaveShiftCandidates: DEFAULT_OCTAVE_SHIFT_CANDIDATES,
+              })
+            : matchPitchClasses(targetNotes, input, requiredAttackRevision);
+        }
+      : undefined,
+    [
+      activeGuides,
+      requirements,
+      styleMatchMode,
+      styleMode,
+      voicingPreferences.allowGlobalOctaveShift,
+    ],
+  );
+  const sessionContext = useMemo(
+    () => ({
+      events: block?.chords ?? [],
+      requirements,
+      ...(styleMatchInput ? { matchInput: styleMatchInput } : {}),
+    }),
+    [block?.chords, requirements, styleMatchInput],
+  );
+  const currentRequirement = requirements[displayedEventIndex];
+  const guide = activeGuides[displayedEventIndex];
+  const keyboardRange = useMemo(
+    () => computePracticeKeyboardRange(
+      activeGuides.flatMap((resolved) => resolved ? [resolved.midiNotes] : []),
+    ),
+    [activeGuides],
+  );
+  const eventBars = useMemo(
+    () => Object.fromEntries(
+      block?.chords.map((event, index) => [practiceEventId(event, index), event.bar]) ?? [],
+    ),
+    [block?.chords],
+  );
+  const previewSourceId = block
+    ? `${block.id}:voicing:${practiceTargetSourceKey(targetSource)}`
+    : "voicing-practice";
+  const previewing = playbackState.status !== "idle"
+    && playbackState.source?.kind === "practice"
+    && playbackState.source.id === previewSourceId;
+  const stylePlanBlocked = styleMode
+    && Boolean(generatedStylePlan?.unsupportedEvents.length)
+    && !allowUnsupportedFallback;
   const filtered = recommendations.filter((item) => matchesQueueFilter(item, filter, localDate));
   const running = session?.status === "running";
   const paused = session?.status === "paused";
+  const previewDisabled = !block
+    || running
+    || stylePlanBlocked
+    || activeGuides.length !== block.chords.length
+    || activeGuides.some((item) => !item);
   const activeEventIndex = block?.chords.length
-    ? Math.max(0, Math.min(block.chords.length - 1, session?.currentEventIndex ?? 0))
+    ? Math.max(0, Math.min(block.chords.length - 1, displayedEventIndex))
     : 0;
+
+  useEffect(() => {
+    styleModeRef.current = styleMode;
+  }, [styleMode]);
 
   useEffect(() => {
     latestSessionRef.current = session;
@@ -375,6 +571,8 @@ export function PracticeView({
 
   useEffect(() => {
     if (
+      styleMode
+      ||
       !block
       || session?.mode !== "flow"
       || !session.lastRoundWasClean
@@ -382,7 +580,7 @@ export function PracticeView({
     ) return;
     persistedRoundRef.current = session.roundNumber;
     persistProgress(block, session);
-  }, [block, session]);
+  }, [block, session, styleMode]);
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -416,7 +614,12 @@ export function PracticeView({
 
   function selectRecommendation(item: PracticeRecommendation) {
     endSession();
+    playbackController.stop();
     setTarget({ ideaId: item.ideaId, blockId: item.block.id });
+    setTargetSource({ type: "resolved-voicing" });
+    setStyleMatchMode("exact-pitch");
+    setAllowUnsupportedFallback(false);
+    setAuditionEventIndex(undefined);
     const confirmed = item.block.practice?.confirmedLevel;
     const suggested = confirmed && confirmed < 3 ? (confirmed + 1) as DojoPracticeLevel : 1;
     setLevel(item.stale ? 1 : suggested);
@@ -426,7 +629,11 @@ export function PracticeView({
 
   async function startSession() {
     if (!selected || !block || block.chords.length === 0) return;
-    if (practiceProgressState(block, localDate) === "stale") {
+    if (stylePlanBlocked) {
+      setToast(text.styleStartBlocked);
+      return;
+    }
+    if (!styleMode && practiceProgressState(block, localDate) === "stale") {
       if (!globalThis.confirm(text.staleConfirm)) return;
       if (!updateProgressionBlock(selected.ideaId, block.id, { practice: resetPracticeProgress(block) })) {
         setToast(text.saveFailed);
@@ -439,6 +646,7 @@ export function PracticeView({
       await defaultLiveMidiStore.getState().activate();
     }
     playbackController.stop();
+    setAuditionEventIndex(undefined);
     const next = createPracticeSessionState({
       blockId: block.id,
       progressionFingerprint: progressionFingerprint(block),
@@ -495,7 +703,7 @@ export function PracticeView({
   }
 
   function persistProgress(targetBlock: SavedProgressionBlock, current: PracticeSessionState) {
-    if (!selected) return;
+    if (!selected || styleModeRef.current) return;
     const practice = recordPracticeRound(targetBlock, {
       level: current.level,
       bpm: current.bpm,
@@ -508,6 +716,101 @@ export function PracticeView({
       setToast(text.saved);
     } else {
       setToast(text.saveFailed);
+    }
+  }
+
+  function prepareVoicingChange(): boolean {
+    if (running && !globalThis.confirm(text.styleChangeConfirm)) return false;
+    clockRef.current.stop();
+    playbackController.stop();
+    persistedRoundRef.current = 0;
+    setBeat(1);
+    setSession(undefined);
+    return true;
+  }
+
+  function changeTargetSource(source: PracticeTargetSource): void {
+    if (practiceTargetSourceKey(source) === practiceTargetSourceKey(targetSource)) return;
+    if (!prepareVoicingChange()) return;
+    setTargetSource(source);
+    setAllowUnsupportedFallback(false);
+  }
+
+  function changeVoicingPreferences(next: VoicingPracticePreferences): void {
+    if (!prepareVoicingChange()) return;
+    setVoicingPreferences(next);
+    try {
+      saveVoicingPracticePreferences(next);
+    } catch {
+      // The session can continue when browser preference storage is unavailable.
+    }
+  }
+
+  function changeStyleMatchMode(next: StyleVoicingMatchMode): void {
+    if (next === styleMatchMode || !prepareVoicingChange()) return;
+    setStyleMatchMode(next);
+  }
+
+  function changeUnsupportedFallback(next: boolean): void {
+    if (next === allowUnsupportedFallback || !prepareVoicingChange()) return;
+    setAllowUnsupportedFallback(next);
+  }
+
+  async function toggleVoicingPreview(): Promise<void> {
+    if (!block || previewDisabled) return;
+    const timeline = block.chords.map((event, index) => ({
+      ...event,
+      eventId: practiceEventId(event, index),
+    }));
+    const explicitMidiNotesByEventId = Object.fromEntries(
+      timeline.flatMap((event, index) => {
+        const notes = activeGuides[index]?.midiNotes;
+        return notes ? [[event.eventId, notes] as const] : [];
+      }),
+    );
+    try {
+      await playbackController.toggle(
+        { kind: "practice", id: previewSourceId },
+        {
+          type: "timeline",
+          timeline,
+          bpm,
+          sound: previewSound,
+          beatsPerBar: beatsPerBar(block.timeSignature),
+          explicitMidiNotesByEventId,
+        },
+      );
+    } catch {
+      setToast(text.previewFailed);
+    }
+  }
+
+  function changePreviewSound(sound: PreviewSound): void {
+    playbackController.stop();
+    setPreviewSound(sound);
+  }
+
+  async function previewChordAt(index: number): Promise<void> {
+    if (!block || running) return;
+    const event = block.chords[index];
+    const eventGuide = activeGuides[index];
+    if (!event || !eventGuide) return;
+    setAuditionEventIndex(index);
+    try {
+      await playbackController.toggle(
+        {
+          kind: "practice",
+          id: `${previewSourceId}:event:${practiceEventId(event, index)}`,
+        },
+        {
+          type: "chord",
+          chord: event.chord,
+          sound: previewSound,
+          explicitMidiNotes: eventGuide.midiNotes,
+        },
+      );
+    } catch {
+      setToast(text.previewFailed);
     }
   }
 
@@ -630,19 +933,21 @@ export function PracticeView({
                   </div>
                   {!l3Available ? <p className="mt-2 text-xs text-amber-200">{text.l3NeedsKey}</p> : null}
                 </div>
-                <label className="text-xs font-semibold text-[var(--lv-text-muted)]">
-                  {text.leniency}
-                  <select
-                    className="lv-input mt-2 block min-w-28 text-sm"
-                    value={leniency}
-                    disabled={running}
-                    onChange={(event) => setLeniency(event.target.value as PracticeLeniency)}
-                  >
-                    <option value="easy">{text.easy}</option>
-                    <option value="normal">{text.normal}</option>
-                    <option value="strict">{text.strict}</option>
-                  </select>
-                </label>
+                {!styleMode ? (
+                  <label className="text-xs font-semibold text-[var(--lv-text-muted)]">
+                    {text.leniency}
+                    <select
+                      className="lv-input mt-2 block min-w-28 text-sm"
+                      value={leniency}
+                      disabled={running}
+                      onChange={(event) => setLeniency(event.target.value as PracticeLeniency)}
+                    >
+                      <option value="easy">{text.easy}</option>
+                      <option value="normal">{text.normal}</option>
+                      <option value="strict">{text.strict}</option>
+                    </select>
+                  </label>
+                ) : <span />}
                 <div>
                   <p className="mb-2 text-xs font-semibold text-[var(--lv-text-muted)]">Mode</p>
                   <div className="flex gap-1">
@@ -664,6 +969,26 @@ export function PracticeView({
               {!flowAvailable ? (
                 <p className="border-b border-[var(--lv-border)] py-3 text-sm text-amber-200">{text.flowUnsupported}</p>
               ) : null}
+
+              <VoicingPracticeControls
+                language={language}
+                targetSource={targetSource}
+                preferences={voicingPreferences}
+                matchMode={styleMatchMode}
+                allowUnsupportedFallback={allowUnsupportedFallback}
+                plan={generatedStylePlan}
+                eventBars={eventBars}
+                running={Boolean(running)}
+                previewing={previewing}
+                previewDisabled={previewDisabled}
+                previewSound={previewSound}
+                onTargetSourceChange={changeTargetSource}
+                onPreferencesChange={changeVoicingPreferences}
+                onMatchModeChange={changeStyleMatchMode}
+                onAllowUnsupportedFallbackChange={changeUnsupportedFallback}
+                onPreviewSoundChange={changePreviewSound}
+                onPreview={() => void toggleVoicingPreview()}
+              />
 
               <div className="flex flex-wrap items-center gap-3 border-b border-[var(--lv-border)] py-4">
                 <span className="text-xs font-semibold text-[var(--lv-text-muted)]">{text.midi}</span>
@@ -698,9 +1023,33 @@ export function PracticeView({
                 <div className="grid gap-5 lg:grid-cols-[minmax(7rem,0.65fr)_minmax(18rem,2fr)_auto]">
                   <div>
                     <p className="text-xs font-semibold uppercase text-[var(--lv-accent)]">{text.current}</p>
-                    <p className="mt-2 text-3xl font-semibold">
-                      {practiceChordLabel(currentTarget, level, keySignature)}
-                    </p>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <p
+                        className="text-3xl font-semibold"
+                        data-testid="practice-current-chord"
+                      >
+                        {practiceChordLabel(currentTarget, level, keySignature)}
+                      </p>
+                      {keySignature ? (
+                        <span
+                          className="border border-[var(--lv-border-strong)] px-2 py-1 text-xs font-semibold text-[var(--lv-text-muted)]"
+                          data-testid="practice-current-key"
+                        >
+                          {text.currentKey(keySignature)}
+                        </span>
+                      ) : null}
+                    </div>
+                    {styleMode && guide ? (
+                      <span
+                        className="mt-2 inline-flex border border-teal-700 px-2 py-1 text-xs font-semibold text-teal-200"
+                        title={guide.addedColorIntervals.length > 0
+                          ? text.addedColor(guide.addedColorIntervals)
+                          : undefined}
+                        data-testid="practice-style-chip"
+                      >
+                        {styleGuideLabel(guide, text)}
+                      </span>
+                    ) : null}
                     <div className="mt-3 flex items-baseline gap-2 text-sm text-[var(--lv-text-muted)]">
                       <span className="text-xs font-semibold uppercase">{text.next}</span>
                       <span>{practiceChordLabel(nextTarget, level, keySignature)}</span>
@@ -713,6 +1062,9 @@ export function PracticeView({
                     level={level}
                     keySignature={keySignature}
                     text={text}
+                    previewDisabled={Boolean(running)}
+                    previewableEvents={activeGuides.map(Boolean)}
+                    onPreviewChord={(index) => void previewChordAt(index)}
                   />
                   <div className="flex h-fit flex-wrap items-center gap-x-3 gap-y-1 text-sm lg:border-l lg:border-[var(--lv-border)] lg:pl-4">
                     <span className="font-semibold">{text.round(session?.roundNumber ?? 1)}</span>
@@ -726,27 +1078,44 @@ export function PracticeView({
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="text-xs font-semibold text-[var(--lv-text-muted)]">{text.guide}</p>
                       <span className="border border-[var(--lv-border)] px-2 py-1 text-xs text-[var(--lv-text-muted)]">
-                        {guide.origin === "practice-override"
-                          ? text.practice
-                          : guide.origin === "source-verified"
-                            ? text.source
-                            : guide.origin === "source-auto"
-                              ? text.sourceInferred
-                            : text.generated}
+                        {styleMode
+                          ? styleGuideLabel(guide, text)
+                          : guide.origin === "practice-override"
+                            ? text.practice
+                            : guide.origin === "source-verified"
+                              ? text.source
+                              : guide.origin === "source-auto"
+                                ? text.sourceInferred
+                                : text.generated}
                       </span>
                     </div>
-                    <p className="mt-1.5 text-sm">
-                      {guide.midiNotes
-                        .map((note) => formatMidiNoteForDisplay(note, "fl-studio", "flat"))
-                        .join(" · ")}
-                    </p>
+                    {styleMode ? (
+                      <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
+                        <p data-testid="practice-left-hand-guide">
+                          <span className="block text-xs text-[var(--lv-text-muted)]">{text.leftGuide}</span>
+                          {formatGuideNotes(guide.leftHandNotes)}
+                        </p>
+                        <p data-testid="practice-right-hand-guide">
+                          <span className="block text-xs text-[var(--lv-text-muted)]">{text.rightGuide}</span>
+                          {formatGuideNotes(guide.rightHandNotes)}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="mt-1.5 text-sm">{formatGuideNotes(guide.midiNotes)}</p>
+                    )}
                   </div>
+                ) : styleMode && guide ? (
+                  <p className="mt-4 text-sm text-[var(--lv-text-muted)]">
+                    {text.shape(guide.midiNotes.length)}
+                  </p>
                 ) : null}
 
                 <div className="mt-4">
                   <PracticeKeyboard
                     range={keyboardRange}
                     guideNotes={guide?.midiNotes ?? []}
+                    leftHandGuideNotes={styleMode ? guide?.leftHandNotes ?? [] : []}
+                    rightHandGuideNotes={styleMode ? guide?.rightHandNotes ?? [] : []}
                     allowedPitchClasses={currentRequirement?.allowedPitchClasses ?? []}
                     requiredPitchClasses={currentRequirement?.requiredPitchClasses ?? []}
                     level={level}
@@ -774,12 +1143,20 @@ export function PracticeView({
                       />
                     </label>
                   ) : null}
-                  <span className="pb-2 text-xs text-[var(--lv-text-muted)]">{text.targetTempo(targetTempoFor(block))}</span>
+                  {!styleMode ? (
+                    <span className="pb-2 text-xs text-[var(--lv-text-muted)]">{text.targetTempo(targetTempoFor(block))}</span>
+                  ) : null}
                   <div className="ml-auto flex gap-2">
                     {!running && !paused ? (
                       <button
+                        data-testid="practice-start"
                         className="lv-button-primary inline-flex h-10 items-center gap-2 px-4 text-sm font-semibold"
-                        disabled={!active || midiStatus !== "connected" || block.chords.length === 0}
+                        disabled={
+                          !active
+                          || midiStatus !== "connected"
+                          || block.chords.length === 0
+                          || stylePlanBlocked
+                        }
                         onClick={() => void startSession()}
                       >
                         <Play aria-hidden="true" size={16} /> {text.start}
@@ -892,6 +1269,9 @@ function ProgressionOverview({
   level,
   keySignature,
   text,
+  previewDisabled,
+  previewableEvents,
+  onPreviewChord,
 }: {
   events: readonly ChordTimelineItem[];
   eventResults: ReadonlyArray<"pending" | "match" | "miss">;
@@ -899,6 +1279,9 @@ function ProgressionOverview({
   level: DojoPracticeLevel;
   keySignature?: string;
   text: typeof copy.ja | typeof copy.en;
+  previewDisabled: boolean;
+  previewableEvents: readonly boolean[];
+  onPreviewChord: (index: number) => void;
 }) {
   const total = events.length;
   const progress = total > 0 ? ((currentIndex + 1) / total) * 100 : 0;
@@ -944,12 +1327,16 @@ function ProgressionOverview({
                 ? text.stepMissed
                 : text.stepUpcoming;
           return (
-            <div
+            <button
               key={event.eventId ?? `${event.bar}:${event.beat}:${index}`}
-              className={progressionStepClass(current, result)}
+              type="button"
+              className={`${progressionStepClass(current, result)} text-left transition-colors enabled:hover:border-teal-500 disabled:cursor-default`}
               data-progression-index={index}
               data-progression-state={current ? "current" : result}
               aria-current={current ? "step" : undefined}
+              aria-label={text.previewChord(practiceChordLabel(event, level, keySignature))}
+              disabled={previewDisabled || !previewableEvents[index]}
+              onClick={() => onPreviewChord(index)}
             >
               <div className="flex items-center justify-between gap-2 text-[10px] text-[var(--lv-text-muted)]">
                 <span>{String(index + 1).padStart(2, "0")}</span>
@@ -967,7 +1354,7 @@ function ProgressionOverview({
               }`}>
                 {status}
               </p>
-            </div>
+            </button>
           );
         })}
       </div>
@@ -1001,6 +1388,38 @@ function practiceChordLabel(
   return level === 3
     ? degreeOf(event.chord, keySignature)?.label ?? "-"
     : event.chord.label;
+}
+
+function practiceEventId(event: ChordTimelineItem, index: number): string {
+  return event.eventId ?? `style-event-${index}`;
+}
+
+function practiceTargetSourceKey(source: PracticeTargetSource): string {
+  return source.type === "style" ? source.styleId : source.type;
+}
+
+function uniquePitchClasses(notes: readonly number[]): number[] {
+  return [...new Set(notes.map((note) => ((note % 12) + 12) % 12))]
+    .sort((left, right) => left - right);
+}
+
+function formatGuideNotes(notes: readonly number[]): string {
+  return notes.length > 0
+    ? notes
+      .map((note) => formatMidiNoteForDisplay(note, "fl-studio", "flat"))
+      .join(" · ")
+    : "-";
+}
+
+function styleGuideLabel(
+  guide: PracticeVoicingGuide,
+  text: typeof copy.ja | typeof copy.en,
+): string {
+  if (guide.fallback) return text.styleClose;
+  if (guide.styleId === "shell-17") return text.styleShell;
+  if (guide.styleId === "open-17") return text.styleOpen;
+  if (guide.styleId === "rootless-ab") return text.styleRootless(guide.variant);
+  return text.styleClose;
 }
 
 function MatchState({

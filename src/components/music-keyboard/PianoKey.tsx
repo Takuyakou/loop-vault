@@ -2,6 +2,7 @@ import { memo } from "react";
 import { formatCLabel, formatMidiNoteForDisplay } from "./noteDisplay";
 import type {
   NoteAccidentalStyle,
+  PianoGuideHand,
   PianoKeyGeometry,
   PianoKeyVisualState,
 } from "./types";
@@ -12,6 +13,7 @@ interface PianoKeyProps {
   showCLabel: boolean;
   guideBass: boolean;
   heldBass: boolean;
+  guideHand?: PianoGuideHand;
   accidentalStyle: NoteAccidentalStyle;
 }
 
@@ -31,13 +33,15 @@ export const PianoKey = memo(function PianoKey({
   showCLabel,
   guideBass,
   heldBass,
+  guideHand,
   accidentalStyle,
 }: PianoKeyProps) {
   const { black, height, note, width, x } = geometry;
   const label = showCLabel ? formatCLabel(note) : undefined;
   const baseFill = black ? "#171717" : "#f5f5f4";
   const baseStroke = black ? "#525252" : "#737373";
-  const overlayFill = stateColors[visualState];
+  const guideColor = guideHand === "right" ? "#5eead4" : "#0f766e";
+  const overlayFill = isGuideState(visualState) ? guideColor : stateColors[visualState];
   const isHeld = visualState === "held-correct"
     || visualState === "held-foreign"
     || visualState === "guide-and-held";
@@ -52,6 +56,7 @@ export const PianoKey = memo(function PianoKey({
       data-midi-note={note}
       data-key-kind={black ? "black" : "white"}
       data-visual-state={visualState}
+      data-guide-hand={guideHand}
     >
       <title>{`${formatMidiNoteForDisplay(note, "fl-studio", accidentalStyle)} (${note})`}</title>
       <rect
@@ -71,9 +76,9 @@ export const PianoKey = memo(function PianoKey({
           width={Math.max(0, width - 2)}
           height={Math.max(0, height - 2)}
           fill={overlayFill}
-          fillOpacity={isHeld ? 0.96 : 0.7}
-          stroke={isGuide && isHeld ? "#115e59" : overlayFill}
-          strokeWidth={isHeld ? 2 : 1}
+          fillOpacity={isHeld ? 0.96 : guideHand ? 0.34 : 0.7}
+          stroke={isGuide ? guideColor : overlayFill}
+          strokeWidth={isHeld || guideHand ? 2 : 1}
           rx={black ? 1 : 0}
           className="transition-[fill,stroke] duration-[40ms]"
         />
@@ -151,3 +156,9 @@ export const PianoKey = memo(function PianoKey({
     </g>
   );
 });
+
+function isGuideState(state: PianoKeyVisualState): boolean {
+  return state === "guide"
+    || state === "guide-and-held"
+    || state === "guide-and-sustained";
+}

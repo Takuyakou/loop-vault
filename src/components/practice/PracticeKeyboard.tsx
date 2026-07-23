@@ -17,6 +17,8 @@ import { defaultLiveMidiStore } from "../../liveMidi/defaultLiveMidiStore";
 interface PracticeKeyboardProps {
   range: KeyboardRange;
   guideNotes: readonly number[];
+  leftHandGuideNotes?: readonly number[];
+  rightHandGuideNotes?: readonly number[];
   allowedPitchClasses: readonly number[];
   requiredPitchClasses: readonly number[];
   level: DojoPracticeLevel;
@@ -45,6 +47,8 @@ const copy = {
 export const PracticeKeyboard = memo(function PracticeKeyboard({
   range,
   guideNotes,
+  leftHandGuideNotes = [],
+  rightHandGuideNotes = [],
   allowedPitchClasses,
   requiredPitchClasses,
   level,
@@ -78,6 +82,8 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
         minMidiNote={range.minMidiNote}
         maxMidiNote={range.maxMidiNote}
         guideNotes={guideNotes}
+        leftHandGuideNotes={leftHandGuideNotes}
+        rightHandGuideNotes={rightHandGuideNotes}
         heldNotes={currentHeldNotes}
         sustainedNotes={currentSustainedNotes}
         allowedPitchClasses={allowedPitchClasses}

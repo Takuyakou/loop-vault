@@ -138,6 +138,49 @@ describe("practice session machine", () => {
     state = reducePracticeSession(state, { type: "STABLE_DEADLINE", nowMs: 200 }, context);
     expect(state.roundDirty).toBe(true);
   });
+
+  it("delegates judgement to an injected matcher without changing session timing", () => {
+    const calls: Array<{ eventIndex: number; requiredAttackRevision: number }> = [];
+    const customContext = {
+      ...context,
+      matchInput: (
+        _requirements: (typeof context.requirements)[number],
+        snapshot: PracticeInputSnapshot,
+        requiredAttackRevision: number,
+        eventIndex: number,
+      ) => {
+        calls.push({ eventIndex, requiredAttackRevision });
+        return {
+          state: "match" as const,
+          heldPitchClasses: snapshot.heldMidiNotes.map((note) => note % 12),
+          missingPitchClasses: [],
+          foreignPitchClasses: [],
+          bassMatches: true,
+          attackSatisfied: true,
+        };
+      },
+    };
+    let state = createPracticeSessionState({
+      blockId: block.id,
+      progressionFingerprint: progressionFingerprint(block),
+      level: 1,
+      mode: "step",
+      leniency: "normal",
+      bpm: 60,
+      targetTempo: 60,
+      eventCount: block.chords.length,
+    });
+
+    state = reducePracticeSession(state, { type: "START_SESSION" }, customContext);
+    state = reducePracticeSession(state, {
+      type: "MIDI_STATE_CHANGED",
+      input: input([61], 3, 1_000),
+    }, customContext);
+
+    expect(state.lastMatch?.state).toBe("match");
+    expect(state.provisionalCandidate?.sinceMs).toBe(1_000);
+    expect(calls).toEqual([{ eventIndex: 0, requiredAttackRevision: 0 }]);
+  });
 });
 
 describe("practice progress", () => {

@@ -106,7 +106,14 @@ function withMidiInput(
   if (state.status !== "running") return state;
   const requirements = context.requirements[state.currentEventIndex];
   if (!requirements) return state;
-  const result = matchPerformance(requirements, input, state.requiredAttackRevision);
+  const result = context.matchInput
+    ? context.matchInput(
+        requirements,
+        input,
+        state.requiredAttackRevision,
+        state.currentEventIndex,
+      )
+    : matchPerformance(requirements, input, state.requiredAttackRevision);
   if (result.state === "empty" || result.state === "partial") {
     return {
       ...state,

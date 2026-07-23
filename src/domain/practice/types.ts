@@ -86,7 +86,15 @@ export type PracticeAction =
 export interface PracticeSessionContext {
   events: readonly ChordTimelineItem[];
   requirements: readonly PracticeChordRequirements[];
+  matchInput?: PracticeMatchEvaluator;
 }
+
+export type PracticeMatchEvaluator = (
+  requirements: PracticeChordRequirements,
+  input: PracticeInputSnapshot,
+  requiredAttackRevision: number,
+  eventIndex: number,
+) => PracticeMatchResult;
 
 export interface PracticeRecommendation {
   ideaId: string;
