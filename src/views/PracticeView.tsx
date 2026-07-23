@@ -12,6 +12,10 @@ import {
   Square,
 } from "lucide-react";
 import { playbackController } from "../audio/playbackController";
+import {
+  computePracticeKeyboardRange,
+  formatMidiNoteForDisplay,
+} from "../components/music-keyboard";
 import { PracticeKeyboard } from "../components/practice/PracticeKeyboard";
 import { voiceChordForPreview } from "../domain/chordVoicing";
 import { degreeOf } from "../domain/harmony/degrees";
@@ -31,10 +35,16 @@ import {
   type PracticeRecommendation,
   type PracticeSessionState,
 } from "../domain/practice";
-import type { AppLanguage, SavedProgressionBlock, SongIdea } from "../domain/types";
+import type {
+  AppLanguage,
+  ChordTimelineItem,
+  SavedProgressionBlock,
+  SongIdea,
+} from "../domain/types";
 import { resolveVoicingForUse } from "../domain/voicing";
 import { defaultLiveMidiStore } from "../liveMidi/defaultLiveMidiStore";
 import { PracticeClock } from "../practice/PracticeClock";
+import { registerClosePreparation } from "../store/closePreparation";
 
 interface PracticeTarget {
   ideaId: string;
@@ -92,9 +102,17 @@ const copy = {
     end: "終了",
     current: "いま",
     next: "つぎ",
+    progressionOverview: "進行全体",
+    progressionPosition: (current: number, total: number) => `${current} / ${total}`,
+    barLabel: (bar: number) => `${bar}小節`,
+    stepCurrent: "いま",
+    stepComplete: "完了",
+    stepMissed: "再挑戦",
+    stepUpcoming: "これから",
     guide: "お手本",
     generated: "自動生成",
     source: "元MIDI",
+    sourceInferred: "元MIDIから推定",
     practice: "鍵盤で記録",
     held: "押している音",
     bass: "Bass",
@@ -102,7 +120,7 @@ const copy = {
     match: "合っています",
     wrong: "構成外の音があります",
     ready: "準備完了",
-    clean: "クリーン周",
+    clean: "クリーン",
     round: (value: number) => `${value}周目`,
     bpm: "BPM",
     targetTempo: (value: number) => `段位目標 ${value} BPM`,
@@ -155,9 +173,17 @@ const copy = {
     end: "End",
     current: "Now",
     next: "Next",
+    progressionOverview: "Full progression",
+    progressionPosition: (current: number, total: number) => `${current} / ${total}`,
+    barLabel: (bar: number) => `Bar ${bar}`,
+    stepCurrent: "Now",
+    stepComplete: "Complete",
+    stepMissed: "Retry",
+    stepUpcoming: "Upcoming",
     guide: "Guide",
     generated: "Generated",
     source: "Source MIDI",
+    sourceInferred: "Inferred from MIDI",
     practice: "Keyboard capture",
     held: "Held notes",
     bass: "Bass",
@@ -165,7 +191,7 @@ const copy = {
     match: "Matched",
     wrong: "A foreign tone is held",
     ready: "Ready",
-    clean: "Clean rounds",
+    clean: "Clean",
     round: (value: number) => `Round ${value}`,
     bpm: "BPM",
     targetTempo: (value: number) => `Level target ${value} BPM`,
@@ -215,6 +241,7 @@ export function PracticeView({
   const latestSessionRef = useRef<PracticeSessionState>();
   const latestBlockRef = useRef<SavedProgressionBlock>();
   const latestSelectedRef = useRef<PracticeRecommendation>();
+  const lastPersistedSessionRef = useRef<PracticeSessionState>();
   const active = useStore(defaultLiveMidiStore, (state) => state.active);
   const midiStatus = useStore(defaultLiveMidiStore, (state) => state.status);
   const selectedDevice = useStore(defaultLiveMidiStore, (state) => state.selected);
@@ -228,31 +255,42 @@ export function PracticeView({
   useEffect(() => {
     ownsMidiRef.current = !defaultLiveMidiStore.getState().active;
     if (ownsMidiRef.current) void defaultLiveMidiStore.getState().activate();
+    const unregisterClosePreparation = registerClosePreparation(() => {
+      persistPendingSession();
+    });
     return () => {
+      unregisterClosePreparation();
       clockRef.current.stop();
-      const current = latestSessionRef.current;
-      const currentBlock = latestBlockRef.current;
-      const currentSelected = latestSelectedRef.current;
-      if (
-        current
-        && current.status !== "completed"
-        && currentBlock
-        && currentSelected
-      ) {
-        updateProgressionBlock(currentSelected.ideaId, currentBlock.id, {
-          practice: recordPracticeRound(currentBlock, {
-            level: current.level,
-            bpm: current.bpm,
-            targetTempo: current.targetTempo,
-            consecutiveCleanFlowRounds: current.consecutiveCleanFlowRounds,
-            nowIso: new Date().toISOString(),
-            localDate: localDateString(new Date()),
-          }),
-        });
-      }
+      persistPendingSession();
       if (ownsMidiRef.current) void defaultLiveMidiStore.getState().deactivate();
     };
   }, [updateProgressionBlock]);
+
+  function persistPendingSession(): void {
+    const current = latestSessionRef.current;
+    const currentBlock = latestBlockRef.current;
+    const currentSelected = latestSelectedRef.current;
+    if (
+      !current
+      || current.status === "completed"
+      || !currentBlock
+      || !currentSelected
+      || lastPersistedSessionRef.current === current
+    ) {
+      return;
+    }
+    const updated = updateProgressionBlock(currentSelected.ideaId, currentBlock.id, {
+      practice: recordPracticeRound(currentBlock, {
+        level: current.level,
+        bpm: current.bpm,
+        targetTempo: current.targetTempo,
+        consecutiveCleanFlowRounds: current.consecutiveCleanFlowRounds,
+        nowIso: new Date().toISOString(),
+        localDate: localDateString(new Date()),
+      }),
+    });
+    if (updated) lastPersistedSessionRef.current = current;
+  }
 
   const selected = recommendations.find(
     (item) => item.ideaId === target?.ideaId && item.block.id === target.blockId,
@@ -277,16 +315,25 @@ export function PracticeView({
     [block?.chords, requirements],
   );
   const currentRequirement = requirements[session?.currentEventIndex ?? 0];
-  const guide = currentTarget
-    ? resolveVoicingForUse(
-        currentTarget.chord,
-        currentTarget.voicingMemory,
-        voiceChordForPreview(currentTarget.chord).notes,
-      )
-    : undefined;
+  const resolvedGuides = useMemo(
+    () => block?.chords.map((event) => resolveVoicingForUse(
+      event.chord,
+      event.voicingMemory,
+      voiceChordForPreview(event.chord).notes,
+    )) ?? [],
+    [block?.chords],
+  );
+  const guide = resolvedGuides[session?.currentEventIndex ?? 0];
+  const keyboardRange = useMemo(
+    () => computePracticeKeyboardRange(resolvedGuides.map((resolved) => resolved.midiNotes)),
+    [resolvedGuides],
+  );
   const filtered = recommendations.filter((item) => matchesQueueFilter(item, filter, localDate));
   const running = session?.status === "running";
   const paused = session?.status === "paused";
+  const activeEventIndex = block?.chords.length
+    ? Math.max(0, Math.min(block.chords.length - 1, session?.currentEventIndex ?? 0))
+    : 0;
 
   useEffect(() => {
     latestSessionRef.current = session;
@@ -482,15 +529,18 @@ export function PracticeView({
   }
 
   return (
-    <div className="py-5">
-      <div className="border-b border-[var(--lv-border)] pb-4">
+    <div className="py-5 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+      <div className="shrink-0 border-b border-[var(--lv-border)] pb-4">
         <p className="text-xs font-semibold uppercase text-[var(--lv-accent)]">{text.eyebrow}</p>
         <h2 className="mt-1 text-xl font-semibold text-[var(--lv-text)]">{text.title}</h2>
       </div>
 
-      <div className="grid min-h-[36rem] gap-0 border-x border-b border-[var(--lv-border)] lg:grid-cols-[17rem_minmax(0,1fr)]">
-        <aside className="border-b border-[var(--lv-border)] bg-[var(--lv-surface)] lg:border-b-0 lg:border-r">
-          <div className="border-b border-[var(--lv-border)] p-3">
+      <div
+        className="grid min-h-[36rem] gap-0 border-x border-b border-[var(--lv-border)] lg:min-h-0 lg:flex-1 lg:grid-cols-[17rem_minmax(0,1fr)] lg:overflow-hidden"
+        data-testid="practice-layout"
+      >
+        <aside className="border-b border-[var(--lv-border)] bg-[var(--lv-surface)] lg:flex lg:min-h-0 lg:flex-col lg:border-b-0 lg:border-r">
+          <div className="shrink-0 border-b border-[var(--lv-border)] p-3">
             <div className="flex items-center gap-2">
               <Dumbbell aria-hidden="true" size={16} className="text-[var(--lv-accent)]" />
               <h3 className="text-sm font-semibold">{text.queue}</h3>
@@ -510,7 +560,10 @@ export function PracticeView({
               <option value="l3">L3</option>
             </select>
           </div>
-          <div className="max-h-[37rem] overflow-y-auto">
+          <div
+            className="max-h-[37rem] overflow-y-auto lg:min-h-0 lg:flex-1 lg:max-h-none lg:overscroll-contain"
+            data-testid="practice-queue-scroll"
+          >
             {recommendations.length === 0 ? (
               <p className="p-4 text-sm text-[var(--lv-text-muted)]">{text.noProgressions}</p>
             ) : filtered.length === 0 ? (
@@ -528,7 +581,10 @@ export function PracticeView({
           </div>
         </aside>
 
-        <section className="min-w-0 bg-[var(--lv-bg)] p-4 sm:p-6">
+        <section
+          className="min-w-0 bg-[var(--lv-bg)] p-4 sm:p-6 lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain"
+          data-testid="practice-workspace-scroll"
+        >
           {!selected || !block ? (
             <div className="grid min-h-80 place-items-center text-sm text-[var(--lv-text-muted)]">
               {text.selectPrompt}
@@ -639,64 +695,68 @@ export function PracticeView({
               </div>
 
               <div className="py-5">
-                <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
+                <div className="grid gap-5 lg:grid-cols-[minmax(7rem,0.65fr)_minmax(18rem,2fr)_auto]">
                   <div>
                     <p className="text-xs font-semibold uppercase text-[var(--lv-accent)]">{text.current}</p>
                     <p className="mt-2 text-3xl font-semibold">
-                      {currentTarget
-                        ? level === 3
-                          ? degreeOf(currentTarget.chord, keySignature)?.label ?? "-"
-                          : currentTarget.chord.label
-                        : "-"}
+                      {practiceChordLabel(currentTarget, level, keySignature)}
                     </p>
-                    <p className="mt-2 text-sm text-[var(--lv-text-muted)]">
-                      {text.next}: {nextTarget
-                        ? level === 3
-                          ? degreeOf(nextTarget.chord, keySignature)?.label ?? "-"
-                          : nextTarget.chord.label
-                        : "-"}
-                    </p>
+                    <div className="mt-3 flex items-baseline gap-2 text-sm text-[var(--lv-text-muted)]">
+                      <span className="text-xs font-semibold uppercase">{text.next}</span>
+                      <span>{practiceChordLabel(nextTarget, level, keySignature)}</span>
+                    </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-3 text-sm">
-                    <span>{text.round(session?.roundNumber ?? 1)}</span>
+                  <ProgressionOverview
+                    events={block.chords}
+                    eventResults={session?.eventResults ?? []}
+                    currentIndex={activeEventIndex}
+                    level={level}
+                    keySignature={keySignature}
+                    text={text}
+                  />
+                  <div className="flex h-fit flex-wrap items-center gap-x-3 gap-y-1 text-sm lg:border-l lg:border-[var(--lv-border)] lg:pl-4">
+                    <span className="font-semibold">{text.round(session?.roundNumber ?? 1)}</span>
                     {mode === "flow" ? <span>{text.bpm} {bpm} · Beat {beat}</span> : null}
-                    <span>{text.clean}: {session?.consecutiveCleanFlowRounds ?? 0}/2</span>
+                    <span className="text-[var(--lv-text-muted)]">{text.clean} {session?.consecutiveCleanFlowRounds ?? 0}/2</span>
                   </div>
                 </div>
 
                 {level === 1 && guide ? (
-                  <div className="mt-4 border border-[var(--lv-border)] bg-[var(--lv-surface)] p-3">
+                  <div className="mt-4 border border-[var(--lv-border)] bg-[var(--lv-surface)] px-3 py-2.5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="text-xs font-semibold text-[var(--lv-text-muted)]">{text.guide}</p>
-                      <span className="text-xs text-[var(--lv-text-muted)]">
+                      <span className="border border-[var(--lv-border)] px-2 py-1 text-xs text-[var(--lv-text-muted)]">
                         {guide.origin === "practice-override"
                           ? text.practice
-                          : guide.origin.startsWith("source")
+                          : guide.origin === "source-verified"
                             ? text.source
+                            : guide.origin === "source-auto"
+                              ? text.sourceInferred
                             : text.generated}
                       </span>
                     </div>
-                    <p className="mt-2 font-mono text-sm">{guide.midiNotes.join(" · ")}</p>
+                    <p className="mt-1.5 text-sm">
+                      {guide.midiNotes
+                        .map((note) => formatMidiNoteForDisplay(note, "fl-studio", "flat"))
+                        .join(" · ")}
+                    </p>
                   </div>
                 ) : null}
 
                 <div className="mt-4">
                   <PracticeKeyboard
-                    guideNotes={level === 1 ? guide?.midiNotes ?? [] : []}
-                    heldNotes={session?.lastInput?.heldMidiNotes ?? []}
-                    sustainedNotes={session?.lastInput?.sustainedMidiNotes ?? []}
-                    foreignPitchClasses={session?.lastMatch?.foreignPitchClasses ?? []}
+                    range={keyboardRange}
+                    guideNotes={guide?.midiNotes ?? []}
+                    allowedPitchClasses={currentRequirement?.allowedPitchClasses ?? []}
+                    requiredPitchClasses={currentRequirement?.requiredPitchClasses ?? []}
+                    level={level}
+                    language={language}
+                    matchState={session?.lastMatch?.state}
                   />
                 </div>
 
-                <div className="mt-4 flex min-h-12 items-center gap-3 border-y border-[var(--lv-border)] py-3">
+                <div className="mt-3 flex min-h-10 items-center gap-3 border-y border-[var(--lv-border)] py-2.5">
                   <MatchState state={session?.lastMatch?.state} text={text} />
-                  {session?.lastInput?.heldMidiNotes.length ? (
-                    <span className="ml-auto text-xs text-[var(--lv-text-muted)]">
-                      {text.held}: {session.lastInput.heldMidiNotes.join(", ")}
-                      {" · "}{text.bass}: {Math.min(...session.lastInput.heldMidiNotes)}
-                    </span>
-                  ) : null}
                 </div>
 
                 <div className="mt-4 flex flex-wrap items-end gap-3">
@@ -823,6 +883,124 @@ function PracticeBadge({
       {stateLabel(block, state, language)}
     </span>
   );
+}
+
+function ProgressionOverview({
+  events,
+  eventResults,
+  currentIndex,
+  level,
+  keySignature,
+  text,
+}: {
+  events: readonly ChordTimelineItem[];
+  eventResults: ReadonlyArray<"pending" | "match" | "miss">;
+  currentIndex: number;
+  level: DojoPracticeLevel;
+  keySignature?: string;
+  text: typeof copy.ja | typeof copy.en;
+}) {
+  const total = events.length;
+  const progress = total > 0 ? ((currentIndex + 1) / total) * 100 : 0;
+  return (
+    <div
+      className="min-w-0 border-y border-[var(--lv-border)] py-3 lg:border-x lg:border-y-0 lg:px-4 lg:py-0"
+      data-testid="practice-progression-overview"
+      aria-label={text.progressionOverview}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-semibold uppercase text-[var(--lv-text-muted)]">
+          {text.progressionOverview}
+        </p>
+        <span className="text-xs font-semibold text-[var(--lv-accent)]">
+          {text.progressionPosition(Math.min(currentIndex + 1, total), total)}
+        </span>
+      </div>
+      <div
+        className="mt-2 h-1.5 overflow-hidden bg-[var(--lv-surface-raised)]"
+        role="progressbar"
+        aria-label={text.progressionOverview}
+        aria-valuemin={0}
+        aria-valuemax={total}
+        aria-valuenow={total > 0 ? currentIndex + 1 : 0}
+      >
+        <span
+          className="block h-full bg-[var(--lv-accent)] transition-[width] duration-150"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+      <div
+        className="mt-2 grid gap-1.5"
+        style={{ gridTemplateColumns: "repeat(auto-fit, minmax(6.25rem, 1fr))" }}
+      >
+        {events.map((event, index) => {
+          const current = index === currentIndex;
+          const result = eventResults[index] ?? "pending";
+          const status = current
+            ? text.stepCurrent
+            : result === "match"
+              ? text.stepComplete
+              : result === "miss"
+                ? text.stepMissed
+                : text.stepUpcoming;
+          return (
+            <div
+              key={event.eventId ?? `${event.bar}:${event.beat}:${index}`}
+              className={progressionStepClass(current, result)}
+              data-progression-index={index}
+              data-progression-state={current ? "current" : result}
+              aria-current={current ? "step" : undefined}
+            >
+              <div className="flex items-center justify-between gap-2 text-[10px] text-[var(--lv-text-muted)]">
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <span>{text.barLabel(event.bar)}</span>
+              </div>
+              <p className="mt-1 truncate text-sm font-semibold">
+                {practiceChordLabel(event, level, keySignature)}
+              </p>
+              <p className={`mt-1 text-[10px] ${
+                current
+                  ? "text-teal-200"
+                  : result === "miss"
+                    ? "text-amber-200"
+                    : "text-[var(--lv-text-muted)]"
+              }`}>
+                {status}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function progressionStepClass(
+  current: boolean,
+  result: "pending" | "match" | "miss",
+): string {
+  const base = "min-w-0 border px-2 py-1.5";
+  if (current) {
+    return `${base} border-teal-300 bg-teal-950/40`;
+  }
+  if (result === "match") {
+    return `${base} border-teal-800 bg-teal-950/20`;
+  }
+  if (result === "miss") {
+    return `${base} border-amber-700 bg-amber-950/20`;
+  }
+  return `${base} border-[var(--lv-border)] bg-[var(--lv-surface)]`;
+}
+
+function practiceChordLabel(
+  event: ChordTimelineItem | undefined,
+  level: DojoPracticeLevel,
+  keySignature?: string,
+): string {
+  if (!event) return "-";
+  return level === 3
+    ? degreeOf(event.chord, keySignature)?.label ?? "-"
+    : event.chord.label;
 }
 
 function MatchState({

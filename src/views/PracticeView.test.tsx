@@ -8,6 +8,7 @@ import { createLiveNoteState } from "../domain/liveMidi";
 import { makeIdea } from "../domain/testFactory";
 import type { SavedProgressionBlock } from "../domain/types";
 import { defaultLiveMidiStore } from "../liveMidi/defaultLiveMidiStore";
+import { runClosePreparations } from "../store/closePreparation";
 import { PracticeView } from "./PracticeView";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
@@ -88,7 +89,32 @@ describe("PracticeView", () => {
     expect(container.textContent).toContain("Test Keys");
     expect(container.textContent).toContain("お手本");
     expect(container.textContent).toContain("自動生成");
-    expect(container.querySelector('[aria-label="Practice keyboard"]')).not.toBeNull();
+    expect(container.querySelector('[role="img"][aria-label*="ピアノ鍵盤"]')).not.toBeNull();
+    expect(container.textContent).toContain("C5");
+    expect(container.textContent).not.toContain("60 ·");
+    expect(container.querySelector('[data-testid="practice-layout"]')?.className)
+      .toContain("lg:overflow-hidden");
+    expect(container.querySelector('[data-testid="practice-queue-scroll"]')?.className)
+      .toContain("overflow-y-auto");
+    expect(container.querySelector('[data-testid="practice-queue-scroll"]')?.className)
+      .toContain("lg:overscroll-contain");
+    expect(container.querySelector('[data-testid="practice-workspace-scroll"]')?.className)
+      .toContain("lg:overflow-y-auto");
+    expect(container.querySelector('[data-testid="practice-workspace-scroll"]')?.className)
+      .toContain("lg:overscroll-contain");
+    const progressionOverview = container.querySelector(
+      '[data-testid="practice-progression-overview"]',
+    );
+    expect(progressionOverview).not.toBeNull();
+    expect(progressionOverview?.querySelectorAll("[data-progression-index]")).toHaveLength(4);
+    expect(progressionOverview?.querySelector('[aria-current="step"]')?.textContent)
+      .toContain(block.chords[0].chord.label);
+    block.chords.forEach((event) => {
+      expect(progressionOverview?.textContent).toContain(event.chord.label);
+    });
+    const progressionBar = progressionOverview?.querySelector('[role="progressbar"]');
+    expect(progressionBar?.getAttribute("aria-valuenow")).toBe("1");
+    expect(progressionBar?.getAttribute("aria-valuemax")).toBe("4");
 
     await act(async () => root.unmount());
   });
@@ -157,5 +183,35 @@ describe("PracticeView", () => {
         }),
       }),
     );
+  });
+
+  it("prepares pending practice progress before app close without duplicating it on unmount", async () => {
+    const idea = makeIdea({
+      id: "00000000-0000-4000-8000-000000000095",
+      title: "Close Prepare",
+      progressionBlocks: [block],
+    });
+    const updateProgressionBlock = vi.fn(() => true);
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={[idea]}
+        language="ja"
+        updateProgressionBlock={updateProgressionBlock}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={vi.fn()}
+      />,
+    ));
+    const start = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent?.includes("練習を開始"));
+    await act(async () => start?.click());
+
+    act(() => runClosePreparations());
+    expect(updateProgressionBlock).toHaveBeenCalledOnce();
+
+    await act(async () => root.unmount());
+    expect(updateProgressionBlock).toHaveBeenCalledOnce();
   });
 });

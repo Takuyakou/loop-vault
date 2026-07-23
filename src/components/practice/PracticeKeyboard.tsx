@@ -1,75 +1,164 @@
-import { midiNoteName } from "../voicing/midiNoteName";
+import { memo, useMemo } from "react";
+import { useStore } from "zustand";
+import {
+  formatMidiNoteForDisplay,
+  PianoKeyboardVisualizer,
+  type KeyboardRange,
+  type NoteAccidentalStyle,
+} from "../music-keyboard";
+import { heldNotes, sustainedNotes } from "../../domain/liveMidi";
+import type {
+  DojoPracticeLevel,
+  PracticeMatchState,
+} from "../../domain/practice";
+import type { AppLanguage } from "../../domain/types";
+import { defaultLiveMidiStore } from "../../liveMidi/defaultLiveMidiStore";
 
 interface PracticeKeyboardProps {
+  range: KeyboardRange;
   guideNotes: readonly number[];
-  heldNotes: readonly number[];
-  sustainedNotes: readonly number[];
-  foreignPitchClasses: readonly number[];
+  allowedPitchClasses: readonly number[];
+  requiredPitchClasses: readonly number[];
+  level: DojoPracticeLevel;
+  language: AppLanguage;
+  accidentalStyle?: NoteAccidentalStyle;
+  matchState?: PracticeMatchState;
 }
 
-export function PracticeKeyboard({
+const copy = {
+  ja: {
+    input: "入力",
+    missing: "あと",
+    matched: "一致",
+    foreign: "構成外音があります",
+    notes: (count: number) => `${count}音`,
+  },
+  en: {
+    input: "Input",
+    missing: "Missing",
+    matched: "Matched",
+    foreign: "Foreign note detected",
+    notes: (count: number) => `${count} notes`,
+  },
+} as const;
+
+export const PracticeKeyboard = memo(function PracticeKeyboard({
+  range,
   guideNotes,
-  heldNotes,
-  sustainedNotes,
-  foreignPitchClasses,
+  allowedPitchClasses,
+  requiredPitchClasses,
+  level,
+  language,
+  accidentalStyle = "flat",
+  matchState = "empty",
 }: PracticeKeyboardProps) {
-  const guide = new Set(guideNotes);
-  const held = new Set(heldNotes);
-  const sustained = new Set(sustainedNotes);
-  const allNotes = [...guideNotes, ...heldNotes, ...sustainedNotes];
-  const minimum = allNotes.length > 0
-    ? Math.max(24, Math.floor(Math.min(...allNotes) / 12) * 12 - 2)
-    : 48;
-  const maximum = allNotes.length > 0
-    ? Math.min(108, Math.ceil(Math.max(...allNotes) / 12) * 12 + 2)
-    : 72;
-  const keys = Array.from({ length: maximum - minimum + 1 }, (_, index) => minimum + index);
+  const liveNoteState = useStore(defaultLiveMidiStore, (state) => state.notes);
+  const currentHeldNotes = useMemo(() => heldNotes(liveNoteState), [liveNoteState]);
+  const currentSustainedNotes = useMemo(
+    () => sustainedNotes(liveNoteState),
+    [liveNoteState],
+  );
+  const heldPitchClasses = useMemo(
+    () => new Set(currentHeldNotes.map(positivePitchClass)),
+    [currentHeldNotes],
+  );
+  const missingPitchClasses = requiredPitchClasses.filter(
+    (pitchClass) => !heldPitchClasses.has(positivePitchClass(pitchClass)),
+  );
+  const foreignNotes = currentHeldNotes.filter(
+    (note) => !allowedPitchClasses.includes(positivePitchClass(note)),
+  );
+  const heldBassNote = currentHeldNotes[0];
+  const guideBassNote = guideNotes.length > 0 ? Math.min(...guideNotes) : undefined;
+  const visualMatchState = matchState === "empty" ? "idle" : matchState;
 
   return (
     <div>
-      <div
-        className="flex h-32 overflow-hidden border border-[var(--lv-border)] bg-black"
-        aria-label="Practice keyboard"
+      <PianoKeyboardVisualizer
+        minMidiNote={range.minMidiNote}
+        maxMidiNote={range.maxMidiNote}
+        guideNotes={guideNotes}
+        heldNotes={currentHeldNotes}
+        sustainedNotes={currentSustainedNotes}
+        allowedPitchClasses={allowedPitchClasses}
+        requiredPitchClasses={requiredPitchClasses}
+        guideBassNote={guideBassNote}
+        heldBassNote={heldBassNote}
+        showGuide={level === 1}
+        showCLabels
+        octaveConvention="fl-studio"
+        accidentalStyle={accidentalStyle}
+        matchState={visualMatchState}
+        language={language}
+      />
+      <p
+        className={`mt-3 min-h-5 text-sm ${
+          foreignNotes.length > 0 ? "text-amber-200" : "text-[var(--lv-text-muted)]"
+        }`}
+        aria-live="polite"
       >
-        {keys.map((note) => {
-          const black = [1, 3, 6, 8, 10].includes(note % 12);
-          const foreign = held.has(note) && foreignPitchClasses.includes(note % 12);
-          const className = foreign
-            ? "!bg-amber-300"
-            : held.has(note)
-              ? "!bg-teal-300"
-              : sustained.has(note)
-                ? "!bg-sky-700"
-                : guide.has(note)
-                  ? "!bg-teal-900"
-                  : black
-                    ? "bg-stone-800"
-                    : "bg-stone-200";
-          return (
-            <span
-              key={note}
-              title={midiNoteName(note)}
-              className={`min-w-0 flex-1 border-r border-stone-700 ${className}`}
-            />
-          );
+        {inputSummary({
+          accidentalStyle,
+          foreignCount: foreignNotes.length,
+          guideNotes,
+          heldNotes: currentHeldNotes,
+          language,
+          level,
+          matchState,
+          missingPitchClasses,
         })}
-      </div>
-      <div className="mt-2 flex flex-wrap gap-4 text-xs text-[var(--lv-text-muted)]">
-        <Legend color="bg-teal-900" label="Guide" />
-        <Legend color="bg-teal-300" label="Held" />
-        <Legend color="bg-amber-300" label="Foreign" />
-        <Legend color="bg-sky-700" label="Sustain" />
-      </div>
+      </p>
     </div>
   );
+});
+
+function inputSummary({
+  accidentalStyle,
+  foreignCount,
+  guideNotes,
+  heldNotes: currentHeldNotes,
+  language,
+  level,
+  matchState,
+  missingPitchClasses,
+}: {
+  accidentalStyle: NoteAccidentalStyle;
+  foreignCount: number;
+  guideNotes: readonly number[];
+  heldNotes: readonly number[];
+  language: AppLanguage;
+  level: DojoPracticeLevel;
+  matchState: PracticeMatchState;
+  missingPitchClasses: readonly number[];
+}): string {
+  const text = copy[language];
+  if (foreignCount > 0 || matchState === "wrong") return text.foreign;
+  if (matchState === "match") return text.matched;
+
+  if (level === 1) {
+    const input = currentHeldNotes.length > 0
+      ? currentHeldNotes
+        .map((note) => formatMidiNoteForDisplay(note, "fl-studio", accidentalStyle))
+        .join(" · ")
+      : "-";
+    const missing = missingPitchClasses
+      .map((pitchClass) => guideNotes.find(
+        (note) => positivePitchClass(note) === positivePitchClass(pitchClass),
+      ))
+      .filter((note): note is number => note !== undefined)
+      .map((note) => formatMidiNoteForDisplay(note, "fl-studio", accidentalStyle));
+    return `${text.input}: ${input}${
+      missing.length > 0 ? ` · ${text.missing}: ${missing.join(" · ")}` : ""
+    }`;
+  }
+
+  return `${text.input}: ${text.notes(currentHeldNotes.length)}${
+    missingPitchClasses.length > 0
+      ? ` · ${text.missing}: ${text.notes(missingPitchClasses.length)}`
+      : ""
+  }`;
 }
 
-function Legend({ color, label }: { color: string; label: string }) {
-  return (
-    <span className="inline-flex items-center gap-1.5">
-      <span className={`h-2.5 w-2.5 ${color}`} />
-      {label}
-    </span>
-  );
+function positivePitchClass(note: number): number {
+  return ((note % 12) + 12) % 12;
 }
-
