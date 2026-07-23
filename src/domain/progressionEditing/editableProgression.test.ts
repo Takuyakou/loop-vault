@@ -26,8 +26,8 @@ describe("editable progression", () => {
 
     expect(first).toEqual(second);
     expect(first.slots.map((slot) => slot.id)).toEqual([
-      "candidate-1:1:1:0",
-      "candidate-1:1:3:1",
+      "legacy:candidate-1:1:1:0",
+      "legacy:candidate-1:1:3:1",
     ]);
     expect(first.slots[0]?.originalChord).not.toBe(candidate.chords[0]?.chord);
     expect(first.slots[0]?.currentChord).not.toBe(first.slots[0]?.originalChord);

@@ -125,7 +125,7 @@ export function splitEditableChord(
   const suffix = editable.historyIndex;
   const left: EditableChordSlot = {
     ...cloneSlot(slot),
-    id: `${slot.id}:left:${suffix}`,
+    id: slot.id,
     position: { ...slot.position, durationBeats },
     edited: true,
     editSource: "split",
@@ -136,6 +136,7 @@ export function splitEditableChord(
     position: { ...rightPosition, durationBeats },
     edited: true,
     editSource: "split",
+    voicingMemory: undefined,
   };
   const slots = [
     ...editable.slots.slice(0, index).map(cloneSlot),
@@ -188,7 +189,7 @@ export function mergeEditableChords(
   const kept = keep === "first" ? first : second;
   const merged: EditableChordSlot = {
     ...cloneSlot(kept),
-    id: `${first.id}+${second.id}`,
+    id: kept.id,
     position: {
       ...first.position,
       durationBeats: first.position.durationBeats + second.position.durationBeats,

@@ -1710,5 +1710,5 @@ export function appendProgressionMemo(existingMemo: string, progressionText: str
 }
 
 function progressionSignature(chords: readonly ChordTimelineItem[]): string {
-  return JSON.stringify(chords);
+  return JSON.stringify(chords.map(({ eventId: _eventId, ...item }) => item));
 }

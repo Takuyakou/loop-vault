@@ -19,6 +19,7 @@ export type PlaybackRequest =
       type: "chord";
       chord: ChordSymbol;
       sound?: PreviewSound;
+      explicitMidiNotes?: readonly number[];
     }
   | {
       type: "timeline";
@@ -26,6 +27,7 @@ export type PlaybackRequest =
       bpm?: number;
       sound?: PreviewSound;
       beatsPerBar?: number;
+      explicitMidiNotesByEventId?: Readonly<Record<string, readonly number[]>>;
     };
 
 export type PlaybackStatus = "idle" | "starting" | "playing";
@@ -51,6 +53,7 @@ export interface PlaybackAudioDriver {
     chord: ChordSymbol,
     sound: PreviewSound | undefined,
     callbacks: PreviewLifecycleCallbacks,
+    explicitMidiNotes?: readonly number[],
   ): Promise<void>;
   playTimeline(
     timeline: readonly ChordTimelineItem[],
@@ -58,6 +61,7 @@ export interface PlaybackAudioDriver {
     sound: PreviewSound | undefined,
     callbacks: PreviewLifecycleCallbacks,
     beatsPerBar?: number,
+    explicitMidiNotesByEventId?: Readonly<Record<string, readonly number[]>>,
   ): Promise<void>;
   stop(): void;
 }
@@ -65,11 +69,18 @@ export interface PlaybackAudioDriver {
 const idleState: PlaybackState = { status: "idle" };
 
 const defaultAudioDriver: PlaybackAudioDriver = {
-  playChord(chord, sound, callbacks) {
-    return previewChord(chord, sound, callbacks);
+  playChord(chord, sound, callbacks, explicitMidiNotes) {
+    return previewChord(chord, sound, callbacks, explicitMidiNotes);
   },
-  playTimeline(timeline, bpm, sound, callbacks, beatsPerBar) {
-    return previewChordTimeline(timeline, bpm, sound, callbacks, beatsPerBar);
+  playTimeline(timeline, bpm, sound, callbacks, beatsPerBar, explicitMidiNotesByEventId) {
+    return previewChordTimeline(
+      timeline,
+      bpm,
+      sound,
+      callbacks,
+      beatsPerBar,
+      explicitMidiNotesByEventId,
+    );
   },
   stop: stopPreview,
 };
@@ -117,18 +128,49 @@ export function createPlaybackController(
 
     try {
       if (request.type === "chord") {
-        await driver.playChord(request.chord, request.sound, callbacks);
-      } else {
-        if (request.beatsPerBar === undefined) {
-          await driver.playTimeline(request.timeline, request.bpm, request.sound, callbacks);
+        if (request.explicitMidiNotes === undefined) {
+          await driver.playChord(request.chord, request.sound, callbacks);
         } else {
-          await driver.playTimeline(
-            request.timeline,
-            request.bpm,
+          await driver.playChord(
+            request.chord,
             request.sound,
             callbacks,
-            request.beatsPerBar,
+            request.explicitMidiNotes,
           );
+        }
+      } else {
+        if (request.beatsPerBar === undefined) {
+          if (request.explicitMidiNotesByEventId === undefined) {
+            await driver.playTimeline(request.timeline, request.bpm, request.sound, callbacks);
+          } else {
+            await driver.playTimeline(
+              request.timeline,
+              request.bpm,
+              request.sound,
+              callbacks,
+              undefined,
+              request.explicitMidiNotesByEventId,
+            );
+          }
+        } else {
+          if (request.explicitMidiNotesByEventId === undefined) {
+            await driver.playTimeline(
+              request.timeline,
+              request.bpm,
+              request.sound,
+              callbacks,
+              request.beatsPerBar,
+            );
+          } else {
+            await driver.playTimeline(
+              request.timeline,
+              request.bpm,
+              request.sound,
+              callbacks,
+              request.beatsPerBar,
+              request.explicitMidiNotesByEventId,
+            );
+          }
         }
       }
     } catch (error) {

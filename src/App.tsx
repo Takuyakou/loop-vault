@@ -18,6 +18,7 @@ import { LiveMidiMiniMode } from "./components/LiveMidiMiniMode";
 import { LiveMidiImportDialog, type LiveMidiImportRequest } from "./components/LiveMidiImportDialog";
 import { UndoToast } from "./components/UndoToast";
 import { statusLabel } from "./domain/displayLabels";
+import { parseMidi } from "./domain/midi";
 import type { SavedProgressionBlock, SongIdea, Status } from "./domain/types";
 import {
   applyPendingDeletions,
@@ -206,6 +207,10 @@ async function analyzeMidiPath(path: string) {
     } catch (error) {
       setToast(error instanceof Error ? error.message : copy.toast.midiReadFailed);
     }
+  }
+
+  async function loadMidiSource(path: string) {
+    return parseMidi(await readFile(path));
   }
 
   async function enterLiveMidiMode() {
@@ -420,6 +425,7 @@ async function analyzeMidiPath(path: string) {
                 setToast={setToast}
                 copy={copy}
                 language={language}
+                loadMidiSource={loadMidiSource}
               />
             ) : null}
             {view === "detail" && !selectedIdea ? (

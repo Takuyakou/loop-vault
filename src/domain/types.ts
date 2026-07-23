@@ -31,6 +31,7 @@ export interface ChordSymbol {
 }
 
 export interface ChordTimelineItem {
+  eventId?: string;
   bar: number;
   beat: number;
   durationBeats: number;
@@ -38,6 +39,35 @@ export interface ChordTimelineItem {
   confidence: number;
   alternatives: { chord: ChordSymbol; confidence: number }[];
   warnings: string[];
+  voicingMemory?: ChordVoicingMemory;
+}
+
+export type VoicingSource =
+  | "midi-extracted"
+  | "live-played"
+  | "chord-drip"
+  | "manual";
+
+export type VoicingRepresentation =
+  | "simultaneous-voicing"
+  | "aggregated-note-set";
+
+export interface VoicingSnapshot {
+  schemaVersion: 1;
+  source: VoicingSource;
+  representation: VoicingRepresentation;
+  midiNotes: number[];
+  bassNote?: number;
+  capturedForChordKey: string;
+  capturedForChordLabel?: string;
+  confidence?: number;
+  userVerified?: boolean;
+  extractorVersion?: string;
+}
+
+export interface ChordVoicingMemory {
+  sourceVoicing?: VoicingSnapshot;
+  practiceVoicingOverride?: VoicingSnapshot;
 }
 
 export interface SuppressedAutoTag {

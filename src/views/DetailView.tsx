@@ -8,6 +8,7 @@ import { pipelineStatuses, StatusPipeline } from "../components/StatusPipeline";
 import { canOpenAssetPath, openableAssetExtensions } from "../domain/assetSecurity";
 import { statusLabel } from "../domain/displayLabels";
 import { beatsPerBar } from "../domain/midi";
+import { resolveTimelineVoicings } from "../domain/voicing";
 import { formatProgressionText } from "../domain/progressionText";
 import type { TransitionOptions, TransitionResult } from "../domain/transition";
 import type { AssetType, SavedProgressionBlock, SongIdea, Status } from "../domain/types";
@@ -74,7 +75,7 @@ function ProgressionBlockCard({
             {block.sourceFileName ?? copy.detail.capturedMidi}{block.startBar ? ` · ${copy.detail.barRange(block.startBar, block.endBar ?? block.startBar)}` : ""}
           </p>
         </button>
-        <PlayToggle source={source} request={{ type: "timeline", timeline: block.chords, bpm, beatsPerBar: beatsPerBar(block.timeSignature) }} playLabel={copy.common.preview} stopLabel={copy.common.stop} className="rounded border border-cyan-500/60 px-2 py-1 text-cyan-100" onError={onPreviewError} />
+        <PlayToggle source={source} request={{ type: "timeline", timeline: block.chords, bpm, beatsPerBar: beatsPerBar(block.timeSignature), explicitMidiNotesByEventId: resolveTimelineVoicings(block.chords) }} playLabel={copy.common.preview} stopLabel={copy.common.stop} className="rounded border border-cyan-500/60 px-2 py-1 text-cyan-100" onError={onPreviewError} />
         <button className="inline-flex items-center gap-2 rounded border border-teal-500/60 px-2 py-1 text-teal-100" onClick={onCopyProgression}>
           <Copy aria-hidden="true" size={16} />
           {copy.capture.copyProgression}

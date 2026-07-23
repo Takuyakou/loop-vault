@@ -205,6 +205,44 @@ describe("parseVaultFileJson", () => {
     expect(result.vault.ideas[0]?.progressionBlocks?.[0]?.suppressedAutoTags).toEqual([]);
   });
 
+  it("loads optional event identity and voicing memory without changing fileVersion", () => {
+    const withVoicing = idea({
+      progressionBlocks: [{
+        id: "91d92f3c-fc9d-4fe5-8cc9-4bec2d7fb887",
+        summaryText: "Cmaj7",
+        chords: [{
+          eventId: "event-1",
+          bar: 1,
+          beat: 1,
+          durationBeats: 4,
+          chord: { root: 0, quality: "maj7", tensions: [], label: "Cmaj7" },
+          confidence: 0.9,
+          alternatives: [],
+          warnings: [],
+          voicingMemory: {
+            sourceVoicing: {
+              schemaVersion: 1,
+              source: "midi-extracted",
+              representation: "simultaneous-voicing",
+              midiNotes: [48, 55, 59, 64],
+              bassNote: 48,
+              capturedForChordKey: "0:maj7:-:-",
+              confidence: 0.9,
+            },
+          },
+        }],
+        tags: [],
+        capturedAt: "2026-01-01T00:00:00.000Z",
+        analyzerVersion: "legacy",
+      }],
+    });
+    const result = parseVaultFileJson(JSON.stringify(vault({ ideas: [withVoicing] })));
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.vault.fileVersion).toBe(1);
+    expect(result.vault.ideas[0]?.progressionBlocks?.[0]?.chords[0]?.eventId).toBe("event-1");
+  });
+
   it("loads legacy settings without language by defaulting to Japanese", () => {
     const legacyVault = {
       app: "loopvault",

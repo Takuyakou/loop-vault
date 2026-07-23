@@ -1,4 +1,4 @@
-import type { ChordSymbol } from "../types";
+import type { ChordSymbol, ChordVoicingMemory } from "../types";
 import type { QuickCandidateSelectionMetadata } from "./quickCandidates";
 
 export interface ChordAlternative {
@@ -33,6 +33,7 @@ export interface EditableChordSlot {
   edited: boolean;
   editSource?: ProgressionEditSource;
   quickCandidateSelection?: QuickCandidateSelectionMetadata;
+  voicingMemory?: ChordVoicingMemory;
 }
 
 export interface EditableProgression {
@@ -95,6 +96,11 @@ export interface AdvisorAppendOperation extends BaseProgressionEditOperation {
   slotIds: string[];
 }
 
+export interface VoicingMemoryOperation extends BaseProgressionEditOperation {
+  type: "voicing-memory";
+  slotId: string;
+}
+
 export type ProgressionEditOperation =
   | ReplaceChordOperation
   | SplitChordOperation
@@ -102,6 +108,7 @@ export type ProgressionEditOperation =
   | DeleteChordOperation
   | InsertChordOperation
   | AdvisorAppendOperation
+  | VoicingMemoryOperation
   | ResetProgressionOperation;
 
 export interface ProgressionEditSummaryItem {

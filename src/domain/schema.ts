@@ -91,8 +91,56 @@ export const chordSymbolSchema = z
   })
   .strict();
 
+export const voicingSourceSchema = z.enum([
+  "midi-extracted",
+  "live-played",
+  "chord-drip",
+  "manual",
+]);
+
+export const voicingRepresentationSchema = z.enum([
+  "simultaneous-voicing",
+  "aggregated-note-set",
+]);
+
+export const voicingSnapshotSchema = z
+  .object({
+    schemaVersion: z.literal(1),
+    source: voicingSourceSchema,
+    representation: voicingRepresentationSchema,
+    midiNotes: z.array(z.number().int().min(0).max(127)).min(2).max(10)
+      .refine(
+        (notes) => notes.every((note, index) => index === 0 || notes[index - 1]! < note),
+        "MIDI notes must be sorted and unique.",
+      ),
+    bassNote: z.number().int().min(0).max(127).optional(),
+    capturedForChordKey: z.string().min(1),
+    capturedForChordLabel: z.string().min(1).optional(),
+    confidence: z.number().min(0).max(1).optional(),
+    userVerified: z.boolean().optional(),
+    extractorVersion: z.string().min(1).optional(),
+  })
+  .strict()
+  .superRefine((snapshot, context) => {
+    if (snapshot.bassNote !== undefined && !snapshot.midiNotes.includes(snapshot.bassNote)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["bassNote"],
+        message: "Bass note must be included in MIDI notes.",
+      });
+    }
+  });
+
+export const chordVoicingMemorySchema = z
+  .object({
+    sourceVoicing: voicingSnapshotSchema.optional(),
+    practiceVoicingOverride: voicingSnapshotSchema.optional(),
+  })
+  .strict();
+
 export const chordTimelineItemSchema = z
   .object({
+    eventId: z.string().min(1).optional(),
     bar: z.number().int().min(1),
     beat: z.number().min(1),
     durationBeats: z.number().positive(),
@@ -109,6 +157,7 @@ export const chordTimelineItemSchema = z
       )
       .max(2),
     warnings: z.array(z.string()),
+    voicingMemory: chordVoicingMemorySchema.optional(),
   })
   .strict();
 
