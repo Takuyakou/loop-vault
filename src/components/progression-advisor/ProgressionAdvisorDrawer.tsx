@@ -78,7 +78,7 @@ export function ProgressionAdvisorDrawer({ open, block, title, keySignature, bpm
     } catch (runError) {
       if (activeRequestId.current !== requestId) return;
       const code = runError instanceof AdvisorServiceError ? runError.code : "unknown";
-      setError(errorMessage(code, language));
+      setError(advisorErrorMessage(code, language));
     } finally {
       if (activeRequestId.current === requestId) {
         activeRequestId.current = undefined;
@@ -155,11 +155,14 @@ export function ProgressionAdvisorDrawer({ open, block, title, keySignature, bpm
   );
 }
 
-function errorMessage(code: string, language: AppLanguage): string {
+export function advisorErrorMessage(code: string, language: AppLanguage): string {
   const ja = language === "ja";
   const messages: Record<string, [string, string]> = {
     desktop_only: ["デスクトップ版で利用できます。", "Available in the desktop app."],
     local_server_unavailable: ["ローカルLLMへ接続できません。設定とサーバーを確認してください。", "Could not reach the local LLM. Check settings and the server."],
+    structured_output_unsupported: ["Ollamaが出力形式を初期化できませんでした。現在のモデルまたはJSON Schemaが、このOllama環境と互換性を持たない可能性があります。", "Ollama could not initialize the output format. The current model or JSON Schema may not be compatible with this Ollama environment."],
+    provider_bad_request: ["Ollamaが生成リクエストを受け付けませんでした。モデルとAI設定を確認してください。", "Ollama rejected the generation request. Check the model and AI settings."],
+    model_not_found: ["指定したモデルがOllamaに見つかりません。設定からモデルを選び直してください。", "The selected model was not found in Ollama. Select the model again in Settings."],
     model_unavailable: ["選択したモデルが見つかりません。", "The selected model is unavailable."],
     timeout: ["生成がタイムアウトしました。", "Generation timed out."],
     cancelled: ["生成をキャンセルしました。", "Generation was cancelled."],

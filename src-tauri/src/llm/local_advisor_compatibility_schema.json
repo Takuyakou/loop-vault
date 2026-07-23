@@ -1,0 +1,56 @@
+{
+  "type": "object",
+  "required": ["schemaVersion", "analysis", "suggestions", "suggestedTagIds"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "analysis": { "type": "string" },
+    "suggestedTagIds": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "suggestions": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["id", "strategy", "label", "intent", "bars", "timeSignature", "events", "suggestedTagIds"],
+        "properties": {
+          "id": { "type": "string" },
+          "strategy": {
+            "type": "string",
+            "enum": ["close_development", "contrast", "experimental"]
+          },
+          "label": { "type": "string" },
+          "intent": { "type": "string" },
+          "key": { "type": "string" },
+          "mode": { "type": "string" },
+          "bars": { "type": "integer", "const": 8 },
+          "timeSignature": { "type": "string", "const": "4/4" },
+          "suggestedTagIds": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "events": {
+            "type": "array",
+            "minItems": 8,
+            "maxItems": 8,
+            "items": {
+              "type": "object",
+              "required": ["bar", "startBeat", "durationBeats", "chord"],
+              "properties": {
+                "bar": { "type": "integer", "minimum": 1, "maximum": 8 },
+                "startBeat": { "type": "number", "const": 1 },
+                "durationBeats": { "type": "number", "const": 4 },
+                "chord": {
+                  "type": "string",
+                  "pattern": "^[A-G](#|b)?(m|dim|aug|maj7|m7|7|m7b5|dim7|maj9|m9|9|m11|13|sus2|sus4|7sus4|add9|6|m6|6/9)?(b9|#9|11|#11|b13|13)?(/[A-G](#|b)?)?$"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
