@@ -14,6 +14,7 @@ export type ProgressionEditSource =
   | "split"
   | "merge"
   | "insert"
+  | "advisor"
   | "delete"
   | "reset";
 
@@ -88,12 +89,19 @@ export interface ResetProgressionOperation extends BaseProgressionEditOperation 
   type: "reset";
 }
 
+export interface AdvisorAppendOperation extends BaseProgressionEditOperation {
+  type: "advisor-append";
+  suggestionId: string;
+  slotIds: string[];
+}
+
 export type ProgressionEditOperation =
   | ReplaceChordOperation
   | SplitChordOperation
   | MergeChordOperation
   | DeleteChordOperation
   | InsertChordOperation
+  | AdvisorAppendOperation
   | ResetProgressionOperation;
 
 export interface ProgressionEditSummaryItem {

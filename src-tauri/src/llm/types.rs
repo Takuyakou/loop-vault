@@ -111,6 +111,25 @@ pub struct ProviderUsage {
     pub total_tokens: Option<u64>,
 }
 
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProviderResult {
+    pub response: AdvisorResponse,
+    pub usage: Option<ProviderUsage>,
+    pub retry_count: u8,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AdvisorExecutionResult {
+    pub response: AdvisorResponse,
+    pub provider: LlmProviderId,
+    pub model: String,
+    pub latency_ms: u64,
+    pub retry_count: u8,
+    pub usage: Option<ProviderUsage>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

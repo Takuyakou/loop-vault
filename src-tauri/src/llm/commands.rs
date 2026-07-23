@@ -1,9 +1,11 @@
 use super::{
     errors::LlmError,
     local_provider::{list_models, LocalLlmModel, LocalLlmSettings},
-    types::{LlmProviderId, ProviderHealth},
+    provider::LlmProvider,
+    types::{AdvisorExecutionResult, AdvisorRequest, LlmProviderId, ProviderHealth},
     LlmState,
 };
+use std::time::Instant;
 use tauri::State;
 
 #[tauri::command]
@@ -35,5 +37,37 @@ pub async fn test_local_llm_connection(
         available: true,
         model: (!settings.model.is_empty()).then_some(settings.model),
         message: Some(format!("{} local model(s) available", models.len())),
+    })
+}
+
+#[tauri::command]
+pub async fn suggest_progression(
+    request_id: String,
+    request: AdvisorRequest,
+    provider: LlmProviderId,
+    local_settings: LocalLlmSettings,
+    state: State<'_, LlmState>,
+) -> Result<AdvisorExecutionResult, LlmError> {
+    let cancellation = state.begin_request(request_id.clone());
+    let started = Instant::now();
+    let model = local_settings.model.clone();
+    let result = match provider {
+        LlmProviderId::Local => {
+            let local =
+                super::local_provider::LocalLlmProvider::new(state.client.clone(), local_settings);
+            local.suggest_progression(request, cancellation).await
+        }
+        LlmProviderId::Openai => Err(LlmError::ProviderNotConfigured),
+    };
+    state.finish_request(&request_id);
+    let provider_result = result?;
+
+    Ok(AdvisorExecutionResult {
+        response: provider_result.response,
+        provider,
+        model,
+        latency_ms: started.elapsed().as_millis().min(u128::from(u64::MAX)) as u64,
+        retry_count: provider_result.retry_count,
+        usage: provider_result.usage,
     })
 }

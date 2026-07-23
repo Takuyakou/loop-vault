@@ -1,9 +1,12 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { LlmPreferences } from "./preferences";
+import type { AdvisorRequest, AdvisorResponse } from "../domain/progressionAdvisor";
 
 export interface LocalLlmModel { name: string }
 export interface ApiKeyStatus { registered: boolean }
 export interface ProviderHealth { provider: "local" | "openai"; available: boolean; model?: string; message?: string }
+export interface ProviderUsage { inputTokens?: number; outputTokens?: number; totalTokens?: number }
+export interface AdvisorExecutionResult { response: AdvisorResponse; provider: "local" | "openai"; model: string; latencyMs: number; retryCount: number; usage?: ProviderUsage }
 
 export function isLlmDesktopAvailable(): boolean {
   return "__TAURI_INTERNALS__" in window;
@@ -31,6 +34,15 @@ export function deleteOpenAiApiKey(): Promise<ApiKeyStatus> {
 
 export function cancelAdvisorRequest(requestId: string): Promise<boolean> {
   return invoke("cancel_advisor_request", { requestId });
+}
+
+export function invokeAdvisorSuggestion(requestId: string, request: AdvisorRequest, preferences: LlmPreferences): Promise<AdvisorExecutionResult> {
+  return invoke("suggest_progression", {
+    requestId,
+    request,
+    provider: preferences.provider,
+    localSettings: preferences.local,
+  });
 }
 
 export function llmErrorCode(error: unknown): string {
