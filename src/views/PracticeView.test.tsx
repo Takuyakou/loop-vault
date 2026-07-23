@@ -121,4 +121,41 @@ describe("PracticeView", () => {
 
     await act(async () => root.unmount());
   });
+
+  it("flushes session progress through updateProgressionBlock when leaving the view", async () => {
+    const idea = makeIdea({
+      id: "00000000-0000-4000-8000-000000000094",
+      title: "Exit Flush",
+      progressionBlocks: [block],
+    });
+    const updateProgressionBlock = vi.fn(() => true);
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={[idea]}
+        language="ja"
+        updateProgressionBlock={updateProgressionBlock}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={vi.fn()}
+      />,
+    ));
+    const start = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent?.includes("練習を開始"));
+    expect(start?.disabled).toBe(false);
+    await act(async () => start?.click());
+    await act(async () => root.unmount());
+
+    expect(updateProgressionBlock).toHaveBeenCalledWith(
+      idea.id,
+      block.id,
+      expect.objectContaining({
+        practice: expect.objectContaining({
+          schemaVersion: 1,
+          lastPracticedAt: expect.any(String),
+        }),
+      }),
+    );
+  });
 });

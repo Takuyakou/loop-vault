@@ -30,7 +30,7 @@ export function AppShell({ view, setView, openCreate, openLiveMidi, openSettings
         <button className={tabClass(view === "capture")} aria-current={view === "capture" ? "page" : undefined} onClick={() => setView("capture")}>{copy.nav.capture}</button>
         <button className={tabClass(view === "library" || view === "detail" || view === "progression-detail")} aria-current={view === "library" || view === "detail" || view === "progression-detail" ? "page" : undefined} onClick={() => setView("library")}>{copy.nav.library}</button>
         <button className={tabClass(view === "practice")} aria-current={view === "practice" ? "page" : undefined} onClick={() => setView("practice")}>
-          <Dumbbell aria-hidden="true" className="mr-1 inline-block" size={14} />
+          <Dumbbell aria-hidden="true" className="mr-1 inline-block" size={16} />
           {copy.nav.practice}
         </button>
       </nav>

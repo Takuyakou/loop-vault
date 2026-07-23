@@ -212,6 +212,9 @@ export function PracticeView({
   const clockRef = useRef(new PracticeClock());
   const ownsMidiRef = useRef(false);
   const persistedRoundRef = useRef(0);
+  const latestSessionRef = useRef<PracticeSessionState>();
+  const latestBlockRef = useRef<SavedProgressionBlock>();
+  const latestSelectedRef = useRef<PracticeRecommendation>();
   const active = useStore(defaultLiveMidiStore, (state) => state.active);
   const midiStatus = useStore(defaultLiveMidiStore, (state) => state.status);
   const selectedDevice = useStore(defaultLiveMidiStore, (state) => state.selected);
@@ -227,9 +230,29 @@ export function PracticeView({
     if (ownsMidiRef.current) void defaultLiveMidiStore.getState().activate();
     return () => {
       clockRef.current.stop();
+      const current = latestSessionRef.current;
+      const currentBlock = latestBlockRef.current;
+      const currentSelected = latestSelectedRef.current;
+      if (
+        current
+        && current.status !== "completed"
+        && currentBlock
+        && currentSelected
+      ) {
+        updateProgressionBlock(currentSelected.ideaId, currentBlock.id, {
+          practice: recordPracticeRound(currentBlock, {
+            level: current.level,
+            bpm: current.bpm,
+            targetTempo: current.targetTempo,
+            consecutiveCleanFlowRounds: current.consecutiveCleanFlowRounds,
+            nowIso: new Date().toISOString(),
+            localDate: localDateString(new Date()),
+          }),
+        });
+      }
       if (ownsMidiRef.current) void defaultLiveMidiStore.getState().deactivate();
     };
-  }, []);
+  }, [updateProgressionBlock]);
 
   const selected = recommendations.find(
     (item) => item.ideaId === target?.ideaId && item.block.id === target.blockId,
@@ -264,6 +287,12 @@ export function PracticeView({
   const filtered = recommendations.filter((item) => matchesQueueFilter(item, filter, localDate));
   const running = session?.status === "running";
   const paused = session?.status === "paused";
+
+  useEffect(() => {
+    latestSessionRef.current = session;
+    latestBlockRef.current = block;
+    latestSelectedRef.current = selected;
+  }, [block, selected, session]);
 
   useEffect(() => {
     if (!running || !currentRequirement) return;
@@ -326,14 +355,20 @@ export function PracticeView({
             ),
           };
         });
+      } else if (event.key === "Escape") {
+        setSession((current) => {
+          if (!current || current.status !== "running") return current;
+          clockRef.current.pause();
+          return reducePracticeSession(current, { type: "PAUSE" }, sessionContext);
+        });
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, []);
+  }, [sessionContext]);
 
   function selectRecommendation(item: PracticeRecommendation) {
-    endSession(false);
+    endSession();
     setTarget({ ideaId: item.ideaId, blockId: item.block.id });
     const confirmed = item.block.practice?.confirmedLevel;
     const suggested = confirmed && confirmed < 3 ? (confirmed + 1) as DojoPracticeLevel : 1;
@@ -429,6 +464,23 @@ export function PracticeView({
     }
   }
 
+  async function reconnectMidi() {
+    const store = defaultLiveMidiStore.getState();
+    if (!store.active) {
+      ownsMidiRef.current = true;
+      await store.activate();
+      return;
+    }
+    await store.refreshDevices();
+    const refreshed = defaultLiveMidiStore.getState();
+    const preferred = refreshed.preferences.preferredInput;
+    const device = refreshed.devices.find((candidate) => (
+      candidate.backendId === preferred?.backendId
+      || candidate.name === preferred?.name
+    ));
+    if (device) await refreshed.selectDevice(device.backendId);
+  }
+
   return (
     <div className="py-5">
       <div className="border-b border-[var(--lv-border)] pb-4">
@@ -440,7 +492,7 @@ export function PracticeView({
         <aside className="border-b border-[var(--lv-border)] bg-[var(--lv-surface)] lg:border-b-0 lg:border-r">
           <div className="border-b border-[var(--lv-border)] p-3">
             <div className="flex items-center gap-2">
-              <Dumbbell aria-hidden="true" size={17} className="text-[var(--lv-accent)]" />
+              <Dumbbell aria-hidden="true" size={16} className="text-[var(--lv-accent)]" />
               <h3 className="text-sm font-semibold">{text.queue}</h3>
             </div>
             <select
@@ -491,7 +543,7 @@ export function PracticeView({
                     <PracticeBadge block={block} localDate={localDate} language={language} />
                     {block.pinned ? (
                       <span className="inline-flex items-center gap-1 border border-[var(--lv-border)] px-2 py-1 text-xs">
-                        <Heart aria-hidden="true" size={12} /> {text.favorite}
+                        <Heart aria-hidden="true" size={16} /> {text.favorite}
                       </span>
                     ) : null}
                   </div>
@@ -574,15 +626,15 @@ export function PracticeView({
                 {midiError ? <span className="text-xs text-amber-200">{midiError}</span> : null}
                 <button
                   className="lv-button-ghost ml-auto inline-flex h-9 items-center gap-2 px-3 text-sm"
-                  onClick={() => void defaultLiveMidiStore.getState().refreshDevices()}
+                  onClick={() => void reconnectMidi()}
                 >
-                  <RefreshCw aria-hidden="true" size={15} /> {text.reconnect}
+                  <RefreshCw aria-hidden="true" size={16} /> {text.reconnect}
                 </button>
                 <button
                   className="lv-button-ghost inline-flex h-9 items-center gap-2 px-3 text-sm"
                   onClick={openSettings}
                 >
-                  <Settings aria-hidden="true" size={15} /> {text.settings}
+                  <Settings aria-hidden="true" size={16} /> {text.settings}
                 </button>
               </div>
 
@@ -685,7 +737,7 @@ export function PracticeView({
                     ) : null}
                     {session && session.status !== "completed" ? (
                       <button className="lv-button-ghost inline-flex h-10 items-center gap-2 px-4 text-sm" onClick={() => endSession()}>
-                        <Square aria-hidden="true" size={15} /> {text.end}
+                        <Square aria-hidden="true" size={16} /> {text.end}
                       </button>
                     ) : null}
                   </div>
@@ -727,7 +779,7 @@ function QueueItem({
     >
       <span className="flex items-center justify-between gap-2">
         <span className="truncate text-sm font-semibold">{item.ideaTitle}</span>
-        {item.favorite ? <Heart aria-hidden="true" size={13} className="shrink-0 text-amber-200" /> : null}
+        {item.favorite ? <Heart aria-hidden="true" size={16} className="shrink-0 text-amber-200" /> : null}
       </span>
       <span className="mt-1 block truncate text-xs text-[var(--lv-text-muted)]">
         {item.block.chords.slice(0, 4).map((event) => event.chord.label).join(" · ") || copy[language].miniSummaryEmpty}
@@ -766,8 +818,8 @@ function PracticeBadge({
             ? "border-teal-300 bg-teal-300 text-black"
             : "border-[var(--lv-border)] text-[var(--lv-text-muted)]"
     }`}>
-      {state === "stale" ? <AlertTriangle aria-hidden="true" size={12} /> : null}
-      {state === "confirmed" ? <Check aria-hidden="true" size={12} /> : null}
+      {state === "stale" ? <AlertTriangle aria-hidden="true" size={16} /> : null}
+      {state === "confirmed" ? <Check aria-hidden="true" size={16} /> : null}
       {stateLabel(block, state, language)}
     </span>
   );
@@ -844,4 +896,3 @@ function localDateString(date: Date): string {
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
-

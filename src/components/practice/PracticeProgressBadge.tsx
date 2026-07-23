@@ -32,8 +32,8 @@ export function PracticeProgressBadge({
       title={label}
       data-practice-state={state}
     >
-      {state === "stale" ? <AlertTriangle aria-hidden="true" size={11} /> : null}
-      {state === "confirmed" ? <Check aria-hidden="true" size={11} /> : null}
+      {state === "stale" ? <AlertTriangle aria-hidden="true" size={16} /> : null}
+      {state === "confirmed" ? <Check aria-hidden="true" size={16} /> : null}
       {compact && state === "confirmed" ? `L${block.practice?.confirmedLevel ?? 1}` : label}
     </span>
   );
@@ -45,4 +45,3 @@ function localDateString(date: Date): string {
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
-
