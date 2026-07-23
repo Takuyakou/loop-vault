@@ -9,6 +9,7 @@ import {
   llmErrorCode,
   setOpenAiApiKey,
   testLocalLlmConnection,
+  testOpenAiLlmConnection,
   type LocalLlmModel,
 } from "../../llm/bridge";
 import { loadLlmPreferences, saveLlmPreferences, type LlmPreferences } from "../../llm/preferences";
@@ -109,6 +110,7 @@ export function LlmSettingsSection({ language, setToast }: Props) {
             <div className="mt-3 flex flex-wrap gap-2">
               <button type="button" disabled={busy || !apiKey} className="inline-flex items-center gap-2 rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950 disabled:opacity-50" onClick={() => void run(async () => { const status = await setOpenAiApiKey(apiKey); setKeyRegistered(status.registered); setApiKey(""); setToast(ui.saved); })}><KeyRound aria-hidden="true" size={16} />{ui.register}</button>
               <button type="button" disabled={busy || !keyRegistered} className="inline-flex items-center gap-2 rounded border border-red-400/50 px-3 py-2 text-sm text-red-100 disabled:opacity-50" onClick={() => void run(async () => { const status = await deleteOpenAiApiKey(); setKeyRegistered(status.registered); setToast(ui.saved); })}><Trash2 aria-hidden="true" size={16} />{ui.remove}</button>
+              <button type="button" disabled={busy || !keyRegistered || !preferences.openai.model} className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm disabled:opacity-50" onClick={() => void run(async () => { await testOpenAiLlmConnection(preferences.openai.model); setToast(ui.connected); })}><PlugZap aria-hidden="true" size={16} />{ui.test}</button>
             </div>
           </div>
         </div>
