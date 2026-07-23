@@ -37,9 +37,11 @@ import {
   undoProgressionEdit,
 } from "../domain/progressionEditing";
 import { beatsPerBar, buildCorrectionEvents } from "../domain/midi";
+import { degreeSequence } from "../domain/harmony/degrees";
+import { buildProgressionIndex } from "../domain/progressionClassification/mod";
 import { formatProgressionText } from "../domain/progressionText";
 import type { SavedProgressionBlock, SongIdea } from "../domain/types";
-import { advisorSuggestionToCandidate, appendAdvisorSuggestionToEditableProgression } from "../domain/progressionAdvisor";
+import { advisorSuggestionToCandidate, appendAdvisorSuggestionToEditableProgression, selectAdvisorReferenceContexts } from "../domain/progressionAdvisor";
 import { appendAnalysisFeedback } from "../storage/analysisFeedbackStorage";
 import {
   progressionDetailCopy,
@@ -109,6 +111,15 @@ export function ProgressionDetailView({
   const selectedIndex = selectedEditableSlotIndex(editable);
   const keySignature = block.detectedKey ?? idea.key;
   const authorReferenceIndex = useMemo(() => buildAuthorReferenceIndex(ideas), [ideas]);
+  const progressionIndex = useMemo(() => buildProgressionIndex(ideas), [ideas]);
+  const currentIndexEntry = progressionIndex.find((entry) => entry.ideaId === idea.id && entry.blockId === block.id);
+  const advisorReferenceContext = useMemo(() => selectAdvisorReferenceContexts({
+    index: progressionIndex,
+    currentBlockId: block.id,
+    key: keySignature,
+    tagIds: currentIndexEntry?.effectiveTags ?? block.tags,
+    romanNumerals: degreeSequence(editingBlock),
+  }), [block.id, block.tags, currentIndexEntry?.effectiveTags, editingBlock, keySignature, progressionIndex]);
   const selectedSlot = selectedIndex === undefined
     ? undefined
     : editable.slots[selectedIndex];
@@ -261,6 +272,8 @@ export function ProgressionDetailView({
           if (!updated) setToast(text.saveFailed);
         }}
         setToast={setToast}
+        referenceContext={advisorReferenceContext}
+        derivedTagIds={currentIndexEntry?.derivedTags.map((tag) => tag.tagId)}
       />
 
       <div className="flex flex-wrap items-center gap-3 border-b border-[var(--lv-border)] py-4">
