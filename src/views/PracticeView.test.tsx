@@ -102,6 +102,19 @@ describe("PracticeView", () => {
       .toContain("lg:overflow-y-auto");
     expect(container.querySelector('[data-testid="practice-workspace-scroll"]')?.className)
       .toContain("lg:overscroll-contain");
+    const progressionOverview = container.querySelector(
+      '[data-testid="practice-progression-overview"]',
+    );
+    expect(progressionOverview).not.toBeNull();
+    expect(progressionOverview?.querySelectorAll("[data-progression-index]")).toHaveLength(4);
+    expect(progressionOverview?.querySelector('[aria-current="step"]')?.textContent)
+      .toContain(block.chords[0].chord.label);
+    block.chords.forEach((event) => {
+      expect(progressionOverview?.textContent).toContain(event.chord.label);
+    });
+    const progressionBar = progressionOverview?.querySelector('[role="progressbar"]');
+    expect(progressionBar?.getAttribute("aria-valuenow")).toBe("1");
+    expect(progressionBar?.getAttribute("aria-valuemax")).toBe("4");
 
     await act(async () => root.unmount());
   });
