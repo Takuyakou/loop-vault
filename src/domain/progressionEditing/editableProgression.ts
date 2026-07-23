@@ -1,4 +1,5 @@
 import type {
+  ChordVoicingMemory,
   ChordSymbol,
   ChordTimelineItem,
   ProgressionBlockCandidate,
@@ -11,6 +12,7 @@ import type {
   ProgressionEditSource,
   ProgressionEditSnapshot,
   ReplaceChordOperation,
+  VoicingMemoryOperation,
 } from "./types";
 
 export * from "./similarSegments";
@@ -20,7 +22,7 @@ export function createEditableProgression(
   beatsPerBar = 4,
 ): EditableProgression {
   const slots = candidate.chords.map((item, index) => ({
-    id: slotId(candidate.id, item, index),
+    id: item.eventId ?? slotId(candidate.id, item, index),
     position: {
       bar: item.bar,
       beat: item.beat,
@@ -34,6 +36,7 @@ export function createEditableProgression(
     })),
     confidence: item.confidence,
     warnings: [...item.warnings],
+    ...(item.voicingMemory ? { voicingMemory: cloneVoicingMemory(item.voicingMemory) } : {}),
     edited: false,
   } satisfies EditableChordSlot));
 
@@ -199,6 +202,7 @@ export function cloneSlot(slot: EditableChordSlot): EditableChordSlot {
       confidence: alternative.confidence,
     })),
     warnings: [...slot.warnings],
+    ...(slot.voicingMemory ? { voicingMemory: cloneVoicingMemory(slot.voicingMemory) } : {}),
     ...(slot.quickCandidateSelection
       ? {
           quickCandidateSelection: {
@@ -243,6 +247,7 @@ export function positionFromStartBeat(startBeat: number, beatsPerBar = 4): { bar
 
 function slotToTimelineItem(slot: EditableChordSlot): ChordTimelineItem {
   return {
+    eventId: slot.id,
     bar: slot.position.bar,
     beat: slot.position.beat,
     durationBeats: slot.position.durationBeats,
@@ -253,7 +258,37 @@ function slotToTimelineItem(slot: EditableChordSlot): ChordTimelineItem {
       confidence: alternative.confidence,
     })),
     warnings: [...slot.warnings],
+    ...(slot.voicingMemory ? { voicingMemory: cloneVoicingMemory(slot.voicingMemory) } : {}),
   };
+}
+
+export function setEditableVoicingMemory(
+  editable: EditableProgression,
+  slotId: string,
+  memory: ChordVoicingMemory | undefined,
+): EditableProgression {
+  return setEditableVoicingMemories(editable, [{ slotId, memory }]);
+}
+
+export function setEditableVoicingMemories(
+  editable: EditableProgression,
+  updates: readonly { slotId: string; memory: ChordVoicingMemory | undefined }[],
+): EditableProgression {
+  const byId = new Map(updates.map((update) => [update.slotId, update.memory]));
+  const slotId = editable.selectedSlotId ?? updates[0]?.slotId;
+  if (!slotId || !editable.slots.some((slot) => byId.has(slot.id))) return editable;
+  const slots = editable.slots.map(cloneSlot);
+  for (const slot of slots) {
+    if (!byId.has(slot.id)) continue;
+    const memory = byId.get(slot.id);
+    slot.voicingMemory = memory ? cloneVoicingMemory(memory) : undefined;
+  }
+  const operation: VoicingMemoryOperation = {
+    type: "voicing-memory",
+    slotId,
+    ...operationSnapshots(editable, { slots, selectedSlotId: editable.selectedSlotId }),
+  };
+  return recordEditOperation(editable, operation);
 }
 
 function slotId(
@@ -261,7 +296,25 @@ function slotId(
   item: ChordTimelineItem,
   index: number,
 ): string {
-  return `${candidateId}:${item.bar}:${item.beat}:${index}`;
+  return `legacy:${candidateId}:${item.bar}:${item.beat}:${index}`;
+}
+
+export function cloneVoicingMemory(
+  memory: NonNullable<ChordTimelineItem["voicingMemory"]>,
+): NonNullable<ChordTimelineItem["voicingMemory"]> {
+  return {
+    ...(memory.sourceVoicing
+      ? { sourceVoicing: { ...memory.sourceVoicing, midiNotes: [...memory.sourceVoicing.midiNotes] } }
+      : {}),
+    ...(memory.practiceVoicingOverride
+      ? {
+          practiceVoicingOverride: {
+            ...memory.practiceVoicingOverride,
+            midiNotes: [...memory.practiceVoicingOverride.midiNotes],
+          },
+        }
+      : {}),
+  };
 }
 
 function chordSymbolsEqual(left: ChordSymbol, right: ChordSymbol): boolean {

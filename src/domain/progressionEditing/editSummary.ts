@@ -24,6 +24,9 @@ export function progressionEditSummary(
 
 export function hasProgressionEdits(editable: EditableProgression): boolean {
   return progressionEditSummary(editable).length > 0
+    || editable.history
+      .slice(0, editable.historyIndex)
+      .some((operation) => operation.type === "voicing-memory")
     || progressionStructureChanged(editable);
 }
 
