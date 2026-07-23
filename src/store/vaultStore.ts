@@ -6,7 +6,16 @@ import {
   type VaultImportMode,
   type VaultRepository,
 } from "../domain/repository";
-import { analyzeMidi, beatsPerBar } from "../domain/midi";
+import {
+  analyzeMidi,
+  annotateVoiceRoles,
+  beatsPerBar,
+  buildVoiceFeatureInputs,
+  buildVoices,
+  normalizeNotes,
+  parseMidi,
+} from "../domain/midi";
+import { extractVoicing } from "../domain/voicing";
 import {
   transition,
   type TransitionOptions,
@@ -22,7 +31,7 @@ import type {
   VaultFile,
   AppLanguage,
 } from "../domain/types";
-import type { AnalyzeMidiOptions } from "../domain/midi/types";
+import type { AnalyzeMidiOptions, MidiSongData, Voice } from "../domain/midi/types";
 import {
   assetAnchor,
   ideaAnchor,
@@ -62,6 +71,8 @@ export interface AnalysisState {
   status: AnalysisStatus;
   result?: MidiProgressionAnalysis;
   error?: string;
+  sourceData?: MidiSongData;
+  sourceVoices?: Voice[];
 }
 
 export interface SongIdeaDraft {
@@ -309,6 +320,7 @@ export function createVaultStore(
           ? toSavedProgressionBlock(draft.progressionBlock, progressionAnalysis, {
               idFactory,
               now,
+              ...voicingSourceContext(get().analysis, draft.progressionAnalysis),
             }, draft.progressionMetadata)
           : undefined;
         const idea: SongIdea = {
@@ -372,6 +384,7 @@ export function createVaultStore(
         const savedBlock = toSavedProgressionBlock(block, effectiveAnalysis, {
           idFactory,
           now,
+          ...voicingSourceContext(get().analysis, analysis),
         }, metadata);
         return applyVaultChange((vault) => ({
           ...vault,
@@ -405,13 +418,16 @@ export function createVaultStore(
           return false;
         }
         const updatedAt = now().toISOString();
+        const persistedChanges = changes.chords
+          ? { ...changes, chords: persistChordEvents(changes.chords, idFactory) }
+          : changes;
         return applyVaultChange((vault) => ({
           ...vault,
           ideas: vault.ideas.map((entry) => entry.id === ideaId
             ? {
                 ...entry,
                 progressionBlocks: (entry.progressionBlocks ?? []).map((candidate) => candidate.id === blockId
-                  ? { ...candidate, ...changes, id: candidate.id }
+                  ? { ...candidate, ...persistedChanges, id: candidate.id }
                   : candidate),
                 updatedAt,
               }
@@ -432,12 +448,35 @@ export function createVaultStore(
           id,
           chords: block.chords.map((item) => ({
             ...item,
+            eventId: idFactory(),
             chord: { ...item.chord, tensions: [...item.chord.tensions] },
             alternatives: item.alternatives.map((alternative) => ({
               ...alternative,
               chord: { ...alternative.chord, tensions: [...alternative.chord.tensions] },
             })),
             warnings: [...item.warnings],
+            ...(item.voicingMemory
+              ? {
+                  voicingMemory: {
+                    ...(item.voicingMemory.sourceVoicing
+                      ? {
+                          sourceVoicing: {
+                            ...item.voicingMemory.sourceVoicing,
+                            midiNotes: [...item.voicingMemory.sourceVoicing.midiNotes],
+                          },
+                        }
+                      : {}),
+                    ...(item.voicingMemory.practiceVoicingOverride
+                      ? {
+                          practiceVoicingOverride: {
+                            ...item.voicingMemory.practiceVoicingOverride,
+                            midiNotes: [...item.voicingMemory.practiceVoicingOverride.midiNotes],
+                          },
+                        }
+                      : {}),
+                  },
+                }
+              : {}),
           })),
           tags: [...block.tags],
           suppressedAutoTags: block.suppressedAutoTags?.map((tag) => ({ ...tag })),
@@ -581,7 +620,15 @@ export function createVaultStore(
         set({ analysis: { status: "analyzing" }, error: undefined });
         try {
           const result = analyzeMidi(bytes, analyzeOptions);
-          set({ analysis: { status: "done", result } });
+          const sourceData = parseMidi(bytes);
+          const normalized = normalizeNotes(sourceData);
+          const baseVoices = buildVoices(sourceData);
+          const sourceVoices = annotateVoiceRoles(
+            baseVoices,
+            buildVoiceFeatureInputs(baseVoices, normalized),
+            analyzeOptions.analysisInput?.roleOverrides,
+          );
+          set({ analysis: { status: "done", result, sourceData, sourceVoices } });
           return result;
         } catch (error) {
           const message =
@@ -801,11 +848,19 @@ function currentVault(state: VaultStoreState): VaultFile {
 function toSavedProgressionBlock(
   block: SavedProgressionBlock | ProgressionBlockCandidate,
   analysis: MidiProgressionAnalysis | undefined,
-  context: { idFactory: () => string; now: () => Date },
+  context: {
+    idFactory: () => string;
+    now: () => Date;
+    sourceData?: MidiSongData;
+    sourceVoices?: Voice[];
+  },
   metadata: ProgressionSaveMetadata = {},
 ): SavedProgressionBlock {
   if ("capturedAt" in block) {
-    return block;
+    return {
+      ...block,
+      chords: persistChordEvents(block.chords, context.idFactory),
+    };
   }
 
   const barLengthBeats = beatsPerBar(analysis?.timeSignature);
@@ -823,7 +878,15 @@ function toSavedProgressionBlock(
     endBar: block.endBar,
     lengthBars: block.lengthBars,
     summaryText: block.summaryText,
-    chords: block.chords,
+    chords: persistChordEvents(
+      block.chords.map((item) => attachExtractedVoicing(
+        item,
+        analysis,
+        context.sourceData,
+        context.sourceVoices,
+      )),
+      context.idFactory,
+    ),
     ...(analysis?.detectedKey ? { detectedKey: analysis.detectedKey } : {}),
     ...(analysis?.bpm ? { bpm: analysis.bpm } : {}),
     ...(analysis?.timeSignature ? { timeSignature: analysis.timeSignature } : {}),
@@ -836,4 +899,66 @@ function toSavedProgressionBlock(
     userEdited: metadata.userEdited ?? false,
     userVerified: metadata.userVerified ?? false,
   };
+}
+
+function voicingSourceContext(
+  state: AnalysisState,
+  analysis: MidiProgressionAnalysis | undefined,
+): Pick<AnalysisState, "sourceData" | "sourceVoices"> {
+  if (!analysis || !state.result) return {};
+  const matches = state.result === analysis
+    || (
+      state.result.sourceFingerprint !== undefined
+      && state.result.sourceFingerprint === analysis.sourceFingerprint
+    );
+  return matches
+    ? {
+        ...(state.sourceData ? { sourceData: state.sourceData } : {}),
+        ...(state.sourceVoices ? { sourceVoices: state.sourceVoices } : {}),
+      }
+    : {};
+}
+
+function attachExtractedVoicing(
+  item: SavedProgressionBlock["chords"][number],
+  analysis: MidiProgressionAnalysis | undefined,
+  sourceData: MidiSongData | undefined,
+  sourceVoices: Voice[] | undefined,
+): SavedProgressionBlock["chords"][number] {
+  if (!analysis || !sourceData) return item;
+  const meter = beatsPerBar(analysis.timeSignature);
+  const startBeat = (item.bar - 1) * meter + item.beat - 1;
+  const result = extractVoicing({
+    chord: item.chord,
+    segment: { startBeat, endBeat: startBeat + item.durationBeats },
+    notes: sourceData.notes,
+    ticksPerBeat: sourceData.ticksPerBeat,
+    voices: sourceVoices,
+  });
+  if (!result.snapshot) return item;
+  return {
+    ...item,
+    voicingMemory: {
+      ...item.voicingMemory,
+      sourceVoicing: result.snapshot,
+    },
+  };
+}
+
+function persistChordEvents(
+  chords: readonly SavedProgressionBlock["chords"][number][],
+  idFactory: () => string,
+): SavedProgressionBlock["chords"] {
+  return chords.map((item) => ({
+    ...item,
+    eventId: isTemporaryEventId(item.eventId) ? idFactory() : item.eventId,
+  }));
+}
+
+function isTemporaryEventId(eventId: string | undefined): boolean {
+  return eventId === undefined
+    || eventId.startsWith("legacy:")
+    || eventId.includes(":insert:")
+    || eventId.includes(":right:")
+    || eventId.includes(":advisor:");
 }
