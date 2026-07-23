@@ -1,4 +1,4 @@
-import { KeyRound, PlugZap, RefreshCw, Trash2 } from "lucide-react";
+import { CircleAlert, CircleCheck, KeyRound, LoaderCircle, PlugZap, RefreshCw, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { AppLanguage } from "../../domain/types";
 import {
@@ -19,12 +19,12 @@ const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[v
 const labels = {
   ja: {
     title: "AIプロバイダー", local: "ローカルLLM", openai: "OpenAI API", baseUrl: "接続先", model: "モデル", timeout: "タイムアウト（秒）",
-    refresh: "モデルを更新", test: "接続を確認", connected: "接続できました", desktopOnly: "デスクトップ版で設定できます", noModels: "利用できるモデルがありません",
+    refresh: "モデルを更新", test: "接続を確認", checking: "接続を確認しています…", connected: "接続できました", desktopOnly: "デスクトップ版で設定できます", noModels: "利用できるモデルがありません",
     paid: "OpenAI APIは従量課金です。料金はOpenAIアカウントへ請求されます。", confirm: "実行前に毎回確認する", key: "APIキー", register: "キーを登録", registered: "登録済み", missing: "未登録", remove: "キーを削除", saved: "設定を保存しました", failed: "操作に失敗しました",
   },
   en: {
     title: "AI provider", local: "Local LLM", openai: "OpenAI API", baseUrl: "Endpoint", model: "Model", timeout: "Timeout (seconds)",
-    refresh: "Refresh models", test: "Test connection", connected: "Connection successful", desktopOnly: "Configure this in the desktop app", noModels: "No models are available",
+    refresh: "Refresh models", test: "Test connection", checking: "Checking connection…", connected: "Connection successful", desktopOnly: "Configure this in the desktop app", noModels: "No models are available",
     paid: "OpenAI API usage is billed to your OpenAI account.", confirm: "Confirm before every paid request", key: "API key", register: "Register key", registered: "Registered", missing: "Not registered", remove: "Delete key", saved: "Settings saved", failed: "The operation failed",
   },
 } as const;
@@ -41,6 +41,7 @@ export function LlmSettingsSection({ language, setToast }: Props) {
   const [apiKey, setApiKey] = useState("");
   const [keyRegistered, setKeyRegistered] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({ kind: "idle", message: "" });
 
   useEffect(() => {
     if (!isLlmDesktopAvailable()) return;
@@ -50,7 +51,34 @@ export function LlmSettingsSection({ language, setToast }: Props) {
   function update(next: LlmPreferences) {
     const synced = { ...next, language };
     setPreferences(synced);
-    saveLlmPreferences(synced);
+    setConnectionStatus({ kind: "idle", message: "" });
+    try {
+      saveLlmPreferences(synced);
+    } catch {
+      // Keep an in-progress value editable and persist it once it becomes valid.
+    }
+  }
+
+  async function checkConnection(action: () => Promise<void>) {
+    if (!isLlmDesktopAvailable()) {
+      setConnectionStatus({ kind: "error", message: ui.desktopOnly });
+      setToast(ui.desktopOnly);
+      return;
+    }
+    setBusy(true);
+    setConnectionStatus({ kind: "checking", message: ui.checking });
+    try {
+      await action();
+      setConnectionStatus({ kind: "success", message: ui.connected });
+      setToast(ui.connected);
+    } catch (error) {
+      const code = llmErrorCode(error);
+      const message = connectionErrorMessage(code, language);
+      setConnectionStatus({ kind: "error", message });
+      setToast(message);
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function run(action: () => Promise<void>) {
@@ -96,8 +124,9 @@ export function LlmSettingsSection({ language, setToast }: Props) {
           <label className="text-sm md:col-span-2">{ui.model}<input className={`${inputClass} mt-2`} list="local-llm-models" value={preferences.local.model} onChange={(event) => update({ ...preferences, local: { ...preferences.local, model: event.target.value } })} /><datalist id="local-llm-models">{models.map((model) => <option key={model.name} value={model.name} />)}</datalist></label>
           <div className="flex flex-wrap gap-2 md:col-span-2">
             <button type="button" disabled={busy} className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={refreshModels}><RefreshCw aria-hidden="true" size={16} />{ui.refresh}</button>
-            <button type="button" disabled={busy || !preferences.local.model} className="inline-flex items-center gap-2 rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950 disabled:opacity-50" onClick={() => void run(async () => { await testLocalLlmConnection(preferences.local); setToast(ui.connected); })}><PlugZap aria-hidden="true" size={16} />{ui.test}</button>
+            <button type="button" disabled={busy} className="inline-flex items-center gap-2 rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950 disabled:opacity-50" onClick={() => void checkConnection(() => testLocalLlmConnection(preferences.local).then(() => undefined))}>{connectionStatus.kind === "checking" ? <LoaderCircle aria-hidden="true" className="animate-spin" size={16} /> : <PlugZap aria-hidden="true" size={16} />}{connectionStatus.kind === "checking" ? ui.checking : ui.test}</button>
           </div>
+          <ConnectionStatusMessage status={connectionStatus} />
         </div>
       ) : (
         <div className="mt-4">
@@ -110,11 +139,36 @@ export function LlmSettingsSection({ language, setToast }: Props) {
             <div className="mt-3 flex flex-wrap gap-2">
               <button type="button" disabled={busy || !apiKey} className="inline-flex items-center gap-2 rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950 disabled:opacity-50" onClick={() => void run(async () => { const status = await setOpenAiApiKey(apiKey); setKeyRegistered(status.registered); setApiKey(""); setToast(ui.saved); })}><KeyRound aria-hidden="true" size={16} />{ui.register}</button>
               <button type="button" disabled={busy || !keyRegistered} className="inline-flex items-center gap-2 rounded border border-red-400/50 px-3 py-2 text-sm text-red-100 disabled:opacity-50" onClick={() => void run(async () => { const status = await deleteOpenAiApiKey(); setKeyRegistered(status.registered); setToast(ui.saved); })}><Trash2 aria-hidden="true" size={16} />{ui.remove}</button>
-              <button type="button" disabled={busy || !keyRegistered || !preferences.openai.model} className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm disabled:opacity-50" onClick={() => void run(async () => { await testOpenAiLlmConnection(preferences.openai.model); setToast(ui.connected); })}><PlugZap aria-hidden="true" size={16} />{ui.test}</button>
+              <button type="button" disabled={busy || !keyRegistered || !preferences.openai.model} className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm disabled:opacity-50" onClick={() => void checkConnection(() => testOpenAiLlmConnection(preferences.openai.model).then(() => undefined))}>{connectionStatus.kind === "checking" ? <LoaderCircle aria-hidden="true" className="animate-spin" size={16} /> : <PlugZap aria-hidden="true" size={16} />}{connectionStatus.kind === "checking" ? ui.checking : ui.test}</button>
             </div>
+            <ConnectionStatusMessage status={connectionStatus} />
           </div>
         </div>
       )}
     </section>
   );
+}
+
+type ConnectionStatus = { kind: "idle" | "checking" | "success" | "error"; message: string };
+
+function ConnectionStatusMessage({ status }: { status: ConnectionStatus }) {
+  if (status.kind === "idle") return null;
+  const color = status.kind === "error" ? "text-red-200" : status.kind === "success" ? "text-emerald-200" : "text-[var(--lv-text-secondary)]";
+  return (
+    <p role="status" aria-live="polite" className={`mt-3 flex items-center gap-2 text-sm md:col-span-2 ${color}`}>
+      {status.kind === "checking" ? <LoaderCircle aria-hidden="true" className="animate-spin" size={16} /> : status.kind === "success" ? <CircleCheck aria-hidden="true" size={16} /> : <CircleAlert aria-hidden="true" size={16} />}
+      {status.message}
+    </p>
+  );
+}
+
+function connectionErrorMessage(code: string, language: AppLanguage): string {
+  const messages: Record<string, [string, string]> = {
+    local_server_unavailable: ["接続できませんでした。ローカルLLMが起動しているか、接続先を確認してください。", "Connection failed. Check that the local LLM is running and the endpoint is correct."],
+    model_unavailable: ["接続先に指定したモデルがありません。", "The selected model is not available at the endpoint."],
+    timeout: ["接続確認がタイムアウトしました。", "The connection test timed out."],
+    api_key_missing: ["OpenAI APIキーが登録されていません。", "No OpenAI API key is registered."],
+    authentication_failed: ["OpenAI APIキーを確認してください。", "Check the OpenAI API key."],
+  };
+  return messages[code]?.[language === "ja" ? 0 : 1] ?? (language === "ja" ? `接続できませんでした (${code})` : `Connection failed (${code})`);
 }
