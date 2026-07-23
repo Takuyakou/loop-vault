@@ -58,6 +58,13 @@ export function voiceChordForPreview(symbol: ChordSymbol): PreviewVoicing {
   };
 }
 
+export function chordPitchClasses(symbol: ChordSymbol): number[] {
+  return uniquePitchClasses([
+    ...qualityIntervals[symbol.quality],
+    ...symbol.tensions.map((tension) => tensionIntervals[tension]),
+  ].map((interval) => symbol.root + interval));
+}
+
 function uniquePitchClasses(values: number[]): number[] {
   const seen = new Set<number>();
   const result: number[] = [];
