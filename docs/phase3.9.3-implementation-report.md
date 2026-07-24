@@ -2,9 +2,11 @@
 
 作成日: 2026-07-24
 
-対象ブランチ: `feature/p3-9-3-l4-l5-mix-session`
+最終更新日: 2026-07-25
 
-報告時HEAD: `7023bb630a17bf3efe7b8ccb889b78e1bec42c99`
+対象: `master`
+
+報告時HEAD: `22cd15e889e0e7530efd482231da139940b9ccaa`
 
 ## 1. 実装結果
 
@@ -13,6 +15,8 @@ Phase 3.9.3ではChord Dojoへ、保存進行を別のキーで練習するL4/L5
 - L4「近くのキーでも」: 元キーを除く五度圏±1/±2/±3の6キー
 - L5「どのキーでも」: 元キーを含む同modeの12キー
 - Mix Session: 2〜5進行、L1〜L3、1〜3巡、Step/Flow
+- Chord Dojo鍵盤: デスクトップ・狭幅の双方で縦方向を縮小
+- マスター音量: Ideaボタン左のFL Studio風ノブから、試聴・練習・メトロノームを一括調整
 
 主な入口は `src/views/PracticeView.tsx`。L4/L5の表示は `src/components/practice/TranspositionPracticeControls.tsx`、Mix実行画面は `src/components/practice/MixPracticeWorkspace.tsx` が担当する。
 
@@ -25,8 +29,21 @@ Phase 3.9.3ではChord Dojoへ、保存進行を別のキーで練習するL4/L5
 | T2 | `0e6cca5` | target plan、resolved voicing移調、L4/L5 session/UI |
 | T3 | `70bdce0` | Key coverage、provisional、別日confirmation、互換migration |
 | T4 | `7023bb6` | 読み取り専用Mix Snapshot、進行bag、Mix Step/Flow、summary/retry |
+| T5 | `19a21c2` | 回帰検証、実装報告書、ユーザー実機確認チェックリスト |
+| F1 | `c6a5cdd` | Chord Dojo鍵盤の高さを縮小 |
+| F2 | `81d167c` | ローカル永続化付きマスター音量ノブ |
+| F3 | `0557376` | 音量ノブをFL Studio風の外観と数値ツールチップへ調整 |
+| F4 | `c821d95` | ホバー時の左右矢印カーソルを通常ポインターへ変更 |
 
-T5文書と最終QAは本報告書作成時点では未コミット。PR作成・mainへのmergeも未実施。
+PRとmerge結果:
+
+| PR | 内容 | Merge commit |
+|---|---|---|
+| [#153](https://github.com/Takuyakou/loop-vault/pull/153) | Phase 3.9.3 L4/L5・Mix Session | `869a811` |
+| [#154](https://github.com/Takuyakou/loop-vault/pull/154) | Chord Dojo鍵盤縮小 | `71e83a6` |
+| [#155](https://github.com/Takuyakou/loop-vault/pull/155) | マスター音量ノブ | `22cd15e` |
+
+3件は依存順にmerge commit方式で`master`へ取り込み済み。merge conflictは発生していない。
 
 ## 3. L4/L5移調ドメイン
 
@@ -160,7 +177,31 @@ Mix Sessionは `updateProgressionBlock()`、`applyVaultChange()`、repositoryを
 
 MixとL4/L5はUI上で同時選択できない。
 
-## 7. 自動テスト
+## 7. 完了後のUI調整
+
+### Chord Dojo鍵盤
+
+`src/components/music-keyboard/PianoKeyboardVisualizer.tsx` の練習画面用高さを
+`h-[clamp(7.5rem,16vw,10rem)]` から `h-[clamp(6rem,13vw,8rem)]` へ変更した。
+鍵数、音域、押鍵・お手本・構成外・ペダル保持の表示ロジックは変更していない。
+
+### マスター音量
+
+`src/components/MasterVolumeKnob.tsx` をApp ShellのIdeaボタン直前へ追加した。外観は暗い角型パネル、白いリングと回転指針、右下のアクセントマーカーで構成する。ホバーまたはキーボードフォーカス時は「マスター音量: 100%」の形式で現在値を表示する。カーソルは左右矢印ではなく通常ポインター。
+
+実際の音量処理は `src/audio/masterVolume.ts` が担当する。
+
+- 入力範囲は0〜100%、1%刻み
+- 100%を0 dB、50%を約-6.02 dBへ変換する対数カーブ
+- 0%は-60 dBに加えてTone Destinationをmute
+- Tone.js共通Destinationを変更するため、コード試聴、Chord Dojo、メトロノームへ一括反映
+- `loop-vault:master-volume:v1` としてこのPCの`localStorage`へ保存
+- 保存値が欠損・不正・旧versionの場合は100%へfallback
+- Vault schema、`data.json`、`fileVersion`は変更しない
+
+日本語ラベルは「マスター音量」、英語ラベルは「Master volume」。透明なnative range inputを操作境界に使うため、クリック・ドラッグ・キーボード操作と`aria-valuetext`を維持している。
+
+## 8. 自動テスト
 
 Phase 3.9.3で追加・拡張した主なテスト:
 
@@ -173,35 +214,37 @@ Phase 3.9.3で追加・拡張した主なテスト:
 - `src/components/practice/MixPracticeWorkspace.test.tsx`: Clock、Pause/Resume、切断/reconnect、summary、操作UI
 - `src/views/PracticeView.test.tsx`: L4/L5情報制限、保存境界、Mix排他、日英、狭幅
 - `src/domain/schema.test.ts` / `repository.test.ts`: 旧JSON、optional field、`fileVersion: 1`
+- `src/audio/masterVolume.test.ts`: 値の正規化、version付き端末保存、対数dB変換、0% mute
+- `src/components/AppShell.test.tsx`: ノブ配置、値変更、日英ラベル、ツールチップ
 
 最終QA結果:
 
 | 検証 | 結果 |
 |---|---|
 | `npm run lint` | PASS |
-| `npm test -- --run` | 148 files / 1027 tests PASS |
+| `npm test -- --run` | 149 files / 1031 tests PASS |
 | `npx tsc --noEmit` | PASS |
 | `npm run build` | PASS |
 | `cargo test --manifest-path src-tauri/Cargo.toml` | 24 tests PASS |
 | `npm run tauri build` | PASS |
-| In-app Browser responsive QA | 1280x720 / 375x812でPASS |
+| In-app Browser responsive QA | 1280x720 / 375 px幅でPASS |
 | `git diff --check` | PASS |
 
 Windows PowerShellの実行ポリシーが `npm.ps1` を拒否したため、npm/npxの検証は同じNode.js CLIを起動する `npm.cmd` / `npx.cmd` で実行した。アプリやテストの失敗ではない。
 
-In-app Browserでは、保存データがないブラウザ用メモリ環境で練習キューとMix共通設定を確認した。デスクトップ幅と375 px幅のどちらでもページ全体の横overflowはなく、主要操作の文字切れやconsole warning/errorも検出しなかった。保存進行・実MIDIを必要とするL4/L5とMix演奏は、この目視確認の完了範囲には含めていない。
+In-app Browserでは、保存データがないブラウザ用メモリ環境で練習キューとMix共通設定を確認した。デスクトップ幅と375 px幅のどちらでもページ全体の横overflowはなく、主要操作の文字切れやconsole warning/errorも検出しなかった。マスター音量は35%への変更、100%への復帰、再読込後の保持、ツールチップ表示を確認した。保存進行・実MIDIを必要とするL4/L5とMix演奏は、この目視確認の完了範囲には含めていない。
 
-## 8. 生成物
+## 9. 生成物
 
-2026-07-24 20:59 JSTにTauri release buildで再生成した。
+2026-07-24 23:29 JSTにTauri release buildで再生成した。
 
 | 種類 | パス | サイズ |
 |---|---|---:|
-| 単体EXE | `src-tauri/target/release/loop-vault.exe` | 14,735,360 bytes（約14.05 MiB） |
+| 単体EXE | `src-tauri/target/release/loop-vault.exe` | 14,739,456 bytes（約14.06 MiB） |
 | MSI | `src-tauri/target/release/bundle/msi/Loop Vault_0.1.0_x64_en-US.msi` | 5,062,656 bytes（約4.83 MiB） |
-| NSIS | `src-tauri/target/release/bundle/nsis/Loop Vault_0.1.0_x64-setup.exe` | 3,545,999 bytes（約3.38 MiB） |
+| NSIS | `src-tauri/target/release/bundle/nsis/Loop Vault_0.1.0_x64-setup.exe` | 3,549,370 bytes（約3.39 MiB） |
 
-## 9. 既知の制約・未確認
+## 10. 既知の制約・未確認
 
 - 実MIDI鍵盤でのL4/L5、Mix、MIDI切断/reconnect、音楽的な自然さはユーザー実機確認待ち。完了扱いにしていない。
 - L4/L5はmajor/minorのみ。modal transpositionは未実装。
@@ -211,4 +254,10 @@ In-app Browserでは、保存データがないブラウザ用メモリ環境で
 - Style/generated-closeの移調練習は公式段位・coverage対象外。
 - 新しいStyle、LLM、MIDI Analyzer、Voicing抽出、Vault試聴ロジックは変更していない。
 - Viteはminify後JavaScriptチャンク約1.06〜1.08 MBに対し、500 kB超過警告を出す。build自体は成功している。
-- PRは未作成、mainへのmergeも未実施。
+- GitHub Actionsの必須CI jobは設定されていない。merge前検証はローカルで実施した。
+
+## 11. 完了判定
+
+Phase 3.9.3の実装、自動テスト、レスポンシブ目視確認、Windows release build、PR #153〜#155の`master`へのmergeは完了している。現行`master`は報告時HEAD `22cd15e`。
+
+残作業は `docs/phase3.9.3-user-verification-checklist.md` に記載した実MIDI鍵盤での音楽的・操作感確認であり、コード上の未コミット作業や未マージPRはない。
