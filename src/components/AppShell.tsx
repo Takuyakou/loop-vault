@@ -2,11 +2,12 @@ import type { AppCopy } from "../i18n";
 import { playbackController, type PlaybackController } from "../audio/playbackController";
 import { usePlaybackState } from "../hooks/usePlaybackState";
 import { Check, CircleAlert, Dumbbell, LoaderCircle, Music, Piano, Plus, Settings } from "lucide-react";
+import { MasterVolumeKnob } from "./MasterVolumeKnob";
 
 export type AppView = "home" | "capture" | "library" | "detail" | "progression-detail" | "practice";
 export type SaveStatus = "saved" | "saving" | "unsaved";
 
-export function AppShell({ view, setView, openCreate, openLiveMidi, openSettings, copy, saveStatus, controller = playbackController }: {
+export function AppShell({ view, setView, openCreate, openLiveMidi, openSettings, copy, saveStatus, masterVolume, onMasterVolumeChange, controller = playbackController }: {
   view: AppView;
   setView: (view: AppView) => void;
   openCreate: () => void;
@@ -14,6 +15,8 @@ export function AppShell({ view, setView, openCreate, openLiveMidi, openSettings
   openSettings: () => void;
   copy: AppCopy;
   saveStatus: SaveStatus;
+  masterVolume: number;
+  onMasterVolumeChange: (value: number) => void;
   controller?: PlaybackController;
 }) {
   const playback = usePlaybackState(controller);
@@ -35,6 +38,11 @@ export function AppShell({ view, setView, openCreate, openLiveMidi, openSettings
         </button>
       </nav>
       <div className="ml-auto flex w-full min-w-0 shrink-0 items-center justify-end gap-1 border-t border-[var(--lv-border)] pt-2 sm:w-auto sm:border-t-0 sm:pt-0 md:gap-2">
+        <MasterVolumeKnob
+          value={masterVolume}
+          onChange={onMasterVolumeChange}
+          label={copy.nav.masterVolume}
+        />
         <button
           className="lv-button-primary inline-flex h-9 items-center gap-1.5 whitespace-nowrap px-2.5 text-sm font-semibold md:px-3"
           onClick={openCreate}

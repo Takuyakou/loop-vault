@@ -20,12 +20,16 @@ async function renderShell({
   controller,
   setView = vi.fn(),
   openSettings = vi.fn(),
+  masterVolume = 100,
+  onMasterVolumeChange = vi.fn(),
 }: {
   view?: "home" | "capture" | "library" | "detail";
   saveStatus?: SaveStatus;
   controller?: ReturnType<typeof createPlaybackController>;
   setView?: ReturnType<typeof vi.fn>;
   openSettings?: ReturnType<typeof vi.fn>;
+  masterVolume?: number;
+  onMasterVolumeChange?: ReturnType<typeof vi.fn>;
 } = {}) {
   const container = document.createElement("div");
   const root = createRoot(container);
@@ -38,6 +42,8 @@ async function renderShell({
       openSettings={openSettings}
       copy={appCopy.en}
       saveStatus={saveStatus}
+      masterVolume={masterVolume}
+      onMasterVolumeChange={onMasterVolumeChange}
       controller={controller}
     />,
   ));
@@ -81,6 +87,35 @@ describe("AppShell", () => {
     expect(settings?.title).toBe("Settings");
     await act(async () => settings?.click());
     expect(openSettings).toHaveBeenCalledOnce();
+    await act(async () => root.unmount());
+  });
+
+  it("places the master volume knob immediately before Idea and changes its value", async () => {
+    const onMasterVolumeChange = vi.fn();
+    const { container, root } = await renderShell({
+      masterVolume: 72,
+      onMasterVolumeChange,
+    });
+    const input = container.querySelector<HTMLInputElement>('input[aria-label="Master volume"]');
+    const createButton = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.title === "+ Idea");
+
+    expect(input?.value).toBe("72");
+    expect(input?.getAttribute("aria-valuetext")).toBe("72%");
+    expect(input?.closest("label")?.nextElementSibling).toBe(createButton);
+    expect(
+      input?.closest("label")?.querySelector('[data-volume-tooltip="true"]')?.textContent,
+    ).toBe("Master volume: 72%");
+
+    await act(async () => {
+      const setter = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        "value",
+      )?.set;
+      setter?.call(input, "41");
+      input?.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    expect(onMasterVolumeChange).toHaveBeenCalledWith(41);
     await act(async () => root.unmount());
   });
 
