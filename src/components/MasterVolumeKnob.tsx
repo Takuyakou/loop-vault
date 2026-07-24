@@ -1,5 +1,3 @@
-import { Volume2, VolumeX } from "lucide-react";
-
 export function MasterVolumeKnob({ value, onChange, label }: {
   value: number;
   onChange: (value: number) => void;
@@ -11,24 +9,36 @@ export function MasterVolumeKnob({ value, onChange, label }: {
 
   return (
     <label
-      className="relative grid h-9 w-9 shrink-0 cursor-ew-resize place-items-center rounded-full focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[var(--lv-accent)]"
+      className="group relative h-9 w-9 shrink-0 cursor-ew-resize rounded-[3px] border border-[var(--lv-border-strong)] bg-[#11161c] shadow-inner transition-colors hover:border-[var(--lv-text-secondary)] focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[var(--lv-accent)]"
       title={valueLabel}
     >
       <span
         aria-hidden="true"
-        className="relative grid h-8 w-8 place-items-center rounded-full border border-[var(--lv-border-strong)] bg-[var(--lv-surface-raised)] text-[var(--lv-text-secondary)] shadow-inner"
+        className="absolute left-1/2 top-[3px] h-[25px] w-[25px] -translate-x-1/2 rounded-full border border-[#aab2ba] bg-[#171d23] shadow-[inset_0_0_0_2px_#0b0f13,0_1px_2px_#000] transition-colors group-hover:border-white"
         data-volume-knob="true"
       >
         <span
-          className="absolute inset-[3px]"
+          className="absolute inset-[2px]"
           data-volume-indicator="true"
           style={{ transform: `rotate(${angle}deg)` }}
         >
-          <span className="mx-auto block h-1.5 w-0.5 rounded-full bg-[var(--lv-accent)]" />
+          <span className="mx-auto mt-px block h-[7px] w-[2px] rounded-full bg-white shadow-[0_0_2px_#fff]" />
         </span>
-        {normalized === 0
-          ? <VolumeX size={16} strokeWidth={1.8} />
-          : <Volume2 size={16} strokeWidth={1.8} />}
+      </span>
+      <span
+        aria-hidden="true"
+        className="absolute bottom-[3px] left-[5px] h-px w-2 bg-[var(--lv-border-strong)] group-hover:bg-[var(--lv-text-secondary)]"
+      />
+      <span
+        aria-hidden="true"
+        className="absolute bottom-0 right-0 h-[7px] w-[7px] bg-[var(--lv-accent)] [clip-path:polygon(100%_0,100%_100%,0_100%)]"
+      />
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute left-1/2 top-full z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded border border-[var(--lv-border-strong)] bg-[var(--lv-surface-raised)] px-2 py-1 text-[11px] font-medium text-[var(--lv-text)] opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
+        data-volume-tooltip="true"
+      >
+        {valueLabel}
       </span>
       <input
         className="absolute inset-0 h-full w-full cursor-ew-resize opacity-0"
