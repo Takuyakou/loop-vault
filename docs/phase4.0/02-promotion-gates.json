@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.0-02",
+  "status": "proposed-awaiting-human-approval",
+  "frozenPolicy": "Thresholds are fixed at P4.0-02 and must not be changed to accommodate a later result. Any change requires explicit human approval and a recorded reason.",
+  "appliesTo": "defaultAnalyzerMode promotion decided in P4.0-06",
+  "baseline": {
+    "analyzer": "legacy",
+    "analyzerVersion": "legacy-v1",
+    "source": "docs/phase4.0/02-normalized-baseline.json",
+    "weighting": "durationWeighted",
+    "subset": "full",
+    "values": {
+      "rootAccuracy": 0.571121,
+      "triadAccuracy": 0.597522,
+      "qualityAccuracy": 0.442349,
+      "seventhAccuracy": 0.551185,
+      "extensionAccuracy": 0.381995,
+      "bassSlashAccuracy": 0.652478,
+      "canonicalExactAccuracy": 0.259159,
+      "pitchSetEquivalentAccuracy": 0.285560,
+      "top3CanonicalAccuracy": 0.374461,
+      "top5CanonicalAccuracy": 0.411099,
+      "top3RootAccuracy": 0.704741,
+      "top3QualityAccuracy": 0.651940
+    },
+    "holdout": { "canonicalExactAccuracy": 0.247113 },
+    "runtimeMsPer100Cases": 585.6
+  },
+  "requireAll": [
+    {
+      "id": "no-root-regression",
+      "metric": "rootAccuracy",
+      "rule": "noRegression",
+      "toleranceLossPp": 0.5,
+      "rationale": "Root is the correction the user cannot shortcut; losing it costs the most edits."
+    },
+    {
+      "id": "no-quality-regression",
+      "metric": "qualityAccuracy",
+      "rule": "noRegression",
+      "toleranceLossPp": 0.5,
+      "rationale": "Quality here is triad plus seventh, not the coarse v1 family."
+    },
+    {
+      "id": "no-triad-regression",
+      "metric": "triadAccuracy",
+      "rule": "noRegression",
+      "toleranceLossPp": 0.5,
+      "rationale": "Simple triad bucket must not degrade while chasing extended chords."
+    },
+    {
+      "id": "no-seventh-regression",
+      "metric": "seventhAccuracy",
+      "rule": "noRegression",
+      "toleranceLossPp": 0.5
+    },
+    {
+      "id": "no-bass-slash-regression",
+      "metric": "bassSlashAccuracy",
+      "rule": "noRegression",
+      "toleranceLossPp": 0.5
+    },
+    {
+      "id": "no-top3-root-regression",
+      "metric": "top3RootAccuracy",
+      "rule": "noRegression",
+      "toleranceLossPp": 1.0,
+      "rationale": "The product goal is that the correct chord sits in the short list the user scans. A sharper single answer does not compensate for a narrower candidate spread."
+    },
+    {
+      "id": "no-top3-quality-regression",
+      "metric": "top3QualityAccuracy",
+      "rule": "noRegression",
+      "toleranceLossPp": 1.0
+    },
+    {
+      "id": "no-correction-cost-increase",
+      "metric": "operationCorrectionCost.mean",
+      "rule": "noIncrease",
+      "toleranceIncrease": 0.02
+    },
+    {
+      "id": "no-block-recall-regression",
+      "metric": "blockRecallAtIoU50",
+      "rule": "noRegression",
+      "toleranceLossPp": 1.0,
+      "baselineEstablishedIn": "P4.0-03",
+      "note": "The rule is fixed now; its baseline value is measured once Candidate Block v2 exists."
+    },
+    {
+      "id": "runtime-ceiling",
+      "metric": "runtimeMsPer100Cases",
+      "rule": "max",
+      "value": 3000,
+      "rationale": "Roughly 5x the legacy baseline. Analysis runs synchronously on the UI thread."
+    },
+    {
+      "id": "determinism",
+      "rule": "identicalOutputOnRepeatRun"
+    },
+    {
+      "id": "holdout-not-worse",
+      "metric": "canonicalExactAccuracy",
+      "subset": "holdout",
+      "rule": "noRegression",
+      "toleranceLossPp": 0.5
+    },
+    {
+      "id": "tests-pass",
+      "rule": "lintTypecheckTestsBuildAllPass"
+    }
+  ],
+  "requireAny": [
+    {
+      "id": "canonical-exact-improves",
+      "metric": "canonicalExactAccuracy",
+      "subset": "holdout",
+      "rule": "improve",
+      "minGainPp": 1.0
+    },
+    {
+      "id": "top3-canonical-improves",
+      "metric": "top3CanonicalAccuracy",
+      "subset": "holdout",
+      "rule": "improve",
+      "minGainPp": 1.0
+    }
+  ],
+  "reportAlwaysButDoNotGate": [
+    "surfaceExactAccuracy",
+    "pitchSetEquivalentAccuracy",
+    "extensionAccuracy",
+    "representability counts",
+    "keySpellingAccuracy"
+  ],
+  "currentAnalyzersAgainstGate": {
+    "note": "Measured at P4.0-02 with the analyzers unchanged. Recorded so P4.0-06 starts from a known position.",
+    "legacyBoundaryRerank": {
+      "verdict": "FAIL",
+      "failing": [
+        { "id": "no-top3-root-regression", "baseline": 0.704741, "candidate": 0.619612, "deltaPp": -8.51 },
+        { "id": "no-top3-quality-regression", "baseline": 0.651940, "candidate": 0.585129, "deltaPp": -6.68 },
+        { "id": "canonical-exact-improves / top3-canonical-improves", "reason": "holdout canonicalExact +0.29pp, below the 1.0pp requireAny threshold" }
+      ],
+      "passing": ["root +0.22pp", "triad +0.76pp", "quality +0.76pp", "seventh +0.86pp", "bassSlash +0.21pp", "runtime 1032.9ms"]
+    },
+    "voiceAwareRerank": {
+      "verdict": "FAIL",
+      "failing": [
+        { "id": "no-top3-root-regression", "baseline": 0.704741, "candidate": 0.621767, "deltaPp": -8.30 },
+        { "id": "no-top3-quality-regression", "baseline": 0.651940, "candidate": 0.583512, "deltaPp": -6.84 },
+        { "id": "canonical-exact-improves / top3-canonical-improves", "reason": "holdout canonicalExact +0.58pp, below the 1.0pp requireAny threshold" }
+      ],
+      "passing": ["root +0.43pp", "triad +0.76pp", "quality +0.65pp", "seventh +0.65pp", "bassSlash +0.21pp", "runtime 1006.9ms"]
+    }
+  },
+  "openQuestionsForApproval": [
+    "Are the 0.5pp / 1.0pp loss tolerances acceptable? The evaluation is deterministic, so any tolerance above 0 is a deliberate allowance for trade-offs rather than noise.",
+    "Is the 1.0pp requireAny gain threshold on holdout the right bar for changing the product default?",
+    "Should top3Root and top3Quality be hard gates at all, or advisory? Making them hard gates means neither existing reranker can be promoted as-is."
+  ]
+}
