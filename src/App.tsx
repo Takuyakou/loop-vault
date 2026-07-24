@@ -5,6 +5,12 @@ import {
   playbackController,
   type PlaybackController,
 } from "./audio/playbackController";
+import {
+  applyMasterVolume,
+  loadMasterVolume,
+  normalizeMasterVolume,
+  saveMasterVolume,
+} from "./audio/masterVolume";
 import { AppShell, type AppView } from "./components/AppShell";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { Modal } from "./components/Modal";
@@ -98,6 +104,7 @@ function App() {
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [toast, setToast] = useState<string>();
   const [liveMidiMode, setLiveMidiMode] = useState(false);
+  const [masterVolume, setMasterVolume] = useState(() => loadMasterVolume());
   const [pendingLiveMidiHistory, setPendingLiveMidiHistory] = useState<LiveChordHistoryEntry[]>();
   const [startupRestoreName, setStartupRestoreName] = useState<string>();
   const undoFallbackFocusRef = useRef<HTMLHeadingElement>(null);
@@ -142,6 +149,10 @@ function App() {
   }, [initialize]);
 
   useEffect(() => {
+    applyMasterVolume(masterVolume);
+  }, [masterVolume]);
+
+  useEffect(() => {
     if (undoEpochRef.current !== vaultEpoch) undoQueue.clearAll();
     undoEpochRef.current = vaultEpoch;
   }, [undoQueue.clearAll, vaultEpoch]);
@@ -177,6 +188,12 @@ function App() {
     setSelectedProgression(undefined);
     setSelectedId(id);
     setView("detail");
+  }
+
+  function changeMasterVolume(value: number) {
+    const normalized = normalizeMasterVolume(value);
+    setMasterVolume(normalized);
+    saveMasterVolume(normalized);
   }
 
   function openProgression(ideaId: string, blockId: string) {
@@ -327,6 +344,8 @@ async function analyzeMidiPath(path: string) {
       }}
       copy={copy}
       saveStatus={saving ? "saving" : unsaved ? "unsaved" : "saved"}
+      masterVolume={masterVolume}
+      onMasterVolumeChange={changeMasterVolume}
     />
   );
 
