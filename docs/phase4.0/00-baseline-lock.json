@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.0-00",
+  "lockedAt": "2026-07-25",
+  "repository": {
+    "headCommit": "e99349e8e76b702b011881105041afece41f1c53",
+    "baseBranch": "master",
+    "masterCommit": "22cd15e",
+    "branch": "docs/p40-00-audit-baseline",
+    "defaultAnalyzerMode": "legacy",
+    "analyzerVersion": "legacy-v1",
+    "fileVersion": 1
+  },
+  "corpus": {
+    "path": "docs/loop-vault-evaluation-corpus",
+    "tracked": false,
+    "gitignored": true,
+    "recipeSha256": "7991f80e29b76717af3fbeee5840a158a83cc387d73f9b73fdf2731afc70f3a6",
+    "generatorVersion": "chord-drip@0.1.0/evaluation-corpus-v1",
+    "caseCount": 100,
+    "expectedEvents": 1058,
+    "expectedBeats": 3712,
+    "integrity": {
+      "sha256AndLengthVerified": 100,
+      "mismatched": 0,
+      "missing": 0,
+      "duplicateCaseIds": 0,
+      "duplicateMidiHashes": 0
+    }
+  },
+  "commands": [
+    "npm run eval:midi:datasets",
+    "npm run eval:midi:rerank",
+    "npm run benchmark:midi",
+    "npm run diagnose:midi-failures",
+    "npm run eval:midi:label-reachability"
+  ],
+  "syntheticLabeled": {
+    "legacy": {
+      "caseCount": 100,
+      "durationBeats": 3712,
+      "rootAccuracy": 0.577586,
+      "rootTop3Accuracy": 0.708513,
+      "qualityAccuracy": 0.608297,
+      "qualityTop3Accuracy": 0.851293,
+      "tetradAccuracy": 0.383082,
+      "surfaceExactAccuracy": 0.136853,
+      "surfaceExactTop3Accuracy": 0.20097,
+      "boundaryPrecision": 0.765475,
+      "boundaryRecall": 0.900864,
+      "overSegmentationRate": 0.240207,
+      "underSegmentationRate": 0.029691,
+      "correctionCost": 918,
+      "operationCorrectionCost": {
+        "segmentCount": 1058,
+        "total": 2870,
+        "mean": 2.712665,
+        "median": 4,
+        "p90": 4,
+        "byCategory": {
+          "primary": 164,
+          "alternative": 102,
+          "structure-editor": 142,
+          "manual-input": 116,
+          "unrepresentable": 534
+        }
+      }
+    },
+    "legacyBoundaryRerank": {
+      "caseCount": 100,
+      "durationBeats": 3712,
+      "rootAccuracy": 0.579741,
+      "rootTop3Accuracy": 0.626078,
+      "qualityAccuracy": 0.614763,
+      "qualityTop3Accuracy": 0.771013,
+      "tetradAccuracy": 0.390625,
+      "surfaceExactAccuracy": 0.137931,
+      "surfaceExactTop3Accuracy": 0.211207,
+      "boundaryPrecision": 0.765475,
+      "boundaryRecall": 0.900864,
+      "overSegmentationRate": 0.240207,
+      "underSegmentationRate": 0.029691,
+      "correctionCost": 917,
+      "operationCorrectionCost": {
+        "segmentCount": 1058,
+        "total": 2859,
+        "mean": 2.702268,
+        "median": 4,
+        "p90": 4,
+        "byCategory": {
+          "primary": 165,
+          "alternative": 111,
+          "structure-editor": 132,
+          "manual-input": 116,
+          "unrepresentable": 534
+        }
+      }
+    },
+    "planExpectationMatch": {
+      "legacyRoot": "57.76% matches plan",
+      "legacyQuality": "60.83% matches plan",
+      "legacySurfaceExact": "13.69% matches plan",
+      "rerankerRoot": "57.97% matches plan",
+      "rerankerQuality": "61.48% matches plan",
+      "rerankerSurfaceExact": "13.79% matches plan",
+      "verdict": "reproduced"
+    }
+  },
+  "labelReachability": {
+    "expectedParseCoverage": 0.495274,
+    "surfaceReachabilityEvents": 0.310964,
+    "surfaceReachabilityBeats": 0.322198,
+    "surfaceExactCeilingBeats": 0.322198,
+    "achievedShareOfCeiling": 0.424758,
+    "unsupportedEventCount": 729,
+    "distinctUnsupportedLabels": 425,
+    "byReasonBeatShare": {
+      "parenthesized-tension": 0.460129,
+      "quality-notation": 0.122845,
+      "enharmonic-spelling": 0.057651,
+      "unparsable-other": 0.037177
+    },
+    "detectorVocabularyUnsupportedQualities": {
+      "dom13sus": 398,
+      "maj13": 68,
+      "blackadder": 32,
+      "totalBeats": 498,
+      "beatShare": 0.134159
+    }
+  },
+  "benchmark": {
+    "syntheticSeconds": 180,
+    "midiByteLength": 2306,
+    "legacyMs": 49.4,
+    "hybridMs": 1429.8,
+    "legacyBoundaryRerankMs": 175.1,
+    "voiceAwareRerankMs": 169.8,
+    "hybridRatio": 28.92,
+    "rerankerRatio": 3.54,
+    "voiceAwareRatio": 3.44
+  },
+  "determinism": {
+    "diagnoseMidiFailuresRegeneratedIdenticalContent": true,
+    "corpusSplitStableAcrossRuns": true
+  },
+  "notes": [
+    "surfaceExact is a historical metric bounded by surfaceReachabilityBeats (0.322198); it must not be used as the primary Phase 4.0 KPI.",
+    "The legacy-boundary reranker improves @1 marginally but regresses rootTop3 (0.708513 -> 0.626078) and qualityTop3 (0.851293 -> 0.771013).",
+    "operationCorrectionCost.unrepresentable is 534/1058 for both analyzers, independently corroborating the label reachability ceiling.",
+    "npm run diagnose:midi-failures rewrites the tracked docs/phase3.6.1-failure-analysis.md as a side effect; content was byte-identical and was restored."
+  ]
+}
