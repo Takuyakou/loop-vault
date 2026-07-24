@@ -123,5 +123,24 @@ rows.forEach((row) => stdout.write(
   + `rank=${row.approxRankingScore} +rep=${row.repeatBonus} +div=${row.diversityBonus} => ${row.approxSelectionScore} `
   + `[${row.densityClass}] ${row.selected ? "SELECTED" : "dropped"}\n`,
 ));
-stdout.write(`\ndedupe collisions: ${collisions.length}\n`);
+stdout.write(`\ndedupe collisions (v1 summary-text keys): ${collisions.length}\n`);
+
+stdout.write(`\n-- selected candidates (actual v2 structure) --\n`);
+for (const block of analysis.blockCandidates) {
+  const stats = block.stats;
+  stdout.write(`  ${block.id.padEnd(14)} ${block.summaryText}\n`);
+  if (stats) {
+    stdout.write(`  ${" ".repeat(14)} ${block.lengthBars}bars / ${stats.eventCount}events / `
+      + `${stats.uniqueChordCount}chords / changes ${stats.harmonicChangeCount} / `
+      + `${stats.chordEventsPerBar}per bar / ${stats.densityClass}`
+      + `${block.repeatCount && block.repeatCount > 1 ? ` / repeat x${block.repeatCount}` : ""}\n`);
+  }
+  const carried = block.events?.filter((event) => event.carriedIn) ?? [];
+  if (carried.length) {
+    stdout.write(`  ${" ".repeat(14)} carried-in: ${carried.map((event) => event.chord.label).join(", ")}\n`);
+  }
+}
+
+const signatures = analysis.blockCandidates.map((block) => block.structuredSignature ?? "");
+stdout.write(`\nstructured signatures unique: ${new Set(signatures).size}/${signatures.length}\n`);
 stdout.write(`selected: ${analysis.blockCandidates.length}\n`);

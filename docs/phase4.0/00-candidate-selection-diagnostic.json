@@ -1,75 +1,50 @@
 {
   "schemaVersion": 1,
-  "file": "cute-future-pop-d-major-9003.mid",
-  "totalBars": 16,
+  "file": "endless-endless-chord.mid",
+  "totalBars": 8,
   "detectedKey": "A major",
   "generatedLengths": [
     4,
-    8,
-    16
+    8
   ],
   "barCompression": [
     {
       "bar": 1,
-      "representative": "Bm9",
+      "representative": "Dmaj7",
       "timelineEvents": [
-        "Bm9@1+4"
+        "Dmaj7@1+4"
       ],
       "lostEvents": []
     },
     {
       "bar": 2,
-      "representative": "Abadd9",
+      "representative": "Dm7",
       "timelineEvents": [
-        "Abadd9@1+2",
-        "Gadd9@3+2"
+        "Dm7@1+4"
       ],
-      "lostEvents": [
-        "Gadd9"
-      ]
+      "lostEvents": []
     },
     {
       "bar": 3,
-      "representative": "Dadd9",
+      "representative": "C#m7",
       "timelineEvents": [
-        "Dadd9@1+4"
+        "C#m7@1+4"
       ],
       "lostEvents": []
     },
     {
       "bar": 4,
-      "representative": "A7sus4",
+      "representative": "F#m11",
       "timelineEvents": [
-        "A7sus4@1+4"
+        "F#m11@1+2",
+        "C7@3+2"
       ],
-      "lostEvents": []
+      "lostEvents": [
+        "C7"
+      ]
     },
     {
       "bar": 5,
-      "representative": "Gadd9",
-      "timelineEvents": [
-        "Gadd9@1+4"
-      ],
-      "lostEvents": []
-    },
-    {
-      "bar": 6,
-      "representative": "A7sus4",
-      "timelineEvents": [
-        "A7sus4@1+4"
-      ],
-      "lostEvents": []
-    },
-    {
-      "bar": 7,
-      "representative": "F#m11",
-      "timelineEvents": [
-        "F#m11@1+4"
-      ],
-      "lostEvents": []
-    },
-    {
-      "bar": 8,
       "representative": "Bm7",
       "timelineEvents": [
         "Bm7@1+4"
@@ -77,70 +52,29 @@
       "lostEvents": []
     },
     {
-      "bar": 9,
-      "representative": "Gadd9",
+      "bar": 6,
+      "representative": "Em11",
       "timelineEvents": [
-        "Gadd9@1+4"
+        "Em11@1+4"
       ],
       "lostEvents": []
     },
     {
-      "bar": 10,
-      "representative": "A7sus4",
+      "bar": 7,
+      "representative": "Gmaj9/A",
       "timelineEvents": [
-        "A7sus4@1+4"
+        "Gmaj9/A@1+8"
       ],
       "lostEvents": []
     },
     {
-      "bar": 11,
-      "representative": "F#m11",
+      "bar": 8,
+      "representative": "N.C.",
       "timelineEvents": [
-        "F#m11@1+4"
-      ],
-      "lostEvents": []
-    },
-    {
-      "bar": 12,
-      "representative": "Bm9",
-      "timelineEvents": [
-        "Bm9@1+4"
-      ],
-      "lostEvents": []
-    },
-    {
-      "bar": 13,
-      "representative": "G",
-      "timelineEvents": [
-        "G@1+4"
-      ],
-      "lostEvents": []
-    },
-    {
-      "bar": 14,
-      "representative": "A",
-      "timelineEvents": [
-        "A@1+4"
-      ],
-      "lostEvents": []
-    },
-    {
-      "bar": 15,
-      "representative": "F#m11",
-      "timelineEvents": [
-        "F#m11@1+4"
-      ],
-      "lostEvents": []
-    },
-    {
-      "bar": 16,
-      "representative": "Bm9",
-      "timelineEvents": [
-        "Bm9@1+2",
-        "B@3+2"
+        "Gmaj9/A@1+8"
       ],
       "lostEvents": [
-        "B"
+        "Gmaj9/A"
       ]
     }
   ],
@@ -150,7 +84,7 @@
       "startBar": 1,
       "endBar": 4,
       "lengthBars": 4,
-      "summaryText": "| Bm9 | Abadd9 | Dadd9 | A7sus4 |",
+      "summaryText": "| Dmaj7 | Dm7 | C#m7 | F#m11 |",
       "eventCount": 5,
       "uniqueChordCount": 4,
       "ncBars": 0,
@@ -160,14 +94,14 @@
       "diversityBonus": 0.12,
       "approxSelectionScore": 1.2,
       "densityClass": "compact",
-      "selected": false
+      "selected": true
     },
     {
       "id": "bars-2-5",
       "startBar": 2,
       "endBar": 5,
       "lengthBars": 4,
-      "summaryText": "| Abadd9 | Dadd9 | A7sus4 | Gadd9 |",
+      "summaryText": "| Dm7 | C#m7 | F#m11 | Bm7 |",
       "eventCount": 5,
       "uniqueChordCount": 4,
       "ncBars": 0,
@@ -184,180 +118,44 @@
       "startBar": 3,
       "endBar": 6,
       "lengthBars": 4,
-      "summaryText": "| Dadd9 | A7sus4 | Gadd9 | A7sus4 |",
-      "eventCount": 4,
-      "uniqueChordCount": 3,
+      "summaryText": "| C#m7 | F#m11 | Bm7 | Em11 |",
+      "eventCount": 5,
+      "uniqueChordCount": 4,
       "ncBars": 0,
       "repeatCount": 1,
       "approxRankingScore": 1,
       "repeatBonus": 0.08,
-      "diversityBonus": 0.09,
-      "approxSelectionScore": 1.17,
+      "diversityBonus": 0.12,
+      "approxSelectionScore": 1.2,
       "densityClass": "compact",
-      "selected": false
+      "selected": true
     },
     {
       "id": "bars-4-7",
       "startBar": 4,
       "endBar": 7,
       "lengthBars": 4,
-      "summaryText": "| A7sus4 | Gadd9 | A7sus4 | F#m11 |",
-      "eventCount": 4,
-      "uniqueChordCount": 3,
+      "summaryText": "| F#m11 | Bm7 | Em11 | Gmaj9/A |",
+      "eventCount": 5,
+      "uniqueChordCount": 4,
       "ncBars": 0,
       "repeatCount": 1,
       "approxRankingScore": 1,
       "repeatBonus": 0.08,
-      "diversityBonus": 0.09,
-      "approxSelectionScore": 1.17,
+      "diversityBonus": 0.12,
+      "approxSelectionScore": 1.2,
       "densityClass": "compact",
-      "selected": false
+      "selected": true
     },
     {
       "id": "bars-5-8",
       "startBar": 5,
       "endBar": 8,
       "lengthBars": 4,
-      "summaryText": "| Gadd9 | A7sus4 | F#m11 | Bm7 |",
-      "eventCount": 4,
+      "summaryText": "| Bm7 | Em11 | Gmaj9/A | N.C. |",
+      "eventCount": 3,
       "uniqueChordCount": 4,
-      "ncBars": 0,
-      "repeatCount": 1,
-      "approxRankingScore": 1,
-      "repeatBonus": 0.08,
-      "diversityBonus": 0.12,
-      "approxSelectionScore": 1.2,
-      "densityClass": "compact",
-      "selected": false
-    },
-    {
-      "id": "bars-6-9",
-      "startBar": 6,
-      "endBar": 9,
-      "lengthBars": 4,
-      "summaryText": "| A7sus4 | F#m11 | Bm7 | Gadd9 |",
-      "eventCount": 4,
-      "uniqueChordCount": 4,
-      "ncBars": 0,
-      "repeatCount": 1,
-      "approxRankingScore": 1,
-      "repeatBonus": 0.08,
-      "diversityBonus": 0.12,
-      "approxSelectionScore": 1.2,
-      "densityClass": "compact",
-      "selected": false
-    },
-    {
-      "id": "bars-7-10",
-      "startBar": 7,
-      "endBar": 10,
-      "lengthBars": 4,
-      "summaryText": "| F#m11 | Bm7 | Gadd9 | A7sus4 |",
-      "eventCount": 4,
-      "uniqueChordCount": 4,
-      "ncBars": 0,
-      "repeatCount": 1,
-      "approxRankingScore": 1,
-      "repeatBonus": 0.08,
-      "diversityBonus": 0.12,
-      "approxSelectionScore": 1.2,
-      "densityClass": "compact",
-      "selected": false
-    },
-    {
-      "id": "bars-8-11",
-      "startBar": 8,
-      "endBar": 11,
-      "lengthBars": 4,
-      "summaryText": "| Bm7 | Gadd9 | A7sus4 | F#m11 |",
-      "eventCount": 4,
-      "uniqueChordCount": 4,
-      "ncBars": 0,
-      "repeatCount": 1,
-      "approxRankingScore": 1,
-      "repeatBonus": 0.08,
-      "diversityBonus": 0.12,
-      "approxSelectionScore": 1.2,
-      "densityClass": "compact",
-      "selected": false
-    },
-    {
-      "id": "bars-9-12",
-      "startBar": 9,
-      "endBar": 12,
-      "lengthBars": 4,
-      "summaryText": "| Gadd9 | A7sus4 | F#m11 | Bm9 |",
-      "eventCount": 4,
-      "uniqueChordCount": 4,
-      "ncBars": 0,
-      "repeatCount": 1,
-      "approxRankingScore": 1,
-      "repeatBonus": 0.08,
-      "diversityBonus": 0.12,
-      "approxSelectionScore": 1.2,
-      "densityClass": "compact",
-      "selected": false
-    },
-    {
-      "id": "bars-10-13",
-      "startBar": 10,
-      "endBar": 13,
-      "lengthBars": 4,
-      "summaryText": "| A7sus4 | F#m11 | Bm9 | G |",
-      "eventCount": 4,
-      "uniqueChordCount": 4,
-      "ncBars": 0,
-      "repeatCount": 1,
-      "approxRankingScore": 1,
-      "repeatBonus": 0.08,
-      "diversityBonus": 0.12,
-      "approxSelectionScore": 1.2,
-      "densityClass": "compact",
-      "selected": false
-    },
-    {
-      "id": "bars-11-14",
-      "startBar": 11,
-      "endBar": 14,
-      "lengthBars": 4,
-      "summaryText": "| F#m11 | Bm9 | G | A |",
-      "eventCount": 4,
-      "uniqueChordCount": 4,
-      "ncBars": 0,
-      "repeatCount": 1,
-      "approxRankingScore": 1,
-      "repeatBonus": 0.08,
-      "diversityBonus": 0.12,
-      "approxSelectionScore": 1.2,
-      "densityClass": "compact",
-      "selected": false
-    },
-    {
-      "id": "bars-12-15",
-      "startBar": 12,
-      "endBar": 15,
-      "lengthBars": 4,
-      "summaryText": "| Bm9 | G | A | F#m11 |",
-      "eventCount": 4,
-      "uniqueChordCount": 4,
-      "ncBars": 0,
-      "repeatCount": 1,
-      "approxRankingScore": 1,
-      "repeatBonus": 0.08,
-      "diversityBonus": 0.12,
-      "approxSelectionScore": 1.2,
-      "densityClass": "compact",
-      "selected": false
-    },
-    {
-      "id": "bars-13-16",
-      "startBar": 13,
-      "endBar": 16,
-      "lengthBars": 4,
-      "summaryText": "| G | A | F#m11 | Bm9 |",
-      "eventCount": 5,
-      "uniqueChordCount": 4,
-      "ncBars": 0,
+      "ncBars": 1,
       "repeatCount": 1,
       "approxRankingScore": 1,
       "repeatBonus": 0.08,
@@ -371,163 +169,10 @@
       "startBar": 1,
       "endBar": 8,
       "lengthBars": 8,
-      "summaryText": "| Bm9 | Abadd9 | Dadd9 | A7sus4 | Gadd9 | A7sus4 | F#m11 | Bm7 |",
-      "eventCount": 9,
-      "uniqueChordCount": 7,
-      "ncBars": 0,
-      "repeatCount": 1,
-      "approxRankingScore": 1,
-      "repeatBonus": 0.08,
-      "diversityBonus": 0.15,
-      "approxSelectionScore": 1.23,
-      "densityClass": "standard",
-      "selected": false
-    },
-    {
-      "id": "bars-2-9",
-      "startBar": 2,
-      "endBar": 9,
-      "lengthBars": 8,
-      "summaryText": "| Abadd9 | Dadd9 | A7sus4 | Gadd9 | A7sus4 | F#m11 | Bm7 | Gadd9 |",
-      "eventCount": 9,
-      "uniqueChordCount": 6,
-      "ncBars": 0,
-      "repeatCount": 1,
-      "approxRankingScore": 1,
-      "repeatBonus": 0.08,
-      "diversityBonus": 0.15,
-      "approxSelectionScore": 1.23,
-      "densityClass": "standard",
-      "selected": false
-    },
-    {
-      "id": "bars-3-10",
-      "startBar": 3,
-      "endBar": 10,
-      "lengthBars": 8,
-      "summaryText": "| Dadd9 | A7sus4 | Gadd9 | A7sus4 | F#m11 | Bm7 | Gadd9 | A7sus4 |",
+      "summaryText": "| Dmaj7 | Dm7 | C#m7 | F#m11 | Bm7 | Em11 | Gmaj9/A | N.C. |",
       "eventCount": 8,
-      "uniqueChordCount": 5,
-      "ncBars": 0,
-      "repeatCount": 1,
-      "approxRankingScore": 1,
-      "repeatBonus": 0.08,
-      "diversityBonus": 0.15,
-      "approxSelectionScore": 1.23,
-      "densityClass": "compact",
-      "selected": true
-    },
-    {
-      "id": "bars-4-11",
-      "startBar": 4,
-      "endBar": 11,
-      "lengthBars": 8,
-      "summaryText": "| A7sus4 | Gadd9 | A7sus4 | F#m11 | Bm7 | Gadd9 | A7sus4 | F#m11 |",
-      "eventCount": 8,
-      "uniqueChordCount": 4,
-      "ncBars": 0,
-      "repeatCount": 1,
-      "approxRankingScore": 1,
-      "repeatBonus": 0.08,
-      "diversityBonus": 0.12,
-      "approxSelectionScore": 1.2,
-      "densityClass": "compact",
-      "selected": false
-    },
-    {
-      "id": "bars-5-12",
-      "startBar": 5,
-      "endBar": 12,
-      "lengthBars": 8,
-      "summaryText": "| Gadd9 | A7sus4 | F#m11 | Bm7 | Gadd9 | A7sus4 | F#m11 | Bm9 |",
-      "eventCount": 8,
-      "uniqueChordCount": 5,
-      "ncBars": 0,
-      "repeatCount": 1,
-      "approxRankingScore": 1,
-      "repeatBonus": 0.08,
-      "diversityBonus": 0.15,
-      "approxSelectionScore": 1.23,
-      "densityClass": "compact",
-      "selected": false
-    },
-    {
-      "id": "bars-6-13",
-      "startBar": 6,
-      "endBar": 13,
-      "lengthBars": 8,
-      "summaryText": "| A7sus4 | F#m11 | Bm7 | Gadd9 | A7sus4 | F#m11 | Bm9 | G |",
-      "eventCount": 8,
-      "uniqueChordCount": 6,
-      "ncBars": 0,
-      "repeatCount": 1,
-      "approxRankingScore": 1,
-      "repeatBonus": 0.08,
-      "diversityBonus": 0.15,
-      "approxSelectionScore": 1.23,
-      "densityClass": "standard",
-      "selected": true
-    },
-    {
-      "id": "bars-7-14",
-      "startBar": 7,
-      "endBar": 14,
-      "lengthBars": 8,
-      "summaryText": "| F#m11 | Bm7 | Gadd9 | A7sus4 | F#m11 | Bm9 | G | A |",
-      "eventCount": 8,
-      "uniqueChordCount": 7,
-      "ncBars": 0,
-      "repeatCount": 1,
-      "approxRankingScore": 1,
-      "repeatBonus": 0.08,
-      "diversityBonus": 0.15,
-      "approxSelectionScore": 1.23,
-      "densityClass": "standard",
-      "selected": false
-    },
-    {
-      "id": "bars-8-15",
-      "startBar": 8,
-      "endBar": 15,
-      "lengthBars": 8,
-      "summaryText": "| Bm7 | Gadd9 | A7sus4 | F#m11 | Bm9 | G | A | F#m11 |",
-      "eventCount": 8,
-      "uniqueChordCount": 7,
-      "ncBars": 0,
-      "repeatCount": 1,
-      "approxRankingScore": 1,
-      "repeatBonus": 0.08,
-      "diversityBonus": 0.15,
-      "approxSelectionScore": 1.23,
-      "densityClass": "standard",
-      "selected": false
-    },
-    {
-      "id": "bars-9-16",
-      "startBar": 9,
-      "endBar": 16,
-      "lengthBars": 8,
-      "summaryText": "| Gadd9 | A7sus4 | F#m11 | Bm9 | G | A | F#m11 | Bm9 |",
-      "eventCount": 9,
-      "uniqueChordCount": 6,
-      "ncBars": 0,
-      "repeatCount": 1,
-      "approxRankingScore": 1,
-      "repeatBonus": 0.08,
-      "diversityBonus": 0.15,
-      "approxSelectionScore": 1.23,
-      "densityClass": "standard",
-      "selected": true
-    },
-    {
-      "id": "bars-1-16",
-      "startBar": 1,
-      "endBar": 16,
-      "lengthBars": 16,
-      "summaryText": "| Bm9 | Abadd9 | Dadd9 | A7sus4 | Gadd9 | A7sus4 | F#m11 | Bm7 | Gadd9 | A7sus4 | F#m11 | Bm9 | G | A | F#m11 | Bm9 |",
-      "eventCount": 18,
-      "uniqueChordCount": 9,
-      "ncBars": 0,
+      "uniqueChordCount": 8,
+      "ncBars": 1,
       "repeatCount": 1,
       "approxRankingScore": 1,
       "repeatBonus": 0.08,
@@ -540,33 +185,11 @@
   "dedupeCollisions": [],
   "selectedCandidates": [
     {
-      "id": "bars-3-10",
-      "startBar": 3,
-      "endBar": 10,
-      "lengthBars": 8,
-      "summaryText": "| Dadd9 | A7sus4 | Gadd9 | A7sus4 | F#m11 | Bm7 | Gadd9 | A7sus4 |",
-      "confidence": 1,
-      "labels": [
-        "main"
-      ]
-    },
-    {
-      "id": "bars-9-16",
-      "startBar": 9,
-      "endBar": 16,
-      "lengthBars": 8,
-      "summaryText": "| Gadd9 | A7sus4 | F#m11 | Bm9 | G | A | F#m11 | Bm9 |",
-      "confidence": 1,
-      "labels": [
-        "main"
-      ]
-    },
-    {
       "id": "bars-2-5",
       "startBar": 2,
       "endBar": 5,
       "lengthBars": 4,
-      "summaryText": "| Abadd9 | Dadd9 | A7sus4 | Gadd9 |",
+      "summaryText": "| Dm7 | C#m7 | F#m11 · C7 | Bm7 |",
       "confidence": 1,
       "labels": [
         "main",
@@ -574,11 +197,23 @@
       ]
     },
     {
-      "id": "bars-1-16",
+      "id": "bars-5-8",
+      "startBar": 5,
+      "endBar": 8,
+      "lengthBars": 4,
+      "summaryText": "| Bm7 | Em11 | Gmaj9/A | — |",
+      "confidence": 1,
+      "labels": [
+        "main",
+        "turnaround"
+      ]
+    },
+    {
+      "id": "bars-1-8",
       "startBar": 1,
-      "endBar": 16,
-      "lengthBars": 16,
-      "summaryText": "| Bm9 | Abadd9 | Dadd9 | A7sus4 | Gadd9 | A7sus4 | F#m11 | Bm7 | Gadd9 | A7sus4 | F#m11 | Bm9 | G | A | F#m11 | Bm9 |",
+      "endBar": 8,
+      "lengthBars": 8,
+      "summaryText": "| Dmaj7 | Dm7 | C#m7 | F#m11 · C7 | Bm7 | Em11 | Gmaj9/A | — |",
       "confidence": 1,
       "labels": [
         "main",
@@ -586,22 +221,36 @@
       ]
     },
     {
-      "id": "bars-6-13",
-      "startBar": 6,
-      "endBar": 13,
-      "lengthBars": 8,
-      "summaryText": "| A7sus4 | F#m11 | Bm7 | Gadd9 | A7sus4 | F#m11 | Bm9 | G |",
+      "id": "bars-1-4",
+      "startBar": 1,
+      "endBar": 4,
+      "lengthBars": 4,
+      "summaryText": "| Dmaj7 | Dm7 | C#m7 | F#m11 · C7 |",
       "confidence": 1,
       "labels": [
-        "main"
+        "main",
+        "intro-like",
+        "turnaround"
       ]
     },
     {
-      "id": "bars-13-16",
-      "startBar": 13,
-      "endBar": 16,
+      "id": "bars-3-6",
+      "startBar": 3,
+      "endBar": 6,
       "lengthBars": 4,
-      "summaryText": "| G | A | F#m11 | Bm9 |",
+      "summaryText": "| C#m7 | F#m11 · C7 | Bm7 | Em11 |",
+      "confidence": 1,
+      "labels": [
+        "main",
+        "turnaround"
+      ]
+    },
+    {
+      "id": "bars-4-7",
+      "startBar": 4,
+      "endBar": 7,
+      "lengthBars": 4,
+      "summaryText": "| F#m11 · C7 | Bm7 | Em11 | Gmaj9/A |",
       "confidence": 1,
       "labels": [
         "main",
