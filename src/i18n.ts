@@ -901,7 +901,7 @@ export const progressionEditorCopy = {
   ja: {
     insertAfterChord: "このコードの後に追加",
     candidate: (index: number) => `候補 ${index}`,
-    candidateBars: (startBar: number, endBar: number, lengthBars: number) => `${startBar}-${endBar}小節 (${lengthBars})`,
+    candidateBars: (startBar: number, endBar: number, chordCount: number) => `${startBar}-${endBar}小節・${chordCount}コード`,
     progressionTitle: (labels: string[]) => `コード進行 ${labels.join(" - ")}`,
     selectChord: "編集するコードを選択",
     quickEdit: "すばやく編集",
@@ -953,7 +953,7 @@ export const progressionEditorCopy = {
   en: {
     candidate: (index: number) => `Candidate ${index}`,
     insertAfterChord: "Insert chord after",
-    candidateBars: (startBar: number, endBar: number, lengthBars: number) => `Bars ${startBar}-${endBar} (${lengthBars})`,
+    candidateBars: (startBar: number, endBar: number, chordCount: number) => `Bars ${startBar}-${endBar} · ${chordCount} chords`,
     progressionTitle: (labels: string[]) => `Progression ${labels.join(" - ")}`,
     selectChord: "Select a chord to edit",
     quickEdit: "Quick edit",

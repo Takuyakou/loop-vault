@@ -1178,7 +1178,11 @@ export function ProgressionCandidateCard({
             {editorCopy.candidate(candidateIndex + 1)}
           </p>
           <p className="mt-2 font-semibold">
-            {editorCopy.candidateBars(candidate.startBar, candidate.endBar, candidate.lengthBars)}
+            {editorCopy.candidateBars(
+              candidate.startBar,
+              candidate.endBar,
+              candidate.stats?.uniqueChordCount ?? candidate.chords.length,
+            )}
           </p>
           {shouldDisplayConfidence ? (
             <p className="mt-1 text-sm text-amber-200">

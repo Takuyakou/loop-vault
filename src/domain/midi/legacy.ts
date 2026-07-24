@@ -7,6 +7,10 @@ import type {
   MidiProgressionAnalysis,
   ProgressionBlockCandidate,
 } from "../types";
+import {
+  buildCandidateEvents, candidateStats, countStructuredRepeats, structuredSignature,
+  summaryFromEvents,
+} from "./candidateBlock";
 import { parseMidi } from "./parser";
 import {
   selectProgressionCandidates,
@@ -104,6 +108,7 @@ export function analyzeMidiWithRankingScores(
     fullTimeline,
     data.totalBars,
     timelineRankingScores,
+    barLengthBeats,
   );
 
   return {
@@ -283,8 +288,8 @@ export function extractBlockCandidates(
   timeline: ChordTimelineItem[],
   totalBars: number,
   rankingScores?: readonly number[],
+  barLengthBeats: number = 4,
 ): ProgressionBlockCandidate[] {
-  const byBar = chordLabelsByBar(timeline, totalBars);
   const raw: CandidateSelectionEntry[] = [];
 
   for (const lengthBars of [4, 8, 16] as const) {
@@ -293,9 +298,16 @@ export function extractBlockCandidates(
     }
 
     for (let start = 1; start <= totalBars - lengthBars + 1; start += 1) {
-      const labels = byBar.slice(start - 1, start - 1 + lengthBars);
-      const summaryText = summaryFromLabels(labels);
-      const repeatCount = countRepeats(byBar, labels);
+      // Candidate identity and display both come from the overlapping timeline
+      // events, so a two-chord bar keeps both chords and a sustained chord keeps
+      // its length instead of being flattened to one label per bar.
+      const events = buildCandidateEvents(timeline, start, lengthBars, barLengthBeats);
+      const signature = structuredSignature(events);
+      const stats = candidateStats(events, lengthBars);
+      const summaryText = summaryFromEvents(events, lengthBars, barLengthBeats);
+      const repeatCount = countStructuredRepeats(
+        timeline, totalBars, lengthBars, signature, barLengthBeats,
+      );
       const rankedChords = timeline.flatMap((item, index) =>
         item.bar >= start && item.bar < start + lengthBars
           ? [{ item, rankingScore: rankingScoreAt(rankingScores, index, item.confidence) }]
@@ -303,14 +315,13 @@ export function extractBlockCandidates(
       const chords = rankedChords.map(({ item }) => item);
       const confidence = average(chords.map((item) => item.confidence));
       const rankingScore = average(rankedChords.map((entry) => entry.rankingScore));
-      const uniqueCount = new Set(labels).size;
       const repeatBonus = Math.min(0.25, repeatCount * 0.08);
-      const diversityBonus = Math.min(0.15, uniqueCount * 0.03);
+      const diversityBonus = Math.min(0.15, stats.uniqueChordCount * 0.03);
       const score = rankingScore + repeatBonus + diversityBonus;
       const displayConfidence = confidence + repeatBonus + diversityBonus;
 
       raw.push({
-        dedupeKey: summaryText,
+        dedupeKey: signature,
         selectionScore: score,
         candidate: {
           id: `bars-${start}-${start + lengthBars - 1}`,
@@ -318,6 +329,9 @@ export function extractBlockCandidates(
           endBar: start + lengthBars - 1,
           lengthBars,
           chords,
+          events,
+          stats,
+          structuredSignature: signature,
           summaryText,
           confidence: clamp(displayConfidence),
           ...(repeatCount > 1 ? { repeatCount } : {}),
@@ -442,32 +456,6 @@ function detectKey(notes: TimedNote[]): string | undefined {
   return `${["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"][root]} major`;
 }
 
-function chordLabelsByBar(timeline: ChordTimelineItem[], totalBars: number): string[] {
-  const labels: string[] = [];
-  for (let bar = 1; bar <= totalBars; bar += 1) {
-    const items = timeline.filter((item) => item.bar === bar);
-    labels.push(
-      items.sort((a, b) => b.durationBeats - a.durationBeats || b.confidence - a.confidence)[0]
-        ?.chord.label ?? "N.C.",
-    );
-  }
-  return labels;
-}
-
-function summaryFromLabels(labels: string[]): string {
-  return `| ${labels.join(" | ")} |`;
-}
-
-function countRepeats(allLabels: string[], labels: string[]): number {
-  let count = 0;
-  for (let index = 0; index <= allLabels.length - labels.length; index += 1) {
-    const candidate = allLabels.slice(index, index + labels.length);
-    if (candidate.every((label, labelIndex) => label === labels[labelIndex])) {
-      count += 1;
-    }
-  }
-  return count;
-}
 
 function blockLabels(startBar: number, lengthBars: number, repeatCount: number, score: number): string[] {
   const labels: string[] = [];

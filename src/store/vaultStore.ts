@@ -12,6 +12,7 @@ import {
   beatsPerBar,
   buildVoiceFeatureInputs,
   buildVoices,
+  candidateEventsAsTimeline,
   normalizeNotes,
   parseMidi,
 } from "../domain/midi";
@@ -864,9 +865,16 @@ function toSavedProgressionBlock(
   }
 
   const barLengthBeats = beatsPerBar(analysis?.timeSignature);
-  const sourceRange = block.chords.length > 0 ? {
-    sourceStartBeat: Math.min(...block.chords.map((item) => (item.bar - 1) * barLengthBeats + item.beat - 1)),
-    sourceEndBeat: Math.max(...block.chords.map((item) => (item.bar - 1) * barLengthBeats + item.beat - 1 + item.durationBeats)),
+  // Save what the candidate actually showed. The v2 event slice keeps both
+  // chords of a two-chord bar, keeps a sustained chord's length, and includes a
+  // chord that sustained in from before the block; `chords` only holds events
+  // that start inside it.
+  const savedChords = block.events?.length
+    ? candidateEventsAsTimeline(block.events, block.startBar, barLengthBeats)
+    : block.chords;
+  const sourceRange = savedChords.length > 0 ? {
+    sourceStartBeat: Math.min(...savedChords.map((item) => (item.bar - 1) * barLengthBeats + item.beat - 1)),
+    sourceEndBeat: Math.max(...savedChords.map((item) => (item.bar - 1) * barLengthBeats + item.beat - 1 + item.durationBeats)),
   } : undefined;
   return {
     id: context.idFactory(),
@@ -879,7 +887,7 @@ function toSavedProgressionBlock(
     lengthBars: block.lengthBars,
     summaryText: block.summaryText,
     chords: persistChordEvents(
-      block.chords.map((item) => attachExtractedVoicing(
+      savedChords.map((item) => attachExtractedVoicing(
         item,
         analysis,
         context.sourceData,
