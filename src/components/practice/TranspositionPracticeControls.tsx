@@ -32,7 +32,10 @@ const copy = {
       "progression-stale": "進行が変更されているため、進捗の再同期が必要です。",
     },
     current: "練習中",
-    cleared: "このセッションでクリア",
+    cleared: "クリア済み",
+    confirmation: "別日確認",
+    confirmationProgress: (current: number, total: number) => `確認チャレンジ ${current} / ${total}`,
+    confirmationTarget: "確認対象",
     untried: "未挑戦",
     select: (key: string) => `${key}を練習する`,
     runningHint: "キーを変更するには、いったん練習を停止してください。",
@@ -53,7 +56,10 @@ const copy = {
       "progression-stale": "The progression changed and its progress must be resynced.",
     },
     current: "Current",
-    cleared: "Cleared this session",
+    cleared: "Cleared",
+    confirmation: "Confirmation",
+    confirmationProgress: (current: number, total: number) => `Confirmation ${current} / ${total}`,
+    confirmationTarget: "Confirmation key",
     untried: "Not attempted",
     select: (key: string) => `Practice in ${key}`,
     runningHint: "Pause practice before changing the target key.",
@@ -133,6 +139,21 @@ export function TranspositionPracticeControls({
         <p className="mt-1 text-xs text-[var(--lv-text-muted)]">
           {state.level === 4 ? text.l4Description : text.l5Description}
         </p>
+        {state.inConfirmationChallenge && state.confirmationPitchClasses ? (
+          <p
+            className="mt-2 border-l-2 border-teal-400 pl-2 text-xs font-semibold text-teal-200"
+            data-testid="transposition-confirmation-progress"
+            aria-live="polite"
+          >
+            L{state.level} {text.confirmation} · {text.confirmationProgress(
+              Math.min(
+                (state.confirmationIndex ?? 0) + 1,
+                state.confirmationPitchClasses.length,
+              ),
+              state.confirmationPitchClasses.length,
+            )}
+          </p>
+        ) : null}
         <div
           className="mt-2 grid gap-1.5"
           style={{
@@ -147,7 +168,16 @@ export function TranspositionPracticeControls({
             const label = formatKeySignature(key, language);
             const current = pitchClass === state.currentTargetKeyPitchClass;
             const cleared = state.sessionClearedPitchClasses.includes(pitchClass);
-            const status = current ? text.current : cleared ? text.cleared : text.untried;
+            const confirmation = Boolean(
+              state.confirmationPitchClasses?.includes(pitchClass),
+            );
+            const status = current
+              ? text.current
+              : confirmation
+                ? text.confirmationTarget
+                : cleared
+                  ? text.cleared
+                  : text.untried;
             return (
               <button
                 key={pitchClass}
@@ -157,9 +187,17 @@ export function TranspositionPracticeControls({
                 ref={(element) => {
                   keyButtonRefs.current[index] = element;
                 }}
-                className={keyButtonClass(current, cleared)}
+                className={keyButtonClass(current, cleared, confirmation)}
                 data-key-pitch-class={pitchClass}
-                data-key-state={current ? "current" : cleared ? "cleared" : "untried"}
+                data-key-state={
+                  current
+                    ? "current"
+                    : confirmation
+                      ? "confirmation"
+                      : cleared
+                        ? "cleared"
+                        : "untried"
+                }
                 aria-current={current ? "step" : undefined}
                 aria-label={`${text.select(label)}: ${status}`}
                 title={manualSelectionDisabled ? text.runningHint : text.select(label)}
@@ -199,9 +237,14 @@ function eligibilityReason(
     : text.reasons[reason];
 }
 
-function keyButtonClass(current: boolean, cleared: boolean): string {
+function keyButtonClass(
+  current: boolean,
+  cleared: boolean,
+  confirmation: boolean,
+): string {
   const base = "min-w-0 border px-2 py-2 text-left disabled:cursor-not-allowed";
   if (current) return `${base} border-teal-300 bg-teal-950/40`;
+  if (confirmation) return `${base} border-amber-500 bg-amber-950/20`;
   if (cleared) return `${base} border-teal-800 bg-teal-950/20`;
   return `${base} border-[var(--lv-border)] bg-[var(--lv-surface)]`;
 }

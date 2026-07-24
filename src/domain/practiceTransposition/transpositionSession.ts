@@ -11,6 +11,10 @@ import type {
   KeyBagState,
   SupportedPracticeMode,
 } from "./types";
+import type {
+  PracticeProvisionalClear,
+  TranspositionPracticeProgress,
+} from "../practice";
 import type { PracticeTargetSource } from "../voicingPractice";
 
 export type TranspositionPracticeLevel = 4 | 5;
@@ -58,6 +62,9 @@ export interface CreateTranspositionSessionInput {
   sourceMode: SupportedPracticeMode;
   seed: number;
   eligibility: TranspositionEligibility;
+  progress?: TranspositionPracticeProgress;
+  provisional?: PracticeProvisionalClear;
+  localDate?: string;
 }
 
 export function evaluateTranspositionEligibility(
@@ -87,7 +94,20 @@ export function createTranspositionSession(
     ? createL4KeyPool(sourceKeyPitchClass)
     : createL5KeyPool(sourceKeyPitchClass);
   const keyBag = createKeyBag(keyPool, input.seed);
-  const first = drawNextKey(keyBag);
+  const confirmationPitchClasses = input.localDate
+    && confirmationDueForLocalDate(
+      input.provisional,
+      input.level,
+      input.localDate,
+    )
+    ? input.provisional?.confirmationPitchClasses
+    : undefined;
+  const first = confirmationPitchClasses?.[0] === undefined
+    ? drawNextKey(keyBag)
+    : {
+        keyPitchClass: confirmationPitchClasses[0],
+        nextState: keyBag,
+      };
   if (first.keyPitchClass === undefined) {
     throw new Error("Transposition practice requires at least one target key.");
   }
@@ -98,10 +118,18 @@ export function createTranspositionSession(
     currentTargetKeyPitchClass: first.keyPitchClass,
     keyPool,
     keyBag: first.nextState,
-    sessionClearedPitchClasses: [],
+    sessionClearedPitchClasses: normalizeClearedPitchClasses(
+      input.progress?.clearedKeyPitchClasses ?? [],
+    ).filter((pitchClass) => keyPool.includes(pitchClass)),
     officialProgressEligible: input.eligibility.eligible,
     eligibilityReasons: [...input.eligibility.reasons],
-    inConfirmationChallenge: false,
+    inConfirmationChallenge: Boolean(confirmationPitchClasses),
+    ...(confirmationPitchClasses
+      ? {
+          confirmationPitchClasses: [...confirmationPitchClasses],
+          confirmationIndex: 0,
+        }
+      : {}),
     sessionSeed: input.seed >>> 0,
   };
 }
@@ -125,13 +153,65 @@ export function completeTranspositionRound(
     meetsTargetTempo: boolean;
   },
 ): TranspositionSessionState {
+  if (state.inConfirmationChallenge) {
+    return completeConfirmationRound(state, input);
+  }
   if (
     input.mode !== "flow"
     || !input.clean
     || !input.meetsTargetTempo
   ) return cloneState(state);
 
-  return advanceTargetKey(state, true);
+  return advanceTargetKey(state, state.officialProgressEligible);
+}
+
+function completeConfirmationRound(
+  state: TranspositionSessionState,
+  input: {
+    mode: "step" | "flow";
+    clean: boolean;
+    meetsTargetTempo: boolean;
+  },
+): TranspositionSessionState {
+  const confirmationPitchClasses = state.confirmationPitchClasses ?? [];
+  if (
+    input.mode !== "flow"
+    || !input.meetsTargetTempo
+    || !state.officialProgressEligible
+  ) return cloneState(state);
+  if (!input.clean) {
+    const first = confirmationPitchClasses[0];
+    return first === undefined
+      ? cloneState(state)
+      : {
+          ...cloneState(state),
+          currentTargetKeyPitchClass: first,
+          confirmationIndex: 0,
+        };
+  }
+
+  const nextIndex = (state.confirmationIndex ?? 0) + 1;
+  const nextKey = confirmationPitchClasses[nextIndex];
+  if (nextKey !== undefined) {
+    return {
+      ...cloneState(state),
+      currentTargetKeyPitchClass: nextKey,
+      confirmationIndex: nextIndex,
+    };
+  }
+
+  const advanced = advanceTargetKey({
+    ...cloneState(state),
+    inConfirmationChallenge: false,
+    confirmationPitchClasses: undefined,
+    confirmationIndex: undefined,
+  }, false);
+  return {
+    ...advanced,
+    inConfirmationChallenge: false,
+    confirmationPitchClasses: undefined,
+    confirmationIndex: undefined,
+  };
 }
 
 export function skipTranspositionKey(
@@ -206,6 +286,21 @@ function appendUnique(values: readonly number[], value: number): number[] {
 
 function nextCycleSeed(seed: number): number {
   return (seed + 0x9e3779b9) >>> 0;
+}
+
+function normalizeClearedPitchClasses(values: readonly number[]): number[] {
+  return [...new Set(values.map(normalizePracticePitchClass))]
+    .sort((left, right) => left - right);
+}
+
+function confirmationDueForLocalDate(
+  provisional: PracticeProvisionalClear | undefined,
+  level: TranspositionPracticeLevel,
+  localDate: string,
+): boolean {
+  return provisional?.level === level
+    && provisional.clearedOnLocalDate !== localDate
+    && provisional.confirmationPitchClasses?.length === (level === 4 ? 2 : 4);
 }
 
 function cloneState(

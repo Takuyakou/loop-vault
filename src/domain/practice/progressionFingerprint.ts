@@ -1,7 +1,39 @@
 import type { SavedProgressionBlock } from "../types";
 import { normalizedChordKey } from "../voicing";
 
-export function progressionFingerprint(block: SavedProgressionBlock): string {
+export function progressionFingerprint(
+  block: SavedProgressionBlock,
+  effectiveKeySignature?: string,
+): string {
+  return fingerprintForKey(
+    block,
+    effectiveKeySignature ?? block.detectedKey,
+  );
+}
+
+export function legacyProgressionFingerprint(
+  block: SavedProgressionBlock,
+): string {
+  return fingerprintForKey(block, block.detectedKey);
+}
+
+export function isCompatibleProgressionFingerprint(
+  block: SavedProgressionBlock,
+  fingerprint: string,
+  effectiveKeySignature?: string,
+): boolean {
+  return fingerprint === progressionFingerprint(block, effectiveKeySignature)
+    || (
+      block.detectedKey === undefined
+      && effectiveKeySignature !== undefined
+      && fingerprint === legacyProgressionFingerprint(block)
+    );
+}
+
+function fingerprintForKey(
+  block: SavedProgressionBlock,
+  keySignature: string | undefined,
+): string {
   const payload = JSON.stringify({
     events: block.chords.map((event) => ({
       chord: normalizedChordKey(event.chord),
@@ -9,7 +41,7 @@ export function progressionFingerprint(block: SavedProgressionBlock): string {
       beat: event.beat,
       durationBeats: event.durationBeats,
     })),
-    key: block.detectedKey ?? null,
+    key: keySignature ?? null,
     bpm: block.bpm ?? null,
     timeSignature: block.timeSignature ?? null,
   });

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizeVaultPracticeCompatibility } from "./practiceCompatibility";
 import type { SongIdea, VaultFile } from "./types";
 
 export const statusSchema = z.enum([
@@ -175,6 +176,44 @@ export const practiceProvisionalClearSchema = z
     clearedAt: isoDateSchema,
     clearedOnLocalDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     targetTempo: z.number().int().min(40).max(300),
+    confirmationPitchClasses: z
+      .array(z.number().int().min(0).max(11))
+      .max(4)
+      .refine((values) => new Set(values).size === values.length, {
+        message: "Confirmation pitch classes must be unique.",
+      })
+      .optional(),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (value.confirmationPitchClasses === undefined) return;
+    const expected = value.level === 4 ? 2 : value.level === 5 ? 4 : 0;
+    const actual = value.confirmationPitchClasses.length;
+    if (actual !== expected) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["confirmationPitchClasses"],
+        message: expected === 0
+          ? "Confirmation pitch classes are only valid for L4/L5."
+          : `L${value.level} requires ${expected} confirmation pitch classes.`,
+      });
+    }
+  });
+
+export const transpositionPracticeProgressSchema = z
+  .object({
+    schemaVersion: z.literal(1),
+    clearedKeyPitchClasses: z
+      .array(z.number().int().min(0).max(11))
+      .max(12)
+      .refine((values) => new Set(values).size === values.length, {
+        message: "Cleared key pitch classes must be unique.",
+      })
+      .refine(
+        (values) => values.every((value, index) => index === 0 || values[index - 1] < value),
+        { message: "Cleared key pitch classes must be sorted." },
+      ),
+    updatedAt: isoDateSchema.optional(),
   })
   .strict();
 
@@ -184,6 +223,7 @@ export const progressionPracticeProgressSchema = z
     progressionFingerprint: z.string().min(1),
     confirmedLevel: practiceLevelSchema.optional(),
     provisional: practiceProvisionalClearSchema.optional(),
+    transposition: transpositionPracticeProgressSchema.optional(),
     lastPracticedAt: isoDateSchema.optional(),
   })
   .strict();
@@ -359,14 +399,15 @@ export function parseVaultFileJson(raw: string): VaultParseResult {
     });
   });
 
+  const vault = normalizeVaultPracticeCompatibility({
+    app: envelope.data.app,
+    fileVersion: envelope.data.fileVersion,
+    settings: envelope.data.settings,
+    ideas,
+  });
   return {
     ok: true,
-    vault: {
-      app: envelope.data.app,
-      fileVersion: envelope.data.fileVersion,
-      settings: envelope.data.settings,
-      ideas,
-    },
+    vault,
     quarantine,
   };
 }

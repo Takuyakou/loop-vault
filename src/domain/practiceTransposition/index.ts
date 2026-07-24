@@ -1,6 +1,7 @@
 export * from "./circleOfFifths";
 export * from "./keyBag";
 export * from "./keyCatalog";
+export * from "./practiceProgress";
 export * from "./targetPlan";
 export * from "./transpositionSession";
 export * from "./transposeChordSymbol";

@@ -12,7 +12,9 @@ import {
   VaultRepositoryError,
   type VaultStorage,
 } from "./repository";
+import { progressionFingerprint } from "./practice";
 import { makeIdea } from "./testFactory";
+import type { SavedProgressionBlock } from "./types";
 
 class MemoryVaultStorage implements VaultStorage {
   readonly files = new Map<string, string>();
@@ -94,6 +96,64 @@ describe("JsonVaultRepository", () => {
       from: TEMP_DATA_PATH,
       to: DATA_PATH,
     });
+  });
+
+  it("normalizes legacy practice in memory during load without writing data.json", async () => {
+    const storage = new MemoryVaultStorage();
+    const source: SavedProgressionBlock = {
+      id: "00000000-0000-4000-8000-000000000150",
+      summaryText: "Legacy practice",
+      chords: [],
+      tags: [],
+      capturedAt: "2026-07-20T00:00:00.000Z",
+      analyzerVersion: "legacy",
+    };
+    const vault = {
+      ...createEmptyVault(),
+      ideas: [makeIdea({
+        key: "C major",
+        progressionBlocks: [{
+          ...source,
+          practice: {
+            schemaVersion: 1,
+            progressionFingerprint: progressionFingerprint(source),
+            confirmedLevel: 3,
+            provisional: {
+              level: 4,
+              clearedAt: "2026-07-23T00:00:00.000Z",
+              clearedOnLocalDate: "2026-07-23",
+              targetTempo: 70,
+            },
+            transposition: {
+              schemaVersion: 1,
+              clearedKeyPitchClasses: [2, 3, 5, 7, 9, 10],
+            },
+          },
+        }],
+      })],
+    };
+    const original = serializeVault(vault);
+    storage.files.set(DATA_PATH, original);
+    const repo = new JsonVaultRepository(storage, {
+      now: () => new Date("2026-07-24T10:00:00.000Z"),
+    });
+
+    const result = await repo.load();
+
+    expect(result.vault.ideas[0]?.progressionBlocks?.[0]?.practice)
+      .toMatchObject({
+        progressionFingerprint: progressionFingerprint(source, "C major"),
+        confirmedLevel: 3,
+        provisional: {
+          level: 4,
+          confirmationPitchClasses: expect.any(Array),
+        },
+      });
+    expect(storage.files.get(DATA_PATH)).toBe(original);
+    expect(storage.operations.filter((operation) => (
+      operation.type === "writeText"
+      && (operation.path === DATA_PATH || operation.path === TEMP_DATA_PATH)
+    ))).toEqual([]);
   });
 
   it("creates a startup backup and keeps only the latest 20 generations", async () => {
@@ -245,6 +305,59 @@ describe("JsonVaultRepository", () => {
       incoming.id,
     ].sort());
     expect(storage.files.get(DATA_PATH)).toBe(serializeVault(result.vault));
+  });
+
+  it("round-trips optional transposition practice progress through export/import", async () => {
+    const storage = new MemoryVaultStorage();
+    const practiced = makeIdea({
+      id: "99999999-9999-4999-8999-999999999999",
+      progressionBlocks: [{
+        id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+        summaryText: "Cmaj7",
+        chords: [],
+        tags: [],
+        capturedAt: "2026-07-24T00:00:00.000Z",
+        analyzerVersion: "test",
+        practice: {
+          schemaVersion: 1,
+          progressionFingerprint: "practice-v1-export",
+          confirmedLevel: 3,
+          provisional: {
+            level: 4,
+            clearedAt: "2026-07-24T00:00:00.000Z",
+            clearedOnLocalDate: "2026-07-24",
+            targetTempo: 70,
+            confirmationPitchClasses: [5, 7],
+          },
+          transposition: {
+            schemaVersion: 1,
+            clearedKeyPitchClasses: [2, 4, 5, 7, 9, 11],
+            updatedAt: "2026-07-24T00:00:00.000Z",
+          },
+        },
+      }],
+    });
+    storage.files.set(DATA_PATH, serializeVault({
+      ...createEmptyVault(),
+      ideas: [practiced],
+    }));
+    const repo = new JsonVaultRepository(storage);
+
+    await repo.exportTo("C:/transposition-export.json");
+    storage.files.set(DATA_PATH, serializeVault(createEmptyVault()));
+    const imported = await repo.importFrom("C:/transposition-export.json");
+
+    expect(imported.vault.fileVersion).toBe(1);
+    expect(imported.vault.ideas[0]?.progressionBlocks?.[0]?.practice)
+      .toMatchObject({
+        provisional: {
+          confirmationPitchClasses: [5, 7],
+        },
+        transposition: {
+          schemaVersion: 1,
+          clearedKeyPitchClasses: [2, 4, 5, 7, 9, 11],
+        },
+      });
   });
 
   it("does not touch data.json when import JSON is invalid", async () => {

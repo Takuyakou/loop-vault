@@ -58,6 +58,7 @@ function ProgressionBlockCard({
   onPreviewError,
   copy,
   language,
+  effectiveKeySignature,
 }: {
   block: SavedProgressionBlock;
   source: PlayingSource;
@@ -68,6 +69,7 @@ function ProgressionBlockCard({
   onPreviewError: (error: unknown) => void;
   copy: AppCopy;
   language: AppLanguage;
+  effectiveKeySignature?: string;
 }) {
   return (
     <div className="border border-[var(--lv-border)] bg-[var(--lv-bg)] p-3 text-sm">
@@ -78,7 +80,11 @@ function ProgressionBlockCard({
             {block.sourceFileName ?? copy.detail.capturedMidi}{block.startBar ? ` · ${copy.detail.barRange(block.startBar, block.endBar ?? block.startBar)}` : ""}
           </p>
           <span className="mt-2 inline-flex">
-            <PracticeProgressBadge block={block} language={language} />
+            <PracticeProgressBadge
+              block={block}
+              language={language}
+              effectiveKeySignature={effectiveKeySignature}
+            />
           </span>
         </button>
         <PlayToggle source={source} request={{ type: "timeline", timeline: block.chords, bpm, beatsPerBar: beatsPerBar(block.timeSignature), explicitMidiNotesByEventId: resolveTimelineVoicings(block.chords) }} playLabel={copy.common.preview} stopLabel={copy.common.stop} className="rounded border border-cyan-500/60 px-2 py-1 text-cyan-100" onError={onPreviewError} />
@@ -546,6 +552,7 @@ export function DetailView({
                   block={block}
                   source={{ kind: "detail", id: `idea:${idea.id}:block:${block.id}` }}
                   bpm={block.bpm ?? idea.bpm}
+                  effectiveKeySignature={block.detectedKey ?? idea.key}
                   onPreviewError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed)}
                   onOpen={() => openProgression(idea.id, block.id)}
                   onCopyProgression={() => void copySavedBlock(block)}

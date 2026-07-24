@@ -27,6 +27,7 @@ import {
   buildPracticeChordRequirements,
   createPracticeSessionState,
   practiceInputFromLiveState,
+  practiceProgressForCurrentFingerprint,
   practiceProgressState,
   progressionFingerprint,
   recommendPracticeBlocks,
@@ -37,6 +38,7 @@ import {
   type PracticeLeniency,
   type PracticeMode,
   type PracticeRecommendation,
+  type ProgressionPracticeProgress,
   type PracticeSessionContext,
   type PracticeSessionLevel,
   type PracticeSessionState,
@@ -49,9 +51,12 @@ import {
   evaluateTranspositionEligibility,
   formatKeySignature,
   parseKeySignature,
+  recordTranspositionPracticeRound,
   selectTranspositionKey,
   setTranspositionEligibility,
   skipTranspositionKey,
+  transpositionCoverageSummary,
+  transpositionProgressLevel,
   transposeProgression,
   type TranspositionPracticeLevel,
   type TranspositionSessionState,
@@ -113,7 +118,16 @@ interface PracticeViewProps {
   practiceClock?: Pick<PracticeClock, "start" | "stop" | "pause" | "resume">;
 }
 
-type QueueFilter = "recommended" | "favorite" | "unstarted" | "confirmation" | "l1" | "l2" | "l3";
+type QueueFilter =
+  | "recommended"
+  | "favorite"
+  | "unstarted"
+  | "confirmation"
+  | "l1"
+  | "l2"
+  | "l3"
+  | "l4"
+  | "l5";
 
 const copy = {
   ja: {
@@ -365,6 +379,7 @@ export function PracticeView({
   const latestTranspositionSessionRef = useRef<TranspositionSessionState>();
   const latestBlockRef = useRef<SavedProgressionBlock>();
   const latestSelectedRef = useRef<PracticeRecommendation>();
+  const latestPracticeProgressRef = useRef<ProgressionPracticeProgress>();
   const lastPersistedSessionRef = useRef<PracticeSessionState>();
   const styleModeRef = useRef(false);
   const active = useStore(defaultLiveMidiStore, (state) => state.active);
@@ -426,7 +441,7 @@ export function PracticeView({
         consecutiveCleanFlowRounds: current.consecutiveCleanFlowRounds,
         nowIso: new Date().toISOString(),
         localDate: localDateString(new Date()),
-      }),
+      }, currentSelected.effectiveKeySignature),
     });
     if (updated) lastPersistedSessionRef.current = current;
   }
@@ -453,6 +468,7 @@ export function PracticeView({
         block.id,
         progressionFingerprint(block),
         keySignature ?? "",
+        selected.stale ? "stale" : "current",
       ].join(":")
     : undefined;
   const transpositionMode = isTranspositionLevel(level);
@@ -753,6 +769,10 @@ export function PracticeView({
   }, [block, selected, session, transpositionSession]);
 
   useEffect(() => {
+    latestPracticeProgressRef.current = block?.practice;
+  }, [block?.id, block?.practice]);
+
+  useEffect(() => {
     setTranspositionSession((current) => current
       ? setTranspositionEligibility(current, transpositionEligibility)
       : current);
@@ -788,6 +808,13 @@ export function PracticeView({
       sourceMode: sourceKey.mode,
       seed: createSessionSeed(),
       eligibility: transpositionEligibility,
+      progress: selected?.stale
+        ? undefined
+        : block?.practice?.transposition,
+      provisional: selected?.stale
+        ? undefined
+        : block?.practice?.provisional,
+      localDate,
     });
     latestTranspositionSessionRef.current = next;
     setTranspositionSession(next);
@@ -1016,6 +1043,13 @@ export function PracticeView({
           confirmedLevel: block?.practice?.confirmedLevel,
           stale: Boolean(selected?.stale),
         }),
+        progress: selected?.stale
+          ? undefined
+          : block?.practice?.transposition,
+        provisional: selected?.stale
+          ? undefined
+          : block?.practice?.provisional,
+        localDate,
       });
       latestTranspositionSessionRef.current = next;
       setTranspositionSession(next);
@@ -1025,7 +1059,12 @@ export function PracticeView({
   }
 
   function selectTargetKey(pitchClass: number): void {
-    if (running || flowRestartPending || flowClockStarting) return;
+    if (
+      running
+      || flowRestartPending
+      || flowClockStarting
+      || latestTranspositionSessionRef.current?.inConfirmationChallenge
+    ) return;
     invalidateFlowClock();
     clockRef.current.stop();
     playbackController.stop();
@@ -1044,6 +1083,7 @@ export function PracticeView({
       || !session
       || session.mode !== "flow"
       || session.lastRoundWasClean !== false
+      || currentTransposition.inConfirmationChallenge
     ) {
       return;
     }
@@ -1302,6 +1342,11 @@ export function PracticeView({
         meetsTargetTempo: completed.bpm >= completed.targetTempo,
       },
     );
+    persistTranspositionRound(
+      currentTransposition,
+      nextTransposition,
+      completed,
+    );
     if (
       nextTransposition.currentTargetKeyPitchClass
       === currentTransposition.currentTargetKeyPitchClass
@@ -1335,14 +1380,59 @@ export function PracticeView({
       return;
     }
     if (
-      !transpositionMode
-      && !styleMode
-      && practiceProgressState(block, localDate) === "stale"
+      !styleMode
+      && practiceProgressState(
+        block,
+        localDate,
+        selected.effectiveKeySignature,
+      ) === "stale"
     ) {
       if (!globalThis.confirm(text.staleConfirm)) return;
-      if (!updateProgressionBlock(selected.ideaId, block.id, { practice: resetPracticeProgress(block) })) {
+      const reset = resetPracticeProgress(
+        block,
+        selected.effectiveKeySignature,
+      );
+      if (!updateProgressionBlock(selected.ideaId, block.id, { practice: reset })) {
         setToast(text.saveFailed);
         return;
+      }
+      const resetBlock = { ...block, practice: reset };
+      const resetSelected = {
+        ...selected,
+        block: resetBlock,
+        stale: false,
+      };
+      latestBlockRef.current = resetBlock;
+      latestSelectedRef.current = resetSelected;
+      latestPracticeProgressRef.current = reset;
+      if (transpositionMode && sourceKey && isTranspositionLevel(level)) {
+        const resetEligibility = evaluateTranspositionEligibility({
+          level,
+          mode,
+          bpm,
+          targetTempo: targetTempoFor(block),
+          targetSource,
+          confirmedLevel: reset.confirmedLevel,
+          stale: false,
+        });
+        const rebuilt = createTranspositionSession({
+          level,
+          sourceKeyPitchClass: sourceKey.tonicPitchClass,
+          sourceMode: sourceKey.mode,
+          seed: createSessionSeed(),
+          eligibility: resetEligibility,
+          progress: reset.transposition,
+          provisional: reset.provisional,
+          localDate,
+        });
+        const resetSession = transpositionSession
+          ? selectTranspositionKey(
+              rebuilt,
+              transpositionSession.currentTargetKeyPitchClass,
+            )
+          : rebuilt;
+        latestTranspositionSessionRef.current = resetSession;
+        setTranspositionSession(resetSession);
       }
       setToast(text.staleReset);
     }
@@ -1354,7 +1444,10 @@ export function PracticeView({
     setAuditionEventIndex(undefined);
     const next = createPracticeSessionState({
       blockId: block.id,
-      progressionFingerprint: progressionFingerprint(block),
+      progressionFingerprint: progressionFingerprint(
+        block,
+        selected.effectiveKeySignature,
+      ),
       level,
       mode,
       leniency,
@@ -1458,12 +1551,66 @@ export function PracticeView({
       consecutiveCleanFlowRounds: current.consecutiveCleanFlowRounds,
       nowIso: new Date().toISOString(),
       localDate: localDateString(new Date()),
-    });
+    }, selected.effectiveKeySignature);
     if (updateProgressionBlock(selected.ideaId, targetBlock.id, { practice })) {
       setToast(text.saved);
     } else {
       setToast(text.saveFailed);
     }
+  }
+
+  function persistTranspositionRound(
+    currentTransposition: TranspositionSessionState,
+    nextTransposition: TranspositionSessionState,
+    completed: PracticeSessionState,
+  ): void {
+    const currentBlock = latestBlockRef.current;
+    const currentSelected = latestSelectedRef.current;
+    if (!currentBlock || !currentSelected || !isTranspositionLevel(completed.level)) {
+      return;
+    }
+    const confirmationCompleted = currentTransposition.inConfirmationChallenge
+      && !nextTransposition.inConfirmationChallenge;
+    const storedProgress = latestPracticeProgressRef.current
+      ?? currentBlock.practice;
+    const currentProgress = practiceProgressForCurrentFingerprint(
+      currentBlock,
+      currentSelected.effectiveKeySignature,
+      storedProgress,
+    );
+    const result = recordTranspositionPracticeRound(
+      currentProgress,
+      {
+        progressionFingerprint: progressionFingerprint(
+          currentBlock,
+          currentSelected.effectiveKeySignature,
+        ),
+        level: completed.level,
+        sourceKeyPitchClass: currentTransposition.sourceKeyPitchClass,
+        targetKeyPitchClass: currentTransposition.currentTargetKeyPitchClass,
+        mode: completed.mode,
+        clean: Boolean(completed.lastRoundWasClean),
+        bpm: completed.bpm,
+        targetTempo: completed.targetTempo,
+        targetSource,
+        confirmedLevel: currentProgress?.confirmedLevel,
+        stale: Boolean(storedProgress) && !currentProgress,
+        nowIso: new Date().toISOString(),
+        localDate: localDateString(new Date()),
+        seed: currentTransposition.sessionSeed,
+        inConfirmationChallenge: currentTransposition.inConfirmationChallenge,
+        confirmationCompleted,
+      },
+    );
+    if (!result.changed) return;
+    if (updateProgressionBlock(currentSelected.ideaId, currentBlock.id, {
+      practice: result.progress,
+    })) {
+      latestPracticeProgressRef.current = result.progress;
+      setToast(text.saved);
+      return;
+    }
+    setToast(text.saveFailed);
   }
 
   function prepareVoicingChange(): boolean {
@@ -1612,6 +1759,8 @@ export function PracticeView({
               <option value="l1">L1</option>
               <option value="l2">L2</option>
               <option value="l3">L3</option>
+              <option value="l4">L4</option>
+              <option value="l5">L5</option>
             </select>
           </div>
           <div
@@ -1653,7 +1802,12 @@ export function PracticeView({
                     {transpositionMode ? text.transpositionPractice : block.summaryText}
                   </h3>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    <PracticeBadge block={block} localDate={localDate} language={language} />
+                    <PracticeBadge
+                      block={block}
+                      localDate={localDate}
+                      language={language}
+                      effectiveKeySignature={selected.effectiveKeySignature}
+                    />
                     {block.pinned ? (
                       <span className="inline-flex items-center gap-1 border border-[var(--lv-border)] px-2 py-1 text-xs">
                         <Heart aria-hidden="true" size={16} /> {text.favorite}
@@ -1782,7 +1936,10 @@ export function PracticeView({
                   state={transpositionSession}
                   language={language}
                   manualSelectionDisabled={Boolean(
-                    running || flowRestartPending || flowClockStarting,
+                    running
+                    || flowRestartPending
+                    || flowClockStarting
+                    || transpositionSession.inConfirmationChallenge,
                   )}
                   targetTempo={targetTempoFor(block)}
                   onSelectKey={selectTargetKey}
@@ -1912,7 +2069,11 @@ export function PracticeView({
                   <div className="flex h-fit flex-wrap items-center gap-x-3 gap-y-1 text-sm lg:border-l lg:border-[var(--lv-border)] lg:pl-4">
                     <span className="font-semibold">{text.round(session?.roundNumber ?? 1)}</span>
                     {mode === "flow" ? <span>{text.bpm} {bpm} · Beat {beat}</span> : null}
-                    <span className="text-[var(--lv-text-muted)]">{text.clean} {session?.consecutiveCleanFlowRounds ?? 0}/2</span>
+                    {!transpositionMode ? (
+                      <span className="text-[var(--lv-text-muted)]">
+                        {text.clean} {session?.consecutiveCleanFlowRounds ?? 0}/2
+                      </span>
+                    ) : null}
                   </div>
                 </div>
 
@@ -2063,7 +2224,8 @@ export function PracticeView({
                 ) : null}
                 {transpositionMode
                   && mode === "flow"
-                  && session?.lastRoundWasClean === false ? (
+                  && session?.lastRoundWasClean === false
+                  && !transpositionSession?.inConfirmationChallenge ? (
                     <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-amber-200">
                       <span>{text.dirtyRetry}</span>
                       <button
@@ -2100,7 +2262,11 @@ function QueueItem({
   concealProgression: boolean;
   onClick: () => void;
 }) {
-  const state = practiceProgressState(item.block, localDate);
+  const state = practiceProgressState(
+    item.block,
+    localDate,
+    item.effectiveKeySignature,
+  );
   return (
     <button
       className={`w-full border-b border-[var(--lv-border)] p-3 text-left ${
@@ -2125,7 +2291,11 @@ function QueueItem({
             ? "border-amber-500 text-amber-200"
             : "border-[var(--lv-border)] text-[var(--lv-text-muted)]"
       }`}>
-        {stateLabel(item.block, state, language)}
+        {stateLabel(
+          item.block,
+          state,
+          language,
+        )}
       </span>
     </button>
   );
@@ -2135,12 +2305,14 @@ function PracticeBadge({
   block,
   localDate,
   language,
+  effectiveKeySignature,
 }: {
   block: SavedProgressionBlock;
   localDate: string;
   language: AppLanguage;
+  effectiveKeySignature?: string;
 }) {
-  const state = practiceProgressState(block, localDate);
+  const state = practiceProgressState(block, localDate, effectiveKeySignature);
   const outlined = state === "provisional" || state === "confirmation-due";
   return (
     <span className={`inline-flex items-center gap-1 border px-2 py-1 text-xs ${
@@ -2287,6 +2459,7 @@ function practiceChordLabel(
       ? event.romanNumeral
       : degreeOf(event.chord, keySignature)?.label ?? "-";
   }
+
   return level === 3
     ? degreeOf(event.chord, keySignature)?.label ?? "-"
     : event.chord.label;
@@ -2375,11 +2548,19 @@ function stateLabel(
   language: AppLanguage,
 ): string {
   const text = copy[language];
-  if (state === "stale") return text.stale;
-  if (state === "confirmation-due") return text.confirmationDue;
-  if (state === "provisional") return text.provisional;
-  if (state === "confirmed") return text.confirmed(block.practice?.confirmedLevel ?? 1);
-  return text.unstarted;
+  const base = state === "stale"
+    ? text.stale
+    : state === "confirmation-due"
+      ? text.confirmationDue
+      : state === "provisional"
+        ? text.provisional
+        : state === "confirmed"
+          ? text.confirmed(block.practice?.confirmedLevel ?? 1)
+          : text.unstarted;
+  const coverage = transpositionProgressLabel(block, language);
+  return coverage && state !== "stale"
+    ? `${base} · ${coverage}`
+    : base;
 }
 
 function matchesQueueFilter(
@@ -2387,14 +2568,35 @@ function matchesQueueFilter(
   filter: QueueFilter,
   localDate: string,
 ): boolean {
-  const state = practiceProgressState(item.block, localDate);
+  const state = practiceProgressState(
+    item.block,
+    localDate,
+    item.effectiveKeySignature,
+  );
   if (filter === "recommended") return true;
   if (filter === "favorite") return item.favorite;
   if (filter === "unstarted") return state === "unstarted";
   if (filter === "confirmation") return state === "confirmation-due";
   const targetLevel = Number(filter.slice(1));
+  if (targetLevel === 4 || targetLevel === 5) {
+    return state !== "stale"
+      && transpositionProgressLevel(item.block.practice) === targetLevel;
+  }
   return item.block.practice?.confirmedLevel === targetLevel
     || item.block.practice?.provisional?.level === targetLevel;
+}
+
+function transpositionProgressLabel(
+  block: SavedProgressionBlock,
+  language: AppLanguage,
+): string | undefined {
+  const count = block.practice?.transposition?.clearedKeyPitchClasses.length;
+  if (count === undefined) return undefined;
+  const summary = transpositionCoverageSummary(block.practice);
+  if (!summary) return undefined;
+  return language === "ja"
+    ? `L${summary.level} キー ${summary.cleared}/${summary.total}`
+    : `L${summary.level} keys ${summary.cleared}/${summary.total}`;
 }
 
 function segmentClass(active: boolean): string {

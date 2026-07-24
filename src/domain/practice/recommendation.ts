@@ -8,7 +8,8 @@ export function recommendPracticeBlocks(
   localDate: string,
 ): PracticeRecommendation[] {
   return ideas.flatMap((idea) => (idea.progressionBlocks ?? []).map((block) => {
-    const state = practiceProgressState(block, localDate);
+    const effectiveKeySignature = block.detectedKey ?? idea.key;
+    const state = practiceProgressState(block, localDate, effectiveKeySignature);
     return {
       ideaId: idea.id,
       ideaTitle: idea.title,
@@ -17,6 +18,7 @@ export function recommendPracticeBlocks(
       confirmationDue: state === "confirmation-due",
       unstarted: state === "unstarted",
       favorite: block.pinned ?? false,
+      effectiveKeySignature,
     };
   })).sort(compareRecommendations);
 }
@@ -46,6 +48,9 @@ function recommendationPriority(item: PracticeRecommendation): number {
 }
 
 function validProgress(item: PracticeRecommendation): boolean {
-  return item.block.practice?.progressionFingerprint === progressionFingerprint(item.block);
+  return item.block.practice?.progressionFingerprint === progressionFingerprint(
+    item.block,
+    item.effectiveKeySignature,
+  );
 }
 

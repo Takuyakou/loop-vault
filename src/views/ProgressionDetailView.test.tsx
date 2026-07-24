@@ -5,6 +5,7 @@ import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { playbackController } from "../audio/playbackController";
 import type { PlaybackController } from "../audio/playbackController";
+import { progressionFingerprint } from "../domain/practice";
 import { makeIdea } from "../domain/testFactory";
 import type { SavedProgressionBlock } from "../domain/types";
 import { appCopy, progressionDetailCopy, progressionEditorCopy } from "../i18n";
@@ -44,6 +45,76 @@ afterEach(() => {
 });
 
 describe("ProgressionDetailView", () => {
+  it("shows transposition coverage and provisional state in progression details", async () => {
+    const practiced: SavedProgressionBlock = {
+      ...block,
+      practice: {
+        schemaVersion: 1,
+        progressionFingerprint: progressionFingerprint(block),
+        confirmedLevel: 3,
+        provisional: {
+          level: 4,
+          clearedAt: "2026-07-24T00:00:00.000Z",
+          clearedOnLocalDate: "2026-07-24",
+          targetTempo: 70,
+          confirmationPitchClasses: [5, 7],
+        },
+        transposition: {
+          schemaVersion: 1,
+          clearedKeyPitchClasses: [2, 4, 5, 7, 9, 11],
+          updatedAt: "2026-07-24T00:00:00.000Z",
+        },
+      },
+    };
+    const idea = makeIdea({
+      id: "idea-practice-progress",
+      progressionBlocks: [practiced],
+    });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const render = (
+      currentIdea: typeof idea,
+      currentBlock: SavedProgressionBlock,
+    ) => (
+      <ProgressionDetailView
+        idea={currentIdea}
+        block={currentBlock}
+        updateProgressionBlock={vi.fn(() => true)}
+        duplicateProgressionBlock={vi.fn()}
+        openProgression={vi.fn()}
+        openIdea={vi.fn()}
+        openVault={vi.fn()}
+        requestDelete={vi.fn()}
+        setToast={vi.fn()}
+        copy={appCopy.ja}
+        language="ja"
+      />
+    );
+
+    await act(async () => root.render(render(idea, practiced)));
+    expect(container.textContent).toContain("仮クリア");
+    expect(container.textContent).toContain("L4 キー 6/6");
+
+    const stale = {
+      ...practiced,
+      practice: {
+        ...practiced.practice!,
+        progressionFingerprint: "practice-v1-stale",
+      },
+    };
+    await act(async () => root.render(render({
+      ...idea,
+      progressionBlocks: [stale],
+    }, stale)));
+    const staleBadge = container.querySelector<HTMLElement>(
+      '[data-practice-state="stale"]',
+    );
+    expect(staleBadge?.textContent).toContain("進行更新・要確認");
+    expect(staleBadge?.textContent).not.toContain("6/6");
+    await act(async () => root.unmount());
+  });
+
   it("keeps the progression, playback metadata, parent Idea, and saved/editing labels in the first view", async () => {
     const idea = makeIdea({ id: "idea-1", title: "Night Loop", progressionBlocks: [block] });
     const container = document.createElement("div");

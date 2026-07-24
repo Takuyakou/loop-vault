@@ -861,6 +861,11 @@ describe("vault store", () => {
           clearedOnLocalDate: "2026-07-15",
           targetTempo: 60,
         },
+        transposition: {
+          schemaVersion: 1,
+          clearedKeyPitchClasses: [2, 5, 7],
+          updatedAt: now.toISOString(),
+        },
       },
     })).toBe(true);
     expect(store.getState().ideas[0]?.progressionBlocks?.[0]).toMatchObject({
@@ -877,6 +882,10 @@ describe("vault store", () => {
     expect(repository.saved).toHaveLength(1);
     expect(repository.saved[0]?.ideas[0]?.progressionBlocks?.[0]?.summaryText).toBe("Dm9 - G13");
     expect(repository.saved[0]?.ideas[0]?.progressionBlocks?.[0]?.practice?.provisional?.level).toBe(1);
+    expect(
+      repository.saved[0]?.ideas[0]?.progressionBlocks?.[0]
+        ?.practice?.transposition?.clearedKeyPitchClasses,
+    ).toEqual([2, 5, 7]);
   });
 
   it("duplicates a saved progression with a new id and cloned chord arrays", async () => {

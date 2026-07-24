@@ -9,6 +9,7 @@ import {
   createLiveNoteState,
   reduceLiveNoteState,
 } from "../domain/liveMidi";
+import { progressionFingerprint } from "../domain/practice";
 import { makeIdea } from "../domain/testFactory";
 import type { SavedProgressionBlock } from "../domain/types";
 import { normalizedChordKey } from "../domain/voicing";
@@ -643,6 +644,247 @@ describe("PracticeView", () => {
     await act(async () => root.unmount());
   });
 
+  it("shows persisted coverage in the queue and restores fixed confirmation keys", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-24T12:00:00.000Z"));
+    const practiced: SavedProgressionBlock = {
+      ...block,
+      id: "00000000-0000-4000-8000-000000000132",
+      practice: {
+        schemaVersion: 1,
+        progressionFingerprint: progressionFingerprint(block),
+        confirmedLevel: 3,
+        provisional: {
+          level: 4,
+          clearedAt: "2026-07-23T12:00:00.000Z",
+          clearedOnLocalDate: "2026-07-23",
+          targetTempo: 70,
+          confirmationPitchClasses: [5, 7],
+        },
+        transposition: {
+          schemaVersion: 1,
+          clearedKeyPitchClasses: [2, 3, 5, 7, 9, 10],
+          updatedAt: "2026-07-23T12:00:00.000Z",
+        },
+      },
+    };
+    const idea = makeIdea({
+      id: "00000000-0000-4000-8000-000000000133",
+      title: "Confirmation queue",
+      progressionBlocks: [practiced],
+    });
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={[idea]}
+        language="en"
+        updateProgressionBlock={vi.fn(() => true)}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={vi.fn()}
+      />,
+    ));
+
+    expect(container.textContent).toContain("Confirm another day · L4 keys 6/6");
+    await act(async () => findButton(container, "L4 Nearby keys")?.click());
+    expect(container.querySelector(
+      '[data-testid="transposition-progress-count"]',
+    )?.textContent).toBe("6 / 6");
+    expect(container.querySelector(
+      '[data-testid="transposition-confirmation-progress"]',
+    )?.textContent).toContain("Confirmation");
+    expect(container.querySelectorAll(
+      '[data-key-state="confirmation"], [data-key-state="current"]',
+    )).toHaveLength(2);
+
+    await act(async () => root.unmount());
+  });
+
+  it("limits an inherited twelve-key history to L4 6/6 and hides the L1-L3 Clean counter", async () => {
+    const practiced: SavedProgressionBlock = {
+      ...block,
+      id: "00000000-0000-4000-8000-000000000141",
+      practice: {
+        schemaVersion: 1,
+        progressionFingerprint: progressionFingerprint(block),
+        confirmedLevel: 4,
+        transposition: {
+          schemaVersion: 1,
+          clearedKeyPitchClasses: Array.from(
+            { length: 12 },
+            (_, index) => index,
+          ),
+        },
+      },
+    };
+    const idea = makeIdea({
+      id: "00000000-0000-4000-8000-000000000142",
+      title: "Inherited all keys",
+      progressionBlocks: [practiced],
+    });
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={[idea]}
+        language="en"
+        updateProgressionBlock={vi.fn(() => true)}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={vi.fn()}
+      />,
+    ));
+
+    await act(async () => findButton(container, "L4 Nearby keys")?.click());
+    expect(container.querySelector(
+      '[data-testid="transposition-progress-count"]',
+    )?.textContent).toBe("6 / 6");
+    expect(container.textContent).not.toContain("Clean 0/2");
+    await act(async () => root.unmount());
+  });
+
+  it("filters partial L4 and L5 coverage without classifying L5 as L4", async () => {
+    const l4Source = {
+      ...block,
+      id: "00000000-0000-4000-8000-000000000143",
+    };
+    const l5Source = {
+      ...block,
+      id: "00000000-0000-4000-8000-000000000144",
+    };
+    const l4: SavedProgressionBlock = {
+      ...l4Source,
+      practice: {
+        schemaVersion: 1,
+        progressionFingerprint: progressionFingerprint(l4Source),
+        confirmedLevel: 3,
+        transposition: {
+          schemaVersion: 1,
+          clearedKeyPitchClasses: [7],
+        },
+      },
+    };
+    const l5: SavedProgressionBlock = {
+      ...l5Source,
+      practice: {
+        schemaVersion: 1,
+        progressionFingerprint: progressionFingerprint(l5Source),
+        confirmedLevel: 4,
+        transposition: {
+          schemaVersion: 1,
+          clearedKeyPitchClasses: [7],
+        },
+      },
+    };
+    const ideas = [
+      makeIdea({
+        id: "00000000-0000-4000-8000-000000000145",
+        title: "Partial L4",
+        progressionBlocks: [l4],
+      }),
+      makeIdea({
+        id: "00000000-0000-4000-8000-000000000146",
+        title: "Partial L5",
+        progressionBlocks: [l5],
+      }),
+    ];
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={ideas}
+        language="en"
+        updateProgressionBlock={vi.fn(() => true)}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={vi.fn()}
+      />,
+    ));
+    const filter = container.querySelector<HTMLSelectElement>("aside select");
+    const queue = container.querySelector('[data-testid="practice-queue-scroll"]');
+
+    await act(async () => {
+      if (!filter) return;
+      filter.value = "l4";
+      filter.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    expect(queue?.textContent).toContain("Partial L4");
+    expect(queue?.textContent).not.toContain("Partial L5");
+
+    await act(async () => {
+      if (!filter) return;
+      filter.value = "l5";
+      filter.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    expect(queue?.textContent).not.toContain("Partial L4");
+    expect(queue?.textContent).toContain("Partial L5");
+    await act(async () => root.unmount());
+  });
+
+  it("rebuilds the L4 rail immediately after a successful stale reset", async () => {
+    vi.spyOn(globalThis, "confirm").mockReturnValue(true);
+    const stale: SavedProgressionBlock = {
+      ...block,
+      id: "00000000-0000-4000-8000-000000000147",
+      practice: {
+        schemaVersion: 1,
+        progressionFingerprint: "practice-v1-stale",
+        confirmedLevel: 3,
+        transposition: {
+          schemaVersion: 1,
+          clearedKeyPitchClasses: [2, 3, 5, 7, 9, 10],
+        },
+      },
+    };
+    const idea = makeIdea({
+      id: "00000000-0000-4000-8000-000000000148",
+      title: "Stale transposition",
+      progressionBlocks: [stale],
+    });
+    const updateProgressionBlock = vi.fn(() => true);
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={[idea]}
+        language="en"
+        updateProgressionBlock={updateProgressionBlock}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={vi.fn()}
+      />,
+    ));
+
+    const queueItem = [...container.querySelectorAll<HTMLButtonElement>(
+      '[data-testid="practice-queue-scroll"] button',
+    )].find((candidate) => candidate.textContent?.includes("Stale transposition"));
+    expect(queueItem?.textContent).not.toContain("6/6");
+    await act(async () => findButton(container, "L4 Nearby keys")?.click());
+    expect(container.querySelector(
+      '[data-testid="transposition-progress-count"]',
+    )?.textContent).toBe("0 / 6");
+    expect(container.querySelectorAll('[data-key-state="cleared"]')).toHaveLength(0);
+
+    await act(async () => container.querySelector<HTMLButtonElement>(
+      '[data-testid="practice-start"]',
+    )?.click());
+    expect(updateProgressionBlock).toHaveBeenCalledWith(
+      idea.id,
+      stale.id,
+      {
+        practice: expect.not.objectContaining({
+          transposition: expect.anything(),
+        }),
+      },
+    );
+    expect(container.querySelector(
+      '[data-testid="transposition-progress-count"]',
+    )?.textContent).toBe("0 / 6");
+    expect(container.querySelectorAll('[data-key-state="cleared"]')).toHaveLength(0);
+    await act(async () => root.unmount());
+  });
+
   it("renders the L5 rail, allows idle key selection, and locks it while running", async () => {
     vi.spyOn(globalThis.crypto, "getRandomValues").mockImplementation((array) => {
       (array as Uint32Array)[0] = 77;
@@ -766,7 +1008,7 @@ describe("PracticeView", () => {
       <PracticeView
         ideas={[idea]}
         language="ja"
-        updateProgressionBlock={updateProgressionBlock}
+        updateProgressionBlock={vi.fn(() => true)}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
         setToast={vi.fn()}
@@ -793,6 +1035,7 @@ describe("PracticeView", () => {
       return array;
     });
     const toggle = vi.spyOn(playbackController, "toggle").mockResolvedValue();
+    const updateProgressionBlock = vi.fn(() => true);
     const idea = makeIdea({
       id: "00000000-0000-4000-8000-000000000111",
       title: "Step keeps key",
@@ -804,7 +1047,7 @@ describe("PracticeView", () => {
       <PracticeView
         ideas={[idea]}
         language="ja"
-        updateProgressionBlock={vi.fn(() => true)}
+        updateProgressionBlock={updateProgressionBlock}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
         setToast={vi.fn()}
@@ -833,12 +1076,211 @@ describe("PracticeView", () => {
       '[data-testid="transposition-progress-count"]',
     )?.textContent).toBe("0 / 6");
     expect(container.textContent).toContain("このキーをフローで弾いてみますか？");
+    expect(updateProgressionBlock).not.toHaveBeenCalled();
     await act(async () => container.querySelector<HTMLButtonElement>(
       '[data-testid="transposition-step-to-flow"]',
     )?.click());
     expect(container.querySelector(
       '[role="radiogroup"][aria-label="モード"] [role="radio"][aria-checked="true"]',
     )?.textContent).toBe("フロー");
+
+    await act(async () => root.unmount());
+    expect(updateProgressionBlock).not.toHaveBeenCalled();
+  });
+
+  it("persists one eligible clean L4 Flow round through updateProgressionBlock", async () => {
+    const source: SavedProgressionBlock = {
+      ...block,
+      id: "00000000-0000-4000-8000-000000000130",
+      bpm: 80,
+      chords: [block.chords[0]],
+    };
+    const eligibleBlock: SavedProgressionBlock = {
+      ...source,
+      practice: {
+        schemaVersion: 1,
+        progressionFingerprint: progressionFingerprint(source),
+        confirmedLevel: 3,
+      },
+    };
+    vi.spyOn(globalThis.crypto, "getRandomValues").mockImplementation((array) => {
+      (array as Uint32Array)[0] = 330;
+      return array;
+    });
+    const starts: PracticeClockStartOptions[] = [];
+    const clock = {
+      start: vi.fn(async (options: PracticeClockStartOptions) => {
+        starts.push(options);
+      }),
+      stop: vi.fn(),
+      pause: vi.fn(),
+      resume: vi.fn(),
+    };
+    const toggle = vi.spyOn(playbackController, "toggle").mockResolvedValue();
+    const updateProgressionBlock = vi.fn(() => true);
+    const idea = makeIdea({
+      id: "00000000-0000-4000-8000-000000000131",
+      title: "Eligible coverage",
+      progressionBlocks: [eligibleBlock],
+    });
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={[idea]}
+        language="en"
+        updateProgressionBlock={updateProgressionBlock}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={vi.fn()}
+        practiceClock={clock}
+      />,
+    ));
+
+    await act(async () => findButton(container, "L4 Nearby keys")?.click());
+    await act(async () => findButton(container, "Flow")?.click());
+    await act(async () => container.querySelector<HTMLButtonElement>(
+      '[data-progression-index="0"]',
+    )?.click());
+    const preview = toggle.mock.calls[toggle.mock.calls.length - 1]?.[1];
+    if (!preview || preview.type !== "chord" || !preview.explicitMidiNotes) {
+      throw new Error("Expected target-key preview notes.");
+    }
+    await act(async () => container.querySelector<HTMLButtonElement>(
+      '[data-testid="practice-start"]',
+    )?.click());
+    await act(async () => starts[0]?.callbacks.onTargetOpen(0));
+    await playMidiNotes(preview.explicitMidiNotes);
+    expect(updateProgressionBlock).not.toHaveBeenCalled();
+    await act(async () => starts[0]?.callbacks.onRoundCompleted());
+
+    expect(updateProgressionBlock).toHaveBeenCalledOnce();
+    expect(updateProgressionBlock).toHaveBeenCalledWith(
+      idea.id,
+      eligibleBlock.id,
+      {
+        practice: expect.objectContaining({
+          confirmedLevel: 3,
+          transposition: expect.objectContaining({
+            schemaVersion: 1,
+            clearedKeyPitchClasses: expect.any(Array),
+          }),
+        }),
+      },
+    );
+
+    act(() => runClosePreparations());
+    await act(async () => root.unmount());
+    expect(updateProgressionBlock).toHaveBeenCalledOnce();
+  });
+
+  it("confirms L4 only after its two fixed keys are clean on another day", async () => {
+    const source: SavedProgressionBlock = {
+      ...block,
+      id: "00000000-0000-4000-8000-000000000134",
+      bpm: 80,
+      chords: [{
+        ...block.chords[0],
+        voicingMemory: {
+          sourceVoicing: {
+            schemaVersion: 1,
+            source: "live-played",
+            representation: "simultaneous-voicing",
+            midiNotes: [48, 52, 55, 59],
+            bassNote: 48,
+            capturedForChordKey: normalizedChordKey(block.chords[0].chord),
+            confidence: 1,
+            userVerified: true,
+          },
+        },
+      }],
+    };
+    const due: SavedProgressionBlock = {
+      ...source,
+      practice: {
+        schemaVersion: 1,
+        progressionFingerprint: progressionFingerprint(source),
+        confirmedLevel: 3,
+        provisional: {
+          level: 4,
+          clearedAt: "2000-01-01T12:00:00.000Z",
+          clearedOnLocalDate: "2000-01-01",
+          targetTempo: 60,
+          confirmationPitchClasses: [5, 7],
+        },
+        transposition: {
+          schemaVersion: 1,
+          clearedKeyPitchClasses: [2, 4, 5, 7, 9, 11],
+          updatedAt: "2000-01-01T12:00:00.000Z",
+        },
+      },
+    };
+    const starts: PracticeClockStartOptions[] = [];
+    const clock = {
+      start: vi.fn(async (options: PracticeClockStartOptions) => {
+        starts.push(options);
+      }),
+      stop: vi.fn(),
+      pause: vi.fn(),
+      resume: vi.fn(),
+    };
+    const updateProgressionBlock = vi.fn(() => true);
+    const idea = makeIdea({
+      id: "00000000-0000-4000-8000-000000000135",
+      title: "L4 confirmation",
+      progressionBlocks: [due],
+    });
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={[idea]}
+        language="en"
+        updateProgressionBlock={updateProgressionBlock}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={vi.fn()}
+        practiceClock={clock}
+      />,
+    ));
+
+    await act(async () => findButton(container, "L4 Nearby keys")?.click());
+    await act(async () => findButton(container, "Flow")?.click());
+    await act(async () => container.querySelector<HTMLButtonElement>(
+      '[data-testid="practice-start"]',
+    )?.click());
+    await act(async () => starts[0]?.callbacks.onTargetOpen(0));
+    await playMidiNotes([53, 57, 60, 64]);
+    await act(async () => starts[0]?.callbacks.onRoundCompleted());
+    await act(async () => Promise.resolve());
+
+    expect(updateProgressionBlock).not.toHaveBeenCalled();
+    expect(starts).toHaveLength(2);
+    expect(container.querySelector(
+      '[data-testid="transposition-confirmation-progress"]',
+    )?.textContent).toContain("2 / 2");
+
+    await act(async () => starts[1]?.callbacks.onTargetOpen(0));
+    await replaceMidiNotes(
+      [53, 57, 60, 64],
+      [55, 59, 62, 66],
+    );
+    await act(async () => starts[1]?.callbacks.onRoundCompleted());
+
+    expect(updateProgressionBlock).toHaveBeenCalledOnce();
+    expect(updateProgressionBlock).toHaveBeenCalledWith(
+      idea.id,
+      due.id,
+      {
+        practice: expect.objectContaining({
+          confirmedLevel: 4,
+          provisional: undefined,
+          transposition: expect.objectContaining({
+            clearedKeyPitchClasses: [2, 4, 5, 7, 9, 11],
+          }),
+        }),
+      },
+    );
 
     await act(async () => root.unmount());
   });
@@ -851,6 +1293,7 @@ describe("PracticeView", () => {
       pause: vi.fn(),
       resume: vi.fn(),
     };
+    const updateProgressionBlock = vi.fn(() => true);
     const idea = makeIdea({
       id: "00000000-0000-4000-8000-000000000121",
       title: "Delayed start",
@@ -862,7 +1305,7 @@ describe("PracticeView", () => {
       <PracticeView
         ideas={[idea]}
         language="en"
-        updateProgressionBlock={vi.fn(() => true)}
+        updateProgressionBlock={updateProgressionBlock}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
         setToast={vi.fn()}
@@ -989,7 +1432,6 @@ describe("PracticeView", () => {
     expect(container.querySelector(
       '[data-testid="transposition-progress-count"]',
     )?.textContent).toBe("0 / 6");
-
     await act(async () => root.unmount());
   });
 
@@ -1396,6 +1838,7 @@ describe("PracticeView", () => {
       pause: vi.fn(),
       resume: vi.fn(),
     };
+    const updateProgressionBlock = vi.fn(() => true);
     const idea = makeIdea({
       id: "00000000-0000-4000-8000-000000000113",
       title: "Dirty retry",
@@ -1407,7 +1850,7 @@ describe("PracticeView", () => {
       <PracticeView
         ideas={[idea]}
         language="en"
-        updateProgressionBlock={vi.fn(() => true)}
+        updateProgressionBlock={updateProgressionBlock}
         openProgression={vi.fn()}
         openSettings={vi.fn()}
         setToast={vi.fn()}
@@ -1433,6 +1876,7 @@ describe("PracticeView", () => {
     expect(container.querySelector(
       '[data-testid="transposition-progress-count"]',
     )?.textContent).toBe("0 / 6");
+    expect(updateProgressionBlock).not.toHaveBeenCalled();
 
     await act(async () => container.querySelector<HTMLButtonElement>(
       '[data-testid="transposition-skip-key"]',
@@ -1445,6 +1889,7 @@ describe("PracticeView", () => {
     expect(container.querySelector(
       '[data-testid="transposition-progress-count"]',
     )?.textContent).toBe("0 / 6");
+    expect(updateProgressionBlock).not.toHaveBeenCalled();
 
     await act(async () => root.unmount());
   });
@@ -1519,7 +1964,7 @@ describe("PracticeView", () => {
     await act(async () => Promise.resolve());
     expect(container.querySelector(
       '[data-testid="transposition-progress-count"]',
-    )?.textContent).toBe("1 / 6");
+    )?.textContent).toBe("0 / 6");
     const targetAfterRestart = container.querySelector(
       '[data-testid="transposition-target-key"]',
     )?.textContent;
@@ -1749,6 +2194,33 @@ async function reAttackMidiNotes(notes: readonly number[]): Promise<void> {
   notes.forEach((note, index) => {
     state = reduceLiveNoteState(state, {
       timestampMs: 200 + index,
+      status: 0x90,
+      channel: 0,
+      data1: note,
+      data2: 100,
+    });
+  });
+  act(() => defaultLiveMidiStore.setState({ notes: state }));
+  await act(async () => new Promise((resolve) => globalThis.setTimeout(resolve, 120)));
+}
+
+async function replaceMidiNotes(
+  previousNotes: readonly number[],
+  nextNotes: readonly number[],
+): Promise<void> {
+  let state = defaultLiveMidiStore.getState().notes;
+  previousNotes.forEach((note, index) => {
+    state = reduceLiveNoteState(state, {
+      timestampMs: 300 + index,
+      status: 0x80,
+      channel: 0,
+      data1: note,
+      data2: 0,
+    });
+  });
+  nextNotes.forEach((note, index) => {
+    state = reduceLiveNoteState(state, {
+      timestampMs: 400 + index,
       status: 0x90,
       channel: 0,
       data1: note,

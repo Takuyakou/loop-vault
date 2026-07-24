@@ -1,5 +1,8 @@
 import type { SavedProgressionBlock } from "../types";
-import { progressionFingerprint } from "./progressionFingerprint";
+import {
+  isCompatibleProgressionFingerprint,
+  progressionFingerprint,
+} from "./progressionFingerprint";
 import type { DojoPracticeLevel, ProgressionPracticeProgress } from "./types";
 
 export type PracticeProgressState =
@@ -21,10 +24,14 @@ export interface RecordPracticeRoundInput {
 export function practiceProgressState(
   block: SavedProgressionBlock,
   localDate: string,
+  effectiveKeySignature?: string,
 ): PracticeProgressState {
-  const progress = block.practice;
-  if (!progress) return "unstarted";
-  if (progress.progressionFingerprint !== progressionFingerprint(block)) return "stale";
+  if (!block.practice) return "unstarted";
+  const progress = practiceProgressForCurrentFingerprint(
+    block,
+    effectiveKeySignature,
+  );
+  if (!progress) return "stale";
   if (
     progress.provisional
     && (!progress.confirmedLevel || progress.provisional.level > progress.confirmedLevel)
@@ -38,21 +45,30 @@ export function practiceProgressState(
 
 export function resetPracticeProgress(
   block: SavedProgressionBlock,
+  effectiveKeySignature?: string,
 ): ProgressionPracticeProgress {
   return {
     schemaVersion: 1,
-    progressionFingerprint: progressionFingerprint(block),
+    progressionFingerprint: progressionFingerprint(block, effectiveKeySignature),
   };
 }
 
 export function recordPracticeRound(
   block: SavedProgressionBlock,
   input: RecordPracticeRoundInput,
+  effectiveKeySignature?: string,
 ): ProgressionPracticeProgress {
-  const fingerprint = progressionFingerprint(block);
-  const current = block.practice?.progressionFingerprint === fingerprint
-    ? block.practice
-    : resetPracticeProgress(block);
+  const fingerprint = progressionFingerprint(block, effectiveKeySignature);
+  const compatible = practiceProgressForCurrentFingerprint(
+    block,
+    effectiveKeySignature,
+  );
+  const current = compatible
+    ? {
+        ...compatible,
+        progressionFingerprint: fingerprint,
+      }
+    : resetPracticeProgress(block, effectiveKeySignature);
   const reachedTarget = input.bpm >= input.targetTempo;
   const provisional = current.provisional;
   const canConfirm = reachedTarget
@@ -62,9 +78,11 @@ export function recordPracticeRound(
 
   if (canConfirm) {
     return {
+      ...current,
       schemaVersion: 1,
       progressionFingerprint: fingerprint,
       confirmedLevel: maxLevel(current.confirmedLevel, input.level),
+      provisional: undefined,
       lastPracticedAt: input.nowIso,
     };
   }
@@ -88,6 +106,28 @@ export function recordPracticeRound(
       : {}),
     lastPracticedAt: input.nowIso,
   };
+}
+
+export function practiceProgressForCurrentFingerprint(
+  block: SavedProgressionBlock,
+  effectiveKeySignature?: string,
+  progress: ProgressionPracticeProgress | undefined = block.practice,
+): ProgressionPracticeProgress | undefined {
+  if (!progress) return undefined;
+  if (!isCompatibleProgressionFingerprint(
+    block,
+    progress.progressionFingerprint,
+    effectiveKeySignature,
+  )) {
+    return undefined;
+  }
+  const fingerprint = progressionFingerprint(block, effectiveKeySignature);
+  return progress.progressionFingerprint === fingerprint
+    ? progress
+    : {
+        ...progress,
+        progressionFingerprint: fingerprint,
+      };
 }
 
 function maxLevel(

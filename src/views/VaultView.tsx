@@ -478,7 +478,12 @@ function ProgressionRow({ entry, selected, showDegrees, language, copy, displayT
       <p className="lv-vault-progression-secondary mt-1 text-xs text-[var(--lv-text-muted)]">
         {entry.idea.title}{showDegrees && degrees.length ? ` · ${degrees.join(" · ")}` : ""}
       </p>
-      <PracticeProgressBadge block={entry.block} language={language} compact />
+      <PracticeProgressBadge
+        block={entry.block}
+        language={language}
+        compact
+        effectiveKeySignature={keyOf(entry)}
+      />
     </button>
     <div className="lv-vault-metadata text-xs text-[var(--lv-text-muted)]">
       <span>{keyOf(entry) ? `Key ${keyOf(entry)}` : "Key -"}</span>

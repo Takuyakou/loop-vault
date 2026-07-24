@@ -4,6 +4,7 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { playbackController } from "../audio/playbackController";
+import { progressionFingerprint } from "../domain/practice";
 import { makeIdea } from "../domain/testFactory";
 import type { SavedProgressionBlock } from "../domain/types";
 import { appCopy, type AppLanguage } from "../i18n";
@@ -42,6 +43,70 @@ afterEach(() => {
 });
 
 describe("VaultView keyboard shortcuts", () => {
+  it("shows transposition coverage in the Vault progression row", async () => {
+    const practiced: SavedProgressionBlock = {
+      ...progressionBlock,
+      detectedKey: "C major",
+      practice: {
+        schemaVersion: 1,
+        progressionFingerprint: progressionFingerprint({
+          ...progressionBlock,
+          detectedKey: "C major",
+        }),
+        confirmedLevel: 3,
+        transposition: {
+          schemaVersion: 1,
+          clearedKeyPitchClasses: [2, 5, 7, 9],
+          updatedAt: "2026-07-24T00:00:00.000Z",
+        },
+      },
+    };
+    const idea = makeIdea({
+      id: "idea-coverage",
+      progressionBlocks: [practiced],
+    });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const render = (currentIdea: typeof idea) => (
+      <VaultView
+        ideas={[currentIdea]}
+        openDetail={vi.fn()}
+        openCreate={vi.fn()}
+        openCapture={vi.fn()}
+        updateIdea={vi.fn()}
+        setToast={vi.fn()}
+        copy={appCopy.ja}
+        language="ja"
+        showRomanNumerals={false}
+      />
+    );
+
+    await act(async () => root.render(render(idea)));
+    const badge = container.querySelector<HTMLElement>("[data-practice-state]");
+    expect(badge?.textContent).toContain("L4 4/6");
+    expect(badge?.className).toContain("max-w-full");
+    expect(badge?.className).not.toContain("shrink-0");
+
+    const stale = {
+      ...practiced,
+      practice: {
+        ...practiced.practice!,
+        progressionFingerprint: "practice-v1-stale",
+      },
+    };
+    await act(async () => root.render(render({
+      ...idea,
+      progressionBlocks: [stale],
+    })));
+    const staleBadge = container.querySelector<HTMLElement>(
+      '[data-practice-state="stale"]',
+    );
+    expect(staleBadge?.textContent).toContain("進行更新・要確認");
+    expect(staleBadge?.textContent).not.toContain("4/6");
+    await act(async () => root.unmount());
+  });
+
   it("opens Library first and keeps a List choice for the current session", async () => {
     const idea = makeIdea({ id: "idea-mode", progressionBlocks: [progressionBlock] });
     const container = document.createElement("div");

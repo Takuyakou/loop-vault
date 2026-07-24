@@ -36,6 +36,13 @@ export interface PracticeProvisionalClear {
   clearedAt: string;
   clearedOnLocalDate: string;
   targetTempo: number;
+  confirmationPitchClasses?: number[];
+}
+
+export interface TranspositionPracticeProgress {
+  schemaVersion: 1;
+  clearedKeyPitchClasses: number[];
+  updatedAt?: string;
 }
 
 export interface ProgressionPracticeProgress {
@@ -43,6 +50,7 @@ export interface ProgressionPracticeProgress {
   progressionFingerprint: string;
   confirmedLevel?: PracticeLevel;
   provisional?: PracticeProvisionalClear;
+  transposition?: TranspositionPracticeProgress;
   lastPracticedAt?: string;
 }
 
@@ -102,6 +110,7 @@ export interface PracticeRecommendation {
   ideaId: string;
   ideaTitle: string;
   block: SavedProgressionBlock;
+  effectiveKeySignature?: string;
   stale: boolean;
   confirmationDue: boolean;
   unstarted: boolean;
