@@ -159,9 +159,16 @@ function accepted(target: ExpectedChordSegment, label: string): boolean {
 }
 
 function qualityFamily(quality: ChordQuality): string {
-  if (quality.startsWith("min") || quality === "dim" || quality === "dim7") return quality.startsWith("min") ? "minor" : "dim";
-  if (quality.startsWith("sus") || quality === "dom7sus4") return "sus";
-  if (quality === "aug") return "aug";
+  // Corpus manifests carry qualities outside `ChordQuality` (dom13sus, maj13,
+  // blackadder), so match on the token rather than on the union members. The
+  // suspended test runs first because `dom13sus` and `dom7sus4` are suspended
+  // chords that would otherwise fall through to "major" and invert the score:
+  // detecting a 13sus correctly as sus would count as a miss while mistaking it
+  // for a plain dominant would count as a hit.
+  const value = String(quality);
+  if (value.includes("sus")) return "sus";
+  if (value.startsWith("min") || value === "dim" || value === "dim7") return value.startsWith("min") ? "minor" : "dim";
+  if (value === "aug") return "aug";
   return "major";
 }
 
