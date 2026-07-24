@@ -79,6 +79,77 @@ describe("practice session machine", () => {
     requirements: block.chords.map((event) => buildPracticeChordRequirements(event.chord, "normal")),
   };
 
+  it("ignores late round callbacks while paused or completed", () => {
+    const ready = createPracticeSessionState({
+      blockId: block.id,
+      progressionFingerprint: progressionFingerprint(block),
+      level: 1,
+      mode: "flow",
+      leniency: "normal",
+      bpm: 60,
+      targetTempo: 60,
+      eventCount: block.chords.length,
+    });
+    const running = reducePracticeSession(
+      ready,
+      { type: "START_SESSION" },
+      context,
+    );
+    const paused = reducePracticeSession(running, { type: "PAUSE" }, context);
+    const completed = reducePracticeSession(
+      running,
+      { type: "END_SESSION" },
+      context,
+    );
+
+    expect(reducePracticeSession(
+      paused,
+      { type: "ROUND_COMPLETED" },
+      context,
+    )).toBe(paused);
+    expect(reducePracticeSession(
+      completed,
+      { type: "ROUND_COMPLETED" },
+      context,
+    )).toBe(completed);
+  });
+
+  it("resets a paused Flow round before starting a replacement clock", () => {
+    const ready = createPracticeSessionState({
+      blockId: block.id,
+      progressionFingerprint: progressionFingerprint(block),
+      level: 4,
+      mode: "flow",
+      leniency: "normal",
+      bpm: 60,
+      targetTempo: 60,
+      eventCount: block.chords.length,
+    });
+    const paused = {
+      ...ready,
+      status: "paused" as const,
+      currentEventIndex: 1,
+      roundDirty: true,
+      eventResults: ["match", "miss"] as Array<"match" | "miss">,
+      requiredAttackRevision: 3,
+      lastRoundWasClean: false,
+    };
+    const reset = reducePracticeSession(
+      paused,
+      { type: "RESET_FLOW_FOR_RESTART", requiredAttackRevision: 7 },
+      context,
+    );
+
+    expect(reset).toMatchObject({
+      status: "paused",
+      currentEventIndex: 0,
+      roundDirty: false,
+      requiredAttackRevision: 7,
+      lastRoundWasClean: undefined,
+    });
+    expect(reset.eventResults).toEqual(["pending", "pending"]);
+  });
+
   it("settles only after 100ms and requires a new attack for repeated chords", () => {
     let state = createPracticeSessionState({
       blockId: block.id,

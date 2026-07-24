@@ -15,6 +15,7 @@ interface PianoKeyProps {
   heldBass: boolean;
   guideHand?: PianoGuideHand;
   accidentalStyle: NoteAccidentalStyle;
+  concealNoteName?: boolean;
 }
 
 const stateColors: Record<PianoKeyVisualState, string | undefined> = {
@@ -35,6 +36,7 @@ export const PianoKey = memo(function PianoKey({
   heldBass,
   guideHand,
   accidentalStyle,
+  concealNoteName = false,
 }: PianoKeyProps) {
   const { black, height, note, width, x } = geometry;
   const label = showCLabel ? formatCLabel(note) : undefined;
@@ -58,7 +60,9 @@ export const PianoKey = memo(function PianoKey({
       data-visual-state={visualState}
       data-guide-hand={guideHand}
     >
-      <title>{`${formatMidiNoteForDisplay(note, "fl-studio", accidentalStyle)} (${note})`}</title>
+      {!concealNoteName ? (
+        <title>{`${formatMidiNoteForDisplay(note, "fl-studio", accidentalStyle)} (${note})`}</title>
+      ) : null}
       <rect
         x={x}
         y={0}

@@ -26,6 +26,7 @@ interface VoicingPracticeControlsProps {
   previewing: boolean;
   previewDisabled: boolean;
   previewSound: PreviewSound;
+  concealChordLabels?: boolean;
   onTargetSourceChange(source: PracticeTargetSource): void;
   onPreferencesChange(preferences: VoicingPracticePreferences): void;
   onMatchModeChange(mode: StyleVoicingMatchMode): void;
@@ -109,6 +110,7 @@ export function VoicingPracticeControls({
   previewing,
   previewDisabled,
   previewSound,
+  concealChordLabels = false,
   onTargetSourceChange,
   onPreferencesChange,
   onMatchModeChange,
@@ -247,7 +249,8 @@ export function VoicingPracticeControls({
           <ul className="mt-2 space-y-1 text-xs">
             {unsupported.map((event) => (
               <li key={event.eventId}>
-                {text.bar(eventBars[event.eventId] ?? 1)}: {event.chordLabel} ·{" "}
+                {text.bar(eventBars[event.eventId] ?? 1)}
+                {concealChordLabels ? "" : `: ${event.chordLabel}`} ·{" "}
                 {localizedUnsupportedReason(event.reason, language)}
               </li>
             ))}

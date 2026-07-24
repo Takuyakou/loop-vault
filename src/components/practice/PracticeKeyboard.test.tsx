@@ -7,6 +7,7 @@ import {
   createLiveNoteState,
   reduceLiveNoteState,
 } from "../../domain/liveMidi";
+import type { PracticeSessionLevel } from "../../domain/practice";
 import { defaultLiveMidiStore } from "../../liveMidi/defaultLiveMidiStore";
 import { PracticeKeyboard } from "./PracticeKeyboard";
 
@@ -20,7 +21,7 @@ afterEach(() => {
   defaultLiveMidiStore.setState({ notes: createLiveNoteState() });
 });
 
-function renderKeyboard(level: 1 | 2 | 3 = 1): HTMLElement {
+function renderKeyboard(level: PracticeSessionLevel = 1): HTMLElement {
   const container = document.createElement("div");
   document.body.appendChild(container);
   const root = createRoot(container);
@@ -110,5 +111,23 @@ describe("PracticeKeyboard", () => {
     expect(summary).toContain("あと: 2音");
     expect(summary).not.toContain("E5");
     expect(summary).not.toContain("G5");
+  });
+
+  it("hides the missing-note count at Level 4 and Level 5", () => {
+    const container = renderKeyboard(4);
+    const notes = reduceLiveNoteState(createLiveNoteState(), {
+      timestampMs: 1,
+      status: 0x90,
+      channel: 0,
+      data1: 60,
+      data2: 100,
+    });
+
+    act(() => defaultLiveMidiStore.setState({ notes }));
+
+    const summary = container.querySelector('[aria-live="polite"]')?.textContent;
+    expect(summary).toContain("入力: 1音");
+    expect(summary).not.toContain("あと");
+    expect(summary).not.toContain("2音");
   });
 });

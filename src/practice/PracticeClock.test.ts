@@ -1,11 +1,60 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { makeChordSymbol } from "../domain/chords";
 import type { ChordTimelineItem } from "../domain/types";
 import {
   buildPracticeClockSchedule,
+  PracticeClock,
   PRACTICE_FLOW_EARLY_MS,
   PRACTICE_FLOW_LATE_MS,
 } from "./PracticeClock";
+
+const toneMock = vi.hoisted(() => {
+  const transport = {
+    PPQ: 192,
+    position: 0 as number | string,
+    bpm: {
+      value: 60,
+      rampTo: vi.fn(),
+    },
+    start: vi.fn(),
+    stop: vi.fn(),
+    pause: vi.fn(),
+    clear: vi.fn(),
+    scheduleRepeat: vi.fn(() => 1),
+  };
+  const draw = {
+    schedule: vi.fn((callback: () => void) => callback()),
+  };
+  class Synth {
+    volume = { value: 0 };
+    triggerAttackRelease = vi.fn();
+    dispose = vi.fn();
+
+    toDestination(): this {
+      return this;
+    }
+  }
+  return {
+    draw,
+    start: vi.fn<() => Promise<void>>(),
+    Synth,
+    transport,
+  };
+});
+
+vi.mock("tone", () => ({
+  getDraw: () => toneMock.draw,
+  getTransport: () => toneMock.transport,
+  start: toneMock.start,
+  Synth: toneMock.Synth,
+}));
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  toneMock.start.mockResolvedValue();
+  toneMock.transport.scheduleRepeat
+    .mockImplementation(() => toneMock.transport.scheduleRepeat.mock.calls.length);
+});
 
 describe("PracticeClock schedule", () => {
   it("builds deterministic 4/4 windows and a round boundary", () => {
@@ -34,6 +83,63 @@ describe("PracticeClock schedule", () => {
   });
 });
 
+describe("PracticeClock start generation", () => {
+  it("does not start the transport when stop cancels a pending Tone.start", async () => {
+    const deferred = createDeferred();
+    toneMock.start.mockReturnValueOnce(deferred.promise);
+    const clock = new PracticeClock();
+
+    const pending = clock.start(startOptions());
+    clock.stop();
+    deferred.resolve();
+    await pending;
+
+    expect(toneMock.transport.start).not.toHaveBeenCalled();
+  });
+
+  it("does not start the transport when pause cancels a pending Tone.start", async () => {
+    const deferred = createDeferred();
+    toneMock.start.mockReturnValueOnce(deferred.promise);
+    const clock = new PracticeClock();
+
+    const pending = clock.start(startOptions());
+    clock.pause();
+    deferred.resolve();
+    await pending;
+
+    expect(toneMock.transport.start).not.toHaveBeenCalled();
+  });
+
+  it("allows only the newest start to reach the transport", async () => {
+    const deferred = createDeferred();
+    toneMock.start
+      .mockReturnValueOnce(deferred.promise)
+      .mockResolvedValueOnce();
+    const clock = new PracticeClock();
+
+    const staleStart = clock.start(startOptions());
+    await clock.start(startOptions());
+    deferred.resolve();
+    await staleStart;
+
+    expect(toneMock.transport.start).toHaveBeenCalledTimes(1);
+  });
+
+  it("pauses and resumes an active transport without rebuilding its schedule", async () => {
+    const clock = new PracticeClock();
+    await clock.start(startOptions());
+    const scheduledCount = toneMock.transport.scheduleRepeat.mock.calls.length;
+
+    clock.pause();
+    clock.resume();
+
+    expect(toneMock.transport.pause).toHaveBeenCalledTimes(1);
+    expect(toneMock.transport.start).toHaveBeenCalledTimes(2);
+    expect(toneMock.transport.scheduleRepeat).toHaveBeenCalledTimes(scheduledCount);
+    expect(toneMock.transport.clear).not.toHaveBeenCalled();
+  });
+});
+
 function event(bar: number, beat: number, durationBeats: number): ChordTimelineItem {
   return {
     bar,
@@ -44,5 +150,26 @@ function event(bar: number, beat: number, durationBeats: number): ChordTimelineI
     alternatives: [],
     warnings: [],
   };
+}
+
+function startOptions() {
+  return {
+    events: [event(1, 1, 4)],
+    bpm: 80,
+    beatsPerBar: 4,
+    callbacks: {
+      onTargetOpen: vi.fn(),
+      onTargetClose: vi.fn(),
+      onRoundCompleted: vi.fn(),
+    },
+  };
+}
+
+function createDeferred() {
+  let resolve!: () => void;
+  const promise = new Promise<void>((next) => {
+    resolve = next;
+  });
+  return { promise, resolve };
 }
 

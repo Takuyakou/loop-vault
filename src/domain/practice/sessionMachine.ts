@@ -55,6 +55,27 @@ export function reducePracticeSession(
         : state;
     case "RESUME":
       return state.status === "paused" ? { ...state, status: "running" } : state;
+    case "RESET_FLOW_FOR_RESTART":
+      if (
+        state.mode !== "flow"
+        || (state.status !== "paused" && state.status !== "ready")
+      ) {
+        return state;
+      }
+      return {
+        ...state,
+        currentEventIndex: 0,
+        roundDirty: false,
+        requiredAttackRevision: Math.max(
+          state.requiredAttackRevision,
+          action.requiredAttackRevision,
+        ),
+        eventResults: state.eventResults.map(() => "pending"),
+        provisionalCandidate: undefined,
+        lastRoundWasClean: undefined,
+        lastInput: undefined,
+        lastMatch: undefined,
+      };
     case "END_SESSION":
       return { ...state, status: "completed", provisionalCandidate: undefined };
     case "FLOW_TARGET_OPEN":
@@ -77,6 +98,7 @@ export function reducePracticeSession(
       };
     }
     case "ROUND_COMPLETED": {
+      if (state.status !== "running") return state;
       const clean = isCleanRound(state.eventResults, state.roundDirty);
       return {
         ...state,

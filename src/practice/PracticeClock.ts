@@ -62,11 +62,13 @@ export class PracticeClock {
   private scheduleIds: number[] = [];
   private metronome?: Tone.Synth;
   private running = false;
+  private startGeneration = 0;
 
   async start(options: PracticeClockStartOptions): Promise<void> {
-    this.stop();
+    const generation = this.invalidateAndClear();
     if (options.events.length === 0) return;
     await Tone.start();
+    if (generation !== this.startGeneration) return;
 
     const schedule = buildPracticeClockSchedule(
       options.events,
@@ -112,7 +114,10 @@ export class PracticeClock {
   }
 
   pause(): void {
-    if (!this.running) return;
+    if (!this.running) {
+      this.startGeneration += 1;
+      return;
+    }
     this.transport.pause();
   }
 
@@ -126,12 +131,18 @@ export class PracticeClock {
   }
 
   stop(): void {
+    this.invalidateAndClear();
+  }
+
+  private invalidateAndClear(): number {
+    this.startGeneration += 1;
     if (this.running) this.transport.stop();
     this.running = false;
     for (const id of this.scheduleIds) this.transport.clear(id);
     this.scheduleIds = [];
     this.metronome?.dispose();
     this.metronome = undefined;
+    return this.startGeneration;
   }
 }
 
