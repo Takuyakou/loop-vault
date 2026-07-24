@@ -30,6 +30,7 @@ export interface PianoKeyboardVisualizerProps {
   accidentalStyle?: NoteAccidentalStyle;
   matchState?: "idle" | "partial" | "match" | "wrong";
   language: "ja" | "en";
+  concealNoteNames?: boolean;
 }
 
 const copy = {
@@ -41,6 +42,7 @@ const copy = {
     foreign: "構成外",
     sustain: "ペダル保持",
     outside: "範囲外の入力",
+    outsideCount: (count: number) => `${count}音`,
     keyboard: (count: number, guide: number, held: number, foreign: number, sustained: number) =>
       `${count}鍵のピアノ鍵盤。お手本${guide}音、押鍵中${held}音、構成外${foreign}音、ペダル保持${sustained}音。`,
   },
@@ -52,6 +54,7 @@ const copy = {
     foreign: "Foreign",
     sustain: "Sustain",
     outside: "Input outside visible range",
+    outsideCount: (count: number) => `${count} notes`,
     keyboard: (count: number, guide: number, held: number, foreign: number, sustained: number) =>
       `${count}-key piano keyboard. ${guide} guide, ${held} held, ${foreign} foreign, ${sustained} sustained notes.`,
   },
@@ -75,6 +78,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
   accidentalStyle = "flat",
   matchState = "idle",
   language,
+  concealNoteNames = false,
 }: PianoKeyboardVisualizerProps) {
   const text = copy[language];
   const range = useMemo(
@@ -123,6 +127,8 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
             label={text.outside}
             notes={outside.below}
             accidentalStyle={accidentalStyle}
+            concealNoteNames={concealNoteNames}
+            countLabel={text.outsideCount}
           />
         ) : null}
         {outside.above.length > 0 ? (
@@ -131,6 +137,8 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
             label={text.outside}
             notes={outside.above}
             accidentalStyle={accidentalStyle}
+            concealNoteNames={concealNoteNames}
+            countLabel={text.outsideCount}
           />
         ) : null}
         <svg
@@ -165,6 +173,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
                       : undefined
                   : undefined}
                 accidentalStyle={accidentalStyle}
+                concealNoteName={concealNoteNames}
               />
             ))}
           </g>
@@ -190,6 +199,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
                       : undefined
                   : undefined}
                 accidentalStyle={accidentalStyle}
+                concealNoteName={concealNoteNames}
               />
             ))}
           </g>
@@ -221,11 +231,15 @@ function OutsideIndicator({
   label,
   notes,
   accidentalStyle,
+  concealNoteNames,
+  countLabel,
 }: {
   direction: "left" | "right";
   label: string;
   notes: readonly number[];
   accidentalStyle: NoteAccidentalStyle;
+  concealNoteNames: boolean;
+  countLabel(count: number): string;
 }) {
   return (
     <div
@@ -235,7 +249,11 @@ function OutsideIndicator({
       }`}
     >
       {direction === "left" ? "← " : ""}
-      {label}: {notes.map((note) => formatMidiNoteForDisplay(note, "fl-studio", accidentalStyle)).join(" · ")}
+      {label}: {concealNoteNames
+        ? countLabel(notes.length)
+        : notes.map((note) => (
+            formatMidiNoteForDisplay(note, "fl-studio", accidentalStyle)
+          )).join(" · ")}
       {direction === "right" ? " →" : ""}
     </div>
   );

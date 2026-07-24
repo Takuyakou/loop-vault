@@ -338,7 +338,11 @@ export function ProgressionDetailView({
             {block.summaryText || text.untitled}
           </h2>
           <span className="mt-2 inline-flex">
-            <PracticeProgressBadge block={block} language={language} />
+            <PracticeProgressBadge
+              block={block}
+              language={language}
+              effectiveKeySignature={block.detectedKey ?? idea.key}
+            />
           </span>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">

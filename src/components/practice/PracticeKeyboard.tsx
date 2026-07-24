@@ -8,8 +8,8 @@ import {
 } from "../music-keyboard";
 import { heldNotes, sustainedNotes } from "../../domain/liveMidi";
 import type {
-  DojoPracticeLevel,
   PracticeMatchState,
+  PracticeSessionLevel,
 } from "../../domain/practice";
 import type { AppLanguage } from "../../domain/types";
 import { defaultLiveMidiStore } from "../../liveMidi/defaultLiveMidiStore";
@@ -21,10 +21,11 @@ interface PracticeKeyboardProps {
   rightHandGuideNotes?: readonly number[];
   allowedPitchClasses: readonly number[];
   requiredPitchClasses: readonly number[];
-  level: DojoPracticeLevel;
+  level: PracticeSessionLevel;
   language: AppLanguage;
   accidentalStyle?: NoteAccidentalStyle;
   matchState?: PracticeMatchState;
+  concealNoteNames?: boolean;
 }
 
 const copy = {
@@ -55,6 +56,7 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
   language,
   accidentalStyle = "flat",
   matchState = "empty",
+  concealNoteNames = false,
 }: PracticeKeyboardProps) {
   const liveNoteState = useStore(defaultLiveMidiStore, (state) => state.notes);
   const currentHeldNotes = useMemo(() => heldNotes(liveNoteState), [liveNoteState]);
@@ -96,6 +98,7 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
         accidentalStyle={accidentalStyle}
         matchState={visualMatchState}
         language={language}
+        concealNoteNames={concealNoteNames}
       />
       <p
         className={`mt-3 min-h-5 text-sm ${
@@ -133,7 +136,7 @@ function inputSummary({
   guideNotes: readonly number[];
   heldNotes: readonly number[];
   language: AppLanguage;
-  level: DojoPracticeLevel;
+  level: PracticeSessionLevel;
   matchState: PracticeMatchState;
   missingPitchClasses: readonly number[];
 }): string {
@@ -156,6 +159,10 @@ function inputSummary({
     return `${text.input}: ${input}${
       missing.length > 0 ? ` · ${text.missing}: ${missing.join(" · ")}` : ""
     }`;
+  }
+
+  if (level >= 4) {
+    return `${text.input}: ${text.notes(currentHeldNotes.length)}`;
   }
 
   return `${text.input}: ${text.notes(currentHeldNotes.length)}${

@@ -2,6 +2,7 @@ import type { ChordTimelineItem, SavedProgressionBlock } from "../types";
 
 export type PracticeLevel = 1 | 2 | 3 | 4 | 5;
 export type DojoPracticeLevel = 1 | 2 | 3;
+export type PracticeSessionLevel = PracticeLevel;
 export type PracticeMode = "step" | "flow";
 export type PracticeLeniency = "easy" | "normal" | "strict";
 export type PracticeMatchState = "empty" | "partial" | "match" | "wrong";
@@ -35,6 +36,13 @@ export interface PracticeProvisionalClear {
   clearedAt: string;
   clearedOnLocalDate: string;
   targetTempo: number;
+  confirmationPitchClasses?: number[];
+}
+
+export interface TranspositionPracticeProgress {
+  schemaVersion: 1;
+  clearedKeyPitchClasses: number[];
+  updatedAt?: string;
 }
 
 export interface ProgressionPracticeProgress {
@@ -42,13 +50,14 @@ export interface ProgressionPracticeProgress {
   progressionFingerprint: string;
   confirmedLevel?: PracticeLevel;
   provisional?: PracticeProvisionalClear;
+  transposition?: TranspositionPracticeProgress;
   lastPracticedAt?: string;
 }
 
 export interface PracticeSessionState {
   blockId: string;
   progressionFingerprint: string;
-  level: DojoPracticeLevel;
+  level: PracticeSessionLevel;
   mode: PracticeMode;
   leniency: PracticeLeniency;
   status: "idle" | "ready" | "running" | "paused" | "completed";
@@ -75,6 +84,7 @@ export type PracticeAction =
   | { type: "START_SESSION" }
   | { type: "PAUSE" }
   | { type: "RESUME" }
+  | { type: "RESET_FLOW_FOR_RESTART"; requiredAttackRevision: number }
   | { type: "MIDI_STATE_CHANGED"; input: PracticeInputSnapshot }
   | { type: "STABLE_DEADLINE"; nowMs: number }
   | { type: "FLOW_TARGET_OPEN"; eventIndex: number }
@@ -100,6 +110,7 @@ export interface PracticeRecommendation {
   ideaId: string;
   ideaTitle: string;
   block: SavedProgressionBlock;
+  effectiveKeySignature?: string;
   stale: boolean;
   confirmationDue: boolean;
   unstarted: boolean;

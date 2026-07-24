@@ -116,4 +116,22 @@ describe("PianoKeyboardVisualizer", () => {
     expect(container.querySelector('[data-outside-direction="right"]')?.textContent)
       .toContain("C8");
   });
+
+  it("conceals concrete note names while preserving C labels", () => {
+    const container = renderKeyboard({
+      language: "en",
+      heldNotes: [36, 60, 96],
+      showGuide: false,
+      concealNoteNames: true,
+    });
+
+    expect(container.querySelectorAll("svg title")).toHaveLength(0);
+    expect(container.querySelector('[data-outside-direction="left"]')?.textContent)
+      .toContain("1 notes");
+    expect(container.querySelector('[data-outside-direction="left"]')?.textContent)
+      .not.toContain("C3");
+    expect(container.querySelector('[data-outside-direction="right"]')?.textContent)
+      .not.toContain("C8");
+    expect(container.querySelector('[data-c-label="C5"]')).not.toBeNull();
+  });
 });

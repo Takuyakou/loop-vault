@@ -5,6 +5,7 @@ import {
   buildPracticeChordRequirements,
   createPracticeSessionState,
   matchPerformance,
+  practiceProgressForCurrentFingerprint,
   practiceProgressState,
   progressionFingerprint,
   recommendPracticeBlocks,
@@ -78,6 +79,77 @@ describe("practice session machine", () => {
     events: block.chords,
     requirements: block.chords.map((event) => buildPracticeChordRequirements(event.chord, "normal")),
   };
+
+  it("ignores late round callbacks while paused or completed", () => {
+    const ready = createPracticeSessionState({
+      blockId: block.id,
+      progressionFingerprint: progressionFingerprint(block),
+      level: 1,
+      mode: "flow",
+      leniency: "normal",
+      bpm: 60,
+      targetTempo: 60,
+      eventCount: block.chords.length,
+    });
+    const running = reducePracticeSession(
+      ready,
+      { type: "START_SESSION" },
+      context,
+    );
+    const paused = reducePracticeSession(running, { type: "PAUSE" }, context);
+    const completed = reducePracticeSession(
+      running,
+      { type: "END_SESSION" },
+      context,
+    );
+
+    expect(reducePracticeSession(
+      paused,
+      { type: "ROUND_COMPLETED" },
+      context,
+    )).toBe(paused);
+    expect(reducePracticeSession(
+      completed,
+      { type: "ROUND_COMPLETED" },
+      context,
+    )).toBe(completed);
+  });
+
+  it("resets a paused Flow round before starting a replacement clock", () => {
+    const ready = createPracticeSessionState({
+      blockId: block.id,
+      progressionFingerprint: progressionFingerprint(block),
+      level: 4,
+      mode: "flow",
+      leniency: "normal",
+      bpm: 60,
+      targetTempo: 60,
+      eventCount: block.chords.length,
+    });
+    const paused = {
+      ...ready,
+      status: "paused" as const,
+      currentEventIndex: 1,
+      roundDirty: true,
+      eventResults: ["match", "miss"] as Array<"match" | "miss">,
+      requiredAttackRevision: 3,
+      lastRoundWasClean: false,
+    };
+    const reset = reducePracticeSession(
+      paused,
+      { type: "RESET_FLOW_FOR_RESTART", requiredAttackRevision: 7 },
+      context,
+    );
+
+    expect(reset).toMatchObject({
+      status: "paused",
+      currentEventIndex: 0,
+      roundDirty: false,
+      requiredAttackRevision: 7,
+      lastRoundWasClean: undefined,
+    });
+    expect(reset.eventResults).toEqual(["pending", "pending"]);
+  });
 
   it("settles only after 100ms and requires a new attack for repeated chords", () => {
     let state = createPracticeSessionState({
@@ -191,6 +263,95 @@ describe("practice progress", () => {
     expect(progressionFingerprint({ ...block, bpm: 90 })).not.toBe(progressionFingerprint(block));
   });
 
+  it("includes the supplied Idea fallback key in the practice fingerprint", () => {
+    const block = {
+      ...progression([makeChordSymbol(0, "maj7")]),
+      detectedKey: undefined,
+    };
+    const cMajor = progressionFingerprint(block, "C major");
+    expect(cMajor).not.toBe(progressionFingerprint(block, "D major"));
+    expect(practiceProgressState({
+      ...block,
+      practice: {
+        schemaVersion: 1,
+        progressionFingerprint: cMajor,
+        confirmedLevel: 3,
+      },
+    }, "2026-07-24", "D major")).toBe("stale");
+  });
+
+  it("accepts a legacy no-detected-key fingerprint and migrates it without losing progress", () => {
+    const block = {
+      ...progression([makeChordSymbol(0, "maj7")]),
+      detectedKey: undefined,
+    };
+    const legacyPractice = {
+      schemaVersion: 1 as const,
+      progressionFingerprint: progressionFingerprint(block),
+      confirmedLevel: 2 as const,
+      provisional: {
+        level: 3 as const,
+        clearedAt: "2026-07-23T00:00:00.000Z",
+        clearedOnLocalDate: "2026-07-23",
+        targetTempo: 70,
+      },
+      lastPracticedAt: "2026-07-23T00:00:00.000Z",
+    };
+    const legacyBlock = { ...block, practice: legacyPractice };
+
+    expect(practiceProgressState(
+      legacyBlock,
+      "2026-07-24",
+      "C major",
+    )).toBe("confirmation-due");
+    const migrated = practiceProgressForCurrentFingerprint(
+      legacyBlock,
+      "C major",
+    );
+    expect(migrated).toMatchObject({
+      progressionFingerprint: progressionFingerprint(block, "C major"),
+      confirmedLevel: 2,
+      provisional: legacyPractice.provisional,
+      lastPracticedAt: legacyPractice.lastPracticedAt,
+    });
+    expect(practiceProgressState(
+      { ...block, practice: migrated },
+      "2026-07-24",
+      "D major",
+    )).toBe("stale");
+  });
+
+  it("writes the effective-key fingerprint on the first post-legacy practice update", () => {
+    const block = {
+      ...progression([makeChordSymbol(0, "maj7")]),
+      detectedKey: undefined,
+    };
+    block.practice = {
+      schemaVersion: 1,
+      progressionFingerprint: progressionFingerprint(block),
+      confirmedLevel: 2,
+      provisional: {
+        level: 3,
+        clearedAt: "2026-07-23T00:00:00.000Z",
+        clearedOnLocalDate: "2026-07-23",
+        targetTempo: 70,
+      },
+    };
+    const updated = recordPracticeRound(block, {
+      level: 1,
+      bpm: 60,
+      targetTempo: 70,
+      consecutiveCleanFlowRounds: 0,
+      nowIso: "2026-07-24T00:00:00.000Z",
+      localDate: "2026-07-24",
+    }, "C major");
+
+    expect(updated.progressionFingerprint)
+      .toBe(progressionFingerprint(block, "C major"));
+    expect(updated.confirmedLevel).toBe(2);
+    expect(updated.provisional).toEqual(block.practice.provisional);
+  });
+
   it("creates provisional after two clean rounds and confirms only on another date", () => {
     const block = progression([makeChordSymbol(0, "maj7")]);
     const provisional = recordPracticeRound(block, {
@@ -232,6 +393,23 @@ describe("practice progress", () => {
     const edited = { ...block, chords: [{ ...block.chords[0], chord: makeChordSymbol(5, "maj7") }], practice };
     expect(practiceProgressState(edited, "2026-07-20")).toBe("stale");
     expect(edited.practice).toEqual(practice);
+  });
+
+  it("clears transposition coverage on an explicit stale reset", () => {
+    const block = progression([makeChordSymbol(0, "maj7")]);
+    block.practice = {
+      schemaVersion: 1,
+      progressionFingerprint: "old",
+      confirmedLevel: 4,
+      transposition: {
+        schemaVersion: 1,
+        clearedKeyPitchClasses: [2, 5, 7],
+      },
+    };
+    expect(resetPracticeProgress(block)).toEqual({
+      schemaVersion: 1,
+      progressionFingerprint: progressionFingerprint(block),
+    });
   });
 
   it("shows a higher provisional level ahead of a lower confirmed level", () => {

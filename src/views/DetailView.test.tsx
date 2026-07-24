@@ -5,7 +5,9 @@ import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { playbackController } from "../audio/playbackController";
+import { progressionFingerprint } from "../domain/practice";
 import { makeIdea } from "../domain/testFactory";
+import type { SavedProgressionBlock } from "../domain/types";
 import { appCopy } from "../i18n";
 import { DetailView } from "./DetailView";
 
@@ -524,6 +526,39 @@ describe("DetailView status reasons", () => {
     const english = await renderDetail(idea, { copy: appCopy.en, language: "en" });
     expect(english.container.textContent).toContain("Captured MIDI · Bars 2–5");
     await english.unmount();
+  });
+
+  it("uses the Idea fallback key for progression practice state", async () => {
+    const source: SavedProgressionBlock = {
+      id: "effective-key-block",
+      summaryText: "Fallback key practice",
+      chords: [],
+      tags: [],
+      capturedAt: "2026-07-15T00:00:00.000Z",
+      analyzerVersion: "test",
+    };
+    const practiced: SavedProgressionBlock = {
+      ...source,
+      practice: {
+        schemaVersion: 1,
+        progressionFingerprint: progressionFingerprint(source, "C major"),
+        confirmedLevel: 3,
+      },
+    };
+    const mounted = await renderDetail(makeIdea({
+      key: "C major",
+      progressionBlocks: [practiced],
+    }), {
+      copy: appCopy.en,
+      language: "en",
+    });
+
+    const badge = mounted.container.querySelector<HTMLElement>(
+      "[data-practice-state]",
+    );
+    expect(badge?.getAttribute("data-practice-state")).toBe("confirmed");
+    expect(badge?.textContent).toContain("L3");
+    await mounted.unmount();
   });
 });
 

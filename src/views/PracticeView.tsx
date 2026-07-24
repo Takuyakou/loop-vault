@@ -17,7 +17,9 @@ import {
   computePracticeKeyboardRange,
   formatMidiNoteForDisplay,
 } from "../components/music-keyboard";
+import { MixPracticeWorkspace } from "../components/practice/MixPracticeWorkspace";
 import { PracticeKeyboard } from "../components/practice/PracticeKeyboard";
+import { TranspositionPracticeControls } from "../components/practice/TranspositionPracticeControls";
 import { VoicingPracticeControls } from "../components/practice/VoicingPracticeControls";
 import { voiceChordForPreview } from "../domain/chordVoicing";
 import { degreeOf } from "../domain/harmony/degrees";
@@ -26,6 +28,7 @@ import {
   buildPracticeChordRequirements,
   createPracticeSessionState,
   practiceInputFromLiveState,
+  practiceProgressForCurrentFingerprint,
   practiceProgressState,
   progressionFingerprint,
   recommendPracticeBlocks,
@@ -36,8 +39,39 @@ import {
   type PracticeLeniency,
   type PracticeMode,
   type PracticeRecommendation,
+  type ProgressionPracticeProgress,
+  type PracticeSessionContext,
+  type PracticeSessionLevel,
   type PracticeSessionState,
 } from "../domain/practice";
+import {
+  createMixSessionState,
+  preflightMixSession,
+  progressionReferenceKey,
+  type MixPreflightError,
+  type MixProgressionCandidate,
+  type MixProgressionReference,
+  type MixSessionConfig,
+  type MixSessionState,
+} from "../domain/practiceMix";
+import {
+  completeTranspositionRound,
+  createPracticeTargetMatchEvaluator,
+  createPracticeTargetPlan,
+  createTranspositionSession,
+  evaluateTranspositionEligibility,
+  formatKeySignature,
+  parseKeySignature,
+  recordTranspositionPracticeRound,
+  selectTranspositionKey,
+  setTranspositionEligibility,
+  skipTranspositionKey,
+  transpositionCoverageSummary,
+  transpositionProgressLevel,
+  transposeProgression,
+  type TranspositionPracticeLevel,
+  type TranspositionSessionState,
+} from "../domain/practiceTransposition";
 import type {
   AppLanguage,
   ChordTimelineItem,
@@ -51,6 +85,7 @@ import {
   matchExactPitch,
   matchPitchClasses,
   type GeneratedStyleVoicing,
+  type GenerateStyleVoicingOptions,
   type PracticeTargetSource,
   type StyleVoicingMatchMode,
   type VoicingPracticePreferences,
@@ -92,9 +127,19 @@ interface PracticeViewProps {
   openProgression: (ideaId: string, blockId: string) => void;
   openSettings: () => void;
   setToast: (message: string) => void;
+  practiceClock?: Pick<PracticeClock, "start" | "stop" | "pause" | "resume">;
 }
 
-type QueueFilter = "recommended" | "favorite" | "unstarted" | "confirmation" | "l1" | "l2" | "l3";
+type QueueFilter =
+  | "recommended"
+  | "favorite"
+  | "unstarted"
+  | "confirmation"
+  | "l1"
+  | "l2"
+  | "l3"
+  | "l4"
+  | "l5";
 
 const copy = {
   ja: {
@@ -113,10 +158,13 @@ const copy = {
     l1: "L1 見て弾く",
     l2: "L2 名前で弾く",
     l3: "L3 度数で弾く",
+    l4: "L4 近くのキーでも",
+    l5: "L5 どのキーでも",
     leniency: "判定",
     easy: "ゆるい",
     normal: "ふつう",
     strict: "きびしい",
+    modeLabel: "モード",
     step: "ステップ",
     flow: "フロー",
     midi: "MIDI入力",
@@ -129,6 +177,7 @@ const copy = {
     pause: "一時停止",
     resume: "再開",
     end: "終了",
+    flowClockStartFailed: "フロー練習を開始できませんでした。MIDI接続とオーディオ設定を確認してください。",
     current: "いま",
     next: "つぎ",
     progressionOverview: "進行全体",
@@ -157,6 +206,14 @@ const copy = {
     targetTempo: (value: number) => `段位目標 ${value} BPM`,
     flowUnsupported: "フローモードは現在4/4に対応しています。ステップモードは利用できます。",
     l3NeedsKey: "L3を使うには進行のKeyを設定してください。",
+    transpositionNeedsKey: "L4/L5にはメジャーまたはマイナーのキー設定が必要です。",
+    transpositionOpenDetail: "進行詳細でキーを設定",
+    transpositionPractice: "移調練習",
+    targetPlanRangeUnavailable: "このボイシングは移調後の鍵盤範囲に収まりません。別のボイシングを選んでください。",
+    stepToFlow: "このキーをフローで弾いてみますか？",
+    startFlow: "フローで練習",
+    dirtyRetry: "このキーをもう一度練習します。",
+    skipKey: "次のキーへ",
     chordAsBlock: "このPhaseでは和音として押さえてください。アルペジオ練習は今後対応予定です。",
     noSound: "音源なしコントローラ向けの内蔵音源／MIDI Thruは今回の対象外です。",
     provisional: "仮クリア",
@@ -180,6 +237,33 @@ const copy = {
     styleRootless: (variant?: string) => `ルートレス ${variant ?? "A/B"}`,
     styleClose: "自動",
     addedColor: (intervals: readonly string[]) => `響きを補う音: ${intervals.join("・")}`,
+    mixSelect: "ミックス選択",
+    mixUnavailable: "L4/L5の移調練習中はミックスを選択できません。",
+    mixSelected: (count: number) => `${count}件選択`,
+    mixMaximum: "ミックス練習では最大5進行まで選べます。",
+    mixClear: "選択を解除",
+    mixCancel: "キャンセル",
+    mixSetup: "ミックス練習の共通設定",
+    mixStart: "ミックス練習を開始",
+    mixCycles: "巡数",
+    mixCycle: (count: number) => `${count}巡`,
+    mixNeedSelection: "2〜5進行を選択してください。",
+    mixPreflightTitle: "ミックス練習を開始できません。",
+    mixMissingBlock: "進行が見つかりません。",
+    mixMissingKey: "Keyが設定されていないためL3を利用できません。",
+    mixUnsupportedKey: "メジャーまたはマイナーのKeyを確認してください。",
+    mixFlowSignature: "フローでは4/4の進行だけ利用できます。",
+    mixTargetUnavailable: "選択中のボイシングを生成できません。",
+    mixInvalid: "コード進行データを確認してください。",
+    mixTargetSource: "練習するボイシング",
+    mixResolved: "保存ボイシング",
+    mixClose: "自動（クローズ）",
+    mixShell: "シェル 1-7",
+    mixOpen: "オープン 1-7",
+    mixRootless: "ルートレス A/B",
+    mixFallback: "未対応コードだけ自動（クローズ）を使用",
+    mixExact: "指定音高",
+    mixPitchClass: "ピッチクラス",
   },
   en: {
     eyebrow: "CHORD DOJO",
@@ -197,10 +281,13 @@ const copy = {
     l1: "L1 See and play",
     l2: "L2 Play by name",
     l3: "L3 Play by degree",
+    l4: "L4 Nearby keys",
+    l5: "L5 Any key",
     leniency: "Judgement",
     easy: "Easy",
     normal: "Normal",
     strict: "Strict",
+    modeLabel: "Mode",
     step: "Step",
     flow: "Flow",
     midi: "MIDI input",
@@ -213,6 +300,7 @@ const copy = {
     pause: "Pause",
     resume: "Resume",
     end: "End",
+    flowClockStartFailed: "Flow practice could not start. Check the MIDI connection and audio settings.",
     current: "Now",
     next: "Next",
     progressionOverview: "Full progression",
@@ -241,6 +329,14 @@ const copy = {
     targetTempo: (value: number) => `Level target ${value} BPM`,
     flowUnsupported: "Flow currently supports 4/4. Step mode is still available.",
     l3NeedsKey: "Set a key on the progression to use L3.",
+    transpositionNeedsKey: "L4/L5 requires a supported major or minor key.",
+    transpositionOpenDetail: "Set the key in progression details",
+    transpositionPractice: "Transposition practice",
+    targetPlanRangeUnavailable: "This voicing does not fit the playable keyboard range after transposition. Choose another voicing.",
+    stepToFlow: "Try this key in Flow mode?",
+    startFlow: "Practice in Flow",
+    dirtyRetry: "Retrying the same key.",
+    skipKey: "Next key",
     chordAsBlock: "Play the notes as a held chord in this phase. Arpeggio practice is planned later.",
     noSound: "Built-in sound and MIDI Thru for silent controllers are outside this phase.",
     provisional: "Provisional",
@@ -264,6 +360,33 @@ const copy = {
     styleRootless: (variant?: string) => `Rootless ${variant ?? "A/B"}`,
     styleClose: "Automatic",
     addedColor: (intervals: readonly string[]) => `Added color tones: ${intervals.join(", ")}`,
+    mixSelect: "Mix selection",
+    mixUnavailable: "Mix cannot be selected while L4/L5 transposition practice is active.",
+    mixSelected: (count: number) => `${count} selected`,
+    mixMaximum: "Mix practice supports up to five progressions.",
+    mixClear: "Clear selection",
+    mixCancel: "Cancel",
+    mixSetup: "Shared Mix practice settings",
+    mixStart: "Start Mix practice",
+    mixCycles: "Cycles",
+    mixCycle: (count: number) => `${count} cycle${count === 1 ? "" : "s"}`,
+    mixNeedSelection: "Select two to five progressions.",
+    mixPreflightTitle: "Mix practice cannot start.",
+    mixMissingBlock: "The progression could not be found.",
+    mixMissingKey: "A key is required to use L3.",
+    mixUnsupportedKey: "Check that the key is major or minor.",
+    mixFlowSignature: "Flow supports only 4/4 progressions.",
+    mixTargetUnavailable: "The selected practice voicing could not be generated.",
+    mixInvalid: "Check the chord progression data.",
+    mixTargetSource: "Practice voicing",
+    mixResolved: "Saved voicing",
+    mixClose: "Automatic (close)",
+    mixShell: "Shell 1-7",
+    mixOpen: "Open 1-7",
+    mixRootless: "Rootless A/B",
+    mixFallback: "Use Automatic (close) only for unsupported chords",
+    mixExact: "Exact pitch",
+    mixPitchClass: "Pitch class",
   },
 } as const;
 
@@ -275,6 +398,7 @@ export function PracticeView({
   openProgression,
   openSettings,
   setToast,
+  practiceClock,
 }: PracticeViewProps) {
   const text = copy[language];
   const localDate = localDateString(new Date());
@@ -282,13 +406,28 @@ export function PracticeView({
     () => recommendPracticeBlocks(ideas, localDate),
     [ideas, localDate],
   );
+  const mixCandidates = useMemo<readonly MixProgressionCandidate[]>(
+    () => recommendations.map((item) => ({
+      reference: { ideaId: item.ideaId, blockId: item.block.id },
+      title: mixProgressionTitle(item),
+      block: item.block,
+      effectiveKeySignature: item.effectiveKeySignature,
+    })),
+    [recommendations],
+  );
   const [filter, setFilter] = useState<QueueFilter>("recommended");
   const [target, setTarget] = useState<PracticeTarget | undefined>(initialTarget);
-  const [level, setLevel] = useState<DojoPracticeLevel>(1);
+  const [level, setLevel] = useState<PracticeSessionLevel>(1);
   const [leniency, setLeniency] = useState<PracticeLeniency>("normal");
   const [mode, setMode] = useState<PracticeMode>("step");
   const [bpm, setBpm] = useState(60);
   const [session, setSession] = useState<PracticeSessionState>();
+  const [transpositionSession, setTranspositionSession] = useState<
+    TranspositionSessionState
+  >();
+  const [pendingFlowRestartKey, setPendingFlowRestartKey] = useState<number>();
+  const [flowClockStarting, setFlowClockStarting] = useState(false);
+  const [flowClockReady, setFlowClockReady] = useState(false);
   const [beat, setBeat] = useState(1);
   const [auditionEventIndex, setAuditionEventIndex] = useState<number>();
   const [previewSound, setPreviewSound] = useState<PreviewSound>("piano");
@@ -297,17 +436,38 @@ export function PracticeView({
   });
   const [styleMatchMode, setStyleMatchMode] = useState<StyleVoicingMatchMode>("exact-pitch");
   const [allowUnsupportedFallback, setAllowUnsupportedFallback] = useState(false);
+  const [mixSelecting, setMixSelecting] = useState(false);
+  const [mixReferences, setMixReferences] = useState<MixProgressionReference[]>([]);
+  const [mixCycles, setMixCycles] = useState<1 | 2 | 3>(1);
+  const [mixErrors, setMixErrors] = useState<readonly MixPreflightError[]>([]);
+  const [mixInitialState, setMixInitialState] = useState<MixSessionState>();
   const [voicingPreferences, setVoicingPreferences] = useState<VoicingPracticePreferences>(
     loadVoicingPracticePreferences,
   );
-  const clockRef = useRef(new PracticeClock());
+  const mixStyleOptions = useMemo<GenerateStyleVoicingOptions>(() => ({
+    maxLeftHandSpanSemitones: voicingPreferences.maxLeftHandSpanSemitones,
+    maxRightHandSpanSemitones: voicingPreferences.maxRightHandSpanSemitones,
+    allowUnsupportedFallback,
+  }), [allowUnsupportedFallback, voicingPreferences]);
+  const clockRef = useRef<
+    Pick<PracticeClock, "start" | "stop" | "pause" | "resume">
+  >(practiceClock ?? new PracticeClock());
   const ownsMidiRef = useRef(false);
   const persistedRoundRef = useRef(0);
+  const flowRestartingRef = useRef(false);
+  const flowClockGenerationRef = useRef(0);
+  const flowClockPendingGenerationRef = useRef<number>();
+  const flowClockPausedGenerationRef = useRef<number>();
+  const flowClockReadyRef = useRef(false);
+  const transpositionSourceIdentityRef = useRef<string>();
   const latestSessionRef = useRef<PracticeSessionState>();
+  const latestTranspositionSessionRef = useRef<TranspositionSessionState>();
   const latestBlockRef = useRef<SavedProgressionBlock>();
   const latestSelectedRef = useRef<PracticeRecommendation>();
+  const latestPracticeProgressRef = useRef<ProgressionPracticeProgress>();
   const lastPersistedSessionRef = useRef<PracticeSessionState>();
   const styleModeRef = useRef(false);
+  const mixModeRef = useRef(false);
   const active = useStore(defaultLiveMidiStore, (state) => state.active);
   const midiStatus = useStore(defaultLiveMidiStore, (state) => state.status);
   const selectedDevice = useStore(defaultLiveMidiStore, (state) => state.selected);
@@ -322,7 +482,13 @@ export function PracticeView({
     setStyleMatchMode("exact-pitch");
     setAllowUnsupportedFallback(false);
     setAuditionEventIndex(undefined);
+    setTranspositionSession(undefined);
     setSession(undefined);
+    setMixSelecting(false);
+    setMixReferences([]);
+    setMixErrors([]);
+    setMixInitialState(undefined);
+    mixModeRef.current = false;
   }, [initialTarget]);
 
   useEffect(() => {
@@ -333,6 +499,10 @@ export function PracticeView({
     });
     return () => {
       unregisterClosePreparation();
+      flowClockGenerationRef.current += 1;
+      flowClockPendingGenerationRef.current = undefined;
+      flowClockPausedGenerationRef.current = undefined;
+      flowClockReadyRef.current = false;
       clockRef.current.stop();
       persistPendingSession();
       if (ownsMidiRef.current) void defaultLiveMidiStore.getState().deactivate();
@@ -340,7 +510,7 @@ export function PracticeView({
   }, [updateProgressionBlock]);
 
   function persistPendingSession(): void {
-    if (styleModeRef.current) return;
+    if (styleModeRef.current || mixModeRef.current) return;
     const current = latestSessionRef.current;
     const currentBlock = latestBlockRef.current;
     const currentSelected = latestSelectedRef.current;
@@ -349,6 +519,7 @@ export function PracticeView({
       || current.status === "completed"
       || !currentBlock
       || !currentSelected
+      || !isDojoPracticeLevel(current.level)
       || lastPersistedSessionRef.current === current
     ) {
       return;
@@ -361,7 +532,7 @@ export function PracticeView({
         consecutiveCleanFlowRounds: current.consecutiveCleanFlowRounds,
         nowIso: new Date().toISOString(),
         localDate: localDateString(new Date()),
-      }),
+      }, currentSelected.effectiveKeySignature),
     });
     if (updated) lastPersistedSessionRef.current = current;
   }
@@ -377,14 +548,46 @@ export function PracticeView({
   const displayedEventIndex = session?.status === "running"
     ? practiceEventIndex
     : auditionEventIndex ?? practiceEventIndex;
-  const currentTarget = block?.chords[displayedEventIndex];
-  const nextTarget = block && block.chords.length > 1
-    ? block.chords[(displayedEventIndex + 1) % block.chords.length]
-    : undefined;
   const keySignature = block?.detectedKey ?? selectedIdea?.key;
+  const sourceKey = useMemo(
+    () => keySignature ? parseKeySignature(keySignature) : undefined,
+    [keySignature],
+  );
+  const transpositionSourceIdentity = selected && block
+    ? [
+        selected.ideaId,
+        block.id,
+        progressionFingerprint(block),
+        keySignature ?? "",
+        selected.stale ? "stale" : "current",
+      ].join(":")
+    : undefined;
+  const transpositionMode = isTranspositionLevel(level);
   const l3Available = Boolean(keySignature);
-  const flowAvailable = !block?.timeSignature || block.timeSignature === "4/4";
+  const transpositionAvailable = Boolean(sourceKey);
   const styleMode = targetSource.type !== "resolved-voicing";
+  const transpositionEligibility = useMemo(
+    () => isTranspositionLevel(level)
+      ? evaluateTranspositionEligibility({
+          level,
+          mode,
+          bpm,
+          targetTempo: block ? targetTempoFor(block) : 0,
+          targetSource,
+          confirmedLevel: block?.practice?.confirmedLevel,
+          stale: Boolean(selected?.stale),
+        })
+      : { eligible: false, reasons: [] },
+    [
+      block,
+      bpm,
+      level,
+      mode,
+      selected?.stale,
+      targetSource,
+    ],
+  );
+  const flowAvailable = !block?.timeSignature || block.timeSignature === "4/4";
   const standardRequirements = useMemo(
     () => block?.chords.map((event) => buildPracticeChordRequirements(event.chord, leniency)) ?? [],
     [block, leniency],
@@ -432,7 +635,7 @@ export function PracticeView({
       };
     }) ?? [];
   }, [block?.chords, generatedStylePlan]);
-  const activeGuides = useMemo(
+  const sourceGuides = useMemo(
     (): Array<PracticeVoicingGuide | undefined> => styleMode
       ? generatedGuides
       : resolvedGuides.map((resolved) => ({
@@ -445,9 +648,9 @@ export function PracticeView({
         })),
     [generatedGuides, resolvedGuides, styleMode],
   );
-  const requirements = useMemo(
+  const sourceRequirements = useMemo(
     () => styleMode
-      ? activeGuides.map((guide, index) => {
+      ? sourceGuides.map((guide, index) => {
           const pitchClasses = uniquePitchClasses(guide?.midiNotes ?? []);
           return {
             requiredPitchClasses: pitchClasses,
@@ -457,17 +660,17 @@ export function PracticeView({
           };
         })
       : standardRequirements,
-    [activeGuides, standardRequirements, styleMode],
+    [sourceGuides, standardRequirements, styleMode],
   );
   const styleMatchInput = useMemo(
     () => styleMode
       ? (
-          _requirements: (typeof requirements)[number],
+          _requirements: (typeof sourceRequirements)[number],
           input: Parameters<typeof matchExactPitch>[1],
           requiredAttackRevision: number,
           eventIndex: number,
         ) => {
-          const targetNotes = activeGuides[eventIndex]?.midiNotes ?? [];
+          const targetNotes = sourceGuides[eventIndex]?.midiNotes ?? [];
           return styleMatchMode === "exact-pitch"
             ? matchExactPitch(targetNotes, input, requiredAttackRevision, {
                 allowGlobalOctaveShift: voicingPreferences.allowGlobalOctaveShift,
@@ -477,20 +680,119 @@ export function PracticeView({
         }
       : undefined,
     [
-      activeGuides,
-      requirements,
+      sourceGuides,
+      sourceRequirements,
       styleMatchMode,
       styleMode,
       voicingPreferences.allowGlobalOctaveShift,
     ],
   );
+  const transposedProgression = useMemo(() => {
+    if (
+      !transpositionMode
+      || !transpositionSession
+      || !sourceKey
+      || !selected
+      || !block
+    ) {
+      return undefined;
+    }
+    return transposeProgression({
+      sourceKey,
+      sourceMode: sourceKey.mode,
+      events: block.chords,
+      targetTonicPitchClass: transpositionSession.currentTargetKeyPitchClass,
+      sourceReference: {
+        ideaId: selected.ideaId,
+        blockId: block.id,
+      },
+    });
+  }, [
+    block,
+    selected,
+    sourceKey,
+    transpositionMode,
+    transpositionSession,
+  ]);
+  const transpositionTargetResult = useMemo(() => {
+    if (!transposedProgression) return undefined;
+    return createPracticeTargetPlan({
+      progression: transposedProgression,
+      targetSource,
+      leniency,
+      styleOptions: mixStyleOptions,
+      styleMatchMode,
+      exactPitchOptions: {
+        allowGlobalOctaveShift: voicingPreferences.allowGlobalOctaveShift,
+        octaveShiftCandidates: DEFAULT_OCTAVE_SHIFT_CANDIDATES,
+      },
+    });
+  }, [
+    allowUnsupportedFallback,
+    leniency,
+    styleMatchMode,
+    targetSource,
+    transposedProgression,
+    voicingPreferences.allowGlobalOctaveShift,
+    voicingPreferences.maxLeftHandSpanSemitones,
+    voicingPreferences.maxRightHandSpanSemitones,
+  ]);
+  const transpositionTargetPlan = transpositionTargetResult?.ok
+    ? transpositionTargetResult.plan
+    : undefined;
+  const practiceEvents = transpositionMode
+    ? transposedProgression?.events ?? []
+    : block?.chords ?? [];
+  const activeGuides = useMemo(
+    (): Array<PracticeVoicingGuide | undefined> => transpositionMode
+      ? transpositionTargetPlan?.events.map((event) => ({
+          midiNotes: [...event.midiNotes],
+          leftHandNotes: [...event.leftHandNotes],
+          rightHandNotes: [...event.rightHandNotes],
+          origin: event.origin,
+          styleId: event.styleId,
+          variant: event.variant,
+          addedColorIntervals: [...event.addedColorIntervals],
+          fallback: event.fallback,
+        })) ?? []
+      : sourceGuides,
+    [sourceGuides, transpositionMode, transpositionTargetPlan],
+  );
+  const requirements = transpositionMode
+    ? transpositionTargetPlan?.requirements ?? []
+    : sourceRequirements;
+  const transpositionMatchInput = useMemo(
+    () => transpositionTargetPlan
+      ? createPracticeTargetMatchEvaluator(transpositionTargetPlan)
+      : undefined,
+    [transpositionTargetPlan],
+  );
+  const currentTarget = practiceEvents[displayedEventIndex];
+  const nextTarget = practiceEvents.length > 1
+    ? practiceEvents[(displayedEventIndex + 1) % practiceEvents.length]
+    : undefined;
+  const displayedKeySignature = transpositionMode && transposedProgression
+    ? formatKeySignature(transposedProgression.targetKey, language)
+    : keySignature;
   const sessionContext = useMemo(
     () => ({
-      events: block?.chords ?? [],
+      events: practiceEvents,
       requirements,
-      ...(styleMatchInput ? { matchInput: styleMatchInput } : {}),
+      ...((transpositionMode ? transpositionMatchInput : styleMatchInput)
+        ? {
+            matchInput: transpositionMode
+              ? transpositionMatchInput
+              : styleMatchInput,
+          }
+        : {}),
     }),
-    [block?.chords, requirements, styleMatchInput],
+    [
+      practiceEvents,
+      requirements,
+      styleMatchInput,
+      transpositionMatchInput,
+      transpositionMode,
+    ],
   );
   const currentRequirement = requirements[displayedEventIndex];
   const guide = activeGuides[displayedEventIndex];
@@ -502,29 +804,49 @@ export function PracticeView({
   );
   const eventBars = useMemo(
     () => Object.fromEntries(
-      block?.chords.map((event, index) => [practiceEventId(event, index), event.bar]) ?? [],
+      practiceEvents.map((event, index) => [
+        event.eventId ?? practiceEventId(event, index),
+        event.bar,
+      ]),
     ),
-    [block?.chords],
+    [practiceEvents],
   );
   const previewSourceId = block
-    ? `${block.id}:voicing:${practiceTargetSourceKey(targetSource)}`
+    ? `${block.id}:voicing:${practiceTargetSourceKey(targetSource)}:${
+        transpositionSession?.currentTargetKeyPitchClass ?? "source"
+      }`
     : "voicing-practice";
   const previewing = playbackState.status !== "idle"
     && playbackState.source?.kind === "practice"
     && playbackState.source.id === previewSourceId;
   const stylePlanBlocked = styleMode
-    && Boolean(generatedStylePlan?.unsupportedEvents.length)
+    && Boolean(
+      transpositionMode
+        ? transpositionTargetPlan?.unsupportedEvents.length
+        : generatedStylePlan?.unsupportedEvents.length,
+    )
     && !allowUnsupportedFallback;
   const filtered = recommendations.filter((item) => matchesQueueFilter(item, filter, localDate));
+  const mixActive = Boolean(mixInitialState);
+  const mixSelectionKeys = useMemo(
+    () => new Set(mixReferences.map(progressionReferenceKey)),
+    [mixReferences],
+  );
   const running = session?.status === "running";
   const paused = session?.status === "paused";
+  const flowRestartPending = pendingFlowRestartKey !== undefined;
   const previewDisabled = !block
     || running
     || stylePlanBlocked
-    || activeGuides.length !== block.chords.length
+    || (transpositionMode && !transpositionTargetPlan)
+    || Boolean(
+      transpositionMode
+      && transpositionTargetPlan?.events.some((event) => !event.ready),
+    )
+    || activeGuides.length !== practiceEvents.length
     || activeGuides.some((item) => !item);
-  const activeEventIndex = block?.chords.length
-    ? Math.max(0, Math.min(block.chords.length - 1, displayedEventIndex))
+  const activeEventIndex = practiceEvents.length
+    ? Math.max(0, Math.min(practiceEvents.length - 1, displayedEventIndex))
     : 0;
 
   useEffect(() => {
@@ -533,60 +855,223 @@ export function PracticeView({
 
   useEffect(() => {
     latestSessionRef.current = session;
+    latestTranspositionSessionRef.current = transpositionSession;
     latestBlockRef.current = block;
     latestSelectedRef.current = selected;
-  }, [block, selected, session]);
+  }, [block, selected, session, transpositionSession]);
 
   useEffect(() => {
-    if (!running || !currentRequirement) return;
-    const input = practiceInputFromLiveState(liveNotes, performance.now());
-    setSession((current) => current
-      ? reducePracticeSession(current, { type: "MIDI_STATE_CHANGED", input }, sessionContext)
+    latestPracticeProgressRef.current = block?.practice;
+  }, [block?.id, block?.practice]);
+
+  useEffect(() => {
+    setTranspositionSession((current) => current
+      ? setTranspositionEligibility(current, transpositionEligibility)
       : current);
-  }, [currentRequirement, liveNotes, running, sessionContext]);
+  }, [transpositionEligibility]);
+
+  useEffect(() => {
+    if (!transpositionMode) {
+      transpositionSourceIdentityRef.current = undefined;
+      return;
+    }
+    if (
+      transpositionSourceIdentityRef.current === undefined
+      || transpositionSourceIdentityRef.current === transpositionSourceIdentity
+    ) {
+      transpositionSourceIdentityRef.current = transpositionSourceIdentity;
+      return;
+    }
+
+    transpositionSourceIdentityRef.current = transpositionSourceIdentity;
+    invalidateFlowClock();
+    clockRef.current.stop();
+    playbackController.stop();
+    setPendingFlowRestartKey(undefined);
+    setSession(undefined);
+    setAuditionEventIndex(undefined);
+    if (!sourceKey || !isTranspositionLevel(level)) {
+      setTranspositionSession(undefined);
+      return;
+    }
+    const next = createTranspositionSession({
+      level,
+      sourceKeyPitchClass: sourceKey.tonicPitchClass,
+      sourceMode: sourceKey.mode,
+      seed: createSessionSeed(),
+      eligibility: transpositionEligibility,
+      progress: selected?.stale
+        ? undefined
+        : block?.practice?.transposition,
+      provisional: selected?.stale
+        ? undefined
+        : block?.practice?.provisional,
+      localDate,
+    });
+    latestTranspositionSessionRef.current = next;
+    setTranspositionSession(next);
+  }, [
+    level,
+    sourceKey,
+    transpositionEligibility,
+    transpositionMode,
+    transpositionSourceIdentity,
+  ]);
+
+  useEffect(() => {
+    if (
+      pendingFlowRestartKey === undefined
+      || flowRestartingRef.current
+      || session?.status !== "paused"
+      || session.mode !== "flow"
+      || transposedProgression?.targetKey.tonicPitchClass !== pendingFlowRestartKey
+      || !transpositionTargetPlan
+    ) {
+      return;
+    }
+    flowRestartingRef.current = true;
+    const restartKey = pendingFlowRestartKey;
+    void (async () => {
+      const started = await startFlowClock(
+        practiceEvents,
+        sessionContext,
+        "paused",
+      );
+      if (
+        !started
+        || latestSessionRef.current?.status !== "paused"
+        || latestTranspositionSessionRef.current?.currentTargetKeyPitchClass
+          !== restartKey
+      ) {
+        if (started) {
+          invalidateFlowClock();
+          clockRef.current.stop();
+        }
+        return;
+      }
+      setSession((current) => {
+        if (!current || current.status !== "paused") return current;
+        const resumed = reducePracticeSession(
+          current,
+          { type: "RESUME" },
+          sessionContext,
+        );
+        latestSessionRef.current = resumed;
+        return resumed;
+      });
+    })().finally(() => {
+      flowRestartingRef.current = false;
+      setPendingFlowRestartKey((current) => (
+        current === restartKey ? undefined : current
+      ));
+    });
+  }, [
+    pendingFlowRestartKey,
+    practiceEvents,
+    session?.mode,
+    session?.status,
+    sessionContext,
+    transposedProgression?.targetKey.tonicPitchClass,
+    transpositionTargetPlan,
+  ]);
+
+  useEffect(() => {
+    if (
+      !running
+      || !currentRequirement
+      || (session?.mode === "flow" && !flowClockReady)
+    ) {
+      return;
+    }
+    const input = practiceInputFromLiveState(liveNotes, performance.now());
+    setSession((current) => {
+      if (!current) return current;
+      const next = reducePracticeSession(
+        current,
+        { type: "MIDI_STATE_CHANGED", input },
+        sessionContext,
+      );
+      latestSessionRef.current = next;
+      return next;
+    });
+  }, [
+    currentRequirement,
+    flowClockReady,
+    liveNotes,
+    running,
+    session?.mode,
+    sessionContext,
+  ]);
 
   useEffect(() => {
     const candidate = session?.provisionalCandidate;
     if (!candidate || !running) return undefined;
     const delay = Math.max(0, candidate.sinceMs + 100 - performance.now());
     const timer = globalThis.setTimeout(() => {
-      setSession((current) => current
-        ? reducePracticeSession(
-            current,
-            { type: "STABLE_DEADLINE", nowMs: performance.now() },
-            sessionContext,
-          )
-        : current);
+      setSession((current) => {
+        if (!current) return current;
+        const next = reducePracticeSession(
+          current,
+          { type: "STABLE_DEADLINE", nowMs: performance.now() },
+          sessionContext,
+        );
+        latestSessionRef.current = next;
+        return next;
+      });
     }, delay);
     return () => globalThis.clearTimeout(timer);
   }, [running, session?.provisionalCandidate, sessionContext]);
 
   useEffect(() => {
     if (midiStatus !== "disconnected" && midiStatus !== "error") return;
-    clockRef.current.pause();
-    setSession((current) => current
-      ? reducePracticeSession(current, { type: "DEVICE_DISCONNECTED" }, sessionContext)
-      : current);
+    const canceledPendingStart = cancelPendingFlowClock();
+    if (!canceledPendingStart) invalidateFlowClock();
+    if (canceledPendingStart) {
+      clockRef.current.stop();
+    } else {
+      clockRef.current.pause();
+    }
+    setSession((current) => {
+      if (!current) return current;
+      const next = reducePracticeSession(
+        current,
+        { type: "DEVICE_DISCONNECTED" },
+        sessionContext,
+      );
+      latestSessionRef.current = next;
+      return next;
+    });
   }, [midiStatus, sessionContext]);
 
   useEffect(() => {
     if (
       styleMode
-      ||
-      !block
+      || transpositionMode
+      || !block
       || session?.mode !== "flow"
       || !session.lastRoundWasClean
       || session.roundNumber <= persistedRoundRef.current
     ) return;
     persistedRoundRef.current = session.roundNumber;
     persistProgress(block, session);
-  }, [block, session, styleMode]);
+  }, [block, session, styleMode, transpositionMode]);
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
-      if (event.isComposing || event.altKey || event.ctrlKey || event.metaKey) return;
-      const element = event.target as HTMLElement | null;
-      if (element?.matches("input, textarea, select, [contenteditable=true]")) return;
+      if (
+        event.defaultPrevented
+        || event.isComposing
+        || event.altKey
+        || event.ctrlKey
+        || event.metaKey
+      ) {
+        return;
+      }
+      const element = event.target;
+      if (
+        element instanceof Element
+        && element.matches("input, textarea, select, [contenteditable=true]")
+      ) return;
       if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
         event.preventDefault();
         setSession((current) => {
@@ -601,11 +1086,7 @@ export function PracticeView({
           };
         });
       } else if (event.key === "Escape") {
-        setSession((current) => {
-          if (!current || current.status !== "running") return current;
-          clockRef.current.pause();
-          return reducePracticeSession(current, { type: "PAUSE" }, sessionContext);
-        });
+        pauseSession();
       }
     };
     window.addEventListener("keydown", handler);
@@ -620,6 +1101,7 @@ export function PracticeView({
     setStyleMatchMode("exact-pitch");
     setAllowUnsupportedFallback(false);
     setAuditionEventIndex(undefined);
+    setTranspositionSession(undefined);
     const confirmed = item.block.practice?.confirmedLevel;
     const suggested = confirmed && confirmed < 3 ? (confirmed + 1) as DojoPracticeLevel : 1;
     setLevel(item.stale ? 1 : suggested);
@@ -627,17 +1109,425 @@ export function PracticeView({
     setSession(undefined);
   }
 
+  function changeLevel(nextLevel: PracticeSessionLevel): void {
+    if (nextLevel === level || running) return;
+    invalidateFlowClock();
+    clockRef.current.stop();
+    playbackController.stop();
+    setSession(undefined);
+    setAuditionEventIndex(undefined);
+    persistedRoundRef.current = 0;
+    setPendingFlowRestartKey(undefined);
+    setLevel(nextLevel);
+    if (
+      isTranspositionLevel(nextLevel)
+      && sourceKey
+    ) {
+      transpositionSourceIdentityRef.current = transpositionSourceIdentity;
+      const next = createTranspositionSession({
+        level: nextLevel,
+        sourceKeyPitchClass: sourceKey.tonicPitchClass,
+        sourceMode: sourceKey.mode,
+        seed: createSessionSeed(),
+        eligibility: evaluateTranspositionEligibility({
+          level: nextLevel,
+          mode,
+          bpm,
+          targetTempo: block ? targetTempoFor(block) : 0,
+          targetSource,
+          confirmedLevel: block?.practice?.confirmedLevel,
+          stale: Boolean(selected?.stale),
+        }),
+        progress: selected?.stale
+          ? undefined
+          : block?.practice?.transposition,
+        provisional: selected?.stale
+          ? undefined
+          : block?.practice?.provisional,
+        localDate,
+      });
+      latestTranspositionSessionRef.current = next;
+      setTranspositionSession(next);
+    } else {
+      setTranspositionSession(undefined);
+    }
+  }
+
+  function selectTargetKey(pitchClass: number): void {
+    if (
+      running
+      || flowRestartPending
+      || flowClockStarting
+      || latestTranspositionSessionRef.current?.inConfirmationChallenge
+    ) return;
+    invalidateFlowClock();
+    clockRef.current.stop();
+    playbackController.stop();
+    setSession(undefined);
+    setAuditionEventIndex(undefined);
+    setPendingFlowRestartKey(undefined);
+    setTranspositionSession((current) => current
+      ? selectTranspositionKey(current, pitchClass)
+      : current);
+  }
+
+  function skipCurrentTranspositionKey(): void {
+    const currentTransposition = latestTranspositionSessionRef.current;
+    if (
+      !currentTransposition
+      || !session
+      || session.mode !== "flow"
+      || session.lastRoundWasClean !== false
+      || currentTransposition.inConfirmationChallenge
+    ) {
+      return;
+    }
+    invalidateFlowClock();
+    clockRef.current.stop();
+    const nextTransposition = skipTranspositionKey(currentTransposition);
+    latestTranspositionSessionRef.current = nextTransposition;
+    setTranspositionSession(nextTransposition);
+    setAuditionEventIndex(undefined);
+
+    const reset = createPracticeSessionState({
+      blockId: session.blockId,
+      progressionFingerprint: session.progressionFingerprint,
+      level: session.level,
+      mode: session.mode,
+      leniency: session.leniency,
+      bpm: session.bpm,
+      targetTempo: session.targetTempo,
+      eventCount: practiceEvents.length,
+    });
+    const runningSession = reducePracticeSession(
+      reset,
+      { type: "START_SESSION" },
+      sessionContext,
+    );
+    const pausedSession = pauseForFlowRestart(runningSession, sessionContext);
+    latestSessionRef.current = pausedSession;
+    setSession(pausedSession);
+    setPendingFlowRestartKey(nextTransposition.currentTargetKeyPitchClass);
+  }
+
+  function switchStepToFlow(): void {
+    invalidateFlowClock();
+    clockRef.current.stop();
+    playbackController.stop();
+    setMode("flow");
+    setSession(undefined);
+    setAuditionEventIndex(undefined);
+  }
+
+  function setFlowClockReadyStatus(next: boolean): void {
+    flowClockReadyRef.current = next;
+    setFlowClockReady(next);
+  }
+
+  function invalidateFlowClock(): void {
+    flowClockGenerationRef.current += 1;
+    flowClockPausedGenerationRef.current = undefined;
+    setFlowClockReadyStatus(false);
+  }
+
+  function cancelPendingFlowClock(): boolean {
+    if (flowClockPendingGenerationRef.current === undefined) return false;
+    invalidateFlowClock();
+    flowClockPendingGenerationRef.current = undefined;
+    setFlowClockStarting(false);
+    return true;
+  }
+
+  function isActiveFlowClockGeneration(generation: number): boolean {
+    return flowClockGenerationRef.current === generation
+      && flowClockReadyRef.current
+      && latestSessionRef.current?.status === "running"
+      && latestSessionRef.current.mode === "flow";
+  }
+
+  async function startFlowClock(
+    events: readonly ChordTimelineItem[],
+    context: PracticeSessionContext,
+    expectedStatus: PracticeSessionState["status"],
+  ): Promise<boolean> {
+    const generation = flowClockGenerationRef.current + 1;
+    flowClockGenerationRef.current = generation;
+    flowClockPendingGenerationRef.current = generation;
+    flowClockPausedGenerationRef.current = undefined;
+    setFlowClockReadyStatus(false);
+    setFlowClockStarting(true);
+    const expectedTargetKeyPitchClass = latestTranspositionSessionRef.current
+      ?.currentTargetKeyPitchClass;
+    try {
+      await clockRef.current.start({
+        events,
+        bpm,
+        beatsPerBar: 4,
+        callbacks: {
+          onTargetOpen: (eventIndex) => {
+            if (!isActiveFlowClockGeneration(generation)) return;
+            setSession((current) => {
+              if (!current) return current;
+              const next = reducePracticeSession(
+                current,
+                { type: "FLOW_TARGET_OPEN", eventIndex },
+                context,
+              );
+              latestSessionRef.current = next;
+              return next;
+            });
+          },
+          onTargetClose: (eventIndex) => {
+            if (!isActiveFlowClockGeneration(generation)) return;
+            setSession((current) => {
+              if (!current) return current;
+              const next = reducePracticeSession(
+                current,
+                { type: "FLOW_TARGET_CLOSE", eventIndex },
+                context,
+              );
+              latestSessionRef.current = next;
+              return next;
+            });
+          },
+          onRoundCompleted: () => completeFlowRound(context, generation),
+          onBeat: (nextBeat) => {
+            if (isActiveFlowClockGeneration(generation)) {
+              setBeat(nextBeat);
+            }
+          },
+        },
+      });
+    } catch {
+      if (flowClockGenerationRef.current !== generation) return false;
+      invalidateFlowClock();
+      clockRef.current.stop();
+      setSession((current) => {
+        if (!current || current.mode !== "flow" || current.status !== "running") {
+          return current;
+        }
+        const pausedSession = reducePracticeSession(
+          current,
+          { type: "PAUSE" },
+          context,
+        );
+        latestSessionRef.current = pausedSession;
+        return pausedSession;
+      });
+      setToast(text.flowClockStartFailed);
+      return false;
+    } finally {
+      if (flowClockPendingGenerationRef.current === generation) {
+        flowClockPendingGenerationRef.current = undefined;
+        setFlowClockStarting(false);
+      }
+    }
+    const current = latestSessionRef.current;
+    if (flowClockGenerationRef.current !== generation) return false;
+    if (
+      current?.status !== expectedStatus
+      || current.mode !== "flow"
+      || (
+        isTranspositionLevel(current.level)
+        && latestTranspositionSessionRef.current?.currentTargetKeyPitchClass
+          !== expectedTargetKeyPitchClass
+      )
+    ) {
+      invalidateFlowClock();
+      clockRef.current.stop();
+      return false;
+    }
+    setFlowClockReadyStatus(true);
+    return true;
+  }
+
+  function pauseForFlowRestart(
+    current: PracticeSessionState,
+    context: PracticeSessionContext,
+  ): PracticeSessionState {
+    const pausedSession = reducePracticeSession(
+      current,
+      { type: "PAUSE" },
+      context,
+    );
+    return {
+      ...pausedSession,
+      requiredAttackRevision: Math.max(
+        pausedSession.requiredAttackRevision,
+        nextRequiredAttackRevision(),
+      ),
+    };
+  }
+
+  function nextRequiredAttackRevision(): number {
+    return practiceInputFromLiveState(
+      defaultLiveMidiStore.getState().notes,
+      performance.now(),
+    ).attackRevision + 1;
+  }
+
+  function resetPausedFlowForNewStart(
+    context: PracticeSessionContext,
+  ): boolean {
+    const current = latestSessionRef.current;
+    if (!current || current.status !== "paused" || current.mode !== "flow") {
+      return false;
+    }
+    const reset = reducePracticeSession(
+      current,
+      {
+        type: "RESET_FLOW_FOR_RESTART",
+        requiredAttackRevision: nextRequiredAttackRevision(),
+      },
+      context,
+    );
+    latestSessionRef.current = reset;
+    setSession(reset);
+    return true;
+  }
+
+  function resumePausedSession(
+    context: PracticeSessionContext,
+    requireFreshAttack: boolean,
+  ): boolean {
+    const current = latestSessionRef.current;
+    if (!current || current.status !== "paused") return false;
+    const guarded = requireFreshAttack
+      ? {
+          ...current,
+          requiredAttackRevision: Math.max(
+            current.requiredAttackRevision,
+            nextRequiredAttackRevision(),
+          ),
+        }
+      : current;
+    const resumed = reducePracticeSession(
+      guarded,
+      { type: "RESUME" },
+      context,
+    );
+    latestSessionRef.current = resumed;
+    setSession(resumed);
+    return true;
+  }
+
+  function completeFlowRound(
+    context: PracticeSessionContext,
+    generation: number,
+  ): void {
+    if (!isActiveFlowClockGeneration(generation)) return;
+    const current = latestSessionRef.current;
+    if (!current) return;
+    const completed = reducePracticeSession(
+      current,
+      { type: "ROUND_COMPLETED" },
+      context,
+    );
+    latestSessionRef.current = completed;
+    setSession(completed);
+    if (!isTranspositionLevel(completed.level)) return;
+
+    const currentTransposition = latestTranspositionSessionRef.current;
+    if (!currentTransposition) return;
+    const nextTransposition = completeTranspositionRound(
+      currentTransposition,
+      {
+        mode: "flow",
+        clean: Boolean(completed.lastRoundWasClean),
+        meetsTargetTempo: completed.bpm >= completed.targetTempo,
+      },
+    );
+    persistTranspositionRound(
+      currentTransposition,
+      nextTransposition,
+      completed,
+    );
+    if (
+      nextTransposition.currentTargetKeyPitchClass
+      === currentTransposition.currentTargetKeyPitchClass
+    ) {
+      return;
+    }
+
+    invalidateFlowClock();
+    clockRef.current.stop();
+    const pausedSession = pauseForFlowRestart(completed, context);
+    latestSessionRef.current = pausedSession;
+    setSession(pausedSession);
+    setAuditionEventIndex(undefined);
+    latestTranspositionSessionRef.current = nextTransposition;
+    setTranspositionSession(nextTransposition);
+    setPendingFlowRestartKey(
+      nextTransposition.currentTargetKeyPitchClass,
+    );
+  }
+
   async function startSession() {
-    if (!selected || !block || block.chords.length === 0) return;
+    if (!selected || !block || practiceEvents.length === 0) return;
+    if (
+      transpositionMode
+      && (!transpositionSession || !transpositionTargetPlan)
+    ) {
+      return;
+    }
     if (stylePlanBlocked) {
       setToast(text.styleStartBlocked);
       return;
     }
-    if (!styleMode && practiceProgressState(block, localDate) === "stale") {
+    if (
+      !styleMode
+      && practiceProgressState(
+        block,
+        localDate,
+        selected.effectiveKeySignature,
+      ) === "stale"
+    ) {
       if (!globalThis.confirm(text.staleConfirm)) return;
-      if (!updateProgressionBlock(selected.ideaId, block.id, { practice: resetPracticeProgress(block) })) {
+      const reset = resetPracticeProgress(
+        block,
+        selected.effectiveKeySignature,
+      );
+      if (!updateProgressionBlock(selected.ideaId, block.id, { practice: reset })) {
         setToast(text.saveFailed);
         return;
+      }
+      const resetBlock = { ...block, practice: reset };
+      const resetSelected = {
+        ...selected,
+        block: resetBlock,
+        stale: false,
+      };
+      latestBlockRef.current = resetBlock;
+      latestSelectedRef.current = resetSelected;
+      latestPracticeProgressRef.current = reset;
+      if (transpositionMode && sourceKey && isTranspositionLevel(level)) {
+        const resetEligibility = evaluateTranspositionEligibility({
+          level,
+          mode,
+          bpm,
+          targetTempo: targetTempoFor(block),
+          targetSource,
+          confirmedLevel: reset.confirmedLevel,
+          stale: false,
+        });
+        const rebuilt = createTranspositionSession({
+          level,
+          sourceKeyPitchClass: sourceKey.tonicPitchClass,
+          sourceMode: sourceKey.mode,
+          seed: createSessionSeed(),
+          eligibility: resetEligibility,
+          progress: reset.transposition,
+          provisional: reset.provisional,
+          localDate,
+        });
+        const resetSession = transpositionSession
+          ? selectTranspositionKey(
+              rebuilt,
+              transpositionSession.currentTargetKeyPitchClass,
+            )
+          : rebuilt;
+        latestTranspositionSessionRef.current = resetSession;
+        setTranspositionSession(resetSession);
       }
       setToast(text.staleReset);
     }
@@ -649,61 +1539,106 @@ export function PracticeView({
     setAuditionEventIndex(undefined);
     const next = createPracticeSessionState({
       blockId: block.id,
-      progressionFingerprint: progressionFingerprint(block),
+      progressionFingerprint: progressionFingerprint(
+        block,
+        selected.effectiveKeySignature,
+      ),
       level,
       mode,
       leniency,
       bpm,
       targetTempo: targetTempoFor(block),
-      eventCount: block.chords.length,
+      eventCount: practiceEvents.length,
     });
     persistedRoundRef.current = 0;
-    setSession(reducePracticeSession(next, { type: "START_SESSION" }, sessionContext));
+    const runningSession = reducePracticeSession(
+      next,
+      { type: "START_SESSION" },
+      sessionContext,
+    );
+    latestSessionRef.current = runningSession;
+    setSession(runningSession);
     if (mode === "flow") {
-      await clockRef.current.start({
-        events: block.chords,
-        bpm,
-        beatsPerBar: 4,
-        callbacks: {
-          onTargetOpen: (eventIndex) => setSession((current) => current
-            ? reducePracticeSession(current, { type: "FLOW_TARGET_OPEN", eventIndex }, sessionContext)
-            : current),
-          onTargetClose: (eventIndex) => setSession((current) => current
-            ? reducePracticeSession(current, { type: "FLOW_TARGET_CLOSE", eventIndex }, sessionContext)
-            : current),
-          onRoundCompleted: () => setSession((current) => current
-            ? reducePracticeSession(current, { type: "ROUND_COMPLETED" }, sessionContext)
-            : current),
-          onBeat: setBeat,
-        },
-      });
+      await startFlowClock(practiceEvents, sessionContext, "running");
     }
   }
 
   function pauseSession() {
+    const current = latestSessionRef.current;
+    const normalFlowPause = current?.status === "running"
+      && current.mode === "flow"
+      && flowClockReadyRef.current;
+    if (normalFlowPause) {
+      flowClockPausedGenerationRef.current = flowClockGenerationRef.current;
+      setFlowClockReadyStatus(false);
+    } else if (!cancelPendingFlowClock()) {
+      setFlowClockReadyStatus(false);
+    }
     clockRef.current.pause();
-    setSession((current) => current
-      ? reducePracticeSession(current, { type: "PAUSE" }, sessionContext)
-      : current);
+    setSession((current) => {
+      if (!current) return current;
+      const pausedSession = reducePracticeSession(
+        current,
+        { type: "PAUSE" },
+        sessionContext,
+      );
+      latestSessionRef.current = pausedSession;
+      return pausedSession;
+    });
   }
 
-  function resumeSession() {
-    clockRef.current.resume();
-    setSession((current) => current
-      ? reducePracticeSession(current, { type: "RESUME" }, sessionContext)
-      : current);
+  async function resumeSession() {
+    if (flowRestartPending || flowClockStarting) return;
+    const current = latestSessionRef.current;
+    if (!current || current.status !== "paused") return;
+    if (current.mode !== "flow") {
+      resumePausedSession(sessionContext, true);
+      return;
+    }
+    if (
+      flowClockPausedGenerationRef.current === flowClockGenerationRef.current
+    ) {
+      if (!resumePausedSession(sessionContext, true)) return;
+      flowClockPausedGenerationRef.current = undefined;
+      setFlowClockReadyStatus(true);
+      clockRef.current.resume();
+      return;
+    }
+    if (!resetPausedFlowForNewStart(sessionContext)) return;
+    const started = await startFlowClock(
+      practiceEvents,
+      sessionContext,
+      "paused",
+    );
+    if (!started) return;
+    resumePausedSession(sessionContext, true);
   }
 
   function endSession(save = true) {
+    if (!cancelPendingFlowClock()) invalidateFlowClock();
     clockRef.current.stop();
+    setPendingFlowRestartKey(undefined);
     if (save && block && session) persistProgress(block, session);
-    setSession((current) => current
-      ? reducePracticeSession(current, { type: "END_SESSION" }, sessionContext)
-      : current);
+    setSession((current) => {
+      if (!current) return current;
+      const completed = reducePracticeSession(
+        current,
+        { type: "END_SESSION" },
+        sessionContext,
+      );
+      latestSessionRef.current = completed;
+      return completed;
+    });
   }
 
   function persistProgress(targetBlock: SavedProgressionBlock, current: PracticeSessionState) {
-    if (!selected || styleModeRef.current) return;
+    if (
+      !selected
+      || styleModeRef.current
+      || !isDojoPracticeLevel(current.level)
+    ) {
+      return;
+    }
     const practice = recordPracticeRound(targetBlock, {
       level: current.level,
       bpm: current.bpm,
@@ -711,7 +1646,7 @@ export function PracticeView({
       consecutiveCleanFlowRounds: current.consecutiveCleanFlowRounds,
       nowIso: new Date().toISOString(),
       localDate: localDateString(new Date()),
-    });
+    }, selected.effectiveKeySignature);
     if (updateProgressionBlock(selected.ideaId, targetBlock.id, { practice })) {
       setToast(text.saved);
     } else {
@@ -719,11 +1654,67 @@ export function PracticeView({
     }
   }
 
+  function persistTranspositionRound(
+    currentTransposition: TranspositionSessionState,
+    nextTransposition: TranspositionSessionState,
+    completed: PracticeSessionState,
+  ): void {
+    const currentBlock = latestBlockRef.current;
+    const currentSelected = latestSelectedRef.current;
+    if (!currentBlock || !currentSelected || !isTranspositionLevel(completed.level)) {
+      return;
+    }
+    const confirmationCompleted = currentTransposition.inConfirmationChallenge
+      && !nextTransposition.inConfirmationChallenge;
+    const storedProgress = latestPracticeProgressRef.current
+      ?? currentBlock.practice;
+    const currentProgress = practiceProgressForCurrentFingerprint(
+      currentBlock,
+      currentSelected.effectiveKeySignature,
+      storedProgress,
+    );
+    const result = recordTranspositionPracticeRound(
+      currentProgress,
+      {
+        progressionFingerprint: progressionFingerprint(
+          currentBlock,
+          currentSelected.effectiveKeySignature,
+        ),
+        level: completed.level,
+        sourceKeyPitchClass: currentTransposition.sourceKeyPitchClass,
+        targetKeyPitchClass: currentTransposition.currentTargetKeyPitchClass,
+        mode: completed.mode,
+        clean: Boolean(completed.lastRoundWasClean),
+        bpm: completed.bpm,
+        targetTempo: completed.targetTempo,
+        targetSource,
+        confirmedLevel: currentProgress?.confirmedLevel,
+        stale: Boolean(storedProgress) && !currentProgress,
+        nowIso: new Date().toISOString(),
+        localDate: localDateString(new Date()),
+        seed: currentTransposition.sessionSeed,
+        inConfirmationChallenge: currentTransposition.inConfirmationChallenge,
+        confirmationCompleted,
+      },
+    );
+    if (!result.changed) return;
+    if (updateProgressionBlock(currentSelected.ideaId, currentBlock.id, {
+      practice: result.progress,
+    })) {
+      latestPracticeProgressRef.current = result.progress;
+      setToast(text.saved);
+      return;
+    }
+    setToast(text.saveFailed);
+  }
+
   function prepareVoicingChange(): boolean {
     if (running && !globalThis.confirm(text.styleChangeConfirm)) return false;
+    invalidateFlowClock();
     clockRef.current.stop();
     playbackController.stop();
     persistedRoundRef.current = 0;
+    setPendingFlowRestartKey(undefined);
     setBeat(1);
     setSession(undefined);
     return true;
@@ -758,9 +1749,9 @@ export function PracticeView({
 
   async function toggleVoicingPreview(): Promise<void> {
     if (!block || previewDisabled) return;
-    const timeline = block.chords.map((event, index) => ({
+    const timeline = practiceEvents.map((event, index) => ({
       ...event,
-      eventId: practiceEventId(event, index),
+      eventId: event.eventId ?? practiceEventId(event, index),
     }));
     const explicitMidiNotesByEventId = Object.fromEntries(
       timeline.flatMap((event, index) => {
@@ -792,7 +1783,7 @@ export function PracticeView({
 
   async function previewChordAt(index: number): Promise<void> {
     if (!block || running) return;
-    const event = block.chords[index];
+    const event = practiceEvents[index];
     const eventGuide = activeGuides[index];
     if (!event || !eventGuide) return;
     setAuditionEventIndex(index);
@@ -800,7 +1791,9 @@ export function PracticeView({
       await playbackController.toggle(
         {
           kind: "practice",
-          id: `${previewSourceId}:event:${practiceEventId(event, index)}`,
+          id: `${previewSourceId}:event:${
+            event.eventId ?? practiceEventId(event, index)
+          }`,
         },
         {
           type: "chord",
@@ -831,6 +1824,101 @@ export function PracticeView({
     if (device) await refreshed.selectDevice(device.backendId);
   }
 
+  function beginMixSelection(): void {
+    if (transpositionMode || mixActive) return;
+    endSession(false);
+    playbackController.stop();
+    mixModeRef.current = true;
+    setMixSelecting(true);
+    setMixReferences([]);
+    setMixErrors([]);
+    setMixInitialState(undefined);
+    if (!isDojoPracticeLevel(level)) setLevel(2);
+  }
+
+  function toggleMixReference(item: PracticeRecommendation): void {
+    const reference = { ideaId: item.ideaId, blockId: item.block.id };
+    const key = progressionReferenceKey(reference);
+    setMixReferences((current) => {
+      if (current.some((candidate) => progressionReferenceKey(candidate) === key)) {
+        return current.filter((candidate) => progressionReferenceKey(candidate) !== key);
+      }
+      if (current.length >= 5) {
+        setToast(text.mixMaximum);
+        return current;
+      }
+      return [...current, reference];
+    });
+    setMixErrors([]);
+  }
+
+  function cancelMixSelection(): void {
+    clockRef.current.stop();
+    mixModeRef.current = false;
+    setMixSelecting(false);
+    setMixReferences([]);
+    setMixErrors([]);
+    setMixInitialState(undefined);
+  }
+
+  function startMixSession(): void {
+    if (mixReferences.length < 2 || mixReferences.length > 5) {
+      setMixErrors([{ code: "selection-count" }]);
+      return;
+    }
+    const mixLevel: DojoPracticeLevel = isDojoPracticeLevel(level) ? level : 2;
+    const config: MixSessionConfig = {
+      references: mixReferences,
+      level: mixLevel,
+      mode,
+      leniency,
+      targetSource,
+      styleMatchMode,
+      allowUnsupportedFallback,
+      cycles: mixCycles,
+      bpm,
+    };
+    const result = preflightMixSession({
+      config,
+      candidates: mixCandidates,
+      styleOptions: {
+        maxLeftHandSpanSemitones: voicingPreferences.maxLeftHandSpanSemitones,
+        maxRightHandSpanSemitones: voicingPreferences.maxRightHandSpanSemitones,
+        allowUnsupportedFallback,
+      },
+    });
+    if (!result.ok) {
+      setMixErrors(result.errors);
+      return;
+    }
+    const next = createMixSessionState(config, result.snapshots, createSessionSeed());
+    mixModeRef.current = true;
+    latestSessionRef.current = undefined;
+    setSession(undefined);
+    setMixSelecting(false);
+    setMixErrors([]);
+    setMixInitialState(next);
+  }
+
+  function reloadMixSession(config: MixSessionConfig): MixSessionState | undefined {
+    const result = preflightMixSession({
+      config,
+      candidates: mixCandidates,
+      styleOptions: {
+        ...mixStyleOptions,
+        allowUnsupportedFallback: config.allowUnsupportedFallback,
+      },
+    });
+    if (!result.ok) {
+      setMixErrors(result.errors);
+      return undefined;
+    }
+    setMixErrors([]);
+    return createMixSessionState(config, result.snapshots, createSessionSeed(), {
+      allowSingle: config.references.length === 1,
+    });
+  }
+
   return (
     <div className="py-5 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
       <div className="shrink-0 border-b border-[var(--lv-border)] pb-4">
@@ -847,7 +1935,44 @@ export function PracticeView({
             <div className="flex items-center gap-2">
               <Dumbbell aria-hidden="true" size={16} className="text-[var(--lv-accent)]" />
               <h3 className="text-sm font-semibold">{text.queue}</h3>
+              {!mixSelecting && !mixActive ? (
+                <button
+                  type="button"
+                  className="lv-button-ghost ml-auto px-2.5 py-1.5 text-xs"
+                  disabled={transpositionMode}
+                  title={transpositionMode ? text.mixUnavailable : undefined}
+                  onClick={beginMixSelection}
+                >
+                  {text.mixSelect}
+                </button>
+              ) : null}
             </div>
+            {mixSelecting ? (
+              <div className="mt-3 border-y border-[var(--lv-border)] py-2">
+                <p className="text-sm font-semibold" aria-live="polite">
+                  {text.mixSelected(mixReferences.length)}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="lv-button-ghost px-2 py-1 text-xs"
+                    onClick={() => {
+                      setMixReferences([]);
+                      setMixErrors([]);
+                    }}
+                  >
+                    {text.mixClear}
+                  </button>
+                  <button
+                    type="button"
+                    className="lv-button-ghost px-2 py-1 text-xs"
+                    onClick={cancelMixSelection}
+                  >
+                    {text.mixCancel}
+                  </button>
+                </div>
+              </div>
+            ) : null}
             <select
               className="lv-input mt-3 w-full text-sm"
               value={filter}
@@ -861,6 +1986,8 @@ export function PracticeView({
               <option value="l1">L1</option>
               <option value="l2">L2</option>
               <option value="l3">L3</option>
+              <option value="l4">L4</option>
+              <option value="l5">L5</option>
             </select>
           </div>
           <div
@@ -878,6 +2005,22 @@ export function PracticeView({
                 active={selected?.ideaId === item.ideaId && selected.block.id === item.block.id}
                 localDate={localDate}
                 language={language}
+                concealProgression={transpositionMode}
+                disabled={mixActive}
+                selectionMode={mixSelecting}
+                selectedForMix={mixSelectionKeys.has(progressionReferenceKey({
+                  ideaId: item.ideaId,
+                  blockId: item.block.id,
+                }))}
+                selectionDisabled={
+                  mixSelecting
+                  && mixReferences.length >= 5
+                  && !mixSelectionKeys.has(progressionReferenceKey({
+                    ideaId: item.ideaId,
+                    blockId: item.block.id,
+                  }))
+                }
+                onToggleMix={() => toggleMixReference(item)}
                 onClick={() => selectRecommendation(item)}
               />
             ))}
@@ -888,7 +2031,51 @@ export function PracticeView({
           className="min-w-0 bg-[var(--lv-bg)] p-4 sm:p-6 lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain"
           data-testid="practice-workspace-scroll"
         >
-          {!selected || !block ? (
+          {mixInitialState ? (
+            <MixPracticeWorkspace
+              initialState={mixInitialState}
+              language={language}
+              practiceClock={clockRef.current}
+              candidates={mixCandidates}
+              styleOptions={mixStyleOptions}
+              midiStatus={midiStatus}
+              midiDeviceName={selectedDevice?.name}
+              midiError={midiError}
+              createSeed={createSessionSeed}
+              reloadSession={reloadMixSession}
+              reconnectMidi={reconnectMidi}
+              openSettings={openSettings}
+              onError={setToast}
+              onExit={cancelMixSelection}
+            />
+          ) : mixSelecting ? (
+            <MixSetupPanel
+              text={text}
+              level={isDojoPracticeLevel(level) ? level : 2}
+              mode={mode}
+              leniency={leniency}
+              bpm={bpm}
+              cycles={mixCycles}
+              targetSource={targetSource}
+              styleMatchMode={styleMatchMode}
+              allowUnsupportedFallback={allowUnsupportedFallback}
+              selectedCount={mixReferences.length}
+              errors={mixErrors}
+              running={false}
+              onLevelChange={(value) => setLevel(value)}
+              onModeChange={setMode}
+              onLeniencyChange={setLeniency}
+              onBpmChange={setBpm}
+              onCyclesChange={setMixCycles}
+              onTargetSourceChange={(source) => {
+                setTargetSource(source);
+                setMixErrors([]);
+              }}
+              onStyleMatchModeChange={setStyleMatchMode}
+              onAllowUnsupportedFallbackChange={setAllowUnsupportedFallback}
+              onStart={startMixSession}
+            />
+          ) : !selected || !block ? (
             <div className="grid min-h-80 place-items-center text-sm text-[var(--lv-text-muted)]">
               {text.selectPrompt}
             </div>
@@ -897,9 +2084,16 @@ export function PracticeView({
               <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--lv-border)] pb-4">
                 <div className="min-w-0">
                   <p className="text-xs text-[var(--lv-text-muted)]">{selected.ideaTitle}</p>
-                  <h3 className="mt-1 truncate text-lg font-semibold">{block.summaryText}</h3>
+                  <h3 className="mt-1 truncate text-lg font-semibold">
+                    {transpositionMode ? text.transpositionPractice : block.summaryText}
+                  </h3>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    <PracticeBadge block={block} localDate={localDate} language={language} />
+                    <PracticeBadge
+                      block={block}
+                      localDate={localDate}
+                      language={language}
+                      effectiveKeySignature={selected.effectiveKeySignature}
+                    />
                     {block.pinned ? (
                       <span className="inline-flex items-center gap-1 border border-[var(--lv-border)] px-2 py-1 text-xs">
                         <Heart aria-hidden="true" size={16} /> {text.favorite}
@@ -918,20 +2112,59 @@ export function PracticeView({
               <div className="grid gap-4 border-b border-[var(--lv-border)] py-4 xl:grid-cols-[1fr_auto_auto]">
                 <div>
                   <p className="mb-2 text-xs font-semibold text-[var(--lv-text-muted)]">{text.level}</p>
-                  <div className="flex flex-wrap gap-1">
-                    {([1, 2, 3] as const).map((value) => (
+                  <div
+                    className="flex flex-wrap gap-1"
+                    role="radiogroup"
+                    aria-label={text.level}
+                  >
+                    {([1, 2, 3, 4, 5] as const).map((value) => {
+                      const unavailable = value >= 4 && !transpositionAvailable;
+                      return (
                       <button
                         key={value}
                         className={segmentClass(level === value)}
-                        disabled={running || (value === 3 && !l3Available)}
-                        title={value === 3 && !l3Available ? text.l3NeedsKey : undefined}
-                        onClick={() => setLevel(value)}
+                        role="radio"
+                        aria-checked={level === value}
+                        disabled={
+                          running
+                          || (value === 3 && !l3Available)
+                          || unavailable
+                        }
+                        title={
+                          value === 3 && !l3Available
+                            ? text.l3NeedsKey
+                            : unavailable
+                              ? text.transpositionNeedsKey
+                              : undefined
+                        }
+                        onClick={() => changeLevel(value)}
                       >
-                        {value === 1 ? text.l1 : value === 2 ? text.l2 : text.l3}
+                        {value === 1
+                          ? text.l1
+                          : value === 2
+                            ? text.l2
+                            : value === 3
+                              ? text.l3
+                              : value === 4
+                                ? text.l4
+                                : text.l5}
                       </button>
-                    ))}
+                      );
+                    })}
                   </div>
                   {!l3Available ? <p className="mt-2 text-xs text-amber-200">{text.l3NeedsKey}</p> : null}
+                  {!transpositionAvailable ? (
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-amber-200">
+                      <span>{text.transpositionNeedsKey}</span>
+                      <button
+                        type="button"
+                        className="underline underline-offset-2"
+                        onClick={() => openProgression(selected.ideaId, block.id)}
+                      >
+                        {text.transpositionOpenDetail}
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
                 {!styleMode ? (
                   <label className="text-xs font-semibold text-[var(--lv-text-muted)]">
@@ -949,13 +2182,27 @@ export function PracticeView({
                   </label>
                 ) : <span />}
                 <div>
-                  <p className="mb-2 text-xs font-semibold text-[var(--lv-text-muted)]">Mode</p>
-                  <div className="flex gap-1">
-                    <button className={segmentClass(mode === "step")} disabled={running} onClick={() => setMode("step")}>
+                  <p className="mb-2 text-xs font-semibold text-[var(--lv-text-muted)]">
+                    {text.modeLabel}
+                  </p>
+                  <div
+                    className="flex gap-1"
+                    role="radiogroup"
+                    aria-label={text.modeLabel}
+                  >
+                    <button
+                      className={segmentClass(mode === "step")}
+                      role="radio"
+                      aria-checked={mode === "step"}
+                      disabled={running}
+                      onClick={() => setMode("step")}
+                    >
                       {text.step}
                     </button>
                     <button
                       className={segmentClass(mode === "flow")}
+                      role="radio"
+                      aria-checked={mode === "flow"}
                       disabled={running || !flowAvailable}
                       title={!flowAvailable ? text.flowUnsupported : undefined}
                       onClick={() => setMode("flow")}
@@ -970,6 +2217,30 @@ export function PracticeView({
                 <p className="border-b border-[var(--lv-border)] py-3 text-sm text-amber-200">{text.flowUnsupported}</p>
               ) : null}
 
+              {transpositionMode && transpositionSession ? (
+                <TranspositionPracticeControls
+                  state={transpositionSession}
+                  language={language}
+                  manualSelectionDisabled={Boolean(
+                    running
+                    || flowRestartPending
+                    || flowClockStarting
+                    || transpositionSession.inConfirmationChallenge,
+                  )}
+                  targetTempo={targetTempoFor(block)}
+                  onSelectKey={selectTargetKey}
+                />
+              ) : null}
+
+              {transpositionMode && transpositionTargetResult && !transpositionTargetResult.ok ? (
+                <p
+                  className="border-b border-[var(--lv-border)] py-3 text-sm text-amber-200"
+                  data-testid="transposition-target-plan-error"
+                >
+                  {text.targetPlanRangeUnavailable}
+                </p>
+              ) : null}
+
               <VoicingPracticeControls
                 language={language}
                 targetSource={targetSource}
@@ -982,6 +2253,7 @@ export function PracticeView({
                 previewing={previewing}
                 previewDisabled={previewDisabled}
                 previewSound={previewSound}
+                concealChordLabels={transpositionMode}
                 onTargetSourceChange={changeTargetSource}
                 onPreferencesChange={changeVoicingPreferences}
                 onMatchModeChange={changeStyleMatchMode}
@@ -1021,25 +2293,30 @@ export function PracticeView({
 
               <div className="py-5">
                 <div className="grid gap-5 lg:grid-cols-[minmax(7rem,0.65fr)_minmax(18rem,2fr)_auto]">
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs font-semibold uppercase text-[var(--lv-accent)]">{text.current}</p>
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       <p
-                        className="text-3xl font-semibold"
+                        className="min-w-0 break-words text-3xl font-semibold"
                         data-testid="practice-current-chord"
+                        aria-live="polite"
                       >
-                        {practiceChordLabel(currentTarget, level, keySignature)}
+                        {practiceChordLabel(
+                          currentTarget,
+                          level,
+                          displayedKeySignature,
+                        )}
                       </p>
-                      {keySignature ? (
+                      {displayedKeySignature ? (
                         <span
                           className="border border-[var(--lv-border-strong)] px-2 py-1 text-xs font-semibold text-[var(--lv-text-muted)]"
                           data-testid="practice-current-key"
                         >
-                          {text.currentKey(keySignature)}
+                          {text.currentKey(displayedKeySignature)}
                         </span>
                       ) : null}
                     </div>
-                    {styleMode && guide ? (
+                    {styleMode && guide && !transpositionMode ? (
                       <span
                         className="mt-2 inline-flex border border-teal-700 px-2 py-1 text-xs font-semibold text-teal-200"
                         title={guide.addedColorIntervals.length > 0
@@ -1050,17 +2327,26 @@ export function PracticeView({
                         {styleGuideLabel(guide, text)}
                       </span>
                     ) : null}
-                    <div className="mt-3 flex items-baseline gap-2 text-sm text-[var(--lv-text-muted)]">
+                    <div className="mt-3 flex min-w-0 items-baseline gap-2 text-sm text-[var(--lv-text-muted)]">
                       <span className="text-xs font-semibold uppercase">{text.next}</span>
-                      <span>{practiceChordLabel(nextTarget, level, keySignature)}</span>
+                      <span
+                        className="min-w-0 break-words"
+                        data-testid="practice-next-chord"
+                      >
+                        {practiceChordLabel(
+                          nextTarget,
+                          level,
+                          displayedKeySignature,
+                        )}
+                      </span>
                     </div>
                   </div>
                   <ProgressionOverview
-                    events={block.chords}
+                    events={practiceEvents}
                     eventResults={session?.eventResults ?? []}
                     currentIndex={activeEventIndex}
                     level={level}
-                    keySignature={keySignature}
+                    keySignature={displayedKeySignature}
                     text={text}
                     previewDisabled={Boolean(running)}
                     previewableEvents={activeGuides.map(Boolean)}
@@ -1069,7 +2355,11 @@ export function PracticeView({
                   <div className="flex h-fit flex-wrap items-center gap-x-3 gap-y-1 text-sm lg:border-l lg:border-[var(--lv-border)] lg:pl-4">
                     <span className="font-semibold">{text.round(session?.roundNumber ?? 1)}</span>
                     {mode === "flow" ? <span>{text.bpm} {bpm} · Beat {beat}</span> : null}
-                    <span className="text-[var(--lv-text-muted)]">{text.clean} {session?.consecutiveCleanFlowRounds ?? 0}/2</span>
+                    {!transpositionMode ? (
+                      <span className="text-[var(--lv-text-muted)]">
+                        {text.clean} {session?.consecutiveCleanFlowRounds ?? 0}/2
+                      </span>
+                    ) : null}
                   </div>
                 </div>
 
@@ -1104,7 +2394,7 @@ export function PracticeView({
                       <p className="mt-1.5 text-sm">{formatGuideNotes(guide.midiNotes)}</p>
                     )}
                   </div>
-                ) : styleMode && guide ? (
+                ) : styleMode && guide && !transpositionMode ? (
                   <p className="mt-4 text-sm text-[var(--lv-text-muted)]">
                     {text.shape(guide.midiNotes.length)}
                   </p>
@@ -1113,14 +2403,23 @@ export function PracticeView({
                 <div className="mt-4">
                   <PracticeKeyboard
                     range={keyboardRange}
-                    guideNotes={guide?.midiNotes ?? []}
-                    leftHandGuideNotes={styleMode ? guide?.leftHandNotes ?? [] : []}
-                    rightHandGuideNotes={styleMode ? guide?.rightHandNotes ?? [] : []}
+                    guideNotes={transpositionMode ? [] : guide?.midiNotes ?? []}
+                    leftHandGuideNotes={
+                      !transpositionMode && styleMode
+                        ? guide?.leftHandNotes ?? []
+                        : []
+                    }
+                    rightHandGuideNotes={
+                      !transpositionMode && styleMode
+                        ? guide?.rightHandNotes ?? []
+                        : []
+                    }
                     allowedPitchClasses={currentRequirement?.allowedPitchClasses ?? []}
                     requiredPitchClasses={currentRequirement?.requiredPitchClasses ?? []}
                     level={level}
                     language={language}
                     matchState={session?.lastMatch?.state}
+                    concealNoteNames={transpositionMode}
                   />
                 </div>
 
@@ -1138,7 +2437,7 @@ export function PracticeView({
                         min={40}
                         max={300}
                         value={bpm}
-                        disabled={running}
+                        disabled={Boolean(running || paused)}
                         onChange={(event) => setBpm(Math.max(40, Math.min(300, Number(event.target.value))))}
                       />
                     </label>
@@ -1154,8 +2453,10 @@ export function PracticeView({
                         disabled={
                           !active
                           || midiStatus !== "connected"
-                          || block.chords.length === 0
+                          || practiceEvents.length === 0
                           || stylePlanBlocked
+                          || (transpositionMode && !transpositionTargetPlan)
+                          || flowClockStarting
                         }
                         onClick={() => void startSession()}
                       >
@@ -1168,7 +2469,16 @@ export function PracticeView({
                       </button>
                     ) : null}
                     {paused ? (
-                      <button className="lv-button-primary inline-flex h-10 items-center gap-2 px-4 text-sm" onClick={resumeSession}>
+                      <button
+                        className="lv-button-primary inline-flex h-10 items-center gap-2 px-4 text-sm"
+                        disabled={
+                          flowRestartPending
+                          || flowClockStarting
+                          || !active
+                          || midiStatus !== "connected"
+                        }
+                        onClick={() => void resumeSession()}
+                      >
                         <Play aria-hidden="true" size={16} /> {text.resume}
                       </button>
                     ) : null}
@@ -1182,8 +2492,38 @@ export function PracticeView({
                 <p className="mt-4 text-xs text-[var(--lv-text-muted)]">{text.chordAsBlock}</p>
                 <p className="mt-1 text-xs text-[var(--lv-text-muted)]">{text.noSound}</p>
                 {session?.lastRoundWasClean && mode === "step" ? (
-                  <p className="mt-3 text-sm text-teal-200">{text.flowSuggestion}</p>
+                  transpositionMode ? (
+                    <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-teal-200">
+                      <span>{text.stepToFlow}</span>
+                      <button
+                        type="button"
+                        className="lv-button-ghost px-3 py-2 text-sm"
+                        data-testid="transposition-step-to-flow"
+                        onClick={switchStepToFlow}
+                      >
+                        {text.startFlow}
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="mt-3 text-sm text-teal-200">{text.flowSuggestion}</p>
+                  )
                 ) : null}
+                {transpositionMode
+                  && mode === "flow"
+                  && session?.lastRoundWasClean === false
+                  && !transpositionSession?.inConfirmationChallenge ? (
+                    <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-amber-200">
+                      <span>{text.dirtyRetry}</span>
+                      <button
+                        type="button"
+                        className="lv-button-ghost px-3 py-2 text-sm"
+                        data-testid="transposition-skip-key"
+                        onClick={skipCurrentTranspositionKey}
+                      >
+                        {text.skipKey}
+                      </button>
+                    </div>
+                  ) : null}
               </div>
             </>
           )}
@@ -1198,20 +2538,62 @@ function QueueItem({
   active,
   localDate,
   language,
+  concealProgression,
+  disabled = false,
+  selectionMode = false,
+  selectedForMix = false,
+  selectionDisabled = false,
+  onToggleMix,
   onClick,
 }: {
   item: PracticeRecommendation;
   active: boolean;
   localDate: string;
   language: AppLanguage;
+  concealProgression: boolean;
+  disabled?: boolean;
+  selectionMode?: boolean;
+  selectedForMix?: boolean;
+  selectionDisabled?: boolean;
+  onToggleMix?: () => void;
   onClick: () => void;
 }) {
-  const state = practiceProgressState(item.block, localDate);
+  const state = practiceProgressState(
+    item.block,
+    localDate,
+    item.effectiveKeySignature,
+  );
+  if (selectionMode) {
+    return (
+      <label
+        className={`flex w-full cursor-pointer items-start gap-3 border-b border-[var(--lv-border)] p-3 text-left ${
+          selectedForMix ? "bg-[var(--lv-surface-raised)]" : "hover:bg-[var(--lv-surface-raised)]"
+        } ${selectionDisabled ? "cursor-not-allowed opacity-50" : ""}`}
+      >
+        <input
+          type="checkbox"
+          className="mt-1 h-4 w-4 accent-teal-300"
+          checked={selectedForMix}
+          disabled={selectionDisabled}
+          aria-label={mixProgressionTitle(item)}
+          onChange={onToggleMix}
+        />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-sm font-semibold">{item.ideaTitle}</span>
+          <span className="mt-1 block truncate text-xs text-[var(--lv-text-muted)]">
+            {item.block.chords.slice(0, 4).map((event) => event.chord.label).join(" · ")
+              || copy[language].miniSummaryEmpty}
+          </span>
+        </span>
+      </label>
+    );
+  }
   return (
     <button
       className={`w-full border-b border-[var(--lv-border)] p-3 text-left ${
         active ? "bg-[var(--lv-surface-raised)]" : "hover:bg-[var(--lv-surface-raised)]"
-      }`}
+      } disabled:cursor-not-allowed disabled:opacity-50`}
+      disabled={disabled}
       onClick={onClick}
     >
       <span className="flex items-center justify-between gap-2">
@@ -1219,7 +2601,10 @@ function QueueItem({
         {item.favorite ? <Heart aria-hidden="true" size={16} className="shrink-0 text-amber-200" /> : null}
       </span>
       <span className="mt-1 block truncate text-xs text-[var(--lv-text-muted)]">
-        {item.block.chords.slice(0, 4).map((event) => event.chord.label).join(" · ") || copy[language].miniSummaryEmpty}
+        {concealProgression
+          ? copy[language].transpositionPractice
+          : item.block.chords.slice(0, 4).map((event) => event.chord.label).join(" · ")
+            || copy[language].miniSummaryEmpty}
       </span>
       <span className={`mt-2 inline-flex border px-1.5 py-0.5 text-[10px] ${
         state === "confirmation-due"
@@ -1228,7 +2613,11 @@ function QueueItem({
             ? "border-amber-500 text-amber-200"
             : "border-[var(--lv-border)] text-[var(--lv-text-muted)]"
       }`}>
-        {stateLabel(item.block, state, language)}
+        {stateLabel(
+          item.block,
+          state,
+          language,
+        )}
       </span>
     </button>
   );
@@ -1238,12 +2627,14 @@ function PracticeBadge({
   block,
   localDate,
   language,
+  effectiveKeySignature,
 }: {
   block: SavedProgressionBlock;
   localDate: string;
   language: AppLanguage;
+  effectiveKeySignature?: string;
 }) {
-  const state = practiceProgressState(block, localDate);
+  const state = practiceProgressState(block, localDate, effectiveKeySignature);
   const outlined = state === "provisional" || state === "confirmation-due";
   return (
     <span className={`inline-flex items-center gap-1 border px-2 py-1 text-xs ${
@@ -1276,7 +2667,7 @@ function ProgressionOverview({
   events: readonly ChordTimelineItem[];
   eventResults: ReadonlyArray<"pending" | "match" | "miss">;
   currentIndex: number;
-  level: DojoPracticeLevel;
+  level: PracticeSessionLevel;
   keySignature?: string;
   text: typeof copy.ja | typeof copy.en;
   previewDisabled: boolean;
@@ -1381,13 +2772,37 @@ function progressionStepClass(
 
 function practiceChordLabel(
   event: ChordTimelineItem | undefined,
-  level: DojoPracticeLevel,
+  level: PracticeSessionLevel,
   keySignature?: string,
 ): string {
   if (!event) return "-";
+  if (isTranspositionLevel(level)) {
+    return "romanNumeral" in event && typeof event.romanNumeral === "string"
+      ? event.romanNumeral
+      : degreeOf(event.chord, keySignature)?.label ?? "-";
+  }
+
   return level === 3
     ? degreeOf(event.chord, keySignature)?.label ?? "-"
     : event.chord.label;
+}
+
+function isTranspositionLevel(
+  level: PracticeSessionLevel,
+): level is TranspositionPracticeLevel {
+  return level === 4 || level === 5;
+}
+
+function isDojoPracticeLevel(
+  level: PracticeSessionLevel,
+): level is DojoPracticeLevel {
+  return level === 1 || level === 2 || level === 3;
+}
+
+function createSessionSeed(): number {
+  const values = new Uint32Array(1);
+  globalThis.crypto.getRandomValues(values);
+  return values[0] ?? 0;
 }
 
 function practiceEventId(event: ChordTimelineItem, index: number): string {
@@ -1396,6 +2811,11 @@ function practiceEventId(event: ChordTimelineItem, index: number): string {
 
 function practiceTargetSourceKey(source: PracticeTargetSource): string {
   return source.type === "style" ? source.styleId : source.type;
+}
+
+function mixProgressionTitle(item: PracticeRecommendation): string {
+  const summary = item.block.summaryText.trim();
+  return summary ? `${item.ideaTitle} · ${summary}` : item.ideaTitle;
 }
 
 function uniquePitchClasses(notes: readonly number[]): number[] {
@@ -1449,17 +2869,262 @@ function MatchState({
   );
 }
 
+function MixSetupPanel({
+  text,
+  level,
+  mode,
+  leniency,
+  bpm,
+  cycles,
+  targetSource,
+  styleMatchMode,
+  allowUnsupportedFallback,
+  selectedCount,
+  errors,
+  running,
+  onLevelChange,
+  onModeChange,
+  onLeniencyChange,
+  onBpmChange,
+  onCyclesChange,
+  onTargetSourceChange,
+  onStyleMatchModeChange,
+  onAllowUnsupportedFallbackChange,
+  onStart,
+}: {
+  text: typeof copy.ja | typeof copy.en;
+  level: DojoPracticeLevel;
+  mode: PracticeMode;
+  leniency: PracticeLeniency;
+  bpm: number;
+  cycles: 1 | 2 | 3;
+  targetSource: PracticeTargetSource;
+  styleMatchMode: StyleVoicingMatchMode;
+  allowUnsupportedFallback: boolean;
+  selectedCount: number;
+  errors: readonly MixPreflightError[];
+  running: boolean;
+  onLevelChange(value: DojoPracticeLevel): void;
+  onModeChange(value: PracticeMode): void;
+  onLeniencyChange(value: PracticeLeniency): void;
+  onBpmChange(value: number): void;
+  onCyclesChange(value: 1 | 2 | 3): void;
+  onTargetSourceChange(value: PracticeTargetSource): void;
+  onStyleMatchModeChange(value: StyleVoicingMatchMode): void;
+  onAllowUnsupportedFallbackChange(value: boolean): void;
+  onStart(): void;
+}) {
+  const targetValue = practiceTargetSourceKey(targetSource);
+  return (
+    <section data-testid="mix-setup" aria-labelledby="mix-setup-title">
+      <div className="border-b border-[var(--lv-border)] pb-4">
+        <p className="text-xs font-semibold uppercase text-[var(--lv-accent)]">MIX SESSION</p>
+        <h3 id="mix-setup-title" className="mt-1 text-xl font-semibold">{text.mixSetup}</h3>
+        <p className="mt-2 text-sm text-[var(--lv-text-muted)]" aria-live="polite">
+          {text.mixSelected(selectedCount)}
+        </p>
+      </div>
+
+      <div className="grid gap-5 border-b border-[var(--lv-border)] py-5 md:grid-cols-2 xl:grid-cols-3">
+        <fieldset>
+          <legend className="text-xs font-semibold text-[var(--lv-text-muted)]">{text.level}</legend>
+          <div className="mt-2 flex flex-wrap gap-1">
+            {([1, 2, 3] as const).map((value) => (
+              <button
+                key={value}
+                type="button"
+                className={segmentClass(level === value)}
+                aria-pressed={level === value}
+                disabled={running}
+                onClick={() => onLevelChange(value)}
+              >
+                {value === 1 ? text.l1 : value === 2 ? text.l2 : text.l3}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend className="text-xs font-semibold text-[var(--lv-text-muted)]">{text.modeLabel}</legend>
+          <div className="mt-2 flex gap-1">
+            {(["step", "flow"] as const).map((value) => (
+              <button
+                key={value}
+                type="button"
+                className={segmentClass(mode === value)}
+                aria-pressed={mode === value}
+                disabled={running}
+                onClick={() => onModeChange(value)}
+              >
+                {value === "step" ? text.step : text.flow}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+        <label className="text-xs font-semibold text-[var(--lv-text-muted)]">
+          {text.leniency}
+          <select
+            className="lv-input mt-2 block w-full text-sm"
+            value={leniency}
+            disabled={running}
+            onChange={(event) => onLeniencyChange(event.target.value as PracticeLeniency)}
+          >
+            <option value="easy">{text.easy}</option>
+            <option value="normal">{text.normal}</option>
+            <option value="strict">{text.strict}</option>
+          </select>
+        </label>
+        <label className="text-xs font-semibold text-[var(--lv-text-muted)]">
+          {text.mixCycles}
+          <select
+            className="lv-input mt-2 block w-full text-sm"
+            value={cycles}
+            disabled={running}
+            onChange={(event) => onCyclesChange(Number(event.target.value) as 1 | 2 | 3)}
+          >
+            {([1, 2, 3] as const).map((value) => (
+              <option key={value} value={value}>{text.mixCycle(value)}</option>
+            ))}
+          </select>
+        </label>
+        <label className="text-xs font-semibold text-[var(--lv-text-muted)]">
+          {text.bpm}
+          <input
+            className="lv-input mt-2 block w-full text-sm"
+            type="number"
+            min={40}
+            max={300}
+            value={bpm}
+            disabled={running}
+            onChange={(event) => onBpmChange(
+              Math.max(40, Math.min(300, Number(event.target.value))),
+            )}
+          />
+        </label>
+        <label className="text-xs font-semibold text-[var(--lv-text-muted)]">
+          {text.mixTargetSource}
+          <select
+            className="lv-input mt-2 block w-full text-sm"
+            value={targetValue}
+            disabled={running}
+            onChange={(event) => onTargetSourceChange(
+              mixTargetSourceFromValue(event.target.value),
+            )}
+          >
+            <option value="resolved-voicing">{text.mixResolved}</option>
+            <option value="generated-close">{text.mixClose}</option>
+            <option value="shell-17">{text.mixShell}</option>
+            <option value="open-17">{text.mixOpen}</option>
+            <option value="rootless-ab">{text.mixRootless}</option>
+          </select>
+        </label>
+      </div>
+
+      {targetSource.type !== "resolved-voicing" ? (
+        <div className="grid gap-4 border-b border-[var(--lv-border)] py-4 sm:grid-cols-2">
+          <label className="text-xs font-semibold text-[var(--lv-text-muted)]">
+            {text.leniency}
+            <select
+              className="lv-input mt-2 block w-full text-sm"
+              value={styleMatchMode}
+              onChange={(event) => onStyleMatchModeChange(
+                event.target.value as StyleVoicingMatchMode,
+              )}
+            >
+              <option value="exact-pitch">{text.mixExact}</option>
+              <option value="pitch-class">{text.mixPitchClass}</option>
+            </select>
+          </label>
+          <label className="flex items-center gap-2 self-end pb-2 text-sm">
+            <input
+              type="checkbox"
+              checked={allowUnsupportedFallback}
+              onChange={(event) => onAllowUnsupportedFallbackChange(event.target.checked)}
+            />
+            {text.mixFallback}
+          </label>
+        </div>
+      ) : null}
+
+      {errors.length > 0 ? (
+        <section
+          className="mt-5 border border-amber-700 bg-amber-950/20 p-4"
+          role="alert"
+          data-testid="mix-preflight-errors"
+        >
+          <h4 className="font-semibold text-amber-100">{text.mixPreflightTitle}</h4>
+          <ul className="mt-2 space-y-2 text-sm text-amber-100">
+            {errors.map((error, index) => (
+              <li key={`${error.code}:${error.reference?.ideaId ?? index}`}>
+                {error.title ? <strong>{error.title}: </strong> : null}
+                {mixErrorLabel(error, text)}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : selectedCount < 2 ? (
+        <p className="mt-5 text-sm text-amber-200">{text.mixNeedSelection}</p>
+      ) : null}
+
+      <div className="mt-6 flex justify-end">
+        <button
+          type="button"
+          className="lv-button-primary px-5 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={running || selectedCount < 2 || selectedCount > 5}
+          onClick={onStart}
+        >
+          {text.mixStart}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function mixTargetSourceFromValue(value: string): PracticeTargetSource {
+  if (value === "generated-close") return { type: "generated-close" };
+  if (value === "shell-17" || value === "open-17" || value === "rootless-ab") {
+    return { type: "style", styleId: value };
+  }
+  return { type: "resolved-voicing" };
+}
+
+function mixErrorLabel(
+  error: MixPreflightError,
+  text: typeof copy.ja | typeof copy.en,
+): string {
+  if (error.code === "selection-count") return text.mixNeedSelection;
+  if (error.code === "missing-block") return text.mixMissingBlock;
+  if (error.code === "missing-key") return text.mixMissingKey;
+  if (error.code === "unsupported-key" || error.code === "roman-numeral-unavailable") {
+    return text.mixUnsupportedKey;
+  }
+  if (error.code === "flow-time-signature" || error.code === "flow-timing") {
+    return text.mixFlowSignature;
+  }
+  if (error.code === "target-plan-unavailable" || error.code === "target-plan-unsupported") {
+    return text.mixTargetUnavailable;
+  }
+  return text.mixInvalid;
+}
+
 function stateLabel(
   block: SavedProgressionBlock,
   state: ReturnType<typeof practiceProgressState>,
   language: AppLanguage,
 ): string {
   const text = copy[language];
-  if (state === "stale") return text.stale;
-  if (state === "confirmation-due") return text.confirmationDue;
-  if (state === "provisional") return text.provisional;
-  if (state === "confirmed") return text.confirmed(block.practice?.confirmedLevel ?? 1);
-  return text.unstarted;
+  const base = state === "stale"
+    ? text.stale
+    : state === "confirmation-due"
+      ? text.confirmationDue
+      : state === "provisional"
+        ? text.provisional
+        : state === "confirmed"
+          ? text.confirmed(block.practice?.confirmedLevel ?? 1)
+          : text.unstarted;
+  const coverage = transpositionProgressLabel(block, language);
+  return coverage && state !== "stale"
+    ? `${base} · ${coverage}`
+    : base;
 }
 
 function matchesQueueFilter(
@@ -1467,14 +3132,35 @@ function matchesQueueFilter(
   filter: QueueFilter,
   localDate: string,
 ): boolean {
-  const state = practiceProgressState(item.block, localDate);
+  const state = practiceProgressState(
+    item.block,
+    localDate,
+    item.effectiveKeySignature,
+  );
   if (filter === "recommended") return true;
   if (filter === "favorite") return item.favorite;
   if (filter === "unstarted") return state === "unstarted";
   if (filter === "confirmation") return state === "confirmation-due";
   const targetLevel = Number(filter.slice(1));
+  if (targetLevel === 4 || targetLevel === 5) {
+    return state !== "stale"
+      && transpositionProgressLevel(item.block.practice) === targetLevel;
+  }
   return item.block.practice?.confirmedLevel === targetLevel
     || item.block.practice?.provisional?.level === targetLevel;
+}
+
+function transpositionProgressLabel(
+  block: SavedProgressionBlock,
+  language: AppLanguage,
+): string | undefined {
+  const count = block.practice?.transposition?.clearedKeyPitchClasses.length;
+  if (count === undefined) return undefined;
+  const summary = transpositionCoverageSummary(block.practice);
+  if (!summary) return undefined;
+  return language === "ja"
+    ? `L${summary.level} キー ${summary.cleared}/${summary.total}`
+    : `L${summary.level} keys ${summary.cleared}/${summary.total}`;
 }
 
 function segmentClass(active: boolean): string {
