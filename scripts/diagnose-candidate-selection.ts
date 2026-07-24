@@ -18,7 +18,13 @@ import { analyzeMidi } from "../src/domain/midi/analysis";
  * which is where multi-chord bars and sustained chords lose information.
  */
 const path = argv[argv.length - 1];
-if (!path || path.endsWith(".ts")) throw new Error("Usage: vite-node scripts/diagnose-candidate-selection.ts <midi-path>");
+if (!path || path.endsWith(".ts")) throw new Error("Usage: vite-node scripts/diagnose-candidate-selection.ts [--output <name>] <midi-path>");
+// Stage artifacts are frozen snapshots, so the report name is explicit and a
+// later run never silently overwrites an earlier stage's record.
+const outputName = (() => {
+  const index = argv.indexOf("--output");
+  return index >= 0 ? argv[index + 1] : "candidate-selection-diagnostic.json";
+})();
 const bytes = new Uint8Array(await readFile(resolve(cwd(), path)));
 const analysis = analyzeMidi(bytes, { mode: "legacy", fileName: basename(path) });
 const totalBars = analysis.totalBars;
@@ -110,7 +116,7 @@ const report = {
 
 const outputDir = resolve(cwd(), "docs/phase4.0");
 await mkdir(outputDir, { recursive: true });
-await writeFile(resolve(outputDir, "00-candidate-selection-diagnostic.json"), `${JSON.stringify(report, null, 2)}\n`, "utf8");
+await writeFile(resolve(outputDir, outputName), `${JSON.stringify(report, null, 2)}\n`, "utf8");
 
 stdout.write(`${basename(path)}: ${totalBars} bars, key ${analysis.detectedKey}, lengths ${report.generatedLengths.join("/")}\n`);
 stdout.write(`\n-- per-bar compression --\n`);
