@@ -20,7 +20,11 @@ const toneMock = vi.hoisted(() => {
     stop: vi.fn(),
     pause: vi.fn(),
     clear: vi.fn(),
-    scheduleRepeat: vi.fn(() => 1),
+    scheduleRepeat: vi.fn((
+      _callback: (time: number) => void,
+      _interval: string,
+      _start?: number | string,
+    ) => 1),
   };
   const draw = {
     schedule: vi.fn((callback: () => void) => callback()),
@@ -81,6 +85,17 @@ describe("PracticeClock schedule", () => {
     expect(schedule.events.map((entry) => entry.eventIndex)).toEqual([1, 0]);
     expect(schedule.roundBeats).toBe(8);
   });
+
+  it("offsets targets by one count-in bar when requested", () => {
+    const schedule = buildPracticeClockSchedule([
+      event(1, 1, 4),
+      event(2, 1, 4),
+    ], 4, 60, 1);
+
+    expect(schedule.countInBeats).toBe(4);
+    expect(schedule.events.map((entry) => entry.targetBeat)).toEqual([4, 8]);
+    expect(schedule.roundBeats).toBe(12);
+  });
 });
 
 describe("PracticeClock start generation", () => {
@@ -137,6 +152,61 @@ describe("PracticeClock start generation", () => {
     expect(toneMock.transport.start).toHaveBeenCalledTimes(2);
     expect(toneMock.transport.scheduleRepeat).toHaveBeenCalledTimes(scheduledCount);
     expect(toneMock.transport.clear).not.toHaveBeenCalled();
+  });
+
+  it("reports all four count-in beats before regular beat callbacks", async () => {
+    const onBeat = vi.fn();
+    const onCountInBeat = vi.fn();
+    const clock = new PracticeClock();
+    await clock.start({
+      ...startOptions(),
+      countInBars: 1,
+      callbacks: {
+        ...startOptions().callbacks,
+        onBeat,
+        onCountInBeat,
+      },
+    });
+    const beatCallback = toneMock.transport.scheduleRepeat.mock.calls[2]?.[0] as
+      | ((time: number) => void)
+      | undefined;
+    expect(beatCallback).toBeDefined();
+    for (let index = 0; index < 5; index += 1) beatCallback?.(index);
+
+    expect(onCountInBeat.mock.calls.map(([beat]) => beat)).toEqual([1, 2, 3, 4]);
+    expect(onBeat).toHaveBeenCalledWith(1);
+  });
+
+  it("ignores an old Draw beat callback after a newer clock generation starts", async () => {
+    const drawCallbacks: Array<() => void> = [];
+    toneMock.draw.schedule.mockImplementation((callback: () => void) => {
+      drawCallbacks.push(callback);
+    });
+    const staleOnBeat = vi.fn();
+    const activeOnBeat = vi.fn();
+    const clock = new PracticeClock();
+    await clock.start({
+      ...startOptions(),
+      callbacks: { ...startOptions().callbacks, onBeat: staleOnBeat },
+    });
+    const staleBeatCallback = toneMock.transport.scheduleRepeat.mock.calls[2]?.[0] as
+      | ((time: number) => void)
+      | undefined;
+    staleBeatCallback?.(0);
+
+    await clock.start({
+      ...startOptions(),
+      callbacks: { ...startOptions().callbacks, onBeat: activeOnBeat },
+    });
+    drawCallbacks[0]?.();
+    expect(staleOnBeat).not.toHaveBeenCalled();
+
+    const activeBeatCallback = toneMock.transport.scheduleRepeat.mock.calls[6]?.[0] as
+      | ((time: number) => void)
+      | undefined;
+    activeBeatCallback?.(0);
+    drawCallbacks[1]?.();
+    expect(activeOnBeat).toHaveBeenCalledWith(1);
   });
 });
 

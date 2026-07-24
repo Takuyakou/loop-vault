@@ -9,17 +9,20 @@ export interface PracticeClockCallbacks {
   onTargetClose(eventIndex: number): void;
   onRoundCompleted(): void;
   onBeat?(beat: number): void;
+  onCountInBeat?(beat: number): void;
 }
 
 export interface PracticeClockStartOptions {
   events: readonly ChordTimelineItem[];
   bpm: number;
   beatsPerBar: number;
+  countInBars?: number;
   callbacks: PracticeClockCallbacks;
 }
 
 export interface PracticeClockSchedule {
   roundBeats: number;
+  countInBeats: number;
   events: Array<{
     eventIndex: number;
     targetBeat: number;
@@ -32,8 +35,12 @@ export function buildPracticeClockSchedule(
   events: readonly ChordTimelineItem[],
   beatsPerBar: number,
   bpm: number,
+  countInBars = 0,
 ): PracticeClockSchedule {
-  if (events.length === 0) return { roundBeats: 0, events: [] };
+  const countInBeats = Math.max(0, Math.trunc(countInBars)) * beatsPerBar;
+  if (events.length === 0) {
+    return { roundBeats: 0, countInBeats, events: [] };
+  }
   const ordered = events
     .map((event, eventIndex) => ({ event, eventIndex }))
     .sort((left, right) => absoluteBeat(left.event, beatsPerBar) - absoluteBeat(right.event, beatsPerBar));
@@ -42,7 +49,7 @@ export function buildPracticeClockSchedule(
   const earlyBeats = PRACTICE_FLOW_EARLY_MS / 1000 / beatSeconds;
   const lateBeats = PRACTICE_FLOW_LATE_MS / 1000 / beatSeconds;
   const scheduled = ordered.map(({ event, eventIndex }) => {
-    const targetBeat = absoluteBeat(event, beatsPerBar) - firstBeat;
+    const targetBeat = absoluteBeat(event, beatsPerBar) - firstBeat + countInBeats;
     return {
       eventIndex,
       targetBeat,
@@ -53,6 +60,7 @@ export function buildPracticeClockSchedule(
   });
   return {
     roundBeats: Math.max(...scheduled.map((event) => event.targetBeat + event.durationBeats)),
+    countInBeats,
     events: scheduled.map(({ durationBeats: _durationBeats, ...event }) => event),
   };
 }
@@ -62,6 +70,7 @@ export class PracticeClock {
   private scheduleIds: number[] = [];
   private metronome?: Tone.Synth;
   private running = false;
+  private paused = false;
   private startGeneration = 0;
 
   async start(options: PracticeClockStartOptions): Promise<void> {
@@ -74,6 +83,7 @@ export class PracticeClock {
       options.events,
       options.beatsPerBar,
       options.bpm,
+      options.countInBars,
     );
     const ppq = this.transport.PPQ;
     const roundTicks = Math.max(1, Math.round(schedule.roundBeats * ppq));
@@ -91,25 +101,46 @@ export class PracticeClock {
       const openTicks = Math.max(0, Math.round(event.openBeat * ppq));
       const closeTicks = Math.max(openTicks + 1, Math.round(event.closeBeat * ppq));
       this.scheduleIds.push(this.transport.scheduleRepeat((time) => {
-        Tone.getDraw().schedule(() => options.callbacks.onTargetOpen(event.eventIndex), time);
+        Tone.getDraw().schedule(() => {
+          if (this.acceptsCallback(generation)) {
+            options.callbacks.onTargetOpen(event.eventIndex);
+          }
+        }, time);
       }, `${roundTicks}i`, `${openTicks}i`));
       this.scheduleIds.push(this.transport.scheduleRepeat((time) => {
-        Tone.getDraw().schedule(() => options.callbacks.onTargetClose(event.eventIndex), time);
+        Tone.getDraw().schedule(() => {
+          if (this.acceptsCallback(generation)) {
+            options.callbacks.onTargetClose(event.eventIndex);
+          }
+        }, time);
       }, `${roundTicks}i`, `${closeTicks}i`));
     });
 
     let beat = 0;
     this.scheduleIds.push(this.transport.scheduleRepeat((time) => {
-      const beatInBar = beat % options.beatsPerBar;
+      const absoluteBeat = beat;
+      const beatInBar = absoluteBeat % options.beatsPerBar;
       this.metronome?.triggerAttackRelease(beatInBar === 0 ? "C6" : "C5", "32n", time);
-      Tone.getDraw().schedule(() => options.callbacks.onBeat?.(beatInBar + 1), time);
+      Tone.getDraw().schedule(() => {
+        if (!this.acceptsCallback(generation)) return;
+        if (absoluteBeat < schedule.countInBeats) {
+          options.callbacks.onCountInBeat?.(beatInBar + 1);
+        } else {
+          options.callbacks.onBeat?.(beatInBar + 1);
+        }
+      }, time);
       beat += 1;
     }, "4n", 0));
     this.scheduleIds.push(this.transport.scheduleRepeat((time) => {
-      Tone.getDraw().schedule(options.callbacks.onRoundCompleted, time);
+      Tone.getDraw().schedule(() => {
+        if (this.acceptsCallback(generation)) {
+          options.callbacks.onRoundCompleted();
+        }
+      }, time);
     }, `${roundTicks}i`, `${roundTicks}i`));
 
     this.running = true;
+    this.paused = false;
     this.transport.start("+0.05");
   }
 
@@ -118,11 +149,13 @@ export class PracticeClock {
       this.startGeneration += 1;
       return;
     }
+    this.paused = true;
     this.transport.pause();
   }
 
   resume(): void {
     if (!this.running) return;
+    this.paused = false;
     this.transport.start();
   }
 
@@ -138,11 +171,16 @@ export class PracticeClock {
     this.startGeneration += 1;
     if (this.running) this.transport.stop();
     this.running = false;
+    this.paused = false;
     for (const id of this.scheduleIds) this.transport.clear(id);
     this.scheduleIds = [];
     this.metronome?.dispose();
     this.metronome = undefined;
     return this.startGeneration;
+  }
+
+  private acceptsCallback(generation: number): boolean {
+    return generation === this.startGeneration && this.running && !this.paused;
   }
 }
 

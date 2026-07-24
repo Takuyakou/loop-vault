@@ -17,6 +17,7 @@ import {
   computePracticeKeyboardRange,
   formatMidiNoteForDisplay,
 } from "../components/music-keyboard";
+import { MixPracticeWorkspace } from "../components/practice/MixPracticeWorkspace";
 import { PracticeKeyboard } from "../components/practice/PracticeKeyboard";
 import { TranspositionPracticeControls } from "../components/practice/TranspositionPracticeControls";
 import { VoicingPracticeControls } from "../components/practice/VoicingPracticeControls";
@@ -43,6 +44,16 @@ import {
   type PracticeSessionLevel,
   type PracticeSessionState,
 } from "../domain/practice";
+import {
+  createMixSessionState,
+  preflightMixSession,
+  progressionReferenceKey,
+  type MixPreflightError,
+  type MixProgressionCandidate,
+  type MixProgressionReference,
+  type MixSessionConfig,
+  type MixSessionState,
+} from "../domain/practiceMix";
 import {
   completeTranspositionRound,
   createPracticeTargetMatchEvaluator,
@@ -74,6 +85,7 @@ import {
   matchExactPitch,
   matchPitchClasses,
   type GeneratedStyleVoicing,
+  type GenerateStyleVoicingOptions,
   type PracticeTargetSource,
   type StyleVoicingMatchMode,
   type VoicingPracticePreferences,
@@ -225,6 +237,33 @@ const copy = {
     styleRootless: (variant?: string) => `ルートレス ${variant ?? "A/B"}`,
     styleClose: "自動",
     addedColor: (intervals: readonly string[]) => `響きを補う音: ${intervals.join("・")}`,
+    mixSelect: "ミックス選択",
+    mixUnavailable: "L4/L5の移調練習中はミックスを選択できません。",
+    mixSelected: (count: number) => `${count}件選択`,
+    mixMaximum: "ミックス練習では最大5進行まで選べます。",
+    mixClear: "選択を解除",
+    mixCancel: "キャンセル",
+    mixSetup: "ミックス練習の共通設定",
+    mixStart: "ミックス練習を開始",
+    mixCycles: "巡数",
+    mixCycle: (count: number) => `${count}巡`,
+    mixNeedSelection: "2〜5進行を選択してください。",
+    mixPreflightTitle: "ミックス練習を開始できません。",
+    mixMissingBlock: "進行が見つかりません。",
+    mixMissingKey: "Keyが設定されていないためL3を利用できません。",
+    mixUnsupportedKey: "メジャーまたはマイナーのKeyを確認してください。",
+    mixFlowSignature: "フローでは4/4の進行だけ利用できます。",
+    mixTargetUnavailable: "選択中のボイシングを生成できません。",
+    mixInvalid: "コード進行データを確認してください。",
+    mixTargetSource: "練習するボイシング",
+    mixResolved: "保存ボイシング",
+    mixClose: "自動（クローズ）",
+    mixShell: "シェル 1-7",
+    mixOpen: "オープン 1-7",
+    mixRootless: "ルートレス A/B",
+    mixFallback: "未対応コードだけ自動（クローズ）を使用",
+    mixExact: "指定音高",
+    mixPitchClass: "ピッチクラス",
   },
   en: {
     eyebrow: "CHORD DOJO",
@@ -321,6 +360,33 @@ const copy = {
     styleRootless: (variant?: string) => `Rootless ${variant ?? "A/B"}`,
     styleClose: "Automatic",
     addedColor: (intervals: readonly string[]) => `Added color tones: ${intervals.join(", ")}`,
+    mixSelect: "Mix selection",
+    mixUnavailable: "Mix cannot be selected while L4/L5 transposition practice is active.",
+    mixSelected: (count: number) => `${count} selected`,
+    mixMaximum: "Mix practice supports up to five progressions.",
+    mixClear: "Clear selection",
+    mixCancel: "Cancel",
+    mixSetup: "Shared Mix practice settings",
+    mixStart: "Start Mix practice",
+    mixCycles: "Cycles",
+    mixCycle: (count: number) => `${count} cycle${count === 1 ? "" : "s"}`,
+    mixNeedSelection: "Select two to five progressions.",
+    mixPreflightTitle: "Mix practice cannot start.",
+    mixMissingBlock: "The progression could not be found.",
+    mixMissingKey: "A key is required to use L3.",
+    mixUnsupportedKey: "Check that the key is major or minor.",
+    mixFlowSignature: "Flow supports only 4/4 progressions.",
+    mixTargetUnavailable: "The selected practice voicing could not be generated.",
+    mixInvalid: "Check the chord progression data.",
+    mixTargetSource: "Practice voicing",
+    mixResolved: "Saved voicing",
+    mixClose: "Automatic (close)",
+    mixShell: "Shell 1-7",
+    mixOpen: "Open 1-7",
+    mixRootless: "Rootless A/B",
+    mixFallback: "Use Automatic (close) only for unsupported chords",
+    mixExact: "Exact pitch",
+    mixPitchClass: "Pitch class",
   },
 } as const;
 
@@ -339,6 +405,15 @@ export function PracticeView({
   const recommendations = useMemo(
     () => recommendPracticeBlocks(ideas, localDate),
     [ideas, localDate],
+  );
+  const mixCandidates = useMemo<readonly MixProgressionCandidate[]>(
+    () => recommendations.map((item) => ({
+      reference: { ideaId: item.ideaId, blockId: item.block.id },
+      title: mixProgressionTitle(item),
+      block: item.block,
+      effectiveKeySignature: item.effectiveKeySignature,
+    })),
+    [recommendations],
   );
   const [filter, setFilter] = useState<QueueFilter>("recommended");
   const [target, setTarget] = useState<PracticeTarget | undefined>(initialTarget);
@@ -361,9 +436,19 @@ export function PracticeView({
   });
   const [styleMatchMode, setStyleMatchMode] = useState<StyleVoicingMatchMode>("exact-pitch");
   const [allowUnsupportedFallback, setAllowUnsupportedFallback] = useState(false);
+  const [mixSelecting, setMixSelecting] = useState(false);
+  const [mixReferences, setMixReferences] = useState<MixProgressionReference[]>([]);
+  const [mixCycles, setMixCycles] = useState<1 | 2 | 3>(1);
+  const [mixErrors, setMixErrors] = useState<readonly MixPreflightError[]>([]);
+  const [mixInitialState, setMixInitialState] = useState<MixSessionState>();
   const [voicingPreferences, setVoicingPreferences] = useState<VoicingPracticePreferences>(
     loadVoicingPracticePreferences,
   );
+  const mixStyleOptions = useMemo<GenerateStyleVoicingOptions>(() => ({
+    maxLeftHandSpanSemitones: voicingPreferences.maxLeftHandSpanSemitones,
+    maxRightHandSpanSemitones: voicingPreferences.maxRightHandSpanSemitones,
+    allowUnsupportedFallback,
+  }), [allowUnsupportedFallback, voicingPreferences]);
   const clockRef = useRef<
     Pick<PracticeClock, "start" | "stop" | "pause" | "resume">
   >(practiceClock ?? new PracticeClock());
@@ -382,6 +467,7 @@ export function PracticeView({
   const latestPracticeProgressRef = useRef<ProgressionPracticeProgress>();
   const lastPersistedSessionRef = useRef<PracticeSessionState>();
   const styleModeRef = useRef(false);
+  const mixModeRef = useRef(false);
   const active = useStore(defaultLiveMidiStore, (state) => state.active);
   const midiStatus = useStore(defaultLiveMidiStore, (state) => state.status);
   const selectedDevice = useStore(defaultLiveMidiStore, (state) => state.selected);
@@ -398,6 +484,11 @@ export function PracticeView({
     setAuditionEventIndex(undefined);
     setTranspositionSession(undefined);
     setSession(undefined);
+    setMixSelecting(false);
+    setMixReferences([]);
+    setMixErrors([]);
+    setMixInitialState(undefined);
+    mixModeRef.current = false;
   }, [initialTarget]);
 
   useEffect(() => {
@@ -419,7 +510,7 @@ export function PracticeView({
   }, [updateProgressionBlock]);
 
   function persistPendingSession(): void {
-    if (styleModeRef.current) return;
+    if (styleModeRef.current || mixModeRef.current) return;
     const current = latestSessionRef.current;
     const currentBlock = latestBlockRef.current;
     const currentSelected = latestSelectedRef.current;
@@ -629,11 +720,7 @@ export function PracticeView({
       progression: transposedProgression,
       targetSource,
       leniency,
-      styleOptions: {
-        maxLeftHandSpanSemitones: voicingPreferences.maxLeftHandSpanSemitones,
-        maxRightHandSpanSemitones: voicingPreferences.maxRightHandSpanSemitones,
-        allowUnsupportedFallback,
-      },
+      styleOptions: mixStyleOptions,
       styleMatchMode,
       exactPitchOptions: {
         allowGlobalOctaveShift: voicingPreferences.allowGlobalOctaveShift,
@@ -740,6 +827,11 @@ export function PracticeView({
     )
     && !allowUnsupportedFallback;
   const filtered = recommendations.filter((item) => matchesQueueFilter(item, filter, localDate));
+  const mixActive = Boolean(mixInitialState);
+  const mixSelectionKeys = useMemo(
+    () => new Set(mixReferences.map(progressionReferenceKey)),
+    [mixReferences],
+  );
   const running = session?.status === "running";
   const paused = session?.status === "paused";
   const flowRestartPending = pendingFlowRestartKey !== undefined;
@@ -975,8 +1067,11 @@ export function PracticeView({
       ) {
         return;
       }
-      const element = event.target as HTMLElement | null;
-      if (element?.matches("input, textarea, select, [contenteditable=true]")) return;
+      const element = event.target;
+      if (
+        element instanceof Element
+        && element.matches("input, textarea, select, [contenteditable=true]")
+      ) return;
       if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
         event.preventDefault();
         setSession((current) => {
@@ -1729,6 +1824,101 @@ export function PracticeView({
     if (device) await refreshed.selectDevice(device.backendId);
   }
 
+  function beginMixSelection(): void {
+    if (transpositionMode || mixActive) return;
+    endSession(false);
+    playbackController.stop();
+    mixModeRef.current = true;
+    setMixSelecting(true);
+    setMixReferences([]);
+    setMixErrors([]);
+    setMixInitialState(undefined);
+    if (!isDojoPracticeLevel(level)) setLevel(2);
+  }
+
+  function toggleMixReference(item: PracticeRecommendation): void {
+    const reference = { ideaId: item.ideaId, blockId: item.block.id };
+    const key = progressionReferenceKey(reference);
+    setMixReferences((current) => {
+      if (current.some((candidate) => progressionReferenceKey(candidate) === key)) {
+        return current.filter((candidate) => progressionReferenceKey(candidate) !== key);
+      }
+      if (current.length >= 5) {
+        setToast(text.mixMaximum);
+        return current;
+      }
+      return [...current, reference];
+    });
+    setMixErrors([]);
+  }
+
+  function cancelMixSelection(): void {
+    clockRef.current.stop();
+    mixModeRef.current = false;
+    setMixSelecting(false);
+    setMixReferences([]);
+    setMixErrors([]);
+    setMixInitialState(undefined);
+  }
+
+  function startMixSession(): void {
+    if (mixReferences.length < 2 || mixReferences.length > 5) {
+      setMixErrors([{ code: "selection-count" }]);
+      return;
+    }
+    const mixLevel: DojoPracticeLevel = isDojoPracticeLevel(level) ? level : 2;
+    const config: MixSessionConfig = {
+      references: mixReferences,
+      level: mixLevel,
+      mode,
+      leniency,
+      targetSource,
+      styleMatchMode,
+      allowUnsupportedFallback,
+      cycles: mixCycles,
+      bpm,
+    };
+    const result = preflightMixSession({
+      config,
+      candidates: mixCandidates,
+      styleOptions: {
+        maxLeftHandSpanSemitones: voicingPreferences.maxLeftHandSpanSemitones,
+        maxRightHandSpanSemitones: voicingPreferences.maxRightHandSpanSemitones,
+        allowUnsupportedFallback,
+      },
+    });
+    if (!result.ok) {
+      setMixErrors(result.errors);
+      return;
+    }
+    const next = createMixSessionState(config, result.snapshots, createSessionSeed());
+    mixModeRef.current = true;
+    latestSessionRef.current = undefined;
+    setSession(undefined);
+    setMixSelecting(false);
+    setMixErrors([]);
+    setMixInitialState(next);
+  }
+
+  function reloadMixSession(config: MixSessionConfig): MixSessionState | undefined {
+    const result = preflightMixSession({
+      config,
+      candidates: mixCandidates,
+      styleOptions: {
+        ...mixStyleOptions,
+        allowUnsupportedFallback: config.allowUnsupportedFallback,
+      },
+    });
+    if (!result.ok) {
+      setMixErrors(result.errors);
+      return undefined;
+    }
+    setMixErrors([]);
+    return createMixSessionState(config, result.snapshots, createSessionSeed(), {
+      allowSingle: config.references.length === 1,
+    });
+  }
+
   return (
     <div className="py-5 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
       <div className="shrink-0 border-b border-[var(--lv-border)] pb-4">
@@ -1745,7 +1935,44 @@ export function PracticeView({
             <div className="flex items-center gap-2">
               <Dumbbell aria-hidden="true" size={16} className="text-[var(--lv-accent)]" />
               <h3 className="text-sm font-semibold">{text.queue}</h3>
+              {!mixSelecting && !mixActive ? (
+                <button
+                  type="button"
+                  className="lv-button-ghost ml-auto px-2.5 py-1.5 text-xs"
+                  disabled={transpositionMode}
+                  title={transpositionMode ? text.mixUnavailable : undefined}
+                  onClick={beginMixSelection}
+                >
+                  {text.mixSelect}
+                </button>
+              ) : null}
             </div>
+            {mixSelecting ? (
+              <div className="mt-3 border-y border-[var(--lv-border)] py-2">
+                <p className="text-sm font-semibold" aria-live="polite">
+                  {text.mixSelected(mixReferences.length)}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="lv-button-ghost px-2 py-1 text-xs"
+                    onClick={() => {
+                      setMixReferences([]);
+                      setMixErrors([]);
+                    }}
+                  >
+                    {text.mixClear}
+                  </button>
+                  <button
+                    type="button"
+                    className="lv-button-ghost px-2 py-1 text-xs"
+                    onClick={cancelMixSelection}
+                  >
+                    {text.mixCancel}
+                  </button>
+                </div>
+              </div>
+            ) : null}
             <select
               className="lv-input mt-3 w-full text-sm"
               value={filter}
@@ -1779,6 +2006,21 @@ export function PracticeView({
                 localDate={localDate}
                 language={language}
                 concealProgression={transpositionMode}
+                disabled={mixActive}
+                selectionMode={mixSelecting}
+                selectedForMix={mixSelectionKeys.has(progressionReferenceKey({
+                  ideaId: item.ideaId,
+                  blockId: item.block.id,
+                }))}
+                selectionDisabled={
+                  mixSelecting
+                  && mixReferences.length >= 5
+                  && !mixSelectionKeys.has(progressionReferenceKey({
+                    ideaId: item.ideaId,
+                    blockId: item.block.id,
+                  }))
+                }
+                onToggleMix={() => toggleMixReference(item)}
                 onClick={() => selectRecommendation(item)}
               />
             ))}
@@ -1789,7 +2031,51 @@ export function PracticeView({
           className="min-w-0 bg-[var(--lv-bg)] p-4 sm:p-6 lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain"
           data-testid="practice-workspace-scroll"
         >
-          {!selected || !block ? (
+          {mixInitialState ? (
+            <MixPracticeWorkspace
+              initialState={mixInitialState}
+              language={language}
+              practiceClock={clockRef.current}
+              candidates={mixCandidates}
+              styleOptions={mixStyleOptions}
+              midiStatus={midiStatus}
+              midiDeviceName={selectedDevice?.name}
+              midiError={midiError}
+              createSeed={createSessionSeed}
+              reloadSession={reloadMixSession}
+              reconnectMidi={reconnectMidi}
+              openSettings={openSettings}
+              onError={setToast}
+              onExit={cancelMixSelection}
+            />
+          ) : mixSelecting ? (
+            <MixSetupPanel
+              text={text}
+              level={isDojoPracticeLevel(level) ? level : 2}
+              mode={mode}
+              leniency={leniency}
+              bpm={bpm}
+              cycles={mixCycles}
+              targetSource={targetSource}
+              styleMatchMode={styleMatchMode}
+              allowUnsupportedFallback={allowUnsupportedFallback}
+              selectedCount={mixReferences.length}
+              errors={mixErrors}
+              running={false}
+              onLevelChange={(value) => setLevel(value)}
+              onModeChange={setMode}
+              onLeniencyChange={setLeniency}
+              onBpmChange={setBpm}
+              onCyclesChange={setMixCycles}
+              onTargetSourceChange={(source) => {
+                setTargetSource(source);
+                setMixErrors([]);
+              }}
+              onStyleMatchModeChange={setStyleMatchMode}
+              onAllowUnsupportedFallbackChange={setAllowUnsupportedFallback}
+              onStart={startMixSession}
+            />
+          ) : !selected || !block ? (
             <div className="grid min-h-80 place-items-center text-sm text-[var(--lv-text-muted)]">
               {text.selectPrompt}
             </div>
@@ -2253,6 +2539,11 @@ function QueueItem({
   localDate,
   language,
   concealProgression,
+  disabled = false,
+  selectionMode = false,
+  selectedForMix = false,
+  selectionDisabled = false,
+  onToggleMix,
   onClick,
 }: {
   item: PracticeRecommendation;
@@ -2260,6 +2551,11 @@ function QueueItem({
   localDate: string;
   language: AppLanguage;
   concealProgression: boolean;
+  disabled?: boolean;
+  selectionMode?: boolean;
+  selectedForMix?: boolean;
+  selectionDisabled?: boolean;
+  onToggleMix?: () => void;
   onClick: () => void;
 }) {
   const state = practiceProgressState(
@@ -2267,11 +2563,37 @@ function QueueItem({
     localDate,
     item.effectiveKeySignature,
   );
+  if (selectionMode) {
+    return (
+      <label
+        className={`flex w-full cursor-pointer items-start gap-3 border-b border-[var(--lv-border)] p-3 text-left ${
+          selectedForMix ? "bg-[var(--lv-surface-raised)]" : "hover:bg-[var(--lv-surface-raised)]"
+        } ${selectionDisabled ? "cursor-not-allowed opacity-50" : ""}`}
+      >
+        <input
+          type="checkbox"
+          className="mt-1 h-4 w-4 accent-teal-300"
+          checked={selectedForMix}
+          disabled={selectionDisabled}
+          aria-label={mixProgressionTitle(item)}
+          onChange={onToggleMix}
+        />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-sm font-semibold">{item.ideaTitle}</span>
+          <span className="mt-1 block truncate text-xs text-[var(--lv-text-muted)]">
+            {item.block.chords.slice(0, 4).map((event) => event.chord.label).join(" · ")
+              || copy[language].miniSummaryEmpty}
+          </span>
+        </span>
+      </label>
+    );
+  }
   return (
     <button
       className={`w-full border-b border-[var(--lv-border)] p-3 text-left ${
         active ? "bg-[var(--lv-surface-raised)]" : "hover:bg-[var(--lv-surface-raised)]"
-      }`}
+      } disabled:cursor-not-allowed disabled:opacity-50`}
+      disabled={disabled}
       onClick={onClick}
     >
       <span className="flex items-center justify-between gap-2">
@@ -2491,6 +2813,11 @@ function practiceTargetSourceKey(source: PracticeTargetSource): string {
   return source.type === "style" ? source.styleId : source.type;
 }
 
+function mixProgressionTitle(item: PracticeRecommendation): string {
+  const summary = item.block.summaryText.trim();
+  return summary ? `${item.ideaTitle} · ${summary}` : item.ideaTitle;
+}
+
 function uniquePitchClasses(notes: readonly number[]): number[] {
   return [...new Set(notes.map((note) => ((note % 12) + 12) % 12))]
     .sort((left, right) => left - right);
@@ -2540,6 +2867,243 @@ function MatchState({
       {label}
     </span>
   );
+}
+
+function MixSetupPanel({
+  text,
+  level,
+  mode,
+  leniency,
+  bpm,
+  cycles,
+  targetSource,
+  styleMatchMode,
+  allowUnsupportedFallback,
+  selectedCount,
+  errors,
+  running,
+  onLevelChange,
+  onModeChange,
+  onLeniencyChange,
+  onBpmChange,
+  onCyclesChange,
+  onTargetSourceChange,
+  onStyleMatchModeChange,
+  onAllowUnsupportedFallbackChange,
+  onStart,
+}: {
+  text: typeof copy.ja | typeof copy.en;
+  level: DojoPracticeLevel;
+  mode: PracticeMode;
+  leniency: PracticeLeniency;
+  bpm: number;
+  cycles: 1 | 2 | 3;
+  targetSource: PracticeTargetSource;
+  styleMatchMode: StyleVoicingMatchMode;
+  allowUnsupportedFallback: boolean;
+  selectedCount: number;
+  errors: readonly MixPreflightError[];
+  running: boolean;
+  onLevelChange(value: DojoPracticeLevel): void;
+  onModeChange(value: PracticeMode): void;
+  onLeniencyChange(value: PracticeLeniency): void;
+  onBpmChange(value: number): void;
+  onCyclesChange(value: 1 | 2 | 3): void;
+  onTargetSourceChange(value: PracticeTargetSource): void;
+  onStyleMatchModeChange(value: StyleVoicingMatchMode): void;
+  onAllowUnsupportedFallbackChange(value: boolean): void;
+  onStart(): void;
+}) {
+  const targetValue = practiceTargetSourceKey(targetSource);
+  return (
+    <section data-testid="mix-setup" aria-labelledby="mix-setup-title">
+      <div className="border-b border-[var(--lv-border)] pb-4">
+        <p className="text-xs font-semibold uppercase text-[var(--lv-accent)]">MIX SESSION</p>
+        <h3 id="mix-setup-title" className="mt-1 text-xl font-semibold">{text.mixSetup}</h3>
+        <p className="mt-2 text-sm text-[var(--lv-text-muted)]" aria-live="polite">
+          {text.mixSelected(selectedCount)}
+        </p>
+      </div>
+
+      <div className="grid gap-5 border-b border-[var(--lv-border)] py-5 md:grid-cols-2 xl:grid-cols-3">
+        <fieldset>
+          <legend className="text-xs font-semibold text-[var(--lv-text-muted)]">{text.level}</legend>
+          <div className="mt-2 flex flex-wrap gap-1">
+            {([1, 2, 3] as const).map((value) => (
+              <button
+                key={value}
+                type="button"
+                className={segmentClass(level === value)}
+                aria-pressed={level === value}
+                disabled={running}
+                onClick={() => onLevelChange(value)}
+              >
+                {value === 1 ? text.l1 : value === 2 ? text.l2 : text.l3}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend className="text-xs font-semibold text-[var(--lv-text-muted)]">{text.modeLabel}</legend>
+          <div className="mt-2 flex gap-1">
+            {(["step", "flow"] as const).map((value) => (
+              <button
+                key={value}
+                type="button"
+                className={segmentClass(mode === value)}
+                aria-pressed={mode === value}
+                disabled={running}
+                onClick={() => onModeChange(value)}
+              >
+                {value === "step" ? text.step : text.flow}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+        <label className="text-xs font-semibold text-[var(--lv-text-muted)]">
+          {text.leniency}
+          <select
+            className="lv-input mt-2 block w-full text-sm"
+            value={leniency}
+            disabled={running}
+            onChange={(event) => onLeniencyChange(event.target.value as PracticeLeniency)}
+          >
+            <option value="easy">{text.easy}</option>
+            <option value="normal">{text.normal}</option>
+            <option value="strict">{text.strict}</option>
+          </select>
+        </label>
+        <label className="text-xs font-semibold text-[var(--lv-text-muted)]">
+          {text.mixCycles}
+          <select
+            className="lv-input mt-2 block w-full text-sm"
+            value={cycles}
+            disabled={running}
+            onChange={(event) => onCyclesChange(Number(event.target.value) as 1 | 2 | 3)}
+          >
+            {([1, 2, 3] as const).map((value) => (
+              <option key={value} value={value}>{text.mixCycle(value)}</option>
+            ))}
+          </select>
+        </label>
+        <label className="text-xs font-semibold text-[var(--lv-text-muted)]">
+          {text.bpm}
+          <input
+            className="lv-input mt-2 block w-full text-sm"
+            type="number"
+            min={40}
+            max={300}
+            value={bpm}
+            disabled={running}
+            onChange={(event) => onBpmChange(
+              Math.max(40, Math.min(300, Number(event.target.value))),
+            )}
+          />
+        </label>
+        <label className="text-xs font-semibold text-[var(--lv-text-muted)]">
+          {text.mixTargetSource}
+          <select
+            className="lv-input mt-2 block w-full text-sm"
+            value={targetValue}
+            disabled={running}
+            onChange={(event) => onTargetSourceChange(
+              mixTargetSourceFromValue(event.target.value),
+            )}
+          >
+            <option value="resolved-voicing">{text.mixResolved}</option>
+            <option value="generated-close">{text.mixClose}</option>
+            <option value="shell-17">{text.mixShell}</option>
+            <option value="open-17">{text.mixOpen}</option>
+            <option value="rootless-ab">{text.mixRootless}</option>
+          </select>
+        </label>
+      </div>
+
+      {targetSource.type !== "resolved-voicing" ? (
+        <div className="grid gap-4 border-b border-[var(--lv-border)] py-4 sm:grid-cols-2">
+          <label className="text-xs font-semibold text-[var(--lv-text-muted)]">
+            {text.leniency}
+            <select
+              className="lv-input mt-2 block w-full text-sm"
+              value={styleMatchMode}
+              onChange={(event) => onStyleMatchModeChange(
+                event.target.value as StyleVoicingMatchMode,
+              )}
+            >
+              <option value="exact-pitch">{text.mixExact}</option>
+              <option value="pitch-class">{text.mixPitchClass}</option>
+            </select>
+          </label>
+          <label className="flex items-center gap-2 self-end pb-2 text-sm">
+            <input
+              type="checkbox"
+              checked={allowUnsupportedFallback}
+              onChange={(event) => onAllowUnsupportedFallbackChange(event.target.checked)}
+            />
+            {text.mixFallback}
+          </label>
+        </div>
+      ) : null}
+
+      {errors.length > 0 ? (
+        <section
+          className="mt-5 border border-amber-700 bg-amber-950/20 p-4"
+          role="alert"
+          data-testid="mix-preflight-errors"
+        >
+          <h4 className="font-semibold text-amber-100">{text.mixPreflightTitle}</h4>
+          <ul className="mt-2 space-y-2 text-sm text-amber-100">
+            {errors.map((error, index) => (
+              <li key={`${error.code}:${error.reference?.ideaId ?? index}`}>
+                {error.title ? <strong>{error.title}: </strong> : null}
+                {mixErrorLabel(error, text)}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : selectedCount < 2 ? (
+        <p className="mt-5 text-sm text-amber-200">{text.mixNeedSelection}</p>
+      ) : null}
+
+      <div className="mt-6 flex justify-end">
+        <button
+          type="button"
+          className="lv-button-primary px-5 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={running || selectedCount < 2 || selectedCount > 5}
+          onClick={onStart}
+        >
+          {text.mixStart}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function mixTargetSourceFromValue(value: string): PracticeTargetSource {
+  if (value === "generated-close") return { type: "generated-close" };
+  if (value === "shell-17" || value === "open-17" || value === "rootless-ab") {
+    return { type: "style", styleId: value };
+  }
+  return { type: "resolved-voicing" };
+}
+
+function mixErrorLabel(
+  error: MixPreflightError,
+  text: typeof copy.ja | typeof copy.en,
+): string {
+  if (error.code === "selection-count") return text.mixNeedSelection;
+  if (error.code === "missing-block") return text.mixMissingBlock;
+  if (error.code === "missing-key") return text.mixMissingKey;
+  if (error.code === "unsupported-key" || error.code === "roman-numeral-unavailable") {
+    return text.mixUnsupportedKey;
+  }
+  if (error.code === "flow-time-signature" || error.code === "flow-timing") {
+    return text.mixFlowSignature;
+  }
+  if (error.code === "target-plan-unavailable" || error.code === "target-plan-unsupported") {
+    return text.mixTargetUnavailable;
+  }
+  return text.mixInvalid;
 }
 
 function stateLabel(

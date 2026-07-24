@@ -2155,6 +2155,458 @@ describe("PracticeView", () => {
 
     await act(async () => root.unmount());
   });
+
+  it("selects two to five queue items for Mix with accessible checkboxes", async () => {
+    const ideas = Array.from({ length: 6 }, (_, index) => makeIdea({
+      id: `00000000-0000-4000-8000-0000000002${index}`,
+      title: `Mix item ${index + 1}`,
+      progressionBlocks: [{
+        ...block,
+        id: `00000000-0000-4000-8000-0000000003${index}`,
+      }],
+    }));
+    const setToast = vi.fn();
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={ideas}
+        language="en"
+        updateProgressionBlock={vi.fn(() => true)}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={setToast}
+      />,
+    ));
+
+    await act(async () => findButton(container, "Mix selection")?.click());
+    const checkboxes = [...container.querySelectorAll<HTMLInputElement>(
+      'input[type="checkbox"][aria-label^="Mix item"]',
+    )];
+    expect(checkboxes).toHaveLength(6);
+    for (const checkbox of checkboxes.slice(0, 5)) {
+      await act(async () => checkbox.click());
+    }
+    expect(container.textContent).toContain("5 selected");
+    expect(checkboxes[5].disabled).toBe(true);
+    expect(container.querySelector('[data-testid="mix-setup"]')).not.toBeNull();
+
+    await act(async () => findButton(container, "Clear selection")?.click());
+    expect(container.textContent).toContain("0 selected");
+    await act(async () => findButton(container, "Cancel")?.click());
+    expect(container.querySelector('[data-testid="mix-setup"]')).toBeNull();
+
+    await act(async () => root.unmount());
+  });
+
+  it("reports L3 preflight errors without silently excluding a progression", async () => {
+    const missingKeyBlock = {
+      ...block,
+      id: "00000000-0000-4000-8000-000000000401",
+      detectedKey: undefined,
+    };
+    const ideas = [
+      makeIdea({
+        id: "00000000-0000-4000-8000-000000000402",
+        title: "Key present",
+        progressionBlocks: [block],
+      }),
+      makeIdea({
+        id: "00000000-0000-4000-8000-000000000403",
+        title: "Key missing",
+        key: undefined,
+        progressionBlocks: [missingKeyBlock],
+      }),
+    ];
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={ideas}
+        language="ja"
+        updateProgressionBlock={vi.fn(() => true)}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={vi.fn()}
+      />,
+    ));
+
+    await act(async () => findButton(container, "ミックス選択")?.click());
+    const checkboxes = [...container.querySelectorAll<HTMLInputElement>(
+      'input[type="checkbox"]',
+    )];
+    await act(async () => checkboxes[0]?.click());
+    await act(async () => checkboxes[1]?.click());
+    await act(async () => findButton(container, "L3 度数で弾く")?.click());
+    await act(async () => findButton(container, "ミックス練習を開始")?.click());
+
+    const errors = container.querySelector('[data-testid="mix-preflight-errors"]');
+    expect(errors?.textContent).toContain("Key missing");
+    expect(errors?.textContent).toContain("Keyが設定されていない");
+    expect(container.querySelector('[data-testid="mix-session"]')).toBeNull();
+
+    await act(async () => root.unmount());
+  });
+
+  it("keeps Mix fully non-persistent through close preparation and unmount", async () => {
+    const ideas = [
+      makeIdea({
+        id: "00000000-0000-4000-8000-000000000411",
+        title: "No save A",
+        progressionBlocks: [block],
+      }),
+      makeIdea({
+        id: "00000000-0000-4000-8000-000000000412",
+        title: "No save B",
+        progressionBlocks: [{
+          ...block,
+          id: "00000000-0000-4000-8000-000000000413",
+        }],
+      }),
+    ];
+    const before = structuredClone(ideas);
+    const updateProgressionBlock = vi.fn(() => true);
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={ideas}
+        language="ja"
+        updateProgressionBlock={updateProgressionBlock}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={vi.fn()}
+      />,
+    ));
+    await act(async () => findButton(container, "ミックス選択")?.click());
+    const checkboxes = [...container.querySelectorAll<HTMLInputElement>(
+      'input[type="checkbox"]',
+    )];
+    await act(async () => checkboxes[0]?.click());
+    await act(async () => checkboxes[1]?.click());
+    await act(async () => findButton(container, "ミックス練習を開始")?.click());
+
+    expect(container.querySelector('[data-testid="mix-session"]')).not.toBeNull();
+    act(() => runClosePreparations());
+    expect(updateProgressionBlock).not.toHaveBeenCalled();
+    expect(ideas).toEqual(before);
+
+    await act(async () => root.unmount());
+    expect(updateProgressionBlock).not.toHaveBeenCalled();
+    expect(ideas).toEqual(before);
+  });
+
+  it("uses no count-in for the first Flow item and one bar between progressions", async () => {
+    const starts: PracticeClockStartOptions[] = [];
+    const clock = {
+      start: vi.fn(async (options: PracticeClockStartOptions) => {
+        starts.push(options);
+      }),
+      stop: vi.fn(),
+      pause: vi.fn(),
+      resume: vi.fn(),
+    };
+    const ideas = [
+      makeIdea({
+        id: "00000000-0000-4000-8000-000000000421",
+        title: "Flow A",
+        progressionBlocks: [block],
+      }),
+      makeIdea({
+        id: "00000000-0000-4000-8000-000000000422",
+        title: "Flow B",
+        progressionBlocks: [{
+          ...block,
+          id: "00000000-0000-4000-8000-000000000423",
+        }],
+      }),
+    ];
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={ideas}
+        language="ja"
+        updateProgressionBlock={vi.fn(() => true)}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={vi.fn()}
+        practiceClock={clock}
+      />,
+    ));
+    await act(async () => findButton(container, "ミックス選択")?.click());
+    const checkboxes = [...container.querySelectorAll<HTMLInputElement>(
+      'input[type="checkbox"]',
+    )];
+    await act(async () => checkboxes[0]?.click());
+    await act(async () => checkboxes[1]?.click());
+    await act(async () => findButton(container, "フロー")?.click());
+    await act(async () => findButton(container, "ミックス練習を開始")?.click());
+    await act(async () => findButton(container, "この進行を開始")?.click());
+    expect(starts[0]?.countInBars).toBe(0);
+
+    await act(async () => starts[0]?.callbacks.onRoundCompleted());
+    expect(container.textContent).toContain("次の進行");
+    await act(async () => findButton(container, "この進行を開始")?.click());
+    expect(starts[1]?.countInBars).toBe(1);
+    await act(async () => starts[1]?.callbacks.onCountInBeat?.(1));
+    expect(container.textContent).toContain("カウントイン 1");
+
+    await act(async () => root.unmount());
+  });
+
+  it("keeps Step completion outside the update and save boundaries", async () => {
+    vi.useFakeTimers();
+    const ideas = makeMixPersistenceIdeas();
+    const before = structuredClone(ideas);
+    const save = vi.fn();
+    const updateProgressionBlock = vi.fn(() => {
+      save();
+      return true;
+    });
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={ideas}
+        language="en"
+        updateProgressionBlock={updateProgressionBlock}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={vi.fn()}
+      />,
+    ));
+    await openTwoItemMix(container);
+
+    await act(async () => findButton(container, "Start this progression")?.click());
+    await setMidiNotesImmediately([60, 64, 71]);
+    await act(async () => {
+      vi.advanceTimersByTime(120);
+      await Promise.resolve();
+    });
+    await act(async () => findButton(container, "Start this progression")?.click());
+    await reAttackMidiNotesImmediately([60, 64, 71]);
+    await act(async () => {
+      vi.advanceTimersByTime(120);
+      await Promise.resolve();
+    });
+
+    expect(container.querySelector('[data-testid="mix-summary"]')).not.toBeNull();
+    act(() => runClosePreparations());
+    expect(updateProgressionBlock).not.toHaveBeenCalled();
+    expect(save).not.toHaveBeenCalled();
+    expect(ideas).toEqual(before);
+    await act(async () => root.unmount());
+    expect(updateProgressionBlock).not.toHaveBeenCalled();
+    expect(ideas).toEqual(before);
+  });
+
+  it("keeps Flow completion, dirty retry, same-selection retry, and Escape exit non-persistent", async () => {
+    const ideas = makeMixPersistenceIdeas();
+    const before = structuredClone(ideas);
+    const save = vi.fn();
+    const updateProgressionBlock = vi.fn(() => {
+      save();
+      return true;
+    });
+    const starts: PracticeClockStartOptions[] = [];
+    const clock = {
+      start: vi.fn(async (options: PracticeClockStartOptions) => {
+        starts.push(options);
+      }),
+      stop: vi.fn(),
+      pause: vi.fn(),
+      resume: vi.fn(),
+    };
+    vi.spyOn(globalThis, "confirm").mockReturnValue(true);
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={ideas}
+        language="en"
+        updateProgressionBlock={updateProgressionBlock}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={vi.fn()}
+        practiceClock={clock}
+      />,
+    ));
+    await openTwoItemMix(container, { flow: true });
+
+    for (let round = 0; round < 2; round += 1) {
+      await act(async () => findButton(container, "Start this progression")?.click());
+      await act(async () => starts[round]?.callbacks.onRoundCompleted());
+    }
+    expect(container.querySelector('[data-testid="mix-summary"]')).not.toBeNull();
+    await act(async () => findButton(
+      container,
+      "Retry only progressions that were not clean",
+    )?.click());
+
+    for (let round = 2; round < 4; round += 1) {
+      await act(async () => findButton(container, "Start this progression")?.click());
+      await act(async () => starts[round]?.callbacks.onRoundCompleted());
+    }
+    await act(async () => findButton(container, "Repeat the same selection")?.click());
+    expect(findButton(container, "Start this progression")).toBeDefined();
+    await act(async () => document.body.dispatchEvent(new KeyboardEvent("keydown", {
+      key: "Escape",
+      bubbles: true,
+    })));
+
+    expect(updateProgressionBlock).not.toHaveBeenCalled();
+    expect(save).not.toHaveBeenCalled();
+    expect(ideas).toEqual(before);
+    await act(async () => root.unmount());
+  });
+
+  it("keeps Style Mix and the explicit End path non-persistent", async () => {
+    const ideas = makeMixPersistenceIdeas();
+    const before = structuredClone(ideas);
+    const save = vi.fn();
+    const updateProgressionBlock = vi.fn(() => {
+      save();
+      return true;
+    });
+    vi.spyOn(globalThis, "confirm").mockReturnValue(true);
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={ideas}
+        language="en"
+        updateProgressionBlock={updateProgressionBlock}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={vi.fn()}
+      />,
+    ));
+    await openTwoItemMix(container, { targetSource: "shell-17" });
+    await act(async () => findButton(container, "Start this progression")?.click());
+    await act(async () => findButton(container, "End")?.click());
+
+    expect(updateProgressionBlock).not.toHaveBeenCalled();
+    expect(save).not.toHaveBeenCalled();
+    expect(ideas).toEqual(before);
+    await act(async () => root.unmount());
+  });
+
+  it.each(["end", "unmount"] as const)(
+    "keeps a pending Flow %s outside the update and save boundaries",
+    async (operation) => {
+      const ideas = makeMixPersistenceIdeas();
+      const before = structuredClone(ideas);
+      const deferred = createDeferred();
+      const save = vi.fn();
+      const updateProgressionBlock = vi.fn(() => {
+        save();
+        return true;
+      });
+      const clock = {
+        start: vi.fn(() => deferred.promise),
+        stop: vi.fn(),
+        pause: vi.fn(),
+        resume: vi.fn(),
+      };
+      vi.spyOn(globalThis, "confirm").mockReturnValue(true);
+      const container = document.createElement("div");
+      const root = createRoot(container);
+      await act(async () => root.render(
+        <PracticeView
+          ideas={ideas}
+          language="en"
+          updateProgressionBlock={updateProgressionBlock}
+          openProgression={vi.fn()}
+          openSettings={vi.fn()}
+          setToast={vi.fn()}
+          practiceClock={clock}
+        />,
+      ));
+      await openTwoItemMix(container, { flow: true });
+      await act(async () => findButton(container, "Start this progression")?.click());
+      if (operation === "end") {
+        await act(async () => findButton(container, "End")?.click());
+      } else {
+        await act(async () => root.unmount());
+      }
+      deferred.reject(new Error("late pending failure"));
+      await act(async () => Promise.resolve());
+
+      expect(updateProgressionBlock).not.toHaveBeenCalled();
+      expect(save).not.toHaveBeenCalled();
+      expect(ideas).toEqual(before);
+      if (operation === "end") await act(async () => root.unmount());
+    },
+  );
+
+  it("detects current Vault prop changes, pauses, and reloads without writing", async () => {
+    const ideas = makeMixPersistenceIdeas();
+    const changedIdeas = structuredClone(ideas);
+    const changedProgressions = changedIdeas[0]!.progressionBlocks;
+    if (!changedProgressions) throw new Error("Missing progression blocks.");
+    const changedBlock = changedProgressions[0]!;
+    const changedChord = changedBlock.chords[0]!;
+    changedBlock.chords[0] = {
+      ...changedChord,
+      chord: makeChordSymbol(2, "maj7"),
+    };
+    const updateProgressionBlock = vi.fn(() => true);
+    const clock = {
+      start: vi.fn(async (_options: PracticeClockStartOptions) => undefined),
+      stop: vi.fn(),
+      pause: vi.fn(),
+      resume: vi.fn(),
+    };
+    const props = {
+      language: "en" as const,
+      updateProgressionBlock,
+      openProgression: vi.fn(),
+      openSettings: vi.fn(),
+      setToast: vi.fn(),
+      practiceClock: clock,
+    };
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(<PracticeView ideas={ideas} {...props} />));
+    await openTwoItemMix(container, { flow: true });
+    await act(async () => findButton(container, "Start this progression")?.click());
+
+    await act(async () => root.render(<PracticeView ideas={changedIdeas} {...props} />));
+    expect(container.querySelector('[data-testid="mix-snapshot-drift"]')).not.toBeNull();
+    expect(clock.stop).toHaveBeenCalled();
+    expect(findButton(container, "Resume")).toBeUndefined();
+    await act(async () => findButton(container, "Reload current data")?.click());
+
+    expect(container.querySelector('[data-testid="mix-snapshot-drift"]')).toBeNull();
+    expect(findButton(container, "Start this progression")).toBeDefined();
+    expect(updateProgressionBlock).not.toHaveBeenCalled();
+    await act(async () => root.unmount());
+  });
+
+  it("disables Mix selection while L4 or L5 is selected", async () => {
+    const idea = makeIdea({
+      id: "00000000-0000-4000-8000-000000000431",
+      title: "Transposition only",
+      progressionBlocks: [block],
+    });
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={[idea]}
+        language="en"
+        updateProgressionBlock={vi.fn(() => true)}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={vi.fn()}
+      />,
+    ));
+    await act(async () => findButton(container, "L4 Nearby keys")?.click());
+    expect(findButton(container, "Mix selection")?.disabled).toBe(true);
+
+    await act(async () => root.unmount());
+  });
 });
 
 function findButton(
@@ -2204,6 +2656,45 @@ async function reAttackMidiNotes(notes: readonly number[]): Promise<void> {
   await act(async () => new Promise((resolve) => globalThis.setTimeout(resolve, 120)));
 }
 
+async function setMidiNotesImmediately(notes: readonly number[]): Promise<void> {
+  let state = createLiveNoteState();
+  notes.forEach((note, index) => {
+    state = reduceLiveNoteState(state, {
+      timestampMs: index + 1,
+      status: 0x90,
+      channel: 0,
+      data1: note,
+      data2: 100,
+    });
+  });
+  act(() => defaultLiveMidiStore.setState({ notes: state }));
+  await act(async () => Promise.resolve());
+}
+
+async function reAttackMidiNotesImmediately(notes: readonly number[]): Promise<void> {
+  let state = defaultLiveMidiStore.getState().notes;
+  notes.forEach((note, index) => {
+    state = reduceLiveNoteState(state, {
+      timestampMs: 100 + index,
+      status: 0x80,
+      channel: 0,
+      data1: note,
+      data2: 0,
+    });
+  });
+  notes.forEach((note, index) => {
+    state = reduceLiveNoteState(state, {
+      timestampMs: 200 + index,
+      status: 0x90,
+      channel: 0,
+      data1: note,
+      data2: 100,
+    });
+  });
+  act(() => defaultLiveMidiStore.setState({ notes: state }));
+  await act(async () => Promise.resolve());
+}
+
 async function replaceMidiNotes(
   previousNotes: readonly number[],
   nextNotes: readonly number[],
@@ -2239,4 +2730,68 @@ function createDeferred() {
     reject = fail;
   });
   return { promise, reject, resolve };
+}
+
+function makeMixPersistenceIdeas() {
+  return [0, 1].map((index) => {
+    const source: SavedProgressionBlock = {
+      ...block,
+      id: `00000000-0000-4000-8000-0000000005${index}`,
+      summaryText: `Persistence ${index + 1}`,
+      chords: [block.chords[0]],
+    };
+    const withPractice: SavedProgressionBlock = {
+      ...source,
+      practice: {
+        schemaVersion: 1,
+        progressionFingerprint: progressionFingerprint(source, "C major"),
+        confirmedLevel: 1,
+        provisional: {
+          level: 2,
+          clearedAt: "2026-07-22T00:00:00.000Z",
+          clearedOnLocalDate: "2026-07-22",
+          targetTempo: 84,
+        },
+        transposition: {
+          schemaVersion: 1,
+          clearedKeyPitchClasses: [0, 5, 7],
+          updatedAt: "2026-07-23T00:00:00.000Z",
+        },
+        lastPracticedAt: "2026-07-23T00:00:00.000Z",
+      },
+    };
+    return makeIdea({
+      id: `00000000-0000-4000-8000-0000000006${index}`,
+      title: `Persistence idea ${index + 1}`,
+      key: "C major",
+      progressionBlocks: [withPractice],
+    });
+  });
+}
+
+async function openTwoItemMix(
+  container: HTMLElement,
+  options: { flow?: boolean; targetSource?: string } = {},
+): Promise<void> {
+  await act(async () => findButton(container, "Mix selection")?.click());
+  const checkboxes = [...container.querySelectorAll<HTMLInputElement>(
+    'input[type="checkbox"]',
+  )];
+  await act(async () => checkboxes[0]?.click());
+  await act(async () => checkboxes[1]?.click());
+  if (options.flow) {
+    await act(async () => findButton(container, "Flow")?.click());
+  }
+  if (options.targetSource) {
+    const targetSelect = [...container.querySelectorAll<HTMLSelectElement>("select")]
+      .find((select) => [...select.options].some(
+        (option) => option.value === options.targetSource,
+      ));
+    if (!targetSelect) throw new Error("Mix target source select not found.");
+    await act(async () => {
+      targetSelect.value = options.targetSource!;
+      targetSelect.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+  }
+  await act(async () => findButton(container, "Start Mix practice")?.click());
 }
