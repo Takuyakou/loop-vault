@@ -1,3 +1,4 @@
+import type { CandidateChordEvent, CandidateChordStats } from "./midi/candidateBlock";
 import type { ProgressionPracticeProgress } from "./practice/types";
 
 export type Status =
@@ -112,7 +113,17 @@ export interface ProgressionBlockCandidate {
   startBar: number;
   endBar: number;
   lengthBars: 4 | 8 | 16;
+  /** Timeline events starting inside the block. Kept for existing consumers. */
   chords: ChordTimelineItem[];
+  /**
+   * Every timeline event overlapping the block, with block-relative timing.
+   * This is the candidate's real content: it keeps both chords of a two-chord
+   * bar and the full length of a chord sustained across bars.
+   */
+  events?: CandidateChordEvent[];
+  stats?: CandidateChordStats;
+  /** Dedup and repeat identity, built from structure rather than display text. */
+  structuredSignature?: string;
   summaryText: string;
   confidence: number;
   selectionScore?: number;

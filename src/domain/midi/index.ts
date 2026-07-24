@@ -16,6 +16,18 @@ export { analyzeMidiHybrid, buildHybridPipeline, defaultHybridFeatures, timeline
 export type { HybridPipelineResult } from "./hybrid";
 export { beatGridSignature, extractHybridBlocks } from "./blocks";
 export {
+  buildCandidateEvents,
+  candidateEventsAsTimeline,
+  candidateStats,
+  countStructuredRepeats,
+  relativeSignature,
+  structuredSignature,
+  summaryFromEvents,
+} from "./candidateBlock";
+export type {
+  CandidateChordEvent, CandidateChordStats, CandidateDensityClass,
+} from "./candidateBlock";
+export {
   candidateIntervalIou,
   candidateLimitForBars,
   candidateOverlapIouThreshold,

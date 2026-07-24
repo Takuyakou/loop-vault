@@ -18,7 +18,13 @@ import { analyzeMidi } from "../src/domain/midi/analysis";
  * which is where multi-chord bars and sustained chords lose information.
  */
 const path = argv[argv.length - 1];
-if (!path || path.endsWith(".ts")) throw new Error("Usage: vite-node scripts/diagnose-candidate-selection.ts <midi-path>");
+if (!path || path.endsWith(".ts")) throw new Error("Usage: vite-node scripts/diagnose-candidate-selection.ts [--output <name>] <midi-path>");
+// Stage artifacts are frozen snapshots, so the report name is explicit and a
+// later run never silently overwrites an earlier stage's record.
+const outputName = (() => {
+  const index = argv.indexOf("--output");
+  return index >= 0 ? argv[index + 1] : "candidate-selection-diagnostic.json";
+})();
 const bytes = new Uint8Array(await readFile(resolve(cwd(), path)));
 const analysis = analyzeMidi(bytes, { mode: "legacy", fileName: basename(path) });
 const totalBars = analysis.totalBars;
@@ -110,7 +116,7 @@ const report = {
 
 const outputDir = resolve(cwd(), "docs/phase4.0");
 await mkdir(outputDir, { recursive: true });
-await writeFile(resolve(outputDir, "00-candidate-selection-diagnostic.json"), `${JSON.stringify(report, null, 2)}\n`, "utf8");
+await writeFile(resolve(outputDir, outputName), `${JSON.stringify(report, null, 2)}\n`, "utf8");
 
 stdout.write(`${basename(path)}: ${totalBars} bars, key ${analysis.detectedKey}, lengths ${report.generatedLengths.join("/")}\n`);
 stdout.write(`\n-- per-bar compression --\n`);
@@ -123,5 +129,24 @@ rows.forEach((row) => stdout.write(
   + `rank=${row.approxRankingScore} +rep=${row.repeatBonus} +div=${row.diversityBonus} => ${row.approxSelectionScore} `
   + `[${row.densityClass}] ${row.selected ? "SELECTED" : "dropped"}\n`,
 ));
-stdout.write(`\ndedupe collisions: ${collisions.length}\n`);
+stdout.write(`\ndedupe collisions (v1 summary-text keys): ${collisions.length}\n`);
+
+stdout.write(`\n-- selected candidates (actual v2 structure) --\n`);
+for (const block of analysis.blockCandidates) {
+  const stats = block.stats;
+  stdout.write(`  ${block.id.padEnd(14)} ${block.summaryText}\n`);
+  if (stats) {
+    stdout.write(`  ${" ".repeat(14)} ${block.lengthBars}bars / ${stats.eventCount}events / `
+      + `${stats.uniqueChordCount}chords / changes ${stats.harmonicChangeCount} / `
+      + `${stats.chordEventsPerBar}per bar / ${stats.densityClass}`
+      + `${block.repeatCount && block.repeatCount > 1 ? ` / repeat x${block.repeatCount}` : ""}\n`);
+  }
+  const carried = block.events?.filter((event) => event.carriedIn) ?? [];
+  if (carried.length) {
+    stdout.write(`  ${" ".repeat(14)} carried-in: ${carried.map((event) => event.chord.label).join(", ")}\n`);
+  }
+}
+
+const signatures = analysis.blockCandidates.map((block) => block.structuredSignature ?? "");
+stdout.write(`\nstructured signatures unique: ${new Set(signatures).size}/${signatures.length}\n`);
 stdout.write(`selected: ${analysis.blockCandidates.length}\n`);

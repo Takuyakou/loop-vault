@@ -1,0 +1,710 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.0-03",
+  "datasetId": "7991f80e29b76717af3fbeee5840a158a83cc387d73f9b73fdf2731afc70f3a6",
+  "caseCount": 100,
+  "totals": {
+    "rawBlocks": 991,
+    "legacyCollidedBlocks": 18,
+    "legacyCollisionRate": 0.018163,
+    "v2CollidedBlocks": 0,
+    "barsLosingASecondChord": 398,
+    "sustainBarsLegacyShowedAsNoChord": 46
+  },
+  "densityClassDistribution": {
+    "standard": 519,
+    "compact": 302,
+    "dense": 153,
+    "vamp": 17
+  },
+  "affectedCases": [
+    {
+      "caseId": "game-menu-bright-b-minor-9006",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 14,
+      "barsLosingASecondChord": 13,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "game-menu-bright-bb-major-9005",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 2,
+      "barsLosingASecondChord": 5,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "neo-soul-warm-b-minor-9004",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 2,
+      "barsLosingASecondChord": 8,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "acid-jazz-groove-a-minor-9001",
+      "totalBars": 4,
+      "blocks": 1,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 1,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "acid-jazz-groove-b-minor-9003",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 2,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "acid-jazz-groove-b-minor-9006",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 14,
+      "sustainBarsLegacyShowedAsNoChord": 1
+    },
+    {
+      "caseId": "acid-jazz-groove-bb-major-9002",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 7,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "acid-jazz-groove-bb-major-9005",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 1,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "acid-jazz-groove-c-major-9007",
+      "totalBars": 4,
+      "blocks": 1,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 1,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "acid-jazz-groove-d-major-9009",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 7,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "acid-jazz-groove-db-minor-9008",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 7,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "acid-jazz-groove-eb-minor-9010",
+      "totalBars": 4,
+      "blocks": 1,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 4,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "afterglow-cloud-a-major-9001",
+      "totalBars": 4,
+      "blocks": 1,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 0,
+      "sustainBarsLegacyShowedAsNoChord": 1
+    },
+    {
+      "caseId": "afterglow-cloud-b-major-9003",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 2,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "afterglow-cloud-bb-minor-9002",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 5,
+      "sustainBarsLegacyShowedAsNoChord": 1
+    },
+    {
+      "caseId": "afterglow-cloud-d-major-9005",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 0,
+      "sustainBarsLegacyShowedAsNoChord": 1
+    },
+    {
+      "caseId": "afterglow-cloud-db-minor-9004",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 3,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "afterglow-cloud-e-major-9007",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 3,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "afterglow-cloud-eb-minor-9006",
+      "totalBars": 4,
+      "blocks": 1,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 4,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "afterglow-cloud-f-minor-9008",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 13,
+      "sustainBarsLegacyShowedAsNoChord": 1
+    },
+    {
+      "caseId": "afterglow-cloud-g-minor-9010",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 5,
+      "sustainBarsLegacyShowedAsNoChord": 1
+    },
+    {
+      "caseId": "afterglow-cloud-gb-major-9009",
+      "totalBars": 4,
+      "blocks": 1,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 1,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "bossa-dusk-ab-major-9007",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 1,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "bossa-dusk-b-minor-9010",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 15,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "bossa-dusk-bb-major-9009",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 2,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "bossa-dusk-e-minor-9002",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 1,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "bossa-dusk-f-major-9003",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 7,
+      "sustainBarsLegacyShowedAsNoChord": 1
+    },
+    {
+      "caseId": "bossa-dusk-f-minor-9004",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 11,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "bossa-dusk-g-minor-9006",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 7,
+      "sustainBarsLegacyShowedAsNoChord": 1
+    },
+    {
+      "caseId": "bossa-dusk-gb-major-9005",
+      "totalBars": 4,
+      "blocks": 1,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 2,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "cute-future-pop-a-minor-9010",
+      "totalBars": 4,
+      "blocks": 1,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 1,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "cute-future-pop-ab-major-9009",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 0,
+      "sustainBarsLegacyShowedAsNoChord": 1
+    },
+    {
+      "caseId": "cute-future-pop-d-major-9003",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 2,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "cute-future-pop-e-major-9005",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 2,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "cute-future-pop-eb-minor-9004",
+      "totalBars": 4,
+      "blocks": 1,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 3,
+      "sustainBarsLegacyShowedAsNoChord": 1
+    },
+    {
+      "caseId": "cute-future-pop-f-minor-9006",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 10,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "cute-future-pop-g-minor-9008",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 5,
+      "sustainBarsLegacyShowedAsNoChord": 1
+    },
+    {
+      "caseId": "cute-future-pop-gb-major-9007",
+      "totalBars": 4,
+      "blocks": 1,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 1,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "game-menu-bright-a-minor-9004",
+      "totalBars": 4,
+      "blocks": 1,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 3,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "game-menu-bright-c-major-9007",
+      "totalBars": 4,
+      "blocks": 1,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 1,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "game-menu-bright-d-major-9009",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 0,
+      "sustainBarsLegacyShowedAsNoChord": 1
+    },
+    {
+      "caseId": "game-menu-bright-db-minor-9008",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 0,
+      "sustainBarsLegacyShowedAsNoChord": 1
+    },
+    {
+      "caseId": "game-menu-bright-e-minor-9002",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 6,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "game-menu-bright-eb-minor-9010",
+      "totalBars": 4,
+      "blocks": 1,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 4,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "lofi-night-piano-a-minor-9006",
+      "totalBars": 4,
+      "blocks": 1,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 1,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "lofi-night-piano-ab-major-9005",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 7,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "lofi-night-piano-b-minor-9008",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 4,
+      "sustainBarsLegacyShowedAsNoChord": 10
+    },
+    {
+      "caseId": "lofi-night-piano-bb-major-9007",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 0,
+      "sustainBarsLegacyShowedAsNoChord": 5
+    },
+    {
+      "caseId": "lofi-night-piano-d-major-9003",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 15,
+      "sustainBarsLegacyShowedAsNoChord": 1
+    },
+    {
+      "caseId": "lofi-night-piano-db-minor-9002",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 0,
+      "sustainBarsLegacyShowedAsNoChord": 6
+    },
+    {
+      "caseId": "lofi-night-piano-db-minor-9010",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 3,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "lofi-night-piano-g-minor-9004",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 8,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "neo-soul-warm-ab-major-9003",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 5,
+      "sustainBarsLegacyShowedAsNoChord": 1
+    },
+    {
+      "caseId": "neo-soul-warm-c-major-9005",
+      "totalBars": 4,
+      "blocks": 1,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 1,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "neo-soul-warm-d-major-9007",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 1,
+      "sustainBarsLegacyShowedAsNoChord": 1
+    },
+    {
+      "caseId": "neo-soul-warm-e-major-9009",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 2,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "neo-soul-warm-eb-minor-9008",
+      "totalBars": 4,
+      "blocks": 1,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 3,
+      "sustainBarsLegacyShowedAsNoChord": 1
+    },
+    {
+      "caseId": "neo-soul-warm-f-minor-9010",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 11,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "neo-soul-warm-g-minor-9002",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 2,
+      "sustainBarsLegacyShowedAsNoChord": 2
+    },
+    {
+      "caseId": "neon-bloom-a-minor-9010",
+      "totalBars": 4,
+      "blocks": 1,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 2,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "neon-bloom-ab-major-9003",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 12,
+      "sustainBarsLegacyShowedAsNoChord": 1
+    },
+    {
+      "caseId": "neon-bloom-ab-major-9009",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 1,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "neon-bloom-eb-minor-9004",
+      "totalBars": 4,
+      "blocks": 1,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 1,
+      "sustainBarsLegacyShowedAsNoChord": 1
+    },
+    {
+      "caseId": "neon-bloom-f-minor-9006",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 1,
+      "sustainBarsLegacyShowedAsNoChord": 1
+    },
+    {
+      "caseId": "neon-bloom-g-minor-9002",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 2,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "neon-bloom-g-minor-9008",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 8,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "neon-bloom-gb-major-9007",
+      "totalBars": 4,
+      "blocks": 1,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 1,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "shibuya-fusion-pop-d-major-9005",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 9,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "shibuya-fusion-pop-db-minor-9004",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 7,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "shibuya-fusion-pop-e-major-9007",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 3,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "shibuya-fusion-pop-e-minor-9002",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 7,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "shibuya-fusion-pop-eb-major-9001",
+      "totalBars": 4,
+      "blocks": 1,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 2,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "shibuya-fusion-pop-eb-minor-9006",
+      "totalBars": 4,
+      "blocks": 1,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 3,
+      "sustainBarsLegacyShowedAsNoChord": 1
+    },
+    {
+      "caseId": "shibuya-fusion-pop-f-major-9003",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 15,
+      "sustainBarsLegacyShowedAsNoChord": 1
+    },
+    {
+      "caseId": "shibuya-fusion-pop-f-minor-9008",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 4,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "shibuya-fusion-pop-g-minor-9010",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 7,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "shibuya-fusion-pop-gb-major-9009",
+      "totalBars": 4,
+      "blocks": 1,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 1,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "tokyo-minor-loop-b-minor-9004",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 16,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "tokyo-minor-loop-c-major-9005",
+      "totalBars": 4,
+      "blocks": 1,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 2,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "tokyo-minor-loop-d-major-9003",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 10,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "tokyo-minor-loop-d-major-9007",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 11,
+      "sustainBarsLegacyShowedAsNoChord": 1
+    },
+    {
+      "caseId": "tokyo-minor-loop-db-minor-9002",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 1,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "tokyo-minor-loop-db-minor-9006",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 7,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "tokyo-minor-loop-e-major-9009",
+      "totalBars": 8,
+      "blocks": 6,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 2,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "tokyo-minor-loop-eb-minor-9008",
+      "totalBars": 4,
+      "blocks": 1,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 2,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    },
+    {
+      "caseId": "tokyo-minor-loop-f-minor-9010",
+      "totalBars": 16,
+      "blocks": 23,
+      "legacyCollidedBlocks": 0,
+      "barsLosingASecondChord": 8,
+      "sustainBarsLegacyShowedAsNoChord": 0
+    }
+  ]
+}
