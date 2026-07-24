@@ -182,26 +182,33 @@ Root / Exact / Top-3 / Corrections は不変。
 
 ## 11. Promotion Gate
 
-`02-promotion-gates.json` に定義した。**現時点では人間承認待ちである。**
+`02-promotion-gates.json` に定義し、**2026-07-25にリポジトリ所有者の承認を得て確定した**。
 
 Gateは以降変更しない。後続の結果に合わせて閾値を動かさない（計画書§8.10）。
 
-### 11.1 現行Analyzerのgate評価
+### 11.1 承認された閾値
 
-Gateを現在の2つのrerankerへ適用すると、**どちらも不合格**になる。
+| 項目 | 値 | 判断 |
+|---|---:|---|
+| root / quality / triad / seventh / bassSlash の許容損失 | 0.5pp | 提案どおり |
+| **top3Root / top3Quality の許容損失** | **3.0pp** | ハードGateとしつつ許容幅を拡大 |
+| requireAny（holdout改善幅） | **0.5pp** | 1.0ppから引き下げ |
+| runtime上限（100件） | 3000 ms | 提案どおり |
 
-| Analyzer | 判定 | 主な不合格理由 |
+`top3Root` / `top3Quality` をハードGateに含めたのは、計画書§2.3の「機械が正解をTop-3へ含める → ユーザーが数秒で選ぶ」が製品目的だからである。許容幅3.0ppは、小さなトレードオフは許しつつ8pp級の損失は阻止する水準に設定した。
+
+### 11.2 現行Analyzerのgate評価
+
+承認された閾値を現在の2つのrerankerへ適用すると、**どちらも不合格**になる。
+
+| Analyzer | 判定 | 不合格理由 |
 |---|---|---|
-| legacy-boundary-rerank | FAIL | top3Root -8.51pp / top3Quality -6.68pp / holdout canonicalExact +0.29pp（要求1.0pp） |
-| voice-aware-rerank-v1 | FAIL | top3Root -8.30pp / top3Quality -6.84pp / holdout canonicalExact +0.58pp（要求1.0pp） |
+| legacy-boundary-rerank | FAIL | top3Root -8.51pp / top3Quality -6.68pp（許容3.0pp）、holdout改善 +0.29pp（要求0.5pp） |
+| voice-aware-rerank-v1 | FAIL | top3Root -8.30pp / top3Quality -6.84pp（許容3.0pp） |
 
-これはP4.0-06の結論を先取りするものではないが、**Gateを承認した場合、既存rerankerを製品既定へ昇格させる根拠は現時点で存在しない**ことを意味する。
+requireAnyを0.5ppへ引き下げたことで、voice-aware は holdout canonicalExact +0.58pp で**改善要件は満たすようになった**。残る不合格理由はTop-3の候補幅のみである。
 
-### 11.2 承認が必要な判断
-
-1. 0.5pp / 1.0pp の許容幅は妥当か。評価は決定的なのでノイズは存在せず、0を超える許容は「トレードオフの意図的な容認」を意味する。
-2. requireAny の holdout 1.0pp 改善という基準は、製品既定を変えるハードルとして妥当か。
-3. `top3Root` / `top3Quality` をハードGateにするか、参考指標に留めるか。ハードGateにすると既存rerankerは昇格不可能になる。
+これはP4.0-06の結論を先取りするものではないが、**現時点で既存rerankerを製品既定へ昇格させる根拠は存在しない**ことを意味する。P4.0-05では、Top-3の候補幅を壊さずに精度を上げることが要件になる。
 
 ## 12. 成果物
 

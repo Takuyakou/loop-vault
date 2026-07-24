@@ -1,7 +1,13 @@
 {
   "schemaVersion": 1,
   "stage": "P4.0-02",
-  "status": "proposed-awaiting-human-approval",
+  "status": "approved",
+  "approvedAt": "2026-07-25",
+  "approvedBy": "repository owner",
+  "approvalNotes": [
+    "top3Root and top3Quality are hard gates, with the loss tolerance widened to 3.0pp so a small trade-off is allowed but an 8pp collapse is not.",
+    "The requireAny holdout improvement bar was lowered from 1.0pp to 0.5pp to allow incremental progress to be promoted."
+  ],
   "frozenPolicy": "Thresholds are fixed at P4.0-02 and must not be changed to accommodate a later result. Any change requires explicit human approval and a recorded reason.",
   "appliesTo": "defaultAnalyzerMode promotion decided in P4.0-06",
   "baseline": {
@@ -65,14 +71,14 @@
       "id": "no-top3-root-regression",
       "metric": "top3RootAccuracy",
       "rule": "noRegression",
-      "toleranceLossPp": 1.0,
-      "rationale": "The product goal is that the correct chord sits in the short list the user scans. A sharper single answer does not compensate for a narrower candidate spread."
+      "toleranceLossPp": 3.0,
+      "rationale": "The product goal is that the correct chord sits in the short list the user scans. A sharper single answer does not compensate for a narrower candidate spread. The tolerance is deliberately wide enough to permit a modest trade-off and narrow enough to block the ~8pp loss both current rerankers show."
     },
     {
       "id": "no-top3-quality-regression",
       "metric": "top3QualityAccuracy",
       "rule": "noRegression",
-      "toleranceLossPp": 1.0
+      "toleranceLossPp": 3.0
     },
     {
       "id": "no-correction-cost-increase",
@@ -117,14 +123,14 @@
       "metric": "canonicalExactAccuracy",
       "subset": "holdout",
       "rule": "improve",
-      "minGainPp": 1.0
+      "minGainPp": 0.5
     },
     {
       "id": "top3-canonical-improves",
       "metric": "top3CanonicalAccuracy",
       "subset": "holdout",
       "rule": "improve",
-      "minGainPp": 1.0
+      "minGainPp": 0.5
     }
   ],
   "reportAlwaysButDoNotGate": [
@@ -139,25 +145,23 @@
     "legacyBoundaryRerank": {
       "verdict": "FAIL",
       "failing": [
-        { "id": "no-top3-root-regression", "baseline": 0.704741, "candidate": 0.619612, "deltaPp": -8.51 },
-        { "id": "no-top3-quality-regression", "baseline": 0.651940, "candidate": 0.585129, "deltaPp": -6.68 },
-        { "id": "canonical-exact-improves / top3-canonical-improves", "reason": "holdout canonicalExact +0.29pp, below the 1.0pp requireAny threshold" }
+        { "id": "no-top3-root-regression", "baseline": 0.704741, "candidate": 0.619612, "deltaPp": -8.51, "toleranceLossPp": 3.0 },
+        { "id": "no-top3-quality-regression", "baseline": 0.651940, "candidate": 0.585129, "deltaPp": -6.68, "toleranceLossPp": 3.0 },
+        { "id": "canonical-exact-improves / top3-canonical-improves", "reason": "holdout canonicalExact +0.29pp, below the 0.5pp requireAny threshold" }
       ],
       "passing": ["root +0.22pp", "triad +0.76pp", "quality +0.76pp", "seventh +0.86pp", "bassSlash +0.21pp", "runtime 1032.9ms"]
     },
     "voiceAwareRerank": {
       "verdict": "FAIL",
       "failing": [
-        { "id": "no-top3-root-regression", "baseline": 0.704741, "candidate": 0.621767, "deltaPp": -8.30 },
-        { "id": "no-top3-quality-regression", "baseline": 0.651940, "candidate": 0.583512, "deltaPp": -6.84 },
-        { "id": "canonical-exact-improves / top3-canonical-improves", "reason": "holdout canonicalExact +0.58pp, below the 1.0pp requireAny threshold" }
+        { "id": "no-top3-root-regression", "baseline": 0.704741, "candidate": 0.621767, "deltaPp": -8.30, "toleranceLossPp": 3.0 },
+        { "id": "no-top3-quality-regression", "baseline": 0.651940, "candidate": 0.583512, "deltaPp": -6.84, "toleranceLossPp": 3.0 }
       ],
-      "passing": ["root +0.43pp", "triad +0.76pp", "quality +0.65pp", "seventh +0.65pp", "bassSlash +0.21pp", "runtime 1006.9ms"]
+      "passing": [
+        "requireAny satisfied: holdout canonicalExact +0.58pp meets the 0.5pp bar",
+        "root +0.43pp", "triad +0.76pp", "quality +0.65pp", "seventh +0.65pp", "bassSlash +0.21pp", "runtime 1006.9ms"
+      ],
+      "note": "Under the approved thresholds this analyzer now clears requireAny; only the Top-3 spread blocks it."
     }
-  },
-  "openQuestionsForApproval": [
-    "Are the 0.5pp / 1.0pp loss tolerances acceptable? The evaluation is deterministic, so any tolerance above 0 is a deliberate allowance for trade-offs rather than noise.",
-    "Is the 1.0pp requireAny gain threshold on holdout the right bar for changing the product default?",
-    "Should top3Root and top3Quality be hard gates at all, or advisory? Making them hard gates means neither existing reranker can be promoted as-is."
-  ]
+  }
 }
