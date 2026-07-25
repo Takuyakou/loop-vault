@@ -65,6 +65,14 @@ export function buildOccurrences(
   options: {
     beatsPerBar?: number;
     lengths?: readonly number[];
+    /**
+     * Windows derived from the material rather than from the fixed length set.
+     *
+     * Added alongside the fixed lengths, never instead of them, so a section of an
+     * awkward length becomes reachable without changing anything about the
+     * windows that already worked.
+     */
+    extraWindows?: ReadonlyArray<{ startBar: number; lengthBars: number }>;
     rawMatchScores?: readonly number[];
     scoreOf?: (events: readonly CandidateChordEvent[], lengthBars: number, repeatCount: number) => number;
   } = {},
@@ -72,32 +80,44 @@ export function buildOccurrences(
   const beatsPerBar = options.beatsPerBar ?? 4;
   const lengths = options.lengths ?? [2, 4, 8, 16];
   const occurrences: CandidateOccurrence[] = [];
+  const seen = new Set<string>();
+
+  const emit = (startBar: number, lengthBars: number) => {
+    if (startBar < 1 || startBar + lengthBars - 1 > totalBars) return;
+    const id = `occ-${startBar}-${startBar + lengthBars - 1}`;
+    if (seen.has(id)) return;
+    const events = buildCandidateEvents(
+      timeline, startBar, lengthBars, beatsPerBar, options.rawMatchScores,
+    );
+    if (events.length === 0) return;
+    seen.add(id);
+    const { startBeat, endBeat } = beatsOf(startBar, lengthBars, beatsPerBar);
+    occurrences.push({
+      id,
+      startBar,
+      endBar: startBar + lengthBars - 1,
+      startBeat,
+      endBeat,
+      lengthBars,
+      events,
+      stats: candidateStats(events, lengthBars),
+      structuredSignature: structuredSignature(events),
+      relativeSignature: relativeSignature(events),
+      score: 0,
+      warnings: [...new Set(events.flatMap((event) => event.warnings))],
+      transposeOffset: 0,
+      sectionIds: [],
+    });
+  };
 
   for (const lengthBars of lengths) {
     if (totalBars < lengthBars) continue;
     for (let startBar = 1; startBar <= totalBars - lengthBars + 1; startBar += 1) {
-      const events = buildCandidateEvents(
-        timeline, startBar, lengthBars, beatsPerBar, options.rawMatchScores,
-      );
-      if (events.length === 0) continue;
-      const { startBeat, endBeat } = beatsOf(startBar, lengthBars, beatsPerBar);
-      occurrences.push({
-        id: `occ-${startBar}-${startBar + lengthBars - 1}`,
-        startBar,
-        endBar: startBar + lengthBars - 1,
-        startBeat,
-        endBeat,
-        lengthBars,
-        events,
-        stats: candidateStats(events, lengthBars),
-        structuredSignature: structuredSignature(events),
-        relativeSignature: relativeSignature(events),
-        score: 0,
-        warnings: [...new Set(events.flatMap((event) => event.warnings))],
-        transposeOffset: 0,
-        sectionIds: [],
-      });
+      emit(startBar, lengthBars);
     }
+  }
+  for (const window of options.extraWindows ?? []) {
+    emit(window.startBar, window.lengthBars);
   }
 
   return occurrences;
