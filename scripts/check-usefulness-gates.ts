@@ -228,6 +228,7 @@ const report = {
     boundaryRecall: summary((evaluation) => evaluation.segmentation.boundaryRecall),
     segmentIoU: summary((evaluation) => evaluation.segmentation.segmentIoU),
     allCandidateCoverage: summary((evaluation) => evaluation.selection.allCandidateCoverage),
+    reachableCandidateCoverage: summary((evaluation) => evaluation.selection.reachableCandidateCoverage),
     progressionCandidateCoverage: summary(
       (evaluation) => evaluation.selection.progressionCandidateCoverage,
     ),

@@ -9,7 +9,7 @@ import type {
 } from "../types";
 import { normalizeChordSymbol } from "../chordIdentity";
 import { normaliseEvidence, scoreBlockQuality } from "./blockQuality";
-import { buildCoverageCandidates } from "./coverageCandidates";
+import { buildCoverageCandidates, buildPatternCoverageCandidates } from "./coverageCandidates";
 import {
   defaultRoleThresholds, extractionRoleThresholds, prepareMidiForAnalysis,
   type ExtractionProfile,
@@ -107,6 +107,13 @@ export interface LegacyScoringOptions {
    * ranking selector stays available so this can be turned off.
    */
   useCoverageSelection?: boolean;
+  /**
+   * Spend a display slot on a pattern rather than on an occurrence.
+   *
+   * Independent of `useCoverageSelection` so the two units can be compared
+   * against the same gates.
+   */
+  usePatternSelection?: boolean;
   /** Robustness pass for AI-extracted MIDI. Raw notes are never modified. */
   useExtractionProfile?: boolean;
   analyzerVersion?: string;
@@ -143,9 +150,11 @@ export function analyzeMidiWithRankingScores(
   const smoothedTimeline = smoothTimelineWithRankingScores(rankedTimeline, barLengthBeats);
   const fullTimeline = smoothedTimeline.map(({ item }) => item);
   const timelineRankingScores = smoothedTimeline.map(({ rankingScore }) => rankingScore);
-  const coverage = scoring.useCoverageSelection
-    ? buildCoverageCandidates(fullTimeline, data, data.totalBars, timelineRankingScores)
-    : undefined;
+  const coverage = scoring.usePatternSelection
+    ? buildPatternCoverageCandidates(fullTimeline, data, data.totalBars, timelineRankingScores)
+    : (scoring.useCoverageSelection
+      ? buildCoverageCandidates(fullTimeline, data, data.totalBars, timelineRankingScores)
+      : undefined);
   const blockCandidates = coverage
     ? coverage.candidates
     : extractBlockCandidates(
@@ -166,7 +175,7 @@ export function analyzeMidiWithRankingScores(
       fullTimeline,
       blockCandidates,
       ...(coverage ? { candidatePatterns: coverage.patterns } : {}),
-      ...(scoring.useCoverageSelection
+      ...(scoring.useCoverageSelection || scoring.usePatternSelection
         ? { sections: segmentSections(analysisData, fullTimeline) }
         : {}),
       analyzedAt: "1970-01-01T00:00:00.000Z",

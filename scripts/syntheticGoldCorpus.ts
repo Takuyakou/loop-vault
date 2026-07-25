@@ -619,6 +619,17 @@ export interface SelectionMetrics {
   top10ProgressionRate: number;
   progressionCandidateCoverage: number;
   allCandidateCoverage: number;
+  /**
+   * Coverage counting every occurrence a shown card can reach.
+   *
+   * Reported alongside `allCandidateCoverage`, never instead of it.
+   * `allCandidateCoverage` counts only the bars a card itself displays, and that
+   * is the definition the A2 gate was frozen on. A pattern-based list moves bars
+   * from the first number to the second without losing them, so both are needed
+   * to describe what happened; substituting one for the other would be moving a
+   * frozen gate to fit a result.
+   */
+  reachableCandidateCoverage: number;
   longestUncoveredHarmonicRun: number;
   minimumSelectedCandidateScore: number | null;
   twoBarFragmentsInTop3: number;
@@ -995,6 +1006,12 @@ export function evaluateFile(
       }),
     ),
     allCandidateCoverage: coverageOf(selected),
+    reachableCandidateCoverage: coverageOf(selected.flatMap((block) => {
+      const occurrence = occurrenceByRange.get(`${block.startBar}:${block.endBar}`);
+      const patternId = occurrence ? patternOf.get(occurrence.id) : undefined;
+      const pattern = patternId ? patternById.get(patternId) : undefined;
+      return pattern ? pattern.occurrences : [block];
+    })),
     longestUncoveredHarmonicRun: longestRun,
     minimumSelectedCandidateScore: selected.length
       ? Number(Math.min(...selected.map((block) => block.selectionScore ?? 0)).toFixed(6))
