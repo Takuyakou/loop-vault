@@ -11,6 +11,10 @@ import { normalizeChordSymbol } from "../chordIdentity";
 import { normaliseEvidence, scoreBlockQuality } from "./blockQuality";
 import { buildCoverageCandidates } from "./coverageCandidates";
 import {
+  defaultRoleThresholds, extractionRoleThresholds, prepareMidiForAnalysis,
+  type ExtractionProfile,
+} from "./extractionProfile";
+import {
   ambiguousQualityWarning, attenuateRootBonus, evaluateQualityEvidence,
   missingQualityToneWarning,
   type QualityEvidenceOptions,
@@ -102,6 +106,8 @@ export interface LegacyScoringOptions {
    * ranking selector stays available so this can be turned off.
    */
   useCoverageSelection?: boolean;
+  /** Robustness pass for AI-extracted MIDI. Raw notes are never modified. */
+  useExtractionProfile?: boolean;
   analyzerVersion?: string;
 }
 
@@ -117,8 +123,14 @@ export function analyzeMidiWithRankingScores(
     return { analysis: emptyAnalysis(data, options), timelineRankingScores: [] };
   }
   const barLengthBeats = beatsPerBar(data.timeSignature);
-  const roles = inferTrackRoles(evidenceData);
-  const windows = buildWeightedWindows(evidenceData, roles, options.beatsPerWindow ?? 2);
+  // Analysis works on the repaired copy; `data.notes` stays exactly as parsed
+  // so preview, saving and export are unaffected.
+  const prepared = scoring.useExtractionProfile ? prepareMidiForAnalysis(data) : null;
+  const analysisData = prepared?.extractionProfile
+    ? { ...evidenceData, notes: selectChordEvidenceNotes(prepared.analysisNotes) }
+    : evidenceData;
+  const roles = inferTrackRoles(analysisData, prepared?.extractionProfile ?? null);
+  const windows = buildWeightedWindows(analysisData, roles, options.beatsPerWindow ?? 2);
   const rankedTimeline: RankedTimelineItem[] = [];
   for (const window of windows) {
     rankedTimeline.push(matchWindowWithRankingScore(
@@ -158,12 +170,29 @@ export function analyzeMidiWithRankingScores(
   };
 }
 
-export function inferTrackRoles(data: MidiSongData): Map<number, TrackRole> {
+export function inferTrackRoles(
+  data: MidiSongData,
+  profile: ExtractionProfile | null = null,
+): Map<number, TrackRole> {
   const roles = new Map<number, TrackRole>();
+  // Extraction fragments sustained parts, so a pad shows lower polyphony and
+  // shorter notes than it really has. The relaxed thresholds apply only when
+  // the profile fired; ordinary MIDI keeps the original ones.
+  const thresholds = profile ? extractionRoleThresholds : defaultRoleThresholds;
 
   for (const track of data.tracks) {
     if (track.roleHint === "percussion") {
       roles.set(track.index, "percussion");
+      continue;
+    }
+
+    // Once the profile has fired the stem name is trustworthy enough to act as
+    // a prior. It matters most for a vocal stem: relaxed thresholds otherwise
+    // read a sustained melody line as harmony, which would feed the chord
+    // detector notes that are not part of the harmony at all.
+    const profileHint = profile?.roleHints.get(track.index);
+    if (profileHint) {
+      roles.set(track.index, profileHint);
       continue;
     }
 
@@ -183,7 +212,7 @@ export function inferTrackRoles(data: MidiSongData): Map<number, TrackRole> {
       continue;
     }
 
-    if (simultaneity >= 2.2 || avgDuration >= 1.3) {
+    if (simultaneity >= thresholds.harmonyPolyphony || avgDuration >= thresholds.harmonyDuration) {
       roles.set(track.index, "harmony");
       continue;
     }
@@ -193,6 +222,8 @@ export function inferTrackRoles(data: MidiSongData): Map<number, TrackRole> {
       continue;
     }
 
+    // Track names only act as a prior once the profile has fired; a name alone
+    // never decides a role.
     roles.set(track.index, track.roleHint ?? "mixed");
   }
 

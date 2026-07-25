@@ -145,3 +145,11 @@ export {
 export type { CandidateOccurrence, CandidatePattern } from "./occurrence";
 export { evaluateSegmentation, segmentSections } from "./sections";
 export type { Section, SectionBoundaryReason, SegmentationQuality } from "./sections";
+export {
+  LEGATO_GAP_BEATS,
+  detectExtractionProfile,
+  extractionRoleThresholds,
+  prepareMidiForAnalysis,
+  repairLegato,
+} from "./extractionProfile";
+export type { ExtractionProfile, ParsedMidi } from "./extractionProfile";
