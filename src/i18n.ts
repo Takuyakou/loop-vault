@@ -313,6 +313,14 @@ export const appCopy = {
       unknown: "不明",
       itemCount: (count: number) => `${count}件`,
       noCandidates: "使えそうな進行候補は見つかりませんでした。",
+      lanes: {
+        progression: "使えそうな進行候補",
+        vamp: "ワンコード／ヴァンプ候補",
+        fragment: "その他の断片",
+        // Shown on the vamp lane so a one-chord loop does not read as a defect.
+        vampNote: "1コードで回すループです。進行として使う場合は展開が必要です。",
+        fragmentNote: "進行として不完全な短い区間です。",
+      },
       closeUnsavedTitle: "未保存の候補を閉じますか？",
       supportedFormats: ".mid / .midi に対応",
       loadFailed: "MIDIを読み込めませんでした",
@@ -759,6 +767,13 @@ export const appCopy = {
       unknown: "Unknown",
       itemCount: (count: number) => `${count} items`,
       noCandidates: "No reusable progression candidates were found.",
+      lanes: {
+        progression: "Progressions worth trying",
+        vamp: "One-chord and vamp candidates",
+        fragment: "Other fragments",
+        vampNote: "A loop over a single chord. Using it as a progression means developing it.",
+        fragmentNote: "A short span that is not a complete progression.",
+      },
       closeUnsavedTitle: "Close the unsaved candidate?",
       supportedFormats: ".mid / .midi supported",
       loadFailed: "Could not load the MIDI",

@@ -632,7 +632,22 @@ export function CaptureView(props: CaptureViewProps) {
         <div className="mt-5">
           <div className="space-y-3">
             {result.blockCandidates.length > 0 ? (
-              result.blockCandidates.map((candidate, index) => (
+              candidateLanes(result.blockCandidates).flatMap((lane) => [
+                lane.heading === null ? null : (
+                  <div key={`lane-${lane.kind}`} className="pt-2" data-candidate-lane={lane.kind}>
+                    <h4 className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--lv-muted)]">
+                      {copy.capture.lanes[lane.kind]}
+                    </h4>
+                    {lane.kind !== "progression" ? (
+                      <p className="mt-1 text-xs text-[var(--lv-muted)]">
+                        {lane.kind === "vamp"
+                          ? copy.capture.lanes.vampNote
+                          : copy.capture.lanes.fragmentNote}
+                      </p>
+                    ) : null}
+                  </div>
+                ),
+                ...lane.candidates.map(({ candidate, index }) => (
                 <ProgressionCandidateCard
                   key={candidate.id}
                   candidate={candidate}
@@ -676,7 +691,8 @@ export function CaptureView(props: CaptureViewProps) {
                   }}
                   showRomanNumerals={showRomanNumerals}
                 />
-              ))
+                )),
+              ])
             ) : (
               <p className="text-sm text-[var(--lv-text-muted)]">{copy.capture.noCandidates}</p>
             )}
@@ -1709,6 +1725,48 @@ function singleChordVoicing(event: ChordTimelineItem | undefined): readonly numb
     event.voicingMemory,
     voiceChordForPreview(event.chord).notes,
   ).midiNotes;
+}
+
+type CandidateLaneKind = "progression" | "vamp" | "fragment";
+
+interface CandidateLane {
+  kind: CandidateLaneKind;
+  /** Null when the lane needs no heading: a single lane is just the list. */
+  heading: string | null;
+  candidates: Array<{ candidate: ProgressionBlockCandidate; index: number }>;
+}
+
+/**
+ * Splits the candidate list into its three lanes.
+ *
+ * A one-chord vamp is a musical shape, not a defective progression, so it keeps a
+ * lane of its own rather than being scored down or hidden — that was the Phase 4.0
+ * decision and it still holds. Fragments sit last and only appear when they exist.
+ *
+ * Headings are suppressed when only one lane has anything in it, so a song made
+ * entirely of vamps reads as a list of candidates rather than as a list under a
+ * warning about what it failed to be.
+ */
+export function candidateLanes(
+  candidates: readonly ProgressionBlockCandidate[],
+): CandidateLane[] {
+  const order: CandidateLaneKind[] = ["progression", "vamp", "fragment"];
+  const numbered = candidates.map((candidate, index) => ({ candidate, index }));
+  const lanes = order
+    .map((kind) => ({
+      kind,
+      heading: kind as string | null,
+      candidates: numbered.filter(
+        // An analyzer that predates the classification leaves `kind` unset; those
+        // candidates stay in the main lane rather than vanishing.
+        ({ candidate }) => (candidate.kind ?? "progression") === kind,
+      ),
+    }))
+    .filter((lane) => lane.candidates.length > 0);
+
+  return lanes.length <= 1
+    ? lanes.map((lane) => ({ ...lane, heading: null }))
+    : lanes;
 }
 
 function captureCandidateSource(

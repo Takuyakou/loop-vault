@@ -134,6 +134,14 @@ export interface ProgressionBlockCandidate {
   quality?: BlockQualityComponents;
   repeatCount?: number;
   labels: string[];
+  /**
+   * Which lane the candidate belongs in.
+   *
+   * Non-persistent and presentational. A vamp is a musical shape, not a weak
+   * progression, so it gets its own lane rather than being hidden or scored down;
+   * a fragment stays out of the main lane unless nothing else exists.
+   */
+  kind?: "progression" | "vamp" | "fragment";
   warnings: string[];
 }
 
