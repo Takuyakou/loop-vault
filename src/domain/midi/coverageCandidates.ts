@@ -3,7 +3,7 @@ import { normaliseEvidence, scoreBlockQuality } from "./blockQuality";
 import { recoverRawMatchScore, summaryFromEvents } from "./candidateBlock";
 import { selectOccurrencesByCoverage, type CoverageSelectionOptions } from "./coverageSelector";
 import { buildPatternCandidates } from "./patternCandidate";
-import { selectPatternsByCoverage, type PatternSelectionOptions } from "./patternSelection";
+import { selectPatternsByUsefulness, type UsefulnessSelectionOptions } from "./patternSelection";
 import {
   buildOccurrences, groupIntoPatterns, occurrenceToCandidate, scoreOccurrences,
   type CandidatePattern,
@@ -67,7 +67,7 @@ export function buildPatternCoverageCandidates(
   data: MidiSongData,
   totalBars: number,
   rankingScores: readonly number[] | undefined,
-  options: Partial<PatternSelectionOptions> = {},
+  options: Partial<UsefulnessSelectionOptions> = {},
 ): CoverageCandidateResult {
   const meter = beatsPerBar(data.timeSignature);
   const rawMatchScores = rankingScores
@@ -83,16 +83,16 @@ export function buildPatternCoverageCandidates(
   const active = harmonicActiveBars(data, totalBars);
   const patterns = groupIntoPatterns(occurrences);
   const patternCandidates = buildPatternCandidates(patterns, active);
-  const selection = selectPatternsByCoverage(patternCandidates, {
+  const selection = selectPatternsByUsefulness(patternCandidates, {
     harmonicActiveBars: active,
     ...options,
   });
 
   return {
-    candidates: selection.selected.map((pattern) => occurrenceToCandidate(
-      pattern.representative,
-      summaryFromEvents(pattern.representative.events, pattern.representative.lengthBars, meter),
-      pattern.representative.stats.densityClass === "vamp" ? ["variation"] : ["main"],
+    candidates: selection.selected.map(({ occurrence }) => occurrenceToCandidate(
+      occurrence,
+      summaryFromEvents(occurrence.events, occurrence.lengthBars, meter),
+      occurrence.stats.densityClass === "vamp" ? ["variation"] : ["main"],
     )),
     patterns,
     harmonicActiveBars: active,
