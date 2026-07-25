@@ -1,0 +1,266 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.0-06",
+  "gateStatus": "approved",
+  "baselineSource": "05-phase4-comparison.json",
+  "results": [
+    {
+      "analyzer": "legacyBoundaryRerank",
+      "verdict": "FAIL",
+      "requireAll": [
+        {
+          "id": "no-root-regression",
+          "verdict": "pass",
+          "detail": "+0.22pp (tolerance 0.5pp)"
+        },
+        {
+          "id": "no-quality-regression",
+          "verdict": "pass",
+          "detail": "+0.75pp (tolerance 0.5pp)"
+        },
+        {
+          "id": "no-triad-regression",
+          "verdict": "pass",
+          "detail": "+0.75pp (tolerance 3pp)"
+        },
+        {
+          "id": "no-seventh-regression",
+          "verdict": "pass",
+          "detail": "+0.86pp (tolerance 0.5pp)"
+        },
+        {
+          "id": "no-bass-slash-regression",
+          "verdict": "pass",
+          "detail": "+0.22pp (tolerance 0.5pp)"
+        },
+        {
+          "id": "no-top3-root-regression",
+          "verdict": "fail",
+          "detail": "-8.51pp (tolerance 3pp)"
+        },
+        {
+          "id": "no-top3-quality-regression",
+          "verdict": "fail",
+          "detail": "-6.68pp (tolerance 3pp)"
+        },
+        {
+          "id": "no-correction-cost-increase",
+          "verdict": "not-evaluated",
+          "detail": "checked outside this script"
+        },
+        {
+          "id": "no-block-recall-regression",
+          "verdict": "not-evaluated",
+          "detail": "metric blockRecallAtIoU50 absent"
+        },
+        {
+          "id": "runtime-ceiling",
+          "verdict": "pass",
+          "detail": "1594 ms vs limit 3000"
+        },
+        {
+          "id": "determinism",
+          "verdict": "not-evaluated",
+          "detail": "checked outside this script"
+        },
+        {
+          "id": "holdout-not-worse",
+          "verdict": "pass",
+          "detail": "+0.29pp (tolerance 0.5pp)"
+        },
+        {
+          "id": "tests-pass",
+          "verdict": "not-evaluated",
+          "detail": "checked outside this script"
+        }
+      ],
+      "requireAny": [
+        {
+          "id": "canonical-exact-improves",
+          "verdict": "fail",
+          "detail": "+0.29pp (needs +0.5pp)"
+        },
+        {
+          "id": "top3-canonical-improves",
+          "verdict": "pass",
+          "detail": "+1.18pp (needs +0.5pp)"
+        }
+      ],
+      "blockedBy": [
+        "no-top3-root-regression",
+        "no-top3-quality-regression"
+      ]
+    },
+    {
+      "analyzer": "voiceAwareRerank",
+      "verdict": "FAIL",
+      "requireAll": [
+        {
+          "id": "no-root-regression",
+          "verdict": "pass",
+          "detail": "+0.43pp (tolerance 0.5pp)"
+        },
+        {
+          "id": "no-quality-regression",
+          "verdict": "pass",
+          "detail": "+0.65pp (tolerance 0.5pp)"
+        },
+        {
+          "id": "no-triad-regression",
+          "verdict": "pass",
+          "detail": "+0.75pp (tolerance 3pp)"
+        },
+        {
+          "id": "no-seventh-regression",
+          "verdict": "pass",
+          "detail": "+0.65pp (tolerance 0.5pp)"
+        },
+        {
+          "id": "no-bass-slash-regression",
+          "verdict": "pass",
+          "detail": "+0.22pp (tolerance 0.5pp)"
+        },
+        {
+          "id": "no-top3-root-regression",
+          "verdict": "fail",
+          "detail": "-8.30pp (tolerance 3pp)"
+        },
+        {
+          "id": "no-top3-quality-regression",
+          "verdict": "fail",
+          "detail": "-6.84pp (tolerance 3pp)"
+        },
+        {
+          "id": "no-correction-cost-increase",
+          "verdict": "not-evaluated",
+          "detail": "checked outside this script"
+        },
+        {
+          "id": "no-block-recall-regression",
+          "verdict": "not-evaluated",
+          "detail": "metric blockRecallAtIoU50 absent"
+        },
+        {
+          "id": "runtime-ceiling",
+          "verdict": "pass",
+          "detail": "1410 ms vs limit 3000"
+        },
+        {
+          "id": "determinism",
+          "verdict": "not-evaluated",
+          "detail": "checked outside this script"
+        },
+        {
+          "id": "holdout-not-worse",
+          "verdict": "pass",
+          "detail": "+0.59pp (tolerance 0.5pp)"
+        },
+        {
+          "id": "tests-pass",
+          "verdict": "not-evaluated",
+          "detail": "checked outside this script"
+        }
+      ],
+      "requireAny": [
+        {
+          "id": "canonical-exact-improves",
+          "verdict": "pass",
+          "detail": "+0.59pp (needs +0.5pp)"
+        },
+        {
+          "id": "top3-canonical-improves",
+          "verdict": "pass",
+          "detail": "+1.47pp (needs +0.5pp)"
+        }
+      ],
+      "blockedBy": [
+        "no-top3-root-regression",
+        "no-top3-quality-regression"
+      ]
+    },
+    {
+      "analyzer": "phase4",
+      "verdict": "PASS",
+      "requireAll": [
+        {
+          "id": "no-root-regression",
+          "verdict": "pass",
+          "detail": "+0.65pp (tolerance 0.5pp)"
+        },
+        {
+          "id": "no-quality-regression",
+          "verdict": "pass",
+          "detail": "+0.75pp (tolerance 0.5pp)"
+        },
+        {
+          "id": "no-triad-regression",
+          "verdict": "pass",
+          "detail": "-1.94pp (tolerance 3pp)"
+        },
+        {
+          "id": "no-seventh-regression",
+          "verdict": "pass",
+          "detail": "+1.13pp (tolerance 0.5pp)"
+        },
+        {
+          "id": "no-bass-slash-regression",
+          "verdict": "pass",
+          "detail": "+1.13pp (tolerance 0.5pp)"
+        },
+        {
+          "id": "no-top3-root-regression",
+          "verdict": "pass",
+          "detail": "+5.50pp (tolerance 3pp)"
+        },
+        {
+          "id": "no-top3-quality-regression",
+          "verdict": "pass",
+          "detail": "-0.22pp (tolerance 3pp)"
+        },
+        {
+          "id": "no-correction-cost-increase",
+          "verdict": "not-evaluated",
+          "detail": "checked outside this script"
+        },
+        {
+          "id": "no-block-recall-regression",
+          "verdict": "not-evaluated",
+          "detail": "metric blockRecallAtIoU50 absent"
+        },
+        {
+          "id": "runtime-ceiling",
+          "verdict": "pass",
+          "detail": "860 ms vs limit 3000"
+        },
+        {
+          "id": "determinism",
+          "verdict": "not-evaluated",
+          "detail": "checked outside this script"
+        },
+        {
+          "id": "holdout-not-worse",
+          "verdict": "pass",
+          "detail": "+0.88pp (tolerance 0.5pp)"
+        },
+        {
+          "id": "tests-pass",
+          "verdict": "not-evaluated",
+          "detail": "checked outside this script"
+        }
+      ],
+      "requireAny": [
+        {
+          "id": "canonical-exact-improves",
+          "verdict": "pass",
+          "detail": "+0.88pp (needs +0.5pp)"
+        },
+        {
+          "id": "top3-canonical-improves",
+          "verdict": "pass",
+          "detail": "+4.12pp (needs +0.5pp)"
+        }
+      ],
+      "blockedBy": []
+    }
+  ]
+}
