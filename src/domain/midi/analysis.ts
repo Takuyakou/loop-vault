@@ -7,9 +7,14 @@ import { analyzeMidiPhase4, phase4AnalyzerVersion } from "./phase4Analyzer";
 import type { AnalyzeMidiOptions } from "./types";
 import { analyzeMidiVoiceAwareRerank, voiceAwareRerankerVersion } from "./voiceAwareReranker";
 
-// Stays `legacy` until the P4.0-06 comparison is reviewed and approved.
-export const defaultAnalyzerMode = "legacy" as const;
-export const analyzerVersion = legacyAnalyzerVersion;
+/**
+ * Promoted from `legacy` in P4.0-06 after the comparison was reviewed and
+ * approved. `phase4-v1` was the only analyzer to clear the frozen gate; see
+ * docs/phase4.0/06-analyzer-comparison.md. Reverting is a one-line change —
+ * every previous mode is still available.
+ */
+export const defaultAnalyzerMode = "phase4-v1" as const;
+export const analyzerVersion = phase4AnalyzerVersion;
 export {
   hybridAnalyzerVersion,
   legacyAnalyzerVersion,
