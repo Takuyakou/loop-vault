@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.0-04",
+  "datasetId": "7991f80e29b76717af3fbeee5840a158a83cc387d73f9b73fdf2731afc70f3a6",
+  "caseCount": 100,
+  "totals": {
+    "rawBlocks": 1819,
+    "selectedBlocks": 531
+  },
+  "byDensityClass": {
+    "vamp": {
+      "rawBlocks": 50,
+      "selectedBlocks": 16,
+      "casesWhereClassExists": 14,
+      "casesWhereClassSelected": 14,
+      "densityClassRecall": 1
+    },
+    "compact": {
+      "rawBlocks": 831,
+      "selectedBlocks": 278,
+      "casesWhereClassExists": 94,
+      "casesWhereClassSelected": 93,
+      "densityClassRecall": 0.989362
+    },
+    "standard": {
+      "rawBlocks": 519,
+      "selectedBlocks": 130,
+      "casesWhereClassExists": 70,
+      "casesWhereClassSelected": 70,
+      "densityClassRecall": 1
+    },
+    "dense": {
+      "rawBlocks": 419,
+      "selectedBlocks": 107,
+      "casesWhereClassExists": 50,
+      "casesWhereClassSelected": 48,
+      "densityClassRecall": 0.96
+    }
+  },
+  "selectedLengthDistribution": {
+    "2": 290,
+    "4": 142,
+    "8": 66,
+    "16": 33
+  }
+}
