@@ -2,6 +2,7 @@ import type { ChordTimelineItem, ProgressionBlockCandidate } from "../types";
 import { normaliseEvidence, scoreBlockQuality } from "./blockQuality";
 import { recoverRawMatchScore, summaryFromEvents } from "./candidateBlock";
 import { selectOccurrencesByCoverage, type CoverageSelectionOptions } from "./coverageSelector";
+import { classifyCandidateKind } from "./candidateKind";
 import { buildPatternCandidates } from "./patternCandidate";
 import { selectPatternsByUsefulness, type UsefulnessSelectionOptions } from "./patternSelection";
 import {
@@ -89,11 +90,18 @@ export function buildPatternCoverageCandidates(
   });
 
   return {
-    candidates: selection.selected.map(({ occurrence }) => occurrenceToCandidate(
-      occurrence,
-      summaryFromEvents(occurrence.events, occurrence.lengthBars, meter),
-      occurrence.stats.densityClass === "vamp" ? ["variation"] : ["main"],
-    )),
+    candidates: selection.selected.map(({ occurrence }) => {
+      const kind = classifyCandidateKind({
+        lengthBars: occurrence.lengthBars,
+        stats: occurrence.stats,
+      });
+      return occurrenceToCandidate(
+        occurrence,
+        summaryFromEvents(occurrence.events, occurrence.lengthBars, meter),
+        kind === "progression" ? ["main"] : ["variation"],
+        kind,
+      );
+    }),
     patterns,
     harmonicActiveBars: active,
     coverage: selection.coverage,

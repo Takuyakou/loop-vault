@@ -219,6 +219,7 @@ export function occurrenceToCandidate(
   occurrence: CandidateOccurrence,
   summaryText: string,
   labels: string[] = [],
+  kind?: ProgressionBlockCandidate["kind"],
 ): ProgressionBlockCandidate {
   return {
     id: occurrence.id,
@@ -236,6 +237,7 @@ export function occurrenceToCandidate(
       : 0,
     selectionScore: occurrence.score,
     labels,
+    ...(kind ? { kind } : {}),
     warnings: occurrence.warnings,
   };
 }
