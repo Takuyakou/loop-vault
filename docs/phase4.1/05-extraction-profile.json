@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.1-05",
+  "source": {
+    "fingerprint": "sha256-2790e82d09b52a58efe8806e79d7379f6ec15091930197073ff9095dcee5ea10",
+    "byteLength": 33055
+  },
+  "profileDetected": true,
+  "reasons": [
+    "all-pitched-tracks-on-one-channel",
+    "stem-style-track-names",
+    "high-short-note-ratio",
+    "stem-style-role-separation"
+  ],
+  "confidence": 0.6188,
+  "notes": {
+    "raw": 3909,
+    "analysis": 2541,
+    "rawUnchanged": true
+  },
+  "trackRoles": [
+    {
+      "index": 0,
+      "name": "",
+      "roleWithoutProfile": "mixed",
+      "roleWithProfile": "mixed"
+    },
+    {
+      "index": 1,
+      "name": "drums",
+      "roleWithoutProfile": "percussion",
+      "roleWithProfile": "percussion"
+    },
+    {
+      "index": 2,
+      "name": "voice",
+      "roleWithoutProfile": "mixed",
+      "roleWithProfile": "mixed"
+    },
+    {
+      "index": 3,
+      "name": "synth_pad",
+      "roleWithoutProfile": "harmony",
+      "roleWithProfile": "harmony"
+    },
+    {
+      "index": 4,
+      "name": "synth_lead",
+      "roleWithoutProfile": "harmony",
+      "roleWithProfile": "melody"
+    },
+    {
+      "index": 5,
+      "name": "clean_electric_guitar",
+      "roleWithoutProfile": "harmony",
+      "roleWithProfile": "harmony"
+    },
+    {
+      "index": 6,
+      "name": "electric_bass",
+      "roleWithoutProfile": "bass",
+      "roleWithProfile": "bass"
+    }
+  ],
+  "timelineEvents": {
+    "withoutProfile": 162,
+    "withProfile": 160
+  },
+  "falsePositives": {
+    "corpusChecked": 100,
+    "detections": 0,
+    "analysesIdentical": 100
+  }
+}
