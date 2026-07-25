@@ -1,0 +1,2008 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.1.2-A2",
+  "corpora": [
+    ".local-evaluation/synthetic-gold-v1",
+    ".local-evaluation/long-form-v1.1"
+  ],
+  "splits": [
+    "dev",
+    "validation"
+  ],
+  "modes": [
+    "phase4.1.2-v1"
+  ],
+  "visibleCardLimit": 10,
+  "fileEvaluations": 56,
+  "gates": [
+    {
+      "id": "visible-pattern-duplicate-count-zero",
+      "description": "No pattern occupies more than one visible card.",
+      "verdict": "pass",
+      "detail": "56/56 files"
+    },
+    {
+      "id": "visible-slot-waste-zero",
+      "description": "No visible slot is spent on a pattern already shown.",
+      "verdict": "pass",
+      "detail": "56/56 files"
+    },
+    {
+      "id": "occurrence-reachability-full",
+      "description": "Every occurrence of a displayed pattern is reachable from its card.",
+      "verdict": "fail",
+      "detail": "54/56 files",
+      "offenders": [
+        "long-form-v1.1:L05_stress:phase4.1.2-v1",
+        "long-form-v1.1:L10_stress:phase4.1.2-v1"
+      ]
+    },
+    {
+      "id": "progression-precision-at-3",
+      "description": "With three or more progression patterns available, all of the first three cards are progressions.",
+      "verdict": "pass",
+      "detail": "56/56 files"
+    },
+    {
+      "id": "no-two-bar-fragment-in-top3",
+      "description": "With three or more progression patterns available, no two-bar fragment sits in the first three cards.",
+      "verdict": "pass",
+      "detail": "56/56 files"
+    },
+    {
+      "id": "rank-constraint-top3-min-hits",
+      "description": "Every priority group meets its top3MinHits.",
+      "verdict": "fail",
+      "detail": "39/56 files",
+      "offenders": [
+        "synthetic-gold-v1:S08_clean:phase4.1.2-v1",
+        "synthetic-gold-v1:S08_stress:phase4.1.2-v1",
+        "synthetic-gold-v1:S14_clean:phase4.1.2-v1",
+        "synthetic-gold-v1:S15_clean:phase4.1.2-v1",
+        "synthetic-gold-v1:S15_stress:phase4.1.2-v1",
+        "synthetic-gold-v1:S16_clean:phase4.1.2-v1",
+        "synthetic-gold-v1:S16_stress:phase4.1.2-v1",
+        "synthetic-gold-v1:S17_clean:phase4.1.2-v1",
+        "synthetic-gold-v1:S17_stress:phase4.1.2-v1",
+        "long-form-v1.1:L01_clean:phase4.1.2-v1",
+        "long-form-v1.1:L01_stress:phase4.1.2-v1",
+        "long-form-v1.1:L06_clean:phase4.1.2-v1"
+      ]
+    },
+    {
+      "id": "rank-constraint-all-visible-min-hits",
+      "description": "Every priority group meets its allVisibleMinHits.",
+      "verdict": "fail",
+      "detail": "41/56 files",
+      "offenders": [
+        "synthetic-gold-v1:S11_clean:phase4.1.2-v1",
+        "synthetic-gold-v1:S11_stress:phase4.1.2-v1",
+        "synthetic-gold-v1:S14_clean:phase4.1.2-v1",
+        "synthetic-gold-v1:S15_clean:phase4.1.2-v1",
+        "synthetic-gold-v1:S15_stress:phase4.1.2-v1",
+        "synthetic-gold-v1:S16_clean:phase4.1.2-v1",
+        "synthetic-gold-v1:S16_stress:phase4.1.2-v1",
+        "long-form-v1.1:L01_clean:phase4.1.2-v1",
+        "long-form-v1.1:L01_stress:phase4.1.2-v1",
+        "long-form-v1.1:L04_clean:phase4.1.2-v1",
+        "long-form-v1.1:L04_stress:phase4.1.2-v1",
+        "long-form-v1.1:L06_clean:phase4.1.2-v1"
+      ]
+    },
+    {
+      "id": "rank-constraint-order",
+      "description": "A group marked afterGroup does not outrank the group it follows.",
+      "verdict": "pass",
+      "detail": "56/56 files"
+    },
+    {
+      "id": "coverage-at-all-visible",
+      "description": "allCandidateCoverage stays at or above 90% (Phase 4.1 gate, unchanged).",
+      "verdict": "fail",
+      "detail": "53/56 files",
+      "offenders": [
+        "synthetic-gold-v1:S16_clean:phase4.1.2-v1",
+        "long-form-v1.1:L06_clean:phase4.1.2-v1",
+        "long-form-v1.1:L06_stress:phase4.1.2-v1"
+      ]
+    },
+    {
+      "id": "longest-uncovered-run",
+      "description": "The longest uncovered harmonic run stays under eight bars (Phase 4.1 gate, unchanged).",
+      "verdict": "fail",
+      "detail": "54/56 files",
+      "offenders": [
+        "synthetic-gold-v1:S16_clean:phase4.1.2-v1",
+        "long-form-v1.1:L06_stress:phase4.1.2-v1"
+      ]
+    },
+    {
+      "id": "runtime-ceiling",
+      "description": "Every file analyses in under 3000 ms.",
+      "verdict": "pass",
+      "detail": "56/56 files"
+    },
+    {
+      "id": "deterministic",
+      "description": "Re-running the same file produces the same cards.",
+      "verdict": "pass",
+      "detail": "2/2 probes stable"
+    },
+    {
+      "id": "chord-corpus-non-regression",
+      "description": "Chord Drip and Chapter 3 Seed do not regress.",
+      "verdict": "not-evaluated",
+      "detail": "checked by scripts/evaluate-midi-analysis.ts and evaluate-chapter3-seed.ts outside this script"
+    }
+  ],
+  "verdict": "FAIL",
+  "metrics": {
+    "mustShowGeneratedRecall": {
+      "min": 0.166667,
+      "mean": 0.970238,
+      "max": 1
+    },
+    "mustShowSelectedRecallAmongGenerated": {
+      "min": 0,
+      "mean": 0.870217,
+      "max": 1
+    },
+    "visiblePatternDuplicateCount": {
+      "min": 0,
+      "mean": 0,
+      "max": 0
+    },
+    "visibleSlotWasteCount": {
+      "min": 0,
+      "mean": 0,
+      "max": 0
+    },
+    "uniquePatternCountAt3": {
+      "min": 3,
+      "mean": 3,
+      "max": 3
+    },
+    "uniquePatternCountAt10": {
+      "min": 8,
+      "mean": 9.732143,
+      "max": 10
+    },
+    "progressionPrecisionAt3": {
+      "min": 1,
+      "mean": 1,
+      "max": 1
+    },
+    "twoBarFragmentsInTop3": {
+      "min": 0,
+      "mean": 0,
+      "max": 0
+    },
+    "occurrenceReachability": {
+      "min": 0.5,
+      "mean": 0.98852,
+      "max": 1
+    },
+    "eventCountRatio": {
+      "min": 0.8182,
+      "mean": 2.806968,
+      "max": 96
+    },
+    "boundaryPrecision": {
+      "min": 0,
+      "mean": 0.269525,
+      "max": 1
+    },
+    "boundaryRecall": {
+      "min": 0,
+      "mean": 0.41875,
+      "max": 1
+    },
+    "segmentIoU": {
+      "min": 0.25,
+      "mean": 0.680965,
+      "max": 1
+    },
+    "allCandidateCoverage": {
+      "min": 0.625,
+      "mean": 0.987723,
+      "max": 1
+    },
+    "reachableCandidateCoverage": {
+      "min": 0.90625,
+      "mean": 0.998326,
+      "max": 1
+    },
+    "progressionCandidateCoverage": {
+      "min": 0.270833,
+      "mean": 0.970796,
+      "max": 1
+    },
+    "runtimeMs": {
+      "min": 10.8,
+      "mean": 68.619643,
+      "max": 237
+    }
+  },
+  "files": [
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S01",
+      "variant": "clean",
+      "fingerprint": "sha256-07681d5a2a01c1e89173f83c4882c5df17e0d2c49386b47a04ec50579498395a",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 4,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S01-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 32.3
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S01",
+      "variant": "stress",
+      "fingerprint": "sha256-40d54de18728513e8a796577a3d5bfc8df3c5e33a95dfb475c9a6343605e6b2f",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 5,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S01-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 17.3
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S02",
+      "variant": "clean",
+      "fingerprint": "sha256-e74c83a7d68dbcfe9aad06e37d64d3d1d72c0c3237c5f5a24ffd11be722f1221",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 5,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S02-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 13.5
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S02",
+      "variant": "stress",
+      "fingerprint": "sha256-017f608f237fad5f6c095a003952dc5facdcc4a5f922652a9949a0e0564f90a5",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 5,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S02-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 16
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S03",
+      "variant": "clean",
+      "fingerprint": "sha256-046daa997c3aa75aae2cdc6f01100d9e48df23add1fba65b7c5d346af265bd46",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 6,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S03-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 13.1
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S03",
+      "variant": "stress",
+      "fingerprint": "sha256-1561bf5a9b3dc12b12782506be1f2e2f3832fea602ee334d3706f5857470f64c",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 7,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S03-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 14.6
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S04",
+      "variant": "clean",
+      "fingerprint": "sha256-1c5539fc3c82cbb92d7f73125fdbec21f89ab7cbd092496a8a47db97f3a9941d",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 5,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S04-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 12.3
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S04",
+      "variant": "stress",
+      "fingerprint": "sha256-fa2b4700210aa30ca3e7c3ca93a35ec6fe0c233b366270807df7744c4c8588dc",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 5,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S04-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 12.7
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S05",
+      "variant": "clean",
+      "fingerprint": "sha256-8135bf9adb93209f190bfbb51420a15c5c1ae4715ecb904ff37eea07c446bcad",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 5,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S05-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 11.9
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S05",
+      "variant": "stress",
+      "fingerprint": "sha256-7087a4756775d41651b36a89e0f50ee53f060b69d77480ee5d0a795724230f60",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 5,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1.5,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S05-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 12.6
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S06",
+      "variant": "clean",
+      "fingerprint": "sha256-18ab6d6b1808b70787d0c1c5e0c12c8f231c7536f2f4f0aa3a65f856f2298105",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 6,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S06-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 11.5
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S06",
+      "variant": "stress",
+      "fingerprint": "sha256-e2c1c7a03d721b834e4a0f1034d2c8a03e174679c8868f50732db1063f01bbe6",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 6,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1.125,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S06-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 12.7
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S07",
+      "variant": "clean",
+      "fingerprint": "sha256-fa650106c240f68f5a2be0a0853bead400faed9b84eba2817d18e601fbdbf5c8",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 5,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S07-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 12.5
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S07",
+      "variant": "stress",
+      "fingerprint": "sha256-3acc6a889c94cb6dcaf3d4daba447908a81b6b9be54e6a28c6bd774dd6dcea19",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 8,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1.0625,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S07-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 13.4
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S08",
+      "variant": "clean",
+      "fingerprint": "sha256-a3dedf121a5eb31a4f3fd53282f0b2830d36fe66d649d9fa3cfd266b1ad90538",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 12,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 0.8182,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S08-top3",
+          "top3Hits": 0,
+          "top3MinHits": 2,
+          "top3Satisfied": false,
+          "allVisibleHits": 2,
+          "allVisibleMinHits": 2,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 13.1
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S08",
+      "variant": "stress",
+      "fingerprint": "sha256-8472ab5e71ebb2e1f0882d3698a0ab82e404e7b0a81aa3d2a22af79935d6833c",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 14,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 0.8182,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S08-top3",
+          "top3Hits": 0,
+          "top3MinHits": 2,
+          "top3Satisfied": false,
+          "allVisibleHits": 2,
+          "allVisibleMinHits": 2,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 12.3
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S09",
+      "variant": "clean",
+      "fingerprint": "sha256-be5839096c3555af76a75576a482c63b4572010d4f29c4737ca3d68e486238af",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 6,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1.375,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S09-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 12.7
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S09",
+      "variant": "stress",
+      "fingerprint": "sha256-5ded0f6f0e5806a0626937d9baacaf807dcd3e056556dc9628daabe8de295266",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 6,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1.625,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S09-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 12.4
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S10",
+      "variant": "clean",
+      "fingerprint": "sha256-fecba08e35b395070ceafaf0efe6fa72010ce2fd82581134fb54692f6e4ef316",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 5,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S10-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 11.3
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S10",
+      "variant": "stress",
+      "fingerprint": "sha256-c2ae078b2c5848ba8da8c73ab81b101db45aeaf2839289185bd3e2ccf5572f93",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 5,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S10-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 10.8
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S11",
+      "variant": "clean",
+      "fingerprint": "sha256-a37165abba468bd6d7ac740c5f984f8c6798fa132864c0fafee5349e6e576ea6",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 18,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S11-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        },
+        {
+          "id": "S11-after-progressions",
+          "top3Hits": 0,
+          "top3MinHits": 0,
+          "top3Satisfied": true,
+          "allVisibleHits": 0,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": false,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 22.8
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S11",
+      "variant": "stress",
+      "fingerprint": "sha256-769d7813d9a362781319025fef9a36040950730c61fd607d656d279e6e1f6679",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 18,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S11-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        },
+        {
+          "id": "S11-after-progressions",
+          "top3Hits": 0,
+          "top3MinHits": 0,
+          "top3Satisfied": true,
+          "allVisibleHits": 0,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": false,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 25.9
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S12",
+      "variant": "clean",
+      "fingerprint": "sha256-fefe50b22f0ed29b143a6044e71ff7504614e793c40b242ef7b29968dbe8b6e0",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 12,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S12-top10",
+          "top3Hits": 1,
+          "top3MinHits": 0,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 52.1
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S12",
+      "variant": "stress",
+      "fingerprint": "sha256-2c5be38fdfe9cb8d7480d5fa33ccad1b9c44a9d71449514650bdf5838c9f4cfe",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 12,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S12-top10",
+          "top3Hits": 1,
+          "top3MinHits": 0,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 55.8
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S13",
+      "variant": "clean",
+      "fingerprint": "sha256-f9b2cbc8df654470d1587960a611894e7279411cc41f04b6b38c2498da351cb0",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 16,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S13-top10",
+          "top3Hits": 0,
+          "top3MinHits": 0,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 24.3
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S13",
+      "variant": "stress",
+      "fingerprint": "sha256-62bd3c541b5277252a00fc908cb3acaea48b82d45c1ca0019c420a1a4d2df1b0",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 16,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S13-top10",
+          "top3Hits": 0,
+          "top3MinHits": 0,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 23.7
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S14",
+      "variant": "clean",
+      "fingerprint": "sha256-1d14520313ffc02aa271c88b617376b382715c0572c09a0d8e922f943e209ceb",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 5,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 0.5,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S14-top3",
+          "top3Hits": 1,
+          "top3MinHits": 2,
+          "top3Satisfied": false,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 2,
+          "allVisibleSatisfied": false,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 11.1
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S14",
+      "variant": "stress",
+      "fingerprint": "sha256-cb739a5ecfc0cf4413785147b1bab237345d999c6d9bd8d4844d4e1d12d13954",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 6,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1.625,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S14-top3",
+          "top3Hits": 2,
+          "top3MinHits": 2,
+          "top3Satisfied": true,
+          "allVisibleHits": 2,
+          "allVisibleMinHits": 2,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 12.2
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S15",
+      "variant": "clean",
+      "fingerprint": "sha256-2eb385f60b63d9f58f0fd58a877f0570f82e54272ccd047f19b8fce9bc0ac5c9",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 22,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 0.75,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S15-top3",
+          "top3Hits": 0,
+          "top3MinHits": 2,
+          "top3Satisfied": false,
+          "allVisibleHits": 2,
+          "allVisibleMinHits": 2,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        },
+        {
+          "id": "S15-top10",
+          "top3Hits": 1,
+          "top3MinHits": 0,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 2,
+          "allVisibleSatisfied": false,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 22.8
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S15",
+      "variant": "stress",
+      "fingerprint": "sha256-d791a6ec4a2bfd2ccea22c449ad3ab91e5ab7c85ec13d1d18bbb66c8d216a4c7",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 24,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 0.5,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1.4667,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S15-top3",
+          "top3Hits": 0,
+          "top3MinHits": 2,
+          "top3Satisfied": false,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 2,
+          "allVisibleSatisfied": false,
+          "orderSatisfied": true
+        },
+        {
+          "id": "S15-top10",
+          "top3Hits": 1,
+          "top3MinHits": 0,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 2,
+          "allVisibleSatisfied": false,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 25
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S16",
+      "variant": "clean",
+      "fingerprint": "sha256-abe8fc725bf0c83c33a6f3b0798d00bdf70fb023345a6a22bbbeb0c36f987850",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 6,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 0,
+      "allCandidateCoverage": 0.625,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S16-top3",
+          "top3Hits": 0,
+          "top3MinHits": 2,
+          "top3Satisfied": false,
+          "allVisibleHits": 0,
+          "allVisibleMinHits": 2,
+          "allVisibleSatisfied": false,
+          "orderSatisfied": true
+        },
+        {
+          "id": "S16-top10",
+          "top3Hits": 0,
+          "top3MinHits": 0,
+          "top3Satisfied": true,
+          "allVisibleHits": 0,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": false,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 47.1
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S16",
+      "variant": "stress",
+      "fingerprint": "sha256-b980c26f8ceeac38d8046d7d08682616fff434c4771f5c245fc60a904cfdf85b",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 15,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 0.666667,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S16-top3",
+          "top3Hits": 1,
+          "top3MinHits": 2,
+          "top3Satisfied": false,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 2,
+          "allVisibleSatisfied": false,
+          "orderSatisfied": true
+        },
+        {
+          "id": "S16-top10",
+          "top3Hits": 0,
+          "top3MinHits": 0,
+          "top3Satisfied": true,
+          "allVisibleHits": 0,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": false,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 47.7
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "validation",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S17",
+      "variant": "clean",
+      "fingerprint": "sha256-82b7f8e91505e8ff312fb3cf8646fee6a24aaff49e4517fa2b3ce85e0831d327",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 24,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1.5882,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S17-top3",
+          "top3Hits": 1,
+          "top3MinHits": 2,
+          "top3Satisfied": false,
+          "allVisibleHits": 2,
+          "allVisibleMinHits": 2,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 25
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "validation",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S17",
+      "variant": "stress",
+      "fingerprint": "sha256-265633c77b9d184a6099d50e1ce69e8e6caf0804183a209c06d5f187a2a7716d",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 24,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1.5882,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S17-top3",
+          "top3Hits": 1,
+          "top3MinHits": 2,
+          "top3Satisfied": false,
+          "allVisibleHits": 2,
+          "allVisibleMinHits": 2,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 25.6
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "validation",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S18",
+      "variant": "clean",
+      "fingerprint": "sha256-3f88ef06af283ef857f690ecf8d97ec93ad186f1732b140957e19d60b12e986a",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 9,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S18-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 22.8
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "validation",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S18",
+      "variant": "stress",
+      "fingerprint": "sha256-3109f668dac242f64d0cf6bff630963721314268ab78540cf1752f4f64e875f1",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 9,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S18-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 23.1
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "validation",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S19",
+      "variant": "clean",
+      "fingerprint": "sha256-df15c3f99e8a5f9cb8217f6b15b3274b3d5a74aa7b19ea73464ab1fef172e4d1",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 9,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S19-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 22.6
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "validation",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S19",
+      "variant": "stress",
+      "fingerprint": "sha256-528d3e6bafc318e1ad7e5ffa92ca18709626a03e125dfdb0cbb5cfe042c4c5cd",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 9,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1.75,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S19-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 23.1
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "validation",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S20",
+      "variant": "clean",
+      "fingerprint": "sha256-e989239b8799c63cdc34f79494b5d7c6ffa5d97a36a9e2a9c272ca55bfe70653",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 9,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S20-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 22.4
+    },
+    {
+      "corpus": "synthetic-gold-v1",
+      "split": "validation",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "S20",
+      "variant": "stress",
+      "fingerprint": "sha256-109a34e6fc36ad64c8ce171001e9008181a31a2f49b16e6c93fdec7c8e537d18",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 9,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 2,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "S20-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 24.2
+    },
+    {
+      "corpus": "long-form-v1.1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "L01",
+      "variant": "clean",
+      "fingerprint": "sha256-aa0d6b4a2da8faa8dff9bcef9d9fabc0fc4bf39b2aa4259a26d2e23860fb6955",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 281,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 0.25,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "L01-top3",
+          "top3Hits": 1,
+          "top3MinHits": 3,
+          "top3Satisfied": false,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 4,
+          "allVisibleSatisfied": false,
+          "orderSatisfied": true
+        },
+        {
+          "id": "L01-after-progressions",
+          "top3Hits": 0,
+          "top3MinHits": 0,
+          "top3Satisfied": true,
+          "allVisibleHits": 0,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": false,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 162.6
+    },
+    {
+      "corpus": "long-form-v1.1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "L01",
+      "variant": "stress",
+      "fingerprint": "sha256-e9d0c77a0423d539b9c93ae98edadd8e9ef9a486af47a65ae5b034b7122b3b3c",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 281,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 0.25,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "L01-top3",
+          "top3Hits": 1,
+          "top3MinHits": 3,
+          "top3Satisfied": false,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 4,
+          "allVisibleSatisfied": false,
+          "orderSatisfied": true
+        },
+        {
+          "id": "L01-after-progressions",
+          "top3Hits": 0,
+          "top3MinHits": 0,
+          "top3Satisfied": true,
+          "allVisibleHits": 0,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": false,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 204.3
+    },
+    {
+      "corpus": "long-form-v1.1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "L02",
+      "variant": "clean",
+      "fingerprint": "sha256-4929c5772e355a46e4bde63a3c97b653f23250d20d93ac9c8453cc6c0c814818",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 262,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "L02-top10",
+          "top3Hits": 1,
+          "top3MinHits": 0,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 207.4
+    },
+    {
+      "corpus": "long-form-v1.1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "L02",
+      "variant": "stress",
+      "fingerprint": "sha256-d93c809415017d9680ebd2f4fb11fff8659008ee428292ffc96d0f8e56de7414",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 281,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1.0078,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "L02-top10",
+          "top3Hits": 1,
+          "top3MinHits": 0,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 200.5
+    },
+    {
+      "corpus": "long-form-v1.1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "L04",
+      "variant": "clean",
+      "fingerprint": "sha256-1631c55e102c4441d0640c382962351486862e9114a062233f6194f01fed7869",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 172,
+      "mustShowGeneratedRecall": 0.166667,
+      "mustShowSelectedRecallAmongGenerated": 0,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "L04-top10",
+          "top3Hits": 0,
+          "top3MinHits": 0,
+          "top3Satisfied": true,
+          "allVisibleHits": 0,
+          "allVisibleMinHits": 6,
+          "allVisibleSatisfied": false,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 161.4
+    },
+    {
+      "corpus": "long-form-v1.1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "L04",
+      "variant": "stress",
+      "fingerprint": "sha256-7a1a8efb5c364eb3e734a5c2ae1a15329c1020edb010e9272f1992a6826442d3",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 172,
+      "mustShowGeneratedRecall": 0.166667,
+      "mustShowSelectedRecallAmongGenerated": 0,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "L04-top10",
+          "top3Hits": 0,
+          "top3MinHits": 0,
+          "top3Satisfied": true,
+          "allVisibleHits": 0,
+          "allVisibleMinHits": 6,
+          "allVisibleSatisfied": false,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 215.3
+    },
+    {
+      "corpus": "long-form-v1.1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "L05",
+      "variant": "clean",
+      "fingerprint": "sha256-1e05e89593d330df0750cb8049f14f85473a17208133b20304d13c079df01b70",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 265,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "L05-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 203.5
+    },
+    {
+      "corpus": "long-form-v1.1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "L05",
+      "variant": "stress",
+      "fingerprint": "sha256-fb92c1cb992ab9299b8bb1474a5cf3d128caeedb3016c9de2d4a179ab10cb295",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 0.5,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 324,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 0.625,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1.3672,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "L05-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 216.3
+    },
+    {
+      "corpus": "long-form-v1.1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "L06",
+      "variant": "clean",
+      "fingerprint": "sha256-09656b95f6c5dfecc9701b520bf03adceb67468bce711865b339df222f91052e",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 18,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 0.895833,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "L06-top3",
+          "top3Hits": 0,
+          "top3MinHits": 2,
+          "top3Satisfied": false,
+          "allVisibleHits": 0,
+          "allVisibleMinHits": 2,
+          "allVisibleSatisfied": false,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 128.7
+    },
+    {
+      "corpus": "long-form-v1.1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "L06",
+      "variant": "stress",
+      "fingerprint": "sha256-edd4320bdc67c067d4c449c33dc2f7de14101c90fd9e5c7f9ef3514bb59cfd18",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 31,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 0.791667,
+      "eventCountRatio": 96,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "L06-top3",
+          "top3Hits": 0,
+          "top3MinHits": 2,
+          "top3Satisfied": false,
+          "allVisibleHits": 0,
+          "allVisibleMinHits": 2,
+          "allVisibleSatisfied": false,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 174.3
+    },
+    {
+      "corpus": "long-form-v1.1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "L12",
+      "variant": "clean",
+      "fingerprint": "sha256-8597753c9e7a46d66b5e931b1812785b30dbe56b75aeecca7ff9dbad876c6646",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 47,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 0.666667,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "L12-top3",
+          "top3Hits": 0,
+          "top3MinHits": 1,
+          "top3Satisfied": false,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        },
+        {
+          "id": "L12-top10",
+          "top3Hits": 0,
+          "top3MinHits": 0,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 2,
+          "allVisibleSatisfied": false,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 196.8
+    },
+    {
+      "corpus": "long-form-v1.1",
+      "split": "dev",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "L12",
+      "variant": "stress",
+      "fingerprint": "sha256-851d9a7e1072073a604549d7a142b513e50b856216f1b829ef7e93e4710e24c4",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 47,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 0.666667,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "L12-top3",
+          "top3Hits": 0,
+          "top3MinHits": 1,
+          "top3Satisfied": false,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        },
+        {
+          "id": "L12-top10",
+          "top3Hits": 0,
+          "top3MinHits": 0,
+          "top3Satisfied": true,
+          "allVisibleHits": 0,
+          "allVisibleMinHits": 2,
+          "allVisibleSatisfied": false,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 237
+    },
+    {
+      "corpus": "long-form-v1.1",
+      "split": "validation",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "L08",
+      "variant": "clean",
+      "fingerprint": "sha256-7019f49228754b567f791fae36b98932e620506529b2f4b54017a7509b9340b3",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 208,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "L08-top3",
+          "top3Hits": 0,
+          "top3MinHits": 1,
+          "top3Satisfied": false,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 148.3
+    },
+    {
+      "corpus": "long-form-v1.1",
+      "split": "validation",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "L08",
+      "variant": "stress",
+      "fingerprint": "sha256-456641f9338c5d4f2927e738cd6034288964b57b1246a8910faf343e7c2a2638",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 208,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "L08-top3",
+          "top3Hits": 0,
+          "top3MinHits": 1,
+          "top3Satisfied": false,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 179.2
+    },
+    {
+      "corpus": "long-form-v1.1",
+      "split": "validation",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "L10",
+      "variant": "clean",
+      "fingerprint": "sha256-acaf11dd1688f8a188454bd55c0ab8f09684ca3b324be69a60d0a3a9d8089b03",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 235,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "L10-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 177.6
+    },
+    {
+      "corpus": "long-form-v1.1",
+      "split": "validation",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "L10",
+      "variant": "stress",
+      "fingerprint": "sha256-286b31747d8b5de5d425e9baee1c645a416409358795eae3958e8f26ed8c5c8a",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 0.857143,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 266,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 0.857143,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1.4732,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "L10-top3",
+          "top3Hits": 1,
+          "top3MinHits": 1,
+          "top3Satisfied": true,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 191.2
+    }
+  ]
+}

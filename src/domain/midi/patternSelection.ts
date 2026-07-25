@@ -1,4 +1,7 @@
 import { qualityFloor } from "./blockQuality";
+import {
+  classifyCandidateKind, kindRank, structuralUsefulness, type CandidateKind,
+} from "./candidateKind";
 import type { PatternCandidate } from "./patternCandidate";
 
 /**
@@ -62,6 +65,236 @@ export interface PatternSelectionResult {
 const DEFAULT_VISIBLE_LIMIT = 10;
 const DEFAULT_ALL_VISIBLE_LIMIT = 30;
 const DEFAULT_COVERAGE_TARGET = 0.95;
+
+export interface UsefulnessSelectionOptions {
+  harmonicActiveBars: readonly number[];
+  visibleLimit?: number;
+  allVisibleLimit?: number;
+  qualityFloor?: number;
+}
+
+export interface UsefulnessSelectionStep extends PatternSelectionStep {
+  kind: CandidateKind;
+  structuralUsefulness: number;
+  addedNewIdentity: boolean;
+}
+
+/**
+ * A chosen pattern together with the occurrence its card leads with.
+ *
+ * The occurrence is picked when the pattern is selected, not before, because the
+ * most useful one to show depends on what the earlier cards already show. A
+ * pattern that appears in bars 1-8 and 90-97 should lead with 90-97 if the first
+ * eight bars are already on screen — the card then lands where the song still
+ * needs one, and its siblings stay one click away either way.
+ */
+export interface SelectedPattern {
+  pattern: PatternCandidate;
+  occurrence: PatternCandidate["representative"];
+}
+
+export interface UsefulnessSelectionResult extends Omit<PatternSelectionResult, "steps" | "selected" | "visible"> {
+  selected: SelectedPattern[];
+  visible: SelectedPattern[];
+  steps: UsefulnessSelectionStep[];
+}
+
+/**
+ * Marginal coverage, coarsened into eleven buckets.
+ *
+ * Compared exactly it decides almost every tie and quality never gets a say;
+ * bucketed, two candidates that close a similar share of the remaining gap are
+ * treated as equal and the later keys break the tie.
+ */
+function coverageBucket(newBars: number, uncovered: number): number {
+  if (uncovered <= 0) return 0;
+  return Math.round((newBars / uncovered) * 10);
+}
+
+/**
+ * Selection ordered by usefulness, then by coverage.
+ *
+ * The previous objective was a weighted sum in which quality could outweigh
+ * coverage, so a two-bar vamp with a high repeat count beat a sixteen-bar
+ * progression by 0.0013. A weighted sum has no way to express "a progression
+ * comes before a vamp" — any weight large enough to guarantee it makes the other
+ * terms decorative.
+ *
+ * So the keys are compared in order instead:
+ *
+ *   1. kind            progression, then vamp, then fragment
+ *   2. new identity    a shape not yet on screen beats a repeat of one
+ *   3. structural      how complete a statement the candidate is
+ *   4. coverage        share of the still-open gap it closes, bucketed
+ *   5. quality         the block score
+ *   6. position        earliest bar, then pattern id
+ *
+ * Quality stays a gate as well as the fifth key: everything below the floor is
+ * out before any of this runs, so nothing weak is ever admitted to fill a slot.
+ *
+ * Coverage no longer stops the search. One sixteen-bar candidate can cover the
+ * whole song and still leave every other useful pattern unoffered, which is the
+ * failure this replaces.
+ */
+export function selectPatternsByUsefulness(
+  patterns: readonly PatternCandidate[],
+  options: UsefulnessSelectionOptions,
+): UsefulnessSelectionResult {
+  const visibleLimit = options.visibleLimit ?? DEFAULT_VISIBLE_LIMIT;
+  const allVisibleLimit = options.allVisibleLimit ?? DEFAULT_ALL_VISIBLE_LIMIT;
+  const floor = options.qualityFloor ?? qualityFloor;
+
+  const activeBars = [...options.harmonicActiveBars].sort((left, right) => left - right);
+  const total = activeBars.length;
+
+  const eligible = patterns.filter((pattern) => pattern.score >= floor);
+  const kindOf = new Map<string, CandidateKind>(eligible.map((pattern) => [
+    pattern.patternId,
+    classifyCandidateKind({ lengthBars: pattern.lengthBars, stats: pattern.representative.stats }),
+  ]));
+  const structuralOf = new Map<string, number>(eligible.map((pattern) => [
+    pattern.patternId,
+    structuralUsefulness({ lengthBars: pattern.lengthBars, stats: pattern.representative.stats }),
+  ]));
+
+  const activeSet = new Set(activeBars);
+  const barsOfOccurrence = (occurrence: PatternCandidate["representative"]) => {
+    const bars: number[] = [];
+    for (let bar = occurrence.startBar; bar <= occurrence.endBar; bar += 1) {
+      if (activeSet.has(bar)) bars.push(bar);
+    }
+    return bars;
+  };
+
+  const covered = new Set<number>();
+  const shownIdentities = new Set<string>();
+  const selected: SelectedPattern[] = [];
+  const steps: UsefulnessSelectionStep[] = [];
+  const remaining = new Set(eligible.map((pattern) => pattern.patternId));
+  let stoppedBecause: PatternSelectionReason = "stopped-limit";
+
+  const coverageNow = () => (total === 0 ? 0 : covered.size / total);
+
+  /**
+   * The occurrence of this pattern that closes the most of the remaining gap.
+   *
+   * Ties fall back to score and then position, so the card still leads with the
+   * clearest statement whenever coverage does not distinguish the options.
+   */
+  const bestOccurrenceFor = (pattern: PatternCandidate) => [...pattern.occurrences]
+    .map((occurrence) => ({
+      occurrence,
+      newBars: barsOfOccurrence(occurrence).filter((bar) => !covered.has(bar)).length,
+    }))
+    .sort((left, right) => right.newBars - left.newBars
+      || right.occurrence.score - left.occurrence.score
+      || left.occurrence.startBar - right.occurrence.startBar
+      || left.occurrence.id.localeCompare(right.occurrence.id))[0];
+
+  while (selected.length < allVisibleLimit && remaining.size > 0) {
+    const uncovered = total - covered.size;
+    let best: {
+      pattern: PatternCandidate;
+      occurrence: PatternCandidate["representative"];
+      keys: number[];
+      newBars: number;
+      redundant: number;
+      newIdentity: boolean;
+    } | undefined;
+
+    for (const pattern of eligible) {
+      if (!remaining.has(pattern.patternId)) continue;
+      const choice = bestOccurrenceFor(pattern);
+      if (!choice) continue;
+      const newBars = choice.newBars;
+      const newIdentity = !shownIdentities.has(pattern.normalizedProgressionIdentity);
+
+      // Nothing is admitted just to make up the count. A candidate has to close
+      // part of the gap, or introduce a shape the user cannot otherwise see —
+      // and the second reason only counts while there are visible slots to fill.
+      const addsValue = newBars > 0 || (newIdentity && selected.length < visibleLimit);
+      if (!addsValue) continue;
+
+      const keys = [
+        kindRank[kindOf.get(pattern.patternId) ?? "fragment"],
+        newIdentity ? 0 : 1,
+        -(structuralOf.get(pattern.patternId) ?? 0),
+        -coverageBucket(newBars, uncovered),
+        -pattern.score,
+        choice.occurrence.startBar,
+      ];
+
+      if (!best || compareKeys(keys, best.keys, pattern.patternId, best.pattern.patternId) < 0) {
+        best = {
+          pattern,
+          occurrence: choice.occurrence,
+          keys,
+          newBars,
+          redundant: barsOfOccurrence(choice.occurrence).length - newBars,
+          newIdentity,
+        };
+      }
+    }
+
+    if (!best) {
+      stoppedBecause = selected.length === 0 ? "stopped-limit" : "stopped-no-marginal-value";
+      break;
+    }
+
+    remaining.delete(best.pattern.patternId);
+    selected.push({ pattern: best.pattern, occurrence: best.occurrence });
+    shownIdentities.add(best.pattern.normalizedProgressionIdentity);
+    for (const bar of barsOfOccurrence(best.occurrence)) covered.add(bar);
+    steps.push({
+      patternId: best.pattern.patternId,
+      representativeOccurrenceId: best.occurrence.id,
+      startBar: best.occurrence.startBar,
+      endBar: best.occurrence.endBar,
+      newBars: best.newBars,
+      redundantBars: best.redundant,
+      utility: 0,
+      coverageAfter: Number(coverageNow().toFixed(6)),
+      reason: best.newBars > 0 ? "selected-by-coverage" : "selected-by-quality",
+      kind: kindOf.get(best.pattern.patternId) ?? "fragment",
+      structuralUsefulness: structuralOf.get(best.pattern.patternId) ?? 0,
+      addedNewIdentity: best.newIdentity,
+    });
+  }
+
+  if (selected.length >= allVisibleLimit) stoppedBecause = "stopped-limit";
+
+  const visible = selected.slice(0, visibleLimit);
+  const visibleCovered = new Set<number>();
+  for (const entry of visible) {
+    for (const bar of barsOfOccurrence(entry.occurrence)) visibleCovered.add(bar);
+  }
+  const selectedIds = new Set(selected.map((entry) => entry.pattern.patternId));
+
+  return {
+    selected,
+    visible,
+    coverage: Number(coverageNow().toFixed(6)),
+    coverageAtVisible: Number((total === 0 ? 0 : visibleCovered.size / total).toFixed(6)),
+    longestUncoveredRun: longestRun(activeBars, covered),
+    uncoveredBars: activeBars.filter((bar) => !covered.has(bar)),
+    steps,
+    stoppedBecause,
+    unselected: patterns.filter((pattern) => !selectedIds.has(pattern.patternId)),
+  };
+}
+
+/** Lexicographic comparison with a final tie-break on id, so runs are identical. */
+function compareKeys(
+  left: readonly number[],
+  right: readonly number[],
+  leftId: string,
+  rightId: string,
+): number {
+  for (let index = 0; index < left.length; index += 1) {
+    if (left[index] !== right[index]) return left[index] - right[index];
+  }
+  return leftId.localeCompare(rightId);
+}
 
 const defaultWeights = { quality: 0.30, coverage: 0.50, diversity: 0.12, overlap: 0.28 };
 

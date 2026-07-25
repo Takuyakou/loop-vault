@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildCandidateEvents, candidateStats, relativeSignature, structuredSignature } from "./candidateBlock";
 import { groupIntoPatterns, type CandidateOccurrence } from "./occurrence";
 import { buildPatternCandidates } from "./patternCandidate";
-import { selectPatternsByCoverage } from "./patternSelection";
+import { selectPatternsByCoverage, selectPatternsByUsefulness } from "./patternSelection";
 import type { ChordTimelineItem } from "../types";
 import { labelFromSymbol, makeChordSymbol } from "../chords";
 
@@ -167,6 +167,111 @@ describe("pattern selection", () => {
     const patterns = buildPatternCandidates(groupIntoPatterns(occurrences), active);
     const first = selectPatternsByCoverage(patterns, { harmonicActiveBars: active });
     const second = selectPatternsByCoverage(patterns, { harmonicActiveBars: active });
+
+    expect(second.steps).toEqual(first.steps);
+  });
+});
+
+describe("usefulness-ordered selection", () => {
+  const active = Array.from({ length: 32 }, (_, index) => index + 1);
+
+  /** Eight bars of one chord held: a vamp by any length. */
+  function vampTimeline(startBar: number, bars: number, root: number): ChordTimelineItem[] {
+    return [{
+      bar: startBar,
+      beat: 1,
+      durationBeats: bars * 4,
+      chord: chord(root, "min11"),
+      confidence: 0.9,
+      alternatives: [],
+      warnings: [],
+    }];
+  }
+
+  it("puts a progression ahead of a vamp that scores higher", () => {
+    const timeline = [...vampTimeline(1, 4, 4), ...phrase(9), ...phrase(13)];
+    const occurrences = [
+      // The vamp scores better, as a repeated one-chord window does.
+      occurrenceOf(timeline, 1, 4, 0.95),
+      occurrenceOf(timeline, 9, 4, 0.60),
+    ];
+    const patterns = buildPatternCandidates(groupIntoPatterns(occurrences), active);
+    const result = selectPatternsByUsefulness(patterns, { harmonicActiveBars: active });
+
+    expect(result.steps[0].kind).toBe("progression");
+    expect(result.steps[0].startBar).toBe(9);
+    expect(result.steps[1].kind).toBe("vamp");
+  });
+
+  it("keeps looking after one candidate has covered everything", () => {
+    // A sixteen-bar window covers all sixteen active bars on its own.
+    const timeline = [...phrase(1), ...phrase(5), ...phrase(9), ...phrase(13)];
+    const sixteen = Array.from({ length: 16 }, (_, index) => index + 1);
+    const occurrences = [
+      occurrenceOf(timeline, 1, 16, 0.80),
+      occurrenceOf(timeline, 1, 4, 0.75),
+      occurrenceOf(timeline, 5, 4, 0.70),
+    ];
+    const patterns = buildPatternCandidates(groupIntoPatterns(occurrences), sixteen);
+    const result = selectPatternsByUsefulness(patterns, { harmonicActiveBars: sixteen });
+
+    // Coverage is complete after the first pick, and distinct shapes are still
+    // offered rather than the search stopping there.
+    expect(result.coverage).toBe(1);
+    expect(result.selected.length).toBeGreaterThan(1);
+  });
+
+  it("does not pad the list with candidates that add nothing", () => {
+    const timeline = [...phrase(1), ...phrase(5)];
+    const eight = Array.from({ length: 8 }, (_, index) => index + 1);
+    // Two occurrences of one shape: the second adds no bars and no new identity.
+    const occurrences = [occurrenceOf(timeline, 1, 4, 0.8), occurrenceOf(timeline, 5, 4, 0.8)];
+    const patterns = buildPatternCandidates(groupIntoPatterns(occurrences), eight);
+    const result = selectPatternsByUsefulness(patterns, { harmonicActiveBars: eight });
+
+    // One pattern, one card. The other occurrence stays reachable from it.
+    expect(result.selected).toHaveLength(1);
+    expect(result.selected[0].pattern.occurrences).toHaveLength(2);
+  });
+
+  it("leads a card with the occurrence that closes the open gap", () => {
+    // The same shape at bars 1-4 and 21-24, plus something covering 1-16.
+    const timeline = [...phrase(1), ...phrase(5), ...phrase(9), ...phrase(13), ...phrase(21)];
+    const occurrences = [
+      occurrenceOf(timeline, 1, 16, 0.85),
+      occurrenceOf(timeline, 1, 4, 0.80),
+      occurrenceOf(timeline, 21, 4, 0.70),
+    ];
+    const patterns = buildPatternCandidates(groupIntoPatterns(occurrences), active);
+    const result = selectPatternsByUsefulness(patterns, { harmonicActiveBars: active });
+
+    // Bars 1-16 are shown first, so the four-bar pattern's card leads with the
+    // occurrence at bar 21 rather than the one already on screen.
+    const fourBarStep = result.steps.find((step) => step.endBar - step.startBar === 3);
+    expect(fourBarStep?.startBar).toBe(21);
+  });
+
+  it("falls back to vamps when the song contains no progression", () => {
+    const timeline = [...vampTimeline(1, 8, 4), ...vampTimeline(9, 8, 9)];
+    const sixteen = Array.from({ length: 16 }, (_, index) => index + 1);
+    const occurrences = [occurrenceOf(timeline, 1, 8, 0.9), occurrenceOf(timeline, 9, 8, 0.88)];
+    const patterns = buildPatternCandidates(groupIntoPatterns(occurrences), sixteen);
+    const result = selectPatternsByUsefulness(patterns, { harmonicActiveBars: sixteen });
+
+    expect(result.selected.length).toBeGreaterThan(0);
+    expect(result.steps.every((step) => step.kind === "vamp")).toBe(true);
+  });
+
+  it("produces identical steps on a rerun", () => {
+    const timeline = [...phrase(1), ...phrase(9), ...phrase(17, 2)];
+    const occurrences = [
+      occurrenceOf(timeline, 1, 4, 0.8),
+      occurrenceOf(timeline, 9, 4, 0.8),
+      occurrenceOf(timeline, 17, 4, 0.8),
+    ];
+    const patterns = buildPatternCandidates(groupIntoPatterns(occurrences), active);
+    const first = selectPatternsByUsefulness(patterns, { harmonicActiveBars: active });
+    const second = selectPatternsByUsefulness(patterns, { harmonicActiveBars: active });
 
     expect(second.steps).toEqual(first.steps);
   });
