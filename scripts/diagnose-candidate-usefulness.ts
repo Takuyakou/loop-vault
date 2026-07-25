@@ -9,6 +9,7 @@ import { selectOccurrencesByCoverage } from "../src/domain/midi/coverageSelector
 import { fingerprintMidiBytes } from "../src/domain/midi/feedback";
 import { analyzeMidiWithRankingScores } from "../src/domain/midi/legacy";
 import { phase4QualityEvidence } from "../src/domain/midi/phase4Analyzer";
+import { structuralWindows } from "../src/domain/midi/structuralWindows";
 import {
   buildOccurrences, groupIntoPatterns, scoreOccurrences,
   type CandidateOccurrence,
@@ -73,9 +74,16 @@ const internal = analyzeMidiWithRankingScores(bytes, { fileName: basename(midiPa
 // differently from the product and make the stage numbers incomparable.
 const rawMatchScores = internal.timelineRankingScores.map(recoverRawMatchScore);
 const normalise = normaliseEvidence(rawMatchScores);
+// The window set has to match the mode's own. Rebuilding without the structural
+// windows leaves every odd-length card unmatched, so it disappears from this
+// report and the list looks shorter than the product actually shows.
+const extraWindows = mode === "phase4.1.2-v1"
+  ? structuralWindows(analysis.fullTimeline, totalBars, meter, analysis.sections ?? [])
+  : [];
 const generated = buildOccurrences(analysis.fullTimeline, totalBars, {
   beatsPerBar: meter,
   rawMatchScores,
+  extraWindows,
 });
 const scored = scoreOccurrences(generated, {
   beatsPerBar: meter,

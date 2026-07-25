@@ -157,6 +157,14 @@ export function selectPatternsByUsefulness(
     structuralUsefulness({ lengthBars: pattern.lengthBars, stats: pattern.representative.stats }),
   ]));
 
+  // Held only when there is something to hold it for, and never when vamps are
+  // all the song has — then they fill the list on their own merits.
+  const vampsAvailable = eligible.some((pattern) => kindOf.get(pattern.patternId) === "vamp");
+  const progressionsAvailable = eligible.filter(
+    (pattern) => kindOf.get(pattern.patternId) === "progression",
+  ).length;
+  const vampReserve = vampsAvailable && progressionsAvailable >= visibleLimit ? 1 : 0;
+
   const activeSet = new Set(activeBars);
   const barsOfOccurrence = (occurrence: PatternCandidate["representative"]) => {
     const bars: number[] = [];
@@ -215,8 +223,18 @@ export function selectPatternsByUsefulness(
       const addsValue = newBars > 0 || (newIdentity && selected.length < visibleLimit);
       if (!addsValue) continue;
 
+      const patternKind = kindOf.get(pattern.patternId) ?? "fragment";
+      // Kind-first ordering means a song with hundreds of progressions never
+      // reaches its vamps, so the vamp lane stays empty and the one-chord loop
+      // the user asked about is nowhere on screen. One visible slot is held for
+      // it — a vamp is a shape worth offering, not a leftover.
+      const holdingSlotForVamp = vampReserve > 0
+        && selected.length >= visibleLimit - vampReserve
+        && selected.length < visibleLimit;
+      if (holdingSlotForVamp && patternKind !== "vamp") continue;
+
       const keys = [
-        kindRank[kindOf.get(pattern.patternId) ?? "fragment"],
+        kindRank[patternKind],
         newIdentity ? 0 : 1,
         -(structuralOf.get(pattern.patternId) ?? 0),
         -coverageBucket(newBars, uncovered),

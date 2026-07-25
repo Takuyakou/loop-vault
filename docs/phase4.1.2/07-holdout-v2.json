@@ -1,0 +1,440 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.1.2-A2",
+  "corpora": [
+    ".local-evaluation/long-form-v1.1"
+  ],
+  "splits": [
+    "holdout-v2"
+  ],
+  "modes": [
+    "phase4.1.2-v1"
+  ],
+  "visibleCardLimit": 10,
+  "fileEvaluations": 8,
+  "gates": [
+    {
+      "id": "visible-pattern-duplicate-count-zero",
+      "description": "No pattern occupies more than one visible card.",
+      "verdict": "pass",
+      "detail": "8/8 files"
+    },
+    {
+      "id": "visible-slot-waste-zero",
+      "description": "No visible slot is spent on a pattern already shown.",
+      "verdict": "pass",
+      "detail": "8/8 files"
+    },
+    {
+      "id": "occurrence-reachability-full",
+      "description": "Every occurrence of a displayed pattern is reachable from its card.",
+      "verdict": "pass",
+      "detail": "8/8 files"
+    },
+    {
+      "id": "progression-precision-at-3",
+      "description": "With three or more progression patterns available, all of the first three cards are progressions.",
+      "verdict": "pass",
+      "detail": "8/8 files"
+    },
+    {
+      "id": "no-two-bar-fragment-in-top3",
+      "description": "With three or more progression patterns available, no two-bar fragment sits in the first three cards.",
+      "verdict": "pass",
+      "detail": "8/8 files"
+    },
+    {
+      "id": "rank-constraint-top3-min-hits",
+      "description": "Every priority group meets its top3MinHits.",
+      "verdict": "fail",
+      "detail": "0/8 files",
+      "offenders": [
+        "long-form-v1.1:L03_clean:phase4.1.2-v1",
+        "long-form-v1.1:L03_stress:phase4.1.2-v1",
+        "long-form-v1.1:L07_clean:phase4.1.2-v1",
+        "long-form-v1.1:L07_stress:phase4.1.2-v1",
+        "long-form-v1.1:L09_clean:phase4.1.2-v1",
+        "long-form-v1.1:L09_stress:phase4.1.2-v1",
+        "long-form-v1.1:L11_clean:phase4.1.2-v1",
+        "long-form-v1.1:L11_stress:phase4.1.2-v1"
+      ]
+    },
+    {
+      "id": "rank-constraint-all-visible-min-hits",
+      "description": "Every priority group meets its allVisibleMinHits.",
+      "verdict": "fail",
+      "detail": "5/8 files",
+      "offenders": [
+        "long-form-v1.1:L03_clean:phase4.1.2-v1",
+        "long-form-v1.1:L03_stress:phase4.1.2-v1",
+        "long-form-v1.1:L07_stress:phase4.1.2-v1"
+      ]
+    },
+    {
+      "id": "rank-constraint-order",
+      "description": "A group marked afterGroup does not outrank the group it follows.",
+      "verdict": "pass",
+      "detail": "8/8 files"
+    },
+    {
+      "id": "coverage-at-all-visible",
+      "description": "allCandidateCoverage stays at or above 90% (Phase 4.1 gate, unchanged).",
+      "verdict": "pass",
+      "detail": "8/8 files"
+    },
+    {
+      "id": "longest-uncovered-run",
+      "description": "The longest uncovered harmonic run stays under eight bars (Phase 4.1 gate, unchanged).",
+      "verdict": "pass",
+      "detail": "8/8 files"
+    },
+    {
+      "id": "runtime-ceiling",
+      "description": "Every file analyses in under 3000 ms.",
+      "verdict": "pass",
+      "detail": "8/8 files"
+    },
+    {
+      "id": "deterministic",
+      "description": "Re-running the same file produces the same cards.",
+      "verdict": "pass",
+      "detail": "1/1 probes stable"
+    },
+    {
+      "id": "chord-corpus-non-regression",
+      "description": "Chord Drip and Chapter 3 Seed do not regress.",
+      "verdict": "not-evaluated",
+      "detail": "checked by scripts/evaluate-midi-analysis.ts and evaluate-chapter3-seed.ts outside this script"
+    }
+  ],
+  "verdict": "FAIL",
+  "metrics": {
+    "mustShowGeneratedRecall": {
+      "min": 1,
+      "mean": 1,
+      "max": 1
+    },
+    "mustShowSelectedRecallAmongGenerated": {
+      "min": 0,
+      "mean": 0.625,
+      "max": 1
+    },
+    "visiblePatternDuplicateCount": {
+      "min": 0,
+      "mean": 0,
+      "max": 0
+    },
+    "visibleSlotWasteCount": {
+      "min": 0,
+      "mean": 0,
+      "max": 0
+    },
+    "uniquePatternCountAt3": {
+      "min": 3,
+      "mean": 3,
+      "max": 3
+    },
+    "uniquePatternCountAt10": {
+      "min": 10,
+      "mean": 10,
+      "max": 10
+    },
+    "progressionPrecisionAt3": {
+      "min": 1,
+      "mean": 1,
+      "max": 1
+    },
+    "twoBarFragmentsInTop3": {
+      "min": 0,
+      "mean": 0,
+      "max": 0
+    },
+    "occurrenceReachability": {
+      "min": 1,
+      "mean": 1,
+      "max": 1
+    },
+    "eventCountRatio": {
+      "min": 1,
+      "mean": 1.242,
+      "max": 1.9792
+    },
+    "boundaryPrecision": {
+      "min": 0.08,
+      "mean": 0.28632,
+      "max": 0.461538
+    },
+    "boundaryRecall": {
+      "min": 1,
+      "mean": 1,
+      "max": 1
+    },
+    "segmentIoU": {
+      "min": 0.296485,
+      "mean": 0.539184,
+      "max": 0.711574
+    },
+    "allCandidateCoverage": {
+      "min": 1,
+      "mean": 1,
+      "max": 1
+    },
+    "reachableCandidateCoverage": {
+      "min": 1,
+      "mean": 1,
+      "max": 1
+    },
+    "progressionCandidateCoverage": {
+      "min": 1,
+      "mean": 1,
+      "max": 1
+    },
+    "runtimeMs": {
+      "min": 188.4,
+      "mean": 298.6875,
+      "max": 460.6
+    }
+  },
+  "files": [
+    {
+      "corpus": "long-form-v1.1",
+      "split": "holdout-v2",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "L03",
+      "variant": "clean",
+      "fingerprint": "sha256-772f01c79c12828f5e8535cfae5d0a8fc1ba899c410b0fca694b5e6810063da0",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 1341,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 0,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "L03-top3",
+          "top3Hits": 0,
+          "top3MinHits": 2,
+          "top3Satisfied": false,
+          "allVisibleHits": 0,
+          "allVisibleMinHits": 2,
+          "allVisibleSatisfied": false,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 406.4
+    },
+    {
+      "corpus": "long-form-v1.1",
+      "split": "holdout-v2",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "L03",
+      "variant": "stress",
+      "fingerprint": "sha256-9dbf757729deaf49523989b409f4ecaa76cc01a6ca50b16b4222e752422e2516",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 1342,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 0,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "L03-top3",
+          "top3Hits": 0,
+          "top3MinHits": 2,
+          "top3Satisfied": false,
+          "allVisibleHits": 0,
+          "allVisibleMinHits": 2,
+          "allVisibleSatisfied": false,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 460.6
+    },
+    {
+      "corpus": "long-form-v1.1",
+      "split": "holdout-v2",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "L07",
+      "variant": "clean",
+      "fingerprint": "sha256-782a7261e218f9a375cb13455d58b0286231a754ce383a5764abb6f3e3576e2c",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 618,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "L07-top3",
+          "top3Hits": 0,
+          "top3MinHits": 1,
+          "top3Satisfied": false,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 188.4
+    },
+    {
+      "corpus": "long-form-v1.1",
+      "split": "holdout-v2",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "L07",
+      "variant": "stress",
+      "fingerprint": "sha256-8e4ec019f8cc2345a557072803b4651af1e8d033c43c425635bdc1c5babbf72b",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 1274,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 0,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1.9792,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "L07-top3",
+          "top3Hits": 0,
+          "top3MinHits": 1,
+          "top3Satisfied": false,
+          "allVisibleHits": 0,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": false,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 378.5
+    },
+    {
+      "corpus": "long-form-v1.1",
+      "split": "holdout-v2",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "L09",
+      "variant": "clean",
+      "fingerprint": "sha256-4f97fdd3756a6ab6f853fc6ad85b2bcd27a2c2911ea460164df6fc3a714fdb02",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 726,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "L09-top3",
+          "top3Hits": 0,
+          "top3MinHits": 1,
+          "top3Satisfied": false,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 216.7
+    },
+    {
+      "corpus": "long-form-v1.1",
+      "split": "holdout-v2",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "L09",
+      "variant": "stress",
+      "fingerprint": "sha256-38f503d02eda02c1746994dd5d1bd60ec97027440e5181822625d8fe2caf8c02",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 727,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1.9464,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "L09-top3",
+          "top3Hits": 0,
+          "top3MinHits": 1,
+          "top3Satisfied": false,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 274.3
+    },
+    {
+      "corpus": "long-form-v1.1",
+      "split": "holdout-v2",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "L11",
+      "variant": "clean",
+      "fingerprint": "sha256-12e01b3db3dcc36e495292145ea3f1e14b507aee9f6bfa07988c1d94c3870f4c",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 1282,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "L11-top3",
+          "top3Hits": 0,
+          "top3MinHits": 1,
+          "top3Satisfied": false,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 229.6
+    },
+    {
+      "corpus": "long-form-v1.1",
+      "split": "holdout-v2",
+      "mode": "phase4.1.2-v1",
+      "scenarioId": "L11",
+      "variant": "stress",
+      "fingerprint": "sha256-1d3420c4bc5fbdfdff3d1c16caf1d5852c55b4fe9f9c778e4d5e62ce8e355811",
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "progressionPrecisionAt3": 1,
+      "twoBarFragmentsInTop3": 0,
+      "progressionCandidateAvailability": 1334,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 1,
+      "allCandidateCoverage": 1,
+      "eventCountRatio": 1.0104,
+      "rankConstraintGroupSatisfaction": [
+        {
+          "id": "L11-top3",
+          "top3Hits": 0,
+          "top3MinHits": 1,
+          "top3Satisfied": false,
+          "allVisibleHits": 1,
+          "allVisibleMinHits": 1,
+          "allVisibleSatisfied": true,
+          "orderSatisfied": true
+        }
+      ],
+      "runtimeMs": 235
+    }
+  ]
+}
