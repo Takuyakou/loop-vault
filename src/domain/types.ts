@@ -1,6 +1,7 @@
 import type { BlockQualityComponents } from "./midi/blockQuality";
 import type { CandidatePattern } from "./midi/occurrence";
 import type { CandidateCatalog } from "./midi/candidateCatalog";
+import type { RecommendationResult } from "./midi/candidateRecommendation";
 import type { Section } from "./midi/sections";
 import type { CandidateChordEvent, CandidateChordStats } from "./midi/candidateBlock";
 import type { ProgressionPracticeProgress } from "./practice/types";
@@ -170,6 +171,13 @@ export interface MidiProgressionAnalysis {
    * into, so a progression that ranks poorly is still reachable.
    */
   candidateCatalog?: CandidateCatalog;
+  /**
+   * Which catalog patterns to show first, and why. Non-persistent.
+   *
+   * The count is dynamic: one eligible pattern yields one recommendation, and
+   * none yields an empty list rather than a padded one.
+   */
+  candidateRecommendation?: RecommendationResult;
   /** Estimated section ranges, numbered rather than named. */
   sections?: Section[];
   analyzedAt: string;

@@ -189,6 +189,7 @@ export function analyzeMidiWithRankingScores(
       blockCandidates,
       ...(coverage ? { candidatePatterns: coverage.patterns } : {}),
       ...(coverage?.catalog ? { candidateCatalog: coverage.catalog } : {}),
+      ...(coverage?.recommendation ? { candidateRecommendation: coverage.recommendation } : {}),
       ...(scoring.useCoverageSelection || scoring.usePatternSelection
         ? { sections: segmentSections(analysisData, fullTimeline) }
         : {}),

@@ -4,6 +4,7 @@ import { recoverRawMatchScore, summaryFromEvents } from "./candidateBlock";
 import { selectOccurrencesByCoverage, type CoverageSelectionOptions } from "./coverageSelector";
 import { classifyCandidateKind } from "./candidateKind";
 import { buildCandidateCatalog, type CandidateCatalog } from "./candidateCatalog";
+import { recommendPatterns, type RecommendationResult } from "./candidateRecommendation";
 import { normalizeCandidatePool } from "./candidatePool";
 import { buildPatternCandidates } from "./patternCandidate";
 import { selectPatternsByUsefulness, type UsefulnessSelectionOptions } from "./patternSelection";
@@ -31,6 +32,8 @@ export interface CoverageCandidateResult {
   patterns: CandidatePattern[];
   /** Every valid pattern, independent of what the shortlist chose. */
   catalog?: CandidateCatalog;
+  /** A ranked reference into the catalog. Owns nothing, removes nothing. */
+  recommendation?: RecommendationResult;
   harmonicActiveBars: number[];
   coverage: number;
   coverageAtVisible: number;
@@ -120,6 +123,8 @@ export function buildPatternCoverageCandidates(
     qualityFloor,
     rawWindowCount: occurrences.length,
   });
+  // Runs after the catalog is complete and cannot change it.
+  const recommendation = recommendPatterns(catalog);
   // Both selectors stay reachable. The two-pass one measured slightly worse on
   // the known corpora, so it is opt-in rather than the path: see
   // docs/phase4.1.2/10-two-pass-selection.md. Wiring the loser would be choosing
@@ -151,6 +156,7 @@ export function buildPatternCoverageCandidates(
     }),
     patterns,
     catalog,
+    recommendation,
     harmonicActiveBars: active,
     coverage: selection.coverage,
     coverageAtVisible: selection.coverageAtVisible,

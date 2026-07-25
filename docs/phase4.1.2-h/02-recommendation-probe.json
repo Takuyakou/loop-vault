@@ -1,0 +1,305 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.1.2-H",
+  "mode": "phase4.1.2-v1",
+  "files": [
+    {
+      "fingerprint": "sha256-07681d5a2a01c1e89173f83c4882c5df17e0d2c49386b47a04ec50579498395a",
+      "byteLength": 357,
+      "totalBars": 8,
+      "mode": "phase4.1.2-v1",
+      "runtimeMs": 24,
+      "catalog": {
+        "version": "candidate-catalog-v1",
+        "patternCount": 11,
+        "progressionCount": 4,
+        "vampCount": 0,
+        "fragmentCount": 7,
+        "uncertainCount": 0,
+        "occurrenceCount": 17,
+        "rawWindowCount": 19,
+        "exactDuplicateCount": 0,
+        "unreachablePatternCount": 0,
+        "unreachableOccurrenceCount": 0,
+        "belowQualityFloorPatternCount": 2
+      },
+      "recommendation": {
+        "version": "recommendation-v1",
+        "count": 1,
+        "eligiblePatternCount": 4,
+        "evaluatedPatternCount": 11,
+        "paddingCount": 0,
+        "stoppedBecause": "all-eligible-used",
+        "ranks": [
+          {
+            "rank": 1,
+            "score": 0.634496,
+            "reasons": [
+              "distinct-progression",
+              "covers-new-ground"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "fingerprint": "sha256-09656b95f6c5dfecc9701b520bf03adceb67468bce711865b339df222f91052e",
+      "byteLength": 6344,
+      "totalBars": 96,
+      "mode": "phase4.1.2-v1",
+      "runtimeMs": 88.7,
+      "catalog": {
+        "version": "candidate-catalog-v1",
+        "patternCount": 47,
+        "progressionCount": 18,
+        "vampCount": 28,
+        "fragmentCount": 1,
+        "uncertainCount": 0,
+        "occurrenceCount": 459,
+        "rawWindowCount": 484,
+        "exactDuplicateCount": 0,
+        "unreachablePatternCount": 0,
+        "unreachableOccurrenceCount": 0,
+        "belowQualityFloorPatternCount": 25
+      },
+      "recommendation": {
+        "version": "recommendation-v1",
+        "count": 1,
+        "eligiblePatternCount": 18,
+        "evaluatedPatternCount": 47,
+        "paddingCount": 0,
+        "stoppedBecause": "all-eligible-used",
+        "ranks": [
+          {
+            "rank": 1,
+            "score": 0.818964,
+            "reasons": [
+              "distinct-progression",
+              "covers-new-ground"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "fingerprint": "sha256-c153f78e536b23f467196f5ab128a2142f27d68961addbab5f0f293a305fb94b",
+      "byteLength": 25966,
+      "totalBars": 154,
+      "mode": "phase4.1.2-v1",
+      "runtimeMs": 260.5,
+      "catalog": {
+        "version": "candidate-catalog-v1",
+        "patternCount": 1777,
+        "progressionCount": 1167,
+        "vampCount": 2,
+        "fragmentCount": 113,
+        "uncertainCount": 495,
+        "occurrenceCount": 1786,
+        "rawWindowCount": 1790,
+        "exactDuplicateCount": 0,
+        "unreachablePatternCount": 0,
+        "unreachableOccurrenceCount": 0,
+        "belowQualityFloorPatternCount": 4
+      },
+      "recommendation": {
+        "version": "recommendation-v1",
+        "count": 10,
+        "eligiblePatternCount": 1167,
+        "evaluatedPatternCount": 1777,
+        "paddingCount": 0,
+        "stoppedBecause": "display-cap",
+        "ranks": [
+          {
+            "rank": 1,
+            "score": 0.803242,
+            "reasons": [
+              "distinct-progression",
+              "covers-new-ground"
+            ]
+          },
+          {
+            "rank": 2,
+            "score": 0.801634,
+            "reasons": [
+              "distinct-progression",
+              "covers-new-ground"
+            ]
+          },
+          {
+            "rank": 3,
+            "score": 0.798198,
+            "reasons": [
+              "distinct-progression",
+              "covers-new-ground"
+            ]
+          },
+          {
+            "rank": 4,
+            "score": 0.796161,
+            "reasons": [
+              "distinct-progression",
+              "covers-new-ground"
+            ]
+          },
+          {
+            "rank": 5,
+            "score": 0.792838,
+            "reasons": [
+              "distinct-progression",
+              "covers-new-ground"
+            ]
+          },
+          {
+            "rank": 6,
+            "score": 0.790967,
+            "reasons": [
+              "distinct-progression",
+              "covers-new-ground"
+            ]
+          },
+          {
+            "rank": 7,
+            "score": 0.728571,
+            "reasons": [
+              "distinct-progression",
+              "covers-new-ground"
+            ]
+          },
+          {
+            "rank": 8,
+            "score": 0.716561,
+            "reasons": [
+              "distinct-progression",
+              "covers-new-ground"
+            ]
+          },
+          {
+            "rank": 9,
+            "score": 0.683275,
+            "reasons": [
+              "distinct-progression",
+              "covers-new-ground"
+            ]
+          },
+          {
+            "rank": 10,
+            "score": 0.631302,
+            "reasons": [
+              "distinct-progression",
+              "covers-new-ground"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "fingerprint": "sha256-2790e82d09b52a58efe8806e79d7379f6ec15091930197073ff9095dcee5ea10",
+      "byteLength": 33055,
+      "totalBars": 100,
+      "mode": "phase4.1.2-v1",
+      "runtimeMs": 238.4,
+      "catalog": {
+        "version": "candidate-catalog-v1",
+        "patternCount": 1352,
+        "progressionCount": 1102,
+        "vampCount": 0,
+        "fragmentCount": 134,
+        "uncertainCount": 116,
+        "occurrenceCount": 1354,
+        "rawWindowCount": 1358,
+        "exactDuplicateCount": 0,
+        "unreachablePatternCount": 0,
+        "unreachableOccurrenceCount": 0,
+        "belowQualityFloorPatternCount": 4
+      },
+      "recommendation": {
+        "version": "recommendation-v1",
+        "count": 10,
+        "eligiblePatternCount": 1102,
+        "evaluatedPatternCount": 1352,
+        "paddingCount": 0,
+        "stoppedBecause": "display-cap",
+        "ranks": [
+          {
+            "rank": 1,
+            "score": 0.804591,
+            "reasons": [
+              "distinct-progression",
+              "covers-new-ground"
+            ]
+          },
+          {
+            "rank": 2,
+            "score": 0.794174,
+            "reasons": [
+              "distinct-progression",
+              "covers-new-ground"
+            ]
+          },
+          {
+            "rank": 3,
+            "score": 0.785065,
+            "reasons": [
+              "distinct-progression",
+              "covers-new-ground"
+            ]
+          },
+          {
+            "rank": 4,
+            "score": 0.781504,
+            "reasons": [
+              "distinct-progression",
+              "covers-new-ground"
+            ]
+          },
+          {
+            "rank": 5,
+            "score": 0.686436,
+            "reasons": [
+              "distinct-progression",
+              "covers-new-ground"
+            ]
+          },
+          {
+            "rank": 6,
+            "score": 0.657986,
+            "reasons": [
+              "distinct-progression",
+              "covers-new-ground"
+            ]
+          },
+          {
+            "rank": 7,
+            "score": 0.646847,
+            "reasons": [
+              "distinct-progression",
+              "covers-new-ground"
+            ]
+          },
+          {
+            "rank": 8,
+            "score": 0.579053,
+            "reasons": [
+              "distinct-progression",
+              "covers-new-ground"
+            ]
+          },
+          {
+            "rank": 9,
+            "score": 0.560077,
+            "reasons": [
+              "distinct-progression"
+            ]
+          },
+          {
+            "rank": 10,
+            "score": 0.559314,
+            "reasons": [
+              "distinct-progression"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
