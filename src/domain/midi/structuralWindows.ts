@@ -27,6 +27,8 @@ export interface StructuralWindow {
   startBar: number;
   lengthBars: number;
   source: StructuralWindowSource;
+  /** Every generator that proposed this span, not only the first to claim it. */
+  sources: StructuralWindowSource[];
 }
 
 /** Lengths the fixed generator already produces, so they are not emitted twice. */
@@ -86,8 +88,14 @@ export function structuralWindows(
     if (startBar < 1 || startBar + lengthBars - 1 > totalBars) return;
     if (!inRange(lengthBars)) return;
     const key = `${startBar}:${lengthBars}`;
-    // First source to claim a window keeps it, so the attribution is stable.
-    if (!found.has(key)) found.set(key, { startBar, lengthBars, source });
+    const existing = found.get(key);
+    if (!existing) {
+      // First source to claim a window names it, so the attribution is stable;
+      // later ones are recorded rather than creating a second window.
+      found.set(key, { startBar, lengthBars, source, sources: [source] });
+      return;
+    }
+    if (!existing.sources.includes(source)) existing.sources.push(source);
   };
 
   // 1. Section boundaries. A section is the unit a user asks for by name, so its

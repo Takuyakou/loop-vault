@@ -3,6 +3,7 @@ import { normaliseEvidence, scoreBlockQuality } from "./blockQuality";
 import { recoverRawMatchScore, summaryFromEvents } from "./candidateBlock";
 import { selectOccurrencesByCoverage, type CoverageSelectionOptions } from "./coverageSelector";
 import { classifyCandidateKind } from "./candidateKind";
+import { normalizeCandidatePool } from "./candidatePool";
 import { buildPatternCandidates } from "./patternCandidate";
 import { selectPatternsByUsefulness, type UsefulnessSelectionOptions } from "./patternSelection";
 import { segmentSections } from "./sections";
@@ -97,7 +98,12 @@ export function buildPatternCoverageCandidates(
   );
 
   const active = harmonicActiveBars(data, totalBars);
-  const patterns = groupIntoPatterns(occurrences);
+  // Normalising before grouping keeps the pool the selector sees free of windows
+  // that say the same thing twice. Nothing reachable becomes unreachable: a
+  // candidate is only dropped when another covers the same bars with the same
+  // chords and scores at least as well.
+  const normalized = normalizeCandidatePool(occurrences, active);
+  const patterns = groupIntoPatterns(normalized.occurrences);
   const patternCandidates = buildPatternCandidates(patterns, active);
   const selection = selectPatternsByUsefulness(patternCandidates, {
     harmonicActiveBars: active,
