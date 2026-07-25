@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.1-04",
+  "source": {
+    "fingerprint": "sha256-2790e82d09b52a58efe8806e79d7379f6ec15091930197073ff9095dcee5ea10",
+    "byteLength": 33055
+  },
+  "rows": [
+    {
+      "selector": "phase4.0-ranking",
+      "candidateCount": 10,
+      "selectedCoverageAtAllVisible": 0.285714,
+      "selectedCoverageAt10": 0.285714,
+      "longestUncoveredHarmonicRun": 16,
+      "sectionRecallAtAllVisible": 0.55,
+      "sectionRecallAt10": 0.55,
+      "focusRangeCovered": 0,
+      "focusRangeBars": 14,
+      "groupedVisibleCoverage": 0.285714,
+      "occurrenceRecall": 0.026738,
+      "minimumSelectedCandidateScore": 0.670448,
+      "runtimeMs": 0,
+      "stoppedBecause": "ranking-limit"
+    },
+    {
+      "selector": "coverage-only",
+      "candidateCount": 7,
+      "selectedCoverageAtAllVisible": 0.959184,
+      "selectedCoverageAt10": 0.959184,
+      "longestUncoveredHarmonicRun": 3,
+      "sectionRecallAtAllVisible": 1,
+      "sectionRecallAt10": 1,
+      "focusRangeCovered": 14,
+      "focusRangeBars": 14,
+      "groupedVisibleCoverage": 0.959184,
+      "occurrenceRecall": 0.018717,
+      "minimumSelectedCandidateScore": 0.581985,
+      "runtimeMs": 1.9,
+      "stoppedBecause": "stopped-coverage-target"
+    },
+    {
+      "selector": "section-aware-coverage",
+      "candidateCount": 8,
+      "selectedCoverageAtAllVisible": 0.959184,
+      "selectedCoverageAt10": 0.959184,
+      "longestUncoveredHarmonicRun": 3,
+      "sectionRecallAtAllVisible": 1,
+      "sectionRecallAt10": 1,
+      "focusRangeCovered": 14,
+      "focusRangeBars": 14,
+      "groupedVisibleCoverage": 0.959184,
+      "occurrenceRecall": 0.02139,
+      "minimumSelectedCandidateScore": 0.581985,
+      "runtimeMs": 2.3,
+      "stoppedBecause": "stopped-coverage-target"
+    }
+  ],
+  "sectionAwareImprovesOverCoverageOnly": false,
+  "recommendedSelector": "coverage-only",
+  "reasoning": "section awareness did not improve on coverage-only; coverage-only is adopted and the section signal stays available but unused"
+}
