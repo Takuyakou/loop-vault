@@ -6,6 +6,7 @@ import { classifyCandidateKind } from "./candidateKind";
 import { normalizeCandidatePool } from "./candidatePool";
 import { buildPatternCandidates } from "./patternCandidate";
 import { selectPatternsByUsefulness, type UsefulnessSelectionOptions } from "./patternSelection";
+import { selectPatternsTwoPass } from "./patternTwoPassSelection";
 import { segmentSections } from "./sections";
 import { structuralWindows } from "./structuralWindows";
 import {
@@ -71,7 +72,10 @@ export function buildPatternCoverageCandidates(
   data: MidiSongData,
   totalBars: number,
   rankingScores: readonly number[] | undefined,
-  options: Partial<UsefulnessSelectionOptions> & { useStructuralWindows?: boolean } = {},
+  options: Partial<UsefulnessSelectionOptions> & {
+    useStructuralWindows?: boolean;
+    useTwoPassSelection?: boolean;
+  } = {},
 ): CoverageCandidateResult {
   const meter = beatsPerBar(data.timeSignature);
   const rawMatchScores = rankingScores
@@ -105,10 +109,21 @@ export function buildPatternCoverageCandidates(
   const normalized = normalizeCandidatePool(occurrences, active);
   const patterns = groupIntoPatterns(normalized.occurrences);
   const patternCandidates = buildPatternCandidates(patterns, active);
-  const selection = selectPatternsByUsefulness(patternCandidates, {
-    harmonicActiveBars: active,
-    ...options,
-  });
+  // Both selectors stay reachable. The two-pass one measured slightly worse on
+  // the known corpora, so it is opt-in rather than the path: see
+  // docs/phase4.1.2/10-two-pass-selection.md. Wiring the loser would be choosing
+  // a hypothesis over a measurement.
+  const selection = options.useTwoPassSelection
+    ? selectPatternsTwoPass(patternCandidates, {
+      harmonicActiveBars: active,
+      sections,
+      totalBars,
+      ...options,
+    })
+    : selectPatternsByUsefulness(patternCandidates, {
+      harmonicActiveBars: active,
+      ...options,
+    });
 
   return {
     candidates: selection.selected.map(({ occurrence }) => {

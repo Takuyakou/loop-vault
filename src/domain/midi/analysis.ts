@@ -7,6 +7,10 @@ import { analyzeMidiPhase4, phase4AnalyzerVersion } from "./phase4Analyzer";
 import { analyzeMidiPhase41, phase41AnalyzerVersion } from "./phase41Analyzer";
 import { analyzeMidiPhase412, phase412AnalyzerVersion } from "./phase412Analyzer";
 import { analyzeMidiPhase412Core, phase412CoreAnalyzerVersion } from "./phase412CoreAnalyzer";
+import {
+  analyzeMidiPhase412CoreG2, analyzeMidiPhase412G2,
+  phase412CoreG2AnalyzerVersion, phase412G2AnalyzerVersion,
+} from "./phase412G2Analyzer";
 import type { AnalyzeMidiOptions } from "./types";
 import { analyzeMidiVoiceAwareRerank, voiceAwareRerankerVersion } from "./voiceAwareReranker";
 
@@ -36,6 +40,8 @@ export {
   phase41AnalyzerVersion,
   phase412AnalyzerVersion,
   phase412CoreAnalyzerVersion,
+  phase412CoreG2AnalyzerVersion,
+  phase412G2AnalyzerVersion,
   voiceAwareRerankerVersion,
 };
 export { buildWeightedWindows, extractBlockCandidates, inferTrackRoles, matchWindow, smoothTimeline } from "./legacy";
@@ -56,6 +62,10 @@ export function analyzeMidi(bytes: Uint8Array, options: AnalyzeMidiOptions = {})
       ? analyzeMidiPhase412(bytes, options)
     : mode === "phase4.1.2-core-v1"
       ? analyzeMidiPhase412Core(bytes, options)
+    : mode === "phase4.1.2-g2-v1"
+      ? analyzeMidiPhase412G2(bytes, options)
+    : mode === "phase4.1.2-core-g2-v1"
+      ? analyzeMidiPhase412CoreG2(bytes, options)
       : analyzeMidiLegacy(bytes, options);
   return { ...analysis, sourceFingerprint: fingerprintMidiBytes(bytes) };
 }
