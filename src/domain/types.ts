@@ -1,3 +1,4 @@
+import type { BlockQualityComponents } from "./midi/blockQuality";
 import type { CandidateChordEvent, CandidateChordStats } from "./midi/candidateBlock";
 import type { ProgressionPracticeProgress } from "./practice/types";
 
@@ -112,7 +113,7 @@ export interface ProgressionBlockCandidate {
   id: string;
   startBar: number;
   endBar: number;
-  lengthBars: 4 | 8 | 16;
+  lengthBars: 2 | 4 | 8 | 16;
   /** Timeline events starting inside the block. Kept for existing consumers. */
   chords: ChordTimelineItem[];
   /**
@@ -127,6 +128,8 @@ export interface ProgressionBlockCandidate {
   summaryText: string;
   confidence: number;
   selectionScore?: number;
+  /** Non-persistent score breakdown, for diagnostics. */
+  quality?: BlockQualityComponents;
   repeatCount?: number;
   labels: string[];
   warnings: string[];

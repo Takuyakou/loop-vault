@@ -7,9 +7,10 @@ import type {
   MidiProgressionAnalysis,
   ProgressionBlockCandidate,
 } from "../types";
+import { normaliseEvidence, scoreBlockQuality } from "./blockQuality";
 import {
-  buildCandidateEvents, candidateStats, countStructuredRepeats, structuredSignature,
-  summaryFromEvents,
+  buildCandidateEvents, candidateStats, recoverRawMatchScore,
+  structuredSignature, summaryFromEvents,
 } from "./candidateBlock";
 import { parseMidi } from "./parser";
 import {
@@ -291,38 +292,62 @@ export function extractBlockCandidates(
   barLengthBeats: number = 4,
 ): ProgressionBlockCandidate[] {
   const raw: CandidateSelectionEntry[] = [];
+  // Recovered per-event evidence. `confidence` saturates at 1 and cannot rank
+  // blocks; the raw template score behind it does spread.
+  const rawMatchScores = rankingScores
+    ? rankingScores.map(recoverRawMatchScore)
+    : timeline.map((item) => item.confidence);
+  const normalise = normaliseEvidence(rawMatchScores);
 
-  for (const lengthBars of [4, 8, 16] as const) {
+  // Two-bar windows are included so short loops and vamps can be found at their
+  // real length instead of only as a quarter of a four-bar block.
+  for (const lengthBars of [2, 4, 8, 16] as const) {
     if (totalBars < lengthBars) {
       continue;
     }
 
+    // Candidate identity and display both come from the overlapping timeline
+    // events, so a two-chord bar keeps both chords and a sustained chord keeps
+    // its length instead of being flattened to one label per bar.
+    //
+    // Every window of this length is built once and its signatures tallied, so
+    // repeat counting is a lookup rather than a rescan per window.
+    const windows = [];
     for (let start = 1; start <= totalBars - lengthBars + 1; start += 1) {
-      // Candidate identity and display both come from the overlapping timeline
-      // events, so a two-chord bar keeps both chords and a sustained chord keeps
-      // its length instead of being flattened to one label per bar.
-      const events = buildCandidateEvents(timeline, start, lengthBars, barLengthBeats);
-      const signature = structuredSignature(events);
+      const events = buildCandidateEvents(
+        timeline, start, lengthBars, barLengthBeats, rawMatchScores,
+      );
+      windows.push({ start, events, signature: structuredSignature(events) });
+    }
+    const repeatCounts = new Map<string, number>();
+    for (const window of windows) {
+      repeatCounts.set(window.signature, (repeatCounts.get(window.signature) ?? 0) + 1);
+    }
+
+    for (const { start, events, signature } of windows) {
       const stats = candidateStats(events, lengthBars);
       const summaryText = summaryFromEvents(events, lengthBars, barLengthBeats);
-      const repeatCount = countStructuredRepeats(
-        timeline, totalBars, lengthBars, signature, barLengthBeats,
-      );
+      const repeatCount = repeatCounts.get(signature) ?? 1;
       const rankedChords = timeline.flatMap((item, index) =>
         item.bar >= start && item.bar < start + lengthBars
           ? [{ item, rankingScore: rankingScoreAt(rankingScores, index, item.confidence) }]
           : []);
       const chords = rankedChords.map(({ item }) => item);
       const confidence = average(chords.map((item) => item.confidence));
-      const rankingScore = average(rankedChords.map((entry) => entry.rankingScore));
-      const repeatBonus = Math.min(0.25, repeatCount * 0.08);
-      const diversityBonus = Math.min(0.15, stats.uniqueChordCount * 0.03);
-      const score = rankingScore + repeatBonus + diversityBonus;
-      const displayConfidence = confidence + repeatBonus + diversityBonus;
+      // Musical evidence, not chord count. A one-chord vamp is not penalised for
+      // being a one-chord vamp; density is handled as a selection class instead.
+      const quality = scoreBlockQuality(events, {
+        repeatCount,
+        beatsPerBar: barLengthBeats,
+        normaliseEvidence: normalise,
+      });
+      const displayConfidence = confidence;
 
       raw.push({
         dedupeKey: signature,
-        selectionScore: score,
+        selectionScore: quality.total,
+        densityClass: stats.densityClass,
+        quality,
         candidate: {
           id: `bars-${start}-${start + lengthBars - 1}`,
           startBar: start,
