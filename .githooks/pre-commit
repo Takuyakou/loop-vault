@@ -1,0 +1,4 @@
+#!/bin/sh
+# Blocks private audio and generated output from entering a commit.
+# Install with: npm run hooks:install
+node scripts/check-staged-files.mjs || exit 1

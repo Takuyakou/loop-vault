@@ -8,6 +8,8 @@
     "build": "tsc && vite build",
     "lint": "eslint . && npm run lint:classes",
     "lint:classes": "node scripts/lint-tailwind-classes.mjs",
+    "check:staged": "node scripts/check-staged-files.mjs",
+    "hooks:install": "git config core.hooksPath .githooks",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
