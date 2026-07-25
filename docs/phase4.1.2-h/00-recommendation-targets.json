@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.1.2-H0",
+  "frozenOn": "2026-07-26",
+  "policy": "These are improvement targets, not promotion conditions. None of them being at 100% is a reason to keep improving the recommender; it is not a reason to withhold a catalog that keeps every valid candidate reachable. Requiring a perfect ranker before shipping the safety net is what kept the previous three stages from delivering anything.",
+  "targets": [
+    { "id": "progressionPrecisionAt3", "direction": "higher-is-better", "note": "Share of the first three recommendations that are progressions, when three or more progression patterns exist." },
+    { "id": "mustShowTop3Recall", "direction": "higher-is-better" },
+    { "id": "mustShowRecommendedRecall", "direction": "higher-is-better", "note": "New: must-show blocks reachable from the recommendation list." },
+    { "id": "mustShowSelectedRecallAmongGenerated", "direction": "higher-is-better" },
+    { "id": "twoBarFragmentsInTop3", "direction": "lower-is-better" },
+    { "id": "patternDiversity", "direction": "higher-is-better", "note": "Distinct patterns among the recommendations, over the recommendation count." },
+    { "id": "temporalDiversity", "direction": "higher-is-better", "note": "Spread of recommended spans across the song." },
+    { "id": "cleanStressAgreement", "direction": "higher-is-better" },
+    { "id": "meanCorrectionClicks", "direction": "lower-is-better", "note": "Not measurable yet; recorded so it is not forgotten." },
+    { "id": "recommendationSaveRate", "direction": "higher-is-better", "note": "Requires product telemetry that does not exist. Deferred." }
+  ],
+  "regressionFloor": {
+    "note": "Recommendation v1 is not made the default if any of these fires. The catalog may still be promoted — see 00-catalog-hard-gates.json.",
+    "rules": [
+      { "metric": "progressionPrecisionAt3", "rule": "must not fall more than 5pp below baseline" },
+      { "metric": "mustShowSelectedRecallAmongGenerated", "rule": "must not fall more than 5pp below baseline" },
+      { "metric": "cleanStressAgreement", "rule": "must not fall more than 5pp below baseline" },
+      { "metric": "twoBarFragmentsInTop3", "rule": "must not increase above baseline" },
+      { "metric": "endlessCriticalGuard", "rule": "must pass" },
+      { "metric": "clean8BarPaddingFixture", "rule": "must pass" }
+    ]
+  },
+  "dynamicCountContract": {
+    "formula": "recommendedCount = min(recommendationDisplayCap, eligibleDistinctPatternCount)",
+    "capIsMaximumNotTarget": true,
+    "paddingForbidden": [
+      "filling to the cap",
+      "repeating a pattern",
+      "admitting a candidate below the quality floor",
+      "admitting a fragment outside fallback",
+      "using a sub-window of a progression already recommended"
+    ],
+    "zeroEligible": "hide the recommendation section entirely; vamp / fragment / uncertain lanes remain",
+    "mergeWhenSmall": "when the catalog holds no more patterns than the display cap, present one list rather than a recommendation section plus an identical catalog section"
+  }
+}

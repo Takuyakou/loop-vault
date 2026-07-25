@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.1.2-H0",
+  "frozenOn": "2026-07-26",
+  "scope": {
+    "corpora": [".local-evaluation/synthetic-gold-v1", ".local-evaluation/long-form-v1.1"],
+    "splits": ["dev", "validation"],
+    "fileEvaluations": 56,
+    "note": "The known set. holdout-v3 is generated and run once after everything is fixed."
+  },
+  "baselineMode": {
+    "id": "phase4.1.2-v1",
+    "description": "The best single-stage selector with Stage E generation (full). Recommendation v1 is measured against this.",
+    "why": "The G2 two-pass selector measured worse in all four configurations, so the single-stage ordering is the incumbent. Full rather than core because the catalog needs Stage E's generation completeness: core leaves mustShowGeneratedRecall at 0.9702 and a 15-bar uncovered run."
+  },
+  "baselines": {
+    "phase4.1.2-v1": {
+      "progressionPrecisionAt3": 1.0,
+      "mustShowSelectedRecallAmongGenerated": 0.745323,
+      "twoBarFragmentsInTop3": 0.0,
+      "visiblePatternDuplicateCount": 0.0,
+      "allCandidateCoverage": 0.99535,
+      "uniquePatternCountAt3": 3.0,
+      "uniquePatternCountAt10": 10.0,
+      "occurrenceReachability": 0.983418,
+      "cleanStressAgreement": 0.7,
+      "runtimeMaxMs": 357.3,
+      "gateFailures": [
+        "occurrence-reachability-full 54/56",
+        "rank-constraint-top3-min-hits 34/56",
+        "rank-constraint-all-visible-min-hits 37/56",
+        "coverage-at-all-visible 55/56"
+      ]
+    },
+    "phase4.1.2-core-v1": {
+      "progressionPrecisionAt3": 1.0,
+      "mustShowSelectedRecallAmongGenerated": 0.865753,
+      "twoBarFragmentsInTop3": 0.0,
+      "visiblePatternDuplicateCount": 0.0,
+      "allCandidateCoverage": 0.987723,
+      "uniquePatternCountAt3": 3.0,
+      "uniquePatternCountAt10": 9.732143,
+      "occurrenceReachability": 0.98852,
+      "cleanStressAgreement": 0.784921,
+      "runtimeMaxMs": 270.4,
+      "gateFailures": [
+        "occurrence-reachability-full 54/56",
+        "rank-constraint-top3-min-hits 39/56",
+        "rank-constraint-all-visible-min-hits 41/56",
+        "coverage-at-all-visible 53/56",
+        "longest-uncovered-run 54/56"
+      ],
+      "note": "Recorded because core beats full on rank-constraint and stability while losing on coverage and generation. Neither dominates; the catalog removes the need to choose, because both modes' candidates are kept."
+    }
+  },
+  "regressionThresholds": {
+    "progressionPrecisionAt3": { "floor": 0.95, "derivation": "baseline 1.0 minus 5pp" },
+    "mustShowSelectedRecallAmongGenerated": { "floor": 0.695323, "derivation": "baseline 0.745323 minus 5pp" },
+    "cleanStressAgreement": { "floor": 0.65, "derivation": "baseline 0.700 minus 5pp" },
+    "twoBarFragmentsInTop3": { "ceiling": 0.0, "derivation": "must not increase above baseline 0.0" }
+  }
+}
