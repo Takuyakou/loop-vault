@@ -104,6 +104,44 @@ export function buildOccurrences(
 }
 
 /**
+ * Occurrences scored the way the product scores candidates.
+ *
+ * Uses the same evidence normalisation, repeat counting and block quality as
+ * `extractBlockCandidates`, so a score here is comparable with the recorded
+ * baseline. Scoring occurrences differently would make every quality
+ * comparison against that baseline meaningless.
+ */
+export function scoreOccurrences(
+  occurrences: readonly CandidateOccurrence[],
+  options: {
+    beatsPerBar: number;
+    rawMatchScores: readonly number[];
+    normaliseEvidence: (value: number) => number;
+    scoreBlockQuality: (
+      events: readonly CandidateChordEvent[],
+      settings: { repeatCount: number; beatsPerBar: number; normaliseEvidence: (value: number) => number },
+    ) => { total: number };
+  },
+): CandidateOccurrence[] {
+  // Repeat counts come from the structured signature, the same identity the
+  // product uses, so a progression that recurs is credited once per length.
+  const repeatCounts = new Map<string, number>();
+  for (const occurrence of occurrences) {
+    const key = `${occurrence.lengthBars}:${occurrence.structuredSignature}`;
+    repeatCounts.set(key, (repeatCounts.get(key) ?? 0) + 1);
+  }
+
+  return occurrences.map((occurrence) => ({
+    ...occurrence,
+    score: options.scoreBlockQuality(occurrence.events, {
+      repeatCount: repeatCounts.get(`${occurrence.lengthBars}:${occurrence.structuredSignature}`) ?? 1,
+      beatsPerBar: options.beatsPerBar,
+      normaliseEvidence: options.normaliseEvidence,
+    }).total,
+  }));
+}
+
+/**
  * Groups occurrences that share a shape, keeping every one of them.
  *
  * The representative is the earliest occurrence, so a pattern's identity is

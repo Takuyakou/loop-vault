@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.1-02",
+  "source": {
+    "fingerprint": "sha256-2790e82d09b52a58efe8806e79d7379f6ec15091930197073ff9095dcee5ea10",
+    "byteLength": 33055
+  },
+  "selector": "coverage",
+  "candidateCount": 7,
+  "stoppedBecause": "stopped-coverage-target",
+  "measured": {
+    "selectedCoverageAtAllVisible": 0.959184,
+    "selectedCoverageAt10": 0.959184,
+    "sectionRecallAtAllVisible": 1,
+    "sectionRecallAt10": 1,
+    "longestUncoveredHarmonicRun": 3,
+    "focusRange.coveredBySelected": 14,
+    "groupedVisibleCoverage": 0.959184,
+    "minimumSelectedCandidateScore": 0.581985,
+    "runtimeMs": 18.7
+  },
+  "gates": [
+    {
+      "id": "selected-coverage-at-all-visible",
+      "metric": "selectedCoverageAtAllVisible",
+      "required": 0.9,
+      "baseline": 0.285714,
+      "measured": 0.959184,
+      "verdict": "PASS"
+    },
+    {
+      "id": "section-recall-at-all-visible",
+      "metric": "sectionRecallAtAllVisible",
+      "required": 1,
+      "baseline": 0.55,
+      "measured": 1,
+      "verdict": "PASS"
+    },
+    {
+      "id": "longest-uncovered-run",
+      "metric": "longestUncoveredHarmonicRun",
+      "required": 8,
+      "baseline": 16,
+      "measured": 3,
+      "verdict": "PASS"
+    },
+    {
+      "id": "focus-range-reachable",
+      "metric": "focusRange.coveredBySelected",
+      "required": 1,
+      "baseline": 0,
+      "measured": 14,
+      "verdict": "PASS"
+    }
+  ],
+  "guardrails": [
+    {
+      "id": "minimum-selected-candidate-score",
+      "measured": 0.581985,
+      "floor": 0.520448,
+      "verdict": "PASS"
+    },
+    {
+      "id": "runtime",
+      "measured": 18.7,
+      "limit": 3000,
+      "verdict": "PASS"
+    },
+    {
+      "id": "determinism",
+      "verdict": "PASS"
+    },
+    {
+      "id": "promotion-metrics-no-regression",
+      "verdict": "not-evaluated"
+    }
+  ],
+  "verdict": "PASS",
+  "selectedBlocks": [
+    {
+      "id": "occ-17-32",
+      "startBar": 17,
+      "endBar": 32,
+      "lengthBars": 16,
+      "selectionScore": 0.672836
+    },
+    {
+      "id": "occ-61-76",
+      "startBar": 61,
+      "endBar": 76,
+      "lengthBars": 16,
+      "selectionScore": 0.652528
+    },
+    {
+      "id": "occ-42-57",
+      "startBar": 42,
+      "endBar": 57,
+      "lengthBars": 16,
+      "selectionScore": 0.646652
+    },
+    {
+      "id": "occ-77-92",
+      "startBar": 77,
+      "endBar": 92,
+      "lengthBars": 16,
+      "selectionScore": 0.620243
+    },
+    {
+      "id": "occ-3-18",
+      "startBar": 3,
+      "endBar": 18,
+      "lengthBars": 16,
+      "selectionScore": 0.619097
+    },
+    {
+      "id": "occ-31-46",
+      "startBar": 31,
+      "endBar": 46,
+      "lengthBars": 16,
+      "selectionScore": 0.632013
+    },
+    {
+      "id": "occ-92-99",
+      "startBar": 92,
+      "endBar": 99,
+      "lengthBars": 8,
+      "selectionScore": 0.581985
+    }
+  ],
+  "uncoveredBars": [
+    58,
+    59,
+    60,
+    100
+  ],
+  "rankingSelectorCandidateCount": 10
+}
