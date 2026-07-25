@@ -9,6 +9,7 @@ import type {
 } from "../types";
 import { normalizeChordSymbol } from "../chordIdentity";
 import { normaliseEvidence, scoreBlockQuality } from "./blockQuality";
+import { buildCoverageCandidates } from "./coverageCandidates";
 import {
   ambiguousQualityWarning, attenuateRootBonus, evaluateQualityEvidence,
   missingQualityToneWarning,
@@ -96,6 +97,11 @@ export function analyzeMidi(
 export interface LegacyScoringOptions {
   useQualityEvidence?: boolean;
   qualityEvidence?: QualityEvidenceOptions;
+  /**
+   * Build the candidate list to cover the song instead of ranking it. The
+   * ranking selector stays available so this can be turned off.
+   */
+  useCoverageSelection?: boolean;
   analyzerVersion?: string;
 }
 
@@ -124,12 +130,16 @@ export function analyzeMidiWithRankingScores(
   const smoothedTimeline = smoothTimelineWithRankingScores(rankedTimeline, barLengthBeats);
   const fullTimeline = smoothedTimeline.map(({ item }) => item);
   const timelineRankingScores = smoothedTimeline.map(({ rankingScore }) => rankingScore);
-  const blockCandidates = extractBlockCandidates(
-    fullTimeline,
-    data.totalBars,
-    timelineRankingScores,
-    barLengthBeats,
-  );
+  const blockCandidates = scoring.useCoverageSelection
+    ? buildCoverageCandidates(
+        fullTimeline, data, data.totalBars, timelineRankingScores,
+      ).candidates
+    : extractBlockCandidates(
+        fullTimeline,
+        data.totalBars,
+        timelineRankingScores,
+        barLengthBeats,
+      );
 
   return {
     analysis: {
