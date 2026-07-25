@@ -1,4 +1,6 @@
 import type { BlockQualityComponents } from "./midi/blockQuality";
+import type { CandidatePattern } from "./midi/occurrence";
+import type { Section } from "./midi/sections";
 import type { CandidateChordEvent, CandidateChordStats } from "./midi/candidateBlock";
 import type { ProgressionPracticeProgress } from "./practice/types";
 
@@ -145,6 +147,14 @@ export interface MidiProgressionAnalysis {
   detectedKey?: string;
   fullTimeline: ChordTimelineItem[];
   blockCandidates: ProgressionBlockCandidate[];
+  /**
+   * Every appearance of each progression, grouped by shape. Non-persistent:
+   * it exists so the UI can offer the other positions of a progression instead
+   * of hiding them behind one representative.
+   */
+  candidatePatterns?: CandidatePattern[];
+  /** Estimated section ranges, numbered rather than named. */
+  sections?: Section[];
   analyzedAt: string;
   analyzerVersion: string;
 }

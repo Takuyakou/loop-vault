@@ -4,6 +4,9 @@ import {
 } from "@tauri-apps/plugin-dialog";
 import { readFile } from "@tauri-apps/plugin-fs";
 import { voiceChordForPreview } from "../domain/chordVoicing";
+import { OccurrenceList } from "../components/OccurrenceList";
+import type { CandidateOccurrence, CandidatePattern } from "../domain/midi/occurrence";
+import type { Section } from "../domain/midi/sections";
 import { resolveVoicingForUse } from "../domain/voicing";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DragEvent, ReactNode } from "react";
@@ -496,6 +499,29 @@ export function CaptureView(props: CaptureViewProps) {
     }
   }
 
+  /**
+   * Auditions one appearance of a progression.
+   *
+   * Plays that occurrence's own events, so the second chorus sounds like the
+   * second chorus rather than replaying the one the card happens to show.
+   */
+  async function previewOccurrence(occurrence: CandidateOccurrence) {
+    try {
+      await controller.toggle(
+        { kind: "capture", id: `capture-occurrence:${occurrence.id}` },
+        {
+          type: "timeline",
+          timeline: occurrence.events.map((event) => event.source),
+          bpm: result?.bpm ?? 96,
+          sound: previewSound,
+          beatsPerBar: beatsPerBarFor(result?.timeSignature),
+        },
+      );
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
+    }
+  }
+
   async function previewCandidateChord(candidate: ProgressionBlockCandidate, chordIndex: number) {
     try {
       const event = candidate.chords[chordIndex];
@@ -620,9 +646,12 @@ export function CaptureView(props: CaptureViewProps) {
                   sourceFileName={result.fileName}
                   ideas={ideas}
                   authorReferenceIndex={authorReferenceIndex}
+                  patterns={result.candidatePatterns}
+                  sections={result.sections}
                   onCopyProgression={copyProgression}
                   onPreview={previewCandidate}
                   onPreviewChord={previewCandidateChord}
+                  onPreviewOccurrence={previewOccurrence}
                   playbackSource={captureCandidateSource(result, candidate.id)}
                   previewSound={previewSound}
                   controller={controller}
@@ -908,6 +937,8 @@ export function TimelineDetails({
 export function ProgressionCandidateCard({
   candidate,
   candidateIndex,
+  patterns,
+  sections,
   bpm,
   beatsPerBar = 4,
   detectedKey,
@@ -935,10 +966,15 @@ export function ProgressionCandidateCard({
   onCreate,
   onAppend,
   onCopyMemo,
+  onPreviewOccurrence,
+  onSaveOccurrence,
   showRomanNumerals = true,
 }: {
   candidate: ProgressionBlockCandidate;
   candidateIndex: number;
+  /** Other appearances of this progression, so none of them is unreachable. */
+  patterns?: readonly CandidatePattern[];
+  sections?: readonly Section[];
   bpm: number;
   beatsPerBar?: number;
   detectedKey?: string;
@@ -968,6 +1004,8 @@ export function ProgressionCandidateCard({
     ideaId: string,
     editable: EditableProgression,
   ) => boolean;
+  onPreviewOccurrence?: (occurrence: CandidateOccurrence) => void | Promise<void>;
+  onSaveOccurrence?: (occurrence: CandidateOccurrence) => void;
   onCopyProgression: (candidate: ProgressionBlockCandidate) => void | Promise<void>;
   onPreview?: (candidate: ProgressionBlockCandidate) => void | Promise<void>;
   onPreviewChord: (
@@ -990,6 +1028,7 @@ export function ProgressionCandidateCard({
   showRomanNumerals?: boolean;
 }) {
   const editorCopy = progressionEditorCopy[language];
+  const [occurrencesExpanded, setOccurrencesExpanded] = useState(false);
   const [editable, setEditable] = useState(() => createEditableProgression(candidate, beatsPerBar));
   const [savedSignature, setSavedSignature] = useState(() => progressionSignature(candidate.chords));
   const [propagationProposal, setPropagationProposal] = useState<PropagationProposal>();
@@ -1204,6 +1243,18 @@ export function ProgressionCandidateCard({
             </p>
           ) : null}
         </button>
+        <OccurrenceList
+          pattern={patterns?.find((entry) => entry.occurrences.some(
+            (occurrence) => occurrence.id === candidate.id,
+          ))}
+          selectedOccurrenceId={candidate.id}
+          sections={sections}
+          text={editorCopy.occurrence}
+          expanded={occurrencesExpanded}
+          onToggleExpanded={() => setOccurrencesExpanded((open) => !open)}
+          onPreview={(occurrence) => void onPreviewOccurrence?.(occurrence)}
+          onSave={(occurrence) => onSaveOccurrence?.(occurrence)}
+        />
         <div className="flex flex-wrap items-center justify-end gap-2">
           <PlayToggle
             source={source}

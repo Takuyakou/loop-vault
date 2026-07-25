@@ -24,6 +24,7 @@ import {
   structuredSignature, summaryFromEvents,
 } from "./candidateBlock";
 import { parseMidi } from "./parser";
+import { segmentSections } from "./sections";
 import {
   selectProgressionCandidates,
   type CandidateSelectionEntry,
@@ -142,10 +143,11 @@ export function analyzeMidiWithRankingScores(
   const smoothedTimeline = smoothTimelineWithRankingScores(rankedTimeline, barLengthBeats);
   const fullTimeline = smoothedTimeline.map(({ item }) => item);
   const timelineRankingScores = smoothedTimeline.map(({ rankingScore }) => rankingScore);
-  const blockCandidates = scoring.useCoverageSelection
-    ? buildCoverageCandidates(
-        fullTimeline, data, data.totalBars, timelineRankingScores,
-      ).candidates
+  const coverage = scoring.useCoverageSelection
+    ? buildCoverageCandidates(fullTimeline, data, data.totalBars, timelineRankingScores)
+    : undefined;
+  const blockCandidates = coverage
+    ? coverage.candidates
     : extractBlockCandidates(
         fullTimeline,
         data.totalBars,
@@ -163,6 +165,10 @@ export function analyzeMidiWithRankingScores(
       detectedKey: detectKey(evidenceNotes),
       fullTimeline,
       blockCandidates,
+      ...(coverage ? { candidatePatterns: coverage.patterns } : {}),
+      ...(scoring.useCoverageSelection
+        ? { sections: segmentSections(analysisData, fullTimeline) }
+        : {}),
       analyzedAt: "1970-01-01T00:00:00.000Z",
       analyzerVersion: scoring.analyzerVersion ?? analyzerVersion,
     },
