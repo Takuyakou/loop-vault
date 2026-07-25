@@ -1,0 +1,299 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.1-03",
+  "source": {
+    "fingerprint": "sha256-2790e82d09b52a58efe8806e79d7379f6ec15091930197073ff9095dcee5ea10",
+    "byteLength": 33055
+  },
+  "naming": "sections are numbered; no chorus/verse labels are inferred",
+  "connectedToSelection": false,
+  "sections": [
+    {
+      "id": "Section 1",
+      "startBar": 1,
+      "endBar": 4,
+      "confidence": 1,
+      "reasons": [
+        "song-start"
+      ],
+      "dominantPitchClass": 0,
+      "noteCount": 46
+    },
+    {
+      "id": "Section 2",
+      "startBar": 5,
+      "endBar": 8,
+      "confidence": 1,
+      "reasons": [
+        "harmonic-novelty",
+        "activity-change"
+      ],
+      "dominantPitchClass": 9,
+      "noteCount": 120
+    },
+    {
+      "id": "Section 3",
+      "startBar": 9,
+      "endBar": 12,
+      "confidence": 0.4935,
+      "reasons": [
+        "harmonic-novelty"
+      ],
+      "dominantPitchClass": 11,
+      "noteCount": 128
+    },
+    {
+      "id": "Section 4",
+      "startBar": 13,
+      "endBar": 16,
+      "confidence": 0.9824,
+      "reasons": [
+        "harmonic-novelty",
+        "instrumentation-change"
+      ],
+      "dominantPitchClass": 2,
+      "noteCount": 150
+    },
+    {
+      "id": "Section 5",
+      "startBar": 17,
+      "endBar": 20,
+      "confidence": 1,
+      "reasons": [
+        "harmonic-novelty",
+        "instrumentation-change"
+      ],
+      "dominantPitchClass": 11,
+      "noteCount": 146
+    },
+    {
+      "id": "Section 6",
+      "startBar": 21,
+      "endBar": 24,
+      "confidence": 1,
+      "reasons": [
+        "harmonic-novelty",
+        "instrumentation-change"
+      ],
+      "dominantPitchClass": 2,
+      "noteCount": 150
+    },
+    {
+      "id": "Section 7",
+      "startBar": 25,
+      "endBar": 28,
+      "confidence": 1,
+      "reasons": [
+        "harmonic-novelty",
+        "instrumentation-change"
+      ],
+      "dominantPitchClass": 9,
+      "noteCount": 206
+    },
+    {
+      "id": "Section 8",
+      "startBar": 29,
+      "endBar": 32,
+      "confidence": 0.8444,
+      "reasons": [
+        "harmonic-novelty",
+        "instrumentation-change"
+      ],
+      "dominantPitchClass": 11,
+      "noteCount": 307
+    },
+    {
+      "id": "Section 9",
+      "startBar": 33,
+      "endBar": 36,
+      "confidence": 1,
+      "reasons": [
+        "harmonic-novelty",
+        "instrumentation-change"
+      ],
+      "dominantPitchClass": 2,
+      "noteCount": 183
+    },
+    {
+      "id": "Section 10",
+      "startBar": 37,
+      "endBar": 40,
+      "confidence": 1,
+      "reasons": [
+        "harmonic-novelty",
+        "activity-change",
+        "instrumentation-change"
+      ],
+      "dominantPitchClass": 11,
+      "noteCount": 299
+    },
+    {
+      "id": "Section 11",
+      "startBar": 41,
+      "endBar": 44,
+      "confidence": 0.8723,
+      "reasons": [
+        "harmonic-novelty",
+        "activity-change"
+      ],
+      "dominantPitchClass": 9,
+      "noteCount": 133
+    },
+    {
+      "id": "Section 12",
+      "startBar": 45,
+      "endBar": 48,
+      "confidence": 0.6395,
+      "reasons": [
+        "harmonic-novelty"
+      ],
+      "dominantPitchClass": 2,
+      "noteCount": 83
+    },
+    {
+      "id": "Section 13",
+      "startBar": 49,
+      "endBar": 53,
+      "confidence": 0.8277,
+      "reasons": [
+        "activity-change",
+        "instrumentation-change"
+      ],
+      "dominantPitchClass": 11,
+      "noteCount": 178
+    },
+    {
+      "id": "Section 14",
+      "startBar": 54,
+      "endBar": 57,
+      "confidence": 0.1,
+      "reasons": [
+        "instrumentation-change"
+      ],
+      "dominantPitchClass": 2,
+      "noteCount": 140
+    },
+    {
+      "id": "Section 15",
+      "startBar": 58,
+      "endBar": 61,
+      "confidence": 0.1074,
+      "reasons": [
+        "harmonic-novelty"
+      ],
+      "dominantPitchClass": 2,
+      "noteCount": 96
+    },
+    {
+      "id": "Section 16",
+      "startBar": 62,
+      "endBar": 65,
+      "confidence": 0.2362,
+      "reasons": [
+        "harmonic-novelty",
+        "instrumentation-change"
+      ],
+      "dominantPitchClass": 2,
+      "noteCount": 147
+    },
+    {
+      "id": "Section 17",
+      "startBar": 66,
+      "endBar": 69,
+      "confidence": 0.2711,
+      "reasons": [
+        "harmonic-novelty",
+        "instrumentation-change"
+      ],
+      "dominantPitchClass": 11,
+      "noteCount": 173
+    },
+    {
+      "id": "Section 18",
+      "startBar": 70,
+      "endBar": 73,
+      "confidence": 0.1751,
+      "reasons": [
+        "activity-change",
+        "instrumentation-change"
+      ],
+      "dominantPitchClass": 11,
+      "noteCount": 277
+    },
+    {
+      "id": "Section 19",
+      "startBar": 74,
+      "endBar": 77,
+      "confidence": 0.1771,
+      "reasons": [
+        "harmonic-novelty"
+      ],
+      "dominantPitchClass": 7,
+      "noteCount": 158
+    },
+    {
+      "id": "Section 20",
+      "startBar": 78,
+      "endBar": 81,
+      "confidence": 0.2944,
+      "reasons": [
+        "harmonic-novelty",
+        "instrumentation-change"
+      ],
+      "dominantPitchClass": 1,
+      "noteCount": 239
+    },
+    {
+      "id": "Section 21",
+      "startBar": 82,
+      "endBar": 85,
+      "confidence": 0.1184,
+      "reasons": [
+        "harmonic-novelty"
+      ],
+      "dominantPitchClass": 9,
+      "noteCount": 197
+    },
+    {
+      "id": "Section 22",
+      "startBar": 86,
+      "endBar": 89,
+      "confidence": 0.1528,
+      "reasons": [
+        "harmonic-novelty"
+      ],
+      "dominantPitchClass": 1,
+      "noteCount": 289
+    },
+    {
+      "id": "Section 23",
+      "startBar": 90,
+      "endBar": 93,
+      "confidence": 0.1389,
+      "reasons": [
+        "harmonic-novelty"
+      ],
+      "dominantPitchClass": 9,
+      "noteCount": 212
+    },
+    {
+      "id": "Section 24",
+      "startBar": 94,
+      "endBar": 100,
+      "confidence": 0.2597,
+      "reasons": [
+        "harmonic-novelty",
+        "instrumentation-change"
+      ],
+      "dominantPitchClass": 11,
+      "noteCount": 420
+    }
+  ],
+  "versusFrozenReference": {
+    "sectionCount": 24,
+    "boundaryPrecision": 0.826087,
+    "boundaryRecall": 0.947368,
+    "overSegmentationRate": 0.263158,
+    "underSegmentationRate": 0.052632
+  }
+}
