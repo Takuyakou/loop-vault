@@ -1,5 +1,6 @@
 import type { BlockQualityComponents } from "./midi/blockQuality";
 import type { CandidatePattern } from "./midi/occurrence";
+import type { CandidateCatalog } from "./midi/candidateCatalog";
 import type { Section } from "./midi/sections";
 import type { CandidateChordEvent, CandidateChordStats } from "./midi/candidateBlock";
 import type { ProgressionPracticeProgress } from "./practice/types";
@@ -161,6 +162,14 @@ export interface MidiProgressionAnalysis {
    * of hiding them behind one representative.
    */
   candidatePatterns?: CandidatePattern[];
+  /**
+   * Every valid pattern, whether or not it was recommended. Non-persistent.
+   *
+   * `blockCandidates` is a ranked shortlist and always has been; anything it left
+   * out used to be gone. The catalog is the full inventory the shortlist points
+   * into, so a progression that ranks poorly is still reachable.
+   */
+  candidateCatalog?: CandidateCatalog;
   /** Estimated section ranges, numbered rather than named. */
   sections?: Section[];
   analyzedAt: string;
