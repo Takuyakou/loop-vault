@@ -31,9 +31,22 @@ export const defaultCoverageWeights: CoverageSelectionWeights = {
   overlap: 0.28,
 };
 
+export interface SectionRange {
+  id: string;
+  startBar: number;
+  endBar: number;
+}
+
 export interface CoverageSelectionOptions {
   /** Bars that carry harmony. Bars outside this set are never counted. */
   harmonicActiveBars: readonly number[];
+  /**
+   * Optional soft signal. Sections nudge the order in which equally useful
+   * candidates are taken; they never exclude one. A wrong boundary can cost a
+   * little ranking, never a candidate.
+   */
+  sections?: readonly SectionRange[];
+  sectionBonus?: number;
   /** Shown without interaction. */
   visibleLimit?: number;
   /** Reachable behind "show more". */
@@ -129,6 +142,13 @@ export function selectOccurrencesByCoverage(
     maxScore - minScore < 1e-9 ? 0.5 : (score - minScore) / (maxScore - minScore)
   );
 
+  const sections = options.sections ?? [];
+  const sectionBonus = options.sectionBonus ?? 0.08;
+  const touchedSections = new Set<string>();
+  const sectionsOf = (occurrence: CandidateOccurrence) => sections.filter(
+    (section) => occurrence.startBar <= section.endBar && occurrence.endBar >= section.startBar,
+  );
+
   const covered = new Set<number>();
   const chosenIdentities = new Set<string>();
   const selected: CandidateOccurrence[] = [];
@@ -163,9 +183,22 @@ export function selectOccurrencesByCoverage(
       const marginalCoverage = uncoveredCount === 0 ? 0 : newBars / uncoveredCount;
       const redundantCoverage = total === 0 ? 0 : redundant / total;
       const diversityGain = chosenIdentities.has(occurrence.relativeSignature) ? 0 : 1;
+
+      // A small nudge toward sections nothing has entered yet, and toward
+      // candidates that sit inside a section rather than straddling it. Both
+      // are additive only: no candidate is ever removed for landing badly.
+      const occurrenceSections = sectionsOf(occurrence);
+      const entersNewSection = occurrenceSections.some(
+        (section) => !touchedSections.has(section.id),
+      );
+      const containedInOneSection = occurrenceSections.length === 1;
+      const sectionSignal = sections.length === 0 ? 0
+        : (entersNewSection ? 1 : 0) + (containedInOneSection ? 0.4 : 0);
+
       const utility = weights.quality * normalizeQuality(occurrence.score)
         + weights.coverage * marginalCoverage
         + weights.diversity * diversityGain * 0.1
+        + sectionBonus * sectionSignal
         - weights.overlap * redundantCoverage;
 
       if (!best
@@ -210,6 +243,7 @@ export function selectOccurrencesByCoverage(
     remaining.delete(best.occurrence.id);
     selected.push(best.occurrence);
     chosenIdentities.add(best.occurrence.relativeSignature);
+    for (const section of sectionsOf(best.occurrence)) touchedSections.add(section.id);
     for (const bar of barsOf(best.occurrence, active)) covered.add(bar);
     steps.push({
       occurrenceId: best.occurrence.id,

@@ -165,6 +165,50 @@ describe("coverage selection", () => {
     expect(second.selected.map((o) => o.id)).toEqual(first.selected.map((o) => o.id));
   });
 
+  it("never excludes a candidate because of a section boundary", () => {
+    const items = timeline(repeated(["C", "Am", "F", "G"], 8));
+    const occurrences = scored(items, 32, () => 0.7);
+    // Deliberately wrong boundaries: they must not cost a candidate.
+    const wrongSections = [
+      { id: "Section 1", startBar: 1, endBar: 3 },
+      { id: "Section 2", startBar: 4, endBar: 32 },
+    ];
+    const withSections = selectOccurrencesByCoverage(occurrences, {
+      harmonicActiveBars: allBars(32),
+      sections: wrongSections,
+      coverageTarget: 1,
+    });
+    const withoutSections = selectOccurrencesByCoverage(occurrences, {
+      harmonicActiveBars: allBars(32),
+      coverageTarget: 1,
+    });
+
+    expect(withSections.coverage).toBeGreaterThanOrEqual(withoutSections.coverage);
+    expect(withSections.selected.every((occurrence) => occurrence.score >= 0.35)).toBe(true);
+    // Everything still available, nothing filtered out by the section signal.
+    expect(withSections.selected.length + withSections.unselected.length)
+      .toBe(occurrences.length);
+  });
+
+  it("treats sections as a nudge rather than a quota", () => {
+    const items = timeline(repeated(["C", "Am", "F", "G"], 8));
+    const occurrences = scored(items, 32, () => 0.7);
+    // Sixteen two-bar sections, far more than coverage needs: one four-bar
+    // candidate already spans two of them. A quota would force sixteen picks.
+    const sections = Array.from({ length: 16 }, (_, index) => ({
+      id: `Section ${index + 1}`,
+      startBar: index * 2 + 1,
+      endBar: index * 2 + 2,
+    }));
+    const result = selectOccurrencesByCoverage(occurrences, {
+      harmonicActiveBars: allBars(32),
+      sections,
+    });
+
+    expect(result.selected.length).toBeLessThan(sections.length);
+    expect(result.coverage).toBeGreaterThanOrEqual(0.9);
+  });
+
   it("handles a song with no harmonic bars", () => {
     const result = selectOccurrencesByCoverage([], { harmonicActiveBars: [] });
     expect(result.selected).toEqual([]);
