@@ -363,7 +363,8 @@ const L05: ScenarioPlan = (() => {
 
 /** L06: nothing but one-chord vamps. */
 const L06: ScenarioPlan = (() => {
-  const totalBars = 96;
+  // Built bar by bar rather than through `layout`: this scenario has no filler,
+  // because the absence of anything but vamps is the point of it.
   const bars: BarPlan[] = [];
   for (let position = 1; position <= 48; position += 2) bars.push(...held(em11a, 2));
   for (let position = 49; position <= 96; position += 2) bars.push(...held(c(A, "min11", D, ["D13sus"]), 2));
