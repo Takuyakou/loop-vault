@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.1.2-H0",
+  "frozenOn": "2026-07-26",
+  "frozenBeforeImplementation": true,
+  "policy": "Catalog Hard Gates are not relaxed. Every one must pass for Candidate Catalog v1 to be promoted. They are deliberately about safety and reachability rather than about ranking quality: a catalog that keeps every valid candidate and lets the user reach all of them is useful even while the recommendation order is still being improved.",
+  "separation": "Recommendation quality is measured separately in 00-recommendation-targets.json and is NOT a promotion condition for the catalog. Requiring a perfect recommender before shipping a non-destructive catalog would hold the safety net hostage to the ranking problem.",
+  "gates": [
+    {
+      "id": "valid-pattern-reachability",
+      "metric": "validPatternReachability",
+      "operator": "==",
+      "threshold": 1.0,
+      "description": "Every CandidatePattern that meets the quality floor is reachable from the UI, whether or not it was recommended.",
+      "failureScenario": "A generated, valid progression exists in the analysis but the user has no way to see it."
+    },
+    {
+      "id": "occurrence-reachability",
+      "metric": "occurrenceReachability",
+      "operator": "==",
+      "threshold": 1.0,
+      "description": "Every occurrence of a displayed pattern is reachable from its card.",
+      "failureScenario": "The second chorus exists in the pattern but cannot be opened, auditioned or saved."
+    },
+    {
+      "id": "visible-pattern-duplicate-count",
+      "metric": "visiblePatternDuplicateCount",
+      "operator": "==",
+      "threshold": 0,
+      "description": "No pattern occupies more than one card in any lane.",
+      "failureScenario": "The reported Endless defect: the same Em11/A pattern takes several of the visible slots."
+    },
+    {
+      "id": "visible-slot-waste-count",
+      "metric": "visibleSlotWasteCount",
+      "operator": "==",
+      "threshold": 0,
+      "description": "No display slot is spent on a pattern already shown."
+    },
+    {
+      "id": "exact-duplicate-count",
+      "metric": "exactDuplicateCount",
+      "operator": "==",
+      "threshold": 0,
+      "description": "No two catalog entries share start, end, canonical event sequence, duration pattern, patternId, absolute chords and occurrence identity.",
+      "note": "Only exact identity is merged. Two occurrences of one pattern at different positions are NOT duplicates."
+    },
+    {
+      "id": "must-show-catalog-recall",
+      "metric": "mustShowCatalogRecall",
+      "operator": "==",
+      "threshold": 1.0,
+      "description": "Every must-show block the generator produced is present in the catalog.",
+      "note": "This is about presence in the catalog, not about rank. A block ranked hundredth still passes."
+    },
+    {
+      "id": "preview-reachability",
+      "metric": "previewReachability",
+      "operator": "==",
+      "threshold": 1.0,
+      "description": "Every occurrence in the catalog can be auditioned individually."
+    },
+    {
+      "id": "save-reachability",
+      "metric": "saveReachability",
+      "operator": "==",
+      "threshold": 1.0,
+      "description": "Every occurrence in the catalog can be saved individually."
+    },
+    {
+      "id": "chord-corpus-non-regression",
+      "metric": "Chord Drip fullTimeline vs phase4-v1",
+      "operator": "==",
+      "threshold": "100/100",
+      "description": "Catalog work does not reach the detector."
+    },
+    {
+      "id": "deterministic",
+      "metric": "catalog and recommendations on rerun",
+      "operator": "==",
+      "threshold": "identical over three runs",
+      "description": "The same input produces the same catalog and the same recommendation order."
+    },
+    {
+      "id": "file-version-unchanged",
+      "metric": "fileVersion",
+      "operator": "==",
+      "threshold": 1,
+      "description": "No saved-data migration."
+    },
+    {
+      "id": "save-schema-compatible",
+      "metric": "saved progression schema",
+      "operator": "==",
+      "threshold": "unchanged",
+      "description": "Existing data.json loads unchanged."
+    },
+    {
+      "id": "analysis-runtime",
+      "metric": "runtimeMs",
+      "operator": "<=",
+      "threshold": 3000,
+      "description": "Catalog construction stays inside the interactive budget."
+    },
+    {
+      "id": "no-crash-no-data-loss",
+      "metric": "crashes and data corruption",
+      "operator": "==",
+      "threshold": 0
+    }
+  ],
+  "criticalGuards": {
+    "note": "Known severe UX defects that must not recur. These are pass/fail alongside the Hard Gates even though general recommendation quality is not.",
+    "guards": [
+      {
+        "id": "clean-8bar-single-progression-no-padding",
+        "expectation": "Catalog 1 pattern, recommendation 1, cards 1, padding 0",
+        "rationale": "A song with one progression must not be presented as ten candidates built from sub-windows of it."
+      },
+      {
+        "id": "two-distinct-progressions-exactly-two",
+        "expectation": "Recommendation 2, padding 0"
+      },
+      {
+        "id": "zero-eligible-hides-recommendation",
+        "expectation": "Recommendation section hidden; vamp / fragment / uncertain lanes still populated"
+      },
+      {
+        "id": "one-pattern-four-occurrences",
+        "expectation": "Catalog 1 card, 4 occurrences, at most 1 recommendation slot"
+      },
+      {
+        "id": "endless-em11a",
+        "expectation": "One Em11/A card with all its occurrences; no duplicate card; with three or more progressions available a two-bar vamp does not occupy the top three; the vamp stays in the catalog"
+      },
+      {
+        "id": "no-low-quality-padding",
+        "expectation": "0 recommendations admitted solely to reach the display cap"
+      }
+    ]
+  }
+}
