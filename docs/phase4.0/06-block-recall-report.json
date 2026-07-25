@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.0-06",
+  "datasetId": "7991f80e29b76717af3fbeee5840a158a83cc387d73f9b73fdf2731afc70f3a6",
+  "groundTruthBlock": "the whole generated clip, bars 1..totalBars",
+  "results": {
+    "legacy": {
+      "caseCount": 100,
+      "blockRecallAtIoU50": 1,
+      "blockRecallAtIoU80": 1,
+      "exactSpanRecall": 1,
+      "missedAtIoU50": []
+    },
+    "legacy-boundary-rerank": {
+      "caseCount": 100,
+      "blockRecallAtIoU50": 1,
+      "blockRecallAtIoU80": 1,
+      "exactSpanRecall": 1,
+      "missedAtIoU50": []
+    },
+    "voice-aware-rerank-v1": {
+      "caseCount": 100,
+      "blockRecallAtIoU50": 1,
+      "blockRecallAtIoU80": 1,
+      "exactSpanRecall": 1,
+      "missedAtIoU50": []
+    },
+    "phase4-v1": {
+      "caseCount": 100,
+      "blockRecallAtIoU50": 1,
+      "blockRecallAtIoU80": 1,
+      "exactSpanRecall": 1,
+      "missedAtIoU50": []
+    }
+  },
+  "gate": {
+    "id": "no-block-recall-regression",
+    "metric": "blockRecallAtIoU50",
+    "deltaPp": 0,
+    "toleranceLossPp": 1,
+    "verdict": "PASS"
+  }
+}
