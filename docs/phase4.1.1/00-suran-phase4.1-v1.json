@@ -1,0 +1,685 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.1.1-00",
+  "analyzerMode": "phase4.1-v1",
+  "source": {
+    "fingerprint": "sha256-2790e82d09b52a58efe8806e79d7379f6ec15091930197073ff9095dcee5ea10",
+    "byteLength": 33055
+  },
+  "song": {
+    "totalBars": 100,
+    "timeSignature": "4/4",
+    "bpm": 115,
+    "detectedKey": "A major",
+    "timelineEvents": 167,
+    "harmonicActiveBars": 98
+  },
+  "pipeline": {
+    "generatedOccurrences": 374,
+    "scoredOccurrences": 374,
+    "eligibleAfterQualityFloor": 371,
+    "selectedOccurrences": 10,
+    "groupedPatterns": 372,
+    "displayedCards": 10,
+    "distinctPatternsAmongSelected": 9,
+    "distinctPatternsAmongDisplayed": 9
+  },
+  "usefulness": {
+    "visiblePatternDuplicateCount": 1,
+    "visiblePatternDuplicateRate": 0.1,
+    "visibleSlotWasteCount": 1,
+    "visibleUniquePatternCount": 9,
+    "top3SingleChordCount": 0,
+    "top10SingleChordRate": 0,
+    "top3ProgressionCount": 1,
+    "top10ProgressionCount": 8,
+    "progressionCandidateAvailability": 274,
+    "fragmentCandidateCount": 95,
+    "vampCandidateCount": 0
+  },
+  "coverage": {
+    "allCandidateCoverage": 0.969388,
+    "progressionCandidateCoverage": 0.969388,
+    "coverageAtVisible": 0.969388,
+    "longestUncoveredHarmonicRun": 1,
+    "rebuiltSelectionCoverage": 0.969388,
+    "stoppedBecause": "stopped-coverage-target"
+  },
+  "displayedCards": [
+    {
+      "visibleCardIndex": 1,
+      "occurrenceId": "occ-30-31",
+      "sourceCandidateId": null,
+      "patternId": "pattern-occ-30-31",
+      "normalizedProgressionIdentity": "0:1920:0|sus4|minor7|||-;1920:5760:7|minor|minor7|11||-",
+      "startBar": 30,
+      "endBar": 31,
+      "barLength": 2,
+      "chordEventCount": 2,
+      "uniqueCanonicalChordCount": 2,
+      "harmonicChangeCount": 2,
+      "densityClass": "compact",
+      "chordLabels": [
+        "E7sus4",
+        "Bm11"
+      ],
+      "rankingScore": 0.787563,
+      "occurrenceCountOfPattern": 2,
+      "marginalCoverage": 2,
+      "selectionUtility": 0.322204,
+      "redundantBars": 0,
+      "kind": "fragment"
+    },
+    {
+      "visibleCardIndex": 2,
+      "occurrenceId": "occ-71-72",
+      "sourceCandidateId": null,
+      "patternId": "pattern-occ-30-31",
+      "normalizedProgressionIdentity": "0:1920:0|sus4|minor7|||-;1920:5760:7|minor|minor7|11||-",
+      "startBar": 71,
+      "endBar": 72,
+      "barLength": 2,
+      "chordEventCount": 2,
+      "uniqueCanonicalChordCount": 2,
+      "harmonicChangeCount": 2,
+      "densityClass": "compact",
+      "chordLabels": [
+        "E7sus4",
+        "Bm11"
+      ],
+      "rankingScore": 0.776579,
+      "occurrenceCountOfPattern": 2,
+      "marginalCoverage": 2,
+      "selectionUtility": 0.300305,
+      "redundantBars": 0,
+      "kind": "fragment"
+    },
+    {
+      "visibleCardIndex": 3,
+      "occurrenceId": "occ-12-27",
+      "sourceCandidateId": null,
+      "patternId": "pattern-occ-12-27",
+      "normalizedProgressionIdentity": "0:3840:0|minor|minor7|11||11;3840:1920:10|sus2|-|||-;5760:1920:5|minor|minor7|11||4;7680:1920:0|sus4|minor7|||-;9600:1920:2|minor|minor7|11||1;11520:1920:8|major|major7|||-;13440:1920:8|major|major7|9||-;15360:1920:3|major|-|6||1;17280:1920:3|major|-|6.9||1;19200:3840:5|minor|minor7|11||-;23040:3840:5|minor|minor7|11||4;26880:3840:5|minor|minor7|9||-;30720:1920:3|major|-|6||-;32640:1920:5|minor|-|||-;34560:3840:5|minor|minor7|11||-;38400:1920:0|sus4|minor7|||-;40320:1920:0|major|minor7|9||-;42240:1920:2|minor|minor7|11||-;44160:1920:1|major|minor7|13||-;46080:3840:8|major|major7|9||-;49920:1920:10|minor|minor7|11||-;51840:1920:1|major|-|6.9||9;53760:1920:3|major|minor7|9||-;55680:1920:3|major|minor7|13||-;57600:1920:5|minor|minor7|9||-;59520:1920:5|minor|minor7|11||-",
+      "startBar": 12,
+      "endBar": 27,
+      "barLength": 16,
+      "chordEventCount": 26,
+      "uniqueCanonicalChordCount": 20,
+      "harmonicChangeCount": 26,
+      "densityClass": "standard",
+      "chordLabels": [
+        "F#m11/B",
+        "Esus2",
+        "Bm11/E",
+        "F#7sus4",
+        "Abm11/C#",
+        "Dmaj7",
+        "Dmaj9",
+        "A6/C#",
+        "A6/9/C#",
+        "Bm11",
+        "Bm11/E",
+        "Bm9",
+        "A6",
+        "Bm",
+        "Bm11",
+        "F#7sus4",
+        "F#9",
+        "Abm11",
+        "G13",
+        "Dmaj9",
+        "Em11",
+        "G6/9/A",
+        "A9",
+        "A13",
+        "Bm9",
+        "Bm11"
+      ],
+      "rankingScore": 0.654541,
+      "occurrenceCountOfPattern": 1,
+      "marginalCoverage": 16,
+      "selectionUtility": 0.27465,
+      "redundantBars": 0,
+      "kind": "progression"
+    },
+    {
+      "visibleCardIndex": 4,
+      "occurrenceId": "occ-53-68",
+      "sourceCandidateId": null,
+      "patternId": "pattern-occ-53-68",
+      "normalizedProgressionIdentity": "0:1920:0|major|-|6.9||-;1920:1920:9|minor|minor7|||-;3840:1920:0|minor|minor7|11||-;5760:1920:2|sus4|minor7|||-;7680:1920:4|minor|minor7|11||6;9600:3840:10|major|major7|9||-;13440:1920:5|major|-|6||-;15360:1920:8|major|-|6||-;17280:1920:7|minor|minor7|11||-;19200:3840:7|minor|minor7|9||-;23040:3840:10|major|minor7|13||0;26880:1920:5|major|minor7|9||7;28800:1920:5|major|minor7|13||-;30720:1920:10|major|major7|||-;32640:1920:7|minor|-|||-;34560:1920:10|major|-|6.9||4;36480:1920:7|minor|minor7|11||4;38400:1920:2|sus4|minor7|||-;40320:1920:0|major|-|6.9||8;42240:1920:3|major|minor7|||-;44160:3840:10|major|major7|9||-;48000:1920:0|minor|minor7|11||-;49920:1920:7|minor|minor7|||-;51840:1920:5|major|minor7|9||-;53760:1920:5|major|minor7|13||-;55680:5760:7|minor|minor7|11||-",
+      "startBar": 53,
+      "endBar": 68,
+      "barLength": 16,
+      "chordEventCount": 26,
+      "uniqueCanonicalChordCount": 21,
+      "harmonicChangeCount": 26,
+      "densityClass": "standard",
+      "chordLabels": [
+        "E6/9",
+        "C#m7",
+        "Em11",
+        "F#7sus4",
+        "Abm11/F#",
+        "Dmaj9",
+        "A6",
+        "C6",
+        "Bm11",
+        "Bm9",
+        "D13/C",
+        "A9/G",
+        "A13",
+        "Dmaj7",
+        "Bm",
+        "D6/9/E",
+        "Bm11/E",
+        "F#7sus4",
+        "E6/9/Ab",
+        "G7",
+        "Dmaj9",
+        "Em11",
+        "Bm7",
+        "A9",
+        "A13",
+        "Bm11"
+      ],
+      "rankingScore": 0.639774,
+      "occurrenceCountOfPattern": 1,
+      "marginalCoverage": 16,
+      "selectionUtility": 0.278514,
+      "redundantBars": 0,
+      "kind": "progression"
+    },
+    {
+      "visibleCardIndex": 5,
+      "occurrenceId": "occ-76-91",
+      "sourceCandidateId": null,
+      "patternId": "pattern-occ-76-91",
+      "normalizedProgressionIdentity": "0:1920:0|minor|minor7|||0;1920:1920:0|major|major7|9||-;3840:1920:5|major|minor7|13||-;5760:1920:7|major|-|9||11;7680:1920:10|major|minor7|13||-;9600:1920:9|minor|minor7|11||-;11520:1920:9|minor|minor7|9||-;13440:1920:4|minor|minor7|9||-;15360:1920:2|minor|minor7|11||-;17280:1920:9|major|minor7|9||-;19200:1920:11|augmented|-|||-;21120:1920:7|major|major7|9||1;23040:3840:9|major|minor7|13||-;26880:1920:2|minor|minor7|11||-;28800:1920:7|sus4|minor7|||-;30720:1920:7|minor|minor7|11||-;32640:1920:0|major|major7|9||-;34560:1920:5|major|minor7|13||-;36480:1920:7|major|-|9||11;38400:1920:10|major|minor7|13||-;40320:3840:9|minor|minor7|11||-;44160:1920:4|minor|minor7|11||-;46080:1920:2|minor|minor7|11||11;48000:1920:1|diminished|minor7|||-;49920:1920:0|minor|minor7|||-;51840:1920:7|major|major7|9||1;53760:1920:10|diminished|diminished7|||-;55680:3840:9|minor|minor7|11||-;59520:1920:7|sus4|minor7|||-",
+      "startBar": 76,
+      "endBar": 91,
+      "barLength": 16,
+      "chordEventCount": 29,
+      "uniqueCanonicalChordCount": 20,
+      "harmonicChangeCount": 29,
+      "densityClass": "standard",
+      "chordLabels": [
+        "Dm7/C",
+        "Dmaj9",
+        "G13",
+        "Aadd9/B",
+        "C13",
+        "Bm11",
+        "Bm9",
+        "F#m9",
+        "Em11",
+        "B9",
+        "C#aug",
+        "Amaj9/C#",
+        "B13",
+        "Em11",
+        "A7sus4",
+        "Am11",
+        "Dmaj9",
+        "G13",
+        "Aadd9/B",
+        "C13",
+        "Bm11",
+        "F#m11",
+        "Em11/B",
+        "Ebm7b5",
+        "Dm7",
+        "Amaj9/C#",
+        "Cdim7",
+        "Bm11",
+        "A7sus4"
+      ],
+      "rankingScore": 0.622379,
+      "occurrenceCountOfPattern": 1,
+      "marginalCoverage": 16,
+      "selectionUtility": 0.288968,
+      "redundantBars": 0,
+      "kind": "progression"
+    },
+    {
+      "visibleCardIndex": 6,
+      "occurrenceId": "occ-36-51",
+      "sourceCandidateId": null,
+      "patternId": "pattern-occ-36-51",
+      "normalizedProgressionIdentity": "0:1920:0|major|major7|9||-;1920:1920:5|major|minor7|13||-;3840:1920:9|minor|minor7|11||-;5760:1920:0|major|minor7|13||0;7680:1920:9|minor|minor7|9||-;9600:1920:4|minor|minor7|11||-;11520:1920:5|major|minor7|13||5;13440:1920:9|major|minor7|9||-;15360:1920:0|minor|-|6||-;17280:1920:7|major|major7|9||-;19200:1920:7|minor|-|||-;21120:1920:7|minor|minor7|11||11;23040:1920:9|minor|minor7|11||4;24960:1920:2|minor|minor7|11||-;26880:3840:7|sus4|minor7|||-;30720:1920:0|major|minor7|13||11;32640:1920:7|major|-|9||11;34560:1920:7|major|major7|||-;36480:1920:7|major|-|6||-;38400:1920:0|major|major7|9||4;40320:1920:9|minor|minor7|11||-;42240:1920:6|minor|minor7|11||-;44160:1920:0|major|major7|||1;46080:1920:0|major|major7|9||1;48000:1920:9|minor|minor7|11||1;49920:3840:9|minor|minor7|11||-;53760:1920:0|major|major7|||9;55680:1920:9|minor|minor7|11||4;57600:1920:2|major|minor7|9||-;59520:1920:0|major|major7|||9",
+      "startBar": 36,
+      "endBar": 51,
+      "barLength": 16,
+      "chordEventCount": 30,
+      "uniqueCanonicalChordCount": 26,
+      "harmonicChangeCount": 30,
+      "densityClass": "standard",
+      "chordLabels": [
+        "Dmaj9",
+        "G13",
+        "Bm11",
+        "D13/C",
+        "Bm9",
+        "F#m11",
+        "G13/F",
+        "B9",
+        "Dm6",
+        "Amaj9",
+        "Am",
+        "Am11/B",
+        "Bm11/E",
+        "Em11",
+        "A7sus4",
+        "D13/B",
+        "Aadd9/B",
+        "Amaj7",
+        "A6",
+        "Dmaj9/E",
+        "Bm11",
+        "Abm11",
+        "Dmaj7/C#",
+        "Dmaj9/C#",
+        "Bm11/C#",
+        "Bm11",
+        "Dmaj7/A",
+        "Bm11/E",
+        "E9",
+        "Dmaj7/A"
+      ],
+      "rankingScore": 0.621809,
+      "occurrenceCountOfPattern": 1,
+      "marginalCoverage": 16,
+      "selectionUtility": 0.333324,
+      "redundantBars": 0,
+      "kind": "progression"
+    },
+    {
+      "visibleCardIndex": 7,
+      "occurrenceId": "occ-4-11",
+      "sourceCandidateId": null,
+      "patternId": "pattern-occ-4-11",
+      "normalizedProgressionIdentity": "0:1920:0|major|major7|||-;1920:1920:0|major|-|9||11;3840:1920:1|major|major7|||-;5760:1920:3|major|minor7|13||10;7680:1920:11|minor|minor7|11||6;9600:1920:9|major|-|9||-;11520:3840:0|major|-|6||-;15360:1920:7|sus2|-|||-;17280:1920:2|sus4|minor7|||-;19200:1920:2|minor|minor7|9||-;21120:5760:2|minor|minor7|11||-;26880:1920:2|major|minor7|13||-;28800:1920:0|major|major7|9||11",
+      "startBar": 4,
+      "endBar": 11,
+      "barLength": 8,
+      "chordEventCount": 13,
+      "uniqueCanonicalChordCount": 13,
+      "harmonicChangeCount": 13,
+      "densityClass": "standard",
+      "chordLabels": [
+        "Amaj7",
+        "Aadd9/B",
+        "Bbmaj7",
+        "C13/Bb",
+        "Abm11/F#",
+        "F#add9",
+        "A6",
+        "Esus2",
+        "B7sus4",
+        "Bm9",
+        "Bm11",
+        "B13",
+        "Amaj9/B"
+      ],
+      "rankingScore": 0.641257,
+      "occurrenceCountOfPattern": 1,
+      "marginalCoverage": 8,
+      "selectionUtility": 0.310648,
+      "redundantBars": 0,
+      "kind": "progression"
+    },
+    {
+      "visibleCardIndex": 8,
+      "occurrenceId": "occ-92-99",
+      "sourceCandidateId": null,
+      "patternId": "pattern-occ-92-99",
+      "normalizedProgressionIdentity": "0:1920:0|sus4|minor7|||-;1920:1920:5|major|major7|9||-;3840:1920:10|major|minor7|13||-;5760:1920:0|major|-|9||1;7680:1920:3|major|minor7|13||-;9600:1920:2|minor|minor7|9||-;11520:1920:4|major|minor7|13||-;13440:1920:9|major|major7|9||1;15360:1920:2|minor|minor7|11||1;17280:1920:2|major|major7|9||1;19200:5760:2|major|minor7|13||1;24960:1920:2|major|minor7|13||-;26880:1920:7|sus4|minor7|||-;28800:1920:0|sus4|minor7|||-",
+      "startBar": 92,
+      "endBar": 99,
+      "barLength": 8,
+      "chordEventCount": 14,
+      "uniqueCanonicalChordCount": 13,
+      "harmonicChangeCount": 14,
+      "densityClass": "standard",
+      "chordLabels": [
+        "A7sus4",
+        "Dmaj9",
+        "G13",
+        "Aadd9/C#",
+        "C13",
+        "Bm9",
+        "C#13",
+        "F#maj9/C#",
+        "Bm11/C#",
+        "Bmaj9/C#",
+        "B13/C#",
+        "B13",
+        "E7sus4",
+        "A7sus4"
+      ],
+      "rankingScore": 0.595195,
+      "occurrenceCountOfPattern": 1,
+      "marginalCoverage": 8,
+      "selectionUtility": 0.316729,
+      "redundantBars": 0,
+      "kind": "progression"
+    },
+    {
+      "visibleCardIndex": 9,
+      "occurrenceId": "occ-28-35",
+      "sourceCandidateId": null,
+      "patternId": "pattern-occ-28-35",
+      "normalizedProgressionIdentity": "0:1920:0|major|major7|9||1;1920:1920:9|minor|minor7|11||1;3840:1920:5|major|major7|9||-;5760:1920:7|major|minor7|13||-;7680:1920:7|sus4|minor7|||-;9600:5760:2|minor|minor7|11||-;15360:1920:0|major|-|6.9||1;17280:1920:2|minor|minor7|11||1;19200:1920:5|minor|minor7|9||-;21120:1920:5|minor|minor7|11||7;23040:1920:10|major|minor7|13||-;24960:1920:1|major|minor7|13||7;26880:1920:8|major|-|6||0;28800:1920:5|major|major7|9||-",
+      "startBar": 28,
+      "endBar": 35,
+      "barLength": 8,
+      "chordEventCount": 14,
+      "uniqueCanonicalChordCount": 13,
+      "harmonicChangeCount": 14,
+      "densityClass": "standard",
+      "chordLabels": [
+        "Amaj9/C#",
+        "F#m11/C#",
+        "Dmaj9",
+        "E13",
+        "E7sus4",
+        "Bm11",
+        "A6/9/C#",
+        "Bm11/C#",
+        "Dm9",
+        "Dm11/G",
+        "G13",
+        "Bb13/G",
+        "F6/C",
+        "Dmaj9"
+      ],
+      "rankingScore": 0.629121,
+      "occurrenceCountOfPattern": 1,
+      "marginalCoverage": 6,
+      "selectionUtility": 0.374714,
+      "redundantBars": 2,
+      "kind": "progression"
+    },
+    {
+      "visibleCardIndex": 10,
+      "occurrenceId": "occ-69-76",
+      "sourceCandidateId": null,
+      "patternId": "pattern-occ-69-76",
+      "normalizedProgressionIdentity": "0:1920:0|major|major7|9||1;1920:3840:5|major|major7|9||-;5760:1920:2|minor|minor7|11||4;7680:1920:7|sus4|minor7|||-;9600:5760:2|minor|minor7|11||-;15360:1920:0|major|minor7|9||1;17280:1920:5|minor|minor7|9||-;19200:1920:5|minor|minor7|11||-;21120:1920:10|major|minor7|||-;23040:1920:8|major|-|6.9||7;24960:1920:10|minor|minor7|9||-;26880:1920:5|minor|minor7|||0;28800:1920:5|major|major7|9||-",
+      "startBar": 69,
+      "endBar": 76,
+      "barLength": 8,
+      "chordEventCount": 13,
+      "uniqueCanonicalChordCount": 12,
+      "harmonicChangeCount": 13,
+      "densityClass": "standard",
+      "chordLabels": [
+        "Amaj9/C#",
+        "Dmaj9",
+        "Bm11/E",
+        "E7sus4",
+        "Bm11",
+        "A9/C#",
+        "Dm9",
+        "Dm11",
+        "G7",
+        "F6/9/G",
+        "Gm9",
+        "Dm7/C",
+        "Dmaj9"
+      ],
+      "rankingScore": 0.624971,
+      "occurrenceCountOfPattern": 1,
+      "marginalCoverage": 5,
+      "selectionUtility": 0.466251,
+      "redundantBars": 3,
+      "kind": "progression"
+    }
+  ],
+  "largestPatterns": [
+    {
+      "patternId": "pattern-occ-30-31",
+      "occurrenceCount": 2,
+      "lengthBars": 2,
+      "uniqueCanonicalChordCount": 2,
+      "chordLabels": [
+        "E7sus4",
+        "Bm11"
+      ],
+      "bars": [
+        [
+          30,
+          31
+        ],
+        [
+          71,
+          72
+        ]
+      ]
+    },
+    {
+      "patternId": "pattern-occ-77-78",
+      "occurrenceCount": 2,
+      "lengthBars": 2,
+      "uniqueCanonicalChordCount": 4,
+      "chordLabels": [
+        "G13",
+        "Aadd9/B",
+        "C13",
+        "Bm11"
+      ],
+      "bars": [
+        [
+          77,
+          78
+        ],
+        [
+          85,
+          86
+        ]
+      ]
+    },
+    {
+      "patternId": "pattern-occ-1-16",
+      "occurrenceCount": 1,
+      "lengthBars": 16,
+      "uniqueCanonicalChordCount": 24,
+      "chordLabels": [
+        "C",
+        "D7/C",
+        "Fmaj7/C",
+        "Amaj7",
+        "Aadd9/B",
+        "Bbmaj7",
+        "C13/Bb",
+        "Abm11/F#",
+        "F#add9",
+        "A6",
+        "Esus2",
+        "B7sus4",
+        "Bm9",
+        "Bm11",
+        "B13",
+        "Amaj9/B",
+        "F#m11/B",
+        "Esus2",
+        "Bm11/E",
+        "F#7sus4",
+        "Abm11/C#",
+        "Dmaj7",
+        "Dmaj9",
+        "A6/C#",
+        "A6/9/C#"
+      ],
+      "bars": [
+        [
+          1,
+          16
+        ]
+      ]
+    },
+    {
+      "patternId": "pattern-occ-1-2",
+      "occurrenceCount": 1,
+      "lengthBars": 2,
+      "uniqueCanonicalChordCount": 1,
+      "chordLabels": [
+        "C"
+      ],
+      "bars": [
+        [
+          1,
+          2
+        ]
+      ]
+    },
+    {
+      "patternId": "pattern-occ-1-4",
+      "occurrenceCount": 1,
+      "lengthBars": 4,
+      "uniqueCanonicalChordCount": 5,
+      "chordLabels": [
+        "C",
+        "D7/C",
+        "Fmaj7/C",
+        "Amaj7",
+        "Aadd9/B"
+      ],
+      "bars": [
+        [
+          1,
+          4
+        ]
+      ]
+    },
+    {
+      "patternId": "pattern-occ-1-8",
+      "occurrenceCount": 1,
+      "lengthBars": 8,
+      "uniqueCanonicalChordCount": 12,
+      "chordLabels": [
+        "C",
+        "D7/C",
+        "Fmaj7/C",
+        "Amaj7",
+        "Aadd9/B",
+        "Bbmaj7",
+        "C13/Bb",
+        "Abm11/F#",
+        "F#add9",
+        "A6",
+        "Esus2",
+        "B7sus4"
+      ],
+      "bars": [
+        [
+          1,
+          8
+        ]
+      ]
+    },
+    {
+      "patternId": "pattern-occ-10-11",
+      "occurrenceCount": 1,
+      "lengthBars": 2,
+      "uniqueCanonicalChordCount": 3,
+      "chordLabels": [
+        "Bm11",
+        "B13",
+        "Amaj9/B"
+      ],
+      "bars": [
+        [
+          10,
+          11
+        ]
+      ]
+    },
+    {
+      "patternId": "pattern-occ-10-13",
+      "occurrenceCount": 1,
+      "lengthBars": 4,
+      "uniqueCanonicalChordCount": 6,
+      "chordLabels": [
+        "Bm11",
+        "B13",
+        "Amaj9/B",
+        "F#m11/B",
+        "Esus2",
+        "Bm11/E"
+      ],
+      "bars": [
+        [
+          10,
+          13
+        ]
+      ]
+    },
+    {
+      "patternId": "pattern-occ-10-17",
+      "occurrenceCount": 1,
+      "lengthBars": 8,
+      "uniqueCanonicalChordCount": 12,
+      "chordLabels": [
+        "Bm11",
+        "B13",
+        "Amaj9/B",
+        "F#m11/B",
+        "Esus2",
+        "Bm11/E",
+        "F#7sus4",
+        "Abm11/C#",
+        "Dmaj7",
+        "Dmaj9",
+        "A6/C#",
+        "A6/9/C#",
+        "Bm11"
+      ],
+      "bars": [
+        [
+          10,
+          17
+        ]
+      ]
+    },
+    {
+      "patternId": "pattern-occ-10-25",
+      "occurrenceCount": 1,
+      "lengthBars": 16,
+      "uniqueCanonicalChordCount": 20,
+      "chordLabels": [
+        "Bm11",
+        "B13",
+        "Amaj9/B",
+        "F#m11/B",
+        "Esus2",
+        "Bm11/E",
+        "F#7sus4",
+        "Abm11/C#",
+        "Dmaj7",
+        "Dmaj9",
+        "A6/C#",
+        "A6/9/C#",
+        "Bm11",
+        "Bm11/E",
+        "Bm9",
+        "A6",
+        "Bm",
+        "Bm11",
+        "F#7sus4",
+        "F#9",
+        "Abm11",
+        "G13",
+        "Dmaj9",
+        "Em11",
+        "G6/9/A"
+      ],
+      "bars": [
+        [
+          10,
+          25
+        ]
+      ]
+    }
+  ]
+}

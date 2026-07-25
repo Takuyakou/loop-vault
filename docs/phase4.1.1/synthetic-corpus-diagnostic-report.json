@@ -1,0 +1,728 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.1.1 synthetic gold corpus diagnostic",
+  "createdOn": "2026-07-25",
+  "productCodeChanged": false,
+  "baseCommit": "309b23d",
+  "currentDefaultAnalyzerMode": "phase4-v1",
+  "corpus": {
+    "format": "loop-vault-synthetic-gold-corpus-v1",
+    "generatorVersion": "openai-gpt-5.6-pro-deterministic-v1",
+    "ppq": 480,
+    "limitations": [
+      "Gold by construction; not an independent expert transcription.",
+      "Synthetic distributions do not replace real-world MIDI validation.",
+      "Ambiguous harmonies include acceptable alternatives where applicable."
+    ],
+    "files": 32,
+    "scenarios": 32
+  },
+  "corpusIntegrity": {
+    "filesInManifest": 48,
+    "sha256Verified": 48,
+    "mismatches": 0,
+    "splits": {
+      "dev": 32,
+      "validation": 8,
+      "holdout": 8
+    }
+  },
+  "conclusion": {
+    "primaryLossStage": "selection-objective",
+    "evidence": {
+      "mustShowBlockRecall": {
+        "dev": 1,
+        "validation": 1,
+        "holdout": 0.875
+      },
+      "mustShowSelectedRecall": {
+        "dev": 0.59375,
+        "validation": 0,
+        "holdout": 0.315476
+      },
+      "allCandidateCoverage": {
+        "dev": 0.995117,
+        "validation": 1,
+        "holdout": 0.951224
+      },
+      "meanSelectedCount": {
+        "dev": 1.84375,
+        "validation": 1.25,
+        "holdout": 14.75
+      }
+    },
+    "statement": "Expected blocks are generated and then never selected. Coverage saturates while usefulness does not: on validation, allCandidateCoverage is 100% and occurrenceRecall is 0%."
+  },
+  "failures": {
+    "total": 248,
+    "byStage": {
+      "selection-objective": 183,
+      "timeline-chord-label": 28,
+      "ui-projection": 27,
+      "candidate-scoring": 4,
+      "candidate-generation": 4,
+      "pattern-grouping": 2
+    },
+    "topClusters": [
+      {
+        "cluster": "selection-objective / must-show-missing-from-top3",
+        "count": 59
+      },
+      {
+        "cluster": "selection-objective / must-show-missing-from-top10",
+        "count": 56
+      },
+      {
+        "cluster": "selection-objective / short-fragment-in-top3",
+        "count": 49
+      },
+      {
+        "cluster": "ui-projection / no-pattern-model-to-reach-occurrences",
+        "count": 27
+      },
+      {
+        "cluster": "selection-objective / duplicate-pattern-occupies-slots",
+        "count": 19
+      },
+      {
+        "cluster": "timeline-chord-label / quality-detail-mismatch",
+        "count": 14
+      },
+      {
+        "cluster": "timeline-chord-label / root-mismatch",
+        "count": 14
+      },
+      {
+        "cluster": "candidate-scoring / block-type-disagreement",
+        "count": 4
+      },
+      {
+        "cluster": "candidate-generation / must-show-block-not-generated",
+        "count": 4
+      },
+      {
+        "cluster": "pattern-grouping / occurrence-lost-absolute-chords",
+        "count": 2
+      }
+    ]
+  },
+  "perSplit": {
+    "dev": {
+      "phase4-v1": {
+        "files": 32,
+        "filesWithoutFailure": 0,
+        "timeline": {
+          "rootAccuracy": 0.921875,
+          "rootAccuracyAgainstAnyAcceptable": 0.96875,
+          "triadAccuracy": 0.917969,
+          "seventhAccuracy": 0.929688,
+          "slashBassAccuracy": 0.929688,
+          "canonicalExact": 0.865234,
+          "acceptableAlternativeMatch": 0.849609,
+          "boundaryMatchWithinTolerance": 1,
+          "averageStartBoundaryErrorBeats": 0.027344,
+          "averageEndBoundaryErrorBeats": 0.210419,
+          "goldLabelUnparseable": 4,
+          "goldNoChordEvents": 6,
+          "goldRepeatOnsets": 14
+        },
+        "generation": {
+          "mustShowBlockRecall": 1,
+          "progressionBlockRecall": 1,
+          "vampBlockRecall": 1,
+          "fragmentFalsePromotionRate": 0.484375,
+          "candidateGenerationLoss": 0,
+          "classificationAgreement": 0.9875
+        },
+        "selection": {
+          "mustShowSelectedRecall": 0.710938,
+          "meanSelectedCount": 6,
+          "stoppedBecause": {
+            "ranking-selector": 32
+          },
+          "mustShowTop3Recall": 0.28125,
+          "mustShowTop10Recall": 0.710938,
+          "top3SingleChordCount": 0,
+          "top10SingleChordRate": 0.015625,
+          "top3ProgressionCount": 39,
+          "top10ProgressionRate": 0.510417,
+          "progressionCandidateCoverage": 0.936096,
+          "allCandidateCoverage": 0.943908,
+          "longestUncoveredHarmonicRun": 12,
+          "minimumSelectedCandidateScore": 0.266378,
+          "twoBarFragmentsInTop3": 57,
+          "filesWithVampAheadOfProgression": 0
+        },
+        "patternUi": {
+          "visiblePatternDuplicateCount": 6,
+          "visiblePatternDuplicateRate": 0.03125,
+          "visibleSlotWasteCount": 6,
+          "expectedCardCountMatch": 1,
+          "mergePolicyRespected": 1,
+          "occurrenceRecall": 0.723437,
+          "occurrenceReachability": 0.953125,
+          "perOccurrenceAbsoluteChordRetention": 0.84375,
+          "perOccurrenceVoicingRetention": 1
+        },
+        "runtime": {
+          "maxMs": 48.5,
+          "meanMs": 19.125
+        },
+        "failuresByStage": {
+          "selection-objective": 74,
+          "ui-projection": 11,
+          "timeline-chord-label": 9,
+          "candidate-scoring": 2
+        },
+        "failuresByKind": {
+          "short-fragment-in-top3": 32,
+          "must-show-missing-from-top3": 25,
+          "must-show-missing-from-top10": 11,
+          "no-pattern-model-to-reach-occurrences": 11,
+          "duplicate-pattern-occupies-slots": 6,
+          "quality-detail-mismatch": 6,
+          "root-mismatch": 3,
+          "block-type-disagreement": 2
+        }
+      },
+      "phase4.1-v1": {
+        "files": 32,
+        "filesWithoutFailure": 10,
+        "timeline": {
+          "rootAccuracy": 0.921875,
+          "rootAccuracyAgainstAnyAcceptable": 0.96875,
+          "triadAccuracy": 0.917969,
+          "seventhAccuracy": 0.929688,
+          "slashBassAccuracy": 0.929688,
+          "canonicalExact": 0.865234,
+          "acceptableAlternativeMatch": 0.849609,
+          "boundaryMatchWithinTolerance": 1,
+          "averageStartBoundaryErrorBeats": 0.027344,
+          "averageEndBoundaryErrorBeats": 0.210419,
+          "goldLabelUnparseable": 4,
+          "goldNoChordEvents": 6,
+          "goldRepeatOnsets": 14
+        },
+        "generation": {
+          "mustShowBlockRecall": 1,
+          "progressionBlockRecall": 1,
+          "vampBlockRecall": 1,
+          "fragmentFalsePromotionRate": 0.042014,
+          "candidateGenerationLoss": 0,
+          "classificationAgreement": 0.9875
+        },
+        "selection": {
+          "mustShowSelectedRecall": 0.59375,
+          "meanSelectedCount": 1.84375,
+          "stoppedBecause": {
+            "stopped-coverage-target": 31,
+            "stopped-no-marginal-value": 1
+          },
+          "mustShowTop3Recall": 0.703125,
+          "mustShowTop10Recall": 0.59375,
+          "top3SingleChordCount": 0,
+          "top10SingleChordRate": 0,
+          "top3ProgressionCount": 40,
+          "top10ProgressionRate": 0.957986,
+          "progressionCandidateCoverage": 0.983398,
+          "allCandidateCoverage": 0.995117,
+          "longestUncoveredHarmonicRun": 2,
+          "minimumSelectedCandidateScore": 0.3544,
+          "twoBarFragmentsInTop3": 5,
+          "filesWithVampAheadOfProgression": 0
+        },
+        "patternUi": {
+          "visiblePatternDuplicateCount": 8,
+          "visiblePatternDuplicateRate": 0.038889,
+          "visibleSlotWasteCount": 8,
+          "expectedCardCountMatch": 1,
+          "mergePolicyRespected": 1,
+          "occurrenceRecall": 0.59375,
+          "occurrenceReachability": 1,
+          "perOccurrenceAbsoluteChordRetention": 0.84375,
+          "perOccurrenceVoicingRetention": 1
+        },
+        "runtime": {
+          "maxMs": 47.8,
+          "meanMs": 18.31875
+        },
+        "failuresByStage": {
+          "selection-objective": 30,
+          "timeline-chord-label": 9,
+          "candidate-scoring": 2
+        },
+        "failuresByKind": {
+          "must-show-missing-from-top10": 14,
+          "must-show-missing-from-top3": 10,
+          "quality-detail-mismatch": 6,
+          "root-mismatch": 3,
+          "short-fragment-in-top3": 3,
+          "duplicate-pattern-occupies-slots": 3,
+          "block-type-disagreement": 2
+        }
+      }
+    },
+    "validation": {
+      "phase4-v1": {
+        "files": 8,
+        "filesWithoutFailure": 0,
+        "timeline": {
+          "rootAccuracy": 0.875,
+          "rootAccuracyAgainstAnyAcceptable": 0.875,
+          "triadAccuracy": 0.90625,
+          "seventhAccuracy": 0.84375,
+          "slashBassAccuracy": 0.8125,
+          "canonicalExact": 0.71875,
+          "acceptableAlternativeMatch": 0.71875,
+          "boundaryMatchWithinTolerance": 1,
+          "averageStartBoundaryErrorBeats": 0.11765,
+          "averageEndBoundaryErrorBeats": 0.125,
+          "goldLabelUnparseable": 0,
+          "goldNoChordEvents": 0,
+          "goldRepeatOnsets": 0
+        },
+        "generation": {
+          "mustShowBlockRecall": 1,
+          "progressionBlockRecall": 1,
+          "vampBlockRecall": 1,
+          "fragmentFalsePromotionRate": 0.416667,
+          "candidateGenerationLoss": 0,
+          "classificationAgreement": 1
+        },
+        "selection": {
+          "mustShowSelectedRecall": 0.4375,
+          "meanSelectedCount": 6,
+          "stoppedBecause": {
+            "ranking-selector": 8
+          },
+          "mustShowTop3Recall": 0.125,
+          "mustShowTop10Recall": 0.4375,
+          "top3SingleChordCount": 0,
+          "top10SingleChordRate": 0,
+          "top3ProgressionCount": 11,
+          "top10ProgressionRate": 0.583333,
+          "progressionCandidateCoverage": 1,
+          "allCandidateCoverage": 1,
+          "longestUncoveredHarmonicRun": 0,
+          "minimumSelectedCandidateScore": 0.351367,
+          "twoBarFragmentsInTop3": 13,
+          "filesWithVampAheadOfProgression": 0
+        },
+        "patternUi": {
+          "visiblePatternDuplicateCount": 1,
+          "visiblePatternDuplicateRate": 0.020833,
+          "visibleSlotWasteCount": 1,
+          "expectedCardCountMatch": 1,
+          "mergePolicyRespected": 1,
+          "occurrenceRecall": 0.4375,
+          "occurrenceReachability": 0.5625,
+          "perOccurrenceAbsoluteChordRetention": 0.5,
+          "perOccurrenceVoicingRetention": 1
+        },
+        "runtime": {
+          "maxMs": 48.9,
+          "meanMs": 29.2125
+        },
+        "failuresByStage": {
+          "selection-objective": 25,
+          "ui-projection": 8,
+          "timeline-chord-label": 3,
+          "pattern-grouping": 2
+        },
+        "failuresByKind": {
+          "must-show-missing-from-top3": 8,
+          "must-show-missing-from-top10": 8,
+          "short-fragment-in-top3": 8,
+          "no-pattern-model-to-reach-occurrences": 8,
+          "occurrence-lost-absolute-chords": 2,
+          "root-mismatch": 2,
+          "quality-detail-mismatch": 1,
+          "duplicate-pattern-occupies-slots": 1
+        }
+      },
+      "phase4.1-v1": {
+        "files": 8,
+        "filesWithoutFailure": 0,
+        "timeline": {
+          "rootAccuracy": 0.875,
+          "rootAccuracyAgainstAnyAcceptable": 0.875,
+          "triadAccuracy": 0.90625,
+          "seventhAccuracy": 0.84375,
+          "slashBassAccuracy": 0.8125,
+          "canonicalExact": 0.71875,
+          "acceptableAlternativeMatch": 0.71875,
+          "boundaryMatchWithinTolerance": 1,
+          "averageStartBoundaryErrorBeats": 0.11765,
+          "averageEndBoundaryErrorBeats": 0.125,
+          "goldLabelUnparseable": 0,
+          "goldNoChordEvents": 0,
+          "goldRepeatOnsets": 0
+        },
+        "generation": {
+          "mustShowBlockRecall": 1,
+          "progressionBlockRecall": 1,
+          "vampBlockRecall": 1,
+          "fragmentFalsePromotionRate": 0.125,
+          "candidateGenerationLoss": 0,
+          "classificationAgreement": 1
+        },
+        "selection": {
+          "mustShowSelectedRecall": 0,
+          "meanSelectedCount": 1.25,
+          "stoppedBecause": {
+            "stopped-coverage-target": 8
+          },
+          "mustShowTop3Recall": 0,
+          "mustShowTop10Recall": 0,
+          "top3SingleChordCount": 0,
+          "top10SingleChordRate": 0,
+          "top3ProgressionCount": 8,
+          "top10ProgressionRate": 0.875,
+          "progressionCandidateCoverage": 0.985294,
+          "allCandidateCoverage": 1,
+          "longestUncoveredHarmonicRun": 0,
+          "minimumSelectedCandidateScore": 0.351367,
+          "twoBarFragmentsInTop3": 2,
+          "filesWithVampAheadOfProgression": 0
+        },
+        "patternUi": {
+          "visiblePatternDuplicateCount": 0,
+          "visiblePatternDuplicateRate": 0,
+          "visibleSlotWasteCount": 0,
+          "expectedCardCountMatch": 1,
+          "mergePolicyRespected": 1,
+          "occurrenceRecall": 0,
+          "occurrenceReachability": 1,
+          "perOccurrenceAbsoluteChordRetention": 1,
+          "perOccurrenceVoicingRetention": 1
+        },
+        "runtime": {
+          "maxMs": 29.2,
+          "meanMs": 25.9
+        },
+        "failuresByStage": {
+          "selection-objective": 18,
+          "timeline-chord-label": 3
+        },
+        "failuresByKind": {
+          "must-show-missing-from-top3": 8,
+          "must-show-missing-from-top10": 8,
+          "short-fragment-in-top3": 2,
+          "root-mismatch": 2,
+          "quality-detail-mismatch": 1
+        }
+      }
+    },
+    "holdout": {
+      "phase4-v1": {
+        "files": 8,
+        "filesWithoutFailure": 0,
+        "timeline": {
+          "rootAccuracy": 0.984375,
+          "rootAccuracyAgainstAnyAcceptable": 0.984375,
+          "triadAccuracy": 0.989062,
+          "seventhAccuracy": 0.9875,
+          "slashBassAccuracy": 0.996875,
+          "canonicalExact": 0.970312,
+          "acceptableAlternativeMatch": 0.957812,
+          "boundaryMatchWithinTolerance": 1,
+          "averageStartBoundaryErrorBeats": 0,
+          "averageEndBoundaryErrorBeats": 0.04875,
+          "goldLabelUnparseable": 10,
+          "goldNoChordEvents": 0,
+          "goldRepeatOnsets": 14
+        },
+        "generation": {
+          "mustShowBlockRecall": 0.875,
+          "progressionBlockRecall": 0.875,
+          "vampBlockRecall": 1,
+          "fragmentFalsePromotionRate": 0.2375,
+          "candidateGenerationLoss": 6,
+          "classificationAgreement": 1
+        },
+        "selection": {
+          "mustShowSelectedRecall": 0.0625,
+          "meanSelectedCount": 10,
+          "stoppedBecause": {
+            "ranking-selector": 8
+          },
+          "mustShowTop3Recall": 0.5,
+          "mustShowTop10Recall": 0.0625,
+          "top3SingleChordCount": 0,
+          "top10SingleChordRate": 0.05,
+          "top3ProgressionCount": 18,
+          "top10ProgressionRate": 0.7125,
+          "progressionCandidateCoverage": 0.303984,
+          "allCandidateCoverage": 0.33263,
+          "longestUncoveredHarmonicRun": 41,
+          "minimumSelectedCandidateScore": 0.35,
+          "twoBarFragmentsInTop3": 6,
+          "filesWithVampAheadOfProgression": 0
+        },
+        "patternUi": {
+          "visiblePatternDuplicateCount": 3,
+          "visiblePatternDuplicateRate": 0.0375,
+          "visibleSlotWasteCount": 3,
+          "expectedCardCountMatch": 1,
+          "mergePolicyRespected": 1,
+          "occurrenceRecall": 0.087798,
+          "occurrenceReachability": 0.729167,
+          "perOccurrenceAbsoluteChordRetention": 1,
+          "perOccurrenceVoicingRetention": 1
+        },
+        "runtime": {
+          "maxMs": 290.1,
+          "meanMs": 180.4375
+        },
+        "failuresByStage": {
+          "selection-objective": 18,
+          "ui-projection": 8,
+          "timeline-chord-label": 2,
+          "candidate-generation": 2
+        },
+        "failuresByKind": {
+          "must-show-missing-from-top10": 8,
+          "no-pattern-model-to-reach-occurrences": 8,
+          "must-show-missing-from-top3": 4,
+          "short-fragment-in-top3": 4,
+          "duplicate-pattern-occupies-slots": 2,
+          "root-mismatch": 2,
+          "must-show-block-not-generated": 2
+        }
+      },
+      "phase4.1-v1": {
+        "files": 8,
+        "filesWithoutFailure": 0,
+        "timeline": {
+          "rootAccuracy": 0.984375,
+          "rootAccuracyAgainstAnyAcceptable": 0.984375,
+          "triadAccuracy": 0.989062,
+          "seventhAccuracy": 0.9875,
+          "slashBassAccuracy": 0.996875,
+          "canonicalExact": 0.970312,
+          "acceptableAlternativeMatch": 0.957812,
+          "boundaryMatchWithinTolerance": 1,
+          "averageStartBoundaryErrorBeats": 0,
+          "averageEndBoundaryErrorBeats": 0.04875,
+          "goldLabelUnparseable": 10,
+          "goldNoChordEvents": 0,
+          "goldRepeatOnsets": 14
+        },
+        "generation": {
+          "mustShowBlockRecall": 0.875,
+          "progressionBlockRecall": 0.875,
+          "vampBlockRecall": 1,
+          "fragmentFalsePromotionRate": 0.0125,
+          "candidateGenerationLoss": 6,
+          "classificationAgreement": 1
+        },
+        "selection": {
+          "mustShowSelectedRecall": 0.315476,
+          "meanSelectedCount": 14.75,
+          "stoppedBecause": {
+            "stopped-coverage-target": 6,
+            "stopped-limit": 2
+          },
+          "mustShowTop3Recall": 0.5,
+          "mustShowTop10Recall": 0.252976,
+          "top3SingleChordCount": 0,
+          "top10SingleChordRate": 0,
+          "top3ProgressionCount": 24,
+          "top10ProgressionRate": 0.9875,
+          "progressionCandidateCoverage": 0.926224,
+          "allCandidateCoverage": 0.951224,
+          "longestUncoveredHarmonicRun": 4,
+          "minimumSelectedCandidateScore": 0.402929,
+          "twoBarFragmentsInTop3": 0,
+          "filesWithVampAheadOfProgression": 0
+        },
+        "patternUi": {
+          "visiblePatternDuplicateCount": 25,
+          "visiblePatternDuplicateRate": 0.325,
+          "visibleSlotWasteCount": 25,
+          "expectedCardCountMatch": 1,
+          "mergePolicyRespected": 1,
+          "occurrenceRecall": 0.25,
+          "occurrenceReachability": 1,
+          "perOccurrenceAbsoluteChordRetention": 1,
+          "perOccurrenceVoicingRetention": 1
+        },
+        "runtime": {
+          "maxMs": 321.6,
+          "meanMs": 187.075
+        },
+        "failuresByStage": {
+          "selection-objective": 18,
+          "timeline-chord-label": 2,
+          "candidate-generation": 2
+        },
+        "failuresByKind": {
+          "duplicate-pattern-occupies-slots": 7,
+          "must-show-missing-from-top10": 7,
+          "must-show-missing-from-top3": 4,
+          "root-mismatch": 2,
+          "must-show-block-not-generated": 2
+        }
+      }
+    }
+  },
+  "qualityEvidencePenaltyProbe": {
+    "split": "dev",
+    "promotedPenalty": 0.08,
+    "rows": [
+      {
+        "penalty": 0,
+        "rootAccuracy": 0.921875,
+        "triadAccuracy": 0.914063,
+        "seventhAccuracy": 0.929688,
+        "canonicalExact": 0.865234
+      },
+      {
+        "penalty": 0.08,
+        "rootAccuracy": 0.921875,
+        "triadAccuracy": 0.917969,
+        "seventhAccuracy": 0.929688,
+        "canonicalExact": 0.865234
+      },
+      {
+        "penalty": 0.12,
+        "rootAccuracy": 0.96875,
+        "triadAccuracy": 0.964844,
+        "seventhAccuracy": 0.976563,
+        "canonicalExact": 0.865234
+      },
+      {
+        "penalty": 0.2,
+        "rootAccuracy": 0.960938,
+        "triadAccuracy": 0.964844,
+        "seventhAccuracy": 0.972656,
+        "canonicalExact": 0.865234
+      },
+      {
+        "penalty": 0.35,
+        "rootAccuracy": 0.960938,
+        "triadAccuracy": 0.964844,
+        "seventhAccuracy": 0.972656,
+        "canonicalExact": 0.865234
+      },
+      {
+        "penalty": 0.5,
+        "rootAccuracy": 0.960938,
+        "triadAccuracy": 0.964844,
+        "seventhAccuracy": 0.972656,
+        "canonicalExact": 0.865234
+      }
+    ],
+    "chordDripTuneCorpus": {
+      "source": "docs/phase4.0/05d-quality-evidence-tune.json",
+      "scope": "full",
+      "presenceThreshold": 0.02,
+      "penalty008": {
+        "root": 0.596939,
+        "triad": 0.598639
+      },
+      "penalty012": {
+        "root": 0.489796,
+        "triad": 0.529762
+      },
+      "note": "The two corpora move in opposite directions at penalty 0.12: synthetic root +4.7pp, Chord Drip root -10.7pp. No single scalar satisfies both."
+    }
+  },
+  "realWorldCrossChecks": {
+    "endless": {
+      "fingerprint": "sha256-c153f78e536b23f467196f5ab128a2142f27d68961addbab5f0f293a305fb94b",
+      "byteLength": 25966,
+      "source": "docs/phase4.1.1/00-endless-phase4.1-v1.json",
+      "note": "Top three cards share one pattern; top3ProgressionCount 0 in both modes."
+    },
+    "suranRemix": {
+      "fingerprint": "sha256-2790e82d09b52a58efe8806e79d7379f6ec15091930197073ff9095dcee5ea10",
+      "byteLength": 33055,
+      "source": "docs/phase4.1.1/00-suran-phase4.1-v1.json"
+    },
+    "chapter3Seed": {
+      "source": "docs/phase4.0/09-chapter3-seed-evaluation.json",
+      "phase4": {
+        "root": 0.9875,
+        "triad": 0.9875,
+        "quality": 0.985,
+        "canonicalExact": 0.977444
+      }
+    },
+    "chordDripCorpus": {
+      "source": "docs/phase4.0/05d-quality-evidence-tune.json"
+    }
+  },
+  "limitations": [
+    "Gold by construction, not an independent transcription.",
+    "32 of 48 files are 8 to 32 bars, so the repeat amplification that drives the one-chord failure on a 154-bar song does not reproduce: top3SingleChordCount is 0 on every split.",
+    "Difficulty is far below the real corpora: synthetic dev canonicalExact 86.52% against Chord Drip 29.6%.",
+    "Stress variants cover an enumerated list of transforms, not the failure modes of real AI-extracted MIDI.",
+    "One generator produced both the audio and the labels, so its conventions are in the gold too: the N.C. and repeated-onset conventions required harness corrections.",
+    "Holdout is 8 files; the six generation losses all come from one scenario and cannot estimate a rate.",
+    "boundaryMatchWithinTolerance cannot see over-merged events; eventCountRatio is proposed to cover that gap."
+  ],
+  "priorities": [
+    {
+      "rank": "P1",
+      "target": "selection stop condition and objective",
+      "failures": 164,
+      "files": [
+        "src/domain/midi/coverageSelector.ts"
+      ]
+    },
+    {
+      "rank": "P2",
+      "target": "one display slot per pattern",
+      "failures": 46,
+      "files": [
+        "src/domain/midi/coverageCandidates.ts",
+        "src/components/OccurrenceList.tsx"
+      ]
+    },
+    {
+      "rank": "P3",
+      "target": "window length and partial windows",
+      "failures": 49,
+      "files": [
+        "src/domain/midi/coverageSelector.ts"
+      ]
+    },
+    {
+      "rank": "P4",
+      "target": "generation window length set (14/18/20 bars)",
+      "failures": 4,
+      "files": [
+        "src/domain/midi/occurrence.ts"
+      ]
+    },
+    {
+      "rank": "P5",
+      "target": "separate root selection from the quality penalty",
+      "failures": 28,
+      "files": [
+        "src/domain/midi/qualityEvidence.ts",
+        "src/domain/midi/legacy.ts"
+      ]
+    },
+    {
+      "rank": "P6",
+      "target": "event over-merge and over-split",
+      "failures": 2,
+      "files": [
+        "src/domain/midi/merge.ts",
+        "src/domain/midi/segmentation.ts"
+      ]
+    }
+  ],
+  "doNotChange": [
+    "scoreBlockQuality repeat / loopFitness weights (Phase 4.0 vamp rescue depends on them)",
+    "canonical identity contract in chordIdentity.ts (mergePolicyRespected is 100% on every split)",
+    "phase4QualityEvidence.penalty as a standalone bump (Chord Drip root -10.7pp at 0.12)",
+    "the Pattern / Occurrence grouping model (occurrenceReachability, mergePolicyRespected and voicing retention are all 100%)",
+    "attachSourceVoicing (100% on every split)",
+    "gold labels and boundaryToleranceBeats",
+    "timeline smoothing of consecutive identical chords (boundary 100% assumes it)",
+    "the Phase 4.1 coverage gates: add usefulness gates rather than relaxing coverage"
+  ]
+}
