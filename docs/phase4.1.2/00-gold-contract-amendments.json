@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.1.2-A0",
+  "frozenOn": "2026-07-25",
+  "policy": "Only constraints that no implementation can satisfy are amended. Nothing here was chosen to make a measurement pass: every amendment is derivable from the corpus alone, without looking at any product output. The gold labels, bar ranges, chord sequences, usefulness values and boundary tolerances are untouched.",
+  "amendments": {
+    "S23": {
+      "reason": "S23 marks four distinct patterns (prog1, prog2, prog3, prog4) with rank_constraint \"top3\". Four distinct cards cannot occupy three slots, so the constraint is unsatisfiable by construction and a failure against it measures nothing. The musical intent — the progressions come first and the Em11/A vamp does not take the top of the list — is preserved as a priority group: all three top slots must be progressions, and all four progressions must be reachable across the visible cards. The vamp keeps its own group, must stay reachable, and may not outrank the progressions.",
+      "replaces": "rank_constraint=top3 on prog1, prog2, prog3, prog4",
+      "groups": [
+        {
+          "id": "S23-progressions",
+          "patternIds": ["prog1", "prog2", "prog3", "prog4"],
+          "top3MinHits": 3,
+          "allVisibleMinHits": 4,
+          "derivedFrom": "amendment: rank_constraint=top3 capped at window size"
+        },
+        {
+          "id": "S23-vamp",
+          "patternIds": ["em11a-vamp"],
+          "top3MinHits": 0,
+          "allVisibleMinHits": 1,
+          "afterGroup": "S23-progressions",
+          "derivedFrom": "amendment: rank_constraint=after-progressions"
+        }
+      ]
+    }
+  },
+  "ambiguousSpans": {
+    "reason": "S23 contains 10 pairs of events per variant that occupy exactly the same beat span — bar 73 carries both Dm7 and C for beats 288-292, bar 74 both G7 and Am, and so on. Two different chords cannot both own the same four beats, so the annotation is ambiguous rather than wrong in a decidable way. Choosing which of the pair is correct would be fitting the gold to whatever the detector happened to emit, so neither is chosen: the span is treated as accepting either reading, and it is excluded from the canonicalExact / triad / seventh denominators. The count is reported so the reduced denominator is visible.",
+    "handling": "merge into one event; both labels become acceptable readings; excluded from exact-match denominators",
+    "affected": { "S23": { "clean": 10, "stress": 10 } },
+    "correctsEarlierFinding": "docs/phase4.1.1/synthetic-corpus-diagnostic-report.md reported bar 73 and 74 as product over-merging (cluster 6, S23 Secondary 3). That was wrong: the product emitted one chord for one span, which is correct. The duplication is in the gold."
+  },
+  "notAmended": {
+    "S24": "Three must-show blocks span 14, 18 and 20 bars, which the current generator cannot produce. This is a product limitation, not a contract error: the corpus is entitled to ask for a section-length candidate. Stage E addresses it. The gold is left alone.",
+    "S16": "The intro block (1-4, Cadd9 G Cadd9 G) is labelled fragment while the structural rule gives progression. The corpus taxonomy defines fragment partly as \"incomplete as a progression\", a musical judgement that no structural rule can derive, so block_type cannot serve as a pass/fail gate. It is measured descriptively; lane placement is gated on `usefulness` (exclude-from-main), which is unambiguous. No amendment is needed and none is made."
+  }
+}

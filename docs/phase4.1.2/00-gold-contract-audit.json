@@ -1,0 +1,546 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.1.2-A0",
+  "corpus": {
+    "format": "loop-vault-synthetic-gold-corpus-v1",
+    "generatorVersion": "openai-gpt-5.6-pro-deterministic-v1"
+  },
+  "generatorLengths": [
+    2,
+    4,
+    8,
+    16
+  ],
+  "amendmentsApplied": [
+    "S23"
+  ],
+  "findings": [
+    {
+      "scenarioId": "S16",
+      "split": "dev",
+      "check": "block-type-vs-structural-rule",
+      "severity": "unmeasurable",
+      "detail": "intro labelled fragment; structural rule gives progression (4 bars, 2 distinct chords, usefulness exclude-from-main)"
+    },
+    {
+      "scenarioId": "S23",
+      "split": "holdout",
+      "check": "top3-capacity",
+      "severity": "impossible",
+      "detail": "4 distinct patterns require rank_constraint \"top3\" but the window holds 3: prog1, prog2, prog3, prog4"
+    },
+    {
+      "scenarioId": "S23",
+      "split": "holdout",
+      "check": "event-overlap",
+      "severity": "inconsistent",
+      "detail": "clean event 67 starts at 288 before 292"
+    },
+    {
+      "scenarioId": "S23",
+      "split": "holdout",
+      "check": "event-overlap",
+      "severity": "inconsistent",
+      "detail": "clean event 69 starts at 292 before 296"
+    },
+    {
+      "scenarioId": "S23",
+      "split": "holdout",
+      "check": "event-overlap",
+      "severity": "inconsistent",
+      "detail": "clean event 107 starts at 448 before 452"
+    },
+    {
+      "scenarioId": "S23",
+      "split": "holdout",
+      "check": "event-overlap",
+      "severity": "inconsistent",
+      "detail": "clean event 109 starts at 452 before 456"
+    },
+    {
+      "scenarioId": "S23",
+      "split": "holdout",
+      "check": "event-overlap",
+      "severity": "inconsistent",
+      "detail": "clean event 111 starts at 456 before 460"
+    },
+    {
+      "scenarioId": "S23",
+      "split": "holdout",
+      "check": "event-overlap",
+      "severity": "inconsistent",
+      "detail": "clean event 113 starts at 460 before 464"
+    },
+    {
+      "scenarioId": "S23",
+      "split": "holdout",
+      "check": "event-overlap",
+      "severity": "inconsistent",
+      "detail": "clean event 149 starts at 608 before 612"
+    },
+    {
+      "scenarioId": "S23",
+      "split": "holdout",
+      "check": "event-overlap",
+      "severity": "inconsistent",
+      "detail": "clean event 151 starts at 612 before 616"
+    },
+    {
+      "scenarioId": "S23",
+      "split": "holdout",
+      "check": "event-overlap",
+      "severity": "inconsistent",
+      "detail": "clean event 153 starts at 616 before 620"
+    },
+    {
+      "scenarioId": "S23",
+      "split": "holdout",
+      "check": "event-overlap",
+      "severity": "inconsistent",
+      "detail": "clean event 155 starts at 620 before 624"
+    },
+    {
+      "scenarioId": "S23",
+      "split": "holdout",
+      "check": "event-overlap",
+      "severity": "inconsistent",
+      "detail": "stress event 67 starts at 288 before 292"
+    },
+    {
+      "scenarioId": "S23",
+      "split": "holdout",
+      "check": "event-overlap",
+      "severity": "inconsistent",
+      "detail": "stress event 69 starts at 292 before 296"
+    },
+    {
+      "scenarioId": "S23",
+      "split": "holdout",
+      "check": "event-overlap",
+      "severity": "inconsistent",
+      "detail": "stress event 107 starts at 448 before 452"
+    },
+    {
+      "scenarioId": "S23",
+      "split": "holdout",
+      "check": "event-overlap",
+      "severity": "inconsistent",
+      "detail": "stress event 109 starts at 452 before 456"
+    },
+    {
+      "scenarioId": "S23",
+      "split": "holdout",
+      "check": "event-overlap",
+      "severity": "inconsistent",
+      "detail": "stress event 111 starts at 456 before 460"
+    },
+    {
+      "scenarioId": "S23",
+      "split": "holdout",
+      "check": "event-overlap",
+      "severity": "inconsistent",
+      "detail": "stress event 113 starts at 460 before 464"
+    },
+    {
+      "scenarioId": "S23",
+      "split": "holdout",
+      "check": "event-overlap",
+      "severity": "inconsistent",
+      "detail": "stress event 149 starts at 608 before 612"
+    },
+    {
+      "scenarioId": "S23",
+      "split": "holdout",
+      "check": "event-overlap",
+      "severity": "inconsistent",
+      "detail": "stress event 151 starts at 612 before 616"
+    },
+    {
+      "scenarioId": "S23",
+      "split": "holdout",
+      "check": "event-overlap",
+      "severity": "inconsistent",
+      "detail": "stress event 153 starts at 616 before 620"
+    },
+    {
+      "scenarioId": "S23",
+      "split": "holdout",
+      "check": "event-overlap",
+      "severity": "inconsistent",
+      "detail": "stress event 155 starts at 620 before 624"
+    },
+    {
+      "scenarioId": "S24",
+      "split": "holdout",
+      "check": "must-show-not-generatable",
+      "severity": "impossible",
+      "detail": "focus spans 14 bars (33-46); generator lengths are 2/4/8/16"
+    },
+    {
+      "scenarioId": "S24",
+      "split": "holdout",
+      "check": "must-show-not-generatable",
+      "severity": "impossible",
+      "detail": "sec4 spans 18 bars (47-64); generator lengths are 2/4/8/16"
+    },
+    {
+      "scenarioId": "S24",
+      "split": "holdout",
+      "check": "must-show-not-generatable",
+      "severity": "impossible",
+      "detail": "sec6 spans 20 bars (81-100); generator lengths are 2/4/8/16"
+    }
+  ],
+  "findingsBySeverity": {
+    "unmeasurable": 1,
+    "impossible": 4,
+    "inconsistent": 20
+  },
+  "rankConstraintGroups": {
+    "S01": [
+      {
+        "id": "S01-top3",
+        "patternIds": [
+          "p1"
+        ],
+        "top3MinHits": 1,
+        "allVisibleMinHits": 1,
+        "derivedFrom": "rank_constraint=top3"
+      }
+    ],
+    "S02": [
+      {
+        "id": "S02-top3",
+        "patternIds": [
+          "p1"
+        ],
+        "top3MinHits": 1,
+        "allVisibleMinHits": 1,
+        "derivedFrom": "rank_constraint=top3"
+      }
+    ],
+    "S03": [
+      {
+        "id": "S03-top3",
+        "patternIds": [
+          "p1"
+        ],
+        "top3MinHits": 1,
+        "allVisibleMinHits": 1,
+        "derivedFrom": "rank_constraint=top3"
+      }
+    ],
+    "S04": [
+      {
+        "id": "S04-top3",
+        "patternIds": [
+          "p1"
+        ],
+        "top3MinHits": 1,
+        "allVisibleMinHits": 1,
+        "derivedFrom": "rank_constraint=top3"
+      }
+    ],
+    "S05": [
+      {
+        "id": "S05-top3",
+        "patternIds": [
+          "p1"
+        ],
+        "top3MinHits": 1,
+        "allVisibleMinHits": 1,
+        "derivedFrom": "rank_constraint=top3"
+      }
+    ],
+    "S06": [
+      {
+        "id": "S06-top3",
+        "patternIds": [
+          "p1"
+        ],
+        "top3MinHits": 1,
+        "allVisibleMinHits": 1,
+        "derivedFrom": "rank_constraint=top3"
+      }
+    ],
+    "S07": [
+      {
+        "id": "S07-top3",
+        "patternIds": [
+          "p1"
+        ],
+        "top3MinHits": 1,
+        "allVisibleMinHits": 1,
+        "derivedFrom": "rank_constraint=top3"
+      }
+    ],
+    "S08": [
+      {
+        "id": "S08-top3",
+        "patternIds": [
+          "p1",
+          "p2"
+        ],
+        "top3MinHits": 2,
+        "allVisibleMinHits": 2,
+        "derivedFrom": "rank_constraint=top3"
+      }
+    ],
+    "S09": [
+      {
+        "id": "S09-top3",
+        "patternIds": [
+          "p1"
+        ],
+        "top3MinHits": 1,
+        "allVisibleMinHits": 1,
+        "derivedFrom": "rank_constraint=top3"
+      }
+    ],
+    "S10": [
+      {
+        "id": "S10-top3",
+        "patternIds": [
+          "p1"
+        ],
+        "top3MinHits": 1,
+        "allVisibleMinHits": 1,
+        "derivedFrom": "rank_constraint=top3"
+      }
+    ],
+    "S11": [
+      {
+        "id": "S11-top3",
+        "patternIds": [
+          "prog-d"
+        ],
+        "top3MinHits": 1,
+        "allVisibleMinHits": 1,
+        "derivedFrom": "rank_constraint=top3"
+      },
+      {
+        "id": "S11-after-progressions",
+        "patternIds": [
+          "vamp-em11a"
+        ],
+        "top3MinHits": 0,
+        "allVisibleMinHits": 1,
+        "afterGroup": "S11-top3",
+        "derivedFrom": "rank_constraint=after-progressions"
+      }
+    ],
+    "S12": [
+      {
+        "id": "S12-top10",
+        "patternIds": [
+          "repeat-p1"
+        ],
+        "top3MinHits": 0,
+        "allVisibleMinHits": 1,
+        "derivedFrom": "rank_constraint=top10"
+      }
+    ],
+    "S13": [
+      {
+        "id": "S13-top10",
+        "patternIds": [
+          "transposed-p1"
+        ],
+        "top3MinHits": 0,
+        "allVisibleMinHits": 1,
+        "derivedFrom": "rank_constraint=top10"
+      }
+    ],
+    "S14": [
+      {
+        "id": "S14-top3",
+        "patternIds": [
+          "dur-a",
+          "dur-b"
+        ],
+        "top3MinHits": 2,
+        "allVisibleMinHits": 2,
+        "derivedFrom": "rank_constraint=top3"
+      }
+    ],
+    "S15": [
+      {
+        "id": "S15-top3",
+        "patternIds": [
+          "phrase-a",
+          "phrase-b"
+        ],
+        "top3MinHits": 2,
+        "allVisibleMinHits": 2,
+        "derivedFrom": "rank_constraint=top3"
+      },
+      {
+        "id": "S15-top10",
+        "patternIds": [
+          "motif-a",
+          "full-form"
+        ],
+        "top3MinHits": 0,
+        "allVisibleMinHits": 2,
+        "derivedFrom": "rank_constraint=top10"
+      }
+    ],
+    "S16": [
+      {
+        "id": "S16-top3",
+        "patternIds": [
+          "verse-p",
+          "chorus-p"
+        ],
+        "top3MinHits": 2,
+        "allVisibleMinHits": 2,
+        "derivedFrom": "rank_constraint=top3"
+      },
+      {
+        "id": "S16-top10",
+        "patternIds": [
+          "bridge-p"
+        ],
+        "top3MinHits": 0,
+        "allVisibleMinHits": 1,
+        "derivedFrom": "rank_constraint=top10"
+      }
+    ],
+    "S17": [
+      {
+        "id": "S17-top3",
+        "patternIds": [
+          "pickup-p",
+          "return-p"
+        ],
+        "top3MinHits": 2,
+        "allVisibleMinHits": 2,
+        "derivedFrom": "rank_constraint=top3"
+      }
+    ],
+    "S18": [
+      {
+        "id": "S18-top3",
+        "patternIds": [
+          "p1"
+        ],
+        "top3MinHits": 1,
+        "allVisibleMinHits": 1,
+        "derivedFrom": "rank_constraint=top3"
+      }
+    ],
+    "S19": [
+      {
+        "id": "S19-top3",
+        "patternIds": [
+          "p1"
+        ],
+        "top3MinHits": 1,
+        "allVisibleMinHits": 1,
+        "derivedFrom": "rank_constraint=top3"
+      }
+    ],
+    "S20": [
+      {
+        "id": "S20-top3",
+        "patternIds": [
+          "p1"
+        ],
+        "top3MinHits": 1,
+        "allVisibleMinHits": 1,
+        "derivedFrom": "rank_constraint=top3"
+      }
+    ],
+    "S21": [
+      {
+        "id": "S21-top10",
+        "patternIds": [
+          "lp1",
+          "lp2",
+          "lp3",
+          "lp4",
+          "lp5",
+          "lp6"
+        ],
+        "top3MinHits": 0,
+        "allVisibleMinHits": 6,
+        "derivedFrom": "rank_constraint=top10"
+      },
+      {
+        "id": "S21-after-progressions",
+        "patternIds": [
+          "outro-vamp"
+        ],
+        "top3MinHits": 0,
+        "allVisibleMinHits": 1,
+        "afterGroup": "S21-top10",
+        "derivedFrom": "rank_constraint=after-progressions"
+      }
+    ],
+    "S22": [
+      {
+        "id": "S22-top3",
+        "patternIds": [
+          "contrast-p"
+        ],
+        "top3MinHits": 1,
+        "allVisibleMinHits": 1,
+        "derivedFrom": "rank_constraint=top3"
+      },
+      {
+        "id": "S22-top10",
+        "patternIds": [
+          "repeat-six"
+        ],
+        "top3MinHits": 0,
+        "allVisibleMinHits": 1,
+        "derivedFrom": "rank_constraint=top10"
+      }
+    ],
+    "S23": [
+      {
+        "id": "S23-progressions",
+        "patternIds": [
+          "prog1",
+          "prog2",
+          "prog3",
+          "prog4"
+        ],
+        "top3MinHits": 3,
+        "allVisibleMinHits": 4,
+        "derivedFrom": "amendment: rank_constraint=top3 capped at window size"
+      },
+      {
+        "id": "S23-vamp",
+        "patternIds": [
+          "em11a-vamp"
+        ],
+        "top3MinHits": 0,
+        "allVisibleMinHits": 1,
+        "afterGroup": "S23-progressions",
+        "derivedFrom": "amendment: rank_constraint=after-progressions"
+      }
+    ],
+    "S24": [
+      {
+        "id": "S24-top10",
+        "patternIds": [
+          "sec1",
+          "sec2",
+          "focus",
+          "sec4",
+          "sec5",
+          "sec6"
+        ],
+        "top3MinHits": 0,
+        "allVisibleMinHits": 6,
+        "derivedFrom": "rank_constraint=top10"
+      }
+    ]
+  },
+  "policy": {
+    "goldNeverFittedToResults": true,
+    "onlyImpossibleConstraintsAmended": true,
+    "blockTypeExcludedFromHardGate": "The fragment definition contains a non-structural clause, so block_type cannot decide pass/fail. Lane placement is gated on `usefulness`, which is unambiguous."
+  }
+}
