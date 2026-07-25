@@ -27,8 +27,10 @@ describe("long MIDI candidate coverage", () => {
     expect(result.blockCandidates.some((candidate) => overlaps(candidate, 1, 4))).toBe(true);
     expect(result.blockCandidates.some((candidate) => overlaps(candidate, 117, 120))).toBe(true);
     expect(result.blockCandidates.some((candidate) => overlaps(candidate, 237, 240))).toBe(true);
+    // Two-bar windows were added in P4.0-04 so short loops and vamps can be
+    // found at their real length.
     expect(new Set(result.blockCandidates.map((candidate) => candidate.lengthBars)))
-      .toEqual(new Set([4, 8, 16]));
+      .toEqual(new Set([2, 4, 8, 16]));
     expect(second.blockCandidates).toEqual(result.blockCandidates);
     expect(JSON.stringify(result)).not.toContain("rankingScore");
     expect(miniMapLayout).toHaveLength(result.blockCandidates.length);

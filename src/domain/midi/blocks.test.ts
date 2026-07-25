@@ -50,6 +50,9 @@ describe("MIDI block meter contract", () => {
     const result = analyzeMidiHybrid(bytes);
 
     expect(result).toMatchObject({ totalBars: 4, timeSignature: "6/8" });
-    expect(result.blockCandidates[0]).toMatchObject({ startBar: 1, endBar: 4, lengthBars: 4 });
+    // Two-bar windows were added in P4.0-04, so the four-bar block is located by
+    // its length rather than by being first in the list.
+    expect(result.blockCandidates.find((candidate) => candidate.lengthBars === 4))
+      .toMatchObject({ startBar: 1, endBar: 4, lengthBars: 4 });
   });
 });

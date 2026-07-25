@@ -43,6 +43,21 @@ export interface CandidateChordEvent {
    * retime the event without dropping its alternatives or voicing memory.
    */
   source: ChordTimelineItem;
+  /**
+   * Non-persistent diagnostic evidence for this event.
+   *
+   * `confidence` is clamped to 1 and saturates, so it cannot rank blocks. The
+   * raw template match score behind it does spread, and the ranking transform
+   * that hides it is invertible, so it is recovered here for scoring and
+   * diagnostics only. It is never presented as a probability.
+   */
+  rawMatchScore?: number;
+}
+
+/** Inverse of the ranking transform in legacy.ts (`1 + raw * 1e-6` above 1). */
+export function recoverRawMatchScore(rankingScore: number): number {
+  if (!Number.isFinite(rankingScore)) return 0;
+  return rankingScore > 1 ? (rankingScore - 1) / 1e-6 : rankingScore;
 }
 
 export interface CandidateChordStats {
@@ -70,17 +85,20 @@ export function buildCandidateEvents(
   startBar: number,
   lengthBars: number,
   beatsPerBar: number = BEATS_PER_BAR,
+  rawMatchScores?: readonly number[],
 ): CandidateChordEvent[] {
   const blockStart = (startBar - 1) * beatsPerBar;
   const blockEnd = blockStart + lengthBars * beatsPerBar;
 
   return timeline
-    .filter((item) => {
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => {
       const start = startBeatOf(item, beatsPerBar);
       return start < blockEnd && start + item.durationBeats > blockStart;
     })
-    .map((item) => {
+    .map(({ item, index }) => {
       const start = startBeatOf(item, beatsPerBar);
+      const rawMatchScore = rawMatchScores?.[index];
       const clippedStart = Math.max(start, blockStart);
       const clippedEnd = Math.min(start + item.durationBeats, blockEnd);
       const identity = normalizeChordLabel(item.chord.label);
@@ -97,6 +115,7 @@ export function buildCandidateEvents(
         confidence: item.confidence,
         warnings: item.warnings,
         source: item,
+        ...(rawMatchScore !== undefined && Number.isFinite(rawMatchScore) ? { rawMatchScore } : {}),
       };
     })
     .sort((left, right) => left.relativeStartBeat - right.relativeStartBeat

@@ -9,21 +9,26 @@ import { beatsPerBar } from "./timing";
 import { analyzeMidiVoiceAwareRerank } from "./voiceAwareReranker";
 
 describe("internal MIDI ranking scores", () => {
-  it("ranks distinct raw scores even when both UI confidences are clamped", () => {
+  it("ranks distinct raw scores even when the UI confidences are clamped", () => {
+    // Every bar reports a clamped confidence of 1, so only the internal ranking
+    // scores can tell the first half of the piece from the second.
     const timeline = timelineWithConfidences([1, 1, 1, 1]);
-    const low = extractHybridBlocks(timeline, 4, 4, [1.05, 1.05, 1.05, 1.05])[0];
-    const high = extractHybridBlocks(timeline, 4, 4, [1.25, 1.25, 1.25, 1.25])[0];
+    const blocks = extractHybridBlocks(timeline, 4, 4, [1.05, 1.05, 1.25, 1.25]);
 
-    expect(low.confidence).toBe(0.92);
-    expect(high.confidence).toBe(0.92);
-    expect(low.selectionScore).toBe(1.05);
-    expect(high.selectionScore).toBe(1.25);
+    const weak = blocks.find((block) => block.startBar === 1 && block.lengthBars === 2);
+    const strong = blocks.find((block) => block.startBar === 3 && block.lengthBars === 2);
+    expect(weak).toBeDefined();
+    expect(strong).toBeDefined();
+    expect(weak!.confidence).toBe(0.92);
+    expect(strong!.confidence).toBe(0.92);
+    expect(strong!.selectionScore!).toBeGreaterThan(weak!.selectionScore!);
 
+    // With both blocks in the same region the higher-scoring one is picked first.
     const selected = selectProgressionCandidates([
-      { candidate: { ...low, id: "low" }, dedupeKey: "low", selectionScore: low.selectionScore! },
-      { candidate: { ...high, id: "high" }, dedupeKey: "high", selectionScore: high.selectionScore! },
+      { candidate: { ...weak!, id: "weak", startBar: 1, endBar: 2 }, dedupeKey: "weak", selectionScore: weak!.selectionScore! },
+      { candidate: { ...strong!, id: "strong", startBar: 1, endBar: 2 }, dedupeKey: "strong", selectionScore: strong!.selectionScore! },
     ], 4);
-    expect(selected[0]?.id).toBe("high");
+    expect(selected[0]?.id).toBe("strong");
   });
 
   it("preserves the existing order when no internal scores are supplied", () => {

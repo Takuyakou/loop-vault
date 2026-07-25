@@ -1,67 +1,88 @@
 import type { ChordTimelineItem, ProgressionBlockCandidate } from "../types";
+import { normaliseEvidence, scoreBlockQuality } from "./blockQuality";
+import {
+  buildCandidateEvents, candidateStats, recoverRawMatchScore,
+  structuredSignature, summaryFromEvents,
+} from "./candidateBlock";
 import {
   selectProgressionCandidates,
+  type CandidateSelectionDiagnostic,
   type CandidateSelectionEntry,
 } from "./candidateSelection";
 
+/**
+ * Block extraction for the reranker analyzers.
+ *
+ * Shares the Candidate Block v2 model with the legacy path so P4.0-06 compares
+ * analyzers on the same block definition. Previously this built its own per-beat
+ * label grid and its own dedup key, which meant a block-level comparison across
+ * analyzers was measuring two different things.
+ */
 export function extractHybridBlocks(
   timeline: readonly ChordTimelineItem[],
   totalBars: number,
   beatsPerBar = 4,
   rankingScores?: readonly number[],
+  diagnostics?: CandidateSelectionDiagnostic[],
 ): ProgressionBlockCandidate[] {
   const raw: CandidateSelectionEntry[] = [];
-  for (const lengthBars of [4, 8, 16] as const) {
+  // Without internal ranking scores the UI confidences are the only evidence
+  // available, which keeps the no-argument call equivalent to passing them.
+  const rawMatchScores = rankingScores
+    ? rankingScores.map(recoverRawMatchScore)
+    : timeline.map((item) => item.confidence);
+  const normalise = normaliseEvidence(rawMatchScores);
+
+  for (const lengthBars of [2, 4, 8, 16] as const) {
+    // Build each window once and tally signatures, so repeat counting is a
+    // lookup instead of a rescan of the whole timeline per window.
+    const windows = [];
     for (let startBar = 1; startBar + lengthBars - 1 <= totalBars; startBar += 1) {
+      const events = buildCandidateEvents(
+        timeline, startBar, lengthBars, beatsPerBar, rawMatchScores,
+      );
+      if (!events.length) continue;
+      windows.push({ startBar, events, signature: structuredSignature(events) });
+    }
+    const repeatCounts = new Map<string, number>();
+    for (const window of windows) {
+      repeatCounts.set(window.signature, (repeatCounts.get(window.signature) ?? 0) + 1);
+    }
+
+    for (const { startBar, events, signature } of windows) {
       const endBar = startBar + lengthBars - 1;
-      const rankedChords = timeline.flatMap((item, index) =>
-        item.bar >= startBar && item.bar <= endBar
-          ? [{ item, rankingScore: rankingScoreAt(rankingScores, index, item.confidence) }]
-          : []);
-      const chords = rankedChords.map(({ item }) => item);
-      if (!chords.length) continue;
-      const signature = beatGridSignature(chords, startBar, lengthBars, beatsPerBar);
-      const repeatCount = countSimilarRepeats(timeline, totalBars, signature, lengthBars, beatsPerBar);
-      const confidence = average(chords.map((item) => item.confidence));
-      const rankingScore = average(rankedChords.map((entry) => entry.rankingScore));
-      const summaryText = `| ${Array.from(
-          { length: lengthBars },
-          (_, index) => signature[Math.round(index * beatsPerBar)] ?? "N.C.",
-        ).join(" | ")} |`;
-      const repeatBonus = Math.min(0.16, Math.max(0, repeatCount - 1) * 0.05);
-      const selectionScore = rankingScore + repeatBonus;
+      const chords = timeline.filter((item) => item.bar >= startBar && item.bar <= endBar);
+      const stats = candidateStats(events, lengthBars);
+      const repeatCount = repeatCounts.get(signature) ?? 1;
+      const quality = scoreBlockQuality(events, {
+        repeatCount, beatsPerBar, normaliseEvidence: normalise,
+      });
       raw.push({
-        dedupeKey: signature.join("|"),
-        selectionScore,
+        dedupeKey: signature,
+        selectionScore: quality.total,
+        densityClass: stats.densityClass,
+        quality,
         candidate: {
           id: `hybrid-bars-${startBar}-${endBar}`,
           startBar,
           endBar,
           lengthBars,
           chords: [...chords],
-          summaryText,
-          confidence: clamp(confidence + repeatBonus),
+          events,
+          stats,
+          structuredSignature: signature,
+          summaryText: summaryFromEvents(events, lengthBars, beatsPerBar),
+          confidence: clamp(average(events.map((event) => event.confidence))),
           ...(repeatCount > 1 ? { repeatCount } : {}),
           labels: repeatCount > 1
             ? ["main", ...(lengthBars === 4 ? ["turnaround"] : [])]
             : [lengthBars === 4 ? "turnaround" : "variation"],
-          warnings: [...new Set(chords.flatMap((item) => item.warnings))],
+          warnings: [...new Set(events.flatMap((event) => event.warnings))],
         },
       });
     }
   }
-  return selectProgressionCandidates(raw, totalBars);
-}
-
-function rankingScoreAt(
-  rankingScores: readonly number[] | undefined,
-  index: number,
-  fallback: number,
-): number {
-  const rankingScore = rankingScores?.[index];
-  return rankingScore !== undefined && Number.isFinite(rankingScore)
-    ? rankingScore
-    : fallback;
+  return selectProgressionCandidates(raw, totalBars, diagnostics);
 }
 
 export function beatGridSignature(
@@ -78,22 +99,6 @@ export function beatGridSignature(
       return beat >= itemStart && beat < itemStart + item.durationBeats;
     })?.chord.label ?? "N.C.";
   });
-}
-
-function countSimilarRepeats(
-  timeline: readonly ChordTimelineItem[],
-  totalBars: number,
-  target: string[],
-  lengthBars: number,
-  beatsPerBar: number,
-): number {
-  let count = 0;
-  for (let start = 1; start + lengthBars - 1 <= totalBars; start += 1) {
-    const candidate = beatGridSignature(timeline, start, lengthBars, beatsPerBar);
-    const same = candidate.filter((label, index) => label === target[index]).length / Math.max(1, target.length);
-    if (same >= 0.82) count += 1;
-  }
-  return count;
 }
 
 function average(values: number[]): number { return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0; }
