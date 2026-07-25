@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.1-07",
+  "source": {
+    "fingerprint": "sha256-2790e82d09b52a58efe8806e79d7379f6ec15091930197073ff9095dcee5ea10",
+    "byteLength": 33055
+  },
+  "configurations": [
+    {
+      "id": "phase4.0-ranking",
+      "candidateCount": 10,
+      "selectedCoverageAtAllVisible": 0.285714,
+      "selectedCoverageAt10": 0.285714,
+      "longestUncoveredHarmonicRun": 16,
+      "sectionRecallAtAllVisible": 0.55,
+      "sectionRecallAt10": 0.55,
+      "focusRange.coveredBySelected": 0,
+      "occurrencesRetained": 0,
+      "minimumSelectedCandidateScore": 0.670448,
+      "runtimeMs": 163.4,
+      "deterministic": true
+    },
+    {
+      "id": "coverage",
+      "candidateCount": 10,
+      "selectedCoverageAtAllVisible": 0.979592,
+      "selectedCoverageAt10": 0.979592,
+      "longestUncoveredHarmonicRun": 1,
+      "sectionRecallAtAllVisible": 1,
+      "sectionRecallAt10": 1,
+      "focusRange.coveredBySelected": 14,
+      "occurrencesRetained": 374,
+      "minimumSelectedCandidateScore": 0.594504,
+      "runtimeMs": 258.7,
+      "deterministic": true
+    },
+    {
+      "id": "coverage+extraction",
+      "candidateCount": 10,
+      "selectedCoverageAtAllVisible": 0.969388,
+      "selectedCoverageAt10": 0.969388,
+      "longestUncoveredHarmonicRun": 1,
+      "sectionRecallAtAllVisible": 1,
+      "sectionRecallAt10": 1,
+      "focusRange.coveredBySelected": 14,
+      "occurrencesRetained": 374,
+      "minimumSelectedCandidateScore": 0.595195,
+      "runtimeMs": 176.3,
+      "deterministic": true
+    }
+  ],
+  "chordCorpus": {
+    "checked": 100,
+    "timelineIdentical": 100,
+    "extractionFalsePositives": 0
+  },
+  "gates": [
+    {
+      "id": "selected-coverage-at-all-visible",
+      "required": 0.9,
+      "measured": 0.969388,
+      "verdict": "PASS"
+    },
+    {
+      "id": "section-recall-at-all-visible",
+      "required": 1,
+      "measured": 1,
+      "verdict": "PASS"
+    },
+    {
+      "id": "longest-uncovered-run",
+      "required": 8,
+      "measured": 1,
+      "verdict": "PASS"
+    },
+    {
+      "id": "focus-range-reachable",
+      "required": 1,
+      "measured": 14,
+      "verdict": "PASS"
+    }
+  ],
+  "verdict": "PASS",
+  "recommendedDefault": "coverage+extraction"
+}
