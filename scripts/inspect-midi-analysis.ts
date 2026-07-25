@@ -6,7 +6,7 @@ import { analyzeMidi } from "../src/domain/midi/analysis";
 const path = argv[argv.length - 1];
 if (!path) throw new Error("Usage: vite-node scripts/inspect-midi-analysis.ts <midi-path>");
 const bytes = new Uint8Array(await readFile(resolve(cwd(), path)));
-for (const mode of ["legacy", "hybrid-v1"] as const) {
+for (const mode of ["legacy", "phase4-v1"] as const) {
   const result = analyzeMidi(bytes, { mode, fileName: path });
   stdout.write(`${mode} (${result.analyzerVersion})\n`);
   result.fullTimeline.forEach((item) => stdout.write(

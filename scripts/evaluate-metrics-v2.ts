@@ -43,6 +43,7 @@ const modes = [
   { key: "legacy", mode: "legacy" },
   { key: "legacyBoundaryRerank", mode: "legacy-boundary-rerank" },
   { key: "voiceAwareRerank", mode: "voice-aware-rerank-v1" },
+  { key: "phase4", mode: "phase4-v1" },
 ] as const;
 
 const results: Record<string, CaseMetricsV2[]> = {};
