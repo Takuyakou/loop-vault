@@ -135,3 +135,11 @@ export type { DecodedSegment, DecoderWeights } from "./decoder";
 export type { ConfidenceFeatures, ConfidenceLevel, ConfidenceResult } from "./confidence";
 export type { MergedDecodedSegment } from "./merge";
 export type { MidiChordCorrectionEvent } from "./feedback";
+export {
+  buildOccurrences,
+  groupIntoPatterns,
+  groupedReachableOccurrences,
+  occurrenceToCandidate,
+  siblingOccurrences,
+} from "./occurrence";
+export type { CandidateOccurrence, CandidatePattern } from "./occurrence";
