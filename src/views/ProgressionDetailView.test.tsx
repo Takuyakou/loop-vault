@@ -44,28 +44,47 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
+/**
+ * Same rule the badge uses to decide "today".
+ *
+ * The practice state flips from `provisional` to `confirmation-due` the day
+ * after a level is cleared, so a hard-coded clear date only passes on the day
+ * the fixture was written. These dates are derived instead.
+ */
+function localDateString(date: Date): string {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
+}
+
+function practicedBlock(clearedOnLocalDate: string): SavedProgressionBlock {
+  return {
+    ...block,
+    practice: {
+      schemaVersion: 1,
+      progressionFingerprint: progressionFingerprint(block),
+      confirmedLevel: 3,
+      provisional: {
+        level: 4,
+        clearedAt: `${clearedOnLocalDate}T00:00:00.000Z`,
+        clearedOnLocalDate,
+        targetTempo: 70,
+        confirmationPitchClasses: [5, 7],
+      },
+      transposition: {
+        schemaVersion: 1,
+        clearedKeyPitchClasses: [2, 4, 5, 7, 9, 11],
+        updatedAt: `${clearedOnLocalDate}T00:00:00.000Z`,
+      },
+    },
+  };
+}
+
 describe("ProgressionDetailView", () => {
   it("shows transposition coverage and provisional state in progression details", async () => {
-    const practiced: SavedProgressionBlock = {
-      ...block,
-      practice: {
-        schemaVersion: 1,
-        progressionFingerprint: progressionFingerprint(block),
-        confirmedLevel: 3,
-        provisional: {
-          level: 4,
-          clearedAt: "2026-07-24T00:00:00.000Z",
-          clearedOnLocalDate: "2026-07-24",
-          targetTempo: 70,
-          confirmationPitchClasses: [5, 7],
-        },
-        transposition: {
-          schemaVersion: 1,
-          clearedKeyPitchClasses: [2, 4, 5, 7, 9, 11],
-          updatedAt: "2026-07-24T00:00:00.000Z",
-        },
-      },
-    };
+    const practiced = practicedBlock(localDateString(new Date()));
     const idea = makeIdea({
       id: "idea-practice-progress",
       progressionBlocks: [practiced],
@@ -92,8 +111,20 @@ describe("ProgressionDetailView", () => {
       />
     );
 
+    // Cleared today: still provisional.
     await act(async () => root.render(render(idea, practiced)));
     expect(container.textContent).toContain("仮クリア");
+    expect(container.textContent).toContain("L4 キー 6/6");
+
+    // Cleared on an earlier day: the badge asks for confirmation on another day.
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const dueForConfirmation = practicedBlock(localDateString(yesterday));
+    await act(async () => root.render(render({
+      ...idea,
+      progressionBlocks: [dueForConfirmation],
+    }, dueForConfirmation)));
+    expect(container.textContent).toContain("別日確認");
     expect(container.textContent).toContain("L4 キー 6/6");
 
     const stale = {

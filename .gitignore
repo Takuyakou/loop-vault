@@ -30,5 +30,13 @@ docs/phase4.0/block-score-diagnostic.json
 docs/phase4.0/candidate-selection-diagnostic.json
 
 # Local-only evaluation input and generated Tauri schemas.
-test/
+#
+# `test/` holds MIDI dropped in for local evaluation, whose licence and
+# provenance are usually unknown, so it is ignored by default. Synthetic
+# fixtures that are safe to commit live in `test/fixtures/`, which is
+# deliberately exempt — see scripts/check-staged-files.mjs for the guard that
+# keeps private audio out of a commit.
+test/*
+!test/fixtures/
+test/private-midi/
 src-tauri/gen/
