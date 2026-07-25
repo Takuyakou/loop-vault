@@ -3,6 +3,8 @@ import {
   open as openFileDialog,
 } from "@tauri-apps/plugin-dialog";
 import { readFile } from "@tauri-apps/plugin-fs";
+import { voiceChordForPreview } from "../domain/chordVoicing";
+import { resolveVoicingForUse } from "../domain/voicing";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DragEvent, ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -496,14 +498,20 @@ export function CaptureView(props: CaptureViewProps) {
 
   async function previewCandidateChord(candidate: ProgressionBlockCandidate, chordIndex: number) {
     try {
-      const chord = candidate.chords[chordIndex]?.chord;
+      const event = candidate.chords[chordIndex];
+      const chord = event?.chord;
       if (chord) {
         await controller.toggle(
           {
             kind: "capture",
             id: `${captureCandidateSource(result, candidate.id).id}:chord:${chordIndex}:${chord.label}`,
           },
-          { type: "chord", chord, sound: previewSound },
+          {
+            type: "chord",
+            chord,
+            sound: previewSound,
+            explicitMidiNotes: singleChordVoicing(event),
+          },
         );
       }
     } catch (error) {
@@ -811,12 +819,18 @@ export function TimelineDetails({
 
   async function previewTimelineChord(index: number) {
     setSelectedChordIndex(index);
-    const chord = result.fullTimeline[index]?.chord;
+    const event = result.fullTimeline[index];
+    const chord = event?.chord;
     if (chord) {
       try {
         await controller.toggle(
           { kind: "capture", id: `${source.id}:chord:${index}:${chord.label}` },
-          { type: "chord", chord, sound: previewSound },
+          {
+            type: "chord",
+            chord,
+            sound: previewSound,
+            explicitMidiNotes: singleChordVoicing(event),
+          },
         );
       } catch (error) {
         onPlaybackError?.(error);
@@ -1623,6 +1637,27 @@ export function captureAnalysisIdentity(result: MidiProgressionAnalysis | undefi
     `analyzed:${encodeURIComponent(result.analyzedAt)}`,
     `analyzer:${encodeURIComponent(result.analyzerVersion)}`,
   ].filter(Boolean).join("|");
+}
+
+/**
+ * Notes for a single chord card click.
+ *
+ * Clicking one chord used to fall through to the generated preview voicing while
+ * the same chord played its original MIDI voicing everywhere else, so a chord
+ * auditioned in capture sounded different from the same chord in Progression
+ * Detail and Chord Dojo. This resolves it the same way those screens do.
+ *
+ * `resolveVoicingForUse` checks the stored voicing against the chord, so an
+ * edited chord falls back to a generated voicing instead of replaying the
+ * voicing of the chord it replaced.
+ */
+function singleChordVoicing(event: ChordTimelineItem | undefined): readonly number[] | undefined {
+  if (!event) return undefined;
+  return resolveVoicingForUse(
+    event.chord,
+    event.voicingMemory,
+    voiceChordForPreview(event.chord).notes,
+  ).midiNotes;
 }
 
 function captureCandidateSource(
