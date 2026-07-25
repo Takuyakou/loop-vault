@@ -114,6 +114,14 @@ export interface LegacyScoringOptions {
    * against the same gates.
    */
   usePatternSelection?: boolean;
+  /**
+   * Stage E's structural window generators.
+   *
+   * Switchable so the ablation can ask what the larger candidate pool costs,
+   * rather than the cost being inferred from two runs that differ in more than
+   * one thing. Defaults to on; `phase4.1.2-core-v1` turns it off.
+   */
+  useStructuralWindows?: boolean;
   /** Robustness pass for AI-extracted MIDI. Raw notes are never modified. */
   useExtractionProfile?: boolean;
   analyzerVersion?: string;
@@ -151,7 +159,9 @@ export function analyzeMidiWithRankingScores(
   const fullTimeline = smoothedTimeline.map(({ item }) => item);
   const timelineRankingScores = smoothedTimeline.map(({ rankingScore }) => rankingScore);
   const coverage = scoring.usePatternSelection
-    ? buildPatternCoverageCandidates(fullTimeline, data, data.totalBars, timelineRankingScores)
+    ? buildPatternCoverageCandidates(fullTimeline, data, data.totalBars, timelineRankingScores, {
+      useStructuralWindows: scoring.useStructuralWindows ?? true,
+    })
     : (scoring.useCoverageSelection
       ? buildCoverageCandidates(fullTimeline, data, data.totalBars, timelineRankingScores)
       : undefined);

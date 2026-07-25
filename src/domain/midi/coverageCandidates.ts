@@ -70,7 +70,7 @@ export function buildPatternCoverageCandidates(
   data: MidiSongData,
   totalBars: number,
   rankingScores: readonly number[] | undefined,
-  options: Partial<UsefulnessSelectionOptions> = {},
+  options: Partial<UsefulnessSelectionOptions> & { useStructuralWindows?: boolean } = {},
 ): CoverageCandidateResult {
   const meter = beatsPerBar(data.timeSignature);
   const rawMatchScores = rankingScores
@@ -82,11 +82,16 @@ export function buildPatternCoverageCandidates(
   // selection, so a wrong boundary can cost a candidate its exact span but can
   // never remove a candidate.
   const sections = segmentSections(data, timeline);
+  // Stage E's generators are switchable so the cost of the larger candidate pool
+  // can be measured against the same gates rather than assumed.
+  const useStructuralWindows = options.useStructuralWindows ?? true;
   const occurrences = scoreOccurrences(
     buildOccurrences(timeline, totalBars, {
       beatsPerBar: meter,
       rawMatchScores,
-      extraWindows: structuralWindows(timeline, totalBars, meter, sections),
+      extraWindows: useStructuralWindows
+        ? structuralWindows(timeline, totalBars, meter, sections)
+        : [],
     }),
     { beatsPerBar: meter, rawMatchScores, normaliseEvidence: normalise, scoreBlockQuality },
   );

@@ -137,7 +137,8 @@ Stage E は生成不能を解消して `mustShowGeneratedRecall` を 0.970 → *
 
 ### 6.2 `coverage >= 90%` 55/56 と `occurrenceReachability` 54/56
 
-- coverage未達は **L06_stress 1件のみ**。ワンコードvampだけの曲で、`visiblePatternDuplicateCount = 0` を守る限りカード表示ベースで90%に到達する方法がない（`reachableCandidateCoverage` は 0.9以上で、ユーザーは全小節へ到達できる）。**2つの凍結Gateが数学的に両立しない。**
+- coverage未達は1件。**当初これを L06_stress と書いたが誤りだった。** 実際の未達は **S16_clean（0.78125）** で、L06 は clean 0.958 / stress ともに通過している。Stage C 時点の未達リストを見たまま、vamp reserve 投入後に確認し直さなかった。訂正と真因は [`08-gate-audit.md` §4](08-gate-audit.md) を参照。
+  - 構造の説明そのもの（同一Patternが2箇所に出る曲では、Pattern一意化とカード表示ベース被覆が競合する）は正しい。当てはまるファイルが違っていた。S16 の chorus は 13–20 と 25–32 の2箇所にあり、1カードは片方しか表示できない。
 - reachability未達は L05_stress / L10_stress の2件。
 
 ---
@@ -159,7 +160,7 @@ Stage E は生成不能を解消して `mustShowGeneratedRecall` を 0.970 → *
 ## 9. 次に必要なこと
 
 1. **`rank-constraint` の回復** — Stage E で増えた候補プールに選定が追いついていない。表示10枠の配分をセクション/位置で分散させる案が候補
-2. **L06型の Gate 衝突の裁定** — カード表示ベース被覆と Pattern 一意性は単一コード曲で両立しない。どちらを優先するかは製品判断
+2. **S16型の Gate 衝突の裁定** — 同一Patternが2箇所に出る曲では、カード表示ベース被覆とPattern一意性が競合する。どちらを優先するかは製品判断（当初L06と書いたのは誤り。[08-gate-audit.md](08-gate-audit.md) §4 で訂正）
 3. **Stage F（Timeline研究）** — 本作業では未着手。A〜Eと混ぜない前提のため別ブランチ・別Gateで実施する
 
 ---
