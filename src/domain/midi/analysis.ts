@@ -8,19 +8,24 @@ import { analyzeMidiPhase41, phase41AnalyzerVersion } from "./phase41Analyzer";
 import type { AnalyzeMidiOptions } from "./types";
 import { analyzeMidiVoiceAwareRerank, voiceAwareRerankerVersion } from "./voiceAwareReranker";
 
-/**
- * Promoted to `phase4.1-v1` in P4.1-07 after every frozen coverage gate passed
- * and the chord corpora came back byte-identical; see
- * docs/phase4.1/07-final-validation.md.
- *
- * Chord detection is unchanged from `phase4-v1`. What changed is the candidate
- * list: it now covers the song instead of ranking it. Reverting is a one-line
- * change — every previous mode is still available.
- */
-export const defaultAnalyzerMode = "phase4.1-v1" as const;
-export const analyzerVersion = phase41AnalyzerVersion;
 /** Kept for rollback: the analyzer promoted in Phase 4.0. */
 export const phase40DefaultAnalyzerMode = "phase4-v1" as const;
+
+/**
+ * Rolled back to `phase4-v1` in P4.1.1-00.
+ *
+ * `phase4.1-v1` met every coverage gate, but the gates measured which bars the
+ * candidate list reached, not whether the cards were distinct. On
+ * 15.Endless,endless. the top three cards were the same one-chord Em11/A
+ * pattern at three different positions, so the list covered the song while
+ * offering the user one usable progression. Coverage is not the same thing as
+ * usefulness, and the frozen gates could not tell the two apart.
+ *
+ * The rollback is the default only. `phase4.1-v1` stays selectable so the
+ * coverage work remains measurable against whatever replaces it.
+ */
+export const defaultAnalyzerMode = phase40DefaultAnalyzerMode;
+export const analyzerVersion = phase4AnalyzerVersion;
 export {
   hybridAnalyzerVersion,
   legacyAnalyzerVersion,
