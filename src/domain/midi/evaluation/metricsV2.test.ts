@@ -133,6 +133,48 @@ describe("canonical scoring", () => {
   });
 });
 
+describe("acceptable alternatives", () => {
+  function caseWithAlternatives(primary: string, alternatives: string[]): MidiEvaluationCase {
+    const base = caseWith([{ label: primary, startBeat: 0, endBeat: 4 }]);
+    return {
+      ...base,
+      expected: {
+        chordTimeline: [{ ...base.expected.chordTimeline[0], acceptableAlternatives: alternatives }],
+      },
+    };
+  }
+
+  it("credits a reading the annotation lists as equally valid", () => {
+    // C6 and Am7/C are the same pitch set; both are legitimate readings.
+    const definition = caseWithAlternatives("C6", ["Am7/C"]);
+    const result = evaluateCaseV2(definition, [timelineItem("Am7/C", 1)]);
+    expect(result.durationWeighted.canonicalExactAccuracy).toBe(1);
+    expect(result.durationWeighted.rootAccuracy).toBe(1);
+    expect(result.durationWeighted.triadAccuracy).toBe(1);
+  });
+
+  it("still rejects a reading outside the accepted set", () => {
+    const definition = caseWithAlternatives("C6", ["Am7/C"]);
+    const result = evaluateCaseV2(definition, [timelineItem("Fmaj7", 1)]);
+    expect(result.durationWeighted.canonicalExactAccuracy).toBe(0);
+  });
+
+  it("credits an alternative found in the Top-3", () => {
+    const definition = caseWithAlternatives("C6", ["Am7/C"]);
+    const result = evaluateCaseV2(definition, [timelineItem("G", 1, 4, ["Am7/C", "Em"])]);
+    expect(result.durationWeighted.canonicalExactAccuracy).toBe(0);
+    expect(result.durationWeighted.top3CanonicalAccuracy).toBe(1);
+  });
+
+  it("behaves exactly as before when no alternatives are listed", () => {
+    const definition = caseWith([{ label: "C6", startBeat: 0, endBeat: 4 }]);
+    const exact = evaluateCaseV2(definition, [timelineItem("C6", 1)]);
+    const other = evaluateCaseV2(definition, [timelineItem("Am7/C", 1)]);
+    expect(exact.durationWeighted.canonicalExactAccuracy).toBe(1);
+    expect(other.durationWeighted.canonicalExactAccuracy).toBe(0);
+  });
+});
+
 describe("weighting", () => {
   it("weights by duration and by event separately", () => {
     const definition = caseWith([

@@ -246,47 +246,64 @@ export function evaluateCaseV2(
     const predictedIdentity = normalizeChordLabel(match.item.chord.label);
     if (!predictedIdentity) continue;
 
+    // A ground truth may name more than one legitimate reading of the same
+    // pitch set (`C6` and `Am7/C`). Scoring only the primary would mark a
+    // musically correct answer wrong, so each layer is credited against
+    // whichever accepted reading it matches.
+    const acceptedIdentities = [
+      expectedIdentity,
+      ...(target.acceptableAlternatives ?? [])
+        .map((label) => normalizeChordLabel(label))
+        .filter((identity): identity is NormalizedChordIdentity => identity !== null),
+    ];
+    const matchesAny = (
+      predicate: (accepted: NormalizedChordIdentity) => boolean,
+    ) => acceptedIdentities.some(predicate);
+
     const award = (key: keyof HierarchyTotals) => {
       events[key] += 1;
       beats[key] += duration;
     };
 
     award("matched");
-    if (predictedIdentity.rootPitchClass === expectedIdentity.rootPitchClass) award("root");
-    if (predictedIdentity.triad === expectedIdentity.triad) award("triad");
-    if (predictedIdentity.seventh === expectedIdentity.seventh) award("seventh");
-    if (
-      predictedIdentity.triad === expectedIdentity.triad
-      && predictedIdentity.seventh === expectedIdentity.seventh
-    ) award("quality");
-    if (
-      sameSet(predictedIdentity.extensions, expectedIdentity.extensions)
-      && sameSet(predictedIdentity.alterations, expectedIdentity.alterations)
-    ) award("extension");
-    if (predictedIdentity.bassPitchClass === expectedIdentity.bassPitchClass) award("bassSlash");
+    if (matchesAny((accepted) => predictedIdentity.rootPitchClass === accepted.rootPitchClass)) {
+      award("root");
+    }
+    if (matchesAny((accepted) => predictedIdentity.triad === accepted.triad)) award("triad");
+    if (matchesAny((accepted) => predictedIdentity.seventh === accepted.seventh)) award("seventh");
+    if (matchesAny((accepted) => predictedIdentity.triad === accepted.triad
+      && predictedIdentity.seventh === accepted.seventh)) award("quality");
+    if (matchesAny((accepted) => sameSet(predictedIdentity.extensions, accepted.extensions)
+      && sameSet(predictedIdentity.alterations, accepted.alterations))) award("extension");
+    if (matchesAny((accepted) => predictedIdentity.bassPitchClass === accepted.bassPitchClass)) {
+      award("bassSlash");
+    }
 
-    const expectedKey = chordIdentityKey(expectedIdentity);
-    if (chordIdentityKey(predictedIdentity) === expectedKey) award("canonicalExact");
-    if (sameSet(pitchClassesOf(predictedIdentity), pitchClassesOf(expectedIdentity))) {
+    const acceptedKeys = new Set(acceptedIdentities.map((accepted) => chordIdentityKey(accepted)));
+    if (acceptedKeys.has(chordIdentityKey(predictedIdentity))) award("canonicalExact");
+    if (matchesAny((accepted) =>
+      sameSet(pitchClassesOf(predictedIdentity), pitchClassesOf(accepted)))) {
       award("pitchSetEquivalent");
     }
 
     const candidates = [match.item.chord, ...match.item.alternatives.map((entry) => entry.chord)]
       .map((chord) => normalizeChordLabel(chord.label));
     const candidateKeys = candidates.map((candidate) => (candidate ? chordIdentityKey(candidate) : ""));
-    if (candidateKeys.slice(0, 3).includes(expectedKey)) award("top3Canonical");
-    if (candidateKeys.slice(0, 5).includes(expectedKey)) award("top5Canonical");
+    if (candidateKeys.slice(0, 3).some((key) => acceptedKeys.has(key))) award("top3Canonical");
+    if (candidateKeys.slice(0, 5).some((key) => acceptedKeys.has(key))) award("top5Canonical");
 
     // Root and quality Top-3 are tracked separately from canonical Top-3: an
     // analyzer can sharpen its single best answer while narrowing the spread of
     // roots it offers, and the product goal is that the user finds the right
     // chord inside the short list.
     const topThree = candidates.slice(0, 3);
-    if (topThree.some((candidate) => candidate?.rootPitchClass === expectedIdentity.rootPitchClass)) {
+    if (topThree.some((candidate) => candidate !== null
+      && matchesAny((accepted) => candidate.rootPitchClass === accepted.rootPitchClass))) {
       award("top3Root");
     }
-    if (topThree.some((candidate) =>
-      candidate?.triad === expectedIdentity.triad && candidate?.seventh === expectedIdentity.seventh)) {
+    if (topThree.some((candidate) => candidate !== null
+      && matchesAny((accepted) => candidate.triad === accepted.triad
+        && candidate.seventh === accepted.seventh))) {
       award("top3Quality");
     }
   }
