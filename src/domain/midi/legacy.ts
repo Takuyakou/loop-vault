@@ -7,7 +7,12 @@ import type {
   MidiProgressionAnalysis,
   ProgressionBlockCandidate,
 } from "../types";
+import { normalizeChordSymbol } from "../chordIdentity";
 import { normaliseEvidence, scoreBlockQuality } from "./blockQuality";
+import {
+  ambiguousQualityWarning, attenuateRootBonus, evaluateQualityEvidence,
+  missingQualityToneWarning,
+} from "./qualityEvidence";
 import {
   buildCandidateEvents, candidateStats, recoverRawMatchScore,
   structuredSignature, summaryFromEvents,
@@ -82,9 +87,20 @@ export function analyzeMidi(
   return analyzeMidiWithRankingScores(bytes, options).analysis;
 }
 
+/**
+ * Opt-in scoring behaviour. Legacy keeps its exact output; `phase4-v1` turns on
+ * quality-defining tone evidence so a chord cannot be named minor or major while
+ * the tone that defines it is absent.
+ */
+export interface LegacyScoringOptions {
+  useQualityEvidence?: boolean;
+  analyzerVersion?: string;
+}
+
 export function analyzeMidiWithRankingScores(
   bytes: Uint8Array,
   options: AnalyzeMidiOptions = {},
+  scoring: LegacyScoringOptions = {},
 ): LegacyAnalysisInternal {
   const data = parseMidi(bytes);
   const evidenceNotes = selectChordEvidenceNotes(data.notes);
@@ -100,6 +116,7 @@ export function analyzeMidiWithRankingScores(
     rankedTimeline.push(matchWindowWithRankingScore(
       window,
       rankedTimeline[rankedTimeline.length - 1]?.item.chord,
+      scoring,
     ));
   }
   const smoothedTimeline = smoothTimelineWithRankingScores(rankedTimeline, barLengthBeats);
@@ -123,7 +140,7 @@ export function analyzeMidiWithRankingScores(
       fullTimeline,
       blockCandidates,
       analyzedAt: "1970-01-01T00:00:00.000Z",
-      analyzerVersion,
+      analyzerVersion: scoring.analyzerVersion ?? analyzerVersion,
     },
     timelineRankingScores,
   };
@@ -241,9 +258,10 @@ export function matchWindow(window: WeightedWindow, previous?: ChordSymbol): Cho
 function matchWindowWithRankingScore(
   window: WeightedWindow,
   previous?: ChordSymbol,
+  scoring: LegacyScoringOptions = {},
 ): RankedTimelineItem {
   const bassPc = maxIndex(window.bassHistogram);
-  const scored = scoreTemplates(window.histogram, bassPc, previous)
+  const scored = scoreTemplates(window.histogram, bassPc, previous, scoring)
     .sort((a, b) => b.confidence - a.confidence || a.chord.label.localeCompare(b.chord.label));
   const best = scored[0] ?? {
     chord: makeChordSymbol(0, "maj"),
@@ -257,8 +275,24 @@ function matchWindowWithRankingScore(
   if (window.totalWeight > 0 && window.melodyWeight / window.totalWeight > 0.45) {
     warnings.push("melody-heavy");
   }
-  if (scored[1] && Math.abs(best.confidence - scored[1].confidence) < 0.05) {
+  const runnerUp = scored[1];
+  const contested = runnerUp !== undefined
+    && Math.abs(best.confidence - runnerUp.confidence) < 0.05;
+  if (contested) {
+    // Historical name kept for compatibility: the condition is a close overall
+    // score, not bass evidence. The warnings below say what is actually unclear.
     warnings.push("ambiguous-bass");
+  }
+  if (scoring.useQualityEvidence) {
+    // Only report an ambiguous quality when the close runner-up disagrees about
+    // the triad or the seventh. Comparing raw quality names would fire on every
+    // event, because maj7 and maj9 differ only by an extension.
+    if (contested && runnerUp && disagreesOnQuality(best.chord, runnerUp.chord)) {
+      warnings.push(ambiguousQualityWarning);
+    }
+    if (best.qualityCoverage !== undefined && best.qualityCoverage < 1) {
+      warnings.push(missingQualityToneWarning);
+    }
   }
 
   return {
@@ -441,13 +475,24 @@ function rankingScoreFor(rawMatchScore: number): number {
   return 1 + rawMatchScore * rankingResolution;
 }
 
-function scoreTemplates(histogram: number[], bassPc: number, previous?: ChordSymbol) {
+function disagreesOnQuality(left: ChordSymbol, right: ChordSymbol): boolean {
+  const a = normalizeChordSymbol(left);
+  const b = normalizeChordSymbol(right);
+  return a.triad !== b.triad || a.seventh !== b.seventh;
+}
+
+function scoreTemplates(
+  histogram: number[],
+  bassPc: number,
+  previous?: ChordSymbol,
+  scoring: LegacyScoringOptions = {},
+) {
   const total = histogram.reduce((sum, value) => sum + value, 0);
   if (total <= 0) {
     return [{ chord: previous ?? makeChordSymbol(0, "maj"), confidence: 0.2 }];
   }
 
-  const entries: Array<{ chord: ChordSymbol; confidence: number }> = [];
+  const entries: Array<{ chord: ChordSymbol; confidence: number; qualityCoverage?: number }> = [];
   for (let root = 0; root < 12; root += 1) {
     for (const template of templates) {
       const pcs = template.intervals.map((interval) => normalizePc(root + interval));
@@ -457,12 +502,32 @@ function scoreTemplates(histogram: number[], bassPc: number, previous?: ChordSym
         0,
       );
       const rootWeight = histogram[root] / total;
-      const bassBonus = bassPc === root ? 0.18 : pcs.includes(bassPc) ? 0.08 : -0.04;
+      const rawBassBonus = bassPc === root ? 0.18 : pcs.includes(bassPc) ? 0.08 : -0.04;
       const extensionPenalty = Math.max(0, pcs.length - 4) * 0.015;
-      const confidence = hit / total - outside / total * 0.12 + rootWeight * 0.12 + bassBonus - extensionPenalty;
+
+      // The template score treats every chord tone alike, so a quality can win
+      // while the tone that defines it is silent. When enabled, the shortfall is
+      // charged directly and a bass sitting on the root no longer compensates.
+      const evidence = scoring.useQualityEvidence
+        ? evaluateQualityEvidence(root, template.quality, histogram, total)
+        : undefined;
+      const bassBonus = evidence && bassPc === root
+        ? attenuateRootBonus(rawBassBonus, evidence.coverage)
+        : rawBassBonus;
+
+      const confidence = hit / total
+        - outside / total * 0.12
+        + rootWeight * 0.12
+        + bassBonus
+        - extensionPenalty
+        - (evidence?.missingPenalty ?? 0);
       const bass = bassPc !== root && pcs.includes(bassPc) ? bassPc : undefined;
       const chord = makeChordSymbol(root, template.quality, [], bass);
-      entries.push({ chord: { ...chord, label: labelFromSymbol(chord) }, confidence });
+      entries.push({
+        chord: { ...chord, label: labelFromSymbol(chord) },
+        confidence,
+        ...(evidence ? { qualityCoverage: evidence.coverage } : {}),
+      });
     }
   }
 
