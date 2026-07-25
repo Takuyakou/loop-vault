@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.1.2-A2",
+  "frozenOn": "2026-07-25",
+  "frozenBeforeImplementation": true,
+  "policy": "Frozen before Stage B is written. Thresholds are not moved to match a later result. The Phase 4.1 coverage gates are carried over unchanged rather than relaxed: coverage and usefulness both have to hold at once.",
+  "scope": {
+    "corpora": [".local-evaluation/synthetic-gold-v1", ".local-evaluation/long-form-v1.1"],
+    "splits": ["dev", "validation"],
+    "modes": ["phase4.1-v1"],
+    "fileEvaluations": 56,
+    "holdoutExcluded": true,
+    "note": "holdout and holdout-v2 are run once, after the implementation and these gates are fixed."
+  },
+  "visibleCardLimit": 10,
+  "gates": [
+    { "id": "visible-pattern-duplicate-count-zero", "metric": "visiblePatternDuplicateCount", "operator": "==", "threshold": 0, "baselinePassing": "38/56" },
+    { "id": "visible-slot-waste-zero", "metric": "visibleSlotWasteCount", "operator": "==", "threshold": 0, "baselinePassing": "38/56" },
+    { "id": "occurrence-reachability-full", "metric": "occurrenceReachability", "operator": "==", "threshold": 1, "baselinePassing": "55/56" },
+    { "id": "progression-precision-at-3", "metric": "progressionPrecisionAt3", "operator": "==", "threshold": 1, "condition": "progressionCandidateAvailability >= 3", "baselinePassing": "39/56" },
+    { "id": "no-two-bar-fragment-in-top3", "metric": "twoBarFragmentsInTop3", "operator": "==", "threshold": 0, "condition": "progressionCandidateAvailability >= 3", "baselinePassing": "40/56" },
+    { "id": "rank-constraint-top3-min-hits", "metric": "rankConstraintGroupSatisfaction.top3Satisfied", "operator": "all", "threshold": true, "baselinePassing": "28/56" },
+    { "id": "rank-constraint-all-visible-min-hits", "metric": "rankConstraintGroupSatisfaction.allVisibleSatisfied", "operator": "all", "threshold": true, "baselinePassing": "23/56" },
+    { "id": "rank-constraint-order", "metric": "rankConstraintGroupSatisfaction.orderSatisfied", "operator": "all", "threshold": true, "baselinePassing": "56/56" },
+    { "id": "coverage-at-all-visible", "metric": "allCandidateCoverage", "operator": ">=", "threshold": 0.9, "carriedOverFrom": "docs/phase4.1/00-coverage-gates.json", "relaxed": false, "baselinePassing": "52/56" },
+    { "id": "longest-uncovered-run", "metric": "longestUncoveredHarmonicRun", "operator": "<", "threshold": 8, "carriedOverFrom": "docs/phase4.1/00-coverage-gates.json", "relaxed": false, "baselinePassing": "55/56" },
+    { "id": "runtime-ceiling", "metric": "runtimeMs", "operator": "<=", "threshold": 3000, "baselinePassing": "56/56" },
+    { "id": "deterministic", "metric": "cards", "operator": "stable-on-rerun", "threshold": true, "baselinePassing": "2/2 probes" },
+    { "id": "chord-corpus-non-regression", "metric": "Chord Drip and Chapter 3 Seed accuracy", "operator": ">=", "threshold": "recorded baseline", "evaluatedBy": ["scripts/evaluate-midi-analysis.ts", "scripts/evaluate-chapter3-seed.ts"] }
+  ],
+  "metricsNotGated": {
+    "eventCountRatio": "Recorded but not gated: it is not in the required gate list, and its baseline maximum of 96 on L06_stress is a timeline robustness question (arpeggiated one-chord vamp read as 192 chord changes) that Stage F owns. Measure first, set a threshold later.",
+    "boundaryPrecision": "Descriptive. Section boundaries are not connected to selection, so a wrong boundary cannot cost a candidate.",
+    "boundaryRecall": "Descriptive.",
+    "segmentIoU": "Descriptive."
+  },
+  "baselineVerdict": "FAIL",
+  "baselineMetrics": {
+    "mustShowGeneratedRecall": { "min": 0.166667, "mean": 0.970238, "max": 1 },
+    "mustShowSelectedRecallAmongGenerated": { "min": 0, "mean": 0.426871, "max": 1 },
+    "visiblePatternDuplicateCount": { "min": 0, "mean": 1.321429, "max": 8 },
+    "visibleSlotWasteCount": { "min": 0, "mean": 1.321429, "max": 8 },
+    "uniquePatternCountAt3": { "min": 1, "mean": 1.482143, "max": 3 },
+    "uniquePatternCountAt10": { "min": 1, "mean": 2.607143, "max": 10 },
+    "progressionPrecisionAt3": { "min": 0, "mean": 0.78869, "max": 1 },
+    "twoBarFragmentsInTop3": { "min": 0, "mean": 0.553571, "max": 3 },
+    "occurrenceReachability": { "min": 0.571429, "mean": 0.992347, "max": 1 },
+    "eventCountRatio": { "min": 0.8182, "mean": 2.806968, "max": 96 },
+    "boundaryPrecision": { "min": 0, "mean": 0.269525, "max": 1 },
+    "boundaryRecall": { "min": 0, "mean": 0.41875, "max": 1 },
+    "segmentIoU": { "min": 0.25, "mean": 0.680965, "max": 1 },
+    "allCandidateCoverage": { "min": 0.596899, "mean": 0.97394, "max": 1 },
+    "progressionCandidateCoverage": { "min": 0, "mean": 0.920335, "max": 1 }
+  }
+}

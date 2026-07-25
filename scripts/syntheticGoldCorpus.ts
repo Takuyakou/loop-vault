@@ -17,8 +17,21 @@ import { parseMidi } from "../src/domain/midi/parser";
 import { phase4QualityEvidence } from "../src/domain/midi/phase4Analyzer";
 import { beatsPerBar } from "../src/domain/midi/timing";
 import type { MidiAnalyzerMode } from "../src/domain/midi/types";
+import { evaluateSegmentation } from "../src/domain/midi/sections";
 import { selectChordEvidenceNotes } from "../src/domain/midi/voices";
 import { attachSourceVoicings } from "../src/domain/voicing/sourceVoicing";
+import {
+  deriveRankConstraintGroups, evaluateRankConstraintGroups, loadContractAmendments,
+  type GroupSatisfaction,
+} from "./goldContract";
+
+/**
+ * Contract amendments, loaded once.
+ *
+ * Only S23 is amended today, and only because its rank constraint was
+ * unsatisfiable by construction; see docs/phase4.1.2/00-gold-contract-audit.md.
+ */
+const amendments = loadContractAmendments();
 
 /**
  * Synthetic Gold Corpus v1 evaluation.
@@ -568,6 +581,8 @@ export interface CardRow {
 export interface GenerationMetrics {
   mustShowBlocks: number;
   mustShowBlockRecall: number;
+  /** Same quantity under the P4.1.2 name, so gate files read unambiguously. */
+  mustShowGeneratedRecall: number;
   progressionBlockRecall: number;
   vampBlockRecall: number;
   fragmentFalsePromotionRate: number;
@@ -585,6 +600,14 @@ export interface SelectionMetrics {
    * different defect from one that is selected and ranked eleventh.
    */
   mustShowSelectedRecall: number;
+  /**
+   * Selected recall counting only blocks the generator actually produced.
+   *
+   * Without this the selector is blamed for windows it was never offered: L04's
+   * 14-bar section cannot be selected because it cannot be generated, and that is
+   * Stage E's problem, not the selector's.
+   */
+  mustShowSelectedRecallAmongGenerated: number;
   selectedCount: number;
   /** Why the coverage selector stopped; null for the ranking selector. */
   stoppedBecause: string | null;
@@ -601,6 +624,21 @@ export interface SelectionMetrics {
   twoBarFragmentsInTop3: number;
   progressionCandidateAvailability: number;
   vampAheadOfProgression: boolean;
+  /** Share of the first three cards that are progressions. */
+  progressionPrecisionAt3: number;
+  uniquePatternCountAt3: number;
+  uniquePatternCountAt10: number;
+  rankConstraintGroupSatisfaction: GroupSatisfaction[];
+  allRankConstraintGroupsSatisfied: boolean;
+}
+
+export interface SegmentationMetrics {
+  goldSections: number;
+  detectedSections: number;
+  boundaryPrecision: number;
+  boundaryRecall: number;
+  /** Mean best-match intersection over union between gold and detected sections. */
+  segmentIoU: number;
 }
 
 export interface PatternUiMetrics {
@@ -618,6 +656,8 @@ export interface PatternUiMetrics {
   perOccurrenceVoicingRetention: number;
   reachableOccurrences: number;
   goldOccurrences: number;
+  /** Product timeline events over gold events; catches over-merge and over-split. */
+  eventCountRatio: number;
 }
 
 export interface FileEvaluation {
@@ -635,6 +675,7 @@ export interface FileEvaluation {
   generation: GenerationMetrics;
   selection: SelectionMetrics;
   patternUi: PatternUiMetrics;
+  segmentation: SegmentationMetrics;
   cards: CardRow[];
   failures: Array<{
     stage: LossStage;
@@ -666,6 +707,9 @@ export function evaluateFile(
 ): FileEvaluation {
   const started = performance.now();
   const normalizedGold = normalizeGoldEvents(variant.events);
+  const collapsedGoldCount = normalizedGold.filter(
+    (event, index) => index === 0 || event.primary !== normalizedGold[index - 1].primary,
+  ).length;
 
   // Stage 1: parse.
   const song = parseMidi(bytes);
@@ -797,6 +841,7 @@ export function evaluateFile(
   const generation: GenerationMetrics = {
     mustShowBlocks: mustShow.length,
     mustShowBlockRecall: recallOf(mustShow),
+    mustShowGeneratedRecall: recallOf(mustShow),
     progressionBlockRecall: recallOf(byType("progression")),
     vampBlockRecall: recallOf(byType("vamp")),
     fragmentFalsePromotionRate: cards.length === 0
@@ -888,11 +933,43 @@ export function evaluateFile(
     };
   });
 
+  const generatedMustShow = mustShow.filter(matched);
+
+  /** Whether a gold pattern is reachable from a row set, by pattern identity. */
+  const patternIdsOf = (goldPatternId: string) => {
+    const goldPattern = scenario.expectedPatterns.find((entry) => entry.pattern_id === goldPatternId);
+    if (!goldPattern) return [];
+    return [...new Set(goldPattern.occurrences
+      .map((occurrence) => occurrenceByRange.get(`${occurrence.startBar}:${occurrence.endBar}`))
+      .filter((occurrence): occurrence is CandidateOccurrence => occurrence !== undefined)
+      .map((occurrence) => patternOf.get(occurrence.id))
+      .filter((id): id is string => id !== undefined))];
+  };
+  const groups = deriveRankConstraintGroups(scenario, amendments);
+  const groupSatisfaction = evaluateRankConstraintGroups(
+    groups,
+    (rows, goldPatternId) => {
+      const ids = patternIdsOf(goldPatternId);
+      const pool = rows === "top3" ? cards.slice(0, 3) : cards;
+      return pool.some((card) => card.patternId !== null && ids.includes(card.patternId));
+    },
+    (goldPatternId) => {
+      const ids = patternIdsOf(goldPatternId);
+      const index = cards.findIndex((card) => card.patternId !== null && ids.includes(card.patternId));
+      return index;
+    },
+  );
+
   const selection: SelectionMetrics = {
     mustShowSelectedRecall: mustShow.length === 0
       ? 1
       : Number((mustShow.filter((block) => reaches(allSelectedRows, block.start_bar, block.end_bar)).length
         / mustShow.length).toFixed(6)),
+    mustShowSelectedRecallAmongGenerated: generatedMustShow.length === 0
+      ? 1
+      : Number((generatedMustShow.filter(
+        (block) => reaches(allSelectedRows, block.start_bar, block.end_bar),
+      ).length / generatedMustShow.length).toFixed(6)),
     selectedCount: selected.length,
     stoppedBecause: coverageRun?.stoppedBecause ?? null,
     mustShowTop3Recall: top3Blocks.length === 0
@@ -929,6 +1006,19 @@ export function evaluateFile(
     vampAheadOfProgression: progressionExists
       && firstVampIndex >= 0
       && (firstProgressionIndex < 0 || firstVampIndex < firstProgressionIndex),
+    progressionPrecisionAt3: top3.length === 0
+      ? 0
+      : Number((top3.filter((card) => card.candidateType === "progression").length / top3.length).toFixed(6)),
+    uniquePatternCountAt3: new Set(
+      top3.map((card) => card.patternId ?? `unmatched-${card.sourceCandidateId}`),
+    ).size,
+    uniquePatternCountAt10: new Set(
+      top10.map((card) => card.patternId ?? `unmatched-${card.sourceCandidateId}`),
+    ).size,
+    rankConstraintGroupSatisfaction: groupSatisfaction,
+    allRankConstraintGroupsSatisfied: groupSatisfaction.every(
+      (entry) => entry.top3Satisfied && entry.allVisibleSatisfied && entry.orderSatisfied,
+    ),
   };
 
   // --- Pattern / Occurrence / UI -----------------------------------------
@@ -947,6 +1037,10 @@ export function evaluateFile(
   let chordRetentionChecked = 0;
   let voicingRetentionHits = 0;
   let voicingRetentionChecked = 0;
+
+  const collapsedProductCount = analysis.fullTimeline.filter((item, index) => index === 0
+    || chordIdentityKey(normalizeChordSymbol(item.chord))
+      !== chordIdentityKey(normalizeChordSymbol(analysis.fullTimeline[index - 1].chord))).length;
 
   const enriched = attachSourceVoicings(
     analysis.fullTimeline,
@@ -1061,6 +1155,15 @@ export function evaluateFile(
       : Number((voicingRetentionHits / voicingRetentionChecked).toFixed(6)),
     reachableOccurrences,
     goldOccurrences,
+    // Both sides are collapsed on consecutive identical chords before comparing.
+    // Merging a chord held across four bars into one event is intended, so an
+    // uncollapsed denominator reads the vamp-only scenario as 1/24; an
+    // uncollapsed numerator reads it as 96x. Collapsing both measures the thing
+    // that matters — whether the detector found the same number of chord
+    // changes — and nothing else.
+    eventCountRatio: collapsedGoldCount === 0
+      ? 0
+      : Number((collapsedProductCount / collapsedGoldCount).toFixed(4)),
   };
 
   const timeline = evaluateTimeline(
@@ -1069,6 +1172,39 @@ export function evaluateFile(
     meter,
     scenario.boundaryToleranceBeats,
   );
+
+  // Section quality. The gold's own section list is the reference, and the
+  // product's `sections` field is the estimate; both are read, neither is tuned.
+  const detected = analysis.sections ?? [];
+  const referenceBoundaries = scenario.sections.slice(1).map((section) => section.startBar);
+  const segmentationQuality = evaluateSegmentation(
+    detected.map((section) => ({ ...section })),
+    referenceBoundaries,
+  );
+  const overlapOf = (
+    left: { startBar: number; endBar: number },
+    right: { startBar: number; endBar: number },
+  ) => {
+    const intersection = Math.max(
+      0,
+      Math.min(left.endBar, right.endBar) - Math.max(left.startBar, right.startBar) + 1,
+    );
+    const union = (left.endBar - left.startBar + 1) + (right.endBar - right.startBar + 1) - intersection;
+    return union === 0 ? 0 : intersection / union;
+  };
+  const iouValues = scenario.sections.map((goldSection) => Math.max(
+    0,
+    ...detected.map((detectedSection) => overlapOf(goldSection, detectedSection)),
+  ));
+  const segmentation: SegmentationMetrics = {
+    goldSections: scenario.sections.length,
+    detectedSections: detected.length,
+    boundaryPrecision: segmentationQuality.boundaryPrecision,
+    boundaryRecall: segmentationQuality.boundaryRecall,
+    segmentIoU: iouValues.length === 0
+      ? 0
+      : Number((iouValues.reduce((sum, value) => sum + value, 0) / iouValues.length).toFixed(6)),
+  };
 
   const stages: StageTrace = {
     parsedNotes: song.notes.length,
@@ -1103,8 +1239,11 @@ export function evaluateFile(
     generation,
     selection,
     patternUi,
+    segmentation,
     cards,
-    failures: classifyFailures({ scenario, stages, timeline, generation, selection, patternUi, cards }),
+    failures: classifyFailures({
+      scenario, stages, timeline, generation, selection, patternUi, segmentation, cards,
+    }),
     runtimeMs: Number((performance.now() - started).toFixed(1)),
   };
 }
@@ -1125,6 +1264,7 @@ export function classifyFailures(input: {
   generation: GenerationMetrics;
   selection: SelectionMetrics;
   patternUi: PatternUiMetrics;
+  segmentation: SegmentationMetrics;
   cards: CardRow[];
 }): FileEvaluation["failures"] {
   const { scenario, stages, timeline, generation, selection, patternUi } = input;
@@ -1163,6 +1303,16 @@ export function classifyFailures(input: {
       stage: "event-boundary",
       kind: "onset-outside-tolerance",
       detail: `boundaryMatch ${timeline.boundaryMatchWithinTolerance} at tolerance ${scenario.boundaryToleranceBeats} beats`,
+    });
+  }
+  // Onset agreement cannot see a merged pair or a split chord, so the event count
+  // is checked separately. The band is deliberately loose: the detector is allowed
+  // to segment differently, not to lose or invent whole chords.
+  if (patternUi.eventCountRatio < 0.9 || patternUi.eventCountRatio > 1.1) {
+    failures.push({
+      stage: "event-boundary",
+      kind: "event-count-out-of-band",
+      detail: `eventCountRatio ${patternUi.eventCountRatio}`,
     });
   }
 
@@ -1218,6 +1368,27 @@ export function classifyFailures(input: {
       stage: "selection-objective",
       kind: "short-fragment-in-top3",
       detail: `twoBarFragmentsInTop3 ${selection.twoBarFragmentsInTop3}`,
+    });
+  }
+  // The top three should be progressions once three distinct progression patterns
+  // exist. Below that threshold there is nothing to demand.
+  if (selection.progressionCandidateAvailability >= 3 && selection.progressionPrecisionAt3 < 1) {
+    failures.push({
+      stage: "selection-objective",
+      kind: "top3-not-all-progressions",
+      detail: `progressionPrecisionAt3 ${selection.progressionPrecisionAt3} with ${selection.progressionCandidateAvailability} progression patterns available`,
+    });
+  }
+  if (!selection.allRankConstraintGroupsSatisfied) {
+    const unmet = selection.rankConstraintGroupSatisfaction
+      .filter((entry) => !entry.top3Satisfied || !entry.allVisibleSatisfied || !entry.orderSatisfied)
+      .map((entry) => `${entry.id} top3 ${entry.top3Hits}/${entry.top3MinHits}`
+        + ` allVisible ${entry.allVisibleHits}/${entry.allVisibleMinHits}`
+        + `${entry.orderSatisfied ? "" : " order violated"}`);
+    failures.push({
+      stage: "selection-objective",
+      kind: "rank-constraint-group-unsatisfied",
+      detail: unmet.join("; "),
     });
   }
 
