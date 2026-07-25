@@ -64,6 +64,48 @@ export interface GoldEvent {
   pitchClasses: number[];
   confidence: string;
   sectionId: string | null;
+  /**
+   * Two gold rows claimed this exact span with different chords.
+   *
+   * Both readings are accepted and the span is left out of the exact-match
+   * denominators. Picking a winner would mean deciding the ambiguity from the
+   * detector's output, which is the one thing an audit must not do. See
+   * docs/phase4.1.2/00-gold-contract-amendments.json.
+   */
+  ambiguousSpan?: boolean;
+}
+
+/**
+ * Collapses gold rows that claim the same span.
+ *
+ * S23 carries ten such pairs per variant. Left alone they make one product chord
+ * answer two contradictory expectations, which reads as a detector defect and is
+ * not one.
+ */
+export function normalizeGoldEvents(events: readonly GoldEvent[]): GoldEvent[] {
+  const bySpan = new Map<string, GoldEvent[]>();
+  for (const event of events) {
+    const key = `${event.startBeatAbsolute}:${event.endBeatAbsolute}`;
+    const group = bySpan.get(key) ?? [];
+    group.push(event);
+    bySpan.set(key, group);
+  }
+
+  return [...bySpan.values()]
+    .map((group) => {
+      if (group.length === 1) return group[0];
+      const [first, ...rest] = group;
+      return {
+        ...first,
+        ambiguousSpan: true,
+        acceptableAlternatives: [
+          ...new Set([...first.acceptableAlternatives, ...rest.flatMap(
+            (event) => [event.primary, ...event.acceptableAlternatives],
+          )]),
+        ],
+      };
+    })
+    .sort((left, right) => left.startBeatAbsolute - right.startBeatAbsolute);
 }
 
 export interface GoldBlock {
@@ -211,6 +253,8 @@ export interface TimelineMetrics {
   goldLabelUnparseable: number;
   /** Gold N.C. events; scored as correct when the product emits no chord there. */
   goldNoChordEvents: number;
+  /** Spans two gold rows claimed with different chords; excluded from exact match. */
+  goldAmbiguousSpans: number;
   /**
    * Gold onsets that repeat the previous chord's identity.
    *
@@ -261,15 +305,17 @@ export interface TimelineMetrics {
  */
 export function evaluateTimeline(
   timeline: readonly ChordTimelineItem[],
-  gold: readonly GoldEvent[],
+  rawGold: readonly GoldEvent[],
   meter: number,
   toleranceBeats: number,
 ): TimelineMetrics {
+  const gold = normalizeGoldEvents(rawGold);
   const productStarts = timeline.map((item) => startBeatOf(item, meter));
   const productEnds = timeline.map((item, index) => productStarts[index] + item.durationBeats);
 
   let unparseable = 0;
   let noChordEvents = 0;
+  let ambiguousSpans = 0;
   let repeatOnsets = 0;
   let sampled = 0;
   let rootHit = 0;
@@ -386,6 +432,28 @@ export function evaluateTimeline(
     if (rootMatchAgainstAcceptable) rootAnyHit += 1;
     if (readings.map(chordIdentityKey).includes(chordIdentityKey(got))) alternativeHit += 1;
 
+    // An ambiguous span has two contradictory gold rows. Matching either reading
+    // is credited; the span is kept out of the exact-match denominators because
+    // there is no single correct answer to be exact about.
+    if (event.ambiguousSpan) {
+      ambiguousSpans += 1;
+      if (!rootMatchAgainstAcceptable) {
+        mismatches.push({
+          eventIndex: event.eventIndex,
+          startBar: event.startBar,
+          expected: `${event.primary} (ambiguous span)`,
+          acceptable: event.acceptableAlternatives,
+          got: item.chord.label,
+          rootMatch,
+          rootMatchAgainstAcceptable,
+          triadMatch: false,
+          seventhMatch: false,
+          bassMatch,
+        });
+      }
+      return;
+    }
+
     const expected = normalizeChordLabel(event.primary);
     if (!expected) {
       unparseable += 1;
@@ -439,6 +507,7 @@ export function evaluateTimeline(
     goldEvents: gold.length,
     goldLabelUnparseable: unparseable,
     goldNoChordEvents: noChordEvents,
+    goldAmbiguousSpans: ambiguousSpans,
     goldRepeatOnsets: repeatOnsets,
     sampledEvents: sampled,
     rootAccuracy: ratio(rootHit, sampled),
@@ -596,6 +665,7 @@ export function evaluateFile(
   mode: MidiAnalyzerMode,
 ): FileEvaluation {
   const started = performance.now();
+  const normalizedGold = normalizeGoldEvents(variant.events);
 
   // Stage 1: parse.
   const song = parseMidi(bytes);
@@ -937,7 +1007,7 @@ export function evaluateFile(
         const collapse = (roots: number[]) => roots.filter(
           (root, position) => position === 0 || root !== roots[position - 1],
         );
-        const goldRoots = collapse(variant.events
+        const goldRoots = collapse(normalizedGold
           .filter((event) => event.startBar >= occurrence.startBar && event.startBar <= occurrence.endBar)
           .map((event) => event.rootPitchClass));
         const productRoots = collapse(product.events
