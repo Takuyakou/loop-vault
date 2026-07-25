@@ -18,6 +18,7 @@ import { phase4QualityEvidence } from "../src/domain/midi/phase4Analyzer";
 import { beatsPerBar } from "../src/domain/midi/timing";
 import type { MidiAnalyzerMode } from "../src/domain/midi/types";
 import { evaluateSegmentation } from "../src/domain/midi/sections";
+import { structuralWindows } from "../src/domain/midi/structuralWindows";
 import { selectChordEvidenceNotes } from "../src/domain/midi/voices";
 import { attachSourceVoicings } from "../src/domain/voicing/sourceVoicing";
 import {
@@ -747,9 +748,17 @@ export function evaluateFile(
   });
   const rawMatchScores = internal.timelineRankingScores.map(recoverRawMatchScore);
   const normalise = normaliseEvidence(rawMatchScores);
+  // The window set has to match the mode's own, or the harness cannot see the
+  // candidates it generated: an odd-length window would be reported as ungenerated
+  // and its card as unclassifiable, which reads as a product regression and is a
+  // measurement gap.
+  const extraWindows = mode === "phase4.1.2-v1"
+    ? structuralWindows(analysis.fullTimeline, totalBars, meter, analysis.sections ?? [])
+    : [];
   const generated = buildOccurrences(analysis.fullTimeline, totalBars, {
     beatsPerBar: meter,
     rawMatchScores,
+    extraWindows,
   });
   const scored = scoreOccurrences(generated, {
     beatsPerBar: meter,

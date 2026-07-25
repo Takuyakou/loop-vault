@@ -5,6 +5,8 @@ import { selectOccurrencesByCoverage, type CoverageSelectionOptions } from "./co
 import { classifyCandidateKind } from "./candidateKind";
 import { buildPatternCandidates } from "./patternCandidate";
 import { selectPatternsByUsefulness, type UsefulnessSelectionOptions } from "./patternSelection";
+import { segmentSections } from "./sections";
+import { structuralWindows } from "./structuralWindows";
 import {
   buildOccurrences, groupIntoPatterns, occurrenceToCandidate, scoreOccurrences,
   type CandidatePattern,
@@ -76,8 +78,16 @@ export function buildPatternCoverageCandidates(
     : timeline.map((item) => item.confidence);
   const normalise = normaliseEvidence(rawMatchScores);
 
+  // Sections are read here only to place windows. They are not connected to
+  // selection, so a wrong boundary can cost a candidate its exact span but can
+  // never remove a candidate.
+  const sections = segmentSections(data, timeline);
   const occurrences = scoreOccurrences(
-    buildOccurrences(timeline, totalBars, { beatsPerBar: meter, rawMatchScores }),
+    buildOccurrences(timeline, totalBars, {
+      beatsPerBar: meter,
+      rawMatchScores,
+      extraWindows: structuralWindows(timeline, totalBars, meter, sections),
+    }),
     { beatsPerBar: meter, rawMatchScores, normaliseEvidence: normalise, scoreBlockQuality },
   );
 
