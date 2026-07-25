@@ -5,6 +5,9 @@ import {
 import { readFile } from "@tauri-apps/plugin-fs";
 import { voiceChordForPreview } from "../domain/chordVoicing";
 import { OccurrenceList } from "../components/OccurrenceList";
+import {
+  buildCatalogView, catalogPageSize, laneCandidate, laneRenderPlan, type CatalogLaneKind,
+} from "../domain/midi/catalogView";
 import type { CandidateOccurrence, CandidatePattern } from "../domain/midi/occurrence";
 import type { Section } from "../domain/midi/sections";
 import { resolveVoicingForUse } from "../domain/voicing";
@@ -140,6 +143,16 @@ export function CaptureView(props: CaptureViewProps) {
   } = props;
   const [isDraggingMidi, setIsDraggingMidi] = useState(false);
   const [expandedCandidateId, setExpandedCandidateId] = useState<string>();
+  /**
+   * How many cards each lane has rendered, and which collapsed lanes are open.
+   *
+   * The catalog holds everything; these decide how much of it is in the DOM right
+   * now. Keeping them separate from the catalog is what stops a rendering limit
+   * becoming a data limit — a 1777-pattern file renders 25 cards and can reach
+   * all 1777.
+   */
+  const [laneLimits, setLaneLimits] = useState<Record<string, number>>({});
+  const [openLanes, setOpenLanes] = useState<Record<string, boolean>>({});
   const [isInspectorExpanded, setInspectorExpanded] = useState(false);
   const [inspectorHost, setInspectorHost] = useState<HTMLDivElement | null>(null);
   const [dirtyCandidateIds, setDirtyCandidateIds] = useState<Set<string>>(() => new Set());
@@ -559,6 +572,80 @@ export function CaptureView(props: CaptureViewProps) {
     );
   }
 
+  const laneMeter = beatsPerBarFor(result.timeSignature);
+  const catalogView = result.candidateCatalog !== undefined
+    && result.candidateRecommendation !== undefined
+    ? buildCatalogView(result.candidateCatalog, result.candidateRecommendation)
+    : undefined;
+
+  const laneHeading = (kind: CatalogLaneKind): string => {
+    if (kind === "recommended") return copy.capture.lanes.recommended;
+    if (kind === "progression") return copy.capture.lanes.allProgressions;
+    if (kind === "vamp") return copy.capture.lanes.vamp;
+    if (kind === "fragment") return copy.capture.lanes.fragment;
+    return copy.capture.lanes.uncertain;
+  };
+  const laneNote = (kind: CatalogLaneKind): string | null => {
+    if (kind === "vamp") return copy.capture.lanes.vampNote;
+    if (kind === "fragment") return copy.capture.lanes.fragmentNote;
+    if (kind === "uncertain") return copy.capture.lanes.uncertainNote;
+    return null;
+  };
+
+  const toggleLane = (key: string) => setOpenLanes(
+    (open) => ({ ...open, [key]: !(open[key] ?? false) }),
+  );
+  const showMoreInLane = (key: string) => setLaneLimits((limits) => ({
+    ...limits,
+    [key]: (limits[key] ?? catalogPageSize) + catalogPageSize,
+  }));
+
+  /**
+   * The lanes as rendered.
+   *
+   * When the analyzer produced a catalog the lanes come from it; otherwise the
+   * old shortlist path is used unchanged, so a mode without a catalog behaves
+   * exactly as before.
+   */
+  const displayLanes = catalogView !== undefined
+    ? catalogView.lanes.map((lane, laneIndex) => {
+      const key = `${lane.kind}-${laneIndex}`;
+      const open = openLanes[key] ?? !lane.initiallyCollapsed;
+      const limit = laneLimits[key] ?? catalogView.pageSize;
+      const plan = laneRenderPlan(lane, { open, limit });
+      let offset = 0;
+      for (const earlier of catalogView.lanes.slice(0, laneIndex)) offset += earlier.entries.length;
+      return {
+        key,
+        kind: lane.kind,
+        heading: catalogView.mode === "unified"
+          ? copy.capture.lanes.unified(lane.totalCount)
+          : laneHeading(lane.kind),
+        note: catalogView.mode === "unified" ? null : laneNote(lane.kind),
+        totalCount: lane.totalCount,
+        recommendedElsewhere: lane.recommendedElsewhere,
+        collapsible: lane.initiallyCollapsed,
+        open,
+        remaining: plan.remaining,
+        visible: plan.visible.map((entry, index) => ({
+          candidate: laneCandidate(entry, laneMeter),
+          index: offset + index,
+        })),
+      };
+    })
+    : candidateLanes(result.blockCandidates).map((lane, laneIndex) => ({
+      key: `${lane.kind}-${laneIndex}`,
+      kind: lane.kind as CatalogLaneKind,
+      heading: lane.heading === null ? null : copy.capture.lanes[lane.kind],
+      note: lane.kind === "progression" ? null : laneNote(lane.kind),
+      totalCount: lane.candidates.length,
+      recommendedElsewhere: 0,
+      collapsible: false,
+      open: true,
+      remaining: 0,
+      visible: lane.candidates,
+    }));
+
   return (
     <>
       <div className="lv-capture-content grid gap-5 py-5" {...dropHandlers}>
@@ -631,23 +718,41 @@ export function CaptureView(props: CaptureViewProps) {
 
         <div className="mt-5">
           <div className="space-y-3">
-            {result.blockCandidates.length > 0 ? (
-              candidateLanes(result.blockCandidates).flatMap((lane) => [
+            {displayLanes.length > 0 ? (
+              displayLanes.flatMap((lane) => [
                 lane.heading === null ? null : (
-                  <div key={`lane-${lane.kind}`} className="pt-2" data-candidate-lane={lane.kind}>
-                    <h4 className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--lv-muted)]">
-                      {copy.capture.lanes[lane.kind]}
-                    </h4>
-                    {lane.kind !== "progression" ? (
-                      <p className="mt-1 text-xs text-[var(--lv-muted)]">
-                        {lane.kind === "vamp"
-                          ? copy.capture.lanes.vampNote
-                          : copy.capture.lanes.fragmentNote}
-                      </p>
-                    ) : null}
+                  <div key={`lane-${lane.key}`} className="pt-2" data-candidate-lane={lane.kind}>
+                    <div className="flex flex-wrap items-baseline gap-2">
+                      <h4 className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--lv-muted)]">
+                        {lane.heading}
+                      </h4>
+                      <span className="text-xs text-[var(--lv-muted)]">
+                        {copy.capture.lanes.laneCount(lane.totalCount)}
+                      </span>
+                      {lane.recommendedElsewhere > 0 ? (
+                        <span className="text-xs text-[var(--lv-muted)]">
+                          {copy.capture.lanes.recommendedElsewhere(lane.recommendedElsewhere)}
+                        </span>
+                      ) : null}
+                      {lane.collapsible ? (
+                        <button
+                          type="button"
+                          className="text-xs font-semibold text-[var(--lv-accent)] underline underline-offset-2"
+                          onClick={() => toggleLane(lane.key)}
+                          aria-expanded={lane.open}
+                          aria-controls={`lane-body-${lane.key}`}
+                          data-lane-toggle={lane.key}
+                        >
+                          {lane.open ? copy.capture.lanes.collapseLane : copy.capture.lanes.expandLane}
+                        </button>
+                      ) : null}
+                    </div>
+                    {lane.note === null ? null : (
+                      <p className="mt-1 text-xs text-[var(--lv-muted)]">{lane.note}</p>
+                    )}
                   </div>
                 ),
-                ...lane.candidates.map(({ candidate, index }) => (
+                ...lane.visible.map(({ candidate, index }) => (
                 <ProgressionCandidateCard
                   key={candidate.id}
                   candidate={candidate}
@@ -692,6 +797,17 @@ export function CaptureView(props: CaptureViewProps) {
                   showRomanNumerals={showRomanNumerals}
                 />
                 )),
+                lane.remaining > 0 ? (
+                  <button
+                    key={`more-${lane.key}`}
+                    type="button"
+                    className="w-full border border-[var(--lv-border)] px-3 py-2 text-sm text-[var(--lv-accent)]"
+                    onClick={() => showMoreInLane(lane.key)}
+                    data-lane-show-more={lane.key}
+                  >
+                    {copy.capture.lanes.showMore(lane.remaining)}
+                  </button>
+                ) : null,
               ])
             ) : (
               <p className="text-sm text-[var(--lv-text-muted)]">{copy.capture.noCandidates}</p>
