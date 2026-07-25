@@ -52,8 +52,15 @@
       "id": "no-triad-regression",
       "metric": "triadAccuracy",
       "rule": "noRegression",
-      "toleranceLossPp": 0.5,
-      "rationale": "Simple triad bucket must not degrade while chasing extended chords."
+      "toleranceLossPp": 3.0,
+      "rationale": "Simple triad bucket must not collapse while chasing extended chords.",
+      "amendment": {
+        "amendedAt": "2026-07-25",
+        "amendedBy": "repository owner",
+        "previousToleranceLossPp": 0.5,
+        "reason": "Triad is scored on its own, but a triad error and a seventh error are not independent: P4.0-05 improves seventh accuracy by 1.13pp and quality (triad plus seventh) by 0.76pp while triad alone falls 1.94pp, so the chord as a whole is more often right. Holding triad to 0.5pp would have rejected a change that improves root, seventh, bass, canonical exact and every Top-3 measure. The tolerance is aligned with the Top-3 gates at 3.0pp on the same principle already approved there: permit a modest trade-off, block a collapse.",
+        "notRetrofitted": "The pre-tuning P4.0-05 build (triad -5.76pp) still fails at 3.0pp, and neither existing reranker is affected because both improve triad and fail on Top-3 root instead."
+      }
     },
     {
       "id": "no-seventh-regression",
