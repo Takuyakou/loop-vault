@@ -16,7 +16,7 @@ import {
   normalizeNotes,
   parseMidi,
 } from "../domain/midi";
-import { extractVoicing } from "../domain/voicing";
+import { attachSourceVoicing, attachSourceVoicings } from "../domain/voicing";
 import {
   transition,
   type TransitionOptions,
@@ -24,6 +24,7 @@ import {
 } from "../domain/transition";
 import type { QuarantinedRecord } from "../domain/schema";
 import type {
+  ChordTimelineItem,
   MidiProgressionAnalysis,
   ProgressionBlockCandidate,
   SavedProgressionBlock,
@@ -629,8 +630,29 @@ export function createVaultStore(
             buildVoiceFeatureInputs(baseVoices, normalized),
             analyzeOptions.analysisInput?.roleOverrides,
           );
-          set({ analysis: { status: "done", result, sourceData, sourceVoices } });
-          return result;
+          // Attach the original MIDI voicing to the candidates now, so the
+          // chord the user auditions before saving is the chord they get after
+          // saving. The cache is per analysis and never persisted.
+          const voicingCache = new Map<string, ChordTimelineItem["voicingMemory"]>();
+          const context = { analysis: result, sourceData, sourceVoices };
+          const enriched: MidiProgressionAnalysis = {
+            ...result,
+            fullTimeline: attachSourceVoicings(result.fullTimeline, context, voicingCache),
+            blockCandidates: result.blockCandidates.map((block) => ({
+              ...block,
+              chords: attachSourceVoicings(block.chords, context, voicingCache),
+              ...(block.events
+                ? {
+                    events: block.events.map((event) => ({
+                      ...event,
+                      source: attachSourceVoicing(event.source, context, voicingCache),
+                    })),
+                  }
+                : {}),
+            })),
+          };
+          set({ analysis: { status: "done", result: enriched, sourceData, sourceVoices } });
+          return enriched;
         } catch (error) {
           const message =
             error instanceof Error ? error.message : "MIDI could not be analyzed.";
@@ -927,30 +949,21 @@ function voicingSourceContext(
     : {};
 }
 
+/**
+ * Save-time source voicing.
+ *
+ * Delegates to the same extraction the capture preview uses, which is what
+ * guarantees the saved progression sounds like the candidate that was
+ * auditioned. An event that already carries a source voicing keeps it.
+ */
 function attachExtractedVoicing(
   item: SavedProgressionBlock["chords"][number],
   analysis: MidiProgressionAnalysis | undefined,
   sourceData: MidiSongData | undefined,
   sourceVoices: Voice[] | undefined,
 ): SavedProgressionBlock["chords"][number] {
-  if (!analysis || !sourceData) return item;
-  const meter = beatsPerBar(analysis.timeSignature);
-  const startBeat = (item.bar - 1) * meter + item.beat - 1;
-  const result = extractVoicing({
-    chord: item.chord,
-    segment: { startBeat, endBeat: startBeat + item.durationBeats },
-    notes: sourceData.notes,
-    ticksPerBeat: sourceData.ticksPerBeat,
-    voices: sourceVoices,
-  });
-  if (!result.snapshot) return item;
-  return {
-    ...item,
-    voicingMemory: {
-      ...item.voicingMemory,
-      sourceVoicing: result.snapshot,
-    },
-  };
+  if (item.voicingMemory?.sourceVoicing) return item;
+  return attachSourceVoicing(item, { analysis, sourceData, sourceVoices });
 }
 
 function persistChordEvents(

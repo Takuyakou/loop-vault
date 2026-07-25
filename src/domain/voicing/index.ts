@@ -7,3 +7,4 @@ export * from "./scoreVoicingCandidate";
 export * from "./extractSimultaneousVoicing";
 export * from "./extractAggregatedNoteSet";
 export * from "./extractVoicing";
+export * from "./sourceVoicing";
