@@ -143,3 +143,5 @@ export {
   siblingOccurrences,
 } from "./occurrence";
 export type { CandidateOccurrence, CandidatePattern } from "./occurrence";
+export { evaluateSegmentation, segmentSections } from "./sections";
+export type { Section, SectionBoundaryReason, SegmentationQuality } from "./sections";
