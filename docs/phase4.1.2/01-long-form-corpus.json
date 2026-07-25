@@ -1,0 +1,359 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.1.2-A1",
+  "format": "loop-vault-long-form-corpus-v1.1",
+  "generatorVersion": "loop-vault-p412-longform-v1",
+  "corpusLocation": ".local-evaluation/long-form-v1.1 (not committed)",
+  "scenarioCount": 12,
+  "fileCount": 24,
+  "barRange": [
+    96,
+    192
+  ],
+  "splits": {
+    "dev": 12,
+    "validation": 4,
+    "holdout-v2": 8
+  },
+  "files": [
+    {
+      "scenarioId": "L01",
+      "title": "endless-vamp-vs-progressions",
+      "variant": "clean",
+      "split": "dev",
+      "bars": 112,
+      "bpm": 96,
+      "sha256": "aa0d6b4a2da8faa8dff9bcef9d9fabc0fc4bf39b2aa4259a26d2e23860fb6955",
+      "byteLength": 6608,
+      "goldEvents": 56,
+      "stressFeatures": []
+    },
+    {
+      "scenarioId": "L01",
+      "title": "endless-vamp-vs-progressions",
+      "variant": "stress",
+      "split": "dev",
+      "bars": 112,
+      "bpm": 96,
+      "sha256": "e9d0c77a0423d539b9c93ae98edadd8e9ef9a486af47a65ae5b034b7122b3b3c",
+      "byteLength": 49966,
+      "goldEvents": 56,
+      "stressFeatures": [
+        "all-channel-zero",
+        "fragmented-notes",
+        "dense-melody",
+        "voice-duplicate"
+      ]
+    },
+    {
+      "scenarioId": "L02",
+      "title": "pattern-eight-occurrences",
+      "variant": "clean",
+      "split": "dev",
+      "bars": 128,
+      "bpm": 104,
+      "sha256": "4929c5772e355a46e4bde63a3c97b653f23250d20d93ac9c8453cc6c0c814818",
+      "byteLength": 10336,
+      "goldEvents": 128,
+      "stressFeatures": []
+    },
+    {
+      "scenarioId": "L02",
+      "title": "pattern-eight-occurrences",
+      "variant": "stress",
+      "split": "dev",
+      "bars": 128,
+      "bpm": 104,
+      "sha256": "d93c809415017d9680ebd2f4fb11fff8659008ee428292ffc96d0f8e56de7414",
+      "byteLength": 10336,
+      "goldEvents": 128,
+      "stressFeatures": [
+        "different-voicing-per-occurrence",
+        "track-reorder",
+        "humanized-timing"
+      ]
+    },
+    {
+      "scenarioId": "L03",
+      "title": "middle-section-reachability",
+      "variant": "clean",
+      "split": "holdout-v2",
+      "bars": 144,
+      "bpm": 92,
+      "sha256": "772f01c79c12828f5e8535cfae5d0a8fc1ba899c410b0fca694b5e6810063da0",
+      "byteLength": 11672,
+      "goldEvents": 144,
+      "stressFeatures": []
+    },
+    {
+      "scenarioId": "L03",
+      "title": "middle-section-reachability",
+      "variant": "stress",
+      "split": "holdout-v2",
+      "bars": 144,
+      "bpm": 92,
+      "sha256": "9dbf757729deaf49523989b409f4ecaa76cc01a6ca50b16b4222e752422e2516",
+      "byteLength": 47288,
+      "goldEvents": 144,
+      "stressFeatures": [
+        "section-instrumentation-change",
+        "fragmented-notes",
+        "all-channel-zero"
+      ]
+    },
+    {
+      "scenarioId": "L04",
+      "title": "odd-section-lengths",
+      "variant": "clean",
+      "split": "dev",
+      "bars": 96,
+      "bpm": 88,
+      "sha256": "1631c55e102c4441d0640c382962351486862e9114a062233f6194f01fed7869",
+      "byteLength": 7656,
+      "goldEvents": 96,
+      "stressFeatures": []
+    },
+    {
+      "scenarioId": "L04",
+      "title": "odd-section-lengths",
+      "variant": "stress",
+      "split": "dev",
+      "bars": 96,
+      "bpm": 88,
+      "sha256": "7a1a8efb5c364eb3e734a5c2ae1a15329c1020edb010e9272f1992a6826442d3",
+      "byteLength": 37214,
+      "goldEvents": 96,
+      "stressFeatures": [
+        "fragmented-notes",
+        "dense-melody",
+        "all-channel-zero"
+      ]
+    },
+    {
+      "scenarioId": "L05",
+      "title": "phrase-vs-half-repeat",
+      "variant": "clean",
+      "split": "dev",
+      "bars": 128,
+      "bpm": 100,
+      "sha256": "1e05e89593d330df0750cb8049f14f85473a17208133b20304d13c079df01b70",
+      "byteLength": 10336,
+      "goldEvents": 128,
+      "stressFeatures": []
+    },
+    {
+      "scenarioId": "L05",
+      "title": "phrase-vs-half-repeat",
+      "variant": "stress",
+      "split": "dev",
+      "bars": 128,
+      "bpm": 100,
+      "sha256": "fb92c1cb992ab9299b8bb1474a5cf3d128caeedb3016c9de2d4a179ab10cb295",
+      "byteLength": 14693,
+      "goldEvents": 128,
+      "stressFeatures": [
+        "humanized-timing",
+        "overlap-notes",
+        "voice-duplicate"
+      ]
+    },
+    {
+      "scenarioId": "L06",
+      "title": "vamp-only-song",
+      "variant": "clean",
+      "split": "dev",
+      "bars": 96,
+      "bpm": 84,
+      "sha256": "09656b95f6c5dfecc9701b520bf03adceb67468bce711865b339df222f91052e",
+      "byteLength": 6344,
+      "goldEvents": 48,
+      "stressFeatures": []
+    },
+    {
+      "scenarioId": "L06",
+      "title": "vamp-only-song",
+      "variant": "stress",
+      "split": "dev",
+      "bars": 96,
+      "bpm": 84,
+      "sha256": "edd4320bdc67c067d4c449c33dc2f7de14101c90fd9e5c7f9ef3514bb59cfd18",
+      "byteLength": 6968,
+      "goldEvents": 48,
+      "stressFeatures": [
+        "fragmented-notes",
+        "arpeggiated-harmony",
+        "ghost-notes"
+      ]
+    },
+    {
+      "scenarioId": "L07",
+      "title": "rootless-walking-bass",
+      "variant": "clean",
+      "split": "holdout-v2",
+      "bars": 96,
+      "bpm": 132,
+      "sha256": "782a7261e218f9a375cb13455d58b0286231a754ce383a5764abb6f3e3576e2c",
+      "byteLength": 8264,
+      "goldEvents": 96,
+      "stressFeatures": []
+    },
+    {
+      "scenarioId": "L07",
+      "title": "rootless-walking-bass",
+      "variant": "stress",
+      "split": "holdout-v2",
+      "bars": 96,
+      "bpm": 132,
+      "sha256": "8e4ec019f8cc2345a557072803b4651af1e8d033c43c425635bdc1c5babbf72b",
+      "byteLength": 19998,
+      "goldEvents": 96,
+      "stressFeatures": [
+        "rootless-harmony",
+        "walking-bass",
+        "voice-duplicate",
+        "dense-melody"
+      ]
+    },
+    {
+      "scenarioId": "L08",
+      "title": "pedal-slash-progression",
+      "variant": "clean",
+      "split": "validation",
+      "bars": 96,
+      "bpm": 90,
+      "sha256": "7019f49228754b567f791fae36b98932e620506529b2f4b54017a7509b9340b3",
+      "byteLength": 7592,
+      "goldEvents": 96,
+      "stressFeatures": []
+    },
+    {
+      "scenarioId": "L08",
+      "title": "pedal-slash-progression",
+      "variant": "stress",
+      "split": "validation",
+      "bars": 96,
+      "bpm": 90,
+      "sha256": "456641f9338c5d4f2927e738cd6034288964b57b1246a8910faf343e7c2a2638",
+      "byteLength": 32840,
+      "goldEvents": 96,
+      "stressFeatures": [
+        "voice-duplicate",
+        "all-channel-zero",
+        "fragmented-notes"
+      ]
+    },
+    {
+      "scenarioId": "L09",
+      "title": "arpeggiated-extraction",
+      "variant": "clean",
+      "split": "holdout-v2",
+      "bars": 112,
+      "bpm": 112,
+      "sha256": "4f97fdd3756a6ab6f853fc6ad85b2bcd27a2c2911ea460164df6fc3a714fdb02",
+      "byteLength": 9504,
+      "goldEvents": 112,
+      "stressFeatures": []
+    },
+    {
+      "scenarioId": "L09",
+      "title": "arpeggiated-extraction",
+      "variant": "stress",
+      "split": "holdout-v2",
+      "bars": 112,
+      "bpm": 112,
+      "sha256": "38f503d02eda02c1746994dd5d1bd60ec97027440e5181822625d8fe2caf8c02",
+      "byteLength": 10805,
+      "goldEvents": 112,
+      "stressFeatures": [
+        "arpeggiated-harmony",
+        "all-channel-zero",
+        "fragmented-notes",
+        "ghost-notes"
+      ]
+    },
+    {
+      "scenarioId": "L10",
+      "title": "humanized-overlap",
+      "variant": "clean",
+      "split": "validation",
+      "bars": 112,
+      "bpm": 76,
+      "sha256": "acaf11dd1688f8a188454bd55c0ab8f09684ca3b324be69a60d0a3a9d8089b03",
+      "byteLength": 9056,
+      "goldEvents": 112,
+      "stressFeatures": []
+    },
+    {
+      "scenarioId": "L10",
+      "title": "humanized-overlap",
+      "variant": "stress",
+      "split": "validation",
+      "bars": 112,
+      "bpm": 76,
+      "sha256": "286b31747d8b5de5d425e9baee1c645a416409358795eae3958e8f26ed8c5c8a",
+      "byteLength": 17152,
+      "goldEvents": 112,
+      "stressFeatures": [
+        "humanized-timing",
+        "overlap-notes",
+        "dense-melody"
+      ]
+    },
+    {
+      "scenarioId": "L11",
+      "title": "transposed-repeats",
+      "variant": "clean",
+      "split": "holdout-v2",
+      "bars": 96,
+      "bpm": 108,
+      "sha256": "12e01b3db3dcc36e495292145ea3f1e14b507aee9f6bfa07988c1d94c3870f4c",
+      "byteLength": 7848,
+      "goldEvents": 96,
+      "stressFeatures": []
+    },
+    {
+      "scenarioId": "L11",
+      "title": "transposed-repeats",
+      "variant": "stress",
+      "split": "holdout-v2",
+      "bars": 96,
+      "bpm": 108,
+      "sha256": "1d3420c4bc5fbdfdff3d1c16caf1d5852c55b4fe9f9c778e4d5e62ce8e355811",
+      "byteLength": 7848,
+      "goldEvents": 96,
+      "stressFeatures": [
+        "different-voicing-per-occurrence",
+        "all-channel-zero",
+        "humanized-timing"
+      ]
+    },
+    {
+      "scenarioId": "L12",
+      "title": "nested-block-lengths",
+      "variant": "clean",
+      "split": "dev",
+      "bars": 128,
+      "bpm": 98,
+      "sha256": "8597753c9e7a46d66b5e931b1812785b30dbe56b75aeecca7ff9dbad876c6646",
+      "byteLength": 10088,
+      "goldEvents": 128,
+      "stressFeatures": []
+    },
+    {
+      "scenarioId": "L12",
+      "title": "nested-block-lengths",
+      "variant": "stress",
+      "split": "dev",
+      "bars": 128,
+      "bpm": 98,
+      "sha256": "851d9a7e1072073a604549d7a142b513e50b856216f1b829ef7e93e4710e24c4",
+      "byteLength": 48894,
+      "goldEvents": 128,
+      "stressFeatures": [
+        "dense-melody",
+        "overlap-notes",
+        "fragmented-notes"
+      ]
+    }
+  ]
+}
