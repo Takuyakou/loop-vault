@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.1.1-00",
+  "frozenOn": "2026-07-25",
+  "note": "Frozen before any product change. Phase 4.1 coverage gates are carried over unchanged; the added gates measure whether the cards differ from each other, which the coverage gates could not see.",
+  "denominator": {
+    "definition": "bars where chord-evidence notes sound; percussion excluded upstream; silent and drum-only bars are not counted",
+    "unchangedFrom": "docs/phase4.1/00-coverage-gates.json"
+  },
+  "songs": {
+    "endless": {
+      "fingerprint": "sha256-c153f78e536b23f467196f5ab128a2142f27d68961addbab5f0f293a305fb94b",
+      "byteLength": 25966,
+      "totalBars": 154,
+      "harmonicActiveBars": 150
+    },
+    "suranRemix": {
+      "fingerprint": "sha256-2790e82d09b52a58efe8806e79d7379f6ec15091930197073ff9095dcee5ea10",
+      "byteLength": 33055,
+      "totalBars": 100,
+      "harmonicActiveBars": 98
+    }
+  },
+  "baseline": {
+    "endless": {
+      "phase4.1-v1": {
+        "visiblePatternDuplicateCount": 3,
+        "visiblePatternDuplicateRate": 0.3,
+        "visibleSlotWasteCount": 3,
+        "visibleUniquePatternCount": 7,
+        "top3SingleChordCount": 3,
+        "top10SingleChordRate": 0.4,
+        "top3ProgressionCount": 0,
+        "top10ProgressionCount": 5,
+        "progressionCandidateAvailability": 435,
+        "fragmentCandidateCount": 142,
+        "vampCandidateCount": 2,
+        "allCandidateCoverage": 0.966667,
+        "progressionCandidateCoverage": 0.94,
+        "coverageAtVisible": 0.6,
+        "longestUncoveredHarmonicRun": 3
+      },
+      "phase4-v1": {
+        "visiblePatternDuplicateCount": 0,
+        "visibleUniquePatternCount": 10,
+        "top3SingleChordCount": 0,
+        "top3ProgressionCount": 0,
+        "top10ProgressionCount": 4,
+        "progressionCandidateAvailability": 435,
+        "allCandidateCoverage": 0.24,
+        "progressionCandidateCoverage": 0.186667,
+        "coverageAtVisible": 0.24,
+        "longestUncoveredHarmonicRun": 3
+      }
+    },
+    "suranRemix": {
+      "phase4.1-v1": {
+        "visiblePatternDuplicateCount": 1,
+        "visibleUniquePatternCount": 9,
+        "top3SingleChordCount": 0,
+        "top3ProgressionCount": 1,
+        "top10ProgressionCount": 8,
+        "progressionCandidateAvailability": 274,
+        "allCandidateCoverage": 0.969388,
+        "progressionCandidateCoverage": 0.969388,
+        "coverageAtVisible": 0.969388,
+        "longestUncoveredHarmonicRun": 1
+      }
+    }
+  },
+  "gates": [
+    {
+      "id": 1,
+      "metric": "visiblePatternDuplicateCount",
+      "operator": "==",
+      "threshold": 0,
+      "appliesTo": ["endless", "suranRemix"]
+    },
+    {
+      "id": 2,
+      "metric": "visibleSlotWasteCount",
+      "operator": "==",
+      "threshold": 0,
+      "appliesTo": ["endless", "suranRemix"]
+    },
+    {
+      "id": 3,
+      "metric": "top3ProgressionCount",
+      "operator": "==",
+      "threshold": 3,
+      "condition": "progressionCandidateAvailability >= 3",
+      "appliesTo": ["endless", "suranRemix"]
+    },
+    {
+      "id": 4,
+      "metric": "progressionsBeforeVamps",
+      "operator": "==",
+      "threshold": true,
+      "condition": "1 <= progressionCandidateAvailability <= 2",
+      "note": "Every available progression is displayed ahead of any vamp."
+    },
+    {
+      "id": 5,
+      "metric": "twoBarFragmentsInTop3",
+      "operator": "==",
+      "threshold": 0,
+      "condition": "a progression of 4 bars or more exists",
+      "appliesTo": ["endless", "suranRemix"]
+    },
+    {
+      "id": 6,
+      "metric": "distinctNormalizedProgressionIdentitiesAmongVisible",
+      "operator": "==",
+      "threshold": "visibleCardCount",
+      "appliesTo": ["endless", "suranRemix"]
+    },
+    {
+      "id": 7,
+      "metric": "occurrenceReachabilityWithinPattern",
+      "operator": "==",
+      "threshold": 1.0,
+      "appliesTo": ["endless", "suranRemix"]
+    },
+    {
+      "id": 8,
+      "metric": "selectedCoverageAtAllVisible",
+      "operator": ">=",
+      "threshold": 0.9,
+      "carriedOverFrom": "docs/phase4.1/00-coverage-gates.json",
+      "appliesTo": ["endless", "suranRemix"]
+    },
+    {
+      "id": 9,
+      "metric": "sectionRecallAtAllVisible",
+      "operator": "==",
+      "threshold": 1.0,
+      "carriedOverFrom": "docs/phase4.1/00-coverage-gates.json",
+      "appliesTo": ["endless", "suranRemix"]
+    },
+    {
+      "id": 10,
+      "metric": "longestUncoveredHarmonicRun",
+      "operator": "<",
+      "threshold": 8,
+      "carriedOverFrom": "docs/phase4.1/00-coverage-gates.json",
+      "appliesTo": ["endless", "suranRemix"]
+    },
+    {
+      "id": 11,
+      "metric": "chordDripTimelineIdentical",
+      "operator": "==",
+      "threshold": "100/100"
+    },
+    {
+      "id": 12,
+      "metric": "chapter3SeedCanonicalMatch",
+      "operator": ">=",
+      "threshold": "baseline",
+      "note": "No regression against the recorded Chapter 3 Seed figure."
+    },
+    {
+      "id": 13,
+      "metric": "runtimeMs",
+      "operator": "<=",
+      "threshold": 3000
+    },
+    {
+      "id": 14,
+      "metric": "deterministic",
+      "operator": "==",
+      "threshold": true
+    }
+  ],
+  "reporting": {
+    "coverageMustBeReportedAs": ["allCandidateCoverage", "progressionCandidateCoverage"],
+    "note": "allCandidateCoverage alone does not carry the product claim: a list can cover the song while every card on it is the same one-chord vamp."
+  }
+}

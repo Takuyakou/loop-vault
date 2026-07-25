@@ -1,0 +1,233 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.1.1 quality-evidence penalty probe",
+  "split": "dev",
+  "promotedPenalty": 0.08,
+  "scope": "full",
+  "presenceThreshold": 0.02,
+  "note": "Diagnostic only. No product default is changed by this script.",
+  "rows": [
+    {
+      "penalty": 0,
+      "rootAccuracy": 0.921875,
+      "rootAccuracyAgainstAnyAcceptable": 0.96875,
+      "triadAccuracy": 0.914063,
+      "seventhAccuracy": 0.929688,
+      "slashBassAccuracy": 0.929688,
+      "canonicalExact": 0.865234,
+      "acceptableAlternativeMatch": 0.849609,
+      "worstScenarios": [
+        {
+          "scenarioId": "S05",
+          "variant": "stress",
+          "canonicalExact": 0
+        },
+        {
+          "scenarioId": "S04",
+          "variant": "clean",
+          "canonicalExact": 0.25
+        },
+        {
+          "scenarioId": "S04",
+          "variant": "stress",
+          "canonicalExact": 0.25
+        },
+        {
+          "scenarioId": "S07",
+          "variant": "stress",
+          "canonicalExact": 0.4375
+        },
+        {
+          "scenarioId": "S06",
+          "variant": "stress",
+          "canonicalExact": 0.625
+        }
+      ]
+    },
+    {
+      "penalty": 0.08,
+      "rootAccuracy": 0.921875,
+      "rootAccuracyAgainstAnyAcceptable": 0.96875,
+      "triadAccuracy": 0.917969,
+      "seventhAccuracy": 0.929688,
+      "slashBassAccuracy": 0.929688,
+      "canonicalExact": 0.865234,
+      "acceptableAlternativeMatch": 0.849609,
+      "worstScenarios": [
+        {
+          "scenarioId": "S05",
+          "variant": "stress",
+          "canonicalExact": 0
+        },
+        {
+          "scenarioId": "S04",
+          "variant": "clean",
+          "canonicalExact": 0.25
+        },
+        {
+          "scenarioId": "S04",
+          "variant": "stress",
+          "canonicalExact": 0.25
+        },
+        {
+          "scenarioId": "S07",
+          "variant": "stress",
+          "canonicalExact": 0.4375
+        },
+        {
+          "scenarioId": "S06",
+          "variant": "stress",
+          "canonicalExact": 0.625
+        }
+      ]
+    },
+    {
+      "penalty": 0.12,
+      "rootAccuracy": 0.96875,
+      "rootAccuracyAgainstAnyAcceptable": 0.96875,
+      "triadAccuracy": 0.964844,
+      "seventhAccuracy": 0.976563,
+      "slashBassAccuracy": 0.976563,
+      "canonicalExact": 0.865234,
+      "acceptableAlternativeMatch": 0.896484,
+      "worstScenarios": [
+        {
+          "scenarioId": "S05",
+          "variant": "stress",
+          "canonicalExact": 0
+        },
+        {
+          "scenarioId": "S04",
+          "variant": "clean",
+          "canonicalExact": 0.25
+        },
+        {
+          "scenarioId": "S04",
+          "variant": "stress",
+          "canonicalExact": 0.25
+        },
+        {
+          "scenarioId": "S07",
+          "variant": "stress",
+          "canonicalExact": 0.4375
+        },
+        {
+          "scenarioId": "S06",
+          "variant": "stress",
+          "canonicalExact": 0.625
+        }
+      ]
+    },
+    {
+      "penalty": 0.2,
+      "rootAccuracy": 0.960938,
+      "rootAccuracyAgainstAnyAcceptable": 0.960938,
+      "triadAccuracy": 0.964844,
+      "seventhAccuracy": 0.972656,
+      "slashBassAccuracy": 0.96875,
+      "canonicalExact": 0.865234,
+      "acceptableAlternativeMatch": 0.896484,
+      "worstScenarios": [
+        {
+          "scenarioId": "S05",
+          "variant": "stress",
+          "canonicalExact": 0
+        },
+        {
+          "scenarioId": "S04",
+          "variant": "clean",
+          "canonicalExact": 0.25
+        },
+        {
+          "scenarioId": "S04",
+          "variant": "stress",
+          "canonicalExact": 0.25
+        },
+        {
+          "scenarioId": "S07",
+          "variant": "stress",
+          "canonicalExact": 0.4375
+        },
+        {
+          "scenarioId": "S06",
+          "variant": "stress",
+          "canonicalExact": 0.625
+        }
+      ]
+    },
+    {
+      "penalty": 0.35,
+      "rootAccuracy": 0.960938,
+      "rootAccuracyAgainstAnyAcceptable": 0.960938,
+      "triadAccuracy": 0.964844,
+      "seventhAccuracy": 0.972656,
+      "slashBassAccuracy": 0.96875,
+      "canonicalExact": 0.865234,
+      "acceptableAlternativeMatch": 0.896484,
+      "worstScenarios": [
+        {
+          "scenarioId": "S05",
+          "variant": "stress",
+          "canonicalExact": 0
+        },
+        {
+          "scenarioId": "S04",
+          "variant": "clean",
+          "canonicalExact": 0.25
+        },
+        {
+          "scenarioId": "S04",
+          "variant": "stress",
+          "canonicalExact": 0.25
+        },
+        {
+          "scenarioId": "S07",
+          "variant": "stress",
+          "canonicalExact": 0.4375
+        },
+        {
+          "scenarioId": "S06",
+          "variant": "stress",
+          "canonicalExact": 0.625
+        }
+      ]
+    },
+    {
+      "penalty": 0.5,
+      "rootAccuracy": 0.960938,
+      "rootAccuracyAgainstAnyAcceptable": 0.960938,
+      "triadAccuracy": 0.964844,
+      "seventhAccuracy": 0.972656,
+      "slashBassAccuracy": 0.96875,
+      "canonicalExact": 0.865234,
+      "acceptableAlternativeMatch": 0.896484,
+      "worstScenarios": [
+        {
+          "scenarioId": "S05",
+          "variant": "stress",
+          "canonicalExact": 0
+        },
+        {
+          "scenarioId": "S04",
+          "variant": "clean",
+          "canonicalExact": 0.25
+        },
+        {
+          "scenarioId": "S04",
+          "variant": "stress",
+          "canonicalExact": 0.25
+        },
+        {
+          "scenarioId": "S07",
+          "variant": "stress",
+          "canonicalExact": 0.4375
+        },
+        {
+          "scenarioId": "S06",
+          "variant": "stress",
+          "canonicalExact": 0.625
+        }
+      ]
+    }
+  ]
+}
