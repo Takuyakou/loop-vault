@@ -14,7 +14,7 @@ describe("voice-aware legacy-boundary reranker", () => {
   it("is opt-in and dispatches through the public analyzer mode", () => {
     const bytes = mixedVoiceMidi();
 
-    expect(defaultAnalyzerMode).toBe("phase4-v1");
+    expect(defaultAnalyzerMode).toBe("phase4.1-v1");
     expect(analyzeMidi(bytes).analyzerVersion).not.toBe(voiceAwareRerankerVersion);
     expect(analyzeMidi(bytes, { mode: "voice-aware-rerank-v1" }).analyzerVersion)
       .toBe(voiceAwareRerankerVersion);

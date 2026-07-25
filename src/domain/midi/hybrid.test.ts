@@ -18,7 +18,7 @@ describe("hybrid MIDI analyzer", () => {
     const hybrid = analyzeMidi(bytes(), { mode: "hybrid-v1" });
     expect(hybrid).toEqual(analyzeMidi(bytes(), { mode: "hybrid-v1" }));
     expect(hybrid.analyzerVersion).toBe("hybrid-symbolic-v1");
-    expect(defaultAnalyzerMode).toBe("phase4-v1");
+    expect(defaultAnalyzerMode).toBe("phase4.1-v1");
     expect(analyzeMidi(bytes(), { mode: "legacy" }).analyzerVersion).toBe("legacy-v1");
   });
 
