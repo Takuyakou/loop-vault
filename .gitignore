@@ -20,3 +20,11 @@ artifacts/midi-difference-review/
 artifacts/correction-promotion/
 artifacts/midi-review-queue/
 artifacts/real-midi-evaluation/
+
+# Default-named diagnostic outputs; stage artifacts use their stage prefix.
+docs/phase4.0/label-reachability.json
+docs/phase4.0/normalized-baseline.json
+docs/phase4.0/dedup-collision-report.json
+docs/phase4.0/density-recall-report.json
+docs/phase4.0/block-score-diagnostic.json
+docs/phase4.0/candidate-selection-diagnostic.json
