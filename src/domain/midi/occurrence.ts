@@ -38,6 +38,14 @@ export interface CandidateOccurrence {
   transposeOffset: number;
   sectionIds: string[];
   sourceCandidateId?: string;
+  /**
+   * Which generators asked for this window.
+   *
+   * A span can be proposed by more than one of them — a section boundary that is
+   * also a repeat cycle, say. Recording the provenance instead of emitting the
+   * window twice is what keeps one span to one candidate. Diagnostic only.
+   */
+  sourceKinds?: string[];
 }
 
 export interface CandidatePattern {
@@ -72,7 +80,7 @@ export function buildOccurrences(
      * awkward length becomes reachable without changing anything about the
      * windows that already worked.
      */
-    extraWindows?: ReadonlyArray<{ startBar: number; lengthBars: number }>;
+    extraWindows?: ReadonlyArray<{ startBar: number; lengthBars: number; sources?: readonly string[] }>;
     rawMatchScores?: readonly number[];
     scoreOf?: (events: readonly CandidateChordEvent[], lengthBars: number, repeatCount: number) => number;
   } = {},
@@ -82,7 +90,7 @@ export function buildOccurrences(
   const occurrences: CandidateOccurrence[] = [];
   const seen = new Set<string>();
 
-  const emit = (startBar: number, lengthBars: number) => {
+  const emit = (startBar: number, lengthBars: number, sourceKinds: readonly string[] = ["fixed-length"]) => {
     if (startBar < 1 || startBar + lengthBars - 1 > totalBars) return;
     const id = `occ-${startBar}-${startBar + lengthBars - 1}`;
     if (seen.has(id)) return;
@@ -107,6 +115,7 @@ export function buildOccurrences(
       warnings: [...new Set(events.flatMap((event) => event.warnings))],
       transposeOffset: 0,
       sectionIds: [],
+      sourceKinds: [...sourceKinds],
     });
   };
 
@@ -117,7 +126,7 @@ export function buildOccurrences(
     }
   }
   for (const window of options.extraWindows ?? []) {
-    emit(window.startBar, window.lengthBars);
+    emit(window.startBar, window.lengthBars, window.sources ?? ["structural"]);
   }
 
   return occurrences;
