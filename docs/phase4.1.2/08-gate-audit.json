@@ -1,0 +1,1393 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.1.2-G0",
+  "productLogicChanged": false,
+  "note": "The only accompanying product edit is a switch that disables Stage E's generators, so the ablation differs in one thing.",
+  "corpora": [
+    ".local-evaluation/synthetic-gold-v1",
+    ".local-evaluation/long-form-v1.1"
+  ],
+  "splits": [
+    "dev",
+    "validation"
+  ],
+  "gates": {
+    "phase4.1.2-core (A-D)": [
+      {
+        "id": "visible-pattern-duplicate-count-zero",
+        "metric": "visiblePatternDuplicateCount",
+        "threshold": "== 0",
+        "actual": "max 0",
+        "verdict": "PASS",
+        "failureScenario": "One pattern occupies two or more of the ten cards, so the list repeats itself.",
+        "failureCount": 0
+      },
+      {
+        "id": "visible-slot-waste-zero",
+        "metric": "visibleSlotWasteCount",
+        "threshold": "== 0",
+        "actual": "max 0",
+        "verdict": "PASS",
+        "failureScenario": "A display slot is spent on a progression already on screen.",
+        "failureCount": 0
+      },
+      {
+        "id": "occurrence-reachability-full",
+        "metric": "occurrenceReachability",
+        "threshold": "== 1",
+        "actual": "min 0.5",
+        "verdict": "FAIL",
+        "failureScenario": "An occurrence of a shown pattern cannot be reached from its card.",
+        "failureCount": 2
+      },
+      {
+        "id": "progression-precision-at-3",
+        "metric": "progressionPrecisionAt3",
+        "threshold": "== 1 when >= 3 progressions",
+        "actual": "min 1",
+        "verdict": "PASS",
+        "failureScenario": "A vamp or fragment sits in the first three cards while progressions exist.",
+        "failureCount": 0
+      },
+      {
+        "id": "no-two-bar-fragment-in-top3",
+        "metric": "twoBarFragmentsInTop3",
+        "threshold": "== 0 when >= 3 progressions",
+        "actual": "max 0",
+        "verdict": "PASS",
+        "failureScenario": "A two-bar fragment outranks an available progression.",
+        "failureCount": 0
+      },
+      {
+        "id": "rank-constraint-top3-min-hits",
+        "metric": "rankConstraintGroupSatisfaction.top3Satisfied",
+        "threshold": "all groups",
+        "actual": "39/56",
+        "verdict": "FAIL",
+        "failureScenario": "The progressions the corpus names are not the ones in the first three cards.",
+        "failureCount": 17
+      },
+      {
+        "id": "rank-constraint-all-visible-min-hits",
+        "metric": "rankConstraintGroupSatisfaction.allVisibleSatisfied",
+        "threshold": "all groups",
+        "actual": "41/56",
+        "verdict": "FAIL",
+        "failureScenario": "A named progression is not reachable anywhere in the ten cards.",
+        "failureCount": 15
+      },
+      {
+        "id": "rank-constraint-order",
+        "metric": "rankConstraintGroupSatisfaction.orderSatisfied",
+        "threshold": "all groups",
+        "actual": "all",
+        "verdict": "PASS",
+        "failureScenario": "A vamp group outranks the progression group it should follow.",
+        "failureCount": 0
+      },
+      {
+        "id": "coverage-at-all-visible",
+        "metric": "allCandidateCoverage",
+        "threshold": ">= 0.9",
+        "actual": "min 0.625",
+        "verdict": "FAIL",
+        "failureScenario": "The bars the cards themselves display cover less than nine tenths of the harmony.",
+        "failureCount": 3
+      },
+      {
+        "id": "longest-uncovered-run",
+        "metric": "longestUncoveredHarmonicRun",
+        "threshold": "< 8",
+        "actual": "max 15",
+        "verdict": "FAIL",
+        "failureScenario": "Eight or more consecutive harmonic bars have no card over them.",
+        "failureCount": 2
+      },
+      {
+        "id": "runtime-ceiling",
+        "metric": "runtimeMs",
+        "threshold": "<= 3000",
+        "actual": "max 255.5 ms",
+        "verdict": "PASS",
+        "failureScenario": "Analysis takes longer than the interactive budget.",
+        "failureCount": 0
+      },
+      {
+        "id": "deterministic",
+        "metric": "cards on rerun",
+        "threshold": "identical",
+        "actual": "identical",
+        "verdict": "PASS",
+        "failureScenario": "Two runs of the same file produce different cards.",
+        "failureCount": 0
+      },
+      {
+        "id": "chord-corpus-non-regression",
+        "metric": "Chord Drip fullTimeline vs phase4-v1",
+        "threshold": "identical",
+        "actual": "100/100 identical",
+        "verdict": "PASS",
+        "failureScenario": "Selection work reached the detector and changed a chord name.",
+        "failureCount": 0
+      }
+    ],
+    "phase4.1.2-full (A-E)": [
+      {
+        "id": "visible-pattern-duplicate-count-zero",
+        "metric": "visiblePatternDuplicateCount",
+        "threshold": "== 0",
+        "actual": "max 0",
+        "verdict": "PASS",
+        "failureScenario": "One pattern occupies two or more of the ten cards, so the list repeats itself.",
+        "failureCount": 0
+      },
+      {
+        "id": "visible-slot-waste-zero",
+        "metric": "visibleSlotWasteCount",
+        "threshold": "== 0",
+        "actual": "max 0",
+        "verdict": "PASS",
+        "failureScenario": "A display slot is spent on a progression already on screen.",
+        "failureCount": 0
+      },
+      {
+        "id": "occurrence-reachability-full",
+        "metric": "occurrenceReachability",
+        "threshold": "== 1",
+        "actual": "min 0.5",
+        "verdict": "FAIL",
+        "failureScenario": "An occurrence of a shown pattern cannot be reached from its card.",
+        "failureCount": 2
+      },
+      {
+        "id": "progression-precision-at-3",
+        "metric": "progressionPrecisionAt3",
+        "threshold": "== 1 when >= 3 progressions",
+        "actual": "min 1",
+        "verdict": "PASS",
+        "failureScenario": "A vamp or fragment sits in the first three cards while progressions exist.",
+        "failureCount": 0
+      },
+      {
+        "id": "no-two-bar-fragment-in-top3",
+        "metric": "twoBarFragmentsInTop3",
+        "threshold": "== 0 when >= 3 progressions",
+        "actual": "max 0",
+        "verdict": "PASS",
+        "failureScenario": "A two-bar fragment outranks an available progression.",
+        "failureCount": 0
+      },
+      {
+        "id": "rank-constraint-top3-min-hits",
+        "metric": "rankConstraintGroupSatisfaction.top3Satisfied",
+        "threshold": "all groups",
+        "actual": "34/56",
+        "verdict": "FAIL",
+        "failureScenario": "The progressions the corpus names are not the ones in the first three cards.",
+        "failureCount": 22
+      },
+      {
+        "id": "rank-constraint-all-visible-min-hits",
+        "metric": "rankConstraintGroupSatisfaction.allVisibleSatisfied",
+        "threshold": "all groups",
+        "actual": "37/56",
+        "verdict": "FAIL",
+        "failureScenario": "A named progression is not reachable anywhere in the ten cards.",
+        "failureCount": 19
+      },
+      {
+        "id": "rank-constraint-order",
+        "metric": "rankConstraintGroupSatisfaction.orderSatisfied",
+        "threshold": "all groups",
+        "actual": "all",
+        "verdict": "PASS",
+        "failureScenario": "A vamp group outranks the progression group it should follow.",
+        "failureCount": 0
+      },
+      {
+        "id": "coverage-at-all-visible",
+        "metric": "allCandidateCoverage",
+        "threshold": ">= 0.9",
+        "actual": "min 0.78125",
+        "verdict": "FAIL",
+        "failureScenario": "The bars the cards themselves display cover less than nine tenths of the harmony.",
+        "failureCount": 1
+      },
+      {
+        "id": "longest-uncovered-run",
+        "metric": "longestUncoveredHarmonicRun",
+        "threshold": "< 8",
+        "actual": "max 4",
+        "verdict": "PASS",
+        "failureScenario": "Eight or more consecutive harmonic bars have no card over them.",
+        "failureCount": 0
+      },
+      {
+        "id": "runtime-ceiling",
+        "metric": "runtimeMs",
+        "threshold": "<= 3000",
+        "actual": "max 355.7 ms",
+        "verdict": "PASS",
+        "failureScenario": "Analysis takes longer than the interactive budget.",
+        "failureCount": 0
+      },
+      {
+        "id": "deterministic",
+        "metric": "cards on rerun",
+        "threshold": "identical",
+        "actual": "identical",
+        "verdict": "PASS",
+        "failureScenario": "Two runs of the same file produce different cards.",
+        "failureCount": 0
+      },
+      {
+        "id": "chord-corpus-non-regression",
+        "metric": "Chord Drip fullTimeline vs phase4-v1",
+        "threshold": "identical",
+        "actual": "100/100 identical",
+        "verdict": "PASS",
+        "failureScenario": "Selection work reached the detector and changed a chord name.",
+        "failureCount": 0
+      }
+    ]
+  },
+  "ablation": [
+    {
+      "modeId": "phase4.1.2-core (A-D)",
+      "files": 56,
+      "candidatePoolPatterns": 78.339286,
+      "candidatePoolOccurrences": 143.375,
+      "mustShowGeneratedRecall": 0.970238,
+      "mustShowSelectedRecallAmongGenerated": 0.865753,
+      "top3MinHitsPassing": 39,
+      "allVisibleMinHitsPassing": 41,
+      "allCandidateCoverage": 0.987723,
+      "reachableCandidateCoverage": 0.998326,
+      "uniquePatternCountAt3": 3,
+      "uniquePatternCountAt10": 9.732143,
+      "runtimeMeanMs": 70.664286,
+      "runtimeMaxMs": 255.5,
+      "cleanStressSelectionAgreement": 0.784921
+    },
+    {
+      "modeId": "phase4.1.2-full (A-E)",
+      "files": 56,
+      "candidatePoolPatterns": 235.357143,
+      "candidatePoolOccurrences": 362.160714,
+      "mustShowGeneratedRecall": 1,
+      "mustShowSelectedRecallAmongGenerated": 0.745323,
+      "top3MinHitsPassing": 34,
+      "allVisibleMinHitsPassing": 37,
+      "allCandidateCoverage": 0.99535,
+      "reachableCandidateCoverage": 0.998326,
+      "uniquePatternCountAt3": 3,
+      "uniquePatternCountAt10": 10,
+      "runtimeMeanMs": 85.623214,
+      "runtimeMaxMs": 355.7,
+      "cleanStressSelectionAgreement": 0.7
+    }
+  ],
+  "rankFailureTaxonomy": {
+    "total": 46,
+    "byCause": {
+      "not-selected": 43,
+      "grouped-into-a-different-pattern": 2,
+      "selected-but-outside-visible-limit": 1
+    },
+    "samples": [
+      {
+        "scenarioId": "S11",
+        "variant": "clean",
+        "groupId": "S11-after-progressions",
+        "patternId": "vamp-em11a",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "S11",
+        "variant": "stress",
+        "groupId": "S11-after-progressions",
+        "patternId": "vamp-em11a",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "S13",
+        "variant": "clean",
+        "groupId": "S13-top10",
+        "patternId": "transposed-p1",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "S13",
+        "variant": "stress",
+        "groupId": "S13-top10",
+        "patternId": "transposed-p1",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "S14",
+        "variant": "clean",
+        "groupId": "S14-top3",
+        "patternId": "dur-b",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "S15",
+        "variant": "clean",
+        "groupId": "S15-top3",
+        "patternId": "phrase-a",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "S15",
+        "variant": "clean",
+        "groupId": "S15-top10",
+        "patternId": "motif-a",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "S15",
+        "variant": "stress",
+        "groupId": "S15-top3",
+        "patternId": "phrase-a",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "S15",
+        "variant": "stress",
+        "groupId": "S15-top3",
+        "patternId": "phrase-b",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "S15",
+        "variant": "stress",
+        "groupId": "S15-top10",
+        "patternId": "motif-a",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "S15",
+        "variant": "stress",
+        "groupId": "S15-top10",
+        "patternId": "full-form",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "S16",
+        "variant": "clean",
+        "groupId": "S16-top3",
+        "patternId": "verse-p",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "S16",
+        "variant": "clean",
+        "groupId": "S16-top3",
+        "patternId": "chorus-p",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "S16",
+        "variant": "clean",
+        "groupId": "S16-top10",
+        "patternId": "bridge-p",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "S16",
+        "variant": "stress",
+        "groupId": "S16-top3",
+        "patternId": "verse-p",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "S16",
+        "variant": "stress",
+        "groupId": "S16-top10",
+        "patternId": "bridge-p",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "L01",
+        "variant": "clean",
+        "groupId": "L01-top3",
+        "patternId": "prog3",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "L01",
+        "variant": "clean",
+        "groupId": "L01-top3",
+        "patternId": "prog4",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "L01",
+        "variant": "clean",
+        "groupId": "L01-after-progressions",
+        "patternId": "em11a-vamp",
+        "cause": "grouped-into-a-different-pattern",
+        "detail": "productPatterns 4, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "L01",
+        "variant": "stress",
+        "groupId": "L01-top3",
+        "patternId": "prog3",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "L01",
+        "variant": "stress",
+        "groupId": "L01-top3",
+        "patternId": "prog4",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "L01",
+        "variant": "stress",
+        "groupId": "L01-after-progressions",
+        "patternId": "em11a-vamp",
+        "cause": "grouped-into-a-different-pattern",
+        "detail": "productPatterns 4, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "L04",
+        "variant": "clean",
+        "groupId": "L04-top10",
+        "patternId": "sec1",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "L04",
+        "variant": "clean",
+        "groupId": "L04-top10",
+        "patternId": "sec2",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "L04",
+        "variant": "clean",
+        "groupId": "L04-top10",
+        "patternId": "sec3",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "L04",
+        "variant": "clean",
+        "groupId": "L04-top10",
+        "patternId": "sec4",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "L04",
+        "variant": "clean",
+        "groupId": "L04-top10",
+        "patternId": "sec5",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "L04",
+        "variant": "clean",
+        "groupId": "L04-top10",
+        "patternId": "sec6",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "L04",
+        "variant": "stress",
+        "groupId": "L04-top10",
+        "patternId": "sec1",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "L04",
+        "variant": "stress",
+        "groupId": "L04-top10",
+        "patternId": "sec2",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "L04",
+        "variant": "stress",
+        "groupId": "L04-top10",
+        "patternId": "sec3",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "L04",
+        "variant": "stress",
+        "groupId": "L04-top10",
+        "patternId": "sec4",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "L04",
+        "variant": "stress",
+        "groupId": "L04-top10",
+        "patternId": "sec5",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "L04",
+        "variant": "stress",
+        "groupId": "L04-top10",
+        "patternId": "sec6",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "L06",
+        "variant": "clean",
+        "groupId": "L06-top3",
+        "patternId": "vamp-a",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "L06",
+        "variant": "clean",
+        "groupId": "L06-top3",
+        "patternId": "vamp-b",
+        "cause": "selected-but-outside-visible-limit",
+        "detail": "productPatterns 1, selectedAnywhere true"
+      },
+      {
+        "scenarioId": "L06",
+        "variant": "stress",
+        "groupId": "L06-top3",
+        "patternId": "vamp-a",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "L06",
+        "variant": "stress",
+        "groupId": "L06-top3",
+        "patternId": "vamp-b",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "L12",
+        "variant": "clean",
+        "groupId": "L12-top3",
+        "patternId": "full-form",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      },
+      {
+        "scenarioId": "L12",
+        "variant": "clean",
+        "groupId": "L12-top10",
+        "patternId": "phrase-a",
+        "cause": "not-selected",
+        "detail": "productPatterns 1, selectedAnywhere false"
+      }
+    ]
+  },
+  "l06Trace": {
+    "clean": {
+      "scenario": "L06_clean",
+      "totalBars": 96,
+      "harmonicActiveBars": 96,
+      "generatedOccurrences": 484,
+      "groupedPatterns": 72,
+      "selectedCards": 21,
+      "visibleCards": 10,
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "representativeOccurrenceCoverage": 0.416667,
+      "reachableOccurrenceCoverage": 0.59375,
+      "groupedVisibleCoverage": 0.59375,
+      "novelHarmonicMaterialCoverage": 0.138889,
+      "cards": [
+        {
+          "bars": [
+            48,
+            63
+          ],
+          "lengthBars": 16,
+          "kind": "progression",
+          "patternId": "pattern-occ-48-63",
+          "occurrenceCount": 1,
+          "occurrenceBars": [
+            [
+              48,
+              63
+            ]
+          ]
+        },
+        {
+          "bars": [
+            44,
+            59
+          ],
+          "lengthBars": 16,
+          "kind": "progression",
+          "patternId": "pattern-occ-44-59",
+          "occurrenceCount": 1,
+          "occurrenceBars": [
+            [
+              44,
+              59
+            ]
+          ]
+        },
+        {
+          "bars": [
+            40,
+            55
+          ],
+          "lengthBars": 16,
+          "kind": "progression",
+          "patternId": "pattern-occ-40-55",
+          "occurrenceCount": 1,
+          "occurrenceBars": [
+            [
+              40,
+              55
+            ]
+          ]
+        },
+        {
+          "bars": [
+            47,
+            62
+          ],
+          "lengthBars": 16,
+          "kind": "progression",
+          "patternId": "pattern-occ-47-62",
+          "occurrenceCount": 1,
+          "occurrenceBars": [
+            [
+              47,
+              62
+            ]
+          ]
+        },
+        {
+          "bars": [
+            48,
+            55
+          ],
+          "lengthBars": 8,
+          "kind": "progression",
+          "patternId": "pattern-occ-48-55",
+          "occurrenceCount": 1,
+          "occurrenceBars": [
+            [
+              48,
+              55
+            ]
+          ]
+        },
+        {
+          "bars": [
+            46,
+            61
+          ],
+          "lengthBars": 16,
+          "kind": "progression",
+          "patternId": "pattern-occ-46-61",
+          "occurrenceCount": 1,
+          "occurrenceBars": [
+            [
+              46,
+              61
+            ]
+          ]
+        },
+        {
+          "bars": [
+            45,
+            60
+          ],
+          "lengthBars": 16,
+          "kind": "progression",
+          "patternId": "pattern-occ-45-60",
+          "occurrenceCount": 1,
+          "occurrenceBars": [
+            [
+              45,
+              60
+            ]
+          ]
+        },
+        {
+          "bars": [
+            47,
+            54
+          ],
+          "lengthBars": 8,
+          "kind": "progression",
+          "patternId": "pattern-occ-47-54",
+          "occurrenceCount": 1,
+          "occurrenceBars": [
+            [
+              47,
+              54
+            ]
+          ]
+        },
+        {
+          "bars": [
+            48,
+            51
+          ],
+          "lengthBars": 4,
+          "kind": "progression",
+          "patternId": "pattern-occ-48-51",
+          "occurrenceCount": 1,
+          "occurrenceBars": [
+            [
+              48,
+              51
+            ]
+          ]
+        },
+        {
+          "bars": [
+            64,
+            79
+          ],
+          "lengthBars": 16,
+          "kind": "vamp",
+          "patternId": "pattern-occ-49-64",
+          "occurrenceCount": 33,
+          "occurrenceBars": [
+            [
+              49,
+              64
+            ],
+            [
+              50,
+              65
+            ],
+            [
+              51,
+              66
+            ],
+            [
+              52,
+              67
+            ],
+            [
+              53,
+              68
+            ],
+            [
+              54,
+              69
+            ],
+            [
+              55,
+              70
+            ],
+            [
+              56,
+              71
+            ],
+            [
+              57,
+              72
+            ],
+            [
+              58,
+              73
+            ],
+            [
+              59,
+              74
+            ],
+            [
+              60,
+              75
+            ]
+          ]
+        }
+      ]
+    },
+    "stress": {
+      "scenario": "L06_stress",
+      "totalBars": 96,
+      "harmonicActiveBars": 96,
+      "generatedOccurrences": 468,
+      "groupedPatterns": 46,
+      "selectedCards": 10,
+      "visibleCards": 10,
+      "visiblePatternDuplicateCount": 0,
+      "occurrenceReachability": 1,
+      "representativeOccurrenceCoverage": 1,
+      "reachableOccurrenceCoverage": 1,
+      "groupedVisibleCoverage": 1,
+      "novelHarmonicMaterialCoverage": 0.217391,
+      "cards": [
+        {
+          "bars": [
+            49,
+            72
+          ],
+          "lengthBars": 24,
+          "kind": "progression",
+          "patternId": "pattern-occ-1-24",
+          "occurrenceCount": 2,
+          "occurrenceBars": [
+            [
+              1,
+              24
+            ],
+            [
+              49,
+              72
+            ]
+          ]
+        },
+        {
+          "bars": [
+            1,
+            18
+          ],
+          "lengthBars": 18,
+          "kind": "progression",
+          "patternId": "pattern-occ-1-18",
+          "occurrenceCount": 2,
+          "occurrenceBars": [
+            [
+              1,
+              18
+            ],
+            [
+              49,
+              66
+            ]
+          ]
+        },
+        {
+          "bars": [
+            74,
+            89
+          ],
+          "lengthBars": 16,
+          "kind": "progression",
+          "patternId": "pattern-occ-2-17",
+          "occurrenceCount": 32,
+          "occurrenceBars": [
+            [
+              2,
+              17
+            ],
+            [
+              4,
+              19
+            ],
+            [
+              6,
+              21
+            ],
+            [
+              8,
+              23
+            ],
+            [
+              10,
+              25
+            ],
+            [
+              12,
+              27
+            ],
+            [
+              14,
+              29
+            ],
+            [
+              16,
+              31
+            ],
+            [
+              18,
+              33
+            ],
+            [
+              20,
+              35
+            ],
+            [
+              22,
+              37
+            ],
+            [
+              24,
+              39
+            ]
+          ]
+        },
+        {
+          "bars": [
+            19,
+            34
+          ],
+          "lengthBars": 16,
+          "kind": "progression",
+          "patternId": "pattern-occ-1-16",
+          "occurrenceCount": 34,
+          "occurrenceBars": [
+            [
+              1,
+              16
+            ],
+            [
+              3,
+              18
+            ],
+            [
+              5,
+              20
+            ],
+            [
+              7,
+              22
+            ],
+            [
+              9,
+              24
+            ],
+            [
+              11,
+              26
+            ],
+            [
+              13,
+              28
+            ],
+            [
+              15,
+              30
+            ],
+            [
+              17,
+              32
+            ],
+            [
+              19,
+              34
+            ],
+            [
+              21,
+              36
+            ],
+            [
+              23,
+              38
+            ]
+          ]
+        },
+        {
+          "bars": [
+            36,
+            51
+          ],
+          "lengthBars": 16,
+          "kind": "progression",
+          "patternId": "pattern-occ-36-51",
+          "occurrenceCount": 1,
+          "occurrenceBars": [
+            [
+              36,
+              51
+            ]
+          ]
+        },
+        {
+          "bars": [
+            89,
+            96
+          ],
+          "lengthBars": 8,
+          "kind": "progression",
+          "patternId": "pattern-occ-1-8",
+          "occurrenceCount": 42,
+          "occurrenceBars": [
+            [
+              1,
+              8
+            ],
+            [
+              3,
+              10
+            ],
+            [
+              5,
+              12
+            ],
+            [
+              7,
+              14
+            ],
+            [
+              9,
+              16
+            ],
+            [
+              11,
+              18
+            ],
+            [
+              13,
+              20
+            ],
+            [
+              15,
+              22
+            ],
+            [
+              17,
+              24
+            ],
+            [
+              19,
+              26
+            ],
+            [
+              21,
+              28
+            ],
+            [
+              23,
+              30
+            ]
+          ]
+        },
+        {
+          "bars": [
+            66,
+            73
+          ],
+          "lengthBars": 8,
+          "kind": "progression",
+          "patternId": "pattern-occ-2-9",
+          "occurrenceCount": 40,
+          "occurrenceBars": [
+            [
+              2,
+              9
+            ],
+            [
+              4,
+              11
+            ],
+            [
+              6,
+              13
+            ],
+            [
+              8,
+              15
+            ],
+            [
+              10,
+              17
+            ],
+            [
+              12,
+              19
+            ],
+            [
+              14,
+              21
+            ],
+            [
+              16,
+              23
+            ],
+            [
+              18,
+              25
+            ],
+            [
+              20,
+              27
+            ],
+            [
+              22,
+              29
+            ],
+            [
+              24,
+              31
+            ]
+          ]
+        },
+        {
+          "bars": [
+            34,
+            49
+          ],
+          "lengthBars": 16,
+          "kind": "progression",
+          "patternId": "pattern-occ-34-49",
+          "occurrenceCount": 1,
+          "occurrenceBars": [
+            [
+              34,
+              49
+            ]
+          ]
+        },
+        {
+          "bars": [
+            48,
+            55
+          ],
+          "lengthBars": 8,
+          "kind": "progression",
+          "patternId": "pattern-occ-48-55",
+          "occurrenceCount": 1,
+          "occurrenceBars": [
+            [
+              48,
+              55
+            ]
+          ]
+        },
+        {
+          "bars": [
+            48,
+            63
+          ],
+          "lengthBars": 16,
+          "kind": "progression",
+          "patternId": "pattern-occ-48-63",
+          "occurrenceCount": 1,
+          "occurrenceBars": [
+            [
+              48,
+              63
+            ]
+          ]
+        }
+      ]
+    }
+  },
+  "s16Trace": {
+    "scenario": "S16_clean",
+    "totalBars": 32,
+    "harmonicActiveBars": 32,
+    "generatedOccurrences": 306,
+    "groupedPatterns": 260,
+    "selectedCards": 16,
+    "visibleCards": 10,
+    "visiblePatternDuplicateCount": 0,
+    "occurrenceReachability": 1,
+    "representativeOccurrenceCoverage": 0.375,
+    "reachableOccurrenceCoverage": 0.75,
+    "groupedVisibleCoverage": 0.75,
+    "novelHarmonicMaterialCoverage": 0.038462,
+    "cards": [
+      {
+        "bars": [
+          1,
+          8
+        ],
+        "lengthBars": 8,
+        "kind": "progression",
+        "patternId": "pattern-occ-1-8",
+        "occurrenceCount": 1,
+        "occurrenceBars": [
+          [
+            1,
+            8
+          ]
+        ]
+      },
+      {
+        "bars": [
+          29,
+          32
+        ],
+        "lengthBars": 4,
+        "kind": "progression",
+        "patternId": "pattern-occ-13-16",
+        "occurrenceCount": 4,
+        "occurrenceBars": [
+          [
+            13,
+            16
+          ],
+          [
+            17,
+            20
+          ],
+          [
+            25,
+            28
+          ],
+          [
+            29,
+            32
+          ]
+        ]
+      },
+      {
+        "bars": [
+          1,
+          4
+        ],
+        "lengthBars": 4,
+        "kind": "progression",
+        "patternId": "pattern-occ-1-4",
+        "occurrenceCount": 1,
+        "occurrenceBars": [
+          [
+            1,
+            4
+          ]
+        ]
+      },
+      {
+        "bars": [
+          2,
+          5
+        ],
+        "lengthBars": 4,
+        "kind": "progression",
+        "patternId": "pattern-occ-2-5",
+        "occurrenceCount": 1,
+        "occurrenceBars": [
+          [
+            2,
+            5
+          ]
+        ]
+      },
+      {
+        "bars": [
+          1,
+          6
+        ],
+        "lengthBars": 6,
+        "kind": "progression",
+        "patternId": "pattern-occ-1-6",
+        "occurrenceCount": 1,
+        "occurrenceBars": [
+          [
+            1,
+            6
+          ]
+        ]
+      },
+      {
+        "bars": [
+          2,
+          7
+        ],
+        "lengthBars": 6,
+        "kind": "progression",
+        "patternId": "pattern-occ-2-7",
+        "occurrenceCount": 1,
+        "occurrenceBars": [
+          [
+            2,
+            7
+          ]
+        ]
+      },
+      {
+        "bars": [
+          1,
+          7
+        ],
+        "lengthBars": 7,
+        "kind": "progression",
+        "patternId": "pattern-occ-1-7",
+        "occurrenceCount": 1,
+        "occurrenceBars": [
+          [
+            1,
+            7
+          ]
+        ]
+      },
+      {
+        "bars": [
+          2,
+          8
+        ],
+        "lengthBars": 7,
+        "kind": "progression",
+        "patternId": "pattern-occ-2-8",
+        "occurrenceCount": 1,
+        "occurrenceBars": [
+          [
+            2,
+            8
+          ]
+        ]
+      },
+      {
+        "bars": [
+          4,
+          7
+        ],
+        "lengthBars": 4,
+        "kind": "progression",
+        "patternId": "pattern-occ-4-7",
+        "occurrenceCount": 1,
+        "occurrenceBars": [
+          [
+            4,
+            7
+          ]
+        ]
+      },
+      {
+        "bars": [
+          3,
+          6
+        ],
+        "lengthBars": 4,
+        "kind": "progression",
+        "patternId": "pattern-occ-3-6",
+        "occurrenceCount": 1,
+        "occurrenceBars": [
+          [
+            3,
+            6
+          ]
+        ]
+      }
+    ]
+  }
+}

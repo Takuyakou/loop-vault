@@ -183,12 +183,34 @@ if (checkDeterminism) {
   });
 }
 
-gates.push({
-  id: "chord-corpus-non-regression",
-  description: "Chord Drip and Chapter 3 Seed do not regress.",
-  verdict: "not-evaluated",
-  detail: "checked by scripts/evaluate-midi-analysis.ts and evaluate-chapter3-seed.ts outside this script",
-});
+// Reads the recorded comparison rather than deferring to another script.
+// Leaving it "not-evaluated" is how a thirteen-gate list quietly became twelve:
+// the verdict was produced elsewhere and never written back, so the count read
+// "8 PASS, 4 FAIL" and nobody could say what the thirteenth was doing.
+gates.push(await (async (): Promise<GateResult> => {
+  const recordedPath = resolve(cwd(), "docs/phase4.1.2/07-timeline-non-regression.json");
+  try {
+    const recorded = JSON.parse(await readFile(recordedPath, "utf8")) as {
+      checked: number;
+      identical: number;
+      differing: string[];
+    };
+    return {
+      id: "chord-corpus-non-regression",
+      description: "Chord Drip fullTimeline is identical to phase4-v1's.",
+      verdict: recorded.identical === recorded.checked ? "pass" : "fail",
+      detail: `${recorded.identical}/${recorded.checked} identical`,
+      ...(recorded.differing.length > 0 ? { offenders: recorded.differing.slice(0, 12) } : {}),
+    };
+  } catch {
+    return {
+      id: "chord-corpus-non-regression",
+      description: "Chord Drip fullTimeline is identical to phase4-v1's.",
+      verdict: "not-evaluated",
+      detail: "run scripts/verify-timeline-non-regression.ts first",
+    };
+  }
+})());
 
 const summary = (pick: (evaluation: FileEvaluation) => number) => {
   const values = rows.map((row) => pick(row.evaluation));
