@@ -2,6 +2,8 @@ import type { ChordTimelineItem, ProgressionBlockCandidate } from "../types";
 import { normaliseEvidence, scoreBlockQuality } from "./blockQuality";
 import { recoverRawMatchScore, summaryFromEvents } from "./candidateBlock";
 import { selectOccurrencesByCoverage, type CoverageSelectionOptions } from "./coverageSelector";
+import { buildPatternCandidates } from "./patternCandidate";
+import { selectPatternsByCoverage, type PatternSelectionOptions } from "./patternSelection";
 import {
   buildOccurrences, groupIntoPatterns, occurrenceToCandidate, scoreOccurrences,
   type CandidatePattern,
@@ -49,6 +51,57 @@ export function harmonicActiveBars(data: MidiSongData, totalBars: number): numbe
     if (sounding) bars.push(bar);
   }
   return bars;
+}
+
+/**
+ * Candidate list built one card per pattern.
+ *
+ * Occurrences still carry the evidence and the score; the difference is that a
+ * display slot is spent on a pattern, so the same progression cannot occupy two
+ * of them. The occurrence list behind each card is unchanged, so nothing becomes
+ * unreachable — the second chorus is still one click away, it just no longer
+ * costs a slot of its own.
+ */
+export function buildPatternCoverageCandidates(
+  timeline: readonly ChordTimelineItem[],
+  data: MidiSongData,
+  totalBars: number,
+  rankingScores: readonly number[] | undefined,
+  options: Partial<PatternSelectionOptions> = {},
+): CoverageCandidateResult {
+  const meter = beatsPerBar(data.timeSignature);
+  const rawMatchScores = rankingScores
+    ? rankingScores.map(recoverRawMatchScore)
+    : timeline.map((item) => item.confidence);
+  const normalise = normaliseEvidence(rawMatchScores);
+
+  const occurrences = scoreOccurrences(
+    buildOccurrences(timeline, totalBars, { beatsPerBar: meter, rawMatchScores }),
+    { beatsPerBar: meter, rawMatchScores, normaliseEvidence: normalise, scoreBlockQuality },
+  );
+
+  const active = harmonicActiveBars(data, totalBars);
+  const patterns = groupIntoPatterns(occurrences);
+  const patternCandidates = buildPatternCandidates(patterns, active);
+  const selection = selectPatternsByCoverage(patternCandidates, {
+    harmonicActiveBars: active,
+    ...options,
+  });
+
+  return {
+    candidates: selection.selected.map((pattern) => occurrenceToCandidate(
+      pattern.representative,
+      summaryFromEvents(pattern.representative.events, pattern.representative.lengthBars, meter),
+      pattern.representative.stats.densityClass === "vamp" ? ["variation"] : ["main"],
+    )),
+    patterns,
+    harmonicActiveBars: active,
+    coverage: selection.coverage,
+    coverageAtVisible: selection.coverageAtVisible,
+    longestUncoveredRun: selection.longestUncoveredRun,
+    uncoveredBars: selection.uncoveredBars,
+    stoppedBecause: selection.stoppedBecause,
+  };
 }
 
 export function buildCoverageCandidates(

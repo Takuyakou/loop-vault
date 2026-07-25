@@ -5,6 +5,7 @@ import { analyzeMidiLegacyBoundaryRerank, legacyBoundaryRerankerVersion } from "
 import { analyzeMidi as analyzeMidiLegacy, analyzerVersion as legacyAnalyzerVersion } from "./legacy";
 import { analyzeMidiPhase4, phase4AnalyzerVersion } from "./phase4Analyzer";
 import { analyzeMidiPhase41, phase41AnalyzerVersion } from "./phase41Analyzer";
+import { analyzeMidiPhase412, phase412AnalyzerVersion } from "./phase412Analyzer";
 import type { AnalyzeMidiOptions } from "./types";
 import { analyzeMidiVoiceAwareRerank, voiceAwareRerankerVersion } from "./voiceAwareReranker";
 
@@ -32,6 +33,7 @@ export {
   legacyBoundaryRerankerVersion,
   phase4AnalyzerVersion,
   phase41AnalyzerVersion,
+  phase412AnalyzerVersion,
   voiceAwareRerankerVersion,
 };
 export { buildWeightedWindows, extractBlockCandidates, inferTrackRoles, matchWindow, smoothTimeline } from "./legacy";
@@ -48,6 +50,8 @@ export function analyzeMidi(bytes: Uint8Array, options: AnalyzeMidiOptions = {})
       ? analyzeMidiPhase4(bytes, options)
     : mode === "phase4.1-v1"
       ? analyzeMidiPhase41(bytes, options)
+    : mode === "phase4.1.2-v1"
+      ? analyzeMidiPhase412(bytes, options)
       : analyzeMidiLegacy(bytes, options);
   return { ...analysis, sourceFingerprint: fingerprintMidiBytes(bytes) };
 }

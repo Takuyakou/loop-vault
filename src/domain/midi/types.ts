@@ -76,7 +76,8 @@ export type MidiAnalyzerMode =
   | "legacy-boundary-rerank"
   | "voice-aware-rerank-v1"
   | "phase4-v1"
-  | "phase4.1-v1";
+  | "phase4.1-v1"
+  | "phase4.1.2-v1";
 
 export interface HybridFeatureFlags {
   trackRoleEstimation: boolean;
