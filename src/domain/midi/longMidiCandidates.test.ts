@@ -17,7 +17,7 @@ describe("long MIDI candidate coverage", () => {
       + finalTimelineItem.durationBeats;
     const miniMapLayout = layoutSongMiniMapCandidates(result.blockCandidates, result.totalBars);
 
-    expect(defaultAnalyzerMode).toBe("legacy");
+    expect(defaultAnalyzerMode).toBe("phase4-v1");
     expect(result.totalBars).toBe(240);
     expect(finalTimelineEndBeat).toBe(960);
     expect(result.blockCandidates).toHaveLength(12);

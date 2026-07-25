@@ -12,8 +12,8 @@ export const phase4AnalyzerVersion = "phase4-symbolic-v1";
  * is charged for naming a quality whose defining tone is absent, and a bass note
  * sitting on the root no longer compensates for that absence.
  *
- * Kept as a separate mode so `defaultAnalyzerMode` stays `legacy` until the
- * P4.0-06 comparison is reviewed and approved.
+ * Promoted to `defaultAnalyzerMode` in P4.0-06. `legacy` remains available and
+ * unchanged, so reverting is a one-line change with no data migration.
  */
 /**
  * Chosen on the tune subset only. Holdout is read at stage completion and at the
