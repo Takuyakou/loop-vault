@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.1-00",
+  "status": "frozen",
+  "frozenAt": "2026-07-25",
+  "frozenPolicy": "Set from the measured baseline before any selector change. These thresholds must not be relaxed to accommodate a later result.",
+  "baselineSource": "docs/phase4.1/00-suran-baseline.json",
+  "derivation": {
+    "rule": "oracleCandidateCoverage >= 95% implies selectedCoverageAtAllVisible >= 90%",
+    "measuredOracleCandidateCoverage": 1.0,
+    "appliedBranch": "oracleCandidateCoverage >= 95%",
+    "reasoning": "Every harmonic-active bar already has a generated candidate window and dedup removes none of them, so nothing about candidate generation caps what selection can reach. The full 90% target therefore applies without relief."
+  },
+  "gates": [
+    {
+      "id": "selected-coverage-at-all-visible",
+      "metric": "selectedCoverageAtAllVisible",
+      "rule": "atLeast",
+      "value": 0.90,
+      "baseline": 0.285714
+    },
+    {
+      "id": "section-recall-at-all-visible",
+      "metric": "sectionRecallAtAllVisible",
+      "rule": "atLeast",
+      "value": 1.0,
+      "baseline": 0.55,
+      "note": "Sections are derived from four-bar chroma novelty; the definition is frozen alongside this gate so the denominator cannot drift."
+    },
+    {
+      "id": "longest-uncovered-run",
+      "metric": "longestUncoveredHarmonicRun",
+      "rule": "lessThan",
+      "value": 8,
+      "baseline": 16
+    },
+    {
+      "id": "focus-range-reachable",
+      "metric": "focusRange.coveredBySelected",
+      "rule": "atLeast",
+      "value": 1,
+      "baseline": 0,
+      "note": "Bars 33-46 must be covered by at least one selected candidate, fully or partially."
+    }
+  ],
+  "guardrails": [
+    {
+      "id": "minimum-selected-candidate-score",
+      "metric": "minimumSelectedCandidateScore",
+      "rule": "noSevereRegression",
+      "toleranceLoss": 0.15,
+      "baseline": 0.670448,
+      "note": "Coverage must not be bought by admitting weak candidates."
+    },
+    {
+      "id": "runtime",
+      "metric": "runtimeMs",
+      "rule": "max",
+      "value": 3000
+    },
+    {
+      "id": "determinism",
+      "rule": "identicalOutputOnRepeatRun"
+    },
+    {
+      "id": "promotion-metrics-no-regression",
+      "rule": "chordDripAndChapter3SeedMetricsDoNotRegress",
+      "note": "Coverage work must not move chord detection accuracy; those gates stay as frozen in Phase 4.0."
+    }
+  ],
+  "denominator": {
+    "definition": "bars in which chord-evidence notes sound",
+    "percussion": "excluded upstream by selectChordEvidenceNotes",
+    "silentBars": "excluded from both numerator and denominator",
+    "drumOnlyBars": "excluded; they carry no harmony to cover",
+    "belowEvidenceThreshold": "excluded by the same evidence selection the analyzer uses",
+    "pickupAndIncompleteBars": "counted as ordinary bars when evidence notes sound in them",
+    "meterChanges": "the analyzer uses the first time signature; this corpus is 4/4 throughout",
+    "measuredHarmonicActiveBars": 98,
+    "measuredTotalBars": 100
+  }
+}

@@ -1,0 +1,751 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.1-00",
+  "source": {
+    "fingerprint": "sha256-2790e82d09b52a58efe8806e79d7379f6ec15091930197073ff9095dcee5ea10",
+    "byteLength": 33055
+  },
+  "song": {
+    "totalBars": 100,
+    "timeSignature": "4/4",
+    "bpm": 115,
+    "detectedKey": "A major",
+    "timelineEvents": 168
+  },
+  "denominator": {
+    "definition": "bars where chord-evidence notes sound; percussion excluded upstream; silent and drum-only bars are not counted",
+    "harmonicActiveBars": 98,
+    "silentOrNonHarmonicBars": 2,
+    "firstHarmonicBar": 3,
+    "lastHarmonicBar": 100
+  },
+  "pipeline": {
+    "rawWindows": 374,
+    "dedupedWindows": 373,
+    "selectedCandidates": 10
+  },
+  "coverage": {
+    "oracleCandidateCoverage": 1,
+    "dedupedCoverage": 1,
+    "selectedCoverageAt10": 0.285714,
+    "selectedCoverageAtAllVisible": 0.285714,
+    "longestUncoveredHarmonicRun": 16,
+    "coverageRedundancy": 1.6429,
+    "minimumSelectedCandidateScore": 0.670448
+  },
+  "loss": {
+    "candidateGenerationLoss": {
+      "bars": 0,
+      "barNumbers": []
+    },
+    "dedupLoss": {
+      "windowsRemoved": 1,
+      "barsMadeUnreachable": []
+    },
+    "selectionLoss": {
+      "bars": 70,
+      "barNumbers": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        14,
+        15,
+        16,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99,
+        100
+      ]
+    }
+  },
+  "sections": {
+    "definition": "derived from four-bar chroma novelty; the source has no human section marks",
+    "windowBars": 4,
+    "noveltyThreshold": 0.45,
+    "count": 20,
+    "ranges": [
+      {
+        "id": "Section 1",
+        "startBar": 3,
+        "endBar": 6
+      },
+      {
+        "id": "Section 2",
+        "startBar": 7,
+        "endBar": 10
+      },
+      {
+        "id": "Section 3",
+        "startBar": 11,
+        "endBar": 14
+      },
+      {
+        "id": "Section 4",
+        "startBar": 15,
+        "endBar": 18
+      },
+      {
+        "id": "Section 5",
+        "startBar": 19,
+        "endBar": 22
+      },
+      {
+        "id": "Section 6",
+        "startBar": 23,
+        "endBar": 26
+      },
+      {
+        "id": "Section 7",
+        "startBar": 27,
+        "endBar": 30
+      },
+      {
+        "id": "Section 8",
+        "startBar": 31,
+        "endBar": 34
+      },
+      {
+        "id": "Section 9",
+        "startBar": 35,
+        "endBar": 38
+      },
+      {
+        "id": "Section 10",
+        "startBar": 39,
+        "endBar": 46
+      },
+      {
+        "id": "Section 11",
+        "startBar": 47,
+        "endBar": 50
+      },
+      {
+        "id": "Section 12",
+        "startBar": 51,
+        "endBar": 54
+      },
+      {
+        "id": "Section 13",
+        "startBar": 55,
+        "endBar": 66
+      },
+      {
+        "id": "Section 14",
+        "startBar": 67,
+        "endBar": 78
+      },
+      {
+        "id": "Section 15",
+        "startBar": 79,
+        "endBar": 82
+      },
+      {
+        "id": "Section 16",
+        "startBar": 83,
+        "endBar": 86
+      },
+      {
+        "id": "Section 17",
+        "startBar": 87,
+        "endBar": 90
+      },
+      {
+        "id": "Section 18",
+        "startBar": 91,
+        "endBar": 94
+      },
+      {
+        "id": "Section 19",
+        "startBar": 95,
+        "endBar": 98
+      },
+      {
+        "id": "Section 20",
+        "startBar": 99,
+        "endBar": 100
+      }
+    ],
+    "sectionRecallAt10": 0.55,
+    "sectionRecallAtAllVisible": 0.55
+  },
+  "occurrence": {
+    "definition": "windows sharing a selected window's structure; the Occurrence model arrives in P4.1-01",
+    "distinctStructures": 373,
+    "structuresReachableFromSelection": 10,
+    "occurrencesOfSelectedStructures": 11,
+    "groupedVisibleCoverage": 0.306122
+  },
+  "focusRange": {
+    "from": 33,
+    "to": 46,
+    "harmonicActiveBars": 14,
+    "coveredByOracle": 14,
+    "coveredAfterDedup": 14,
+    "coveredBySelected": 0,
+    "uncoveredBars": [
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46
+    ]
+  },
+  "barActivity": [
+    {
+      "bar": 1,
+      "evidenceNotes": 0
+    },
+    {
+      "bar": 2,
+      "evidenceNotes": 0
+    },
+    {
+      "bar": 3,
+      "evidenceNotes": 14
+    },
+    {
+      "bar": 4,
+      "evidenceNotes": 12
+    },
+    {
+      "bar": 5,
+      "evidenceNotes": 14
+    },
+    {
+      "bar": 6,
+      "evidenceNotes": 18
+    },
+    {
+      "bar": 7,
+      "evidenceNotes": 21
+    },
+    {
+      "bar": 8,
+      "evidenceNotes": 20
+    },
+    {
+      "bar": 9,
+      "evidenceNotes": 34
+    },
+    {
+      "bar": 10,
+      "evidenceNotes": 30
+    },
+    {
+      "bar": 11,
+      "evidenceNotes": 16
+    },
+    {
+      "bar": 12,
+      "evidenceNotes": 10
+    },
+    {
+      "bar": 13,
+      "evidenceNotes": 12
+    },
+    {
+      "bar": 14,
+      "evidenceNotes": 27
+    },
+    {
+      "bar": 15,
+      "evidenceNotes": 31
+    },
+    {
+      "bar": 16,
+      "evidenceNotes": 25
+    },
+    {
+      "bar": 17,
+      "evidenceNotes": 28
+    },
+    {
+      "bar": 18,
+      "evidenceNotes": 45
+    },
+    {
+      "bar": 19,
+      "evidenceNotes": 20
+    },
+    {
+      "bar": 20,
+      "evidenceNotes": 9
+    },
+    {
+      "bar": 21,
+      "evidenceNotes": 23
+    },
+    {
+      "bar": 22,
+      "evidenceNotes": 20
+    },
+    {
+      "bar": 23,
+      "evidenceNotes": 27
+    },
+    {
+      "bar": 24,
+      "evidenceNotes": 33
+    },
+    {
+      "bar": 25,
+      "evidenceNotes": 38
+    },
+    {
+      "bar": 26,
+      "evidenceNotes": 37
+    },
+    {
+      "bar": 27,
+      "evidenceNotes": 44
+    },
+    {
+      "bar": 28,
+      "evidenceNotes": 43
+    },
+    {
+      "bar": 29,
+      "evidenceNotes": 49
+    },
+    {
+      "bar": 30,
+      "evidenceNotes": 54
+    },
+    {
+      "bar": 31,
+      "evidenceNotes": 70
+    },
+    {
+      "bar": 32,
+      "evidenceNotes": 73
+    },
+    {
+      "bar": 33,
+      "evidenceNotes": 85
+    },
+    {
+      "bar": 34,
+      "evidenceNotes": 13
+    },
+    {
+      "bar": 35,
+      "evidenceNotes": 17
+    },
+    {
+      "bar": 36,
+      "evidenceNotes": 38
+    },
+    {
+      "bar": 37,
+      "evidenceNotes": 77
+    },
+    {
+      "bar": 38,
+      "evidenceNotes": 58
+    },
+    {
+      "bar": 39,
+      "evidenceNotes": 61
+    },
+    {
+      "bar": 40,
+      "evidenceNotes": 46
+    },
+    {
+      "bar": 41,
+      "evidenceNotes": 42
+    },
+    {
+      "bar": 42,
+      "evidenceNotes": 27
+    },
+    {
+      "bar": 43,
+      "evidenceNotes": 21
+    },
+    {
+      "bar": 44,
+      "evidenceNotes": 17
+    },
+    {
+      "bar": 45,
+      "evidenceNotes": 14
+    },
+    {
+      "bar": 46,
+      "evidenceNotes": 15
+    },
+    {
+      "bar": 47,
+      "evidenceNotes": 17
+    },
+    {
+      "bar": 48,
+      "evidenceNotes": 36
+    },
+    {
+      "bar": 49,
+      "evidenceNotes": 32
+    },
+    {
+      "bar": 50,
+      "evidenceNotes": 43
+    },
+    {
+      "bar": 51,
+      "evidenceNotes": 26
+    },
+    {
+      "bar": 52,
+      "evidenceNotes": 24
+    },
+    {
+      "bar": 53,
+      "evidenceNotes": 15
+    },
+    {
+      "bar": 54,
+      "evidenceNotes": 16
+    },
+    {
+      "bar": 55,
+      "evidenceNotes": 30
+    },
+    {
+      "bar": 56,
+      "evidenceNotes": 26
+    },
+    {
+      "bar": 57,
+      "evidenceNotes": 21
+    },
+    {
+      "bar": 58,
+      "evidenceNotes": 16
+    },
+    {
+      "bar": 59,
+      "evidenceNotes": 6
+    },
+    {
+      "bar": 60,
+      "evidenceNotes": 26
+    },
+    {
+      "bar": 61,
+      "evidenceNotes": 15
+    },
+    {
+      "bar": 62,
+      "evidenceNotes": 21
+    },
+    {
+      "bar": 63,
+      "evidenceNotes": 21
+    },
+    {
+      "bar": 64,
+      "evidenceNotes": 38
+    },
+    {
+      "bar": 65,
+      "evidenceNotes": 36
+    },
+    {
+      "bar": 66,
+      "evidenceNotes": 22
+    },
+    {
+      "bar": 67,
+      "evidenceNotes": 26
+    },
+    {
+      "bar": 68,
+      "evidenceNotes": 37
+    },
+    {
+      "bar": 69,
+      "evidenceNotes": 46
+    },
+    {
+      "bar": 70,
+      "evidenceNotes": 41
+    },
+    {
+      "bar": 71,
+      "evidenceNotes": 56
+    },
+    {
+      "bar": 72,
+      "evidenceNotes": 59
+    },
+    {
+      "bar": 73,
+      "evidenceNotes": 62
+    },
+    {
+      "bar": 74,
+      "evidenceNotes": 41
+    },
+    {
+      "bar": 75,
+      "evidenceNotes": 24
+    },
+    {
+      "bar": 76,
+      "evidenceNotes": 23
+    },
+    {
+      "bar": 77,
+      "evidenceNotes": 40
+    },
+    {
+      "bar": 78,
+      "evidenceNotes": 57
+    },
+    {
+      "bar": 79,
+      "evidenceNotes": 53
+    },
+    {
+      "bar": 80,
+      "evidenceNotes": 40
+    },
+    {
+      "bar": 81,
+      "evidenceNotes": 33
+    },
+    {
+      "bar": 82,
+      "evidenceNotes": 35
+    },
+    {
+      "bar": 83,
+      "evidenceNotes": 38
+    },
+    {
+      "bar": 84,
+      "evidenceNotes": 28
+    },
+    {
+      "bar": 85,
+      "evidenceNotes": 52
+    },
+    {
+      "bar": 86,
+      "evidenceNotes": 76
+    },
+    {
+      "bar": 87,
+      "evidenceNotes": 65
+    },
+    {
+      "bar": 88,
+      "evidenceNotes": 60
+    },
+    {
+      "bar": 89,
+      "evidenceNotes": 36
+    },
+    {
+      "bar": 90,
+      "evidenceNotes": 29
+    },
+    {
+      "bar": 91,
+      "evidenceNotes": 38
+    },
+    {
+      "bar": 92,
+      "evidenceNotes": 36
+    },
+    {
+      "bar": 93,
+      "evidenceNotes": 55
+    },
+    {
+      "bar": 94,
+      "evidenceNotes": 45
+    },
+    {
+      "bar": 95,
+      "evidenceNotes": 52
+    },
+    {
+      "bar": 96,
+      "evidenceNotes": 54
+    },
+    {
+      "bar": 97,
+      "evidenceNotes": 44
+    },
+    {
+      "bar": 98,
+      "evidenceNotes": 60
+    },
+    {
+      "bar": 99,
+      "evidenceNotes": 63
+    },
+    {
+      "bar": 100,
+      "evidenceNotes": 10
+    }
+  ],
+  "selectedBlocks": [
+    {
+      "id": "bars-21-22",
+      "startBar": 21,
+      "endBar": 22,
+      "lengthBars": 2,
+      "selectionScore": 0.711521,
+      "densityClass": "compact"
+    },
+    {
+      "id": "bars-30-31",
+      "startBar": 30,
+      "endBar": 31,
+      "lengthBars": 2,
+      "selectionScore": 0.787519,
+      "densityClass": "compact"
+    },
+    {
+      "id": "bars-66-67",
+      "startBar": 66,
+      "endBar": 67,
+      "lengthBars": 2,
+      "selectionScore": 0.70361,
+      "densityClass": "dense"
+    },
+    {
+      "id": "bars-83-86",
+      "startBar": 83,
+      "endBar": 86,
+      "lengthBars": 4,
+      "selectionScore": 0.670448,
+      "densityClass": "dense"
+    },
+    {
+      "id": "bars-21-28",
+      "startBar": 21,
+      "endBar": 28,
+      "lengthBars": 8,
+      "selectionScore": 0.6876,
+      "densityClass": "standard"
+    },
+    {
+      "id": "bars-17-32",
+      "startBar": 17,
+      "endBar": 32,
+      "lengthBars": 16,
+      "selectionScore": 0.674031,
+      "densityClass": "standard"
+    },
+    {
+      "id": "bars-17-18",
+      "startBar": 17,
+      "endBar": 18,
+      "lengthBars": 2,
+      "selectionScore": 0.695458,
+      "densityClass": "compact"
+    },
+    {
+      "id": "bars-10-13",
+      "startBar": 10,
+      "endBar": 13,
+      "lengthBars": 4,
+      "selectionScore": 0.682564,
+      "densityClass": "standard"
+    },
+    {
+      "id": "bars-49-50",
+      "startBar": 49,
+      "endBar": 50,
+      "lengthBars": 2,
+      "selectionScore": 0.682178,
+      "densityClass": "compact"
+    },
+    {
+      "id": "bars-19-22",
+      "startBar": 19,
+      "endBar": 22,
+      "lengthBars": 4,
+      "selectionScore": 0.681081,
+      "densityClass": "standard"
+    }
+  ],
+  "densityDistribution": {
+    "compact": 4,
+    "dense": 2,
+    "standard": 4
+  }
+}
