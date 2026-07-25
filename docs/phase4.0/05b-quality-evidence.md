@@ -2,6 +2,7 @@
 
 - 作成日: 2026-07-25
 - Branch: `feature/p40-05b-quality-evidence`（base: `feature/p40-04-block-selection-v2`）
+- 本書は05B（品質決定音）と05D（tune探索）の結果を含む
 - **`defaultAnalyzerMode` は `legacy` のまま。legacyの出力は1ビットも変えていない**
 
 ## 1. 結論
@@ -17,7 +18,7 @@
 
 単純なコード（`Dmaj7` / `Dm7` / `C#m7` / `C7` / `Bm7` / `Gmaj9/A`）は不変。
 
-**ただし、コーパス全体では Gate を通らない。** root -8.13pp / triad -5.76pp の退行がある（§5）。
+**ただし、コーパス全体では Gate を通らない。** tune探索後も `triad` が -1.94pp 残る（§6）。
 
 ## 2. 何が問題だったか
 
@@ -59,8 +60,10 @@ const hit = pcs.reduce((sum, pc) => sum + histogram[pc], 0);
 ### 3.2 減点とBass減衰
 
 ```text
-confidence -= (1 - coverage) × 0.35
+confidence -= (1 - coverage) × penalty
 ```
+
+`penalty` の値は §5 のtune探索で決めた（採用値 0.08）。
 
 さらに §11.6 に従い、Bassがルート上にあっても品質証拠が弱ければルートボーナスを減衰させる。
 
@@ -93,56 +96,104 @@ bassBonus × (0.4 + 0.6 × coverage)
 
 品質証拠は `LegacyScoringOptions.useQualityEvidence` でのみ有効になり、legacyは通過しない。
 
-## 5. コーパス評価 — Gateを通らない
+## 5. Tune探索（05D）
+
+減点係数と存在判定閾値は設計値だったため、tune 70件のみで探索した。**holdoutは探索中に一度も読んでいない。**
+
+### 5.1 「3rdのみに絞る」案は逆効果だった
+
+先に立てた仮説（減点を3rd欠落のmajor/minorへ限定すれば副作用が減る）は**否定された**。
+
+| scope | canonicalExact（tune、対legacy） |
+|---|---:|
+| `third` | **-1.02 〜 -2.38pp** |
+| `full` | **+1.11 〜 +3.23pp** |
+
+3rdだけを課金対象にすると canonicalExact はむしろ悪化する。7thや変化5度の欠落も課金する `full` の方が一貫して良い。
+
+### 5.2 減点係数に崖がある
+
+| penalty | root（対legacy） | triad | canonicalExact |
+|---:|---:|---:|---:|
+| 0.02 | +0.09 | -1.53 | +3.23 |
+| 0.04 | +0.26 | -1.87 | +3.23 |
+| 0.06 | +0.34 | -1.96 | +3.15 |
+| **0.08** | **+0.68** | **-1.79** | **+2.98** |
+| 0.10 | +0.17 | -2.21 | +3.06 |
+| 0.12 | **-10.03** | -8.67 | +2.81 |
+| 0.14 | -10.03 | -8.59 | +2.81 |
+
+0.10と0.12の間でrootが約10pp崩壊する。当初の0.35はこの崖の遥か上にあった。
+
+### 5.3 存在判定閾値は無効
+
+0.01 / 0.02 / 0.03 で結果が**完全に同一**だった。必須音は明確に鳴っているか明確に無音かのどちらかで、境界ケースがこのコーパスには存在しない。パラメータとしては現状死んでいる。
+
+### 5.4 採用構成
+
+```ts
+{ scope: "full", penalty: 0.08, presenceThreshold: 0.02 }
+```
+
+tune上でrootとTop-3が最良。
+
+## 6. コーパス評価 — 残る不合格は triad の1件のみ
 
 duration-weighted / full、100 MIDI。
 
 | Metric | legacy | phase4-v1 | Δ | Gate判定 |
 |---|---:|---:|---:|---|
-| **root** | 57.11% | **48.98%** | **-8.13pp** | ❌ 許容0.5pp |
-| **triad** | 59.75% | **53.99%** | **-5.76pp** | ❌ 許容0.5pp |
-| quality | 44.23% | 43.53% | -0.70pp | ❌ 許容0.5pp |
-| seventh | 55.12% | 56.68% | +1.56pp | ✅ |
-| extension | 38.20% | 36.31% | -1.89pp | 対象外 |
-| bassSlash | 65.25% | 66.11% | +0.86pp | ✅ |
-| **canonicalExact** | 25.92% | **27.91%** | **+1.99pp** | ✅ |
-| pitchSetEquivalent | 28.56% | 30.66% | +2.10pp | 対象外 |
-| **top3Canonical** | 37.45% | **39.76%** | **+2.31pp** | ✅ |
-| top3Root | 70.47% | 68.86% | -1.61pp | ✅ 許容3.0pp |
-| top3Quality | 65.19% | 64.33% | -0.86pp | ✅ 許容3.0pp |
-| holdout canonicalExact | 24.71% | **25.88%** | **+1.17pp** | ✅ requireAny充足 |
-| runtime | 587 ms | 675 ms | +88 ms | ✅ 上限3000 ms |
+| root | 57.11% | 57.76% | **+0.65pp** | ✅ |
+| **triad** | 59.75% | **57.81%** | **-1.94pp** | ❌ 許容0.5pp |
+| quality | 44.23% | 44.99% | +0.76pp | ✅ |
+| seventh | 55.12% | 56.25% | +1.13pp | ✅ |
+| extension | 38.20% | 36.42% | -1.78pp | 対象外 |
+| bassSlash | 65.25% | 66.38% | +1.13pp | ✅ |
+| **canonicalExact** | 25.92% | **28.13%** | **+2.21pp** | ✅ |
+| pitchSetEquivalent | 28.56% | 30.98% | +2.42pp | 対象外 |
+| **top3Canonical** | 37.45% | **40.25%** | **+2.80pp** | ✅ |
+| **top3Root** | 70.47% | **75.97%** | **+5.50pp** | ✅ |
+| top3Quality | 65.19% | 64.98% | -0.21pp | ✅ |
+| holdout canonicalExact | 24.71% | **25.59%** | **+0.88pp** | ✅ requireAny充足 |
+| runtime | 587 ms | 860 ms | +273 ms | ✅ 上限3000 ms |
 
-**判定: FAIL。** requireAny（holdout改善0.5pp以上）は満たすが、requireAll の root / triad / quality で不合格。
+**判定: FAIL（triadのみ）。**
 
-### 5.1 何が起きているか
+### 6.1 既存rerankerとの決定的な違い
 
-canonicalExact は上がり root は下がる、という一見矛盾した結果になっている。canonicalExact は root・triad・seventh・extension・bass のすべてが一致して初めて加点されるので、次のように読める。
+| Metric | legacy | LBR | voice-aware | **phase4-v1** |
+|---|---:|---:|---:|---:|
+| root | 57.11% | 57.33% | 57.54% | **57.76%** |
+| canonicalExact | 25.92% | 26.13% | 26.13% | **28.13%** |
+| top3Canonical | 37.45% | 38.09% | 38.36% | **40.25%** |
+| **top3Root** | 70.47% | **61.96%** | **62.18%** | **75.97%** |
 
-**phase4は「正解するときは完全に正解する」が、「ルートを取り違える頻度が legacy より高い」。**
+既存reranker2種は top3Root を8pp犠牲にして@1をわずかに上げていた。**phase4-v1は逆に top3Root を5.50pp改善している。** 計画書§2.3の「正解をTop-3へ入れてユーザーが数秒で選ぶ」という目的に対しては、3モードの中で唯一正しい方向へ動いている。
 
-3rd欠落への減点が、slash読み（`Em11` → `Dadd9/E`）へ寄せる方向に働く。fixtureのように期待がslash読みなら正解だが、コーパスには期待がルート位置のケースが多く、そこでルートを落としている可能性が高い。
+### 6.2 triadだけが下がる理由
 
-`top3Root` の低下は1.61ppに留まる（許容内）ため、**正しいルートは候補リストには残っている**。@1の選択がずれているだけである。
+triad が -1.94pp なのに quality（triad + seventh）が +0.76pp 上がっている。quality は両方一致で初めて加点されるので、次のように読める。
 
-## 6. 判断が必要な点
+**7thの取り違えを大きく減らす代わりに、一部でtriadを取り違えるようになった。** 純増ではあるが、triadを単独で見ると退行している。
 
-Gateは凍結済みであり、**結果に合わせて閾値を動かすことはしない**（計画書§4原則23、§8.10）。したがって現状の `phase4-v1` は製品既定にできない。
+## 7. 判断が必要な点
 
-考えられる次の手は3つある。
+Gateは凍結済みであり、**結果に合わせて閾値を動かすことはしない**（§4原則23、§8.10）。したがって現状の `phase4-v1` は自動的には昇格できない。
 
-1. **05Dのtune探索を実施する。** 減点係数0.35と存在判定閾値2%は設計値であり、tune corpus での探索を経ていない。root退行を許容内に収めつつcanonicalExactの改善を残せる設定があるかを探る。holdoutは触らない。
-2. **減点の適用範囲を絞る。** 現在は全qualityに一律で適用している。3rd欠落のmajor/minorだけに限定し、7th欠落などは減点しない案。
-3. **phase4を採用せず、Top-3改善のみを取り込む。** canonicalExact +1.99pp / top3Canonical +2.31pp は候補提示としては有益なので、主コードはlegacyのまま代替候補だけphase4で作る（`hybrid-v1` が主ラベルをlegacyに保つのと同じ構造）。
+選択肢は3つある。
 
-## 7. 未実施（本Stageの範囲外）
+1. **triadの許容幅を明示的に見直す。** Gate文書は「変更には人間の明示承認と理由の記録が必要」と定めている。root +0.65 / top3Root +5.50 / canonicalExact +2.21 と引き換えに triad -1.94 を受け入れるかの判断。
+2. **主コードはlegacyのまま、代替候補だけphase4で作る。** `hybrid-v1` が主ラベルをlegacyに保つのと同じ構造。@1指標は定義上すべて不変なので**Gateを確実に通り**、top3の利得だけを取れる。
+3. **phase4を保留し、P4.0-06でlegacy維持を推奨する。** Phase 4.0の成果はラベル層・評価基盤・Block v2として残る（§12.5「Phase 4.0は失敗ではない」）。
 
-- **05A Upper Structure Slash候補生成** — 未実装。P4.0-00の予測どおり、05Bだけで `Eadd9/F#` / `Dadd9/E` が主候補になったため、05Aの必要範囲は改めて評価すべき
+## 8. 未実施（本Stageの範囲外）
+
+- **05A Upper Structure Slash候補生成** — 未実装。P4.0-00の予測どおり、05Bだけで `Eadd9/F#` / `Dadd9/E` が主候補になったため、**必要性そのものが薄い**
 - **05C Legacy Boundary Reranker A/B接続** — 未実装
-- **05D tune corpusでの weight / 閾値探索** — 未実施。§5.1の退行はここで扱うのが筋
 - `sustained-across-bar` / `upper-structure-slash-possible` warning — 未実装
+- `presenceThreshold` はこのコーパスでは無効なパラメータであり、境界ケースを含む実データが得られるまで意味を持たない
 
-## 8. テスト
+## 9. テスト
 
 `src/domain/midi/qualityEvidence.test.ts`（16件）。
 
@@ -156,11 +207,13 @@ Gateは凍結済みであり、**結果に合わせて閾値を動かすこと�
 | `npx tsc --noEmit` | PASS |
 | `npm run eval:midi:datasets` | legacy baseline完全一致 |
 
-## 9. 成果物
+## 10. 成果物
 
 ```text
 docs/phase4.0/05b-quality-evidence.md        本書
 docs/phase4.0/05-phase4-comparison.json      4モードのcanonical比較
+docs/phase4.0/05d-quality-evidence-tune.json tune探索の全結果
+scripts/tune-quality-evidence.ts             tune限定のgrid探索
 src/domain/midi/qualityEvidence.ts           品質決定音の証拠
 src/domain/midi/phase4Analyzer.ts            phase4-v1モード
 src/domain/midi/qualityEvidence.test.ts      16件

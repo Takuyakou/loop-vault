@@ -28,10 +28,25 @@ export interface QualityDefiningEvidence {
  * A tone is counted as sounding once it carries this share of the window's
  * weight, which keeps a stray grace note from standing in for a real chord tone.
  */
-const presenceThreshold = 0.02;
+export const defaultPresenceThreshold = 0.02;
 
 /** How much a fully missing quality-defining tone costs the candidate. */
 export const missingQualityTonePenalty = 0.35;
+
+/**
+ * Which tones the penalty covers.
+ *
+ * `third` charges only the tone that separates major from minor from suspended,
+ * which is the failure the fixture shows. `full` also charges a missing seventh
+ * or altered fifth, which reaches further but disturbs root selection more.
+ */
+export type QualityEvidenceScope = "third" | "full";
+
+export interface QualityEvidenceOptions {
+  scope?: QualityEvidenceScope;
+  penalty?: number;
+  presenceThreshold?: number;
+}
 
 /**
  * Intervals that define each quality, relative to the root.
@@ -64,8 +79,19 @@ const definingIntervals: Record<ChordQuality, readonly number[]> = {
   sixNine: [4],
 };
 
-export function qualityDefiningIntervals(quality: ChordQuality): readonly number[] {
-  return definingIntervals[quality] ?? [];
+/**
+ * The tone that names the quality family: the third, or the suspended tone that
+ * replaces it. Everything else in `definingIntervals` is corroborating detail.
+ */
+const thirdIntervals = new Set([2, 3, 4, 5]);
+
+export function qualityDefiningIntervals(
+  quality: ChordQuality,
+  scope: QualityEvidenceScope = "full",
+): readonly number[] {
+  const intervals = definingIntervals[quality] ?? [];
+  if (scope === "full") return intervals;
+  return intervals.filter((interval) => thirdIntervals.has(interval));
 }
 
 export function evaluateQualityEvidence(
@@ -73,22 +99,25 @@ export function evaluateQualityEvidence(
   quality: ChordQuality,
   histogram: readonly number[],
   total: number,
+  options: QualityEvidenceOptions = {},
 ): QualityDefiningEvidence {
-  const intervals = qualityDefiningIntervals(quality);
+  const penalty = options.penalty ?? missingQualityTonePenalty;
+  const threshold = options.presenceThreshold ?? defaultPresenceThreshold;
+  const intervals = qualityDefiningIntervals(quality, options.scope ?? "full");
   const requiredPitchClasses = intervals.map((interval) => normalizePc(root + interval));
   if (requiredPitchClasses.length === 0 || total <= 0) {
     return { requiredPitchClasses, coverage: 1, missingPenalty: 0 };
   }
 
   const present = requiredPitchClasses.filter(
-    (pitchClass) => (histogram[pitchClass] ?? 0) / total > presenceThreshold,
+    (pitchClass) => (histogram[pitchClass] ?? 0) / total > threshold,
   ).length;
   const coverage = present / requiredPitchClasses.length;
 
   return {
     requiredPitchClasses,
     coverage,
-    missingPenalty: (1 - coverage) * missingQualityTonePenalty,
+    missingPenalty: (1 - coverage) * penalty,
   };
 }
 

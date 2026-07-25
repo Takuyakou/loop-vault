@@ -12,6 +12,7 @@ import { normaliseEvidence, scoreBlockQuality } from "./blockQuality";
 import {
   ambiguousQualityWarning, attenuateRootBonus, evaluateQualityEvidence,
   missingQualityToneWarning,
+  type QualityEvidenceOptions,
 } from "./qualityEvidence";
 import {
   buildCandidateEvents, candidateStats, recoverRawMatchScore,
@@ -94,6 +95,7 @@ export function analyzeMidi(
  */
 export interface LegacyScoringOptions {
   useQualityEvidence?: boolean;
+  qualityEvidence?: QualityEvidenceOptions;
   analyzerVersion?: string;
 }
 
@@ -509,7 +511,9 @@ function scoreTemplates(
       // while the tone that defines it is silent. When enabled, the shortfall is
       // charged directly and a bass sitting on the root no longer compensates.
       const evidence = scoring.useQualityEvidence
-        ? evaluateQualityEvidence(root, template.quality, histogram, total)
+        ? evaluateQualityEvidence(
+            root, template.quality, histogram, total, scoring.qualityEvidence,
+          )
         : undefined;
       const bassBonus = evidence && bassPc === root
         ? attenuateRootBonus(rawBassBonus, evidence.coverage)

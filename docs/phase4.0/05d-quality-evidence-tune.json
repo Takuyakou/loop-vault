@@ -1,0 +1,434 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.0-05D",
+  "subset": "tune",
+  "tuneCaseCount": 70,
+  "legacyBaseline": {
+    "denominator": 2352,
+    "rootAccuracy": 0.590136,
+    "triadAccuracy": 0.616497,
+    "qualityAccuracy": 0.434524,
+    "seventhAccuracy": 0.531463,
+    "extensionAccuracy": 0.395408,
+    "bassSlashAccuracy": 0.669218,
+    "canonicalExactAccuracy": 0.266156,
+    "pitchSetEquivalentAccuracy": 0.287415,
+    "top3CanonicalAccuracy": 0.37585,
+    "top5CanonicalAccuracy": 0.408163,
+    "top3RootAccuracy": 0.717687,
+    "top3QualityAccuracy": 0.637755,
+    "unmatchedRate": 0
+  },
+  "grid": {
+    "scopes": [
+      "full"
+    ],
+    "penalties": [
+      0.02,
+      0.04,
+      0.06,
+      0.08,
+      0.1,
+      0.12,
+      0.14
+    ],
+    "thresholds": [
+      0.01,
+      0.02,
+      0.03
+    ]
+  },
+  "rows": [
+    {
+      "config": {
+        "scope": "full",
+        "penalty": 0.02,
+        "presenceThreshold": 0.01
+      },
+      "root": 0.590986,
+      "triad": 0.60119,
+      "quality": 0.456633,
+      "bassSlash": 0.677721,
+      "canonicalExact": 0.298469,
+      "top3Canonical": 0.380952,
+      "top3Root": 0.723639,
+      "passesGate": false,
+      "failing": [
+        "triad"
+      ]
+    },
+    {
+      "config": {
+        "scope": "full",
+        "penalty": 0.02,
+        "presenceThreshold": 0.02
+      },
+      "root": 0.590986,
+      "triad": 0.60119,
+      "quality": 0.456633,
+      "bassSlash": 0.677721,
+      "canonicalExact": 0.298469,
+      "top3Canonical": 0.380952,
+      "top3Root": 0.723639,
+      "passesGate": false,
+      "failing": [
+        "triad"
+      ]
+    },
+    {
+      "config": {
+        "scope": "full",
+        "penalty": 0.02,
+        "presenceThreshold": 0.03
+      },
+      "root": 0.590986,
+      "triad": 0.60119,
+      "quality": 0.456633,
+      "bassSlash": 0.677721,
+      "canonicalExact": 0.298469,
+      "top3Canonical": 0.380952,
+      "top3Root": 0.723639,
+      "passesGate": false,
+      "failing": [
+        "triad"
+      ]
+    },
+    {
+      "config": {
+        "scope": "full",
+        "penalty": 0.04,
+        "presenceThreshold": 0.01
+      },
+      "root": 0.592687,
+      "triad": 0.597789,
+      "quality": 0.454932,
+      "bassSlash": 0.679422,
+      "canonicalExact": 0.298469,
+      "top3Canonical": 0.387755,
+      "top3Root": 0.733844,
+      "passesGate": false,
+      "failing": [
+        "triad"
+      ]
+    },
+    {
+      "config": {
+        "scope": "full",
+        "penalty": 0.04,
+        "presenceThreshold": 0.02
+      },
+      "root": 0.592687,
+      "triad": 0.597789,
+      "quality": 0.454932,
+      "bassSlash": 0.679422,
+      "canonicalExact": 0.298469,
+      "top3Canonical": 0.387755,
+      "top3Root": 0.733844,
+      "passesGate": false,
+      "failing": [
+        "triad"
+      ]
+    },
+    {
+      "config": {
+        "scope": "full",
+        "penalty": 0.04,
+        "presenceThreshold": 0.03
+      },
+      "root": 0.592687,
+      "triad": 0.597789,
+      "quality": 0.454932,
+      "bassSlash": 0.679422,
+      "canonicalExact": 0.298469,
+      "top3Canonical": 0.387755,
+      "top3Root": 0.733844,
+      "passesGate": false,
+      "failing": [
+        "triad"
+      ]
+    },
+    {
+      "config": {
+        "scope": "full",
+        "penalty": 0.06,
+        "presenceThreshold": 0.01
+      },
+      "root": 0.593537,
+      "triad": 0.596939,
+      "quality": 0.45068,
+      "bassSlash": 0.678571,
+      "canonicalExact": 0.297619,
+      "top3Canonical": 0.396259,
+      "top3Root": 0.753401,
+      "passesGate": false,
+      "failing": [
+        "triad"
+      ]
+    },
+    {
+      "config": {
+        "scope": "full",
+        "penalty": 0.06,
+        "presenceThreshold": 0.02
+      },
+      "root": 0.593537,
+      "triad": 0.596939,
+      "quality": 0.45068,
+      "bassSlash": 0.678571,
+      "canonicalExact": 0.297619,
+      "top3Canonical": 0.396259,
+      "top3Root": 0.753401,
+      "passesGate": false,
+      "failing": [
+        "triad"
+      ]
+    },
+    {
+      "config": {
+        "scope": "full",
+        "penalty": 0.06,
+        "presenceThreshold": 0.03
+      },
+      "root": 0.593537,
+      "triad": 0.596939,
+      "quality": 0.45068,
+      "bassSlash": 0.678571,
+      "canonicalExact": 0.297619,
+      "top3Canonical": 0.396259,
+      "top3Root": 0.753401,
+      "passesGate": false,
+      "failing": [
+        "triad"
+      ]
+    },
+    {
+      "config": {
+        "scope": "full",
+        "penalty": 0.08,
+        "presenceThreshold": 0.01
+      },
+      "root": 0.596939,
+      "triad": 0.598639,
+      "quality": 0.452381,
+      "bassSlash": 0.678571,
+      "canonicalExact": 0.295918,
+      "top3Canonical": 0.396259,
+      "top3Root": 0.754252,
+      "passesGate": false,
+      "failing": [
+        "triad"
+      ]
+    },
+    {
+      "config": {
+        "scope": "full",
+        "penalty": 0.08,
+        "presenceThreshold": 0.02
+      },
+      "root": 0.596939,
+      "triad": 0.598639,
+      "quality": 0.452381,
+      "bassSlash": 0.678571,
+      "canonicalExact": 0.295918,
+      "top3Canonical": 0.396259,
+      "top3Root": 0.754252,
+      "passesGate": false,
+      "failing": [
+        "triad"
+      ]
+    },
+    {
+      "config": {
+        "scope": "full",
+        "penalty": 0.08,
+        "presenceThreshold": 0.03
+      },
+      "root": 0.596939,
+      "triad": 0.598639,
+      "quality": 0.452381,
+      "bassSlash": 0.678571,
+      "canonicalExact": 0.295918,
+      "top3Canonical": 0.396259,
+      "top3Root": 0.754252,
+      "passesGate": false,
+      "failing": [
+        "triad"
+      ]
+    },
+    {
+      "config": {
+        "scope": "full",
+        "penalty": 0.1,
+        "presenceThreshold": 0.01
+      },
+      "root": 0.591837,
+      "triad": 0.594388,
+      "quality": 0.453231,
+      "bassSlash": 0.671769,
+      "canonicalExact": 0.296769,
+      "top3Canonical": 0.396259,
+      "top3Root": 0.754252,
+      "passesGate": false,
+      "failing": [
+        "triad"
+      ]
+    },
+    {
+      "config": {
+        "scope": "full",
+        "penalty": 0.1,
+        "presenceThreshold": 0.02
+      },
+      "root": 0.591837,
+      "triad": 0.594388,
+      "quality": 0.453231,
+      "bassSlash": 0.671769,
+      "canonicalExact": 0.296769,
+      "top3Canonical": 0.396259,
+      "top3Root": 0.754252,
+      "passesGate": false,
+      "failing": [
+        "triad"
+      ]
+    },
+    {
+      "config": {
+        "scope": "full",
+        "penalty": 0.1,
+        "presenceThreshold": 0.03
+      },
+      "root": 0.591837,
+      "triad": 0.594388,
+      "quality": 0.453231,
+      "bassSlash": 0.671769,
+      "canonicalExact": 0.296769,
+      "top3Canonical": 0.396259,
+      "top3Root": 0.754252,
+      "passesGate": false,
+      "failing": [
+        "triad"
+      ]
+    },
+    {
+      "config": {
+        "scope": "full",
+        "penalty": 0.12,
+        "presenceThreshold": 0.01
+      },
+      "root": 0.489796,
+      "triad": 0.529762,
+      "quality": 0.435374,
+      "bassSlash": 0.673469,
+      "canonicalExact": 0.294218,
+      "top3Canonical": 0.396259,
+      "top3Root": 0.658163,
+      "passesGate": false,
+      "failing": [
+        "root",
+        "triad",
+        "top3Root"
+      ]
+    },
+    {
+      "config": {
+        "scope": "full",
+        "penalty": 0.12,
+        "presenceThreshold": 0.02
+      },
+      "root": 0.489796,
+      "triad": 0.529762,
+      "quality": 0.435374,
+      "bassSlash": 0.673469,
+      "canonicalExact": 0.294218,
+      "top3Canonical": 0.396259,
+      "top3Root": 0.658163,
+      "passesGate": false,
+      "failing": [
+        "root",
+        "triad",
+        "top3Root"
+      ]
+    },
+    {
+      "config": {
+        "scope": "full",
+        "penalty": 0.12,
+        "presenceThreshold": 0.03
+      },
+      "root": 0.489796,
+      "triad": 0.529762,
+      "quality": 0.435374,
+      "bassSlash": 0.673469,
+      "canonicalExact": 0.294218,
+      "top3Canonical": 0.396259,
+      "top3Root": 0.658163,
+      "passesGate": false,
+      "failing": [
+        "root",
+        "triad",
+        "top3Root"
+      ]
+    },
+    {
+      "config": {
+        "scope": "full",
+        "penalty": 0.14,
+        "presenceThreshold": 0.01
+      },
+      "root": 0.489796,
+      "triad": 0.530612,
+      "quality": 0.436224,
+      "bassSlash": 0.671769,
+      "canonicalExact": 0.294218,
+      "top3Canonical": 0.392007,
+      "top3Root": 0.654762,
+      "passesGate": false,
+      "failing": [
+        "root",
+        "triad",
+        "top3Root"
+      ]
+    },
+    {
+      "config": {
+        "scope": "full",
+        "penalty": 0.14,
+        "presenceThreshold": 0.02
+      },
+      "root": 0.489796,
+      "triad": 0.530612,
+      "quality": 0.436224,
+      "bassSlash": 0.671769,
+      "canonicalExact": 0.294218,
+      "top3Canonical": 0.392007,
+      "top3Root": 0.654762,
+      "passesGate": false,
+      "failing": [
+        "root",
+        "triad",
+        "top3Root"
+      ]
+    },
+    {
+      "config": {
+        "scope": "full",
+        "penalty": 0.14,
+        "presenceThreshold": 0.03
+      },
+      "root": 0.489796,
+      "triad": 0.530612,
+      "quality": 0.436224,
+      "bassSlash": 0.671769,
+      "canonicalExact": 0.294218,
+      "top3Canonical": 0.392007,
+      "top3Root": 0.654762,
+      "passesGate": false,
+      "failing": [
+        "root",
+        "triad",
+        "top3Root"
+      ]
+    }
+  ],
+  "gatePassing": []
+}
