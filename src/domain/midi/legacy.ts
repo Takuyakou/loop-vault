@@ -122,6 +122,8 @@ export interface LegacyScoringOptions {
    * one thing. Defaults to on; `phase4.1.2-core-v1` turns it off.
    */
   useStructuralWindows?: boolean;
+  /** The G2 two-pass selector. Opt-in: it measured worse than the single pass. */
+  useTwoPassSelection?: boolean;
   /** Robustness pass for AI-extracted MIDI. Raw notes are never modified. */
   useExtractionProfile?: boolean;
   analyzerVersion?: string;
@@ -161,6 +163,7 @@ export function analyzeMidiWithRankingScores(
   const coverage = scoring.usePatternSelection
     ? buildPatternCoverageCandidates(fullTimeline, data, data.totalBars, timelineRankingScores, {
       useStructuralWindows: scoring.useStructuralWindows ?? true,
+      useTwoPassSelection: scoring.useTwoPassSelection ?? false,
     })
     : (scoring.useCoverageSelection
       ? buildCoverageCandidates(fullTimeline, data, data.totalBars, timelineRankingScores)

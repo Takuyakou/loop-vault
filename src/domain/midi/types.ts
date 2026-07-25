@@ -78,7 +78,9 @@ export type MidiAnalyzerMode =
   | "phase4-v1"
   | "phase4.1-v1"
   | "phase4.1.2-v1"
-  | "phase4.1.2-core-v1";
+  | "phase4.1.2-core-v1"
+  | "phase4.1.2-g2-v1"
+  | "phase4.1.2-core-g2-v1";
 
 export interface HybridFeatureFlags {
   trackRoleEstimation: boolean;
