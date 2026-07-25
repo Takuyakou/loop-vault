@@ -1,8 +1,9 @@
 import type { ChordTimelineItem, ProgressionBlockCandidate } from "../types";
-import { normaliseEvidence, scoreBlockQuality } from "./blockQuality";
+import { normaliseEvidence, qualityFloor, scoreBlockQuality } from "./blockQuality";
 import { recoverRawMatchScore, summaryFromEvents } from "./candidateBlock";
 import { selectOccurrencesByCoverage, type CoverageSelectionOptions } from "./coverageSelector";
 import { classifyCandidateKind } from "./candidateKind";
+import { buildCandidateCatalog, type CandidateCatalog } from "./candidateCatalog";
 import { normalizeCandidatePool } from "./candidatePool";
 import { buildPatternCandidates } from "./patternCandidate";
 import { selectPatternsByUsefulness, type UsefulnessSelectionOptions } from "./patternSelection";
@@ -28,6 +29,8 @@ import { selectChordEvidenceNotes } from "./voices";
 export interface CoverageCandidateResult {
   candidates: ProgressionBlockCandidate[];
   patterns: CandidatePattern[];
+  /** Every valid pattern, independent of what the shortlist chose. */
+  catalog?: CandidateCatalog;
   harmonicActiveBars: number[];
   coverage: number;
   coverageAtVisible: number;
@@ -109,6 +112,14 @@ export function buildPatternCoverageCandidates(
   const normalized = normalizeCandidatePool(occurrences, active);
   const patterns = groupIntoPatterns(normalized.occurrences);
   const patternCandidates = buildPatternCandidates(patterns, active);
+  // Built before selection and never touched by it: the catalog is the inventory,
+  // the shortlist is one view of it.
+  const catalog = buildCandidateCatalog({
+    patterns,
+    harmonicActiveBars: active,
+    qualityFloor,
+    rawWindowCount: occurrences.length,
+  });
   // Both selectors stay reachable. The two-pass one measured slightly worse on
   // the known corpora, so it is opt-in rather than the path: see
   // docs/phase4.1.2/10-two-pass-selection.md. Wiring the loser would be choosing
@@ -139,6 +150,7 @@ export function buildPatternCoverageCandidates(
       );
     }),
     patterns,
+    catalog,
     harmonicActiveBars: active,
     coverage: selection.coverage,
     coverageAtVisible: selection.coverageAtVisible,
