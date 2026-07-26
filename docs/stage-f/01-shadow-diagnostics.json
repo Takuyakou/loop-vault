@@ -1,0 +1,1646 @@
+{
+  "schemaVersion": 1,
+  "stage": "Stage F1",
+  "mode": "phase4-v1",
+  "connectedToProduct": false,
+  "files": 199,
+  "windows": 7490,
+  "gates": [
+    {
+      "id": "product-timeline-unchanged",
+      "verdict": "pass",
+      "detail": "199/199"
+    },
+    {
+      "id": "candidate-rank-unchanged",
+      "verdict": "pass",
+      "detail": "199/199"
+    },
+    {
+      "id": "warnings-unchanged",
+      "verdict": "pass",
+      "detail": "199/199"
+    }
+  ],
+  "verdict": "PASS",
+  "distributions": {
+    "relation": {
+      "aligned": 5742,
+      "pedal": 1240,
+      "walking": 501,
+      "none": 7
+    },
+    "ambiguity": {
+      "tension-uncertain": 861,
+      "pedal-or-root": 1298,
+      "rootless-inferred": 1850,
+      "inversion-or-added": 929,
+      "quality-underdetermined": 551
+    },
+    "triadVerdict": {
+      "major:supported": 3717,
+      "minor:contradicted": 3773,
+      "diminished:contradicted": 5814,
+      "augmented:contradicted": 5652,
+      "sus2:contradicted": 5402,
+      "sus4:contradicted": 6050,
+      "power:contradicted": 6960,
+      "unknown:underdetermined": 7490,
+      "major:contradicted": 2920,
+      "minor:supported": 2437,
+      "sus2:supported": 1690,
+      "major:underdetermined": 853,
+      "diminished:underdetermined": 1321,
+      "augmented:supported": 272,
+      "sus4:supported": 951,
+      "augmented:underdetermined": 1566,
+      "minor:underdetermined": 1280,
+      "diminished:supported": 355,
+      "sus2:underdetermined": 398,
+      "power:supported": 279,
+      "sus4:underdetermined": 489,
+      "power:underdetermined": 251
+    },
+    "seventhVerdict": {
+      "minor7:underdetermined": 862,
+      "major7:underdetermined": 862,
+      "diminished7:underdetermined": 861,
+      "minor7:contradicted": 2143,
+      "major7:supported": 2432,
+      "diminished7:contradicted": 6482,
+      "minor7:supported": 4485,
+      "major7:contradicted": 4196,
+      "diminished7:supported": 147
+    }
+  },
+  "evidence": {
+    "bassMargin": {
+      "min": 0,
+      "mean": 0.878402,
+      "max": 1
+    },
+    "rootMargin": {
+      "min": 0,
+      "mean": 0.14444,
+      "max": 0.4082
+    },
+    "bassEvidenceAmount": {
+      "min": 0,
+      "mean": 1.030237,
+      "max": 5.384375
+    }
+  },
+  "rootLedger": {
+    "windowsWithProductRoot": 7490,
+    "differs": 1698,
+    "agreementRate": 0.773298,
+    "productRootInShadowTop3AmongDisagreements": 321,
+    "sample": [
+      {
+        "source": "synthetic-gold-v1:S04_clean",
+        "bar": 1,
+        "beat": 1,
+        "currentLabel": "Em11",
+        "currentRoot": 4,
+        "shadowTop1": 6,
+        "shadowTop3": [
+          6,
+          2,
+          11
+        ],
+        "margin": 0.164,
+        "relation": "aligned",
+        "ambiguities": [
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S04_clean",
+        "bar": 2,
+        "beat": 1,
+        "currentLabel": "F#m11",
+        "currentRoot": 6,
+        "shadowTop1": 8,
+        "shadowTop3": [
+          8,
+          4,
+          1
+        ],
+        "margin": 0.164,
+        "relation": "aligned",
+        "ambiguities": [
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S04_clean",
+        "bar": 4,
+        "beat": 1,
+        "currentLabel": "Dm11",
+        "currentRoot": 2,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          7,
+          0
+        ],
+        "margin": 0.158,
+        "relation": "aligned",
+        "ambiguities": [
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S04_clean",
+        "bar": 5,
+        "beat": 1,
+        "currentLabel": "Em11",
+        "currentRoot": 4,
+        "shadowTop1": 6,
+        "shadowTop3": [
+          6,
+          2,
+          11
+        ],
+        "margin": 0.164,
+        "relation": "aligned",
+        "ambiguities": [
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S04_clean",
+        "bar": 6,
+        "beat": 1,
+        "currentLabel": "F#m11",
+        "currentRoot": 6,
+        "shadowTop1": 8,
+        "shadowTop3": [
+          8,
+          4,
+          1
+        ],
+        "margin": 0.164,
+        "relation": "aligned",
+        "ambiguities": [
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S04_clean",
+        "bar": 8,
+        "beat": 1,
+        "currentLabel": "Dm11",
+        "currentRoot": 2,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          7,
+          0
+        ],
+        "margin": 0.158,
+        "relation": "aligned",
+        "ambiguities": [
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S04_stress",
+        "bar": 1,
+        "beat": 1,
+        "currentLabel": "Em11",
+        "currentRoot": 4,
+        "shadowTop1": 6,
+        "shadowTop3": [
+          6,
+          2,
+          9
+        ],
+        "margin": 0.204888,
+        "relation": "pedal",
+        "ambiguities": [
+          "pedal-or-root"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S04_stress",
+        "bar": 2,
+        "beat": 1,
+        "currentLabel": "F#m11",
+        "currentRoot": 6,
+        "shadowTop1": 8,
+        "shadowTop3": [
+          8,
+          4,
+          11
+        ],
+        "margin": 0.204888,
+        "relation": "pedal",
+        "ambiguities": [
+          "pedal-or-root"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S04_stress",
+        "bar": 3,
+        "beat": 1,
+        "currentLabel": "Gmaj9/A",
+        "currentRoot": 7,
+        "shadowTop1": 11,
+        "shadowTop3": [
+          11,
+          7,
+          8
+        ],
+        "margin": 0.035695,
+        "relation": "aligned",
+        "ambiguities": [
+          "rootless-inferred",
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S04_stress",
+        "bar": 4,
+        "beat": 1,
+        "currentLabel": "Dm11",
+        "currentRoot": 2,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          0,
+          7
+        ],
+        "margin": 0.204888,
+        "relation": "pedal",
+        "ambiguities": [
+          "pedal-or-root"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S04_stress",
+        "bar": 5,
+        "beat": 1,
+        "currentLabel": "Em11",
+        "currentRoot": 4,
+        "shadowTop1": 6,
+        "shadowTop3": [
+          6,
+          2,
+          9
+        ],
+        "margin": 0.204888,
+        "relation": "pedal",
+        "ambiguities": [
+          "pedal-or-root"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S04_stress",
+        "bar": 6,
+        "beat": 1,
+        "currentLabel": "F#m11",
+        "currentRoot": 6,
+        "shadowTop1": 8,
+        "shadowTop3": [
+          8,
+          4,
+          11
+        ],
+        "margin": 0.204888,
+        "relation": "pedal",
+        "ambiguities": [
+          "pedal-or-root"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S04_stress",
+        "bar": 7,
+        "beat": 1,
+        "currentLabel": "Gmaj9/A",
+        "currentRoot": 7,
+        "shadowTop1": 11,
+        "shadowTop3": [
+          11,
+          7,
+          8
+        ],
+        "margin": 0.035695,
+        "relation": "aligned",
+        "ambiguities": [
+          "rootless-inferred",
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S04_stress",
+        "bar": 8,
+        "beat": 1,
+        "currentLabel": "Dm11",
+        "currentRoot": 2,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          0,
+          7
+        ],
+        "margin": 0.204888,
+        "relation": "pedal",
+        "ambiguities": [
+          "pedal-or-root"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S05_clean",
+        "bar": 2,
+        "beat": 1,
+        "currentLabel": "G13",
+        "currentRoot": 7,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          7,
+          5
+        ],
+        "margin": 0,
+        "relation": "pedal",
+        "ambiguities": [
+          "pedal-or-root",
+          "rootless-inferred"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S05_clean",
+        "bar": 3,
+        "beat": 1,
+        "currentLabel": "Cmaj9",
+        "currentRoot": 0,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          0,
+          7
+        ],
+        "margin": 0.05,
+        "relation": "pedal",
+        "ambiguities": [
+          "pedal-or-root"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S05_clean",
+        "bar": 6,
+        "beat": 1,
+        "currentLabel": "G13",
+        "currentRoot": 7,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          7,
+          5
+        ],
+        "margin": 0,
+        "relation": "pedal",
+        "ambiguities": [
+          "pedal-or-root",
+          "rootless-inferred"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S05_clean",
+        "bar": 7,
+        "beat": 1,
+        "currentLabel": "Cmaj9",
+        "currentRoot": 0,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          0,
+          7
+        ],
+        "margin": 0.05,
+        "relation": "pedal",
+        "ambiguities": [
+          "pedal-or-root"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S05_stress",
+        "bar": 1,
+        "beat": 1,
+        "currentLabel": "Dm9/E",
+        "currentRoot": 2,
+        "shadowTop1": 5,
+        "shadowTop3": [
+          5,
+          2,
+          9
+        ],
+        "margin": 0.062093,
+        "relation": "walking",
+        "ambiguities": []
+      },
+      {
+        "source": "synthetic-gold-v1:S05_stress",
+        "bar": 2,
+        "beat": 1,
+        "currentLabel": "G13/E",
+        "currentRoot": 7,
+        "shadowTop1": 11,
+        "shadowTop3": [
+          11,
+          5,
+          4
+        ],
+        "margin": 0.030449,
+        "relation": "walking",
+        "ambiguities": [
+          "rootless-inferred"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S05_stress",
+        "bar": 3,
+        "beat": 1,
+        "currentLabel": "Cmaj9/E",
+        "currentRoot": 0,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          0,
+          7
+        ],
+        "margin": 0.023023,
+        "relation": "walking",
+        "ambiguities": [
+          "rootless-inferred"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S05_stress",
+        "bar": 4,
+        "beat": 1,
+        "currentLabel": "Edim7",
+        "currentRoot": 4,
+        "shadowTop1": 10,
+        "shadowTop3": [
+          10,
+          9,
+          1
+        ],
+        "margin": 0.020107,
+        "relation": "walking",
+        "ambiguities": [
+          "rootless-inferred"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S05_stress",
+        "bar": 5,
+        "beat": 1,
+        "currentLabel": "Dm9/E",
+        "currentRoot": 2,
+        "shadowTop1": 5,
+        "shadowTop3": [
+          5,
+          2,
+          9
+        ],
+        "margin": 0.062093,
+        "relation": "walking",
+        "ambiguities": []
+      },
+      {
+        "source": "synthetic-gold-v1:S05_stress",
+        "bar": 6,
+        "beat": 1,
+        "currentLabel": "G13/E",
+        "currentRoot": 7,
+        "shadowTop1": 11,
+        "shadowTop3": [
+          11,
+          5,
+          4
+        ],
+        "margin": 0.030449,
+        "relation": "walking",
+        "ambiguities": [
+          "rootless-inferred"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S05_stress",
+        "bar": 7,
+        "beat": 1,
+        "currentLabel": "Cmaj9/E",
+        "currentRoot": 0,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          0,
+          7
+        ],
+        "margin": 0.023023,
+        "relation": "walking",
+        "ambiguities": [
+          "rootless-inferred"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S05_stress",
+        "bar": 8,
+        "beat": 1,
+        "currentLabel": "Edim7",
+        "currentRoot": 4,
+        "shadowTop1": 10,
+        "shadowTop3": [
+          10,
+          9,
+          1
+        ],
+        "margin": 0.020107,
+        "relation": "walking",
+        "ambiguities": [
+          "rootless-inferred"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S06_clean",
+        "bar": 2,
+        "beat": 1,
+        "currentLabel": "Cadd9",
+        "currentRoot": 0,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          0,
+          9
+        ],
+        "margin": 0.054,
+        "relation": "aligned",
+        "ambiguities": [
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S06_clean",
+        "bar": 3,
+        "beat": 1,
+        "currentLabel": "F6/9",
+        "currentRoot": 5,
+        "shadowTop1": 2,
+        "shadowTop3": [
+          2,
+          9,
+          5
+        ],
+        "margin": 0.054,
+        "relation": "aligned",
+        "ambiguities": [
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S06_clean",
+        "bar": 4,
+        "beat": 1,
+        "currentLabel": "Gm11",
+        "currentRoot": 7,
+        "shadowTop1": 2,
+        "shadowTop3": [
+          2,
+          9,
+          7
+        ],
+        "margin": 0.104,
+        "relation": "aligned",
+        "ambiguities": [
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S06_clean",
+        "bar": 5,
+        "beat": 1,
+        "currentLabel": "Bdim7",
+        "currentRoot": 11,
+        "shadowTop1": 1,
+        "shadowTop3": [
+          1,
+          4,
+          7
+        ],
+        "margin": 0,
+        "relation": "aligned",
+        "ambiguities": [
+          "rootless-inferred",
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S06_clean",
+        "bar": 6,
+        "beat": 1,
+        "currentLabel": "Caug",
+        "currentRoot": 0,
+        "shadowTop1": 1,
+        "shadowTop3": [
+          1,
+          0,
+          5
+        ],
+        "margin": 0.0308,
+        "relation": "aligned",
+        "ambiguities": [
+          "rootless-inferred",
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S06_stress",
+        "bar": 3,
+        "beat": 1,
+        "currentLabel": "Fsus2",
+        "currentRoot": 5,
+        "shadowTop1": 2,
+        "shadowTop3": [
+          2,
+          5,
+          0
+        ],
+        "margin": 0.054153,
+        "relation": "aligned",
+        "ambiguities": [
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S06_stress",
+        "bar": 3,
+        "beat": 3,
+        "currentLabel": "F6",
+        "currentRoot": 5,
+        "shadowTop1": 2,
+        "shadowTop3": [
+          2,
+          5,
+          10
+        ],
+        "margin": 0.116373,
+        "relation": "aligned",
+        "ambiguities": [
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S06_stress",
+        "bar": 4,
+        "beat": 1,
+        "currentLabel": "G7sus4",
+        "currentRoot": 7,
+        "shadowTop1": 2,
+        "shadowTop3": [
+          2,
+          9,
+          7
+        ],
+        "margin": 0.122407,
+        "relation": "aligned",
+        "ambiguities": [
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S07_clean",
+        "bar": 2,
+        "beat": 3,
+        "currentLabel": "G6",
+        "currentRoot": 7,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          7,
+          0
+        ],
+        "margin": 0.021,
+        "relation": "aligned",
+        "ambiguities": [
+          "rootless-inferred",
+          "inversion-or-added",
+          "tension-uncertain"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S07_clean",
+        "bar": 6,
+        "beat": 3,
+        "currentLabel": "G6",
+        "currentRoot": 7,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          7,
+          0
+        ],
+        "margin": 0.021,
+        "relation": "aligned",
+        "ambiguities": [
+          "rootless-inferred",
+          "inversion-or-added",
+          "tension-uncertain"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S07_stress",
+        "bar": 1,
+        "beat": 3,
+        "currentLabel": "G/B",
+        "currentRoot": 7,
+        "shadowTop1": 11,
+        "shadowTop3": [
+          11,
+          7,
+          4
+        ],
+        "margin": 0.028368,
+        "relation": "aligned",
+        "ambiguities": [
+          "rootless-inferred",
+          "tension-uncertain"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S07_stress",
+        "bar": 2,
+        "beat": 3,
+        "currentLabel": "G6/9",
+        "currentRoot": 7,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          0,
+          7
+        ],
+        "margin": 0.02371,
+        "relation": "aligned",
+        "ambiguities": [
+          "rootless-inferred",
+          "inversion-or-added",
+          "tension-uncertain"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S07_stress",
+        "bar": 3,
+        "beat": 3,
+        "currentLabel": "C6/E",
+        "currentRoot": 0,
+        "shadowTop1": 5,
+        "shadowTop3": [
+          5,
+          9,
+          0
+        ],
+        "margin": 0.042667,
+        "relation": "aligned",
+        "ambiguities": [
+          "rootless-inferred",
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S07_stress",
+        "bar": 4,
+        "beat": 1,
+        "currentLabel": "Dm7",
+        "currentRoot": 2,
+        "shadowTop1": 5,
+        "shadowTop3": [
+          5,
+          2,
+          9
+        ],
+        "margin": 0.001107,
+        "relation": "pedal",
+        "ambiguities": [
+          "pedal-or-root",
+          "rootless-inferred"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S07_stress",
+        "bar": 5,
+        "beat": 1,
+        "currentLabel": "Cmaj7",
+        "currentRoot": 0,
+        "shadowTop1": 7,
+        "shadowTop3": [
+          7,
+          0,
+          4
+        ],
+        "margin": 0.001894,
+        "relation": "aligned",
+        "ambiguities": [
+          "rootless-inferred",
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S07_stress",
+        "bar": 5,
+        "beat": 3,
+        "currentLabel": "G6/B",
+        "currentRoot": 7,
+        "shadowTop1": 0,
+        "shadowTop3": [
+          0,
+          4,
+          7
+        ],
+        "margin": 0.000544,
+        "relation": "aligned",
+        "ambiguities": [
+          "rootless-inferred",
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S07_stress",
+        "bar": 7,
+        "beat": 1,
+        "currentLabel": "Fmaj7",
+        "currentRoot": 5,
+        "shadowTop1": 9,
+        "shadowTop3": [
+          9,
+          5,
+          0
+        ],
+        "margin": 0.000406,
+        "relation": "walking",
+        "ambiguities": [
+          "pedal-or-root",
+          "rootless-inferred"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S07_stress",
+        "bar": 7,
+        "beat": 3,
+        "currentLabel": "C6/E",
+        "currentRoot": 0,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          9,
+          2
+        ],
+        "margin": 0.003177,
+        "relation": "aligned",
+        "ambiguities": [
+          "rootless-inferred"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S07_stress",
+        "bar": 8,
+        "beat": 3,
+        "currentLabel": "G9",
+        "currentRoot": 7,
+        "shadowTop1": 2,
+        "shadowTop3": [
+          2,
+          7,
+          11
+        ],
+        "margin": 0.001636,
+        "relation": "aligned",
+        "ambiguities": [
+          "rootless-inferred",
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S07_stress",
+        "bar": 9,
+        "beat": 1,
+        "currentLabel": "Cmaj7",
+        "currentRoot": 0,
+        "shadowTop1": 11,
+        "shadowTop3": [
+          11,
+          7,
+          8
+        ],
+        "margin": 0.2136,
+        "relation": "pedal",
+        "ambiguities": [
+          "pedal-or-root",
+          "quality-underdetermined",
+          "tension-uncertain"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S09_stress",
+        "bar": 1,
+        "beat": 3,
+        "currentLabel": "Am9/C",
+        "currentRoot": 9,
+        "shadowTop1": 0,
+        "shadowTop3": [
+          0,
+          9,
+          4
+        ],
+        "margin": 0.098485,
+        "relation": "aligned",
+        "ambiguities": []
+      },
+      {
+        "source": "synthetic-gold-v1:S09_stress",
+        "bar": 5,
+        "beat": 3,
+        "currentLabel": "Am9/C",
+        "currentRoot": 9,
+        "shadowTop1": 0,
+        "shadowTop3": [
+          0,
+          9,
+          4
+        ],
+        "margin": 0.09772,
+        "relation": "aligned",
+        "ambiguities": []
+      },
+      {
+        "source": "synthetic-gold-v1:S10_clean",
+        "bar": 2,
+        "beat": 1,
+        "currentLabel": "Am9",
+        "currentRoot": 9,
+        "shadowTop1": 0,
+        "shadowTop3": [
+          0,
+          9,
+          4
+        ],
+        "margin": 0,
+        "relation": "aligned",
+        "ambiguities": [
+          "rootless-inferred",
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S10_clean",
+        "bar": 6,
+        "beat": 1,
+        "currentLabel": "Am9",
+        "currentRoot": 9,
+        "shadowTop1": 0,
+        "shadowTop3": [
+          0,
+          9,
+          4
+        ],
+        "margin": 0,
+        "relation": "aligned",
+        "ambiguities": [
+          "rootless-inferred",
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S10_stress",
+        "bar": 2,
+        "beat": 1,
+        "currentLabel": "Am9",
+        "currentRoot": 9,
+        "shadowTop1": 0,
+        "shadowTop3": [
+          0,
+          9,
+          4
+        ],
+        "margin": 0.007143,
+        "relation": "aligned",
+        "ambiguities": [
+          "rootless-inferred",
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S10_stress",
+        "bar": 6,
+        "beat": 1,
+        "currentLabel": "Am9",
+        "currentRoot": 9,
+        "shadowTop1": 0,
+        "shadowTop3": [
+          0,
+          9,
+          4
+        ],
+        "margin": 0.007143,
+        "relation": "aligned",
+        "ambiguities": [
+          "rootless-inferred",
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S11_stress",
+        "bar": 8,
+        "beat": 1,
+        "currentLabel": "E13",
+        "currentRoot": 4,
+        "shadowTop1": 11,
+        "shadowTop3": [
+          11,
+          4,
+          1
+        ],
+        "margin": 0.010151,
+        "relation": "aligned",
+        "ambiguities": [
+          "rootless-inferred",
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S11_stress",
+        "bar": 12,
+        "beat": 1,
+        "currentLabel": "E13",
+        "currentRoot": 4,
+        "shadowTop1": 11,
+        "shadowTop3": [
+          11,
+          4,
+          1
+        ],
+        "margin": 0.010151,
+        "relation": "aligned",
+        "ambiguities": [
+          "rootless-inferred",
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S11_stress",
+        "bar": 13,
+        "beat": 1,
+        "currentLabel": "Em11/A",
+        "currentRoot": 4,
+        "shadowTop1": 11,
+        "shadowTop3": [
+          11,
+          4,
+          7
+        ],
+        "margin": 0.045385,
+        "relation": "aligned",
+        "ambiguities": [
+          "rootless-inferred",
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S14_stress",
+        "bar": 1,
+        "beat": 3,
+        "currentLabel": "C6",
+        "currentRoot": 0,
+        "shadowTop1": 9,
+        "shadowTop3": [
+          9,
+          0,
+          5
+        ],
+        "margin": 0.020331,
+        "relation": "aligned",
+        "ambiguities": [
+          "rootless-inferred",
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S14_stress",
+        "bar": 2,
+        "beat": 1,
+        "currentLabel": "Am",
+        "currentRoot": 9,
+        "shadowTop1": 5,
+        "shadowTop3": [
+          5,
+          9,
+          2
+        ],
+        "margin": 0.018117,
+        "relation": "aligned",
+        "ambiguities": [
+          "rootless-inferred",
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S14_stress",
+        "bar": 3,
+        "beat": 3,
+        "currentLabel": "Fadd9",
+        "currentRoot": 5,
+        "shadowTop1": 9,
+        "shadowTop3": [
+          9,
+          7,
+          2
+        ],
+        "margin": 0.019834,
+        "relation": "aligned",
+        "ambiguities": [
+          "rootless-inferred",
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S16_clean",
+        "bar": 1,
+        "beat": 1,
+        "currentLabel": "Cadd9",
+        "currentRoot": 0,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          0,
+          9
+        ],
+        "margin": 0.104,
+        "relation": "aligned",
+        "ambiguities": [
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S16_clean",
+        "bar": 3,
+        "beat": 1,
+        "currentLabel": "Cadd9",
+        "currentRoot": 0,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          0,
+          7
+        ],
+        "margin": 0.104,
+        "relation": "aligned",
+        "ambiguities": [
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S16_stress",
+        "bar": 1,
+        "beat": 1,
+        "currentLabel": "Cadd9",
+        "currentRoot": 0,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          0,
+          9
+        ],
+        "margin": 0.104,
+        "relation": "aligned",
+        "ambiguities": [
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S16_stress",
+        "bar": 3,
+        "beat": 1,
+        "currentLabel": "Cadd9",
+        "currentRoot": 0,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          0,
+          7
+        ],
+        "margin": 0.104,
+        "relation": "aligned",
+        "ambiguities": [
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S19_stress",
+        "bar": 1,
+        "beat": 1,
+        "currentLabel": "Cadd9",
+        "currentRoot": 0,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          0,
+          9
+        ],
+        "margin": 0.010153,
+        "relation": "aligned",
+        "ambiguities": [
+          "rootless-inferred",
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S19_stress",
+        "bar": 4,
+        "beat": 1,
+        "currentLabel": "G13",
+        "currentRoot": 7,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          7,
+          3
+        ],
+        "margin": 0.154153,
+        "relation": "aligned",
+        "ambiguities": [
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S19_stress",
+        "bar": 4,
+        "beat": 3,
+        "currentLabel": "G6/9",
+        "currentRoot": 7,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          11,
+          7
+        ],
+        "margin": 0.104,
+        "relation": "pedal",
+        "ambiguities": [
+          "pedal-or-root"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S19_stress",
+        "bar": 5,
+        "beat": 1,
+        "currentLabel": "Cadd9",
+        "currentRoot": 0,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          0,
+          9
+        ],
+        "margin": 0.060153,
+        "relation": "aligned",
+        "ambiguities": [
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S19_stress",
+        "bar": 8,
+        "beat": 1,
+        "currentLabel": "G13",
+        "currentRoot": 7,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          7,
+          3
+        ],
+        "margin": 0.154153,
+        "relation": "aligned",
+        "ambiguities": [
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S19_stress",
+        "bar": 8,
+        "beat": 3,
+        "currentLabel": "G6/9",
+        "currentRoot": 7,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          11,
+          7
+        ],
+        "margin": 0.104,
+        "relation": "pedal",
+        "ambiguities": [
+          "pedal-or-root"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S19_stress",
+        "bar": 9,
+        "beat": 1,
+        "currentLabel": "Cadd9",
+        "currentRoot": 0,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          0,
+          9
+        ],
+        "margin": 0.060153,
+        "relation": "aligned",
+        "ambiguities": [
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S19_stress",
+        "bar": 12,
+        "beat": 1,
+        "currentLabel": "G13",
+        "currentRoot": 7,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          7,
+          3
+        ],
+        "margin": 0.154153,
+        "relation": "aligned",
+        "ambiguities": [
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S19_stress",
+        "bar": 12,
+        "beat": 3,
+        "currentLabel": "G6/9",
+        "currentRoot": 7,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          11,
+          7
+        ],
+        "margin": 0.104,
+        "relation": "pedal",
+        "ambiguities": [
+          "pedal-or-root"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S19_stress",
+        "bar": 13,
+        "beat": 1,
+        "currentLabel": "Cadd9",
+        "currentRoot": 0,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          0,
+          9
+        ],
+        "margin": 0.060153,
+        "relation": "aligned",
+        "ambiguities": [
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S19_stress",
+        "bar": 16,
+        "beat": 1,
+        "currentLabel": "G13",
+        "currentRoot": 7,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          7,
+          3
+        ],
+        "margin": 0.154153,
+        "relation": "aligned",
+        "ambiguities": [
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S19_stress",
+        "bar": 16,
+        "beat": 3,
+        "currentLabel": "G6/9",
+        "currentRoot": 7,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          11,
+          7
+        ],
+        "margin": 0.104,
+        "relation": "pedal",
+        "ambiguities": [
+          "pedal-or-root"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S20_clean",
+        "bar": 2,
+        "beat": 1,
+        "currentLabel": "Amaj9",
+        "currentRoot": 9,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          1,
+          9
+        ],
+        "margin": 0.0402,
+        "relation": "pedal",
+        "ambiguities": [
+          "pedal-or-root",
+          "rootless-inferred",
+          "tension-uncertain"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S20_clean",
+        "bar": 3,
+        "beat": 1,
+        "currentLabel": "A6",
+        "currentRoot": 9,
+        "shadowTop1": 6,
+        "shadowTop3": [
+          6,
+          9,
+          2
+        ],
+        "margin": 0.021,
+        "relation": "aligned",
+        "ambiguities": [
+          "rootless-inferred",
+          "inversion-or-added",
+          "tension-uncertain"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S20_clean",
+        "bar": 4,
+        "beat": 1,
+        "currentLabel": "Gadd9/A",
+        "currentRoot": 7,
+        "shadowTop1": 11,
+        "shadowTop3": [
+          11,
+          7,
+          4
+        ],
+        "margin": 0.164,
+        "relation": "pedal",
+        "ambiguities": [
+          "pedal-or-root"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S20_clean",
+        "bar": 5,
+        "beat": 1,
+        "currentLabel": "D/A",
+        "currentRoot": 2,
+        "shadowTop1": 11,
+        "shadowTop3": [
+          11,
+          2,
+          3
+        ],
+        "margin": 0.0098,
+        "relation": "aligned",
+        "ambiguities": [
+          "rootless-inferred",
+          "inversion-or-added"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S20_clean",
+        "bar": 6,
+        "beat": 1,
+        "currentLabel": "Amaj9",
+        "currentRoot": 9,
+        "shadowTop1": 4,
+        "shadowTop3": [
+          4,
+          1,
+          9
+        ],
+        "margin": 0.0402,
+        "relation": "pedal",
+        "ambiguities": [
+          "pedal-or-root",
+          "rootless-inferred",
+          "tension-uncertain"
+        ]
+      },
+      {
+        "source": "synthetic-gold-v1:S20_clean",
+        "bar": 7,
+        "beat": 1,
+        "currentLabel": "A6",
+        "currentRoot": 9,
+        "shadowTop1": 6,
+        "shadowTop3": [
+          6,
+          9,
+          2
+        ],
+        "margin": 0.021,
+        "relation": "aligned",
+        "ambiguities": [
+          "rootless-inferred",
+          "inversion-or-added",
+          "tension-uncertain"
+        ]
+      }
+    ]
+  },
+  "subsets": {
+    "plain-triad": {
+      "windows": 16,
+      "rootDiffers": 0,
+      "rootless": 0
+    },
+    "clean": {
+      "windows": 2512,
+      "rootDiffers": 92,
+      "rootless": 162
+    },
+    "stress": {
+      "windows": 3234,
+      "rootDiffers": 855,
+      "rootless": 1122
+    },
+    "tension-rich": {
+      "windows": 36,
+      "rootDiffers": 12,
+      "rootless": 21
+    },
+    "humanized": {
+      "windows": 1459,
+      "rootDiffers": 183,
+      "rootless": 451
+    },
+    "pedal-slash": {
+      "windows": 272,
+      "rootDiffers": 130,
+      "rootless": 69
+    },
+    "inversion": {
+      "windows": 256,
+      "rootDiffers": 126,
+      "rootless": 59
+    },
+    "rootless": {
+      "windows": 483,
+      "rootDiffers": 265,
+      "rootless": 190
+    },
+    "walking-bass": {
+      "windows": 531,
+      "rootDiffers": 304,
+      "rootless": 210
+    },
+    "arpeggiated": {
+      "windows": 1011,
+      "rootDiffers": 258,
+      "rootless": 316
+    },
+    "half-bar-2chord": {
+      "windows": 33,
+      "rootDiffers": 12,
+      "rootless": 18
+    },
+    "chord-drip": {
+      "windows": 1300,
+      "rootDiffers": 519,
+      "rootless": 365
+    },
+    "private": {
+      "windows": 444,
+      "rootDiffers": 232,
+      "rootless": 201
+    }
+  },
+  "runtimeMs": {
+    "min": 2.6,
+    "mean": 30.855779,
+    "max": 168
+  }
+}
