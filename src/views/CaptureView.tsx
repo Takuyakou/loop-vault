@@ -101,10 +101,12 @@ import {
   draftSourcePreviewTimeline,
 } from "../domain/midi/manualDraftPlayback";
 import {
+  createManualDraft,
   createDraftFromCandidate,
   fingerprintTimeline,
   type ManualCandidateDraft,
 } from "../domain/midi/manualDraft";
+import type { TimelineRange } from "../domain/midi/manualRange";
 import {
   canRedoCaptureDraft,
   canUndoCaptureDraft,
@@ -114,7 +116,6 @@ import {
 } from "../domain/midi/captureEditHistory";
 import { CaptureEditHistoryPanel } from "../components/CaptureEditHistoryPanel";
 import { DraftBoundaryHandles } from "../components/DraftBoundaryHandles";
-import { DraftRangeOverlay } from "../components/DraftRangeOverlay";
 import { CaptureDraftSessionBar } from "../components/CaptureDraftSessionBar";
 import { cutDraftRangeAtEvent } from "../domain/midi/draftRangeEditing";
 import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
@@ -191,6 +192,7 @@ export function CaptureView(props: CaptureViewProps) {
     candidateId: string | undefined;
     revealTimeline?: boolean;
     closeDraft?: boolean;
+    manualRange?: TimelineRange;
   }>();
   const [isTimelineOpen, setTimelineOpen] = useState(false);
   const [timelineScrollBar, setTimelineScrollBar] = useState<number>();
@@ -745,6 +747,46 @@ export function CaptureView(props: CaptureViewProps) {
     applyCandidateSelection(candidate.id);
   }
 
+  function openManualRangeDraft(range: TimelineRange) {
+    if (!result) return;
+    try {
+      stopCapturePlayback(controller);
+      setActiveDraft(createManualDraft({
+        timeline: result.fullTimeline,
+        range,
+        beatsPerBar: laneMeter,
+      }));
+      applyCandidateSelection(undefined);
+    } catch {
+      setToast(language === "ja"
+        ? "この範囲から採集候補を作成できませんでした。"
+        : "A capture draft could not be created from this range.");
+    }
+  }
+
+  function requestManualRangeDraft(range: TimelineRange) {
+    if (activeDraft?.isDirty) {
+      setPendingCandidateSelection({
+        candidateId: undefined,
+        manualRange: range,
+      });
+      return;
+    }
+    openManualRangeDraft(range);
+  }
+
+  function focusActiveDraftEditor() {
+    const candidateId = activeDraft?.source.type === "automatic-candidate"
+      ? activeDraft.source.candidateId
+      : undefined;
+    const target = candidateId === undefined
+      ? document.querySelector<HTMLElement>("[data-testid='manual-candidate-editor']")
+      : [...document.querySelectorAll<HTMLElement>("[data-candidate-toggle]")]
+        .find((element) => element.dataset.candidateId === candidateId);
+    target?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+    target?.focus();
+  }
+
   async function previewSourceDraft(draft: ManualCandidateDraft) {
     if (!draftHasMidiSourcePreview(draft)) return;
     try {
@@ -765,6 +807,12 @@ export function CaptureView(props: CaptureViewProps) {
 
   function applyPendingDraftSelection() {
     if (!pendingCandidateSelection) return;
+    const manualRange = pendingCandidateSelection.manualRange;
+    if (manualRange) {
+      openManualRangeDraft(manualRange);
+      setPendingCandidateSelection(undefined);
+      return;
+    }
     const candidateId = pendingCandidateSelection.candidateId;
     if (pendingCandidateSelection.closeDraft) {
       stopCapturePlayback(controller);
@@ -865,8 +913,14 @@ export function CaptureView(props: CaptureViewProps) {
 
       <SongMiniMap
         totalBars={result.totalBars}
+        beatsPerBar={laneMeter}
+        timeline={result.fullTimeline}
         candidates={result.blockCandidates}
-        activeCandidateId={expandedCandidateId}
+        {...(activeDraft === null ? {} : { draft: activeDraft })}
+        activeCandidateId={activeDraft?.source.type === "automatic-candidate"
+          ? activeDraft.source.candidateId
+          : undefined}
+        language={language}
         copy={{
           title: copy.capture.songMiniMap,
           description: copy.capture.songMiniMapDescription,
@@ -875,11 +929,22 @@ export function CaptureView(props: CaptureViewProps) {
         }}
         onCandidateSelect={(candidateId) => {
           const candidate = result.blockCandidates.find((entry) => entry.id === candidateId);
-          if (candidate && selectExpandedCandidate(candidateId, { revealTimeline: true })) {
+          if (candidate && selectExpandedCandidate(candidateId)) {
             openCandidateDraft(candidate);
-            revealCandidateInTimeline(candidateId);
           }
         }}
+        onDraftChange={setActiveDraft}
+        onManualRangeCreate={requestManualRangeDraft}
+        onPreviewSelection={() => {
+          if (activeDraft) void previewManualDraft(activeDraft);
+        }}
+        onUndo={() => {
+          if (activeDraft) setActiveDraft(undoCaptureDraft(activeDraft));
+        }}
+        onRedo={() => {
+          if (activeDraft) setActiveDraft(redoCaptureDraft(activeDraft));
+        }}
+        onEnterSelection={focusActiveDraftEditor}
       />
 
       <div className={`grid gap-5 ${expandedCandidateId ? "xl:grid-cols-[minmax(0,1fr)_20rem] xl:items-start" : ""}`}>
@@ -1131,11 +1196,6 @@ export function CaptureView(props: CaptureViewProps) {
         scrollToBar={timelineScrollBar}
         openRangeSelectorRequest={rangeSelectorRequest}
         renderDraftEditor={false}
-        {...(activeDraft === null ? {} : { draft: activeDraft })}
-        onDraftChange={setActiveDraft}
-        onPreviewDraft={() => {
-          if (activeDraft) void previewManualDraft(activeDraft);
-        }}
         language={language}
         onManualDraftCreated={(draft) => {
           setActiveDraft(draft);
@@ -1278,9 +1338,6 @@ export function TimelineDetails({
   scrollToBar,
   openRangeSelectorRequest,
   renderDraftEditor = true,
-  draft,
-  onDraftChange,
-  onPreviewDraft,
   onManualDraftCreated,
   manualDraftSave,
   onPreviewManualDraft,
@@ -1297,9 +1354,6 @@ export function TimelineDetails({
   scrollToBar?: number;
   openRangeSelectorRequest?: number;
   renderDraftEditor?: boolean;
-  draft?: ManualCandidateDraft;
-  onDraftChange?: (draft: ManualCandidateDraft) => void;
-  onPreviewDraft?: () => void;
   onManualDraftCreated?: (draft: ManualCandidateDraft) => void;
   manualDraftSave?: ManualDraftSaveTarget;
   onPreviewManualDraft?: (draft: ManualCandidateDraft) => void;
@@ -1400,16 +1454,6 @@ export function TimelineDetails({
           />
         </div>
       ) : null}
-      {draft === undefined || onDraftChange === undefined ? null : (
-        <DraftRangeOverlay
-          draft={draft}
-          timeline={result.fullTimeline}
-          totalBars={result.totalBars}
-          language={language ?? "ja"}
-          onChange={onDraftChange}
-          {...(onPreviewDraft === undefined ? {} : { onPreview: onPreviewDraft })}
-        />
-      )}
       <div className="mt-5">
         {result.fullTimeline.length > 0 ? (
           <ProgressionGrid

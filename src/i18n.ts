@@ -262,7 +262,7 @@ export const appCopy = {
     },
     capture: {
       songMiniMap: "全曲",
-      songMiniMapDescription: "候補が曲のどこにあるかを選んで確認できます。",
+      songMiniMapDescription: "候補を選ぶか空いている領域をドラッグして、現在の採集範囲を決めます。",
       songMiniMapEmpty: "表示できる進行候補はありません。",
       songMiniMapCandidate: (index: number, startBar: number, endBar: number) => `候補 ${index}: ${startBar}-${endBar}小節`,
       eyebrow: "コード採集",
@@ -800,7 +800,7 @@ export const appCopy = {
     capture: {
       eyebrow: "Progression capture",
       songMiniMap: "Whole song",
-      songMiniMapDescription: "Select a range to inspect where each candidate appears in the song.",
+      songMiniMapDescription: "Choose a candidate or drag an empty area to set the current capture range.",
       songMiniMapEmpty: "There are no progression candidates to show.",
       songMiniMapCandidate: (index: number, startBar: number, endBar: number) => `Candidate ${index}: bars ${startBar}-${endBar}`,
       title: "Capture Progressions from MIDI",

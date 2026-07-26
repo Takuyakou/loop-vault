@@ -15,78 +15,91 @@ export function DraftBoundaryHandles({
   onChange,
 }: DraftBoundaryHandlesProps) {
   const [pending, setPending] = useState<Record<string, number>>({});
+  const [open, setOpen] = useState(false);
 
   useEffect(() => setPending({}), [draft.historyIndex, draft.events]);
 
   if (draft.events.length < 2) return null;
 
   return (
-    <section
+    <details
+      open={open}
+      onToggle={(event) => setOpen(event.currentTarget.open)}
       className="mt-3 border-t border-[var(--lv-border)] pt-3"
       aria-label={language === "ja" ? "コード境界" : "Chord boundaries"}
       data-testid="draft-boundary-handles"
     >
-      <p className="text-xs text-[var(--lv-text-muted)]">
+      <summary className="min-h-10 cursor-pointer select-none py-2 text-sm font-semibold text-[var(--lv-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)]">
         {language === "ja"
-          ? "境界をドラッグすると左右の長さを同時に調整します。Altでスナップを一時解除。"
-          : "Drag a boundary to resize both neighbours. Hold Alt to bypass snap."}
-      </p>
-      <div className="mt-2 grid gap-2">
-        {draft.events.slice(0, -1).map((left, index) => {
-          const right = draft.events[index + 1]!;
-          const leftId = left.sourceEventId ?? `${index}`;
-          const current = left.relativeStartBeat + left.durationBeats;
-          const value = pending[leftId] ?? current;
-          const minimum = left.relativeStartBeat + 0.25;
-          const maximum = right.relativeStartBeat + right.durationBeats - 0.25;
-          const label = language === "ja"
-            ? `${left.chord.label} と ${right.chord.label} の境界`
-            : `Boundary between ${left.chord.label} and ${right.chord.label}`;
+          ? `詳細：コード境界を調整（${draft.events.length - 1}箇所）`
+          : `Details: adjust chord boundaries (${draft.events.length - 1})`}
+      </summary>
+      <div
+        className="mt-2 max-h-72 overflow-y-auto overscroll-contain border-t border-[var(--lv-border)] pt-3 pr-2"
+        data-boundary-scroll-region
+      >
+        <p className="text-xs text-[var(--lv-text-muted)]">
+          {language === "ja"
+            ? "境界をドラッグすると左右の長さを同時に調整します。Altでスナップを一時解除。"
+            : "Drag a boundary to resize both neighbours. Hold Alt to bypass snap."}
+        </p>
+        <div className="mt-2 grid gap-2">
+          {draft.events.slice(0, -1).map((left, index) => {
+            const right = draft.events[index + 1]!;
+            const leftId = left.sourceEventId ?? `${index}`;
+            const current = left.relativeStartBeat + left.durationBeats;
+            const value = pending[leftId] ?? current;
+            const minimum = left.relativeStartBeat + 0.25;
+            const maximum = right.relativeStartBeat + right.durationBeats - 0.25;
+            const label = language === "ja"
+              ? `${left.chord.label} と ${right.chord.label} の境界`
+              : `Boundary between ${left.chord.label} and ${right.chord.label}`;
 
-          return (
-            <label
-              key={`${leftId}-${right.sourceEventId ?? index + 1}`}
-              className="grid min-h-10 grid-cols-[minmax(7rem,auto)_minmax(8rem,1fr)_4rem] items-center gap-3 text-xs"
-            >
-              <span className="truncate text-[var(--lv-text)]" title={label}>
-                {left.chord.label} | {right.chord.label}
-              </span>
-              <input
-                type="range"
-                min={minimum}
-                max={maximum}
-                step={0.25}
-                value={value}
-                data-boundary-after={leftId}
-                aria-label={label}
-                aria-valuetext={`${value.toFixed(2)} beats`}
-                className="min-h-8 accent-amber-300"
-                onChange={(event) => {
-                  const nextValue = Number(event.currentTarget.value);
-                  setPending((currentValues) => ({
-                    ...currentValues,
-                    [leftId]: nextValue,
-                  }));
-                }}
-                onPointerUp={(event) => {
-                  onChange(resizeDraftBoundary(draft, leftId, value, {
-                    disableSnap: event.altKey,
-                  }));
-                }}
-                onKeyUp={(event) => {
-                  if (!event.key.startsWith("Arrow")) return;
-                  onChange(resizeDraftBoundary(draft, leftId, value, {
-                    disableSnap: event.altKey,
-                  }));
-                }}
-              />
-              <span className="tabular-nums text-[var(--lv-text-muted)]">
-                {value.toFixed(2)}
-              </span>
-            </label>
-          );
-        })}
+            return (
+              <label
+                key={`${leftId}-${right.sourceEventId ?? index + 1}`}
+                className="grid min-h-10 grid-cols-[minmax(7rem,auto)_minmax(8rem,1fr)_4rem] items-center gap-3 text-xs"
+              >
+                <span className="truncate text-[var(--lv-text)]" title={label}>
+                  {left.chord.label} | {right.chord.label}
+                </span>
+                <input
+                  type="range"
+                  min={minimum}
+                  max={maximum}
+                  step={0.25}
+                  value={value}
+                  data-boundary-after={leftId}
+                  aria-label={label}
+                  aria-valuetext={`${value.toFixed(2)} beats`}
+                  className="min-h-8 accent-amber-300"
+                  onChange={(event) => {
+                    const nextValue = Number(event.currentTarget.value);
+                    setPending((currentValues) => ({
+                      ...currentValues,
+                      [leftId]: nextValue,
+                    }));
+                  }}
+                  onPointerUp={(event) => {
+                    onChange(resizeDraftBoundary(draft, leftId, value, {
+                      disableSnap: event.altKey,
+                    }));
+                  }}
+                  onKeyUp={(event) => {
+                    if (!event.key.startsWith("Arrow")) return;
+                    onChange(resizeDraftBoundary(draft, leftId, value, {
+                      disableSnap: event.altKey,
+                    }));
+                  }}
+                />
+                <span className="tabular-nums text-[var(--lv-text-muted)]">
+                  {value.toFixed(2)}
+                </span>
+              </label>
+            );
+          })}
+        </div>
       </div>
-    </section>
+    </details>
   );
 }

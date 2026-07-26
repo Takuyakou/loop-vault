@@ -1474,7 +1474,7 @@ describe("CaptureView song mini map", () => {
     return { container, root };
   }
 
-  it("places the map between the file overview and candidate list, then opens and scrolls the timeline", async () => {
+  it("places the map between the overview and candidates, then selects a Draft without opening the full timeline", async () => {
     const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
     const scrollIntoView = vi.fn();
     Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
@@ -1495,18 +1495,19 @@ describe("CaptureView song mini map", () => {
       const secondRange = container.querySelector<HTMLButtonElement>(
         '[data-song-minimap-candidate="candidate-2"]',
       );
-      expect(secondRange?.getAttribute("aria-label")).toBe("Candidate 2: bars 5-8");
+      expect(secondRange?.getAttribute("aria-label")).toBe(
+        "Candidate 2: bars 5-8. Capture range selection preset",
+      );
       await act(async () => secondRange?.click());
 
-      const details = container.querySelector<HTMLDetailsElement>("details");
       const headers = container.querySelectorAll<HTMLElement>("[data-candidate-toggle]");
-      const targetBar = container.querySelector<HTMLElement>('[data-progression-bar="5"]');
-      expect(details?.open).toBe(true);
       expect(headers[1]?.getAttribute("aria-expanded")).toBe("true");
       expect(secondRange?.getAttribute("aria-pressed")).toBe("true");
-      expect(scrollIntoView).toHaveBeenCalledTimes(1);
-      expect(scrollIntoView.mock.instances[0]).toBe(targetBar);
-      expect(targetBar?.querySelector('button[aria-pressed="true"]')).not.toBeNull();
+      expect(container.querySelector("[data-current-selection]")).not.toBeNull();
+      expect(container.textContent).toContain("Selection: 5.1–8.4");
+      expect([...container.querySelectorAll<HTMLDetailsElement>("details")]
+        .some((details) => details.open)).toBe(false);
+      expect(scrollIntoView).not.toHaveBeenCalled();
     } finally {
       await act(async () => root.unmount());
       container.remove();
@@ -1517,7 +1518,7 @@ describe("CaptureView song mini map", () => {
     }
   });
 
-  it("waits for dirty confirmation before selecting or scrolling, and leaves state unchanged on cancel", async () => {
+  it("waits for dirty confirmation before changing the primary selection", async () => {
     const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
     const scrollIntoView = vi.fn();
     Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
@@ -1560,11 +1561,8 @@ describe("CaptureView song mini map", () => {
       const confirmButton = dialog?.querySelectorAll<HTMLButtonElement>("button")[1];
       await act(async () => confirmButton?.click());
       expect(secondRange?.getAttribute("aria-pressed")).toBe("true");
-      expect(container.querySelector<HTMLDetailsElement>("details")?.open).toBe(true);
-      expect(scrollIntoView).toHaveBeenCalledTimes(1);
-      expect(scrollIntoView.mock.instances[0]).toBe(
-        container.querySelector('[data-progression-bar="5"]'),
-      );
+      expect(container.textContent).toContain("Selection: 5.1–8.4");
+      expect(scrollIntoView).not.toHaveBeenCalled();
     } finally {
       await act(async () => root.unmount());
       container.remove();

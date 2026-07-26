@@ -17,6 +17,14 @@ const englishCopy: SongMiniMapCopy = {
   candidateLabel: (index, startBar, endBar) => `Candidate ${index}: bars ${startBar}-${endBar}`,
 };
 
+const editorProps = {
+  beatsPerBar: 4,
+  timeline: [],
+  language: "en" as const,
+  onDraftChange: vi.fn(),
+  onManualRangeCreate: vi.fn(),
+};
+
 function candidate(id: string, startBar: number, endBar: number): ProgressionBlockCandidate {
   return {
     id,
@@ -55,6 +63,7 @@ describe("SongMiniMap", () => {
     const candidates = [candidate("a", 1, 4), candidate("b", 5, 8)];
     const english = renderToStaticMarkup(
       <SongMiniMap
+        {...editorProps}
         totalBars={8}
         candidates={candidates}
         activeCandidateId="b"
@@ -64,6 +73,7 @@ describe("SongMiniMap", () => {
     );
     const japanese = renderToStaticMarkup(
       <SongMiniMap
+        {...editorProps}
         totalBars={8}
         candidates={candidates}
         copy={{
@@ -75,15 +85,16 @@ describe("SongMiniMap", () => {
       />,
     );
 
-    expect(english).toContain('aria-label="Candidate 2: bars 5-8"');
+    expect(english).toContain('aria-label="Candidate 2: bars 5-8. Capture range selection preset"');
     expect(english).toContain('data-song-minimap-candidate="b"');
     expect(english).toContain('aria-pressed="true"');
-    expect(japanese).toContain('aria-label="候補 1: 1-4小節"');
+    expect(japanese).toContain('aria-label="候補 1: 1-4小節. Capture range selection preset"');
   });
 
   it("is safe for empty candidates and zero bars", () => {
     const markup = renderToStaticMarkup(
       <SongMiniMap
+        {...editorProps}
         totalBars={0}
         candidates={[candidate("a", 1, 4)]}
         copy={englishCopy}
@@ -98,21 +109,35 @@ describe("SongMiniMap", () => {
 
   it("reports the clicked candidate", async () => {
     const onCandidateSelect = vi.fn();
+    const candidates = Array.from({ length: 6 }, (_unused, index) => (
+      candidate(`candidate-${index + 1}`, index * 4 + 1, index * 4 + 4)
+    ));
     const container = document.createElement("div");
     const root = createRoot(container);
     await act(async () => {
       root.render(
         <SongMiniMap
-          totalBars={8}
-          candidates={[candidate("a", 1, 4)]}
+          {...editorProps}
+          totalBars={24}
+          candidates={candidates}
           copy={englishCopy}
           onCandidateSelect={onCandidateSelect}
         />,
       );
     });
 
-    await act(async () => container.querySelector<HTMLButtonElement>("button")?.click());
-    expect(onCandidateSelect).toHaveBeenCalledWith("a");
+    const first = container.querySelector<HTMLButtonElement>(
+      '[data-song-minimap-candidate="candidate-1"]',
+    );
+    const sixth = container.querySelector<HTMLButtonElement>(
+      '[data-song-minimap-candidate="candidate-6"]',
+    );
+    await act(async () => first?.click());
+    await act(async () => sixth?.click());
+    expect(onCandidateSelect.mock.calls).toEqual([
+      ["candidate-1"],
+      ["candidate-6"],
+    ]);
     await act(async () => root.unmount());
   });
 });
