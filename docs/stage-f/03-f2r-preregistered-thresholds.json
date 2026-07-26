@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "stage": "Stage F2R",
+  "contract": "Selective Root Correction Shadow v1",
+  "frozenOn": "2026-07-26",
+  "frozenBeforeMeasurement": true,
+  "policy": "Every threshold below is fixed before a single override is measured. They are derived from the evidence distributions already published in 01-shadow-diagnostics.json and 02-shadow-root.json, never from how well an override turns out. Tuning them against override accuracy would make F2R a measurement of the tuning rather than of the approach, which is what F2 was run to avoid.",
+  "supersedes": "nothing. Stage F2's finding stands: the factorized root is worse than phase4-v1 overall, and F2b is not adopted.",
+  "default": {
+    "primary": "phase4-v1 Top 1",
+    "note": "The product's root is the default and stays the default. F2R only ever proposes replacing it, and abstains unless every condition below is met."
+  },
+  "scope": {
+    "eligibleRelations": ["pedal", "aligned"],
+    "excludedRelations": ["walking", "none"],
+    "walkingNote": "Walking bass is excluded entirely and belongs to Stage F2W. Stage F2 measured its shadow top1 at 11.8% and top3 at 60.9%: the candidate set itself is unreliable there, so a correction rule built on it would be guessing.",
+    "plainTriadExcluded": true,
+    "plainTriadDefinition": "The window sounds the root, a third and a fifth of the product's Top 1, no seventh, and the lowest note is the root. Derived from the notes, never from a corpus subset label or a fixture id.",
+    "plainTriadRationale": "Stage F2 measured plain triads at 100% for both the product and the shadow. There is nothing to correct and everything to lose."
+  },
+  "conditions": [
+    {
+      "id": "1-contest",
+      "requirement": "shadowScore(productTop1) and shadowScore(alternative) differ by no more than contestBand",
+      "contestBand": 0.05,
+      "derivation": "Published rootMargin mean is 0.14444. A third of that is the point below which the two candidates are not meaningfully separated by the evidence. Chosen from the margin distribution, not from outcomes."
+    },
+    {
+      "id": "2-relation-confidence",
+      "requirement": "relationMargin >= relationMarginFloor AND bassEvidenceAmount >= bassEvidenceFloor AND bassMargin >= bassMarginFloor",
+      "relationMarginFloor": 0.25,
+      "bassEvidenceFloor": 0.5,
+      "bassMarginFloor": 0.5,
+      "derivation": "Relation scores span 0..1, so a quarter of the scale is a clear lead. Published bassEvidenceAmount mean is 1.030237 and bassMargin mean is 0.878402; the floors sit at roughly half of each, so a window with unusually thin or unusually divided bass evidence is not eligible."
+    },
+    {
+      "id": "3-alternative-has-skeleton",
+      "requirement": "tertianSkeleton[alternative] > 0 AND (rootPresence[alternative] > 0 OR shellSkeleton[alternative] > 0)",
+      "derivation": "Positive structural evidence, not merely a higher score. A candidate with no skeleton above it is an artefact of the weighting."
+    },
+    {
+      "id": "4-current-top1-contradicted",
+      "requirement": "rootPresence[productTop1] == 0 OR the defining triad tone of the product's Top 1 is 'contradicted'",
+      "derivation": "A correction needs a reason to disbelieve the incumbent, not just a reason to like the challenger. 'Underdetermined' is deliberately not enough: Stage F1 exists because absence is not denial."
+    },
+    {
+      "id": "5-alternative-is-a-known-candidate",
+      "requirement": "alternative is in the shadow root Top 3, or is the product's own bass or an existing product alternative",
+      "derivation": "Stage F2 measured shadow Top 3 at 100% on inversion and pedal/slash. Restricting to that set keeps corrections inside the candidate pool that was shown to contain the answer."
+    },
+    {
+      "id": "6-abstain",
+      "requirement": "If any condition above fails, abstain. Abstaining is the default outcome, not a fallback.",
+      "derivation": "Stage F2's overall shadow accuracy is below the product's. A rule that fires often would import that deficit; a rule that fires rarely and precisely is the only shape worth having."
+    }
+  ],
+  "reportedMetrics": [
+    "overrideCount", "overridePrecision", "wrongToCorrect", "correctToWrong",
+    "netCorrectionGain", "abstentionRate", "correctionCost"
+  ],
+  "promotionStance": {
+    "connectsToProduct": false,
+    "note": "F2R reports a recommendation and nothing else. Even a clean result does not connect anything; that decision is the user's."
+  }
+}
