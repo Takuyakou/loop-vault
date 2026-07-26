@@ -1,0 +1,750 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.1.1-00",
+  "analyzerMode": "phase4.1.2-v1",
+  "source": {
+    "fingerprint": "sha256-aa0d6b4a2da8faa8dff9bcef9d9fabc0fc4bf39b2aa4259a26d2e23860fb6955",
+    "byteLength": 6608
+  },
+  "song": {
+    "totalBars": 112,
+    "timeSignature": "4/4",
+    "bpm": 96,
+    "detectedKey": "F major",
+    "timelineEvents": 56,
+    "harmonicActiveBars": 112
+  },
+  "pipeline": {
+    "generatedOccurrences": 422,
+    "scoredOccurrences": 422,
+    "eligibleAfterQualityFloor": 419,
+    "selectedOccurrences": 22,
+    "groupedPatterns": 330,
+    "displayedCards": 10,
+    "distinctPatternsAmongSelected": 16,
+    "distinctPatternsAmongDisplayed": 10
+  },
+  "usefulness": {
+    "visiblePatternDuplicateCount": 0,
+    "visiblePatternDuplicateRate": 0,
+    "visibleSlotWasteCount": 0,
+    "visibleUniquePatternCount": 10,
+    "top3SingleChordCount": 0,
+    "top10SingleChordRate": 0,
+    "top3ProgressionCount": 3,
+    "top10ProgressionCount": 10,
+    "progressionCandidateAvailability": 281,
+    "fragmentCandidateCount": 35,
+    "vampCandidateCount": 11
+  },
+  "coverage": {
+    "allCandidateCoverage": 1,
+    "progressionCandidateCoverage": 1,
+    "coverageAtVisible": 1,
+    "longestUncoveredHarmonicRun": 1,
+    "rebuiltSelectionCoverage": 0.991071,
+    "stoppedBecause": "stopped-coverage-target"
+  },
+  "displayedCards": [
+    {
+      "visibleCardIndex": 1,
+      "occurrenceId": "occ-29-36",
+      "sourceCandidateId": null,
+      "patternId": "pattern-occ-29-36",
+      "normalizedProgressionIdentity": "0:3840:0|major|major7|||-;3840:3840:11|minor|minor7|||-;7680:3840:9|minor|minor7|||-;11520:3840:7|major|-|||-;15360:3840:0|major|major7|||-;19200:3840:11|minor|minor7|||-;23040:3840:9|minor|minor7|||-;26880:3840:7|major|-|||-",
+      "startBar": 29,
+      "endBar": 36,
+      "barLength": 8,
+      "chordEventCount": 8,
+      "uniqueCanonicalChordCount": 4,
+      "harmonicChangeCount": 8,
+      "densityClass": "standard",
+      "chordLabels": [
+        "Fmaj7",
+        "Em7",
+        "Dm7",
+        "C",
+        "Fmaj7",
+        "Em7",
+        "Dm7",
+        "C"
+      ],
+      "rankingScore": 0.765425,
+      "occurrenceCountOfPattern": 1,
+      "marginalCoverage": null,
+      "selectionUtility": null,
+      "redundantBars": null,
+      "kind": "progression"
+    },
+    {
+      "visibleCardIndex": 2,
+      "occurrenceId": "occ-78-93",
+      "sourceCandidateId": null,
+      "patternId": "pattern-occ-78-93",
+      "normalizedProgressionIdentity": "0:11520:0|minor|minor7|||-;11520:15360:5|major|minor7|||-;26880:3840:6|minor|minor7|||-;30720:3840:11|major|minor7|||-;34560:3840:4|major|major7|||-;38400:3840:9|major|major7|||-;42240:3840:6|minor|minor7|||-;46080:3840:11|major|minor7|||-;49920:3840:4|major|major7|||-;53760:3840:9|major|major7|||-;57600:3840:7|major|minor7|9||-",
+      "startBar": 78,
+      "endBar": 93,
+      "barLength": 16,
+      "chordEventCount": 11,
+      "uniqueCanonicalChordCount": 7,
+      "harmonicChangeCount": 11,
+      "densityClass": "standard",
+      "chordLabels": [
+        "Abm7",
+        "C#7",
+        "Dm7",
+        "G7",
+        "Cmaj7",
+        "Fmaj7",
+        "Dm7",
+        "G7",
+        "Cmaj7",
+        "Fmaj7",
+        "Eb9"
+      ],
+      "rankingScore": 0.761358,
+      "occurrenceCountOfPattern": 1,
+      "marginalCoverage": null,
+      "selectionUtility": null,
+      "redundantBars": null,
+      "kind": "progression"
+    },
+    {
+      "visibleCardIndex": 3,
+      "occurrenceId": "occ-57-72",
+      "sourceCandidateId": null,
+      "patternId": "pattern-occ-57-72",
+      "normalizedProgressionIdentity": "0:3840:0|minor|minor7|||-;3840:3840:8|major|major7|||-;7680:3840:3|major|major7|||-;11520:3840:10|major|minor7|||-;15360:3840:0|minor|minor7|||-;19200:3840:8|major|major7|||-;23040:3840:3|major|major7|||-;26880:3840:10|major|minor7|||-;30720:15360:9|major|major7|||-;46080:7680:2|minor|minor7|||-;53760:7680:7|minor|minor7|11||9",
+      "startBar": 57,
+      "endBar": 72,
+      "barLength": 16,
+      "chordEventCount": 11,
+      "uniqueCanonicalChordCount": 7,
+      "harmonicChangeCount": 11,
+      "densityClass": "standard",
+      "chordLabels": [
+        "Am7",
+        "Fmaj7",
+        "Cmaj7",
+        "G7",
+        "Am7",
+        "Fmaj7",
+        "Cmaj7",
+        "G7",
+        "F#maj7",
+        "Bm7",
+        "Em11/A"
+      ],
+      "rankingScore": 0.743819,
+      "occurrenceCountOfPattern": 1,
+      "marginalCoverage": 16,
+      "selectionUtility": 0.297603,
+      "redundantBars": 0,
+      "kind": "progression"
+    },
+    {
+      "visibleCardIndex": 4,
+      "occurrenceId": "occ-16-31",
+      "sourceCandidateId": null,
+      "patternId": "pattern-occ-16-31",
+      "normalizedProgressionIdentity": "0:3840:0|major|minor7|13||1;3840:15360:9|major|major7|||-;19200:15360:2|minor|minor7|||-;34560:15360:7|major|minor7|9||-;49920:3840:8|major|major7|||-;53760:3840:7|minor|minor7|||-;57600:3840:5|minor|minor7|||-",
+      "startBar": 16,
+      "endBar": 31,
+      "barLength": 16,
+      "chordEventCount": 7,
+      "uniqueCanonicalChordCount": 7,
+      "harmonicChangeCount": 7,
+      "densityClass": "standard",
+      "chordLabels": [
+        "A13/C#",
+        "F#maj7",
+        "Bm7",
+        "E9",
+        "Fmaj7",
+        "Em7",
+        "Dm7"
+      ],
+      "rankingScore": 0.710011,
+      "occurrenceCountOfPattern": 1,
+      "marginalCoverage": null,
+      "selectionUtility": null,
+      "redundantBars": null,
+      "kind": "progression"
+    },
+    {
+      "visibleCardIndex": 5,
+      "occurrenceId": "occ-93-108",
+      "sourceCandidateId": null,
+      "patternId": "pattern-occ-93-108",
+      "normalizedProgressionIdentity": "0:15360:0|major|minor7|9||-;15360:7680:7|major|major7|||-;23040:7680:9|major|minor7|13||9;30720:15360:0|major|major7|9||-;46080:15360:5|major|major7|||-",
+      "startBar": 93,
+      "endBar": 108,
+      "barLength": 16,
+      "chordEventCount": 5,
+      "uniqueCanonicalChordCount": 5,
+      "harmonicChangeCount": 5,
+      "densityClass": "compact",
+      "chordLabels": [
+        "Eb9",
+        "Bbmaj7",
+        "C13/A",
+        "Ebmaj9",
+        "Abmaj7"
+      ],
+      "rankingScore": 0.683853,
+      "occurrenceCountOfPattern": 1,
+      "marginalCoverage": 16,
+      "selectionUtility": 0.297743,
+      "redundantBars": 0,
+      "kind": "progression"
+    },
+    {
+      "visibleCardIndex": 6,
+      "occurrenceId": "occ-41-56",
+      "sourceCandidateId": null,
+      "patternId": "pattern-occ-41-56",
+      "normalizedProgressionIdentity": "0:7680:0|minor|minor7|||-;7680:7680:11|major|minor7|13||-;15360:15360:5|major|minor7|9||-;30720:15360:0|major|major7|||-;46080:15360:5|major|major7|9||-",
+      "startBar": 41,
+      "endBar": 56,
+      "barLength": 16,
+      "chordEventCount": 5,
+      "uniqueCanonicalChordCount": 5,
+      "harmonicChangeCount": 5,
+      "densityClass": "compact",
+      "chordLabels": [
+        "Bbm7",
+        "A13",
+        "Eb9",
+        "Bbmaj7",
+        "Ebmaj9"
+      ],
+      "rankingScore": 0.670062,
+      "occurrenceCountOfPattern": 1,
+      "marginalCoverage": 10,
+      "selectionUtility": 0.331596,
+      "redundantBars": 6,
+      "kind": "progression"
+    },
+    {
+      "visibleCardIndex": 7,
+      "occurrenceId": "occ-1-16",
+      "sourceCandidateId": null,
+      "patternId": "pattern-occ-1-16",
+      "normalizedProgressionIdentity": "0:3840:0|major|major7|||-;3840:3840:9|minor|minor7|||-;7680:3840:2|minor|minor7|||-;11520:3840:7|major|minor7|||-;15360:3840:0|major|major7|||-;19200:3840:9|minor|minor7|||-;23040:3840:2|minor|minor7|||-;26880:3840:7|major|minor7|||-;30720:15360:8|major|major7|||-;46080:7680:1|major|major7|9||-;53760:7680:9|major|minor7|13||1",
+      "startBar": 1,
+      "endBar": 16,
+      "barLength": 16,
+      "chordEventCount": 11,
+      "uniqueCanonicalChordCount": 7,
+      "harmonicChangeCount": 11,
+      "densityClass": "standard",
+      "chordLabels": [
+        "Cmaj7",
+        "Am7",
+        "Dm7",
+        "G7",
+        "Cmaj7",
+        "Am7",
+        "Dm7",
+        "G7",
+        "Abmaj7",
+        "C#maj9",
+        "A13/C#"
+      ],
+      "rankingScore": 0.649559,
+      "occurrenceCountOfPattern": 1,
+      "marginalCoverage": 5,
+      "selectionUtility": 0.531766,
+      "redundantBars": 11,
+      "kind": "progression"
+    },
+    {
+      "visibleCardIndex": 8,
+      "occurrenceId": "occ-66-81",
+      "sourceCandidateId": null,
+      "patternId": "pattern-occ-66-81",
+      "normalizedProgressionIdentity": "0:11520:0|major|major7|||-;11520:7680:5|minor|minor7|||-;19200:7680:10|minor|minor7|11||9;26880:15360:10|major|minor7|9||-;42240:15360:2|minor|minor7|||-;57600:3840:7|major|minor7|||-",
+      "startBar": 66,
+      "endBar": 81,
+      "barLength": 16,
+      "chordEventCount": 6,
+      "uniqueCanonicalChordCount": 6,
+      "harmonicChangeCount": 6,
+      "densityClass": "standard",
+      "chordLabels": [
+        "F#maj7",
+        "Bm7",
+        "Em11/A",
+        "E9",
+        "Abm7",
+        "C#7"
+      ],
+      "rankingScore": 0.736913,
+      "occurrenceCountOfPattern": 1,
+      "marginalCoverage": null,
+      "selectionUtility": null,
+      "redundantBars": null,
+      "kind": "progression"
+    },
+    {
+      "visibleCardIndex": 9,
+      "occurrenceId": "occ-35-42",
+      "sourceCandidateId": null,
+      "patternId": "pattern-occ-35-42",
+      "normalizedProgressionIdentity": "0:3840:0|minor|minor7|||-;3840:3840:10|major|-|||-;7680:15360:4|major|major7|9||-;23040:7680:8|minor|minor7|||-",
+      "startBar": 35,
+      "endBar": 42,
+      "barLength": 8,
+      "chordEventCount": 4,
+      "uniqueCanonicalChordCount": 4,
+      "harmonicChangeCount": 4,
+      "densityClass": "compact",
+      "chordLabels": [
+        "Dm7",
+        "C",
+        "F#maj9",
+        "Bbm7"
+      ],
+      "rankingScore": 0.709071,
+      "occurrenceCountOfPattern": 1,
+      "marginalCoverage": null,
+      "selectionUtility": null,
+      "redundantBars": null,
+      "kind": "progression"
+    },
+    {
+      "visibleCardIndex": 10,
+      "occurrenceId": "occ-97-112",
+      "sourceCandidateId": null,
+      "patternId": "pattern-occ-97-112",
+      "normalizedProgressionIdentity": "0:7680:0|major|major7|||-;7680:7680:2|major|minor7|13||9;15360:15360:5|major|major7|9||-;30720:15360:10|major|major7|||-;46080:15360:3|major|major7|9||-",
+      "startBar": 97,
+      "endBar": 112,
+      "barLength": 16,
+      "chordEventCount": 5,
+      "uniqueCanonicalChordCount": 5,
+      "harmonicChangeCount": 5,
+      "densityClass": "compact",
+      "chordLabels": [
+        "Bbmaj7",
+        "C13/A",
+        "Ebmaj9",
+        "Abmaj7",
+        "C#maj9"
+      ],
+      "rankingScore": 0.653853,
+      "occurrenceCountOfPattern": 1,
+      "marginalCoverage": null,
+      "selectionUtility": null,
+      "redundantBars": null,
+      "kind": "progression"
+    }
+  ],
+  "largestPatterns": [
+    {
+      "patternId": "pattern-occ-9-10",
+      "occurrenceCount": 16,
+      "lengthBars": 2,
+      "uniqueCanonicalChordCount": 1,
+      "chordLabels": [
+        "Abmaj7"
+      ],
+      "bars": [
+        [
+          9,
+          10
+        ],
+        [
+          10,
+          11
+        ],
+        [
+          11,
+          12
+        ],
+        [
+          17,
+          18
+        ],
+        [
+          18,
+          19
+        ],
+        [
+          19,
+          20
+        ],
+        [
+          49,
+          50
+        ],
+        [
+          50,
+          51
+        ],
+        [
+          51,
+          52
+        ],
+        [
+          65,
+          66
+        ],
+        [
+          66,
+          67
+        ],
+        [
+          67,
+          68
+        ],
+        [
+          97,
+          98
+        ],
+        [
+          105,
+          106
+        ],
+        [
+          106,
+          107
+        ],
+        [
+          107,
+          108
+        ]
+      ]
+    },
+    {
+      "patternId": "pattern-occ-13-14",
+      "occurrenceCount": 13,
+      "lengthBars": 2,
+      "uniqueCanonicalChordCount": 1,
+      "chordLabels": [
+        "C#maj9"
+      ],
+      "bars": [
+        [
+          13,
+          14
+        ],
+        [
+          37,
+          38
+        ],
+        [
+          38,
+          39
+        ],
+        [
+          39,
+          40
+        ],
+        [
+          53,
+          54
+        ],
+        [
+          54,
+          55
+        ],
+        [
+          55,
+          56
+        ],
+        [
+          101,
+          102
+        ],
+        [
+          102,
+          103
+        ],
+        [
+          103,
+          104
+        ],
+        [
+          109,
+          110
+        ],
+        [
+          110,
+          111
+        ],
+        [
+          111,
+          112
+        ]
+      ]
+    },
+    {
+      "patternId": "pattern-occ-25-26",
+      "occurrenceCount": 12,
+      "lengthBars": 2,
+      "uniqueCanonicalChordCount": 1,
+      "chordLabels": [
+        "E9"
+      ],
+      "bars": [
+        [
+          25,
+          26
+        ],
+        [
+          26,
+          27
+        ],
+        [
+          27,
+          28
+        ],
+        [
+          45,
+          46
+        ],
+        [
+          46,
+          47
+        ],
+        [
+          47,
+          48
+        ],
+        [
+          73,
+          74
+        ],
+        [
+          74,
+          75
+        ],
+        [
+          75,
+          76
+        ],
+        [
+          93,
+          94
+        ],
+        [
+          94,
+          95
+        ],
+        [
+          95,
+          96
+        ]
+      ]
+    },
+    {
+      "patternId": "pattern-occ-21-22",
+      "occurrenceCount": 8,
+      "lengthBars": 2,
+      "uniqueCanonicalChordCount": 1,
+      "chordLabels": [
+        "Bm7"
+      ],
+      "bars": [
+        [
+          21,
+          22
+        ],
+        [
+          22,
+          23
+        ],
+        [
+          23,
+          24
+        ],
+        [
+          41,
+          42
+        ],
+        [
+          69,
+          70
+        ],
+        [
+          77,
+          78
+        ],
+        [
+          78,
+          79
+        ],
+        [
+          79,
+          80
+        ]
+      ]
+    },
+    {
+      "patternId": "pattern-occ-3-4",
+      "occurrenceCount": 5,
+      "lengthBars": 2,
+      "uniqueCanonicalChordCount": 2,
+      "chordLabels": [
+        "Dm7",
+        "G7"
+      ],
+      "bars": [
+        [
+          3,
+          4
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          80,
+          81
+        ],
+        [
+          85,
+          86
+        ],
+        [
+          89,
+          90
+        ]
+      ]
+    },
+    {
+      "patternId": "pattern-occ-9-12",
+      "occurrenceCount": 5,
+      "lengthBars": 4,
+      "uniqueCanonicalChordCount": 1,
+      "chordLabels": [
+        "Abmaj7"
+      ],
+      "bars": [
+        [
+          9,
+          12
+        ],
+        [
+          17,
+          20
+        ],
+        [
+          49,
+          52
+        ],
+        [
+          65,
+          68
+        ],
+        [
+          105,
+          108
+        ]
+      ]
+    },
+    {
+      "patternId": "pattern-occ-25-28",
+      "occurrenceCount": 4,
+      "lengthBars": 4,
+      "uniqueCanonicalChordCount": 1,
+      "chordLabels": [
+        "E9"
+      ],
+      "bars": [
+        [
+          25,
+          28
+        ],
+        [
+          45,
+          48
+        ],
+        [
+          73,
+          76
+        ],
+        [
+          93,
+          96
+        ]
+      ]
+    },
+    {
+      "patternId": "pattern-occ-37-40",
+      "occurrenceCount": 4,
+      "lengthBars": 4,
+      "uniqueCanonicalChordCount": 1,
+      "chordLabels": [
+        "F#maj9"
+      ],
+      "bars": [
+        [
+          37,
+          40
+        ],
+        [
+          53,
+          56
+        ],
+        [
+          101,
+          104
+        ],
+        [
+          109,
+          112
+        ]
+      ]
+    },
+    {
+      "patternId": "pattern-occ-1-2",
+      "occurrenceCount": 3,
+      "lengthBars": 2,
+      "uniqueCanonicalChordCount": 2,
+      "chordLabels": [
+        "Cmaj7",
+        "Am7"
+      ],
+      "bars": [
+        [
+          1,
+          2
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          88,
+          89
+        ]
+      ]
+    },
+    {
+      "patternId": "pattern-occ-10-13",
+      "occurrenceCount": 3,
+      "lengthBars": 4,
+      "uniqueCanonicalChordCount": 2,
+      "chordLabels": [
+        "Abmaj7",
+        "C#maj9"
+      ],
+      "bars": [
+        [
+          10,
+          13
+        ],
+        [
+          50,
+          53
+        ],
+        [
+          106,
+          109
+        ]
+      ]
+    }
+  ]
+}
