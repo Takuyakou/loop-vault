@@ -136,7 +136,6 @@ export function splitEditableChord(
     position: { ...rightPosition, durationBeats },
     edited: true,
     editSource: "split",
-    voicingMemory: undefined,
   };
   const slots = [
     ...editable.slots.slice(0, index).map(cloneSlot),

@@ -5,6 +5,7 @@ import { undoCaptureDraft } from "./captureEditHistory";
 import { createManualDraft } from "./manualDraft";
 import { draftPreviewTimeline } from "./manualDraftPlayback";
 import {
+  cutDraftRangeAtEvent,
   cycleDraftSnapMode,
   resizeDraftBoundary,
   retargetDraftByAbsoluteBeats,
@@ -103,6 +104,17 @@ describe("Draft range editing", () => {
     expect(snapAbsoluteBeat(6.3, "beat", longTimeline, 4)).toBe(6);
     expect(snapAbsoluteBeat(6.3, "harmonic", longTimeline, 4)).toBe(8);
     expect(snapAbsoluteBeat(6.3, "bar", longTimeline, 4, true)).toBe(6.25);
+  });
+
+  it("cuts the Draft range at a selected event and restores it on undo", () => {
+    const before = draft(1, 8);
+    const after = cutDraftRangeAtEvent(before, "event-4");
+
+    expect(after.selectedRange.endBar).toBe(4);
+    expect(after.lengthBars).toBe(4);
+    expect(after.events).toHaveLength(4);
+    expect(after.isDirty).toBe(true);
+    expect(undoCaptureDraft(after).selectedRange).toEqual(before.selectedRange);
   });
 });
 

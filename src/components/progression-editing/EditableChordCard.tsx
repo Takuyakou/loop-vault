@@ -11,6 +11,7 @@ interface EditableChordCardProps {
   onNavigate?: (direction: -1 | 1) => void;
   onPreview?: () => void;
   onQuickEdit?: (anchorElement: HTMLElement) => void;
+  openActionLabel?: string;
   onInsertAfter?: () => void;
   buttonRef?: (element: HTMLButtonElement | null) => void;
   language: AppLanguage;
@@ -25,6 +26,7 @@ export function EditableChordCard({
   onNavigate,
   onPreview,
   onQuickEdit,
+  openActionLabel,
   onInsertAfter,
   buttonRef,
   language,
@@ -68,7 +70,11 @@ export function EditableChordCard({
             return;
           }
           if (!onQuickEdit) return;
-          if (event.key === "Enter" || (event.shiftKey && event.key === "F10")) {
+          if (
+            event.key === "Enter"
+            || event.key === "ContextMenu"
+            || (event.shiftKey && event.key === "F10")
+          ) {
             event.preventDefault();
             event.stopPropagation();
             onQuickEdit(event.currentTarget);
@@ -107,8 +113,8 @@ export function EditableChordCard({
             event.stopPropagation();
             onQuickEdit(event.currentTarget);
           }}
-          aria-label={text.quickEdit}
-          title={text.quickEdit}
+          aria-label={openActionLabel ?? text.quickEdit}
+          title={openActionLabel ?? text.quickEdit}
         >
           <SquarePen aria-hidden="true" size={16} />
         </button>

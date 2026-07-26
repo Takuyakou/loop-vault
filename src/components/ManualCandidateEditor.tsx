@@ -4,6 +4,10 @@ import type { ChordTimelineItem } from "../domain/types";
 import { replaceEditableChord } from "../domain/progressionEditing/chordReplacement";
 import { selectEditableSlot } from "../domain/progressionEditing/editableProgression";
 import {
+  deleteEditableChordWithMode,
+  type ChordContextAction,
+} from "../domain/progressionEditing/contextActions";
+import {
   deleteEditableChord,
   insertSuggestedEditableChordAfter,
   mergeEditableChords,
@@ -36,6 +40,7 @@ import { SaveProgressionPopover } from "./SaveProgressionPopover";
 import type { SongIdea } from "../domain/types";
 import { CaptureEditHistoryPanel } from "./CaptureEditHistoryPanel";
 import { DraftBoundaryHandles } from "./DraftBoundaryHandles";
+import { cutDraftRangeAtEvent } from "../domain/midi/draftRangeEditing";
 
 /**
  * Editing a manual draft.
@@ -199,6 +204,56 @@ export function ManualCandidateEditor({
   const selectedSlotId = editable.selectedSlotId;
   const selectedIndex = editable.slots.findIndex((slot) => slot.id === selectedSlotId);
 
+  function runContextAction(slotId: string, action: ChordContextAction): boolean {
+    if (action === "cut-range-here") {
+      const nextDraft = cutDraftRangeAtEvent(draft, slotId);
+      if (nextDraft === draft) return false;
+      applyHistoryDraft(nextDraft);
+      return true;
+    }
+
+    let next = editable;
+    let operations: Parameters<typeof applyEditableToDraft>[2] = [];
+    if (action === "delete-extend-previous") {
+      next = deleteEditableChordWithMode(editable, slotId, "extend-previous");
+      operations = [{ type: "delete-chord", eventId: slotId }];
+    } else if (action === "delete-extend-next") {
+      next = deleteEditableChordWithMode(editable, slotId, "extend-next");
+      operations = [{ type: "delete-chord", eventId: slotId }];
+    } else if (action === "delete-close-gap") {
+      next = deleteEditableChordWithMode(editable, slotId, "close-gap");
+      operations = [{ type: "delete-chord", eventId: slotId }];
+    } else if (action === "replace-no-chord") {
+      const before = editable.slots.find((slot) => slot.id === slotId);
+      next = deleteEditableChordWithMode(editable, slotId, "replace-no-chord");
+      operations = [{
+        type: "replace-chord",
+        eventId: slotId,
+        from: before?.currentChord.label ?? "",
+        to: "N.C.",
+      }];
+    } else if (action === "split") {
+      next = splitEditableChord(editable, slotId);
+      operations = [{ type: "split-event", eventId: slotId }];
+    } else {
+      const index = editable.slots.findIndex((slot) => slot.id === slotId);
+      const left = editable.slots[index + 1] ? editable.slots[index] : editable.slots[index - 1];
+      const right = editable.slots[index + 1] ?? editable.slots[index];
+      if (left && right) {
+        next = mergeEditableChords(
+          editable,
+          left.id,
+          right.id,
+          action === "merge-keep-left" ? "first" : "second",
+        );
+        operations = [{ type: "merge-events", eventIds: [left.id, right.id] }];
+      }
+    }
+    if (next === editable) return false;
+    commit(next, operations);
+    return true;
+  }
+
   return (
     <section
       ref={editorRef}
@@ -359,6 +414,13 @@ export function ManualCandidateEditor({
           onNavigate={(slotId) => setEditable((current) => selectEditableSlot(current, slotId))}
           {...(keySignature === undefined ? {} : { keySignature })}
           language={language}
+          contextActions={{
+            canCutRange: (slotId) => {
+              const index = editable.slots.findIndex((slot) => slot.id === slotId);
+              return index >= 0 && index < editable.slots.length - 1;
+            },
+            onAction: runContextAction,
+          }}
           quickEditor={{
             onOpen: (slotId) => setEditable((current) => selectEditableSlot(current, slotId)),
             onPreview: (slotId) => setEditable((current) => selectEditableSlot(current, slotId)),

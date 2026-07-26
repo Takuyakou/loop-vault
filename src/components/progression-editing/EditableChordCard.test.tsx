@@ -63,7 +63,7 @@ async function renderCard() {
 }
 
 describe("EditableChordCard", () => {
-  it("selects from the full card and opens quick edit with Enter or Shift+F10", async () => {
+  it("selects from the full card and opens actions with Enter, Shift+F10, or Menu", async () => {
     const { container, root, onSelect, onQuickEdit } = await renderCard();
     const option = container.querySelector<HTMLElement>("[role='option']")!;
     const mainButton = container.querySelector<HTMLButtonElement>("button")!;
@@ -82,6 +82,13 @@ describe("EditableChordCard", () => {
       );
     });
     expect(onQuickEdit).toHaveBeenCalledTimes(2);
+
+    await act(async () => {
+      mainButton.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "ContextMenu", bubbles: true }),
+      );
+    });
+    expect(onQuickEdit).toHaveBeenCalledTimes(3);
     await act(async () => root.unmount());
   });
 
