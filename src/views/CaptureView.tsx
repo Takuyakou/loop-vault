@@ -86,6 +86,8 @@ import { PreviewSoundSelector } from "../components/PreviewSoundSelector";
 import { SaveProgressionPopover } from "../components/SaveProgressionPopover";
 import { SongMiniMap } from "../components/SongMiniMap";
 import { EditableProgressionGrid } from "../components/progression-editing/EditableProgressionGrid";
+import { TimelineRangeSelector } from "../components/TimelineRangeSelector";
+import type { ManualCandidateDraft } from "../domain/midi/manualDraft";
 import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
 import { ProgressionEditSummary } from "../components/progression-editing/ProgressionEditSummary";
 import { usePlaybackState } from "../hooks/usePlaybackState";
@@ -943,6 +945,7 @@ export function TimelineDetails({
   open,
   onOpenChange,
   scrollToBar,
+  onManualDraftCreated,
 }: {
   result: MidiProgressionAnalysis;
   copy: AppCopy;
@@ -954,8 +957,10 @@ export function TimelineDetails({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   scrollToBar?: number;
+  onManualDraftCreated?: (draft: ManualCandidateDraft) => void;
 }) {
   const [selectedChordIndex, setSelectedChordIndex] = useState<number>();
+  const [rangeSelectorOpen, setRangeSelectorOpen] = useState(false);
   const detailsRef = useRef<HTMLDetailsElement>(null);
   const playback = usePlaybackState(controller);
   const source = captureFullTimelineSource(result);
@@ -1062,6 +1067,29 @@ export function TimelineDetails({
       <p className="mt-4 text-xs text-[var(--lv-text-muted)]">
         {copy.capture.outsideCandidates}
       </p>
+      {result.fullTimeline.length > 0 ? (
+        <>
+          <button
+            type="button"
+            className="mt-3 inline-flex min-h-10 items-center border border-[var(--lv-border)] px-4 text-sm text-[var(--lv-text)]"
+            aria-expanded={rangeSelectorOpen}
+            onClick={() => setRangeSelectorOpen((value) => !value)}
+          >
+            {rangeSelectorOpen
+              ? copy.capture.manualRange.close
+              : copy.capture.manualRange.open}
+          </button>
+          {rangeSelectorOpen ? (
+            <TimelineRangeSelector
+              timeline={result.fullTimeline}
+              totalBars={result.totalBars}
+              beatsPerBar={beatsPerBarFor(result.timeSignature)}
+              copy={copy}
+              onCreate={(draft) => onManualDraftCreated?.(draft)}
+            />
+          ) : null}
+        </>
+      ) : null}
     </details>
   );
 }
