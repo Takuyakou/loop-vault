@@ -361,6 +361,50 @@ export const appCopy = {
         barLabel: (bar: number) => `${bar}小節目`,
         draftCreated: "手動候補を作成しました。",
       },
+      manualDraft: {
+        title: "手動候補",
+        unsaved: "未保存",
+        dirty: "変更あり",
+        range: (
+          startBar: number, startBeat: number, endBar: number, endBeat: number,
+        ) => `${startBar}小節${startBeat}拍目 〜 ${endBar}小節${endBeat}拍目`,
+        lengthBars: (bars: number) => `${bars}小節`,
+        rangeControls: "範囲の調整",
+        nudge: (edge: "start" | "end", unit: "beat" | "bar", delta: number) => {
+          const where = edge === "start" ? "開始" : "終了";
+          const amount = unit === "bar" ? "1小節" : "1拍";
+          return `${where}を${amount}${delta < 0 ? "前" : "後"}へ`;
+        },
+        reselect: "Full Timelineで選び直す",
+        confirmTitle: "範囲を変えますか？",
+        confirmBody: "コードを編集しています。範囲を変えると元のTimelineから作り直します。編集を残すか捨てるかを選んでください。",
+        confirmKeep: "編集を残す",
+        confirmDiscard: "編集を捨てて作り直す",
+        undo: "元に戻す",
+        redo: "やり直す",
+        split: "分割",
+        merge: "結合",
+        insert: "コードを挿入",
+        delete: "コードを削除",
+        errors: "保存できない問題",
+        warnings: "確認",
+        issue: (kind: string, position: number) => {
+          const labels: Record<string, string> = {
+            "outside-range": "範囲の外にあります",
+            "non-positive-duration": "長さがありません",
+            "out-of-order": "順序が入れ替わっています",
+            "duplicate-id": "IDが重複しています",
+            "unparseable-chord": "コード名を読み取れません",
+            gap: "前のコードとの間に空きがあります",
+            overlap: "前のコードと重なっています",
+          };
+          return `${position}番目: ${labels[kind] ?? kind}`;
+        },
+        preview: "試聴",
+        save: "Vaultに保存",
+        discard: "破棄",
+        leaveWarning: "保存していない手動候補があります。",
+      },
       reference: "（参考）",
       reviewPrefix: "要確認",
       savedToVault: "進行をVaultに保存しました。",
@@ -849,6 +893,50 @@ export const appCopy = {
         startsMidChord: "The first chord starts before the range.",
         barLabel: (bar: number) => `Bar ${bar}`,
         draftCreated: "Created a manual candidate.",
+      },
+      manualDraft: {
+        title: "Manual candidate",
+        unsaved: "Unsaved",
+        dirty: "Edited",
+        range: (
+          startBar: number, startBeat: number, endBar: number, endBeat: number,
+        ) => `Bar ${startBar} beat ${startBeat} to bar ${endBar} beat ${endBeat}`,
+        lengthBars: (bars: number) => `${bars} bars`,
+        rangeControls: "Adjust the range",
+        nudge: (edge: "start" | "end", unit: "beat" | "bar", delta: number) => {
+          const where = edge === "start" ? "Start" : "End";
+          const amount = unit === "bar" ? "a bar" : "a beat";
+          return `${where} ${delta < 0 ? "back" : "forward"} ${amount}`;
+        },
+        reselect: "Choose again on the timeline",
+        confirmTitle: "Change the range?",
+        confirmBody: "You have edited chords. Changing the range rebuilds the block from the original timeline. Keep the edits or start again?",
+        confirmKeep: "Keep the edits",
+        confirmDiscard: "Discard and rebuild",
+        undo: "Undo",
+        redo: "Redo",
+        split: "Split",
+        merge: "Merge",
+        insert: "Insert chord",
+        delete: "Delete chord",
+        errors: "Problems that block saving",
+        warnings: "Worth checking",
+        issue: (kind: string, position: number) => {
+          const labels: Record<string, string> = {
+            "outside-range": "sits outside the range",
+            "non-positive-duration": "has no length",
+            "out-of-order": "is out of order",
+            "duplicate-id": "has a duplicate id",
+            "unparseable-chord": "has a chord name nothing can read",
+            gap: "leaves a gap after the previous chord",
+            overlap: "overlaps the previous chord",
+          };
+          return `#${position}: ${labels[kind] ?? kind}`;
+        },
+        preview: "Play",
+        save: "Save to Vault",
+        discard: "Discard",
+        leaveWarning: "You have an unsaved manual candidate.",
       },
       reference: " (reference)",
       reviewPrefix: "Review",
