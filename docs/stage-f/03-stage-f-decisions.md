@@ -52,3 +52,15 @@ walking bass は F2R から除外し、別 Stage とする。F2 の実測: shado
 - canonical identity 契約 / `qualityEvidence` 係数 / global penalty
 - P4.1.3 Manual Candidate Rescue
 - `derived-length` generator / Candidate Catalog / Recommendation
+
+---
+
+## 6. F2R — **非昇格（固定）**
+
+F2R の非昇格判断を固定する。再検討には新しい証拠を要する。
+
+事前登録閾値のもとで override は 7490 window 中 **1件**、netCorrectionGain **0**、abstention **99.99%**、correction cost 差は全 subset で **±0**。唯一の発火は wrong-to-wrong。
+
+**害が無いことは確認できたが、規則が何もしていないことと区別できない。** 統計的に何も言えていないものを昇格させない。
+
+`contestBand` の事前登録が誤った分布（rootMargin）から導かれていたことは `03-f2r-selective-root-correction.md` §6 に記録した。**その観測を見てから閾値を動かすことはしない。**
