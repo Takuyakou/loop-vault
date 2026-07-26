@@ -120,3 +120,33 @@ root / bass を `phase4-v1` から入力として固定し、同一 root 内で�
 原因の推測: 三値化の過程で持続時間・信頼度の重みを捨てている（stress で triad 96.5% → 86.4%）。
 
 **残す価値があるもの**: triad がどれも supported でない window が 11.6%、seventh が 7.9%。これは quality 決定ではなく **ambiguity 表示**の材料であり、別 Stage として扱う。未着手。
+
+---
+
+## 11. F3a — **F3b は非昇格（固定）**
+
+| 項目 | 決定 |
+|---|---|
+| **F3b** | **非昇格（固定）** |
+| **製品値** | `phase4-v1` の **root / bass / triad / seventh** を製品値として維持 |
+| **三値判定** | **quality 決定には使用しない** |
+| `supported` / `contradicted` / `underdetermined` | **F7 の曖昧性表示用の診断として保持** |
+| 三値判定の重み調整 | **着手しない** |
+| `defaultAnalyzerMode` | `phase4-v1` のまま |
+| 保存 schema / `fileVersion` | 変更しない |
+
+根拠: canonicalExact 78.7% → 72.8%、correction cost **+349**。助けたい subset（plain-triad / pedal / inversion / rootless）では **cost 差 0 の同点**で、悪化は普通の window に集中する。接続すれば純損失である。
+
+---
+
+## 12. F5a — F5b は非推奨、tension 研究の終了を推奨
+
+core（root / bass / triad / seventh）を `phase4-v1` から入力として固定し、tension だけを独立検出する shadow を実装した。不変条件3つは PASS（core 列 199/199、摂動下の不変 199/199、非空虚 30/199）。
+
+結果は指示が非推奨と定めた形そのもの。**recall +2.6pp（58.7→61.3%）に対し precision −28.3pp（74.6→46.3%）、false positive/window は 3.5倍（0.082→0.290）、canonicalExact −10.1pp、correction cost +601。**
+
+通過音の防御は効いた（plain-triad への誤追加 0→0）。崩れたのは識別力で、humanized の precision が 65.7% → 22.6% まで落ちる。
+
+**発見: 製品は alteration を1つも検出していない**（`b9`/`#9`/`#11`/`b13`/`b5`/`#5` の recall **0.0%**）。既知の `A7#5` → `A7` は個別の不具合ではなく、alteration 検出が存在しないことの一例だった。
+
+**推奨: tension 研究を終了し F7（曖昧性表示）へ進む。** Stage F を通じて、製品の判断を置き換える試みはすべて悪化させ、判断の不確かさを伝える材料だけが残った。
