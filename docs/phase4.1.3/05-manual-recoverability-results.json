@@ -1,0 +1,260 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.1.3-M5",
+  "contract": "Manual Recoverability Contract v1",
+  "mode": "phase4.1.2-v1",
+  "regionCount": 10,
+  "gates": [
+    {
+      "id": "timeline-range-selection-success-rate",
+      "verdict": "pass",
+      "detail": "10/10 regions expressible"
+    },
+    {
+      "id": "arbitrary-length-candidate-creation-rate",
+      "verdict": "pass",
+      "detail": "910/910 ranges, 64 distinct lengths"
+    },
+    {
+      "id": "manual-draft-event-reachability",
+      "verdict": "pass",
+      "detail": "10/10"
+    },
+    {
+      "id": "manual-draft-editor-reachability",
+      "verdict": "pass",
+      "detail": "10/10"
+    },
+    {
+      "id": "preview-reachability",
+      "verdict": "pass",
+      "detail": "10/10"
+    },
+    {
+      "id": "save-reachability",
+      "verdict": "pass",
+      "detail": "10/10"
+    },
+    {
+      "id": "catalog-non-destructive",
+      "verdict": "pass",
+      "detail": "10/10"
+    },
+    {
+      "id": "recommendation-non-regression",
+      "verdict": "pass",
+      "detail": "10/10"
+    },
+    {
+      "id": "deterministic-domain-functions",
+      "verdict": "pass",
+      "detail": "10/10 stable over three builds"
+    },
+    {
+      "id": "private-midi-tracked",
+      "verdict": "pass",
+      "detail": "0 files"
+    },
+    {
+      "id": "timeline-non-regression",
+      "verdict": "pass",
+      "detail": "100/100 identical"
+    },
+    {
+      "id": "reload-consistency",
+      "verdict": "not-evaluated",
+      "detail": "asserted in src/domain/midi/manualDraftSave.test.ts (save -> parse -> compare)"
+    },
+    {
+      "id": "chord-dojo-reachability",
+      "verdict": "not-evaluated",
+      "detail": "asserted in src/domain/midi/manualDraftSave.test.ts (ordinary member of idea.progressionBlocks)"
+    },
+    {
+      "id": "schema-compatibility",
+      "verdict": "not-evaluated",
+      "detail": "asserted in src/domain/midi/manualDraftSave.test.ts (vaultFileSchema.parse)"
+    },
+    {
+      "id": "file-version",
+      "verdict": "not-evaluated",
+      "detail": "asserted in src/domain/midi/manualDraftSave.test.ts (fileVersion === 1)"
+    },
+    {
+      "id": "tauri-build",
+      "verdict": "not-evaluated",
+      "detail": "run npm run tauri build; recorded in 05-final-report.md"
+    },
+    {
+      "id": "rollback-available",
+      "verdict": "not-evaluated",
+      "detail": "each stage is its own merge commit; recorded in 05-final-report.md"
+    }
+  ],
+  "verdict": "PASS",
+  "arbitraryLengthProbe": {
+    "attempted": 910,
+    "created": 910,
+    "distinctLengths": 64
+  },
+  "qualityTargets": {
+    "repairableWithin1RangeSelection": 9,
+    "regionCount": 10,
+    "timelineSourceComplete": 9,
+    "meanNearestCandidateBarIoU": 0.75,
+    "meanBoundaryAdjustmentBars": 2.7,
+    "timeToSavedProgression": null
+  },
+  "regions": [
+    {
+      "region": "holdout-v3:H3_clean:sec2",
+      "lengthBars": 19,
+      "rangeExpressible": true,
+      "draftCreated": true,
+      "eventsInDraft": 19,
+      "eventsInRange": 19,
+      "editorSlots": 19,
+      "previewEvents": 19,
+      "canSave": true,
+      "deterministic": true,
+      "catalogPatternsBefore": 974,
+      "catalogPatternsAfter": 974,
+      "recommendationIdentical": true
+    },
+    {
+      "region": "holdout-v3:H3_clean:sec6",
+      "lengthBars": 22,
+      "rangeExpressible": true,
+      "draftCreated": true,
+      "eventsInDraft": 22,
+      "eventsInRange": 22,
+      "editorSlots": 22,
+      "previewEvents": 22,
+      "canSave": true,
+      "deterministic": true,
+      "catalogPatternsBefore": 974,
+      "catalogPatternsAfter": 974,
+      "recommendationIdentical": true
+    },
+    {
+      "region": "holdout-v3:H3_stress:sec2",
+      "lengthBars": 19,
+      "rangeExpressible": true,
+      "draftCreated": true,
+      "eventsInDraft": 19,
+      "eventsInRange": 19,
+      "editorSlots": 19,
+      "previewEvents": 19,
+      "canSave": true,
+      "deterministic": true,
+      "catalogPatternsBefore": 974,
+      "catalogPatternsAfter": 974,
+      "recommendationIdentical": true
+    },
+    {
+      "region": "holdout-v3:H3_stress:sec6",
+      "lengthBars": 22,
+      "rangeExpressible": true,
+      "draftCreated": true,
+      "eventsInDraft": 22,
+      "eventsInRange": 22,
+      "editorSlots": 22,
+      "previewEvents": 22,
+      "canSave": true,
+      "deterministic": true,
+      "catalogPatternsBefore": 974,
+      "catalogPatternsAfter": 974,
+      "recommendationIdentical": true
+    },
+    {
+      "region": "synthetic-gold-v1:S14_clean:b2",
+      "lengthBars": 4,
+      "rangeExpressible": true,
+      "draftCreated": true,
+      "eventsInDraft": 4,
+      "eventsInRange": 4,
+      "editorSlots": 4,
+      "previewEvents": 4,
+      "canSave": true,
+      "deterministic": true,
+      "catalogPatternsBefore": 16,
+      "catalogPatternsAfter": 16,
+      "recommendationIdentical": true
+    },
+    {
+      "region": "synthetic-gold-v1:S16_clean:verse",
+      "lengthBars": 8,
+      "rangeExpressible": true,
+      "draftCreated": true,
+      "eventsInDraft": 8,
+      "eventsInRange": 8,
+      "editorSlots": 8,
+      "previewEvents": 8,
+      "canSave": true,
+      "deterministic": true,
+      "catalogPatternsBefore": 23,
+      "catalogPatternsAfter": 23,
+      "recommendationIdentical": true
+    },
+    {
+      "region": "synthetic-gold-v1:S16_clean:chorus1",
+      "lengthBars": 8,
+      "rangeExpressible": true,
+      "draftCreated": true,
+      "eventsInDraft": 8,
+      "eventsInRange": 8,
+      "editorSlots": 8,
+      "previewEvents": 8,
+      "canSave": true,
+      "deterministic": true,
+      "catalogPatternsBefore": 23,
+      "catalogPatternsAfter": 23,
+      "recommendationIdentical": true
+    },
+    {
+      "region": "synthetic-gold-v1:S16_clean:chorus2",
+      "lengthBars": 8,
+      "rangeExpressible": true,
+      "draftCreated": true,
+      "eventsInDraft": 8,
+      "eventsInRange": 8,
+      "editorSlots": 8,
+      "previewEvents": 8,
+      "canSave": true,
+      "deterministic": true,
+      "catalogPatternsBefore": 23,
+      "catalogPatternsAfter": 23,
+      "recommendationIdentical": true
+    },
+    {
+      "region": "synthetic-gold-v1:S16_stress:verse",
+      "lengthBars": 8,
+      "rangeExpressible": true,
+      "draftCreated": true,
+      "eventsInDraft": 8,
+      "eventsInRange": 8,
+      "editorSlots": 8,
+      "previewEvents": 8,
+      "canSave": true,
+      "deterministic": true,
+      "catalogPatternsBefore": 58,
+      "catalogPatternsAfter": 58,
+      "recommendationIdentical": true
+    },
+    {
+      "region": "synthetic-gold-v1:S24_stress:sec6",
+      "lengthBars": 20,
+      "rangeExpressible": true,
+      "draftCreated": true,
+      "eventsInDraft": 20,
+      "eventsInRange": 20,
+      "editorSlots": 20,
+      "previewEvents": 20,
+      "canSave": true,
+      "deterministic": true,
+      "catalogPatternsBefore": 1274,
+      "catalogPatternsAfter": 1274,
+      "recommendationIdentical": true
+    }
+  ]
+}
