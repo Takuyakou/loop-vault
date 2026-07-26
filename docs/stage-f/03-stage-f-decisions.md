@@ -88,3 +88,35 @@ F2Wb（bass 候補生成の改良）は**無い問題を直すことになる**�
 加えて product は Gold walking window で **93.8%** 正しく、shadow は 52.1%。失敗は **stress variant に集中**している（clean 93.3% / stress 10.7%）。
 
 **推奨: root 研究を終了し、`phase4-v1` root を固定して F3 へ進む。**
+
+---
+
+## 9. root 研究 — **終了（固定）**
+
+| 項目 | 決定 |
+|---|---|
+| **製品 root** | **`phase4-v1` の root を製品 root として固定** |
+| **F2b**（factorized root を Primary へ） | **非昇格（固定）** |
+| **F2R**（selective root correction） | **非昇格（固定）** |
+| **F2Wb**（bass 候補生成の改良） | **非昇格（固定）** |
+| **F4 Primary root routing** | **禁止**。bass relation を root 決定へ直結してはならない |
+| **F0〜F2A** | **診断基盤として残す**。製品経路へは接続しない |
+| **F2W の音響 heuristic** | **製品判断へ使用しない**。531 の注釈 walking window のうち7しか拾えず、検出器として機能していない |
+
+根拠の要約: F2 / F2R / F2W / F2A の4段階を通じて、**shadow root が製品を上回った subset は1つも無い**。Gold walking window で product は 93.8%、shadow は 52.1%。F2A の敗因診断は明快だったが validation で再現せず、失敗は stress variant に集中していた（clean 93.3% / stress 10.7%）。
+
+将来 root を再訪する場合の出発点は `05-f2a-root-ranking-attribution.md` §8 に記録した。
+
+---
+
+## 10. F3a — F3b は非推奨
+
+root / bass を `phase4-v1` から入力として固定し、同一 root 内でのみ quality を比較する三値判定を shadow 実装した。不変条件は4つすべて PASS（root 列 199/199、bass 列 199/199、摂動下の不変 199/199、非空虚 199/199）。
+
+三値判定は設計どおり働いている（反証による除外 7.12/window、**欠落のまま生存 1.50/window**）が、精度は製品より悪い（canonicalExact 78.7% → 72.8%、cost **+349**）。
+
+**形が重要**: 助けたい subset（plain-triad / pedal / inversion / rootless）では **cost 差 0 の同点**で、悪化は普通の window に集中する。**接続すれば純損失。**
+
+原因の推測: 三値化の過程で持続時間・信頼度の重みを捨てている（stress で triad 96.5% → 86.4%）。
+
+**残す価値があるもの**: triad がどれも supported でない window が 11.6%、seventh が 7.9%。これは quality 決定ではなく **ambiguity 表示**の材料であり、別 Stage として扱う。未着手。
