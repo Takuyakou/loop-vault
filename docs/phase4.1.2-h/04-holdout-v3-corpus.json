@@ -1,0 +1,237 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.1.2-H4",
+  "format": "loop-vault-holdout-v3",
+  "generatorVersion": "loop-vault-p412-h4-holdout-v3",
+  "corpusLocation": ".local-evaluation/holdout-v3 (not committed)",
+  "scenarioCount": 8,
+  "fileCount": 16,
+  "files": [
+    {
+      "scenarioId": "H1",
+      "title": "repeated-vamp-with-distinct-progressions",
+      "variant": "clean",
+      "split": "holdout-v3",
+      "bars": 128,
+      "bpm": 94,
+      "sha256": "2f3ab256fe9ec3064996cc9b3e7b544319b05f5938a013e53bffc8edd7f706ed",
+      "byteLength": 7416,
+      "goldEvents": 60,
+      "stressFeatures": []
+    },
+    {
+      "scenarioId": "H1",
+      "title": "repeated-vamp-with-distinct-progressions",
+      "variant": "stress",
+      "split": "holdout-v3",
+      "bars": 128,
+      "bpm": 94,
+      "sha256": "2a39464c269898f3e9669f43510709e8b1fbdd22d298161c9bcda37b57953f37",
+      "byteLength": 53018,
+      "goldEvents": 60,
+      "stressFeatures": [
+        "all-channel-zero",
+        "fragmented-notes",
+        "dense-melody"
+      ]
+    },
+    {
+      "scenarioId": "H2",
+      "title": "nested-four-eight-sixteen",
+      "variant": "clean",
+      "split": "holdout-v3",
+      "bars": 128,
+      "bpm": 102,
+      "sha256": "e8d8c031dab20ff19910f293e7e06f56ec77d69907ecc90b555ba9fb13ab5c10",
+      "byteLength": 10152,
+      "goldEvents": 128,
+      "stressFeatures": []
+    },
+    {
+      "scenarioId": "H2",
+      "title": "nested-four-eight-sixteen",
+      "variant": "stress",
+      "split": "holdout-v3",
+      "bars": 128,
+      "bpm": 102,
+      "sha256": "02a452e7477fe65f5463ddb582f7f45b962d60b7d42af01448aab43ff3a534f5",
+      "byteLength": 49406,
+      "goldEvents": 128,
+      "stressFeatures": [
+        "dense-melody",
+        "overlap-notes",
+        "fragmented-notes"
+      ]
+    },
+    {
+      "scenarioId": "H3",
+      "title": "non-power-of-two-sections",
+      "variant": "clean",
+      "split": "holdout-v3",
+      "bars": 108,
+      "bpm": 86,
+      "sha256": "132e409117cd14eae69c7f36f1c96503ac7e9e8d254e98f6d02bab0a0d09e5f8",
+      "byteLength": 8832,
+      "goldEvents": 108,
+      "stressFeatures": []
+    },
+    {
+      "scenarioId": "H3",
+      "title": "non-power-of-two-sections",
+      "variant": "stress",
+      "split": "holdout-v3",
+      "bars": 108,
+      "bpm": 86,
+      "sha256": "97c048234eb97d352d7163df84a3e3f0dc347b845dbbf44acdba10e3f8bb53e4",
+      "byteLength": 43706,
+      "goldEvents": 108,
+      "stressFeatures": [
+        "fragmented-notes",
+        "dense-melody",
+        "all-channel-zero"
+      ]
+    },
+    {
+      "scenarioId": "H4",
+      "title": "rootless-over-walking-bass",
+      "variant": "clean",
+      "split": "holdout-v3",
+      "bars": 96,
+      "bpm": 138,
+      "sha256": "bac558a5502df81e6d2192f30b495c038f917019262ae55e07721370ec10ebd4",
+      "byteLength": 6616,
+      "goldEvents": 60,
+      "stressFeatures": []
+    },
+    {
+      "scenarioId": "H4",
+      "title": "rootless-over-walking-bass",
+      "variant": "stress",
+      "split": "holdout-v3",
+      "bars": 96,
+      "bpm": 138,
+      "sha256": "752dd2ae01983770536143ddd1b5436f45f58fae67b467c8a7a3d36b3df9b2ad",
+      "byteLength": 17962,
+      "goldEvents": 60,
+      "stressFeatures": [
+        "rootless-harmony",
+        "walking-bass",
+        "voice-duplicate",
+        "dense-melody"
+      ]
+    },
+    {
+      "scenarioId": "H5",
+      "title": "arpeggiated-extraction",
+      "variant": "clean",
+      "split": "holdout-v3",
+      "bars": 112,
+      "bpm": 116,
+      "sha256": "c35184bfe62422641a85b6952d8934b09c28d22aea05f2625adc4d7a24638273",
+      "byteLength": 7588,
+      "goldEvents": 70,
+      "stressFeatures": []
+    },
+    {
+      "scenarioId": "H5",
+      "title": "arpeggiated-extraction",
+      "variant": "stress",
+      "split": "holdout-v3",
+      "bars": 112,
+      "bpm": 116,
+      "sha256": "27b15dfd935af6c86c7c9a5966b3206d890cbc8cea2a3d38d996da665f9f404d",
+      "byteLength": 8471,
+      "goldEvents": 70,
+      "stressFeatures": [
+        "arpeggiated-harmony",
+        "all-channel-zero",
+        "fragmented-notes",
+        "ghost-notes"
+      ]
+    },
+    {
+      "scenarioId": "H6",
+      "title": "humanized-overlap",
+      "variant": "clean",
+      "split": "holdout-v3",
+      "bars": 112,
+      "bpm": 78,
+      "sha256": "25a6b7180badd11d790ef74d3b04e344b5f9dcc88218a1fca60fcd49c901b98e",
+      "byteLength": 7140,
+      "goldEvents": 70,
+      "stressFeatures": []
+    },
+    {
+      "scenarioId": "H6",
+      "title": "humanized-overlap",
+      "variant": "stress",
+      "split": "holdout-v3",
+      "bars": 112,
+      "bpm": 78,
+      "sha256": "7df1f3a4e16fbc8cb60f4ff9fcc94994903ed864c88b598d32369364e8078bbf",
+      "byteLength": 15229,
+      "goldEvents": 70,
+      "stressFeatures": [
+        "humanized-timing",
+        "overlap-notes",
+        "dense-melody"
+      ]
+    },
+    {
+      "scenarioId": "H7",
+      "title": "transposed-repetition",
+      "variant": "clean",
+      "split": "holdout-v3",
+      "bars": 104,
+      "bpm": 106,
+      "sha256": "61d72f87ac087375fc2a52dcb35bc5417c5435d6841bc8f80299256c02d9f7e9",
+      "byteLength": 6128,
+      "goldEvents": 52,
+      "stressFeatures": []
+    },
+    {
+      "scenarioId": "H7",
+      "title": "transposed-repetition",
+      "variant": "stress",
+      "split": "holdout-v3",
+      "bars": 104,
+      "bpm": 106,
+      "sha256": "5bb2fc034d4956e314d74b23769c06030f7e8f63a397a7f9df42ee1f1cd7b085",
+      "byteLength": 6128,
+      "goldEvents": 52,
+      "stressFeatures": [
+        "different-voicing-per-occurrence",
+        "all-channel-zero",
+        "humanized-timing"
+      ]
+    },
+    {
+      "scenarioId": "H8",
+      "title": "long-middle-section",
+      "variant": "clean",
+      "split": "holdout-v3",
+      "bars": 160,
+      "bpm": 90,
+      "sha256": "15139e345eb8effd522c2a95f2d0e69a014a182d4ebcbdf14212d99e927e7aff",
+      "byteLength": 9808,
+      "goldEvents": 88,
+      "stressFeatures": []
+    },
+    {
+      "scenarioId": "H8",
+      "title": "long-middle-section",
+      "variant": "stress",
+      "split": "holdout-v3",
+      "bars": 160,
+      "bpm": 90,
+      "sha256": "8f59b93da87b220e458da7011de05e03e3bdd6404d25aeffd41d6dbd56770447",
+      "byteLength": 53760,
+      "goldEvents": 88,
+      "stressFeatures": [
+        "section-instrumentation-change",
+        "fragmented-notes",
+        "all-channel-zero"
+      ]
+    }
+  ]
+}

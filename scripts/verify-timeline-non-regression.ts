@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
-import { cwd, stdout } from "node:process";
+import { argv, cwd, stdout } from "node:process";
 import { analyzeMidi } from "../src/domain/midi/analysis";
 
 /**
@@ -43,11 +43,14 @@ const report = {
   identical,
   differing,
 };
-await mkdir(resolve(cwd(), "docs/phase4.1.2"), { recursive: true });
-await writeFile(
-  resolve(cwd(), "docs/phase4.1.2/07-timeline-non-regression.json"),
-  `${JSON.stringify(report, null, 2)}\n`,
-  "utf8",
+// Each stage records its own run rather than overwriting the previous one, so a
+// later result cannot be mistaken for the evidence an earlier promotion rested on.
+const outputIndex = argv.indexOf("--output");
+const outputPath = resolve(
+  cwd(),
+  outputIndex >= 0 ? argv[outputIndex + 1] : "docs/phase4.1.2/07-timeline-non-regression.json",
 );
+await mkdir(dirname(outputPath), { recursive: true });
+await writeFile(outputPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
 stdout.write(`timeline identical ${identical}/${checked}\n`);
 if (differing.length) stdout.write(`differing: ${differing.slice(0, 10).join(", ")}\n`);

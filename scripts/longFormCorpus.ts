@@ -170,7 +170,7 @@ export interface ScenarioPlan {
   title: string;
   description: string;
   bpm: number;
-  split: "dev" | "validation" | "holdout-v2";
+  split: "dev" | "validation" | "holdout-v2" | "holdout-v3";
   tags: string[];
   stressFeatures: StressFeature[];
   boundaryToleranceBeats: number;

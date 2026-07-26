@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.1.2 final",
+  "corpus": "Chord Drip evaluation corpus",
+  "comparison": "phase4-v1 vs phase4.1.2-v1 fullTimeline",
+  "checked": 100,
+  "identical": 100,
+  "differing": []
+}
