@@ -3,7 +3,7 @@
 - 対象ブランチ: `feature/p42-06-final-validation`
 - ベース: `feature/p42-05-keyboard-preview-session`
 - 検証日: 2026-07-26
-- 最終PR: 作成後に本PR内で追記
+- 最終PR: https://github.com/Takuyakou/loop-vault/pull/219
 
 ## 結論
 
@@ -54,7 +54,7 @@ Voicing、履歴、A/B試聴、保存は同じ Draft を参照する。
 | P4.2-03 | `feature/p42-03-range-and-boundary-editing` | #216 |
 | P4.2-04 | `feature/p42-04-context-actions-and-voicing` | #217 |
 | P4.2-05 | `feature/p42-05-keyboard-preview-session` | #218 |
-| P4.2-06 | `feature/p42-06-final-validation` | 作成後に追記 |
+| P4.2-06 | `feature/p42-06-final-validation` | #219 |
 
 ## 2. Commit一覧
 
@@ -254,7 +254,7 @@ Phase 4.2の対象外として、複数Draftの同時選択、一括移調・削
 
 ## 37. 最終PR URL
 
-作成後に本PR内で追記する。
+https://github.com/Takuyakou/loop-vault/pull/219
 
 ## 検証結果
 

@@ -4,7 +4,7 @@
   "date": "2026-07-26",
   "branch": "feature/p42-06-final-validation",
   "base": "feature/p42-05-keyboard-preview-session",
-  "finalPullRequest": null,
+  "finalPullRequest": "https://github.com/Takuyakou/loop-vault/pull/219",
   "hardGates": {
     "unifiedDraftSourceOfTruth": 1,
     "automaticCandidateToDraft": "PASS",
