@@ -107,6 +107,8 @@ import {
   undoCaptureDraft,
 } from "../domain/midi/captureEditHistory";
 import { CaptureEditHistoryPanel } from "../components/CaptureEditHistoryPanel";
+import { DraftBoundaryHandles } from "../components/DraftBoundaryHandles";
+import { DraftRangeOverlay } from "../components/DraftRangeOverlay";
 import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
 import { ProgressionEditSummary } from "../components/progression-editing/ProgressionEditSummary";
 import { usePlaybackState } from "../hooks/usePlaybackState";
@@ -1019,6 +1021,11 @@ export function CaptureView(props: CaptureViewProps) {
         scrollToBar={timelineScrollBar}
         openRangeSelectorRequest={rangeSelectorRequest}
         renderDraftEditor={false}
+        {...(activeDraft === null ? {} : { draft: activeDraft })}
+        onDraftChange={setActiveDraft}
+        onPreviewDraft={() => {
+          if (activeDraft) void previewManualDraft(activeDraft);
+        }}
         language={language}
         onManualDraftCreated={(draft) => {
           setActiveDraft(draft);
@@ -1144,6 +1151,9 @@ export function TimelineDetails({
   scrollToBar,
   openRangeSelectorRequest,
   renderDraftEditor = true,
+  draft,
+  onDraftChange,
+  onPreviewDraft,
   onManualDraftCreated,
   manualDraftSave,
   onPreviewManualDraft,
@@ -1160,6 +1170,9 @@ export function TimelineDetails({
   scrollToBar?: number;
   openRangeSelectorRequest?: number;
   renderDraftEditor?: boolean;
+  draft?: ManualCandidateDraft;
+  onDraftChange?: (draft: ManualCandidateDraft) => void;
+  onPreviewDraft?: () => void;
   onManualDraftCreated?: (draft: ManualCandidateDraft) => void;
   manualDraftSave?: ManualDraftSaveTarget;
   onPreviewManualDraft?: (draft: ManualCandidateDraft) => void;
@@ -1260,6 +1273,16 @@ export function TimelineDetails({
           />
         </div>
       ) : null}
+      {draft === undefined || onDraftChange === undefined ? null : (
+        <DraftRangeOverlay
+          draft={draft}
+          timeline={result.fullTimeline}
+          totalBars={result.totalBars}
+          language={language ?? "ja"}
+          onChange={onDraftChange}
+          {...(onPreviewDraft === undefined ? {} : { onPreview: onPreviewDraft })}
+        />
+      )}
       <div className="mt-5">
         {result.fullTimeline.length > 0 ? (
           <ProgressionGrid
@@ -1829,6 +1852,13 @@ export function ProgressionCandidateCard({
               },
             }}
           />
+          {captureDraft === undefined ? null : (
+            <DraftBoundaryHandles
+              draft={captureDraft}
+              language={language}
+              onChange={applyCaptureHistory}
+            />
+          )}
         </div>
         {isExpanded ? renderInspector(
           <ChordInspector
