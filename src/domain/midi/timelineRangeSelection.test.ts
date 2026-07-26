@@ -153,7 +153,7 @@ describe("creating a draft", () => {
 
     expect(draft.lengthBars).toBe(19);
     expect(draft.events).toHaveLength(19);
-    expect(draft.source).toBe("manual-range");
+    expect(draft.source).toEqual({ type: "manual-range" });
     expect(draft.isDirty).toBe(false);
     expect(draft.repairOperations).toEqual([{ type: "create-from-range" }]);
     expect(editOperationCount(draft)).toBe(0);

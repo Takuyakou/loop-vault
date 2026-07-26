@@ -26,6 +26,10 @@ import type { ManualCandidateDraft, ManualRepairOperation } from "./manualDraft"
  * chord outside the block they drew and let them edit bars they did not select.
  */
 export function draftToCandidate(draft: ManualCandidateDraft): ProgressionBlockCandidate {
+  if (!draft.isDirty && draft.sourceCandidateSnapshot !== undefined) {
+    return cloneCandidateSnapshot(draft.sourceCandidateSnapshot);
+  }
+
   const { startBeat } = timelineRangeBeats(draft.selectedRange, draft.beatsPerBar);
   const chords: ChordTimelineItem[] = draft.events.map((event, index) => {
     const absolute = startBeat + event.relativeStartBeat;
@@ -42,8 +46,10 @@ export function draftToCandidate(draft: ManualCandidateDraft): ProgressionBlockC
     };
   });
 
+  const snapshot = draft.sourceCandidateSnapshot;
   return {
-    id: draft.draftId,
+    ...snapshot,
+    id: snapshot?.id ?? draft.draftId,
     startBar: draft.selectedRange.startBar,
     endBar: draft.selectedRange.endBar,
     lengthBars: draft.lengthBars as ProgressionBlockCandidate["lengthBars"],
@@ -58,14 +64,14 @@ export function draftToCandidate(draft: ManualCandidateDraft): ProgressionBlockC
         : 0,
       densityClass: "standard",
     },
-    structuredSignature: draft.draftId,
+    structuredSignature: snapshot?.structuredSignature ?? draft.draftId,
     summaryText: summaryFromEvents(draft.events, draft.lengthBars, draft.beatsPerBar),
     confidence: draft.events.length
       ? Number((draft.events.reduce((sum, event) => sum + event.confidence, 0)
         / draft.events.length).toFixed(4))
       : 0,
-    selectionScore: 0,
-    labels: [],
+    selectionScore: snapshot?.selectionScore ?? 0,
+    labels: [...new Set(chords.map((item) => item.chord.label))],
     warnings: draft.warnings,
   };
 }
@@ -277,6 +283,54 @@ function identityKeyOf(label: string): string {
 
 function isRest(label: string): boolean {
   return /^(n\.?c\.?|no chord|-)$/i.test(label.trim());
+}
+
+function cloneCandidateSnapshot(
+  candidate: ProgressionBlockCandidate,
+): ProgressionBlockCandidate {
+  return {
+    ...candidate,
+    chords: candidate.chords.map((item) => ({
+      ...item,
+      chord: { ...item.chord, tensions: [...item.chord.tensions] },
+      alternatives: item.alternatives.map((alternative) => ({
+        ...alternative,
+        chord: {
+          ...alternative.chord,
+          tensions: [...alternative.chord.tensions],
+        },
+      })),
+      warnings: [...item.warnings],
+    })),
+    ...(candidate.events === undefined
+      ? {}
+      : {
+          events: candidate.events.map((event) => ({
+            ...event,
+            chord: { ...event.chord, tensions: [...event.chord.tensions] },
+            warnings: [...event.warnings],
+            source: {
+              ...event.source,
+              chord: {
+                ...event.source.chord,
+                tensions: [...event.source.chord.tensions],
+              },
+              alternatives: event.source.alternatives.map((alternative) => ({
+                ...alternative,
+                chord: {
+                  ...alternative.chord,
+                  tensions: [...alternative.chord.tensions],
+                },
+              })),
+              warnings: [...event.source.warnings],
+            },
+          })),
+        }),
+    ...(candidate.stats === undefined ? {} : { stats: { ...candidate.stats } }),
+    ...(candidate.quality === undefined ? {} : { quality: { ...candidate.quality } }),
+    labels: [...candidate.labels],
+    warnings: [...candidate.warnings],
+  };
 }
 
 /** Appends an operation without touching the music. */

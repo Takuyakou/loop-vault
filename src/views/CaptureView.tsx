@@ -88,9 +88,17 @@ import { SongMiniMap } from "../components/SongMiniMap";
 import { EditableProgressionGrid } from "../components/progression-editing/EditableProgressionGrid";
 import { TimelineRangeSelector } from "../components/TimelineRangeSelector";
 import { ManualCandidateEditor, type ManualDraftSaveTarget } from "../components/ManualCandidateEditor";
-import { draftEditable, draftToCandidate } from "../domain/midi/manualDraftEditing";
+import {
+  applyEditableToDraft,
+  draftEditable,
+  draftToCandidate,
+} from "../domain/midi/manualDraftEditing";
 import { draftPreviewTimeline } from "../domain/midi/manualDraftPlayback";
-import type { ManualCandidateDraft } from "../domain/midi/manualDraft";
+import {
+  createDraftFromCandidate,
+  fingerprintTimeline,
+  type ManualCandidateDraft,
+} from "../domain/midi/manualDraft";
 import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
 import { ProgressionEditSummary } from "../components/progression-editing/ProgressionEditSummary";
 import { usePlaybackState } from "../hooks/usePlaybackState";
@@ -169,6 +177,8 @@ export function CaptureView(props: CaptureViewProps) {
   const [timelineScrollBar, setTimelineScrollBar] = useState<number>();
   const [sourcePath, setSourcePath] = useState<string>();
   const [previewSound, setPreviewSound] = useState<PreviewSound>("piano");
+  const [activeDraft, setActiveDraft] = useState<ManualCandidateDraft | null>(null);
+  const [rangeSelectorRequest, setRangeSelectorRequest] = useState(0);
   const candidateHeaderFocusIdRef = useRef<string>();
   const result = analysis.result;
   const authorReferenceIndex = useMemo(() => buildAuthorReferenceIndex(ideas), [ideas]);
@@ -235,6 +245,8 @@ export function CaptureView(props: CaptureViewProps) {
     (bytes: Uint8Array, fileName: string) => {
       stopCapturePlayback(controller);
       const analyzed = analyzeMidiBytes(bytes, { fileName });
+      setActiveDraft(null);
+      setExpandedCandidateId(undefined);
       setToast(analyzed ? copy.toast.midiAnalyzed : copy.toast.midiFailed);
     },
     [analyzeMidiBytes, controller, copy.toast.midiAnalyzed, copy.toast.midiFailed, setToast],
@@ -399,9 +411,10 @@ export function CaptureView(props: CaptureViewProps) {
     original: ProgressionBlockCandidate,
     editable: EditableProgression,
     propagationEvents: readonly CorrectionPropagationFeedbackEvent[],
+    userEditedOverride?: boolean,
   ): boolean {
     const corrections = correctionEvents(original, candidate, editable);
-    const userEdited = hasProgressionEdits(editable);
+    const userEdited = userEditedOverride ?? hasProgressionEdits(editable);
     const id = createIdeaFromDraft({
       title,
       status: "idea",
@@ -454,6 +467,7 @@ export function CaptureView(props: CaptureViewProps) {
     ideaId: string,
     userVerified: boolean,
     propagationEvents: readonly CorrectionPropagationFeedbackEvent[],
+    userEditedOverride?: boolean,
   ): boolean {
     if (!ideaId) {
       setToast(copy.capture.chooseIdeaFirst);
@@ -462,7 +476,7 @@ export function CaptureView(props: CaptureViewProps) {
 
     const appended = appendBlockToIdea(ideaId, candidate, analysis.result, {
       sourcePath,
-      userEdited: hasProgressionEdits(editable),
+      userEdited: userEditedOverride ?? hasProgressionEdits(editable),
       userVerified,
     });
     if (appended) {
@@ -676,6 +690,33 @@ export function CaptureView(props: CaptureViewProps) {
       visible: lane.candidates,
     }));
 
+  function openCandidateDraft(candidate: ProgressionBlockCandidate) {
+    if (!result) return;
+    if (
+      activeDraft?.source.type === "automatic-candidate"
+      && activeDraft.source.candidateId === candidate.id
+    ) {
+      applyCandidateSelection(candidate.id);
+      return;
+    }
+    const pattern = result.candidatePatterns?.find((entry) => entry.occurrences.some(
+      (occurrence) => occurrence.id === candidate.id
+        || occurrence.sourceCandidateId === candidate.id,
+    ));
+    const occurrence = pattern?.occurrences.find(
+      (entry) => entry.id === candidate.id || entry.sourceCandidateId === candidate.id,
+    );
+    stopCapturePlayback(controller);
+    setActiveDraft(createDraftFromCandidate({
+      candidate,
+      timelineFingerprint: fingerprintTimeline(result.fullTimeline, laneMeter),
+      beatsPerBar: laneMeter,
+      ...(pattern === undefined ? {} : { patternId: pattern.patternId }),
+      ...(occurrence === undefined ? {} : { occurrenceId: occurrence.id }),
+    }));
+    applyCandidateSelection(candidate.id);
+  }
+
   return (
     <>
       <div className="lv-capture-content grid gap-5 py-5" {...dropHandlers}>
@@ -720,7 +761,11 @@ export function CaptureView(props: CaptureViewProps) {
           candidateLabel: copy.capture.songMiniMapCandidate,
         }}
         onCandidateSelect={(candidateId) => {
-          selectExpandedCandidate(candidateId, { revealTimeline: true });
+          const candidate = result.blockCandidates.find((entry) => entry.id === candidateId);
+          if (candidate && selectExpandedCandidate(candidateId, { revealTimeline: true })) {
+            openCandidateDraft(candidate);
+            revealCandidateInTimeline(candidateId);
+          }
         }}
       />
 
@@ -809,18 +854,58 @@ export function CaptureView(props: CaptureViewProps) {
                   copy={copy}
                   language={language}
                   isExpanded={expandedCandidateId === candidate.id}
+                  draft={activeDraft?.source.type === "automatic-candidate"
+                    && activeDraft.source.candidateId === candidate.id
+                    ? activeDraft
+                    : undefined}
                   inspectorExpanded={isInspectorExpanded}
                   inspectorHost={inspectorHost}
-                  onSelect={() => selectExpandedCandidate(candidate.id)}
+                  onSelect={() => {
+                    if (!selectExpandedCandidate(candidate.id)) return false;
+                    openCandidateDraft(candidate);
+                    return true;
+                  }}
                   onCollapse={() => selectExpandedCandidate(undefined)}
                   onInspectorExpandedChange={setInspectorExpanded}
                   onDirtyChange={markCandidateDirty}
-                  onCreate={(editedCandidate, title, nextAction, userVerified, editable, propagationEvents) => (
-                    saveNew(editedCandidate, title, nextAction, userVerified, candidate, editable, propagationEvents)
-                  )}
-                  onAppend={(editedCandidate, ideaId, userVerified, editable, propagationEvents) => (
-                    appendExisting(editedCandidate, candidate, editable, ideaId, userVerified, propagationEvents)
-                  )}
+                  onDraftChange={setActiveDraft}
+                  onCreate={(editedCandidate, title, nextAction, userVerified, editable, propagationEvents) => {
+                    const currentDraft = activeDraft?.source.type === "automatic-candidate"
+                      && activeDraft.source.candidateId === candidate.id
+                      ? activeDraft
+                      : undefined;
+                    const savingCandidate = currentDraft === undefined
+                      ? editedCandidate
+                      : draftToCandidate(currentDraft);
+                    return saveNew(
+                      savingCandidate,
+                      title,
+                      nextAction,
+                      userVerified,
+                      currentDraft?.sourceCandidateSnapshot ?? candidate,
+                      editable,
+                      propagationEvents,
+                      currentDraft?.isDirty,
+                    );
+                  }}
+                  onAppend={(editedCandidate, ideaId, userVerified, editable, propagationEvents) => {
+                    const currentDraft = activeDraft?.source.type === "automatic-candidate"
+                      && activeDraft.source.candidateId === candidate.id
+                      ? activeDraft
+                      : undefined;
+                    const savingCandidate = currentDraft === undefined
+                      ? editedCandidate
+                      : draftToCandidate(currentDraft);
+                    return appendExisting(
+                      savingCandidate,
+                      currentDraft?.sourceCandidateSnapshot ?? candidate,
+                      editable,
+                      ideaId,
+                      userVerified,
+                      propagationEvents,
+                      currentDraft?.isDirty,
+                    );
+                  }}
                   onCopyMemo={(editedCandidate, ideaId) => {
                     return copyMemo(editedCandidate, ideaId);
                   }}
@@ -854,6 +939,63 @@ export function CaptureView(props: CaptureViewProps) {
       />
       </div>
 
+      {activeDraft === null || activeDraft.source.type === "automatic-candidate" ? null : (
+        <ManualCandidateEditor
+          key={activeDraft.draftId}
+          draft={activeDraft}
+          timeline={result.fullTimeline}
+          totalBars={result.totalBars}
+          copy={copy}
+          language={language}
+          {...(result.detectedKey ? { keySignature: result.detectedKey } : {})}
+          save={{
+            initialTitle: copy.capture.manualDraft.defaultTitle,
+            ideas,
+            defaultNextAction: copy.capture.defaultNextAction,
+            onCreate: (draft, title, nextAction, userVerified) => {
+              const candidate = draftToCandidate(draft);
+              const original = draft.sourceCandidateSnapshot ?? candidate;
+              return saveNew(
+                candidate,
+                title,
+                nextAction,
+                userVerified,
+                original,
+                draftEditable(draft),
+                [],
+                draft.isDirty,
+              );
+            },
+            onAppend: (draft, ideaId, userVerified) => {
+              const candidate = draftToCandidate(draft);
+              const original = draft.sourceCandidateSnapshot ?? candidate;
+              return appendExisting(
+                candidate,
+                original,
+                draftEditable(draft),
+                ideaId,
+                userVerified,
+                [],
+                draft.isDirty,
+              );
+            },
+          }}
+          onPreview={(draft) => void previewManualDraft(draft)}
+          onChange={setActiveDraft}
+          onSave={(draft) => setActiveDraft({ ...draft, isDirty: false })}
+          onDiscard={() => {
+            setActiveDraft(null);
+            applyCandidateSelection(undefined);
+          }}
+          onReselect={() => {
+            setActiveDraft(null);
+            applyCandidateSelection(undefined);
+            setTimelineOpen(true);
+            setRangeSelectorRequest((request) => request + 1);
+          }}
+        />
+      )}
+
       <TimelineDetails
         result={result}
         copy={copy}
@@ -867,29 +1009,14 @@ export function CaptureView(props: CaptureViewProps) {
         open={isTimelineOpen}
         onOpenChange={setTimelineOpen}
         scrollToBar={timelineScrollBar}
+        openRangeSelectorRequest={rangeSelectorRequest}
+        renderDraftEditor={false}
         language={language}
-        onPreviewManualDraft={(draft) => void previewManualDraft(draft)}
-        manualDraftSave={{
-          initialTitle: copy.capture.manualDraft.defaultTitle,
-          ideas,
-          defaultNextAction: copy.capture.defaultNextAction,
-          // The same handlers the automatic candidate cards use, so a manual
-          // block reaches the Vault by the one path that already goes through
-          // applyVaultChange and autosave.
-          onCreate: (draft, title, nextAction, userVerified) => {
-            const candidate = draftToCandidate(draft);
-            return saveNew(
-              candidate, title, nextAction, userVerified, candidate,
-              draftEditable(draft), [],
-            );
-          },
-          onAppend: (draft, ideaId, userVerified) => {
-            const candidate = draftToCandidate(draft);
-            return appendExisting(
-              candidate, candidate, draftEditable(draft), ideaId, userVerified, [],
-            );
-          },
+        onManualDraftCreated={(draft) => {
+          setActiveDraft(draft);
+          applyCandidateSelection(undefined);
         }}
+        onPreviewManualDraft={(draft) => void previewManualDraft(draft)}
       />
       </div>
       <ConfirmDialog
@@ -901,9 +1028,19 @@ export function CaptureView(props: CaptureViewProps) {
         onCancel={() => setPendingCandidateSelection(undefined)}
         onConfirm={() => {
           if (!pendingCandidateSelection) return;
-          applyCandidateSelection(pendingCandidateSelection.candidateId);
-          if (pendingCandidateSelection.candidateId && pendingCandidateSelection.revealTimeline) {
-            revealCandidateInTimeline(pendingCandidateSelection.candidateId);
+          const candidateId = pendingCandidateSelection.candidateId;
+          const candidate = candidateId === undefined
+            ? undefined
+            : displayLanes.flatMap((lane) => lane.visible)
+              .find((entry) => entry.candidate.id === candidateId)?.candidate
+              ?? result.blockCandidates.find((entry) => entry.id === candidateId);
+          if (candidate) {
+            openCandidateDraft(candidate);
+          } else {
+            applyCandidateSelection(candidateId);
+          }
+          if (candidateId && pendingCandidateSelection.revealTimeline) {
+            revealCandidateInTimeline(candidateId);
           }
           setPendingCandidateSelection(undefined);
         }}
@@ -997,6 +1134,8 @@ export function TimelineDetails({
   open,
   onOpenChange,
   scrollToBar,
+  openRangeSelectorRequest,
+  renderDraftEditor = true,
   onManualDraftCreated,
   manualDraftSave,
   onPreviewManualDraft,
@@ -1011,6 +1150,8 @@ export function TimelineDetails({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   scrollToBar?: number;
+  openRangeSelectorRequest?: number;
+  renderDraftEditor?: boolean;
   onManualDraftCreated?: (draft: ManualCandidateDraft) => void;
   manualDraftSave?: ManualDraftSaveTarget;
   onPreviewManualDraft?: (draft: ManualCandidateDraft) => void;
@@ -1039,6 +1180,11 @@ export function TimelineDetails({
     const chordIndex = result.fullTimeline.findIndex((chord) => chord.bar >= scrollToBar);
     if (chordIndex >= 0) setSelectedChordIndex(chordIndex);
   }, [open, result.fullTimeline, scrollToBar]);
+
+  useEffect(() => {
+    if (openRangeSelectorRequest === undefined || openRangeSelectorRequest <= 0) return;
+    setRangeSelectorOpen(true);
+  }, [openRangeSelectorRequest]);
 
   async function previewTimelineChord(index: number) {
     setSelectedChordIndex(index);
@@ -1143,13 +1289,13 @@ export function TimelineDetails({
               beatsPerBar={beatsPerBarFor(result.timeSignature)}
               copy={copy}
               onCreate={(draft) => {
-                setManualDraft(draft);
+                if (renderDraftEditor) setManualDraft(draft);
                 setRangeSelectorOpen(false);
                 onManualDraftCreated?.(draft);
               }}
             />
           ) : null}
-          {manualDraft === null ? null : (
+          {!renderDraftEditor || manualDraft === null ? null : (
             <ManualCandidateEditor
               draft={manualDraft}
               timeline={result.fullTimeline}
@@ -1203,6 +1349,8 @@ export function ProgressionCandidateCard({
   onCollapse,
   onInspectorExpandedChange,
   onDirtyChange,
+  draft,
+  onDraftChange,
   onCreate,
   onAppend,
   onCopyMemo,
@@ -1265,6 +1413,8 @@ export function ProgressionCandidateCard({
   onCollapse?: () => void;
   onInspectorExpandedChange?: (expanded: boolean) => void;
   onDirtyChange?: (candidateId: string, dirty: boolean) => void;
+  draft?: ManualCandidateDraft;
+  onDraftChange?: (draft: ManualCandidateDraft) => void;
   showRomanNumerals?: boolean;
 }) {
   const editorCopy = progressionEditorCopy[language];
@@ -1291,11 +1441,16 @@ export function ProgressionCandidateCard({
     && samePlaybackSource(playback.source, source);
 
   useEffect(() => {
-    setEditable(createEditableProgression(candidate, beatsPerBar));
+    setEditable(
+      draft?.source.type === "automatic-candidate"
+        && draft.source.candidateId === candidate.id
+        ? draftEditable(draft)
+        : createEditableProgression(candidate, beatsPerBar),
+    );
     setSavedSignature(progressionSignature(candidate.chords));
     setPropagationProposal(undefined);
     setPropagationFeedback([]);
-  }, [beatsPerBar, candidate.id]);
+  }, [beatsPerBar, candidate.id, draft?.draftId]);
 
   useEffect(() => {
     if (!isExpanded) {
@@ -1318,6 +1473,26 @@ export function ProgressionCandidateCard({
   useEffect(() => {
     onDirtyChange?.(candidate.id, currentSignature !== savedSignature);
   }, [candidate.id, currentSignature, onDirtyChange, savedSignature]);
+
+  useEffect(() => {
+    if (
+      draft?.source.type !== "automatic-candidate"
+      || draft.source.candidateId !== candidate.id
+      || onDraftChange === undefined
+    ) {
+      return;
+    }
+    const draftSignature = progressionSignature(draftToCandidate(draft).chords);
+    if (draftSignature === currentSignature) return;
+    const next = applyEditableToDraft(draft, editable);
+    const originalSignature = draft.sourceCandidateSnapshot === undefined
+      ? undefined
+      : progressionSignature(draft.sourceCandidateSnapshot.chords);
+    onDraftChange({
+      ...next,
+      isDirty: originalSignature === undefined || currentSignature !== originalSignature,
+    });
+  }, [candidate.id, currentSignature, draft, editable, onDraftChange]);
 
   useEffect(() => {
     if (!isExpanded) {
@@ -1536,6 +1711,9 @@ export function ProgressionCandidateCard({
               setSavedSignature(currentSignature);
               setPropagationProposal(undefined);
               setPropagationFeedback([]);
+              if (draft !== undefined && onDraftChange !== undefined) {
+                onDraftChange({ ...draft, isDirty: false });
+              }
             }}
           />
           <button className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => void onCopyProgression(editedCandidate)}>
@@ -1545,6 +1723,14 @@ export function ProgressionCandidateCard({
         </div>
       </div>
       <span className="mt-3 inline-flex rounded bg-[var(--lv-surface-raised)] px-2 py-1 text-xs text-teal-200">{candidateLabelList(candidate.labels, language).join(" · ")}</span>
+      {draft?.source.type === "automatic-candidate"
+        && draft.source.candidateId === candidate.id ? (
+          <p className="mt-2 text-xs text-[var(--lv-text-muted)]" data-testid="draft-source">
+            {language === "ja"
+              ? `自動候補から作成${draft.isDirty ? "・編集中" : ""}`
+              : `Created from automatic candidate${draft.isDirty ? " · Editing" : ""}`}
+          </p>
+        ) : null}
       {candidate.summaryText.trim() ? <p className="mt-3 text-sm text-[var(--lv-text-secondary)]">{candidate.summaryText}</p> : null}
       <div className="mt-4">
         <div>

@@ -705,6 +705,50 @@ describe("ProgressionCandidateCard", () => {
 });
 
 describe("CaptureView saving", () => {
+  it("creates the shared Draft when an automatic candidate is selected", async () => {
+    const capturedCandidate = candidate();
+    const result: MidiProgressionAnalysis = {
+      totalBars: 4,
+      bpm: 100,
+      fullTimeline: capturedCandidate.chords,
+      blockCandidates: [capturedCandidate],
+      analyzedAt: "2026-07-16T00:00:00.000Z",
+      analyzerVersion: "test",
+    };
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <CaptureView
+          ideas={[]}
+          analysis={{ status: "done", result }}
+          analyzeMidiBytes={vi.fn()}
+          clearAnalysis={vi.fn()}
+          createIdeaFromDraft={vi.fn()}
+          appendBlockToIdea={vi.fn()}
+          updateIdea={vi.fn()}
+          setToast={vi.fn()}
+          copy={appCopy.ja}
+          language="ja"
+          showRomanNumerals
+        />,
+      );
+    });
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>("[data-candidate-toggle]")?.click();
+    });
+
+    expect(container.querySelector('[data-testid="draft-source"]')?.textContent)
+      .toBe("自動候補から作成");
+    expect(container.querySelector("[data-manual-range-selector]")).toBeNull();
+
+    await act(async () => root.unmount());
+    container.remove();
+  });
+
   it("keeps one portaled inspector mounted and cleans up responsive height tracking", async () => {
     const first = chord("Cmaj7", 1);
     first.alternatives = [{

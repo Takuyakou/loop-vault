@@ -1,5 +1,9 @@
-import type { ChordTimelineItem } from "../types";
-import { BEATS_PER_BAR, type CandidateChordEvent } from "./candidateBlock";
+import type { ChordTimelineItem, ProgressionBlockCandidate } from "../types";
+import {
+  BEATS_PER_BAR,
+  buildCandidateEvents,
+  type CandidateChordEvent,
+} from "./candidateBlock";
 import {
   createCandidateFromTimelineRange,
   manualRangeSource,
@@ -38,9 +42,29 @@ export type ManualRepairOperation =
   | { type: "undo" }
   | { type: "redo" };
 
+export type CandidateDraftSource =
+  | { type: "manual-range" }
+  | {
+      type: "automatic-candidate";
+      candidateId: string;
+      patternId?: string;
+      occurrenceId?: string;
+    };
+
+/**
+ * The analyzer result a Draft was copied from.
+ *
+ * Session-only by design. It lets an untouched automatic candidate round-trip
+ * without rebuilding its scores or labels, while every edit still lands in the
+ * detached Draft events.
+ */
+export type CandidateSnapshot = ProgressionBlockCandidate;
+
+export type CandidateDraftSnapMode = "bar" | "harmonic" | "beat";
+
 export interface ManualCandidateDraft {
   draftId: string;
-  source: typeof manualRangeSource;
+  source: CandidateDraftSource;
   /** Ties the draft to the analysis it was cut from. */
   sourceTimelineFingerprint: string;
   selectedRange: TimelineRange;
@@ -50,6 +74,8 @@ export interface ManualCandidateDraft {
   repairOperations: ManualRepairOperation[];
   createdAt: string;
   isDirty: boolean;
+  snapMode: CandidateDraftSnapMode;
+  sourceCandidateSnapshot?: CandidateSnapshot;
   beatsPerBar: number;
   lengthBars: number;
   warnings: string[];
@@ -109,7 +135,7 @@ export function createManualDraft(input: CreateManualDraftInput): ManualCandidat
 
   return {
     draftId: input.draftId ?? `draft-${occurrence.id}-${createdAt}`,
-    source: manualRangeSource,
+    source: { type: manualRangeSource },
     sourceTimelineFingerprint: fingerprintTimeline(input.timeline, beatsPerBar),
     selectedRange: { ...input.range },
     events: occurrence.events,
@@ -119,9 +145,68 @@ export function createManualDraft(input: CreateManualDraftInput): ManualCandidat
     repairOperations: [{ type: "create-from-range" }],
     createdAt,
     isDirty: false,
+    snapMode: "beat",
     beatsPerBar,
     lengthBars: occurrence.lengthBars,
     warnings: occurrence.warnings,
+  };
+}
+
+export interface CreateDraftFromCandidateInput {
+  candidate: ProgressionBlockCandidate;
+  timelineFingerprint: string;
+  beatsPerBar?: number;
+  patternId?: string;
+  occurrenceId?: string;
+  /** Supplied by the caller so the Draft is reproducible in tests. */
+  now?: string;
+  draftId?: string;
+}
+
+/**
+ * Copies an analyzer candidate into the same detached Draft used by a manual
+ * range. The input candidate and its Catalog/Occurrence owners are never
+ * mutated.
+ */
+export function createDraftFromCandidate(
+  input: CreateDraftFromCandidateInput,
+): ManualCandidateDraft {
+  const beatsPerBar = input.beatsPerBar ?? BEATS_PER_BAR;
+  const createdAt = input.now ?? new Date().toISOString();
+  const candidate = cloneCandidate(input.candidate);
+  const events = candidate.events?.map(cloneEvent)
+    ?? buildCandidateEvents(
+      candidate.chords,
+      candidate.startBar,
+      candidate.lengthBars,
+      beatsPerBar,
+    ).map(cloneEvent);
+
+  return {
+    draftId: input.draftId ?? `draft-${candidate.id}-${createdAt}`,
+    source: {
+      type: "automatic-candidate",
+      candidateId: candidate.id,
+      ...(input.patternId === undefined ? {} : { patternId: input.patternId }),
+      ...(input.occurrenceId === undefined ? {} : { occurrenceId: input.occurrenceId }),
+    },
+    sourceTimelineFingerprint: input.timelineFingerprint,
+    selectedRange: {
+      startBar: candidate.startBar,
+      startBeat: 1,
+      endBar: candidate.endBar,
+      endBeat: beatsPerBar,
+    },
+    events,
+    originalEvents: events.map(cloneEvent),
+    repairOperations: [],
+    createdAt,
+    isDirty: false,
+    snapMode: "bar",
+    sourceCandidateSnapshot: candidate,
+    beatsPerBar,
+    lengthBars: candidate.lengthBars,
+    warnings: [...candidate.warnings],
   };
 }
 
@@ -141,4 +226,65 @@ export function draftMatchesTimeline(
   beatsPerBar: number = BEATS_PER_BAR,
 ): boolean {
   return draft.sourceTimelineFingerprint === fingerprintTimeline(timeline, beatsPerBar);
+}
+
+function cloneCandidate(candidate: ProgressionBlockCandidate): ProgressionBlockCandidate {
+  return {
+    ...candidate,
+    chords: candidate.chords.map(cloneTimelineItem),
+    ...(candidate.events === undefined
+      ? {}
+      : { events: candidate.events.map(cloneEvent) }),
+    ...(candidate.stats === undefined ? {} : { stats: { ...candidate.stats } }),
+    ...(candidate.quality === undefined ? {} : { quality: { ...candidate.quality } }),
+    labels: [...candidate.labels],
+    warnings: [...candidate.warnings],
+  };
+}
+
+function cloneEvent(event: CandidateChordEvent): CandidateChordEvent {
+  return {
+    ...event,
+    chord: cloneChord(event.chord),
+    warnings: [...event.warnings],
+    source: cloneTimelineItem(event.source),
+  };
+}
+
+function cloneTimelineItem(item: ChordTimelineItem): ChordTimelineItem {
+  return {
+    ...item,
+    chord: cloneChord(item.chord),
+    alternatives: item.alternatives.map((alternative) => ({
+      ...alternative,
+      chord: cloneChord(alternative.chord),
+    })),
+    warnings: [...item.warnings],
+    ...(item.voicingMemory === undefined
+      ? {}
+      : {
+          voicingMemory: {
+            ...(item.voicingMemory.sourceVoicing === undefined
+              ? {}
+              : {
+                  sourceVoicing: {
+                    ...item.voicingMemory.sourceVoicing,
+                    midiNotes: [...item.voicingMemory.sourceVoicing.midiNotes],
+                  },
+                }),
+            ...(item.voicingMemory.practiceVoicingOverride === undefined
+              ? {}
+              : {
+                  practiceVoicingOverride: {
+                    ...item.voicingMemory.practiceVoicingOverride,
+                    midiNotes: [...item.voicingMemory.practiceVoicingOverride.midiNotes],
+                  },
+                }),
+          },
+        }),
+  };
+}
+
+function cloneChord(chord: ChordTimelineItem["chord"]): ChordTimelineItem["chord"] {
+  return { ...chord, tensions: [...chord.tensions] };
 }
