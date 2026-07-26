@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.1.3-M5",
+  "contract": "Manual Recoverability Contract v1",
+  "frozenOn": "2026-07-26",
+  "policy": "These gates are about whether a person can reach, build, hear and keep the block they want. They are deliberately not about whether the automatic window generator proposed it: P4.1.2-H4 recorded that must-show-catalog-recall is 14/16 and that record is not amended. A generator that misses a span is a shortfall; a user who cannot express the span they want is a dead end, and only the second one is what this contract closes.",
+  "supersedes": "nothing. docs/phase4.1.2-h/00-catalog-hard-gates.json stays in force as written, including its recorded FAIL.",
+  "gates": [
+    {
+      "id": "timeline-range-selection-success-rate",
+      "metric": "timelineRangeSelectionSuccessRate",
+      "threshold": 1.0,
+      "description": "Every region a user wants can be expressed as a range on the Full Timeline.",
+      "failureScenario": "The chords are on screen and there is no way to say which of them to keep."
+    },
+    {
+      "id": "arbitrary-length-candidate-creation-rate",
+      "metric": "arbitraryLengthCandidateCreationRate",
+      "threshold": 1.0,
+      "description": "A range of any length becomes a candidate, with no length-specific branch in product code.",
+      "note": "Checked over lengths 1 to 64 from a fixed seed, not only over 19 and 22."
+    },
+    {
+      "id": "manual-draft-event-reachability",
+      "metric": "manualDraftEventReachability",
+      "threshold": 1.0,
+      "description": "Every chord event in the selected range is present in the draft."
+    },
+    {
+      "id": "manual-draft-editor-reachability",
+      "metric": "manualDraftEditorReachability",
+      "threshold": 1.0,
+      "description": "Every draft opens in the editor with one slot per event."
+    },
+    {
+      "id": "preview-reachability",
+      "metric": "previewReachability",
+      "threshold": 1.0,
+      "description": "Every draft can be auditioned, and what is played is what would be saved."
+    },
+    {
+      "id": "save-reachability",
+      "metric": "saveReachability",
+      "threshold": 1.0,
+      "description": "Every valid draft can be saved through the ordinary Vault path."
+    },
+    {
+      "id": "reload-consistency",
+      "metric": "reloadConsistency",
+      "threshold": 1.0,
+      "description": "A saved manual block round-trips through the save schema unchanged.",
+      "failureScenario": "Edits look right on screen and vanish after a restart."
+    },
+    {
+      "id": "chord-dojo-reachability",
+      "metric": "chordDojoReachability",
+      "threshold": 1.0,
+      "description": "A saved manual block is an ordinary member of idea.progressionBlocks, which is what Practice, Mix and the detail view read."
+    },
+    {
+      "id": "catalog-non-destructive",
+      "metric": "catalogNonDestructive",
+      "threshold": "PASS",
+      "description": "Creating or saving a draft changes neither the catalog's pattern count nor its reachability."
+    },
+    {
+      "id": "recommendation-non-regression",
+      "metric": "recommendationNonRegression",
+      "threshold": "PASS",
+      "description": "The recommendation list is byte-identical before and after a draft exists."
+    },
+    {
+      "id": "timeline-non-regression",
+      "metric": "Chord Drip fullTimeline vs phase4-v1",
+      "threshold": "100/100",
+      "description": "Manual rescue does not reach the detector."
+    },
+    {
+      "id": "schema-compatibility",
+      "metric": "saved progression schema",
+      "threshold": "unchanged",
+      "description": "Existing data.json loads unchanged."
+    },
+    {
+      "id": "file-version",
+      "metric": "fileVersion",
+      "threshold": 1
+    },
+    {
+      "id": "deterministic-domain-functions",
+      "metric": "same input, same range, same edits",
+      "threshold": "identical over three runs"
+    },
+    {
+      "id": "private-midi-tracked",
+      "metric": "git ls-files *.mid *.midi",
+      "threshold": 0
+    },
+    {
+      "id": "tauri-build",
+      "metric": "npm run tauri build",
+      "threshold": "PASS"
+    },
+    {
+      "id": "rollback-available",
+      "metric": "revert path",
+      "threshold": "PASS",
+      "description": "Every stage is a separate merge commit and no stage changes the product default."
+    }
+  ],
+  "qualityTargets": {
+    "note": "Measured, not required. A shortfall here is a reason to keep improving, not a reason to withhold a capability that removes a dead end.",
+    "ids": [
+      "repairableWithin1RangeSelection",
+      "repairableWithin2Edits",
+      "repairableWithin5Edits",
+      "meanManualRepairOperationCount",
+      "medianManualRepairOperationCount",
+      "nearestCandidateBarIoU",
+      "boundaryAdjustmentBars",
+      "chordEditDistance",
+      "timelineSourceComplete",
+      "manualRangeCreationSuccessRate"
+    ],
+    "notMeasurable": [
+      {
+        "id": "timeToSavedProgression",
+        "reason": "Needs a real person at a real screen. Operation counts are recorded instead and are not a substitute."
+      }
+    ]
+  }
+}
