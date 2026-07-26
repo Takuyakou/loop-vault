@@ -106,6 +106,19 @@ export function applyEditableToDraft(
       identityKey: identityKeyOf(slot.currentChord.label),
       warnings: slot.warnings,
       ...(slot.id ? { sourceEventId: slot.id } : {}),
+      // The source item has to carry the edit too. Saving goes through
+      // `candidateEventsAsTimeline`, which spreads `event.source`, so leaving the
+      // detected chord there would store the chord the analyser guessed instead
+      // of the one the user chose — the edit would vanish at save time and only
+      // be noticed after reload. `originalEvents` still holds what the range
+      // first gave, so nothing is lost by moving this forward.
+      source: {
+        ...previous.source,
+        bar: slot.position.bar,
+        beat: slot.position.beat,
+        durationBeats: slot.position.durationBeats,
+        chord: slot.currentChord,
+      },
     };
   });
 

@@ -30,6 +30,9 @@ import {
   type RangeNudge,
 } from "../domain/midi/manualDraftEditing";
 import { clampTimelineRange } from "../domain/midi/manualRange";
+import { draftVoicingSummary } from "../domain/midi/manualDraftPlayback";
+import { SaveProgressionPopover } from "./SaveProgressionPopover";
+import type { SongIdea } from "../domain/types";
 
 /**
  * Editing a manual draft.
@@ -41,6 +44,23 @@ import { clampTimelineRange } from "../domain/midi/manualRange";
  * saved can be read back.
  */
 
+/**
+ * The Vault save path, supplied by the screen rather than reached from here.
+ *
+ * A draft is saved by the same handlers an automatic candidate is saved by, so
+ * it goes through `applyVaultChange` and autosave like everything else. This
+ * component never touches the repository.
+ */
+export interface ManualDraftSaveTarget {
+  initialTitle: string;
+  ideas: SongIdea[];
+  defaultNextAction: string;
+  onCreate(
+    draft: ManualCandidateDraft, title: string, nextAction: string, userVerified: boolean,
+  ): boolean;
+  onAppend(draft: ManualCandidateDraft, ideaId: string, userVerified: boolean): boolean;
+}
+
 export interface ManualCandidateEditorProps {
   draft: ManualCandidateDraft;
   timeline: readonly ChordTimelineItem[];
@@ -48,6 +68,7 @@ export interface ManualCandidateEditorProps {
   copy: AppCopy;
   language: AppLanguage;
   keySignature?: string;
+  save?: ManualDraftSaveTarget;
   onChange(draft: ManualCandidateDraft): void;
   onDiscard(): void;
   onReselect(): void;
@@ -67,12 +88,14 @@ export function ManualCandidateEditor({
   onReselect,
   onPreview,
   onSave,
+  save,
 }: ManualCandidateEditorProps) {
   const text = copy.capture.manualDraft;
   const [editable, setEditable] = useState<EditableProgression>(() => draftEditable(draft));
   const [pendingNudge, setPendingNudge] = useState<RangeNudge | null>(null);
 
   const validation = useMemo(() => validateDraft(draft), [draft]);
+  const voicing = useMemo(() => draftVoicingSummary(draft), [draft]);
 
   const commit = useCallback((next: EditableProgression, operation?: Parameters<
     typeof applyEditableToDraft
@@ -333,7 +356,11 @@ export function ManualCandidateEditor({
         </ul>
       ) : null}
 
-      <div className="mt-4 flex flex-wrap gap-2">
+      <p className="mt-3 text-xs text-[var(--lv-text-muted)]" data-testid="draft-voicing">
+        {voicing.anyGenerated ? text.voicingGenerated : text.voicingSource}
+      </p>
+
+      <div className="mt-4 flex flex-wrap items-start gap-2">
         <button
           type="button"
           data-action="preview"
@@ -342,15 +369,38 @@ export function ManualCandidateEditor({
         >
           {text.preview}
         </button>
-        <button
-          type="button"
-          data-action="save"
-          disabled={!validation.canSave}
-          className="lv-button-primary min-h-10 px-4 disabled:opacity-40"
-          onClick={() => onSave?.(draft)}
-        >
-          {text.save}
-        </button>
+        {save === undefined || !validation.canSave ? (
+          <button
+            type="button"
+            data-action="save"
+            disabled={!validation.canSave}
+            className="lv-button-primary min-h-10 px-4 disabled:opacity-40"
+            onClick={() => {
+              // Without a Vault target the editor is still usable on its own —
+              // the screen that mounted it decides what saving means.
+              if (save === undefined) onSave?.(draft);
+              else save.onCreate(draft, text.defaultTitle, "", false);
+            }}
+          >
+            {text.save}
+          </button>
+        ) : (
+          // The same popover the automatic candidates use, so a manual block is
+          // saved by the path everything else is saved by rather than a second
+          // one that would have to be kept in step with it.
+          <SaveProgressionPopover
+            initialTitle={save.initialTitle}
+            ideas={save.ideas}
+            defaultNextAction={save.defaultNextAction}
+            copy={copy}
+            onCreate={(title, nextAction, userVerified) => (
+              save.onCreate(draft, title, nextAction, userVerified)
+            )}
+            onAppend={(ideaId, userVerified) => save.onAppend(draft, ideaId, userVerified)}
+            onCopyMemo={() => false}
+            onSaved={() => onSave?.(draft)}
+          />
+        )}
         <button
           type="button"
           data-action="discard"
