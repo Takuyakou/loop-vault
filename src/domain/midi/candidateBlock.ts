@@ -88,8 +88,31 @@ export function buildCandidateEvents(
   rawMatchScores?: readonly number[],
 ): CandidateChordEvent[] {
   const blockStart = (startBar - 1) * beatsPerBar;
-  const blockEnd = blockStart + lengthBars * beatsPerBar;
+  return buildCandidateEventsInBeatRange(
+    timeline,
+    blockStart,
+    blockStart + lengthBars * beatsPerBar,
+    beatsPerBar,
+    rawMatchScores,
+  );
+}
 
+/**
+ * The same thing, bounded by absolute beats rather than whole bars.
+ *
+ * Automatic windows are always bar-aligned, so `buildCandidateEvents` is the
+ * shape almost everything wants. A range a person drew is not: it can start on
+ * the third beat because that is where the chord they mean starts. Both go
+ * through this one function so a hand-drawn block and a generated one are built
+ * from the timeline in exactly the same way.
+ */
+export function buildCandidateEventsInBeatRange(
+  timeline: readonly ChordTimelineItem[],
+  blockStart: number,
+  blockEnd: number,
+  beatsPerBar: number = BEATS_PER_BAR,
+  rawMatchScores?: readonly number[],
+): CandidateChordEvent[] {
   return timeline
     .map((item, index) => ({ item, index }))
     .filter(({ item }) => {
