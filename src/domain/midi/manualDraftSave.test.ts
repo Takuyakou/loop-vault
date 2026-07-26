@@ -17,7 +17,12 @@ import { recommendPatterns } from "./candidateRecommendation";
 import { buildOccurrences, groupIntoPatterns } from "./occurrence";
 import { createManualDraft, type ManualCandidateDraft } from "./manualDraft";
 import { applyEditableToDraft, draftEditable, draftToCandidate } from "./manualDraftEditing";
-import { draftPreviewTimeline, draftVoicingSummary } from "./manualDraftPlayback";
+import {
+  draftHasMidiSourcePreview,
+  draftPreviewTimeline,
+  draftSourcePreviewTimeline,
+  draftVoicingSummary,
+} from "./manualDraftPlayback";
 
 /**
  * Saving a manual draft.
@@ -217,6 +222,42 @@ describe("voicing", () => {
     // Replaying the old voicing under a new chord would have the user auditioning
     // a chord they no longer have.
     expect(draftVoicingSummary(edited).anyGenerated).toBe(true);
+    expect(edited.events[1]?.source.voicingMemory).toBeUndefined();
+  });
+
+  it("keeps A as the MIDI source and B as the edited save timeline", () => {
+    const withVoicing: ChordTimelineItem[] = timeline.map((item) => ({
+      ...item,
+      voicingMemory: {
+        sourceVoicing: {
+          midiNotes: [48, 52, 55, 59],
+          source: "midi-extracted",
+          representation: "simultaneous-voicing",
+          capturedForChordKey: normalizedChordKey(item.chord),
+          schemaVersion: 1 as const,
+        },
+      },
+    }));
+    const draft = createManualDraft({
+      timeline: withVoicing,
+      range: { startBar: 1, startBeat: 1, endBar: 4, endBeat: 4 },
+      now: "2026-07-26T00:00:00.000Z",
+    });
+    const editable = draftEditable(draft);
+    const edited = applyEditableToDraft(
+      draft,
+      replaceEditableChord(
+        editable,
+        editable.slots[1]!.id,
+        parseChordLabel("C#m7b5")!,
+        "manual-label",
+      ),
+    );
+
+    expect(draftHasMidiSourcePreview(edited)).toBe(true);
+    expect(draftSourcePreviewTimeline(edited)[1]?.chord.label)
+      .toBe(draft.originalEvents[1]?.source.chord.label);
+    expect(draftPreviewTimeline(edited)[1]?.chord.label).toBe("C#m7b5");
   });
 });
 

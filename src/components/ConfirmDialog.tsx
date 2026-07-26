@@ -10,6 +10,8 @@ export interface ConfirmDialogProps {
   cancelLabel: string;
   onConfirm: () => void;
   onCancel: () => void;
+  secondaryLabel?: string;
+  onSecondary?: () => void;
   onClose?: () => void;
   tone?: "default" | "danger";
   busy?: boolean;
@@ -23,6 +25,8 @@ export function ConfirmDialog({
   cancelLabel,
   onConfirm,
   onCancel,
+  secondaryLabel,
+  onSecondary,
   onClose = onCancel,
   tone = "default",
   busy = false,
@@ -73,6 +77,16 @@ export function ConfirmDialog({
         >
           {confirmLabel}
         </button>
+        {secondaryLabel && onSecondary ? (
+          <button
+            type="button"
+            className="rounded border border-teal-300/60 px-3 py-2 text-sm text-teal-100 disabled:opacity-50"
+            disabled={busy}
+            onClick={onSecondary}
+          >
+            {secondaryLabel}
+          </button>
+        ) : null}
       </div>
     </Modal>
   );

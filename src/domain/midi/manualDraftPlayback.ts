@@ -3,6 +3,7 @@ import type { ChordTimelineItem } from "../types";
 import { resolveVoicingForUse } from "../voicing";
 import type { ManualCandidateDraft } from "./manualDraft";
 import { draftToCandidate } from "./manualDraftEditing";
+import { timelineRangeBeats } from "./manualRange";
 
 /**
  * What a draft sounds like, and where each voicing came from.
@@ -37,6 +38,32 @@ export interface DraftVoicingSummary {
  */
 export function draftPreviewTimeline(draft: ManualCandidateDraft): ChordTimelineItem[] {
   return draftToCandidate(draft).chords;
+}
+
+export function draftSourcePreviewTimeline(draft: ManualCandidateDraft): ChordTimelineItem[] {
+  const { startBeat } = timelineRangeBeats(draft.selectedRange, draft.beatsPerBar);
+  return draft.originalEvents.map((event, index) => {
+    const absolute = startBeat + event.relativeStartBeat;
+    return {
+      ...event.source,
+      eventId: event.sourceEventId ?? `${draft.draftId}:source:${index}`,
+      bar: Math.floor(absolute / draft.beatsPerBar) + 1,
+      beat: (absolute % draft.beatsPerBar) + 1,
+      durationBeats: event.durationBeats,
+      chord: event.source.chord,
+      alternatives: event.source.alternatives.map((alternative) => ({
+        ...alternative,
+        chord: { ...alternative.chord, tensions: [...alternative.chord.tensions] },
+      })),
+      warnings: [...event.source.warnings],
+    };
+  });
+}
+
+export function draftHasMidiSourcePreview(draft: ManualCandidateDraft): boolean {
+  return draftSourcePreviewTimeline(draft).some(
+    (item) => Boolean(item.voicingMemory?.sourceVoicing?.midiNotes.length),
+  );
 }
 
 export function draftVoicingSummary(draft: ManualCandidateDraft): DraftVoicingSummary {
