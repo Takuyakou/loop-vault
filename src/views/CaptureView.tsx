@@ -87,6 +87,7 @@ import { SaveProgressionPopover } from "../components/SaveProgressionPopover";
 import { SongMiniMap } from "../components/SongMiniMap";
 import { EditableProgressionGrid } from "../components/progression-editing/EditableProgressionGrid";
 import { TimelineRangeSelector } from "../components/TimelineRangeSelector";
+import { ManualCandidateEditor } from "../components/ManualCandidateEditor";
 import type { ManualCandidateDraft } from "../domain/midi/manualDraft";
 import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
 import { ProgressionEditSummary } from "../components/progression-editing/ProgressionEditSummary";
@@ -938,6 +939,7 @@ function StepCard({ index, text }: { index: string; text: string }) {
 export function TimelineDetails({
   result,
   copy,
+  language,
   previewSound,
   onPreviewSoundChange,
   onPlaybackError,
@@ -961,6 +963,7 @@ export function TimelineDetails({
 }) {
   const [selectedChordIndex, setSelectedChordIndex] = useState<number>();
   const [rangeSelectorOpen, setRangeSelectorOpen] = useState(false);
+  const [manualDraft, setManualDraft] = useState<ManualCandidateDraft | null>(null);
   const detailsRef = useRef<HTMLDetailsElement>(null);
   const playback = usePlaybackState(controller);
   const source = captureFullTimelineSource(result);
@@ -1085,9 +1088,29 @@ export function TimelineDetails({
               totalBars={result.totalBars}
               beatsPerBar={beatsPerBarFor(result.timeSignature)}
               copy={copy}
-              onCreate={(draft) => onManualDraftCreated?.(draft)}
+              onCreate={(draft) => {
+                setManualDraft(draft);
+                setRangeSelectorOpen(false);
+                onManualDraftCreated?.(draft);
+              }}
             />
           ) : null}
+          {manualDraft === null ? null : (
+            <ManualCandidateEditor
+              draft={manualDraft}
+              timeline={result.fullTimeline}
+              totalBars={result.totalBars}
+              copy={copy}
+              language={language ?? "ja"}
+              {...(result.detectedKey ? { keySignature: result.detectedKey } : {})}
+              onChange={setManualDraft}
+              onDiscard={() => setManualDraft(null)}
+              onReselect={() => {
+                setManualDraft(null);
+                setRangeSelectorOpen(true);
+              }}
+            />
+          )}
         </>
       ) : null}
     </details>
