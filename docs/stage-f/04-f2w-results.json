@@ -1,0 +1,625 @@
+{
+  "schemaVersion": 1,
+  "stage": "Stage F2W (shadow)",
+  "mode": "phase4-v1",
+  "connectedToProduct": false,
+  "files": 199,
+  "subsetDefinition": {
+    "note": "Three independent definitions, all reported. Stage F1's relation is one of them and is never the sole definition: using the classifier whose consequences are being measured to select the windows would be circular.",
+    "declared": 531,
+    "material": 265,
+    "relation": 501,
+    "allThree": 4,
+    "anyOf": 938
+  },
+  "deterministic": {
+    "checks": 199,
+    "stable": 199,
+    "verdict": "pass"
+  },
+  "runtimeMs": {
+    "min": 2.5,
+    "mean": 34.6,
+    "max": 176.1
+  },
+  "bestVariantByAt3": {
+    "variant": "current",
+    "at3": 0.875,
+    "removed": 0
+  },
+  "baselineAt3": 0.875,
+  "buckets": {
+    "all": {
+      "current": {
+        "windows": 7490,
+        "goldWindows": 5962,
+        "walkingGoldRootPresentAt1": 0.834787,
+        "walkingGoldRootPresentAt3": 0.947501,
+        "walkingGoldRootPresentAt5": 0.982221,
+        "walkingCandidateRecall": 0.997987,
+        "rootCandidateEntropy": 3.145594,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 985
+      },
+      "strong-beat": {
+        "windows": 7490,
+        "goldWindows": 5962,
+        "walkingGoldRootPresentAt1": 0.832271,
+        "walkingGoldRootPresentAt3": 0.947333,
+        "walkingGoldRootPresentAt5": 0.983395,
+        "walkingCandidateRecall": 0.997987,
+        "rootCandidateEntropy": 3.14448,
+        "wrongPassingToneRemoved": 176,
+        "correctRootRemoved": 1,
+        "correctionCost": 1000
+      },
+      "long-duration": {
+        "windows": 7490,
+        "goldWindows": 5962,
+        "walkingGoldRootPresentAt1": 0.832271,
+        "walkingGoldRootPresentAt3": 0.947501,
+        "walkingGoldRootPresentAt5": 0.982221,
+        "walkingCandidateRecall": 0.997987,
+        "rootCandidateEntropy": 3.145082,
+        "wrongPassingToneRemoved": 107,
+        "correctRootRemoved": 2,
+        "correctionCost": 1000
+      },
+      "passing-tone-attenuated": {
+        "windows": 7490,
+        "goldWindows": 5962,
+        "walkingGoldRootPresentAt1": 0.832607,
+        "walkingGoldRootPresentAt3": 0.947501,
+        "walkingGoldRootPresentAt5": 0.982221,
+        "walkingCandidateRecall": 0.997987,
+        "rootCandidateEntropy": 3.145311,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 998
+      },
+      "faster-than-harmony-attenuated": {
+        "windows": 7490,
+        "goldWindows": 5962,
+        "walkingGoldRootPresentAt1": 0.834116,
+        "walkingGoldRootPresentAt3": 0.947333,
+        "walkingGoldRootPresentAt5": 0.981885,
+        "walkingCandidateRecall": 0.997987,
+        "rootCandidateEntropy": 3.145752,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 2,
+        "correctionCost": 989
+      },
+      "chord-boundary-preferred": {
+        "windows": 7490,
+        "goldWindows": 5962,
+        "walkingGoldRootPresentAt1": 0.831265,
+        "walkingGoldRootPresentAt3": 0.946494,
+        "walkingGoldRootPresentAt5": 0.982221,
+        "walkingCandidateRecall": 0.997987,
+        "rootCandidateEntropy": 3.145617,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 1006
+      }
+    },
+    "inversion": {
+      "current": {
+        "windows": 256,
+        "goldWindows": 240,
+        "walkingGoldRootPresentAt1": 0.591667,
+        "walkingGoldRootPresentAt3": 1,
+        "walkingGoldRootPresentAt5": 1,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.224123,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 98
+      },
+      "strong-beat": {
+        "windows": 256,
+        "goldWindows": 240,
+        "walkingGoldRootPresentAt1": 0.591667,
+        "walkingGoldRootPresentAt3": 1,
+        "walkingGoldRootPresentAt5": 1,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.222533,
+        "wrongPassingToneRemoved": 12,
+        "correctRootRemoved": 0,
+        "correctionCost": 98
+      },
+      "long-duration": {
+        "windows": 256,
+        "goldWindows": 240,
+        "walkingGoldRootPresentAt1": 0.591667,
+        "walkingGoldRootPresentAt3": 1,
+        "walkingGoldRootPresentAt5": 1,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.224116,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 98
+      },
+      "passing-tone-attenuated": {
+        "windows": 256,
+        "goldWindows": 240,
+        "walkingGoldRootPresentAt1": 0.591667,
+        "walkingGoldRootPresentAt3": 1,
+        "walkingGoldRootPresentAt5": 1,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.224123,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 98
+      },
+      "faster-than-harmony-attenuated": {
+        "windows": 256,
+        "goldWindows": 240,
+        "walkingGoldRootPresentAt1": 0.591667,
+        "walkingGoldRootPresentAt3": 1,
+        "walkingGoldRootPresentAt5": 1,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.224123,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 98
+      },
+      "chord-boundary-preferred": {
+        "windows": 256,
+        "goldWindows": 240,
+        "walkingGoldRootPresentAt1": 0.591667,
+        "walkingGoldRootPresentAt3": 1,
+        "walkingGoldRootPresentAt5": 1,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.224123,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 98
+      }
+    },
+    "non-walking": {
+      "current": {
+        "windows": 6312,
+        "goldWindows": 5341,
+        "walkingGoldRootPresentAt1": 0.865755,
+        "walkingGoldRootPresentAt3": 0.951133,
+        "walkingGoldRootPresentAt5": 0.981839,
+        "walkingCandidateRecall": 0.997753,
+        "rootCandidateEntropy": 3.117103,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 717
+      },
+      "strong-beat": {
+        "windows": 6312,
+        "goldWindows": 5341,
+        "walkingGoldRootPresentAt1": 0.862947,
+        "walkingGoldRootPresentAt3": 0.950946,
+        "walkingGoldRootPresentAt5": 0.981839,
+        "walkingCandidateRecall": 0.997753,
+        "rootCandidateEntropy": 3.116461,
+        "wrongPassingToneRemoved": 4,
+        "correctRootRemoved": 1,
+        "correctionCost": 732
+      },
+      "long-duration": {
+        "windows": 6312,
+        "goldWindows": 5341,
+        "walkingGoldRootPresentAt1": 0.862947,
+        "walkingGoldRootPresentAt3": 0.951133,
+        "walkingGoldRootPresentAt5": 0.981839,
+        "walkingCandidateRecall": 0.997753,
+        "rootCandidateEntropy": 3.11657,
+        "wrongPassingToneRemoved": 105,
+        "correctRootRemoved": 0,
+        "correctionCost": 732
+      },
+      "passing-tone-attenuated": {
+        "windows": 6312,
+        "goldWindows": 5341,
+        "walkingGoldRootPresentAt1": 0.863321,
+        "walkingGoldRootPresentAt3": 0.951133,
+        "walkingGoldRootPresentAt5": 0.981839,
+        "walkingCandidateRecall": 0.997753,
+        "rootCandidateEntropy": 3.116964,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 730
+      },
+      "faster-than-harmony-attenuated": {
+        "windows": 6312,
+        "goldWindows": 5341,
+        "walkingGoldRootPresentAt1": 0.865194,
+        "walkingGoldRootPresentAt3": 0.950946,
+        "walkingGoldRootPresentAt5": 0.981464,
+        "walkingCandidateRecall": 0.997753,
+        "rootCandidateEntropy": 3.117281,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 1,
+        "correctionCost": 720
+      },
+      "chord-boundary-preferred": {
+        "windows": 6312,
+        "goldWindows": 5341,
+        "walkingGoldRootPresentAt1": 0.861824,
+        "walkingGoldRootPresentAt3": 0.950009,
+        "walkingGoldRootPresentAt5": 0.981839,
+        "walkingCandidateRecall": 0.997753,
+        "rootCandidateEntropy": 3.117131,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 738
+      }
+    },
+    "pedal-slash": {
+      "current": {
+        "windows": 272,
+        "goldWindows": 256,
+        "walkingGoldRootPresentAt1": 0.617188,
+        "walkingGoldRootPresentAt3": 1,
+        "walkingGoldRootPresentAt5": 1,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.228554,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 98
+      },
+      "strong-beat": {
+        "windows": 272,
+        "goldWindows": 256,
+        "walkingGoldRootPresentAt1": 0.617188,
+        "walkingGoldRootPresentAt3": 1,
+        "walkingGoldRootPresentAt5": 1,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.227058,
+        "wrongPassingToneRemoved": 12,
+        "correctRootRemoved": 0,
+        "correctionCost": 98
+      },
+      "long-duration": {
+        "windows": 272,
+        "goldWindows": 256,
+        "walkingGoldRootPresentAt1": 0.617188,
+        "walkingGoldRootPresentAt3": 1,
+        "walkingGoldRootPresentAt5": 1,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.228548,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 98
+      },
+      "passing-tone-attenuated": {
+        "windows": 272,
+        "goldWindows": 256,
+        "walkingGoldRootPresentAt1": 0.617188,
+        "walkingGoldRootPresentAt3": 1,
+        "walkingGoldRootPresentAt5": 1,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.228554,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 98
+      },
+      "faster-than-harmony-attenuated": {
+        "windows": 272,
+        "goldWindows": 256,
+        "walkingGoldRootPresentAt1": 0.617188,
+        "walkingGoldRootPresentAt3": 1,
+        "walkingGoldRootPresentAt5": 1,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.228554,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 98
+      },
+      "chord-boundary-preferred": {
+        "windows": 272,
+        "goldWindows": 256,
+        "walkingGoldRootPresentAt1": 0.617188,
+        "walkingGoldRootPresentAt3": 1,
+        "walkingGoldRootPresentAt5": 1,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.228554,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 98
+      }
+    },
+    "plain-triad": {
+      "current": {
+        "windows": 16,
+        "goldWindows": 16,
+        "walkingGoldRootPresentAt1": 1,
+        "walkingGoldRootPresentAt3": 1,
+        "walkingGoldRootPresentAt5": 1,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 2.839908,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 0
+      },
+      "strong-beat": {
+        "windows": 16,
+        "goldWindows": 16,
+        "walkingGoldRootPresentAt1": 1,
+        "walkingGoldRootPresentAt3": 1,
+        "walkingGoldRootPresentAt5": 1,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 2.839908,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 0
+      },
+      "long-duration": {
+        "windows": 16,
+        "goldWindows": 16,
+        "walkingGoldRootPresentAt1": 1,
+        "walkingGoldRootPresentAt3": 1,
+        "walkingGoldRootPresentAt5": 1,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 2.839908,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 0
+      },
+      "passing-tone-attenuated": {
+        "windows": 16,
+        "goldWindows": 16,
+        "walkingGoldRootPresentAt1": 1,
+        "walkingGoldRootPresentAt3": 1,
+        "walkingGoldRootPresentAt5": 1,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 2.839908,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 0
+      },
+      "faster-than-harmony-attenuated": {
+        "windows": 16,
+        "goldWindows": 16,
+        "walkingGoldRootPresentAt1": 1,
+        "walkingGoldRootPresentAt3": 1,
+        "walkingGoldRootPresentAt5": 1,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 2.839908,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 0
+      },
+      "chord-boundary-preferred": {
+        "windows": 16,
+        "goldWindows": 16,
+        "walkingGoldRootPresentAt1": 1,
+        "walkingGoldRootPresentAt3": 1,
+        "walkingGoldRootPresentAt5": 1,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 2.839908,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 0
+      }
+    },
+    "walking-declared": {
+      "current": {
+        "windows": 531,
+        "goldWindows": 357,
+        "walkingGoldRootPresentAt1": 0.529412,
+        "walkingGoldRootPresentAt3": 0.871148,
+        "walkingGoldRootPresentAt5": 0.980392,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.336219,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 168
+      },
+      "strong-beat": {
+        "windows": 531,
+        "goldWindows": 357,
+        "walkingGoldRootPresentAt1": 0.529412,
+        "walkingGoldRootPresentAt3": 0.871148,
+        "walkingGoldRootPresentAt5": 1,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.332851,
+        "wrongPassingToneRemoved": 170,
+        "correctRootRemoved": 0,
+        "correctionCost": 168
+      },
+      "long-duration": {
+        "windows": 531,
+        "goldWindows": 357,
+        "walkingGoldRootPresentAt1": 0.529412,
+        "walkingGoldRootPresentAt3": 0.871148,
+        "walkingGoldRootPresentAt5": 0.980392,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.336225,
+        "wrongPassingToneRemoved": 2,
+        "correctRootRemoved": 2,
+        "correctionCost": 168
+      },
+      "passing-tone-attenuated": {
+        "windows": 531,
+        "goldWindows": 357,
+        "walkingGoldRootPresentAt1": 0.529412,
+        "walkingGoldRootPresentAt3": 0.871148,
+        "walkingGoldRootPresentAt5": 0.980392,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.336189,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 168
+      },
+      "faster-than-harmony-attenuated": {
+        "windows": 531,
+        "goldWindows": 357,
+        "walkingGoldRootPresentAt1": 0.529412,
+        "walkingGoldRootPresentAt3": 0.871148,
+        "walkingGoldRootPresentAt5": 0.980392,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.336084,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 168
+      },
+      "chord-boundary-preferred": {
+        "windows": 531,
+        "goldWindows": 357,
+        "walkingGoldRootPresentAt1": 0.529412,
+        "walkingGoldRootPresentAt3": 0.871148,
+        "walkingGoldRootPresentAt5": 0.980392,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.336196,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 168
+      }
+    },
+    "walking-material": {
+      "current": {
+        "windows": 265,
+        "goldWindows": 8,
+        "walkingGoldRootPresentAt1": 0.375,
+        "walkingGoldRootPresentAt3": 0.875,
+        "walkingGoldRootPresentAt5": 1,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.26504,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 5
+      },
+      "strong-beat": {
+        "windows": 265,
+        "goldWindows": 8,
+        "walkingGoldRootPresentAt1": 0.375,
+        "walkingGoldRootPresentAt3": 0.875,
+        "walkingGoldRootPresentAt5": 1,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.254902,
+        "wrongPassingToneRemoved": 4,
+        "correctRootRemoved": 0,
+        "correctionCost": 5
+      },
+      "long-duration": {
+        "windows": 265,
+        "goldWindows": 8,
+        "walkingGoldRootPresentAt1": 0.375,
+        "walkingGoldRootPresentAt3": 0.875,
+        "walkingGoldRootPresentAt5": 1,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.263255,
+        "wrongPassingToneRemoved": 2,
+        "correctRootRemoved": 2,
+        "correctionCost": 5
+      },
+      "passing-tone-attenuated": {
+        "windows": 265,
+        "goldWindows": 8,
+        "walkingGoldRootPresentAt1": 0.375,
+        "walkingGoldRootPresentAt3": 0.875,
+        "walkingGoldRootPresentAt5": 1,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.26047,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 5
+      },
+      "faster-than-harmony-attenuated": {
+        "windows": 265,
+        "goldWindows": 8,
+        "walkingGoldRootPresentAt1": 0.25,
+        "walkingGoldRootPresentAt3": 0.875,
+        "walkingGoldRootPresentAt5": 1,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.264661,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 1,
+        "correctionCost": 6
+      },
+      "chord-boundary-preferred": {
+        "windows": 265,
+        "goldWindows": 8,
+        "walkingGoldRootPresentAt1": 0.375,
+        "walkingGoldRootPresentAt3": 0.875,
+        "walkingGoldRootPresentAt5": 1,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.264928,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 5
+      }
+    },
+    "walking-relation": {
+      "current": {
+        "windows": 501,
+        "goldWindows": 110,
+        "walkingGoldRootPresentAt1": 0.109091,
+        "walkingGoldRootPresentAt3": 0.618182,
+        "walkingGoldRootPresentAt5": 0.918182,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.316587,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 98
+      },
+      "strong-beat": {
+        "windows": 501,
+        "goldWindows": 110,
+        "walkingGoldRootPresentAt1": 0.109091,
+        "walkingGoldRootPresentAt3": 0.618182,
+        "walkingGoldRootPresentAt5": 0.981818,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.310481,
+        "wrongPassingToneRemoved": 83,
+        "correctRootRemoved": 0,
+        "correctionCost": 98
+      },
+      "long-duration": {
+        "windows": 501,
+        "goldWindows": 110,
+        "walkingGoldRootPresentAt1": 0.109091,
+        "walkingGoldRootPresentAt3": 0.618182,
+        "walkingGoldRootPresentAt5": 0.918182,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.3157,
+        "wrongPassingToneRemoved": 2,
+        "correctRootRemoved": 2,
+        "correctionCost": 98
+      },
+      "passing-tone-attenuated": {
+        "windows": 501,
+        "goldWindows": 110,
+        "walkingGoldRootPresentAt1": 0.109091,
+        "walkingGoldRootPresentAt3": 0.618182,
+        "walkingGoldRootPresentAt5": 0.918182,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.314085,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 98
+      },
+      "faster-than-harmony-attenuated": {
+        "windows": 501,
+        "goldWindows": 110,
+        "walkingGoldRootPresentAt1": 0.109091,
+        "walkingGoldRootPresentAt3": 0.618182,
+        "walkingGoldRootPresentAt5": 0.918182,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.316655,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 98
+      },
+      "chord-boundary-preferred": {
+        "windows": 501,
+        "goldWindows": 110,
+        "walkingGoldRootPresentAt1": 0.109091,
+        "walkingGoldRootPresentAt3": 0.618182,
+        "walkingGoldRootPresentAt5": 0.918182,
+        "walkingCandidateRecall": 1,
+        "rootCandidateEntropy": 3.316563,
+        "wrongPassingToneRemoved": 0,
+        "correctRootRemoved": 0,
+        "correctionCost": 98
+      }
+    }
+  }
+}
