@@ -12,6 +12,7 @@ import {
   saveMasterVolume,
 } from "./audio/masterVolume";
 import { AppShell, type AppView } from "./components/AppShell";
+import { CaptureRenderBoundary } from "./components/CaptureRenderBoundary";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { Modal } from "./components/Modal";
 import { DetailView } from "./views/DetailView";
@@ -399,25 +400,38 @@ async function analyzeMidiPath(path: string) {
               />
             ) : null}
             {view === "capture" ? (
-              <CaptureView
-                ideas={visibleIdeas}
-                analysis={analysis}
-                analyzeMidiBytes={analyzeMidiBytes}
-                clearAnalysis={clearAnalysis}
-                createIdeaFromDraft={(draft) => {
-                  const id = createIdeaFromDraft(draft);
-                  if (id) {
-                    openDetail(id);
-                  }
-                  return id;
-                }}
-                appendBlockToIdea={appendBlockToIdea}
-                updateIdea={updateIdea}
-                setToast={setToast}
-                copy={copy}
+              <CaptureRenderBoundary
                 language={language}
-                showRomanNumerals={settings.showRomanNumerals ?? true}
-              />
+                resetKey={[
+                  analysis.status,
+                  analysis.result?.sourceFingerprint,
+                  analysis.result?.fileName,
+                ].filter(Boolean).join(":")}
+                onReset={() => {
+                  playbackController.stop();
+                  clearAnalysis();
+                }}
+              >
+                <CaptureView
+                  ideas={visibleIdeas}
+                  analysis={analysis}
+                  analyzeMidiBytes={analyzeMidiBytes}
+                  clearAnalysis={clearAnalysis}
+                  createIdeaFromDraft={(draft) => {
+                    const id = createIdeaFromDraft(draft);
+                    if (id) {
+                      openDetail(id);
+                    }
+                    return id;
+                  }}
+                  appendBlockToIdea={appendBlockToIdea}
+                  updateIdea={updateIdea}
+                  setToast={setToast}
+                  copy={copy}
+                  language={language}
+                  showRomanNumerals={settings.showRomanNumerals ?? true}
+                />
+              </CaptureRenderBoundary>
             ) : null}
             {view === "detail" && selectedIdea ? (
               <DetailView
