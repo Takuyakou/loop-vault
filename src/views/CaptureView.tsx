@@ -87,7 +87,9 @@ import { SaveProgressionPopover } from "../components/SaveProgressionPopover";
 import { SongMiniMap } from "../components/SongMiniMap";
 import { EditableProgressionGrid } from "../components/progression-editing/EditableProgressionGrid";
 import { TimelineRangeSelector } from "../components/TimelineRangeSelector";
-import { ManualCandidateEditor } from "../components/ManualCandidateEditor";
+import { ManualCandidateEditor, type ManualDraftSaveTarget } from "../components/ManualCandidateEditor";
+import { draftEditable, draftToCandidate } from "../domain/midi/manualDraftEditing";
+import { draftPreviewTimeline } from "../domain/midi/manualDraftPlayback";
 import type { ManualCandidateDraft } from "../domain/midi/manualDraft";
 import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
 import { ProgressionEditSummary } from "../components/progression-editing/ProgressionEditSummary";
@@ -498,6 +500,31 @@ export function CaptureView(props: CaptureViewProps) {
     }
   }
 
+  /**
+   * Auditions a manual draft.
+   *
+   * Plays the same event list the save path stores, so what the user hears
+   * before saving is what they get afterwards. Voicings resolve by the product's
+   * existing rule: the captured one where it still fits the chord, a generated
+   * one where an edit made it no longer fit.
+   */
+  async function previewManualDraft(draft: ManualCandidateDraft) {
+    try {
+      await controller.toggle(
+        { kind: "capture", id: `capture-manual-draft:${draft.draftId}` },
+        {
+          type: "timeline",
+          timeline: draftPreviewTimeline(draft),
+          bpm: result?.bpm ?? 96,
+          sound: previewSound,
+          beatsPerBar: beatsPerBarFor(result?.timeSignature),
+        },
+      );
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
+    }
+  }
+
   async function previewCandidate(candidate: ProgressionBlockCandidate) {
     try {
       await controller.toggle(
@@ -840,6 +867,29 @@ export function CaptureView(props: CaptureViewProps) {
         open={isTimelineOpen}
         onOpenChange={setTimelineOpen}
         scrollToBar={timelineScrollBar}
+        language={language}
+        onPreviewManualDraft={(draft) => void previewManualDraft(draft)}
+        manualDraftSave={{
+          initialTitle: copy.capture.manualDraft.defaultTitle,
+          ideas,
+          defaultNextAction: copy.capture.defaultNextAction,
+          // The same handlers the automatic candidate cards use, so a manual
+          // block reaches the Vault by the one path that already goes through
+          // applyVaultChange and autosave.
+          onCreate: (draft, title, nextAction, userVerified) => {
+            const candidate = draftToCandidate(draft);
+            return saveNew(
+              candidate, title, nextAction, userVerified, candidate,
+              draftEditable(draft), [],
+            );
+          },
+          onAppend: (draft, ideaId, userVerified) => {
+            const candidate = draftToCandidate(draft);
+            return appendExisting(
+              candidate, candidate, draftEditable(draft), ideaId, userVerified, [],
+            );
+          },
+        }}
       />
       </div>
       <ConfirmDialog
@@ -948,6 +998,8 @@ export function TimelineDetails({
   onOpenChange,
   scrollToBar,
   onManualDraftCreated,
+  manualDraftSave,
+  onPreviewManualDraft,
 }: {
   result: MidiProgressionAnalysis;
   copy: AppCopy;
@@ -960,6 +1012,8 @@ export function TimelineDetails({
   onOpenChange?: (open: boolean) => void;
   scrollToBar?: number;
   onManualDraftCreated?: (draft: ManualCandidateDraft) => void;
+  manualDraftSave?: ManualDraftSaveTarget;
+  onPreviewManualDraft?: (draft: ManualCandidateDraft) => void;
 }) {
   const [selectedChordIndex, setSelectedChordIndex] = useState<number>();
   const [rangeSelectorOpen, setRangeSelectorOpen] = useState(false);
@@ -1103,7 +1157,10 @@ export function TimelineDetails({
               copy={copy}
               language={language ?? "ja"}
               {...(result.detectedKey ? { keySignature: result.detectedKey } : {})}
+              {...(manualDraftSave ? { save: manualDraftSave } : {})}
+              {...(onPreviewManualDraft ? { onPreview: onPreviewManualDraft } : {})}
               onChange={setManualDraft}
+              onSave={() => setManualDraft(null)}
               onDiscard={() => setManualDraft(null)}
               onReselect={() => {
                 setManualDraft(null);
