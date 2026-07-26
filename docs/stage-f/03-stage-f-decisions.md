@@ -64,3 +64,27 @@ F2R の非昇格判断を固定する。再検討には新しい証拠を要す�
 **害が無いことは確認できたが、規則が何もしていないことと区別できない。** 統計的に何も言えていないものを昇格させない。
 
 `contestBand` の事前登録が誤った分布（rootMargin）から導かれていたことは `03-f2r-selective-root-correction.md` §6 に記録した。**その観測を見てから閾値を動かすことはしない。**
+
+---
+
+## 7. F2W — **否定結果を固定**、F2Wb は非推奨（固定）
+
+walking の失敗は**候補生成ではない**。`walkingCandidateRecall` は全 variant 全 subset で **100%**。正解 root は常に12候補の中に正のスコアで存在しており、順位で負けているだけである。
+
+bass 重み付けの6 variant はどれも **@1 と @3 を1件も動かさない**。`strong-beat` は通過音を170件落として正解 root を0件しか落とさないが、**それが順位を変えないという事実が、通過音は元々問題ではなかったことを示している**。全体はどの variant でもわずかに悪化する。
+
+F2Wb（bass 候補生成の改良）は**無い問題を直すことになる**ので進まない。
+
+補足: walking subset の3定義（corpus 宣言 531 / 音から判定 265 / F1 relation 501）の一致は**わずか4 window**。F2 の 60.9% は relation 定義に固有の数字だった。
+
+---
+
+## 8. F2A — root 研究の終了を推奨
+
+敗因は **`rootPresence` 55.6% / `continuity` 34.5%** に集中しており、誤答の 66.7% は Gold root の5度上か長3度上（走るベースの通過音）。診断としては明快である。
+
+**しかし validation で再現しない。** dev 66.7% / holdout-v2 98.9% / regression-v3 100% に対し **validation は 0.0%**。事前に決めた条件は「validation でも再現した場合のみ ablation を提案する」であり、満たしていない。
+
+加えて product は Gold walking window で **93.8%** 正しく、shadow は 52.1%。失敗は **stress variant に集中**している（clean 93.3% / stress 10.7%）。
+
+**推奨: root 研究を終了し、`phase4-v1` root を固定して F3 へ進む。**
