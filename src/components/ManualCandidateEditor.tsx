@@ -1,12 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AppCopy, AppLanguage } from "../i18n";
 import type { ChordTimelineItem } from "../domain/types";
-import {
-  canRedoProgressionEdit,
-  canUndoProgressionEdit,
-  redoProgressionEdit,
-  undoProgressionEdit,
-} from "../domain/progressionEditing/editHistory";
 import { replaceEditableChord } from "../domain/progressionEditing/chordReplacement";
 import { selectEditableSlot } from "../domain/progressionEditing/editableProgression";
 import {
@@ -31,8 +25,16 @@ import {
 } from "../domain/midi/manualDraftEditing";
 import { clampTimelineRange } from "../domain/midi/manualRange";
 import { draftVoicingSummary } from "../domain/midi/manualDraftPlayback";
+import {
+  canRedoCaptureDraft,
+  canUndoCaptureDraft,
+  jumpCaptureDraftHistory,
+  redoCaptureDraft,
+  undoCaptureDraft,
+} from "../domain/midi/captureEditHistory";
 import { SaveProgressionPopover } from "./SaveProgressionPopover";
 import type { SongIdea } from "../domain/types";
+import { CaptureEditHistoryPanel } from "./CaptureEditHistoryPanel";
 
 /**
  * Editing a manual draft.
@@ -93,6 +95,7 @@ export function ManualCandidateEditor({
   const text = copy.capture.manualDraft;
   const [editable, setEditable] = useState<EditableProgression>(() => draftEditable(draft));
   const [pendingNudge, setPendingNudge] = useState<RangeNudge | null>(null);
+  const editorRef = useRef<HTMLElement>(null);
 
   const validation = useMemo(() => validateDraft(draft), [draft]);
   const voicing = useMemo(() => draftVoicingSummary(draft), [draft]);
@@ -108,6 +111,32 @@ export function ManualCandidateEditor({
     setEditable(draftEditable(draft));
     setPendingNudge(null);
   }, [draft.draftId]);
+
+  const applyHistoryDraft = useCallback((next: ManualCandidateDraft) => {
+    setEditable(draftEditable(next));
+    onChange(next);
+  }, [onChange]);
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (
+        event.defaultPrevented
+        || event.isComposing
+        || !event.ctrlKey
+        || !editorRef.current?.contains(document.activeElement)
+        || isNativeEditTarget(event.target)
+      ) {
+        return;
+      }
+      const key = event.key.toLowerCase();
+      const redo = key === "y" || (key === "z" && event.shiftKey);
+      if (key !== "z" && key !== "y") return;
+      event.preventDefault();
+      applyHistoryDraft(redo ? redoCaptureDraft(draft) : undoCaptureDraft(draft));
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [applyHistoryDraft, draft]);
 
   const commit = useCallback((next: EditableProgression, operation?: Parameters<
     typeof applyEditableToDraft
@@ -148,14 +177,13 @@ export function ManualCandidateEditor({
         draft,
         clampTimelineRange(range, totalBars, draft.beatsPerBar),
         timeline,
-        { keepEdits },
+        {
+          keepEdits,
+          operation: nudgeOperation(nudge, draft.beatsPerBar),
+        },
       );
-      const recorded = {
-        ...next,
-        repairOperations: [...next.repairOperations, nudgeOperation(nudge, draft.beatsPerBar)],
-      };
-      setEditable(draftEditable(recorded));
-      onChange(recorded);
+      setEditable(draftEditable(next));
+      onChange(next);
     } catch {
       // An unusable range leaves the draft alone rather than emptying it.
     }
@@ -172,6 +200,7 @@ export function ManualCandidateEditor({
 
   return (
     <section
+      ref={editorRef}
       className="mt-4 border border-[var(--lv-border)] bg-[var(--lv-surface)]/40 p-4"
       data-testid="manual-candidate-editor"
       aria-label={text.title}
@@ -249,18 +278,18 @@ export function ManualCandidateEditor({
         <button
           type="button"
           data-action="undo"
-          disabled={!canUndoProgressionEdit(editable)}
+          disabled={!canUndoCaptureDraft(draft)}
           className="min-h-9 border border-[var(--lv-border)] px-3 text-xs disabled:opacity-40"
-          onClick={() => commit(undoProgressionEdit(editable), [{ type: "undo" }])}
+          onClick={() => applyHistoryDraft(undoCaptureDraft(draft))}
         >
           {text.undo}
         </button>
         <button
           type="button"
           data-action="redo"
-          disabled={!canRedoProgressionEdit(editable)}
+          disabled={!canRedoCaptureDraft(draft)}
           className="min-h-9 border border-[var(--lv-border)] px-3 text-xs disabled:opacity-40"
-          onClick={() => commit(redoProgressionEdit(editable), [{ type: "redo" }])}
+          onClick={() => applyHistoryDraft(redoCaptureDraft(draft))}
         >
           {text.redo}
         </button>
@@ -374,6 +403,14 @@ export function ManualCandidateEditor({
         {voicing.anyGenerated ? text.voicingGenerated : text.voicingSource}
       </p>
 
+      <CaptureEditHistoryPanel
+        draft={draft}
+        language={language}
+        onJump={(historyIndex) => applyHistoryDraft(
+          jumpCaptureDraftHistory(draft, historyIndex),
+        )}
+      />
+
       <div className="mt-4 flex flex-wrap items-start gap-2">
         <button
           type="button"
@@ -426,4 +463,11 @@ export function ManualCandidateEditor({
       </div>
     </section>
   );
+}
+
+function isNativeEditTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  return target instanceof HTMLInputElement
+    || target instanceof HTMLTextAreaElement
+    || target.isContentEditable;
 }

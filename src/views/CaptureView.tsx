@@ -99,6 +99,14 @@ import {
   fingerprintTimeline,
   type ManualCandidateDraft,
 } from "../domain/midi/manualDraft";
+import {
+  canRedoCaptureDraft,
+  canUndoCaptureDraft,
+  jumpCaptureDraftHistory,
+  redoCaptureDraft,
+  undoCaptureDraft,
+} from "../domain/midi/captureEditHistory";
+import { CaptureEditHistoryPanel } from "../components/CaptureEditHistoryPanel";
 import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
 import { ProgressionEditSummary } from "../components/progression-editing/ProgressionEditSummary";
 import { usePlaybackState } from "../hooks/usePlaybackState";
@@ -1439,6 +1447,16 @@ export function ProgressionCandidateCard({
   const playback = usePlaybackState(controller);
   const candidatePlaying = playback.status !== "idle"
     && samePlaybackSource(playback.source, source);
+  const captureDraft = draft?.source.type === "automatic-candidate"
+    && draft.source.candidateId === candidate.id
+    ? draft
+    : undefined;
+  const canUndoCurrent = captureDraft === undefined
+    ? canUndoProgressionEdit(editable)
+    : canUndoCaptureDraft(captureDraft);
+  const canRedoCurrent = captureDraft === undefined
+    ? canRedoProgressionEdit(editable)
+    : canRedoCaptureDraft(captureDraft);
 
   useEffect(() => {
     setEditable(
@@ -1516,9 +1534,8 @@ export function ProgressionCandidateCard({
       if (event.ctrlKey && event.key.toLowerCase() === "z") {
         event.preventDefault();
         stopCandidatePreview();
-        setEditable((current) => event.shiftKey
-          ? redoProgressionEdit(current)
-          : undoProgressionEdit(current));
+        if (event.shiftKey) redoCurrentEdit();
+        else undoCurrentEdit();
         return;
       }
       if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
@@ -1564,6 +1581,35 @@ export function ProgressionCandidateCard({
     ) {
       controller.stop();
     }
+  }
+
+  function applyCaptureHistory(next: ManualCandidateDraft) {
+    setEditable(draftEditable(next));
+    onDraftChange?.(next);
+  }
+
+  function undoCurrentEdit() {
+    if (captureDraft === undefined) {
+      setEditable((current) => undoProgressionEdit(current));
+      return;
+    }
+    const next = undoCaptureDraft(captureDraft);
+    setEditable((current) => canUndoProgressionEdit(current)
+      ? undoProgressionEdit(current)
+      : draftEditable(next));
+    onDraftChange?.(next);
+  }
+
+  function redoCurrentEdit() {
+    if (captureDraft === undefined) {
+      setEditable((current) => redoProgressionEdit(current));
+      return;
+    }
+    const next = redoCaptureDraft(captureDraft);
+    setEditable((current) => canRedoProgressionEdit(current)
+      ? redoProgressionEdit(current)
+      : draftEditable(next));
+    onDraftChange?.(next);
   }
 
   async function selectChord(index: number) {
@@ -1736,11 +1782,11 @@ export function ProgressionCandidateCard({
         <div>
           {isExpanded ? (
             <ProgressionEditorToolbar
-              canUndo={canUndoProgressionEdit(editable)}
-              canRedo={canRedoProgressionEdit(editable)}
+              canUndo={canUndoCurrent}
+              canRedo={canRedoCurrent}
               dirty={hasProgressionEdits(editable)}
-              onUndo={() => { stopCandidatePreview(); setPropagationProposal(undefined); setEditable((current) => undoProgressionEdit(current)); }}
-              onRedo={() => { stopCandidatePreview(); setPropagationProposal(undefined); setEditable((current) => redoProgressionEdit(current)); }}
+              onUndo={() => { stopCandidatePreview(); setPropagationProposal(undefined); undoCurrentEdit(); }}
+              onRedo={() => { stopCandidatePreview(); setPropagationProposal(undefined); redoCurrentEdit(); }}
               onResetAll={() => { stopCandidatePreview(); setPropagationProposal(undefined); setEditable((current) => resetAllEditableChords(current)); }}
               language={language}
             />
@@ -1898,6 +1944,16 @@ export function ProgressionCandidateCard({
               setEditable((current) => selectEditableSlot(current, slotId));
             }
           }}
+        />
+      ) : null}
+
+      {isExpanded && captureDraft !== undefined ? (
+        <CaptureEditHistoryPanel
+          draft={captureDraft}
+          language={language}
+          onJump={(historyIndex) => applyCaptureHistory(
+            jumpCaptureDraftHistory(captureDraft, historyIndex),
+          )}
         />
       ) : null}
 
