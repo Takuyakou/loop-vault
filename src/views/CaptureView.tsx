@@ -95,7 +95,11 @@ import {
   draftEditable,
   draftToCandidate,
 } from "../domain/midi/manualDraftEditing";
-import { draftPreviewTimeline } from "../domain/midi/manualDraftPlayback";
+import {
+  draftHasMidiSourcePreview,
+  draftPreviewTimeline,
+  draftSourcePreviewTimeline,
+} from "../domain/midi/manualDraftPlayback";
 import {
   createDraftFromCandidate,
   fingerprintTimeline,
@@ -111,6 +115,7 @@ import {
 import { CaptureEditHistoryPanel } from "../components/CaptureEditHistoryPanel";
 import { DraftBoundaryHandles } from "../components/DraftBoundaryHandles";
 import { DraftRangeOverlay } from "../components/DraftRangeOverlay";
+import { CaptureDraftSessionBar } from "../components/CaptureDraftSessionBar";
 import { cutDraftRangeAtEvent } from "../domain/midi/draftRangeEditing";
 import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
 import { ProgressionEditSummary } from "../components/progression-editing/ProgressionEditSummary";
@@ -185,6 +190,7 @@ export function CaptureView(props: CaptureViewProps) {
   const [pendingCandidateSelection, setPendingCandidateSelection] = useState<{
     candidateId: string | undefined;
     revealTimeline?: boolean;
+    closeDraft?: boolean;
   }>();
   const [isTimelineOpen, setTimelineOpen] = useState(false);
   const [timelineScrollBar, setTimelineScrollBar] = useState<number>();
@@ -194,6 +200,7 @@ export function CaptureView(props: CaptureViewProps) {
   const [rangeSelectorRequest, setRangeSelectorRequest] = useState(0);
   const candidateHeaderFocusIdRef = useRef<string>();
   const result = analysis.result;
+  const capturePlayback = usePlaybackState(controller);
   const authorReferenceIndex = useMemo(() => buildAuthorReferenceIndex(ideas), [ideas]);
 
   useStickyInspectorHeight(inspectorHost, Boolean(expandedCandidateId));
@@ -221,10 +228,18 @@ export function CaptureView(props: CaptureViewProps) {
     candidateId: string | undefined,
     options?: { revealTimeline?: boolean },
   ): boolean {
+    const changingDraft = activeDraft?.isDirty
+      && (
+        activeDraft.source.type === "manual-range"
+        || activeDraft.source.candidateId !== candidateId
+      );
     if (
-      expandedCandidateId
-      && expandedCandidateId !== candidateId
-      && dirtyCandidateIds.has(expandedCandidateId)
+      changingDraft
+      || (
+        expandedCandidateId
+        && expandedCandidateId !== candidateId
+        && dirtyCandidateIds.has(expandedCandidateId)
+      )
     ) {
       setPendingCandidateSelection({ candidateId, revealTimeline: options?.revealTimeline });
       return false;
@@ -730,8 +745,93 @@ export function CaptureView(props: CaptureViewProps) {
     applyCandidateSelection(candidate.id);
   }
 
+  async function previewSourceDraft(draft: ManualCandidateDraft) {
+    if (!draftHasMidiSourcePreview(draft)) return;
+    try {
+      await controller.toggle(
+        { kind: "capture", id: `capture-draft-source:${draft.draftId}` },
+        {
+          type: "timeline",
+          timeline: draftSourcePreviewTimeline(draft),
+          bpm: result?.bpm ?? 96,
+          sound: previewSound,
+          beatsPerBar: beatsPerBarFor(result?.timeSignature),
+        },
+      );
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
+    }
+  }
+
+  function applyPendingDraftSelection() {
+    if (!pendingCandidateSelection) return;
+    const candidateId = pendingCandidateSelection.candidateId;
+    if (pendingCandidateSelection.closeDraft) {
+      stopCapturePlayback(controller);
+      setActiveDraft(null);
+      applyCandidateSelection(undefined);
+      setPendingCandidateSelection(undefined);
+      return;
+    }
+    const candidate = candidateId === undefined
+      ? undefined
+      : displayLanes.flatMap((lane) => lane.visible)
+        .find((entry) => entry.candidate.id === candidateId)?.candidate
+        ?? result?.blockCandidates.find((entry) => entry.id === candidateId);
+    if (candidate) openCandidateDraft(candidate);
+    else applyCandidateSelection(candidateId);
+    if (candidateId && pendingCandidateSelection.revealTimeline) {
+      revealCandidateInTimeline(candidateId);
+    }
+    setPendingCandidateSelection(undefined);
+  }
+
+  function saveActiveDraftForSwitch(): boolean {
+    if (!activeDraft || !result) return false;
+    const candidate = draftToCandidate(activeDraft);
+    return saveNew(
+      candidate,
+      captureSaveTitle(candidate, result.fileName, result.detectedKey, copy, language),
+      copy.capture.defaultNextAction,
+      false,
+      activeDraft.sourceCandidateSnapshot ?? candidate,
+      draftEditable(activeDraft),
+      [],
+      activeDraft.isDirty,
+    );
+  }
+
+  useEffect(() => {
+    if (!activeDraft) return undefined;
+    const keyboardDraft: ManualCandidateDraft = activeDraft;
+    function onKeyDown(event: KeyboardEvent) {
+      if (
+        event.defaultPrevented
+        || event.isComposing
+        || event.ctrlKey
+        || event.metaKey
+        || event.altKey
+        || isEditableKeyboardTarget(event.target)
+      ) return;
+      const key = event.key.toLowerCase();
+      if (key === "escape") {
+        if (controller.getState().source?.kind !== "capture") return;
+        event.preventDefault();
+        stopCapturePlayback(controller);
+      } else if (key === "a" && draftHasMidiSourcePreview(keyboardDraft)) {
+        event.preventDefault();
+        void previewSourceDraft(keyboardDraft);
+      } else if (key === "b") {
+        event.preventDefault();
+        void previewManualDraft(keyboardDraft);
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [activeDraft, controller, previewSound, result?.bpm, result?.timeSignature]);
+
   return (
-    <>
+    <div data-capture-view-root>
       <div className="lv-capture-content grid gap-5 py-5" {...dropHandlers}>
       {isDraggingMidi ? <DropOverlay copy={copy} /> : null}
       <section className="border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-5">
@@ -882,6 +982,10 @@ export function CaptureView(props: CaptureViewProps) {
                   onInspectorExpandedChange={setInspectorExpanded}
                   onDirtyChange={markCandidateDirty}
                   onDraftChange={setActiveDraft}
+                  onDraftSaved={() => {
+                    setActiveDraft(null);
+                    markCandidateDirty(candidate.id, false);
+                  }}
                   onCreate={(editedCandidate, title, nextAction, userVerified, editable, propagationEvents) => {
                     const currentDraft = activeDraft?.source.type === "automatic-candidate"
                       && activeDraft.source.candidateId === candidate.id
@@ -995,7 +1099,10 @@ export function CaptureView(props: CaptureViewProps) {
           }}
           onPreview={(draft) => void previewManualDraft(draft)}
           onChange={setActiveDraft}
-          onSave={(draft) => setActiveDraft({ ...draft, isDirty: false })}
+          onSave={() => {
+            setActiveDraft(null);
+            applyCandidateSelection(undefined);
+          }}
           onDiscard={() => {
             setActiveDraft(null);
             applyCandidateSelection(undefined);
@@ -1036,6 +1143,36 @@ export function CaptureView(props: CaptureViewProps) {
         }}
         onPreviewManualDraft={(draft) => void previewManualDraft(draft)}
       />
+
+      {activeDraft ? (
+        <CaptureDraftSessionBar
+          language={language}
+          dirty={activeDraft.isDirty}
+          sourceAvailable={draftHasMidiSourcePreview(activeDraft)}
+          playing={capturePlayback.status === "idle"
+            ? null
+            : capturePlayback.source?.id === `capture-draft-source:${activeDraft.draftId}`
+              ? "source"
+              : capturePlayback.source?.id === `capture-manual-draft:${activeDraft.draftId}`
+                ? "edited"
+                : null}
+          onPreviewSource={() => void previewSourceDraft(activeDraft)}
+          onPreviewEdited={() => void previewManualDraft(activeDraft)}
+          onStop={() => stopCapturePlayback(controller)}
+          onRequestDiscard={() => {
+            if (activeDraft.isDirty) {
+              setPendingCandidateSelection({
+                candidateId: undefined,
+                closeDraft: true,
+              });
+            } else {
+              stopCapturePlayback(controller);
+              setActiveDraft(null);
+              applyCandidateSelection(undefined);
+            }
+          }}
+        />
+      ) : null}
       </div>
       <ConfirmDialog
         open={Boolean(pendingCandidateSelection)}
@@ -1043,28 +1180,15 @@ export function CaptureView(props: CaptureViewProps) {
         description={copy.capture.unsavedCandidateConfirm}
         confirmLabel={copy.common.close}
         cancelLabel={copy.common.cancel}
+        secondaryLabel={language === "ja" ? "Vaultへ保存して続ける" : "Save to Vault and continue"}
         onCancel={() => setPendingCandidateSelection(undefined)}
-        onConfirm={() => {
-          if (!pendingCandidateSelection) return;
-          const candidateId = pendingCandidateSelection.candidateId;
-          const candidate = candidateId === undefined
-            ? undefined
-            : displayLanes.flatMap((lane) => lane.visible)
-              .find((entry) => entry.candidate.id === candidateId)?.candidate
-              ?? result.blockCandidates.find((entry) => entry.id === candidateId);
-          if (candidate) {
-            openCandidateDraft(candidate);
-          } else {
-            applyCandidateSelection(candidateId);
-          }
-          if (candidateId && pendingCandidateSelection.revealTimeline) {
-            revealCandidateInTimeline(candidateId);
-          }
-          setPendingCandidateSelection(undefined);
+        onSecondary={() => {
+          if (saveActiveDraftForSwitch()) applyPendingDraftSelection();
         }}
+        onConfirm={applyPendingDraftSelection}
         tone="danger"
       />
-    </>
+    </div>
   );
 }
 
@@ -1385,6 +1509,7 @@ export function ProgressionCandidateCard({
   onDirtyChange,
   draft,
   onDraftChange,
+  onDraftSaved,
   onCreate,
   onAppend,
   onCopyMemo,
@@ -1449,6 +1574,7 @@ export function ProgressionCandidateCard({
   onDirtyChange?: (candidateId: string, dirty: boolean) => void;
   draft?: ManualCandidateDraft;
   onDraftChange?: (draft: ManualCandidateDraft) => void;
+  onDraftSaved?: () => void;
   showRomanNumerals?: boolean;
 }) {
   const editorCopy = progressionEditorCopy[language];
@@ -1839,7 +1965,9 @@ export function ProgressionCandidateCard({
               setSavedSignature(currentSignature);
               setPropagationProposal(undefined);
               setPropagationFeedback([]);
-              if (draft !== undefined && onDraftChange !== undefined) {
+              if (captureDraft !== undefined && onDraftSaved !== undefined) {
+                onDraftSaved();
+              } else if (draft !== undefined && onDraftChange !== undefined) {
                 onDraftChange({ ...draft, isDirty: false });
               }
             }}

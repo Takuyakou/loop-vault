@@ -125,6 +125,7 @@ export function applyEditableToDraft(
         beat: slot.position.beat,
         durationBeats: slot.position.durationBeats,
         chord: slot.currentChord,
+        voicingMemory: slot.voicingMemory,
       },
     };
   });
