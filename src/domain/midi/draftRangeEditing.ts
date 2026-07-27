@@ -189,6 +189,48 @@ export function resizeDraftBoundary(
   );
 }
 
+export function cutDraftRangeAtEvent(
+  draft: ManualCandidateDraft,
+  eventId: string,
+): ManualCandidateDraft {
+  const index = draft.events.findIndex(
+    (event, eventIndex) => (event.sourceEventId ?? `${eventIndex}`) === eventId,
+  );
+  const event = draft.events[index];
+  if (!event || index === draft.events.length - 1) return draft;
+  const cutoff = event.relativeStartBeat + event.durationBeats;
+  const currentBeats = draft.lengthBars * draft.beatsPerBar;
+  if (cutoff >= currentBeats) return draft;
+
+  const rangeStart = draftRangeAbsoluteBeats(draft).startBeat;
+  const selectedRange = rangeFromAbsoluteBeats(
+    rangeStart,
+    rangeStart + cutoff,
+    draft.beatsPerBar,
+  );
+  const operation: ManualRepairOperation = {
+    type: "trim-end",
+    beats: currentBeats - cutoff,
+  };
+  const keptIds = new Set(
+    draft.events
+      .slice(0, index + 1)
+      .map((item, itemIndex) => item.sourceEventId ?? `${itemIndex}`),
+  );
+  const next: ManualCandidateDraft = {
+    ...draft,
+    selectedRange,
+    events: draft.events.slice(0, index + 1),
+    originalEvents: draft.originalEvents.filter(
+      (item, itemIndex) => keptIds.has(item.sourceEventId ?? `${itemIndex}`),
+    ),
+    lengthBars: cutoff / draft.beatsPerBar,
+    repairOperations: [...draft.repairOperations, operation],
+    isDirty: true,
+  };
+  return recordCaptureDraftChange(draft, next, operation);
+}
+
 function applyAbsoluteTiming(
   event: ManualCandidateDraft["events"][number],
   absoluteBeat: number,

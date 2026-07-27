@@ -11,4 +11,6 @@ export * from "./quickCandidates";
 export * from "./smoothCandidates";
 export * from "./styleCandidates";
 export * from "./slotQuickCandidates";
+export * from "./contextActions";
+export * from "./voicingIdentity";
 

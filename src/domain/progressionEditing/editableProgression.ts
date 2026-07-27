@@ -14,6 +14,7 @@ import type {
   ReplaceChordOperation,
   VoicingMemoryOperation,
 } from "./types";
+import { compatibleVoicingMemory } from "./voicingIdentity";
 
 export * from "./similarSegments";
 
@@ -173,6 +174,7 @@ export function replaceEditableChords(
     return {
       ...cloneSlot(slot),
       currentChord,
+      voicingMemory: compatibleVoicingMemory(slot.voicingMemory, currentChord),
       edited: !chordSymbolsEqual(slot.originalChord, currentChord),
       editSource,
     };

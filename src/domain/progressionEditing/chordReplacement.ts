@@ -8,6 +8,7 @@ import type {
   ResetProgressionOperation,
 } from "./types";
 import type { QuickCandidateSelectionMetadata } from "./quickCandidates";
+import { compatibleVoicingMemory } from "./voicingIdentity";
 
 type ReplacementSource = Extract<
   ProgressionEditSource,
@@ -34,6 +35,7 @@ export function replaceEditableChord(
     return {
       ...cloneSlot(candidate),
       currentChord,
+      voicingMemory: compatibleVoicingMemory(candidate.voicingMemory, currentChord),
       edited: !chordsEqual(candidate.originalChord, currentChord),
       editSource,
       ...(quickCandidateSelection

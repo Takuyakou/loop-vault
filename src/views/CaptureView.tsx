@@ -24,6 +24,7 @@ import {
   buildAuthorReferenceIndex,
   chordsEqual,
   createEditableProgression,
+  deleteEditableChordWithMode,
   deleteEditableChord,
   findSimilarSegments,
   hasProgressionEdits,
@@ -42,6 +43,7 @@ import {
   SIMILAR_SEGMENT_THRESHOLD,
 } from "../domain/progressionEditing";
 import type {
+  ChordContextAction,
   EditableChordSlot,
   EditableProgression,
   AuthorReferenceIndex,
@@ -109,6 +111,7 @@ import {
 import { CaptureEditHistoryPanel } from "../components/CaptureEditHistoryPanel";
 import { DraftBoundaryHandles } from "../components/DraftBoundaryHandles";
 import { DraftRangeOverlay } from "../components/DraftRangeOverlay";
+import { cutDraftRangeAtEvent } from "../domain/midi/draftRangeEditing";
 import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
 import { ProgressionEditSummary } from "../components/progression-editing/ProgressionEditSummary";
 import { usePlaybackState } from "../hooks/usePlaybackState";
@@ -1678,6 +1681,62 @@ export function ProgressionCandidateCard({
     setEditable(next);
   }
 
+  function runContextAction(slotId: string, action: ChordContextAction): boolean {
+    if (action === "cut-range-here") {
+      if (!captureDraft || !onDraftChange) return false;
+      const nextDraft = cutDraftRangeAtEvent(captureDraft, slotId);
+      if (nextDraft === captureDraft) return false;
+      applyCaptureHistory(nextDraft);
+      return true;
+    }
+
+    let next = editable;
+    let operations: Parameters<typeof applyEditableToDraft>[2] = [];
+    if (action === "delete-extend-previous") {
+      next = deleteEditableChordWithMode(editable, slotId, "extend-previous");
+      operations = [{ type: "delete-chord", eventId: slotId }];
+    } else if (action === "delete-extend-next") {
+      next = deleteEditableChordWithMode(editable, slotId, "extend-next");
+      operations = [{ type: "delete-chord", eventId: slotId }];
+    } else if (action === "delete-close-gap") {
+      next = deleteEditableChordWithMode(editable, slotId, "close-gap");
+      operations = [{ type: "delete-chord", eventId: slotId }];
+    } else if (action === "replace-no-chord") {
+      const before = editable.slots.find((slot) => slot.id === slotId);
+      next = deleteEditableChordWithMode(editable, slotId, "replace-no-chord");
+      operations = [{
+        type: "replace-chord",
+        eventId: slotId,
+        from: before?.currentChord.label ?? "",
+        to: "N.C.",
+      }];
+    } else if (action === "split") {
+      next = splitEditableChord(editable, slotId);
+      operations = [{ type: "split-event", eventId: slotId }];
+    } else {
+      const index = editable.slots.findIndex((slot) => slot.id === slotId);
+      const left = editable.slots[index + 1] ? editable.slots[index] : editable.slots[index - 1];
+      const right = editable.slots[index + 1] ?? editable.slots[index];
+      if (left && right) {
+        next = mergeEditableChords(
+          editable,
+          left.id,
+          right.id,
+          action === "merge-keep-left" ? "first" : "second",
+        );
+        operations = [{ type: "merge-events", eventIds: [left.id, right.id] }];
+      }
+    }
+    if (next === editable) return false;
+    stopCandidatePreview();
+    setPropagationProposal(undefined);
+    setEditable(next);
+    if (captureDraft && onDraftChange) {
+      onDraftChange(applyEditableToDraft(captureDraft, next, operations));
+    }
+    return true;
+  }
+
   const playbackPosition = candidatePlaying && playback.status === "playing"
     ? timelinePlaybackPosition(chords, bpm, playback.startedAt, undefined, beatsPerBar)
     : undefined;
@@ -1824,6 +1883,15 @@ export function ProgressionCandidateCard({
             keySignature={detectedKey}
             authorReferenceIndex={authorReferenceIndex}
             language={language}
+            contextActions={{
+              canCutRange: (slotId) => {
+                const index = editable.slots.findIndex((slot) => slot.id === slotId);
+                return captureDraft !== undefined
+                  && index >= 0
+                  && index < editable.slots.length - 1;
+              },
+              onAction: runContextAction,
+            }}
             quickEditor={{
               onOpen: (slotId, _index) => {
                 setEditable((current) => selectEditableSlot(current, slotId));
