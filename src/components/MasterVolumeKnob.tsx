@@ -9,7 +9,7 @@ export function MasterVolumeKnob({ value, onChange, label }: {
 
   return (
     <label
-      className="group relative h-9 w-9 shrink-0 cursor-pointer rounded-[3px] border border-[var(--lv-border-strong)] bg-[#11161c] shadow-inner transition-colors hover:border-[var(--lv-text-secondary)] focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[var(--lv-accent)]"
+      className="group relative h-9 w-9 shrink-0 cursor-pointer bg-transparent focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[var(--lv-accent)]"
       title={valueLabel}
     >
       <span
