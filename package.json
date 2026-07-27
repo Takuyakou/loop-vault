@@ -23,6 +23,7 @@
     "eval:midi:label-reachability": "vite-node scripts/evaluate-label-reachability.ts",
     "eval:p43:labels": "vite-node scripts/audit-phase43-labels.ts",
     "eval:p43:corpus": "vite-node scripts/verify-phase43-voicing-corpus.ts",
+    "eval:p43:voicing": "vite-node scripts/evaluate-phase43-voicing.ts",
     "eval:stored-progressions": "vite-node scripts/evaluate-stored-progressions.ts",
     "eval:review-differences": "vite-node scripts/review-midi-differences.ts",
     "eval:promote-corrections": "vite-node scripts/promote-midi-corrections.ts",
