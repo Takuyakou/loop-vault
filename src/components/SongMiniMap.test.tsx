@@ -200,7 +200,7 @@ describe("SongMiniMap", () => {
     await act(async () => candidateButton.dispatchEvent(
       new MouseEvent("dblclick", { bubbles: true, detail: 2 }),
     ));
-    expect(onCandidateDoubleClick).toHaveBeenCalledWith("overlap", 1);
+    expect(onCandidateDoubleClick).toHaveBeenCalledWith("overlap");
     expect(candidateButton.title).toContain("Double-click");
 
     await act(async () => root.unmount());

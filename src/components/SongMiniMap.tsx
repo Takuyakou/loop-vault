@@ -21,7 +21,7 @@ export interface SongMiniMapProps {
   language: AppLanguage;
   copy: SongMiniMapCopy;
   onCandidateSelect: (candidateId: string) => void;
-  onCandidateDoubleClick?: (candidateId: string, startBar: number) => void;
+  onCandidateDoubleClick?: (candidateId: string) => void;
   onDraftChange: (draft: ManualCandidateDraft) => void;
   onManualRangeCreate: (range: TimelineRange) => void;
   onPreviewSelection?: () => void;
@@ -161,8 +161,8 @@ export function SongMiniMap({
                   aria-label={label}
                   aria-pressed={isActive}
                   title={language === "ja"
-                    ? `${label}・ダブルクリックで全曲の該当位置へ移動`
-                    : `${label}. Double-click to reveal this position in the full timeline`}
+                    ? `${label}・ダブルクリックで候補カードへ移動`
+                    : `${label}. Double-click to reveal the candidate card`}
                   className={`absolute z-40 grid h-7 min-w-7 place-items-center overflow-hidden border px-1 text-xs font-semibold transition focus-visible:z-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] ${
                     isActive
                       ? "border-teal-100 bg-teal-200 text-stone-950 shadow-[0_0_0_2px_rgba(94,234,212,0.3)]"
@@ -177,7 +177,7 @@ export function SongMiniMap({
                   onClick={() => onCandidateSelect(candidate.id)}
                   onDoubleClick={(event) => {
                     event.stopPropagation();
-                    onCandidateDoubleClick?.(candidate.id, candidate.startBar);
+                    onCandidateDoubleClick?.(candidate.id);
                   }}
                 >
                   {candidateIndex + 1}

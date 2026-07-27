@@ -1474,7 +1474,7 @@ describe("CaptureView song mini map", () => {
     return { container, root };
   }
 
-  it("selects a Draft on click and reveals its full-timeline position on double-click", async () => {
+  it("selects a Draft on click and reveals its candidate card on double-click", async () => {
     const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
     const scrollIntoView = vi.fn();
     Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
@@ -1513,15 +1513,12 @@ describe("CaptureView song mini map", () => {
         new MouseEvent("dblclick", { bubbles: true, detail: 2 }),
       ));
       expect([...container.querySelectorAll<HTMLDetailsElement>("details")]
-        .some((details) => details.open)).toBe(true);
+        .some((details) => details.open)).toBe(false);
       expect(scrollIntoView).toHaveBeenCalledWith({
         behavior: "smooth",
-        block: "center",
+        block: "start",
       });
-      const selectedTimelineChord = container.querySelector(
-        '[data-progression-bar="5"] button[aria-pressed="true"]',
-      );
-      expect(selectedTimelineChord).not.toBeNull();
+      expect(document.activeElement).toBe(headers[1]);
     } finally {
       await act(async () => root.unmount());
       container.remove();
