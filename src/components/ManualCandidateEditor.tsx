@@ -35,6 +35,7 @@ import {
 import { SaveProgressionPopover } from "./SaveProgressionPopover";
 import type { SongIdea } from "../domain/types";
 import { CaptureEditHistoryPanel } from "./CaptureEditHistoryPanel";
+import { DraftBoundaryHandles } from "./DraftBoundaryHandles";
 
 /**
  * Editing a manual draft.
@@ -379,6 +380,12 @@ export function ManualCandidateEditor({
           }}
         />
       </div>
+
+      <DraftBoundaryHandles
+        draft={draft}
+        language={language}
+        onChange={applyHistoryDraft}
+      />
 
       {validation.errors.length > 0 ? (
         <ul className="mt-3 text-xs text-red-300" aria-label={text.errors}>
