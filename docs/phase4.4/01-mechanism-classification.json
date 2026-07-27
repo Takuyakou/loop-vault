@@ -1,0 +1,191 @@
+{
+  "schemaVersion": 1,
+  "analyzerMode": "phase4-v1",
+  "dedicatedHoldoutStatus": "not-evaluated",
+  "precedence": [
+    "M1-same-track-role-mixing",
+    "M2-track-role-misclassification",
+    "M3-downstream-retention"
+  ],
+  "splits": {
+    "dev": {
+      "baselineA": {
+        "events": 160,
+        "voicingExactRate": 0.88125,
+        "notePrecision": 0.976801,
+        "noteRecall": 1,
+        "noteF1": 0.988264,
+        "extraNoteCount": 19,
+        "missingNoteCount": 0,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.88125,
+        "registerExactRate": 0.88125,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.029687,
+        "melodyContaminationEventCount": 19,
+        "sourceVoicingUsableRate": 1,
+        "generatedFallbackRate": 0,
+        "sourceNoteAdditionCount": 0
+      },
+      "baselineB": {
+        "events": 160,
+        "voicingExactRate": 0.875,
+        "notePrecision": 0.97561,
+        "noteRecall": 1,
+        "noteF1": 0.987654,
+        "extraNoteCount": 20,
+        "missingNoteCount": 0,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.88125,
+        "registerExactRate": 0.88125,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.03125,
+        "melodyContaminationEventCount": 20,
+        "sourceVoicingUsableRate": 0.85,
+        "generatedFallbackRate": 0.15,
+        "sourceNoteAdditionCount": 0
+      },
+      "mechanisms": {
+        "M1-same-track-role-mixing": {
+          "eventCount": 1,
+          "noteCount": 1,
+          "clean": 0,
+          "stress": 1,
+          "sameTrack": 1,
+          "separateTrack": 0,
+          "meanPrecision": 0.833333,
+          "precisionLoss": 0.166667,
+          "usableRate": 0,
+          "usableLoss": 1,
+          "scenarios": {
+            "M09": 1
+          }
+        },
+        "M2-track-role-misclassification": {
+          "eventCount": 2,
+          "noteCount": 2,
+          "clean": 0,
+          "stress": 2,
+          "sameTrack": 0,
+          "separateTrack": 2,
+          "meanPrecision": 0.833333,
+          "precisionLoss": 0.166667,
+          "usableRate": 1,
+          "usableLoss": 0,
+          "scenarios": {
+            "M06": 1,
+            "M10": 1
+          }
+        },
+        "M3-downstream-retention": {
+          "eventCount": 17,
+          "noteCount": 17,
+          "clean": 9,
+          "stress": 8,
+          "sameTrack": 0,
+          "separateTrack": 17,
+          "meanPrecision": 0.833333,
+          "precisionLoss": 0.166667,
+          "usableRate": 0.941176,
+          "usableLoss": 0.058824,
+          "scenarios": {
+            "M06": 1,
+            "M07": 16
+          }
+        }
+      }
+    },
+    "validation": {
+      "baselineA": {
+        "events": 48,
+        "voicingExactRate": 0.625,
+        "notePrecision": 0.977901,
+        "noteRecall": 0.790179,
+        "noteF1": 0.874074,
+        "extraNoteCount": 4,
+        "missingNoteCount": 47,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.916667,
+        "registerExactRate": 0.916667,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.016949,
+        "melodyContaminationEventCount": 4,
+        "sourceVoicingUsableRate": 0.479167,
+        "generatedFallbackRate": 0.520833,
+        "sourceNoteAdditionCount": 0
+      },
+      "baselineB": {
+        "events": 48,
+        "voicingExactRate": 0.625,
+        "notePrecision": 0.967391,
+        "noteRecall": 0.794643,
+        "noteF1": 0.872549,
+        "extraNoteCount": 6,
+        "missingNoteCount": 46,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.875,
+        "registerExactRate": 0.875,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.025424,
+        "melodyContaminationEventCount": 6,
+        "sourceVoicingUsableRate": 0.25,
+        "generatedFallbackRate": 0.75,
+        "sourceNoteAdditionCount": 0
+      },
+      "mechanisms": {
+        "M1-same-track-role-mixing": {
+          "eventCount": 0,
+          "noteCount": 0,
+          "clean": 0,
+          "stress": 0,
+          "sameTrack": 0,
+          "separateTrack": 0,
+          "meanPrecision": null,
+          "precisionLoss": null,
+          "usableRate": null,
+          "usableLoss": null,
+          "scenarios": {}
+        },
+        "M2-track-role-misclassification": {
+          "eventCount": 2,
+          "noteCount": 2,
+          "clean": 0,
+          "stress": 2,
+          "sameTrack": 0,
+          "separateTrack": 2,
+          "meanPrecision": 0.666667,
+          "precisionLoss": 0.333333,
+          "usableRate": 0,
+          "usableLoss": 1,
+          "scenarios": {
+            "M12": 2
+          }
+        },
+        "M3-downstream-retention": {
+          "eventCount": 4,
+          "noteCount": 4,
+          "clean": 3,
+          "stress": 1,
+          "sameTrack": 0,
+          "separateTrack": 4,
+          "meanPrecision": 0.733333,
+          "precisionLoss": 0.266667,
+          "usableRate": 0,
+          "usableLoss": 1,
+          "scenarios": {
+            "M12": 2,
+            "M13": 2
+          }
+        }
+      }
+    }
+  },
+  "validationReproduction": {
+    "reproduced": true,
+    "eventCount": 6,
+    "mechanisms": [
+      "M3-downstream-retention",
+      "M2-track-role-misclassification"
+    ]
+  }
+}

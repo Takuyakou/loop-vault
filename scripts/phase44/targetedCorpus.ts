@@ -112,6 +112,7 @@ export interface Phase44EventEvaluation {
   octaveError: boolean;
   melodyOpportunityCount: number;
   melodyLeakCount: number;
+  melodyLeakedNotes: number[];
   contaminationEvent: boolean;
   sourceNoteAdditionCount: number;
 }
@@ -294,6 +295,7 @@ export async function evaluatePhase44Split(
           octaveError: register.octaveError,
           melodyOpportunityCount: new Set(event.excludedDistractorMidi).size,
           melodyLeakCount: leaked.length,
+          melodyLeakedNotes: leaked,
           contaminationEvent: leaked.length > 0,
           sourceNoteAdditionCount: predicted.filter((pitch) => !observed.includes(pitch)).length,
         });
