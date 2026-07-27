@@ -9,3 +9,4 @@ export * from "./extractAggregatedNoteSet";
 export * from "./extractVoicing";
 export * from "./evaluation";
 export * from "./sourceVoicing";
+export * from "./melodyContaminationFilter";

@@ -17,12 +17,14 @@ import type {
 import { annotateVoiceRoles } from "../../src/domain/midi/voiceRoles";
 import {
   extractVoicing,
+  filterEventLocalMelodyContamination,
   voicingNoteSetMetrics,
   voicingRegisterMetrics,
+  type MelodyContaminationFilterOptions,
 } from "../../src/domain/voicing";
 
 export type Phase44Split = "dev" | "validation" | "holdout";
-export type Phase44Condition = "A" | "A+" | "B";
+export type Phase44Condition = "A" | "A+" | "B" | "S";
 
 export interface Phase44Track {
   trackId: string;
@@ -115,6 +117,8 @@ export interface Phase44EventEvaluation {
   melodyLeakedNotes: number[];
   contaminationEvent: boolean;
   sourceNoteAdditionCount: number;
+  filteredNoteCount: number;
+  filterReasons: string[];
 }
 
 export interface Phase44Aggregate {
@@ -229,6 +233,7 @@ export async function evaluatePhase44Split(
   manifest: Phase44Manifest,
   split: Phase44Split,
   conditions: readonly Phase44Condition[],
+  options: { shadowFilterOptions?: MelodyContaminationFilterOptions } = {},
 ): Promise<Phase44EventEvaluation[]> {
   const rows: Phase44EventEvaluation[] = [];
   for (const file of manifest.files.filter((candidate) => candidate.split === split)) {
@@ -248,8 +253,18 @@ export async function evaluatePhase44Split(
       const chord = parseChordLabel(event.chordSymbol);
       if (!chord) throw new Error(`Unparseable Gold chord: ${file.fileId}/${event.eventId}`);
       for (const condition of conditions) {
-        const notes = condition === "A+" ? perNoteGoldNotes : data.notes;
-        const voices = condition === "B" ? productVoices : goldVoices;
+        const shadow = condition === "S"
+          ? filterEventLocalMelodyContamination({
+              notes: data.notes,
+              voices: productVoices,
+              ticksPerBeat: data.ticksPerBeat,
+              segment: { startBeat: event.startBeat, endBeat: event.endBeat },
+            }, options.shadowFilterOptions)
+          : undefined;
+        const notes = condition === "A+"
+          ? perNoteGoldNotes
+          : shadow?.notes ?? data.notes;
+        const voices = condition === "B" || condition === "S" ? productVoices : goldVoices;
         const extraction = extractVoicing({
           chord,
           segment: { startBeat: event.startBeat, endBeat: event.endBeat },
@@ -298,6 +313,8 @@ export async function evaluatePhase44Split(
           melodyLeakedNotes: leaked,
           contaminationEvent: leaked.length > 0,
           sourceNoteAdditionCount: predicted.filter((pitch) => !observed.includes(pitch)).length,
+          filteredNoteCount: shadow?.removed.length ?? 0,
+          filterReasons: [...new Set(shadow?.removed.flatMap((entry) => entry.reasons) ?? [])],
         });
       }
     }
