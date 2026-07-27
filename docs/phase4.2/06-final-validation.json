@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "stage": "P4.2-06",
+  "date": "2026-07-26",
+  "branch": "feature/p42-06-final-validation",
+  "base": "feature/p42-05-keyboard-preview-session",
+  "finalPullRequest": "https://github.com/Takuyakou/loop-vault/pull/219",
+  "hardGates": {
+    "unifiedDraftSourceOfTruth": 1,
+    "automaticCandidateToDraft": "PASS",
+    "manualRangeToDraft": "PASS",
+    "unifiedSavePath": "PASS",
+    "rangeUndoRedo": "PASS",
+    "chordUndoRedo": "PASS",
+    "historyMixedSequence": "PASS",
+    "boundaryDrag": "PASS",
+    "rangeHandle": "PASS",
+    "previewSaveConsistency": "PASS",
+    "voicingConsistency": "PASS",
+    "catalogNonDestructive": "PASS",
+    "recommendationNonRegression": "PASS",
+    "timelineNonRegression": "100/100",
+    "manualRescueRegression": "PASS",
+    "schemaCompatibility": "PASS",
+    "fileVersion": 1,
+    "keyboardWorkflow": "PASS",
+    "mouseWorkflow": "PASS",
+    "accessibility": "PASS",
+    "deterministic": "PASS",
+    "privateMidiTracked": 0,
+    "tauriBuild": "PASS",
+    "rollbackAvailable": "PASS"
+  },
+  "validation": {
+    "frontendTestFiles": 192,
+    "frontendTests": 1633,
+    "rustTests": 24,
+    "chordDripTimelineIdentical": 100,
+    "chordDripTimelineChecked": 100,
+    "chapter3Cases": 100,
+    "chapter3AnnotatedEvents": 399,
+    "chapter3LegacyCanonicalExact": 0.964646,
+    "chapter3Phase4CanonicalExact": 0.977273,
+    "chapter3CanonicalExactDeltaPp": 1.26,
+    "endless": {
+      "bars": 154,
+      "catalogPatterns": 1777,
+      "progressionPatterns": 1167,
+      "vampPatterns": 2,
+      "recommendations": 10,
+      "visiblePatternDuplicates": 0
+    },
+    "suran": {
+      "bars": 100,
+      "catalogPatterns": 1352,
+      "progressionPatterns": 1108,
+      "recommendations": 10,
+      "visiblePatternDuplicates": 0
+    },
+    "desktopViewport": {
+      "width": 1280,
+      "horizontalOverflow": false,
+      "consoleErrors": 0
+    },
+    "mobileViewport": {
+      "width": 390,
+      "horizontalOverflow": false,
+      "consoleErrors": 0
+    }
+  },
+  "unchangedContracts": {
+    "defaultAnalyzerMode": "phase4-v1",
+    "fileVersion": 1,
+    "vaultSchemaChanged": false,
+    "candidateCatalogChangedByEditing": false
+  },
+  "artifacts": [
+    "src-tauri/target/release/loop-vault.exe",
+    "src-tauri/target/release/bundle/msi/Loop Vault_0.1.0_x64_en-US.msi",
+    "src-tauri/target/release/bundle/nsis/Loop Vault_0.1.0_x64-setup.exe"
+  ],
+  "knownWarnings": [
+    "Vite reports a JavaScript chunk larger than 500 kB after minification."
+  ]
+}
