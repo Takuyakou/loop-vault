@@ -103,6 +103,8 @@ describe("AppShell", () => {
     expect(input?.value).toBe("72");
     expect(input?.getAttribute("aria-valuetext")).toBe("72%");
     expect(input?.closest("label")?.nextElementSibling).toBe(createButton);
+    expect(input?.closest("label")?.className).not.toContain("border");
+    expect(input?.closest("label")?.className).toContain("bg-transparent");
     expect(
       input?.closest("label")?.querySelector('[data-volume-tooltip="true"]')?.textContent,
     ).toBe("Master volume: 72%");
