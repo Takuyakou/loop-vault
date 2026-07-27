@@ -174,7 +174,8 @@ Chord label列とTimelineは、フィルタを製品Analyzerへ接続してい�
 - [#240 P4.4-05](https://github.com/Takuyakou/loop-vault/pull/240)
 - [#241 P4.4-06](https://github.com/Takuyakou/loop-vault/pull/241)
 - P4.4-07はValidation Gate未達によりPR・評価とも未実施
-- P4.4-08は本報告の非昇格クローズアウトPR
+- [#242 P4.4-08](https://github.com/Takuyakou/loop-vault/pull/242)
+- [#243 P4.4-UI](https://github.com/Takuyakou/loop-vault/pull/243)
 
 Commit:
 
@@ -185,6 +186,8 @@ Commit:
 - `03e698b` P4.4-04
 - `eb4a4f1` P4.4-05
 - `add6424` P4.4-06
+- `199f822` P4.4-08
+- `ec36b9a` P4.4-UI
 
 ## Voicing Source Chip
 
@@ -238,3 +241,5 @@ Rollback:
 Validationの6汚染イベントでは、固定フィルタがnoteを除外しても抽出結果の汚染noteが変わらなかった。次期検討ではHoldoutを開かず、新しいDevデータまたは失敗機序の追加診断から、抽出器が区間内noteを選ぶ過程とfilter後のstatus判定を分けて調べる必要がある。
 
 既存のValidation結果を見て今回の閾値を変更することはしない。
+
+最終PR: [#243 P4.4-UI](https://github.com/Takuyakou/loop-vault/pull/243)
