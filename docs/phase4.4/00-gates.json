@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.4",
+  "analyzerMode": "phase4-v1",
+  "fileVersion": 1,
+  "oracleAPlusThreshold": {
+    "exactGainMinimum": 0.05,
+    "usableGainMinimum": 0.05,
+    "decision": "Either threshold selects event-local-note-filtering"
+  },
+  "dev": {
+    "melodyContaminationEventReductionMinimum": 0.5,
+    "melodyLeakRateImprovementMinimum": 0.5,
+    "exactGainMinimumOrUsableGainMinimum": 0.03,
+    "noteRecallMaximumRegression": 0.005,
+    "bassAccuracyMaximumRegression": 0,
+    "topNoteAccuracyMaximumRegression": 0.005,
+    "registerExactMaximumRegression": 0.005,
+    "plainBlockExactMaximumRegression": 0,
+    "generalCorpusF1MaximumRegression": 0.0025,
+    "sourceNoteAdditionsMaximum": 0,
+    "chordLabelsMustMatch": true
+  },
+  "validation": {
+    "melodyContaminationEventReductionMinimum": 0.25,
+    "melodyLeakDirectionMustMatchDev": true,
+    "exactAndUsableDirectionMustMatchDev": true,
+    "noNewMajorFailure": true
+  },
+  "holdout": {
+    "runCountMaximum": 1,
+    "melodyContaminationMustImprove": true,
+    "melodyLeakMustImprove": true,
+    "exactOrUsableMustNotRegress": true
+  },
+  "locks": {
+    "singleInterventionVariable": true,
+    "boundary": "unchanged",
+    "aggregate": "unchanged",
+    "fallback": "unchanged",
+    "labels": "unchanged",
+    "timeline": "unchanged",
+    "schema": "unchanged",
+    "privateMidiTrackedMaximum": 0
+  }
+}
