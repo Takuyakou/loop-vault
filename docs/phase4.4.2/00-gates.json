@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.4.2",
+  "registeredBeforeDevEvaluation": true,
+  "hypotheses": {
+    "relativeSupport": [
+      {
+        "id": "A1",
+        "minimumCoverageRatio": 0.25,
+        "minimumSupportPitchCount": 1,
+        "minimumSupportBeats": 0.2
+      },
+      {
+        "id": "A2",
+        "minimumCoverageRatio": 0.5,
+        "minimumSupportPitchCount": 1,
+        "minimumSupportBeats": 0.2
+      },
+      {
+        "id": "A3",
+        "minimumCoverageRatio": 0.75,
+        "minimumSupportPitchCount": 1,
+        "minimumSupportBeats": 0.2
+      }
+    ],
+    "countDuration": [
+      {
+        "id": "B1",
+        "minimumSupportPitchCount": 1,
+        "minimumSupportMass": 0.2
+      },
+      {
+        "id": "B2",
+        "minimumSupportPitchCount": 1,
+        "minimumSupportMass": 0.4
+      },
+      {
+        "id": "B3",
+        "minimumSupportPitchCount": 1,
+        "minimumSupportMass": 0.6
+      }
+    ]
+  },
+  "devSelectionOrder": [
+    "primaryMelodyContaminationReduction",
+    "primaryMelodyLeakReduction",
+    "noteRecall",
+    "bassAccuracy",
+    "voicingExactRate",
+    "generalRegressionF1",
+    "statusOnlyImprovement"
+  ],
+  "devGates": {
+    "primaryContaminationReductionMinimum": 0.5,
+    "primaryMelodyLeakReductionMinimum": 0.5,
+    "noteRecallRegressionMinimum": -0.005,
+    "bassAccuracyRegressionMinimum": 0,
+    "topNoteAccuracyRegressionMinimum": -0.005,
+    "registerExactRegressionMinimum": -0.005,
+    "plainBlockExactRegressionMinimum": 0,
+    "rootlessExactRegressionMinimum": -0.005,
+    "arpeggioF1RegressionMinimum": -0.005,
+    "generalRegressionF1Minimum": -0.0025,
+    "sourceNoteAdditionsMaximum": 0,
+    "chordLabelsExact": true,
+    "timelineExact": true
+  },
+  "validationGates": {
+    "primaryContaminationReductionMinimum": 0.25,
+    "melodyLeakMustImprove": true,
+    "exactOrF1SignMustMatchDev": true,
+    "noNewMajorFailure": true,
+    "regressionCorpusMustPass": true
+  },
+  "holdoutGates": {
+    "primaryContaminationMustImprove": true,
+    "melodyLeakMustImprove": true,
+    "exactAndF1NonRegression": true,
+    "safetyMetricsWithinDevTolerance": true,
+    "sourceNoteAdditionsMaximum": 0,
+    "chordLabelsExact": true,
+    "timelineExact": true
+  },
+  "stopConditions": {
+    "bothHypothesesMissDevGate": "stop-without-promotion",
+    "validationFailure": "stop-without-holdout",
+    "holdoutFailure": "stop-without-promotion",
+    "gateRelaxation": "prohibited"
+  }
+}
