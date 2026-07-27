@@ -1,0 +1,355 @@
+{
+  "schemaVersion": 1,
+  "analyzerMode": "phase4-v1",
+  "productPathChanged": false,
+  "evaluationPolicy": {
+    "split": "validation",
+    "run": "single-frozen-evaluation",
+    "thresholdChangesAfterRun": "prohibited",
+    "dedicatedHoldoutStatus": "blocked-not-evaluated"
+  },
+  "frozenOptions": {
+    "minimumRoleConfidence": 0.65,
+    "minimumConcurrentNonMelodyPitches": 4,
+    "minimumConcurrentSupportBeats": 0.2
+  },
+  "baseline": {
+    "events": 48,
+    "voicingExactRate": 0.625,
+    "notePrecision": 0.967391,
+    "noteRecall": 0.794643,
+    "noteF1": 0.872549,
+    "extraNoteCount": 6,
+    "missingNoteCount": 46,
+    "bassNoteAccuracy": 1,
+    "topNoteAccuracy": 0.875,
+    "registerExactRate": 0.875,
+    "octaveErrorRate": 0,
+    "melodyLeakRate": 0.025424,
+    "melodyContaminationEventCount": 6,
+    "sourceVoicingUsableRate": 0.25,
+    "generatedFallbackRate": 0.75,
+    "sourceNoteAdditionCount": 0
+  },
+  "shadow": {
+    "events": 48,
+    "voicingExactRate": 0.625,
+    "notePrecision": 0.967391,
+    "noteRecall": 0.794643,
+    "noteF1": 0.872549,
+    "extraNoteCount": 6,
+    "missingNoteCount": 46,
+    "bassNoteAccuracy": 1,
+    "topNoteAccuracy": 0.875,
+    "registerExactRate": 0.875,
+    "octaveErrorRate": 0,
+    "melodyLeakRate": 0.025424,
+    "melodyContaminationEventCount": 6,
+    "sourceVoicingUsableRate": 0.395833,
+    "generatedFallbackRate": 0.604167,
+    "sourceNoteAdditionCount": 0
+  },
+  "delta": {
+    "voicingExactRate": 0,
+    "notePrecision": 0,
+    "noteRecall": 0,
+    "noteF1": 0,
+    "melodyLeakRate": 0,
+    "melodyContaminationEventCount": 0,
+    "melodyContaminationReduction": 0,
+    "sourceVoicingUsableRate": 0.145833,
+    "bassNoteAccuracy": 0,
+    "topNoteAccuracy": 0,
+    "registerExactRate": 0
+  },
+  "majorFailures": [],
+  "generalRegression": {
+    "split": "validation",
+    "product": {
+      "overall": {
+        "events": 96,
+        "voicingExactRate": 0.739583,
+        "notePrecision": 0.955117,
+        "noteRecall": 0.985185,
+        "noteF1": 0.969918,
+        "bassNoteAccuracy": 0.916667,
+        "topNoteAccuracy": 0.864583,
+        "registerExactRate": 0.78125,
+        "sourceVoicingUsableRate": 0.708333,
+        "generatedFallbackRate": 0.291667,
+        "sourceNoteAdditionCount": 0
+      },
+      "plainBlock": {
+        "events": 0,
+        "voicingExactRate": null,
+        "notePrecision": 1,
+        "noteRecall": 1,
+        "noteF1": 1,
+        "bassNoteAccuracy": null,
+        "topNoteAccuracy": null,
+        "registerExactRate": null,
+        "sourceVoicingUsableRate": null,
+        "generatedFallbackRate": null,
+        "sourceNoteAdditionCount": 0
+      },
+      "rootless": {
+        "events": 0,
+        "voicingExactRate": null,
+        "notePrecision": 1,
+        "noteRecall": 1,
+        "noteF1": 1,
+        "bassNoteAccuracy": null,
+        "topNoteAccuracy": null,
+        "registerExactRate": null,
+        "sourceVoicingUsableRate": null,
+        "generatedFallbackRate": null,
+        "sourceNoteAdditionCount": 0
+      },
+      "arpeggio": {
+        "events": 0,
+        "voicingExactRate": null,
+        "notePrecision": 1,
+        "noteRecall": 1,
+        "noteF1": 1,
+        "bassNoteAccuracy": null,
+        "topNoteAccuracy": null,
+        "registerExactRate": null,
+        "sourceVoicingUsableRate": null,
+        "generatedFallbackRate": null,
+        "sourceNoteAdditionCount": 0
+      },
+      "byScenario": {
+        "V21": {
+          "slug": "two-chords-per-bar",
+          "metrics": {
+            "events": 32,
+            "voicingExactRate": 0.625,
+            "notePrecision": 0.9375,
+            "noteRecall": 1,
+            "noteF1": 0.967742,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 0.6875,
+            "registerExactRate": 0.6875,
+            "sourceVoicingUsableRate": 0.5,
+            "generatedFallbackRate": 0.5,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V22": {
+          "slug": "walking-bass",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.5,
+            "notePrecision": 0.911111,
+            "noteRecall": 0.911111,
+            "noteF1": 0.911111,
+            "bassNoteAccuracy": 0.5,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 0.5,
+            "sourceVoicingUsableRate": 1,
+            "generatedFallbackRate": 0,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V23": {
+          "slug": "voice-duplicate",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 1,
+            "notePrecision": 1,
+            "noteRecall": 1,
+            "noteF1": 1,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 0.9375,
+            "generatedFallbackRate": 0.0625,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V24": {
+          "slug": "humanized-overlap",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.6875,
+            "notePrecision": 0.947368,
+            "noteRecall": 1,
+            "noteF1": 0.972973,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 0.8125,
+            "registerExactRate": 0.8125,
+            "sourceVoicingUsableRate": 0.5,
+            "generatedFallbackRate": 0.5,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V25": {
+          "slug": "velocity-imbalance",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 1,
+            "notePrecision": 1,
+            "noteRecall": 1,
+            "noteF1": 1,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 0.8125,
+            "generatedFallbackRate": 0.1875,
+            "sourceNoteAdditionCount": 0
+          }
+        }
+      }
+    },
+    "shadow": {
+      "overall": {
+        "events": 96,
+        "voicingExactRate": 0.791667,
+        "notePrecision": 0.963768,
+        "noteRecall": 0.985185,
+        "noteF1": 0.974359,
+        "bassNoteAccuracy": 0.916667,
+        "topNoteAccuracy": 0.895833,
+        "registerExactRate": 0.8125,
+        "sourceVoicingUsableRate": 0.822917,
+        "generatedFallbackRate": 0.177083,
+        "sourceNoteAdditionCount": 0
+      },
+      "plainBlock": {
+        "events": 0,
+        "voicingExactRate": null,
+        "notePrecision": 1,
+        "noteRecall": 1,
+        "noteF1": 1,
+        "bassNoteAccuracy": null,
+        "topNoteAccuracy": null,
+        "registerExactRate": null,
+        "sourceVoicingUsableRate": null,
+        "generatedFallbackRate": null,
+        "sourceNoteAdditionCount": 0
+      },
+      "rootless": {
+        "events": 0,
+        "voicingExactRate": null,
+        "notePrecision": 1,
+        "noteRecall": 1,
+        "noteF1": 1,
+        "bassNoteAccuracy": null,
+        "topNoteAccuracy": null,
+        "registerExactRate": null,
+        "sourceVoicingUsableRate": null,
+        "generatedFallbackRate": null,
+        "sourceNoteAdditionCount": 0
+      },
+      "arpeggio": {
+        "events": 0,
+        "voicingExactRate": null,
+        "notePrecision": 1,
+        "noteRecall": 1,
+        "noteF1": 1,
+        "bassNoteAccuracy": null,
+        "topNoteAccuracy": null,
+        "registerExactRate": null,
+        "sourceVoicingUsableRate": null,
+        "generatedFallbackRate": null,
+        "sourceNoteAdditionCount": 0
+      },
+      "byScenario": {
+        "V21": {
+          "slug": "two-chords-per-bar",
+          "metrics": {
+            "events": 32,
+            "voicingExactRate": 0.625,
+            "notePrecision": 0.9375,
+            "noteRecall": 1,
+            "noteF1": 0.967742,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 0.6875,
+            "registerExactRate": 0.6875,
+            "sourceVoicingUsableRate": 0.5,
+            "generatedFallbackRate": 0.5,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V22": {
+          "slug": "walking-bass",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.5,
+            "notePrecision": 0.911111,
+            "noteRecall": 0.911111,
+            "noteF1": 0.911111,
+            "bassNoteAccuracy": 0.5,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 0.5,
+            "sourceVoicingUsableRate": 1,
+            "generatedFallbackRate": 0,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V23": {
+          "slug": "voice-duplicate",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 1,
+            "notePrecision": 1,
+            "noteRecall": 1,
+            "noteF1": 1,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 0.9375,
+            "generatedFallbackRate": 0.0625,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V24": {
+          "slug": "humanized-overlap",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 1,
+            "notePrecision": 1,
+            "noteRecall": 1,
+            "noteF1": 1,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 1,
+            "generatedFallbackRate": 0,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V25": {
+          "slug": "velocity-imbalance",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 1,
+            "notePrecision": 1,
+            "noteRecall": 1,
+            "noteF1": 1,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 1,
+            "generatedFallbackRate": 0,
+            "sourceNoteAdditionCount": 0
+          }
+        }
+      }
+    }
+  },
+  "gates": {
+    "contaminationReductionAtLeastQuarter": false,
+    "melodyLeakImproves": false,
+    "exactSignMatchesDev": false,
+    "usableSignMatchesDev": true,
+    "recallRegressionWithinHalfPoint": true,
+    "bassNonRegression": true,
+    "topRegressionWithinHalfPoint": true,
+    "registerRegressionWithinHalfPoint": true,
+    "noNewMajorFailure": true,
+    "sourceNoteAdditionsZero": true,
+    "generalF1RegressionWithinQuarterPoint": true
+  },
+  "passed": false
+}
