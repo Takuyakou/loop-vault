@@ -5,7 +5,11 @@ import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { parseChordLabel } from "../domain/chords";
-import { createManualDraft } from "../domain/midi/manualDraft";
+import {
+  createDraftFromCandidate,
+  createManualDraft,
+} from "../domain/midi/manualDraft";
+import { retargetDraftByAbsoluteBeats } from "../domain/midi/draftRangeEditing";
 import type { ChordTimelineItem, ProgressionBlockCandidate } from "../domain/types";
 import { layoutSongMiniMapCandidates, SongMiniMap, type SongMiniMapCopy } from "./SongMiniMap";
 
@@ -185,9 +189,70 @@ describe("SongMiniMap", () => {
     expect(candidateButton.className).toContain("z-40");
     expect(candidateButton.style.top).toBe("2rem");
     expect(selectionBand.className).toContain("pointer-events-none");
+    expect(selectionBand.className).toContain("top-1");
+    expect(selectionBand.className).toContain("h-6");
+    expect(selectionBand.className).not.toContain("inset-y");
     expect(container.querySelector("[data-selection-move-handle]")).not.toBeNull();
     await act(async () => candidateButton.click());
     expect(onCandidateSelect).toHaveBeenCalledWith("overlap");
+
+    await act(async () => root.unmount());
+  });
+
+  it("renders the active candidate bar from the edited Draft range", async () => {
+    const selectionTimeline: ChordTimelineItem[] = Array.from(
+      { length: 8 },
+      (_unused, index) => ({
+        eventId: `range-event-${index + 1}`,
+        bar: index + 1,
+        beat: 1,
+        durationBeats: 4,
+        chord: parseChordLabel(index % 2 === 0 ? "Cmaj7" : "G7")!,
+        confidence: 0.9,
+        alternatives: [],
+        warnings: [],
+      }),
+    );
+    const sourceCandidate = {
+      ...candidate("range-source", 1, 4),
+      chords: selectionTimeline.slice(0, 4),
+    };
+    const sourceDraft = createDraftFromCandidate({
+      candidate: sourceCandidate,
+      timelineFingerprint: "timeline",
+      now: "2026-07-27T00:00:00.000Z",
+    });
+    const editedDraft = retargetDraftByAbsoluteBeats(
+      sourceDraft,
+      selectionTimeline,
+      4,
+      32,
+      8,
+      { keepEdits: true },
+    ).draft;
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <SongMiniMap
+        {...editorProps}
+        totalBars={8}
+        timeline={selectionTimeline}
+        candidates={[sourceCandidate]}
+        draft={editedDraft}
+        activeCandidateId={sourceCandidate.id}
+        copy={englishCopy}
+        onCandidateSelect={vi.fn()}
+      />,
+    ));
+
+    const displayed = container.querySelector<HTMLButtonElement>(
+      '[data-song-minimap-candidate="range-source"]',
+    )!;
+    expect(displayed.style.left).toBe("12.5%");
+    expect(displayed.style.width).toBe("87.5%");
+    expect(displayed.getAttribute("aria-label")).toContain("bars 2-8");
+    expect(sourceCandidate.startBar).toBe(1);
+    expect(sourceCandidate.endBar).toBe(4);
 
     await act(async () => root.unmount());
   });

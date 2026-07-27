@@ -1573,6 +1573,50 @@ describe("CaptureView song mini map", () => {
     }
   });
 
+  it("reflects a resized Draft in the active green bar and candidate card", async () => {
+    const result = analysisWithCandidates();
+    const { container, root } = await renderCapture(result);
+
+    try {
+      const firstRange = container.querySelector<HTMLButtonElement>(
+        '[data-song-minimap-candidate="candidate-1"]',
+      );
+      await act(async () => firstRange?.click());
+
+      expect(firstRange?.style.left).toBe("0%");
+      expect(firstRange?.style.width).toBe("50%");
+      const candidateHeaders = container.querySelectorAll<HTMLButtonElement>(
+        "[data-candidate-toggle]",
+      );
+      const firstCard = candidateHeaders[0]?.parentElement?.parentElement;
+      expect(candidateHeaders[0]?.textContent).toContain("Bars 1-4");
+      expect(firstCard?.querySelectorAll('[role="option"]')).toHaveLength(2);
+
+      const moveHandle = container.querySelector<HTMLButtonElement>(
+        "[data-selection-move-handle]",
+      );
+      await act(async () => {
+        moveHandle?.dispatchEvent(new KeyboardEvent("keydown", {
+          key: "ArrowRight",
+          shiftKey: true,
+          bubbles: true,
+        }));
+      });
+
+      expect(firstRange?.style.left).toBe("0%");
+      expect(firstRange?.style.width).toBe("62.5%");
+      expect(firstRange?.getAttribute("aria-label")).toContain("bars 1-5");
+      expect(candidateHeaders[0]?.textContent).toContain("Bars 1-5");
+      expect(firstCard?.querySelectorAll('[role="option"]')).toHaveLength(3);
+      expect(firstCard?.textContent).toContain("Fmaj7");
+      expect(result.blockCandidates[0]?.endBar).toBe(4);
+      expect(result.blockCandidates[0]?.chords).toHaveLength(2);
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+    }
+  });
+
   it("keeps an empty zero-bar analysis renderable", async () => {
     const { container, root } = await renderCapture({
       totalBars: 0,

@@ -649,7 +649,7 @@ function PrimaryDraftRangeOverlay({
             aria-hidden="true"
             data-selection-band
             data-selection-control
-            className="pointer-events-none absolute inset-y-1 z-30 min-w-6 border-2 border-amber-100 bg-amber-300/20 shadow-[0_0_0_2px_rgba(8,15,22,0.9)]"
+            className="pointer-events-none absolute top-1 z-30 h-6 min-w-6 border-2 border-amber-100 bg-amber-300/20 shadow-[0_0_0_2px_rgba(8,15,22,0.9)]"
             style={{ left: `${left}%`, width: `${width}%` }}
           />
           <button
@@ -691,7 +691,7 @@ function PrimaryDraftRangeOverlay({
             aria-valuemax={maximum}
             aria-valuenow={visibleRange.startBeat}
             title={labels.startHandle}
-            className="absolute inset-y-1 z-50 grid w-4 -translate-x-1/2 cursor-ew-resize place-items-center border border-amber-50 bg-amber-200 text-stone-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-100"
+            className="absolute top-1 z-50 grid h-6 w-4 -translate-x-1/2 cursor-ew-resize place-items-center border border-amber-50 bg-amber-200 text-stone-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-100"
             style={{ left: `${left}%` }}
             onPointerDown={(event) => beginDrag("start", event)}
             onKeyDown={handleSelectionKeyDown}
@@ -708,7 +708,7 @@ function PrimaryDraftRangeOverlay({
             aria-valuemax={maximum}
             aria-valuenow={visibleRange.endBeat}
             title={labels.endHandle}
-            className="absolute inset-y-1 z-50 grid w-4 -translate-x-1/2 cursor-ew-resize place-items-center border border-amber-50 bg-amber-200 text-stone-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-100"
+            className="absolute top-1 z-50 grid h-6 w-4 -translate-x-1/2 cursor-ew-resize place-items-center border border-amber-50 bg-amber-200 text-stone-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-100"
             style={{ left: `${left + width}%` }}
             onPointerDown={(event) => beginDrag("end", event)}
             onKeyDown={handleSelectionKeyDown}

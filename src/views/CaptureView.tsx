@@ -1622,13 +1622,28 @@ export function ProgressionCandidateCard({
   showRomanNumerals?: boolean;
 }) {
   const editorCopy = progressionEditorCopy[language];
+  const captureDraft = draft?.source.type === "automatic-candidate"
+    && draft.source.candidateId === candidate.id
+    ? draft
+    : undefined;
+  const captureDraftCandidate = captureDraft === undefined
+    ? undefined
+    : draftToCandidate(captureDraft);
+  const baseCandidate = captureDraftCandidate ?? candidate;
+  const skipEditableToDraftRef = useRef(false);
+  const candidateRef = useRef(candidate);
+  const captureDraftRef = useRef(captureDraft);
+  candidateRef.current = candidate;
+  captureDraftRef.current = captureDraft;
   const [occurrencesExpanded, setOccurrencesExpanded] = useState(false);
-  const [editable, setEditable] = useState(() => createEditableProgression(candidate, beatsPerBar));
+  const [editable, setEditable] = useState(
+    () => createEditableProgression(baseCandidate, beatsPerBar),
+  );
   const [savedSignature, setSavedSignature] = useState(() => progressionSignature(candidate.chords));
   const [propagationProposal, setPropagationProposal] = useState<PropagationProposal>();
   const [propagationFeedback, setPropagationFeedback] = useState<PendingPropagationFeedback[]>([]);
   const [, forcePlaybackTick] = useState(0);
-  const currentCandidate = applyEditableProgression(candidate, editable);
+  const currentCandidate = applyEditableProgression(baseCandidate, editable);
   const chords = currentCandidate.chords;
   const selectedSlotIndex = selectedEditableSlotIndex(editable);
   const selectedChordIndex = selectedSlotIndex ?? 0;
@@ -1643,10 +1658,6 @@ export function ProgressionCandidateCard({
   const playback = usePlaybackState(controller);
   const candidatePlaying = playback.status !== "idle"
     && samePlaybackSource(playback.source, source);
-  const captureDraft = draft?.source.type === "automatic-candidate"
-    && draft.source.candidateId === candidate.id
-    ? draft
-    : undefined;
   const canUndoCurrent = captureDraft === undefined
     ? canUndoProgressionEdit(editable)
     : canUndoCaptureDraft(captureDraft);
@@ -1655,16 +1666,34 @@ export function ProgressionCandidateCard({
     : canRedoCaptureDraft(captureDraft);
 
   useEffect(() => {
+    const incomingDraft = captureDraftRef.current;
+    const incomingCandidate = candidateRef.current;
+    skipEditableToDraftRef.current = incomingDraft !== undefined;
     setEditable(
-      draft?.source.type === "automatic-candidate"
-        && draft.source.candidateId === candidate.id
-        ? draftEditable(draft)
-        : createEditableProgression(candidate, beatsPerBar),
+      incomingDraft !== undefined
+        ? draftEditable(incomingDraft)
+        : createEditableProgression(incomingCandidate, beatsPerBar),
     );
-    setSavedSignature(progressionSignature(candidate.chords));
+  }, [
+    beatsPerBar,
+    candidate.id,
+    captureDraft?.draftId,
+    captureDraft?.selectedRange.startBar,
+    captureDraft?.selectedRange.startBeat,
+    captureDraft?.selectedRange.endBar,
+    captureDraft?.selectedRange.endBeat,
+  ]);
+
+  useEffect(() => {
+    const incomingCandidate = candidateRef.current;
+    setSavedSignature(progressionSignature(incomingCandidate.chords));
     setPropagationProposal(undefined);
     setPropagationFeedback([]);
-  }, [beatsPerBar, candidate.id, draft?.draftId]);
+  }, [
+    beatsPerBar,
+    candidate.id,
+    captureDraft?.draftId,
+  ]);
 
   useEffect(() => {
     if (!isExpanded) {
@@ -1689,6 +1718,10 @@ export function ProgressionCandidateCard({
   }, [candidate.id, currentSignature, onDirtyChange, savedSignature]);
 
   useEffect(() => {
+    if (skipEditableToDraftRef.current) {
+      skipEditableToDraftRef.current = false;
+      return;
+    }
     if (
       draft?.source.type !== "automatic-candidate"
       || draft.source.candidateId !== candidate.id
@@ -1945,9 +1978,9 @@ export function ProgressionCandidateCard({
           </p>
           <p className="mt-2 font-semibold">
             {editorCopy.candidateBars(
-              candidate.startBar,
-              candidate.endBar,
-              candidate.stats?.uniqueChordCount ?? candidate.chords.length,
+              editedCandidate.startBar,
+              editedCandidate.endBar,
+              editedCandidate.stats?.uniqueChordCount ?? editedCandidate.chords.length,
             )}
           </p>
           {shouldDisplayConfidence ? (

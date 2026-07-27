@@ -85,13 +85,23 @@ export function SongMiniMap({
   onRedo,
   onEnterSelection,
 }: SongMiniMapProps) {
-  const positionedCandidates = layoutSongMiniMapCandidates(candidates, totalBars);
-  const laneCount = positionedCandidates.length > 0
-    ? Math.max(...positionedCandidates.map(({ lane }) => lane)) + 1
-    : 1;
   const sourceCandidateId = draft && draft.source.type === "automatic-candidate"
     ? draft.source.candidateId
     : undefined;
+  const displayCandidates = candidates.map((candidate) => (
+    draft && candidate.id === sourceCandidateId
+      ? {
+          ...candidate,
+          startBar: draft.selectedRange.startBar,
+          endBar: draft.selectedRange.endBar,
+          lengthBars: draft.lengthBars as ProgressionBlockCandidate["lengthBars"],
+        }
+      : candidate
+  ));
+  const positionedCandidates = layoutSongMiniMapCandidates(displayCandidates, totalBars);
+  const laneCount = positionedCandidates.length > 0
+    ? Math.max(...positionedCandidates.map(({ lane }) => lane)) + 1
+    : 1;
   const sourceCandidateIndex = sourceCandidateId === undefined
     ? undefined
     : candidates.findIndex((candidate) => candidate.id === sourceCandidateId) + 1;

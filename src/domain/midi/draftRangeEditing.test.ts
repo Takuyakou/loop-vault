@@ -69,6 +69,7 @@ describe("Draft range editing", () => {
 
     expect(after.selectedRange.endBar).toBe(32);
     expect(after.events).toHaveLength(32);
+    expect(after.isDirty).toBe(true);
     expect(after.history).toHaveLength(1);
     expect(undoCaptureDraft(after).selectedRange.endBar).toBe(8);
   });

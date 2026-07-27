@@ -216,7 +216,10 @@ export function retargetDraftRange(
       lengthBars: rebuilt.lengthBars,
       warnings: rebuilt.warnings,
       repairOperations: [...draft.repairOperations, operation],
-      isDirty: options.keepEdits ? draft.isDirty : false,
+      // The selected range is part of the saved progression. Even when no
+      // chord label was edited, moving or resizing it must leave the analyzer
+      // candidate snapshot and render the rebuilt Draft instead.
+      isDirty: options.keepEdits ? true : false,
   };
 
   return {
