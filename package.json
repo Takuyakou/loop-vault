@@ -35,6 +35,7 @@
     "eval:p44:validation": "vite-node scripts/evaluate-phase44-validation.ts",
     "diagnose:p441:validation": "vite-node scripts/trace-phase441-validation.ts",
     "eval:p442:baseline": "vite-node scripts/evaluate-phase442-baseline.ts",
+    "eval:p442:failures": "vite-node scripts/evaluate-phase442-failure-matrix.ts",
     "eval:stored-progressions": "vite-node scripts/evaluate-stored-progressions.ts",
     "eval:review-differences": "vite-node scripts/review-midi-differences.ts",
     "eval:promote-corrections": "vite-node scripts/promote-midi-corrections.ts",
