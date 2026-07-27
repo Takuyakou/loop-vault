@@ -167,6 +167,7 @@ describe("SongMiniMap", () => {
       now: "2026-07-27T00:00:00.000Z",
     });
     const onCandidateSelect = vi.fn();
+    const onCandidateDoubleClick = vi.fn();
     const container = document.createElement("div");
     const root = createRoot(container);
     await act(async () => root.render(
@@ -179,6 +180,7 @@ describe("SongMiniMap", () => {
         activeCandidateId="overlap"
         copy={englishCopy}
         onCandidateSelect={onCandidateSelect}
+        onCandidateDoubleClick={onCandidateDoubleClick}
       />,
     ));
 
@@ -195,6 +197,11 @@ describe("SongMiniMap", () => {
     expect(container.querySelector("[data-selection-move-handle]")).not.toBeNull();
     await act(async () => candidateButton.click());
     expect(onCandidateSelect).toHaveBeenCalledWith("overlap");
+    await act(async () => candidateButton.dispatchEvent(
+      new MouseEvent("dblclick", { bubbles: true, detail: 2 }),
+    ));
+    expect(onCandidateDoubleClick).toHaveBeenCalledWith("overlap");
+    expect(candidateButton.title).toContain("Double-click");
 
     await act(async () => root.unmount());
   });

@@ -191,6 +191,7 @@ export function CaptureView(props: CaptureViewProps) {
   const [pendingCandidateSelection, setPendingCandidateSelection] = useState<{
     candidateId: string | undefined;
     revealTimeline?: boolean;
+    focusCandidate?: boolean;
     closeDraft?: boolean;
     manualRange?: TimelineRange;
   }>();
@@ -228,7 +229,7 @@ export function CaptureView(props: CaptureViewProps) {
 
   function selectExpandedCandidate(
     candidateId: string | undefined,
-    options?: { revealTimeline?: boolean },
+    options?: { revealTimeline?: boolean; focusCandidate?: boolean },
   ): boolean {
     const changingDraft = activeDraft?.isDirty
       && (
@@ -243,12 +244,19 @@ export function CaptureView(props: CaptureViewProps) {
         && dirtyCandidateIds.has(expandedCandidateId)
       )
     ) {
-      setPendingCandidateSelection({ candidateId, revealTimeline: options?.revealTimeline });
+      setPendingCandidateSelection({
+        candidateId,
+        revealTimeline: options?.revealTimeline,
+        focusCandidate: options?.focusCandidate,
+      });
       return false;
     }
     applyCandidateSelection(candidateId);
     if (candidateId && options?.revealTimeline) {
       revealCandidateInTimeline(candidateId);
+    }
+    if (candidateId && options?.focusCandidate) {
+      focusCandidateCard(candidateId);
     }
     return true;
   }
@@ -258,6 +266,13 @@ export function CaptureView(props: CaptureViewProps) {
     if (!candidate) return;
     setTimelineOpen(true);
     setTimelineScrollBar(candidate.startBar);
+  }
+
+  function focusCandidateCard(candidateId: string) {
+    const target = [...document.querySelectorAll<HTMLButtonElement>("[data-candidate-toggle]")]
+      .find((button) => button.dataset.candidateId === candidateId);
+    target?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+    target?.focus();
   }
 
   function applyCandidateSelection(candidateId: string | undefined) {
@@ -831,6 +846,9 @@ export function CaptureView(props: CaptureViewProps) {
     if (candidateId && pendingCandidateSelection.revealTimeline) {
       revealCandidateInTimeline(candidateId);
     }
+    if (candidateId && pendingCandidateSelection.focusCandidate) {
+      focusCandidateCard(candidateId);
+    }
     setPendingCandidateSelection(undefined);
   }
 
@@ -930,6 +948,15 @@ export function CaptureView(props: CaptureViewProps) {
         onCandidateSelect={(candidateId) => {
           const candidate = result.blockCandidates.find((entry) => entry.id === candidateId);
           if (candidate && selectExpandedCandidate(candidateId)) {
+            openCandidateDraft(candidate);
+          }
+        }}
+        onCandidateDoubleClick={(candidateId) => {
+          const candidate = result.blockCandidates.find((entry) => entry.id === candidateId);
+          if (
+            candidate
+            && selectExpandedCandidate(candidateId, { focusCandidate: true })
+          ) {
             openCandidateDraft(candidate);
           }
         }}
