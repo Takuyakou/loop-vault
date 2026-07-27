@@ -81,24 +81,27 @@ async function mountPrimary(
   const onUndo = vi.fn();
   const onRedo = vi.fn();
   const onEnter = vi.fn();
-  await act(async () => root.render(
-    <DraftRangeOverlay
-      variant="primary"
-      draft={draft}
-      timeline={primaryTimeline}
-      totalBars={totalBars}
-      beatsPerBar={4}
-      language="en"
-      trackHeightRem={6}
-      sourceCandidateIndex={6}
-      onChange={onChange}
-      onCreateRange={onCreateRange}
-      onPreview={onPreview}
-      onUndo={onUndo}
-      onRedo={onRedo}
-      onEnter={onEnter}
-    />,
-  ));
+  async function render(nextDraft = draft) {
+    await act(async () => root.render(
+      <DraftRangeOverlay
+        variant="primary"
+        draft={nextDraft}
+        timeline={primaryTimeline}
+        totalBars={totalBars}
+        beatsPerBar={4}
+        language="en"
+        trackHeightRem={6}
+        sourceCandidateIndex={6}
+        onChange={onChange}
+        onCreateRange={onCreateRange}
+        onPreview={onPreview}
+        onUndo={onUndo}
+        onRedo={onRedo}
+        onEnter={onEnter}
+      />,
+    ));
+  }
+  await render();
   const track = container.querySelector<HTMLElement>("[data-song-minimap-track]")!;
   track.getBoundingClientRect = () => ({
     x: 0,
@@ -121,6 +124,7 @@ async function mountPrimary(
     onUndo,
     onRedo,
     onEnter,
+    render,
   };
 }
 
@@ -256,6 +260,7 @@ describe("DraftRangeOverlay", () => {
     expect(harness.container.textContent).toContain("Selection: 1.1–12.4");
     expect(harness.container.textContent).toContain("Length: 12 bars");
     expect(harness.container.textContent).toContain("Chords: 12 events");
+    expect(harness.container.textContent).toContain("Current 1-12 · 12 bars · changing");
 
     await act(async () => {
       harness.track.dispatchEvent(pointerEvent("pointerup", 240));
@@ -268,6 +273,8 @@ describe("DraftRangeOverlay", () => {
       endBar: 12,
       endBeat: 4,
     });
+    await harness.render(changed);
+    expect(harness.container.textContent).toContain("Current 1-12 · 12 bars · changed");
     await act(async () => harness.root.unmount());
   });
 

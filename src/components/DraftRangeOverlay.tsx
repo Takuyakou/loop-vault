@@ -603,6 +603,14 @@ function PrimaryDraftRangeOverlay({
       || visibleRange.endBeat !== current.endBeat
     ),
   );
+  const committedRangeChange = draft?.repairOperations.some((operation) => (
+    operation.type === "extend-start"
+    || operation.type === "extend-end"
+    || operation.type === "trim-start"
+    || operation.type === "trim-end"
+    || operation.type === "reselect-range"
+  )) ?? false;
+  const rangeChanged = pendingChange || committedRangeChange;
   const left = visibleRange ? (visibleRange.startBeat / maximum) * 100 : 0;
   const width = visibleRange
     ? ((visibleRange.endBeat - visibleRange.startBeat) / maximum) * 100
@@ -657,13 +665,21 @@ function PrimaryDraftRangeOverlay({
               displayRange.endBeat,
             )}
             title={labels.moveHandle}
-            className="absolute top-1 z-50 flex h-6 min-w-6 cursor-grab items-center justify-center gap-1 overflow-hidden border border-amber-50 bg-[var(--lv-bg)]/95 px-1 text-[0.65rem] font-semibold text-amber-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200 active:cursor-grabbing"
+            className="absolute top-1 z-50 flex h-6 min-w-6 cursor-grab items-center justify-center gap-1 overflow-hidden border border-amber-50 bg-amber-200 px-1 text-[0.65rem] font-bold text-stone-950 shadow-[0_0_0_1px_rgba(8,15,22,0.85)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-100 active:cursor-grabbing"
             style={{ left: `${left}%`, width: `${width}%` }}
             onPointerDown={(event) => beginDrag("move", event)}
             onKeyDown={handleSelectionKeyDown}
           >
             <MoveHorizontal aria-hidden="true" className="shrink-0" size={16} />
-            <span className="truncate">{labels.currentSelection}</span>
+            <span className="truncate">
+              {labels.selectionBar(
+                displayRange.startBar,
+                displayRange.endBar,
+                displayDraft.lengthBars,
+                pendingChange,
+                rangeChanged,
+              )}
+            </span>
           </button>
           <button
             type="button"
@@ -779,6 +795,15 @@ const primaryCopy = {
   ja: {
     currentSelection: "現在の採集範囲",
     moveHandle: "採集範囲を移動",
+    selectionBar: (
+      startBar: number,
+      endBar: number,
+      lengthBars: number,
+      changing: boolean,
+      changed: boolean,
+    ) => `現在 ${startBar}〜${endBar}小節・${formatNumber(lengthBars)}小節${
+      changing ? "・変更中" : changed ? "・変更済み" : ""
+    }`,
     startHandle: "採集範囲の開始ハンドル",
     endHandle: "採集範囲の終了ハンドル",
     selectionAria: (startBar: number, startBeat: number, endBar: number, endBeat: number) =>
@@ -803,6 +828,15 @@ const primaryCopy = {
   en: {
     currentSelection: "Current capture range",
     moveHandle: "Move capture range",
+    selectionBar: (
+      startBar: number,
+      endBar: number,
+      lengthBars: number,
+      changing: boolean,
+      changed: boolean,
+    ) => `Current ${startBar}-${endBar} · ${formatNumber(lengthBars)} bars${
+      changing ? " · changing" : changed ? " · changed" : ""
+    }`,
     startHandle: "Capture range start handle",
     endHandle: "Capture range end handle",
     selectionAria: (startBar: number, startBeat: number, endBar: number, endBeat: number) =>
