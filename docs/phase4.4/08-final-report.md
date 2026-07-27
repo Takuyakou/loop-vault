@@ -186,12 +186,46 @@ Commit:
 - `eb4a4f1` P4.4-05
 - `add6424` P4.4-06
 
-## UI・Build・Rollback
+## Voicing Source Chip
 
-- Voicing Source Chip: Core精度改善と独立したP4.4-UI PRで実装する
-- Tauri build: P4.4-UI完了後の最終検証で実行する
+Core精度改善と独立したP4.4-UI PRで実装した。
+
+表示:
+
+- `元MIDI`: 互換性のある`midi-extracted`かつ同時押鍵Voicingで、検証済みまたは自動利用confidence以上
+- `自動生成`: source voicingがない、またはコード編集でstale
+- `要確認`: aggregated note set、低confidence、不正データ、元MIDI以外のsource
+
+対象:
+
+- Capture Preview: 自動候補カードと手動範囲Draft
+- Progression Detail: 選択コードのVoicingパネル
+- Chord Dojo: 現在練習中のコード
+
+判定は`src/domain/voicing/voicingSourceStatus.ts`へ集約し、全画面が同じ結果を使う。チップは色だけに依存せず、アイコン・テキスト・`aria-label`・理由tooltipを持つ。保存schemaとVoicing抽出ロジックは変更していない。
+
+## 最終検証
+
+- `npm run lint`: PASS
+- `npx tsc --noEmit`: PASS
+- Vitest: 197 files / 1660 tests PASS
+- `cargo test`: 24 tests PASS
+- `npm run build`: PASS
+- `npm run tauri build`: PASS
+- `git diff --check`: PASS
+- default analyzer: `phase4-v1`
+- `fileVersion`: 1
 - private MIDI: Git追跡0件
-- `.local-evaluation`: Git追跡対象外
+- `.local-evaluation`: Git追跡0件
+- 既知警告: Viteの500 kB超chunk warningのみ
+
+生成物:
+
+- `src-tauri/target/release/loop-vault.exe`
+- `src-tauri/target/release/bundle/msi/Loop Vault_0.1.0_x64_en-US.msi`
+- `src-tauri/target/release/bundle/nsis/Loop Vault_0.1.0_x64-setup.exe`
+
+## Rollback
 
 Rollback:
 

@@ -98,6 +98,9 @@ describe("PracticeView", () => {
     expect(container.textContent).toContain("Test Keys");
     expect(container.textContent).toContain("お手本");
     expect(container.textContent).toContain("自動生成");
+    expect(container.querySelector(
+      '[data-testid="dojo-voicing-source-chip"]',
+    )?.getAttribute("data-voicing-source")).toBe("generated");
     expect(container.querySelector('[role="img"][aria-label*="ピアノ鍵盤"]')).not.toBeNull();
     expect(container.textContent).toContain("C5");
     expect(container.textContent).not.toContain("60 ·");
