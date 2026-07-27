@@ -4,6 +4,7 @@ import { createEditableProgression } from "../progressionEditing/editableProgres
 import type { EditableProgression } from "../progressionEditing/types";
 import type { ChordTimelineItem, ProgressionBlockCandidate } from "../types";
 import { summaryFromEvents, type CandidateChordEvent } from "./candidateBlock";
+import { recordCaptureDraftChange } from "./captureEditHistory";
 import { createCandidateFromTimelineRange, timelineRangeBeats, timelineRangeIssues } from "./manualRange";
 import type { ManualCandidateDraft, ManualRepairOperation } from "./manualDraft";
 
@@ -128,12 +129,19 @@ export function applyEditableToDraft(
     };
   });
 
-  return {
+  const next: ManualCandidateDraft = {
     ...draft,
     events,
     repairOperations: [...draft.repairOperations, ...operations],
     isDirty: true,
   };
+  const operation = operations[0] ?? { type: "edit-progression" };
+  return recordCaptureDraftChange(
+    draft,
+    next,
+    operation,
+    operations.length > 1 ? "Edit progression" : undefined,
+  );
 }
 
 export interface RetargetOptions {
@@ -145,6 +153,7 @@ export interface RetargetOptions {
    * caller has to have asked.
    */
   keepEdits: boolean;
+  operation?: ManualRepairOperation;
 }
 
 export interface RetargetResult {
@@ -197,17 +206,20 @@ export function retargetDraftRange(
     : rebuilt.events;
   const droppedEditCount = edited.size;
 
-  return {
-    draft: {
+  const operation = options.operation ?? { type: "reselect-range" };
+  const next: ManualCandidateDraft = {
       ...draft,
       selectedRange: { ...range },
       events,
       originalEvents: rebuilt.events.map((event) => ({ ...event })),
       lengthBars: rebuilt.lengthBars,
       warnings: rebuilt.warnings,
-      repairOperations: [...draft.repairOperations, { type: "reselect-range" }],
+      repairOperations: [...draft.repairOperations, operation],
       isDirty: options.keepEdits ? draft.isDirty : false,
-    },
+  };
+
+  return {
+    draft: recordCaptureDraftChange(draft, next, operation),
     droppedEditCount,
   };
 }

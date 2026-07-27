@@ -220,6 +220,7 @@ describe("chord operations", () => {
     expect(action(harness, "redo").disabled).toBe(true);
 
     await click(action(harness, "split"));
+    await harness.render(harness.onChange.mock.calls[0][0] as ManualCandidateDraft);
     expect(action(harness, "undo").disabled).toBe(false);
   });
 
@@ -227,21 +228,73 @@ describe("chord operations", () => {
     const draft = draftOf(14, 17);
     const harness = await mount(draft);
     await click(action(harness, "split"));
+    await harness.render(harness.onChange.mock.calls[0][0] as ManualCandidateDraft);
     await click(action(harness, "undo"));
 
     const undone = harness.onChange.mock.calls[harness.onChange.mock.calls.length - 1][0] as ManualCandidateDraft;
     expect(undone.events).toHaveLength(4);
-    expect(undone.repairOperations.some((operation) => operation.type === "undo")).toBe(true);
+    expect(undone.repairOperations.some((operation) => operation.type === "split-event")).toBe(false);
   });
 
   it("redoes what was undone", async () => {
     const harness = await mount(draftOf(14, 17));
     await click(action(harness, "split"));
+    await harness.render(harness.onChange.mock.calls[0][0] as ManualCandidateDraft);
     await click(action(harness, "undo"));
+    const undone: ManualCandidateDraft =
+      harness.onChange.mock.calls[harness.onChange.mock.calls.length - 1][0];
+    await harness.render(undone);
     await click(action(harness, "redo"));
 
     expect((harness.onChange.mock.calls[harness.onChange.mock.calls.length - 1][0] as ManualCandidateDraft).events)
       .toHaveLength(5);
+  });
+
+  it("shows the shared history and jumps back to the initial state", async () => {
+    const harness = await mount(draftOf(14, 17));
+    await click(action(harness, "split"));
+    const changed: ManualCandidateDraft = harness.onChange.mock.calls[0][0];
+    await harness.render(changed);
+
+    const history = harness.container.querySelector('[data-testid="capture-edit-history"]')!;
+    expect(history.querySelectorAll("button")).toHaveLength(2);
+    await click(history.querySelector<HTMLButtonElement>("button")!);
+
+    const jumped: ManualCandidateDraft =
+      harness.onChange.mock.calls[harness.onChange.mock.calls.length - 1][0];
+    expect(jumped.events).toHaveLength(4);
+    expect(jumped.historyIndex).toBe(-1);
+  });
+
+  it("uses Ctrl+Z for Draft undo but leaves native input undo alone", async () => {
+    const harness = await mount(draftOf(14, 17));
+    await click(action(harness, "split"));
+    const changed: ManualCandidateDraft = harness.onChange.mock.calls[0][0];
+    await harness.render(changed);
+
+    action(harness, "undo").focus();
+    const beforeUndo = harness.onChange.mock.calls.length;
+    await act(async () => window.dispatchEvent(new KeyboardEvent("keydown", {
+      key: "z",
+      ctrlKey: true,
+      bubbles: true,
+    })));
+    expect(harness.onChange.mock.calls.length).toBe(beforeUndo + 1);
+    const undoCall = harness.onChange.mock.calls[harness.onChange.mock.calls.length - 1];
+    expect((undoCall?.[0] as ManualCandidateDraft).events)
+      .toHaveLength(4);
+
+    await harness.render(changed);
+    const input = document.createElement("input");
+    harness.container.querySelector("section")?.append(input);
+    input.focus();
+    const beforeNativeUndo = harness.onChange.mock.calls.length;
+    await act(async () => input.dispatchEvent(new KeyboardEvent("keydown", {
+      key: "z",
+      ctrlKey: true,
+      bubbles: true,
+    })));
+    expect(harness.onChange.mock.calls.length).toBe(beforeNativeUndo);
   });
 });
 

@@ -27,6 +27,7 @@ import {
 /** Every action that changes a draft, for measuring how much repair costs. */
 export type ManualRepairOperation =
   | { type: "create-from-range" }
+  | { type: "edit-progression" }
   | { type: "extend-start"; beats: number }
   | { type: "extend-end"; beats: number }
   | { type: "trim-start"; beats: number }
@@ -39,6 +40,11 @@ export type ManualRepairOperation =
   | { type: "resize-event"; eventId: string; deltaBeats: number }
   | { type: "split-event"; eventId: string }
   | { type: "merge-events"; eventIds: string[] }
+  | {
+      type: "change-snap";
+      from: CandidateDraftSnapMode;
+      to: CandidateDraftSnapMode;
+    }
   | { type: "undo" }
   | { type: "redo" };
 
@@ -62,6 +68,26 @@ export type CandidateSnapshot = ProgressionBlockCandidate;
 
 export type CandidateDraftSnapMode = "bar" | "harmonic" | "beat";
 
+export interface DraftSnapshot {
+  selectedRange: TimelineRange;
+  events: CandidateChordEvent[];
+  originalEvents: CandidateChordEvent[];
+  repairOperations: ManualRepairOperation[];
+  isDirty: boolean;
+  snapMode: CandidateDraftSnapMode;
+  lengthBars: number;
+  warnings: string[];
+}
+
+export interface CaptureEditHistoryEntry {
+  id: string;
+  label: string;
+  operation: ManualRepairOperation;
+  before: DraftSnapshot;
+  after: DraftSnapshot;
+  createdAt: string;
+}
+
 export interface ManualCandidateDraft {
   draftId: string;
   source: CandidateDraftSource;
@@ -76,6 +102,8 @@ export interface ManualCandidateDraft {
   isDirty: boolean;
   snapMode: CandidateDraftSnapMode;
   sourceCandidateSnapshot?: CandidateSnapshot;
+  history: CaptureEditHistoryEntry[];
+  historyIndex: number;
   beatsPerBar: number;
   lengthBars: number;
   warnings: string[];
@@ -146,6 +174,8 @@ export function createManualDraft(input: CreateManualDraftInput): ManualCandidat
     createdAt,
     isDirty: false,
     snapMode: "beat",
+    history: [],
+    historyIndex: -1,
     beatsPerBar,
     lengthBars: occurrence.lengthBars,
     warnings: occurrence.warnings,
@@ -204,6 +234,8 @@ export function createDraftFromCandidate(
     isDirty: false,
     snapMode: "bar",
     sourceCandidateSnapshot: candidate,
+    history: [],
+    historyIndex: -1,
     beatsPerBar,
     lengthBars: candidate.lengthBars,
     warnings: [...candidate.warnings],
