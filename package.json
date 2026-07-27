@@ -31,6 +31,7 @@
     "eval:p44:mechanisms": "vite-node scripts/classify-phase44-mechanisms.ts",
     "eval:p44:oracle": "vite-node scripts/evaluate-phase44-oracle-a-plus.ts",
     "eval:p44:shadow": "vite-node scripts/evaluate-phase44-shadow.ts",
+    "eval:p44:dev": "vite-node scripts/tune-phase44-dev.ts",
     "eval:stored-progressions": "vite-node scripts/evaluate-stored-progressions.ts",
     "eval:review-differences": "vite-node scripts/review-midi-differences.ts",
     "eval:promote-corrections": "vite-node scripts/promote-midi-corrections.ts",

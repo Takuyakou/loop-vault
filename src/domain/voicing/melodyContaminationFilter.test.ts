@@ -52,6 +52,25 @@ describe("event-local melody contamination filter", () => {
     expect(result.removed).toEqual([]);
   });
 
+  it("uses polyphonic structure as support without deleting a misclassified bass", () => {
+    const harmony = [55, 59, 62, 64].map((pitch) => note(pitch, 0, 4, 0, 0));
+    const bass = note(43, 0, 4, 1, 1);
+    const melody = note(70, 0, 4, 2, 2);
+    const result = filterEventLocalMelodyContamination({
+      notes: [...harmony, bass, melody],
+      voices: [
+        voice(0, 0, "melody", 0.9, 4),
+        voice(1, 1, "melody", 0.9, 1, { lowest: 1, highest: 0 }),
+        voice(2, 2, "melody", 0.9, 1),
+      ],
+      ticksPerBeat,
+      segment: { startBeat: 0, endBeat: 4 },
+    });
+    expect(result.notes).toContain(bass);
+    expect(result.notes).not.toContain(melody);
+    expect(result.removed.map((entry) => entry.note.pitch)).toEqual([70]);
+  });
+
   it("is deterministic and only removes notes that existed in the source", () => {
     const source = [
       ...[48, 55, 59, 64].map((pitch) => note(pitch, 0, 4, 0, 0)),
@@ -94,6 +113,10 @@ function voice(
   role: VoiceRole,
   confidence: number,
   maxPolyphony: number,
+  shares: { lowest: number; highest: number } = {
+    lowest: 0,
+    highest: role === "melody" ? 1 : 0,
+  },
 ): Voice {
   return {
     id: `${trackIndex}:${channel}`,
@@ -108,8 +131,8 @@ function voice(
     noteDensity: 1,
     maxPolyphony,
     simultaneousOnsetRatio: maxPolyphony > 1 ? 1 : 0,
-    lowestVoiceShare: 0,
-    highestVoiceShare: role === "melody" ? 1 : 0,
+    lowestVoiceShare: shares.lowest,
+    highestVoiceShare: shares.highest,
     inferredRole: role,
     roleConfidence: confidence,
     roleEvidence: {
