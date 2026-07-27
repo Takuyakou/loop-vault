@@ -256,8 +256,12 @@ export function CaptureView(props: CaptureViewProps) {
   function revealCandidateInTimeline(candidateId: string) {
     const candidate = result?.blockCandidates.find((item) => item.id === candidateId);
     if (!candidate) return;
+    revealTimelineAtBar(candidate.startBar);
+  }
+
+  function revealTimelineAtBar(startBar: number) {
     setTimelineOpen(true);
-    setTimelineScrollBar(candidate.startBar);
+    setTimelineScrollBar(startBar);
   }
 
   function applyCandidateSelection(candidateId: string | undefined) {
@@ -931,6 +935,16 @@ export function CaptureView(props: CaptureViewProps) {
           const candidate = result.blockCandidates.find((entry) => entry.id === candidateId);
           if (candidate && selectExpandedCandidate(candidateId)) {
             openCandidateDraft(candidate);
+          }
+        }}
+        onCandidateDoubleClick={(candidateId, startBar) => {
+          const candidate = result.blockCandidates.find((entry) => entry.id === candidateId);
+          if (
+            candidate
+            && selectExpandedCandidate(candidateId, { revealTimeline: true })
+          ) {
+            openCandidateDraft(candidate);
+            revealTimelineAtBar(startBar);
           }
         }}
         onDraftChange={setActiveDraft}
