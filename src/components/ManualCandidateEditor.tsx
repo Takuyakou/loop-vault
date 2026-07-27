@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { AppCopy, AppLanguage } from "../i18n";
 import type { ChordTimelineItem } from "../domain/types";
 import {
@@ -96,6 +96,18 @@ export function ManualCandidateEditor({
 
   const validation = useMemo(() => validateDraft(draft), [draft]);
   const voicing = useMemo(() => draftVoicingSummary(draft), [draft]);
+  const sourceLabel = draft.source.type === "automatic-candidate"
+    ? language === "ja"
+      ? `自動候補から作成${draft.isDirty ? "・編集中" : ""}`
+      : `Created from automatic candidate${draft.isDirty ? " · Editing" : ""}`
+    : language === "ja"
+      ? "手動範囲から作成"
+      : "Created from manual range";
+
+  useEffect(() => {
+    setEditable(draftEditable(draft));
+    setPendingNudge(null);
+  }, [draft.draftId]);
 
   const commit = useCallback((next: EditableProgression, operation?: Parameters<
     typeof applyEditableToDraft
@@ -173,6 +185,8 @@ export function ManualCandidateEditor({
       </header>
 
       <p className="mt-1 text-xs text-[var(--lv-text-muted)]">
+        <span data-testid="draft-source">{sourceLabel}</span>
+        {" · "}
         {text.range(
           draft.selectedRange.startBar, draft.selectedRange.startBeat,
           draft.selectedRange.endBar, draft.selectedRange.endBeat,

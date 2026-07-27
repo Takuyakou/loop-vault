@@ -91,6 +91,21 @@ const nudge = (harness: Harness, name: string) => harness.container
 const click = async (element: HTMLElement) => { await act(async () => element.click()); };
 
 describe("opening a draft in the editor", () => {
+  it("shows whether the Draft came from an automatic candidate", async () => {
+    const draft: ManualCandidateDraft = {
+      ...draftOf(14, 17),
+      source: {
+        type: "automatic-candidate",
+        candidateId: "candidate-1",
+        patternId: "pattern-1",
+      },
+    };
+    const harness = await mount(draft);
+
+    expect(harness.container.querySelector('[data-testid="draft-source"]')?.textContent)
+      .toBe("自動候補から作成");
+  });
+
   it("shows the range, the length and that it is unsaved", async () => {
     const harness = await mount(draftOf(14, 32));
 

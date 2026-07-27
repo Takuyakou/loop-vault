@@ -160,7 +160,7 @@ describe("selecting a range by typing", () => {
     expect(draft.selectedRange).toEqual({ startBar: 14, startBeat: 1, endBar: 32, endBeat: 4 });
     expect(draft.lengthBars).toBe(19);
     expect(draft.events).toHaveLength(19);
-    expect(draft.source).toBe("manual-range");
+    expect(draft.source).toEqual({ type: "manual-range" });
   });
 
   it("builds the 22-bar range too", async () => {
