@@ -1,9 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+} from "react";
 import type { ChordTimelineItem } from "../domain/types";
 import {
   cycleDraftSnapMode,
   draftRangeAbsoluteBeats,
   retargetDraftByAbsoluteBeats,
+  rangeFromAbsoluteBeats,
   setDraftSnapMode,
   snapAbsoluteBeat,
 } from "../domain/midi/draftRangeEditing";
@@ -12,24 +21,54 @@ import type {
   ManualCandidateDraft,
 } from "../domain/midi/manualDraft";
 import type { AppLanguage } from "../i18n";
+import { GripVertical, MoveHorizontal } from "lucide-react";
 
-export interface DraftRangeOverlayProps {
-  draft: ManualCandidateDraft;
+interface DraftRangeOverlayBaseProps {
   timeline: readonly ChordTimelineItem[];
   totalBars: number;
   language: AppLanguage;
-  onChange(draft: ManualCandidateDraft): void;
   onPreview?(): void;
 }
 
-export function DraftRangeOverlay({
+interface StandaloneDraftRangeOverlayProps extends DraftRangeOverlayBaseProps {
+  variant?: "standalone";
+  draft: ManualCandidateDraft;
+  onChange(draft: ManualCandidateDraft): void;
+}
+
+interface PrimaryDraftRangeOverlayProps extends DraftRangeOverlayBaseProps {
+  variant: "primary";
+  draft?: ManualCandidateDraft;
+  beatsPerBar: number;
+  children?: ReactNode;
+  trackHeightRem: number;
+  sourceCandidateIndex?: number;
+  onChange?(draft: ManualCandidateDraft): void;
+  onCreateRange(range: ReturnType<typeof rangeFromAbsoluteBeats>): void;
+  onUndo?(): void;
+  onRedo?(): void;
+  onEnter?(): void;
+}
+
+export type DraftRangeOverlayProps =
+  | StandaloneDraftRangeOverlayProps
+  | PrimaryDraftRangeOverlayProps;
+
+export function DraftRangeOverlay(props: DraftRangeOverlayProps) {
+  if (props.variant === "primary") {
+    return <PrimaryDraftRangeOverlay {...props} />;
+  }
+  return <StandaloneDraftRangeOverlay {...props} />;
+}
+
+function StandaloneDraftRangeOverlay({
   draft,
   timeline,
   totalBars,
   language,
   onChange,
   onPreview,
-}: DraftRangeOverlayProps) {
+}: StandaloneDraftRangeOverlayProps) {
   const absolute = draftRangeAbsoluteBeats(draft);
   const [pending, setPending] = useState(absolute);
   const [confirmDraft, setConfirmDraft] = useState<ManualCandidateDraft>();
@@ -95,7 +134,7 @@ export function DraftRangeOverlay({
     onChange(setDraftSnapMode(draft, mode));
   }
 
-  function onKeyDown(event: React.KeyboardEvent<HTMLElement>) {
+  function onKeyDown(event: ReactKeyboardEvent<HTMLElement>) {
     if (
       event.defaultPrevented
       || event.nativeEvent.isComposing
@@ -288,6 +327,545 @@ export function DraftRangeOverlay({
       )}
     </section>
   );
+}
+
+interface AbsoluteRange {
+  startBeat: number;
+  endBeat: number;
+}
+
+type PointerDrag =
+  | {
+      kind: "create";
+      pointerId: number;
+      anchorBeat: number;
+      initial: AbsoluteRange;
+    }
+  | {
+      kind: "move" | "start" | "end";
+      pointerId: number;
+      anchorBeat: number;
+      initial: AbsoluteRange;
+    };
+
+function PrimaryDraftRangeOverlay({
+  draft,
+  timeline,
+  totalBars,
+  language,
+  beatsPerBar,
+  children,
+  trackHeightRem,
+  sourceCandidateIndex,
+  onChange,
+  onCreateRange,
+  onPreview,
+  onUndo,
+  onRedo,
+  onEnter,
+}: PrimaryDraftRangeOverlayProps) {
+  const maximum = Math.max(beatsPerBar, totalBars * beatsPerBar);
+  const current = draft ? draftRangeAbsoluteBeats(draft) : undefined;
+  const [pending, setPendingState] = useState<AbsoluteRange | undefined>(current);
+  const pendingRef = useRef<AbsoluteRange | undefined>(current);
+  const dragRef = useRef<PointerDrag>();
+  const trackRef = useRef<HTMLDivElement>(null);
+  const selectionRef = useRef<HTMLButtonElement>(null);
+  const [confirmDraft, setConfirmDraft] = useState<ManualCandidateDraft>();
+
+  useEffect(() => {
+    const next = draft ? draftRangeAbsoluteBeats(draft) : undefined;
+    pendingRef.current = next;
+    setPendingState(next);
+    setConfirmDraft(undefined);
+    dragRef.current = undefined;
+  }, [draft?.draftId, draft?.historyIndex, draft?.selectedRange]);
+
+  function setPending(next: AbsoluteRange | undefined) {
+    pendingRef.current = next;
+    setPendingState(next);
+  }
+
+  function beatFromPointer(clientX: number): number {
+    const rect = trackRef.current?.getBoundingClientRect();
+    if (!rect || rect.width <= 0) return 0;
+    return clamp(((clientX - rect.left) / rect.width) * maximum, 0, maximum);
+  }
+
+  function snap(value: number, disableSnap: boolean): number {
+    return clamp(snapAbsoluteBeat(
+      value,
+      draft?.snapMode ?? "bar",
+      timeline,
+      beatsPerBar,
+      disableSnap,
+    ), 0, maximum);
+  }
+
+  function commitDraftRange(range: AbsoluteRange, disableSnap: boolean) {
+    if (!draft || !onChange) return;
+    const absolute = draftRangeAbsoluteBeats(draft);
+    if (range.startBeat === absolute.startBeat && range.endBeat === absolute.endBeat) return;
+    try {
+      const result = retargetDraftByAbsoluteBeats(
+        draft,
+        timeline,
+        range.startBeat,
+        range.endBeat,
+        totalBars,
+        { keepEdits: true, disableSnap },
+      );
+      if (result.droppedEditCount > 0) {
+        setConfirmDraft(result.draft);
+        return;
+      }
+      onChange(result.draft);
+    } catch {
+      setPending(absolute);
+    }
+  }
+
+  function beginDrag(
+    kind: PointerDrag["kind"],
+    event: ReactPointerEvent<HTMLElement>,
+  ) {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const initial = pendingRef.current;
+    if (!initial) return;
+    const anchorBeat = beatFromPointer(event.clientX);
+    dragRef.current = { kind, pointerId: event.pointerId, anchorBeat, initial };
+    trackRef.current?.setPointerCapture?.(event.pointerId);
+    selectionRef.current?.focus();
+  }
+
+  function beginCreate(event: ReactPointerEvent<HTMLDivElement>) {
+    if (event.button !== 0) return;
+    const target = event.target;
+    if (
+      target instanceof Element
+      && target.closest("[data-song-minimap-candidate], [data-selection-control]")
+    ) return;
+    event.preventDefault();
+    const anchorBeat = snap(beatFromPointer(event.clientX), event.altKey);
+    const initial = {
+      startBeat: anchorBeat,
+      endBeat: Math.min(maximum, anchorBeat + beatsPerBar),
+    };
+    dragRef.current = {
+      kind: "create",
+      pointerId: event.pointerId,
+      anchorBeat,
+      initial,
+    };
+    setPending(initial);
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+  }
+
+  function rangeForPointer(event: ReactPointerEvent<HTMLDivElement>): AbsoluteRange | undefined {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return undefined;
+    const raw = beatFromPointer(event.clientX);
+    const value = snap(raw, event.altKey);
+    const minimumLength = 0.25;
+
+    if (drag.kind === "create") {
+      const startBeat = Math.min(drag.anchorBeat, value);
+      const endBeat = Math.max(drag.anchorBeat, value);
+      return endBeat - startBeat >= minimumLength
+        ? { startBeat, endBeat }
+        : {
+            startBeat: Math.min(startBeat, maximum - beatsPerBar),
+            endBeat: Math.min(maximum, startBeat + beatsPerBar),
+          };
+    }
+    if (drag.kind === "start") {
+      return {
+        startBeat: Math.min(value, drag.initial.endBeat - minimumLength),
+        endBeat: drag.initial.endBeat,
+      };
+    }
+    if (drag.kind === "end") {
+      return {
+        startBeat: drag.initial.startBeat,
+        endBeat: Math.max(value, drag.initial.startBeat + minimumLength),
+      };
+    }
+
+    const length = drag.initial.endBeat - drag.initial.startBeat;
+    const rawStart = drag.initial.startBeat + raw - drag.anchorBeat;
+    const snappedStart = snap(rawStart, event.altKey);
+    const startBeat = clamp(snappedStart, 0, maximum - length);
+    return { startBeat, endBeat: startBeat + length };
+  }
+
+  function updatePointer(event: ReactPointerEvent<HTMLDivElement>) {
+    const next = rangeForPointer(event);
+    if (next) setPending(next);
+  }
+
+  function finishPointer(event: ReactPointerEvent<HTMLDivElement>) {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    const next = rangeForPointer(event) ?? pendingRef.current ?? drag.initial;
+    dragRef.current = undefined;
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+    if (drag.kind === "create") {
+      onCreateRange(rangeFromAbsoluteBeats(next.startBeat, next.endBeat, beatsPerBar));
+      return;
+    }
+    commitDraftRange(next, event.altKey);
+  }
+
+  function handleSelectionKeyDown(event: ReactKeyboardEvent<HTMLElement>) {
+    if (event.defaultPrevented || event.nativeEvent.isComposing || !draft || !pending) return;
+    const key = event.key.toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && (key === "z" || key === "y")) {
+      event.preventDefault();
+      if (key === "y" || event.shiftKey) onRedo?.();
+      else onUndo?.();
+      return;
+    }
+    if (key === "g") {
+      event.preventDefault();
+      onChange?.(cycleDraftSnapMode(draft, event.shiftKey));
+      return;
+    }
+    if (event.key === " ") {
+      event.preventDefault();
+      onPreview?.();
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      onEnter?.();
+      return;
+    }
+    if (event.key === "Escape") {
+      event.preventDefault();
+      setPending(draftRangeAbsoluteBeats(draft));
+      selectionRef.current?.blur();
+      return;
+    }
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    const direction = event.key === "ArrowRight" ? 1 : -1;
+    const step = draft.snapMode === "bar" ? beatsPerBar : 1;
+    let next: AbsoluteRange;
+    if (event.altKey && event.shiftKey) {
+      next = {
+        startBeat: clamp(pending.startBeat + direction * step, 0, pending.endBeat - 0.25),
+        endBeat: pending.endBeat,
+      };
+    } else if (event.shiftKey) {
+      next = {
+        startBeat: pending.startBeat,
+        endBeat: clamp(pending.endBeat + direction * step, pending.startBeat + 0.25, maximum),
+      };
+    } else {
+      const length = pending.endBeat - pending.startBeat;
+      const startBeat = clamp(pending.startBeat + direction * step, 0, maximum - length);
+      next = { startBeat, endBeat: startBeat + length };
+    }
+    setPending(next);
+    commitDraftRange(next, event.altKey);
+  }
+
+  const visibleRange = pending ?? current;
+  const displayDraft = useMemo(() => {
+    if (!draft || !visibleRange) return draft;
+    const absolute = draftRangeAbsoluteBeats(draft);
+    if (
+      absolute.startBeat === visibleRange.startBeat
+      && absolute.endBeat === visibleRange.endBeat
+    ) return draft;
+    try {
+      return retargetDraftByAbsoluteBeats(
+        draft,
+        timeline,
+        visibleRange.startBeat,
+        visibleRange.endBeat,
+        totalBars,
+        { keepEdits: true, disableSnap: true },
+      ).draft;
+    } catch {
+      return draft;
+    }
+  }, [draft, timeline, totalBars, visibleRange]);
+  const displayRange = displayDraft?.selectedRange;
+  const pendingChange = Boolean(
+    draft
+    && visibleRange
+    && current
+    && (
+      visibleRange.startBeat !== current.startBeat
+      || visibleRange.endBeat !== current.endBeat
+    ),
+  );
+  const committedRangeChange = draft?.repairOperations.some((operation) => (
+    operation.type === "extend-start"
+    || operation.type === "extend-end"
+    || operation.type === "trim-start"
+    || operation.type === "trim-end"
+    || operation.type === "reselect-range"
+  )) ?? false;
+  const rangeChanged = pendingChange || committedRangeChange;
+  const left = visibleRange ? (visibleRange.startBeat / maximum) * 100 : 0;
+  const width = visibleRange
+    ? ((visibleRange.endBeat - visibleRange.startBeat) / maximum) * 100
+    : 0;
+  const labels = primaryCopy[language];
+  const source = draft?.source.type === "automatic-candidate"
+    ? labels.automaticSource(sourceCandidateIndex)
+    : labels.manualSource;
+
+  return (
+    <div data-testid="draft-range-overlay" data-variant="primary">
+      <div
+        ref={trackRef}
+        className="relative mt-4 touch-none overflow-hidden border border-[var(--lv-border)] bg-[var(--lv-surface)]"
+        style={{ height: `${Math.max(5.5, trackHeightRem)}rem` }}
+        data-song-minimap-track
+        onPointerDown={beginCreate}
+        onPointerMove={updatePointer}
+        onPointerUp={finishPointer}
+        onPointerCancel={(event) => {
+          if (dragRef.current?.pointerId === event.pointerId) {
+            dragRef.current = undefined;
+            setPending(current);
+          }
+        }}
+      >
+        <div aria-hidden="true" className="absolute inset-0 grid grid-cols-4">
+          {Array.from({ length: 4 }, (_unused, index) => (
+            <span key={index} className={index === 0 ? "" : "border-l border-[var(--lv-border)]/70"} />
+          ))}
+        </div>
+        {children}
+        {draft && visibleRange && displayRange ? (
+          <>
+          <div
+            aria-hidden="true"
+            data-selection-band
+            data-selection-control
+            className="pointer-events-none absolute top-1 z-30 h-6 min-w-6 border-2 border-amber-100 bg-amber-300/20 shadow-[0_0_0_2px_rgba(8,15,22,0.9)]"
+            style={{ left: `${left}%`, width: `${width}%` }}
+          />
+          <button
+            ref={selectionRef}
+            type="button"
+            data-current-selection
+            data-selection-control
+            data-selection-move-handle
+            aria-label={labels.selectionAria(
+              displayRange.startBar,
+              displayRange.startBeat,
+              displayRange.endBar,
+              displayRange.endBeat,
+            )}
+            title={labels.moveHandle}
+            className="absolute top-1 z-50 flex h-6 min-w-6 cursor-grab items-center justify-center gap-1 overflow-hidden border border-amber-50 bg-amber-200 px-1 text-[0.65rem] font-bold text-stone-950 shadow-[0_0_0_1px_rgba(8,15,22,0.85)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-100 active:cursor-grabbing"
+            style={{ left: `${left}%`, width: `${width}%` }}
+            onPointerDown={(event) => beginDrag("move", event)}
+            onKeyDown={handleSelectionKeyDown}
+          >
+            <MoveHorizontal aria-hidden="true" className="shrink-0" size={16} />
+            <span className="truncate">
+              {labels.selectionBar(
+                displayRange.startBar,
+                displayRange.endBar,
+                displayDraft.lengthBars,
+                pendingChange,
+                rangeChanged,
+              )}
+            </span>
+          </button>
+          <button
+            type="button"
+            role="slider"
+            data-selection-control
+            data-selection-handle="start"
+            aria-label={labels.startHandle}
+            aria-valuemin={0}
+            aria-valuemax={maximum}
+            aria-valuenow={visibleRange.startBeat}
+            title={labels.startHandle}
+            className="absolute top-1 z-50 grid h-6 w-4 -translate-x-1/2 cursor-ew-resize place-items-center border border-amber-50 bg-amber-200 text-stone-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-100"
+            style={{ left: `${left}%` }}
+            onPointerDown={(event) => beginDrag("start", event)}
+            onKeyDown={handleSelectionKeyDown}
+          >
+            <GripVertical aria-hidden="true" size={16} />
+          </button>
+          <button
+            type="button"
+            role="slider"
+            data-selection-control
+            data-selection-handle="end"
+            aria-label={labels.endHandle}
+            aria-valuemin={0}
+            aria-valuemax={maximum}
+            aria-valuenow={visibleRange.endBeat}
+            title={labels.endHandle}
+            className="absolute top-1 z-50 grid h-6 w-4 -translate-x-1/2 cursor-ew-resize place-items-center border border-amber-50 bg-amber-200 text-stone-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-100"
+            style={{ left: `${left + width}%` }}
+            onPointerDown={(event) => beginDrag("end", event)}
+            onKeyDown={handleSelectionKeyDown}
+          >
+            <GripVertical aria-hidden="true" size={16} />
+          </button>
+          </>
+        ) : null}
+      </div>
+
+      {draft && displayDraft ? (
+        <div className="mt-3 border border-amber-200/30 bg-amber-200/5 p-3" aria-live="polite">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-amber-100">{labels.currentSelection}</p>
+              <p className="mt-1 text-xs text-[var(--lv-text-secondary)]">
+                {labels.range(
+                  displayDraft.selectedRange.startBar,
+                  displayDraft.selectedRange.startBeat,
+                  displayDraft.selectedRange.endBar,
+                  displayDraft.selectedRange.endBeat,
+                )}
+              </p>
+              <p className="mt-1 text-xs text-[var(--lv-text-muted)]">
+                {labels.length(displayDraft.lengthBars)} · {labels.events(displayDraft.events.length)}
+              </p>
+              <p className="mt-1 text-xs text-[var(--lv-text-muted)]">
+                {source}{draft.isDirty || pendingChange ? ` · ${labels.dirty}` : ""}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-1" role="group" aria-label={labels.snap}>
+              {(["bar", "harmonic", "beat"] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  className={`min-h-9 border px-3 text-xs ${
+                    draft.snapMode === mode
+                      ? "border-teal-300 bg-teal-300/10 text-teal-100"
+                      : "border-[var(--lv-border)] text-[var(--lv-text-muted)]"
+                  }`}
+                  aria-pressed={draft.snapMode === mode}
+                  onClick={() => onChange?.(setDraftSnapMode(draft, mode))}
+                >
+                  {snapLabel(mode, language)}
+                </button>
+              ))}
+            </div>
+          </div>
+          <p className="mt-2 text-xs text-[var(--lv-text-muted)]">{labels.keyboardHelp}</p>
+        </div>
+      ) : (
+        <p className="mt-3 text-sm text-[var(--lv-text-muted)]">{labels.emptySelection}</p>
+      )}
+
+      {confirmDraft === undefined ? null : (
+        <div className="mt-3 border border-amber-300/50 p-3" role="alertdialog">
+          <p className="text-xs text-amber-100">{labels.lostEdit}</p>
+          <div className="mt-2 flex gap-2">
+            <button
+              type="button"
+              className="min-h-9 border border-amber-300 px-3 text-xs"
+              onClick={() => onChange?.(confirmDraft)}
+            >
+              {labels.apply}
+            </button>
+            <button
+              type="button"
+              className="min-h-9 border border-[var(--lv-border)] px-3 text-xs"
+              onClick={() => {
+                setConfirmDraft(undefined);
+                setPending(current);
+              }}
+            >
+              {labels.cancel}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const primaryCopy = {
+  ja: {
+    currentSelection: "現在の採集範囲",
+    moveHandle: "採集範囲を移動",
+    selectionBar: (
+      startBar: number,
+      endBar: number,
+      lengthBars: number,
+      changing: boolean,
+      changed: boolean,
+    ) => `現在 ${startBar}〜${endBar}小節・${formatNumber(lengthBars)}小節${
+      changing ? "・変更中" : changed ? "・変更済み" : ""
+    }`,
+    startHandle: "採集範囲の開始ハンドル",
+    endHandle: "採集範囲の終了ハンドル",
+    selectionAria: (startBar: number, startBeat: number, endBar: number, endBeat: number) =>
+      `現在の採集範囲 ${startBar}小節${startBeat}拍から${endBar}小節${endBeat}拍`,
+    range: (startBar: number, startBeat: number, endBar: number, endBeat: number) =>
+      `選択範囲: ${startBar}.${startBeat}〜${endBar}.${endBeat}`,
+    length: (bars: number) => `長さ: ${formatNumber(bars)}小節`,
+    events: (count: number) => `コード: ${count}イベント`,
+    automaticSource: (index?: number) => index
+      ? `自動候補${index}から作成`
+      : "自動候補から作成",
+    manualSource: "手動範囲から作成",
+    dirty: "編集済み",
+    snap: "スナップ",
+    emptySelection: "候補を選ぶか、空いている領域をドラッグして採集範囲を作成します。",
+    keyboardHelp:
+      "←/→ 移動 · Shift+←/→ 終了を伸縮 · Alt+Shift+←/→ 開始を伸縮 · G スナップ · Space 試聴 · Enter 編集",
+    lostEdit: "この範囲変更では範囲外の編集が失われます。変更を適用しますか？",
+    apply: "適用",
+    cancel: "キャンセル",
+  },
+  en: {
+    currentSelection: "Current capture range",
+    moveHandle: "Move capture range",
+    selectionBar: (
+      startBar: number,
+      endBar: number,
+      lengthBars: number,
+      changing: boolean,
+      changed: boolean,
+    ) => `Current ${startBar}-${endBar} · ${formatNumber(lengthBars)} bars${
+      changing ? " · changing" : changed ? " · changed" : ""
+    }`,
+    startHandle: "Capture range start handle",
+    endHandle: "Capture range end handle",
+    selectionAria: (startBar: number, startBeat: number, endBar: number, endBeat: number) =>
+      `Current capture range from bar ${startBar} beat ${startBeat} to bar ${endBar} beat ${endBeat}`,
+    range: (startBar: number, startBeat: number, endBar: number, endBeat: number) =>
+      `Selection: ${startBar}.${startBeat}–${endBar}.${endBeat}`,
+    length: (bars: number) => `Length: ${formatNumber(bars)} bars`,
+    events: (count: number) => `Chords: ${count} events`,
+    automaticSource: (index?: number) => index
+      ? `Created from automatic candidate ${index}`
+      : "Created from an automatic candidate",
+    manualSource: "Created from a manual range",
+    dirty: "Edited",
+    snap: "Snap",
+    emptySelection: "Choose a candidate or drag an empty area to create a capture range.",
+    keyboardHelp:
+      "←/→ move · Shift+←/→ resize end · Alt+Shift+←/→ resize start · G snap · Space preview · Enter edit",
+    lostEdit: "This range change drops edits outside the range. Apply it?",
+    apply: "Apply",
+    cancel: "Cancel",
+  },
+} as const;
+
+function formatNumber(value: number): string {
+  return Number.isInteger(value) ? value.toString() : value.toFixed(2);
+}
+
+function clamp(value: number, minimum: number, maximum: number): number {
+  return Math.max(minimum, Math.min(maximum, value));
 }
 
 function snapLabel(mode: CandidateDraftSnapMode, language: AppLanguage): string {

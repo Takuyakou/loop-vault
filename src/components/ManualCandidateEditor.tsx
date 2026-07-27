@@ -259,6 +259,7 @@ export function ManualCandidateEditor({
       ref={editorRef}
       className="mt-4 border border-[var(--lv-border)] bg-[var(--lv-surface)]/40 p-4"
       data-testid="manual-candidate-editor"
+      tabIndex={-1}
       aria-label={text.title}
     >
       <header className="flex flex-wrap items-baseline gap-3">

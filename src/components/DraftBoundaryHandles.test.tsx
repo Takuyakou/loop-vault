@@ -62,6 +62,13 @@ describe("DraftBoundaryHandles", () => {
         onChange={onChange}
       />,
     ));
+    const details = container.querySelector<HTMLDetailsElement>(
+      '[data-testid="draft-boundary-handles"]',
+    )!;
+    expect(details.open).toBe(false);
+    expect(details.textContent).toContain("Details: adjust chord boundaries (1)");
+    await act(async () => container.querySelector<HTMLElement>("summary")?.click());
+    expect(details.open).toBe(true);
     const slider = container.querySelector<HTMLInputElement>(
       'input[data-boundary-after="left"]',
     )!;
@@ -83,6 +90,39 @@ describe("DraftBoundaryHandles", () => {
     expect(changed.events[1].relativeStartBeat).toBe(3);
     expect(changed.events[1].durationBeats).toBe(1);
     expect(changed.history).toHaveLength(1);
+
+    await act(async () => root.unmount());
+  });
+
+  it("keeps a 50-event boundary editor collapsed and internally scrollable", async () => {
+    const longTimeline: ChordTimelineItem[] = Array.from({ length: 50 }, (_unused, index) => ({
+      eventId: `event-${index + 1}`,
+      bar: index + 1,
+      beat: 1,
+      durationBeats: 4,
+      chord: parseChordLabel(index % 2 === 0 ? "Cmaj7" : "G7")!,
+      confidence: 0.9,
+      alternatives: [],
+      warnings: [],
+    }));
+    const draft = createManualDraft({
+      timeline: longTimeline,
+      range: { startBar: 1, startBeat: 1, endBar: 50, endBeat: 4 },
+      now: "2026-07-26T00:00:00.000Z",
+    });
+    const container = document.createElement("div");
+    const root = createRoot(container);
+
+    await act(async () => root.render(
+      <DraftBoundaryHandles draft={draft} language="en" onChange={vi.fn()} />,
+    ));
+
+    const details = container.querySelector<HTMLDetailsElement>("details")!;
+    const scrollRegion = container.querySelector<HTMLElement>("[data-boundary-scroll-region]")!;
+    expect(details.open).toBe(false);
+    expect(details.textContent).toContain("Details: adjust chord boundaries (49)");
+    expect(scrollRegion.className).toContain("max-h-72");
+    expect(scrollRegion.className).toContain("overflow-y-auto");
 
     await act(async () => root.unmount());
   });
