@@ -2,9 +2,9 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { cwd, stdout } from "node:process";
 import {
-  filterRelativeSupportMelodyContamination,
-  type RelativeSupportFilterOptions,
-} from "../src/domain/voicing/relativeSupportMelodyFilter";
+  filterCountDurationMelodyContamination,
+  type CountDurationFilterOptions,
+} from "../src/domain/voicing/countDurationMelodyFilter";
 import { evaluateGeneralRegression } from "./phase44/generalRegression";
 import {
   aggregatePhase44Rows,
@@ -29,7 +29,7 @@ const gates = JSON.parse(
   await readFile(resolve(cwd(), "docs/phase4.4.2/00-gates.json"), "utf8"),
 ) as {
   hypotheses: {
-    relativeSupport: ((Omit<RelativeSupportFilterOptions, "minimumRoleConfidence">) & {
+    countDuration: ((Omit<CountDurationFilterOptions, "minimumRoleConfidence">) & {
       id: string;
     })[];
   };
@@ -42,12 +42,12 @@ const baselinePrimary = aggregateSupportRows(
 );
 const candidateResults = [];
 
-for (const registered of gates.hypotheses.relativeSupport) {
+for (const registered of gates.hypotheses.countDuration) {
   const options = {
     ...registered,
     minimumRoleConfidence: 0.65,
   };
-  const filter = relativeFilter(options);
+  const filter = countDurationFilter(options);
   const rows = await evaluateSupportSplit(corpusDir, manifest, "dev", filter);
   const primary = aggregateSupportRows(
     rows.filter((row) => row.evidence.subset === "primary"),
@@ -60,7 +60,7 @@ for (const registered of gates.hypotheses.relativeSupport) {
       minimumConcurrentNonMelodyPitches: 4,
       minimumConcurrentSupportBeats: 0.2,
     },
-    (input) => filterRelativeSupportMelodyContamination(input, options),
+    (input) => filterCountDurationMelodyContamination(input, options),
   );
   const oldRows = await evaluatePhase44Split(
     oldTargetedDir,
@@ -69,7 +69,7 @@ for (const registered of gates.hypotheses.relativeSupport) {
     ["B", "S"],
     {
       customShadowFilter: (input) =>
-        filterRelativeSupportMelodyContamination(input, options),
+        filterCountDurationMelodyContamination(input, options),
     },
   );
   candidateResults.push({
@@ -90,10 +90,11 @@ for (const registered of gates.hypotheses.relativeSupport) {
     },
   });
 }
+
 const report = {
   schemaVersion: 1,
-  phase: "4.4.2-02",
-  hypothesis: "A-relative-support",
+  phase: "4.4.2-03",
+  hypothesis: "B-count-duration",
   split: "dev",
   analyzerMode: "phase4-v1",
   fileVersion: 1,
@@ -102,12 +103,12 @@ const report = {
   holdoutStatus: "not-run",
   candidates: candidateResults,
 };
-const outputJson = resolve(cwd(), "docs/phase4.4.2/02-relative-support-shadow.json");
-const outputMarkdown = resolve(cwd(), "docs/phase4.4.2/02-relative-support-shadow.md");
+const outputJson = resolve(cwd(), "docs/phase4.4.2/03-count-duration-shadow.json");
+const outputMarkdown = resolve(cwd(), "docs/phase4.4.2/03-count-duration-shadow.md");
 await mkdir(dirname(outputJson), { recursive: true });
 await writeFile(outputJson, `${JSON.stringify(report, null, 2)}\n`, "utf8");
 await writeFile(outputMarkdown, markdown(report), "utf8");
-stdout.write("P4.4.2-02 Hypothesis A shadow: PASS\n");
+stdout.write("P4.4.2-03 Hypothesis B shadow: PASS\n");
 stdout.write(`${JSON.stringify(candidateResults.map((candidate) => ({
   id: candidate.options.id,
   delta: candidate.delta,
@@ -115,11 +116,9 @@ stdout.write(`${JSON.stringify(candidateResults.map((candidate) => ({
   generalF1: candidate.regression.general60Dev.shadow.overall.noteF1,
 })), null, 2)}\n`);
 
-function relativeFilter(
-  options: RelativeSupportFilterOptions & { id: string },
-): ShadowFilter {
+function countDurationFilter(options: CountDurationFilterOptions): ShadowFilter {
   return (input, ids) => {
-    const result = filterRelativeSupportMelodyContamination(input, options);
+    const result = filterCountDurationMelodyContamination(input, options);
     return {
       notes: result.notes,
       removed: result.removed,
@@ -150,27 +149,26 @@ function delta(current: ReturnType<typeof aggregateSupportRows>, baseline: typeo
 }
 
 function markdown(value: typeof report): string {
-  return `# P4.4.2-02 Hypothesis A: Relative Support
+  return `# P4.4.2-03 Hypothesis B: Count x Duration
 
-- devだけで3候補を独立shadow評価
-- Goldはsubset分類とmetricsだけに使用
-- Bass role分類、Analyzer、製品経路は不変
-- Validation / Holdout未実行
+- Evaluated B1/B2/B3 independently on the dev split.
+- Gold labels are used only for subset assignment and metrics.
+- Bass-role repair and product-path integration are intentionally excluded.
+- Validation and holdout were not run.
 
-| ID | Ratio | Primary contamination reduction | Leak reduction | Recall Δ | Bass Δ | Top Δ | Register Δ | Exact Δ | General F1 |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| ID | Minimum mass | Contamination reduction | Leak reduction | Recall delta | Bass delta | Exact delta | General F1 |
+|---|---:|---:|---:|---:|---:|---:|---:|
 ${value.candidates.map((candidate) =>
-    `| ${candidate.options.id} | ${candidate.options.minimumCoverageRatio} | `
+    `| ${candidate.options.id} | ${candidate.options.minimumSupportMass} | `
     + `${percent(candidate.delta.primaryContaminationReduction)} | `
     + `${percent(candidate.delta.primaryMelodyLeakReduction)} | `
-    + `${points(candidate.delta.noteRecall)} | ${points(candidate.delta.bassAccuracy)} | `
-    + `${points(candidate.delta.topNoteAccuracy)} | `
-    + `${points(candidate.delta.registerExactRate)} | `
+    + `${points(candidate.delta.noteRecall)} | `
+    + `${points(candidate.delta.bassAccuracy)} | `
     + `${points(candidate.delta.voicingExactRate)} | `
     + `${percent(candidate.regression.general60Dev.shadow.overall.noteF1)} |`,
   ).join("\n")}
 
-support count / duration / block / arpeggio / rootless / subset別結果と、既存60 MIDI・旧専用dev回帰はJSONへ保存した。
+Detailed event, support-count, duration, texture, subset, and regression metrics are in the JSON report.
 `;
 }
 
