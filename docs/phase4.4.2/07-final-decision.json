@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.4.2-07",
+  "decision": "stop-without-promotion",
+  "eligibleForProductIntegration": false,
+  "selectedCandidate": {
+    "id": "A1",
+    "hypothesis": "A-relative-support",
+    "minimumRoleConfidence": 0.65,
+    "minimumSupportPitchCount": 1,
+    "minimumCoverageRatio": 0.25,
+    "minimumSupportBeats": 0.2
+  },
+  "corpusIntegrity": {
+    "files": 32,
+    "events": 256,
+    "notes": 1472,
+    "scenarios": 16,
+    "passed": true
+  },
+  "dev": {
+    "gatePassed": true,
+    "primaryContaminationReduction": 1,
+    "primaryMelodyLeakReduction": 1,
+    "noteRecallDelta": 0.002451,
+    "voicingExactDelta": 0.170454,
+    "bassAccuracyDelta": 0,
+    "sourceNoteAdditions": 0
+  },
+  "validation": {
+    "executionCount": 1,
+    "gatePassed": true,
+    "primaryEvents": 16,
+    "primaryContaminationReduction": 0.5,
+    "primaryMelodyLeakReduction": 0.5,
+    "noteF1Delta": 0.047619,
+    "voicingExactDelta": 0.5
+  },
+  "holdout": {
+    "executionCount": 1,
+    "gatePassed": false,
+    "primaryEvents": 8,
+    "primaryContaminationReduction": 0,
+    "primaryMelodyLeakReduction": 0,
+    "filterTriggerRate": 0,
+    "measuredSupportDurationBeats": 0.179167,
+    "failedGates": [
+      "primaryContaminationImproved",
+      "melodyLeakImproved"
+    ]
+  },
+  "invariants": {
+    "defaultAnalyzerMode": "phase4-v1",
+    "fileVersion": 1,
+    "schemaChanged": false,
+    "timelineChanged": false,
+    "chordLabelsChanged": false,
+    "productPathChanged": false,
+    "privateMidiTracked": false
+  },
+  "oldDedicatedHoldoutStatus": "not-run",
+  "rollback": "No product integration was performed.",
+  "phase443Handoff": [
+    "all-channel-zero",
+    "stem track role classification",
+    "harmony or melody voice misclassified as bass",
+    "support-count-0",
+    "missing-harmony-dominant",
+    "pre-register handling of MIDI quantization near the 0.2 beat boundary"
+  ]
+}
