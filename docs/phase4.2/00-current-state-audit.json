@@ -1,0 +1,126 @@
+{
+  "auditVersion": 1,
+  "auditedCommit": "95f8575",
+  "auditedAt": "2026-07-26",
+  "defaultAnalyzerMode": "phase4-v1",
+  "fileVersion": 1,
+  "sourceOfTruth": {
+    "manualRangeSelection": {
+      "location": "src/components/TimelineRangeSelector.tsx",
+      "state": "component-local selection"
+    },
+    "manualDraft": {
+      "location": "src/views/CaptureView.tsx:TimelineDetails",
+      "state": "component-local manualDraft"
+    },
+    "manualEditor": {
+      "location": "src/components/ManualCandidateEditor.tsx",
+      "state": "component-local EditableProgression"
+    },
+    "automaticCandidateEditor": {
+      "location": "src/views/CaptureView.tsx:ProgressionCandidateCard",
+      "state": "card-local EditableProgression"
+    },
+    "unified": false,
+    "newStoreRequired": false
+  },
+  "implemented": [
+    "manual timeline range selection",
+    "ManualCandidateDraft creation from a timeline range",
+    "timeline fingerprint validation",
+    "chord replace, insert, delete, split and merge",
+    "chord-slot undo and redo",
+    "manual range nudge with keep-or-discard confirmation",
+    "draft preview using resolved voicing",
+    "Vault save through CaptureView and applyVaultChange",
+    "Vault reload, Chord Dojo and Mix preflight compatibility"
+  ],
+  "partial": [
+    {
+      "feature": "unified save path",
+      "reason": "Both routes reach saveNew/appendExisting, but use different state and conversion paths."
+    },
+    {
+      "feature": "draft editing",
+      "reason": "ManualCandidateEditor owns EditableProgression separately from ManualCandidateDraft."
+    },
+    {
+      "feature": "range keyboard editing",
+      "reason": "Basic selection shortcuts exist, but Phase 4.2 range and snap shortcuts do not."
+    },
+    {
+      "feature": "voicing consistency",
+      "reason": "Manual Draft fallback exists; automatic candidate Draft integration does not."
+    }
+  ],
+  "missing": [
+    "CandidateDraftSource union",
+    "createDraftFromCandidate",
+    "automatic candidate to ManualCandidateDraft route",
+    "sourceCandidateSnapshot",
+    "snapMode",
+    "single active Capture Draft",
+    "mixed range and chord snapshot history",
+    "history limit 64",
+    "history list and jump UI",
+    "persistent timeline range handles",
+    "chord boundary drag",
+    "four explicit delete semantics",
+    "two explicit merge semantics",
+    "operation result toast",
+    "A/B source MIDI versus Draft preview",
+    "session Draft retention across Capture subviews"
+  ],
+  "history": {
+    "implementation": "src/domain/progressionEditing/editHistory.ts",
+    "currentLimit": 100,
+    "capturesChordSlots": true,
+    "capturesSelectedRange": false,
+    "capturesSnapMode": false,
+    "capturesMixedOperations": false,
+    "hasJumpUi": false
+  },
+  "persistence": {
+    "draftPersisted": false,
+    "vaultSchemaChangeNeeded": false,
+    "saveEntryPoints": [
+      "src/views/CaptureView.tsx:saveNew",
+      "src/views/CaptureView.tsx:appendExisting"
+    ],
+    "storeMutationPath": "src/store/vaultStore.ts:applyVaultChange"
+  },
+  "layering": {
+    "domainImportsReact": false,
+    "domainImportsZustand": false,
+    "domainImportsTauri": false,
+    "draftIsSessionOnly": true
+  },
+  "protectedAreas": [
+    "MIDI parser",
+    "chord detection",
+    "root, quality and tension scoring",
+    "Candidate Catalog generation",
+    "Vault schema",
+    "fileVersion",
+    "defaultAnalyzerMode"
+  ],
+  "nextStage": [
+    "Extend ManualCandidateDraft source model.",
+    "Add pure createDraftFromCandidate.",
+    "Move active Draft ownership to the Capture view.",
+    "Route automatic and manual entry points through one editor and one save conversion.",
+    "Prove Catalog, Recommendation, Pattern and Occurrence remain unchanged."
+  ],
+  "evidence": [
+    "src/domain/midi/manualDraft.ts",
+    "src/domain/midi/manualRange.ts",
+    "src/domain/midi/manualDraftEditing.ts",
+    "src/domain/midi/manualDraftPlayback.ts",
+    "src/domain/progressionEditing/editHistory.ts",
+    "src/domain/progressionEditing/types.ts",
+    "src/components/TimelineRangeSelector.tsx",
+    "src/components/ManualCandidateEditor.tsx",
+    "src/views/CaptureView.tsx",
+    "src/store/vaultStore.ts"
+  ]
+}
