@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.4",
+  "selectedIntervention": "event-local-note-filtering",
+  "selectionBasis": {
+    "devMechanisms": {
+      "M1-same-track-role-mixing": 1,
+      "M2-track-role-misclassification": 2,
+      "M3-downstream-retention": 17
+    },
+    "validationMechanisms": {
+      "M1-same-track-role-mixing": 0,
+      "M2-track-role-misclassification": 2,
+      "M3-downstream-retention": 4
+    },
+    "oracleAPlusDevExactGain": 0.11875,
+    "oracleAPlusDevUsableGain": 0,
+    "oracleAPlusValidationExactGain": 0.041667,
+    "oracleAPlusValidationUsableGain": 0.145833
+  },
+  "notSelected": {
+    "role-evidence": "M2 is a minority and Gold per-voice role still retains 19 dev contamination events",
+    "unconditional-melody-removal": "Validation arpeggio Top/Register regressed by 0.25 in Oracle A+",
+    "chord-tone-filter": "Chord-tone membership is not a reliable melody discriminator",
+    "register-only-filter": "Low-register melody is explicitly present in the Gold corpus"
+  },
+  "shadowContract": {
+    "productOutput": "unchanged",
+    "shadowOutput": "filtered-notes-then-current-extractor",
+    "eligibleRole": "melody",
+    "requireMonophonicVoice": true,
+    "minimumConcurrentNonMelodyPitches": 3,
+    "minimumConcurrentSupportBeats": 0.1,
+    "roleConfidenceSearch": [
+      0.45,
+      0.55,
+      0.65
+    ],
+    "concurrentPitchSearch": [
+      3,
+      4
+    ],
+    "supportBeatsSearch": [
+      0.1,
+      0.2
+    ],
+    "selectionOrder": [
+      "Pass all dev gates",
+      "Maximum contamination event reduction",
+      "Maximum note F1",
+      "Maximum exact",
+      "Higher role confidence threshold",
+      "Higher concurrent support threshold",
+      "Higher support duration threshold"
+    ],
+    "diagnosticReasonsRequired": true,
+    "sourceNoteAdditionAllowed": false
+  },
+  "changedFiles": [
+    "src/domain/voicing/melodyContaminationFilter.ts",
+    "src/domain/voicing/melodyContaminationFilter.test.ts",
+    "scripts/evaluate-phase44-shadow.ts"
+  ],
+  "unchanged": [
+    "src/domain/midi/voiceRoles.ts",
+    "src/domain/midi/analysis.ts",
+    "src/domain/voicing/extractSimultaneousVoicing.ts",
+    "src/domain/voicing/extractAggregatedNoteSet.ts",
+    "src/domain/voicing/extractVoicing.ts",
+    "boundary",
+    "aggregate fallback",
+    "chord labels",
+    "timeline",
+    "Vault schema",
+    "fileVersion"
+  ],
+  "risks": [
+    "Removing a legitimate top voice from a melody-labelled but harmonic Voice",
+    "Reducing register fidelity in arpeggiated material",
+    "Failing to address M1 and M2 events"
+  ],
+  "hardGates": "docs/phase4.4/00-gates.json",
+  "rollback": "Keep product path unchanged in shadow; revert the shadow commit if diagnostics regress"
+}
