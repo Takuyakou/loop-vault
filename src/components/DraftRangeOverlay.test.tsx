@@ -252,6 +252,12 @@ describe("DraftRangeOverlay", () => {
     await act(async () => {
       endHandle.dispatchEvent(pointerEvent("pointerdown", 160));
       harness.track.dispatchEvent(pointerEvent("pointermove", 240));
+    });
+    expect(harness.container.textContent).toContain("Selection: 1.1–12.4");
+    expect(harness.container.textContent).toContain("Length: 12 bars");
+    expect(harness.container.textContent).toContain("Chords: 12 events");
+
+    await act(async () => {
       harness.track.dispatchEvent(pointerEvent("pointerup", 240));
     });
 

@@ -117,7 +117,7 @@ export function SongMiniMap({
           totalBars={totalBars}
           beatsPerBar={beatsPerBar}
           language={language}
-          trackHeightRem={laneCount * 2 + 1.25}
+          trackHeightRem={laneCount * 2 + 2.75}
           {...(draft === undefined ? {} : { draft })}
           {...(sourceCandidateIndex === undefined || sourceCandidateIndex < 1
             ? {}
@@ -149,15 +149,15 @@ export function SongMiniMap({
                   aria-label={label}
                   aria-pressed={isActive}
                   title={label}
-                  className={`absolute grid h-7 min-w-7 place-items-center overflow-hidden border px-1 text-xs font-semibold transition focus-visible:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] ${
+                  className={`absolute z-40 grid h-7 min-w-7 place-items-center overflow-hidden border px-1 text-xs font-semibold transition focus-visible:z-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] ${
                     isActive
-                      ? "z-10 border-teal-100 bg-teal-200 text-stone-950 shadow-[0_0_0_2px_rgba(94,234,212,0.3)]"
+                      ? "border-teal-100 bg-teal-200 text-stone-950 shadow-[0_0_0_2px_rgba(94,234,212,0.3)]"
                       : "border-teal-300/80 bg-teal-400/35 text-teal-50 hover:bg-teal-300/55"
                   }`}
                   style={{
                     left: `${left}%`,
                     width: `${width}%`,
-                    top: `${lane * 2 + 0.25}rem`,
+                    top: `${lane * 2 + 2}rem`,
                   }}
                   onPointerDown={(event) => event.stopPropagation()}
                   onClick={() => onCandidateSelect(candidate.id)}

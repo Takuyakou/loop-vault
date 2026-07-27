@@ -10,6 +10,8 @@ Candidate CatalogやRecommendationは選択プリセットとして表示し、�
 
 - 「全曲」上へCandidate、現在Selection、左右ハンドル、選択帯を重ねて表示する。
 - Candidateは緑系、現在Selectionは琥珀色の太い外枠とハンドルで区別する。
+- Selectionの帯はpointer eventを遮らず、重なったCandidateを直接クリックできる。
+- 範囲全体の移動は帯上部の専用移動ハンドルへ分離する。
 - Selection直下へ開始・終了、小節数、コードイベント数、生成元、編集済み状態を常時表示する。
 - コード境界スライダーは削除せず、初期状態が閉じた詳細accordionへ移した。
 - Candidateクリックだけでは「曲全体のコードを見る」を開かず、同じ画面上でDraft編集へ進める。
@@ -39,6 +41,9 @@ Candidate CatalogやRecommendationは選択プリセットとして表示し、�
 範囲変更後のコード列は既存の範囲再構築ロジックで更新される。Candidate、
 Occurrence、Catalog、Recommendationへは書き戻さない。範囲外の編集が失われる場合は、
 既存と同じ確認UIを表示する。
+
+左右ハンドルのdrag中は、Selectionの帯と直下の開始・終了、小節数、コードイベント数を
+即時更新する。pointer release時に一度だけDraftへcommitし、統一履歴を不要に増やさない。
 
 ## 境界accordion
 

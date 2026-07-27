@@ -21,7 +21,7 @@ import type {
   ManualCandidateDraft,
 } from "../domain/midi/manualDraft";
 import type { AppLanguage } from "../i18n";
-import { GripVertical } from "lucide-react";
+import { GripVertical, MoveHorizontal } from "lucide-react";
 
 interface DraftRangeOverlayBaseProps {
   timeline: readonly ChordTimelineItem[];
@@ -370,7 +370,7 @@ function PrimaryDraftRangeOverlay({
   const pendingRef = useRef<AbsoluteRange | undefined>(current);
   const dragRef = useRef<PointerDrag>();
   const trackRef = useRef<HTMLDivElement>(null);
-  const selectionRef = useRef<HTMLDivElement>(null);
+  const selectionRef = useRef<HTMLButtonElement>(null);
   const [confirmDraft, setConfirmDraft] = useState<ManualCandidateDraft>();
 
   useEffect(() => {
@@ -518,7 +518,7 @@ function PrimaryDraftRangeOverlay({
     commitDraftRange(next, event.altKey);
   }
 
-  function handleSelectionKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
+  function handleSelectionKeyDown(event: ReactKeyboardEvent<HTMLElement>) {
     if (event.defaultPrevented || event.nativeEvent.isComposing || !draft || !pending) return;
     const key = event.key.toLowerCase();
     if ((event.ctrlKey || event.metaKey) && (key === "z" || key === "y")) {
@@ -573,6 +573,36 @@ function PrimaryDraftRangeOverlay({
   }
 
   const visibleRange = pending ?? current;
+  const displayDraft = useMemo(() => {
+    if (!draft || !visibleRange) return draft;
+    const absolute = draftRangeAbsoluteBeats(draft);
+    if (
+      absolute.startBeat === visibleRange.startBeat
+      && absolute.endBeat === visibleRange.endBeat
+    ) return draft;
+    try {
+      return retargetDraftByAbsoluteBeats(
+        draft,
+        timeline,
+        visibleRange.startBeat,
+        visibleRange.endBeat,
+        totalBars,
+        { keepEdits: true, disableSnap: true },
+      ).draft;
+    } catch {
+      return draft;
+    }
+  }, [draft, timeline, totalBars, visibleRange]);
+  const displayRange = displayDraft?.selectedRange;
+  const pendingChange = Boolean(
+    draft
+    && visibleRange
+    && current
+    && (
+      visibleRange.startBeat !== current.startBeat
+      || visibleRange.endBeat !== current.endBeat
+    ),
+  );
   const left = visibleRange ? (visibleRange.startBeat / maximum) * 100 : 0;
   const width = visibleRange
     ? ((visibleRange.endBeat - visibleRange.startBeat) / maximum) * 100
@@ -605,77 +635,92 @@ function PrimaryDraftRangeOverlay({
           ))}
         </div>
         {children}
-        {draft && visibleRange ? (
+        {draft && visibleRange && displayRange ? (
+          <>
           <div
+            aria-hidden="true"
+            data-selection-band
+            data-selection-control
+            className="pointer-events-none absolute inset-y-1 z-30 min-w-6 border-2 border-amber-100 bg-amber-300/20 shadow-[0_0_0_2px_rgba(8,15,22,0.9)]"
+            style={{ left: `${left}%`, width: `${width}%` }}
+          />
+          <button
             ref={selectionRef}
-            role="group"
-            tabIndex={0}
+            type="button"
             data-current-selection
             data-selection-control
+            data-selection-move-handle
             aria-label={labels.selectionAria(
-              draft.selectedRange.startBar,
-              draft.selectedRange.startBeat,
-              draft.selectedRange.endBar,
-              draft.selectedRange.endBeat,
+              displayRange.startBar,
+              displayRange.startBeat,
+              displayRange.endBar,
+              displayRange.endBeat,
             )}
-            className="absolute inset-y-1 z-30 min-w-6 cursor-grab border-2 border-amber-100 bg-amber-300/20 shadow-[0_0_0_2px_rgba(8,15,22,0.9)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200 active:cursor-grabbing"
+            title={labels.moveHandle}
+            className="absolute top-1 z-50 flex h-6 min-w-6 cursor-grab items-center justify-center gap-1 overflow-hidden border border-amber-50 bg-[var(--lv-bg)]/95 px-1 text-[0.65rem] font-semibold text-amber-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200 active:cursor-grabbing"
             style={{ left: `${left}%`, width: `${width}%` }}
             onPointerDown={(event) => beginDrag("move", event)}
             onKeyDown={handleSelectionKeyDown}
           >
-            <span className="pointer-events-none absolute left-1 top-1 max-w-[calc(100%-0.5rem)] truncate bg-[var(--lv-bg)]/90 px-1 text-[0.65rem] font-semibold text-amber-100">
-              {labels.currentSelection}
-            </span>
-            <button
-              type="button"
-              role="slider"
-              data-selection-control
-              data-selection-handle="start"
-              aria-label={labels.startHandle}
-              aria-valuemin={0}
-              aria-valuemax={maximum}
-              aria-valuenow={visibleRange.startBeat}
-              className="absolute inset-y-0 -left-2 w-4 cursor-ew-resize border border-amber-50 bg-amber-200 text-stone-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-100"
-              onPointerDown={(event) => beginDrag("start", event)}
-            >
-              <GripVertical aria-hidden="true" size={16} />
-            </button>
-            <button
-              type="button"
-              role="slider"
-              data-selection-control
-              data-selection-handle="end"
-              aria-label={labels.endHandle}
-              aria-valuemin={0}
-              aria-valuemax={maximum}
-              aria-valuenow={visibleRange.endBeat}
-              className="absolute inset-y-0 -right-2 w-4 cursor-ew-resize border border-amber-50 bg-amber-200 text-stone-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-100"
-              onPointerDown={(event) => beginDrag("end", event)}
-            >
-              <GripVertical aria-hidden="true" size={16} />
-            </button>
-          </div>
+            <MoveHorizontal aria-hidden="true" className="shrink-0" size={16} />
+            <span className="truncate">{labels.currentSelection}</span>
+          </button>
+          <button
+            type="button"
+            role="slider"
+            data-selection-control
+            data-selection-handle="start"
+            aria-label={labels.startHandle}
+            aria-valuemin={0}
+            aria-valuemax={maximum}
+            aria-valuenow={visibleRange.startBeat}
+            title={labels.startHandle}
+            className="absolute inset-y-1 z-50 grid w-4 -translate-x-1/2 cursor-ew-resize place-items-center border border-amber-50 bg-amber-200 text-stone-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-100"
+            style={{ left: `${left}%` }}
+            onPointerDown={(event) => beginDrag("start", event)}
+            onKeyDown={handleSelectionKeyDown}
+          >
+            <GripVertical aria-hidden="true" size={16} />
+          </button>
+          <button
+            type="button"
+            role="slider"
+            data-selection-control
+            data-selection-handle="end"
+            aria-label={labels.endHandle}
+            aria-valuemin={0}
+            aria-valuemax={maximum}
+            aria-valuenow={visibleRange.endBeat}
+            title={labels.endHandle}
+            className="absolute inset-y-1 z-50 grid w-4 -translate-x-1/2 cursor-ew-resize place-items-center border border-amber-50 bg-amber-200 text-stone-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-100"
+            style={{ left: `${left + width}%` }}
+            onPointerDown={(event) => beginDrag("end", event)}
+            onKeyDown={handleSelectionKeyDown}
+          >
+            <GripVertical aria-hidden="true" size={16} />
+          </button>
+          </>
         ) : null}
       </div>
 
-      {draft ? (
+      {draft && displayDraft ? (
         <div className="mt-3 border border-amber-200/30 bg-amber-200/5 p-3" aria-live="polite">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-amber-100">{labels.currentSelection}</p>
               <p className="mt-1 text-xs text-[var(--lv-text-secondary)]">
                 {labels.range(
-                  draft.selectedRange.startBar,
-                  draft.selectedRange.startBeat,
-                  draft.selectedRange.endBar,
-                  draft.selectedRange.endBeat,
+                  displayDraft.selectedRange.startBar,
+                  displayDraft.selectedRange.startBeat,
+                  displayDraft.selectedRange.endBar,
+                  displayDraft.selectedRange.endBeat,
                 )}
               </p>
               <p className="mt-1 text-xs text-[var(--lv-text-muted)]">
-                {labels.length(draft.lengthBars)} · {labels.events(draft.events.length)}
+                {labels.length(displayDraft.lengthBars)} · {labels.events(displayDraft.events.length)}
               </p>
               <p className="mt-1 text-xs text-[var(--lv-text-muted)]">
-                {source}{draft.isDirty ? ` · ${labels.dirty}` : ""}
+                {source}{draft.isDirty || pendingChange ? ` · ${labels.dirty}` : ""}
               </p>
             </div>
             <div className="flex flex-wrap gap-1" role="group" aria-label={labels.snap}>
@@ -733,6 +778,7 @@ function PrimaryDraftRangeOverlay({
 const primaryCopy = {
   ja: {
     currentSelection: "現在の採集範囲",
+    moveHandle: "採集範囲を移動",
     startHandle: "採集範囲の開始ハンドル",
     endHandle: "採集範囲の終了ハンドル",
     selectionAria: (startBar: number, startBeat: number, endBar: number, endBeat: number) =>
@@ -756,6 +802,7 @@ const primaryCopy = {
   },
   en: {
     currentSelection: "Current capture range",
+    moveHandle: "Move capture range",
     startHandle: "Capture range start handle",
     endHandle: "Capture range end handle",
     selectionAria: (startBar: number, startBeat: number, endBar: number, endBeat: number) =>

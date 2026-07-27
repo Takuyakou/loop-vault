@@ -4,7 +4,9 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import type { ProgressionBlockCandidate } from "../domain/types";
+import { parseChordLabel } from "../domain/chords";
+import { createManualDraft } from "../domain/midi/manualDraft";
+import type { ChordTimelineItem, ProgressionBlockCandidate } from "../domain/types";
 import { layoutSongMiniMapCandidates, SongMiniMap, type SongMiniMapCopy } from "./SongMiniMap";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
@@ -138,6 +140,55 @@ describe("SongMiniMap", () => {
       ["candidate-1"],
       ["candidate-6"],
     ]);
+    await act(async () => root.unmount());
+  });
+
+  it("keeps overlapping candidates above the passive selection band", async () => {
+    const selectionTimeline: ChordTimelineItem[] = Array.from(
+      { length: 8 },
+      (_unused, index) => ({
+        eventId: `event-${index + 1}`,
+        bar: index + 1,
+        beat: 1,
+        durationBeats: 4,
+        chord: parseChordLabel(index % 2 === 0 ? "Cmaj7" : "G7")!,
+        confidence: 0.9,
+        alternatives: [],
+        warnings: [],
+      }),
+    );
+    const draft = createManualDraft({
+      timeline: selectionTimeline,
+      range: { startBar: 1, startBeat: 1, endBar: 4, endBeat: 4 },
+      now: "2026-07-27T00:00:00.000Z",
+    });
+    const onCandidateSelect = vi.fn();
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <SongMiniMap
+        {...editorProps}
+        totalBars={8}
+        timeline={selectionTimeline}
+        candidates={[candidate("overlap", 1, 4)]}
+        draft={draft}
+        activeCandidateId="overlap"
+        copy={englishCopy}
+        onCandidateSelect={onCandidateSelect}
+      />,
+    ));
+
+    const candidateButton = container.querySelector<HTMLButtonElement>(
+      '[data-song-minimap-candidate="overlap"]',
+    )!;
+    const selectionBand = container.querySelector<HTMLElement>("[data-selection-band]")!;
+    expect(candidateButton.className).toContain("z-40");
+    expect(candidateButton.style.top).toBe("2rem");
+    expect(selectionBand.className).toContain("pointer-events-none");
+    expect(container.querySelector("[data-selection-move-handle]")).not.toBeNull();
+    await act(async () => candidateButton.click());
+    expect(onCandidateSelect).toHaveBeenCalledWith("overlap");
+
     await act(async () => root.unmount());
   });
 });
