@@ -43,6 +43,7 @@
     "eval:p442:holdout": "vite-node scripts/evaluate-phase442-holdout.ts",
     "eval:p443:classify": "vite-node scripts/classify-phase443-holdout.ts",
     "eval:p443:a1-prime": "vite-node scripts/evaluate-phase443-a1-prime.ts",
+    "eval:p443:cv": "vite-node scripts/evaluate-phase443-loso-cv.ts",
     "eval:stored-progressions": "vite-node scripts/evaluate-stored-progressions.ts",
     "eval:review-differences": "vite-node scripts/review-midi-differences.ts",
     "eval:promote-corrections": "vite-node scripts/promote-midi-corrections.ts",
