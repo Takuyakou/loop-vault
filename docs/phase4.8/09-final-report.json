@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.8-09",
+  "decision": "non-promotion",
+  "reason": "All pre-registered variants failed at least one Existing Dev Hard Gate.",
+  "selectedVariant": null,
+  "pullRequests": [
+    284,
+    285,
+    286,
+    287,
+    288
+  ],
+  "promotionCandidate": {
+    "closestVariant": "E1",
+    "target7b9Recall": 0.8,
+    "generatedRescueCount": 32,
+    "stillMissingCount": 8,
+    "negativeFalseGenerationRate": 0.007142857142857143,
+    "averageAddedCandidates": 0.11875,
+    "maximumAddedCandidates": 2,
+    "runtimeRelative": 0.2323270801210123,
+    "runtimeAbsolutePerFileMs": 1.1496450000000096,
+    "failedGates": [
+      "runtimeRelative"
+    ]
+  },
+  "variants": {
+    "E1": {
+      "target7b9Recall": 0.8,
+      "negativeFalseGenerationRate": 0.007142857142857143,
+      "runtimeRelative": 0.2323270801210123,
+      "passed": false
+    },
+    "E2": {
+      "target7b9Recall": 0.6,
+      "negativeFalseGenerationRate": 0.475,
+      "runtimeRelative": 0.23620864564030103,
+      "passed": false
+    },
+    "E3": {
+      "target7b9Recall": 0.575,
+      "negativeFalseGenerationRate": 0.4142857142857143,
+      "runtimeRelative": 0.2535157899842179,
+      "passed": false
+    }
+  },
+  "counterfactual": {
+    "rank1ChangedCount": 0,
+    "improvedCount": 0,
+    "regressedCount": 0,
+    "neutralCount": 0,
+    "rootChangedCount": 0,
+    "plainSevenStolenCount": 0,
+    "top3CanonicalBefore": 0.73125,
+    "top3CanonicalAfter": 0.8125,
+    "top3RootBefore": 0.9625,
+    "top3RootAfter": 0.9625,
+    "mrrBefore": 0.6748452732130403,
+    "mrrAfter": 0.7160210143428255
+  },
+  "product": {
+    "connected": false,
+    "featureFlagImplemented": false,
+    "analyzerMode": "phase4-v1",
+    "fileVersion": 1,
+    "schemaChanged": false,
+    "rankChanged": false,
+    "top3Changed": false,
+    "scoreChanged": false,
+    "confidenceChanged": false,
+    "analyzerHashBefore": "c841bf9fc416a13ad7dec935fb8bd740d347a7920dec580684b0c06d073951d7",
+    "analyzerHashAfter": "c841bf9fc416a13ad7dec935fb8bd740d347a7920dec580684b0c06d073951d7"
+  },
+  "stages": {
+    "P4.8-00": "completed",
+    "P4.8-01": "completed",
+    "P4.8-02": "completed",
+    "P4.8-03": "completed",
+    "P4.8-04": "skipped-by-existing-dev-gate",
+    "P4.8-05": "skipped-by-existing-dev-gate",
+    "P4.8-06": "skipped-by-existing-dev-gate",
+    "P4.8-07": "skipped-by-existing-dev-gate",
+    "P4.8-08": "skipped-by-existing-dev-gate",
+    "P4.8-09": "completed"
+  },
+  "splitRuns": {
+    "newDev": 0,
+    "validation": 0,
+    "holdout": 0
+  },
+  "privateMidiTracked": 0,
+  "localEvaluationTracked": 0,
+  "nextAlterationFamilyAutoExpansionAllowed": false
+}
