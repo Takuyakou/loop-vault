@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.8-00",
+  "existingDev": {
+    "target7b9RecallMinimum": 0.8,
+    "rescuedMinimum": 32,
+    "negativeFalseGenerationMaximum": 0.05,
+    "inertnessMinimum": 1,
+    "averageAddedMaximum": 0.5,
+    "maximumAddedPerEvent": 2,
+    "runtimeRelativeMaximum": 0.1,
+    "runtimeAbsoluteMsMaximum": 10,
+    "counterfactualRegressionMaximum": 0
+  },
+  "newDev": {
+    "target7b9RecallMinimum": 0.8,
+    "falseGenerationMaximum": 0.05
+  },
+  "validationAndHoldout": {
+    "target7b9RecallMinimum": 0.75,
+    "falseGenerationMaximum": 0.05,
+    "runsMaximum": 1
+  },
+  "global": {
+    "rank1ChangesMaximum": 0,
+    "top3ChangesMaximum": 0,
+    "duplicateMaximum": 0,
+    "missingProvenanceMaximum": 0,
+    "rootChangesMaximum": 0,
+    "plainSevenStolenMaximum": 0,
+    "determinismMinimum": 1,
+    "fileVersion": 1,
+    "defaultAnalyzerMode": "phase4-v1"
+  }
+}

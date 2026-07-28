@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.8-00",
+  "corpusVersion": "1.0.0",
+  "analyzerMode": "phase4-v1",
+  "fileVersion": 1,
+  "files": 40,
+  "events": 320,
+  "rawCandidateCount": 80640,
+  "hashes": {
+    "rank1": "4b3fb71a7a4d93f93b6222ee3efcd066e47c91fa8fcd74f4d452a2b5dc4397bd",
+    "top3": "77883343d72c4be5277103f179391ec5f112e1cd561d4a7400728df28eff47d7",
+    "candidateSet": "e30d51ec2cc432689463237be1f6a65ca635c0bd36c9c0684ca5dbff6f317f85",
+    "analyzerOutput": "c841bf9fc416a13ad7dec935fb8bd740d347a7920dec580684b0c06d073951d7"
+  },
+  "target7b9": {
+    "events": 40,
+    "rawRecall": 0,
+    "top3Recall": 0,
+    "missing": 40
+  },
+  "productMetrics": {
+    "representableRate": 1,
+    "top3Canonical": 0.70625,
+    "top3Root": 0.98125,
+    "correctCandidateMeanRank": 1.137168,
+    "MRR": 0.657813,
+    "correctionCost": {
+      "segmentCount": 320,
+      "total": 246,
+      "mean": 0.76875,
+      "median": 0,
+      "p90": 3,
+      "byCost": {
+        "0": 195,
+        "1": 44,
+        "2": 41,
+        "3": 40,
+        "4": 0
+      },
+      "byCategory": {
+        "primary": 195,
+        "alternative": 44,
+        "structure-editor": 41,
+        "manual-input": 40,
+        "unrepresentable": 0
+      }
+    },
+    "manualInputRequiredRate": 0.125,
+    "rootDiversityAt3": 2.05,
+    "canonicalDiversityAt3": 3,
+    "alternativeDuplicateIdentityCount": 0,
+    "canonicalExactAt1": 0.609375,
+    "rootAt1": 0.946875,
+    "qualityAt1": 0.9625,
+    "seventhAt1": 0.89375,
+    "tensionAt1": 0.721875
+  },
+  "top3MissLabelCounts": {
+    "A7b9": 40,
+    "Dm7": 10,
+    "Em7": 10,
+    "Am9": 8,
+    "Dm9": 8,
+    "G13": 8,
+    "G7sus4": 6,
+    "Cmaj9": 4
+  },
+  "runtime": {
+    "samplesMs": [
+      204.01789999999892,
+      209.64859999999862,
+      197.4493999999995,
+      202.23959999999897,
+      206.04720000000088,
+      213.46689999999944,
+      196.84430000000066
+    ],
+    "medianMs": 204.01789999999892
+  },
+  "productChanged": false
+}
