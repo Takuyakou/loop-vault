@@ -31,10 +31,15 @@ import {
 
 const feedbackSpies = vi.hoisted(() => ({
   append: vi.fn(async () => undefined),
+  appendLabelCorrections: vi.fn(async () => 0),
 }));
 
 vi.mock("../storage/analysisFeedbackStorage", () => ({
   appendAnalysisFeedback: feedbackSpies.append,
+}));
+
+vi.mock("../storage/labelCorrectionLogStorage", () => ({
+  appendLabelCorrectionLogs: feedbackSpies.appendLabelCorrections,
 }));
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
@@ -1292,6 +1297,7 @@ describe("CaptureView saving", () => {
 
   it("appends final correction feedback only after an edited save succeeds", async () => {
     feedbackSpies.append.mockClear();
+    feedbackSpies.appendLabelCorrections.mockClear();
     const first = chord("Cmaj7", 1);
     first.alternatives = [
       {
@@ -1393,6 +1399,7 @@ describe("CaptureView saving", () => {
     await act(async () => confirmSave?.click());
 
     expect(feedbackSpies.append).not.toHaveBeenCalled();
+    expect(feedbackSpies.appendLabelCorrections).not.toHaveBeenCalled();
     saveSucceeds = true;
     const retrySave = [...container.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')]
       .find((button) => button.textContent === "保存");
@@ -1404,6 +1411,20 @@ describe("CaptureView saving", () => {
       }),
     }));
     expect(feedbackSpies.append).toHaveBeenCalledTimes(1);
+    expect(feedbackSpies.appendLabelCorrections).toHaveBeenCalledTimes(1);
+    expect(feedbackSpies.appendLabelCorrections).toHaveBeenCalledWith([
+      expect.objectContaining({
+        schemaVersion: 1,
+        analyzerMode: "phase4-v1",
+        detectedLabel: "Cmaj7",
+        finalSavedLabel: "G7",
+        editType: "selected-rank2",
+        selectedCandidateRank: 2,
+        staleEdit: false,
+      }),
+      expect.objectContaining({ editType: "manual-input", finalSavedLabel: "G7" }),
+      expect.objectContaining({ editType: "accepted-rank1", finalSavedLabel: "Cmaj7" }),
+    ]);
     expect(feedbackSpies.append).toHaveBeenCalledWith([
       expect.objectContaining({ corrected: "G7", editMethod: "alternative-selection" }),
       expect.objectContaining({

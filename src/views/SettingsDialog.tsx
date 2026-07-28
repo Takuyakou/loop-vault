@@ -15,6 +15,10 @@ import {
   setAnalysisFeedbackEnabled,
 } from "../storage/analysisFeedbackStorage";
 import {
+  deleteLabelCorrectionLog,
+  exportLabelCorrectionLog,
+} from "../storage/labelCorrectionLogStorage";
+import {
   deleteDifferenceReviews,
   deletePromotedCorrections,
   deleteRealEvaluationData,
@@ -187,10 +191,31 @@ export function SettingsDialog({
       description: ui.deleteCorrectionDescription,
       confirmLabel: ui.delete,
       action: async () => {
-        await deleteAnalysisFeedback();
+        await Promise.all([
+          deleteAnalysisFeedback(),
+          deleteLabelCorrectionLog(),
+        ]);
         setToast(ui.correctionDeleted);
       },
     });
+  }
+
+  async function exportCorrectionLog() {
+    if (!("__TAURI_INTERNALS__" in window)) {
+      setToast(ui.exportDesktopOnly);
+      return;
+    }
+    const target = await saveFileDialog({
+      defaultPath: `loopvault-label-corrections-${timestampForFile(new Date())}.jsonl`,
+      filters: [{ name: "JSONL", extensions: ["jsonl"] }],
+    });
+    if (!target) return;
+    try {
+      const count = await exportLabelCorrectionLog(target);
+      setToast(ui.correctionExported(count));
+    } catch {
+      setToast(ui.correctionExportFailed);
+    }
   }
 
   async function runEvaluationAction(action: () => Promise<void>, successMessage: string) {
@@ -365,7 +390,10 @@ export function SettingsDialog({
                   <input className="mt-1" type="checkbox" checked={feedbackEnabled} onChange={(event) => updateFeedbackEnabled(event.target.checked)} />
                   <span><strong className="block text-[var(--lv-text-secondary)]">{ui.correctionStore}</strong><span className="mt-1 block text-[var(--lv-text-muted)]">{ui.correctionStoreHelp}</span></span>
                 </label>
-                <button className="mt-4 inline-flex items-center gap-2 rounded border border-red-400/50 px-3 py-2 text-red-100" onClick={clearFeedback}><Trash2 aria-hidden="true" size={16} />{ui.deleteCorrectionLog}</button>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2" onClick={() => void exportCorrectionLog()}><Download aria-hidden="true" size={16} />{ui.exportCorrectionLog}</button>
+                  <button className="inline-flex items-center gap-2 rounded border border-red-400/50 px-3 py-2 text-red-100" onClick={clearFeedback}><Trash2 aria-hidden="true" size={16} />{ui.deleteCorrectionLog}</button>
+                </div>
               </div>
               <div className="mt-5 border-t border-amber-400/20 pt-4">
                 <h4 className="font-semibold">{ui.evaluationTitle}</h4>

@@ -55,6 +55,7 @@ import type {
   SimilarityVoiceContext,
 } from "../domain/progressionEditing";
 import { beatsPerBar as beatsPerBarFor, buildCorrectionEvents } from "../domain/midi";
+import { buildLabelCorrectionLogs } from "../domain/midi/labelCorrectionLog";
 import type { AnalysisInput } from "../domain/midi/types";
 import type {
   CorrectionPropagationFeedbackEvent,
@@ -77,6 +78,7 @@ import { ProgressionGrid, timelineStartBeat } from "../ui/ProgressionGrid";
 import { chordProgressFraction } from "../ui/playbackProgress";
 import { confidenceLabel, shouldShowConfidence, warningLabel } from "./captureLabels";
 import { appendAnalysisFeedback } from "../storage/analysisFeedbackStorage";
+import { appendLabelCorrectionLogs } from "../storage/labelCorrectionLogStorage";
 import type { PreviewSound } from "../audio/chordPreview";
 import {
   playbackController,
@@ -477,6 +479,7 @@ export function CaptureView(props: CaptureViewProps) {
     });
     if (id) {
       persistCorrectionEvents([...corrections, ...propagationEvents]);
+      persistLabelCorrectionLogs(original, editable);
       setToast(copy.capture.savedToVault);
       return true;
     }
@@ -509,6 +512,19 @@ export function CaptureView(props: CaptureViewProps) {
       .catch((error) => setToast(error instanceof Error ? error.message : copy.capture.feedbackSaveFailed));
   }
 
+  function persistLabelCorrectionLogs(
+    original: ProgressionBlockCandidate,
+    editable: EditableProgression,
+  ) {
+    if (!analysis.result) return;
+    const events = buildLabelCorrectionLogs(original, editable, analysis.result, {
+      analyzerMode: "phase4-v1",
+      occurredAt: new Date().toISOString(),
+    });
+    void appendLabelCorrectionLogs(events)
+      .catch(() => setToast(copy.capture.feedbackSaveFailed));
+  }
+
   function appendExisting(
     candidate: ProgressionBlockCandidate,
     original: ProgressionBlockCandidate,
@@ -533,6 +549,7 @@ export function CaptureView(props: CaptureViewProps) {
         ...correctionEvents(original, candidate, editable),
         ...propagationEvents,
       ]);
+      persistLabelCorrectionLogs(original, editable);
       setToast(copy.toast.blockSaved);
       return true;
     }

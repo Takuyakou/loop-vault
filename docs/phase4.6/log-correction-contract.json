@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.6-LOG",
+  "storage": {
+    "format": "JSONL",
+    "relativePath": "loopvault/label-corrections.jsonl",
+    "baseDirectory": "AppData",
+    "externalTransmission": false,
+    "vaultSchemaChanged": false
+  },
+  "recording": {
+    "trigger": "after a Vault save or append succeeds",
+    "failurePolicy": "best-effort; a log failure never changes the Vault save result",
+    "optOut": "shared local analysis-feedback preference",
+    "deduplication": [
+      "eventFingerprint",
+      "finalSavedLabel",
+      "editType",
+      "staleEdit"
+    ],
+    "staleIdentificationField": "staleEdit"
+  },
+  "editTypes": [
+    "accepted-rank1",
+    "selected-rank2",
+    "selected-rank3",
+    "manual-input",
+    "reverted",
+    "deleted"
+  ],
+  "privacy": {
+    "stored": [
+      "analyzer identity",
+      "hashed event identity",
+      "detected/displayed/final chord labels",
+      "canonical diff",
+      "confidence",
+      "hashed note snapshot token",
+      "timestamp"
+    ],
+    "neverStored": [
+      "MIDI bytes",
+      "song title",
+      "absolute path",
+      "source file name",
+      "Idea title",
+      "memo",
+      "personal identifiers"
+    ]
+  },
+  "userControls": [
+    "opt-out",
+    "export JSONL",
+    "clear"
+  ],
+  "researchThresholds": {
+    "minimumSavedEvents": 100,
+    "minimumProgressions": 20,
+    "recommendedSavedEvents": "200-300",
+    "promotionUse": "priority signal only; never Fixed Gold or direct Product promotion evidence"
+  },
+  "invariants": {
+    "fileVersion": 1,
+    "defaultAnalyzerMode": "phase4-v1",
+    "productAnalyzerChanged": false
+  }
+}
