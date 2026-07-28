@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.5-00",
+  "analyzerMode": "phase4-v1",
+  "evaluationIdentity": "canonical",
+  "diagnostics": [
+    "D1-rank-distribution",
+    "D2-candidate-recall-funnel",
+    "D3-top3-miss-taxonomy",
+    "D4-same-root-oracle",
+    "D5-root-confidence-calibration"
+  ],
+  "rank1Invariant": [
+    "rawLabel",
+    "canonicalIdentity",
+    "root",
+    "bass",
+    "rawScore",
+    "confidence",
+    "candidateSource"
+  ],
+  "funnel": [
+    "raw-generation",
+    "canonical-dedup",
+    "eligibility",
+    "same-root-pool",
+    "same-root-rank",
+    "global-rank",
+    "allocated-top3"
+  ],
+  "splits": {
+    "development": "dev",
+    "validation": "not-run-burned",
+    "holdout": "not-run-burned"
+  },
+  "invariants": {
+    "defaultAnalyzerMode": "phase4-v1",
+    "fileVersion": 1,
+    "vaultSchemaChanged": false,
+    "timelineChanged": false,
+    "voicingChanged": false,
+    "boundaryChanged": false,
+    "aggregateChanged": false,
+    "fallbackChanged": false
+  }
+}

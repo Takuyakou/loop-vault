@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.5-00",
+  "fixedBeforeDiagnostics": true,
+  "diagnosticSupport": {
+    "rank3ExactMaximum": 0.01,
+    "rawCandidateRecallMinimum": 0.9,
+    "canonicalCandidateRecallMinimum": 0.9,
+    "eligibleCandidateRecallMinimum": 0.9,
+    "sameRootCandidateRecallMinimum": 0.9,
+    "sameRootGoldMeanRankMaximum": 3,
+    "allocationEditableMissShareMinimum": 0.5,
+    "ambiguousOrAnnotationMissShareMaximum": 0.2
+  },
+  "oracle": {
+    "top3CanonicalGainMinimum": 0.03,
+    "netRescueMinimumExclusive": 0,
+    "lostRootRescueToGainedCanonicalMaximum": 0.25,
+    "correctionCostMeanMustImprove": true,
+    "manualInputRequiredMustNotRegress": true
+  },
+  "rootCalibration": {
+    "rootAccuracyMinimum": 0.98,
+    "wilsonLowerBoundMinimum": 0.95,
+    "minimumEventCount": 48,
+    "rootRescueLossToGainMaximum": 0.25,
+    "candidateBands": [
+      {
+        "id": "entropy-low",
+        "metric": "rootEntropy",
+        "direction": "maximum"
+      },
+      {
+        "id": "normalized-margin-high",
+        "metric": "normalizedRootMargin",
+        "direction": "minimum"
+      }
+    ]
+  },
+  "shadowDev": {
+    "rank1ChangeCount": 0,
+    "top3CanonicalGainMinimum": 0.03,
+    "top3RootDeltaMinimum": -0.0025,
+    "correctionCostMeanMustImprove": true,
+    "correctionCostP90MustNotRegress": true,
+    "manualInputRequiredMustNotRegress": true,
+    "mrrMustImprove": true,
+    "canonicalDiversityMustNotRegress": true,
+    "duplicateIdentityCount": 0,
+    "improvedScenarioShareMinimumExclusive": 0.5,
+    "regressedScenarioCount": 0
+  },
+  "decision": {
+    "allocationRequiresAllDiagnosticSupport": true,
+    "generationRestartWhenAnyRecallGateFails": true,
+    "automaticResearchStopWhenOracleNetRescueNonPositive": true,
+    "productPromotionAllowedWithoutNewUnseenData": false
+  }
+}
