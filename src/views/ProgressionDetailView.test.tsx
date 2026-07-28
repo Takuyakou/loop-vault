@@ -185,6 +185,9 @@ describe("ProgressionDetailView", () => {
     expect(container.querySelectorAll("[role='option']")).toHaveLength(1);
     expect(container.querySelector("[data-alternative-count]")?.getAttribute("data-alternative-count")).toBe("5");
     expect(container.querySelector("[data-progression-detail-inspector]")?.classList.contains("lv-responsive-inspector-host")).toBe(false);
+    expect(container.querySelector(
+      '[data-testid="detail-voicing-source-chip"]',
+    )?.getAttribute("data-voicing-source")).toBe("generated");
 
     await act(async () => root.unmount());
   });

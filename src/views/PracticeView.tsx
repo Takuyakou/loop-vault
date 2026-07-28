@@ -21,6 +21,7 @@ import { MixPracticeWorkspace } from "../components/practice/MixPracticeWorkspac
 import { PracticeKeyboard } from "../components/practice/PracticeKeyboard";
 import { TranspositionPracticeControls } from "../components/practice/TranspositionPracticeControls";
 import { VoicingPracticeControls } from "../components/practice/VoicingPracticeControls";
+import { VoicingSourceChip } from "../components/voicing/VoicingSourceChip";
 import { voiceChordForPreview } from "../domain/chordVoicing";
 import { degreeOf } from "../domain/harmony/degrees";
 import { beatsPerBar } from "../domain/midi/timing";
@@ -78,7 +79,7 @@ import type {
   SavedProgressionBlock,
   SongIdea,
 } from "../domain/types";
-import { resolveVoicingForUse } from "../domain/voicing";
+import { resolveVoicingForUse, voicingSourceStatus } from "../domain/voicing";
 import {
   DEFAULT_OCTAVE_SHIFT_CANDIDATES,
   generateStyleVoicingPlan,
@@ -796,6 +797,10 @@ export function PracticeView({
   );
   const currentRequirement = requirements[displayedEventIndex];
   const guide = activeGuides[displayedEventIndex];
+  const sourceEvent = block?.chords[displayedEventIndex];
+  const currentVoicingSource = styleMode || !sourceEvent
+    ? { status: "generated" as const, reason: "source-missing" as const }
+    : voicingSourceStatus(sourceEvent.chord, sourceEvent.voicingMemory);
   const keyboardRange = useMemo(
     () => computePracticeKeyboardRange(
       activeGuides.flatMap((resolved) => resolved ? [resolved.midiNotes] : []),
@@ -2315,6 +2320,12 @@ export function PracticeView({
                           {text.currentKey(displayedKeySignature)}
                         </span>
                       ) : null}
+                      <VoicingSourceChip
+                        status={currentVoicingSource.status}
+                        reason={currentVoicingSource.reason}
+                        language={language}
+                        testId="dojo-voicing-source-chip"
+                      />
                     </div>
                     {styleMode && guide && !transpositionMode ? (
                       <span

@@ -6,12 +6,14 @@ import {
   chordCoverage,
   normalizedChordKey,
   resolveVoicingForUse,
+  voicingSourceStatus,
   voicingCompatibility,
 } from "../../domain/voicing";
 import { defaultLiveMidiStore } from "../../liveMidi/defaultLiveMidiStore";
 import type { AppLanguage } from "../../i18n";
 import { KeyboardVisualizer } from "./KeyboardVisualizer";
 import { midiNoteName } from "./midiNoteName";
+import { VoicingSourceChip } from "./VoicingSourceChip";
 
 interface VoicingPanelProps {
   chord: ChordSymbol;
@@ -98,6 +100,7 @@ export function VoicingPanel({
       : undefined;
   const displayedNotes = displayedSnapshot?.midiNotes ?? resolved.midiNotes;
   const captureCoverage = chordCoverage(chord, stableNotes, stableNotes[0]);
+  const sourceStatus = voicingSourceStatus(chord, memory);
 
   useEffect(() => {
     if (!recording) return undefined;
@@ -169,9 +172,17 @@ export function VoicingPanel({
     <section className="mt-4 border-t border-[var(--lv-border)] pt-4" data-voicing-panel>
       <div className="flex items-center justify-between gap-3">
         <h3 className="text-sm font-semibold text-[var(--lv-text)]">{text.title}</h3>
-        <span className="border border-[var(--lv-border)] px-2 py-1 text-xs text-teal-100">
-          {text.used}: {originLabel}
-        </span>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <VoicingSourceChip
+            status={sourceStatus.status}
+            reason={sourceStatus.reason}
+            language={language}
+            testId="detail-voicing-source-chip"
+          />
+          <span className="border border-[var(--lv-border)] px-2 py-1 text-xs text-teal-100">
+            {text.used}: {originLabel}
+          </span>
+        </div>
       </div>
       <p className="mt-3 text-sm font-semibold text-[var(--lv-text)]">
         {displayedNotes.map(midiNoteName).join("  ")}

@@ -28,7 +28,8 @@ import {
   type RangeNudge,
 } from "../domain/midi/manualDraftEditing";
 import { clampTimelineRange } from "../domain/midi/manualRange";
-import { draftVoicingSummary } from "../domain/midi/manualDraftPlayback";
+import { draftPreviewTimeline } from "../domain/midi/manualDraftPlayback";
+import { timelineVoicingSourceStatus } from "../domain/voicing";
 import {
   canRedoCaptureDraft,
   canUndoCaptureDraft,
@@ -41,6 +42,7 @@ import type { SongIdea } from "../domain/types";
 import { CaptureEditHistoryPanel } from "./CaptureEditHistoryPanel";
 import { DraftBoundaryHandles } from "./DraftBoundaryHandles";
 import { cutDraftRangeAtEvent } from "../domain/midi/draftRangeEditing";
+import { VoicingSourceChip } from "./voicing/VoicingSourceChip";
 
 /**
  * Editing a manual draft.
@@ -104,7 +106,10 @@ export function ManualCandidateEditor({
   const editorRef = useRef<HTMLElement>(null);
 
   const validation = useMemo(() => validateDraft(draft), [draft]);
-  const voicing = useMemo(() => draftVoicingSummary(draft), [draft]);
+  const voicingSource = useMemo(
+    () => timelineVoicingSourceStatus(draftPreviewTimeline(draft)),
+    [draft],
+  );
   const sourceLabel = draft.source.type === "automatic-candidate"
     ? language === "ja"
       ? `自動候補から作成${draft.isDirty ? "・編集中" : ""}`
@@ -469,9 +474,14 @@ export function ManualCandidateEditor({
         </ul>
       ) : null}
 
-      <p className="mt-3 text-xs text-[var(--lv-text-muted)]" data-testid="draft-voicing">
-        {voicing.anyGenerated ? text.voicingGenerated : text.voicingSource}
-      </p>
+      <div className="mt-3" data-testid="draft-voicing">
+        <VoicingSourceChip
+          status={voicingSource.status}
+          reason={voicingSource.reason}
+          language={language}
+          testId="capture-voicing-source-chip"
+        />
+      </div>
 
       <CaptureEditHistoryPanel
         draft={draft}

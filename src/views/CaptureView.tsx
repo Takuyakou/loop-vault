@@ -10,7 +10,10 @@ import {
 } from "../domain/midi/catalogView";
 import type { CandidateOccurrence, CandidatePattern } from "../domain/midi/occurrence";
 import type { Section } from "../domain/midi/sections";
-import { resolveVoicingForUse } from "../domain/voicing";
+import {
+  resolveVoicingForUse,
+  timelineVoicingSourceStatus,
+} from "../domain/voicing";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DragEvent, ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -86,6 +89,7 @@ import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PlayToggle } from "../components/PlayToggle";
 import { PreviewSoundSelector } from "../components/PreviewSoundSelector";
 import { SaveProgressionPopover } from "../components/SaveProgressionPopover";
+import { VoicingSourceChip } from "../components/voicing/VoicingSourceChip";
 import { SongMiniMap } from "../components/SongMiniMap";
 import { EditableProgressionGrid } from "../components/progression-editing/EditableProgressionGrid";
 import { TimelineRangeSelector } from "../components/TimelineRangeSelector";
@@ -1995,6 +1999,10 @@ export function ProgressionCandidateCard({
     : undefined;
   const visibleWarnings = candidate.warnings.map((warning) => warningLabel(warning, language));
   const shouldDisplayConfidence = shouldShowConfidence(candidate.confidence);
+  const candidateVoicingSource = useMemo(
+    () => timelineVoicingSourceStatus(editedCandidate.chords),
+    [editedCandidate.chords],
+  );
 
   return (
     <div className={`border bg-[var(--lv-bg)] p-4 transition-colors ${isExpanded ? "border-teal-400/50" : "border-[var(--lv-border)] hover:border-stone-600"}`}>
@@ -2082,7 +2090,17 @@ export function ProgressionCandidateCard({
           </button>
         </div>
       </div>
-      <span className="mt-3 inline-flex rounded bg-[var(--lv-surface-raised)] px-2 py-1 text-xs text-teal-200">{candidateLabelList(candidate.labels, language).join(" · ")}</span>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <span className="inline-flex rounded bg-[var(--lv-surface-raised)] px-2 py-1 text-xs text-teal-200">
+          {candidateLabelList(candidate.labels, language).join(" · ")}
+        </span>
+        <VoicingSourceChip
+          status={candidateVoicingSource.status}
+          reason={candidateVoicingSource.reason}
+          language={language}
+          testId="candidate-voicing-source-chip"
+        />
+      </div>
       {draft?.source.type === "automatic-candidate"
         && draft.source.candidateId === candidate.id ? (
           <p className="mt-2 text-xs text-[var(--lv-text-muted)]" data-testid="draft-source">

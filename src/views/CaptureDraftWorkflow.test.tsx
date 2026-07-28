@@ -128,6 +128,9 @@ describe("Capture Draft keyboard, A/B preview, and retention", () => {
     expect(harness.container.querySelector(
       '[data-testid="capture-draft-session"]',
     )?.textContent).toContain("Unsaved");
+    expect(harness.container.querySelector(
+      '[data-testid="candidate-voicing-source-chip"]',
+    )?.getAttribute("data-voicing-source")).toBe("review");
 
     await act(async () => window.dispatchEvent(
       new KeyboardEvent("keydown", { key: "a", bubbles: true }),
