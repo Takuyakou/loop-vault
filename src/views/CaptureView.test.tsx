@@ -1649,6 +1649,41 @@ describe("CaptureView song mini map", () => {
     }
   });
 
+  it("switches candidate cards without a warning after a range-only adjustment", async () => {
+    const { container, root } = await renderCapture(analysisWithCandidates());
+
+    try {
+      const firstRange = container.querySelector<HTMLButtonElement>(
+        '[data-song-minimap-candidate="candidate-1"]',
+      );
+      await act(async () => firstRange?.click());
+
+      const moveHandle = container.querySelector<HTMLButtonElement>(
+        "[data-selection-move-handle]",
+      );
+      await act(async () => {
+        moveHandle?.dispatchEvent(new KeyboardEvent("keydown", {
+          key: "ArrowRight",
+          shiftKey: true,
+          bubbles: true,
+        }));
+      });
+
+      const candidateHeaders = container.querySelectorAll<HTMLButtonElement>(
+        "[data-candidate-toggle]",
+      );
+      expect(candidateHeaders[0]?.textContent).toContain("Bars 1-5");
+      await act(async () => candidateHeaders[1]?.click());
+
+      expect(document.querySelector('[role="dialog"]')).toBeNull();
+      expect(candidateHeaders[1]?.getAttribute("aria-expanded")).toBe("true");
+      expect(container.textContent).toContain("Selection: 5.1–8.4");
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+    }
+  });
+
   it("keeps an empty zero-bar analysis renderable", async () => {
     const { container, root } = await renderCapture({
       totalBars: 0,

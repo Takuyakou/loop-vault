@@ -109,6 +109,7 @@ import {
 import {
   createManualDraft,
   createDraftFromCandidate,
+  draftHasMusicEdits,
   fingerprintTimeline,
   type ManualCandidateDraft,
 } from "../domain/midi/manualDraft";
@@ -237,17 +238,22 @@ export function CaptureView(props: CaptureViewProps) {
     candidateId: string | undefined,
     options?: { revealTimeline?: boolean; focusCandidate?: boolean },
   ): boolean {
-    const changingDraft = activeDraft?.isDirty
+    const changingDraft = activeDraft !== null
+      && draftHasMusicEdits(activeDraft)
       && (
         activeDraft.source.type === "manual-range"
         || activeDraft.source.candidateId !== candidateId
       );
+    const rangeOnlyDraftOwnsExpandedCandidate = activeDraft?.source.type === "automatic-candidate"
+      && activeDraft.source.candidateId === expandedCandidateId
+      && !draftHasMusicEdits(activeDraft);
     if (
       changingDraft
       || (
         expandedCandidateId
         && expandedCandidateId !== candidateId
         && dirtyCandidateIds.has(expandedCandidateId)
+        && !rangeOnlyDraftOwnsExpandedCandidate
       )
     ) {
       setPendingCandidateSelection({
