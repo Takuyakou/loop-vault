@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.4.3-06",
+  "decision": "stop-automatic-removal",
+  "promotion": {
+    "candidate": "A1-prime",
+    "promoted": false,
+    "productConnected": false,
+    "remainsShadowOnly": true
+  },
+  "crossValidation": {
+    "scenarioCount": 16,
+    "eventCount": 256,
+    "decisionEligibleFolds": 13,
+    "improved": 5,
+    "inconclusive": 0,
+    "regressed": 8,
+    "burnedDiagnosticFolds": 3
+  },
+  "gates": {
+    "applicabilityReported": true,
+    "efficacyPassedForAllEligibleFolds": false,
+    "inertnessPassedForAllEligibleFolds": false,
+    "generalRegressionPassed": true,
+    "invariantsPassed": true,
+    "sourceNoteAdditionCount": 0
+  },
+  "decisiveEvidence": [
+    "improved fold count was 5, at or below the preregistered stop threshold of 7",
+    "regressed fold count was 8, above the preregistered stop threshold of 0",
+    "H11 inertness was 0.5 for out-of-scope X events"
+  ],
+  "productTrack": {
+    "T1": {
+      "status": "implemented",
+      "summary": "Voicing source chip: 元の響き / 自動 / 要確認"
+    },
+    "T2": {
+      "status": "implemented",
+      "summary": "review/fallback recovery path through keyboard capture"
+    },
+    "T3": {
+      "status": "implemented",
+      "summary": "usable source voicing ratio is a tie-breaker within the existing Dojo practice priority"
+    }
+  },
+  "invariants": {
+    "defaultAnalyzerMode": "phase4-v1",
+    "fileVersion": 1,
+    "vaultSchemaChanged": false,
+    "chordLabelChanged": false,
+    "timelineChanged": false,
+    "boundaryChanged": false,
+    "aggregateChanged": false,
+    "fallbackChanged": false
+  },
+  "nextTrack": "label-quality-tension",
+  "verification": {
+    "lint": "passed",
+    "typecheck": "passed",
+    "vitest": {
+      "files": 201,
+      "tests": 1672,
+      "status": "passed"
+    },
+    "cargoTest": {
+      "tests": 24,
+      "status": "passed"
+    },
+    "webBuild": "passed",
+    "tauriBuild": "passed",
+    "trackedMidiFiles": 0,
+    "warnings": [
+      "Vite chunk size warning above 500 kB"
+    ]
+  },
+  "evidence": [
+    "docs/phase4.4.3/00-evaluation-contract.md",
+    "docs/phase4.4.3/01-holdout-classification.md",
+    "docs/phase4.4.3/02-a1-prime-shadow.md",
+    "docs/phase4.4.3/03-loso-cv-results.md"
+  ]
+}
