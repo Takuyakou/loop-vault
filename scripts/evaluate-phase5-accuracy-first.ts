@@ -3,11 +3,18 @@ import { resolve } from "node:path";
 import { performance } from "node:perf_hooks";
 import { cwd, stdout } from "node:process";
 import { parseChordLabel } from "../src/domain/chords";
+import { chordIdentityKey, normalizeChordLabel } from "../src/domain/chordIdentity";
 import { analyzeMidi } from "../src/domain/midi/analysis";
 import {
   operationCorrectionCostResult,
+  operationCorrectionCostResultForCandidateCatalog,
   summarizeOperationCorrectionCosts,
 } from "../src/domain/midi/correctionCost";
+import {
+  ACCURACY_CANDIDATE_CATALOG_LIMIT,
+  accuracyCandidateUnionModes,
+  applyAccuracyCandidateUnion,
+} from "../src/domain/midi/accuracyCandidateUnion";
 import {
   aggregateV2,
   evaluateCaseV2,
@@ -39,17 +46,41 @@ import {
 
 const root = cwd();
 const outputDir = resolve(root, "docs/phase5");
-const modes: ReadonlyArray<{
+interface EvaluationMode {
   id: string;
   mode: MidiAnalyzerMode;
   bassCompanion: boolean;
-}> = [
+  observedFlatNine?: boolean;
+  candidateUnion?: "product" | "with-hybrid";
+}
+
+const modes: readonly EvaluationMode[] = [
   { id: "legacy", mode: "legacy", bassCompanion: false },
   { id: "legacy-boundary-rerank", mode: "legacy-boundary-rerank", bassCompanion: false },
   { id: "voice-aware-rerank-v1", mode: "voice-aware-rerank-v1", bassCompanion: false },
   { id: "hybrid-v1", mode: "hybrid-v1", bassCompanion: false },
   { id: "phase4-v1", mode: "phase4-v1", bassCompanion: false },
   { id: "phase4-v1+R1", mode: "phase4-v1", bassCompanion: true },
+  {
+    id: "phase4-v1+R1+E1",
+    mode: "phase4-v1",
+    bassCompanion: true,
+    observedFlatNine: true,
+  },
+  {
+    id: "phase4-v1+R1+E1+Union",
+    mode: "phase4-v1",
+    bassCompanion: true,
+    observedFlatNine: true,
+    candidateUnion: "product",
+  },
+  {
+    id: "phase4-v1+R1+E1+Union+Hybrid",
+    mode: "phase4-v1",
+    bassCompanion: true,
+    observedFlatNine: true,
+    candidateUnion: "with-hybrid",
+  },
 ];
 
 const corpora = await loadCorpora();
@@ -70,11 +101,22 @@ for (const corpus of corpora) {
 
 const r2 = await evaluateR2();
 const realMidi = await evaluateRealMidi();
+const hybridReassessment = await readJson<{
+  typicalThreeMinuteSummary: { underTenSeconds: boolean };
+}>(resolve(outputDir, "02-hybrid-runtime-reassessment.json"));
 const phase4Rows = corpusResults.map((corpus) => ({
   corpus: corpus.id,
   phase4: corpus.modes.find((entry) => entry.id === "phase4-v1")!,
   hybrid: corpus.modes.find((entry) => entry.id === "hybrid-v1")!,
   r1: corpus.modes.find((entry) => entry.id === "phase4-v1+R1")!,
+}));
+const candidateUnionRows = corpusResults.map((corpus) => ({
+  corpus: corpus.id,
+  baseline: corpus.modes.find((entry) => entry.id === "phase4-v1+R1+E1")!,
+  union: corpus.modes.find((entry) => entry.id === "phase4-v1+R1+E1+Union")!,
+  unionWithHybrid: corpus.modes.find(
+    (entry) => entry.id === "phase4-v1+R1+E1+Union+Hybrid",
+  )!,
 }));
 const hybridImprovement = phase4Rows.filter(({ phase4, hybrid }) =>
   hybrid.canonicalExact > phase4.canonicalExact
@@ -86,13 +128,17 @@ const r1Improvement = phase4Rows.filter(({ phase4, r1 }) =>
   r1.candidateRecall > phase4.candidateRecall
   || r1.correctionCostMean < phase4.correctionCostMean
   || r1.manualInputRate < phase4.manualInputRate);
-const overTenSeconds = realMidi.flatMap((file) =>
-  file.modes.filter((entry) => file.estimatedDurationSeconds >= 120
-    && file.estimatedDurationSeconds <= 300
-    && entry.runtimeMs > 10_000)
-    .map((entry) => `${file.alias}/${entry.id}`));
-const hybridRuntimeStopped = overTenSeconds.some((entry) =>
-  entry.endsWith("/hybrid-v1"));
+const overTenSeconds = hybridReassessment.typicalThreeMinuteSummary.underTenSeconds
+  ? []
+  : ["dedicated-three-minute-reassessment/hybrid-v1"];
+const hybridRuntimeStopped = overTenSeconds.length > 0;
+const hybridCorrectionImproved = phase4Rows.filter(({ phase4, hybrid }) =>
+  hybrid.correctionCostMean < phase4.correctionCostMean).length;
+const hybridCorrectionRegressed = phase4Rows.filter(({ phase4, hybrid }) =>
+  hybrid.correctionCostMean > phase4.correctionCostMean).length;
+const unionGainCorpora = candidateUnionRows.filter(({ baseline, union }) =>
+  union.unionCandidateRecall > baseline.unionCandidateRecall
+  || union.catalogManualInputRate < baseline.catalogManualInputRate);
 
 const report = {
   schemaVersion: 1,
@@ -124,12 +170,13 @@ const report = {
     typicalThreeMinuteOverTenSeconds: overTenSeconds,
     hybridAdoptionStage: hybridRuntimeStopped
       ? "stopped-typical-midi-over-10s"
-      : hybridImprovement.length > 0
+      : hybridCorrectionImproved > hybridCorrectionRegressed
         ? "eligible-for-feature-flag"
-        : "not-selected-no-accuracy-gain",
-    candidateUnionStage: hybridRuntimeStopped
-      ? "not-started-dependent-hybrid-stage-stopped"
-      : "not-started-proposal-follow-up",
+        : "not-selected-correction-cost-not-improved",
+    candidateUnionStage: "implemented-without-hybrid",
+    candidateUnionModes: [...accuracyCandidateUnionModes],
+    candidateUnionImprovementCorpora: unionGainCorpora.map((entry) => entry.corpus),
+    candidateUnionRank1AndTop3Policy: "primary-fixed",
     twoWeekPersonalUse: "pending-user-evaluation",
     defaultAnalyzerModeChanged: false,
   },
@@ -218,31 +265,41 @@ async function evaluateModes(cases: readonly EvaluationCaseInput[]) {
   for (const mode of modes) {
     const caseMetrics = [];
     const costs = [];
+    const catalogCosts = [];
     const runtimes = [];
     let analyzerVersion = "";
+    let catalogHits = 0;
+    let duplicateCandidates = 0;
+    let maxCandidatesPerEvent = 0;
     for (const input of cases) {
       const started = performance.now();
-      const analysis = analyzeMidi(input.bytes, {
-        mode: mode.mode,
-        accuracyFirst: {
-          bassCompanionCandidates: mode.bassCompanion,
-          melodyContaminationFilter: false,
-        },
-      });
+      const analysis = analyzeEvaluationMode(input.bytes, mode);
       runtimes.push(performance.now() - started);
       analyzerVersion ||= analysis.analyzerVersion;
       caseMetrics.push(evaluateCaseV2(input.definition, analysis.fullTimeline));
       costs.push(...correctionCosts(input.definition, analysis.fullTimeline));
+      catalogCosts.push(...candidateCatalogCorrectionCosts(input.definition, analysis.fullTimeline));
+      catalogHits += candidateCatalogHits(input.definition, analysis.fullTimeline);
+      duplicateCandidates += countCandidateDuplicates(analysis.fullTimeline);
+      maxCandidatesPerEvent = Math.max(
+        maxCandidatesPerEvent,
+        ...analysis.fullTimeline.map((entry) => entry.alternatives.length + 1),
+      );
     }
     const aggregate = aggregateV2(caseMetrics).eventWeighted;
     const correction = summarizeOperationCorrectionCosts(costs);
+    const catalogCorrection = summarizeOperationCorrectionCosts(catalogCosts);
     output.push({
       id: mode.id,
       analyzerVersion,
       canonicalExact: aggregate.canonicalExactAccuracy,
       rank1Adoption: aggregate.canonicalExactAccuracy,
       top3Canonical: aggregate.top3CanonicalAccuracy,
+      top3Root: aggregate.top3RootAccuracy,
       candidateRecall: aggregate.top5CanonicalAccuracy,
+      unionCandidateRecall: ratio(catalogHits, correction.segmentCount),
+      candidateCatalogRescueCount:
+        catalogHits - Math.round(aggregate.top5CanonicalAccuracy * correction.segmentCount),
       rootAccuracy: aggregate.rootAccuracy,
       qualityAccuracy: aggregate.qualityAccuracy,
       correctionCostTotal: correction.total,
@@ -251,6 +308,16 @@ async function evaluateModes(cases: readonly EvaluationCaseInput[]) {
         correction.byCategory["manual-input"] + correction.byCategory.unrepresentable,
         correction.segmentCount,
       ),
+      catalogManualInputRate: ratio(
+        catalogCorrection.byCategory["manual-input"] + catalogCorrection.byCategory.unrepresentable,
+        catalogCorrection.segmentCount,
+      ),
+      rank2Or3RescueRate: rounded(
+        aggregate.top3CanonicalAccuracy - aggregate.canonicalExactAccuracy,
+      ),
+      correctionsPerEightEvents: rounded(correction.mean * 8),
+      duplicateCandidates,
+      maxCandidatesPerEvent,
       runtimeMs: rounded(sum(runtimes)),
       runtimePerFileP50Ms: percentile(runtimes, 0.5),
       runtimePerFileP90Ms: percentile(runtimes, 0.9),
@@ -320,21 +387,9 @@ async function evaluateRealMidi() {
     let durationSeconds = 0;
     for (const mode of modes) {
       const started = performance.now();
-      const analysis = analyzeMidi(bytes, {
-        mode: mode.mode,
-        accuracyFirst: {
-          bassCompanionCandidates: mode.bassCompanion,
-          melodyContaminationFilter: false,
-        },
-      });
+      const analysis = analyzeEvaluationMode(bytes, mode);
       const elapsed = performance.now() - started;
-      const repeated = analyzeMidi(bytes, {
-        mode: mode.mode,
-        accuracyFirst: {
-          bassCompanionCandidates: mode.bassCompanion,
-          melodyContaminationFilter: false,
-        },
-      });
+      const repeated = analyzeEvaluationMode(bytes, mode);
       firstBars ||= analysis.totalBars;
       durationSeconds ||= analysis.totalBars * meter(analysis.timeSignature)
         * 60 / (analysis.bpm ?? 120);
@@ -357,25 +412,68 @@ async function evaluateRealMidi() {
   return available;
 }
 
+function analyzeEvaluationMode(bytes: Uint8Array, mode: EvaluationMode) {
+  const accuracyFirst = {
+    bassCompanionCandidates: mode.bassCompanion,
+    melodyContaminationFilter: false,
+    observedFlatNineDominantCandidate: mode.observedFlatNine ?? false,
+    enableAccuracyCandidateUnion: mode.candidateUnion === "product",
+  };
+  if (mode.candidateUnion !== "with-hybrid") {
+    return analyzeMidi(bytes, { mode: mode.mode, accuracyFirst });
+  }
+  const primary = analyzeMidi(bytes, {
+    mode: mode.mode,
+    accuracyFirst: { ...accuracyFirst, enableAccuracyCandidateUnion: false },
+  });
+  return applyAccuracyCandidateUnion(primary, [
+    ...accuracyCandidateUnionModes.map((sourceMode) => ({
+      mode: sourceMode,
+      analysis: analyzeMidi(bytes, {
+        mode: sourceMode,
+        accuracyFirst: { ...accuracyFirst, enableAccuracyCandidateUnion: false },
+      }),
+    })),
+    {
+      mode: "hybrid-v1",
+      analysis: analyzeMidi(bytes, {
+        mode: "hybrid-v1",
+        accuracyFirst: { ...accuracyFirst, enableAccuracyCandidateUnion: false },
+      }),
+    },
+  ]);
+}
+
 function correctionCosts(
   definition: MidiEvaluationCase,
   timeline: readonly ChordTimelineItem[],
 ) {
-  const ranges = timeline.map((item) => {
-    const startBeat = (item.bar - 1) * 4 + item.beat - 1;
-    return { startBeat, endBeat: startBeat + item.durationBeats, item };
-  });
+  return correctionCostsWith(definition, timeline, operationCorrectionCostResult);
+}
+
+function candidateCatalogCorrectionCosts(
+  definition: MidiEvaluationCase,
+  timeline: readonly ChordTimelineItem[],
+) {
+  return correctionCostsWith(
+    definition,
+    timeline,
+    (detected, acceptable) => operationCorrectionCostResultForCandidateCatalog(
+      detected,
+      acceptable,
+      ACCURACY_CANDIDATE_CATALOG_LIMIT,
+    ),
+  );
+}
+
+function correctionCostsWith(
+  definition: MidiEvaluationCase,
+  timeline: readonly ChordTimelineItem[],
+  costOf: typeof operationCorrectionCostResult,
+) {
   return definition.expected.chordTimeline.map((expected) => {
-    const best = ranges.map((entry) => ({
-      entry,
-      overlap: Math.max(
-        0,
-        Math.min(expected.endBeat, entry.endBeat) - Math.max(expected.startBeat, entry.startBeat),
-      ),
-    })).sort((left, right) => right.overlap - left.overlap
-      || left.entry.startBeat - right.entry.startBeat)[0];
-    const match = best?.overlap ? best.entry.item : undefined;
-    return operationCorrectionCostResult(
+    const match = matchingTimelineItem(expected, timeline);
+    return costOf(
       match
         ? {
             primary: match.chord,
@@ -385,6 +483,54 @@ function correctionCosts(
       [expected.primary, ...(expected.acceptableAlternatives ?? [])],
     );
   });
+}
+
+function candidateCatalogHits(
+  definition: MidiEvaluationCase,
+  timeline: readonly ChordTimelineItem[],
+): number {
+  return definition.expected.chordTimeline.filter((expected) => {
+    const match = matchingTimelineItem(expected, timeline);
+    if (!match) return false;
+    const accepted = new Set(
+      [expected.primary, ...(expected.acceptableAlternatives ?? [])]
+        .map((label) => normalizeChordLabel(label))
+        .filter((identity) => identity !== null)
+        .map(chordIdentityKey),
+    );
+    return [match.chord, ...match.alternatives.map((entry) => entry.chord)]
+      .map((chord) => normalizeChordLabel(chord.label))
+      .some((identity) => identity !== null && accepted.has(chordIdentityKey(identity)));
+  }).length;
+}
+
+function countCandidateDuplicates(timeline: readonly ChordTimelineItem[]): number {
+  return timeline.reduce((total, item) => {
+    const identities = [item.chord, ...item.alternatives.map((entry) => entry.chord)]
+      .map((chord) => normalizeChordLabel(chord.label))
+      .filter((identity) => identity !== null)
+      .map(chordIdentityKey);
+    return total + identities.length - new Set(identities).size;
+  }, 0);
+}
+
+function matchingTimelineItem(
+  expected: MidiEvaluationCase["expected"]["chordTimeline"][number],
+  timeline: readonly ChordTimelineItem[],
+): ChordTimelineItem | undefined {
+  const ranges = timeline.map((item) => {
+    const startBeat = (item.bar - 1) * 4 + item.beat - 1;
+    return { startBeat, endBeat: startBeat + item.durationBeats, item };
+  });
+  const best = ranges.map((entry) => ({
+    entry,
+    overlap: Math.max(
+      0,
+      Math.min(expected.endBeat, entry.endBeat) - Math.max(expected.startBeat, entry.startBeat),
+    ),
+  })).sort((left, right) => right.overlap - left.overlap
+    || left.entry.startBeat - right.entry.startBeat)[0];
+  return best?.overlap ? best.entry.item : undefined;
 }
 
 interface SeedCase {
@@ -565,6 +711,14 @@ ${corpus.modes.map((mode) =>
   const realRows = value.realMidi.flatMap((file) => file.modes.map((mode) =>
     `| ${file.alias} | ${file.totalBars} | ${file.estimatedDurationSeconds.toFixed(1)}s | ${mode.id} | ${mode.runtimeMs.toFixed(1)}ms | ${mode.timelineSegments} | ${mode.blockCandidates} | ${mode.deterministic ? "PASS" : "FAIL"} |`,
   )).join("\n");
+  const unionRows = value.corpora.map((corpus) => {
+    const baseline = corpus.modes.find((entry) => entry.id === "phase4-v1+R1+E1")!;
+    const union = corpus.modes.find((entry) => entry.id === "phase4-v1+R1+E1+Union")!;
+    const withHybrid = corpus.modes.find(
+      (entry) => entry.id === "phase4-v1+R1+E1+Union+Hybrid",
+    )!;
+    return `| ${corpus.id} | ${pct(baseline.unionCandidateRecall)} | ${pct(union.unionCandidateRecall)} | ${pct(withHybrid.unionCandidateRecall)} | ${union.candidateCatalogRescueCount} | ${pct(union.catalogManualInputRate)} | ${union.duplicateCandidates} | ${union.maxCandidatesPerEvent} |`;
+  }).join("\n");
   return `# Phase 5 Accuracy First 評価
 
 ## 結論
@@ -583,6 +737,16 @@ ${corpus.modes.map((mode) =>
 ## 全モード精度
 
 ${corpusSections}
+
+## Candidate Union
+
+Product採用modeは \`legacy-boundary-rerank\` と
+\`voice-aware-rerank-v1\`。Hybridは比較だけに含め、Product Unionから除外した。
+Primaryのrank 1と既存Top-3順は固定し、canonical identityでdedupしている。
+
+| Corpus | Baseline catalog recall | Union recall | Union + Hybrid | Catalog rescue | Catalog manual input | Duplicates | Max/event |
+|---|---:|---:|---:|---:|---:|---:|---:|
+${unionRows}
 
 ## R2 ボイシング混入フィルタ
 
@@ -612,6 +776,7 @@ ${realRows}
 - Rank 1: 保存前の主コードがcanonical identityで正解
 - Top-3: 主コードと先頭2候補内に正解
 - Candidate Recall: Productが表示可能な先頭5候補内に正解
+- Union Candidate Recall: 展開式Candidate Catalog（最大32件）内に正解
 - Correction mean: 候補選択1、構造編集2、手入力3、表現不能4の平均
 - Manual input: 手入力または表現不能が必要なイベント率
 `;

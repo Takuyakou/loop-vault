@@ -95,6 +95,7 @@ export interface AccuracyFirstFeatureFlags {
   bassCompanionCandidates: boolean;
   melodyContaminationFilter: boolean;
   observedFlatNineDominantCandidate: boolean;
+  enableAccuracyCandidateUnion: boolean;
 }
 
 export interface AnalyzeMidiOptions {

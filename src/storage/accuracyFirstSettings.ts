@@ -6,6 +6,7 @@ export const defaultAccuracyFirstFeatureFlags: AccuracyFirstFeatureFlags = {
   bassCompanionCandidates: true,
   melodyContaminationFilter: true,
   observedFlatNineDominantCandidate: true,
+  enableAccuracyCandidateUnion: true,
 };
 
 export function getAccuracyFirstFeatureFlags(): AccuracyFirstFeatureFlags {
@@ -26,6 +27,10 @@ export function getAccuracyFirstFeatureFlags(): AccuracyFirstFeatureFlags {
         typeof stored.observedFlatNineDominantCandidate === "boolean"
           ? stored.observedFlatNineDominantCandidate
           : defaultAccuracyFirstFeatureFlags.observedFlatNineDominantCandidate,
+      enableAccuracyCandidateUnion:
+        typeof stored.enableAccuracyCandidateUnion === "boolean"
+          ? stored.enableAccuracyCandidateUnion
+          : defaultAccuracyFirstFeatureFlags.enableAccuracyCandidateUnion,
     };
   } catch {
     return { ...defaultAccuracyFirstFeatureFlags };

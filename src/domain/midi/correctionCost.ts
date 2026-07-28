@@ -49,13 +49,38 @@ export function operationCorrectionCostResult(
   detected: DetectedChordCandidates | undefined,
   acceptableLabels: readonly string[],
 ): OperationCorrectionCostResult {
+  return operationCorrectionCostResultWithLimit(
+    detected,
+    acceptableLabels,
+    QUICK_CHORD_ALTERNATIVE_LIMIT,
+  );
+}
+
+/** Evaluation of the opt-in expanded analyzer catalog; Product quick candidates stay at five. */
+export function operationCorrectionCostResultForCandidateCatalog(
+  detected: DetectedChordCandidates | undefined,
+  acceptableLabels: readonly string[],
+  candidateLimit: number,
+): OperationCorrectionCostResult {
+  return operationCorrectionCostResultWithLimit(
+    detected,
+    acceptableLabels,
+    Math.max(0, candidateLimit),
+  );
+}
+
+function operationCorrectionCostResultWithLimit(
+  detected: DetectedChordCandidates | undefined,
+  acceptableLabels: readonly string[],
+  candidateLimit: number,
+): OperationCorrectionCostResult {
   if (!detected || acceptableLabels.length === 0) {
     return { cost: 4, category: "unrepresentable" };
   }
 
   const primary = chordSymbol(detected.primary);
   const displayedAlternatives = detected.alternatives
-    .slice(0, QUICK_CHORD_ALTERNATIVE_LIMIT)
+    .slice(0, candidateLimit)
     .map(chordSymbol)
     .filter((chord): chord is ChordSymbol => chord !== undefined);
   const startingChords = [primary, ...displayedAlternatives]
