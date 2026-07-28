@@ -14,6 +14,7 @@ import {
   voicingNoteSetMetrics,
   voicingRegisterMetrics,
   type MelodyContaminationFilterOptions,
+  type VoicingExtractionInput,
 } from "../../src/domain/voicing";
 
 interface GeneralEvent {
@@ -61,6 +62,9 @@ export async function evaluateGeneralRegression(
   corpusDir: string,
   split: "dev" | "validation" | "holdout",
   options: MelodyContaminationFilterOptions,
+  customFilter?: (
+    input: VoicingExtractionInput,
+  ) => { notes: VoicingExtractionInput["notes"] },
 ) {
   const manifest = JSON.parse(
     await readFile(resolve(corpusDir, "manifest.json"), "utf8"),
@@ -76,12 +80,15 @@ export async function evaluateGeneralRegression(
       const chord = parseChordLabel(event.chordSymbol);
       if (!chord) throw new Error(`Unparseable Gold chord ${file.fileId}/${event.eventId}`);
       const segment = { startBeat: event.startBeat, endBeat: event.endBeat };
-      const shadow = filterEventLocalMelodyContamination({
+      const filterInput = {
         notes: data.notes,
         voices: productVoices,
         ticksPerBeat: data.ticksPerBeat,
         segment,
-      }, options);
+        chord,
+      };
+      const shadow = customFilter?.(filterInput)
+        ?? filterEventLocalMelodyContamination(filterInput, options);
       const observed = observedPitches(data.notes, data.ticksPerBeat, segment);
       for (const mode of ["product", "shadow"] as const) {
         const extraction = extractVoicing({

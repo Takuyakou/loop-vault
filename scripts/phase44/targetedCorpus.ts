@@ -233,7 +233,12 @@ export async function evaluatePhase44Split(
   manifest: Phase44Manifest,
   split: Phase44Split,
   conditions: readonly Phase44Condition[],
-  options: { shadowFilterOptions?: MelodyContaminationFilterOptions } = {},
+  options: {
+    shadowFilterOptions?: MelodyContaminationFilterOptions;
+    customShadowFilter?: (
+      input: Parameters<typeof extractVoicing>[0],
+    ) => ReturnType<typeof filterEventLocalMelodyContamination>;
+  } = {},
 ): Promise<Phase44EventEvaluation[]> {
   const rows: Phase44EventEvaluation[] = [];
   for (const file of manifest.files.filter((candidate) => candidate.split === split)) {
@@ -253,13 +258,19 @@ export async function evaluatePhase44Split(
       const chord = parseChordLabel(event.chordSymbol);
       if (!chord) throw new Error(`Unparseable Gold chord: ${file.fileId}/${event.eventId}`);
       for (const condition of conditions) {
-        const shadow = condition === "S"
-          ? filterEventLocalMelodyContamination({
+        const shadowInput = {
+              chord,
               notes: data.notes,
               voices: productVoices,
               ticksPerBeat: data.ticksPerBeat,
               segment: { startBeat: event.startBeat, endBeat: event.endBeat },
-            }, options.shadowFilterOptions)
+            };
+        const shadow = condition === "S"
+          ? options.customShadowFilter?.(shadowInput)
+            ?? filterEventLocalMelodyContamination(
+              shadowInput,
+              options.shadowFilterOptions,
+            )
           : undefined;
         const notes = condition === "A+"
           ? perNoteGoldNotes
