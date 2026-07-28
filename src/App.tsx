@@ -23,6 +23,7 @@ import { ProgressionDetailView } from "./views/ProgressionDetailView";
 import { PracticeView } from "./views/PracticeView";
 import { Toast } from "./components/Toast";
 import { LiveMidiMiniMode } from "./components/LiveMidiMiniMode";
+import { PreviewSoundProvider } from "./components/PreviewSoundProvider";
 import { LiveMidiImportDialog, type LiveMidiImportRequest } from "./components/LiveMidiImportDialog";
 import { UndoToast } from "./components/UndoToast";
 import { statusLabel } from "./domain/displayLabels";
@@ -355,9 +356,10 @@ async function analyzeMidiPath(path: string) {
   }
 
   return (
-    <main className={`min-h-screen bg-[var(--lv-bg)] text-[var(--lv-text)] ${
-      view === "practice" ? "lg:h-screen lg:overflow-hidden" : ""
-    }`}>
+    <PreviewSoundProvider>
+      <main className={`min-h-screen bg-[var(--lv-bg)] text-[var(--lv-text)] ${
+        view === "practice" ? "lg:h-screen lg:overflow-hidden" : ""
+      }`}>
       <section className={`mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-5 sm:px-6 ${
         view === "practice" ? "lg:h-screen" : ""
       }`}>
@@ -570,7 +572,8 @@ async function analyzeMidiPath(path: string) {
       {toast ? (
         <Toast message={toast} />
       ) : null}
-    </main>
+      </main>
+    </PreviewSoundProvider>
   );
 }
 

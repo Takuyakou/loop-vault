@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { playbackController, samePlaybackSource, type PlayingSource } from "../audio/playbackController";
+import type { PreviewSound } from "../audio/chordPreview";
 import { PlayToggle } from "../components/PlayToggle";
+import { usePreviewSound } from "../components/PreviewSoundProvider";
 import { PracticeProgressBadge } from "../components/practice/PracticeProgressBadge";
 import {
   isRecent,
@@ -45,6 +47,7 @@ export function VaultView({
   language: AppLanguage;
   showRomanNumerals: boolean;
 }) {
+  const { sound: previewSound } = usePreviewSound();
   const [mode, setMode] = useState<VaultMode>(readProgressionViewMode);
   const [libraryScope, setLibraryScope] = useState<ProgressionLibraryScope>("all");
   const [selectedLibraryTags, setSelectedLibraryTags] = useState<string[]>([]);
@@ -95,11 +98,11 @@ export function VaultView({
 
   const togglePlayback = useCallback(async (entry: ProgressionEntry) => {
     try {
-      await playbackController.toggle(sourceOf(entry), requestOf(entry));
+      await playbackController.toggle(sourceOf(entry), requestOf(entry, previewSound));
     } catch (error) {
       setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
     }
-  }, [copy.toast.chordPreviewFailed, setToast]);
+  }, [copy.toast.chordPreviewFailed, previewSound, setToast]);
 
   function changeMode(next: VaultMode) {
     setMode(next);
@@ -455,13 +458,14 @@ function VirtualizedProgressionRows({
 }
 
 function ProgressionRow({ entry, selected, showDegrees, language, copy, displayTags, onSelect, onOpen, onPin, onCopy, onPreviewError }: { entry: ProgressionEntry; selected: boolean; showDegrees: boolean; language: AppLanguage; copy: AppCopy; displayTags?: string[]; onSelect: () => void; onOpen: () => void; onPin: () => void; onCopy: () => void; onPreviewError: (error: unknown) => void }) {
+  const { sound: previewSound } = usePreviewSound();
   const degrees = degreeSequence(entry.block);
   const playback = usePlaybackState();
   const source = sourceOf(entry);
   const playing = playback.status !== "idle" && samePlaybackSource(playback.source, source);
   return <div className={`lv-vault-row h-24 overflow-hidden border-b border-[var(--lv-border)] px-2 py-2 text-sm ${selected ? "bg-[var(--lv-surface-raised)]" : "hover:bg-[var(--lv-surface)]"} ${playing ? "border-l-2 border-l-[var(--lv-accent)]" : ""}`} onClick={onSelect}>
     <div className="lv-vault-play" onClick={(event) => event.stopPropagation()} onDoubleClick={(event) => event.stopPropagation()}>
-      <PlayToggle source={source} request={requestOf(entry)} playLabel={copy.common.preview} stopLabel={copy.common.stop} className="lv-button-ghost grid h-8 w-8 place-items-center" showLabel={false} onError={onPreviewError} />
+      <PlayToggle source={source} request={requestOf(entry, previewSound)} playLabel={copy.common.preview} stopLabel={copy.common.stop} className="lv-button-ghost grid h-8 w-8 place-items-center" showLabel={false} onError={onPreviewError} />
     </div>
     <button
       type="button"
@@ -543,11 +547,12 @@ function libraryTags(entry: ProgressionIndexEntry | undefined, language: AppLang
   if (!entry) return [];
   return entry.effectiveTags.slice(0, 4).map((tagId) => displayTaxonomyTag(tagId, language));
 }
-function requestOf(entry: ProgressionEntry) {
+function requestOf(entry: ProgressionEntry, sound: PreviewSound) {
   return {
     type: "timeline" as const,
     timeline: entry.block.chords,
     bpm: entry.block.bpm ?? entry.idea.bpm,
+    sound,
     beatsPerBar: beatsPerBar(entry.block.timeSignature),
     explicitMidiNotesByEventId: resolveTimelineVoicings(entry.block.chords),
   };

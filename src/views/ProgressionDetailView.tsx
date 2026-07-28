@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import type { PreviewSound } from "../audio/chordPreview";
 import { voiceChordForPreview } from "../domain/chordVoicing";
 import {
   playbackController,
@@ -8,6 +7,7 @@ import {
 } from "../audio/playbackController";
 import { PlayToggle } from "../components/PlayToggle";
 import { PreviewSoundSelector } from "../components/PreviewSoundSelector";
+import { usePreviewSound } from "../components/PreviewSoundProvider";
 import { ProgressionTagsEditor } from "../components/ProgressionTagsEditor";
 import { PracticeProgressBadge } from "../components/practice/PracticeProgressBadge";
 import { ProgressionAdvisorButton } from "../components/progression-advisor/ProgressionAdvisorButton";
@@ -120,7 +120,7 @@ export function ProgressionDetailView({
   const text = progressionDetailCopy[language];
   const meter = beatsPerBar(block.timeSignature);
   const [editable, setEditable] = useState(() => createEditableProgression(block, meter));
-  const [previewSound, setPreviewSound] = useState<PreviewSound>("piano");
+  const { sound: previewSound, setSound: setPreviewSound } = usePreviewSound();
   const [advisorOpen, setAdvisorOpen] = useState(false);
   const [reextracting, setReextracting] = useState(false);
   const dirty = hasProgressionEdits(editable);

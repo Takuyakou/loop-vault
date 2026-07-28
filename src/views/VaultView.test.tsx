@@ -4,6 +4,8 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { playbackController } from "../audio/playbackController";
+import { GlobalPreviewSoundSelector } from "../components/GlobalPreviewSoundSelector";
+import { PreviewSoundProvider } from "../components/PreviewSoundProvider";
 import { progressionFingerprint } from "../domain/practice";
 import { makeIdea } from "../domain/testFactory";
 import type { SavedProgressionBlock } from "../domain/types";
@@ -37,6 +39,7 @@ const progressionBlock: SavedProgressionBlock = {
 
 afterEach(() => {
   playbackController.stop();
+  window.localStorage.clear();
   window.sessionStorage.clear();
   vi.restoreAllMocks();
   document.body.replaceChildren();
@@ -481,6 +484,58 @@ describe("VaultView keyboard shortcuts", () => {
 
     expect(setToast).toHaveBeenCalledWith(appCopy.en.toast.chordPreviewFailed);
     expect(setToast).not.toHaveBeenCalledWith(appCopy.ja.toast.chordPreviewFailed);
+
+    await act(async () => root.unmount());
+  });
+
+  it("uses the shared preview sound for Vault playback", async () => {
+    const toggle = vi.spyOn(playbackController, "toggle")
+      .mockResolvedValue(undefined);
+    const idea = makeIdea({ progressionBlocks: [progressionBlock] });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <PreviewSoundProvider>
+          <GlobalPreviewSoundSelector copy={appCopy.en} />
+          <VaultView
+            ideas={[idea]}
+            openDetail={vi.fn()}
+            openCreate={vi.fn()}
+            openCapture={vi.fn()}
+            updateIdea={vi.fn()}
+            setToast={vi.fn()}
+            copy={appCopy.en}
+            language="en"
+            showRomanNumerals={false}
+          />
+        </PreviewSoundProvider>,
+      );
+    });
+
+    const selector = container.querySelector<HTMLSelectElement>(
+      'select[aria-label="Preview sound"]',
+    );
+    await act(async () => {
+      const setter = Object.getOwnPropertyDescriptor(
+        HTMLSelectElement.prototype,
+        "value",
+      )?.set;
+      setter?.call(selector, "electric-piano");
+      selector?.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>(
+        'button[aria-label="Preview"]',
+      )?.click();
+    });
+
+    expect(toggle).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: "vault" }),
+      expect.objectContaining({ sound: "electric-piano" }),
+    );
 
     await act(async () => root.unmount());
   });
