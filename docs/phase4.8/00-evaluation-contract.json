@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.8-00",
+  "canonicalDisplay": "7(b9)",
+  "aliases": ["7b9", "7(b9)", "7♭9"],
+  "core": {
+    "complete": ["root", "M3", "P5", "m7"],
+    "fifthOmit": ["root", "M3", "m7"],
+    "neverGenerateWithout": ["root", "M3", "m7"]
+  },
+  "evidenceVariants": {
+    "E1": { "minimumCoreOverlapRatio": 0.5 },
+    "E2": {
+      "minimumEventDurationRatio": 0.25,
+      "minimumRepeatedOnsets": 2,
+      "latestFirstOnsetRatio": 0.75
+    },
+    "E3": {
+      "inherits": "E2",
+      "allowedRoles": ["harmony", "pad", "mixed", "unknown"],
+      "rejectMelodyOnly": true
+    }
+  },
+  "candidateBudget": {
+    "perRoot": 1,
+    "perEvent": 2,
+    "canonicalDuplicateMaximum": 0
+  },
+  "intervention": "candidate-generation-only",
+  "productChanged": false,
+  "validationRunsMaximum": 1,
+  "holdoutRunsMaximum": 1
+}
