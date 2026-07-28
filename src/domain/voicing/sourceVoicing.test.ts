@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseChordLabel } from "../chords";
 import type { ChordTimelineItem, MidiProgressionAnalysis } from "../types";
-import type { MidiSongData, TimedNote } from "../midi/types";
+import type { MidiSongData, TimedNote, Voice } from "../midi/types";
 import {
   attachSourceVoicing, attachSourceVoicings, hasSourceVoicing,
   sourceVoicingCacheKey, sourceVoicingExtractorVersion,
@@ -75,7 +75,65 @@ describe("source voicing extraction", () => {
     const empty = attachSourceVoicing(item("Dm7", 9), context);
     expect(hasSourceVoicing(empty)).toBe(false);
   });
+
+  it("removes a supported monophonic melody only when Accuracy First is enabled", () => {
+    const harmonyNotes = [
+      { ...note(60, 0, 4), trackIndex: 0, channel: 0 },
+      { ...note(64, 0, 4), trackIndex: 0, channel: 0 },
+      { ...note(67, 0, 4), trackIndex: 0, channel: 0 },
+    ];
+    const melody = { ...note(72, 0, 4), trackIndex: 1, channel: 1 };
+    const voices = [
+      voice("0:0", "harmony", 0.9, 3, 0.2, 0.2),
+      voice("1:1", "melody", 0.9, 1, 1, 0),
+    ];
+    const sourceData = { ...songData, notes: [...harmonyNotes, melody] };
+    const baseContext = { analysis, sourceData, sourceVoices: voices };
+    const withoutFilter = attachSourceVoicing(item("C", 1), baseContext);
+    const withFilter = attachSourceVoicing(item("C", 1), {
+      ...baseContext,
+      accuracyFirst: { melodyContaminationFilter: true },
+    });
+    expect(withoutFilter.voicingMemory?.sourceVoicing?.midiNotes).toContain(72);
+    expect(withFilter.voicingMemory?.sourceVoicing?.midiNotes).toEqual([60, 64, 67]);
+  });
 });
+
+function voice(
+  id: string,
+  inferredRole: Voice["inferredRole"],
+  roleConfidence: number,
+  maxPolyphony: number,
+  highestVoiceShare: number,
+  lowestVoiceShare: number,
+): Voice {
+  return {
+    id,
+    trackIndex: Number(id.split(":")[0]),
+    channel: Number(id.split(":")[1]),
+    explicitPrograms: [],
+    dominantProgramExplicit: false,
+    noteCount: 4,
+    pitchRange: [48, 84],
+    medianPitch: 64,
+    avgDurationTick: ticksPerBeat * 4,
+    noteDensity: 1,
+    maxPolyphony,
+    simultaneousOnsetRatio: maxPolyphony > 1 ? 1 : 0,
+    highestVoiceShare,
+    lowestVoiceShare,
+    inferredRole,
+    roleConfidence,
+    roleEvidence: { measured: {
+      bass: 0,
+      harmony: inferredRole === "harmony" ? 1 : 0,
+      pad: 0,
+      melody: inferredRole === "melody" ? 1 : 0,
+      percussion: 0,
+      mixed: 0,
+    } },
+  };
+}
 
 describe("capture preview matches the saved progression", () => {
   it("resolves the same notes before and after saving", () => {

@@ -39,6 +39,9 @@ export function analyzeMidiPhase4(
   return analyzeMidiWithRankingScores(bytes, options, {
     useQualityEvidence: true,
     qualityEvidence: evidence,
-    analyzerVersion: phase4AnalyzerVersion,
+    useBassCompanionCandidates: options.accuracyFirst?.bassCompanionCandidates ?? false,
+    analyzerVersion: options.accuracyFirst?.bassCompanionCandidates
+      ? "phase5-accuracy-first-v1"
+      : phase4AnalyzerVersion,
   }).analysis;
 }

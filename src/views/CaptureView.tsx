@@ -56,7 +56,7 @@ import type {
 } from "../domain/progressionEditing";
 import { beatsPerBar as beatsPerBarFor, buildCorrectionEvents } from "../domain/midi";
 import { buildLabelCorrectionLogs } from "../domain/midi/labelCorrectionLog";
-import type { AnalysisInput } from "../domain/midi/types";
+import type { AnalysisInput, AnalyzeMidiOptions } from "../domain/midi/types";
 import {
   buildProgressionSaveFeedbackEvent,
   type CorrectionPropagationFeedbackEvent,
@@ -80,6 +80,7 @@ import { chordProgressFraction } from "../ui/playbackProgress";
 import { confidenceLabel, shouldShowConfidence, warningLabel } from "./captureLabels";
 import { appendAnalysisFeedback } from "../storage/analysisFeedbackStorage";
 import { appendLabelCorrectionLogs } from "../storage/labelCorrectionLogStorage";
+import { getAccuracyFirstFeatureFlags } from "../storage/accuracyFirstSettings";
 import type { PreviewSound } from "../audio/chordPreview";
 import {
   playbackController,
@@ -135,7 +136,7 @@ interface CaptureViewProps {
   analysis: AnalysisState;
   analyzeMidiBytes: (
     bytes: Uint8Array,
-    options?: { fileName?: string; sourceAssetId?: string },
+    options?: AnalyzeMidiOptions,
   ) => MidiProgressionAnalysis | undefined;
   clearAnalysis: () => void;
   createIdeaFromDraft: (draft: {
@@ -296,7 +297,10 @@ export function CaptureView(props: CaptureViewProps) {
   const analyzeMidiBytesWithToast = useCallback(
     (bytes: Uint8Array, fileName: string) => {
       stopCapturePlayback(controller);
-      const analyzed = analyzeMidiBytes(bytes, { fileName });
+      const analyzed = analyzeMidiBytes(bytes, {
+        fileName,
+        accuracyFirst: getAccuracyFirstFeatureFlags(),
+      });
       setActiveDraft(null);
       setExpandedCandidateId(undefined);
       setToast(analyzed ? copy.toast.midiAnalyzed : copy.toast.midiFailed);
