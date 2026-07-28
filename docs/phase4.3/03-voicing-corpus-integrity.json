@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "corpusVersion": "1.0.0",
+  "generatorVersion": "openai-gpt-5.6-pro-voicing-gold-v1",
+  "corpusPathPersisted": false,
+  "checks": {
+    "passed": true,
+    "failures": [],
+    "fileCount": 60,
+    "scenarioCount": 30,
+    "eventCount": 496,
+    "noteInstanceCount": 6382,
+    "noteEventRows": 6382,
+    "uniqueFileIds": 60,
+    "uniquePaths": 60,
+    "sha256Verified": 60,
+    "byteLengthVerified": 60,
+    "scenarioPairsVerified": 30,
+    "splitIsolationVerified": true,
+    "goldPolicyComplete": 496
+  },
+  "splitCounts": {
+    "dev": 40,
+    "validation": 10,
+    "holdout": 10
+  },
+  "representationCounts": {
+    "simultaneous": 460,
+    "aggregated": 16,
+    "hybrid": 16,
+    "none": 4
+  },
+  "holdoutStatus": "not-evaluated"
+}
