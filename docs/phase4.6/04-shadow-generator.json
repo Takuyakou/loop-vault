@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.6-04",
+  "generator": "plain-minor-seventh-root-position-companion-v1",
+  "productConnected": false,
+  "vaultPersistent": false,
+  "publicSchemaChanged": false,
+  "fileVersionChanged": false,
+  "transposition": {
+    "rootsTested": 12,
+    "generated": 12,
+    "canonicalRoundTrip": 12,
+    "deterministic": true,
+    "provenanceComplete": true,
+    "sourceUnchanged": true,
+    "rows": [
+      {
+        "root": 0,
+        "generatedCount": 1,
+        "canonicalIdentity": "0|minor|minor7|||-",
+        "label": "Cm7",
+        "deterministic": true,
+        "sourceUnchanged": true,
+        "provenanceCount": 4
+      },
+      {
+        "root": 1,
+        "generatedCount": 1,
+        "canonicalIdentity": "1|minor|minor7|||-",
+        "label": "C#m7",
+        "deterministic": true,
+        "sourceUnchanged": true,
+        "provenanceCount": 4
+      },
+      {
+        "root": 2,
+        "generatedCount": 1,
+        "canonicalIdentity": "2|minor|minor7|||-",
+        "label": "Dm7",
+        "deterministic": true,
+        "sourceUnchanged": true,
+        "provenanceCount": 4
+      },
+      {
+        "root": 3,
+        "generatedCount": 1,
+        "canonicalIdentity": "3|minor|minor7|||-",
+        "label": "Ebm7",
+        "deterministic": true,
+        "sourceUnchanged": true,
+        "provenanceCount": 4
+      },
+      {
+        "root": 4,
+        "generatedCount": 1,
+        "canonicalIdentity": "4|minor|minor7|||-",
+        "label": "Em7",
+        "deterministic": true,
+        "sourceUnchanged": true,
+        "provenanceCount": 4
+      },
+      {
+        "root": 5,
+        "generatedCount": 1,
+        "canonicalIdentity": "5|minor|minor7|||-",
+        "label": "Fm7",
+        "deterministic": true,
+        "sourceUnchanged": true,
+        "provenanceCount": 4
+      },
+      {
+        "root": 6,
+        "generatedCount": 1,
+        "canonicalIdentity": "6|minor|minor7|||-",
+        "label": "F#m7",
+        "deterministic": true,
+        "sourceUnchanged": true,
+        "provenanceCount": 4
+      },
+      {
+        "root": 7,
+        "generatedCount": 1,
+        "canonicalIdentity": "7|minor|minor7|||-",
+        "label": "Gm7",
+        "deterministic": true,
+        "sourceUnchanged": true,
+        "provenanceCount": 4
+      },
+      {
+        "root": 8,
+        "generatedCount": 1,
+        "canonicalIdentity": "8|minor|minor7|||-",
+        "label": "Abm7",
+        "deterministic": true,
+        "sourceUnchanged": true,
+        "provenanceCount": 4
+      },
+      {
+        "root": 9,
+        "generatedCount": 1,
+        "canonicalIdentity": "9|minor|minor7|||-",
+        "label": "Am7",
+        "deterministic": true,
+        "sourceUnchanged": true,
+        "provenanceCount": 4
+      },
+      {
+        "root": 10,
+        "generatedCount": 1,
+        "canonicalIdentity": "10|minor|minor7|||-",
+        "label": "Bbm7",
+        "deterministic": true,
+        "sourceUnchanged": true,
+        "provenanceCount": 4
+      },
+      {
+        "root": 11,
+        "generatedCount": 1,
+        "canonicalIdentity": "11|minor|minor7|||-",
+        "label": "Bm7",
+        "deterministic": true,
+        "sourceUnchanged": true,
+        "provenanceCount": 4
+      }
+    ]
+  },
+  "budget": {
+    "sourceCount": 12,
+    "generatedCount": 4,
+    "perEventLimit": 4,
+    "duplicateCanonicalIdentityCount": 0,
+    "diagnostics": {
+      "sourceCount": 12,
+      "eligibleSourceCount": 12,
+      "generatedCount": 4,
+      "skippedExistingCanonical": 0,
+      "skippedInsufficientProvenance": 0,
+      "skippedPerRootBudget": 0,
+      "skippedEventBudget": 8,
+      "canonicalDuplicateCount": 0
+    }
+  }
+}
