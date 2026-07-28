@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.6-03",
+  "decision": "locked",
+  "selectedFamily": {
+    "id": "plain-minor-seventh-root-position-companion-v1",
+    "description": "Generate one root-position companion from an existing slash-bass min7 raw candidate.",
+    "scope": {
+      "quality": "min7",
+      "alterations": [],
+      "extensions": [],
+      "sourceBass": "present-and-non-root",
+      "generatedBass": "omitted"
+    }
+  },
+  "evidence": {
+    "phase46TraceTargets": 8,
+    "phase46TraceClassifiedSlashOnly": 8,
+    "allRawMisses": 68,
+    "slashBassGenerationMisses": 28,
+    "alterationGenerationMisses": 40,
+    "selectionRule": "A generator bug affecting all observed basic m7 misses has priority over a new altered-dominant vocabulary."
+  },
+  "grammar": {
+    "input": "ChordSymbol(root, quality=min7, tensions=[], bass!=root)",
+    "output": "ChordSymbol(same root, quality=min7, same tensions, bass omitted)",
+    "preconditions": [
+      "source candidate is already present in the raw phase4-v1 candidate pool",
+      "all four min7 core pitch classes have source note-instance support",
+      "the root-position canonical identity is not already present",
+      "source canonical identity parses successfully"
+    ],
+    "forbidden": [
+      "using Gold labels as generator input",
+      "adding tensions or alterations",
+      "changing root or quality",
+      "changing Product candidates",
+      "generating from a generated candidate"
+    ]
+  },
+  "compatibilityMatrix": [
+    {
+      "sourceQuality": "min7",
+      "sourceTensions": [],
+      "sourceBass": "non-root",
+      "coreEvidence": "complete",
+      "result": "allow-root-position-companion"
+    },
+    {
+      "sourceQuality": "min7",
+      "sourceTensions": [],
+      "sourceBass": "root-or-omitted",
+      "coreEvidence": "complete",
+      "result": "reject-already-root-position"
+    },
+    {
+      "sourceQuality": "min7",
+      "sourceTensions": [],
+      "sourceBass": "non-root",
+      "coreEvidence": "incomplete",
+      "result": "reject-insufficient-provenance"
+    },
+    {
+      "sourceQuality": "not-min7",
+      "sourceTensions": "any",
+      "sourceBass": "any",
+      "coreEvidence": "any",
+      "result": "reject-outside-family"
+    }
+  ],
+  "candidateBudget": {
+    "perSource": 1,
+    "perRoot": 1,
+    "perEvent": 4,
+    "globalMaximumRequiredByPlan": 12,
+    "averageGate": 4,
+    "selectionOrder": [
+      "source rawScore descending",
+      "source canonical identity ascending"
+    ],
+    "dedupIdentity": "canonical chord identity"
+  },
+  "provenance": {
+    "required": true,
+    "requiredFields": [
+      "sourceCandidateCanonicalIdentity",
+      "sourceCandidateRawScore",
+      "sourceNoteInstanceIds",
+      "supportingPitchClasses",
+      "grammarId"
+    ],
+    "missingPolicy": "do-not-generate"
+  },
+  "runtime": {
+    "maximumOverheadVsSameProcessBaseline": 0.2,
+    "implementationConstraint": "single bounded pass over pre-sorted raw candidates"
+  },
+  "counterfactualRisk": {
+    "expected": "Generated root-position companion retains the source raw score and may tie with its slash source.",
+    "mustMeasure": [
+      "tie-break-only changes",
+      "slash-only changes",
+      "root changes",
+      "rank1 regression",
+      "plain chord displacement"
+    ],
+    "scorePolicy": "Do not invent a bonus or mix a new score scale."
+  },
+  "notSelected": [
+    {
+      "family": "dominant-seventh-plus-observed-b9",
+      "reason": "It is a separate alteration-vocabulary gap; the preregistered generator-bug priority applies first."
+    },
+    {
+      "family": "all-root-position-companions",
+      "reason": "It spans several quality families and widens the first experiment beyond one family."
+    },
+    {
+      "family": "minor-ninth-root-position-companion",
+      "reason": "Same mechanism but a distinct extension family; defer until the basic m7 bounded experiment is measured."
+    }
+  ],
+  "rollback": {
+    "productCodeTouched": false,
+    "action": "Remove the evaluation-only Shadow generator and reports; no Vault migration or Product rollback is required."
+  },
+  "invariants": {
+    "defaultAnalyzerMode": "phase4-v1",
+    "fileVersion": 1,
+    "productRankAndCandidatesUnchanged": true,
+    "validationOrHoldoutRun": false
+  }
+}
