@@ -66,6 +66,7 @@
     "eval:p47:holdout": "vite-node scripts/evaluate-phase47-gold-split.ts --split holdout",
     "eval:p48:baseline": "vite-node scripts/evaluate-phase48-baseline.ts",
     "eval:p48:trace": "vite-node scripts/evaluate-phase48-a7b9-trace.ts",
+    "eval:p48:shadow": "vite-node scripts/evaluate-phase48-shadow-generators.ts",
     "eval:stored-progressions": "vite-node scripts/evaluate-stored-progressions.ts",
     "eval:review-differences": "vite-node scripts/review-midi-differences.ts",
     "eval:promote-corrections": "vite-node scripts/promote-midi-corrections.ts",
