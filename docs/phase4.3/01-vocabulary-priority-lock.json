@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "split": "dev",
+  "eventCount": 320,
+  "decision": "no-extension",
+  "reason": "All dev Gold labels round-trip through the current parser and serializer; no non-zero representation gap can be pre-locked.",
+  "representableRate": 1,
+  "lockedFamilies": [],
+  "observedUnsupportedFamilyCounts": {
+    "maj13": 0,
+    "dom13sus": 0,
+    "minMaj7": 0,
+    "altered-dominant": 0,
+    "parenthesized-tensions": 0,
+    "no3-or-omit": 0,
+    "multiple-tensions": 0,
+    "slash-complex-quality": 0,
+    "parser-unsupported": 0,
+    "serializer-unsupported": 0
+  },
+  "trackCAllowed": false,
+  "detectorChangesAllowed": false
+}

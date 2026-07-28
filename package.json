@@ -21,6 +21,7 @@
     "eval:midi:datasets": "vite-node scripts/evaluate-midi-datasets.ts",
     "eval:midi:inspect": "vite-node scripts/inspect-midi-analysis.ts",
     "eval:midi:label-reachability": "vite-node scripts/evaluate-label-reachability.ts",
+    "eval:p43:labels": "vite-node scripts/audit-phase43-labels.ts",
     "eval:stored-progressions": "vite-node scripts/evaluate-stored-progressions.ts",
     "eval:review-differences": "vite-node scripts/review-midi-differences.ts",
     "eval:promote-corrections": "vite-node scripts/promote-midi-corrections.ts",
