@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.6-07",
+  "decision": {
+    "code": "C",
+    "label": "Generator Bug Phase",
+    "productConnection": false,
+    "summary": "The bounded Shadow experiment is low-risk on Dev, but the root-position loss is a general automatic-bass generation bug. A separately preregistered bug-fix phase must precede any Product connection."
+  },
+  "baseline": {
+    "split": "dev",
+    "files": 40,
+    "events": 320,
+    "rawCandidateRecall": 0.7875,
+    "canonicalCandidateRecall": 0.7875,
+    "eligibleCandidateRecall": 0.7875,
+    "sameRootCandidateRecall": 0.7875,
+    "rawMissingCount": 68
+  },
+  "basicM7Trace": {
+    "targets": 8,
+    "classified": 8,
+    "firstInvalidationStage": "T2-core-generation-root-position-identity",
+    "rootHypothesisMissing": 0,
+    "coreMissing": 0,
+    "slashOnlyGenerated": 8,
+    "cause": "automatic-bass-attachment-suppresses-root-position-identity"
+  },
+  "missingTaxonomy": {
+    "targetCount": 68,
+    "primaryCounts": {
+      "alteration-generation-missing": 40,
+      "slash-bass-generation-missing": 28
+    },
+    "familyCounts": {
+      "A7b9": 40,
+      "Am9": 6,
+      "Dm9": 4,
+      "Dm7": 6,
+      "G7sus4": 6,
+      "Cmaj9": 2,
+      "G13": 2,
+      "Em7": 2
+    }
+  },
+  "targetFamily": {
+    "id": "plain-minor-seventh-root-position-companion-v1",
+    "reason": "The preregistered generator-bug priority overrides the initially proposed altered-dominant family.",
+    "grammar": "existing slash min7 plus complete four-tone note-instance evidence produces the same min7 canonical identity with bass omitted",
+    "candidateBudget": {
+      "perSource": 1,
+      "perRoot": 1,
+      "perEvent": 4
+    },
+    "provenanceRequired": true,
+    "twelveKeySyntheticPass": "12/12",
+    "canonicalRoundTripPass": "12/12"
+  },
+  "coverage": {
+    "overallBefore": 0.7875,
+    "overallAfter": 0.8125,
+    "targetFamilyBefore": 0.9,
+    "targetFamilyAfter": 1,
+    "targetFamilyCount": 80,
+    "generatedRescueCount": 8,
+    "stillMissingCount": 60,
+    "candidateEconomy": {
+      "totalAdded": 65,
+      "averageAddedPerEvent": 0.203125,
+      "maximumAddedPerEvent": 2,
+      "canonicalDuplicateCount": 0,
+      "missingProvenanceCount": 0
+    },
+    "performance": {
+      "baselineMedianMs": 154.4896,
+      "shadowMedianMs": 160.349,
+      "runtimeOverheadRate": 0.03792747214051521,
+      "peakHeapDeltaDifferenceBytes": 2877416
+    },
+    "deterministic": true
+  },
+  "counterfactual": {
+    "competitionPoint": "deduplicated pre-clamp raw candidate ranking",
+    "rank1ChangedCount": 3,
+    "rank1ChangedRate": 0.009375,
+    "improvedCount": 3,
+    "regressedCount": 0,
+    "neutralCount": 0,
+    "tieBreakOnlyCount": 3,
+    "slashOnlyCount": 3,
+    "rootChangedCount": 0,
+    "plainStolenByAlteredCount": 0,
+    "top3CanonicalBefore": 0.73125,
+    "top3CanonicalAfter": 0.75,
+    "top3RootBefore": 0.959375,
+    "top3RootAfter": 0.959375,
+    "mrrDelta": 0.014565801823034796,
+    "risk": "low-risk",
+    "productConnectionAllowed": false
+  },
+  "correctionLog": {
+    "status": "implemented-in-independent-pr",
+    "branch": "feature/p46-label-correction-log",
+    "pullRequest": 275,
+    "format": "local JSONL",
+    "features": [
+      "save-success-only",
+      "opt-out",
+      "export",
+      "clear",
+      "deduplication",
+      "stale edit identification",
+      "best-effort failure isolation"
+    ],
+    "privacy": "No MIDI bytes, titles, absolute paths, source file names, Idea names, memos or personal identifiers."
+  },
+  "invariants": {
+    "productRank1Unchanged": true,
+    "productTop3Unchanged": true,
+    "productCandidateScoresUnchanged": true,
+    "analyzerOutputUnchanged": true,
+    "timelineUnchanged": true,
+    "voicingUnchanged": true,
+    "vaultSchemaUnchanged": true,
+    "fileVersion": 1,
+    "defaultAnalyzerMode": "phase4-v1",
+    "validationOrHoldoutRun": false,
+    "privateMidiAdded": false
+  },
+  "gates": {
+    "G1-product-rank1-top3-invariant": "PASS",
+    "G2-basic-m7-trace": "PASS",
+    "G3-missing-68-taxonomy": "PASS",
+    "G4-one-target-family": "PASS",
+    "G5-no-monolithic-symbol-hardcode": "PASS",
+    "G6-no-tension-powerset": "PASS",
+    "G7-observed-compatible-extension-only": "PASS-NOT-APPLICABLE-NO-EXTENSION-GENERATED",
+    "G8-canonical-duplicate-zero": "PASS",
+    "G9-provenance-missing-zero": "PASS",
+    "G10-target-family-recall-at-least-80": "PASS",
+    "G11-overall-recall-improved": "PASS",
+    "G12-average-added-at-most-4": "PASS",
+    "G13-maximum-added-at-most-12": "PASS",
+    "G14-runtime-overhead-at-most-20-percent": "PASS",
+    "G15-deterministic-100-percent": "PASS",
+    "G16-counterfactual-changes-classified": "PASS",
+    "G17-analyzer-timeline-voicing-invariant": "PASS",
+    "G18-schema-fileVersion-1": "PASS",
+    "G19-defaultAnalyzerMode-phase4-v1": "PASS",
+    "G20-private-midi-tracked-zero": "PASS",
+    "G21-all-verification": "PASS",
+    "G22-no-product-connection": "PASS"
+  },
+  "rollback": "Drop the evaluation-only Phase 4.6 scripts and reports. No Product rollback or Vault migration is required.",
+  "nextWork": [
+    "Preregister a dedicated automatic-bass/root-position generation bug-fix phase.",
+    "Keep root estimation, primary scoring, boundaries and Analyzer mode fixed in that phase.",
+    "Use new independent Gold before any Product connection decision.",
+    "Accumulate at least 100 saved events and 20 progressions in the Label Correction Log before using it for research priority.",
+    "Do not resume altered-dominant generation until the general root-position bug is resolved and independently evaluated."
+  ]
+}
