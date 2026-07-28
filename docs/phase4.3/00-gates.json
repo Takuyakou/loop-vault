@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.3",
+  "baselineCommit": "33e28a24ae97d0850f30993d641c8a88cc4af85e",
+  "locks": {
+    "defaultAnalyzerMode": "phase4-v1",
+    "fileVersion": 1,
+    "stageFPrimaryConnection": false,
+    "detectorScoreChangesAllowed": false,
+    "privateMidiCommitAllowed": false
+  },
+  "splits": {
+    "development": "dev",
+    "validationRuns": 1,
+    "holdoutRuns": 1,
+    "holdoutMayTune": false
+  },
+  "labelPrimaryMetrics": [
+    "top3Canonical",
+    "top3Root",
+    "correctCandidateMeanRank",
+    "MRR",
+    "correctionCost",
+    "manualInputRequiredRate"
+  ],
+  "voicingGoldPolicies": [
+    "sourceFaithfulMidi",
+    "aggregateHarmonyMidi",
+    "dojoIntegratedMidi"
+  ],
+  "ablationConditions": {
+    "A": { "boundary": "gold", "roles": "gold" },
+    "B": { "boundary": "gold", "roles": "product" },
+    "C": { "boundary": "product", "roles": "gold" },
+    "D": { "boundary": "product", "roles": "product" }
+  },
+  "hardRegressionGates": {
+    "lint": true,
+    "typecheck": true,
+    "tests": true,
+    "cargoTest": true,
+    "webBuild": true,
+    "tauriBuild": true,
+    "trackedMidiFiles": 0
+  }
+}
