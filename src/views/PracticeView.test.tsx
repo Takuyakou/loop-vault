@@ -78,13 +78,14 @@ describe("PracticeView", () => {
     const container = document.createElement("div");
     document.body.append(container);
     const root = createRoot(container);
+    const openProgression = vi.fn();
 
     await act(async () => root.render(
       <PracticeView
         ideas={[idea]}
         language="ja"
         updateProgressionBlock={vi.fn(() => true)}
-        openProgression={vi.fn()}
+        openProgression={openProgression}
         openSettings={vi.fn()}
         setToast={vi.fn()}
       />,
@@ -101,6 +102,12 @@ describe("PracticeView", () => {
     expect(container.querySelector(
       '[data-testid="dojo-voicing-source-chip"]',
     )?.getAttribute("data-voicing-source")).toBe("generated");
+    const recovery = container.querySelector<HTMLButtonElement>(
+      '[data-testid="dojo-voicing-recovery"]',
+    );
+    expect(recovery?.textContent).toContain("鍵盤で弾いて上書き");
+    await act(async () => recovery?.click());
+    expect(openProgression).toHaveBeenCalledWith(idea.id, block.id);
     expect(container.querySelector('[role="img"][aria-label*="ピアノ鍵盤"]')).not.toBeNull();
     expect(container.textContent).toContain("C5");
     expect(container.textContent).not.toContain("60 ·");

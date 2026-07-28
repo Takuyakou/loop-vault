@@ -36,6 +36,7 @@ const copy = {
     aggregated: "区間内の音を集約",
     stale: "元MIDIのボイシングは編集前のコード用です。現在は自動生成を使用します。",
     record: "鍵盤で記録",
+    replace: "鍵盤で弾いて上書き",
     recordPrompt: "MIDIキーボードで押さえてください",
     stable: "安定",
     confirm: "この押さえ方を使う",
@@ -57,6 +58,7 @@ const copy = {
     aggregated: "Aggregated note set",
     stale: "The source voicing belongs to the chord before editing. Generated voicing is in use.",
     record: "Capture from keyboard",
+    replace: "Play and replace",
     recordPrompt: "Hold a voicing on your MIDI keyboard",
     stable: "Stable",
     confirm: "Use this voicing",
@@ -221,8 +223,13 @@ export function VoicingPanel({
         </div>
       ) : (
         <div className="mt-4 flex flex-wrap gap-2">
-          <button type="button" className="lv-button-secondary px-3 py-2 text-sm" onClick={() => void startRecording()}>
-            {text.record}
+          <button
+            type="button"
+            className="lv-button-secondary px-3 py-2 text-sm"
+            data-testid={sourceStatus.status === "source" ? undefined : "detail-voicing-recovery"}
+            onClick={() => void startRecording()}
+          >
+            {sourceStatus.status === "source" ? text.record : text.replace}
           </button>
           <button type="button" className="lv-button-secondary px-3 py-2 text-sm" disabled={!sourceAvailable || reextracting} onClick={onReextract}>
             {text.reextract}

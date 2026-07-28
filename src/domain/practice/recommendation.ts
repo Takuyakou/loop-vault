@@ -1,4 +1,5 @@
 import type { SongIdea } from "../types";
+import { voicingSourceStatus } from "../voicing";
 import { practiceProgressState } from "./practiceProgress";
 import { progressionFingerprint } from "./progressionFingerprint";
 import type { PracticeRecommendation } from "./types";
@@ -29,6 +30,8 @@ function compareRecommendations(
 ): number {
   const priority = recommendationPriority(left) - recommendationPriority(right);
   if (priority !== 0) return priority;
+  const voicingOrder = usableSourceVoicingRatio(right) - usableSourceVoicingRatio(left);
+  if (voicingOrder !== 0) return voicingOrder;
   const leftPracticed = validProgress(left) ? left.block.practice?.lastPracticedAt ?? "" : "";
   const rightPracticed = validProgress(right) ? right.block.practice?.lastPracticedAt ?? "" : "";
   const practiceOrder = leftPracticed.localeCompare(rightPracticed);
@@ -37,6 +40,14 @@ function compareRecommendations(
   const capturedOrder = right.block.capturedAt.localeCompare(left.block.capturedAt);
   if (capturedOrder !== 0) return capturedOrder;
   return left.block.id.localeCompare(right.block.id);
+}
+
+function usableSourceVoicingRatio(item: PracticeRecommendation): number {
+  if (item.block.chords.length === 0) return 0;
+  const usableCount = item.block.chords.filter((event) => (
+    voicingSourceStatus(event.chord, event.voicingMemory).status === "source"
+  )).length;
+  return usableCount / item.block.chords.length;
 }
 
 function recommendationPriority(item: PracticeRecommendation): number {

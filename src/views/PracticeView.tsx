@@ -230,6 +230,7 @@ const copy = {
     styleChangeConfirm: "一時停止してボイシングを変更しますか？現在の周回は破棄されます。",
     styleStartBlocked: "未対応コードがあります。自動フォールバックを許可するか、別のボイシングを選んでください。",
     previewFailed: "ボイシングの試聴を開始できませんでした。",
+    replaceVoicing: "鍵盤で弾いて上書き",
     leftGuide: "左手の目安",
     rightGuide: "右手の目安",
     shape: (count: number) => `${count}音の形`,
@@ -353,6 +354,7 @@ const copy = {
     styleChangeConfirm: "Pause and change the voicing? The current round will be discarded.",
     styleStartBlocked: "Unsupported chords remain. Allow automatic fallback or choose another voicing.",
     previewFailed: "Could not start the voicing preview.",
+    replaceVoicing: "Play and replace",
     leftGuide: "Left-hand guide",
     rightGuide: "Right-hand guide",
     shape: (count: number) => `${count}-note shape`,
@@ -2326,6 +2328,16 @@ export function PracticeView({
                         language={language}
                         testId="dojo-voicing-source-chip"
                       />
+                      {currentVoicingSource.status !== "source" ? (
+                        <button
+                          type="button"
+                          className="lv-button-secondary px-2 py-1 text-xs"
+                          data-testid="dojo-voicing-recovery"
+                          onClick={() => openProgression(selected.ideaId, block.id)}
+                        >
+                          {text.replaceVoicing}
+                        </button>
+                      ) : null}
                     </div>
                     {styleMode && guide && !transpositionMode ? (
                       <span
