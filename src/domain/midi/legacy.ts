@@ -33,6 +33,7 @@ import { beatsPerBar } from "./timing";
 import type { AnalyzeMidiOptions, MidiSongData, TimedNote, TrackRole } from "./types";
 import { selectChordEvidenceNotes } from "./voices";
 import { addBassPlainCompanion } from "./accuracyFirstCandidates";
+import { addObservedFlatNineDominantCandidate } from "./observedFlatNineCandidate";
 
 export const analyzerVersion = "legacy-v1";
 
@@ -146,6 +147,8 @@ export interface LegacyScoringOptions {
   useExtractionProfile?: boolean;
   /** Add a plain identity beside an automatically attached non-root bass. */
   useBassCompanionCandidates?: boolean;
+  /** Add E1 observed b9 beside a complete dominant-seventh core. */
+  useObservedFlatNineDominantCandidate?: boolean;
   analyzerVersion?: string;
 }
 
@@ -442,7 +445,7 @@ function matchWindowWithRankingScore(
     best.chord,
     scored.slice(1).map((entry) => ({ chord: entry.chord, confidence: entry.confidence })),
   ).map((entry) => ({ chord: entry.chord, confidence: clamp(entry.confidence) }));
-  const alternatives = scoring.useBassCompanionCandidates
+  const bassCompanionAlternatives = scoring.useBassCompanionCandidates
     ? addBassPlainCompanion(
         best.chord,
         baselineAlternatives,
@@ -450,6 +453,14 @@ function matchWindowWithRankingScore(
         clamp(best.confidence),
       )
     : baselineAlternatives;
+  const alternatives = scoring.useObservedFlatNineDominantCandidate
+    ? addObservedFlatNineDominantCandidate(
+        best.chord,
+        bassCompanionAlternatives,
+        scored.map((entry) => ({ chord: entry.chord, rawScore: entry.confidence })),
+        window.histogram,
+      )
+    : bassCompanionAlternatives;
 
   return {
     item: {

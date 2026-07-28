@@ -5,6 +5,7 @@ const storageKey = "loopvault.accuracyFirstFeatures";
 export const defaultAccuracyFirstFeatureFlags: AccuracyFirstFeatureFlags = {
   bassCompanionCandidates: true,
   melodyContaminationFilter: true,
+  observedFlatNineDominantCandidate: true,
 };
 
 export function getAccuracyFirstFeatureFlags(): AccuracyFirstFeatureFlags {
@@ -21,6 +22,10 @@ export function getAccuracyFirstFeatureFlags(): AccuracyFirstFeatureFlags {
       melodyContaminationFilter: typeof stored.melodyContaminationFilter === "boolean"
         ? stored.melodyContaminationFilter
         : defaultAccuracyFirstFeatureFlags.melodyContaminationFilter,
+      observedFlatNineDominantCandidate:
+        typeof stored.observedFlatNineDominantCandidate === "boolean"
+          ? stored.observedFlatNineDominantCandidate
+          : defaultAccuracyFirstFeatureFlags.observedFlatNineDominantCandidate,
     };
   } catch {
     return { ...defaultAccuracyFirstFeatureFlags };
