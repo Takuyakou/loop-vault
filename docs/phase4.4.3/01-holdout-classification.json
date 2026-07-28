@@ -1,0 +1,210 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.4.3-01",
+  "source": "stored-phase4.4.2-holdout-report",
+  "midiReparsed": false,
+  "holdoutRerun": false,
+  "eventCount": 8,
+  "counts": {
+    "H": 8,
+    "N": 0,
+    "X": 0,
+    "unclassified": 0
+  },
+  "allEventsClassified": true,
+  "observations": {
+    "allProductRolesMelody": true,
+    "allRoleConfidenceOne": true,
+    "allSupportCountThree": true,
+    "allCoverageOne": true,
+    "allSupportDurationBeats": [
+      0.179167
+    ]
+  },
+  "events": [
+    {
+      "key": "H14_clean/e01",
+      "scenarioId": "H14",
+      "scenarioSlug": "boundary-support-duration",
+      "variant": "clean",
+      "mode": "duration",
+      "productRole": "melody",
+      "roleConfidence": 1,
+      "hasHarmonyVoice": true,
+      "supportPitchCount": 3,
+      "supportCoverageRatio": 1,
+      "supportDurationBeats": 0.179167,
+      "previousFilterTriggered": false,
+      "classification": {
+        "class": "H",
+        "reasons": [
+          "role-is-melody",
+          "role-confidence-passed",
+          "harmony-voice-present",
+          "support-count-positive"
+        ]
+      }
+    },
+    {
+      "key": "H14_clean/e02",
+      "scenarioId": "H14",
+      "scenarioSlug": "boundary-support-duration",
+      "variant": "clean",
+      "mode": "duration",
+      "productRole": "melody",
+      "roleConfidence": 1,
+      "hasHarmonyVoice": true,
+      "supportPitchCount": 3,
+      "supportCoverageRatio": 1,
+      "supportDurationBeats": 0.179167,
+      "previousFilterTriggered": false,
+      "classification": {
+        "class": "H",
+        "reasons": [
+          "role-is-melody",
+          "role-confidence-passed",
+          "harmony-voice-present",
+          "support-count-positive"
+        ]
+      }
+    },
+    {
+      "key": "H14_clean/e03",
+      "scenarioId": "H14",
+      "scenarioSlug": "boundary-support-duration",
+      "variant": "clean",
+      "mode": "duration",
+      "productRole": "melody",
+      "roleConfidence": 1,
+      "hasHarmonyVoice": true,
+      "supportPitchCount": 3,
+      "supportCoverageRatio": 1,
+      "supportDurationBeats": 0.179167,
+      "previousFilterTriggered": false,
+      "classification": {
+        "class": "H",
+        "reasons": [
+          "role-is-melody",
+          "role-confidence-passed",
+          "harmony-voice-present",
+          "support-count-positive"
+        ]
+      }
+    },
+    {
+      "key": "H14_clean/e04",
+      "scenarioId": "H14",
+      "scenarioSlug": "boundary-support-duration",
+      "variant": "clean",
+      "mode": "duration",
+      "productRole": "melody",
+      "roleConfidence": 1,
+      "hasHarmonyVoice": true,
+      "supportPitchCount": 3,
+      "supportCoverageRatio": 1,
+      "supportDurationBeats": 0.179167,
+      "previousFilterTriggered": false,
+      "classification": {
+        "class": "H",
+        "reasons": [
+          "role-is-melody",
+          "role-confidence-passed",
+          "harmony-voice-present",
+          "support-count-positive"
+        ]
+      }
+    },
+    {
+      "key": "H14_clean/e05",
+      "scenarioId": "H14",
+      "scenarioSlug": "boundary-support-duration",
+      "variant": "clean",
+      "mode": "duration",
+      "productRole": "melody",
+      "roleConfidence": 1,
+      "hasHarmonyVoice": true,
+      "supportPitchCount": 3,
+      "supportCoverageRatio": 1,
+      "supportDurationBeats": 0.179167,
+      "previousFilterTriggered": false,
+      "classification": {
+        "class": "H",
+        "reasons": [
+          "role-is-melody",
+          "role-confidence-passed",
+          "harmony-voice-present",
+          "support-count-positive"
+        ]
+      }
+    },
+    {
+      "key": "H14_clean/e06",
+      "scenarioId": "H14",
+      "scenarioSlug": "boundary-support-duration",
+      "variant": "clean",
+      "mode": "duration",
+      "productRole": "melody",
+      "roleConfidence": 1,
+      "hasHarmonyVoice": true,
+      "supportPitchCount": 3,
+      "supportCoverageRatio": 1,
+      "supportDurationBeats": 0.179167,
+      "previousFilterTriggered": false,
+      "classification": {
+        "class": "H",
+        "reasons": [
+          "role-is-melody",
+          "role-confidence-passed",
+          "harmony-voice-present",
+          "support-count-positive"
+        ]
+      }
+    },
+    {
+      "key": "H14_clean/e07",
+      "scenarioId": "H14",
+      "scenarioSlug": "boundary-support-duration",
+      "variant": "clean",
+      "mode": "duration",
+      "productRole": "melody",
+      "roleConfidence": 1,
+      "hasHarmonyVoice": true,
+      "supportPitchCount": 3,
+      "supportCoverageRatio": 1,
+      "supportDurationBeats": 0.179167,
+      "previousFilterTriggered": false,
+      "classification": {
+        "class": "H",
+        "reasons": [
+          "role-is-melody",
+          "role-confidence-passed",
+          "harmony-voice-present",
+          "support-count-positive"
+        ]
+      }
+    },
+    {
+      "key": "H14_clean/e08",
+      "scenarioId": "H14",
+      "scenarioSlug": "boundary-support-duration",
+      "variant": "clean",
+      "mode": "duration",
+      "productRole": "melody",
+      "roleConfidence": 1,
+      "hasHarmonyVoice": true,
+      "supportPitchCount": 3,
+      "supportCoverageRatio": 1,
+      "supportDurationBeats": 0.179167,
+      "previousFilterTriggered": false,
+      "classification": {
+        "class": "H",
+        "reasons": [
+          "role-is-melody",
+          "role-confidence-passed",
+          "harmony-voice-present",
+          "support-count-positive"
+        ]
+      }
+    }
+  ]
+}
