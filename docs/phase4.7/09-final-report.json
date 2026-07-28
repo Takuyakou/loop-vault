@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.7-09",
+  "decision": "Non-Promotion",
+  "decisionReasons": [
+    "new-dev-candidate-economy-over-budget",
+    "new-dev-runtime-over-budget"
+  ],
+  "contract": {
+    "canonicalBassSemantics": "Contract A",
+    "plainBassMeaning": "root",
+    "consistent": true,
+    "partAAllowed": true,
+    "partBAllowed": false
+  },
+  "pullRequests": [
+    { "stage": "P4.7-00", "number": 277, "commit": "5a6cdac" },
+    { "stage": "P4.7-01", "number": 278, "commit": "e11f6ff" },
+    { "stage": "P4.7-02", "number": 279, "commits": ["a0a77db", "0ba5cdb"] },
+    { "stage": "P4.7-03", "number": 280, "commit": "f3ddb3e" },
+    { "stage": "P4.7-04", "number": 281, "commit": "49d08ab" },
+    { "stage": "P4.7-05", "number": 282, "commit": "c7447e5" }
+  ],
+  "baseline": {
+    "eventCount": 320,
+    "candidateRecall": 0.7875,
+    "displayedTop3Canonical": 0.70625,
+    "rankingTop3Canonical": 0.73125,
+    "top3Root": 0.959375,
+    "mrr": 0.6750052434511356,
+    "correctionCostMean": 0.76875,
+    "correctionCostP90": 3,
+    "manualInputRequired": 0.125
+  },
+  "realScope": {
+    "bassAttachmentEvents": 320,
+    "rawCandidates": 80640,
+    "slashOnlyIdentities": 20800,
+    "plainIdentitiesLost": 20800,
+    "provenanceEligibleCompanions": 1770,
+    "applicableEvents": 289,
+    "scoreTies": 17,
+    "scoreTieRate": 0.053125
+  },
+  "partA": {
+    "rule": "automatic-bass-plain-companion-v1",
+    "maximumGeneratedPerEvent": 1,
+    "tieBreak": "all-incumbents-in-original-order-then-generated-stable-suffix",
+    "productConnected": false
+  },
+  "existingDev": {
+    "rank1Unchanged": 320,
+    "candidateSetRetained": 320,
+    "duplicateCount": 0,
+    "missingProvenanceCount": 0,
+    "generated": 29,
+    "averageAdded": 0.090625,
+    "runtimeOverhead": 0.03081415999916586,
+    "deterministic": true,
+    "applicable": 29,
+    "improvedApplicable": 22,
+    "inertness": 1,
+    "baselineCanonicalTop3Retained": "234/234",
+    "baselineRootTop3Retained": "308/308",
+    "newCanonicalMiss": 0,
+    "newRootMiss": 0
+  },
+  "newCorpus": {
+    "version": "loop-vault-bass-companion-identity-gold-v1",
+    "files": 36,
+    "events": 288,
+    "notes": 1930,
+    "bytes": 20925,
+    "parserRoundTrip": "36/36",
+    "representable": "288/288",
+    "splitOverlap": 0,
+    "integrityPass": true,
+    "integrityApplicable": {
+      "dev": 92,
+      "validation": 91,
+      "holdout": 91
+    }
+  },
+  "newDev": {
+    "events": 96,
+    "applicable": 45,
+    "candidateRecall": { "before": 0.5625, "after": 0.6145833333333334 },
+    "candidateRescue": 5,
+    "candidateLoss": 0,
+    "top3Canonical": { "before": 0.052083333333333336, "after": 0.052083333333333336 },
+    "top3Root": { "before": 0.17708333333333334, "after": 0.17708333333333334 },
+    "mrr": { "before": 0.05390391425554, "after": 0.054109777233142115 },
+    "correctionCostMean": { "before": 1.90625, "after": 1.90625 },
+    "correctionCostP90": { "before": 2, "after": 2 },
+    "manualInputRequired": { "before": 0, "after": 0 },
+    "rank1Changes": 0,
+    "baselineTop3CanonicalRetained": "5/5",
+    "baselineTop3RootRetained": "17/17",
+    "newCanonicalMiss": 0,
+    "newRootMiss": 0,
+    "inertness": 1,
+    "duplicateCount": 0,
+    "missingProvenanceCount": 0,
+    "deterministic": true,
+    "economy": {
+      "totalAdded": 45,
+      "averageAdded": 0.46875,
+      "maximumAdded": 1,
+      "limit": 0.25,
+      "pass": false
+    },
+    "runtime": {
+      "baselineMedianMs": 78.95019999999931,
+      "shadowMedianMs": 85.79680000000008,
+      "overheadRate": 0.08672048962511586,
+      "limit": 0.05,
+      "pass": false
+    },
+    "familyCandidateGain": {
+      "13": 1,
+      "7sus4": 1,
+      "dom7": 1,
+      "m7": 0,
+      "m9": 1,
+      "maj7": 0,
+      "maj9": 1
+    },
+    "familyCandidateLoss": 0,
+    "bassConditionGain": {
+      "third": 1,
+      "seventh": 2,
+      "pedal": 1,
+      "short": 2,
+      "medium": 4,
+      "plain-gold": 5,
+      "separate-track": 5
+    },
+    "bassConditionLoss": 0,
+    "overallGate": false
+  },
+  "laterStages": {
+    "validationRun": false,
+    "holdoutRun": false,
+    "productConnection": false,
+    "featureFlagImplemented": false
+  },
+  "productState": {
+    "defaultAnalyzerMode": "phase4-v1",
+    "fileVersion": 1,
+    "vaultSchemaChanged": false,
+    "timelineChanged": false,
+    "voicingChanged": false,
+    "boundaryChanged": false,
+    "aggregateChanged": false,
+    "fallbackChanged": false
+  },
+  "privacy": {
+    "trackedMidi": 0,
+    "trackedLocalEvaluation": 0
+  },
+  "rollback": {
+    "required": false,
+    "reason": "Product path was never connected"
+  },
+  "correctionLog": {
+    "savedEvents": 0,
+    "progressions": 0,
+    "acceptedRank1": 0,
+    "selectedRank2": 0,
+    "selectedRank3": 0,
+    "manualInput": 0,
+    "minimumReached": false
+  },
+  "verification": {
+    "lint": "PASS",
+    "typecheck": "PASS",
+    "tests": {
+      "files": 213,
+      "tests": 1706,
+      "result": "PASS"
+    },
+    "cargoTests": {
+      "tests": 24,
+      "result": "PASS"
+    },
+    "build": "PASS",
+    "tauriBuild": "PASS",
+    "diffCheck": "PASS",
+    "stagedCheck": "PASS",
+    "artifacts": [
+      "src-tauri/target/release/loop-vault.exe",
+      "src-tauri/target/release/bundle/msi/Loop Vault_0.1.0_x64_en-US.msi",
+      "src-tauri/target/release/bundle/nsis/Loop Vault_0.1.0_x64-setup.exe"
+    ],
+    "warnings": [
+      "Vite chunk size exceeds 500 kB"
+    ]
+  }
+}
