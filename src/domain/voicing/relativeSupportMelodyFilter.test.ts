@@ -51,6 +51,38 @@ describe("relative support melody filter", () => {
       minimumSupportBeats: 0.2,
     }).removed).toEqual([]);
   });
+
+  it("supports A1-prime without an absolute duration gate", () => {
+    const shortSupportInput = {
+      ...input,
+      notes: [
+        note(65, 1, 0.18, 1, 2),
+        note(60, 1, 0.18, 0, 0),
+        note(64, 1, 0.18, 0, 0),
+        note(67, 1, 0.18, 0, 0),
+        note(71, 1, 0.18, 0, 0),
+      ],
+    };
+
+    const a1 = filterRelativeSupportMelodyContamination(shortSupportInput, {
+      minimumRoleConfidence: 0.65,
+      minimumSupportPitchCount: 1,
+      minimumCoverageRatio: 0.25,
+      minimumSupportBeats: 0.2,
+    });
+    const a1Prime = filterRelativeSupportMelodyContamination(
+      shortSupportInput,
+      {
+        minimumRoleConfidence: 0.65,
+        minimumSupportPitchCount: 1,
+        minimumCoverageRatio: 0.25,
+      },
+    );
+
+    expect(a1.removed).toEqual([]);
+    expect(a1Prime.removed.map((entry) => entry.note.pitch)).toEqual([65]);
+    expect(a1Prime.removed[0]?.reasons).toContain("duration-gate:disabled");
+  });
 });
 
 function note(

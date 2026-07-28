@@ -9,7 +9,7 @@ export interface RelativeSupportFilterOptions {
   minimumRoleConfidence: number;
   minimumSupportPitchCount: number;
   minimumCoverageRatio: number;
-  minimumSupportBeats: number;
+  minimumSupportBeats?: number;
 }
 
 export interface RelativeSupportEvidence {
@@ -73,7 +73,7 @@ export function filterRelativeSupportMelodyContamination(
         && entry.startBeat < endBeat),
       startBeat,
       endBeat,
-      options.minimumSupportBeats,
+      options.minimumSupportBeats ?? 0,
     );
     const ratio = availablePitches.length === 0
       ? 0
@@ -105,6 +105,9 @@ export function filterRelativeSupportMelodyContamination(
         `available-texture:${availablePitches.length}`,
         `coverage-ratio:${rounded(ratio)}`,
         `support-beats:${rounded(strongest.duration)}`,
+        options.minimumSupportBeats === undefined
+          ? "duration-gate:disabled"
+          : `duration-gate:${rounded(options.minimumSupportBeats)}`,
       ],
       concurrentSupportPitches: strongest.pitches,
     });
