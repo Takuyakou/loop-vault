@@ -35,7 +35,7 @@ import { selectChordEvidenceNotes } from "./voices";
 
 export const analyzerVersion = "legacy-v1";
 
-interface WeightedWindow {
+export interface WeightedWindow {
   bar: number;
   beat: number;
   durationBeats: number;
@@ -43,11 +43,26 @@ interface WeightedWindow {
   bassHistogram: number[];
   totalWeight: number;
   melodyWeight: number;
+  noteCount: number;
 }
 
 interface RankedTimelineItem {
   item: ChordTimelineItem;
   rankingScore: number;
+}
+
+export interface LegacyWindowCandidateDiagnostic {
+  bar: number;
+  beat: number;
+  durationBeats: number;
+  totalWeight: number;
+  melodyWeight: number;
+  noteCount: number;
+  candidates: Array<{
+    chord: ChordSymbol;
+    rawScore: number;
+    qualityCoverage?: number;
+  }>;
 }
 
 // Keep above-clamp ordering without letting the raw matcher scale overpower block bonuses.
@@ -200,6 +215,53 @@ export function analyzeMidiWithRankingScores(
   };
 }
 
+/**
+ * Evaluation-only view of the candidates that enter the existing matcher.
+ *
+ * The product result is not changed or widened: this API exposes the raw,
+ * pre-clamp ordering so offline audits can distinguish generation, filtering
+ * and display allocation losses.
+ */
+export function diagnoseLegacyWindowCandidates(
+  bytes: Uint8Array,
+  scoring: LegacyScoringOptions = {},
+): LegacyWindowCandidateDiagnostic[] {
+  const data = parseMidi(bytes);
+  const evidenceNotes = selectChordEvidenceNotes(data.notes);
+  if (evidenceNotes.length === 0) return [];
+  const evidenceData = { ...data, notes: evidenceNotes };
+  const prepared = scoring.useExtractionProfile ? prepareMidiForAnalysis(data) : null;
+  const analysisData = prepared?.extractionProfile
+    ? { ...evidenceData, notes: selectChordEvidenceNotes(prepared.analysisNotes) }
+    : evidenceData;
+  const roles = inferTrackRoles(analysisData, prepared?.extractionProfile ?? null);
+  const windows = buildWeightedWindows(analysisData, roles, 2);
+  const diagnostics: LegacyWindowCandidateDiagnostic[] = [];
+  let previous: ChordSymbol | undefined;
+
+  for (const window of windows) {
+    const candidates = rankWindowCandidates(window, previous, scoring);
+    previous = candidates[0]?.chord ?? previous;
+    diagnostics.push({
+      bar: window.bar,
+      beat: window.beat,
+      durationBeats: window.durationBeats,
+      totalWeight: window.totalWeight,
+      melodyWeight: window.melodyWeight,
+      noteCount: window.noteCount,
+      candidates: candidates.map((entry) => ({
+        chord: entry.chord,
+        rawScore: entry.confidence,
+        ...(entry.qualityCoverage !== undefined
+          ? { qualityCoverage: entry.qualityCoverage }
+          : {}),
+      })),
+    });
+  }
+
+  return diagnostics;
+}
+
 export function inferTrackRoles(
   data: MidiSongData,
   profile: ExtractionProfile | null = null,
@@ -274,6 +336,7 @@ export function buildWeightedWindows(
     const bassHistogram = Array(12).fill(0) as number[];
     let totalWeight = 0;
     let melodyWeight = 0;
+    let noteCount = 0;
     const startTick = startBeat * data.ticksPerBeat;
     const endTick = (startBeat + durationBeats) * data.ticksPerBeat;
     const overlapping = data.notes.filter((note) =>
@@ -286,6 +349,7 @@ export function buildWeightedWindows(
       if (role === "percussion") {
         continue;
       }
+      noteCount += 1;
 
       const overlapTick =
         Math.min(note.startTick + note.durationTick, endTick) -
@@ -318,6 +382,7 @@ export function buildWeightedWindows(
       bassHistogram,
       totalWeight,
       melodyWeight,
+      noteCount,
     });
   }
 
@@ -333,9 +398,7 @@ function matchWindowWithRankingScore(
   previous?: ChordSymbol,
   scoring: LegacyScoringOptions = {},
 ): RankedTimelineItem {
-  const bassPc = maxIndex(window.bassHistogram);
-  const scored = scoreTemplates(window.histogram, bassPc, previous, scoring)
-    .sort((a, b) => b.confidence - a.confidence || a.chord.label.localeCompare(b.chord.label));
+  const scored = rankWindowCandidates(window, previous, scoring);
   const best = scored[0] ?? {
     chord: makeChordSymbol(0, "maj"),
     confidence: 0,
@@ -383,6 +446,16 @@ function matchWindowWithRankingScore(
     },
     rankingScore: rankingScoreFor(best.confidence),
   };
+}
+
+function rankWindowCandidates(
+  window: WeightedWindow,
+  previous?: ChordSymbol,
+  scoring: LegacyScoringOptions = {},
+) {
+  const bassPc = maxIndex(window.bassHistogram);
+  return scoreTemplates(window.histogram, bassPc, previous, scoring)
+    .sort((a, b) => b.confidence - a.confidence || a.chord.label.localeCompare(b.chord.label));
 }
 
 export function smoothTimeline(items: ChordTimelineItem[], barLengthBeats = 4): ChordTimelineItem[] {
