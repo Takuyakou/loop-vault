@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.7-00",
+  "contract": {
+    "canonicalBassSemantics": "Contract A",
+    "partAAllowed": true,
+    "partBExcluded": true
+  },
+  "minimumApplicableEvents": {
+    "dev": 24,
+    "validation": 12,
+    "holdout": 12
+  },
+  "invariants": {
+    "rank1DifferenceMaximum": 0,
+    "analyzerHashDifferenceMaximum": 0,
+    "baselineCandidateRetentionMinimum": 1,
+    "existingCandidateMutationMaximum": 0,
+    "baselineTop3CanonicalRetentionMinimum": 1,
+    "baselineTop3RootRetentionMinimum": 1,
+    "newCanonicalMissMaximum": 0,
+    "newRootMissMaximum": 0,
+    "nonApplicableInertnessMinimum": 1
+  },
+  "efficacy": {
+    "applicableCandidateRecallMustImprove": true,
+    "applicableTop3CanonicalMustImproveOrEqual": true,
+    "applicableTop3RootMustNotRegress": true,
+    "generatedRescueMinimum": 1,
+    "mrrMustNotRegress": true,
+    "correctionCostMustNotRegress": true,
+    "manualInputRequiredMustNotIncrease": true
+  },
+  "economy": {
+    "averageAddedCandidatesPerEventMaximum": 0.25,
+    "maximumAddedCandidatesPerEventMaximum": 2,
+    "canonicalDuplicateMaximum": 0,
+    "missingProvenanceMaximum": 0,
+    "runtimeOverheadMaximum": 0.05,
+    "deterministicRateMinimum": 1
+  },
+  "splitDiscipline": {
+    "validationRunsMaximum": 1,
+    "holdoutRunsMaximum": 1,
+    "holdoutRequiresValidationPass": true,
+    "productRequiresAllSplitsPass": true
+  },
+  "invariantsOutsideCandidateGeneration": [
+    "timeline",
+    "voicing",
+    "boundary",
+    "aggregate",
+    "fallback",
+    "vault-schema",
+    "fileVersion-1",
+    "defaultAnalyzerMode-phase4-v1"
+  ]
+}

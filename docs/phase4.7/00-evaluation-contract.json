@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.7-00",
+  "canonicalBassSemantics": "Contract A",
+  "partA": "preserve-plain-and-add-slash-companion",
+  "partBExcluded": true,
+  "analyzerMode": "phase4-v1",
+  "fileVersion": 1,
+  "candidateContract": {
+    "supersetRequired": true,
+    "existingCandidateImmutable": true,
+    "incumbentPreservingTieBreak": [
+      "score-descending",
+      "baseline-candidate-first",
+      "baseline-original-rank",
+      "generation-order",
+      "canonical-identity"
+    ]
+  },
+  "applicableMinimum": {
+    "dev": 24,
+    "validation": 12,
+    "holdout": 12
+  },
+  "newCorpus": "loop-vault-bass-companion-identity-gold-v1",
+  "existingCorpusUse": "diagnostic-and-regression-only",
+  "validationRunsMaximum": 1,
+  "holdoutRunsMaximum": 1,
+  "productConnectionRequiresAllSplitGates": true,
+  "productChanged": false
+}
+

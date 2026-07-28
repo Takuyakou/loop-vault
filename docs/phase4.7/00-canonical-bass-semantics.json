@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.7-00",
+  "decision": "Contract A",
+  "plainBassMeaning": "root",
+  "examples": [
+    {
+      "input": "Dm7",
+      "parsedBass": null,
+      "factorizedBassPitchClass": 2,
+      "canonicalBassPitchClass": null,
+      "meaning": "root-bass"
+    },
+    {
+      "input": "Dm7/D",
+      "parsedBass": 2,
+      "factorizedBassPitchClass": 2,
+      "canonicalBassPitchClass": null,
+      "meaning": "root-bass"
+    },
+    {
+      "input": "Dm7/A",
+      "parsedBass": 9,
+      "factorizedBassPitchClass": 9,
+      "canonicalBassPitchClass": 9,
+      "meaning": "explicit-slash-bass"
+    },
+    {
+      "input": "Dm7/C",
+      "parsedBass": 0,
+      "factorizedBassPitchClass": 0,
+      "canonicalBassPitchClass": 0,
+      "meaning": "explicit-slash-bass"
+    }
+  ],
+  "auditedBoundaries": {
+    "parser": "Contract A compatible",
+    "serializer": "Contract A",
+    "canonicalizer": "Contract A",
+    "factorization": "Contract A explicit",
+    "equalityAndDedup": "Contract A",
+    "goldAnnotation": "Contract A",
+    "ui": "Contract A",
+    "persistence": "Contract A compatible",
+    "correctionLog": "Contract A",
+    "chordDripIdentity": "Contract A compatible",
+    "representability": "Contract A"
+  },
+  "contractInconsistent": false,
+  "partAAllowed": true,
+  "productChanged": false
+}
+
