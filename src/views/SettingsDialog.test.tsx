@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   appDataDir: vi.fn(async () => "C:/LoopVault/"),
   revealItemInDir: vi.fn(async () => undefined),
   deleteAnalysisFeedback: vi.fn(async () => undefined),
+  exportAnalysisFeedback: vi.fn(async () => 2),
   deleteLabelCorrectionLog: vi.fn(async () => undefined),
   exportLabelCorrectionLog: vi.fn(async () => 3),
   deleteDifferenceReviews: vi.fn(async () => undefined),
@@ -33,6 +34,7 @@ vi.mock("@tauri-apps/plugin-dialog", () => ({
 vi.mock("@tauri-apps/plugin-opener", () => ({ revealItemInDir: mocks.revealItemInDir }));
 vi.mock("../storage/analysisFeedbackStorage", () => ({
   deleteAnalysisFeedback: mocks.deleteAnalysisFeedback,
+  exportAnalysisFeedback: mocks.exportAnalysisFeedback,
   isAnalysisFeedbackEnabled: () => true,
   setAnalysisFeedbackEnabled: vi.fn(),
 }));
@@ -177,6 +179,9 @@ describe("SettingsDialog sections", () => {
     const mounted = await renderSettings();
     await click(findButton(appCopy.ja.settingsUi.analysis, dialogs()[0]));
 
+    await clickButton(appCopy.ja.settingsUi.exportAnalysisFeedback, dialogs()[0]);
+    expect(mocks.exportAnalysisFeedback)
+      .toHaveBeenCalledWith("C:/exports/label-corrections.jsonl");
     await clickButton(appCopy.ja.settingsUi.exportCorrectionLog, dialogs()[0]);
     expect(mocks.exportLabelCorrectionLog)
       .toHaveBeenCalledWith("C:/exports/label-corrections.jsonl");

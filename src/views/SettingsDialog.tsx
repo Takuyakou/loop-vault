@@ -11,6 +11,7 @@ import type { AppCopy, AppLanguage } from "../i18n";
 import { defaultVaultStore } from "../store/defaultVaultStore";
 import {
   deleteAnalysisFeedback,
+  exportAnalysisFeedback,
   isAnalysisFeedbackEnabled,
   setAnalysisFeedbackEnabled,
 } from "../storage/analysisFeedbackStorage";
@@ -243,6 +244,24 @@ export function SettingsDialog({
     try {
       const count = await exportLabelCorrectionLog(target);
       setToast(ui.correctionExported(count));
+    } catch {
+      setToast(ui.correctionExportFailed);
+    }
+  }
+
+  async function exportProgressionFeedback() {
+    if (!("__TAURI_INTERNALS__" in window)) {
+      setToast(ui.exportDesktopOnly);
+      return;
+    }
+    const target = await saveFileDialog({
+      defaultPath: `loopvault-analysis-feedback-${timestampForFile(new Date())}.jsonl`,
+      filters: [{ name: "JSONL", extensions: ["jsonl"] }],
+    });
+    if (!target) return;
+    try {
+      const count = await exportAnalysisFeedback(target);
+      setToast(ui.feedbackExported(count));
     } catch {
       setToast(ui.correctionExportFailed);
     }
@@ -509,6 +528,7 @@ export function SettingsDialog({
                   <span><strong className="block text-[var(--lv-text-secondary)]">{ui.correctionStore}</strong><span className="mt-1 block text-[var(--lv-text-muted)]">{ui.correctionStoreHelp}</span></span>
                 </label>
                 <div className="mt-4 flex flex-wrap gap-2">
+                  <button className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2" onClick={() => void exportProgressionFeedback()}><Download aria-hidden="true" size={16} />{ui.exportAnalysisFeedback}</button>
                   <button className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2" onClick={() => void exportCorrectionLog()}><Download aria-hidden="true" size={16} />{ui.exportCorrectionLog}</button>
                   <button className="inline-flex items-center gap-2 rounded border border-red-400/50 px-3 py-2 text-red-100" onClick={clearFeedback}><Trash2 aria-hidden="true" size={16} />{ui.deleteCorrectionLog}</button>
                 </div>
