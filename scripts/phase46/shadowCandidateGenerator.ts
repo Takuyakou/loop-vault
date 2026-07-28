@@ -63,8 +63,13 @@ const eventBudget = 4;
 export function generateRootPositionMin7Shadows(
   input: ShadowGenerationInput,
 ): ShadowGenerationResult {
-  const existingCanonical = new Set(input.rawCandidates.map((candidate) =>
-    chordIdentityKey(normalizeChordSymbol(candidate.chord))));
+  const rootPositionMin7Canonical = new Set(input.rawCandidates
+    .filter((candidate) =>
+      candidate.chord.quality === "min7"
+      && candidate.chord.tensions.length === 0
+      && (candidate.chord.bass === undefined
+        || normalizePc(candidate.chord.bass) === normalizePc(candidate.chord.root)))
+    .map((candidate) => chordIdentityKey(normalizeChordSymbol(candidate.chord))));
   const eligible = input.rawCandidates
     .filter((candidate) =>
       candidate.chord.quality === "min7"
@@ -97,7 +102,7 @@ export function generateRootPositionMin7Shadows(
     }
     const chord = makeChordSymbol(root, "min7");
     const identity = chordIdentityKey(normalizeChordSymbol(chord));
-    if (existingCanonical.has(identity)) {
+    if (rootPositionMin7Canonical.has(identity)) {
       skippedExistingCanonical += 1;
       continue;
     }
