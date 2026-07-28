@@ -40,7 +40,12 @@ export function analyzeMidiPhase4(
     useQualityEvidence: true,
     qualityEvidence: evidence,
     useBassCompanionCandidates: options.accuracyFirst?.bassCompanionCandidates ?? false,
-    analyzerVersion: options.accuracyFirst?.bassCompanionCandidates
+    useObservedFlatNineDominantCandidate:
+      options.accuracyFirst?.observedFlatNineDominantCandidate ?? false,
+    analyzerVersion: (
+      options.accuracyFirst?.bassCompanionCandidates
+      || options.accuracyFirst?.observedFlatNineDominantCandidate
+    )
       ? "phase5-accuracy-first-v1"
       : phase4AnalyzerVersion,
   }).analysis;

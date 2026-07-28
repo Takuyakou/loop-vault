@@ -18,10 +18,12 @@ describe("accuracy-first settings", () => {
     setAccuracyFirstFeatureFlags({
       bassCompanionCandidates: false,
       melodyContaminationFilter: true,
+      observedFlatNineDominantCandidate: false,
     });
     expect(getAccuracyFirstFeatureFlags()).toEqual({
       bassCompanionCandidates: false,
       melodyContaminationFilter: true,
+      observedFlatNineDominantCandidate: false,
     });
   });
 

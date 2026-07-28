@@ -94,6 +94,7 @@ export interface HybridFeatureFlags {
 export interface AccuracyFirstFeatureFlags {
   bassCompanionCandidates: boolean;
   melodyContaminationFilter: boolean;
+  observedFlatNineDominantCandidate: boolean;
 }
 
 export interface AnalyzeMidiOptions {
