@@ -49,6 +49,7 @@
     "eval:p45:d3": "vite-node scripts/evaluate-phase45-miss-taxonomy.ts",
     "eval:p45:d4": "vite-node scripts/evaluate-phase45-same-root-oracle.ts",
     "eval:p45:d5": "vite-node scripts/evaluate-phase45-root-confidence.ts",
+    "eval:p45:decision": "vite-node scripts/evaluate-phase45-decision-lock.ts",
     "eval:stored-progressions": "vite-node scripts/evaluate-stored-progressions.ts",
     "eval:review-differences": "vite-node scripts/review-midi-differences.ts",
     "eval:promote-corrections": "vite-node scripts/promote-midi-corrections.ts",

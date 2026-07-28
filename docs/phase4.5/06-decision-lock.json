@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.5-06",
+  "decidedAt": "preregistered-D1-D5-completion",
+  "decision": "B-candidate-generation",
+  "allocationAllowed": false,
+  "failedAllocationConditions": [
+    "rawCandidateRecall",
+    "canonicalCandidateRecall",
+    "eligibleCandidateRecall",
+    "sameRootCandidateRecall",
+    "allocationEditableShare",
+    "oracleGain",
+    "netRescue",
+    "lostRootToGainedRatio",
+    "correctionCostMeanDelta",
+    "highConfidenceBandExists"
+  ],
+  "evidence": {
+    "rank3Contribution": {
+      "value": 0,
+      "gate": "<= 0.01",
+      "pass": true
+    },
+    "rawCandidateRecall": {
+      "value": 0.7875,
+      "gate": ">= 0.90",
+      "pass": false
+    },
+    "canonicalCandidateRecall": {
+      "value": 0.7875,
+      "gate": ">= 0.90",
+      "pass": false
+    },
+    "eligibleCandidateRecall": {
+      "value": 0.7875,
+      "gate": ">= 0.90",
+      "pass": false
+    },
+    "sameRootCandidateRecall": {
+      "value": 0.7875,
+      "gate": ">= 0.90",
+      "pass": false
+    },
+    "sameRootMeanRank": {
+      "value": 1.373015873015873,
+      "gate": "<= 3",
+      "pass": true
+    },
+    "allocationEditableShare": {
+      "value": 0.2765957446808511,
+      "gate": ">= 0.50",
+      "pass": false
+    },
+    "ambiguousOrAnnotationShare": {
+      "value": 0,
+      "gate": "<= 0.20",
+      "pass": true
+    },
+    "oracleGain": {
+      "value": 0.025,
+      "gate": ">= 0.03",
+      "pass": false
+    },
+    "netRescue": {
+      "value": -3,
+      "gate": "> 0",
+      "pass": false
+    },
+    "lostRootToGainedRatio": {
+      "value": 1.375,
+      "gate": "<= 0.25",
+      "pass": false
+    },
+    "correctionCostMeanDelta": {
+      "value": 0,
+      "gate": "< 0",
+      "pass": false
+    },
+    "manualInputRequiredDelta": {
+      "value": 0,
+      "gate": "<= 0",
+      "pass": true
+    },
+    "highConfidenceBandExists": {
+      "value": false,
+      "gate": "true",
+      "pass": false
+    },
+    "rank1ChangeCount": {
+      "value": 0,
+      "gate": "= 0",
+      "pass": true
+    }
+  },
+  "nextAction": "Close Phase 4.5 as diagnostic-complete and open a separate Candidate Generation phase.",
+  "stages": {
+    "allocationShadow07": "not-run",
+    "devLoso08": "not-run",
+    "validation09": "not-run",
+    "holdout10": "not-run"
+  },
+  "invariants": {
+    "productAllocationChanged": false,
+    "rank1Changed": false,
+    "analyzerChanged": false,
+    "schemaChanged": false,
+    "fileVersionChanged": false
+  }
+}
