@@ -91,6 +91,11 @@ export interface HybridFeatureFlags {
   adjacentMerge: boolean;
 }
 
+export interface AccuracyFirstFeatureFlags {
+  bassCompanionCandidates: boolean;
+  melodyContaminationFilter: boolean;
+}
+
 export interface AnalyzeMidiOptions {
   sourceAssetId?: string;
   fileName?: string;
@@ -99,6 +104,7 @@ export interface AnalyzeMidiOptions {
   weights?: Partial<AnalyzerWeights>;
   debug?: boolean;
   features?: Partial<HybridFeatureFlags>;
+  accuracyFirst?: Partial<AccuracyFirstFeatureFlags>;
   analysisInput?: AnalysisInput;
 }
 

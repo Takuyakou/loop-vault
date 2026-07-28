@@ -634,7 +634,12 @@ export function createVaultStore(
           // chord the user auditions before saving is the chord they get after
           // saving. The cache is per analysis and never persisted.
           const voicingCache = new Map<string, ChordTimelineItem["voicingMemory"]>();
-          const context = { analysis: result, sourceData, sourceVoices };
+          const context = {
+            analysis: result,
+            sourceData,
+            sourceVoices,
+            accuracyFirst: analyzeOptions.accuracyFirst,
+          };
           const enriched: MidiProgressionAnalysis = {
             ...result,
             fullTimeline: attachSourceVoicings(result.fullTimeline, context, voicingCache),

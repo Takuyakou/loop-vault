@@ -32,6 +32,7 @@ import {
 import { beatsPerBar } from "./timing";
 import type { AnalyzeMidiOptions, MidiSongData, TimedNote, TrackRole } from "./types";
 import { selectChordEvidenceNotes } from "./voices";
+import { addBassPlainCompanion } from "./accuracyFirstCandidates";
 
 export const analyzerVersion = "legacy-v1";
 
@@ -143,6 +144,8 @@ export interface LegacyScoringOptions {
   useTwoPassSelection?: boolean;
   /** Robustness pass for AI-extracted MIDI. Raw notes are never modified. */
   useExtractionProfile?: boolean;
+  /** Add a plain identity beside an automatically attached non-root bass. */
+  useBassCompanionCandidates?: boolean;
   analyzerVersion?: string;
 }
 
@@ -435,6 +438,19 @@ function matchWindowWithRankingScore(
     }
   }
 
+  const baselineAlternatives = selectQuickChordAlternatives(
+    best.chord,
+    scored.slice(1).map((entry) => ({ chord: entry.chord, confidence: entry.confidence })),
+  ).map((entry) => ({ chord: entry.chord, confidence: clamp(entry.confidence) }));
+  const alternatives = scoring.useBassCompanionCandidates
+    ? addBassPlainCompanion(
+        best.chord,
+        baselineAlternatives,
+        window.histogram,
+        clamp(best.confidence),
+      )
+    : baselineAlternatives;
+
   return {
     item: {
       bar: window.bar,
@@ -442,10 +458,7 @@ function matchWindowWithRankingScore(
       durationBeats: window.durationBeats,
       chord: best.chord,
       confidence: clamp(best.confidence),
-      alternatives: selectQuickChordAlternatives(
-        best.chord,
-        scored.slice(1).map((entry) => ({ chord: entry.chord, confidence: entry.confidence })),
-      ).map((entry) => ({ chord: entry.chord, confidence: clamp(entry.confidence) })),
+      alternatives,
       warnings,
     },
     rankingScore: rankingScoreFor(best.confidence),

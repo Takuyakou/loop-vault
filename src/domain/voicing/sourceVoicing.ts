@@ -2,6 +2,14 @@ import type { ChordTimelineItem, MidiProgressionAnalysis } from "../types";
 import type { MidiSongData, Voice } from "../midi/types";
 import { beatsPerBar } from "../midi/timing";
 import { extractVoicing } from "./extractVoicing";
+import { filterRelativeSupportMelodyContamination } from "./relativeSupportMelodyFilter";
+
+export const phase5MelodyFilterOptions = {
+  minimumRoleConfidence: 0.65,
+  minimumSupportPitchCount: 1,
+  minimumCoverageRatio: 0.25,
+  minimumSupportBeats: 0.2,
+} as const;
 
 /**
  * Source voicing shared by the capture preview and the save path.
@@ -17,6 +25,9 @@ export interface SourceVoicingContext {
   analysis: MidiProgressionAnalysis | undefined;
   sourceData: MidiSongData | undefined;
   sourceVoices: Voice[] | undefined;
+  accuracyFirst?: {
+    melodyContaminationFilter?: boolean;
+  };
 }
 
 /**
@@ -58,13 +69,20 @@ export function attachSourceVoicing<T extends ChordTimelineItem>(
 
   const meter = beatsPerBar(analysis.timeSignature);
   const startBeat = (item.bar - 1) * meter + item.beat - 1;
-  const result = extractVoicing({
+  const extractionInput = {
     chord: item.chord,
     segment: { startBeat, endBeat: startBeat + item.durationBeats },
     notes: sourceData.notes,
     ticksPerBeat: sourceData.ticksPerBeat,
     voices: sourceVoices,
-  });
+  };
+  const filteredNotes = context.accuracyFirst?.melodyContaminationFilter
+    ? filterRelativeSupportMelodyContamination(
+        extractionInput,
+        phase5MelodyFilterOptions,
+      ).notes
+    : extractionInput.notes;
+  const result = extractVoicing({ ...extractionInput, notes: filteredNotes });
 
   if (!result.snapshot) {
     if (key) cache?.set(key, undefined);
