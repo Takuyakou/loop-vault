@@ -69,6 +69,7 @@
     "eval:p48:shadow": "vite-node scripts/evaluate-phase48-shadow-generators.ts",
     "eval:p48:dev-selection": "vite-node scripts/evaluate-phase48-dev-selection.ts",
     "eval:p5:accuracy": "vite-node scripts/evaluate-phase5-accuracy-first.ts",
+    "eval:p5:hybrid": "vite-node scripts/evaluate-phase5-hybrid-reassessment.ts",
     "eval:stored-progressions": "vite-node scripts/evaluate-stored-progressions.ts",
     "eval:review-differences": "vite-node scripts/review-midi-differences.ts",
     "eval:promote-corrections": "vite-node scripts/promote-midi-corrections.ts",
