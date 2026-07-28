@@ -1,0 +1,384 @@
+{
+  "schemaVersion": 1,
+  "phase": "5-hybrid-runtime-reassessment",
+  "policy": {
+    "hardStopSeconds": 10,
+    "typicalDurationRangeSeconds": [
+      150,
+      220
+    ],
+    "relativeRuntimeIsGate": false,
+    "synchronousFrontend": true
+  },
+  "measurements": [
+    {
+      "alias": "synthetic-180s",
+      "kind": "synthetic",
+      "durationSeconds": 179.9,
+      "modes": [
+        {
+          "mode": "phase4-v1",
+          "samplesMs": [
+            105.559,
+            76.636,
+            79.449,
+            79.546,
+            92.846,
+            97.518,
+            79.026
+          ],
+          "medianMs": 79.546,
+          "p95Ms": 105.559,
+          "maxMs": 105.559,
+          "runtimePerMinuteMs": 26.53,
+          "peakObservedRssMb": 875.898,
+          "maximumResidentSetMb": 875.906,
+          "mainThreadBlockedP95Ms": 105.559,
+          "timelineCount": 90,
+          "blockCount": 10,
+          "deterministic": true
+        },
+        {
+          "mode": "hybrid-v1",
+          "samplesMs": [
+            1758.127,
+            2310.344,
+            2098.417,
+            2037.016,
+            1633.261,
+            1725.241,
+            1907.582
+          ],
+          "medianMs": 1907.582,
+          "p95Ms": 2310.344,
+          "maxMs": 2310.344,
+          "runtimePerMinuteMs": 636.214,
+          "peakObservedRssMb": 952.414,
+          "maximumResidentSetMb": 952.414,
+          "mainThreadBlockedP95Ms": 2310.344,
+          "timelineCount": 90,
+          "blockCount": 10,
+          "deterministic": true
+        }
+      ]
+    },
+    {
+      "alias": "all-instruments",
+      "kind": "real",
+      "durationSeconds": 206.41,
+      "modes": [
+        {
+          "mode": "phase4-v1",
+          "samplesMs": [
+            164.123,
+            153.125,
+            155.369,
+            156.233,
+            124.75
+          ],
+          "medianMs": 155.369,
+          "p95Ms": 164.123,
+          "maxMs": 164.123,
+          "runtimePerMinuteMs": 45.163,
+          "peakObservedRssMb": 957.852,
+          "maximumResidentSetMb": 957.852,
+          "mainThreadBlockedP95Ms": 164.123,
+          "timelineCount": 179,
+          "blockCount": 10,
+          "deterministic": true
+        },
+        {
+          "mode": "hybrid-v1",
+          "samplesMs": [
+            9201.828,
+            8502.847,
+            9480.576,
+            7304.873,
+            7516.182
+          ],
+          "medianMs": 8502.847,
+          "p95Ms": 9480.576,
+          "maxMs": 9480.576,
+          "runtimePerMinuteMs": 2471.633,
+          "peakObservedRssMb": 1145.398,
+          "maximumResidentSetMb": 1146.23,
+          "mainThreadBlockedP95Ms": 9480.576,
+          "timelineCount": 177,
+          "blockCount": 10,
+          "deterministic": true
+        }
+      ]
+    },
+    {
+      "alias": "suran-remix",
+      "kind": "real",
+      "durationSeconds": 206.409,
+      "modes": [
+        {
+          "mode": "phase4-v1",
+          "samplesMs": [
+            89.266,
+            92.873,
+            80.259,
+            74.609,
+            79.005
+          ],
+          "medianMs": 80.259,
+          "p95Ms": 92.873,
+          "maxMs": 92.873,
+          "runtimePerMinuteMs": 23.33,
+          "peakObservedRssMb": 1144.133,
+          "maximumResidentSetMb": 1146.23,
+          "mainThreadBlockedP95Ms": 92.873,
+          "timelineCount": 168,
+          "blockCount": 10,
+          "deterministic": true
+        },
+        {
+          "mode": "hybrid-v1",
+          "samplesMs": [
+            7066.46,
+            7165.377,
+            7137.11,
+            7125.407,
+            7249.076
+          ],
+          "medianMs": 7137.11,
+          "p95Ms": 7249.076,
+          "maxMs": 7249.076,
+          "runtimePerMinuteMs": 2074.648,
+          "peakObservedRssMb": 1144.16,
+          "maximumResidentSetMb": 1146.23,
+          "mainThreadBlockedP95Ms": 7249.076,
+          "timelineCount": 162,
+          "blockCount": 10,
+          "deterministic": true
+        }
+      ]
+    },
+    {
+      "alias": "endless-reference",
+      "kind": "real",
+      "durationSeconds": 295,
+      "modes": [
+        {
+          "mode": "phase4-v1",
+          "samplesMs": [
+            102.182,
+            112.416,
+            111.091
+          ],
+          "medianMs": 111.091,
+          "p95Ms": 112.416,
+          "maxMs": 112.416,
+          "runtimePerMinuteMs": 22.595,
+          "peakObservedRssMb": 1144.457,
+          "maximumResidentSetMb": 1146.23,
+          "mainThreadBlockedP95Ms": 112.416,
+          "timelineCount": 236,
+          "blockCount": 12,
+          "deterministic": true
+        },
+        {
+          "mode": "hybrid-v1",
+          "samplesMs": [
+            13500.301,
+            13031.162,
+            13588.779
+          ],
+          "medianMs": 13500.301,
+          "p95Ms": 13588.779,
+          "maxMs": 13588.779,
+          "runtimePerMinuteMs": 2745.824,
+          "peakObservedRssMb": 1168.953,
+          "maximumResidentSetMb": 1169.109,
+          "mainThreadBlockedP95Ms": 13588.779,
+          "timelineCount": 235,
+          "blockCount": 12,
+          "deterministic": true
+        }
+      ]
+    }
+  ],
+  "typicalThreeMinuteSummary": {
+    "fixtureCount": 3,
+    "sampleCount": 17,
+    "medianMs": 7125.407,
+    "p95Ms": 9480.576,
+    "maxMs": 9480.576,
+    "underTenSeconds": true
+  },
+  "accuracy": [
+    {
+      "corpus": "chord-drip-100",
+      "eventCount": 1058,
+      "phase4": {
+        "id": "phase4-v1",
+        "analyzerVersion": "phase4-symbolic-v1",
+        "canonicalExact": 0.278828,
+        "rank1Adoption": 0.278828,
+        "top3Canonical": 0.402646,
+        "candidateRecall": 0.44707,
+        "rootAccuracy": 0.582231,
+        "qualityAccuracy": 0.455577,
+        "correctionCostTotal": 1691,
+        "correctionCostMean": 1.598299,
+        "manualInputRate": 0.330813,
+        "runtimeMs": 664.459,
+        "runtimePerFileP50Ms": 5.249,
+        "runtimePerFileP90Ms": 11.649,
+        "correctionsPerEightEvents": 12.786,
+        "rank2Or3RescueRate": 0.123818
+      },
+      "hybrid": {
+        "id": "hybrid-v1",
+        "analyzerVersion": "hybrid-symbolic-v1",
+        "canonicalExact": 0.26087,
+        "rank1Adoption": 0.26087,
+        "top3Canonical": 0.353497,
+        "candidateRecall": 0.387524,
+        "rootAccuracy": 0.579395,
+        "qualityAccuracy": 0.451796,
+        "correctionCostTotal": 1781,
+        "correctionCostMean": 1.683365,
+        "manualInputRate": 0.330813,
+        "runtimeMs": 17092.602,
+        "runtimePerFileP50Ms": 127.774,
+        "runtimePerFileP90Ms": 312.729,
+        "correctionsPerEightEvents": 13.467,
+        "rank2Or3RescueRate": 0.092627
+      }
+    },
+    {
+      "corpus": "chapter3-seed-100",
+      "eventCount": 399,
+      "phase4": {
+        "id": "phase4-v1",
+        "analyzerVersion": "phase4-symbolic-v1",
+        "canonicalExact": 0.977444,
+        "rank1Adoption": 0.977444,
+        "top3Canonical": 0.987469,
+        "candidateRecall": 0.989975,
+        "rootAccuracy": 0.987469,
+        "qualityAccuracy": 0.984962,
+        "correctionCostTotal": 16,
+        "correctionCostMean": 0.0401,
+        "manualInputRate": 0.007519,
+        "runtimeMs": 254.304,
+        "runtimePerFileP50Ms": 2.402,
+        "runtimePerFileP90Ms": 3.005,
+        "correctionsPerEightEvents": 0.321,
+        "rank2Or3RescueRate": 0.010025
+      },
+      "hybrid": {
+        "id": "hybrid-v1",
+        "analyzerVersion": "hybrid-symbolic-v1",
+        "canonicalExact": 0.964912,
+        "rank1Adoption": 0.964912,
+        "top3Canonical": 0.984962,
+        "candidateRecall": 0.987469,
+        "rootAccuracy": 0.987469,
+        "qualityAccuracy": 0.972431,
+        "correctionCostTotal": 21,
+        "correctionCostMean": 0.052632,
+        "manualInputRate": 0.007519,
+        "runtimeMs": 5380.467,
+        "runtimePerFileP50Ms": 52.248,
+        "runtimePerFileP90Ms": 68.701,
+        "correctionsPerEightEvents": 0.421,
+        "rank2Or3RescueRate": 0.02005
+      }
+    },
+    {
+      "corpus": "phase4.5-label-dev",
+      "eventCount": 320,
+      "phase4": {
+        "id": "phase4-v1",
+        "analyzerVersion": "phase4-symbolic-v1",
+        "canonicalExact": 0.609375,
+        "rank1Adoption": 0.609375,
+        "top3Canonical": 0.70625,
+        "candidateRecall": 0.73125,
+        "rootAccuracy": 0.946875,
+        "qualityAccuracy": 0.890625,
+        "correctionCostTotal": 246,
+        "correctionCostMean": 0.76875,
+        "manualInputRate": 0.125,
+        "runtimeMs": 199.131,
+        "runtimePerFileP50Ms": 4.949,
+        "runtimePerFileP90Ms": 5.414,
+        "correctionsPerEightEvents": 6.15,
+        "rank2Or3RescueRate": 0.096875
+      },
+      "hybrid": {
+        "id": "hybrid-v1",
+        "analyzerVersion": "hybrid-symbolic-v1",
+        "canonicalExact": 0.628125,
+        "rank1Adoption": 0.628125,
+        "top3Canonical": 0.678125,
+        "candidateRecall": 0.7375,
+        "rootAccuracy": 0.925,
+        "qualityAccuracy": 0.896875,
+        "correctionCostTotal": 237,
+        "correctionCostMean": 0.740625,
+        "manualInputRate": 0.125,
+        "runtimeMs": 4226.164,
+        "runtimePerFileP50Ms": 103.82,
+        "runtimePerFileP90Ms": 129.264,
+        "correctionsPerEightEvents": 5.925,
+        "rank2Or3RescueRate": 0.05
+      }
+    },
+    {
+      "corpus": "phase4.7-gold",
+      "eventCount": 288,
+      "phase4": {
+        "id": "phase4-v1",
+        "analyzerVersion": "phase4-symbolic-v1",
+        "canonicalExact": 0.038194,
+        "rank1Adoption": 0.038194,
+        "top3Canonical": 0.045139,
+        "candidateRecall": 0.045139,
+        "rootAccuracy": 0.125,
+        "qualityAccuracy": 0.232639,
+        "correctionCostTotal": 552,
+        "correctionCostMean": 1.916667,
+        "manualInputRate": 0,
+        "runtimeMs": 303.672,
+        "runtimePerFileP50Ms": 8.342,
+        "runtimePerFileP90Ms": 8.984,
+        "correctionsPerEightEvents": 15.333,
+        "rank2Or3RescueRate": 0.006945
+      },
+      "hybrid": {
+        "id": "hybrid-v1",
+        "analyzerVersion": "hybrid-symbolic-v1",
+        "canonicalExact": 0.038194,
+        "rank1Adoption": 0.038194,
+        "top3Canonical": 0.065972,
+        "candidateRecall": 0.069444,
+        "rootAccuracy": 0.138889,
+        "qualityAccuracy": 0.222222,
+        "correctionCostTotal": 544,
+        "correctionCostMean": 1.888889,
+        "manualInputRate": 0,
+        "runtimeMs": 6756.954,
+        "runtimePerFileP50Ms": 191.678,
+        "runtimePerFileP90Ms": 208.973,
+        "correctionsPerEightEvents": 15.111,
+        "rank2Or3RescueRate": 0.027778
+      }
+    }
+  ],
+  "correctionCostDecision": {
+    "improvedCorpora": 2,
+    "regressedCorpora": 2
+  },
+  "decision": {
+    "adoptHybridForAccuracyFirst": false,
+    "stableAnalyzer": "phase4-v1",
+    "accuracyFirstAnalyzer": "phase4-v1",
+    "reason": "Typical runtime was measured independently, but Hybrid did not reduce correction cost across the evaluated corpora.",
+    "candidateUnionContinuesWithoutHybrid": true
+  }
+}
