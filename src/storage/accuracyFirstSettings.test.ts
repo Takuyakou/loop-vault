@@ -19,11 +19,13 @@ describe("accuracy-first settings", () => {
       bassCompanionCandidates: false,
       melodyContaminationFilter: true,
       observedFlatNineDominantCandidate: false,
+      enableAccuracyCandidateUnion: false,
     });
     expect(getAccuracyFirstFeatureFlags()).toEqual({
       bassCompanionCandidates: false,
       melodyContaminationFilter: true,
       observedFlatNineDominantCandidate: false,
+      enableAccuracyCandidateUnion: false,
     });
   });
 

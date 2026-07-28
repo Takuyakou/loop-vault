@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { makeChordSymbol, parseChordLabel } from "../chords";
-import { operationCorrectionCost, operationCorrectionCostFromEditMethod, operationCorrectionCostResult, summarizeOperationCorrectionCosts } from "./correctionCost";
+import {
+  operationCorrectionCost,
+  operationCorrectionCostFromEditMethod,
+  operationCorrectionCostResult,
+  operationCorrectionCostResultForCandidateCatalog,
+  summarizeOperationCorrectionCosts,
+} from "./correctionCost";
 
 describe("operation correction cost", () => {
   it("assigns the fixed 0-4 costs from the actual candidate and editor paths", () => {
@@ -31,6 +37,16 @@ describe("operation correction cost", () => {
       primary: "C7b9",
       alternatives: ["D7b9", "E7b9", "F7b9", "G7b9", "A7b9"],
     }, ["A7b9"])).toBe(1);
+  });
+
+  it("keeps the quick limit while allowing the expanded candidate catalog to rescue", () => {
+    const detected = {
+      primary: "C",
+      alternatives: ["Dm", "Em", "F", "G", "Am", "Bb7(b9)"],
+    };
+    expect(operationCorrectionCostResult(detected, ["Bb7(b9)"]).category).toBe("manual-input");
+    expect(operationCorrectionCostResultForCandidateCatalog(detected, ["Bb7(b9)"], 32).category)
+      .toBe("alternative");
   });
 
   it("accepts structured ChordSymbol candidates from analyzer timelines", () => {

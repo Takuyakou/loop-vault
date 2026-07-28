@@ -11,8 +11,12 @@ import {
   analyzeMidiPhase412CoreG2, analyzeMidiPhase412G2,
   phase412CoreG2AnalyzerVersion, phase412G2AnalyzerVersion,
 } from "./phase412G2Analyzer";
-import type { AnalyzeMidiOptions } from "./types";
+import type { AnalyzeMidiOptions, MidiAnalyzerMode } from "./types";
 import { analyzeMidiVoiceAwareRerank, voiceAwareRerankerVersion } from "./voiceAwareReranker";
+import {
+  accuracyCandidateUnionModes,
+  applyAccuracyCandidateUnion,
+} from "./accuracyCandidateUnion";
 
 /** Kept for rollback: the analyzer promoted in Phase 4.0. */
 export const phase40DefaultAnalyzerMode = "phase4-v1" as const;
@@ -48,7 +52,33 @@ export { buildWeightedWindows, extractBlockCandidates, inferTrackRoles, matchWin
 
 export function analyzeMidi(bytes: Uint8Array, options: AnalyzeMidiOptions = {}): MidiProgressionAnalysis {
   const mode = options.mode ?? defaultAnalyzerMode;
-  const analysis = mode === "hybrid-v1"
+  const primary = runAnalyzer(bytes, options, mode);
+  const analysis = options.accuracyFirst?.enableAccuracyCandidateUnion
+    ? applyAccuracyCandidateUnion(
+        primary,
+        accuracyCandidateUnionModes
+          .filter((sourceMode) => sourceMode !== mode)
+          .map((sourceMode) => ({
+            mode: sourceMode,
+            analysis: runAnalyzer(bytes, {
+              ...options,
+              accuracyFirst: {
+                ...options.accuracyFirst,
+                enableAccuracyCandidateUnion: false,
+              },
+            }, sourceMode),
+          })),
+      )
+    : primary;
+  return { ...analysis, sourceFingerprint: fingerprintMidiBytes(bytes) };
+}
+
+function runAnalyzer(
+  bytes: Uint8Array,
+  options: AnalyzeMidiOptions,
+  mode: MidiAnalyzerMode,
+): MidiProgressionAnalysis {
+  return mode === "hybrid-v1"
     ? analyzeMidiHybrid(bytes, options)
     : mode === "voice-aware-rerank-v1"
       ? analyzeMidiVoiceAwareRerank(bytes, options)
@@ -67,5 +97,4 @@ export function analyzeMidi(bytes: Uint8Array, options: AnalyzeMidiOptions = {})
     : mode === "phase4.1.2-core-g2-v1"
       ? analyzeMidiPhase412CoreG2(bytes, options)
       : analyzeMidiLegacy(bytes, options);
-  return { ...analysis, sourceFingerprint: fingerprintMidiBytes(bytes) };
 }

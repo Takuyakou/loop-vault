@@ -5,7 +5,7 @@ import { analyzerQuickCandidates } from "../../domain/progressionEditing";
 import { ChordAlternativeList } from "./ChordAlternativeList";
 
 describe("ChordAlternativeList", () => {
-  it("wraps and renders at most five alternatives", () => {
+  it("keeps five quick alternatives and puts the rest in the candidate catalog", () => {
     const markup = renderToStaticMarkup(<ChordAlternativeList
       candidates={analyzerQuickCandidates([0, 2, 4, 5, 7, 9].map((root, index) => ({
         chord: makeChordSymbol(root, "maj"),
@@ -17,8 +17,9 @@ describe("ChordAlternativeList", () => {
 
     expect(markup).toContain("flex-wrap");
     expect(markup).toContain('data-alternative-count="5"');
-    expect((markup.match(/<button/g) ?? [])).toHaveLength(5);
+    expect((markup.match(/<button/g) ?? [])).toHaveLength(6);
     expect(markup).toContain(">G<");
-    expect(markup).not.toContain(">A<");
+    expect(markup).toContain("More analyzer candidates (1)");
+    expect(markup).toContain(">A<");
   });
 });
