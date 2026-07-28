@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.5-01",
+  "corpusVersion": "1.0.0",
+  "analyzerMode": "phase4-v1",
+  "split": "dev",
+  "fileCount": 40,
+  "eventCount": 320,
+  "rank1": {
+    "count": 195,
+    "rate": 0.609375
+  },
+  "rank2": {
+    "count": 31,
+    "rate": 0.096875
+  },
+  "rank3": {
+    "count": 0,
+    "rate": 0
+  },
+  "outsideTop3": {
+    "count": 94,
+    "rate": 0.29375
+  },
+  "correctCandidateAbsent": {
+    "count": 94,
+    "rate": 0.29375
+  },
+  "canonicalEquivalentDuplicateCount": 0,
+  "mrr": 0.6578125,
+  "correctCandidateMeanRank": 1.1371681415929205,
+  "branchDecision": "rank3-low-proceed-to-d2"
+}
