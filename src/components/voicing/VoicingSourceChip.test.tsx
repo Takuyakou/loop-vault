@@ -16,8 +16,8 @@ afterEach(() => {
 
 describe("VoicingSourceChip", () => {
   it.each([
-    ["source", "元MIDI"],
-    ["generated", "自動生成"],
+    ["source", "元の響き"],
+    ["generated", "自動"],
     ["review", "要確認"],
   ] as const)("renders %s without relying on color alone", (status, label) => {
     const container = document.createElement("div");
@@ -41,5 +41,6 @@ describe("VoicingSourceChip", () => {
     expect(chip?.querySelector("svg")).not.toBeNull();
     expect(chip?.getAttribute("data-voicing-source")).toBe(status);
     expect(chip?.getAttribute("title")).toBeTruthy();
+    expect(chip?.getAttribute("aria-label")).toContain(label);
   });
 });
