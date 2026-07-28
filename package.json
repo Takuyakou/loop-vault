@@ -28,6 +28,7 @@
     "eval:p43:failures": "vite-node scripts/classify-phase43-voicing-failures.ts",
     "eval:p43:real-review": "vite-node scripts/build-phase43-real-midi-review-pack.ts",
     "eval:p44:baseline": "vite-node scripts/evaluate-phase44-baseline.ts",
+    "eval:p44:mechanisms": "vite-node scripts/classify-phase44-mechanisms.ts",
     "eval:stored-progressions": "vite-node scripts/evaluate-stored-progressions.ts",
     "eval:review-differences": "vite-node scripts/review-midi-differences.ts",
     "eval:promote-corrections": "vite-node scripts/promote-midi-corrections.ts",
