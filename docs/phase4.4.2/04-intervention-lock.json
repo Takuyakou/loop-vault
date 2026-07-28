@@ -1,0 +1,339 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.4.2-04",
+  "analyzerMode": "phase4-v1",
+  "fileVersion": 1,
+  "productPathChanged": false,
+  "validationStatus": "not-run",
+  "holdoutStatus": "not-run",
+  "gatesLocked": true,
+  "candidates": [
+    {
+      "id": "A1",
+      "hypothesis": "A-relative-support",
+      "options": {
+        "id": "A1",
+        "minimumCoverageRatio": 0.25,
+        "minimumSupportPitchCount": 1,
+        "minimumSupportBeats": 0.2
+      },
+      "values": {
+        "primaryContaminationReduction": 1,
+        "primaryMelodyLeakReduction": 1,
+        "noteRecall": 0.002451,
+        "bassAccuracy": 0,
+        "topNoteAccuracy": 0.125,
+        "registerExactRate": 0.125,
+        "plainBlockExact": 0.0625,
+        "rootlessExact": 0.0625,
+        "arpeggioF1": 0.016484,
+        "generalRegressionF1": 0.012838,
+        "sourceNoteAdditions": 0,
+        "chordLabelsExact": true,
+        "timelineExact": true
+      },
+      "checks": {
+        "primaryContaminationReduction": true,
+        "primaryMelodyLeakReduction": true,
+        "noteRecall": true,
+        "bassAccuracy": true,
+        "topNoteAccuracy": true,
+        "registerExactRate": true,
+        "plainBlockExact": true,
+        "rootlessExact": true,
+        "arpeggioF1": true,
+        "generalRegressionF1": true,
+        "sourceNoteAdditions": true,
+        "chordLabelsExact": true,
+        "timelineExact": true
+      },
+      "passed": true,
+      "failedGates": [],
+      "ranking": [
+        1,
+        1,
+        0.002451,
+        0,
+        0.170454,
+        0.012838,
+        0.056818
+      ]
+    },
+    {
+      "id": "A2",
+      "hypothesis": "A-relative-support",
+      "options": {
+        "id": "A2",
+        "minimumCoverageRatio": 0.5,
+        "minimumSupportPitchCount": 1,
+        "minimumSupportBeats": 0.2
+      },
+      "values": {
+        "primaryContaminationReduction": 1,
+        "primaryMelodyLeakReduction": 1,
+        "noteRecall": 0.002451,
+        "bassAccuracy": 0,
+        "topNoteAccuracy": 0.170455,
+        "registerExactRate": 0.170455,
+        "plainBlockExact": 0.0625,
+        "rootlessExact": 0.0625,
+        "arpeggioF1": 0.016484,
+        "generalRegressionF1": 0.012838,
+        "sourceNoteAdditions": 0,
+        "chordLabelsExact": true,
+        "timelineExact": true
+      },
+      "checks": {
+        "primaryContaminationReduction": true,
+        "primaryMelodyLeakReduction": true,
+        "noteRecall": true,
+        "bassAccuracy": true,
+        "topNoteAccuracy": true,
+        "registerExactRate": true,
+        "plainBlockExact": true,
+        "rootlessExact": true,
+        "arpeggioF1": true,
+        "generalRegressionF1": true,
+        "sourceNoteAdditions": true,
+        "chordLabelsExact": true,
+        "timelineExact": true
+      },
+      "passed": true,
+      "failedGates": [],
+      "ranking": [
+        1,
+        1,
+        0.002451,
+        0,
+        0.170454,
+        0.012838,
+        0.056818
+      ]
+    },
+    {
+      "id": "A3",
+      "hypothesis": "A-relative-support",
+      "options": {
+        "id": "A3",
+        "minimumCoverageRatio": 0.75,
+        "minimumSupportPitchCount": 1,
+        "minimumSupportBeats": 0.2
+      },
+      "values": {
+        "primaryContaminationReduction": 1,
+        "primaryMelodyLeakReduction": 1,
+        "noteRecall": 0,
+        "bassAccuracy": 0,
+        "topNoteAccuracy": 0.170455,
+        "registerExactRate": 0.170455,
+        "plainBlockExact": 0,
+        "rootlessExact": 0.0625,
+        "arpeggioF1": 0.009539,
+        "generalRegressionF1": 0.007774,
+        "sourceNoteAdditions": 0,
+        "chordLabelsExact": true,
+        "timelineExact": true
+      },
+      "checks": {
+        "primaryContaminationReduction": true,
+        "primaryMelodyLeakReduction": true,
+        "noteRecall": true,
+        "bassAccuracy": true,
+        "topNoteAccuracy": true,
+        "registerExactRate": true,
+        "plainBlockExact": true,
+        "rootlessExact": true,
+        "arpeggioF1": true,
+        "generalRegressionF1": true,
+        "sourceNoteAdditions": true,
+        "chordLabelsExact": true,
+        "timelineExact": true
+      },
+      "passed": true,
+      "failedGates": [],
+      "ranking": [
+        1,
+        1,
+        0,
+        0,
+        0.170454,
+        0.007774,
+        0.034091
+      ]
+    },
+    {
+      "id": "B1",
+      "hypothesis": "B-count-duration",
+      "options": {
+        "id": "B1",
+        "minimumSupportPitchCount": 1,
+        "minimumSupportMass": 0.2,
+        "minimumRoleConfidence": 0.65
+      },
+      "values": {
+        "primaryContaminationReduction": 1,
+        "primaryMelodyLeakReduction": 1,
+        "noteRecall": 0.002451,
+        "bassAccuracy": 0,
+        "topNoteAccuracy": 0.125,
+        "registerExactRate": 0.125,
+        "plainBlockExact": 0,
+        "rootlessExact": 0,
+        "arpeggioF1": 0,
+        "generalRegressionF1": 0.007478,
+        "sourceNoteAdditions": 0,
+        "chordLabelsExact": true,
+        "timelineExact": true
+      },
+      "checks": {
+        "primaryContaminationReduction": true,
+        "primaryMelodyLeakReduction": true,
+        "noteRecall": true,
+        "bassAccuracy": true,
+        "topNoteAccuracy": true,
+        "registerExactRate": true,
+        "plainBlockExact": true,
+        "rootlessExact": true,
+        "arpeggioF1": true,
+        "generalRegressionF1": true,
+        "sourceNoteAdditions": true,
+        "chordLabelsExact": true,
+        "timelineExact": true
+      },
+      "passed": true,
+      "failedGates": [],
+      "ranking": [
+        1,
+        1,
+        0.002451,
+        0,
+        0.170454,
+        0.007478,
+        0.056818
+      ]
+    },
+    {
+      "id": "B2",
+      "hypothesis": "B-count-duration",
+      "options": {
+        "id": "B2",
+        "minimumSupportPitchCount": 1,
+        "minimumSupportMass": 0.4,
+        "minimumRoleConfidence": 0.65
+      },
+      "values": {
+        "primaryContaminationReduction": 1,
+        "primaryMelodyLeakReduction": 1,
+        "noteRecall": 0.002451,
+        "bassAccuracy": 0,
+        "topNoteAccuracy": 0.170455,
+        "registerExactRate": 0.170455,
+        "plainBlockExact": 0,
+        "rootlessExact": 0,
+        "arpeggioF1": 0,
+        "generalRegressionF1": 0.007478,
+        "sourceNoteAdditions": 0,
+        "chordLabelsExact": true,
+        "timelineExact": true
+      },
+      "checks": {
+        "primaryContaminationReduction": true,
+        "primaryMelodyLeakReduction": true,
+        "noteRecall": true,
+        "bassAccuracy": true,
+        "topNoteAccuracy": true,
+        "registerExactRate": true,
+        "plainBlockExact": true,
+        "rootlessExact": true,
+        "arpeggioF1": true,
+        "generalRegressionF1": true,
+        "sourceNoteAdditions": true,
+        "chordLabelsExact": true,
+        "timelineExact": true
+      },
+      "passed": true,
+      "failedGates": [],
+      "ranking": [
+        1,
+        1,
+        0.002451,
+        0,
+        0.170454,
+        0.007478,
+        0.056818
+      ]
+    },
+    {
+      "id": "B3",
+      "hypothesis": "B-count-duration",
+      "options": {
+        "id": "B3",
+        "minimumSupportPitchCount": 1,
+        "minimumSupportMass": 0.6,
+        "minimumRoleConfidence": 0.65
+      },
+      "values": {
+        "primaryContaminationReduction": 1,
+        "primaryMelodyLeakReduction": 1,
+        "noteRecall": 0.002451,
+        "bassAccuracy": 0,
+        "topNoteAccuracy": 0.170455,
+        "registerExactRate": 0.170455,
+        "plainBlockExact": 0,
+        "rootlessExact": 0,
+        "arpeggioF1": 0,
+        "generalRegressionF1": 0.007478,
+        "sourceNoteAdditions": 0,
+        "chordLabelsExact": true,
+        "timelineExact": true
+      },
+      "checks": {
+        "primaryContaminationReduction": true,
+        "primaryMelodyLeakReduction": true,
+        "noteRecall": true,
+        "bassAccuracy": true,
+        "topNoteAccuracy": true,
+        "registerExactRate": true,
+        "plainBlockExact": true,
+        "rootlessExact": true,
+        "arpeggioF1": true,
+        "generalRegressionF1": true,
+        "sourceNoteAdditions": true,
+        "chordLabelsExact": true,
+        "timelineExact": true
+      },
+      "passed": true,
+      "failedGates": [],
+      "ranking": [
+        1,
+        1,
+        0.002451,
+        0,
+        0.170454,
+        0.007478,
+        0.056818
+      ]
+    }
+  ],
+  "selectionOrder": [
+    "primaryMelodyContaminationReduction",
+    "primaryMelodyLeakReduction",
+    "noteRecall",
+    "bassAccuracy",
+    "voicingExactRate",
+    "generalRegressionF1",
+    "statusOnlyImprovement"
+  ],
+  "tieBreaker": "stable candidate id ascending after registered metrics",
+  "selected": {
+    "id": "A1",
+    "hypothesis": "A-relative-support",
+    "options": {
+      "id": "A1",
+      "minimumCoverageRatio": 0.25,
+      "minimumSupportPitchCount": 1,
+      "minimumSupportBeats": 0.2
+    }
+  },
+  "decision": "advance-selected-candidate-to-validation"
+}
