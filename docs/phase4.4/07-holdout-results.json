@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "split": "holdout",
+  "status": "blocked-not-evaluated",
+  "reason": "P4.4-06 validation gate did not pass",
+  "midiAnalyzed": false,
+  "metricsProduced": false,
+  "thresholdChangesAfterValidation": false,
+  "gateRelaxed": false,
+  "promotionEligible": false
+}
