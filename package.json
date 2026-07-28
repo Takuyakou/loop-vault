@@ -46,6 +46,7 @@
     "eval:p443:cv": "vite-node scripts/evaluate-phase443-loso-cv.ts",
     "eval:p45:d1": "vite-node scripts/evaluate-phase45-rank-distribution.ts",
     "eval:p45:d2": "vite-node scripts/evaluate-phase45-candidate-funnel.ts",
+    "eval:p45:d3": "vite-node scripts/evaluate-phase45-miss-taxonomy.ts",
     "eval:stored-progressions": "vite-node scripts/evaluate-stored-progressions.ts",
     "eval:review-differences": "vite-node scripts/review-midi-differences.ts",
     "eval:promote-corrections": "vite-node scripts/promote-midi-corrections.ts",
