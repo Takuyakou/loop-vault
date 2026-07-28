@@ -86,10 +86,10 @@ describe("observed flat-nine dominant Product candidate", () => {
     });
     const bytes = new Uint8Array(midi.toArray());
     const off = analyzeMidiPhase4(bytes, {
-      accuracyFirst: { observedFlatNineDominantCandidate: false },
+      accuracyFirst: { enableObservedFlatNineDominantCandidate: false },
     });
     const on = analyzeMidiPhase4(bytes, {
-      accuracyFirst: { observedFlatNineDominantCandidate: true },
+      accuracyFirst: { enableObservedFlatNineDominantCandidate: true },
     });
 
     expect(on.fullTimeline[0]?.chord).toEqual(off.fullTimeline[0]?.chord);

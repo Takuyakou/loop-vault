@@ -80,7 +80,7 @@ import { chordProgressFraction } from "../ui/playbackProgress";
 import { confidenceLabel, shouldShowConfidence, warningLabel } from "./captureLabels";
 import { appendAnalysisFeedback } from "../storage/analysisFeedbackStorage";
 import { appendLabelCorrectionLogs } from "../storage/labelCorrectionLogStorage";
-import { getAccuracyFirstFeatureFlags } from "../storage/accuracyFirstSettings";
+import { getAnalysisProfileAnalyzeOptions } from "../storage/accuracyFirstSettings";
 import type { PreviewSound } from "../audio/chordPreview";
 import {
   playbackController,
@@ -302,7 +302,7 @@ export function CaptureView(props: CaptureViewProps) {
       await waitForNextPaint();
       const analyzed = analyzeMidiBytes(bytes, {
         fileName,
-        accuracyFirst: getAccuracyFirstFeatureFlags(),
+        ...getAnalysisProfileAnalyzeOptions(),
       });
       setAnalysisProgress("finalizing");
       await waitForNextPaint();
