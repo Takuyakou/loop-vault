@@ -1,0 +1,200 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.7-04",
+  "corpusVersion": "loop-vault-bass-companion-identity-gold-v1",
+  "splitOverlap": {
+    "duplicateFileIds": 0,
+    "duplicateSha256AcrossSplits": 0,
+    "duplicateScenarioIds": 0
+  },
+  "splits": {
+    "dev": {
+      "files": 12,
+      "events": 96,
+      "notes": 644,
+      "variants": {
+        "clean": 6,
+        "stress": 6
+      },
+      "families": {
+        "13": 14,
+        "7sus4": 14,
+        "dom7": 13,
+        "m7": 14,
+        "m9": 14,
+        "maj7": 13,
+        "maj9": 14
+      },
+      "goldBassIdentity": {
+        "plain": 48,
+        "slash": 48
+      },
+      "keys": {
+        "0": 1,
+        "1": 1,
+        "2": 1,
+        "3": 1,
+        "4": 1,
+        "5": 1,
+        "6": 1,
+        "7": 1,
+        "8": 1,
+        "9": 1,
+        "10": 1,
+        "11": 1
+      },
+      "bassConditions": {
+        "fifth": 12,
+        "non-chord": 12,
+        "passing": 12,
+        "pedal": 12,
+        "root": 12,
+        "seventh": 12,
+        "short": 12,
+        "third": 12
+      },
+      "trackLayouts": {
+        "same-track": 48,
+        "separate-track": 48
+      },
+      "durationClasses": {
+        "long": 53,
+        "medium": 31,
+        "short": 12
+      },
+      "representableEvents": 96,
+      "expectedApplicableEvents": 84,
+      "measuredApplicableEvents": 92,
+      "minimumApplicableEvents": 24,
+      "applicableMinimumPass": true
+    },
+    "validation": {
+      "files": 12,
+      "events": 96,
+      "notes": 643,
+      "variants": {
+        "clean": 6,
+        "stress": 6
+      },
+      "families": {
+        "13": 14,
+        "7sus4": 14,
+        "dom7": 14,
+        "m7": 13,
+        "m9": 13,
+        "maj7": 14,
+        "maj9": 14
+      },
+      "goldBassIdentity": {
+        "plain": 48,
+        "slash": 48
+      },
+      "keys": {
+        "0": 1,
+        "1": 1,
+        "2": 1,
+        "3": 1,
+        "4": 1,
+        "5": 1,
+        "6": 1,
+        "7": 1,
+        "8": 1,
+        "9": 1,
+        "10": 1,
+        "11": 1
+      },
+      "bassConditions": {
+        "fifth": 12,
+        "non-chord": 12,
+        "passing": 12,
+        "pedal": 12,
+        "root": 12,
+        "seventh": 12,
+        "short": 12,
+        "third": 12
+      },
+      "trackLayouts": {
+        "same-track": 48,
+        "separate-track": 48
+      },
+      "durationClasses": {
+        "long": 52,
+        "medium": 32,
+        "short": 12
+      },
+      "representableEvents": 96,
+      "expectedApplicableEvents": 84,
+      "measuredApplicableEvents": 91,
+      "minimumApplicableEvents": 12,
+      "applicableMinimumPass": true
+    },
+    "holdout": {
+      "files": 12,
+      "events": 96,
+      "notes": 643,
+      "variants": {
+        "clean": 6,
+        "stress": 6
+      },
+      "families": {
+        "13": 14,
+        "7sus4": 13,
+        "dom7": 14,
+        "m7": 14,
+        "m9": 14,
+        "maj7": 14,
+        "maj9": 13
+      },
+      "goldBassIdentity": {
+        "plain": 48,
+        "slash": 48
+      },
+      "keys": {
+        "0": 1,
+        "1": 1,
+        "2": 1,
+        "3": 1,
+        "4": 1,
+        "5": 1,
+        "6": 1,
+        "7": 1,
+        "8": 1,
+        "9": 1,
+        "10": 1,
+        "11": 1
+      },
+      "bassConditions": {
+        "fifth": 12,
+        "non-chord": 12,
+        "passing": 12,
+        "pedal": 12,
+        "root": 12,
+        "seventh": 12,
+        "short": 12,
+        "third": 12
+      },
+      "trackLayouts": {
+        "same-track": 48,
+        "separate-track": 48
+      },
+      "durationClasses": {
+        "long": 52,
+        "medium": 32,
+        "short": 12
+      },
+      "representableEvents": 96,
+      "expectedApplicableEvents": 84,
+      "measuredApplicableEvents": 91,
+      "minimumApplicableEvents": 12,
+      "applicableMinimumPass": true
+    }
+  },
+  "stratificationGates": {
+    "splitOverlapZero": true,
+    "familiesStratified": true,
+    "bassConditionsStratified": true,
+    "cleanStressBalanced": true,
+    "plainSlashBalanced": true,
+    "allTwelveKeysPerSplit": true
+  }
+}
