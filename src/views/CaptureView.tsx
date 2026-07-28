@@ -208,6 +208,7 @@ export function CaptureView(props: CaptureViewProps) {
   const [sourcePath, setSourcePath] = useState<string>();
   const [previewSound, setPreviewSound] = useState<PreviewSound>("piano");
   const [activeDraft, setActiveDraft] = useState<ManualCandidateDraft | null>(null);
+  const [analysisProgress, setAnalysisProgress] = useState<CaptureAnalysisProgressStage>();
   const [rangeSelectorRequest, setRangeSelectorRequest] = useState(0);
   const candidateHeaderFocusIdRef = useRef<string>();
   const result = analysis.result;
@@ -295,15 +296,20 @@ export function CaptureView(props: CaptureViewProps) {
   }
 
   const analyzeMidiBytesWithToast = useCallback(
-    (bytes: Uint8Array, fileName: string) => {
+    async (bytes: Uint8Array, fileName: string) => {
       stopCapturePlayback(controller);
+      setAnalysisProgress("analyzing");
+      await waitForNextPaint();
       const analyzed = analyzeMidiBytes(bytes, {
         fileName,
         accuracyFirst: getAccuracyFirstFeatureFlags(),
       });
+      setAnalysisProgress("finalizing");
+      await waitForNextPaint();
       setActiveDraft(null);
       setExpandedCandidateId(undefined);
       setToast(analyzed ? copy.toast.midiAnalyzed : copy.toast.midiFailed);
+      setAnalysisProgress(undefined);
     },
     [analyzeMidiBytes, controller, copy.toast.midiAnalyzed, copy.toast.midiFailed, setToast],
   );
@@ -316,10 +322,13 @@ export function CaptureView(props: CaptureViewProps) {
       }
 
       try {
+        setAnalysisProgress("reading");
+        await waitForNextPaint();
         const bytes = await readFile(path);
         setSourcePath(path);
-        analyzeMidiBytesWithToast(bytes, fileNameFromPath(path));
+        await analyzeMidiBytesWithToast(bytes, fileNameFromPath(path));
       } catch (error) {
+        setAnalysisProgress(undefined);
         setToast(error instanceof Error ? error.message : copy.toast.midiReadFailed);
       }
     },
@@ -334,10 +343,13 @@ export function CaptureView(props: CaptureViewProps) {
       }
 
       try {
+        setAnalysisProgress("reading");
+        await waitForNextPaint();
         const bytes = new Uint8Array(await file.arrayBuffer());
         setSourcePath(undefined);
-        analyzeMidiBytesWithToast(bytes, file.name);
+        await analyzeMidiBytesWithToast(bytes, file.name);
       } catch (error) {
+        setAnalysisProgress(undefined);
         setToast(error instanceof Error ? error.message : copy.toast.midiReadFailed);
       }
     },
@@ -722,6 +734,7 @@ export function CaptureView(props: CaptureViewProps) {
           onChooseMidi={() => void chooseMidi()}
           isDraggingMidi={isDraggingMidi}
           copy={copy}
+          progressStage={analysisProgress}
         />
       </div>
     );
@@ -964,6 +977,9 @@ export function CaptureView(props: CaptureViewProps) {
 
   return (
     <div data-capture-view-root>
+      {analysisProgress ? (
+        <CaptureAnalysisProgress stage={analysisProgress} copy={copy} />
+      ) : null}
       <div className="lv-capture-content grid gap-5 py-5" {...dropHandlers}>
       {isDraggingMidi ? <DropOverlay copy={copy} /> : null}
       <section className="border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-5">
@@ -1351,12 +1367,14 @@ function CaptureEmptyState({
   onChooseMidi,
   isDraggingMidi,
   copy,
+  progressStage,
 }: {
   status: AnalysisState["status"];
   error?: string;
   onChooseMidi: () => void;
   isDraggingMidi: boolean;
   copy: AppCopy;
+  progressStage?: CaptureAnalysisProgressStage;
 }) {
   return (
     <section className={`grid min-h-[32rem] place-items-center border p-6 text-center transition-colors ${isDraggingMidi ? "border-teal-300 bg-[var(--lv-accent)]/10" : "border-[var(--lv-border)] bg-[var(--lv-bg)]/70"}`}>
@@ -1381,10 +1399,15 @@ function CaptureEmptyState({
           {copy.capture.loadMidi}
         </button>
         <p className="mt-3 text-xs text-[var(--lv-text-muted)]">{copy.capture.supportedFormats}</p>
-        {status === "analyzing" ? (
+        {status === "analyzing" || progressStage ? (
           <div className="mt-6 border border-cyan-500/30 bg-cyan-500/10 p-4 text-left text-sm text-cyan-100">
-            <p className="font-semibold">{copy.capture.analyzing}</p>
+            <p className="font-semibold">
+              {progressStage ? analysisProgressLabel(progressStage, copy) : copy.capture.analyzing}
+            </p>
             <p className="mt-2 text-cyan-100/80">{copy.capture.analyzingDetail}</p>
+            <div className="mt-3 h-1.5 overflow-hidden bg-cyan-950" role="progressbar" aria-label={copy.capture.analysisProgress}>
+              <div className="h-full w-1/2 animate-pulse bg-cyan-300" />
+            </div>
           </div>
         ) : null}
         {status === "error" ? (
@@ -1396,6 +1419,47 @@ function CaptureEmptyState({
       </div>
     </section>
   );
+}
+
+type CaptureAnalysisProgressStage = "reading" | "analyzing" | "finalizing";
+
+export function CaptureAnalysisProgress({
+  stage,
+  copy,
+}: {
+  stage: CaptureAnalysisProgressStage;
+  copy: AppCopy;
+}) {
+  return (
+    <div
+      className="fixed bottom-6 right-6 z-50 w-[min(24rem,calc(100vw-3rem))] border border-cyan-400/40 bg-[var(--lv-surface)] p-4 shadow-2xl"
+      role="status"
+      aria-live="polite"
+      data-analysis-progress={stage}
+    >
+      <p className="text-sm font-semibold text-cyan-100">{analysisProgressLabel(stage, copy)}</p>
+      <p className="mt-1 text-xs text-[var(--lv-text-muted)]">{copy.capture.analyzingDetail}</p>
+      <div className="mt-3 h-1.5 overflow-hidden bg-cyan-950" role="progressbar" aria-label={copy.capture.analysisProgress}>
+        <div className="h-full w-1/2 animate-pulse bg-cyan-300" />
+      </div>
+    </div>
+  );
+}
+
+function analysisProgressLabel(stage: CaptureAnalysisProgressStage, copy: AppCopy): string {
+  if (stage === "reading") return copy.capture.readingMidi;
+  if (stage === "finalizing") return copy.capture.finalizingAnalysis;
+  return copy.capture.analyzing;
+}
+
+function waitForNextPaint(): Promise<void> {
+  return new Promise((resolve) => {
+    if (typeof requestAnimationFrame === "function") {
+      requestAnimationFrame(() => resolve());
+    } else {
+      setTimeout(resolve, 0);
+    }
+  });
 }
 
 function DropOverlay({ copy }: { copy: AppCopy }) {
@@ -2253,6 +2317,8 @@ export function ProgressionCandidateCard({
             stopLabel={copy.common.stop}
             onPreviewError={onPreviewError}
             controller={controller}
+            keySignature={detectedKey}
+            previousChord={previousSlot?.currentChord}
             onApply={(chord, source, selection) => {
               stopCandidatePreview();
               const slotId = editable.selectedSlotId;

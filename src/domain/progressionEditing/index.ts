@@ -13,4 +13,5 @@ export * from "./styleCandidates";
 export * from "./slotQuickCandidates";
 export * from "./contextActions";
 export * from "./voicingIdentity";
+export * from "./fastLabelEntry";
 
