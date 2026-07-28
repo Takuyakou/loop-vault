@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.7-00",
+  "sourcePhase": "4.6-00",
+  "corpusVersion": "1.0.0",
+  "analyzerMode": "phase4-v1",
+  "split": "dev-regression",
+  "files": 40,
+  "events": 320,
+  "metrics": {
+    "rawCandidateRecall": 0.7875,
+    "canonicalCandidateRecall": 0.7875,
+    "eligibleCandidateRecall": 0.7875,
+    "sameRootCandidateRecall": 0.7875,
+    "displayedTop3Canonical": 0.70625,
+    "counterfactualRankingTop3Canonical": 0.73125,
+    "top3Root": 0.959375,
+    "mrr": 0.6750052434511356,
+    "correctionCost": {
+      "mean": 0.76875,
+      "median": 0,
+      "p90": 3
+    },
+    "manualInputRequiredRate": 0.125,
+    "canonicalDuplicateCount": 0
+  },
+  "candidateCount": {
+    "total": 1920,
+    "mean": 6,
+    "minimum": 6,
+    "maximum": 6
+  },
+  "performance": {
+    "runtimeMs": 300.1924999999992,
+    "runtimePerEventMs": 0.9381015624999975,
+    "peakHeapDeltaBytes": 41885088
+  },
+  "hashes": {
+    "rank1": "a4166c993a81e4573072eeb05b8db088a56f5ab0d6db15db748fa5fed4b76d63",
+    "productTop3": "fd30ae6acf63c9e04dbc1810e0097949584ecbbdc6b15cbf8242a38b944209fc",
+    "productCandidatesAndScores": "11007e43ea40c2b08dbbf1ff03d3f0497ce73c32edbce6f80329233472e49b45",
+    "analyzerOutput": "c841bf9fc416a13ad7dec935fb8bd740d347a7920dec580684b0c06d073951d7"
+  },
+  "deterministic": true,
+  "productChanged": false
+}
+
