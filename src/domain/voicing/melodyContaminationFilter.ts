@@ -51,6 +51,8 @@ export function filterEventLocalMelodyContamination(
       || voice.inferredRole !== "melody"
       || voice.roleConfidence < options.minimumRoleConfidence
       || voice.maxPolyphony > 1
+      || voice.highestVoiceShare < 0.5
+      || voice.highestVoiceShare <= voice.lowestVoiceShare
       || candidate.endBeat <= input.segment.startBeat
       || candidate.startBeat >= input.segment.endBeat
     ) {
@@ -62,7 +64,7 @@ export function filterEventLocalMelodyContamination(
       timed.filter((entry) =>
         entry.note !== candidate.note
         && entry.voice !== undefined
-        && isHarmonySupportRole(entry.voice.inferredRole)
+        && isHarmonySupportVoice(entry.voice)
         && entry.endBeat > startBeat
         && entry.startBeat < endBeat),
       startBeat,
@@ -76,6 +78,7 @@ export function filterEventLocalMelodyContamination(
       reasons: [
         `role:melody@${rounded(voice.roleConfidence)}`,
         "voice:monophonic",
+        "voice:highest-share",
         `concurrent-harmony:${support.length}`,
         `support-beats>=${options.minimumConcurrentSupportBeats}`,
       ],
@@ -131,8 +134,11 @@ function strongestConcurrentSupport(
   return best;
 }
 
-function isHarmonySupportRole(role: Voice["inferredRole"]): boolean {
-  return role === "harmony" || role === "pad" || role === "mixed";
+function isHarmonySupportVoice(voice: Voice): boolean {
+  return voice.inferredRole === "harmony"
+    || voice.inferredRole === "pad"
+    || voice.inferredRole === "mixed"
+    || voice.maxPolyphony >= 3;
 }
 
 function compareNotes(left: readonly number[], right: readonly number[]): number {

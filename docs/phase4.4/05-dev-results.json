@@ -1,0 +1,1661 @@
+{
+  "schemaVersion": 1,
+  "analyzerMode": "phase4-v1",
+  "productPathChanged": false,
+  "dedicatedHoldoutStatus": "not-evaluated",
+  "searchSpace": {
+    "roleConfidence": [
+      0.45,
+      0.55,
+      0.65
+    ],
+    "concurrentNonMelodyPitches": [
+      3,
+      4
+    ],
+    "concurrentSupportBeats": [
+      0.1,
+      0.2
+    ],
+    "candidateCount": 12
+  },
+  "candidateResults": [
+    {
+      "options": {
+        "minimumRoleConfidence": 0.45,
+        "minimumConcurrentNonMelodyPitches": 3,
+        "minimumConcurrentSupportBeats": 0.1
+      },
+      "baseline": {
+        "events": 160,
+        "voicingExactRate": 0.875,
+        "notePrecision": 0.97561,
+        "noteRecall": 1,
+        "noteF1": 0.987654,
+        "extraNoteCount": 20,
+        "missingNoteCount": 0,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.88125,
+        "registerExactRate": 0.88125,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.03125,
+        "melodyContaminationEventCount": 20,
+        "sourceVoicingUsableRate": 0.85,
+        "generatedFallbackRate": 0.15,
+        "sourceNoteAdditionCount": 0
+      },
+      "shadow": {
+        "events": 160,
+        "voicingExactRate": 0.98125,
+        "notePrecision": 0.996264,
+        "noteRecall": 1,
+        "noteF1": 0.998129,
+        "extraNoteCount": 3,
+        "missingNoteCount": 0,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.9875,
+        "registerExactRate": 0.9875,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.004687,
+        "melodyContaminationEventCount": 3,
+        "sourceVoicingUsableRate": 0.9125,
+        "generatedFallbackRate": 0.0875,
+        "sourceNoteAdditionCount": 0
+      },
+      "delta": {
+        "voicingExactRate": 0.10625,
+        "notePrecision": 0.020654,
+        "noteRecall": 0,
+        "noteF1": 0.010475,
+        "melodyLeakRate": -0.026563,
+        "melodyContaminationEventCount": -17,
+        "melodyContaminationReduction": 0.85,
+        "melodyLeakImprovement": 0.850016,
+        "sourceVoicingUsableRate": 0.0625,
+        "bassNoteAccuracy": 0,
+        "topNoteAccuracy": 0.10625,
+        "registerExactRate": 0.10625
+      },
+      "dedicatedGates": {
+        "contaminationReductionAtLeastHalf": true,
+        "melodyLeakImprovementAtLeastHalf": true,
+        "exactOrUsableGainAtLeastThreePoints": true,
+        "recallRegressionWithinHalfPoint": true,
+        "bassNonRegression": true,
+        "topRegressionWithinHalfPoint": true,
+        "registerRegressionWithinHalfPoint": true,
+        "sourceNoteAdditionsZero": true
+      }
+    },
+    {
+      "options": {
+        "minimumRoleConfidence": 0.45,
+        "minimumConcurrentNonMelodyPitches": 3,
+        "minimumConcurrentSupportBeats": 0.2
+      },
+      "baseline": {
+        "events": 160,
+        "voicingExactRate": 0.875,
+        "notePrecision": 0.97561,
+        "noteRecall": 1,
+        "noteF1": 0.987654,
+        "extraNoteCount": 20,
+        "missingNoteCount": 0,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.88125,
+        "registerExactRate": 0.88125,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.03125,
+        "melodyContaminationEventCount": 20,
+        "sourceVoicingUsableRate": 0.85,
+        "generatedFallbackRate": 0.15,
+        "sourceNoteAdditionCount": 0
+      },
+      "shadow": {
+        "events": 160,
+        "voicingExactRate": 0.98125,
+        "notePrecision": 0.996264,
+        "noteRecall": 1,
+        "noteF1": 0.998129,
+        "extraNoteCount": 3,
+        "missingNoteCount": 0,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.9875,
+        "registerExactRate": 0.9875,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.004687,
+        "melodyContaminationEventCount": 3,
+        "sourceVoicingUsableRate": 0.9125,
+        "generatedFallbackRate": 0.0875,
+        "sourceNoteAdditionCount": 0
+      },
+      "delta": {
+        "voicingExactRate": 0.10625,
+        "notePrecision": 0.020654,
+        "noteRecall": 0,
+        "noteF1": 0.010475,
+        "melodyLeakRate": -0.026563,
+        "melodyContaminationEventCount": -17,
+        "melodyContaminationReduction": 0.85,
+        "melodyLeakImprovement": 0.850016,
+        "sourceVoicingUsableRate": 0.0625,
+        "bassNoteAccuracy": 0,
+        "topNoteAccuracy": 0.10625,
+        "registerExactRate": 0.10625
+      },
+      "dedicatedGates": {
+        "contaminationReductionAtLeastHalf": true,
+        "melodyLeakImprovementAtLeastHalf": true,
+        "exactOrUsableGainAtLeastThreePoints": true,
+        "recallRegressionWithinHalfPoint": true,
+        "bassNonRegression": true,
+        "topRegressionWithinHalfPoint": true,
+        "registerRegressionWithinHalfPoint": true,
+        "sourceNoteAdditionsZero": true
+      }
+    },
+    {
+      "options": {
+        "minimumRoleConfidence": 0.45,
+        "minimumConcurrentNonMelodyPitches": 4,
+        "minimumConcurrentSupportBeats": 0.1
+      },
+      "baseline": {
+        "events": 160,
+        "voicingExactRate": 0.875,
+        "notePrecision": 0.97561,
+        "noteRecall": 1,
+        "noteF1": 0.987654,
+        "extraNoteCount": 20,
+        "missingNoteCount": 0,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.88125,
+        "registerExactRate": 0.88125,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.03125,
+        "melodyContaminationEventCount": 20,
+        "sourceVoicingUsableRate": 0.85,
+        "generatedFallbackRate": 0.15,
+        "sourceNoteAdditionCount": 0
+      },
+      "shadow": {
+        "events": 160,
+        "voicingExactRate": 0.98125,
+        "notePrecision": 0.996264,
+        "noteRecall": 1,
+        "noteF1": 0.998129,
+        "extraNoteCount": 3,
+        "missingNoteCount": 0,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.9875,
+        "registerExactRate": 0.9875,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.004687,
+        "melodyContaminationEventCount": 3,
+        "sourceVoicingUsableRate": 0.9125,
+        "generatedFallbackRate": 0.0875,
+        "sourceNoteAdditionCount": 0
+      },
+      "delta": {
+        "voicingExactRate": 0.10625,
+        "notePrecision": 0.020654,
+        "noteRecall": 0,
+        "noteF1": 0.010475,
+        "melodyLeakRate": -0.026563,
+        "melodyContaminationEventCount": -17,
+        "melodyContaminationReduction": 0.85,
+        "melodyLeakImprovement": 0.850016,
+        "sourceVoicingUsableRate": 0.0625,
+        "bassNoteAccuracy": 0,
+        "topNoteAccuracy": 0.10625,
+        "registerExactRate": 0.10625
+      },
+      "dedicatedGates": {
+        "contaminationReductionAtLeastHalf": true,
+        "melodyLeakImprovementAtLeastHalf": true,
+        "exactOrUsableGainAtLeastThreePoints": true,
+        "recallRegressionWithinHalfPoint": true,
+        "bassNonRegression": true,
+        "topRegressionWithinHalfPoint": true,
+        "registerRegressionWithinHalfPoint": true,
+        "sourceNoteAdditionsZero": true
+      }
+    },
+    {
+      "options": {
+        "minimumRoleConfidence": 0.45,
+        "minimumConcurrentNonMelodyPitches": 4,
+        "minimumConcurrentSupportBeats": 0.2
+      },
+      "baseline": {
+        "events": 160,
+        "voicingExactRate": 0.875,
+        "notePrecision": 0.97561,
+        "noteRecall": 1,
+        "noteF1": 0.987654,
+        "extraNoteCount": 20,
+        "missingNoteCount": 0,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.88125,
+        "registerExactRate": 0.88125,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.03125,
+        "melodyContaminationEventCount": 20,
+        "sourceVoicingUsableRate": 0.85,
+        "generatedFallbackRate": 0.15,
+        "sourceNoteAdditionCount": 0
+      },
+      "shadow": {
+        "events": 160,
+        "voicingExactRate": 0.98125,
+        "notePrecision": 0.996264,
+        "noteRecall": 1,
+        "noteF1": 0.998129,
+        "extraNoteCount": 3,
+        "missingNoteCount": 0,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.9875,
+        "registerExactRate": 0.9875,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.004687,
+        "melodyContaminationEventCount": 3,
+        "sourceVoicingUsableRate": 0.9125,
+        "generatedFallbackRate": 0.0875,
+        "sourceNoteAdditionCount": 0
+      },
+      "delta": {
+        "voicingExactRate": 0.10625,
+        "notePrecision": 0.020654,
+        "noteRecall": 0,
+        "noteF1": 0.010475,
+        "melodyLeakRate": -0.026563,
+        "melodyContaminationEventCount": -17,
+        "melodyContaminationReduction": 0.85,
+        "melodyLeakImprovement": 0.850016,
+        "sourceVoicingUsableRate": 0.0625,
+        "bassNoteAccuracy": 0,
+        "topNoteAccuracy": 0.10625,
+        "registerExactRate": 0.10625
+      },
+      "dedicatedGates": {
+        "contaminationReductionAtLeastHalf": true,
+        "melodyLeakImprovementAtLeastHalf": true,
+        "exactOrUsableGainAtLeastThreePoints": true,
+        "recallRegressionWithinHalfPoint": true,
+        "bassNonRegression": true,
+        "topRegressionWithinHalfPoint": true,
+        "registerRegressionWithinHalfPoint": true,
+        "sourceNoteAdditionsZero": true
+      }
+    },
+    {
+      "options": {
+        "minimumRoleConfidence": 0.55,
+        "minimumConcurrentNonMelodyPitches": 3,
+        "minimumConcurrentSupportBeats": 0.1
+      },
+      "baseline": {
+        "events": 160,
+        "voicingExactRate": 0.875,
+        "notePrecision": 0.97561,
+        "noteRecall": 1,
+        "noteF1": 0.987654,
+        "extraNoteCount": 20,
+        "missingNoteCount": 0,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.88125,
+        "registerExactRate": 0.88125,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.03125,
+        "melodyContaminationEventCount": 20,
+        "sourceVoicingUsableRate": 0.85,
+        "generatedFallbackRate": 0.15,
+        "sourceNoteAdditionCount": 0
+      },
+      "shadow": {
+        "events": 160,
+        "voicingExactRate": 0.98125,
+        "notePrecision": 0.996264,
+        "noteRecall": 1,
+        "noteF1": 0.998129,
+        "extraNoteCount": 3,
+        "missingNoteCount": 0,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.9875,
+        "registerExactRate": 0.9875,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.004687,
+        "melodyContaminationEventCount": 3,
+        "sourceVoicingUsableRate": 0.90625,
+        "generatedFallbackRate": 0.09375,
+        "sourceNoteAdditionCount": 0
+      },
+      "delta": {
+        "voicingExactRate": 0.10625,
+        "notePrecision": 0.020654,
+        "noteRecall": 0,
+        "noteF1": 0.010475,
+        "melodyLeakRate": -0.026563,
+        "melodyContaminationEventCount": -17,
+        "melodyContaminationReduction": 0.85,
+        "melodyLeakImprovement": 0.850016,
+        "sourceVoicingUsableRate": 0.05625,
+        "bassNoteAccuracy": 0,
+        "topNoteAccuracy": 0.10625,
+        "registerExactRate": 0.10625
+      },
+      "dedicatedGates": {
+        "contaminationReductionAtLeastHalf": true,
+        "melodyLeakImprovementAtLeastHalf": true,
+        "exactOrUsableGainAtLeastThreePoints": true,
+        "recallRegressionWithinHalfPoint": true,
+        "bassNonRegression": true,
+        "topRegressionWithinHalfPoint": true,
+        "registerRegressionWithinHalfPoint": true,
+        "sourceNoteAdditionsZero": true
+      }
+    },
+    {
+      "options": {
+        "minimumRoleConfidence": 0.55,
+        "minimumConcurrentNonMelodyPitches": 3,
+        "minimumConcurrentSupportBeats": 0.2
+      },
+      "baseline": {
+        "events": 160,
+        "voicingExactRate": 0.875,
+        "notePrecision": 0.97561,
+        "noteRecall": 1,
+        "noteF1": 0.987654,
+        "extraNoteCount": 20,
+        "missingNoteCount": 0,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.88125,
+        "registerExactRate": 0.88125,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.03125,
+        "melodyContaminationEventCount": 20,
+        "sourceVoicingUsableRate": 0.85,
+        "generatedFallbackRate": 0.15,
+        "sourceNoteAdditionCount": 0
+      },
+      "shadow": {
+        "events": 160,
+        "voicingExactRate": 0.98125,
+        "notePrecision": 0.996264,
+        "noteRecall": 1,
+        "noteF1": 0.998129,
+        "extraNoteCount": 3,
+        "missingNoteCount": 0,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.9875,
+        "registerExactRate": 0.9875,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.004687,
+        "melodyContaminationEventCount": 3,
+        "sourceVoicingUsableRate": 0.90625,
+        "generatedFallbackRate": 0.09375,
+        "sourceNoteAdditionCount": 0
+      },
+      "delta": {
+        "voicingExactRate": 0.10625,
+        "notePrecision": 0.020654,
+        "noteRecall": 0,
+        "noteF1": 0.010475,
+        "melodyLeakRate": -0.026563,
+        "melodyContaminationEventCount": -17,
+        "melodyContaminationReduction": 0.85,
+        "melodyLeakImprovement": 0.850016,
+        "sourceVoicingUsableRate": 0.05625,
+        "bassNoteAccuracy": 0,
+        "topNoteAccuracy": 0.10625,
+        "registerExactRate": 0.10625
+      },
+      "dedicatedGates": {
+        "contaminationReductionAtLeastHalf": true,
+        "melodyLeakImprovementAtLeastHalf": true,
+        "exactOrUsableGainAtLeastThreePoints": true,
+        "recallRegressionWithinHalfPoint": true,
+        "bassNonRegression": true,
+        "topRegressionWithinHalfPoint": true,
+        "registerRegressionWithinHalfPoint": true,
+        "sourceNoteAdditionsZero": true
+      }
+    },
+    {
+      "options": {
+        "minimumRoleConfidence": 0.55,
+        "minimumConcurrentNonMelodyPitches": 4,
+        "minimumConcurrentSupportBeats": 0.1
+      },
+      "baseline": {
+        "events": 160,
+        "voicingExactRate": 0.875,
+        "notePrecision": 0.97561,
+        "noteRecall": 1,
+        "noteF1": 0.987654,
+        "extraNoteCount": 20,
+        "missingNoteCount": 0,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.88125,
+        "registerExactRate": 0.88125,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.03125,
+        "melodyContaminationEventCount": 20,
+        "sourceVoicingUsableRate": 0.85,
+        "generatedFallbackRate": 0.15,
+        "sourceNoteAdditionCount": 0
+      },
+      "shadow": {
+        "events": 160,
+        "voicingExactRate": 0.98125,
+        "notePrecision": 0.996264,
+        "noteRecall": 1,
+        "noteF1": 0.998129,
+        "extraNoteCount": 3,
+        "missingNoteCount": 0,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.9875,
+        "registerExactRate": 0.9875,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.004687,
+        "melodyContaminationEventCount": 3,
+        "sourceVoicingUsableRate": 0.90625,
+        "generatedFallbackRate": 0.09375,
+        "sourceNoteAdditionCount": 0
+      },
+      "delta": {
+        "voicingExactRate": 0.10625,
+        "notePrecision": 0.020654,
+        "noteRecall": 0,
+        "noteF1": 0.010475,
+        "melodyLeakRate": -0.026563,
+        "melodyContaminationEventCount": -17,
+        "melodyContaminationReduction": 0.85,
+        "melodyLeakImprovement": 0.850016,
+        "sourceVoicingUsableRate": 0.05625,
+        "bassNoteAccuracy": 0,
+        "topNoteAccuracy": 0.10625,
+        "registerExactRate": 0.10625
+      },
+      "dedicatedGates": {
+        "contaminationReductionAtLeastHalf": true,
+        "melodyLeakImprovementAtLeastHalf": true,
+        "exactOrUsableGainAtLeastThreePoints": true,
+        "recallRegressionWithinHalfPoint": true,
+        "bassNonRegression": true,
+        "topRegressionWithinHalfPoint": true,
+        "registerRegressionWithinHalfPoint": true,
+        "sourceNoteAdditionsZero": true
+      }
+    },
+    {
+      "options": {
+        "minimumRoleConfidence": 0.55,
+        "minimumConcurrentNonMelodyPitches": 4,
+        "minimumConcurrentSupportBeats": 0.2
+      },
+      "baseline": {
+        "events": 160,
+        "voicingExactRate": 0.875,
+        "notePrecision": 0.97561,
+        "noteRecall": 1,
+        "noteF1": 0.987654,
+        "extraNoteCount": 20,
+        "missingNoteCount": 0,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.88125,
+        "registerExactRate": 0.88125,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.03125,
+        "melodyContaminationEventCount": 20,
+        "sourceVoicingUsableRate": 0.85,
+        "generatedFallbackRate": 0.15,
+        "sourceNoteAdditionCount": 0
+      },
+      "shadow": {
+        "events": 160,
+        "voicingExactRate": 0.98125,
+        "notePrecision": 0.996264,
+        "noteRecall": 1,
+        "noteF1": 0.998129,
+        "extraNoteCount": 3,
+        "missingNoteCount": 0,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.9875,
+        "registerExactRate": 0.9875,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.004687,
+        "melodyContaminationEventCount": 3,
+        "sourceVoicingUsableRate": 0.90625,
+        "generatedFallbackRate": 0.09375,
+        "sourceNoteAdditionCount": 0
+      },
+      "delta": {
+        "voicingExactRate": 0.10625,
+        "notePrecision": 0.020654,
+        "noteRecall": 0,
+        "noteF1": 0.010475,
+        "melodyLeakRate": -0.026563,
+        "melodyContaminationEventCount": -17,
+        "melodyContaminationReduction": 0.85,
+        "melodyLeakImprovement": 0.850016,
+        "sourceVoicingUsableRate": 0.05625,
+        "bassNoteAccuracy": 0,
+        "topNoteAccuracy": 0.10625,
+        "registerExactRate": 0.10625
+      },
+      "dedicatedGates": {
+        "contaminationReductionAtLeastHalf": true,
+        "melodyLeakImprovementAtLeastHalf": true,
+        "exactOrUsableGainAtLeastThreePoints": true,
+        "recallRegressionWithinHalfPoint": true,
+        "bassNonRegression": true,
+        "topRegressionWithinHalfPoint": true,
+        "registerRegressionWithinHalfPoint": true,
+        "sourceNoteAdditionsZero": true
+      }
+    },
+    {
+      "options": {
+        "minimumRoleConfidence": 0.65,
+        "minimumConcurrentNonMelodyPitches": 3,
+        "minimumConcurrentSupportBeats": 0.1
+      },
+      "baseline": {
+        "events": 160,
+        "voicingExactRate": 0.875,
+        "notePrecision": 0.97561,
+        "noteRecall": 1,
+        "noteF1": 0.987654,
+        "extraNoteCount": 20,
+        "missingNoteCount": 0,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.88125,
+        "registerExactRate": 0.88125,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.03125,
+        "melodyContaminationEventCount": 20,
+        "sourceVoicingUsableRate": 0.85,
+        "generatedFallbackRate": 0.15,
+        "sourceNoteAdditionCount": 0
+      },
+      "shadow": {
+        "events": 160,
+        "voicingExactRate": 0.98125,
+        "notePrecision": 0.996264,
+        "noteRecall": 1,
+        "noteF1": 0.998129,
+        "extraNoteCount": 3,
+        "missingNoteCount": 0,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.9875,
+        "registerExactRate": 0.9875,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.004687,
+        "melodyContaminationEventCount": 3,
+        "sourceVoicingUsableRate": 0.90625,
+        "generatedFallbackRate": 0.09375,
+        "sourceNoteAdditionCount": 0
+      },
+      "delta": {
+        "voicingExactRate": 0.10625,
+        "notePrecision": 0.020654,
+        "noteRecall": 0,
+        "noteF1": 0.010475,
+        "melodyLeakRate": -0.026563,
+        "melodyContaminationEventCount": -17,
+        "melodyContaminationReduction": 0.85,
+        "melodyLeakImprovement": 0.850016,
+        "sourceVoicingUsableRate": 0.05625,
+        "bassNoteAccuracy": 0,
+        "topNoteAccuracy": 0.10625,
+        "registerExactRate": 0.10625
+      },
+      "dedicatedGates": {
+        "contaminationReductionAtLeastHalf": true,
+        "melodyLeakImprovementAtLeastHalf": true,
+        "exactOrUsableGainAtLeastThreePoints": true,
+        "recallRegressionWithinHalfPoint": true,
+        "bassNonRegression": true,
+        "topRegressionWithinHalfPoint": true,
+        "registerRegressionWithinHalfPoint": true,
+        "sourceNoteAdditionsZero": true
+      }
+    },
+    {
+      "options": {
+        "minimumRoleConfidence": 0.65,
+        "minimumConcurrentNonMelodyPitches": 3,
+        "minimumConcurrentSupportBeats": 0.2
+      },
+      "baseline": {
+        "events": 160,
+        "voicingExactRate": 0.875,
+        "notePrecision": 0.97561,
+        "noteRecall": 1,
+        "noteF1": 0.987654,
+        "extraNoteCount": 20,
+        "missingNoteCount": 0,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.88125,
+        "registerExactRate": 0.88125,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.03125,
+        "melodyContaminationEventCount": 20,
+        "sourceVoicingUsableRate": 0.85,
+        "generatedFallbackRate": 0.15,
+        "sourceNoteAdditionCount": 0
+      },
+      "shadow": {
+        "events": 160,
+        "voicingExactRate": 0.98125,
+        "notePrecision": 0.996264,
+        "noteRecall": 1,
+        "noteF1": 0.998129,
+        "extraNoteCount": 3,
+        "missingNoteCount": 0,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.9875,
+        "registerExactRate": 0.9875,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.004687,
+        "melodyContaminationEventCount": 3,
+        "sourceVoicingUsableRate": 0.90625,
+        "generatedFallbackRate": 0.09375,
+        "sourceNoteAdditionCount": 0
+      },
+      "delta": {
+        "voicingExactRate": 0.10625,
+        "notePrecision": 0.020654,
+        "noteRecall": 0,
+        "noteF1": 0.010475,
+        "melodyLeakRate": -0.026563,
+        "melodyContaminationEventCount": -17,
+        "melodyContaminationReduction": 0.85,
+        "melodyLeakImprovement": 0.850016,
+        "sourceVoicingUsableRate": 0.05625,
+        "bassNoteAccuracy": 0,
+        "topNoteAccuracy": 0.10625,
+        "registerExactRate": 0.10625
+      },
+      "dedicatedGates": {
+        "contaminationReductionAtLeastHalf": true,
+        "melodyLeakImprovementAtLeastHalf": true,
+        "exactOrUsableGainAtLeastThreePoints": true,
+        "recallRegressionWithinHalfPoint": true,
+        "bassNonRegression": true,
+        "topRegressionWithinHalfPoint": true,
+        "registerRegressionWithinHalfPoint": true,
+        "sourceNoteAdditionsZero": true
+      }
+    },
+    {
+      "options": {
+        "minimumRoleConfidence": 0.65,
+        "minimumConcurrentNonMelodyPitches": 4,
+        "minimumConcurrentSupportBeats": 0.1
+      },
+      "baseline": {
+        "events": 160,
+        "voicingExactRate": 0.875,
+        "notePrecision": 0.97561,
+        "noteRecall": 1,
+        "noteF1": 0.987654,
+        "extraNoteCount": 20,
+        "missingNoteCount": 0,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.88125,
+        "registerExactRate": 0.88125,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.03125,
+        "melodyContaminationEventCount": 20,
+        "sourceVoicingUsableRate": 0.85,
+        "generatedFallbackRate": 0.15,
+        "sourceNoteAdditionCount": 0
+      },
+      "shadow": {
+        "events": 160,
+        "voicingExactRate": 0.98125,
+        "notePrecision": 0.996264,
+        "noteRecall": 1,
+        "noteF1": 0.998129,
+        "extraNoteCount": 3,
+        "missingNoteCount": 0,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.9875,
+        "registerExactRate": 0.9875,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.004687,
+        "melodyContaminationEventCount": 3,
+        "sourceVoicingUsableRate": 0.90625,
+        "generatedFallbackRate": 0.09375,
+        "sourceNoteAdditionCount": 0
+      },
+      "delta": {
+        "voicingExactRate": 0.10625,
+        "notePrecision": 0.020654,
+        "noteRecall": 0,
+        "noteF1": 0.010475,
+        "melodyLeakRate": -0.026563,
+        "melodyContaminationEventCount": -17,
+        "melodyContaminationReduction": 0.85,
+        "melodyLeakImprovement": 0.850016,
+        "sourceVoicingUsableRate": 0.05625,
+        "bassNoteAccuracy": 0,
+        "topNoteAccuracy": 0.10625,
+        "registerExactRate": 0.10625
+      },
+      "dedicatedGates": {
+        "contaminationReductionAtLeastHalf": true,
+        "melodyLeakImprovementAtLeastHalf": true,
+        "exactOrUsableGainAtLeastThreePoints": true,
+        "recallRegressionWithinHalfPoint": true,
+        "bassNonRegression": true,
+        "topRegressionWithinHalfPoint": true,
+        "registerRegressionWithinHalfPoint": true,
+        "sourceNoteAdditionsZero": true
+      }
+    },
+    {
+      "options": {
+        "minimumRoleConfidence": 0.65,
+        "minimumConcurrentNonMelodyPitches": 4,
+        "minimumConcurrentSupportBeats": 0.2
+      },
+      "baseline": {
+        "events": 160,
+        "voicingExactRate": 0.875,
+        "notePrecision": 0.97561,
+        "noteRecall": 1,
+        "noteF1": 0.987654,
+        "extraNoteCount": 20,
+        "missingNoteCount": 0,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.88125,
+        "registerExactRate": 0.88125,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.03125,
+        "melodyContaminationEventCount": 20,
+        "sourceVoicingUsableRate": 0.85,
+        "generatedFallbackRate": 0.15,
+        "sourceNoteAdditionCount": 0
+      },
+      "shadow": {
+        "events": 160,
+        "voicingExactRate": 0.98125,
+        "notePrecision": 0.996264,
+        "noteRecall": 1,
+        "noteF1": 0.998129,
+        "extraNoteCount": 3,
+        "missingNoteCount": 0,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.9875,
+        "registerExactRate": 0.9875,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.004687,
+        "melodyContaminationEventCount": 3,
+        "sourceVoicingUsableRate": 0.90625,
+        "generatedFallbackRate": 0.09375,
+        "sourceNoteAdditionCount": 0
+      },
+      "delta": {
+        "voicingExactRate": 0.10625,
+        "notePrecision": 0.020654,
+        "noteRecall": 0,
+        "noteF1": 0.010475,
+        "melodyLeakRate": -0.026563,
+        "melodyContaminationEventCount": -17,
+        "melodyContaminationReduction": 0.85,
+        "melodyLeakImprovement": 0.850016,
+        "sourceVoicingUsableRate": 0.05625,
+        "bassNoteAccuracy": 0,
+        "topNoteAccuracy": 0.10625,
+        "registerExactRate": 0.10625
+      },
+      "dedicatedGates": {
+        "contaminationReductionAtLeastHalf": true,
+        "melodyLeakImprovementAtLeastHalf": true,
+        "exactOrUsableGainAtLeastThreePoints": true,
+        "recallRegressionWithinHalfPoint": true,
+        "bassNonRegression": true,
+        "topRegressionWithinHalfPoint": true,
+        "registerRegressionWithinHalfPoint": true,
+        "sourceNoteAdditionsZero": true
+      }
+    }
+  ],
+  "selected": {
+    "options": {
+      "minimumRoleConfidence": 0.65,
+      "minimumConcurrentNonMelodyPitches": 4,
+      "minimumConcurrentSupportBeats": 0.2
+    },
+    "baseline": {
+      "events": 160,
+      "voicingExactRate": 0.875,
+      "notePrecision": 0.97561,
+      "noteRecall": 1,
+      "noteF1": 0.987654,
+      "extraNoteCount": 20,
+      "missingNoteCount": 0,
+      "bassNoteAccuracy": 1,
+      "topNoteAccuracy": 0.88125,
+      "registerExactRate": 0.88125,
+      "octaveErrorRate": 0,
+      "melodyLeakRate": 0.03125,
+      "melodyContaminationEventCount": 20,
+      "sourceVoicingUsableRate": 0.85,
+      "generatedFallbackRate": 0.15,
+      "sourceNoteAdditionCount": 0
+    },
+    "shadow": {
+      "events": 160,
+      "voicingExactRate": 0.98125,
+      "notePrecision": 0.996264,
+      "noteRecall": 1,
+      "noteF1": 0.998129,
+      "extraNoteCount": 3,
+      "missingNoteCount": 0,
+      "bassNoteAccuracy": 1,
+      "topNoteAccuracy": 0.9875,
+      "registerExactRate": 0.9875,
+      "octaveErrorRate": 0,
+      "melodyLeakRate": 0.004687,
+      "melodyContaminationEventCount": 3,
+      "sourceVoicingUsableRate": 0.90625,
+      "generatedFallbackRate": 0.09375,
+      "sourceNoteAdditionCount": 0
+    },
+    "delta": {
+      "voicingExactRate": 0.10625,
+      "notePrecision": 0.020654,
+      "noteRecall": 0,
+      "noteF1": 0.010475,
+      "melodyLeakRate": -0.026563,
+      "melodyContaminationEventCount": -17,
+      "melodyContaminationReduction": 0.85,
+      "melodyLeakImprovement": 0.850016,
+      "sourceVoicingUsableRate": 0.05625,
+      "bassNoteAccuracy": 0,
+      "topNoteAccuracy": 0.10625,
+      "registerExactRate": 0.10625
+    },
+    "dedicatedGates": {
+      "contaminationReductionAtLeastHalf": true,
+      "melodyLeakImprovementAtLeastHalf": true,
+      "exactOrUsableGainAtLeastThreePoints": true,
+      "recallRegressionWithinHalfPoint": true,
+      "bassNonRegression": true,
+      "topRegressionWithinHalfPoint": true,
+      "registerRegressionWithinHalfPoint": true,
+      "sourceNoteAdditionsZero": true
+    }
+  },
+  "generalRegression": {
+    "split": "dev",
+    "product": {
+      "overall": {
+        "events": 320,
+        "voicingExactRate": 0.759375,
+        "notePrecision": 0.960684,
+        "noteRecall": 0.964531,
+        "noteF1": 0.962603,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.825,
+        "registerExactRate": 0.825,
+        "sourceVoicingUsableRate": 0.678125,
+        "generatedFallbackRate": 0.321875,
+        "sourceNoteAdditionCount": 0
+      },
+      "plainBlock": {
+        "events": 16,
+        "voicingExactRate": 0.9375,
+        "notePrecision": 0.989011,
+        "noteRecall": 1,
+        "noteF1": 0.994475,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 1,
+        "registerExactRate": 1,
+        "sourceVoicingUsableRate": 1,
+        "generatedFallbackRate": 0,
+        "sourceNoteAdditionCount": 0
+      },
+      "rootless": {
+        "events": 16,
+        "voicingExactRate": 0.9375,
+        "notePrecision": 0.986667,
+        "noteRecall": 1,
+        "noteF1": 0.993289,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 1,
+        "registerExactRate": 1,
+        "sourceVoicingUsableRate": 1,
+        "generatedFallbackRate": 0,
+        "sourceNoteAdditionCount": 0
+      },
+      "arpeggio": {
+        "events": 32,
+        "voicingExactRate": 0.375,
+        "notePrecision": 0.907563,
+        "noteRecall": 0.635294,
+        "noteF1": 0.747405,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.375,
+        "registerExactRate": 0.375,
+        "sourceVoicingUsableRate": 0.34375,
+        "generatedFallbackRate": 0.65625,
+        "sourceNoteAdditionCount": 0
+      },
+      "byScenario": {
+        "V01": {
+          "slug": "close-block-chords",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.9375,
+            "notePrecision": 0.989011,
+            "noteRecall": 1,
+            "noteF1": 0.994475,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 1,
+            "generatedFallbackRate": 0,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V02": {
+          "slug": "inversions",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.6875,
+            "notePrecision": 0.936709,
+            "noteRecall": 1,
+            "noteF1": 0.96732,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 0.75,
+            "registerExactRate": 0.75,
+            "sourceVoicingUsableRate": 0.5,
+            "generatedFallbackRate": 0.5,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V03": {
+          "slug": "open-spread",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.9375,
+            "notePrecision": 0.989011,
+            "noteRecall": 1,
+            "noteF1": 0.994475,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 1,
+            "generatedFallbackRate": 0,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V04": {
+          "slug": "shell-sparse",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.5625,
+            "notePrecision": 0.872727,
+            "noteRecall": 1,
+            "noteF1": 0.932039,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 0.5625,
+            "registerExactRate": 0.5625,
+            "sourceVoicingUsableRate": 0.375,
+            "generatedFallbackRate": 0.625,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V05": {
+          "slug": "split-hands",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.9375,
+            "notePrecision": 0.989011,
+            "noteRecall": 1,
+            "noteF1": 0.994475,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 1,
+            "generatedFallbackRate": 0,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V06": {
+          "slug": "separate-bass-upper",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.6875,
+            "notePrecision": 0.947368,
+            "noteRecall": 1,
+            "noteF1": 0.972973,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 0.8125,
+            "registerExactRate": 0.8125,
+            "sourceVoicingUsableRate": 0.5,
+            "generatedFallbackRate": 0.5,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V07": {
+          "slug": "rootless-with-bass",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.9375,
+            "notePrecision": 0.986667,
+            "noteRecall": 1,
+            "noteF1": 0.993289,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 1,
+            "generatedFallbackRate": 0,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V08": {
+          "slug": "slash-bass",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.75,
+            "notePrecision": 0.957447,
+            "noteRecall": 1,
+            "noteF1": 0.978261,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 0.875,
+            "registerExactRate": 0.875,
+            "sourceVoicingUsableRate": 0.5,
+            "generatedFallbackRate": 0.5,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V09": {
+          "slug": "pedal-bass",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.625,
+            "notePrecision": 0.9375,
+            "noteRecall": 1,
+            "noteF1": 0.967742,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 0.75,
+            "registerExactRate": 0.75,
+            "sourceVoicingUsableRate": 0.375,
+            "generatedFallbackRate": 0.625,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V10": {
+          "slug": "octave-doublings",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.9375,
+            "notePrecision": 0.99187,
+            "noteRecall": 1,
+            "noteF1": 0.995918,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 0.6875,
+            "generatedFallbackRate": 0.3125,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V11": {
+          "slug": "duplicate-across-tracks",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.9375,
+            "notePrecision": 0.989011,
+            "noteRecall": 1,
+            "noteF1": 0.994475,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 1,
+            "generatedFallbackRate": 0,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V12": {
+          "slug": "separate-melody-contamination",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 1,
+            "notePrecision": 1,
+            "noteRecall": 1,
+            "noteF1": 1,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 0.9375,
+            "generatedFallbackRate": 0.0625,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V13": {
+          "slug": "same-track-melody",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.875,
+            "notePrecision": 0.978261,
+            "noteRecall": 1,
+            "noteF1": 0.989011,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 0.5,
+            "generatedFallbackRate": 0.5,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V14": {
+          "slug": "passing-tones",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.9375,
+            "notePrecision": 0.989011,
+            "noteRecall": 1,
+            "noteF1": 0.994475,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 1,
+            "generatedFallbackRate": 0,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V15": {
+          "slug": "sustain-overlap",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.9375,
+            "notePrecision": 0.978261,
+            "noteRecall": 1,
+            "noteF1": 0.989011,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 1,
+            "generatedFallbackRate": 0,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V16": {
+          "slug": "anticipated-next-chord",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.6875,
+            "notePrecision": 0.947368,
+            "noteRecall": 1,
+            "noteF1": 0.972973,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 0.75,
+            "registerExactRate": 0.75,
+            "sourceVoicingUsableRate": 0.5,
+            "generatedFallbackRate": 0.5,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V17": {
+          "slug": "pure-arpeggio",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0,
+            "notePrecision": 0.842105,
+            "noteRecall": 0.355556,
+            "noteF1": 0.5,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 0,
+            "registerExactRate": 0,
+            "sourceVoicingUsableRate": 0,
+            "generatedFallbackRate": 1,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V18": {
+          "slug": "hybrid-block-arpeggio",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.75,
+            "notePrecision": 0.938272,
+            "noteRecall": 0.95,
+            "noteF1": 0.944099,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 0.75,
+            "registerExactRate": 0.75,
+            "sourceVoicingUsableRate": 0.6875,
+            "generatedFallbackRate": 0.3125,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V19": {
+          "slug": "guitar-strum",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.5625,
+            "notePrecision": 0.927835,
+            "noteRecall": 1,
+            "noteF1": 0.962567,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 0.6875,
+            "registerExactRate": 0.6875,
+            "sourceVoicingUsableRate": 0.5,
+            "generatedFallbackRate": 0.5,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V20": {
+          "slug": "repeated-reattacks",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.5,
+            "notePrecision": 0.918367,
+            "noteRecall": 1,
+            "noteF1": 0.957447,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 0.5625,
+            "registerExactRate": 0.5625,
+            "sourceVoicingUsableRate": 0.5,
+            "generatedFallbackRate": 0.5,
+            "sourceNoteAdditionCount": 0
+          }
+        }
+      }
+    },
+    "shadow": {
+      "overall": {
+        "events": 320,
+        "voicingExactRate": 0.84375,
+        "notePrecision": 0.975694,
+        "noteRecall": 0.964531,
+        "noteF1": 0.970081,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.8875,
+        "registerExactRate": 0.8875,
+        "sourceVoicingUsableRate": 0.775,
+        "generatedFallbackRate": 0.225,
+        "sourceNoteAdditionCount": 0
+      },
+      "plainBlock": {
+        "events": 16,
+        "voicingExactRate": 0.9375,
+        "notePrecision": 0.989011,
+        "noteRecall": 1,
+        "noteF1": 0.994475,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 1,
+        "registerExactRate": 1,
+        "sourceVoicingUsableRate": 1,
+        "generatedFallbackRate": 0,
+        "sourceNoteAdditionCount": 0
+      },
+      "rootless": {
+        "events": 16,
+        "voicingExactRate": 0.9375,
+        "notePrecision": 0.986667,
+        "noteRecall": 1,
+        "noteF1": 0.993289,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 1,
+        "registerExactRate": 1,
+        "sourceVoicingUsableRate": 1,
+        "generatedFallbackRate": 0,
+        "sourceNoteAdditionCount": 0
+      },
+      "arpeggio": {
+        "events": 32,
+        "voicingExactRate": 0.375,
+        "notePrecision": 0.907563,
+        "noteRecall": 0.635294,
+        "noteF1": 0.747405,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.375,
+        "registerExactRate": 0.375,
+        "sourceVoicingUsableRate": 0.34375,
+        "generatedFallbackRate": 0.65625,
+        "sourceNoteAdditionCount": 0
+      },
+      "byScenario": {
+        "V01": {
+          "slug": "close-block-chords",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.9375,
+            "notePrecision": 0.989011,
+            "noteRecall": 1,
+            "noteF1": 0.994475,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 1,
+            "generatedFallbackRate": 0,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V02": {
+          "slug": "inversions",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 1,
+            "notePrecision": 1,
+            "noteRecall": 1,
+            "noteF1": 1,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 0.9375,
+            "generatedFallbackRate": 0.0625,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V03": {
+          "slug": "open-spread",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.9375,
+            "notePrecision": 0.989011,
+            "noteRecall": 1,
+            "noteF1": 0.994475,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 1,
+            "generatedFallbackRate": 0,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V04": {
+          "slug": "shell-sparse",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.5625,
+            "notePrecision": 0.872727,
+            "noteRecall": 1,
+            "noteF1": 0.932039,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 0.5625,
+            "registerExactRate": 0.5625,
+            "sourceVoicingUsableRate": 0.375,
+            "generatedFallbackRate": 0.625,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V05": {
+          "slug": "split-hands",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.9375,
+            "notePrecision": 0.989011,
+            "noteRecall": 1,
+            "noteF1": 0.994475,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 1,
+            "generatedFallbackRate": 0,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V06": {
+          "slug": "separate-bass-upper",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 1,
+            "notePrecision": 1,
+            "noteRecall": 1,
+            "noteF1": 1,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 1,
+            "generatedFallbackRate": 0,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V07": {
+          "slug": "rootless-with-bass",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.9375,
+            "notePrecision": 0.986667,
+            "noteRecall": 1,
+            "noteF1": 0.993289,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 1,
+            "generatedFallbackRate": 0,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V08": {
+          "slug": "slash-bass",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 1,
+            "notePrecision": 1,
+            "noteRecall": 1,
+            "noteF1": 1,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 0.9375,
+            "generatedFallbackRate": 0.0625,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V09": {
+          "slug": "pedal-bass",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.625,
+            "notePrecision": 0.9375,
+            "noteRecall": 1,
+            "noteF1": 0.967742,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 0.75,
+            "registerExactRate": 0.75,
+            "sourceVoicingUsableRate": 0.375,
+            "generatedFallbackRate": 0.625,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V10": {
+          "slug": "octave-doublings",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.9375,
+            "notePrecision": 0.99187,
+            "noteRecall": 1,
+            "noteF1": 0.995918,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 0.6875,
+            "generatedFallbackRate": 0.3125,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V11": {
+          "slug": "duplicate-across-tracks",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.9375,
+            "notePrecision": 0.989011,
+            "noteRecall": 1,
+            "noteF1": 0.994475,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 1,
+            "generatedFallbackRate": 0,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V12": {
+          "slug": "separate-melody-contamination",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 1,
+            "notePrecision": 1,
+            "noteRecall": 1,
+            "noteF1": 1,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 1,
+            "generatedFallbackRate": 0,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V13": {
+          "slug": "same-track-melody",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.875,
+            "notePrecision": 0.978261,
+            "noteRecall": 1,
+            "noteF1": 0.989011,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 0.5,
+            "generatedFallbackRate": 0.5,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V14": {
+          "slug": "passing-tones",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.9375,
+            "notePrecision": 0.989011,
+            "noteRecall": 1,
+            "noteF1": 0.994475,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 1,
+            "generatedFallbackRate": 0,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V15": {
+          "slug": "sustain-overlap",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.9375,
+            "notePrecision": 0.978261,
+            "noteRecall": 1,
+            "noteF1": 0.989011,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 1,
+            "generatedFallbackRate": 0,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V16": {
+          "slug": "anticipated-next-chord",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 1,
+            "notePrecision": 1,
+            "noteRecall": 1,
+            "noteF1": 1,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 1,
+            "generatedFallbackRate": 0,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V17": {
+          "slug": "pure-arpeggio",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0,
+            "notePrecision": 0.842105,
+            "noteRecall": 0.355556,
+            "noteF1": 0.5,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 0,
+            "registerExactRate": 0,
+            "sourceVoicingUsableRate": 0,
+            "generatedFallbackRate": 1,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V18": {
+          "slug": "hybrid-block-arpeggio",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.75,
+            "notePrecision": 0.938272,
+            "noteRecall": 0.95,
+            "noteF1": 0.944099,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 0.75,
+            "registerExactRate": 0.75,
+            "sourceVoicingUsableRate": 0.6875,
+            "generatedFallbackRate": 0.3125,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V19": {
+          "slug": "guitar-strum",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 0.5625,
+            "notePrecision": 0.927835,
+            "noteRecall": 1,
+            "noteF1": 0.962567,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 0.6875,
+            "registerExactRate": 0.6875,
+            "sourceVoicingUsableRate": 0.5,
+            "generatedFallbackRate": 0.5,
+            "sourceNoteAdditionCount": 0
+          }
+        },
+        "V20": {
+          "slug": "repeated-reattacks",
+          "metrics": {
+            "events": 16,
+            "voicingExactRate": 1,
+            "notePrecision": 1,
+            "noteRecall": 1,
+            "noteF1": 1,
+            "bassNoteAccuracy": 1,
+            "topNoteAccuracy": 1,
+            "registerExactRate": 1,
+            "sourceVoicingUsableRate": 0.5,
+            "generatedFallbackRate": 0.5,
+            "sourceNoteAdditionCount": 0
+          }
+        }
+      }
+    }
+  },
+  "generalGates": {
+    "f1RegressionWithinLimit": true,
+    "plainBlockExactNonRegression": true,
+    "sourceNoteAdditionsZero": true
+  },
+  "passed": true,
+  "frozenOptions": {
+    "minimumRoleConfidence": 0.65,
+    "minimumConcurrentNonMelodyPitches": 4,
+    "minimumConcurrentSupportBeats": 0.2
+  }
+}
