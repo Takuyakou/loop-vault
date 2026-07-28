@@ -123,27 +123,26 @@ describe("AppShell", () => {
 
   it("places the global preview sound selector immediately before master volume", async () => {
     const { container, root } = await renderShell();
-    const sound = container.querySelector<HTMLSelectElement>(
-      'select[aria-label="Preview sound"]',
+    const group = container.querySelector<HTMLElement>(
+      '[role="group"][aria-label="Preview sound"]',
+    );
+    const piano = group?.querySelector<HTMLButtonElement>(
+      'button[data-preview-sound="piano"]',
+    );
+    const electricPiano = group?.querySelector<HTMLButtonElement>(
+      'button[data-preview-sound="electric-piano"]',
     );
     const volume = container.querySelector<HTMLInputElement>(
       'input[aria-label="Master volume"]',
     );
 
-    expect(sound?.value).toBe("piano");
-    expect(sound?.closest("label")?.nextElementSibling).toBe(
-      volume?.closest("label"),
-    );
+    expect(piano?.getAttribute("aria-pressed")).toBe("true");
+    expect(electricPiano?.getAttribute("aria-pressed")).toBe("false");
+    expect(group?.nextElementSibling).toBe(volume?.closest("label"));
 
-    await act(async () => {
-      const setter = Object.getOwnPropertyDescriptor(
-        HTMLSelectElement.prototype,
-        "value",
-      )?.set;
-      setter?.call(sound, "electric-piano");
-      sound?.dispatchEvent(new Event("change", { bubbles: true }));
-    });
-    expect(sound?.value).toBe("electric-piano");
+    await act(async () => electricPiano?.click());
+    expect(piano?.getAttribute("aria-pressed")).toBe("false");
+    expect(electricPiano?.getAttribute("aria-pressed")).toBe("true");
     await act(async () => root.unmount());
   });
 

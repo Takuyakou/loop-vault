@@ -515,17 +515,10 @@ describe("VaultView keyboard shortcuts", () => {
       );
     });
 
-    const selector = container.querySelector<HTMLSelectElement>(
-      'select[aria-label="Preview sound"]',
+    const electricPiano = container.querySelector<HTMLButtonElement>(
+      'button[data-preview-sound="electric-piano"]',
     );
-    await act(async () => {
-      const setter = Object.getOwnPropertyDescriptor(
-        HTMLSelectElement.prototype,
-        "value",
-      )?.set;
-      setter?.call(selector, "electric-piano");
-      selector?.dispatchEvent(new Event("change", { bubbles: true }));
-    });
+    await act(async () => electricPiano?.click());
     await act(async () => {
       container.querySelector<HTMLButtonElement>(
         'button[aria-label="Preview"]',
