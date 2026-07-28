@@ -5,6 +5,7 @@ import type { MidiDifferenceReview, RealMidiEvaluationCase } from "./types";
 import type { MidiChordCorrectionEvent } from "../feedback";
 import type {
   CorrectionPropagationFeedbackEvent,
+  ProgressionSaveFeedbackEvent,
 } from "../analysisFeedback";
 
 const expectedChordSegmentSchema = z.object({
@@ -203,11 +204,48 @@ function validatePropagationRouting(
 export const correctionPropagationFeedbackEventSchema: z.ZodType<CorrectionPropagationFeedbackEvent> =
   correctionPropagationFeedbackEventObjectSchema.superRefine(validatePropagationRouting);
 
+const progressionSaveFeedbackEventObjectSchema = z.object({
+  schemaVersion: z.literal(1),
+  eventType: z.literal("progression-save"),
+  sourceFingerprint: z.string().regex(/^(sha256-[a-f0-9]{64}|fnv1a32-[a-f0-9]{8})$/),
+  analyzerVersion: z.string().min(1),
+  occurredAt: z.string().datetime({ offset: true }),
+  range: correctionSegmentSchema,
+  savedEventCount: z.number().int().positive(),
+  userEdited: z.boolean(),
+  userVerified: z.boolean(),
+  decisions: z.array(z.object({
+    startBeat: z.number().nonnegative(),
+    endBeat: z.number().positive(),
+    detected: z.string().min(1).nullable(),
+    saved: z.string().min(1),
+    outcome: z.enum(["rank1", "rank2", "rank3", "manual-input"]),
+  }).strict().refine((value) => value.endBeat > value.startBeat, {
+    path: ["endBeat"],
+    message: "endBeat must be after startBeat",
+  })).min(1),
+}).strict();
+
+function validateProgressionSaveFeedback(
+  value: ProgressionSaveFeedbackEvent,
+  context: z.RefinementCtx,
+): void {
+  if (value.savedEventCount !== value.decisions.length) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["savedEventCount"],
+      message: "savedEventCount must match decisions length",
+    });
+  }
+}
+
 const analysisFeedbackEventDiscriminatedSchema = z.discriminatedUnion("eventType", [
   taggedMidiChordCorrectionEventSchema,
   correctionPropagationFeedbackEventObjectSchema,
+  progressionSaveFeedbackEventObjectSchema,
 ]).superRefine((value, context) => {
   if (value.eventType === "correction-propagation") validatePropagationRouting(value, context);
+  if (value.eventType === "progression-save") validateProgressionSaveFeedback(value, context);
 });
 
 export const analysisFeedbackEventSchema = z.preprocess((value) => {
