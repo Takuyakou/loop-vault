@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.7-03",
+  "corpusVersion": "1.0.0",
+  "analyzerMode": "phase4-v1",
+  "eventCount": 320,
+  "rank1": {
+    "unchangedCount": 320,
+    "changedCount": 0,
+    "pass": true
+  },
+  "candidateSuperset": {
+    "baselineRetainedCount": 320,
+    "existingScoreRetainedCount": 320,
+    "existingRelativeOrderRetainedCount": 320,
+    "duplicateCount": 0,
+    "missingProvenanceCount": 0,
+    "pass": true
+  },
+  "productInvariants": {
+    "rank1Hash": "a4166c993a81e4573072eeb05b8db088a56f5ab0d6db15db748fa5fed4b76d63",
+    "top3Hash": "fd30ae6acf63c9e04dbc1810e0097949584ecbbdc6b15cbf8242a38b944209fc",
+    "productCandidateHash": "11007e43ea40c2b08dbbf1ff03d3f0497ce73c32edbce6f80329233472e49b45",
+    "analyzerOutputHash": "c841bf9fc416a13ad7dec935fb8bd740d347a7920dec580684b0c06d073951d7",
+    "rank1HashMatchesFrozen": true,
+    "top3HashMatchesFrozen": true,
+    "candidateHashMatchesFrozen": true,
+    "analyzerHashMatchesFrozen": true
+  },
+  "economy": {
+    "totalAdded": 29,
+    "averageAddedPerEvent": 0.090625,
+    "maximumAddedPerEvent": 1
+  },
+  "determinism": {
+    "firstHash": "9d53b8aa9dba71a26c9d5a3e2e19124247a29cbde85575c946592fb5351b2dad",
+    "repeatHash": "9d53b8aa9dba71a26c9d5a3e2e19124247a29cbde85575c946592fb5351b2dad",
+    "pass": true
+  },
+  "performance": {
+    "repetitions": 7,
+    "baselineSamplesMs": [
+      179.96610000000146,
+      234.5694999999996,
+      180.4403000000002,
+      183.65029999999933,
+      178.26679999999942,
+      188.42300000000068,
+      182.71470000000045
+    ],
+    "shadowSamplesMs": [
+      179.06219999999848,
+      183.45839999999953,
+      198.72020000000157,
+      187.59590000000026,
+      188.34490000000005,
+      191.6908000000003,
+      188.46999999999935
+    ],
+    "baselineMedianMs": 182.71470000000045,
+    "shadowMedianMs": 188.34490000000005,
+    "overheadRate": 0.03081415999916586,
+    "baselineHeapMedianBytes": 12821200,
+    "shadowHeapMedianBytes": 19487232
+  },
+  "productChanged": false,
+  "validationOrHoldoutRun": false
+}
