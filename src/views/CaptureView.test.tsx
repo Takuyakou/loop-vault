@@ -1339,6 +1339,7 @@ describe("CaptureView saving", () => {
     const createIdeaFromDraft = vi.fn(() => saveSucceeds
       ? "22222222-2222-4222-8222-222222222222"
       : undefined);
+    const setToast = vi.fn();
     await act(async () => {
       root.render(
         <CaptureView
@@ -1349,7 +1350,7 @@ describe("CaptureView saving", () => {
           createIdeaFromDraft={createIdeaFromDraft}
           appendBlockToIdea={vi.fn(() => false)}
           updateIdea={vi.fn()}
-          setToast={vi.fn()}
+          setToast={setToast}
           copy={appCopy.ja}
           language="ja"
           showRomanNumerals
@@ -1412,6 +1413,7 @@ describe("CaptureView saving", () => {
     expect(feedbackSpies.append).not.toHaveBeenCalled();
     expect(feedbackSpies.appendLabelCorrections).not.toHaveBeenCalled();
     saveSucceeds = true;
+    feedbackSpies.append.mockRejectedValueOnce(new Error("feedback write failed"));
     const retrySave = [...container.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')]
       .find((button) => button.textContent === "保存");
     await act(async () => retrySave?.click());
@@ -1461,6 +1463,11 @@ describe("CaptureView saving", () => {
         ],
       }),
     ]);
+    await act(async () => Promise.resolve());
+    expect(setToast).toHaveBeenCalledWith("feedback write failed");
+    expect(createIdeaFromDraft).toHaveReturnedWith(
+      "22222222-2222-4222-8222-222222222222",
+    );
     await act(async () => root.unmount());
     container.remove();
   });

@@ -78,6 +78,7 @@
     "tune:midi-weights": "vite-node scripts/tune-midi-weights.ts",
     "benchmark:midi": "vite-node scripts/benchmark-midi-analysis.ts",
     "benchmark:live-midi": "vite-node scripts/benchmark-live-midi-latency.ts",
+    "benchmark:dojo": "vite-node scripts/benchmark-chord-dojo.ts",
     "eval:advisor": "vite-node scripts/evaluate-progression-advisor.ts",
     "diagnose:llm-schema": "vite-node scripts/diagnose-llm-schema-compatibility.ts",
     "diagnose:midi-failures": "vite-node scripts/analyze-midi-failures.ts",
