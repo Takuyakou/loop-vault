@@ -1,0 +1,6360 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.6-02",
+  "corpusVersion": "1.0.0",
+  "analyzerMode": "phase4-v1",
+  "split": "dev",
+  "targetCount": 68,
+  "expectedTargetCount": 68,
+  "primaryCounts": {
+    "alteration-generation-missing": 40,
+    "slash-bass-generation-missing": 28
+  },
+  "secondaryFamilyCounts": {
+    "altered dominant": 40,
+    "dominant thirteenth": 2,
+    "major ninth": 2,
+    "minor ninth": 10,
+    "plain minor seventh": 8,
+    "suspended dominant": 6
+  },
+  "familyStats": [
+    {
+      "label": "A7b9",
+      "goldCount": 40,
+      "missingCount": 40,
+      "missingRate": 1,
+      "uniqueScenarioCount": 20,
+      "cleanMissing": 20,
+      "stressMissing": 20,
+      "rootCorrectCount": 34,
+      "primaryCounts": {
+        "alteration-generation-missing": 40
+      }
+    },
+    {
+      "label": "Am9",
+      "goldCount": 40,
+      "missingCount": 6,
+      "missingRate": 0.15,
+      "uniqueScenarioCount": 3,
+      "cleanMissing": 3,
+      "stressMissing": 3,
+      "rootCorrectCount": 6,
+      "primaryCounts": {
+        "slash-bass-generation-missing": 6
+      }
+    },
+    {
+      "label": "Cmaj9",
+      "goldCount": 40,
+      "missingCount": 2,
+      "missingRate": 0.05,
+      "uniqueScenarioCount": 1,
+      "cleanMissing": 1,
+      "stressMissing": 1,
+      "rootCorrectCount": 2,
+      "primaryCounts": {
+        "slash-bass-generation-missing": 2
+      }
+    },
+    {
+      "label": "Dm7",
+      "goldCount": 40,
+      "missingCount": 6,
+      "missingRate": 0.15,
+      "uniqueScenarioCount": 3,
+      "cleanMissing": 3,
+      "stressMissing": 3,
+      "rootCorrectCount": 3,
+      "primaryCounts": {
+        "slash-bass-generation-missing": 6
+      }
+    },
+    {
+      "label": "Dm9",
+      "goldCount": 40,
+      "missingCount": 4,
+      "missingRate": 0.1,
+      "uniqueScenarioCount": 2,
+      "cleanMissing": 2,
+      "stressMissing": 2,
+      "rootCorrectCount": 4,
+      "primaryCounts": {
+        "slash-bass-generation-missing": 4
+      }
+    },
+    {
+      "label": "Em7",
+      "goldCount": 40,
+      "missingCount": 2,
+      "missingRate": 0.05,
+      "uniqueScenarioCount": 1,
+      "cleanMissing": 1,
+      "stressMissing": 1,
+      "rootCorrectCount": 0,
+      "primaryCounts": {
+        "slash-bass-generation-missing": 2
+      }
+    },
+    {
+      "label": "G13",
+      "goldCount": 40,
+      "missingCount": 2,
+      "missingRate": 0.05,
+      "uniqueScenarioCount": 1,
+      "cleanMissing": 1,
+      "stressMissing": 1,
+      "rootCorrectCount": 2,
+      "primaryCounts": {
+        "slash-bass-generation-missing": 2
+      }
+    },
+    {
+      "label": "G7sus4",
+      "goldCount": 40,
+      "missingCount": 6,
+      "missingRate": 0.15,
+      "uniqueScenarioCount": 3,
+      "cleanMissing": 3,
+      "stressMissing": 3,
+      "rootCorrectCount": 6,
+      "primaryCounts": {
+        "slash-bass-generation-missing": 6
+      }
+    }
+  ],
+  "twelveKeyReproducibility": {
+    "observedRootCount": 5,
+    "observedRoots": [
+      0,
+      2,
+      4,
+      7,
+      9
+    ],
+    "conclusion": "Fixed Gold does not span 12 roots; grammar transposition must be tested synthetically after Decision Lock."
+  },
+  "productChanged": false,
+  "validationOrHoldoutRun": false,
+  "rows": [
+    {
+      "fileId": "V01_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V01",
+      "scenarioSlug": "close-block-chords",
+      "variant": "clean",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V01",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 1.0499999999999998,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 1.035,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 1.0199999999999998,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A",
+          "rawScore": 0.8749999999999998,
+          "canonicalIdentity": "9|major|-|||-"
+        },
+        {
+          "label": "A6",
+          "rawScore": 0.8749999999999998,
+          "canonicalIdentity": "9|major|-|6||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V01_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V01",
+      "scenarioSlug": "close-block-chords",
+      "variant": "stress",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V01",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 1.0414431704666935,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 1.0264431704666936,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 1.0114431704666935,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A",
+          "rawScore": 0.8629730080172211,
+          "canonicalIdentity": "9|major|-|||-"
+        },
+        {
+          "label": "A6",
+          "rawScore": 0.8629730080172211,
+          "canonicalIdentity": "9|major|-|6||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V02_clean",
+      "eventId": "e02",
+      "expected": "Am9",
+      "scenarioId": "V02",
+      "scenarioSlug": "inversions",
+      "variant": "clean",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "minor ninth",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V02",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "minor",
+        "seventh": "minor7",
+        "tensions": [
+          9
+        ],
+        "alterations": [],
+        "bass": 9,
+        "canonicalIdentity": "9|minor|minor7|9||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": true,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          0,
+          4,
+          7,
+          9,
+          11
+        ],
+        "observedPitchClasses": [
+          0,
+          4,
+          7,
+          9,
+          11
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "Am9/C",
+          "rawScore": 1.0910869565217394,
+          "canonicalIdentity": "9|minor|minor7|9||0"
+        },
+        {
+          "label": "Am11/C",
+          "rawScore": 1.0760869565217392,
+          "canonicalIdentity": "9|minor|minor7|11||0"
+        },
+        {
+          "label": "Am7/C",
+          "rawScore": 0.8626086956521738,
+          "canonicalIdentity": "9|minor|minor7|||0"
+        },
+        {
+          "label": "A9",
+          "rawScore": 0.7849999999999997,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 0.7699999999999997,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "Am9/C",
+          "rawScore": 1.0910869565217394
+        }
+      ]
+    },
+    {
+      "fileId": "V02_clean",
+      "eventId": "e03",
+      "expected": "Dm9",
+      "scenarioId": "V02",
+      "scenarioSlug": "inversions",
+      "variant": "clean",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "minor ninth",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V02",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 2,
+        "triad": "minor",
+        "seventh": "minor7",
+        "tensions": [
+          9
+        ],
+        "alterations": [],
+        "bass": 2,
+        "canonicalIdentity": "2|minor|minor7|9||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": true,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          0,
+          2,
+          4,
+          5,
+          9
+        ],
+        "observedPitchClasses": [
+          0,
+          2,
+          4,
+          5,
+          9
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "Dm9/C",
+          "rawScore": 1.0839473684210525,
+          "canonicalIdentity": "2|minor|minor7|9||0"
+        },
+        {
+          "label": "Dm11/C",
+          "rawScore": 1.0689473684210524,
+          "canonicalIdentity": "2|minor|minor7|11||0"
+        },
+        {
+          "label": "Dm7/C",
+          "rawScore": 0.9221052631578947,
+          "canonicalIdentity": "2|minor|minor7|||0"
+        },
+        {
+          "label": "D9/C",
+          "rawScore": 0.7492105263157893,
+          "canonicalIdentity": "2|major|minor7|9||0"
+        },
+        {
+          "label": "D13/C",
+          "rawScore": 0.7342105263157893,
+          "canonicalIdentity": "2|major|minor7|13||0"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "Dm9/C",
+          "rawScore": 1.0839473684210525
+        }
+      ]
+    },
+    {
+      "fileId": "V02_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V02",
+      "scenarioSlug": "inversions",
+      "variant": "clean",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V02",
+        "detectedRoot": "wrong"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 0.7426086956521738,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 0.7276086956521738,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 0.7126086956521738,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "Am7/C",
+          "rawScore": 0.6765217391304346,
+          "canonicalIdentity": "9|minor|minor7|||0"
+        },
+        {
+          "label": "Am9/C",
+          "rawScore": 0.6615217391304345,
+          "canonicalIdentity": "9|minor|minor7|9||0"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V02_clean",
+      "eventId": "e07",
+      "expected": "Dm7",
+      "scenarioId": "V02",
+      "scenarioSlug": "inversions",
+      "variant": "clean",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "plain minor seventh",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V02",
+        "detectedRoot": "wrong"
+      },
+      "components": {
+        "root": 2,
+        "triad": "minor",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [],
+        "bass": 2,
+        "canonicalIdentity": "2|minor|minor7|||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          0,
+          2,
+          5,
+          9
+        ],
+        "observedPitchClasses": [
+          0,
+          2,
+          5,
+          9
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "Dm7/C",
+          "rawScore": 1.1025000000000003,
+          "canonicalIdentity": "2|minor|minor7|||0"
+        },
+        {
+          "label": "Dm9/C",
+          "rawScore": 1.0875000000000004,
+          "canonicalIdentity": "2|minor|minor7|9||0"
+        },
+        {
+          "label": "Dm11/C",
+          "rawScore": 1.0725000000000002,
+          "canonicalIdentity": "2|minor|minor7|11||0"
+        },
+        {
+          "label": "Dm",
+          "rawScore": 0.7725000000000001,
+          "canonicalIdentity": "2|minor|-|||-"
+        },
+        {
+          "label": "Dm6",
+          "rawScore": 0.7725000000000001,
+          "canonicalIdentity": "2|minor|-|6||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "Dm7/C",
+          "rawScore": 1.1025000000000003
+        }
+      ]
+    },
+    {
+      "fileId": "V02_clean",
+      "eventId": "e08",
+      "expected": "G7sus4",
+      "scenarioId": "V02",
+      "scenarioSlug": "inversions",
+      "variant": "clean",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "suspended dominant",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V02",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 7,
+        "triad": "sus4",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [],
+        "bass": 7,
+        "canonicalIdentity": "7|sus4|minor7|||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": true,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          0,
+          2,
+          5,
+          7
+        ],
+        "observedPitchClasses": [
+          0,
+          2,
+          5,
+          7
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "G7sus4/C",
+          "rawScore": 1.1133333333333333,
+          "canonicalIdentity": "7|sus4|minor7|||0"
+        },
+        {
+          "label": "Gm11/C",
+          "rawScore": 1.0433333333333332,
+          "canonicalIdentity": "7|minor|minor7|11||0"
+        },
+        {
+          "label": "Gsus4/C",
+          "rawScore": 0.8022222222222221,
+          "canonicalIdentity": "7|sus4|-|||0"
+        },
+        {
+          "label": "G7",
+          "rawScore": 0.7666666666666665,
+          "canonicalIdentity": "7|major|minor7|||-"
+        },
+        {
+          "label": "Gm7",
+          "rawScore": 0.7666666666666665,
+          "canonicalIdentity": "7|minor|minor7|||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "G7sus4/C",
+          "rawScore": 1.1133333333333333
+        }
+      ]
+    },
+    {
+      "fileId": "V02_stress",
+      "eventId": "e02",
+      "expected": "Am9",
+      "scenarioId": "V02",
+      "scenarioSlug": "inversions",
+      "variant": "stress",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "minor ninth",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V02",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "minor",
+        "seventh": "minor7",
+        "tensions": [
+          9
+        ],
+        "alterations": [],
+        "bass": 9,
+        "canonicalIdentity": "9|minor|minor7|9||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": true,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          0,
+          4,
+          7,
+          9,
+          11
+        ],
+        "observedPitchClasses": [
+          0,
+          2,
+          3,
+          4,
+          7,
+          9,
+          11
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "Am9/C",
+          "rawScore": 1.0734653843627213,
+          "canonicalIdentity": "9|minor|minor7|9||0"
+        },
+        {
+          "label": "Am11/C",
+          "rawScore": 1.0667837193876166,
+          "canonicalIdentity": "9|minor|minor7|11||0"
+        },
+        {
+          "label": "Am7/C",
+          "rawScore": 0.8493701457157374,
+          "canonicalIdentity": "9|minor|minor7|||0"
+        },
+        {
+          "label": "A9",
+          "rawScore": 0.7634111876480552,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 0.7484111876480551,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "Am9/C",
+          "rawScore": 1.0734653843627213
+        }
+      ]
+    },
+    {
+      "fileId": "V02_stress",
+      "eventId": "e03",
+      "expected": "Dm9",
+      "scenarioId": "V02",
+      "scenarioSlug": "inversions",
+      "variant": "stress",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "minor ninth",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V02",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 2,
+        "triad": "minor",
+        "seventh": "minor7",
+        "tensions": [
+          9
+        ],
+        "alterations": [],
+        "bass": 2,
+        "canonicalIdentity": "2|minor|minor7|9||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": true,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          0,
+          2,
+          4,
+          5,
+          9
+        ],
+        "observedPitchClasses": [
+          0,
+          2,
+          3,
+          4,
+          5,
+          7,
+          9
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "Dm9/C",
+          "rawScore": 1.0652066058421936,
+          "canonicalIdentity": "2|minor|minor7|9||0"
+        },
+        {
+          "label": "Dm11/C",
+          "rawScore": 1.059814207551623,
+          "canonicalIdentity": "2|minor|minor7|11||0"
+        },
+        {
+          "label": "Dm7/C",
+          "rawScore": 0.9093820531681441,
+          "canonicalIdentity": "2|minor|minor7|||0"
+        },
+        {
+          "label": "D9/C",
+          "rawScore": 0.7466770292943657,
+          "canonicalIdentity": "2|major|minor7|9||0"
+        },
+        {
+          "label": "D13/C",
+          "rawScore": 0.7316770292943657,
+          "canonicalIdentity": "2|major|minor7|13||0"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "Dm9/C",
+          "rawScore": 1.0652066058421936
+        }
+      ]
+    },
+    {
+      "fileId": "V02_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V02",
+      "scenarioSlug": "inversions",
+      "variant": "stress",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V02",
+        "detectedRoot": "wrong"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 0.7338305517718353,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 0.7188305517718353,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 0.7038305517718353,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "Am7/C",
+          "rawScore": 0.6812559680884669,
+          "canonicalIdentity": "9|minor|minor7|||0"
+        },
+        {
+          "label": "Am9/C",
+          "rawScore": 0.6662559680884669,
+          "canonicalIdentity": "9|minor|minor7|9||0"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V02_stress",
+      "eventId": "e07",
+      "expected": "Dm7",
+      "scenarioId": "V02",
+      "scenarioSlug": "inversions",
+      "variant": "stress",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "plain minor seventh",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V02",
+        "detectedRoot": "wrong"
+      },
+      "components": {
+        "root": 2,
+        "triad": "minor",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [],
+        "bass": 2,
+        "canonicalIdentity": "2|minor|minor7|||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          0,
+          2,
+          5,
+          9
+        ],
+        "observedPitchClasses": [
+          0,
+          2,
+          3,
+          5,
+          7,
+          9
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "Dm7/C",
+          "rawScore": 1.0796517714792302,
+          "canonicalIdentity": "2|minor|minor7|||0"
+        },
+        {
+          "label": "Dm9/C",
+          "rawScore": 1.0646517714792303,
+          "canonicalIdentity": "2|minor|minor7|9||0"
+        },
+        {
+          "label": "Dm11/C",
+          "rawScore": 1.0611674676382812,
+          "canonicalIdentity": "2|minor|minor7|11||0"
+        },
+        {
+          "label": "Dm",
+          "rawScore": 0.7431764440964352,
+          "canonicalIdentity": "2|minor|-|||-"
+        },
+        {
+          "label": "Dm6",
+          "rawScore": 0.7431764440964352,
+          "canonicalIdentity": "2|minor|-|6||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "Dm7/C",
+          "rawScore": 1.0796517714792302
+        }
+      ]
+    },
+    {
+      "fileId": "V02_stress",
+      "eventId": "e08",
+      "expected": "G7sus4",
+      "scenarioId": "V02",
+      "scenarioSlug": "inversions",
+      "variant": "stress",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "suspended dominant",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V02",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 7,
+        "triad": "sus4",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [],
+        "bass": 7,
+        "canonicalIdentity": "7|sus4|minor7|||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": true,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          0,
+          2,
+          5,
+          7
+        ],
+        "observedPitchClasses": [
+          0,
+          2,
+          3,
+          5,
+          7
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "G7sus4/C",
+          "rawScore": 1.1020749176221314,
+          "canonicalIdentity": "7|sus4|minor7|||0"
+        },
+        {
+          "label": "Gm11/C",
+          "rawScore": 1.0320749176221313,
+          "canonicalIdentity": "7|minor|minor7|11||0"
+        },
+        {
+          "label": "Gsus4/C",
+          "rawScore": 0.7945214064310492,
+          "canonicalIdentity": "7|sus4|-|||0"
+        },
+        {
+          "label": "G7",
+          "rawScore": 0.7577439735954296,
+          "canonicalIdentity": "7|major|minor7|||-"
+        },
+        {
+          "label": "Gm7",
+          "rawScore": 0.7577439735954296,
+          "canonicalIdentity": "7|minor|minor7|||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "G7sus4/C",
+          "rawScore": 1.1020749176221314
+        }
+      ]
+    },
+    {
+      "fileId": "V03_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V03",
+      "scenarioSlug": "open-spread",
+      "variant": "clean",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V03",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 1.1114285714285712,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 1.0964285714285713,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 1.0814285714285712,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A",
+          "rawScore": 0.9114285714285713,
+          "canonicalIdentity": "9|major|-|||-"
+        },
+        {
+          "label": "A6",
+          "rawScore": 0.9114285714285713,
+          "canonicalIdentity": "9|major|-|6||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V03_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V03",
+      "scenarioSlug": "open-spread",
+      "variant": "stress",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V03",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 1.094728005023219,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 1.0797280050232192,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 1.064728005023219,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A",
+          "rawScore": 0.8890475472304322,
+          "canonicalIdentity": "9|major|-|||-"
+        },
+        {
+          "label": "A6",
+          "rawScore": 0.8890475472304322,
+          "canonicalIdentity": "9|major|-|6||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V04_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V04",
+      "scenarioSlug": "shell-sparse",
+      "variant": "clean",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V04",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": false
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          1,
+          7,
+          9
+        ],
+        "sufficient": false
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 1.229411764705882,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 1.214411764705882,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 1.199411764705882,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A",
+          "rawScore": 0.8999999999999999,
+          "canonicalIdentity": "9|major|-|||-"
+        },
+        {
+          "label": "A6",
+          "rawScore": 0.8999999999999999,
+          "canonicalIdentity": "9|major|-|6||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V04_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V04",
+      "scenarioSlug": "shell-sparse",
+      "variant": "stress",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V04",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": false
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          0,
+          1,
+          2,
+          3,
+          7,
+          9
+        ],
+        "sufficient": false
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 1.1946105423639402,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 1.1796105423639403,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 1.1646105423639401,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A",
+          "rawScore": 0.8584356235919903,
+          "canonicalIdentity": "9|major|-|||-"
+        },
+        {
+          "label": "A6",
+          "rawScore": 0.8584356235919903,
+          "canonicalIdentity": "9|major|-|6||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V05_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V05",
+      "scenarioSlug": "split-hands",
+      "variant": "clean",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V05",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 1.0499999999999998,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 1.035,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 1.0199999999999998,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A",
+          "rawScore": 0.8749999999999998,
+          "canonicalIdentity": "9|major|-|||-"
+        },
+        {
+          "label": "A6",
+          "rawScore": 0.8749999999999998,
+          "canonicalIdentity": "9|major|-|6||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V05_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V05",
+      "scenarioSlug": "split-hands",
+      "variant": "stress",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V05",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 1.0423079954846477,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 1.0273079954846478,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 1.0123079954846477,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A",
+          "rawScore": 0.8635522804407034,
+          "canonicalIdentity": "9|major|-|||-"
+        },
+        {
+          "label": "A6",
+          "rawScore": 0.8635522804407034,
+          "canonicalIdentity": "9|major|-|6||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V06_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V06",
+      "scenarioSlug": "separate-bass-upper",
+      "variant": "clean",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V06",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 1.0590596419310259,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 1.044059641931026,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 1.0290596419310258,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A",
+          "rawScore": 0.890401391282744,
+          "canonicalIdentity": "9|major|-|||-"
+        },
+        {
+          "label": "A6",
+          "rawScore": 0.890401391282744,
+          "canonicalIdentity": "9|major|-|6||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V06_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V06",
+      "scenarioSlug": "separate-bass-upper",
+      "variant": "stress",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V06",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 1.0470626192566341,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 1.0320626192566342,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 1.017062619256634,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A",
+          "rawScore": 0.8700823471358388,
+          "canonicalIdentity": "9|major|-|||-"
+        },
+        {
+          "label": "A6",
+          "rawScore": 0.8700823471358388,
+          "canonicalIdentity": "9|major|-|6||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V07_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V07",
+      "scenarioSlug": "rootless-with-bass",
+      "variant": "clean",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V07",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 1.0163446246092536,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 1.0013446246092537,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 0.9863446246092535,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A",
+          "rawScore": 0.8177858618357312,
+          "canonicalIdentity": "9|major|-|||-"
+        },
+        {
+          "label": "A6",
+          "rawScore": 0.8177858618357312,
+          "canonicalIdentity": "9|major|-|6||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V07_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V07",
+      "scenarioSlug": "rootless-with-bass",
+      "variant": "stress",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V07",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 0.999613526859416,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 0.9846135268594159,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 0.9696135268594159,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A",
+          "rawScore": 0.7980310355703366,
+          "canonicalIdentity": "9|major|-|||-"
+        },
+        {
+          "label": "A6",
+          "rawScore": 0.7980310355703366,
+          "canonicalIdentity": "9|major|-|6||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V08_clean",
+      "eventId": "e01",
+      "expected": "Cmaj9",
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "clean",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "major ninth",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V08",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 0,
+        "triad": "major",
+        "seventh": "major7",
+        "tensions": [
+          9
+        ],
+        "alterations": [],
+        "bass": 0,
+        "canonicalIdentity": "0|major|major7|9||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": true,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          0,
+          2,
+          4,
+          7,
+          11
+        ],
+        "observedPitchClasses": [
+          0,
+          2,
+          4,
+          7,
+          11
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "Cmaj9/E",
+          "rawScore": 1.0842287737641645,
+          "canonicalIdentity": "0|major|major7|9||4"
+        },
+        {
+          "label": "Cmaj7/E",
+          "rawScore": 0.991547640684844,
+          "canonicalIdentity": "0|major|major7|||4"
+        },
+        {
+          "label": "Cadd9/E",
+          "rawScore": 0.9197602186319639,
+          "canonicalIdentity": "0|major|-|9||4"
+        },
+        {
+          "label": "C6/9/E",
+          "rawScore": 0.9047602186319639,
+          "canonicalIdentity": "0|major|-|6.9||4"
+        },
+        {
+          "label": "C9/E",
+          "rawScore": 0.8647602186319638,
+          "canonicalIdentity": "0|major|minor7|9||4"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "Cmaj9/E",
+          "rawScore": 1.0842287737641645
+        }
+      ]
+    },
+    {
+      "fileId": "V08_clean",
+      "eventId": "e02",
+      "expected": "Am9",
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "clean",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "minor ninth",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V08",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "minor",
+        "seventh": "minor7",
+        "tensions": [
+          9
+        ],
+        "alterations": [],
+        "bass": 9,
+        "canonicalIdentity": "9|minor|minor7|9||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": true,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          0,
+          4,
+          7,
+          9,
+          11
+        ],
+        "observedPitchClasses": [
+          0,
+          4,
+          7,
+          9,
+          11
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "Am9/C",
+          "rawScore": 1.084442987219113,
+          "canonicalIdentity": "9|minor|minor7|9||0"
+        },
+        {
+          "label": "Am11/C",
+          "rawScore": 1.069442987219113,
+          "canonicalIdentity": "9|minor|minor7|11||0"
+        },
+        {
+          "label": "Am7/C",
+          "rawScore": 0.9179751065073928,
+          "canonicalIdentity": "9|minor|minor7|||0"
+        },
+        {
+          "label": "Am/C",
+          "rawScore": 0.7365072257956728,
+          "canonicalIdentity": "9|minor|-|||0"
+        },
+        {
+          "label": "Am6/C",
+          "rawScore": 0.7365072257956728,
+          "canonicalIdentity": "9|minor|-|6||0"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "Am9/C",
+          "rawScore": 1.084442987219113
+        }
+      ]
+    },
+    {
+      "fileId": "V08_clean",
+      "eventId": "e04",
+      "expected": "G13",
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "clean",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "dominant thirteenth",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V08",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 7,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [
+          13
+        ],
+        "alterations": [],
+        "bass": 7,
+        "canonicalIdentity": "7|major|minor7|13||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": true,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": false
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          2,
+          4,
+          5,
+          7,
+          11
+        ],
+        "observedPitchClasses": [
+          4,
+          5,
+          7,
+          9,
+          11
+        ],
+        "sufficient": false
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "G13/A",
+          "rawScore": 1.0692287737641641,
+          "canonicalIdentity": "7|major|minor7|13||9"
+        },
+        {
+          "label": "G9/A",
+          "rawScore": 0.976547640684844,
+          "canonicalIdentity": "7|major|minor7|9||9"
+        },
+        {
+          "label": "G6/9/A",
+          "rawScore": 0.9047602186319638,
+          "canonicalIdentity": "7|major|-|6.9||9"
+        },
+        {
+          "label": "Gadd9/A",
+          "rawScore": 0.8120790855526437,
+          "canonicalIdentity": "7|major|-|9||9"
+        },
+        {
+          "label": "Gm9/A",
+          "rawScore": 0.7570790855526437,
+          "canonicalIdentity": "7|minor|minor7|9||9"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "G13/A",
+          "rawScore": 1.0692287737641641
+        }
+      ]
+    },
+    {
+      "fileId": "V08_clean",
+      "eventId": "e05",
+      "expected": "Em7",
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "clean",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "plain minor seventh",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V08",
+        "detectedRoot": "wrong"
+      },
+      "components": {
+        "root": 4,
+        "triad": "minor",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [],
+        "bass": 4,
+        "canonicalIdentity": "4|minor|minor7|||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          2,
+          4,
+          7,
+          11
+        ],
+        "observedPitchClasses": [
+          2,
+          4,
+          7,
+          11
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "Em7/G",
+          "rawScore": 1.1028979336452607,
+          "canonicalIdentity": "4|minor|minor7|||7"
+        },
+        {
+          "label": "Em9/G",
+          "rawScore": 1.0878979336452608,
+          "canonicalIdentity": "4|minor|minor7|9||7"
+        },
+        {
+          "label": "Em11/G",
+          "rawScore": 1.0728979336452606,
+          "canonicalIdentity": "4|minor|minor7|11||7"
+        },
+        {
+          "label": "Em/G",
+          "rawScore": 0.9746695052318007,
+          "canonicalIdentity": "4|minor|-|||7"
+        },
+        {
+          "label": "Em6/G",
+          "rawScore": 0.9746695052318007,
+          "canonicalIdentity": "4|minor|-|6||7"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "Em7/G",
+          "rawScore": 1.1028979336452607
+        }
+      ]
+    },
+    {
+      "fileId": "V08_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "clean",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V08",
+        "detectedRoot": "wrong"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7/C#",
+          "rawScore": 0.9179751065073928,
+          "canonicalIdentity": "9|major|minor7|||1"
+        },
+        {
+          "label": "A9/C#",
+          "rawScore": 0.9029751065073928,
+          "canonicalIdentity": "9|major|minor7|9||1"
+        },
+        {
+          "label": "A13/C#",
+          "rawScore": 0.8879751065073928,
+          "canonicalIdentity": "9|major|minor7|13||1"
+        },
+        {
+          "label": "A/C#",
+          "rawScore": 0.7365072257956728,
+          "canonicalIdentity": "9|major|-|||1"
+        },
+        {
+          "label": "A6/C#",
+          "rawScore": 0.7365072257956728,
+          "canonicalIdentity": "9|major|-|6||1"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V08_clean",
+      "eventId": "e07",
+      "expected": "Dm7",
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "clean",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "plain minor seventh",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V08",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 2,
+        "triad": "minor",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [],
+        "bass": 2,
+        "canonicalIdentity": "2|minor|minor7|||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          0,
+          2,
+          5,
+          9
+        ],
+        "observedPitchClasses": [
+          0,
+          2,
+          5,
+          9
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "Dm7/A",
+          "rawScore": 1.1028979336452607,
+          "canonicalIdentity": "2|minor|minor7|||9"
+        },
+        {
+          "label": "Dm9/A",
+          "rawScore": 1.0878979336452608,
+          "canonicalIdentity": "2|minor|minor7|9||9"
+        },
+        {
+          "label": "Dm11/A",
+          "rawScore": 1.0728979336452606,
+          "canonicalIdentity": "2|minor|minor7|11||9"
+        },
+        {
+          "label": "Dm/A",
+          "rawScore": 0.9746695052318007,
+          "canonicalIdentity": "2|minor|-|||9"
+        },
+        {
+          "label": "Dm6/A",
+          "rawScore": 0.9746695052318007,
+          "canonicalIdentity": "2|minor|-|6||9"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "Dm7/A",
+          "rawScore": 1.1028979336452607
+        }
+      ]
+    },
+    {
+      "fileId": "V08_clean",
+      "eventId": "e08",
+      "expected": "G7sus4",
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "clean",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "suspended dominant",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V08",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 7,
+        "triad": "sus4",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [],
+        "bass": 7,
+        "canonicalIdentity": "7|sus4|minor7|||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": true,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          0,
+          2,
+          5,
+          7
+        ],
+        "observedPitchClasses": [
+          0,
+          2,
+          5,
+          7
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "G7sus4/C",
+          "rawScore": 1.1032023446378372,
+          "canonicalIdentity": "7|sus4|minor7|||0"
+        },
+        {
+          "label": "Gm11/C",
+          "rawScore": 1.0332023446378371,
+          "canonicalIdentity": "7|minor|minor7|11||0"
+        },
+        {
+          "label": "Gsus4/C",
+          "rawScore": 0.8866471280180235,
+          "canonicalIdentity": "7|sus4|-|||0"
+        },
+        {
+          "label": "G7",
+          "rawScore": 0.4728679944972785,
+          "canonicalIdentity": "7|major|minor7|||-"
+        },
+        {
+          "label": "Gm7",
+          "rawScore": 0.4728679944972785,
+          "canonicalIdentity": "7|minor|minor7|||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "G7sus4/C",
+          "rawScore": 1.1032023446378372
+        }
+      ]
+    },
+    {
+      "fileId": "V08_stress",
+      "eventId": "e01",
+      "expected": "Cmaj9",
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "stress",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "major ninth",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V08",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 0,
+        "triad": "major",
+        "seventh": "major7",
+        "tensions": [
+          9
+        ],
+        "alterations": [],
+        "bass": 0,
+        "canonicalIdentity": "0|major|major7|9||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": true,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          0,
+          2,
+          4,
+          7,
+          11
+        ],
+        "observedPitchClasses": [
+          0,
+          2,
+          3,
+          4,
+          7,
+          11
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "Cmaj9/E",
+          "rawScore": 1.0784029403032576,
+          "canonicalIdentity": "0|major|major7|9||4"
+        },
+        {
+          "label": "Cmaj7/E",
+          "rawScore": 0.9776508240762101,
+          "canonicalIdentity": "0|major|major7|||4"
+        },
+        {
+          "label": "Cadd9/E",
+          "rawScore": 0.9214233074551436,
+          "canonicalIdentity": "0|major|-|9||4"
+        },
+        {
+          "label": "C6/9/E",
+          "rawScore": 0.9064233074551435,
+          "canonicalIdentity": "0|major|-|6.9||4"
+        },
+        {
+          "label": "C9/E",
+          "rawScore": 0.8664233074551435,
+          "canonicalIdentity": "0|major|minor7|9||4"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "Cmaj9/E",
+          "rawScore": 1.0784029403032576
+        }
+      ]
+    },
+    {
+      "fileId": "V08_stress",
+      "eventId": "e02",
+      "expected": "Am9",
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "stress",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "minor ninth",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V08",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "minor",
+        "seventh": "minor7",
+        "tensions": [
+          9
+        ],
+        "alterations": [],
+        "bass": 9,
+        "canonicalIdentity": "9|minor|minor7|9||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": true,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          0,
+          4,
+          7,
+          9,
+          11
+        ],
+        "observedPitchClasses": [
+          0,
+          2,
+          3,
+          4,
+          7,
+          9,
+          11
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "Am9/C",
+          "rawScore": 1.072487548330858,
+          "canonicalIdentity": "9|minor|minor7|9||0"
+        },
+        {
+          "label": "Am11/C",
+          "rawScore": 1.0635261149950592,
+          "canonicalIdentity": "9|minor|minor7|11||0"
+        },
+        {
+          "label": "Am7/C",
+          "rawScore": 0.9139200575599374,
+          "canonicalIdentity": "9|minor|minor7|||0"
+        },
+        {
+          "label": "Am/C",
+          "rawScore": 0.7239647586799909,
+          "canonicalIdentity": "9|minor|-|||0"
+        },
+        {
+          "label": "Am6/C",
+          "rawScore": 0.7239647586799909,
+          "canonicalIdentity": "9|minor|-|6||0"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "Am9/C",
+          "rawScore": 1.072487548330858
+        }
+      ]
+    },
+    {
+      "fileId": "V08_stress",
+      "eventId": "e04",
+      "expected": "G13",
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "stress",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "dominant thirteenth",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V08",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 7,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [
+          13
+        ],
+        "alterations": [],
+        "bass": 7,
+        "canonicalIdentity": "7|major|minor7|13||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": true,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          2,
+          4,
+          5,
+          7,
+          11
+        ],
+        "observedPitchClasses": [
+          0,
+          2,
+          3,
+          4,
+          5,
+          7,
+          9,
+          11
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "G13/A",
+          "rawScore": 1.0571860465910023,
+          "canonicalIdentity": "7|major|minor7|13||9"
+        },
+        {
+          "label": "G9/A",
+          "rawScore": 0.9650101858346252,
+          "canonicalIdentity": "7|major|minor7|9||9"
+        },
+        {
+          "label": "G6/9/A",
+          "rawScore": 0.8908195425109388,
+          "canonicalIdentity": "7|major|-|6.9||9"
+        },
+        {
+          "label": "Gadd9/A",
+          "rawScore": 0.7986436817545617,
+          "canonicalIdentity": "7|major|-|9||9"
+        },
+        {
+          "label": "Gm9/A",
+          "rawScore": 0.7466880113224007,
+          "canonicalIdentity": "7|minor|minor7|9||9"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "G13/A",
+          "rawScore": 1.0571860465910023
+        }
+      ]
+    },
+    {
+      "fileId": "V08_stress",
+      "eventId": "e05",
+      "expected": "Em7",
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "stress",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "plain minor seventh",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V08",
+        "detectedRoot": "wrong"
+      },
+      "components": {
+        "root": 4,
+        "triad": "minor",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [],
+        "bass": 4,
+        "canonicalIdentity": "4|minor|minor7|||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          2,
+          4,
+          7,
+          11
+        ],
+        "observedPitchClasses": [
+          0,
+          2,
+          3,
+          4,
+          7,
+          11
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "Em7/G",
+          "rawScore": 1.0873333021646423,
+          "canonicalIdentity": "4|minor|minor7|||7"
+        },
+        {
+          "label": "Em9/G",
+          "rawScore": 1.0723333021646424,
+          "canonicalIdentity": "4|minor|minor7|9||7"
+        },
+        {
+          "label": "Em11/G",
+          "rawScore": 1.0573333021646423,
+          "canonicalIdentity": "4|minor|minor7|11||7"
+        },
+        {
+          "label": "Em/G",
+          "rawScore": 0.9594442665293423,
+          "canonicalIdentity": "4|minor|-|||7"
+        },
+        {
+          "label": "Em6/G",
+          "rawScore": 0.9594442665293423,
+          "canonicalIdentity": "4|minor|-|6||7"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "Em7/G",
+          "rawScore": 1.0873333021646423
+        }
+      ]
+    },
+    {
+      "fileId": "V08_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "stress",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V08",
+        "detectedRoot": "wrong"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7/C#",
+          "rawScore": 0.9025066606418128,
+          "canonicalIdentity": "9|major|minor7|||1"
+        },
+        {
+          "label": "A9/C#",
+          "rawScore": 0.8875066606418128,
+          "canonicalIdentity": "9|major|minor7|9||1"
+        },
+        {
+          "label": "A13/C#",
+          "rawScore": 0.8725066606418128,
+          "canonicalIdentity": "9|major|minor7|13||1"
+        },
+        {
+          "label": "A/C#",
+          "rawScore": 0.7237002630637829,
+          "canonicalIdentity": "9|major|-|||1"
+        },
+        {
+          "label": "A6/C#",
+          "rawScore": 0.7237002630637829,
+          "canonicalIdentity": "9|major|-|6||1"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V08_stress",
+      "eventId": "e07",
+      "expected": "Dm7",
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "stress",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "plain minor seventh",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V08",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 2,
+        "triad": "minor",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [],
+        "bass": 2,
+        "canonicalIdentity": "2|minor|minor7|||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          0,
+          2,
+          5,
+          9
+        ],
+        "observedPitchClasses": [
+          0,
+          2,
+          3,
+          5,
+          7,
+          9
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "Dm7/A",
+          "rawScore": 1.0885514738905808,
+          "canonicalIdentity": "2|minor|minor7|||9"
+        },
+        {
+          "label": "Dm9/A",
+          "rawScore": 1.073551473890581,
+          "canonicalIdentity": "2|minor|minor7|9||9"
+        },
+        {
+          "label": "Dm11/A",
+          "rawScore": 1.065610024460141,
+          "canonicalIdentity": "2|minor|minor7|11||9"
+        },
+        {
+          "label": "Dm/A",
+          "rawScore": 0.9534243775430311,
+          "canonicalIdentity": "2|minor|-|||9"
+        },
+        {
+          "label": "Dm6/A",
+          "rawScore": 0.9534243775430311,
+          "canonicalIdentity": "2|minor|-|6||9"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "Dm7/A",
+          "rawScore": 1.0885514738905808
+        }
+      ]
+    },
+    {
+      "fileId": "V08_stress",
+      "eventId": "e08",
+      "expected": "G7sus4",
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "stress",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "suspended dominant",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V08",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 7,
+        "triad": "sus4",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [],
+        "bass": 7,
+        "canonicalIdentity": "7|sus4|minor7|||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": true,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          0,
+          2,
+          5,
+          7
+        ],
+        "observedPitchClasses": [
+          0,
+          2,
+          3,
+          5,
+          7
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "G7sus4/C",
+          "rawScore": 1.096189889271042,
+          "canonicalIdentity": "7|sus4|minor7|||0"
+        },
+        {
+          "label": "Gm11/C",
+          "rawScore": 1.026189889271042,
+          "canonicalIdentity": "7|minor|minor7|11||0"
+        },
+        {
+          "label": "Gsus4/C",
+          "rawScore": 0.8829038393475662,
+          "canonicalIdentity": "7|sus4|-|||0"
+        },
+        {
+          "label": "G7",
+          "rawScore": 0.47335270416203384,
+          "canonicalIdentity": "7|major|minor7|||-"
+        },
+        {
+          "label": "Gm7",
+          "rawScore": 0.47335270416203384,
+          "canonicalIdentity": "7|minor|minor7|||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "G7sus4/C",
+          "rawScore": 1.096189889271042
+        }
+      ]
+    },
+    {
+      "fileId": "V09_clean",
+      "eventId": "e02",
+      "expected": "Am9",
+      "scenarioId": "V09",
+      "scenarioSlug": "pedal-bass",
+      "variant": "clean",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "minor ninth",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V09",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "minor",
+        "seventh": "minor7",
+        "tensions": [
+          9
+        ],
+        "alterations": [],
+        "bass": 9,
+        "canonicalIdentity": "9|minor|minor7|9||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": true,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          0,
+          4,
+          7,
+          9,
+          11
+        ],
+        "observedPitchClasses": [
+          0,
+          4,
+          7,
+          9,
+          11
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "Am9/C",
+          "rawScore": 1.0830705268551732,
+          "canonicalIdentity": "9|minor|minor7|9||0"
+        },
+        {
+          "label": "Am11/C",
+          "rawScore": 1.0680705268551731,
+          "canonicalIdentity": "9|minor|minor7|11||0"
+        },
+        {
+          "label": "Am7/C",
+          "rawScore": 0.9294122762068912,
+          "canonicalIdentity": "9|minor|minor7|||0"
+        },
+        {
+          "label": "Am/C",
+          "rawScore": 0.7607540255586092,
+          "canonicalIdentity": "9|minor|-|||0"
+        },
+        {
+          "label": "Am6/C",
+          "rawScore": 0.7607540255586092,
+          "canonicalIdentity": "9|minor|-|6||0"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "Am9/C",
+          "rawScore": 1.0830705268551732
+        }
+      ]
+    },
+    {
+      "fileId": "V09_clean",
+      "eventId": "e03",
+      "expected": "Dm9",
+      "scenarioId": "V09",
+      "scenarioSlug": "pedal-bass",
+      "variant": "clean",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "minor ninth",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V09",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 2,
+        "triad": "minor",
+        "seventh": "minor7",
+        "tensions": [
+          9
+        ],
+        "alterations": [],
+        "bass": 2,
+        "canonicalIdentity": "2|minor|minor7|9||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": true,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          0,
+          2,
+          4,
+          5,
+          9
+        ],
+        "observedPitchClasses": [
+          0,
+          2,
+          4,
+          5,
+          9
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "Dm9/C",
+          "rawScore": 1.0855456670421206,
+          "canonicalIdentity": "2|minor|minor7|9||0"
+        },
+        {
+          "label": "Dm11/C",
+          "rawScore": 1.0705456670421205,
+          "canonicalIdentity": "2|minor|minor7|11||0"
+        },
+        {
+          "label": "Dm7/C",
+          "rawScore": 0.985489931606247,
+          "canonicalIdentity": "2|minor|minor7|||0"
+        },
+        {
+          "label": "D9/C",
+          "rawScore": 0.8537861079823313,
+          "canonicalIdentity": "2|major|minor7|9||0"
+        },
+        {
+          "label": "D13/C",
+          "rawScore": 0.8387861079823313,
+          "canonicalIdentity": "2|major|minor7|13||0"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "Dm9/C",
+          "rawScore": 1.0855456670421206
+        }
+      ]
+    },
+    {
+      "fileId": "V09_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V09",
+      "scenarioSlug": "pedal-bass",
+      "variant": "clean",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V09",
+        "detectedRoot": "wrong"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          0,
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "Am7/C",
+          "rawScore": 0.7607540255586092,
+          "canonicalIdentity": "9|minor|minor7|||0"
+        },
+        {
+          "label": "Am9/C",
+          "rawScore": 0.7457540255586091,
+          "canonicalIdentity": "9|minor|minor7|9||0"
+        },
+        {
+          "label": "Am11/C",
+          "rawScore": 0.7307540255586091,
+          "canonicalIdentity": "9|minor|minor7|11||0"
+        },
+        {
+          "label": "Am/C",
+          "rawScore": 0.5920957749103274,
+          "canonicalIdentity": "9|minor|-|||0"
+        },
+        {
+          "label": "Am6/C",
+          "rawScore": 0.5920957749103274,
+          "canonicalIdentity": "9|minor|-|6||0"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V09_clean",
+      "eventId": "e07",
+      "expected": "Dm7",
+      "scenarioId": "V09",
+      "scenarioSlug": "pedal-bass",
+      "variant": "clean",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "plain minor seventh",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V09",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 2,
+        "triad": "minor",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [],
+        "bass": 2,
+        "canonicalIdentity": "2|minor|minor7|||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          0,
+          2,
+          5,
+          9
+        ],
+        "observedPitchClasses": [
+          0,
+          2,
+          5,
+          9
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "Dm7/C",
+          "rawScore": 1.1028979336452607,
+          "canonicalIdentity": "2|minor|minor7|||0"
+        },
+        {
+          "label": "Dm9/C",
+          "rawScore": 1.0878979336452608,
+          "canonicalIdentity": "2|minor|minor7|9||0"
+        },
+        {
+          "label": "Dm11/C",
+          "rawScore": 1.0728979336452606,
+          "canonicalIdentity": "2|minor|minor7|11||0"
+        },
+        {
+          "label": "Dm7b5/C",
+          "rawScore": 0.8625172196228275,
+          "canonicalIdentity": "2|diminished|minor7|||0"
+        },
+        {
+          "label": "D7/C",
+          "rawScore": 0.8491838862894941,
+          "canonicalIdentity": "2|major|minor7|||0"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "Dm7/C",
+          "rawScore": 1.1028979336452607
+        }
+      ]
+    },
+    {
+      "fileId": "V09_clean",
+      "eventId": "e08",
+      "expected": "G7sus4",
+      "scenarioId": "V09",
+      "scenarioSlug": "pedal-bass",
+      "variant": "clean",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "suspended dominant",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V09",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 7,
+        "triad": "sus4",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [],
+        "bass": 7,
+        "canonicalIdentity": "7|sus4|minor7|||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": true,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          0,
+          2,
+          5,
+          7
+        ],
+        "observedPitchClasses": [
+          0,
+          2,
+          5,
+          7
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "G7sus4/C",
+          "rawScore": 1.101274153154306,
+          "canonicalIdentity": "7|sus4|minor7|||0"
+        },
+        {
+          "label": "Gm11/C",
+          "rawScore": 1.031274153154306,
+          "canonicalIdentity": "7|minor|minor7|11||0"
+        },
+        {
+          "label": "Gsus4/C",
+          "rawScore": 0.9027153903807834,
+          "canonicalIdentity": "7|sus4|-|||0"
+        },
+        {
+          "label": "G7",
+          "rawScore": 0.4169504414748735,
+          "canonicalIdentity": "7|major|minor7|||-"
+        },
+        {
+          "label": "Gm7",
+          "rawScore": 0.4169504414748735,
+          "canonicalIdentity": "7|minor|minor7|||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "G7sus4/C",
+          "rawScore": 1.101274153154306
+        }
+      ]
+    },
+    {
+      "fileId": "V09_stress",
+      "eventId": "e02",
+      "expected": "Am9",
+      "scenarioId": "V09",
+      "scenarioSlug": "pedal-bass",
+      "variant": "stress",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "minor ninth",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V09",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "minor",
+        "seventh": "minor7",
+        "tensions": [
+          9
+        ],
+        "alterations": [],
+        "bass": 9,
+        "canonicalIdentity": "9|minor|minor7|9||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": true,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          0,
+          4,
+          7,
+          9,
+          11
+        ],
+        "observedPitchClasses": [
+          0,
+          2,
+          3,
+          4,
+          7,
+          9,
+          11
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "Am9/C",
+          "rawScore": 1.0717302205694947,
+          "canonicalIdentity": "9|minor|minor7|9||0"
+        },
+        {
+          "label": "Am11/C",
+          "rawScore": 1.0623198686119921,
+          "canonicalIdentity": "9|minor|minor7|11||0"
+        },
+        {
+          "label": "Am7/C",
+          "rawScore": 0.9265681452612488,
+          "canonicalIdentity": "9|minor|minor7|||0"
+        },
+        {
+          "label": "Am/C",
+          "rawScore": 0.7584214571614061,
+          "canonicalIdentity": "9|minor|-|||0"
+        },
+        {
+          "label": "Am6/C",
+          "rawScore": 0.7584214571614061,
+          "canonicalIdentity": "9|minor|-|6||0"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "Am9/C",
+          "rawScore": 1.0717302205694947
+        }
+      ]
+    },
+    {
+      "fileId": "V09_stress",
+      "eventId": "e03",
+      "expected": "Dm9",
+      "scenarioId": "V09",
+      "scenarioSlug": "pedal-bass",
+      "variant": "stress",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "minor ninth",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V09",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 2,
+        "triad": "minor",
+        "seventh": "minor7",
+        "tensions": [
+          9
+        ],
+        "alterations": [],
+        "bass": 2,
+        "canonicalIdentity": "2|minor|minor7|9||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": true,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          0,
+          2,
+          4,
+          5,
+          9
+        ],
+        "observedPitchClasses": [
+          0,
+          2,
+          3,
+          4,
+          5,
+          7,
+          9
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "Dm9/C",
+          "rawScore": 1.0723844845777175,
+          "canonicalIdentity": "2|minor|minor7|9||0"
+        },
+        {
+          "label": "Dm11/C",
+          "rawScore": 1.0637384493768975,
+          "canonicalIdentity": "2|minor|minor7|11||0"
+        },
+        {
+          "label": "Dm7/C",
+          "rawScore": 0.9719007328533329,
+          "canonicalIdentity": "2|minor|minor7|||0"
+        },
+        {
+          "label": "D9/C",
+          "rawScore": 0.8412054748814103,
+          "canonicalIdentity": "2|major|minor7|9||0"
+        },
+        {
+          "label": "D13/C",
+          "rawScore": 0.8262054748814103,
+          "canonicalIdentity": "2|major|minor7|13||0"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "Dm9/C",
+          "rawScore": 1.0723844845777175
+        }
+      ]
+    },
+    {
+      "fileId": "V09_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V09",
+      "scenarioSlug": "pedal-bass",
+      "variant": "stress",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V09",
+        "detectedRoot": "wrong"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "Am7/C",
+          "rawScore": 0.7561258779773333,
+          "canonicalIdentity": "9|minor|minor7|||0"
+        },
+        {
+          "label": "Am9/C",
+          "rawScore": 0.7411258779773333,
+          "canonicalIdentity": "9|minor|minor7|9||0"
+        },
+        {
+          "label": "Am11/C",
+          "rawScore": 0.7318604134465618,
+          "canonicalIdentity": "9|minor|minor7|11||0"
+        },
+        {
+          "label": "Am/C",
+          "rawScore": 0.5822609000247486,
+          "canonicalIdentity": "9|minor|-|||0"
+        },
+        {
+          "label": "Am6/C",
+          "rawScore": 0.5822609000247486,
+          "canonicalIdentity": "9|minor|-|6||0"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V09_stress",
+      "eventId": "e07",
+      "expected": "Dm7",
+      "scenarioId": "V09",
+      "scenarioSlug": "pedal-bass",
+      "variant": "stress",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "plain minor seventh",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V09",
+        "detectedRoot": "wrong"
+      },
+      "components": {
+        "root": 2,
+        "triad": "minor",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [],
+        "bass": 2,
+        "canonicalIdentity": "2|minor|minor7|||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          0,
+          2,
+          5,
+          9
+        ],
+        "observedPitchClasses": [
+          0,
+          2,
+          3,
+          5,
+          7,
+          9
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "Dm7/C",
+          "rawScore": 1.0883872377829646,
+          "canonicalIdentity": "2|minor|minor7|||0"
+        },
+        {
+          "label": "Dm9/C",
+          "rawScore": 1.0733872377829647,
+          "canonicalIdentity": "2|minor|minor7|9||0"
+        },
+        {
+          "label": "Dm11/C",
+          "rawScore": 1.0656107425190982,
+          "canonicalIdentity": "2|minor|minor7|11||0"
+        },
+        {
+          "label": "Dm7b5/C",
+          "rawScore": 0.8565854358735145,
+          "canonicalIdentity": "2|diminished|minor7|||0"
+        },
+        {
+          "label": "D7sus4/C",
+          "rawScore": 0.8405001684452319,
+          "canonicalIdentity": "2|sus4|minor7|||0"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "Dm7/C",
+          "rawScore": 1.0883872377829646
+        }
+      ]
+    },
+    {
+      "fileId": "V09_stress",
+      "eventId": "e08",
+      "expected": "G7sus4",
+      "scenarioId": "V09",
+      "scenarioSlug": "pedal-bass",
+      "variant": "stress",
+      "primaryCategory": "slash-bass-generation-missing",
+      "secondary": {
+        "family": "suspended dominant",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V09",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 7,
+        "triad": "sus4",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [],
+        "bass": 7,
+        "canonicalIdentity": "7|sus4|minor7|||-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": true,
+        "expectedHasAlteration": false,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": true,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          0,
+          2,
+          5,
+          7
+        ],
+        "observedPitchClasses": [
+          0,
+          2,
+          3,
+          5,
+          7
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "G7sus4/C",
+          "rawScore": 1.0954940042418073,
+          "canonicalIdentity": "7|sus4|minor7|||0"
+        },
+        {
+          "label": "Gm11/C",
+          "rawScore": 1.0254940042418073,
+          "canonicalIdentity": "7|minor|minor7|11||0"
+        },
+        {
+          "label": "Gsus4/C",
+          "rawScore": 0.9040122751110047,
+          "canonicalIdentity": "7|sus4|-|||0"
+        },
+        {
+          "label": "G7",
+          "rawScore": 0.4120361547106795,
+          "canonicalIdentity": "7|major|minor7|||-"
+        },
+        {
+          "label": "Gm7",
+          "rawScore": 0.4120361547106795,
+          "canonicalIdentity": "7|minor|minor7|||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": [
+        {
+          "label": "G7sus4/C",
+          "rawScore": 1.0954940042418073
+        }
+      ]
+    },
+    {
+      "fileId": "V10_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V10",
+      "scenarioSlug": "octave-doublings",
+      "variant": "clean",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V10",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 1.0209523809523808,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 1.005952380952381,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 0.9909523809523808,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A",
+          "rawScore": 0.8876190476190475,
+          "canonicalIdentity": "9|major|-|||-"
+        },
+        {
+          "label": "A6",
+          "rawScore": 0.8876190476190475,
+          "canonicalIdentity": "9|major|-|6||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V10_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V10",
+      "scenarioSlug": "octave-doublings",
+      "variant": "stress",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V10",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 1.0089886316902754,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 0.9939886316902754,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 0.9789886316902754,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A",
+          "rawScore": 0.8683471979836552,
+          "canonicalIdentity": "9|major|-|||-"
+        },
+        {
+          "label": "A6",
+          "rawScore": 0.8683471979836552,
+          "canonicalIdentity": "9|major|-|6||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V11_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V11",
+      "scenarioSlug": "duplicate-across-tracks",
+      "variant": "clean",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V11",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 1.0880479871472404,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 1.0730479871472405,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 1.0580479871472404,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A",
+          "rawScore": 0.855000417012348,
+          "canonicalIdentity": "9|major|-|||-"
+        },
+        {
+          "label": "A6",
+          "rawScore": 0.855000417012348,
+          "canonicalIdentity": "9|major|-|6||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V11_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V11",
+      "scenarioSlug": "duplicate-across-tracks",
+      "variant": "stress",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V11",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 1.0760578766660658,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 1.0610578766660659,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 1.0460578766660658,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A",
+          "rawScore": 0.8382900983421782,
+          "canonicalIdentity": "9|major|-|||-"
+        },
+        {
+          "label": "A6",
+          "rawScore": 0.8382900983421782,
+          "canonicalIdentity": "9|major|-|6||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V12_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V12",
+      "scenarioSlug": "separate-melody-contamination",
+      "variant": "clean",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V12",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          0,
+          1,
+          4,
+          7,
+          9,
+          10,
+          11
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A9",
+          "rawScore": 1.0285303260061414,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A7",
+          "rawScore": 1.0279138715382063,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 1.0135303260061412,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "Aadd9",
+          "rawScore": 0.872434439623125,
+          "canonicalIdentity": "9|major|-|9||-"
+        },
+        {
+          "label": "A6/9",
+          "rawScore": 0.8574344396231249,
+          "canonicalIdentity": "9|major|-|6.9||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V12_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V12",
+      "scenarioSlug": "separate-melody-contamination",
+      "variant": "stress",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V12",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          0,
+          1,
+          4,
+          7,
+          9,
+          10,
+          11
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A9",
+          "rawScore": 1.0357743972351483,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A7",
+          "rawScore": 1.0352159811912711,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 1.0207743972351482,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "Aadd9",
+          "rawScore": 0.8761540571662227,
+          "canonicalIdentity": "9|major|-|9||-"
+        },
+        {
+          "label": "A6/9",
+          "rawScore": 0.8611540571662227,
+          "canonicalIdentity": "9|major|-|6.9||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V13_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V13",
+      "scenarioSlug": "same-track-melody",
+      "variant": "clean",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V13",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10,
+          11
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A9",
+          "rawScore": 1.0415763639295095,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A7",
+          "rawScore": 1.0371933965583238,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 1.0265763639295094,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "Aadd9",
+          "rawScore": 0.887633541233005,
+          "canonicalIdentity": "9|major|-|9||-"
+        },
+        {
+          "label": "A6/9",
+          "rawScore": 0.872633541233005,
+          "canonicalIdentity": "9|major|-|6.9||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V13_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V13",
+      "scenarioSlug": "same-track-melody",
+      "variant": "stress",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V13",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10,
+          11
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A9",
+          "rawScore": 1.0434517711343432,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A7",
+          "rawScore": 1.0395972640848101,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 1.028451771134343,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "Aadd9",
+          "rawScore": 0.8890621964906218,
+          "canonicalIdentity": "9|major|-|9||-"
+        },
+        {
+          "label": "A6/9",
+          "rawScore": 0.8740621964906218,
+          "canonicalIdentity": "9|major|-|6.9||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V14_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V14",
+      "scenarioSlug": "passing-tones",
+      "variant": "clean",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V14",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          1,
+          2,
+          3,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 1.021481235930338,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 1.0064812359303381,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 0.991481235930338,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A",
+          "rawScore": 0.8515224315992176,
+          "canonicalIdentity": "9|major|-|||-"
+        },
+        {
+          "label": "A6",
+          "rawScore": 0.8515224315992176,
+          "canonicalIdentity": "9|major|-|6||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V14_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V14",
+      "scenarioSlug": "passing-tones",
+      "variant": "stress",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V14",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 1.0033094888835459,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 0.9883094888835459,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 0.9733094888835458,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A7sus4",
+          "rawScore": 0.8615682523577561,
+          "canonicalIdentity": "9|sus4|minor7|||-"
+        },
+        {
+          "label": "A",
+          "rawScore": 0.8361058374022663,
+          "canonicalIdentity": "9|major|-|||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V15_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V15",
+      "scenarioSlug": "sustain-overlap",
+      "variant": "clean",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V15",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          1,
+          2,
+          4,
+          7,
+          9,
+          10,
+          11
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A9",
+          "rawScore": 1.0110296225513618,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 0.9960296225513616,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A7",
+          "rawScore": 0.9681700907787865,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "Aadd9",
+          "rawScore": 0.8654945054945054,
+          "canonicalIdentity": "9|major|-|9||-"
+        },
+        {
+          "label": "A6/9",
+          "rawScore": 0.8504945054945053,
+          "canonicalIdentity": "9|major|-|6.9||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V15_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V15",
+      "scenarioSlug": "sustain-overlap",
+      "variant": "stress",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V15",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          7,
+          9,
+          10,
+          11
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A9",
+          "rawScore": 0.997935423149542,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 0.982935423149542,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A7",
+          "rawScore": 0.9571993750543257,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "Aadd9",
+          "rawScore": 0.8543567985607725,
+          "canonicalIdentity": "9|major|-|9||-"
+        },
+        {
+          "label": "A7sus4",
+          "rawScore": 0.8423944562757608,
+          "canonicalIdentity": "9|sus4|minor7|||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V16_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V16",
+      "scenarioSlug": "anticipated-next-chord",
+      "variant": "clean",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V16",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 1.0499999999999998,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 1.035,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 1.0199999999999998,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A",
+          "rawScore": 0.8749999999999998,
+          "canonicalIdentity": "9|major|-|||-"
+        },
+        {
+          "label": "A6",
+          "rawScore": 0.8749999999999998,
+          "canonicalIdentity": "9|major|-|6||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V16_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V16",
+      "scenarioSlug": "anticipated-next-chord",
+      "variant": "stress",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V16",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 1.0338683780598499,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 1.01886837805985,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 1.0038683780598499,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A",
+          "rawScore": 0.8546463212024269,
+          "canonicalIdentity": "9|major|-|||-"
+        },
+        {
+          "label": "A6",
+          "rawScore": 0.8546463212024269,
+          "canonicalIdentity": "9|major|-|6||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V17_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V17",
+      "scenarioSlug": "pure-arpeggio",
+      "variant": "clean",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V17",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": false
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          1,
+          4,
+          9
+        ],
+        "sufficient": false
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A",
+          "rawScore": 1.2747496786642738,
+          "canonicalIdentity": "9|major|-|||-"
+        },
+        {
+          "label": "A6",
+          "rawScore": 1.2747496786642738,
+          "canonicalIdentity": "9|major|-|6||-"
+        },
+        {
+          "label": "Aadd9",
+          "rawScore": 1.2747496786642738,
+          "canonicalIdentity": "9|major|-|9||-"
+        },
+        {
+          "label": "A6/9",
+          "rawScore": 1.259749678664274,
+          "canonicalIdentity": "9|major|-|6.9||-"
+        },
+        {
+          "label": "A7",
+          "rawScore": 1.1807496786642737,
+          "canonicalIdentity": "9|major|minor7|||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V17_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V17",
+      "scenarioSlug": "pure-arpeggio",
+      "variant": "stress",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V17",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": false
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          7,
+          9
+        ],
+        "sufficient": false
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A",
+          "rawScore": 1.2140796810767636,
+          "canonicalIdentity": "9|major|-|||-"
+        },
+        {
+          "label": "A6",
+          "rawScore": 1.2140796810767636,
+          "canonicalIdentity": "9|major|-|6||-"
+        },
+        {
+          "label": "Aadd9",
+          "rawScore": 1.2140796810767636,
+          "canonicalIdentity": "9|major|-|9||-"
+        },
+        {
+          "label": "A6/9",
+          "rawScore": 1.1990796810767637,
+          "canonicalIdentity": "9|major|-|6.9||-"
+        },
+        {
+          "label": "A7",
+          "rawScore": 1.1343294226825575,
+          "canonicalIdentity": "9|major|minor7|||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V18_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V18",
+      "scenarioSlug": "hybrid-block-arpeggio",
+      "variant": "clean",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V18",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": false
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          1,
+          4,
+          7,
+          9
+        ],
+        "sufficient": false
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 1.2435990486030528,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 1.228599048603053,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 1.2135990486030528,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A",
+          "rawScore": 1.1667701356772742,
+          "canonicalIdentity": "9|major|-|||-"
+        },
+        {
+          "label": "A6",
+          "rawScore": 1.1667701356772742,
+          "canonicalIdentity": "9|major|-|6||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V18_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V18",
+      "scenarioSlug": "hybrid-block-arpeggio",
+      "variant": "stress",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V18",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": false
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          7,
+          9
+        ],
+        "sufficient": false
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 1.2200363650531962,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 1.2050363650531963,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 1.1900363650531962,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A",
+          "rawScore": 1.134455869485498,
+          "canonicalIdentity": "9|major|-|||-"
+        },
+        {
+          "label": "A6",
+          "rawScore": 1.134455869485498,
+          "canonicalIdentity": "9|major|-|6||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V19_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V19",
+      "scenarioSlug": "guitar-strum",
+      "variant": "clean",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V19",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 1.0723237143259212,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 1.0573237143259213,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 1.0423237143259212,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A",
+          "rawScore": 0.9105242549696269,
+          "canonicalIdentity": "9|major|-|||-"
+        },
+        {
+          "label": "A6",
+          "rawScore": 0.9105242549696269,
+          "canonicalIdentity": "9|major|-|6||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V19_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V19",
+      "scenarioSlug": "guitar-strum",
+      "variant": "stress",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V19",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 1.0599243663141156,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 1.0449243663141157,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 1.0299243663141155,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A",
+          "rawScore": 0.8995616772580584,
+          "canonicalIdentity": "9|major|-|||-"
+        },
+        {
+          "label": "A6",
+          "rawScore": 0.8995616772580584,
+          "canonicalIdentity": "9|major|-|6||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V20_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V20",
+      "scenarioSlug": "repeated-reattacks",
+      "variant": "clean",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "clean",
+        "scenario": "V20",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 1.05,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 1.0350000000000001,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 1.02,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A",
+          "rawScore": 0.875,
+          "canonicalIdentity": "9|major|-|||-"
+        },
+        {
+          "label": "A6",
+          "rawScore": 0.875,
+          "canonicalIdentity": "9|major|-|6||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    },
+    {
+      "fileId": "V20_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "scenarioId": "V20",
+      "scenarioSlug": "repeated-reattacks",
+      "variant": "stress",
+      "primaryCategory": "alteration-generation-missing",
+      "secondary": {
+        "family": "altered dominant",
+        "position": "root-position",
+        "variant": "stress",
+        "scenario": "V20",
+        "detectedRoot": "correct"
+      },
+      "components": {
+        "root": 9,
+        "triad": "major",
+        "seventh": "minor7",
+        "tensions": [],
+        "alterations": [
+          "b9"
+        ],
+        "bass": 9,
+        "canonicalIdentity": "9|major|minor7||b9|-"
+      },
+      "signals": {
+        "representable": true,
+        "canonicalRoundTrip": true,
+        "rootHypothesisPresent": true,
+        "triadCorePresent": true,
+        "seventhCorePresent": true,
+        "exactIgnoringBassPresent": false,
+        "expectedHasAlteration": true,
+        "baseWithoutAlterationPresent": true,
+        "expectedHasTension": false,
+        "baseWithoutTensionPresent": true,
+        "expectedIsSuspendedSeventh": false,
+        "suspendedTriadPresent": true,
+        "presentBeforeClamp": true,
+        "presentAfterBudget": true,
+        "evidenceSufficient": true
+      },
+      "evidence": {
+        "requiredPitchClasses": [
+          1,
+          4,
+          7,
+          9,
+          10
+        ],
+        "observedPitchClasses": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          7,
+          9,
+          10
+        ],
+        "sufficient": true
+      },
+      "nearestSameRootCandidates": [
+        {
+          "label": "A7",
+          "rawScore": 1.0274683854767594,
+          "canonicalIdentity": "9|major|minor7|||-"
+        },
+        {
+          "label": "A9",
+          "rawScore": 1.0124683854767595,
+          "canonicalIdentity": "9|major|minor7|9||-"
+        },
+        {
+          "label": "A13",
+          "rawScore": 0.9974683854767594,
+          "canonicalIdentity": "9|major|minor7|13||-"
+        },
+        {
+          "label": "A",
+          "rawScore": 0.8486163375552063,
+          "canonicalIdentity": "9|major|-|||-"
+        },
+        {
+          "label": "A6",
+          "rawScore": 0.8486163375552063,
+          "canonicalIdentity": "9|major|-|6||-"
+        }
+      ],
+      "exactIgnoringBassCandidates": []
+    }
+  ]
+}
