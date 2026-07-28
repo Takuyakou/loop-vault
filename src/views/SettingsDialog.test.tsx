@@ -16,6 +16,8 @@ const mocks = vi.hoisted(() => ({
   appDataDir: vi.fn(async () => "C:/LoopVault/"),
   revealItemInDir: vi.fn(async () => undefined),
   deleteAnalysisFeedback: vi.fn(async () => undefined),
+  deleteLabelCorrectionLog: vi.fn(async () => undefined),
+  exportLabelCorrectionLog: vi.fn(async () => 3),
   deleteDifferenceReviews: vi.fn(async () => undefined),
   deletePromotedCorrections: vi.fn(async () => undefined),
   deleteRealEvaluationData: vi.fn(async () => undefined),
@@ -33,6 +35,10 @@ vi.mock("../storage/analysisFeedbackStorage", () => ({
   deleteAnalysisFeedback: mocks.deleteAnalysisFeedback,
   isAnalysisFeedbackEnabled: () => true,
   setAnalysisFeedbackEnabled: vi.fn(),
+}));
+vi.mock("../storage/labelCorrectionLogStorage", () => ({
+  deleteLabelCorrectionLog: mocks.deleteLabelCorrectionLog,
+  exportLabelCorrectionLog: mocks.exportLabelCorrectionLog,
 }));
 vi.mock("../storage/realEvaluationStorage", () => ({
   deleteDifferenceReviews: mocks.deleteDifferenceReviews,
@@ -137,6 +143,24 @@ describe("SettingsDialog sections", () => {
     expect(dialogs()[0]?.textContent).toContain("data-backup-6.json");
     await clickButton(appCopy.ja.settingsUi.showLatestFive, dialogs()[0]);
     expect(dialogs()[0]?.textContent).not.toContain("data-backup-6.json");
+    await mounted.unmount();
+  });
+
+  it("exports and clears the local label correction log", async () => {
+    mocks.saveFileDialog.mockResolvedValue("C:/exports/label-corrections.jsonl");
+    const mounted = await renderSettings();
+    await click(findButton(appCopy.ja.settingsUi.analysis, dialogs()[0]));
+
+    await clickButton(appCopy.ja.settingsUi.exportCorrectionLog, dialogs()[0]);
+    expect(mocks.exportLabelCorrectionLog)
+      .toHaveBeenCalledWith("C:/exports/label-corrections.jsonl");
+
+    await clickButton(appCopy.ja.settingsUi.deleteCorrectionLog, dialogs()[0]);
+    expect(mocks.deleteAnalysisFeedback).not.toHaveBeenCalled();
+    expect(mocks.deleteLabelCorrectionLog).not.toHaveBeenCalled();
+    await clickButton(appCopy.ja.settingsUi.delete, dialogs()[1]);
+    expect(mocks.deleteAnalysisFeedback).toHaveBeenCalledTimes(1);
+    expect(mocks.deleteLabelCorrectionLog).toHaveBeenCalledTimes(1);
     await mounted.unmount();
   });
 });
