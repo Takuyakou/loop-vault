@@ -58,6 +58,8 @@ export interface LegacyWindowCandidateDiagnostic {
   totalWeight: number;
   melodyWeight: number;
   noteCount: number;
+  histogram?: number[];
+  bassHistogram?: number[];
   candidates: Array<{
     chord: ChordSymbol;
     rawScore: number;
@@ -249,6 +251,8 @@ export function diagnoseLegacyWindowCandidates(
       totalWeight: window.totalWeight,
       melodyWeight: window.melodyWeight,
       noteCount: window.noteCount,
+      histogram: [...window.histogram],
+      bassHistogram: [...window.bassHistogram],
       candidates: candidates.map((entry) => ({
         chord: entry.chord,
         rawScore: entry.confidence,
