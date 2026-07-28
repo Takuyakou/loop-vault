@@ -62,12 +62,24 @@ export function generateObservedFlatNineShadowCandidates(
         && candidate.chord.tensions.length === 0)
       .sort(compareSourceCandidates),
   );
+  const eventPitchClasses = new Set(
+    notes
+      .filter((note) =>
+        note.startBeat < options.eventEndBeat
+        && note.endBeat > options.eventStartBeat)
+      .map((note) => note.pitchClass),
+  );
   const generated: AlteredDominantShadowCandidate[] = [];
 
   for (const source of sourceCores) {
     const bass = source.chord.bass ?? source.chord.root;
     const canonicalIdentity = flatNineIdentity(source.chord.root, bass);
     if (existingIdentities.has(canonicalIdentity)) continue;
+    if (!hasRequiredPitchClasses(
+      eventPitchClasses,
+      source.chord.root,
+      options.variant,
+    )) continue;
     const evidence = analyzePhase48EventEvidence(
       notes,
       source.chord.root,
@@ -103,6 +115,18 @@ export function generateObservedFlatNineShadowCandidates(
   }
 
   return generated;
+}
+
+function hasRequiredPitchClasses(
+  pitchClasses: ReadonlySet<number>,
+  root: number,
+  variant: FlatNineEvidenceVariant,
+): boolean {
+  const required = variant === "E1"
+    ? [root, root + 4, root + 7, root + 10, root + 1]
+    : [root, root + 4, root + 10, root + 1];
+  return required.every((pitchClass) =>
+    pitchClasses.has(((pitchClass % 12) + 12) % 12));
 }
 
 export function shadowCandidateToChord(

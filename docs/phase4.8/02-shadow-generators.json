@@ -25,9 +25,9 @@
         "strong": 38
       },
       "runtime": {
-        "totalMs": 262.4812000000002,
-        "generationOnlyMs": 66.57380000000558,
-        "generationPerEventMs": 0.20804312500001743
+        "totalMs": 256.64609999999993,
+        "generationOnlyMs": 61.049699999983204,
+        "generationPerEventMs": 0.1907803124999475
       },
       "deterministicHash": "2a07cb2fee26650a99c033e9d7d740b15e94f329832698cf62056f82339893aa",
       "rows": [
@@ -4344,9 +4344,9 @@
         "weak": 235
       },
       "runtime": {
-        "totalMs": 257.70590000000084,
-        "generationOnlyMs": 64.0610000000288,
-        "generationPerEventMs": 0.20019062500009
+        "totalMs": 251.86050000000068,
+        "generationOnlyMs": 60.56060000000252,
+        "generationPerEventMs": 0.1892518750000079
       },
       "deterministicHash": "87cbe9b5e650fbd21299e83ee8b084c3200cdda26d19dec7207f9ba0483f3e71",
       "rows": [
@@ -15499,9 +15499,9 @@
         "weak": 205
       },
       "runtime": {
-        "totalMs": 251.0555000000004,
-        "generationOnlyMs": 61.18369999999595,
-        "generationPerEventMs": 0.19119906249998736
+        "totalMs": 238.12209999999868,
+        "generationOnlyMs": 57.012500000004366,
+        "generationPerEventMs": 0.17816406250001365
       },
       "deterministicHash": "c2f93d21f5c2fedbcbde035dbc6a66db23f682d4bc3a3f5b13394828f4dcde86",
       "rows": [
