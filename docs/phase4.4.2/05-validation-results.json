@@ -1,0 +1,6776 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.4.2-05",
+  "candidate": {
+    "id": "A1",
+    "hypothesis": "A-relative-support",
+    "options": {
+      "id": "A1",
+      "minimumCoverageRatio": 0.25,
+      "minimumSupportPitchCount": 1,
+      "minimumSupportBeats": 0.2,
+      "minimumRoleConfidence": 0.65
+    }
+  },
+  "split": "validation",
+  "analyzerMode": "phase4-v1",
+  "fileVersion": 1,
+  "productPathChanged": false,
+  "holdoutStatus": "not-run",
+  "baseline": {
+    "overall": {
+      "events": 48,
+      "contaminationEventCount": 34,
+      "melodyLeakRate": 0.708333,
+      "voicingExactRate": 0.291667,
+      "notePrecision": 0.815217,
+      "noteRecall": 0.78125,
+      "noteF1": 0.797872,
+      "extraNoteCount": 34,
+      "missingNoteCount": 42,
+      "finalPitchSetChangedRate": 0.041667,
+      "sourceVoicingUsableRate": 0,
+      "reviewRate": 1,
+      "generatedFallbackRate": 1,
+      "statusOnlyChangeRate": 0,
+      "averageConfidenceDelta": 0.004453,
+      "averageWinnerDurationDelta": 0.055382,
+      "bassAccuracy": 1,
+      "topNoteAccuracy": 0.291667,
+      "registerExactRate": 0.291667,
+      "octaveErrorRate": 0,
+      "sourceNoteAdditionCount": 0,
+      "filterTriggerRate": 0.166667
+    },
+    "bySubset": {
+      "diagnostic-only": {
+        "events": 8,
+        "contaminationEventCount": 8,
+        "melodyLeakRate": 1,
+        "voicingExactRate": 0,
+        "notePrecision": 0.8,
+        "noteRecall": 1,
+        "noteF1": 0.888889,
+        "extraNoteCount": 8,
+        "missingNoteCount": 0,
+        "finalPitchSetChangedRate": 0,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0,
+        "averageWinnerDurationDelta": 0,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0,
+        "registerExactRate": 0,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0
+      },
+      "other": {
+        "events": 24,
+        "contaminationEventCount": 10,
+        "melodyLeakRate": 0.416667,
+        "voicingExactRate": 0.583333,
+        "notePrecision": 0.886364,
+        "noteRecall": 0.8125,
+        "noteF1": 0.847826,
+        "extraNoteCount": 10,
+        "missingNoteCount": 18,
+        "finalPitchSetChangedRate": 0.083333,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0.008906,
+        "averageWinnerDurationDelta": 0.110764,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0.583333,
+        "registerExactRate": 0.583333,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0.333333
+      },
+      "primary": {
+        "events": 16,
+        "contaminationEventCount": 16,
+        "melodyLeakRate": 1,
+        "voicingExactRate": 0,
+        "notePrecision": 0.714286,
+        "noteRecall": 0.625,
+        "noteF1": 0.666667,
+        "extraNoteCount": 16,
+        "missingNoteCount": 24,
+        "finalPitchSetChangedRate": 0,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0,
+        "averageWinnerDurationDelta": 0,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0,
+        "registerExactRate": 0,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0
+      }
+    },
+    "byVariant": {
+      "clean": {
+        "events": 24,
+        "contaminationEventCount": 16,
+        "melodyLeakRate": 0.666667,
+        "voicingExactRate": 0.333333,
+        "notePrecision": 0.818182,
+        "noteRecall": 0.75,
+        "noteF1": 0.782609,
+        "extraNoteCount": 16,
+        "missingNoteCount": 24,
+        "finalPitchSetChangedRate": 0.083333,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0.008906,
+        "averageWinnerDurationDelta": 0.110764,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0.333333,
+        "registerExactRate": 0.333333,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0.333333
+      },
+      "stress": {
+        "events": 24,
+        "contaminationEventCount": 18,
+        "melodyLeakRate": 0.75,
+        "voicingExactRate": 0.25,
+        "notePrecision": 0.8125,
+        "noteRecall": 0.8125,
+        "noteF1": 0.8125,
+        "extraNoteCount": 18,
+        "missingNoteCount": 18,
+        "finalPitchSetChangedRate": 0,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0,
+        "averageWinnerDurationDelta": 0,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0.25,
+        "registerExactRate": 0.25,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0
+      }
+    },
+    "bySupportCount": {
+      "3": {
+        "events": 48,
+        "contaminationEventCount": 34,
+        "melodyLeakRate": 0.708333,
+        "voicingExactRate": 0.291667,
+        "notePrecision": 0.815217,
+        "noteRecall": 0.78125,
+        "noteF1": 0.797872,
+        "extraNoteCount": 34,
+        "missingNoteCount": 42,
+        "finalPitchSetChangedRate": 0.041667,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0.004453,
+        "averageWinnerDurationDelta": 0.055382,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0.291667,
+        "registerExactRate": 0.291667,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0.166667
+      }
+    },
+    "bySupportDuration": {
+      "0.1": {
+        "events": 16,
+        "contaminationEventCount": 16,
+        "melodyLeakRate": 1,
+        "voicingExactRate": 0,
+        "notePrecision": 0.578947,
+        "noteRecall": 0.34375,
+        "noteF1": 0.431373,
+        "extraNoteCount": 16,
+        "missingNoteCount": 42,
+        "finalPitchSetChangedRate": 0,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0,
+        "averageWinnerDurationDelta": 0,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0,
+        "registerExactRate": 0,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0
+      },
+      "0.4": {
+        "events": 16,
+        "contaminationEventCount": 16,
+        "melodyLeakRate": 1,
+        "voicingExactRate": 0,
+        "notePrecision": 0.8,
+        "noteRecall": 1,
+        "noteF1": 0.888889,
+        "extraNoteCount": 16,
+        "missingNoteCount": 0,
+        "finalPitchSetChangedRate": 0,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0,
+        "averageWinnerDurationDelta": 0,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0,
+        "registerExactRate": 0,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0
+      },
+      "0.45": {
+        "events": 16,
+        "contaminationEventCount": 2,
+        "melodyLeakRate": 0.125,
+        "voicingExactRate": 0.875,
+        "notePrecision": 0.969697,
+        "noteRecall": 1,
+        "noteF1": 0.984615,
+        "extraNoteCount": 2,
+        "missingNoteCount": 0,
+        "finalPitchSetChangedRate": 0.125,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0.013359,
+        "averageWinnerDurationDelta": 0.166146,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0.875,
+        "registerExactRate": 0.875,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0.5
+      }
+    },
+    "byTexture": {
+      "allch0": {
+        "events": 16,
+        "contaminationEventCount": 2,
+        "melodyLeakRate": 0.125,
+        "voicingExactRate": 0.875,
+        "notePrecision": 0.969697,
+        "noteRecall": 1,
+        "noteF1": 0.984615,
+        "extraNoteCount": 2,
+        "missingNoteCount": 0,
+        "finalPitchSetChangedRate": 0.125,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0.013359,
+        "averageWinnerDurationDelta": 0.166146,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0.875,
+        "registerExactRate": 0.875,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0.5
+      },
+      "duration": {
+        "events": 32,
+        "contaminationEventCount": 32,
+        "melodyLeakRate": 1,
+        "voicingExactRate": 0,
+        "notePrecision": 0.728814,
+        "noteRecall": 0.671875,
+        "noteF1": 0.699187,
+        "extraNoteCount": 32,
+        "missingNoteCount": 42,
+        "finalPitchSetChangedRate": 0,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0,
+        "averageWinnerDurationDelta": 0,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0,
+        "registerExactRate": 0,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0
+      }
+    },
+    "byScenario": {
+      "H11": {
+        "events": 16,
+        "contaminationEventCount": 2,
+        "melodyLeakRate": 0.125,
+        "voicingExactRate": 0.875,
+        "notePrecision": 0.969697,
+        "noteRecall": 1,
+        "noteF1": 0.984615,
+        "extraNoteCount": 2,
+        "missingNoteCount": 0,
+        "finalPitchSetChangedRate": 0.125,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0.013359,
+        "averageWinnerDurationDelta": 0.166146,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0.875,
+        "registerExactRate": 0.875,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0.5
+      },
+      "H13": {
+        "events": 16,
+        "contaminationEventCount": 16,
+        "melodyLeakRate": 1,
+        "voicingExactRate": 0,
+        "notePrecision": 0.578947,
+        "noteRecall": 0.34375,
+        "noteF1": 0.431373,
+        "extraNoteCount": 16,
+        "missingNoteCount": 42,
+        "finalPitchSetChangedRate": 0,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0,
+        "averageWinnerDurationDelta": 0,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0,
+        "registerExactRate": 0,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0
+      },
+      "H15": {
+        "events": 16,
+        "contaminationEventCount": 16,
+        "melodyLeakRate": 1,
+        "voicingExactRate": 0,
+        "notePrecision": 0.8,
+        "noteRecall": 1,
+        "noteF1": 0.888889,
+        "extraNoteCount": 16,
+        "missingNoteCount": 0,
+        "finalPitchSetChangedRate": 0,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0,
+        "averageWinnerDurationDelta": 0,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0,
+        "registerExactRate": 0,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0
+      }
+    }
+  },
+  "candidateMetrics": {
+    "overall": {
+      "events": 48,
+      "contaminationEventCount": 26,
+      "melodyLeakRate": 0.541667,
+      "voicingExactRate": 0.458333,
+      "notePrecision": 0.852273,
+      "noteRecall": 0.78125,
+      "noteF1": 0.815217,
+      "extraNoteCount": 26,
+      "missingNoteCount": 42,
+      "finalPitchSetChangedRate": 0.208333,
+      "sourceVoicingUsableRate": 0,
+      "reviewRate": 1,
+      "generatedFallbackRate": 1,
+      "statusOnlyChangeRate": 0,
+      "averageConfidenceDelta": 0.016887,
+      "averageWinnerDurationDelta": 0.058854,
+      "bassAccuracy": 1,
+      "topNoteAccuracy": 0.458333,
+      "registerExactRate": 0.458333,
+      "octaveErrorRate": 0,
+      "sourceNoteAdditionCount": 0,
+      "filterTriggerRate": 0.333333
+    },
+    "bySubset": {
+      "diagnostic-only": {
+        "events": 8,
+        "contaminationEventCount": 8,
+        "melodyLeakRate": 1,
+        "voicingExactRate": 0,
+        "notePrecision": 0.8,
+        "noteRecall": 1,
+        "noteF1": 0.888889,
+        "extraNoteCount": 8,
+        "missingNoteCount": 0,
+        "finalPitchSetChangedRate": 0,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0,
+        "averageWinnerDurationDelta": 0,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0,
+        "registerExactRate": 0,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0
+      },
+      "other": {
+        "events": 24,
+        "contaminationEventCount": 10,
+        "melodyLeakRate": 0.416667,
+        "voicingExactRate": 0.583333,
+        "notePrecision": 0.886364,
+        "noteRecall": 0.8125,
+        "noteF1": 0.847826,
+        "extraNoteCount": 10,
+        "missingNoteCount": 18,
+        "finalPitchSetChangedRate": 0.083333,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0.008906,
+        "averageWinnerDurationDelta": 0.110764,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0.583333,
+        "registerExactRate": 0.583333,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0.333333
+      },
+      "primary": {
+        "events": 16,
+        "contaminationEventCount": 8,
+        "melodyLeakRate": 0.5,
+        "voicingExactRate": 0.5,
+        "notePrecision": 0.833333,
+        "noteRecall": 0.625,
+        "noteF1": 0.714286,
+        "extraNoteCount": 8,
+        "missingNoteCount": 24,
+        "finalPitchSetChangedRate": 0.5,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0.037302,
+        "averageWinnerDurationDelta": 0.010417,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0.5,
+        "registerExactRate": 0.5,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0.5
+      }
+    },
+    "byVariant": {
+      "clean": {
+        "events": 24,
+        "contaminationEventCount": 8,
+        "melodyLeakRate": 0.333333,
+        "voicingExactRate": 0.666667,
+        "notePrecision": 0.9,
+        "noteRecall": 0.75,
+        "noteF1": 0.818182,
+        "extraNoteCount": 8,
+        "missingNoteCount": 24,
+        "finalPitchSetChangedRate": 0.416667,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0.033775,
+        "averageWinnerDurationDelta": 0.117708,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0.666667,
+        "registerExactRate": 0.666667,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0.666667
+      },
+      "stress": {
+        "events": 24,
+        "contaminationEventCount": 18,
+        "melodyLeakRate": 0.75,
+        "voicingExactRate": 0.25,
+        "notePrecision": 0.8125,
+        "noteRecall": 0.8125,
+        "noteF1": 0.8125,
+        "extraNoteCount": 18,
+        "missingNoteCount": 18,
+        "finalPitchSetChangedRate": 0,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0,
+        "averageWinnerDurationDelta": 0,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0.25,
+        "registerExactRate": 0.25,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0
+      }
+    },
+    "bySupportCount": {
+      "3": {
+        "events": 48,
+        "contaminationEventCount": 26,
+        "melodyLeakRate": 0.541667,
+        "voicingExactRate": 0.458333,
+        "notePrecision": 0.852273,
+        "noteRecall": 0.78125,
+        "noteF1": 0.815217,
+        "extraNoteCount": 26,
+        "missingNoteCount": 42,
+        "finalPitchSetChangedRate": 0.208333,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0.016887,
+        "averageWinnerDurationDelta": 0.058854,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0.458333,
+        "registerExactRate": 0.458333,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0.333333
+      }
+    },
+    "bySupportDuration": {
+      "0.1": {
+        "events": 16,
+        "contaminationEventCount": 16,
+        "melodyLeakRate": 1,
+        "voicingExactRate": 0,
+        "notePrecision": 0.578947,
+        "noteRecall": 0.34375,
+        "noteF1": 0.431373,
+        "extraNoteCount": 16,
+        "missingNoteCount": 42,
+        "finalPitchSetChangedRate": 0,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0,
+        "averageWinnerDurationDelta": 0,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0,
+        "registerExactRate": 0,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0
+      },
+      "0.4": {
+        "events": 16,
+        "contaminationEventCount": 8,
+        "melodyLeakRate": 0.5,
+        "voicingExactRate": 0.5,
+        "notePrecision": 0.888889,
+        "noteRecall": 1,
+        "noteF1": 0.941176,
+        "extraNoteCount": 8,
+        "missingNoteCount": 0,
+        "finalPitchSetChangedRate": 0.5,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0.037302,
+        "averageWinnerDurationDelta": 0.010417,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0.5,
+        "registerExactRate": 0.5,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0.5
+      },
+      "0.45": {
+        "events": 16,
+        "contaminationEventCount": 2,
+        "melodyLeakRate": 0.125,
+        "voicingExactRate": 0.875,
+        "notePrecision": 0.969697,
+        "noteRecall": 1,
+        "noteF1": 0.984615,
+        "extraNoteCount": 2,
+        "missingNoteCount": 0,
+        "finalPitchSetChangedRate": 0.125,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0.013359,
+        "averageWinnerDurationDelta": 0.166146,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0.875,
+        "registerExactRate": 0.875,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0.5
+      }
+    },
+    "byTexture": {
+      "allch0": {
+        "events": 16,
+        "contaminationEventCount": 2,
+        "melodyLeakRate": 0.125,
+        "voicingExactRate": 0.875,
+        "notePrecision": 0.969697,
+        "noteRecall": 1,
+        "noteF1": 0.984615,
+        "extraNoteCount": 2,
+        "missingNoteCount": 0,
+        "finalPitchSetChangedRate": 0.125,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0.013359,
+        "averageWinnerDurationDelta": 0.166146,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0.875,
+        "registerExactRate": 0.875,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0.5
+      },
+      "duration": {
+        "events": 32,
+        "contaminationEventCount": 24,
+        "melodyLeakRate": 0.75,
+        "voicingExactRate": 0.25,
+        "notePrecision": 0.781818,
+        "noteRecall": 0.671875,
+        "noteF1": 0.722689,
+        "extraNoteCount": 24,
+        "missingNoteCount": 42,
+        "finalPitchSetChangedRate": 0.25,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0.018651,
+        "averageWinnerDurationDelta": 0.005208,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0.25,
+        "registerExactRate": 0.25,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0.25
+      }
+    },
+    "byScenario": {
+      "H11": {
+        "events": 16,
+        "contaminationEventCount": 2,
+        "melodyLeakRate": 0.125,
+        "voicingExactRate": 0.875,
+        "notePrecision": 0.969697,
+        "noteRecall": 1,
+        "noteF1": 0.984615,
+        "extraNoteCount": 2,
+        "missingNoteCount": 0,
+        "finalPitchSetChangedRate": 0.125,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0.013359,
+        "averageWinnerDurationDelta": 0.166146,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0.875,
+        "registerExactRate": 0.875,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0.5
+      },
+      "H13": {
+        "events": 16,
+        "contaminationEventCount": 16,
+        "melodyLeakRate": 1,
+        "voicingExactRate": 0,
+        "notePrecision": 0.578947,
+        "noteRecall": 0.34375,
+        "noteF1": 0.431373,
+        "extraNoteCount": 16,
+        "missingNoteCount": 42,
+        "finalPitchSetChangedRate": 0,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0,
+        "averageWinnerDurationDelta": 0,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0,
+        "registerExactRate": 0,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0
+      },
+      "H15": {
+        "events": 16,
+        "contaminationEventCount": 8,
+        "melodyLeakRate": 0.5,
+        "voicingExactRate": 0.5,
+        "notePrecision": 0.888889,
+        "noteRecall": 1,
+        "noteF1": 0.941176,
+        "extraNoteCount": 8,
+        "missingNoteCount": 0,
+        "finalPitchSetChangedRate": 0.5,
+        "sourceVoicingUsableRate": 0,
+        "reviewRate": 1,
+        "generatedFallbackRate": 1,
+        "statusOnlyChangeRate": 0,
+        "averageConfidenceDelta": 0.037302,
+        "averageWinnerDurationDelta": 0.010417,
+        "bassAccuracy": 1,
+        "topNoteAccuracy": 0.5,
+        "registerExactRate": 0.5,
+        "octaveErrorRate": 0,
+        "sourceNoteAdditionCount": 0,
+        "filterTriggerRate": 0.5
+      }
+    }
+  },
+  "primary": {
+    "baseline": {
+      "events": 16,
+      "contaminationEventCount": 16,
+      "melodyLeakRate": 1,
+      "voicingExactRate": 0,
+      "notePrecision": 0.714286,
+      "noteRecall": 0.625,
+      "noteF1": 0.666667,
+      "extraNoteCount": 16,
+      "missingNoteCount": 24,
+      "finalPitchSetChangedRate": 0,
+      "sourceVoicingUsableRate": 0,
+      "reviewRate": 1,
+      "generatedFallbackRate": 1,
+      "statusOnlyChangeRate": 0,
+      "averageConfidenceDelta": 0,
+      "averageWinnerDurationDelta": 0,
+      "bassAccuracy": 1,
+      "topNoteAccuracy": 0,
+      "registerExactRate": 0,
+      "octaveErrorRate": 0,
+      "sourceNoteAdditionCount": 0,
+      "filterTriggerRate": 0
+    },
+    "candidate": {
+      "events": 16,
+      "contaminationEventCount": 8,
+      "melodyLeakRate": 0.5,
+      "voicingExactRate": 0.5,
+      "notePrecision": 0.833333,
+      "noteRecall": 0.625,
+      "noteF1": 0.714286,
+      "extraNoteCount": 8,
+      "missingNoteCount": 24,
+      "finalPitchSetChangedRate": 0.5,
+      "sourceVoicingUsableRate": 0,
+      "reviewRate": 1,
+      "generatedFallbackRate": 1,
+      "statusOnlyChangeRate": 0,
+      "averageConfidenceDelta": 0.037302,
+      "averageWinnerDurationDelta": 0.010417,
+      "bassAccuracy": 1,
+      "topNoteAccuracy": 0.5,
+      "registerExactRate": 0.5,
+      "octaveErrorRate": 0,
+      "sourceNoteAdditionCount": 0,
+      "filterTriggerRate": 0.5
+    },
+    "delta": {
+      "primaryContaminationReduction": 0.5,
+      "primaryMelodyLeakReduction": 0.5,
+      "notePrecision": 0.119047,
+      "noteRecall": 0,
+      "noteF1": 0.047619,
+      "bassAccuracy": 0,
+      "topNoteAccuracy": 0.5,
+      "registerExactRate": 0.5,
+      "voicingExactRate": 0.5
+    }
+  },
+  "diagnosticOnly": {
+    "events": 8,
+    "contaminationEventCount": 8,
+    "melodyLeakRate": 1,
+    "voicingExactRate": 0,
+    "notePrecision": 0.8,
+    "noteRecall": 1,
+    "noteF1": 0.888889,
+    "extraNoteCount": 8,
+    "missingNoteCount": 0,
+    "finalPitchSetChangedRate": 0,
+    "sourceVoicingUsableRate": 0,
+    "reviewRate": 1,
+    "generatedFallbackRate": 1,
+    "statusOnlyChangeRate": 0,
+    "averageConfidenceDelta": 0,
+    "averageWinnerDurationDelta": 0,
+    "bassAccuracy": 1,
+    "topNoteAccuracy": 0,
+    "registerExactRate": 0,
+    "octaveErrorRate": 0,
+    "sourceNoteAdditionCount": 0,
+    "filterTriggerRate": 0
+  },
+  "statusAndPitchBreakdown": {
+    "statusOnlyChangeCount": 0,
+    "pitchFidelityChangeCount": 10
+  },
+  "regression": {
+    "general60Validation": {
+      "split": "validation",
+      "product": {
+        "overall": {
+          "events": 96,
+          "voicingExactRate": 0.739583,
+          "notePrecision": 0.955117,
+          "noteRecall": 0.985185,
+          "noteF1": 0.969918,
+          "bassNoteAccuracy": 0.916667,
+          "topNoteAccuracy": 0.864583,
+          "registerExactRate": 0.78125,
+          "sourceVoicingUsableRate": 0.708333,
+          "generatedFallbackRate": 0.291667,
+          "sourceNoteAdditionCount": 0
+        },
+        "plainBlock": {
+          "events": 0,
+          "voicingExactRate": null,
+          "notePrecision": 1,
+          "noteRecall": 1,
+          "noteF1": 1,
+          "bassNoteAccuracy": null,
+          "topNoteAccuracy": null,
+          "registerExactRate": null,
+          "sourceVoicingUsableRate": null,
+          "generatedFallbackRate": null,
+          "sourceNoteAdditionCount": 0
+        },
+        "rootless": {
+          "events": 0,
+          "voicingExactRate": null,
+          "notePrecision": 1,
+          "noteRecall": 1,
+          "noteF1": 1,
+          "bassNoteAccuracy": null,
+          "topNoteAccuracy": null,
+          "registerExactRate": null,
+          "sourceVoicingUsableRate": null,
+          "generatedFallbackRate": null,
+          "sourceNoteAdditionCount": 0
+        },
+        "arpeggio": {
+          "events": 0,
+          "voicingExactRate": null,
+          "notePrecision": 1,
+          "noteRecall": 1,
+          "noteF1": 1,
+          "bassNoteAccuracy": null,
+          "topNoteAccuracy": null,
+          "registerExactRate": null,
+          "sourceVoicingUsableRate": null,
+          "generatedFallbackRate": null,
+          "sourceNoteAdditionCount": 0
+        },
+        "byScenario": {
+          "V21": {
+            "slug": "two-chords-per-bar",
+            "metrics": {
+              "events": 32,
+              "voicingExactRate": 0.625,
+              "notePrecision": 0.9375,
+              "noteRecall": 1,
+              "noteF1": 0.967742,
+              "bassNoteAccuracy": 1,
+              "topNoteAccuracy": 0.6875,
+              "registerExactRate": 0.6875,
+              "sourceVoicingUsableRate": 0.5,
+              "generatedFallbackRate": 0.5,
+              "sourceNoteAdditionCount": 0
+            }
+          },
+          "V22": {
+            "slug": "walking-bass",
+            "metrics": {
+              "events": 16,
+              "voicingExactRate": 0.5,
+              "notePrecision": 0.911111,
+              "noteRecall": 0.911111,
+              "noteF1": 0.911111,
+              "bassNoteAccuracy": 0.5,
+              "topNoteAccuracy": 1,
+              "registerExactRate": 0.5,
+              "sourceVoicingUsableRate": 1,
+              "generatedFallbackRate": 0,
+              "sourceNoteAdditionCount": 0
+            }
+          },
+          "V23": {
+            "slug": "voice-duplicate",
+            "metrics": {
+              "events": 16,
+              "voicingExactRate": 1,
+              "notePrecision": 1,
+              "noteRecall": 1,
+              "noteF1": 1,
+              "bassNoteAccuracy": 1,
+              "topNoteAccuracy": 1,
+              "registerExactRate": 1,
+              "sourceVoicingUsableRate": 0.9375,
+              "generatedFallbackRate": 0.0625,
+              "sourceNoteAdditionCount": 0
+            }
+          },
+          "V24": {
+            "slug": "humanized-overlap",
+            "metrics": {
+              "events": 16,
+              "voicingExactRate": 0.6875,
+              "notePrecision": 0.947368,
+              "noteRecall": 1,
+              "noteF1": 0.972973,
+              "bassNoteAccuracy": 1,
+              "topNoteAccuracy": 0.8125,
+              "registerExactRate": 0.8125,
+              "sourceVoicingUsableRate": 0.5,
+              "generatedFallbackRate": 0.5,
+              "sourceNoteAdditionCount": 0
+            }
+          },
+          "V25": {
+            "slug": "velocity-imbalance",
+            "metrics": {
+              "events": 16,
+              "voicingExactRate": 1,
+              "notePrecision": 1,
+              "noteRecall": 1,
+              "noteF1": 1,
+              "bassNoteAccuracy": 1,
+              "topNoteAccuracy": 1,
+              "registerExactRate": 1,
+              "sourceVoicingUsableRate": 0.8125,
+              "generatedFallbackRate": 0.1875,
+              "sourceNoteAdditionCount": 0
+            }
+          }
+        }
+      },
+      "shadow": {
+        "overall": {
+          "events": 96,
+          "voicingExactRate": 0.791667,
+          "notePrecision": 0.963768,
+          "noteRecall": 0.985185,
+          "noteF1": 0.974359,
+          "bassNoteAccuracy": 0.916667,
+          "topNoteAccuracy": 0.895833,
+          "registerExactRate": 0.8125,
+          "sourceVoicingUsableRate": 0.822917,
+          "generatedFallbackRate": 0.177083,
+          "sourceNoteAdditionCount": 0
+        },
+        "plainBlock": {
+          "events": 0,
+          "voicingExactRate": null,
+          "notePrecision": 1,
+          "noteRecall": 1,
+          "noteF1": 1,
+          "bassNoteAccuracy": null,
+          "topNoteAccuracy": null,
+          "registerExactRate": null,
+          "sourceVoicingUsableRate": null,
+          "generatedFallbackRate": null,
+          "sourceNoteAdditionCount": 0
+        },
+        "rootless": {
+          "events": 0,
+          "voicingExactRate": null,
+          "notePrecision": 1,
+          "noteRecall": 1,
+          "noteF1": 1,
+          "bassNoteAccuracy": null,
+          "topNoteAccuracy": null,
+          "registerExactRate": null,
+          "sourceVoicingUsableRate": null,
+          "generatedFallbackRate": null,
+          "sourceNoteAdditionCount": 0
+        },
+        "arpeggio": {
+          "events": 0,
+          "voicingExactRate": null,
+          "notePrecision": 1,
+          "noteRecall": 1,
+          "noteF1": 1,
+          "bassNoteAccuracy": null,
+          "topNoteAccuracy": null,
+          "registerExactRate": null,
+          "sourceVoicingUsableRate": null,
+          "generatedFallbackRate": null,
+          "sourceNoteAdditionCount": 0
+        },
+        "byScenario": {
+          "V21": {
+            "slug": "two-chords-per-bar",
+            "metrics": {
+              "events": 32,
+              "voicingExactRate": 0.625,
+              "notePrecision": 0.9375,
+              "noteRecall": 1,
+              "noteF1": 0.967742,
+              "bassNoteAccuracy": 1,
+              "topNoteAccuracy": 0.6875,
+              "registerExactRate": 0.6875,
+              "sourceVoicingUsableRate": 0.5,
+              "generatedFallbackRate": 0.5,
+              "sourceNoteAdditionCount": 0
+            }
+          },
+          "V22": {
+            "slug": "walking-bass",
+            "metrics": {
+              "events": 16,
+              "voicingExactRate": 0.5,
+              "notePrecision": 0.911111,
+              "noteRecall": 0.911111,
+              "noteF1": 0.911111,
+              "bassNoteAccuracy": 0.5,
+              "topNoteAccuracy": 1,
+              "registerExactRate": 0.5,
+              "sourceVoicingUsableRate": 1,
+              "generatedFallbackRate": 0,
+              "sourceNoteAdditionCount": 0
+            }
+          },
+          "V23": {
+            "slug": "voice-duplicate",
+            "metrics": {
+              "events": 16,
+              "voicingExactRate": 1,
+              "notePrecision": 1,
+              "noteRecall": 1,
+              "noteF1": 1,
+              "bassNoteAccuracy": 1,
+              "topNoteAccuracy": 1,
+              "registerExactRate": 1,
+              "sourceVoicingUsableRate": 0.9375,
+              "generatedFallbackRate": 0.0625,
+              "sourceNoteAdditionCount": 0
+            }
+          },
+          "V24": {
+            "slug": "humanized-overlap",
+            "metrics": {
+              "events": 16,
+              "voicingExactRate": 1,
+              "notePrecision": 1,
+              "noteRecall": 1,
+              "noteF1": 1,
+              "bassNoteAccuracy": 1,
+              "topNoteAccuracy": 1,
+              "registerExactRate": 1,
+              "sourceVoicingUsableRate": 1,
+              "generatedFallbackRate": 0,
+              "sourceNoteAdditionCount": 0
+            }
+          },
+          "V25": {
+            "slug": "velocity-imbalance",
+            "metrics": {
+              "events": 16,
+              "voicingExactRate": 1,
+              "notePrecision": 1,
+              "noteRecall": 1,
+              "noteF1": 1,
+              "bassNoteAccuracy": 1,
+              "topNoteAccuracy": 1,
+              "registerExactRate": 1,
+              "sourceVoicingUsableRate": 1,
+              "generatedFallbackRate": 0,
+              "sourceNoteAdditionCount": 0
+            }
+          }
+        }
+      }
+    },
+    "oldDedicatedValidation": {
+      "product": {
+        "events": 48,
+        "voicingExactRate": 0.625,
+        "notePrecision": 0.967391,
+        "noteRecall": 0.794643,
+        "noteF1": 0.872549,
+        "extraNoteCount": 6,
+        "missingNoteCount": 46,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.875,
+        "registerExactRate": 0.875,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.025424,
+        "melodyContaminationEventCount": 6,
+        "sourceVoicingUsableRate": 0.25,
+        "generatedFallbackRate": 0.75,
+        "sourceNoteAdditionCount": 0
+      },
+      "shadow": {
+        "events": 48,
+        "voicingExactRate": 0.666667,
+        "notePrecision": 0.988889,
+        "noteRecall": 0.794643,
+        "noteF1": 0.881188,
+        "extraNoteCount": 2,
+        "missingNoteCount": 46,
+        "bassNoteAccuracy": 1,
+        "topNoteAccuracy": 0.791667,
+        "registerExactRate": 0.791667,
+        "octaveErrorRate": 0,
+        "melodyLeakRate": 0.008475,
+        "melodyContaminationEventCount": 2,
+        "sourceVoicingUsableRate": 0.458333,
+        "generatedFallbackRate": 0.541667,
+        "sourceNoteAdditionCount": 0
+      }
+    },
+    "chordLabelsExact": true,
+    "timelineExact": true
+  },
+  "checks": {
+    "primaryContaminationReduction": true,
+    "melodyLeakImproved": true,
+    "exactOrF1SignMatchesDev": true,
+    "noteRecallWithinTolerance": true,
+    "bassAccuracyWithinTolerance": true,
+    "topNoteWithinTolerance": true,
+    "registerWithinTolerance": true,
+    "noSourceNoteAdditions": true,
+    "noNewMajorFailure": true,
+    "plainBlockRegression": true,
+    "rootlessRegression": true,
+    "arpeggioRegression": true,
+    "generalRegression": true
+  },
+  "failedGates": [],
+  "validationPassed": true,
+  "decision": "advance-to-holdout",
+  "events": [
+    {
+      "key": "H11_clean/e01",
+      "fileId": "H11_clean",
+      "scenarioId": "H11",
+      "scenarioSlug": "all-channel-zero-stems",
+      "split": "validation",
+      "variant": "clean",
+      "mode": "allch0",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.45,
+      "eventId": "e01",
+      "chordSymbol": "Cmaj9",
+      "evidence": {
+        "targetNoteInstanceId": "n4:t3:c0:s480:d216:p65",
+        "targetPitch": 65,
+        "productRole": "melody",
+        "roleConfidence": 1,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 4,
+        "supportPitches": [
+          48,
+          55,
+          59,
+          62
+        ],
+        "supportDurationBeats": 0.4,
+        "supportDurationRatio": 0.888889,
+        "supportMass": 1.68125,
+        "repeatedSupportCount": 4,
+        "eventAvailableSupportPitchCount": 4,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": true,
+        "baselineFilterRejectionReasons": [],
+        "subset": "other"
+      },
+      "filterTriggered": true,
+      "removedNoteInstanceIds": [
+        "n4:t3:c0:s480:d216:p65"
+      ],
+      "filterReasons": [
+        "hypothesis-a:relative-support",
+        "support-count:4",
+        "available-texture:4",
+        "coverage-ratio:1",
+        "support-beats:0.4"
+      ],
+      "filterEvidence": {
+        "n4:t3:c0:s480:d216:p65": {
+          "supportPitches": [
+            48,
+            55,
+            59,
+            62
+          ],
+          "eventAvailableSupportPitches": [
+            48,
+            55,
+            59,
+            62
+          ],
+          "supportCoverageRatio": 1,
+          "supportDurationBeats": 0.3999999999999999
+        }
+      },
+      "beforeInputPitchSet": [
+        48,
+        55,
+        59,
+        62,
+        65
+      ],
+      "afterInputPitchSet": [
+        48,
+        55,
+        59,
+        62
+      ],
+      "beforeFinalPitchSet": [
+        48,
+        55,
+        59,
+        62
+      ],
+      "afterFinalPitchSet": [
+        48,
+        55,
+        59,
+        62
+      ],
+      "goldPitchSet": [
+        48,
+        55,
+        59,
+        62
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.6300474585784406,
+      "afterConfidence": 0.6620474585784406,
+      "confidenceDelta": 0.032,
+      "beforeWinnerDuration": 0.129167,
+      "afterWinnerDuration": 0.529167,
+      "winnerDurationDelta": 0.4,
+      "beforeExact": true,
+      "afterExact": true,
+      "beforeMelodyLeakedPitches": [],
+      "afterMelodyLeakedPitches": [],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": true,
+      "afterRegisterExact": true,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 4,
+      "goldCount": 4,
+      "extraNoteCount": 0,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H11_clean/e02",
+      "fileId": "H11_clean",
+      "scenarioId": "H11",
+      "scenarioSlug": "all-channel-zero-stems",
+      "split": "validation",
+      "variant": "clean",
+      "mode": "allch0",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.45,
+      "eventId": "e02",
+      "chordSymbol": "Am9",
+      "evidence": {
+        "targetNoteInstanceId": "n9:t3:c0:s2400:d216:p62",
+        "targetPitch": 62,
+        "productRole": "melody",
+        "roleConfidence": 1,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 4,
+        "supportPitches": [
+          45,
+          52,
+          55,
+          59
+        ],
+        "supportDurationBeats": 0.4,
+        "supportDurationRatio": 0.888889,
+        "supportMass": 1.68125,
+        "repeatedSupportCount": 4,
+        "eventAvailableSupportPitchCount": 4,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": true,
+        "baselineFilterRejectionReasons": [],
+        "subset": "other"
+      },
+      "filterTriggered": true,
+      "removedNoteInstanceIds": [
+        "n9:t3:c0:s2400:d216:p62"
+      ],
+      "filterReasons": [
+        "hypothesis-a:relative-support",
+        "support-count:4",
+        "available-texture:4",
+        "coverage-ratio:1",
+        "support-beats:0.4"
+      ],
+      "filterEvidence": {
+        "n9:t3:c0:s2400:d216:p62": {
+          "supportPitches": [
+            45,
+            52,
+            55,
+            59
+          ],
+          "eventAvailableSupportPitches": [
+            45,
+            52,
+            55,
+            59
+          ],
+          "supportCoverageRatio": 1,
+          "supportDurationBeats": 0.40000000000000036
+        }
+      },
+      "beforeInputPitchSet": [
+        45,
+        52,
+        55,
+        59,
+        62
+      ],
+      "afterInputPitchSet": [
+        45,
+        52,
+        55,
+        59
+      ],
+      "beforeFinalPitchSet": [
+        45,
+        52,
+        55,
+        59
+      ],
+      "afterFinalPitchSet": [
+        45,
+        52,
+        55,
+        59
+      ],
+      "goldPitchSet": [
+        45,
+        52,
+        55,
+        59
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.6300474585784406,
+      "afterConfidence": 0.6620474585784406,
+      "confidenceDelta": 0.032,
+      "beforeWinnerDuration": 0.129167,
+      "afterWinnerDuration": 0.529167,
+      "winnerDurationDelta": 0.4,
+      "beforeExact": true,
+      "afterExact": true,
+      "beforeMelodyLeakedPitches": [],
+      "afterMelodyLeakedPitches": [],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": true,
+      "afterRegisterExact": true,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 4,
+      "goldCount": 4,
+      "extraNoteCount": 0,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H11_clean/e03",
+      "fileId": "H11_clean",
+      "scenarioId": "H11",
+      "scenarioSlug": "all-channel-zero-stems",
+      "split": "validation",
+      "variant": "clean",
+      "mode": "allch0",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.45,
+      "eventId": "e03",
+      "chordSymbol": "Dm9",
+      "evidence": {
+        "targetNoteInstanceId": "n14:t3:c0:s4320:d216:p68",
+        "targetPitch": 68,
+        "productRole": "melody",
+        "roleConfidence": 1,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 4,
+        "supportPitches": [
+          50,
+          57,
+          60,
+          64
+        ],
+        "supportDurationBeats": 0.4,
+        "supportDurationRatio": 0.888889,
+        "supportMass": 1.68125,
+        "repeatedSupportCount": 4,
+        "eventAvailableSupportPitchCount": 4,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": true,
+        "baselineFilterRejectionReasons": [],
+        "subset": "other"
+      },
+      "filterTriggered": true,
+      "removedNoteInstanceIds": [
+        "n14:t3:c0:s4320:d216:p68"
+      ],
+      "filterReasons": [
+        "hypothesis-a:relative-support",
+        "support-count:4",
+        "available-texture:4",
+        "coverage-ratio:1",
+        "support-beats:0.4"
+      ],
+      "filterEvidence": {
+        "n14:t3:c0:s4320:d216:p68": {
+          "supportPitches": [
+            50,
+            57,
+            60,
+            64
+          ],
+          "eventAvailableSupportPitches": [
+            50,
+            57,
+            60,
+            64
+          ],
+          "supportCoverageRatio": 1,
+          "supportDurationBeats": 0.40000000000000036
+        }
+      },
+      "beforeInputPitchSet": [
+        50,
+        57,
+        60,
+        64,
+        68
+      ],
+      "afterInputPitchSet": [
+        50,
+        57,
+        60,
+        64
+      ],
+      "beforeFinalPitchSet": [
+        50,
+        57,
+        60,
+        64
+      ],
+      "afterFinalPitchSet": [
+        50,
+        57,
+        60,
+        64
+      ],
+      "goldPitchSet": [
+        50,
+        57,
+        60,
+        64
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.6300474585784406,
+      "afterConfidence": 0.6620474585784406,
+      "confidenceDelta": 0.032,
+      "beforeWinnerDuration": 0.129167,
+      "afterWinnerDuration": 0.529167,
+      "winnerDurationDelta": 0.4,
+      "beforeExact": true,
+      "afterExact": true,
+      "beforeMelodyLeakedPitches": [],
+      "afterMelodyLeakedPitches": [],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": true,
+      "afterRegisterExact": true,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 4,
+      "goldCount": 4,
+      "extraNoteCount": 0,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H11_clean/e04",
+      "fileId": "H11_clean",
+      "scenarioId": "H11",
+      "scenarioSlug": "all-channel-zero-stems",
+      "split": "validation",
+      "variant": "clean",
+      "mode": "allch0",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.45,
+      "eventId": "e04",
+      "chordSymbol": "G13",
+      "evidence": {
+        "targetNoteInstanceId": "n19:t3:c0:s6240:d216:p65",
+        "targetPitch": 65,
+        "productRole": "melody",
+        "roleConfidence": 1,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 4,
+        "supportPitches": [
+          43,
+          53,
+          57,
+          59
+        ],
+        "supportDurationBeats": 0.4,
+        "supportDurationRatio": 0.888889,
+        "supportMass": 1.68125,
+        "repeatedSupportCount": 4,
+        "eventAvailableSupportPitchCount": 4,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": true,
+        "baselineFilterRejectionReasons": [],
+        "subset": "other"
+      },
+      "filterTriggered": true,
+      "removedNoteInstanceIds": [
+        "n19:t3:c0:s6240:d216:p65"
+      ],
+      "filterReasons": [
+        "hypothesis-a:relative-support",
+        "support-count:4",
+        "available-texture:4",
+        "coverage-ratio:1",
+        "support-beats:0.4"
+      ],
+      "filterEvidence": {
+        "n19:t3:c0:s6240:d216:p65": {
+          "supportPitches": [
+            43,
+            53,
+            57,
+            59
+          ],
+          "eventAvailableSupportPitches": [
+            43,
+            53,
+            57,
+            59
+          ],
+          "supportCoverageRatio": 1,
+          "supportDurationBeats": 0.40000000000000036
+        }
+      },
+      "beforeInputPitchSet": [
+        43,
+        53,
+        57,
+        59,
+        65
+      ],
+      "afterInputPitchSet": [
+        43,
+        53,
+        57,
+        59
+      ],
+      "beforeFinalPitchSet": [
+        43,
+        53,
+        57,
+        59,
+        65
+      ],
+      "afterFinalPitchSet": [
+        43,
+        53,
+        57,
+        59
+      ],
+      "goldPitchSet": [
+        43,
+        53,
+        57,
+        59
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.5845046335294193,
+      "afterConfidence": 0.595380791911774,
+      "confidenceDelta": 0.010876,
+      "beforeWinnerDuration": 0.4,
+      "afterWinnerDuration": 0.529167,
+      "winnerDurationDelta": 0.129167,
+      "beforeExact": false,
+      "afterExact": true,
+      "beforeMelodyLeakedPitches": [
+        65
+      ],
+      "afterMelodyLeakedPitches": [],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": true,
+      "pitchFidelityChanged": true,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": true,
+      "afterRegisterExact": true,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 4,
+      "goldCount": 4,
+      "extraNoteCount": 0,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H11_clean/e05",
+      "fileId": "H11_clean",
+      "scenarioId": "H11",
+      "scenarioSlug": "all-channel-zero-stems",
+      "split": "validation",
+      "variant": "clean",
+      "mode": "allch0",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.45,
+      "eventId": "e05",
+      "chordSymbol": "Em7",
+      "evidence": {
+        "targetNoteInstanceId": "n24:t3:c0:s8160:d216:p69",
+        "targetPitch": 69,
+        "productRole": "melody",
+        "roleConfidence": 1,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 4,
+        "supportPitches": [
+          52,
+          59,
+          62,
+          64
+        ],
+        "supportDurationBeats": 0.4,
+        "supportDurationRatio": 0.888889,
+        "supportMass": 1.68125,
+        "repeatedSupportCount": 4,
+        "eventAvailableSupportPitchCount": 4,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": true,
+        "baselineFilterRejectionReasons": [],
+        "subset": "other"
+      },
+      "filterTriggered": true,
+      "removedNoteInstanceIds": [
+        "n24:t3:c0:s8160:d216:p69"
+      ],
+      "filterReasons": [
+        "hypothesis-a:relative-support",
+        "support-count:4",
+        "available-texture:4",
+        "coverage-ratio:1",
+        "support-beats:0.4"
+      ],
+      "filterEvidence": {
+        "n24:t3:c0:s8160:d216:p69": {
+          "supportPitches": [
+            52,
+            59,
+            62,
+            64
+          ],
+          "eventAvailableSupportPitches": [
+            52,
+            59,
+            62,
+            64
+          ],
+          "supportCoverageRatio": 1,
+          "supportDurationBeats": 0.3999999999999986
+        }
+      },
+      "beforeInputPitchSet": [
+        52,
+        59,
+        62,
+        64,
+        69
+      ],
+      "afterInputPitchSet": [
+        52,
+        59,
+        62,
+        64
+      ],
+      "beforeFinalPitchSet": [
+        52,
+        59,
+        62,
+        64
+      ],
+      "afterFinalPitchSet": [
+        52,
+        59,
+        62,
+        64
+      ],
+      "goldPitchSet": [
+        52,
+        59,
+        62,
+        64
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.6050474585784407,
+      "afterConfidence": 0.6370474585784405,
+      "confidenceDelta": 0.032,
+      "beforeWinnerDuration": 0.129167,
+      "afterWinnerDuration": 0.529167,
+      "winnerDurationDelta": 0.4,
+      "beforeExact": true,
+      "afterExact": true,
+      "beforeMelodyLeakedPitches": [],
+      "afterMelodyLeakedPitches": [],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": true,
+      "afterRegisterExact": true,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 4,
+      "goldCount": 4,
+      "extraNoteCount": 0,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H11_clean/e06",
+      "fileId": "H11_clean",
+      "scenarioId": "H11",
+      "scenarioSlug": "all-channel-zero-stems",
+      "split": "validation",
+      "variant": "clean",
+      "mode": "allch0",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.45,
+      "eventId": "e06",
+      "chordSymbol": "A7b9",
+      "evidence": {
+        "targetNoteInstanceId": "n29:t3:c0:s10080:d216:p67",
+        "targetPitch": 67,
+        "productRole": "melody",
+        "roleConfidence": 1,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 4,
+        "supportPitches": [
+          45,
+          55,
+          58,
+          61
+        ],
+        "supportDurationBeats": 0.4,
+        "supportDurationRatio": 0.888889,
+        "supportMass": 1.68125,
+        "repeatedSupportCount": 4,
+        "eventAvailableSupportPitchCount": 4,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": true,
+        "baselineFilterRejectionReasons": [],
+        "subset": "other"
+      },
+      "filterTriggered": true,
+      "removedNoteInstanceIds": [
+        "n29:t3:c0:s10080:d216:p67"
+      ],
+      "filterReasons": [
+        "hypothesis-a:relative-support",
+        "support-count:4",
+        "available-texture:4",
+        "coverage-ratio:1",
+        "support-beats:0.4"
+      ],
+      "filterEvidence": {
+        "n29:t3:c0:s10080:d216:p67": {
+          "supportPitches": [
+            45,
+            55,
+            58,
+            61
+          ],
+          "eventAvailableSupportPitches": [
+            45,
+            55,
+            58,
+            61
+          ],
+          "supportCoverageRatio": 1,
+          "supportDurationBeats": 0.3999999999999986
+        }
+      },
+      "beforeInputPitchSet": [
+        45,
+        55,
+        58,
+        61,
+        67
+      ],
+      "afterInputPitchSet": [
+        45,
+        55,
+        58,
+        61
+      ],
+      "beforeFinalPitchSet": [
+        45,
+        55,
+        58,
+        61,
+        67
+      ],
+      "afterFinalPitchSet": [
+        45,
+        55,
+        58,
+        61
+      ],
+      "goldPitchSet": [
+        45,
+        55,
+        58,
+        61
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.6511713001960857,
+      "afterConfidence": 0.6620474585784406,
+      "confidenceDelta": 0.010876,
+      "beforeWinnerDuration": 0.4,
+      "afterWinnerDuration": 0.529167,
+      "winnerDurationDelta": 0.129167,
+      "beforeExact": false,
+      "afterExact": true,
+      "beforeMelodyLeakedPitches": [
+        67
+      ],
+      "afterMelodyLeakedPitches": [],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": true,
+      "pitchFidelityChanged": true,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": true,
+      "afterRegisterExact": true,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 4,
+      "goldCount": 4,
+      "extraNoteCount": 0,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H11_clean/e07",
+      "fileId": "H11_clean",
+      "scenarioId": "H11",
+      "scenarioSlug": "all-channel-zero-stems",
+      "split": "validation",
+      "variant": "clean",
+      "mode": "allch0",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.45,
+      "eventId": "e07",
+      "chordSymbol": "Dm7",
+      "evidence": {
+        "targetNoteInstanceId": "n34:t3:c0:s12000:d216:p66",
+        "targetPitch": 66,
+        "productRole": "melody",
+        "roleConfidence": 1,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 4,
+        "supportPitches": [
+          50,
+          57,
+          60,
+          62
+        ],
+        "supportDurationBeats": 0.4,
+        "supportDurationRatio": 0.888889,
+        "supportMass": 1.68125,
+        "repeatedSupportCount": 4,
+        "eventAvailableSupportPitchCount": 4,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": true,
+        "baselineFilterRejectionReasons": [],
+        "subset": "other"
+      },
+      "filterTriggered": true,
+      "removedNoteInstanceIds": [
+        "n34:t3:c0:s12000:d216:p66"
+      ],
+      "filterReasons": [
+        "hypothesis-a:relative-support",
+        "support-count:4",
+        "available-texture:4",
+        "coverage-ratio:1",
+        "support-beats:0.4"
+      ],
+      "filterEvidence": {
+        "n34:t3:c0:s12000:d216:p66": {
+          "supportPitches": [
+            50,
+            57,
+            60,
+            62
+          ],
+          "eventAvailableSupportPitches": [
+            50,
+            57,
+            60,
+            62
+          ],
+          "supportCoverageRatio": 1,
+          "supportDurationBeats": 0.3999999999999986
+        }
+      },
+      "beforeInputPitchSet": [
+        50,
+        57,
+        60,
+        62,
+        66
+      ],
+      "afterInputPitchSet": [
+        50,
+        57,
+        60,
+        62
+      ],
+      "beforeFinalPitchSet": [
+        50,
+        57,
+        60,
+        62
+      ],
+      "afterFinalPitchSet": [
+        50,
+        57,
+        60,
+        62
+      ],
+      "goldPitchSet": [
+        50,
+        57,
+        60,
+        62
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.6050474585784407,
+      "afterConfidence": 0.6370474585784405,
+      "confidenceDelta": 0.032,
+      "beforeWinnerDuration": 0.129167,
+      "afterWinnerDuration": 0.529167,
+      "winnerDurationDelta": 0.4,
+      "beforeExact": true,
+      "afterExact": true,
+      "beforeMelodyLeakedPitches": [],
+      "afterMelodyLeakedPitches": [],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": true,
+      "afterRegisterExact": true,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 4,
+      "goldCount": 4,
+      "extraNoteCount": 0,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H11_clean/e08",
+      "fileId": "H11_clean",
+      "scenarioId": "H11",
+      "scenarioSlug": "all-channel-zero-stems",
+      "split": "validation",
+      "variant": "clean",
+      "mode": "allch0",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.45,
+      "eventId": "e08",
+      "chordSymbol": "G7sus4",
+      "evidence": {
+        "targetNoteInstanceId": "n39:t3:c0:s13920:d216:p64",
+        "targetPitch": 64,
+        "productRole": "melody",
+        "roleConfidence": 1,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 4,
+        "supportPitches": [
+          43,
+          53,
+          55,
+          60
+        ],
+        "supportDurationBeats": 0.4,
+        "supportDurationRatio": 0.888889,
+        "supportMass": 1.68125,
+        "repeatedSupportCount": 4,
+        "eventAvailableSupportPitchCount": 4,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": true,
+        "baselineFilterRejectionReasons": [],
+        "subset": "other"
+      },
+      "filterTriggered": true,
+      "removedNoteInstanceIds": [
+        "n39:t3:c0:s13920:d216:p64"
+      ],
+      "filterReasons": [
+        "hypothesis-a:relative-support",
+        "support-count:4",
+        "available-texture:4",
+        "coverage-ratio:1",
+        "support-beats:0.4"
+      ],
+      "filterEvidence": {
+        "n39:t3:c0:s13920:d216:p64": {
+          "supportPitches": [
+            43,
+            53,
+            55,
+            60
+          ],
+          "eventAvailableSupportPitches": [
+            43,
+            53,
+            55,
+            60
+          ],
+          "supportCoverageRatio": 1,
+          "supportDurationBeats": 0.3999999999999986
+        }
+      },
+      "beforeInputPitchSet": [
+        43,
+        53,
+        55,
+        60,
+        64
+      ],
+      "afterInputPitchSet": [
+        43,
+        53,
+        55,
+        60
+      ],
+      "beforeFinalPitchSet": [
+        43,
+        53,
+        55,
+        60
+      ],
+      "afterFinalPitchSet": [
+        43,
+        53,
+        55,
+        60
+      ],
+      "goldPitchSet": [
+        43,
+        53,
+        55,
+        60
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.6050474585784407,
+      "afterConfidence": 0.6370474585784405,
+      "confidenceDelta": 0.032,
+      "beforeWinnerDuration": 0.129167,
+      "afterWinnerDuration": 0.529167,
+      "winnerDurationDelta": 0.4,
+      "beforeExact": true,
+      "afterExact": true,
+      "beforeMelodyLeakedPitches": [],
+      "afterMelodyLeakedPitches": [],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": true,
+      "afterRegisterExact": true,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 4,
+      "goldCount": 4,
+      "extraNoteCount": 0,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H11_stress/e01",
+      "fileId": "H11_stress",
+      "scenarioId": "H11",
+      "scenarioSlug": "all-channel-zero-stems",
+      "split": "validation",
+      "variant": "stress",
+      "mode": "allch0",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.45,
+      "eventId": "e01",
+      "chordSymbol": "Cmaj9",
+      "evidence": {
+        "targetNoteInstanceId": "n4:t1:c0:s474:d234:p65",
+        "targetPitch": 65,
+        "productRole": "harmony",
+        "roleConfidence": 0.468869,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 4,
+        "supportPitches": [
+          48,
+          55,
+          59,
+          62
+        ],
+        "supportDurationBeats": 0.379167,
+        "supportDurationRatio": 0.777778,
+        "supportMass": 1.7375,
+        "repeatedSupportCount": 4,
+        "eventAvailableSupportPitchCount": 4,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "role-is-harmony",
+          "role-confidence-too-low"
+        ],
+        "subset": "other"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {},
+      "beforeInputPitchSet": [
+        48,
+        55,
+        59,
+        62,
+        65
+      ],
+      "afterInputPitchSet": [
+        48,
+        55,
+        59,
+        62,
+        65
+      ],
+      "beforeFinalPitchSet": [
+        48,
+        55,
+        59,
+        62
+      ],
+      "afterFinalPitchSet": [
+        48,
+        55,
+        59,
+        62
+      ],
+      "goldPitchSet": [
+        48,
+        55,
+        59,
+        62
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.7235246076900843,
+      "afterConfidence": 0.7235246076900843,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.120833,
+      "afterWinnerDuration": 0.120833,
+      "winnerDurationDelta": 0,
+      "beforeExact": true,
+      "afterExact": true,
+      "beforeMelodyLeakedPitches": [],
+      "afterMelodyLeakedPitches": [],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": true,
+      "afterRegisterExact": true,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 4,
+      "goldCount": 4,
+      "extraNoteCount": 0,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H11_stress/e02",
+      "fileId": "H11_stress",
+      "scenarioId": "H11",
+      "scenarioSlug": "all-channel-zero-stems",
+      "split": "validation",
+      "variant": "stress",
+      "mode": "allch0",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.45,
+      "eventId": "e02",
+      "chordSymbol": "Am9",
+      "evidence": {
+        "targetNoteInstanceId": "n9:t1:c0:s2410:d220:p62",
+        "targetPitch": 62,
+        "productRole": "harmony",
+        "roleConfidence": 0.468869,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 4,
+        "supportPitches": [
+          45,
+          52,
+          55,
+          59
+        ],
+        "supportDurationBeats": 0.372917,
+        "supportDurationRatio": 0.813636,
+        "supportMass": 1.622917,
+        "repeatedSupportCount": 5,
+        "eventAvailableSupportPitchCount": 5,
+        "supportCoverageRatio": 0.8,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "role-is-harmony",
+          "role-confidence-too-low"
+        ],
+        "subset": "other"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {},
+      "beforeInputPitchSet": [
+        45,
+        50,
+        52,
+        55,
+        59,
+        62
+      ],
+      "afterInputPitchSet": [
+        45,
+        50,
+        52,
+        55,
+        59,
+        62
+      ],
+      "beforeFinalPitchSet": [
+        45,
+        52,
+        55,
+        59
+      ],
+      "afterFinalPitchSet": [
+        45,
+        52,
+        55,
+        59
+      ],
+      "goldPitchSet": [
+        45,
+        52,
+        55,
+        59
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.7250246076900844,
+      "afterConfidence": 0.7250246076900844,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.139583,
+      "afterWinnerDuration": 0.139583,
+      "winnerDurationDelta": 0,
+      "beforeExact": true,
+      "afterExact": true,
+      "beforeMelodyLeakedPitches": [],
+      "afterMelodyLeakedPitches": [],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": true,
+      "afterRegisterExact": true,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 4,
+      "goldCount": 4,
+      "extraNoteCount": 0,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H11_stress/e03",
+      "fileId": "H11_stress",
+      "scenarioId": "H11",
+      "scenarioSlug": "all-channel-zero-stems",
+      "split": "validation",
+      "variant": "stress",
+      "mode": "allch0",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.45,
+      "eventId": "e03",
+      "chordSymbol": "Dm9",
+      "evidence": {
+        "targetNoteInstanceId": "n14:t1:c0:s4316:d218:p68",
+        "targetPitch": 68,
+        "productRole": "harmony",
+        "roleConfidence": 0.468869,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 4,
+        "supportPitches": [
+          50,
+          57,
+          60,
+          64
+        ],
+        "supportDurationBeats": 0.420833,
+        "supportDurationRatio": 0.926606,
+        "supportMass": 1.770833,
+        "repeatedSupportCount": 5,
+        "eventAvailableSupportPitchCount": 5,
+        "supportCoverageRatio": 0.8,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "role-is-harmony",
+          "role-confidence-too-low"
+        ],
+        "subset": "other"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {},
+      "beforeInputPitchSet": [
+        43,
+        50,
+        57,
+        60,
+        64,
+        68
+      ],
+      "afterInputPitchSet": [
+        43,
+        50,
+        57,
+        60,
+        64,
+        68
+      ],
+      "beforeFinalPitchSet": [
+        50,
+        57,
+        60,
+        64
+      ],
+      "afterFinalPitchSet": [
+        50,
+        57,
+        60,
+        64
+      ],
+      "goldPitchSet": [
+        50,
+        57,
+        60,
+        64
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.7223579410234178,
+      "afterConfidence": 0.7223579410234178,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.10625,
+      "afterWinnerDuration": 0.10625,
+      "winnerDurationDelta": 0,
+      "beforeExact": true,
+      "afterExact": true,
+      "beforeMelodyLeakedPitches": [],
+      "afterMelodyLeakedPitches": [],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": true,
+      "afterRegisterExact": true,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 4,
+      "goldCount": 4,
+      "extraNoteCount": 0,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H11_stress/e04",
+      "fileId": "H11_stress",
+      "scenarioId": "H11",
+      "scenarioSlug": "all-channel-zero-stems",
+      "split": "validation",
+      "variant": "stress",
+      "mode": "allch0",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.45,
+      "eventId": "e04",
+      "chordSymbol": "G13",
+      "evidence": {
+        "targetNoteInstanceId": "n19:t1:c0:s6241:d209:p65",
+        "targetPitch": 65,
+        "productRole": "harmony",
+        "roleConfidence": 0.468869,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 4,
+        "supportPitches": [
+          43,
+          53,
+          57,
+          59
+        ],
+        "supportDurationBeats": 0.385417,
+        "supportDurationRatio": 0.885167,
+        "supportMass": 1.65,
+        "repeatedSupportCount": 5,
+        "eventAvailableSupportPitchCount": 5,
+        "supportCoverageRatio": 0.8,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "role-is-harmony",
+          "role-confidence-too-low"
+        ],
+        "subset": "other"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {},
+      "beforeInputPitchSet": [
+        43,
+        52,
+        53,
+        57,
+        59,
+        65
+      ],
+      "afterInputPitchSet": [
+        43,
+        52,
+        53,
+        57,
+        59,
+        65
+      ],
+      "beforeFinalPitchSet": [
+        43,
+        53,
+        57,
+        59,
+        65
+      ],
+      "afterFinalPitchSet": [
+        43,
+        53,
+        57,
+        59,
+        65
+      ],
+      "goldPitchSet": [
+        43,
+        53,
+        57,
+        59
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.6768794515147105,
+      "afterConfidence": 0.6768794515147105,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.385417,
+      "afterWinnerDuration": 0.385417,
+      "winnerDurationDelta": 0,
+      "beforeExact": false,
+      "afterExact": false,
+      "beforeMelodyLeakedPitches": [
+        65
+      ],
+      "afterMelodyLeakedPitches": [
+        65
+      ],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": false,
+      "afterRegisterExact": false,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 5,
+      "goldCount": 4,
+      "extraNoteCount": 1,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H11_stress/e05",
+      "fileId": "H11_stress",
+      "scenarioId": "H11",
+      "scenarioSlug": "all-channel-zero-stems",
+      "split": "validation",
+      "variant": "stress",
+      "mode": "allch0",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.45,
+      "eventId": "e05",
+      "chordSymbol": "Em7",
+      "evidence": {
+        "targetNoteInstanceId": "n24:t1:c0:s8156:d212:p69",
+        "targetPitch": 69,
+        "productRole": "harmony",
+        "roleConfidence": 0.468869,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 4,
+        "supportPitches": [
+          52,
+          59,
+          62,
+          64
+        ],
+        "supportDurationBeats": 0.40625,
+        "supportDurationRatio": 0.919811,
+        "supportMass": 1.695833,
+        "repeatedSupportCount": 5,
+        "eventAvailableSupportPitchCount": 5,
+        "supportCoverageRatio": 0.8,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "role-is-harmony",
+          "role-confidence-too-low"
+        ],
+        "subset": "other"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {},
+      "beforeInputPitchSet": [
+        45,
+        52,
+        59,
+        62,
+        64,
+        69
+      ],
+      "afterInputPitchSet": [
+        45,
+        52,
+        59,
+        62,
+        64,
+        69
+      ],
+      "beforeFinalPitchSet": [
+        52,
+        59,
+        62,
+        64
+      ],
+      "afterFinalPitchSet": [
+        52,
+        59,
+        62,
+        64
+      ],
+      "goldPitchSet": [
+        52,
+        59,
+        62,
+        64
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.6970246076900843,
+      "afterConfidence": 0.6970246076900843,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.102083,
+      "afterWinnerDuration": 0.102083,
+      "winnerDurationDelta": 0,
+      "beforeExact": true,
+      "afterExact": true,
+      "beforeMelodyLeakedPitches": [],
+      "afterMelodyLeakedPitches": [],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": true,
+      "afterRegisterExact": true,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 4,
+      "goldCount": 4,
+      "extraNoteCount": 0,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H11_stress/e06",
+      "fileId": "H11_stress",
+      "scenarioId": "H11",
+      "scenarioSlug": "all-channel-zero-stems",
+      "split": "validation",
+      "variant": "stress",
+      "mode": "allch0",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.45,
+      "eventId": "e06",
+      "chordSymbol": "A7b9",
+      "evidence": {
+        "targetNoteInstanceId": "n29:t1:c0:s10076:d228:p67",
+        "targetPitch": 67,
+        "productRole": "harmony",
+        "roleConfidence": 0.468869,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 4,
+        "supportPitches": [
+          45,
+          55,
+          58,
+          61
+        ],
+        "supportDurationBeats": 0.4375,
+        "supportDurationRatio": 0.921053,
+        "supportMass": 1.814583,
+        "repeatedSupportCount": 5,
+        "eventAvailableSupportPitchCount": 5,
+        "supportCoverageRatio": 0.8,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "role-is-harmony",
+          "role-confidence-too-low"
+        ],
+        "subset": "other"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {},
+      "beforeInputPitchSet": [
+        45,
+        50,
+        55,
+        58,
+        61,
+        67
+      ],
+      "afterInputPitchSet": [
+        45,
+        50,
+        55,
+        58,
+        61,
+        67
+      ],
+      "beforeFinalPitchSet": [
+        45,
+        55,
+        58,
+        61,
+        67
+      ],
+      "afterFinalPitchSet": [
+        45,
+        55,
+        58,
+        61,
+        67
+      ],
+      "goldPitchSet": [
+        45,
+        55,
+        58,
+        61
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.7477127848480438,
+      "afterConfidence": 0.7477127848480438,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.4375,
+      "afterWinnerDuration": 0.4375,
+      "winnerDurationDelta": 0,
+      "beforeExact": false,
+      "afterExact": false,
+      "beforeMelodyLeakedPitches": [
+        67
+      ],
+      "afterMelodyLeakedPitches": [
+        67
+      ],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": false,
+      "afterRegisterExact": false,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 5,
+      "goldCount": 4,
+      "extraNoteCount": 1,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H11_stress/e07",
+      "fileId": "H11_stress",
+      "scenarioId": "H11",
+      "scenarioSlug": "all-channel-zero-stems",
+      "split": "validation",
+      "variant": "stress",
+      "mode": "allch0",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.45,
+      "eventId": "e07",
+      "chordSymbol": "Dm7",
+      "evidence": {
+        "targetNoteInstanceId": "n34:t1:c0:s11989:d222:p66",
+        "targetPitch": 66,
+        "productRole": "harmony",
+        "roleConfidence": 0.468869,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 4,
+        "supportPitches": [
+          50,
+          57,
+          60,
+          62
+        ],
+        "supportDurationBeats": 0.408333,
+        "supportDurationRatio": 0.882883,
+        "supportMass": 1.772917,
+        "repeatedSupportCount": 5,
+        "eventAvailableSupportPitchCount": 5,
+        "supportCoverageRatio": 0.8,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "role-is-harmony",
+          "role-confidence-too-low"
+        ],
+        "subset": "other"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {},
+      "beforeInputPitchSet": [
+        43,
+        50,
+        57,
+        60,
+        62,
+        66
+      ],
+      "afterInputPitchSet": [
+        43,
+        50,
+        57,
+        60,
+        62,
+        66
+      ],
+      "beforeFinalPitchSet": [
+        50,
+        57,
+        60,
+        62
+      ],
+      "afterFinalPitchSet": [
+        50,
+        57,
+        60,
+        62
+      ],
+      "goldPitchSet": [
+        50,
+        57,
+        60,
+        62
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.6981912743567511,
+      "afterConfidence": 0.6981912743567511,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.116667,
+      "afterWinnerDuration": 0.116667,
+      "winnerDurationDelta": 0,
+      "beforeExact": true,
+      "afterExact": true,
+      "beforeMelodyLeakedPitches": [],
+      "afterMelodyLeakedPitches": [],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": true,
+      "afterRegisterExact": true,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 4,
+      "goldCount": 4,
+      "extraNoteCount": 0,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H11_stress/e08",
+      "fileId": "H11_stress",
+      "scenarioId": "H11",
+      "scenarioSlug": "all-channel-zero-stems",
+      "split": "validation",
+      "variant": "stress",
+      "mode": "allch0",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.45,
+      "eventId": "e08",
+      "chordSymbol": "G7sus4",
+      "evidence": {
+        "targetNoteInstanceId": "n39:t1:c0:s13909:d222:p64",
+        "targetPitch": 64,
+        "productRole": "harmony",
+        "roleConfidence": 0.468869,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 4,
+        "supportPitches": [
+          43,
+          53,
+          55,
+          60
+        ],
+        "supportDurationBeats": 0.433333,
+        "supportDurationRatio": 0.936937,
+        "supportMass": 1.816667,
+        "repeatedSupportCount": 4,
+        "eventAvailableSupportPitchCount": 4,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "role-is-harmony",
+          "role-confidence-too-low"
+        ],
+        "subset": "other"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {},
+      "beforeInputPitchSet": [
+        43,
+        53,
+        55,
+        60,
+        64
+      ],
+      "afterInputPitchSet": [
+        43,
+        53,
+        55,
+        60,
+        64
+      ],
+      "beforeFinalPitchSet": [
+        43,
+        53,
+        55,
+        60
+      ],
+      "afterFinalPitchSet": [
+        43,
+        53,
+        55,
+        60
+      ],
+      "goldPitchSet": [
+        43,
+        53,
+        55,
+        60
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.696691274356751,
+      "afterConfidence": 0.696691274356751,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.097917,
+      "afterWinnerDuration": 0.097917,
+      "winnerDurationDelta": 0,
+      "beforeExact": true,
+      "afterExact": true,
+      "beforeMelodyLeakedPitches": [],
+      "afterMelodyLeakedPitches": [],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": true,
+      "afterRegisterExact": true,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 4,
+      "goldCount": 4,
+      "extraNoteCount": 0,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H13_clean/e01",
+      "fileId": "H13_clean",
+      "scenarioId": "H13",
+      "scenarioSlug": "short-support-duration",
+      "split": "validation",
+      "variant": "clean",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.1,
+      "eventId": "e01",
+      "chordSymbol": "Cmaj9",
+      "evidence": {
+        "targetNoteInstanceId": "n4:t3:c2:s480:d216:p65",
+        "targetPitch": 65,
+        "productRole": "melody",
+        "roleConfidence": 1,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 3,
+        "supportPitches": [
+          55,
+          59,
+          62
+        ],
+        "supportDurationBeats": 0.079167,
+        "supportDurationRatio": 0.175926,
+        "supportMass": 0.2375,
+        "repeatedSupportCount": 3,
+        "eventAvailableSupportPitchCount": 3,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "support-count-3",
+          "support-duration-too-short"
+        ],
+        "subset": "primary"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {
+        "n4:t3:c2:s480:d216:p65": {
+          "supportPitches": [],
+          "eventAvailableSupportPitches": [
+            55,
+            59,
+            62
+          ],
+          "supportCoverageRatio": 0,
+          "supportDurationBeats": 0.37083333333333335
+        }
+      },
+      "beforeInputPitchSet": [
+        48,
+        55,
+        59,
+        62,
+        65
+      ],
+      "afterInputPitchSet": [
+        48,
+        55,
+        59,
+        62,
+        65
+      ],
+      "beforeFinalPitchSet": [
+        48,
+        65
+      ],
+      "afterFinalPitchSet": [
+        48,
+        65
+      ],
+      "goldPitchSet": [
+        48,
+        55,
+        59,
+        62
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.22166666666666668,
+      "afterConfidence": 0.22166666666666668,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.370833,
+      "afterWinnerDuration": 0.370833,
+      "winnerDurationDelta": 0,
+      "beforeExact": false,
+      "afterExact": false,
+      "beforeMelodyLeakedPitches": [
+        65
+      ],
+      "afterMelodyLeakedPitches": [
+        65
+      ],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": false,
+      "afterRegisterExact": false,
+      "afterOctaveError": false,
+      "truePositive": 1,
+      "predictedCount": 2,
+      "goldCount": 4,
+      "extraNoteCount": 1,
+      "missingNoteCount": 3
+    },
+    {
+      "key": "H13_clean/e02",
+      "fileId": "H13_clean",
+      "scenarioId": "H13",
+      "scenarioSlug": "short-support-duration",
+      "split": "validation",
+      "variant": "clean",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.1,
+      "eventId": "e02",
+      "chordSymbol": "Am9",
+      "evidence": {
+        "targetNoteInstanceId": "n9:t3:c2:s2400:d216:p62",
+        "targetPitch": 62,
+        "productRole": "melody",
+        "roleConfidence": 1,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 3,
+        "supportPitches": [
+          52,
+          55,
+          59
+        ],
+        "supportDurationBeats": 0.079167,
+        "supportDurationRatio": 0.175926,
+        "supportMass": 0.2375,
+        "repeatedSupportCount": 3,
+        "eventAvailableSupportPitchCount": 3,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "support-count-3",
+          "support-duration-too-short"
+        ],
+        "subset": "primary"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {
+        "n9:t3:c2:s2400:d216:p62": {
+          "supportPitches": [],
+          "eventAvailableSupportPitches": [
+            52,
+            55,
+            59
+          ],
+          "supportCoverageRatio": 0,
+          "supportDurationBeats": 0.37083333333333357
+        }
+      },
+      "beforeInputPitchSet": [
+        45,
+        52,
+        55,
+        59,
+        62
+      ],
+      "afterInputPitchSet": [
+        45,
+        52,
+        55,
+        59,
+        62
+      ],
+      "beforeFinalPitchSet": [
+        45,
+        62
+      ],
+      "afterFinalPitchSet": [
+        45,
+        62
+      ],
+      "goldPitchSet": [
+        45,
+        52,
+        55,
+        59
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.22166666666666668,
+      "afterConfidence": 0.22166666666666668,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.370833,
+      "afterWinnerDuration": 0.370833,
+      "winnerDurationDelta": 0,
+      "beforeExact": false,
+      "afterExact": false,
+      "beforeMelodyLeakedPitches": [
+        62
+      ],
+      "afterMelodyLeakedPitches": [
+        62
+      ],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": false,
+      "afterRegisterExact": false,
+      "afterOctaveError": false,
+      "truePositive": 1,
+      "predictedCount": 2,
+      "goldCount": 4,
+      "extraNoteCount": 1,
+      "missingNoteCount": 3
+    },
+    {
+      "key": "H13_clean/e03",
+      "fileId": "H13_clean",
+      "scenarioId": "H13",
+      "scenarioSlug": "short-support-duration",
+      "split": "validation",
+      "variant": "clean",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.1,
+      "eventId": "e03",
+      "chordSymbol": "Dm9",
+      "evidence": {
+        "targetNoteInstanceId": "n14:t3:c2:s4320:d216:p68",
+        "targetPitch": 68,
+        "productRole": "melody",
+        "roleConfidence": 1,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 3,
+        "supportPitches": [
+          57,
+          60,
+          64
+        ],
+        "supportDurationBeats": 0.079167,
+        "supportDurationRatio": 0.175926,
+        "supportMass": 0.2375,
+        "repeatedSupportCount": 3,
+        "eventAvailableSupportPitchCount": 3,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "support-count-3",
+          "support-duration-too-short"
+        ],
+        "subset": "primary"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {
+        "n14:t3:c2:s4320:d216:p68": {
+          "supportPitches": [],
+          "eventAvailableSupportPitches": [
+            57,
+            60,
+            64
+          ],
+          "supportCoverageRatio": 0,
+          "supportDurationBeats": 0.3708333333333318
+        }
+      },
+      "beforeInputPitchSet": [
+        50,
+        57,
+        60,
+        64,
+        68
+      ],
+      "afterInputPitchSet": [
+        50,
+        57,
+        60,
+        64,
+        68
+      ],
+      "beforeFinalPitchSet": [
+        50,
+        68
+      ],
+      "afterFinalPitchSet": [
+        50,
+        68
+      ],
+      "goldPitchSet": [
+        50,
+        57,
+        60,
+        64
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.22166666666666657,
+      "afterConfidence": 0.22166666666666657,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.370833,
+      "afterWinnerDuration": 0.370833,
+      "winnerDurationDelta": 0,
+      "beforeExact": false,
+      "afterExact": false,
+      "beforeMelodyLeakedPitches": [
+        68
+      ],
+      "afterMelodyLeakedPitches": [
+        68
+      ],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": false,
+      "afterRegisterExact": false,
+      "afterOctaveError": false,
+      "truePositive": 1,
+      "predictedCount": 2,
+      "goldCount": 4,
+      "extraNoteCount": 1,
+      "missingNoteCount": 3
+    },
+    {
+      "key": "H13_clean/e04",
+      "fileId": "H13_clean",
+      "scenarioId": "H13",
+      "scenarioSlug": "short-support-duration",
+      "split": "validation",
+      "variant": "clean",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.1,
+      "eventId": "e04",
+      "chordSymbol": "G13",
+      "evidence": {
+        "targetNoteInstanceId": "n19:t3:c2:s6240:d216:p65",
+        "targetPitch": 65,
+        "productRole": "melody",
+        "roleConfidence": 1,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 3,
+        "supportPitches": [
+          53,
+          57,
+          59
+        ],
+        "supportDurationBeats": 0.079167,
+        "supportDurationRatio": 0.175926,
+        "supportMass": 0.2375,
+        "repeatedSupportCount": 3,
+        "eventAvailableSupportPitchCount": 3,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "support-count-3",
+          "support-duration-too-short"
+        ],
+        "subset": "primary"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {
+        "n19:t3:c2:s6240:d216:p65": {
+          "supportPitches": [],
+          "eventAvailableSupportPitches": [
+            53,
+            57,
+            59
+          ],
+          "supportCoverageRatio": 0,
+          "supportDurationBeats": 0.3708333333333318
+        }
+      },
+      "beforeInputPitchSet": [
+        43,
+        53,
+        57,
+        59,
+        65
+      ],
+      "afterInputPitchSet": [
+        43,
+        53,
+        57,
+        59,
+        65
+      ],
+      "beforeFinalPitchSet": [
+        43,
+        65
+      ],
+      "afterFinalPitchSet": [
+        43,
+        65
+      ],
+      "goldPitchSet": [
+        43,
+        53,
+        57,
+        59
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.4133333333333332,
+      "afterConfidence": 0.4133333333333332,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.370833,
+      "afterWinnerDuration": 0.370833,
+      "winnerDurationDelta": 0,
+      "beforeExact": false,
+      "afterExact": false,
+      "beforeMelodyLeakedPitches": [
+        65
+      ],
+      "afterMelodyLeakedPitches": [
+        65
+      ],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": false,
+      "afterRegisterExact": false,
+      "afterOctaveError": false,
+      "truePositive": 1,
+      "predictedCount": 2,
+      "goldCount": 4,
+      "extraNoteCount": 1,
+      "missingNoteCount": 3
+    },
+    {
+      "key": "H13_clean/e05",
+      "fileId": "H13_clean",
+      "scenarioId": "H13",
+      "scenarioSlug": "short-support-duration",
+      "split": "validation",
+      "variant": "clean",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.1,
+      "eventId": "e05",
+      "chordSymbol": "Em7",
+      "evidence": {
+        "targetNoteInstanceId": "n24:t3:c2:s8160:d216:p69",
+        "targetPitch": 69,
+        "productRole": "melody",
+        "roleConfidence": 1,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 3,
+        "supportPitches": [
+          59,
+          62,
+          64
+        ],
+        "supportDurationBeats": 0.079167,
+        "supportDurationRatio": 0.175926,
+        "supportMass": 0.2375,
+        "repeatedSupportCount": 3,
+        "eventAvailableSupportPitchCount": 3,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "support-count-3",
+          "support-duration-too-short"
+        ],
+        "subset": "primary"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {
+        "n24:t3:c2:s8160:d216:p69": {
+          "supportPitches": [],
+          "eventAvailableSupportPitches": [
+            59,
+            62,
+            64
+          ],
+          "supportCoverageRatio": 0,
+          "supportDurationBeats": 0.37083333333333357
+        }
+      },
+      "beforeInputPitchSet": [
+        52,
+        59,
+        62,
+        64,
+        69
+      ],
+      "afterInputPitchSet": [
+        52,
+        59,
+        62,
+        64,
+        69
+      ],
+      "beforeFinalPitchSet": [
+        52,
+        69
+      ],
+      "afterFinalPitchSet": [
+        52,
+        69
+      ],
+      "goldPitchSet": [
+        52,
+        59,
+        62,
+        64
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.24666666666666665,
+      "afterConfidence": 0.24666666666666665,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.370833,
+      "afterWinnerDuration": 0.370833,
+      "winnerDurationDelta": 0,
+      "beforeExact": false,
+      "afterExact": false,
+      "beforeMelodyLeakedPitches": [
+        69
+      ],
+      "afterMelodyLeakedPitches": [
+        69
+      ],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": false,
+      "afterRegisterExact": false,
+      "afterOctaveError": false,
+      "truePositive": 1,
+      "predictedCount": 2,
+      "goldCount": 4,
+      "extraNoteCount": 1,
+      "missingNoteCount": 3
+    },
+    {
+      "key": "H13_clean/e06",
+      "fileId": "H13_clean",
+      "scenarioId": "H13",
+      "scenarioSlug": "short-support-duration",
+      "split": "validation",
+      "variant": "clean",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.1,
+      "eventId": "e06",
+      "chordSymbol": "A7b9",
+      "evidence": {
+        "targetNoteInstanceId": "n29:t3:c2:s10080:d216:p67",
+        "targetPitch": 67,
+        "productRole": "melody",
+        "roleConfidence": 1,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 3,
+        "supportPitches": [
+          55,
+          58,
+          61
+        ],
+        "supportDurationBeats": 0.079167,
+        "supportDurationRatio": 0.175926,
+        "supportMass": 0.2375,
+        "repeatedSupportCount": 3,
+        "eventAvailableSupportPitchCount": 3,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "support-count-3",
+          "support-duration-too-short"
+        ],
+        "subset": "primary"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {
+        "n29:t3:c2:s10080:d216:p67": {
+          "supportPitches": [],
+          "eventAvailableSupportPitches": [
+            55,
+            58,
+            61
+          ],
+          "supportCoverageRatio": 0,
+          "supportDurationBeats": 0.37083333333333357
+        }
+      },
+      "beforeInputPitchSet": [
+        45,
+        55,
+        58,
+        61,
+        67
+      ],
+      "afterInputPitchSet": [
+        45,
+        55,
+        58,
+        61,
+        67
+      ],
+      "beforeFinalPitchSet": [
+        45,
+        67
+      ],
+      "afterFinalPitchSet": [
+        45,
+        67
+      ],
+      "goldPitchSet": [
+        45,
+        55,
+        58,
+        61
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.4466666666666667,
+      "afterConfidence": 0.4466666666666667,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.370833,
+      "afterWinnerDuration": 0.370833,
+      "winnerDurationDelta": 0,
+      "beforeExact": false,
+      "afterExact": false,
+      "beforeMelodyLeakedPitches": [
+        67
+      ],
+      "afterMelodyLeakedPitches": [
+        67
+      ],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": false,
+      "afterRegisterExact": false,
+      "afterOctaveError": false,
+      "truePositive": 1,
+      "predictedCount": 2,
+      "goldCount": 4,
+      "extraNoteCount": 1,
+      "missingNoteCount": 3
+    },
+    {
+      "key": "H13_clean/e07",
+      "fileId": "H13_clean",
+      "scenarioId": "H13",
+      "scenarioSlug": "short-support-duration",
+      "split": "validation",
+      "variant": "clean",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.1,
+      "eventId": "e07",
+      "chordSymbol": "Dm7",
+      "evidence": {
+        "targetNoteInstanceId": "n34:t3:c2:s12000:d216:p66",
+        "targetPitch": 66,
+        "productRole": "melody",
+        "roleConfidence": 1,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 3,
+        "supportPitches": [
+          57,
+          60,
+          62
+        ],
+        "supportDurationBeats": 0.079167,
+        "supportDurationRatio": 0.175926,
+        "supportMass": 0.2375,
+        "repeatedSupportCount": 3,
+        "eventAvailableSupportPitchCount": 3,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "support-count-3",
+          "support-duration-too-short"
+        ],
+        "subset": "primary"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {
+        "n34:t3:c2:s12000:d216:p66": {
+          "supportPitches": [],
+          "eventAvailableSupportPitches": [
+            57,
+            60,
+            62
+          ],
+          "supportCoverageRatio": 0,
+          "supportDurationBeats": 0.37083333333333357
+        }
+      },
+      "beforeInputPitchSet": [
+        50,
+        57,
+        60,
+        62,
+        66
+      ],
+      "afterInputPitchSet": [
+        50,
+        57,
+        60,
+        62,
+        66
+      ],
+      "beforeFinalPitchSet": [
+        50,
+        66
+      ],
+      "afterFinalPitchSet": [
+        50,
+        66
+      ],
+      "goldPitchSet": [
+        50,
+        57,
+        60,
+        62
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.24666666666666665,
+      "afterConfidence": 0.24666666666666665,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.370833,
+      "afterWinnerDuration": 0.370833,
+      "winnerDurationDelta": 0,
+      "beforeExact": false,
+      "afterExact": false,
+      "beforeMelodyLeakedPitches": [
+        66
+      ],
+      "afterMelodyLeakedPitches": [
+        66
+      ],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": false,
+      "afterRegisterExact": false,
+      "afterOctaveError": false,
+      "truePositive": 1,
+      "predictedCount": 2,
+      "goldCount": 4,
+      "extraNoteCount": 1,
+      "missingNoteCount": 3
+    },
+    {
+      "key": "H13_clean/e08",
+      "fileId": "H13_clean",
+      "scenarioId": "H13",
+      "scenarioSlug": "short-support-duration",
+      "split": "validation",
+      "variant": "clean",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.1,
+      "eventId": "e08",
+      "chordSymbol": "G7sus4",
+      "evidence": {
+        "targetNoteInstanceId": "n39:t3:c2:s13920:d216:p64",
+        "targetPitch": 64,
+        "productRole": "melody",
+        "roleConfidence": 1,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 3,
+        "supportPitches": [
+          53,
+          55,
+          60
+        ],
+        "supportDurationBeats": 0.079167,
+        "supportDurationRatio": 0.175926,
+        "supportMass": 0.2375,
+        "repeatedSupportCount": 3,
+        "eventAvailableSupportPitchCount": 3,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "support-count-3",
+          "support-duration-too-short"
+        ],
+        "subset": "primary"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {
+        "n39:t3:c2:s13920:d216:p64": {
+          "supportPitches": [],
+          "eventAvailableSupportPitches": [
+            53,
+            55,
+            60
+          ],
+          "supportCoverageRatio": 0,
+          "supportDurationBeats": 0.37083333333333357
+        }
+      },
+      "beforeInputPitchSet": [
+        43,
+        53,
+        55,
+        60,
+        64
+      ],
+      "afterInputPitchSet": [
+        43,
+        53,
+        55,
+        60,
+        64
+      ],
+      "beforeFinalPitchSet": [
+        43,
+        64
+      ],
+      "afterFinalPitchSet": [
+        43,
+        64
+      ],
+      "goldPitchSet": [
+        43,
+        53,
+        55,
+        60
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.24666666666666665,
+      "afterConfidence": 0.24666666666666665,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.370833,
+      "afterWinnerDuration": 0.370833,
+      "winnerDurationDelta": 0,
+      "beforeExact": false,
+      "afterExact": false,
+      "beforeMelodyLeakedPitches": [
+        64
+      ],
+      "afterMelodyLeakedPitches": [
+        64
+      ],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": false,
+      "afterRegisterExact": false,
+      "afterOctaveError": false,
+      "truePositive": 1,
+      "predictedCount": 2,
+      "goldCount": 4,
+      "extraNoteCount": 1,
+      "missingNoteCount": 3
+    },
+    {
+      "key": "H13_stress/e01",
+      "fileId": "H13_stress",
+      "scenarioId": "H13",
+      "scenarioSlug": "short-support-duration",
+      "split": "validation",
+      "variant": "stress",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.1,
+      "eventId": "e01",
+      "chordSymbol": "Cmaj9",
+      "evidence": {
+        "targetNoteInstanceId": "n4:t2:c0:s489:d229:p65",
+        "targetPitch": 65,
+        "productRole": "harmony",
+        "roleConfidence": 0.468892,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 4,
+        "supportPitches": [
+          48,
+          55,
+          59,
+          62
+        ],
+        "supportDurationBeats": 0.0625,
+        "supportDurationRatio": 0.131004,
+        "supportMass": 0.766667,
+        "repeatedSupportCount": 5,
+        "eventAvailableSupportPitchCount": 5,
+        "supportCoverageRatio": 0.8,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "role-is-harmony",
+          "role-confidence-too-low",
+          "support-duration-too-short"
+        ],
+        "subset": "other"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {},
+      "beforeInputPitchSet": [
+        45,
+        48,
+        55,
+        59,
+        62,
+        65
+      ],
+      "afterInputPitchSet": [
+        45,
+        48,
+        55,
+        59,
+        62,
+        65
+      ],
+      "beforeFinalPitchSet": [
+        48,
+        65
+      ],
+      "afterFinalPitchSet": [
+        48,
+        65
+      ],
+      "goldPitchSet": [
+        48,
+        55,
+        59,
+        62
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.3112946876444071,
+      "afterConfidence": 0.3112946876444071,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.3625,
+      "afterWinnerDuration": 0.3625,
+      "winnerDurationDelta": 0,
+      "beforeExact": false,
+      "afterExact": false,
+      "beforeMelodyLeakedPitches": [
+        65
+      ],
+      "afterMelodyLeakedPitches": [
+        65
+      ],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": false,
+      "afterRegisterExact": false,
+      "afterOctaveError": false,
+      "truePositive": 1,
+      "predictedCount": 2,
+      "goldCount": 4,
+      "extraNoteCount": 1,
+      "missingNoteCount": 3
+    },
+    {
+      "key": "H13_stress/e02",
+      "fileId": "H13_stress",
+      "scenarioId": "H13",
+      "scenarioSlug": "short-support-duration",
+      "split": "validation",
+      "variant": "stress",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.1,
+      "eventId": "e02",
+      "chordSymbol": "Am9",
+      "evidence": {
+        "targetNoteInstanceId": "n9:t2:c0:s2399:d227:p62",
+        "targetPitch": 62,
+        "productRole": "harmony",
+        "roleConfidence": 0.468892,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 4,
+        "supportPitches": [
+          45,
+          52,
+          55,
+          59
+        ],
+        "supportDurationBeats": 0.05625,
+        "supportDurationRatio": 0.118943,
+        "supportMass": 0.672917,
+        "repeatedSupportCount": 4,
+        "eventAvailableSupportPitchCount": 4,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "role-is-harmony",
+          "role-confidence-too-low",
+          "support-duration-too-short"
+        ],
+        "subset": "other"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {},
+      "beforeInputPitchSet": [
+        45,
+        52,
+        55,
+        59,
+        62
+      ],
+      "afterInputPitchSet": [
+        45,
+        52,
+        55,
+        59,
+        62
+      ],
+      "beforeFinalPitchSet": [
+        45,
+        62
+      ],
+      "afterFinalPitchSet": [
+        45,
+        62
+      ],
+      "goldPitchSet": [
+        45,
+        52,
+        55,
+        59
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.31362802097774045,
+      "afterConfidence": 0.31362802097774045,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.391667,
+      "afterWinnerDuration": 0.391667,
+      "winnerDurationDelta": 0,
+      "beforeExact": false,
+      "afterExact": false,
+      "beforeMelodyLeakedPitches": [
+        62
+      ],
+      "afterMelodyLeakedPitches": [
+        62
+      ],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": false,
+      "afterRegisterExact": false,
+      "afterOctaveError": false,
+      "truePositive": 1,
+      "predictedCount": 2,
+      "goldCount": 4,
+      "extraNoteCount": 1,
+      "missingNoteCount": 3
+    },
+    {
+      "key": "H13_stress/e03",
+      "fileId": "H13_stress",
+      "scenarioId": "H13",
+      "scenarioSlug": "short-support-duration",
+      "split": "validation",
+      "variant": "stress",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.1,
+      "eventId": "e03",
+      "chordSymbol": "Dm9",
+      "evidence": {
+        "targetNoteInstanceId": "n13:t2:c0:s4311:d220:p68",
+        "targetPitch": 68,
+        "productRole": "harmony",
+        "roleConfidence": 0.468892,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 4,
+        "supportPitches": [
+          50,
+          57,
+          60,
+          64
+        ],
+        "supportDurationBeats": 0.058333,
+        "supportDurationRatio": 0.127273,
+        "supportMass": 0.752083,
+        "repeatedSupportCount": 4,
+        "eventAvailableSupportPitchCount": 4,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "role-is-harmony",
+          "role-confidence-too-low",
+          "support-duration-too-short"
+        ],
+        "subset": "other"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {},
+      "beforeInputPitchSet": [
+        50,
+        57,
+        60,
+        64,
+        68
+      ],
+      "afterInputPitchSet": [
+        50,
+        57,
+        60,
+        64,
+        68
+      ],
+      "beforeFinalPitchSet": [
+        50,
+        68
+      ],
+      "afterFinalPitchSet": [
+        50,
+        68
+      ],
+      "goldPitchSet": [
+        50,
+        57,
+        60,
+        64
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.3077946876444071,
+      "afterConfidence": 0.3077946876444071,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.31875,
+      "afterWinnerDuration": 0.31875,
+      "winnerDurationDelta": 0,
+      "beforeExact": false,
+      "afterExact": false,
+      "beforeMelodyLeakedPitches": [
+        68
+      ],
+      "afterMelodyLeakedPitches": [
+        68
+      ],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": false,
+      "afterRegisterExact": false,
+      "afterOctaveError": false,
+      "truePositive": 1,
+      "predictedCount": 2,
+      "goldCount": 4,
+      "extraNoteCount": 1,
+      "missingNoteCount": 3
+    },
+    {
+      "key": "H13_stress/e04",
+      "fileId": "H13_stress",
+      "scenarioId": "H13",
+      "scenarioSlug": "short-support-duration",
+      "split": "validation",
+      "variant": "stress",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.1,
+      "eventId": "e04",
+      "chordSymbol": "G13",
+      "evidence": {
+        "targetNoteInstanceId": "n19:t2:c0:s6243:d223:p65",
+        "targetPitch": 65,
+        "productRole": "harmony",
+        "roleConfidence": 0.468892,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 4,
+        "supportPitches": [
+          43,
+          53,
+          57,
+          59
+        ],
+        "supportDurationBeats": 0.05,
+        "supportDurationRatio": 0.107623,
+        "supportMass": 0.71875,
+        "repeatedSupportCount": 5,
+        "eventAvailableSupportPitchCount": 5,
+        "supportCoverageRatio": 0.8,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "role-is-harmony",
+          "role-confidence-too-low",
+          "support-duration-too-short"
+        ],
+        "subset": "other"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {},
+      "beforeInputPitchSet": [
+        43,
+        52,
+        53,
+        57,
+        59,
+        65
+      ],
+      "afterInputPitchSet": [
+        43,
+        52,
+        53,
+        57,
+        59,
+        65
+      ],
+      "beforeFinalPitchSet": [
+        43,
+        65
+      ],
+      "afterFinalPitchSet": [
+        43,
+        65
+      ],
+      "goldPitchSet": [
+        43,
+        53,
+        57,
+        59
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.5026280209777403,
+      "afterConfidence": 0.5026280209777403,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.358333,
+      "afterWinnerDuration": 0.358333,
+      "winnerDurationDelta": 0,
+      "beforeExact": false,
+      "afterExact": false,
+      "beforeMelodyLeakedPitches": [
+        65
+      ],
+      "afterMelodyLeakedPitches": [
+        65
+      ],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": false,
+      "afterRegisterExact": false,
+      "afterOctaveError": false,
+      "truePositive": 1,
+      "predictedCount": 2,
+      "goldCount": 4,
+      "extraNoteCount": 1,
+      "missingNoteCount": 3
+    },
+    {
+      "key": "H13_stress/e05",
+      "fileId": "H13_stress",
+      "scenarioId": "H13",
+      "scenarioSlug": "short-support-duration",
+      "split": "validation",
+      "variant": "stress",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.1,
+      "eventId": "e05",
+      "chordSymbol": "Em7",
+      "evidence": {
+        "targetNoteInstanceId": "n24:t2:c0:s8167:d227:p69",
+        "targetPitch": 69,
+        "productRole": "harmony",
+        "roleConfidence": 0.468892,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 4,
+        "supportPitches": [
+          52,
+          59,
+          62,
+          64
+        ],
+        "supportDurationBeats": 0.097917,
+        "supportDurationRatio": 0.207048,
+        "supportMass": 0.802083,
+        "repeatedSupportCount": 4,
+        "eventAvailableSupportPitchCount": 4,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "role-is-harmony",
+          "role-confidence-too-low",
+          "support-duration-too-short"
+        ],
+        "subset": "other"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {},
+      "beforeInputPitchSet": [
+        52,
+        59,
+        62,
+        64,
+        69
+      ],
+      "afterInputPitchSet": [
+        52,
+        59,
+        62,
+        64,
+        69
+      ],
+      "beforeFinalPitchSet": [
+        52,
+        59,
+        62,
+        64,
+        69
+      ],
+      "afterFinalPitchSet": [
+        52,
+        59,
+        62,
+        64,
+        69
+      ],
+      "goldPitchSet": [
+        52,
+        59,
+        62,
+        64
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.6326401104778068,
+      "afterConfidence": 0.6326401104778068,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.097917,
+      "afterWinnerDuration": 0.097917,
+      "winnerDurationDelta": 0,
+      "beforeExact": false,
+      "afterExact": false,
+      "beforeMelodyLeakedPitches": [
+        69
+      ],
+      "afterMelodyLeakedPitches": [
+        69
+      ],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": false,
+      "afterRegisterExact": false,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 5,
+      "goldCount": 4,
+      "extraNoteCount": 1,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H13_stress/e06",
+      "fileId": "H13_stress",
+      "scenarioId": "H13",
+      "scenarioSlug": "short-support-duration",
+      "split": "validation",
+      "variant": "stress",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.1,
+      "eventId": "e06",
+      "chordSymbol": "A7b9",
+      "evidence": {
+        "targetNoteInstanceId": "n29:t2:c0:s10091:d223:p67",
+        "targetPitch": 67,
+        "productRole": "harmony",
+        "roleConfidence": 0.468892,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 4,
+        "supportPitches": [
+          45,
+          55,
+          58,
+          61
+        ],
+        "supportDurationBeats": 0.052083,
+        "supportDurationRatio": 0.112108,
+        "supportMass": 0.633333,
+        "repeatedSupportCount": 4,
+        "eventAvailableSupportPitchCount": 4,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "role-is-harmony",
+          "role-confidence-too-low",
+          "support-duration-too-short"
+        ],
+        "subset": "other"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {},
+      "beforeInputPitchSet": [
+        45,
+        55,
+        58,
+        61,
+        67
+      ],
+      "afterInputPitchSet": [
+        45,
+        55,
+        58,
+        61,
+        67
+      ],
+      "beforeFinalPitchSet": [
+        45,
+        67
+      ],
+      "afterFinalPitchSet": [
+        45,
+        67
+      ],
+      "goldPitchSet": [
+        45,
+        55,
+        58,
+        61
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.5396280209777407,
+      "afterConfidence": 0.5396280209777407,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.404167,
+      "afterWinnerDuration": 0.404167,
+      "winnerDurationDelta": 0,
+      "beforeExact": false,
+      "afterExact": false,
+      "beforeMelodyLeakedPitches": [
+        67
+      ],
+      "afterMelodyLeakedPitches": [
+        67
+      ],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": false,
+      "afterRegisterExact": false,
+      "afterOctaveError": false,
+      "truePositive": 1,
+      "predictedCount": 2,
+      "goldCount": 4,
+      "extraNoteCount": 1,
+      "missingNoteCount": 3
+    },
+    {
+      "key": "H13_stress/e07",
+      "fileId": "H13_stress",
+      "scenarioId": "H13",
+      "scenarioSlug": "short-support-duration",
+      "split": "validation",
+      "variant": "stress",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.1,
+      "eventId": "e07",
+      "chordSymbol": "Dm7",
+      "evidence": {
+        "targetNoteInstanceId": "n33:t2:c0:s11996:d213:p66",
+        "targetPitch": 66,
+        "productRole": "harmony",
+        "roleConfidence": 0.468892,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 4,
+        "supportPitches": [
+          50,
+          57,
+          60,
+          62
+        ],
+        "supportDurationBeats": 0.075,
+        "supportDurationRatio": 0.169014,
+        "supportMass": 0.716667,
+        "repeatedSupportCount": 4,
+        "eventAvailableSupportPitchCount": 4,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "role-is-harmony",
+          "role-confidence-too-low",
+          "support-duration-too-short"
+        ],
+        "subset": "other"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {},
+      "beforeInputPitchSet": [
+        50,
+        57,
+        60,
+        62,
+        66
+      ],
+      "afterInputPitchSet": [
+        50,
+        57,
+        60,
+        62,
+        66
+      ],
+      "beforeFinalPitchSet": [
+        50,
+        66
+      ],
+      "afterFinalPitchSet": [
+        50,
+        66
+      ],
+      "goldPitchSet": [
+        50,
+        57,
+        60,
+        62
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.3341280209777402,
+      "afterConfidence": 0.3341280209777402,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.335417,
+      "afterWinnerDuration": 0.335417,
+      "winnerDurationDelta": 0,
+      "beforeExact": false,
+      "afterExact": false,
+      "beforeMelodyLeakedPitches": [
+        66
+      ],
+      "afterMelodyLeakedPitches": [
+        66
+      ],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": false,
+      "afterRegisterExact": false,
+      "afterOctaveError": false,
+      "truePositive": 1,
+      "predictedCount": 2,
+      "goldCount": 4,
+      "extraNoteCount": 1,
+      "missingNoteCount": 3
+    },
+    {
+      "key": "H13_stress/e08",
+      "fileId": "H13_stress",
+      "scenarioId": "H13",
+      "scenarioSlug": "short-support-duration",
+      "split": "validation",
+      "variant": "stress",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.1,
+      "eventId": "e08",
+      "chordSymbol": "G7sus4",
+      "evidence": {
+        "targetNoteInstanceId": "n37:t2:c0:s13911:d209:p64",
+        "targetPitch": 64,
+        "productRole": "harmony",
+        "roleConfidence": 0.468892,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 4,
+        "supportPitches": [
+          43,
+          53,
+          55,
+          60
+        ],
+        "supportDurationBeats": 0.08125,
+        "supportDurationRatio": 0.186603,
+        "supportMass": 0.75,
+        "repeatedSupportCount": 4,
+        "eventAvailableSupportPitchCount": 4,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "role-is-harmony",
+          "role-confidence-too-low",
+          "support-duration-too-short"
+        ],
+        "subset": "other"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {},
+      "beforeInputPitchSet": [
+        43,
+        53,
+        55,
+        60,
+        64
+      ],
+      "afterInputPitchSet": [
+        43,
+        53,
+        55,
+        60,
+        64
+      ],
+      "beforeFinalPitchSet": [
+        43,
+        53,
+        55,
+        60,
+        64
+      ],
+      "afterFinalPitchSet": [
+        43,
+        53,
+        55,
+        60,
+        64
+      ],
+      "goldPitchSet": [
+        43,
+        53,
+        55,
+        60
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.6313067771444736,
+      "afterConfidence": 0.6313067771444736,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.08125,
+      "afterWinnerDuration": 0.08125,
+      "winnerDurationDelta": 0,
+      "beforeExact": false,
+      "afterExact": false,
+      "beforeMelodyLeakedPitches": [
+        64
+      ],
+      "afterMelodyLeakedPitches": [
+        64
+      ],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": false,
+      "afterRegisterExact": false,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 5,
+      "goldCount": 4,
+      "extraNoteCount": 1,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H15_clean/e01",
+      "fileId": "H15_clean",
+      "scenarioId": "H15",
+      "scenarioSlug": "long-support-duration",
+      "split": "validation",
+      "variant": "clean",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.4,
+      "eventId": "e01",
+      "chordSymbol": "Cmaj9",
+      "evidence": {
+        "targetNoteInstanceId": "n4:t3:c2:s480:d216:p65",
+        "targetPitch": 65,
+        "productRole": "melody",
+        "roleConfidence": 1,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 3,
+        "supportPitches": [
+          55,
+          59,
+          62
+        ],
+        "supportDurationBeats": 0.379167,
+        "supportDurationRatio": 0.842593,
+        "supportMass": 1.1375,
+        "repeatedSupportCount": 3,
+        "eventAvailableSupportPitchCount": 3,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "support-count-3"
+        ],
+        "subset": "primary"
+      },
+      "filterTriggered": true,
+      "removedNoteInstanceIds": [
+        "n4:t3:c2:s480:d216:p65"
+      ],
+      "filterReasons": [
+        "hypothesis-a:relative-support",
+        "support-count:3",
+        "available-texture:3",
+        "coverage-ratio:1",
+        "support-beats:0.379"
+      ],
+      "filterEvidence": {
+        "n4:t3:c2:s480:d216:p65": {
+          "supportPitches": [
+            55,
+            59,
+            62
+          ],
+          "eventAvailableSupportPitches": [
+            55,
+            59,
+            62
+          ],
+          "supportCoverageRatio": 1,
+          "supportDurationBeats": 0.37916666666666665
+        }
+      },
+      "beforeInputPitchSet": [
+        48,
+        55,
+        59,
+        62,
+        65
+      ],
+      "afterInputPitchSet": [
+        48,
+        55,
+        59,
+        62
+      ],
+      "beforeFinalPitchSet": [
+        48,
+        55,
+        59,
+        62,
+        65
+      ],
+      "afterFinalPitchSet": [
+        48,
+        55,
+        59,
+        62
+      ],
+      "goldPitchSet": [
+        48,
+        55,
+        59,
+        62
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.6895833333333332,
+      "afterConfidence": 0.772,
+      "confidenceDelta": 0.082417,
+      "beforeWinnerDuration": 0.379167,
+      "afterWinnerDuration": 0.4,
+      "winnerDurationDelta": 0.020833,
+      "beforeExact": false,
+      "afterExact": true,
+      "beforeMelodyLeakedPitches": [
+        65
+      ],
+      "afterMelodyLeakedPitches": [],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": true,
+      "pitchFidelityChanged": true,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": true,
+      "afterRegisterExact": true,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 4,
+      "goldCount": 4,
+      "extraNoteCount": 0,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H15_clean/e02",
+      "fileId": "H15_clean",
+      "scenarioId": "H15",
+      "scenarioSlug": "long-support-duration",
+      "split": "validation",
+      "variant": "clean",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.4,
+      "eventId": "e02",
+      "chordSymbol": "Am9",
+      "evidence": {
+        "targetNoteInstanceId": "n9:t3:c2:s2400:d216:p62",
+        "targetPitch": 62,
+        "productRole": "melody",
+        "roleConfidence": 1,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 3,
+        "supportPitches": [
+          52,
+          55,
+          59
+        ],
+        "supportDurationBeats": 0.379167,
+        "supportDurationRatio": 0.842593,
+        "supportMass": 1.1375,
+        "repeatedSupportCount": 3,
+        "eventAvailableSupportPitchCount": 3,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "support-count-3"
+        ],
+        "subset": "primary"
+      },
+      "filterTriggered": true,
+      "removedNoteInstanceIds": [
+        "n9:t3:c2:s2400:d216:p62"
+      ],
+      "filterReasons": [
+        "hypothesis-a:relative-support",
+        "support-count:3",
+        "available-texture:3",
+        "coverage-ratio:1",
+        "support-beats:0.379"
+      ],
+      "filterEvidence": {
+        "n9:t3:c2:s2400:d216:p62": {
+          "supportPitches": [
+            52,
+            55,
+            59
+          ],
+          "eventAvailableSupportPitches": [
+            52,
+            55,
+            59
+          ],
+          "supportCoverageRatio": 1,
+          "supportDurationBeats": 0.37916666666666643
+        }
+      },
+      "beforeInputPitchSet": [
+        45,
+        52,
+        55,
+        59,
+        62
+      ],
+      "afterInputPitchSet": [
+        45,
+        52,
+        55,
+        59
+      ],
+      "beforeFinalPitchSet": [
+        45,
+        52,
+        55,
+        59,
+        62
+      ],
+      "afterFinalPitchSet": [
+        45,
+        52,
+        55,
+        59
+      ],
+      "goldPitchSet": [
+        45,
+        52,
+        55,
+        59
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.6895833333333332,
+      "afterConfidence": 0.772,
+      "confidenceDelta": 0.082417,
+      "beforeWinnerDuration": 0.379167,
+      "afterWinnerDuration": 0.4,
+      "winnerDurationDelta": 0.020833,
+      "beforeExact": false,
+      "afterExact": true,
+      "beforeMelodyLeakedPitches": [
+        62
+      ],
+      "afterMelodyLeakedPitches": [],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": true,
+      "pitchFidelityChanged": true,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": true,
+      "afterRegisterExact": true,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 4,
+      "goldCount": 4,
+      "extraNoteCount": 0,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H15_clean/e03",
+      "fileId": "H15_clean",
+      "scenarioId": "H15",
+      "scenarioSlug": "long-support-duration",
+      "split": "validation",
+      "variant": "clean",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.4,
+      "eventId": "e03",
+      "chordSymbol": "Dm9",
+      "evidence": {
+        "targetNoteInstanceId": "n14:t3:c2:s4320:d216:p68",
+        "targetPitch": 68,
+        "productRole": "melody",
+        "roleConfidence": 1,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 3,
+        "supportPitches": [
+          57,
+          60,
+          64
+        ],
+        "supportDurationBeats": 0.379167,
+        "supportDurationRatio": 0.842593,
+        "supportMass": 1.1375,
+        "repeatedSupportCount": 3,
+        "eventAvailableSupportPitchCount": 3,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "support-count-3"
+        ],
+        "subset": "primary"
+      },
+      "filterTriggered": true,
+      "removedNoteInstanceIds": [
+        "n14:t3:c2:s4320:d216:p68"
+      ],
+      "filterReasons": [
+        "hypothesis-a:relative-support",
+        "support-count:3",
+        "available-texture:3",
+        "coverage-ratio:1",
+        "support-beats:0.379"
+      ],
+      "filterEvidence": {
+        "n14:t3:c2:s4320:d216:p68": {
+          "supportPitches": [
+            57,
+            60,
+            64
+          ],
+          "eventAvailableSupportPitches": [
+            57,
+            60,
+            64
+          ],
+          "supportCoverageRatio": 1,
+          "supportDurationBeats": 0.37916666666666643
+        }
+      },
+      "beforeInputPitchSet": [
+        50,
+        57,
+        60,
+        64,
+        68
+      ],
+      "afterInputPitchSet": [
+        50,
+        57,
+        60,
+        64
+      ],
+      "beforeFinalPitchSet": [
+        50,
+        57,
+        60,
+        64,
+        68
+      ],
+      "afterFinalPitchSet": [
+        50,
+        57,
+        60,
+        64
+      ],
+      "goldPitchSet": [
+        50,
+        57,
+        60,
+        64
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.6895833333333332,
+      "afterConfidence": 0.772,
+      "confidenceDelta": 0.082417,
+      "beforeWinnerDuration": 0.379167,
+      "afterWinnerDuration": 0.4,
+      "winnerDurationDelta": 0.020833,
+      "beforeExact": false,
+      "afterExact": true,
+      "beforeMelodyLeakedPitches": [
+        68
+      ],
+      "afterMelodyLeakedPitches": [],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": true,
+      "pitchFidelityChanged": true,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": true,
+      "afterRegisterExact": true,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 4,
+      "goldCount": 4,
+      "extraNoteCount": 0,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H15_clean/e04",
+      "fileId": "H15_clean",
+      "scenarioId": "H15",
+      "scenarioSlug": "long-support-duration",
+      "split": "validation",
+      "variant": "clean",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.4,
+      "eventId": "e04",
+      "chordSymbol": "G13",
+      "evidence": {
+        "targetNoteInstanceId": "n19:t3:c2:s6240:d216:p65",
+        "targetPitch": 65,
+        "productRole": "melody",
+        "roleConfidence": 1,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 3,
+        "supportPitches": [
+          53,
+          57,
+          59
+        ],
+        "supportDurationBeats": 0.379167,
+        "supportDurationRatio": 0.842593,
+        "supportMass": 1.1375,
+        "repeatedSupportCount": 3,
+        "eventAvailableSupportPitchCount": 3,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "support-count-3"
+        ],
+        "subset": "primary"
+      },
+      "filterTriggered": true,
+      "removedNoteInstanceIds": [
+        "n19:t3:c2:s6240:d216:p65"
+      ],
+      "filterReasons": [
+        "hypothesis-a:relative-support",
+        "support-count:3",
+        "available-texture:3",
+        "coverage-ratio:1",
+        "support-beats:0.379"
+      ],
+      "filterEvidence": {
+        "n19:t3:c2:s6240:d216:p65": {
+          "supportPitches": [
+            53,
+            57,
+            59
+          ],
+          "eventAvailableSupportPitches": [
+            53,
+            57,
+            59
+          ],
+          "supportCoverageRatio": 1,
+          "supportDurationBeats": 0.37916666666666643
+        }
+      },
+      "beforeInputPitchSet": [
+        43,
+        53,
+        57,
+        59,
+        65
+      ],
+      "afterInputPitchSet": [
+        43,
+        53,
+        57,
+        59
+      ],
+      "beforeFinalPitchSet": [
+        43,
+        53,
+        57,
+        59,
+        65
+      ],
+      "afterFinalPitchSet": [
+        43,
+        53,
+        57,
+        59
+      ],
+      "goldPitchSet": [
+        43,
+        53,
+        57,
+        59
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.6729166666666666,
+      "afterConfidence": 0.7053333333333334,
+      "confidenceDelta": 0.032417,
+      "beforeWinnerDuration": 0.379167,
+      "afterWinnerDuration": 0.4,
+      "winnerDurationDelta": 0.020833,
+      "beforeExact": false,
+      "afterExact": true,
+      "beforeMelodyLeakedPitches": [
+        65
+      ],
+      "afterMelodyLeakedPitches": [],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": true,
+      "pitchFidelityChanged": true,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": true,
+      "afterRegisterExact": true,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 4,
+      "goldCount": 4,
+      "extraNoteCount": 0,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H15_clean/e05",
+      "fileId": "H15_clean",
+      "scenarioId": "H15",
+      "scenarioSlug": "long-support-duration",
+      "split": "validation",
+      "variant": "clean",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.4,
+      "eventId": "e05",
+      "chordSymbol": "Em7",
+      "evidence": {
+        "targetNoteInstanceId": "n24:t3:c2:s8160:d216:p69",
+        "targetPitch": 69,
+        "productRole": "melody",
+        "roleConfidence": 1,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 3,
+        "supportPitches": [
+          59,
+          62,
+          64
+        ],
+        "supportDurationBeats": 0.379167,
+        "supportDurationRatio": 0.842593,
+        "supportMass": 1.1375,
+        "repeatedSupportCount": 3,
+        "eventAvailableSupportPitchCount": 3,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "support-count-3"
+        ],
+        "subset": "primary"
+      },
+      "filterTriggered": true,
+      "removedNoteInstanceIds": [
+        "n24:t3:c2:s8160:d216:p69"
+      ],
+      "filterReasons": [
+        "hypothesis-a:relative-support",
+        "support-count:3",
+        "available-texture:3",
+        "coverage-ratio:1",
+        "support-beats:0.379"
+      ],
+      "filterEvidence": {
+        "n24:t3:c2:s8160:d216:p69": {
+          "supportPitches": [
+            59,
+            62,
+            64
+          ],
+          "eventAvailableSupportPitches": [
+            59,
+            62,
+            64
+          ],
+          "supportCoverageRatio": 1,
+          "supportDurationBeats": 0.37916666666666643
+        }
+      },
+      "beforeInputPitchSet": [
+        52,
+        59,
+        62,
+        64,
+        69
+      ],
+      "afterInputPitchSet": [
+        52,
+        59,
+        62,
+        64
+      ],
+      "beforeFinalPitchSet": [
+        52,
+        59,
+        62,
+        64,
+        69
+      ],
+      "afterFinalPitchSet": [
+        52,
+        59,
+        62,
+        64
+      ],
+      "goldPitchSet": [
+        52,
+        59,
+        62,
+        64
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.6520833333333333,
+      "afterConfidence": 0.7469999999999999,
+      "confidenceDelta": 0.094917,
+      "beforeWinnerDuration": 0.379167,
+      "afterWinnerDuration": 0.4,
+      "winnerDurationDelta": 0.020833,
+      "beforeExact": false,
+      "afterExact": true,
+      "beforeMelodyLeakedPitches": [
+        69
+      ],
+      "afterMelodyLeakedPitches": [],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": true,
+      "pitchFidelityChanged": true,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": true,
+      "afterRegisterExact": true,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 4,
+      "goldCount": 4,
+      "extraNoteCount": 0,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H15_clean/e06",
+      "fileId": "H15_clean",
+      "scenarioId": "H15",
+      "scenarioSlug": "long-support-duration",
+      "split": "validation",
+      "variant": "clean",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.4,
+      "eventId": "e06",
+      "chordSymbol": "A7b9",
+      "evidence": {
+        "targetNoteInstanceId": "n29:t3:c2:s10080:d216:p67",
+        "targetPitch": 67,
+        "productRole": "melody",
+        "roleConfidence": 1,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 3,
+        "supportPitches": [
+          55,
+          58,
+          61
+        ],
+        "supportDurationBeats": 0.379167,
+        "supportDurationRatio": 0.842593,
+        "supportMass": 1.1375,
+        "repeatedSupportCount": 3,
+        "eventAvailableSupportPitchCount": 3,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "support-count-3"
+        ],
+        "subset": "primary"
+      },
+      "filterTriggered": true,
+      "removedNoteInstanceIds": [
+        "n29:t3:c2:s10080:d216:p67"
+      ],
+      "filterReasons": [
+        "hypothesis-a:relative-support",
+        "support-count:3",
+        "available-texture:3",
+        "coverage-ratio:1",
+        "support-beats:0.379"
+      ],
+      "filterEvidence": {
+        "n29:t3:c2:s10080:d216:p67": {
+          "supportPitches": [
+            55,
+            58,
+            61
+          ],
+          "eventAvailableSupportPitches": [
+            55,
+            58,
+            61
+          ],
+          "supportCoverageRatio": 1,
+          "supportDurationBeats": 0.37916666666666643
+        }
+      },
+      "beforeInputPitchSet": [
+        45,
+        55,
+        58,
+        61,
+        67
+      ],
+      "afterInputPitchSet": [
+        45,
+        55,
+        58,
+        61
+      ],
+      "beforeFinalPitchSet": [
+        45,
+        55,
+        58,
+        61,
+        67
+      ],
+      "afterFinalPitchSet": [
+        45,
+        55,
+        58,
+        61
+      ],
+      "goldPitchSet": [
+        45,
+        55,
+        58,
+        61
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.7395833333333333,
+      "afterConfidence": 0.7719999999999998,
+      "confidenceDelta": 0.032417,
+      "beforeWinnerDuration": 0.379167,
+      "afterWinnerDuration": 0.4,
+      "winnerDurationDelta": 0.020833,
+      "beforeExact": false,
+      "afterExact": true,
+      "beforeMelodyLeakedPitches": [
+        67
+      ],
+      "afterMelodyLeakedPitches": [],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": true,
+      "pitchFidelityChanged": true,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": true,
+      "afterRegisterExact": true,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 4,
+      "goldCount": 4,
+      "extraNoteCount": 0,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H15_clean/e07",
+      "fileId": "H15_clean",
+      "scenarioId": "H15",
+      "scenarioSlug": "long-support-duration",
+      "split": "validation",
+      "variant": "clean",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.4,
+      "eventId": "e07",
+      "chordSymbol": "Dm7",
+      "evidence": {
+        "targetNoteInstanceId": "n34:t3:c2:s12000:d216:p66",
+        "targetPitch": 66,
+        "productRole": "melody",
+        "roleConfidence": 1,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 3,
+        "supportPitches": [
+          57,
+          60,
+          62
+        ],
+        "supportDurationBeats": 0.379167,
+        "supportDurationRatio": 0.842593,
+        "supportMass": 1.1375,
+        "repeatedSupportCount": 3,
+        "eventAvailableSupportPitchCount": 3,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "support-count-3"
+        ],
+        "subset": "primary"
+      },
+      "filterTriggered": true,
+      "removedNoteInstanceIds": [
+        "n34:t3:c2:s12000:d216:p66"
+      ],
+      "filterReasons": [
+        "hypothesis-a:relative-support",
+        "support-count:3",
+        "available-texture:3",
+        "coverage-ratio:1",
+        "support-beats:0.379"
+      ],
+      "filterEvidence": {
+        "n34:t3:c2:s12000:d216:p66": {
+          "supportPitches": [
+            57,
+            60,
+            62
+          ],
+          "eventAvailableSupportPitches": [
+            57,
+            60,
+            62
+          ],
+          "supportCoverageRatio": 1,
+          "supportDurationBeats": 0.37916666666666643
+        }
+      },
+      "beforeInputPitchSet": [
+        50,
+        57,
+        60,
+        62,
+        66
+      ],
+      "afterInputPitchSet": [
+        50,
+        57,
+        60,
+        62
+      ],
+      "beforeFinalPitchSet": [
+        50,
+        57,
+        60,
+        62,
+        66
+      ],
+      "afterFinalPitchSet": [
+        50,
+        57,
+        60,
+        62
+      ],
+      "goldPitchSet": [
+        50,
+        57,
+        60,
+        62
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.6520833333333333,
+      "afterConfidence": 0.7469999999999999,
+      "confidenceDelta": 0.094917,
+      "beforeWinnerDuration": 0.379167,
+      "afterWinnerDuration": 0.4,
+      "winnerDurationDelta": 0.020833,
+      "beforeExact": false,
+      "afterExact": true,
+      "beforeMelodyLeakedPitches": [
+        66
+      ],
+      "afterMelodyLeakedPitches": [],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": true,
+      "pitchFidelityChanged": true,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": true,
+      "afterRegisterExact": true,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 4,
+      "goldCount": 4,
+      "extraNoteCount": 0,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H15_clean/e08",
+      "fileId": "H15_clean",
+      "scenarioId": "H15",
+      "scenarioSlug": "long-support-duration",
+      "split": "validation",
+      "variant": "clean",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.4,
+      "eventId": "e08",
+      "chordSymbol": "G7sus4",
+      "evidence": {
+        "targetNoteInstanceId": "n39:t3:c2:s13920:d216:p64",
+        "targetPitch": 64,
+        "productRole": "melody",
+        "roleConfidence": 1,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 3,
+        "supportPitches": [
+          53,
+          55,
+          60
+        ],
+        "supportDurationBeats": 0.379167,
+        "supportDurationRatio": 0.842593,
+        "supportMass": 1.1375,
+        "repeatedSupportCount": 3,
+        "eventAvailableSupportPitchCount": 3,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "support-count-3"
+        ],
+        "subset": "primary"
+      },
+      "filterTriggered": true,
+      "removedNoteInstanceIds": [
+        "n39:t3:c2:s13920:d216:p64"
+      ],
+      "filterReasons": [
+        "hypothesis-a:relative-support",
+        "support-count:3",
+        "available-texture:3",
+        "coverage-ratio:1",
+        "support-beats:0.379"
+      ],
+      "filterEvidence": {
+        "n39:t3:c2:s13920:d216:p64": {
+          "supportPitches": [
+            53,
+            55,
+            60
+          ],
+          "eventAvailableSupportPitches": [
+            53,
+            55,
+            60
+          ],
+          "supportCoverageRatio": 1,
+          "supportDurationBeats": 0.37916666666666643
+        }
+      },
+      "beforeInputPitchSet": [
+        43,
+        53,
+        55,
+        60,
+        64
+      ],
+      "afterInputPitchSet": [
+        43,
+        53,
+        55,
+        60
+      ],
+      "beforeFinalPitchSet": [
+        43,
+        53,
+        55,
+        60,
+        64
+      ],
+      "afterFinalPitchSet": [
+        43,
+        53,
+        55,
+        60
+      ],
+      "goldPitchSet": [
+        43,
+        53,
+        55,
+        60
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.6520833333333333,
+      "afterConfidence": 0.7469999999999999,
+      "confidenceDelta": 0.094917,
+      "beforeWinnerDuration": 0.379167,
+      "afterWinnerDuration": 0.4,
+      "winnerDurationDelta": 0.020833,
+      "beforeExact": false,
+      "afterExact": true,
+      "beforeMelodyLeakedPitches": [
+        64
+      ],
+      "afterMelodyLeakedPitches": [],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": true,
+      "pitchFidelityChanged": true,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": true,
+      "afterRegisterExact": true,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 4,
+      "goldCount": 4,
+      "extraNoteCount": 0,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H15_stress/e01",
+      "fileId": "H15_stress",
+      "scenarioId": "H15",
+      "scenarioSlug": "long-support-duration",
+      "split": "validation",
+      "variant": "stress",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.4,
+      "eventId": "e01",
+      "chordSymbol": "Cmaj9",
+      "evidence": {
+        "targetNoteInstanceId": "n4:t2:c0:s477:d228:p65",
+        "targetPitch": 65,
+        "productRole": "bass",
+        "roleConfidence": 0.730028,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 3,
+        "supportPitches": [
+          55,
+          59,
+          62
+        ],
+        "supportDurationBeats": 0.383333,
+        "supportDurationRatio": 0.807018,
+        "supportMass": 1.183333,
+        "repeatedSupportCount": 3,
+        "eventAvailableSupportPitchCount": 3,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "role-is-bass",
+          "support-count-3"
+        ],
+        "subset": "diagnostic-only"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {},
+      "beforeInputPitchSet": [
+        45,
+        48,
+        55,
+        59,
+        62,
+        65
+      ],
+      "afterInputPitchSet": [
+        45,
+        48,
+        55,
+        59,
+        62,
+        65
+      ],
+      "beforeFinalPitchSet": [
+        48,
+        55,
+        59,
+        62,
+        65
+      ],
+      "afterFinalPitchSet": [
+        48,
+        55,
+        59,
+        62,
+        65
+      ],
+      "goldPitchSet": [
+        48,
+        55,
+        59,
+        62
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.6381666666666665,
+      "afterConfidence": 0.6381666666666665,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.383333,
+      "afterWinnerDuration": 0.383333,
+      "winnerDurationDelta": 0,
+      "beforeExact": false,
+      "afterExact": false,
+      "beforeMelodyLeakedPitches": [
+        65
+      ],
+      "afterMelodyLeakedPitches": [
+        65
+      ],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": false,
+      "afterRegisterExact": false,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 5,
+      "goldCount": 4,
+      "extraNoteCount": 1,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H15_stress/e02",
+      "fileId": "H15_stress",
+      "scenarioId": "H15",
+      "scenarioSlug": "long-support-duration",
+      "split": "validation",
+      "variant": "stress",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.4,
+      "eventId": "e02",
+      "chordSymbol": "Am9",
+      "evidence": {
+        "targetNoteInstanceId": "n9:t2:c0:s2410:d222:p62",
+        "targetPitch": 62,
+        "productRole": "bass",
+        "roleConfidence": 0.730028,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 3,
+        "supportPitches": [
+          52,
+          55,
+          59
+        ],
+        "supportDurationBeats": 0.352083,
+        "supportDurationRatio": 0.761261,
+        "supportMass": 1.116667,
+        "repeatedSupportCount": 3,
+        "eventAvailableSupportPitchCount": 3,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "role-is-bass",
+          "support-count-3"
+        ],
+        "subset": "diagnostic-only"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {},
+      "beforeInputPitchSet": [
+        45,
+        52,
+        55,
+        59,
+        62
+      ],
+      "afterInputPitchSet": [
+        45,
+        52,
+        55,
+        59,
+        62
+      ],
+      "beforeFinalPitchSet": [
+        45,
+        52,
+        55,
+        59,
+        62
+      ],
+      "afterFinalPitchSet": [
+        45,
+        52,
+        55,
+        59,
+        62
+      ],
+      "goldPitchSet": [
+        45,
+        52,
+        55,
+        59
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.6356666666666666,
+      "afterConfidence": 0.6356666666666666,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.352083,
+      "afterWinnerDuration": 0.352083,
+      "winnerDurationDelta": 0,
+      "beforeExact": false,
+      "afterExact": false,
+      "beforeMelodyLeakedPitches": [
+        62
+      ],
+      "afterMelodyLeakedPitches": [
+        62
+      ],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": false,
+      "afterRegisterExact": false,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 5,
+      "goldCount": 4,
+      "extraNoteCount": 1,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H15_stress/e03",
+      "fileId": "H15_stress",
+      "scenarioId": "H15",
+      "scenarioSlug": "long-support-duration",
+      "split": "validation",
+      "variant": "stress",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.4,
+      "eventId": "e03",
+      "chordSymbol": "Dm9",
+      "evidence": {
+        "targetNoteInstanceId": "n14:t2:c0:s4327:d227:p68",
+        "targetPitch": 68,
+        "productRole": "bass",
+        "roleConfidence": 0.730028,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 3,
+        "supportPitches": [
+          57,
+          60,
+          64
+        ],
+        "supportDurationBeats": 0.379167,
+        "supportDurationRatio": 0.801762,
+        "supportMass": 1.15625,
+        "repeatedSupportCount": 3,
+        "eventAvailableSupportPitchCount": 3,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "role-is-bass",
+          "support-count-3"
+        ],
+        "subset": "diagnostic-only"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {},
+      "beforeInputPitchSet": [
+        50,
+        57,
+        60,
+        64,
+        68
+      ],
+      "afterInputPitchSet": [
+        50,
+        57,
+        60,
+        64,
+        68
+      ],
+      "beforeFinalPitchSet": [
+        50,
+        57,
+        60,
+        64,
+        68
+      ],
+      "afterFinalPitchSet": [
+        50,
+        57,
+        60,
+        64,
+        68
+      ],
+      "goldPitchSet": [
+        50,
+        57,
+        60,
+        64
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.6378333333333333,
+      "afterConfidence": 0.6378333333333333,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.379167,
+      "afterWinnerDuration": 0.379167,
+      "winnerDurationDelta": 0,
+      "beforeExact": false,
+      "afterExact": false,
+      "beforeMelodyLeakedPitches": [
+        68
+      ],
+      "afterMelodyLeakedPitches": [
+        68
+      ],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": false,
+      "afterRegisterExact": false,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 5,
+      "goldCount": 4,
+      "extraNoteCount": 1,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H15_stress/e04",
+      "fileId": "H15_stress",
+      "scenarioId": "H15",
+      "scenarioSlug": "long-support-duration",
+      "split": "validation",
+      "variant": "stress",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.4,
+      "eventId": "e04",
+      "chordSymbol": "G13",
+      "evidence": {
+        "targetNoteInstanceId": "n19:t2:c0:s6247:d233:p65",
+        "targetPitch": 65,
+        "productRole": "bass",
+        "roleConfidence": 0.730028,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 3,
+        "supportPitches": [
+          53,
+          57,
+          59
+        ],
+        "supportDurationBeats": 0.354167,
+        "supportDurationRatio": 0.729614,
+        "supportMass": 1.1,
+        "repeatedSupportCount": 3,
+        "eventAvailableSupportPitchCount": 3,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "role-is-bass",
+          "support-count-3"
+        ],
+        "subset": "diagnostic-only"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {},
+      "beforeInputPitchSet": [
+        43,
+        52,
+        53,
+        57,
+        59,
+        65
+      ],
+      "afterInputPitchSet": [
+        43,
+        52,
+        53,
+        57,
+        59,
+        65
+      ],
+      "beforeFinalPitchSet": [
+        43,
+        53,
+        57,
+        59,
+        65
+      ],
+      "afterFinalPitchSet": [
+        43,
+        53,
+        57,
+        59,
+        65
+      ],
+      "goldPitchSet": [
+        43,
+        53,
+        57,
+        59
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.6191666666666666,
+      "afterConfidence": 0.6191666666666666,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.354167,
+      "afterWinnerDuration": 0.354167,
+      "winnerDurationDelta": 0,
+      "beforeExact": false,
+      "afterExact": false,
+      "beforeMelodyLeakedPitches": [
+        65
+      ],
+      "afterMelodyLeakedPitches": [
+        65
+      ],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": false,
+      "afterRegisterExact": false,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 5,
+      "goldCount": 4,
+      "extraNoteCount": 1,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H15_stress/e05",
+      "fileId": "H15_stress",
+      "scenarioId": "H15",
+      "scenarioSlug": "long-support-duration",
+      "split": "validation",
+      "variant": "stress",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.4,
+      "eventId": "e05",
+      "chordSymbol": "Em7",
+      "evidence": {
+        "targetNoteInstanceId": "n23:t2:c0:s8155:d226:p69",
+        "targetPitch": 69,
+        "productRole": "bass",
+        "roleConfidence": 0.730028,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 3,
+        "supportPitches": [
+          59,
+          62,
+          64
+        ],
+        "supportDurationBeats": 0.36875,
+        "supportDurationRatio": 0.783186,
+        "supportMass": 1.177083,
+        "repeatedSupportCount": 3,
+        "eventAvailableSupportPitchCount": 3,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "role-is-bass",
+          "support-count-3"
+        ],
+        "subset": "diagnostic-only"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {},
+      "beforeInputPitchSet": [
+        52,
+        59,
+        62,
+        64,
+        69
+      ],
+      "afterInputPitchSet": [
+        52,
+        59,
+        62,
+        64,
+        69
+      ],
+      "beforeFinalPitchSet": [
+        52,
+        59,
+        62,
+        64,
+        69
+      ],
+      "afterFinalPitchSet": [
+        52,
+        59,
+        62,
+        64,
+        69
+      ],
+      "goldPitchSet": [
+        52,
+        59,
+        62,
+        64
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.5994999999999999,
+      "afterConfidence": 0.5994999999999999,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.36875,
+      "afterWinnerDuration": 0.36875,
+      "winnerDurationDelta": 0,
+      "beforeExact": false,
+      "afterExact": false,
+      "beforeMelodyLeakedPitches": [
+        69
+      ],
+      "afterMelodyLeakedPitches": [
+        69
+      ],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": false,
+      "afterRegisterExact": false,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 5,
+      "goldCount": 4,
+      "extraNoteCount": 1,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H15_stress/e06",
+      "fileId": "H15_stress",
+      "scenarioId": "H15",
+      "scenarioSlug": "long-support-duration",
+      "split": "validation",
+      "variant": "stress",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.4,
+      "eventId": "e06",
+      "chordSymbol": "A7b9",
+      "evidence": {
+        "targetNoteInstanceId": "n28:t2:c0:s10074:d224:p67",
+        "targetPitch": 67,
+        "productRole": "bass",
+        "roleConfidence": 0.730028,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 3,
+        "supportPitches": [
+          55,
+          58,
+          61
+        ],
+        "supportDurationBeats": 0.358333,
+        "supportDurationRatio": 0.767857,
+        "supportMass": 1.129167,
+        "repeatedSupportCount": 3,
+        "eventAvailableSupportPitchCount": 3,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "role-is-bass",
+          "support-count-3"
+        ],
+        "subset": "diagnostic-only"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {},
+      "beforeInputPitchSet": [
+        45,
+        50,
+        55,
+        58,
+        61,
+        67
+      ],
+      "afterInputPitchSet": [
+        45,
+        50,
+        55,
+        58,
+        61,
+        67
+      ],
+      "beforeFinalPitchSet": [
+        45,
+        55,
+        58,
+        61,
+        67
+      ],
+      "afterFinalPitchSet": [
+        45,
+        55,
+        58,
+        61,
+        67
+      ],
+      "goldPitchSet": [
+        45,
+        55,
+        58,
+        61
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.6861666666666666,
+      "afterConfidence": 0.6861666666666666,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.358333,
+      "afterWinnerDuration": 0.358333,
+      "winnerDurationDelta": 0,
+      "beforeExact": false,
+      "afterExact": false,
+      "beforeMelodyLeakedPitches": [
+        67
+      ],
+      "afterMelodyLeakedPitches": [
+        67
+      ],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": false,
+      "afterRegisterExact": false,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 5,
+      "goldCount": 4,
+      "extraNoteCount": 1,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H15_stress/e07",
+      "fileId": "H15_stress",
+      "scenarioId": "H15",
+      "scenarioSlug": "long-support-duration",
+      "split": "validation",
+      "variant": "stress",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.4,
+      "eventId": "e07",
+      "chordSymbol": "Dm7",
+      "evidence": {
+        "targetNoteInstanceId": "n33:t2:c0:s12001:d227:p66",
+        "targetPitch": 66,
+        "productRole": "bass",
+        "roleConfidence": 0.730028,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 3,
+        "supportPitches": [
+          57,
+          60,
+          62
+        ],
+        "supportDurationBeats": 0.3875,
+        "supportDurationRatio": 0.819383,
+        "supportMass": 1.202083,
+        "repeatedSupportCount": 3,
+        "eventAvailableSupportPitchCount": 3,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "role-is-bass",
+          "support-count-3"
+        ],
+        "subset": "diagnostic-only"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {},
+      "beforeInputPitchSet": [
+        43,
+        50,
+        57,
+        60,
+        62,
+        66
+      ],
+      "afterInputPitchSet": [
+        43,
+        50,
+        57,
+        60,
+        62,
+        66
+      ],
+      "beforeFinalPitchSet": [
+        50,
+        57,
+        60,
+        62,
+        66
+      ],
+      "afterFinalPitchSet": [
+        50,
+        57,
+        60,
+        62,
+        66
+      ],
+      "goldPitchSet": [
+        50,
+        57,
+        60,
+        62
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.601,
+      "afterConfidence": 0.601,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.3875,
+      "afterWinnerDuration": 0.3875,
+      "winnerDurationDelta": 0,
+      "beforeExact": false,
+      "afterExact": false,
+      "beforeMelodyLeakedPitches": [
+        66
+      ],
+      "afterMelodyLeakedPitches": [
+        66
+      ],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": false,
+      "afterRegisterExact": false,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 5,
+      "goldCount": 4,
+      "extraNoteCount": 1,
+      "missingNoteCount": 0
+    },
+    {
+      "key": "H15_stress/e08",
+      "fileId": "H15_stress",
+      "scenarioId": "H15",
+      "scenarioSlug": "long-support-duration",
+      "split": "validation",
+      "variant": "stress",
+      "mode": "duration",
+      "declaredSupportCount": 3,
+      "declaredSupportBeats": 0.4,
+      "eventId": "e08",
+      "chordSymbol": "G7sus4",
+      "evidence": {
+        "targetNoteInstanceId": "n39:t2:c0:s13918:d212:p64",
+        "targetPitch": 64,
+        "productRole": "bass",
+        "roleConfidence": 0.730028,
+        "maxPolyphony": 1,
+        "highestVoiceShare": 1,
+        "lowestVoiceShare": 0,
+        "supportPitchCount": 3,
+        "supportPitches": [
+          53,
+          55,
+          60
+        ],
+        "supportDurationBeats": 0.345833,
+        "supportDurationRatio": 0.783019,
+        "supportMass": 1.13125,
+        "repeatedSupportCount": 3,
+        "eventAvailableSupportPitchCount": 3,
+        "supportCoverageRatio": 1,
+        "polyphonicSupportVoiceCount": 1,
+        "hasHarmonyVoice": true,
+        "baselineFilterTriggeredForTarget": false,
+        "baselineFilterRejectionReasons": [
+          "role-is-bass",
+          "support-count-3"
+        ],
+        "subset": "diagnostic-only"
+      },
+      "filterTriggered": false,
+      "removedNoteInstanceIds": [],
+      "filterReasons": [],
+      "filterEvidence": {},
+      "beforeInputPitchSet": [
+        43,
+        53,
+        55,
+        60,
+        64
+      ],
+      "afterInputPitchSet": [
+        43,
+        53,
+        55,
+        60,
+        64
+      ],
+      "beforeFinalPitchSet": [
+        43,
+        53,
+        55,
+        60,
+        64
+      ],
+      "afterFinalPitchSet": [
+        43,
+        53,
+        55,
+        60,
+        64
+      ],
+      "goldPitchSet": [
+        43,
+        53,
+        55,
+        60
+      ],
+      "beforeStatus": "review",
+      "afterStatus": "review",
+      "beforeConfidence": 0.5976666666666663,
+      "afterConfidence": 0.5976666666666663,
+      "confidenceDelta": 0,
+      "beforeWinnerDuration": 0.345833,
+      "afterWinnerDuration": 0.345833,
+      "winnerDurationDelta": 0,
+      "beforeExact": false,
+      "afterExact": false,
+      "beforeMelodyLeakedPitches": [
+        64
+      ],
+      "afterMelodyLeakedPitches": [
+        64
+      ],
+      "melodyOpportunityCount": 1,
+      "pitchSetChanged": false,
+      "pitchFidelityChanged": false,
+      "statusOnlyChanged": false,
+      "sourceNoteAdditionCount": 0,
+      "afterBassCorrect": true,
+      "afterTopCorrect": false,
+      "afterRegisterExact": false,
+      "afterOctaveError": false,
+      "truePositive": 4,
+      "predictedCount": 5,
+      "goldCount": 4,
+      "extraNoteCount": 1,
+      "missingNoteCount": 0
+    }
+  ],
+  "validationEvaluationCount": 1,
+  "gateClassificationRecomputedFromStoredResults": true,
+  "regressionApplicability": {
+    "plainBlock": "not-applicable-zero-events",
+    "rootless": "not-applicable-zero-events",
+    "arpeggio": "not-applicable-zero-events",
+    "overall": "evaluated"
+  }
+}
