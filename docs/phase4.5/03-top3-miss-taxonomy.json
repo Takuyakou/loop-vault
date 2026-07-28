@@ -1,0 +1,1849 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.5-03",
+  "corpusVersion": "1.0.0",
+  "analyzerMode": "phase4-v1",
+  "split": "dev",
+  "metrics": {
+    "missCount": 94,
+    "primaryCounts": {
+      "candidate-not-generated": 68,
+      "canonical-dedup-loss": 0,
+      "candidate-ineligible": 0,
+      "same-root-ranked-too-low": 12,
+      "alternative-root-allocation-loss": 14,
+      "root-wrong": 0,
+      "quality-family-wrong": 0,
+      "seventh-wrong": 0,
+      "tension-under": 0,
+      "tension-over": 0,
+      "slash-bass-wrong": 0,
+      "canonical-equivalent": 0,
+      "ambiguous": 0,
+      "annotation-contract-issue": 0,
+      "other": 0
+    },
+    "secondaryCounts": {
+      "root-wrong": 17,
+      "quality-family-wrong": 12,
+      "seventh-wrong": 30,
+      "tension-under": 53,
+      "tension-over": 25,
+      "slash-bass-wrong": 30
+    },
+    "allocationEditableCount": 26,
+    "allocationEditableShare": 0.2765957446808511,
+    "ambiguousOrAnnotationCount": 0,
+    "ambiguousOrAnnotationShare": 0
+  },
+  "gates": {
+    "allocationEditableShareMinimum": 0.5,
+    "allocationEditableSharePass": false,
+    "ambiguousOrAnnotationMaximum": 0.2,
+    "ambiguousOrAnnotationPass": true,
+    "primaryCountInvariantPass": true
+  },
+  "byScenario": {
+    "V08": 16,
+    "V09": 14,
+    "V17": 14,
+    "V02": 12,
+    "V04": 8,
+    "V01": 2,
+    "V03": 2,
+    "V05": 2,
+    "V06": 2,
+    "V07": 2,
+    "V10": 2,
+    "V11": 2,
+    "V12": 2,
+    "V13": 2,
+    "V14": 2,
+    "V15": 2,
+    "V16": 2,
+    "V18": 2,
+    "V19": 2,
+    "V20": 2
+  },
+  "byVariant": {
+    "clean": 47,
+    "stress": 47
+  },
+  "byExpectedLabel": {
+    "A7b9": 40,
+    "Dm7": 10,
+    "Em7": 10,
+    "Am9": 8,
+    "Dm9": 8,
+    "G13": 8,
+    "G7sus4": 6,
+    "Cmaj9": 4
+  },
+  "rows": [
+    {
+      "fileId": "V01_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V01",
+      "scenarioSlug": "close-block-chords",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V01_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V01",
+      "scenarioSlug": "close-block-chords",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V02_clean",
+      "eventId": "e02",
+      "expected": "Am9",
+      "detectedRank1": "Am9/C",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V02",
+      "scenarioSlug": "inversions",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V02_clean",
+      "eventId": "e03",
+      "expected": "Dm9",
+      "detectedRank1": "Dm9/C",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V02",
+      "scenarioSlug": "inversions",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V02_clean",
+      "eventId": "e05",
+      "expected": "Em7",
+      "detectedRank1": "Cmaj9",
+      "firstDropStage": "allocated-top3",
+      "primaryCategory": "alternative-root-allocation-loss",
+      "secondaryCategories": [
+        "root-wrong",
+        "quality-family-wrong",
+        "seventh-wrong",
+        "tension-over"
+      ],
+      "expectedRootCorrectAt1": false,
+      "expectedCandidateExists": true,
+      "sameRootRank": 1,
+      "globalRank": 5,
+      "scenarioId": "V02",
+      "scenarioSlug": "inversions",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V02_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "C13",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "root-wrong",
+        "tension-under",
+        "tension-over"
+      ],
+      "expectedRootCorrectAt1": false,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V02",
+      "scenarioSlug": "inversions",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V02_clean",
+      "eventId": "e07",
+      "expected": "Dm7",
+      "detectedRank1": "F6/C",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "root-wrong",
+        "quality-family-wrong",
+        "seventh-wrong",
+        "tension-over",
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": false,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V02",
+      "scenarioSlug": "inversions",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V02_clean",
+      "eventId": "e08",
+      "expected": "G7sus4",
+      "detectedRank1": "G7sus4/C",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V02",
+      "scenarioSlug": "inversions",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V02_stress",
+      "eventId": "e02",
+      "expected": "Am9",
+      "detectedRank1": "Am9/C",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V02",
+      "scenarioSlug": "inversions",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V02_stress",
+      "eventId": "e03",
+      "expected": "Dm9",
+      "detectedRank1": "Dm9/C",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V02",
+      "scenarioSlug": "inversions",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V02_stress",
+      "eventId": "e05",
+      "expected": "Em7",
+      "detectedRank1": "Cmaj9",
+      "firstDropStage": "allocated-top3",
+      "primaryCategory": "alternative-root-allocation-loss",
+      "secondaryCategories": [
+        "root-wrong",
+        "quality-family-wrong",
+        "seventh-wrong",
+        "tension-over"
+      ],
+      "expectedRootCorrectAt1": false,
+      "expectedCandidateExists": true,
+      "sameRootRank": 1,
+      "globalRank": 5,
+      "scenarioId": "V02",
+      "scenarioSlug": "inversions",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V02_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "C13",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "root-wrong",
+        "tension-under",
+        "tension-over"
+      ],
+      "expectedRootCorrectAt1": false,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V02",
+      "scenarioSlug": "inversions",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V02_stress",
+      "eventId": "e07",
+      "expected": "Dm7",
+      "detectedRank1": "F6/C",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "root-wrong",
+        "quality-family-wrong",
+        "seventh-wrong",
+        "tension-over",
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": false,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V02",
+      "scenarioSlug": "inversions",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V02_stress",
+      "eventId": "e08",
+      "expected": "G7sus4",
+      "detectedRank1": "G7sus4/C",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V02",
+      "scenarioSlug": "inversions",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V03_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V03",
+      "scenarioSlug": "open-spread",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V03_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V03",
+      "scenarioSlug": "open-spread",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V04_clean",
+      "eventId": "e04",
+      "expected": "G13",
+      "detectedRank1": "Gadd9",
+      "firstDropStage": "allocated-top3",
+      "primaryCategory": "same-root-ranked-too-low",
+      "secondaryCategories": [
+        "seventh-wrong",
+        "tension-under",
+        "tension-over"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": true,
+      "sameRootRank": 5,
+      "globalRank": 5,
+      "scenarioId": "V04",
+      "scenarioSlug": "shell-sparse",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V04_clean",
+      "eventId": "e05",
+      "expected": "Em7",
+      "detectedRank1": "Em",
+      "firstDropStage": "allocated-top3",
+      "primaryCategory": "alternative-root-allocation-loss",
+      "secondaryCategories": [
+        "seventh-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": true,
+      "sameRootRank": 3,
+      "globalRank": 3,
+      "scenarioId": "V04",
+      "scenarioSlug": "shell-sparse",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V04_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V04",
+      "scenarioSlug": "shell-sparse",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V04_clean",
+      "eventId": "e07",
+      "expected": "Dm7",
+      "detectedRank1": "Dm",
+      "firstDropStage": "allocated-top3",
+      "primaryCategory": "alternative-root-allocation-loss",
+      "secondaryCategories": [
+        "seventh-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": true,
+      "sameRootRank": 3,
+      "globalRank": 3,
+      "scenarioId": "V04",
+      "scenarioSlug": "shell-sparse",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V04_stress",
+      "eventId": "e04",
+      "expected": "G13",
+      "detectedRank1": "Gadd9",
+      "firstDropStage": "allocated-top3",
+      "primaryCategory": "same-root-ranked-too-low",
+      "secondaryCategories": [
+        "seventh-wrong",
+        "tension-under",
+        "tension-over"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": true,
+      "sameRootRank": 5,
+      "globalRank": 5,
+      "scenarioId": "V04",
+      "scenarioSlug": "shell-sparse",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V04_stress",
+      "eventId": "e05",
+      "expected": "Em7",
+      "detectedRank1": "Em",
+      "firstDropStage": "allocated-top3",
+      "primaryCategory": "alternative-root-allocation-loss",
+      "secondaryCategories": [
+        "seventh-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": true,
+      "sameRootRank": 3,
+      "globalRank": 3,
+      "scenarioId": "V04",
+      "scenarioSlug": "shell-sparse",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V04_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V04",
+      "scenarioSlug": "shell-sparse",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V04_stress",
+      "eventId": "e07",
+      "expected": "Dm7",
+      "detectedRank1": "Dm",
+      "firstDropStage": "allocated-top3",
+      "primaryCategory": "alternative-root-allocation-loss",
+      "secondaryCategories": [
+        "seventh-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": true,
+      "sameRootRank": 3,
+      "globalRank": 3,
+      "scenarioId": "V04",
+      "scenarioSlug": "shell-sparse",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V05_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V05",
+      "scenarioSlug": "split-hands",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V05_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V05",
+      "scenarioSlug": "split-hands",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V06_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V06",
+      "scenarioSlug": "separate-bass-upper",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V06_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V06",
+      "scenarioSlug": "separate-bass-upper",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V07_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V07",
+      "scenarioSlug": "rootless-with-bass",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V07_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V07",
+      "scenarioSlug": "rootless-with-bass",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V08_clean",
+      "eventId": "e01",
+      "expected": "Cmaj9",
+      "detectedRank1": "Cmaj9/E",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V08_clean",
+      "eventId": "e02",
+      "expected": "Am9",
+      "detectedRank1": "Am9/C",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V08_clean",
+      "eventId": "e03",
+      "expected": "Dm9",
+      "detectedRank1": "Dm11/G",
+      "firstDropStage": "allocated-top3",
+      "primaryCategory": "same-root-ranked-too-low",
+      "secondaryCategories": [
+        "tension-under",
+        "tension-over",
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": true,
+      "sameRootRank": 4,
+      "globalRank": 34,
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V08_clean",
+      "eventId": "e04",
+      "expected": "G13",
+      "detectedRank1": "G13/A",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V08_clean",
+      "eventId": "e05",
+      "expected": "Em7",
+      "detectedRank1": "G6",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "root-wrong",
+        "quality-family-wrong",
+        "seventh-wrong",
+        "tension-over"
+      ],
+      "expectedRootCorrectAt1": false,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V08_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "C#dim7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "root-wrong",
+        "quality-family-wrong",
+        "seventh-wrong",
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": false,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V08_clean",
+      "eventId": "e07",
+      "expected": "Dm7",
+      "detectedRank1": "Dm7/A",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V08_clean",
+      "eventId": "e08",
+      "expected": "G7sus4",
+      "detectedRank1": "G7sus4/C",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V08_stress",
+      "eventId": "e01",
+      "expected": "Cmaj9",
+      "detectedRank1": "Cmaj9/E",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V08_stress",
+      "eventId": "e02",
+      "expected": "Am9",
+      "detectedRank1": "Am9/C",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V08_stress",
+      "eventId": "e03",
+      "expected": "Dm9",
+      "detectedRank1": "Dm11/G",
+      "firstDropStage": "allocated-top3",
+      "primaryCategory": "same-root-ranked-too-low",
+      "secondaryCategories": [
+        "tension-under",
+        "tension-over",
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": true,
+      "sameRootRank": 4,
+      "globalRank": 35,
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V08_stress",
+      "eventId": "e04",
+      "expected": "G13",
+      "detectedRank1": "G13/A",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V08_stress",
+      "eventId": "e05",
+      "expected": "Em7",
+      "detectedRank1": "G6",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "root-wrong",
+        "quality-family-wrong",
+        "seventh-wrong",
+        "tension-over"
+      ],
+      "expectedRootCorrectAt1": false,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V08_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "C#dim7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "root-wrong",
+        "quality-family-wrong",
+        "seventh-wrong",
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": false,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V08_stress",
+      "eventId": "e07",
+      "expected": "Dm7",
+      "detectedRank1": "Dm7/A",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V08_stress",
+      "eventId": "e08",
+      "expected": "G7sus4",
+      "detectedRank1": "G7sus4/C",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V09_clean",
+      "eventId": "e02",
+      "expected": "Am9",
+      "detectedRank1": "Am9/C",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V09",
+      "scenarioSlug": "pedal-bass",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V09_clean",
+      "eventId": "e03",
+      "expected": "Dm9",
+      "detectedRank1": "Dm9/C",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V09",
+      "scenarioSlug": "pedal-bass",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V09_clean",
+      "eventId": "e04",
+      "expected": "G13",
+      "detectedRank1": "Am9/C",
+      "firstDropStage": "allocated-top3",
+      "primaryCategory": "alternative-root-allocation-loss",
+      "secondaryCategories": [
+        "root-wrong",
+        "quality-family-wrong",
+        "tension-under",
+        "tension-over",
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": false,
+      "expectedCandidateExists": true,
+      "sameRootRank": 2,
+      "globalRank": 21,
+      "scenarioId": "V09",
+      "scenarioSlug": "pedal-bass",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V09_clean",
+      "eventId": "e05",
+      "expected": "Em7",
+      "detectedRank1": "Cmaj9",
+      "firstDropStage": "allocated-top3",
+      "primaryCategory": "alternative-root-allocation-loss",
+      "secondaryCategories": [
+        "root-wrong",
+        "quality-family-wrong",
+        "seventh-wrong",
+        "tension-over"
+      ],
+      "expectedRootCorrectAt1": false,
+      "expectedCandidateExists": true,
+      "sameRootRank": 1,
+      "globalRank": 22,
+      "scenarioId": "V09",
+      "scenarioSlug": "pedal-bass",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V09_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "C13",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "root-wrong",
+        "tension-under",
+        "tension-over"
+      ],
+      "expectedRootCorrectAt1": false,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V09",
+      "scenarioSlug": "pedal-bass",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V09_clean",
+      "eventId": "e07",
+      "expected": "Dm7",
+      "detectedRank1": "Dm7/C",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V09",
+      "scenarioSlug": "pedal-bass",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V09_clean",
+      "eventId": "e08",
+      "expected": "G7sus4",
+      "detectedRank1": "G7sus4/C",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V09",
+      "scenarioSlug": "pedal-bass",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V09_stress",
+      "eventId": "e02",
+      "expected": "Am9",
+      "detectedRank1": "Am9/C",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V09",
+      "scenarioSlug": "pedal-bass",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V09_stress",
+      "eventId": "e03",
+      "expected": "Dm9",
+      "detectedRank1": "Dm9/C",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V09",
+      "scenarioSlug": "pedal-bass",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V09_stress",
+      "eventId": "e04",
+      "expected": "G13",
+      "detectedRank1": "Fmaj9/C",
+      "firstDropStage": "allocated-top3",
+      "primaryCategory": "alternative-root-allocation-loss",
+      "secondaryCategories": [
+        "root-wrong",
+        "seventh-wrong",
+        "tension-under",
+        "tension-over",
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": false,
+      "expectedCandidateExists": true,
+      "sameRootRank": 2,
+      "globalRank": 23,
+      "scenarioId": "V09",
+      "scenarioSlug": "pedal-bass",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V09_stress",
+      "eventId": "e05",
+      "expected": "Em7",
+      "detectedRank1": "Cmaj9",
+      "firstDropStage": "allocated-top3",
+      "primaryCategory": "alternative-root-allocation-loss",
+      "secondaryCategories": [
+        "root-wrong",
+        "quality-family-wrong",
+        "seventh-wrong",
+        "tension-over"
+      ],
+      "expectedRootCorrectAt1": false,
+      "expectedCandidateExists": true,
+      "sameRootRank": 1,
+      "globalRank": 21,
+      "scenarioId": "V09",
+      "scenarioSlug": "pedal-bass",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V09_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "C13",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "root-wrong",
+        "tension-under",
+        "tension-over"
+      ],
+      "expectedRootCorrectAt1": false,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V09",
+      "scenarioSlug": "pedal-bass",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V09_stress",
+      "eventId": "e07",
+      "expected": "Dm7",
+      "detectedRank1": "F6/C",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "root-wrong",
+        "quality-family-wrong",
+        "seventh-wrong",
+        "tension-over",
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": false,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V09",
+      "scenarioSlug": "pedal-bass",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V09_stress",
+      "eventId": "e08",
+      "expected": "G7sus4",
+      "detectedRank1": "G7sus4/C",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "slash-bass-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V09",
+      "scenarioSlug": "pedal-bass",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V10_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V10",
+      "scenarioSlug": "octave-doublings",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V10_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V10",
+      "scenarioSlug": "octave-doublings",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V11_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V11",
+      "scenarioSlug": "duplicate-across-tracks",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V11_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V11",
+      "scenarioSlug": "duplicate-across-tracks",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V12_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A9",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under",
+        "tension-over"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V12",
+      "scenarioSlug": "separate-melody-contamination",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V12_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A9",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under",
+        "tension-over"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V12",
+      "scenarioSlug": "separate-melody-contamination",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V13_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A9",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under",
+        "tension-over"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V13",
+      "scenarioSlug": "same-track-melody",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V13_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A9",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under",
+        "tension-over"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V13",
+      "scenarioSlug": "same-track-melody",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V14_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V14",
+      "scenarioSlug": "passing-tones",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V14_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V14",
+      "scenarioSlug": "passing-tones",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V15_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A9",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under",
+        "tension-over"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V15",
+      "scenarioSlug": "sustain-overlap",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V15_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A9",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under",
+        "tension-over"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V15",
+      "scenarioSlug": "sustain-overlap",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V16_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V16",
+      "scenarioSlug": "anticipated-next-chord",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V16_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V16",
+      "scenarioSlug": "anticipated-next-chord",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V17_clean",
+      "eventId": "e01",
+      "expected": "Cmaj9",
+      "detectedRank1": "C",
+      "firstDropStage": "allocated-top3",
+      "primaryCategory": "same-root-ranked-too-low",
+      "secondaryCategories": [
+        "seventh-wrong",
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": true,
+      "sameRootRank": 8,
+      "globalRank": 8,
+      "scenarioId": "V17",
+      "scenarioSlug": "pure-arpeggio",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V17_clean",
+      "eventId": "e02",
+      "expected": "Am9",
+      "detectedRank1": "Am",
+      "firstDropStage": "allocated-top3",
+      "primaryCategory": "same-root-ranked-too-low",
+      "secondaryCategories": [
+        "seventh-wrong",
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": true,
+      "sameRootRank": 4,
+      "globalRank": 4,
+      "scenarioId": "V17",
+      "scenarioSlug": "pure-arpeggio",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V17_clean",
+      "eventId": "e03",
+      "expected": "Dm9",
+      "detectedRank1": "Dm",
+      "firstDropStage": "allocated-top3",
+      "primaryCategory": "same-root-ranked-too-low",
+      "secondaryCategories": [
+        "seventh-wrong",
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": true,
+      "sameRootRank": 4,
+      "globalRank": 4,
+      "scenarioId": "V17",
+      "scenarioSlug": "pure-arpeggio",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V17_clean",
+      "eventId": "e04",
+      "expected": "G13",
+      "detectedRank1": "G7",
+      "firstDropStage": "allocated-top3",
+      "primaryCategory": "alternative-root-allocation-loss",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": true,
+      "sameRootRank": 3,
+      "globalRank": 3,
+      "scenarioId": "V17",
+      "scenarioSlug": "pure-arpeggio",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V17_clean",
+      "eventId": "e05",
+      "expected": "Em7",
+      "detectedRank1": "Em",
+      "firstDropStage": "allocated-top3",
+      "primaryCategory": "same-root-ranked-too-low",
+      "secondaryCategories": [
+        "seventh-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": true,
+      "sameRootRank": 4,
+      "globalRank": 4,
+      "scenarioId": "V17",
+      "scenarioSlug": "pure-arpeggio",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V17_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "seventh-wrong",
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V17",
+      "scenarioSlug": "pure-arpeggio",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V17_clean",
+      "eventId": "e07",
+      "expected": "Dm7",
+      "detectedRank1": "Dm",
+      "firstDropStage": "allocated-top3",
+      "primaryCategory": "same-root-ranked-too-low",
+      "secondaryCategories": [
+        "seventh-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": true,
+      "sameRootRank": 4,
+      "globalRank": 4,
+      "scenarioId": "V17",
+      "scenarioSlug": "pure-arpeggio",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V17_stress",
+      "eventId": "e01",
+      "expected": "Cmaj9",
+      "detectedRank1": "Cadd9",
+      "firstDropStage": "allocated-top3",
+      "primaryCategory": "same-root-ranked-too-low",
+      "secondaryCategories": [
+        "seventh-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": true,
+      "sameRootRank": 6,
+      "globalRank": 6,
+      "scenarioId": "V17",
+      "scenarioSlug": "pure-arpeggio",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V17_stress",
+      "eventId": "e02",
+      "expected": "Am9",
+      "detectedRank1": "Am",
+      "firstDropStage": "allocated-top3",
+      "primaryCategory": "same-root-ranked-too-low",
+      "secondaryCategories": [
+        "seventh-wrong",
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": true,
+      "sameRootRank": 4,
+      "globalRank": 4,
+      "scenarioId": "V17",
+      "scenarioSlug": "pure-arpeggio",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V17_stress",
+      "eventId": "e03",
+      "expected": "Dm9",
+      "detectedRank1": "Dm",
+      "firstDropStage": "allocated-top3",
+      "primaryCategory": "same-root-ranked-too-low",
+      "secondaryCategories": [
+        "seventh-wrong",
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": true,
+      "sameRootRank": 5,
+      "globalRank": 5,
+      "scenarioId": "V17",
+      "scenarioSlug": "pure-arpeggio",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V17_stress",
+      "eventId": "e04",
+      "expected": "G13",
+      "detectedRank1": "G7",
+      "firstDropStage": "allocated-top3",
+      "primaryCategory": "alternative-root-allocation-loss",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": true,
+      "sameRootRank": 3,
+      "globalRank": 3,
+      "scenarioId": "V17",
+      "scenarioSlug": "pure-arpeggio",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V17_stress",
+      "eventId": "e05",
+      "expected": "Em7",
+      "detectedRank1": "Em",
+      "firstDropStage": "allocated-top3",
+      "primaryCategory": "alternative-root-allocation-loss",
+      "secondaryCategories": [
+        "seventh-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": true,
+      "sameRootRank": 3,
+      "globalRank": 3,
+      "scenarioId": "V17",
+      "scenarioSlug": "pure-arpeggio",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V17_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "seventh-wrong",
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V17",
+      "scenarioSlug": "pure-arpeggio",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V17_stress",
+      "eventId": "e07",
+      "expected": "Dm7",
+      "detectedRank1": "Dm",
+      "firstDropStage": "allocated-top3",
+      "primaryCategory": "alternative-root-allocation-loss",
+      "secondaryCategories": [
+        "seventh-wrong"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": true,
+      "sameRootRank": 3,
+      "globalRank": 3,
+      "scenarioId": "V17",
+      "scenarioSlug": "pure-arpeggio",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V18_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V18",
+      "scenarioSlug": "hybrid-block-arpeggio",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V18_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V18",
+      "scenarioSlug": "hybrid-block-arpeggio",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V19_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V19",
+      "scenarioSlug": "guitar-strum",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V19_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V19",
+      "scenarioSlug": "guitar-strum",
+      "variant": "stress"
+    },
+    {
+      "fileId": "V20_clean",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V20",
+      "scenarioSlug": "repeated-reattacks",
+      "variant": "clean"
+    },
+    {
+      "fileId": "V20_stress",
+      "eventId": "e06",
+      "expected": "A7b9",
+      "detectedRank1": "A7",
+      "firstDropStage": "raw-generation",
+      "primaryCategory": "candidate-not-generated",
+      "secondaryCategories": [
+        "tension-under"
+      ],
+      "expectedRootCorrectAt1": true,
+      "expectedCandidateExists": false,
+      "sameRootRank": null,
+      "globalRank": null,
+      "scenarioId": "V20",
+      "scenarioSlug": "repeated-reattacks",
+      "variant": "stress"
+    }
+  ]
+}
