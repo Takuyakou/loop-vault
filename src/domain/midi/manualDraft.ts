@@ -251,6 +251,22 @@ export function editOperationCount(draft: ManualCandidateDraft): number {
   ).length;
 }
 
+/**
+ * Whether the music inside the selected range differs from its current
+ * timeline baseline.
+ *
+ * Moving the range rebuilds both `events` and `originalEvents`, so it remains a
+ * saveable Draft change without being mistaken for a chord edit when the user
+ * intentionally switches to another candidate preset.
+ */
+export function draftHasMusicEdits(draft: ManualCandidateDraft): boolean {
+  if (!draft.isDirty) return false;
+  if (draft.events.length !== draft.originalEvents.length) return true;
+  return draft.events.some((event, index) => (
+    editableEventSignature(event) !== editableEventSignature(draft.originalEvents[index]!)
+  ));
+}
+
 /** Whether the draft still describes the timeline currently on screen. */
 export function draftMatchesTimeline(
   draft: ManualCandidateDraft,
@@ -319,4 +335,15 @@ function cloneTimelineItem(item: ChordTimelineItem): ChordTimelineItem {
 
 function cloneChord(chord: ChordTimelineItem["chord"]): ChordTimelineItem["chord"] {
   return { ...chord, tensions: [...chord.tensions] };
+}
+
+function editableEventSignature(event: CandidateChordEvent): string {
+  return JSON.stringify({
+    relativeStartBeat: event.relativeStartBeat,
+    durationBeats: event.durationBeats,
+    bar: event.bar,
+    beat: event.beat,
+    chord: event.chord,
+    voicingMemory: event.source.voicingMemory,
+  });
 }

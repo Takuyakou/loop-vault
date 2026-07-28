@@ -6,12 +6,14 @@ import { buildCandidateEvents, candidateStats } from "./candidateBlock";
 import {
   createDraftFromCandidate,
   createManualDraft,
+  draftHasMusicEdits,
   fingerprintTimeline,
 } from "./manualDraft";
 import {
   applyEditableToDraft,
   draftEditable,
   draftToCandidate,
+  retargetDraftRange,
 } from "./manualDraftEditing";
 
 const timeline: ChordTimelineItem[] = ["Cmaj7", "Am7", "Dm7", "G7"].map(
@@ -112,8 +114,26 @@ describe("automatic candidate Draft", () => {
     );
 
     expect(draftToCandidate(edited).chords[1]!.chord.label).toBe("Fmaj7");
+    expect(draftHasMusicEdits(edited)).toBe(true);
     expect(edited.sourceCandidateSnapshot).toEqual(original);
     expect(original.chords[1]!.chord.label).toBe("Am7");
+  });
+
+  it("does not treat a range-only adjustment as an edited chord progression", () => {
+    const draft = createDraftFromCandidate({
+      candidate: candidate(),
+      timelineFingerprint: fingerprintTimeline(timeline),
+      now: "2026-07-26T00:00:00.000Z",
+    });
+    const resized = retargetDraftRange(
+      draft,
+      { startBar: 1, startBeat: 1, endBar: 3, endBeat: 4 },
+      timeline,
+      { keepEdits: true },
+    ).draft;
+
+    expect(resized.isDirty).toBe(true);
+    expect(draftHasMusicEdits(resized)).toBe(false);
   });
 
   it("keeps manual ranges on the same source union", () => {
