@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { makeChordSymbol } from "../chords";
 import type { SavedProgressionBlock, SongIdea } from "../types";
+import { normalizedChordKey } from "../voicing";
 import {
   buildPracticeChordRequirements,
   createPracticeSessionState,
@@ -451,6 +452,37 @@ describe("practice recommendation", () => {
     const idea = ideaWith([plain, favorite, stale, confirmation]);
     expect(recommendPracticeBlocks([idea], "2026-07-20").map((item) => item.block.id))
       .toEqual([confirmation.id, stale.id, favorite.id, plain.id]);
+  });
+
+  it("prefers blocks with more usable source voicings within the same practice priority", () => {
+    const generated = progression(
+      [makeChordSymbol(0, "maj7"), makeChordSymbol(7, "dom7")],
+      "00000000-0000-4000-8000-000000000005",
+    );
+    generated.capturedAt = "2026-07-21T00:00:00.000Z";
+    const source = progression(
+      [makeChordSymbol(0, "maj7"), makeChordSymbol(7, "dom7")],
+      "00000000-0000-4000-8000-000000000006",
+    );
+    source.capturedAt = "2026-07-19T00:00:00.000Z";
+    source.chords = source.chords.map((event) => ({
+      ...event,
+      voicingMemory: {
+        sourceVoicing: {
+          schemaVersion: 1,
+          source: "midi-extracted",
+          representation: "simultaneous-voicing",
+          midiNotes: [48, 52, 55, 59],
+          bassNote: 48,
+          capturedForChordKey: normalizedChordKey(event.chord),
+          confidence: 1,
+        },
+      },
+    }));
+
+    expect(recommendPracticeBlocks([ideaWith([generated, source])], "2026-07-20")
+      .map((item) => item.block.id))
+      .toEqual([source.id, generated.id]);
   });
 });
 

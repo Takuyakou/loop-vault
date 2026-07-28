@@ -188,6 +188,9 @@ describe("ProgressionDetailView", () => {
     expect(container.querySelector(
       '[data-testid="detail-voicing-source-chip"]',
     )?.getAttribute("data-voicing-source")).toBe("generated");
+    expect(container.querySelector(
+      '[data-testid="detail-voicing-recovery"]',
+    )?.textContent).toContain("鍵盤で弾いて上書き");
 
     await act(async () => root.unmount());
   });
