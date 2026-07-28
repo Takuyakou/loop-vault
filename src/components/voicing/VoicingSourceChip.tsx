@@ -14,16 +14,16 @@ interface VoicingSourceChipProps {
 
 const copy = {
   ja: {
-    source: "元MIDI",
-    generated: "自動生成",
+    source: "元の響き",
+    generated: "自動",
     review: "要確認",
     descriptions: {
-      "source-ready": "元MIDIから取得したボイシングを使用できます。",
-      "source-missing": "元MIDIのボイシングがないため、自動生成を使用します。",
-      "source-stale": "コード編集後のため、自動生成を使用します。",
-      "source-invalid": "元MIDIのボイシングデータを確認してください。",
-      "source-aggregated": "区間内の集約音であり、同時押鍵とは限りません。",
-      "source-low-confidence": "元MIDIの推定信頼度が自動利用条件を満たしていません。",
+      "source-ready": "元MIDIから採れたボイシングを使用します。",
+      "source-missing": "元MIDIのボイシングがないため、自動生成した形を使用します。",
+      "source-stale": "コード編集後のため、自動生成した形を使用します。",
+      "source-invalid": "保存された元MIDIのボイシングを確認してください。",
+      "source-aggregated": "区間内の音を集約した結果です。同時に鳴った形とは限りません。",
+      "source-low-confidence": "元MIDIからの推定が自動利用の信頼条件を満たしていません。",
       "source-non-midi": "元MIDI以外から記録されたボイシングです。",
     },
   },
