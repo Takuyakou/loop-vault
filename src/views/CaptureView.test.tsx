@@ -1438,6 +1438,17 @@ describe("CaptureView saving", () => {
         rejectedSegmentIds: [expect.stringContaining(":3:1:")],
         threshold: 0.86,
       }),
+      expect.objectContaining({
+        eventType: "progression-save",
+        analyzerVersion: "test",
+        savedEventCount: 3,
+        userEdited: true,
+        decisions: [
+          expect.objectContaining({ detected: "Cmaj7", saved: "G7", outcome: "rank2" }),
+          expect.objectContaining({ detected: "Cmaj7", saved: "G7", outcome: "manual-input" }),
+          expect.objectContaining({ detected: "Cmaj7", saved: "Cmaj7", outcome: "rank1" }),
+        ],
+      }),
     ]);
     await act(async () => root.unmount());
     container.remove();

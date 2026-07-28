@@ -57,9 +57,10 @@ import type {
 import { beatsPerBar as beatsPerBarFor, buildCorrectionEvents } from "../domain/midi";
 import { buildLabelCorrectionLogs } from "../domain/midi/labelCorrectionLog";
 import type { AnalysisInput } from "../domain/midi/types";
-import type {
-  CorrectionPropagationFeedbackEvent,
-  PersistedAnalysisFeedbackEvent,
+import {
+  buildProgressionSaveFeedbackEvent,
+  type CorrectionPropagationFeedbackEvent,
+  type PersistedAnalysisFeedbackEvent,
 } from "../domain/midi/analysisFeedback";
 import { candidateLabelList } from "../domain/displayLabels";
 import { romanNumeralHint } from "../domain/harmony/romanNumerals";
@@ -478,7 +479,17 @@ export function CaptureView(props: CaptureViewProps) {
       progressionMetadata: { sourcePath, userEdited, userVerified },
     });
     if (id) {
-      persistCorrectionEvents([...corrections, ...propagationEvents]);
+      persistCorrectionEvents([
+        ...corrections,
+        ...propagationEvents,
+        ...progressionSaveFeedback(
+          original,
+          candidate,
+          editable,
+          userEdited,
+          userVerified,
+        ),
+      ]);
       persistLabelCorrectionLogs(original, editable);
       setToast(copy.capture.savedToVault);
       return true;
@@ -510,6 +521,28 @@ export function CaptureView(props: CaptureViewProps) {
     }
     void appendAnalysisFeedback(events)
       .catch((error) => setToast(error instanceof Error ? error.message : copy.capture.feedbackSaveFailed));
+  }
+
+  function progressionSaveFeedback(
+    original: ProgressionBlockCandidate,
+    saved: ProgressionBlockCandidate,
+    editable: EditableProgression,
+    userEdited: boolean,
+    userVerified: boolean,
+  ): PersistedAnalysisFeedbackEvent[] {
+    if (!analysis.result) return [];
+    const event = buildProgressionSaveFeedbackEvent(
+      original,
+      saved,
+      analysis.result,
+      editable.slots.map((slot) => slot.editSource),
+      {
+        occurredAt: new Date().toISOString(),
+        userEdited,
+        userVerified,
+      },
+    );
+    return event ? [event] : [];
   }
 
   function persistLabelCorrectionLogs(
@@ -545,9 +578,17 @@ export function CaptureView(props: CaptureViewProps) {
       userVerified,
     });
     if (appended) {
+      const userEdited = userEditedOverride ?? hasProgressionEdits(editable);
       persistCorrectionEvents([
         ...correctionEvents(original, candidate, editable),
         ...propagationEvents,
+        ...progressionSaveFeedback(
+          original,
+          candidate,
+          editable,
+          userEdited,
+          userVerified,
+        ),
       ]);
       persistLabelCorrectionLogs(original, editable);
       setToast(copy.toast.blockSaved);
