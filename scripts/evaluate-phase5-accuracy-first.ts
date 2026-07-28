@@ -416,7 +416,7 @@ function analyzeEvaluationMode(bytes: Uint8Array, mode: EvaluationMode) {
   const accuracyFirst = {
     bassCompanionCandidates: mode.bassCompanion,
     melodyContaminationFilter: false,
-    observedFlatNineDominantCandidate: mode.observedFlatNine ?? false,
+    enableObservedFlatNineDominantCandidate: mode.observedFlatNine ?? false,
     enableAccuracyCandidateUnion: mode.candidateUnion === "product",
   };
   if (mode.candidateUnion !== "with-hybrid") {

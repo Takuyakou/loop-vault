@@ -53,6 +53,7 @@ vi.mock("../storage/realEvaluationStorage", () => ({
 
 beforeEach(() => {
   Object.defineProperty(window, "__TAURI_INTERNALS__", { configurable: true, value: {} });
+  localStorage.clear();
   vi.clearAllMocks();
 });
 
@@ -92,6 +93,31 @@ describe("SettingsDialog sections", () => {
     expect(text).toContain(appCopy.en.settingsUi.data);
     expect(text).toContain(appCopy.en.settingsUi.analysis);
     expect(text).toContain(appCopy.en.settingsUi.monthlyGoal);
+    await mounted.unmount();
+  });
+
+  it("switches Stable and Accuracy First feature sets without enabling A1 in Stable", async () => {
+    const mounted = await renderSettings();
+    await click(findButton(appCopy.ja.settingsUi.analysis, dialogs()[0]));
+    const scope = dialogs()[0]!;
+    const r2 = checkboxForLabel(appCopy.ja.settingsUi.melodyContaminationFilter, scope);
+    const union = checkboxForLabel(appCopy.ja.settingsUi.accuracyCandidateUnion, scope);
+    const e1 = checkboxForLabel(appCopy.ja.settingsUi.observedFlatNineCandidate, scope);
+
+    expect(r2?.checked).toBe(false);
+    expect(r2?.disabled).toBe(true);
+    expect(union?.checked).toBe(false);
+    expect(union?.disabled).toBe(true);
+    expect(e1?.checked).toBe(true);
+
+    await click(findButton(appCopy.ja.settingsUi.accuracyProfile, scope));
+    expect(r2?.checked).toBe(true);
+    expect(r2?.disabled).toBe(false);
+    expect(union?.checked).toBe(true);
+    expect(union?.disabled).toBe(false);
+
+    await click(r2);
+    expect(r2?.checked).toBe(false);
     await mounted.unmount();
   });
 
@@ -286,6 +312,12 @@ function dialogs() {
 function findButton(label: string, scope: ParentNode = document) {
   return [...scope.querySelectorAll<HTMLButtonElement>("button")]
     .find((candidate) => candidate.textContent?.includes(label));
+}
+
+function checkboxForLabel(label: string, scope: ParentNode = document) {
+  return [...scope.querySelectorAll<HTMLLabelElement>("label")]
+    .find((candidate) => candidate.textContent?.includes(label))
+    ?.querySelector<HTMLInputElement>('input[type="checkbox"]');
 }
 
 async function clickButton(label: string, scope: ParentNode = document) {

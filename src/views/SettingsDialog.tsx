@@ -26,8 +26,12 @@ import {
   rebuildLocalMidiSourceIndex,
 } from "../storage/realEvaluationStorage";
 import {
+  analysisProfileFeatureDefaults,
   getAccuracyFirstFeatureFlags,
+  getAnalysisProfileSettings,
   setAccuracyFirstFeatureFlags,
+  setAnalysisProfile,
+  type AnalysisProfile,
 } from "../storage/accuracyFirstSettings";
 import { Copy, Download, FolderOpen, RotateCcw, Trash2, Upload } from "lucide-react";
 import type { StoreApi } from "zustand/vanilla";
@@ -101,6 +105,9 @@ export function SettingsDialog({
   const [showAllBackups, setShowAllBackups] = useState(false);
   const [analysisExpanded, setAnalysisExpanded] = useState(false);
   const [feedbackEnabled, setFeedbackEnabled] = useState(isAnalysisFeedbackEnabled);
+  const [analysisProfile, setAnalysisProfileState] = useState(
+    () => getAnalysisProfileSettings().profile,
+  );
   const [accuracyFirst, setAccuracyFirst] = useState(getAccuracyFirstFeatureFlags);
   const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation>();
   const [confirmationBusy, setConfirmationBusy] = useState(false);
@@ -194,11 +201,18 @@ export function SettingsDialog({
     key: keyof typeof accuracyFirst,
     enabled: boolean,
   ) {
+    if (!analysisProfileFeatureDefaults[analysisProfile][key]) return;
     setAccuracyFirst((current) => {
       const next = { ...current, [key]: enabled };
       setAccuracyFirstFeatureFlags(next);
       return next;
     });
+  }
+
+  function updateAnalysisProfile(profile: AnalysisProfile) {
+    setAnalysisProfile(profile);
+    setAnalysisProfileState(profile);
+    setAccuracyFirst(getAnalysisProfileSettings().flags);
   }
 
   function clearFeedback() {
@@ -403,11 +417,38 @@ export function SettingsDialog({
               <div>
                 <h4 className="font-semibold">{ui.accuracyFirstTitle}</h4>
                 <p className="mt-1 text-[var(--lv-text-muted)]">{ui.accuracyFirstHelp}</p>
+                <fieldset className="mt-4">
+                  <legend className="text-xs font-semibold text-[var(--lv-text-secondary)]">
+                    {ui.analysisProfile}
+                  </legend>
+                  <div className="mt-2 inline-flex border border-[var(--lv-border-strong)]">
+                    {([
+                      ["stable", ui.stableProfile],
+                      ["accuracy-first", ui.accuracyProfile],
+                    ] as const).map(([profile, label]) => (
+                      <button
+                        type="button"
+                        key={profile}
+                        className={`px-3 py-2 text-sm ${analysisProfile === profile ? "bg-[var(--lv-accent)] font-semibold text-stone-950" : "text-[var(--lv-text-secondary)]"}`}
+                        aria-pressed={analysisProfile === profile}
+                        onClick={() => updateAnalysisProfile(profile)}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-xs text-[var(--lv-text-muted)]">
+                    {analysisProfile === "stable"
+                      ? ui.stableProfileHelp
+                      : ui.accuracyProfileHelp}
+                  </p>
+                </fieldset>
                 <label className="mt-3 flex cursor-pointer items-start gap-3">
                   <input
                     className="mt-1"
                     type="checkbox"
                     checked={accuracyFirst.bassCompanionCandidates}
+                    disabled={!analysisProfileFeatureDefaults[analysisProfile].bassCompanionCandidates}
                     onChange={(event) => updateAccuracyFirst("bassCompanionCandidates", event.target.checked)}
                   />
                   <span>
@@ -420,11 +461,44 @@ export function SettingsDialog({
                     className="mt-1"
                     type="checkbox"
                     checked={accuracyFirst.melodyContaminationFilter}
+                    disabled={!analysisProfileFeatureDefaults[analysisProfile].melodyContaminationFilter}
                     onChange={(event) => updateAccuracyFirst("melodyContaminationFilter", event.target.checked)}
                   />
                   <span>
                     <strong className="block text-[var(--lv-text-secondary)]">{ui.melodyContaminationFilter}</strong>
                     <span className="mt-1 block text-[var(--lv-text-muted)]">{ui.melodyContaminationFilterHelp}</span>
+                  </span>
+                </label>
+                <label className="mt-3 flex cursor-pointer items-start gap-3">
+                  <input
+                    className="mt-1"
+                    type="checkbox"
+                    checked={accuracyFirst.enableObservedFlatNineDominantCandidate}
+                    disabled={!analysisProfileFeatureDefaults[analysisProfile].enableObservedFlatNineDominantCandidate}
+                    onChange={(event) => updateAccuracyFirst(
+                      "enableObservedFlatNineDominantCandidate",
+                      event.target.checked,
+                    )}
+                  />
+                  <span>
+                    <strong className="block text-[var(--lv-text-secondary)]">{ui.observedFlatNineCandidate}</strong>
+                    <span className="mt-1 block text-[var(--lv-text-muted)]">{ui.observedFlatNineCandidateHelp}</span>
+                  </span>
+                </label>
+                <label className="mt-3 flex cursor-pointer items-start gap-3">
+                  <input
+                    className="mt-1"
+                    type="checkbox"
+                    checked={accuracyFirst.enableAccuracyCandidateUnion}
+                    disabled={!analysisProfileFeatureDefaults[analysisProfile].enableAccuracyCandidateUnion}
+                    onChange={(event) => updateAccuracyFirst(
+                      "enableAccuracyCandidateUnion",
+                      event.target.checked,
+                    )}
+                  />
+                  <span>
+                    <strong className="block text-[var(--lv-text-secondary)]">{ui.accuracyCandidateUnion}</strong>
+                    <span className="mt-1 block text-[var(--lv-text-muted)]">{ui.accuracyCandidateUnionHelp}</span>
                   </span>
                 </label>
               </div>
