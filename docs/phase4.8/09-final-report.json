@@ -4,6 +4,13 @@
   "decision": "non-promotion",
   "reason": "All pre-registered variants failed at least one Existing Dev Hard Gate.",
   "selectedVariant": null,
+  "pullRequests": [
+    284,
+    285,
+    286,
+    287,
+    288
+  ],
   "promotionCandidate": {
     "closestVariant": "E1",
     "target7b9Recall": 0.8,

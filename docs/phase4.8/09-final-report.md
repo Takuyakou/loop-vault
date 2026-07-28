@@ -21,7 +21,7 @@ Existing Devで事前登録したE1/E2/E3を比較した結果、全案がHard G
 | P4.8-02 | `feature/p48-02-shadow-generators` | `c93a9f7`, `911f4f8` | #286 | E1/E2/E3 Shadow |
 | P4.8-03 | `eval/p48-03-dev-selection-lock` | `dede3db` | #287 | Dev Gate・Non-Promotion |
 | P4.8-04〜08 | - | - | - | Gate停止により意図的に未実行 |
-| P4.8-09 | `docs/p48-09-final-decision` | この報告書のcommit | この報告書のPR | 最終判断 |
+| P4.8-09 | `docs/p48-09-final-decision` | `f9cbd96` | #288 | 最終判断 |
 
 ## 3. Repository Audit / Intervention Lock
 
