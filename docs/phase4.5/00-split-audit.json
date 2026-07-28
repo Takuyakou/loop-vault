@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.5-00",
+  "corpus": "loop-vault-voicing-gold-corpus-v1",
+  "splits": {
+    "dev": {
+      "files": 40,
+      "events": 320,
+      "scenarios": 20,
+      "status": "diagnostic-and-development"
+    },
+    "validation": {
+      "files": 10,
+      "events": 96,
+      "scenarios": 5,
+      "status": "burned-diagnostic-only",
+      "reason": "Gold chord labels were consumed by Phase 4.3 voicing validation"
+    },
+    "holdout": {
+      "files": 10,
+      "events": 80,
+      "scenarios": 5,
+      "status": "burned-diagnostic-only",
+      "reason": "Gold chord labels were consumed and reported by Phase 4.3 voicing holdout"
+    }
+  },
+  "pastLabelAllocationUse": {
+    "alternativesDesign": false,
+    "thresholdSelection": false,
+    "candidateAllocation": false,
+    "rootConfidenceCalibration": false,
+    "qualityTensionHypothesisSelection": false,
+    "promotionDecision": false
+  },
+  "phase45Policy": {
+    "diagnosticSplit": "dev",
+    "validationWillRun": false,
+    "holdoutWillRun": false,
+    "promotionRequiresNewUnseenData": true
+  }
+}
