@@ -549,6 +549,8 @@ export function ProgressionDetailView({
                   voiceChordForPreview(selectedSlot.currentChord).notes,
                 ).midiNotes
               : undefined}
+            keySignature={keySignature}
+            previousChord={previousSlot?.currentChord}
             onApply={(chord, source, selection) => setEditable((current) => {
               const slotId = current.selectedSlotId;
               return slotId

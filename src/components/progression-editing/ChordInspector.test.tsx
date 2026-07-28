@@ -12,6 +12,55 @@ import { ChordInspector } from "./ChordInspector";
   .IS_REACT_ACT_ENVIRONMENT = true;
 
 describe("ChordInspector playback", () => {
+  it("accepts degree input with key-aware autocomplete and applies it on Enter", async () => {
+    const slot: EditableChordSlot = {
+      id: "slot-fast-entry",
+      position: { bar: 1, beat: 1, durationBeats: 4 },
+      originalChord: { root: 0, quality: "maj7", tensions: [], label: "Cmaj7" },
+      currentChord: { root: 0, quality: "maj7", tensions: [], label: "Cmaj7" },
+      alternatives: [],
+      warnings: [],
+      edited: false,
+    };
+    const onApply = vi.fn();
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(
+        <ChordInspector
+          slot={slot}
+          language="ja"
+          keySignature="C major"
+          previousChord={{ root: 9, quality: "min7", tensions: [], label: "Am7" }}
+          onPreview={vi.fn()}
+          onApply={onApply}
+          onReset={vi.fn()}
+        />,
+      );
+    });
+
+    const input = container.querySelector<HTMLInputElement>("#chord-label-slot-fast-entry");
+    expect(input?.getAttribute("list")).toBe("chord-label-suggestions-slot-fast-entry");
+    expect([...container.querySelectorAll<HTMLOptionElement>("datalist option")]
+      .some((option) => option.label === "Gm7")).toBe(true);
+    await act(async () => {
+      if (!input) return;
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")
+        ?.set?.call(input, "V7");
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await act(async () => {
+      if (!input) return;
+      input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    });
+    expect(onApply).toHaveBeenCalledWith(
+      expect.objectContaining({ label: "G7" }),
+      "manual-label",
+      undefined,
+    );
+    await act(async () => root.unmount());
+  });
+
   it("keeps original, current, and draft controls synced with the shared controller", async () => {
     const driver: PlaybackAudioDriver = {
       playChord: vi.fn(async (_chord, _sound, callbacks) => callbacks.onStarted?.()),

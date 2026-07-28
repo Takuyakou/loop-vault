@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { parseChordLabel } from "../../domain/chords";
 import {
   analyzerQuickCandidates,
+  fastLabelSuggestions,
+  parseFastChordEntry,
   quickCandidateSelectionMetadata,
   type QuickCandidateSelectionMetadata,
   type QuickChordCandidate,
@@ -60,6 +61,8 @@ interface ChordInspectorProps {
   originalLabel?: string;
   currentLabel?: string;
   currentExplicitMidiNotes?: readonly number[];
+  keySignature?: string;
+  previousChord?: ChordSymbol;
 }
 
 export function ChordInspector({
@@ -90,6 +93,8 @@ export function ChordInspector({
   originalLabel,
   currentLabel,
   currentExplicitMidiNotes,
+  keySignature,
+  previousChord,
 }: ChordInspectorProps) {
   const text = progressionEditorCopy[language];
   const quickCandidates = providedQuickCandidates
@@ -131,13 +136,15 @@ export function ChordInspector({
   const sourceBase = playbackSource ?? { kind: "capture", id: "chord-inspector" };
   const firstAlternative = quickCandidates[0];
   const detailsId = `chord-inspector-details-${slot.id}`;
+  const suggestionsId = `chord-label-suggestions-${slot.id}`;
+  const labelSuggestions = fastLabelSuggestions(keySignature, previousChord);
 
   function updateLabel(label: string) {
     onEditStart?.();
     setDraftLabel(label);
     setDraftSource("manual-label");
     setSelectedCandidate(undefined);
-    const parsed = parseChordLabel(label.trim());
+    const parsed = parseFastChordEntry(label.trim(), keySignature, previousChord);
     setDraftChord(parsed ?? undefined);
     setError(parsed || label.trim().length === 0 ? undefined : text.invalidChord);
   }
@@ -304,6 +311,8 @@ export function ChordInspector({
           id={`chord-label-${slot.id}`}
           className="mt-2 w-full border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm outline-none focus:border-teal-300"
           value={draftLabel}
+          list={labelSuggestions.length > 0 ? suggestionsId : undefined}
+          placeholder={keySignature ? text.fastLabelPlaceholder : undefined}
           onFocus={onEditStart}
           onChange={(event) => updateLabel(event.target.value)}
           onKeyDown={(event) => {
@@ -313,6 +322,22 @@ export function ChordInspector({
           }}
           aria-invalid={Boolean(error)}
         />
+        {labelSuggestions.length > 0 ? (
+          <datalist id={suggestionsId}>
+            {labelSuggestions.map((suggestion) => (
+              <option
+                key={`${suggestion.input}:${suggestion.chord.label}`}
+                value={suggestion.input}
+                label={suggestion.chord.label}
+              />
+            ))}
+          </datalist>
+        ) : null}
+        {keySignature ? (
+          <p className="mt-2 text-xs text-[var(--lv-text-muted)]">
+            {text.fastLabelHelp(keySignature)}
+          </p>
+        ) : null}
         {error ? <p className="mt-2 text-xs text-red-200">{error}</p> : null}
         {draftChord ? (
           <ChordStructureEditor

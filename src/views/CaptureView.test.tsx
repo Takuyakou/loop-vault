@@ -21,6 +21,7 @@ import {
   captureSimilarityContext,
   captureAnalysisIdentity,
   captureSaveTitle,
+  CaptureAnalysisProgress,
   CaptureView,
   isEditableKeyboardTarget,
   isMidiFileName,
@@ -710,6 +711,16 @@ describe("ProgressionCandidateCard", () => {
 });
 
 describe("CaptureView saving", () => {
+  it("renders an honest indeterminate analysis progress stage", () => {
+    const markup = renderToStaticMarkup(
+      <CaptureAnalysisProgress stage="analyzing" copy={appCopy.ja} />,
+    );
+    expect(markup).toContain('role="status"');
+    expect(markup).toContain('role="progressbar"');
+    expect(markup).toContain("解析中");
+    expect(markup).not.toContain("%");
+  });
+
   it("creates the shared Draft when an automatic candidate is selected", async () => {
     const capturedCandidate = candidate();
     const result: MidiProgressionAnalysis = {
