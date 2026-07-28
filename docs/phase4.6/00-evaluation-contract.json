@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.6-00",
+  "analyzerMode": "phase4-v1",
+  "fileVersion": 1,
+  "data": {
+    "developmentSplit": "dev",
+    "developmentFiles": 40,
+    "developmentEvents": 320,
+    "validation": "burned-diagnostic-only-not-run",
+    "holdout": "burned-diagnostic-only-not-run",
+    "phase47RequiresNewIndependentGold": true
+  },
+  "canonicalIdentity": [
+    "root",
+    "triad",
+    "seventh",
+    "extensions",
+    "alterations",
+    "bass"
+  ],
+  "productInvariant": [
+    "rank1-label-score-hash",
+    "top3-label-score-hash",
+    "all-product-candidates-score-count-hash",
+    "analyzer-output-hash"
+  ],
+  "shadowOnly": true,
+  "productConnectionAllowed": false,
+  "counterfactualTieBreak": [
+    "score-descending",
+    "canonical-identity-ascending"
+  ],
+  "privateMidiTracked": false
+}

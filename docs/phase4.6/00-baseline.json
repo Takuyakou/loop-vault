@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.6-00",
+  "corpusVersion": "1.0.0",
+  "analyzerMode": "phase4-v1",
+  "split": "dev",
+  "files": 40,
+  "eventCount": 320,
+  "recallFunnel": {
+    "eventCount": 320,
+    "rawCandidateRecall": 0.7875,
+    "canonicalCandidateRecall": 0.7875,
+    "eligibleCandidateRecall": 0.7875,
+    "sameRootCandidateRecall": 0.7875,
+    "sameRootGoldTop1Rate": 0.621875,
+    "sameRootGoldTop2Rate": 0.725,
+    "sameRootGoldTop3Rate": 0.75,
+    "sameRootGoldMeanRank": 1.373015873015873,
+    "globalGoldMeanRank": 1.9682539682539681,
+    "displayedTop3Canonical": 0.70625,
+    "firstDropStageCounts": {
+      "raw-generation": 68,
+      "canonical-dedup": 0,
+      "eligibility": 0,
+      "same-root-pool": 0,
+      "same-root-rank": 0,
+      "global-rank": 0,
+      "allocated-top3": 26
+    }
+  },
+  "missingRawCandidateCount": 68,
+  "familyStats": [
+    {
+      "label": "A7b9",
+      "goldCount": 40,
+      "missingCount": 40,
+      "missingRate": 1,
+      "uniqueScenarioCount": 20,
+      "cleanMissing": 20,
+      "stressMissing": 20
+    },
+    {
+      "label": "Am9",
+      "goldCount": 40,
+      "missingCount": 6,
+      "missingRate": 0.15,
+      "uniqueScenarioCount": 3,
+      "cleanMissing": 3,
+      "stressMissing": 3
+    },
+    {
+      "label": "Cmaj9",
+      "goldCount": 40,
+      "missingCount": 2,
+      "missingRate": 0.05,
+      "uniqueScenarioCount": 1,
+      "cleanMissing": 1,
+      "stressMissing": 1
+    },
+    {
+      "label": "Dm7",
+      "goldCount": 40,
+      "missingCount": 6,
+      "missingRate": 0.15,
+      "uniqueScenarioCount": 3,
+      "cleanMissing": 3,
+      "stressMissing": 3
+    },
+    {
+      "label": "Dm9",
+      "goldCount": 40,
+      "missingCount": 4,
+      "missingRate": 0.1,
+      "uniqueScenarioCount": 2,
+      "cleanMissing": 2,
+      "stressMissing": 2
+    },
+    {
+      "label": "Em7",
+      "goldCount": 40,
+      "missingCount": 2,
+      "missingRate": 0.05,
+      "uniqueScenarioCount": 1,
+      "cleanMissing": 1,
+      "stressMissing": 1
+    },
+    {
+      "label": "G13",
+      "goldCount": 40,
+      "missingCount": 2,
+      "missingRate": 0.05,
+      "uniqueScenarioCount": 1,
+      "cleanMissing": 1,
+      "stressMissing": 1
+    },
+    {
+      "label": "G7sus4",
+      "goldCount": 40,
+      "missingCount": 6,
+      "missingRate": 0.15,
+      "uniqueScenarioCount": 3,
+      "cleanMissing": 3,
+      "stressMissing": 3
+    }
+  ],
+  "productInvariants": {
+    "rank1Hash": "a4166c993a81e4573072eeb05b8db088a56f5ab0d6db15db748fa5fed4b76d63",
+    "top3Hash": "fd30ae6acf63c9e04dbc1810e0097949584ecbbdc6b15cbf8242a38b944209fc",
+    "productCandidateHash": "11007e43ea40c2b08dbbf1ff03d3f0497ce73c32edbce6f80329233472e49b45",
+    "analyzerOutputHash": "c841bf9fc416a13ad7dec935fb8bd740d347a7920dec580684b0c06d073951d7",
+    "candidateCount": {
+      "total": 1920,
+      "mean": 6,
+      "minimum": 6,
+      "maximum": 6
+    },
+    "canonicalDuplicateCount": 0
+  },
+  "performance": {
+    "runtimeMs": 300.1924999999992,
+    "runtimePerEventMs": 0.9381015624999975,
+    "peakHeapDeltaBytes": 41885088
+  }
+}

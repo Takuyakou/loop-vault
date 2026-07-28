@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.6-00",
+  "generationBudget": {
+    "maximumExtensionsPerCore": 2,
+    "maximumShadowCandidatesPerRoot": 4,
+    "maximumShadowCandidatesPerEvent": 12,
+    "maximumAddedTensionsPerCandidate": 1,
+    "allowTensionPowerset": false,
+    "canonicalDuplicateMaximum": 0
+  },
+  "targetFamilySelection": {
+    "familyCount": 1,
+    "priorityOrder": [
+      "general-generator-bug-affecting-basic-m7",
+      "missing-rate",
+      "unique-scenario-count",
+      "clean-stress-reproduction",
+      "root-correct-rate",
+      "implementation-generality",
+      "candidate-explosion-risk"
+    ],
+    "forbidSingleSymbolHardcode": true,
+    "forbidRootSpecificBranch": true,
+    "forbidScenarioSpecificBranch": true
+  },
+  "shadowCoverage": {
+    "targetFamilyRawRecallMinimum": 0.8,
+    "targetFamilyCanonicalRecallMinimum": 0.8,
+    "overallRawRecallMustImprove": true,
+    "provenanceMissingMaximum": 0,
+    "averageAddedCandidatesPerEventMaximum": 4,
+    "maximumAddedCandidatesPerEventMaximum": 12,
+    "runtimeOverheadMaximum": 0.2,
+    "deterministicRateMinimum": 1
+  },
+  "counterfactual": {
+    "scoreRule": "existing-window-formula-applied-to-explicit-composed-pitch-class-set",
+    "tieBreak": [
+      "score-descending",
+      "canonical-identity-ascending"
+    ],
+    "productConnectionAllowed": false
+  },
+  "phase47LowRisk": {
+    "targetRecallGatePass": true,
+    "duplicateCount": 0,
+    "candidateEconomyPass": true,
+    "counterfactualRegressedMaximum": 0,
+    "plainStolenByAlteredMaximum": 0,
+    "productInvariantPass": true,
+    "newIndependentGoldRequired": true
+  },
+  "stopConditions": [
+    "general-basic-m7-generator-bug-routes-to-bug-phase",
+    "target-family-recall-below-gate",
+    "candidate-budget-exceeded",
+    "runtime-overhead-exceeded",
+    "provenance-missing",
+    "canonical-duplicate",
+    "product-invariant-change"
+  ]
+}
