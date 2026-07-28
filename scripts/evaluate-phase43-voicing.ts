@@ -2,11 +2,17 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { argv, cwd, stdout } from "node:process";
 import { parseChordLabel } from "../src/domain/chords";
-import { buildVoiceFeatureInputs, buildVoices, parseMidi } from "../src/domain/midi";
+import { analyzeMidi, buildVoiceFeatureInputs, buildVoices, parseMidi } from "../src/domain/midi";
 import { normalizeNotes } from "../src/domain/midi/normalize";
 import type { Voice, VoiceRole } from "../src/domain/midi/types";
+import { beatsPerBar } from "../src/domain/midi/timing";
 import { annotateVoiceRoles } from "../src/domain/midi/voiceRoles";
-import type { ChordSymbol, VoicingRepresentation } from "../src/domain/types";
+import type {
+  ChordSymbol,
+  ChordTimelineItem,
+  MidiProgressionAnalysis,
+  VoicingRepresentation,
+} from "../src/domain/types";
 import {
   extractVoicing,
   leakedNotes,
@@ -20,6 +26,7 @@ import {
 
 type Split = "dev" | "validation" | "holdout";
 type GoldPolicy = "sourceFaithfulMidi" | "aggregateHarmonyMidi" | "dojoIntegratedMidi";
+type Condition = "A" | "B" | "C" | "D";
 
 interface GoldTargets {
   sourceFaithfulMidi: number[];
@@ -69,6 +76,7 @@ interface NoteEventRow {
 }
 
 interface EventEvaluation {
+  condition: Condition;
   fileId: string;
   scenarioId: string;
   scenarioTitleJa: string;
@@ -120,10 +128,14 @@ const policies: readonly GoldPolicy[] = [
 const corpusDir = resolve(cwd(), option("--corpus")
   ?? "test/loop-vault-voicing-gold-corpus-v1");
 const split = (option("--split") ?? "dev") as Split;
+const conditions = parseConditions(option("--conditions"));
+const matrix = conditions.length > 1;
 const output = resolve(cwd(), option("--output")
-  ?? `docs/phase4.3/04-oracle-voicing-${split}.json`);
+  ?? (matrix
+    ? `docs/phase4.3/05-voicing-ablation-${split}.json`
+    : `docs/phase4.3/04-oracle-voicing-${split}.json`));
 const detailsOutput = resolve(cwd(), option("--details")
-  ?? `.local-evaluation/phase4.3/oracle-${split}-events.json`);
+  ?? `.local-evaluation/phase4.3/${matrix ? "ablation" : "oracle"}-${split}-events.json`);
 const manifest = JSON.parse(
   await readFile(resolve(corpusDir, "manifest.json"), "utf8"),
 ) as CorpusManifest;
@@ -141,80 +153,91 @@ for (const file of files) {
   const rawVoices = buildVoices(data);
   const features = buildVoiceFeatureInputs(rawVoices, normalizeNotes(data));
   const goldVoices = annotateVoiceRoles(rawVoices, features, goldRoleOverrides(rawVoices, file.tracks));
+  const productVoices = annotateVoiceRoles(rawVoices, features);
+  const productAnalysis = conditions.some((condition) => condition === "C" || condition === "D")
+    ? analyzeMidi(bytes, { mode: "phase4-v1", fileName: file.path })
+    : undefined;
 
   for (const event of file.events) {
     const chord = parseChordLabel(event.chordSymbol);
-    const extraction = chord
-      ? extractVoicing({
-          chord,
-          segment: { startBeat: event.startBeat, endBeat: event.endBeat },
-          notes: data.notes,
-          ticksPerBeat: data.ticksPerBeat,
-          voices: goldVoices,
-        })
-      : { status: "not-found" as const, reasons: ["no-chord-gold"] };
-    const predictedNotes = extraction.snapshot?.midiNotes ?? [];
     const eventDistractors = distractors.get(`${file.fileId}/${event.eventId}`) ?? emptyDistractors();
-
-    for (const policy of policies) {
-      rows.push(evaluateEvent(file, event, policy, extraction, predictedNotes, eventDistractors, chord));
+    for (const condition of conditions) {
+      const segment = usesProductBoundary(condition) && productAnalysis
+        ? productSegment(productAnalysis, event)
+        : { startBeat: event.startBeat, endBeat: event.endBeat };
+      const voices = usesProductRoles(condition) ? productVoices : goldVoices;
+      const extraction = chord
+        ? extractVoicing({
+            chord,
+            segment,
+            notes: data.notes,
+            ticksPerBeat: data.ticksPerBeat,
+            voices,
+          })
+        : { status: "not-found" as const, reasons: ["no-chord-gold"] };
+      const predictedNotes = extraction.snapshot?.midiNotes ?? [];
+      for (const policy of policies) {
+        rows.push(evaluateEvent(
+          condition,
+          file,
+          event,
+          policy,
+          extraction,
+          predictedNotes,
+          eventDistractors,
+          chord,
+        ));
+      }
     }
   }
 }
 
-const report = {
+const baseReport = {
   schemaVersion: 1,
   corpusVersion: manifest.corpusVersion,
   analyzerMode: "phase4-v1",
-  condition: "A",
-  boundary: "gold",
-  roles: "gold",
   split,
   fileCount: files.length,
   eventCount: files.reduce((sum, file) => sum + file.events.length, 0),
-  policies: Object.fromEntries(policies.map((policy) => [
-    policy,
-    aggregate(rows.filter((row) => row.policy === policy)),
-  ])),
-  byVariant: Object.fromEntries(
-    (["clean", "stress"] as const).map((variant) => [
-      variant,
-      Object.fromEntries(policies.map((policy) => [
-        policy,
-        aggregate(rows.filter((row) => row.variant === variant && row.policy === policy)),
-      ])),
-    ]),
-  ),
-  byRepresentationType: Object.fromEntries(
-    (["simultaneous", "aggregated", "hybrid", "none"] as const).map((representation) => [
-      representation,
-      aggregate(rows.filter(
-        (row) => row.representationType === representation && row.policy === "sourceFaithfulMidi",
-      )),
-    ]),
-  ),
-  byScenario: Object.fromEntries(
-    [...new Set(rows.map((row) => row.scenarioId))].sort().map((scenarioId) => [
-      scenarioId,
-      {
-        titleJa: rows.find((row) => row.scenarioId === scenarioId)?.scenarioTitleJa,
-        sourceFaithful: aggregate(rows.filter(
-          (row) => row.scenarioId === scenarioId && row.policy === "sourceFaithfulMidi",
-        )),
-      },
-    ]),
-  ),
   holdoutStatus: split === "holdout" ? "evaluated" : "not-evaluated",
 };
+const conditionReports = Object.fromEntries(conditions.map((condition) => [
+  condition,
+  buildConditionReport(condition, rows),
+]));
+const report = matrix
+  ? {
+      ...baseReport,
+      conditions: conditionReports,
+      deltas: buildAblationDeltas(conditionReports),
+    }
+  : {
+      ...baseReport,
+      condition: conditions[0],
+      ...conditionReports[conditions[0]!],
+    };
 
 await mkdir(dirname(output), { recursive: true });
 await mkdir(dirname(detailsOutput), { recursive: true });
 await writeFile(output, `${JSON.stringify(report, null, 2)}\n`, "utf8");
 await writeFile(detailsOutput, `${JSON.stringify({ schemaVersion: 1, split, rows }, null, 2)}\n`, "utf8");
-stdout.write(`P4.3 Oracle A: ${files.length} files / ${report.eventCount} events (${split})\n`);
-stdout.write(`${JSON.stringify(report.policies, null, 2)}\n`);
+stdout.write(`P4.3 ${matrix ? "Ablation A-D" : `Oracle ${conditions[0]}`}: ${files.length} files / ${report.eventCount} events (${split})\n`);
+stdout.write(`${JSON.stringify(
+  matrix
+    ? {
+        policies: Object.fromEntries(conditions.map((condition) => [
+          condition,
+          conditionReports[condition]!.policies.sourceFaithfulMidi,
+        ])),
+        deltas: "deltas" in report ? report.deltas : {},
+      }
+    : conditionReports[conditions[0]!],
+  null,
+  2,
+)}\n`);
 
 function evaluateEvent(
+  condition: Condition,
   file: CorpusFile,
   event: GoldEvent,
   policy: GoldPolicy,
@@ -238,6 +261,7 @@ function evaluateEvent(
       }) === "stale"
     : undefined;
   return {
+    condition,
     fileId: file.fileId,
     scenarioId: file.scenarioId,
     scenarioTitleJa: file.scenarioTitleJa,
@@ -274,6 +298,81 @@ function evaluateEvent(
     aggregatedAsSimultaneous: representation.aggregatedAsSimultaneous,
     ...leak,
     ...(staleAfterEditCorrect === undefined ? {} : { staleAfterEditCorrect }),
+  };
+}
+
+function buildConditionReport(condition: Condition, allRows: readonly EventEvaluation[]) {
+  const conditionRows = allRows.filter((row) => row.condition === condition);
+  return {
+    boundary: usesProductBoundary(condition) ? "product" : "gold",
+    roles: usesProductRoles(condition) ? "product" : "gold",
+    policies: Object.fromEntries(policies.map((policy) => [
+      policy,
+      aggregate(conditionRows.filter((row) => row.policy === policy)),
+    ])),
+    byVariant: Object.fromEntries(
+      (["clean", "stress"] as const).map((variant) => [
+        variant,
+        Object.fromEntries(policies.map((policy) => [
+          policy,
+          aggregate(conditionRows.filter((row) => row.variant === variant && row.policy === policy)),
+        ])),
+      ]),
+    ),
+    byRepresentationType: Object.fromEntries(
+      (["simultaneous", "aggregated", "hybrid", "none"] as const).map((representation) => [
+        representation,
+        aggregate(conditionRows.filter(
+          (row) => row.representationType === representation && row.policy === "sourceFaithfulMidi",
+        )),
+      ]),
+    ),
+    byScenario: Object.fromEntries(
+      [...new Set(conditionRows.map((row) => row.scenarioId))].sort().map((scenarioId) => [
+        scenarioId,
+        {
+          titleJa: conditionRows.find((row) => row.scenarioId === scenarioId)?.scenarioTitleJa,
+          sourceFaithful: aggregate(conditionRows.filter(
+            (row) => row.scenarioId === scenarioId && row.policy === "sourceFaithfulMidi",
+          )),
+        },
+      ]),
+    ),
+  };
+}
+
+type ConditionReport = ReturnType<typeof buildConditionReport>;
+
+function buildAblationDeltas(reports: Record<string, ConditionReport>) {
+  const source = (condition: Condition) => reports[condition]!.policies.sourceFaithfulMidi;
+  return {
+    "B-A-role-loss": metricDelta(source("B"), source("A")),
+    "C-A-boundary-loss": metricDelta(source("C"), source("A")),
+    "D-B-interaction-vs-role": metricDelta(source("D"), source("B")),
+    "D-C-interaction-vs-boundary": metricDelta(source("D"), source("C")),
+    "D-A-total-loss": metricDelta(source("D"), source("A")),
+  };
+}
+
+function metricDelta(
+  current: ReturnType<typeof aggregate>,
+  baseline: ReturnType<typeof aggregate>,
+) {
+  return {
+    voicingExactRate: subtract(current.voicingExactRate, baseline.voicingExactRate),
+    notePrecision: subtract(current.notePrecision, baseline.notePrecision),
+    noteRecall: subtract(current.noteRecall, baseline.noteRecall),
+    noteF1: subtract(current.noteF1, baseline.noteF1),
+    registerExactRate: subtract(current.registerExactRate, baseline.registerExactRate),
+    representationTypeAccuracy: subtract(
+      current.representationTypeAccuracy,
+      baseline.representationTypeAccuracy,
+    ),
+    sourceVoicingUsableRate: subtract(
+      current.sourceVoicingUsableRate,
+      baseline.sourceVoicingUsableRate,
+    ),
+    generatedFallbackRate: subtract(current.generatedFallbackRate, baseline.generatedFallbackRate),
   };
 }
 
@@ -437,6 +536,54 @@ function goldRoleOverrides(
   }));
 }
 
+function productSegment(
+  analysis: MidiProgressionAnalysis,
+  event: Pick<GoldEvent, "startBeat" | "endBeat">,
+): { startBeat: number; endBeat: number } {
+  const meter = beatsPerBar(analysis.timeSignature);
+  const best = [...analysis.fullTimeline].sort((left, right) => {
+    const leftRange = timelineRange(left, meter);
+    const rightRange = timelineRange(right, meter);
+    return intervalIou(rightRange.startBeat, rightRange.endBeat, event.startBeat, event.endBeat)
+      - intervalIou(leftRange.startBeat, leftRange.endBeat, event.startBeat, event.endBeat)
+      || leftRange.startBeat - rightRange.startBeat;
+  })[0];
+  return best ? timelineRange(best, meter) : { startBeat: event.startBeat, endBeat: event.endBeat };
+}
+
+function timelineRange(item: ChordTimelineItem, meter: number) {
+  const startBeat = (item.bar - 1) * meter + item.beat - 1;
+  return { startBeat, endBeat: startBeat + item.durationBeats };
+}
+
+function intervalIou(
+  leftStart: number,
+  leftEnd: number,
+  rightStart: number,
+  rightEnd: number,
+): number {
+  const intersection = Math.max(0, Math.min(leftEnd, rightEnd) - Math.max(leftStart, rightStart));
+  const union = Math.max(leftEnd, rightEnd) - Math.min(leftStart, rightStart);
+  return union > 0 ? intersection / union : 0;
+}
+
+function parseConditions(value: string | undefined): Condition[] {
+  if (!value) return ["A"];
+  if (value === "all") return ["A", "B", "C", "D"];
+  const parsed = value.split(",").filter((entry): entry is Condition =>
+    ["A", "B", "C", "D"].includes(entry));
+  if (parsed.length === 0) throw new Error(`Invalid --conditions: ${value}`);
+  return [...new Set(parsed)];
+}
+
+function usesProductBoundary(condition: Condition): boolean {
+  return condition === "C" || condition === "D";
+}
+
+function usesProductRoles(condition: Condition): boolean {
+  return condition === "B" || condition === "D";
+}
+
 function mapGoldRole(role: string): VoiceRole {
   if (role === "bass") return "bass";
   if (role === "percussion") return "percussion";
@@ -463,4 +610,11 @@ function ratio(value: number, total: number): number | null {
 
 function rounded(value: number): number {
   return Number(value.toFixed(6));
+}
+
+function subtract(
+  current: number | null,
+  baseline: number | null,
+): number | null {
+  return current === null || baseline === null ? null : rounded(current - baseline);
 }
