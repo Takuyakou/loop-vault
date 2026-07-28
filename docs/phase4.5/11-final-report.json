@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.5-11",
+  "decision": "B-candidate-generation",
+  "allocationImplemented": false,
+  "prStack": [
+    { "stage": "P4.5-00", "pr": 260, "commit": "1a08c4d" },
+    { "stage": "P4.5-01", "pr": 261, "commit": "4f29341" },
+    { "stage": "P4.5-02", "pr": 262, "commit": "2e4fcea" },
+    { "stage": "P4.5-03", "pr": 263, "commit": "65e46de" },
+    { "stage": "P4.5-04", "pr": 264, "commit": "9c3c5e9" },
+    { "stage": "P4.5-05", "pr": 265, "commit": "46e77cd" },
+    { "stage": "P4.5-06", "pr": 266, "commit": "63be93f" }
+  ],
+  "splitAudit": {
+    "dev": { "files": 40, "events": 320, "scenarios": 20, "usage": "diagnostic-and-calibration" },
+    "validation": { "files": 10, "events": 96, "scenarios": 5, "usage": "burned-diagnostic-only-not-run" },
+    "holdout": { "files": 10, "events": 80, "scenarios": 5, "usage": "burned-diagnostic-only-not-run" }
+  },
+  "baseline": {
+    "canonicalExactAt1": 0.609375,
+    "rootAt1": 0.946875,
+    "top3Canonical": 0.70625,
+    "top3Root": 0.98125,
+    "MRR": 0.657813,
+    "correctCandidateMeanRank": 1.137168,
+    "correctionCost": { "mean": 0.76875, "median": 0, "p90": 3 },
+    "manualInputRequiredRate": 0.125,
+    "rootDiversityAt3": 2.05,
+    "canonicalDiversityAt3": 3,
+    "duplicateIdentityCount": 0
+  },
+  "d1": {
+    "rank1": { "count": 195, "rate": 0.609375 },
+    "rank2": { "count": 31, "rate": 0.096875 },
+    "rank3": { "count": 0, "rate": 0 },
+    "outsideTop3": { "count": 94, "rate": 0.29375 }
+  },
+  "d2": {
+    "rawCandidateRecall": 0.7875,
+    "canonicalCandidateRecall": 0.7875,
+    "eligibleCandidateRecall": 0.7875,
+    "sameRootCandidateRecall": 0.7875,
+    "sameRootGoldMeanRank": 1.373015873015873,
+    "globalGoldMeanRank": 1.9682539682539681,
+    "firstDrop": { "rawGeneration": 68, "allocatedTop3": 26 }
+  },
+  "d3": {
+    "missCount": 94,
+    "candidateNotGenerated": 68,
+    "sameRootRankedTooLow": 12,
+    "alternativeRootAllocationLoss": 14,
+    "allocationEditableShare": 0.2765957446808511,
+    "ambiguousOrAnnotationShare": 0
+  },
+  "d4": {
+    "oracleTop3Canonical": 0.73125,
+    "oracleGain": 0.025,
+    "oracleTop3Root": 0.946875,
+    "top3RootDelta": -0.034375,
+    "gainedCanonicalRescue": 8,
+    "lostRootRescue": 11,
+    "netRescue": -3,
+    "lostRootToGainedRatio": 1.375,
+    "rank1Changes": 0
+  },
+  "d5": {
+    "highConfidenceBandExists": false,
+    "usesRawMarginThreshold": false
+  },
+  "stagesNotRun": [
+    "P4.5-07-allocation-shadow",
+    "P4.5-08-dev-loso",
+    "P4.5-09-validation",
+    "P4.5-10-holdout"
+  ],
+  "productTracks": {
+    "correctionLog": "not-implemented-independent-track",
+    "fastLabelEntry": "not-implemented-independent-track",
+    "ambiguityReasons": "not-implemented-independent-track"
+  },
+  "invariants": {
+    "defaultAnalyzerMode": "phase4-v1",
+    "fileVersion": 1,
+    "rank1Changed": false,
+    "productAllocationChanged": false,
+    "analyzerChanged": false,
+    "timelineChanged": false,
+    "voicingChanged": false,
+    "schemaChanged": false,
+    "trackedMidiFiles": 0,
+    "trackedLocalEvaluationFiles": 0
+  },
+  "rollback": "Do not merge the P4.5 stack; no product allocation path was changed.",
+  "nextResearch": "Candidate generation recall, beginning with A7b9 and slash-bass canonical identity gaps.",
+  "verification": {
+    "lint": "pass",
+    "typecheck": "pass",
+    "test": { "files": 207, "tests": 1687, "status": "pass" },
+    "cargoTest": { "tests": 24, "status": "pass" },
+    "build": "pass",
+    "tauriBuild": "pass",
+    "diffCheck": "pass",
+    "stagedCheck": "pass",
+    "warning": "Vite chunk-size warning only"
+  },
+  "artifacts": {
+    "exe": "D:\\dev\\Loop Vault\\src-tauri\\target\\release\\loop-vault.exe",
+    "msi": "D:\\dev\\Loop Vault\\src-tauri\\target\\release\\bundle\\msi\\Loop Vault_0.1.0_x64_en-US.msi",
+    "nsis": "D:\\dev\\Loop Vault\\src-tauri\\target\\release\\bundle\\nsis\\Loop Vault_0.1.0_x64-setup.exe"
+  }
+}
