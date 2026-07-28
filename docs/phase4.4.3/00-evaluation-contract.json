@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.4.3-00",
+  "registeredBeforeEvaluation": true,
+  "coverageDefinition": {
+    "numerator": "maximum distinct concurrent support pitches inside the target note interval",
+    "denominator": "distinct event-available support pitches",
+    "isTemporalRatio": false,
+    "duplicatePitchPolicy": "count once",
+    "absoluteDurationGate": "removed"
+  },
+  "candidate": {
+    "id": "A1-prime",
+    "minimumRoleConfidence": 0.65,
+    "minimumSupportPitchCount": 1,
+    "minimumCoverageRatio": 0.25
+  },
+  "classificationPriority": [
+    "X",
+    "N",
+    "H"
+  ],
+  "cv": {
+    "protocol": "leave-one-scenario-out",
+    "scenarioCount": 16,
+    "eventCount": 256,
+    "keepCleanStressTogether": true,
+    "parameterSelectionPerFold": false
+  },
+  "gates": {
+    "minimumApplicability": 0.3,
+    "minimumContaminationReduction": 0.5,
+    "melodyLeakMustImprove": true,
+    "minimumNoteRecallDelta": -0.005,
+    "minimumBassAccuracyDelta": 0,
+    "minimumTopNoteAccuracyDelta": -0.005,
+    "minimumRegisterExactDelta": -0.005,
+    "inertness": 1,
+    "maximumSourceNoteAdditions": 0,
+    "minimumGeneralF1Delta": -0.0025,
+    "minimumPlainBlockExactDelta": 0,
+    "minimumRootlessExactDelta": -0.005,
+    "minimumArpeggioF1Delta": -0.005,
+    "chordLabelsExact": true,
+    "timelineExact": true
+  },
+  "exit": {
+    "promotion": {
+      "minimumImprovedFolds": 12,
+      "maximumRegressedFolds": 0
+    },
+    "conditionalPromotion": {
+      "minimumImprovedFolds": 8,
+      "maximumImprovedFolds": 11,
+      "maximumRegressedFolds": 0
+    },
+    "stop": {
+      "maximumImprovedFolds": 7,
+      "minimumRegressedFolds": 1,
+      "generalRegressionFailure": true
+    }
+  },
+  "burnedHoldout": {
+    "diagnosticClassificationOnly": true,
+    "parameterSelectionAllowed": false,
+    "promotionDecisionAllowed": false,
+    "rerunAllowed": false
+  },
+  "invariants": {
+    "defaultAnalyzerMode": "phase4-v1",
+    "fileVersion": 1,
+    "schemaChanged": false,
+    "timelineChanged": false,
+    "chordLabelsChanged": false
+  }
+}
