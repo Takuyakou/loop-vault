@@ -1,0 +1,208 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.4.1",
+  "analyzerMode": "phase4-v1",
+  "fileVersion": 1,
+  "productBehaviorChanged": false,
+  "holdoutStatus": "not-run",
+  "classificationPolicy": {
+    "multipleLabelsAllowed": true,
+    "primaryPriority": [
+      "filter-not-triggered",
+      "unfiltered-rebuild",
+      "missing-harmony-dominant",
+      "same-pitch-duplicate",
+      "evaluator-provenance-mismatch",
+      "status-only-change",
+      "candidate-unchanged"
+    ],
+    "definitions": {
+      "filter-not-triggered": "Shadow filter removed no note instance.",
+      "same-pitch-duplicate": "A removed pitch remained on a different track after filtering.",
+      "unfiltered-rebuild": "A removed noteInstanceId reappeared in the Shadow winner provenance.",
+      "candidate-unchanged": "Candidate structural keys were unchanged, even if roleScore changed.",
+      "status-only-change": "Final pitch set stayed equal while source status changed.",
+      "missing-harmony-dominant": "No event voice was harmony/pad/mixed or polyphonic enough for harmony support.",
+      "evaluator-provenance-mismatch": "Pitch-only leak evaluation labels a remaining gold instance as the removed distractor pitch."
+    }
+  },
+  "counts": {
+    "filter-not-triggered": 6,
+    "same-pitch-duplicate": 0,
+    "unfiltered-rebuild": 0,
+    "candidate-unchanged": 6,
+    "status-only-change": 0,
+    "missing-harmony-dominant": 2,
+    "evaluator-provenance-mismatch": 0
+  },
+  "firstInvalidationStageCounts": {
+    "filter-trigger": 6
+  },
+  "statusOnlyExplanation": {
+    "reviewToUsableEvents": [
+      "M11_stress/e01",
+      "M11_stress/e02",
+      "M11_stress/e03",
+      "M11_stress/e05",
+      "M11_stress/e06",
+      "M11_stress/e07",
+      "M11_stress/e08"
+    ],
+    "usableToReviewEvents": [],
+    "reviewToUsableWithUnchangedFinalPitchSet": [
+      "M11_stress/e01",
+      "M11_stress/e02",
+      "M11_stress/e03",
+      "M11_stress/e05",
+      "M11_stress/e06",
+      "M11_stress/e07",
+      "M11_stress/e08"
+    ],
+    "winnerDurationExtendedWithUnchangedFinalPitchSet": [
+      "M11_stress/e01",
+      "M11_stress/e02",
+      "M11_stress/e03",
+      "M11_stress/e05",
+      "M11_stress/e06",
+      "M11_stress/e07",
+      "M11_stress/e08"
+    ]
+  },
+  "events": [
+    {
+      "key": "M12_clean/e04",
+      "primaryClassification": "filter-not-triggered",
+      "classifications": [
+        "filter-not-triggered",
+        "candidate-unchanged"
+      ],
+      "firstInvalidationStage": "filter-trigger",
+      "removedNoteInstanceCount": 0,
+      "noteInstanceChanged": false,
+      "filterPitchSetChanged": false,
+      "samePitchDifferentTrackDuplicateCount": 0,
+      "candidateStructurallyUnchanged": true,
+      "winnerStructurallyUnchanged": true,
+      "finalPitchSetChanged": false,
+      "statusChanged": false,
+      "exactChanged": false,
+      "melodyLeakChanged": false,
+      "unfilteredRebuildDetected": false,
+      "evaluatorProvenanceMismatchPitches": []
+    },
+    {
+      "key": "M12_clean/e06",
+      "primaryClassification": "filter-not-triggered",
+      "classifications": [
+        "filter-not-triggered",
+        "candidate-unchanged"
+      ],
+      "firstInvalidationStage": "filter-trigger",
+      "removedNoteInstanceCount": 0,
+      "noteInstanceChanged": false,
+      "filterPitchSetChanged": false,
+      "samePitchDifferentTrackDuplicateCount": 0,
+      "candidateStructurallyUnchanged": true,
+      "winnerStructurallyUnchanged": true,
+      "finalPitchSetChanged": false,
+      "statusChanged": false,
+      "exactChanged": false,
+      "melodyLeakChanged": false,
+      "unfilteredRebuildDetected": false,
+      "evaluatorProvenanceMismatchPitches": []
+    },
+    {
+      "key": "M12_stress/e04",
+      "primaryClassification": "filter-not-triggered",
+      "classifications": [
+        "filter-not-triggered",
+        "candidate-unchanged",
+        "missing-harmony-dominant"
+      ],
+      "firstInvalidationStage": "filter-trigger",
+      "removedNoteInstanceCount": 0,
+      "noteInstanceChanged": false,
+      "filterPitchSetChanged": false,
+      "samePitchDifferentTrackDuplicateCount": 0,
+      "candidateStructurallyUnchanged": true,
+      "winnerStructurallyUnchanged": true,
+      "finalPitchSetChanged": false,
+      "statusChanged": false,
+      "exactChanged": false,
+      "melodyLeakChanged": false,
+      "unfilteredRebuildDetected": false,
+      "evaluatorProvenanceMismatchPitches": []
+    },
+    {
+      "key": "M12_stress/e06",
+      "primaryClassification": "filter-not-triggered",
+      "classifications": [
+        "filter-not-triggered",
+        "candidate-unchanged",
+        "missing-harmony-dominant"
+      ],
+      "firstInvalidationStage": "filter-trigger",
+      "removedNoteInstanceCount": 0,
+      "noteInstanceChanged": false,
+      "filterPitchSetChanged": false,
+      "samePitchDifferentTrackDuplicateCount": 0,
+      "candidateStructurallyUnchanged": true,
+      "winnerStructurallyUnchanged": true,
+      "finalPitchSetChanged": false,
+      "statusChanged": false,
+      "exactChanged": false,
+      "melodyLeakChanged": false,
+      "unfilteredRebuildDetected": false,
+      "evaluatorProvenanceMismatchPitches": []
+    },
+    {
+      "key": "M13_clean/e04",
+      "primaryClassification": "filter-not-triggered",
+      "classifications": [
+        "filter-not-triggered",
+        "candidate-unchanged"
+      ],
+      "firstInvalidationStage": "filter-trigger",
+      "removedNoteInstanceCount": 0,
+      "noteInstanceChanged": false,
+      "filterPitchSetChanged": false,
+      "samePitchDifferentTrackDuplicateCount": 0,
+      "candidateStructurallyUnchanged": true,
+      "winnerStructurallyUnchanged": true,
+      "finalPitchSetChanged": false,
+      "statusChanged": false,
+      "exactChanged": false,
+      "melodyLeakChanged": false,
+      "unfilteredRebuildDetected": false,
+      "evaluatorProvenanceMismatchPitches": []
+    },
+    {
+      "key": "M13_stress/e04",
+      "primaryClassification": "filter-not-triggered",
+      "classifications": [
+        "filter-not-triggered",
+        "candidate-unchanged"
+      ],
+      "firstInvalidationStage": "filter-trigger",
+      "removedNoteInstanceCount": 0,
+      "noteInstanceChanged": false,
+      "filterPitchSetChanged": false,
+      "samePitchDifferentTrackDuplicateCount": 0,
+      "candidateStructurallyUnchanged": true,
+      "winnerStructurallyUnchanged": true,
+      "finalPitchSetChanged": false,
+      "statusChanged": false,
+      "exactChanged": false,
+      "melodyLeakChanged": false,
+      "unfilteredRebuildDetected": false,
+      "evaluatorProvenanceMismatchPitches": []
+    }
+  ],
+  "conclusion": {
+    "allSixFirstInvalidationStagesIdentified": true,
+    "noteInstanceAndPitchSetSeparated": true,
+    "usableOnlyReason": "The 6 contaminated events are a disjoint cohort from the 7 review-to-usable events: their filter never triggers, so their note instances, pitch sets, Exact, and melody leak remain unchanged. In the 7 usable gains, filtering removes melody note instances that split simultaneous windows; the same harmonic contributor set then spans a longer winning window, raising the duration score and confidence across the usable threshold while the final pitch set stays unchanged.",
+    "productPathUnchanged": true,
+    "holdoutNotRun": true
+  }
+}
