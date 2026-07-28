@@ -1,0 +1,220 @@
+{
+  "schemaVersion": 1,
+  "rulesVersion": "p43-failure-taxonomy-v1",
+  "dev": {
+    "eventCount": 320,
+    "firstLossStageCounts": {
+      "pass": 204,
+      "note-selection": 28,
+      "fallback-policy": 34,
+      "role-derived": 38,
+      "representation-type": 16
+    }
+  },
+  "validation": {
+    "eventCount": 96,
+    "firstLossStageCounts": {
+      "pass": 60,
+      "role-derived": 25,
+      "fallback-policy": 2,
+      "note-selection": 9
+    }
+  },
+  "rankedClusters": [
+    {
+      "cluster": "melody-contamination",
+      "affectedEventCount": 60,
+      "affectedFileCount": 20,
+      "cleanEventCount": 1,
+      "stressEventCount": 59,
+      "meanCorrectionSeverity": 3.533333,
+      "productImpact": 2,
+      "examples": [
+        "V01_stress/e04",
+        "V02_stress/e01",
+        "V02_stress/e02",
+        "V02_stress/e04",
+        "V02_stress/e06"
+      ],
+      "validationEventCount": 18,
+      "validationReproducibility": 1,
+      "priorityScore": 423.99996
+    },
+    {
+      "cluster": "simultaneous-frame-wrong",
+      "affectedEventCount": 59,
+      "affectedFileCount": 19,
+      "cleanEventCount": 1,
+      "stressEventCount": 58,
+      "meanCorrectionSeverity": 3.288136,
+      "productImpact": 2,
+      "examples": [
+        "V01_stress/e04",
+        "V02_stress/e01",
+        "V02_stress/e02",
+        "V02_stress/e04",
+        "V02_stress/e06"
+      ],
+      "validationEventCount": 25,
+      "validationReproducibility": 1,
+      "priorityScore": 388.000048
+    },
+    {
+      "cluster": "fallback-despite-usable-source",
+      "affectedEventCount": 40,
+      "affectedFileCount": 14,
+      "cleanEventCount": 8,
+      "stressEventCount": 32,
+      "meanCorrectionSeverity": 2.5,
+      "productImpact": 2.5,
+      "examples": [
+        "V02_stress/e03",
+        "V02_stress/e05",
+        "V02_stress/e07",
+        "V04_clean/e01",
+        "V04_clean/e02"
+      ],
+      "validationEventCount": 11,
+      "validationReproducibility": 1,
+      "priorityScore": 250
+    },
+    {
+      "cluster": "aggregated-misclassified",
+      "affectedEventCount": 16,
+      "affectedFileCount": 2,
+      "cleanEventCount": 8,
+      "stressEventCount": 8,
+      "meanCorrectionSeverity": 10.0625,
+      "productImpact": 3,
+      "examples": [
+        "V17_clean/e01",
+        "V17_clean/e02",
+        "V17_clean/e03",
+        "V17_clean/e04",
+        "V17_clean/e05"
+      ],
+      "validationEventCount": 0,
+      "validationReproducibility": 0.5,
+      "priorityScore": 241.5
+    },
+    {
+      "cluster": "arpeggio-under-collection",
+      "affectedEventCount": 16,
+      "affectedFileCount": 2,
+      "cleanEventCount": 8,
+      "stressEventCount": 8,
+      "meanCorrectionSeverity": 10.0625,
+      "productImpact": 3,
+      "examples": [
+        "V17_clean/e01",
+        "V17_clean/e02",
+        "V17_clean/e03",
+        "V17_clean/e04",
+        "V17_clean/e05"
+      ],
+      "validationEventCount": 0,
+      "validationReproducibility": 0.5,
+      "priorityScore": 241.5
+    },
+    {
+      "cluster": "top-note-missing",
+      "affectedEventCount": 18,
+      "affectedFileCount": 3,
+      "cleanEventCount": 8,
+      "stressEventCount": 10,
+      "meanCorrectionSeverity": 9.5,
+      "productImpact": 2.25,
+      "examples": [
+        "V17_clean/e01",
+        "V17_clean/e02",
+        "V17_clean/e03",
+        "V17_clean/e04",
+        "V17_clean/e05"
+      ],
+      "validationEventCount": 0,
+      "validationReproducibility": 0.5,
+      "priorityScore": 192.375
+    },
+    {
+      "cluster": "anticipated-next-chord-contamination",
+      "affectedEventCount": 5,
+      "affectedFileCount": 1,
+      "cleanEventCount": 0,
+      "stressEventCount": 5,
+      "meanCorrectionSeverity": 3.5,
+      "productImpact": 2,
+      "examples": [
+        "V16_stress/e01",
+        "V16_stress/e02",
+        "V16_stress/e04",
+        "V16_stress/e06",
+        "V16_stress/e08"
+      ],
+      "validationEventCount": 0,
+      "validationReproducibility": 0.5,
+      "priorityScore": 17.5
+    },
+    {
+      "cluster": "octave-register-error",
+      "affectedEventCount": 1,
+      "affectedFileCount": 1,
+      "cleanEventCount": 0,
+      "stressEventCount": 1,
+      "meanCorrectionSeverity": 3.5,
+      "productImpact": 2,
+      "examples": [
+        "V20_stress/e08"
+      ],
+      "validationEventCount": 2,
+      "validationReproducibility": 1,
+      "priorityScore": 7
+    },
+    {
+      "cluster": "same-track-melody-contamination",
+      "affectedEventCount": 2,
+      "affectedFileCount": 2,
+      "cleanEventCount": 1,
+      "stressEventCount": 1,
+      "meanCorrectionSeverity": 2.75,
+      "productImpact": 2,
+      "examples": [
+        "V13_clean/e04",
+        "V13_stress/e04"
+      ],
+      "validationEventCount": 0,
+      "validationReproducibility": 0.5,
+      "priorityScore": 5.5
+    },
+    {
+      "cluster": "sustain-carry",
+      "affectedEventCount": 1,
+      "affectedFileCount": 1,
+      "cleanEventCount": 0,
+      "stressEventCount": 1,
+      "meanCorrectionSeverity": 3,
+      "productImpact": 2,
+      "examples": [
+        "V15_stress/e04"
+      ],
+      "validationEventCount": 0,
+      "validationReproducibility": 0.5,
+      "priorityScore": 3
+    },
+    {
+      "cluster": "duplicate-across-tracks",
+      "affectedEventCount": 1,
+      "affectedFileCount": 1,
+      "cleanEventCount": 0,
+      "stressEventCount": 1,
+      "meanCorrectionSeverity": 2,
+      "productImpact": 2,
+      "examples": [
+        "V11_stress/e04"
+      ],
+      "validationEventCount": 0,
+      "validationReproducibility": 0.5,
+      "priorityScore": 2
+    }
+  ],
+  "maximumFailureCluster": "melody-contamination"
+}
