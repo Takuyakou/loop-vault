@@ -1,0 +1,986 @@
+{
+  "schemaVersion": 1,
+  "phase": "4.6-01",
+  "corpusVersion": "1.0.0",
+  "analyzerMode": "phase4-v1",
+  "targetCount": 8,
+  "expectedTargetCount": 8,
+  "classificationCounts": {
+    "slash-only-generated": 8
+  },
+  "firstInvalidationStage": "T2-core-generation-root-position-identity",
+  "generatorBug": {
+    "present": true,
+    "kind": "automatic-bass-attachment-suppresses-root-position-identity",
+    "affectedTargetEvents": 8,
+    "productFixApplied": false,
+    "nextAction": "Prioritize a bounded Shadow root-position companion before altered-tension generation."
+  },
+  "rows": [
+    {
+      "fileId": "V02_clean",
+      "eventId": "e07",
+      "scenarioId": "V02",
+      "scenarioSlug": "inversions",
+      "variant": "clean",
+      "expected": "Dm7",
+      "classification": "slash-only-generated",
+      "T0GoldContract": {
+        "canonicalIdentity": "2|minor|minor7|||-",
+        "root": 2,
+        "bass": 2,
+        "requiredPitchClasses": [
+          2,
+          5,
+          9,
+          0
+        ],
+        "representable": true
+      },
+      "T1RootHypothesis": {
+        "present": true,
+        "score": 1.1025000000000003,
+        "rank": 2,
+        "rootCandidateBudgetApplied": false
+      },
+      "T2CoreGeneration": {
+        "minorTriadGenerated": true,
+        "minorSeventhCoreGenerated": true,
+        "rootPositionGenerated": false,
+        "slashIdentityOnly": true,
+        "slashCandidates": [
+          {
+            "label": "Dm7/C",
+            "rawScore": 1.1025000000000003,
+            "bass": 0
+          }
+        ]
+      },
+      "T3CanonicalMapping": {
+        "rawSymbols": [
+          "Dm7/C"
+        ],
+        "parsedIdentities": [
+          "2|minor|minor7|||0"
+        ],
+        "expectedRoundTrip": true,
+        "mappingLoss": false
+      },
+      "T4ClampBudget": {
+        "presentBeforeClamp": true,
+        "rawCandidateCount": 252,
+        "rootBudgetApplied": false,
+        "chordBudgetAppliedBeforeScoring": false,
+        "presentAfterBudget": true,
+        "dedupMergedWithDifferentIdentity": false
+      },
+      "T5Evidence": {
+        "noteInstances": [
+          "V02_clean:n0:t1:c0:p65:s11520:d1766",
+          "V02_clean:n1:t1:c0:p69:s11520:d1766",
+          "V02_clean:n2:t1:c0:p72:s11520:d1766",
+          "V02_clean:n3:t1:c0:p74:s11520:d1766"
+        ],
+        "observedPitchClasses": [
+          0,
+          2,
+          5,
+          9
+        ],
+        "histogram": [
+          2.8279367999999994,
+          0,
+          2.8279367999999994,
+          0,
+          0,
+          4.713227999999999,
+          0,
+          0,
+          0,
+          4.713227999999999,
+          0,
+          0
+        ],
+        "bassHistogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "selectedBassPitchClass": 0,
+        "requiredPitchClasses": [
+          2,
+          5,
+          9,
+          0
+        ],
+        "evidenceSupportsGold": true,
+        "sustainOrOverlapNoteCount": 4,
+        "rootlessOrMissingTones": []
+      }
+    },
+    {
+      "fileId": "V02_stress",
+      "eventId": "e07",
+      "scenarioId": "V02",
+      "scenarioSlug": "inversions",
+      "variant": "stress",
+      "expected": "Dm7",
+      "classification": "slash-only-generated",
+      "T0GoldContract": {
+        "canonicalIdentity": "2|minor|minor7|||-",
+        "root": 2,
+        "bass": 2,
+        "requiredPitchClasses": [
+          2,
+          5,
+          9,
+          0
+        ],
+        "representable": true
+      },
+      "T1RootHypothesis": {
+        "present": true,
+        "score": 1.0796517714792302,
+        "rank": 2,
+        "rootCandidateBudgetApplied": false
+      },
+      "T2CoreGeneration": {
+        "minorTriadGenerated": true,
+        "minorSeventhCoreGenerated": true,
+        "rootPositionGenerated": false,
+        "slashIdentityOnly": true,
+        "slashCandidates": [
+          {
+            "label": "Dm7/C",
+            "rawScore": 1.0796517714792302,
+            "bass": 0
+          }
+        ]
+      },
+      "T3CanonicalMapping": {
+        "rawSymbols": [
+          "Dm7/C"
+        ],
+        "parsedIdentities": [
+          "2|minor|minor7|||0"
+        ],
+        "expectedRoundTrip": true,
+        "mappingLoss": false
+      },
+      "T4ClampBudget": {
+        "presentBeforeClamp": true,
+        "rawCandidateCount": 252,
+        "rootBudgetApplied": false,
+        "chordBudgetAppliedBeforeScoring": false,
+        "presentAfterBudget": true,
+        "dedupMergedWithDifferentIdentity": false
+      },
+      "T5Evidence": {
+        "noteInstances": [
+          "V02_stress:n0:t1:c0:p72:s11509:d1755",
+          "V02_stress:n1:t1:c0:p74:s11509:d1768",
+          "V02_stress:n2:t1:c0:p65:s11518:d1783",
+          "V02_stress:n3:t2:c9:p36:s11520:d38",
+          "V02_stress:n4:t3:c0:p72:s11520:d134",
+          "V02_stress:n5:t1:c0:p69:s11527:d1761",
+          "V02_stress:n6:t3:c0:p74:s11760:d134",
+          "V02_stress:n7:t2:c9:p42:s12000:d38",
+          "V02_stress:n8:t3:c0:p75:s12000:d134",
+          "V02_stress:n9:t3:c0:p79:s12240:d134",
+          "V02_stress:n10:t2:c9:p42:s12480:d38",
+          "V02_stress:n11:t3:c0:p83:s12480:d134",
+          "V02_stress:n12:t3:c0:p81:s12720:d134",
+          "V02_stress:n13:t2:c9:p42:s12960:d38",
+          "V02_stress:n14:t3:c0:p77:s12960:d134",
+          "V02_stress:n15:t3:c0:p73:s13200:d134",
+          "V02_stress:n16:t1:c0:p65:s13429:d1769",
+          "V02_stress:n17:t1:c0:p67:s13434:d1785",
+          "V02_stress:n18:t1:c0:p62:s13439:d1753"
+        ],
+        "observedPitchClasses": [
+          0,
+          1,
+          2,
+          3,
+          5,
+          6,
+          7,
+          9,
+          11
+        ],
+        "histogram": [
+          3.0101062499999998,
+          0,
+          2.9438374499999997,
+          0.16012664999999998,
+          0,
+          4.565808,
+          0,
+          0.16012664999999998,
+          0,
+          4.7336820374999995,
+          0,
+          0
+        ],
+        "bassHistogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "selectedBassPitchClass": 0,
+        "requiredPitchClasses": [
+          2,
+          5,
+          9,
+          0
+        ],
+        "evidenceSupportsGold": true,
+        "sustainOrOverlapNoteCount": 19,
+        "rootlessOrMissingTones": []
+      }
+    },
+    {
+      "fileId": "V08_clean",
+      "eventId": "e05",
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "clean",
+      "expected": "Em7",
+      "classification": "slash-only-generated",
+      "T0GoldContract": {
+        "canonicalIdentity": "4|minor|minor7|||-",
+        "root": 4,
+        "bass": 4,
+        "requiredPitchClasses": [
+          4,
+          7,
+          11,
+          2
+        ],
+        "representable": true
+      },
+      "T1RootHypothesis": {
+        "present": true,
+        "score": 1.1028979336452607,
+        "rank": 2,
+        "rootCandidateBudgetApplied": false
+      },
+      "T2CoreGeneration": {
+        "minorTriadGenerated": true,
+        "minorSeventhCoreGenerated": true,
+        "rootPositionGenerated": false,
+        "slashIdentityOnly": true,
+        "slashCandidates": [
+          {
+            "label": "Em7/G",
+            "rawScore": 1.1028979336452607,
+            "bass": 7
+          }
+        ]
+      },
+      "T3CanonicalMapping": {
+        "rawSymbols": [
+          "Em7/G"
+        ],
+        "parsedIdentities": [
+          "4|minor|minor7|||7"
+        ],
+        "expectedRoundTrip": true,
+        "mappingLoss": false
+      },
+      "T4ClampBudget": {
+        "presentBeforeClamp": true,
+        "rawCandidateCount": 252,
+        "rootBudgetApplied": false,
+        "chordBudgetAppliedBeforeScoring": false,
+        "presentAfterBudget": true,
+        "dedupMergedWithDifferentIdentity": false
+      },
+      "T5Evidence": {
+        "noteInstances": [
+          "V08_clean:n0:t1:c0:p64:s7680:d1766",
+          "V08_clean:n1:t1:c0:p67:s7680:d1766",
+          "V08_clean:n2:t1:c0:p71:s7680:d1766",
+          "V08_clean:n3:t1:c0:p74:s7680:d1766",
+          "V08_clean:n4:t2:c3:p43:s7680:d1766"
+        ],
+        "observedPitchClasses": [
+          2,
+          4,
+          7,
+          11
+        ],
+        "histogram": [
+          0,
+          0,
+          2.8279367999999994,
+          0,
+          4.713227999999999,
+          0,
+          0,
+          12.445973999999998,
+          0,
+          0,
+          0,
+          4.713227999999999
+        ],
+        "bassHistogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          9.665932499999998,
+          0,
+          0,
+          0,
+          0
+        ],
+        "selectedBassPitchClass": 7,
+        "requiredPitchClasses": [
+          4,
+          7,
+          11,
+          2
+        ],
+        "evidenceSupportsGold": true,
+        "sustainOrOverlapNoteCount": 5,
+        "rootlessOrMissingTones": []
+      }
+    },
+    {
+      "fileId": "V08_clean",
+      "eventId": "e07",
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "clean",
+      "expected": "Dm7",
+      "classification": "slash-only-generated",
+      "T0GoldContract": {
+        "canonicalIdentity": "2|minor|minor7|||-",
+        "root": 2,
+        "bass": 2,
+        "requiredPitchClasses": [
+          2,
+          5,
+          9,
+          0
+        ],
+        "representable": true
+      },
+      "T1RootHypothesis": {
+        "present": true,
+        "score": 1.1028979336452607,
+        "rank": 1,
+        "rootCandidateBudgetApplied": false
+      },
+      "T2CoreGeneration": {
+        "minorTriadGenerated": true,
+        "minorSeventhCoreGenerated": true,
+        "rootPositionGenerated": false,
+        "slashIdentityOnly": true,
+        "slashCandidates": [
+          {
+            "label": "Dm7/A",
+            "rawScore": 1.1028979336452607,
+            "bass": 9
+          }
+        ]
+      },
+      "T3CanonicalMapping": {
+        "rawSymbols": [
+          "Dm7/A"
+        ],
+        "parsedIdentities": [
+          "2|minor|minor7|||9"
+        ],
+        "expectedRoundTrip": true,
+        "mappingLoss": false
+      },
+      "T4ClampBudget": {
+        "presentBeforeClamp": true,
+        "rawCandidateCount": 252,
+        "rootBudgetApplied": false,
+        "chordBudgetAppliedBeforeScoring": false,
+        "presentAfterBudget": true,
+        "dedupMergedWithDifferentIdentity": false
+      },
+      "T5Evidence": {
+        "noteInstances": [
+          "V08_clean:n0:t1:c0:p62:s11520:d1766",
+          "V08_clean:n1:t1:c0:p65:s11520:d1766",
+          "V08_clean:n2:t1:c0:p69:s11520:d1766",
+          "V08_clean:n3:t1:c0:p72:s11520:d1766",
+          "V08_clean:n4:t2:c3:p45:s11520:d1766"
+        ],
+        "observedPitchClasses": [
+          0,
+          2,
+          5,
+          9
+        ],
+        "histogram": [
+          2.8279367999999994,
+          0,
+          4.713227999999999,
+          0,
+          0,
+          4.713227999999999,
+          0,
+          0,
+          0,
+          12.445973999999998,
+          0,
+          0
+        ],
+        "bassHistogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          9.665932499999998,
+          0,
+          0
+        ],
+        "selectedBassPitchClass": 9,
+        "requiredPitchClasses": [
+          2,
+          5,
+          9,
+          0
+        ],
+        "evidenceSupportsGold": true,
+        "sustainOrOverlapNoteCount": 5,
+        "rootlessOrMissingTones": []
+      }
+    },
+    {
+      "fileId": "V08_stress",
+      "eventId": "e05",
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "stress",
+      "expected": "Em7",
+      "classification": "slash-only-generated",
+      "T0GoldContract": {
+        "canonicalIdentity": "4|minor|minor7|||-",
+        "root": 4,
+        "bass": 4,
+        "requiredPitchClasses": [
+          4,
+          7,
+          11,
+          2
+        ],
+        "representable": true
+      },
+      "T1RootHypothesis": {
+        "present": true,
+        "score": 1.0873333021646423,
+        "rank": 2,
+        "rootCandidateBudgetApplied": false
+      },
+      "T2CoreGeneration": {
+        "minorTriadGenerated": true,
+        "minorSeventhCoreGenerated": true,
+        "rootPositionGenerated": false,
+        "slashIdentityOnly": true,
+        "slashCandidates": [
+          {
+            "label": "Em7/G",
+            "rawScore": 1.0873333021646423,
+            "bass": 7
+          }
+        ]
+      },
+      "T3CanonicalMapping": {
+        "rawSymbols": [
+          "Em7/G"
+        ],
+        "parsedIdentities": [
+          "4|minor|minor7|||7"
+        ],
+        "expectedRoundTrip": true,
+        "mappingLoss": false
+      },
+      "T4ClampBudget": {
+        "presentBeforeClamp": true,
+        "rawCandidateCount": 252,
+        "rootBudgetApplied": false,
+        "chordBudgetAppliedBeforeScoring": false,
+        "presentAfterBudget": true,
+        "dedupMergedWithDifferentIdentity": false
+      },
+      "T5Evidence": {
+        "noteInstances": [
+          "V08_stress:n0:t1:c0:p67:s7671:d1760",
+          "V08_stress:n1:t1:c0:p71:s7671:d1783",
+          "V08_stress:n2:t1:c0:p64:s7673:d1766",
+          "V08_stress:n3:t3:c9:p36:s7680:d38",
+          "V08_stress:n4:t4:c0:p72:s7680:d134",
+          "V08_stress:n5:t1:c0:p74:s7684:d1759",
+          "V08_stress:n6:t2:c0:p43:s7686:d1766",
+          "V08_stress:n7:t4:c0:p74:s7920:d134",
+          "V08_stress:n8:t3:c9:p42:s8160:d38",
+          "V08_stress:n9:t4:c0:p75:s8160:d134",
+          "V08_stress:n10:t4:c0:p79:s8400:d134",
+          "V08_stress:n11:t3:c9:p42:s8640:d38",
+          "V08_stress:n12:t4:c0:p83:s8640:d134",
+          "V08_stress:n13:t4:c0:p81:s8880:d134",
+          "V08_stress:n14:t3:c9:p42:s9120:d38",
+          "V08_stress:n15:t4:c0:p77:s9120:d134",
+          "V08_stress:n16:t4:c0:p73:s9360:d134",
+          "V08_stress:n17:t1:c0:p70:s9592:d1759",
+          "V08_stress:n18:t1:c0:p57:s9598:d1759",
+          "V08_stress:n19:t2:c0:p49:s9599:d1767"
+        ],
+        "observedPitchClasses": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          9,
+          10,
+          11
+        ],
+        "histogram": [
+          0.16012664999999998,
+          0,
+          2.877151544999999,
+          0.16012664999999998,
+          4.528836,
+          0,
+          0,
+          12.6100306125,
+          0,
+          0,
+          0,
+          4.860648
+        ],
+        "bassHistogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          9.901334953125,
+          0,
+          0,
+          0,
+          0
+        ],
+        "selectedBassPitchClass": 7,
+        "requiredPitchClasses": [
+          4,
+          7,
+          11,
+          2
+        ],
+        "evidenceSupportsGold": true,
+        "sustainOrOverlapNoteCount": 20,
+        "rootlessOrMissingTones": []
+      }
+    },
+    {
+      "fileId": "V08_stress",
+      "eventId": "e07",
+      "scenarioId": "V08",
+      "scenarioSlug": "slash-bass",
+      "variant": "stress",
+      "expected": "Dm7",
+      "classification": "slash-only-generated",
+      "T0GoldContract": {
+        "canonicalIdentity": "2|minor|minor7|||-",
+        "root": 2,
+        "bass": 2,
+        "requiredPitchClasses": [
+          2,
+          5,
+          9,
+          0
+        ],
+        "representable": true
+      },
+      "T1RootHypothesis": {
+        "present": true,
+        "score": 1.0885514738905808,
+        "rank": 1,
+        "rootCandidateBudgetApplied": false
+      },
+      "T2CoreGeneration": {
+        "minorTriadGenerated": true,
+        "minorSeventhCoreGenerated": true,
+        "rootPositionGenerated": false,
+        "slashIdentityOnly": true,
+        "slashCandidates": [
+          {
+            "label": "Dm7/A",
+            "rawScore": 1.0885514738905808,
+            "bass": 9
+          }
+        ]
+      },
+      "T3CanonicalMapping": {
+        "rawSymbols": [
+          "Dm7/A"
+        ],
+        "parsedIdentities": [
+          "2|minor|minor7|||9"
+        ],
+        "expectedRoundTrip": true,
+        "mappingLoss": false
+      },
+      "T4ClampBudget": {
+        "presentBeforeClamp": true,
+        "rawCandidateCount": 252,
+        "rootBudgetApplied": false,
+        "chordBudgetAppliedBeforeScoring": false,
+        "presentAfterBudget": true,
+        "dedupMergedWithDifferentIdentity": false
+      },
+      "T5Evidence": {
+        "noteInstances": [
+          "V08_stress:n0:t1:c0:p72:s11512:d1767",
+          "V08_stress:n1:t1:c0:p62:s11514:d1779",
+          "V08_stress:n2:t1:c0:p65:s11520:d1774",
+          "V08_stress:n3:t3:c9:p36:s11520:d38",
+          "V08_stress:n4:t4:c0:p72:s11520:d134",
+          "V08_stress:n5:t1:c0:p69:s11521:d1756",
+          "V08_stress:n6:t2:c0:p45:s11524:d1761",
+          "V08_stress:n7:t4:c0:p74:s11760:d134",
+          "V08_stress:n8:t3:c9:p42:s12000:d38",
+          "V08_stress:n9:t4:c0:p75:s12000:d134",
+          "V08_stress:n10:t4:c0:p79:s12240:d134",
+          "V08_stress:n11:t3:c9:p42:s12480:d38",
+          "V08_stress:n12:t4:c0:p83:s12480:d134",
+          "V08_stress:n13:t4:c0:p81:s12720:d134",
+          "V08_stress:n14:t3:c9:p42:s12960:d38",
+          "V08_stress:n15:t4:c0:p77:s12960:d134",
+          "V08_stress:n16:t4:c0:p73:s13200:d134",
+          "V08_stress:n17:t1:c0:p62:s13431:d1771"
+        ],
+        "observedPitchClasses": [
+          0,
+          1,
+          2,
+          3,
+          5,
+          6,
+          7,
+          9,
+          11
+        ],
+        "histogram": [
+          3.06542385,
+          0,
+          4.799644649999999,
+          0.16012664999999998,
+          0,
+          4.528836,
+          0,
+          0.16012664999999998,
+          0,
+          12.693586499999999,
+          0,
+          0
+        ],
+        "bassHistogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          9.958793906249998,
+          0,
+          0
+        ],
+        "selectedBassPitchClass": 9,
+        "requiredPitchClasses": [
+          2,
+          5,
+          9,
+          0
+        ],
+        "evidenceSupportsGold": true,
+        "sustainOrOverlapNoteCount": 18,
+        "rootlessOrMissingTones": []
+      }
+    },
+    {
+      "fileId": "V09_clean",
+      "eventId": "e07",
+      "scenarioId": "V09",
+      "scenarioSlug": "pedal-bass",
+      "variant": "clean",
+      "expected": "Dm7",
+      "classification": "slash-only-generated",
+      "T0GoldContract": {
+        "canonicalIdentity": "2|minor|minor7|||-",
+        "root": 2,
+        "bass": 2,
+        "requiredPitchClasses": [
+          2,
+          5,
+          9,
+          0
+        ],
+        "representable": true
+      },
+      "T1RootHypothesis": {
+        "present": true,
+        "score": 1.1028979336452607,
+        "rank": 1,
+        "rootCandidateBudgetApplied": false
+      },
+      "T2CoreGeneration": {
+        "minorTriadGenerated": true,
+        "minorSeventhCoreGenerated": true,
+        "rootPositionGenerated": false,
+        "slashIdentityOnly": true,
+        "slashCandidates": [
+          {
+            "label": "Dm7/C",
+            "rawScore": 1.1028979336452607,
+            "bass": 0
+          }
+        ]
+      },
+      "T3CanonicalMapping": {
+        "rawSymbols": [
+          "Dm7/C"
+        ],
+        "parsedIdentities": [
+          "2|minor|minor7|||0"
+        ],
+        "expectedRoundTrip": true,
+        "mappingLoss": false
+      },
+      "T4ClampBudget": {
+        "presentBeforeClamp": true,
+        "rawCandidateCount": 252,
+        "rootBudgetApplied": false,
+        "chordBudgetAppliedBeforeScoring": false,
+        "presentAfterBudget": true,
+        "dedupMergedWithDifferentIdentity": false
+      },
+      "T5Evidence": {
+        "noteInstances": [
+          "V09_clean:n0:t1:c3:p36:s11520:d1882",
+          "V09_clean:n1:t2:c4:p62:s11520:d1766",
+          "V09_clean:n2:t2:c4:p65:s11520:d1766",
+          "V09_clean:n3:t2:c4:p69:s11520:d1766",
+          "V09_clean:n4:t2:c4:p72:s11520:d1766"
+        ],
+        "observedPitchClasses": [
+          0,
+          2,
+          5,
+          9
+        ],
+        "histogram": [
+          10.560682799999999,
+          0,
+          4.713227999999999,
+          0,
+          0,
+          4.713227999999999,
+          0,
+          0,
+          0,
+          4.713227999999999,
+          0,
+          0
+        ],
+        "bassHistogram": [
+          9.665932499999998,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "selectedBassPitchClass": 0,
+        "requiredPitchClasses": [
+          2,
+          5,
+          9,
+          0
+        ],
+        "evidenceSupportsGold": true,
+        "sustainOrOverlapNoteCount": 5,
+        "rootlessOrMissingTones": []
+      }
+    },
+    {
+      "fileId": "V09_stress",
+      "eventId": "e07",
+      "scenarioId": "V09",
+      "scenarioSlug": "pedal-bass",
+      "variant": "stress",
+      "expected": "Dm7",
+      "classification": "slash-only-generated",
+      "T0GoldContract": {
+        "canonicalIdentity": "2|minor|minor7|||-",
+        "root": 2,
+        "bass": 2,
+        "requiredPitchClasses": [
+          2,
+          5,
+          9,
+          0
+        ],
+        "representable": true
+      },
+      "T1RootHypothesis": {
+        "present": true,
+        "score": 1.0883872377829646,
+        "rank": 2,
+        "rootCandidateBudgetApplied": false
+      },
+      "T2CoreGeneration": {
+        "minorTriadGenerated": true,
+        "minorSeventhCoreGenerated": true,
+        "rootPositionGenerated": false,
+        "slashIdentityOnly": true,
+        "slashCandidates": [
+          {
+            "label": "Dm7/C",
+            "rawScore": 1.0883872377829646,
+            "bass": 0
+          }
+        ]
+      },
+      "T3CanonicalMapping": {
+        "rawSymbols": [
+          "Dm7/C"
+        ],
+        "parsedIdentities": [
+          "2|minor|minor7|||0"
+        ],
+        "expectedRoundTrip": true,
+        "mappingLoss": false
+      },
+      "T4ClampBudget": {
+        "presentBeforeClamp": true,
+        "rawCandidateCount": 252,
+        "rootBudgetApplied": false,
+        "chordBudgetAppliedBeforeScoring": false,
+        "presentAfterBudget": true,
+        "dedupMergedWithDifferentIdentity": false
+      },
+      "T5Evidence": {
+        "noteInstances": [
+          "V09_stress:n0:t2:c0:p65:s11515:d1781",
+          "V09_stress:n1:t1:c0:p72:s11520:d134",
+          "V09_stress:n2:t2:c0:p69:s11520:d1771",
+          "V09_stress:n3:t4:c9:p36:s11520:d38",
+          "V09_stress:n4:t3:c0:p36:s11521:d1888",
+          "V09_stress:n5:t2:c0:p62:s11528:d1776",
+          "V09_stress:n6:t2:c0:p72:s11529:d1772",
+          "V09_stress:n7:t1:c0:p74:s11760:d134",
+          "V09_stress:n8:t1:c0:p75:s12000:d134",
+          "V09_stress:n9:t4:c9:p42:s12000:d38",
+          "V09_stress:n10:t1:c0:p79:s12240:d134",
+          "V09_stress:n11:t1:c0:p83:s12480:d134",
+          "V09_stress:n12:t4:c9:p42:s12480:d38",
+          "V09_stress:n13:t1:c0:p81:s12720:d134",
+          "V09_stress:n14:t1:c0:p77:s12960:d134",
+          "V09_stress:n15:t4:c9:p42:s12960:d38",
+          "V09_stress:n16:t1:c0:p73:s13200:d134",
+          "V09_stress:n17:t2:c0:p65:s13431:d1766",
+          "V09_stress:n18:t3:c0:p36:s13436:d1885"
+        ],
+        "observedPitchClasses": [
+          0,
+          1,
+          2,
+          3,
+          5,
+          6,
+          7,
+          9,
+          11
+        ],
+        "histogram": [
+          10.467193938749999,
+          0,
+          4.7243181,
+          0.16012664999999998,
+          0,
+          4.768451999999999,
+          0,
+          0.16012664999999998,
+          0,
+          4.547321999999999,
+          0,
+          0
+        ],
+        "bassHistogram": [
+          9.395787515624999,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "selectedBassPitchClass": 0,
+        "requiredPitchClasses": [
+          2,
+          5,
+          9,
+          0
+        ],
+        "evidenceSupportsGold": true,
+        "sustainOrOverlapNoteCount": 19,
+        "rootlessOrMissingTones": []
+      }
+    }
+  ]
+}

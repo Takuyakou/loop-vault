@@ -51,6 +51,7 @@
     "eval:p45:d5": "vite-node scripts/evaluate-phase45-root-confidence.ts",
     "eval:p45:decision": "vite-node scripts/evaluate-phase45-decision-lock.ts",
     "eval:p46:baseline": "vite-node scripts/evaluate-phase46-baseline.ts",
+    "eval:p46:m7-trace": "vite-node scripts/evaluate-phase46-basic-m7-trace.ts",
     "eval:stored-progressions": "vite-node scripts/evaluate-stored-progressions.ts",
     "eval:review-differences": "vite-node scripts/review-midi-differences.ts",
     "eval:promote-corrections": "vite-node scripts/promote-midi-corrections.ts",
