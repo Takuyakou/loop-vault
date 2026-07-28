@@ -172,14 +172,18 @@ export function generatePartACompanion(
 }
 
 /**
- * Score remains the primary order. At an exact tie every incumbent stays ahead
- * of every generated companion, then keeps its original baseline rank.
+ * Keeps the complete incumbent sequence ahead of generated companions.
+ *
+ * Part A only restores identities to the candidate set; it does not authorize a
+ * new musical preference or the eviction of an existing Product Top-3 entry.
+ * Part B owns score separation. Generated candidates therefore remain a stable
+ * suffix until that separately preregistered work exists.
  */
 export function rankWithIncumbentPreference(
   baseline: readonly PartASourceCandidate[],
   generated: readonly PartAGeneratedCandidate[],
 ): RankedPartACandidate[] {
-  const entries: RankedPartACandidate[] = [
+  return [
     ...baseline.map((candidate, baselineRank) => ({
       ...candidate,
       baseline: true,
@@ -193,13 +197,4 @@ export function rankWithIncumbentPreference(
       provenance: candidate.provenance,
     })),
   ];
-  return entries.sort((left, right) =>
-    right.rawScore - left.rawScore
-    || Number(right.baseline) - Number(left.baseline)
-    || (left.baselineRank ?? Number.MAX_SAFE_INTEGER)
-      - (right.baselineRank ?? Number.MAX_SAFE_INTEGER)
-    || (left.generationOrder ?? Number.MAX_SAFE_INTEGER)
-      - (right.generationOrder ?? Number.MAX_SAFE_INTEGER)
-    || chordIdentityKey(normalizeChordSymbol(left.chord))
-      .localeCompare(chordIdentityKey(normalizeChordSymbol(right.chord))));
 }
