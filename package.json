@@ -56,6 +56,7 @@
     "eval:p46:shadow-generator": "vite-node scripts/evaluate-phase46-shadow-generator.ts",
     "eval:p46:shadow-coverage": "vite-node scripts/evaluate-phase46-shadow-coverage.ts",
     "eval:p46:counterfactual": "vite-node scripts/evaluate-phase46-counterfactual-risk.ts",
+    "eval:p47:scope": "vite-node scripts/evaluate-phase47-real-scope.ts",
     "eval:stored-progressions": "vite-node scripts/evaluate-stored-progressions.ts",
     "eval:review-differences": "vite-node scripts/review-midi-differences.ts",
     "eval:promote-corrections": "vite-node scripts/promote-midi-corrections.ts",
