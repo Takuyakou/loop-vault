@@ -80,4 +80,3 @@ Role訂正ログは解析成功時だけAppDataの`loopvault/role-corrections.js
 - Stable profile: `alwaysShowPreAnalysis`がfalseなら既存Phase 5経路
 - Analyzer mode: `phase4-v1`のまま
 - `fileVersion = 1`のまま
-

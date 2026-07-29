@@ -65,4 +65,3 @@ strict zod schemaは次の集計値だけを許可する。
 ## Result
 
 Privacy、Vault schema、file version、Analyzer defaultの全GateはPASSした。
-

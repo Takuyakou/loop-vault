@@ -88,4 +88,3 @@ coverage、実行完了、A/B同値、決定性だけを判定した。
 
 Accuracy FirstではPhase 5.1を既定ONとする条件を満たした。
 Stableの即時rollbackと設定上の明示OFFは維持する。
-

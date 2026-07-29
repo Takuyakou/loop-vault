@@ -50,4 +50,3 @@ Phase 5.1ではWorker化やAnalyzer threshold変更を行っていない。
 - 継続memory増加: 検出なし
 - 一般的な3分MIDIで10秒超: なし
 - Phase 5.1をruntimeだけで不採用にする条件: なし
-
