@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { PlayToggle } from "../components/PlayToggle";
+import { usePreviewSound } from "../components/PreviewSoundProvider";
 import { displayKey, statusLabel } from "../domain/displayLabels";
 import { pickFocus } from "../domain/focus";
 import { degreeSequence } from "../domain/harmony/degrees";
@@ -43,6 +44,7 @@ export function HomeView({
   transitionIdea: (id: string, to: Status, now?: Date) => TransitionResult;
   setToast: (toast: string) => void;
 }) {
+  const { sound: previewSound } = usePreviewSound();
   const [now, setNow] = useState(() => new Date());
   const focus = pickFocus(ideas, now);
   const stats = monthlyStats(ideas, now, monthlyGoal);
@@ -95,6 +97,7 @@ export function HomeView({
                     type: "timeline",
                     timeline: focusBlock.chords,
                     bpm: focusBlock.bpm ?? focus.focus.bpm,
+                    sound: previewSound,
                     beatsPerBar: beatsPerBar(focusBlock.timeSignature),
                     explicitMidiNotesByEventId: resolveTimelineVoicings(focusBlock.chords),
                   }}
@@ -157,6 +160,7 @@ export function HomeView({
                         type: "timeline",
                         timeline: block.chords,
                         bpm: block.bpm ?? idea.bpm,
+                        sound: previewSound,
                         beatsPerBar: beatsPerBar(block.timeSignature),
                         explicitMidiNotesByEventId: resolveTimelineVoicings(block.chords),
                       }}

@@ -121,6 +121,31 @@ describe("AppShell", () => {
     await act(async () => root.unmount());
   });
 
+  it("places the global preview sound selector immediately before master volume", async () => {
+    const { container, root } = await renderShell();
+    const group = container.querySelector<HTMLElement>(
+      '[role="group"][aria-label="Preview sound"]',
+    );
+    const piano = group?.querySelector<HTMLButtonElement>(
+      'button[data-preview-sound="piano"]',
+    );
+    const electricPiano = group?.querySelector<HTMLButtonElement>(
+      'button[data-preview-sound="electric-piano"]',
+    );
+    const volume = container.querySelector<HTMLInputElement>(
+      'input[aria-label="Master volume"]',
+    );
+
+    expect(piano?.getAttribute("aria-pressed")).toBe("true");
+    expect(electricPiano?.getAttribute("aria-pressed")).toBe("false");
+    expect(group?.nextElementSibling).toBe(volume?.closest("label"));
+
+    await act(async () => electricPiano?.click());
+    expect(piano?.getAttribute("aria-pressed")).toBe("false");
+    expect(electricPiano?.getAttribute("aria-pressed")).toBe("true");
+    await act(async () => root.unmount());
+  });
+
   it("shows the global stop action while another view keeps playing", async () => {
     let callbacks: PreviewLifecycleCallbacks | undefined;
     const driver: PlaybackAudioDriver = {

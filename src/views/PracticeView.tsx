@@ -22,6 +22,7 @@ import { PracticeKeyboard } from "../components/practice/PracticeKeyboard";
 import { TranspositionPracticeControls } from "../components/practice/TranspositionPracticeControls";
 import { VoicingPracticeControls } from "../components/practice/VoicingPracticeControls";
 import { VoicingSourceChip } from "../components/voicing/VoicingSourceChip";
+import { usePreviewSound } from "../components/PreviewSoundProvider";
 import { voiceChordForPreview } from "../domain/chordVoicing";
 import { degreeOf } from "../domain/harmony/degrees";
 import { beatsPerBar } from "../domain/midi/timing";
@@ -433,7 +434,7 @@ export function PracticeView({
   const [flowClockReady, setFlowClockReady] = useState(false);
   const [beat, setBeat] = useState(1);
   const [auditionEventIndex, setAuditionEventIndex] = useState<number>();
-  const [previewSound, setPreviewSound] = useState<PreviewSound>("piano");
+  const { sound: previewSound, setSound: setPreviewSound } = usePreviewSound();
   const [targetSource, setTargetSource] = useState<PracticeTargetSource>({
     type: "resolved-voicing",
   });

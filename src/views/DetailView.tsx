@@ -4,6 +4,7 @@ import { type FormEvent, useEffect, useRef, useState } from "react";
 import { playbackController, type PlayingSource } from "../audio/playbackController";
 import { Modal } from "../components/Modal";
 import { PlayToggle } from "../components/PlayToggle";
+import { usePreviewSound } from "../components/PreviewSoundProvider";
 import { PracticeProgressBadge } from "../components/practice/PracticeProgressBadge";
 import { pipelineStatuses, StatusPipeline } from "../components/StatusPipeline";
 import { canOpenAssetPath, openableAssetExtensions } from "../domain/assetSecurity";
@@ -71,6 +72,7 @@ function ProgressionBlockCard({
   language: AppLanguage;
   effectiveKeySignature?: string;
 }) {
+  const { sound: previewSound } = usePreviewSound();
   return (
     <div className="border border-[var(--lv-border)] bg-[var(--lv-bg)] p-3 text-sm">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -87,7 +89,7 @@ function ProgressionBlockCard({
             />
           </span>
         </button>
-        <PlayToggle source={source} request={{ type: "timeline", timeline: block.chords, bpm, beatsPerBar: beatsPerBar(block.timeSignature), explicitMidiNotesByEventId: resolveTimelineVoicings(block.chords) }} playLabel={copy.common.preview} stopLabel={copy.common.stop} className="rounded border border-cyan-500/60 px-2 py-1 text-cyan-100" onError={onPreviewError} />
+        <PlayToggle source={source} request={{ type: "timeline", timeline: block.chords, bpm, sound: previewSound, beatsPerBar: beatsPerBar(block.timeSignature), explicitMidiNotesByEventId: resolveTimelineVoicings(block.chords) }} playLabel={copy.common.preview} stopLabel={copy.common.stop} className="rounded border border-cyan-500/60 px-2 py-1 text-cyan-100" onError={onPreviewError} />
         <button className="inline-flex items-center gap-2 rounded border border-teal-500/60 px-2 py-1 text-teal-100" onClick={onCopyProgression}>
           <Copy aria-hidden="true" size={16} />
           {copy.capture.copyProgression}

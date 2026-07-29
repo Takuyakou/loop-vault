@@ -3,6 +3,7 @@ import { playbackController, type PlaybackController } from "../audio/playbackCo
 import { usePlaybackState } from "../hooks/usePlaybackState";
 import { Check, CircleAlert, Dumbbell, LoaderCircle, Music, Piano, Plus, Settings } from "lucide-react";
 import { MasterVolumeKnob } from "./MasterVolumeKnob";
+import { GlobalPreviewSoundSelector } from "./GlobalPreviewSoundSelector";
 
 export type AppView = "home" | "capture" | "library" | "detail" | "progression-detail" | "practice";
 export type SaveStatus = "saved" | "saving" | "unsaved";
@@ -38,6 +39,7 @@ export function AppShell({ view, setView, openCreate, openLiveMidi, openSettings
         </button>
       </nav>
       <div className="ml-auto flex w-full min-w-0 shrink-0 items-center justify-end gap-1 border-t border-[var(--lv-border)] pt-2 sm:w-auto sm:border-t-0 sm:pt-0 md:gap-2">
+        <GlobalPreviewSoundSelector copy={copy} />
         <MasterVolumeKnob
           value={masterVolume}
           onChange={onMasterVolumeChange}

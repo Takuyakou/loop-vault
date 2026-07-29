@@ -92,6 +92,7 @@ import { ChordInspector } from "../components/progression-editing/ChordInspector
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PlayToggle } from "../components/PlayToggle";
 import { PreviewSoundSelector } from "../components/PreviewSoundSelector";
+import { usePreviewSound } from "../components/PreviewSoundProvider";
 import { SaveProgressionPopover } from "../components/SaveProgressionPopover";
 import { VoicingSourceChip } from "../components/voicing/VoicingSourceChip";
 import { SongMiniMap } from "../components/SongMiniMap";
@@ -207,7 +208,7 @@ export function CaptureView(props: CaptureViewProps) {
   const [isTimelineOpen, setTimelineOpen] = useState(false);
   const [timelineScrollBar, setTimelineScrollBar] = useState<number>();
   const [sourcePath, setSourcePath] = useState<string>();
-  const [previewSound, setPreviewSound] = useState<PreviewSound>("piano");
+  const { sound: previewSound, setSound: setPreviewSound } = usePreviewSound();
   const [activeDraft, setActiveDraft] = useState<ManualCandidateDraft | null>(null);
   const [analysisProgress, setAnalysisProgress] = useState<CaptureAnalysisProgressStage>();
   const [rangeSelectorRequest, setRangeSelectorRequest] = useState(0);
