@@ -57,6 +57,7 @@ import type {
 import {
   addMidiSources,
   beatsPerBar as beatsPerBarFor,
+  buildRoleCorrectionLogEvents,
   buildSessionAnalysisRequest,
   buildCorrectionEvents,
   createAnalysisSession,
@@ -89,6 +90,7 @@ import { chordProgressFraction } from "../ui/playbackProgress";
 import { confidenceLabel, shouldShowConfidence, warningLabel } from "./captureLabels";
 import { appendAnalysisFeedback } from "../storage/analysisFeedbackStorage";
 import { appendLabelCorrectionLogs } from "../storage/labelCorrectionLogStorage";
+import { appendRoleCorrectionLog } from "../storage/roleCorrectionLogStorage";
 import {
   getAnalysisProfileAnalyzeOptions,
   getAnalysisProfileSettings,
@@ -344,6 +346,7 @@ export function CaptureView(props: CaptureViewProps) {
       setExpandedCandidateId(undefined);
       setToast(analyzed ? copy.toast.midiAnalyzed : copy.toast.midiFailed);
       setAnalysisProgress(undefined);
+      return Boolean(analyzed);
     },
     [analyzeMidiBytes, controller, copy.toast.midiAnalyzed, copy.toast.midiFailed, setToast],
   );
@@ -847,11 +850,19 @@ export function CaptureView(props: CaptureViewProps) {
               if (!master) return;
               try {
                 const request = buildSessionAnalysisRequest(preAnalysisSession);
+                const roleEvents = buildRoleCorrectionLogEvents(
+                  preAnalysisSession,
+                  new Date().toISOString(),
+                );
                 void analyzeMidiBytesWithToast(
                   request.bytes,
                   request.fileName,
                   request.options,
-                );
+                ).then((analyzed) => {
+                  if (!analyzed) return;
+                  void appendRoleCorrectionLog(roleEvents)
+                    .catch(() => undefined);
+                });
               } catch (error) {
                 setToast(error instanceof Error
                   ? error.message

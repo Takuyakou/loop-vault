@@ -142,12 +142,14 @@ export {
   createMidiSourceId,
   buildPreparedMidiSongData,
   buildSessionAnalysisRequest,
+  buildRoleCorrectionLogEvents,
   gmProgramName,
   preAnalysisRoleFromProductRole,
   preAnalysisVoiceId,
   preScanMidiSource,
   removeMidiSource,
   resetAnalysisSessionAuto,
+  sessionPreviewNotes,
   selectedSessionNotes,
   updateAnalysisSessionSource,
   updateAnalysisSessionVoice,
@@ -173,6 +175,7 @@ export type {
   PreAnalysisVoiceRole,
   PreScanMidiSourceOptions,
   SessionAnalysisRequest,
+  RoleCorrectionLogEvent,
 } from "./preAnalysis";
 export {
   buildOccurrences,

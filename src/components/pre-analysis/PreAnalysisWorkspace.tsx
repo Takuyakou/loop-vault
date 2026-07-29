@@ -8,11 +8,17 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import {
+  previewMidiNotes,
+  stopPreview,
+} from "../../audio/chordPreview";
+import { usePreviewSound } from "../PreviewSoundProvider";
 import {
   applyAnalysisSessionPreset,
   resetAnalysisSessionAuto,
+  sessionPreviewNotes,
   updateAnalysisSessionSource,
   updateAnalysisSessionVoice,
   type AnalysisSession,
@@ -52,8 +58,12 @@ export function PreAnalysisWorkspace({
   );
   const [zoom, setZoom] = useState(1);
   const [viewportStartBeat, setViewportStartBeat] = useState(0);
-  const [playheadBeat] = useState(0);
+  const [playheadBeat, setPlayheadBeat] = useState(0);
   const [follow, setFollow] = useState(true);
+  const [playbackActive, setPlaybackActive] = useState(false);
+  const [playbackError, setPlaybackError] = useState<string>();
+  const playheadTimerRef = useRef<ReturnType<typeof globalThis.setInterval>>();
+  const { sound: previewSound } = usePreviewSound();
   const includedCount = session.voices.filter((voice) =>
     voice.included && !voice.duplicateOf).length;
   const recommended = useMemo(() => {
@@ -65,6 +75,67 @@ export function PreAnalysisWorkspace({
     return copy.recommendation(harmony, bass, excluded);
   }, [copy, includedCount, session.voices]);
 
+  useEffect(() => () => {
+    stopPreview();
+    if (playheadTimerRef.current) {
+      globalThis.clearInterval(playheadTimerRef.current);
+    }
+  }, []);
+
+  function stopSessionPlayback() {
+    onStop?.();
+    stopPreview();
+    if (playheadTimerRef.current) {
+      globalThis.clearInterval(playheadTimerRef.current);
+      playheadTimerRef.current = undefined;
+    }
+    setPlaybackActive(false);
+  }
+
+  async function playSession() {
+    if (onPlay) {
+      onPlay();
+      return;
+    }
+    stopSessionPlayback();
+    setPlaybackError(undefined);
+    const master = session.sources.find((source) =>
+      source.id === session.masterSourceId) ?? session.sources[0];
+    const bpm = master?.tempoMap[0]?.bpm ?? 96;
+    const previewNotes = sessionPreviewNotes(session, viewportStartBeat);
+    if (!previewNotes.length) {
+      setPlaybackError(copy.noAudibleVoices);
+      return;
+    }
+    try {
+      await previewMidiNotes(previewNotes, bpm, previewSound, {
+        onStarted() {
+          setPlaybackActive(true);
+          const startedAt = performanceNow();
+          playheadTimerRef.current = globalThis.setInterval(() => {
+            const elapsedBeats = (
+              performanceNow() - startedAt
+            ) / 1000 * bpm / 60;
+            setPlayheadBeat(Math.min(
+              sessionDuration(session),
+              viewportStartBeat + elapsedBeats,
+            ));
+          }, 50);
+        },
+        onEnded() {
+          if (playheadTimerRef.current) {
+            globalThis.clearInterval(playheadTimerRef.current);
+            playheadTimerRef.current = undefined;
+          }
+          setPlaybackActive(false);
+        },
+      });
+    } catch {
+      stopSessionPlayback();
+      setPlaybackError(copy.playbackFailed);
+    }
+  }
+
   function setPreset(preset: PreAnalysisSelectionPreset) {
     onSessionChange(applyAnalysisSessionPreset(session, preset));
   }
@@ -73,6 +144,9 @@ export function PreAnalysisWorkspace({
     voiceId: string,
     changes: Parameters<typeof updateAnalysisSessionVoice>[2],
   ) {
+    if (changes.muted !== undefined || changes.solo !== undefined) {
+      stopSessionPlayback();
+    }
     const next = updateAnalysisSessionVoice(session, voiceId, changes);
     onSessionChange({ ...next, preset: "custom" });
   }
@@ -104,8 +178,7 @@ export function PreAnalysisWorkspace({
           <button
             type="button"
             className="border border-[var(--lv-border-strong)] px-3 py-2 text-sm disabled:opacity-40"
-            disabled={!onPlay}
-            onClick={onPlay}
+            onClick={() => void playSession()}
           >
             <Volume2 size={16} className="mr-2 inline" aria-hidden="true" />
             {copy.play}
@@ -115,8 +188,8 @@ export function PreAnalysisWorkspace({
             className="border border-[var(--lv-border-strong)] p-2 disabled:opacity-40"
             title={copy.stop}
             aria-label={copy.stop}
-            disabled={!onStop}
-            onClick={onStop}
+            disabled={!playbackActive && !onStop}
+            onClick={stopSessionPlayback}
           >
             <Square size={16} aria-hidden="true" />
           </button>
@@ -132,6 +205,11 @@ export function PreAnalysisWorkspace({
             {formatBeatTime(viewportStartBeat)} / {formatBeatTime(sessionDuration(session))}
           </span>
         </div>
+        {playbackError ? (
+          <p className="mt-3 text-sm text-red-200" role="alert">
+            {playbackError}
+          </p>
+        ) : null}
 
         <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
           <div className="min-w-0">
@@ -217,11 +295,14 @@ export function PreAnalysisWorkspace({
                       <IconToggle
                         active={source.muted}
                         label={source.muted ? copy.unmuteSource : copy.muteSource}
-                        onClick={() => onSessionChange(updateAnalysisSessionSource(
-                          session,
-                          source.id,
-                          { muted: !source.muted },
-                        ))}
+                        onClick={() => {
+                          stopSessionPlayback();
+                          onSessionChange(updateAnalysisSessionSource(
+                            session,
+                            source.id,
+                            { muted: !source.muted },
+                          ));
+                        }}
                         activeIcon={<VolumeX size={16} />}
                         inactiveIcon={<Volume2 size={16} />}
                       />
@@ -231,7 +312,10 @@ export function PreAnalysisWorkspace({
                         title={copy.removeSource}
                         aria-label={copy.removeSource}
                         disabled={session.sources.length === 1}
-                        onClick={() => onRemoveSource(source.id)}
+                        onClick={() => {
+                          stopSessionPlayback();
+                          onRemoveSource(source.id);
+                        }}
                       >
                         <Trash2 size={16} aria-hidden="true" />
                       </button>
@@ -240,7 +324,7 @@ export function PreAnalysisWorkspace({
                       {sourceVoices.map((voice) => (
                         <div
                           key={voice.id}
-                          className={`grid grid-cols-[auto_auto_auto_minmax(0,1fr)] items-center gap-2 px-1 py-2 ${
+                          className={`grid grid-cols-[auto_auto_auto_auto_minmax(0,1fr)] items-center gap-2 px-1 py-2 ${
                             selectedVoiceId === voice.id ? "bg-[var(--lv-accent-soft)]" : ""
                           }`}
                         >
@@ -259,6 +343,7 @@ export function PreAnalysisWorkspace({
                             aria-label={copy.soloVoice(voice.displayName)}
                             title={copy.solo}
                             onClick={() => {
+                              stopSessionPlayback();
                               onSessionChange({
                                 ...session,
                                 voices: session.voices.map((entry) => ({
@@ -270,6 +355,17 @@ export function PreAnalysisWorkspace({
                           >
                             S
                           </button>
+                          <IconToggle
+                            active={voice.muted}
+                            label={voice.muted
+                              ? copy.unmuteVoice(voice.displayName)
+                              : copy.muteVoice(voice.displayName)}
+                            onClick={() => updateVoice(voice.id, {
+                              muted: !voice.muted,
+                            })}
+                            activeIcon={<VolumeX size={16} />}
+                            inactiveIcon={<Volume2 size={16} />}
+                          />
                           <IconToggle
                             active={voice.visible}
                             label={voice.visible
@@ -293,7 +389,7 @@ export function PreAnalysisWorkspace({
                               T{voice.trackIndex + 1} / Ch{voice.channel + 1} · {voice.noteCount} notes
                             </span>
                           </button>
-                          <span className="col-span-3 col-start-2 flex flex-wrap items-center gap-2">
+                          <span className="col-span-4 col-start-2 flex flex-wrap items-center gap-2">
                             <select
                               className="border border-[var(--lv-border)] bg-[var(--lv-bg)] px-2 py-1 text-xs"
                               aria-label={copy.roleFor(voice.displayName)}
@@ -401,6 +497,10 @@ function formatBeatTime(beats: number): string {
   return `${String(minutes).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
+function performanceNow(): number {
+  return globalThis.performance?.now() ?? Date.now();
+}
+
 function presetOptions(copy: ReturnType<typeof workspaceCopy>): {
   value: PreAnalysisSelectionPreset;
   label: string;
@@ -472,6 +572,8 @@ function workspaceCopy(language: AppLanguage) {
       showVoice: (name: string) => `${name}を表示`,
       includeVoice: (name: string) => `${name}を解析対象にする`,
       soloVoice: (name: string) => `${name}をSolo`,
+      muteVoice: (name: string) => `${name}をミュート`,
+      unmuteVoice: (name: string) => `${name}のミュートを解除`,
       roleFor: (name: string) => `${name}の解析役割`,
       solo: "Solo",
       harmony: "和声",
@@ -484,6 +586,8 @@ function workspaceCopy(language: AppLanguage) {
       warnings: "確認事項",
       analyze: "この構成で解析",
       preparing: "準備中...",
+      noAudibleVoices: "再生できるVoiceがありません。Solo / Muteを確認してください。",
+      playbackFailed: "MIDIパートを再生できませんでした。",
       recommendation: (harmony: number, bass: number, excluded: number) =>
         `解析対象: 和声 ${harmony} / ベース ${bass}・除外 ${excluded}`,
     };
@@ -512,6 +616,8 @@ function workspaceCopy(language: AppLanguage) {
     showVoice: (name: string) => `Show ${name}`,
     includeVoice: (name: string) => `Include ${name} in analysis`,
     soloVoice: (name: string) => `Solo ${name}`,
+    muteVoice: (name: string) => `Mute ${name}`,
+    unmuteVoice: (name: string) => `Unmute ${name}`,
     roleFor: (name: string) => `Analysis role for ${name}`,
     solo: "Solo",
     harmony: "Harmony",
@@ -524,6 +630,8 @@ function workspaceCopy(language: AppLanguage) {
     warnings: "Review notes",
     analyze: "Analyze this configuration",
     preparing: "Preparing...",
+    noAudibleVoices: "No audible Voice. Check Solo and Mute.",
+    playbackFailed: "The MIDI parts could not be played.",
     recommendation: (harmony: number, bass: number, excluded: number) =>
       `Included: ${harmony} harmony / ${bass} bass · ${excluded} excluded`,
   };

@@ -20,6 +20,10 @@ import {
   exportLabelCorrectionLog,
 } from "../storage/labelCorrectionLogStorage";
 import {
+  deleteRoleCorrectionLog,
+  exportRoleCorrectionLog,
+} from "../storage/roleCorrectionLogStorage";
+import {
   deleteDifferenceReviews,
   deletePromotedCorrections,
   deleteRealEvaluationData,
@@ -243,6 +247,7 @@ export function SettingsDialog({
         await Promise.all([
           deleteAnalysisFeedback(),
           deleteLabelCorrectionLog(),
+          deleteRoleCorrectionLog(),
         ]);
         setToast(ui.correctionDeleted);
       },
@@ -282,6 +287,28 @@ export function SettingsDialog({
       setToast(ui.feedbackExported(count));
     } catch {
       setToast(ui.correctionExportFailed);
+    }
+  }
+
+  async function exportRoleCorrections() {
+    if (!("__TAURI_INTERNALS__" in window)) {
+      setToast(ui.exportDesktopOnly);
+      return;
+    }
+    const target = await saveFileDialog({
+      defaultPath: `loopvault-role-corrections-${timestampForFile(new Date())}.jsonl`,
+      filters: [{ name: "JSONL", extensions: ["jsonl"] }],
+    });
+    if (!target) return;
+    try {
+      const count = await exportRoleCorrectionLog(target);
+      setToast(language === "ja"
+        ? `役割修正ログを${count}件書き出しました。`
+        : `Exported ${count} role correction records.`);
+    } catch {
+      setToast(language === "ja"
+        ? "役割修正ログを書き出せませんでした。"
+        : "The role correction log could not be exported.");
     }
   }
 
@@ -596,6 +623,7 @@ export function SettingsDialog({
                 <div className="mt-4 flex flex-wrap gap-2">
                   <button className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2" onClick={() => void exportProgressionFeedback()}><Download aria-hidden="true" size={16} />{ui.exportAnalysisFeedback}</button>
                   <button className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2" onClick={() => void exportCorrectionLog()}><Download aria-hidden="true" size={16} />{ui.exportCorrectionLog}</button>
+                  <button className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2" onClick={() => void exportRoleCorrections()}><Download aria-hidden="true" size={16} />{language === "ja" ? "役割修正ログを書き出す" : "Export role corrections"}</button>
                   <button className="inline-flex items-center gap-2 rounded border border-red-400/50 px-3 py-2 text-red-100" onClick={clearFeedback}><Trash2 aria-hidden="true" size={16} />{ui.deleteCorrectionLog}</button>
                 </div>
               </div>
