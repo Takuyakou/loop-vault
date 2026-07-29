@@ -4,8 +4,9 @@
 
 ## Status
 
-Phase 5.12の実装、production相当E2E、visual artifact、全Vitestは完了した。
-production build artifact欄はsource commit確定後のTauri buildで更新する。
+Phase 5.12の実装、production相当E2E、visual artifact、全test、production buildを
+完了した。production artifactのsource commitは
+`61b3d8c9b691c354870010ed3539866dc3404c8b`。
 
 ## Delivered
 
@@ -37,19 +38,42 @@ production build artifact欄はsource commit確定後のTauri buildで更新す�
 | 390px horizontal overflow | 0 |
 | Vitest | 234 files / 1,817 tests PASS |
 
-## Pending Build Record
+## Verification
 
-source commit確定後に以下を記録する。
+| Command / Gate | Result |
+|---|---|
+| `npm run lint` | PASS。ESLint + Tailwind CSS-variable class lint |
+| `npx tsc --noEmit` | PASS |
+| `npm test -- --run` | PASS。234 files / 1,817 tests |
+| `cargo test` | PASS。24 Rust tests |
+| `npm run build` | PASS。3,078 modules |
+| `npm run tauri build` | PASS。EXE + MSI + NSIS |
+| `git diff --check` | PASS |
+| `npm run check:staged` | PASS |
+| Phase 5 deep equal | PASS |
+| tracked MIDI | 0 |
+| tracked `.local-evaluation` | 0 |
+| schema / type diff | 0 |
+| `fileVersion` | 1 |
 
-- lint / Tailwind class lint
-- TypeScript
-- Rust test
-- Web build
-- Tauri build
-- `check:staged`
-- EXE / MSI / NSIS path、size、SHA-256
-- tracked MIDI / `.local-evaluation`
-- final commit / PR URL
+## Production Artifacts
+
+Build日時: 2026-07-30 00:45 JST
+
+| Artifact | Size | SHA-256 |
+|---|---:|---|
+| `src-tauri/target/release/loop-vault.exe` | 14.107 MiB | `5ef16256b1ea48a007e430ffdb4ec36420bf822794c70fbd4b79b92006d5a8cf` |
+| `src-tauri/target/release/bundle/msi/Loop Vault_0.1.0_x64_en-US.msi` | 4.883 MiB | `d36510a6e80db3b159315137cca9a1c4e3dad48ba5dd91f3e89300af10e68858` |
+| `src-tauri/target/release/bundle/nsis/Loop Vault_0.1.0_x64-setup.exe` | 3.437 MiB | `ba652a88d43de5288203ababc56f06539ec6f9a3e2286d8bf55b2e42f7453bc7` |
+
+絶対pathはGit管理文書へ保存せず、repository相対pathだけを記録した。
+
+## Warnings
+
+- Viteはminified JS chunk 1,281.52kBに対して500kB超の警告を出す。
+  buildは成功しており、Phase 5.12で新しい停止条件には該当しない。
+- Phase 5.12単独のJS heap peakは未計測。既存Phase 5.1計測と
+  Canvas 1 / note DOM 0 / 100,000 notes回帰Gateを維持した。
 
 ## Compatibility
 
