@@ -33,7 +33,11 @@ import { needsPreAnalysisReview } from "../../storage/preAnalysisSettings";
 import {
   PreAnalysisPianoRoll,
   preAnalysisVoiceColor,
+  visibleBeatCount as pianoRollVisibleBeatCount,
 } from "./PreAnalysisPianoRoll";
+import { PreAnalysisTimeScrollbar } from "./PreAnalysisTimeScrollbar";
+
+type PianoRollDisplayScope = "analysis-targets" | "all-voices";
 
 interface PreAnalysisWorkspaceProps {
   session: AnalysisSession;
@@ -64,6 +68,8 @@ export function PreAnalysisWorkspace({
   );
   const [zoom, setZoom] = useState(1);
   const [viewportStartBeat, setViewportStartBeat] = useState(0);
+  const [pianoRollDisplayScope, setPianoRollDisplayScope] =
+    useState<PianoRollDisplayScope>("analysis-targets");
   const [playheadBeat, setPlayheadBeat] = useState(0);
   const [follow, setFollow] = useState(true);
   const [playbackActive, setPlaybackActive] = useState(false);
@@ -115,9 +121,30 @@ export function PreAnalysisWorkspace({
   }, [session.latestSourceId]);
 
   useEffect(() => {
-    if (session.voices.some((voice) => voice.id === selectedVoiceId)) return;
-    setSelectedVoiceId(session.voices[0]?.id);
-  }, [selectedVoiceId, session.voices]);
+    const selected = session.voices.find((voice) =>
+      voice.id === selectedVoiceId);
+    if (
+      selected
+      && (
+        pianoRollDisplayScope === "all-voices"
+        || selected.included
+      )
+    ) return;
+    const fallback = pianoRollDisplayScope === "analysis-targets"
+      ? session.voices.find((voice) => voice.included && voice.visible)
+      : session.voices.find((voice) => voice.visible);
+    setSelectedVoiceId(fallback?.id ?? session.voices[0]?.id);
+  }, [pianoRollDisplayScope, selectedVoiceId, session.voices]);
+
+  useEffect(() => {
+    const totalBeats = sessionDuration(session);
+    const visibleBeats = Math.min(
+      totalBeats,
+      pianoRollVisibleBeatCount(session, zoom),
+    );
+    const maxStartBeat = Math.max(0, totalBeats - visibleBeats);
+    setViewportStartBeat((current) => Math.min(current, maxStartBeat));
+  }, [session, zoom]);
 
   function stopSessionPlayback() {
     onStop?.();
@@ -314,24 +341,71 @@ export function PreAnalysisWorkspace({
                   zoom={zoom}
                   viewportStartBeat={viewportStartBeat}
                   playheadBeat={playheadBeat}
+                  showAnalysisTargetsOnly={
+                    pianoRollDisplayScope === "analysis-targets"
+                  }
                   onSelectVoice={setSelectedVoiceId}
                   onViewportStartChange={setViewportStartBeat}
                 />
-                <div className="mt-3 flex items-center gap-3">
-                  <label className="text-sm text-[var(--lv-text-muted)]" htmlFor="pre-analysis-zoom">
-                    {copy.zoom}
-                  </label>
-                  <input
-                    id="pre-analysis-zoom"
-                    className="w-48 accent-[var(--lv-accent)]"
-                    type="range"
-                    min="1"
-                    max="8"
-                    step="1"
-                    value={zoom}
-                    onChange={(event) => setZoom(Number(event.currentTarget.value))}
-                  />
-                  <span className="text-xs text-[var(--lv-text-muted)]">{zoom}x</span>
+                <PreAnalysisTimeScrollbar
+                  language={language}
+                  totalBeats={sessionDuration(session)}
+                  visibleBeats={pianoRollVisibleBeatCount(session, zoom)}
+                  startBeat={viewportStartBeat}
+                  beatsPerBar={sessionBeatsPerBar(session)}
+                  onStartBeatChange={setViewportStartBeat}
+                />
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <label className="text-sm text-[var(--lv-text-muted)]" htmlFor="pre-analysis-zoom">
+                      {copy.zoom}
+                    </label>
+                    <input
+                      id="pre-analysis-zoom"
+                      className="w-40 accent-[var(--lv-accent)] sm:w-48"
+                      type="range"
+                      min="1"
+                      max="8"
+                      step="1"
+                      value={zoom}
+                      onChange={(event) => setZoom(Number(event.currentTarget.value))}
+                    />
+                    <span className="text-xs text-[var(--lv-text-muted)]">{zoom}x</span>
+                  </div>
+                  <div
+                    className="flex items-center gap-1"
+                    role="group"
+                    aria-label={copy.pianoRollDisplay}
+                  >
+                    <span className="mr-1 text-xs text-[var(--lv-text-muted)]">
+                      {copy.display}
+                    </span>
+                    <button
+                      type="button"
+                      className={displayScopeClass(
+                        pianoRollDisplayScope === "analysis-targets",
+                      )}
+                      data-piano-roll-scope="analysis-targets"
+                      aria-pressed={
+                        pianoRollDisplayScope === "analysis-targets"
+                      }
+                      onClick={() =>
+                        setPianoRollDisplayScope("analysis-targets")}
+                    >
+                      {copy.analysisTargets}
+                    </button>
+                    <button
+                      type="button"
+                      className={displayScopeClass(
+                        pianoRollDisplayScope === "all-voices",
+                      )}
+                      data-piano-roll-scope="all-voices"
+                      aria-pressed={pianoRollDisplayScope === "all-voices"}
+                      onClick={() => setPianoRollDisplayScope("all-voices")}
+                    >
+                      {copy.allVoices}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -343,6 +417,7 @@ export function PreAnalysisWorkspace({
                       key={option.value}
                       type="button"
                       role="radio"
+                      data-analysis-preset={option.value}
                       aria-checked={session.preset === option.value}
                       className={`border px-3 py-2 text-left text-sm ${
                         session.preset === option.value
@@ -613,6 +688,19 @@ function sessionDuration(session: AnalysisSession): number {
   return Math.max(0, ...session.sources.map((source) => source.durationBeats));
 }
 
+function sessionBeatsPerBar(session: AnalysisSession): number {
+  const source = session.sources.find((candidate) =>
+    candidate.id === session.masterSourceId) ?? session.sources[0];
+  const meter = source?.timeSignatures[0];
+  return meter ? meter.numerator * 4 / meter.denominator : 4;
+}
+
+function displayScopeClass(active: boolean): string {
+  return active
+    ? "border border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] px-2.5 py-1.5 text-xs text-[var(--lv-text)]"
+    : "border border-[var(--lv-border)] px-2.5 py-1.5 text-xs text-[var(--lv-text-secondary)] hover:border-[var(--lv-border-strong)]";
+}
+
 function formatBeatTime(beats: number): string {
   const seconds = Math.max(0, Math.round(beats / 2));
   return formatClock(seconds);
@@ -722,6 +810,10 @@ function workspaceCopy(language: AppLanguage) {
       play: "再生",
       stop: "停止",
       zoom: "ズーム",
+      pianoRollDisplay: "ピアノロールの表示対象",
+      display: "表示",
+      analysisTargets: "解析対象",
+      allVoices: "全Voice",
       preset: "解析プリセット",
       auto: "おまかせ（推奨）",
       harmonyBass: "和声＋ベース",
@@ -775,6 +867,10 @@ function workspaceCopy(language: AppLanguage) {
     play: "Play",
     stop: "Stop",
     zoom: "Zoom",
+    pianoRollDisplay: "Piano roll display scope",
+    display: "Display",
+    analysisTargets: "Analysis targets",
+    allVoices: "All Voices",
     preset: "Analysis preset",
     auto: "Auto (recommended)",
     harmonyBass: "Harmony + bass",

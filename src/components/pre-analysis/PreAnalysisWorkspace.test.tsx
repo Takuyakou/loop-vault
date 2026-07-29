@@ -2,7 +2,7 @@
 
 import type { MidiEvent } from "midi-file";
 import { writeMidi } from "midi-file";
-import { act } from "react";
+import { act, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import {
@@ -119,6 +119,98 @@ describe("PreAnalysisWorkspace", () => {
       .find((button) => button.textContent?.includes("自動推定に戻す"));
     await act(async () => reset?.click());
     expect(lastSession(onSessionChange).preset).toBe("auto");
+
+    await unmount();
+  });
+
+  it("keeps the Piano Roll synchronized with the selected analysis preset", async () => {
+    const base = createAnalysisSession([{
+      sourceId: "preset-visual",
+      displayName: "preset-visual.mid",
+      bytes: midi([0, 1, 2, 9]),
+    }]).session!;
+    const roles = ["harmony", "bass", "melody-weak", "exclude"] as const;
+    const session: AnalysisSession = {
+      ...base,
+      preset: "auto",
+      voices: base.voices.map((voice, index) => ({
+        ...voice,
+        autoRole: roles[index],
+        assignedRole: roles[index],
+        included: index < 3,
+      })),
+    };
+    const { container, unmount } = await renderStatefulWorkspace(session);
+    const canvas = container.querySelector<HTMLCanvasElement>(
+      "[data-testid='pre-analysis-piano-roll']",
+    )!;
+
+    expect(canvas.dataset.displayScope).toBe("analysis-targets");
+    expect(canvas.dataset.visibleNoteCount).toBe("3");
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>(
+        "[data-analysis-preset='accompaniment-only']",
+      )?.click();
+    });
+    expect(canvas.dataset.visibleNoteCount).toBe("1");
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>(
+        "[data-piano-roll-scope='all-voices']",
+      )?.click();
+    });
+    expect(canvas.dataset.displayScope).toBe("all-voices");
+    expect(canvas.dataset.visibleNoteCount).toBe("4");
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>(
+        "[data-analysis-preset='harmony-bass']",
+      )?.click();
+      container.querySelector<HTMLButtonElement>(
+        "[data-piano-roll-scope='analysis-targets']",
+      )?.click();
+    });
+    expect(canvas.dataset.displayScope).toBe("analysis-targets");
+    expect(canvas.dataset.visibleNoteCount).toBe("2");
+
+    await unmount();
+  });
+
+  it("moves the same Piano Roll viewport from the timeline scrollbar", async () => {
+    const base = fixtureSession();
+    const session: AnalysisSession = {
+      ...base,
+      sources: base.sources.map((source) => ({
+        ...source,
+        durationBeats: 64,
+      })),
+    };
+    const { container, unmount } = await renderStatefulWorkspace(session);
+    const zoom = container.querySelector<HTMLInputElement>(
+      "#pre-analysis-zoom",
+    )!;
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")
+        ?.set?.call(zoom, "4");
+      zoom.dispatchEvent(new Event("input", { bubbles: true }));
+      zoom.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    const scrollbar = container.querySelector<HTMLDivElement>(
+      "[data-testid='pre-analysis-time-scrollbar']",
+    )!;
+    await act(async () => {
+      scrollbar.dispatchEvent(new KeyboardEvent("keydown", {
+        key: "End",
+        bubbles: true,
+      }));
+    });
+
+    expect(scrollbar.getAttribute("aria-valuenow")).toBe("48");
+    expect(container.querySelector<HTMLCanvasElement>(
+      "[data-testid='pre-analysis-piano-roll']",
+    )?.dataset.viewportStartBeat).toBe("48");
 
     await unmount();
   });
@@ -263,6 +355,32 @@ async function renderWorkspace(
       {...overrides}
     />,
   ));
+  return {
+    container,
+    unmount: async () => act(async () => root.unmount()),
+  };
+}
+
+async function renderStatefulWorkspace(initialSession: AnalysisSession) {
+  const container = document.createElement("div");
+  Object.defineProperty(container, "clientWidth", { value: 1000 });
+  const root = createRoot(container);
+
+  function Harness() {
+    const [session, setSession] = useState(initialSession);
+    return (
+      <PreAnalysisWorkspace
+        session={session}
+        language="ja"
+        onSessionChange={setSession}
+        onAddMidi={vi.fn()}
+        onRemoveSource={vi.fn()}
+        onAnalyze={vi.fn()}
+      />
+    );
+  }
+
+  await act(async () => root.render(<Harness />));
   return {
     container,
     unmount: async () => act(async () => root.unmount()),
