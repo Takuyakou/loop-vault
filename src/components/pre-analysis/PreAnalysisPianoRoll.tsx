@@ -37,6 +37,7 @@ interface PreAnalysisPianoRollProps {
   zoom: number;
   viewportStartBeat: number;
   playheadBeat: number;
+  showAnalysisTargetsOnly: boolean;
   onSelectVoice: (voiceId: string) => void;
   onViewportStartChange: (beat: number) => void;
 }
@@ -48,6 +49,7 @@ export function PreAnalysisPianoRoll({
   zoom,
   viewportStartBeat,
   playheadBeat,
+  showAnalysisTargetsOnly,
   onSelectVoice,
   onViewportStartChange,
 }: PreAnalysisPianoRollProps) {
@@ -74,6 +76,7 @@ export function PreAnalysisPianoRoll({
         zoom,
         viewportStartBeat,
         playheadBeat,
+        showAnalysisTargetsOnly,
       }, hitAreasRef);
     };
     render();
@@ -81,7 +84,14 @@ export function PreAnalysisPianoRoll({
     const observer = new ResizeObserver(render);
     if (canvas.parentElement) observer.observe(canvas.parentElement);
     return () => observer.disconnect();
-  }, [playheadBeat, selectedVoiceId, session, viewportStartBeat, zoom]);
+  }, [
+    playheadBeat,
+    selectedVoiceId,
+    session,
+    showAnalysisTargetsOnly,
+    viewportStartBeat,
+    zoom,
+  ]);
 
   function handleKeyDown(event: KeyboardEvent<HTMLCanvasElement>) {
     const visibleBeats = visibleBeatCount(session, zoom);
@@ -111,6 +121,13 @@ export function PreAnalysisPianoRoll({
         : "Pre-analysis piano roll colored by Voice. Use Left and Right to move in time."}
       data-testid="pre-analysis-piano-roll"
       data-voice-color-count={voiceColors.length}
+      data-visible-note-count={
+        visiblePianoRollNotes(session, showAnalysisTargetsOnly).length
+      }
+      data-display-scope={
+        showAnalysisTargetsOnly ? "analysis-targets" : "all-voices"
+      }
+      data-viewport-start-beat={viewportStartBeat}
       onKeyDown={handleKeyDown}
       onClick={(event) => {
         const bounds = event.currentTarget.getBoundingClientRect();
@@ -131,6 +148,7 @@ export interface PreAnalysisPianoRollDrawOptions {
   zoom: number;
   viewportStartBeat: number;
   playheadBeat: number;
+  showAnalysisTargetsOnly: boolean;
 }
 
 export function drawPianoRoll(
@@ -140,17 +158,22 @@ export function drawPianoRoll(
   options: PreAnalysisPianoRollDrawOptions,
   hitAreasRef: { current: NoteHitArea[] },
 ) {
-  const { session, selectedVoiceId, zoom, viewportStartBeat, playheadBeat } = options;
+  const {
+    session,
+    selectedVoiceId,
+    zoom,
+    viewportStartBeat,
+    playheadBeat,
+    showAnalysisTargetsOnly,
+  } = options;
   const voiceById = new Map(session.voices.map((voice, index) => [
     voice.id,
     { voice, index },
   ]));
-  const sourceById = new Map(session.sources.map((source) => [source.id, source]));
-  const visibleNotes = session.notes.filter((note) => {
-    const voice = voiceById.get(note.voiceId)?.voice;
-    const source = sourceById.get(note.sourceId);
-    return voice?.visible && source?.visible;
-  });
+  const visibleNotes = visiblePianoRollNotes(
+    session,
+    showAnalysisTargetsOnly,
+  );
   const pitches = visibleNotes.map((note) => note.pitch);
   const minPitch = Math.max(0, Math.min(...pitches, 48) - 2);
   const maxPitch = Math.min(127, Math.max(...pitches, 72) + 2);
@@ -251,11 +274,31 @@ export function drawPianoRoll(
   hitAreasRef.current = hitAreas;
 }
 
-function visibleBeatCount(session: AnalysisSession, zoom: number): number {
+export function visiblePianoRollNotes(
+  session: AnalysisSession,
+  showAnalysisTargetsOnly: boolean,
+) {
+  const voiceById = new Map(session.voices.map((voice) => [voice.id, voice]));
+  const sourceById = new Map(session.sources.map((source) => [source.id, source]));
+  return session.notes.filter((note) => {
+    const voice = voiceById.get(note.voiceId);
+    const source = sourceById.get(note.sourceId);
+    return Boolean(
+      voice?.visible
+      && source?.visible
+      && (!showAnalysisTargetsOnly || voice.included),
+    );
+  });
+}
+
+export function visibleBeatCount(
+  session: AnalysisSession,
+  zoom: number,
+): number {
   return Math.max(4, sessionDuration(session) / Math.max(1, zoom));
 }
 
-function sessionDuration(session: AnalysisSession): number {
+export function sessionDuration(session: AnalysisSession): number {
   return Math.max(1, ...session.sources.map((source) => source.durationBeats));
 }
 
