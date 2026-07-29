@@ -12,7 +12,15 @@ const voiceColors = [
   "#34d399",
   "#fb7185",
   "#38bdf8",
+  "#e879f9",
+  "#a3e635",
+  "#fb923c",
+  "#818cf8",
 ] as const;
+
+export function preAnalysisVoiceColor(index: number): string {
+  return voiceColors[index % voiceColors.length];
+}
 
 interface NoteHitArea {
   voiceId: string;
@@ -51,7 +59,7 @@ export function PreAnalysisPianoRoll({
     if (!canvas) return undefined;
     const render = () => {
       const width = Math.max(320, canvas.parentElement?.clientWidth ?? 900);
-      const height = 330;
+      const height = 290;
       const pixelRatio = window.devicePixelRatio || 1;
       canvas.width = Math.round(width * pixelRatio);
       canvas.height = Math.round(height * pixelRatio);
@@ -102,6 +110,7 @@ export function PreAnalysisPianoRoll({
         ? "Voiceを色分けした解析前ピアノロール。左右キーで時間を移動できます。"
         : "Pre-analysis piano roll colored by Voice. Use Left and Right to move in time."}
       data-testid="pre-analysis-piano-roll"
+      data-voice-color-count={voiceColors.length}
       onKeyDown={handleKeyDown}
       onClick={(event) => {
         const bounds = event.currentTarget.getBoundingClientRect();
@@ -213,7 +222,7 @@ export function drawPianoRoll(
     const selected = note.voiceId === selectedVoiceId;
     const included = voiceEntry.voice.included;
     context.globalAlpha = included ? (selected ? 1 : 0.78) : 0.28;
-    context.fillStyle = voiceColors[voiceEntry.index % voiceColors.length];
+    context.fillStyle = preAnalysisVoiceColor(voiceEntry.index);
     context.fillRect(clippedX, y, rectWidth, rectHeight);
     if (selected) {
       context.strokeStyle = "#ffffff";

@@ -12,9 +12,9 @@ import {
 describe("pre-analysis source selection settings", () => {
   beforeEach(() => localStorage.clear());
 
-  it("rolls out to Accuracy First while Stable keeps the direct path", () => {
+  it("opens the inline preparation surface in both product profiles", () => {
     expect(shouldOpenPreAnalysis("accuracy-first")).toBe(true);
-    expect(shouldOpenPreAnalysis("stable")).toBe(false);
+    expect(shouldOpenPreAnalysis("stable")).toBe(true);
   });
 
   it("opens complex all-in-one MIDI in Stable", () => {
@@ -41,7 +41,7 @@ describe("pre-analysis source selection settings", () => {
     }))).toBe(true);
   });
 
-  it("keeps one high-confidence pitched Voice on the direct Stable path", () => {
+  it("keeps one high-confidence pitched Voice in compact presentation", () => {
     const simple = reviewSession({
       pitchedVoiceConfidences: [0.9],
     });
@@ -51,7 +51,7 @@ describe("pre-analysis source selection settings", () => {
       "stable",
       defaultPreAnalysisSourceSelectionSettings,
       simple,
-    )).toBe(false);
+    )).toBe(true);
   });
 
   it("can always show the preparation screen in Stable", () => {
@@ -68,6 +68,7 @@ describe("pre-analysis source selection settings", () => {
       alwaysShowPreAnalysis: true,
     });
     expect(shouldOpenPreAnalysis("accuracy-first")).toBe(false);
+    expect(shouldOpenPreAnalysis("stable")).toBe(false);
     expect(getPreAnalysisSourceSelectionSettings()).toEqual({
       enablePreAnalysisSourceSelection: false,
       alwaysShowPreAnalysis: true,

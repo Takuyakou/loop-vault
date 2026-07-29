@@ -27,7 +27,7 @@ describe("PreAnalysisWorkspace", () => {
 
     expect(container.querySelectorAll("canvas")).toHaveLength(1);
     expect(container.querySelectorAll("[data-midi-note]")).toHaveLength(0);
-    expect(container.textContent).toContain("解析するパートを確認");
+    expect(container.textContent).toContain("読み込んだMIDI");
     expect(container.textContent).toContain("Piano");
     expect(container.textContent).toContain("Bass");
     expect(container.textContent).toContain("Drums");
@@ -45,8 +45,40 @@ describe("PreAnalysisWorkspace", () => {
 
     expect(session.sources).toHaveLength(1);
     expect(session.voices).toHaveLength(11);
+    expect(container.querySelector("[data-testid='pre-analysis-workspace']")
+      ?.getAttribute("data-pre-analysis-mode")).toBe("expanded");
     expect(container.querySelectorAll("select")).toHaveLength(11);
+    expect(container.querySelectorAll("[data-voice-id]")).toHaveLength(11);
+    expect(new Set([...container.querySelectorAll<HTMLElement>("[data-voice-id]")]
+      .map((row) => row.dataset.voiceColor)).size).toBe(11);
+    expect(container.querySelectorAll("[data-testid='pre-analysis-analyze']"))
+      .toHaveLength(1);
+    expect(container.textContent).toContain("SMF 0");
     expect(container.textContent).toContain("Drums");
+
+    await unmount();
+  });
+
+  it("keeps a simple one-Voice MIDI compact without adding a required step", async () => {
+    const session = createAnalysisSession([{
+      sourceId: "simple",
+      displayName: "piano.mid",
+      bytes: midi([0]),
+    }]).session!;
+    const { container, unmount } = await renderWorkspace(session);
+    const workspace = container.querySelector("[data-testid='pre-analysis-workspace']");
+
+    expect(workspace?.getAttribute("data-pre-analysis-mode")).toBe("compact");
+    expect(container.querySelector("canvas")).toBeNull();
+    expect(container.textContent).toContain("解析対象:");
+    expect(container.querySelectorAll("[data-testid='pre-analysis-analyze']"))
+      .toHaveLength(1);
+
+    const details = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent?.includes("パート詳細"));
+    await act(async () => details?.click());
+    expect(workspace?.getAttribute("data-pre-analysis-mode")).toBe("expanded");
+    expect(container.querySelectorAll("canvas")).toHaveLength(1);
 
     await unmount();
   });
@@ -83,6 +115,11 @@ describe("PreAnalysisWorkspace", () => {
       included: false,
     });
 
+    const reset = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent?.includes("自動推定に戻す"));
+    await act(async () => reset?.click());
+    expect(lastSession(onSessionChange).preset).toBe("auto");
+
     await unmount();
   });
 
@@ -104,6 +141,7 @@ describe("PreAnalysisWorkspace", () => {
       visible: false,
       included: true,
     });
+    expect(changed.preset).toBe("auto");
 
     await unmount();
   });
@@ -124,9 +162,9 @@ describe("PreAnalysisWorkspace", () => {
         .find((button) => button.textContent?.includes("MIDIを追加"))?.click();
       [...container.querySelectorAll<HTMLButtonElement>("button")]
         .find((button) => button.textContent?.includes("この構成で解析"))?.click();
-      container.querySelector<HTMLButtonElement>(
-        'button[aria-label="MIDIを削除"]',
-      )?.click();
+      [...container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.getAttribute("aria-label")
+          ?.startsWith("MIDIを削除:"))?.click();
     });
     expect(onAddMidi).toHaveBeenCalledOnce();
     expect(onAnalyze).toHaveBeenCalledOnce();

@@ -45,6 +45,7 @@ import {
 import { Copy, Download, FolderOpen, RotateCcw, Trash2, Upload } from "lucide-react";
 import type { StoreApi } from "zustand/vanilla";
 import type { LiveMidiStoreState } from "../liveMidi/liveMidiStore";
+import { loopVaultBuildInfo } from "../buildInfo";
 
 const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
 
@@ -403,8 +404,19 @@ export function SettingsDialog({
               <span className="mt-1 block text-[var(--lv-text-muted)]">{ui.showDegreesHelp}</span>
             </span>
           </label>
-          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1 border-t border-[var(--lv-border)] pt-3 text-xs text-[var(--lv-text-muted)]" aria-label={ui.formatInfo}>
-            <span>Loop Vault</span><span>{ui.appFormat}</span><span>{ui.dataFormat}</span>
+          <div
+            className="mt-4 grid gap-1 border-t border-[var(--lv-border)] pt-3 text-xs text-[var(--lv-text-muted)] sm:grid-cols-2"
+            aria-label={ui.formatInfo}
+            data-testid="loop-vault-build-info"
+          >
+            <span>{ui.appVersion(loopVaultBuildInfo.version)}</span>
+            <span>{ui.buildCommit(loopVaultBuildInfo.commit)}</span>
+            <span>{ui.buildDate(loopVaultBuildInfo.builtAt)}</span>
+            <span>{ui.preAnalysisStatus(
+              preAnalysisSettings.enablePreAnalysisSourceSelection,
+            )}</span>
+            <span>{ui.appFormat}</span>
+            <span>{ui.dataFormat}</span>
           </div>
         </section>
 
@@ -545,28 +557,11 @@ export function SettingsDialog({
                       </span>
                     </span>
                   </label>
-                  <label className="mt-3 flex cursor-pointer items-start gap-3">
-                    <input
-                      className="mt-1"
-                      type="checkbox"
-                      checked={preAnalysisSettings.alwaysShowPreAnalysis}
-                      disabled={!preAnalysisSettings.enablePreAnalysisSourceSelection}
-                      onChange={(event) => updatePreAnalysisSetting(
-                        "alwaysShowPreAnalysis",
-                        event.target.checked,
-                      )}
-                    />
-                    <span>
-                      <strong className="block text-[var(--lv-text-secondary)]">
-                        {language === "ja" ? "Stableでも常に表示" : "Always show in Stable"}
-                      </strong>
-                      <span className="mt-1 block text-[var(--lv-text-muted)]">
-                        {language === "ja"
-                          ? "通常はAccuracy Firstで表示し、Stableでは従来どおり直接解析します。"
-                          : "By default it opens in Accuracy First; Stable analyzes directly."}
-                      </span>
-                    </span>
-                  </label>
+                  <p className="mt-3 text-xs text-[var(--lv-text-muted)]">
+                    {language === "ja"
+                      ? "Stable / Accuracy Firstの両方で有効です。単純MIDIはcompact、複雑MIDIは自動展開します。"
+                      : "Enabled for Stable and Accuracy First. Simple MIDI stays compact; complex MIDI expands automatically."}
+                  </p>
                 </div>
                 <label className="mt-3 flex cursor-pointer items-start gap-3">
                   <input
