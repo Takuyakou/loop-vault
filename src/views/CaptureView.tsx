@@ -57,6 +57,7 @@ import type {
 import {
   addMidiSources,
   beatsPerBar as beatsPerBarFor,
+  buildSessionAnalysisRequest,
   buildCorrectionEvents,
   createAnalysisSession,
   removeMidiSource,
@@ -88,7 +89,11 @@ import { chordProgressFraction } from "../ui/playbackProgress";
 import { confidenceLabel, shouldShowConfidence, warningLabel } from "./captureLabels";
 import { appendAnalysisFeedback } from "../storage/analysisFeedbackStorage";
 import { appendLabelCorrectionLogs } from "../storage/labelCorrectionLogStorage";
-import { getAnalysisProfileAnalyzeOptions } from "../storage/accuracyFirstSettings";
+import {
+  getAnalysisProfileAnalyzeOptions,
+  getAnalysisProfileSettings,
+} from "../storage/accuracyFirstSettings";
+import { shouldOpenPreAnalysis } from "../storage/preAnalysisSettings";
 import type { PreviewSound } from "../audio/chordPreview";
 import {
   playbackController,
@@ -226,6 +231,13 @@ export function CaptureView(props: CaptureViewProps) {
   const result = analysis.result;
   const capturePlayback = usePlaybackState(controller);
   const authorReferenceIndex = useMemo(() => buildAuthorReferenceIndex(ideas), [ideas]);
+  const analysisTargetLabel = useMemo(() => preAnalysisSession?.voices
+    .filter((voice) =>
+      voice.included
+      && !voice.duplicateOf
+      && voice.assignedRole !== "exclude")
+    .map((voice) => voice.displayName)
+    .join(" / "), [preAnalysisSession]);
 
   useStickyInspectorHeight(inspectorHost, Boolean(expandedCandidateId));
 
@@ -313,13 +325,18 @@ export function CaptureView(props: CaptureViewProps) {
   }
 
   const analyzeMidiBytesWithToast = useCallback(
-    async (bytes: Uint8Array, fileName: string) => {
+    async (
+      bytes: Uint8Array,
+      fileName: string,
+      optionOverrides: AnalyzeMidiOptions = {},
+    ) => {
       stopCapturePlayback(controller);
       setAnalysisProgress("analyzing");
       await waitForNextPaint();
       const analyzed = analyzeMidiBytes(bytes, {
         fileName,
         ...getAnalysisProfileAnalyzeOptions(),
+        ...optionOverrides,
       });
       setAnalysisProgress("finalizing");
       await waitForNextPaint();
@@ -348,6 +365,19 @@ export function CaptureView(props: CaptureViewProps) {
         setToast(issue?.message ?? copy.toast.midiReadFailed);
         return;
       }
+      if (
+        !options.append
+        && !shouldOpenPreAnalysis(getAnalysisProfileSettings().profile)
+      ) {
+        setPreAnalysisSession(undefined);
+        setSourcePath(options.sourcePath);
+        setAnalysisProgress(undefined);
+        await analyzeMidiBytesWithToast(
+          inputs[0].bytes,
+          inputs[0].displayName,
+        );
+        return;
+      }
       clearAnalysis();
       setPreAnalysisSession(intake.session);
       if (!options.append) {
@@ -364,6 +394,7 @@ export function CaptureView(props: CaptureViewProps) {
       clearAnalysis,
       controller,
       copy.toast.midiReadFailed,
+      analyzeMidiBytesWithToast,
       preAnalysisSession,
       setToast,
     ],
@@ -475,7 +506,8 @@ export function CaptureView(props: CaptureViewProps) {
     }
 
     const path = await openFileDialog({
-      multiple: true,
+      multiple: append
+        || shouldOpenPreAnalysis(getAnalysisProfileSettings().profile),
       filters: [{ name: "MIDI", extensions: ["mid", "midi"] }],
     });
     if (!path) {
@@ -813,7 +845,18 @@ export function CaptureView(props: CaptureViewProps) {
             }}
             onAnalyze={() => {
               if (!master) return;
-              void analyzeMidiBytesWithToast(master.bytes, master.displayName);
+              try {
+                const request = buildSessionAnalysisRequest(preAnalysisSession);
+                void analyzeMidiBytesWithToast(
+                  request.bytes,
+                  request.fileName,
+                  request.options,
+                );
+              } catch (error) {
+                setToast(error instanceof Error
+                  ? error.message
+                  : copy.toast.midiFailed);
+              }
             }}
           />
         </div>
@@ -1083,6 +1126,11 @@ export function CaptureView(props: CaptureViewProps) {
             </p>
             <h2 className="mt-2 text-2xl font-semibold">{copy.capture.title}</h2>
             <p className="mt-2 text-sm text-teal-200">{result.fileName ?? "MIDI"}</p>
+            {analysisTargetLabel ? (
+              <p className="mt-1 text-xs text-[var(--lv-text-muted)]">
+                {language === "ja" ? "解析対象" : "Analyzed parts"}: {analysisTargetLabel}
+              </p>
+            ) : null}
             <p className="mt-2 max-w-2xl text-sm text-[var(--lv-text-muted)]">
               {copy.capture.resultDescription}
             </p>

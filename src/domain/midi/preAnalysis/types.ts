@@ -68,12 +68,24 @@ export interface PreAnalysisNote {
   startBeat: number;
   durationBeats: number;
   program?: number;
+  programExplicit?: boolean;
+}
+
+export interface PreAnalysisControlChange {
+  sourceId: string;
+  voiceId: string;
+  trackIndex: number;
+  channel: number;
+  number: number;
+  beat: number;
+  value: number;
 }
 
 export interface PreAnalysisSourceScan {
   source: PreAnalysisMidiSource;
   voices: PreAnalysisVoice[];
   notes: PreAnalysisNote[];
+  controlChanges: PreAnalysisControlChange[];
 }
 
 export type AnalysisSessionWarningCode =
@@ -107,6 +119,7 @@ export interface AnalysisSession {
   sources: AnalysisSessionSource[];
   voices: AnalysisSessionVoice[];
   notes: PreAnalysisNote[];
+  controlChanges: PreAnalysisControlChange[];
   preset: PreAnalysisSelectionPreset;
   warnings: AnalysisSessionWarning[];
   latestSourceId?: string;

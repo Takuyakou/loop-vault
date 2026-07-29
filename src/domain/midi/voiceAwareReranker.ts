@@ -47,7 +47,7 @@ export function analyzeMidiVoiceAwareRerank(
   options: AnalyzeMidiOptions = {},
   rerankerOptions: VoiceAwareRerankerOptions = {},
 ): MidiProgressionAnalysis {
-  const data = parseMidi(bytes);
+  const data = options.preparedData ?? parseMidi(bytes);
   const legacyInternal = analyzeMidiWithRankingScores(bytes, options);
   const legacy = legacyInternal.analysis;
   const normalizedNotes = normalizeNotes(data);

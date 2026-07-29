@@ -26,6 +26,7 @@ export interface MidiTrackInfo {
   channel?: number;
   program?: number;
   roleHint?: TrackRole;
+  roleOverride?: TrackRole;
 }
 
 export interface MidiControlChange {
@@ -108,6 +109,10 @@ export interface AnalyzeMidiOptions {
   features?: Partial<HybridFeatureFlags>;
   accuracyFirst?: Partial<AccuracyFirstFeatureFlags>;
   analysisInput?: AnalysisInput;
+  /** Runtime-only pre-analysis input. Never serialized into Vault data. */
+  preparedData?: MidiSongData;
+  /** Privacy-safe fingerprint for a prepared multi-source input. */
+  analysisFingerprint?: string;
 }
 
 export type AnalyzeMidiResult = MidiProgressionAnalysis;

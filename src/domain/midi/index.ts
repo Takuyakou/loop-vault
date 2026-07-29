@@ -140,6 +140,8 @@ export {
   applyAnalysisSessionPreset,
   createAnalysisSession,
   createMidiSourceId,
+  buildPreparedMidiSongData,
+  buildSessionAnalysisRequest,
   gmProgramName,
   preAnalysisRoleFromProductRole,
   preAnalysisVoiceId,
@@ -161,6 +163,7 @@ export type {
   MidiIntakeIssueCode,
   MidiSourceInput,
   PreAnalysisMidiSource,
+  PreAnalysisControlChange,
   PreAnalysisNote,
   PreAnalysisSelectionPreset,
   PreAnalysisSourceScan,
@@ -169,6 +172,7 @@ export type {
   PreAnalysisVoice,
   PreAnalysisVoiceRole,
   PreScanMidiSourceOptions,
+  SessionAnalysisRequest,
 } from "./preAnalysis";
 export {
   buildOccurrences,

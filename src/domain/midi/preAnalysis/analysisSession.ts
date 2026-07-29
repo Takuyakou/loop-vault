@@ -44,6 +44,8 @@ export function removeMidiSource(
   const voices = session.voices.filter((voice) =>
     retainedVoiceIds.has(voice.id));
   const notes = session.notes.filter((note) => retainedVoiceIds.has(note.voiceId));
+  const controlChanges = session.controlChanges.filter((change) =>
+    retainedVoiceIds.has(change.voiceId));
   return finalizeSession({
     ...session,
     masterSourceId: session.masterSourceId === sourceId
@@ -52,6 +54,7 @@ export function removeMidiSource(
     sources,
     voices,
     notes,
+    controlChanges,
     latestSourceId: undefined,
   });
 }
@@ -136,6 +139,7 @@ function intake(
   const sources = current ? [...current.sources] : [];
   const voices = current ? [...current.voices] : [];
   const notes = current ? [...current.notes] : [];
+  const controlChanges = current ? [...current.controlChanges] : [];
   const issues: MidiIntakeIssue[] = [];
   const usedIds = new Set(sources.map((source) => source.id));
   let latestSourceId: string | undefined;
@@ -164,6 +168,7 @@ function intake(
       });
       voices.push(...scan.voices);
       notes.push(...scan.notes);
+      controlChanges.push(...scan.controlChanges);
       latestSourceId = sourceId;
     } catch (error) {
       issues.push(issueFromError(error, inputIndex));
@@ -177,6 +182,7 @@ function intake(
     sources,
     voices,
     notes,
+    controlChanges,
     preset: current?.preset ?? "auto",
     warnings: [],
     ...(latestSourceId ? { latestSourceId } : {}),

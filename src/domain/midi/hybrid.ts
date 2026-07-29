@@ -89,7 +89,7 @@ export function analyzeMidiHybrid(bytes: Uint8Array, options: AnalyzeMidiOptions
 }
 
 export function buildHybridPipeline(bytes: Uint8Array, options: AnalyzeMidiOptions = {}): HybridPipelineResult {
-  const data = parseMidi(bytes);
+  const data = options.preparedData ?? parseMidi(bytes);
   const weights: AnalyzerWeights = { ...defaultAnalyzerWeights, ...options.weights };
   const features: HybridFeatureFlags = { ...defaultHybridFeatures, ...options.features };
   const evidenceData = { ...data, notes: selectChordEvidenceNotes(data.notes) };
