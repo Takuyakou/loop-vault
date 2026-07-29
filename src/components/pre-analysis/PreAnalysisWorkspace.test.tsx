@@ -158,6 +158,37 @@ describe("PreAnalysisWorkspace", () => {
     });
     await unmount();
   });
+
+  it("renders 100,000 notes on one Canvas without creating note DOM nodes", async () => {
+    const base = fixtureSession();
+    const voice = base.voices.find((candidate) => !candidate.isDrum)!;
+    const source = base.sources.find((candidate) => candidate.id === voice.sourceId)!;
+    const session: AnalysisSession = {
+      ...base,
+      sources: base.sources.map((candidate) => candidate.id === source.id
+        ? { ...candidate, durationBeats: 720 }
+        : candidate),
+      notes: Array.from({ length: 100_000 }, (_, index) => ({
+        sourceId: source.id,
+        voiceId: voice.id,
+        trackIndex: voice.trackIndex,
+        channel: voice.channel,
+        pitch: 48 + index % 36,
+        velocity: 80,
+        startBeat: index % 720,
+        durationBeats: 0.25,
+      })),
+    };
+    const startedAt = performance.now();
+    const { container, unmount } = await renderWorkspace(session);
+    const elapsedMs = performance.now() - startedAt;
+
+    expect(container.querySelectorAll("canvas")).toHaveLength(1);
+    expect(container.querySelectorAll("[data-midi-note]")).toHaveLength(0);
+    expect(elapsedMs).toBeLessThan(3_000);
+
+    await unmount();
+  }, 10_000);
 });
 
 async function renderWorkspace(

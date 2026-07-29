@@ -1,0 +1,238 @@
+{
+  "schemaVersion": 1,
+  "phase": "5.1",
+  "stage": "dev",
+  "fixturePolicy": "deterministic-generated-no-midi-committed",
+  "frozenConditions": {
+    "A": "Phase 5 direct input",
+    "B": "single source / auto / untouched UI path",
+    "C": "Gold per-voice role",
+    "D": "harmony-bass preset",
+    "E": "full source plus exact duplicate split bass"
+  },
+  "cases": [
+    {
+      "id": "dev-1",
+      "backwardEquivalent": true,
+      "aEqualsB": true,
+      "deterministic": true,
+      "voiceCount": 4,
+      "selectedVoiceCount": 3,
+      "excludedNoteCount": 64,
+      "exactDuplicateCount": 1,
+      "autoRoleDisagreementRate": 0,
+      "roleCorrectionCount": 0
+    },
+    {
+      "id": "dev-2",
+      "backwardEquivalent": true,
+      "aEqualsB": true,
+      "deterministic": true,
+      "voiceCount": 4,
+      "selectedVoiceCount": 3,
+      "excludedNoteCount": 64,
+      "exactDuplicateCount": 1,
+      "autoRoleDisagreementRate": 0,
+      "roleCorrectionCount": 0
+    },
+    {
+      "id": "dev-3",
+      "backwardEquivalent": true,
+      "aEqualsB": true,
+      "deterministic": true,
+      "voiceCount": 4,
+      "selectedVoiceCount": 3,
+      "excludedNoteCount": 64,
+      "exactDuplicateCount": 1,
+      "autoRoleDisagreementRate": 0,
+      "roleCorrectionCount": 0
+    },
+    {
+      "id": "dev-4",
+      "backwardEquivalent": true,
+      "aEqualsB": true,
+      "deterministic": true,
+      "voiceCount": 4,
+      "selectedVoiceCount": 3,
+      "excludedNoteCount": 64,
+      "exactDuplicateCount": 1,
+      "autoRoleDisagreementRate": 0,
+      "roleCorrectionCount": 0
+    }
+  ],
+  "conditions": {
+    "A": {
+      "eventCount": 64,
+      "canonicalExact": 1,
+      "usable": 1,
+      "rootAccuracy": 1,
+      "qualityAccuracy": 1,
+      "seventhAccuracy": 1,
+      "tensionAccuracy": 1,
+      "slashBassAccuracy": 1,
+      "rank1Adoption": 1,
+      "top3Canonical": 1,
+      "candidateRecall": 1,
+      "manualInputRate": 0,
+      "correctionCostMean": 0,
+      "runtimeMs": {
+        "p50": 62.1412,
+        "p95": 121.6823,
+        "max": 121.6823
+      }
+    },
+    "B": {
+      "eventCount": 64,
+      "canonicalExact": 1,
+      "usable": 1,
+      "rootAccuracy": 1,
+      "qualityAccuracy": 1,
+      "seventhAccuracy": 1,
+      "tensionAccuracy": 1,
+      "slashBassAccuracy": 1,
+      "rank1Adoption": 1,
+      "top3Canonical": 1,
+      "candidateRecall": 1,
+      "manualInputRate": 0,
+      "correctionCostMean": 0,
+      "runtimeMs": {
+        "p50": 81.0063,
+        "p95": 85.9166,
+        "max": 85.9166
+      }
+    },
+    "C": {
+      "eventCount": 64,
+      "canonicalExact": 1,
+      "usable": 1,
+      "rootAccuracy": 1,
+      "qualityAccuracy": 1,
+      "seventhAccuracy": 1,
+      "tensionAccuracy": 1,
+      "slashBassAccuracy": 1,
+      "rank1Adoption": 1,
+      "top3Canonical": 1,
+      "candidateRecall": 1,
+      "manualInputRate": 0,
+      "correctionCostMean": 0,
+      "runtimeMs": {
+        "p50": 70.0187,
+        "p95": 89.4947,
+        "max": 89.4947
+      }
+    },
+    "D": {
+      "eventCount": 64,
+      "canonicalExact": 1,
+      "usable": 1,
+      "rootAccuracy": 1,
+      "qualityAccuracy": 1,
+      "seventhAccuracy": 1,
+      "tensionAccuracy": 1,
+      "slashBassAccuracy": 1,
+      "rank1Adoption": 1,
+      "top3Canonical": 1,
+      "candidateRecall": 1,
+      "manualInputRate": 0,
+      "correctionCostMean": 0,
+      "runtimeMs": {
+        "p50": 57.8029,
+        "p95": 73.2178,
+        "max": 73.2178
+      }
+    },
+    "E": {
+      "eventCount": 64,
+      "canonicalExact": 1,
+      "usable": 1,
+      "rootAccuracy": 1,
+      "qualityAccuracy": 1,
+      "seventhAccuracy": 1,
+      "tensionAccuracy": 1,
+      "slashBassAccuracy": 1,
+      "rank1Adoption": 1,
+      "top3Canonical": 1,
+      "candidateRecall": 1,
+      "manualInputRate": 0,
+      "correctionCostMean": 0,
+      "runtimeMs": {
+        "p50": 67.3766,
+        "p95": 77.1337,
+        "max": 77.1337
+      }
+    }
+  },
+  "gates": {
+    "aEqualsBDeepEqual": true,
+    "aEqualsBAggregateMetrics": true,
+    "selectedVoiceIsolation": true,
+    "exactDuplicateUsedOnce": true,
+    "deterministic": true,
+    "phase5ScoringChanged": false
+  },
+  "performance": {
+    "preScanMs": {
+      "p50": 1.6207,
+      "p95": 6.8786,
+      "max": 6.8786
+    },
+    "pianoRollFirstFrameMs": {
+      "p50": 0.1435,
+      "p95": 0.561,
+      "max": 0.561
+    },
+    "multiMidiAddMs": {
+      "p50": 0.4735,
+      "p95": 0.4839,
+      "max": 0.4839
+    },
+    "analyzerByConditionMs": {
+      "A": {
+        "p50": 62.1412,
+        "p95": 121.6823,
+        "max": 121.6823
+      },
+      "B": {
+        "p50": 81.0063,
+        "p95": 85.9166,
+        "max": 85.9166
+      },
+      "C": {
+        "p50": 70.0187,
+        "p95": 89.4947,
+        "max": 89.4947
+      },
+      "D": {
+        "p50": 57.8029,
+        "p95": 73.2178,
+        "max": 73.2178
+      },
+      "E": {
+        "p50": 67.3766,
+        "p95": 77.1337,
+        "max": 77.1337
+      }
+    },
+    "typicalThreeMinute": {
+      "bars": 180,
+      "notes": 1872,
+      "preScanMs": 14.8116,
+      "pianoRollFirstFrameMs": 0.8669,
+      "analyzerMs": 793.3782,
+      "underTenSeconds": true
+    },
+    "peakRssMiB": 288.632813
+  },
+  "safety": {
+    "sourceNamesStored": false,
+    "pathsStored": false,
+    "midiBytesStored": false,
+    "analyzerMode": "phase4-v1",
+    "fileVersion": 1
+  },
+  "summary": {
+    "fixtureCount": 4,
+    "eventCount": 64,
+    "allGatesPassed": true
+  }
+}
