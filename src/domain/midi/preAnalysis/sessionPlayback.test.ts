@@ -3,15 +3,24 @@ import type { AnalysisSession } from "./types";
 import { sessionPreviewNotes } from "./sessionPlayback";
 
 describe("Phase 5.1 session playback", () => {
-  it("solos one Voice independently from analysis inclusion", () => {
+  it("keeps playback aligned with analysis inclusion even when an excluded Voice is soloed", () => {
     const session = fixtureSession();
     session.voices[1].solo = true;
     session.voices[1].included = false;
     session.voices[1].assignedRole = "exclude";
 
     expect(sessionPreviewNotes(session)).toEqual([
-      { pitch: 36, startBeat: 0, durationBeats: 4, velocity: 0.8 },
+      { pitch: 60, startBeat: 0, durationBeats: 4, velocity: 0.8 },
     ]);
+  });
+
+  it("plays only Voices selected by the current analysis preset", () => {
+    const session = fixtureSession();
+    session.voices[1].included = false;
+    session.voices[1].assignedRole = "exclude";
+
+    expect(sessionPreviewNotes(session).map((note) => note.pitch))
+      .toEqual([60]);
   });
 
   it("honors source and Voice mute while visibility remains visual only", () => {

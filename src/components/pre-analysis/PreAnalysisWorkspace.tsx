@@ -3,6 +3,7 @@ import {
   ChevronRight,
   Eye,
   EyeOff,
+  Play,
   Plus,
   RotateCcw,
   Square,
@@ -158,19 +159,23 @@ export function PreAnalysisWorkspace({
 
   async function playSession() {
     if (onPlay) {
+      setPlaybackActive(true);
       onPlay();
       return;
     }
-    stopSessionPlayback();
     setPlaybackError(undefined);
     const master = session.sources.find((source) =>
       source.id === session.masterSourceId) ?? session.sources[0];
     const bpm = master?.tempoMap[0]?.bpm ?? 96;
-    const previewNotes = sessionPreviewNotes(session, viewportStartBeat);
+    const totalBeats = sessionDuration(session);
+    const playbackStartBeat = playheadBeat >= totalBeats ? 0 : playheadBeat;
+    const previewNotes = sessionPreviewNotes(session, playbackStartBeat);
     if (!previewNotes.length) {
       setPlaybackError(copy.noAudibleVoices);
       return;
     }
+    setPlayheadBeat(playbackStartBeat);
+    setPlaybackActive(true);
     try {
       await previewMidiNotes(previewNotes, bpm, previewSound, {
         onStarted() {
@@ -180,10 +185,18 @@ export function PreAnalysisWorkspace({
             const elapsedBeats = (
               performanceNow() - startedAt
             ) / 1000 * bpm / 60;
-            setPlayheadBeat(Math.min(
-              sessionDuration(session),
-              viewportStartBeat + elapsedBeats,
-            ));
+            const nextBeat = Math.min(
+              totalBeats,
+              playbackStartBeat + elapsedBeats,
+            );
+            setPlayheadBeat(nextBeat);
+            if (follow) {
+              setViewportStartBeat(viewportStartForBeat(
+                session,
+                zoom,
+                nextBeat,
+              ));
+            }
           }, 50);
         },
         onEnded() {
@@ -201,6 +214,7 @@ export function PreAnalysisWorkspace({
   }
 
   function setPreset(preset: PreAnalysisSelectionPreset) {
+    stopSessionPlayback();
     onSessionChange(applyAnalysisSessionPreset(session, preset));
   }
 
@@ -208,13 +222,37 @@ export function PreAnalysisWorkspace({
     voiceId: string,
     changes: Parameters<typeof updateAnalysisSessionVoice>[2],
   ) {
-    if (changes.muted !== undefined || changes.solo !== undefined) {
+    if (
+      changes.muted !== undefined
+      || changes.solo !== undefined
+      || changes.assignedRole !== undefined
+      || changes.included !== undefined
+    ) {
       stopSessionPlayback();
     }
     const next = updateAnalysisSessionVoice(session, voiceId, changes);
     const selectionChanged = changes.assignedRole !== undefined
       || changes.included !== undefined;
     onSessionChange(selectionChanged ? { ...next, preset: "custom" } : next);
+  }
+
+  function setTimelinePosition(beat: number) {
+    const nextBeat = clamp(beat, 0, sessionDuration(session));
+    stopSessionPlayback();
+    setPlayheadBeat(nextBeat);
+    setViewportStartBeat(viewportStartForBeat(session, zoom, nextBeat));
+  }
+
+  function setViewportPosition(beat: number) {
+    const visibleBeats = Math.min(
+      sessionDuration(session),
+      pianoRollVisibleBeatCount(session, zoom),
+    );
+    const maxStart = Math.max(0, sessionDuration(session) - visibleBeats);
+    const nextStart = clamp(beat, 0, maxStart);
+    stopSessionPlayback();
+    setViewportStartBeat(nextStart);
+    setPlayheadBeat(nextStart);
   }
 
   return (
@@ -234,7 +272,10 @@ export function PreAnalysisWorkspace({
               {copy.description}
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div
+            className="flex flex-wrap items-start gap-2"
+            data-testid="pre-analysis-primary-actions"
+          >
             <button
               type="button"
               className="inline-flex items-center gap-2 border border-[var(--lv-border-strong)] px-3 py-2 text-sm hover:border-[var(--lv-accent)]"
@@ -250,14 +291,26 @@ export function PreAnalysisWorkspace({
                 {copy.voiceCount(session.voices.length)}
               </span>
             </button>
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 border border-[var(--lv-border-strong)] px-3 py-2 text-sm hover:border-[var(--lv-accent)]"
-              onClick={onAddMidi}
-            >
-              <Plus size={16} aria-hidden="true" />
-              {copy.addMidi}
-            </button>
+            <div className="grid gap-2">
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 border border-[var(--lv-border-strong)] px-3 py-2 text-sm hover:border-[var(--lv-accent)]"
+                data-testid="pre-analysis-add-midi"
+                onClick={onAddMidi}
+              >
+                <Plus size={16} aria-hidden="true" />
+                {copy.addMidi}
+              </button>
+              <button
+                type="button"
+                className="bg-[var(--lv-accent)] px-4 py-2 text-sm font-semibold text-stone-950 disabled:opacity-40"
+                data-testid="pre-analysis-analyze"
+                disabled={busy || includedCount === 0}
+                onClick={onAnalyze}
+              >
+                {busy ? copy.preparing : copy.analyze}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -298,21 +351,24 @@ export function PreAnalysisWorkspace({
             <div className="mt-5 flex flex-wrap items-center gap-2 border-y border-[var(--lv-border)] py-3">
               <button
                 type="button"
-                className="border border-[var(--lv-border-strong)] px-3 py-2 text-sm disabled:opacity-40"
-                onClick={() => void playSession()}
+                className={playbackActive
+                  ? "inline-flex items-center gap-2 border border-rose-300/70 bg-rose-500/10 px-4 py-2 text-sm font-semibold text-rose-100"
+                  : "inline-flex items-center gap-2 bg-[var(--lv-accent)] px-4 py-2 text-sm font-semibold text-stone-950"}
+                data-testid="pre-analysis-playback-toggle"
+                title={playbackActive ? copy.stop : copy.play}
+                aria-label={playbackActive ? copy.stop : copy.play}
+                onClick={() => {
+                  if (playbackActive) {
+                    stopSessionPlayback();
+                  } else {
+                    void playSession();
+                  }
+                }}
               >
-                <Volume2 size={16} className="mr-2 inline" aria-hidden="true" />
-                {copy.play}
-              </button>
-              <button
-                type="button"
-                className="border border-[var(--lv-border-strong)] p-2 disabled:opacity-40"
-                title={copy.stop}
-                aria-label={copy.stop}
-                disabled={!playbackActive && !onStop}
-                onClick={stopSessionPlayback}
-              >
-                <Square size={16} aria-hidden="true" />
+                {playbackActive
+                  ? <Square size={16} aria-hidden="true" />
+                  : <Play size={16} fill="currentColor" aria-hidden="true" />}
+                {playbackActive ? copy.stop : copy.play}
               </button>
               <label className="ml-2 flex items-center gap-2 text-sm">
                 <input
@@ -323,7 +379,7 @@ export function PreAnalysisWorkspace({
                 Follow
               </label>
               <span className="ml-auto text-sm text-[var(--lv-text-muted)]">
-                {formatBeatTime(viewportStartBeat)} / {formatBeatTime(sessionDuration(session))}
+                {formatBeatTime(playheadBeat)} / {formatBeatTime(sessionDuration(session))}
               </span>
             </div>
             {playbackError ? (
@@ -345,15 +401,20 @@ export function PreAnalysisWorkspace({
                     pianoRollDisplayScope === "analysis-targets"
                   }
                   onSelectVoice={setSelectedVoiceId}
-                  onViewportStartChange={setViewportStartBeat}
+                  onViewportStartChange={setViewportPosition}
+                  onPlayheadBeatChange={(beat) => {
+                    stopSessionPlayback();
+                    setPlayheadBeat(beat);
+                  }}
                 />
                 <PreAnalysisTimeScrollbar
                   language={language}
                   totalBeats={sessionDuration(session)}
                   visibleBeats={pianoRollVisibleBeatCount(session, zoom)}
-                  startBeat={viewportStartBeat}
+                  viewportStartBeat={viewportStartBeat}
+                  positionBeat={playheadBeat}
                   beatsPerBar={sessionBeatsPerBar(session)}
-                  onStartBeatChange={setViewportStartBeat}
+                  onPositionBeatChange={setTimelinePosition}
                 />
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
@@ -640,17 +701,8 @@ export function PreAnalysisWorkspace({
           </div>
         ) : null}
 
-        <div className="mt-5 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--lv-border)] pt-5">
+        <div className="mt-5 border-t border-[var(--lv-border)] pt-5">
           <p className="text-sm text-[var(--lv-text-secondary)]">{recommended}</p>
-          <button
-            type="button"
-            className="bg-[var(--lv-accent)] px-5 py-3 font-semibold text-stone-950 disabled:opacity-40"
-            data-testid="pre-analysis-analyze"
-            disabled={busy || includedCount === 0}
-            onClick={onAnalyze}
-          >
-            {busy ? copy.preparing : copy.analyze}
-          </button>
         </div>
       </div>
     </section>
@@ -688,6 +740,20 @@ function sessionDuration(session: AnalysisSession): number {
   return Math.max(0, ...session.sources.map((source) => source.durationBeats));
 }
 
+function viewportStartForBeat(
+  session: AnalysisSession,
+  zoom: number,
+  beat: number,
+): number {
+  const totalBeats = sessionDuration(session);
+  const visibleBeats = Math.min(
+    totalBeats,
+    pianoRollVisibleBeatCount(session, zoom),
+  );
+  const maxStart = Math.max(0, totalBeats - visibleBeats);
+  return clamp(beat - visibleBeats / 2, 0, maxStart);
+}
+
 function sessionBeatsPerBar(session: AnalysisSession): number {
   const source = session.sources.find((candidate) =>
     candidate.id === session.masterSourceId) ?? session.sources[0];
@@ -709,6 +775,10 @@ function formatBeatTime(beats: number): string {
 function formatClock(seconds: number): string {
   const minutes = Math.floor(seconds / 60);
   return `${String(minutes).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
+}
+
+function clamp(value: number, minimum: number, maximum: number): number {
+  return Math.min(maximum, Math.max(minimum, value));
 }
 
 function sourceSummary(source: AnalysisSession["sources"][number]): string {
