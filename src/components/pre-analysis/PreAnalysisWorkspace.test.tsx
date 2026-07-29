@@ -123,6 +123,53 @@ describe("PreAnalysisWorkspace", () => {
     await unmount();
   });
 
+  it("turns a re-selected excluded part into analyzable harmony and keeps drums unavailable", async () => {
+    const base = fixtureSession();
+    const target = base.voices.find((voice) =>
+      !voice.isDrum && !voice.duplicateOf)!;
+    const session: AnalysisSession = {
+      ...base,
+      preset: "custom",
+      voices: base.voices.map((voice) => voice.id === target.id
+        ? {
+            ...voice,
+            autoRole: "exclude",
+            assignedRole: "exclude",
+            included: false,
+          }
+        : voice),
+    };
+    const { container, unmount } = await renderStatefulWorkspace(session);
+    const targetCheckbox = container.querySelector<HTMLInputElement>(
+      `input[aria-label="${target.displayName}を解析対象にする"]`,
+    )!;
+    const targetRole = container.querySelector<HTMLSelectElement>(
+      `select[aria-label="${target.displayName}の解析役割"]`,
+    )!;
+    const drumCheckbox = container.querySelector<HTMLInputElement>(
+      'input[aria-label="Drumsを解析対象にする"]',
+    )!;
+
+    expect(targetCheckbox.checked).toBe(false);
+    expect(targetCheckbox.disabled).toBe(false);
+    expect(targetRole.value).toBe("exclude");
+    expect(drumCheckbox.disabled).toBe(true);
+
+    await act(async () => targetCheckbox.click());
+
+    expect(container.querySelector<HTMLInputElement>(
+      `input[aria-label="${target.displayName}を解析対象にする"]`,
+    )?.checked).toBe(true);
+    expect(container.querySelector<HTMLSelectElement>(
+      `select[aria-label="${target.displayName}の解析役割"]`,
+    )?.value).toBe("harmony");
+    expect(container.querySelector<HTMLElement>(
+      '[data-analysis-preset="custom"]',
+    )?.getAttribute("aria-checked")).toBe("true");
+
+    await unmount();
+  });
+
   it("keeps the Piano Roll synchronized with the selected analysis preset", async () => {
     const base = createAnalysisSession([{
       sourceId: "preset-visual",
@@ -200,6 +247,7 @@ describe("PreAnalysisWorkspace", () => {
     const scrollbar = container.querySelector<HTMLDivElement>(
       "[data-testid='pre-analysis-time-scrollbar']",
     )!;
+    expect(scrollbar.className).toContain("cursor-pointer");
     await act(async () => {
       scrollbar.dispatchEvent(new KeyboardEvent("keydown", {
         key: "End",
@@ -215,6 +263,7 @@ describe("PreAnalysisWorkspace", () => {
     const canvas = container.querySelector<HTMLCanvasElement>(
       "[data-testid='pre-analysis-piano-roll']",
     )!;
+    expect(canvas.className).toContain("cursor-pointer");
     canvas.getBoundingClientRect = () => ({
       x: 0,
       y: 0,

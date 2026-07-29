@@ -103,7 +103,7 @@ export function PreAnalysisTimeScrollbar({
       </div>
       <div
         ref={trackRef}
-        className="relative h-6 touch-none cursor-ew-resize border-y border-[var(--lv-border-strong)] bg-[#0a111b] focus:outline-none focus:ring-2 focus:ring-[var(--lv-accent)]"
+        className="relative h-6 touch-none cursor-pointer border-y border-[var(--lv-border-strong)] bg-[#0a111b] focus:outline-none focus:ring-2 focus:ring-[var(--lv-accent)]"
         role="slider"
         tabIndex={0}
         aria-label={language === "ja"

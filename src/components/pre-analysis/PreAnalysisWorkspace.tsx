@@ -568,16 +568,26 @@ export function PreAnalysisWorkspace({
                                 }`}
                                 style={{ borderLeftColor: color }}
                                 data-voice-id={voice.id}
+                                data-voice-channel={voice.channel}
                                 data-voice-color={color}
                                 data-selected={selectedVoiceId === voice.id || undefined}
                               >
                                 <input
                                   type="checkbox"
                                   checked={voice.included}
+                                  disabled={voice.isDrum || Boolean(voice.duplicateOf)}
                                   aria-label={copy.includeVoice(voice.displayName)}
-                                  onChange={(event) => updateVoice(voice.id, {
-                                    included: event.currentTarget.checked,
-                                  })}
+                                  onChange={(event) => {
+                                    const included = event.currentTarget.checked;
+                                    const assignedRole = included
+                                      && voice.assignedRole === "exclude"
+                                      ? selectableRoleFor(voice.autoRole)
+                                      : voice.assignedRole;
+                                    updateVoice(voice.id, {
+                                      included,
+                                      assignedRole,
+                                    });
+                                  }}
                                 />
                                 <button
                                   type="button"
@@ -645,6 +655,7 @@ export function PreAnalysisWorkspace({
                                     className="border border-[var(--lv-border)] bg-[var(--lv-bg)] px-2 py-1 text-xs"
                                     aria-label={copy.roleFor(voice.displayName)}
                                     value={voice.assignedRole}
+                                    disabled={voice.isDrum || Boolean(voice.duplicateOf)}
                                     onChange={(event) => {
                                       const assignedRole = event.currentTarget.value as PreAnalysisVoiceRole;
                                       updateVoice(voice.id, {
@@ -779,6 +790,12 @@ function formatClock(seconds: number): string {
 
 function clamp(value: number, minimum: number, maximum: number): number {
   return Math.min(maximum, Math.max(minimum, value));
+}
+
+function selectableRoleFor(
+  role: PreAnalysisVoiceRole,
+): Exclude<PreAnalysisVoiceRole, "exclude"> {
+  return role === "exclude" ? "harmony" : role;
 }
 
 function sourceSummary(source: AnalysisSession["sources"][number]): string {
