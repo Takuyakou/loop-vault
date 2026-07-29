@@ -122,6 +122,16 @@ describe("Phase 5.1 Analysis Session", () => {
     expect(session.warnings.some((warning) =>
       warning.code === "exact-duplicate")).toBe(true);
     expect(selectedSessionNotes(session).filter((note) => note.pitch === 48)).toHaveLength(1);
+
+    const custom = {
+      ...updateAnalysisSessionVoice(session, allBass.id, {
+        assignedRole: "harmony",
+        included: true,
+      }),
+      preset: "custom" as const,
+    };
+    expect(selectedSessionNotes(custom).filter((note) =>
+      note.pitch === 48)).toHaveLength(2);
   });
 
   it("warns on near duplicate without excluding either Voice", () => {

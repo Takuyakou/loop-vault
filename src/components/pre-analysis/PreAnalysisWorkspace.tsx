@@ -338,7 +338,7 @@ export function PreAnalysisWorkspace({
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-l-2 border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] px-4 py-3">
             <p className="text-sm text-[var(--lv-text-secondary)]">
               {copy.compactSummary(session.voices.find((voice) =>
-                voice.included && !voice.isDrum)?.displayName ?? copy.unknownVoice)}
+                voice.included)?.displayName ?? copy.unknownVoice)}
             </p>
             <span className="text-xs text-[var(--lv-text-muted)]">
               {copy.optionalDetails}
@@ -575,7 +575,10 @@ export function PreAnalysisWorkspace({
                                 <input
                                   type="checkbox"
                                   checked={voice.included}
-                                  disabled={voice.isDrum || Boolean(voice.duplicateOf)}
+                                  disabled={
+                                    session.preset !== "custom"
+                                    && (voice.isDrum || Boolean(voice.duplicateOf))
+                                  }
                                   aria-label={copy.includeVoice(voice.displayName)}
                                   onChange={(event) => {
                                     const included = event.currentTarget.checked;
@@ -655,7 +658,10 @@ export function PreAnalysisWorkspace({
                                     className="border border-[var(--lv-border)] bg-[var(--lv-bg)] px-2 py-1 text-xs"
                                     aria-label={copy.roleFor(voice.displayName)}
                                     value={voice.assignedRole}
-                                    disabled={voice.isDrum || Boolean(voice.duplicateOf)}
+                                    disabled={
+                                      session.preset !== "custom"
+                                      && (voice.isDrum || Boolean(voice.duplicateOf))
+                                    }
                                     onChange={(event) => {
                                       const assignedRole = event.currentTarget.value as PreAnalysisVoiceRole;
                                       updateVoice(voice.id, {

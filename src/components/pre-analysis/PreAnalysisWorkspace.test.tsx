@@ -123,13 +123,15 @@ describe("PreAnalysisWorkspace", () => {
     await unmount();
   });
 
-  it("turns a re-selected excluded part into analyzable harmony and keeps drums unavailable", async () => {
+  it("locks protected Voices by default and enables them in Custom", async () => {
     const base = fixtureSession();
     const target = base.voices.find((voice) =>
       !voice.isDrum && !voice.duplicateOf)!;
+    const drum = base.voices.find((voice) => voice.isDrum)!;
+    const duplicate = base.voices.find((voice) => voice.duplicateOf)!;
     const session: AnalysisSession = {
       ...base,
-      preset: "custom",
+      preset: "auto",
       voices: base.voices.map((voice) => voice.id === target.id
         ? {
             ...voice,
@@ -140,29 +142,45 @@ describe("PreAnalysisWorkspace", () => {
         : voice),
     };
     const { container, unmount } = await renderStatefulWorkspace(session);
-    const targetCheckbox = container.querySelector<HTMLInputElement>(
-      `input[aria-label="${target.displayName}を解析対象にする"]`,
-    )!;
-    const targetRole = container.querySelector<HTMLSelectElement>(
-      `select[aria-label="${target.displayName}の解析役割"]`,
-    )!;
-    const drumCheckbox = container.querySelector<HTMLInputElement>(
-      'input[aria-label="Drumsを解析対象にする"]',
-    )!;
+    const controlsFor = (voiceId: string) => {
+      const row = [...container.querySelectorAll<HTMLElement>("[data-voice-id]")]
+        .find((candidate) => candidate.dataset.voiceId === voiceId)!;
+      return {
+        checkbox: row.querySelector<HTMLInputElement>('input[type="checkbox"]')!,
+        role: row.querySelector<HTMLSelectElement>("select")!,
+      };
+    };
 
-    expect(targetCheckbox.checked).toBe(false);
-    expect(targetCheckbox.disabled).toBe(false);
-    expect(targetRole.value).toBe("exclude");
-    expect(drumCheckbox.disabled).toBe(true);
+    expect(controlsFor(drum.id).checkbox.checked).toBe(false);
+    expect(controlsFor(drum.id).checkbox.disabled).toBe(true);
+    expect(controlsFor(drum.id).role.disabled).toBe(true);
+    expect(controlsFor(duplicate.id).checkbox.checked).toBe(false);
+    expect(controlsFor(duplicate.id).checkbox.disabled).toBe(true);
+    expect(controlsFor(duplicate.id).role.disabled).toBe(true);
 
-    await act(async () => targetCheckbox.click());
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>(
+        '[data-analysis-preset="custom"]',
+      )?.click();
+    });
 
-    expect(container.querySelector<HTMLInputElement>(
-      `input[aria-label="${target.displayName}を解析対象にする"]`,
-    )?.checked).toBe(true);
-    expect(container.querySelector<HTMLSelectElement>(
-      `select[aria-label="${target.displayName}の解析役割"]`,
-    )?.value).toBe("harmony");
+    expect(controlsFor(drum.id).checkbox.disabled).toBe(false);
+    expect(controlsFor(drum.id).role.disabled).toBe(false);
+    expect(controlsFor(duplicate.id).checkbox.disabled).toBe(false);
+    expect(controlsFor(duplicate.id).role.disabled).toBe(false);
+
+    await act(async () => {
+      controlsFor(target.id).checkbox.click();
+      controlsFor(drum.id).checkbox.click();
+      controlsFor(duplicate.id).checkbox.click();
+    });
+
+    expect(controlsFor(target.id).checkbox.checked).toBe(true);
+    expect(controlsFor(target.id).role.value).toBe("harmony");
+    expect(controlsFor(drum.id).checkbox.checked).toBe(true);
+    expect(controlsFor(drum.id).role.value).toBe("harmony");
+    expect(controlsFor(duplicate.id).checkbox.checked).toBe(true);
+    expect(controlsFor(duplicate.id).role.value).not.toBe("exclude");
     expect(container.querySelector<HTMLElement>(
       '[data-analysis-preset="custom"]',
     )?.getAttribute("aria-checked")).toBe("true");

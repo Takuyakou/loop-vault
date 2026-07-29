@@ -175,6 +175,63 @@ describe("Phase 5.1 analyzer input", () => {
     expect(request.options.preparedData?.notes).toHaveLength(3);
   });
 
+  it("includes an exact duplicate when explicitly selected in Custom", () => {
+    const bytes = chordMidi(480, 0, [60, 64, 67]);
+    const initial = createAnalysisSession([
+      { sourceId: "full", displayName: "full.mid", bytes },
+      { sourceId: "split", displayName: "split.mid", bytes },
+    ]).session!;
+    const duplicate = initial.voices.find((voice) => voice.duplicateOf)!;
+    const session = {
+      ...updateAnalysisSessionVoice(initial, duplicate.id, {
+        assignedRole: "harmony",
+        included: true,
+      }),
+      preset: "custom" as const,
+    };
+
+    const request = buildSessionAnalysisRequest(session);
+
+    expect(request.selectedVoiceIds).toContain(duplicate.id);
+    expect(request.options.preparedData?.tracks).toHaveLength(2);
+    expect(request.options.preparedData?.notes).toHaveLength(6);
+  });
+
+  it("includes drums when explicitly selected in Custom", () => {
+    const bytes = midi(480, [[
+      noteOn(0, 60),
+      noteOn(0, 64),
+      noteOn(0, 67),
+      noteOn(9, 36),
+      noteOff(0, 60, 480),
+      noteOff(0, 64),
+      noteOff(0, 67),
+      noteOff(9, 36),
+      endOfTrack(),
+    ]]);
+    const initial = createAnalysisSession([{
+      sourceId: "full",
+      displayName: "drums.mid",
+      bytes,
+    }]).session!;
+    const drum = initial.voices.find((voice) => voice.isDrum)!;
+    const session = {
+      ...updateAnalysisSessionVoice(initial, drum.id, {
+        assignedRole: "harmony",
+        included: true,
+      }),
+      preset: "custom" as const,
+    };
+
+    const request = buildSessionAnalysisRequest(session);
+
+    expect(request.selectedVoiceIds).toContain(drum.id);
+    expect(request.options.preparedData?.notes.some((note) =>
+      note.channel === 9)).toBe(true);
+    expect(request.options.preparedData?.tracks.find((track) =>
+      track.channel === 9)?.roleOverride).toBe("harmony");
+  });
+
   it("preserves sustain controls for selected voices", () => {
     const bytes = midi(480, [[
       controlChange(0, 64, 127),

@@ -125,7 +125,7 @@ export function selectedSessionNotes(
 ): PreAnalysisNote[] {
   const included = new Set(
     session.voices
-      .filter((voice) => voice.included && voice.duplicateOf === undefined)
+      .filter((voice) => voice.included)
       .map((voice) => voice.id),
   );
   return session.notes.filter((note) => included.has(note.voiceId));

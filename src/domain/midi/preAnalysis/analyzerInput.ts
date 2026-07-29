@@ -179,9 +179,7 @@ function buildPreparedAnalysisInput(
 
 function isSelectedVoice(voice: AnalysisSessionVoice): boolean {
   return voice.included
-    && !voice.isDrum
-    && voice.assignedRole !== "exclude"
-    && voice.duplicateOf === undefined;
+    && voice.assignedRole !== "exclude";
 }
 
 function trackRoleFor(role: PreAnalysisVoiceRole): TrackRole {

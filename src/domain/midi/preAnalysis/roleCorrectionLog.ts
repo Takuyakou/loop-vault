@@ -67,9 +67,9 @@ export function buildRoleCorrectionLogEvents(
     preset: session.preset,
     manuallyChanged: voice.assignedRole !== voice.autoRole,
     includedForAnalysis: voice.included
-      && voice.assignedRole !== "exclude"
-      && voice.duplicateOf === undefined,
-    exactDuplicateExcluded: voice.duplicateOf !== undefined,
+      && voice.assignedRole !== "exclude",
+    exactDuplicateExcluded: voice.duplicateOf !== undefined
+      && !voice.included,
     analyzeExecuted: true,
     occurredAt,
   }));
