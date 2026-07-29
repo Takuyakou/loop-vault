@@ -188,7 +188,7 @@ export function PreAnalysisWorkspace({
               className="mt-3 inline-flex items-center gap-2 text-sm text-[var(--lv-text-secondary)] hover:text-[var(--lv-text)]"
               onClick={() => onSessionChange(resetAnalysisSessionAuto(session))}
             >
-              <RotateCcw size={15} aria-hidden="true" />
+              <RotateCcw size={16} aria-hidden="true" />
               {copy.resetAuto}
             </button>
 
@@ -211,8 +211,8 @@ export function PreAnalysisWorkspace({
                           source.id,
                           { visible: !source.visible },
                         ))}
-                        activeIcon={<Eye size={15} />}
-                        inactiveIcon={<EyeOff size={15} />}
+                        activeIcon={<Eye size={16} />}
+                        inactiveIcon={<EyeOff size={16} />}
                       />
                       <IconToggle
                         active={source.muted}
@@ -222,8 +222,8 @@ export function PreAnalysisWorkspace({
                           source.id,
                           { muted: !source.muted },
                         ))}
-                        activeIcon={<VolumeX size={15} />}
-                        inactiveIcon={<Volume2 size={15} />}
+                        activeIcon={<VolumeX size={16} />}
+                        inactiveIcon={<Volume2 size={16} />}
                       />
                       <button
                         type="button"
@@ -233,7 +233,7 @@ export function PreAnalysisWorkspace({
                         disabled={session.sources.length === 1}
                         onClick={() => onRemoveSource(source.id)}
                       >
-                        <Trash2 size={15} aria-hidden="true" />
+                        <Trash2 size={16} aria-hidden="true" />
                       </button>
                     </div>
                     <div className="mt-2 grid gap-1">
@@ -278,8 +278,8 @@ export function PreAnalysisWorkspace({
                             onClick={() => updateVoice(voice.id, {
                               visible: !voice.visible,
                             })}
-                            activeIcon={<Eye size={14} />}
-                            inactiveIcon={<EyeOff size={14} />}
+                            activeIcon={<Eye size={16} />}
+                            inactiveIcon={<EyeOff size={16} />}
                           />
                           <button
                             type="button"
