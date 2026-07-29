@@ -136,13 +136,28 @@ export type { ConfidenceFeatures, ConfidenceLevel, ConfidenceResult } from "./co
 export type { MergedDecodedSegment } from "./merge";
 export type { MidiChordCorrectionEvent } from "./feedback";
 export {
+  addMidiSources,
+  createAnalysisSession,
   createMidiSourceId,
   gmProgramName,
   preAnalysisRoleFromProductRole,
   preAnalysisVoiceId,
   preScanMidiSource,
+  removeMidiSource,
+  selectedSessionNotes,
+  updateAnalysisSessionSource,
+  updateAnalysisSessionVoice,
 } from "./preAnalysis";
 export type {
+  AnalysisSession,
+  AnalysisSessionIntakeResult,
+  AnalysisSessionSource,
+  AnalysisSessionVoice,
+  AnalysisSessionWarning,
+  AnalysisSessionWarningCode,
+  MidiIntakeIssue,
+  MidiIntakeIssueCode,
+  MidiSourceInput,
   PreAnalysisMidiSource,
   PreAnalysisNote,
   PreAnalysisSelectionPreset,

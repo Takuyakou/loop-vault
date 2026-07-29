@@ -75,3 +75,61 @@ export interface PreAnalysisSourceScan {
   voices: PreAnalysisVoice[];
   notes: PreAnalysisNote[];
 }
+
+export type AnalysisSessionWarningCode =
+  | "tempo-map-mismatch"
+  | "time-signature-mismatch"
+  | "duration-mismatch"
+  | "start-position-mismatch"
+  | "exact-duplicate"
+  | "near-duplicate";
+
+export interface AnalysisSessionWarning {
+  code: AnalysisSessionWarningCode;
+  sourceIds: string[];
+  voiceIds?: string[];
+}
+
+export interface AnalysisSessionSource extends PreAnalysisMidiSource {
+  bytes: Uint8Array;
+  visible: boolean;
+  muted: boolean;
+}
+
+export interface AnalysisSessionVoice extends PreAnalysisVoice {
+  duplicateOf?: string;
+  duplicateKind?: "exact";
+}
+
+export interface AnalysisSession {
+  id: string;
+  masterSourceId: string;
+  sources: AnalysisSessionSource[];
+  voices: AnalysisSessionVoice[];
+  notes: PreAnalysisNote[];
+  preset: PreAnalysisSelectionPreset;
+  warnings: AnalysisSessionWarning[];
+  latestSourceId?: string;
+}
+
+export type MidiIntakeIssueCode =
+  | "invalid-midi"
+  | "unsupported-format"
+  | "empty-midi";
+
+export interface MidiIntakeIssue {
+  inputIndex: number;
+  code: MidiIntakeIssueCode;
+  message: string;
+}
+
+export interface MidiSourceInput {
+  bytes: Uint8Array;
+  displayName: string;
+  sourceId?: string;
+}
+
+export interface AnalysisSessionIntakeResult {
+  session?: AnalysisSession;
+  issues: MidiIntakeIssue[];
+}
