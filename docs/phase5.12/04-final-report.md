@@ -68,6 +68,17 @@ Build日時: 2026-07-30 00:45 JST
 
 絶対pathはGit管理文書へ保存せず、repository相対pathだけを記録した。
 
+## Git / PR
+
+| Item | Value |
+|---|---|
+| Branch | `fix/p5-12-inline-preanalysis-product-path` |
+| PR | [#309](https://github.com/Takuyakou/loop-vault/pull/309) |
+| Base | `fix/p5-1-complex-midi-preanalysis` / PR #308 |
+| Source implementation commit | `61b3d8c9b691c354870010ed3539866dc3404c8b` |
+| Validation report commit | `7c66854` |
+| Merge order | #308 → #309 |
+
 ## Warnings
 
 - Viteはminified JS chunk 1,281.52kBに対して500kB超の警告を出す。
