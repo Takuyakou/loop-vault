@@ -15,6 +15,11 @@ export interface RawSmfSong {
   tempo?: number;
   tempoChanges: MidiTempoChange[];
   timeSignature: [number, number];
+  timeSignatureChanges: {
+    tick: number;
+    numerator: number;
+    denominator: number;
+  }[];
   notes: ParsedTimedNote[];
   tracks: RawSmfTrack[];
   controlChanges: MidiControlChange[];
@@ -70,7 +75,7 @@ export function parseRawSmf(bytes: Uint8Array): RawSmfSong {
       tick += event.deltaTime;
 
       if (event.type === "trackName" && !name) {
-        name = event.text;
+        name = decodeMidiText(event.text);
         return;
       }
       if (event.type === "setTempo") {
@@ -152,8 +157,9 @@ export function parseRawSmf(bytes: Uint8Array): RawSmfSong {
   closeDanglingNotes(activeNotes, notes, trackEndTicks);
 
   const orderedTempos = orderTimed(tempos);
+  const orderedTimeSignatures = orderTimed(timeSignatures);
   const tempo = orderedTempos[0]?.value;
-  const timeSignature = firstTimedValue(timeSignatures) ?? [4, 4];
+  const timeSignature = orderedTimeSignatures[0]?.value ?? [4, 4];
 
   return {
     format: midi.header.format,
@@ -161,6 +167,10 @@ export function parseRawSmf(bytes: Uint8Array): RawSmfSong {
     ...(tempo !== undefined ? { tempo } : {}),
     tempoChanges: orderedTempos.map(({ tick, value: bpm }) => ({ tick, bpm })),
     timeSignature,
+    timeSignatureChanges: orderedTimeSignatures.map(({
+      tick,
+      value: [numerator, denominator],
+    }) => ({ tick, numerator, denominator })),
     notes: notes.sort(compareNotes),
     tracks,
     controlChanges: controlChanges.sort(
@@ -171,6 +181,19 @@ export function parseRawSmf(bytes: Uint8Array): RawSmfSong {
 
 function isChannelEvent(event: MidiEvent): event is Extract<MidiEvent, { channel: number }> {
   return "channel" in event;
+}
+
+function decodeMidiText(text: string): string {
+  if ([...text].some((character) => character.charCodeAt(0) > 0xff)) {
+    return text;
+  }
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(
+      Uint8Array.from([...text].map((character) => character.charCodeAt(0))),
+    );
+  } catch {
+    return text;
+  }
 }
 
 function noteKey(trackIndex: number, channel: number, pitch: number): string {
@@ -236,10 +259,6 @@ function compareNotes(a: TimedNote, b: TimedNote): number {
     || a.trackIndex - b.trackIndex
     || (a.channel ?? -1) - (b.channel ?? -1)
     || a.durationTick - b.durationTick;
-}
-
-function firstTimedValue<T>(values: TimedMeta<T>[]): T | undefined {
-  return orderTimed(values)[0]?.value;
 }
 
 function orderTimed<T extends { tick: number; trackIndex: number; eventIndex: number }>(values: T[]): T[] {
