@@ -116,7 +116,7 @@ export function PreAnalysisPianoRoll({
   );
 }
 
-interface DrawOptions {
+export interface PreAnalysisPianoRollDrawOptions {
   session: AnalysisSession;
   selectedVoiceId?: string;
   zoom: number;
@@ -124,11 +124,11 @@ interface DrawOptions {
   playheadBeat: number;
 }
 
-function drawPianoRoll(
+export function drawPianoRoll(
   context: CanvasRenderingContext2D,
   width: number,
   height: number,
-  options: DrawOptions,
+  options: PreAnalysisPianoRollDrawOptions,
   hitAreasRef: { current: NoteHitArea[] },
 ) {
   const { session, selectedVoiceId, zoom, viewportStartBeat, playheadBeat } = options;
