@@ -123,6 +123,71 @@ describe("PreAnalysisWorkspace", () => {
     await unmount();
   });
 
+  it("locks protected Voices by default and enables them in Custom", async () => {
+    const base = fixtureSession();
+    const target = base.voices.find((voice) =>
+      !voice.isDrum && !voice.duplicateOf)!;
+    const drum = base.voices.find((voice) => voice.isDrum)!;
+    const duplicate = base.voices.find((voice) => voice.duplicateOf)!;
+    const session: AnalysisSession = {
+      ...base,
+      preset: "auto",
+      voices: base.voices.map((voice) => voice.id === target.id
+        ? {
+            ...voice,
+            autoRole: "exclude",
+            assignedRole: "exclude",
+            included: false,
+          }
+        : voice),
+    };
+    const { container, unmount } = await renderStatefulWorkspace(session);
+    const controlsFor = (voiceId: string) => {
+      const row = [...container.querySelectorAll<HTMLElement>("[data-voice-id]")]
+        .find((candidate) => candidate.dataset.voiceId === voiceId)!;
+      return {
+        checkbox: row.querySelector<HTMLInputElement>('input[type="checkbox"]')!,
+        role: row.querySelector<HTMLSelectElement>("select")!,
+      };
+    };
+
+    expect(controlsFor(drum.id).checkbox.checked).toBe(false);
+    expect(controlsFor(drum.id).checkbox.disabled).toBe(true);
+    expect(controlsFor(drum.id).role.disabled).toBe(true);
+    expect(controlsFor(duplicate.id).checkbox.checked).toBe(false);
+    expect(controlsFor(duplicate.id).checkbox.disabled).toBe(true);
+    expect(controlsFor(duplicate.id).role.disabled).toBe(true);
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>(
+        '[data-analysis-preset="custom"]',
+      )?.click();
+    });
+
+    expect(controlsFor(drum.id).checkbox.disabled).toBe(false);
+    expect(controlsFor(drum.id).role.disabled).toBe(false);
+    expect(controlsFor(duplicate.id).checkbox.disabled).toBe(false);
+    expect(controlsFor(duplicate.id).role.disabled).toBe(false);
+
+    await act(async () => {
+      controlsFor(target.id).checkbox.click();
+      controlsFor(drum.id).checkbox.click();
+      controlsFor(duplicate.id).checkbox.click();
+    });
+
+    expect(controlsFor(target.id).checkbox.checked).toBe(true);
+    expect(controlsFor(target.id).role.value).toBe("harmony");
+    expect(controlsFor(drum.id).checkbox.checked).toBe(true);
+    expect(controlsFor(drum.id).role.value).toBe("harmony");
+    expect(controlsFor(duplicate.id).checkbox.checked).toBe(true);
+    expect(controlsFor(duplicate.id).role.value).not.toBe("exclude");
+    expect(container.querySelector<HTMLElement>(
+      '[data-analysis-preset="custom"]',
+    )?.getAttribute("aria-checked")).toBe("true");
+
+    await unmount();
+  });
+
   it("keeps the Piano Roll synchronized with the selected analysis preset", async () => {
     const base = createAnalysisSession([{
       sourceId: "preset-visual",
@@ -200,6 +265,7 @@ describe("PreAnalysisWorkspace", () => {
     const scrollbar = container.querySelector<HTMLDivElement>(
       "[data-testid='pre-analysis-time-scrollbar']",
     )!;
+    expect(scrollbar.className).toContain("cursor-pointer");
     await act(async () => {
       scrollbar.dispatchEvent(new KeyboardEvent("keydown", {
         key: "End",
@@ -215,6 +281,7 @@ describe("PreAnalysisWorkspace", () => {
     const canvas = container.querySelector<HTMLCanvasElement>(
       "[data-testid='pre-analysis-piano-roll']",
     )!;
+    expect(canvas.className).toContain("cursor-pointer");
     canvas.getBoundingClientRect = () => ({
       x: 0,
       y: 0,

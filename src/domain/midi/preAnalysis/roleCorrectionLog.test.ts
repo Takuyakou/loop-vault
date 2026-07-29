@@ -49,6 +49,27 @@ describe("Phase 5.1 role correction log", () => {
     expect(result.events).toEqual([event]);
     expect(result.invalidLineCount).toBe(2);
   });
+
+  it("records an explicitly selected duplicate as included in Custom", () => {
+    const base = session();
+    const duplicateSession: AnalysisSession = {
+      ...base,
+      voices: [{
+        ...base.voices[0],
+        id: "private-source:1:0",
+        duplicateOf: base.voices[0].id,
+        included: true,
+      }],
+    };
+
+    const event = buildRoleCorrectionLogEvents(
+      duplicateSession,
+      "2026-07-29T12:00:00.000Z",
+    )[0];
+
+    expect(event.includedForAnalysis).toBe(true);
+    expect(event.exactDuplicateExcluded).toBe(false);
+  });
 });
 
 function session(): AnalysisSession {

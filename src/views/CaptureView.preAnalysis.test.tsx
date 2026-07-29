@@ -90,6 +90,54 @@ describe("Phase 5.12 Capture product path", () => {
     await mounted.unmount();
   }, 20_000);
 
+  it("passes a custom part selection through the product Analyze button", async () => {
+    const analyzerCalls: AnalyzeMidiOptions[] = [];
+    const mounted = await renderCaptureProduct(analyzerCalls);
+
+    await dropMidi(
+      mounted.container,
+      "all_instruments.mid",
+      allInstrumentsMidi(),
+    );
+    await waitFor(() =>
+      mounted.container.querySelectorAll("[data-voice-id]").length === 11);
+
+    const selectedRow = [
+      ...mounted.container.querySelectorAll<HTMLElement>("[data-voice-id]"),
+    ].find((row) => row.querySelector<HTMLInputElement>(
+      'input[type="checkbox"]:checked:not(:disabled)',
+    ));
+    const selectedCheckbox = selectedRow?.querySelector<HTMLInputElement>(
+      'input[type="checkbox"]',
+    );
+    const excludedChannel = Number(selectedRow?.dataset.voiceChannel);
+    expect(selectedCheckbox).toBeDefined();
+    expect(Number.isInteger(excludedChannel)).toBe(true);
+
+    await act(async () => selectedCheckbox?.click());
+    expect(mounted.container.querySelector<HTMLElement>(
+      '[data-analysis-preset="custom"]',
+    )?.getAttribute("aria-checked")).toBe("true");
+
+    await act(async () => {
+      mounted.container.querySelector<HTMLButtonElement>(
+        "[data-testid='pre-analysis-analyze']",
+      )?.click();
+    });
+    await waitFor(() => analyzerCalls.length === 1);
+
+    const prepared = analyzerCalls[0].preparedData;
+    expect(prepared).toBeDefined();
+    expect(prepared?.notes.some((note) =>
+      note.channel === excludedChannel)).toBe(false);
+    expect(prepared?.tracks.some((track) =>
+      track.channel === excludedChannel)).toBe(false);
+    expect(analyzerCalls[0].analysisInput?.enabledVoiceIds)
+      .toHaveLength(prepared?.tracks.length ?? 0);
+
+    await mounted.unmount();
+  }, 20_000);
+
   it("routes the file picker through the same eleven-Voice inline surface", async () => {
     Object.defineProperty(window, "__TAURI_INTERNALS__", {
       configurable: true,

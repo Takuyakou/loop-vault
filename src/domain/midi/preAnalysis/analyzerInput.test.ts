@@ -5,6 +5,7 @@ import { analyzeMidi } from "../analysis";
 import { inferTrackRoles } from "../legacy";
 import {
   addMidiSources,
+  applyAnalysisSessionPreset,
   createAnalysisSession,
   updateAnalysisSessionVoice,
 } from "./analysisSession";
@@ -92,6 +93,46 @@ describe("Phase 5.1 analyzer input", () => {
     expect(serialized).not.toContain("parts.mid");
   });
 
+  it("rebuilds analyzer input from only the Voices selected by each explicit preset", () => {
+    const base = createAnalysisSession([{
+      sourceId: "master",
+      displayName: "preset-parts.mid",
+      bytes: multiVoiceMidi(480),
+    }]).session!;
+    const roles = ["harmony", "bass", "melody-weak"] as const;
+    const session = {
+      ...base,
+      voices: base.voices.map((voice, index) => ({
+        ...voice,
+        autoRole: roles[index],
+        assignedRole: roles[index],
+        included: true,
+      })),
+    };
+    const cases = [
+      ["harmony-bass", [0, 1], ["harmony", "bass"]],
+      ["accompaniment-only", [0], ["harmony"]],
+      ["all-pitched", [0, 1, 2], ["harmony", "bass", "melody"]],
+    ] as const;
+
+    for (const [preset, expectedChannels, expectedRoles] of cases) {
+      const selected = applyAnalysisSessionPreset(session, preset);
+      const request = buildSessionAnalysisRequest(selected);
+      const prepared = request.options.preparedData!;
+
+      expect(request.backwardEquivalent).toBe(false);
+      expect([...new Set(prepared.notes.map((note) => note.channel))])
+        .toEqual(expectedChannels);
+      expect(prepared.tracks.map((track) => track.roleOverride))
+        .toEqual(expectedRoles);
+      expect(request.selectedVoiceIds).toEqual(
+        selected.voices.filter((voice) => voice.included).map((voice) => voice.id),
+      );
+      expect(request.options.analysisInput?.enabledVoiceIds)
+        .toHaveLength(expectedChannels.length);
+    }
+  });
+
   it("normalizes added source PPQ to the master beat grid", () => {
     const master = chordMidi(480, 0, [60, 64, 67]);
     const added = chordMidi(960, 1, [36]);
@@ -132,6 +173,63 @@ describe("Phase 5.1 analyzer input", () => {
       warning.code === "exact-duplicate")).toBe(true);
     expect(request.selectedVoiceIds).toHaveLength(1);
     expect(request.options.preparedData?.notes).toHaveLength(3);
+  });
+
+  it("includes an exact duplicate when explicitly selected in Custom", () => {
+    const bytes = chordMidi(480, 0, [60, 64, 67]);
+    const initial = createAnalysisSession([
+      { sourceId: "full", displayName: "full.mid", bytes },
+      { sourceId: "split", displayName: "split.mid", bytes },
+    ]).session!;
+    const duplicate = initial.voices.find((voice) => voice.duplicateOf)!;
+    const session = {
+      ...updateAnalysisSessionVoice(initial, duplicate.id, {
+        assignedRole: "harmony",
+        included: true,
+      }),
+      preset: "custom" as const,
+    };
+
+    const request = buildSessionAnalysisRequest(session);
+
+    expect(request.selectedVoiceIds).toContain(duplicate.id);
+    expect(request.options.preparedData?.tracks).toHaveLength(2);
+    expect(request.options.preparedData?.notes).toHaveLength(6);
+  });
+
+  it("includes drums when explicitly selected in Custom", () => {
+    const bytes = midi(480, [[
+      noteOn(0, 60),
+      noteOn(0, 64),
+      noteOn(0, 67),
+      noteOn(9, 36),
+      noteOff(0, 60, 480),
+      noteOff(0, 64),
+      noteOff(0, 67),
+      noteOff(9, 36),
+      endOfTrack(),
+    ]]);
+    const initial = createAnalysisSession([{
+      sourceId: "full",
+      displayName: "drums.mid",
+      bytes,
+    }]).session!;
+    const drum = initial.voices.find((voice) => voice.isDrum)!;
+    const session = {
+      ...updateAnalysisSessionVoice(initial, drum.id, {
+        assignedRole: "harmony",
+        included: true,
+      }),
+      preset: "custom" as const,
+    };
+
+    const request = buildSessionAnalysisRequest(session);
+
+    expect(request.selectedVoiceIds).toContain(drum.id);
+    expect(request.options.preparedData?.notes.some((note) =>
+      note.channel === 9)).toBe(true);
+    expect(request.options.preparedData?.tracks.find((track) =>
+      track.channel === 9)?.roleOverride).toBe("harmony");
   });
 
   it("preserves sustain controls for selected voices", () => {
