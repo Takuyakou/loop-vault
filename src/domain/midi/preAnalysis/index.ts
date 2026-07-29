@@ -15,6 +15,13 @@ export {
   isBackwardEquivalentSession,
 } from "./analyzerInput";
 export type { SessionAnalysisRequest } from "./analyzerInput";
+export { sessionPreviewNotes } from "./sessionPlayback";
+export {
+  buildRoleCorrectionLogEvents,
+  readRoleCorrectionLogJsonl,
+  roleCorrectionLogEventSchema,
+} from "./roleCorrectionLog";
+export type { RoleCorrectionLogEvent } from "./roleCorrectionLog";
 export {
   createMidiSourceId,
   preAnalysisRoleFromProductRole,

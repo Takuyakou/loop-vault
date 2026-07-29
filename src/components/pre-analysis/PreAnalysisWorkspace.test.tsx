@@ -127,6 +127,37 @@ describe("PreAnalysisWorkspace", () => {
 
     await unmount();
   });
+
+  it("keeps Voice audition controls independent and exposes Play / Stop", async () => {
+    const session = fixtureSession();
+    const onSessionChange = vi.fn();
+    const onPlay = vi.fn();
+    const onStop = vi.fn();
+    const { container, unmount } = await renderWorkspace(session, {
+      onSessionChange,
+      onPlay,
+      onStop,
+    });
+
+    await act(async () => {
+      [...container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent?.includes("再生"))?.click();
+      container.querySelector<HTMLButtonElement>(
+        'button[aria-label="停止"]',
+      )?.click();
+      container.querySelector<HTMLButtonElement>(
+        'button[aria-label="Acoustic Grand Pianoをミュート"]',
+      )?.click();
+    });
+
+    expect(onPlay).toHaveBeenCalledOnce();
+    expect(onStop).toHaveBeenCalledTimes(2);
+    expect(lastSession(onSessionChange).voices.find((voice) =>
+      voice.displayName === "Acoustic Grand Piano")).toMatchObject({
+      muted: true,
+    });
+    await unmount();
+  });
 });
 
 async function renderWorkspace(

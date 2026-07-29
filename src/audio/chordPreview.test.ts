@@ -26,11 +26,13 @@ const tone = vi.hoisted(() => {
 
   const voices: unknown[] = [];
   const samplers: AudioNode[] = [];
+  const polySynths: AudioNode[] = [];
 
   class PolySynth extends AudioNode {
     constructor(voice: unknown) {
       super();
       voices.push(voice);
+      polySynths.push(this);
     }
   }
 
@@ -48,6 +50,7 @@ const tone = vi.hoisted(() => {
     Sampler,
     Synth,
     loaded: vi.fn().mockResolvedValue(undefined),
+    polySynths,
     samplers,
     start: vi.fn().mockResolvedValue(undefined),
     voices,
@@ -69,7 +72,11 @@ vi.mock("tone", () => ({
   start: tone.start,
 }));
 
-import { previewChord, stopPreview } from "./chordPreview";
+import {
+  previewChord,
+  previewMidiNotes,
+  stopPreview,
+} from "./chordPreview";
 
 const chord = {
   root: 0,
@@ -126,6 +133,34 @@ describe("chord preview instruments", () => {
     expect(ended).toHaveBeenCalledWith("completed");
     stopPreview();
     expect(ended).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
+
+  it("plays raw MIDI notes in bounded windows and releases them on stop", async () => {
+    vi.useFakeTimers();
+    const started = vi.fn();
+    const ended = vi.fn();
+    await previewMidiNotes([
+      { pitch: 60, startBeat: 0, durationBeats: 1, velocity: 100 },
+      { pitch: 64, startBeat: 8, durationBeats: 1, velocity: 100 },
+    ], 120, "electric-piano", { onStarted: started, onEnded: ended });
+
+    await vi.advanceTimersByTimeAsync(10);
+    const electric = tone.polySynths[tone.polySynths.length - 1]!;
+    expect(started).toHaveBeenCalledOnce();
+    expect(electric.triggerAttackRelease).toHaveBeenCalledWith(
+      "C4",
+      0.5,
+      undefined,
+      100 / 127,
+    );
+    expect(ended).not.toHaveBeenCalled();
+    stopPreview();
+    expect(ended).toHaveBeenCalledWith("stopped");
+    expect(electric.releaseAll).toHaveBeenCalled();
+    const triggerCount = electric.triggerAttackRelease.mock.calls.length;
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(electric.triggerAttackRelease).toHaveBeenCalledTimes(triggerCount);
     vi.useRealTimers();
   });
 });

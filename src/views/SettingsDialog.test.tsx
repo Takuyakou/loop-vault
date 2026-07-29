@@ -19,6 +19,8 @@ const mocks = vi.hoisted(() => ({
   exportAnalysisFeedback: vi.fn(async () => 2),
   deleteLabelCorrectionLog: vi.fn(async () => undefined),
   exportLabelCorrectionLog: vi.fn(async () => 3),
+  deleteRoleCorrectionLog: vi.fn(async () => undefined),
+  exportRoleCorrectionLog: vi.fn(async () => 4),
   deleteDifferenceReviews: vi.fn(async () => undefined),
   deletePromotedCorrections: vi.fn(async () => undefined),
   deleteRealEvaluationData: vi.fn(async () => undefined),
@@ -41,6 +43,10 @@ vi.mock("../storage/analysisFeedbackStorage", () => ({
 vi.mock("../storage/labelCorrectionLogStorage", () => ({
   deleteLabelCorrectionLog: mocks.deleteLabelCorrectionLog,
   exportLabelCorrectionLog: mocks.exportLabelCorrectionLog,
+}));
+vi.mock("../storage/roleCorrectionLogStorage", () => ({
+  deleteRoleCorrectionLog: mocks.deleteRoleCorrectionLog,
+  exportRoleCorrectionLog: mocks.exportRoleCorrectionLog,
 }));
 vi.mock("../storage/realEvaluationStorage", () => ({
   deleteDifferenceReviews: mocks.deleteDifferenceReviews,
@@ -185,13 +191,18 @@ describe("SettingsDialog sections", () => {
     await clickButton(appCopy.ja.settingsUi.exportCorrectionLog, dialogs()[0]);
     expect(mocks.exportLabelCorrectionLog)
       .toHaveBeenCalledWith("C:/exports/label-corrections.jsonl");
+    await clickButton("役割修正ログを書き出す", dialogs()[0]);
+    expect(mocks.exportRoleCorrectionLog)
+      .toHaveBeenCalledWith("C:/exports/label-corrections.jsonl");
 
     await clickButton(appCopy.ja.settingsUi.deleteCorrectionLog, dialogs()[0]);
     expect(mocks.deleteAnalysisFeedback).not.toHaveBeenCalled();
     expect(mocks.deleteLabelCorrectionLog).not.toHaveBeenCalled();
+    expect(mocks.deleteRoleCorrectionLog).not.toHaveBeenCalled();
     await clickButton(appCopy.ja.settingsUi.delete, dialogs()[1]);
     expect(mocks.deleteAnalysisFeedback).toHaveBeenCalledTimes(1);
     expect(mocks.deleteLabelCorrectionLog).toHaveBeenCalledTimes(1);
+    expect(mocks.deleteRoleCorrectionLog).toHaveBeenCalledTimes(1);
     await mounted.unmount();
   });
 });

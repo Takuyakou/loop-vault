@@ -22,6 +22,13 @@ export interface PreviewLifecycleCallbacks {
   onEnded?(reason: PreviewEndReason): void;
 }
 
+export interface MidiPreviewNote {
+  pitch: number;
+  startBeat: number;
+  durationBeats: number;
+  velocity: number;
+}
+
 const PIANO_SAMPLE_URLS = {
   A0: "A0.mp3",
   C1: "C1.mp3",
@@ -118,6 +125,83 @@ export async function previewChordTimeline(
       completionDelayMs,
     ),
   );
+}
+
+export async function previewMidiNotes(
+  notes: readonly MidiPreviewNote[],
+  bpm = 96,
+  sound: PreviewSound = "electric-piano",
+  callbacks: PreviewLifecycleCallbacks = {},
+): Promise<void> {
+  const ordered = [...notes]
+    .filter((note) =>
+      Number.isFinite(note.startBeat)
+      && Number.isFinite(note.durationBeats)
+      && note.durationBeats > 0)
+    .sort((left, right) =>
+      left.startBeat - right.startBeat
+      || left.pitch - right.pitch
+      || left.durationBeats - right.durationBeats);
+  const session = beginPreview(callbacks);
+  if (!ordered.length) {
+    finishPreview(session, "completed");
+    return;
+  }
+  const target = await preparePreviewAudio(sound, session);
+  if (!target || !isActive(session)) return;
+
+  const beatSeconds = 60 / Math.max(1, bpm);
+  const startedAt = performanceNow();
+  const lookAheadSeconds = 1.5;
+  const schedulerIntervalMs = 200;
+  let nextIndex = 0;
+  callbacks.onStarted?.();
+
+  const scheduleWindow = () => {
+    if (!isActive(session)) return;
+    const elapsedSeconds = (performanceNow() - startedAt) / 1000;
+    const horizonSeconds = elapsedSeconds + lookAheadSeconds;
+    while (
+      nextIndex < ordered.length
+      && ordered[nextIndex].startBeat * beatSeconds <= horizonSeconds
+    ) {
+      const note = ordered[nextIndex];
+      nextIndex += 1;
+      const delayMs = Math.max(
+        0,
+        note.startBeat * beatSeconds * 1000
+          - (performanceNow() - startedAt),
+      );
+      scheduledTimers.push(globalThis.setTimeout(() => {
+        if (!isActive(session)) return;
+        target.triggerAttackRelease(
+          midiToNoteName(note.pitch),
+          Math.max(0.05, note.durationBeats * beatSeconds),
+          undefined,
+          normalizeMidiVelocity(note.velocity),
+        );
+      }, delayMs));
+    }
+    if (nextIndex < ordered.length) {
+      scheduledTimers.push(globalThis.setTimeout(
+        scheduleWindow,
+        schedulerIntervalMs,
+      ));
+      return;
+    }
+    const lastEndSeconds = ordered.reduce(
+      (maximum, note) => Math.max(
+        maximum,
+        (note.startBeat + note.durationBeats) * beatSeconds,
+      ),
+      0,
+    );
+    scheduledTimers.push(globalThis.setTimeout(
+      () => finishPreview(session, "completed"),
+      Math.max(0, lastEndSeconds * 1000 - (performanceNow() - startedAt)),
+    ));
+  };
+  scheduleWindow();
 }
 
 export function stopPreview(): void {
@@ -351,6 +435,14 @@ function midiToNoteName(note: number): string {
   const pc = ((Math.trunc(note) % 12) + 12) % 12;
   const octave = Math.floor(note / 12) - 1;
   return `${names[pc]}${octave}`;
+}
+
+function normalizeMidiVelocity(value: number): number {
+  return Math.max(0.05, Math.min(1, value > 1 ? value / 127 : value));
+}
+
+function performanceNow(): number {
+  return globalThis.performance?.now() ?? Date.now();
 }
 
 function absoluteBeat(bar: number, beat: number, beatsPerBar: number): number {
