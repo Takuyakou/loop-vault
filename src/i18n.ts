@@ -22,6 +22,11 @@ export const appCopy = {
       formatInfo: "形式情報",
       appFormat: "アプリ形式: 1",
       dataFormat: "データ形式: 1",
+      appVersion: (version: string) => `アプリ版: ${version}`,
+      buildCommit: (commit: string) => `Build commit: ${commit}`,
+      buildDate: (date: string) => `Build日時: ${date}`,
+      preAnalysisStatus: (enabled: boolean) =>
+        `Pre-Analysis Part Selection: ${enabled ? "ON" : "OFF"}`,
       dataLocation: "データ保存先",
       dataPathFallback: "デスクトップアプリのデータ保存場所",
       openFolder: "フォルダを開く",
@@ -582,6 +587,11 @@ export const appCopy = {
       formatInfo: "Format information",
       appFormat: "App format: 1",
       dataFormat: "Data format: 1",
+      appVersion: (version: string) => `App version: ${version}`,
+      buildCommit: (commit: string) => `Build commit: ${commit}`,
+      buildDate: (date: string) => `Built: ${date}`,
+      preAnalysisStatus: (enabled: boolean) =>
+        `Pre-Analysis Part Selection: ${enabled ? "ON" : "OFF"}`,
       dataLocation: "Data location",
       dataPathFallback: "Desktop app data location",
       openFolder: "Open folder",

@@ -164,6 +164,22 @@ describe("SettingsDialog sections", () => {
     await mounted.unmount();
   });
 
+  it("shows build identity and the current pre-analysis rollback state", async () => {
+    const mounted = await renderSettings();
+    const buildInfo = document.querySelector("[data-testid='loop-vault-build-info']");
+
+    expect(buildInfo?.textContent).toContain("アプリ版:");
+    expect(buildInfo?.textContent).toContain("Build commit:");
+    expect(buildInfo?.textContent).toContain("Build日時:");
+    expect(buildInfo?.textContent).toContain("Pre-Analysis Part Selection: ON");
+
+    await click(findButton(appCopy.ja.settingsUi.analysis, dialogs()[0]));
+    await click(checkboxForLabel("解析前のパート選択を有効にする", dialogs()[0]!));
+    expect(buildInfo?.textContent).toContain("Pre-Analysis Part Selection: OFF");
+
+    await mounted.unmount();
+  });
+
   it("shows only the latest five backups until all are requested", async () => {
     const backups = Array.from({ length: 6 }, (_, index) => ({
       name: `data-backup-${index + 1}.json`,

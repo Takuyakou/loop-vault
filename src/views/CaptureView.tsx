@@ -582,6 +582,35 @@ export function CaptureView(props: CaptureViewProps) {
     onDrop: handleDrop,
   };
 
+  useEffect(() => {
+    if (!activeDraft) return undefined;
+    const keyboardDraft: ManualCandidateDraft = activeDraft;
+    function onKeyDown(event: KeyboardEvent) {
+      if (
+        event.defaultPrevented
+        || event.isComposing
+        || event.ctrlKey
+        || event.metaKey
+        || event.altKey
+        || isEditableKeyboardTarget(event.target)
+      ) return;
+      const key = event.key.toLowerCase();
+      if (key === "escape") {
+        if (controller.getState().source?.kind !== "capture") return;
+        event.preventDefault();
+        stopCapturePlayback(controller);
+      } else if (key === "a" && draftHasMidiSourcePreview(keyboardDraft)) {
+        event.preventDefault();
+        void previewSourceDraft(keyboardDraft);
+      } else if (key === "b") {
+        event.preventDefault();
+        void previewManualDraft(keyboardDraft);
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [activeDraft, controller, previewSound, result?.bpm, result?.timeSignature]);
+
   function saveNew(
     candidate: ProgressionBlockCandidate,
     title: string,
@@ -842,7 +871,11 @@ export function CaptureView(props: CaptureViewProps) {
         source.id === preAnalysisSession.masterSourceId)
         ?? preAnalysisSession.sources[0];
       return (
-        <div {...dropHandlers}>
+        <div
+          data-capture-stage="pre-analysis"
+          data-capture-midi-drop-zone
+          {...dropHandlers}
+        >
           {isDraggingMidi ? <DropOverlay copy={copy} /> : null}
           <PreAnalysisWorkspace
             session={preAnalysisSession}
@@ -882,7 +915,12 @@ export function CaptureView(props: CaptureViewProps) {
       );
     }
     return (
-      <div className="py-5" {...dropHandlers}>
+      <div
+        className="py-5"
+        data-capture-stage="empty"
+        data-capture-midi-drop-zone
+        {...dropHandlers}
+      >
         <CaptureEmptyState
           status={analysis.status}
           error={analysis.error}
@@ -1101,41 +1139,16 @@ export function CaptureView(props: CaptureViewProps) {
     );
   }
 
-  useEffect(() => {
-    if (!activeDraft) return undefined;
-    const keyboardDraft: ManualCandidateDraft = activeDraft;
-    function onKeyDown(event: KeyboardEvent) {
-      if (
-        event.defaultPrevented
-        || event.isComposing
-        || event.ctrlKey
-        || event.metaKey
-        || event.altKey
-        || isEditableKeyboardTarget(event.target)
-      ) return;
-      const key = event.key.toLowerCase();
-      if (key === "escape") {
-        if (controller.getState().source?.kind !== "capture") return;
-        event.preventDefault();
-        stopCapturePlayback(controller);
-      } else if (key === "a" && draftHasMidiSourcePreview(keyboardDraft)) {
-        event.preventDefault();
-        void previewSourceDraft(keyboardDraft);
-      } else if (key === "b") {
-        event.preventDefault();
-        void previewManualDraft(keyboardDraft);
-      }
-    }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [activeDraft, controller, previewSound, result?.bpm, result?.timeSignature]);
-
   return (
-    <div data-capture-view-root>
+    <div data-capture-view-root data-capture-stage="result">
       {analysisProgress ? (
         <CaptureAnalysisProgress stage={analysisProgress} copy={copy} />
       ) : null}
-      <div className="lv-capture-content grid gap-5 py-5" {...dropHandlers}>
+      <div
+        className="lv-capture-content grid gap-5 py-5"
+        data-capture-midi-drop-zone
+        {...dropHandlers}
+      >
       {isDraggingMidi ? <DropOverlay copy={copy} /> : null}
       <section className="border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">

@@ -9,11 +9,18 @@ export interface PreAnalysisSourceSelectionSettings {
 }
 
 export interface PreAnalysisReviewSession {
-  sources: readonly unknown[];
+  sources: readonly {
+    id?: string;
+    smfType?: number;
+  }[];
   voices: readonly {
+    sourceId?: string;
+    channel?: number;
     isDrum: boolean;
+    autoRole?: string;
     autoRoleConfidence: number;
   }[];
+  warnings?: readonly unknown[];
 }
 
 export const defaultPreAnalysisSourceSelectionSettings:
@@ -57,24 +64,30 @@ export function setPreAnalysisSourceSelectionSettings(
 }
 
 export function shouldOpenPreAnalysis(
-  profile: AnalysisProfile,
+  _profile: AnalysisProfile,
   settings = getPreAnalysisSourceSelectionSettings(),
-  session?: PreAnalysisReviewSession,
+  _session?: PreAnalysisReviewSession,
 ): boolean {
-  return settings.enablePreAnalysisSourceSelection
-    && (
-      profile === "accuracy-first"
-      || settings.alwaysShowPreAnalysis
-      || (session !== undefined && needsPreAnalysisReview(session))
-    );
+  return settings.enablePreAnalysisSourceSelection;
 }
 
 export function needsPreAnalysisReview(
   session: PreAnalysisReviewSession,
 ): boolean {
   const pitchedVoices = session.voices.filter((voice) => !voice.isDrum);
+  const typeZeroMultiChannel = session.sources.some((source) => (
+    source.smfType === 0
+    && source.id !== undefined
+    && new Set(session.voices
+      .filter((voice) => voice.sourceId === source.id)
+      .map((voice) => voice.channel))
+      .size > 1
+  ));
   return session.sources.length > 1
     || pitchedVoices.length > 1
     || session.voices.some((voice) => voice.isDrum)
-    || pitchedVoices.some((voice) => voice.autoRoleConfidence < 0.45);
+    || pitchedVoices.some((voice) => voice.autoRole === "melody-weak")
+    || pitchedVoices.some((voice) => voice.autoRoleConfidence < 0.45)
+    || Boolean(session.warnings?.length)
+    || typeZeroMultiChannel;
 }
