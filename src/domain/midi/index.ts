@@ -137,6 +137,7 @@ export type { MergedDecodedSegment } from "./merge";
 export type { MidiChordCorrectionEvent } from "./feedback";
 export {
   addMidiSources,
+  applyAnalysisSessionPreset,
   createAnalysisSession,
   createMidiSourceId,
   gmProgramName,
@@ -144,6 +145,7 @@ export {
   preAnalysisVoiceId,
   preScanMidiSource,
   removeMidiSource,
+  resetAnalysisSessionAuto,
   selectedSessionNotes,
   updateAnalysisSessionSource,
   updateAnalysisSessionVoice,

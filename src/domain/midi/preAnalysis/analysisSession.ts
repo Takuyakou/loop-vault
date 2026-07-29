@@ -11,6 +11,7 @@ import type {
   MidiIntakeIssue,
   MidiSourceInput,
   PreAnalysisNote,
+  PreAnalysisSelectionPreset,
 } from "./types";
 
 const nearDuplicateThreshold = 0.9;
@@ -68,6 +69,40 @@ export function updateAnalysisSessionVoice(
     voices: session.voices.map((voice) =>
       voice.id === voiceId ? { ...voice, ...changes } : voice),
   };
+}
+
+export function applyAnalysisSessionPreset(
+  session: AnalysisSession,
+  preset: PreAnalysisSelectionPreset,
+): AnalysisSession {
+  if (preset === "custom") return { ...session, preset };
+  const voices = session.voices.map((voice): AnalysisSessionVoice => {
+    const assignedRole = preset === "auto"
+      ? voice.autoRole
+      : voice.assignedRole;
+    const included = voice.duplicateOf === undefined
+      && !voice.isDrum
+      && (
+        preset === "all-pitched"
+        || (preset === "harmony-bass"
+          && (assignedRole === "harmony" || assignedRole === "bass"))
+        || (preset === "accompaniment-only" && assignedRole === "harmony")
+        || (preset === "auto" && assignedRole !== "exclude")
+      );
+    return {
+      ...voice,
+      assignedRole,
+      included,
+      solo: false,
+    };
+  });
+  return { ...session, voices, preset };
+}
+
+export function resetAnalysisSessionAuto(
+  session: AnalysisSession,
+): AnalysisSession {
+  return applyAnalysisSessionPreset(session, "auto");
 }
 
 export function updateAnalysisSessionSource(
