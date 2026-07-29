@@ -54,7 +54,15 @@ import type {
   SimilarityContext,
   SimilarityVoiceContext,
 } from "../domain/progressionEditing";
-import { beatsPerBar as beatsPerBarFor, buildCorrectionEvents } from "../domain/midi";
+import {
+  addMidiSources,
+  beatsPerBar as beatsPerBarFor,
+  buildCorrectionEvents,
+  createAnalysisSession,
+  removeMidiSource,
+  type AnalysisSession,
+  type MidiSourceInput,
+} from "../domain/midi";
 import { buildLabelCorrectionLogs } from "../domain/midi/labelCorrectionLog";
 import type { AnalysisInput, AnalyzeMidiOptions } from "../domain/midi/types";
 import {
@@ -127,6 +135,7 @@ import {
 import { CaptureEditHistoryPanel } from "../components/CaptureEditHistoryPanel";
 import { DraftBoundaryHandles } from "../components/DraftBoundaryHandles";
 import { CaptureDraftSessionBar } from "../components/CaptureDraftSessionBar";
+import { PreAnalysisWorkspace } from "../components/pre-analysis/PreAnalysisWorkspace";
 import { cutDraftRangeAtEvent } from "../domain/midi/draftRangeEditing";
 import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
 import { ProgressionEditSummary } from "../components/progression-editing/ProgressionEditSummary";
@@ -208,6 +217,7 @@ export function CaptureView(props: CaptureViewProps) {
   const [isTimelineOpen, setTimelineOpen] = useState(false);
   const [timelineScrollBar, setTimelineScrollBar] = useState<number>();
   const [sourcePath, setSourcePath] = useState<string>();
+  const [preAnalysisSession, setPreAnalysisSession] = useState<AnalysisSession>();
   const { sound: previewSound, setSound: setPreviewSound } = usePreviewSound();
   const [activeDraft, setActiveDraft] = useState<ManualCandidateDraft | null>(null);
   const [analysisProgress, setAnalysisProgress] = useState<CaptureAnalysisProgressStage>();
@@ -321,9 +331,48 @@ export function CaptureView(props: CaptureViewProps) {
     [analyzeMidiBytes, controller, copy.toast.midiAnalyzed, copy.toast.midiFailed, setToast],
   );
 
+  const prepareMidiInputs = useCallback(
+    async (
+      inputs: readonly MidiSourceInput[],
+      options: { append?: boolean; sourcePath?: string } = {},
+    ) => {
+      stopCapturePlayback(controller);
+      setAnalysisProgress("reading");
+      await waitForNextPaint();
+      const intake = options.append && preAnalysisSession
+        ? addMidiSources(preAnalysisSession, inputs)
+        : createAnalysisSession(inputs);
+      if (!intake.session) {
+        setAnalysisProgress(undefined);
+        const issue = intake.issues[0];
+        setToast(issue?.message ?? copy.toast.midiReadFailed);
+        return;
+      }
+      clearAnalysis();
+      setPreAnalysisSession(intake.session);
+      if (!options.append) {
+        setSourcePath(options.sourcePath);
+      }
+      setActiveDraft(null);
+      setExpandedCandidateId(undefined);
+      setAnalysisProgress(undefined);
+      if (intake.issues.length) {
+        setToast(intake.issues[0].message);
+      }
+    },
+    [
+      clearAnalysis,
+      controller,
+      copy.toast.midiReadFailed,
+      preAnalysisSession,
+      setToast,
+    ],
+  );
+
   const analyzeMidiPath = useCallback(
-    async (path: string) => {
-      if (!isMidiFileName(path)) {
+    async (paths: readonly string[], append = false) => {
+      const midiPaths = paths.filter(isMidiFileName);
+      if (!midiPaths.length) {
         setToast(copy.toast.midiDropInvalid);
         return;
       }
@@ -331,20 +380,26 @@ export function CaptureView(props: CaptureViewProps) {
       try {
         setAnalysisProgress("reading");
         await waitForNextPaint();
-        const bytes = await readFile(path);
-        setSourcePath(path);
-        await analyzeMidiBytesWithToast(bytes, fileNameFromPath(path));
+        const inputs = await Promise.all(midiPaths.map(async (path): Promise<MidiSourceInput> => ({
+          bytes: await readFile(path),
+          displayName: fileNameFromPath(path),
+        })));
+        await prepareMidiInputs(inputs, {
+          append,
+          sourcePath: append ? undefined : midiPaths[0],
+        });
       } catch (error) {
         setAnalysisProgress(undefined);
         setToast(error instanceof Error ? error.message : copy.toast.midiReadFailed);
       }
     },
-    [analyzeMidiBytesWithToast, copy.toast.midiDropInvalid, copy.toast.midiReadFailed, setToast],
+    [copy.toast.midiDropInvalid, copy.toast.midiReadFailed, prepareMidiInputs, setToast],
   );
 
   const analyzeDroppedFile = useCallback(
-    async (file: File) => {
-      if (!isMidiFileName(file.name)) {
+    async (files: readonly File[], append = false) => {
+      const midiFiles = files.filter((file) => isMidiFileName(file.name));
+      if (!midiFiles.length) {
         setToast(copy.toast.midiDropInvalid);
         return;
       }
@@ -352,15 +407,17 @@ export function CaptureView(props: CaptureViewProps) {
       try {
         setAnalysisProgress("reading");
         await waitForNextPaint();
-        const bytes = new Uint8Array(await file.arrayBuffer());
-        setSourcePath(undefined);
-        await analyzeMidiBytesWithToast(bytes, file.name);
+        const inputs = await Promise.all(midiFiles.map(async (file): Promise<MidiSourceInput> => ({
+          bytes: new Uint8Array(await file.arrayBuffer()),
+          displayName: file.name,
+        })));
+        await prepareMidiInputs(inputs, { append });
       } catch (error) {
         setAnalysisProgress(undefined);
         setToast(error instanceof Error ? error.message : copy.toast.midiReadFailed);
       }
     },
-    [analyzeMidiBytesWithToast, copy.toast.midiDropInvalid, copy.toast.midiReadFailed, setToast],
+    [copy.toast.midiDropInvalid, copy.toast.midiReadFailed, prepareMidiInputs, setToast],
   );
 
   useEffect(() => {
@@ -384,13 +441,13 @@ export function CaptureView(props: CaptureViewProps) {
         }
 
         setIsDraggingMidi(false);
-        const path = event.payload.paths.find(isMidiFileName);
-        if (!path) {
+        const paths = event.payload.paths.filter(isMidiFileName);
+        if (!paths.length) {
           setToast(copy.toast.midiDropInvalid);
           return;
         }
 
-        void analyzeMidiPath(path);
+        void analyzeMidiPath(paths, Boolean(preAnalysisSession));
       })
       .then((listener) => {
         if (disposed) {
@@ -408,9 +465,9 @@ export function CaptureView(props: CaptureViewProps) {
       disposed = true;
       unlisten?.();
     };
-  }, [analyzeMidiPath, copy.toast.midiDropInvalid, setToast]);
+  }, [analyzeMidiPath, copy.toast.midiDropInvalid, preAnalysisSession, setToast]);
 
-  async function chooseMidi() {
+  async function chooseMidi(append = false) {
     stopCapturePlayback(controller);
     if (!("__TAURI_INTERNALS__" in window)) {
       setToast(copy.toast.desktopMidiOnly);
@@ -418,14 +475,17 @@ export function CaptureView(props: CaptureViewProps) {
     }
 
     const path = await openFileDialog({
-      multiple: false,
+      multiple: true,
       filters: [{ name: "MIDI", extensions: ["mid", "midi"] }],
     });
-    if (typeof path !== "string") {
+    if (!path) {
       return;
     }
 
-    await analyzeMidiPath(path);
+    await analyzeMidiPath(
+      typeof path === "string" ? [path] : path,
+      append,
+    );
   }
 
   function handleDragEnter(event: DragEvent<HTMLDivElement>) {
@@ -462,13 +522,14 @@ export function CaptureView(props: CaptureViewProps) {
 
     event.preventDefault();
     setIsDraggingMidi(false);
-    const file = Array.from(event.dataTransfer.files).find((item) => isMidiFileName(item.name));
-    if (!file) {
+    const files = Array.from(event.dataTransfer.files).filter((item) =>
+      isMidiFileName(item.name));
+    if (!files.length) {
       setToast(copy.toast.midiDropInvalid);
       return;
     }
 
-    void analyzeDroppedFile(file);
+    void analyzeDroppedFile(files, Boolean(preAnalysisSession));
   }
 
   const dropHandlers = {
@@ -733,12 +794,37 @@ export function CaptureView(props: CaptureViewProps) {
   }
 
   if (!result) {
+    if (preAnalysisSession) {
+      const master = preAnalysisSession.sources.find((source) =>
+        source.id === preAnalysisSession.masterSourceId)
+        ?? preAnalysisSession.sources[0];
+      return (
+        <div {...dropHandlers}>
+          {isDraggingMidi ? <DropOverlay copy={copy} /> : null}
+          <PreAnalysisWorkspace
+            session={preAnalysisSession}
+            language={language}
+            busy={analysisProgress !== undefined}
+            onSessionChange={setPreAnalysisSession}
+            onAddMidi={() => void chooseMidi(true)}
+            onRemoveSource={(sourceId) => {
+              const next = removeMidiSource(preAnalysisSession, sourceId);
+              if (next) setPreAnalysisSession(next);
+            }}
+            onAnalyze={() => {
+              if (!master) return;
+              void analyzeMidiBytesWithToast(master.bytes, master.displayName);
+            }}
+          />
+        </div>
+      );
+    }
     return (
       <div className="py-5" {...dropHandlers}>
         <CaptureEmptyState
           status={analysis.status}
           error={analysis.error}
-          onChooseMidi={() => void chooseMidi()}
+          onChooseMidi={() => void chooseMidi(false)}
           isDraggingMidi={isDraggingMidi}
           copy={copy}
           progressStage={analysisProgress}
@@ -1002,10 +1088,21 @@ export function CaptureView(props: CaptureViewProps) {
             </p>
           </div>
           <div className="flex gap-2">
-            <button className="rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => void chooseMidi()}>
+            {preAnalysisSession ? (
+              <button
+                className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm"
+                onClick={() => {
+                  stopCapturePlayback(controller);
+                  clearAnalysis();
+                }}
+              >
+                {language === "ja" ? "パート選択を変更" : "Change part selection"}
+              </button>
+            ) : null}
+            <button className="rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => void chooseMidi(false)}>
               {copy.capture.chooseAnother}
             </button>
-            <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => { stopCapturePlayback(controller); clearAnalysis(); setSourcePath(undefined); }}>
+            <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => { stopCapturePlayback(controller); clearAnalysis(); setPreAnalysisSession(undefined); setSourcePath(undefined); }}>
               {copy.capture.clear}
             </button>
           </div>

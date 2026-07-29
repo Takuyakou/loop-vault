@@ -3,6 +3,7 @@ import { writeMidi } from "midi-file";
 import { describe, expect, it } from "vitest";
 import {
   addMidiSources,
+  applyAnalysisSessionPreset,
   createAnalysisSession,
   removeMidiSource,
   selectedSessionNotes,
@@ -201,6 +202,35 @@ describe("Phase 5.1 Analysis Session", () => {
     ];
 
     expect(createAnalysisSession(inputs)).toEqual(createAnalysisSession(inputs));
+  });
+
+  it("applies all five preset states without including drums", () => {
+    const session = createAnalysisSession([
+      input("voices", midi(0, 480, [[
+        noteOn(0, 36),
+        noteOn(1, 60),
+        noteOn(9, 42),
+        noteOff(0, 36, 480),
+        noteOff(1, 60),
+        noteOff(9, 42),
+        endOfTrack(),
+      ]])),
+    ]).session!;
+    const harmonyBass = applyAnalysisSessionPreset(session, "harmony-bass");
+    const accompaniment = applyAnalysisSessionPreset(session, "accompaniment-only");
+    const allPitched = applyAnalysisSessionPreset(session, "all-pitched");
+    const custom = applyAnalysisSessionPreset(session, "custom");
+    const auto = applyAnalysisSessionPreset(session, "auto");
+
+    expect(harmonyBass.preset).toBe("harmony-bass");
+    expect(accompaniment.preset).toBe("accompaniment-only");
+    expect(allPitched.voices.filter((voice) => voice.included).map((voice) =>
+      voice.channel)).toEqual([0, 1]);
+    expect(allPitched.voices.find((voice) => voice.channel === 9)?.included).toBe(false);
+    expect(custom.preset).toBe("custom");
+    expect(auto.voices.map((voice) => voice.assignedRole)).toEqual(
+      auto.voices.map((voice) => voice.autoRole),
+    );
   });
 });
 
