@@ -35,6 +35,22 @@ describe("PreAnalysisWorkspace", () => {
     await unmount();
   });
 
+  it("renders every Voice from an all-in-one Type 0 MIDI", async () => {
+    const session = createAnalysisSession([{
+      sourceId: "all-in-one",
+      displayName: "all_instruments.mid",
+      bytes: midi(Array.from({ length: 11 }, (_, channel) => channel)),
+    }]).session!;
+    const { container, unmount } = await renderWorkspace(session);
+
+    expect(session.sources).toHaveLength(1);
+    expect(session.voices).toHaveLength(11);
+    expect(container.querySelectorAll("select")).toHaveLength(11);
+    expect(container.textContent).toContain("Drums");
+
+    await unmount();
+  });
+
   it("switches presets and moves manual role edits to Custom", async () => {
     const session = fixtureSession();
     const onSessionChange = vi.fn();
@@ -243,14 +259,14 @@ function midi(channels: readonly number[]): Uint8Array {
       deltaTime: 0,
       type: "noteOn",
       channel,
-      noteNumber: channel === 9 ? 36 : 48 + index * 12,
+      noteNumber: channel === 9 ? 36 : 48 + (index % 4) * 7,
       velocity: 100,
     });
     events.push({
       deltaTime: 480,
       type: "noteOff",
       channel,
-      noteNumber: channel === 9 ? 36 : 48 + index * 12,
+      noteNumber: channel === 9 ? 36 : 48 + (index % 4) * 7,
       velocity: 0,
     });
   });

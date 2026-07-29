@@ -95,7 +95,10 @@ import {
   getAnalysisProfileAnalyzeOptions,
   getAnalysisProfileSettings,
 } from "../storage/accuracyFirstSettings";
-import { shouldOpenPreAnalysis } from "../storage/preAnalysisSettings";
+import {
+  getPreAnalysisSourceSelectionSettings,
+  shouldOpenPreAnalysis,
+} from "../storage/preAnalysisSettings";
 import type { PreviewSound } from "../audio/chordPreview";
 import {
   playbackController,
@@ -370,7 +373,11 @@ export function CaptureView(props: CaptureViewProps) {
       }
       if (
         !options.append
-        && !shouldOpenPreAnalysis(getAnalysisProfileSettings().profile)
+        && !shouldOpenPreAnalysis(
+          getAnalysisProfileSettings().profile,
+          getPreAnalysisSourceSelectionSettings(),
+          intake.session,
+        )
       ) {
         setPreAnalysisSession(undefined);
         setSourcePath(options.sourcePath);
@@ -510,7 +517,8 @@ export function CaptureView(props: CaptureViewProps) {
 
     const path = await openFileDialog({
       multiple: append
-        || shouldOpenPreAnalysis(getAnalysisProfileSettings().profile),
+        || getPreAnalysisSourceSelectionSettings()
+          .enablePreAnalysisSourceSelection,
       filters: [{ name: "MIDI", extensions: ["mid", "midi"] }],
     });
     if (!path) {

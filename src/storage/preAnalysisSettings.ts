@@ -8,6 +8,14 @@ export interface PreAnalysisSourceSelectionSettings {
   alwaysShowPreAnalysis: boolean;
 }
 
+export interface PreAnalysisReviewSession {
+  sources: readonly unknown[];
+  voices: readonly {
+    isDrum: boolean;
+    autoRoleConfidence: number;
+  }[];
+}
+
 export const defaultPreAnalysisSourceSelectionSettings:
 PreAnalysisSourceSelectionSettings = {
   enablePreAnalysisSourceSelection: true,
@@ -51,7 +59,22 @@ export function setPreAnalysisSourceSelectionSettings(
 export function shouldOpenPreAnalysis(
   profile: AnalysisProfile,
   settings = getPreAnalysisSourceSelectionSettings(),
+  session?: PreAnalysisReviewSession,
 ): boolean {
   return settings.enablePreAnalysisSourceSelection
-    && (profile === "accuracy-first" || settings.alwaysShowPreAnalysis);
+    && (
+      profile === "accuracy-first"
+      || settings.alwaysShowPreAnalysis
+      || (session !== undefined && needsPreAnalysisReview(session))
+    );
+}
+
+export function needsPreAnalysisReview(
+  session: PreAnalysisReviewSession,
+): boolean {
+  const pitchedVoices = session.voices.filter((voice) => !voice.isDrum);
+  return session.sources.length > 1
+    || pitchedVoices.length > 1
+    || session.voices.some((voice) => voice.isDrum)
+    || pitchedVoices.some((voice) => voice.autoRoleConfidence < 0.45);
 }
