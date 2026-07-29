@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, PointerEvent } from "react";
 import type { AnalysisSession } from "../../domain/midi/preAnalysis";
 import type { AppLanguage } from "../../i18n";
 
@@ -40,6 +40,7 @@ interface PreAnalysisPianoRollProps {
   showAnalysisTargetsOnly: boolean;
   onSelectVoice: (voiceId: string) => void;
   onViewportStartChange: (beat: number) => void;
+  onPlayheadBeatChange: (beat: number) => void;
 }
 
 export function PreAnalysisPianoRoll({
@@ -52,9 +53,11 @@ export function PreAnalysisPianoRoll({
   showAnalysisTargetsOnly,
   onSelectVoice,
   onViewportStartChange,
+  onPlayheadBeatChange,
 }: PreAnalysisPianoRollProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const hitAreasRef = useRef<NoteHitArea[]>([]);
+  const playheadPointerRef = useRef<number>();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -110,15 +113,52 @@ export function PreAnalysisPianoRoll({
     }
   }
 
+  function updatePlayheadFromPointer(event: PointerEvent<HTMLCanvasElement>) {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const visibleBeats = visibleBeatCount(session, zoom);
+    const noteAreaWidth = Math.max(1, bounds.width - PIANO_ROLL_GUTTER);
+    const ratio = clamp(
+      (event.clientX - bounds.left - PIANO_ROLL_GUTTER) / noteAreaWidth,
+      0,
+      1,
+    );
+    onPlayheadBeatChange(Math.min(
+      sessionDuration(session),
+      viewportStartBeat + ratio * visibleBeats,
+    ));
+  }
+
+  function handlePointerDown(event: PointerEvent<HTMLCanvasElement>) {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    if (event.clientX - bounds.left < PIANO_ROLL_GUTTER) return;
+    playheadPointerRef.current = event.pointerId;
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    updatePlayheadFromPointer(event);
+  }
+
+  function handlePointerMove(event: PointerEvent<HTMLCanvasElement>) {
+    if (playheadPointerRef.current !== event.pointerId) return;
+    updatePlayheadFromPointer(event);
+  }
+
+  function handlePointerEnd(event: PointerEvent<HTMLCanvasElement>) {
+    if (playheadPointerRef.current !== event.pointerId) return;
+    playheadPointerRef.current = undefined;
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+  }
+
   return (
     <canvas
       ref={canvasRef}
-      className="block w-full border-y border-[var(--lv-border)] bg-[#0a111b] focus:outline-none focus:ring-2 focus:ring-[var(--lv-accent)]"
+      className="block w-full touch-none cursor-ew-resize border-y border-[var(--lv-border)] bg-[#0a111b] focus:outline-none focus:ring-2 focus:ring-[var(--lv-accent)]"
       role="img"
       tabIndex={0}
       aria-label={language === "ja"
-        ? "Voiceを色分けした解析前ピアノロール。左右キーで時間を移動できます。"
-        : "Pre-analysis piano roll colored by Voice. Use Left and Right to move in time."}
+        ? "Voiceを色分けした解析前ピアノロール。白いバーのドラッグまたは左右キーで時間を移動できます。"
+        : "Pre-analysis piano roll colored by Voice. Drag the white bar or use Left and Right to move in time."}
+      title={language === "ja"
+        ? "ドラッグして白い再生位置バーを移動"
+        : "Drag to move the white playback cursor"}
       data-testid="pre-analysis-piano-roll"
       data-voice-color-count={voiceColors.length}
       data-visible-note-count={
@@ -128,7 +168,12 @@ export function PreAnalysisPianoRoll({
         showAnalysisTargetsOnly ? "analysis-targets" : "all-voices"
       }
       data-viewport-start-beat={viewportStartBeat}
+      data-playhead-beat={playheadBeat}
       onKeyDown={handleKeyDown}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerEnd}
+      onPointerCancel={handlePointerEnd}
       onClick={(event) => {
         const bounds = event.currentTarget.getBoundingClientRect();
         const x = event.clientX - bounds.left;
@@ -178,7 +223,7 @@ export function drawPianoRoll(
   const minPitch = Math.max(0, Math.min(...pitches, 48) - 2);
   const maxPitch = Math.min(127, Math.max(...pitches, 72) + 2);
   const pitchCount = Math.max(1, maxPitch - minPitch + 1);
-  const gutter = 38;
+  const gutter = PIANO_ROLL_GUTTER;
   const ruler = 24;
   const noteWidth = width - gutter;
   const noteHeight = height - ruler;
@@ -304,4 +349,10 @@ export function sessionDuration(session: AnalysisSession): number {
 
 function isBlackKey(pitchClass: number): boolean {
   return [1, 3, 6, 8, 10].includes(pitchClass);
+}
+
+const PIANO_ROLL_GUTTER = 38;
+
+function clamp(value: number, minimum: number, maximum: number): number {
+  return Math.min(maximum, Math.max(minimum, value));
 }

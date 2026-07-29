@@ -207,10 +207,31 @@ describe("PreAnalysisWorkspace", () => {
       }));
     });
 
-    expect(scrollbar.getAttribute("aria-valuenow")).toBe("48");
+    expect(scrollbar.getAttribute("aria-valuenow")).toBe("64");
     expect(container.querySelector<HTMLCanvasElement>(
       "[data-testid='pre-analysis-piano-roll']",
     )?.dataset.viewportStartBeat).toBe("48");
+
+    const canvas = container.querySelector<HTMLCanvasElement>(
+      "[data-testid='pre-analysis-piano-roll']",
+    )!;
+    canvas.getBoundingClientRect = () => ({
+      x: 0,
+      y: 0,
+      top: 0,
+      right: 1000,
+      bottom: 290,
+      left: 0,
+      width: 1000,
+      height: 290,
+      toJSON: () => ({}),
+    });
+    await act(async () => {
+      canvas.dispatchEvent(pointerEvent("pointerdown", 519));
+      canvas.dispatchEvent(pointerEvent("pointerup", 519));
+    });
+    expect(Number(canvas.dataset.playheadBeat)).toBeGreaterThan(48);
+    expect(Number(canvas.dataset.playheadBeat)).toBeLessThan(64);
 
     await unmount();
   });
@@ -248,6 +269,15 @@ describe("PreAnalysisWorkspace", () => {
       onRemoveSource,
       onAnalyze,
     });
+    const addMidiButton = container.querySelector<HTMLButtonElement>(
+      "[data-testid='pre-analysis-add-midi']",
+    )!;
+    const analyzeButton = container.querySelector<HTMLButtonElement>(
+      "[data-testid='pre-analysis-analyze']",
+    )!;
+    expect(addMidiButton.parentElement).toBe(analyzeButton.parentElement);
+    expect(addMidiButton.compareDocumentPosition(analyzeButton)
+      & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
 
     await act(async () => {
       [...container.querySelectorAll<HTMLButtonElement>("button")]
@@ -274,7 +304,7 @@ describe("PreAnalysisWorkspace", () => {
     await unmount();
   });
 
-  it("keeps Voice audition controls independent and exposes Play / Stop", async () => {
+  it("uses one Play / Stop toggle while keeping Voice audition controls independent", async () => {
     const session = fixtureSession();
     const onSessionChange = vi.fn();
     const onPlay = vi.fn();
@@ -285,12 +315,17 @@ describe("PreAnalysisWorkspace", () => {
       onStop,
     });
 
+    const playbackToggle = container.querySelector<HTMLButtonElement>(
+      "[data-testid='pre-analysis-playback-toggle']",
+    )!;
+    expect(playbackToggle.textContent).toContain("再生");
+    expect(playbackToggle.className).toContain("bg-[var(--lv-accent)]");
+    await act(async () => playbackToggle.click());
+    expect(playbackToggle.textContent).toContain("停止");
+    expect(playbackToggle.className).toContain("border-rose-300/70");
+    await act(async () => playbackToggle.click());
+    expect(playbackToggle.textContent).toContain("再生");
     await act(async () => {
-      [...container.querySelectorAll<HTMLButtonElement>("button")]
-        .find((button) => button.textContent?.includes("再生"))?.click();
-      container.querySelector<HTMLButtonElement>(
-        'button[aria-label="停止"]',
-      )?.click();
       container.querySelector<HTMLButtonElement>(
         'button[aria-label="Acoustic Grand Pianoをミュート"]',
       )?.click();
@@ -456,4 +491,13 @@ function fakeCanvasContext() {
 
 function lastSession(callback: ReturnType<typeof vi.fn>): AnalysisSession {
   return callback.mock.calls[callback.mock.calls.length - 1][0] as AnalysisSession;
+}
+
+function pointerEvent(type: string, clientX: number): Event {
+  const event = new Event(type, { bubbles: true, cancelable: true });
+  Object.defineProperties(event, {
+    clientX: { value: clientX },
+    pointerId: { value: 1 },
+  });
+  return event;
 }

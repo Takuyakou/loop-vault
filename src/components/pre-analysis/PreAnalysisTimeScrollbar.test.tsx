@@ -9,34 +9,38 @@ import { PreAnalysisTimeScrollbar } from "./PreAnalysisTimeScrollbar";
   .IS_REACT_ACT_ENVIRONMENT = true;
 
 describe("PreAnalysisTimeScrollbar", () => {
-  it("moves the visible window by dragging its FL-style thumb", async () => {
+  it("moves the white timeline cursor and centers the visible range", async () => {
     const { container, unmount } = await renderScrollbar();
     const track = container.querySelector<HTMLDivElement>(
       "[data-testid='pre-analysis-time-scrollbar']",
     )!;
-    const thumb = container.querySelector<HTMLElement>(
-      "[data-testid='pre-analysis-time-scroll-thumb']",
+    const cursor = container.querySelector<HTMLElement>(
+      "[data-testid='pre-analysis-time-cursor']",
+    )!;
+    const visibleRange = container.querySelector<HTMLElement>(
+      "[data-testid='pre-analysis-visible-range']",
     )!;
     track.getBoundingClientRect = () => ({
       x: 0,
       y: 0,
       top: 0,
       right: 400,
-      bottom: 16,
+      bottom: 24,
       left: 0,
       width: 400,
-      height: 16,
+      height: 24,
       toJSON: () => ({}),
     });
 
     await act(async () => {
-      thumb.dispatchEvent(pointerEvent("pointerdown", 20));
-      track.dispatchEvent(pointerEvent("pointermove", 220));
-      track.dispatchEvent(pointerEvent("pointerup", 220));
+      track.dispatchEvent(pointerEvent("pointerdown", 200));
+      track.dispatchEvent(pointerEvent("pointermove", 300));
+      track.dispatchEvent(pointerEvent("pointerup", 300));
     });
 
-    expect(Number(track.getAttribute("aria-valuenow"))).toBeCloseTo(32, 1);
-    expect(thumb.style.left).toBe("50%");
+    expect(Number(track.getAttribute("aria-valuenow"))).toBeCloseTo(48, 1);
+    expect(cursor.style.left).toBe("75%");
+    expect(visibleRange.style.left).toBe("62.5%");
 
     await unmount();
   });
@@ -51,10 +55,10 @@ describe("PreAnalysisTimeScrollbar", () => {
       y: 0,
       top: 0,
       right: 400,
-      bottom: 16,
+      bottom: 24,
       left: 0,
       width: 400,
-      height: 16,
+      height: 24,
       toJSON: () => ({}),
     });
 
@@ -62,7 +66,7 @@ describe("PreAnalysisTimeScrollbar", () => {
       track.dispatchEvent(pointerEvent("pointerdown", 300));
       track.dispatchEvent(pointerEvent("pointerup", 300));
     });
-    expect(Number(track.getAttribute("aria-valuenow"))).toBeCloseTo(40, 1);
+    expect(Number(track.getAttribute("aria-valuenow"))).toBeCloseTo(48, 1);
 
     await act(async () => {
       track.dispatchEvent(new KeyboardEvent("keydown", {
@@ -78,8 +82,8 @@ describe("PreAnalysisTimeScrollbar", () => {
         bubbles: true,
       }));
     });
-    expect(track.getAttribute("aria-valuenow")).toBe("48");
-    expect(track.getAttribute("aria-valuetext")).toContain("小節");
+    expect(track.getAttribute("aria-valuenow")).toBe("64");
+    expect(track.getAttribute("aria-valuetext")).toContain("16小節目");
 
     await unmount();
   });
@@ -90,15 +94,22 @@ async function renderScrollbar() {
   const root = createRoot(container);
 
   function Harness() {
-    const [startBeat, setStartBeat] = useState(0);
+    const [positionBeat, setPositionBeat] = useState(0);
+    const visibleBeats = 16;
+    const totalBeats = 64;
+    const viewportStartBeat = Math.min(
+      totalBeats - visibleBeats,
+      Math.max(0, positionBeat - visibleBeats / 2),
+    );
     return (
       <PreAnalysisTimeScrollbar
         language="ja"
-        totalBeats={64}
-        visibleBeats={16}
-        startBeat={startBeat}
+        totalBeats={totalBeats}
+        visibleBeats={visibleBeats}
+        viewportStartBeat={viewportStartBeat}
+        positionBeat={positionBeat}
         beatsPerBar={4}
-        onStartBeatChange={setStartBeat}
+        onPositionBeatChange={setPositionBeat}
       />
     );
   }
