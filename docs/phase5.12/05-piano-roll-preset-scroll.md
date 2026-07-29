@@ -60,7 +60,18 @@ Canvas直下に`PreAnalysisTimeScrollbar`を追加した
 | `npm test -- --run` | 235 files / 1,821 tests PASS |
 | `cargo test` | 24 tests PASS |
 | `npm run build` | PASS、3,079 modules |
+| `npm run tauri build` | PASS、EXE / MSI / NSIS |
 | desktop / mobile visual | PASS |
+
+## Production Artifacts
+
+Source commit: `b856406`
+
+| Artifact | Size | SHA-256 |
+|---|---:|---|
+| `src-tauri/target/release/loop-vault.exe` | 14.107 MiB | `33ee729d44d295d97c1048da0ab31f3e09ceecf9c2ec90b233dfba082122c5ad` |
+| `src-tauri/target/release/bundle/msi/Loop Vault_0.1.0_x64_en-US.msi` | 4.883 MiB | `413ec18bb4f57ed767088f679106b8f134ae56e15a5cc2a5ee65b9ca0b45377b` |
+| `src-tauri/target/release/bundle/nsis/Loop Vault_0.1.0_x64-setup.exe` | 3.437 MiB | `39bfd0c5ac2a936f48258ca4f1bb5da6eec6d0f19d7e3a0d647ec57f01738769` |
 
 ## Unchanged
 
