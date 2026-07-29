@@ -625,7 +625,7 @@ export function createVaultStore(
         set({ analysis: { status: "analyzing" }, error: undefined });
         try {
           const result = analyzeMidi(bytes, analyzeOptions);
-          const sourceData = parseMidi(bytes);
+          const sourceData = analyzeOptions.preparedData ?? parseMidi(bytes);
           const normalized = normalizeNotes(sourceData);
           const baseVoices = buildVoices(sourceData);
           const sourceVoices = annotateVoiceRoles(

@@ -10,6 +10,12 @@ export {
   updateAnalysisSessionVoice,
 } from "./analysisSession";
 export {
+  buildPreparedMidiSongData,
+  buildSessionAnalysisRequest,
+  isBackwardEquivalentSession,
+} from "./analyzerInput";
+export type { SessionAnalysisRequest } from "./analyzerInput";
+export {
   createMidiSourceId,
   preAnalysisRoleFromProductRole,
   preAnalysisVoiceId,
@@ -18,6 +24,7 @@ export {
 export type { PreScanMidiSourceOptions } from "./voiceExtraction";
 export type {
   PreAnalysisMidiSource,
+  PreAnalysisControlChange,
   PreAnalysisNote,
   PreAnalysisSelectionPreset,
   PreAnalysisSourceScan,

@@ -157,7 +157,7 @@ export function analyzeMidiWithRankingScores(
   options: AnalyzeMidiOptions = {},
   scoring: LegacyScoringOptions = {},
 ): LegacyAnalysisInternal {
-  const data = parseMidi(bytes);
+  const data = options.preparedData ?? parseMidi(bytes);
   const evidenceNotes = selectChordEvidenceNotes(data.notes);
   const evidenceData = { ...data, notes: evidenceNotes };
   if (evidenceNotes.length === 0) {
@@ -283,6 +283,10 @@ export function inferTrackRoles(
   const thresholds = profile ? extractionRoleThresholds : defaultRoleThresholds;
 
   for (const track of data.tracks) {
+    if (track.roleOverride) {
+      roles.set(track.index, track.roleOverride);
+      continue;
+    }
     if (track.roleHint === "percussion") {
       roles.set(track.index, "percussion");
       continue;

@@ -34,6 +34,10 @@ import {
   setAnalysisProfile,
   type AnalysisProfile,
 } from "../storage/accuracyFirstSettings";
+import {
+  getPreAnalysisSourceSelectionSettings,
+  setPreAnalysisSourceSelectionSettings,
+} from "../storage/preAnalysisSettings";
 import { Copy, Download, FolderOpen, RotateCcw, Trash2, Upload } from "lucide-react";
 import type { StoreApi } from "zustand/vanilla";
 import type { LiveMidiStoreState } from "../liveMidi/liveMidiStore";
@@ -110,6 +114,9 @@ export function SettingsDialog({
     () => getAnalysisProfileSettings().profile,
   );
   const [accuracyFirst, setAccuracyFirst] = useState(getAccuracyFirstFeatureFlags);
+  const [preAnalysisSettings, setPreAnalysisSettings] = useState(
+    getPreAnalysisSourceSelectionSettings,
+  );
   const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation>();
   const [confirmationBusy, setConfirmationBusy] = useState(false);
   const confirmationLockRef = useRef(false);
@@ -214,6 +221,17 @@ export function SettingsDialog({
     setAnalysisProfile(profile);
     setAnalysisProfileState(profile);
     setAccuracyFirst(getAnalysisProfileSettings().flags);
+  }
+
+  function updatePreAnalysisSetting(
+    key: keyof typeof preAnalysisSettings,
+    enabled: boolean,
+  ) {
+    setPreAnalysisSettings((current) => {
+      const next = { ...current, [key]: enabled };
+      setPreAnalysisSourceSelectionSettings(next);
+      return next;
+    });
   }
 
   function clearFeedback() {
@@ -475,6 +493,54 @@ export function SettingsDialog({
                     <span className="mt-1 block text-[var(--lv-text-muted)]">{ui.bassCompanionCandidatesHelp}</span>
                   </span>
                 </label>
+                <div className="mt-5 border-t border-amber-400/20 pt-4">
+                  <h4 className="font-semibold">
+                    {language === "ja" ? "MIDI解析前のパート選択" : "Pre-analysis part selection"}
+                  </h4>
+                  <label className="mt-3 flex cursor-pointer items-start gap-3">
+                    <input
+                      className="mt-1"
+                      type="checkbox"
+                      checked={preAnalysisSettings.enablePreAnalysisSourceSelection}
+                      onChange={(event) => updatePreAnalysisSetting(
+                        "enablePreAnalysisSourceSelection",
+                        event.target.checked,
+                      )}
+                    />
+                    <span>
+                      <strong className="block text-[var(--lv-text-secondary)]">
+                        {language === "ja" ? "解析前のパート選択を有効にする" : "Enable pre-analysis part selection"}
+                      </strong>
+                      <span className="mt-1 block text-[var(--lv-text-muted)]">
+                        {language === "ja"
+                          ? "オフにすると従来のPhase 5解析経路へすぐ戻ります。"
+                          : "Turn off to immediately restore the Phase 5 direct analysis path."}
+                      </span>
+                    </span>
+                  </label>
+                  <label className="mt-3 flex cursor-pointer items-start gap-3">
+                    <input
+                      className="mt-1"
+                      type="checkbox"
+                      checked={preAnalysisSettings.alwaysShowPreAnalysis}
+                      disabled={!preAnalysisSettings.enablePreAnalysisSourceSelection}
+                      onChange={(event) => updatePreAnalysisSetting(
+                        "alwaysShowPreAnalysis",
+                        event.target.checked,
+                      )}
+                    />
+                    <span>
+                      <strong className="block text-[var(--lv-text-secondary)]">
+                        {language === "ja" ? "Stableでも常に表示" : "Always show in Stable"}
+                      </strong>
+                      <span className="mt-1 block text-[var(--lv-text-muted)]">
+                        {language === "ja"
+                          ? "通常はAccuracy Firstで表示し、Stableでは従来どおり直接解析します。"
+                          : "By default it opens in Accuracy First; Stable analyzes directly."}
+                      </span>
+                    </span>
+                  </label>
+                </div>
                 <label className="mt-3 flex cursor-pointer items-start gap-3">
                   <input
                     className="mt-1"

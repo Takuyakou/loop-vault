@@ -7,6 +7,7 @@ import { buildVoices } from "../voices";
 import { gmProgramName } from "./gmProgramNames";
 import type {
   PreAnalysisMidiSource,
+  PreAnalysisControlChange,
   PreAnalysisNote,
   PreAnalysisSourceScan,
   PreAnalysisVoice,
@@ -98,13 +99,33 @@ export function preScanMidiSource(
       startBeat: note.startTick / data.ticksPerBeat,
       durationBeats: note.durationTick / data.ticksPerBeat,
       ...(note.program !== undefined ? { program: note.program } : {}),
+      ...(note.programExplicit !== undefined
+        ? { programExplicit: note.programExplicit }
+        : {}),
     }];
   });
+  const controlChanges = data.controlChanges.flatMap(
+    (change): PreAnalysisControlChange[] => {
+      if (change.channel === undefined) return [];
+      const voiceId = mappedVoiceIds.get(`${change.trackIndex}:${change.channel}`);
+      if (!voiceId) return [];
+      return [{
+        sourceId: options.sourceId,
+        voiceId,
+        trackIndex: change.trackIndex,
+        channel: change.channel,
+        number: change.number,
+        beat: change.tick / data.ticksPerBeat,
+        value: change.value,
+      }];
+    },
+  );
 
   return {
     source,
     voices: mappedVoices,
     notes,
+    controlChanges,
   };
 }
 

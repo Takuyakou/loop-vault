@@ -70,7 +70,10 @@ export function analyzeMidi(bytes: Uint8Array, options: AnalyzeMidiOptions = {})
           })),
       )
     : primary;
-  return { ...analysis, sourceFingerprint: fingerprintMidiBytes(bytes) };
+  return {
+    ...analysis,
+    sourceFingerprint: options.analysisFingerprint ?? fingerprintMidiBytes(bytes),
+  };
 }
 
 function runAnalyzer(

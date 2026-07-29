@@ -53,7 +53,9 @@ export function inferTrackRoleProfiles(
   const features = extractTrackFeatures(notes, data);
   return new Map(features.map((feature) => {
     const track = data.tracks.find((entry) => entry.index === feature.trackIndex);
-    const role = classify(feature, track?.name ?? "", track?.program, track?.roleHint === "percussion");
+    const role = track?.roleOverride
+      ? explicitHybridRole(track.roleOverride)
+      : classify(feature, track?.name ?? "", track?.program, track?.roleHint === "percussion");
     const qualityWeight = roleQualityWeight(role, weights);
     const rootWeight = role === "bass" ? weights.bassRoleRootWeight : qualityWeight;
     const reasons = reasonsFor(feature, role, track?.name ?? "");
@@ -62,6 +64,14 @@ export function inferTrackRoleProfiles(
       confidence: Math.min(0.95, 0.55 + reasons.length * 0.1), reasons,
     }];
   }));
+}
+
+function explicitHybridRole(role: NonNullable<MidiSongData["tracks"][number]["roleOverride"]>): HybridTrackRole {
+  if (role === "harmony") return "chord";
+  if (role === "bass") return "bass";
+  if (role === "melody") return "melody";
+  if (role === "percussion") return "drums";
+  return "unknown";
 }
 
 function classify(feature: TrackFeatures, name: string, program?: number, percussion = false): HybridTrackRole {

@@ -82,7 +82,7 @@ export function analyzeMidiLegacyBoundaryRerank(
   options: AnalyzeMidiOptions = {},
   thresholds: LegacyBoundaryRerankerThresholds = defaultLegacyBoundaryRerankerThresholds,
 ): MidiProgressionAnalysis {
-  const data = parseMidi(bytes);
+  const data = options.preparedData ?? parseMidi(bytes);
   const weights: AnalyzerWeights = { ...defaultAnalyzerWeights, ...options.weights };
   const evidenceData = { ...data, notes: selectChordEvidenceNotes(data.notes) };
   if (evidenceData.notes.length === 0) {
