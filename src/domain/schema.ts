@@ -104,6 +104,8 @@ export const voicingRepresentationSchema = z.enum([
   "aggregated-note-set",
 ]);
 
+export const MAX_PERSISTED_CHORD_ALTERNATIVES = 2;
+
 export const voicingSnapshotSchema = z
   .object({
     schemaVersion: z.literal(1),
@@ -156,7 +158,7 @@ export const chordTimelineItemSchema = z
           })
           .strict(),
       )
-      .max(2),
+      .max(MAX_PERSISTED_CHORD_ALTERNATIVES),
     warnings: z.array(z.string()),
     voicingMemory: chordVoicingMemorySchema.optional(),
   })

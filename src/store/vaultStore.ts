@@ -22,7 +22,10 @@ import {
   type TransitionOptions,
   type TransitionResult,
 } from "../domain/transition";
-import type { QuarantinedRecord } from "../domain/schema";
+import {
+  MAX_PERSISTED_CHORD_ALTERNATIVES,
+  type QuarantinedRecord,
+} from "../domain/schema";
 import type {
   ChordTimelineItem,
   MidiProgressionAnalysis,
@@ -977,6 +980,10 @@ function persistChordEvents(
 ): SavedProgressionBlock["chords"] {
   return chords.map((item) => ({
     ...item,
+    alternatives: item.alternatives.slice(
+      0,
+      MAX_PERSISTED_CHORD_ALTERNATIVES,
+    ),
     eventId: isTemporaryEventId(item.eventId) ? idFactory() : item.eventId,
   }));
 }

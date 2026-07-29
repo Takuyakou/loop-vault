@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createEmptyVault,
+  serializeVault,
   VaultRepositoryError,
   type VaultBackup,
   type VaultImportMode,
@@ -676,6 +677,10 @@ describe("vault store", () => {
 
   it("keeps MIDI analysis transient and persists only appended progression blocks", async () => {
     const repository = new FakeRepository();
+    repository.saveImplementation = async (vault) => {
+      serializeVault(vault);
+      repository.saved.push(vault);
+    };
     const idea = makeIdea({ id: generatedId, progressionBlocks: [] });
     repository.loadResult = {
       vault: { ...createEmptyVault(), ideas: [idea] },
@@ -704,7 +709,20 @@ describe("vault store", () => {
             label: "C",
           },
           confidence: 0.9,
-          alternatives: [],
+          alternatives: [
+            {
+              chord: { root: 5, quality: "maj", tensions: [], label: "F" },
+              confidence: 0.8,
+            },
+            {
+              chord: { root: 7, quality: "dom7", tensions: [], label: "G7" },
+              confidence: 0.7,
+            },
+            {
+              chord: { root: 9, quality: "min", tensions: [], label: "Am" },
+              confidence: 0.6,
+            },
+          ],
           warnings: [],
         },
       ],
@@ -752,6 +770,12 @@ describe("vault store", () => {
     });
     expect(repository.saved[0]?.ideas[0]?.progressionBlocks?.[0]?.chords[0]?.eventId)
       .toBe("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb");
+    expect(
+      repository.saved[0]?.ideas[0]?.progressionBlocks?.[0]?.chords[0]?.alternatives
+        .map((alternative) => alternative.chord.label),
+    ).toEqual(["F", "G7"]);
+    expect(candidate.chords[0]?.alternatives).toHaveLength(3);
+    expect(store.getState().unsaved).toBe(false);
     expect(repository.saved[0]?.ideas[0]?.assets).toEqual([
       expect.objectContaining({ type: "midi", path: "D:/music/capture.mid" }),
     ]);
