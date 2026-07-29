@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "phase": "5.1",
+  "capturedAt": "2026-07-29",
+  "baseBranch": "master",
+  "commit": "15ca98c5dee49674fc321bbe18a98c8f39695224",
+  "primaryAnalyzer": "phase4-v1",
+  "fileVersion": 1,
+  "hashes": {
+    "src/domain/schema.ts": "7770a544139f57579a5079e423ddc0b9d4c93e881d284f9e25bc18be9caf3137",
+    "src/domain/midi/analysis.ts": "e14412900340092160b792bfcc212996b167d18c761ace517703c3fafa5e7018"
+  },
+  "tests": {
+    "files": 226,
+    "tests": 1762,
+    "status": "pass"
+  },
+  "repositorySafety": {
+    "trackedMidiFiles": 0,
+    "trackedLocalEvaluationPaths": 0,
+    "vaultSchemaChanged": false,
+    "fileVersionChanged": false
+  },
+  "phase5ProductMode": "phase4-v1+R1+E1+Union",
+  "phase5Metrics": [
+    {
+      "corpus": "chord-drip-100",
+      "cases": 100,
+      "events": 1058,
+      "canonicalExact": 0.278828,
+      "top3Canonical": 0.402646,
+      "candidateRecall": 0.448015,
+      "unionCandidateRecall": 0.513233,
+      "manualInputRate": 0.328922,
+      "runtimeMs": 4333.166
+    },
+    {
+      "corpus": "chapter3-seed-100",
+      "cases": 100,
+      "events": 399,
+      "canonicalExact": 0.977444,
+      "top3Canonical": 0.987469,
+      "candidateRecall": 0.989975,
+      "unionCandidateRecall": 0.992481,
+      "manualInputRate": 0.007519,
+      "runtimeMs": 1764.118
+    },
+    {
+      "corpus": "phase4.5-label-dev",
+      "cases": 40,
+      "events": 320,
+      "canonicalExact": 0.609375,
+      "top3Canonical": 0.70625,
+      "candidateRecall": 0.9,
+      "unionCandidateRecall": 0.953125,
+      "manualInputRate": 0.01875,
+      "runtimeMs": 1367.602
+    },
+    {
+      "corpus": "phase4.7-gold",
+      "cases": 36,
+      "events": 288,
+      "canonicalExact": 0.038194,
+      "top3Canonical": 0.045139,
+      "candidateRecall": 0.086806,
+      "unionCandidateRecall": 0.131944,
+      "manualInputRate": 0,
+      "runtimeMs": 1842.086
+    }
+  ]
+}
