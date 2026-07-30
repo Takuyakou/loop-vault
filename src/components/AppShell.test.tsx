@@ -20,6 +20,7 @@ async function renderShell({
   controller,
   setView = vi.fn(),
   openSettings = vi.fn(),
+  settingsOpen = false,
   masterVolume = 100,
   onMasterVolumeChange = vi.fn(),
 }: {
@@ -28,6 +29,7 @@ async function renderShell({
   controller?: ReturnType<typeof createPlaybackController>;
   setView?: ReturnType<typeof vi.fn>;
   openSettings?: ReturnType<typeof vi.fn>;
+  settingsOpen?: boolean;
   masterVolume?: number;
   onMasterVolumeChange?: ReturnType<typeof vi.fn>;
 } = {}) {
@@ -40,6 +42,7 @@ async function renderShell({
       openCreate={vi.fn()}
       openLiveMidi={vi.fn()}
       openSettings={openSettings}
+      settingsOpen={settingsOpen}
       copy={appCopy.en}
       saveStatus={saveStatus}
       masterVolume={masterVolume}
@@ -180,6 +183,13 @@ describe("AppShell", () => {
     await act(async () => stopButton?.click());
     expect(controller.getState()).toEqual({ status: "idle" });
     expect(container.querySelector('button[aria-label="Stop current playback"]')).toBeNull();
+    await act(async () => root.unmount());
+  });
+
+  it("marks Settings as the active sidebar destination while the dialog is open", async () => {
+    const { container, root } = await renderShell({ settingsOpen: true });
+    const active = container.querySelector<HTMLButtonElement>('nav button[aria-current="page"]');
+    expect(active?.textContent).toBe("Settings");
     await act(async () => root.unmount());
   });
 

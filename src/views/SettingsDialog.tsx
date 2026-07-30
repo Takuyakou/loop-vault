@@ -397,7 +397,27 @@ export function SettingsDialog({
           <Button ref={closeRef} variant="ghost" size="sm" onClick={onClose}>{ui.close}</Button>
         </div>
 
-        <section aria-labelledby="settings-general-title" className="mt-5 border border-[var(--lv-border)] bg-[var(--lv-bg)] p-4">
+        <div className="mt-5 grid gap-5 md:grid-cols-[11rem_minmax(0,1fr)]">
+        <nav className="h-fit border border-[var(--lv-border)] bg-[var(--lv-bg)] p-2 md:sticky md:top-0" aria-label={language === "ja" ? "設定カテゴリ" : "Settings categories"}>
+          {[
+            ["settings-general", language === "ja" ? "一般" : "General"],
+            ["settings-audio-midi", "Audio & MIDI"],
+            ["settings-ai", "AI"],
+            ["settings-data", language === "ja" ? "データ" : "Data"],
+            ["settings-analysis", language === "ja" ? "解析とログ" : "Analysis & Logs"],
+            ["settings-about", language === "ja" ? "このアプリについて" : "About"],
+          ].map(([target, label]) => (
+            <a
+              key={target}
+              href={`#${target}`}
+              className="block min-h-10 px-3 py-2 text-sm text-[var(--lv-text-secondary)] hover:bg-[var(--lv-surface)] hover:text-[var(--lv-text)]"
+            >
+              {label}
+            </a>
+          ))}
+        </nav>
+        <div className="min-w-0">
+        <section id="settings-general" aria-labelledby="settings-general-title" className="scroll-mt-4 border border-[var(--lv-border)] bg-[var(--lv-bg)] p-4">
           <h3 id="settings-general-title" className="text-sm font-semibold text-[var(--lv-accent)]">{ui.general}</h3>
           <div className="mt-4 grid gap-5 md:grid-cols-2">
             <div>
@@ -434,6 +454,7 @@ export function SettingsDialog({
             </span>
           </label>
           <div
+            id="settings-about"
             className="mt-4 grid gap-1 border-t border-[var(--lv-border)] pt-3 text-xs text-[var(--lv-text-muted)] sm:grid-cols-2"
             aria-label={ui.formatInfo}
             data-testid="loop-vault-build-info"
@@ -449,11 +470,15 @@ export function SettingsDialog({
           </div>
         </section>
 
-        <LiveMidiSettingsSection copy={ui} store={liveMidiStore} />
+        <div id="settings-audio-midi" className="scroll-mt-4">
+          <LiveMidiSettingsSection copy={ui} store={liveMidiStore} />
+        </div>
 
-        <LlmSettingsSection language={language} setToast={setToast} />
+        <div id="settings-ai" className="scroll-mt-4">
+          <LlmSettingsSection language={language} setToast={setToast} />
+        </div>
 
-        <section aria-labelledby="settings-data-title" className="mt-5 border border-[var(--lv-border)] bg-[var(--lv-bg)] p-4">
+        <section id="settings-data" aria-labelledby="settings-data-title" className="mt-5 scroll-mt-4 border border-[var(--lv-border)] bg-[var(--lv-bg)] p-4">
           <h3 id="settings-data-title" className="text-sm font-semibold text-[var(--lv-accent)]">{ui.data}</h3>
           <div className="mt-4">
             <h4 className="font-semibold">{ui.dataLocation}</h4>
@@ -523,7 +548,7 @@ export function SettingsDialog({
           </div>
         </section>
 
-        <section className="mt-5 border border-amber-400/35 bg-amber-950/10">
+        <section id="settings-analysis" className="mt-5 scroll-mt-4 border border-amber-400/35 bg-amber-950/10">
           <h3>
             <button
               type="button"
@@ -686,6 +711,8 @@ export function SettingsDialog({
             </div>
           ) : null}
         </section>
+        </div>
+        </div>
       </Modal>
       <ConfirmDialog
         open={Boolean(pendingConfirmation)}

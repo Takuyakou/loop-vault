@@ -90,6 +90,11 @@ describe("SettingsDialog sections", () => {
     await click(disclosure);
     expect(disclosure?.getAttribute("aria-expanded")).toBe("true");
     expect(dialogs()[0]?.textContent).toContain(appCopy.ja.settingsUi.correctionTitle);
+    const categoryNav = dialogs()[0]?.querySelector('nav[aria-label="設定カテゴリ"]');
+    expect(categoryNav?.querySelector('a[href="#settings-general"]')).not.toBeNull();
+    expect(categoryNav?.querySelector('a[href="#settings-audio-midi"]')).not.toBeNull();
+    expect(categoryNav?.querySelector('a[href="#settings-analysis"]')).not.toBeNull();
+    expect(categoryNav?.querySelector('a[href="#settings-about"]')).not.toBeNull();
     await mounted.unmount();
   });
 

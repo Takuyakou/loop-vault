@@ -18,6 +18,7 @@ import { Modal } from "./components/Modal";
 import { DetailView } from "./views/DetailView";
 import { HomeView } from "./views/HomeView";
 import { SettingsDialog } from "./views/SettingsDialog";
+import { HistoryView } from "./views/HistoryView";
 import { VaultView } from "./views/VaultView";
 import { ProgressionDetailView } from "./views/ProgressionDetailView";
 import { PracticeView } from "./views/PracticeView";
@@ -389,6 +390,7 @@ async function analyzeMidiPath(path: string) {
           setSettingsOpen(true);
           void refreshBackups();
         }}
+        settingsOpen={isSettingsOpen}
         copy={copy}
         saveStatus={saving ? "saving" : unsaved ? "unsaved" : "saved"}
         masterVolume={masterVolume}
@@ -534,13 +536,12 @@ async function analyzeMidiPath(path: string) {
               />
             ) : null}
             {view === "history" ? (
-              <section className="lv-surface p-6">
-                <p className="lv-section-kicker">History</p>
-                <h2 className="lv-section-title mt-2">最近の操作</h2>
-                <p className="lv-section-description mt-2">
-                  履歴はまだありません。進行を採集、編集、練習するとここで確認できます。
-                </p>
-              </section>
+              <HistoryView
+                ideas={visibleIdeas}
+                language={language}
+                openIdea={openDetail}
+                openProgression={openProgression}
+              />
             ) : null}
             {view === "detail" && !selectedIdea ? (
               <EmptyState openCreate={() => setCreateOpen(true)} copy={copy} />

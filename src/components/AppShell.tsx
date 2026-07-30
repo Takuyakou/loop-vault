@@ -38,6 +38,7 @@ interface AppShellProps {
   openCreate: () => void;
   openLiveMidi: () => void;
   openSettings: () => void;
+  settingsOpen?: boolean;
   copy: AppCopy;
   saveStatus: SaveStatus;
   masterVolume: number;
@@ -67,6 +68,7 @@ export function AppShell({
   pageContext,
   pageTitle,
   saveStatus,
+  settingsOpen = false,
   setView,
   view,
 }: AppShellProps) {
@@ -104,7 +106,7 @@ export function AppShell({
             {workspaceItems.map((item) => (
               <SidebarItem
                 key={item.view}
-                active={isRouteActive(view, item.view)}
+                active={!settingsOpen && isRouteActive(view, item.view)}
                 collapsed={collapsed}
                 icon={item.icon}
                 label={item.label}
@@ -122,14 +124,14 @@ export function AppShell({
 
           <SidebarGroup label="System" collapsed={collapsed} className="mt-5">
             <SidebarItem
-              active={view === "history"}
+              active={!settingsOpen && view === "history"}
               collapsed={collapsed}
               icon={History}
               label="History"
               onClick={() => setView("history")}
             />
             <SidebarItem
-              active={false}
+              active={settingsOpen}
               collapsed={collapsed}
               icon={Settings}
               label="Settings"
