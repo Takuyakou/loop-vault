@@ -450,6 +450,11 @@ describe("VaultView keyboard shortcuts", () => {
     const primary = row.querySelector(".lv-vault-progression-primary")!;
     const secondary = row.querySelector(".lv-vault-progression-secondary")!;
     const metadata = row.querySelector(".lv-vault-metadata")!;
+    expect(row.getAttribute("data-compact")).toBe("false");
+    expect(row.classList.contains("min-h-24")).toBe(true);
+    expect(row.classList.contains("overflow-hidden")).toBe(false);
+    expect(primary.classList.contains("truncate")).toBe(false);
+    expect(row.querySelector(".lv-vault-progression")?.getAttribute("aria-current")).toBe("true");
     expect(primary.textContent).toContain("Cmaj7");
     expect(secondary.textContent).toContain("Night bridge");
     expect(metadata.textContent).toContain("Key D minor");
@@ -652,7 +657,14 @@ describe("VaultView keyboard shortcuts", () => {
 
     expect(container.querySelector("[data-virtualized='true']")).not.toBeNull();
     expect(container.querySelector("[data-virtualized='true']")?.getAttribute("data-row-height")).toBe("96");
-    expect(container.querySelector(".lv-vault-row")?.classList.contains("h-24")).toBe(true);
+    const compactRow = container.querySelector<HTMLElement>(".lv-vault-row")!;
+    expect(compactRow.getAttribute("data-compact")).toBe("true");
+    expect(compactRow.classList.contains("h-24")).toBe(true);
+    expect(compactRow.classList.contains("overflow-hidden")).toBe(true);
+    expect(compactRow.querySelector(".lv-vault-progression-primary")?.classList.contains("truncate"))
+      .toBe(true);
+    expect(compactRow.querySelector(".lv-vault-progression")?.getAttribute("title"))
+      .toContain("Cmaj7");
     expect(container.querySelectorAll(".lv-vault-row").length).toBeLessThan(205);
     expect(container.textContent).toContain("205 items");
     await act(async () => root.unmount());
