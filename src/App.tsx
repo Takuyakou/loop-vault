@@ -1,3 +1,5 @@
+import { isTauri } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { readFile } from "@tauri-apps/plugin-fs";
 import { FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "zustand";
@@ -58,6 +60,12 @@ import { defaultLiveMidiStore } from "./liveMidi/defaultLiveMidiStore";
 import { createTauriMiniWindowAdapter, MiniWindowController } from "./liveMidi/miniWindowController";
 import { loadLiveMidiPreferences, saveLiveMidiPreferences } from "./liveMidi/preferences";
 import { historyToSavedProgressionBlock, type LiveChordHistoryEntry } from "./domain/liveMidi";
+import {
+  createLiveMidiWindowSnapshot,
+  LIVE_MIDI_COMMAND_EVENT,
+  sendLiveMidiSnapshot,
+  type LiveMidiWindowCommand,
+} from "./liveMidi/windowProtocol";
 
 type View = AppView;
 const pipeline: Status[] = ["idea", "loop", "arrange", "mix", "done"];
@@ -111,7 +119,7 @@ function App() {
   const [isCreateOpen, setCreateOpen] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [toast, setToast] = useState<string>();
-  const [liveMidiMode, setLiveMidiMode] = useState(false);
+  const [webLiveMidiPreviewOpen, setWebLiveMidiPreviewOpen] = useState(false);
   const [masterVolume, setMasterVolume] = useState(() => loadMasterVolume());
   const [pendingLiveMidiHistory, setPendingLiveMidiHistory] = useState<LiveChordHistoryEntry[]>();
   const [startupRestoreName, setStartupRestoreName] = useState<string>();
@@ -121,6 +129,7 @@ function App() {
   const mainContentRef = useRef<HTMLElement>(null);
   const previousViewRef = useRef(view);
   const miniWindowControllerRef = useRef<MiniWindowController | undefined>(undefined);
+  const liveMidiClosingRef = useRef(false);
   const undoQueue = useUndoQueue();
   const undoEpochRef = useRef(vaultEpoch);
   const pendingDeletions = useMemo(
@@ -200,7 +209,7 @@ function App() {
   }, [view]);
 
   useEffect(() => {
-    if (!liveMidiMode) return undefined;
+    if (!webLiveMidiPreviewOpen) return undefined;
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
@@ -209,7 +218,46 @@ function App() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [liveMidiMode]);
+  }, [webLiveMidiPreviewOpen]);
+
+  useEffect(() => {
+    if (!isTauri()) return undefined;
+    let disposed = false;
+    let unlistenCommand: (() => void) | undefined;
+    const sendSnapshot = () => {
+      void sendLiveMidiSnapshot(
+        createLiveMidiWindowSnapshot(defaultLiveMidiStore.getState(), language),
+      ).catch(() => undefined);
+    };
+    const unsubscribeStore = defaultLiveMidiStore.subscribe(sendSnapshot);
+
+    void listen<LiveMidiWindowCommand>(LIVE_MIDI_COMMAND_EVENT, (event) => {
+      if (disposed) return;
+      const command = event.payload;
+      if (command.type === "ready") {
+        sendSnapshot();
+      } else if (command.type === "show-main") {
+        void miniWindowControllerRef.current?.showMain();
+      } else if (command.type === "close") {
+        void leaveLiveMidiMode();
+      } else if (command.type === "refresh-devices") {
+        void defaultLiveMidiStore.getState().refreshDevices();
+      } else if (command.type === "select-device") {
+        void defaultLiveMidiStore.getState().selectDevice(command.backendId);
+      } else if (command.type === "set-show-history") {
+        defaultLiveMidiStore.getState().setShowHistory(command.show);
+      }
+    }).then((unlisten) => {
+      unlistenCommand = unlisten;
+      sendSnapshot();
+    });
+
+    return () => {
+      disposed = true;
+      unsubscribeStore();
+      unlistenCommand?.();
+    };
+  }, [language]);
 
   function openDetail(id: string) {
     setSelectedProgression(undefined);
@@ -279,33 +327,46 @@ async function analyzeMidiPath(path: string) {
   }
 
   async function enterLiveMidiMode() {
-    if (liveMidiMode) return;
     try {
       const preferences = loadLiveMidiPreferences();
-      const adapter = createTauriMiniWindowAdapter();
-      if (adapter) {
-        const controller = new MiniWindowController(adapter);
+      if (isTauri()) {
+        const adapter = createTauriMiniWindowAdapter();
+        if (!adapter) throw new Error(copy.liveMidi.miniModeFailed);
+        const controller = miniWindowControllerRef.current ?? new MiniWindowController(adapter);
         miniWindowControllerRef.current = controller;
-        await controller.enter(preferences.miniBounds, preferences.alwaysOnTop ?? true);
+        await controller.open(preferences.miniBounds, preferences.alwaysOnTop ?? true);
+      } else {
+        setWebLiveMidiPreviewOpen(true);
       }
-      setLiveMidiMode(true);
       await defaultLiveMidiStore.getState().activate();
+      if (isTauri()) {
+        await sendLiveMidiSnapshot(
+          createLiveMidiWindowSnapshot(defaultLiveMidiStore.getState(), language),
+        ).catch(() => undefined);
+      }
     } catch (error) {
+      await defaultLiveMidiStore.getState().deactivate().catch(() => undefined);
+      await miniWindowControllerRef.current?.close().catch(() => undefined);
       setToast(errorMessage(error, copy.liveMidi.miniModeFailed));
-      setLiveMidiMode(false);
+      setWebLiveMidiPreviewOpen(false);
     }
   }
 
   async function leaveLiveMidiMode() {
-    await defaultLiveMidiStore.getState().deactivate();
-    const miniBounds = await miniWindowControllerRef.current?.exit();
-    miniWindowControllerRef.current = undefined;
-    if (miniBounds) {
-      saveLiveMidiPreferences({ ...defaultLiveMidiStore.getState().preferences, miniBounds });
+    if (liveMidiClosingRef.current) return;
+    liveMidiClosingRef.current = true;
+    try {
+      const history = [...defaultLiveMidiStore.getState().history];
+      await defaultLiveMidiStore.getState().deactivate();
+      const miniBounds = await miniWindowControllerRef.current?.close();
+      if (miniBounds) {
+        saveLiveMidiPreferences({ ...defaultLiveMidiStore.getState().preferences, miniBounds });
+      }
+      setWebLiveMidiPreviewOpen(false);
+      if (history.length > 0) setPendingLiveMidiHistory(history);
+    } finally {
+      liveMidiClosingRef.current = false;
     }
-    setLiveMidiMode(false);
-    const history = defaultLiveMidiStore.getState().history;
-    if (history.length > 0) setPendingLiveMidiHistory([...history]);
   }
 
   function discardLiveMidiHistory() {
@@ -371,10 +432,6 @@ async function analyzeMidiPath(path: string) {
     });
     setSelectedProgression(undefined);
     setView("library");
-  }
-
-  if (liveMidiMode) {
-    return <LiveMidiMiniMode copy={copy.liveMidi} onBack={() => { void leaveLiveMidiMode(); }} />;
   }
 
   return (
@@ -646,6 +703,14 @@ async function analyzeMidiPath(path: string) {
           dismissLabel={copy.common.close}
           onDismiss={() => setToast(undefined)}
         />
+      ) : null}
+      {webLiveMidiPreviewOpen ? (
+        <div className="fixed bottom-4 right-4 z-50 h-[260px] w-[420px] max-w-[calc(100vw-2rem)] border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] shadow-xl">
+          <LiveMidiMiniMode
+            copy={copy.liveMidi}
+            onShowMain={() => { void leaveLiveMidiMode(); }}
+          />
+        </div>
       ) : null}
       </AppShell>
     </PreviewSoundProvider>
