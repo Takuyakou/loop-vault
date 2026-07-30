@@ -8,6 +8,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Info,
+  LoaderCircle,
   TriangleAlert,
 } from "lucide-react";
 
@@ -107,13 +108,110 @@ export function Field({
 
 export interface SurfaceProps extends HTMLAttributes<HTMLElement> {
   children: ReactNode;
+  variant?: "standard" | "raised" | "primary";
 }
 
-export function Surface({ children, className = "", ...props }: SurfaceProps) {
+export function Surface({
+  children,
+  className = "",
+  variant = "standard",
+  ...props
+}: SurfaceProps) {
+  const variantClass = variant === "standard" ? "" : ` lv-surface-${variant}`;
   return (
-    <section {...props} className={`lv-surface ${className}`}>
+    <section {...props} className={`lv-surface${variantClass} ${className}`}>
       {children}
     </section>
+  );
+}
+
+export type BadgeTone =
+  | "neutral"
+  | "teal"
+  | "indigo"
+  | "success"
+  | "warning"
+  | "danger";
+
+export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
+  tone?: BadgeTone;
+}
+
+export function Badge({
+  children,
+  className = "",
+  tone = "neutral",
+  ...props
+}: BadgeProps) {
+  return (
+    <span {...props} className={`lv-badge lv-badge-${tone} ${className}`}>
+      {children}
+    </span>
+  );
+}
+
+export interface SectionHeadingProps {
+  title: string;
+  kicker?: string;
+  description?: string;
+  action?: ReactNode;
+  level?: 2 | 3;
+  className?: string;
+}
+
+export function SectionHeading({
+  action,
+  className = "",
+  description,
+  kicker,
+  level = 2,
+  title,
+}: SectionHeadingProps) {
+  const Heading = level === 2 ? "h2" : "h3";
+  return (
+    <div className={`flex min-w-0 items-start justify-between gap-4 ${className}`}>
+      <div className="min-w-0">
+        {kicker ? <p className="lv-section-kicker">{kicker}</p> : null}
+        <Heading className={`${kicker ? "mt-1.5 " : ""}lv-section-title break-words`}>
+          {title}
+        </Heading>
+        {description ? (
+          <p className="lv-section-description mt-1.5 max-w-3xl">{description}</p>
+        ) : null}
+      </div>
+      {action ? <div className="shrink-0">{action}</div> : null}
+    </div>
+  );
+}
+
+export interface LoadingStateProps {
+  label: string;
+  description?: string;
+  className?: string;
+}
+
+export function LoadingState({
+  className = "",
+  description,
+  label,
+}: LoadingStateProps) {
+  return (
+    <div
+      className={`flex min-w-0 items-center gap-3 text-sm text-[var(--lv-text-secondary)] ${className}`}
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      <LoaderCircle
+        aria-hidden="true"
+        className="shrink-0 animate-spin text-[var(--lv-accent)]"
+        size={18}
+      />
+      <div className="min-w-0">
+        <p className="font-medium text-[var(--lv-text)]">{label}</p>
+        {description ? <p className="mt-0.5 break-words text-xs">{description}</p> : null}
+      </div>
+    </div>
   );
 }
 

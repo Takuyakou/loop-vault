@@ -1,27 +1,31 @@
 :root {
-  --lv-bg: #0b0e14;
-  --lv-bg-subtle: #0e131b;
-  --lv-surface: #11161f;
-  --lv-surface-raised: #171d28;
-  --lv-surface-overlay: #1d2532;
-  --lv-border: #2a3342;
-  --lv-border-strong: #3a4658;
-  --lv-accent: #46dfc7;
-  --lv-accent-strong: #20bfa9;
-  --lv-accent-soft: #102f2c;
+  --lv-bg: #0a1019;
+  --lv-bg-subtle: #0d1522;
+  --lv-sidebar: #0d1522;
+  --lv-topbar: #0b121d;
+  --lv-surface: #111b2a;
+  --lv-surface-raised: #162338;
+  --lv-surface-overlay: #1b2b43;
+  --lv-border: rgb(150 170 195 / 14%);
+  --lv-border-strong: rgb(150 170 195 / 28%);
+  --lv-accent: #42d8c6;
+  --lv-accent-strong: #27c6b4;
+  --lv-accent-soft: #123b3a;
+  --lv-accent-secondary: #746df4;
+  --lv-accent-secondary-soft: #25234d;
   --lv-info: #78c8f5;
   --lv-info-soft: #102d40;
-  --lv-success: #62d7a6;
+  --lv-success: #36c990;
   --lv-success-soft: #12382c;
-  --lv-warning: #e6ae4a;
+  --lv-warning: #f2c14e;
   --lv-warning-soft: #3b2b11;
-  --lv-danger: #ff8585;
-  --lv-danger-strong: #e65f67;
+  --lv-danger: #ee6b73;
+  --lv-danger-strong: #d95761;
   --lv-danger-soft: #421b22;
   --lv-focus: #8bd7ff;
-  --lv-text: #f5f7fa;
-  --lv-text-secondary: #c0c8d4;
-  --lv-text-muted: #8792a4;
+  --lv-text: #f2f6fc;
+  --lv-text-secondary: #a5b2c6;
+  --lv-text-muted: #738299;
   --lv-text-on-accent: #06110f;
   --lv-muted: var(--lv-text-muted);
   --lv-space-1: 4px;
@@ -30,19 +34,26 @@
   --lv-space-4: 16px;
   --lv-space-5: 20px;
   --lv-space-6: 24px;
+  --lv-space-7: 28px;
   --lv-space-8: 32px;
+  --lv-space-10: 40px;
   --lv-radius-sm: 8px;
   --lv-radius-md: 12px;
   --lv-radius-lg: 16px;
+  --lv-radius-xl: 18px;
   --lv-control-sm: 36px;
   --lv-control-md: 40px;
+  --lv-control-lg: 44px;
   --lv-font-xs: 0.75rem;
   --lv-font-sm: 0.875rem;
   --lv-font-md: 1rem;
   --lv-font-lg: 1.125rem;
   --lv-font-xl: 1.5rem;
+  --lv-font-chord: 1.125rem;
+  --lv-font-current-chord: 2rem;
   --lv-line-tight: 1.25;
   --lv-line-body: 1.55;
+  --lv-shadow-raised: 0 12px 32px rgb(0 0 0 / 20%);
   --lv-shadow-overlay: 0 18px 48px rgb(0 0 0 / 48%);
   --lv-shadow-focus: 0 0 0 3px rgb(139 215 255 / 22%);
   --lv-motion-fast: 120ms;
@@ -52,12 +63,20 @@
   --lv-z-popover: 50;
   --lv-z-dialog: 70;
   --lv-z-toast: 80;
+  --lv-sidebar-expanded: 220px;
+  --lv-sidebar-collapsed: 68px;
+  --lv-topbar-height: 68px;
 }
 
 @layer base {
+  html {
+    color-scheme: dark;
+  }
+
   body {
     background: var(--lv-bg);
     color: var(--lv-text);
+    line-height: var(--lv-line-body);
   }
 
   button,
@@ -134,7 +153,7 @@
     min-height: var(--lv-control-md);
     border: 1px solid var(--lv-border-strong);
     border-radius: var(--lv-radius-sm);
-    background: var(--lv-bg);
+    background: var(--lv-bg-subtle);
     color: var(--lv-text);
   }
 
@@ -144,8 +163,91 @@
 
   .lv-surface {
     border: 1px solid var(--lv-border);
-    border-radius: var(--lv-radius-sm);
+    border-radius: var(--lv-radius-md);
     background: var(--lv-surface);
+  }
+
+  .lv-surface-raised {
+    background: var(--lv-surface-raised);
+  }
+
+  .lv-surface-primary {
+    border-color: color-mix(in srgb, var(--lv-accent) 28%, var(--lv-border));
+    border-radius: var(--lv-radius-lg);
+    background: var(--lv-surface-raised);
+    box-shadow: var(--lv-shadow-raised);
+  }
+
+  .lv-badge {
+    display: inline-flex;
+    min-height: 24px;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--lv-border);
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: var(--lv-font-xs);
+    font-weight: 600;
+    line-height: 1.25;
+    white-space: nowrap;
+  }
+
+  .lv-badge-neutral {
+    background: var(--lv-bg-subtle);
+    color: var(--lv-text-secondary);
+  }
+
+  .lv-badge-teal {
+    border-color: color-mix(in srgb, var(--lv-accent) 42%, var(--lv-border));
+    background: var(--lv-accent-soft);
+    color: var(--lv-accent);
+  }
+
+  .lv-badge-indigo {
+    border-color: color-mix(in srgb, var(--lv-accent-secondary) 45%, var(--lv-border));
+    background: var(--lv-accent-secondary-soft);
+    color: #c4c0ff;
+  }
+
+  .lv-badge-success {
+    border-color: color-mix(in srgb, var(--lv-success) 42%, var(--lv-border));
+    background: var(--lv-success-soft);
+    color: var(--lv-success);
+  }
+
+  .lv-badge-warning {
+    border-color: color-mix(in srgb, var(--lv-warning) 42%, var(--lv-border));
+    background: var(--lv-warning-soft);
+    color: var(--lv-warning);
+  }
+
+  .lv-badge-danger {
+    border-color: color-mix(in srgb, var(--lv-danger) 42%, var(--lv-border));
+    background: var(--lv-danger-soft);
+    color: var(--lv-danger);
+  }
+
+  .lv-section-kicker {
+    color: var(--lv-accent);
+    font-size: var(--lv-font-xs);
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .lv-section-title {
+    color: var(--lv-text);
+    font-size: var(--lv-font-lg);
+    font-weight: 700;
+    line-height: var(--lv-line-tight);
+    text-wrap: balance;
+  }
+
+  .lv-section-description {
+    color: var(--lv-text-secondary);
+    font-size: var(--lv-font-sm);
+    line-height: var(--lv-line-body);
+    text-wrap: pretty;
   }
 
   .lv-status-info {

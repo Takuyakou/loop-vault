@@ -2,11 +2,15 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { Plus } from "lucide-react";
 import {
+  Badge,
   Button,
   EmptyState,
   Field,
   IconButton,
+  LoadingState,
+  SectionHeading,
   StatusMessage,
+  Surface,
 } from "./primitives";
 
 describe("shared UI primitives", () => {
@@ -55,5 +59,30 @@ describe("shared UI primitives", () => {
     expect(markup).toContain("<h3");
     expect(markup).toContain("Import MIDI");
   });
-});
 
+  it("provides semantic visual hierarchy without changing surface semantics", () => {
+    const markup = renderToStaticMarkup(
+      <Surface variant="primary">
+        <SectionHeading
+          kicker="Today"
+          title="Current progression"
+          description="Continue from the latest saved chord."
+        />
+      </Surface>,
+    );
+    expect(markup).toContain("<section");
+    expect(markup).toContain("lv-surface-primary");
+    expect(markup).toContain("<h2");
+    expect(markup).toContain("lv-section-kicker");
+  });
+
+  it("labels badges by tone and loading updates as polite status", () => {
+    const badge = renderToStaticMarkup(<Badge tone="indigo">Practice</Badge>);
+    const loading = renderToStaticMarkup(
+      <LoadingState label="Analyzing…" description="Voice 3 of 8" />,
+    );
+    expect(badge).toContain("lv-badge-indigo");
+    expect(loading).toContain('role="status"');
+    expect(loading).toContain('aria-live="polite"');
+  });
+});
