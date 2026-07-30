@@ -33,6 +33,28 @@ struct PreparedMidiArtifact {
     content_hash: String,
 }
 
+impl MidiExportState {
+    fn prepared_artifact(
+        &self,
+        drag_token: &str,
+        now: u64,
+    ) -> Result<PreparedMidiArtifact, String> {
+        let mut artifacts = self
+            .artifacts
+            .lock()
+            .map_err(|_| "MIDI drag preparation is unavailable.".to_string())?;
+        let artifact = artifacts
+            .get(drag_token)
+            .cloned()
+            .ok_or_else(|| "The prepared MIDI drag has expired. Try dragging again.".to_string())?;
+        if artifact.expires_at <= now {
+            artifacts.remove(drag_token);
+            return Err("The prepared MIDI drag has expired. Try dragging again.".to_string());
+        }
+        Ok(artifact)
+    }
+}
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SavedMidiFileDto {
@@ -241,6 +263,39 @@ fn reusable_cache_file(path: &Path, bytes: &[u8]) -> bool {
         && existing == bytes
 }
 
+pub(crate) fn validated_drag_path(
+    app: &tauri::AppHandle,
+    state: &MidiExportState,
+    drag_token: &str,
+) -> Result<PathBuf, String> {
+    let artifact = state.prepared_artifact(drag_token, unix_seconds())?;
+    let cache_dir = midi_export_cache_dir(app)?;
+    if artifact.temp_path.parent() != Some(cache_dir.as_path())
+        || artifact
+            .temp_path
+            .extension()
+            .and_then(|value| value.to_str())
+            != Some("mid")
+    {
+        return Err("The prepared MIDI drag is invalid. Try dragging again.".to_string());
+    }
+    let metadata = fs::symlink_metadata(&artifact.temp_path)
+        .map_err(|_| "The prepared MIDI drag is unavailable. Try dragging again.".to_string())?;
+    if !metadata.is_file()
+        || metadata.file_type().is_symlink()
+        || metadata.len() == 0
+        || metadata.len() != artifact.bytes_length as u64
+    {
+        return Err("The prepared MIDI drag is unavailable. Try dragging again.".to_string());
+    }
+    let bytes = fs::read(&artifact.temp_path)
+        .map_err(|_| "The prepared MIDI drag is unavailable. Try dragging again.".to_string())?;
+    if sha256_hex(&bytes) != artifact.content_hash {
+        return Err("The prepared MIDI drag is invalid. Try dragging again.".to_string());
+    }
+    Ok(artifact.temp_path)
+}
+
 fn cleanup_stale_files(cache_dir: &Path, now: SystemTime) -> CleanupMidiExportsDto {
     let mut result = CleanupMidiExportsDto {
         removed: 0,
@@ -425,6 +480,26 @@ mod tests {
         assert!(validate_midi_bytes(&[]).is_err());
         assert!(validate_midi_bytes(b"not-midi-bytes").is_err());
         assert!(validate_midi_bytes(MIDI_BYTES).is_ok());
+    }
+
+    #[test]
+    fn expired_drag_tokens_are_removed() {
+        let state = MidiExportState::default();
+        state.artifacts.lock().unwrap().insert(
+            "expired".to_string(),
+            PreparedMidiArtifact {
+                drag_token: "expired".to_string(),
+                file_name: "clip.mid".to_string(),
+                temp_path: PathBuf::from("clip.mid"),
+                bytes_length: MIDI_BYTES.len(),
+                prepared_at: 10,
+                expires_at: 20,
+                content_hash: sha256_hex(MIDI_BYTES),
+            },
+        );
+
+        assert!(state.prepared_artifact("expired", 20).is_err());
+        assert!(!state.artifacts.lock().unwrap().contains_key("expired"));
     }
 
     fn test_directory(label: &str) -> PathBuf {
