@@ -58,7 +58,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       ref={ref}
       aria-label={label}
       title={title}
-      className={`h-10 min-h-10 w-10 px-0 ${className}`}
+      className={`h-10 min-h-10 w-10 shrink-0 !px-0 ${className}`}
     >
       {children}
     </Button>
@@ -183,4 +183,3 @@ export function EmptyState({
     </div>
   );
 }
-

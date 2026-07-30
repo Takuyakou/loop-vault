@@ -631,7 +631,11 @@ async function analyzeMidiPath(path: string) {
         fallbackFocusRef={undoFallbackFocusRef}
       />
       {toast ? (
-        <Toast message={toast} />
+        <Toast
+          message={toast}
+          dismissLabel={copy.common.close}
+          onDismiss={() => setToast(undefined)}
+        />
       ) : null}
       </div>
     </PreviewSoundProvider>
