@@ -950,7 +950,7 @@ function workspaceCopy(language: AppLanguage) {
       duplicateExcluded: "重複除外",
       warnings: "確認事項",
       analyze: "この構成で解析",
-      preparing: "準備中...",
+      preparing: "準備中…",
       noAudibleVoices: "再生できるVoiceがありません。Solo / Muteを確認してください。",
       playbackFailed: "MIDIパートを再生できませんでした。",
       recommendation: (harmony: number, bass: number, excluded: number) =>
@@ -1010,7 +1010,7 @@ function workspaceCopy(language: AppLanguage) {
     duplicateExcluded: "Duplicate excluded",
     warnings: "Review notes",
     analyze: "Analyze this configuration",
-    preparing: "Preparing...",
+    preparing: "Preparing…",
     noAudibleVoices: "No audible Voice. Check Solo and Mute.",
     playbackFailed: "The MIDI parts could not be played.",
     recommendation: (harmony: number, bass: number, excluded: number) =>

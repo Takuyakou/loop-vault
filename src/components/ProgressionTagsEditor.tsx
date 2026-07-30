@@ -54,6 +54,9 @@ export function ProgressionTagsEditor({
         </p>
         <form className="mt-2 flex gap-2" onSubmit={addTag}>
           <input
+            name="progression-tag"
+            autoComplete="off"
+            aria-label={text.manualTitle}
             className="min-w-0 flex-1 border border-[var(--lv-border-strong)] bg-[var(--lv-surface)] px-3 py-2 text-sm"
             value={input}
             onChange={(event) => setInput(event.target.value)}
@@ -62,7 +65,7 @@ export function ProgressionTagsEditor({
           />
           <button
             type="submit"
-            className="lv-button-secondary grid h-9 w-9 place-items-center disabled:opacity-40"
+            className="lv-button-secondary grid h-10 w-10 place-items-center disabled:opacity-40"
             disabled={!input.trim()}
             aria-label={text.add}
             title={text.add}
@@ -76,7 +79,7 @@ export function ProgressionTagsEditor({
               {displayManualTag(tag)}
               <button
                 type="button"
-                className="grid h-5 w-5 place-items-center text-[var(--lv-text-muted)] hover:text-[var(--lv-text)]"
+                className="-my-2 -mr-2 grid h-10 w-10 place-items-center text-[var(--lv-text-muted)] hover:text-[var(--lv-text)]"
                 onClick={() => onChange({
                   tags: block.tags.filter((entry) => entry !== tag),
                   suppressedAutoTags: block.suppressedAutoTags ?? [],
@@ -107,7 +110,7 @@ export function ProgressionTagsEditor({
                 {label}
                 <button
                   type="button"
-                  className="grid h-5 w-5 place-items-center text-teal-200 hover:text-white"
+                  className="-my-2 -mr-2 grid h-10 w-10 place-items-center text-teal-200 hover:text-white"
                   onClick={() => onChange({
                     tags: block.tags,
                     suppressedAutoTags: suppressAutoTag(block.suppressedAutoTags, tag.tagId),

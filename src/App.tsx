@@ -143,6 +143,10 @@ function App() {
   );
   const language = settings.language;
   const copy = appCopy[language];
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
   const progressionCopy = progressionDetailCopy[language];
 
   useEffect(() => {
@@ -408,7 +412,7 @@ async function analyzeMidiPath(path: string) {
           ref={mainContentRef}
           tabIndex={-1}
           aria-label={viewLabel(view, copy)}
-          className="flex min-w-0 flex-1 flex-col outline-none"
+          className="flex min-w-0 flex-1 flex-col outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--lv-accent)]"
         >
         {loadStatus === "ready" ? (
           <>
