@@ -345,6 +345,9 @@ describe("PreAnalysisWorkspace", () => {
     expect(addMidiButton.parentElement).toBe(analyzeButton.parentElement);
     expect(addMidiButton.compareDocumentPosition(analyzeButton)
       & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
+    expect(container.querySelector(
+      "[data-testid='pre-analysis-primary-actions']",
+    )?.textContent).toContain("4 Voice中 2 Voiceを解析します");
 
     await act(async () => {
       [...container.querySelectorAll<HTMLButtonElement>("button")]
@@ -368,6 +371,28 @@ describe("PreAnalysisWorkspace", () => {
     });
     expect(canvas.getAttribute("aria-label")).toContain("左右キー");
 
+    await unmount();
+  });
+
+  it("explains why Analyze is disabled when no Voice is selected", async () => {
+    const session = fixtureSession();
+    const { container, unmount } = await renderWorkspace({
+      ...session,
+      preset: "custom",
+      voices: session.voices.map((voice) => ({
+        ...voice,
+        included: false,
+        assignedRole: "exclude",
+      })),
+    });
+    const analyze = container.querySelector<HTMLButtonElement>(
+      "[data-testid='pre-analysis-analyze']",
+    )!;
+    expect(analyze.disabled).toBe(true);
+    expect(analyze.getAttribute("aria-describedby"))
+      .toBe("pre-analysis-disabled-reason");
+    expect(container.querySelector("#pre-analysis-disabled-reason")?.textContent)
+      .toContain("1つ以上選んでください");
     await unmount();
   });
 

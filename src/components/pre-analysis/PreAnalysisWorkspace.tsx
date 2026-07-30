@@ -37,6 +37,7 @@ import {
   visibleBeatCount as pianoRollVisibleBeatCount,
 } from "./PreAnalysisPianoRoll";
 import { PreAnalysisTimeScrollbar } from "./PreAnalysisTimeScrollbar";
+import { Button, IconButton, StatusMessage } from "../ui";
 
 type PianoRollDisplayScope = "analysis-targets" | "all-voices";
 
@@ -273,12 +274,12 @@ export function PreAnalysisWorkspace({
             </p>
           </div>
           <div
-            className="flex flex-wrap items-start gap-2"
+            className="flex w-full flex-wrap items-start gap-2 sm:w-auto"
             data-testid="pre-analysis-primary-actions"
           >
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 border border-[var(--lv-border-strong)] px-3 py-2 text-sm hover:border-[var(--lv-accent)]"
+            <Button
+              variant="secondary"
+              className="justify-start px-3"
               aria-expanded={detailsExpanded}
               aria-controls="pre-analysis-part-details"
               onClick={() => setDetailsExpanded((expanded) => !expanded)}
@@ -286,30 +287,39 @@ export function PreAnalysisWorkspace({
               {detailsExpanded
                 ? <ChevronDown size={16} aria-hidden="true" />
                 : <ChevronRight size={16} aria-hidden="true" />}
-              {copy.partDetails}
-              <span className="text-[var(--lv-text-muted)]">
+              <span className="min-w-0 truncate">{copy.partDetails}</span>
+              <span className="ml-auto shrink-0 text-xs text-[var(--lv-text-muted)]">
                 {copy.voiceCount(session.voices.length)}
               </span>
-            </button>
-            <div className="grid gap-2">
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 border border-[var(--lv-border-strong)] px-3 py-2 text-sm hover:border-[var(--lv-accent)]"
+            </Button>
+            <div className="grid min-w-64 flex-1 gap-2 sm:max-w-80">
+              <Button
+                variant="secondary"
+                className="justify-start px-3"
                 data-testid="pre-analysis-add-midi"
                 onClick={onAddMidi}
               >
                 <Plus size={16} aria-hidden="true" />
                 {copy.addMidi}
-              </button>
-              <button
-                type="button"
-                className="bg-[var(--lv-accent)] px-4 py-2 text-sm font-semibold text-stone-950 disabled:opacity-40"
+              </Button>
+              <p className="px-1 text-xs leading-5 text-[var(--lv-text-secondary)]" aria-live="polite">
+                {copy.targetSummary(includedCount, session.voices.length)}
+              </p>
+              <Button
+                variant="primary"
+                className="w-full"
                 data-testid="pre-analysis-analyze"
                 disabled={busy || includedCount === 0}
                 onClick={onAnalyze}
+                aria-describedby={includedCount === 0 ? "pre-analysis-disabled-reason" : undefined}
               >
                 {busy ? copy.preparing : copy.analyze}
-              </button>
+              </Button>
+              {includedCount === 0 ? (
+                <p id="pre-analysis-disabled-reason" className="px-1 text-xs text-[var(--lv-warning)]">
+                  {copy.selectAtLeastOne}
+                </p>
+              ) : null}
             </div>
           </div>
         </div>
@@ -349,11 +359,11 @@ export function PreAnalysisWorkspace({
         {detailsExpanded ? (
           <div id="pre-analysis-part-details">
             <div className="mt-5 flex flex-wrap items-center gap-2 border-y border-[var(--lv-border)] py-3">
-              <button
-                type="button"
+              <Button
+                variant={playbackActive ? "danger" : "primary"}
                 className={playbackActive
-                  ? "inline-flex items-center gap-2 border border-rose-300/70 bg-rose-500/10 px-4 py-2 text-sm font-semibold text-rose-100"
-                  : "inline-flex items-center gap-2 bg-[var(--lv-accent)] px-4 py-2 text-sm font-semibold text-stone-950"}
+                  ? "border-rose-300/70 bg-rose-500/10 px-4 text-rose-100"
+                  : "bg-[var(--lv-accent)] px-4 text-stone-950"}
                 data-testid="pre-analysis-playback-toggle"
                 title={playbackActive ? copy.stop : copy.play}
                 aria-label={playbackActive ? copy.stop : copy.play}
@@ -369,7 +379,7 @@ export function PreAnalysisWorkspace({
                   ? <Square size={16} aria-hidden="true" />
                   : <Play size={16} fill="currentColor" aria-hidden="true" />}
                 {playbackActive ? copy.stop : copy.play}
-              </button>
+              </Button>
               <label className="ml-2 flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
@@ -541,11 +551,12 @@ export function PreAnalysisWorkspace({
                             activeIcon={<VolumeX size={16} />}
                             inactiveIcon={<Volume2 size={16} />}
                           />
-                          <button
-                            type="button"
-                            className="p-1.5 text-[var(--lv-text-muted)] hover:text-red-300 disabled:opacity-30"
+                          <IconButton
+                            variant="ghost"
+                            size="sm"
+                            className="h-9 min-h-9 w-9 text-[var(--lv-text-muted)] hover:text-red-300"
                             title={copy.removeSource}
-                            aria-label={`${copy.removeSource}: ${source.displayName}`}
+                            label={`${copy.removeSource}: ${source.displayName}`}
                             disabled={session.sources.length === 1}
                             onClick={() => {
                               stopSessionPlayback();
@@ -553,7 +564,7 @@ export function PreAnalysisWorkspace({
                             }}
                           >
                             <Trash2 size={16} aria-hidden="true" />
-                          </button>
+                          </IconButton>
                         </div>
                         <div className="mt-2 grid gap-1">
                           {sourceVoices.map((voice) => {
@@ -594,7 +605,7 @@ export function PreAnalysisWorkspace({
                                 />
                                 <button
                                   type="button"
-                                  className="w-7 border border-[var(--lv-border)] py-1 text-xs"
+                                    className="h-8 w-8 border border-[var(--lv-border)] text-xs"
                                   aria-pressed={voice.solo}
                                   aria-label={copy.soloVoice(voice.displayName)}
                                   title={copy.solo}
@@ -655,7 +666,7 @@ export function PreAnalysisWorkspace({
                                 </button>
                                 <span className="col-span-4 col-start-2 flex flex-wrap items-center gap-2">
                                   <select
-                                    className="border border-[var(--lv-border)] bg-[var(--lv-bg)] px-2 py-1 text-xs"
+                                    className="min-h-9 border border-[var(--lv-border)] bg-[var(--lv-bg)] px-2 py-1 text-xs"
                                     aria-label={copy.roleFor(voice.displayName)}
                                     value={voice.assignedRole}
                                     disabled={
@@ -705,15 +716,14 @@ export function PreAnalysisWorkspace({
             </div>
 
             {session.warnings.length ? (
-              <div className="mt-5 border-y border-amber-400/30 py-3" role="status">
-                <p className="text-sm font-semibold text-amber-200">{copy.warnings}</p>
+              <StatusMessage className="mt-5" tone="warning" title={copy.warnings}>
                 <ul className="mt-2 grid gap-1 text-sm text-amber-100/80">
                   {[...new Set(session.warnings.map((warning) =>
                     warningLabel(warning.code, language)))].map((warning) => (
                     <li key={warning}>{warning}</li>
                   ))}
                 </ul>
-              </div>
+              </StatusMessage>
             ) : null}
           </div>
         ) : null}
@@ -740,16 +750,16 @@ function IconToggle({
   inactiveIcon: ReactNode;
 }) {
   return (
-    <button
-      type="button"
-      className="p-1.5 text-[var(--lv-text-muted)] hover:text-[var(--lv-text)]"
-      aria-label={label}
+    <IconButton
+      variant="ghost"
+      size="sm"
+      className="h-8 min-h-8 w-8 text-[var(--lv-text-muted)] hover:text-[var(--lv-text)]"
+      label={label}
       aria-pressed={active}
-      title={label}
       onClick={onClick}
     >
       {active ? activeIcon : inactiveIcon}
-    </button>
+    </IconButton>
   );
 }
 
@@ -945,6 +955,9 @@ function workspaceCopy(language: AppLanguage) {
       playbackFailed: "MIDIパートを再生できませんでした。",
       recommendation: (harmony: number, bass: number, excluded: number) =>
         `解析対象: 和声 ${harmony} / ベース ${bass}・除外 ${excluded}`,
+      targetSummary: (included: number, total: number) =>
+        `${total} Voice中 ${included} Voiceを解析します`,
+      selectAtLeastOne: "解析するVoiceを1つ以上選んでください。",
     };
   }
   return {
@@ -1002,5 +1015,8 @@ function workspaceCopy(language: AppLanguage) {
     playbackFailed: "The MIDI parts could not be played.",
     recommendation: (harmony: number, bass: number, excluded: number) =>
       `Included: ${harmony} harmony / ${bass} bass · ${excluded} excluded`,
+    targetSummary: (included: number, total: number) =>
+      `${included} of ${total} Voices will be analyzed`,
+    selectAtLeastOne: "Select at least one Voice to analyze.",
   };
 }

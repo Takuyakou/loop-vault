@@ -151,7 +151,8 @@ import { cutDraftRangeAtEvent } from "../domain/midi/draftRangeEditing";
 import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
 import { ProgressionEditSummary } from "../components/progression-editing/ProgressionEditSummary";
 import { usePlaybackState } from "../hooks/usePlaybackState";
-import { Copy, TriangleAlert } from "lucide-react";
+import { Copy, FileMusic, TriangleAlert } from "lucide-react";
+import { Button, StatusMessage } from "../components/ui";
 
 interface CaptureViewProps {
   ideas: SongIdea[];
@@ -1562,27 +1563,36 @@ function CaptureEmptyState({
   progressStage?: CaptureAnalysisProgressStage;
 }) {
   return (
-    <section className={`grid min-h-[32rem] place-items-center border p-6 text-center transition-colors ${isDraggingMidi ? "border-teal-300 bg-[var(--lv-accent)]/10" : "border-[var(--lv-border)] bg-[var(--lv-bg)]/70"}`}>
+    <section
+      className={`grid min-h-[32rem] place-items-center border p-6 text-center transition-colors ${isDraggingMidi ? "border-teal-300 bg-[var(--lv-accent)]/10" : "border-[var(--lv-border)] bg-[var(--lv-bg)]/70"}`}
+      aria-labelledby="capture-empty-title"
+      data-drop-target-state={isDraggingMidi ? "active" : "idle"}
+    >
       <div className="max-w-2xl">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--lv-accent)]">
           {copy.capture.eyebrow}
         </p>
-        <h2 className="mt-3 text-3xl font-semibold">{copy.capture.title}</h2>
+        <h2 id="capture-empty-title" className="mt-3 text-3xl font-semibold">{copy.capture.title}</h2>
         <p className="mt-3 text-sm leading-6 text-[var(--lv-text-muted)]">{copy.capture.emptyDescription}</p>
         <div className="mt-6 grid gap-3 text-left sm:grid-cols-3">
           <StepCard index="1" text={copy.capture.emptyStepTimeline} />
           <StepCard index="2" text={copy.capture.emptyStepCandidates} />
           <StepCard index="3" text={copy.capture.emptyStepSave} />
         </div>
-        <div className={`mt-7 border border-dashed p-5 ${isDraggingMidi ? "border-teal-300 bg-[var(--lv-accent)]/10 text-teal-50" : "border-[var(--lv-border-strong)] bg-[var(--lv-bg)] text-[var(--lv-text-secondary)]"}`}>
+        <div
+          className={`mt-7 border border-dashed p-5 ${isDraggingMidi ? "border-teal-300 bg-[var(--lv-accent)]/10 text-teal-50" : "border-[var(--lv-border-strong)] bg-[var(--lv-bg)] text-[var(--lv-text-secondary)]"}`}
+          role="status"
+          aria-live="polite"
+        >
+          <FileMusic aria-hidden="true" className="mx-auto mb-3 text-[var(--lv-accent)]" size={28} />
           <p className="text-lg font-semibold">
             {isDraggingMidi ? copy.capture.dropActive : copy.capture.dropMidi}
           </p>
           <p className="mt-2 text-sm text-[var(--lv-text-muted)]">{copy.capture.dropHelp}</p>
         </div>
-        <button className="mt-7 rounded bg-[var(--lv-accent)] px-5 py-3 text-sm font-semibold text-stone-950" onClick={onChooseMidi}>
+        <Button variant="primary" className="mt-7 min-h-11 px-5" onClick={onChooseMidi}>
           {copy.capture.loadMidi}
-        </button>
+        </Button>
         <p className="mt-3 text-xs text-[var(--lv-text-muted)]">{copy.capture.supportedFormats}</p>
         {status === "analyzing" || progressStage ? (
           <div className="mt-6 border border-cyan-500/30 bg-cyan-500/10 p-4 text-left text-sm text-cyan-100">
@@ -1596,10 +1606,18 @@ function CaptureEmptyState({
           </div>
         ) : null}
         {status === "error" ? (
-          <div className="mt-6 border border-red-500/30 bg-red-500/10 p-4 text-left text-sm text-red-100">
-            <p className="font-semibold">{copy.capture.loadFailed}</p>
-            <p className="mt-2 text-red-100/80">{error}</p>
-          </div>
+          <StatusMessage
+            className="mt-6 text-left"
+            tone="error"
+            title={copy.capture.loadFailed}
+            action={(
+              <Button variant="secondary" size="sm" onClick={onChooseMidi}>
+                {copy.capture.loadMidi}
+              </Button>
+            )}
+          >
+            {error}
+          </StatusMessage>
         ) : null}
       </div>
     </section>
