@@ -47,7 +47,7 @@ Phase 5.13の未保存保護、focus、非同期状態、reduced motion、長文
 - #331: Progression Detail Renewal
 - #332: Practice / Live MIDI Renewal
 - #333: History / Settings / Edge States
-- `PENDING_STAGE09_PR`: Guideline Re-Audit / Playwright / Build
+- #334: Guideline Re-Audit / Playwright / Build
 
 mainへは未マージ。
 
