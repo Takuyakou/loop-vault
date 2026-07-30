@@ -1,0 +1,29 @@
+{
+  "phase": "5.14",
+  "capturedAt": "2026-07-30",
+  "loopVault": {
+    "repository": "Takuyakou/loop-vault",
+    "baseBranch": "master",
+    "commit": "e5147a435a09168629642c8c2191e66888bf3ab4",
+    "vitestFiles": 240,
+    "vitestTests": 1855,
+    "defaultAnalyzerMode": "phase4-v1",
+    "fileVersion": 1,
+    "trackedMidi": 0,
+    "trackedLocalEvaluation": 0,
+    "protectedBlobs": {
+      "src/domain/schema.ts": "3e8b9a9ef8ba91631899629cdd9d5527045fa836",
+      "src/domain/midi/analysis.ts": "8a05e530dc583950b89ce090c7aba591793c6c03",
+      "src/store/vaultStore.ts": "1d4c33f64abbd5b90e43161efbbe6938b5df9add",
+      "src/styles/tokens.css": "9d6987627638a736f0c493b4b9edc96f487355d0"
+    }
+  },
+  "chordDrip": {
+    "path": "D:\\dev\\Chord Drip作成",
+    "repository": "Takuyakou/chord-drip",
+    "auditedHead": "0254c440d5c532a49b21c9ba5102fa48f94b9f1f",
+    "nativeDragSourceCommit": "7c90159099961122e80dd4514e4a7213f8ee12df",
+    "frontendBridgeCommit": "50795f732869c57a4fffadb35657706d34c4cfc5",
+    "midiExporterCommit": "9a6a7dfc82f248f78a7d6056a91b4b12bff34913"
+  }
+}
