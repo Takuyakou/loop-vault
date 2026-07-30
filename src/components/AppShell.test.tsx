@@ -103,7 +103,7 @@ describe("AppShell", () => {
     await act(async () => root.unmount());
   });
 
-  it("places the master volume knob immediately before Idea and changes its value", async () => {
+  it("places the master volume knob between the level meter and sound selector", async () => {
     const onMasterVolumeChange = vi.fn();
     const { container, root } = await renderShell({
       masterVolume: 72,
@@ -115,7 +115,11 @@ describe("AppShell", () => {
 
     expect(input?.value).toBe("72");
     expect(input?.getAttribute("aria-valuetext")).toBe("72%");
-    expect(input?.closest("label")?.nextElementSibling).toBe(createButton);
+    const meter = container.querySelector("[data-playback-level-meter]");
+    const soundSelector = container.querySelector('[role="group"][aria-label="Preview sound"]');
+    expect(meter?.nextElementSibling).toBe(input?.closest("label"));
+    expect(input?.closest("label")?.nextElementSibling).toBe(soundSelector);
+    expect(soundSelector?.nextElementSibling).toBe(createButton);
     expect(input?.closest("label")?.className).not.toContain("border");
     expect(input?.closest("label")?.className).toContain("bg-transparent");
     expect(
@@ -134,7 +138,7 @@ describe("AppShell", () => {
     await act(async () => root.unmount());
   });
 
-  it("places the global preview sound selector immediately before master volume", async () => {
+  it("places the global preview sound selector immediately after master volume", async () => {
     const { container, root } = await renderShell();
     const group = container.querySelector<HTMLElement>(
       '[role="group"][aria-label="Preview sound"]',
@@ -151,7 +155,7 @@ describe("AppShell", () => {
 
     expect(piano?.getAttribute("aria-pressed")).toBe("true");
     expect(electricPiano?.getAttribute("aria-pressed")).toBe("false");
-    expect(group?.nextElementSibling).toBe(volume?.closest("label"));
+    expect(volume?.closest("label")?.nextElementSibling).toBe(group);
 
     await act(async () => electricPiano?.click());
     expect(piano?.getAttribute("aria-pressed")).toBe("false");
@@ -159,7 +163,7 @@ describe("AppShell", () => {
     await act(async () => root.unmount());
   });
 
-  it("shows the global stop action while another view keeps playing", async () => {
+  it("keeps the level meter mounted and uses it as the global stop action", async () => {
     let callbacks: PreviewLifecycleCallbacks | undefined;
     const driver: PlaybackAudioDriver = {
       playChord: vi.fn(async (_chord, _sound, nextCallbacks) => {
@@ -176,13 +180,17 @@ describe("AppShell", () => {
       { type: "chord", chord: { root: 0, quality: "maj", tensions: [], label: "C" } },
     ));
     await act(async () => callbacks?.onStarted?.());
-    const stopButton = container.querySelector<HTMLButtonElement>('button[aria-label="Stop current playback"]');
-    expect(stopButton).not.toBeNull();
-    expect(stopButton?.title).toBe("Stop current playback");
+    const stopButton = container.querySelector<HTMLButtonElement>("[data-playback-level-meter]");
+    expect(stopButton?.getAttribute("data-playback-status")).toBe("playing");
+    expect(stopButton?.getAttribute("aria-label")).toBe("Stop current playback");
+    expect(stopButton?.disabled).toBe(false);
 
     await act(async () => stopButton?.click());
     expect(controller.getState()).toEqual({ status: "idle" });
-    expect(container.querySelector('button[aria-label="Stop current playback"]')).toBeNull();
+    const idleMeter = container.querySelector<HTMLButtonElement>("[data-playback-level-meter]");
+    expect(idleMeter).toBe(stopButton);
+    expect(idleMeter?.getAttribute("data-playback-status")).toBe("idle");
+    expect(idleMeter?.disabled).toBe(true);
     await act(async () => root.unmount());
   });
 
