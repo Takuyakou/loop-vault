@@ -377,13 +377,19 @@ describe("VaultView keyboard shortcuts", () => {
     expect(search?.placeholder).toBe(appCopy.en.library.searchPlaceholder);
     expect(container.querySelector<HTMLLabelElement>('label[for="vault-search"]')?.textContent)
       .toBe(appCopy.en.library.search);
+    expect(container.querySelector<HTMLLabelElement>('label[for="vault-search"]')?.className)
+      .not.toContain("sr-only");
     expect(container.querySelector<HTMLLabelElement>('label[for="vault-sort"]')?.textContent)
       .toBe(appCopy.en.library.sort);
+    expect(container.querySelector<HTMLLabelElement>('label[for="vault-sort"]')?.className)
+      .not.toContain("sr-only");
     expect(container.querySelector('[role="group"][aria-label="Filter by bar count"]'))
       .not.toBeNull();
     expect(container.querySelectorAll('[role="group"][aria-label="Filter by bar count"] button[aria-pressed="true"]'))
       .toHaveLength(1);
     expect(container.textContent).toContain(appCopy.en.library.all);
+    expect(container.querySelector('[role="status"][aria-live="polite"]')?.textContent)
+      .toContain("2");
     const favorite = container.querySelectorAll<HTMLButtonElement>(`[aria-label="${appCopy.en.library.addFavorite}"]`)[1]!;
     const copyButton = container.querySelectorAll<HTMLButtonElement>(`[aria-label="${appCopy.en.library.copyProgression}"]`)[1]!;
     expect(favorite.title).toBe(appCopy.en.library.addFavorite);

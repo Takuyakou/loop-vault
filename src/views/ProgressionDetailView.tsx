@@ -15,6 +15,7 @@ import { ProgressionAdvisorDrawer } from "../components/progression-advisor/Prog
 import { ChordInspector } from "../components/progression-editing/ChordInspector";
 import { EditableProgressionGrid } from "../components/progression-editing/EditableProgressionGrid";
 import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
+import { Button, IconButton } from "../components/ui";
 import { VoicingPanel } from "../components/voicing/VoicingPanel";
 import {
   applyEditableProgressionToSavedBlock,
@@ -359,14 +360,16 @@ export function ProgressionDetailView({
     <div className="lv-capture-content py-5">
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--lv-border)] pb-4">
         <div className="min-w-0">
-          <button
+          <Button
             type="button"
-            className="inline-flex items-center gap-2 text-sm text-[var(--lv-text-secondary)] hover:text-[var(--lv-text)]"
+            variant="ghost"
+            size="sm"
+            className="!px-0 text-[var(--lv-text-secondary)] hover:text-[var(--lv-text)]"
             onClick={() => runLeaveAction(openVault)}
           >
             <ArrowLeft aria-hidden="true" size={16} />
             {text.backToVault}
-          </button>
+          </Button>
           <p className="mt-4 text-xs font-semibold uppercase text-[var(--lv-accent)]">
             {text.progression}
           </p>
@@ -383,42 +386,43 @@ export function ProgressionDetailView({
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
           {openPractice ? (
-            <button
+            <Button
               type="button"
-              className="lv-button-primary inline-flex min-h-9 items-center gap-2 px-3 text-sm font-semibold"
+              variant="primary"
+              size="sm"
               onClick={() => runLeaveAction(openPractice)}
             >
               <Dumbbell aria-hidden="true" size={16} />
               {language === "ja" ? "練習する" : "Practice"}
-            </button>
+            </Button>
           ) : null}
           <ProgressionAdvisorButton language={language} onClick={() => setAdvisorOpen(true)} />
-          <button
+          <Button
             type="button"
-            className="lv-button-ghost inline-flex min-h-9 items-center gap-2 px-3 text-sm"
+            variant="ghost"
+            size="sm"
             onClick={() => runLeaveAction(() => openIdea(idea.id))}
           >
             <ExternalLink aria-hidden="true" size={16} />
             {text.openParentIdea}
-          </button>
-          <button
+          </Button>
+          <IconButton
             type="button"
-            className="lv-button-ghost inline-flex h-9 w-9 items-center justify-center"
+            variant="ghost"
             onClick={duplicate}
-            aria-label={text.duplicate}
-            title={text.duplicate}
+            label={text.duplicate}
           >
             <CopyPlus aria-hidden="true" size={16} />
-          </button>
-          <button
+          </IconButton>
+          <IconButton
             type="button"
-            className="lv-button-ghost inline-flex h-9 w-9 items-center justify-center text-red-200"
+            variant="ghost"
+            className="text-[var(--lv-danger)]"
             onClick={() => runLeaveAction(() => requestDelete(idea, block))}
-            aria-label={copy.common.delete}
-            title={copy.common.delete}
+            label={copy.common.delete}
           >
             <Trash2 aria-hidden="true" size={16} />
-          </button>
+          </IconButton>
         </div>
       </div>
       <ProgressionAdvisorDrawer
@@ -479,15 +483,16 @@ export function ProgressionDetailView({
         >
           {dirty ? text.unsavedChanges : text.noChanges}
         </span>
-        <button
+        <Button
           type="button"
-          className="lv-button-primary inline-flex min-h-9 items-center gap-2 px-3 text-sm font-semibold disabled:opacity-40"
+          variant="primary"
+          size="sm"
           disabled={!dirty}
           onClick={saveChanges}
         >
           <Save aria-hidden="true" size={16} />
           {text.saveChanges}
-        </button>
+        </Button>
       </div>
 
       <div className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]" data-progression-detail-editor>

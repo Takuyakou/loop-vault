@@ -6,6 +6,7 @@ import { ConfirmDialog } from "../components/ConfirmDialog";
 import { LiveMidiSettingsSection } from "../components/LiveMidiSettingsSection";
 import { LlmSettingsSection } from "../components/progression-advisor/LlmSettingsSection";
 import { Modal } from "../components/Modal";
+import { Button, StatusMessage } from "../components/ui";
 import type { SongIdea } from "../domain/types";
 import type { AppCopy, AppLanguage } from "../i18n";
 import { defaultVaultStore } from "../store/defaultVaultStore";
@@ -393,7 +394,7 @@ export function SettingsDialog({
       >
         <div className="flex items-center justify-between gap-3">
           <h2 id="settings-dialog-title" className="text-xl font-semibold">{ui.title}</h2>
-          <button ref={closeRef} className="rounded px-2 py-1 text-[var(--lv-text-muted)]" onClick={onClose}>{ui.close}</button>
+          <Button ref={closeRef} variant="ghost" size="sm" onClick={onClose}>{ui.close}</Button>
         </div>
 
         <section aria-labelledby="settings-general-title" className="mt-5 border border-[var(--lv-border)] bg-[var(--lv-bg)] p-4">
@@ -458,23 +459,24 @@ export function SettingsDialog({
             <h4 className="font-semibold">{ui.dataLocation}</h4>
             <p className="mt-2 break-all text-sm text-[var(--lv-text-muted)]">{dataPath}</p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <button className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => void openDataFolder()}><FolderOpen aria-hidden="true" size={16} />{ui.openFolder}</button>
-              <button className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => void copyDataPath()}><Copy aria-hidden="true" size={16} />{ui.copyPath}</button>
+              <Button onClick={() => void openDataFolder()}><FolderOpen aria-hidden="true" size={16} />{ui.openFolder}</Button>
+              <Button onClick={() => void copyDataPath()}><Copy aria-hidden="true" size={16} />{ui.copyPath}</Button>
             </div>
           </div>
           <div className="mt-5 grid gap-5 border-t border-[var(--lv-border)] pt-4 md:grid-cols-2">
             <div>
               <h4 className="font-semibold">{ui.exportTitle}</h4>
               <p className="mt-1 text-sm text-[var(--lv-text-muted)]">{ui.exportDescription}</p>
-              <button
-                className="mt-3 inline-flex items-center gap-2 rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950 disabled:cursor-wait disabled:opacity-60"
+              <Button
+                variant="primary"
+                className="mt-3"
                 disabled={Boolean(dataOperation)}
                 aria-busy={dataOperation === "export"}
                 onClick={() => void exportData()}
               >
                 <Download aria-hidden="true" size={16} />
                 {dataOperation === "export" ? ui.processing : ui.exportButton}
-              </button>
+              </Button>
             </div>
             <div>
               <h4 className="font-semibold">{ui.importTitle}</h4>
@@ -484,39 +486,39 @@ export function SettingsDialog({
                 <option value="merge">{ui.importMerge}</option>
                 <option value="replace">{ui.importReplace}</option>
               </select>
-              <button
-                className="mt-3 inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm disabled:cursor-wait disabled:opacity-60"
+              <Button
+                className="mt-3"
                 disabled={Boolean(dataOperation)}
                 aria-busy={dataOperation === "import"}
                 onClick={() => void importData()}
               >
                 <Upload aria-hidden="true" size={16} />
                 {dataOperation === "import" ? ui.processing : ui.importButton}
-              </button>
+              </Button>
               <p className="sr-only" role="status" aria-live="polite">
                 {dataOperation ? ui.processing : ""}
               </p>
-              {error ? <p className="mt-2 text-sm text-red-200">{error}</p> : null}
+              {error ? <StatusMessage className="mt-3" tone="error" title={error} /> : null}
             </div>
           </div>
           <div className="mt-5 border-t border-[var(--lv-border)] pt-4">
             <div className="flex items-center justify-between gap-3">
               <h4 className="font-semibold">{ui.backups}</h4>
-              <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => void refreshBackups()}>{ui.refresh}</button>
+              <Button size="sm" onClick={() => void refreshBackups()}>{ui.refresh}</Button>
             </div>
             <div className="mt-3 space-y-2">
               {backups.length === 0 ? <p className="text-sm text-[var(--lv-text-muted)]">{ui.noBackups}</p> : null}
               {(showAllBackups ? backups : backups.slice(0, 5)).map((backup) => (
                 <div key={backup.name} className="flex flex-wrap items-center justify-between gap-3 border border-[var(--lv-border)] p-3 text-sm">
                   <div><p className="font-medium">{backup.name}</p><p className="text-[var(--lv-text-muted)]">{backup.createdAt}</p></div>
-                  <button className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2" onClick={() => restore(backup.name)}><RotateCcw aria-hidden="true" size={16} />{ui.restore}</button>
+                  <Button size="sm" onClick={() => restore(backup.name)}><RotateCcw aria-hidden="true" size={16} />{ui.restore}</Button>
                 </div>
               ))}
             </div>
             {backups.length > 5 ? (
-              <button className="mt-3 text-sm text-teal-200 hover:underline" onClick={() => setShowAllBackups((value) => !value)}>
+              <Button variant="ghost" size="sm" className="mt-3 !px-0 text-teal-200 hover:underline" onClick={() => setShowAllBackups((value) => !value)}>
                 {showAllBackups ? ui.showLatestFive : ui.showAll}
-              </button>
+              </Button>
             ) : null}
           </div>
         </section>

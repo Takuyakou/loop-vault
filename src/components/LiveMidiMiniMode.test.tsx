@@ -14,6 +14,10 @@ import { LiveMidiMiniMode } from "./LiveMidiMiniMode";
 
 afterEach(() => {
   defaultLiveMidiStore.setState({
+    devices: [],
+    selected: undefined,
+    status: "idle",
+    error: undefined,
     notes: createLiveNoteState(),
     stabilizer: createLiveChordStabilizerState(),
     instant: emptyLiveChordDetection(),
@@ -75,6 +79,31 @@ describe("LiveMidiMiniMode", () => {
     });
     expect(container.textContent).toContain("Notes: C · E");
     expect(container.textContent).toContain("Bass: C");
+
+    await act(async () => root.unmount());
+  });
+
+  it("announces connection failures and keeps a visible recovery action", async () => {
+    defaultLiveMidiStore.setState({
+      status: "error",
+      error: "Device is busy.",
+    });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => root.render(createElement(LiveMidiMiniMode, {
+      copy: appCopy.en.liveMidi,
+      onBack: vi.fn(),
+    })));
+
+    const alert = container.querySelector('[role="alert"]');
+    expect(alert?.textContent).toContain(appCopy.en.liveMidi.openFailed);
+    expect(alert?.textContent).toContain("Device is busy.");
+    const recovery = [...(alert?.querySelectorAll<HTMLButtonElement>("button") ?? [])].find(
+      (button) => button.textContent?.includes(appCopy.en.liveMidi.refreshDevices),
+    );
+    expect(recovery).toBeTruthy();
 
     await act(async () => root.unmount());
   });

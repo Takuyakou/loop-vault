@@ -1938,11 +1938,11 @@ export function PracticeView({
         className="grid min-h-[36rem] gap-0 border-x border-b border-[var(--lv-border)] lg:min-h-0 lg:flex-1 lg:grid-cols-[17rem_minmax(0,1fr)] lg:overflow-hidden"
         data-testid="practice-layout"
       >
-        <aside className="border-b border-[var(--lv-border)] bg-[var(--lv-surface)] lg:flex lg:min-h-0 lg:flex-col lg:border-b-0 lg:border-r">
+        <aside aria-labelledby="practice-queue-title" className="border-b border-[var(--lv-border)] bg-[var(--lv-surface)] lg:flex lg:min-h-0 lg:flex-col lg:border-b-0 lg:border-r">
           <div className="shrink-0 border-b border-[var(--lv-border)] p-3">
             <div className="flex items-center gap-2">
               <Dumbbell aria-hidden="true" size={16} className="text-[var(--lv-accent)]" />
-              <h3 className="text-sm font-semibold">{text.queue}</h3>
+              <h3 id="practice-queue-title" className="text-sm font-semibold">{text.queue}</h3>
               {!mixSelecting && !mixActive ? (
                 <button
                   type="button"
@@ -2001,6 +2001,8 @@ export function PracticeView({
           <div
             className="max-h-[37rem] overflow-y-auto lg:min-h-0 lg:flex-1 lg:max-h-none lg:overscroll-contain"
             data-testid="practice-queue-scroll"
+            tabIndex={0}
+            aria-label={text.queue}
           >
             {recommendations.length === 0 ? (
               <p className="p-4 text-sm text-[var(--lv-text-muted)]">{text.noProgressions}</p>
@@ -2038,6 +2040,8 @@ export function PracticeView({
         <section
           className="min-w-0 bg-[var(--lv-bg)] p-4 sm:p-6 lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain"
           data-testid="practice-workspace-scroll"
+          tabIndex={0}
+          aria-label={text.title}
         >
           {mixInitialState ? (
             <MixPracticeWorkspace
