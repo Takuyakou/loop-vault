@@ -231,26 +231,34 @@ function App() {
     };
     const unsubscribeStore = defaultLiveMidiStore.subscribe(sendSnapshot);
 
-    void listen<LiveMidiWindowCommand>(LIVE_MIDI_COMMAND_EVENT, (event) => {
-      if (disposed) return;
-      const command = event.payload;
-      if (command.type === "ready") {
-        sendSnapshot();
-      } else if (command.type === "show-main") {
-        void miniWindowControllerRef.current?.showMain();
-      } else if (command.type === "close") {
-        void leaveLiveMidiMode();
-      } else if (command.type === "refresh-devices") {
-        void defaultLiveMidiStore.getState().refreshDevices();
-      } else if (command.type === "select-device") {
-        void defaultLiveMidiStore.getState().selectDevice(command.backendId);
-      } else if (command.type === "set-show-history") {
-        defaultLiveMidiStore.getState().setShowHistory(command.show);
+    void (async () => {
+      const stopCommands = await listen<LiveMidiWindowCommand>(
+        LIVE_MIDI_COMMAND_EVENT,
+        (event) => {
+          if (disposed) return;
+          const command = event.payload;
+          if (command.type === "ready") {
+            sendSnapshot();
+          } else if (command.type === "show-main") {
+            void miniWindowControllerRef.current?.showMain();
+          } else if (command.type === "close") {
+            void leaveLiveMidiMode();
+          } else if (command.type === "refresh-devices") {
+            void defaultLiveMidiStore.getState().refreshDevices();
+          } else if (command.type === "select-device") {
+            void defaultLiveMidiStore.getState().selectDevice(command.backendId);
+          } else if (command.type === "set-show-history") {
+            defaultLiveMidiStore.getState().setShowHistory(command.show);
+          }
+        },
+      );
+      if (disposed) {
+        stopCommands();
+        return;
       }
-    }).then((unlisten) => {
-      unlistenCommand = unlisten;
+      unlistenCommand = stopCommands;
       sendSnapshot();
-    });
+    })();
 
     return () => {
       disposed = true;

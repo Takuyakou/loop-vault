@@ -17,18 +17,30 @@ export function LiveMidiWindowRoot() {
     let unlistenSnapshot: (() => void) | undefined;
     let unlistenClose: (() => void) | undefined;
 
-    void listen<LiveMidiWindowSnapshot>(LIVE_MIDI_SNAPSHOT_EVENT, (event) => {
-      if (!disposed) setSnapshot(event.payload);
-    }).then((unlisten) => {
-      unlistenSnapshot = unlisten;
-      return getCurrentWindow().onCloseRequested((event) => {
+    void (async () => {
+      const stopSnapshot = await listen<LiveMidiWindowSnapshot>(
+        LIVE_MIDI_SNAPSHOT_EVENT,
+        (event) => {
+          if (!disposed) setSnapshot(event.payload);
+        },
+      );
+      if (disposed) {
+        stopSnapshot();
+        return;
+      }
+      unlistenSnapshot = stopSnapshot;
+
+      const stopClose = await getCurrentWindow().onCloseRequested((event) => {
         event.preventDefault();
         void sendLiveMidiCommand({ type: "close" });
       });
-    }).then((unlisten) => {
-      unlistenClose = unlisten;
-      return sendLiveMidiCommand({ type: "ready" });
-    });
+      if (disposed) {
+        stopClose();
+        return;
+      }
+      unlistenClose = stopClose;
+      await sendLiveMidiCommand({ type: "ready" });
+    })();
 
     return () => {
       disposed = true;
