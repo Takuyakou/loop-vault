@@ -45,7 +45,11 @@ async function renderShell({
       masterVolume={masterVolume}
       onMasterVolumeChange={onMasterVolumeChange}
       controller={controller}
-    />,
+      pageTitle="Home"
+      pageContext="Today’s loop"
+    >
+      <main id="test-content">Content</main>
+    </AppShell>,
   ));
   return { container, root };
 }
@@ -61,7 +65,7 @@ describe("AppShell", () => {
     expect(status?.getAttribute("aria-label")).toBe(label);
     expect(status?.getAttribute("title")).toBe(label);
     expect(status?.querySelector(`.${iconClass}`)).not.toBeNull();
-    expect(status?.querySelector(".md\\:inline")?.textContent).toBe(label);
+    expect(status?.querySelector(".xl\\:inline")?.textContent).toBe(label);
     await act(async () => root.unmount());
   });
 
@@ -71,12 +75,15 @@ describe("AppShell", () => {
     const { container, root } = await renderShell({ view: "detail", openSettings, setView });
     const active = container.querySelector<HTMLButtonElement>('button[aria-current="page"]');
     expect(active?.textContent).toBe("Vault");
-    expect(active?.className).toContain("bg-[var(--lv-surface-raised)]");
+    expect(active?.className).toContain("bg-[var(--lv-accent-soft)]");
     expect([...container.querySelectorAll("nav button")].map((button) => button.textContent)).toEqual([
       "Home",
-      "Capture",
+      "Chord Capture",
       "Vault",
       "Practice",
+      "Live MIDI",
+      "History",
+      "Settings",
     ]);
     const createButton = [...container.querySelectorAll<HTMLButtonElement>("button")]
       .find((button) => button.title === "+ Idea");
@@ -84,9 +91,11 @@ describe("AppShell", () => {
     expect(createButton?.textContent).toContain("Idea");
 
     const settings = container.querySelector<HTMLButtonElement>('button[aria-label="Settings"]');
-    expect(settings?.title).toBe("Settings");
-    expect(settings?.className).toContain("h-10");
-    await act(async () => settings?.click());
+    const settingsByText = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent === "Settings");
+    expect(settings).toBeNull();
+    expect(settingsByText?.className).toContain("min-h-10");
+    await act(async () => settingsByText?.click());
     expect(openSettings).toHaveBeenCalledOnce();
     await act(async () => root.unmount());
   });
@@ -166,11 +175,27 @@ describe("AppShell", () => {
     await act(async () => callbacks?.onStarted?.());
     const stopButton = container.querySelector<HTMLButtonElement>('button[aria-label="Stop current playback"]');
     expect(stopButton).not.toBeNull();
-    expect(stopButton?.textContent).toContain("Playing");
+    expect(stopButton?.title).toBe("Stop current playback");
 
     await act(async () => stopButton?.click());
     expect(controller.getState()).toEqual({ status: "idle" });
     expect(container.querySelector('button[aria-label="Stop current playback"]')).toBeNull();
+    await act(async () => root.unmount());
+  });
+
+  it("collapses the sidebar without removing accessible route names", async () => {
+    const { container, root } = await renderShell();
+    const sidebar = container.querySelector("[data-sidebar]");
+    const toggle = container.querySelector<HTMLButtonElement>("[data-sidebar-toggle]");
+
+    expect(sidebar?.getAttribute("data-sidebar")).toBe("expanded");
+    await act(async () => toggle?.click());
+    expect(sidebar?.getAttribute("data-sidebar")).toBe("collapsed");
+    expect(
+      container.querySelector<HTMLButtonElement>('nav button[aria-label="Chord Capture"]')?.title,
+    ).toBe("Chord Capture");
+    expect(toggle?.getAttribute("aria-label")).toBe("Expand sidebar");
+
     await act(async () => root.unmount());
   });
 });

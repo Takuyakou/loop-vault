@@ -371,49 +371,44 @@ async function analyzeMidiPath(path: string) {
     setView("library");
   }
 
-  const shell = (
-    <AppShell
-      view={view}
-      setView={navigateTo}
-      openCreate={() => setCreateOpen(true)}
-      openLiveMidi={() => requestProgressionLeave(() => { void enterLiveMidiMode(); })}
-      openSettings={() => {
-        setSettingsOpen(true);
-        void refreshBackups();
-      }}
-      copy={copy}
-      saveStatus={saving ? "saving" : unsaved ? "unsaved" : "saved"}
-      masterVolume={masterVolume}
-      onMasterVolumeChange={changeMasterVolume}
-    />
-  );
-
   if (liveMidiMode) {
     return <LiveMidiMiniMode copy={copy.liveMidi} onBack={() => { void leaveLiveMidiMode(); }} />;
   }
 
   return (
     <PreviewSoundProvider>
-      <div className={`min-h-screen bg-[var(--lv-bg)] text-[var(--lv-text)] ${
-        view === "practice" ? "lg:h-screen lg:overflow-hidden" : ""
-      }`}>
       <a className="lv-skip-link" href="#main-content">
         {copy.common.skipToContent}
       </a>
-      <section className={`mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-5 sm:px-6 ${
-        view === "practice" ? "lg:h-screen" : ""
-      }`}>
+      <AppShell
+        view={view}
+        setView={navigateTo}
+        openCreate={() => setCreateOpen(true)}
+        openLiveMidi={() => requestProgressionLeave(() => { void enterLiveMidiMode(); })}
+        openSettings={() => {
+          setSettingsOpen(true);
+          void refreshBackups();
+        }}
+        copy={copy}
+        saveStatus={saving ? "saving" : unsaved ? "unsaved" : "saved"}
+        masterVolume={masterVolume}
+        onMasterVolumeChange={changeMasterVolume}
+        pageTitle={viewLabel(view, copy)}
+        pageContext={viewContext(view, language)}
+      >
         <h1 ref={undoFallbackFocusRef} tabIndex={-1} className="sr-only">
           Loop Vault
         </h1>
-        {shell}
         <main
           id="main-content"
           ref={mainContentRef}
           tabIndex={-1}
           aria-label={viewLabel(view, copy)}
-          className="flex min-w-0 flex-1 flex-col outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--lv-accent)]"
+          className={`min-w-0 flex-1 px-4 py-5 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--lv-accent)] lg:px-6 ${
+            view === "practice" ? "overflow-hidden" : "overflow-y-auto"
+          }`}
         >
+        <div className="mx-auto flex min-h-full w-full max-w-[1680px] min-w-0 flex-col">
         {loadStatus === "ready" ? (
           <>
             <QuarantineNotice count={quarantine.length} copy={copy} />
@@ -538,6 +533,15 @@ async function analyzeMidiPath(path: string) {
                 setToast={setToast}
               />
             ) : null}
+            {view === "history" ? (
+              <section className="lv-surface p-6">
+                <p className="lv-section-kicker">History</p>
+                <h2 className="lv-section-title mt-2">最近の操作</h2>
+                <p className="lv-section-description mt-2">
+                  履歴はまだありません。進行を採集、編集、練習するとここで確認できます。
+                </p>
+              </section>
+            ) : null}
             {view === "detail" && !selectedIdea ? (
               <EmptyState openCreate={() => setCreateOpen(true)} copy={copy} />
             ) : null}
@@ -552,8 +556,8 @@ async function analyzeMidiPath(path: string) {
             copy={copy}
           />
         )}
+        </div>
         </main>
-      </section>
       {isCreateOpen ? (
         <CreateDialog
           onCreate={handleCreate}
@@ -641,7 +645,7 @@ async function analyzeMidiPath(path: string) {
           onDismiss={() => setToast(undefined)}
         />
       ) : null}
-      </div>
+      </AppShell>
     </PreviewSoundProvider>
   );
 }
@@ -851,7 +855,19 @@ function viewLabel(view: View, copy: AppCopy): string {
   if (view === "library" || view === "detail" || view === "progression-detail") {
     return copy.nav.library;
   }
+  if (view === "history") return "History";
   return copy.nav.home;
+}
+
+function viewContext(view: View, language: AppLanguage): string {
+  const ja = language === "ja";
+  if (view === "capture") return ja ? "MIDIからコード進行を採集" : "Capture progressions from MIDI";
+  if (view === "library") return ja ? "保存進行をすばやく取り出す" : "Find saved progressions";
+  if (view === "detail") return ja ? "Ideaの情報と次の一手" : "Idea details and next action";
+  if (view === "progression-detail") return ja ? "コード進行を試聴・修正" : "Preview and edit progression";
+  if (view === "practice") return ja ? "保存進行を自分の手で覚える" : "Practice saved progressions";
+  if (view === "history") return ja ? "採集・編集・練習の履歴" : "Capture, edit, and practice history";
+  return ja ? "今日のLoopと最近の進行" : "Today’s loop and recent progressions";
 }
 
 const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
