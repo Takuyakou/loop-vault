@@ -62,6 +62,9 @@ describe("LiveMidiMiniMode", () => {
     })));
 
     expect(container.textContent).toContain("C");
+    expect(container.querySelector("[data-live-midi-current-chord]")).not.toBeNull();
+    expect(container.querySelector("[data-detection-state]")?.textContent)
+      .toBe(appCopy.en.liveMidi.provisional);
     expect(container.textContent).toContain("Notes: C · E · G");
     expect(container.textContent).toContain("Bass: C");
 

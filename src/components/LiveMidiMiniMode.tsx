@@ -23,6 +23,11 @@ export function LiveMidiMiniMode({ copy, onBack }: {
   const refreshDevices = useStore(defaultLiveMidiStore, (state) => state.refreshDevices);
   const setShowHistory = useStore(defaultLiveMidiStore, (state) => state.setShowHistory);
   const displayedChord = provisionalChord ?? confirmedChord;
+  const detectionState = provisionalChord
+    ? copy.provisional
+    : confirmedChord.label === "—"
+      ? copy.waitingForChord
+      : copy.confirmed;
 
   return (
     <main className="flex h-screen min-h-40 min-w-[280px] flex-col overflow-hidden bg-[var(--lv-bg)] p-3 text-[var(--lv-text)]">
@@ -50,10 +55,20 @@ export function LiveMidiMiniMode({ copy, onBack }: {
         </IconButton>
       </header>
 
-      <section className="flex min-h-0 flex-1 flex-col items-center justify-center py-2 text-center">
-        <div className="mb-1 flex items-center gap-1.5 text-xs text-[var(--lv-text-muted)]" data-status={status} role="status" aria-live="polite">
+      <div className="flex shrink-0 items-center gap-2 border-b border-[var(--lv-border)] py-2">
+        <div className="flex items-center gap-1.5 text-xs text-[var(--lv-text-muted)]" data-status={status} role="status" aria-live="polite">
           <span className="h-2 w-2 rounded-full bg-current" aria-hidden="true" />
           {statusLabel(status, copy)}
+        </div>
+        {selected ? <span className="min-w-0 truncate text-xs text-[var(--lv-text-secondary)]">{selected.name}</span> : null}
+      </div>
+
+      <section className="my-2 flex min-h-0 flex-1 flex-col items-center justify-center border border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] p-3 text-center" data-live-midi-current-chord>
+        <div className="mb-2 flex items-center gap-2">
+          <span className="text-xs font-semibold uppercase text-[var(--lv-text-muted)]">{copy.currentChord}</span>
+          <span className="border border-[var(--lv-border-strong)] bg-[var(--lv-surface)] px-2 py-0.5 text-xs font-semibold" data-detection-state={detectionState}>
+            {detectionState}
+          </span>
         </div>
         <div className="flex items-center gap-2" aria-live="polite" aria-atomic="true">
           <Piano aria-hidden="true" className="shrink-0 text-[var(--lv-accent)]" size={20} />
@@ -84,11 +99,11 @@ export function LiveMidiMiniMode({ copy, onBack }: {
       </section>
 
       {showHistory ? (
-        <section className="h-10 shrink-0 border-t border-[var(--lv-border)] pt-2" aria-label={copy.history}>
-          <div className="flex min-w-0 items-center gap-2 overflow-hidden text-xs">
-            <span className="shrink-0 text-[var(--lv-text-muted)]">{copy.history}</span>
+        <section className="shrink-0 border-t border-[var(--lv-border)] pt-2" aria-label={copy.history}>
+          <p className="mb-1 text-xs font-semibold text-[var(--lv-text-muted)]">{copy.history}</p>
+          <div className="flex min-w-0 items-center gap-1.5 overflow-hidden text-xs">
             {history.length > 0 ? history.slice(-5).map((entry) => (
-              <span key={entry.id} className="shrink-0 font-semibold text-[var(--lv-text-secondary)]">{entry.label}</span>
+              <span key={entry.id} className="shrink-0 border border-[var(--lv-border)] bg-[var(--lv-surface)] px-2 py-1 font-semibold text-[var(--lv-text-secondary)]">{entry.label}</span>
             )) : <span className="truncate text-[var(--lv-text-muted)]">{copy.noHistory}</span>}
           </div>
         </section>

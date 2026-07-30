@@ -125,6 +125,13 @@ describe("PracticeView", () => {
       '[data-testid="practice-progression-overview"]',
     );
     expect(progressionOverview).not.toBeNull();
+    const challenge = container.querySelector('[data-testid="practice-current-challenge"]');
+    const settingsGroup = container.querySelector('[data-testid="practice-settings-group"]');
+    expect(challenge).not.toBeNull();
+    expect(settingsGroup).not.toBeNull();
+    if (!challenge || !settingsGroup) throw new Error("Practice hierarchy was not rendered.");
+    expect(challenge.compareDocumentPosition(settingsGroup) & Node.DOCUMENT_POSITION_FOLLOWING)
+      .toBeTruthy();
     expect(progressionOverview?.querySelectorAll("[data-progression-index]")).toHaveLength(4);
     expect(progressionOverview?.querySelector('[aria-current="step"]')?.textContent)
       .toContain(block.chords[0].chord.label);
