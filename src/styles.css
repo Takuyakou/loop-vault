@@ -102,6 +102,20 @@ button {
   grid-area: actions;
 }
 
+.lv-vault-row[data-compact="true"] .lv-vault-metadata {
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.lv-vault-row[data-compact="true"] .lv-vault-metadata > span {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.lv-vault-row[data-compact="true"] .lv-vault-tags {
+  flex-shrink: 1;
+}
+
 .lv-capture-content {
   padding-bottom: calc(var(--lv-sticky-inspector-height, 0px) + 1.25rem);
 }
