@@ -33,7 +33,9 @@ describe("HomeView hierarchy", () => {
     const ideas = dashboardIdeas();
     const container = await renderHome(ideas);
 
-    expect(container.querySelector("h2")?.textContent).toBe(appCopy.ja.home.today);
+    expect(container.querySelector(".lv-section-kicker")?.textContent).toBe(appCopy.ja.home.today);
+    expect(container.querySelector("[data-testid='home-focus-chords']")).not.toBeNull();
+    expect(container.querySelectorAll("[data-testid='home-focus-chords'] > div")).toHaveLength(1);
     expect(container.textContent).not.toContain(appCopy.ja.home.headline);
     expect(container.querySelector(".md\\:grid-cols-3")).toBeNull();
 
