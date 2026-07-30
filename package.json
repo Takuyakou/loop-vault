@@ -13,6 +13,11 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "npm run build && playwright test",
+    "test:e2e:update": "npm run build && playwright test --update-snapshots",
+    "test:e2e:report": "playwright show-report",
+    "typecheck:e2e": "tsc -p tsconfig.e2e.json",
+    "playwright:install": "playwright install chromium",
     "seed:demo": "node scripts/seed-demo.mjs",
     "eval:midi": "vite-node scripts/evaluate-midi-analysis.ts",
     "eval:midi:compare": "vite-node scripts/evaluate-midi-analysis.ts --compare",
@@ -107,7 +112,9 @@
     "zustand": "^5.0.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.57.0",
     "@tauri-apps/cli": "^2.0.0",
     "@types/node": "^24.0.0",
     "@types/react": "^18.3.0",

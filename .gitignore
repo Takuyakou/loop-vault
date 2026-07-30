@@ -40,3 +40,6 @@ test/*
 !test/fixtures/
 test/private-midi/
 src-tauri/gen/
+playwright-report/
+test-results/
+blob-report/

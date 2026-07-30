@@ -46,7 +46,7 @@ export function Toast({
           className="-mr-2 -mt-2 shrink-0"
           onClick={onDismiss}
         >
-          <X aria-hidden="true" size={18} />
+          <X aria-hidden="true" size={16} />
         </IconButton>
       ) : null}
     </div>

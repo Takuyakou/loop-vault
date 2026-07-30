@@ -43,8 +43,8 @@ async function mount() {
 }
 
 async function openFor(harness: Awaited<ReturnType<typeof mount>>, index: number) {
-  const options = harness.container.querySelectorAll<HTMLElement>('[role="option"]');
-  await act(async () => options[index]?.dispatchEvent(
+  const cards = harness.container.querySelectorAll<HTMLElement>("[data-chord-card]");
+  await act(async () => cards[index]?.dispatchEvent(
     new MouseEvent("contextmenu", { bubbles: true, cancelable: true }),
   ));
   return document.body.querySelector<HTMLElement>('[role="menu"]')!;
@@ -91,8 +91,7 @@ describe("ChordContextMenu", () => {
 
   it("supports keyboard navigation, Escape, and focus restoration", async () => {
     const harness = await mount();
-    const option = harness.container.querySelectorAll<HTMLElement>('[role="option"]')[0]!;
-    const anchor = option.querySelector<HTMLButtonElement>("button")!;
+    const anchor = harness.container.querySelectorAll<HTMLButtonElement>("[data-chord-card]")[0]!;
 
     await act(async () => anchor.dispatchEvent(
       new KeyboardEvent("keydown", { key: "ContextMenu", bubbles: true }),

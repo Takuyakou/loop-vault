@@ -149,7 +149,7 @@ export function StatusMessage({
       aria-live={tone === "error" ? "assertive" : "polite"}
       aria-atomic="true"
     >
-      <Icon aria-hidden="true" className="mt-0.5 shrink-0" size={18} />
+      <Icon aria-hidden="true" className="mt-0.5 shrink-0" size={16} />
       <div className="min-w-0 flex-1">
         <p className="font-semibold text-[var(--lv-text)]">{title}</p>
         {children ? <div className="mt-1 break-words text-sm leading-6 text-[var(--lv-text-secondary)]">{children}</div> : null}

@@ -1,7 +1,7 @@
 import react from "@vitejs/plugin-react";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 
 const packageMetadata = JSON.parse(
   readFileSync(new URL("./package.json", import.meta.url), "utf8"),
@@ -27,6 +27,9 @@ export default defineConfig({
       process.env.TAURI_ENV_PLATFORM === "windows" ? "chrome105" : "safari13",
     minify: !process.env.TAURI_ENV_DEBUG ? "esbuild" : false,
     sourcemap: Boolean(process.env.TAURI_ENV_DEBUG),
+  },
+  test: {
+    exclude: ["e2e/**", "node_modules/**", "dist/**"],
   },
 });
 

@@ -35,7 +35,6 @@ export function EditableChordCard({
   const needsReview = (slot.confidence ?? 1) < 0.7 || slot.warnings.length > 0;
   return (
     <div
-      role="option"
       className={`group relative min-h-20 overflow-hidden border text-left transition-colors ${
         selected
           ? "border-teal-300 bg-teal-300/10"
@@ -43,18 +42,23 @@ export function EditableChordCard({
             ? "border-cyan-300 bg-cyan-300/10"
             : "border-[var(--lv-border)] bg-[var(--lv-surface)] hover:border-stone-500"
       }`}
-      aria-selected={selected}
-      onClick={onSelect}
       onContextMenu={(event) => {
         if (!onQuickEdit) return;
         event.preventDefault();
-        onQuickEdit(event.currentTarget);
+        onQuickEdit(
+          event.currentTarget.querySelector<HTMLElement>("[data-chord-card]")
+            ?? event.currentTarget,
+        );
       }}
     >
       <button
         ref={buttonRef}
         type="button"
+        data-chord-card
+        data-selected={selected}
+        aria-pressed={selected}
         className="min-h-20 w-full px-3 py-3 pr-20 text-left"
+        onClick={onSelect}
         onKeyDown={(event) => {
           if (event.nativeEvent.isComposing) return;
           if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {

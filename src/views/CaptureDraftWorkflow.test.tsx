@@ -111,7 +111,7 @@ async function openFirstDraftAndReplaceSecondWithNoChord(
     "[data-candidate-toggle]",
   );
   await act(async () => headers[0]?.click());
-  const cards = harness.container.querySelectorAll<HTMLElement>('[role="option"]');
+  const cards = harness.container.querySelectorAll<HTMLElement>("[data-chord-card]");
   await act(async () => cards[1]?.dispatchEvent(
     new MouseEvent("contextmenu", { bubbles: true, cancelable: true }),
   ));
