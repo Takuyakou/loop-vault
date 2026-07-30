@@ -108,7 +108,7 @@ test.describe.serial("Phase 5.13 visual evidence", () => {
 
     await page.getByRole("button", { name: "Live MIDI" }).click();
     await evidence(page, "live-midi");
-    await page.getByRole("button", { name: /戻る|Back/ }).click();
+    await page.getByRole("button", { name: /メイン画面を表示|Show main window/ }).click();
 
     await page.getByRole("button", { name: "History", exact: true }).click();
     await evidence(page, "history");

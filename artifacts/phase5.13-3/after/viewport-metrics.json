@@ -1,0 +1,43 @@
+[
+  {
+    "viewport": "1024x720",
+    "clientHeight": 652,
+    "scrollHeight": 1734,
+    "finalScrollTop": 1081,
+    "horizontalOverflowPx": 0,
+    "endVisible": true
+  },
+  {
+    "viewport": "1280x720",
+    "clientHeight": 652,
+    "scrollHeight": 1454,
+    "finalScrollTop": 798,
+    "horizontalOverflowPx": 0,
+    "endVisible": true,
+    "queueWheelChained": true
+  },
+  {
+    "viewport": "1366x768",
+    "clientHeight": 700,
+    "scrollHeight": 1454,
+    "finalScrollTop": 721,
+    "horizontalOverflowPx": 0,
+    "endVisible": true
+  },
+  {
+    "viewport": "1440x900",
+    "clientHeight": 832,
+    "scrollHeight": 1332,
+    "finalScrollTop": 500,
+    "horizontalOverflowPx": 0,
+    "endVisible": true
+  },
+  {
+    "viewport": "1920x1080",
+    "clientHeight": 1012,
+    "scrollHeight": 1313,
+    "finalScrollTop": 289,
+    "horizontalOverflowPx": 0,
+    "endVisible": true
+  }
+]
