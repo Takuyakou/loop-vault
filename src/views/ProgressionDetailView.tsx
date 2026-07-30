@@ -7,6 +7,10 @@ import {
 } from "../audio/playbackController";
 import { PlayToggle } from "../components/PlayToggle";
 import { PreviewSoundSelector } from "../components/PreviewSoundSelector";
+import {
+  ProgressionMidiControl,
+  type ProgressionMidiControlActions,
+} from "../components/ProgressionMidiControl";
 import { usePreviewSound } from "../components/PreviewSoundProvider";
 import { usePlaybackState } from "../hooks/usePlaybackState";
 import { ProgressionTagsEditor } from "../components/ProgressionTagsEditor";
@@ -53,12 +57,17 @@ import {
 } from "../domain/midi";
 import type { MidiSongData } from "../domain/midi/types";
 import { degreeSequence } from "../domain/harmony/degrees";
+import {
+  buildProgressionMidi,
+  ProgressionMidiExportError,
+} from "../domain/midiExport";
 import { buildProgressionIndex } from "../domain/progressionClassification/mod";
 import { formatProgressionText } from "../domain/progressionText";
 import type { SavedProgressionBlock, SongIdea } from "../domain/types";
 import { extractVoicing, resolveVoicingForUse } from "../domain/voicing";
 import { advisorSuggestionToCandidate, appendAdvisorSuggestionToEditableProgression, selectAdvisorReferenceContexts } from "../domain/progressionAdvisor";
 import { appendAnalysisFeedback } from "../storage/analysisFeedbackStorage";
+import { isProgressionMidiExportEnabled } from "../midiExport/featureFlag";
 import { registerCloseBlocker } from "../store/closeBlocker";
 import {
   progressionDetailCopy,
@@ -102,6 +111,8 @@ interface ProgressionDetailViewProps {
   language: AppLanguage;
   controller?: PlaybackController;
   loadMidiSource?: (path: string) => Promise<MidiSongData>;
+  midiExportEnabled?: boolean;
+  midiExportActions?: ProgressionMidiControlActions;
 }
 
 export function ProgressionDetailView({
@@ -123,6 +134,8 @@ export function ProgressionDetailView({
   language,
   controller = playbackController,
   loadMidiSource,
+  midiExportEnabled,
+  midiExportActions,
 }: ProgressionDetailViewProps) {
   const text = progressionDetailCopy[language];
   const meter = beatsPerBar(block.timeSignature);
@@ -130,6 +143,10 @@ export function ProgressionDetailView({
   const { sound: previewSound, setSound: setPreviewSound } = usePreviewSound();
   const [advisorOpen, setAdvisorOpen] = useState(false);
   const [reextracting, setReextracting] = useState(false);
+  const [defaultMidiExportEnabled] = useState(
+    () => isProgressionMidiExportEnabled(),
+  );
+  const showMidiExport = midiExportEnabled ?? defaultMidiExportEnabled;
   const dirty = hasProgressionEdits(editable);
   useEffect(() => {
     onDirtyChange?.(dirty);
@@ -215,6 +232,18 @@ export function ProgressionDetailView({
       ]];
     }),
   ), [editingBlock.chords]);
+  const midiExport = useMemo(() => {
+    if (!showMidiExport) return {};
+    try {
+      return {
+        result: buildProgressionMidi(editingBlock, { ideaBpm: idea.bpm }),
+      };
+    } catch (error) {
+      return {
+        disabledReason: midiExportDisabledReason(error, language),
+      };
+    }
+  }, [editingBlock, idea.bpm, language, showMidiExport]);
 
   function saveChanges() {
     const saved = updateProgressionBlock(idea.id, block.id, editingBlock);
@@ -524,6 +553,15 @@ export function ProgressionDetailView({
           }}
           copy={copy}
         />
+        {showMidiExport ? (
+          <ProgressionMidiControl
+            result={midiExport.result}
+            disabledReason={midiExport.disabledReason}
+            language={language}
+            setToast={setToast}
+            actions={midiExportActions}
+          />
+        ) : null}
         <MetadataBadge label="Key" value={block.detectedKey ?? idea.key ?? "-"} />
         <MetadataBadge label="BPM" value={String(block.bpm ?? idea.bpm ?? "-")} />
         <MetadataBadge label={text.barCount(bars)} value={block.startBar && block.endBar ? text.barRange(block.startBar, block.endBar) : block.timeSignature ?? "-"} />
@@ -656,6 +694,22 @@ function progressionBarCount(block: SavedProgressionBlock): number {
 
 function chordPreviewKey(chord: SavedProgressionBlock["chords"][number]["chord"]): string {
   return [chord.root, chord.quality, chord.bass ?? "root", ...chord.tensions].join("-");
+}
+
+function midiExportDisabledReason(
+  error: unknown,
+  language: AppLanguage,
+): string {
+  const ja = language === "ja";
+  if (error instanceof ProgressionMidiExportError) {
+    const position = error.eventIndex === undefined
+      ? ""
+      : (ja ? `コード${error.eventIndex + 1}: ` : `Chord ${error.eventIndex + 1}: `);
+    return `${position}${ja ? "MIDIに書き出せない内容があります。" : "This item cannot be exported to MIDI."}`;
+  }
+  return ja
+    ? "この進行はMIDIに書き出せません。"
+    : "This progression cannot be exported to MIDI.";
 }
 
 function MetadataBadge({ label, value }: { label: string; value: string }) {
