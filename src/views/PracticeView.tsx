@@ -2121,7 +2121,102 @@ export function PracticeView({
                 </button>
               </div>
 
-              <div className="grid gap-4 border-b border-[var(--lv-border)] py-4 xl:grid-cols-[1fr_auto_auto]">
+              <section
+                className="mt-4 border border-[var(--lv-accent-secondary)] bg-[var(--lv-accent-secondary-soft)] p-4"
+                aria-label={text.current}
+                data-testid="practice-current-challenge"
+              >
+                <div className="grid gap-5 lg:grid-cols-[minmax(7rem,0.65fr)_minmax(18rem,2fr)_auto]">
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase text-[var(--lv-accent-secondary)]">{text.current}</p>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <p
+                        className="min-w-0 break-words text-4xl font-semibold"
+                        data-testid="practice-current-chord"
+                        aria-live="polite"
+                      >
+                        {practiceChordLabel(
+                          currentTarget,
+                          level,
+                          displayedKeySignature,
+                        )}
+                      </p>
+                      {displayedKeySignature ? (
+                        <span
+                          className="border border-[var(--lv-border-strong)] px-2 py-1 text-xs font-semibold text-[var(--lv-text-muted)]"
+                          data-testid="practice-current-key"
+                        >
+                          {text.currentKey(displayedKeySignature)}
+                        </span>
+                      ) : null}
+                      <VoicingSourceChip
+                        status={currentVoicingSource.status}
+                        reason={currentVoicingSource.reason}
+                        language={language}
+                        testId="dojo-voicing-source-chip"
+                      />
+                      {currentVoicingSource.status !== "source" ? (
+                        <button
+                          type="button"
+                          className="lv-button-secondary px-2 py-1 text-xs"
+                          data-testid="dojo-voicing-recovery"
+                          onClick={() => openProgression(selected.ideaId, block.id)}
+                        >
+                          {text.replaceVoicing}
+                        </button>
+                      ) : null}
+                    </div>
+                    {styleMode && guide && !transpositionMode ? (
+                      <span
+                        className="mt-2 inline-flex border border-teal-700 px-2 py-1 text-xs font-semibold text-teal-200"
+                        title={guide.addedColorIntervals.length > 0
+                          ? text.addedColor(guide.addedColorIntervals)
+                          : undefined}
+                        data-testid="practice-style-chip"
+                      >
+                        {styleGuideLabel(guide, text)}
+                      </span>
+                    ) : null}
+                    <div className="mt-3 flex min-w-0 items-baseline gap-2 text-sm text-[var(--lv-text-muted)]">
+                      <span className="text-xs font-semibold uppercase">{text.next}</span>
+                      <span
+                        className="min-w-0 break-words"
+                        data-testid="practice-next-chord"
+                      >
+                        {practiceChordLabel(
+                          nextTarget,
+                          level,
+                          displayedKeySignature,
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                  <ProgressionOverview
+                    events={practiceEvents}
+                    eventResults={session?.eventResults ?? []}
+                    currentIndex={activeEventIndex}
+                    level={level}
+                    keySignature={displayedKeySignature}
+                    text={text}
+                    previewDisabled={Boolean(running)}
+                    previewableEvents={activeGuides.map(Boolean)}
+                    onPreviewChord={(index) => void previewChordAt(index)}
+                  />
+                  <div className="flex h-fit flex-wrap items-center gap-x-3 gap-y-1 text-sm lg:border-l lg:border-[var(--lv-border)] lg:pl-4">
+                    <span className="font-semibold">{text.round(session?.roundNumber ?? 1)}</span>
+                    {mode === "flow" ? <span>{text.bpm} {bpm} · Beat {beat}</span> : null}
+                    {!transpositionMode ? (
+                      <span className="text-[var(--lv-text-muted)]">
+                        {text.clean} {session?.consecutiveCleanFlowRounds ?? 0}/2
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              </section>
+
+              <section className="mt-4 border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4" aria-label={text.settings} data-testid="practice-settings-group">
+                <h4 className="text-sm font-semibold">{text.settings}</h4>
+                <div className="mt-3 grid gap-4 xl:grid-cols-[1fr_auto_auto]">
                 <div>
                   <p className="mb-2 text-xs font-semibold text-[var(--lv-text-muted)]">{text.level}</p>
                   <div
@@ -2273,6 +2368,7 @@ export function PracticeView({
                 onPreviewSoundChange={changePreviewSound}
                 onPreview={() => void toggleVoicingPreview()}
               />
+              </section>
 
               <div className="flex flex-wrap items-center gap-3 border-b border-[var(--lv-border)] py-4">
                 <span className="text-xs font-semibold text-[var(--lv-text-muted)]">{text.midi}</span>
@@ -2304,92 +2400,6 @@ export function PracticeView({
               </div>
 
               <div className="py-5">
-                <div className="grid gap-5 lg:grid-cols-[minmax(7rem,0.65fr)_minmax(18rem,2fr)_auto]">
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold uppercase text-[var(--lv-accent)]">{text.current}</p>
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <p
-                        className="min-w-0 break-words text-3xl font-semibold"
-                        data-testid="practice-current-chord"
-                        aria-live="polite"
-                      >
-                        {practiceChordLabel(
-                          currentTarget,
-                          level,
-                          displayedKeySignature,
-                        )}
-                      </p>
-                      {displayedKeySignature ? (
-                        <span
-                          className="border border-[var(--lv-border-strong)] px-2 py-1 text-xs font-semibold text-[var(--lv-text-muted)]"
-                          data-testid="practice-current-key"
-                        >
-                          {text.currentKey(displayedKeySignature)}
-                        </span>
-                      ) : null}
-                      <VoicingSourceChip
-                        status={currentVoicingSource.status}
-                        reason={currentVoicingSource.reason}
-                        language={language}
-                        testId="dojo-voicing-source-chip"
-                      />
-                      {currentVoicingSource.status !== "source" ? (
-                        <button
-                          type="button"
-                          className="lv-button-secondary px-2 py-1 text-xs"
-                          data-testid="dojo-voicing-recovery"
-                          onClick={() => openProgression(selected.ideaId, block.id)}
-                        >
-                          {text.replaceVoicing}
-                        </button>
-                      ) : null}
-                    </div>
-                    {styleMode && guide && !transpositionMode ? (
-                      <span
-                        className="mt-2 inline-flex border border-teal-700 px-2 py-1 text-xs font-semibold text-teal-200"
-                        title={guide.addedColorIntervals.length > 0
-                          ? text.addedColor(guide.addedColorIntervals)
-                          : undefined}
-                        data-testid="practice-style-chip"
-                      >
-                        {styleGuideLabel(guide, text)}
-                      </span>
-                    ) : null}
-                    <div className="mt-3 flex min-w-0 items-baseline gap-2 text-sm text-[var(--lv-text-muted)]">
-                      <span className="text-xs font-semibold uppercase">{text.next}</span>
-                      <span
-                        className="min-w-0 break-words"
-                        data-testid="practice-next-chord"
-                      >
-                        {practiceChordLabel(
-                          nextTarget,
-                          level,
-                          displayedKeySignature,
-                        )}
-                      </span>
-                    </div>
-                  </div>
-                  <ProgressionOverview
-                    events={practiceEvents}
-                    eventResults={session?.eventResults ?? []}
-                    currentIndex={activeEventIndex}
-                    level={level}
-                    keySignature={displayedKeySignature}
-                    text={text}
-                    previewDisabled={Boolean(running)}
-                    previewableEvents={activeGuides.map(Boolean)}
-                    onPreviewChord={(index) => void previewChordAt(index)}
-                  />
-                  <div className="flex h-fit flex-wrap items-center gap-x-3 gap-y-1 text-sm lg:border-l lg:border-[var(--lv-border)] lg:pl-4">
-                    <span className="font-semibold">{text.round(session?.roundNumber ?? 1)}</span>
-                    {mode === "flow" ? <span>{text.bpm} {bpm} · Beat {beat}</span> : null}
-                    {!transpositionMode ? (
-                      <span className="text-[var(--lv-text-muted)]">
-                        {text.clean} {session?.consecutiveCleanFlowRounds ?? 0}/2
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
 
                 {level === 1 && guide ? (
                   <div className="mt-4 border border-[var(--lv-border)] bg-[var(--lv-surface)] px-3 py-2.5">
