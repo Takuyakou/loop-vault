@@ -224,6 +224,35 @@ describe("SettingsDialog sections", () => {
 });
 
 describe("SettingsDialog confirmations", () => {
+  it("shows import progress and ignores a second click while the file dialog is open", async () => {
+    let finishDialog: ((value: null) => void) | undefined;
+    mocks.openFileDialog.mockImplementation(() => new Promise<null>((resolve) => {
+      finishDialog = resolve;
+    }));
+    const mounted = await renderSettings();
+    const importButton = findButton(appCopy.ja.settingsUi.importButton, dialogs()[0])!;
+
+    await act(async () => {
+      importButton.click();
+      importButton.click();
+      await Promise.resolve();
+    });
+
+    expect(mocks.openFileDialog).toHaveBeenCalledOnce();
+    expect(importButton.disabled).toBe(true);
+    expect(importButton.getAttribute("aria-busy")).toBe("true");
+    expect(importButton.textContent).toContain(appCopy.ja.settingsUi.processing);
+    expect(dialogs()[0]?.querySelector('[role="status"]')?.textContent)
+      .toBe(appCopy.ja.settingsUi.processing);
+
+    await act(async () => {
+      finishDialog?.(null);
+      await Promise.resolve();
+    });
+    expect(importButton.disabled).toBe(false);
+    await mounted.unmount();
+  });
+
   it("does not replace the Vault until the shared confirmation is accepted", async () => {
     mocks.openFileDialog.mockResolvedValue("C:/backup.json");
     const importVault = vi.fn(async () => true);
