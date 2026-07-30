@@ -22,7 +22,7 @@
 - #339 `feature/p513-3-03-preview-level-meter`
 - #340 `fix/p513-3-04-live-window-hardening`
 - #341 `fix/p513-3-05-dojo-viewport`
-- Final validation PR: this branch (`test/p513-3-06-validation`)
+- #342 `test/p513-3-06-validation`
 
 All PRs are stacked in dependency order. `main` is not merged or rewritten.
 
