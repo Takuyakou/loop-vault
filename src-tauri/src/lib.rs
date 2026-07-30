@@ -1,6 +1,7 @@
 mod live_midi;
 pub mod llm;
 mod midi_export;
+mod native_drag;
 
 #[tauri::command]
 fn exit_app(app: tauri::AppHandle) {
@@ -25,6 +26,7 @@ pub fn run() {
             midi_export::cleanup_stale_progression_midi_exports,
             midi_export::prepare_progression_midi_drag,
             midi_export::save_progression_midi,
+            native_drag::start_progression_midi_drag,
             live_midi::commands::list_live_midi_inputs,
             live_midi::commands::open_live_midi_input,
             live_midi::commands::close_live_midi_input,

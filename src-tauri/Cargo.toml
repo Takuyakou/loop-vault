@@ -29,4 +29,10 @@ tokio-util = "0.7"
 windows = { version = "0.61", features = [
   "Win32_Foundation",
   "Win32_Storage_FileSystem",
+  "Win32_System_Com",
+  "Win32_System_Memory",
+  "Win32_System_Ole",
+  "Win32_System_SystemServices",
+  "Win32_UI_Shell",
 ] }
+windows-core = "0.61"
