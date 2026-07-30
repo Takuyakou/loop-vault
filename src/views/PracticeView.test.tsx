@@ -112,15 +112,16 @@ describe("PracticeView", () => {
     expect(container.textContent).toContain("C5");
     expect(container.textContent).not.toContain("60 ·");
     expect(container.querySelector('[data-testid="practice-layout"]')?.className)
-      .toContain("lg:overflow-hidden");
+      .not.toContain("overflow-hidden");
     expect(container.querySelector('[data-testid="practice-queue-scroll"]')?.className)
       .toContain("overflow-y-auto");
     expect(container.querySelector('[data-testid="practice-queue-scroll"]')?.className)
-      .toContain("lg:overscroll-contain");
+      .not.toContain("overscroll-contain");
     expect(container.querySelector('[data-testid="practice-workspace-scroll"]')?.className)
-      .toContain("lg:overflow-y-auto");
+      .not.toContain("overflow-y-auto");
     expect(container.querySelector('[data-testid="practice-workspace-scroll"]')?.className)
-      .toContain("lg:overscroll-contain");
+      .not.toContain("overscroll-contain");
+    expect(container.querySelector('[data-testid="practice-workspace-end"]')).not.toBeNull();
     const progressionOverview = container.querySelector(
       '[data-testid="practice-progression-overview"]',
     );
