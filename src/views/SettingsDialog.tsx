@@ -443,7 +443,8 @@ export function SettingsDialog({
             <div>
               <h4 className="font-semibold">{ui.importTitle}</h4>
               <p className="mt-1 text-sm text-[var(--lv-text-muted)]">{ui.importDescription}</p>
-              <select className={`${inputClass} mt-2`} value={importMode} onChange={(event) => setImportMode(event.target.value as "replace" | "merge")}>
+              <label className="sr-only" htmlFor="settings-import-mode">{ui.importTitle}</label>
+              <select id="settings-import-mode" name="settings-import-mode" className={`${inputClass} mt-2`} value={importMode} onChange={(event) => setImportMode(event.target.value as "replace" | "merge")}>
                 <option value="merge">{ui.importMerge}</option>
                 <option value="replace">{ui.importReplace}</option>
               </select>

@@ -117,6 +117,8 @@ function App() {
   const [progressionDetailDirty, setProgressionDetailDirty] = useState(false);
   const [pendingProgressionLeave, setPendingProgressionLeave] = useState<(() => void)>();
   const undoFallbackFocusRef = useRef<HTMLHeadingElement>(null);
+  const mainContentRef = useRef<HTMLElement>(null);
+  const previousViewRef = useRef(view);
   const miniWindowControllerRef = useRef<MiniWindowController | undefined>(undefined);
   const undoQueue = useUndoQueue();
   const undoEpochRef = useRef(vaultEpoch);
@@ -181,6 +183,15 @@ function App() {
 
     return undefined;
   }, [toast]);
+
+  useEffect(() => {
+    if (previousViewRef.current === view) return undefined;
+    previousViewRef.current = view;
+    const frame = window.requestAnimationFrame(() => {
+      mainContentRef.current?.focus({ preventScroll: true });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [view]);
 
   useEffect(() => {
     if (!liveMidiMode) return undefined;
@@ -379,9 +390,12 @@ async function analyzeMidiPath(path: string) {
 
   return (
     <PreviewSoundProvider>
-      <main className={`min-h-screen bg-[var(--lv-bg)] text-[var(--lv-text)] ${
+      <div className={`min-h-screen bg-[var(--lv-bg)] text-[var(--lv-text)] ${
         view === "practice" ? "lg:h-screen lg:overflow-hidden" : ""
       }`}>
+      <a className="lv-skip-link" href="#main-content">
+        {copy.common.skipToContent}
+      </a>
       <section className={`mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-5 sm:px-6 ${
         view === "practice" ? "lg:h-screen" : ""
       }`}>
@@ -389,6 +403,13 @@ async function analyzeMidiPath(path: string) {
           Loop Vault
         </h1>
         {shell}
+        <main
+          id="main-content"
+          ref={mainContentRef}
+          tabIndex={-1}
+          aria-label={viewLabel(view, copy)}
+          className="flex min-w-0 flex-1 flex-col outline-none"
+        >
         {loadStatus === "ready" ? (
           <>
             <QuarantineNotice count={quarantine.length} copy={copy} />
@@ -527,6 +548,7 @@ async function analyzeMidiPath(path: string) {
             copy={copy}
           />
         )}
+        </main>
       </section>
       {isCreateOpen ? (
         <CreateDialog
@@ -611,7 +633,7 @@ async function analyzeMidiPath(path: string) {
       {toast ? (
         <Toast message={toast} />
       ) : null}
-      </main>
+      </div>
     </PreviewSoundProvider>
   );
 }
@@ -714,8 +736,23 @@ export function CreateDialog({
           <h2 id="create-idea-title" className="text-xl font-semibold">{copy.create.title}</h2>
           <button type="button" className="rounded px-2 py-1 text-[var(--lv-text-muted)]" onClick={onClose}>{copy.common.close}</button>
         </div>
-        <input ref={titleRef} className={`${inputClass} mt-4`} value={title} onChange={(event) => setTitle(event.target.value)} placeholder={copy.common.title} />
-        <select className={`${inputClass} mt-3`} value={status} onChange={(event) => setStatus(event.target.value as Status)}>
+        <label htmlFor="create-idea-name" className="mt-4 block text-sm font-medium text-[var(--lv-text-secondary)]">
+          {copy.common.title}
+        </label>
+        <input
+          id="create-idea-name"
+          ref={titleRef}
+          name="idea-title"
+          autoComplete="off"
+          className={`${inputClass} mt-1`}
+          value={title}
+          onChange={(event) => setTitle(event.target.value)}
+          placeholder={copy.common.title}
+        />
+        <label htmlFor="create-idea-status" className="mt-3 block text-sm font-medium text-[var(--lv-text-secondary)]">
+          {copy.library.status}
+        </label>
+        <select id="create-idea-status" name="idea-status" className={`${inputClass} mt-1`} value={status} onChange={(event) => setStatus(event.target.value as Status)}>
           {pipeline.map((entry) => <option key={entry} value={entry}>{labelStatus(entry, language)}</option>)}
         </select>
         <button className="mt-4 w-full rounded bg-[var(--lv-accent)] px-3 py-2 font-semibold text-stone-950" type="submit">{copy.create.submit}</button>
@@ -798,6 +835,15 @@ function Panel({ children, className = "" }: { children: ReactNode; className?: 
 
 function labelStatus(status: Status, language: AppLanguage): string {
   return statusLabel(status, language);
+}
+
+function viewLabel(view: View, copy: AppCopy): string {
+  if (view === "capture") return copy.nav.capture;
+  if (view === "practice") return copy.nav.practice;
+  if (view === "library" || view === "detail" || view === "progression-detail") {
+    return copy.nav.library;
+  }
+  return copy.nav.home;
 }
 
 const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";

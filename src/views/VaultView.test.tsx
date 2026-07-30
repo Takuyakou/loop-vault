@@ -134,7 +134,9 @@ describe("VaultView keyboard shortcuts", () => {
     };
 
     await render();
-    const modeButtons = [...container.querySelectorAll<HTMLButtonElement>("[role='group'] button")];
+    const modeButtons = [...container.querySelectorAll<HTMLButtonElement>(
+      "[role='group'][aria-label='Vault'] button",
+    )];
     expect(modeButtons.map((button) => button.textContent)).toEqual(["Library", "List", "Idea"]);
     expect(modeButtons[0]?.getAttribute("aria-pressed")).toBe("true");
 
@@ -371,7 +373,16 @@ describe("VaultView keyboard shortcuts", () => {
     };
 
     await render("en");
-    expect(container.querySelector<HTMLInputElement>("input")?.placeholder).toBe(appCopy.en.library.searchPlaceholder);
+    const search = container.querySelector<HTMLInputElement>("#vault-search");
+    expect(search?.placeholder).toBe(appCopy.en.library.searchPlaceholder);
+    expect(container.querySelector<HTMLLabelElement>('label[for="vault-search"]')?.textContent)
+      .toBe(appCopy.en.library.search);
+    expect(container.querySelector<HTMLLabelElement>('label[for="vault-sort"]')?.textContent)
+      .toBe(appCopy.en.library.sort);
+    expect(container.querySelector('[role="group"][aria-label="Filter by bar count"]'))
+      .not.toBeNull();
+    expect(container.querySelectorAll('[role="group"][aria-label="Filter by bar count"] button[aria-pressed="true"]'))
+      .toHaveLength(1);
     expect(container.textContent).toContain(appCopy.en.library.all);
     const favorite = container.querySelectorAll<HTMLButtonElement>(`[aria-label="${appCopy.en.library.addFavorite}"]`)[1]!;
     const copyButton = container.querySelectorAll<HTMLButtonElement>(`[aria-label="${appCopy.en.library.copyProgression}"]`)[1]!;
@@ -392,7 +403,7 @@ describe("VaultView keyboard shortcuts", () => {
     expect(openDetail).toHaveBeenLastCalledWith(firstIdea.id);
 
     await render("ja");
-    expect(container.querySelector<HTMLInputElement>("input")?.placeholder).toBe(appCopy.ja.library.searchPlaceholder);
+    expect(container.querySelector<HTMLInputElement>("#vault-search")?.placeholder).toBe(appCopy.ja.library.searchPlaceholder);
     expect(container.textContent).toContain(appCopy.ja.library.all);
     expect(container.textContent).not.toContain("All");
     expect(container.querySelector(`[aria-label="${appCopy.ja.library.addFavorite}"][title="${appCopy.ja.library.addFavorite}"]`)).not.toBeNull();

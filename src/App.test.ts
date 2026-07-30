@@ -120,6 +120,10 @@ describe("CreateDialog IME handling", () => {
     const form = input?.closest("form");
     expect(input).not.toBeNull();
     expect(form).not.toBeNull();
+    expect(document.querySelector<HTMLLabelElement>('label[for="create-idea-name"]')?.textContent)
+      .toBe(appCopy.en.common.title);
+    expect(document.querySelector<HTMLLabelElement>('label[for="create-idea-status"]')?.textContent)
+      .toBe(appCopy.en.library.status);
     await changeInput(input!, "Composed title");
 
     await pressEnterAndSubmitIfAllowed(input!, form!, { isComposing: true });
