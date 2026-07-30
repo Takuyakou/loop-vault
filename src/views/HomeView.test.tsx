@@ -35,7 +35,7 @@ describe("HomeView hierarchy", () => {
 
     expect(container.querySelector(".lv-section-kicker")?.textContent).toBe(appCopy.ja.home.today);
     expect(container.querySelector("[data-testid='home-focus-chords']")).not.toBeNull();
-    expect(container.querySelectorAll("[data-testid='home-focus-chords'] > div")).toHaveLength(1);
+    expect(container.querySelectorAll("[data-testid='home-focus-chords'] > button")).toHaveLength(1);
     expect(container.textContent).not.toContain(appCopy.ja.home.headline);
     expect(container.querySelector(".md\\:grid-cols-3")).toBeNull();
 
@@ -44,6 +44,31 @@ describe("HomeView hierarchy", () => {
     expect(container.querySelectorAll("[data-testid='home-overview-summary']")).toHaveLength(1);
     expect(container.querySelector("[role='progressbar']")?.getAttribute("aria-valuenow")).toBe("1");
     expect(container.textContent).toContain(appCopy.ja.home.daysLeft(15));
+  });
+
+  it("previews a focus chord card with the shared sound and resolved voicing", async () => {
+    const toggle = vi.spyOn(playbackController, "toggle").mockResolvedValue();
+    const container = await renderHome(dashboardIdeas());
+    const chordCard = container.querySelector<HTMLButtonElement>("[data-home-focus-chord='0']");
+
+    expect(chordCard?.getAttribute("aria-label")).toBe(`${appCopy.ja.common.preview}: Cmaj7`);
+
+    await act(async () => chordCard?.click());
+
+    expect(toggle).toHaveBeenCalledWith(
+      { kind: "home", id: "idea:focus:block:block-1:chord:1:1:0" },
+      {
+        type: "chord",
+        chord: {
+          root: 0,
+          quality: "maj7",
+          tensions: [],
+          label: "Cmaj7",
+        },
+        sound: "piano",
+        explicitMidiNotes: expect.any(Array),
+      },
+    );
   });
 
   it("shows at most three recent progressions and preserves their preview controls", async () => {
