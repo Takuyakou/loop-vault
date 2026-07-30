@@ -1,22 +1,57 @@
 :root {
   --lv-bg: #0b0e14;
+  --lv-bg-subtle: #0e131b;
   --lv-surface: #11161f;
   --lv-surface-raised: #171d28;
+  --lv-surface-overlay: #1d2532;
   --lv-border: #2a3342;
   --lv-border-strong: #3a4658;
   --lv-accent: #46dfc7;
   --lv-accent-strong: #20bfa9;
+  --lv-accent-soft: #123f3a;
+  --lv-info: #78c8f5;
+  --lv-info-soft: #102d40;
+  --lv-success: #62d7a6;
+  --lv-success-soft: #12382c;
   --lv-warning: #e6ae4a;
+  --lv-warning-soft: #3b2b11;
+  --lv-danger: #ff8585;
+  --lv-danger-strong: #e65f67;
+  --lv-danger-soft: #421b22;
+  --lv-focus: #8bd7ff;
   --lv-text: #f5f7fa;
   --lv-text-secondary: #c0c8d4;
   --lv-text-muted: #8792a4;
+  --lv-text-on-accent: #06110f;
+  --lv-muted: var(--lv-text-muted);
   --lv-space-1: 4px;
   --lv-space-2: 8px;
   --lv-space-3: 12px;
   --lv-space-4: 16px;
+  --lv-space-5: 20px;
   --lv-space-6: 24px;
+  --lv-space-8: 32px;
   --lv-radius-sm: 8px;
   --lv-radius-md: 12px;
+  --lv-radius-lg: 16px;
+  --lv-control-sm: 36px;
+  --lv-control-md: 40px;
+  --lv-font-xs: 0.75rem;
+  --lv-font-sm: 0.875rem;
+  --lv-font-md: 1rem;
+  --lv-font-lg: 1.125rem;
+  --lv-font-xl: 1.5rem;
+  --lv-line-tight: 1.25;
+  --lv-line-body: 1.55;
+  --lv-shadow-overlay: 0 18px 48px rgb(0 0 0 / 48%);
+  --lv-shadow-focus: 0 0 0 3px rgb(139 215 255 / 22%);
+  --lv-motion-fast: 120ms;
+  --lv-motion-normal: 180ms;
+  --lv-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --lv-z-sticky: 30;
+  --lv-z-popover: 50;
+  --lv-z-dialog: 70;
+  --lv-z-toast: 80;
 }
 
 @layer base {
@@ -37,7 +72,7 @@
   .lv-button-primary {
     background: var(--lv-accent);
     border-radius: var(--lv-radius-sm);
-    color: #06110f;
+    color: var(--lv-text-on-accent);
   }
 
   .lv-button-secondary {
@@ -54,5 +89,82 @@
   .lv-button-ghost:hover {
     background: var(--lv-surface-raised);
     color: var(--lv-text);
+  }
+
+  .lv-button-danger {
+    border: 1px solid color-mix(in srgb, var(--lv-danger) 58%, transparent);
+    border-radius: var(--lv-radius-sm);
+    color: var(--lv-danger);
+  }
+
+  .lv-button-danger:hover {
+    background: var(--lv-danger-soft);
+    color: #fff;
+  }
+
+  .lv-button-primary,
+  .lv-button-secondary,
+  .lv-button-ghost,
+  .lv-button-danger {
+    transition:
+      background-color var(--lv-motion-fast) var(--lv-ease-standard),
+      border-color var(--lv-motion-fast) var(--lv-ease-standard),
+      color var(--lv-motion-fast) var(--lv-ease-standard);
+  }
+
+  .lv-button-primary:hover {
+    background: var(--lv-accent-strong);
+  }
+
+  .lv-button-secondary:hover {
+    border-color: color-mix(in srgb, var(--lv-accent) 58%, var(--lv-border-strong));
+    color: var(--lv-text);
+  }
+
+  .lv-button-primary:disabled,
+  .lv-button-secondary:disabled,
+  .lv-button-ghost:disabled,
+  .lv-button-danger:disabled {
+    cursor: not-allowed;
+    opacity: 0.48;
+  }
+
+  .lv-field-control {
+    width: 100%;
+    min-height: var(--lv-control-md);
+    border: 1px solid var(--lv-border-strong);
+    border-radius: var(--lv-radius-sm);
+    background: var(--lv-bg);
+    color: var(--lv-text);
+  }
+
+  .lv-field-control[aria-invalid="true"] {
+    border-color: var(--lv-danger);
+  }
+
+  .lv-surface {
+    border: 1px solid var(--lv-border);
+    border-radius: var(--lv-radius-sm);
+    background: var(--lv-surface);
+  }
+
+  .lv-status-info {
+    border-color: color-mix(in srgb, var(--lv-info) 42%, var(--lv-border));
+    background: color-mix(in srgb, var(--lv-info-soft) 66%, var(--lv-surface));
+  }
+
+  .lv-status-success {
+    border-color: color-mix(in srgb, var(--lv-success) 42%, var(--lv-border));
+    background: color-mix(in srgb, var(--lv-success-soft) 66%, var(--lv-surface));
+  }
+
+  .lv-status-warning {
+    border-color: color-mix(in srgb, var(--lv-warning) 45%, var(--lv-border));
+    background: color-mix(in srgb, var(--lv-warning-soft) 66%, var(--lv-surface));
+  }
+
+  .lv-status-error {
+    border-color: color-mix(in srgb, var(--lv-danger) 48%, var(--lv-border));
+    background: color-mix(in srgb, var(--lv-danger-soft) 70%, var(--lv-surface));
   }
 }
