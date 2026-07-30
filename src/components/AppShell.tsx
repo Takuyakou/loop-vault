@@ -11,7 +11,6 @@ import {
   Home,
   Layers3,
   LoaderCircle,
-  Music,
   PanelLeftClose,
   PanelLeftOpen,
   Piano,
@@ -20,6 +19,7 @@ import {
 } from "lucide-react";
 import { MasterVolumeKnob } from "./MasterVolumeKnob";
 import { GlobalPreviewSoundSelector } from "./GlobalPreviewSoundSelector";
+import { PlaybackLevelMeter } from "./PlaybackLevelMeter";
 import { Button, IconButton } from "./ui";
 
 export type AppView =
@@ -167,12 +167,19 @@ export function AppShell({
             ) : null}
           </div>
           <div className="flex min-w-0 shrink-0 items-center justify-end gap-1.5" data-global-actions>
-            <GlobalPreviewSoundSelector copy={copy} />
+            <PlaybackLevelMeter
+              label={copy.nav.previewLevel}
+              masterVolume={masterVolume}
+              status={playback.status}
+              stopLabel={copy.nav.stopPlaying}
+              onStop={() => controller.stop()}
+            />
             <MasterVolumeKnob
               value={masterVolume}
               onChange={onMasterVolumeChange}
               label={copy.nav.masterVolume}
             />
+            <GlobalPreviewSoundSelector copy={copy} />
             <Button
               variant="primary"
               className="h-10 whitespace-nowrap px-3"
@@ -182,15 +189,6 @@ export function AppShell({
               <Plus aria-hidden="true" size={16} />
               <span className="hidden sm:inline">{copy.nav.new}</span>
             </Button>
-            {playback.status !== "idle" ? (
-              <IconButton
-                variant="ghost"
-                onClick={() => controller.stop()}
-                label={copy.nav.stopPlaying}
-              >
-                <Music aria-hidden="true" size={20} />
-              </IconButton>
-            ) : null}
             <span
               className="ml-1 inline-flex h-10 min-w-10 items-center justify-center gap-1.5 border-l border-[var(--lv-border)] pl-3 text-xs text-[var(--lv-text-muted)]"
               aria-live="polite"

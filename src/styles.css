@@ -22,6 +22,76 @@ button {
   font: inherit;
 }
 
+.lv-level-meter {
+  display: inline-flex;
+  width: 3rem;
+  height: 2.25rem;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.1875rem;
+  padding: 0.25rem 0.1875rem;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.lv-level-meter:disabled {
+  cursor: default;
+}
+
+.lv-level-meter-track {
+  display: block;
+  width: 100%;
+  height: 0.375rem;
+  overflow: hidden;
+  border: 1px solid var(--lv-border-strong);
+  background: var(--lv-bg);
+}
+
+.lv-level-meter-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: scaleX(var(--lv-meter-level));
+  transform-origin: left center;
+  background: linear-gradient(
+    to right,
+    var(--lv-accent) 0 76%,
+    #a3e635 76% 90%,
+    #facc15 90% 100%
+  );
+  transition: transform 80ms linear;
+}
+
+.lv-level-meter[data-playback-status="playing"] .lv-level-meter-fill {
+  animation: lv-meter-primary 620ms ease-in-out infinite alternate;
+}
+
+.lv-level-meter[data-playback-status="playing"] .lv-level-meter-fill-secondary {
+  animation-name: lv-meter-secondary;
+  animation-duration: 760ms;
+}
+
+@keyframes lv-meter-primary {
+  from { transform: scaleX(var(--lv-meter-low)); }
+  to { transform: scaleX(var(--lv-meter-level)); }
+}
+
+@keyframes lv-meter-secondary {
+  from { transform: scaleX(var(--lv-meter-level)); }
+  to { transform: scaleX(var(--lv-meter-low)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lv-level-meter-fill {
+    transition: none;
+  }
+
+  .lv-level-meter[data-playback-status="playing"] .lv-level-meter-fill {
+    animation: none;
+  }
+}
+
 :where(
   a[href],
   button,
