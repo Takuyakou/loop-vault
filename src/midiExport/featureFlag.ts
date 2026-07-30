@@ -1,6 +1,6 @@
 export const MIDI_EXPORT_FEATURE_STORAGE_KEY =
   "loop-vault:progression-midi-export-enabled:v1";
-export const DEFAULT_MIDI_EXPORT_FEATURE_ENABLED = false;
+export const DEFAULT_MIDI_EXPORT_FEATURE_ENABLED = true;
 
 interface StorageLike {
   getItem(key: string): string | null;

@@ -222,7 +222,7 @@ export function ProgressionMidiControl({
       >
         <FileMusic aria-hidden="true" size={16} />
         MIDI
-        <GripVertical aria-hidden="true" size={14} />
+        <GripVertical aria-hidden="true" size={16} />
       </Button>
       {result ? (
         <span className="whitespace-nowrap text-xs text-[var(--lv-text-muted)]">

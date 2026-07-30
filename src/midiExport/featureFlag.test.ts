@@ -13,14 +13,14 @@ function storage(value: string | null) {
 }
 
 describe("progression MIDI export feature flag", () => {
-  test("stays off by default during staged development", () => {
-    expect(DEFAULT_MIDI_EXPORT_FEATURE_ENABLED).toBe(false);
-    expect(isProgressionMidiExportEnabled(storage(null))).toBe(false);
+  test("is enabled by default after the release gates pass", () => {
+    expect(DEFAULT_MIDI_EXPORT_FEATURE_ENABLED).toBe(true);
+    expect(isProgressionMidiExportEnabled(storage(null))).toBe(true);
   });
 
   test("supports an explicit local override for verification and rollback", () => {
     expect(isProgressionMidiExportEnabled(storage("true"))).toBe(true);
     expect(isProgressionMidiExportEnabled(storage("false"))).toBe(false);
-    expect(isProgressionMidiExportEnabled(storage("invalid"))).toBe(false);
+    expect(isProgressionMidiExportEnabled(storage("invalid"))).toBe(true);
   });
 });
