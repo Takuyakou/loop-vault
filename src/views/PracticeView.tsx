@@ -1935,10 +1935,10 @@ export function PracticeView({
       </div>
 
       <div
-        className="grid min-h-[36rem] items-start gap-0 border-x border-b border-[var(--lv-border)] lg:grid-cols-[17rem_minmax(0,1fr)]"
+        className="grid min-h-[36rem] items-start gap-0 border-x border-b border-[var(--lv-border)] xl:grid-cols-[17rem_minmax(0,1fr)]"
         data-testid="practice-layout"
       >
-        <aside aria-labelledby="practice-queue-title" className="border-b border-[var(--lv-border)] bg-[var(--lv-surface)] lg:sticky lg:top-0 lg:border-b-0 lg:border-r">
+        <aside aria-labelledby="practice-queue-title" className="border-b border-[var(--lv-border)] bg-[var(--lv-surface)] xl:sticky xl:top-0 xl:border-b-0 xl:border-r">
           <div className="shrink-0 border-b border-[var(--lv-border)] p-3">
             <div className="flex items-center gap-2">
               <Dumbbell aria-hidden="true" size={16} className="text-[var(--lv-accent)]" />
