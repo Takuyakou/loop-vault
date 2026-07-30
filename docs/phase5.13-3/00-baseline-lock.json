@@ -1,0 +1,32 @@
+{
+  "phase": "5.13-3",
+  "capturedAt": "2026-07-30",
+  "baselineCommit": "c7d2aa29b247ae76620654b3b53d373b15e67280",
+  "baselineTree": "ad09e9a730da10695b07e135f0271a7be7dacb12",
+  "protectedBlobs": {
+    "src/domain/schema.ts": "3e8b9a9ef8ba91631899629cdd9d5527045fa836",
+    "src/domain/midi/analysis.ts": "8a05e530dc583950b89ce090c7aba591793c6c03",
+    "src/store/vaultStore.ts": "1d4c33f64abbd5b90e43161efbbe6938b5df9add"
+  },
+  "changeBoundaryBlobs": {
+    "src/App.tsx": "fd43c192e6bd8b82ebef01107b28fa6f86bfac4e",
+    "src/liveMidi/miniWindowController.ts": "0c75bee462a6a1858b2bdd24cf52aee4a31fb2c6",
+    "src/views/PracticeView.tsx": "76d6a06c11819f11f833e737b3c69e1f37c5fb98",
+    "src/components/AppShell.tsx": "fdc9179fd06048dab25c619b6890b89e3aac404c",
+    "src/styles/tokens.css": "9d6987627638a736f0c493b4b9edc96f487355d0"
+  },
+  "contracts": {
+    "fileVersion": 1,
+    "defaultAnalyzerMode": "phase4-v1",
+    "trackedMidiFiles": 0,
+    "trackedLocalEvaluationFiles": 0,
+    "declaredTauriWindows": 1,
+    "liveMidiWindowLabel": null
+  },
+  "validatedBaseline": {
+    "vitestFiles": 239,
+    "vitestTests": 1852,
+    "rustTests": 24,
+    "playwrightTests": 28
+  }
+}
