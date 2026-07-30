@@ -77,6 +77,7 @@
     "eval:p5:hybrid": "vite-node scripts/evaluate-phase5-hybrid-reassessment.ts",
     "eval:p51:input-selection": "vite-node scripts/evaluate-phase51-input-selection.ts",
     "eval:stored-progressions": "vite-node scripts/evaluate-stored-progressions.ts",
+    "eval:p514:roundtrip": "vite-node scripts/evaluate-phase514-round-trip.ts",
     "eval:review-differences": "vite-node scripts/review-midi-differences.ts",
     "eval:promote-corrections": "vite-node scripts/promote-midi-corrections.ts",
     "eval:build-review-queue": "vite-node scripts/build-midi-review-queue.ts",

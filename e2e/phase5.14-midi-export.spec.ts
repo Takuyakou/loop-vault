@@ -10,6 +10,10 @@ const featureKey = "loop-vault:progression-midi-export-enabled:v1";
 test("Progression Detail keeps cards first and exposes accessible click, keyboard, and drag MIDI flows", async ({ page }) => {
   await openApp(page);
   await createSavedProgression(page, "Phase 5.14 MIDI Export");
+  await page.evaluate(
+    ({ key }) => localStorage.setItem(key, "false"),
+    { key: featureKey },
+  );
   await openVault(page);
   await openFirstProgression(page);
   await expect(page.locator("[data-midi-export-control]")).toHaveCount(0);
