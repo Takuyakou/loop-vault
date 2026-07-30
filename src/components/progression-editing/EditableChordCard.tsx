@@ -82,7 +82,7 @@ export function EditableChordCard({
         }}
       >
         <span className="flex items-start gap-2">
-          <span className="min-w-0 text-base font-semibold text-[var(--lv-text)]">
+          <span className="min-w-0 break-words text-base font-semibold text-[var(--lv-text)] [overflow-wrap:anywhere]">
             {slot.currentChord.label}
           </span>
           {slot.edited ? (
@@ -108,7 +108,7 @@ export function EditableChordCard({
       {onQuickEdit ? (
         <button
           type="button"
-          className="absolute right-2 top-2 grid h-8 w-8 place-items-center border border-[var(--lv-border-strong)] bg-[var(--lv-surface)] opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
+          className="absolute right-2 top-2 grid h-9 w-9 place-items-center border border-[var(--lv-border-strong)] bg-[var(--lv-surface)] opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
           onClick={(event) => {
             event.stopPropagation();
             onQuickEdit(event.currentTarget);
@@ -123,7 +123,7 @@ export function EditableChordCard({
         <button
           type="button"
           data-insert-chord-after
-          className="absolute right-11 top-2 grid h-8 w-8 place-items-center border border-[var(--lv-border-strong)] bg-[var(--lv-surface)] text-[var(--lv-text-secondary)] opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
+          className="absolute right-12 top-2 grid h-9 w-9 place-items-center border border-[var(--lv-border-strong)] bg-[var(--lv-surface)] text-[var(--lv-text-secondary)] opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
           onClick={(event) => {
             event.stopPropagation();
             onInsertAfter();

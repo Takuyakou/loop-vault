@@ -66,6 +66,9 @@ describe("CaptureDraftSessionBar", () => {
     expect(container.querySelector<HTMLButtonElement>(
       '[data-preview-side="source"]',
     )?.disabled).toBe(true);
+    expect(container.textContent).toContain("Saved state");
+    expect(container.querySelector('[aria-label="Stop preview"]')?.className)
+      .toContain("h-10");
 
     await act(async () => root.unmount());
   });

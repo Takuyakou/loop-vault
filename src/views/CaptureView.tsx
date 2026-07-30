@@ -151,7 +151,7 @@ import { cutDraftRangeAtEvent } from "../domain/midi/draftRangeEditing";
 import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
 import { ProgressionEditSummary } from "../components/progression-editing/ProgressionEditSummary";
 import { usePlaybackState } from "../hooks/usePlaybackState";
-import { Copy, FileMusic, TriangleAlert } from "lucide-react";
+import { Copy, FileMusic } from "lucide-react";
 import { Button, StatusMessage } from "../components/ui";
 
 interface CaptureViewProps {
@@ -1171,22 +1171,22 @@ export function CaptureView(props: CaptureViewProps) {
           </div>
           <div className="flex gap-2">
             {preAnalysisSession ? (
-              <button
-                className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm"
+              <Button
+                variant="secondary"
                 onClick={() => {
                   stopCapturePlayback(controller);
                   clearAnalysis();
                 }}
               >
                 {language === "ja" ? "パート選択を変更" : "Change part selection"}
-              </button>
+              </Button>
             ) : null}
-            <button className="rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => void chooseMidi(false)}>
+            <Button variant="secondary" onClick={() => void chooseMidi(false)}>
               {copy.capture.chooseAnother}
-            </button>
-            <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => { stopCapturePlayback(controller); clearAnalysis(); setPreAnalysisSession(undefined); setSourcePath(undefined); }}>
+            </Button>
+            <Button variant="ghost" onClick={() => { stopCapturePlayback(controller); clearAnalysis(); setPreAnalysisSession(undefined); setSourcePath(undefined); }}>
               {copy.capture.clear}
-            </button>
+            </Button>
           </div>
         </div>
         <div className="mt-5 grid gap-3 text-sm sm:grid-cols-4">
@@ -2334,12 +2334,26 @@ export function ProgressionCandidateCard({
   );
 
   return (
-    <div className={`border bg-[var(--lv-bg)] p-4 transition-colors ${isExpanded ? "border-teal-400/50" : "border-[var(--lv-border)] hover:border-stone-600"}`}>
+    <div
+      className={`border bg-[var(--lv-bg)] p-4 transition-colors ${
+        isExpanded
+          ? "border-teal-400/60 border-l-4 border-l-[var(--lv-accent)]"
+          : "border-[var(--lv-border)] hover:border-[var(--lv-border-strong)]"
+      }`}
+      data-candidate-state={isExpanded ? "selected" : "idle"}
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <button data-candidate-toggle data-candidate-id={candidate.id} className="min-w-0 text-left" onClick={onSelect} aria-expanded={isExpanded}>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--lv-accent)]">
-            {editorCopy.candidate(candidateIndex + 1)}
-          </p>
+        <button data-candidate-toggle data-candidate-id={candidate.id} className="min-w-0 flex-1 text-left" onClick={onSelect} aria-expanded={isExpanded}>
+          <span className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--lv-accent)]">
+              {editorCopy.candidate(candidateIndex + 1)}
+            </span>
+            {isExpanded ? (
+              <span className="border border-[var(--lv-accent)] px-2 py-0.5 text-xs font-semibold text-[var(--lv-accent)]">
+                {language === "ja" ? "選択中・編集対象" : "Selected for editing"}
+              </span>
+            ) : null}
+          </span>
           <p className="mt-2 font-semibold">
             {editorCopy.candidateBars(
               editedCandidate.startBar,
@@ -2413,10 +2427,10 @@ export function ProgressionCandidateCard({
               }
             }}
           />
-          <button className="inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => void onCopyProgression(editedCandidate)}>
+          <Button variant="secondary" size="sm" className="min-h-10" onClick={() => void onCopyProgression(editedCandidate)}>
             <Copy aria-hidden="true" size={16} />
             {copy.capture.copyProgression}
-          </button>
+          </Button>
         </div>
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -2600,14 +2614,11 @@ export function ProgressionCandidateCard({
         <p className="mt-2 text-xs text-[var(--lv-text-muted)]">{selectedRomanHint.label}{selectedRomanHint.detail ? ` · ${selectedRomanHint.detail}` : ""}{selectedRomanHint.confidence !== "high" ? copy.capture.reference : ""}</p>
       ) : null}
       {isExpanded && visibleWarnings.length > 0 ? (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {visibleWarnings.map((warning) => (
-            <span key={warning} className="inline-flex items-center gap-1.5 rounded border border-amber-400/40 bg-amber-400/10 px-2 py-1 text-xs text-amber-100">
-              <TriangleAlert aria-hidden="true" size={16} />
-              {copy.capture.reviewPrefix}: {warning}
-            </span>
-          ))}
-        </div>
+        <StatusMessage className="mt-3" tone="warning" title={copy.capture.reviewPrefix}>
+          <ul className="grid gap-1">
+            {visibleWarnings.map((warning) => <li key={warning}>{warning}</li>)}
+          </ul>
+        </StatusMessage>
       ) : null}
 
       {isExpanded ? (

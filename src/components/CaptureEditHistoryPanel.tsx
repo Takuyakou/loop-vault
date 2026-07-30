@@ -62,7 +62,7 @@ function HistoryButton({
   return (
     <button
       type="button"
-      className={`min-h-8 border px-2 text-xs ${
+      className={`min-h-9 border px-2 text-xs ${
         current
           ? "border-teal-300 bg-teal-300/10 text-teal-100"
           : "border-[var(--lv-border)] text-[var(--lv-text-muted)]"
