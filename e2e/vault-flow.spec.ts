@@ -20,9 +20,10 @@ test("解析結果を保存し、Vaultで検索して詳細とDojoへ渡せる",
   const row = page.locator(".lv-vault-row").first();
   await expect(row).toBeVisible();
   await row.getByRole("button", { name: /進行を開く|Open progression/ }).click();
-  await expect(page.getByRole("button", { name: /練習する|Practice/ })).toBeVisible();
+  const detail = page.locator("[data-progression-detail-view]");
+  await expect(detail.getByRole("button", { name: /練習する|Practice/ })).toBeVisible();
 
-  await page.getByRole("button", { name: /練習する|Practice/ }).click();
+  await detail.getByRole("button", { name: /練習する|Practice/ }).click();
   await expect(page.getByTestId("practice-layout")).toBeVisible();
   await expect(page.getByTestId("practice-progression-overview")).toBeVisible();
   expect(pageErrors).toEqual([]);

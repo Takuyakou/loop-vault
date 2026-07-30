@@ -189,7 +189,7 @@ export function HomeView({
               onClick={openVault}
             >
               {copy.home.openVault}
-              <ArrowRight aria-hidden="true" size={14} />
+              <ArrowRight aria-hidden="true" size={16} />
             </button>
           </div>
           {recentProgressions.length ? (

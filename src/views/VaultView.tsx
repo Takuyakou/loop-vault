@@ -595,7 +595,7 @@ function ActiveFilterChip({ clearLabel, label, onClear }: { clearLabel: string; 
       aria-label={`${clearLabel}: ${label}`}
     >
       {label}
-      <X aria-hidden="true" size={14} />
+      <X aria-hidden="true" size={16} />
     </button>
   );
 }

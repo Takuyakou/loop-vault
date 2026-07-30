@@ -205,7 +205,7 @@ export function LoadingState({
       <LoaderCircle
         aria-hidden="true"
         className="shrink-0 animate-spin text-[var(--lv-accent)]"
-        size={18}
+        size={20}
       />
       <div className="min-w-0">
         <p className="font-medium text-[var(--lv-text)]">{label}</p>

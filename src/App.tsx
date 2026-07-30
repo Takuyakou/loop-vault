@@ -193,6 +193,7 @@ function App() {
     if (previousViewRef.current === view) return undefined;
     previousViewRef.current = view;
     const frame = window.requestAnimationFrame(() => {
+      mainContentRef.current?.scrollTo({ top: 0, left: 0 });
       mainContentRef.current?.focus({ preventScroll: true });
     });
     return () => window.cancelAnimationFrame(frame);

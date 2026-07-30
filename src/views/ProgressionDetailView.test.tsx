@@ -83,6 +83,56 @@ function practicedBlock(clearedOnLocalDate: string): SavedProgressionBlock {
 }
 
 describe("ProgressionDetailView", () => {
+  it("renders a 100-chord progression without dropping chord cards", async () => {
+    const longBlock: SavedProgressionBlock = {
+      ...block,
+      id: "block-100-chords",
+      summaryText: "100 chord UI endurance fixture",
+      lengthBars: 25,
+      chords: Array.from({ length: 100 }, (_, index) => ({
+        ...block.chords[0]!,
+        eventId: `event-${index + 1}`,
+        bar: Math.floor(index / 4) + 1,
+        beat: (index % 4) + 1,
+        durationBeats: 1,
+        chord: {
+          ...block.chords[0]!.chord,
+          label: `Cmaj7/${index + 1}`,
+        },
+      })),
+    };
+    const idea = makeIdea({
+      id: "idea-100-chords",
+      progressionBlocks: [longBlock],
+    });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <ProgressionDetailView
+          idea={idea}
+          block={longBlock}
+          updateProgressionBlock={vi.fn(() => true)}
+          duplicateProgressionBlock={vi.fn()}
+          openProgression={vi.fn()}
+          openIdea={vi.fn()}
+          openVault={vi.fn()}
+          requestDelete={vi.fn()}
+          setToast={vi.fn()}
+          copy={appCopy.en}
+          language="en"
+        />,
+      );
+    });
+
+    expect(container.querySelectorAll("[data-chord-card]")).toHaveLength(100);
+    expect(container.textContent).toContain("Cmaj7/100");
+
+    await act(async () => root.unmount());
+  });
+
   it("shows transposition coverage and provisional state in progression details", async () => {
     const practiced = practicedBlock(localDateString(new Date()));
     const idea = makeIdea({

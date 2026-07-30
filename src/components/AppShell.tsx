@@ -150,9 +150,9 @@ export function AppShell({
             data-sidebar-toggle
           >
             {collapsed ? (
-              <PanelLeftOpen aria-hidden="true" size={18} />
+              <PanelLeftOpen aria-hidden="true" size={20} />
             ) : (
-              <PanelLeftClose aria-hidden="true" size={18} />
+              <PanelLeftClose aria-hidden="true" size={20} />
             )}
           </IconButton>
         </div>
@@ -188,7 +188,7 @@ export function AppShell({
                 onClick={() => controller.stop()}
                 label={copy.nav.stopPlaying}
               >
-                <Music aria-hidden="true" size={18} />
+                <Music aria-hidden="true" size={20} />
               </IconButton>
             ) : null}
             <span
@@ -262,7 +262,7 @@ function SidebarItem({
       title={collapsed ? label : undefined}
       onClick={onClick}
     >
-      <Icon aria-hidden="true" className="shrink-0" size={18} />
+      <Icon aria-hidden="true" className="shrink-0" size={20} />
       {!collapsed ? <span className="min-w-0 truncate">{label}</span> : null}
     </button>
   );
