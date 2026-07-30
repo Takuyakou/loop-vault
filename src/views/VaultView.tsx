@@ -36,6 +36,7 @@ type VaultMode = "library" | "list" | "idea";
 type ProgressionViewMode = Exclude<VaultMode, "idea">;
 
 const progressionViewModeSessionKey = "loop-vault.progression-view-mode";
+const progressionVirtualizationThreshold = 50;
 
 export function VaultView({
   ideas, storedIdeas = ideas, openDetail, openProgression, openCreate, openCapture, updateIdea, setToast, copy, language, showRomanNumerals,
@@ -389,7 +390,7 @@ function ProgressionRows({
       language={language}
       copy={copy}
       displayTags={displayTags?.(entry)}
-      compact={entries.length > 200}
+      compact={entries.length > progressionVirtualizationThreshold}
       onSelect={() => onSelect(index)}
       onOpen={() => onOpen(entry)}
       onPin={() => onPin(entry)}
@@ -399,7 +400,7 @@ function ProgressionRows({
   );
 
   if (entries.length === 0) return null;
-  if (entries.length <= 200) {
+  if (entries.length <= progressionVirtualizationThreshold) {
     return <div className="mt-4 overflow-hidden border border-[var(--lv-border)]">{entries.map(row)}</div>;
   }
   return (
@@ -476,7 +477,7 @@ function ProgressionRow({ entry, selected, showDegrees, language, copy, displayT
   const source = sourceOf(entry);
   const playing = playback.status !== "idle" && samePlaybackSource(playback.source, source);
   const progressionText = entry.block.chords.map((item) => item.chord.label).join(" · ");
-  return <div data-compact={compact} className={`lv-vault-row border-b border-[var(--lv-border)] px-2 py-2 text-sm ${compact ? "h-24 overflow-hidden" : "min-h-24"} ${selected ? "bg-[var(--lv-surface-raised)]" : "hover:bg-[var(--lv-surface)]"} ${playing ? "border-l-2 border-l-[var(--lv-accent)]" : ""}`} onClick={onSelect}>
+  return <div data-compact={compact} data-selected={selected} className={`lv-vault-row border-b border-[var(--lv-border)] px-2 py-2 text-sm ${compact ? "h-24 overflow-hidden" : "min-h-24"} ${selected ? "bg-[var(--lv-surface-raised)]" : "hover:bg-[var(--lv-surface)]"} ${playing ? "border-l-2 border-l-[var(--lv-accent)]" : ""}`}>
     <div className="lv-vault-play" onClick={(event) => event.stopPropagation()} onDoubleClick={(event) => event.stopPropagation()}>
       <PlayToggle source={source} request={requestOf(entry, previewSound)} playLabel={copy.common.preview} stopLabel={copy.common.stop} className="lv-button-ghost grid h-10 w-10 place-items-center" showLabel={false} onError={onPreviewError} />
     </div>
@@ -485,6 +486,7 @@ function ProgressionRow({ entry, selected, showDegrees, language, copy, displayT
       className="lv-vault-progression min-w-0 text-left"
       aria-current={selected ? "true" : undefined}
       title={compact ? progressionText : undefined}
+      onClick={onSelect}
       onKeyDown={(event) => {
         if (event.key !== "Enter") return;
         event.preventDefault();

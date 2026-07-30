@@ -247,17 +247,17 @@ export function SaveProgressionPopover({
             <div className="mt-4 grid gap-3">
               <label className="text-xs font-semibold uppercase text-[var(--lv-text-muted)]">
                 {copy.common.title}
-                <input ref={titleInputRef} className={`${inputClass} mt-2`} value={title} onChange={(event) => setTitle(event.target.value)} />
+                <input ref={titleInputRef} name="progression-title" autoComplete="off" className={`${inputClass} mt-2`} value={title} onChange={(event) => setTitle(event.target.value)} />
               </label>
               <label className="text-xs font-semibold uppercase text-[var(--lv-text-muted)]">
                 {copy.capture.nextAction}
-                <input className={`${inputClass} mt-2`} value={nextAction} onChange={(event) => setNextAction(event.target.value)} />
+                <input name="progression-next-action" autoComplete="off" className={`${inputClass} mt-2`} value={nextAction} onChange={(event) => setNextAction(event.target.value)} />
               </label>
             </div>
           ) : (
             <label className="mt-4 block text-xs font-semibold uppercase text-[var(--lv-text-muted)]">
               {copy.capture.destination}
-              <select ref={ideaSelectRef} className={`${inputClass} mt-2`} value={ideaId} onChange={(event) => setIdeaId(event.target.value)}>
+              <select ref={ideaSelectRef} name="progression-destination" className={`${inputClass} mt-2`} value={ideaId} onChange={(event) => setIdeaId(event.target.value)}>
                 <option value="">{copy.capture.chooseIdea}</option>
                 {ideas.map((idea) => <option key={idea.id} value={idea.id}>{idea.title}</option>)}
               </select>

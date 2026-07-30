@@ -204,7 +204,7 @@ export function VoicingPanel({
         <div className="mt-4 border border-[var(--lv-border)] p-3">
           <p className="text-sm text-[var(--lv-text)]">{text.recordPrompt}</p>
           <p className="mt-2 text-xs text-[var(--lv-text-secondary)]">
-            {currentHeld.map(midiNoteName).join("  ") || "-"} / {text.stable}: {stable ? "100 ms" : "..."}
+            {currentHeld.map(midiNoteName).join("  ") || "-"} / {text.stable}: {stable ? "100 ms" : "…"}
           </p>
           {stable && captureCoverage.requiredCoverage < 0.67 ? (
             <p className="mt-2 text-xs text-amber-100">{text.mismatch}</p>
