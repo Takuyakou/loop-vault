@@ -258,23 +258,23 @@ export function PreAnalysisWorkspace({
 
   return (
     <section
-      className="py-5"
+      className="py-1"
       data-testid="pre-analysis-workspace"
       data-pre-analysis-mode={detailsExpanded ? "expanded" : "compact"}
     >
-      <div className="border-y border-[var(--lv-border)] py-5">
-        <div className="flex flex-wrap items-start justify-between gap-4 px-1">
+      <div className="lv-surface p-4 sm:p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--lv-accent)]">
+            <p className="lv-section-kicker">
               MIDI ANALYSIS
             </p>
-            <h2 className="mt-2 text-2xl font-semibold">{copy.loadedMidi}</h2>
-            <p className="mt-2 max-w-3xl text-sm text-[var(--lv-text-muted)]">
+            <h2 className="mt-1.5 text-xl font-bold">{copy.loadedMidi}</h2>
+            <p className="mt-1 max-w-3xl text-sm text-[var(--lv-text-secondary)]">
               {copy.description}
             </p>
           </div>
           <div
-            className="flex w-full flex-wrap items-start gap-2 sm:w-auto"
+            className="flex w-full flex-wrap items-center justify-end gap-2 xl:w-auto"
             data-testid="pre-analysis-primary-actions"
           >
             <Button
@@ -292,49 +292,47 @@ export function PreAnalysisWorkspace({
                 {copy.voiceCount(session.voices.length)}
               </span>
             </Button>
-            <div className="grid min-w-64 flex-1 gap-2 sm:max-w-80">
-              <Button
-                variant="secondary"
-                className="justify-start px-3"
-                data-testid="pre-analysis-add-midi"
-                onClick={onAddMidi}
-              >
-                <Plus size={16} aria-hidden="true" />
-                {copy.addMidi}
-              </Button>
-              <p className="px-1 text-xs leading-5 text-[var(--lv-text-secondary)]" aria-live="polite">
-                {copy.targetSummary(includedCount, session.voices.length)}
+            <Button
+              variant="secondary"
+              className="justify-start px-3"
+              data-testid="pre-analysis-add-midi"
+              onClick={onAddMidi}
+            >
+              <Plus size={16} aria-hidden="true" />
+              {copy.addMidi}
+            </Button>
+            <Button
+              variant="primary"
+              className="min-w-28"
+              data-testid="pre-analysis-analyze"
+              disabled={busy || includedCount === 0}
+              onClick={onAnalyze}
+              aria-describedby={includedCount === 0 ? "pre-analysis-disabled-reason" : undefined}
+            >
+              {busy ? copy.preparing : copy.analyze}
+            </Button>
+            <p className="w-full text-right text-xs leading-5 text-[var(--lv-text-secondary)]" aria-live="polite">
+              {copy.targetSummary(includedCount, session.voices.length)}
+            </p>
+            {includedCount === 0 ? (
+              <p id="pre-analysis-disabled-reason" className="w-full text-right text-xs text-[var(--lv-warning)]">
+                {copy.selectAtLeastOne}
               </p>
-              <Button
-                variant="primary"
-                className="w-full"
-                data-testid="pre-analysis-analyze"
-                disabled={busy || includedCount === 0}
-                onClick={onAnalyze}
-                aria-describedby={includedCount === 0 ? "pre-analysis-disabled-reason" : undefined}
-              >
-                {busy ? copy.preparing : copy.analyze}
-              </Button>
-              {includedCount === 0 ? (
-                <p id="pre-analysis-disabled-reason" className="px-1 text-xs text-[var(--lv-warning)]">
-                  {copy.selectAtLeastOne}
-                </p>
-              ) : null}
-            </div>
+            ) : null}
           </div>
         </div>
 
-        <div className="mt-4 grid border-y border-[var(--lv-border)] sm:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-3 flex flex-wrap gap-2" aria-label={copy.loadedMidi}>
           {session.sources.map((source) => (
             <div
               key={source.id}
-              className={`min-w-0 border-b border-[var(--lv-border)] px-3 py-3 sm:border-r ${
+              className={`min-w-0 max-w-full rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] bg-[var(--lv-bg-subtle)] px-3 py-2 ${
                 highlightedSourceId === source.id ? "bg-[var(--lv-accent-soft)]" : ""
               }`}
               data-source-id={source.id}
               data-new-source={highlightedSourceId === source.id || undefined}
             >
-              <p className="truncate text-sm font-semibold" title={source.displayName}>
+              <p className="max-w-72 truncate text-sm font-semibold" title={source.displayName}>
                 {source.displayName}
               </p>
               <p className="mt-1 text-xs text-[var(--lv-text-muted)]">
@@ -345,7 +343,7 @@ export function PreAnalysisWorkspace({
         </div>
 
         {!detailsExpanded ? (
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-l-2 border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] px-4 py-3">
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-l-2 border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] px-4 py-3">
             <p className="text-sm text-[var(--lv-text-secondary)]">
               {copy.compactSummary(session.voices.find((voice) =>
                 voice.included)?.displayName ?? copy.unknownVoice)}
@@ -398,7 +396,7 @@ export function PreAnalysisWorkspace({
               </p>
             ) : null}
 
-            <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_400px]">
+            <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
               <div className="min-w-0">
                 <PreAnalysisPianoRoll
                   session={session}
@@ -480,7 +478,7 @@ export function PreAnalysisWorkspace({
                 </div>
               </div>
 
-              <aside className="min-w-0 border-l border-[var(--lv-border)] pl-4">
+              <aside className="min-w-0 rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] bg-[var(--lv-bg-subtle)] p-4">
                 <h3 className="text-sm font-semibold">{copy.preset}</h3>
                 <div className="mt-3 grid grid-cols-2 gap-2" role="radiogroup" aria-label={copy.preset}>
                   {presetOptions(copy).map((option) => (
