@@ -123,4 +123,13 @@ describe("EditableChordCard", () => {
     expect(onPreview).toHaveBeenCalledOnce();
     await act(async () => root.unmount());
   });
+
+  it("allows long chord labels to wrap inside the card", async () => {
+    const { container, root } = await renderCard();
+    const label = container.querySelector(".break-words");
+    expect(label?.textContent).toBe("Cmaj7");
+    expect(label?.className).toContain("[overflow-wrap:anywhere]");
+    expect(label?.className).toContain("break-words");
+    await act(async () => root.unmount());
+  });
 });

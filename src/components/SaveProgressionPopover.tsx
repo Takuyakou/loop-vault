@@ -3,6 +3,7 @@ import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import type { SongIdea } from "../domain/types";
 import type { AppCopy } from "../i18n";
 import { ChevronDown, Save } from "lucide-react";
+import { Button } from "./ui";
 
 type SavePanel = "new" | "append" | "memo";
 
@@ -158,10 +159,11 @@ export function SaveProgressionPopover({
 
   return (
     <div ref={rootRef} className="relative inline-flex">
-      <button
+      <Button
         ref={primaryButtonRef}
-        type="button"
-        className="inline-flex items-center gap-2 rounded-l bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950"
+        variant="primary"
+        size="sm"
+        className="min-h-10 rounded-r-none px-3"
         aria-haspopup="dialog"
         aria-controls={primaryExpanded ? panelId : undefined}
         aria-expanded={primaryExpanded}
@@ -169,11 +171,12 @@ export function SaveProgressionPopover({
       >
         <Save aria-hidden="true" size={16} />
         {copy.capture.saveToVault}
-      </button>
-      <button
+      </Button>
+      <Button
         ref={menuButtonRef}
-        type="button"
-        className="rounded-r border-l border-stone-950/30 bg-[var(--lv-accent)] px-2 py-2 text-sm font-semibold text-stone-950"
+        variant="primary"
+        size="sm"
+        className="min-h-10 rounded-l-none border-l border-stone-950/30 !px-2"
         aria-label={copy.capture.saveMenu}
         title={copy.capture.saveMenu}
         aria-haspopup={secondaryPanelOpen ? "dialog" : "menu"}
@@ -188,7 +191,7 @@ export function SaveProgressionPopover({
         }}
       >
         <ChevronDown aria-hidden="true" size={16} />
-      </button>
+      </Button>
 
       {menuOpen ? (
         <div

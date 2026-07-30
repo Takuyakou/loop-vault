@@ -1,5 +1,6 @@
 import { Play, Square, Trash2 } from "lucide-react";
 import type { AppLanguage } from "../i18n";
+import { Button, IconButton } from "./ui";
 
 export interface CaptureDraftSessionBarProps {
   language: AppLanguage;
@@ -35,15 +36,20 @@ export function CaptureDraftSessionBar({
             {ja ? "編集中のDraft" : "Active Draft"}
           </span>
           {dirty ? (
-            <span className="border border-amber-300/60 px-2 py-0.5 text-xs text-amber-200">
+            <span className="border border-amber-300/60 px-2 py-0.5 text-xs text-amber-200" role="status" aria-live="polite">
               {ja ? "未保存" : "Unsaved"}
             </span>
-          ) : null}
+          ) : (
+            <span className="text-xs text-[var(--lv-success)]" role="status">
+              {ja ? "保存済みの状態" : "Saved state"}
+            </span>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-2" role="group" aria-label={ja ? "A/B試聴" : "A/B preview"}>
-          <button
-            type="button"
-            className="inline-flex min-h-9 items-center gap-2 border border-[var(--lv-border-strong)] px-3 text-sm disabled:opacity-40"
+          <Button
+            variant="secondary"
+            size="sm"
+            className="min-h-10"
             disabled={!sourceAvailable}
             aria-pressed={playing === "source"}
             onClick={onPreviewSource}
@@ -51,35 +57,32 @@ export function CaptureDraftSessionBar({
           >
             <Play aria-hidden="true" size={16} />
             {ja ? "A: 元MIDI" : "A: Source MIDI"}
-          </button>
-          <button
-            type="button"
-            className="inline-flex min-h-9 items-center gap-2 border border-teal-300 px-3 text-sm text-teal-100"
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="min-h-10 border-teal-300 text-teal-100"
             aria-pressed={playing === "edited"}
             onClick={onPreviewEdited}
             data-preview-side="edited"
           >
             <Play aria-hidden="true" size={16} />
             {ja ? "B: 編集後" : "B: Edited Draft"}
-          </button>
-          <button
-            type="button"
-            className="grid h-9 w-9 place-items-center border border-[var(--lv-border-strong)]"
+          </Button>
+          <IconButton
+            variant="secondary"
             onClick={onStop}
-            aria-label={ja ? "試聴を停止" : "Stop preview"}
-            title={ja ? "試聴を停止" : "Stop preview"}
+            label={ja ? "試聴を停止" : "Stop preview"}
           >
             <Square aria-hidden="true" size={16} />
-          </button>
-          <button
-            type="button"
-            className="grid h-9 w-9 place-items-center border border-red-400/50 text-red-200"
+          </IconButton>
+          <IconButton
+            variant="danger"
             onClick={onRequestDiscard}
-            aria-label={ja ? "Draftを閉じる" : "Close Draft"}
-            title={ja ? "Draftを閉じる" : "Close Draft"}
+            label={ja ? "Draftを閉じる" : "Close Draft"}
           >
             <Trash2 aria-hidden="true" size={16} />
-          </button>
+          </IconButton>
         </div>
       </div>
       {!sourceAvailable ? (
