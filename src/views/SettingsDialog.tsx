@@ -124,7 +124,9 @@ export function SettingsDialog({
   );
   const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation>();
   const [confirmationBusy, setConfirmationBusy] = useState(false);
+  const [dataOperation, setDataOperation] = useState<"export" | "import">();
   const confirmationLockRef = useRef(false);
+  const dataOperationLockRef = useRef(false);
   const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -135,17 +137,38 @@ export function SettingsDialog({
     void appDataDir().then((path) => setDataPath(`${path}loopvault/data.json`));
   }, [ui.dataPathFallback]);
 
+  async function runDataOperation<T>(
+    operation: "export" | "import",
+    action: () => Promise<T>,
+  ): Promise<T | undefined> {
+    if (dataOperationLockRef.current) return undefined;
+    dataOperationLockRef.current = true;
+    setDataOperation(operation);
+    try {
+      return await action();
+    } catch (operationError) {
+      setToast(operationError instanceof Error ? operationError.message : ui.operationFailed);
+      return undefined;
+    } finally {
+      dataOperationLockRef.current = false;
+      setDataOperation(undefined);
+    }
+  }
+
   async function exportData() {
     if (!("__TAURI_INTERNALS__" in window)) {
       setToast(ui.exportDesktopOnly);
       return;
     }
-    const target = await saveFileDialog({
-      defaultPath: `loopvault-export-${timestampForFile(new Date())}.json`,
-      filters: [{ name: "JSON", extensions: ["json"] }],
+    const ok = await runDataOperation("export", async () => {
+      const target = await saveFileDialog({
+        defaultPath: `loopvault-export-${timestampForFile(new Date())}.json`,
+        filters: [{ name: "JSON", extensions: ["json"] }],
+      });
+      if (!target) return undefined;
+      return exportVault(target);
     });
-    if (!target) return;
-    const ok = await exportVault(target);
+    if (ok === undefined) return;
     setToast(ok ? ui.exported : ui.exportFailed);
   }
 
@@ -154,13 +177,18 @@ export function SettingsDialog({
       setToast(ui.importDesktopOnly);
       return;
     }
-    const target = await openFileDialog({
-      multiple: false,
-      filters: [{ name: "JSON", extensions: ["json"] }],
-    });
+    const target = await runDataOperation("import", () => openFileDialog({
+        multiple: false,
+        filters: [{ name: "JSON", extensions: ["json"] }],
+      }),
+    );
     if (typeof target !== "string") return;
     const runImport = async () => {
-      const ok = await importVault(target, importMode);
+      const ok = await runDataOperation(
+        "import",
+        () => importVault(target, importMode),
+      );
+      if (ok === undefined) return;
       setToast(ok ? ui.imported : ui.importFailed);
     };
     if (importMode === "replace") {
@@ -438,17 +466,36 @@ export function SettingsDialog({
             <div>
               <h4 className="font-semibold">{ui.exportTitle}</h4>
               <p className="mt-1 text-sm text-[var(--lv-text-muted)]">{ui.exportDescription}</p>
-              <button className="mt-3 inline-flex items-center gap-2 rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950" onClick={() => void exportData()}><Download aria-hidden="true" size={16} />{ui.exportButton}</button>
+              <button
+                className="mt-3 inline-flex items-center gap-2 rounded bg-[var(--lv-accent)] px-3 py-2 text-sm font-semibold text-stone-950 disabled:cursor-wait disabled:opacity-60"
+                disabled={Boolean(dataOperation)}
+                aria-busy={dataOperation === "export"}
+                onClick={() => void exportData()}
+              >
+                <Download aria-hidden="true" size={16} />
+                {dataOperation === "export" ? ui.processing : ui.exportButton}
+              </button>
             </div>
             <div>
               <h4 className="font-semibold">{ui.importTitle}</h4>
               <p className="mt-1 text-sm text-[var(--lv-text-muted)]">{ui.importDescription}</p>
               <label className="sr-only" htmlFor="settings-import-mode">{ui.importTitle}</label>
-              <select id="settings-import-mode" name="settings-import-mode" className={`${inputClass} mt-2`} value={importMode} onChange={(event) => setImportMode(event.target.value as "replace" | "merge")}>
+              <select id="settings-import-mode" name="settings-import-mode" className={`${inputClass} mt-2`} disabled={Boolean(dataOperation)} value={importMode} onChange={(event) => setImportMode(event.target.value as "replace" | "merge")}>
                 <option value="merge">{ui.importMerge}</option>
                 <option value="replace">{ui.importReplace}</option>
               </select>
-              <button className="mt-3 inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" onClick={() => void importData()}><Upload aria-hidden="true" size={16} />{ui.importButton}</button>
+              <button
+                className="mt-3 inline-flex items-center gap-2 rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm disabled:cursor-wait disabled:opacity-60"
+                disabled={Boolean(dataOperation)}
+                aria-busy={dataOperation === "import"}
+                onClick={() => void importData()}
+              >
+                <Upload aria-hidden="true" size={16} />
+                {dataOperation === "import" ? ui.processing : ui.importButton}
+              </button>
+              <p className="sr-only" role="status" aria-live="polite">
+                {dataOperation ? ui.processing : ""}
+              </p>
               {error ? <p className="mt-2 text-sm text-red-200">{error}</p> : null}
             </div>
           </div>
