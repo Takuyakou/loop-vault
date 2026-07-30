@@ -8,6 +8,7 @@ import {
   Button,
   EmptyState as UiEmptyState,
   IconButton,
+  Surface,
 } from "../components/ui";
 import {
   isRecent,
@@ -77,6 +78,12 @@ export function VaultView({
   const keys = useMemo(() => [...new Set(ideas.flatMap((idea) => (idea.progressionBlocks ?? []).map((block) => block.detectedKey ?? idea.key).filter((value): value is string => Boolean(value))))].sort(), [ideas]);
   const sources = useMemo(() => [...new Set(allBlocks.map((block) => block.sourceFileName).filter((value): value is string => Boolean(value)))].sort(), [allBlocks]);
   const tags = useMemo(() => [...new Set(allBlocks.flatMap((block) => block.tags))].sort(), [allBlocks]);
+  const hasActiveFilters = onlyPinned
+    || lengthBars !== "all"
+    || keyFilter !== ""
+    || sourceFilter !== ""
+    || tagFilter !== ""
+    || selectedLibraryTags.length > 0;
   const visible = useMemo(() => {
     const sorted = filterAndSortProgressions(ideas, {
       query: mode === "library" ? "" : query,
@@ -113,6 +120,16 @@ export function VaultView({
   function changeMode(next: VaultMode) {
     setMode(next);
     if (next !== "idea") writeProgressionViewMode(next);
+  }
+
+  function clearFilters() {
+    setOnlyPinned(false);
+    setLengthBars("all");
+    setKeyFilter("");
+    setSourceFilter("");
+    setTagFilter("");
+    setSelectedLibraryTags([]);
+    setLibraryScope("all");
   }
 
   const openProgressionDetail = useCallback((entry: ProgressionEntry) => {
@@ -210,7 +227,7 @@ export function VaultView({
         </button>
       </div>
       {mode !== "idea" ? <>
-        <div className="grid gap-3 border-y border-[var(--lv-border)] py-3 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-end">
+        <Surface variant="raised" className="grid gap-3 p-3 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-end">
           <label className="min-w-0 text-xs font-medium text-[var(--lv-text-secondary)]" htmlFor="vault-search">
             {copy.library.search}
             <input id="vault-search" name="vault-search" autoComplete="off" ref={searchRef} className="lv-input mt-1.5 min-h-10 w-full px-3 text-sm" value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") { setQuery(""); event.currentTarget.blur(); } }} placeholder={copy.library.searchPlaceholder} />
@@ -220,7 +237,7 @@ export function VaultView({
             <label className="block text-xs font-medium text-[var(--lv-text-secondary)]" htmlFor="vault-sort">{copy.library.sort}</label>
             <select id="vault-sort" name="vault-sort" className="lv-input mt-1.5 min-h-10 min-w-32 px-2 text-xs" value={sort} onChange={(event) => setSort(event.target.value as SortField)}><option value="capturedAt">{copy.library.captured}</option><option value="updatedAt">{copy.library.updated}</option><option value="key">Key</option><option value="bpm">BPM</option></select>
           </div>
-        </div>
+        </Surface>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <button className={onlyPinned ? "inline-flex items-center gap-1.5 bg-[var(--lv-surface-raised)] px-3 py-1 text-xs text-[var(--lv-warning)]" : "inline-flex items-center gap-1.5 border border-[var(--lv-border)] px-3 py-1 text-xs text-[var(--lv-text-muted)]"} onClick={() => setOnlyPinned((value) => {
             const next = !value;
@@ -245,23 +262,30 @@ export function VaultView({
             </button>
           ) : null}
         </div>
-        {mode === "library" && selectedLibraryTags.length > 0 ? (
+        {hasActiveFilters ? (
           <div className="mt-3 flex flex-wrap items-center gap-2" aria-label={libraryText.selectedFilters}>
+            {onlyPinned ? (
+              <ActiveFilterChip clearLabel={libraryText.clear} label={copy.library.onlyFavorites} onClear={() => {
+                setOnlyPinned(false);
+                if (mode === "library") setLibraryScope("all");
+              }} />
+            ) : null}
+            {lengthBars !== "all" ? <ActiveFilterChip clearLabel={libraryText.clear} label={copy.library.bars(Number(lengthBars))} onClear={() => setLengthBars("all")} /> : null}
+            {keyFilter ? <ActiveFilterChip clearLabel={libraryText.clear} label={`Key ${keyFilter}`} onClear={() => setKeyFilter("")} /> : null}
+            {sourceFilter ? <ActiveFilterChip clearLabel={libraryText.clear} label={sourceFilter} onClear={() => setSourceFilter("")} /> : null}
+            {tagFilter ? <ActiveFilterChip clearLabel={libraryText.clear} label={tagFilter} onClear={() => setTagFilter("")} /> : null}
             {selectedLibraryTags.map((tagId) => (
-              <button
+              <ActiveFilterChip
                 key={tagId}
-                type="button"
-                className="inline-flex items-center gap-1 bg-teal-300/10 px-2 py-1 text-xs text-teal-100"
-                onClick={() => setSelectedLibraryTags((current) => current.filter((entry) => entry !== tagId))}
-              >
-                {displayTaxonomyTag(tagId, language)}
-                <X aria-hidden="true" size={16} />
-              </button>
+                clearLabel={libraryText.clear}
+                label={displayTaxonomyTag(tagId, language)}
+                onClear={() => setSelectedLibraryTags((current) => current.filter((entry) => entry !== tagId))}
+              />
             ))}
             <button
               type="button"
               className="px-2 py-1 text-xs text-[var(--lv-text-muted)]"
-              onClick={() => setSelectedLibraryTags([])}
+              onClick={clearFilters}
             >
               {libraryText.clear}
             </button>
@@ -269,7 +293,7 @@ export function VaultView({
         ) : null}
         {mode === "library" ? (
           <div className="mt-4 grid gap-4 lg:grid-cols-[15rem_minmax(0,1fr)]">
-            <aside className="hidden border-r border-[var(--lv-border)] pr-4 lg:block">
+            <aside className="hidden border border-[var(--lv-border)] bg-[var(--lv-surface)] p-3 lg:block">
               <ProgressionLibraryRail
                 entries={progressionIndex}
                 selectedTagIds={selectedLibraryTags}
@@ -477,7 +501,10 @@ function ProgressionRow({ entry, selected, showDegrees, language, copy, displayT
   const source = sourceOf(entry);
   const playing = playback.status !== "idle" && samePlaybackSource(playback.source, source);
   const progressionText = entry.block.chords.map((item) => item.chord.label).join(" · ");
-  return <div data-compact={compact} data-selected={selected} className={`lv-vault-row border-b border-[var(--lv-border)] px-2 py-2 text-sm ${compact ? "h-24 overflow-hidden" : "min-h-24"} ${selected ? "bg-[var(--lv-surface-raised)]" : "hover:bg-[var(--lv-surface)]"} ${playing ? "border-l-2 border-l-[var(--lv-accent)]" : ""}`}>
+  const sourceAndTitle = entry.block.sourceFileName
+    ? `${entry.block.sourceFileName} · ${entry.idea.title}`
+    : entry.idea.title;
+  return <div data-compact={compact} data-selected={selected} data-playing={playing} className={`lv-vault-row border-b border-[var(--lv-border)] px-2 py-2 text-sm ${compact ? "h-24 overflow-hidden" : "min-h-24"} ${selected ? "bg-[var(--lv-surface-raised)] ring-1 ring-inset ring-[var(--lv-accent-secondary)]" : "hover:bg-[var(--lv-surface)]"} ${playing ? "border-l-2 border-l-[var(--lv-accent)]" : ""}`}>
     <div className="lv-vault-play" onClick={(event) => event.stopPropagation()} onDoubleClick={(event) => event.stopPropagation()}>
       <PlayToggle source={source} request={requestOf(entry, previewSound)} playLabel={copy.common.preview} stopLabel={copy.common.stop} className="lv-button-ghost grid h-10 w-10 place-items-center" showLabel={false} onError={onPreviewError} />
     </div>
@@ -497,7 +524,7 @@ function ProgressionRow({ entry, selected, showDegrees, language, copy, displayT
     >
       <p className={`lv-vault-progression-primary font-mono ${compact ? "truncate" : ""}`}>{progressionText}</p>
       <p className={`lv-vault-progression-secondary mt-1 text-xs text-[var(--lv-text-muted)] ${compact ? "truncate" : ""}`}>
-        {entry.idea.title}{showDegrees && degrees.length ? ` · ${degrees.join(" · ")}` : ""}
+        {sourceAndTitle}{showDegrees && degrees.length ? ` · ${degrees.join(" · ")}` : ""}
       </p>
       <PracticeProgressBadge
         block={entry.block}
@@ -559,6 +586,19 @@ function EmptyState({ copy, openCreate }: { copy: AppCopy; openCreate: () => voi
   );
 }
 function FilterSelect({ label, allLabel, value, values, onChange }: { label: string; allLabel: string; value: string; values: string[]; onChange: (value: string) => void }) { return <select className="lv-input min-h-10 px-2 text-xs text-[var(--lv-text-secondary)]" aria-label={label} value={value} onChange={(event) => onChange(event.target.value)}><option value="">{label}: {allLabel}</option>{values.map((entry) => <option key={entry} value={entry}>{entry}</option>)}</select>; }
+function ActiveFilterChip({ clearLabel, label, onClear }: { clearLabel: string; label: string; onClear: () => void }) {
+  return (
+    <button
+      type="button"
+      className="inline-flex min-h-8 items-center gap-1.5 border border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] px-2.5 text-xs text-[var(--lv-text)]"
+      onClick={onClear}
+      aria-label={`${clearLabel}: ${label}`}
+    >
+      {label}
+      <X aria-hidden="true" size={14} />
+    </button>
+  );
+}
 function keyOf(entry: ProgressionEntry): string { return entry.block.detectedKey ?? entry.idea.key ?? ""; }
 function bpmOf(entry: ProgressionEntry): number { return entry.block.bpm ?? entry.idea.bpm ?? 0; }
 function formatDate(value: string): string { return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value)); }
