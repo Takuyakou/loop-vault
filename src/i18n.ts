@@ -141,6 +141,7 @@ export const appCopy = {
     },
     liveMidi: {
       back: "戻る",
+      showMain: "メイン画面を表示",
       title: "Live MIDI",
       chooseDevice: "MIDI入力を選択",
       noDevices: "MIDI入力が見つかりません",
@@ -714,6 +715,7 @@ export const appCopy = {
     },
     liveMidi: {
       back: "Back",
+      showMain: "Show main window",
       title: "Live MIDI",
       chooseDevice: "Choose MIDI input",
       noDevices: "No MIDI inputs found",

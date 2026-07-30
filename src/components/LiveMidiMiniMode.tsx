@@ -4,24 +4,47 @@ import { noteNameFromPitchClass } from "../domain/chords";
 import type { AppCopy } from "../i18n";
 import { defaultLiveMidiStore } from "../liveMidi/defaultLiveMidiStore";
 import type { LiveMidiConnectionStatus } from "../liveMidi/types";
+import type { LiveMidiWindowSnapshot } from "../liveMidi/windowProtocol";
 import { Button, IconButton, StatusMessage } from "./ui";
 
-export function LiveMidiMiniMode({ copy, onBack }: {
+export function LiveMidiMiniMode({
+  copy,
+  snapshot,
+  onShowMain,
+  onBack,
+  onRefreshDevices,
+  onSelectDevice,
+  onSetShowHistory,
+}: {
   copy: AppCopy["liveMidi"];
-  onBack: () => void;
+  snapshot?: LiveMidiWindowSnapshot;
+  onShowMain?: () => void;
+  onBack?: () => void;
+  onRefreshDevices?: () => void;
+  onSelectDevice?: (backendId: string) => void;
+  onSetShowHistory?: (show: boolean) => void;
 }) {
-  const devices = useStore(defaultLiveMidiStore, (state) => state.devices);
-  const selected = useStore(defaultLiveMidiStore, (state) => state.selected);
-  const status = useStore(defaultLiveMidiStore, (state) => state.status);
-  const error = useStore(defaultLiveMidiStore, (state) => state.error);
-  const instant = useStore(defaultLiveMidiStore, (state) => state.instant);
-  const provisionalChord = useStore(defaultLiveMidiStore, (state) => state.provisionalChord);
-  const confirmedChord = useStore(defaultLiveMidiStore, (state) => state.confirmedChord);
-  const history = useStore(defaultLiveMidiStore, (state) => state.history);
-  const showHistory = useStore(defaultLiveMidiStore, (state) => state.preferences.showHistory ?? true);
-  const selectDevice = useStore(defaultLiveMidiStore, (state) => state.selectDevice);
-  const refreshDevices = useStore(defaultLiveMidiStore, (state) => state.refreshDevices);
-  const setShowHistory = useStore(defaultLiveMidiStore, (state) => state.setShowHistory);
+  const localDevices = useStore(defaultLiveMidiStore, (state) => state.devices);
+  const localSelected = useStore(defaultLiveMidiStore, (state) => state.selected);
+  const localStatus = useStore(defaultLiveMidiStore, (state) => state.status);
+  const localError = useStore(defaultLiveMidiStore, (state) => state.error);
+  const localInstant = useStore(defaultLiveMidiStore, (state) => state.instant);
+  const localProvisionalChord = useStore(defaultLiveMidiStore, (state) => state.provisionalChord);
+  const localConfirmedChord = useStore(defaultLiveMidiStore, (state) => state.confirmedChord);
+  const localHistory = useStore(defaultLiveMidiStore, (state) => state.history);
+  const localShowHistory = useStore(defaultLiveMidiStore, (state) => state.preferences.showHistory ?? true);
+  const localSelectDevice = useStore(defaultLiveMidiStore, (state) => state.selectDevice);
+  const localRefreshDevices = useStore(defaultLiveMidiStore, (state) => state.refreshDevices);
+  const localSetShowHistory = useStore(defaultLiveMidiStore, (state) => state.setShowHistory);
+  const devices = snapshot?.devices ?? localDevices;
+  const selected = snapshot?.selected ?? localSelected;
+  const status = snapshot?.status ?? localStatus;
+  const error = snapshot?.error ?? localError;
+  const instant = snapshot?.instant ?? localInstant;
+  const provisionalChord = snapshot?.provisionalChord ?? localProvisionalChord;
+  const confirmedChord = snapshot?.confirmedChord ?? localConfirmedChord;
+  const history = snapshot?.history ?? localHistory;
+  const showHistory = snapshot?.showHistory ?? localShowHistory;
   const displayedChord = provisionalChord ?? confirmedChord;
   const detectionState = provisionalChord
     ? copy.provisional
@@ -32,25 +55,43 @@ export function LiveMidiMiniMode({ copy, onBack }: {
   return (
     <main className="flex h-screen min-h-40 min-w-[280px] flex-col overflow-hidden bg-[var(--lv-bg)] p-3 text-[var(--lv-text)]">
       <header className="flex h-9 shrink-0 items-center gap-2 border-b border-[var(--lv-border)] pb-2">
-        <Button variant="ghost" size="sm" onClick={onBack}>
+        <Button variant="ghost" size="sm" onClick={onShowMain ?? onBack}>
           <ArrowLeft aria-hidden="true" size={16} />
-          {copy.back}
+          {copy.showMain}
         </Button>
         <label className="ml-auto min-w-0 flex-1">
           <span className="sr-only">{copy.chooseDevice}</span>
           <select
             className="lv-input h-10 w-full min-w-0 px-2 text-xs"
             value={selected?.backendId ?? ""}
-            onChange={(event) => { void selectDevice(event.target.value); }}
+            onChange={(event) => {
+              if (onSelectDevice) onSelectDevice(event.target.value);
+              else void localSelectDevice(event.target.value);
+            }}
           >
             <option value="">{devices.length === 0 ? copy.noDevices : copy.chooseDevice}</option>
             {devices.map((device) => <option key={device.backendId} value={device.backendId}>{device.name}</option>)}
           </select>
         </label>
-        <IconButton variant="ghost" onClick={() => { void refreshDevices(); }} label={copy.refreshDevices}>
+        <IconButton
+          variant="ghost"
+          onClick={() => {
+            if (onRefreshDevices) onRefreshDevices();
+            else void localRefreshDevices();
+          }}
+          label={copy.refreshDevices}
+        >
           <RefreshCw aria-hidden="true" size={16} />
         </IconButton>
-        <IconButton variant="ghost" onClick={() => setShowHistory(!showHistory)} label={copy.history} aria-pressed={showHistory}>
+        <IconButton
+          variant="ghost"
+          onClick={() => {
+            if (onSetShowHistory) onSetShowHistory(!showHistory);
+            else localSetShowHistory(!showHistory);
+          }}
+          label={copy.history}
+          aria-pressed={showHistory}
+        >
           <History aria-hidden="true" size={16} />
         </IconButton>
       </header>
@@ -87,7 +128,13 @@ export function LiveMidiMiniMode({ copy, onBack }: {
             title={copy.openFailed}
             className="mt-2 max-w-full p-2 text-left text-xs"
             action={(
-              <Button size="sm" onClick={() => { void refreshDevices(); }}>
+              <Button
+                size="sm"
+                onClick={() => {
+                  if (onRefreshDevices) onRefreshDevices();
+                  else void localRefreshDevices();
+                }}
+              >
                 <RefreshCw aria-hidden="true" size={16} />
                 {copy.refreshDevices}
               </Button>

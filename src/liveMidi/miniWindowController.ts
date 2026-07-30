@@ -1,76 +1,71 @@
 import { isTauri } from "@tauri-apps/api/core";
-import {
-  availableMonitors,
-  currentMonitor,
-  getCurrentWindow,
-  PhysicalPosition,
-  PhysicalSize,
-} from "@tauri-apps/api/window";
+import { availableMonitors, getCurrentWindow } from "@tauri-apps/api/window";
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import type { WindowBounds } from "./preferences";
-
-export interface MainWindowSnapshot {
-  position: { x: number; y: number };
-  size: { width: number; height: number };
-  maximized: boolean;
-  fullscreen: boolean;
-  monitorId?: string;
-}
 
 export interface MonitorWorkArea {
   id?: string;
   bounds: WindowBounds;
 }
 
-export interface MiniWindowAdapter {
-  snapshot: () => Promise<MainWindowSnapshot>;
-  currentBounds: () => Promise<WindowBounds>;
-  monitors: () => Promise<MonitorWorkArea[]>;
-  prepareForBounds: () => Promise<void>;
-  setBounds: (bounds: WindowBounds) => Promise<void>;
-  setMinSize: (width: number, height: number) => Promise<void>;
-  setAlwaysOnTop: (enabled: boolean) => Promise<void>;
-  setFullscreen: (enabled: boolean) => Promise<void>;
-  maximize: () => Promise<void>;
-  focus: () => Promise<void>;
+export interface LiveMidiWindowHandle {
+  bounds: () => Promise<WindowBounds>;
+  focusAndShow: () => Promise<void>;
+  destroy: () => Promise<void>;
 }
 
-export const DEFAULT_MINI_BOUNDS: WindowBounds = { x: 80, y: 80, width: 340, height: 200 };
-export const MINI_MIN_SIZE = { width: 280, height: 160 };
-export const MAIN_MIN_SIZE = { width: 768, height: 640 };
+export interface LiveMidiWindowAdapter {
+  get: () => Promise<LiveMidiWindowHandle | undefined>;
+  create: (bounds: WindowBounds, alwaysOnTop: boolean) => Promise<LiveMidiWindowHandle>;
+  monitors: () => Promise<MonitorWorkArea[]>;
+  showMain: () => Promise<void>;
+}
+
+export type LiveMidiWindowOpenResult = "created" | "focused";
+
+export const LIVE_MIDI_WINDOW_LABEL = "live-midi";
+export const DEFAULT_MINI_BOUNDS: WindowBounds = { x: 80, y: 80, width: 420, height: 260 };
+export const MINI_MIN_SIZE = { width: 320, height: 200 };
 
 export class MiniWindowController {
-  private mainSnapshot?: MainWindowSnapshot;
+  private opening?: Promise<LiveMidiWindowOpenResult>;
 
-  constructor(private readonly adapter: MiniWindowAdapter) {}
+  constructor(private readonly adapter: LiveMidiWindowAdapter) {}
 
-  async enter(savedBounds?: WindowBounds, alwaysOnTop = true): Promise<MainWindowSnapshot> {
-    const snapshot = await this.adapter.snapshot();
-    this.mainSnapshot = snapshot;
-    const monitors = await this.adapter.monitors();
-    const bounds = clampWindowBounds(savedBounds ?? DEFAULT_MINI_BOUNDS, monitors, snapshot.monitorId);
-    await this.adapter.prepareForBounds();
-    await this.adapter.setMinSize(MINI_MIN_SIZE.width, MINI_MIN_SIZE.height);
-    await this.adapter.setAlwaysOnTop(alwaysOnTop);
-    await this.adapter.setBounds(bounds);
-    await this.adapter.focus();
-    return snapshot;
+  open(savedBounds?: WindowBounds, alwaysOnTop = true): Promise<LiveMidiWindowOpenResult> {
+    if (this.opening) return this.opening;
+    this.opening = this.openInternal(savedBounds, alwaysOnTop).finally(() => {
+      this.opening = undefined;
+    });
+    return this.opening;
   }
 
-  async exit(): Promise<WindowBounds | undefined> {
-    const snapshot = this.mainSnapshot;
-    if (!snapshot) return undefined;
-    const miniBounds = await this.adapter.currentBounds();
+  async showMain(): Promise<void> {
+    await this.adapter.showMain();
+  }
+
+  async close(): Promise<WindowBounds | undefined> {
+    const window = await this.adapter.get();
+    if (!window) return undefined;
+    const bounds = await window.bounds();
+    await window.destroy();
+    return bounds;
+  }
+
+  private async openInternal(
+    savedBounds?: WindowBounds,
+    alwaysOnTop = true,
+  ): Promise<LiveMidiWindowOpenResult> {
+    const existing = await this.adapter.get();
+    if (existing) {
+      await existing.focusAndShow();
+      return "focused";
+    }
     const monitors = await this.adapter.monitors();
-    const restoreBounds = clampWindowBounds({ ...snapshot.position, ...snapshot.size }, monitors, snapshot.monitorId);
-    await this.adapter.setAlwaysOnTop(false);
-    await this.adapter.prepareForBounds();
-    await this.adapter.setMinSize(MAIN_MIN_SIZE.width, MAIN_MIN_SIZE.height);
-    await this.adapter.setBounds(restoreBounds);
-    if (snapshot.fullscreen) await this.adapter.setFullscreen(true);
-    else if (snapshot.maximized) await this.adapter.maximize();
-    await this.adapter.focus();
-    this.mainSnapshot = undefined;
-    return miniBounds;
+    const bounds = clampWindowBounds(savedBounds ?? DEFAULT_MINI_BOUNDS, monitors);
+    const created = await this.adapter.create(bounds, alwaysOnTop);
+    await created.focusAndShow();
+    return "created";
   }
 }
 
@@ -94,22 +89,33 @@ export function clampWindowBounds(
   };
 }
 
-export function createTauriMiniWindowAdapter(): MiniWindowAdapter | undefined {
+export function createTauriMiniWindowAdapter(): LiveMidiWindowAdapter | undefined {
   if (!isTauri()) return undefined;
-  const window = getCurrentWindow();
+
   return {
-    async snapshot() {
-      const [position, size, maximized, fullscreen, monitor] = await Promise.all([
-        window.outerPosition(), window.innerSize(), window.isMaximized(), window.isFullscreen(), currentMonitor(),
-      ]);
-      return {
-        position: { x: position.x, y: position.y }, size: { width: size.width, height: size.height },
-        maximized, fullscreen, ...(monitor?.name ? { monitorId: monitor.name } : {}),
-      };
+    async get() {
+      const window = await WebviewWindow.getByLabel(LIVE_MIDI_WINDOW_LABEL);
+      return window ? tauriHandle(window) : undefined;
     },
-    async currentBounds() {
-      const [position, size] = await Promise.all([window.outerPosition(), window.innerSize()]);
-      return { x: position.x, y: position.y, width: size.width, height: size.height };
+    async create(bounds, alwaysOnTop) {
+      const window = new WebviewWindow(LIVE_MIDI_WINDOW_LABEL, {
+        url: "/?window=live-midi",
+        title: "Loop Vault Live MIDI",
+        x: bounds.x,
+        y: bounds.y,
+        width: bounds.width,
+        height: bounds.height,
+        minWidth: MINI_MIN_SIZE.width,
+        minHeight: MINI_MIN_SIZE.height,
+        resizable: true,
+        alwaysOnTop,
+        focus: true,
+      });
+      await new Promise<void>((resolve, reject) => {
+        void window.once("tauri://created", () => resolve());
+        void window.once<string>("tauri://error", (event) => reject(new Error(event.payload)));
+      });
+      return tauriHandle(window);
     },
     async monitors() {
       return (await availableMonitors()).map((monitor) => ({
@@ -122,20 +128,29 @@ export function createTauriMiniWindowAdapter(): MiniWindowAdapter | undefined {
         },
       }));
     },
-    async prepareForBounds() {
-      await window.setFullscreen(false);
-      await window.unmaximize();
-      await window.setResizable(true);
+    async showMain() {
+      const main = getCurrentWindow();
+      if (await main.isMinimized()) await main.unminimize();
+      if (!(await main.isVisible())) await main.show();
+      await main.setFocus();
     },
-    async setBounds(bounds) {
-      await window.setPosition(new PhysicalPosition(bounds.x, bounds.y));
-      await window.setSize(new PhysicalSize(bounds.width, bounds.height));
+  };
+}
+
+function tauriHandle(window: WebviewWindow): LiveMidiWindowHandle {
+  return {
+    async bounds() {
+      const [position, size] = await Promise.all([window.outerPosition(), window.innerSize()]);
+      return { x: position.x, y: position.y, width: size.width, height: size.height };
     },
-    async setMinSize(width, height) { await window.setMinSize(new PhysicalSize(width, height)); },
-    async setAlwaysOnTop(enabled) { await window.setAlwaysOnTop(enabled); },
-    async setFullscreen(enabled) { await window.setFullscreen(enabled); },
-    async maximize() { await window.maximize(); },
-    async focus() { await window.setFocus(); },
+    async focusAndShow() {
+      if (await window.isMinimized()) await window.unminimize();
+      if (!(await window.isVisible())) await window.show();
+      await window.setFocus();
+    },
+    async destroy() {
+      await window.destroy();
+    },
   };
 }
 
