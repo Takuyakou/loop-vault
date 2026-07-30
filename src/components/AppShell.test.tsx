@@ -61,7 +61,7 @@ describe("AppShell", () => {
     expect(status?.getAttribute("aria-label")).toBe(label);
     expect(status?.getAttribute("title")).toBe(label);
     expect(status?.querySelector(`.${iconClass}`)).not.toBeNull();
-    expect(status?.querySelector(".lg\\:inline")?.textContent).toBe(label);
+    expect(status?.querySelector(".md\\:inline")?.textContent).toBe(label);
     await act(async () => root.unmount());
   });
 
@@ -85,6 +85,7 @@ describe("AppShell", () => {
 
     const settings = container.querySelector<HTMLButtonElement>('button[aria-label="Settings"]');
     expect(settings?.title).toBe("Settings");
+    expect(settings?.className).toContain("h-10");
     await act(async () => settings?.click());
     expect(openSettings).toHaveBeenCalledOnce();
     await act(async () => root.unmount());
