@@ -5,6 +5,11 @@ import { PlayToggle } from "../components/PlayToggle";
 import { usePreviewSound } from "../components/PreviewSoundProvider";
 import { PracticeProgressBadge } from "../components/practice/PracticeProgressBadge";
 import {
+  Button,
+  EmptyState as UiEmptyState,
+  IconButton,
+} from "../components/ui";
+import {
   isRecent,
   ProgressionLibraryRail,
   type ProgressionLibraryScope,
@@ -23,7 +28,7 @@ import { formatProgressionText } from "../domain/progressionText";
 import type { SavedProgressionBlock, SongIdea } from "../domain/types";
 import { smartLibraryCopy, type AppCopy, type AppLanguage } from "../i18n";
 import { usePlaybackState } from "../hooks/usePlaybackState";
-import { ChevronRight, Copy, SlidersHorizontal, Star, X } from "lucide-react";
+import { ChevronRight, Copy, SearchX, SlidersHorizontal, Star, X } from "lucide-react";
 
 type ProgressionEntry = { idea: SongIdea; block: SavedProgressionBlock };
 type SortField = "capturedAt" | "updatedAt" | "key" | "bpm";
@@ -175,7 +180,7 @@ export function VaultView({
       <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
         <div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--lv-accent)]">Vault</p>
           <h2 className="mt-2 text-2xl font-semibold">{copy.library.subtitle}</h2></div>
-        <button className="lv-button-primary px-4 py-2 text-sm font-semibold" onClick={openCapture}>{copy.library.capture}</button>
+        <Button variant="primary" onClick={openCapture}>{copy.library.capture}</Button>
       </div>
       <div className="mb-3 inline-flex border border-[var(--lv-border)] p-0.5 text-sm" role="group" aria-label="Vault">
         <button
@@ -204,12 +209,16 @@ export function VaultView({
         </button>
       </div>
       {mode !== "idea" ? <>
-        <div className="grid gap-2 border-y border-[var(--lv-border)] py-3 md:grid-cols-[minmax(0,1fr)_auto_auto]">
-          <label className="sr-only" htmlFor="vault-search">{copy.library.search}</label>
-          <input id="vault-search" name="vault-search" autoComplete="off" ref={searchRef} className="border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm outline-none focus:border-[var(--lv-accent)]" value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") { setQuery(""); event.currentTarget.blur(); } }} placeholder={copy.library.searchPlaceholder} />
-          <div className="flex gap-1" role="group" aria-label={copy.library.lengthFilter}>{(["all", "4", "8", "16"] as const).map((value) => <button type="button" key={value} aria-pressed={lengthBars === value} className={lengthBars === value ? "bg-[var(--lv-surface-raised)] px-2 text-xs" : "px-2 text-xs text-[var(--lv-text-muted)]"} onClick={() => setLengthBars(value)}>{value === "all" ? copy.library.all : copy.library.bars(Number(value))}</button>)}</div>
-          <label className="sr-only" htmlFor="vault-sort">{copy.library.sort}</label>
-          <select id="vault-sort" name="vault-sort" className="border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-2 text-xs" value={sort} onChange={(event) => setSort(event.target.value as SortField)}><option value="capturedAt">{copy.library.captured}</option><option value="updatedAt">{copy.library.updated}</option><option value="key">Key</option><option value="bpm">BPM</option></select>
+        <div className="grid gap-3 border-y border-[var(--lv-border)] py-3 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-end">
+          <label className="min-w-0 text-xs font-medium text-[var(--lv-text-secondary)]" htmlFor="vault-search">
+            {copy.library.search}
+            <input id="vault-search" name="vault-search" autoComplete="off" ref={searchRef} className="lv-input mt-1.5 min-h-10 w-full px-3 text-sm" value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") { setQuery(""); event.currentTarget.blur(); } }} placeholder={copy.library.searchPlaceholder} />
+          </label>
+          <div className="flex min-h-10 gap-1" role="group" aria-label={copy.library.lengthFilter}>{(["all", "4", "8", "16"] as const).map((value) => <button type="button" key={value} aria-pressed={lengthBars === value} className={lengthBars === value ? "min-w-10 bg-[var(--lv-surface-raised)] px-2 text-xs" : "min-w-10 px-2 text-xs text-[var(--lv-text-muted)]"} onClick={() => setLengthBars(value)}>{value === "all" ? copy.library.all : copy.library.bars(Number(value))}</button>)}</div>
+          <div>
+            <label className="block text-xs font-medium text-[var(--lv-text-secondary)]" htmlFor="vault-sort">{copy.library.sort}</label>
+            <select id="vault-sort" name="vault-sort" className="lv-input mt-1.5 min-h-10 min-w-32 px-2 text-xs" value={sort} onChange={(event) => setSort(event.target.value as SortField)}><option value="capturedAt">{copy.library.captured}</option><option value="updatedAt">{copy.library.updated}</option><option value="key">Key</option><option value="bpm">BPM</option></select>
+          </div>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <button className={onlyPinned ? "inline-flex items-center gap-1.5 bg-[var(--lv-surface-raised)] px-3 py-1 text-xs text-[var(--lv-warning)]" : "inline-flex items-center gap-1.5 border border-[var(--lv-border)] px-3 py-1 text-xs text-[var(--lv-text-muted)]"} onClick={() => setOnlyPinned((value) => {
@@ -223,7 +232,7 @@ export function VaultView({
           <FilterSelect label="Key" allLabel={copy.library.all} value={keyFilter} values={keys} onChange={setKeyFilter} />
           <FilterSelect label={copy.library.source} allLabel={copy.library.all} value={sourceFilter} values={sources} onChange={setSourceFilter} />
           <FilterSelect label={copy.library.tag} allLabel={copy.library.all} value={tagFilter} values={tags} onChange={setTagFilter} />
-          <span className="text-xs text-[var(--lv-text-muted)]">{copy.library.itemCount(visible.length)}</span>
+          <span className="text-xs text-[var(--lv-text-muted)]" role="status" aria-live="polite" aria-atomic="true">{copy.library.itemCount(visible.length)}</span>
           {mode === "library" ? (
             <button
               type="button"
@@ -469,7 +478,7 @@ function ProgressionRow({ entry, selected, showDegrees, language, copy, displayT
   const progressionText = entry.block.chords.map((item) => item.chord.label).join(" · ");
   return <div data-compact={compact} className={`lv-vault-row border-b border-[var(--lv-border)] px-2 py-2 text-sm ${compact ? "h-24 overflow-hidden" : "min-h-24"} ${selected ? "bg-[var(--lv-surface-raised)]" : "hover:bg-[var(--lv-surface)]"} ${playing ? "border-l-2 border-l-[var(--lv-accent)]" : ""}`} onClick={onSelect}>
     <div className="lv-vault-play" onClick={(event) => event.stopPropagation()} onDoubleClick={(event) => event.stopPropagation()}>
-      <PlayToggle source={source} request={requestOf(entry, previewSound)} playLabel={copy.common.preview} stopLabel={copy.common.stop} className="lv-button-ghost grid h-8 w-8 place-items-center" showLabel={false} onError={onPreviewError} />
+      <PlayToggle source={source} request={requestOf(entry, previewSound)} playLabel={copy.common.preview} stopLabel={copy.common.stop} className="lv-button-ghost grid h-10 w-10 place-items-center" showLabel={false} onError={onPreviewError} />
     </div>
     <button
       type="button"
@@ -502,34 +511,32 @@ function ProgressionRow({ entry, selected, showDegrees, language, copy, displayT
       <span className={`lv-vault-tags ${compact ? "truncate" : ""}`}>{(displayTags ?? entry.block.tags).join(" · ") || "-"}</span>
     </div>
     <div className="lv-vault-actions flex items-center gap-1">
-      <button
+      <IconButton
         type="button"
-        className={`grid h-8 w-8 shrink-0 place-items-center ${entry.block.pinned ? "text-[var(--lv-warning)]" : "text-[var(--lv-text-muted)]"}`}
+        variant="ghost"
+        className={entry.block.pinned ? "text-[var(--lv-warning)]" : "text-[var(--lv-text-muted)]"}
         onClick={(event) => { event.stopPropagation(); onPin(); }}
-        aria-label={entry.block.pinned ? copy.library.removeFavorite : copy.library.addFavorite}
-        title={entry.block.pinned ? copy.library.removeFavorite : copy.library.addFavorite}
-      ><Star aria-hidden="true" size={16} fill={entry.block.pinned ? "currentColor" : "none"} /></button>
-      <button
+        label={entry.block.pinned ? copy.library.removeFavorite : copy.library.addFavorite}
+      ><Star aria-hidden="true" size={16} fill={entry.block.pinned ? "currentColor" : "none"} /></IconButton>
+      <IconButton
         type="button"
-        className="lv-button-ghost grid h-8 w-8 shrink-0 place-items-center text-xs"
+        variant="ghost"
         onClick={(event) => { event.stopPropagation(); onCopy(); }}
-        aria-label={copy.library.copyProgression}
-        title={copy.library.copyProgression}
-      ><Copy aria-hidden="true" size={16} /></button>
-      <button
+        label={copy.library.copyProgression}
+      ><Copy aria-hidden="true" size={16} /></IconButton>
+      <IconButton
         type="button"
-        className="lv-button-ghost grid h-8 w-8 shrink-0 place-items-center text-lg"
+        variant="ghost"
         onClick={(event) => {
           event.stopPropagation();
           if (event.detail > 1) return;
           onOpen();
         }}
         onDoubleClick={(event) => event.stopPropagation()}
-        aria-label={copy.library.openProgression}
-        title={copy.library.openProgression}
+        label={copy.library.openProgression}
       >
         <ChevronRight aria-hidden="true" size={20} />
-      </button>
+      </IconButton>
     </div>
   </div>;
 }
@@ -538,8 +545,18 @@ function IdeaList({ ideas, openDetail, copy }: { ideas: SongIdea[]; openDetail: 
   return <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-4">{ideas.map((idea) => <button key={idea.id} className="min-h-24 border border-[var(--lv-border)] bg-[var(--lv-surface)] p-3 text-left hover:border-[var(--lv-accent)]" onClick={() => openDetail(idea.id)}><p className="truncate font-semibold">{idea.title}</p><p className="mt-2 text-xs text-[var(--lv-text-muted)]">{idea.bpm ?? "-"} BPM · {idea.key ?? "Key -"}</p><p className="mt-2 truncate text-xs text-[var(--lv-text-secondary)]">{idea.nextAction.text || copy.library.noNextAction}</p></button>)}</div>;
 }
 
-function EmptyState({ copy, openCreate }: { copy: AppCopy; openCreate: () => void }) { return <div className="py-16 text-center"><p className="text-[var(--lv-text-muted)]">{copy.library.noMatchingProgressions}</p><button className="lv-button-secondary mt-4 px-3 py-2 text-sm" onClick={openCreate}>{copy.library.newIdea}</button></div>; }
-function FilterSelect({ label, allLabel, value, values, onChange }: { label: string; allLabel: string; value: string; values: string[]; onChange: (value: string) => void }) { return <select className="border border-[var(--lv-border)] bg-[var(--lv-bg)] px-2 py-1 text-xs text-[var(--lv-text-secondary)]" aria-label={label} value={value} onChange={(event) => onChange(event.target.value)}><option value="">{label}: {allLabel}</option>{values.map((entry) => <option key={entry} value={entry}>{entry}</option>)}</select>; }
+function EmptyState({ copy, openCreate }: { copy: AppCopy; openCreate: () => void }) {
+  return (
+    <UiEmptyState
+      className="mt-4"
+      icon={<SearchX aria-hidden="true" size={22} />}
+      title={copy.library.noMatchingProgressions}
+      description={copy.library.searchPlaceholder}
+      action={<Button onClick={openCreate}>{copy.library.newIdea}</Button>}
+    />
+  );
+}
+function FilterSelect({ label, allLabel, value, values, onChange }: { label: string; allLabel: string; value: string; values: string[]; onChange: (value: string) => void }) { return <select className="lv-input min-h-10 px-2 text-xs text-[var(--lv-text-secondary)]" aria-label={label} value={value} onChange={(event) => onChange(event.target.value)}><option value="">{label}: {allLabel}</option>{values.map((entry) => <option key={entry} value={entry}>{entry}</option>)}</select>; }
 function keyOf(entry: ProgressionEntry): string { return entry.block.detectedKey ?? entry.idea.key ?? ""; }
 function bpmOf(entry: ProgressionEntry): number { return entry.block.bpm ?? entry.idea.bpm ?? 0; }
 function formatDate(value: string): string { return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(value)); }
