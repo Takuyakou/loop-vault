@@ -368,6 +368,61 @@ describe("ProgressionDetailView", () => {
     await act(async () => root.unmount());
   });
 
+  it("routes navigation through the unsaved-change guard after an edit", async () => {
+    const idea = makeIdea({ id: "idea-guard", progressionBlocks: [block] });
+    const openVault = vi.fn();
+    const requestLeave = vi.fn();
+    const onDirtyChange = vi.fn();
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <ProgressionDetailView
+          idea={idea}
+          block={block}
+          updateProgressionBlock={vi.fn(() => true)}
+          duplicateProgressionBlock={vi.fn()}
+          openProgression={vi.fn()}
+          openIdea={vi.fn()}
+          openVault={openVault}
+          requestDelete={vi.fn()}
+          requestLeave={requestLeave}
+          onDirtyChange={onDirtyChange}
+          setToast={vi.fn()}
+          copy={appCopy.en}
+          language="en"
+        />,
+      );
+    });
+
+    const buttons = [...container.querySelectorAll<HTMLButtonElement>("button")];
+    await act(async () => {
+      buttons.find((button) => button.textContent?.trim().startsWith("G7"))?.click();
+    });
+    await act(async () => {
+      [...container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent?.trim() === "Apply")
+        ?.click();
+    });
+
+    expect(onDirtyChange).toHaveBeenLastCalledWith(true);
+    const back = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent?.includes(progressionDetailCopy.en.backToVault))!;
+    await act(async () => back.click());
+
+    expect(requestLeave).toHaveBeenCalledOnce();
+    expect(openVault).not.toHaveBeenCalled();
+
+    const guardedAction = requestLeave.mock.calls[0]![0] as () => void;
+    guardedAction();
+    expect(openVault).toHaveBeenCalledOnce();
+
+    await act(async () => root.unmount());
+    expect(onDirtyChange).toHaveBeenLastCalledWith(false);
+  });
+
   it("keeps the clicked slot selected through editing and saving", async () => {
     const secondAlternative = {
       root: 5,

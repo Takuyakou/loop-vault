@@ -39,7 +39,12 @@ import {
   type PendingIdeaDeletion,
   type PendingProgressionBlockDeletion,
 } from "./domain/undoDeletion";
-import { appCopy, type AppCopy, type AppLanguage } from "./i18n";
+import {
+  appCopy,
+  progressionDetailCopy,
+  type AppCopy,
+  type AppLanguage,
+} from "./i18n";
 import {
   registerBrowserCloseGuard,
   registerTauriCloseGuard,
@@ -109,6 +114,8 @@ function App() {
   const [masterVolume, setMasterVolume] = useState(() => loadMasterVolume());
   const [pendingLiveMidiHistory, setPendingLiveMidiHistory] = useState<LiveChordHistoryEntry[]>();
   const [startupRestoreName, setStartupRestoreName] = useState<string>();
+  const [progressionDetailDirty, setProgressionDetailDirty] = useState(false);
+  const [pendingProgressionLeave, setPendingProgressionLeave] = useState<(() => void)>();
   const undoFallbackFocusRef = useRef<HTMLHeadingElement>(null);
   const miniWindowControllerRef = useRef<MiniWindowController | undefined>(undefined);
   const undoQueue = useUndoQueue();
@@ -134,6 +141,7 @@ function App() {
   );
   const language = settings.language;
   const copy = appCopy[language];
+  const progressionCopy = progressionDetailCopy[language];
 
   useEffect(() => {
     void initialize();
@@ -192,6 +200,18 @@ function App() {
     setView("detail");
   }
 
+  function requestProgressionLeave(action: () => void) {
+    if (view === "progression-detail" && progressionDetailDirty) {
+      setPendingProgressionLeave(() => action);
+      return;
+    }
+    action();
+  }
+
+  function navigateTo(nextView: View) {
+    requestProgressionLeave(() => setView(nextView));
+  }
+
   function changeMasterVolume(value: number) {
     const normalized = normalizeMasterVolume(value);
     setMasterVolume(normalized);
@@ -210,13 +230,15 @@ function App() {
   }
 
   function handleCreate(title: string, status: Status) {
-    const id = createIdea(title, status);
-    if (!id) {
-      return;
-    }
+    requestProgressionLeave(() => {
+      const id = createIdea(title, status);
+      if (!id) {
+        return;
+      }
 
-    setCreateOpen(false);
-    openDetail(id);
+      setCreateOpen(false);
+      openDetail(id);
+    });
   }
 
 async function analyzeMidiPath(path: string) {
@@ -337,9 +359,9 @@ async function analyzeMidiPath(path: string) {
   const shell = (
     <AppShell
       view={view}
-      setView={setView}
+      setView={navigateTo}
       openCreate={() => setCreateOpen(true)}
-      openLiveMidi={() => { void enterLiveMidiMode(); }}
+      openLiveMidi={() => requestProgressionLeave(() => { void enterLiveMidiMode(); })}
       openSettings={() => {
         setSettingsOpen(true);
         void refreshBackups();
@@ -469,6 +491,8 @@ async function analyzeMidiPath(path: string) {
                 openVault={() => setView("library")}
                 requestDelete={requestProgressionDelete}
                 openPractice={() => openPractice(progressionIdea.id, progressionBlock.id)}
+                requestLeave={requestProgressionLeave}
+                onDirtyChange={setProgressionDetailDirty}
                 setToast={setToast}
                 copy={copy}
                 language={language}
@@ -547,6 +571,21 @@ async function analyzeMidiPath(path: string) {
           onSave={importLiveMidiHistory}
         />
       ) : null}
+      <ConfirmDialog
+        open={Boolean(pendingProgressionLeave)}
+        title={progressionCopy.leaveUnsavedTitle}
+        description={progressionCopy.leaveUnsavedDescription}
+        confirmLabel={progressionCopy.discardAndLeave}
+        cancelLabel={copy.common.cancel}
+        onCancel={() => setPendingProgressionLeave(undefined)}
+        onConfirm={() => {
+          const action = pendingProgressionLeave;
+          setPendingProgressionLeave(undefined);
+          setProgressionDetailDirty(false);
+          action?.();
+        }}
+        tone="danger"
+      />
       <ConfirmDialog
         open={Boolean(startupRestoreName)}
         title={copy.startup.restoreBackupTitle}
