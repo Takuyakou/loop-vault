@@ -125,7 +125,7 @@ export function EditableProgressionGrid({
   return (
     <>
       <div className="grid grid-cols-[repeat(auto-fit,minmax(8.5rem,1fr))] gap-2">
-        <div className="contents" role="listbox" aria-label={text.selectChord}>
+        <div className="contents" role="group" aria-label={text.selectChord}>
           {editable.slots.map((slot, index) => (
             <EditableChordCard
               key={slot.id}

@@ -65,7 +65,7 @@ async function renderCard() {
 describe("EditableChordCard", () => {
   it("selects from the full card and opens actions with Enter, Shift+F10, or Menu", async () => {
     const { container, root, onSelect, onQuickEdit } = await renderCard();
-    const option = container.querySelector<HTMLElement>("[role='option']")!;
+    const option = container.querySelector<HTMLElement>("[data-chord-card]")!;
     const mainButton = container.querySelector<HTMLButtonElement>("button")!;
 
     await act(async () => option.click());
@@ -94,7 +94,7 @@ describe("EditableChordCard", () => {
 
   it("opens quick edit from the context menu and hover edit button", async () => {
     const { container, root, onSelect, onQuickEdit } = await renderCard();
-    const option = container.querySelector<HTMLElement>("[role='option']")!;
+    const option = container.querySelector<HTMLElement>("[data-chord-card]")!;
     const editButton = container.querySelector<HTMLButtonElement>("button[aria-label='Quick edit']")!;
 
     await act(async () => {

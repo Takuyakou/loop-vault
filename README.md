@@ -70,6 +70,38 @@ npm run build
 npm run tauri build
 ```
 
+### Playwright UI検証
+
+初回のみChromiumをインストールします。
+
+```bash
+npm run playwright:install
+```
+
+production build、preview serverの起動・停止、E2E、visual regressionは次の1コマンドで実行できます。
+
+```bash
+npm run test:e2e
+```
+
+基準画像を意図的に更新する場合だけ、差分を目視確認してから次を実行します。
+
+```bash
+npm run test:e2e:update
+```
+
+失敗時のスクリーンショット、video、traceは`test-results/`、HTML reportは
+`playwright-report/`へ生成されます。確認には次を使用します。
+
+```bash
+npm run test:e2e:report
+```
+
+Codex内蔵Playwright kernelではなく、リポジトリに固定したPlaywright CLIを検証の正とします。
+Web previewではファイルピッカー、OS MIDIデバイス、Tauriウィンドウ操作を完全再現できないため、
+それらはTauri buildとデスクトップ実機確認を分けて行います。個人MIDIはE2Eへ追加せず、
+テスト内で生成するSMF fixtureを使用します。
+
 ビルド後のexeは通常、次の場所に生成されます。
 
 ```text

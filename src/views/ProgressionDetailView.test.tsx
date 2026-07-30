@@ -182,7 +182,7 @@ describe("ProgressionDetailView", () => {
     const previewToggle = container.querySelector(".lv-progression-preview-toggle");
     expect(previewToggle?.classList.contains("inline-flex")).toBe(true);
     expect(previewToggle?.classList.contains("whitespace-nowrap")).toBe(true);
-    expect(container.querySelectorAll("[role='option']")).toHaveLength(1);
+    expect(container.querySelectorAll("[data-chord-card]")).toHaveLength(1);
     expect(container.querySelector("[data-alternative-count]")?.getAttribute("data-alternative-count")).toBe("5");
     expect(container.querySelector("[data-progression-detail-inspector]")?.classList.contains("lv-responsive-inspector-host")).toBe(false);
     expect(container.querySelector(
@@ -234,7 +234,7 @@ describe("ProgressionDetailView", () => {
       .find((button) => button.textContent === appCopy.en.capture.electricPiano)!;
     await act(async () => electricPiano.click());
 
-    const card = container.querySelector<HTMLElement>("[role='option']")!;
+    const card = container.querySelector<HTMLElement>("[data-chord-card]")!;
     await act(async () => card.click());
     expect(toggle).toHaveBeenCalledWith(
       expect.objectContaining({ kind: "detail", id: expect.stringContaining(":chord:") }),
@@ -287,9 +287,9 @@ describe("ProgressionDetailView", () => {
     const addChord = container.querySelector<HTMLButtonElement>("[data-insert-chord-after]")!;
     expect(addChord.getAttribute("aria-label")).toBe(progressionEditorCopy.ja.insertAfterChord);
     await act(async () => addChord.click());
-    const cards = [...container.querySelectorAll<HTMLElement>("[role='option']")];
+    const cards = [...container.querySelectorAll<HTMLElement>("[data-chord-card]")];
     expect(cards).toHaveLength(2);
-    expect(cards[1]?.getAttribute("aria-selected")).toBe("true");
+    expect(cards[1]?.getAttribute("data-selected")).toBe("true");
     expect(cards[1]?.textContent).not.toContain("Cmaj7");
     expect(container.querySelector("[data-alternative-count]")).not.toBeNull();
 
@@ -479,21 +479,21 @@ describe("ProgressionDetailView", () => {
       );
     });
 
-    const cards = [...container.querySelectorAll<HTMLElement>("[role='option']")];
+    const cards = [...container.querySelectorAll<HTMLElement>("[data-chord-card]")];
     expect(cards).toHaveLength(3);
-    expect(cards[0]?.getAttribute("aria-selected")).toBe("true");
+    expect(cards[0]?.getAttribute("data-selected")).toBe("true");
 
-    const firstCardButton = cards[0]!.querySelector<HTMLButtonElement>("button")!;
+    const firstCardButton = cards[0] as HTMLButtonElement;
     await act(async () => {
       firstCardButton.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
     });
-    expect(cards[1]?.getAttribute("aria-selected")).toBe("true");
-    expect(document.activeElement).toBe(cards[1]!.querySelector("button"));
+    expect(cards[1]?.getAttribute("data-selected")).toBe("true");
+    expect(document.activeElement).toBe(cards[1]);
 
     await act(async () => {
       cards[2]!.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));
     });
-    expect(cards[2]?.getAttribute("aria-selected")).toBe("true");
+    expect(cards[2]?.getAttribute("data-selected")).toBe("true");
     const quickEditor = document.querySelector<HTMLElement>("[data-quick-chord-editor]")!;
     expect(quickEditor).not.toBeNull();
     await act(async () => {
@@ -501,8 +501,8 @@ describe("ProgressionDetailView", () => {
     });
 
     await act(async () => cards[1]!.click());
-    expect(cards[1]?.getAttribute("aria-selected")).toBe("true");
-    expect(cards[0]?.getAttribute("aria-selected")).toBe("false");
+    expect(cards[1]?.getAttribute("data-selected")).toBe("true");
+    expect(cards[0]?.getAttribute("data-selected")).toBe("false");
 
     const buttons = () => [...container.querySelectorAll<HTMLButtonElement>("button")];
     await act(async () => {
@@ -511,7 +511,7 @@ describe("ProgressionDetailView", () => {
     await act(async () => {
       buttons().find((button) => button.textContent?.trim() === "Apply")?.click();
     });
-    expect(cards[1]?.getAttribute("aria-selected")).toBe("true");
+    expect(cards[1]?.getAttribute("data-selected")).toBe("true");
 
     const save = buttons().find((button) => button.textContent?.trim() === progressionDetailCopy.en.saveChanges)!;
     await act(async () => save.click());
@@ -527,7 +527,7 @@ describe("ProgressionDetailView", () => {
         ],
       }),
     );
-    expect(cards[1]?.getAttribute("aria-selected")).toBe("true");
+    expect(cards[1]?.getAttribute("data-selected")).toBe("true");
 
     await act(async () => root.unmount());
   });

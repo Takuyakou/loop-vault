@@ -636,8 +636,8 @@ describe("VaultView keyboard shortcuts", () => {
     await act(async () => root.unmount());
   });
 
-  it("virtualizes progression rows after the 50-entry threshold", async () => {
-    const blocks = Array.from({ length: 51 }, (_, index) => ({
+  it("virtualizes 1000 progression rows without mounting every card", async () => {
+    const blocks = Array.from({ length: 1000 }, (_, index) => ({
       ...progressionBlock,
       id: `block-${index}`,
     }));
@@ -671,8 +671,8 @@ describe("VaultView keyboard shortcuts", () => {
       .toBe(true);
     expect(compactRow.querySelector(".lv-vault-progression")?.getAttribute("title"))
       .toContain("Cmaj7");
-    expect(container.querySelectorAll(".lv-vault-row").length).toBeLessThan(51);
-    expect(container.textContent).toContain("51 items");
+    expect(container.querySelectorAll(".lv-vault-row").length).toBeLessThan(100);
+    expect(container.textContent).toContain("1000 items");
     await act(async () => root.unmount());
   });
 });

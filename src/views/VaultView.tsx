@@ -551,7 +551,7 @@ function EmptyState({ copy, openCreate }: { copy: AppCopy; openCreate: () => voi
   return (
     <UiEmptyState
       className="mt-4"
-      icon={<SearchX aria-hidden="true" size={22} />}
+      icon={<SearchX aria-hidden="true" size={20} />}
       title={copy.library.noMatchingProgressions}
       description={copy.library.searchPlaceholder}
       action={<Button onClick={openCreate}>{copy.library.newIdea}</Button>}

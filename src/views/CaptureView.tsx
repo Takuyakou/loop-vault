@@ -230,6 +230,7 @@ export function CaptureView(props: CaptureViewProps) {
   const [timelineScrollBar, setTimelineScrollBar] = useState<number>();
   const [sourcePath, setSourcePath] = useState<string>();
   const [preAnalysisSession, setPreAnalysisSession] = useState<AnalysisSession>();
+  const [intakeError, setIntakeError] = useState<string>();
   const { sound: previewSound, setSound: setPreviewSound } = usePreviewSound();
   const [activeDraft, setActiveDraft] = useState<ManualCandidateDraft | null>(null);
   const [analysisProgress, setAnalysisProgress] = useState<CaptureAnalysisProgressStage>();
@@ -350,6 +351,7 @@ export function CaptureView(props: CaptureViewProps) {
       setActiveDraft(null);
       setExpandedCandidateId(undefined);
       setToast(analyzed ? copy.toast.midiAnalyzed : copy.toast.midiFailed);
+      await waitForStatusFeedback();
       setAnalysisProgress(undefined);
       return Boolean(analyzed);
     },
@@ -370,9 +372,12 @@ export function CaptureView(props: CaptureViewProps) {
       if (!intake.session) {
         setAnalysisProgress(undefined);
         const issue = intake.issues[0];
-        setToast(issue?.message ?? copy.toast.midiReadFailed);
+        const message = issue?.message ?? copy.toast.midiReadFailed;
+        setIntakeError(message);
+        setToast(message);
         return;
       }
+      setIntakeError(undefined);
       if (
         !options.append
         && !shouldOpenPreAnalysis(
@@ -433,7 +438,9 @@ export function CaptureView(props: CaptureViewProps) {
         });
       } catch (error) {
         setAnalysisProgress(undefined);
-        setToast(error instanceof Error ? error.message : copy.toast.midiReadFailed);
+        const message = error instanceof Error ? error.message : copy.toast.midiReadFailed;
+        setIntakeError(message);
+        setToast(message);
       }
     },
     [copy.toast.midiDropInvalid, copy.toast.midiReadFailed, prepareMidiInputs, setToast],
@@ -457,7 +464,9 @@ export function CaptureView(props: CaptureViewProps) {
         await prepareMidiInputs(inputs, { append });
       } catch (error) {
         setAnalysisProgress(undefined);
-        setToast(error instanceof Error ? error.message : copy.toast.midiReadFailed);
+        const message = error instanceof Error ? error.message : copy.toast.midiReadFailed;
+        setIntakeError(message);
+        setToast(message);
       }
     },
     [copy.toast.midiDropInvalid, copy.toast.midiReadFailed, prepareMidiInputs, setToast],
@@ -924,8 +933,8 @@ export function CaptureView(props: CaptureViewProps) {
         {...dropHandlers}
       >
         <CaptureEmptyState
-          status={analysis.status}
-          error={analysis.error}
+          status={intakeError ? "error" : analysis.status}
+          error={intakeError ?? analysis.error}
           onChooseMidi={() => void chooseMidi(false)}
           isDraggingMidi={isDraggingMidi}
           copy={copy}
@@ -1584,13 +1593,18 @@ function CaptureEmptyState({
           role="status"
           aria-live="polite"
         >
-          <FileMusic aria-hidden="true" className="mx-auto mb-3 text-[var(--lv-accent)]" size={28} />
+          <FileMusic aria-hidden="true" className="mx-auto mb-3 text-[var(--lv-accent)]" size={20} />
           <p className="text-lg font-semibold">
             {isDraggingMidi ? copy.capture.dropActive : copy.capture.dropMidi}
           </p>
           <p className="mt-2 text-sm text-[var(--lv-text-muted)]">{copy.capture.dropHelp}</p>
         </div>
-        <Button variant="primary" className="mt-7 min-h-11 px-5" onClick={onChooseMidi}>
+        <Button
+          variant="primary"
+          className="mt-7 min-h-11 px-5"
+          data-testid="capture-choose-midi"
+          onClick={onChooseMidi}
+        >
           {copy.capture.loadMidi}
         </Button>
         <p className="mt-3 text-xs text-[var(--lv-text-muted)]">{copy.capture.supportedFormats}</p>
@@ -1611,7 +1625,12 @@ function CaptureEmptyState({
             tone="error"
             title={copy.capture.loadFailed}
             action={(
-              <Button variant="secondary" size="sm" onClick={onChooseMidi}>
+              <Button
+                variant="secondary"
+                size="sm"
+                data-testid="capture-retry-midi"
+                onClick={onChooseMidi}
+              >
                 {copy.capture.loadMidi}
               </Button>
             )}
@@ -1639,6 +1658,7 @@ export function CaptureAnalysisProgress({
       role="status"
       aria-live="polite"
       data-analysis-progress={stage}
+      data-testid="capture-analysis-progress"
     >
       <p className="text-sm font-semibold text-cyan-100">{analysisProgressLabel(stage, copy)}</p>
       <p className="mt-1 text-xs text-[var(--lv-text-muted)]">{copy.capture.analyzingDetail}</p>
@@ -1662,6 +1682,12 @@ function waitForNextPaint(): Promise<void> {
     } else {
       setTimeout(resolve, 0);
     }
+  });
+}
+
+function waitForStatusFeedback(): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, 300);
   });
 }
 

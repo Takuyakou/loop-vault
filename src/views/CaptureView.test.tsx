@@ -265,11 +265,11 @@ describe("ProgressionCandidateCard", () => {
       );
     });
 
-    const options = container.querySelectorAll<HTMLButtonElement>('[role="option"]');
+    const options = container.querySelectorAll<HTMLButtonElement>("[data-chord-card]");
     await act(async () => options[1]?.click());
 
     expect(container.querySelector("aside")?.textContent).toContain("Am7");
-    expect(options[1]?.getAttribute("aria-selected")).toBe("true");
+    expect(options[1]?.getAttribute("data-selected")).toBe("true");
     await act(async () => root.unmount());
   });
 
@@ -310,7 +310,7 @@ describe("ProgressionCandidateCard", () => {
       .find((button) => button.textContent === "適用");
     await act(async () => applyButton?.click());
 
-    expect(container.querySelector('[role="option"]')?.textContent).toContain("G7");
+    expect(container.querySelector("[data-chord-card]")?.textContent).toContain("G7");
     expect(container.querySelector('[aria-label="編集済み"]')).not.toBeNull();
     await act(async () => root.unmount());
   });
@@ -345,7 +345,7 @@ describe("ProgressionCandidateCard", () => {
       .find((button) => button.textContent === "適用");
     await act(async () => apply?.click());
 
-    let chordCards = container.querySelectorAll<HTMLButtonElement>('[role="option"]');
+    let chordCards = container.querySelectorAll<HTMLButtonElement>("[data-chord-card]");
     expect([...chordCards].map((card) => card.textContent)).toEqual([
       expect.stringContaining("G7"),
       expect.stringContaining("Cmaj7"),
@@ -360,7 +360,7 @@ describe("ProgressionCandidateCard", () => {
       .find((button) => button.textContent?.includes("選択した区間へ適用"));
     await act(async () => applyPropagation?.click());
 
-    chordCards = container.querySelectorAll<HTMLButtonElement>('[role="option"]');
+    chordCards = container.querySelectorAll<HTMLButtonElement>("[data-chord-card]");
     expect([...chordCards].map((card) => card.textContent)).toEqual([
       expect.stringContaining("G7"),
       expect.stringContaining("G7"),
@@ -369,7 +369,7 @@ describe("ProgressionCandidateCard", () => {
 
     const undo = container.querySelector<HTMLButtonElement>('button[aria-label="元に戻す"]');
     await act(async () => undo?.click());
-    chordCards = container.querySelectorAll<HTMLButtonElement>('[role="option"]');
+    chordCards = container.querySelectorAll<HTMLButtonElement>("[data-chord-card]");
     expect([...chordCards].map((card) => card.textContent)).toEqual([
       expect.stringContaining("G7"),
       expect.stringContaining("Cmaj7"),
@@ -484,13 +484,13 @@ describe("ProgressionCandidateCard", () => {
 
     const findButton = (label: string) => [...container.querySelectorAll("button")]
       .find((button) => button.textContent?.trim() === label);
-    expect(container.querySelectorAll('[role="option"]')).toHaveLength(2);
+    expect(container.querySelectorAll("[data-chord-card]")).toHaveLength(2);
     await act(async () => findButton("コードを分割")?.click());
-    expect(container.querySelectorAll('[role="option"]')).toHaveLength(3);
+    expect(container.querySelectorAll("[data-chord-card]")).toHaveLength(3);
     await act(async () => findButton("次と結合")?.click());
-    expect(container.querySelectorAll('[role="option"]')).toHaveLength(2);
+    expect(container.querySelectorAll("[data-chord-card]")).toHaveLength(2);
     await act(async () => findButton("コードを削除")?.click());
-    expect(container.querySelectorAll('[role="option"]')).toHaveLength(1);
+    expect(container.querySelectorAll("[data-chord-card]")).toHaveLength(1);
 
     await act(async () => root.unmount());
   });
@@ -858,7 +858,7 @@ describe("CaptureView saving", () => {
       await act(async () => window.dispatchEvent(new Event("resize")));
       expect(document.documentElement.style.getPropertyValue("--lv-sticky-inspector-height")).toBe("196px");
 
-      const chordOptions = container.querySelectorAll<HTMLButtonElement>('[role="option"]');
+      const chordOptions = container.querySelectorAll<HTMLButtonElement>("[data-chord-card]");
       await act(async () => chordOptions[1]?.click());
       expect(host?.querySelector("[data-chord-inspector]")?.getAttribute("data-inspector-state")).toBe("expanded");
 
@@ -1651,7 +1651,7 @@ describe("CaptureView song mini map", () => {
       );
       const firstCard = candidateHeaders[0]?.parentElement?.parentElement;
       expect(candidateHeaders[0]?.textContent).toContain("Bars 1-4");
-      expect(firstCard?.querySelectorAll('[role="option"]')).toHaveLength(2);
+      expect(firstCard?.querySelectorAll("[data-chord-card]")).toHaveLength(2);
 
       const moveHandle = container.querySelector<HTMLButtonElement>(
         "[data-selection-move-handle]",
@@ -1668,7 +1668,7 @@ describe("CaptureView song mini map", () => {
       expect(firstRange?.style.width).toBe("62.5%");
       expect(firstRange?.getAttribute("aria-label")).toContain("bars 1-5");
       expect(candidateHeaders[0]?.textContent).toContain("Bars 1-5");
-      expect(firstCard?.querySelectorAll('[role="option"]')).toHaveLength(3);
+      expect(firstCard?.querySelectorAll("[data-chord-card]")).toHaveLength(3);
       expect(firstCard?.textContent).toContain("Fmaj7");
       expect(result.blockCandidates[0]?.endBar).toBe(4);
       expect(result.blockCandidates[0]?.chords).toHaveLength(2);
