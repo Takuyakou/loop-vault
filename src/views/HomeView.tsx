@@ -1,15 +1,25 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { ArrowRight, Check } from "lucide-react";
+import {
+  playbackController,
+  samePlaybackSource,
+} from "../audio/playbackController";
+import type { PreviewSound } from "../audio/chordPreview";
 import { PlayToggle } from "../components/PlayToggle";
 import { usePreviewSound } from "../components/PreviewSoundProvider";
 import { Badge, Button, Surface } from "../components/ui";
+import { voiceChordForPreview } from "../domain/chordVoicing";
 import { displayKey, statusLabel } from "../domain/displayLabels";
 import { pickFocus } from "../domain/focus";
 import { degreeSequence } from "../domain/harmony/degrees";
 import { beatsPerBar } from "../domain/midi";
-import { resolveTimelineVoicings } from "../domain/voicing";
+import {
+  resolveTimelineVoicings,
+  resolveVoicingForUse,
+} from "../domain/voicing";
 import { monthlyStats } from "../domain/monthlyStats";
 import { formatProgressionText } from "../domain/progressionText";
+import { usePlaybackState } from "../hooks/usePlaybackState";
 import type { TransitionResult } from "../domain/transition";
 import type { SavedProgressionBlock, SongIdea, Status } from "../domain/types";
 import type { AppCopy, AppLanguage } from "../i18n";
@@ -103,6 +113,13 @@ export function HomeView({
                 block={focusBlock}
                 degrees={focusDegrees}
                 fallback={focusPreview}
+                ideaId={focus.focus.id}
+                sound={previewSound}
+                playLabel={copy.common.preview}
+                stopLabel={copy.common.stop}
+                onPlaybackError={(error) => setToast(
+                  error instanceof Error ? error.message : copy.toast.chordPreviewFailed,
+                )}
               />
             ) : focusPreview ? (
               <p className="mt-5 break-words border-y border-[var(--lv-border)] py-4 text-sm text-[var(--lv-text-secondary)]">
@@ -296,10 +313,20 @@ function FocusChordCards({
   block,
   degrees,
   fallback,
+  ideaId,
+  sound,
+  playLabel,
+  stopLabel,
+  onPlaybackError,
 }: {
   block: SavedProgressionBlock;
   degrees: string[];
   fallback?: string;
+  ideaId: string;
+  sound: PreviewSound;
+  playLabel: string;
+  stopLabel: string;
+  onPlaybackError: (error: unknown) => void;
 }) {
   if (!block.chords.length) {
     return fallback ? (
@@ -314,9 +341,16 @@ function FocusChordCards({
       data-testid="home-focus-chords"
     >
       {block.chords.map((event, index) => (
-        <div
+        <FocusChordCard
           key={`${event.bar}:${event.beat}:${index}`}
-          className="flex min-h-20 min-w-28 flex-col justify-between rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] bg-[var(--lv-bg-subtle)] p-3 first:border-[var(--lv-accent)] first:bg-[var(--lv-accent-soft)]"
+          blockId={block.id}
+          event={event}
+          ideaId={ideaId}
+          index={index}
+          sound={sound}
+          playLabel={playLabel}
+          stopLabel={stopLabel}
+          onPlaybackError={onPlaybackError}
         >
           <span className="text-[11px] text-[var(--lv-text-muted)]">
             {String(index + 1).padStart(2, "0")} · {event.bar} bar
@@ -325,8 +359,77 @@ function FocusChordCards({
           {degrees[index] ? (
             <span className="mt-1 text-xs text-[var(--lv-text-secondary)]">{degrees[index]}</span>
           ) : null}
-        </div>
+        </FocusChordCard>
       ))}
     </div>
+  );
+}
+
+function FocusChordCard({
+  blockId,
+  event,
+  ideaId,
+  index,
+  sound,
+  playLabel,
+  stopLabel,
+  onPlaybackError,
+  children,
+}: {
+  blockId: string;
+  event: SavedProgressionBlock["chords"][number];
+  ideaId: string;
+  index: number;
+  sound: PreviewSound;
+  playLabel: string;
+  stopLabel: string;
+  onPlaybackError: (error: unknown) => void;
+  children: ReactNode;
+}) {
+  const playback = usePlaybackState();
+  const source = {
+    kind: "home" as const,
+    id: `idea:${ideaId}:block:${blockId}:chord:${event.eventId ?? `${event.bar}:${event.beat}:${index}`}`,
+  };
+  const playing = playback.status !== "idle"
+    && samePlaybackSource(playback.source, source);
+  const actionLabel = playing ? stopLabel : playLabel;
+  const explicitMidiNotes = resolveVoicingForUse(
+    event.chord,
+    event.voicingMemory,
+    voiceChordForPreview(event.chord).notes,
+  ).midiNotes;
+
+  return (
+    <button
+      type="button"
+      className={`relative flex min-h-20 min-w-28 flex-col justify-between overflow-hidden rounded-[var(--lv-radius-md)] border p-3 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-focus)] ${
+        playing
+          ? "border-[var(--lv-accent)] bg-[var(--lv-accent-soft)]"
+          : index === 0
+            ? "border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] hover:bg-[var(--lv-surface-raised)]"
+            : "border-[var(--lv-border)] bg-[var(--lv-bg-subtle)] hover:border-[var(--lv-accent)] hover:bg-[var(--lv-surface-raised)]"
+      }`}
+      data-home-focus-chord={index}
+      data-playing={playing}
+      aria-label={`${actionLabel}: ${event.chord.label}`}
+      aria-pressed={playing}
+      aria-busy={playing && playback.status === "starting"}
+      title={`${actionLabel}: ${event.chord.label}`}
+      onClick={() => void playbackController.toggle(source, {
+        type: "chord",
+        chord: event.chord,
+        sound,
+        explicitMidiNotes,
+      }).catch(onPlaybackError)}
+    >
+      {children}
+      {playing ? (
+        <span
+          aria-hidden="true"
+          className="absolute inset-x-0 bottom-0 h-1 bg-[var(--lv-accent)]"
+        />
+      ) : null}
+    </button>
   );
 }
