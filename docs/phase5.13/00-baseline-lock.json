@@ -1,0 +1,54 @@
+{
+  "phase": "5.13",
+  "baselineCommit": "f368e80e473be318c643bf2adecd735ec2cf24b5",
+  "fileVersion": 1,
+  "defaultAnalyzerMode": "phase4-v1",
+  "hashes": {
+    "src/domain/schema.ts": "3e8b9a9ef8ba91631899629cdd9d5527045fa836",
+    "src/domain/midi/analysis.ts": "8a05e530dc583950b89ce090c7aba591793c6c03"
+  },
+  "trackedPrivateData": {
+    "midiFiles": 0,
+    "localEvaluationFiles": 0
+  },
+  "verification": {
+    "lint": "pass",
+    "typecheck": "pass",
+    "vitest": {
+      "status": "pass",
+      "files": 236,
+      "tests": 1835
+    },
+    "cargoTest": {
+      "status": "pass",
+      "tests": 24
+    },
+    "webBuild": "pass",
+    "tauriBuild": "pass",
+    "playwrightCli": {
+      "status": "pass",
+      "version": "1.57.0",
+      "browser": "Google Chrome",
+      "viewports": [
+        "1024x720",
+        "1280x720"
+      ]
+    }
+  },
+  "webBundleBytes": {
+    "css": 44390,
+    "cssGzip": 9370,
+    "javascript": 1316760,
+    "javascriptGzip": 383300
+  },
+  "protectedBehavior": [
+    "midi-analysis",
+    "candidate-ranking",
+    "voice-extraction-and-role-assignment",
+    "vault-persistence",
+    "live-midi-judgment",
+    "chord-dojo-judgment",
+    "midi-playback-musical-behavior"
+  ]
+}
+
