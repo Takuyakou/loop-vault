@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { voiceChordForPreview } from "../domain/chordVoicing";
 import {
   playbackController,
@@ -57,6 +57,7 @@ import type { SavedProgressionBlock, SongIdea } from "../domain/types";
 import { extractVoicing, resolveVoicingForUse } from "../domain/voicing";
 import { advisorSuggestionToCandidate, appendAdvisorSuggestionToEditableProgression, selectAdvisorReferenceContexts } from "../domain/progressionAdvisor";
 import { appendAnalysisFeedback } from "../storage/analysisFeedbackStorage";
+import { registerCloseBlocker } from "../store/closeBlocker";
 import {
   progressionDetailCopy,
   type AppCopy,
@@ -92,6 +93,8 @@ interface ProgressionDetailViewProps {
   openVault: () => void;
   requestDelete: (idea: SongIdea, block: SavedProgressionBlock) => void;
   openPractice?: () => void;
+  requestLeave?: (action: () => void) => void;
+  onDirtyChange?: (dirty: boolean) => void;
   setToast: (message: string) => void;
   copy: AppCopy;
   language: AppLanguage;
@@ -111,6 +114,8 @@ export function ProgressionDetailView({
   openVault,
   requestDelete,
   openPractice,
+  requestLeave,
+  onDirtyChange,
   setToast,
   copy,
   language,
@@ -124,6 +129,27 @@ export function ProgressionDetailView({
   const [advisorOpen, setAdvisorOpen] = useState(false);
   const [reextracting, setReextracting] = useState(false);
   const dirty = hasProgressionEdits(editable);
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+  }, [dirty, onDirtyChange]);
+  useEffect(() => () => {
+    onDirtyChange?.(false);
+  }, [onDirtyChange]);
+  useEffect(() => {
+    if (!dirty) return undefined;
+    return registerCloseBlocker({
+      title: text.leaveUnsavedTitle,
+      message: text.leaveUnsavedDescription,
+      confirmLabel: text.discardAndLeave,
+      cancelLabel: copy.common.cancel,
+    });
+  }, [
+    copy.common.cancel,
+    dirty,
+    text.discardAndLeave,
+    text.leaveUnsavedDescription,
+    text.leaveUnsavedTitle,
+  ]);
   const editingBlock = useMemo(
     () => applyEditableProgressionToSavedBlock(block, editable),
     [block, editable],
@@ -211,13 +237,23 @@ export function ProgressionDetailView({
   }
 
   function duplicate() {
-    const duplicateId = duplicateProgressionBlock(idea.id, block.id);
-    if (!duplicateId) {
-      setToast(text.duplicateFailed);
+    runLeaveAction(() => {
+      const duplicateId = duplicateProgressionBlock(idea.id, block.id);
+      if (!duplicateId) {
+        setToast(text.duplicateFailed);
+        return;
+      }
+      setToast(text.duplicatedToast);
+      openProgression(idea.id, duplicateId);
+    });
+  }
+
+  function runLeaveAction(action: () => void) {
+    if (requestLeave) {
+      requestLeave(action);
       return;
     }
-    setToast(text.duplicatedToast);
-    openProgression(idea.id, duplicateId);
+    action();
   }
 
   async function copyForChordDrip() {
@@ -326,7 +362,7 @@ export function ProgressionDetailView({
           <button
             type="button"
             className="inline-flex items-center gap-2 text-sm text-[var(--lv-text-secondary)] hover:text-[var(--lv-text)]"
-            onClick={openVault}
+            onClick={() => runLeaveAction(openVault)}
           >
             <ArrowLeft aria-hidden="true" size={16} />
             {text.backToVault}
@@ -350,7 +386,7 @@ export function ProgressionDetailView({
             <button
               type="button"
               className="lv-button-primary inline-flex min-h-9 items-center gap-2 px-3 text-sm font-semibold"
-              onClick={openPractice}
+              onClick={() => runLeaveAction(openPractice)}
             >
               <Dumbbell aria-hidden="true" size={16} />
               {language === "ja" ? "練習する" : "Practice"}
@@ -360,7 +396,7 @@ export function ProgressionDetailView({
           <button
             type="button"
             className="lv-button-ghost inline-flex min-h-9 items-center gap-2 px-3 text-sm"
-            onClick={() => openIdea(idea.id)}
+            onClick={() => runLeaveAction(() => openIdea(idea.id))}
           >
             <ExternalLink aria-hidden="true" size={16} />
             {text.openParentIdea}
@@ -377,7 +413,7 @@ export function ProgressionDetailView({
           <button
             type="button"
             className="lv-button-ghost inline-flex h-9 w-9 items-center justify-center text-red-200"
-            onClick={() => requestDelete(idea, block)}
+            onClick={() => runLeaveAction(() => requestDelete(idea, block))}
             aria-label={copy.common.delete}
             title={copy.common.delete}
           >

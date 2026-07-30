@@ -10,6 +10,7 @@ import {
   registerTauriCloseGuard,
   shouldBlockClose,
 } from "./closeGuard";
+import { registerCloseBlocker } from "./closeBlocker";
 import { registerClosePreparation } from "./closePreparation";
 
 type CloseRequestHandler = (event: { preventDefault(): void }) => Promise<void> | void;
@@ -17,6 +18,7 @@ type CloseRequestHandler = (event: { preventDefault(): void }) => Promise<void> 
 const tauriMocks = vi.hoisted(() => ({
   invoke: vi.fn(),
   isTauri: vi.fn(() => false),
+  ask: vi.fn(),
   message: vi.fn(),
   onCloseRequested: vi.fn(),
 }));
@@ -30,7 +32,10 @@ vi.mock("@tauri-apps/api/window", () => ({
   getCurrentWindow: () => ({ onCloseRequested: tauriMocks.onCloseRequested }),
 }));
 
-vi.mock("@tauri-apps/plugin-dialog", () => ({ message: tauriMocks.message }));
+vi.mock("@tauri-apps/plugin-dialog", () => ({
+  ask: tauriMocks.ask,
+  message: tauriMocks.message,
+}));
 
 function state(overrides: Partial<VaultStoreState>): VaultStoreState {
   return {
@@ -80,6 +85,7 @@ describe("close guards", () => {
   beforeEach(() => {
     tauriMocks.invoke.mockReset();
     tauriMocks.isTauri.mockReset().mockReturnValue(false);
+    tauriMocks.ask.mockReset();
     tauriMocks.message.mockReset();
     tauriMocks.onCloseRequested.mockReset();
   });
@@ -98,6 +104,23 @@ describe("close guards", () => {
     expect(event.defaultPrevented).toBe(true);
     expect(stop).not.toHaveBeenCalled();
     cleanup();
+  });
+
+  it("warns on beforeunload when an editor has unsaved local changes", () => {
+    const cleanupBlocker = registerCloseBlocker({
+      title: "Unsaved",
+      message: "Discard changes?",
+      confirmLabel: "Discard",
+      cancelLabel: "Cancel",
+    });
+    const cleanup = registerBrowserCloseGuard(storeFrom(() => state({ unsaved: false })));
+    const event = new Event("beforeunload", { cancelable: true });
+
+    window.dispatchEvent(event);
+
+    expect(event.defaultPrevented).toBe(true);
+    cleanup();
+    cleanupBlocker();
   });
 
   it("stops playback once page navigation is committed", () => {
@@ -162,6 +185,57 @@ describe("close guards", () => {
     expect(order).toEqual(["stop", "midi-stop", "exit"]);
     expect(tauriMocks.invoke).toHaveBeenCalledWith("close_live_midi_input");
     expect(tauriMocks.invoke).toHaveBeenCalledWith("exit_app");
+  });
+
+  it("keeps the desktop app open when local edits are not discarded", async () => {
+    tauriMocks.isTauri.mockReturnValue(true);
+    tauriMocks.ask.mockResolvedValue(false);
+    let closeHandler: CloseRequestHandler | undefined;
+    tauriMocks.onCloseRequested.mockImplementation(async (handler: CloseRequestHandler) => {
+      closeHandler = handler;
+      return () => undefined;
+    });
+    const cleanupBlocker = registerCloseBlocker({
+      title: "Unsaved",
+      message: "Discard changes?",
+      confirmLabel: "Discard",
+      cancelLabel: "Cancel",
+    });
+    await registerTauriCloseGuard(storeFrom(() => state({ unsaved: false })));
+
+    await closeHandler?.({ preventDefault: vi.fn() });
+
+    expect(tauriMocks.ask).toHaveBeenCalledWith("Discard changes?", {
+      title: "Unsaved",
+      kind: "warning",
+      okLabel: "Discard",
+      cancelLabel: "Cancel",
+    });
+    expect(tauriMocks.invoke).not.toHaveBeenCalled();
+    cleanupBlocker();
+  });
+
+  it("closes the desktop app after local edits are explicitly discarded", async () => {
+    tauriMocks.isTauri.mockReturnValue(true);
+    tauriMocks.ask.mockResolvedValue(true);
+    let closeHandler: CloseRequestHandler | undefined;
+    tauriMocks.onCloseRequested.mockImplementation(async (handler: CloseRequestHandler) => {
+      closeHandler = handler;
+      return () => undefined;
+    });
+    vi.spyOn(playbackController, "stop").mockImplementation(() => undefined);
+    const cleanupBlocker = registerCloseBlocker({
+      title: "Unsaved",
+      message: "Discard changes?",
+      confirmLabel: "Discard",
+      cancelLabel: "Cancel",
+    });
+    await registerTauriCloseGuard(storeFrom(() => state({ unsaved: false })));
+
+    await closeHandler?.({ preventDefault: vi.fn() });
+
+    expect(tauriMocks.invoke).toHaveBeenCalledWith("exit_app");
+    cleanupBlocker();
   });
 
   it("commits mounted view changes before flushing and closing", async () => {

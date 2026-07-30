@@ -1,11 +1,12 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { message } from "@tauri-apps/plugin-dialog";
+import { ask, message } from "@tauri-apps/plugin-dialog";
 import type { StoreApi } from "zustand/vanilla";
 import type { VaultStoreState } from "./vaultStore";
 import { playbackController } from "../audio/playbackController";
 import { liveMidiService } from "../liveMidi/liveMidiService";
 import { runClosePreparations } from "./closePreparation";
+import { firstCloseBlocker, hasCloseBlockers } from "./closeBlocker";
 
 const MAX_CLOSE_FLUSH_ATTEMPTS = 2;
 
@@ -32,7 +33,7 @@ export function registerBrowserCloseGuard(
       event.returnValue = "";
       return;
     }
-    if (!shouldBlockClose(store.getState())) {
+    if (!shouldBlockClose(store.getState()) && !hasCloseBlockers()) {
       return;
     }
 
@@ -92,6 +93,20 @@ export async function registerTauriCloseGuard(
       closeInProgress = false;
       await showCloseSaveError();
       return;
+    }
+
+    const blocker = firstCloseBlocker();
+    if (blocker) {
+      const discardAndClose = await ask(blocker.message, {
+        title: blocker.title,
+        kind: "warning",
+        okLabel: blocker.confirmLabel,
+        cancelLabel: blocker.cancelLabel,
+      });
+      if (!discardAndClose) {
+        closeInProgress = false;
+        return;
+      }
     }
 
     await exitDesktopApp();
