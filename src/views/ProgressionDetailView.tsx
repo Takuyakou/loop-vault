@@ -8,6 +8,7 @@ import {
 import { PlayToggle } from "../components/PlayToggle";
 import { PreviewSoundSelector } from "../components/PreviewSoundSelector";
 import { usePreviewSound } from "../components/PreviewSoundProvider";
+import { usePlaybackState } from "../hooks/usePlaybackState";
 import { ProgressionTagsEditor } from "../components/ProgressionTagsEditor";
 import { PracticeProgressBadge } from "../components/practice/PracticeProgressBadge";
 import { ProgressionAdvisorButton } from "../components/progression-advisor/ProgressionAdvisorButton";
@@ -186,6 +187,10 @@ export function ProgressionDetailView({
     kind: "detail",
     id: `idea:${idea.id}:progression:${block.id}`,
   };
+  const playback = usePlaybackState(controller);
+  const playingSlotId = playback.source?.kind === "detail"
+    ? editable.slots.find((slot) => playback.source?.id.includes(`:chord:${slot.id}:`))?.id
+    : undefined;
   const sourceAsset = idea.assets.find((asset) => (
     asset.type === "midi"
     && (
@@ -358,7 +363,52 @@ export function ProgressionDetailView({
 
   return (
     <div className="lv-capture-content py-5">
-      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--lv-border)] pb-4">
+      <section
+        className="border-b border-[var(--lv-border)] pb-4"
+        aria-label={text.progression}
+        data-progression-card-stage
+      >
+        <EditableProgressionGrid
+          editable={editable}
+          playingSlotId={playingSlotId}
+          onSelect={(slotId, index) => {
+            setEditable((current) => selectEditableSlot(current, slotId));
+            const slot = editable.slots[index];
+            if (slot) void previewChord(slot.currentChord, slot.id, true);
+          }}
+          onNavigate={(slotId) => setEditable((current) => selectEditableSlot(current, slotId))}
+          onPreviewSlot={(slotId, chord) => {
+            setEditable((current) => selectEditableSlot(current, slotId));
+            void previewChord(chord, slotId, true);
+          }}
+          onInsertAfter={(slotId) => setEditable((current) => (
+            insertSuggestedEditableChordAfter(
+              current,
+              slotId,
+              keySignature,
+              authorReferenceIndex,
+            )
+          ))}
+          keySignature={keySignature}
+          authorReferenceIndex={authorReferenceIndex}
+          language={language}
+          quickEditor={{
+            onPreview: (slotId, chord) => void previewChord(chord, slotId),
+            onApply: (slotId, chord, source, selection) => setEditable((current) => (
+              replaceEditableChord(
+                selectEditableSlot(current, slotId),
+                slotId,
+                chord,
+                source,
+                selection,
+              )
+            )),
+            onReset: (slotId) => setEditable((current) => resetEditableChord(current, slotId)),
+            onOpenInspector: (slotId) => setEditable((current) => selectEditableSlot(current, slotId)),
+          }}
+        />
+      </section>
+      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--lv-border)] py-3">
         <div className="min-w-0">
           <Button
             type="button"
@@ -370,10 +420,10 @@ export function ProgressionDetailView({
             <ArrowLeft aria-hidden="true" size={16} />
             {text.backToVault}
           </Button>
-          <p className="mt-4 text-xs font-semibold uppercase text-[var(--lv-accent)]">
+          <p className="mt-2 text-xs font-semibold uppercase text-[var(--lv-accent)]">
             {text.progression}
           </p>
-          <h2 className="mt-1 text-lg font-semibold text-[var(--lv-text)]">
+          <h2 className="mt-1 text-base font-semibold text-[var(--lv-text)]">
             {block.summaryText || text.untitled}
           </h2>
           <span className="mt-2 inline-flex">
@@ -506,45 +556,6 @@ export function ProgressionDetailView({
             onResetAll={() => setEditable((current) => resetAllEditableChords(current))}
             language={language}
           />
-          <EditableProgressionGrid
-            editable={editable}
-            onSelect={(slotId, index) => {
-              setEditable((current) => selectEditableSlot(current, slotId));
-              const slot = editable.slots[index];
-              if (slot) void previewChord(slot.currentChord, slot.id, true);
-            }}
-            onNavigate={(slotId) => setEditable((current) => selectEditableSlot(current, slotId))}
-            onPreviewSlot={(slotId, chord) => {
-              setEditable((current) => selectEditableSlot(current, slotId));
-              void previewChord(chord, slotId, true);
-            }}
-            onInsertAfter={(slotId) => setEditable((current) => (
-              insertSuggestedEditableChordAfter(
-                current,
-                slotId,
-                keySignature,
-                authorReferenceIndex,
-              )
-            ))}
-            keySignature={keySignature}
-            authorReferenceIndex={authorReferenceIndex}
-            language={language}
-            quickEditor={{
-              onPreview: (slotId, chord) => void previewChord(chord, slotId),
-              onApply: (slotId, chord, source, selection) => setEditable((current) => (
-                replaceEditableChord(
-                  selectEditableSlot(current, slotId),
-                  slotId,
-                  chord,
-                  source,
-                  selection,
-                )
-              )),
-              onReset: (slotId) => setEditable((current) => resetEditableChord(current, slotId)),
-              onOpenInspector: (slotId) => setEditable((current) => selectEditableSlot(current, slotId)),
-            }}
-          />
-
           <div className="mt-6 border-t border-[var(--lv-border)] pt-4">
             <ProgressionTagsEditor
               block={editingBlock}

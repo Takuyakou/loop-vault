@@ -183,6 +183,8 @@ describe("ProgressionDetailView", () => {
     expect(previewToggle?.classList.contains("inline-flex")).toBe(true);
     expect(previewToggle?.classList.contains("whitespace-nowrap")).toBe(true);
     expect(container.querySelectorAll("[data-chord-card]")).toHaveLength(1);
+    const cardStage = container.querySelector("[data-progression-card-stage]");
+    expect(cardStage).toBe(container.querySelector(".lv-capture-content")?.firstElementChild);
     expect(container.querySelector("[data-alternative-count]")?.getAttribute("data-alternative-count")).toBe("5");
     expect(container.querySelector("[data-progression-detail-inspector]")?.classList.contains("lv-responsive-inspector-host")).toBe(false);
     expect(container.querySelector(
