@@ -15,7 +15,7 @@ selection, saved-data schema, or `fileVersion`.
 | P5.14-02 save/cache | `feature/p514-02-midi-file-cache` | #346 |
 | P5.14-03 native drag | `feature/p514-03-native-daw-drag` | #347 |
 | P5.14-04 UI | `feature/p514-04-progression-midi-ui` | #348 |
-| P5.14-05 release gates | `test/p514-05-roundtrip-release-gates` | pending |
+| P5.14-05 release gates | `test/p514-05-roundtrip-release-gates` | #349 |
 
 Dependency order is #344 -> #345 -> #346 -> #347 -> #348 -> P5.14-05.
 All PRs remain unmerged.
@@ -72,7 +72,7 @@ The protected blob hashes still match `00-baseline-lock.json`.
 
 ## Windows artifacts
 
-Generated on 2026-07-30 from the final Phase 5.14 source tree:
+Generated on 2026-07-30 from source commit `7b8de34`:
 
 | Artifact | Bytes | SHA-256 |
 |---|---:|---|
