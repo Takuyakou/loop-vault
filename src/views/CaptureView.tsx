@@ -1573,41 +1573,41 @@ function CaptureEmptyState({
 }) {
   return (
     <section
-      className={`grid min-h-[32rem] place-items-center border p-6 text-center transition-colors ${isDraggingMidi ? "border-teal-300 bg-[var(--lv-accent)]/10" : "border-[var(--lv-border)] bg-[var(--lv-bg)]/70"}`}
+      className={`lv-surface lv-surface-primary grid min-h-[28rem] place-items-center p-5 text-center transition-colors sm:p-7 ${isDraggingMidi ? "border-teal-300 bg-[var(--lv-accent-soft)]" : ""}`}
       aria-labelledby="capture-empty-title"
       data-drop-target-state={isDraggingMidi ? "active" : "idle"}
     >
-      <div className="max-w-2xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--lv-accent)]">
+      <div className="w-full max-w-3xl">
+        <p className="lv-section-kicker">
           {copy.capture.eyebrow}
         </p>
-        <h2 id="capture-empty-title" className="mt-3 text-3xl font-semibold">{copy.capture.title}</h2>
-        <p className="mt-3 text-sm leading-6 text-[var(--lv-text-muted)]">{copy.capture.emptyDescription}</p>
-        <div className="mt-6 grid gap-3 text-left sm:grid-cols-3">
+        <h2 id="capture-empty-title" className="mt-2 text-2xl font-bold sm:text-3xl">{copy.capture.title}</h2>
+        <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-[var(--lv-text-secondary)]">{copy.capture.emptyDescription}</p>
+        <div
+          className={`mx-auto mt-6 rounded-[var(--lv-radius-lg)] border-2 border-dashed px-5 py-8 ${isDraggingMidi ? "border-teal-300 bg-[var(--lv-accent-soft)] text-[var(--lv-text)]" : "border-[var(--lv-border-strong)] bg-[var(--lv-bg-subtle)] text-[var(--lv-text-secondary)]"}`}
+          role="status"
+          aria-live="polite"
+        >
+          <FileMusic aria-hidden="true" className="mx-auto mb-3 text-[var(--lv-accent)]" size={28} />
+          <p className="text-lg font-bold">
+            {isDraggingMidi ? copy.capture.dropActive : copy.capture.dropMidi}
+          </p>
+          <p className="mt-2 text-sm text-[var(--lv-text-muted)]">{copy.capture.dropHelp}</p>
+          <Button
+            variant="primary"
+            className="mt-5 min-h-11 px-5"
+            data-testid="capture-choose-midi"
+            onClick={onChooseMidi}
+          >
+            {copy.capture.loadMidi}
+          </Button>
+          <p className="mt-3 text-xs text-[var(--lv-text-muted)]">{copy.capture.supportedFormats}</p>
+        </div>
+        <div className="mt-5 flex flex-col justify-center gap-2 text-left sm:flex-row sm:gap-4">
           <StepCard index="1" text={copy.capture.emptyStepTimeline} />
           <StepCard index="2" text={copy.capture.emptyStepCandidates} />
           <StepCard index="3" text={copy.capture.emptyStepSave} />
         </div>
-        <div
-          className={`mt-7 border border-dashed p-5 ${isDraggingMidi ? "border-teal-300 bg-[var(--lv-accent)]/10 text-teal-50" : "border-[var(--lv-border-strong)] bg-[var(--lv-bg)] text-[var(--lv-text-secondary)]"}`}
-          role="status"
-          aria-live="polite"
-        >
-          <FileMusic aria-hidden="true" className="mx-auto mb-3 text-[var(--lv-accent)]" size={20} />
-          <p className="text-lg font-semibold">
-            {isDraggingMidi ? copy.capture.dropActive : copy.capture.dropMidi}
-          </p>
-          <p className="mt-2 text-sm text-[var(--lv-text-muted)]">{copy.capture.dropHelp}</p>
-        </div>
-        <Button
-          variant="primary"
-          className="mt-7 min-h-11 px-5"
-          data-testid="capture-choose-midi"
-          onClick={onChooseMidi}
-        >
-          {copy.capture.loadMidi}
-        </Button>
-        <p className="mt-3 text-xs text-[var(--lv-text-muted)]">{copy.capture.supportedFormats}</p>
         {status === "analyzing" || progressStage ? (
           <div className="mt-6 border border-cyan-500/30 bg-cyan-500/10 p-4 text-left text-sm text-cyan-100">
             <p className="font-semibold">
@@ -1704,9 +1704,11 @@ function DropOverlay({ copy }: { copy: AppCopy }) {
 
 function StepCard({ index, text }: { index: string; text: string }) {
   return (
-    <div className="border border-[var(--lv-border)] bg-[var(--lv-bg)] p-4">
-      <p className="text-xs font-semibold text-[var(--lv-accent)]">{index}</p>
-      <p className="mt-2 text-sm text-[var(--lv-text-secondary)]">{text}</p>
+    <div className="flex min-w-0 items-center gap-2 rounded-[var(--lv-radius-sm)] px-2 py-1.5">
+      <span className="grid size-6 shrink-0 place-items-center rounded-full border border-[var(--lv-accent)] text-[11px] font-bold text-[var(--lv-accent)]">
+        {index}
+      </span>
+      <p className="min-w-0 text-xs text-[var(--lv-text-secondary)]">{text}</p>
     </div>
   );
 }
