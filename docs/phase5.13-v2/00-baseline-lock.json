@@ -1,0 +1,32 @@
+{
+  "phase": "5.13-v2",
+  "capturedAt": "2026-07-30",
+  "baselineCommit": "e9ae868560e8389f432ca5994ef05b88d4ed3fbd",
+  "baselineTree": "5b43767845ef296bdd795f3ee523e53c8fed4719",
+  "protectedBlobs": {
+    "src/domain/schema.ts": "3e8b9a9ef8ba91631899629cdd9d5527045fa836",
+    "src/domain/midi/analysis.ts": "8a05e530dc583950b89ce090c7aba591793c6c03",
+    "src/store/vaultStore.ts": "1d4c33f64abbd5b90e43161efbbe6938b5df9add"
+  },
+  "contracts": {
+    "fileVersion": 1,
+    "defaultAnalyzerMode": "phase4-v1",
+    "trackedMidiFiles": 0,
+    "trackedLocalEvaluationFiles": 0
+  },
+  "validatedBaseline": {
+    "vitestFiles": 238,
+    "vitestTests": 1845,
+    "rustTests": 24,
+    "playwrightTests": 27,
+    "playwrightProjects": 4,
+    "axeCritical": 0,
+    "axeSerious": 0
+  },
+  "bundle": {
+    "javascriptKb": 1318.86,
+    "javascriptGzipKb": 384.8,
+    "cssKb": 46.71,
+    "cssGzipKb": 10.0
+  }
+}
