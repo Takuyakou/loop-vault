@@ -26,7 +26,7 @@ export function AppShell({ view, setView, openCreate, openLiveMidi, openSettings
   return (
     <header className="flex min-w-0 flex-wrap items-center gap-2 border-b border-[var(--lv-border)] pb-4 sm:flex-nowrap md:gap-3">
       <div className="flex shrink-0 items-center gap-2.5">
-        <img src="/loop-vault-icon.svg" alt="" className="h-8 w-8" />
+        <img src="/loop-vault-icon.svg" alt="" width="32" height="32" className="h-8 w-8" />
         <p className="hidden text-xs uppercase tracking-[0.2em] text-[var(--lv-accent)] xl:block">Loop Vault</p>
       </div>
       <nav className="flex min-w-0 shrink items-center gap-1 text-sm md:gap-2" aria-label={copy.nav.mainNavigation}>

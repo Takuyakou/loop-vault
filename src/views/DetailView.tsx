@@ -593,9 +593,12 @@ export function DetailView({
         <Panel>
           <h2 className="text-xl font-semibold">{copy.detail.references}</h2>
           <form className="mt-3 grid gap-2" onSubmit={addReference}>
-            <input className={inputClass} value={referenceDraft.title} onChange={(event) => setReferenceDraft({ ...referenceDraft, title: event.target.value })} placeholder={copy.detail.placeholders.title} />
-            <input className={inputClass} value={referenceDraft.url ?? ""} onChange={(event) => setReferenceDraft({ ...referenceDraft, url: event.target.value })} placeholder={copy.detail.placeholders.url} />
-            <input className={inputClass} value={referenceDraft.memo ?? ""} onChange={(event) => setReferenceDraft({ ...referenceDraft, memo: event.target.value })} placeholder={copy.detail.placeholders.memo} />
+            <label className="sr-only" htmlFor="reference-title">{copy.detail.placeholders.title}</label>
+            <input id="reference-title" name="reference-title" autoComplete="off" className={inputClass} value={referenceDraft.title} onChange={(event) => setReferenceDraft({ ...referenceDraft, title: event.target.value })} placeholder={copy.detail.placeholders.title} />
+            <label className="sr-only" htmlFor="reference-url">{copy.detail.placeholders.url}</label>
+            <input id="reference-url" name="reference-url" inputMode="url" autoComplete="url" className={inputClass} value={referenceDraft.url ?? ""} onChange={(event) => setReferenceDraft({ ...referenceDraft, url: event.target.value })} placeholder={copy.detail.placeholders.url} />
+            <label className="sr-only" htmlFor="reference-memo">{copy.detail.placeholders.memo}</label>
+            <input id="reference-memo" name="reference-memo" autoComplete="off" className={inputClass} value={referenceDraft.memo ?? ""} onChange={(event) => setReferenceDraft({ ...referenceDraft, memo: event.target.value })} placeholder={copy.detail.placeholders.memo} />
             <button className="rounded bg-[var(--lv-surface-raised)] px-3 py-2 text-sm" type="submit">{copy.detail.addReference}</button>
           </form>
           <div className="mt-4 space-y-2">
@@ -619,16 +622,19 @@ export function DetailView({
           <h2 className="text-xl font-semibold">{copy.detail.assets}</h2>
           <form className="mt-3 grid gap-2" onSubmit={addAsset}>
             <div className="grid gap-2 sm:grid-cols-[0.4fr_1fr_auto]">
-              <select className={inputClass} value={assetDraft.type} onChange={(event) => setAssetDraft({ ...assetDraft, type: event.target.value as AssetType })}>
+              <label className="sr-only" htmlFor="asset-type">{copy.detail.assetType}</label>
+              <select id="asset-type" name="asset-type" className={inputClass} value={assetDraft.type} onChange={(event) => setAssetDraft({ ...assetDraft, type: event.target.value as AssetType })}>
                 <option value="flp">FLP</option>
                 <option value="midi">MIDI</option>
                 <option value="audio">Audio</option>
                 <option value="other">Other</option>
               </select>
-              <input className={inputClass} value={assetDraft.path ?? ""} onChange={(event) => setAssetDraft({ ...assetDraft, path: event.target.value })} placeholder={copy.detail.absolutePath} />
+              <label className="sr-only" htmlFor="asset-path">{copy.detail.absolutePath}</label>
+              <input id="asset-path" name="asset-path" autoComplete="off" className={inputClass} value={assetDraft.path ?? ""} onChange={(event) => setAssetDraft({ ...assetDraft, path: event.target.value })} placeholder={copy.detail.absolutePath} />
               <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" type="button" onClick={() => void chooseAssetPath()}>{copy.common.choose}</button>
             </div>
-            <input className={inputClass} value={assetDraft.memo ?? ""} onChange={(event) => setAssetDraft({ ...assetDraft, memo: event.target.value })} placeholder={copy.detail.placeholders.memo} />
+            <label className="sr-only" htmlFor="asset-memo">{copy.detail.placeholders.memo}</label>
+            <input id="asset-memo" name="asset-memo" autoComplete="off" className={inputClass} value={assetDraft.memo ?? ""} onChange={(event) => setAssetDraft({ ...assetDraft, memo: event.target.value })} placeholder={copy.detail.placeholders.memo} />
             <button className="rounded bg-[var(--lv-surface-raised)] px-3 py-2 text-sm" type="submit">{copy.detail.addAsset}</button>
           </form>
           <div className="mt-4 space-y-2">

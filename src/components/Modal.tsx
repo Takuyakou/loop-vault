@@ -144,7 +144,7 @@ export function Modal({
   const modal = (
     <div
       ref={backdropRef}
-      className={`fixed inset-0 ${layerClassName} grid place-items-center overflow-y-auto bg-black/70 px-4 py-6`}
+      className={`fixed inset-0 ${layerClassName} grid place-items-center overflow-y-auto overscroll-contain bg-black/70 px-4 py-6`}
       data-modal-backdrop
       aria-hidden={isTop ? undefined : "true"}
       onMouseDown={(event) => {

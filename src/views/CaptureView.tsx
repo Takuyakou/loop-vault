@@ -146,6 +146,7 @@ import { CaptureEditHistoryPanel } from "../components/CaptureEditHistoryPanel";
 import { DraftBoundaryHandles } from "../components/DraftBoundaryHandles";
 import { CaptureDraftSessionBar } from "../components/CaptureDraftSessionBar";
 import { PreAnalysisWorkspace } from "../components/pre-analysis/PreAnalysisWorkspace";
+import { preferredScrollBehavior } from "../ui/motion";
 import { cutDraftRangeAtEvent } from "../domain/midi/draftRangeEditing";
 import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
 import { ProgressionEditSummary } from "../components/progression-editing/ProgressionEditSummary";
@@ -314,7 +315,7 @@ export function CaptureView(props: CaptureViewProps) {
   function focusCandidateCard(candidateId: string) {
     const target = [...document.querySelectorAll<HTMLButtonElement>("[data-candidate-toggle]")]
       .find((button) => button.dataset.candidateId === candidateId);
-    target?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+    target?.scrollIntoView?.({ behavior: preferredScrollBehavior(), block: "start" });
     target?.focus();
   }
 
@@ -1070,7 +1071,7 @@ export function CaptureView(props: CaptureViewProps) {
       ? document.querySelector<HTMLElement>("[data-testid='manual-candidate-editor']")
       : [...document.querySelectorAll<HTMLElement>("[data-candidate-toggle]")]
         .find((element) => element.dataset.candidateId === candidateId);
-    target?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+    target?.scrollIntoView?.({ behavior: preferredScrollBehavior(), block: "start" });
     target?.focus();
   }
 
@@ -1719,7 +1720,7 @@ export function TimelineDetails({
     const target = detailsRef.current?.querySelector<HTMLElement>(
       `[data-progression-bar="${scrollToBar}"]`,
     );
-    target?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+    target?.scrollIntoView?.({ behavior: preferredScrollBehavior(), block: "center" });
     const chordIndex = result.fullTimeline.findIndex((chord) => chord.bar >= scrollToBar);
     if (chordIndex >= 0) setSelectedChordIndex(chordIndex);
   }, [open, result.fullTimeline, scrollToBar]);
