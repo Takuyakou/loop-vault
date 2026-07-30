@@ -362,7 +362,7 @@ export function ProgressionDetailView({
   const bars = block.lengthBars ?? progressionBarCount(block);
 
   return (
-    <div className="lv-capture-content py-5">
+    <div className="lv-capture-content py-5" data-progression-detail-view>
       <section
         className="border-b border-[var(--lv-border)] pb-4"
         aria-label={text.progression}

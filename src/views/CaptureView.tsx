@@ -1588,7 +1588,7 @@ function CaptureEmptyState({
           role="status"
           aria-live="polite"
         >
-          <FileMusic aria-hidden="true" className="mx-auto mb-3 text-[var(--lv-accent)]" size={28} />
+          <FileMusic aria-hidden="true" className="mx-auto mb-3 text-[var(--lv-accent)]" size={20} />
           <p className="text-lg font-bold">
             {isDraggingMidi ? copy.capture.dropActive : copy.capture.dropMidi}
           </p>

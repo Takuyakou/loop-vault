@@ -102,7 +102,8 @@ test("保存、Vault検索、詳細、Dojo開始をキーボードで辿れる",
     .getByRole("button", { name: /進行を開く|Open progression/ });
   await open.focus();
   await page.keyboard.press("Enter");
-  const practice = page.getByRole("button", { name: /練習する|Practice/ });
+  const practice = page.locator("[data-progression-detail-view]")
+    .getByRole("button", { name: /練習する|Practice/ });
   await practice.focus();
   await page.keyboard.press("Enter");
   const start = page.getByTestId("practice-start");

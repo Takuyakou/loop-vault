@@ -134,7 +134,7 @@ function HistoryRow({
   return (
     <article className="grid gap-3 border-b border-[var(--lv-border)] bg-[var(--lv-surface)] p-3 last:border-b-0 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center">
       <span className="grid h-9 w-9 place-items-center border border-[var(--lv-border-strong)] text-[var(--lv-accent)]">
-        <Icon aria-hidden="true" size={17} />
+        <Icon aria-hidden="true" size={16} />
       </span>
       <div className="min-w-0">
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
@@ -145,7 +145,7 @@ function HistoryRow({
         <p className="mt-1 truncate text-xs text-[var(--lv-text-muted)]">{text.source}: {event.source}</p>
       </div>
       <Button variant="ghost" size="sm" onClick={onOpen}>
-        <ExternalLink aria-hidden="true" size={15} />
+        <ExternalLink aria-hidden="true" size={16} />
         {text.open}
       </Button>
     </article>
