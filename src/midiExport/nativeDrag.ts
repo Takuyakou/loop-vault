@@ -31,6 +31,13 @@ export async function startProgressionMidiDrag(
   dependencies: NativeProgressionMidiDragDependencies = defaultDependencies,
 ): Promise<NativeProgressionMidiDragResult> {
   const prepared = await dependencies.prepare(result);
+  return startPreparedProgressionMidiDrag(prepared, dependencies);
+}
+
+export function startPreparedProgressionMidiDrag(
+  prepared: Pick<PreparedProgressionMidiDragFile, "dragToken">,
+  dependencies: Pick<NativeProgressionMidiDragDependencies, "invoke"> = defaultDependencies,
+): Promise<NativeProgressionMidiDragResult> {
   return dependencies.invoke("start_progression_midi_drag", {
     dragToken: prepared.dragToken,
   });

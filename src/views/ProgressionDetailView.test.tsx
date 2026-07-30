@@ -83,6 +83,55 @@ function practicedBlock(clearedOnLocalDate: string): SavedProgressionBlock {
 }
 
 describe("ProgressionDetailView", () => {
+  it("keeps chord cards above the enabled MIDI control and exports the current progression", async () => {
+    const idea = makeIdea({
+      id: "idea-midi-export",
+      bpm: 92,
+      progressionBlocks: [block],
+    });
+    const save = vi.fn().mockResolvedValue({ status: "saved", bytesLength: 64 });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(
+        <ProgressionDetailView
+          idea={idea}
+          block={block}
+          updateProgressionBlock={vi.fn(() => true)}
+          duplicateProgressionBlock={vi.fn()}
+          openProgression={vi.fn()}
+          openIdea={vi.fn()}
+          openVault={vi.fn()}
+          requestDelete={vi.fn()}
+          setToast={vi.fn()}
+          copy={appCopy.ja}
+          language="ja"
+          midiExportEnabled
+          midiExportActions={{
+            save,
+            prepare: vi.fn(),
+            startDrag: vi.fn(),
+          }}
+        />,
+      );
+    });
+
+    const chordStage = container.querySelector("[data-progression-card-stage]")!;
+    const midiControl = container.querySelector("[data-midi-export-control]")!;
+    expect(
+      chordStage.compareDocumentPosition(midiControl)
+      & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).not.toBe(0);
+    expect(midiControl.textContent).toContain("MIDI");
+    await act(async () => {
+      midiControl.querySelector<HTMLButtonElement>("button")!.click();
+    });
+    expect(save).toHaveBeenCalledOnce();
+    expect(save.mock.calls[0]![0].events).toHaveLength(block.chords.length);
+    await act(async () => root.unmount());
+  });
+
   it("renders a 100-chord progression without dropping chord cards", async () => {
     const longBlock: SavedProgressionBlock = {
       ...block,
