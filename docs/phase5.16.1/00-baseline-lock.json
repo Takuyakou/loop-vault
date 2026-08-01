@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 1,
+  "phase": "5.16.1-00",
+  "capturedAt": "2026-08-02T00:44:57.7586149+09:00",
+  "activeInstruction": "docs/phase5.16/stages/phase5.16.1-degree-echo-core.md",
+  "sourceControl": {
+    "branch": "docs/p5161-00-audit",
+    "commit": "97b03f49542b8eac6b95e8e1c1fb657731d64223",
+    "parentCommit": "41f50c0faafe35e6dbe576be4587b41e8a860086",
+    "safeBaseDescription": "Phase 5.15 hardening commit in an isolated Phase 5.16.1 worktree",
+    "defaultRemoteBranch": "origin/master",
+    "defaultRemoteCommit": "2eb36b63a064c4ee44e0d071836b2d722f534502",
+    "worktreeWasCleanAtStart": true,
+    "mainMerged": false
+  },
+  "repositoryInventory": {
+    "inventoryCommit": "97b03f49542b8eac6b95e8e1c1fb657731d64223",
+    "trackedFiles": 1397,
+    "sourceUnitTestFiles": 226,
+    "e2eSpecFiles": 9,
+    "rustSourceFiles": 19,
+    "trackedMidiFiles": 0,
+    "trackedLocalEvaluationFiles": 0,
+    "vaultFileVersion": 1,
+    "vaultSchemaMustRemainUnchanged": true,
+    "inventoryCommands": {
+      "sourceUnitTestFiles": "git ls-files src | Where-Object { $_ -match '\\.test\\.tsx?$' }",
+      "e2eSpecFiles": "git ls-files e2e | Where-Object { $_ -match '\\.spec\\.ts$' }",
+      "trackedMidiFiles": "git ls-files '*.mid' '*.midi'",
+      "trackedLocalEvaluationFiles": "git ls-files '.local-evaluation/**'"
+    }
+  },
+  "toolchainObserved": {
+    "node": "24.14.1",
+    "npm": "11.11.0",
+    "rustc": "1.96.1",
+    "cargo": "1.96.1",
+    "git": "2.53.0.windows.2"
+  },
+  "instructionFiles": [
+    {
+      "path": "docs/phase5.16/PLAN.md",
+      "bytes": 6090,
+      "sha256": "cf335d6e6f657bc0a608a0950b0e6c2c46fcf6d10872115a80b52314bff83cce"
+    },
+    {
+      "path": "docs/phase5.16/README.md",
+      "bytes": 1440,
+      "sha256": "e1cf457672fd9f2e79e2908871455b9363285db43f435ea9f716071e470a6f03"
+    },
+    {
+      "path": "docs/phase5.16/contracts/01-honesty-scope-and-autonomy.md",
+      "bytes": 2352,
+      "sha256": "8f306c9ecbfd28bc5eb2fb034d0b468bfc1df4d8ec8035060b702eda4eb43eea"
+    },
+    {
+      "path": "docs/phase5.16/contracts/02-practice-domain-state-and-storage.md",
+      "bytes": 3865,
+      "sha256": "0af2d3c56eab950241874939a9946e7607d10b78567c3199c77361b98764cea5"
+    },
+    {
+      "path": "docs/phase5.16/contracts/03-playback-singing-hints-and-timing.md",
+      "bytes": 2835,
+      "sha256": "7f2b782e69100edba4d36572fa7d37c25e880e3b47f24918c11130edd1d2b151"
+    },
+    {
+      "path": "docs/phase5.16/contracts/04-shared-ux-home-history-and-accessibility.md",
+      "bytes": 3274,
+      "sha256": "57ef942a9ecedbfde3d6d1bbfcd7b972e7442df57b283eefcf5c6041b543d6cb"
+    },
+    {
+      "path": "docs/phase5.16/reference/phase5.16-bass-practice-ui-mock.html",
+      "bytes": 59623,
+      "sha256": "090c0de546519755c5d4f65a75e24f5cf63083df9293aa04b3947749e1acfd97"
+    },
+    {
+      "path": "docs/phase5.16/stages/phase5.16.1-degree-echo-core.md",
+      "bytes": 8940,
+      "sha256": "9d216849dc5b426de42c8dc15a981eecc3066a0999a5253c69f124c0d8cd57ba"
+    },
+    {
+      "path": "docs/phase5.16/stages/phase5.16.2-rhythm-echo.md",
+      "bytes": 5168,
+      "sha256": "68a32811589230cfec86b0afd513769ad50a856b8c100a5a4f399a2d2a6fdf56"
+    },
+    {
+      "path": "docs/phase5.16/stages/phase5.16.3-bassline-vault.md",
+      "bytes": 6318,
+      "sha256": "01249e29e0db6de8b80e44abe9260f4940cc67b6f8cd4e868fa7e352268b6a37"
+    }
+  ],
+  "protectedSurfaceHashes": {
+    "package-lock.json": "0ab5c348c4c8cd742752f3dd18371d94f20aac1a595c8a8cb624ba4a891cb7d1",
+    "package.json": "ed39fd9beba74ad94a61b573ead3586f65daac350b5f13d3ff9d1c923d6f50ab",
+    "src/App.tsx": "89f8570fe055b05a375e2ffd1c7e1b18a1dcb8e3aad1099b12f97c6fb6ce6686",
+    "src/components/AppShell.tsx": "735f699e4f70cc909c7010bd1420cac57daacd1ff2a8037331f27a666aa754b7",
+    "src/views/PracticeView.tsx": "8111bba952e1f37ecc2cfd940b9b4a3dbb99402e8ddc8db1e61d2bc629bdaa82",
+    "src/views/HomeView.tsx": "921aed977fb8801aaee471028dff7ba1d266a6761a3e1eb9b3277556b94226c5",
+    "src/views/HistoryView.tsx": "697c617fa1274ff23d39d08e8f6ec7c55cb563f94b7db42a06e37aad23156cfc",
+    "src/audio/playbackController.ts": "6db1f3a3a112b54a54924cb78a1d481ad4cb83846767ed428fe4ac92d5c50703",
+    "src/audio/chordPreview.ts": "84f6e6f5cfb9fcf0be09328e51dfcee318edba4afbd7d2281746c15252df8eff",
+    "src/audio/masterVolume.ts": "cd5b90605e31aef24932d08df0a835bd0bf21ca0a092ace23f668599a019f0c3",
+    "src/domain/repository.ts": "9d048bef5ddecd64b5c99cc1087d2ad4ef34bd77304d1b78e8407578430910e2",
+    "src/domain/schema.ts": "7770a544139f57579a5079e423ddc0b9d4c93e881d284f9e25bc18be9caf3137",
+    "src/styles/tokens.css": "fd83b179dc3b71b00d6004d6012541f40741f79c4cb8442daa0560300f5ae503",
+    "src/styles.css": "e47329b15da5ce3304e11f23536a5b2338e00f2231a087ef311adfaa659edb20",
+    "playwright.config.ts": "3937c971e28271f1154db919946bb96ea5158379b1c86cc1a4ad90705a7d6082",
+    "vite.config.ts": "b8561116b14b258fe22e6cb9739fcd2de0b8579aa7b45ce26b4cb865dcb7f1e9"
+  },
+  "featureFlagBaseline": {
+    "bassPractice": {
+      "implemented": false,
+      "requiredDefaultForImplementation": false,
+      "offContract": "No Bass Practice subnavigation, Home card, History summary, storage initialization, or audio side effect"
+    },
+    "progressionMidiExport": {
+      "storageKey": "loop-vault:progression-midi-export-enabled:v1",
+      "defaultEnabled": true
+    },
+    "analysisProfile": {
+      "storageKey": "loopvault.accuracyFirstFeatures",
+      "defaultProfile": "stable",
+      "analyzerMode": "phase4-v1",
+      "defaultFlags": {
+        "bassCompanionCandidates": true,
+        "melodyContaminationFilter": false,
+        "enableObservedFlatNineDominantCandidate": true,
+        "enableAccuracyCandidateUnion": false
+      }
+    },
+    "analysisFeedbackDefaultEnabled": true
+  },
+  "requiredGateCommands": {
+    "targetedProtectedSurface": [
+      "npx vitest run src/components/AppShell.test.tsx src/views/PracticeView.test.tsx src/views/HomeView.test.tsx src/views/HistoryView.test.tsx src/audio/playbackController.test.ts src/audio/masterVolume.test.ts src/domain/repository.test.ts src/domain/schema.test.ts src/midiExport/featureFlag.test.ts",
+      "npx playwright test e2e/keyboard.spec.ts e2e/responsive.spec.ts e2e/reduced-motion.spec.ts e2e/accessibility.spec.ts e2e/visual.spec.ts"
+    ],
+    "release": [
+      "npm run lint",
+      "npx tsc --noEmit",
+      "npm run typecheck:e2e",
+      "npm test",
+      "cargo test --manifest-path src-tauri/Cargo.toml",
+      "npx playwright test",
+      "npm run build",
+      "npm run tauri build",
+      "git diff --check"
+    ],
+    "repositorySafety": [
+      "git ls-files '*.mid' '*.midi'",
+      "git ls-files '.local-evaluation/**'",
+      "git status --short --branch"
+    ]
+  },
+  "auditExecution": {
+    "analysisType": "read-only structural audit",
+    "testsExecuted": [],
+    "reason": "P5.16.1-00 permits documentation changes only; executable gates are locked here for the implementation and final release stages.",
+    "instructionCopyVerification": "10 files matched by normalized relative path, byte size, and SHA-256"
+  },
+  "forbiddenScope": [
+    "Rhythm Echo",
+    "Bassline Echo",
+    "Vault source",
+    "microphone capture",
+    "DI recording",
+    "automatic scoring",
+    "Vault schema or fileVersion change",
+    "Analyzer change",
+    "Phase 5.17"
+  ]
+}
