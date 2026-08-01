@@ -36,16 +36,26 @@ export interface DegreePracticeSessionOptions {
   readonly timer?: DegreePracticeTimer;
 }
 
+export interface DegreePracticeSessionSnapshot {
+  readonly revision: number;
+  readonly state: DegreePracticeState;
+  readonly exercise: PracticeExercise;
+  readonly transferPlaybackActive: boolean;
+}
+
 export class DegreePracticeSession {
-  private readonly exercise: PracticeExercise;
+  private exercise: PracticeExercise;
   private readonly controller: PlaybackController;
   private readonly clock: DegreePracticeClock;
   private readonly timer: DegreePracticeTimer;
-  private readonly source: PlayingSource;
+  private source: PlayingSource;
   private readonly listeners = new Set<() => void>();
   private state: DegreePracticeState;
+  private snapshot: DegreePracticeSessionSnapshot;
   private dwellTimer: unknown;
   private playbackGeneration = 0;
+  private revision = 0;
+  private transferPlaybackActive = false;
   private disposed = false;
 
   constructor(options: DegreePracticeSessionOptions) {
@@ -65,6 +75,7 @@ export class DegreePracticeSession {
       ),
       maximumHintLevel: options.exercise.difficulty.hintAvailability,
     });
+    this.snapshot = this.createSnapshot();
   }
 
   getState(): DegreePracticeState {
@@ -77,6 +88,10 @@ export class DegreePracticeSession {
 
   getExercise(): PracticeExercise {
     return this.exercise;
+  }
+
+  getSnapshot(): DegreePracticeSessionSnapshot {
+    return this.snapshot;
   }
 
   subscribe(listener: () => void): () => void {
@@ -155,6 +170,75 @@ export class DegreePracticeSession {
 
   nextHint(): PracticeTransitionResult {
     return this.transition({ type: "NEXT_HINT" });
+  }
+
+  beginTransfer(exercise: PracticeExercise): PracticeTransitionResult {
+    if (this.disposed || this.state.status !== "transfer-offer") {
+      return applicationFailure(
+        "invalid-transition",
+        `Transfer is unavailable while practice is ${this.state.status}.`,
+      );
+    }
+    if (!isValidTransferExercise(this.exercise, exercise)) {
+      return applicationFailure(
+        "invalid-transition",
+        "Transfer exercise must use a different key with the same degree and rhythm sequence.",
+      );
+    }
+    this.stopOwnedPlayback();
+    const result = reduceDegreePractice(this.state, { type: "START_TRANSFER" });
+    if (!result.ok) return result;
+    this.state = result.state;
+    this.exercise = exercise;
+    this.source = Object.freeze({
+      kind: "practice",
+      id: `degree-echo:${exercise.id}`,
+    });
+    this.notify();
+    return result;
+  }
+
+  async playTransferReference(): Promise<PracticeTransitionResult> {
+    if (this.disposed || this.state.status !== "transfer") {
+      return applicationFailure(
+        "invalid-transition",
+        `Transfer reference is unavailable while practice is ${this.state.status}.`,
+      );
+    }
+    const generation = this.nextPlaybackGeneration();
+    this.transferPlaybackActive = true;
+    this.notify();
+    try {
+      await this.controller.play(
+        this.source,
+        degreeTargetPlaybackRequest(this.exercise),
+        {
+          onEnded: (reason) => {
+            if (this.disposed || generation !== this.playbackGeneration) return;
+            this.transferPlaybackActive = false;
+            if (reason !== "completed") this.playbackGeneration += 1;
+            this.notify();
+          },
+        },
+      );
+    } catch (error) {
+      if (!this.disposed && generation === this.playbackGeneration) {
+        this.transferPlaybackActive = false;
+        this.notify();
+      }
+      throw error;
+    }
+    return { ok: true, state: this.state };
+  }
+
+  completeTransferUserAttempt(): PracticeTransitionResult {
+    if (this.transferPlaybackActive) {
+      return applicationFailure(
+        "invalid-transition",
+        "Stop the Transfer reference before completing the user attempt.",
+      );
+    }
+    return this.transition({ type: "COMPLETE_TRANSFER" });
   }
 
   isSingingCompletionAvailable(): boolean {
@@ -279,6 +363,7 @@ export class DegreePracticeSession {
     if (this.disposed) return;
     this.disposed = true;
     this.playbackGeneration += 1;
+    this.transferPlaybackActive = false;
     this.clearDwellTimer();
     this.stopOwnedPlayback();
     this.listeners.clear();
@@ -291,7 +376,18 @@ export class DegreePracticeSession {
   }
 
   private notify(): void {
+    this.revision += 1;
+    this.snapshot = this.createSnapshot();
     for (const listener of this.listeners) listener();
+  }
+
+  private createSnapshot(): DegreePracticeSessionSnapshot {
+    return Object.freeze({
+      revision: this.revision,
+      state: this.state,
+      exercise: this.exercise,
+      transferPlaybackActive: this.transferPlaybackActive,
+    });
   }
 }
 
@@ -311,5 +407,25 @@ function applicationFailure(
   return Object.freeze({
     ok: false,
     error: Object.freeze({ code, message }),
+  });
+}
+
+function isValidTransferExercise(
+  source: PracticeExercise,
+  target: PracticeExercise,
+): boolean {
+  if (
+    source.tonalContext.key === target.tonalContext.key
+    || source.tonalContext.scale !== target.tonalContext.scale
+    || source.targetEvents.length !== target.targetEvents.length
+  ) return false;
+  return source.targetEvents.every((event, index) => {
+    const candidate = target.targetEvents[index];
+    return candidate.degree.degree === event.degree.degree
+      && candidate.degree.accidental === event.degree.accidental
+      && candidate.degree.octave === event.degree.octave
+      && candidate.startBeat === event.startBeat
+      && candidate.durationBeats === event.durationBeats
+      && candidate.velocity === event.velocity;
   });
 }

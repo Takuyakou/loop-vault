@@ -5,6 +5,7 @@ import {
   type PlaybackRequest,
 } from "../../../audio/playbackController";
 import type { PreviewLifecycleCallbacks } from "../../../audio/chordPreview";
+import { createCompletedAttempt, deriveTransferExercise } from "../domain";
 import { generatedExercise } from "../domain/testFixtures";
 import {
   DegreePracticeSession,
@@ -268,11 +269,15 @@ describe("DegreePracticeSession", () => {
     await session.startListen();
     lifecycles[0].onEnded?.("completed");
     session.beginSinging();
+    const beforeDeadline = session.getSnapshot();
     listener.mockClear();
 
     advance(1_600);
     fireTimer();
     expect(listener).toHaveBeenCalledOnce();
+    expect(session.getSnapshot()).not.toBe(beforeDeadline);
+    expect(session.getSnapshot().revision).toBeGreaterThan(beforeDeadline.revision);
+    expect(session.getSnapshot().state).toBe(beforeDeadline.state);
     expect(session.completeSinging()).toEqual(expect.objectContaining({
       ok: true,
       state: expect.objectContaining({
@@ -281,6 +286,61 @@ describe("DegreePracticeSession", () => {
         singSkipped: false,
       }),
     }));
+  });
+
+  it("binds Transfer playback to the actual different-key exercise before returning to review", async () => {
+    const { advance, lifecycles, requests, session } = harness();
+    const sourceExercise = session.getExercise();
+    session.configure();
+    await session.startListen();
+    lifecycles[0].onEnded?.("completed");
+    session.beginSinging();
+    advance(1_600);
+    session.completeSinging();
+    session.transitionAction({ type: "START_PLAY" });
+    session.transitionAction({ type: "COMPLETE_PLAY" });
+    session.transitionAction({ type: "RATE", rating: "good" });
+    const attempt = createCompletedAttempt({
+      id: "application-transfer-source",
+      sessionId: "application-transfer-session",
+      startedAt: "2026-01-01T00:00:00.000Z",
+      completedAt: "2026-01-01T00:01:00.000Z",
+      listenCount: 1,
+      hintLevel: 0,
+      singSkipped: false,
+      singGateCompleted: true,
+      rating: "good",
+      exercise: sourceExercise,
+    });
+    const transfer = deriveTransferExercise(attempt, { targetKey: "G" });
+    expect(transfer.ok).toBe(true);
+    if (!transfer.ok) return;
+
+    expect(session.beginTransfer(transfer.exercise)).toEqual(expect.objectContaining({
+      ok: true,
+      state: expect.objectContaining({ status: "transfer" }),
+    }));
+    expect(session.getSnapshot().exercise.tonalContext.key).toBe("G");
+    expect(session.getSnapshot().exercise.targetEvents.map((event) => event.degree))
+      .toEqual(sourceExercise.targetEvents.map((event) => event.degree));
+    await session.playTransferReference();
+    expect(session.getSnapshot().transferPlaybackActive).toBe(true);
+    expect(requests[requests.length - 1]).toMatchObject({ type: "notes", sound: "clean-bass" });
+    lifecycles[lifecycles.length - 1]?.onEnded?.("completed");
+    expect(session.getSnapshot()).toMatchObject({
+      transferPlaybackActive: false,
+      state: { status: "transfer" },
+      exercise: { tonalContext: { key: "G" } },
+    });
+    expect(session.completeTransferUserAttempt()).toEqual(expect.objectContaining({
+      ok: true,
+      state: expect.objectContaining({ status: "review" }),
+    }));
+    expect(session.getSnapshot()).toMatchObject({
+      transferPlaybackActive: false,
+      state: { status: "review", rating: undefined, mainIssue: undefined },
+      exercise: { tonalContext: { key: "G" } },
+    });
   });
 
   it("plays octave references without changing the answer or workflow state", async () => {

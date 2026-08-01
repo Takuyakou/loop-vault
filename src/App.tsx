@@ -1,7 +1,16 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { readFile } from "@tauri-apps/plugin-fs";
-import { FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import {
+  FormEvent,
+  lazy,
+  ReactNode,
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useStore } from "zustand";
 import {
   playbackController,
@@ -24,6 +33,12 @@ import { HistoryView } from "./views/HistoryView";
 import { VaultView } from "./views/VaultView";
 import { ProgressionDetailView } from "./views/ProgressionDetailView";
 import { PracticeView } from "./views/PracticeView";
+import { isBassPracticeDegreeEchoEnabled } from "./features/bass-practice/application/featureFlag";
+import { BassPracticeHomeCard } from "./features/bass-practice/ui/BassPracticeHomeCard";
+import {
+  PracticeWorkspace,
+  type PracticeWorkspaceMode,
+} from "./features/bass-practice/ui/PracticeWorkspace";
 import { Toast } from "./components/Toast";
 import { LiveMidiMiniMode } from "./components/LiveMidiMiniMode";
 import { PreviewSoundProvider } from "./components/PreviewSoundProvider";
@@ -69,6 +84,10 @@ import {
 
 type View = AppView;
 const pipeline: Status[] = ["idea", "loop", "arrange", "mix", "done"];
+const BassPracticeView = lazy(async () => {
+  const module = await import("./features/bass-practice/ui/BassPracticeView");
+  return { default: module.BassPracticeView };
+});
 
 export function errorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error) return error.message;
@@ -113,6 +132,8 @@ function App() {
   const clearAnalysis = useStore(defaultVaultStore, (state) => state.clearAnalysis);
 
   const [view, setView] = useState<View>("home");
+  const [bassPracticeEnabled] = useState(isBassPracticeDegreeEchoEnabled);
+  const [practiceMode, setPracticeMode] = useState<PracticeWorkspaceMode>("chord-dojo");
   const [selectedId, setSelectedId] = useState<string>();
   const [selectedProgression, setSelectedProgression] = useState<{ ideaId: string; blockId: string }>();
   const [practiceTarget, setPracticeTarget] = useState<{ ideaId: string; blockId: string }>();
@@ -299,6 +320,14 @@ function App() {
 
   function openPractice(ideaId: string, blockId: string) {
     setPracticeTarget({ ideaId, blockId });
+    setPracticeMode("chord-dojo");
+    setView("practice");
+  }
+
+  function openBassPractice() {
+    if (!bassPracticeEnabled) return;
+    setPracticeTarget(undefined);
+    setPracticeMode("bass-practice");
     setView("practice");
   }
 
@@ -480,6 +509,9 @@ async function analyzeMidiPath(path: string) {
             <QuarantineNotice count={quarantine.length} copy={copy} />
             {view === "home" ? (
               <HomeView
+                bassPracticeCard={bassPracticeEnabled ? (
+                  <BassPracticeHomeCard onOpen={openBassPractice} />
+                ) : undefined}
                 ideas={visibleIdeas}
                 monthlyGoal={settings.monthlyGoal}
                 copy={copy}
@@ -586,18 +618,44 @@ async function analyzeMidiPath(path: string) {
               />
             ) : null}
             {view === "practice" ? (
-              <PracticeView
-                ideas={visibleIdeas}
-                initialTarget={practiceTarget}
-                language={language}
-                updateProgressionBlock={updateProgressionBlock}
-                openProgression={openProgression}
-                openSettings={() => {
-                  setSettingsOpen(true);
-                  void refreshBackups();
-                }}
-                setToast={setToast}
-              />
+              bassPracticeEnabled ? (
+                <PracticeWorkspace
+                  mode={practiceMode}
+                  onModeChange={setPracticeMode}
+                  bassPractice={(
+                    <Suspense fallback={<p role="status" className="py-8 text-sm text-[var(--lv-text-secondary)]">Degree Echoを読み込んでいます…</p>}>
+                      <BassPracticeView />
+                    </Suspense>
+                  )}
+                  chordDojo={(
+                    <PracticeView
+                      ideas={visibleIdeas}
+                      initialTarget={practiceTarget}
+                      language={language}
+                      updateProgressionBlock={updateProgressionBlock}
+                      openProgression={openProgression}
+                      openSettings={() => {
+                        setSettingsOpen(true);
+                        void refreshBackups();
+                      }}
+                      setToast={setToast}
+                    />
+                  )}
+                />
+              ) : (
+                <PracticeView
+                  ideas={visibleIdeas}
+                  initialTarget={practiceTarget}
+                  language={language}
+                  updateProgressionBlock={updateProgressionBlock}
+                  openProgression={openProgression}
+                  openSettings={() => {
+                    setSettingsOpen(true);
+                    void refreshBackups();
+                  }}
+                  setToast={setToast}
+                />
+              )
             ) : null}
             {view === "history" ? (
               <HistoryView
