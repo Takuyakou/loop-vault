@@ -487,6 +487,30 @@ async function withOperationLock<T>(
   }
 }
 
+/**
+ * Run another P5.15 artifact transaction under the same hardened operation
+ * lock used by the Stage 00 report writer.  Callers get the verified real
+ * report root only after stale-lock recovery and Stage 00 transaction cleanup
+ * have completed.
+ */
+export async function withPhase515ArtifactOperationLock<T>(
+  repositoryRoot: string,
+  task: (realOutputRoot: string) => Promise<T>,
+): Promise<T> {
+  const outputRoot = resolve(repositoryRoot, "docs/phase5.15");
+  const realOutputRoot = await assertSafePhase515ReportRoot(
+    repositoryRoot,
+    outputRoot,
+  );
+  return withOperationLock(realOutputRoot, async () => {
+    await recoverReportTransactionLocked(realOutputRoot);
+    await cleanupOrphanedControlSnapshots(realOutputRoot);
+    await cleanupOrphanedTransactionFiles(realOutputRoot);
+    await assertSafePhase515ReportRoot(repositoryRoot, outputRoot);
+    return task(realOutputRoot);
+  });
+}
+
 async function acquireOperationLock(
   outputRoot: string,
   ownerPath: string,

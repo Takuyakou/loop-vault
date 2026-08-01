@@ -1,0 +1,1892 @@
+{
+  "schemaVersion": 2,
+  "phase": "P5.15-01",
+  "purpose": "bind-the-frozen-stage00-safe-corpus-without-analyzer-recomputation",
+  "sourceLocks": {
+    "baselineLockSha256": "3f126e3ab04dedbd46c2bb859992877875c20378df6e2ca79deb48b55a277633",
+    "dataInventorySha256": "1cdeb5078a5b10f0466951a474279b523b06fe7170abcddbcba651058108360d",
+    "partitionLockSha256": "66bf45e8afd412d11f71ebe7b221d3d2121a7ad71a8c8bf20c793b163d9a0adb",
+    "runtimeBaselineSha256": "38256b5bfac5e244264f497ed7250842c7d33c39973f3e280a486dc6edf0aa46"
+  },
+  "baseline": {
+    "repositoryCommit": "2eb36b63a064c4ee44e0d071836b2d722f534502",
+    "analyzerConfigSha256": "881d0784d051251179fb47afbfb7c0a79586ec7bebaf59405464f9913eeb837d",
+    "featureFlagState": {
+      "enableExactNoteEvidenceDedup": false,
+      "enableEventLocalTensionEvidence": false,
+      "enableSyncopatedShellBoundary": false,
+      "enableShellSeventhPreference": false,
+      "enableSuspendedQualityDisambiguation": false,
+      "implementedAtBaseline": false
+    },
+    "partitionLockSha256": "66bf45e8afd412d11f71ebe7b221d3d2121a7ad71a8c8bf20c793b163d9a0adb"
+  },
+  "normalizedManifest": {
+    "logicalEntryCount": 317,
+    "uniquePhysicalFileCount": 277,
+    "suites": [
+      {
+        "id": "all-instruments",
+        "manifestPath": ".local-evaluation/midi/all_instruments.mid",
+        "files": [
+          {
+            "relativePath": ".local-evaluation/midi/all_instruments.mid",
+            "byteLength": 19436,
+            "sha256": "9f717c0a55d689befef2532ddf231eb3ae44264639443e4830de9c06d0d1abd1"
+          }
+        ]
+      },
+      {
+        "id": "chapter3",
+        "manifestPath": ".local-evaluation/chapter3-seed/manifest.json",
+        "files": [
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_001.mid",
+            "byteLength": 158,
+            "sha256": "36eb8727b50e32c94d9f7acad4adaa4e4390e5b997e951a787a3ed2798caf5ba"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_002.mid",
+            "byteLength": 158,
+            "sha256": "5ffbe0e177a45f0f0d7502b1555cc183000ba858a7d3407158f3ccd52dc53eba"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_003.mid",
+            "byteLength": 158,
+            "sha256": "e3ae0559afcdec4318902a3dc20f137eaabae78056c53947f8c2a68f3338905f"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_004.mid",
+            "byteLength": 158,
+            "sha256": "7b96ee10aa5a00a6c2db80e1d9f76b014d4895b3042eae9bf3711a4d3d0a8d1a"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_005.mid",
+            "byteLength": 158,
+            "sha256": "216654bfb72afd3824526803f5b5890a0ac30342e9a92ca3fe293bc5fed9e9f4"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_006.mid",
+            "byteLength": 266,
+            "sha256": "960d838808151cf2f9b967c30a3331e9ac680a61735d1e641360bfd5bbdda4b3"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_007.mid",
+            "byteLength": 158,
+            "sha256": "379ad6c2ec33aaa73aeebde77a38b8f193ae2596d918cfcf7c80b619de7be747"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_008.mid",
+            "byteLength": 158,
+            "sha256": "f48a6b737850d59dff7033ee66702c18f9286abda0e0cc5a2e0868e0dd015091"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_009.mid",
+            "byteLength": 170,
+            "sha256": "bbbcefbb99420cc3bffc7f8fcb7d8257e506c83296663a6cde83472868c1cc0d"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_010.mid",
+            "byteLength": 131,
+            "sha256": "112fcbffaba7052138067641cac5846e30d62221485d744c0d1e040ba6f5b999"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_011.mid",
+            "byteLength": 176,
+            "sha256": "a6ae5dba0b6395dc994ae2b35dcee44db8af88a0f171242c7fb967bc9d7bdec8"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_012.mid",
+            "byteLength": 176,
+            "sha256": "31b0a707f2bb21a03a5af5026429010e0988a598db1bc5d5c74280814b991b7b"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_013.mid",
+            "byteLength": 164,
+            "sha256": "ea989c446cee20bfc3f8709ddc17b46544db90f2adb6d515c87dce2dbc6267c5"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_014.mid",
+            "byteLength": 266,
+            "sha256": "cbf85b922d24ac3c05535d067d4d01ae68fcb5aa9460eca02273ab5b1dc70d87"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_015.mid",
+            "byteLength": 165,
+            "sha256": "ede103e60a7fb8abe230a9a0dc573e884b7ff303e5d3482d54084b26e80a7264"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_016.mid",
+            "byteLength": 131,
+            "sha256": "31c9803f259693bf10df4acbd77f09db29396de572452f15007371b4e1002370"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_017.mid",
+            "byteLength": 110,
+            "sha256": "ed140331309df6dd4903e0f391adcd42d8e0c2214f86f79e27b3b2a119def8ce"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_018.mid",
+            "byteLength": 131,
+            "sha256": "b98c28abc1d3d6f55e3152ff9b82ac31ea76a0c63a9596d4a3207dd81a349b43"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_019.mid",
+            "byteLength": 169,
+            "sha256": "d02f9e4c7fba471431167fe5a1f50cb8d7f2e253114821ac6a33c02e477bba28"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_020.mid",
+            "byteLength": 170,
+            "sha256": "5639b3ab6d7bd9fbef53073b4b7bdb745256d895bea9c264ab8843100789e47f"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_021.mid",
+            "byteLength": 203,
+            "sha256": "05eec536c1d1e54aad57ae9f7a64cf0db9f756fa72457d102379c2584339339e"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_022.mid",
+            "byteLength": 236,
+            "sha256": "876b526c1c097f91ce3c1fbd045d90a5d17419f38cba17c941887ab55af9f23f"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_023.mid",
+            "byteLength": 185,
+            "sha256": "4fb1db9be181164669a5925c9067337c3dac1ee7ed8c006fd539431a081ea87e"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_024.mid",
+            "byteLength": 158,
+            "sha256": "3defe234f7d384e9af2458dbbd29a5d0a7f51e787b847f8d4163fa0626f7a633"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_025.mid",
+            "byteLength": 104,
+            "sha256": "feda763b4eeaf6b12ea852197ab508e481a6f3a6408e9c7709c1d3f795addf44"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_026.mid",
+            "byteLength": 131,
+            "sha256": "f87aaf3fe20916112b2c739ed20802368562bbb0f9be8b463c736944cefac8b3"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_027.mid",
+            "byteLength": 158,
+            "sha256": "93d0c419e8bf9d6057556a8760b0fc13c7dd5a732b03f304ecc62645532d70c8"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_028.mid",
+            "byteLength": 158,
+            "sha256": "c298d41e5aa6f72a49c4e66ae49434b7a0141172e60db655c4142dafbc9db1e3"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_029.mid",
+            "byteLength": 158,
+            "sha256": "4ef209c642fa450dcb32a74bf9bb4d03c55216afc9c5eaa23f348cf23701be47"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_030.mid",
+            "byteLength": 185,
+            "sha256": "f3647031b809b222aafea970cc6bd0e6c6bbfa4d825ea54fcadc5bead789d28f"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_031.mid",
+            "byteLength": 131,
+            "sha256": "faab9b5a9c89ecd403bdef376d6258ba163a4db01a2ce7c911cd7f64bfbd667e"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_032.mid",
+            "byteLength": 131,
+            "sha256": "14885ff57720b8e043ebd4e0d6927f84def330fabb838baeb88f9a4ba6cc93c9"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_033.mid",
+            "byteLength": 158,
+            "sha256": "fd05205217c73df30f02c72f6c01089abcfab006238962d26c5d75c08e1239b2"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_034.mid",
+            "byteLength": 164,
+            "sha256": "e7189f8397024624fade30fe5c9be22bbd1780b57a99f881203d8982614397a6"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_035.mid",
+            "byteLength": 158,
+            "sha256": "7feca5331cb6ede9f0a52b8a24ec5ccaa14c6f5eb67305c7f69a8015e6a533f3"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_036.mid",
+            "byteLength": 137,
+            "sha256": "1743fc29d22e66434ee025ada477766a36de16d183d176ee8414e22931ba35ab"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_037.mid",
+            "byteLength": 104,
+            "sha256": "1598908a886dbb102ae242c38165f441915af6a9201b73dec8956bd2db73ac1f"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_038.mid",
+            "byteLength": 137,
+            "sha256": "362da5af3fd573d04c5887bd151c9d9a0a9ac0c3adf0243b67dbacd51d9b69ac"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_039.mid",
+            "byteLength": 272,
+            "sha256": "fe195ff215958feec5ecf469894375cd05013751927f0aa038e584fbe6b7d47a"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_040.mid",
+            "byteLength": 158,
+            "sha256": "97fde09057d6a9a1f9983688c479434db111b11c475708474903046076aebcec"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_041.mid",
+            "byteLength": 158,
+            "sha256": "c8ae2af8754dca1b8313092fda18b78436bc8c0901a8dd32b8084d6a2e8a9fa5"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_042.mid",
+            "byteLength": 158,
+            "sha256": "c7266c01b62fdd55910ae01fb6f4b5233c1af64b966db8f21c13cc357cb8242b"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_043.mid",
+            "byteLength": 185,
+            "sha256": "3859dae48fa06d375e637e3a67ec01ea88abbe7d138c15ec37c5c3b6c88fb549"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_044.mid",
+            "byteLength": 158,
+            "sha256": "7877ceb65ffed89888d970779306c3607ec864032f302fa194f3fb2398a5e6cb"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_045.mid",
+            "byteLength": 131,
+            "sha256": "f3ed49350ab6b1ec4be69064151b277c2547fb53101a372a38c18429d3f24945"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_046.mid",
+            "byteLength": 158,
+            "sha256": "3e92e3f02cc5c56a249b5d04fa560cd136298e56854c81a531ac8057e0500d9b"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_047.mid",
+            "byteLength": 158,
+            "sha256": "522877a6ad24c99de2b9fb485179629d7ddc51e57c74bf2a6b105379eec467fb"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_048.mid",
+            "byteLength": 158,
+            "sha256": "56918520549adbfa292863127bbc443d3697c06a578b66c624516d7552037e2d"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_049.mid",
+            "byteLength": 131,
+            "sha256": "c6cc403586bb74d7c25d15f5b9064e8eb92a3ae0f423879faef5a29ceb6c77f6"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_050.mid",
+            "byteLength": 158,
+            "sha256": "e4bb06217fa8cdb00d461b97e8a82d188d2f26cc9006ef5f011c4ed807c22d1e"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_051.mid",
+            "byteLength": 158,
+            "sha256": "64a70f865fe6413636c58f145e5e5a039bf965b619a202670303deb3c7d2ca58"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_052.mid",
+            "byteLength": 158,
+            "sha256": "4645245f2eb62c5405f052c440df6c43c88d17c3f269a3910cd9e9b7943c59a1"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_053.mid",
+            "byteLength": 158,
+            "sha256": "3c81d0e2f8a582a53ba0cce962b9c27a1d6c76684312117ffdf6f3257264c9e9"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_054.mid",
+            "byteLength": 158,
+            "sha256": "e8d914c385f354628348672034ef49b56b5bb1e4e53064799b8cee49db499ee0"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_055.mid",
+            "byteLength": 170,
+            "sha256": "f1353a8bdbce9c833bdd3d837e543c2eb8365e9a3da6c64c8b5ecb793a975505"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_056.mid",
+            "byteLength": 203,
+            "sha256": "9e06c6fbc671ee0daad99e9bf04cf4fcfee1e21cb8384e0d1475668f56be1527"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_057.mid",
+            "byteLength": 164,
+            "sha256": "56400d6f91c4479cd1b922cc92515c3372f1480bfca20f11a3c759d7cfa6f43a"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_058.mid",
+            "byteLength": 131,
+            "sha256": "d1bc11c3c7b5ae5070df1355cdf5f7a42b45dc10725aa19c15721cddad4cb306"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_059.mid",
+            "byteLength": 131,
+            "sha256": "9a0921845e2e038abd70a51a8e29af22e48fa1a3b1f4da08873f1c86b4107d79"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_060.mid",
+            "byteLength": 184,
+            "sha256": "d7fec77ff3a1bdcc787f6a2bb7abed1b0fd856da66550e3c7e785de405cab7cd"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_061.mid",
+            "byteLength": 170,
+            "sha256": "29a9ab51647ef38c3f5b3896a5792d7352a6846e70c3c6833983e6419cce9bbd"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_062.mid",
+            "byteLength": 104,
+            "sha256": "9670de4aa92443c18314ef19849c2b9f05e29b254d1b58b0914bc61c887a9192"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_063.mid",
+            "byteLength": 158,
+            "sha256": "01fd443ae4e37f95d9a2594ef89bbfeb26c3d27dd86e3d7c3aab8b77f6b880a0"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_064.mid",
+            "byteLength": 185,
+            "sha256": "366dbae61d70542eb8b0f60de124064d9d9e5b83ee338f4c9aa8a69475f26300"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_065.mid",
+            "byteLength": 158,
+            "sha256": "04e73be4681f69fab05a45a3acc362d3fcf4b2862271d771d5a0c5e8189e20b5"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_066.mid",
+            "byteLength": 164,
+            "sha256": "7ffc94acaa94b8fc53bbb943711fd51647dd5e883730964af344be4fe3b2b7c7"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_067.mid",
+            "byteLength": 158,
+            "sha256": "01885f6aa457090676e775dad69f27b525c23099d9eb8c981834c4efc006f065"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_068.mid",
+            "byteLength": 158,
+            "sha256": "3a787343d4ce878f951694506877c548b5b875b22f7bc92ded385f45b7ae52ad"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_069.mid",
+            "byteLength": 158,
+            "sha256": "0b613944ede25d57cfe09ce5e3bb19ec2f142654b371e658dda1580001cca50d"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_070.mid",
+            "byteLength": 158,
+            "sha256": "d0a0ab7eed81eafc01286045ca790ef98f22696767a79c161f694cf8d5cfb9eb"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_071.mid",
+            "byteLength": 164,
+            "sha256": "0ce5f71cdf39b5e8d7d11506f26986e2051cbc5048d97cb82c02413c7a5d4d59"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_072.mid",
+            "byteLength": 158,
+            "sha256": "93c60c8bbdef1e3a44baf83caf358ff97b76d6165125c872c92d2fad04b155d9"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_073.mid",
+            "byteLength": 158,
+            "sha256": "22922595291ed8cc096fb606c4f888672b1de576bc9e8c436e5b0ff7c9ab0386"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_074.mid",
+            "byteLength": 164,
+            "sha256": "57146703cf6df6d2868ea8744122b7d1a80426c285855f229988ab3eef8074bc"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_075.mid",
+            "byteLength": 164,
+            "sha256": "e672a62b5e437de8c1f6cbbd61dd4f3cb32b3f4e0b5d9244b194c877747c9243"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_076.mid",
+            "byteLength": 164,
+            "sha256": "cbeadc505339e16d099fab788d7c78a05d3934049b2822d2ceb5433cdf6fc8f0"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_077.mid",
+            "byteLength": 185,
+            "sha256": "2a974bbcb16ef2f0cb16b10055ba38ed805ea1863fee28c929d3148d46e4a4f5"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_078.mid",
+            "byteLength": 272,
+            "sha256": "51bde173ee1f86e4ae7474a3a2a7604e5b4f9c1e74133c654d9c8b4d1eb1efe1"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_079.mid",
+            "byteLength": 316,
+            "sha256": "334880451a5b4ac6e191cccf8c019b6fbc256d7a0a2be5d45bb3f8ec41f3c07f"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_080.mid",
+            "byteLength": 278,
+            "sha256": "27f02b2210f16af41842c2f16498785d14ea66743b65bbc5830a31766cb95e47"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_081.mid",
+            "byteLength": 164,
+            "sha256": "b02cc2eb32308a125662cdac4e272858aff7b5a30923751893c9c004c32556ce"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_082.mid",
+            "byteLength": 170,
+            "sha256": "aaa0f2bc3c8c650734d1018c7103baa94a1833ad139e23ba8772030b2c8c5c28"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_083.mid",
+            "byteLength": 176,
+            "sha256": "bae3565b09860269af494a407413cb1c1be19f2d126cabbee6363d72c93c7b94"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_084.mid",
+            "byteLength": 158,
+            "sha256": "06232ef017daada296a380172056470a7ed0c9f94bfc312783c0914e72d7d939"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_085.mid",
+            "byteLength": 158,
+            "sha256": "a93f816a2dd6e9dcc02f4c3f154a4dd47ba90b4397116e35d183868592ce3bad"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_086.mid",
+            "byteLength": 131,
+            "sha256": "5903bbc49b2b326d18885490eb177883d7a52b0b5ae274c3f7d25fa2024273b7"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_087.mid",
+            "byteLength": 158,
+            "sha256": "f268c9e38705866ec7876c849fe4f517f259dd4252ac3bd9f30eed2e8913a36c"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_088.mid",
+            "byteLength": 170,
+            "sha256": "7e0b365505c20ecaf03ddb288c612e3153d11ab36faa4803052ffbe2a8858dcf"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_089.mid",
+            "byteLength": 170,
+            "sha256": "79740d51a15656ad0c4a35bb0dc62aba7e5f5d1a71acda26cf75928e6624d5bc"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_090.mid",
+            "byteLength": 104,
+            "sha256": "7c91933e20bd1c801aedffd0f6987cf6cb951655fa37e1bea556ec755586007c"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_091.mid",
+            "byteLength": 158,
+            "sha256": "219448a7e5156c2b448719de8c719994112166c7646d1310f52e2cc63f4d937c"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_092.mid",
+            "byteLength": 158,
+            "sha256": "50a6b40c32c3b4b77a431aa7fa4b9a6e37362338f3774b09a5d2489913460aaf"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_093.mid",
+            "byteLength": 248,
+            "sha256": "1c426dfcaedf743f0ebe52e9dcaeea6bcadab21fe040593227006ed5763a07e0"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_094.mid",
+            "byteLength": 328,
+            "sha256": "a7e876a714542bfec0fc121d72a4d9f51ef90b62a79cb4b1ca736c909141983a"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_095.mid",
+            "byteLength": 142,
+            "sha256": "2c6d749cee84dfd76132d79e19114a529f4a53ec00487cf414fc4838896c4ab9"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_096.mid",
+            "byteLength": 116,
+            "sha256": "5d934f237bf06b48d3d4a057a9c9fa215ce5467943e4de957570aeff3470c4d0"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_097.mid",
+            "byteLength": 143,
+            "sha256": "2adf9be17aab705728f538fd3e225944167c8711ff767294e1db4dd1caa6a3d0"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_098.mid",
+            "byteLength": 137,
+            "sha256": "93dc4558e481f3f29b86e526a08450bf79ea37b43785a2bf1130629149ba439e"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_099.mid",
+            "byteLength": 104,
+            "sha256": "ac04204472d1fab4e5274c0a1ca58ab0e7c8d5d76fc166b157b780987f9f78fb"
+          },
+          {
+            "relativePath": ".local-evaluation/chapter3-seed/midi/chord3_100.mid",
+            "byteLength": 131,
+            "sha256": "225eb4feba279d0bf05c79d9e8cb36e0477b0b620febf49d02d994c90d2aec85"
+          }
+        ]
+      },
+      {
+        "id": "chord-drip-100",
+        "manifestPath": "docs/loop-vault-evaluation-corpus/manifest.json",
+        "files": [
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/acid-jazz-groove-a-minor-9001.mid",
+            "byteLength": 356,
+            "sha256": "28addb9408b2283b09fe6b342a4b2479b1c48d740e4b36cee72a69812eeeb49f"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/acid-jazz-groove-a-minor-9004.mid",
+            "byteLength": 305,
+            "sha256": "b4c46c9f0041ab0124e48aad8c6973c5802bfef8d3e284c022a0d47a16e65c7a"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/acid-jazz-groove-b-minor-9003.mid",
+            "byteLength": 898,
+            "sha256": "11c7b3d08f52d45f8a7932d0f88e237d8044e632d2b79bc74dd3c0ba4c7dba1a"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/acid-jazz-groove-b-minor-9006.mid",
+            "byteLength": 1418,
+            "sha256": "224fdd48f6f54ed3eb590183859ecd69ae1fbfaf787429b0216bedaaabeeb982"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/acid-jazz-groove-bb-major-9002.mid",
+            "byteLength": 835,
+            "sha256": "ffe064e64a9bf9074affe1327f2b8fa76e58434b7c5e235d5511e916fed9d66d"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/acid-jazz-groove-bb-major-9005.mid",
+            "byteLength": 504,
+            "sha256": "212ebebea3702d1cda0015af1df5d8f18128eb6fd62657c766ea653ef6e67bb2"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/acid-jazz-groove-c-major-9007.mid",
+            "byteLength": 562,
+            "sha256": "fa966ff98621f28863a6d2667f83f8468dc648fbc281fa988e93f2e87fe59109"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/acid-jazz-groove-d-major-9009.mid",
+            "byteLength": 583,
+            "sha256": "b918821fca87b3c2b18840fcdefdb07606dd8c392a367d8fb62b7ff4b9a3fa28"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/acid-jazz-groove-db-minor-9008.mid",
+            "byteLength": 819,
+            "sha256": "2fff5e6f91b746c06ec1014f03e309e301daf4b3bb57a64beee67069e69b8168"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/acid-jazz-groove-eb-minor-9010.mid",
+            "byteLength": 313,
+            "sha256": "76865047a1282a957dda0eb115aea7667aeb584ae6bd19751716be36f79494af"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/afterglow-cloud-a-major-9001.mid",
+            "byteLength": 316,
+            "sha256": "8fa54506419f1a7d7a9f22bb4f076a0366a23ad8c16f194d7c3af6f3cca42c93"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/afterglow-cloud-b-major-9003.mid",
+            "byteLength": 858,
+            "sha256": "5b6ee7fb621a2b67a6f2b3e8b46cf24c5b4a615bc33424715fec0210ad296122"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/afterglow-cloud-bb-minor-9002.mid",
+            "byteLength": 511,
+            "sha256": "af84d967045e6f1ae1a27efd6eb1bb04f7667bb1c58ceeb4145c3af4a0525b14"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/afterglow-cloud-d-major-9005.mid",
+            "byteLength": 760,
+            "sha256": "0591e81f73a386b987202cda3c17377d1877c6ed47648887c2004f2be27092bd"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/afterglow-cloud-db-minor-9004.mid",
+            "byteLength": 630,
+            "sha256": "207c3e4b173457aa8df5535b5228336d5d1121fc70406ef6b8dfc0c72d57302d"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/afterglow-cloud-e-major-9007.mid",
+            "byteLength": 1042,
+            "sha256": "c1b0969dcf1d87538745b12787d5c6e7a97b3030a6e6671b2d6233908aa7d6ed"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/afterglow-cloud-eb-minor-9006.mid",
+            "byteLength": 434,
+            "sha256": "e898804c666a7251d93782276b8adec2b9087cfc729024a8ac48f4bfff9f5e78"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/afterglow-cloud-f-minor-9008.mid",
+            "byteLength": 1576,
+            "sha256": "7dfea761cb2c14f75ce7246f0a292541376d449e54e0cb384d49fdf87a2323b0"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/afterglow-cloud-g-minor-9010.mid",
+            "byteLength": 522,
+            "sha256": "5c2312589f87252fb348d8cbe438c7bf475b2bef02973f0c17aa0aa10d45e1ff"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/afterglow-cloud-gb-major-9009.mid",
+            "byteLength": 237,
+            "sha256": "781e9e8add95e3a4b14a30f09b92a82c634d3ecb52ba5491794b76deac294dbe"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/bossa-dusk-a-minor-9008.mid",
+            "byteLength": 297,
+            "sha256": "9eb1d6daf6d3f71f440e064b2a0fa31b8bcc98184a8a41fa6afb1ec5dbf089d2"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/bossa-dusk-ab-major-9007.mid",
+            "byteLength": 816,
+            "sha256": "8ed30ba8fb7163ea9401aaf8563c64fa4d18bafd18b2dadce3c87e01e0c3440f"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/bossa-dusk-b-minor-9010.mid",
+            "byteLength": 1488,
+            "sha256": "3b0d9bcacf9fb10a15d4a7619e216a0e4779b392a7129a47c07d8661419879dc"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/bossa-dusk-bb-major-9009.mid",
+            "byteLength": 554,
+            "sha256": "d237e23f90484304ad2f35ac09fe6733e418bfc926da19769c7bcc8fc942bd9f"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/bossa-dusk-e-minor-9002.mid",
+            "byteLength": 512,
+            "sha256": "987840701ede90ac4f593a269cc729bcdf7f664e9c1be3865d6e82c33a46ac2c"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/bossa-dusk-eb-major-9001.mid",
+            "byteLength": 305,
+            "sha256": "b8327007ad87de9253357301a32da3f71ef453056cfd2c9caca7c45c0208c2d7"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/bossa-dusk-f-major-9003.mid",
+            "byteLength": 2058,
+            "sha256": "5c490f844529bb4b50e68c7e8291609d53f687831b0d26bff1dc7c4246c39321"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/bossa-dusk-f-minor-9004.mid",
+            "byteLength": 1514,
+            "sha256": "f8dbb9042daee0a910f125d176dfc6b73b804982c7eca03c51765551d30182db"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/bossa-dusk-g-minor-9006.mid",
+            "byteLength": 572,
+            "sha256": "cbbbae663672e742cf39ac80b1a7014d1e4052988174ce6b751278546c6ee718"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/bossa-dusk-gb-major-9005.mid",
+            "byteLength": 227,
+            "sha256": "6ca4c1e3acfb003f544b268cf0165876e7395f805ce81cd650856ea3b6023d03"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/cute-future-pop-a-minor-9010.mid",
+            "byteLength": 324,
+            "sha256": "df950a4672a1ec5fd47711b25eeea05278ca291dbbcd5973f0d6c4db88ccface"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/cute-future-pop-ab-major-9009.mid",
+            "byteLength": 734,
+            "sha256": "e5a02a2c3a9c8b00d9465784487f633d3983f23aabda19ecedaffba19eb0287f"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/cute-future-pop-c-major-9001.mid",
+            "byteLength": 270,
+            "sha256": "ace8c404529a7ca175fbb5ac27790f8ac55cda2c0bd0d2f9ca2f975ffeda9665"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/cute-future-pop-d-major-9003.mid",
+            "byteLength": 1986,
+            "sha256": "6cd530f4ec3d90e6ec5370987f5b5d117b8ea7956ad731ccda3ea002812ba768"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/cute-future-pop-db-minor-9002.mid",
+            "byteLength": 446,
+            "sha256": "70bdd3fceeb0f47e44b6d9e9600a0765d7e619f81ae9eb936007ea0b4a1209fe"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/cute-future-pop-e-major-9005.mid",
+            "byteLength": 994,
+            "sha256": "f54681e70b58bbeaa07cb9c6cbbfd270e7729fa90e235175a1d63cf05ddcaece"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/cute-future-pop-eb-minor-9004.mid",
+            "byteLength": 434,
+            "sha256": "e0c65995b184558bc71e86ca8eeea51b13c1737b81e56cce5f39834fdce3278f"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/cute-future-pop-f-minor-9006.mid",
+            "byteLength": 1419,
+            "sha256": "9a5f4024d5d8b694e669a53c3228eb13c30341d5873049bbc8fb370fb02b4477"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/cute-future-pop-g-minor-9008.mid",
+            "byteLength": 529,
+            "sha256": "66f3d94eed497673aadda0cbf984b50a677339b7ce444714cbc80285a7e9a1d2"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/cute-future-pop-gb-major-9007.mid",
+            "byteLength": 227,
+            "sha256": "4554d8eb53dd2ef3b8df9504fe9acf25c4804255f44b64a3da8d5deffa207181"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/game-menu-bright-a-minor-9004.mid",
+            "byteLength": 454,
+            "sha256": "7a41a3e19c1ec102801bab70b5fa871c00fe20fc424ca11cf002ad7ada3d02c3"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/game-menu-bright-b-minor-9006.mid",
+            "byteLength": 876,
+            "sha256": "f2521fe79b54fbaa6320fc67663306170e72455da40aae0b7973847c6fc2f9bc"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/game-menu-bright-bb-major-9005.mid",
+            "byteLength": 339,
+            "sha256": "e4182e89377bde10ea21e887b990cb375f0cafbbca8a3f0b9fd9f05fd194d29d"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/game-menu-bright-c-major-9007.mid",
+            "byteLength": 304,
+            "sha256": "d58e6f4783098b49384d708d61df78e3505d31b95e6bfae09ffa3fdd6f5ac2ed"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/game-menu-bright-d-major-9009.mid",
+            "byteLength": 686,
+            "sha256": "3f0dd42cb818035965fd280a3a49018b24d953c0fa0f9532e7061e13b498be9b"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/game-menu-bright-db-minor-9008.mid",
+            "byteLength": 453,
+            "sha256": "3b30aced1c23ec2b010dd5dc2810d456c747b114b84468992596387b53427da9"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/game-menu-bright-e-minor-9002.mid",
+            "byteLength": 762,
+            "sha256": "46b05b832c5ca10e6067f98e9607526a7166d3157493a4447dcfff0dcfab4240"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/game-menu-bright-eb-major-9001.mid",
+            "byteLength": 273,
+            "sha256": "a3bdb9bd41ff1e21c5d606d25efc9efa5482d681834712101af676f395ec3679"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/game-menu-bright-eb-minor-9010.mid",
+            "byteLength": 434,
+            "sha256": "13212e022e022442e023d3be5683924b5aef38661dade80e82794f23e1faae67"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/game-menu-bright-f-major-9003.mid",
+            "byteLength": 758,
+            "sha256": "c2b00d85a232f015959eed8a06ffef6057f647448d7dd4c5d900d617d7b83d4a"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/lofi-night-piano-a-minor-9006.mid",
+            "byteLength": 438,
+            "sha256": "2c828ca0bacb1e09343982ddf2235f2625b5e5e6ee792832eff4c2e14c59c247"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/lofi-night-piano-ab-major-9005.mid",
+            "byteLength": 1970,
+            "sha256": "2eb9f8d9984a1162bfd2dc682dca709c0e3f4dbcc1cb3d79212929ffdbac150f"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/lofi-night-piano-b-minor-9008.mid",
+            "byteLength": 887,
+            "sha256": "1e673b9fc85aaeab5ac75bbaa39408498d73814f2c080200b480c751184e44de"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/lofi-night-piano-bb-major-9007.mid",
+            "byteLength": 339,
+            "sha256": "135bce7d73072813859e47028d080268bb1a90541eb31db4a7231d0cc677e12c"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/lofi-night-piano-c-major-9001.mid",
+            "byteLength": 278,
+            "sha256": "7aaddfbaf0b8e00e28cf9212907fed3f589270bce33dfb760c9f4bd59ed1ed9a"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/lofi-night-piano-c-major-9009.mid",
+            "byteLength": 294,
+            "sha256": "e4cfe8f223512b1da0ad028c962a1aee801efe2e8136832f82fefa4e751fe08e"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/lofi-night-piano-d-major-9003.mid",
+            "byteLength": 1458,
+            "sha256": "fb2cfd8de43b3cd151b215966ae94e3d9f27dfe8831566f2639a22c69736f647"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/lofi-night-piano-db-minor-9002.mid",
+            "byteLength": 500,
+            "sha256": "ce78a157fc7c7924f025db31ce819955c497ab814d8d2cb3d364c546759dd3e9"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/lofi-night-piano-db-minor-9010.mid",
+            "byteLength": 539,
+            "sha256": "5c13574f783d6ac4ddbdb54f477ea0ffe0487cbb9133c6c76d24b61419039fb4"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/lofi-night-piano-g-minor-9004.mid",
+            "byteLength": 782,
+            "sha256": "d71a7550896f8114b3ebf573ba2d7d771af0de1286e1fa1c8665a16bdc82ddce"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/neo-soul-warm-ab-major-9003.mid",
+            "byteLength": 897,
+            "sha256": "76cb131cb0b63aab52875f2ecd9413d09454abcdf2d0d569a2dfe287e4e33e95"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/neo-soul-warm-b-minor-9004.mid",
+            "byteLength": 887,
+            "sha256": "1954771ac495479d9a01fe148e7df17a4d022a5b3eb549c61650a3c024e5286e"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/neo-soul-warm-c-major-9005.mid",
+            "byteLength": 328,
+            "sha256": "e77d8756d6353e895b03cf65b3d5812ad63eb78b322bd85a607faaba5483cfd9"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/neo-soul-warm-d-major-9007.mid",
+            "byteLength": 808,
+            "sha256": "0464ff37b1fa4a503fd85163e9e3b7aced29a2084e71cb181939655904410d4e"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/neo-soul-warm-db-minor-9006.mid",
+            "byteLength": 493,
+            "sha256": "94ba9706fd8786cda7cc2c5d498398726de4b48aec3da81415e22b033113d423"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/neo-soul-warm-e-major-9009.mid",
+            "byteLength": 1173,
+            "sha256": "1eeeba5d1be5fc03055e0a735d4902d4eb5dac85a7f8e3d479f0b2b39abbb477"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/neo-soul-warm-eb-minor-9008.mid",
+            "byteLength": 434,
+            "sha256": "119f10fa2a85059452ea58b6abb6bd718a8e8bd90985c3b05640a259429fbbe2"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/neo-soul-warm-f-minor-9010.mid",
+            "byteLength": 1487,
+            "sha256": "dadc696afaca8ebb564de8cd2286cd3d5acb59132be266fd5fa63e71ddbcfd7e"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/neo-soul-warm-g-minor-9002.mid",
+            "byteLength": 359,
+            "sha256": "1a3f4610117e55321d355b9655eb99e70104396c7ccbf48660b1bc06aea31bb0"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/neo-soul-warm-gb-major-9001.mid",
+            "byteLength": 310,
+            "sha256": "a9ce27428bfacdde1ab466c1ed9f669aa7b427c739f11f16ed8261b440234cad"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/neon-bloom-a-minor-9010.mid",
+            "byteLength": 438,
+            "sha256": "e6399f5af8a6b5d0fe46258f205f0694d6234682853caf0216327d223e23302c"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/neon-bloom-ab-major-9003.mid",
+            "byteLength": 1418,
+            "sha256": "6e6683853abaaeffe765de35152b04b0095e57b971f51255efd40d01235d251f"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/neon-bloom-ab-major-9009.mid",
+            "byteLength": 1786,
+            "sha256": "d18534a8d80e2f301e9ea6699380ee166fc73e7e632af4365d86c7e68234355f"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/neon-bloom-e-major-9005.mid",
+            "byteLength": 454,
+            "sha256": "67c14dad77fc86b2945db51385babd2498405d28b83b78c529daf2d5f0499950"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/neon-bloom-eb-minor-9004.mid",
+            "byteLength": 312,
+            "sha256": "967239bc64a38f9b0ec4467af1f5f9ac66ffd04076d24704d41a34900ba58838"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/neon-bloom-f-minor-9006.mid",
+            "byteLength": 856,
+            "sha256": "0b136a5f9d5155aecd2458adcf00014f3dc1ade8f384f39aef252f4f41e2441b"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/neon-bloom-g-minor-9002.mid",
+            "byteLength": 1058,
+            "sha256": "58f2f12ee70ac18c73bb9c942a0791fbaca5c3fa1c3bd882bff5770ac480120c"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/neon-bloom-g-minor-9008.mid",
+            "byteLength": 782,
+            "sha256": "58456302c5dd42b79fe61a0cef46a1ed49a76e2387cd5f141483a5f100594390"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/neon-bloom-gb-major-9001.mid",
+            "byteLength": 302,
+            "sha256": "f1dddc6eacf448416b0ff7d9bc29dda82847c37820d59114463fd4c532c536ed"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/neon-bloom-gb-major-9007.mid",
+            "byteLength": 328,
+            "sha256": "bdc56ff23e0fb111adb7b26bbeee497f30a5ddd2780dd2661c226a048850e75e"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/shibuya-fusion-pop-d-major-9005.mid",
+            "byteLength": 593,
+            "sha256": "e698230b4928a9415a024f139c80b4137e89301aa5e80f4617810291e5796520"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/shibuya-fusion-pop-db-minor-9004.mid",
+            "byteLength": 896,
+            "sha256": "883b007d2a89a4c0e0b03561b2e8a4dd7d1db1592480f3d9d60873c2611511a3"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/shibuya-fusion-pop-e-major-9007.mid",
+            "byteLength": 588,
+            "sha256": "1d139c187ca64cae6c24c71b94f0b0f9d46271dcebead8de7064371c656a3ce1"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/shibuya-fusion-pop-e-minor-9002.mid",
+            "byteLength": 775,
+            "sha256": "ded97e586f19d668d5eff80bd8e30ebf2fb2144cb88421ea8a292d1ac175ee8f"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/shibuya-fusion-pop-eb-major-9001.mid",
+            "byteLength": 399,
+            "sha256": "9053075293bf139145d54cbb1682c898bbc69a581ab8281a1dd94d21691f5d4c"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/shibuya-fusion-pop-eb-minor-9006.mid",
+            "byteLength": 332,
+            "sha256": "5868633d90de440d4036f7afc3a6b1d9ebf8528435c2457a041b8d9747635aad"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/shibuya-fusion-pop-f-major-9003.mid",
+            "byteLength": 1485,
+            "sha256": "63004054db4a10e6348346529d29ca7c2dc7ae49fee44fdb198c7beeebb1905e"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/shibuya-fusion-pop-f-minor-9008.mid",
+            "byteLength": 1065,
+            "sha256": "c749fb30eae397c3a621fb5671714dc94d8ca3e583099d98eea52d8a129b8f90"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/shibuya-fusion-pop-g-minor-9010.mid",
+            "byteLength": 819,
+            "sha256": "b582a0a3f881e7dbd474d580c9af5932f9dc674778296109c985612ff174954a"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/shibuya-fusion-pop-gb-major-9009.mid",
+            "byteLength": 328,
+            "sha256": "6a541085c41b80f2033bec8f912726460eff41f91e3a55bd9523f74739c86c1b"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/tokyo-minor-loop-b-minor-9004.mid",
+            "byteLength": 1458,
+            "sha256": "60fa2cc420ec634f765e0e51cb6ee7f5260df6f8bf1f6aecb8ffb126c829b2fd"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/tokyo-minor-loop-c-major-9001.mid",
+            "byteLength": 318,
+            "sha256": "b8c77f57c7e06d978ca9c91f7cb2a27c2ef92364e701d500a028bf9fa6e4e1fb"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/tokyo-minor-loop-c-major-9005.mid",
+            "byteLength": 554,
+            "sha256": "819c8fdc34f300f63d9327b2bbfe8560107450004f7fcd7b8a9605f7185eb31a"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/tokyo-minor-loop-d-major-9003.mid",
+            "byteLength": 1644,
+            "sha256": "3544ba186f735af9c5efceb722f304bcb4d5763b44cb4c02fa6cc6166f38e7f1"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/tokyo-minor-loop-d-major-9007.mid",
+            "byteLength": 676,
+            "sha256": "f052010f07fb7a6fa385e21cbdef5e5a626193d012e792498db3e041482015ce"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/tokyo-minor-loop-db-minor-9002.mid",
+            "byteLength": 560,
+            "sha256": "3c6fcd5d5e0b9666a281fef33693ddf645c90874ac620ce322fcb79a8627fd49"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/tokyo-minor-loop-db-minor-9006.mid",
+            "byteLength": 791,
+            "sha256": "b1ad3dcb8f1284d445597d0a770d5a89e838ca8ca2d40c769a130ebdb9e1d362"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/tokyo-minor-loop-e-major-9009.mid",
+            "byteLength": 546,
+            "sha256": "de98694151a667264cda116656656521a25c78f75c3b07855cd3e5e5080335d6"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/tokyo-minor-loop-eb-minor-9008.mid",
+            "byteLength": 312,
+            "sha256": "3829cd05ef1107718611c3f0eb4cbb7320db7ab1ad887e02a5ab3cf128baaa76"
+          },
+          {
+            "relativePath": "docs/loop-vault-evaluation-corpus/tokyo-minor-loop-f-minor-9010.mid",
+            "byteLength": 1143,
+            "sha256": "2e81bdd61a345c94b2c8c298b4940020640e3e80d4d977ee944f1dbd788a583f"
+          }
+        ]
+      },
+      {
+        "id": "endless",
+        "manifestPath": ".local-evaluation/phase4.1.1/fixtures/endless.mid",
+        "files": [
+          {
+            "relativePath": ".local-evaluation/phase4.1.1/fixtures/endless.mid",
+            "byteLength": 25966,
+            "sha256": "c153f78e536b23f467196f5ab128a2142f27d68961addbab5f0f293a305fb94b"
+          }
+        ]
+      },
+      {
+        "id": "phase4.7-development",
+        "manifestPath": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/manifest.json",
+        "files": [
+          {
+            "relativePath": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/midi/dev/dev-01-clean_c-identity-pairs.mid",
+            "byteLength": 481,
+            "sha256": "9399941ae2fb198ac91cdf7dc81fc7e3b0713b2775f8c1206132376040045f01"
+          },
+          {
+            "relativePath": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/midi/dev/dev-02-stress_cs-identity-pairs.mid",
+            "byteLength": 679,
+            "sha256": "387067088ef0cf0d64f0e0e30c7f85b60806c7116562fefc11e286eec4548d6e"
+          },
+          {
+            "relativePath": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/midi/dev/dev-03-clean_d-identity-pairs.mid",
+            "byteLength": 491,
+            "sha256": "12b942133814cbb49b5240dbce42b88eb24f79f57b7fd73bcecbebba6a1f03e3"
+          },
+          {
+            "relativePath": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/midi/dev/dev-04-stress_eb-identity-pairs.mid",
+            "byteLength": 670,
+            "sha256": "8810cab8919385f2428583e9b27f4a2c0a5da0ddc7d6cbf0e61aaa3cfe62eb68"
+          },
+          {
+            "relativePath": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/midi/dev/dev-05-clean_e-identity-pairs.mid",
+            "byteLength": 498,
+            "sha256": "bf425cdc1a2eb71b2474210194654dc385bb70f0d8e7e897cbd5705dd5d7cdd2"
+          },
+          {
+            "relativePath": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/midi/dev/dev-06-stress_f-identity-pairs.mid",
+            "byteLength": 670,
+            "sha256": "69e696e4e3a2fae6b761383bfc980691939893aa2341007c66bb46e55a945550"
+          },
+          {
+            "relativePath": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/midi/dev/dev-07-clean_fs-identity-pairs.mid",
+            "byteLength": 483,
+            "sha256": "b13fefc5be44e17832e1b2dec01007e728648408d1af7292dc0b212bf78f1061"
+          },
+          {
+            "relativePath": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/midi/dev/dev-08-stress_g-identity-pairs.mid",
+            "byteLength": 671,
+            "sha256": "04d52b1f07abd7253cb3010814a29bcf1a92174a769a5375fd1f927313fe0002"
+          },
+          {
+            "relativePath": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/midi/dev/dev-09-clean_ab-identity-pairs.mid",
+            "byteLength": 489,
+            "sha256": "323a404278bdab8efa4afa38a619e3a34b5312a3de99c8d79a4a0d484d05d333"
+          },
+          {
+            "relativePath": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/midi/dev/dev-10-stress_a-identity-pairs.mid",
+            "byteLength": 679,
+            "sha256": "fc0a9d212c1ca2577b26bbb466e770ae70b11321b51f71fc760516cf27a54a8d"
+          },
+          {
+            "relativePath": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/midi/dev/dev-11-clean_bb-identity-pairs.mid",
+            "byteLength": 483,
+            "sha256": "ac1031f529a9fe46edf5a66624d95e812a2a0743a00c11ab35d845410f321ffd"
+          },
+          {
+            "relativePath": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/midi/dev/dev-12-stress_b-identity-pairs.mid",
+            "byteLength": 686,
+            "sha256": "a8c3c4c94b96012015a3e85e3c2b44362d1b797ebcf0080e19eaece485c6170c"
+          }
+        ]
+      },
+      {
+        "id": "phase4.7-validation",
+        "manifestPath": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/manifest.json",
+        "files": [
+          {
+            "relativePath": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/midi/validation/validation-01-clean_c-identity-pairs.mid",
+            "byteLength": 491,
+            "sha256": "8fccc921f4d03a699a44cb2fe7a8f79d20c44f47d31e0b5808b3f173ebb78c5b"
+          },
+          {
+            "relativePath": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/midi/validation/validation-02-stress_cs-identity-pairs.mid",
+            "byteLength": 670,
+            "sha256": "ddfdfa137c9a8eed75bc696eec36b1692150b1a1d3b35f7c0a82713e6d5a3060"
+          },
+          {
+            "relativePath": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/midi/validation/validation-03-clean_d-identity-pairs.mid",
+            "byteLength": 498,
+            "sha256": "3f9318a86434a7602829adc77d71a0b9c07f746f105fc2be33657d9ee0965f21"
+          },
+          {
+            "relativePath": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/midi/validation/validation-04-stress_eb-identity-pairs.mid",
+            "byteLength": 670,
+            "sha256": "22eeaca67bd3c832be0585bcf8cdae3b59166324f4d613fc3cf78335c5135718"
+          },
+          {
+            "relativePath": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/midi/validation/validation-05-clean_e-identity-pairs.mid",
+            "byteLength": 483,
+            "sha256": "5764b9d916316f3bd44df968ce1a23972d69e27324f50971b46a42db1fc55ce2"
+          },
+          {
+            "relativePath": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/midi/validation/validation-06-stress_f-identity-pairs.mid",
+            "byteLength": 671,
+            "sha256": "9fab93660cb8f58ac9c4a01e4023e579bfc2202cb03851064f88f9109528c162"
+          },
+          {
+            "relativePath": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/midi/validation/validation-07-clean_fs-identity-pairs.mid",
+            "byteLength": 489,
+            "sha256": "8a4bbe0af0010f6c30543b406724a1a313ba367d0356d37ad9a82bdeef069cb9"
+          },
+          {
+            "relativePath": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/midi/validation/validation-08-stress_g-identity-pairs.mid",
+            "byteLength": 679,
+            "sha256": "0930786101e8738f4cf01eebfd74ff96486f17005e7474c8f2c9bffbad8c50df"
+          },
+          {
+            "relativePath": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/midi/validation/validation-09-clean_ab-identity-pairs.mid",
+            "byteLength": 483,
+            "sha256": "bdb01018a9b1dcd975fe41ea395ad66f42a0e2d540338d4f42c886018c564075"
+          },
+          {
+            "relativePath": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/midi/validation/validation-10-stress_a-identity-pairs.mid",
+            "byteLength": 686,
+            "sha256": "a2ebbab1122297861b523e9cc12a6a16a6d667d87e4dfde8a044a95bf6adf5ee"
+          },
+          {
+            "relativePath": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/midi/validation/validation-11-clean_bb-identity-pairs.mid",
+            "byteLength": 482,
+            "sha256": "dc7dfe52e513683fa1dc830f1f146253d2591b37c7f11905c4d8de3dd9b74358"
+          },
+          {
+            "relativePath": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/midi/validation/validation-12-stress_b-identity-pairs.mid",
+            "byteLength": 670,
+            "sha256": "2a0f764e911bee10dc6060be96357f897e9fc6977f616f7ecfdc4dfcf08f3fb4"
+          }
+        ]
+      },
+      {
+        "id": "suran",
+        "manifestPath": ".local-evaluation/phase4.1/fixtures/suran-remix.mid",
+        "files": [
+          {
+            "relativePath": ".local-evaluation/phase4.1/fixtures/suran-remix.mid",
+            "byteLength": 33055,
+            "sha256": "2790e82d09b52a58efe8806e79d7379f6ec15091930197073ff9095dcee5ea10"
+          }
+        ]
+      },
+      {
+        "id": "voicing-gold-40-file-selection",
+        "manifestPath": "test/loop-vault-voicing-gold-corpus-v1/manifest.json",
+        "files": [
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V01_clean_close-block-chords.mid",
+            "byteLength": 379,
+            "sha256": "09189ee8dd334a374d7177ae0cc5738832010956d0ea7f5bc911faae9538503c"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V01_stress_close-block-chords.mid",
+            "byteLength": 1296,
+            "sha256": "9faf652c6c07782435b38cac3dfeef8a91a7eead8746a68a056249ffa8780a17"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V02_clean_inversions.mid",
+            "byteLength": 331,
+            "sha256": "2d00b30bc096ebafc812b5403a55786e1d279a1c14c56b54609ee577569e7dde"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V02_stress_inversions.mid",
+            "byteLength": 1248,
+            "sha256": "7d7f7a4f0f25127456cc1fd39c27dcccbe8033717d242653b796193fb5f4a32e"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V03_clean_open-spread.mid",
+            "byteLength": 372,
+            "sha256": "d8a3d15cec28610f79950f8d6ab3a35f752126585dcd3ba4adf52be39647d627"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V03_stress_open-spread.mid",
+            "byteLength": 1292,
+            "sha256": "20875e8a44bd808a3fafdd9ee4f29741ef5cd93f89171b4d374bda5daaa12a39"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V04_clean_shell-sparse.mid",
+            "byteLength": 253,
+            "sha256": "41c7641557c9020c9327fcbbb24704b0a8fe922471d5cce689d1264c2089b315"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V04_stress_shell-sparse.mid",
+            "byteLength": 1171,
+            "sha256": "23ec0088dcbf131d1bacc22208c6143ec51c6ec1075e23e57ce441b9ad37e24d"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V05_clean_split-hands.mid",
+            "byteLength": 445,
+            "sha256": "09e0580c506569e3f9b631a63ff1428bde3f8f96242ba3ec84ee970c1c84ecf5"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V05_stress_split-hands.mid",
+            "byteLength": 1354,
+            "sha256": "25ccb7a551eaf5f0b395e9fb3a51287318ad9ed6b239fbe06f37bb2155354bfd"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V06_clean_separate-bass-upper.mid",
+            "byteLength": 437,
+            "sha256": "6c6767a935f16f953a2c1f4b43ecca679439d2385ab9def32edfb4bdc22abe86"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V06_stress_separate-bass-upper.mid",
+            "byteLength": 1352,
+            "sha256": "109f53fc6917af8f77d3cded69027614cc939df5ff1acc31576ea486d1b78882"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V07_clean_rootless-with-bass.mid",
+            "byteLength": 385,
+            "sha256": "b8af899f93c641a6f469145d499e549873cb1ed1153ec9b3c7c35dda79de1736"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V07_stress_rootless-with-bass.mid",
+            "byteLength": 1307,
+            "sha256": "2a77ab8c6dbde6af1a36f50c9635dd658dba7971e521039f9463993ae639cd28"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V08_clean_slash-bass.mid",
+            "byteLength": 433,
+            "sha256": "cddc5783284afdcd636492e6e127b442d76283b9aa57aef8b21c95c166fd3b21"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V08_stress_slash-bass.mid",
+            "byteLength": 1356,
+            "sha256": "fd14fe4d33a130f1a6b2cc48d7317d30ba86816dcbe0a34957c4db97657c79b4"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V09_clean_pedal-bass.mid",
+            "byteLength": 430,
+            "sha256": "016357e3426794c2dcd3212ad3979b2d6bf8b771b5fa2d55437d5abc19d7fc80"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V09_stress_pedal-bass.mid",
+            "byteLength": 1347,
+            "sha256": "1b848e9c63a37c8424b2e376b48f36d99a2531e9805dbd56aff95ff5723af57b"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V10_clean_octave-doublings.mid",
+            "byteLength": 475,
+            "sha256": "37c750a44d8cca996087cc97720b7414330c75e204b10ed979180b4bc9bf8687"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V10_stress_octave-doublings.mid",
+            "byteLength": 1391,
+            "sha256": "1c0629f3fba8271e3cda625736404dadffa49c9d5ed6ae5a9705a021f308cb56"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V11_clean_duplicate-across-tracks.mid",
+            "byteLength": 582,
+            "sha256": "cc0bcf075585a09e832d9ac0c1f5c0a9644e1e5dac800b4d0e390d1d2ce14de5"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V11_stress_duplicate-across-tracks.mid",
+            "byteLength": 1490,
+            "sha256": "839f8fc39820ae8fda4c7ce90ab47ab34a11737e6c9ee8f2515b8f8c7d5d4434"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V12_clean_separate-melody-contamination.mid",
+            "byteLength": 721,
+            "sha256": "cb34f66f1bf0736570214cadc572ba2b471a02b398e8b5038e9632901e448a48"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V12_stress_separate-melody-contamination.mid",
+            "byteLength": 1040,
+            "sha256": "a3d86d5d884d6593af918fcde778539e168cebc5385d7adfebcfdbfdefe9ff3c"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V13_clean_same-track-melody.mid",
+            "byteLength": 651,
+            "sha256": "a62c630d3854d3975628da085aa02c6c6413b5a8307bc9d1a96062b4f2c634e0"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V13_stress_same-track-melody.mid",
+            "byteLength": 992,
+            "sha256": "e55aeb9131aa478d81b8ac4b3680c768c7f08bc097028a24ad38ddd1b3868044"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V14_clean_passing-tones.mid",
+            "byteLength": 579,
+            "sha256": "aba387061a4f239d166d71ad9a34c8cb61123fc8505a04e1710de52fe1d6d12e"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V14_stress_passing-tones.mid",
+            "byteLength": 1495,
+            "sha256": "f2be814a87c801b578487a8caf89609fc2e0081315046dbf311a7368064fdd9f"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V15_clean_sustain-overlap.mid",
+            "byteLength": 446,
+            "sha256": "4a70af68197e8df367dd737eb58aec195711f55bef36934ef26bd99f399a429d"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V15_stress_sustain-overlap.mid",
+            "byteLength": 1372,
+            "sha256": "c234ea97e468ec1ffd84cb05cf7e3c0febf2f038ede28d79e5a14f9720d6152c"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V16_clean_anticipated-next-chord.mid",
+            "byteLength": 370,
+            "sha256": "ed5a6897032dd8a7192cf3a0c929952f38c847820311757c82ef3a9a79c552f2"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V16_stress_anticipated-next-chord.mid",
+            "byteLength": 1294,
+            "sha256": "6d1bcbab3c4274da4feaa6b8fa16941979f230c2b3ee56df3c511f2a474f95fd"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V17_clean_pure-arpeggio.mid",
+            "byteLength": 513,
+            "sha256": "b70948f83442e07ffcbed6e1d1a6b363d636fc5dbfbd5a2be724e50d9ae4474a"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V17_stress_pure-arpeggio.mid",
+            "byteLength": 1437,
+            "sha256": "b46fc4ac9ca706c3b62a76f0ac20a9c14613e1302d5a1192e2c1cf95cb67680e"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V18_clean_hybrid-block-arpeggio.mid",
+            "byteLength": 469,
+            "sha256": "e72271fdc458402e78d83da58ba37cae8095b9ee03710fbe4adfcbde43de0cb4"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V18_stress_hybrid-block-arpeggio.mid",
+            "byteLength": 1394,
+            "sha256": "d66ef74d39f37bc33db48ba3afd13309caa34f66fde412b990f70363021d1c81"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V19_clean_guitar-strum.mid",
+            "byteLength": 429,
+            "sha256": "92a2ef62e8dc6eca96067bae422286f209260348d3b741887ffa41847fb1237a"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V19_stress_guitar-strum.mid",
+            "byteLength": 1356,
+            "sha256": "a123216b17a40e6001ab8020539d1cb34e208599578ac8d0d699f655ecfc93e7"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V20_clean_repeated-reattacks.mid",
+            "byteLength": 1254,
+            "sha256": "d38f9750d38d7e78b7f0dcae33dee040cbc677f665aca2f16bb503a9b2821cdf"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V20_stress_repeated-reattacks.mid",
+            "byteLength": 2174,
+            "sha256": "b5627b4e2587bc88da3e64b9786f8c7d0bb3031354aca07fc790978255cfd77c"
+          }
+        ]
+      },
+      {
+        "id": "voicing-gold-development",
+        "manifestPath": "test/loop-vault-voicing-gold-corpus-v1/manifest.json",
+        "files": [
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V01_clean_close-block-chords.mid",
+            "byteLength": 379,
+            "sha256": "09189ee8dd334a374d7177ae0cc5738832010956d0ea7f5bc911faae9538503c"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V01_stress_close-block-chords.mid",
+            "byteLength": 1296,
+            "sha256": "9faf652c6c07782435b38cac3dfeef8a91a7eead8746a68a056249ffa8780a17"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V02_clean_inversions.mid",
+            "byteLength": 331,
+            "sha256": "2d00b30bc096ebafc812b5403a55786e1d279a1c14c56b54609ee577569e7dde"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V02_stress_inversions.mid",
+            "byteLength": 1248,
+            "sha256": "7d7f7a4f0f25127456cc1fd39c27dcccbe8033717d242653b796193fb5f4a32e"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V03_clean_open-spread.mid",
+            "byteLength": 372,
+            "sha256": "d8a3d15cec28610f79950f8d6ab3a35f752126585dcd3ba4adf52be39647d627"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V03_stress_open-spread.mid",
+            "byteLength": 1292,
+            "sha256": "20875e8a44bd808a3fafdd9ee4f29741ef5cd93f89171b4d374bda5daaa12a39"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V04_clean_shell-sparse.mid",
+            "byteLength": 253,
+            "sha256": "41c7641557c9020c9327fcbbb24704b0a8fe922471d5cce689d1264c2089b315"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V04_stress_shell-sparse.mid",
+            "byteLength": 1171,
+            "sha256": "23ec0088dcbf131d1bacc22208c6143ec51c6ec1075e23e57ce441b9ad37e24d"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V05_clean_split-hands.mid",
+            "byteLength": 445,
+            "sha256": "09e0580c506569e3f9b631a63ff1428bde3f8f96242ba3ec84ee970c1c84ecf5"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V05_stress_split-hands.mid",
+            "byteLength": 1354,
+            "sha256": "25ccb7a551eaf5f0b395e9fb3a51287318ad9ed6b239fbe06f37bb2155354bfd"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V06_clean_separate-bass-upper.mid",
+            "byteLength": 437,
+            "sha256": "6c6767a935f16f953a2c1f4b43ecca679439d2385ab9def32edfb4bdc22abe86"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V06_stress_separate-bass-upper.mid",
+            "byteLength": 1352,
+            "sha256": "109f53fc6917af8f77d3cded69027614cc939df5ff1acc31576ea486d1b78882"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V07_clean_rootless-with-bass.mid",
+            "byteLength": 385,
+            "sha256": "b8af899f93c641a6f469145d499e549873cb1ed1153ec9b3c7c35dda79de1736"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V07_stress_rootless-with-bass.mid",
+            "byteLength": 1307,
+            "sha256": "2a77ab8c6dbde6af1a36f50c9635dd658dba7971e521039f9463993ae639cd28"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V08_clean_slash-bass.mid",
+            "byteLength": 433,
+            "sha256": "cddc5783284afdcd636492e6e127b442d76283b9aa57aef8b21c95c166fd3b21"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V08_stress_slash-bass.mid",
+            "byteLength": 1356,
+            "sha256": "fd14fe4d33a130f1a6b2cc48d7317d30ba86816dcbe0a34957c4db97657c79b4"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V09_clean_pedal-bass.mid",
+            "byteLength": 430,
+            "sha256": "016357e3426794c2dcd3212ad3979b2d6bf8b771b5fa2d55437d5abc19d7fc80"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V09_stress_pedal-bass.mid",
+            "byteLength": 1347,
+            "sha256": "1b848e9c63a37c8424b2e376b48f36d99a2531e9805dbd56aff95ff5723af57b"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V10_clean_octave-doublings.mid",
+            "byteLength": 475,
+            "sha256": "37c750a44d8cca996087cc97720b7414330c75e204b10ed979180b4bc9bf8687"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V10_stress_octave-doublings.mid",
+            "byteLength": 1391,
+            "sha256": "1c0629f3fba8271e3cda625736404dadffa49c9d5ed6ae5a9705a021f308cb56"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V11_clean_duplicate-across-tracks.mid",
+            "byteLength": 582,
+            "sha256": "cc0bcf075585a09e832d9ac0c1f5c0a9644e1e5dac800b4d0e390d1d2ce14de5"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V11_stress_duplicate-across-tracks.mid",
+            "byteLength": 1490,
+            "sha256": "839f8fc39820ae8fda4c7ce90ab47ab34a11737e6c9ee8f2515b8f8c7d5d4434"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V12_clean_separate-melody-contamination.mid",
+            "byteLength": 721,
+            "sha256": "cb34f66f1bf0736570214cadc572ba2b471a02b398e8b5038e9632901e448a48"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V12_stress_separate-melody-contamination.mid",
+            "byteLength": 1040,
+            "sha256": "a3d86d5d884d6593af918fcde778539e168cebc5385d7adfebcfdbfdefe9ff3c"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V13_clean_same-track-melody.mid",
+            "byteLength": 651,
+            "sha256": "a62c630d3854d3975628da085aa02c6c6413b5a8307bc9d1a96062b4f2c634e0"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V13_stress_same-track-melody.mid",
+            "byteLength": 992,
+            "sha256": "e55aeb9131aa478d81b8ac4b3680c768c7f08bc097028a24ad38ddd1b3868044"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V14_clean_passing-tones.mid",
+            "byteLength": 579,
+            "sha256": "aba387061a4f239d166d71ad9a34c8cb61123fc8505a04e1710de52fe1d6d12e"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V14_stress_passing-tones.mid",
+            "byteLength": 1495,
+            "sha256": "f2be814a87c801b578487a8caf89609fc2e0081315046dbf311a7368064fdd9f"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V15_clean_sustain-overlap.mid",
+            "byteLength": 446,
+            "sha256": "4a70af68197e8df367dd737eb58aec195711f55bef36934ef26bd99f399a429d"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V15_stress_sustain-overlap.mid",
+            "byteLength": 1372,
+            "sha256": "c234ea97e468ec1ffd84cb05cf7e3c0febf2f038ede28d79e5a14f9720d6152c"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V16_clean_anticipated-next-chord.mid",
+            "byteLength": 370,
+            "sha256": "ed5a6897032dd8a7192cf3a0c929952f38c847820311757c82ef3a9a79c552f2"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V16_stress_anticipated-next-chord.mid",
+            "byteLength": 1294,
+            "sha256": "6d1bcbab3c4274da4feaa6b8fa16941979f230c2b3ee56df3c511f2a474f95fd"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V17_clean_pure-arpeggio.mid",
+            "byteLength": 513,
+            "sha256": "b70948f83442e07ffcbed6e1d1a6b363d636fc5dbfbd5a2be724e50d9ae4474a"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V17_stress_pure-arpeggio.mid",
+            "byteLength": 1437,
+            "sha256": "b46fc4ac9ca706c3b62a76f0ac20a9c14613e1302d5a1192e2c1cf95cb67680e"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V18_clean_hybrid-block-arpeggio.mid",
+            "byteLength": 469,
+            "sha256": "e72271fdc458402e78d83da58ba37cae8095b9ee03710fbe4adfcbde43de0cb4"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V18_stress_hybrid-block-arpeggio.mid",
+            "byteLength": 1394,
+            "sha256": "d66ef74d39f37bc33db48ba3afd13309caa34f66fde412b990f70363021d1c81"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V19_clean_guitar-strum.mid",
+            "byteLength": 429,
+            "sha256": "92a2ef62e8dc6eca96067bae422286f209260348d3b741887ffa41847fb1237a"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V19_stress_guitar-strum.mid",
+            "byteLength": 1356,
+            "sha256": "a123216b17a40e6001ab8020539d1cb34e208599578ac8d0d699f655ecfc93e7"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V20_clean_repeated-reattacks.mid",
+            "byteLength": 1254,
+            "sha256": "d38f9750d38d7e78b7f0dcae33dee040cbc677f665aca2f16bb503a9b2821cdf"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V20_stress_repeated-reattacks.mid",
+            "byteLength": 2174,
+            "sha256": "b5627b4e2587bc88da3e64b9786f8c7d0bb3031354aca07fc790978255cfd77c"
+          }
+        ]
+      },
+      {
+        "id": "voicing-gold-validation",
+        "manifestPath": "test/loop-vault-voicing-gold-corpus-v1/manifest.json",
+        "files": [
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/validation/V21_clean_two-chords-per-bar.mid",
+            "byteLength": 737,
+            "sha256": "94896a26a9ee121d6df686c97984422c55104dfb1812f3fcbffa038d099cc730"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/validation/V21_stress_two-chords-per-bar.mid",
+            "byteLength": 1662,
+            "sha256": "28595f6c402b0ebdf1959c468bfcbe226ef1a6a760561612c8e8738ac9ae739b"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/validation/V22_clean_walking-bass.mid",
+            "byteLength": 642,
+            "sha256": "3dfbc6a8a65608f8c932af8379abb732a42579c3bdb170ee7464117767e0a840"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/validation/V22_stress_walking-bass.mid",
+            "byteLength": 1567,
+            "sha256": "f9ef144e061a438526ab1a64a29f944572f459fc95ab8d4d694dd636ecea6313"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/validation/V23_clean_voice-duplicate.mid",
+            "byteLength": 744,
+            "sha256": "99372f3ec5deb29865d5d2eb7b728d032fd3eebe3339ee995bffdf54f674fb0e"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/validation/V23_stress_voice-duplicate.mid",
+            "byteLength": 1094,
+            "sha256": "38c00820b14fda5e41065a95e4eab0bbfcdf3217968cce5cecd34d9ef772eebb"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/validation/V24_clean_humanized-overlap.mid",
+            "byteLength": 436,
+            "sha256": "8d14144911da9bf80881daf608d28f6ab4d58124b7f750b332ca63144f0f23ec"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/validation/V24_stress_humanized-overlap.mid",
+            "byteLength": 1363,
+            "sha256": "1d335730d8ccbf6d9f0b158664033dd630799b37b6ab9e4974bac82a8d507a44"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/validation/V25_clean_velocity-imbalance.mid",
+            "byteLength": 779,
+            "sha256": "e7a343902673fdf68e10c14c20035428f1987e9773a2481fa07eed020da1e89e"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/validation/V25_stress_velocity-imbalance.mid",
+            "byteLength": 1095,
+            "sha256": "84e9cbe54685803d305408dafadc382cf1a6950dbc7ab1809521a741cb2f45a6"
+          }
+        ]
+      }
+    ],
+    "allowedCrossSuiteOverlaps": [
+      {
+        "suiteIds": [
+          "voicing-gold-40-file-selection",
+          "voicing-gold-development"
+        ],
+        "files": [
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V01_clean_close-block-chords.mid",
+            "byteLength": 379,
+            "sha256": "09189ee8dd334a374d7177ae0cc5738832010956d0ea7f5bc911faae9538503c"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V01_stress_close-block-chords.mid",
+            "byteLength": 1296,
+            "sha256": "9faf652c6c07782435b38cac3dfeef8a91a7eead8746a68a056249ffa8780a17"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V02_clean_inversions.mid",
+            "byteLength": 331,
+            "sha256": "2d00b30bc096ebafc812b5403a55786e1d279a1c14c56b54609ee577569e7dde"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V02_stress_inversions.mid",
+            "byteLength": 1248,
+            "sha256": "7d7f7a4f0f25127456cc1fd39c27dcccbe8033717d242653b796193fb5f4a32e"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V03_clean_open-spread.mid",
+            "byteLength": 372,
+            "sha256": "d8a3d15cec28610f79950f8d6ab3a35f752126585dcd3ba4adf52be39647d627"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V03_stress_open-spread.mid",
+            "byteLength": 1292,
+            "sha256": "20875e8a44bd808a3fafdd9ee4f29741ef5cd93f89171b4d374bda5daaa12a39"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V04_clean_shell-sparse.mid",
+            "byteLength": 253,
+            "sha256": "41c7641557c9020c9327fcbbb24704b0a8fe922471d5cce689d1264c2089b315"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V04_stress_shell-sparse.mid",
+            "byteLength": 1171,
+            "sha256": "23ec0088dcbf131d1bacc22208c6143ec51c6ec1075e23e57ce441b9ad37e24d"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V05_clean_split-hands.mid",
+            "byteLength": 445,
+            "sha256": "09e0580c506569e3f9b631a63ff1428bde3f8f96242ba3ec84ee970c1c84ecf5"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V05_stress_split-hands.mid",
+            "byteLength": 1354,
+            "sha256": "25ccb7a551eaf5f0b395e9fb3a51287318ad9ed6b239fbe06f37bb2155354bfd"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V06_clean_separate-bass-upper.mid",
+            "byteLength": 437,
+            "sha256": "6c6767a935f16f953a2c1f4b43ecca679439d2385ab9def32edfb4bdc22abe86"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V06_stress_separate-bass-upper.mid",
+            "byteLength": 1352,
+            "sha256": "109f53fc6917af8f77d3cded69027614cc939df5ff1acc31576ea486d1b78882"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V07_clean_rootless-with-bass.mid",
+            "byteLength": 385,
+            "sha256": "b8af899f93c641a6f469145d499e549873cb1ed1153ec9b3c7c35dda79de1736"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V07_stress_rootless-with-bass.mid",
+            "byteLength": 1307,
+            "sha256": "2a77ab8c6dbde6af1a36f50c9635dd658dba7971e521039f9463993ae639cd28"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V08_clean_slash-bass.mid",
+            "byteLength": 433,
+            "sha256": "cddc5783284afdcd636492e6e127b442d76283b9aa57aef8b21c95c166fd3b21"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V08_stress_slash-bass.mid",
+            "byteLength": 1356,
+            "sha256": "fd14fe4d33a130f1a6b2cc48d7317d30ba86816dcbe0a34957c4db97657c79b4"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V09_clean_pedal-bass.mid",
+            "byteLength": 430,
+            "sha256": "016357e3426794c2dcd3212ad3979b2d6bf8b771b5fa2d55437d5abc19d7fc80"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V09_stress_pedal-bass.mid",
+            "byteLength": 1347,
+            "sha256": "1b848e9c63a37c8424b2e376b48f36d99a2531e9805dbd56aff95ff5723af57b"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V10_clean_octave-doublings.mid",
+            "byteLength": 475,
+            "sha256": "37c750a44d8cca996087cc97720b7414330c75e204b10ed979180b4bc9bf8687"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V10_stress_octave-doublings.mid",
+            "byteLength": 1391,
+            "sha256": "1c0629f3fba8271e3cda625736404dadffa49c9d5ed6ae5a9705a021f308cb56"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V11_clean_duplicate-across-tracks.mid",
+            "byteLength": 582,
+            "sha256": "cc0bcf075585a09e832d9ac0c1f5c0a9644e1e5dac800b4d0e390d1d2ce14de5"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V11_stress_duplicate-across-tracks.mid",
+            "byteLength": 1490,
+            "sha256": "839f8fc39820ae8fda4c7ce90ab47ab34a11737e6c9ee8f2515b8f8c7d5d4434"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V12_clean_separate-melody-contamination.mid",
+            "byteLength": 721,
+            "sha256": "cb34f66f1bf0736570214cadc572ba2b471a02b398e8b5038e9632901e448a48"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V12_stress_separate-melody-contamination.mid",
+            "byteLength": 1040,
+            "sha256": "a3d86d5d884d6593af918fcde778539e168cebc5385d7adfebcfdbfdefe9ff3c"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V13_clean_same-track-melody.mid",
+            "byteLength": 651,
+            "sha256": "a62c630d3854d3975628da085aa02c6c6413b5a8307bc9d1a96062b4f2c634e0"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V13_stress_same-track-melody.mid",
+            "byteLength": 992,
+            "sha256": "e55aeb9131aa478d81b8ac4b3680c768c7f08bc097028a24ad38ddd1b3868044"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V14_clean_passing-tones.mid",
+            "byteLength": 579,
+            "sha256": "aba387061a4f239d166d71ad9a34c8cb61123fc8505a04e1710de52fe1d6d12e"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V14_stress_passing-tones.mid",
+            "byteLength": 1495,
+            "sha256": "f2be814a87c801b578487a8caf89609fc2e0081315046dbf311a7368064fdd9f"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V15_clean_sustain-overlap.mid",
+            "byteLength": 446,
+            "sha256": "4a70af68197e8df367dd737eb58aec195711f55bef36934ef26bd99f399a429d"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V15_stress_sustain-overlap.mid",
+            "byteLength": 1372,
+            "sha256": "c234ea97e468ec1ffd84cb05cf7e3c0febf2f038ede28d79e5a14f9720d6152c"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V16_clean_anticipated-next-chord.mid",
+            "byteLength": 370,
+            "sha256": "ed5a6897032dd8a7192cf3a0c929952f38c847820311757c82ef3a9a79c552f2"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V16_stress_anticipated-next-chord.mid",
+            "byteLength": 1294,
+            "sha256": "6d1bcbab3c4274da4feaa6b8fa16941979f230c2b3ee56df3c511f2a474f95fd"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V17_clean_pure-arpeggio.mid",
+            "byteLength": 513,
+            "sha256": "b70948f83442e07ffcbed6e1d1a6b363d636fc5dbfbd5a2be724e50d9ae4474a"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V17_stress_pure-arpeggio.mid",
+            "byteLength": 1437,
+            "sha256": "b46fc4ac9ca706c3b62a76f0ac20a9c14613e1302d5a1192e2c1cf95cb67680e"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V18_clean_hybrid-block-arpeggio.mid",
+            "byteLength": 469,
+            "sha256": "e72271fdc458402e78d83da58ba37cae8095b9ee03710fbe4adfcbde43de0cb4"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V18_stress_hybrid-block-arpeggio.mid",
+            "byteLength": 1394,
+            "sha256": "d66ef74d39f37bc33db48ba3afd13309caa34f66fde412b990f70363021d1c81"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V19_clean_guitar-strum.mid",
+            "byteLength": 429,
+            "sha256": "92a2ef62e8dc6eca96067bae422286f209260348d3b741887ffa41847fb1237a"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V19_stress_guitar-strum.mid",
+            "byteLength": 1356,
+            "sha256": "a123216b17a40e6001ab8020539d1cb34e208599578ac8d0d699f655ecfc93e7"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V20_clean_repeated-reattacks.mid",
+            "byteLength": 1254,
+            "sha256": "d38f9750d38d7e78b7f0dcae33dee040cbc677f665aca2f16bb503a9b2821cdf"
+          },
+          {
+            "relativePath": "test/loop-vault-voicing-gold-corpus-v1/midi/dev/V20_stress_repeated-reattacks.mid",
+            "byteLength": 2174,
+            "sha256": "b5627b4e2587bc88da3e64b9786f8c7d0bb3031354aca07fc790978255cfd77c"
+          }
+        ]
+      }
+    ],
+    "sha256": "8e97f2f9a16546d9f3b2ad6a8dcff76f8fff40b8df8a063a28b1dc2456b78eb6"
+  },
+  "privacy": {
+    "repositoryRelativePathsOnly": true,
+    "absolutePathsIncluded": false,
+    "personalNamesIncluded": false,
+    "midiBytesIncluded": false
+  }
+}
