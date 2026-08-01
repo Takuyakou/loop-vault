@@ -8,6 +8,7 @@ const tone = vi.hoisted(() => {
     wet = { value: 0 };
     volume = { value: 0 };
     dispose = vi.fn();
+    cancel = vi.fn();
     releaseAll = vi.fn();
     triggerAttackRelease = vi.fn();
 
@@ -27,6 +28,7 @@ const tone = vi.hoisted(() => {
   const voices: unknown[] = [];
   const samplers: AudioNode[] = [];
   const polySynths: AudioNode[] = [];
+  let audioNow = 0;
 
   class PolySynth extends AudioNode {
     constructor(voice: unknown) {
@@ -50,9 +52,13 @@ const tone = vi.hoisted(() => {
     Sampler,
     Synth,
     loaded: vi.fn().mockResolvedValue(undefined),
+    now: vi.fn(() => audioNow),
     polySynths,
     samplers,
     start: vi.fn().mockResolvedValue(undefined),
+    setAudioNow(value: number) {
+      audioNow = value;
+    },
     voices,
   };
 });
@@ -69,6 +75,7 @@ vi.mock("tone", () => ({
   Synth: tone.Synth,
   getDestination: vi.fn(() => new tone.AudioNode()),
   loaded: tone.loaded,
+  now: tone.now,
   start: tone.start,
 }));
 
@@ -138,6 +145,7 @@ describe("chord preview instruments", () => {
 
   it("plays raw MIDI notes in bounded windows and releases them on stop", async () => {
     vi.useFakeTimers();
+    tone.setAudioNow(0);
     const started = vi.fn();
     const ended = vi.fn();
     await previewMidiNotes([
@@ -151,16 +159,70 @@ describe("chord preview instruments", () => {
     expect(electric.triggerAttackRelease).toHaveBeenCalledWith(
       "C4",
       0.5,
-      undefined,
+      0,
       100 / 127,
     );
     expect(ended).not.toHaveBeenCalled();
     stopPreview();
     expect(ended).toHaveBeenCalledWith("stopped");
     expect(electric.releaseAll).toHaveBeenCalled();
+    expect(electric.dispose).toHaveBeenCalled();
     const triggerCount = electric.triggerAttackRelease.mock.calls.length;
     await vi.advanceTimersByTimeAsync(5_000);
     expect(electric.triggerAttackRelease).toHaveBeenCalledTimes(triggerCount);
+    vi.useRealTimers();
+  });
+
+  it("keeps note offsets on the audio clock when the rolling timer stalls", async () => {
+    vi.useFakeTimers();
+    tone.setAudioNow(10);
+    await previewMidiNotes([
+      { pitch: 60, startBeat: 0, durationBeats: 1, velocity: 100 },
+      { pitch: 64, startBeat: 4, durationBeats: 1, velocity: 100 },
+    ], 120, "clean-bass");
+    const bass = tone.polySynths[tone.polySynths.length - 1]!;
+
+    expect(bass.triggerAttackRelease).toHaveBeenNthCalledWith(
+      1,
+      "C4",
+      0.5,
+      10,
+      100 / 127,
+    );
+    tone.setAudioNow(11.2);
+    await vi.advanceTimersByTimeAsync(200);
+    expect(bass.triggerAttackRelease).toHaveBeenNthCalledWith(
+      2,
+      "E4",
+      0.5,
+      12,
+      100 / 127,
+    );
+    stopPreview();
+    expect(bass.dispose).toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  it("replaces the active practice timbre without leaving a second graph sounding", async () => {
+    vi.useFakeTimers();
+    const bassEnded = vi.fn();
+    const referenceEnded = vi.fn();
+    const note = [{ pitch: 40, startBeat: 0, durationBeats: 1, velocity: 96 }];
+
+    await previewMidiNotes(note, 120, "clean-bass", { onEnded: bassEnded });
+    const bass = tone.polySynths[tone.polySynths.length - 1]!;
+    await previewMidiNotes(note, 120, "singing-reference", { onEnded: referenceEnded });
+    const reference = tone.polySynths[tone.polySynths.length - 1]!;
+
+    expect(reference).not.toBe(bass);
+    expect(bassEnded).toHaveBeenCalledOnce();
+    expect(bassEnded).toHaveBeenCalledWith("stopped");
+    expect(bass.releaseAll).toHaveBeenCalled();
+    expect(bass.dispose).toHaveBeenCalledOnce();
+    await vi.advanceTimersByTimeAsync(500);
+    expect(reference.triggerAttackRelease).toHaveBeenCalled();
+    expect(referenceEnded).toHaveBeenCalledWith("completed");
+    stopPreview();
     vi.useRealTimers();
   });
 });

@@ -100,6 +100,21 @@ describe("Degree Echo state machine", () => {
     expect(state).toEqual(snapshot);
   });
 
+  it("recovers from cancelled initial and replay playback without counting partial listens", () => {
+    let initial = createDegreePracticeState({ singEnabled: true, listenLimit: 2 });
+    initial = transition(initial, { type: "CONFIGURE" });
+    initial = transition(initial, { type: "START_LISTEN" });
+    initial = transition(initial, { type: "PLAYBACK_CANCELLED" });
+    expect(initial).toMatchObject({ status: "ready", listenCount: 0 });
+
+    let replay = reachRecall(true, 2);
+    replay = transition(replay, { type: "REPLAY" });
+    replay = transition(replay, { type: "PLAYBACK_CANCELLED" });
+    expect(replay).toMatchObject({ status: "recall", listenCount: 1 });
+    replay = transition(replay, { type: "REPLAY" });
+    expect(replay).toMatchObject({ status: "listening", listenCount: 2 });
+  });
+
   it.each(["recall", "thinking"] as const)(
     "replays through listening and returns only to the typed %s stage",
     (returnStage) => {

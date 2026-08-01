@@ -41,6 +41,7 @@ export type PracticeAction =
   | { readonly type: "CONFIGURE" }
   | { readonly type: "START_LISTEN" }
   | { readonly type: "PLAYBACK_ENDED" }
+  | { readonly type: "PLAYBACK_CANCELLED" }
   | { readonly type: "REPLAY" }
   | {
       readonly type: "CONTINUE_RECALL";
@@ -135,6 +136,19 @@ export function reduceDegreePractice(
     return success({
       ...state,
       status: state.playbackReturnStatus,
+      playbackReturnStatus: undefined,
+    });
+  }
+  if (action.type === "PLAYBACK_CANCELLED" && state.status === "listening") {
+    if (!state.playbackReturnStatus) {
+      return failure("invalid-transition", "Listening state has no typed return stage.");
+    }
+    const cancelledInitialListen = state.listenCount === 1
+      && state.playbackReturnStatus === "recall";
+    return success({
+      ...state,
+      status: cancelledInitialListen ? "ready" : state.playbackReturnStatus,
+      listenCount: Math.max(0, state.listenCount - 1),
       playbackReturnStatus: undefined,
     });
   }
