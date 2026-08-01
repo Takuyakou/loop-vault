@@ -1,7 +1,8 @@
 import { readFile, stat, mkdir, writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { execFileSync } from "node:child_process";
+import { dirname, relative, resolve } from "node:path";
 import { performance } from "node:perf_hooks";
-import { cwd, stdout } from "node:process";
+import { argv, cwd, stdout } from "node:process";
 import { parseChordLabel } from "../src/domain/chords";
 import { chordIdentityKey, normalizeChordLabel } from "../src/domain/chordIdentity";
 import { analyzeMidi } from "../src/domain/midi/analysis";
@@ -43,6 +44,22 @@ import {
   evaluateSupportSplit,
   type ShadowFilter,
 } from "./phase442/supportEvaluation";
+import {
+  assertRealCorpusRootWithinRepository,
+  readFileExistingWithinRoot,
+} from "./phase515/safePath";
+import {
+  assertPhase47SafeManifest,
+  assertVoicingGoldSafeManifest,
+  frozenSafeEvaluatorArgs,
+  frozenSuite,
+  loadFrozenSafeEvaluatorContract,
+  readFrozenSuiteManifest,
+  readFrozenSuiteMidi,
+  selectFrozenDefinitions,
+  type FrozenSafeEvaluatorContract,
+  type FrozenSafeEvaluatorSuite,
+} from "./phase515/safeEvaluatorContract";
 
 const root = cwd();
 const outputDir = resolve(root, "docs/phase5");
@@ -83,6 +100,8 @@ const modes: readonly EvaluationMode[] = [
   },
 ];
 
+const p515SafeNonHoldout = argv.includes("--p515-safe-non-holdout");
+if (!p515SafeNonHoldout) {
 const corpora = await loadCorpora();
 const corpusResults = [];
 for (const corpus of corpora) {
@@ -203,6 +222,7 @@ await writeFile(
   "utf8",
 );
 stdout.write(`Wrote Phase 5 evaluation: ${corpusResults.length} corpora, ${realMidi.length} real MIDI files\n`);
+}
 
 async function loadCorpora(): Promise<Array<{
   id: string;
@@ -210,8 +230,8 @@ async function loadCorpora(): Promise<Array<{
   cases: EvaluationCaseInput[];
 }>> {
   const chordDripRoot = resolve(root, "docs/loop-vault-evaluation-corpus");
-  const chordDripManifest = await readJson<ChordDripCorpusManifest>(
-    resolve(chordDripRoot, "manifest.json"),
+  const chordDripManifest = await readCorpusJson<ChordDripCorpusManifest>(
+    chordDripRoot, "manifest.json",
   );
   const chordDrip = await loadCases(
     chordDripRoot,
@@ -222,17 +242,17 @@ async function loadCorpora(): Promise<Array<{
     resolve(root, ".local-evaluation/chapter3-seed"),
     resolve(root, "test/loop-vault-chapter3-seed"),
   ]);
-  const chapterManifest = await readJson<{
+  const chapterManifest = await readCorpusJson<{
     cases: SeedCase[];
-  }>(resolve(chapterRoot, "manifest.json"));
+  }>(chapterRoot, "manifest.json");
   const chapter = await loadCases(
     chapterRoot,
     chapterManifest.cases.map(adaptSeedCase),
   );
 
   const labelRoot = resolve(root, "test/loop-vault-voicing-gold-corpus-v1");
-  const labelManifest = await readJson<LabelCorpusManifest>(
-    resolve(labelRoot, "manifest.json"),
+  const labelManifest = await readCorpusJson<LabelCorpusManifest>(
+    labelRoot, "manifest.json",
   );
   const labelDev = await loadCases(
     labelRoot,
@@ -260,9 +280,12 @@ async function loadCorpora(): Promise<Array<{
   ];
 }
 
-async function evaluateModes(cases: readonly EvaluationCaseInput[]) {
+export async function evaluateModes(
+  cases: readonly EvaluationCaseInput[],
+  modeIds?: ReadonlySet<string>,
+) {
   const output = [];
-  for (const mode of modes) {
+  for (const mode of modes.filter((entry) => !modeIds || modeIds.has(entry.id))) {
     const caseMetrics = [];
     const costs = [];
     const catalogCosts = [];
@@ -271,10 +294,15 @@ async function evaluateModes(cases: readonly EvaluationCaseInput[]) {
     let catalogHits = 0;
     let duplicateCandidates = 0;
     let maxCandidatesPerEvent = 0;
+    let deterministic = true;
+    let slashExpected = 0;
+    let slashCorrect = 0;
     for (const input of cases) {
       const started = performance.now();
       const analysis = analyzeEvaluationMode(input.bytes, mode);
       runtimes.push(performance.now() - started);
+      const repeated = analyzeEvaluationMode(input.bytes, mode);
+      deterministic &&= JSON.stringify(analysis) === JSON.stringify(repeated);
       analyzerVersion ||= analysis.analyzerVersion;
       caseMetrics.push(evaluateCaseV2(input.definition, analysis.fullTimeline));
       costs.push(...correctionCosts(input.definition, analysis.fullTimeline));
@@ -285,6 +313,9 @@ async function evaluateModes(cases: readonly EvaluationCaseInput[]) {
         maxCandidatesPerEvent,
         ...analysis.fullTimeline.map((entry) => entry.alternatives.length + 1),
       );
+      const slash = strictSlashMetrics(input.definition, analysis.fullTimeline);
+      slashExpected += slash.expected;
+      slashCorrect += slash.correct;
     }
     const aggregate = aggregateV2(caseMetrics).eventWeighted;
     const correction = summarizeOperationCorrectionCosts(costs);
@@ -302,6 +333,10 @@ async function evaluateModes(cases: readonly EvaluationCaseInput[]) {
         catalogHits - Math.round(aggregate.top5CanonicalAccuracy * correction.segmentCount),
       rootAccuracy: aggregate.rootAccuracy,
       qualityAccuracy: aggregate.qualityAccuracy,
+      seventhAccuracy: aggregate.seventhAccuracy,
+      tensionAccuracy: aggregate.extensionAccuracy,
+      slashBassAccuracy: ratio(slashCorrect, slashExpected),
+      usableAccuracy: aggregate.pitchSetEquivalentAccuracy,
       correctionCostTotal: correction.total,
       correctionCostMean: correction.mean,
       manualInputRate: ratio(
@@ -318,6 +353,7 @@ async function evaluateModes(cases: readonly EvaluationCaseInput[]) {
       correctionsPerEightEvents: rounded(correction.mean * 8),
       duplicateCandidates,
       maxCandidatesPerEvent,
+      deterministic,
       runtimeMs: rounded(sum(runtimes)),
       runtimePerFileP50Ms: percentile(runtimes, 0.5),
       runtimePerFileP90Ms: percentile(runtimes, 0.9),
@@ -571,7 +607,7 @@ interface Phase47Manifest {
   files: GoldFile[];
 }
 
-function adaptSeedCase(seed: SeedCase): MidiEvaluationCase {
+export function adaptSeedCase(seed: SeedCase): MidiEvaluationCase {
   return {
     id: seed.id,
     title: seed.title,
@@ -587,7 +623,7 @@ function adaptSeedCase(seed: SeedCase): MidiEvaluationCase {
   };
 }
 
-function adaptGoldFile(file: GoldFile, family: string): MidiEvaluationCase {
+export function adaptGoldFile(file: GoldFile, family: string): MidiEvaluationCase {
   return {
     id: file.fileId,
     title: file.fileId,
@@ -626,15 +662,76 @@ function expectedSegment(
   };
 }
 
-async function loadCases(rootDir: string, definitions: MidiEvaluationCase[]) {
+export async function loadCases(rootDir: string, definitions: MidiEvaluationCase[]) {
+  await assertRealCorpusRootWithinRepository(root, rootDir);
   return Promise.all(definitions.map(async (definition) => ({
     definition,
-    bytes: new Uint8Array(await readFile(resolve(rootDir, definition.midiPath))),
+    bytes: new Uint8Array(await readFileExistingWithinRoot(
+      rootDir,
+      definition.midiPath,
+    )),
+  })));
+}
+
+async function loadFrozenCases(
+  rootDir: string,
+  suite: FrozenSafeEvaluatorSuite,
+  definitions: MidiEvaluationCase[],
+): Promise<EvaluationCaseInput[]> {
+  const selected = selectFrozenDefinitions(
+    suite,
+    definitions,
+    (definition) => definition.midiPath,
+  );
+  return Promise.all(selected.map(async (definition) => ({
+    definition,
+    // These are the exact bytes whose handle identity, length, and frozen
+    // digest were checked. Analyzer never reopens a mutable pathname.
+    bytes: new Uint8Array(await readFrozenSuiteMidi(
+      root,
+      rootDir,
+      suite,
+      definition.midiPath,
+    )),
   })));
 }
 
 async function readJson<T>(path: string): Promise<T> {
-  return JSON.parse(await readFile(path, "utf8")) as T;
+  return JSON.parse(
+    (await readFileExistingWithinRoot(root, relative(root, path))).toString("utf8"),
+  ) as T;
+}
+
+async function readCorpusJson<T>(
+  corpusRoot: string,
+  corpusRelativePath: string,
+): Promise<T> {
+  await assertRealCorpusRootWithinRepository(root, corpusRoot);
+  return JSON.parse(
+    (await readFileExistingWithinRoot(corpusRoot, corpusRelativePath))
+      .toString("utf8"),
+  ) as T;
+}
+
+function strictSlashMetrics(
+  definition: MidiEvaluationCase,
+  timeline: readonly ChordTimelineItem[],
+) {
+  let expected = 0;
+  let correct = 0;
+  for (const target of definition.expected.chordTimeline) {
+    const identity = normalizeChordLabel(target.primary);
+    if (
+      !identity
+      || identity.bassPitchClass === undefined
+      || identity.bassPitchClass === identity.rootPitchClass
+    ) continue;
+    expected += 1;
+    const match = matchingTimelineItem(target, timeline);
+    const actual = match ? normalizeChordLabel(match.chord.label) : null;
+    if (actual?.bassPitchClass === identity.bassPitchClass) correct += 1;
+  }
+  return { expected, correct };
 }
 
 async function firstExisting(paths: string[]): Promise<string> {
@@ -695,7 +792,205 @@ function pct(value: number): string {
   return `${(value * 100).toFixed(2)}%`;
 }
 
-function markdown(value: typeof report): string {
+async function runP515SafeNonHoldout(
+  frozenContract: FrozenSafeEvaluatorContract,
+) {
+  const selected: Array<{
+    id: string;
+    sourceKind: string;
+    cases: EvaluationCaseInput[];
+  }> = [];
+  const chordDripRoot = resolve(root, "docs/loop-vault-evaluation-corpus");
+  const chordSuite = frozenSuite(frozenContract, "chord-drip-100");
+  const chordManifest = JSON.parse((await readFrozenSuiteManifest(
+    root,
+    chordDripRoot,
+    chordSuite,
+  )).toString("utf8")) as ChordDripCorpusManifest;
+  selected.push({
+    id: "chord-drip-100",
+    sourceKind: "synthetic-labeled",
+    cases: await loadFrozenCases(
+      chordDripRoot,
+      chordSuite,
+      adaptChordDripManifest(chordManifest),
+    ),
+  });
+
+  const chapterSuite = frozenSuite(frozenContract, "chapter3");
+  // Safe mode follows the reviewed lock path exactly; it never probes multiple
+  // corpus roots and chooses one itself.
+  const chapterRoot = resolve(root, dirname(chapterSuite.repositoryLocation));
+  const chapterManifest = JSON.parse((await readFrozenSuiteManifest(
+    root,
+    chapterRoot,
+    chapterSuite,
+  )).toString("utf8")) as { cases: SeedCase[] };
+  selected.push({
+    id: "chapter3-seed-100",
+    sourceKind: "hand-annotated-local",
+    cases: await loadFrozenCases(
+      chapterRoot,
+      chapterSuite,
+      chapterManifest.cases.map(adaptSeedCase),
+    ),
+  });
+
+  const voicingRoot = resolve(root, "test/loop-vault-voicing-gold-corpus-v1");
+  const voicingDevSuite = frozenSuite(
+    frozenContract,
+    "voicing-gold-development",
+  );
+  const voicingManifest = JSON.parse((await readFrozenSuiteManifest(
+    root,
+    voicingRoot,
+    voicingDevSuite,
+  )).toString("utf8")) as LabelCorpusManifest;
+  assertVoicingGoldSafeManifest(voicingRoot, voicingManifest.files);
+  for (const split of ["dev", "validation"] as const) {
+    const suite = split === "dev"
+      ? voicingDevSuite
+      : frozenSuite(frozenContract, "voicing-gold-validation");
+    selected.push({
+      id: `voicing-gold-${split}`,
+      sourceKind: "synthetic-label-gold",
+      cases: await loadFrozenCases(
+        voicingRoot,
+        suite,
+        voicingManifest.files
+          .filter((file) => file.split === split)
+          .map((file) => adaptGoldFile(file, `voicing-gold-${split}`)),
+      ),
+    });
+  }
+
+  const phase47Root = resolve(
+    root,
+    ".local-evaluation/loop-vault-bass-companion-identity-gold-v1",
+  );
+  const phase47DevSuite = frozenSuite(
+    frozenContract,
+    "phase4.7-development",
+  );
+  const phase47Manifest = JSON.parse((await readFrozenSuiteManifest(
+    root,
+    phase47Root,
+    phase47DevSuite,
+  )).toString("utf8")) as Phase47Manifest;
+  assertPhase47SafeManifest(phase47Root, phase47Manifest.files);
+  for (const split of ["dev", "validation"] as const) {
+    const suite = split === "dev"
+      ? phase47DevSuite
+      : frozenSuite(frozenContract, "phase4.7-validation");
+    selected.push({
+      id: `phase4.7-${split}`,
+      sourceKind: "fixed-bass-identity-gold",
+      cases: await loadFrozenCases(
+        phase47Root,
+        suite,
+        phase47Manifest.files
+          .filter((file) => file.split === split)
+          .map((file) => adaptGoldFile(file, `phase4.7-${split}`)),
+      ),
+    });
+  }
+
+  const results = [];
+  for (const corpus of selected) {
+    results.push({
+      id: corpus.id,
+      sourceKind: corpus.sourceKind,
+      caseCount: corpus.cases.length,
+      eventCount: corpus.cases.reduce(
+        (sum, input) => sum + input.definition.expected.chordTimeline.length,
+        0,
+      ),
+      modes: await evaluateModes(
+        corpus.cases,
+        new Set([
+          "phase4-v1",
+          "phase4-v1+R1+E1",
+          "phase4-v1+R1+E1+Union",
+        ]),
+      ),
+    });
+  }
+  stdout.write(`P515_SAFE_RESULT=${JSON.stringify({
+    schemaVersion: 1,
+    phase: "P5.15-00-existing-corpora",
+    holdoutEvaluated: false,
+    aliases: {
+      phase45Development40: "voicing-gold-dev",
+      phase5AccuracyFirst: "aggregate evaluation lens; not an independent corpus",
+      candidateUnion: "mode conditions; not an independent corpus",
+    },
+    corpora: results,
+    voicingGold: {
+      evaluator: "phase43-ablation-condition-D-sourceFaithfulMidi",
+      splits: (["dev", "validation"] as const).map(
+        (split) => evaluateVoicingGoldSafe(split, frozenContract.lockSha256),
+      ),
+    },
+  })}\n`);
+}
+
+function evaluateVoicingGoldSafe(
+  split: "dev" | "validation",
+  frozenContractSha256: string,
+) {
+  const output = execFileSync(process.execPath, [
+    resolve(root, "node_modules/vite-node/vite-node.mjs"),
+    resolve(root, "scripts/evaluate-phase43-voicing.ts"),
+    "--conditions",
+    "all",
+    "--split",
+    split,
+    "--p515-safe-stdout",
+    ...frozenSafeEvaluatorArgs(frozenContractSha256),
+  ], {
+    cwd: root,
+    encoding: "utf8",
+    maxBuffer: 32 * 1024 * 1024,
+  });
+  const marker = "P515_VOICING_RESULT=";
+  const line = output.split(/\r?\n/).find((entry) => entry.startsWith(marker));
+  if (!line) throw new Error(`Safe Voicing Gold ${split} result is missing.`);
+  const report = JSON.parse(line.slice(marker.length)) as {
+    split: string;
+    holdoutStatus: string;
+    fileCount: number;
+    eventCount: number;
+    conditions: {
+      D: {
+        policies: {
+          sourceFaithfulMidi: Record<string, number>;
+        };
+      };
+    };
+  };
+  if (
+    report.split !== split
+    || report.holdoutStatus !== "not-evaluated"
+    || !report.conditions?.D?.policies?.sourceFaithfulMidi
+  ) {
+    throw new Error(`Safe Voicing Gold ${split} contract mismatch.`);
+  }
+  return {
+    split,
+    fileCount: report.fileCount,
+    eventCount: report.eventCount,
+    condition: "D",
+    policy: "sourceFaithfulMidi",
+    metrics: report.conditions.D.policies.sourceFaithfulMidi,
+  };
+}
+
+if (p515SafeNonHoldout) {
+  const frozenContract = await loadFrozenSafeEvaluatorContract(root, argv);
+  await runP515SafeNonHoldout(frozenContract);
+}
+
+function markdown(value: Parameters<typeof JSON.stringify>[0]): string {
   const corpusSections = value.corpora.map((corpus) => `### ${corpus.id}
 
 ${corpus.caseCount} files / ${corpus.eventCount} annotated events.

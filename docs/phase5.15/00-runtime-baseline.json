@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "phase": "P5.15-00",
+  "analyzer": {
+    "mode": "phase4-v1",
+    "version": "phase4-symbolic-v1"
+  },
+  "syntheticNonHoldout": {
+    "caseCount": 35,
+    "runtimeMs": {
+      "count": 35,
+      "median": 1.0819,
+      "p95": 4.6947,
+      "max": 12.8559
+    }
+  },
+  "threeMinute": {
+    "caseId": "36_long_three_minute_stability",
+    "iterations": 7,
+    "runtimeMs": {
+      "count": 7,
+      "median": 69.4042,
+      "p95": 74.1853,
+      "max": 74.1853
+    },
+    "maxObservedPostAnalysisRssBytes": 642822144,
+    "maxObservedPostAnalysisRssMiB": 613.042969,
+    "underTenSeconds": true,
+    "maximumCandidateCatalogSize": 0,
+    "repeatedAnalysis": {
+      "iterations": 20,
+      "heapDeltaBytes": 20731832,
+      "rssDeltaBytes": 38363136,
+      "rssBytes": {
+        "count": 21,
+        "median": 604463104,
+        "p95": 608284672,
+        "max": 642822144
+      },
+      "heapUsedBytes": {
+        "count": 21,
+        "median": 207969600,
+        "p95": 219578864,
+        "max": 223403240
+      },
+      "firstHalfRssMedian": 604463104,
+      "secondHalfRssMedian": 606494720,
+      "note": "In-process Windows-compatible RSS observations; Node GC is not forced."
+    }
+  },
+  "fortyFileBatch": {
+    "status": "COMPLETED",
+    "corpus": "Voicing Gold development split",
+    "requested": 40,
+    "completed": 40,
+    "totalMs": 290.8063,
+    "perFileMs": {
+      "count": 40,
+      "median": 4.9436,
+      "p95": 9.933,
+      "max": 12.4277
+    }
+  },
+  "namedRuntimeOnly": {
+    "suran": {
+      "path": ".local-evaluation/phase4.1/fixtures/suran-remix.mid",
+      "exists": true,
+      "sha256": "2790e82d09b52a58efe8806e79d7379f6ec15091930197073ff9095dcee5ea10",
+      "byteLength": 33055,
+      "runtimeMs": 75.9918,
+      "timelineEvents": 168,
+      "candidateCatalogSize": 0
+    },
+    "endless": {
+      "path": ".local-evaluation/phase4.1.1/fixtures/endless.mid",
+      "exists": true,
+      "sha256": "c153f78e536b23f467196f5ab128a2142f27d68961addbab5f0f293a305fb94b",
+      "byteLength": 25966,
+      "runtimeMs": 105.1537,
+      "timelineEvents": 236,
+      "candidateCatalogSize": 0
+    },
+    "allInstruments": {
+      "path": ".local-evaluation/midi/all_instruments.mid",
+      "exists": true,
+      "sha256": "9f717c0a55d689befef2532ddf231eb3ae44264639443e4830de9c06d0d1abd1",
+      "byteLength": 19436,
+      "runtimeMs": 72.7162,
+      "timelineEvents": 179,
+      "candidateCatalogSize": 0
+    }
+  },
+  "liveMidi": {
+    "model": "deterministic-injected-transport",
+    "injectedTransportMs": 2,
+    "before": {
+      "notesAndBass": {
+        "p50Ms": 2,
+        "p90Ms": 2
+      },
+      "candidateGenerated": {
+        "p50Ms": 2,
+        "p90Ms": 2
+      },
+      "confirmedChord": {
+        "p50Ms": 141,
+        "p90Ms": 157
+      }
+    },
+    "after": {
+      "notesAndBass": {
+        "p50Ms": 2,
+        "p90Ms": 2
+      },
+      "candidateGenerated": {
+        "p50Ms": 2,
+        "p90Ms": 2
+      },
+      "blockChordProvisional": {
+        "p50Ms": 27,
+        "p90Ms": 39
+      },
+      "confirmedChord": {
+        "p50Ms": 52,
+        "p90Ms": 52
+      },
+      "arpeggioFromLastNote": {
+        "p50Ms": 52,
+        "p90Ms": 52
+      },
+      "fullRelease": {
+        "p50Ms": 182,
+        "p90Ms": 182
+      }
+    }
+  },
+  "chordDojo": {
+    "operations": 50000,
+    "millisecondsPerOperation": {
+      "count": 50,
+      "median": 0.000277,
+      "p95": 0.000567,
+      "max": 0.000776
+    }
+  },
+  "gates": {
+    "threeMinuteUnderTenSeconds": true,
+    "fortyFileBatchCompletedOrSkipped": true,
+    "deterministicRuntimeCase": true,
+    "memoryLeakConclusion": "No leak conclusion from one process; freeze observational deltas for regression comparison."
+  }
+}

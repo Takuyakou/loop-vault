@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { argv, cwd, stdout } from "node:process";
 import { parseChordLabel } from "../src/domain/chords";
@@ -23,6 +23,19 @@ import {
   type GoldRepresentation,
   type VoicingExtractionResult,
 } from "../src/domain/voicing";
+import {
+  assertRealCorpusRootWithinRepository,
+  readFileExistingWithinRoot,
+} from "./phase515/safePath";
+import {
+  assertVoicingGoldSafeManifest,
+  frozenSuite,
+  loadFrozenSafeEvaluatorContract,
+  readFrozenSuiteManifest,
+  readFrozenSuiteMidi,
+  readFrozenSuiteSupplementalInput,
+  selectFrozenDefinitions,
+} from "./phase515/safeEvaluatorContract";
 
 type Split = "dev" | "validation" | "holdout";
 type GoldPolicy = "sourceFaithfulMidi" | "aggregateHarmonyMidi" | "dojoIntegratedMidi";
@@ -128,6 +141,14 @@ const policies: readonly GoldPolicy[] = [
 const corpusDir = resolve(cwd(), option("--corpus")
   ?? "test/loop-vault-voicing-gold-corpus-v1");
 const split = (option("--split") ?? "dev") as Split;
+const p515SafeStdout = argv.includes("--p515-safe-stdout");
+if (
+  p515SafeStdout
+  && split !== "dev"
+  && split !== "validation"
+) {
+  throw new Error("P5.15 safe voicing evaluation permits only dev/validation.");
+}
 const conditions = parseConditions(option("--conditions"));
 const matrix = conditions.length > 1;
 const output = resolve(cwd(), option("--output")
@@ -136,19 +157,51 @@ const output = resolve(cwd(), option("--output")
     : `docs/phase4.3/04-oracle-voicing-${split}.json`));
 const detailsOutput = resolve(cwd(), option("--details")
   ?? `.local-evaluation/phase4.3/${matrix ? "ablation" : "oracle"}-${split}-events.json`);
+const frozenContract = p515SafeStdout
+  ? await loadFrozenSafeEvaluatorContract(cwd(), argv)
+  : null;
+const safeSuite = frozenContract
+  ? frozenSuite(
+    frozenContract,
+    split === "dev"
+      ? "voicing-gold-development"
+      : "voicing-gold-validation",
+  )
+  : null;
 const manifest = JSON.parse(
-  await readFile(resolve(corpusDir, "manifest.json"), "utf8"),
+  (safeSuite
+    ? await readFrozenSuiteManifest(cwd(), corpusDir, safeSuite)
+    : await safeCorpusRead("manifest.json")).toString("utf8"),
 ) as CorpusManifest;
-const noteRows = (await readFile(resolve(corpusDir, "note-events.jsonl"), "utf8"))
+if (p515SafeStdout) {
+  assertVoicingGoldSafeManifest(corpusDir, manifest.files);
+}
+const noteRows = (safeSuite
+  ? await readFrozenSuiteSupplementalInput(
+      cwd(),
+      corpusDir,
+      safeSuite,
+      "note-events.jsonl",
+    )
+  : await safeCorpusRead("note-events.jsonl")).toString("utf8")
   .split(/\r?\n/)
   .filter(Boolean)
   .map((line) => JSON.parse(line) as NoteEventRow);
-const files = manifest.files.filter((file) => file.split === split);
-const distractors = buildDistractorIndex(noteRows, files);
+const splitFiles = manifest.files.filter((file) => file.split === split);
+const files = safeSuite
+  ? selectFrozenDefinitions(safeSuite, splitFiles, (file) => file.path)
+  : splitFiles;
+const selectedFileIds = new Set(files.map((file) => file.fileId));
+const distractors = buildDistractorIndex(
+  noteRows.filter((row) => selectedFileIds.has(row.fileId)),
+  files,
+);
 const rows: EventEvaluation[] = [];
 
 for (const file of files) {
-  const bytes = new Uint8Array(await readFile(resolve(corpusDir, file.path)));
+  const bytes = new Uint8Array(safeSuite
+    ? await readFrozenSuiteMidi(cwd(), corpusDir, safeSuite, file.path)
+    : await safeCorpusRead(file.path));
   const data = parseMidi(bytes);
   const rawVoices = buildVoices(data);
   const features = buildVoiceFeatureInputs(rawVoices, normalizeNotes(data));
@@ -217,10 +270,19 @@ const report = matrix
       ...conditionReports[conditions[0]!],
     };
 
-await mkdir(dirname(output), { recursive: true });
-await mkdir(dirname(detailsOutput), { recursive: true });
-await writeFile(output, `${JSON.stringify(report, null, 2)}\n`, "utf8");
-await writeFile(detailsOutput, `${JSON.stringify({ schemaVersion: 1, split, rows }, null, 2)}\n`, "utf8");
+if (!p515SafeStdout) {
+  await mkdir(dirname(output), { recursive: true });
+  await mkdir(dirname(detailsOutput), { recursive: true });
+  await writeFile(output, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+  await writeFile(
+    detailsOutput,
+    `${JSON.stringify({ schemaVersion: 1, split, rows }, null, 2)}\n`,
+    "utf8",
+  );
+}
+if (p515SafeStdout) {
+  stdout.write(`P515_VOICING_RESULT=${JSON.stringify(report)}\n`);
+}
 stdout.write(`P4.3 ${matrix ? "Ablation A-D" : `Oracle ${conditions[0]}`}: ${files.length} files / ${report.eventCount} events (${split})\n`);
 stdout.write(`${JSON.stringify(
   matrix
@@ -235,6 +297,15 @@ stdout.write(`${JSON.stringify(
   null,
   2,
 )}\n`);
+
+async function safeCorpusRead(manifestPath: string): Promise<Buffer> {
+  const repositoryRoot = cwd();
+  await assertRealCorpusRootWithinRepository(repositoryRoot, corpusDir);
+  return readFileExistingWithinRoot(
+    corpusDir,
+    manifestPath,
+  );
+}
 
 function evaluateEvent(
   condition: Condition,

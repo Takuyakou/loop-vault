@@ -81,6 +81,7 @@ describe("Phase 5.12 Capture product path", () => {
     });
     await waitFor(() =>
       mounted.container.querySelector("[data-capture-stage='result']") !== null);
+    await waitForAnalysisCompletion(mounted.container);
 
     expect(analyzerCalls).toHaveLength(1);
     expect(analyzerCalls[0]).toMatchObject({ mode: "phase4-v1" });
@@ -125,6 +126,7 @@ describe("Phase 5.12 Capture product path", () => {
       )?.click();
     });
     await waitFor(() => analyzerCalls.length === 1);
+    await waitForAnalysisCompletion(mounted.container);
 
     const prepared = analyzerCalls[0].preparedData;
     expect(prepared).toBeDefined();
@@ -193,6 +195,7 @@ describe("Phase 5.12 Capture product path", () => {
       )?.click();
     });
     await waitFor(() => analyzerCalls.length === 1);
+    await waitForAnalysisCompletion(mounted.container);
     expect(analyzerCalls[0]).toMatchObject({ mode: "phase4-v1" });
 
     await mounted.unmount();
@@ -209,6 +212,7 @@ describe("Phase 5.12 Capture product path", () => {
     await dropMidi(mounted.container, "piano.mid", simplePianoMidi());
     await waitFor(() =>
       mounted.container.querySelector("[data-capture-stage='result']") !== null);
+    await waitForAnalysisCompletion(mounted.container);
 
     expect(analyzerCalls).toHaveLength(1);
     expect(mounted.container.querySelector("[data-testid='pre-analysis-workspace']"))
@@ -332,6 +336,11 @@ async function waitFor(predicate: () => boolean) {
     });
   }
   throw new Error("Timed out waiting for the Capture product path.");
+}
+
+async function waitForAnalysisCompletion(container: HTMLElement) {
+  await waitFor(() =>
+    container.querySelector("[role='progressbar']") === null);
 }
 
 function allInstrumentsMidi(): Uint8Array {

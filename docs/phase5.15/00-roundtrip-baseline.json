@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 1,
+  "analyzerMode": "legacy",
+  "analyzerVersion": "legacy-v1",
+  "exporterVersion": "p5.14-v1",
+  "vocabularySize": 21,
+  "timelineEvents": 21,
+  "counts": {
+    "exact": 19,
+    "same-root-different-quality": 2,
+    "same-family": 0,
+    "mismatch": 0,
+    "missing": 0
+  },
+  "comparisons": [
+    {
+      "index": 0,
+      "expected": "C",
+      "actual": "C",
+      "classification": "exact"
+    },
+    {
+      "index": 1,
+      "expected": "Fm",
+      "actual": "Fm",
+      "classification": "exact"
+    },
+    {
+      "index": 2,
+      "expected": "Bbdim",
+      "actual": "Bbdim",
+      "classification": "exact"
+    },
+    {
+      "index": 3,
+      "expected": "Ebaug",
+      "actual": "Ebaug",
+      "classification": "exact"
+    },
+    {
+      "index": 4,
+      "expected": "Abmaj7",
+      "actual": "Abmaj7",
+      "classification": "exact"
+    },
+    {
+      "index": 5,
+      "expected": "C#m7",
+      "actual": "C#m7",
+      "classification": "exact"
+    },
+    {
+      "index": 6,
+      "expected": "F#7",
+      "actual": "F#7",
+      "classification": "exact"
+    },
+    {
+      "index": 7,
+      "expected": "Bm7b5",
+      "actual": "Bm7b5",
+      "classification": "exact"
+    },
+    {
+      "index": 8,
+      "expected": "Edim7",
+      "actual": "Edim7",
+      "classification": "exact"
+    },
+    {
+      "index": 9,
+      "expected": "Amaj9",
+      "actual": "Amaj9",
+      "classification": "exact"
+    },
+    {
+      "index": 10,
+      "expected": "Dm9",
+      "actual": "Dm9",
+      "classification": "exact"
+    },
+    {
+      "index": 11,
+      "expected": "G9",
+      "actual": "G9",
+      "classification": "exact"
+    },
+    {
+      "index": 12,
+      "expected": "Cm11",
+      "actual": "Cm11",
+      "classification": "exact"
+    },
+    {
+      "index": 13,
+      "expected": "F13",
+      "actual": "F13",
+      "classification": "exact"
+    },
+    {
+      "index": 14,
+      "expected": "Bbsus2",
+      "actual": "Bbadd9",
+      "classification": "same-root-different-quality"
+    },
+    {
+      "index": 15,
+      "expected": "Ebsus4",
+      "actual": "Eb7sus4",
+      "classification": "same-root-different-quality"
+    },
+    {
+      "index": 16,
+      "expected": "Ab7sus4",
+      "actual": "Ab7sus4",
+      "classification": "exact"
+    },
+    {
+      "index": 17,
+      "expected": "C#add9",
+      "actual": "C#add9",
+      "classification": "exact"
+    },
+    {
+      "index": 18,
+      "expected": "F#6",
+      "actual": "F#6",
+      "classification": "exact"
+    },
+    {
+      "index": 19,
+      "expected": "Bm6",
+      "actual": "Bm6",
+      "classification": "exact"
+    },
+    {
+      "index": 20,
+      "expected": "E6/9",
+      "actual": "E6/9",
+      "classification": "exact"
+    }
+  ],
+  "gate": {
+    "timeline21Of21": true,
+    "exact19": true,
+    "ambiguity2": true
+  }
+}

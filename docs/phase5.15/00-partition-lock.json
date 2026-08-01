@@ -1,0 +1,191 @@
+{
+  "schemaVersion": 2,
+  "phase": "P5.15-00",
+  "policy": {
+    "frozenBeforeAnalyzerChanges": true,
+    "holdoutResultsVisibleBeforeP51506": false,
+    "thresholdTuningAgainstHoldout": false
+  },
+  "development": [
+    "01_shell_fifths_aligned",
+    "02_shell_fifths_pickup_irregular",
+    "04_adjacent_chord_false_tension_trap",
+    "05_fleeting_tensions_do_not_promote",
+    "06_true_sustained_tensions",
+    "13_major7_shells",
+    "14_minor7_shells",
+    "16_arpeggiated_shells",
+    "18_melody_contamination_separate_track",
+    "19_chromatic_bass_approach_notes",
+    "33_sus2_vs_add9",
+    "34_sus4_vs_7sus4"
+  ],
+  "validation": [
+    "07_legitimate_slash_pedal",
+    "08_same_chord_rearticulation",
+    "09_halfbeat_boundary_changes",
+    "12_split_tracks_harmony_bass",
+    "15_rootless_dominant_with_context",
+    "17_common_tone_legato_boundary",
+    "20_true_pedal_bass_slash_progression",
+    "21_sustain_pedal_overlap",
+    "22_triplet_boundaries",
+    "23_meter_3_4",
+    "24_meter_6_8",
+    "32_type0_multichannel",
+    "35_nc_silence_region"
+  ],
+  "roundTrip": [
+    "10_phase514_roundtrip_basic",
+    "11_phase514_roundtrip_complex"
+  ],
+  "invariant": {
+    "duplicate": [
+      "02_shell_fifths_pickup_irregular",
+      "03_shell_fifths_pickup_irregular_exact_duplicates"
+    ],
+    "ppq": [
+      "26_ppq96_equivalence",
+      "27_ppq960_equivalence"
+    ],
+    "velocity": [
+      "28_velocity_low",
+      "29_velocity_high"
+    ],
+    "trackOrder": [
+      "30_track_order_harmony_first",
+      "31_track_order_bass_first"
+    ],
+    "tempoMap": [
+      "25_tempo_change_mid_file"
+    ]
+  },
+  "runtime": [
+    "36_long_three_minute_stability"
+  ],
+  "holdout": {
+    "phase47FreshHoldout": {
+      "sourceManifestSha256": "8f3fce224db3d9b4356f393f8def4a427fd35267d805e12f9a0a1434b851b7c9",
+      "caseCount": 12,
+      "selectionSha256": "8ceb390f06ac47b10ab771d2a050ef72738a574eee6b1cb255b27c4a1aa8fe64",
+      "expectedManifestFieldsSha256": "cf35a2b00a5a9af56a7d852887636d321de0084b178bd438772cf7b1cd0814d6",
+      "midiContentSha256": "31a5b941f039296afd609975e34341d098e0a667e384c37dcaf61d4a49f0171c",
+      "files": [
+        {
+          "path": "midi/holdout/holdout-01-clean_c-identity-pairs.mid",
+          "expectedManifestFieldsSha256": "655ab88d46bff2719a3b8a622716e641d1bacd865379a9aa42a0e292922c08fd",
+          "expectedSha256": "5da5e973204b7a9029cc408234207828985d64c151c21503ddf2be1c6ea43175",
+          "actualSha256": "5da5e973204b7a9029cc408234207828985d64c151c21503ddf2be1c6ea43175",
+          "actualByteLength": 498,
+          "matchesManifest": true
+        },
+        {
+          "path": "midi/holdout/holdout-02-stress_cs-identity-pairs.mid",
+          "expectedManifestFieldsSha256": "23b25bbaf29a726a2820ecee1b68bd5b93c3326d16610a233a512ed91b14ad20",
+          "expectedSha256": "542c8f608839cd79bb42e0251dcd249de5eee2cb59a70fe6d296ae71af283bfb",
+          "actualSha256": "542c8f608839cd79bb42e0251dcd249de5eee2cb59a70fe6d296ae71af283bfb",
+          "actualByteLength": 670,
+          "matchesManifest": true
+        },
+        {
+          "path": "midi/holdout/holdout-03-clean_d-identity-pairs.mid",
+          "expectedManifestFieldsSha256": "e1de66e6322acfddbfce431c5ba8e8d9dec44840a3617d5b5b2e3197b78ce82c",
+          "expectedSha256": "390fe4f813a7aee35847ef3c9d5a62888b39df49b5c288822e72a306856b528c",
+          "actualSha256": "390fe4f813a7aee35847ef3c9d5a62888b39df49b5c288822e72a306856b528c",
+          "actualByteLength": 483,
+          "matchesManifest": true
+        },
+        {
+          "path": "midi/holdout/holdout-04-stress_eb-identity-pairs.mid",
+          "expectedManifestFieldsSha256": "11dfeb51bb606ce46ff06c98a5c7698b994bce8409026be8c349512e8f82414b",
+          "expectedSha256": "d253fc0f8ee0ddc8499ec047c87de91f745e9a7bc89c6c4fdc7eb56af16b907d",
+          "actualSha256": "d253fc0f8ee0ddc8499ec047c87de91f745e9a7bc89c6c4fdc7eb56af16b907d",
+          "actualByteLength": 671,
+          "matchesManifest": true
+        },
+        {
+          "path": "midi/holdout/holdout-05-clean_e-identity-pairs.mid",
+          "expectedManifestFieldsSha256": "44e954a1bb97ad916030e979ebc430b56755104f81569e1be658515574845b67",
+          "expectedSha256": "ab121fa56db1f82deee12160311889cdd94a6c236dbcae55b2f9e068e923c7f0",
+          "actualSha256": "ab121fa56db1f82deee12160311889cdd94a6c236dbcae55b2f9e068e923c7f0",
+          "actualByteLength": 489,
+          "matchesManifest": true
+        },
+        {
+          "path": "midi/holdout/holdout-06-stress_f-identity-pairs.mid",
+          "expectedManifestFieldsSha256": "5973d95f274ae1996507734c7183a37ec1a20e0b1c93f6e296d001c2df805e5b",
+          "expectedSha256": "ef1cf8512e0af60129374f2e41089d144e74355ced51c86dbe3db89e276c66f0",
+          "actualSha256": "ef1cf8512e0af60129374f2e41089d144e74355ced51c86dbe3db89e276c66f0",
+          "actualByteLength": 679,
+          "matchesManifest": true
+        },
+        {
+          "path": "midi/holdout/holdout-07-clean_fs-identity-pairs.mid",
+          "expectedManifestFieldsSha256": "ebd91053dbe0bbed43210624c5e42d3779f34ad6e4f420f4b3309837c6e6a582",
+          "expectedSha256": "a56f54066083ad12c175adf12567d79cca9968ee008579af3f49df9444aa3fa1",
+          "actualSha256": "a56f54066083ad12c175adf12567d79cca9968ee008579af3f49df9444aa3fa1",
+          "actualByteLength": 483,
+          "matchesManifest": true
+        },
+        {
+          "path": "midi/holdout/holdout-08-stress_g-identity-pairs.mid",
+          "expectedManifestFieldsSha256": "1d5133aebd9ae4279e3c4bd0d35bdcc2262271de383ff8a774078e8e7fc149b0",
+          "expectedSha256": "a9e3033fce5d4eb3d568cac72a1de03a8ac8a7ff1e5c3d5e65603b54b229cff4",
+          "actualSha256": "a9e3033fce5d4eb3d568cac72a1de03a8ac8a7ff1e5c3d5e65603b54b229cff4",
+          "actualByteLength": 686,
+          "matchesManifest": true
+        },
+        {
+          "path": "midi/holdout/holdout-09-clean_ab-identity-pairs.mid",
+          "expectedManifestFieldsSha256": "337dea2eb7942ec2aea33ddc6bc7a225a3ab3c1c24b5b7ae1660c0d77cd05bf7",
+          "expectedSha256": "b2f06478fd8201d21a53aa4cb5935ebac058ac4aae18f4cb62f0f1354dbd38ff",
+          "actualSha256": "b2f06478fd8201d21a53aa4cb5935ebac058ac4aae18f4cb62f0f1354dbd38ff",
+          "actualByteLength": 482,
+          "matchesManifest": true
+        },
+        {
+          "path": "midi/holdout/holdout-10-stress_a-identity-pairs.mid",
+          "expectedManifestFieldsSha256": "e3047ab081adaa1ec8def67f98dca624072c441459d995b74bbd84d3a1fe2806",
+          "expectedSha256": "14ec88af4edbf6315d9b7f7bd55d304aed9d8785589097774cb63157e0bcd927",
+          "actualSha256": "14ec88af4edbf6315d9b7f7bd55d304aed9d8785589097774cb63157e0bcd927",
+          "actualByteLength": 670,
+          "matchesManifest": true
+        },
+        {
+          "path": "midi/holdout/holdout-11-clean_bb-identity-pairs.mid",
+          "expectedManifestFieldsSha256": "1cc42a52232671498d600579d7b1b2acf2ab7286abcf4ab080c24fa9233f6522",
+          "expectedSha256": "084a01868d3b76130877f3973eec59bfa799cdbc67c0aa51ff94d36c622f347a",
+          "actualSha256": "084a01868d3b76130877f3973eec59bfa799cdbc67c0aa51ff94d36c622f347a",
+          "actualByteLength": 483,
+          "matchesManifest": true
+        },
+        {
+          "path": "midi/holdout/holdout-12-stress_b-identity-pairs.mid",
+          "expectedManifestFieldsSha256": "9fb809f597861eb1a5226f56c4ac8330571a0108fc96dbbf7b050a7ad4bde3a9",
+          "expectedSha256": "d038a105c062b1dd07b894913d83b7c562844d51e2762227fa5623c8511c837f",
+          "actualSha256": "d038a105c062b1dd07b894913d83b7c562844d51e2762227fa5623c8511c837f",
+          "actualByteLength": 679,
+          "matchesManifest": true
+        }
+      ],
+      "resultOpened": false
+    },
+    "phase514RoundTripSubset": {
+      "selectionSize": 4,
+      "selectionSha256": "a4ceb39fc6beaefc9e09547436817b032fe9090536695ff64fbd6f64130a3af8",
+      "exportedMidiSha256": "300f3cbbf092918700311ee618fb57e4be964ba3104fefb0f4ddaedeeae241c1",
+      "exportedMidiByteLength": 288,
+      "exporterSourceSha256": "52077bf8fa604c5a0c5f147143f9161d7c131e429203c45a97fc648e40fc60ce",
+      "resultOpened": false
+    },
+    "excluded": {
+      "voicingGoldHoldout": "burned by prior diagnostics",
+      "userRealMidi": "explicitly excluded"
+    }
+  },
+  "finalRealSongSmoke": {
+    "maximumFiles": 3,
+    "selection": "deferred until all automated gates pass",
+    "reusedForTuning": false
+  }
+}

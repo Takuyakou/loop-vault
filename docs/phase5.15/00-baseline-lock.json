@@ -1,0 +1,3657 @@
+{
+  "schemaVersion": 2,
+  "phase": "P5.15-00",
+  "capturedAt": "2026-07-30",
+  "git": {
+    "baseBranch": "master",
+    "branch": "docs/p515-00-preflight-baseline",
+    "commit": "2eb36b63a064c4ee44e0d071836b2d722f534502",
+    "tree": "1aa97e028fbc3197d4146db497ad0555d1126a83",
+    "originMaster": "2eb36b63a064c4ee44e0d071836b2d722f534502"
+  },
+  "product": {
+    "defaultAnalyzerMode": "phase4-v1",
+    "analyzerVersion": "phase4-symbolic-v1",
+    "fileVersion": 1,
+    "analyzerProductCodeChanged": false,
+    "vaultSchemaChanged": false,
+    "midiExporterChanged": false,
+    "featureFlags": {
+      "enableExactNoteEvidenceDedup": false,
+      "enableEventLocalTensionEvidence": false,
+      "enableSyncopatedShellBoundary": false,
+      "enableShellSeventhPreference": false,
+      "enableSuspendedQualityDisambiguation": false,
+      "implementedAtBaseline": false
+    }
+  },
+  "roundTripBaseline": {
+    "timelineEvents": 21,
+    "exact": 19,
+    "ambiguity": 2
+  },
+  "sourceFingerprints": {
+    "packageLockSha256": "0ab5c348c4c8cd742752f3dd18371d94f20aac1a595c8a8cb624ba4a891cb7d1",
+    "cargoLockSha256": "d2ad83606c1cf9a921503316c1952ec44680062239711dec0114d80635eafb9c",
+    "corpusContractSha256": "518b254b29023ba45b87d44a95f311612fddb636eb1fb5d31400c92841e61de7",
+    "evaluationContractSha256": "b3d92e43078a8b9c9281510197e3c57df6e370681e046d72b9d1f301480a57f3",
+    "manifestValidatorSha256": "7f9bd7b02ba758985a7324e8f6334c8ea28e4f0ea92dc75ea56ead4b77eeaa67",
+    "contractValidatorSha256": "3af26242d05b143d79ff51bf1cc26a492c39a5968195d2cb87733df317ab27e4",
+    "evaluatorSelfSha256": "eeee2769a5d72fffdf91103057aa83753ed21defcd24f2f8586571dd36fcbb31",
+    "comparisonPolicySha256": "520c3cec2841d3c71be80b42ed609eabbfe5ecc485bdc48e47b094cc06849394",
+    "holdoutPolicySha256": "4a20b0cf1bbff66eddfe21f5df4f7250f92e2df085e9ed0e9cec881525af2e6c",
+    "safePathSha256": "ac5149a607dd974dbeda5acc0782ddf88de21313de83ce4fb0085b89bdf04b05",
+    "privacyPolicySha256": "0137893e4998ac0e8dd9255eea38b9a114bb9fa3b7041073d2107f9fa7f88f46",
+    "externalSuitePolicySha256": "0d357768083cba6ff51ab6185e86470c60071c742f94ff4e56f06424fd3186c3",
+    "vaultSchemaSha256": "7770a544139f57579a5079e423ddc0b9d4c93e881d284f9e25bc18be9caf3137",
+    "vaultRepositorySha256": "9d048bef5ddecd64b5c99cc1087d2ad4ef34bd77304d1b78e8407578430910e2",
+    "vaultStoreSha256": "a742959e80907f7b5e5699e94a9abfff01d1bf4d480d1a25335957ebed1db02e"
+  },
+  "analyzerDependencyGraph": [
+    {
+      "path": "src/domain/chordAlternatives.ts",
+      "sha256": "f973f4ee8cdc5b541ad1f15fa11014bc6f8170b1637c888618f76864d47d1733"
+    },
+    {
+      "path": "src/domain/chordIdentity.ts",
+      "sha256": "cee4b5a261aa1491d4c142b217f564b924b6eadf4c39458ecf8be7ecb420ae74"
+    },
+    {
+      "path": "src/domain/chordVoicing.ts",
+      "sha256": "8c82005ce6c17c2d1ba96cc2e7f991cf163570df2b496399aff30b464547f3f1"
+    },
+    {
+      "path": "src/domain/chords.ts",
+      "sha256": "2a5bce8b3a80aeb827fda3d6b1a1d3828c7cf23277ce869c68dc48c434e9a1e2"
+    },
+    {
+      "path": "src/domain/midi/accuracyCandidateUnion.ts",
+      "sha256": "d91bd2e76094e4b2eb7db717f3452d7c806029ba36354b3b877c35d1a397be03"
+    },
+    {
+      "path": "src/domain/midi/accuracyFirstCandidates.ts",
+      "sha256": "fc1330d01d210290245a570d8cc191f01d9e149d5715822c04e6c8f0b714d4d7"
+    },
+    {
+      "path": "src/domain/midi/analysis.ts",
+      "sha256": "eadcb6f471c3a01f5c311f1ced58d6530780e376010a6d2542bcf865bf91e3b3"
+    },
+    {
+      "path": "src/domain/midi/blockQuality.ts",
+      "sha256": "310b778fda13c7d6bd9aab03412ce7ac3fd1b600c05c09589e277c5edd18da8b"
+    },
+    {
+      "path": "src/domain/midi/blocks.ts",
+      "sha256": "077b763d208c9b37faf69b16805ff5e5fcffea45b4389e38f7b287a614860977"
+    },
+    {
+      "path": "src/domain/midi/candidateBlock.ts",
+      "sha256": "92fb8c42356da38be0f7da263d089279abc189d161248245641e3836b978bd83"
+    },
+    {
+      "path": "src/domain/midi/candidateCatalog.ts",
+      "sha256": "104d3c38f32c46804dbc75dbd77e67e5c852d333ada59fb1bdc1ec2efa433144"
+    },
+    {
+      "path": "src/domain/midi/candidateDiversity.ts",
+      "sha256": "045ab22a2b57f90f0fc519cde33f2eea91e5c2b866a7542a579754ebead0a483"
+    },
+    {
+      "path": "src/domain/midi/candidateKind.ts",
+      "sha256": "ea2bed0e03905a21ed1e347cd24b9d7ab0a9d13cd76c13ff74b9ed02569278b7"
+    },
+    {
+      "path": "src/domain/midi/candidatePool.ts",
+      "sha256": "f56587288f883a1c3a7fe28186c1a6a6f3f68bca2de01f5f1229063feffc9e1b"
+    },
+    {
+      "path": "src/domain/midi/candidateRecommendation.ts",
+      "sha256": "c686eebc627733b1a56d03c4547b4438e33b9937348d6cee58fa906efd393dbf"
+    },
+    {
+      "path": "src/domain/midi/candidateSelection.ts",
+      "sha256": "5aa6ae5866d22d016e0ee1ec7aaa8af805fd5dd08ef19ba44b357aabdf710a83"
+    },
+    {
+      "path": "src/domain/midi/candidates.ts",
+      "sha256": "9390a7822fd91ca72eb4f496640b08ad5f7cf7c9f6bd3b033d7648bc2de938e4"
+    },
+    {
+      "path": "src/domain/midi/confidence.ts",
+      "sha256": "cf7b0e6001a03fcfe6db271cae5d0dda356289aa4419eab7c4013318621be059"
+    },
+    {
+      "path": "src/domain/midi/coverageCandidates.ts",
+      "sha256": "a9243f858b29a9fcd9a9c3d0d1f10c2eeb66f6fef6b99e066d8f6c4202590d64"
+    },
+    {
+      "path": "src/domain/midi/coverageSelector.ts",
+      "sha256": "cd3c510382f8b95eabfd02b55027f6f03e407c2ece6fc22f3ffaf3801fc24812"
+    },
+    {
+      "path": "src/domain/midi/decoder.ts",
+      "sha256": "69d9a36be064ada07fbd182e69960f814192072dc7ca53f64ba2f50e6c1a30f6"
+    },
+    {
+      "path": "src/domain/midi/extractionProfile.ts",
+      "sha256": "219c01ef2211760c998cfb96880dcc57650fc13dbafa24480b1fc196151f26c4"
+    },
+    {
+      "path": "src/domain/midi/feedback.ts",
+      "sha256": "c3b94c82fb7df2060494c755997016373d0a6feb0f1ba7b1c48546884433b846"
+    },
+    {
+      "path": "src/domain/midi/fingerprint.ts",
+      "sha256": "ffdf685e06498b39bd33d6c4039a05705a3db8da8f2f9c95d7730dc03d6ae855"
+    },
+    {
+      "path": "src/domain/midi/gmRoles.ts",
+      "sha256": "7101321d23d5633cafa9327ce96090a2721e3aa07609073275fee17800021070"
+    },
+    {
+      "path": "src/domain/midi/hybrid.ts",
+      "sha256": "e63568bb4d17f6e52a8f25c7c30710e12b0cde6b97f0417adb47c8c17461585c"
+    },
+    {
+      "path": "src/domain/midi/keyPrior.ts",
+      "sha256": "7bc6aee677db9f09dc44c70bfcdc23ca4c0e336979e88d013a669298eb52a9b2"
+    },
+    {
+      "path": "src/domain/midi/legacy.ts",
+      "sha256": "9b7faecf936b03583661c3cbbd7a944a1330c0c4c04c576bf0e660ad6677166c"
+    },
+    {
+      "path": "src/domain/midi/legacyBoundaryReranker.ts",
+      "sha256": "10db8f5334c40ad036fc52ee92eea86b75f2010f5062d329e3821c04b13bb603"
+    },
+    {
+      "path": "src/domain/midi/merge.ts",
+      "sha256": "0e41d238067cb52ba88e5c4f7b7471bbb2c97e6a802fc36035fe94b00983f52b"
+    },
+    {
+      "path": "src/domain/midi/normalize.ts",
+      "sha256": "896a978432eeacee860bd2b701dfd4bcd4dd93ba9fa9299ea244f0a4b6b1b508"
+    },
+    {
+      "path": "src/domain/midi/observedFlatNineCandidate.ts",
+      "sha256": "fc6a1b9fb3067a669ae0305380350d0498aa0603e69ec2b7ef24fe0c8f3af8a7"
+    },
+    {
+      "path": "src/domain/midi/occurrence.ts",
+      "sha256": "3691347d3bd7ecf5bac238fdfd962d90868e8f1da2c5e70e9a8cee1e8c1f271f"
+    },
+    {
+      "path": "src/domain/midi/ornaments.ts",
+      "sha256": "6dbadfc04fd5d1bcb7e5b226a6d86dd8ddc82b132a978ed01befe3e3b10cbcea"
+    },
+    {
+      "path": "src/domain/midi/parser.ts",
+      "sha256": "121d0b0035dccc8b648dc9322387aee0861043fdf49822b015d3bbb5245ebffe"
+    },
+    {
+      "path": "src/domain/midi/patternCandidate.ts",
+      "sha256": "f500a6a75a0a4fda8d4fc17fa70d490b028fe54c78f88fb7b8a81c22f0f50e60"
+    },
+    {
+      "path": "src/domain/midi/patternEvidence.ts",
+      "sha256": "8ee901df6f8b7ad73466361bd50967b83dc08cd97e8a10f13e7307a971b8c227"
+    },
+    {
+      "path": "src/domain/midi/patternSelection.ts",
+      "sha256": "315f9db66e7d71f3cf7524d731eddf03844e612c2300a56804ae294e48bf2009"
+    },
+    {
+      "path": "src/domain/midi/patternTwoPassSelection.ts",
+      "sha256": "df9cce990035ac29dfd4c330a88e1ec1ec2d4e4174facba26f44e322398edac4"
+    },
+    {
+      "path": "src/domain/midi/phase412Analyzer.ts",
+      "sha256": "256e4177b897abf5f00ced2bdc5c370e78c7d3d3fc9a643a310856abb61ffa96"
+    },
+    {
+      "path": "src/domain/midi/phase412CoreAnalyzer.ts",
+      "sha256": "03e24c8f6771532555e9e7d4bbca4ef2c8eadf795c7f62d1e9b930d1a3bade9d"
+    },
+    {
+      "path": "src/domain/midi/phase412G2Analyzer.ts",
+      "sha256": "33bc69405500151dabc58c74b8a0765f24fe08129bdc7061b8f808f53c1d2871"
+    },
+    {
+      "path": "src/domain/midi/phase41Analyzer.ts",
+      "sha256": "b3ec55c988b0786efa107bb20e2f1fd655aedd216a9c2b675613bf3e7b4e8812"
+    },
+    {
+      "path": "src/domain/midi/phase4Analyzer.ts",
+      "sha256": "7297075ea98669d1bd658382189673de00f283376cdc4cd0905ded5cc394c148"
+    },
+    {
+      "path": "src/domain/midi/profiles.ts",
+      "sha256": "02c72860ea9a92643a36a2fc355f6598a14e40d1a85c9b32867c6f757efbaa5b"
+    },
+    {
+      "path": "src/domain/midi/qualityEvidence.ts",
+      "sha256": "48d2853db12faf6c164354096fd1f749be614fa3438001a8a5497d43154d32fe"
+    },
+    {
+      "path": "src/domain/midi/rawSmf.ts",
+      "sha256": "471154f889c0e4bedc4ea68c51c57bfedc9728fe5494c24648d54c910add5c54"
+    },
+    {
+      "path": "src/domain/midi/sections.ts",
+      "sha256": "e95d84bfc7052bd4ee6adcb69a2ec7f6d7f10af9bd65032342a0e74a90f6c995"
+    },
+    {
+      "path": "src/domain/midi/segmentation.ts",
+      "sha256": "19bd174cef059b04a545cadd71e43ea305c9907aed319d83456d32a8f670bdd6"
+    },
+    {
+      "path": "src/domain/midi/structuralWindows.ts",
+      "sha256": "4a0b857401a4ea19f6256251ea2ccfa8a53514a47eb7b156706ac8c453d9e51a"
+    },
+    {
+      "path": "src/domain/midi/timing.ts",
+      "sha256": "897899916a9a06584ed53cdafd7cb508e71c8548250dabeff4d3b7eecaf42d85"
+    },
+    {
+      "path": "src/domain/midi/trackRoles.ts",
+      "sha256": "5cd97ec3856f3cbbef53b945fe53064359deacf8715e318b8cde132fb05dd739"
+    },
+    {
+      "path": "src/domain/midi/types.ts",
+      "sha256": "42e86e46d555194fe460f3019447fe6271ab9926d2e5f81fdb87360d864f2abc"
+    },
+    {
+      "path": "src/domain/midi/voiceAwareReranker.ts",
+      "sha256": "77b2375d348fa36c48e3e322566b22f49a8513547b0e8aabad4e2cad4b8d877b"
+    },
+    {
+      "path": "src/domain/midi/voiceProfiles.ts",
+      "sha256": "e5157f8b7d55aad984f32c555b9615ea304eff076a3721e2ab6be43b50eea98a"
+    },
+    {
+      "path": "src/domain/midi/voiceRoles.ts",
+      "sha256": "9b0df05c2b813a7946d758405015f0b4b41f8f62025a4751f4bb68eb9cba3557"
+    },
+    {
+      "path": "src/domain/midi/voices.ts",
+      "sha256": "f27579e895a84106b93e3534deb479ccd023d660392284d6203734b105c4827c"
+    },
+    {
+      "path": "src/domain/midi/weights.ts",
+      "sha256": "5e95738dac23600b7b5004d44c799d873741896e69c476f99e3e9436b4577b5c"
+    },
+    {
+      "path": "src/domain/practice/types.ts",
+      "sha256": "ac2552f5b63b497123a1521a3d18163f32924a7f50c84341af40eb01b701d6d4"
+    },
+    {
+      "path": "src/domain/progressionEditing/quickCandidates.ts",
+      "sha256": "183e79890e000c3786240b48b83cac0e23832fce453849a62e3eac048ee00165"
+    },
+    {
+      "path": "src/domain/progressionEditing/types.ts",
+      "sha256": "0fc2334572fac929b7090d0e81a640f9e12f0a46a0198015659b9c9bed929f23"
+    },
+    {
+      "path": "src/domain/types.ts",
+      "sha256": "bb58b6d8ffc78bc16f288b496ec4d7c92e76e00a0c3a7676cc68d10212bc3773"
+    }
+  ],
+  "evaluatorDependencyGraph": [
+    {
+      "path": "docs/phase5.15/00-evaluation-contract.md",
+      "sha256": "b3d92e43078a8b9c9281510197e3c57df6e370681e046d72b9d1f301480a57f3"
+    },
+    {
+      "path": "scripts/evaluate-phase43-voicing.ts",
+      "sha256": "44c13756f0d1f39a131f5a56528a0dbf6e094086d1d5d3c0bca1d5ba9a6610ab"
+    },
+    {
+      "path": "scripts/evaluate-phase5-accuracy-first.ts",
+      "sha256": "dba73c4a6f0a27d3074d99c2b53ba50fe0472e730369b0aaa986689c7f4f465f"
+    },
+    {
+      "path": "scripts/phase44/targetedCorpus.ts",
+      "sha256": "458b7894603b3c2c108e3dece7cea62a28bdf06b8e4d404a954b529c310cb11f"
+    },
+    {
+      "path": "scripts/phase442/harmonySupportCorpus.ts",
+      "sha256": "414999eff39ea4ebe027f34f0f79014a36b606f8372d57c408d13205d6003eb4"
+    },
+    {
+      "path": "scripts/phase442/supportEvaluation.ts",
+      "sha256": "138c3baf104e805be1d3002c4acbcc73c72f0ea58cbf3c5d886aba4351f99578"
+    },
+    {
+      "path": "scripts/phase515/artifactWriter.ts",
+      "sha256": "3bc42eddf4d37ad2e42510a30179f43a6a41627b412cc10c2aaa14de43adcd8a"
+    },
+    {
+      "path": "scripts/phase515/buildArtifactLockPolicy.ts",
+      "sha256": "6ce9cb5bbe4b24dc723568ea12f9e96de3f7edfbabc29a005c017d1df65cfacd"
+    },
+    {
+      "path": "scripts/phase515/comparisonPolicy.ts",
+      "sha256": "520c3cec2841d3c71be80b42ed609eabbfe5ecc485bdc48e47b094cc06849394"
+    },
+    {
+      "path": "scripts/phase515/corpusContract.ts",
+      "sha256": "807f305d45a4c8d183cfdd56537ea43814f0ab6a1f7757a37bbf47c2300e531b"
+    },
+    {
+      "path": "scripts/phase515/corpusWorkspace.ts",
+      "sha256": "53fbf86138d992b68de64f836d58450ad01c751e7fdcc0bc6e615cc65d291ec3"
+    },
+    {
+      "path": "scripts/phase515/evaluate-baseline.ts",
+      "sha256": "eeee2769a5d72fffdf91103057aa83753ed21defcd24f2f8586571dd36fcbb31"
+    },
+    {
+      "path": "scripts/phase515/externalSuites.ts",
+      "sha256": "0d357768083cba6ff51ab6185e86470c60071c742f94ff4e56f06424fd3186c3"
+    },
+    {
+      "path": "scripts/phase515/fortyFileBatch.ts",
+      "sha256": "c7f41d01951285804f01369f289e821f8486a2ba554cd2f570358415fbb0ed9a"
+    },
+    {
+      "path": "scripts/phase515/generateCorpus.ts",
+      "sha256": "d4ca6bc03db5a25f0ebcc17b6433175d4c24f7fc2307d96a2b4207e01f846e6b"
+    },
+    {
+      "path": "scripts/phase515/holdoutLock.ts",
+      "sha256": "4a20b0cf1bbff66eddfe21f5df4f7250f92e2df085e9ed0e9cec881525af2e6c"
+    },
+    {
+      "path": "scripts/phase515/lockContract.ts",
+      "sha256": "fe3d10011fe354faa1965cec5b9f4e652d5d9f538e5cc882c241c378cb4dfb4d"
+    },
+    {
+      "path": "scripts/phase515/manifestValidation.ts",
+      "sha256": "7f9bd7b02ba758985a7324e8f6334c8ea28e4f0ea92dc75ea56ead4b77eeaa67"
+    },
+    {
+      "path": "scripts/phase515/privacy.ts",
+      "sha256": "0137893e4998ac0e8dd9255eea38b9a114bb9fa3b7041073d2107f9fa7f88f46"
+    },
+    {
+      "path": "scripts/phase515/regressionComparison.ts",
+      "sha256": "b198be5e0b47a254a9d17ab7161ab630857f7f5ea9138d6614352bcc1163f25e"
+    },
+    {
+      "path": "scripts/phase515/runtimeSummary.ts",
+      "sha256": "bf89f70829d15708539d4a4cc3a3ea277d572cc774170bcf407136c5b9e7dfbc"
+    },
+    {
+      "path": "scripts/phase515/safeEvaluatorContract.ts",
+      "sha256": "fb4c0988837ea05448edc0e46ee3b2ca0a4dbfc5b85f168bf286a0782d85cf8f"
+    },
+    {
+      "path": "scripts/phase515/safePath.ts",
+      "sha256": "ac5149a607dd974dbeda5acc0782ddf88de21313de83ce4fb0085b89bdf04b05"
+    },
+    {
+      "path": "scripts/phase515/validateCorpusContract.ts",
+      "sha256": "3af26242d05b143d79ff51bf1cc26a492c39a5968195d2cb87733df317ab27e4"
+    },
+    {
+      "path": "src/audio/chordPreview.ts",
+      "sha256": "84f6e6f5cfb9fcf0be09328e51dfcee318edba4afbd7d2281746c15252df8eff"
+    },
+    {
+      "path": "src/domain/chordAlternatives.ts",
+      "sha256": "f973f4ee8cdc5b541ad1f15fa11014bc6f8170b1637c888618f76864d47d1733"
+    },
+    {
+      "path": "src/domain/chordIdentity.ts",
+      "sha256": "cee4b5a261aa1491d4c142b217f564b924b6eadf4c39458ecf8be7ecb420ae74"
+    },
+    {
+      "path": "src/domain/chordVoicing.ts",
+      "sha256": "8c82005ce6c17c2d1ba96cc2e7f991cf163570df2b496399aff30b464547f3f1"
+    },
+    {
+      "path": "src/domain/chords.ts",
+      "sha256": "2a5bce8b3a80aeb827fda3d6b1a1d3828c7cf23277ce869c68dc48c434e9a1e2"
+    },
+    {
+      "path": "src/domain/liveMidi/chordHistory.ts",
+      "sha256": "0de5485ee4d30053ccdd81fae3416b34f97273435d6902093bd9a1637c3b8590"
+    },
+    {
+      "path": "src/domain/liveMidi/chordStabilizer.ts",
+      "sha256": "1f05b5e69bb5a6ff4357d0f7e260de88507e55fae45478331d498faf194d1980"
+    },
+    {
+      "path": "src/domain/liveMidi/constants.ts",
+      "sha256": "a80ae7b5c1ea3724a752d769b15b23e5fdc6f6a7522b365edbb90eaeef1eb5fc"
+    },
+    {
+      "path": "src/domain/liveMidi/historyImport.ts",
+      "sha256": "09982acf73b93d5051d5802dd138b612dfc4f117715b10b7557705dfbb9bf05b"
+    },
+    {
+      "path": "src/domain/liveMidi/index.ts",
+      "sha256": "80e1e8fcb3cfdd0d4380eaeeccc6dc39fc6e1626c427be4c599fdead9329ee46"
+    },
+    {
+      "path": "src/domain/liveMidi/liveBass.ts",
+      "sha256": "1a895d810da883eb9e7d322b208d40089e22b4ccd49b4daea138d13349742c47"
+    },
+    {
+      "path": "src/domain/liveMidi/liveChordDetector.ts",
+      "sha256": "aa70521d21cd6e200f3c116f63aa8dcfce9e4bd8745700d05275299b62bc6ccf"
+    },
+    {
+      "path": "src/domain/liveMidi/noteState.ts",
+      "sha256": "2f1dd1daa1cab85ac12596cd42efbe6aa4c171851d2eb2f7a9d93789283a367d"
+    },
+    {
+      "path": "src/domain/liveMidi/noteStateReducer.ts",
+      "sha256": "ba1fd00ded305cb966997580e7f0254c0440fbf094984f8ed83953e850b91a0d"
+    },
+    {
+      "path": "src/domain/liveMidi/provisionalChord.ts",
+      "sha256": "15eca7de3695d86a4ffe4176a50653d2036d746cad0384a57421e4c444bce08e"
+    },
+    {
+      "path": "src/domain/liveMidi/types.ts",
+      "sha256": "711743c0685917e973954e5ddf3bae41f04c1f4c47a1e1a0a2ba41b60c8edd38"
+    },
+    {
+      "path": "src/domain/midi/accuracyCandidateUnion.ts",
+      "sha256": "d91bd2e76094e4b2eb7db717f3452d7c806029ba36354b3b877c35d1a397be03"
+    },
+    {
+      "path": "src/domain/midi/accuracyFirstCandidates.ts",
+      "sha256": "fc1330d01d210290245a570d8cc191f01d9e149d5715822c04e6c8f0b714d4d7"
+    },
+    {
+      "path": "src/domain/midi/analysis.ts",
+      "sha256": "eadcb6f471c3a01f5c311f1ced58d6530780e376010a6d2542bcf865bf91e3b3"
+    },
+    {
+      "path": "src/domain/midi/blockQuality.ts",
+      "sha256": "310b778fda13c7d6bd9aab03412ce7ac3fd1b600c05c09589e277c5edd18da8b"
+    },
+    {
+      "path": "src/domain/midi/blocks.ts",
+      "sha256": "077b763d208c9b37faf69b16805ff5e5fcffea45b4389e38f7b287a614860977"
+    },
+    {
+      "path": "src/domain/midi/candidateBlock.ts",
+      "sha256": "92fb8c42356da38be0f7da263d089279abc189d161248245641e3836b978bd83"
+    },
+    {
+      "path": "src/domain/midi/candidateCatalog.ts",
+      "sha256": "104d3c38f32c46804dbc75dbd77e67e5c852d333ada59fb1bdc1ec2efa433144"
+    },
+    {
+      "path": "src/domain/midi/candidateDiversity.ts",
+      "sha256": "045ab22a2b57f90f0fc519cde33f2eea91e5c2b866a7542a579754ebead0a483"
+    },
+    {
+      "path": "src/domain/midi/candidateKind.ts",
+      "sha256": "ea2bed0e03905a21ed1e347cd24b9d7ab0a9d13cd76c13ff74b9ed02569278b7"
+    },
+    {
+      "path": "src/domain/midi/candidatePool.ts",
+      "sha256": "f56587288f883a1c3a7fe28186c1a6a6f3f68bca2de01f5f1229063feffc9e1b"
+    },
+    {
+      "path": "src/domain/midi/candidateRecommendation.ts",
+      "sha256": "c686eebc627733b1a56d03c4547b4438e33b9937348d6cee58fa906efd393dbf"
+    },
+    {
+      "path": "src/domain/midi/candidateSelection.ts",
+      "sha256": "5aa6ae5866d22d016e0ee1ec7aaa8af805fd5dd08ef19ba44b357aabdf710a83"
+    },
+    {
+      "path": "src/domain/midi/candidates.ts",
+      "sha256": "9390a7822fd91ca72eb4f496640b08ad5f7cf7c9f6bd3b033d7648bc2de938e4"
+    },
+    {
+      "path": "src/domain/midi/confidence.ts",
+      "sha256": "cf7b0e6001a03fcfe6db271cae5d0dda356289aa4419eab7c4013318621be059"
+    },
+    {
+      "path": "src/domain/midi/correctionCost.ts",
+      "sha256": "f1fc59bc8d8ff604e6c677934f8c42cb56d8309b0c0ebdf132af7eb26bbfa976"
+    },
+    {
+      "path": "src/domain/midi/coverageCandidates.ts",
+      "sha256": "a9243f858b29a9fcd9a9c3d0d1f10c2eeb66f6fef6b99e066d8f6c4202590d64"
+    },
+    {
+      "path": "src/domain/midi/coverageSelector.ts",
+      "sha256": "cd3c510382f8b95eabfd02b55027f6f03e407c2ece6fc22f3ffaf3801fc24812"
+    },
+    {
+      "path": "src/domain/midi/decoder.ts",
+      "sha256": "69d9a36be064ada07fbd182e69960f814192072dc7ca53f64ba2f50e6c1a30f6"
+    },
+    {
+      "path": "src/domain/midi/evaluation/degrade.ts",
+      "sha256": "010216fa085d0454437de4c91b67192a1f2cd0c98f95d61b63c449a0e8885fc1"
+    },
+    {
+      "path": "src/domain/midi/evaluation/manifest.ts",
+      "sha256": "4284dd1152e8a6e0ef2674feb06bb40f910f3a651698b1df17c3c2aafacc094e"
+    },
+    {
+      "path": "src/domain/midi/evaluation/metricsV2.ts",
+      "sha256": "b4b7913af5bee0773604a67d426e793f4e99f03c64fbf53951ab6ab445026720"
+    },
+    {
+      "path": "src/domain/midi/evaluation/types.ts",
+      "sha256": "73f60d87b8903fd0e2a07bb73cbdc56a12fdc5a0c2722403372b740efd018350"
+    },
+    {
+      "path": "src/domain/midi/extractionProfile.ts",
+      "sha256": "219c01ef2211760c998cfb96880dcc57650fc13dbafa24480b1fc196151f26c4"
+    },
+    {
+      "path": "src/domain/midi/feedback.ts",
+      "sha256": "c3b94c82fb7df2060494c755997016373d0a6feb0f1ba7b1c48546884433b846"
+    },
+    {
+      "path": "src/domain/midi/fingerprint.ts",
+      "sha256": "ffdf685e06498b39bd33d6c4039a05705a3db8da8f2f9c95d7730dc03d6ae855"
+    },
+    {
+      "path": "src/domain/midi/gmRoles.ts",
+      "sha256": "7101321d23d5633cafa9327ce96090a2721e3aa07609073275fee17800021070"
+    },
+    {
+      "path": "src/domain/midi/hybrid.ts",
+      "sha256": "e63568bb4d17f6e52a8f25c7c30710e12b0cde6b97f0417adb47c8c17461585c"
+    },
+    {
+      "path": "src/domain/midi/index.ts",
+      "sha256": "de3325bef97bd2c75acdf3e9973bc8a16c362cf88c29717dcbfb491704a0895b"
+    },
+    {
+      "path": "src/domain/midi/keyPrior.ts",
+      "sha256": "7bc6aee677db9f09dc44c70bfcdc23ca4c0e336979e88d013a669298eb52a9b2"
+    },
+    {
+      "path": "src/domain/midi/legacy.ts",
+      "sha256": "9b7faecf936b03583661c3cbbd7a944a1330c0c4c04c576bf0e660ad6677166c"
+    },
+    {
+      "path": "src/domain/midi/legacyBoundaryReranker.ts",
+      "sha256": "10db8f5334c40ad036fc52ee92eea86b75f2010f5062d329e3821c04b13bb603"
+    },
+    {
+      "path": "src/domain/midi/merge.ts",
+      "sha256": "0e41d238067cb52ba88e5c4f7b7471bbb2c97e6a802fc36035fe94b00983f52b"
+    },
+    {
+      "path": "src/domain/midi/normalize.ts",
+      "sha256": "896a978432eeacee860bd2b701dfd4bcd4dd93ba9fa9299ea244f0a4b6b1b508"
+    },
+    {
+      "path": "src/domain/midi/observedFlatNineCandidate.ts",
+      "sha256": "fc6a1b9fb3067a669ae0305380350d0498aa0603e69ec2b7ef24fe0c8f3af8a7"
+    },
+    {
+      "path": "src/domain/midi/occurrence.ts",
+      "sha256": "3691347d3bd7ecf5bac238fdfd962d90868e8f1da2c5e70e9a8cee1e8c1f271f"
+    },
+    {
+      "path": "src/domain/midi/ornaments.ts",
+      "sha256": "6dbadfc04fd5d1bcb7e5b226a6d86dd8ddc82b132a978ed01befe3e3b10cbcea"
+    },
+    {
+      "path": "src/domain/midi/parser.ts",
+      "sha256": "121d0b0035dccc8b648dc9322387aee0861043fdf49822b015d3bbb5245ebffe"
+    },
+    {
+      "path": "src/domain/midi/patternCandidate.ts",
+      "sha256": "f500a6a75a0a4fda8d4fc17fa70d490b028fe54c78f88fb7b8a81c22f0f50e60"
+    },
+    {
+      "path": "src/domain/midi/patternEvidence.ts",
+      "sha256": "8ee901df6f8b7ad73466361bd50967b83dc08cd97e8a10f13e7307a971b8c227"
+    },
+    {
+      "path": "src/domain/midi/patternSelection.ts",
+      "sha256": "315f9db66e7d71f3cf7524d731eddf03844e612c2300a56804ae294e48bf2009"
+    },
+    {
+      "path": "src/domain/midi/patternTwoPassSelection.ts",
+      "sha256": "df9cce990035ac29dfd4c330a88e1ec1ec2d4e4174facba26f44e322398edac4"
+    },
+    {
+      "path": "src/domain/midi/phase412Analyzer.ts",
+      "sha256": "256e4177b897abf5f00ced2bdc5c370e78c7d3d3fc9a643a310856abb61ffa96"
+    },
+    {
+      "path": "src/domain/midi/phase412CoreAnalyzer.ts",
+      "sha256": "03e24c8f6771532555e9e7d4bbca4ef2c8eadf795c7f62d1e9b930d1a3bade9d"
+    },
+    {
+      "path": "src/domain/midi/phase412G2Analyzer.ts",
+      "sha256": "33bc69405500151dabc58c74b8a0765f24fe08129bdc7061b8f808f53c1d2871"
+    },
+    {
+      "path": "src/domain/midi/phase41Analyzer.ts",
+      "sha256": "b3ec55c988b0786efa107bb20e2f1fd655aedd216a9c2b675613bf3e7b4e8812"
+    },
+    {
+      "path": "src/domain/midi/phase4Analyzer.ts",
+      "sha256": "7297075ea98669d1bd658382189673de00f283376cdc4cd0905ded5cc394c148"
+    },
+    {
+      "path": "src/domain/midi/preAnalysis/analysisSession.ts",
+      "sha256": "e469b5b16b443e8ec70775525d475adefb0fa6dda92b552c5b574776babe7824"
+    },
+    {
+      "path": "src/domain/midi/preAnalysis/analyzerInput.ts",
+      "sha256": "ff1fafde530a3e2fc6ad6f1c33f7d2f7b400f7d4b82a16a9cca106b9857f78e7"
+    },
+    {
+      "path": "src/domain/midi/preAnalysis/gmProgramNames.ts",
+      "sha256": "0adcdc46c5c5650dc12a3701f54509bc133f13279546a162dd48164adc29efe5"
+    },
+    {
+      "path": "src/domain/midi/preAnalysis/index.ts",
+      "sha256": "1d554af5fef12d26a3b57bfb97f14f2f707a24b6d743428a48989d2f4efc9195"
+    },
+    {
+      "path": "src/domain/midi/preAnalysis/roleCorrectionLog.ts",
+      "sha256": "11c12a4133a29e294964b4e7e6af2d1efa9bc9ba1d6528d3680683cec562bf63"
+    },
+    {
+      "path": "src/domain/midi/preAnalysis/sessionPlayback.ts",
+      "sha256": "b19e714cd1b0dc49263bce159b5f9d4e9aa1c480d1b4f57e7f0085f28720df69"
+    },
+    {
+      "path": "src/domain/midi/preAnalysis/types.ts",
+      "sha256": "2cbba24fb041bbd43e67ca8b74319c92b9df3e22c66989e46200607f845e7895"
+    },
+    {
+      "path": "src/domain/midi/preAnalysis/voiceExtraction.ts",
+      "sha256": "3b56eae41e82fd417437381a5d01c1fbdc87786b111c76340a1da63abebf7f8b"
+    },
+    {
+      "path": "src/domain/midi/profiles.ts",
+      "sha256": "02c72860ea9a92643a36a2fc355f6598a14e40d1a85c9b32867c6f757efbaa5b"
+    },
+    {
+      "path": "src/domain/midi/qualityEvidence.ts",
+      "sha256": "48d2853db12faf6c164354096fd1f749be614fa3438001a8a5497d43154d32fe"
+    },
+    {
+      "path": "src/domain/midi/rawSmf.ts",
+      "sha256": "471154f889c0e4bedc4ea68c51c57bfedc9728fe5494c24648d54c910add5c54"
+    },
+    {
+      "path": "src/domain/midi/sections.ts",
+      "sha256": "e95d84bfc7052bd4ee6adcb69a2ec7f6d7f10af9bd65032342a0e74a90f6c995"
+    },
+    {
+      "path": "src/domain/midi/segmentation.ts",
+      "sha256": "19bd174cef059b04a545cadd71e43ea305c9907aed319d83456d32a8f670bdd6"
+    },
+    {
+      "path": "src/domain/midi/structuralWindows.ts",
+      "sha256": "4a0b857401a4ea19f6256251ea2ccfa8a53514a47eb7b156706ac8c453d9e51a"
+    },
+    {
+      "path": "src/domain/midi/timing.ts",
+      "sha256": "897899916a9a06584ed53cdafd7cb508e71c8548250dabeff4d3b7eecaf42d85"
+    },
+    {
+      "path": "src/domain/midi/trackRoles.ts",
+      "sha256": "5cd97ec3856f3cbbef53b945fe53064359deacf8715e318b8cde132fb05dd739"
+    },
+    {
+      "path": "src/domain/midi/types.ts",
+      "sha256": "42e86e46d555194fe460f3019447fe6271ab9926d2e5f81fdb87360d864f2abc"
+    },
+    {
+      "path": "src/domain/midi/voiceAwareReranker.ts",
+      "sha256": "77b2375d348fa36c48e3e322566b22f49a8513547b0e8aabad4e2cad4b8d877b"
+    },
+    {
+      "path": "src/domain/midi/voiceProfiles.ts",
+      "sha256": "e5157f8b7d55aad984f32c555b9615ea304eff076a3721e2ab6be43b50eea98a"
+    },
+    {
+      "path": "src/domain/midi/voiceRoles.ts",
+      "sha256": "9b0df05c2b813a7946d758405015f0b4b41f8f62025a4751f4bb68eb9cba3557"
+    },
+    {
+      "path": "src/domain/midi/voices.ts",
+      "sha256": "f27579e895a84106b93e3534deb479ccd023d660392284d6203734b105c4827c"
+    },
+    {
+      "path": "src/domain/midi/weights.ts",
+      "sha256": "5e95738dac23600b7b5004d44c799d873741896e69c476f99e3e9436b4577b5c"
+    },
+    {
+      "path": "src/domain/midiExport/build.ts",
+      "sha256": "52077bf8fa604c5a0c5f147143f9161d7c131e429203c45a97fc648e40fc60ce"
+    },
+    {
+      "path": "src/domain/midiExport/index.ts",
+      "sha256": "a72b64975228749c90a347406072f66e448dd25bb19e66cf380ef6b107fee29c"
+    },
+    {
+      "path": "src/domain/midiExport/model.ts",
+      "sha256": "b072bedf3e97da1fa7a519abcb3881693e0f8eb126ffcad4c0827be452e8c21f"
+    },
+    {
+      "path": "src/domain/midiExport/serializer.ts",
+      "sha256": "f200fe3a89532840aaca9a09e8f67cc8f55621d14df5873e812f20316c22dfcd"
+    },
+    {
+      "path": "src/domain/midiExport/types.ts",
+      "sha256": "5c66bfb8a4e5f3f33f7c417fc0a0c580329d14cf80fc4fae225f63645a6da6d8"
+    },
+    {
+      "path": "src/domain/practice/chordRequirements.ts",
+      "sha256": "07f7eadd38a483288f198ce89ca6555a19fd34ed0eb46bfdea6ce171555652d7"
+    },
+    {
+      "path": "src/domain/practice/cleanRound.ts",
+      "sha256": "3b2de37d257095016a9491682909c209d190168649f5919f34c1987b9c720152"
+    },
+    {
+      "path": "src/domain/practice/index.ts",
+      "sha256": "ebc0736f7529a635534d1122c59904454c5650b8ed3efe852f79ded923584208"
+    },
+    {
+      "path": "src/domain/practice/inputState.ts",
+      "sha256": "bb60c5336c7808bd0888e41b0369648686d919076151833b2e892ebf5727181c"
+    },
+    {
+      "path": "src/domain/practice/matchPerformance.ts",
+      "sha256": "c027944a62dde2286af0e6b3a03fad22dc7a2c6b932c5845cdd49c172dc51a25"
+    },
+    {
+      "path": "src/domain/practice/practiceProgress.ts",
+      "sha256": "646157325cbc748ccae8be8d08832405dbf12092f103c725f8aa7487d93c165c"
+    },
+    {
+      "path": "src/domain/practice/progressionFingerprint.ts",
+      "sha256": "c03c7e436cfc702e6610a1be9242f3b8748147669a710ef67eca9d5ae2d6cc12"
+    },
+    {
+      "path": "src/domain/practice/recommendation.ts",
+      "sha256": "2d014a976d96acddbf653bbbb70df81b4740407c2563adc9f91b714d2c383020"
+    },
+    {
+      "path": "src/domain/practice/sessionMachine.ts",
+      "sha256": "a018d637ad3f032509fa4f093a45ba11d9cafc08f3fedcd7c2a3ca46523cff3f"
+    },
+    {
+      "path": "src/domain/practice/types.ts",
+      "sha256": "ac2552f5b63b497123a1521a3d18163f32924a7f50c84341af40eb01b701d6d4"
+    },
+    {
+      "path": "src/domain/progressionEditing/quickCandidates.ts",
+      "sha256": "183e79890e000c3786240b48b83cac0e23832fce453849a62e3eac048ee00165"
+    },
+    {
+      "path": "src/domain/progressionEditing/types.ts",
+      "sha256": "0fc2334572fac929b7090d0e81a640f9e12f0a46a0198015659b9c9bed929f23"
+    },
+    {
+      "path": "src/domain/types.ts",
+      "sha256": "bb58b6d8ffc78bc16f288b496ec4d7c92e76e00a0c3a7676cc68d10212bc3773"
+    },
+    {
+      "path": "src/domain/voicing/compatibility.ts",
+      "sha256": "24c959c5ca55b87c91b9df3a5e8bc508d02383f2996ac15ffa43df4840f303e6"
+    },
+    {
+      "path": "src/domain/voicing/evaluation.ts",
+      "sha256": "bcc26abd3b33f9dc4a50d23e9707d61512cb18240b323b82555b6e71b007522e"
+    },
+    {
+      "path": "src/domain/voicing/extractAggregatedNoteSet.ts",
+      "sha256": "87aa4c88ba70f17d83fb2635f32f6e037b2f27be0c8cc1cde334e08adba48142"
+    },
+    {
+      "path": "src/domain/voicing/extractSimultaneousVoicing.ts",
+      "sha256": "951699faf9ce30300abc139018c66b347fb7b3a95035fa0b53c6009bba49278e"
+    },
+    {
+      "path": "src/domain/voicing/extractVoicing.ts",
+      "sha256": "c56b563a52f09bff9d650bfb5a62265d349edbca0ee9eafe4133c07b93f6479f"
+    },
+    {
+      "path": "src/domain/voicing/extractionConfig.ts",
+      "sha256": "6d05ca3d464afd0cf7d7f1824ad14778260ca4de9ffb255a905f50cded1bae37"
+    },
+    {
+      "path": "src/domain/voicing/index.ts",
+      "sha256": "72cfd630ca44ea342f9299f1ded43da42755684a87a4808cf7bfa1ff29df644b"
+    },
+    {
+      "path": "src/domain/voicing/melodyContaminationFilter.ts",
+      "sha256": "f21747f070a429c0d91356139a4823f602549271f150ff373406fc0a0a079b9c"
+    },
+    {
+      "path": "src/domain/voicing/normalizeVoicing.ts",
+      "sha256": "90fe48f0190c78e01c97e5daf2d027414aa8048fc84d1185bc1de4a61b50237f"
+    },
+    {
+      "path": "src/domain/voicing/relativeSupportMelodyFilter.ts",
+      "sha256": "f37a29b6265c523b79fa2bc8ca170715b854caf97b086abf1e7f13196be6aed6"
+    },
+    {
+      "path": "src/domain/voicing/resolveVoicing.ts",
+      "sha256": "01846e5e4387f651d7b909fb2607c0ea2c91fa93e4b4153b1d5ffcde74dcf28a"
+    },
+    {
+      "path": "src/domain/voicing/scoreVoicingCandidate.ts",
+      "sha256": "ed3d2907bc5ca39d777f72396729cfc56916385c82e3911915e62bb9aae4cdc4"
+    },
+    {
+      "path": "src/domain/voicing/sourceVoicing.ts",
+      "sha256": "49c08cd39859acfaaf39056fea8881fd6dd293fa6a33e6a6f6b3da3d9003bbd3"
+    },
+    {
+      "path": "src/domain/voicing/types.ts",
+      "sha256": "9d81a69ea17131f4c3b915929134e2ba0e8ede010dbf930a4fcc3df4c21398a9"
+    },
+    {
+      "path": "src/domain/voicing/voicingSourceStatus.ts",
+      "sha256": "598d275b0e923455ec5fd0c8faf5ba3fcf2e7399ac3f5b0f4e81ebf58675f397"
+    },
+    {
+      "path": "src/liveMidi/latencyBenchmark.ts",
+      "sha256": "cf60fb74deaa5903997af65e1f8da3399616c8484830b7160f1d8d76b0e8277a"
+    }
+  ],
+  "externalSuites": [
+    {
+      "id": "all-instruments",
+      "selection": "single runtime fixture",
+      "repositoryLocation": ".local-evaluation/midi/all_instruments.mid",
+      "manifestSha256": null,
+      "selectionSha256": "6680a730124ce67128e0f5d42f645cebaf85d7e224935820fea7f1caecddc61c",
+      "contentSha256": "9f717c0a55d689befef2532ddf231eb3ae44264639443e4830de9c06d0d1abd1",
+      "fileCount": 1,
+      "files": [
+        {
+          "path": ".local-evaluation/midi/all_instruments.mid",
+          "sha256": "9f717c0a55d689befef2532ddf231eb3ae44264639443e4830de9c06d0d1abd1",
+          "byteLength": 19436
+        }
+      ],
+      "supplementalInputs": []
+    },
+    {
+      "id": "chapter3",
+      "selection": "all manifest cases",
+      "repositoryLocation": ".local-evaluation/chapter3-seed/manifest.json",
+      "manifestSha256": "245c10fcd3fcbc1f1fee903814b6fdc3c95de302c4ac114ae0bd9ae30911cb3f",
+      "selectionSha256": "3dffe70a7f78859f5bf9693b88521d0a03baa03ad587d95d0376011e9ecf1c8f",
+      "contentSha256": "21c0fdca60de24866ca4917ca6f211733a364c56e08eb7054b2fbf67873caef9",
+      "fileCount": 100,
+      "files": [
+        {
+          "path": "midi/chord3_001.mid",
+          "sha256": "36eb8727b50e32c94d9f7acad4adaa4e4390e5b997e951a787a3ed2798caf5ba",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_002.mid",
+          "sha256": "5ffbe0e177a45f0f0d7502b1555cc183000ba858a7d3407158f3ccd52dc53eba",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_003.mid",
+          "sha256": "e3ae0559afcdec4318902a3dc20f137eaabae78056c53947f8c2a68f3338905f",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_004.mid",
+          "sha256": "7b96ee10aa5a00a6c2db80e1d9f76b014d4895b3042eae9bf3711a4d3d0a8d1a",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_005.mid",
+          "sha256": "216654bfb72afd3824526803f5b5890a0ac30342e9a92ca3fe293bc5fed9e9f4",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_006.mid",
+          "sha256": "960d838808151cf2f9b967c30a3331e9ac680a61735d1e641360bfd5bbdda4b3",
+          "byteLength": 266
+        },
+        {
+          "path": "midi/chord3_007.mid",
+          "sha256": "379ad6c2ec33aaa73aeebde77a38b8f193ae2596d918cfcf7c80b619de7be747",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_008.mid",
+          "sha256": "f48a6b737850d59dff7033ee66702c18f9286abda0e0cc5a2e0868e0dd015091",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_009.mid",
+          "sha256": "bbbcefbb99420cc3bffc7f8fcb7d8257e506c83296663a6cde83472868c1cc0d",
+          "byteLength": 170
+        },
+        {
+          "path": "midi/chord3_010.mid",
+          "sha256": "112fcbffaba7052138067641cac5846e30d62221485d744c0d1e040ba6f5b999",
+          "byteLength": 131
+        },
+        {
+          "path": "midi/chord3_011.mid",
+          "sha256": "a6ae5dba0b6395dc994ae2b35dcee44db8af88a0f171242c7fb967bc9d7bdec8",
+          "byteLength": 176
+        },
+        {
+          "path": "midi/chord3_012.mid",
+          "sha256": "31b0a707f2bb21a03a5af5026429010e0988a598db1bc5d5c74280814b991b7b",
+          "byteLength": 176
+        },
+        {
+          "path": "midi/chord3_013.mid",
+          "sha256": "ea989c446cee20bfc3f8709ddc17b46544db90f2adb6d515c87dce2dbc6267c5",
+          "byteLength": 164
+        },
+        {
+          "path": "midi/chord3_014.mid",
+          "sha256": "cbf85b922d24ac3c05535d067d4d01ae68fcb5aa9460eca02273ab5b1dc70d87",
+          "byteLength": 266
+        },
+        {
+          "path": "midi/chord3_015.mid",
+          "sha256": "ede103e60a7fb8abe230a9a0dc573e884b7ff303e5d3482d54084b26e80a7264",
+          "byteLength": 165
+        },
+        {
+          "path": "midi/chord3_016.mid",
+          "sha256": "31c9803f259693bf10df4acbd77f09db29396de572452f15007371b4e1002370",
+          "byteLength": 131
+        },
+        {
+          "path": "midi/chord3_017.mid",
+          "sha256": "ed140331309df6dd4903e0f391adcd42d8e0c2214f86f79e27b3b2a119def8ce",
+          "byteLength": 110
+        },
+        {
+          "path": "midi/chord3_018.mid",
+          "sha256": "b98c28abc1d3d6f55e3152ff9b82ac31ea76a0c63a9596d4a3207dd81a349b43",
+          "byteLength": 131
+        },
+        {
+          "path": "midi/chord3_019.mid",
+          "sha256": "d02f9e4c7fba471431167fe5a1f50cb8d7f2e253114821ac6a33c02e477bba28",
+          "byteLength": 169
+        },
+        {
+          "path": "midi/chord3_020.mid",
+          "sha256": "5639b3ab6d7bd9fbef53073b4b7bdb745256d895bea9c264ab8843100789e47f",
+          "byteLength": 170
+        },
+        {
+          "path": "midi/chord3_021.mid",
+          "sha256": "05eec536c1d1e54aad57ae9f7a64cf0db9f756fa72457d102379c2584339339e",
+          "byteLength": 203
+        },
+        {
+          "path": "midi/chord3_022.mid",
+          "sha256": "876b526c1c097f91ce3c1fbd045d90a5d17419f38cba17c941887ab55af9f23f",
+          "byteLength": 236
+        },
+        {
+          "path": "midi/chord3_023.mid",
+          "sha256": "4fb1db9be181164669a5925c9067337c3dac1ee7ed8c006fd539431a081ea87e",
+          "byteLength": 185
+        },
+        {
+          "path": "midi/chord3_024.mid",
+          "sha256": "3defe234f7d384e9af2458dbbd29a5d0a7f51e787b847f8d4163fa0626f7a633",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_025.mid",
+          "sha256": "feda763b4eeaf6b12ea852197ab508e481a6f3a6408e9c7709c1d3f795addf44",
+          "byteLength": 104
+        },
+        {
+          "path": "midi/chord3_026.mid",
+          "sha256": "f87aaf3fe20916112b2c739ed20802368562bbb0f9be8b463c736944cefac8b3",
+          "byteLength": 131
+        },
+        {
+          "path": "midi/chord3_027.mid",
+          "sha256": "93d0c419e8bf9d6057556a8760b0fc13c7dd5a732b03f304ecc62645532d70c8",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_028.mid",
+          "sha256": "c298d41e5aa6f72a49c4e66ae49434b7a0141172e60db655c4142dafbc9db1e3",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_029.mid",
+          "sha256": "4ef209c642fa450dcb32a74bf9bb4d03c55216afc9c5eaa23f348cf23701be47",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_030.mid",
+          "sha256": "f3647031b809b222aafea970cc6bd0e6c6bbfa4d825ea54fcadc5bead789d28f",
+          "byteLength": 185
+        },
+        {
+          "path": "midi/chord3_031.mid",
+          "sha256": "faab9b5a9c89ecd403bdef376d6258ba163a4db01a2ce7c911cd7f64bfbd667e",
+          "byteLength": 131
+        },
+        {
+          "path": "midi/chord3_032.mid",
+          "sha256": "14885ff57720b8e043ebd4e0d6927f84def330fabb838baeb88f9a4ba6cc93c9",
+          "byteLength": 131
+        },
+        {
+          "path": "midi/chord3_033.mid",
+          "sha256": "fd05205217c73df30f02c72f6c01089abcfab006238962d26c5d75c08e1239b2",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_034.mid",
+          "sha256": "e7189f8397024624fade30fe5c9be22bbd1780b57a99f881203d8982614397a6",
+          "byteLength": 164
+        },
+        {
+          "path": "midi/chord3_035.mid",
+          "sha256": "7feca5331cb6ede9f0a52b8a24ec5ccaa14c6f5eb67305c7f69a8015e6a533f3",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_036.mid",
+          "sha256": "1743fc29d22e66434ee025ada477766a36de16d183d176ee8414e22931ba35ab",
+          "byteLength": 137
+        },
+        {
+          "path": "midi/chord3_037.mid",
+          "sha256": "1598908a886dbb102ae242c38165f441915af6a9201b73dec8956bd2db73ac1f",
+          "byteLength": 104
+        },
+        {
+          "path": "midi/chord3_038.mid",
+          "sha256": "362da5af3fd573d04c5887bd151c9d9a0a9ac0c3adf0243b67dbacd51d9b69ac",
+          "byteLength": 137
+        },
+        {
+          "path": "midi/chord3_039.mid",
+          "sha256": "fe195ff215958feec5ecf469894375cd05013751927f0aa038e584fbe6b7d47a",
+          "byteLength": 272
+        },
+        {
+          "path": "midi/chord3_040.mid",
+          "sha256": "97fde09057d6a9a1f9983688c479434db111b11c475708474903046076aebcec",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_041.mid",
+          "sha256": "c8ae2af8754dca1b8313092fda18b78436bc8c0901a8dd32b8084d6a2e8a9fa5",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_042.mid",
+          "sha256": "c7266c01b62fdd55910ae01fb6f4b5233c1af64b966db8f21c13cc357cb8242b",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_043.mid",
+          "sha256": "3859dae48fa06d375e637e3a67ec01ea88abbe7d138c15ec37c5c3b6c88fb549",
+          "byteLength": 185
+        },
+        {
+          "path": "midi/chord3_044.mid",
+          "sha256": "7877ceb65ffed89888d970779306c3607ec864032f302fa194f3fb2398a5e6cb",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_045.mid",
+          "sha256": "f3ed49350ab6b1ec4be69064151b277c2547fb53101a372a38c18429d3f24945",
+          "byteLength": 131
+        },
+        {
+          "path": "midi/chord3_046.mid",
+          "sha256": "3e92e3f02cc5c56a249b5d04fa560cd136298e56854c81a531ac8057e0500d9b",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_047.mid",
+          "sha256": "522877a6ad24c99de2b9fb485179629d7ddc51e57c74bf2a6b105379eec467fb",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_048.mid",
+          "sha256": "56918520549adbfa292863127bbc443d3697c06a578b66c624516d7552037e2d",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_049.mid",
+          "sha256": "c6cc403586bb74d7c25d15f5b9064e8eb92a3ae0f423879faef5a29ceb6c77f6",
+          "byteLength": 131
+        },
+        {
+          "path": "midi/chord3_050.mid",
+          "sha256": "e4bb06217fa8cdb00d461b97e8a82d188d2f26cc9006ef5f011c4ed807c22d1e",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_051.mid",
+          "sha256": "64a70f865fe6413636c58f145e5e5a039bf965b619a202670303deb3c7d2ca58",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_052.mid",
+          "sha256": "4645245f2eb62c5405f052c440df6c43c88d17c3f269a3910cd9e9b7943c59a1",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_053.mid",
+          "sha256": "3c81d0e2f8a582a53ba0cce962b9c27a1d6c76684312117ffdf6f3257264c9e9",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_054.mid",
+          "sha256": "e8d914c385f354628348672034ef49b56b5bb1e4e53064799b8cee49db499ee0",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_055.mid",
+          "sha256": "f1353a8bdbce9c833bdd3d837e543c2eb8365e9a3da6c64c8b5ecb793a975505",
+          "byteLength": 170
+        },
+        {
+          "path": "midi/chord3_056.mid",
+          "sha256": "9e06c6fbc671ee0daad99e9bf04cf4fcfee1e21cb8384e0d1475668f56be1527",
+          "byteLength": 203
+        },
+        {
+          "path": "midi/chord3_057.mid",
+          "sha256": "56400d6f91c4479cd1b922cc92515c3372f1480bfca20f11a3c759d7cfa6f43a",
+          "byteLength": 164
+        },
+        {
+          "path": "midi/chord3_058.mid",
+          "sha256": "d1bc11c3c7b5ae5070df1355cdf5f7a42b45dc10725aa19c15721cddad4cb306",
+          "byteLength": 131
+        },
+        {
+          "path": "midi/chord3_059.mid",
+          "sha256": "9a0921845e2e038abd70a51a8e29af22e48fa1a3b1f4da08873f1c86b4107d79",
+          "byteLength": 131
+        },
+        {
+          "path": "midi/chord3_060.mid",
+          "sha256": "d7fec77ff3a1bdcc787f6a2bb7abed1b0fd856da66550e3c7e785de405cab7cd",
+          "byteLength": 184
+        },
+        {
+          "path": "midi/chord3_061.mid",
+          "sha256": "29a9ab51647ef38c3f5b3896a5792d7352a6846e70c3c6833983e6419cce9bbd",
+          "byteLength": 170
+        },
+        {
+          "path": "midi/chord3_062.mid",
+          "sha256": "9670de4aa92443c18314ef19849c2b9f05e29b254d1b58b0914bc61c887a9192",
+          "byteLength": 104
+        },
+        {
+          "path": "midi/chord3_063.mid",
+          "sha256": "01fd443ae4e37f95d9a2594ef89bbfeb26c3d27dd86e3d7c3aab8b77f6b880a0",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_064.mid",
+          "sha256": "366dbae61d70542eb8b0f60de124064d9d9e5b83ee338f4c9aa8a69475f26300",
+          "byteLength": 185
+        },
+        {
+          "path": "midi/chord3_065.mid",
+          "sha256": "04e73be4681f69fab05a45a3acc362d3fcf4b2862271d771d5a0c5e8189e20b5",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_066.mid",
+          "sha256": "7ffc94acaa94b8fc53bbb943711fd51647dd5e883730964af344be4fe3b2b7c7",
+          "byteLength": 164
+        },
+        {
+          "path": "midi/chord3_067.mid",
+          "sha256": "01885f6aa457090676e775dad69f27b525c23099d9eb8c981834c4efc006f065",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_068.mid",
+          "sha256": "3a787343d4ce878f951694506877c548b5b875b22f7bc92ded385f45b7ae52ad",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_069.mid",
+          "sha256": "0b613944ede25d57cfe09ce5e3bb19ec2f142654b371e658dda1580001cca50d",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_070.mid",
+          "sha256": "d0a0ab7eed81eafc01286045ca790ef98f22696767a79c161f694cf8d5cfb9eb",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_071.mid",
+          "sha256": "0ce5f71cdf39b5e8d7d11506f26986e2051cbc5048d97cb82c02413c7a5d4d59",
+          "byteLength": 164
+        },
+        {
+          "path": "midi/chord3_072.mid",
+          "sha256": "93c60c8bbdef1e3a44baf83caf358ff97b76d6165125c872c92d2fad04b155d9",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_073.mid",
+          "sha256": "22922595291ed8cc096fb606c4f888672b1de576bc9e8c436e5b0ff7c9ab0386",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_074.mid",
+          "sha256": "57146703cf6df6d2868ea8744122b7d1a80426c285855f229988ab3eef8074bc",
+          "byteLength": 164
+        },
+        {
+          "path": "midi/chord3_075.mid",
+          "sha256": "e672a62b5e437de8c1f6cbbd61dd4f3cb32b3f4e0b5d9244b194c877747c9243",
+          "byteLength": 164
+        },
+        {
+          "path": "midi/chord3_076.mid",
+          "sha256": "cbeadc505339e16d099fab788d7c78a05d3934049b2822d2ceb5433cdf6fc8f0",
+          "byteLength": 164
+        },
+        {
+          "path": "midi/chord3_077.mid",
+          "sha256": "2a974bbcb16ef2f0cb16b10055ba38ed805ea1863fee28c929d3148d46e4a4f5",
+          "byteLength": 185
+        },
+        {
+          "path": "midi/chord3_078.mid",
+          "sha256": "51bde173ee1f86e4ae7474a3a2a7604e5b4f9c1e74133c654d9c8b4d1eb1efe1",
+          "byteLength": 272
+        },
+        {
+          "path": "midi/chord3_079.mid",
+          "sha256": "334880451a5b4ac6e191cccf8c019b6fbc256d7a0a2be5d45bb3f8ec41f3c07f",
+          "byteLength": 316
+        },
+        {
+          "path": "midi/chord3_080.mid",
+          "sha256": "27f02b2210f16af41842c2f16498785d14ea66743b65bbc5830a31766cb95e47",
+          "byteLength": 278
+        },
+        {
+          "path": "midi/chord3_081.mid",
+          "sha256": "b02cc2eb32308a125662cdac4e272858aff7b5a30923751893c9c004c32556ce",
+          "byteLength": 164
+        },
+        {
+          "path": "midi/chord3_082.mid",
+          "sha256": "aaa0f2bc3c8c650734d1018c7103baa94a1833ad139e23ba8772030b2c8c5c28",
+          "byteLength": 170
+        },
+        {
+          "path": "midi/chord3_083.mid",
+          "sha256": "bae3565b09860269af494a407413cb1c1be19f2d126cabbee6363d72c93c7b94",
+          "byteLength": 176
+        },
+        {
+          "path": "midi/chord3_084.mid",
+          "sha256": "06232ef017daada296a380172056470a7ed0c9f94bfc312783c0914e72d7d939",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_085.mid",
+          "sha256": "a93f816a2dd6e9dcc02f4c3f154a4dd47ba90b4397116e35d183868592ce3bad",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_086.mid",
+          "sha256": "5903bbc49b2b326d18885490eb177883d7a52b0b5ae274c3f7d25fa2024273b7",
+          "byteLength": 131
+        },
+        {
+          "path": "midi/chord3_087.mid",
+          "sha256": "f268c9e38705866ec7876c849fe4f517f259dd4252ac3bd9f30eed2e8913a36c",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_088.mid",
+          "sha256": "7e0b365505c20ecaf03ddb288c612e3153d11ab36faa4803052ffbe2a8858dcf",
+          "byteLength": 170
+        },
+        {
+          "path": "midi/chord3_089.mid",
+          "sha256": "79740d51a15656ad0c4a35bb0dc62aba7e5f5d1a71acda26cf75928e6624d5bc",
+          "byteLength": 170
+        },
+        {
+          "path": "midi/chord3_090.mid",
+          "sha256": "7c91933e20bd1c801aedffd0f6987cf6cb951655fa37e1bea556ec755586007c",
+          "byteLength": 104
+        },
+        {
+          "path": "midi/chord3_091.mid",
+          "sha256": "219448a7e5156c2b448719de8c719994112166c7646d1310f52e2cc63f4d937c",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_092.mid",
+          "sha256": "50a6b40c32c3b4b77a431aa7fa4b9a6e37362338f3774b09a5d2489913460aaf",
+          "byteLength": 158
+        },
+        {
+          "path": "midi/chord3_093.mid",
+          "sha256": "1c426dfcaedf743f0ebe52e9dcaeea6bcadab21fe040593227006ed5763a07e0",
+          "byteLength": 248
+        },
+        {
+          "path": "midi/chord3_094.mid",
+          "sha256": "a7e876a714542bfec0fc121d72a4d9f51ef90b62a79cb4b1ca736c909141983a",
+          "byteLength": 328
+        },
+        {
+          "path": "midi/chord3_095.mid",
+          "sha256": "2c6d749cee84dfd76132d79e19114a529f4a53ec00487cf414fc4838896c4ab9",
+          "byteLength": 142
+        },
+        {
+          "path": "midi/chord3_096.mid",
+          "sha256": "5d934f237bf06b48d3d4a057a9c9fa215ce5467943e4de957570aeff3470c4d0",
+          "byteLength": 116
+        },
+        {
+          "path": "midi/chord3_097.mid",
+          "sha256": "2adf9be17aab705728f538fd3e225944167c8711ff767294e1db4dd1caa6a3d0",
+          "byteLength": 143
+        },
+        {
+          "path": "midi/chord3_098.mid",
+          "sha256": "93dc4558e481f3f29b86e526a08450bf79ea37b43785a2bf1130629149ba439e",
+          "byteLength": 137
+        },
+        {
+          "path": "midi/chord3_099.mid",
+          "sha256": "ac04204472d1fab4e5274c0a1ca58ab0e7c8d5d76fc166b157b780987f9f78fb",
+          "byteLength": 104
+        },
+        {
+          "path": "midi/chord3_100.mid",
+          "sha256": "225eb4feba279d0bf05c79d9e8cb36e0477b0b620febf49d02d994c90d2aec85",
+          "byteLength": 131
+        }
+      ],
+      "supplementalInputs": []
+    },
+    {
+      "id": "chord-drip-100",
+      "selection": "all 100 manifest files",
+      "repositoryLocation": "docs/loop-vault-evaluation-corpus/manifest.json",
+      "manifestSha256": "f5a6a3f20a6e34c9bb486cdc0b0a438b7d9d95303ef24d4068c2379f56251328",
+      "selectionSha256": "94ae6c29bb153daa64c07b0df27308031856e480835fe54d0b6c4b5d5471bf0e",
+      "contentSha256": "7247422517ea2e8e63fb39ca8260666cee77caac23ec5476d52b13237b832e56",
+      "fileCount": 100,
+      "files": [
+        {
+          "path": "acid-jazz-groove-a-minor-9001.mid",
+          "sha256": "28addb9408b2283b09fe6b342a4b2479b1c48d740e4b36cee72a69812eeeb49f",
+          "byteLength": 356
+        },
+        {
+          "path": "acid-jazz-groove-a-minor-9004.mid",
+          "sha256": "b4c46c9f0041ab0124e48aad8c6973c5802bfef8d3e284c022a0d47a16e65c7a",
+          "byteLength": 305
+        },
+        {
+          "path": "acid-jazz-groove-b-minor-9003.mid",
+          "sha256": "11c7b3d08f52d45f8a7932d0f88e237d8044e632d2b79bc74dd3c0ba4c7dba1a",
+          "byteLength": 898
+        },
+        {
+          "path": "acid-jazz-groove-b-minor-9006.mid",
+          "sha256": "224fdd48f6f54ed3eb590183859ecd69ae1fbfaf787429b0216bedaaabeeb982",
+          "byteLength": 1418
+        },
+        {
+          "path": "acid-jazz-groove-bb-major-9002.mid",
+          "sha256": "ffe064e64a9bf9074affe1327f2b8fa76e58434b7c5e235d5511e916fed9d66d",
+          "byteLength": 835
+        },
+        {
+          "path": "acid-jazz-groove-bb-major-9005.mid",
+          "sha256": "212ebebea3702d1cda0015af1df5d8f18128eb6fd62657c766ea653ef6e67bb2",
+          "byteLength": 504
+        },
+        {
+          "path": "acid-jazz-groove-c-major-9007.mid",
+          "sha256": "fa966ff98621f28863a6d2667f83f8468dc648fbc281fa988e93f2e87fe59109",
+          "byteLength": 562
+        },
+        {
+          "path": "acid-jazz-groove-d-major-9009.mid",
+          "sha256": "b918821fca87b3c2b18840fcdefdb07606dd8c392a367d8fb62b7ff4b9a3fa28",
+          "byteLength": 583
+        },
+        {
+          "path": "acid-jazz-groove-db-minor-9008.mid",
+          "sha256": "2fff5e6f91b746c06ec1014f03e309e301daf4b3bb57a64beee67069e69b8168",
+          "byteLength": 819
+        },
+        {
+          "path": "acid-jazz-groove-eb-minor-9010.mid",
+          "sha256": "76865047a1282a957dda0eb115aea7667aeb584ae6bd19751716be36f79494af",
+          "byteLength": 313
+        },
+        {
+          "path": "afterglow-cloud-a-major-9001.mid",
+          "sha256": "8fa54506419f1a7d7a9f22bb4f076a0366a23ad8c16f194d7c3af6f3cca42c93",
+          "byteLength": 316
+        },
+        {
+          "path": "afterglow-cloud-b-major-9003.mid",
+          "sha256": "5b6ee7fb621a2b67a6f2b3e8b46cf24c5b4a615bc33424715fec0210ad296122",
+          "byteLength": 858
+        },
+        {
+          "path": "afterglow-cloud-bb-minor-9002.mid",
+          "sha256": "af84d967045e6f1ae1a27efd6eb1bb04f7667bb1c58ceeb4145c3af4a0525b14",
+          "byteLength": 511
+        },
+        {
+          "path": "afterglow-cloud-d-major-9005.mid",
+          "sha256": "0591e81f73a386b987202cda3c17377d1877c6ed47648887c2004f2be27092bd",
+          "byteLength": 760
+        },
+        {
+          "path": "afterglow-cloud-db-minor-9004.mid",
+          "sha256": "207c3e4b173457aa8df5535b5228336d5d1121fc70406ef6b8dfc0c72d57302d",
+          "byteLength": 630
+        },
+        {
+          "path": "afterglow-cloud-e-major-9007.mid",
+          "sha256": "c1b0969dcf1d87538745b12787d5c6e7a97b3030a6e6671b2d6233908aa7d6ed",
+          "byteLength": 1042
+        },
+        {
+          "path": "afterglow-cloud-eb-minor-9006.mid",
+          "sha256": "e898804c666a7251d93782276b8adec2b9087cfc729024a8ac48f4bfff9f5e78",
+          "byteLength": 434
+        },
+        {
+          "path": "afterglow-cloud-f-minor-9008.mid",
+          "sha256": "7dfea761cb2c14f75ce7246f0a292541376d449e54e0cb384d49fdf87a2323b0",
+          "byteLength": 1576
+        },
+        {
+          "path": "afterglow-cloud-g-minor-9010.mid",
+          "sha256": "5c2312589f87252fb348d8cbe438c7bf475b2bef02973f0c17aa0aa10d45e1ff",
+          "byteLength": 522
+        },
+        {
+          "path": "afterglow-cloud-gb-major-9009.mid",
+          "sha256": "781e9e8add95e3a4b14a30f09b92a82c634d3ecb52ba5491794b76deac294dbe",
+          "byteLength": 237
+        },
+        {
+          "path": "bossa-dusk-a-minor-9008.mid",
+          "sha256": "9eb1d6daf6d3f71f440e064b2a0fa31b8bcc98184a8a41fa6afb1ec5dbf089d2",
+          "byteLength": 297
+        },
+        {
+          "path": "bossa-dusk-ab-major-9007.mid",
+          "sha256": "8ed30ba8fb7163ea9401aaf8563c64fa4d18bafd18b2dadce3c87e01e0c3440f",
+          "byteLength": 816
+        },
+        {
+          "path": "bossa-dusk-b-minor-9010.mid",
+          "sha256": "3b0d9bcacf9fb10a15d4a7619e216a0e4779b392a7129a47c07d8661419879dc",
+          "byteLength": 1488
+        },
+        {
+          "path": "bossa-dusk-bb-major-9009.mid",
+          "sha256": "d237e23f90484304ad2f35ac09fe6733e418bfc926da19769c7bcc8fc942bd9f",
+          "byteLength": 554
+        },
+        {
+          "path": "bossa-dusk-e-minor-9002.mid",
+          "sha256": "987840701ede90ac4f593a269cc729bcdf7f664e9c1be3865d6e82c33a46ac2c",
+          "byteLength": 512
+        },
+        {
+          "path": "bossa-dusk-eb-major-9001.mid",
+          "sha256": "b8327007ad87de9253357301a32da3f71ef453056cfd2c9caca7c45c0208c2d7",
+          "byteLength": 305
+        },
+        {
+          "path": "bossa-dusk-f-major-9003.mid",
+          "sha256": "5c490f844529bb4b50e68c7e8291609d53f687831b0d26bff1dc7c4246c39321",
+          "byteLength": 2058
+        },
+        {
+          "path": "bossa-dusk-f-minor-9004.mid",
+          "sha256": "f8dbb9042daee0a910f125d176dfc6b73b804982c7eca03c51765551d30182db",
+          "byteLength": 1514
+        },
+        {
+          "path": "bossa-dusk-g-minor-9006.mid",
+          "sha256": "cbbbae663672e742cf39ac80b1a7014d1e4052988174ce6b751278546c6ee718",
+          "byteLength": 572
+        },
+        {
+          "path": "bossa-dusk-gb-major-9005.mid",
+          "sha256": "6ca4c1e3acfb003f544b268cf0165876e7395f805ce81cd650856ea3b6023d03",
+          "byteLength": 227
+        },
+        {
+          "path": "cute-future-pop-a-minor-9010.mid",
+          "sha256": "df950a4672a1ec5fd47711b25eeea05278ca291dbbcd5973f0d6c4db88ccface",
+          "byteLength": 324
+        },
+        {
+          "path": "cute-future-pop-ab-major-9009.mid",
+          "sha256": "e5a02a2c3a9c8b00d9465784487f633d3983f23aabda19ecedaffba19eb0287f",
+          "byteLength": 734
+        },
+        {
+          "path": "cute-future-pop-c-major-9001.mid",
+          "sha256": "ace8c404529a7ca175fbb5ac27790f8ac55cda2c0bd0d2f9ca2f975ffeda9665",
+          "byteLength": 270
+        },
+        {
+          "path": "cute-future-pop-d-major-9003.mid",
+          "sha256": "6cd530f4ec3d90e6ec5370987f5b5d117b8ea7956ad731ccda3ea002812ba768",
+          "byteLength": 1986
+        },
+        {
+          "path": "cute-future-pop-db-minor-9002.mid",
+          "sha256": "70bdd3fceeb0f47e44b6d9e9600a0765d7e619f81ae9eb936007ea0b4a1209fe",
+          "byteLength": 446
+        },
+        {
+          "path": "cute-future-pop-e-major-9005.mid",
+          "sha256": "f54681e70b58bbeaa07cb9c6cbbfd270e7729fa90e235175a1d63cf05ddcaece",
+          "byteLength": 994
+        },
+        {
+          "path": "cute-future-pop-eb-minor-9004.mid",
+          "sha256": "e0c65995b184558bc71e86ca8eeea51b13c1737b81e56cce5f39834fdce3278f",
+          "byteLength": 434
+        },
+        {
+          "path": "cute-future-pop-f-minor-9006.mid",
+          "sha256": "9a5f4024d5d8b694e669a53c3228eb13c30341d5873049bbc8fb370fb02b4477",
+          "byteLength": 1419
+        },
+        {
+          "path": "cute-future-pop-g-minor-9008.mid",
+          "sha256": "66f3d94eed497673aadda0cbf984b50a677339b7ce444714cbc80285a7e9a1d2",
+          "byteLength": 529
+        },
+        {
+          "path": "cute-future-pop-gb-major-9007.mid",
+          "sha256": "4554d8eb53dd2ef3b8df9504fe9acf25c4804255f44b64a3da8d5deffa207181",
+          "byteLength": 227
+        },
+        {
+          "path": "game-menu-bright-a-minor-9004.mid",
+          "sha256": "7a41a3e19c1ec102801bab70b5fa871c00fe20fc424ca11cf002ad7ada3d02c3",
+          "byteLength": 454
+        },
+        {
+          "path": "game-menu-bright-b-minor-9006.mid",
+          "sha256": "f2521fe79b54fbaa6320fc67663306170e72455da40aae0b7973847c6fc2f9bc",
+          "byteLength": 876
+        },
+        {
+          "path": "game-menu-bright-bb-major-9005.mid",
+          "sha256": "e4182e89377bde10ea21e887b990cb375f0cafbbca8a3f0b9fd9f05fd194d29d",
+          "byteLength": 339
+        },
+        {
+          "path": "game-menu-bright-c-major-9007.mid",
+          "sha256": "d58e6f4783098b49384d708d61df78e3505d31b95e6bfae09ffa3fdd6f5ac2ed",
+          "byteLength": 304
+        },
+        {
+          "path": "game-menu-bright-d-major-9009.mid",
+          "sha256": "3f0dd42cb818035965fd280a3a49018b24d953c0fa0f9532e7061e13b498be9b",
+          "byteLength": 686
+        },
+        {
+          "path": "game-menu-bright-db-minor-9008.mid",
+          "sha256": "3b30aced1c23ec2b010dd5dc2810d456c747b114b84468992596387b53427da9",
+          "byteLength": 453
+        },
+        {
+          "path": "game-menu-bright-e-minor-9002.mid",
+          "sha256": "46b05b832c5ca10e6067f98e9607526a7166d3157493a4447dcfff0dcfab4240",
+          "byteLength": 762
+        },
+        {
+          "path": "game-menu-bright-eb-major-9001.mid",
+          "sha256": "a3bdb9bd41ff1e21c5d606d25efc9efa5482d681834712101af676f395ec3679",
+          "byteLength": 273
+        },
+        {
+          "path": "game-menu-bright-eb-minor-9010.mid",
+          "sha256": "13212e022e022442e023d3be5683924b5aef38661dade80e82794f23e1faae67",
+          "byteLength": 434
+        },
+        {
+          "path": "game-menu-bright-f-major-9003.mid",
+          "sha256": "c2b00d85a232f015959eed8a06ffef6057f647448d7dd4c5d900d617d7b83d4a",
+          "byteLength": 758
+        },
+        {
+          "path": "lofi-night-piano-a-minor-9006.mid",
+          "sha256": "2c828ca0bacb1e09343982ddf2235f2625b5e5e6ee792832eff4c2e14c59c247",
+          "byteLength": 438
+        },
+        {
+          "path": "lofi-night-piano-ab-major-9005.mid",
+          "sha256": "2eb9f8d9984a1162bfd2dc682dca709c0e3f4dbcc1cb3d79212929ffdbac150f",
+          "byteLength": 1970
+        },
+        {
+          "path": "lofi-night-piano-b-minor-9008.mid",
+          "sha256": "1e673b9fc85aaeab5ac75bbaa39408498d73814f2c080200b480c751184e44de",
+          "byteLength": 887
+        },
+        {
+          "path": "lofi-night-piano-bb-major-9007.mid",
+          "sha256": "135bce7d73072813859e47028d080268bb1a90541eb31db4a7231d0cc677e12c",
+          "byteLength": 339
+        },
+        {
+          "path": "lofi-night-piano-c-major-9001.mid",
+          "sha256": "7aaddfbaf0b8e00e28cf9212907fed3f589270bce33dfb760c9f4bd59ed1ed9a",
+          "byteLength": 278
+        },
+        {
+          "path": "lofi-night-piano-c-major-9009.mid",
+          "sha256": "e4cfe8f223512b1da0ad028c962a1aee801efe2e8136832f82fefa4e751fe08e",
+          "byteLength": 294
+        },
+        {
+          "path": "lofi-night-piano-d-major-9003.mid",
+          "sha256": "fb2cfd8de43b3cd151b215966ae94e3d9f27dfe8831566f2639a22c69736f647",
+          "byteLength": 1458
+        },
+        {
+          "path": "lofi-night-piano-db-minor-9002.mid",
+          "sha256": "ce78a157fc7c7924f025db31ce819955c497ab814d8d2cb3d364c546759dd3e9",
+          "byteLength": 500
+        },
+        {
+          "path": "lofi-night-piano-db-minor-9010.mid",
+          "sha256": "5c13574f783d6ac4ddbdb54f477ea0ffe0487cbb9133c6c76d24b61419039fb4",
+          "byteLength": 539
+        },
+        {
+          "path": "lofi-night-piano-g-minor-9004.mid",
+          "sha256": "d71a7550896f8114b3ebf573ba2d7d771af0de1286e1fa1c8665a16bdc82ddce",
+          "byteLength": 782
+        },
+        {
+          "path": "neo-soul-warm-ab-major-9003.mid",
+          "sha256": "76cb131cb0b63aab52875f2ecd9413d09454abcdf2d0d569a2dfe287e4e33e95",
+          "byteLength": 897
+        },
+        {
+          "path": "neo-soul-warm-b-minor-9004.mid",
+          "sha256": "1954771ac495479d9a01fe148e7df17a4d022a5b3eb549c61650a3c024e5286e",
+          "byteLength": 887
+        },
+        {
+          "path": "neo-soul-warm-c-major-9005.mid",
+          "sha256": "e77d8756d6353e895b03cf65b3d5812ad63eb78b322bd85a607faaba5483cfd9",
+          "byteLength": 328
+        },
+        {
+          "path": "neo-soul-warm-d-major-9007.mid",
+          "sha256": "0464ff37b1fa4a503fd85163e9e3b7aced29a2084e71cb181939655904410d4e",
+          "byteLength": 808
+        },
+        {
+          "path": "neo-soul-warm-db-minor-9006.mid",
+          "sha256": "94ba9706fd8786cda7cc2c5d498398726de4b48aec3da81415e22b033113d423",
+          "byteLength": 493
+        },
+        {
+          "path": "neo-soul-warm-e-major-9009.mid",
+          "sha256": "1eeeba5d1be5fc03055e0a735d4902d4eb5dac85a7f8e3d479f0b2b39abbb477",
+          "byteLength": 1173
+        },
+        {
+          "path": "neo-soul-warm-eb-minor-9008.mid",
+          "sha256": "119f10fa2a85059452ea58b6abb6bd718a8e8bd90985c3b05640a259429fbbe2",
+          "byteLength": 434
+        },
+        {
+          "path": "neo-soul-warm-f-minor-9010.mid",
+          "sha256": "dadc696afaca8ebb564de8cd2286cd3d5acb59132be266fd5fa63e71ddbcfd7e",
+          "byteLength": 1487
+        },
+        {
+          "path": "neo-soul-warm-g-minor-9002.mid",
+          "sha256": "1a3f4610117e55321d355b9655eb99e70104396c7ccbf48660b1bc06aea31bb0",
+          "byteLength": 359
+        },
+        {
+          "path": "neo-soul-warm-gb-major-9001.mid",
+          "sha256": "a9ce27428bfacdde1ab466c1ed9f669aa7b427c739f11f16ed8261b440234cad",
+          "byteLength": 310
+        },
+        {
+          "path": "neon-bloom-a-minor-9010.mid",
+          "sha256": "e6399f5af8a6b5d0fe46258f205f0694d6234682853caf0216327d223e23302c",
+          "byteLength": 438
+        },
+        {
+          "path": "neon-bloom-ab-major-9003.mid",
+          "sha256": "6e6683853abaaeffe765de35152b04b0095e57b971f51255efd40d01235d251f",
+          "byteLength": 1418
+        },
+        {
+          "path": "neon-bloom-ab-major-9009.mid",
+          "sha256": "d18534a8d80e2f301e9ea6699380ee166fc73e7e632af4365d86c7e68234355f",
+          "byteLength": 1786
+        },
+        {
+          "path": "neon-bloom-e-major-9005.mid",
+          "sha256": "67c14dad77fc86b2945db51385babd2498405d28b83b78c529daf2d5f0499950",
+          "byteLength": 454
+        },
+        {
+          "path": "neon-bloom-eb-minor-9004.mid",
+          "sha256": "967239bc64a38f9b0ec4467af1f5f9ac66ffd04076d24704d41a34900ba58838",
+          "byteLength": 312
+        },
+        {
+          "path": "neon-bloom-f-minor-9006.mid",
+          "sha256": "0b136a5f9d5155aecd2458adcf00014f3dc1ade8f384f39aef252f4f41e2441b",
+          "byteLength": 856
+        },
+        {
+          "path": "neon-bloom-g-minor-9002.mid",
+          "sha256": "58f2f12ee70ac18c73bb9c942a0791fbaca5c3fa1c3bd882bff5770ac480120c",
+          "byteLength": 1058
+        },
+        {
+          "path": "neon-bloom-g-minor-9008.mid",
+          "sha256": "58456302c5dd42b79fe61a0cef46a1ed49a76e2387cd5f141483a5f100594390",
+          "byteLength": 782
+        },
+        {
+          "path": "neon-bloom-gb-major-9001.mid",
+          "sha256": "f1dddc6eacf448416b0ff7d9bc29dda82847c37820d59114463fd4c532c536ed",
+          "byteLength": 302
+        },
+        {
+          "path": "neon-bloom-gb-major-9007.mid",
+          "sha256": "bdc56ff23e0fb111adb7b26bbeee497f30a5ddd2780dd2661c226a048850e75e",
+          "byteLength": 328
+        },
+        {
+          "path": "shibuya-fusion-pop-d-major-9005.mid",
+          "sha256": "e698230b4928a9415a024f139c80b4137e89301aa5e80f4617810291e5796520",
+          "byteLength": 593
+        },
+        {
+          "path": "shibuya-fusion-pop-db-minor-9004.mid",
+          "sha256": "883b007d2a89a4c0e0b03561b2e8a4dd7d1db1592480f3d9d60873c2611511a3",
+          "byteLength": 896
+        },
+        {
+          "path": "shibuya-fusion-pop-e-major-9007.mid",
+          "sha256": "1d139c187ca64cae6c24c71b94f0b0f9d46271dcebead8de7064371c656a3ce1",
+          "byteLength": 588
+        },
+        {
+          "path": "shibuya-fusion-pop-e-minor-9002.mid",
+          "sha256": "ded97e586f19d668d5eff80bd8e30ebf2fb2144cb88421ea8a292d1ac175ee8f",
+          "byteLength": 775
+        },
+        {
+          "path": "shibuya-fusion-pop-eb-major-9001.mid",
+          "sha256": "9053075293bf139145d54cbb1682c898bbc69a581ab8281a1dd94d21691f5d4c",
+          "byteLength": 399
+        },
+        {
+          "path": "shibuya-fusion-pop-eb-minor-9006.mid",
+          "sha256": "5868633d90de440d4036f7afc3a6b1d9ebf8528435c2457a041b8d9747635aad",
+          "byteLength": 332
+        },
+        {
+          "path": "shibuya-fusion-pop-f-major-9003.mid",
+          "sha256": "63004054db4a10e6348346529d29ca7c2dc7ae49fee44fdb198c7beeebb1905e",
+          "byteLength": 1485
+        },
+        {
+          "path": "shibuya-fusion-pop-f-minor-9008.mid",
+          "sha256": "c749fb30eae397c3a621fb5671714dc94d8ca3e583099d98eea52d8a129b8f90",
+          "byteLength": 1065
+        },
+        {
+          "path": "shibuya-fusion-pop-g-minor-9010.mid",
+          "sha256": "b582a0a3f881e7dbd474d580c9af5932f9dc674778296109c985612ff174954a",
+          "byteLength": 819
+        },
+        {
+          "path": "shibuya-fusion-pop-gb-major-9009.mid",
+          "sha256": "6a541085c41b80f2033bec8f912726460eff41f91e3a55bd9523f74739c86c1b",
+          "byteLength": 328
+        },
+        {
+          "path": "tokyo-minor-loop-b-minor-9004.mid",
+          "sha256": "60fa2cc420ec634f765e0e51cb6ee7f5260df6f8bf1f6aecb8ffb126c829b2fd",
+          "byteLength": 1458
+        },
+        {
+          "path": "tokyo-minor-loop-c-major-9001.mid",
+          "sha256": "b8c77f57c7e06d978ca9c91f7cb2a27c2ef92364e701d500a028bf9fa6e4e1fb",
+          "byteLength": 318
+        },
+        {
+          "path": "tokyo-minor-loop-c-major-9005.mid",
+          "sha256": "819c8fdc34f300f63d9327b2bbfe8560107450004f7fcd7b8a9605f7185eb31a",
+          "byteLength": 554
+        },
+        {
+          "path": "tokyo-minor-loop-d-major-9003.mid",
+          "sha256": "3544ba186f735af9c5efceb722f304bcb4d5763b44cb4c02fa6cc6166f38e7f1",
+          "byteLength": 1644
+        },
+        {
+          "path": "tokyo-minor-loop-d-major-9007.mid",
+          "sha256": "f052010f07fb7a6fa385e21cbdef5e5a626193d012e792498db3e041482015ce",
+          "byteLength": 676
+        },
+        {
+          "path": "tokyo-minor-loop-db-minor-9002.mid",
+          "sha256": "3c6fcd5d5e0b9666a281fef33693ddf645c90874ac620ce322fcb79a8627fd49",
+          "byteLength": 560
+        },
+        {
+          "path": "tokyo-minor-loop-db-minor-9006.mid",
+          "sha256": "b1ad3dcb8f1284d445597d0a770d5a89e838ca8ca2d40c769a130ebdb9e1d362",
+          "byteLength": 791
+        },
+        {
+          "path": "tokyo-minor-loop-e-major-9009.mid",
+          "sha256": "de98694151a667264cda116656656521a25c78f75c3b07855cd3e5e5080335d6",
+          "byteLength": 546
+        },
+        {
+          "path": "tokyo-minor-loop-eb-minor-9008.mid",
+          "sha256": "3829cd05ef1107718611c3f0eb4cbb7320db7ab1ad887e02a5ab3cf128baaa76",
+          "byteLength": 312
+        },
+        {
+          "path": "tokyo-minor-loop-f-minor-9010.mid",
+          "sha256": "2e81bdd61a345c94b2c8c298b4940020640e3e80d4d977ee944f1dbd788a583f",
+          "byteLength": 1143
+        }
+      ],
+      "supplementalInputs": []
+    },
+    {
+      "id": "endless",
+      "selection": "single runtime fixture",
+      "repositoryLocation": ".local-evaluation/phase4.1.1/fixtures/endless.mid",
+      "manifestSha256": null,
+      "selectionSha256": "d5236dd3e253d42c822e14ccafc980bf212100cea30c5aa11e9d811f2ba9c9ba",
+      "contentSha256": "c153f78e536b23f467196f5ab128a2142f27d68961addbab5f0f293a305fb94b",
+      "fileCount": 1,
+      "files": [
+        {
+          "path": ".local-evaluation/phase4.1.1/fixtures/endless.mid",
+          "sha256": "c153f78e536b23f467196f5ab128a2142f27d68961addbab5f0f293a305fb94b",
+          "byteLength": 25966
+        }
+      ],
+      "supplementalInputs": []
+    },
+    {
+      "id": "phase4.7-development",
+      "selection": "manifest files where split=dev",
+      "repositoryLocation": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/manifest.json",
+      "manifestSha256": "8f3fce224db3d9b4356f393f8def4a427fd35267d805e12f9a0a1434b851b7c9",
+      "selectionSha256": "3fde04b2649c857a678cde46f01fc6115cdf645c9f9743beff442ac24d1a571b",
+      "contentSha256": "8daa12829750e9d31b3ac71eb5436bff5a35e9a7880e1f31ee8ee9e0c6013d50",
+      "fileCount": 12,
+      "files": [
+        {
+          "path": "midi/dev/dev-01-clean_c-identity-pairs.mid",
+          "sha256": "9399941ae2fb198ac91cdf7dc81fc7e3b0713b2775f8c1206132376040045f01",
+          "byteLength": 481
+        },
+        {
+          "path": "midi/dev/dev-02-stress_cs-identity-pairs.mid",
+          "sha256": "387067088ef0cf0d64f0e0e30c7f85b60806c7116562fefc11e286eec4548d6e",
+          "byteLength": 679
+        },
+        {
+          "path": "midi/dev/dev-03-clean_d-identity-pairs.mid",
+          "sha256": "12b942133814cbb49b5240dbce42b88eb24f79f57b7fd73bcecbebba6a1f03e3",
+          "byteLength": 491
+        },
+        {
+          "path": "midi/dev/dev-04-stress_eb-identity-pairs.mid",
+          "sha256": "8810cab8919385f2428583e9b27f4a2c0a5da0ddc7d6cbf0e61aaa3cfe62eb68",
+          "byteLength": 670
+        },
+        {
+          "path": "midi/dev/dev-05-clean_e-identity-pairs.mid",
+          "sha256": "bf425cdc1a2eb71b2474210194654dc385bb70f0d8e7e897cbd5705dd5d7cdd2",
+          "byteLength": 498
+        },
+        {
+          "path": "midi/dev/dev-06-stress_f-identity-pairs.mid",
+          "sha256": "69e696e4e3a2fae6b761383bfc980691939893aa2341007c66bb46e55a945550",
+          "byteLength": 670
+        },
+        {
+          "path": "midi/dev/dev-07-clean_fs-identity-pairs.mid",
+          "sha256": "b13fefc5be44e17832e1b2dec01007e728648408d1af7292dc0b212bf78f1061",
+          "byteLength": 483
+        },
+        {
+          "path": "midi/dev/dev-08-stress_g-identity-pairs.mid",
+          "sha256": "04d52b1f07abd7253cb3010814a29bcf1a92174a769a5375fd1f927313fe0002",
+          "byteLength": 671
+        },
+        {
+          "path": "midi/dev/dev-09-clean_ab-identity-pairs.mid",
+          "sha256": "323a404278bdab8efa4afa38a619e3a34b5312a3de99c8d79a4a0d484d05d333",
+          "byteLength": 489
+        },
+        {
+          "path": "midi/dev/dev-10-stress_a-identity-pairs.mid",
+          "sha256": "fc0a9d212c1ca2577b26bbb466e770ae70b11321b51f71fc760516cf27a54a8d",
+          "byteLength": 679
+        },
+        {
+          "path": "midi/dev/dev-11-clean_bb-identity-pairs.mid",
+          "sha256": "ac1031f529a9fe46edf5a66624d95e812a2a0743a00c11ab35d845410f321ffd",
+          "byteLength": 483
+        },
+        {
+          "path": "midi/dev/dev-12-stress_b-identity-pairs.mid",
+          "sha256": "a8c3c4c94b96012015a3e85e3c2b44362d1b797ebcf0080e19eaece485c6170c",
+          "byteLength": 686
+        }
+      ],
+      "supplementalInputs": []
+    },
+    {
+      "id": "phase4.7-validation",
+      "selection": "manifest files where split=validation",
+      "repositoryLocation": ".local-evaluation/loop-vault-bass-companion-identity-gold-v1/manifest.json",
+      "manifestSha256": "8f3fce224db3d9b4356f393f8def4a427fd35267d805e12f9a0a1434b851b7c9",
+      "selectionSha256": "50dce617480040093bdd839f7f3ca320b3db8bfdb521f51c0116e6847b274c56",
+      "contentSha256": "a674e5c3860999569b5948713456a8c65788fd2734f1faf0eb8e76292d1fe991",
+      "fileCount": 12,
+      "files": [
+        {
+          "path": "midi/validation/validation-01-clean_c-identity-pairs.mid",
+          "sha256": "8fccc921f4d03a699a44cb2fe7a8f79d20c44f47d31e0b5808b3f173ebb78c5b",
+          "byteLength": 491
+        },
+        {
+          "path": "midi/validation/validation-02-stress_cs-identity-pairs.mid",
+          "sha256": "ddfdfa137c9a8eed75bc696eec36b1692150b1a1d3b35f7c0a82713e6d5a3060",
+          "byteLength": 670
+        },
+        {
+          "path": "midi/validation/validation-03-clean_d-identity-pairs.mid",
+          "sha256": "3f9318a86434a7602829adc77d71a0b9c07f746f105fc2be33657d9ee0965f21",
+          "byteLength": 498
+        },
+        {
+          "path": "midi/validation/validation-04-stress_eb-identity-pairs.mid",
+          "sha256": "22eeaca67bd3c832be0585bcf8cdae3b59166324f4d613fc3cf78335c5135718",
+          "byteLength": 670
+        },
+        {
+          "path": "midi/validation/validation-05-clean_e-identity-pairs.mid",
+          "sha256": "5764b9d916316f3bd44df968ce1a23972d69e27324f50971b46a42db1fc55ce2",
+          "byteLength": 483
+        },
+        {
+          "path": "midi/validation/validation-06-stress_f-identity-pairs.mid",
+          "sha256": "9fab93660cb8f58ac9c4a01e4023e579bfc2202cb03851064f88f9109528c162",
+          "byteLength": 671
+        },
+        {
+          "path": "midi/validation/validation-07-clean_fs-identity-pairs.mid",
+          "sha256": "8a4bbe0af0010f6c30543b406724a1a313ba367d0356d37ad9a82bdeef069cb9",
+          "byteLength": 489
+        },
+        {
+          "path": "midi/validation/validation-08-stress_g-identity-pairs.mid",
+          "sha256": "0930786101e8738f4cf01eebfd74ff96486f17005e7474c8f2c9bffbad8c50df",
+          "byteLength": 679
+        },
+        {
+          "path": "midi/validation/validation-09-clean_ab-identity-pairs.mid",
+          "sha256": "bdb01018a9b1dcd975fe41ea395ad66f42a0e2d540338d4f42c886018c564075",
+          "byteLength": 483
+        },
+        {
+          "path": "midi/validation/validation-10-stress_a-identity-pairs.mid",
+          "sha256": "a2ebbab1122297861b523e9cc12a6a16a6d667d87e4dfde8a044a95bf6adf5ee",
+          "byteLength": 686
+        },
+        {
+          "path": "midi/validation/validation-11-clean_bb-identity-pairs.mid",
+          "sha256": "dc7dfe52e513683fa1dc830f1f146253d2591b37c7f11905c4d8de3dd9b74358",
+          "byteLength": 482
+        },
+        {
+          "path": "midi/validation/validation-12-stress_b-identity-pairs.mid",
+          "sha256": "2a0f764e911bee10dc6060be96357f897e9fc6977f616f7ecfdc4dfcf08f3fb4",
+          "byteLength": 670
+        }
+      ],
+      "supplementalInputs": []
+    },
+    {
+      "id": "suran",
+      "selection": "single runtime fixture",
+      "repositoryLocation": ".local-evaluation/phase4.1/fixtures/suran-remix.mid",
+      "manifestSha256": null,
+      "selectionSha256": "e0c9f598e37c338cb735badb0c7247555350693aa309b2f99f41e35605e7af4e",
+      "contentSha256": "2790e82d09b52a58efe8806e79d7379f6ec15091930197073ff9095dcee5ea10",
+      "fileCount": 1,
+      "files": [
+        {
+          "path": ".local-evaluation/phase4.1/fixtures/suran-remix.mid",
+          "sha256": "2790e82d09b52a58efe8806e79d7379f6ec15091930197073ff9095dcee5ea10",
+          "byteLength": 33055
+        }
+      ],
+      "supplementalInputs": []
+    },
+    {
+      "id": "voicing-gold-40-file-selection",
+      "selection": "frozen 40-file development selection",
+      "repositoryLocation": "test/loop-vault-voicing-gold-corpus-v1/manifest.json",
+      "manifestSha256": "4fe04f2a6f6519366c3d8856db388f1885e4f4583fc5187970b58020fdc5db89",
+      "selectionSha256": "c89f0ba7e05c7aa686c1bd97650371975a8d81579b587ffa419a8e9c23d24cbe",
+      "contentSha256": "0ab17a7f8f2145cf2c1415f89d589eb5f51140dee8341a6ad9dd4d121bd5d23b",
+      "fileCount": 40,
+      "files": [
+        {
+          "path": "midi/dev/V01_clean_close-block-chords.mid",
+          "sha256": "09189ee8dd334a374d7177ae0cc5738832010956d0ea7f5bc911faae9538503c",
+          "byteLength": 379
+        },
+        {
+          "path": "midi/dev/V01_stress_close-block-chords.mid",
+          "sha256": "9faf652c6c07782435b38cac3dfeef8a91a7eead8746a68a056249ffa8780a17",
+          "byteLength": 1296
+        },
+        {
+          "path": "midi/dev/V02_clean_inversions.mid",
+          "sha256": "2d00b30bc096ebafc812b5403a55786e1d279a1c14c56b54609ee577569e7dde",
+          "byteLength": 331
+        },
+        {
+          "path": "midi/dev/V02_stress_inversions.mid",
+          "sha256": "7d7f7a4f0f25127456cc1fd39c27dcccbe8033717d242653b796193fb5f4a32e",
+          "byteLength": 1248
+        },
+        {
+          "path": "midi/dev/V03_clean_open-spread.mid",
+          "sha256": "d8a3d15cec28610f79950f8d6ab3a35f752126585dcd3ba4adf52be39647d627",
+          "byteLength": 372
+        },
+        {
+          "path": "midi/dev/V03_stress_open-spread.mid",
+          "sha256": "20875e8a44bd808a3fafdd9ee4f29741ef5cd93f89171b4d374bda5daaa12a39",
+          "byteLength": 1292
+        },
+        {
+          "path": "midi/dev/V04_clean_shell-sparse.mid",
+          "sha256": "41c7641557c9020c9327fcbbb24704b0a8fe922471d5cce689d1264c2089b315",
+          "byteLength": 253
+        },
+        {
+          "path": "midi/dev/V04_stress_shell-sparse.mid",
+          "sha256": "23ec0088dcbf131d1bacc22208c6143ec51c6ec1075e23e57ce441b9ad37e24d",
+          "byteLength": 1171
+        },
+        {
+          "path": "midi/dev/V05_clean_split-hands.mid",
+          "sha256": "09e0580c506569e3f9b631a63ff1428bde3f8f96242ba3ec84ee970c1c84ecf5",
+          "byteLength": 445
+        },
+        {
+          "path": "midi/dev/V05_stress_split-hands.mid",
+          "sha256": "25ccb7a551eaf5f0b395e9fb3a51287318ad9ed6b239fbe06f37bb2155354bfd",
+          "byteLength": 1354
+        },
+        {
+          "path": "midi/dev/V06_clean_separate-bass-upper.mid",
+          "sha256": "6c6767a935f16f953a2c1f4b43ecca679439d2385ab9def32edfb4bdc22abe86",
+          "byteLength": 437
+        },
+        {
+          "path": "midi/dev/V06_stress_separate-bass-upper.mid",
+          "sha256": "109f53fc6917af8f77d3cded69027614cc939df5ff1acc31576ea486d1b78882",
+          "byteLength": 1352
+        },
+        {
+          "path": "midi/dev/V07_clean_rootless-with-bass.mid",
+          "sha256": "b8af899f93c641a6f469145d499e549873cb1ed1153ec9b3c7c35dda79de1736",
+          "byteLength": 385
+        },
+        {
+          "path": "midi/dev/V07_stress_rootless-with-bass.mid",
+          "sha256": "2a77ab8c6dbde6af1a36f50c9635dd658dba7971e521039f9463993ae639cd28",
+          "byteLength": 1307
+        },
+        {
+          "path": "midi/dev/V08_clean_slash-bass.mid",
+          "sha256": "cddc5783284afdcd636492e6e127b442d76283b9aa57aef8b21c95c166fd3b21",
+          "byteLength": 433
+        },
+        {
+          "path": "midi/dev/V08_stress_slash-bass.mid",
+          "sha256": "fd14fe4d33a130f1a6b2cc48d7317d30ba86816dcbe0a34957c4db97657c79b4",
+          "byteLength": 1356
+        },
+        {
+          "path": "midi/dev/V09_clean_pedal-bass.mid",
+          "sha256": "016357e3426794c2dcd3212ad3979b2d6bf8b771b5fa2d55437d5abc19d7fc80",
+          "byteLength": 430
+        },
+        {
+          "path": "midi/dev/V09_stress_pedal-bass.mid",
+          "sha256": "1b848e9c63a37c8424b2e376b48f36d99a2531e9805dbd56aff95ff5723af57b",
+          "byteLength": 1347
+        },
+        {
+          "path": "midi/dev/V10_clean_octave-doublings.mid",
+          "sha256": "37c750a44d8cca996087cc97720b7414330c75e204b10ed979180b4bc9bf8687",
+          "byteLength": 475
+        },
+        {
+          "path": "midi/dev/V10_stress_octave-doublings.mid",
+          "sha256": "1c0629f3fba8271e3cda625736404dadffa49c9d5ed6ae5a9705a021f308cb56",
+          "byteLength": 1391
+        },
+        {
+          "path": "midi/dev/V11_clean_duplicate-across-tracks.mid",
+          "sha256": "cc0bcf075585a09e832d9ac0c1f5c0a9644e1e5dac800b4d0e390d1d2ce14de5",
+          "byteLength": 582
+        },
+        {
+          "path": "midi/dev/V11_stress_duplicate-across-tracks.mid",
+          "sha256": "839f8fc39820ae8fda4c7ce90ab47ab34a11737e6c9ee8f2515b8f8c7d5d4434",
+          "byteLength": 1490
+        },
+        {
+          "path": "midi/dev/V12_clean_separate-melody-contamination.mid",
+          "sha256": "cb34f66f1bf0736570214cadc572ba2b471a02b398e8b5038e9632901e448a48",
+          "byteLength": 721
+        },
+        {
+          "path": "midi/dev/V12_stress_separate-melody-contamination.mid",
+          "sha256": "a3d86d5d884d6593af918fcde778539e168cebc5385d7adfebcfdbfdefe9ff3c",
+          "byteLength": 1040
+        },
+        {
+          "path": "midi/dev/V13_clean_same-track-melody.mid",
+          "sha256": "a62c630d3854d3975628da085aa02c6c6413b5a8307bc9d1a96062b4f2c634e0",
+          "byteLength": 651
+        },
+        {
+          "path": "midi/dev/V13_stress_same-track-melody.mid",
+          "sha256": "e55aeb9131aa478d81b8ac4b3680c768c7f08bc097028a24ad38ddd1b3868044",
+          "byteLength": 992
+        },
+        {
+          "path": "midi/dev/V14_clean_passing-tones.mid",
+          "sha256": "aba387061a4f239d166d71ad9a34c8cb61123fc8505a04e1710de52fe1d6d12e",
+          "byteLength": 579
+        },
+        {
+          "path": "midi/dev/V14_stress_passing-tones.mid",
+          "sha256": "f2be814a87c801b578487a8caf89609fc2e0081315046dbf311a7368064fdd9f",
+          "byteLength": 1495
+        },
+        {
+          "path": "midi/dev/V15_clean_sustain-overlap.mid",
+          "sha256": "4a70af68197e8df367dd737eb58aec195711f55bef36934ef26bd99f399a429d",
+          "byteLength": 446
+        },
+        {
+          "path": "midi/dev/V15_stress_sustain-overlap.mid",
+          "sha256": "c234ea97e468ec1ffd84cb05cf7e3c0febf2f038ede28d79e5a14f9720d6152c",
+          "byteLength": 1372
+        },
+        {
+          "path": "midi/dev/V16_clean_anticipated-next-chord.mid",
+          "sha256": "ed5a6897032dd8a7192cf3a0c929952f38c847820311757c82ef3a9a79c552f2",
+          "byteLength": 370
+        },
+        {
+          "path": "midi/dev/V16_stress_anticipated-next-chord.mid",
+          "sha256": "6d1bcbab3c4274da4feaa6b8fa16941979f230c2b3ee56df3c511f2a474f95fd",
+          "byteLength": 1294
+        },
+        {
+          "path": "midi/dev/V17_clean_pure-arpeggio.mid",
+          "sha256": "b70948f83442e07ffcbed6e1d1a6b363d636fc5dbfbd5a2be724e50d9ae4474a",
+          "byteLength": 513
+        },
+        {
+          "path": "midi/dev/V17_stress_pure-arpeggio.mid",
+          "sha256": "b46fc4ac9ca706c3b62a76f0ac20a9c14613e1302d5a1192e2c1cf95cb67680e",
+          "byteLength": 1437
+        },
+        {
+          "path": "midi/dev/V18_clean_hybrid-block-arpeggio.mid",
+          "sha256": "e72271fdc458402e78d83da58ba37cae8095b9ee03710fbe4adfcbde43de0cb4",
+          "byteLength": 469
+        },
+        {
+          "path": "midi/dev/V18_stress_hybrid-block-arpeggio.mid",
+          "sha256": "d66ef74d39f37bc33db48ba3afd13309caa34f66fde412b990f70363021d1c81",
+          "byteLength": 1394
+        },
+        {
+          "path": "midi/dev/V19_clean_guitar-strum.mid",
+          "sha256": "92a2ef62e8dc6eca96067bae422286f209260348d3b741887ffa41847fb1237a",
+          "byteLength": 429
+        },
+        {
+          "path": "midi/dev/V19_stress_guitar-strum.mid",
+          "sha256": "a123216b17a40e6001ab8020539d1cb34e208599578ac8d0d699f655ecfc93e7",
+          "byteLength": 1356
+        },
+        {
+          "path": "midi/dev/V20_clean_repeated-reattacks.mid",
+          "sha256": "d38f9750d38d7e78b7f0dcae33dee040cbc677f665aca2f16bb503a9b2821cdf",
+          "byteLength": 1254
+        },
+        {
+          "path": "midi/dev/V20_stress_repeated-reattacks.mid",
+          "sha256": "b5627b4e2587bc88da3e64b9786f8c7d0bb3031354aca07fc790978255cfd77c",
+          "byteLength": 2174
+        }
+      ],
+      "supplementalInputs": [
+        {
+          "path": "note-events.jsonl",
+          "sha256": "1af0b92b0b42e5867c1e708b1c67ca5ce54e288bcbb2c4609f61a798544469ff",
+          "byteLength": 1574734,
+          "selectionAssociation": "rows-filtered-to-frozen-midi-selection"
+        }
+      ]
+    },
+    {
+      "id": "voicing-gold-burned-holdout-diagnostic-only",
+      "selection": "manifest files where split=holdout; burned diagnostic-only, never fresh",
+      "repositoryLocation": "test/loop-vault-voicing-gold-corpus-v1/manifest.json",
+      "manifestSha256": "4fe04f2a6f6519366c3d8856db388f1885e4f4583fc5187970b58020fdc5db89",
+      "selectionSha256": "fec0a4cf8a5b059cf5cf07e9f0075de11425926334acb0a439ab675f753dc631",
+      "contentSha256": "f02ace124105b9e3f021d044fab4fde22274bd6c85cc1289216dbda003b756ec",
+      "fileCount": 10,
+      "files": [
+        {
+          "path": "midi/holdout/V26_clean_common-tone-hold.mid",
+          "sha256": "bec20deeb4d90b6ff79b7770388f198cacbb0fd4feea7b7e1bf33f71aef07a27",
+          "byteLength": 409
+        },
+        {
+          "path": "midi/holdout/V26_stress_common-tone-hold.mid",
+          "sha256": "1d8f85c4a55fc98fe06ac3de4a00ee87f5f836b2443209348828eb3d254062ee",
+          "byteLength": 1329
+        },
+        {
+          "path": "midi/holdout/V27_clean_no-chord-rest.mid",
+          "sha256": "b2e4b94c2f6829f61cc9b12ea47c41597238cbdf3eed4610f0f1d2c4ddae198f",
+          "byteLength": 348
+        },
+        {
+          "path": "midi/holdout/V27_stress_no-chord-rest.mid",
+          "sha256": "5a7050f39dc39873e91ef3ef5d65cf7925263d2062e1c89dbdabba35b47cd7cc",
+          "byteLength": 1235
+        },
+        {
+          "path": "midi/holdout/V28_clean_all-channel-zero-stems.mid",
+          "sha256": "94f6f815440abfeae7b7371535fa3c6ff5084eb57836b735d556e89c402333ca",
+          "byteLength": 541
+        },
+        {
+          "path": "midi/holdout/V28_stress_all-channel-zero-stems.mid",
+          "sha256": "ac840ce77c333030dcf1d1d771562a80ff02a84835b5e7b2b367089667b649ac",
+          "byteLength": 1464
+        },
+        {
+          "path": "midi/holdout/V29_clean_fragmented-ai-extract.mid",
+          "sha256": "bcbd3529e7771099939b22e5d5ba25ce8f26e3524bc2b03775a65663e6931a31",
+          "byteLength": 1168
+        },
+        {
+          "path": "midi/holdout/V29_stress_fragmented-ai-extract.mid",
+          "sha256": "e9386e5f91e65772d9557a32e8be2b025cf48912ec8c5b6deb001e73ba4fdbc5",
+          "byteLength": 2087
+        },
+        {
+          "path": "midi/holdout/V30_clean_dense-all-in.mid",
+          "sha256": "48cfaa4bad46613a762739c82e85b7f297cacb377d268e3df071452667d58177",
+          "byteLength": 1576
+        },
+        {
+          "path": "midi/holdout/V30_stress_dense-all-in.mid",
+          "sha256": "d5aa86009349aed432551906868f09679bddc7dcf979aca1b539d08086c2e2a6",
+          "byteLength": 1596
+        }
+      ],
+      "supplementalInputs": []
+    },
+    {
+      "id": "voicing-gold-development",
+      "selection": "manifest files where split=dev",
+      "repositoryLocation": "test/loop-vault-voicing-gold-corpus-v1/manifest.json",
+      "manifestSha256": "4fe04f2a6f6519366c3d8856db388f1885e4f4583fc5187970b58020fdc5db89",
+      "selectionSha256": "c89f0ba7e05c7aa686c1bd97650371975a8d81579b587ffa419a8e9c23d24cbe",
+      "contentSha256": "0ab17a7f8f2145cf2c1415f89d589eb5f51140dee8341a6ad9dd4d121bd5d23b",
+      "fileCount": 40,
+      "files": [
+        {
+          "path": "midi/dev/V01_clean_close-block-chords.mid",
+          "sha256": "09189ee8dd334a374d7177ae0cc5738832010956d0ea7f5bc911faae9538503c",
+          "byteLength": 379
+        },
+        {
+          "path": "midi/dev/V01_stress_close-block-chords.mid",
+          "sha256": "9faf652c6c07782435b38cac3dfeef8a91a7eead8746a68a056249ffa8780a17",
+          "byteLength": 1296
+        },
+        {
+          "path": "midi/dev/V02_clean_inversions.mid",
+          "sha256": "2d00b30bc096ebafc812b5403a55786e1d279a1c14c56b54609ee577569e7dde",
+          "byteLength": 331
+        },
+        {
+          "path": "midi/dev/V02_stress_inversions.mid",
+          "sha256": "7d7f7a4f0f25127456cc1fd39c27dcccbe8033717d242653b796193fb5f4a32e",
+          "byteLength": 1248
+        },
+        {
+          "path": "midi/dev/V03_clean_open-spread.mid",
+          "sha256": "d8a3d15cec28610f79950f8d6ab3a35f752126585dcd3ba4adf52be39647d627",
+          "byteLength": 372
+        },
+        {
+          "path": "midi/dev/V03_stress_open-spread.mid",
+          "sha256": "20875e8a44bd808a3fafdd9ee4f29741ef5cd93f89171b4d374bda5daaa12a39",
+          "byteLength": 1292
+        },
+        {
+          "path": "midi/dev/V04_clean_shell-sparse.mid",
+          "sha256": "41c7641557c9020c9327fcbbb24704b0a8fe922471d5cce689d1264c2089b315",
+          "byteLength": 253
+        },
+        {
+          "path": "midi/dev/V04_stress_shell-sparse.mid",
+          "sha256": "23ec0088dcbf131d1bacc22208c6143ec51c6ec1075e23e57ce441b9ad37e24d",
+          "byteLength": 1171
+        },
+        {
+          "path": "midi/dev/V05_clean_split-hands.mid",
+          "sha256": "09e0580c506569e3f9b631a63ff1428bde3f8f96242ba3ec84ee970c1c84ecf5",
+          "byteLength": 445
+        },
+        {
+          "path": "midi/dev/V05_stress_split-hands.mid",
+          "sha256": "25ccb7a551eaf5f0b395e9fb3a51287318ad9ed6b239fbe06f37bb2155354bfd",
+          "byteLength": 1354
+        },
+        {
+          "path": "midi/dev/V06_clean_separate-bass-upper.mid",
+          "sha256": "6c6767a935f16f953a2c1f4b43ecca679439d2385ab9def32edfb4bdc22abe86",
+          "byteLength": 437
+        },
+        {
+          "path": "midi/dev/V06_stress_separate-bass-upper.mid",
+          "sha256": "109f53fc6917af8f77d3cded69027614cc939df5ff1acc31576ea486d1b78882",
+          "byteLength": 1352
+        },
+        {
+          "path": "midi/dev/V07_clean_rootless-with-bass.mid",
+          "sha256": "b8af899f93c641a6f469145d499e549873cb1ed1153ec9b3c7c35dda79de1736",
+          "byteLength": 385
+        },
+        {
+          "path": "midi/dev/V07_stress_rootless-with-bass.mid",
+          "sha256": "2a77ab8c6dbde6af1a36f50c9635dd658dba7971e521039f9463993ae639cd28",
+          "byteLength": 1307
+        },
+        {
+          "path": "midi/dev/V08_clean_slash-bass.mid",
+          "sha256": "cddc5783284afdcd636492e6e127b442d76283b9aa57aef8b21c95c166fd3b21",
+          "byteLength": 433
+        },
+        {
+          "path": "midi/dev/V08_stress_slash-bass.mid",
+          "sha256": "fd14fe4d33a130f1a6b2cc48d7317d30ba86816dcbe0a34957c4db97657c79b4",
+          "byteLength": 1356
+        },
+        {
+          "path": "midi/dev/V09_clean_pedal-bass.mid",
+          "sha256": "016357e3426794c2dcd3212ad3979b2d6bf8b771b5fa2d55437d5abc19d7fc80",
+          "byteLength": 430
+        },
+        {
+          "path": "midi/dev/V09_stress_pedal-bass.mid",
+          "sha256": "1b848e9c63a37c8424b2e376b48f36d99a2531e9805dbd56aff95ff5723af57b",
+          "byteLength": 1347
+        },
+        {
+          "path": "midi/dev/V10_clean_octave-doublings.mid",
+          "sha256": "37c750a44d8cca996087cc97720b7414330c75e204b10ed979180b4bc9bf8687",
+          "byteLength": 475
+        },
+        {
+          "path": "midi/dev/V10_stress_octave-doublings.mid",
+          "sha256": "1c0629f3fba8271e3cda625736404dadffa49c9d5ed6ae5a9705a021f308cb56",
+          "byteLength": 1391
+        },
+        {
+          "path": "midi/dev/V11_clean_duplicate-across-tracks.mid",
+          "sha256": "cc0bcf075585a09e832d9ac0c1f5c0a9644e1e5dac800b4d0e390d1d2ce14de5",
+          "byteLength": 582
+        },
+        {
+          "path": "midi/dev/V11_stress_duplicate-across-tracks.mid",
+          "sha256": "839f8fc39820ae8fda4c7ce90ab47ab34a11737e6c9ee8f2515b8f8c7d5d4434",
+          "byteLength": 1490
+        },
+        {
+          "path": "midi/dev/V12_clean_separate-melody-contamination.mid",
+          "sha256": "cb34f66f1bf0736570214cadc572ba2b471a02b398e8b5038e9632901e448a48",
+          "byteLength": 721
+        },
+        {
+          "path": "midi/dev/V12_stress_separate-melody-contamination.mid",
+          "sha256": "a3d86d5d884d6593af918fcde778539e168cebc5385d7adfebcfdbfdefe9ff3c",
+          "byteLength": 1040
+        },
+        {
+          "path": "midi/dev/V13_clean_same-track-melody.mid",
+          "sha256": "a62c630d3854d3975628da085aa02c6c6413b5a8307bc9d1a96062b4f2c634e0",
+          "byteLength": 651
+        },
+        {
+          "path": "midi/dev/V13_stress_same-track-melody.mid",
+          "sha256": "e55aeb9131aa478d81b8ac4b3680c768c7f08bc097028a24ad38ddd1b3868044",
+          "byteLength": 992
+        },
+        {
+          "path": "midi/dev/V14_clean_passing-tones.mid",
+          "sha256": "aba387061a4f239d166d71ad9a34c8cb61123fc8505a04e1710de52fe1d6d12e",
+          "byteLength": 579
+        },
+        {
+          "path": "midi/dev/V14_stress_passing-tones.mid",
+          "sha256": "f2be814a87c801b578487a8caf89609fc2e0081315046dbf311a7368064fdd9f",
+          "byteLength": 1495
+        },
+        {
+          "path": "midi/dev/V15_clean_sustain-overlap.mid",
+          "sha256": "4a70af68197e8df367dd737eb58aec195711f55bef36934ef26bd99f399a429d",
+          "byteLength": 446
+        },
+        {
+          "path": "midi/dev/V15_stress_sustain-overlap.mid",
+          "sha256": "c234ea97e468ec1ffd84cb05cf7e3c0febf2f038ede28d79e5a14f9720d6152c",
+          "byteLength": 1372
+        },
+        {
+          "path": "midi/dev/V16_clean_anticipated-next-chord.mid",
+          "sha256": "ed5a6897032dd8a7192cf3a0c929952f38c847820311757c82ef3a9a79c552f2",
+          "byteLength": 370
+        },
+        {
+          "path": "midi/dev/V16_stress_anticipated-next-chord.mid",
+          "sha256": "6d1bcbab3c4274da4feaa6b8fa16941979f230c2b3ee56df3c511f2a474f95fd",
+          "byteLength": 1294
+        },
+        {
+          "path": "midi/dev/V17_clean_pure-arpeggio.mid",
+          "sha256": "b70948f83442e07ffcbed6e1d1a6b363d636fc5dbfbd5a2be724e50d9ae4474a",
+          "byteLength": 513
+        },
+        {
+          "path": "midi/dev/V17_stress_pure-arpeggio.mid",
+          "sha256": "b46fc4ac9ca706c3b62a76f0ac20a9c14613e1302d5a1192e2c1cf95cb67680e",
+          "byteLength": 1437
+        },
+        {
+          "path": "midi/dev/V18_clean_hybrid-block-arpeggio.mid",
+          "sha256": "e72271fdc458402e78d83da58ba37cae8095b9ee03710fbe4adfcbde43de0cb4",
+          "byteLength": 469
+        },
+        {
+          "path": "midi/dev/V18_stress_hybrid-block-arpeggio.mid",
+          "sha256": "d66ef74d39f37bc33db48ba3afd13309caa34f66fde412b990f70363021d1c81",
+          "byteLength": 1394
+        },
+        {
+          "path": "midi/dev/V19_clean_guitar-strum.mid",
+          "sha256": "92a2ef62e8dc6eca96067bae422286f209260348d3b741887ffa41847fb1237a",
+          "byteLength": 429
+        },
+        {
+          "path": "midi/dev/V19_stress_guitar-strum.mid",
+          "sha256": "a123216b17a40e6001ab8020539d1cb34e208599578ac8d0d699f655ecfc93e7",
+          "byteLength": 1356
+        },
+        {
+          "path": "midi/dev/V20_clean_repeated-reattacks.mid",
+          "sha256": "d38f9750d38d7e78b7f0dcae33dee040cbc677f665aca2f16bb503a9b2821cdf",
+          "byteLength": 1254
+        },
+        {
+          "path": "midi/dev/V20_stress_repeated-reattacks.mid",
+          "sha256": "b5627b4e2587bc88da3e64b9786f8c7d0bb3031354aca07fc790978255cfd77c",
+          "byteLength": 2174
+        }
+      ],
+      "supplementalInputs": [
+        {
+          "path": "note-events.jsonl",
+          "sha256": "1af0b92b0b42e5867c1e708b1c67ca5ce54e288bcbb2c4609f61a798544469ff",
+          "byteLength": 1574734,
+          "selectionAssociation": "rows-filtered-to-frozen-midi-selection"
+        }
+      ]
+    },
+    {
+      "id": "voicing-gold-validation",
+      "selection": "manifest files where split=validation",
+      "repositoryLocation": "test/loop-vault-voicing-gold-corpus-v1/manifest.json",
+      "manifestSha256": "4fe04f2a6f6519366c3d8856db388f1885e4f4583fc5187970b58020fdc5db89",
+      "selectionSha256": "3d3aad89560497703720df91d0a4e61ce7e6d07946673c086303c0ed9fad4324",
+      "contentSha256": "aacb316c5cce1fb65d19c65be7978f38fa0d4ae4b7823afaec30907a7d9c3e09",
+      "fileCount": 10,
+      "files": [
+        {
+          "path": "midi/validation/V21_clean_two-chords-per-bar.mid",
+          "sha256": "94896a26a9ee121d6df686c97984422c55104dfb1812f3fcbffa038d099cc730",
+          "byteLength": 737
+        },
+        {
+          "path": "midi/validation/V21_stress_two-chords-per-bar.mid",
+          "sha256": "28595f6c402b0ebdf1959c468bfcbe226ef1a6a760561612c8e8738ac9ae739b",
+          "byteLength": 1662
+        },
+        {
+          "path": "midi/validation/V22_clean_walking-bass.mid",
+          "sha256": "3dfbc6a8a65608f8c932af8379abb732a42579c3bdb170ee7464117767e0a840",
+          "byteLength": 642
+        },
+        {
+          "path": "midi/validation/V22_stress_walking-bass.mid",
+          "sha256": "f9ef144e061a438526ab1a64a29f944572f459fc95ab8d4d694dd636ecea6313",
+          "byteLength": 1567
+        },
+        {
+          "path": "midi/validation/V23_clean_voice-duplicate.mid",
+          "sha256": "99372f3ec5deb29865d5d2eb7b728d032fd3eebe3339ee995bffdf54f674fb0e",
+          "byteLength": 744
+        },
+        {
+          "path": "midi/validation/V23_stress_voice-duplicate.mid",
+          "sha256": "38c00820b14fda5e41065a95e4eab0bbfcdf3217968cce5cecd34d9ef772eebb",
+          "byteLength": 1094
+        },
+        {
+          "path": "midi/validation/V24_clean_humanized-overlap.mid",
+          "sha256": "8d14144911da9bf80881daf608d28f6ab4d58124b7f750b332ca63144f0f23ec",
+          "byteLength": 436
+        },
+        {
+          "path": "midi/validation/V24_stress_humanized-overlap.mid",
+          "sha256": "1d335730d8ccbf6d9f0b158664033dd630799b37b6ab9e4974bac82a8d507a44",
+          "byteLength": 1363
+        },
+        {
+          "path": "midi/validation/V25_clean_velocity-imbalance.mid",
+          "sha256": "e7a343902673fdf68e10c14c20035428f1987e9773a2481fa07eed020da1e89e",
+          "byteLength": 779
+        },
+        {
+          "path": "midi/validation/V25_stress_velocity-imbalance.mid",
+          "sha256": "84e9cbe54685803d305408dafadc382cf1a6950dbc7ab1809521a741cb2f45a6",
+          "byteLength": 1095
+        }
+      ],
+      "supplementalInputs": [
+        {
+          "path": "note-events.jsonl",
+          "sha256": "1af0b92b0b42e5867c1e708b1c67ca5ce54e288bcbb2c4609f61a798544469ff",
+          "byteLength": 1574734,
+          "selectionAssociation": "rows-filtered-to-frozen-midi-selection"
+        }
+      ]
+    }
+  ],
+  "existingCorpusBaselines": {
+    "schemaVersion": 1,
+    "holdoutEvaluated": false,
+    "aliases": {
+      "phase45Development40": "voicing-gold-dev",
+      "phase5AccuracyFirst": "aggregate evaluation lens; not an independent corpus",
+      "candidateUnion": "mode conditions; not an independent corpus"
+    },
+    "corpora": [
+      {
+        "id": "chord-drip-100",
+        "sourceKind": "synthetic-labeled",
+        "caseCount": 100,
+        "eventCount": 1058,
+        "conditions": [
+          {
+            "id": "phase4-v1",
+            "analyzerVersion": "phase4-symbolic-v1",
+            "canonicalExact": 0.278828,
+            "usableAccuracy": 0.308129,
+            "rootAccuracy": 0.582231,
+            "qualityAccuracy": 0.455577,
+            "seventhAccuracy": 0.573724,
+            "tensionAccuracy": 0.362949,
+            "slashBassAccuracy": 0.319415,
+            "rank1": 0.278828,
+            "top3Canonical": 0.402646,
+            "top3Root": 0.767486,
+            "candidateRecall": 0.44707,
+            "unionCandidateRecall": 0.465974,
+            "candidateCatalogRescueCount": 20,
+            "correctionCostTotal": 1691,
+            "correctionCostMean": 1.598299,
+            "manualInputRate": 0.330813,
+            "catalogManualInputRate": 0.330813,
+            "rank2Or3RescueRate": 0.124,
+            "correctionsPerEightEvents": 12.786,
+            "duplicateCandidates": 0,
+            "maxCandidatesPerEvent": 6,
+            "deterministic": true,
+            "runtimeMs": 652.158,
+            "runtimePerFileP50Ms": 5.277,
+            "runtimePerFileP90Ms": 11.488
+          },
+          {
+            "id": "phase4-v1+R1+E1",
+            "analyzerVersion": "phase5-accuracy-first-v1",
+            "canonicalExact": 0.278828,
+            "usableAccuracy": 0.308129,
+            "rootAccuracy": 0.582231,
+            "qualityAccuracy": 0.455577,
+            "seventhAccuracy": 0.573724,
+            "tensionAccuracy": 0.362949,
+            "slashBassAccuracy": 0.319415,
+            "rank1": 0.278828,
+            "top3Canonical": 0.402646,
+            "top3Root": 0.767486,
+            "candidateRecall": 0.448015,
+            "unionCandidateRecall": 0.465028,
+            "candidateCatalogRescueCount": 18,
+            "correctionCostTotal": 1690,
+            "correctionCostMean": 1.597353,
+            "manualInputRate": 0.328922,
+            "catalogManualInputRate": 0.328922,
+            "rank2Or3RescueRate": 0.124,
+            "correctionsPerEightEvents": 12.779,
+            "duplicateCandidates": 0,
+            "maxCandidatesPerEvent": 6,
+            "deterministic": true,
+            "runtimeMs": 640.464,
+            "runtimePerFileP50Ms": 5.506,
+            "runtimePerFileP90Ms": 11.423
+          },
+          {
+            "id": "phase4-v1+R1+E1+Union",
+            "analyzerVersion": "phase5-accuracy-first-v1",
+            "canonicalExact": 0.278828,
+            "usableAccuracy": 0.308129,
+            "rootAccuracy": 0.582231,
+            "qualityAccuracy": 0.455577,
+            "seventhAccuracy": 0.573724,
+            "tensionAccuracy": 0.362949,
+            "slashBassAccuracy": 0.319415,
+            "rank1": 0.278828,
+            "top3Canonical": 0.402646,
+            "top3Root": 0.767486,
+            "candidateRecall": 0.448015,
+            "unionCandidateRecall": 0.513233,
+            "candidateCatalogRescueCount": 69,
+            "correctionCostTotal": 1690,
+            "correctionCostMean": 1.597353,
+            "manualInputRate": 0.328922,
+            "catalogManualInputRate": 0.328922,
+            "rank2Or3RescueRate": 0.124,
+            "correctionsPerEightEvents": 12.779,
+            "duplicateCandidates": 0,
+            "maxCandidatesPerEvent": 26,
+            "deterministic": true,
+            "runtimeMs": 2756.328,
+            "runtimePerFileP50Ms": 23.58,
+            "runtimePerFileP90Ms": 51.728
+          }
+        ]
+      },
+      {
+        "id": "chapter3-seed-100",
+        "sourceKind": "hand-annotated-local",
+        "caseCount": 100,
+        "eventCount": 399,
+        "conditions": [
+          {
+            "id": "phase4-v1",
+            "analyzerVersion": "phase4-symbolic-v1",
+            "canonicalExact": 0.977444,
+            "usableAccuracy": 0.977444,
+            "rootAccuracy": 0.987469,
+            "qualityAccuracy": 0.984962,
+            "seventhAccuracy": 0.994987,
+            "tensionAccuracy": 0.97995,
+            "slashBassAccuracy": 0.857143,
+            "rank1": 0.977444,
+            "top3Canonical": 0.987469,
+            "top3Root": 0.997494,
+            "candidateRecall": 0.989975,
+            "unionCandidateRecall": 0.992481,
+            "candidateCatalogRescueCount": 1,
+            "correctionCostTotal": 16,
+            "correctionCostMean": 0.0401,
+            "manualInputRate": 0.007519,
+            "catalogManualInputRate": 0.007519,
+            "rank2Or3RescueRate": 0.01,
+            "correctionsPerEightEvents": 0.321,
+            "duplicateCandidates": 0,
+            "maxCandidatesPerEvent": 6,
+            "deterministic": true,
+            "runtimeMs": 283.868,
+            "runtimePerFileP50Ms": 2.745,
+            "runtimePerFileP90Ms": 3.508
+          },
+          {
+            "id": "phase4-v1+R1+E1",
+            "analyzerVersion": "phase5-accuracy-first-v1",
+            "canonicalExact": 0.977444,
+            "usableAccuracy": 0.977444,
+            "rootAccuracy": 0.987469,
+            "qualityAccuracy": 0.984962,
+            "seventhAccuracy": 0.994987,
+            "tensionAccuracy": 0.97995,
+            "slashBassAccuracy": 0.857143,
+            "rank1": 0.977444,
+            "top3Canonical": 0.987469,
+            "top3Root": 0.997494,
+            "candidateRecall": 0.989975,
+            "unionCandidateRecall": 0.992481,
+            "candidateCatalogRescueCount": 1,
+            "correctionCostTotal": 16,
+            "correctionCostMean": 0.0401,
+            "manualInputRate": 0.007519,
+            "catalogManualInputRate": 0.007519,
+            "rank2Or3RescueRate": 0.01,
+            "correctionsPerEightEvents": 0.321,
+            "duplicateCandidates": 0,
+            "maxCandidatesPerEvent": 6,
+            "deterministic": true,
+            "runtimeMs": 263.296,
+            "runtimePerFileP50Ms": 2.558,
+            "runtimePerFileP90Ms": 2.973
+          },
+          {
+            "id": "phase4-v1+R1+E1+Union",
+            "analyzerVersion": "phase5-accuracy-first-v1",
+            "canonicalExact": 0.977444,
+            "usableAccuracy": 0.977444,
+            "rootAccuracy": 0.987469,
+            "qualityAccuracy": 0.984962,
+            "seventhAccuracy": 0.994987,
+            "tensionAccuracy": 0.97995,
+            "slashBassAccuracy": 0.857143,
+            "rank1": 0.977444,
+            "top3Canonical": 0.987469,
+            "top3Root": 0.997494,
+            "candidateRecall": 0.989975,
+            "unionCandidateRecall": 0.992481,
+            "candidateCatalogRescueCount": 1,
+            "correctionCostTotal": 16,
+            "correctionCostMean": 0.0401,
+            "manualInputRate": 0.007519,
+            "catalogManualInputRate": 0.007519,
+            "rank2Or3RescueRate": 0.01,
+            "correctionsPerEightEvents": 0.321,
+            "duplicateCandidates": 0,
+            "maxCandidatesPerEvent": 14,
+            "deterministic": true,
+            "runtimeMs": 1157.907,
+            "runtimePerFileP50Ms": 11.409,
+            "runtimePerFileP90Ms": 13.499
+          }
+        ]
+      },
+      {
+        "id": "voicing-gold-dev",
+        "sourceKind": "synthetic-label-gold",
+        "caseCount": 40,
+        "eventCount": 320,
+        "conditions": [
+          {
+            "id": "phase4-v1",
+            "analyzerVersion": "phase4-symbolic-v1",
+            "canonicalExact": 0.609375,
+            "usableAccuracy": 0.690625,
+            "rootAccuracy": 0.946875,
+            "qualityAccuracy": 0.890625,
+            "seventhAccuracy": 0.89375,
+            "tensionAccuracy": 0.721875,
+            "slashBassAccuracy": 0,
+            "rank1": 0.609375,
+            "top3Canonical": 0.70625,
+            "top3Root": 0.98125,
+            "candidateRecall": 0.73125,
+            "unionCandidateRecall": 0.746875,
+            "candidateCatalogRescueCount": 5,
+            "correctionCostTotal": 246,
+            "correctionCostMean": 0.76875,
+            "manualInputRate": 0.125,
+            "catalogManualInputRate": 0.125,
+            "rank2Or3RescueRate": 0.097,
+            "correctionsPerEightEvents": 6.15,
+            "duplicateCandidates": 0,
+            "maxCandidatesPerEvent": 6,
+            "deterministic": true,
+            "runtimeMs": 207.373,
+            "runtimePerFileP50Ms": 5.077,
+            "runtimePerFileP90Ms": 5.694
+          },
+          {
+            "id": "phase4-v1+R1+E1",
+            "analyzerVersion": "phase5-accuracy-first-v1",
+            "canonicalExact": 0.609375,
+            "usableAccuracy": 0.690625,
+            "rootAccuracy": 0.946875,
+            "qualityAccuracy": 0.890625,
+            "seventhAccuracy": 0.89375,
+            "tensionAccuracy": 0.721875,
+            "slashBassAccuracy": 0,
+            "rank1": 0.609375,
+            "top3Canonical": 0.70625,
+            "top3Root": 0.98125,
+            "candidateRecall": 0.9,
+            "unionCandidateRecall": 0.915625,
+            "candidateCatalogRescueCount": 5,
+            "correctionCostTotal": 158,
+            "correctionCostMean": 0.49375,
+            "manualInputRate": 0.01875,
+            "catalogManualInputRate": 0.01875,
+            "rank2Or3RescueRate": 0.097,
+            "correctionsPerEightEvents": 3.95,
+            "duplicateCandidates": 0,
+            "maxCandidatesPerEvent": 6,
+            "deterministic": true,
+            "runtimeMs": 219.382,
+            "runtimePerFileP50Ms": 5.45,
+            "runtimePerFileP90Ms": 5.971
+          },
+          {
+            "id": "phase4-v1+R1+E1+Union",
+            "analyzerVersion": "phase5-accuracy-first-v1",
+            "canonicalExact": 0.609375,
+            "usableAccuracy": 0.690625,
+            "rootAccuracy": 0.946875,
+            "qualityAccuracy": 0.890625,
+            "seventhAccuracy": 0.89375,
+            "tensionAccuracy": 0.721875,
+            "slashBassAccuracy": 0,
+            "rank1": 0.609375,
+            "top3Canonical": 0.70625,
+            "top3Root": 0.98125,
+            "candidateRecall": 0.9,
+            "unionCandidateRecall": 0.953125,
+            "candidateCatalogRescueCount": 17,
+            "correctionCostTotal": 158,
+            "correctionCostMean": 0.49375,
+            "manualInputRate": 0.01875,
+            "catalogManualInputRate": 0.01875,
+            "rank2Or3RescueRate": 0.097,
+            "correctionsPerEightEvents": 3.95,
+            "duplicateCandidates": 0,
+            "maxCandidatesPerEvent": 15,
+            "deterministic": true,
+            "runtimeMs": 902.716,
+            "runtimePerFileP50Ms": 22.176,
+            "runtimePerFileP90Ms": 26.629
+          }
+        ]
+      },
+      {
+        "id": "voicing-gold-validation",
+        "sourceKind": "synthetic-label-gold",
+        "caseCount": 10,
+        "eventCount": 96,
+        "conditions": [
+          {
+            "id": "phase4-v1",
+            "analyzerVersion": "phase4-symbolic-v1",
+            "canonicalExact": 0.822917,
+            "usableAccuracy": 0.822917,
+            "rootAccuracy": 1,
+            "qualityAccuracy": 0.989583,
+            "seventhAccuracy": 1,
+            "tensionAccuracy": 0.822917,
+            "slashBassAccuracy": 0,
+            "rank1": 0.822917,
+            "top3Canonical": 0.833333,
+            "top3Root": 1,
+            "candidateRecall": 0.875,
+            "unionCandidateRecall": 0.875,
+            "candidateCatalogRescueCount": 0,
+            "correctionCostTotal": 41,
+            "correctionCostMean": 0.427083,
+            "manualInputRate": 0.125,
+            "catalogManualInputRate": 0.125,
+            "rank2Or3RescueRate": 0.01,
+            "correctionsPerEightEvents": 3.417,
+            "duplicateCandidates": 0,
+            "maxCandidatesPerEvent": 6,
+            "deterministic": true,
+            "runtimeMs": 61.106,
+            "runtimePerFileP50Ms": 5.469,
+            "runtimePerFileP90Ms": 8.369
+          },
+          {
+            "id": "phase4-v1+R1+E1",
+            "analyzerVersion": "phase5-accuracy-first-v1",
+            "canonicalExact": 0.822917,
+            "usableAccuracy": 0.822917,
+            "rootAccuracy": 1,
+            "qualityAccuracy": 0.989583,
+            "seventhAccuracy": 1,
+            "tensionAccuracy": 0.822917,
+            "slashBassAccuracy": 0,
+            "rank1": 0.822917,
+            "top3Canonical": 0.833333,
+            "top3Root": 1,
+            "candidateRecall": 0.989583,
+            "unionCandidateRecall": 1,
+            "candidateCatalogRescueCount": 1,
+            "correctionCostTotal": 17,
+            "correctionCostMean": 0.177083,
+            "manualInputRate": 0,
+            "catalogManualInputRate": 0,
+            "rank2Or3RescueRate": 0.01,
+            "correctionsPerEightEvents": 1.417,
+            "duplicateCandidates": 0,
+            "maxCandidatesPerEvent": 6,
+            "deterministic": true,
+            "runtimeMs": 53.4,
+            "runtimePerFileP50Ms": 5.304,
+            "runtimePerFileP90Ms": 5.683
+          },
+          {
+            "id": "phase4-v1+R1+E1+Union",
+            "analyzerVersion": "phase5-accuracy-first-v1",
+            "canonicalExact": 0.822917,
+            "usableAccuracy": 0.822917,
+            "rootAccuracy": 1,
+            "qualityAccuracy": 0.989583,
+            "seventhAccuracy": 1,
+            "tensionAccuracy": 0.822917,
+            "slashBassAccuracy": 0,
+            "rank1": 0.822917,
+            "top3Canonical": 0.833333,
+            "top3Root": 1,
+            "candidateRecall": 0.989583,
+            "unionCandidateRecall": 1,
+            "candidateCatalogRescueCount": 1,
+            "correctionCostTotal": 17,
+            "correctionCostMean": 0.177083,
+            "manualInputRate": 0,
+            "catalogManualInputRate": 0,
+            "rank2Or3RescueRate": 0.01,
+            "correctionsPerEightEvents": 1.417,
+            "duplicateCandidates": 0,
+            "maxCandidatesPerEvent": 18,
+            "deterministic": true,
+            "runtimeMs": 241.518,
+            "runtimePerFileP50Ms": 22.093,
+            "runtimePerFileP90Ms": 29.004
+          }
+        ]
+      },
+      {
+        "id": "phase4.7-dev",
+        "sourceKind": "fixed-bass-identity-gold",
+        "caseCount": 12,
+        "eventCount": 96,
+        "conditions": [
+          {
+            "id": "phase4-v1",
+            "analyzerVersion": "phase4-symbolic-v1",
+            "canonicalExact": 0.041667,
+            "usableAccuracy": 0.104167,
+            "rootAccuracy": 0.125,
+            "qualityAccuracy": 0.229167,
+            "seventhAccuracy": 0.53125,
+            "tensionAccuracy": 0.322917,
+            "slashBassAccuracy": 0.083333,
+            "rank1": 0.041667,
+            "top3Canonical": 0.052083,
+            "top3Root": 0.239583,
+            "candidateRecall": 0.052083,
+            "unionCandidateRecall": 0.052083,
+            "candidateCatalogRescueCount": 0,
+            "correctionCostTotal": 183,
+            "correctionCostMean": 1.90625,
+            "manualInputRate": 0,
+            "catalogManualInputRate": 0,
+            "rank2Or3RescueRate": 0.01,
+            "correctionsPerEightEvents": 15.25,
+            "duplicateCandidates": 0,
+            "maxCandidatesPerEvent": 6,
+            "deterministic": true,
+            "runtimeMs": 92.604,
+            "runtimePerFileP50Ms": 7.646,
+            "runtimePerFileP90Ms": 8.138
+          },
+          {
+            "id": "phase4-v1+R1+E1",
+            "analyzerVersion": "phase5-accuracy-first-v1",
+            "canonicalExact": 0.041667,
+            "usableAccuracy": 0.104167,
+            "rootAccuracy": 0.125,
+            "qualityAccuracy": 0.229167,
+            "seventhAccuracy": 0.53125,
+            "tensionAccuracy": 0.322917,
+            "slashBassAccuracy": 0.083333,
+            "rank1": 0.041667,
+            "top3Canonical": 0.052083,
+            "top3Root": 0.239583,
+            "candidateRecall": 0.104167,
+            "unionCandidateRecall": 0.104167,
+            "candidateCatalogRescueCount": 0,
+            "correctionCostTotal": 178,
+            "correctionCostMean": 1.854167,
+            "manualInputRate": 0,
+            "catalogManualInputRate": 0,
+            "rank2Or3RescueRate": 0.01,
+            "correctionsPerEightEvents": 14.833,
+            "duplicateCandidates": 0,
+            "maxCandidatesPerEvent": 6,
+            "deterministic": true,
+            "runtimeMs": 100.087,
+            "runtimePerFileP50Ms": 8.25,
+            "runtimePerFileP90Ms": 8.699
+          },
+          {
+            "id": "phase4-v1+R1+E1+Union",
+            "analyzerVersion": "phase5-accuracy-first-v1",
+            "canonicalExact": 0.041667,
+            "usableAccuracy": 0.104167,
+            "rootAccuracy": 0.125,
+            "qualityAccuracy": 0.229167,
+            "seventhAccuracy": 0.53125,
+            "tensionAccuracy": 0.322917,
+            "slashBassAccuracy": 0.083333,
+            "rank1": 0.041667,
+            "top3Canonical": 0.052083,
+            "top3Root": 0.239583,
+            "candidateRecall": 0.104167,
+            "unionCandidateRecall": 0.125,
+            "candidateCatalogRescueCount": 2,
+            "correctionCostTotal": 178,
+            "correctionCostMean": 1.854167,
+            "manualInputRate": 0,
+            "catalogManualInputRate": 0,
+            "rank2Or3RescueRate": 0.01,
+            "correctionsPerEightEvents": 14.833,
+            "duplicateCandidates": 0,
+            "maxCandidatesPerEvent": 16,
+            "deterministic": true,
+            "runtimeMs": 394.037,
+            "runtimePerFileP50Ms": 32.808,
+            "runtimePerFileP90Ms": 33.534
+          }
+        ]
+      },
+      {
+        "id": "phase4.7-validation",
+        "sourceKind": "fixed-bass-identity-gold",
+        "caseCount": 12,
+        "eventCount": 96,
+        "conditions": [
+          {
+            "id": "phase4-v1",
+            "analyzerVersion": "phase4-symbolic-v1",
+            "canonicalExact": 0.03125,
+            "usableAccuracy": 0.072917,
+            "rootAccuracy": 0.114583,
+            "qualityAccuracy": 0.239583,
+            "seventhAccuracy": 0.53125,
+            "tensionAccuracy": 0.34375,
+            "slashBassAccuracy": 0.055556,
+            "rank1": 0.03125,
+            "top3Canonical": 0.041667,
+            "top3Root": 0.229167,
+            "candidateRecall": 0.041667,
+            "unionCandidateRecall": 0.041667,
+            "candidateCatalogRescueCount": 0,
+            "correctionCostTotal": 185,
+            "correctionCostMean": 1.927083,
+            "manualInputRate": 0,
+            "catalogManualInputRate": 0,
+            "rank2Or3RescueRate": 0.01,
+            "correctionsPerEightEvents": 15.417,
+            "duplicateCandidates": 0,
+            "maxCandidatesPerEvent": 6,
+            "deterministic": true,
+            "runtimeMs": 105.121,
+            "runtimePerFileP50Ms": 8.691,
+            "runtimePerFileP90Ms": 9.184
+          },
+          {
+            "id": "phase4-v1+R1+E1",
+            "analyzerVersion": "phase5-accuracy-first-v1",
+            "canonicalExact": 0.03125,
+            "usableAccuracy": 0.072917,
+            "rootAccuracy": 0.114583,
+            "qualityAccuracy": 0.239583,
+            "seventhAccuracy": 0.53125,
+            "tensionAccuracy": 0.34375,
+            "slashBassAccuracy": 0.055556,
+            "rank1": 0.03125,
+            "top3Canonical": 0.041667,
+            "top3Root": 0.229167,
+            "candidateRecall": 0.083333,
+            "unionCandidateRecall": 0.083333,
+            "candidateCatalogRescueCount": 0,
+            "correctionCostTotal": 181,
+            "correctionCostMean": 1.885417,
+            "manualInputRate": 0,
+            "catalogManualInputRate": 0,
+            "rank2Or3RescueRate": 0.01,
+            "correctionsPerEightEvents": 15.083,
+            "duplicateCandidates": 0,
+            "maxCandidatesPerEvent": 6,
+            "deterministic": true,
+            "runtimeMs": 111.896,
+            "runtimePerFileP50Ms": 8.698,
+            "runtimePerFileP90Ms": 10.306
+          },
+          {
+            "id": "phase4-v1+R1+E1+Union",
+            "analyzerVersion": "phase5-accuracy-first-v1",
+            "canonicalExact": 0.03125,
+            "usableAccuracy": 0.072917,
+            "rootAccuracy": 0.114583,
+            "qualityAccuracy": 0.239583,
+            "seventhAccuracy": 0.53125,
+            "tensionAccuracy": 0.34375,
+            "slashBassAccuracy": 0.055556,
+            "rank1": 0.03125,
+            "top3Canonical": 0.041667,
+            "top3Root": 0.229167,
+            "candidateRecall": 0.083333,
+            "unionCandidateRecall": 0.145833,
+            "candidateCatalogRescueCount": 6,
+            "correctionCostTotal": 181,
+            "correctionCostMean": 1.885417,
+            "manualInputRate": 0,
+            "catalogManualInputRate": 0,
+            "rank2Or3RescueRate": 0.01,
+            "correctionsPerEightEvents": 15.083,
+            "duplicateCandidates": 0,
+            "maxCandidatesPerEvent": 16,
+            "deterministic": true,
+            "runtimeMs": 416.663,
+            "runtimePerFileP50Ms": 33.907,
+            "runtimePerFileP90Ms": 37.132
+          }
+        ]
+      }
+    ],
+    "voicingGold": [
+      {
+        "split": "dev",
+        "fileCount": 40,
+        "eventCount": 320,
+        "condition": "D",
+        "policy": "sourceFaithfulMidi",
+        "metrics": {
+          "events": 320,
+          "voicingExactRate": 0.765625,
+          "notePrecision": 0.964571,
+          "noteRecall": 0.965675,
+          "noteF1": 0.965123,
+          "extraNoteCount": 62,
+          "missingNoteCount": 60,
+          "bassNoteAccuracy": 1,
+          "topNoteAccuracy": 0.83125,
+          "lowestNoteAbsoluteError": 0,
+          "highestNoteAbsoluteError": 1.23125,
+          "registerExactRate": 0.83125,
+          "octaveErrorRate": 0.003125,
+          "representationTypeAccuracy": 0.95,
+          "simultaneousExactRate": 0.805921,
+          "aggregateF1": 0.519841,
+          "simultaneousMissRate": 0,
+          "aggregatedAsSimultaneousRate": 1,
+          "distractorLeakRate": 0.037263,
+          "melodyLeakRate": 0.048069,
+          "passingToneLeakRate": 0,
+          "sustainCarryLeakRate": null,
+          "voiceDuplicateLeakRate": null,
+          "sourceVoicingUsableRate": 0.675,
+          "generatedFallbackRate": 0.325,
+          "requiresReviewRate": 0.325,
+          "staleAfterChordEditAccuracy": 1
+        }
+      },
+      {
+        "split": "validation",
+        "fileCount": 10,
+        "eventCount": 96,
+        "condition": "D",
+        "policy": "sourceFaithfulMidi",
+        "metrics": {
+          "events": 96,
+          "voicingExactRate": 0.739583,
+          "notePrecision": 0.955117,
+          "noteRecall": 0.985185,
+          "noteF1": 0.969918,
+          "extraNoteCount": 25,
+          "missingNoteCount": 8,
+          "bassNoteAccuracy": 0.916667,
+          "topNoteAccuracy": 0.864583,
+          "lowestNoteAbsoluteError": 0.270833,
+          "highestNoteAbsoluteError": 1.020833,
+          "registerExactRate": 0.78125,
+          "octaveErrorRate": 0.020833,
+          "representationTypeAccuracy": 1,
+          "simultaneousExactRate": 0.739583,
+          "aggregateF1": null,
+          "simultaneousMissRate": 0,
+          "aggregatedAsSimultaneousRate": null,
+          "distractorLeakRate": 0.043584,
+          "melodyLeakRate": 0.069498,
+          "passingToneLeakRate": null,
+          "sustainCarryLeakRate": null,
+          "voiceDuplicateLeakRate": 0,
+          "sourceVoicingUsableRate": 0.708333,
+          "generatedFallbackRate": 0.291667,
+          "requiresReviewRate": 0.291667,
+          "staleAfterChordEditAccuracy": 1
+        }
+      }
+    ]
+  },
+  "buildArtifacts": {
+    "productName": "Loop Vault",
+    "version": "0.1.0",
+    "packageVersion": "0.1.0",
+    "frozenFingerprints": [
+      {
+        "kind": "executable",
+        "path": "src-tauri/target/release/loop-vault.exe",
+        "sha256": "de308b1206348a9262936a75642bbf1bd9e5dd3c7f8e88141d263b88683d03f3",
+        "byteLength": 14979584
+      },
+      {
+        "kind": "msi",
+        "path": "src-tauri/target/release/bundle/msi/Loop Vault_0.1.0_x64_en-US.msi",
+        "sha256": "9eff548f14709d0a1a23fca3a3c07f73f52a433b4e48d5ee55972ebeeca2564c",
+        "byteLength": 5177344
+      },
+      {
+        "kind": "nsis",
+        "path": "src-tauri/target/release/bundle/nsis/Loop Vault_0.1.0_x64-setup.exe",
+        "sha256": "f691c2e87be856f5ed343d0aaf95714ef2263b90b4e67bba3448a552284b6aee",
+        "byteLength": 3650706
+      }
+    ]
+  },
+  "privacy": {
+    "trackedMidi": 0,
+    "trackedLocalEvaluation": 0,
+    "trackedBuildArtifacts": 0,
+    "trackedReviewedArtifactFiles": 77,
+    "artifactScanIssueCount": 0
+  },
+  "preflight": {
+    "phase514StackIntegrated": true,
+    "phase514FlStudioSmoke": "PASS (user-confirmed 2026-07-30)",
+    "manifestValidation": "PASS"
+  },
+  "syntheticInventory": {
+    "caseCount": 36,
+    "cases": [
+      {
+        "id": "01_shell_fifths_aligned",
+        "midiSha256": "1d5052b6d0a8832ab16acc4d7efa4f2241bf74bc141801bb2a7cbdfdd53b1622",
+        "byteLength": 295
+      },
+      {
+        "id": "02_shell_fifths_pickup_irregular",
+        "midiSha256": "50bc7fef83aa99a355dbbb9802aa5640851b9c74de3bcef78e7f89f4dbb52658",
+        "byteLength": 481
+      },
+      {
+        "id": "03_shell_fifths_pickup_irregular_exact_duplicates",
+        "midiSha256": "cb8efb3dc04d7e3e2e3bb3a6adb6afb5aefb9670469ded92419331b3ce4e2cfc",
+        "byteLength": 649
+      },
+      {
+        "id": "04_adjacent_chord_false_tension_trap",
+        "midiSha256": "8185756e19aeffd654ba55d1e8da667813c041942ea64163f9b3fa3f8adacc36",
+        "byteLength": 284
+      },
+      {
+        "id": "05_fleeting_tensions_do_not_promote",
+        "midiSha256": "660941f88ea9e5270891de7e0128f22559d5f50f6c83ee13fc45983504baa699",
+        "byteLength": 299
+      },
+      {
+        "id": "06_true_sustained_tensions",
+        "midiSha256": "281c8408068fe78678706e94f8145ed4fd9ab59f82f42fc8ddc97f844eaa8314",
+        "byteLength": 291
+      },
+      {
+        "id": "07_legitimate_slash_pedal",
+        "midiSha256": "2588cf10de80486aabcc6bde6b8af5caa361128d82e5796e16aa21494d8f9a39",
+        "byteLength": 243
+      },
+      {
+        "id": "08_same_chord_rearticulation",
+        "midiSha256": "1f1fc723283623689ee057f0de7f73322016ec66324ef584493e59c74d296852",
+        "byteLength": 295
+      },
+      {
+        "id": "09_halfbeat_boundary_changes",
+        "midiSha256": "51d36ab1c68f65c2771e013237a4ad51de6d48d2a5e8f0486f9857d7dd905a89",
+        "byteLength": 258
+      },
+      {
+        "id": "10_phase514_roundtrip_basic",
+        "midiSha256": "16db4cff393e3e68afaf6a0fd096ea50c6e2c5aacf7ed6b1e60caf50b27cd9a2",
+        "byteLength": 339
+      },
+      {
+        "id": "11_phase514_roundtrip_complex",
+        "midiSha256": "d8161f31a8c217429b3b5bcef69938df5abc05aa91fcc9dedd66e285bba4a712",
+        "byteLength": 363
+      },
+      {
+        "id": "12_split_tracks_harmony_bass",
+        "midiSha256": "b9bbc3eaf15e516fcc6547932ed9ba483eb167133beec4d473e1427e5df5ea56",
+        "byteLength": 310
+      },
+      {
+        "id": "13_major7_shells",
+        "midiSha256": "0865e47856b1b9a564f5a90f73590a9894e44be5907fc8b4e31ebe7ba5eb606d",
+        "byteLength": 237
+      },
+      {
+        "id": "14_minor7_shells",
+        "midiSha256": "2317bc8b9161dc50f13ea0ede6ef1445c49734cb26e2a469e8f0e6d7c228effa",
+        "byteLength": 231
+      },
+      {
+        "id": "15_rootless_dominant_with_context",
+        "midiSha256": "1b67364c6527dd7d5ed23632fae851d171c8ce82fe8b884ac7639b3e317f82a3",
+        "byteLength": 267
+      },
+      {
+        "id": "16_arpeggiated_shells",
+        "midiSha256": "813f6b3605689832bec3c72e59a976a7dd8779ba99b7a05b76de2a6b25027c7c",
+        "byteLength": 224
+      },
+      {
+        "id": "17_common_tone_legato_boundary",
+        "midiSha256": "54beaad536769afc7d2401df280d4e6ba79e9a19e29bff65a9f3a84ddc2ca886",
+        "byteLength": 211
+      },
+      {
+        "id": "18_melody_contamination_separate_track",
+        "midiSha256": "4a0b8baf60c360b02e4dbdf8fe28ac82f03907308f52ad45da648d3a8322b808",
+        "byteLength": 298
+      },
+      {
+        "id": "19_chromatic_bass_approach_notes",
+        "midiSha256": "631d17f82c880ba1ebee9faade6c0589da43942bf329826f5cb7236122b9b5fd",
+        "byteLength": 298
+      },
+      {
+        "id": "20_true_pedal_bass_slash_progression",
+        "midiSha256": "08979f4ab3d4a9e07fcf3105f85792b3cae23f26552cd09af50c8a45b9a5121f",
+        "byteLength": 286
+      },
+      {
+        "id": "21_sustain_pedal_overlap",
+        "midiSha256": "86b381beba7fe870ddc3a45290c2b7835b8b614196dfb0ad06b6d4284c434a84",
+        "byteLength": 234
+      },
+      {
+        "id": "22_triplet_boundaries",
+        "midiSha256": "d8448b99682fee57df61beedcb6604a5e0dacd8b12c7f634e2bc6c80eecf2aee",
+        "byteLength": 223
+      },
+      {
+        "id": "23_meter_3_4",
+        "midiSha256": "30df99d22eb2d22ad27a38d7fc3a36a56a1f3836e666b0522882056dc8977954",
+        "byteLength": 243
+      },
+      {
+        "id": "24_meter_6_8",
+        "midiSha256": "58640ab40759641168624967f7392fe3ebdbb2210a858a7f582c0a557e54e494",
+        "byteLength": 255
+      },
+      {
+        "id": "25_tempo_change_mid_file",
+        "midiSha256": "62fd9bbdaf0871c79e64866e5dec137637aacc0aa929a1857d1601425faa59f0",
+        "byteLength": 269
+      },
+      {
+        "id": "26_ppq96_equivalence",
+        "midiSha256": "f8a327b55dc18859413c9759f03ef97998a9f880ab92a1834366d053852b6902",
+        "byteLength": 227
+      },
+      {
+        "id": "27_ppq960_equivalence",
+        "midiSha256": "1277bf1de1eb45f3ec4a1bd8865b3aef6278d8d0d208f6f10193a1548f949e0d",
+        "byteLength": 232
+      },
+      {
+        "id": "28_velocity_low",
+        "midiSha256": "6fb9cab14f3886c88539253d8cf80ecfcc9cb74fd44a8eea202ab8542944cb88",
+        "byteLength": 179
+      },
+      {
+        "id": "29_velocity_high",
+        "midiSha256": "bbb1a5b2ddb860503fe37602f942428a2151e5f40ca09a9effd5c1b3c04a3a1d",
+        "byteLength": 180
+      },
+      {
+        "id": "30_track_order_harmony_first",
+        "midiSha256": "b325bf332bb031d51eee3b4f482cb224c006f9cd33c3d08b0112d28c8fc8aac2",
+        "byteLength": 264
+      },
+      {
+        "id": "31_track_order_bass_first",
+        "midiSha256": "32bf26403ccb1f6100d51f157acd98908bc6c952d2e29c7be0bfb1de6ec11061",
+        "byteLength": 264
+      },
+      {
+        "id": "32_type0_multichannel",
+        "midiSha256": "efe5a40dea90189b2f418850bec5330cecd6a73945ea8f24587519581d6ae53e",
+        "byteLength": 237
+      },
+      {
+        "id": "33_sus2_vs_add9",
+        "midiSha256": "c8513b5957f25d39624cec416d0e5fa042d7536804803dc3a1ce1a2ffbf36be6",
+        "byteLength": 194
+      },
+      {
+        "id": "34_sus4_vs_7sus4",
+        "midiSha256": "fdba26ebbdb563b23951db0c4cf96e46a7194545885551c9a1b0f0f64f76ca32",
+        "byteLength": 196
+      },
+      {
+        "id": "35_nc_silence_region",
+        "midiSha256": "dc0f0d5255a9b346531bbaf83017368007b726ac69d5bde67fc4b20610ccd907",
+        "byteLength": 205
+      },
+      {
+        "id": "36_long_three_minute_stability",
+        "midiSha256": "422d73fc9249666ba073aefdf849242b793e9e45c041aa0604a33d0014839e84",
+        "byteLength": 5252
+      }
+    ]
+  },
+  "holdout": {
+    "phase47FreshHoldout": {
+      "sourceManifestSha256": "8f3fce224db3d9b4356f393f8def4a427fd35267d805e12f9a0a1434b851b7c9",
+      "caseCount": 12,
+      "selectionSha256": "8ceb390f06ac47b10ab771d2a050ef72738a574eee6b1cb255b27c4a1aa8fe64",
+      "expectedManifestFieldsSha256": "cf35a2b00a5a9af56a7d852887636d321de0084b178bd438772cf7b1cd0814d6",
+      "midiContentSha256": "31a5b941f039296afd609975e34341d098e0a667e384c37dcaf61d4a49f0171c",
+      "files": [
+        {
+          "path": "midi/holdout/holdout-01-clean_c-identity-pairs.mid",
+          "expectedManifestFieldsSha256": "655ab88d46bff2719a3b8a622716e641d1bacd865379a9aa42a0e292922c08fd",
+          "expectedSha256": "5da5e973204b7a9029cc408234207828985d64c151c21503ddf2be1c6ea43175",
+          "actualSha256": "5da5e973204b7a9029cc408234207828985d64c151c21503ddf2be1c6ea43175",
+          "actualByteLength": 498,
+          "matchesManifest": true
+        },
+        {
+          "path": "midi/holdout/holdout-02-stress_cs-identity-pairs.mid",
+          "expectedManifestFieldsSha256": "23b25bbaf29a726a2820ecee1b68bd5b93c3326d16610a233a512ed91b14ad20",
+          "expectedSha256": "542c8f608839cd79bb42e0251dcd249de5eee2cb59a70fe6d296ae71af283bfb",
+          "actualSha256": "542c8f608839cd79bb42e0251dcd249de5eee2cb59a70fe6d296ae71af283bfb",
+          "actualByteLength": 670,
+          "matchesManifest": true
+        },
+        {
+          "path": "midi/holdout/holdout-03-clean_d-identity-pairs.mid",
+          "expectedManifestFieldsSha256": "e1de66e6322acfddbfce431c5ba8e8d9dec44840a3617d5b5b2e3197b78ce82c",
+          "expectedSha256": "390fe4f813a7aee35847ef3c9d5a62888b39df49b5c288822e72a306856b528c",
+          "actualSha256": "390fe4f813a7aee35847ef3c9d5a62888b39df49b5c288822e72a306856b528c",
+          "actualByteLength": 483,
+          "matchesManifest": true
+        },
+        {
+          "path": "midi/holdout/holdout-04-stress_eb-identity-pairs.mid",
+          "expectedManifestFieldsSha256": "11dfeb51bb606ce46ff06c98a5c7698b994bce8409026be8c349512e8f82414b",
+          "expectedSha256": "d253fc0f8ee0ddc8499ec047c87de91f745e9a7bc89c6c4fdc7eb56af16b907d",
+          "actualSha256": "d253fc0f8ee0ddc8499ec047c87de91f745e9a7bc89c6c4fdc7eb56af16b907d",
+          "actualByteLength": 671,
+          "matchesManifest": true
+        },
+        {
+          "path": "midi/holdout/holdout-05-clean_e-identity-pairs.mid",
+          "expectedManifestFieldsSha256": "44e954a1bb97ad916030e979ebc430b56755104f81569e1be658515574845b67",
+          "expectedSha256": "ab121fa56db1f82deee12160311889cdd94a6c236dbcae55b2f9e068e923c7f0",
+          "actualSha256": "ab121fa56db1f82deee12160311889cdd94a6c236dbcae55b2f9e068e923c7f0",
+          "actualByteLength": 489,
+          "matchesManifest": true
+        },
+        {
+          "path": "midi/holdout/holdout-06-stress_f-identity-pairs.mid",
+          "expectedManifestFieldsSha256": "5973d95f274ae1996507734c7183a37ec1a20e0b1c93f6e296d001c2df805e5b",
+          "expectedSha256": "ef1cf8512e0af60129374f2e41089d144e74355ced51c86dbe3db89e276c66f0",
+          "actualSha256": "ef1cf8512e0af60129374f2e41089d144e74355ced51c86dbe3db89e276c66f0",
+          "actualByteLength": 679,
+          "matchesManifest": true
+        },
+        {
+          "path": "midi/holdout/holdout-07-clean_fs-identity-pairs.mid",
+          "expectedManifestFieldsSha256": "ebd91053dbe0bbed43210624c5e42d3779f34ad6e4f420f4b3309837c6e6a582",
+          "expectedSha256": "a56f54066083ad12c175adf12567d79cca9968ee008579af3f49df9444aa3fa1",
+          "actualSha256": "a56f54066083ad12c175adf12567d79cca9968ee008579af3f49df9444aa3fa1",
+          "actualByteLength": 483,
+          "matchesManifest": true
+        },
+        {
+          "path": "midi/holdout/holdout-08-stress_g-identity-pairs.mid",
+          "expectedManifestFieldsSha256": "1d5133aebd9ae4279e3c4bd0d35bdcc2262271de383ff8a774078e8e7fc149b0",
+          "expectedSha256": "a9e3033fce5d4eb3d568cac72a1de03a8ac8a7ff1e5c3d5e65603b54b229cff4",
+          "actualSha256": "a9e3033fce5d4eb3d568cac72a1de03a8ac8a7ff1e5c3d5e65603b54b229cff4",
+          "actualByteLength": 686,
+          "matchesManifest": true
+        },
+        {
+          "path": "midi/holdout/holdout-09-clean_ab-identity-pairs.mid",
+          "expectedManifestFieldsSha256": "337dea2eb7942ec2aea33ddc6bc7a225a3ab3c1c24b5b7ae1660c0d77cd05bf7",
+          "expectedSha256": "b2f06478fd8201d21a53aa4cb5935ebac058ac4aae18f4cb62f0f1354dbd38ff",
+          "actualSha256": "b2f06478fd8201d21a53aa4cb5935ebac058ac4aae18f4cb62f0f1354dbd38ff",
+          "actualByteLength": 482,
+          "matchesManifest": true
+        },
+        {
+          "path": "midi/holdout/holdout-10-stress_a-identity-pairs.mid",
+          "expectedManifestFieldsSha256": "e3047ab081adaa1ec8def67f98dca624072c441459d995b74bbd84d3a1fe2806",
+          "expectedSha256": "14ec88af4edbf6315d9b7f7bd55d304aed9d8785589097774cb63157e0bcd927",
+          "actualSha256": "14ec88af4edbf6315d9b7f7bd55d304aed9d8785589097774cb63157e0bcd927",
+          "actualByteLength": 670,
+          "matchesManifest": true
+        },
+        {
+          "path": "midi/holdout/holdout-11-clean_bb-identity-pairs.mid",
+          "expectedManifestFieldsSha256": "1cc42a52232671498d600579d7b1b2acf2ab7286abcf4ab080c24fa9233f6522",
+          "expectedSha256": "084a01868d3b76130877f3973eec59bfa799cdbc67c0aa51ff94d36c622f347a",
+          "actualSha256": "084a01868d3b76130877f3973eec59bfa799cdbc67c0aa51ff94d36c622f347a",
+          "actualByteLength": 483,
+          "matchesManifest": true
+        },
+        {
+          "path": "midi/holdout/holdout-12-stress_b-identity-pairs.mid",
+          "expectedManifestFieldsSha256": "9fb809f597861eb1a5226f56c4ac8330571a0108fc96dbbf7b050a7ad4bde3a9",
+          "expectedSha256": "d038a105c062b1dd07b894913d83b7c562844d51e2762227fa5623c8511c837f",
+          "actualSha256": "d038a105c062b1dd07b894913d83b7c562844d51e2762227fa5623c8511c837f",
+          "actualByteLength": 679,
+          "matchesManifest": true
+        }
+      ],
+      "resultOpened": false
+    },
+    "phase514RoundTripSubset": {
+      "selectionSize": 4,
+      "selectionSha256": "a4ceb39fc6beaefc9e09547436817b032fe9090536695ff64fbd6f64130a3af8",
+      "exportedMidiSha256": "300f3cbbf092918700311ee618fb57e4be964ba3104fefb0f4ddaedeeae241c1",
+      "exportedMidiByteLength": 288,
+      "exporterSourceSha256": "52077bf8fa604c5a0c5f147143f9161d7c131e429203c45a97fc648e40fc60ce",
+      "resultOpened": false
+    },
+    "excluded": {
+      "voicingGoldHoldout": "burned by prior diagnostics",
+      "userRealMidi": "explicitly excluded"
+    }
+  }
+}

@@ -8,6 +8,8 @@ export default tseslint.config(
       "src-tauri/**",
       "node_modules/**",
       "coverage/**",
+      ".agents/**",
+      ".claude/**",
       "*.config.js",
     ],
   },
