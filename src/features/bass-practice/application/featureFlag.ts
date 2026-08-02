@@ -1,5 +1,6 @@
 export const BASS_PRACTICE_DEGREE_ECHO_FEATURE_STORAGE_KEY = "loop-vault:bass-practice-degree-echo-enabled:v1";
 export const BASS_PRACTICE_RHYTHM_ECHO_FEATURE_STORAGE_KEY = "loop-vault:bass-practice-rhythm-echo-enabled:v1";
+export const BASS_PRACTICE_BASSLINE_ECHO_FEATURE_STORAGE_KEY = "loop-vault:bass-practice-bassline-echo-enabled:v1";
 export const DEFAULT_BASS_PRACTICE_DEGREE_ECHO_ENABLED = false;
 export const DEFAULT_BASS_PRACTICE_RHYTHM_ECHO_ENABLED = false;
 
@@ -7,6 +8,7 @@ interface StorageLike { getItem(key: string): string | null; }
 
 export function isBassPracticeDegreeEchoEnabled(storage?: StorageLike): boolean { return readFlag(BASS_PRACTICE_DEGREE_ECHO_FEATURE_STORAGE_KEY, DEFAULT_BASS_PRACTICE_DEGREE_ECHO_ENABLED, storage); }
 export function isBassPracticeRhythmEchoEnabled(storage?: StorageLike): boolean { return readFlag(BASS_PRACTICE_RHYTHM_ECHO_FEATURE_STORAGE_KEY, DEFAULT_BASS_PRACTICE_RHYTHM_ECHO_ENABLED, storage); }
+export function isBassPracticeBasslineEchoEnabled(storage?: StorageLike): boolean { return readFlag(BASS_PRACTICE_BASSLINE_ECHO_FEATURE_STORAGE_KEY, false, storage); }
 
 function readFlag(key: string, fallback: boolean, storage?: StorageLike): boolean {
   let target = storage;
