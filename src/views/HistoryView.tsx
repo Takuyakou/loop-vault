@@ -50,7 +50,7 @@ export function HistoryView({
     if (filter !== "all" && filter !== "practice") return [];
     const normalized = query.trim().toLocaleLowerCase();
     if (!normalized) return practiceHistory;
-    return practiceHistory.filter((summary) => ["bass practice", "degree echo", "self-rated", summary.nextFocus]
+    return practiceHistory.filter((summary) => ["bass practice", summary.mode === "rhythm" ? "rhythm echo" : "degree echo", "self-rated", summary.nextFocus]
       .some((value) => value.toLocaleLowerCase().includes(normalized)));
   }, [filter, practiceHistory, query]);
   const groups = useMemo(() => groupByDate(visible, language), [language, visible]);
@@ -102,7 +102,7 @@ export function HistoryView({
             {visiblePracticeHistory.map((summary) => (
               <Surface key={summary.id} className="p-4">
                 <div className="flex items-center justify-between gap-3">
-                  <strong>Degree Echo</strong>
+                  <strong>{summary.mode === "rhythm" ? "Rhythm Echo" : "Degree Echo"}</strong>
                   <time className="text-xs text-[var(--lv-text-muted)]" dateTime={summary.at}>{formatTime(summary.at)}</time>
                 </div>
                 <p className="mt-2 text-sm text-[var(--lv-text-secondary)]">{summary.completedCount} / {summary.targetCount} completed</p>

@@ -310,3 +310,28 @@ export type TransferResult =
       readonly exercise: PracticeExercise;
     }
   | { readonly ok: false; readonly error: TransferError };
+
+export interface RhythmPracticeAttempt {
+  readonly id: string;
+  readonly sessionId: string;
+  readonly startedAt: string;
+  readonly completedAt: string;
+  readonly listenCount: number;
+  readonly hintLevel: HintLevel;
+  readonly rating: PracticeRating;
+  readonly mainIssue?: Extract<PracticeIssue, "rhythm" | "duration" | "recall">;
+  readonly independentSuccess: boolean;
+  readonly transferOfAttemptId?: string;
+  readonly exerciseSnapshot: RhythmPracticeExercise;
+}
+
+export interface RhythmPracticeSession {
+  readonly id: string;
+  readonly startedAt: string;
+  readonly completedAt?: string;
+  readonly targetCount: number;
+  readonly completedCount: number;
+  readonly mode: "rhythm";
+  readonly attemptIds: readonly string[];
+  readonly abandoned: boolean;
+}

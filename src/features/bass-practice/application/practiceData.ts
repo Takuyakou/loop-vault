@@ -7,9 +7,11 @@ import {
   type PracticeRating,
   type PracticeSettings,
   type ReviewQueueItem,
+  type RhythmPracticeAttempt,
 } from "../domain";
 import {
   addCompletedAttempt,
+  addCompletedRhythmAttempt,
   JsonPracticeRepository,
   PracticeRepositoryError,
   type PracticeFileV1,
@@ -87,6 +89,18 @@ export class PracticeDataController {
     });
   }
 
+  recordRhythmAttempt(attempt: RhythmPracticeAttempt): Promise<void> {
+    const operation = this.saveQueue.then(async () => {
+      if (!this.file) throw new Error("Practice progress is not ready.");
+      this.file = await this.persistMutation((file) => addCompletedRhythmAttempt(file, attempt));
+      this.publish({ status: "ready", file: this.file, quarantine: this.snapshot.quarantine });
+    });
+    this.saveQueue = operation.catch(() => undefined);
+    return operation.catch((error) => {
+      if (this.file) this.publish({ status: "ready", file: this.file, quarantine: this.snapshot.quarantine, error: errorMessage(error) });
+      throw error;
+    });
+  }
   claimNextExercise(sessionId: string, now: Date): Promise<ClaimedPracticeExercise | undefined> {
     const operation = this.saveQueue.then(async () => {
       if (!this.file) throw new Error("Practice progress is not ready.");
@@ -233,6 +247,7 @@ export function derivePracticeHomeSummary(file: PracticeFileV1, now: Date): Prac
 
 export interface PracticeHistorySummary {
   readonly id: string;
+  readonly mode?: "degree" | "rhythm";
   readonly at: string;
   readonly completedCount: number;
   readonly targetCount: number;
@@ -245,24 +260,16 @@ export interface PracticeHistorySummary {
 }
 
 export function derivePracticeHistory(file: PracticeFileV1, limit = 100): readonly PracticeHistorySummary[] {
-  const attemptById = new Map(file.attempts.map((attempt) => [attempt.id, attempt]));
-  return file.sessions.map((session) => {
-    const attempts = session.attemptIds.map((id) => attemptById.get(id)).filter((attempt): attempt is PracticeAttempt => Boolean(attempt?.completedAt && attempt.rating));
-    const ratingCounts: Record<PracticeRating, number> = { again: 0, hard: 0, good: 0, easy: 0 };
-    const issues = new Map<PracticeIssue, number>();
-    attempts.forEach((attempt) => { ratingCounts[attempt.rating!] += 1; if (attempt.mainIssue) issues.set(attempt.mainIssue, (issues.get(attempt.mainIssue) ?? 0) + 1); });
-    return {
-      id: session.id, at: session.completedAt ?? attempts[attempts.length - 1]?.completedAt ?? session.startedAt,
-      completedCount: attempts.length, targetCount: session.targetCount, ratingCounts,
-      goodOrEasyCount: ratingCounts.good + ratingCounts.easy,
-      independentSuccessCount: attempts.filter(({ independentSuccess }) => independentSuccess).length,
-      averageListenCount: attempts.length ? attempts.reduce((sum, attempt) => sum + attempt.listenCount, 0) / attempts.length : 0,
-      transferCount: attempts.filter(({ transferOfAttemptId }) => Boolean(transferOfAttemptId)).length,
-      nextFocus: [...issues.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] ?? "degree-recall",
-    };
-  }).filter(({ completedCount }) => completedCount > 0).sort((a, b) => b.at.localeCompare(a.at) || a.id.localeCompare(b.id)).slice(0, limit);
+  const summarize = <T extends { readonly id: string; readonly startedAt: string; readonly completedAt?: string; readonly targetCount: number; readonly attemptIds: readonly string[] }>(session: T, attempts: readonly (PracticeAttempt | RhythmPracticeAttempt)[], mode: "degree" | "rhythm"): PracticeHistorySummary | undefined => {
+    const byId = new Map(attempts.map((attempt) => [attempt.id, attempt]));
+    const completed = session.attemptIds.map((id) => byId.get(id)).filter((attempt): attempt is PracticeAttempt | RhythmPracticeAttempt => Boolean(attempt));
+    if (completed.length === 0) return undefined;
+    const ratingCounts: Record<PracticeRating, number> = { again: 0, hard: 0, good: 0, easy: 0 }; const issues = new Map<PracticeIssue, number>();
+    completed.forEach((attempt) => { ratingCounts[attempt.rating!] += 1; if (attempt.mainIssue) issues.set(attempt.mainIssue, (issues.get(attempt.mainIssue) ?? 0) + 1); });
+    return { id: session.id, mode, at: session.completedAt ?? completed[completed.length - 1]?.completedAt ?? session.startedAt, completedCount: completed.length, targetCount: session.targetCount, ratingCounts, goodOrEasyCount: ratingCounts.good + ratingCounts.easy, independentSuccessCount: completed.filter(({ independentSuccess }) => independentSuccess).length, averageListenCount: completed.reduce((sum, attempt) => sum + attempt.listenCount, 0) / completed.length, transferCount: completed.filter(({ transferOfAttemptId }) => Boolean(transferOfAttemptId)).length, nextFocus: [...issues.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] ?? "degree-recall" };
+  };
+  return [...file.sessions.map((session) => summarize(session, file.attempts, "degree")), ...file.rhythmSessions.map((session) => summarize(session, file.rhythmAttempts, "rhythm"))].filter((summary): summary is PracticeHistorySummary => Boolean(summary)).sort((a, b) => b.at.localeCompare(a.at) || a.id.localeCompare(b.id)).slice(0, limit);
 }
-
 export function restoreClaimedExercise(file: PracticeFileV1, sessionId: string): ClaimedPracticeExercise | undefined {
   const item = file.reviewQueue.find((candidate) => candidate.claim?.sessionId === sessionId);
   if (!item?.claim) return undefined;

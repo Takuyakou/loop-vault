@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createCompletedAttempt } from "../domain";
+import { createCompletedAttempt, generateRhythmExercise, RHYTHM_GENERATOR_VERSION, type RhythmPracticeAttempt } from "../domain";
 import { generatedExercise } from "../domain/testFixtures";
 import { addCompletedAttempt, createEmptyPracticeFile, JsonPracticeRepository, MemoryPracticeStorage, validatePracticeFile } from "../infra/repository";
 import { createPracticeControllerIfEnabled, derivePracticeHistory, derivePracticeHomeSummary, PracticeDataController, restoreClaimedExercise } from "./practiceData";
@@ -257,5 +257,16 @@ describe("Practice derived views", () => {
     const reloaded = await new JsonPracticeRepository(storage, () => now).load();
     expect(reloaded.file.sessions[0]).toMatchObject({ abandoned: true, completedAt: "2026-08-02T10:05:00.000Z" });
     expect(reloaded.file.reviewQueue.every(({ claim }) => claim === undefined)).toBe(true);
+  });
+  it("persists a canonical Rhythm self-review through the controller and exposes a distinct History summary", async () => {
+    const storage = new MemoryPracticeStorage(); const controller = new PracticeDataController(new JsonPracticeRepository(storage, () => now)); await controller.initialize();
+    const generated = generateRhythmExercise({ generatorVersion: RHYTHM_GENERATOR_VERSION, seed: "rhythm-controller", vocabularyId: "offbeat-eighth", tempo: 88, meter: { numerator: 4, denominator: 4 }, phraseBars: 1, startPositionBeats: 0, countInBars: 1, listenLimit: 2 });
+    if (!generated.ok) throw new Error(generated.error.message);
+    const rhythm: RhythmPracticeAttempt = { id: "rhythm-controller-1", sessionId: "rhythm-session", startedAt: "2026-08-02T09:59:00.000Z", completedAt: "2026-08-02T10:00:00.000Z", listenCount: 1, hintLevel: 0, rating: "good", mainIssue: "rhythm", independentSuccess: true, exerciseSnapshot: generated.exercise };
+    await controller.recordRhythmAttempt(rhythm);
+    const file = controller.getSnapshot().file!;
+    expect(file.rhythmAttempts).toHaveLength(1);
+    expect(derivePracticeHistory(file)[0]).toMatchObject({ mode: "rhythm", goodOrEasyCount: 1, nextFocus: "rhythm" });
+    expect(storage.operations).toContain("rename");
   });
 });

@@ -683,6 +683,10 @@ async function analyzeMidiPath(path: string) {
                         initialRound={practiceSession.round}
                         initialSettings={practiceData.file?.settings}
                         notice={practiceData.error}
+                        onRhythmAttemptCompleted={(attempt) => {
+                          const controller = practiceControllerRef.current;
+                          return controller ? controller.recordRhythmAttempt(attempt) : Promise.reject(new Error("Practice progress is not ready."));
+                        }}
                         onAttemptCompleted={(attempt) => {
                           const controller = practiceControllerRef.current;
                           return controller ? controller.recordAttempt(attempt) : Promise.reject(new Error("Practice progress is not ready."));
@@ -769,7 +773,7 @@ async function analyzeMidiPath(path: string) {
                 ideas={visibleIdeas}
                 language={language}
                 practiceHistory={practiceHistory}
-                practiceHistoryTotal={practiceData.file?.sessions.filter(({ completedCount }) => completedCount > 0).length ?? 0}
+                practiceHistoryTotal={practiceData.file ? practiceData.file.sessions.filter(({ completedCount }) => completedCount > 0).length + practiceData.file.rhythmSessions.filter(({ completedCount }) => completedCount > 0).length : 0}
                 openIdea={openDetail}
                 openProgression={openProgression}
               />

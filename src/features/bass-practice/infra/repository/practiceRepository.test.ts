@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { createCompletedAttempt } from "../../domain";
+import { createCompletedAttempt, generateRhythmExercise, RHYTHM_GENERATOR_VERSION, type RhythmPracticeAttempt } from "../../domain";
 import { generatedExercise } from "../../domain/testFixtures";
 import {
   addCompletedAttempt,
+  addCompletedRhythmAttempt,
   createEmptyPracticeFile,
   JsonPracticeRepository,
   MemoryPracticeStorage,
@@ -249,5 +250,25 @@ describe("JsonPracticeRepository", () => {
     await expect(repository.restoreBackup(backup.name)).rejects.toThrow("review queue");
     expect(storage.committed).toBeUndefined();
     expect([...storage.corrupt.values()]).toEqual(retainedCorrupt);
+  });
+  it("migrates legacy Practice data and atomically persists canonical Rhythm self-reviews", async () => {
+    const storage = new MemoryPracticeStorage();
+    const legacy = { ...createEmptyPracticeFile(NOW), revision: 1 } as Record<string, unknown>;
+    delete legacy.rhythmAttempts; delete legacy.rhythmSessions;
+    storage.committed = `${JSON.stringify(legacy)}\n`;
+    const repository = new JsonPracticeRepository(storage, () => NOW);
+    const loaded = await repository.load();
+    expect(loaded.file.rhythmAttempts).toEqual([]);
+    expect(loaded.file.rhythmSessions).toEqual([]);
+
+    const exercise = generateRhythmExercise({ generatorVersion: RHYTHM_GENERATOR_VERSION, seed: "persisted-rhythm", vocabularyId: "offbeat-eighth", tempo: 88, meter: { numerator: 4, denominator: 4 }, phraseBars: 1, startPositionBeats: 0, countInBars: 1, listenLimit: 2 });
+    if (!exercise.ok) throw new Error(exercise.error.message);
+    const rhythmAttempt: RhythmPracticeAttempt = { id: "rhythm-attempt-1", sessionId: "rhythm-session-1", startedAt: "2026-08-02T09:59:00.000Z", completedAt: "2026-08-02T10:00:00.000Z", listenCount: 1, hintLevel: 0, rating: "good", independentSuccess: true, exerciseSnapshot: exercise.exercise };
+    const saved = await repository.save(addCompletedRhythmAttempt(loaded.file, rhythmAttempt));
+    expect(saved.rhythmSessions).toMatchObject([{ id: "rhythm-session-1", mode: "rhythm", completedCount: 1 }]);
+    expect(storage.operations).toContain("rename");
+    const lastGood = storage.committed;
+    await expect(repository.save({ ...saved, rhythmAttempts: [{ ...saved.rhythmAttempts[0], independentSuccess: false }] })).rejects.toThrow("canonical");
+    expect(storage.committed).toBe(lastGood);
   });
 });

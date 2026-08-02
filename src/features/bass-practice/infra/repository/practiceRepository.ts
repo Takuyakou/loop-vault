@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isCanonicalRhythmAttempt, rhythmAttemptSchema, rhythmIndependentSuccess, rhythmSessionSchema } from "./rhythmSchemas";
 import { sha256Hex } from "../../../../domain/midi/fingerprint";
 import {
   deriveIndependentSuccess,
@@ -9,6 +10,8 @@ import {
   type PracticeSession,
   type PracticeSettings,
   type ReviewQueueItem,
+  type RhythmPracticeAttempt,
+  type RhythmPracticeSession,
 } from "../../domain";
 
 export const PRACTICE_DATA_PATH = "loopvault/practice-v1.json";
@@ -52,11 +55,11 @@ const queueSchema: z.ZodType<ReviewQueueItem> = z.object({
   ]), claim: z.object({ id: z.string().min(1), sessionId: z.string().min(1), claimedAt: z.string().datetime(), exercise: exerciseSchema }).strict().optional(),
 }).strict();
 
-export interface PracticeFileV1 { readonly app: "loopvault-practice"; readonly fileVersion: 1; readonly revision: number; readonly settings: PracticeSettings; readonly exercises: readonly PracticeExercise[]; readonly attempts: readonly PracticeAttempt[]; readonly sessions: readonly PracticeSession[]; readonly reviewQueue: readonly ReviewQueueItem[]; readonly updatedAt: string; }
+export interface PracticeFileV1 { readonly app: "loopvault-practice"; readonly fileVersion: 1; readonly revision: number; readonly settings: PracticeSettings; readonly exercises: readonly PracticeExercise[]; readonly attempts: readonly PracticeAttempt[]; readonly sessions: readonly PracticeSession[]; readonly reviewQueue: readonly ReviewQueueItem[]; readonly rhythmAttempts: readonly RhythmPracticeAttempt[]; readonly rhythmSessions: readonly RhythmPracticeSession[]; readonly updatedAt: string; }
 export interface PracticeQuarantine { readonly collection: "attempts"; readonly index: number; readonly issue: "invalid-schema" | "independent-success-mismatch" | "invalid-transfer-reference"; }
 export interface PracticeRecoveryMetadata { readonly kind: "invalid-json" | "invalid-schema" | "retained-corrupt"; readonly corruptPath: string; readonly backups: readonly PracticeBackupMetadata[]; }
 export interface PracticeLoadResult { readonly file: PracticeFileV1; readonly quarantine: readonly PracticeQuarantine[]; readonly created: boolean; readonly recovery?: PracticeRecoveryMetadata; }
-const envelopeSchema = z.object({ app: z.literal("loopvault-practice"), fileVersion: z.literal(1), revision: z.number().int().nonnegative(), settings: settingsSchema, exercises: z.array(exerciseSchema), attempts: z.array(z.unknown()), sessions: z.array(sessionSchema), reviewQueue: z.array(queueSchema), updatedAt: z.string().datetime() }).strict();
+const envelopeSchema = z.object({ app: z.literal("loopvault-practice"), fileVersion: z.literal(1), revision: z.number().int().nonnegative(), settings: settingsSchema, exercises: z.array(exerciseSchema), attempts: z.array(z.unknown()), sessions: z.array(sessionSchema), reviewQueue: z.array(queueSchema), rhythmAttempts: z.array(rhythmAttemptSchema).optional().default([]), rhythmSessions: z.array(rhythmSessionSchema).optional().default([]), updatedAt: z.string().datetime() }).strict();
 
 export interface PracticeStoredDocument { readonly contents: string; readonly revision: number; readonly token: string; }
 export interface PracticeBackupMetadata { readonly name: string; readonly revision: number; readonly token: string; }
@@ -214,7 +217,7 @@ export class JsonPracticeRepository {
   }
 }
 
-export function createEmptyPracticeFile(now: Date): PracticeFileV1 { return freezeFile({ app: "loopvault-practice", fileVersion: 1, revision: 0, settings: { version: 1, singEnabled: true, singingReferenceMode: "auto", stringCount: 4, handedness: "right", fretRange: { min: 0, max: 12 }, sessionTargetCount: 8 }, exercises: [], attempts: [], sessions: [], reviewQueue: [], updatedAt: now.toISOString() }); }
+export function createEmptyPracticeFile(now: Date): PracticeFileV1 { return freezeFile({ app: "loopvault-practice", fileVersion: 1, revision: 0, settings: { version: 1, singEnabled: true, singingReferenceMode: "auto", stringCount: 4, handedness: "right", fretRange: { min: 0, max: 12 }, sessionTargetCount: 8 }, exercises: [], attempts: [], sessions: [], reviewQueue: [], rhythmAttempts: [], rhythmSessions: [], updatedAt: now.toISOString() }); }
 export function addCompletedAttempt(file: PracticeFileV1, attempt: PracticeAttempt): PracticeFileV1 {
   if (!attempt.completedAt || !attempt.rating) throw new PracticeRepositoryError("invalid-data", "Only completed, self-rated attempts can be saved.");
   if (file.attempts.some(({ id }) => id === attempt.id)) throw new PracticeRepositoryError("invalid-data", `Attempt ${attempt.id} has already been saved.`);
@@ -230,6 +233,17 @@ export function addCompletedAttempt(file: PracticeFileV1, attempt: PracticeAttem
   const reviewQueue = [...acknowledgedQueue, newQueue].sort(compareQueue);
   return validatePracticeFile({ ...file, exercises, attempts, sessions, reviewQueue, updatedAt: attempt.completedAt });
 }
+export function addCompletedRhythmAttempt(file: PracticeFileV1, attempt: RhythmPracticeAttempt): PracticeFileV1 {
+  if (file.rhythmAttempts.some(({ id }) => id === attempt.id)) throw new PracticeRepositoryError("invalid-data", `Rhythm attempt ${attempt.id} has already been saved.`);
+  if (!isCanonicalRhythmAttempt(attempt) || attempt.independentSuccess !== rhythmIndependentSuccess(attempt)) throw new PracticeRepositoryError("invalid-data", "Rhythm attempt failed canonical validation.");
+  if (attempt.transferOfAttemptId && !isValidRhythmTransferReference(attempt, file.rhythmAttempts)) throw new PracticeRepositoryError("invalid-data", "Rhythm transfer source must be an earlier completed Good/Easy attempt with a changed tempo or start position.");
+  const existing = file.rhythmSessions.find(({ id }) => id === attempt.sessionId);
+  if (existing?.abandoned || existing?.completedAt || (existing && existing.completedCount >= existing.targetCount)) throw new PracticeRepositoryError("invalid-data", "Completed or abandoned Rhythm sessions cannot accept attempts.");
+  const rhythmAttempts = [...file.rhythmAttempts, attempt];
+  const rhythmSession: RhythmPracticeSession = existing ? { ...existing, completedCount: existing.completedCount + 1, completedAt: existing.completedCount + 1 >= existing.targetCount ? attempt.completedAt : undefined, attemptIds: [...existing.attemptIds, attempt.id] } : { id: attempt.sessionId, startedAt: attempt.startedAt, targetCount: file.settings.sessionTargetCount, completedCount: 1, mode: "rhythm", attemptIds: [attempt.id], abandoned: false };
+  const rhythmSessions = [...file.rhythmSessions.filter(({ id }) => id !== rhythmSession.id), rhythmSession];
+  return validatePracticeFile({ ...file, rhythmAttempts, rhythmSessions, updatedAt: attempt.completedAt });
+}
 export function validatePracticeFile(file: PracticeFileV1): PracticeFileV1 {
   const parsed = envelopeSchema.safeParse(file); if (!parsed.success) throw new PracticeRepositoryError("invalid-data", "Practice file failed strict schema validation.", parsed.error);
   const attempts = parsed.data.attempts.map((candidate, index) => { const attempt = attemptSchema.parse(candidate); if (!isAttemptSemanticallyValid(attempt)) throw new PracticeRepositoryError("invalid-data", `Attempt ${index} failed semantic validation.`); if (attempt.independentSuccess !== deriveIndependentSuccess(attempt)) throw new PracticeRepositoryError("invalid-data", `Attempt ${index} independentSuccess is not canonical.`); return attempt; });
@@ -239,7 +253,15 @@ export function validatePracticeFile(file: PracticeFileV1): PracticeFileV1 {
   const sessions = normalizeLoadedSessions(parsed.data.sessions, attempts, false);
   if (!sessions) throw new PracticeRepositoryError("invalid-data", "Practice session references are inconsistent.");
   if (!isValidPendingQueue(parsed.data.reviewQueue, attempts, sessions)) throw new PracticeRepositoryError("invalid-data", "Practice review queue is not canonical.");
-  return freezeFile({ ...parsed.data, attempts });
+  const rhythmAttempts = parsed.data.rhythmAttempts;
+  rhythmAttempts.forEach((attempt, index) => {
+    if (!isCanonicalRhythmAttempt(attempt) || attempt.independentSuccess !== rhythmIndependentSuccess(attempt)) throw new PracticeRepositoryError("invalid-data", `Rhythm attempt ${index} failed canonical validation.`);
+    if (attempt.transferOfAttemptId && !isValidRhythmTransferReference(attempt, rhythmAttempts.slice(0, index))) throw new PracticeRepositoryError("invalid-data", `Rhythm attempt ${attempt.id} has an invalid transfer reference.`);
+  });
+  if (new Set(rhythmAttempts.map(({ id }) => id)).size !== rhythmAttempts.length) throw new PracticeRepositoryError("invalid-data", "Rhythm attempt IDs must be unique.");
+  const rhythmSessions = normalizeRhythmSessions(parsed.data.rhythmSessions, rhythmAttempts);
+  if (!rhythmSessions) throw new PracticeRepositoryError("invalid-data", "Rhythm session references are inconsistent.");
+  return freezeFile({ ...parsed.data, attempts, rhythmAttempts, rhythmSessions });
 }
 function withoutClaim(item: ReviewQueueItem): ReviewQueueItem { const { claim: _claim, ...base } = item; return base; }
 function isValidPendingQueue(queue: readonly ReviewQueueItem[], attempts: readonly PracticeAttempt[], sessions: readonly PracticeSession[]): boolean {
@@ -361,6 +383,23 @@ function normalizeLoadedSessions(sessions: readonly PracticeSession[], attempts:
   }
   if (attempts.some((attempt) => !assigned.has(attempt.id))) return undefined;
   return Object.freeze(normalized);
+}
+function normalizeRhythmSessions(sessions: readonly RhythmPracticeSession[], attempts: readonly RhythmPracticeAttempt[]): readonly RhythmPracticeSession[] | undefined {
+  if (new Set(sessions.map(({ id }) => id)).size !== sessions.length) return undefined;
+  const attemptById = new Map(attempts.map((attempt) => [attempt.id, attempt])); const assigned = new Set<string>();
+  for (const session of sessions) {
+    if (new Set(session.attemptIds).size !== session.attemptIds.length || session.completedCount !== session.attemptIds.length) return undefined;
+    if (session.attemptIds.some((id) => attemptById.get(id)?.sessionId !== session.id || assigned.has(id))) return undefined;
+    session.attemptIds.forEach((id) => assigned.add(id)); const complete = session.completedCount >= session.targetCount;
+    if ((!session.abandoned && complete !== Boolean(session.completedAt)) || (session.abandoned && !session.completedAt)) return undefined;
+  }
+  return attempts.every((attempt) => assigned.has(attempt.id)) ? Object.freeze([...sessions]) : undefined;
+}
+function isValidRhythmTransferReference(attempt: RhythmPracticeAttempt, prior: readonly RhythmPracticeAttempt[]): boolean {
+  const source = prior.find(({ id }) => id === attempt.transferOfAttemptId);
+  if (!source || (source.rating !== "good" && source.rating !== "easy")) return false;
+  const from = source.exerciseSnapshot.generatorSnapshot; const to = attempt.exerciseSnapshot.generatorSnapshot;
+  return from.vocabularyId === to.vocabularyId && from.meter.numerator === to.meter.numerator && from.meter.denominator === to.meter.denominator && (from.tempo !== to.tempo || from.startPositionBeats !== to.startPositionBeats);
 }
 function isExerciseIndexValid(exercises: readonly PracticeExercise[], attempts: readonly PracticeAttempt[]): boolean {
   if (new Set(exercises.map(({ id }) => id)).size !== exercises.length) return false;
