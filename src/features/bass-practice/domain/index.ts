@@ -10,5 +10,6 @@ export * from "./rhythm";
 export * from "./singingReference";
 export * from "./stateMachine";
 export * from "./transfer";
+export * from "./vaultBassline";
 export * from "./vocabulary";
 export type * from "./types";
