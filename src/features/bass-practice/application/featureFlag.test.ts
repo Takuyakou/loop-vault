@@ -3,6 +3,7 @@ import {
   BASS_PRACTICE_DEGREE_ECHO_FEATURE_STORAGE_KEY,
   DEFAULT_BASS_PRACTICE_DEGREE_ECHO_ENABLED,
   isBassPracticeDegreeEchoEnabled,
+  isBassPracticeRhythmEchoEnabled,
 } from "./featureFlag";
 
 function storage(value: string | null) {
@@ -33,3 +34,10 @@ describe("Degree Echo feature flag", () => {
     })).toBe(false);
   });
 });
+  test("keeps Rhythm Echo separately disabled and supports its own rollback", () => {
+    const rhythmKey = "loop-vault:bass-practice-rhythm-echo-enabled:v1";
+    const rhythmStorage = (value: string | null) => ({ getItem: (key: string) => key === rhythmKey ? value : null });
+    expect(isBassPracticeRhythmEchoEnabled(rhythmStorage(null))).toBe(false);
+    expect(isBassPracticeRhythmEchoEnabled(rhythmStorage("true"))).toBe(true);
+    expect(isBassPracticeRhythmEchoEnabled(rhythmStorage("false"))).toBe(false);
+  });

@@ -33,7 +33,7 @@ import { HistoryView } from "./views/HistoryView";
 import { VaultView } from "./views/VaultView";
 import { ProgressionDetailView } from "./views/ProgressionDetailView";
 import { PracticeView } from "./views/PracticeView";
-import { isBassPracticeDegreeEchoEnabled } from "./features/bass-practice/application/featureFlag";
+import { isBassPracticeDegreeEchoEnabled, isBassPracticeRhythmEchoEnabled } from "./features/bass-practice/application/featureFlag";
 import {
   derivePracticeHistory,
   derivePracticeHomeSummary,
@@ -96,8 +96,8 @@ type View = AppView;
 const pipeline: Status[] = ["idea", "loop", "arrange", "mix", "done"];
 const DISABLED_PRACTICE_DATA: PracticeDataSnapshot = { status: "disabled", quarantine: [] };
 const BassPracticeView = lazy(async () => {
-  const module = await import("./features/bass-practice/ui/BassPracticeView");
-  return { default: module.BassPracticeView };
+  const module = await import("./features/bass-practice/ui/BassPracticeModeView");
+  return { default: module.BassPracticeModeView };
 });
 
 export function errorMessage(error: unknown, fallback: string): string {
@@ -150,7 +150,7 @@ function App() {
   const clearAnalysis = useStore(defaultVaultStore, (state) => state.clearAnalysis);
 
   const [view, setView] = useState<View>("home");
-  const [bassPracticeEnabled] = useState(isBassPracticeDegreeEchoEnabled);
+  const [bassPracticeEnabled] = useState(() => isBassPracticeDegreeEchoEnabled() || isBassPracticeRhythmEchoEnabled());
   const practiceControllerRef = useRef<PracticeDataController>();
   const pendingPracticeSessionIdRef = useRef<string>();
   const [practiceSessionGeneration, setPracticeSessionGeneration] = useState(0);

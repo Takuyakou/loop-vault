@@ -40,6 +40,7 @@ export class RhythmPlaybackController {
   dispose(): void { this.clear(); }
 
   private clear(): number {
+    if (typeof this.transport.stop !== "function" || typeof this.transport.clear !== "function") return this.generation;
     this.generation += 1;
     this.transport.stop();
     for (const id of this.ids) this.transport.clear(id);
