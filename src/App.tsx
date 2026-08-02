@@ -34,7 +34,17 @@ import { VaultView } from "./views/VaultView";
 import { ProgressionDetailView } from "./views/ProgressionDetailView";
 import { PracticeView } from "./views/PracticeView";
 import { isBassPracticeDegreeEchoEnabled } from "./features/bass-practice/application/featureFlag";
+import {
+  derivePracticeHistory,
+  derivePracticeHomeSummary,
+  createPracticeControllerIfEnabled,
+  PracticeDataController,
+  restoreClaimedExercise,
+  type PracticeDataSnapshot,
+} from "./features/bass-practice/application/practiceData";
+import { createRuntimePracticeStorage } from "./features/bass-practice/infra/repository";
 import { BassPracticeHomeCard } from "./features/bass-practice/ui/BassPracticeHomeCard";
+import { PracticeRecoveryPanel } from "./features/bass-practice/ui/PracticeRecoveryPanel";
 import {
   PracticeWorkspace,
   type PracticeWorkspaceMode,
@@ -84,6 +94,7 @@ import {
 
 type View = AppView;
 const pipeline: Status[] = ["idea", "loop", "arrange", "mix", "done"];
+const DISABLED_PRACTICE_DATA: PracticeDataSnapshot = { status: "disabled", quarantine: [] };
 const BassPracticeView = lazy(async () => {
   const module = await import("./features/bass-practice/ui/BassPracticeView");
   return { default: module.BassPracticeView };
@@ -93,6 +104,13 @@ export function errorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error) return error.message;
   if (typeof error === "string" && error.trim()) return error;
   return fallback;
+}
+
+function newPracticeSessionId(): string {
+  const id = typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+  return `practice-session:${id}`;
 }
 
 function App() {
@@ -133,6 +151,10 @@ function App() {
 
   const [view, setView] = useState<View>("home");
   const [bassPracticeEnabled] = useState(isBassPracticeDegreeEchoEnabled);
+  const practiceControllerRef = useRef<PracticeDataController>();
+  const pendingPracticeSessionIdRef = useRef<string>();
+  const [practiceSessionGeneration, setPracticeSessionGeneration] = useState(0);
+  const [practiceData, setPracticeData] = useState<PracticeDataSnapshot>(DISABLED_PRACTICE_DATA);
   const [practiceMode, setPracticeMode] = useState<PracticeWorkspaceMode>("chord-dojo");
   const [selectedId, setSelectedId] = useState<string>();
   const [selectedProgression, setSelectedProgression] = useState<{ ideaId: string; blockId: string }>();
@@ -159,6 +181,37 @@ function App() {
       .filter(isPendingDeletion),
     [undoQueue.actions],
   );
+  useEffect(() => {
+    if (!bassPracticeEnabled) {
+      practiceControllerRef.current = undefined;
+      setPracticeData(DISABLED_PRACTICE_DATA);
+      return;
+    }
+    const controller = createPracticeControllerIfEnabled(bassPracticeEnabled, createRuntimePracticeStorage)!;
+    practiceControllerRef.current = controller;
+    const unsubscribe = controller.subscribe(() => setPracticeData(controller.getSnapshot()));
+    void controller.initialize();
+    return () => { unsubscribe(); if (practiceControllerRef.current === controller) practiceControllerRef.current = undefined; };
+  }, [bassPracticeEnabled]);
+  const practiceHomeSummary = useMemo(() => practiceData.file ? derivePracticeHomeSummary(practiceData.file, new Date()) : undefined, [practiceData]);
+  const practiceHistory = useMemo(() => practiceData.file ? derivePracticeHistory(practiceData.file) : [], [practiceData]);
+  const practiceSession = useMemo(() => {
+    const file = practiceData.file;
+    const active = file?.sessions.find((session) => !session.completedAt && !session.abandoned && session.completedCount < session.targetCount);
+    if (active) pendingPracticeSessionIdRef.current = active.id;
+    else if (!pendingPracticeSessionIdRef.current) pendingPracticeSessionIdRef.current = newPracticeSessionId();
+    const selected = file?.sessions.find(({ id }) => id === pendingPracticeSessionIdRef.current);
+    return { id: pendingPracticeSessionIdRef.current!, round: (selected?.completedCount ?? 0) + 1 };
+  }, [practiceData.file, practiceSessionGeneration]);
+  const practiceClaim = useMemo(
+    () => practiceData.file ? restoreClaimedExercise(practiceData.file, practiceSession.id) : undefined,
+    [practiceData.file, practiceSession.id],
+  );
+  useEffect(() => {
+    if (bassPracticeEnabled && practiceData.status === "ready" && view === "practice" && practiceMode === "bass-practice") {
+      void practiceControllerRef.current?.ensureSession(practiceSession.id, new Date());
+    }
+  }, [bassPracticeEnabled, practiceData.status, practiceMode, practiceSession.id, view]);
   const visibleIdeas = useMemo(
     () => applyPendingDeletions(ideas, pendingDeletions, vaultEpoch),
     [ideas, pendingDeletions, vaultEpoch],
@@ -510,7 +563,7 @@ async function analyzeMidiPath(path: string) {
             {view === "home" ? (
               <HomeView
                 bassPracticeCard={bassPracticeEnabled ? (
-                  <BassPracticeHomeCard onOpen={openBassPractice} />
+                  <BassPracticeHomeCard onOpen={openBassPractice} summary={practiceHomeSummary} />
                 ) : undefined}
                 ideas={visibleIdeas}
                 monthlyGoal={settings.monthlyGoal}
@@ -624,7 +677,61 @@ async function analyzeMidiPath(path: string) {
                   onModeChange={setPracticeMode}
                   bassPractice={(
                     <Suspense fallback={<p role="status" className="py-8 text-sm text-[var(--lv-text-secondary)]">Degree Echoを読み込んでいます…</p>}>
-                      <BassPracticeView />
+                      {practiceData.status === "ready" ? <BassPracticeView
+                        key={practiceSession.id}
+                        initialClaim={practiceClaim}
+                        initialRound={practiceSession.round}
+                        initialSettings={practiceData.file?.settings}
+                        notice={practiceData.error}
+                        onAttemptCompleted={(attempt) => {
+                          const controller = practiceControllerRef.current;
+                          return controller ? controller.recordAttempt(attempt) : Promise.reject(new Error("Practice progress is not ready."));
+                        }}
+                        onSettingsChange={(next) => {
+                          const controller = practiceControllerRef.current;
+                          const current = practiceData.file?.settings;
+                          return controller && current
+                            ? controller.updateSettings({ ...current, ...next, version: 1 })
+                            : Promise.reject(new Error("Practice settings are not ready."));
+                        }}
+                        onNextExercise={() => {
+                          const controller = practiceControllerRef.current;
+                          return controller ? controller.claimNextExercise(practiceSession.id, new Date()) : Promise.reject(new Error("Practice queue is not ready."));
+                        }}
+                        onSessionAbandoned={(id) => practiceControllerRef.current?.abandonSession(id, new Date()) ?? Promise.resolve()}
+                        onSessionRestart={async () => {
+                          const controller = practiceControllerRef.current;
+                          if (!controller) throw new Error("Practice progress is not ready.");
+                          const nextSessionId = newPracticeSessionId();
+                          pendingPracticeSessionIdRef.current = nextSessionId;
+                          setPracticeSessionGeneration((generation) => generation + 1);
+                          await controller.ensureSession(nextSessionId, new Date());
+                          await controller.claimNextExercise(nextSessionId, new Date());
+                        }}
+                        sessionId={practiceSession.id}
+                        sessionTargetCount={practiceData.file?.settings.sessionTargetCount ?? 8}
+                      /> : practiceData.status === "recovery-required" ? (
+                        <PracticeRecoveryPanel
+                          backups={practiceData.backups}
+                          error={practiceData.error}
+                          onRestore={(name) => practiceControllerRef.current?.restoreBackup(name) ?? Promise.reject(new Error("Practice recovery is not ready."))}
+                          onRetry={() => practiceControllerRef.current?.retryLoad() ?? Promise.reject(new Error("Practice recovery is not ready."))}
+                          onStartFresh={() => practiceControllerRef.current?.startFresh() ?? Promise.reject(new Error("Practice recovery is not ready."))}
+                        />
+                      ) : practiceData.status === "future-version" ? (
+                        <PracticeRecoveryPanel
+                          backups={[]}
+                          error={practiceData.error}
+                          onRetry={() => practiceControllerRef.current?.retryLoad() ?? Promise.reject(new Error("Practice read-only reload is not ready."))}
+                          readOnly
+                        />
+                      ) : practiceData.status === "error" ? (
+                        <PracticeRecoveryPanel
+                          backups={[]}
+                          error={practiceData.error}
+                          onRetry={() => practiceControllerRef.current?.retryLoad() ?? Promise.reject(new Error("Practice recovery is not ready."))}
+                        />
+                      ) : <p role="status" className="py-8 text-sm text-[var(--lv-text-secondary)]">Practice progressを読み込んでいます…</p>}
                     </Suspense>
                   )}
                   chordDojo={(
@@ -661,6 +768,8 @@ async function analyzeMidiPath(path: string) {
               <HistoryView
                 ideas={visibleIdeas}
                 language={language}
+                practiceHistory={practiceHistory}
+                practiceHistoryTotal={practiceData.file?.sessions.filter(({ completedCount }) => completedCount > 0).length ?? 0}
                 openIdea={openDetail}
                 openProgression={openProgression}
               />

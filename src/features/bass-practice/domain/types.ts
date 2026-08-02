@@ -135,6 +135,7 @@ export interface PracticeAttempt {
   readonly mainIssue?: PracticeIssue;
   readonly independentSuccess: boolean;
   readonly transferOfAttemptId?: string;
+  readonly reviewQueueClaimId?: string;
   readonly exerciseSnapshot: PracticeExercise;
 }
 
@@ -170,6 +171,12 @@ export interface ReviewQueueItem {
   readonly sourceAttemptId: string;
   readonly stableOrder: number;
   readonly schedule: ReviewSchedule;
+  readonly claim?: {
+    readonly id: string;
+    readonly sessionId: string;
+    readonly claimedAt: string;
+    readonly exercise: PracticeExercise;
+  };
 }
 
 export type ReviewSchedule =

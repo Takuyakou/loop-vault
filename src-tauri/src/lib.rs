@@ -2,6 +2,7 @@ mod live_midi;
 pub mod llm;
 mod midi_export;
 mod native_drag;
+mod practice_storage;
 
 #[tauri::command]
 fn exit_app(app: tauri::AppHandle) {
@@ -14,6 +15,7 @@ pub fn run() {
         .manage(live_midi::LiveMidiState::default())
         .manage(midi_export::MidiExportState::default())
         .manage(llm::LlmState::default())
+        .manage(practice_storage::PracticeStorageState::default())
         .setup(|app| {
             midi_export::startup_cleanup(app.handle());
             Ok(())
@@ -38,6 +40,13 @@ pub fn run() {
             llm::keychain::openai_api_key_status,
             llm::keychain::set_openai_api_key,
             llm::keychain::delete_openai_api_key,
+            practice_storage::load_practice_file,
+            practice_storage::save_practice_file,
+            practice_storage::quarantine_practice_file,
+            practice_storage::list_practice_recovery_artifacts,
+            practice_storage::list_practice_backups,
+            practice_storage::read_practice_backup,
+            practice_storage::restore_practice_backup,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Loop Vault");

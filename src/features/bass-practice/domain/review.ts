@@ -35,6 +35,7 @@ export function createCompletedAttempt(input: {
   readonly mainIssue?: PracticeIssue;
   readonly responseLatencyMs?: number;
   readonly transferOfAttemptId?: string;
+  readonly reviewQueueClaimId?: string;
   readonly exercise: PracticeExercise;
 }): PracticeAttempt {
   assertIsoDate(input.startedAt, "startedAt");
@@ -66,6 +67,7 @@ export function createCompletedAttempt(input: {
     mainIssue: input.mainIssue,
     independentSuccess: deriveIndependentSuccess(facts),
     transferOfAttemptId: input.transferOfAttemptId,
+    reviewQueueClaimId: input.reviewQueueClaimId,
     exerciseSnapshot: input.exercise,
   });
 }

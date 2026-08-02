@@ -3,6 +3,7 @@ import { Activity, AudioWaveform, Dumbbell, ExternalLink, SearchX } from "lucide
 import { formatProgressionText } from "../domain/progressionText";
 import type { AppLanguage, SongIdea } from "../domain/types";
 import { Button, EmptyState, Surface } from "../components/ui";
+import type { PracticeHistorySummary } from "../features/bass-practice/application";
 
 type HistoryEventType = "capture" | "idea-update" | "practice" | "status";
 
@@ -20,11 +21,15 @@ interface HistoryEvent {
 export function HistoryView({
   ideas,
   language,
+  practiceHistory = [],
+  practiceHistoryTotal = practiceHistory.length,
   openIdea,
   openProgression,
 }: {
   ideas: readonly SongIdea[];
   language: AppLanguage;
+  practiceHistory?: readonly PracticeHistorySummary[];
+  practiceHistoryTotal?: number;
   openIdea: (ideaId: string) => void;
   openProgression: (ideaId: string, blockId: string) => void;
 }) {
@@ -41,6 +46,13 @@ export function HistoryView({
         .some((value) => value.toLocaleLowerCase().includes(normalized));
     });
   }, [events, filter, query]);
+  const visiblePracticeHistory = useMemo(() => {
+    if (filter !== "all" && filter !== "practice") return [];
+    const normalized = query.trim().toLocaleLowerCase();
+    if (!normalized) return practiceHistory;
+    return practiceHistory.filter((summary) => ["bass practice", "degree echo", "self-rated", summary.nextFocus]
+      .some((value) => value.toLocaleLowerCase().includes(normalized)));
+  }, [filter, practiceHistory, query]);
   const groups = useMemo(() => groupByDate(visible, language), [language, visible]);
 
   return (
@@ -80,17 +92,40 @@ export function HistoryView({
       </Surface>
 
       <p className="mt-3 text-xs text-[var(--lv-text-muted)]" role="status" aria-live="polite">
-        {text.count(visible.length)}
+        {text.count(visible.length + visiblePracticeHistory.length)}
       </p>
 
-      {groups.length === 0 ? (
+      {visiblePracticeHistory.length ? (
+        <section className="mt-4" aria-labelledby="bass-practice-history-title" data-testid="bass-practice-history">
+          <h3 id="bass-practice-history-title" className="mb-2 text-xs font-semibold uppercase text-[var(--lv-text-muted)]">Bass Practice · Self-rated</h3>
+          <div className="grid gap-3 lg:grid-cols-2">
+            {visiblePracticeHistory.map((summary) => (
+              <Surface key={summary.id} className="p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <strong>Degree Echo</strong>
+                  <time className="text-xs text-[var(--lv-text-muted)]" dateTime={summary.at}>{formatTime(summary.at)}</time>
+                </div>
+                <p className="mt-2 text-sm text-[var(--lv-text-secondary)]">{summary.completedCount} / {summary.targetCount} completed</p>
+                <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">Self-rated Good or Easy: {summary.goodOrEasyCount}</p>
+                <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">Self-rated independent: {summary.independentSuccessCount}</p>
+                <p className="mt-1 text-xs text-[var(--lv-text-muted)]">Average listens: {summary.averageListenCount.toFixed(1)} · Transfers: {summary.transferCount} · Next focus: {summary.nextFocus}</p>
+              </Surface>
+            ))}
+          </div>
+          {practiceHistoryTotal > visiblePracticeHistory.length ? (
+            <p className="mt-3 text-xs text-[var(--lv-text-muted)]">Showing the latest {visiblePracticeHistory.length} of {practiceHistoryTotal} saved Practice sessions.</p>
+          ) : null}
+        </section>
+      ) : null}
+
+      {groups.length === 0 && visiblePracticeHistory.length === 0 ? (
         <EmptyState
           className="mt-4"
           icon={<SearchX aria-hidden="true" size={20} />}
           title={events.length === 0 ? text.empty : text.noMatches}
           description={events.length === 0 ? text.emptyDescription : text.noMatchesDescription}
         />
-      ) : (
+      ) : groups.length ? (
         <div className="mt-4 space-y-5">
           {groups.map((group) => (
             <section key={group.key} aria-labelledby={`history-date-${group.key}`}>
@@ -112,7 +147,7 @@ export function HistoryView({
             </section>
           ))}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

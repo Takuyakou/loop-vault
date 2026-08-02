@@ -1,7 +1,8 @@
 import { ArrowRight, Headphones } from "lucide-react";
 import { Button, Surface } from "../../../components/ui";
+import type { PracticeHomeSummary } from "../application";
 
-export function BassPracticeHomeCard({ onOpen }: { onOpen: () => void }) {
+export function BassPracticeHomeCard({ onOpen, summary }: { onOpen: () => void; summary?: PracticeHomeSummary }) {
   return (
     <Surface className="p-4" aria-labelledby="bass-practice-home-title" data-testid="bass-practice-home-card">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -12,10 +13,10 @@ export function BassPracticeHomeCard({ onOpen }: { onOpen: () => void }) {
           <div className="min-w-0">
             <p className="lv-section-kicker">今日のベース練習</p>
             <h2 id="bass-practice-home-title" className="mt-1 text-base font-semibold text-[var(--lv-text)]">
-              最初のDegree Echoセッションを始める
+              {summary?.firstRun ? "最初のDegree Echoセッションを始める" : `Degree Echo: 復習 ${summary?.dueCount ?? 0}問`}
             </h2>
             <p className="mt-1 text-xs leading-5 text-[var(--lv-text-muted)]">
-              聴く・歌う・度数で考える・弾く。自己評価式で、自動採点ではありません。
+              自己評価式 · 今日 {summary?.completedToday ?? 0}問完了 · 次の焦点: {summary?.nextFocus ?? "degree recall"}。自動採点ではありません。
             </p>
           </div>
         </div>

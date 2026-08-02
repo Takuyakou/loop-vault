@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
 } from "react";
@@ -24,18 +25,21 @@ import {
   type GeneratorSnapshot,
   type Handedness,
   type PracticeExercise,
+  type PracticeAttempt,
   type PracticeIssue,
   type PracticeRating,
+  type PracticeSettings,
   type SingingReferenceMode,
   type StringCount,
 } from "../domain";
 import {
+  type ClaimedPracticeExercise,
   degreeHintDisclosure,
   DegreePracticeSession,
 } from "../application";
 import { DegreeFretboard } from "./DegreeFretboard";
 
-interface DegreeUiSettings {
+export interface DegreeUiSettings {
   readonly stringCount: StringCount;
   readonly handedness: Handedness;
   readonly fretRange: { readonly min: number; readonly max: number };
@@ -68,12 +72,37 @@ const ISSUES: readonly { value: PracticeIssue; label: string }[] = [
 
 const FLOW_STEPS = ["Listen", "Sing", "Think", "Play", "Review", "Transfer"] as const;
 
-export function BassPracticeView() {
-  const [settings, setSettings] = useState<DegreeUiSettings>(DEFAULT_SETTINGS);
-  const [round, setRound] = useState(1);
+export function BassPracticeView({ initialClaim, initialRound = 1, initialSettings, notice, onAttemptCompleted, onNextExercise, onSessionAbandoned, onSessionRestart, onSettingsChange, sessionId, sessionTargetCount = 8 }: {
+  initialClaim?: ClaimedPracticeExercise;
+  initialRound?: number;
+  initialSettings?: PracticeSettings;
+  notice?: string;
+  onAttemptCompleted?: (attempt: PracticeAttempt) => Promise<void>;
+  onNextExercise?: () => Promise<ClaimedPracticeExercise | undefined>;
+  onSessionAbandoned?: (sessionId: string) => Promise<void>;
+  onSessionRestart?: () => Promise<void>;
+  onSettingsChange?: (settings: DegreeUiSettings) => Promise<void>;
+  sessionId?: string;
+  sessionTargetCount?: number;
+}) {
+  const [settings, setSettings] = useState<DegreeUiSettings>(() => initialSettings ? {
+    stringCount: initialSettings.stringCount, handedness: initialSettings.handedness,
+    fretRange: initialSettings.fretRange, singEnabled: initialSettings.singEnabled,
+    singingReferenceMode: initialSettings.singingReferenceMode,
+  } : DEFAULT_SETTINGS);
+  const [settingsError, setSettingsError] = useState<string>();
+  const [round, setRound] = useState(initialRound);
+  const [queuedClaim, setQueuedClaim] = useState<ClaimedPracticeExercise | undefined>(initialClaim);
+  const [sessionCompletedCount, setSessionCompletedCount] = useState(Math.max(0, initialRound - 1));
+  const activeSessionId = useMemo(() => sessionId ?? uniqueId("session"), [sessionId]);
+  const abandonHandlerRef = useRef(onSessionAbandoned);
+  const advancingRef = useRef(false);
+  useEffect(() => { if (initialClaim) setQueuedClaim(initialClaim); }, [initialClaim]);
+  useEffect(() => { abandonHandlerRef.current = onSessionAbandoned; }, [onSessionAbandoned]);
+  useEffect(() => () => { void abandonHandlerRef.current?.(activeSessionId); }, [activeSessionId]);
   const generation = useMemo(
-    () => generateDegreeExercise(createGeneratorSnapshot(settings, round)),
-    [round, settings],
+    () => queuedClaim ? { ok: true as const, exercise: queuedClaim.exercise } : generateDegreeExercise(createGeneratorSnapshot(settings, round)),
+    [queuedClaim, round, settings],
   );
 
   if (!generation.ok) {
@@ -88,23 +117,64 @@ export function BassPracticeView() {
     <DegreeSessionWorkspace
       key={generation.exercise.id}
       exercise={generation.exercise}
-      onNext={() => setRound((current) => current + 1)}
-      onSettingsChange={setSettings}
+      claimedTransferOfAttemptId={queuedClaim?.transferOfAttemptId}
+      reviewQueueClaimId={queuedClaim?.claimId}
+      onAttemptCompleted={async (attempt) => { await onAttemptCompleted?.(attempt); setSessionCompletedCount((count) => count + 1); }}
+      onNext={() => { void (async () => {
+        if (advancingRef.current) return; advancingRef.current = true;
+        try {
+          if (sessionCompletedCount >= sessionTargetCount && onSessionRestart) {
+            await onSessionRestart();
+            return;
+          }
+          if (sessionCompletedCount >= sessionTargetCount) setSessionCompletedCount(0);
+          setQueuedClaim(await onNextExercise?.()); setRound((current) => current + 1);
+        } catch (caught) {
+          setSettingsError(caught instanceof Error ? caught.message : "The next Practice exercise could not be prepared.");
+        } finally { advancingRef.current = false; }
+      })(); }}
+      externalError={settingsError ?? notice}
+      onSettingsChange={(next) => {
+        const previous = settings;
+        setSettings(next);
+        setSettingsError(undefined);
+        void onSettingsChange?.(next).catch((caught) => {
+          setSettings(previous);
+          setSettingsError(caught instanceof Error ? caught.message : "Practice settings could not be saved.");
+        });
+      }}
       settings={settings}
+      sessionId={activeSessionId}
+      sessionCompletedCount={sessionCompletedCount}
+      sessionTargetCount={sessionTargetCount}
     />
   );
 }
 
 function DegreeSessionWorkspace({
+  claimedTransferOfAttemptId,
   exercise,
+  externalError,
+  onAttemptCompleted,
   onNext,
   onSettingsChange,
+  reviewQueueClaimId,
   settings,
+  sessionId,
+  sessionCompletedCount,
+  sessionTargetCount,
 }: {
+  claimedTransferOfAttemptId?: string;
   exercise: PracticeExercise;
+  externalError?: string;
+  onAttemptCompleted?: (attempt: PracticeAttempt) => Promise<void>;
   onNext: () => void;
   onSettingsChange: (settings: DegreeUiSettings) => void;
+  reviewQueueClaimId?: string;
   settings: DegreeUiSettings;
+  sessionId: string;
+  sessionCompletedCount: number;
+  sessionTargetCount: number;
 }) {
   const session = useMemo(
     () => new DegreePracticeSession({ exercise, singEnabled: settings.singEnabled }),
@@ -117,6 +187,10 @@ function DegreeSessionWorkspace({
   const activeExercise = sessionSnapshot.exercise;
   const [draftRating, setDraftRating] = useState<PracticeRating>();
   const [draftIssue, setDraftIssue] = useState<PracticeIssue>();
+  const [savedAttempt, setSavedAttempt] = useState<PracticeAttempt>();
+  const [savingReview, setSavingReview] = useState(false);
+  const savingReviewRef = useRef(false);
+  const attemptStartedAt = useMemo(() => new Date().toISOString(), [activeExercise.id]);
   const [error, setError] = useState<string>();
   const [transferRelation, setTransferRelation] = useState<{
     readonly sourceAttemptId: string;
@@ -147,10 +221,31 @@ function DegreeSessionWorkspace({
     }
   }, [applyResult]);
 
-  const rate = useCallback((rating: PracticeRating) => {
+  const rate = useCallback(async (rating: PracticeRating) => {
+    if (savingReviewRef.current) return;
     setDraftRating(rating);
-    applyResult(session.transitionAction({ type: "RATE", rating, mainIssue: draftIssue }));
-  }, [applyResult, draftIssue, session]);
+    const completedAt = new Date().toISOString();
+    const attempt = createCompletedAttempt({
+      id: uniqueId("attempt"), sessionId, startedAt: attemptStartedAt, completedAt,
+      listenCount: state.listenCount, hintLevel: state.hintLevel, singSkipped: state.singSkipped,
+      singGateCompleted: state.singGateCompleted, rating, mainIssue: draftIssue,
+      transferOfAttemptId: transferRelation?.sourceAttemptId ?? claimedTransferOfAttemptId,
+      reviewQueueClaimId: transferRelation ? undefined : reviewQueueClaimId,
+      exercise: activeExercise,
+    });
+    setSavingReview(true);
+    savingReviewRef.current = true;
+    try {
+      await onAttemptCompleted?.(attempt);
+      setSavedAttempt(attempt);
+      applyResult(session.transitionAction({ type: "RATE", rating, mainIssue: draftIssue }));
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Practice progress could not be saved. Your review is still available.");
+    } finally {
+      setSavingReview(false);
+      savingReviewRef.current = false;
+    }
+  }, [activeExercise, applyResult, attemptStartedAt, claimedTransferOfAttemptId, draftIssue, onAttemptCompleted, reviewQueueClaimId, savingReview, session, sessionId, state, transferRelation]);
 
   const nextHint = useCallback(() => {
     applyResult(session.nextHint());
@@ -161,20 +256,10 @@ function DegreeSessionWorkspace({
   }, [runPlayback, session]);
 
   const beginTransfer = useCallback(() => {
+    if (sessionCompletedCount >= sessionTargetCount) return;
     if (state.rating !== "good" && state.rating !== "easy") return;
-    const sourceAttempt = createCompletedAttempt({
-      id: `ui-transfer-source:${exercise.id}`,
-      sessionId: `ui-session:${exercise.id}`,
-      startedAt: "2026-01-01T00:00:00.000Z",
-      completedAt: "2026-01-01T00:01:00.000Z",
-      listenCount: state.listenCount,
-      hintLevel: state.hintLevel,
-      singSkipped: state.singSkipped,
-      singGateCompleted: state.singGateCompleted,
-      rating: state.rating,
-      mainIssue: state.mainIssue,
-      exercise,
-    });
+    const sourceAttempt = savedAttempt;
+    if (!sourceAttempt) return;
     const transfer = ["G", "D", "A", "F", "Bb"]
       .filter((key) => key !== exercise.tonalContext.key)
       .map((targetKey) => deriveTransferExercise(sourceAttempt, { targetKey }))
@@ -191,7 +276,7 @@ function DegreeSessionWorkspace({
       targetKey: transfer.exercise.tonalContext.key,
     });
     applyResult(session.beginTransfer(transfer.exercise));
-  }, [applyResult, exercise, session, state]);
+  }, [applyResult, exercise, savedAttempt, session, sessionCompletedCount, sessionTargetCount, state]);
 
   const primaryAction = (() => {
     switch (state.status) {
@@ -212,11 +297,13 @@ function DegreeSessionWorkspace({
       case "review":
         return {
           label: "自己評価を確定",
-          disabled: draftRating === undefined,
-          action: () => draftRating ? rate(draftRating) : undefined,
+          disabled: draftRating === undefined || savingReview,
+          action: () => draftRating ? void rate(draftRating) : undefined,
         };
       case "transfer-offer":
-        return { label: "別KeyへTransfer", disabled: false, action: beginTransfer };
+        return sessionCompletedCount >= sessionTargetCount
+          ? { label: "セッション結果を見る", disabled: false, action: () => applyResult(session.transitionAction({ type: "DECLINE_TRANSFER" })) }
+          : { label: "別KeyへTransfer", disabled: false, action: beginTransfer };
       case "transfer":
         return {
           label: "Transfer演奏を完了",
@@ -224,7 +311,7 @@ function DegreeSessionWorkspace({
           action: () => applyResult(session.completeTransferUserAttempt()),
         };
       case "completed":
-        return { label: "次の問題", disabled: false, action: onNext };
+        return { label: sessionCompletedCount >= sessionTargetCount ? "次のセッションを始める" : "次の問題", disabled: false, action: onNext };
       case "abandoned":
         return undefined;
     }
@@ -248,7 +335,7 @@ function DegreeSessionWorkspace({
       else if (key === "r" && (state.status === "recall" || state.status === "thinking")) replay();
       else if (key === "h" && ["recall", "singing", "thinking", "playing"].includes(state.status)) nextHint();
       else if (key === "s" && state.status === "singing" && session.isSingingCompletionAvailable()) applyResult(session.completeSinging());
-      else if (["1", "2", "3", "4"].includes(key) && state.status === "review") rate(RATINGS[Number(key) - 1].value);
+      else if (["1", "2", "3", "4"].includes(key) && state.status === "review") void rate(RATINGS[Number(key) - 1].value);
       else if (key === "n" && state.status === "completed") onNext();
       else if (key === "t" && state.status === "transfer-offer") beginTransfer();
       else if (key === "escape") session.stopPlayback();
@@ -298,6 +385,14 @@ function DegreeSessionWorkspace({
           </li>
         ))}
       </ol>
+
+      {state.status === "completed" && sessionCompletedCount >= sessionTargetCount ? (
+        <Surface className="p-4" data-testid="degree-session-summary">
+          <p className="lv-section-kicker">Session summary · Self-rated</p>
+          <h3 className="mt-1 font-semibold">{sessionCompletedCount} / {sessionTargetCount} exercises completed</h3>
+          <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">Saved locally. This is your manual review history, not an automatic score.</p>
+        </Surface>
+      ) : null}
 
       <p
         className="sr-only"
@@ -385,7 +480,7 @@ function DegreeSessionWorkspace({
             />
           ) : null}
 
-          {error ? <StatusMessage className="mt-4" title="操作を完了できませんでした" tone="error">{error}</StatusMessage> : null}
+          {error || externalError ? <StatusMessage className="mt-4" title="操作を完了できませんでした" tone="error">{error ?? externalError}</StatusMessage> : null}
 
           <div className="mt-5 flex flex-col-reverse gap-3 border-t border-[var(--lv-border)] pt-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap gap-2">
@@ -644,4 +739,11 @@ function statusAnnouncement(status: ReturnType<DegreePracticeSession["getState"]
 function isEditableTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   return Boolean(target.closest("input, textarea, select, [contenteditable='true']"));
+}
+
+function uniqueId(prefix: string): string {
+  const value = typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+  return `${prefix}:${value}`;
 }
