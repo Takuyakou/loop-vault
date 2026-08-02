@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "upstreamCommit": "8dcb7ea9116f417273ef8c030d15e7b3aa654301",
+  "assets": [
+    {
+      "path": "samples/finger/finger-28.wav",
+      "bytes": 506316,
+      "sha256": "3825e69ccc90ef5b29bd422169fc7d3eb768838d950a06789b6d0993f689868c"
+    },
+    {
+      "path": "samples/finger/finger-29.wav",
+      "bytes": 305708,
+      "sha256": "de6db472af92251308f86a3a11c44da12a869259cb9d5ea5b9532a04f89f6aca"
+    },
+    {
+      "path": "samples/finger/finger-30.wav",
+      "bytes": 375340,
+      "sha256": "b060179f872fe7f542b5a8db92cfb40da9f3eb856b3ccef9ef202668bea29127"
+    },
+    {
+      "path": "samples/finger/finger-31.wav",
+      "bytes": 417836,
+      "sha256": "34b3e1f8fab6ebcf9042c7ea29affd039b86ad170234afb09f845f3e63284108"
+    },
+    {
+      "path": "samples/finger/finger-32.wav",
+      "bytes": 361228,
+      "sha256": "b364d48c3ec1edfb30b5bdcbd8d1c2cf36cdbf778461418e6524704749d6e66e"
+    },
+    {
+      "path": "samples/finger/finger-33.wav",
+      "bytes": 357194,
+      "sha256": "e0043477b587c30b681ba637b6bb4a52da71d536d18b68b89e80c6609f279637"
+    },
+    {
+      "path": "samples/finger/finger-34.wav",
+      "bytes": 341036,
+      "sha256": "ebb7c42d0f09537a31f03d950d710dcfd6f514616670c87c69ff1a25428da911"
+    },
+    {
+      "path": "samples/finger/finger-35.wav",
+      "bytes": 314636,
+      "sha256": "32c447904159bb705e975f880aa7c39ec48b15bfbc4cc2454036f8f9e1c75538"
+    },
+    {
+      "path": "samples/finger/finger-36.wav",
+      "bytes": 280780,
+      "sha256": "2f95cefffd22b643b848d8a60d4d207f6efd999ffe21b287ab803bfa350936e7"
+    },
+    {
+      "path": "samples/finger/finger-37.wav",
+      "bytes": 256236,
+      "sha256": "3c20e69f10853291718ba1dad1b21615949e799b7a8040d9db101352c84a8598"
+    },
+    {
+      "path": "samples/finger/finger-38.wav",
+      "bytes": 227150,
+      "sha256": "ec58b6f543d4b6efe7ecb73c5dfd2843afcc64e8e04ce49c81d73cdfdf6539c0"
+    },
+    {
+      "path": "samples/finger/finger-39.wav",
+      "bytes": 475020,
+      "sha256": "4e6f3f1412ad510bd0a3cc661d6adee2730c1ab9b2dbcd88a1af850dee3f7e25"
+    },
+    {
+      "path": "samples/pick/pick-28.wav",
+      "bytes": 404844,
+      "sha256": "c16a088071133cc7ff4824b5995d0405c6a8f3b6348a4321acd31fcf77774369"
+    },
+    {
+      "path": "samples/pick/pick-29.wav",
+      "bytes": 344108,
+      "sha256": "544c5cc57deaaa7ad475214cff38ac635b7c0f647b8e833c592333a2d627d2b2"
+    },
+    {
+      "path": "samples/pick/pick-30.wav",
+      "bytes": 346156,
+      "sha256": "f9c5b44e7f81688eab1353adb8d351bbf099375db08e2a6c314ef9431200407c"
+    },
+    {
+      "path": "samples/pick/pick-31.wav",
+      "bytes": 286588,
+      "sha256": "774b00d3d50e2fb236583866ee7f30bcd5b1de41619749ca9f3ef83977c0f784"
+    },
+    {
+      "path": "samples/pick/pick-32.wav",
+      "bytes": 271388,
+      "sha256": "59f47a253fbf6e2aa870200836e7643b45f8d6962202db5294a7a7d119833418"
+    },
+    {
+      "path": "samples/pick/pick-33.wav",
+      "bytes": 307692,
+      "sha256": "fb8255864c669cded57943d5c0d5d08156d29e27d3f98d76d076e0c98a4620e8"
+    },
+    {
+      "path": "samples/pick/pick-34.wav",
+      "bytes": 266508,
+      "sha256": "848b2005049e5ef6a90bb86d2168451e009efc09f7e4933d222d848d20ba3de1"
+    },
+    {
+      "path": "samples/pick/pick-35.wav",
+      "bytes": 248692,
+      "sha256": "183997d3da5cfa43fd930893c63771fd091a992cd97c961f632b2cbdc647bce2"
+    },
+    {
+      "path": "samples/pick/pick-36.wav",
+      "bytes": 230444,
+      "sha256": "916f69041c181d838f29ad5594ca999f0089e35e73e3a5253591d1f9e071725e"
+    },
+    {
+      "path": "samples/pick/pick-37.wav",
+      "bytes": 241708,
+      "sha256": "311d7f7086668276a03d6f6652339204c967c4c69305f05f1d91d3fe954d0778"
+    },
+    {
+      "path": "samples/pick/pick-38.wav",
+      "bytes": 218976,
+      "sha256": "88871b46b32926d0339c7f845f5a9dcb6de3de4978d8a32ba54ee70be0c5c77d"
+    },
+    {
+      "path": "samples/pick/pick-39.wav",
+      "bytes": 202204,
+      "sha256": "78b3c3de40258915d95821d076e63acd62d13843ab6258f9d4dc817ebefcc5e7"
+    },
+    {
+      "path": "samples/pick/pick-40.wav",
+      "bytes": 156460,
+      "sha256": "c5e725d19b8189e8c00070acbb543ddad1b57ccf289378900c31d81d09d9b42d"
+    }
+  ],
+  "manifestSha256": "a702cbe5c45501abb1656e475e9f64f61e84ddb5518935a301504abf3180dc99"
+}
