@@ -33,7 +33,7 @@ import { HistoryView } from "./views/HistoryView";
 import { VaultView } from "./views/VaultView";
 import { ProgressionDetailView } from "./views/ProgressionDetailView";
 import { PracticeView } from "./views/PracticeView";
-import { isBassPracticeDegreeEchoEnabled, isBassPracticeRhythmEchoEnabled } from "./features/bass-practice/application/featureFlag";
+import { isBassPracticeBasslineEchoEnabled, isBassPracticeDegreeEchoEnabled, isBassPracticeRhythmEchoEnabled } from "./features/bass-practice/application/featureFlag";
 import {
   derivePracticeHistory,
   derivePracticeHomeSummary,
@@ -150,7 +150,7 @@ function App() {
   const clearAnalysis = useStore(defaultVaultStore, (state) => state.clearAnalysis);
 
   const [view, setView] = useState<View>("home");
-  const [bassPracticeEnabled] = useState(() => isBassPracticeDegreeEchoEnabled() || isBassPracticeRhythmEchoEnabled());
+  const [bassPracticeEnabled] = useState(() => isBassPracticeDegreeEchoEnabled() || isBassPracticeRhythmEchoEnabled() || isBassPracticeBasslineEchoEnabled());
   const practiceControllerRef = useRef<PracticeDataController>();
   const pendingPracticeSessionIdRef = useRef<string>();
   const [practiceSessionGeneration, setPracticeSessionGeneration] = useState(0);
@@ -373,7 +373,7 @@ function App() {
 
   function openPractice(ideaId: string, blockId: string) {
     setPracticeTarget({ ideaId, blockId });
-    setPracticeMode("chord-dojo");
+    setPracticeMode(bassPracticeEnabled ? "bass-practice" : "chord-dojo");
     setView("practice");
   }
 
