@@ -10,12 +10,30 @@ import { BassPracticeModeView } from "./BassPracticeModeView";
 let root: Root | undefined;
 afterEach(async () => { await act(async () => root?.unmount()); root = undefined; localStorage.clear(); document.body.replaceChildren(); });
 
-describe("Rhythm Echo mode", () => {
-  test("is separately gated and keeps its visual grid hidden until Hint 4", async () => {
-    localStorage.setItem("loop-vault:bass-practice-rhythm-echo-enabled:v1", "true");
+describe("Bass Practice production modes", () => {
+  test("ships all three modes and keeps an active Degree session mounted while changing tabs", async () => {
     const container = document.createElement("div"); document.body.append(container); root = createRoot(container);
     await act(async () => root?.render(<BassPracticeModeView />));
+    const degree = container.querySelector("[data-testid='degree-echo-view']");
+    expect(degree).not.toBeNull();
+    expect(Array.from(container.querySelectorAll("[role='tab']")).map((tab) => tab.textContent)).toEqual([
+      "Degree Echo", "Rhythm Echo", "Bassline Echo",
+    ]);
+
     await act(async () => Array.from(container.querySelectorAll("button")).find((button) => button.textContent === "Rhythm Echo")?.click());
+    expect(container.querySelector("[data-testid='rhythm-echo-view']")).not.toBeNull();
+    expect(container.querySelector("[data-testid='degree-echo-view']")).toBe(degree);
+    expect((degree?.parentElement as HTMLDivElement).hidden).toBe(true);
+
+    await act(async () => Array.from(container.querySelectorAll("button")).find((button) => button.textContent === "Degree Echo")?.click());
+    expect((degree?.parentElement as HTMLDivElement).hidden).toBe(false);
+  });
+
+  test("keeps Rhythm Echo available independently and hides its visual grid until Hint 4", async () => {
+    localStorage.setItem("loop-vault:bass-practice-degree-echo-enabled:v1", "false");
+    localStorage.setItem("loop-vault:bass-practice-bassline-echo-enabled:v1", "false");
+    const container = document.createElement("div"); document.body.append(container); root = createRoot(container);
+    await act(async () => root?.render(<BassPracticeModeView />));
     expect(container.querySelector("[data-testid='rhythm-echo-view']")).not.toBeNull();
     expect(container.querySelector("[data-testid='rhythm-grid']")?.textContent).toContain("hidden");
     for (let index = 0; index < 4; index += 1) await act(async () => Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("Hint"))?.click());

@@ -93,6 +93,7 @@ test.describe.serial("Phase 5.13 visual evidence", () => {
 
     await page.locator("[data-progression-detail-view]")
       .getByRole("button", { name: /練習する|Practice/ }).click();
+    await page.getByRole("tab", { name: "Chord Dojo" }).click();
     await expect(page.getByTestId("practice-layout")).toBeVisible();
     await evidence(page, "practice");
     await expect(page).toHaveScreenshot("practice.png", { fullPage: true });

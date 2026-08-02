@@ -2,37 +2,41 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { assertNoHorizontalOverflow, openApp } from "./helpers/app";
 
-const featureKey = "loop-vault:bass-practice-degree-echo-enabled:v1";
+const bassPracticeFeatureKeys = [
+  "loop-vault:bass-practice-degree-echo-enabled:v1",
+  "loop-vault:bass-practice-rhythm-echo-enabled:v1",
+  "loop-vault:bass-practice-bassline-echo-enabled:v1",
+] as const;
 
-async function enableDegreeEcho(page: Page) {
-  await page.addInitScript(({ key }) => localStorage.setItem(key, "true"), {
-    key: featureKey,
+async function disableBassPractice(page: Page) {
+  await page.addInitScript(({ keys }) => keys.forEach((key) => localStorage.setItem(key, "false")), {
+    keys: bassPracticeFeatureKeys,
   });
 }
 
 async function openDegreeEcho(page: Page) {
-  await enableDegreeEcho(page);
   await openApp(page);
   await page.getByTestId("bass-practice-home-card")
-    .getByRole("button", { name: "練習を開く" })
+    .getByRole("button")
     .click();
   await expect(page.getByTestId("degree-echo-view")).toBeVisible();
 }
 
-test("Degree Echo is disabled by default and leaves Chord Dojo navigation unchanged", async ({ page }) => {
+test("explicit Bass Practice rollback leaves Chord Dojo navigation unchanged", async ({ page }) => {
+  await disableBassPractice(page);
   await openApp(page);
   await expect(page.getByTestId("bass-practice-home-card")).toHaveCount(0);
   await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
   await expect(page.getByRole("tab", { name: "Bass Practice" })).toHaveCount(0);
 });
 
-test("Degree Echo exposes an honest accessible setup without future modes", async ({ page }) => {
+test("Degree Echo exposes an honest accessible setup with the shipped P5.16 modes", async ({ page }) => {
   await openDegreeEcho(page);
   const view = page.getByTestId("degree-echo-view");
   await expect(view).toContainText("自己評価");
   await expect(view).toContainText("自動採点ではありません");
-  await expect(view).not.toContainText("Rhythm Echo");
-  await expect(view).not.toContainText("Bassline Echo");
+  await expect(page.getByRole("tab", { name: "Rhythm Echo" })).toBeVisible();
+  await expect(page.getByRole("tab", { name: "Bassline Echo" })).toBeVisible();
   await expect(view.locator("[data-primary-action]")).toHaveCount(1);
 
   const axe = await new AxeBuilder({ page: page as never })
