@@ -1,0 +1,6 @@
+import { describe, expect, it } from "vitest";
+import { makeChordSymbol } from "../../../domain/chords";
+import { createVaultBasslineExercise } from "./vaultBassline";
+
+const block = { id: "block-1", summaryText: "ii-V-I", detectedKey: "C major", bpm: 100, chords: [{ bar: 1, beat: 1, durationBeats: 2, chord: makeChordSymbol(2, "min7") }, { bar: 1, beat: 3, durationBeats: 2, chord: makeChordSymbol(7, "dom7") }, { bar: 2, beat: 1, durationBeats: 4, chord: makeChordSymbol(0, "maj7") }] } as never;
+describe("Vault Bassline snapshot", () => { it("is read-only deterministic and omits private source fields", () => { const result = createVaultBasslineExercise(block, "vault-seed", 2); expect(result.ok).toBe(true); if (!result.ok) return; expect(result.exercise.source).toEqual({ kind: "vault", referenceId: "block-1", label: "ii-V-I" }); expect(JSON.stringify(result.exercise)).not.toMatch(/sourceFileName|memo|sourceAssetId/); expect(createVaultBasslineExercise(block, "vault-seed", 2)).toEqual(result); }); it("handles unavailable and unsupported sources explicitly", () => { expect(createVaultBasslineExercise(undefined, "x", 1)).toMatchObject({ ok: false, error: { code: "source-unavailable" } }); expect(createVaultBasslineExercise({ ...block, detectedKey: undefined }, "x", 1)).toMatchObject({ ok: false, error: { code: "unsupported-source" } }); }); });
