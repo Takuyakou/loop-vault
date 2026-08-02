@@ -133,3 +133,24 @@ for (const viewport of [
     expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(viewport.width + 1);
   });
 }
+
+test("Degree Echo remains operable at Windows 200% scale", async ({ browser }) => {
+  const context = await browser.newContext({
+    baseURL: "http://127.0.0.1:4174",
+    colorScheme: "dark",
+    deviceScaleFactor: 2,
+    locale: "ja-JP",
+    viewport: { width: 1024, height: 720 },
+  });
+  try {
+    const page = await context.newPage();
+    await openDegreeEcho(page);
+    await assertNoHorizontalOverflow(page);
+    const primary = page.locator("[data-primary-action]");
+    await primary.scrollIntoViewIfNeeded();
+    await expect(primary).toBeVisible();
+    await expect(primary).toContainText("練習を準備");
+  } finally {
+    await context.close();
+  }
+});

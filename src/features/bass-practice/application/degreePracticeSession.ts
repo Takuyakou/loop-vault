@@ -347,10 +347,17 @@ export class DegreePracticeSession {
     this.clearDwellTimer();
     const deadline = state.singGateAvailableAtMs;
     if (deadline === undefined) return;
-    this.dwellTimer = this.timer.set(() => {
+    const notifyWhenAvailable = () => {
       this.dwellTimer = undefined;
-      if (!this.disposed && this.state.status === "singing") this.notify();
-    }, Math.max(0, deadline - this.clock.now()));
+      if (this.disposed || this.state.status !== "singing") return;
+      const remainingMs = deadline - this.clock.now();
+      if (remainingMs > 0) {
+        this.dwellTimer = this.timer.set(notifyWhenAvailable, remainingMs);
+        return;
+      }
+      this.notify();
+    };
+    this.dwellTimer = this.timer.set(notifyWhenAvailable, Math.max(0, deadline - this.clock.now()));
   }
 
   private clearDwellTimer(): void {

@@ -288,6 +288,28 @@ describe("DegreePracticeSession", () => {
     }));
   });
 
+  it("reschedules an early dwell timer instead of leaving sing completion disabled", async () => {
+    const { advance, fireTimer, lifecycles, session, timer } = harness();
+    const listener = vi.fn();
+    session.subscribe(listener);
+    session.configure();
+    await session.startListen();
+    lifecycles[0].onEnded?.("completed");
+    session.beginSinging();
+    listener.mockClear();
+
+    advance(1_599);
+    fireTimer();
+    expect(session.isSingingCompletionAvailable()).toBe(false);
+    expect(listener).not.toHaveBeenCalled();
+    expect(timer.set).toHaveBeenLastCalledWith(expect.any(Function), 1);
+
+    advance(1);
+    fireTimer();
+    expect(session.isSingingCompletionAvailable()).toBe(true);
+    expect(listener).toHaveBeenCalledOnce();
+  });
+
   it("binds Transfer playback to the actual different-key exercise before returning to review", async () => {
     const { advance, lifecycles, requests, session } = harness();
     const sourceExercise = session.getExercise();
