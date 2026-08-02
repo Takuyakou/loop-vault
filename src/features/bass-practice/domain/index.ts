@@ -1,3 +1,4 @@
+export * from "./bassline";
 export * from "./constants";
 export * from "./determinism";
 export * from "./difficulty";

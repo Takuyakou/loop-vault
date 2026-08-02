@@ -335,3 +335,10 @@ export interface RhythmPracticeSession {
   readonly attemptIds: readonly string[];
   readonly abandoned: boolean;
 }
+
+export type BasslineLevel = 1 | 2 | 3;
+export interface BasslineChord { readonly root: number; readonly bass?: number; readonly label: string; readonly startBeat: number; readonly durationBeats: number; }
+export interface BasslineGeneratorSnapshot { readonly generatorVersion: string; readonly seed: string; readonly source: "generated" | "vault"; readonly level: BasslineLevel; readonly tempo: number; readonly meter: { readonly numerator: 4; readonly denominator: 4 }; readonly key: string; readonly chords: readonly BasslineChord[]; readonly sourceReferenceId?: string; readonly sourceLabel?: string; }
+export interface BasslineTargetEvent { readonly index: number; readonly midiNote: number; readonly startBeat: number; readonly durationBeats: number; readonly velocity: number; readonly chordIndex: number; }
+export interface BasslinePracticeExercise { readonly id: string; readonly version: 1; readonly generatorVersion: string; readonly seed: string; readonly mode: "bassline"; readonly source: { readonly kind: "generated" | "vault"; readonly referenceId?: string; readonly label?: string }; readonly tempo: number; readonly meter: { readonly numerator: 4; readonly denominator: 4 }; readonly targetEvents: readonly BasslineTargetEvent[]; readonly chords: readonly BasslineChord[]; readonly difficulty: PracticeDifficulty; readonly hints: readonly PracticeHint[]; readonly generatorSnapshot: BasslineGeneratorSnapshot; }
+export type BasslineGeneratorResult = { readonly ok: true; readonly exercise: BasslinePracticeExercise } | { readonly ok: false; readonly error: { readonly code: GeneratorErrorCode; readonly message: string; readonly attempts: number } };
