@@ -9,7 +9,7 @@ describe("Bassline generator", () => {
     expect(first).toEqual(second); if (!first.ok) throw new Error(first.error.message);
     expect(first.exercise.targetEvents.every((event) => event.midiNote >= 28 && event.midiNote <= 55)).toBe(true);
     expect(first.exercise.targetEvents.every((event, index, all) => index === 0 || all[index - 1].startBeat + all[index - 1].durationBeats <= event.startBeat)).toBe(true);
-    expect(first.exercise.targetEvents.find((event) => event.chordIndex === 2)?.midiNote % 12).toBe(4);
+    const slash = first.exercise.targetEvents.find((event) => event.chordIndex === 2); expect(slash).toBeDefined(); expect(slash!.midiNote % 12).toBe(4);
   });
   it("varies note vocabulary by level and rejects unsupported phrases", () => {
     const l1 = generateBasslineExercise(snapshot(1)); const l3 = generateBasslineExercise(snapshot(3));
