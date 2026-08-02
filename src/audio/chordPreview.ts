@@ -15,6 +15,8 @@ interface PreviewInstrument {
 
 export type PreviewSound = "piano" | "electric-piano";
 
+export type MidiPreviewSound = PreviewSound | "clean-bass" | "singing-reference";
+
 export type PreviewEndReason = "completed" | "stopped";
 
 export interface PreviewLifecycleCallbacks {
@@ -29,6 +31,10 @@ export interface MidiPreviewNote {
   velocity: number;
 }
 
+export interface PreviewAudioClock {
+  now(): number;
+}
+
 const PIANO_SAMPLE_URLS = {
   A0: "A0.mp3",
   C1: "C1.mp3",
@@ -41,7 +47,8 @@ const PIANO_SAMPLE_URLS = {
 } as const;
 
 let instrument: PreviewInstrument | undefined;
-let instrumentSound: PreviewSound | undefined;
+let instrumentSound: MidiPreviewSound | undefined;
+let hasScheduledAudioEvents = false;
 let scheduledTimers: ReturnType<typeof globalThis.setTimeout>[] = [];
 let previewGeneration = 0;
 let activeSession: PreviewSession | undefined;
@@ -130,8 +137,9 @@ export async function previewChordTimeline(
 export async function previewMidiNotes(
   notes: readonly MidiPreviewNote[],
   bpm = 96,
-  sound: PreviewSound = "electric-piano",
+  sound: MidiPreviewSound = "electric-piano",
   callbacks: PreviewLifecycleCallbacks = {},
+  audioClock: PreviewAudioClock = toneAudioClock,
 ): Promise<void> {
   const ordered = [...notes]
     .filter((note) =>
@@ -151,7 +159,7 @@ export async function previewMidiNotes(
   if (!target || !isActive(session)) return;
 
   const beatSeconds = 60 / Math.max(1, bpm);
-  const startedAt = performanceNow();
+  const startedAt = audioClock.now();
   const lookAheadSeconds = 1.5;
   const schedulerIntervalMs = 200;
   let nextIndex = 0;
@@ -159,7 +167,7 @@ export async function previewMidiNotes(
 
   const scheduleWindow = () => {
     if (!isActive(session)) return;
-    const elapsedSeconds = (performanceNow() - startedAt) / 1000;
+    const elapsedSeconds = Math.max(0, audioClock.now() - startedAt);
     const horizonSeconds = elapsedSeconds + lookAheadSeconds;
     while (
       nextIndex < ordered.length
@@ -167,20 +175,13 @@ export async function previewMidiNotes(
     ) {
       const note = ordered[nextIndex];
       nextIndex += 1;
-      const delayMs = Math.max(
-        0,
-        note.startBeat * beatSeconds * 1000
-          - (performanceNow() - startedAt),
+      target.triggerAttackRelease(
+        midiToNoteName(note.pitch),
+        Math.max(0.05, note.durationBeats * beatSeconds),
+        startedAt + note.startBeat * beatSeconds,
+        normalizeMidiVelocity(note.velocity),
       );
-      scheduledTimers.push(globalThis.setTimeout(() => {
-        if (!isActive(session)) return;
-        target.triggerAttackRelease(
-          midiToNoteName(note.pitch),
-          Math.max(0.05, note.durationBeats * beatSeconds),
-          undefined,
-          normalizeMidiVelocity(note.velocity),
-        );
-      }, delayMs));
+      hasScheduledAudioEvents = true;
     }
     if (nextIndex < ordered.length) {
       scheduledTimers.push(globalThis.setTimeout(
@@ -198,7 +199,7 @@ export async function previewMidiNotes(
     );
     scheduledTimers.push(globalThis.setTimeout(
       () => finishPreview(session, "completed"),
-      Math.max(0, lastEndSeconds * 1000 - (performanceNow() - startedAt)),
+      Math.max(0, (startedAt + lastEndSeconds - audioClock.now()) * 1000),
     ));
   };
   scheduleWindow();
@@ -211,6 +212,12 @@ export function stopPreview(): void {
   }
   scheduledTimers = [];
   instrument?.releaseAll();
+  if (instrument && hasScheduledAudioEvents) {
+    instrument.dispose();
+    instrument = undefined;
+    instrumentSound = undefined;
+    hasScheduledAudioEvents = false;
+  }
   if (activeSession) {
     finishPreview(activeSession, "stopped", true);
   }
@@ -245,7 +252,7 @@ function finishPreview(
 }
 
 async function preparePreviewAudio(
-  sound: PreviewSound,
+  sound: MidiPreviewSound,
   session: PreviewSession,
 ): Promise<PreviewInstrument | undefined> {
   try {
@@ -260,7 +267,11 @@ async function preparePreviewAudio(
 
     const nextInstrument = sound === "piano"
       ? await createPianoInstrument()
-      : createElectricPianoInstrument();
+      : sound === "clean-bass"
+        ? createCleanBassInstrument()
+        : sound === "singing-reference"
+          ? createSingingReferenceInstrument()
+          : createElectricPianoInstrument();
     if (!isActive(session)) {
       nextInstrument.dispose();
       return undefined;
@@ -430,6 +441,85 @@ function createElectricPianoInstrument(): PreviewInstrument {
   };
 }
 
+function createCleanBassInstrument(): PreviewInstrument {
+  const highpass = new Tone.Filter({ frequency: 32, type: "highpass" });
+  const lowpass = new Tone.Filter({
+    frequency: 1700,
+    type: "lowpass",
+    Q: 0.8,
+    rolloff: -24,
+  });
+  const compressor = new Tone.Compressor({ threshold: -20, ratio: 4 });
+  const synth = new Tone.PolySynth(Tone.FMSynth, {
+    harmonicity: 1,
+    modulationIndex: 0.8,
+    oscillator: { type: "sine" },
+    modulation: { type: "triangle" },
+    envelope: {
+      attack: 0.004,
+      decay: 0.18,
+      sustain: 0.58,
+      release: 0.22,
+    },
+    modulationEnvelope: {
+      attack: 0.002,
+      decay: 0.1,
+      sustain: 0.12,
+      release: 0.12,
+    },
+  }).chain(highpass, lowpass, compressor, Tone.getDestination());
+  synth.volume.value = -6;
+
+  return {
+    triggerAttackRelease(notes, duration, time, velocity) {
+      synth.triggerAttackRelease(notes, duration, time, velocity);
+    },
+    releaseAll() {
+      synth.releaseAll();
+    },
+    dispose() {
+      synth.dispose();
+      highpass.dispose();
+      lowpass.dispose();
+      compressor.dispose();
+    },
+  };
+}
+
+function createSingingReferenceInstrument(): PreviewInstrument {
+  const highpass = new Tone.Filter({ frequency: 110, type: "highpass" });
+  const lowpass = new Tone.Filter({
+    frequency: 4200,
+    type: "lowpass",
+    Q: 0.45,
+    rolloff: -24,
+  });
+  const synth = new Tone.PolySynth(Tone.Synth, {
+    oscillator: { type: "sine" },
+    envelope: {
+      attack: 0.025,
+      decay: 0.12,
+      sustain: 0.72,
+      release: 0.18,
+    },
+  }).chain(highpass, lowpass, Tone.getDestination());
+  synth.volume.value = -10;
+
+  return {
+    triggerAttackRelease(notes, duration, time, velocity) {
+      synth.triggerAttackRelease(notes, duration, time, velocity);
+    },
+    releaseAll() {
+      synth.releaseAll();
+    },
+    dispose() {
+      synth.dispose();
+      highpass.dispose();
+      lowpass.dispose();
+    },
+  };
+}
+
 function midiToNoteName(note: number): string {
   const names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
   const pc = ((Math.trunc(note) % 12) + 12) % 12;
@@ -441,9 +531,9 @@ function normalizeMidiVelocity(value: number): number {
   return Math.max(0.05, Math.min(1, value > 1 ? value / 127 : value));
 }
 
-function performanceNow(): number {
-  return globalThis.performance?.now() ?? Date.now();
-}
+const toneAudioClock: PreviewAudioClock = {
+  now: () => Tone.now(),
+};
 
 function absoluteBeat(bar: number, beat: number, beatsPerBar: number): number {
   return (bar - 1) * beatsPerBar + (beat - 1);

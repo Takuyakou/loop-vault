@@ -1,0 +1,1663 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>Loop Vault — Phase 5.16 Bass Practice Mode Mock</title>
+  <style>
+    :root {
+      --bg-0: #081018;
+      --bg-1: #0c1622;
+      --bg-2: #111e2d;
+      --bg-3: #172638;
+      --surface: #132233;
+      --surface-2: #182a3f;
+      --surface-3: #1c3148;
+      --line: rgba(151, 174, 198, .15);
+      --line-strong: rgba(151, 174, 198, .25);
+      --text: #edf5fb;
+      --muted: #94a7b8;
+      --subtle: #6f8396;
+      --teal: #35d1c5;
+      --teal-2: #69e0d7;
+      --indigo: #7773ff;
+      --indigo-2: #9c97ff;
+      --green: #48d69d;
+      --amber: #f2b85b;
+      --red: #ff747f;
+      --focus: #8bece4;
+      --radius-sm: 10px;
+      --radius: 15px;
+      --radius-lg: 20px;
+      --shadow: 0 18px 48px rgba(0,0,0,.24);
+      --sidebar: 220px;
+      --topbar: 64px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 79% -12%, rgba(53, 209, 197, .08), transparent 26rem),
+        radial-gradient(circle at 15% 90%, rgba(119, 115, 255, .08), transparent 28rem),
+        var(--bg-0);
+      font-family: Inter, "Noto Sans JP", "Yu Gothic UI", "Segoe UI", system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      overflow: hidden;
+    }
+
+    button, select, input { font: inherit; }
+    button { color: inherit; }
+    :focus-visible {
+      outline: 3px solid rgba(139,236,228,.52);
+      outline-offset: 2px;
+    }
+
+    .app {
+      height: 100dvh;
+      display: grid;
+      grid-template-columns: var(--sidebar) minmax(0, 1fr);
+    }
+
+    .sidebar {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 17px 12px;
+      border-right: 1px solid var(--line);
+      background: rgba(10, 19, 30, .96);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 2px 9px 19px;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 11px;
+      color: #041516;
+      background: linear-gradient(145deg, var(--teal), #8bf0e8);
+      box-shadow: 0 9px 24px rgba(53,209,197,.22);
+      font-weight: 950;
+      letter-spacing: -.05em;
+    }
+
+    .brand-name {
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .1em;
+    }
+
+    .brand-sub {
+      display: block;
+      margin-top: 1px;
+      color: var(--subtle);
+      font-size: 9px;
+      letter-spacing: .04em;
+    }
+
+    .nav-label {
+      padding: 0 10px;
+      margin: 8px 0 6px;
+      color: #607589;
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: .14em;
+    }
+
+    .nav {
+      display: grid;
+      gap: 4px;
+    }
+
+    .nav-item {
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      border: 0;
+      border-radius: 11px;
+      padding: 0 11px;
+      color: #8ea1b3;
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .nav-item:hover { background: rgba(255,255,255,.035); color: #d8e2ea; }
+    .nav-item.active {
+      color: #f7ffff;
+      background: linear-gradient(90deg, rgba(53,209,197,.18), rgba(53,209,197,.045));
+      box-shadow: inset 2px 0 0 var(--teal);
+    }
+
+    .nav-icon {
+      width: 18px;
+      display: grid;
+      place-items: center;
+      color: #6e8497;
+      font-size: 14px;
+    }
+    .nav-item.active .nav-icon { color: var(--teal-2); }
+
+    .sidebar-spacer { flex: 1; }
+
+    .sidebar-card {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: rgba(255,255,255,.025);
+    }
+
+    .sidebar-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 9px;
+    }
+
+    .sidebar-card strong { font-size: 11px; }
+    .online-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--green);
+      box-shadow: 0 0 0 4px rgba(72,214,157,.1);
+    }
+    .sidebar-note { color: var(--subtle); font-size: 10px; }
+
+    .shell {
+      min-width: 0;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: var(--topbar) minmax(0, 1fr);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 19px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(12, 22, 34, .94);
+      backdrop-filter: blur(16px);
+    }
+
+    .page-title { font-size: 15px; font-weight: 900; }
+    .page-sub { margin-top: 1px; color: var(--subtle); font-size: 10px; }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .level-meter {
+      width: 88px;
+      display: grid;
+      gap: 4px;
+    }
+    .meter-row {
+      height: 4px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #24364a;
+    }
+    .meter-row span {
+      display: block;
+      width: 63%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--teal), #77d9ff);
+    }
+    .meter-row:last-child span { width: 48%; }
+
+    .top-pill, .icon-button {
+      min-height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: #a8b8c7;
+      background: rgba(255,255,255,.027);
+    }
+    .top-pill { display: flex; align-items: center; gap: 8px; padding: 0 10px; font-size: 11px; }
+    .top-pill strong { color: #f3f8fb; }
+    .icon-button { width: 36px; display: grid; place-items: center; cursor: pointer; }
+    .icon-button:hover { color: white; background: rgba(255,255,255,.055); }
+
+    .route {
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+
+    .page {
+      width: min(1480px, calc(100% - 34px));
+      margin: 0 auto;
+      padding: 18px 0 36px;
+    }
+
+    .practice-switcher {
+      display: inline-flex;
+      gap: 4px;
+      padding: 4px;
+      margin-bottom: 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255,255,255,.022);
+    }
+
+    .practice-switcher button {
+      min-height: 32px;
+      border: 0;
+      border-radius: 8px;
+      padding: 0 12px;
+      color: #8296a9;
+      background: transparent;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 850;
+    }
+    .practice-switcher button.active {
+      color: #f6ffff;
+      background: rgba(53,209,197,.14);
+      box-shadow: inset 0 0 0 1px rgba(53,209,197,.28);
+    }
+
+    .practice-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 13px;
+    }
+
+    .practice-title {
+      margin: 0;
+      font-size: 25px;
+      line-height: 1.15;
+      letter-spacing: -.035em;
+    }
+    .practice-lead {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .head-tools {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .badge {
+      min-height: 31px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0 10px;
+      color: #aebdca;
+      background: rgba(255,255,255,.024);
+      font-size: 10px;
+      font-weight: 850;
+    }
+    .badge.manual { color: #c9c5ff; border-color: rgba(119,115,255,.3); background: rgba(119,115,255,.1); }
+    .badge.progress strong { color: white; }
+
+    .mode-tabs {
+      display: flex;
+      gap: 7px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .mode-tabs::-webkit-scrollbar { display: none; }
+
+    .mode-tab {
+      flex: 0 0 auto;
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      padding: 0 13px;
+      color: #879bad;
+      background: rgba(255,255,255,.018);
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 850;
+    }
+    .mode-tab:hover { color: #dbe5ed; background: rgba(255,255,255,.04); }
+    .mode-tab.active {
+      color: white;
+      border-color: rgba(119,115,255,.48);
+      background: rgba(119,115,255,.14);
+      box-shadow: 0 0 0 2px rgba(119,115,255,.055);
+    }
+    .mode-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 260px;
+      gap: 13px;
+      align-items: start;
+    }
+
+    .challenge {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(137,163,190,.18);
+      border-radius: var(--radius-lg);
+      background:
+        radial-gradient(circle at 87% -15%, rgba(119,115,255,.22), transparent 45%),
+        linear-gradient(150deg, #16283b, #122133 66%, #101d2c);
+      box-shadow: var(--shadow);
+    }
+    .challenge::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(125deg, rgba(255,255,255,.025), transparent 24%);
+    }
+
+    .challenge-top {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 18px 19px 10px;
+    }
+
+    .eyebrow {
+      color: #748ba0;
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .challenge-title {
+      margin-top: 5px;
+      color: white;
+      font-size: 21px;
+      line-height: 1.2;
+      font-weight: 950;
+      letter-spacing: -.035em;
+    }
+
+    .challenge-desc {
+      max-width: 670px;
+      margin-top: 5px;
+      color: #8fa3b5;
+      font-size: 11px;
+    }
+
+    .level {
+      flex: 0 0 auto;
+      min-height: 29px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0 9px;
+      color: #b5c2ce;
+      background: rgba(255,255,255,.035);
+      font-size: 9px;
+      font-weight: 850;
+    }
+    .level i { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+
+    .steps {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 7px;
+      padding: 0 19px 13px;
+    }
+
+    .step {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: #64798e;
+      font-size: 9px;
+      font-weight: 850;
+    }
+    .step::before {
+      content: attr(data-index);
+      width: 20px;
+      height: 20px;
+      flex: 0 0 20px;
+      display: grid;
+      place-items: center;
+      border: 1px solid #344a60;
+      border-radius: 50%;
+      color: #758a9e;
+      background: #182a3d;
+      font-size: 8px;
+    }
+    .step.active { color: #f2f0ff; }
+    .step.active::before { color: white; border-color: var(--indigo); background: var(--indigo); box-shadow: 0 0 0 4px rgba(119,115,255,.1); }
+    .step.done { color: #9cb0bf; }
+    .step.done::before { content: "✓"; color: #b8f5dc; border-color: rgba(72,214,157,.46); background: rgba(72,214,157,.12); }
+
+    .stage {
+      position: relative;
+      z-index: 1;
+      margin: 0 19px;
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 15px;
+      background: rgba(5, 12, 20, .33);
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-bottom: 14px;
+    }
+    .chip {
+      min-height: 27px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 0 9px;
+      color: #9fb1c1;
+      background: rgba(255,255,255,.045);
+      font-size: 9px;
+      font-weight: 800;
+    }
+    .chip strong { color: white; }
+    .chip.key { color: #c9c6ff; background: rgba(119,115,255,.13); }
+
+    .source-control {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-left: auto;
+    }
+    .source-control select {
+      min-height: 29px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 0 27px 0 9px;
+      color: #d8e3eb;
+      background: #15283a;
+      font-size: 9px;
+    }
+
+    .audio-row {
+      display: grid;
+      grid-template-columns: 50px minmax(0,1fr) auto;
+      gap: 13px;
+      align-items: center;
+    }
+
+    .play {
+      width: 50px;
+      height: 50px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 50%;
+      color: #071a19;
+      background: linear-gradient(145deg, var(--teal), #8bece4);
+      box-shadow: 0 10px 26px rgba(53,209,197,.27);
+      cursor: pointer;
+    }
+    .play:hover { transform: translateY(-1px); }
+    .play svg { width: 19px; height: 19px; margin-left: 2px; fill: currentColor; }
+
+    .wave {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      overflow: hidden;
+    }
+    .wave span {
+      flex: 1;
+      min-width: 2px;
+      max-width: 5px;
+      height: var(--h);
+      border-radius: 999px;
+      background: linear-gradient(180deg, var(--teal-2), var(--indigo));
+      opacity: .68;
+      transform-origin: center;
+    }
+    .wave.playing span { animation: pulse .65s ease-in-out infinite alternate; animation-delay: calc(var(--i) * -26ms); }
+    @keyframes pulse { from { transform: scaleY(.58); opacity: .45; } to { transform: scaleY(1.14); opacity: 1; } }
+
+    .listen-count {
+      min-width: 58px;
+      text-align: right;
+      color: #74899d;
+      font-size: 9px;
+    }
+    .listen-count strong { display: block; color: #e3edf3; font-size: 12px; }
+
+    .prompt {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      margin-top: 14px;
+      padding-top: 13px;
+      border-top: 1px solid rgba(255,255,255,.06);
+    }
+    .prompt-label { color: #74889b; font-size: 8px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+    .prompt-text { margin-top: 3px; color: #edf4f8; font-size: 11px; font-weight: 760; }
+
+    .state {
+      flex: 0 0 auto;
+      min-height: 28px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 0 9px;
+      color: #9eb0c0;
+      background: rgba(255,255,255,.045);
+      font-size: 9px;
+      font-weight: 850;
+    }
+    .state-dot { width: 6px; height: 6px; border-radius: 50%; background: #74899e; }
+    .state.ready { color: #aaf1d1; background: rgba(72,214,157,.12); }
+    .state.ready .state-dot { background: var(--green); }
+    .state.playing { color: #d7d3ff; background: rgba(119,115,255,.13); }
+    .state.playing .state-dot { background: var(--indigo-2); }
+    .state.attempt { color: #ffd1d5; background: rgba(255,116,127,.12); }
+    .state.attempt .state-dot { background: var(--red); animation: blink 1s ease-in-out infinite; }
+    @keyframes blink { 50% { opacity: .3; } }
+
+    .hint {
+      position: relative;
+      z-index: 1;
+      min-height: 45px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin: 10px 19px 0;
+      padding: 10px 12px;
+      border: 1px dashed rgba(119,115,255,.3);
+      border-radius: 12px;
+      color: #8ea3b5;
+      background: rgba(119,115,255,.055);
+      font-size: 10px;
+    }
+    .hint strong { color: #d2cfff; }
+    .hint-count { flex: 0 0 auto; color: #6d8295; font-weight: 900; }
+
+    .actions {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 13px 19px 18px;
+    }
+    .action-group { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .button {
+      min-height: 37px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0 13px;
+      color: #a9bac8;
+      background: rgba(255,255,255,.032);
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 900;
+    }
+    .button:hover { color: white; background: rgba(255,255,255,.06); }
+    .button.primary {
+      color: #041817;
+      border-color: var(--teal);
+      background: linear-gradient(145deg, var(--teal), #86e9e1);
+      box-shadow: 0 8px 20px rgba(53,209,197,.2);
+    }
+    .button.primary:hover { color: #031514; }
+    .button:disabled { opacity: .45; cursor: not-allowed; }
+    .shortcut { color: #657c90; font-size: 8px; }
+    .button.primary .shortcut { color: rgba(3,21,20,.55); }
+
+    .side {
+      display: grid;
+      gap: 10px;
+    }
+
+    .side-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 13px;
+      background: rgba(255,255,255,.025);
+    }
+    .side-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 11px;
+      color: #d9e4eb;
+      font-size: 10px;
+      font-weight: 950;
+    }
+    .side-link { color: #6f8498; font-size: 8px; }
+
+    .progress-bar {
+      height: 6px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #24374b;
+    }
+    .progress-bar span {
+      display: block;
+      width: 25%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--teal), var(--indigo));
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .metric {
+      padding: 9px;
+      border-radius: 10px;
+      background: rgba(255,255,255,.027);
+    }
+    .metric small { color: #74899c; font-size: 8px; }
+    .metric strong { display: block; margin-top: 2px; color: #eef5f8; font-size: 15px; }
+
+    .focus-box {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 10px;
+      align-items: start;
+    }
+    .focus-icon {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      color: #ffd48f;
+      background: rgba(242,184,91,.12);
+      font-size: 11px;
+      font-weight: 950;
+    }
+    .focus-box strong { font-size: 10px; }
+    .focus-box p { margin: 3px 0 0; color: #7e93a5; font-size: 9px; line-height: 1.45; }
+
+    .queue {
+      display: grid;
+      gap: 7px;
+    }
+    .queue-item {
+      display: grid;
+      grid-template-columns: 24px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 7px 8px;
+      border-radius: 9px;
+      background: rgba(255,255,255,.025);
+    }
+    .queue-index {
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      border-radius: 7px;
+      color: #9dafbe;
+      background: #213448;
+      font-size: 8px;
+      font-weight: 900;
+    }
+    .queue-item strong { display: block; font-size: 9px; }
+    .queue-item small { color: #6f8497; font-size: 8px; }
+    .queue-tag { color: #aaa6ff; font-size: 8px; font-weight: 850; }
+
+    .fretboard-section, .review-section {
+      grid-column: 1 / -1;
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.022);
+    }
+
+    .section-head {
+      min-height: 45px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 13px;
+      border-bottom: 1px solid var(--line);
+    }
+    .section-head strong { font-size: 10px; }
+    .section-head span { color: #6f8497; font-size: 9px; }
+
+    .fretboard-tools { display: flex; gap: 7px; }
+    .mini-button {
+      min-height: 28px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 9px;
+      color: #9fb0bf;
+      background: rgba(255,255,255,.026);
+      cursor: pointer;
+      font-size: 8px;
+      font-weight: 850;
+    }
+    .mini-button.active { color: #d4ffff; border-color: rgba(53,209,197,.35); background: rgba(53,209,197,.1); }
+
+    .fretboard-wrap { overflow-x: auto; padding: 12px; }
+    .fretboard {
+      min-width: 780px;
+      display: grid;
+      grid-template-columns: 34px repeat(13, minmax(42px,1fr));
+      grid-auto-rows: 28px;
+      gap: 2px;
+      user-select: none;
+    }
+    .fret-num, .string-name { display: grid; place-items: center; color: #62788c; font-size: 8px; font-weight: 850; }
+    .fret-cell {
+      position: relative;
+      display: grid;
+      place-items: center;
+      border-left: 1px solid #3b5065;
+      background: linear-gradient(180deg, rgba(255,255,255,.02), transparent);
+    }
+    .fret-cell::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; top: 50%;
+      height: 1px;
+      background: #607386;
+      opacity: .56;
+    }
+    .marker {
+      position: relative;
+      z-index: 1;
+      width: 21px;
+      height: 21px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #051b1a;
+      background: var(--teal);
+      box-shadow: 0 5px 14px rgba(53,209,197,.25);
+      font-size: 7px;
+      font-weight: 950;
+      opacity: 0;
+      transform: scale(.7);
+      transition: opacity .17s ease, transform .17s ease;
+    }
+    .fretboard.reveal .marker { opacity: 1; transform: scale(1); }
+    .marker.alt { color: #f4f2ff; background: var(--indigo); box-shadow: 0 5px 14px rgba(119,115,255,.25); }
+
+    .review-section { display: none; overflow: hidden; }
+    .review-section.visible { display: block; }
+
+    .review-body {
+      display: grid;
+      grid-template-columns: minmax(0,1fr) minmax(280px,.7fr);
+      gap: 16px;
+      padding: 14px;
+    }
+
+    .rating-grid {
+      display: grid;
+      grid-template-columns: repeat(4,1fr);
+      gap: 8px;
+    }
+    .rating {
+      min-height: 63px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: #bdcad4;
+      background: rgba(255,255,255,.027);
+      cursor: pointer;
+      font-weight: 900;
+    }
+    .rating small { display: block; margin-top: 3px; color: #718699; font-size: 8px; font-weight: 700; }
+    .rating[data-rating="again"]:hover { border-color: rgba(255,116,127,.44); background: rgba(255,116,127,.08); }
+    .rating[data-rating="hard"]:hover { border-color: rgba(242,184,91,.44); background: rgba(242,184,91,.08); }
+    .rating[data-rating="good"]:hover { border-color: rgba(53,209,197,.44); background: rgba(53,209,197,.08); }
+    .rating[data-rating="easy"]:hover { border-color: rgba(119,115,255,.44); background: rgba(119,115,255,.08); }
+
+    .issue-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 12px;
+    }
+    .issue {
+      min-height: 30px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0 10px;
+      color: #879bac;
+      background: rgba(255,255,255,.02);
+      cursor: pointer;
+      font-size: 9px;
+      font-weight: 850;
+    }
+    .issue.active { color: #f3ffff; border-color: rgba(53,209,197,.36); background: rgba(53,209,197,.1); }
+
+    .review-note {
+      padding: 12px;
+      border-radius: 12px;
+      color: #8fa4b5;
+      background: rgba(119,115,255,.065);
+      font-size: 10px;
+      line-height: 1.55;
+    }
+    .review-note strong { display: block; margin-bottom: 4px; color: #d5d1ff; }
+
+    .transfer {
+      display: none;
+      margin-top: 9px;
+      padding: 10px;
+      border: 1px solid rgba(53,209,197,.2);
+      border-radius: 11px;
+      background: rgba(53,209,197,.05);
+    }
+    .transfer.visible { display: block; }
+    .transfer strong { font-size: 10px; }
+    .transfer p { margin: 3px 0 8px; color: #7f94a6; font-size: 9px; }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 200;
+      max-width: 350px;
+      padding: 12px 14px;
+      border: 1px solid var(--line-strong);
+      border-radius: 12px;
+      color: #eff7fb;
+      background: rgba(12,22,34,.96);
+      box-shadow: var(--shadow);
+      font-size: 11px;
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: .18s ease;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    .summary-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      background: rgba(1,7,12,.72);
+      backdrop-filter: blur(8px);
+    }
+    .summary-modal.visible { display: grid; }
+    .summary-card {
+      width: min(650px,100%);
+      border: 1px solid var(--line-strong);
+      border-radius: 20px;
+      padding: 20px;
+      background: #122235;
+      box-shadow: 0 30px 80px rgba(0,0,0,.42);
+    }
+    .summary-card h2 { margin: 0; font-size: 23px; }
+    .summary-card p { color: var(--muted); }
+    .summary-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 9px; margin: 16px 0; }
+    .summary-stat { padding: 11px; border-radius: 11px; background: rgba(255,255,255,.03); }
+    .summary-stat small { color: #74899d; font-size: 8px; }
+    .summary-stat strong { display: block; margin-top: 2px; font-size: 17px; }
+
+    @media (max-width: 1100px) {
+      :root { --sidebar: 72px; }
+      .brand-copy, .nav-item span:last-child, .nav-label, .sidebar-card { display: none; }
+      .brand { justify-content: center; padding-left: 0; padding-right: 0; }
+      .nav-item { justify-content: center; padding: 0; }
+      .layout { grid-template-columns: 1fr; }
+      .side { grid-template-columns: repeat(3,1fr); }
+      .fretboard-section, .review-section { grid-column: 1; }
+    }
+
+    @media (max-width: 760px) {
+      body { overflow: auto; }
+      .app { height: auto; min-height: 100dvh; grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .shell { min-height: 100dvh; }
+      .topbar { position: sticky; top: 0; z-index: 50; }
+      .page { width: min(100% - 20px,1480px); }
+      .practice-head { flex-direction: column; }
+      .head-tools { justify-content: flex-start; }
+      .steps { grid-template-columns: repeat(3,1fr); }
+      .side { grid-template-columns: 1fr; }
+      .audio-row { grid-template-columns: 48px minmax(0,1fr); }
+      .listen-count { display: none; }
+      .prompt { align-items: flex-start; }
+      .actions { align-items: stretch; flex-direction: column; }
+      .action-group .button { flex: 1; }
+      .review-body { grid-template-columns: 1fr; }
+      .rating-grid { grid-template-columns: 1fr 1fr; }
+      .summary-stats { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="Primary navigation">
+      <div class="brand">
+        <div class="brand-mark">LV</div>
+        <div class="brand-copy">
+          <div class="brand-name">LOOP VAULT</div>
+          <span class="brand-sub">MUSIC WORKSTATION</span>
+        </div>
+      </div>
+
+      <div class="nav-label">WORKSPACE</div>
+      <nav class="nav">
+        <button class="nav-item" type="button"><span class="nav-icon">⌂</span><span>Home</span></button>
+        <button class="nav-item" type="button"><span class="nav-icon">⌁</span><span>Chord Capture</span></button>
+        <button class="nav-item" type="button"><span class="nav-icon">▦</span><span>Vault</span></button>
+        <button class="nav-item active" type="button"><span class="nav-icon">◉</span><span>Practice</span></button>
+        <button class="nav-item" type="button"><span class="nav-icon">♬</span><span>Live MIDI</span></button>
+      </nav>
+
+      <div class="nav-label">SYSTEM</div>
+      <nav class="nav">
+        <button class="nav-item" type="button"><span class="nav-icon">◌</span><span>History</span></button>
+        <button class="nav-item" type="button"><span class="nav-icon">⚙</span><span>Settings</span></button>
+      </nav>
+
+      <div class="sidebar-spacer"></div>
+      <div class="sidebar-card">
+        <div class="sidebar-card-head"><strong>Practice Engine</strong><span class="online-dot"></span></div>
+        <div class="sidebar-note">Local · Offline · Manual Review</div>
+      </div>
+    </aside>
+
+    <div class="shell">
+      <header class="topbar">
+        <div>
+          <div class="page-title">Practice</div>
+          <div class="page-sub">Ear first. Fretboard second. TAB last.</div>
+        </div>
+        <div class="top-actions">
+          <div class="level-meter" aria-label="Preview output level">
+            <div class="meter-row"><span></span></div>
+            <div class="meter-row"><span></span></div>
+          </div>
+          <div class="top-pill">Volume <strong>72%</strong></div>
+          <div class="top-pill">Sound <strong>Clean Bass</strong></div>
+          <button class="icon-button" type="button" aria-label="Practice settings">⚙</button>
+        </div>
+      </header>
+
+      <main class="route">
+        <div class="page">
+          <div class="practice-switcher" aria-label="Practice tool">
+            <button type="button">Chord Dojo</button>
+            <button class="active" type="button" aria-current="page">Bass Practice</button>
+          </div>
+
+          <div class="practice-head">
+            <div>
+              <h1 class="practice-title">Bass Practice</h1>
+              <p class="practice-lead">短いフレーズを聴き、見ずに再現し、次に直す1点を残します。</p>
+            </div>
+            <div class="head-tools">
+              <span class="badge manual">Manual Review</span>
+              <span class="badge progress"><strong id="doneCount">3</strong> / 12 exercises</span>
+              <span class="badge">5-string · BEADG · Left-handed</span>
+            </div>
+          </div>
+
+          <div class="mode-tabs" role="tablist" aria-label="Bass practice modes">
+            <button class="mode-tab active" role="tab" aria-selected="true" data-mode="degree"><span class="mode-dot"></span>Degree Echo</button>
+            <button class="mode-tab" role="tab" aria-selected="false" data-mode="rhythm"><span class="mode-dot"></span>Rhythm Echo</button>
+            <button class="mode-tab" role="tab" aria-selected="false" data-mode="bassline"><span class="mode-dot"></span>Bassline Echo</button>
+          </div>
+
+          <div class="layout">
+            <section class="challenge" aria-labelledby="challengeTitle">
+              <div class="challenge-top">
+                <div>
+                  <div class="eyebrow">Exercise <span id="exerciseNo">04</span> / 12</div>
+                  <div class="challenge-title" id="challengeTitle">度数を聴いて、指板へ移す</div>
+                  <div class="challenge-desc" id="challengeDesc">音源を2回まで聴き、止まってから声で輪郭を確認し、ベースで再現します。</div>
+                </div>
+                <div class="level"><i></i><span id="levelLabel">Level 2</span></div>
+              </div>
+
+              <div class="steps" aria-label="Practice steps">
+                <div class="step active" data-index="1">Listen</div>
+                <div class="step" data-index="2">Sing</div>
+                <div class="step" data-index="3">Play</div>
+                <div class="step" data-index="4">Review</div>
+                <div class="step" data-index="5">Transfer</div>
+              </div>
+
+              <div class="stage">
+                <div class="meta">
+                  <span class="chip key">Key <strong id="keyLabel">D minor</strong></span>
+                  <span class="chip">Tempo <strong id="tempoLabel">92 BPM</strong></span>
+                  <span class="chip">Length <strong id="lengthLabel">1 bar</strong></span>
+                  <span class="chip">Notes <strong id="notesLabel">4</strong></span>
+                  <div class="source-control">
+                    <label for="sourceSelect" class="chip">Source</label>
+                    <select id="sourceSelect" aria-label="Practice source">
+                      <option value="generated">Generated</option>
+                      <option value="vault">Vault · Dmaj7 loop</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="audio-row">
+                  <button class="play" id="playButton" type="button" aria-label="課題フレーズを再生">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                  </button>
+                  <div class="wave" id="wave" aria-hidden="true"></div>
+                  <div class="listen-count"><strong><span id="listenCount">0</span> / 2</strong>listens</div>
+                </div>
+
+                <div class="prompt">
+                  <div>
+                    <div class="prompt-label">Current task</div>
+                    <div class="prompt-text" id="promptText">まずは音数、上行・下行、開始位置だけを聴き取る</div>
+                  </div>
+                  <div class="state" id="statePill"><span class="state-dot"></span><span id="stateText">Ready</span></div>
+                </div>
+              </div>
+
+              <div class="hint" aria-live="polite">
+                <div id="hintText">ヒントは必要になるまで隠します。最初からTABは表示しません。</div>
+                <div class="hint-count">Hint <span id="hintLevel">0</span> / 4</div>
+              </div>
+
+              <div class="actions">
+                <div class="action-group">
+                  <button class="button" id="hintButton" type="button">ヒントを表示 <span class="shortcut">H</span></button>
+                  <button class="button" id="singButton" type="button" disabled>歌えた <span class="shortcut">S</span></button>
+                </div>
+                <div class="action-group">
+                  <button class="button primary" id="primaryButton" type="button">課題を再生 <span class="shortcut">Space</span></button>
+                </div>
+              </div>
+            </section>
+
+            <aside class="side" aria-label="Practice session">
+              <section class="side-card">
+                <div class="side-title"><span>Today's Session</span><span class="side-link">3 / 12</span></div>
+                <div class="progress-bar"><span id="sessionBar"></span></div>
+                <div class="metric-grid" style="margin-top:10px">
+                  <div class="metric"><small>No-hint</small><strong id="noHintMetric">67%</strong></div>
+                  <div class="metric"><small>Avg listens</small><strong id="listenMetric">1.4</strong></div>
+                  <div class="metric"><small>Transfer</small><strong id="transferMetric">2 / 3</strong></div>
+                  <div class="metric"><small>Streak</small><strong>4 days</strong></div>
+                </div>
+              </section>
+
+              <section class="side-card">
+                <div class="side-title"><span>Next Focus</span></div>
+                <div class="focus-box">
+                  <div class="focus-icon">♭7</div>
+                  <div>
+                    <strong id="focusTitle">6度と♭7度を区別する</strong>
+                    <p id="focusText">次は1–5–6–♭7をD minorで出題します。</p>
+                  </div>
+                </div>
+              </section>
+
+              <section class="side-card">
+                <div class="side-title"><span>Up Next</span><span class="side-link">Adaptive</span></div>
+                <div class="queue">
+                  <div class="queue-item"><span class="queue-index">1</span><span><strong>1–5–6–♭7</strong><small>D minor · 88 BPM</small></span><span class="queue-tag">Retry</span></div>
+                  <div class="queue-item"><span class="queue-index">2</span><span><strong>Offbeat 8ths</strong><small>Muted · 96 BPM</small></span><span class="queue-tag">Rhythm</span></div>
+                  <div class="queue-item"><span class="queue-index">3</span><span><strong>ii–V approach</strong><small>Vault source</small></span><span class="queue-tag">Bassline</span></div>
+                </div>
+              </section>
+            </aside>
+
+            <section class="fretboard-section" aria-labelledby="fretboardTitle">
+              <div class="section-head">
+                <div><strong id="fretboardTitle">Fretboard Hint</strong> <span>Hint 4で正解位置を表示</span></div>
+                <div class="fretboard-tools">
+                  <button class="mini-button active" id="leftHandButton" type="button">Left-handed</button>
+                  <button class="mini-button active" id="fiveStringButton" type="button">5-string</button>
+                  <button class="mini-button" id="labelModeButton" type="button">Degrees</button>
+                </div>
+              </div>
+              <div class="fretboard-wrap">
+                <div class="fretboard" id="fretboard" aria-label="5弦ベース指板"></div>
+              </div>
+            </section>
+
+            <section class="review-section" id="reviewSection" aria-labelledby="reviewTitle">
+              <div class="section-head">
+                <div><strong id="reviewTitle">自己評価</strong> <span>自動採点ではありません</span></div>
+                <span>1〜4キーでも選択できます</span>
+              </div>
+              <div class="review-body">
+                <div>
+                  <div class="rating-grid">
+                    <button class="rating" data-rating="again" type="button">Again<small>再現できなかった</small></button>
+                    <button class="rating" data-rating="hard" type="button">Hard<small>かなり迷った</small></button>
+                    <button class="rating" data-rating="good" type="button">Good<small>概ね再現できた</small></button>
+                    <button class="rating" data-rating="easy" type="button">Easy<small>余裕をもって再現</small></button>
+                  </div>
+                  <div class="issue-list" aria-label="一番難しかったもの">
+                    <button class="issue" data-issue="pitch" type="button">Pitch</button>
+                    <button class="issue" data-issue="rhythm" type="button">Rhythm</button>
+                    <button class="issue" data-issue="duration" type="button">Duration</button>
+                    <button class="issue" data-issue="recall" type="button">Recall</button>
+                    <button class="issue" data-issue="fretboard" type="button">Fretboard</button>
+                  </div>
+                </div>
+                <div>
+                  <div class="review-note" id="reviewNote">
+                    <strong>記録されるもの</strong>
+                    再生回数、ヒント段階、応答時間、自己評価を保存します。音程やリズムを自動採点したような数値は表示しません。
+                  </div>
+                  <div class="transfer" id="transferBox">
+                    <strong>Transfer challenge</strong>
+                    <p id="transferText">同じdegree patternをA minorへ移して挑戦します。</p>
+                    <button class="button" id="transferButton" type="button">移調して挑戦 <span class="shortcut">T</span></button>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <div class="summary-modal" id="summaryModal" role="dialog" aria-modal="true" aria-labelledby="summaryTitle">
+    <div class="summary-card">
+      <h2 id="summaryTitle">Session complete</h2>
+      <p>12問を完了しました。自動採点ではなく、独立度と自己評価から次の練習を決めています。</p>
+      <div class="summary-stats">
+        <div class="summary-stat"><small>Completed</small><strong>12</strong></div>
+        <div class="summary-stat"><small>No-hint</small><strong>8</strong></div>
+        <div class="summary-stat"><small>Avg listens</small><strong>1.5</strong></div>
+        <div class="summary-stat"><small>Transfer</small><strong>3 / 4</strong></div>
+      </div>
+      <div class="review-note">
+        <strong>Next focus</strong>
+        b7と6の区別、8分裏の開始位置、1小節を2回以内で保持する練習を優先します。
+      </div>
+      <div class="action-group" style="justify-content:flex-end;margin-top:14px">
+        <button class="button" id="closeSummary" type="button">閉じる</button>
+        <button class="button primary" id="newSession" type="button">新しいSession</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const $ = (s, root = document) => root.querySelector(s);
+      const $$ = (s, root = document) => [...root.querySelectorAll(s)];
+
+      const modes = {
+        degree: {
+          title: "度数を聴いて、指板へ移す",
+          desc: "音源を2回まで聴き、止まってから声で輪郭を確認し、ベースで再現します。",
+          key: "D minor", tempo: "92 BPM", length: "1 bar", notes: "4", level: "Level 2",
+          prompt: "まずは音数、上行・下行、開始位置だけを聴き取る",
+          freqs: [73.42, 87.31, 110.00, 130.81],
+          durs: [.42,.42,.42,.68],
+          gaps: [.12,.12,.12,0],
+          hints: [
+            "KeyはD minorです。",
+            "4音で、すべて上行します。",
+            "Degreeは1 → ♭3 → 5 → ♭7です。",
+            "音名はD → F → A → Cです。指板位置を表示しました。"
+          ],
+          markers: [["A",5,"1"],["E",1,"♭3"],["E",5,"5"],["A",3,"♭7"]],
+          focus: ["6度と♭7度を区別する","次は1–5–6–♭7をD minorで出題します。"],
+          transfer: "同じdegree patternをA minorへ移して挑戦します。"
+        },
+        rhythm: {
+          title: "音程を外して、グルーヴだけを写す",
+          desc: "単一音で、発音位置・休符・音価を1小節そのまま再現します。",
+          key: "Muted note", tempo: "104 BPM", length: "1 bar", notes: "6", level: "Level 3",
+          prompt: "1拍目の裏と、3拍目直前の短い音に注目する",
+          freqs: [82.41,82.41,82.41,82.41,82.41,82.41],
+          durs: [.1,.18,.1,.08,.2,.12],
+          gaps: [.18,.25,.12,.29,.18,0],
+          hints: [
+            "拍子は4/4、Tempoは104 BPMです。",
+            "開始は1拍目の裏です。",
+            "短い音は3拍目直前にあります。",
+            "フルのrhythm gridを表示しました。"
+          ],
+          markers: [],
+          focus: ["8分裏を待つ","表拍を感じたまま、裏へ置く問題を続けます。"],
+          transfer: "同じrhythm cellを80 BPMへ落として挑戦します。"
+        },
+        bassline: {
+          title: "コード進行の中で、1小節を再現する",
+          desc: "ルート、コードトーン、接近音を含む短いベースラインを再現します。",
+          key: "Am7 → D7", tempo: "96 BPM", length: "2 bars", notes: "7", level: "Level 4",
+          prompt: "コードが変わる直前の半音アプローチと、小節末の音価を聴く",
+          freqs: [55,82.41,98,103.83,73.42,92.50,110],
+          durs: [.34,.18,.24,.38,.34,.18,.56],
+          gaps: [.1,.12,.08,.22,.1,.08,0],
+          hints: [
+            "進行はAm7 → D7です。",
+            "1小節目の最後は半音上行です。",
+            "Degreeは1–5–♭7–7 | 1–3–5です。",
+            "音名はA–E–G–G♯ | D–F♯–Aです。"
+          ],
+          markers: [["E",5,"1"],["A",7,"5"],["D",5,"♭7"],["D",6,"7"],["A",5,"1"],["E",2,"3"],["E",5,"5"]],
+          focus: ["接近音をコード音へ丸めない","G→G♯→Aの3音だけを再出題します。"],
+          transfer: "同じbassline shapeをC minorへ移して挑戦します。"
+        }
+      };
+
+      let currentMode = "degree";
+      let state = "ready";
+      let listenCount = 0;
+      let hintLevel = 0;
+      let done = 3;
+      let selectedIssue = null;
+      let audioCtx = null;
+      let phraseTimer = null;
+      let attemptTimer = null;
+      let toastTimer = null;
+      let leftHanded = true;
+      let fiveString = true;
+      let labelMode = "degrees";
+
+      const heights = [18,26,41,63,37,22,50,78,43,30,65,85,48,25,70,57,34,80,51,28,66,90,55,35,75,49,31,61,82,46,23,68,54,33,77,47,29,59,73,40,21,65,51,32,70,44,27,56,79,42,24,62,50,30,74,48,28,64,86,39];
+      const wave = $("#wave");
+      heights.forEach((h,i) => {
+        const bar = document.createElement("span");
+        bar.style.setProperty("--h", `${h}%`);
+        bar.style.setProperty("--i", i);
+        wave.appendChild(bar);
+      });
+
+      function toast(message) {
+        const el = $("#toast");
+        el.textContent = message;
+        el.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => el.classList.remove("show"), 2200);
+      }
+
+      function context() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        return audioCtx;
+      }
+
+      function tone(ctx, frequency, start, duration, muted = false) {
+        const osc = ctx.createOscillator();
+        const sub = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+        osc.type = muted ? "square" : "triangle";
+        sub.type = "sine";
+        osc.frequency.value = frequency;
+        sub.frequency.value = frequency / 2;
+        filter.type = "lowpass";
+        filter.frequency.value = muted ? 420 : 690;
+        gain.gain.setValueAtTime(.0001, start);
+        gain.gain.exponentialRampToValueAtTime(muted ? .055 : .12, start + .012);
+        gain.gain.exponentialRampToValueAtTime(.0001, start + duration);
+        osc.connect(filter); sub.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+        osc.start(start); sub.start(start);
+        osc.stop(start + duration + .03); sub.stop(start + duration + .03);
+      }
+
+      function setState(next) {
+        state = next;
+        const label = {
+          ready: "Ready",
+          playing: "Listening",
+          recall: "Recall",
+          attempt: "Playing",
+          review: "Manual Review",
+          transfer: "Transfer",
+          completed: "Completed"
+        }[state];
+
+        const pill = $("#statePill");
+        pill.className = "state";
+        if (state === "playing" || state === "recall") pill.classList.add("playing");
+        if (state === "attempt") pill.classList.add("attempt");
+        if (state === "review" || state === "transfer" || state === "completed") pill.classList.add("ready");
+        $("#stateText").textContent = label;
+
+        const stepIndex = {ready:0,playing:0,recall:1,attempt:2,review:3,transfer:4,completed:4}[state];
+        $$(".step").forEach((el,i) => {
+          el.classList.toggle("done", i < stepIndex);
+          el.classList.toggle("active", i === stepIndex);
+        });
+
+        $("#singButton").disabled = !(state === "recall");
+        const primary = $("#primaryButton");
+        const map = {
+          ready: "課題を再生",
+          playing: "再生中",
+          recall: "演奏を開始",
+          attempt: "演奏を終了",
+          review: "自己評価を選択",
+          transfer: "次の問題へ",
+          completed: "次の問題へ"
+        };
+        primary.firstChild.textContent = `${map[state]} `;
+        primary.disabled = state === "playing" || state === "review";
+      }
+
+      async function playPhrase() {
+        if (listenCount >= 2) {
+          toast("標準設定では再生は2回までです。ヒントまたは演奏へ進んでください。");
+          return;
+        }
+        const data = modes[currentMode];
+        const ctx = context();
+        if (ctx.state === "suspended") await ctx.resume();
+        let t = ctx.currentTime + .07;
+        data.freqs.forEach((f,i) => {
+          tone(ctx, f, t, data.durs[i], currentMode === "rhythm");
+          t += data.durs[i] + data.gaps[i];
+        });
+        listenCount += 1;
+        $("#listenCount").textContent = listenCount;
+        setState("playing");
+        wave.classList.add("playing");
+        $("#promptText").textContent = listenCount === 1
+          ? "音数、輪郭、開始位置に集中する"
+          : "停止後に頭の中でもう一度再生する";
+        clearTimeout(phraseTimer);
+        phraseTimer = setTimeout(() => {
+          wave.classList.remove("playing");
+          setState("recall");
+          $("#promptText").textContent = "音源は止まりました。声で輪郭を確認してから弾く";
+        }, Math.max(900, (t - ctx.currentTime) * 1000));
+      }
+
+      function startAttempt() {
+        setState("attempt");
+        $("#promptText").textContent = "ベースで再現しています。終わったらSpaceまたはボタンを押す";
+        let remaining = 5;
+        $("#stateText").textContent = `Playing 0:0${remaining}`;
+        clearInterval(attemptTimer);
+        attemptTimer = setInterval(() => {
+          remaining -= 1;
+          $("#stateText").textContent = `Playing 0:0${Math.max(remaining,0)}`;
+          if (remaining <= 0) finishAttempt();
+        }, 1000);
+      }
+
+      function finishAttempt() {
+        clearInterval(attemptTimer);
+        setState("review");
+        $("#promptText").textContent = "自己評価を1つ選び、必要なら一番難しかった項目を残す";
+        $("#reviewSection").classList.add("visible");
+        $("#reviewSection").scrollIntoView({behavior:"smooth", block:"nearest"});
+      }
+
+      function revealHint() {
+        if (hintLevel >= 4) {
+          toast("すべてのヒントを表示しています。");
+          return;
+        }
+        hintLevel += 1;
+        $("#hintLevel").textContent = hintLevel;
+        $("#hintText").innerHTML = `<strong>Hint ${hintLevel}：</strong> ${modes[currentMode].hints[hintLevel - 1]}`;
+        if (hintLevel === 4) $("#fretboard").classList.add("reveal");
+      }
+
+      function modeChange(mode) {
+        currentMode = mode;
+        listenCount = 0;
+        hintLevel = 0;
+        selectedIssue = null;
+        $("#listenCount").textContent = "0";
+        $("#hintLevel").textContent = "0";
+        $("#hintText").textContent = "ヒントは必要になるまで隠します。最初からTABは表示しません。";
+        $("#reviewSection").classList.remove("visible");
+        $("#transferBox").classList.remove("visible");
+        $("#fretboard").classList.remove("reveal");
+        $$(".issue").forEach(x => x.classList.remove("active"));
+
+        const d = modes[mode];
+        $("#challengeTitle").textContent = d.title;
+        $("#challengeDesc").textContent = d.desc;
+        $("#keyLabel").textContent = d.key;
+        $("#tempoLabel").textContent = d.tempo;
+        $("#lengthLabel").textContent = d.length;
+        $("#notesLabel").textContent = d.notes;
+        $("#levelLabel").textContent = d.level;
+        $("#promptText").textContent = d.prompt;
+        $("#focusTitle").textContent = d.focus[0];
+        $("#focusText").textContent = d.focus[1];
+        $("#transferText").textContent = d.transfer;
+
+        $$(".mode-tab").forEach(tab => {
+          const active = tab.dataset.mode === mode;
+          tab.classList.toggle("active", active);
+          tab.setAttribute("aria-selected", String(active));
+        });
+
+        buildFretboard();
+        setState("ready");
+      }
+
+      function rate(value) {
+        const issue = selectedIssue ? ` / ${selectedIssue}` : "";
+        if (value === "again") {
+          toast(`Againを記録しました${issue}。2〜3問後に難度を下げて再出題します。`);
+          $("#transferBox").classList.remove("visible");
+          setState("completed");
+        } else if (value === "hard") {
+          toast(`Hardを記録しました${issue}。Session後半に同型を再出題します。`);
+          $("#transferBox").classList.remove("visible");
+          setState("completed");
+        } else {
+          toast(`${value === "good" ? "Good" : "Easy"}を記録しました${issue}。Transferを選べます。`);
+          $("#transferBox").classList.add("visible");
+          setState("transfer");
+        }
+        done = Math.min(12, done + 1);
+        $("#doneCount").textContent = done;
+        $("#sessionBar").style.width = `${done / 12 * 100}%`;
+        if (hintLevel === 0) $("#noHintMetric").textContent = `${Math.min(100, 67 + (done - 3) * 3)}%`;
+      }
+
+      function nextExercise() {
+        if (done >= 12) {
+          $("#summaryModal").classList.add("visible");
+          $("#closeSummary").focus();
+          return;
+        }
+        const no = done + 1;
+        $("#exerciseNo").textContent = String(no).padStart(2,"0");
+        modeChange(currentMode);
+        $(".route").scrollTo({top:0, behavior:"smooth"});
+      }
+
+      function transfer() {
+        toast(modes[currentMode].transfer);
+        listenCount = 0;
+        hintLevel = 0;
+        $("#listenCount").textContent = "0";
+        $("#hintLevel").textContent = "0";
+        $("#reviewSection").classList.remove("visible");
+        $("#transferBox").classList.remove("visible");
+        $("#fretboard").classList.remove("reveal");
+        setState("ready");
+        $("#promptText").textContent = "同じpatternを別keyで聴き、指板形状を移す";
+        $(".route").scrollTo({top:0,behavior:"smooth"});
+      }
+
+      function buildFretboard() {
+        const board = $("#fretboard");
+        board.innerHTML = "";
+        const frets = [...Array(13).keys()];
+        const fretOrder = leftHanded ? [...frets].reverse() : frets;
+        board.appendChild(Object.assign(document.createElement("div"), {className:"fret-num", textContent:""}));
+        fretOrder.forEach(f => board.appendChild(Object.assign(document.createElement("div"), {className:"fret-num", textContent:String(f)})));
+
+        const strings = fiveString ? ["G","D","A","E","B"] : ["G","D","A","E"];
+        const markerMap = new Map(modes[currentMode].markers.map(([s,f,l]) => [`${s}-${f}`,l]));
+        strings.forEach((stringName, rowIndex) => {
+          board.appendChild(Object.assign(document.createElement("div"), {className:"string-name", textContent:stringName}));
+          fretOrder.forEach(fret => {
+            const cell = document.createElement("div");
+            cell.className = "fret-cell";
+            const label = markerMap.get(`${stringName}-${fret}`);
+            if (label) {
+              const marker = document.createElement("span");
+              marker.className = `marker${rowIndex % 2 ? " alt" : ""}`;
+              marker.textContent = labelMode === "degrees" ? label : noteAt(stringName, fret);
+              marker.title = `${stringName} string, fret ${fret}`;
+              cell.appendChild(marker);
+            }
+            board.appendChild(cell);
+          });
+        });
+      }
+
+      function noteAt(openString, fret) {
+        const base = {B:23,E:28,A:33,D:38,G:43}[openString];
+        const names = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+        const midi = base + fret;
+        return names[midi % 12];
+      }
+
+      $("#playButton").addEventListener("click", playPhrase);
+      $("#hintButton").addEventListener("click", revealHint);
+      $("#singButton").addEventListener("click", () => {
+        if (state !== "recall") return;
+        $("#promptText").textContent = "声で確認しました。次は指板上へ移して演奏する";
+        toast("歌唱確認を記録しました。");
+        setState("recall");
+      });
+      $("#primaryButton").addEventListener("click", () => {
+        if (state === "ready") playPhrase();
+        else if (state === "recall") startAttempt();
+        else if (state === "attempt") finishAttempt();
+        else if (state === "transfer" || state === "completed") nextExercise();
+      });
+
+      $$(".mode-tab").forEach(tab => tab.addEventListener("click", () => modeChange(tab.dataset.mode)));
+      $$(".rating").forEach(button => button.addEventListener("click", () => rate(button.dataset.rating)));
+      $$(".issue").forEach(button => button.addEventListener("click", () => {
+        selectedIssue = button.dataset.issue;
+        $$(".issue").forEach(x => x.classList.toggle("active", x === button));
+      }));
+
+      $("#transferButton").addEventListener("click", transfer);
+      $("#leftHandButton").addEventListener("click", () => {
+        leftHanded = !leftHanded;
+        $("#leftHandButton").classList.toggle("active", leftHanded);
+        $("#leftHandButton").textContent = leftHanded ? "Left-handed" : "Right-handed";
+        buildFretboard();
+      });
+      $("#fiveStringButton").addEventListener("click", () => {
+        fiveString = !fiveString;
+        $("#fiveStringButton").classList.toggle("active", fiveString);
+        $("#fiveStringButton").textContent = fiveString ? "5-string" : "4-string";
+        buildFretboard();
+      });
+      $("#labelModeButton").addEventListener("click", () => {
+        labelMode = labelMode === "degrees" ? "notes" : "degrees";
+        $("#labelModeButton").classList.toggle("active", labelMode === "notes");
+        $("#labelModeButton").textContent = labelMode === "degrees" ? "Degrees" : "Notes";
+        buildFretboard();
+      });
+      $("#sourceSelect").addEventListener("change", event => {
+        toast(event.target.value === "vault"
+          ? "Vault進行のsnapshotを練習文脈として使用します。元データは変更しません。"
+          : "決定論的Generatorへ切り替えました。");
+      });
+
+      $("#closeSummary").addEventListener("click", () => $("#summaryModal").classList.remove("visible"));
+      $("#newSession").addEventListener("click", () => {
+        done = 0;
+        $("#doneCount").textContent = "0";
+        $("#sessionBar").style.width = "0%";
+        $("#summaryModal").classList.remove("visible");
+        modeChange("degree");
+      });
+
+      document.addEventListener("keydown", event => {
+        if (event.target.matches("input, select, textarea")) return;
+        const key = event.key.toLowerCase();
+        if (event.code === "Space") {
+          event.preventDefault();
+          $("#primaryButton").click();
+        } else if (key === "r") {
+          playPhrase();
+        } else if (key === "h") {
+          revealHint();
+        } else if (key === "s" && state === "recall") {
+          $("#singButton").click();
+        } else if (["1","2","3","4"].includes(event.key) && state === "review") {
+          $$(".rating")[Number(event.key)-1].click();
+        } else if (key === "t" && $("#transferBox").classList.contains("visible")) {
+          transfer();
+        } else if (key === "n" && (state === "transfer" || state === "completed")) {
+          nextExercise();
+        } else if (event.key === "Escape") {
+          if ($("#summaryModal").classList.contains("visible")) $("#summaryModal").classList.remove("visible");
+          if (state === "playing") {
+            clearTimeout(phraseTimer);
+            wave.classList.remove("playing");
+            setState("recall");
+          }
+        }
+      });
+
+      buildFretboard();
+      setState("ready");
+      $("#sessionBar").style.width = `${done / 12 * 100}%`;
+    })();
+  </script>
+</body>
+</html>

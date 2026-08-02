@@ -27,6 +27,7 @@ import type { AppCopy, AppLanguage } from "../i18n";
 const pipeline: Status[] = ["idea", "loop", "arrange", "mix", "done"];
 
 export function HomeView({
+  bassPracticeCard,
   ideas,
   monthlyGoal,
   copy,
@@ -40,6 +41,7 @@ export function HomeView({
   transitionIdea,
   setToast,
 }: {
+  bassPracticeCard?: ReactNode;
   ideas: SongIdea[];
   monthlyGoal: number;
   copy: AppCopy;
@@ -176,6 +178,8 @@ export function HomeView({
           </div>
         )}
       </Surface>
+
+      {bassPracticeCard}
 
       <section aria-label={copy.home.overviewLabel} className="border-b border-[var(--lv-border)] pb-4">
         <div className="flex flex-wrap items-center justify-between gap-2">

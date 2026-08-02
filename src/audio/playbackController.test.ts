@@ -34,6 +34,9 @@ function makeDriver() {
     playTimeline: vi.fn(async (_timeline, _bpm, _sound, callbacks) => {
       sessions.push(callbacks);
     }),
+    playNotes: vi.fn(async (_notes, _bpm, _sound, callbacks) => {
+      sessions.push(callbacks);
+    }),
     stop: vi.fn(),
   };
   return { driver, sessions };
@@ -104,6 +107,72 @@ describe("playbackController", () => {
       "electric-piano",
       expect.any(Object),
     );
+  });
+
+  it("routes note events and reports natural lifecycle completion", async () => {
+    const { driver, sessions } = makeDriver();
+    const controller = createPlaybackController(driver);
+    const lifecycle = { onStarted: vi.fn(), onEnded: vi.fn() };
+    const notes = [{ pitch: 40, startBeat: 0, durationBeats: 1, velocity: 96 }];
+
+    await controller.play(
+      { kind: "practice", id: "degree:one" },
+      { type: "notes", notes, bpm: 88, sound: "clean-bass" },
+      lifecycle,
+    );
+    expect(driver.playNotes).toHaveBeenCalledWith(
+      notes,
+      88,
+      "clean-bass",
+      expect.any(Object),
+    );
+    sessions[0].onStarted?.();
+    sessions[0].onEnded?.("completed");
+    expect(lifecycle.onStarted).toHaveBeenCalledOnce();
+    expect(lifecycle.onEnded).toHaveBeenCalledWith("completed");
+    expect(controller.getState()).toEqual({ status: "idle" });
+  });
+
+  it("reports Top Bar stop once and suppresses stale natural completion", async () => {
+    const { sessions, driver } = makeDriver();
+    const controller = createPlaybackController(driver);
+    const lifecycle = { onEnded: vi.fn() };
+
+    await controller.play(sourceA, { type: "timeline", timeline }, lifecycle);
+    sessions[0].onStarted?.();
+    controller.stop();
+    controller.stop();
+    sessions[0].onEnded?.("completed");
+
+    expect(lifecycle.onEnded).toHaveBeenCalledTimes(1);
+    expect(lifecycle.onEnded).toHaveBeenCalledWith("stopped");
+    expect(controller.getState()).toEqual({ status: "idle" });
+  });
+
+  it("reports cross-source replacement once and keeps the replacement active", async () => {
+    const firstLifecycle = { onEnded: vi.fn() };
+    const secondLifecycle = { onEnded: vi.fn() };
+    const controlled = makeDriver();
+    const replacementController = createPlaybackController(controlled.driver);
+
+    await replacementController.play(
+      sourceA,
+      { type: "timeline", timeline },
+      firstLifecycle,
+    );
+    await replacementController.play(sourceB, { type: "chord", chord }, secondLifecycle);
+    controlled.sessions[0].onEnded?.("completed");
+
+    expect(firstLifecycle.onEnded).toHaveBeenCalledTimes(1);
+    expect(firstLifecycle.onEnded).toHaveBeenCalledWith("replaced");
+    expect(secondLifecycle.onEnded).not.toHaveBeenCalled();
+    expect(replacementController.getState()).toMatchObject({
+      status: "starting",
+      source: sourceB,
+    });
+    controlled.sessions[1].onEnded?.("completed");
+    expect(secondLifecycle.onEnded).toHaveBeenCalledWith("completed");
+    expect(replacementController.getState()).toEqual({ status: "idle" });
   });
 
   it("ignores a rejected request after a newer request replaces it", async () => {

@@ -1,0 +1,2 @@
+# P5.16.3-02 Vault Source
+Saved progression blocks are converted to privacy-safe read-only snapshots. Raw MIDI, paths, memo and source filenames are excluded. Missing/unsupported source states are explicit.

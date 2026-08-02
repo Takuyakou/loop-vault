@@ -92,4 +92,21 @@ describe("HistoryView", () => {
 
     await act(async () => root.unmount());
   });
+
+  it("shows persisted Practice summaries as self-rated facts without a fake score", async () => {
+    const container = document.createElement("div"); document.body.append(container); const root = createRoot(container);
+    await act(async () => root.render(<HistoryView ideas={[]} language="en" openIdea={vi.fn()} openProgression={vi.fn()} practiceHistory={[{
+      id: "practice-session", at: "2026-08-02T10:00:00.000Z", completedCount: 8, targetCount: 10,
+      ratingCounts: { again: 1, hard: 1, good: 4, easy: 2 }, goodOrEasyCount: 6,
+      independentSuccessCount: 4, averageListenCount: 1.6, transferCount: 1, nextFocus: "recall",
+    }]} />));
+    expect(container.textContent).toContain("8 / 10 completed");
+    expect(container.textContent).toContain("Self-rated Good or Easy: 6");
+    expect(container.textContent).toContain("Self-rated independent: 4");
+    expect(container.textContent).not.toMatch(/accuracy|score|confidence/i);
+    expect(container.textContent).not.toContain("No history yet");
+    expect(container.textContent).toContain("1 events");
+    expect(container.textContent).not.toContain("0 events");
+    await act(async () => root.unmount());
+  });
 });
