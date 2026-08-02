@@ -2,15 +2,24 @@
 
 ## 1. Final determination
 
-**BLOCKED**. All Phase 5.16 code, build, accessibility, and release gates listed below passed. The required Phase 5.15 frozen 317-file corpus fixture is absent from this clean dedicated worktree, so its lock verification and the one dependent full-Vitest test cannot pass. No personal or external MIDI was copied, generated, analyzed, or retained to bypass this gate.
+**PASS WITH DOCUMENTED P5.15 EXTERNAL-FIXTURE EXCEPTION**.
 
-## 2. Branch, worktree, and gate HEAD
+- Phase 5.16 release verification: **PASS**.
+- P5.16-specific gates: **PASS**.
+- The repository full-Vitest result is recorded separately in section 6; its one failure is the known frozen P5.15 external-corpus fixture-dependent test and is not a Phase 5.16 release blocker.
 
-- Branch: `test/p5163-04-release-gates`
+## 2. Branch, worktree, current HEAD, and build relationship
+
+- Current branch: `test/p5163-04-release-gates`
+- Current closure-documentation HEAD before this report-only amendment: `14eff994baa70eb63fb7a1b7413a9fbb371f18ba`
 - Dedicated worktree: P5.16.3 release-gates worktree (no absolute path recorded)
-- Gate HEAD: `f861aff875d971b2d8e76360492ac76f3f5354e2`
+- Code-equivalent build and gate commit: `f861aff875d971b2d8e76360492ac76f3f5354e2`
+- Original closure-report commit: `b22e5769499e052c53a1fbcc7a538b0c2d0a8e70`
+- Closure-report commit-chain-detail commit: `14eff994baa70eb63fb7a1b7413a9fbb371f18ba`
+- Both recorded closure-report commits are docs-only and do not change production code or build inputs.
+- The setup executable was built from the code-equivalent commit `f861aff875d971b2d8e76360492ac76f3f5354e2`.
 - Merge base with `origin/master`: `2eb36b63a064c4ee44e0d071836b2d722f534502`
-- Remote branch containing gate HEAD: none; no push and no PR were created.
+- Remote branch containing the closure documentation HEAD: none; no push and no PR were created.
 
 ## 3. Phase 5.16 commit chain
 
@@ -47,9 +56,9 @@
 - `e225c50` docs: P5.16統合作業報告書を追加
 - `f861aff` P5.16: status recordの絶対pathを除去
 
-## 4. Final closure commit
+## 4. Final closure documentation commits
 
-The closure-report commits are `P5.16: Final Closure Gateを記録` followed by `P5.16: Closure commit chainを完全化`; both contain only `docs/phase5.16/FINAL-CLOSURE-REPORT.md`. The executable/code gate HEAD above is the immediately preceding code-equivalent commit; these documentation-only closure commits do not alter production code or build inputs.
+The closure report was recorded in `b22e5769499e052c53a1fbcc7a538b0c2d0a8e70` and its P5.16.1 chain detail was completed in `14eff994baa70eb63fb7a1b7413a9fbb371f18ba`. Each commit changes only `docs/phase5.16/FINAL-CLOSURE-REPORT.md`. The build/gate commit remains `f861aff875d971b2d8e76360492ac76f3f5354e2`; no production code or build input changes after that commit are being claimed.
 
 ## 5. Release gates run on gate HEAD
 
@@ -68,13 +77,16 @@ The closure-report commits are `P5.16: Final Closure Gateを記録` followed by 
 
 Benchmark medians / p95 / max: generation-1000 36.8072 / 38.6573 / 38.6573 ms; queue-1000 1.2990 / 1.7911 / 1.7911 ms; history-1000/100 sessions 4.0224 / 4.8437 / 4.8437 ms; playback-1000 1.0079 / 1.6807 / 1.6807 ms.
 
-## 6. Full Vitest and fixture condition
+## 6. Full Vitest and frozen P5.15 fixture exception
 
-- Precondition command: `npm run eval:p515:stage01:verify-lock`
-- Result: BLOCKED before analyzer execution: all 317 locked relative inputs were reported `missing`.
-- No temporary fixture placement was safe or available under the documented Phase 5.15 procedure, so no corpus data was copied or created.
-- Same clean fixture-absent placement: `npm test` completed in 213.42 s with **286 test files / 2340 tests passing** and **one failed test file / one failed test**: `scripts/phase515/stage01CorpusLock.test.ts`, the expected byte-verification test for the missing 317-file corpus.
-- This is not reported as full-Vitest PASS.
+- **Phase 5.16 release verification: PASS.**
+- **P5.16-specific gates: PASS.**
+- Repository full Vitest, in the clean fixture-absent placement: `npm test` completed in 213.42 s with **286 test files / 2340 tests passing** and **one failed test file / one failed test**: `scripts/phase515/stage01CorpusLock.test.ts`.
+- That known failure depends on the intentionally absent frozen P5.15 317-file external corpus fixture. The corresponding lock precondition command was `npm run eval:p515:stage01:verify-lock`; no Analyzer execution occurred.
+- **Phase 5.15 evaluation: NOT RUN / FROZEN.** No temporary fixture was copied, regenerated, or analyzed.
+- This closure makes no new guarantee about P5.15 correctness or regressions.
+- P5.15 changes in this closure: **0**.
+- The P5.15 fixture exception is documented but does not block the P5.16 release or merge candidacy.
 
 ## 7. Privacy and protected surfaces
 
@@ -100,7 +112,7 @@ Benchmark medians / p95 / max: generation-1000 36.8072 / 38.6573 / 38.6573 ms; q
 
 After removing only the verified Playwright-regenerated Phase 5.13 visual evidence from this worktree and normalizing the identical `Cargo.toml` index entry, `git status --short` is empty in the dedicated P5.16.3 release-gates worktree.
 
-Other worktrees remain untouched: the frozen P5.15 worktree retains its pre-existing user changes, and the P5.16.2 worktree retains pre-existing/generated Phase 5.13 evidence plus an identical-content `Cargo.toml` worktree-state entry. Neither is staged or committed by this closure.
+Other worktrees remain untouched: the frozen P5.15 worktree retains its pre-existing user changes, and the P5.16.2 worktree retains pre-existing/generated Phase 5.13 evidence plus an identical-content `Cargo.toml` worktree-state entry. Neither is staged or committed by this closure. P5.15 changes made by this report correction: **0**.
 
 ## 10. Merge and push
 
@@ -108,14 +120,16 @@ Other worktrees remain untouched: the frozen P5.15 worktree retains its pre-exis
 - Push: not performed.
 - PR: none created or pushed from this branch.
 
-## 11. Unresolved item
+## 11. Known future P5.15 prerequisite (non-blocking)
 
-Provide the documented, locked 317-file corpus through the approved temporary-fixture procedure, verify its SHA-256 / manifest / partition binding, rerun full Vitest, and remove the temporary fixture afterwards. Until then the only final-closure blocker is the P5.15 corpus fixture gate.
+The documented, locked 317-file corpus remains a known prerequisite only if P5.15 is resumed in the future. It does not block P5.16 merge. This closure did not copy, regenerate, analyze, or retain the fixture.
 
 ## 12. Recommended merge order
 
-1. `test/p5161-05-release-gates`
-2. `test/p5162-04-release-gates`
-3. `test/p5163-04-release-gates` (including this closure report)
+P5.16 is a merge candidate.
 
-Do not merge while this report is BLOCKED. No Phase 5.17 work or docs-operations migration was started.
+1. Perform a hardware smoke check before merge.
+2. Confirm branch ancestry and choose the merge method.
+3. Merge in the established order: `test/p5161-05-release-gates`, then `test/p5162-04-release-gates`, then `test/p5163-04-release-gates`.
+
+No Phase 5.17 work or docs-operations migration was started. The default branch remains unmerged and no push was performed.
