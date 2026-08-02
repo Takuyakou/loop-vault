@@ -5,6 +5,7 @@ export * from "./generator";
 export * from "./hints";
 export * from "./mapping";
 export * from "./review";
+export * from "./rhythm";
 export * from "./singingReference";
 export * from "./stateMachine";
 export * from "./transfer";

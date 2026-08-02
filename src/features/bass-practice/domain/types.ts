@@ -1,4 +1,4 @@
-export type BassPracticeMode = "degree";
+export type BassPracticeMode = "degree" | "rhythm";
 
 export type PracticeRating = "again" | "hard" | "good" | "easy";
 
@@ -91,7 +91,11 @@ export interface PracticeHint {
     | "tonal-context"
     | "note-count-contour"
     | "degree-sequence"
-    | "note-names-fretboard";
+    | "note-names-fretboard"
+    | "tempo-meter"
+    | "start-position"
+    | "rhythm-syllables"
+    | "full-rhythm-grid";
 }
 
 export interface SingingReference {
@@ -100,7 +104,7 @@ export interface SingingReference {
   readonly events: readonly PracticeTargetEvent[];
 }
 
-export interface PracticeExercise {
+export interface DegreePracticeExercise {
   readonly id: string;
   readonly version: 1;
   readonly generatorVersion: string;
@@ -220,8 +224,72 @@ export interface GeneratorError {
   readonly attempts: number;
 }
 
+
+export type RhythmVocabularyId =
+  | "quarter"
+  | "eighth"
+  | "offbeat-eighth"
+  | "rest-start"
+  | "dotted-eighth-sixteenth"
+  | "sixteenth-syncopation"
+  | "tied-duration"
+  | "anticipation"
+  | "two-beat-cell"
+  | "one-bar-cell";
+
+export interface RhythmMeter {
+  readonly numerator: 3 | 4 | 6;
+  readonly denominator: 4 | 8;
+}
+
+export interface RhythmTargetEvent {
+  readonly index: number;
+  readonly startBeat: number;
+  readonly durationBeats: number;
+  readonly velocity: number;
+  readonly accent: boolean;
+}
+
+export interface RhythmGeneratorSnapshot {
+  readonly generatorVersion: string;
+  readonly seed: string;
+  readonly vocabularyId: RhythmVocabularyId;
+  readonly tempo: number;
+  readonly meter: RhythmMeter;
+  readonly phraseBars: 1 | 2;
+  readonly startPositionBeats: number;
+  readonly countInBars: 1 | 2;
+  readonly listenLimit: number;
+}
+
+export interface RhythmPracticeExercise {
+  readonly id: string;
+  readonly version: 1;
+  readonly generatorVersion: string;
+  readonly seed: string;
+  readonly mode: "rhythm";
+  readonly source: { readonly kind: "generated" };
+  readonly tempo: number;
+  readonly meter: RhythmMeter;
+  readonly targetEvents: readonly RhythmTargetEvent[];
+  readonly difficulty: PracticeDifficulty;
+  readonly hints: readonly PracticeHint[];
+  readonly generatorSnapshot: RhythmGeneratorSnapshot;
+}
+
+export type PracticeExercise = DegreePracticeExercise;
+
+export interface RhythmGeneratorError {
+  readonly code: GeneratorErrorCode;
+  readonly message: string;
+  readonly attempts: number;
+}
+
+export type RhythmGeneratorResult =
+  | { readonly ok: true; readonly exercise: RhythmPracticeExercise }
+  | { readonly ok: false; readonly error: RhythmGeneratorError };
 export type GeneratorResult =
-  | { readonly ok: true; readonly exercise: PracticeExercise }
+  | { readonly ok: true; readonly exercise: DegreePracticeExercise }
   | { readonly ok: false; readonly error: GeneratorError };
 
 export type TransferErrorCode =
