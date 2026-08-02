@@ -16,7 +16,12 @@
 
 ### P5.16.1
 
-`8661e5d` through `85453d9` (`P5.16.1-05: Degree Echo release gatesを完了`).
+- `8661e5d` P5.16.1-00: Degree Echo baselineを固定
+- `794220f` P5.16.1-01: Degree Echo domainを実装
+- `4a57902` P5.16.1-02: Degree Echo playbackとsinging contractを実装
+- `55ef122` P5.16.1-03: Bass Practice UIとHome導線を実装
+- `3f6144f` P5.16.1-04: Practice review保存とHistoryを実装
+- `85453d9` P5.16.1-05: Degree Echo release gatesを完了
 
 ### P5.16.2
 
@@ -44,7 +49,7 @@
 
 ## 4. Final closure commit
 
-This report is committed as `P5.16: Final Closure Gateを記録` and contains only `docs/phase5.16/FINAL-CLOSURE-REPORT.md`. The executable/code gate HEAD above is the immediately preceding code-equivalent commit; this documentation-only closure commit does not alter production code or build inputs.
+The closure-report commits are `P5.16: Final Closure Gateを記録` followed by `P5.16: Closure commit chainを完全化`; both contain only `docs/phase5.16/FINAL-CLOSURE-REPORT.md`. The executable/code gate HEAD above is the immediately preceding code-equivalent commit; these documentation-only closure commits do not alter production code or build inputs.
 
 ## 5. Release gates run on gate HEAD
 
