@@ -15,7 +15,7 @@ export const DEGREE_ECHO_LISTEN_LIMIT = 2;
 export function degreeTargetPlaybackRequest(
   exercise: PracticeExercise,
 ): PlaybackRequest {
-  return noteEventRequest(exercise.targetEvents, exercise.tempo, "clean-bass");
+  return noteEventRequest(exercise.targetEvents, exercise.tempo, "freepats-finger-bass");
 }
 
 export function degreeSingingReferencePlaybackRequest(

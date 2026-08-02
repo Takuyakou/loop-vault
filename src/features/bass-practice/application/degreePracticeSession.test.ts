@@ -89,7 +89,7 @@ describe("DegreePracticeSession", () => {
 
     await session.startListen();
     expect(session.getState()).toMatchObject({ status: "listening", listenCount: 1 });
-    expect(requests[0]).toMatchObject({ type: "notes", sound: "clean-bass" });
+    expect(requests[0]).toMatchObject({ type: "notes", sound: "freepats-finger-bass" });
     lifecycles[0].onStarted?.();
     expect(session.getState().status).toBe("listening");
     lifecycles[0].onEnded?.("completed");
@@ -347,7 +347,7 @@ describe("DegreePracticeSession", () => {
       .toEqual(sourceExercise.targetEvents.map((event) => event.degree));
     await session.playTransferReference();
     expect(session.getSnapshot().transferPlaybackActive).toBe(true);
-    expect(requests[requests.length - 1]).toMatchObject({ type: "notes", sound: "clean-bass" });
+    expect(requests[requests.length - 1]).toMatchObject({ type: "notes", sound: "freepats-finger-bass" });
     lifecycles[lifecycles.length - 1]?.onEnded?.("completed");
     expect(session.getSnapshot()).toMatchObject({
       transferPlaybackActive: false,

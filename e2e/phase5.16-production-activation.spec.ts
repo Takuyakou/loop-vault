@@ -40,6 +40,9 @@ test("production defaults expose and start every shipped Bass Practice mode with
   await page.getByRole("tab", { name: "Bassline Echo" }).click();
   const bassline = page.getByTestId("bassline-echo-view");
   await expect(bassline).toBeVisible();
+  await bassline.getByTestId("bassline-listen").click();
+  await expect(bassline.getByTestId("bassline-listen")).toHaveText("Stop", { timeout: 10_000 });
+  await bassline.getByTestId("bassline-listen").click();
   await bassline.getByRole("button", { name: "Review" }).click();
   await expect(bassline.getByText("Self-rated review")).toBeVisible();
 

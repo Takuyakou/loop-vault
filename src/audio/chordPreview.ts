@@ -1,6 +1,7 @@
 import * as Tone from "tone";
 import { voiceChordForPreview } from "../domain/chordVoicing";
 import type { ChordSymbol, ChordTimelineItem } from "../domain/types";
+import { createFreepatsBassInstrument } from "../features/bass-practice/application/freepatsBass";
 
 interface PreviewInstrument {
   triggerAttackRelease(
@@ -15,7 +16,7 @@ interface PreviewInstrument {
 
 export type PreviewSound = "piano" | "electric-piano";
 
-export type MidiPreviewSound = PreviewSound | "clean-bass" | "singing-reference";
+export type MidiPreviewSound = PreviewSound | "clean-bass" | "singing-reference" | "freepats-finger-bass" | "freepats-picked-bass";
 
 export type PreviewEndReason = "completed" | "stopped";
 
@@ -271,7 +272,11 @@ async function preparePreviewAudio(
         ? createCleanBassInstrument()
         : sound === "singing-reference"
           ? createSingingReferenceInstrument()
-          : createElectricPianoInstrument();
+          : sound === "freepats-finger-bass"
+            ? await createFreepatsBassInstrument("finger")
+            : sound === "freepats-picked-bass"
+              ? await createFreepatsBassInstrument("pick")
+              : createElectricPianoInstrument();
     if (!isActive(session)) {
       nextInstrument.dispose();
       return undefined;

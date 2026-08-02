@@ -96,7 +96,8 @@
     "eval:midi:diversity:report": "vite-node scripts/evaluate-voice-aware-reranker.ts --run-cli --report artifacts/phase3.6.5-candidate-diversity --report-only",
     "eval:midi:correction-cost": "vite-node scripts/evaluate-voice-aware-reranker.ts --run-cli --report artifacts/phase3.6.5-correction-cost",
     "eval:midi:correction-cost:report": "vite-node scripts/evaluate-voice-aware-reranker.ts --run-cli --report artifacts/phase3.6.5-correction-cost --report-only",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "audio:ab:freepats": "node scripts/render-freepats-bass-ab.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0",
@@ -123,6 +124,7 @@
     "@vitejs/plugin-react": "^5.0.0",
     "autoprefixer": "^10.4.0",
     "eslint": "^10.6.0",
+    "ffmpeg-static": "5.2.0",
     "jsdom": "^26.0.0",
     "postcss": "^8.4.0",
     "tailwindcss": "^3.4.0",

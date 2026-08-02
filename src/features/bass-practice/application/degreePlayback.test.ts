@@ -18,7 +18,7 @@ describe("Degree Echo playback requests", () => {
       type: "notes",
       notes: targetEventsAsPreviewNotes(exercise.targetEvents),
       bpm: 120,
-      sound: "clean-bass",
+      sound: "freepats-finger-bass",
     });
     expect(degreePhraseDurationMs(exercise)).toBe(
       Math.max(...exercise.targetEvents.map(
