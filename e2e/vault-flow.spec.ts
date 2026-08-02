@@ -24,6 +24,7 @@ test("解析結果を保存し、Vaultで検索して詳細とDojoへ渡せる",
   await expect(detail.getByRole("button", { name: /練習する|Practice/ })).toBeVisible();
 
   await detail.getByRole("button", { name: /練習する|Practice/ }).click();
+  await page.getByRole("tab", { name: "Chord Dojo" }).click();
   await expect(page.getByTestId("practice-layout")).toBeVisible();
   await expect(page.getByTestId("practice-progression-overview")).toBeVisible();
   expect(pageErrors).toEqual([]);

@@ -64,6 +64,7 @@ test.describe.serial("Phase 5.13-3 viewport recovery", () => {
     await page.locator("[data-progression-detail-view]")
       .getByRole("button", { name: /練習する|Practice/ })
       .click();
+    await page.getByRole("tab", { name: "Chord Dojo" }).click();
     await expect(page.getByTestId("practice-layout")).toBeVisible();
 
     for (const viewport of viewportMatrix) {
