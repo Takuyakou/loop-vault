@@ -5,6 +5,7 @@ src-tauri/target/
 src-tauri/target-*/
 .env
 .env.*
+!.env.example
 *.log
 *.tmp
 demo-data/*.json

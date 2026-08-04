@@ -1,179 +1,274 @@
+<div align="center">
+
 # Loop Vault
 
-Loop Vaultは、作りかけのループやコード進行を「完成まで進める」ためのデスクトップアプリです。
+**MIDI からコード進行を解析し、編集・試聴・練習までを 1 つのデスクトップアプリで扱うための音楽制作支援ツール**
 
-思いついたネタをただ溜めるだけではなく、各アイデアに次の一手を1つだけ持たせ、今日取り組むべきFocusを見つけやすくします。Phase 2では、MIDIからコード進行を解析し、よさそうな進行ブロックを保存して再利用できるようになりました。
+Tauri v2 + React + TypeScript + Rust で構築したデスクトップアプリケーションです（主に Windows で開発・動作確認しています）。
 
-## できること
+![Loop Vault](docs/images/hero.png)
 
-- Idea / Loop / Arrange / Mix / Done の状態で曲ネタを管理
-- 各アイデアにNext Actionを1つ設定
-- 今日取り組むFocus候補を表示
-- 月間完成目標の進捗を表示
-- `.flp`、`.mid`、`.wav`などのローカルアセットを登録
-- MIDIファイルからコード進行タイムラインを解析
-- 4 / 8 / 16小節のコード進行候補を確認
-- 候補のコードを編集、単体試聴、進行全体で試聴
-- コード進行ブロックを新規Ideaとして保存
-- コード進行ブロックを既存Ideaへ追加
-- 保存済み進行ブロックをDetail画面で確認、試聴、削除
-- Settingsから日本語 / Englishを切り替え
-- JSONのimport / export、バックアップ、破損データ退避
+</div>
 
-## ワークフロー
+> **公開リポジトリについて**
+> このリポジトリには MIDI ファイルを含めていません（ライセンス上の理由）。
+> ソースの閲覧・ビルド・単体テストの実行に MIDI データは不要です。
+> 精度評価を手元で再現する場合の配置は [`docs/local-data.md`](docs/local-data.md) を参照してください。
 
-```mermaid
-flowchart LR
-  A["Chord Drip / MIDI"] --> B["Loop Vault"]
-  B --> C["FL Studio"]
-  C --> D["完成"]
+---
+
+## 目次
+
+- [概要](#概要)
+- [主な機能](#主な機能)
+- [スクリーンショット](#スクリーンショット)
+- [技術スタック](#技術スタック)
+- [アーキテクチャ](#アーキテクチャ)
+- [コード進行検出の精度改善への取り組み方](#コード進行検出の精度改善への取り組み方)
+- [AI を用いた開発フロー](#ai-を用いた開発フロー)
+- [セットアップ](#セットアップ)
+- [今後の方向性](#今後の方向性)
+- [ライセンス](#ライセンス)
+
+---
+
+## 概要
+
+Loop Vault は、DTM / 作曲時の「MIDI からコード進行を把握し、素材として整理・練習する」
+という一連の流れを支援するデスクトップアプリです。
+
+- MIDI ファイルを取り込むと、コード進行を自動で解析してタイムラインとして表示します。
+- 解析結果はそのまま鵜呑みにするのではなく、**解析前の下ごしらえ**（どのボイスを解析対象に
+  するか等）や、**解析後の手直し**（範囲選択・コード修正・試聴）ができます。
+- 気に入ったループやアイデアは「Vault」に保存し、制作の進捗ステータスとともに管理できます。
+- コード進行の練習（度数・リズム・ベースなど）を行うモードや、LLM に展開のアイデアを
+  相談する機能も備えています。
+
+アプリの本体（既定の解析モード）は、後述の評価プロセスを経て固定した安定版を使用しています。
+
+## 主な機能
+
+以下は、いずれもリポジトリ内に実装が存在する機能です。
+
+### MIDI 取り込みとコード進行解析（Capture）
+- MIDI ファイル（複数ファイルの取り込みにも対応）から、コード進行を自動解析します。
+- 解析前に、対象とするボイス（パート）の役割を指定し、Canvas 上のピアノロールで
+  解析対象を調整してから解析を実行できます。
+- 解析結果は、4 / 8 / 16 小節などの**候補ブロック**として提示されます。
+
+### 候補の手動作成・編集（Candidate Catalog / 手動候補）
+- 自動検出された候補の一覧（カタログ）から選ぶだけでなく、タイムライン上で**任意の範囲を
+  選択して候補を作成**できます。
+- 候補の範囲やコードイベント（追加・削除・置換・分割・結合・移動）を編集でき、
+  Undo / Redo に対応しています。
+
+### コード進行の詳細・試聴・書き出し（Progression Detail）
+- コード進行をタイムラインで確認し、各コードを編集できます。
+- 元 MIDI のボイシングを保持する **Voicing Memory** を持ち、試聴や練習に反映します。
+- [Tone.js](https://tonejs.github.io/) による試聴に対応しています。
+- 解析・編集した進行を MIDI として書き出し、DAW へ**ネイティブにドラッグ&ドロップ**で
+  渡すことができます（Rust 側の `midi_export` / `native_drag` コマンドで実装）。
+
+### アイデア / ループの管理（Vault）
+- 取り込んだループやアイデアを保存し、制作ステータス（Idea / Loop / Arrange / Mix / Done）
+  とともに一覧・管理できます。
+- 次にやること（Next Action）やフォーカスなど、制作を前に進めるための整理を支援します。
+
+### 練習モード（Practice / Bass Practice）
+- コード進行を題材にした練習モードを備えます（移調・ミックスなどに対応）。
+- **Bass Practice**（P5.16 で追加）では、度数（Degree）・リズム・ベースライン模奏
+  （Bassline Echo）といった、ベース練習用の独立したエクササイズを提供します。
+  ベース音色には FreePats のサウンドを使用しています。
+
+### コード進行アドバイザー（Progression Advisor / LLM）
+- OpenAI の API を用いて、コード進行の展開アイデアを相談できる機能です。
+- **API キーはフロントエンド側に保存しません。** アプリ内の設定から入力したキーを、
+  Tauri(Rust) 経由で **OS のキーチェーン**（Windows 資格情報マネージャー等）に保存します
+  （実装: [`src-tauri/src/llm/keychain.rs`](src-tauri/src/llm/keychain.rs)）。
+
+### データの保存・バックアップ・復旧
+- 練習データ等の保存・読み込みに加え、バックアップの一覧・復元・退避（quarantine）を
+  Rust 側（`practice_storage`）で扱います。
+
+### 多言語
+- 日本語 / 英語の切り替えに対応しています（`src/i18n.ts`）。
+
+## スクリーンショット
+
+以下はいずれも**合成したダミー MIDI / ダミーデータ**で撮影しています（撮影方法:
+[`docs/images/README.md`](docs/images/README.md)）。
+
+| Capture（MIDI 解析） | Vault（管理） |
+| --- | --- |
+| ![Capture](docs/images/capture.png) | ![Vault](docs/images/vault.png) |
+
+| Progression Detail（詳細・試聴・書き出し） | Bass Practice（Degree Echo） |
+| --- | --- |
+| ![Progression Detail](docs/images/progression-detail.png) | ![Bass Practice](docs/images/bass-practice.png) |
+
+## 技術スタック
+
+| 領域 | 採用技術 |
+| --- | --- |
+| デスクトップ基盤 | Tauri v2（Rust バックエンド + WebView フロント） |
+| フロントエンド | React 18 / TypeScript |
+| ビルド | Vite 7 |
+| 状態管理 | Zustand 5 |
+| スキーマ / バリデーション | Zod 3 |
+| 音声 / MIDI 再生 | Tone.js 15 |
+| ネイティブ機能（Rust） | OS キーチェーン連携（LLM キー）、練習データ永続化、MIDI 書き出し、DAW へのネイティブドラッグ |
+| テスト | Vitest |
+| Lint | ESLint |
+
+## アーキテクチャ
+
+フロントエンド（React）と、Tauri(Rust) のネイティブコマンドを境界で分離した構成です。
+音楽理論・MIDI 解析などの中核ロジックは、UI から独立した純粋関数として `src/domain/`
+に置き、単体テストで検証しています。
+
+```
+src/
+├─ domain/           音楽理論・MIDI 解析・コード進行ロジック（UI 非依存、テスト対象）
+│  ├─ midi/          MIDI 解析パイプライン、候補ブロック生成、手動候補（Draft）など
+│  ├─ harmony/       ハーモニー関連
+│  ├─ practice*/     練習・移調・ミックス
+│  └─ progressionAdvisor/  LLM アドバイザー用のドメインロジック
+├─ views/            画面（Capture / Vault / Home / Practice / ProgressionDetail / History / Detail）
+├─ features/
+│  └─ bass-practice/ ベース練習機能（application / domain / infra / ui / assets）
+├─ llm/              LLM 呼び出しのブリッジ（Tauri invoke 経由）
+└─ i18n.ts           日本語 / 英語
+
+src-tauri/           Tauri(Rust) 側
+└─ src/
+   ├─ llm/keychain.rs      OpenAI API キーを OS キーチェーンで管理
+   ├─ practice_storage     練習データの保存・バックアップ・復旧
+   └─ midi_export / native_drag  MIDI 書き出しと DAW へのネイティブドラッグ
 ```
 
-Loop Vaultは、コード進行やMIDIから生まれたアイデアを、DAWで完成させるまでの作業台として使います。思いつき、コードメモ、MIDI、プロジェクトファイル、次の作業を1つのIdeaにまとめます。
+中核となる MIDI 解析仕様の詳細は
+[`docs/current-midi-detection-spec.md`](docs/current-midi-detection-spec.md)、
+アプリ全体の技術的な引き継ぎメモは
+[`docs/current-app-technical-handoff.md`](docs/current-app-technical-handoff.md)
+にまとめています。
 
-## 開発環境
+## コード進行検出の精度改善への取り組み方
 
-必要なもの:
+コード進行の検出精度は「なんとなく良くなった気がする」で判断しないことを方針にしています。
+本リポジトリでは、検出ロジックの変更を以下のプロセスで評価・記録しています。
 
-- Node.js 20+
-- Rust stable toolchain
-- Windows
+- **Gold コーパスによるベースライン固定**
+  正解ラベルを人手で確認した MIDI 群（Gold コーパス）を評価の基準として固定し、
+  変更前後を同じ指標で比較します。コーパス自体はライセンス上の理由から公開していません
+  （[`docs/local-data.md`](docs/local-data.md)）。
 
-インストール:
+- **アブレーション（ablation）**
+  検出の各要素を個別に有効化 / 無効化し、どの要素が精度にどれだけ寄与しているかを
+  切り分けて測定します（例: [`docs/phase3.6.1-ablation-report.md`](docs/phase3.6.1-ablation-report.md)、
+  スクリプト `scripts/ablate-midi-analysis.ts`）。
+
+- **失敗の分類（failure taxonomy）**
+  外した事例を「なぜ外したか」で分類し、対策の優先順位付けに使います
+  （スクリプト `scripts/analyze-midi-failures.ts` ほか）。
+
+- **Decision Lock（判断の固定）と shadow 評価**
+  新しい検出アイデアは、まず製品には接続しない「shadow（影）」として計算し、Gold コーパスに
+  対して事前登録した閾値で評価します。効果が基準に満たない場合は**製品へ昇格させず**、
+  その判断と理由を記録として残します。Stage F の一連の研究では、この方針に沿って複数の
+  検出器を評価し、**昇格しなかったものも含めて**結果を文書化しています
+  （[`docs/stage-f/09-detector-research-report.md`](docs/stage-f/09-detector-research-report.md)、
+  [`docs/stage-f/08-stage-f-final-closeout.md`](docs/stage-f/08-stage-f-final-closeout.md)、
+  [`docs/stage-f/03-stage-f-decisions.md`](docs/stage-f/03-stage-f-decisions.md)）。
+
+このように、**採用した変更だけでなく、採用を見送った変更も理由とともに残す**ことで、
+同じ検証を繰り返さずに済むようにしています。
+
+## AI を用いた開発フロー
+
+本プロジェクトは、AI コーディングツールを役割分担させながら、チケット駆動で開発を
+進めています。
+
+- **仕様・設計**: Claude Code を用いて、各フェーズ（チケット）のゴール・評価契約・
+  受け入れ条件を先に固め、実装前に検証方法まで決めます。
+- **実装**: 固めた仕様に沿って Codex（別の AI）が実装を担当します。
+- **チケット駆動**: 作業は「フェーズ番号 + ステージ」（例: P4.1.2-H4、P5.16 など）の単位で
+  区切り、各ステージの計画・プロンプト・引き継ぎ内容をドキュメントとして残します
+  （[`docs/loop-vault-codex-plan.md`](docs/loop-vault-codex-plan.md)、
+  [`docs/loop-vault-codex-prompts.md`](docs/loop-vault-codex-prompts.md)、
+  [`docs/current-app-technical-handoff.md`](docs/current-app-technical-handoff.md)）。
+
+`docs/` 配下には、各フェーズの作業レポート・評価結果・意思決定の記録が蓄積されており、
+「どういう根拠でこの実装・この既定値になったか」を後から追えるようにしています。
+
+## セットアップ
+
+### 前提
+
+- [Node.js](https://nodejs.org/)（LTS を推奨）
+- [Rust ツールチェイン](https://www.rust-lang.org/tools/install)（Tauri のビルドに必要）
+- Tauri v2 の実行前提（Windows の場合は WebView2 と Microsoft C++ Build Tools 等）。
+  詳細は [Tauri 公式の前提条件](https://tauri.app/start/prerequisites/) を参照してください。
+
+### 依存関係のインストール
 
 ```bash
 npm install
 ```
 
-開発起動:
+### 開発
 
-```bash
-npm run tauri dev
-```
-
-ブラウザだけでUIを確認する場合:
+ブラウザ上でフロントエンドのみ起動する場合:
 
 ```bash
 npm run dev
 ```
 
-テストとビルド:
+デスクトップアプリ（Tauri）として起動する場合:
 
 ```bash
-npm test
+npm run tauri dev
+```
+
+### ビルド
+
+フロントエンドのビルド:
+
+```bash
 npm run build
 ```
 
-デスクトップアプリをビルド:
+デスクトップアプリの配布ビルド:
 
 ```bash
 npm run tauri build
 ```
 
-### Playwright UI検証
-
-初回のみChromiumをインストールします。
+### テスト / Lint
 
 ```bash
-npm run playwright:install
+npm run test
 ```
-
-production build、preview serverの起動・停止、E2E、visual regressionは次の1コマンドで実行できます。
-
-```bash
-npm run test:e2e
-```
-
-基準画像を意図的に更新する場合だけ、差分を目視確認してから次を実行します。
-
-```bash
-npm run test:e2e:update
-```
-
-失敗時のスクリーンショット、video、traceは`test-results/`、HTML reportは
-`playwright-report/`へ生成されます。確認には次を使用します。
-
-```bash
-npm run test:e2e:report
-```
-
-Codex内蔵Playwright kernelではなく、リポジトリに固定したPlaywright CLIを検証の正とします。
-Web previewではファイルピッカー、OS MIDIデバイス、Tauriウィンドウ操作を完全再現できないため、
-それらはTauri buildとデスクトップ実機確認を分けて行います。個人MIDIはE2Eへ追加せず、
-テスト内で生成するSMF fixtureを使用します。
-
-ビルド後のexeは通常、次の場所に生成されます。
-
-```text
-src-tauri/target/release/loop-vault.exe
-```
-
-## データ保存
-
-Loop Vaultのデータは、Tauriの`appDataDir`配下にある`loopvault`フォルダへ保存されます。
-
-- `data.json`: メインのVaultデータ
-- `data.json.tmp`: アトミック書き込み用の一時ファイル
-- `backups/data-YYYYMMDD-HHmm.json`: 起動時バックアップ
-- `data.corrupt-YYYYMMDD-HHmmss.json`: 破損JSONを退避したファイル
-
-`data.json`は平文JSONです。曲名、メモ、ローカルファイルの絶対パスを含む可能性があります。暗号化はしていません。ユーザーが直接確認、復旧しやすいことを優先しています。
-
-## バックアップと復旧
-
-- 起動時にバックアップを作成
-- バックアップは新しいものから20世代を保持
-- 保存は一時ファイルへ書いてからrenameするアトミック書き込み
-- JSONが破損している場合は`data.corrupt-*`へ退避し、無言で上書きしない
-- exportは任意の場所へJSONを書き出し
-- importは全置換とマージに対応
-- fileVersionがアプリの対応範囲より新しい場合は読み取り専用扱い
-
-## MIDI解析とコード試聴
-
-Phase 2では、MIDI Progression Timeline & Captureを追加しました。
-
-- `@tonejs/midi`でMIDIを読み込み
-- 解析直後に自前のTimedNote形式へ変換
-- 解析ロジックはライブラリ非依存の純関数として実装
-- コードは文字列だけではなく`ChordSymbol`として構造化
-- 解析結果全体は`data.json`へ保存しない
-- ユーザーが保存した`SavedProgressionBlock`だけをIdeaへ永続化
-- `tone`を使ってピアノ音色でコードを試聴
-
-## Chord Dripとの関係
-
-Chord Dripのコードカード、進行表示、再生進捗の考え方をLoop Vault側へ移植しています。
-
-現時点では、Chord Dripとの完全な双方向連携ではありません。Loop Vault側では、MIDI解析結果や保存済みコード進行ブロックを見やすく表示し、音で確認できるところまでを実装しています。
-
-## アーキテクチャ
-
-Loop Vaultは主に4つの層に分けています。
-
-- UI層: Reactコンポーネントと画面操作
-- 状態管理層: Zustand store、autosave、import/export操作
-- ドメイン層: ステータス遷移、Focus選定、月間集計、MIDI解析などの純粋ロジック
-- 永続化層: JSON読み書き、バックアップ、破損データ退避
-
-`src/domain/*`はReact、Zustand、Tauri APIに依存させない方針です。新しい解析ロジックやデータ変換は、まずdomain層に純関数として置くのが基本です。
-
-## 検証コマンド
-
-よく使う確認コマンド:
 
 ```bash
 npm run lint
-npm test
-npm run build
-npm run tauri build
 ```
 
-## 今後の候補
+> 単体テストは MIDI 評価コーパスに依存せず、クリーンな clone の状態でも実行できます。
+> 精度評価用のスクリプト（`scripts/` 配下）を動かす場合のみ、
+> [`docs/local-data.md`](docs/local-data.md) に従って MIDI を配置してください。
 
-- MIDI解析結果の視覚化をさらに細かくする
-- オーディオからのコード検出
-- Chord Dripとのより深い連携
-- 移動したアセットの再リンク支援
-- Ideaごとの履歴/滞留時間の可視化
-- 将来的なSQLite移行
+## 今後の方向性
+
+開発はフェーズ単位で継続しています。方向性としては、コード進行検出の精度改善（前述の
+Gold コーパス・アブレーション・失敗分類に基づく反復）と、練習機能の拡充を中心に進めています。
+具体的な変更は、各フェーズの `docs/` 配下のレポートに記録していきます。
+
+## ライセンス
+
+[MIT License](LICENSE) の下で公開しています。
+
+- 本リポジトリのソースコードは MIT ライセンスの対象です。
+- MIDI 評価コーパス等のデータはリポジトリに含まれておらず、ライセンスの対象外です。
+- ベース音色に使用している FreePats（[electric-bass-YR](https://github.com/freepats/electric-bass-YR)）の
+  サンプルは CC0-1.0（パブリックドメイン相当）で、`src/features/bass-practice/assets/freepats-bass-yr/`
+  にライセンス（`LICENSE.txt`）とともに同梱しています。
