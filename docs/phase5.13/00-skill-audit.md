@@ -13,7 +13,7 @@ The generated design-system suggestion included an exaggerated-minimal/landing-p
 
 ### web-design-guidelines
 
-- Path: `C:\Users\fdfff\.codex\skills\web-design-guidelines\SKILL.md`
+- Path: `C:\Users\<user>\.codex\skills\web-design-guidelines\SKILL.md`
 - Declared version: `1.0.0`
 - Author: Vercel
 - SHA-256: `F4647CA866A3ACCF763777F83E7682954F0187CD6BEA7EEA0399796652414E8F`

@@ -306,14 +306,14 @@ npm.cmd run tauri build
 生成済みexe:
 
 ```text
-C:\Users\fdfff\Documents\Loop Vault\src-tauri\target\release\loop-vault.exe
+C:\Users\<user>\Documents\Loop Vault\src-tauri\target\release\loop-vault.exe
 ```
 
 生成済みインストーラ:
 
 ```text
-C:\Users\fdfff\Documents\Loop Vault\src-tauri\target\release\bundle\msi\Loop Vault_0.1.0_x64_en-US.msi
-C:\Users\fdfff\Documents\Loop Vault\src-tauri\target\release\bundle\nsis\Loop Vault_0.1.0_x64-setup.exe
+C:\Users\<user>\Documents\Loop Vault\src-tauri\target\release\bundle\msi\Loop Vault_0.1.0_x64_en-US.msi
+C:\Users\<user>\Documents\Loop Vault\src-tauri\target\release\bundle\nsis\Loop Vault_0.1.0_x64-setup.exe
 ```
 
 ## 9. 手動確認してほしい点

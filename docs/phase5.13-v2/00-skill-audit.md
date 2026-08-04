@@ -31,7 +31,7 @@
 
 ## web-design-guidelines
 
-- Path: `C:/Users/fdfff/.codex/skills/web-design-guidelines/SKILL.md`
+- Path: `C:/Users/<user>/.codex/skills/web-design-guidelines/SKILL.md`
 - Version: `1.0.0`
 - Latest rule source:
   `https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md`
