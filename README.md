@@ -6,6 +6,8 @@
 
 Tauri v2 + React + TypeScript + Rust で構築したデスクトップアプリケーションです（主に Windows で開発・動作確認しています）。
 
+**日本語** | [English](README.en.md)
+
 ![Loop Vault](docs/images/hero.png)
 
 </div>
