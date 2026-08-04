@@ -267,10 +267,13 @@ Gold コーパス・アブレーション・失敗分類に基づく反復）と
 
 ## ライセンス
 
-[MIT License](LICENSE) の下で公開しています。
+**本リポジトリはオープンソースではありません。** ソースコードは**閲覧・評価のみ**を目的として
+公開しています（詳細は [LICENSE](LICENSE)）。
 
-- 本リポジトリのソースコードは MIT ライセンスの対象です。
-- MIDI 評価コーパス等のデータはリポジトリに含まれておらず、ライセンスの対象外です。
+- 著作権者の書面による許可なく、**商用利用・改変（派生物の作成）・再配布は禁止**です。
+- 上記を含め、原則としてあらゆる利用を許可していません（All Rights Reserved）。
+- GitHub 上での閲覧・fork（GitHub 規約の範囲）は、上記で保留した権利を許諾するものではありません。
 - ベース音色に使用している FreePats（[electric-bass-YR](https://github.com/freepats/electric-bass-YR)）の
-  サンプルは CC0-1.0（パブリックドメイン相当）で、`src/features/bass-practice/assets/freepats-bass-yr/`
+  サンプルは提供元の CC0-1.0（パブリックドメイン相当）で、`src/features/bass-practice/assets/freepats-bass-yr/`
   にライセンス（`LICENSE.txt`）とともに同梱しています。
+- MIDI 評価コーパス等のデータはリポジトリに含まれていません。
