@@ -4,10 +4,9 @@
 
 **MIDI からコード進行を解析し、編集・試聴・練習までを 1 つのデスクトップアプリで扱うための音楽制作支援ツール**
 
-Tauri v2 + React + TypeScript + Rust で構築した、Windows 向けデスクトップアプリケーションです。
+Tauri v2 + React + TypeScript + Rust で構築したデスクトップアプリケーションです（主に Windows で開発・動作確認しています）。
 
-<!-- ヒーロー画像（撮影後に docs/images/hero.png を配置すると表示されます） -->
-<!-- ![Loop Vault](docs/images/hero.png) -->
+![Loop Vault](docs/images/hero.png)
 
 </div>
 
@@ -96,18 +95,16 @@ Loop Vault は、DTM / 作曲時の「MIDI からコード進行を把握し、�
 
 ## スクリーンショット
 
-画像は撮影後に `docs/images/` へ配置すると表示されます（撮影ガイド:
-[`docs/images/README.md`](docs/images/README.md)）。掲載時は**ダミーデータ**で撮影してください。
+以下はいずれも**合成したダミー MIDI / ダミーデータ**で撮影しています（撮影方法:
+[`docs/images/README.md`](docs/images/README.md)）。
 
-<!--
-| Capture（解析） | Vault（管理） |
+| Capture（MIDI 解析） | Vault（管理） |
 | --- | --- |
 | ![Capture](docs/images/capture.png) | ![Vault](docs/images/vault.png) |
 
-| Progression Detail（詳細・試聴） | Bass Practice（練習） |
+| Progression Detail（詳細・試聴・書き出し） | Bass Practice（Degree Echo） |
 | --- | --- |
 | ![Progression Detail](docs/images/progression-detail.png) | ![Bass Practice](docs/images/bass-practice.png) |
--->
 
 ## 技術スタック
 
