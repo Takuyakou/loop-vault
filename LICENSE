@@ -1,16 +1,32 @@
-MIT License
+Copyright (c) 2026 Takuyakou. All rights reserved.
 
-Copyright (c) 2026 Takuyakou
+This repository is published for viewing and evaluation purposes only
+(for example, to let others review the author's work). It is NOT open-source
+software.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Except where a separate license is explicitly stated for third-party
+components (see "Third-party components" below), NO license or permission is
+granted to any person to use, run, copy, modify, adapt, translate, merge,
+publish, distribute, sublicense, sell, or otherwise exploit this software or
+any derivative works, in whole or in part, by any means, without the prior
+written permission of the copyright holder.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+In particular, the following are expressly prohibited without prior written
+permission from the copyright holder:
+
+  - Commercial use of any kind
+  - Modification or creation of derivative works
+  - Redistribution, republication, or sharing of copies
+
+Viewing the source code on GitHub, and forking within GitHub as permitted by
+GitHub's Terms of Service, do not grant any of the rights withheld above.
+
+Third-party components
+
+  - The FreePats "electric-bass-YR" samples included under
+    src/features/bass-practice/assets/freepats-bass-yr/ are provided under
+    CC0-1.0 by their respective authors and retain that license.
+  - Third-party software dependencies retain their own respective licenses.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,

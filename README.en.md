@@ -266,10 +266,14 @@ the practice features. Concrete changes are recorded in the per-phase reports un
 
 ## License
 
-Released under the [MIT License](LICENSE).
+**This repository is not open source.** The source code is published for **viewing and evaluation
+only** (see [LICENSE](LICENSE)).
 
-- The source code in this repository is covered by the MIT License.
-- Data such as the MIDI evaluation corpus is not included in the repository and is out of scope of the license.
+- Without the copyright holder's prior written permission, **commercial use, modification (derivative
+  works), and redistribution are prohibited**.
+- Beyond the above, essentially all use is not permitted (All Rights Reserved).
+- Viewing and forking on GitHub (within GitHub's Terms of Service) does not grant any of the withheld rights.
 - The FreePats ([electric-bass-YR](https://github.com/freepats/electric-bass-YR)) samples used for the
-  bass timbre are CC0-1.0 (public-domain equivalent), and are bundled under
+  bass timbre are provided under their CC0-1.0 (public-domain equivalent) license, and are bundled under
   `src/features/bass-practice/assets/freepats-bass-yr/` together with their license (`LICENSE.txt`).
+- Data such as the MIDI evaluation corpus is not included in the repository.
