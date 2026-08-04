@@ -158,6 +158,29 @@ describe("Phase 5.1 analyzer input", () => {
       [0, 1920],
       [0, 1920],
     ]);
+    expect(request.options.preparedData?.notes.map((note) =>
+      note.analysisProvenance)).toEqual([
+      {
+        sourceIdentity: "master",
+        logicalVoiceIdentity: "master:0:0",
+        sourceTrackIndex: 0,
+      },
+      {
+        sourceIdentity: "master",
+        logicalVoiceIdentity: "master:0:0",
+        sourceTrackIndex: 0,
+      },
+      {
+        sourceIdentity: "master",
+        logicalVoiceIdentity: "master:0:0",
+        sourceTrackIndex: 0,
+      },
+      {
+        sourceIdentity: "bass",
+        logicalVoiceIdentity: "bass:0:1",
+        sourceTrackIndex: 0,
+      },
+    ]);
   });
 
   it("does not double-count exact duplicate voices", () => {

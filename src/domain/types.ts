@@ -180,8 +180,29 @@ export interface MidiProgressionAnalysis {
   candidateRecommendation?: RecommendationResult;
   /** Estimated section ranges, numbered rather than named. */
   sections?: Section[];
+  /**
+   * Runtime-only evidence accounting for the opt-in Phase 5.15 exact-note
+   * dedup pass. The source/voice identities used by the pass are deliberately
+   * not exposed here, so diagnostics remain safe to log and never widen the
+   * Vault schema.
+   */
+  noteEvidenceDedup?: NoteEvidenceDedupDiagnostics;
   analyzedAt: string;
   analyzerVersion: string;
+}
+
+export interface NoteEvidenceDuplicateGroup {
+  representativeId: string;
+  duplicateCount: number;
+  duplicateIds: string[];
+  reason: "exact-note-evidence";
+}
+
+export interface NoteEvidenceDedupDiagnostics {
+  originalNoteCount: number;
+  effectiveNoteCount: number;
+  duplicateCount: number;
+  groups: NoteEvidenceDuplicateGroup[];
 }
 
 export interface SongIdea {

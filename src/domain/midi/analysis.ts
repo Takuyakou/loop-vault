@@ -17,6 +17,8 @@ import {
   accuracyCandidateUnionModes,
   applyAccuracyCandidateUnion,
 } from "./accuracyCandidateUnion";
+import { deduplicateExactNoteEvidence } from "./exactNoteEvidenceDedup";
+import { parseMidi } from "./parser";
 
 /** Kept for rollback: the analyzer promoted in Phase 4.0. */
 export const phase40DefaultAnalyzerMode = "phase4-v1" as const;
@@ -52,7 +54,25 @@ export { buildWeightedWindows, extractBlockCandidates, inferTrackRoles, matchWin
 
 export function analyzeMidi(bytes: Uint8Array, options: AnalyzeMidiOptions = {}): MidiProgressionAnalysis {
   const mode = options.mode ?? defaultAnalyzerMode;
-  const primary = runAnalyzer(bytes, options, mode);
+  const sourceData = options.phase515?.enableExactNoteEvidenceDedup
+    ? options.preparedData ?? parseMidi(bytes)
+    : undefined;
+  const dedup = options.phase515?.enableExactNoteEvidenceDedup
+    ? deduplicateExactNoteEvidence(
+        sourceData!.notes,
+        options.sourceAssetId ?? "single-source",
+      )
+    : undefined;
+  const preparedData = dedup
+    ? {
+        ...sourceData!,
+        notes: dedup.notes,
+      }
+    : options.preparedData;
+  const effectiveOptions = dedup
+    ? { ...options, preparedData }
+    : options;
+  const primary = runAnalyzer(bytes, effectiveOptions, mode);
   const analysis = options.accuracyFirst?.enableAccuracyCandidateUnion
     ? applyAccuracyCandidateUnion(
         primary,
@@ -61,9 +81,9 @@ export function analyzeMidi(bytes: Uint8Array, options: AnalyzeMidiOptions = {})
           .map((sourceMode) => ({
             mode: sourceMode,
             analysis: runAnalyzer(bytes, {
-              ...options,
+              ...effectiveOptions,
               accuracyFirst: {
-                ...options.accuracyFirst,
+                ...effectiveOptions.accuracyFirst,
                 enableAccuracyCandidateUnion: false,
               },
             }, sourceMode),
@@ -72,6 +92,7 @@ export function analyzeMidi(bytes: Uint8Array, options: AnalyzeMidiOptions = {})
     : primary;
   return {
     ...analysis,
+    ...(dedup ? { noteEvidenceDedup: dedup.diagnostics } : {}),
     sourceFingerprint: options.analysisFingerprint ?? fingerprintMidiBytes(bytes),
   };
 }

@@ -12,6 +12,14 @@ export interface TimedNote {
   channel?: number;
   program?: number;
   programExplicit?: boolean;
+  /** Runtime-only origin retained when pre-analysis builds a combined input. */
+  analysisProvenance?: NoteAnalysisProvenance;
+}
+
+export interface NoteAnalysisProvenance {
+  sourceIdentity: string;
+  logicalVoiceIdentity: string;
+  sourceTrackIndex: number;
 }
 
 export interface ParsedTimedNote extends TimedNote {
@@ -99,6 +107,10 @@ export interface AccuracyFirstFeatureFlags {
   enableAccuracyCandidateUnion: boolean;
 }
 
+export interface Phase515FeatureFlags {
+  enableExactNoteEvidenceDedup: boolean;
+}
+
 export interface AnalyzeMidiOptions {
   sourceAssetId?: string;
   fileName?: string;
@@ -108,6 +120,8 @@ export interface AnalyzeMidiOptions {
   debug?: boolean;
   features?: Partial<HybridFeatureFlags>;
   accuracyFirst?: Partial<AccuracyFirstFeatureFlags>;
+  /** Runtime-only experimental controls. Absent flags are always OFF. */
+  phase515?: Partial<Phase515FeatureFlags>;
   analysisInput?: AnalysisInput;
   /** Runtime-only pre-analysis input. Never serialized into Vault data. */
   preparedData?: MidiSongData;

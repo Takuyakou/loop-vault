@@ -106,6 +106,11 @@ export function buildPreparedMidiSongData(
       ...(note.programExplicit !== undefined
         ? { programExplicit: note.programExplicit }
         : {}),
+      analysisProvenance: {
+        sourceIdentity: note.sourceId,
+        logicalVoiceIdentity: note.voiceId,
+        sourceTrackIndex: note.trackIndex,
+      },
     }];
   }).sort(compareTimedNote);
   const firstMeter = master.timeSignatures[0] ?? {

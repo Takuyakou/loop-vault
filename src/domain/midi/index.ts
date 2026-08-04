@@ -38,6 +38,8 @@ export {
 export type { CandidateSelectionEntry } from "./candidateSelection";
 export { parseMidi } from "./parser";
 export { parseRawSmf } from "./rawSmf";
+export { deduplicateExactNoteEvidence } from "./exactNoteEvidenceDedup";
+export type { ExactNoteEvidenceDedupResult } from "./exactNoteEvidenceDedup";
 export { normalizeNotes, overlapWithSegment } from "./normalize";
 export { beatsPerBar, tickToSeconds } from "./timing";
 export { buildVoices, isPercussionEvidence, selectChordEvidenceNotes, voiceId } from "./voices";
@@ -121,6 +123,8 @@ export type {
   VoiceSelectionPreset,
   MidiAnalyzerMode,
   HybridFeatureFlags,
+  Phase515FeatureFlags,
+  NoteAnalysisProvenance,
 } from "./types";
 export type { GmRoleEvidence } from "./gmRoles";
 export type { VoiceRoleProfile } from "./voiceProfiles";
