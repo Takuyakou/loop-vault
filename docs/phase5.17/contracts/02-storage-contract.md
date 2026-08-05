@@ -21,22 +21,28 @@ Only an explicit **Keep Take** writes a take locally. Requirements:
 - No cloud. No personal absolute path in metadata. Opaque id. Binary-safe.
   Versioned. Deletable. Bounded quota. Never auto-deletes old takes.
 
-## Chosen store (decision)
+## Chosen store (decision — refined in P5.17-03)
 
-**Extend the existing Tauri practice storage with a dedicated binary take store**
-under `app_data_dir/loopvault/recordings/` (already inside the `fs:scope`
-allow-list), addressed by opaque id, with a small sidecar metadata index kept
-separate from `practice-v1.json`. New Rust commands (e.g.
-`save_practice_recording`, `load_practice_recording`, `list_practice_recordings`,
-`delete_practice_recording`) mirror the atomic-write / bounded / validated-name
-discipline already proven in `practice_storage.rs`. In the browser/dev runtime,
-back the same `RecordingTakeRepository` interface with **IndexedDB** (binary-safe,
-not `localStorage`). No new Tauri plugin is required; if later a plugin or new
-dependency appears necessary, its need, alternatives and added permissions must
-be recorded in the audit before adoption.
+**IndexedDB is the single Vault-independent binary take store for both runtimes.**
+IndexedDB is binary-safe and persists across restarts in browsers and in the
+Tauri WebView2 runtime (under the app's user-data dir), so a kept take survives
+an app restart without any Rust file store. This keeps audio entirely out of the
+Vault-adjacent `practice-v1.json`, touches no Vault schema, adds no Tauri plugin
+or dependency, and needs no new capability (WebView2 owns IndexedDB).
 
-Rationale: reuses audited atomic/CAS/quarantine patterns, keeps audio out of the
-Vault-adjacent Practice JSON, and stays within existing capabilities.
+Layering (P5.17-03):
+
+- `RecordingStore` port — low-level binary+metadata KV. `IndexedDbRecordingStore`
+  at runtime; `InMemoryRecordingStore` in tests (and as a non-persistent fallback
+  when IndexedDB is unavailable).
+- `PersistentRecordingTakeRepository` on top — opaque ids, quota, non-identifying
+  metadata, schema version, corruption/orphan handling.
+
+The earlier option of a Rust `loopvault/recordings/` store is superseded: it is
+unnecessary given WebView2 IndexedDB persistence, and avoiding it removes a whole
+native surface (commands, capabilities, atomic-write code). If a future need
+(e.g. very large takes beyond IndexedDB quotas) requires a file store, its need,
+alternatives, and added permissions are to be recorded in the audit first.
 
 ## Metadata (per take; non-identifying only)
 

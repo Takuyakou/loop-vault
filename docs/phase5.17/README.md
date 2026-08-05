@@ -15,9 +15,9 @@ stage report.
 ## Status
 
 - **Status:** in-progress
-- **Active stage:** P5.17-03 — Persistence / History
-- **Completed stages:** P5.17-00 (workflow/audit/contract/baseline), P5.17-01 (capture foundation), P5.17-02 (session flow integration)
-- **Next action:** Build the Vault-independent binary take store (Tauri `recordings/` + IndexedDB), Keep Take metadata, quota, History playback/delete, corruption resilience, orphan cleanup, migration, privacy UI — see [`contracts/02-storage-contract.md`](contracts/02-storage-contract.md).
+- **Active stage:** P5.17-04 — Product Hardening
+- **Completed stages:** P5.17-00 (workflow/audit/contract/baseline), P5.17-01 (capture foundation), P5.17-02 (session flow integration), P5.17-03 (persistence / history)
+- **Next action:** Product hardening — production-default flag, failure paths (permission/device/codec/storage/quota/route/retake), accessibility, viewport, resource-leak, build identity, Tauri smoke; and fold the retained-takes panel into the Practice History tab. See [`work-instructions.md`](work-instructions.md).
 - **Final determination (not yet reached):** `READY FOR HARDWARE ACCEPTANCE — Record & Compare`
 
 Do not merge to master and do not push — a human authorizes the merge after
@@ -68,7 +68,8 @@ lifecycle. **Done** — see [`reports/P5.17-02-session-integration.md`](reports/
 ### P5.17-03 — Persistence / History
 
 Ephemeral default, Keep Take, binary storage, metadata, quota, History playback,
-delete, corruption resilience, orphan cleanup, migration, privacy UI.
+delete, corruption resilience, orphan cleanup, migration, privacy UI. **Done** —
+see [`reports/P5.17-03-persistence-history.md`](reports/P5.17-03-persistence-history.md).
 
 ### P5.17-04 — Product Hardening
 

@@ -4,7 +4,7 @@ import type { ChannelMode } from "../domain/types";
 import type { RecorderState } from "../domain/recorderStateMachine";
 import { createBrowserRecordingController } from "../application/createController";
 import type { RecordingSessionController } from "../application/recordingSessionController";
-import type { RecordingTake } from "../application/ports";
+import type { KeepContext, RecordingTake } from "../application/ports";
 
 /**
  * React lifecycle wrapper around a RecordingSessionController (P5.17-02). It
@@ -38,7 +38,7 @@ export interface RecordCompareSession {
   playbackEnded(): void;
   retake(): void;
   discard(): void;
-  keep(): Promise<void>;
+  keep(context?: KeepContext): Promise<void>;
 }
 
 function defaultIsTypeSupported(mimeType: string): boolean {
@@ -118,8 +118,8 @@ export function useRecordCompareSession(
     discard() {
       withController((controller) => controller.discard());
     },
-    async keep() {
-      await withController((controller) => controller.keep());
+    async keep(context) {
+      await withController((controller) => controller.keep(context));
     },
   };
 }

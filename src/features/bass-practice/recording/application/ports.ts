@@ -5,6 +5,7 @@ import type {
   RecordingTakeMetadata,
   ResolvedChannel,
 } from "../domain/types";
+import type { RecordingMode } from "../domain/persistence";
 
 /**
  * Boundaries for Record & Compare (brief §11.1). The UI never touches
@@ -56,9 +57,18 @@ export interface PracticeRecorder {
   dispose(): void;
 }
 
-/** Ephemeral + Keep Take persistence (full store is P5.17-03). */
+/** Non-identifying context supplied when keeping a take (for its metadata). */
+export interface KeepContext {
+  readonly practiceSessionId: string;
+  readonly exerciseSignature: string;
+  readonly mode: RecordingMode;
+  readonly inputDeviceName: string;
+  readonly playedBackBeforeReview: boolean;
+}
+
+/** Ephemeral + Keep Take persistence. */
 export interface RecordingTakeRepository {
-  keep(take: RecordingTake): Promise<string>;
+  keep(take: RecordingTake, context?: KeepContext): Promise<string>;
   list(): Promise<readonly RecordingTakeMetadata[]>;
   load(id: string): Promise<RecordingTake | undefined>;
   remove(id: string): Promise<void>;

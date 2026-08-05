@@ -4,6 +4,7 @@ import type { ChannelMode } from "../domain/types";
 import { useRecordCompareSession } from "./useRecordCompareSession";
 import type { RecordingSessionController } from "../application/recordingSessionController";
 import { BrowserTakePlayer, type PlaybackHandle, type TakePlayer, type TargetPlayer } from "../application/playback";
+import { RetainedTakesPanel } from "./RetainedTakesPanel";
 
 /**
  * Shared Record & Compare panel for all three Echo modes (P5.17-02). It is
@@ -20,6 +21,8 @@ export interface RecordCompareSectionProps {
   readonly mode: "degree" | "rhythm" | "bassline";
   /** Stable exercise signature; changing it resets the recorder for a new take. */
   readonly resetKey?: string;
+  /** Practice session id recorded in kept-take metadata (non-identifying). */
+  readonly practiceSessionId?: string;
   /** Plays the exercise Target; when omitted, Hear Target is unavailable. */
   readonly targetPlayer?: TargetPlayer;
   /** Milliseconds of count-in before recording starts (0 = immediate). */
@@ -41,6 +44,7 @@ const CHANNELS: readonly { readonly value: ChannelMode; readonly label: string }
 export function RecordCompareSection({
   mode,
   resetKey,
+  practiceSessionId,
   targetPlayer,
   countInMs = 0,
   controller,
@@ -108,6 +112,7 @@ export function RecordCompareSection({
             使わない場合はそのまま録音せず続けられます
           </span>
         </div>
+        <RetainedTakesPanel enabledOverride={enabled} />
       </section>
     );
   }
@@ -237,13 +242,21 @@ export function RecordCompareSection({
         <button type="button" data-testid="hear-take" disabled={status !== "recorded"} onClick={hearTake}>Hear My Take</button>
         <button type="button" data-testid="record-retake" disabled={status !== "recorded"} onClick={retake}>Retake</button>
         <button type="button" data-testid="record-discard" disabled={status !== "recorded"} onClick={discard}>Discard</button>
-        <button type="button" data-testid="record-keep" disabled={status !== "recorded"} onClick={() => void session.keep().catch(() => undefined)}>Keep Take</button>
+        <button type="button" data-testid="record-keep" disabled={status !== "recorded"} onClick={() => void session.keep({
+          practiceSessionId: practiceSessionId ?? "practice-session",
+          exerciseSignature: resetKey ?? `${mode}-exercise`,
+          mode,
+          inputDeviceName: "Input",
+          playedBackBeforeReview: session.state?.heardTake ?? false,
+        }).catch(() => undefined)}>Keep Take</button>
         <button type="button" data-testid="record-skip" onClick={() => { stopPlayback(); clearCountIn(); setOptedIn(false); }}>録音せず続ける</button>
       </div>
 
       <p className="mt-2 text-[11px] text-[var(--lv-text-muted)]">
         ローカル保存のみ・cloud送信なし・自動分析や採点はありません。
       </p>
+
+      <RetainedTakesPanel enabledOverride={enabled} />
     </section>
   );
 }

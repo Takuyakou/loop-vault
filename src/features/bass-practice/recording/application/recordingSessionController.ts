@@ -8,6 +8,7 @@ import { resolveChannel, type AutoResolution } from "../domain/channelRouting";
 import type { ChannelMode, ResolvedChannel } from "../domain/types";
 import type {
   CaptureDeviceRepository,
+  KeepContext,
   PracticeRecorder,
   RecordingCapability,
   RecordingTake,
@@ -151,13 +152,13 @@ export class RecordingSessionController {
     return this.dispatch({ type: "DISCARD" });
   }
 
-  async keep(): Promise<{ readonly state: RecorderState; readonly id?: string }> {
+  async keep(context?: KeepContext): Promise<{ readonly state: RecorderState; readonly id?: string }> {
     this.dispatch({ type: "KEEP" });
     if (!this.pendingTake) {
       return { state: this.dispatch({ type: "SAVE_FAILED", errorCode: "save-failed" }) };
     }
     try {
-      const id = await this.deps.takes.keep(this.pendingTake);
+      const id = await this.deps.takes.keep(this.pendingTake, context);
       return { state: this.dispatch({ type: "SAVED" }), id };
     } catch {
       // Save failure keeps the ephemeral take playable (contract 02).

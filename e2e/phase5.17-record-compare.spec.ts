@@ -54,6 +54,32 @@ test("record, listen back and keep a take with a fake input device", async ({ pa
   await expect(section).toHaveAttribute("data-record-state", "saved");
 });
 
+test("a kept take persists across reload and can be deleted from History", async ({ page }) => {
+  test.setTimeout(30_000);
+  await openBasslineReview(page);
+  await page.getByTestId("record-compare-enable").click();
+  await expect(page.getByTestId("record-compare-status")).toContainText("録音できます");
+  await page.getByLabel("入力チャンネル").selectOption("mono-sum");
+  await page.getByTestId("record-start").click();
+  const section = page.getByTestId("record-compare");
+  await expect(section).toHaveAttribute("data-record-state", "recording", { timeout: 10_000 });
+  await page.getByTestId("record-stop").click();
+  await page.getByTestId("record-keep").click();
+  await expect(section).toHaveAttribute("data-record-state", "saved");
+
+  // Reload — IndexedDB persists the kept take across restart.
+  await page.reload();
+  await openBasslineReview(page);
+  await expect(page.getByTestId("retained-takes")).toBeVisible();
+  const take = page.getByTestId("retained-take").first();
+  await expect(take).toBeVisible();
+  await expect(take).toContainText("Bassline Echo");
+
+  await take.getByTestId("retained-take-delete").click();
+  await take.getByTestId("retained-take-confirm-delete").click();
+  await expect(page.getByTestId("retained-take")).toHaveCount(0);
+});
+
 test("explicit local false hides Record & Compare (rollback)", async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem("loop-vault:bass-practice-record-compare-enabled:v1", "false");

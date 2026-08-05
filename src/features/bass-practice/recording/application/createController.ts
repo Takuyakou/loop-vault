@@ -3,17 +3,30 @@ import {
   BrowserPracticeRecorder,
   BrowserRecordingCapability,
 } from "./browserAdapters";
-import { InMemoryRecordingTakeRepository } from "./fakes";
+import { InMemoryRecordingStore } from "./recordingStore";
+import { IndexedDbRecordingStore, isIndexedDbAvailable } from "./indexedDbRecordingStore";
+import { PersistentRecordingTakeRepository } from "./recordingStore";
 import { RecordingSessionController } from "./recordingSessionController";
 import type { RecordingTakeRepository } from "./ports";
 
 /**
- * Wires the production browser adapters into a controller. Persistence is a
- * placeholder in-memory repository for P5.17-01 (the real Vault-independent
- * binary store lands in P5.17-03); everything else is the real capture stack.
+ * Wires the production browser adapters into a controller. Kept takes persist in
+ * IndexedDB (binary-safe, Vault-independent, survives restart in browsers and
+ * WebView2); when IndexedDB is unavailable, an in-memory store keeps the feature
+ * usable for the current session only.
  */
+
+export function createPersistentTakeRepository(): PersistentRecordingTakeRepository {
+  const store = isIndexedDbAvailable() ? new IndexedDbRecordingStore() : new InMemoryRecordingStore();
+  return new PersistentRecordingTakeRepository(store);
+}
+
+export function createRecordingTakeRepository(): RecordingTakeRepository {
+  return createPersistentTakeRepository();
+}
+
 export function createBrowserRecordingController(
-  takeRepository: RecordingTakeRepository = new InMemoryRecordingTakeRepository(),
+  takeRepository: RecordingTakeRepository = createRecordingTakeRepository(),
 ): RecordingSessionController {
   return new RecordingSessionController({
     capability: new BrowserRecordingCapability(),
