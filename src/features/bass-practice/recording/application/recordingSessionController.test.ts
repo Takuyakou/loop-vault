@@ -121,6 +121,37 @@ describe("RecordingSessionController", () => {
     expect(recorder.leaked).toBe(false);
   });
 
+  it("no-device permission grant yields device-missing, recoverable", async () => {
+    const devices = new FakeCaptureDeviceRepository({ devices: [] });
+    const { controller } = makeController({ devices });
+    controller.probe();
+    const state = await controller.enableRecording();
+    expect(state.status).toBe("device-missing");
+  });
+
+  it("resource benchmark: 20 start/stop, deny/retry, disconnect leave nothing retained", async () => {
+    const devices = new FakeCaptureDeviceRepository();
+    const recorder = new FakePracticeRecorder();
+    const { controller } = makeController({ devices, recorder });
+    controller.probe();
+    await controller.enableRecording();
+    for (let i = 0; i < 20; i += 1) {
+      controller.startCountIn();
+      await controller.beginRecording({ mimeType: "audio/webm;codecs=opus" });
+      await controller.stop();
+      controller.retake();
+    }
+    // device disconnect during a fresh recording, then full teardown
+    controller.startCountIn();
+    await controller.beginRecording({ mimeType: "audio/webm;codecs=opus" });
+    controller.deviceDisconnected();
+    controller.dispose();
+    expect(recorder.leaked).toBe(false);
+    expect(recorder.active).toBe(false);
+    expect(recorder.startCount).toBe(21);
+    expect(recorder.disposeCount).toBeGreaterThanOrEqual(21);
+  });
+
   it("notifies subscribers on each transition", async () => {
     const { controller } = makeController();
     const seen: string[] = [];

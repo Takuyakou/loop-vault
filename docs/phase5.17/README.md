@@ -15,9 +15,9 @@ stage report.
 ## Status
 
 - **Status:** in-progress
-- **Active stage:** P5.17-04 — Product Hardening
-- **Completed stages:** P5.17-00 (workflow/audit/contract/baseline), P5.17-01 (capture foundation), P5.17-02 (session flow integration), P5.17-03 (persistence / history)
-- **Next action:** Product hardening — production-default flag, failure paths (permission/device/codec/storage/quota/route/retake), accessibility, viewport, resource-leak, build identity, Tauri smoke; and fold the retained-takes panel into the Practice History tab. See [`work-instructions.md`](work-instructions.md).
+- **Active stage:** P5.17-05 — Release Gates / Acceptance
+- **Completed stages:** P5.17-00 … P5.17-04 (workflow/audit, capture, session integration, persistence, product hardening)
+- **Next action:** Run the full automated gate set, generate the direct executable + NSIS + MSI, write the Product Acceptance report, and stop at `READY FOR HARDWARE ACCEPTANCE`. **Critical hardware item:** implement and verify the WebView2 microphone-permission handler on the target Windows machine — see [`reports/P5.17-04-product-hardening.md`](reports/P5.17-04-product-hardening.md).
 - **Final determination (not yet reached):** `READY FOR HARDWARE ACCEPTANCE — Record & Compare`
 
 Do not merge to master and do not push — a human authorizes the merge after
@@ -76,6 +76,8 @@ see [`reports/P5.17-03-persistence-history.md`](reports/P5.17-03-persistence-his
 Production-default flag, permission-denied / no-device / disconnect /
 unsupported-codec / storage-denial / quota-exceeded / route-leave / repeated
 retake, accessibility, viewport, resource-leak, build identity, Tauri smoke.
+**Done (app-side)** — see [`reports/P5.17-04-product-hardening.md`](reports/P5.17-04-product-hardening.md).
+The WebView2 microphone-permission handler is routed to P5.17-05 hardware.
 
 ### P5.17-05 — Release Gates / Acceptance
 

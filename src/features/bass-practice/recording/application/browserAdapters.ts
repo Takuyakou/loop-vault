@@ -12,6 +12,7 @@ import type {
   RecordingTake,
   StartRecordingOptions,
 } from "./ports";
+import { negotiateCodec } from "../domain/codecNegotiation";
 
 /**
  * Browser / WebView2 implementations of the recording ports. These are the
@@ -32,6 +33,11 @@ const REQUIRED_APIS: readonly { readonly name: string; readonly present: () => b
 export class BrowserRecordingCapability implements RecordingCapability {
   probe(): RecordingCapabilityReport {
     const missing = REQUIRED_APIS.filter((api) => !safe(api.present)).map((api) => api.name);
+    // No supported codec means recording is impossible even if the APIs exist;
+    // fold it into the probe so the feature disables instead of failing later.
+    if (missing.length === 0 && !negotiateCodec((mime) => MediaRecorder.isTypeSupported(mime))) {
+      missing.push("supported audio codec");
+    }
     return Object.freeze({ available: missing.length === 0, missing: Object.freeze(missing) });
   }
 }

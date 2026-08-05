@@ -2,18 +2,19 @@
   "schemaVersion": 1,
   "phaseId": "5.17",
   "status": "in-progress",
-  "activeStage": "P5.17-04",
-  "completedStages": ["P5.17-00", "P5.17-01", "P5.17-02", "P5.17-03"],
+  "activeStage": "P5.17-05",
+  "completedStages": ["P5.17-00", "P5.17-01", "P5.17-02", "P5.17-03", "P5.17-04"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "ef31d4db566d808b40a44f3df2ef15c823817d4e",
-  "lastVerifiedCommit": "f0bd54c4ca87d1858b3727948c042421cb01a01f",
+  "lastVerifiedCommit": "35c5a7997289b189deb5f09c2295aa0cc295f6b1",
   "currentBranch": "feat/p517-record-and-compare",
   "requiredGates": {
     "P5.17-00": ["validate:phase-docs", "phase-docs-tests", "baseline-vitest", "baseline-rust", "lint", "typecheck-app", "typecheck-e2e"],
     "P5.17-01": ["recording-unit-tests", "full-vitest", "lint", "typecheck-app", "typecheck-e2e", "validate:phase-docs"],
     "P5.17-02": ["recording-unit-tests", "full-vitest", "lint", "typecheck-app", "typecheck-e2e", "web-build", "playwright-record-compare", "playwright-regression", "validate:phase-docs"],
-    "P5.17-03": ["recording-unit-tests", "full-vitest", "lint", "typecheck-app", "typecheck-e2e", "web-build", "playwright-record-compare", "playwright-regression", "validate:phase-docs"]
+    "P5.17-03": ["recording-unit-tests", "full-vitest", "lint", "typecheck-app", "typecheck-e2e", "web-build", "playwright-record-compare", "playwright-regression", "validate:phase-docs"],
+    "P5.17-04": ["recording-unit-tests", "full-vitest", "lint", "typecheck-app", "typecheck-e2e", "web-build", "cargo-build", "playwright-record-compare", "playwright-a11y-viewport", "playwright-regression", "validate:phase-docs"]
   },
   "gateResults": {
     "validate:phase-docs": "pass",
@@ -26,9 +27,11 @@
     "recording-unit-tests": "pass",
     "full-vitest": "pass",
     "web-build": "pass",
+    "cargo-build": "pass",
     "playwright-record-compare": "pass",
+    "playwright-a11y-viewport": "pass",
     "playwright-regression": "pass"
   },
-  "nextAction": "P5.17-04: product hardening — production-default flag, permission-denied/no-device/disconnect/unsupported-codec/storage-denial/quota-exceeded/route-leave/repeated-retake, accessibility, viewport, resource-leak, build identity, Tauri smoke. Also fold the retained-takes panel into the Practice History tab and add per-take review-result display.",
+  "nextAction": "P5.17-05: release gates & acceptance — full automated gate set, direct executable + NSIS + MSI, Product Acceptance report. CRITICAL hardware item: implement/verify the WebView2 microphone-permission handler on the target Windows machine (getUserMedia in production WebView2), then stop at READY FOR HARDWARE ACCEPTANCE.",
   "updatedAt": "2026-08-05"
 }

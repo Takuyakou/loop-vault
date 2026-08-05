@@ -4,6 +4,7 @@ import { formatProgressionText } from "../domain/progressionText";
 import type { AppLanguage, SongIdea } from "../domain/types";
 import { Button, EmptyState, Surface } from "../components/ui";
 import type { PracticeHistorySummary } from "../features/bass-practice/application";
+import { RetainedTakesPanel } from "../features/bass-practice/recording/ui/RetainedTakesPanel";
 
 type HistoryEventType = "capture" | "idea-update" | "practice" | "status";
 
@@ -117,6 +118,8 @@ export function HistoryView({
           ) : null}
         </section>
       ) : null}
+
+      {filter === "all" || filter === "practice" ? <RetainedTakesPanel /> : null}
 
       {groups.length === 0 && visiblePracticeHistory.length === 0 ? (
         <EmptyState

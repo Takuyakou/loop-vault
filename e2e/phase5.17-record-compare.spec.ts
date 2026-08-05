@@ -1,5 +1,6 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers/app";
+import { assertNoHorizontalOverflow, openApp } from "./helpers/app";
 
 /**
  * Record & Compare (P5.17-02) end-to-end with Chromium's fake media device, so
@@ -86,4 +87,23 @@ test("explicit local false hides Record & Compare (rollback)", async ({ page }) 
   });
   await openBasslineReview(page);
   await expect(page.getByTestId("record-compare")).toHaveCount(0);
+});
+
+test("Record & Compare has no serious accessibility violations", async ({ page }) => {
+  await openBasslineReview(page);
+  await page.getByTestId("record-compare-enable").click();
+  await expect(page.getByTestId("record-compare-status")).toContainText("録音できます");
+  const results = await new AxeBuilder({ page: page as never })
+    .include('[data-testid="record-compare"]')
+    .withTags(["wcag2a", "wcag2aa"])
+    .analyze();
+  expect(results.violations).toEqual([]);
+});
+
+test("Record & Compare stays usable at 320px width", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 812 });
+  await openBasslineReview(page);
+  await page.getByTestId("record-compare-enable").click();
+  await expect(page.getByTestId("record-start")).toBeVisible();
+  await assertNoHorizontalOverflow(page);
 });
