@@ -60,6 +60,11 @@ const NEGATION_MARKERS = [
   /行わない/,
   /勝手に/,
   /避け/,
+  /せず/,
+  /ずに/,
+  /進まず/,
+  /無断/,
+  /ないで/,
   /never/i,
   /do not/i,
   /don't/i,
@@ -74,6 +79,11 @@ const NEGATION_MARKERS = [
   /を防/,
   /no tracked/i,
 ];
+
+// An affirmative imperative to act — the marker that turns a mention of a
+// dangerous action into a directive to perform it.
+const AFFIRMATIVE_IMPERATIVE =
+  /(?:してください|しなさい|せよ|する(?:$|[。、\s])|行ってください|行う)/;
 
 function isProhibition(line) {
   return NEGATION_MARKERS.some((re) => re.test(line));
@@ -364,11 +374,17 @@ export function validatePackage(pkgDir, { schema, repoRoot = pkgDir } = {}) {
         add("personal-path", file, `personal absolute path at line ${i + 1}: ${line.trim()}`);
       }
       if (isProhibition(line)) return; // prohibitions are allowed to name dangerous actions
-      if (
-        /(?:master|main)\s*(?:branch)?\s*へ.*(?:merge|マージ|push|プッシュ)/i.test(line) ||
+      // English merge/push-to-master phrasing is itself a directive; Japanese
+      // "master へ … merge/push" only counts when paired with an affirmative
+      // imperative, so prose that merely names the action (e.g. a bare "禁止事項"
+      // list item, or "merge・push指示") is not misread as a command.
+      const englishMergePush =
         /(?:merge|push)\s+(?:into|to)\s+(?:master|main)\b/i.test(line) ||
-        /\bgit\s+push\b/i.test(line)
-      ) {
+        /\bgit\s+push\b/i.test(line);
+      const japaneseMergePush =
+        /(?:master|main)\s*(?:branch)?\s*へ.*(?:merge|マージ|push|プッシュ)/i.test(line) &&
+        AFFIRMATIVE_IMPERATIVE.test(line);
+      if (englishMergePush || japaneseMergePush) {
         add("unauthorized-merge-push", file, `merge/push-to-master directive at line ${i + 1}: ${line.trim()}`);
       }
       if (

@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "5.17",
+  "status": "in-progress",
+  "activeStage": "P5.17-01",
+  "completedStages": ["P5.17-00"],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "ef31d4db566d808b40a44f3df2ef15c823817d4e",
+  "lastVerifiedCommit": "ef31d4db566d808b40a44f3df2ef15c823817d4e",
+  "currentBranch": "feat/p517-record-and-compare",
+  "requiredGates": {
+    "P5.17-00": [
+      "validate:phase-docs",
+      "phase-docs-tests",
+      "baseline-vitest",
+      "baseline-rust",
+      "lint",
+      "typecheck-app",
+      "typecheck-e2e"
+    ]
+  },
+  "gateResults": {
+    "validate:phase-docs": "pass",
+    "phase-docs-tests": "pass",
+    "baseline-vitest": "pass",
+    "baseline-rust": "pass",
+    "lint": "pass",
+    "typecheck-app": "pass",
+    "typecheck-e2e": "pass"
+  },
+  "nextAction": "P5.17-01: implement capture foundation behind enableBassPracticeRecordCompare (adapters, device repo, codec negotiation, recorder state machine, fakes)",
+  "updatedAt": "2026-08-05"
+}
