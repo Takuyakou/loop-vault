@@ -2,19 +2,20 @@
   "schemaVersion": 1,
   "phaseId": "5.17",
   "status": "in-progress",
-  "activeStage": "P5.17-05",
-  "completedStages": ["P5.17-00", "P5.17-01", "P5.17-02", "P5.17-03", "P5.17-04"],
+  "activeStage": null,
+  "completedStages": ["P5.17-00", "P5.17-01", "P5.17-02", "P5.17-03", "P5.17-04", "P5.17-05"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "ef31d4db566d808b40a44f3df2ef15c823817d4e",
-  "lastVerifiedCommit": "35c5a7997289b189deb5f09c2295aa0cc295f6b1",
+  "lastVerifiedCommit": "8f6796698c9c344d12997d3172e274cb80b39b50",
   "currentBranch": "feat/p517-record-and-compare",
   "requiredGates": {
     "P5.17-00": ["validate:phase-docs", "phase-docs-tests", "baseline-vitest", "baseline-rust", "lint", "typecheck-app", "typecheck-e2e"],
     "P5.17-01": ["recording-unit-tests", "full-vitest", "lint", "typecheck-app", "typecheck-e2e", "validate:phase-docs"],
     "P5.17-02": ["recording-unit-tests", "full-vitest", "lint", "typecheck-app", "typecheck-e2e", "web-build", "playwright-record-compare", "playwright-regression", "validate:phase-docs"],
     "P5.17-03": ["recording-unit-tests", "full-vitest", "lint", "typecheck-app", "typecheck-e2e", "web-build", "playwright-record-compare", "playwright-regression", "validate:phase-docs"],
-    "P5.17-04": ["recording-unit-tests", "full-vitest", "lint", "typecheck-app", "typecheck-e2e", "web-build", "cargo-build", "playwright-record-compare", "playwright-a11y-viewport", "playwright-regression", "validate:phase-docs"]
+    "P5.17-04": ["recording-unit-tests", "full-vitest", "lint", "typecheck-app", "typecheck-e2e", "web-build", "cargo-build", "playwright-record-compare", "playwright-a11y-viewport", "playwright-regression", "validate:phase-docs"],
+    "P5.17-05": ["validate:phase-docs", "lint", "typecheck-app", "typecheck-e2e", "full-vitest", "cargo-test", "full-playwright", "web-build", "tauri-release-build", "executable-smoke", "git-diff-check"]
   },
   "gateResults": {
     "validate:phase-docs": "pass",
@@ -28,10 +29,15 @@
     "full-vitest": "pass",
     "web-build": "pass",
     "cargo-build": "pass",
+    "cargo-test": "pass",
     "playwright-record-compare": "pass",
     "playwright-a11y-viewport": "pass",
-    "playwright-regression": "pass"
+    "playwright-regression": "pass",
+    "full-playwright": "pass",
+    "tauri-release-build": "pass",
+    "executable-smoke": "pass",
+    "git-diff-check": "pass"
   },
-  "nextAction": "P5.17-05: release gates & acceptance — full automated gate set, direct executable + NSIS + MSI, Product Acceptance report. CRITICAL hardware item: implement/verify the WebView2 microphone-permission handler on the target Windows machine (getUserMedia in production WebView2), then stop at READY FOR HARDWARE ACCEPTANCE.",
+  "nextAction": "Automated gates complete; determination READY FOR HARDWARE ACCEPTANCE. Await human MOTU M4 hardware acceptance (see reports/P5.17-05-product-acceptance.md). Do NOT merge to master or push until the human authorizes it after verifying microphone capture and the hardware checklist.",
   "updatedAt": "2026-08-05"
 }

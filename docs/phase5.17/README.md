@@ -14,11 +14,10 @@ stage report.
 
 ## Status
 
-- **Status:** in-progress
-- **Active stage:** P5.17-05 — Release Gates / Acceptance
-- **Completed stages:** P5.17-00 … P5.17-04 (workflow/audit, capture, session integration, persistence, product hardening)
-- **Next action:** Run the full automated gate set, generate the direct executable + NSIS + MSI, write the Product Acceptance report, and stop at `READY FOR HARDWARE ACCEPTANCE`. **Critical hardware item:** implement and verify the WebView2 microphone-permission handler on the target Windows machine — see [`reports/P5.17-04-product-hardening.md`](reports/P5.17-04-product-hardening.md).
-- **Final determination (not yet reached):** `READY FOR HARDWARE ACCEPTANCE — Record & Compare`
+- **Status:** automated gates complete — awaiting human MOTU M4 hardware acceptance
+- **Completed stages:** P5.17-00 … P5.17-05 (all six)
+- **Next action:** Human verifies microphone capture and the hardware checklist in [`reports/P5.17-05-product-acceptance.md`](reports/P5.17-05-product-acceptance.md), then authorizes the merge. **Do not merge or push until then.**
+- **Final determination:** `READY FOR HARDWARE ACCEPTANCE — Record & Compare`
 
 Do not merge to master and do not push — a human authorizes the merge after
 MOTU M4 hardware acceptance.
@@ -83,7 +82,8 @@ The WebView2 microphone-permission handler is routed to P5.17-05 hardware.
 
 All automated gates, direct executable, setup, Product Acceptance report. Stop at
 `READY FOR HARDWARE ACCEPTANCE — Record & Compare`. Do not merge; wait for human
-hardware confirmation.
+hardware confirmation. **Done (automated)** — see
+[`reports/P5.17-05-product-acceptance.md`](reports/P5.17-05-product-acceptance.md).
 
 ## Independent feature flag
 
