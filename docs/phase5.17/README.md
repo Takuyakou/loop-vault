@@ -15,9 +15,9 @@ stage report.
 ## Status
 
 - **Status:** in-progress
-- **Active stage:** P5.17-01 — Capture Foundation
-- **Completed stages:** P5.17-00 — Workflow / Audit / Contract / Baseline
-- **Next action:** Implement the capture foundation (adapters, device repo, codec negotiation, recorder state machine, fakes) behind the `enableBassPracticeRecordCompare` flag — see [`work-instructions.md`](work-instructions.md) §P5.17-01.
+- **Active stage:** P5.17-02 — Session Flow Integration
+- **Completed stages:** P5.17-00 (workflow/audit/contract/baseline), P5.17-01 (capture foundation)
+- **Next action:** Integrate Record & Compare into Degree/Rhythm/Bassline Echo (count-in, Play/Record, Listen Back, Target/My Take, Retake, Skip, Review continuation, mode/tab/route lifecycle) — see [`work-instructions.md`](work-instructions.md) and [`contracts/01-ux-contract.md`](contracts/01-ux-contract.md).
 - **Final determination (not yet reached):** `READY FOR HARDWARE ACCEPTANCE — Record & Compare`
 
 Do not merge to master and do not push — a human authorizes the merge after
@@ -57,7 +57,7 @@ production feature. **Done.**
 Capability adapter, device repository, permission state, codec negotiation,
 input-channel routing, mono capture, input meter, clip warning, recorder state
 machine, resource cleanup, fake implementation. UI limited to a diagnostic
-harness / minimal Settings wiring.
+harness. **Done** — see [`reports/P5.17-01-capture-foundation.md`](reports/P5.17-01-capture-foundation.md).
 
 ### P5.17-02 — Session Flow Integration
 

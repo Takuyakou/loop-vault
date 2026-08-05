@@ -387,8 +387,11 @@ export function validatePackage(pkgDir, { schema, repoRoot = pkgDir } = {}) {
       if (englishMergePush || japaneseMergePush) {
         add("unauthorized-merge-push", file, `merge/push-to-master directive at line ${i + 1}: ${line.trim()}`);
       }
+      // Key on an actual audio/MIDI file extension, not a generic word: the
+      // feature is literally named "recording", so matching that word would
+      // false-positive on every mention of the module.
       if (
-        /(?:commit|コミット|git\s+add).*(?:\.midi?\b|\.wav\b|\.webm\b|録音|recording)/i.test(line)
+        /(?:commit|コミット|git\s+add).*(?:\.midi?\b|\.wav\b|\.webm\b|\.ogg\b|\.m4a\b|\.mp3\b|\.flac\b|\.aac\b|\.aiff\b)/i.test(line)
       ) {
         add("raw-audio-commit", file, `raw audio/MIDI commit directive at line ${i + 1}: ${line.trim()}`);
       }

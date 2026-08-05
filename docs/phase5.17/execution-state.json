@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "5.17",
   "status": "in-progress",
-  "activeStage": "P5.17-01",
-  "completedStages": ["P5.17-00"],
+  "activeStage": "P5.17-02",
+  "completedStages": ["P5.17-00", "P5.17-01"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "ef31d4db566d808b40a44f3df2ef15c823817d4e",
-  "lastVerifiedCommit": "ef31d4db566d808b40a44f3df2ef15c823817d4e",
+  "lastVerifiedCommit": "304361f06486b63325bf062909207302f94f08d1",
   "currentBranch": "feat/p517-record-and-compare",
   "requiredGates": {
     "P5.17-00": [
@@ -18,6 +18,14 @@
       "lint",
       "typecheck-app",
       "typecheck-e2e"
+    ],
+    "P5.17-01": [
+      "recording-unit-tests",
+      "full-vitest",
+      "lint",
+      "typecheck-app",
+      "typecheck-e2e",
+      "validate:phase-docs"
     ]
   },
   "gateResults": {
@@ -27,8 +35,10 @@
     "baseline-rust": "pass",
     "lint": "pass",
     "typecheck-app": "pass",
-    "typecheck-e2e": "pass"
+    "typecheck-e2e": "pass",
+    "recording-unit-tests": "pass",
+    "full-vitest": "pass"
   },
-  "nextAction": "P5.17-01: implement capture foundation behind enableBassPracticeRecordCompare (adapters, device repo, codec negotiation, recorder state machine, fakes)",
+  "nextAction": "P5.17-02: integrate Record & Compare into Degree/Rhythm/Bassline Echo (count-in, Play/Record, Listen Back, Target/My Take, Retake, Skip, Review continuation, mode/tab/route lifecycle)",
   "updatedAt": "2026-08-05"
 }

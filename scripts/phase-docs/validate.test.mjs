@@ -133,6 +133,13 @@ describe("phase-docs validator — one violation per check", () => {
     expect(checkSet(issues)).toContain("raw-audio-commit");
   });
 
+  it("raw-audio-commit: the word 'recording' near 'commit' is not flagged", () => {
+    const issues = runWithMutation((pkg) =>
+      appendFileSync(join(pkg, "work-instructions.md"), "\nDelivered by the commit that adds src/features/recording/.\n"),
+    );
+    expect(checkSet(issues)).not.toContain("raw-audio-commit");
+  });
+
   it("raw-audio-commit: an audio binary lives in the package", () => {
     const issues = runWithMutation((pkg) => {
       const dir = join(pkg, "evidence");
