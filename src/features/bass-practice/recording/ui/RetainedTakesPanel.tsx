@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Button } from "../../../../components/ui";
 import { isBassPracticeRecordCompareEnabled } from "../../application/featureFlag";
 import { TOTAL_QUOTA_BYTES, type StoredRecordingMetadata } from "../domain/persistence";
 import { createPersistentTakeRepository } from "../application/createController";
@@ -120,20 +121,20 @@ export function RetainedTakesPanel({
                 </p>
               ) : null}
               <div className="mt-2 flex gap-2">
-                <button type="button" data-testid="retained-take-play" onClick={() => void play(take.recordingId)}>
+                <Button variant="secondary" size="sm" data-testid="retained-take-play" onClick={() => void play(take.recordingId)}>
                   {playingId === take.recordingId ? "再生中…" : "再生"}
-                </button>
+                </Button>
                 {confirmingId === take.recordingId ? (
                   <>
-                    <button type="button" data-testid="retained-take-confirm-delete" onClick={() => void remove(take.recordingId)}>
+                    <Button variant="danger" size="sm" data-testid="retained-take-confirm-delete" onClick={() => void remove(take.recordingId)}>
                       削除を確定
-                    </button>
-                    <button type="button" onClick={() => setConfirmingId(undefined)}>やめる</button>
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setConfirmingId(undefined)}>やめる</Button>
                   </>
                 ) : (
-                  <button type="button" data-testid="retained-take-delete" onClick={() => setConfirmingId(take.recordingId)}>
+                  <Button variant="ghost" size="sm" data-testid="retained-take-delete" onClick={() => setConfirmingId(take.recordingId)}>
                     削除
-                  </button>
+                  </Button>
                 )}
               </div>
             </li>

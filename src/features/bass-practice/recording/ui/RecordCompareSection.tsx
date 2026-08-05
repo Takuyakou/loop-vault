@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Button } from "../../../../components/ui";
 import { isBassPracticeRecordCompareEnabled } from "../../application/featureFlag";
 import type { ChannelMode } from "../domain/types";
 import { useRecordCompareSession } from "./useRecordCompareSession";
@@ -96,18 +97,18 @@ export function RecordCompareSection({
         <p className="mt-1 text-xs text-[var(--lv-text-secondary)]">
           自分の演奏を録音してTargetと聴き比べできます。ローカルのみ・自動採点や分析はありません。
         </p>
-        <div className="mt-2 flex flex-wrap gap-2">
-          <button
-            type="button"
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <Button
+            variant="primary"
+            size="sm"
             data-testid="record-compare-enable"
-            className="min-h-9 rounded-[var(--lv-radius-sm)] border border-[var(--lv-accent)] px-3 text-xs font-semibold text-[var(--lv-accent)]"
             onClick={() => {
               setOptedIn(true);
               void session.enable().catch(() => undefined);
             }}
           >
             Record &amp; Compareを使う
-          </button>
+          </Button>
           <span className="self-center text-xs text-[var(--lv-text-muted)]">
             使わない場合はそのまま録音せず続けられます
           </span>
@@ -219,7 +220,7 @@ export function RecordCompareSection({
       {status === "counting-in" ? (
         <div className="mt-3 flex items-center gap-2" data-testid="record-countin">
           <span className="text-xs text-[var(--lv-accent)]">カウントイン中…</span>
-          <button type="button" data-testid="record-cancel-countin" onClick={cancelCountIn}>キャンセル</button>
+          <Button variant="ghost" size="sm" data-testid="record-cancel-countin" onClick={cancelCountIn}>キャンセル</Button>
         </div>
       ) : null}
 
@@ -229,27 +230,27 @@ export function RecordCompareSection({
             Reviewへ進む前に、My Takeを聴くか聴き返しをスキップしてください。
           </p>
           <div className="mt-2 flex gap-2">
-            <button type="button" data-testid="listen-choice-hear" onClick={hearTake}>My Takeを聴く</button>
-            <button type="button" data-testid="listen-choice-skip" onClick={() => setListenBackSkipped(true)}>聴き返しをスキップ</button>
+            <Button variant="secondary" size="sm" data-testid="listen-choice-hear" onClick={hearTake}>My Takeを聴く</Button>
+            <Button variant="ghost" size="sm" data-testid="listen-choice-skip" onClick={() => setListenBackSkipped(true)}>聴き返しをスキップ</Button>
           </div>
         </div>
       ) : null}
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <button type="button" data-testid="record-start" disabled={status !== "ready"} onClick={startRecording}>Play / Record</button>
-        <button type="button" data-testid="record-stop" disabled={status !== "recording"} onClick={() => void session.stop().catch(() => undefined)}>Stop</button>
-        <button type="button" data-testid="hear-target" disabled={status !== "recorded" || !targetPlayer} onClick={hearTarget}>Hear Target</button>
-        <button type="button" data-testid="hear-take" disabled={status !== "recorded"} onClick={hearTake}>Hear My Take</button>
-        <button type="button" data-testid="record-retake" disabled={status !== "recorded"} onClick={retake}>Retake</button>
-        <button type="button" data-testid="record-discard" disabled={status !== "recorded"} onClick={discard}>Discard</button>
-        <button type="button" data-testid="record-keep" disabled={status !== "recorded"} onClick={() => void session.keep({
+        <Button variant="primary" size="sm" data-testid="record-start" disabled={status !== "ready"} onClick={startRecording}>Play / Record</Button>
+        <Button variant="secondary" size="sm" data-testid="record-stop" disabled={status !== "recording"} onClick={() => void session.stop().catch(() => undefined)}>Stop</Button>
+        <Button variant="secondary" size="sm" data-testid="hear-target" disabled={status !== "recorded" || !targetPlayer} onClick={hearTarget}>Hear Target</Button>
+        <Button variant="secondary" size="sm" data-testid="hear-take" disabled={status !== "recorded"} onClick={hearTake}>Hear My Take</Button>
+        <Button variant="ghost" size="sm" data-testid="record-retake" disabled={status !== "recorded"} onClick={retake}>Retake</Button>
+        <Button variant="danger" size="sm" data-testid="record-discard" disabled={status !== "recorded"} onClick={discard}>Discard</Button>
+        <Button variant="primary" size="sm" data-testid="record-keep" disabled={status !== "recorded"} onClick={() => void session.keep({
           practiceSessionId: practiceSessionId ?? "practice-session",
           exerciseSignature: resetKey ?? `${mode}-exercise`,
           mode,
           inputDeviceName: "Input",
           playedBackBeforeReview: session.state?.heardTake ?? false,
-        }).catch(() => undefined)}>Keep Take</button>
-        <button type="button" data-testid="record-skip" onClick={() => { stopPlayback(); clearCountIn(); setOptedIn(false); }}>録音せず続ける</button>
+        }).catch(() => undefined)}>Keep Take</Button>
+        <Button variant="ghost" size="sm" data-testid="record-skip" onClick={() => { stopPlayback(); clearCountIn(); setOptedIn(false); }}>録音せず続ける</Button>
       </div>
 
       <p className="mt-2 text-[11px] text-[var(--lv-text-muted)]">
