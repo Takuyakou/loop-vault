@@ -16,3 +16,5 @@ export * from "./ui/RecordingDiagnosticsPanel";
 export * from "./ui/useRecordCompareSession";
 export * from "./ui/RecordCompareSection";
 export * from "./ui/RetainedTakesPanel";
+export * from "./ui/BassPracticeRecordingSettingsSection";
+export * from "./application/recordChannelStore";

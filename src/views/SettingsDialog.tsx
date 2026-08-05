@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { LiveMidiSettingsSection } from "../components/LiveMidiSettingsSection";
 import { LlmSettingsSection } from "../components/progression-advisor/LlmSettingsSection";
+import { BassPracticeRecordingSettingsSection } from "../features/bass-practice/recording/ui/BassPracticeRecordingSettingsSection";
 import { Modal } from "../components/Modal";
 import { Button, StatusMessage } from "../components/ui";
 import type { SongIdea } from "../domain/types";
@@ -473,6 +474,8 @@ export function SettingsDialog({
         <div id="settings-audio-midi" className="scroll-mt-4">
           <LiveMidiSettingsSection copy={ui} store={liveMidiStore} />
         </div>
+
+        <BassPracticeRecordingSettingsSection />
 
         <div id="settings-ai" className="scroll-mt-4">
           <LlmSettingsSection language={language} setToast={setToast} />

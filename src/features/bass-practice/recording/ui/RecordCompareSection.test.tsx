@@ -2,8 +2,9 @@
 
 import { act } from "react";
 import { createRoot } from "react-dom/client";
-import { describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { RecordCompareSection } from "./RecordCompareSection";
+import { setRecordChannel } from "../application/recordChannelStore";
 import { RecordingSessionController } from "../application/recordingSessionController";
 import {
   FakeCaptureDeviceRepository,
@@ -46,6 +47,11 @@ async function click(container: HTMLElement, testId: string) {
 }
 
 describe("RecordCompareSection", () => {
+  // The channel now comes from the shared store; use a concrete channel so
+  // recording resolves without live Auto metering.
+  beforeEach(() => setRecordChannel("mono-sum"));
+  afterEach(() => { try { localStorage.clear(); } catch { /* jsdom */ } });
+
   test("renders nothing when the feature flag is off", async () => {
     const { container, root } = mount();
     await act(async () => root.render(<RecordCompareSection mode="degree" enabledOverride={false} />));

@@ -3,6 +3,7 @@ import { Button } from "../../../../components/ui";
 import { isBassPracticeRecordCompareEnabled } from "../../application/featureFlag";
 import type { ChannelMode } from "../domain/types";
 import { useRecordCompareSession } from "./useRecordCompareSession";
+import { useRecordChannel } from "../application/recordChannelStore";
 import type { RecordingSessionController } from "../application/recordingSessionController";
 import { BrowserTakePlayer, type PlaybackHandle, type TakePlayer, type TargetPlayer } from "../application/playback";
 import { RetainedTakesPanel } from "./RetainedTakesPanel";
@@ -56,11 +57,23 @@ export function RecordCompareSection({
   const enabled = enabledOverride ?? isBassPracticeRecordCompareEnabled();
   const [optedIn, setOptedIn] = useState(false);
   const [listenBackSkipped, setListenBackSkipped] = useState(false);
+  const [channel, setChannel] = useRecordChannel();
   const session = useRecordCompareSession({
     controllerFactory: controller ? () => controller : undefined,
     isTypeSupported,
     resetKey,
   });
+  const sessionStatus = session.state?.status ?? "idle";
+  // Push the shared channel into the controller whenever it can accept it, so
+  // Practice Settings and the panel stay in sync without racing live capture.
+  useEffect(() => {
+    try {
+      session.setChannel(channel);
+    } catch {
+      /* not a channel-pickable state right now; re-applied on the next change */
+    }
+    // session delegates to the live controller; only channel/status drive this.
+  }, [channel, sessionStatus]);
   const playerRef = useRef<TakePlayer>(takePlayer ?? new BrowserTakePlayer());
   const activePlaybackRef = useRef<PlaybackHandle | null>(null);
   const countInTimerRef = useRef<ReturnType<typeof setTimeout>>();
@@ -208,8 +221,8 @@ export function RecordCompareSection({
         <select
           aria-label="入力チャンネル"
           className="lv-input mt-1 w-full max-w-xs"
-          value={session.state?.channelMode ?? "auto"}
-          onChange={(event) => session.setChannel(event.target.value as ChannelMode)}
+          value={channel}
+          onChange={(event) => setChannel(event.target.value as ChannelMode)}
         >
           {CHANNELS.map((channel) => (
             <option key={channel.value} value={channel.value}>{channel.label}</option>
