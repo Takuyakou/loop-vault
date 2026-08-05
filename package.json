@@ -10,6 +10,7 @@
     "lint": "eslint . && npm run lint:classes",
     "lint:classes": "node scripts/lint-tailwind-classes.mjs",
     "check:staged": "node scripts/check-staged-files.mjs",
+    "validate:phase-docs": "node scripts/phase-docs/validate.mjs",
     "hooks:install": "git config core.hooksPath .githooks",
     "preview": "vite preview",
     "test": "vitest run",

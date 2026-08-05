@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://loop-vault/phase-workflow/execution-state.schema.json",
+  "title": "Phase execution state",
+  "description": "Machine-readable resume state for a single phase. Git is always the source of truth; this file is a convenience mirror. See docs/phase-workflow/README.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "phaseId",
+    "status",
+    "activeStage",
+    "completedStages",
+    "blocked",
+    "blockerReason",
+    "baseCommit",
+    "lastVerifiedCommit",
+    "currentBranch",
+    "requiredGates",
+    "gateResults",
+    "nextAction",
+    "updatedAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "description": "Schema version of this file. Bump when the shape changes.",
+      "type": "integer",
+      "const": 1
+    },
+    "phaseId": {
+      "description": "Phase identifier, e.g. \"5.17\". Must match the README phase-id marker and (for docs/phaseX.Y/) the directory name.",
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+$"
+    },
+    "status": {
+      "description": "Overall phase status.",
+      "type": "string",
+      "enum": ["planned", "in-progress", "blocked", "completed"]
+    },
+    "activeStage": {
+      "description": "Stage currently being worked, e.g. \"P5.17-00\". Null when the phase is complete.",
+      "type": ["string", "null"],
+      "pattern": "^P[0-9]+\\.[0-9]+-[0-9]{2}$"
+    },
+    "completedStages": {
+      "description": "Stage ids that are fully done, each with recorded gates and a commit hash.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^P[0-9]+\\.[0-9]+-[0-9]{2}$"
+      }
+    },
+    "blocked": {
+      "description": "True when a stop condition is active. Must agree with status and blockerReason.",
+      "type": "boolean"
+    },
+    "blockerReason": {
+      "description": "Non-null free text when blocked is true; null otherwise.",
+      "type": ["string", "null"]
+    },
+    "baseCommit": {
+      "description": "Commit the phase branch was created from.",
+      "type": "string"
+    },
+    "lastVerifiedCommit": {
+      "description": "Most recent commit whose gates were actually run and recorded.",
+      "type": "string"
+    },
+    "currentBranch": {
+      "description": "Git branch that carries this phase's work.",
+      "type": "string"
+    },
+    "requiredGates": {
+      "description": "Map of stage id -> array of gate names that must pass before the stage is completed.",
+      "type": "object"
+    },
+    "gateResults": {
+      "description": "Map of gate name -> result. Only \"pass\" counts as passed.",
+      "type": "object"
+    },
+    "nextAction": {
+      "description": "Single next concrete action to resume from.",
+      "type": "string"
+    },
+    "updatedAt": {
+      "description": "ISO-8601 timestamp. Advisory only; never overrides Git reality.",
+      "type": "string"
+    }
+  }
+}

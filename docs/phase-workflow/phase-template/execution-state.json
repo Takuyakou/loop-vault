@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "0.0",
+  "status": "planned",
+  "activeStage": "P0.0-00",
+  "completedStages": [],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "",
+  "lastVerifiedCommit": "",
+  "currentBranch": "feat/p00-template",
+  "requiredGates": {
+    "P0.0-00": ["validate:phase-docs", "phase-docs-tests"]
+  },
+  "gateResults": {},
+  "nextAction": "Copy this template into docs/phaseX.Y/ and run the repository audit",
+  "updatedAt": ""
+}
