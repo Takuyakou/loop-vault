@@ -1,24 +1,32 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { isBassPracticeRecordCompareEnabled } from "../../application/featureFlag";
 import type { ChannelMode } from "../domain/types";
 import { useRecordCompareSession } from "./useRecordCompareSession";
 import type { RecordingSessionController } from "../application/recordingSessionController";
+import { BrowserTakePlayer, type PlaybackHandle, type TakePlayer, type TargetPlayer } from "../application/playback";
 
 /**
  * Shared Record & Compare panel for all three Echo modes (P5.17-02). It is
- * additive and opt-in: it renders only when the feature flag is on, and it does
- * nothing (beyond a compact opt-in) until the user chooses to record — so
- * microphone permission is requested only on explicit enable, and the initial
- * practice screen is unchanged. It is a mirror for self-review: no scoring,
- * accuracy, or analysis is ever shown.
+ * additive and opt-in: it renders only when the feature flag is on, does nothing
+ * (beyond a compact opt-in) until the user chooses to record, and requests
+ * microphone permission only on enable — so the initial practice screen is
+ * unchanged. It is a mirror for self-review: no scoring, accuracy, or analysis.
+ *
+ * Target and My Take never play at once, and reaching Review without hearing My
+ * Take forces an explicit hear-or-skip choice (contract 01).
  */
 
 export interface RecordCompareSectionProps {
   readonly mode: "degree" | "rhythm" | "bassline";
   /** Stable exercise signature; changing it resets the recorder for a new take. */
   readonly resetKey?: string;
+  /** Plays the exercise Target; when omitted, Hear Target is unavailable. */
+  readonly targetPlayer?: TargetPlayer;
+  /** Milliseconds of count-in before recording starts (0 = immediate). */
+  readonly countInMs?: number;
   /** Injected in tests. */
   readonly controller?: RecordingSessionController;
+  readonly takePlayer?: TakePlayer;
   readonly enabledOverride?: boolean;
   readonly isTypeSupported?: (mimeType: string) => boolean;
 }
@@ -33,17 +41,40 @@ const CHANNELS: readonly { readonly value: ChannelMode; readonly label: string }
 export function RecordCompareSection({
   mode,
   resetKey,
+  targetPlayer,
+  countInMs = 0,
   controller,
+  takePlayer,
   enabledOverride,
   isTypeSupported,
 }: RecordCompareSectionProps) {
   const enabled = enabledOverride ?? isBassPracticeRecordCompareEnabled();
   const [optedIn, setOptedIn] = useState(false);
+  const [listenBackSkipped, setListenBackSkipped] = useState(false);
   const session = useRecordCompareSession({
     controllerFactory: controller ? () => controller : undefined,
     isTypeSupported,
     resetKey,
   });
+  const playerRef = useRef<TakePlayer>(takePlayer ?? new BrowserTakePlayer());
+  const activePlaybackRef = useRef<PlaybackHandle | null>(null);
+  const countInTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const stopPlayback = () => {
+    activePlaybackRef.current?.stop();
+    activePlaybackRef.current = null;
+  };
+  const clearCountIn = () => {
+    if (countInTimerRef.current !== undefined) {
+      clearTimeout(countInTimerRef.current);
+      countInTimerRef.current = undefined;
+    }
+  };
+
+  useEffect(() => () => {
+    stopPlayback();
+    clearCountIn();
+  }, []);
 
   if (!enabled) return null;
 
@@ -80,6 +111,62 @@ export function RecordCompareSection({
       </section>
     );
   }
+
+  const startRecording = () => {
+    setListenBackSkipped(false);
+    session.startCountIn();
+    clearCountIn();
+    if (countInMs > 0) {
+      countInTimerRef.current = setTimeout(() => {
+        countInTimerRef.current = undefined;
+        void session.record().catch(() => undefined);
+      }, countInMs);
+    } else {
+      void session.record().catch(() => undefined);
+    }
+  };
+
+  const cancelCountIn = () => {
+    clearCountIn();
+    session.cancelCountIn();
+  };
+
+  const hearTarget = () => {
+    if (!targetPlayer) return;
+    stopPlayback();
+    session.playTarget();
+    activePlaybackRef.current = targetPlayer.play(() => {
+      activePlaybackRef.current = null;
+      session.playbackEnded();
+    });
+  };
+
+  const hearTake = () => {
+    const take = session.currentTake();
+    if (!take) return;
+    stopPlayback();
+    session.playTake();
+    activePlaybackRef.current = playerRef.current.play(take, () => {
+      activePlaybackRef.current = null;
+      session.playbackEnded();
+    });
+  };
+
+  const retake = () => {
+    stopPlayback();
+    clearCountIn();
+    setListenBackSkipped(false);
+    session.retake();
+  };
+
+  const discard = () => {
+    stopPlayback();
+    session.discard();
+  };
+
+  const needsListenChoice = status === "recorded"
+    && !(session.state?.heardTake ?? false)
+    && !listenBackSkipped;
 
   return (
     <section
@@ -124,18 +211,34 @@ export function RecordCompareSection({
         </select>
       </label>
 
+      {status === "counting-in" ? (
+        <div className="mt-3 flex items-center gap-2" data-testid="record-countin">
+          <span className="text-xs text-[var(--lv-accent)]">カウントイン中…</span>
+          <button type="button" data-testid="record-cancel-countin" onClick={cancelCountIn}>キャンセル</button>
+        </div>
+      ) : null}
+
+      {needsListenChoice ? (
+        <div className="mt-3 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] p-2" role="status" data-testid="listen-choice">
+          <p className="text-xs text-[var(--lv-text-secondary)]">
+            Reviewへ進む前に、My Takeを聴くか聴き返しをスキップしてください。
+          </p>
+          <div className="mt-2 flex gap-2">
+            <button type="button" data-testid="listen-choice-hear" onClick={hearTake}>My Takeを聴く</button>
+            <button type="button" data-testid="listen-choice-skip" onClick={() => setListenBackSkipped(true)}>聴き返しをスキップ</button>
+          </div>
+        </div>
+      ) : null}
+
       <div className="mt-3 flex flex-wrap gap-2">
-        <button type="button" data-testid="record-start" disabled={status !== "ready"} onClick={() => {
-          session.startCountIn();
-          void session.record().catch(() => undefined);
-        }}>Play / Record</button>
+        <button type="button" data-testid="record-start" disabled={status !== "ready"} onClick={startRecording}>Play / Record</button>
         <button type="button" data-testid="record-stop" disabled={status !== "recording"} onClick={() => void session.stop().catch(() => undefined)}>Stop</button>
-        <button type="button" data-testid="hear-target" disabled={status !== "recorded"} onClick={() => session.playTarget()}>Hear Target</button>
-        <button type="button" data-testid="hear-take" disabled={status !== "recorded"} onClick={() => session.playTake()}>Hear My Take</button>
-        <button type="button" data-testid="record-retake" disabled={status !== "recorded"} onClick={() => session.retake()}>Retake</button>
-        <button type="button" data-testid="record-discard" disabled={status !== "recorded"} onClick={() => session.discard()}>Discard</button>
+        <button type="button" data-testid="hear-target" disabled={status !== "recorded" || !targetPlayer} onClick={hearTarget}>Hear Target</button>
+        <button type="button" data-testid="hear-take" disabled={status !== "recorded"} onClick={hearTake}>Hear My Take</button>
+        <button type="button" data-testid="record-retake" disabled={status !== "recorded"} onClick={retake}>Retake</button>
+        <button type="button" data-testid="record-discard" disabled={status !== "recorded"} onClick={discard}>Discard</button>
         <button type="button" data-testid="record-keep" disabled={status !== "recorded"} onClick={() => void session.keep().catch(() => undefined)}>Keep Take</button>
-        <button type="button" data-testid="record-skip" onClick={() => setOptedIn(false)}>録音せず続ける</button>
+        <button type="button" data-testid="record-skip" onClick={() => { stopPlayback(); clearCountIn(); setOptedIn(false); }}>録音せず続ける</button>
       </div>
 
       <p className="mt-2 text-[11px] text-[var(--lv-text-muted)]">

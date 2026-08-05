@@ -15,10 +15,9 @@ stage report.
 ## Status
 
 - **Status:** in-progress
-- **Active stage:** P5.17-02 — Session Flow Integration (partially complete)
-- **Completed stages:** P5.17-00 (workflow/audit/contract/baseline), P5.17-01 (capture foundation)
-- **P5.17-02 so far:** shared `RecordCompareSection` wired into Degree/Rhythm/Bassline Echo (opt-in, flag-gated, appears only in the play/listen-back window), record → stop → Retake/Discard/Keep/Skip flow, mode/tab/route lifecycle disposal. Verified non-regressing (Vitest, build, production-activation + degree-echo + visual + accessibility Playwright).
-- **P5.17-02 remaining:** real Target/My Take audio playback, timed count-in, force hear-or-skip before Review, dedicated Record & Compare Playwright scenarios (fake media device). See [`reports/P5.17-02-session-integration.md`](reports/P5.17-02-session-integration.md).
+- **Active stage:** P5.17-03 — Persistence / History
+- **Completed stages:** P5.17-00 (workflow/audit/contract/baseline), P5.17-01 (capture foundation), P5.17-02 (session flow integration)
+- **Next action:** Build the Vault-independent binary take store (Tauri `recordings/` + IndexedDB), Keep Take metadata, quota, History playback/delete, corruption resilience, orphan cleanup, migration, privacy UI — see [`contracts/02-storage-contract.md`](contracts/02-storage-contract.md).
 - **Final determination (not yet reached):** `READY FOR HARDWARE ACCEPTANCE — Record & Compare`
 
 Do not merge to master and do not push — a human authorizes the merge after
@@ -64,7 +63,7 @@ harness. **Done** — see [`reports/P5.17-01-capture-foundation.md`](reports/P5.
 
 Integrate into Degree / Rhythm / Bassline Echo: count-in, Play/Record, Listen
 Back, Target/My Take, Retake, Skip recording, Review continuation, mode/tab/route
-lifecycle.
+lifecycle. **Done** — see [`reports/P5.17-02-session-integration.md`](reports/P5.17-02-session-integration.md).
 
 ### P5.17-03 — Persistence / History
 

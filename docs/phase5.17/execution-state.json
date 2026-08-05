@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "5.17",
   "status": "in-progress",
-  "activeStage": "P5.17-02",
-  "completedStages": ["P5.17-00", "P5.17-01"],
+  "activeStage": "P5.17-03",
+  "completedStages": ["P5.17-00", "P5.17-01", "P5.17-02"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "ef31d4db566d808b40a44f3df2ef15c823817d4e",
-  "lastVerifiedCommit": "9f9d58f3c7bd6eed77a112045ef4f5db50557e72",
+  "lastVerifiedCommit": "5830473ebb6ae0a2eb3a0e6b872f37b31226fbe5",
   "currentBranch": "feat/p517-record-and-compare",
   "requiredGates": {
     "P5.17-00": [
@@ -26,6 +26,17 @@
       "typecheck-app",
       "typecheck-e2e",
       "validate:phase-docs"
+    ],
+    "P5.17-02": [
+      "recording-unit-tests",
+      "full-vitest",
+      "lint",
+      "typecheck-app",
+      "typecheck-e2e",
+      "web-build",
+      "playwright-record-compare",
+      "playwright-regression",
+      "validate:phase-docs"
     ]
   },
   "gateResults": {
@@ -37,8 +48,11 @@
     "typecheck-app": "pass",
     "typecheck-e2e": "pass",
     "recording-unit-tests": "pass",
-    "full-vitest": "pass"
+    "full-vitest": "pass",
+    "web-build": "pass",
+    "playwright-record-compare": "pass",
+    "playwright-regression": "pass"
   },
-  "nextAction": "P5.17-02 continuation: wire real Target/My Take audio playback and timed count-in into RecordCompareSection, force a hear-or-skip choice before Review, and add dedicated Record & Compare Playwright scenarios (fake media device). Structural 3-mode integration + lifecycle is committed and regression-verified.",
+  "nextAction": "P5.17-03: persistence & History — Vault-independent binary take store (Tauri recordings/ + IndexedDB), Keep Take metadata, quota, History playback/delete, corruption resilience, orphan cleanup, migration, privacy UI",
   "updatedAt": "2026-08-05"
 }

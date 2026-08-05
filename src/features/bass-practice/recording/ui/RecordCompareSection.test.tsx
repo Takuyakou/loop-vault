@@ -11,6 +11,7 @@ import {
   FakeRecordingCapability,
   InMemoryRecordingTakeRepository,
 } from "../application/fakes";
+import { FakePlayer } from "../application/playback";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
   .IS_REACT_ACT_ENVIRONMENT = true;
@@ -105,6 +106,68 @@ describe("RecordCompareSection", () => {
     await click(container, "record-compare-enable");
     expect(container.querySelector("[data-record-state=permission-denied]")).not.toBeNull();
     expect(container.textContent).toContain("録音せずに続けられます");
+    await act(async () => root.unmount());
+    document.body.replaceChildren();
+  });
+
+  test("count-in can be cancelled back to ready", async () => {
+    const controller = fakeController();
+    const { container, root } = mount();
+    await act(async () => root.render(
+      <RecordCompareSection mode="degree" controller={controller} countInMs={10_000} enabledOverride />,
+    ));
+    await click(container, "record-compare-enable");
+    await click(container, "record-start");
+    expect(container.querySelector("[data-record-state=counting-in]")).not.toBeNull();
+    expect(container.querySelector("[data-testid=record-countin]")).not.toBeNull();
+    await click(container, "record-cancel-countin");
+    expect(container.querySelector("[data-record-state=ready]")).not.toBeNull();
+    await act(async () => root.unmount());
+    document.body.replaceChildren();
+  });
+
+  test("Hear My Take and Hear Target never play at once", async () => {
+    const controller = fakeController();
+    const takePlayer = new FakePlayer();
+    const targetPlayer = new FakePlayer();
+    const { container, root } = mount();
+    await act(async () => root.render(
+      <RecordCompareSection
+        mode="degree"
+        controller={controller}
+        takePlayer={takePlayer}
+        targetPlayer={targetPlayer}
+        enabledOverride
+      />,
+    ));
+    await click(container, "record-compare-enable");
+    await click(container, "record-start");
+    await click(container, "record-stop");
+    await click(container, "hear-take");
+    expect(takePlayer.playing).toBe(true);
+    expect(container.querySelector("[data-record-state=playing-take]")).not.toBeNull();
+    // switching to Target must stop the take first (mutual exclusion)
+    await act(async () => { takePlayer.end(); await flush(); }); // finish take playback -> recorded
+    await click(container, "hear-target");
+    expect(targetPlayer.playing).toBe(true);
+    expect(takePlayer.playing).toBe(false);
+    await act(async () => root.unmount());
+    document.body.replaceChildren();
+  });
+
+  test("reaching recorded forces an explicit hear-or-skip choice", async () => {
+    const controller = fakeController();
+    const takePlayer = new FakePlayer();
+    const { container, root } = mount();
+    await act(async () => root.render(
+      <RecordCompareSection mode="degree" controller={controller} takePlayer={takePlayer} enabledOverride />,
+    ));
+    await click(container, "record-compare-enable");
+    await click(container, "record-start");
+    await click(container, "record-stop");
+    expect(container.querySelector("[data-testid=listen-choice]")).not.toBeNull();
+    await click(container, "listen-choice-skip");
+    expect(container.querySelector("[data-testid=listen-choice]")).toBeNull();
     await act(async () => root.unmount());
     document.body.replaceChildren();
   });

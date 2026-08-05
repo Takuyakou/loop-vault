@@ -45,6 +45,11 @@ export class RecordingSessionController {
     return this.state;
   }
 
+  /** The current ephemeral take (for Listen Back), if one exists. */
+  currentTake(): RecordingTake | undefined {
+    return this.pendingTake;
+  }
+
   subscribe(listener: (state: RecorderState) => void): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
