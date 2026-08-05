@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "9.9",
+  "status": "planned",
+  "activeStage": "P9.9-00",
+  "completedStages": [],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "",
+  "lastVerifiedCommit": "",
+  "currentBranch": "feat/p99-fixture",
+  "requiredGates": {
+    "P9.9-00": ["validate:phase-docs"],
+    "P9.9-01": ["unit-tests"]
+  },
+  "gateResults": {},
+  "nextAction": "run the audit",
+  "updatedAt": ""
+}
