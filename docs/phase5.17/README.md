@@ -15,9 +15,10 @@ stage report.
 ## Status
 
 - **Status:** in-progress
-- **Active stage:** P5.17-02 — Session Flow Integration
+- **Active stage:** P5.17-02 — Session Flow Integration (partially complete)
 - **Completed stages:** P5.17-00 (workflow/audit/contract/baseline), P5.17-01 (capture foundation)
-- **Next action:** Integrate Record & Compare into Degree/Rhythm/Bassline Echo (count-in, Play/Record, Listen Back, Target/My Take, Retake, Skip, Review continuation, mode/tab/route lifecycle) — see [`work-instructions.md`](work-instructions.md) and [`contracts/01-ux-contract.md`](contracts/01-ux-contract.md).
+- **P5.17-02 so far:** shared `RecordCompareSection` wired into Degree/Rhythm/Bassline Echo (opt-in, flag-gated, appears only in the play/listen-back window), record → stop → Retake/Discard/Keep/Skip flow, mode/tab/route lifecycle disposal. Verified non-regressing (Vitest, build, production-activation + degree-echo + visual + accessibility Playwright).
+- **P5.17-02 remaining:** real Target/My Take audio playback, timed count-in, force hear-or-skip before Review, dedicated Record & Compare Playwright scenarios (fake media device). See [`reports/P5.17-02-session-integration.md`](reports/P5.17-02-session-integration.md).
 - **Final determination (not yet reached):** `READY FOR HARDWARE ACCEPTANCE — Record & Compare`
 
 Do not merge to master and do not push — a human authorizes the merge after

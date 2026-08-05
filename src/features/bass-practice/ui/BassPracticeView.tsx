@@ -38,6 +38,7 @@ import {
   DegreePracticeSession,
 } from "../application";
 import { DegreeFretboard } from "./DegreeFretboard";
+import { RecordCompareSection } from "../recording/ui/RecordCompareSection";
 
 export interface DegreeUiSettings {
   readonly stringCount: StringCount;
@@ -478,6 +479,10 @@ function DegreeSessionWorkspace({
               onIssueChange={setDraftIssue}
               onRatingChange={setDraftRating}
             />
+          ) : null}
+
+          {state.status === "thinking" || state.status === "playing" || state.status === "review" ? (
+            <RecordCompareSection mode="degree" resetKey={`degree:${activeExercise.id}`} />
           ) : null}
 
           {error || externalError ? <StatusMessage className="mt-4" title="操作を完了できませんでした" tone="error">{error ?? externalError}</StatusMessage> : null}

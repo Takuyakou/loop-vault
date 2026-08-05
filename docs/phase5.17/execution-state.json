@@ -7,7 +7,7 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "ef31d4db566d808b40a44f3df2ef15c823817d4e",
-  "lastVerifiedCommit": "304361f06486b63325bf062909207302f94f08d1",
+  "lastVerifiedCommit": "9f9d58f3c7bd6eed77a112045ef4f5db50557e72",
   "currentBranch": "feat/p517-record-and-compare",
   "requiredGates": {
     "P5.17-00": [
@@ -39,6 +39,6 @@
     "recording-unit-tests": "pass",
     "full-vitest": "pass"
   },
-  "nextAction": "P5.17-02: integrate Record & Compare into Degree/Rhythm/Bassline Echo (count-in, Play/Record, Listen Back, Target/My Take, Retake, Skip, Review continuation, mode/tab/route lifecycle)",
+  "nextAction": "P5.17-02 continuation: wire real Target/My Take audio playback and timed count-in into RecordCompareSection, force a hear-or-skip choice before Review, and add dedicated Record & Compare Playwright scenarios (fake media device). Structural 3-mode integration + lifecycle is committed and regression-verified.",
   "updatedAt": "2026-08-05"
 }

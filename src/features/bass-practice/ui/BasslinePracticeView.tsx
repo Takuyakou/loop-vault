@@ -3,6 +3,7 @@ import { Ear, Lightbulb, Square } from "lucide-react";
 import { stopPreview, previewMidiNotes } from "../../../audio/chordPreview";
 import { Button, Surface } from "../../../components/ui";
 import { BASSLINE_GENERATOR_VERSION, generateBasslineExercise } from "../domain";
+import { RecordCompareSection } from "../recording/ui/RecordCompareSection";
 
 export function BasslinePracticeView() {
   const [level, setLevel] = useState<1 | 2 | 3>(1);
@@ -51,6 +52,7 @@ export function BasslinePracticeView() {
       <Button variant="ghost" onClick={() => setHint((value) => Math.min(4, value + 1))}><Lightbulb size={15} /> Hint {hint}/4</Button>
       <Button onClick={() => setReview(true)}><Ear size={15} /> Review</Button>
     </div>
+    {review ? <RecordCompareSection mode="bassline" resetKey={`bassline:${level}`} /> : null}
     {review ? <fieldset className="mt-4"><legend>Self-rated review</legend>{["again", "hard", "good", "easy"].map((rating) => <button key={rating} type="button" className="mr-2">{rating}</button>)}</fieldset> : null}
   </Surface>;
 }

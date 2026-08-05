@@ -9,3 +9,5 @@ export * from "./application/fakes";
 export * from "./application/browserAdapters";
 export * from "./application/createController";
 export * from "./ui/RecordingDiagnosticsPanel";
+export * from "./ui/useRecordCompareSession";
+export * from "./ui/RecordCompareSection";
