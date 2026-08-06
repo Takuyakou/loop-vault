@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "phaseId": "5.17",
-  "status": "in-progress",
+  "status": "completed",
   "activeStage": null,
   "completedStages": ["P5.17-00", "P5.17-01", "P5.17-02", "P5.17-03", "P5.17-04", "P5.17-05"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "ef31d4db566d808b40a44f3df2ef15c823817d4e",
-  "lastVerifiedCommit": "8f6796698c9c344d12997d3172e274cb80b39b50",
+  "lastVerifiedCommit": "406702b",
   "currentBranch": "feat/p517-record-and-compare",
   "requiredGates": {
     "P5.17-00": ["validate:phase-docs", "phase-docs-tests", "baseline-vitest", "baseline-rust", "lint", "typecheck-app", "typecheck-e2e"],
@@ -38,6 +38,6 @@
     "executable-smoke": "pass",
     "git-diff-check": "pass"
   },
-  "nextAction": "Automated gates complete; determination READY FOR HARDWARE ACCEPTANCE. Await human MOTU M4 hardware acceptance (see reports/P5.17-05-product-acceptance.md). Do NOT merge to master or push until the human authorizes it after verifying microphone capture and the hardware checklist.",
+  "nextAction": "Phase complete: human hardware acceptance done (microphone confirmed working in the production WebView2 build) and the user authorized the merge into local master (--no-ff, not pushed). Backlog: Degree Echo 1/2-bar phrase length is deferred to a future phase (see reports/P5.17-05-product-acceptance.md).",
   "updatedAt": "2026-08-05"
 }

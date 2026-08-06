@@ -14,10 +14,11 @@ stage report.
 
 ## Status
 
-- **Status:** automated gates complete — awaiting human MOTU M4 hardware acceptance
+- **Status:** completed — human hardware acceptance done, merged into local master (not pushed)
 - **Completed stages:** P5.17-00 … P5.17-05 (all six)
-- **Next action:** Human verifies microphone capture and the hardware checklist in [`reports/P5.17-05-product-acceptance.md`](reports/P5.17-05-product-acceptance.md), then authorizes the merge. **Do not merge or push until then.**
-- **Final determination:** `READY FOR HARDWARE ACCEPTANCE — Record & Compare`
+- **Outcome:** Microphone capture confirmed working in the production WebView2 build; UX feedback addressed; the user authorized the merge. See [`reports/P5.17-05-product-acceptance.md`](reports/P5.17-05-product-acceptance.md).
+- **Backlog:** Degree Echo 1/2-bar phrase length deferred to a future phase.
+- **Final determination:** `READY FOR HARDWARE ACCEPTANCE — Record & Compare` (accepted)
 
 Do not merge to master and do not push — a human authorizes the merge after
 MOTU M4 hardware acceptance.
