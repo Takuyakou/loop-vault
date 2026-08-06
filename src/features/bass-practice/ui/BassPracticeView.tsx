@@ -48,8 +48,6 @@ export interface DegreeUiSettings {
   readonly fretRange: { readonly min: number; readonly max: number };
   readonly singEnabled: boolean;
   readonly singingReferenceMode: SingingReferenceMode;
-  /** Phrase length in bars. 2 concatenates two one-bar phrases. */
-  readonly phraseBars: 1 | 2;
 }
 
 const DEFAULT_SETTINGS: DegreeUiSettings = {
@@ -58,7 +56,6 @@ const DEFAULT_SETTINGS: DegreeUiSettings = {
   fretRange: { min: 0, max: 12 },
   singEnabled: true,
   singingReferenceMode: "auto",
-  phraseBars: 1,
 };
 
 const RATINGS: readonly { value: PracticeRating; label: string; key: string }[] = [
@@ -94,7 +91,7 @@ export function BassPracticeView({ initialClaim, initialRound = 1, initialSettin
   const [settings, setSettings] = useState<DegreeUiSettings>(() => initialSettings ? {
     stringCount: initialSettings.stringCount, handedness: initialSettings.handedness,
     fretRange: initialSettings.fretRange, singEnabled: initialSettings.singEnabled,
-    singingReferenceMode: initialSettings.singingReferenceMode, phraseBars: 1,
+    singingReferenceMode: initialSettings.singingReferenceMode,
   } : DEFAULT_SETTINGS);
   const [settingsError, setSettingsError] = useState<string>();
   const [round, setRound] = useState(initialRound);
@@ -106,15 +103,10 @@ export function BassPracticeView({ initialClaim, initialRound = 1, initialSettin
   useEffect(() => { if (initialClaim) setQueuedClaim(initialClaim); }, [initialClaim]);
   useEffect(() => { abandonHandlerRef.current = onSessionAbandoned; }, [onSessionAbandoned]);
   useEffect(() => () => { void abandonHandlerRef.current?.(activeSessionId); }, [activeSessionId]);
-  const generation = useMemo(() => {
-    if (queuedClaim) return { ok: true as const, exercise: queuedClaim.exercise };
-    const snapshot = createGeneratorSnapshot(settings, round);
-    const first = generateDegreeExercise(snapshot);
-    if (settings.phraseBars !== 2 || !first.ok) return first;
-    const second = generateDegreeExercise({ ...snapshot, seed: `${snapshot.seed}::bar2` });
-    if (!second.ok) return second;
-    return { ok: true as const, exercise: mergeDegreeExercises(first.exercise, second.exercise) };
-  }, [queuedClaim, round, settings]);
+  const generation = useMemo(
+    () => queuedClaim ? { ok: true as const, exercise: queuedClaim.exercise } : generateDegreeExercise(createGeneratorSnapshot(settings, round)),
+    [queuedClaim, round, settings],
+  );
 
   if (!generation.ok) {
     return (
@@ -644,12 +636,6 @@ function SetupControls({
           <option value="octave-2">+2 Octaves</option>
         </select>
       </Field>
-      <Field htmlFor="degree-phrase-bars" label="フレーズ長">
-        <select id="degree-phrase-bars" className="lv-input min-h-10 w-full" value={settings.phraseBars} onChange={(event) => onChange({ ...settings, phraseBars: Number(event.target.value) as 1 | 2 })}>
-          <option value={1}>1小節</option>
-          <option value={2}>2小節</option>
-        </select>
-      </Field>
     </fieldset>
   );
 }
@@ -707,26 +693,7 @@ function ReviewControls({
   );
 }
 
-/** Concatenates two one-bar phrases into a two-bar exercise (same key/scale). */
-export function mergeDegreeExercises(a: PracticeExercise, b: PracticeExercise): PracticeExercise {
-  const offsetBeats = a.difficulty.phraseLengthBeats;
-  const secondEvents = b.targetEvents.map((event, index) => ({
-    ...event,
-    index: a.targetEvents.length + index,
-    startBeat: event.startBeat + offsetBeats,
-  }));
-  return {
-    ...a,
-    id: `${a.id}+${b.id}`,
-    targetEvents: [...a.targetEvents, ...secondEvents],
-    difficulty: {
-      ...a.difficulty,
-      phraseLengthBeats: a.difficulty.phraseLengthBeats + b.difficulty.phraseLengthBeats,
-    },
-  };
-}
-
-export function createGeneratorSnapshot(settings: DegreeUiSettings, round: number): GeneratorSnapshot {
+function createGeneratorSnapshot(settings: DegreeUiSettings, round: number): GeneratorSnapshot {
   const preset = degreeDifficultyPreset(2, "major");
   const tuning = STANDARD_BASS_TUNINGS[settings.stringCount];
   return {
