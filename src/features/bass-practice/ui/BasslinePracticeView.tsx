@@ -47,7 +47,10 @@ export function BasslinePracticeView() {
     <p className="mt-2 text-sm">Generated source · self-rated practice only · no microphone or automatic score.</p>
     <label className="mt-3 block">Level <select aria-label="Bassline level" value={level} onChange={(event) => setLevel(Number(event.target.value) as 1 | 2 | 3)}><option value={1}>1 — Roots</option><option value={2}>2 — Chord tones</option><option value={3}>3 — Approach</option></select></label>
     <div className="mt-4 rounded border p-3" aria-label="Bassline progression strip">{exercise.exercise.chords.map((chord) => <span key={`${chord.startBeat}:${chord.label}`} className="mr-2">{chord.label}</span>)}</div>
-    <div className="mt-3" data-testid="bassline-notes">{hint >= 4 || review ? exercise.exercise.targetEvents.map((event) => <span key={event.index} className="mr-2">{event.midiNote}</span>) : "Listen and recall first. Notes stay hidden until Hint 4 or Review."}</div>
+    <div className="mt-3 text-sm" data-testid="bassline-notes">{hint >= 4 || review ? <>
+      <span className="mr-2 text-xs text-[var(--lv-text-muted)]">音名:</span>
+      {exercise.exercise.targetEvents.map((event) => <span key={event.index} className="mr-2 font-semibold" title={`MIDI ${event.midiNote}`}>{midiNoteName(event.midiNote)}</span>)}
+    </> : "Listen and recall first. Notes stay hidden until Hint 4 or Review."}</div>
     <div className="mt-4 flex gap-2">
       <Button onClick={listen} data-testid="bassline-listen">{playing ? <Square size={15} /> : <Ear size={15} />}{playing ? "Stop" : "Listen"}</Button>
       <Button variant="ghost" onClick={() => setHint((value) => Math.min(4, value + 1))}><Lightbulb size={15} /> Hint {hint}/4</Button>
@@ -74,4 +77,15 @@ export function BasslinePracticeView() {
     /> : null}
     {review ? <fieldset className="mt-4"><legend>Self-rated review</legend>{["again", "hard", "good", "easy"].map((rating) => <button key={rating} type="button" className="mr-2">{rating}</button>)}</fieldset> : null}
   </Surface>;
+}
+
+const PITCH_CLASS_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"] as const;
+
+/** MIDI note number → scientific pitch name (60 = C4), e.g. 45 → "A2". */
+function midiNoteName(midi: number): string {
+  if (!Number.isFinite(midi)) return "?";
+  const rounded = Math.round(midi);
+  const name = PITCH_CLASS_NAMES[((rounded % 12) + 12) % 12];
+  const octave = Math.floor(rounded / 12) - 1;
+  return `${name}${octave}`;
 }
