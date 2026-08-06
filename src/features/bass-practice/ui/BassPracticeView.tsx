@@ -38,6 +38,9 @@ import {
   DegreePracticeSession,
 } from "../application";
 import { DegreeFretboard } from "./DegreeFretboard";
+import { RecordCompareSection } from "../recording/ui/RecordCompareSection";
+import { createTargetPlayer } from "../recording/application/playback";
+import { previewMidiNotes, stopPreview } from "../../../audio/chordPreview";
 
 export interface DegreeUiSettings {
   readonly stringCount: StringCount;
@@ -477,6 +480,28 @@ function DegreeSessionWorkspace({
               draftRating={draftRating}
               onIssueChange={setDraftIssue}
               onRatingChange={setDraftRating}
+            />
+          ) : null}
+
+          {state.status === "thinking" || state.status === "playing" || state.status === "review" ? (
+            <RecordCompareSection
+              mode="degree"
+              resetKey={`degree:${activeExercise.id}`}
+              countInMs={Math.round((4 * 60_000) / activeExercise.tempo)}
+              targetPlayer={createTargetPlayer(
+                (onEnded) => void previewMidiNotes(
+                  activeExercise.targetEvents.map((event) => ({
+                    pitch: event.midiNote,
+                    startBeat: event.startBeat,
+                    durationBeats: event.durationBeats,
+                    velocity: event.velocity,
+                  })),
+                  activeExercise.tempo,
+                  "freepats-finger-bass",
+                  { onEnded },
+                ),
+                stopPreview,
+              )}
             />
           ) : null}
 

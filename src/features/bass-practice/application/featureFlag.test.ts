@@ -2,12 +2,15 @@ import { describe, expect, test } from "vitest";
 import {
   BASS_PRACTICE_BASSLINE_ECHO_FEATURE_STORAGE_KEY,
   BASS_PRACTICE_DEGREE_ECHO_FEATURE_STORAGE_KEY,
+  BASS_PRACTICE_RECORD_COMPARE_FEATURE_STORAGE_KEY,
   BASS_PRACTICE_RHYTHM_ECHO_FEATURE_STORAGE_KEY,
   DEFAULT_BASS_PRACTICE_BASSLINE_ECHO_ENABLED,
   DEFAULT_BASS_PRACTICE_DEGREE_ECHO_ENABLED,
+  DEFAULT_BASS_PRACTICE_RECORD_COMPARE_ENABLED,
   DEFAULT_BASS_PRACTICE_RHYTHM_ECHO_ENABLED,
   isBassPracticeBasslineEchoEnabled,
   isBassPracticeDegreeEchoEnabled,
+  isBassPracticeRecordCompareEnabled,
   isBassPracticeRhythmEchoEnabled,
 } from "./featureFlag";
 
@@ -42,5 +45,15 @@ describe("Bass Practice production feature flags", () => {
     expect(isBassPracticeDegreeEchoEnabled(unavailableStorage)).toBe(true);
     expect(isBassPracticeRhythmEchoEnabled(unavailableStorage)).toBe(true);
     expect(isBassPracticeBasslineEchoEnabled(unavailableStorage)).toBe(true);
+    expect(isBassPracticeRecordCompareEnabled(unavailableStorage)).toBe(true);
+  });
+
+  test("Record & Compare ships enabled with an independent explicit-false rollback", () => {
+    expect(DEFAULT_BASS_PRACTICE_RECORD_COMPARE_ENABLED).toBe(true);
+    expect(isBassPracticeRecordCompareEnabled(storage(BASS_PRACTICE_RECORD_COMPARE_FEATURE_STORAGE_KEY, null))).toBe(true);
+    expect(isBassPracticeRecordCompareEnabled(storage(BASS_PRACTICE_RECORD_COMPARE_FEATURE_STORAGE_KEY, "invalid"))).toBe(true);
+    expect(isBassPracticeRecordCompareEnabled(storage(BASS_PRACTICE_RECORD_COMPARE_FEATURE_STORAGE_KEY, "false"))).toBe(false);
+    // independent of the Degree Echo flag
+    expect(isBassPracticeRecordCompareEnabled(storage(BASS_PRACTICE_DEGREE_ECHO_FEATURE_STORAGE_KEY, "false"))).toBe(true);
   });
 });

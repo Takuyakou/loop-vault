@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "5.17",
+  "status": "completed",
+  "activeStage": null,
+  "completedStages": ["P5.17-00", "P5.17-01", "P5.17-02", "P5.17-03", "P5.17-04", "P5.17-05"],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "ef31d4db566d808b40a44f3df2ef15c823817d4e",
+  "lastVerifiedCommit": "406702b",
+  "currentBranch": "feat/p517-record-and-compare",
+  "requiredGates": {
+    "P5.17-00": ["validate:phase-docs", "phase-docs-tests", "baseline-vitest", "baseline-rust", "lint", "typecheck-app", "typecheck-e2e"],
+    "P5.17-01": ["recording-unit-tests", "full-vitest", "lint", "typecheck-app", "typecheck-e2e", "validate:phase-docs"],
+    "P5.17-02": ["recording-unit-tests", "full-vitest", "lint", "typecheck-app", "typecheck-e2e", "web-build", "playwright-record-compare", "playwright-regression", "validate:phase-docs"],
+    "P5.17-03": ["recording-unit-tests", "full-vitest", "lint", "typecheck-app", "typecheck-e2e", "web-build", "playwright-record-compare", "playwright-regression", "validate:phase-docs"],
+    "P5.17-04": ["recording-unit-tests", "full-vitest", "lint", "typecheck-app", "typecheck-e2e", "web-build", "cargo-build", "playwright-record-compare", "playwright-a11y-viewport", "playwright-regression", "validate:phase-docs"],
+    "P5.17-05": ["validate:phase-docs", "lint", "typecheck-app", "typecheck-e2e", "full-vitest", "cargo-test", "full-playwright", "web-build", "tauri-release-build", "executable-smoke", "git-diff-check"]
+  },
+  "gateResults": {
+    "validate:phase-docs": "pass",
+    "phase-docs-tests": "pass",
+    "baseline-vitest": "pass",
+    "baseline-rust": "pass",
+    "lint": "pass",
+    "typecheck-app": "pass",
+    "typecheck-e2e": "pass",
+    "recording-unit-tests": "pass",
+    "full-vitest": "pass",
+    "web-build": "pass",
+    "cargo-build": "pass",
+    "cargo-test": "pass",
+    "playwright-record-compare": "pass",
+    "playwright-a11y-viewport": "pass",
+    "playwright-regression": "pass",
+    "full-playwright": "pass",
+    "tauri-release-build": "pass",
+    "executable-smoke": "pass",
+    "git-diff-check": "pass"
+  },
+  "nextAction": "Phase complete: human hardware acceptance done (microphone confirmed working in the production WebView2 build) and the user authorized the merge into local master (--no-ff, not pushed). Backlog: Degree Echo 1/2-bar phrase length is deferred to a future phase (see reports/P5.17-05-product-acceptance.md).",
+  "updatedAt": "2026-08-05"
+}

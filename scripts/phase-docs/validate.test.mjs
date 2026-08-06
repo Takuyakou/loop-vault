@@ -133,6 +133,13 @@ describe("phase-docs validator — one violation per check", () => {
     expect(checkSet(issues)).toContain("raw-audio-commit");
   });
 
+  it("raw-audio-commit: the word 'recording' near 'commit' is not flagged", () => {
+    const issues = runWithMutation((pkg) =>
+      appendFileSync(join(pkg, "work-instructions.md"), "\nDelivered by the commit that adds src/features/recording/.\n"),
+    );
+    expect(checkSet(issues)).not.toContain("raw-audio-commit");
+  });
+
   it("raw-audio-commit: an audio binary lives in the package", () => {
     const issues = runWithMutation((pkg) => {
       const dir = join(pkg, "evidence");
@@ -162,6 +169,31 @@ describe("phase-docs validator — one violation per check", () => {
       appendFileSync(join(pkg, "work-instructions.md"), "\nmasterへ勝手にmergeやpushをしないでください\n"),
     );
     expect(checkSet(issues)).not.toContain("unauthorized-merge-push");
+  });
+
+  it("bare prohibition list items and negated JP lines are not flagged", () => {
+    const issues = runWithMutation((pkg) =>
+      appendFileSync(
+        join(pkg, "work-instructions.md"),
+        [
+          "",
+          "禁止事項：",
+          "- masterへのmerge",
+          "- main/masterへの無断merge・push指示",
+          "masterへmergeせず、人間の実機確認待ちで停止してください。",
+          "指定外Stage、masterへのmerge、pushには進まず、報告して停止してください。",
+          "",
+        ].join("\n"),
+      ),
+    );
+    expect(checkSet(issues)).not.toContain("unauthorized-merge-push");
+  });
+
+  it("English merge-to-master directives are still flagged", () => {
+    const issues = runWithMutation((pkg) =>
+      appendFileSync(join(pkg, "work-instructions.md"), "\nWhen the stage is done, merge to master and push.\n"),
+    );
+    expect(checkSet(issues)).toContain("unauthorized-merge-push");
   });
 });
 

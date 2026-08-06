@@ -1,8 +1,11 @@
 mod live_midi;
 pub mod llm;
+mod media_permission;
 mod midi_export;
 mod native_drag;
 mod practice_storage;
+
+use tauri::Manager;
 
 #[tauri::command]
 fn exit_app(app: tauri::AppHandle) {
@@ -18,6 +21,9 @@ pub fn run() {
         .manage(practice_storage::PracticeStorageState::default())
         .setup(|app| {
             midi_export::startup_cleanup(app.handle());
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.with_webview(media_permission::install);
+            }
             Ok(())
         })
         .plugin(tauri_plugin_fs::init())
