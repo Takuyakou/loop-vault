@@ -36,6 +36,8 @@ export class RecordingSessionController {
   private state: RecorderState;
   private readonly listeners = new Set<(state: RecorderState) => void>();
   private pendingTake?: RecordingTake;
+  /** Invalidates delayed recorder starts after Stop/cancel/device teardown. */
+  private captureGeneration = 0;
   private unsubscribeDevices?: () => void;
 
   constructor(private readonly deps: RecordingControllerDeps, channelMode: ChannelMode = "auto") {
@@ -82,6 +84,7 @@ export class RecordingSessionController {
   }
 
   cancelCountIn(): RecorderState {
+    this.captureGeneration += 1;
     return this.dispatch({ type: "CANCEL_COUNT_IN" });
   }
 
@@ -96,6 +99,8 @@ export class RecordingSessionController {
     readonly autoResolution?: AutoResolution;
   }): Promise<RecorderState> {
     this.dispatch({ type: "COUNT_IN_ELAPSED" });
+    const generation = this.captureGeneration + 1;
+    this.captureGeneration = generation;
     const resolved = resolveChannel(this.state.channelMode, options.autoResolution);
     if (!resolved) {
       // Auto could not decide; surface as a recorder error so the UI re-picks.
@@ -111,13 +116,28 @@ export class RecordingSessionController {
       });
     } catch {
       this.deps.recorder.dispose();
+      if (generation !== this.captureGeneration || this.state.status !== "starting") return this.state;
       return this.dispatch({ type: "RECORDER_ERROR", errorCode: "recorder-error" });
+    }
+    if (generation !== this.captureGeneration || this.state.status !== "starting") {
+      this.deps.recorder.dispose();
+      return this.state;
     }
     return this.dispatch({ type: "RECORDER_STARTED" });
   }
 
   async stop(): Promise<RecorderState> {
+    const wasStarting = this.state.status === "starting";
+    this.captureGeneration += 1;
     this.dispatch({ type: "STOP" });
+    if (wasStarting) {
+      // A delayed getUserMedia/MediaRecorder start may still resolve. The
+      // generation check in beginRecording will dispose it before it can enter
+      // recording or create a phantom take.
+      this.pendingTake = undefined;
+      this.deps.recorder.dispose();
+      return this.dispatch({ type: "RECORDER_STOPPED" });
+    }
     let take: RecordingTake | undefined;
     try {
       take = await this.deps.recorder.stop();
@@ -167,16 +187,19 @@ export class RecordingSessionController {
   }
 
   deviceDisconnected(): RecorderState {
+    this.captureGeneration += 1;
     this.deps.recorder.dispose();
     return this.dispatch({ type: "DEVICE_DISCONNECTED" });
   }
   permissionRevoked(): RecorderState {
+    this.captureGeneration += 1;
     this.deps.recorder.dispose();
     return this.dispatch({ type: "PERMISSION_REVOKED" });
   }
 
   /** Full teardown: feature-flag OFF, unmount, route leave. */
   dispose(): RecorderState {
+    this.captureGeneration += 1;
     this.dropPendingTake();
     this.deps.recorder.dispose();
     this.unsubscribeDevices?.();

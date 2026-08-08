@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Activity, AudioWaveform, Dumbbell, ExternalLink, SearchX } from "lucide-react";
 import { formatProgressionText } from "../domain/progressionText";
 import type { AppLanguage, SongIdea } from "../domain/types";
+import type { ChordContextHistoryEntry } from "../features/bass-practice/domain";
 import { Button, EmptyState, Surface } from "../components/ui";
 import type { PracticeHistorySummary } from "../features/bass-practice/application";
 import { RetainedTakesPanel } from "../features/bass-practice/recording/ui/RetainedTakesPanel";
@@ -23,6 +24,7 @@ export function HistoryView({
   ideas,
   language,
   practiceHistory = [],
+  chordContextHistory = [],
   practiceHistoryTotal = practiceHistory.length,
   openIdea,
   openProgression,
@@ -30,6 +32,7 @@ export function HistoryView({
   ideas: readonly SongIdea[];
   language: AppLanguage;
   practiceHistory?: readonly PracticeHistorySummary[];
+  chordContextHistory?: readonly ChordContextHistoryEntry[];
   practiceHistoryTotal?: number;
   openIdea: (ideaId: string) => void;
   openProgression: (ideaId: string, blockId: string) => void;
@@ -54,6 +57,20 @@ export function HistoryView({
     return practiceHistory.filter((summary) => ["bass practice", summary.mode === "rhythm" ? "rhythm echo" : "degree echo", "self-rated", summary.nextFocus]
       .some((value) => value.toLocaleLowerCase().includes(normalized)));
   }, [filter, practiceHistory, query]);
+  const visibleChordContextHistory = useMemo(() => {
+    if (filter !== "all" && filter !== "practice") return [];
+    const normalized = query.trim().toLocaleLowerCase();
+    return [...chordContextHistory]
+      .sort((left, right) => right.completedAt.localeCompare(left.completedAt) || left.id.localeCompare(right.id))
+      .filter((entry) => !normalized || [
+        "chord context",
+        "bassline echo",
+        entry.source.safeLabel,
+        entry.section.id,
+        entry.listenMode,
+        entry.playMode,
+      ].some((value) => value.toLocaleLowerCase().includes(normalized)));
+  }, [chordContextHistory, filter, query]);
   const groups = useMemo(() => groupByDate(visible, language), [language, visible]);
 
   return (
@@ -93,7 +110,7 @@ export function HistoryView({
       </Surface>
 
       <p className="mt-3 text-xs text-[var(--lv-text-muted)]" role="status" aria-live="polite">
-        {text.count(visible.length + visiblePracticeHistory.length)}
+        {text.count(visible.length + visiblePracticeHistory.length + visibleChordContextHistory.length)}
       </p>
 
       {visiblePracticeHistory.length ? (
@@ -119,9 +136,29 @@ export function HistoryView({
         </section>
       ) : null}
 
+      {visibleChordContextHistory.length ? (
+        <section className="mt-4" aria-labelledby="chord-context-history-title" data-testid="chord-context-history">
+          <h3 id="chord-context-history-title" className="mb-2 text-xs font-semibold uppercase text-[var(--lv-text-muted)]">Bass Practice - Chord Context factual sessions</h3>
+          <div className="grid gap-3 lg:grid-cols-2">
+            {visibleChordContextHistory.map((entry) => (
+              <Surface key={entry.id} className="p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <strong>Bassline Echo - {entry.source.safeLabel}</strong>
+                  <time className="text-xs text-[var(--lv-text-muted)]" dateTime={entry.completedAt}>{formatTime(entry.completedAt)}</time>
+                </div>
+                <p className="mt-2 text-sm text-[var(--lv-text-secondary)]">Section {entry.section.id} - bars {entry.section.startBar} to {entry.section.endBar}</p>
+                <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">Original {entry.originalBpm} BPM - session {entry.effectiveBpm} BPM</p>
+                <p className="mt-1 text-xs text-[var(--lv-text-muted)]">Listen: {entry.listenMode} - Play: {entry.playMode} - Metronome: {entry.metronomeUsed ? "used" : "off"} - Record & Compare: {entry.recordCompareUsed ? "used" : "not used"}</p>
+                {entry.retainedTakeReference ? <p className="mt-1 text-xs text-[var(--lv-text-muted)]">Retained take reference: {entry.retainedTakeReference}</p> : null}
+              </Surface>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {filter === "all" || filter === "practice" ? <RetainedTakesPanel /> : null}
 
-      {groups.length === 0 && visiblePracticeHistory.length === 0 ? (
+      {groups.length === 0 && visiblePracticeHistory.length === 0 && visibleChordContextHistory.length === 0 ? (
         <EmptyState
           className="mt-4"
           icon={<SearchX aria-hidden="true" size={20} />}

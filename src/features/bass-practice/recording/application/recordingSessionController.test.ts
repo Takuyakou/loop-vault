@@ -152,6 +152,28 @@ describe("RecordingSessionController", () => {
     expect(recorder.disposeCount).toBeGreaterThanOrEqual(21);
   });
 
+  it("cancels a delayed recorder start without a late active capture", async () => {
+    let releaseStart: (() => void) | undefined;
+    const recorder = new FakePracticeRecorder();
+    recorder.startGate = new Promise<void>((resolve) => { releaseStart = resolve; });
+    const { controller } = makeController({ recorder });
+    controller.probe();
+    await controller.enableRecording();
+    controller.startCountIn();
+
+    const pendingStart = controller.beginRecording({ mimeType: "audio/webm;codecs=opus" });
+    expect(controller.getState().status).toBe("starting");
+    const stopped = await controller.stop();
+    expect(stopped.status).toBe("ready");
+    expect(recorder.active).toBe(false);
+
+    releaseStart?.();
+    await pendingStart;
+    expect(controller.getState().status).toBe("ready");
+    expect(recorder.active).toBe(false);
+    expect(recorder.leaked).toBe(false);
+  });
+
   it("notifies subscribers on each transition", async () => {
     const { controller } = makeController();
     const seen: string[] = [];

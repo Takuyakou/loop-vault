@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createCompletedAttempt, generateRhythmExercise, RHYTHM_GENERATOR_VERSION, type RhythmPracticeAttempt } from "../domain";
+import { createCompletedAttempt, generateRhythmExercise, RHYTHM_GENERATOR_VERSION, type RhythmPracticeAttempt, type ChordContextHistoryEntry } from "../domain";
 import { generatedExercise } from "../domain/testFixtures";
 import { addCompletedAttempt, createEmptyPracticeFile, JsonPracticeRepository, MemoryPracticeStorage, validatePracticeFile } from "../infra/repository";
 import { createPracticeControllerIfEnabled, derivePracticeHistory, derivePracticeHomeSummary, PracticeDataController, restoreClaimedExercise } from "./practiceData";
@@ -33,6 +33,38 @@ describe("Practice derived views", () => {
     const history = derivePracticeHistory(file);
     expect(history[0]).toMatchObject({ completedCount: 2, goodOrEasyCount: 1, independentSuccessCount: 1, averageListenCount: 2, nextFocus: "recall" });
     expect(JSON.stringify(history)).not.toMatch(/accuracy|score|confidence/i);
+  });
+
+
+  it("persists factual Chord Context History across restart without raw audio or Vault mutation data", async () => {
+    const storage = new MemoryPracticeStorage();
+    const controller = new PracticeDataController(new JsonPracticeRepository(storage, () => now));
+    await controller.initialize();
+    const entry: ChordContextHistoryEntry = {
+      id: "chord-context-history-1",
+      version: 1,
+      completedAt: "2026-08-02T10:00:00.000Z",
+      source: { kind: "generated", safeLabel: "Generated progression" },
+      snapshotSignature: "a".repeat(64),
+      section: { id: "generated-section", startBar: 1, endBar: 2, lengthBeats: 8 },
+      originalBpm: 96,
+      effectiveBpm: 100,
+      listenMode: "bass-and-chords",
+      playMode: "chords-and-metronome",
+      metronomeUsed: true,
+      recordCompareUsed: true,
+      retainedTakeReference: "take-opaque-1",
+    };
+    await controller.recordChordContextHistory(entry);
+
+    expect(controller.getSnapshot().file?.chordContextHistory).toEqual([entry]);
+    const persisted = storage.committed!;
+    expect(persisted).toContain('"chordContextHistory"');
+    expect(persisted).not.toMatch(/rawMidi|sourcePath|deviceId|audioBlob|score/i);
+
+    const restarted = new PracticeDataController(new JsonPracticeRepository(storage, () => now));
+    await restarted.initialize();
+    expect(restarted.getSnapshot().file?.chordContextHistory).toEqual([entry]);
   });
 
   it("does not publish a failed save and can retry without reconstructing the session", async () => {

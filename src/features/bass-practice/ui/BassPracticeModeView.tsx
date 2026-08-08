@@ -5,7 +5,7 @@ import {
   isBassPracticeDegreeEchoEnabled,
   isBassPracticeRhythmEchoEnabled,
 } from "../application/featureFlag";
-import type { RhythmPracticeAttempt, VaultChordContextSnapshot } from "../domain";
+import type { ChordContextHistoryEntry, RhythmPracticeAttempt, VaultChordContextSnapshot } from "../domain";
 import { BassPracticeView } from "./BassPracticeView";
 import { BasslinePracticeView } from "./BasslinePracticeView";
 import { RhythmPracticeView } from "./RhythmPracticeView";
@@ -14,6 +14,7 @@ type Mode = "degree" | "rhythm" | "bassline";
 type BassPracticeModeViewProps = ComponentProps<typeof BassPracticeView> & {
   readonly onRhythmAttemptCompleted?: (attempt: RhythmPracticeAttempt) => Promise<void>;
   readonly chordContextSnapshot?: VaultChordContextSnapshot;
+  readonly onChordContextHistoryRecorded?: (entry: ChordContextHistoryEntry) => Promise<void>;
 };
 
 /**
@@ -21,7 +22,7 @@ type BassPracticeModeViewProps = ComponentProps<typeof BassPracticeView> & {
  * live Practice session, so unmounting it merely to reveal another mode would
  * incorrectly mark that session abandoned.
  */
-export function BassPracticeModeView({ onRhythmAttemptCompleted, chordContextSnapshot, ...degreeProps }: BassPracticeModeViewProps) {
+export function BassPracticeModeView({ onRhythmAttemptCompleted, chordContextSnapshot, onChordContextHistoryRecorded, ...degreeProps }: BassPracticeModeViewProps) {
   const degreeEnabled = isBassPracticeDegreeEchoEnabled();
   const rhythmEnabled = isBassPracticeRhythmEchoEnabled();
   const basslineEnabled = isBassPracticeBasslineEchoEnabled();
@@ -50,7 +51,7 @@ export function BassPracticeModeView({ onRhythmAttemptCompleted, chordContextSna
       </div>
       {degreeEnabled ? <div hidden={mode !== "degree"}><BassPracticeView {...degreeProps} /></div> : null}
       {mode === "rhythm" && rhythmEnabled ? <RhythmPracticeView onAttemptCompleted={onRhythmAttemptCompleted} /> : null}
-      {mode === "bassline" && basslineEnabled ? <BasslinePracticeView chordContextSnapshot={enabledChordContextSnapshot} chordContextEnabled={chordContextEnabled} /> : null}
+      {mode === "bassline" && basslineEnabled ? <BasslinePracticeView chordContextSnapshot={enabledChordContextSnapshot} chordContextEnabled={chordContextEnabled} onChordContextHistoryRecorded={onChordContextHistoryRecorded} /> : null}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import {
   deriveIndependentSuccess,
   deriveReviewQueue,
   generateDegreeExercise,
+  type ChordContextHistoryEntry,
   type PracticeAttempt,
   type PracticeExercise,
   type PracticeSession,
@@ -55,11 +56,30 @@ const queueSchema: z.ZodType<ReviewQueueItem> = z.object({
   ]), claim: z.object({ id: z.string().min(1), sessionId: z.string().min(1), claimedAt: z.string().datetime(), exercise: exerciseSchema }).strict().optional(),
 }).strict();
 
-export interface PracticeFileV1 { readonly app: "loopvault-practice"; readonly fileVersion: 1; readonly revision: number; readonly settings: PracticeSettings; readonly exercises: readonly PracticeExercise[]; readonly attempts: readonly PracticeAttempt[]; readonly sessions: readonly PracticeSession[]; readonly reviewQueue: readonly ReviewQueueItem[]; readonly rhythmAttempts: readonly RhythmPracticeAttempt[]; readonly rhythmSessions: readonly RhythmPracticeSession[]; readonly updatedAt: string; }
+const chordContextHistoryEntrySchema: z.ZodType<ChordContextHistoryEntry> = z.object({
+  id: z.string().min(1).max(200),
+  version: z.literal(1),
+  completedAt: z.string().datetime(),
+  source: z.discriminatedUnion("kind", [
+    z.object({ kind: z.literal("generated"), safeLabel: z.literal("Generated progression") }).strict(),
+    z.object({ kind: z.literal("vault"), safeLabel: z.string().min(1).max(160), reference: z.object({ ideaId: z.string().min(1).max(200), blockId: z.string().min(1).max(200) }).strict() }).strict(),
+  ]),
+  snapshotSignature: z.string().regex(/^[a-f0-9]{8,128}$/),
+  section: z.object({ id: z.string().min(1).max(200), startBar: z.number().int().positive(), endBar: z.number().int().positive(), lengthBeats: z.union([z.literal(4), z.literal(8)]) }).strict(),
+  originalBpm: z.number().finite().min(30).max(240),
+  effectiveBpm: z.number().finite().min(30).max(240),
+  listenMode: z.enum(["bass-only", "chords-only", "bass-and-chords", "bass-chords-and-metronome"]),
+  playMode: z.enum(["chords-only", "chords-and-metronome", "metronome-only", "no-accompaniment"]),
+  metronomeUsed: z.boolean(),
+  recordCompareUsed: z.boolean(),
+  retainedTakeReference: z.string().min(1).max(200).optional(),
+}).strict();
+
+export interface PracticeFileV1 { readonly app: "loopvault-practice"; readonly fileVersion: 1; readonly revision: number; readonly settings: PracticeSettings; readonly exercises: readonly PracticeExercise[]; readonly attempts: readonly PracticeAttempt[]; readonly sessions: readonly PracticeSession[]; readonly reviewQueue: readonly ReviewQueueItem[]; readonly rhythmAttempts: readonly RhythmPracticeAttempt[]; readonly rhythmSessions: readonly RhythmPracticeSession[]; readonly chordContextHistory: readonly ChordContextHistoryEntry[]; readonly updatedAt: string; }
 export interface PracticeQuarantine { readonly collection: "attempts"; readonly index: number; readonly issue: "invalid-schema" | "independent-success-mismatch" | "invalid-transfer-reference"; }
 export interface PracticeRecoveryMetadata { readonly kind: "invalid-json" | "invalid-schema" | "retained-corrupt"; readonly corruptPath: string; readonly backups: readonly PracticeBackupMetadata[]; }
 export interface PracticeLoadResult { readonly file: PracticeFileV1; readonly quarantine: readonly PracticeQuarantine[]; readonly created: boolean; readonly recovery?: PracticeRecoveryMetadata; }
-const envelopeSchema = z.object({ app: z.literal("loopvault-practice"), fileVersion: z.literal(1), revision: z.number().int().nonnegative(), settings: settingsSchema, exercises: z.array(exerciseSchema), attempts: z.array(z.unknown()), sessions: z.array(sessionSchema), reviewQueue: z.array(queueSchema), rhythmAttempts: z.array(rhythmAttemptSchema).optional().default([]), rhythmSessions: z.array(rhythmSessionSchema).optional().default([]), updatedAt: z.string().datetime() }).strict();
+const envelopeSchema = z.object({ app: z.literal("loopvault-practice"), fileVersion: z.literal(1), revision: z.number().int().nonnegative(), settings: settingsSchema, exercises: z.array(exerciseSchema), attempts: z.array(z.unknown()), sessions: z.array(sessionSchema), reviewQueue: z.array(queueSchema), rhythmAttempts: z.array(rhythmAttemptSchema).optional().default([]), rhythmSessions: z.array(rhythmSessionSchema).optional().default([]), chordContextHistory: z.array(chordContextHistoryEntrySchema).optional().default([]), updatedAt: z.string().datetime() }).strict();
 
 export interface PracticeStoredDocument { readonly contents: string; readonly revision: number; readonly token: string; }
 export interface PracticeBackupMetadata { readonly name: string; readonly revision: number; readonly token: string; }
@@ -217,7 +237,17 @@ export class JsonPracticeRepository {
   }
 }
 
-export function createEmptyPracticeFile(now: Date): PracticeFileV1 { return freezeFile({ app: "loopvault-practice", fileVersion: 1, revision: 0, settings: { version: 1, singEnabled: true, singingReferenceMode: "auto", stringCount: 4, handedness: "right", fretRange: { min: 0, max: 12 }, sessionTargetCount: 8 }, exercises: [], attempts: [], sessions: [], reviewQueue: [], rhythmAttempts: [], rhythmSessions: [], updatedAt: now.toISOString() }); }
+export function createEmptyPracticeFile(now: Date): PracticeFileV1 { return freezeFile({ app: "loopvault-practice", fileVersion: 1, revision: 0, settings: { version: 1, singEnabled: true, singingReferenceMode: "auto", stringCount: 4, handedness: "right", fretRange: { min: 0, max: 12 }, sessionTargetCount: 8 }, exercises: [], attempts: [], sessions: [], reviewQueue: [], rhythmAttempts: [], rhythmSessions: [], chordContextHistory: [], updatedAt: now.toISOString() }); }
+export function addChordContextHistoryEntry(file: PracticeFileV1, entry: ChordContextHistoryEntry): PracticeFileV1 {
+  if (file.chordContextHistory.some(({ id }) => id === entry.id)) {
+    throw new PracticeRepositoryError("invalid-data", "Chord Context History entry " + entry.id + " has already been saved.");
+  }
+  return validatePracticeFile({
+    ...file,
+    chordContextHistory: [...file.chordContextHistory, entry],
+    updatedAt: entry.completedAt,
+  });
+}
 export function addCompletedAttempt(file: PracticeFileV1, attempt: PracticeAttempt): PracticeFileV1 {
   if (!attempt.completedAt || !attempt.rating) throw new PracticeRepositoryError("invalid-data", "Only completed, self-rated attempts can be saved.");
   if (file.attempts.some(({ id }) => id === attempt.id)) throw new PracticeRepositoryError("invalid-data", `Attempt ${attempt.id} has already been saved.`);
@@ -261,7 +291,10 @@ export function validatePracticeFile(file: PracticeFileV1): PracticeFileV1 {
   if (new Set(rhythmAttempts.map(({ id }) => id)).size !== rhythmAttempts.length) throw new PracticeRepositoryError("invalid-data", "Rhythm attempt IDs must be unique.");
   const rhythmSessions = normalizeRhythmSessions(parsed.data.rhythmSessions, rhythmAttempts);
   if (!rhythmSessions) throw new PracticeRepositoryError("invalid-data", "Rhythm session references are inconsistent.");
-  return freezeFile({ ...parsed.data, attempts, rhythmAttempts, rhythmSessions });
+  const chordContextHistory = parsed.data.chordContextHistory;
+  if (new Set(chordContextHistory.map(({ id }) => id)).size !== chordContextHistory.length) throw new PracticeRepositoryError("invalid-data", "Chord Context History entry IDs must be unique.");
+  if (chordContextHistory.some((entry) => entry.section.endBar < entry.section.startBar)) throw new PracticeRepositoryError("invalid-data", "Chord Context History section bounds are invalid.");
+  return freezeFile({ ...parsed.data, attempts, rhythmAttempts, rhythmSessions, chordContextHistory });
 }
 function withoutClaim(item: ReviewQueueItem): ReviewQueueItem { const { claim: _claim, ...base } = item; return base; }
 function isValidPendingQueue(queue: readonly ReviewQueueItem[], attempts: readonly PracticeAttempt[], sessions: readonly PracticeSession[]): boolean {

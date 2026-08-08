@@ -7,6 +7,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const playback = vi.hoisted(() => ({
   sessions: [] as { events: { layer: string }[]; stopped: number; disposed: number; complete: () => void }[],
   driversDisposed: 0,
+  prepareFails: false,
+}));
+const recordCompare = vi.hoisted(() => ({
+  props: undefined as undefined | {
+    readonly resetKey?: string;
+    readonly onRecordingPrepare?: () => boolean | void | Promise<boolean | void>;
+    readonly onRecordingStart?: () => boolean | void | Promise<boolean | void>;
+    readonly onTakeKept?: (retainedTakeReference: string) => void;
+    readonly onUnkeptTakeChange?: (hasUnkeptTake: boolean) => void;
+    readonly onRecordingActivityChange?: (active: boolean) => void;
+  },
 }));
 const preview = vi.hoisted(() => ({
   stopped: 0,
@@ -29,9 +40,16 @@ vi.mock("../../../audio/chordPreview", () => ({
   }),
 }));
 
+vi.mock("../recording/ui/RecordCompareSection", () => ({
+  RecordCompareSection: (props: NonNullable<typeof recordCompare.props>) => {
+    recordCompare.props = props;
+    return <div data-testid="record-compare-probe" />;
+  },
+}));
+
 vi.mock("../application/chordContextToneDriver", () => ({
   createChordContextToneDriver: vi.fn(() => ({
-    prepare: vi.fn(async () => undefined),
+    prepare: vi.fn(async () => { if (playback.prepareFails) throw new Error("prepare failed"); }),
     createPlayer: vi.fn((_mix: unknown, lifecycle: { onCompleted(): void }) => {
       const session = {
         events: [] as { layer: string }[],
@@ -60,10 +78,12 @@ let root: Root | undefined;
 beforeEach(() => {
   playback.sessions = [];
   playback.driversDisposed = 0;
+  playback.prepareFails = false;
   preview.stopped = 0;
   preview.started = 0;
   preview.delayStart = false;
   preview.pendingStart = undefined;
+  recordCompare.props = undefined;
 });
 afterEach(async () => {
   await act(async () => root?.unmount());
@@ -173,6 +193,162 @@ describe("Bassline Echo Chord Context", () => {
     expect(legacy.textContent).toContain("Listen");
     expect(container.querySelector("[data-testid='chord-context-status']")?.textContent).toContain("Listen playback running");
   });
+
+  it("keeps tempo session-only and saves factual Chord Context History", async () => {
+    const onChordContextHistoryRecorded = vi.fn(async (_entry: unknown) => undefined);
+    const container = await renderView({ onChordContextHistoryRecorded });
+
+    const tempo = container.querySelector<HTMLInputElement>("[data-testid='chord-context-effective-bpm']")!;
+    expect(tempo.value).toBe("96");
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>("[data-testid='chord-context-bpm-plus-four']")?.click();
+      await Promise.resolve();
+    });
+    expect(tempo.value).toBe("100");
+    await act(async () => {
+      setNumberInputValue(tempo, "999");
+      tempo.dispatchEvent(new Event("input", { bubbles: true }));
+      await Promise.resolve();
+    });
+    expect(tempo.value).toBe("240");
+    expect(container.querySelector<HTMLButtonElement>("[data-testid='chord-context-bpm-plus-four']")?.disabled).toBe(true);
+    await act(async () => {
+      setNumberInputValue(tempo, "0");
+      tempo.dispatchEvent(new Event("input", { bubbles: true }));
+      await Promise.resolve();
+    });
+    expect(tempo.value).toBe("30");
+    await act(async () => {
+      setNumberInputValue(tempo, "100");
+      tempo.dispatchEvent(new Event("input", { bubbles: true }));
+      await Promise.resolve();
+    });
+    expect(tempo.value).toBe("100");
+    expect(container.querySelector("[data-testid='chord-context-tempo']")?.textContent).toContain("Vault is not changed");
+
+    await act(async () => findButton(container, "Review")?.click());
+    expect(checkedLabel(container, "record-accompaniment")).toContain("Chords only");
+    await chooseRadio(container, "record-accompaniment", "Chords + Metronome");
+    expect(checkedLabel(container, "record-accompaniment")).toContain("Chords + Metronome");
+    expect(container.querySelector("[data-testid='record-accompaniment']")?.textContent)
+      .toContain("never internally mixed");
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>("[data-testid='chord-context-save-history']")?.click();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(onChordContextHistoryRecorded).toHaveBeenCalledTimes(1);
+    const entry = onChordContextHistoryRecorded.mock.calls[0]![0];
+    expect(entry).toMatchObject({
+      source: { kind: "generated", safeLabel: "Generated progression" },
+      originalBpm: 96,
+      effectiveBpm: 100,
+      listenMode: "bass-and-chords",
+      playMode: "chords-only",
+      metronomeUsed: false,
+      recordCompareUsed: false,
+    });
+    expect(entry).not.toHaveProperty("retainedTakeReference");
+    expect(JSON.stringify(entry)).not.toMatch(/rawMidi|sourcePath|targetEvents|score/i);
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>("[data-testid='chord-context-save-history']")?.click();
+      await Promise.resolve();
+    });
+    expect(onChordContextHistoryRecorded).toHaveBeenCalledTimes(1);
+    expect(container.querySelector("[data-testid='chord-context-save-history']")?.textContent)
+      .toContain("Saved to History");
+  });
+
+  it("records metronome use only after successful scheduled playback", async () => {
+    const onChordContextHistoryRecorded = vi.fn(async (_entry: unknown) => undefined);
+    const container = await renderView({ onChordContextHistoryRecorded });
+    await chooseRadio(container, "chord-context-practice-mode", "Play");
+    await chooseRadio(container, "chord-context-play-mode", "Chords + Metronome");
+    await clickStart(container);
+    expect(playback.sessions[playback.sessions.length - 1]?.events.map((event) => event.layer)).toContain("metronome");
+    await act(async () => findButton(container, "Review")?.click());
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>("[data-testid=chord-context-save-history]")?.click();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(onChordContextHistoryRecorded.mock.calls[0]![0]).toMatchObject({ metronomeUsed: true });
+  });
+
+  it("does not record metronome use when preparation fails", async () => {
+    playback.prepareFails = true;
+    const onChordContextHistoryRecorded = vi.fn(async (_entry: unknown) => undefined);
+    const container = await renderView({ onChordContextHistoryRecorded });
+    await chooseRadio(container, "chord-context-practice-mode", "Play");
+    await chooseRadio(container, "chord-context-play-mode", "Chords + Metronome");
+    await clickStart(container);
+    expect(playback.sessions).toHaveLength(0);
+    await act(async () => findButton(container, "Review")?.click());
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>("[data-testid=chord-context-save-history]")?.click();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(onChordContextHistoryRecorded.mock.calls[0]![0]).toMatchObject({ metronomeUsed: false });
+  });
+
+  it("requires Keep before factual History can retain a take and clears it after BPM or recording-mode changes", async () => {
+    const onChordContextHistoryRecorded = vi.fn(async (_entry: unknown) => undefined);
+    const container = await renderView({ onChordContextHistoryRecorded });
+    await act(async () => findButton(container, "Review")?.click());
+    expect(recordCompare.props).toBeDefined();
+    const firstResetKey = recordCompare.props?.resetKey;
+    const save = container.querySelector<HTMLButtonElement>("[data-testid=chord-context-save-history]")!;
+    const tempo = container.querySelector<HTMLInputElement>("[data-testid=chord-context-effective-bpm]")!;
+    await act(async () => { recordCompare.props?.onRecordingActivityChange?.(true); });
+    expect(tempo.disabled).toBe(true);
+    expect(save.disabled).toBe(true);
+    await act(async () => { recordCompare.props?.onRecordingActivityChange?.(false); });
+
+    await act(async () => {
+      const prepared = await recordCompare.props?.onRecordingPrepare?.();
+      expect(prepared).toBe(true);
+      await recordCompare.props?.onRecordingStart?.();
+      recordCompare.props?.onUnkeptTakeChange?.(true);
+    });
+    expect(save.disabled).toBe(true);
+    expect(container.textContent).toContain("Keep or discard the recorded take");
+
+    await act(async () => {
+      recordCompare.props?.onTakeKept?.("take-opaque-id");
+      recordCompare.props?.onUnkeptTakeChange?.(false);
+    });
+    expect(save.disabled).toBe(false);
+    await act(async () => { save.click(); await Promise.resolve(); await Promise.resolve(); });
+    expect(onChordContextHistoryRecorded).toHaveBeenCalledTimes(1);
+    expect(onChordContextHistoryRecorded.mock.calls[0]![0]).toMatchObject({
+      recordCompareUsed: true,
+      retainedTakeReference: "take-opaque-id",
+    });
+    await act(async () => { save.click(); await Promise.resolve(); });
+    expect(onChordContextHistoryRecorded).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      setNumberInputValue(tempo, "104");
+      tempo.dispatchEvent(new Event("input", { bubbles: true }));
+      await Promise.resolve();
+    });
+    expect(recordCompare.props?.resetKey).not.toBe(firstResetKey);
+    await act(async () => { save.click(); await Promise.resolve(); await Promise.resolve(); });
+    expect(onChordContextHistoryRecorded).toHaveBeenCalledTimes(2);
+    expect(onChordContextHistoryRecorded.mock.calls[1]![0]).toMatchObject({ recordCompareUsed: false });
+    expect(onChordContextHistoryRecorded.mock.calls[1]![0]).not.toHaveProperty("retainedTakeReference");
+
+    const bpmResetKey = recordCompare.props?.resetKey;
+    await chooseRadio(container, "record-accompaniment", "Chords + Metronome");
+    expect(recordCompare.props?.resetKey).not.toBe(bpmResetKey);
+    await act(async () => { save.click(); await Promise.resolve(); await Promise.resolve(); });
+    expect(onChordContextHistoryRecorded).toHaveBeenCalledTimes(3);
+    expect(onChordContextHistoryRecorded.mock.calls[2]![0]).toMatchObject({ recordCompareUsed: false });
+    expect(onChordContextHistoryRecorded.mock.calls[2]![0]).not.toHaveProperty("retainedTakeReference");
+  });
+
   it("keeps the P5.16 Bassline surface when the Chord Context rollback is explicit", async () => {
     const container = await renderView({ chordContextEnabled: false });
 
@@ -205,6 +381,12 @@ async function chooseRadio(container: HTMLElement, name: string, label: string) 
     input?.click();
     await Promise.resolve();
   });
+}
+
+function setNumberInputValue(input: HTMLInputElement, value: string) {
+  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+  if (!setter) throw new Error("Missing HTMLInputElement value setter.");
+  setter.call(input, value);
 }
 
 function checkedLabel(container: HTMLElement, name: string): string | undefined {

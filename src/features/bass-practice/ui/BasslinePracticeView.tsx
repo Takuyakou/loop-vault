@@ -5,8 +5,10 @@ import { Button, Surface } from "../../../components/ui";
 import {
   BASSLINE_GENERATOR_VERSION,
   buildGeneratedChordContextSnapshot,
+  createChordContextHistoryEntry,
   createChordContextVaultBasslineExercise,
   generateBasslineExercise,
+  type ChordContextHistoryEntry,
   type ChordContextSnapshot,
   type VaultChordContextSnapshot,
 } from "../domain";
@@ -38,16 +40,24 @@ type ActiveChordContextSession = {
   readonly driver: PreparedChordContextToneDriver;
   engine?: ChordContextPlaybackEngine;
 };
+type ChordContextPlaybackActivity = {
+  readonly started: boolean;
+  readonly metronomeUsed: boolean;
+};
+const NO_CHORD_CONTEXT_ACTIVITY: ChordContextPlaybackActivity = Object.freeze({ started: false, metronomeUsed: false });
 
 export interface BasslinePracticeViewProps {
   readonly chordContextSnapshot?: ChordContextSnapshot;
   /** Feature-flag rollback preserves the P5.16 Bassline Echo surface. */
   readonly chordContextEnabled?: boolean;
+  /** Persists only the factual P5.18 History record in the existing Practice document. */
+  readonly onChordContextHistoryRecorded?: (entry: ChordContextHistoryEntry) => Promise<void>;
 }
 
 export function BasslinePracticeView({
   chordContextSnapshot,
   chordContextEnabled = true,
+  onChordContextHistoryRecorded,
 }: BasslinePracticeViewProps) {
   const [level, setLevel] = useState<1 | 2 | 3>(1);
   const [hint, setHint] = useState(0);
@@ -68,6 +78,29 @@ export function BasslinePracticeView({
     [],
   );
   const activeSnapshot = chordContextSnapshot ?? (generatedSnapshot.ok ? generatedSnapshot.snapshot : undefined);
+  const [effectiveBpm, setEffectiveBpm] = useState(() => activeSnapshot?.originalBpm ?? 96);
+  const [recordPlayMode, setRecordPlayMode] = useState<Extract<ChordContextPlayMode, "chords-only" | "chords-and-metronome">>("chords-only");
+  const [recordCompareUsed, setRecordCompareUsed] = useState(false);
+  const [metronomeUsed, setMetronomeUsed] = useState(false);
+  const [recordingInFlight, setRecordingInFlight] = useState(false);
+  const [hasUnkeptRecordingTake, setHasUnkeptRecordingTake] = useState(false);
+  const [recordingFacts, setRecordingFacts] = useState<RecordedChordContextFacts>();
+  const [retainedTakeReference, setRetainedTakeReference] = useState<string>();
+  const [historyStatus, setHistoryStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const historySavingRef = useRef(false);
+  const historyEntryIdRef = useRef<string>();
+  const historyStatusRef = useRef(historyStatus);
+  const basslineRecordSessionIdRef = useRef(newChordContextRecordSessionId());
+  useEffect(() => { historyStatusRef.current = historyStatus; }, [historyStatus]);
+  const invalidateRecordedFacts = useCallback(() => {
+    setRecordCompareUsed(false);
+    setMetronomeUsed(false);
+    setRecordingFacts(undefined);
+    setRetainedTakeReference(undefined);
+    setHasUnkeptRecordingTake(false);
+    historyEntryIdRef.current = undefined;
+    setHistoryStatus("idle");
+  }, []);
   const exercise = useMemo(() => isVaultChordContextSnapshot(chordContextSnapshot)
     ? createChordContextVaultBasslineExercise(chordContextSnapshot, level)
     : generateBasslineExercise({
@@ -102,10 +135,17 @@ export function BasslinePracticeView({
     stopChordContext();
     stopPreview();
   }, [stopChordContext]);
-  useEffect(() => { stopChordContext(); }, [chordContextSnapshot?.signature, stopChordContext]);
+  useEffect(() => {
+    stopChordContext();
+    stopPreview();
+    setLegacyPlaying(false);
+    setEffectiveBpm(activeSnapshot?.originalBpm ?? 96);
+    setRecordingInFlight(false);
+    invalidateRecordedFacts();
+  }, [activeSnapshot?.originalBpm, chordContextSnapshot?.signature, invalidateRecordedFacts, stopChordContext]);
 
-  const startChordContext = useCallback(async () => {
-    if (!activeSnapshot || !exercise.ok) return;
+  const prepareChordContext = useCallback(async (): Promise<boolean> => {
+    if (!activeSnapshot || !exercise.ok) return false;
     legacyPreviewGenerationRef.current += 1;
     stopPreview();
     setLegacyPlaying(false);
@@ -120,73 +160,137 @@ export function BasslinePracticeView({
       await driver.prepare();
       if (generationRef.current !== generation || sessionRef.current?.generation !== generation) {
         driver.dispose();
-        return;
+        return false;
       }
-      const engine = createChordContextPlaybackEngine(driver, {
-        onError(error) {
-          if (generationRef.current === generation) {
-            setPlaybackError(error instanceof Error ? error.message : "Chord Context playback stopped unexpectedly.");
-          }
-        },
-        onCompleted() {
-          if (sessionRef.current?.generation !== generation) return;
-          sessionRef.current = undefined;
-          driver.dispose();
-          setContextPlayback(undefined);
-          setPreparing(false);
-          setLegacyPlaying(false);
-        },
-      });
-      sessionRef.current.engine = engine;
-      const input = toChordContextInput(activeSnapshot, exercise.exercise.targetEvents, practiceMode, listenMode, playMode);
-      const result = engine.start(input);
-      if (!result.ok) {
-        setPlaybackError(result.error.message);
-        engine.dispose();
-        driver.dispose();
-        sessionRef.current = undefined;
-        return;
-      }
-      if (result.plan.events.length === 0) {
-        engine.dispose();
-        driver.dispose();
-        if (sessionRef.current?.generation === generation) sessionRef.current = undefined;
-        setContextPlayback(undefined);
-        return;
-      }
-      if (sessionRef.current?.generation === generation) setContextPlayback(practiceMode);
+      return true;
     } catch (error) {
       if (generationRef.current === generation) {
-        setPlaybackError(error instanceof Error ? error.message : "Chord Context audio could not start.");
+        setPlaybackError(error instanceof Error ? error.message : "Chord Context audio could not prepare.");
         sessionRef.current = undefined;
-        driver.dispose();
       }
+      driver.dispose();
+      return false;
     } finally {
       if (generationRef.current === generation) setPreparing(false);
     }
-  }, [activeSnapshot, exercise, legacyPlaying, listenMode, playMode, practiceMode, stopChordContext]);
+  }, [activeSnapshot, exercise, stopChordContext]);
 
+  const schedulePreparedChordContext = useCallback((options: { readonly practiceMode?: PracticeMode; readonly listenMode?: ChordContextListenMode; readonly playMode?: ChordContextPlayMode } = {}): ChordContextPlaybackActivity => {
+    if (!activeSnapshot || !exercise.ok) return NO_CHORD_CONTEXT_ACTIVITY;
+    const session = sessionRef.current;
+    if (!session) return NO_CHORD_CONTEXT_ACTIVITY;
+    const generation = session.generation;
+    const selectedPracticeMode = options.practiceMode ?? practiceMode;
+    const selectedListenMode = options.listenMode ?? listenMode;
+    const selectedPlayMode = options.playMode ?? playMode;
+    const engine = createChordContextPlaybackEngine(session.driver, {
+      onError(error) {
+        if (generationRef.current === generation) {
+          setPlaybackError(error instanceof Error ? error.message : "Chord Context playback stopped unexpectedly.");
+        }
+      },
+      onCompleted() {
+        if (sessionRef.current?.generation !== generation) return;
+        sessionRef.current = undefined;
+        session.driver.dispose();
+        setContextPlayback(undefined);
+        setPreparing(false);
+        setLegacyPlaying(false);
+      },
+    });
+    session.engine = engine;
+    const input = toChordContextInput(activeSnapshot, exercise.exercise.targetEvents, effectiveBpm, selectedPracticeMode, selectedListenMode, selectedPlayMode);
+    const result = engine.start(input);
+    if (!result.ok) {
+      setPlaybackError(result.error.message);
+      engine.dispose();
+      session.driver.dispose();
+      if (sessionRef.current?.generation === generation) sessionRef.current = undefined;
+      return NO_CHORD_CONTEXT_ACTIVITY;
+    }
+    const activePlan = engine.getActivePlan();
+    if (!activePlan || activePlan.events.length === 0) {
+      engine.dispose();
+      session.driver.dispose();
+      if (sessionRef.current?.generation === generation) sessionRef.current = undefined;
+      setContextPlayback(undefined);
+      return NO_CHORD_CONTEXT_ACTIVITY;
+    }
+    const activity = Object.freeze({ started: true, metronomeUsed: activePlan.events.some((event) => event.layer === "metronome") });
+    if (sessionRef.current?.generation === generation) {
+      setContextPlayback(selectedPracticeMode);
+      if (activity.metronomeUsed) setMetronomeUsed(true);
+    }
+    return activity;
+  }, [activeSnapshot, effectiveBpm, exercise, listenMode, playMode, practiceMode]);
+
+  const startChordContext = useCallback(async (options: { readonly practiceMode?: PracticeMode; readonly listenMode?: ChordContextListenMode; readonly playMode?: ChordContextPlayMode } = {}): Promise<ChordContextPlaybackActivity> => {
+    const prepared = await prepareChordContext();
+    if (!prepared) return NO_CHORD_CONTEXT_ACTIVITY;
+    return schedulePreparedChordContext(options);
+  }, [prepareChordContext, schedulePreparedChordContext]);
   const choosePracticeMode = (next: PracticeMode): void => {
     if (next === practiceMode) return;
     stopChordContext();
     setPracticeMode(next);
+    invalidateRecordedFacts();
   };
   const chooseListenMode = (next: ChordContextListenMode): void => {
     if (next === listenMode) return;
     stopChordContext();
     setListenMode(next);
+    invalidateRecordedFacts();
   };
   const choosePlayMode = (next: ChordContextPlayMode): void => {
     if (next === playMode) return;
     stopChordContext();
     setPlayMode(next);
+    invalidateRecordedFacts();
+  };
+  const chooseEffectiveBpm = (next: number): void => {
+    const tempo = clampChordContextBpm(next, activeSnapshot?.originalBpm ?? 96);
+    if (tempo === effectiveBpm) return;
+    legacyPreviewGenerationRef.current += 1;
+    stopPreview();
+    setLegacyPlaying(false);
+    stopChordContext();
+    setEffectiveBpm(tempo);
+    invalidateRecordedFacts();
   };
   const chooseLevel = (next: 1 | 2 | 3): void => {
     stopChordContext();
     setLevel(next);
     setHint(0);
     setReview(false);
+    invalidateRecordedFacts();
   };
+
+  const saveChordContextHistory = useCallback(async () => {
+    if (!activeSnapshot || !onChordContextHistoryRecorded || recordingInFlight || hasUnkeptRecordingTake || historySavingRef.current || historyStatusRef.current === "saved") return;
+    const facts = recordingFacts ?? { effectiveBpm, listenMode, playMode, metronomeUsed, recordCompareUsed: false };
+    const id = historyEntryIdRef.current ?? newChordContextHistoryId();
+    historyEntryIdRef.current = id;
+    historySavingRef.current = true;
+    setHistoryStatus("saving");
+    try {
+      await onChordContextHistoryRecorded(createChordContextHistoryEntry({
+        id,
+        completedAt: new Date().toISOString(),
+        snapshot: activeSnapshot,
+        effectiveBpm: facts.effectiveBpm,
+        listenMode: facts.listenMode,
+        playMode: facts.playMode,
+        metronomeUsed: facts.metronomeUsed,
+        recordCompareUsed: facts.recordCompareUsed,
+        ...(retainedTakeReference === undefined ? {} : { retainedTakeReference }),
+      }));
+      setHistoryStatus("saved");
+    } catch {
+      setHistoryStatus("error");
+    } finally {
+      historySavingRef.current = false;
+    }
+  }, [activeSnapshot, effectiveBpm, hasUnkeptRecordingTake, listenMode, metronomeUsed, onChordContextHistoryRecorded, playMode, recordCompareUsed, recordingFacts, recordingInFlight, retainedTakeReference]);
 
   const legacyListen = () => {
     stopChordContext();
@@ -199,7 +303,7 @@ export function BasslinePracticeView({
       startBeat: event.startBeat,
       durationBeats: event.durationBeats,
       velocity: event.velocity,
-    })), exercise.exercise.tempo, "freepats-finger-bass", {
+    })), effectiveBpm, "freepats-finger-bass", {
       onStarted: () => { if (legacyPreviewGenerationRef.current === generation) setLegacyPlaying(true); },
       onEnded: () => { if (legacyPreviewGenerationRef.current === generation) setLegacyPlaying(false); },
     });
@@ -214,8 +318,8 @@ export function BasslinePracticeView({
   return <Surface className="p-4" data-testid="bassline-echo-view">
     <p className="lv-section-kicker">Bass Practice</p>
     <h2 className="text-2xl font-bold">Bassline Echo</h2>
-    <p className="mt-2 text-sm" data-testid="bassline-source">{sourceLabel}{" \u00b7 "}self-rated practice only{" \u00b7 "}no microphone or automatic score.</p>
-    <label className="mt-3 block">Level <select aria-label="Bassline level" value={level} onChange={(event) => chooseLevel(Number(event.target.value) as 1 | 2 | 3)}><option value={1}>1 - Roots</option><option value={2}>2 - Chord tones</option><option value={3}>3 - Approach</option></select></label>
+    <p className="mt-2 text-sm" data-testid="bassline-source">{sourceLabel}{" \u00b7 "}self-rated practice only{" \u00b7 "}no automatic score.</p>
+    <label className="mt-3 block">Level <select aria-label="Bassline level" disabled={recordingInFlight} value={level} onChange={(event) => chooseLevel(Number(event.target.value) as 1 | 2 | 3)}><option value={1}>1 - Roots</option><option value={2}>2 - Chord tones</option><option value={3}>3 - Approach</option></select></label>
     <div className="mt-4 rounded border p-3" aria-label="Bassline progression strip">{exercise.exercise.chords.map((chord) => <span key={`${chord.startBeat}:${chord.label}`} className="mr-2">{chord.label}</span>)}</div>
     <div className="mt-3 text-sm" data-testid="bassline-notes">{hint >= 4 || review ? <>
       <span className="mr-2 text-xs text-[var(--lv-text-muted)]">Answer notes</span>
@@ -225,11 +329,21 @@ export function BasslinePracticeView({
     {chordContextEnabled ? <section className="mt-4 rounded border p-3" aria-labelledby="chord-context-heading" data-testid="chord-context-controls">
       <h3 id="chord-context-heading" className="font-semibold">Chord Context</h3>
       <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">{activeSnapshot?.source.safeLabel ?? "Chord Context source unavailable."}</p>
+      <fieldset className="mt-3" data-testid="chord-context-tempo">
+        <legend>Session tempo</legend>
+        <p className="mt-1 text-xs text-[var(--lv-text-secondary)]">Original: {activeSnapshot?.originalBpm ?? 96} BPM. This override is session-only; the Vault is not changed.</p>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <label htmlFor="chord-context-effective-bpm">BPM</label>
+          <input id="chord-context-effective-bpm" data-testid="chord-context-effective-bpm" type="number" min={30} max={240} step={1} value={effectiveBpm} disabled={recordingInFlight} onChange={(event) => chooseEffectiveBpm(event.currentTarget.valueAsNumber)} onBlur={(event) => chooseEffectiveBpm(event.currentTarget.valueAsNumber)} className="lv-input w-24" />
+          <Button type="button" variant="ghost" data-testid="chord-context-bpm-plus-four" onClick={() => chooseEffectiveBpm(effectiveBpm + 4)} disabled={recordingInFlight || effectiveBpm >= 240}>+4 BPM</Button>
+          <Button type="button" variant="ghost" onClick={() => chooseEffectiveBpm(activeSnapshot?.originalBpm ?? 96)} disabled={recordingInFlight || effectiveBpm === (activeSnapshot?.originalBpm ?? 96)}>Use original</Button>
+        </div>
+      </fieldset>
       <fieldset className="mt-3">
         <legend>Practice mode</legend>
         <div className="flex flex-wrap gap-3">
-          <label><input type="radio" name="chord-context-practice-mode" checked={practiceMode === "listen"} onChange={() => choosePracticeMode("listen")} /> Listen</label>
-          <label><input type="radio" name="chord-context-practice-mode" checked={practiceMode === "play"} onChange={() => choosePracticeMode("play")} /> Play</label>
+          <label><input type="radio" name="chord-context-practice-mode" disabled={recordingInFlight} checked={practiceMode === "listen"} onChange={() => choosePracticeMode("listen")} /> Listen</label>
+          <label><input type="radio" name="chord-context-practice-mode" disabled={recordingInFlight} checked={practiceMode === "play"} onChange={() => choosePracticeMode("play")} /> Play</label>
         </div>
       </fieldset>
       {practiceMode === "listen" ? <ContextModeOptions
@@ -238,12 +352,14 @@ export function BasslinePracticeView({
         selected={listenMode}
         onChange={chooseListenMode}
         options={LISTEN_MODE_OPTIONS}
+        disabled={recordingInFlight}
       /> : <ContextModeOptions
         legend="Play accompaniment"
         name="chord-context-play-mode"
         selected={playMode}
         onChange={choosePlayMode}
         options={PLAY_MODE_OPTIONS}
+        disabled={recordingInFlight}
       />}
       <p className="mt-3 text-sm text-[var(--lv-text-secondary)]">
         {practiceMode === "play" ? "Play never auto-plays the target bass." : "Listen uses the target bass only in the selected Listen layer."}
@@ -255,26 +371,61 @@ export function BasslinePracticeView({
       <div className="mt-3 flex flex-wrap gap-2">
         <Button
           onClick={() => { if (contextPlayback || preparing) stopChordContext(); else void startChordContext(); }}
-          disabled={noContextSource}
+          disabled={noContextSource || recordingInFlight}
           data-testid="chord-context-start-stop"
         >
           {contextPlayback || preparing ? <Square size={15} /> : <Ear size={15} />}
           {contextPlayback || preparing ? "Stop" : practiceMode === "listen" ? "Start Listen" : "Start Play"}
         </Button>
-        <Button variant="ghost" onClick={stopChordContext} disabled={!contextPlayback && !preparing}>Stop</Button>
+        <Button variant="ghost" onClick={stopChordContext} disabled={recordingInFlight || (!contextPlayback && !preparing)}>Stop</Button>
       </div>
     </section> : null}
 
     <div className="mt-4 flex flex-wrap gap-2">
-      <Button onClick={legacyListen} data-testid="bassline-listen">{legacyPlaying ? <Square size={15} /> : <Ear size={15} />}{legacyPlaying ? "Stop" : "Listen"}</Button>
-      <Button variant="ghost" onClick={() => setHint((value) => Math.min(4, value + 1))}><Lightbulb size={15} /> Hint {hint}/4</Button>
-      <Button onClick={() => { legacyPreviewGenerationRef.current += 1; stopPreview(); setLegacyPlaying(false); stopChordContext(); setReview(true); }}><Ear size={15} /> Review</Button>
+      <Button onClick={legacyListen} disabled={recordingInFlight} data-testid="bassline-listen">{legacyPlaying ? <Square size={15} /> : <Ear size={15} />}{legacyPlaying ? "Stop" : "Listen"}</Button>
+      <Button variant="ghost" disabled={recordingInFlight} onClick={() => setHint((value) => Math.min(4, value + 1))}><Lightbulb size={15} /> Hint {hint}/4</Button>
+      <Button disabled={recordingInFlight} onClick={() => { legacyPreviewGenerationRef.current += 1; stopPreview(); setLegacyPlaying(false); stopChordContext(); setReview(true); }}><Ear size={15} /> Review</Button>
     </div>
+    {review ? <section className="mt-4 rounded border p-3" aria-labelledby="record-accompaniment-heading" data-testid="record-accompaniment">
+      <h3 id="record-accompaniment-heading" className="font-semibold">Recording accompaniment</h3>
+      <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">Choose chords only or chords with metronome for the take. Use headphones to reduce speaker bleed; app audio is never internally mixed into the captured take.</p>
+      <fieldset className="mt-3">
+        <legend>Accompaniment while recording</legend>
+        <label className="mr-3"><input type="radio" name="record-accompaniment" disabled={recordingInFlight} checked={recordPlayMode === "chords-only"} onChange={() => { setRecordPlayMode("chords-only"); invalidateRecordedFacts(); }} /> Chords only</label>
+        <label><input type="radio" name="record-accompaniment" disabled={recordingInFlight} checked={recordPlayMode === "chords-and-metronome"} onChange={() => { setRecordPlayMode("chords-and-metronome"); invalidateRecordedFacts(); }} /> Chords + Metronome</label>
+      </fieldset>
+    </section> : null}
     {review ? <RecordCompareSection
       mode="bassline"
-      resetKey={`bassline:${chordContextSnapshot?.signature ?? "generated"}:${level}`}
-      countInMs={Math.round((4 * 60_000) / exercise.exercise.tempo)}
+      resetKey={"bassline:" + (chordContextSnapshot?.signature ?? "generated") + ":" + level + ":" + effectiveBpm + ":" + listenMode + ":" + playMode + ":" + recordPlayMode}
+      practiceSessionId={basslineRecordSessionIdRef.current}
+      countInMs={Math.round((4 * 60_000) / effectiveBpm)}
       onPlaybackStart={stopChordContext}
+      onRecordingActivityChange={setRecordingInFlight}
+      onUnkeptTakeChange={setHasUnkeptRecordingTake}
+      onRecordingPrepare={prepareChordContext}
+      onRecordingStart={() => {
+        const activity = schedulePreparedChordContext({ practiceMode: "play", playMode: recordPlayMode });
+        const facts: RecordedChordContextFacts = {
+          effectiveBpm,
+          listenMode,
+          playMode: recordPlayMode,
+          metronomeUsed: activity.metronomeUsed,
+          recordCompareUsed: true,
+        };
+        setRecordingFacts(facts);
+        setRecordCompareUsed(true);
+        if (activity.metronomeUsed) setMetronomeUsed(true);
+        setRetainedTakeReference(undefined);
+        historyEntryIdRef.current = undefined;
+        setHistoryStatus("idle");
+        return activity.started;
+      }}
+      onRecordingStop={stopChordContext}
+      onTakeKept={(id) => {
+        setRetainedTakeReference(id);
+        if (historyStatusRef.current !== "saved") setHistoryStatus("idle");
+      }}
       targetPlayer={createTargetPlayer(
         (onEnded) => void previewMidiNotes(
           exercise.exercise.targetEvents.map((event) => ({
@@ -283,14 +434,21 @@ export function BasslinePracticeView({
             durationBeats: event.durationBeats,
             velocity: event.velocity,
           })),
-          exercise.exercise.tempo,
+          effectiveBpm,
           "freepats-finger-bass",
           { onEnded },
         ),
         stopPreview,
       )}
     /> : null}
-    {review ? <fieldset className="mt-4"><legend>Self-rated review</legend>{["again", "hard", "good", "easy"].map((rating) => <button key={rating} type="button" className="mr-2">{rating}</button>)}</fieldset> : null}
+    {review ? <section className="mt-4 rounded border p-3" aria-labelledby="chord-context-history-heading" data-testid="chord-context-history-save">
+      <h3 id="chord-context-history-heading" className="font-semibold">Practice History</h3>
+      <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">Save factual source, section, tempo, selected layers, and retained-take reference only. This does not score your playing.</p>
+      {historyStatus === "error" ? <p role="alert" className="mt-2 text-sm text-[var(--lv-danger)]">Practice History could not be saved. Your review remains available.</p> : null}
+      {hasUnkeptRecordingTake ? <p role="status" className="mt-2 text-sm">Keep or discard the recorded take before saving this factual session.</p> : null}
+      <p aria-live="polite" className="mt-2 text-sm">{historyStatus === "saving" ? "Saving factual History." : historyStatus === "saved" ? "Factual session saved to History." : "History is not yet saved."}</p>
+      <Button className="mt-3" onClick={() => void saveChordContextHistory()} disabled={!onChordContextHistoryRecorded || recordingInFlight || hasUnkeptRecordingTake || historyStatus === "saving" || historyStatus === "saved"} data-testid="chord-context-save-history">{historyStatus === "saved" ? "Saved to History" : "Save factual session"}</Button>
+    </section> : null}
   </Surface>;
 }
 
@@ -318,18 +476,20 @@ function ContextModeOptions<T extends string>({
   selected,
   onChange,
   options,
+  disabled = false,
 }: {
   readonly legend: string;
   readonly name: string;
   readonly selected: T;
   readonly onChange: (value: T) => void;
   readonly options: readonly ContextModeOption<T>[];
+  readonly disabled?: boolean;
 }) {
   return <fieldset className="mt-3">
     <legend>{legend}</legend>
     <div className="grid gap-2 sm:grid-cols-2">
       {options.map((option) => <label key={option.value} className="rounded border p-2 text-sm">
-        <input type="radio" name={name} checked={selected === option.value} onChange={() => onChange(option.value)} /> {option.label}
+        <input type="radio" name={name} disabled={disabled} checked={selected === option.value} onChange={() => onChange(option.value)} /> {option.label}
       </label>)}
     </div>
   </fieldset>;
@@ -338,12 +498,13 @@ function ContextModeOptions<T extends string>({
 function toChordContextInput(
   snapshot: ChordContextSnapshot,
   bassEvents: readonly { readonly index: number; readonly midiNote: number; readonly startBeat: number; readonly durationBeats: number; readonly velocity: number }[],
+  effectiveBpm: number,
   practiceMode: PracticeMode,
   listenMode: ChordContextListenMode,
   playMode: ChordContextPlayMode,
 ): ChordContextPlaybackInput {
   const source = {
-    bpm: snapshot.originalBpm,
+    bpm: effectiveBpm,
     meter: snapshot.meter,
     chordEvents: snapshot.section.chords.map((chord) => ({
       id: chord.id,
@@ -368,6 +529,33 @@ function toChordContextInput(
   return practiceMode === "listen"
     ? { ...source, mode: "listen", listenMode }
     : { ...source, mode: "play", playMode };
+}
+
+function clampChordContextBpm(value: number, fallback: number): number {
+  if (!Number.isFinite(value)) return fallback;
+  return Math.max(30, Math.min(240, Math.round(value)));
+}
+
+interface RecordedChordContextFacts {
+  readonly effectiveBpm: number;
+  readonly listenMode: ChordContextListenMode;
+  readonly playMode: ChordContextPlayMode;
+  readonly metronomeUsed: boolean;
+  readonly recordCompareUsed: boolean;
+}
+
+function newChordContextRecordSessionId(): string {
+  const value = typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : Date.now().toString(36) + "-" + Math.random().toString(36).slice(2);
+  return "bassline-chord-context-session:" + value;
+}
+
+function newChordContextHistoryId(): string {
+  const value = typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : Date.now().toString(36) + "-" + Math.random().toString(36).slice(2);
+  return "chord-context-history:" + value;
 }
 
 const PITCH_CLASS_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"] as const;

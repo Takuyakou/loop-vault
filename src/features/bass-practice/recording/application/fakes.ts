@@ -81,8 +81,11 @@ export class FakePracticeRecorder implements PracticeRecorder {
   nextTake?: RecordingTake;
   /** When true, start rejects (simulates a recorder error). */
   failStart = false;
+  /** Optional test-only gate for a pending getUserMedia / recorder start. */
+  startGate?: Promise<void>;
 
   async start(options: StartRecordingOptions): Promise<void> {
+    if (this.startGate) await this.startGate;
     if (this.failStart) throw new Error("fake recorder start failed");
     this.startCount += 1;
     this.active = true;
