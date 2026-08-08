@@ -2,17 +2,18 @@
   "schemaVersion": 1,
   "phaseId": "5.18",
   "status": "in-progress",
-  "activeStage": "P5.18-04",
+  "activeStage": "P5.18-05",
   "completedStages": [
     "P5.18-00",
     "P5.18-01",
     "P5.18-02",
-    "P5.18-03"
+    "P5.18-03",
+    "P5.18-04"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "c3c992373bd4e97e6e39ef172d03ecd70666fa9c",
-  "lastVerifiedCommit": "c2770ecb6515720db25aefebe00f63379ec0976a",
+  "lastVerifiedCommit": "888b15867c713d4674f74c1d23966b1c08f1d8ff",
   "currentBranch": "feat/p518-chord-context-practice",
   "requiredGates": {
     "P5.18-00": [
@@ -100,8 +101,18 @@
     "p5.18-03-web-build": "pass",
     "p5.18-03-production-default-playwright": "pass",
     "p5.18-03-git-diff-check": "pass",
-    "p5.18-03-protected-surface-check": "pass"
+    "p5.18-03-protected-surface-check": "pass",
+    "p5.18-04-phase-docs-validation": "pass",
+    "p5.18-04-focused-vitest": "pass",
+    "p5.18-04-bass-practice-regression": "pass",
+    "p5.18-04-record-compare-regression": "pass",
+    "p5.18-04-tempo-history-persistence": "pass",
+    "p5.18-04-lint": "pass",
+    "p5.18-04-typecheck-app": "pass",
+    "p5.18-04-typecheck-e2e": "pass",
+    "p5.18-04-git-diff-check": "pass",
+    "p5.18-04-protected-surface-check": "pass"
   },
-  "nextAction": "P5.18-03 is complete. P5.18-04 — Record & Compare / Tempo / History — is the next authorized stage; do not start P5.18-05 until P5.18-04 is completed and committed.",
+  "nextAction": "P5.18-04 is complete. P5.18-05 — Final integration / release gates — is the next authorized stage; do not start any later phase.",
   "updatedAt": "2026-08-08"
 }
