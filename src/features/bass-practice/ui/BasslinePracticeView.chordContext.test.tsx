@@ -68,6 +68,7 @@ vi.mock("../application/chordContextToneDriver", () => ({
   })),
 }));
 
+import { buildGeneratedChordContextSnapshot, type ChordContextSnapshot } from "../domain";
 import { BasslinePracticeView } from "./BasslinePracticeView";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
@@ -133,6 +134,46 @@ describe("Bassline Echo Chord Context", () => {
     expect(playback.driversDisposed).toBeGreaterThan(0);
   });
 
+  it("releases every driver across 20 replay, layer-switch, and play-stop cycles", async () => {
+    const container = await renderView();
+    for (let index = 0; index < 20; index += 1) {
+      await clickStart(container);
+      await act(async () => {
+        container.querySelector<HTMLButtonElement>("[data-testid='chord-context-start-stop']")?.click();
+        await Promise.resolve();
+      });
+      await chooseRadio(container, "chord-context-practice-mode", index % 2 === 0 ? "Play" : "Listen");
+    }
+
+    expect(playback.sessions).toHaveLength(20);
+    expect(playback.sessions.every((session) => session.stopped > 0 && session.disposed > 0)).toBe(true);
+    expect(playback.driversDisposed).toBe(20);
+    expect(container.querySelector("[data-testid='chord-context-status']")?.textContent).toContain("Chord Context stopped");
+  });
+  it("fails closed and releases the prepared driver when an unsupported chord reaches playback", async () => {
+    const built = buildGeneratedChordContextSnapshot({
+      key: "C major",
+      bpm: 96,
+      chords: [{ id: "generated:unsupported", root: 0, quality: "maj7", tensions: [], label: "Cmaj7", startBeat: 0, durationBeats: 4 }],
+    });
+    if (!built.ok) throw new Error(built.error.message);
+    const unsupported = {
+      ...built.snapshot,
+      section: {
+        ...built.snapshot.section,
+        chords: built.snapshot.section.chords.map((chord) => ({ ...chord, quality: "made-up" })),
+      },
+      signature: "tampered-for-fail-closed-test",
+    } as unknown as ChordContextSnapshot;
+    const container = await renderView({ chordContextSnapshot: unsupported });
+
+    await clickStart(container);
+
+    expect(container.querySelector("[role='alert']")?.textContent).toContain("cannot voice this chord safely");
+    expect(playback.sessions).toHaveLength(0);
+    expect(playback.driversDisposed).toBe(1);
+    expect(container.querySelector("[data-testid='chord-context-status']")?.textContent).toContain("Chord Context stopped");
+  });
   it("immediately releases the prepared driver for Play with no accompaniment", async () => {
     const container = await renderView();
     await chooseRadio(container, "chord-context-practice-mode", "Play");
