@@ -2,29 +2,31 @@ import { useEffect, useMemo, useState } from "react";
 import { Ear, Lightbulb, Square } from "lucide-react";
 import { stopPreview, previewMidiNotes } from "../../../audio/chordPreview";
 import { Button, Surface } from "../../../components/ui";
-import { BASSLINE_GENERATOR_VERSION, generateBasslineExercise } from "../domain";
+import { BASSLINE_GENERATOR_VERSION, createChordContextVaultBasslineExercise, generateBasslineExercise, type VaultChordContextSnapshot } from "../domain";
 import { RecordCompareSection } from "../recording/ui/RecordCompareSection";
 import { createTargetPlayer } from "../recording/application/playback";
 
-export function BasslinePracticeView() {
+export function BasslinePracticeView({ chordContextSnapshot }: { readonly chordContextSnapshot?: VaultChordContextSnapshot }) {
   const [level, setLevel] = useState<1 | 2 | 3>(1);
   const [hint, setHint] = useState(0);
   const [review, setReview] = useState(false);
   const [playing, setPlaying] = useState(false);
-  const exercise = useMemo(() => generateBasslineExercise({
-    generatorVersion: BASSLINE_GENERATOR_VERSION,
-    seed: `bassline-ui:${level}`,
-    source: "generated",
-    level,
-    tempo: 96,
-    meter: { numerator: 4, denominator: 4 },
-    key: "C major",
-    chords: [
-      { root: 2, label: "Dm7", startBeat: 0, durationBeats: 2 },
-      { root: 7, label: "G7", startBeat: 2, durationBeats: 2 },
-      { root: 0, label: "Cmaj7", startBeat: 4, durationBeats: 4 },
-    ],
-  }), [level]);
+  const exercise = useMemo(() => chordContextSnapshot
+    ? createChordContextVaultBasslineExercise(chordContextSnapshot, level)
+    : generateBasslineExercise({
+      generatorVersion: BASSLINE_GENERATOR_VERSION,
+      seed: `bassline-ui:${level}`,
+      source: "generated",
+      level,
+      tempo: 96,
+      meter: { numerator: 4, denominator: 4 },
+      key: "C major",
+      chords: [
+        { root: 2, label: "Dm7", startBeat: 0, durationBeats: 2 },
+        { root: 7, label: "G7", startBeat: 2, durationBeats: 2 },
+        { root: 0, label: "Cmaj7", startBeat: 4, durationBeats: 4 },
+      ],
+    }), [chordContextSnapshot, level]);
 
   useEffect(() => () => stopPreview(), []);
   if (!exercise.ok) return <p role="alert">{exercise.error.message}</p>;
@@ -44,7 +46,7 @@ export function BasslinePracticeView() {
   return <Surface className="p-4" data-testid="bassline-echo-view">
     <p className="lv-section-kicker">Bass Practice</p>
     <h2 className="text-2xl font-bold">Bassline Echo</h2>
-    <p className="mt-2 text-sm">Generated source · self-rated practice only · no microphone or automatic score.</p>
+    <p className="mt-2 text-sm" data-testid="bassline-source">{chordContextSnapshot ? `Vault source · ${chordContextSnapshot.source.safeLabel}` : "Generated source"} · self-rated practice only · no microphone or automatic score.</p>
     <label className="mt-3 block">Level <select aria-label="Bassline level" value={level} onChange={(event) => setLevel(Number(event.target.value) as 1 | 2 | 3)}><option value={1}>1 — Roots</option><option value={2}>2 — Chord tones</option><option value={3}>3 — Approach</option></select></label>
     <div className="mt-4 rounded border p-3" aria-label="Bassline progression strip">{exercise.exercise.chords.map((chord) => <span key={`${chord.startBeat}:${chord.label}`} className="mr-2">{chord.label}</span>)}</div>
     <div className="mt-3 text-sm" data-testid="bassline-notes">{hint >= 4 || review ? <>
@@ -58,7 +60,7 @@ export function BasslinePracticeView() {
     </div>
     {review ? <RecordCompareSection
       mode="bassline"
-      resetKey={`bassline:${level}`}
+      resetKey={`bassline:${chordContextSnapshot?.signature ?? "generated"}:${level}`}
       countInMs={Math.round((4 * 60_000) / exercise.exercise.tempo)}
       targetPlayer={createTargetPlayer(
         (onEnded) => void previewMidiNotes(

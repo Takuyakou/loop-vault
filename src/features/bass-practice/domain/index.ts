@@ -1,4 +1,5 @@
 export * from "./bassline";
+export * from "./chordContextSnapshot";
 export * from "./constants";
 export * from "./determinism";
 export * from "./difficulty";

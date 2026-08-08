@@ -64,6 +64,7 @@ import {
 import { buildProgressionIndex } from "../domain/progressionClassification/mod";
 import { formatProgressionText } from "../domain/progressionText";
 import type { SavedProgressionBlock, SongIdea } from "../domain/types";
+import { buildVaultChordContextSnapshot, selectVaultChordContextSections, type VaultChordContextSnapshot } from "../features/bass-practice/domain";
 import { extractVoicing, resolveVoicingForUse } from "../domain/voicing";
 import { advisorSuggestionToCandidate, appendAdvisorSuggestionToEditableProgression, selectAdvisorReferenceContexts } from "../domain/progressionAdvisor";
 import { appendAnalysisFeedback } from "../storage/analysisFeedbackStorage";
@@ -103,7 +104,7 @@ interface ProgressionDetailViewProps {
   openIdea: (ideaId: string) => void;
   openVault: () => void;
   requestDelete: (idea: SongIdea, block: SavedProgressionBlock) => void;
-  openPractice?: () => void;
+  openPractice?: (snapshot: VaultChordContextSnapshot) => void;
   requestLeave?: (action: () => void) => void;
   onDirtyChange?: (dirty: boolean) => void;
   setToast: (message: string) => void;
@@ -173,6 +174,17 @@ export function ProgressionDetailView({
     () => applyEditableProgressionToSavedBlock(block, editable),
     [block, editable],
   );
+  const chordContextSectionsResult = useMemo(
+    () => selectVaultChordContextSections(block),
+    [block],
+  );
+  const chordContextSections = chordContextSectionsResult.ok
+    ? chordContextSectionsResult.sections
+    : [];
+  const [selectedChordContextSectionId, setSelectedChordContextSectionId] = useState<string>();
+  const selectedChordContextSection = chordContextSections.find(
+    (section) => section.id === selectedChordContextSectionId,
+  ) ?? chordContextSections[0];
   const selectedIndex = selectedEditableSlotIndex(editable);
   const keySignature = block.detectedKey ?? idea.key;
   const authorReferenceIndex = useMemo(() => buildAuthorReferenceIndex(ideas), [ideas]);
@@ -291,6 +303,22 @@ export function ProgressionDetailView({
     action();
   }
 
+  function startChordContextPractice() {
+    if (!openPractice || !selectedChordContextSection) {
+      setToast("Chord Context Practice is unavailable for this saved progression.");
+      return;
+    }
+    const snapshot = buildVaultChordContextSnapshot({
+      sourceReference: { ideaId: idea.id, blockId: block.id },
+      block,
+      sectionId: selectedChordContextSection.id,
+    });
+    if (!snapshot.ok) {
+      setToast(snapshot.error.message);
+      return;
+    }
+    runLeaveAction(() => openPractice(snapshot.snapshot));
+  }
   async function copyForChordDrip() {
     if (!navigator.clipboard?.writeText) {
       setToast(text.copyFailed);
@@ -465,15 +493,40 @@ export function ProgressionDetailView({
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
           {openPractice ? (
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              onClick={() => runLeaveAction(openPractice)}
-            >
-              <Dumbbell aria-hidden="true" size={16} />
-              {language === "ja" ? "練習する" : "Practice"}
-            </Button>
+            <div className="flex flex-wrap items-center justify-end gap-2" data-testid="chord-context-handoff">
+              {selectedChordContextSection ? (
+                <label className="text-xs text-[var(--lv-text-secondary)]">
+                  {language === "ja" ? "Chord Context セクション" : "Chord Context section"}
+                  <select
+                    aria-label="Chord Context section"
+                    className="ml-1 rounded border border-[var(--lv-border)] bg-[var(--lv-surface)] px-2 py-1 text-sm text-[var(--lv-text)]"
+                    data-testid="chord-context-section-select"
+                    value={selectedChordContextSection.id}
+                    onChange={(event) => setSelectedChordContextSectionId(event.target.value)}
+                  >
+                    {chordContextSections.map((section) => (
+                      <option key={section.id} value={section.id}>
+                        {language === "ja" ? `${section.startBar}–${section.endBar}小節` : `Bars ${section.startBar}–${section.endBar}`}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : (
+                <p className="text-xs text-[var(--lv-text-secondary)]" role="status">
+                  {chordContextSectionsResult.ok ? "Chord Context Practice is unavailable." : chordContextSectionsResult.error.message}
+                </p>
+              )}
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                disabled={!selectedChordContextSection}
+                onClick={startChordContextPractice}
+              >
+                <Dumbbell aria-hidden="true" size={16} />
+                {language === "ja" ? "練習する" : "Practice"}
+              </Button>
+            </div>
           ) : null}
           <ProgressionAdvisorButton language={language} onClick={() => setAdvisorOpen(true)} />
           <Button

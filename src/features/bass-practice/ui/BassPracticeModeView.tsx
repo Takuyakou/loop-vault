@@ -1,10 +1,10 @@
-import { useState, type ComponentProps } from "react";
+import { useEffect, useState, type ComponentProps } from "react";
 import {
   isBassPracticeBasslineEchoEnabled,
   isBassPracticeDegreeEchoEnabled,
   isBassPracticeRhythmEchoEnabled,
 } from "../application/featureFlag";
-import type { RhythmPracticeAttempt } from "../domain";
+import type { RhythmPracticeAttempt, VaultChordContextSnapshot } from "../domain";
 import { BassPracticeView } from "./BassPracticeView";
 import { BasslinePracticeView } from "./BasslinePracticeView";
 import { RhythmPracticeView } from "./RhythmPracticeView";
@@ -12,6 +12,7 @@ import { RhythmPracticeView } from "./RhythmPracticeView";
 type Mode = "degree" | "rhythm" | "bassline";
 type BassPracticeModeViewProps = ComponentProps<typeof BassPracticeView> & {
   readonly onRhythmAttemptCompleted?: (attempt: RhythmPracticeAttempt) => Promise<void>;
+  readonly chordContextSnapshot?: VaultChordContextSnapshot;
 };
 
 /**
@@ -19,12 +20,13 @@ type BassPracticeModeViewProps = ComponentProps<typeof BassPracticeView> & {
  * live Practice session, so unmounting it merely to reveal another mode would
  * incorrectly mark that session abandoned.
  */
-export function BassPracticeModeView({ onRhythmAttemptCompleted, ...degreeProps }: BassPracticeModeViewProps) {
+export function BassPracticeModeView({ onRhythmAttemptCompleted, chordContextSnapshot, ...degreeProps }: BassPracticeModeViewProps) {
   const degreeEnabled = isBassPracticeDegreeEchoEnabled();
   const rhythmEnabled = isBassPracticeRhythmEchoEnabled();
   const basslineEnabled = isBassPracticeBasslineEchoEnabled();
   const firstEnabledMode: Mode = degreeEnabled ? "degree" : rhythmEnabled ? "rhythm" : "bassline";
-  const [mode, setMode] = useState<Mode>(firstEnabledMode);
+  const [mode, setMode] = useState<Mode>(() => chordContextSnapshot && basslineEnabled ? "bassline" : firstEnabledMode);
+  useEffect(() => { if (chordContextSnapshot && basslineEnabled) setMode("bassline"); }, [basslineEnabled, chordContextSnapshot?.signature]);
 
   if (!degreeEnabled && !rhythmEnabled && !basslineEnabled) return null;
   if (degreeEnabled && !rhythmEnabled && !basslineEnabled) return <BassPracticeView {...degreeProps} />;
@@ -45,7 +47,7 @@ export function BassPracticeModeView({ onRhythmAttemptCompleted, ...degreeProps 
       </div>
       {degreeEnabled ? <div hidden={mode !== "degree"}><BassPracticeView {...degreeProps} /></div> : null}
       {mode === "rhythm" && rhythmEnabled ? <RhythmPracticeView onAttemptCompleted={onRhythmAttemptCompleted} /> : null}
-      {mode === "bassline" && basslineEnabled ? <BasslinePracticeView /> : null}
+      {mode === "bassline" && basslineEnabled ? <BasslinePracticeView chordContextSnapshot={chordContextSnapshot} /> : null}
     </div>
   );
 }
