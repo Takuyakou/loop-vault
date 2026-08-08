@@ -3,7 +3,7 @@
 # Phase 5.18 — Chord Context Practice
 
 ## Status
-`COMPLETED - P5.18-00 through P5.18-05 complete; automated and human hardware acceptance PASS`
+`COMPLETED - P5.18-00 through P5.18-05 complete; automated and human hardware acceptance PASS; merged into local master (not pushed)`
 
 ## Single entry point
 この `README.md` を Phase 5.18 の単一入口とする。
