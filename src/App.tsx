@@ -580,7 +580,7 @@ async function analyzeMidiPath(path: string) {
           ref={mainContentRef}
           tabIndex={-1}
           aria-label={viewLabel(view, copy)}
-          className="min-w-0 flex-1 overflow-y-auto px-4 py-5 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--lv-accent)] lg:px-6"
+          className="min-h-0 min-w-0 flex-1 overflow-y-auto px-4 py-5 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--lv-accent)] lg:px-6"
         >
         <div className="mx-auto flex min-h-full w-full max-w-[1680px] min-w-0 flex-col">
         {loadStatus === "ready" ? (

@@ -8,6 +8,7 @@ const playback = vi.hoisted(() => ({
   sessions: [] as { events: { layer: string }[]; stopped: number; disposed: number; complete: () => void }[],
   driversDisposed: 0,
   prepareFails: false,
+  driverOptions: [] as unknown[],
 }));
 const recordCompare = vi.hoisted(() => ({
   props: undefined as undefined | {
@@ -48,7 +49,9 @@ vi.mock("../recording/ui/RecordCompareSection", () => ({
 }));
 
 vi.mock("../application/chordContextToneDriver", () => ({
-  createChordContextToneDriver: vi.fn(() => ({
+  createChordContextToneDriver: vi.fn((options?: unknown) => {
+    playback.driverOptions.push(options);
+    return ({
     prepare: vi.fn(async () => { if (playback.prepareFails) throw new Error("prepare failed"); }),
     createPlayer: vi.fn((_mix: unknown, lifecycle: { onCompleted(): void }) => {
       const session = {
@@ -65,7 +68,8 @@ vi.mock("../application/chordContextToneDriver", () => ({
       };
     }),
     dispose: () => { playback.driversDisposed += 1; },
-  })),
+    });
+  }),
 }));
 
 import { buildGeneratedChordContextSnapshot, type ChordContextSnapshot } from "../domain";
@@ -80,6 +84,7 @@ beforeEach(() => {
   playback.sessions = [];
   playback.driversDisposed = 0;
   playback.prepareFails = false;
+  playback.driverOptions = [];
   preview.stopped = 0;
   preview.started = 0;
   preview.delayStart = false;
@@ -97,6 +102,9 @@ describe("Bassline Echo Chord Context", () => {
     const container = await renderView();
 
     expect(container.querySelector("[data-testid='chord-context-controls']")).not.toBeNull();
+    expect(container.querySelector("[aria-label='Bassline Echo progress']")?.textContent).toContain("SetupListenPlayReview");
+    expect(container.querySelector("[aria-current='step']")?.textContent).toBe("Setup");
+    expect(container.querySelector<HTMLSelectElement>("[data-testid='chord-context-timbre']")?.value).toBe("electric");
     expect(checkedLabel(container, "chord-context-practice-mode")).toContain("Listen");
     expect(checkedLabel(container, "chord-context-listen-mode")).toContain("Bass + Chords");
     expect(container.textContent).toContain("Bass only");
@@ -111,6 +119,22 @@ describe("Bassline Echo Chord Context", () => {
     expect(container.textContent).toContain("No accompaniment");
   });
 
+  it("offers Electric and Piano chord timbres and prepares the selected session sound", async () => {
+    const container = await renderView({ language: "ja" });
+    const timbre = container.querySelector<HTMLSelectElement>("[data-testid='chord-context-timbre']")!;
+    expect(Array.from(timbre.options).map((option) => option.textContent)).toEqual(["エレクトリック", "ピアノ"]);
+
+    await act(async () => {
+      timbre.value = "piano";
+      timbre.dispatchEvent(new Event("change", { bubbles: true }));
+      await Promise.resolve();
+    });
+    await clickStart(container);
+
+    expect(playback.driverOptions[playback.driverOptions.length - 1]).toEqual({ chordTimbre: "piano" });
+    expect(container.querySelector("[aria-label='Bassline Echoの進行']")?.textContent).toContain("設定聴く演奏レビュー");
+    expect(container.querySelector("[aria-current='step']")?.textContent).toBe("聴く");
+  });
   it("uses bass only in Listen, replaces playback on a layer switch, and cleans up on unmount", async () => {
     const container = await renderView();
     await clickStart(container);

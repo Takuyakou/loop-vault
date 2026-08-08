@@ -8,9 +8,22 @@ test("P5.18 production default is keyboard-operable without 320px overflow", asy
   const card = page.getByTestId("bass-practice-home-card");
   await expect(card).toBeVisible();
   await card.getByRole("button").click();
+  const scrollContract = await page.evaluate(() => {
+    const main = document.querySelector<HTMLElement>("#main-content");
+    return {
+      body: { client: document.body.clientHeight, scroll: document.body.scrollHeight },
+      html: { client: document.documentElement.clientHeight, scroll: document.documentElement.scrollHeight },
+      mainOverflowY: main ? getComputedStyle(main).overflowY : "missing",
+    };
+  });
+  expect(scrollContract.html.scroll).toBeLessThanOrEqual(scrollContract.html.client + 1);
+  expect(scrollContract.body.scroll).toBeLessThanOrEqual(scrollContract.body.client + 1);
+  expect(scrollContract.mainOverflowY).toBe("auto");
+
   await page.getByRole("tab", { name: "Rhythm Echo" }).click();
   const rhythm = page.getByTestId("rhythm-echo-view");
-  await expect(rhythm).toContainText("自己評価式の練習です");
+  await expect(rhythm).toContainText("リズムを聴き、思い出し、歌ってからベースで再現します。");
+  await expect(rhythm.getByLabel("Rhythm Echoの進行")).toContainText("聴く思い出す歌う考える演奏レビュー");
   await expect(rhythm.getByLabel("リズムのテンポ")).toBeVisible();
   await page.getByRole("tab", { name: "Bassline Echo" }).click();
 
@@ -18,6 +31,10 @@ test("P5.18 production default is keyboard-operable without 320px overflow", asy
   await expect(context).toBeVisible();
   await expect(context.getByRole("radio", { name: "聴く" })).toBeChecked();
   await expect(context.getByRole("radio", { name: "ベース + コード", exact: true })).toBeChecked();
+  const timbre = context.getByTestId("chord-context-timbre");
+  await expect(timbre).toHaveValue("electric");
+  await timbre.selectOption("piano");
+  await expect(timbre).toHaveValue("piano");
   await assertNoHorizontalOverflow(page);
 
   const bpm = context.getByTestId("chord-context-effective-bpm");

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Ear, Lightbulb, Square } from "lucide-react";
 import type { AppLanguage } from "../../../i18n";
 import { stopPreview, previewMidiNotes } from "../../../audio/chordPreview";
-import { Button, Surface } from "../../../components/ui";
+import { Button, Field, Surface } from "../../../components/ui";
 import {
   BASSLINE_GENERATOR_VERSION,
   buildGeneratedChordContextSnapshot,
@@ -24,10 +24,12 @@ import {
 } from "../application/chordContextPlayback";
 import {
   createChordContextToneDriver,
+  type ChordContextChordTimbre,
   type PreparedChordContextToneDriver,
 } from "../application/chordContextToneDriver";
 import { RecordCompareSection } from "../recording/ui/RecordCompareSection";
 import { createTargetPlayer } from "../recording/application/playback";
+import { EchoPracticeHeader, EchoPracticeProgress } from "./EchoPracticeChrome";
 
 const GENERATED_CONTEXT_CHORDS = [
   { id: "generated:0", root: 2, quality: "min7" as const, tensions: [] as const, label: "Dm7", startBeat: 0, durationBeats: 2 },
@@ -46,6 +48,10 @@ type ChordContextPlaybackActivity = {
   readonly metronomeUsed: boolean;
 };
 const NO_CHORD_CONTEXT_ACTIVITY: ChordContextPlaybackActivity = Object.freeze({ started: false, metronomeUsed: false });
+const BASSLINE_STEPS = {
+  en: ["Setup", "Listen", "Play", "Review"],
+  ja: ["設定", "聴く", "演奏", "レビュー"],
+} as const;
 
 export interface BasslinePracticeViewProps {
   readonly language?: AppLanguage;
@@ -70,6 +76,7 @@ export function BasslinePracticeView({
   const [practiceMode, setPracticeMode] = useState<PracticeMode>("listen");
   const [listenMode, setListenMode] = useState<ChordContextListenMode>(DEFAULT_CHORD_CONTEXT_LISTEN_MODE);
   const [playMode, setPlayMode] = useState<ChordContextPlayMode>(DEFAULT_CHORD_CONTEXT_PLAY_MODE);
+  const [chordTimbre, setChordTimbre] = useState<ChordContextChordTimbre>("electric");
   const [contextPlayback, setContextPlayback] = useState<PracticeMode | undefined>();
   const [preparing, setPreparing] = useState(false);
   const [playbackError, setPlaybackError] = useState<string | undefined>();
@@ -156,7 +163,7 @@ export function BasslinePracticeView({
     stopChordContext();
     const generation = generationRef.current + 1;
     generationRef.current = generation;
-    const driver = createChordContextToneDriver();
+    const driver = createChordContextToneDriver({ chordTimbre });
     sessionRef.current = { generation, driver };
     setPlaybackError(undefined);
     setPreparing(true);
@@ -177,7 +184,7 @@ export function BasslinePracticeView({
     } finally {
       if (generationRef.current === generation) setPreparing(false);
     }
-  }, [activeSnapshot, exercise, stopChordContext]);
+  }, [activeSnapshot, chordTimbre, exercise, stopChordContext]);
 
   const schedulePreparedChordContext = useCallback((options: { readonly practiceMode?: PracticeMode; readonly listenMode?: ChordContextListenMode; readonly playMode?: ChordContextPlayMode } = {}): ChordContextPlaybackActivity => {
     if (!activeSnapshot || !exercise.ok) return NO_CHORD_CONTEXT_ACTIVITY;
@@ -251,6 +258,12 @@ export function BasslinePracticeView({
     setPlayMode(next);
     invalidateRecordedFacts();
   };
+  const chooseChordTimbre = (next: ChordContextChordTimbre): void => {
+    if (next === chordTimbre) return;
+    stopChordContext();
+    setChordTimbre(next);
+    invalidateRecordedFacts();
+  };
   const chooseEffectiveBpm = (next: number): void => {
     const tempo = clampChordContextBpm(next, activeSnapshot?.originalBpm ?? 96);
     if (tempo === effectiveBpm) return;
@@ -318,13 +331,33 @@ export function BasslinePracticeView({
     ? `${ja ? "Vault進行" : "Vault source"} \u00b7 ${chordContextSnapshot.source.safeLabel}`
     : ja ? "生成進行" : "Generated source";
   const noContextSource = chordContextEnabled && !activeSnapshot;
+  const basslineStepIndex = review ? 3 : contextPlayback === "play" ? 2 : contextPlayback === "listen" || legacyPlaying ? 1 : 0;
+  const basslineSteps = BASSLINE_STEPS[language];
 
-  return <Surface className="p-4" data-testid="bassline-echo-view">
-    <p className="lv-section-kicker">{ja ? "ベース練習" : "Bass Practice"}</p>
-    <h2 className="text-2xl font-bold">Bassline Echo</h2>
-    <p className="mt-2 text-sm" data-testid="bassline-source">{sourceLabel}{" \u00b7 "}{ja ? "自己評価式" : "self-rated practice only"}{" \u00b7 "}{ja ? "自動採点なし。" : "no automatic score."}</p>
-    <label className="mt-3 block">{ja ? "レベル" : "Level"} <select aria-label={ja ? "ベースラインのレベル" : "Bassline level"} disabled={recordingInFlight} value={level} onChange={(event) => chooseLevel(Number(event.target.value) as 1 | 2 | 3)}><option value={1}>{ja ? "1 - ルート" : "1 - Roots"}</option><option value={2}>{ja ? "2 - コードトーン" : "2 - Chord tones"}</option><option value={3}>{ja ? "3 - アプローチ" : "3 - Approach"}</option></select></label>
-    <div className="mt-4 rounded border p-3" aria-label={ja ? "ベースラインのコード進行" : "Bassline progression strip"}>{exercise.exercise.chords.map((chord) => <span key={`${chord.startBeat}:${chord.label}`} className="mr-2">{chord.label}</span>)}</div>
+  return <div className="min-w-0 space-y-4" data-testid="bassline-echo-view">
+    <EchoPracticeHeader
+      kicker={ja ? "ベース練習" : "Bass Practice"}
+      title="Bassline Echo"
+      description={ja ? "コード進行を聴き、ベースラインを思い出して演奏します。" : "Listen in chord context, recall the bassline, and play it yourself."}
+      badge={ja ? "自己評価 · 自動採点ではありません" : "Self-rated · No automatic scoring"}
+    />
+    <EchoPracticeProgress
+      ariaLabel={ja ? "Bassline Echoの進行" : "Bassline Echo progress"}
+      currentIndex={basslineStepIndex}
+      steps={basslineSteps}
+    />
+    <Surface variant="primary" className="min-w-0 overflow-hidden p-4 sm:p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--lv-border)] pb-4">
+        <div>
+          <p className="text-xs font-semibold uppercase text-[var(--lv-text-muted)]">{ja ? "現在の課題" : "Current challenge"}</p>
+          <h3 className="mt-1 text-lg font-semibold">{ja ? "コード進行の中でベースを再現" : "Reproduce the bassline in context"}</h3>
+          <p className="mt-1 text-sm text-[var(--lv-text-secondary)]" data-testid="bassline-source">{sourceLabel}</p>
+        </div>
+        <Field htmlFor="bassline-level" label={ja ? "レベル" : "Level"} className="w-full sm:w-52">
+          <select id="bassline-level" name="bassline-level" className="lv-input w-full" aria-label={ja ? "ベースラインのレベル" : "Bassline level"} disabled={recordingInFlight} value={level} onChange={(event) => chooseLevel(Number(event.target.value) as 1 | 2 | 3)}><option value={1}>{ja ? "1 - ルート" : "1 - Roots"}</option><option value={2}>{ja ? "2 - コードトーン" : "2 - Chord tones"}</option><option value={3}>{ja ? "3 - アプローチ" : "3 - Approach"}</option></select>
+        </Field>
+      </div>
+      <div className="mt-4 rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] p-3" aria-label={ja ? "ベースラインのコード進行" : "Bassline progression strip"}>{exercise.exercise.chords.map((chord) => <span key={`${chord.startBeat}:${chord.label}`} className="mr-2 inline-block font-semibold">{chord.label}</span>)}</div>
     <div className="mt-3 text-sm" data-testid="bassline-notes">{hint >= 4 || review ? <>
       <span className="mr-2 text-xs text-[var(--lv-text-muted)]">{ja ? "お手本の音名" : "Answer notes"}</span>
       {exercise.exercise.targetEvents.map((event) => <span key={event.index} className="mr-2 font-semibold" title={`MIDI ${event.midiNote}`}>{midiNoteName(event.midiNote)}</span>)}
@@ -343,6 +376,12 @@ export function BasslinePracticeView({
           <Button type="button" variant="ghost" onClick={() => chooseEffectiveBpm(activeSnapshot?.originalBpm ?? 96)} disabled={recordingInFlight || effectiveBpm === (activeSnapshot?.originalBpm ?? 96)}>{ja ? "元のテンポに戻す" : "Use original"}</Button>
         </div>
       </fieldset>
+      <Field htmlFor="chord-context-timbre" label={ja ? "コード音色" : "Chord timbre"} helper={ja ? "このセッションだけに適用されます。" : "This selection applies to this session only."} className="mt-3 max-w-sm">
+        <select id="chord-context-timbre" name="chord-context-timbre" data-testid="chord-context-timbre" className="lv-input w-full" disabled={recordingInFlight} value={chordTimbre} onChange={(event) => chooseChordTimbre(event.currentTarget.value as ChordContextChordTimbre)}>
+          <option value="electric">{ja ? "エレクトリック" : "Electric"}</option>
+          <option value="piano">{ja ? "ピアノ" : "Piano"}</option>
+        </select>
+      </Field>
       <fieldset className="mt-3">
         <legend>{ja ? "練習モード" : "Practice mode"}</legend>
         <div className="flex flex-wrap gap-3">
@@ -401,7 +440,7 @@ export function BasslinePracticeView({
     </section> : null}
     {review ? <RecordCompareSection
       mode="bassline"
-      resetKey={"bassline:" + (chordContextSnapshot?.signature ?? "generated") + ":" + level + ":" + effectiveBpm + ":" + listenMode + ":" + playMode + ":" + recordPlayMode}
+      resetKey={"bassline:" + (chordContextSnapshot?.signature ?? "generated") + ":" + level + ":" + effectiveBpm + ":" + listenMode + ":" + playMode + ":" + recordPlayMode + ":" + chordTimbre}
       practiceSessionId={basslineRecordSessionIdRef.current}
       countInMs={Math.round((4 * 60_000) / effectiveBpm)}
       onPlaybackStart={stopChordContext}
@@ -453,7 +492,8 @@ export function BasslinePracticeView({
       <p aria-live="polite" className="mt-2 text-sm">{historyStatus === "saving" ? ja ? "練習履歴を保存しています。" : "Saving factual History." : historyStatus === "saved" ? ja ? "練習履歴へ保存しました。" : "Factual session saved to History." : ja ? "このセッションはまだ履歴へ保存されていません。" : "History is not yet saved."}</p>
       <Button className="mt-3" onClick={() => void saveChordContextHistory()} disabled={!onChordContextHistoryRecorded || recordingInFlight || hasUnkeptRecordingTake || historyStatus === "saving" || historyStatus === "saved"} data-testid="chord-context-save-history">{historyStatus === "saved" ? ja ? "履歴へ保存済み" : "Saved to History" : ja ? "セッションを履歴へ保存" : "Save factual session"}</Button>
     </section> : null}
-  </Surface>;
+    </Surface>
+  </div>;
 }
 
 function isVaultChordContextSnapshot(snapshot: ChordContextSnapshot | undefined): snapshot is VaultChordContextSnapshot {

@@ -14,7 +14,7 @@ import {
   RotateCcw,
   Square,
 } from "lucide-react";
-import { Badge, Button, Field, StatusMessage, Surface } from "../../../components/ui";
+import { Button, Field, StatusMessage, Surface } from "../../../components/ui";
 import {
   degreeDifficultyPreset,
   createCompletedAttempt,
@@ -41,6 +41,7 @@ import { DegreeFretboard } from "./DegreeFretboard";
 import { RecordCompareSection } from "../recording/ui/RecordCompareSection";
 import { createTargetPlayer } from "../recording/application/playback";
 import { previewMidiNotes, stopPreview } from "../../../audio/chordPreview";
+import { EchoPracticeHeader, EchoPracticeProgress } from "./EchoPracticeChrome";
 
 export interface DegreeUiSettings {
   readonly stringCount: StringCount;
@@ -366,28 +367,18 @@ function DegreeSessionWorkspace({
       data-testid="degree-echo-view"
       data-practice-state={state.status}
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <p className="lv-section-kicker">Bass Practice</p>
-          <h2 className="mt-1 text-2xl font-bold text-[var(--lv-text)]">Degree Echo</h2>
-          <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--lv-text-secondary)]">
-            短いフレーズを聴き、歌い、度数で捉えてからベースで再現します。
-          </p>
-        </div>
-        <Badge tone="indigo" className="w-fit">自己評価 · 自動採点ではありません</Badge>
-      </div>
+      <EchoPracticeHeader
+        kicker="Bass Practice"
+        title="Degree Echo"
+        description="短いフレーズを聴き、歌い、度数で捉えてからベースで再現します。"
+        badge="自己評価 · 自動採点ではありません"
+      />
 
-      <ol className="grid grid-cols-3 gap-1 sm:grid-cols-6" aria-label="Degree Echo progress">
-        {FLOW_STEPS.map((step, index) => (
-          <li
-            key={step}
-            className={`rounded-[var(--lv-radius-sm)] border px-2 py-2 text-center text-[11px] font-semibold ${index === stepIndex ? "border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)]" : index < stepIndex ? "border-[var(--lv-success)] text-[var(--lv-success)]" : "border-[var(--lv-border)] text-[var(--lv-text-muted)]"}`}
-            aria-current={index === stepIndex ? "step" : undefined}
-          >
-            {step}
-          </li>
-        ))}
-      </ol>
+      <EchoPracticeProgress
+        ariaLabel="Degree Echo progress"
+        currentIndex={stepIndex}
+        steps={FLOW_STEPS}
+      />
 
       {state.status === "completed" && sessionCompletedCount >= sessionTargetCount ? (
         <Surface className="p-4" data-testid="degree-session-summary">

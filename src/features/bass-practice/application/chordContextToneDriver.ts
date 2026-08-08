@@ -21,7 +21,16 @@ export interface PreparedChordContextToneDriver extends ChordContextPlaybackDriv
   dispose(): void;
 }
 
-export function createChordContextToneDriver(): PreparedChordContextToneDriver {
+export type ChordContextChordTimbre = "electric" | "piano";
+
+export interface ChordContextToneDriverOptions {
+  readonly chordTimbre?: ChordContextChordTimbre;
+}
+
+/** Lets note envelopes reach silence before natural-completion disposal. */
+export const CHORD_CONTEXT_NATURAL_RELEASE_TAIL_MS = 550;
+
+export function createChordContextToneDriver(options: ChordContextToneDriverOptions = {}): PreparedChordContextToneDriver {
   let bass: BassPreviewInstrument | undefined;
   let preparePromise: Promise<void> | undefined;
   let disposed = false;
@@ -47,7 +56,7 @@ export function createChordContextToneDriver(): PreparedChordContextToneDriver {
     prepare,
     createPlayer(mix, lifecycle) {
       if (disposed || !bass) throw new Error("Chord Context audio must be prepared before playback.");
-      return createTonePlayer(bass, mix, lifecycle);
+      return createTonePlayer(bass, mix, lifecycle, options.chordTimbre ?? "electric");
     },
     dispose() {
       if (disposed) return;
@@ -63,9 +72,13 @@ function createTonePlayer(
   bass: BassPreviewInstrument,
   mix: ChordContextMix,
   lifecycle: ChordContextPlaybackLifecycle,
+  chordTimbre: ChordContextChordTimbre,
 ): ChordContextPlayer {
   const chordGain = new Tone.Volume(mix.chordsDb);
-  const chordSynth = new Tone.PolySynth(Tone.Synth, {
+  const chordSynth = new Tone.PolySynth(Tone.Synth, chordTimbre === "piano" ? {
+    oscillator: { type: "triangle8" },
+    envelope: { attack: 0.004, decay: 0.85, sustain: 0.06, release: 0.45 },
+  } : {
     oscillator: { type: "triangle" },
     envelope: { attack: 0.008, decay: 0.08, sustain: 0.35, release: 0.12 },
   }).chain(chordGain, Tone.getDestination());
@@ -109,7 +122,7 @@ function createTonePlayer(
       release();
       disposeNodes();
       lifecycle.onCompleted();
-    }, Math.max(0, latestEndMs) + 32);
+    }, Math.max(0, latestEndMs) + CHORD_CONTEXT_NATURAL_RELEASE_TAIL_MS);
   };
 
   return {
