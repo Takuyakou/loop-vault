@@ -1,14 +1,15 @@
 {
   "schemaVersion": 1,
   "phaseId": "5.18",
-  "status": "in-progress",
-  "activeStage": "P5.18-05",
+  "status": "completed",
+  "activeStage": null,
   "completedStages": [
     "P5.18-00",
     "P5.18-01",
     "P5.18-02",
     "P5.18-03",
-    "P5.18-04"
+    "P5.18-04",
+    "P5.18-05"
   ],
   "blocked": false,
   "blockerReason": null,
@@ -153,8 +154,8 @@
     "p5.18-05-resource-benchmark": "pass",
     "p5.18-05-git-diff-check": "pass",
     "p5.18-05-protected-surface-check": "pass",
-    "p5.18-05-hardware-acceptance": "not-run"
+    "p5.18-05-hardware-acceptance": "pass"
   },
-  "nextAction": "Recording is human-confirmed. The reported Bass Practice issues, Degree Echo Japanese progress labels, and the Bassline Echo in-screen default/Vault progression selector are implemented; automated release gates pass at 665bf7b79659b0c04916e64698c2c117f52716e1. Human-check the refreshed direct executable for progression selection, Piano/Electric timbre, final-note click removal, Rhythm preparation Stop recovery, the single-scroll layout, localized Echo-mode consistency, and real-hardware balance; keep P5.18-05 active and do not merge or start P5.19 until those results are recorded.",
+  "nextAction": "Phase complete: the user confirmed real-product hardware, listening, layout, localization, progression-selection, Rhythm Stop recovery, final-note completion, and audio-balance acceptance on 2026-08-09. Automated release gates pass at code/build commit 665bf7b79659b0c04916e64698c2c117f52716e1. The user authorized a local master merge; push remains prohibited and P5.19 is not started.",
   "updatedAt": "2026-08-09"
 }
