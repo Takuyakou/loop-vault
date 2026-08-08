@@ -10,15 +10,30 @@ test("P5.18 production default is keyboard-operable without 320px overflow", asy
   await card.getByRole("button").click();
   const scrollContract = await page.evaluate(() => {
     const main = document.querySelector<HTMLElement>("#main-content");
+    const root = document.querySelector<HTMLElement>("#root");
+    if (!main || !root) {
+      throw new Error("App scroll owners are unavailable");
+    }
+
+    main.scrollTop = 120;
     return {
-      body: { client: document.body.clientHeight, scroll: document.body.scrollHeight },
-      html: { client: document.documentElement.clientHeight, scroll: document.documentElement.scrollHeight },
-      mainOverflowY: main ? getComputedStyle(main).overflowY : "missing",
+      outerOverflowY: [
+        getComputedStyle(document.documentElement).overflowY,
+        getComputedStyle(document.body).overflowY,
+        getComputedStyle(root).overflowY,
+      ],
+      rootHeight: root.getBoundingClientRect().height,
+      viewportHeight: window.innerHeight,
+      mainOverflowY: getComputedStyle(main).overflowY,
+      mainCanScroll: main.scrollHeight > main.clientHeight,
+      mainScrollTop: main.scrollTop,
     };
   });
-  expect(scrollContract.html.scroll).toBeLessThanOrEqual(scrollContract.html.client + 1);
-  expect(scrollContract.body.scroll).toBeLessThanOrEqual(scrollContract.body.client + 1);
+  expect(scrollContract.outerOverflowY).toEqual(["hidden", "hidden", "hidden"]);
+  expect(scrollContract.rootHeight).toBe(scrollContract.viewportHeight);
   expect(scrollContract.mainOverflowY).toBe("auto");
+  expect(scrollContract.mainCanScroll).toBe(true);
+  expect(scrollContract.mainScrollTop).toBeGreaterThan(0);
 
   await page.getByRole("tab", { name: "Rhythm Echo" }).click();
   const rhythm = page.getByTestId("rhythm-echo-view");
