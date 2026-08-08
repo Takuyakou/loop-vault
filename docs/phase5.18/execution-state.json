@@ -13,7 +13,7 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "c3c992373bd4e97e6e39ef172d03ecd70666fa9c",
-  "lastVerifiedCommit": "888b15867c713d4674f74c1d23966b1c08f1d8ff",
+  "lastVerifiedCommit": "8cc68ee94a4908bdaa3ee57ba061929223b967ec",
   "currentBranch": "feat/p518-chord-context-practice",
   "requiredGates": {
     "P5.18-00": [
@@ -69,6 +69,28 @@
       "p5.18-04-typecheck-e2e",
       "p5.18-04-git-diff-check",
       "p5.18-04-protected-surface-check"
+    ],
+    "P5.18-05": [
+      "p5.18-05-phase-docs-validation",
+      "p5.18-05-validator-tests",
+      "p5.18-05-lint",
+      "p5.18-05-typecheck-app",
+      "p5.18-05-typecheck-e2e",
+      "p5.18-05-focused-vitest",
+      "p5.18-05-bass-practice-regression",
+      "p5.18-05-full-vitest",
+      "p5.18-05-cargo-test",
+      "p5.18-05-production-default-playwright",
+      "p5.18-05-full-playwright",
+      "p5.18-05-accessibility-keyboard-motion-viewport",
+      "p5.18-05-web-build",
+      "p5.18-05-tauri-release-build",
+      "p5.18-05-p516-benchmark",
+      "p5.18-05-p517-resource-regression",
+      "p5.18-05-resource-benchmark",
+      "p5.18-05-git-diff-check",
+      "p5.18-05-protected-surface-check",
+      "p5.18-05-hardware-acceptance"
     ]
   },
   "gateResults": {
@@ -111,8 +133,28 @@
     "p5.18-04-typecheck-app": "pass",
     "p5.18-04-typecheck-e2e": "pass",
     "p5.18-04-git-diff-check": "pass",
-    "p5.18-04-protected-surface-check": "pass"
+    "p5.18-04-protected-surface-check": "pass",
+    "p5.18-05-phase-docs-validation": "pass",
+    "p5.18-05-validator-tests": "pass",
+    "p5.18-05-lint": "pass",
+    "p5.18-05-typecheck-app": "pass",
+    "p5.18-05-typecheck-e2e": "pass",
+    "p5.18-05-focused-vitest": "pass",
+    "p5.18-05-bass-practice-regression": "pass",
+    "p5.18-05-full-vitest": "pass",
+    "p5.18-05-cargo-test": "pass",
+    "p5.18-05-production-default-playwright": "pass",
+    "p5.18-05-full-playwright": "pass",
+    "p5.18-05-accessibility-keyboard-motion-viewport": "pass",
+    "p5.18-05-web-build": "pass",
+    "p5.18-05-tauri-release-build": "pass",
+    "p5.18-05-p516-benchmark": "pass",
+    "p5.18-05-p517-resource-regression": "pass",
+    "p5.18-05-resource-benchmark": "pass",
+    "p5.18-05-git-diff-check": "pass",
+    "p5.18-05-protected-surface-check": "pass",
+    "p5.18-05-hardware-acceptance": "not-run"
   },
-  "nextAction": "P5.18-04 is complete. P5.18-05 — Final integration / release gates — is the next authorized stage; do not start any later phase.",
+  "nextAction": "Automated P5.18-05 release gates are complete at 8cc68ee94a4908bdaa3ee57ba061929223b967ec. Run the documented Windows + MOTU M4 + real-bass hardware acceptance checklist; keep P5.18-05 active and do not merge or start P5.19 until a human records the result.",
   "updatedAt": "2026-08-08"
 }
