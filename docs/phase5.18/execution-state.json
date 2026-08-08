@@ -13,7 +13,7 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "c3c992373bd4e97e6e39ef172d03ecd70666fa9c",
-  "lastVerifiedCommit": "baa64122152d612f0174b2a0db9449202cfd13df",
+  "lastVerifiedCommit": "665bf7b79659b0c04916e64698c2c117f52716e1",
   "currentBranch": "feat/p518-chord-context-practice",
   "requiredGates": {
     "P5.18-00": [
@@ -155,6 +155,6 @@
     "p5.18-05-protected-surface-check": "pass",
     "p5.18-05-hardware-acceptance": "not-run"
   },
-  "nextAction": "Recording is human-confirmed. The five reported Bass Practice product issues and the Degree Echo Japanese progress-label inconsistency are fixed; automated release gates pass at baa64122152d612f0174b2a0db9449202cfd13df. Human-check the refreshed direct executable for Piano/Electric timbre, final-note click removal, Rhythm preparation Stop recovery, the single-scroll layout, localized Echo-mode consistency, and real-hardware balance; keep P5.18-05 active and do not merge or start P5.19 until those results are recorded.",
+  "nextAction": "Recording is human-confirmed. The reported Bass Practice issues, Degree Echo Japanese progress labels, and the Bassline Echo in-screen default/Vault progression selector are implemented; automated release gates pass at 665bf7b79659b0c04916e64698c2c117f52716e1. Human-check the refreshed direct executable for progression selection, Piano/Electric timbre, final-note click removal, Rhythm preparation Stop recovery, the single-scroll layout, localized Echo-mode consistency, and real-hardware balance; keep P5.18-05 active and do not merge or start P5.19 until those results are recorded.",
   "updatedAt": "2026-08-09"
 }
