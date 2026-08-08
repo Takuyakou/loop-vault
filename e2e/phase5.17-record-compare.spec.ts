@@ -20,7 +20,7 @@ async function openBasslineReview(page: Page) {
   await page.getByTestId("bass-practice-home-card").getByRole("button").click();
   await page.getByRole("tab", { name: "Bassline Echo" }).click();
   await expect(page.getByTestId("bassline-echo-view")).toBeVisible();
-  await page.getByRole("button", { name: "Review" }).click();
+  await page.getByRole("button", { name: /^(レビュー|Review)$/ }).click();
 }
 
 test("Record & Compare is available at the production default without flag injection", async ({ page }) => {
