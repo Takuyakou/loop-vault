@@ -9,6 +9,7 @@ test("P5.18 production default is keyboard-operable without 320px overflow", asy
   await expect(card).toBeVisible();
   await card.getByRole("button").click();
   await expect(page.getByRole("heading", { name: "Degree Echo", exact: true })).toBeVisible();
+  await expect(page.getByLabel("Degree Echoの進行")).toContainText("聴く歌う考える演奏レビュー移調");
   const scrollContract = await page.evaluate(() => {
     const main = document.querySelector<HTMLElement>("#main-content");
     const root = document.querySelector<HTMLElement>("#root");

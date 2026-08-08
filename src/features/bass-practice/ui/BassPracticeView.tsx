@@ -15,6 +15,7 @@ import {
   Square,
 } from "lucide-react";
 import { Button, Field, StatusMessage, Surface } from "../../../components/ui";
+import type { AppLanguage } from "../../../i18n";
 import {
   degreeDifficultyPreset,
   createCompletedAttempt,
@@ -74,12 +75,16 @@ const ISSUES: readonly { value: PracticeIssue; label: string }[] = [
   { value: "fretboard", label: "Fretboard" },
 ];
 
-const FLOW_STEPS = ["Listen", "Sing", "Think", "Play", "Review", "Transfer"] as const;
+const FLOW_STEPS: Record<AppLanguage, readonly string[]> = {
+  en: ["Listen", "Sing", "Think", "Play", "Review", "Transfer"],
+  ja: ["聴く", "歌う", "考える", "演奏", "レビュー", "移調"],
+};
 
-export function BassPracticeView({ initialClaim, initialRound = 1, initialSettings, notice, onAttemptCompleted, onNextExercise, onSessionAbandoned, onSessionRestart, onSettingsChange, sessionId, sessionTargetCount = 8 }: {
+export function BassPracticeView({ initialClaim, initialRound = 1, initialSettings, language = "en", notice, onAttemptCompleted, onNextExercise, onSessionAbandoned, onSessionRestart, onSettingsChange, sessionId, sessionTargetCount = 8 }: {
   initialClaim?: ClaimedPracticeExercise;
   initialRound?: number;
   initialSettings?: PracticeSettings;
+  language?: AppLanguage;
   notice?: string;
   onAttemptCompleted?: (attempt: PracticeAttempt) => Promise<void>;
   onNextExercise?: () => Promise<ClaimedPracticeExercise | undefined>;
@@ -138,6 +143,7 @@ export function BassPracticeView({ initialClaim, initialRound = 1, initialSettin
         } finally { advancingRef.current = false; }
       })(); }}
       externalError={settingsError ?? notice}
+      language={language}
       onSettingsChange={(next) => {
         const previous = settings;
         setSettings(next);
@@ -159,6 +165,7 @@ function DegreeSessionWorkspace({
   claimedTransferOfAttemptId,
   exercise,
   externalError,
+  language,
   onAttemptCompleted,
   onNext,
   onSettingsChange,
@@ -171,6 +178,7 @@ function DegreeSessionWorkspace({
   claimedTransferOfAttemptId?: string;
   exercise: PracticeExercise;
   externalError?: string;
+  language: AppLanguage;
   onAttemptCompleted?: (attempt: PracticeAttempt) => Promise<void>;
   onNext: () => void;
   onSettingsChange: (settings: DegreeUiSettings) => void;
@@ -375,9 +383,9 @@ function DegreeSessionWorkspace({
       />
 
       <EchoPracticeProgress
-        ariaLabel="Degree Echo progress"
+        ariaLabel={language === "ja" ? "Degree Echoの進行" : "Degree Echo progress"}
         currentIndex={stepIndex}
-        steps={FLOW_STEPS}
+        steps={FLOW_STEPS[language]}
       />
 
       {state.status === "completed" && sessionCompletedCount >= sessionTargetCount ? (
