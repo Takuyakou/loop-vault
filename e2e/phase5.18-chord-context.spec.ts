@@ -8,6 +8,7 @@ test("P5.18 production default is keyboard-operable without 320px overflow", asy
   const card = page.getByTestId("bass-practice-home-card");
   await expect(card).toBeVisible();
   await card.getByRole("button").click();
+  await expect(page.getByRole("heading", { name: "Degree Echo", exact: true })).toBeVisible();
   const scrollContract = await page.evaluate(() => {
     const main = document.querySelector<HTMLElement>("#main-content");
     const root = document.querySelector<HTMLElement>("#root");
