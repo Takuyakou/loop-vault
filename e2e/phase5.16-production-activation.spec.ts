@@ -44,7 +44,8 @@ test("production defaults expose and start every shipped Bass Practice mode with
   await expect(bassline.getByTestId("bassline-listen")).toHaveText("Stop", { timeout: 10_000 });
   await bassline.getByTestId("bassline-listen").click();
   await bassline.getByRole("button", { name: "Review" }).click();
-  await expect(bassline.getByText("Self-rated review")).toBeVisible();
+  await expect(bassline.getByTestId("record-accompaniment")).toBeVisible();
+  await expect(bassline.getByTestId("chord-context-history-save")).toBeVisible();
 
   await page.getByRole("tab", { name: "Degree Echo" }).click();
   await saveOneDegreeReview(page);
@@ -65,5 +66,7 @@ test("Vault Detail opens Bass Practice in the production default", async ({ page
   await row.getByRole("button", { name: /Open progression|進行を開く/ }).click();
   const detail = page.locator("[data-progression-detail-view]");
   await detail.getByRole("button", { name: /Practice|練習する/ }).click();
-  await expect(page.getByTestId("degree-echo-view")).toBeVisible();
+  const bassline = page.getByTestId("bassline-echo-view");
+  await expect(bassline).toBeVisible();
+  await expect(bassline.getByTestId("bassline-source")).toContainText("Vault source");
 });
