@@ -705,6 +705,7 @@ async function analyzeMidiPath(path: string) {
                     <Suspense fallback={<p role="status" className="py-8 text-sm text-[var(--lv-text-secondary)]">Degree Echoを読み込んでいます…</p>}>
                       {practiceData.status === "ready" ? <BassPracticeView
                         key={practiceSession.id}
+                        language={language}
                         chordContextSnapshot={chordContextSnapshot}
                         initialClaim={practiceClaim}
                         initialRound={practiceSession.round}

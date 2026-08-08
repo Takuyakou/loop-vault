@@ -8,12 +8,16 @@ test("P5.18 production default is keyboard-operable without 320px overflow", asy
   const card = page.getByTestId("bass-practice-home-card");
   await expect(card).toBeVisible();
   await card.getByRole("button").click();
+  await page.getByRole("tab", { name: "Rhythm Echo" }).click();
+  const rhythm = page.getByTestId("rhythm-echo-view");
+  await expect(rhythm).toContainText("自己評価式の練習です");
+  await expect(rhythm.getByLabel("リズムのテンポ")).toBeVisible();
   await page.getByRole("tab", { name: "Bassline Echo" }).click();
 
   const context = page.getByTestId("chord-context-controls");
   await expect(context).toBeVisible();
-  await expect(context.getByRole("radio", { name: "Listen" })).toBeChecked();
-  await expect(context.getByRole("radio", { name: "Bass + Chords", exact: true })).toBeChecked();
+  await expect(context.getByRole("radio", { name: "聴く" })).toBeChecked();
+  await expect(context.getByRole("radio", { name: "ベース + コード", exact: true })).toBeChecked();
   await assertNoHorizontalOverflow(page);
 
   const bpm = context.getByTestId("chord-context-effective-bpm");
@@ -21,19 +25,19 @@ test("P5.18 production default is keyboard-operable without 320px overflow", asy
   await context.getByTestId("chord-context-bpm-plus-four").click();
   await expect(bpm).toHaveValue("104");
 
-  const play = context.getByRole("radio", { name: "Play" });
+  const play = context.getByRole("radio", { name: "演奏" });
   await play.focus();
   await page.keyboard.press("Space");
   await expect(play).toBeChecked();
-  await expect(context.getByRole("radio", { name: "Chords only", exact: true })).toBeChecked();
-  await expect(context.getByText("Play never auto-plays the target bass.")).toBeVisible();
+  await expect(context.getByRole("radio", { name: "コードのみ", exact: true })).toBeChecked();
+  await expect(context.getByText("演奏モードではお手本のベースを自動再生しません。")).toBeVisible();
 
   const startStop = context.getByTestId("chord-context-start-stop");
   await startStop.focus();
   await page.keyboard.press("Enter");
-  await expect(context.getByTestId("chord-context-status")).toContainText("Play playback running.");
+  await expect(context.getByTestId("chord-context-status")).toContainText("演奏を再生中です。");
   await page.keyboard.press("Enter");
-  await expect(context.getByTestId("chord-context-status")).toContainText("Chord Context stopped.");
+  await expect(context.getByTestId("chord-context-status")).toContainText("Chord Contextは停止しています。");
   await assertNoHorizontalOverflow(page);
 });
 
@@ -62,18 +66,18 @@ test("P5.18 remains operable with reduced motion and an effective 200% scale", a
   expect(durations.every(({ animation, transition }) =>
     parseDuration(animation) <= 0.01 && parseDuration(transition) <= 0.01)).toBe(true);
 
-  const play = context.getByRole("radio", { name: "Play" });
+  const play = context.getByRole("radio", { name: "演奏" });
   await play.focus();
   await page.keyboard.press("Space");
-  await context.getByRole("radio", { name: "Chords + Metronome", exact: true }).click();
+  await context.getByRole("radio", { name: "コード + メトロノーム", exact: true }).click();
   await context.getByTestId("chord-context-bpm-plus-four").click();
   await expect(context.getByTestId("chord-context-effective-bpm")).toHaveValue("100");
 
   const startStop = context.getByTestId("chord-context-start-stop");
   await startStop.click();
-  await expect(context.getByTestId("chord-context-status")).toContainText("Play playback running.");
+  await expect(context.getByTestId("chord-context-status")).toContainText("演奏を再生中です。");
   await startStop.click();
-  await expect(context.getByTestId("chord-context-status")).toContainText("Chord Context stopped.");
+  await expect(context.getByTestId("chord-context-status")).toContainText("Chord Contextは停止しています。");
   await assertNoHorizontalOverflow(page);
 });
 

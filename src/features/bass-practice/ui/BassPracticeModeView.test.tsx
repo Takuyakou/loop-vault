@@ -39,4 +39,23 @@ describe("Bass Practice production modes", () => {
     for (let index = 0; index < 4; index += 1) await act(async () => Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("Hint"))?.click());
     expect(container.querySelector("[data-testid='rhythm-grid']")?.textContent).toContain("0+");
   });
+  test("uses the selected Japanese language for Rhythm Echo and Bassline Echo controls", async () => {
+    const container = document.createElement("div"); document.body.append(container); root = createRoot(container);
+    await act(async () => root?.render(<BassPracticeModeView language="ja" />));
+
+    await act(async () => Array.from(container.querySelectorAll("button")).find((button) => button.textContent === "Rhythm Echo")?.click());
+    const rhythm = container.querySelector("[data-testid='rhythm-echo-view']");
+    expect(rhythm?.textContent).toContain("自己評価式の練習です");
+    expect(rhythm?.textContent).toContain("まずお手本を聴いてください");
+    expect(rhythm?.querySelector("[aria-label='リズムのテンポ']")).not.toBeNull();
+    expect(rhythm?.textContent).not.toContain("Self-rated practice only");
+
+    await act(async () => Array.from(container.querySelectorAll("button")).find((button) => button.textContent === "Bassline Echo")?.click());
+    const bassline = container.querySelector("[data-testid='bassline-echo-view']");
+    expect(bassline?.textContent).toContain("自己評価式");
+    expect(bassline?.textContent).toContain("セッションテンポ");
+    expect(bassline?.textContent).toContain("お手本のレイヤー");
+    expect(bassline?.textContent).not.toContain("Session tempo");
+    expect(bassline?.textContent).not.toContain("Listen layers");
+   });
 });

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Ear, Lightbulb, Square } from "lucide-react";
+import type { AppLanguage } from "../../../i18n";
 import { stopPreview, previewMidiNotes } from "../../../audio/chordPreview";
 import { Button, Surface } from "../../../components/ui";
 import {
@@ -47,6 +48,7 @@ type ChordContextPlaybackActivity = {
 const NO_CHORD_CONTEXT_ACTIVITY: ChordContextPlaybackActivity = Object.freeze({ started: false, metronomeUsed: false });
 
 export interface BasslinePracticeViewProps {
+  readonly language?: AppLanguage;
   readonly chordContextSnapshot?: ChordContextSnapshot;
   /** Feature-flag rollback preserves the P5.16 Bassline Echo surface. */
   readonly chordContextEnabled?: boolean;
@@ -55,10 +57,12 @@ export interface BasslinePracticeViewProps {
 }
 
 export function BasslinePracticeView({
+  language = "en",
   chordContextSnapshot,
   chordContextEnabled = true,
   onChordContextHistoryRecorded,
 }: BasslinePracticeViewProps) {
+  const ja = language === "ja";
   const [level, setLevel] = useState<1 | 2 | 3>(1);
   const [hint, setHint] = useState(0);
   const [review, setReview] = useState(false);
@@ -311,62 +315,62 @@ export function BasslinePracticeView({
 
   if (!exercise.ok) return <p role="alert">{exercise.error.message}</p>;
   const sourceLabel = chordContextSnapshot?.source.kind === "vault"
-    ? `Vault source \u00b7 ${chordContextSnapshot.source.safeLabel}`
-    : "Generated source";
+    ? `${ja ? "Vault進行" : "Vault source"} \u00b7 ${chordContextSnapshot.source.safeLabel}`
+    : ja ? "生成進行" : "Generated source";
   const noContextSource = chordContextEnabled && !activeSnapshot;
 
   return <Surface className="p-4" data-testid="bassline-echo-view">
-    <p className="lv-section-kicker">Bass Practice</p>
+    <p className="lv-section-kicker">{ja ? "ベース練習" : "Bass Practice"}</p>
     <h2 className="text-2xl font-bold">Bassline Echo</h2>
-    <p className="mt-2 text-sm" data-testid="bassline-source">{sourceLabel}{" \u00b7 "}self-rated practice only{" \u00b7 "}no automatic score.</p>
-    <label className="mt-3 block">Level <select aria-label="Bassline level" disabled={recordingInFlight} value={level} onChange={(event) => chooseLevel(Number(event.target.value) as 1 | 2 | 3)}><option value={1}>1 - Roots</option><option value={2}>2 - Chord tones</option><option value={3}>3 - Approach</option></select></label>
-    <div className="mt-4 rounded border p-3" aria-label="Bassline progression strip">{exercise.exercise.chords.map((chord) => <span key={`${chord.startBeat}:${chord.label}`} className="mr-2">{chord.label}</span>)}</div>
+    <p className="mt-2 text-sm" data-testid="bassline-source">{sourceLabel}{" \u00b7 "}{ja ? "自己評価式" : "self-rated practice only"}{" \u00b7 "}{ja ? "自動採点なし。" : "no automatic score."}</p>
+    <label className="mt-3 block">{ja ? "レベル" : "Level"} <select aria-label={ja ? "ベースラインのレベル" : "Bassline level"} disabled={recordingInFlight} value={level} onChange={(event) => chooseLevel(Number(event.target.value) as 1 | 2 | 3)}><option value={1}>{ja ? "1 - ルート" : "1 - Roots"}</option><option value={2}>{ja ? "2 - コードトーン" : "2 - Chord tones"}</option><option value={3}>{ja ? "3 - アプローチ" : "3 - Approach"}</option></select></label>
+    <div className="mt-4 rounded border p-3" aria-label={ja ? "ベースラインのコード進行" : "Bassline progression strip"}>{exercise.exercise.chords.map((chord) => <span key={`${chord.startBeat}:${chord.label}`} className="mr-2">{chord.label}</span>)}</div>
     <div className="mt-3 text-sm" data-testid="bassline-notes">{hint >= 4 || review ? <>
-      <span className="mr-2 text-xs text-[var(--lv-text-muted)]">Answer notes</span>
+      <span className="mr-2 text-xs text-[var(--lv-text-muted)]">{ja ? "お手本の音名" : "Answer notes"}</span>
       {exercise.exercise.targetEvents.map((event) => <span key={event.index} className="mr-2 font-semibold" title={`MIDI ${event.midiNote}`}>{midiNoteName(event.midiNote)}</span>)}
-    </> : "Listen and recall first. Notes stay hidden until Hint 4 or Review."}</div>
+    </> : ja ? "まずお手本を聴いて思い出してください。音名はヒント4またはレビューで表示されます。" : "Listen and recall first. Notes stay hidden until Hint 4 or Review."}</div>
 
     {chordContextEnabled ? <section className="mt-4 rounded border p-3" aria-labelledby="chord-context-heading" data-testid="chord-context-controls">
       <h3 id="chord-context-heading" className="font-semibold">Chord Context</h3>
-      <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">{activeSnapshot?.source.safeLabel ?? "Chord Context source unavailable."}</p>
+      <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">{activeSnapshot?.source.safeLabel ?? (ja ? "Chord Contextの進行を利用できません。" : "Chord Context source unavailable.")}</p>
       <fieldset className="mt-3" data-testid="chord-context-tempo">
-        <legend>Session tempo</legend>
-        <p className="mt-1 text-xs text-[var(--lv-text-secondary)]">Original: {activeSnapshot?.originalBpm ?? 96} BPM. This override is session-only; the Vault is not changed.</p>
+        <legend>{ja ? "セッションテンポ" : "Session tempo"}</legend>
+        <p className="mt-1 text-xs text-[var(--lv-text-secondary)]">{ja ? "元のテンポ" : "Original"}: {activeSnapshot?.originalBpm ?? 96} BPM. {ja ? "変更はこのセッションだけに適用され、Vaultは変更されません。" : "This override is session-only; the Vault is not changed."}</p>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <label htmlFor="chord-context-effective-bpm">BPM</label>
           <input id="chord-context-effective-bpm" data-testid="chord-context-effective-bpm" type="number" min={30} max={240} step={1} value={effectiveBpm} disabled={recordingInFlight} onChange={(event) => chooseEffectiveBpm(event.currentTarget.valueAsNumber)} onBlur={(event) => chooseEffectiveBpm(event.currentTarget.valueAsNumber)} className="lv-input w-24" />
           <Button type="button" variant="ghost" data-testid="chord-context-bpm-plus-four" onClick={() => chooseEffectiveBpm(effectiveBpm + 4)} disabled={recordingInFlight || effectiveBpm >= 240}>+4 BPM</Button>
-          <Button type="button" variant="ghost" onClick={() => chooseEffectiveBpm(activeSnapshot?.originalBpm ?? 96)} disabled={recordingInFlight || effectiveBpm === (activeSnapshot?.originalBpm ?? 96)}>Use original</Button>
+          <Button type="button" variant="ghost" onClick={() => chooseEffectiveBpm(activeSnapshot?.originalBpm ?? 96)} disabled={recordingInFlight || effectiveBpm === (activeSnapshot?.originalBpm ?? 96)}>{ja ? "元のテンポに戻す" : "Use original"}</Button>
         </div>
       </fieldset>
       <fieldset className="mt-3">
-        <legend>Practice mode</legend>
+        <legend>{ja ? "練習モード" : "Practice mode"}</legend>
         <div className="flex flex-wrap gap-3">
-          <label><input type="radio" name="chord-context-practice-mode" disabled={recordingInFlight} checked={practiceMode === "listen"} onChange={() => choosePracticeMode("listen")} /> Listen</label>
-          <label><input type="radio" name="chord-context-practice-mode" disabled={recordingInFlight} checked={practiceMode === "play"} onChange={() => choosePracticeMode("play")} /> Play</label>
+          <label><input type="radio" name="chord-context-practice-mode" disabled={recordingInFlight} checked={practiceMode === "listen"} onChange={() => choosePracticeMode("listen")} /> {ja ? "聴く" : "Listen"}</label>
+          <label><input type="radio" name="chord-context-practice-mode" disabled={recordingInFlight} checked={practiceMode === "play"} onChange={() => choosePracticeMode("play")} /> {ja ? "演奏" : "Play"}</label>
         </div>
       </fieldset>
       {practiceMode === "listen" ? <ContextModeOptions
-        legend="Listen layers"
+        legend={ja ? "お手本のレイヤー" : "Listen layers"}
         name="chord-context-listen-mode"
         selected={listenMode}
         onChange={chooseListenMode}
-        options={LISTEN_MODE_OPTIONS}
+        options={listenModeOptions(language)}
         disabled={recordingInFlight}
       /> : <ContextModeOptions
-        legend="Play accompaniment"
+        legend={ja ? "演奏時の伴奏" : "Play accompaniment"}
         name="chord-context-play-mode"
         selected={playMode}
         onChange={choosePlayMode}
-        options={PLAY_MODE_OPTIONS}
+        options={playModeOptions(language)}
         disabled={recordingInFlight}
       />}
       <p className="mt-3 text-sm text-[var(--lv-text-secondary)]">
-        {practiceMode === "play" ? "Play never auto-plays the target bass." : "Listen uses the target bass only in the selected Listen layer."}
+        {practiceMode === "play" ? ja ? "演奏モードではお手本のベースを自動再生しません。" : "Play never auto-plays the target bass." : ja ? "聴くモードでは選択したレイヤーにだけお手本のベースが含まれます。" : "Listen uses the target bass only in the selected Listen layer."}
       </p>
       {playbackError ? <p role="alert" className="mt-2 text-sm text-[var(--lv-danger)]">{playbackError}</p> : null}
       <p aria-live="polite" className="mt-2 text-sm" data-testid="chord-context-status">
-        {preparing ? "Preparing Chord Context audio." : contextPlayback ? `${contextPlayback === "listen" ? "Listen" : "Play"} playback running.` : "Chord Context stopped."}
+        {preparing ? ja ? "Chord Contextの音を準備しています。" : "Preparing Chord Context audio." : contextPlayback ? ja ? `${contextPlayback === "listen" ? "お手本" : "演奏"}を再生中です。` : `${contextPlayback === "listen" ? "Listen" : "Play"} playback running.` : ja ? "Chord Contextは停止しています。" : "Chord Context stopped."}
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <Button
@@ -375,24 +379,24 @@ export function BasslinePracticeView({
           data-testid="chord-context-start-stop"
         >
           {contextPlayback || preparing ? <Square size={15} /> : <Ear size={15} />}
-          {contextPlayback || preparing ? "Stop" : practiceMode === "listen" ? "Start Listen" : "Start Play"}
+          {contextPlayback || preparing ? ja ? "停止" : "Stop" : practiceMode === "listen" ? ja ? "お手本を再生" : "Start Listen" : ja ? "伴奏を開始" : "Start Play"}
         </Button>
-        <Button variant="ghost" onClick={stopChordContext} disabled={recordingInFlight || (!contextPlayback && !preparing)}>Stop</Button>
+        <Button variant="ghost" onClick={stopChordContext} disabled={recordingInFlight || (!contextPlayback && !preparing)}>{ja ? "停止" : "Stop"}</Button>
       </div>
     </section> : null}
 
     <div className="mt-4 flex flex-wrap gap-2">
-      <Button onClick={legacyListen} disabled={recordingInFlight} data-testid="bassline-listen">{legacyPlaying ? <Square size={15} /> : <Ear size={15} />}{legacyPlaying ? "Stop" : "Listen"}</Button>
-      <Button variant="ghost" disabled={recordingInFlight} onClick={() => setHint((value) => Math.min(4, value + 1))}><Lightbulb size={15} /> Hint {hint}/4</Button>
-      <Button disabled={recordingInFlight} onClick={() => { legacyPreviewGenerationRef.current += 1; stopPreview(); setLegacyPlaying(false); stopChordContext(); setReview(true); }}><Ear size={15} /> Review</Button>
+      <Button onClick={legacyListen} disabled={recordingInFlight} data-testid="bassline-listen">{legacyPlaying ? <Square size={15} /> : <Ear size={15} />}{legacyPlaying ? ja ? "停止" : "Stop" : ja ? "お手本を聴く" : "Listen"}</Button>
+      <Button variant="ghost" disabled={recordingInFlight} onClick={() => setHint((value) => Math.min(4, value + 1))}><Lightbulb size={15} /> {ja ? "ヒント" : "Hint"} {hint}/4</Button>
+      <Button disabled={recordingInFlight} onClick={() => { legacyPreviewGenerationRef.current += 1; stopPreview(); setLegacyPlaying(false); stopChordContext(); setReview(true); }}><Ear size={15} /> {ja ? "レビュー" : "Review"}</Button>
     </div>
     {review ? <section className="mt-4 rounded border p-3" aria-labelledby="record-accompaniment-heading" data-testid="record-accompaniment">
-      <h3 id="record-accompaniment-heading" className="font-semibold">Recording accompaniment</h3>
-      <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">Choose chords only or chords with metronome for the take. Use headphones to reduce speaker bleed; app audio is never internally mixed into the captured take.</p>
+      <h3 id="record-accompaniment-heading" className="font-semibold">{ja ? "録音時の伴奏" : "Recording accompaniment"}</h3>
+      <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">{ja ? "録音時の伴奏をコードのみ、またはコードとメトロノームから選べます。スピーカー音の回り込みを減らすためヘッドホンを使用してください。アプリの音は録音へ内部ミックスされません。" : "Choose chords only or chords with metronome for the take. Use headphones to reduce speaker bleed; app audio is never internally mixed into the captured take."}</p>
       <fieldset className="mt-3">
-        <legend>Accompaniment while recording</legend>
-        <label className="mr-3"><input type="radio" name="record-accompaniment" disabled={recordingInFlight} checked={recordPlayMode === "chords-only"} onChange={() => { setRecordPlayMode("chords-only"); invalidateRecordedFacts(); }} /> Chords only</label>
-        <label><input type="radio" name="record-accompaniment" disabled={recordingInFlight} checked={recordPlayMode === "chords-and-metronome"} onChange={() => { setRecordPlayMode("chords-and-metronome"); invalidateRecordedFacts(); }} /> Chords + Metronome</label>
+        <legend>{ja ? "録音中の伴奏" : "Accompaniment while recording"}</legend>
+        <label className="mr-3"><input type="radio" name="record-accompaniment" disabled={recordingInFlight} checked={recordPlayMode === "chords-only"} onChange={() => { setRecordPlayMode("chords-only"); invalidateRecordedFacts(); }} /> {ja ? "コードのみ" : "Chords only"}</label>
+        <label><input type="radio" name="record-accompaniment" disabled={recordingInFlight} checked={recordPlayMode === "chords-and-metronome"} onChange={() => { setRecordPlayMode("chords-and-metronome"); invalidateRecordedFacts(); }} /> {ja ? "コード + メトロノーム" : "Chords + Metronome"}</label>
       </fieldset>
     </section> : null}
     {review ? <RecordCompareSection
@@ -442,12 +446,12 @@ export function BasslinePracticeView({
       )}
     /> : null}
     {review ? <section className="mt-4 rounded border p-3" aria-labelledby="chord-context-history-heading" data-testid="chord-context-history-save">
-      <h3 id="chord-context-history-heading" className="font-semibold">Practice History</h3>
-      <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">Save factual source, section, tempo, selected layers, and retained-take reference only. This does not score your playing.</p>
-      {historyStatus === "error" ? <p role="alert" className="mt-2 text-sm text-[var(--lv-danger)]">Practice History could not be saved. Your review remains available.</p> : null}
-      {hasUnkeptRecordingTake ? <p role="status" className="mt-2 text-sm">Keep or discard the recorded take before saving this factual session.</p> : null}
-      <p aria-live="polite" className="mt-2 text-sm">{historyStatus === "saving" ? "Saving factual History." : historyStatus === "saved" ? "Factual session saved to History." : "History is not yet saved."}</p>
-      <Button className="mt-3" onClick={() => void saveChordContextHistory()} disabled={!onChordContextHistoryRecorded || recordingInFlight || hasUnkeptRecordingTake || historyStatus === "saving" || historyStatus === "saved"} data-testid="chord-context-save-history">{historyStatus === "saved" ? "Saved to History" : "Save factual session"}</Button>
+      <h3 id="chord-context-history-heading" className="font-semibold">{ja ? "練習履歴" : "Practice History"}</h3>
+      <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">{ja ? "進行、セクション、テンポ、選択レイヤー、保持したテイクの参照など、事実だけを保存します。演奏の採点は行いません。" : "Save factual source, section, tempo, selected layers, and retained-take reference only. This does not score your playing."}</p>
+      {historyStatus === "error" ? <p role="alert" className="mt-2 text-sm text-[var(--lv-danger)]">{ja ? "練習履歴を保存できませんでした。レビュー内容はこのまま残ります。" : "Practice History could not be saved. Your review remains available."}</p> : null}
+      {hasUnkeptRecordingTake ? <p role="status" className="mt-2 text-sm">{ja ? "このセッションを保存する前に、録音したテイクを保持するか破棄してください。" : "Keep or discard the recorded take before saving this factual session."}</p> : null}
+      <p aria-live="polite" className="mt-2 text-sm">{historyStatus === "saving" ? ja ? "練習履歴を保存しています。" : "Saving factual History." : historyStatus === "saved" ? ja ? "練習履歴へ保存しました。" : "Factual session saved to History." : ja ? "このセッションはまだ履歴へ保存されていません。" : "History is not yet saved."}</p>
+      <Button className="mt-3" onClick={() => void saveChordContextHistory()} disabled={!onChordContextHistoryRecorded || recordingInFlight || hasUnkeptRecordingTake || historyStatus === "saving" || historyStatus === "saved"} data-testid="chord-context-save-history">{historyStatus === "saved" ? ja ? "履歴へ保存済み" : "Saved to History" : ja ? "セッションを履歴へ保存" : "Save factual session"}</Button>
     </section> : null}
   </Surface>;
 }
@@ -469,6 +473,26 @@ const PLAY_MODE_OPTIONS: readonly ContextModeOption<ChordContextPlayMode>[] = [
   { value: "metronome-only", label: "Metronome only" },
   { value: "no-accompaniment", label: "No accompaniment" },
 ];
+
+function listenModeOptions(language: AppLanguage): readonly ContextModeOption<ChordContextListenMode>[] {
+  if (language === "en") return LISTEN_MODE_OPTIONS;
+  return [
+    { value: "bass-only", label: "ベースのみ" },
+    { value: "chords-only", label: "コードのみ" },
+    { value: "bass-and-chords", label: "ベース + コード" },
+    { value: "bass-chords-and-metronome", label: "ベース + コード + メトロノーム" },
+  ];
+}
+
+function playModeOptions(language: AppLanguage): readonly ContextModeOption<ChordContextPlayMode>[] {
+  if (language === "en") return PLAY_MODE_OPTIONS;
+  return [
+    { value: "chords-only", label: "コードのみ" },
+    { value: "chords-and-metronome", label: "コード + メトロノーム" },
+    { value: "metronome-only", label: "メトロノームのみ" },
+    { value: "no-accompaniment", label: "伴奏なし" },
+  ];
+}
 
 function ContextModeOptions<T extends string>({
   legend,
