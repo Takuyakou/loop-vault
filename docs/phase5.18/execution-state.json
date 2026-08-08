@@ -2,16 +2,17 @@
   "schemaVersion": 1,
   "phaseId": "5.18",
   "status": "in-progress",
-  "activeStage": "P5.18-03",
+  "activeStage": "P5.18-04",
   "completedStages": [
     "P5.18-00",
     "P5.18-01",
-    "P5.18-02"
+    "P5.18-02",
+    "P5.18-03"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "c3c992373bd4e97e6e39ef172d03ecd70666fa9c",
-  "lastVerifiedCommit": "ff6ce7fb774c65424968ee542f82b704564a54ee",
+  "lastVerifiedCommit": "c2770ecb6515720db25aefebe00f63379ec0976a",
   "currentBranch": "feat/p518-chord-context-practice",
   "requiredGates": {
     "P5.18-00": [
@@ -43,6 +44,30 @@
       "p5.18-02-typecheck-e2e",
       "p5.18-02-git-diff-check",
       "p5.18-02-protected-surface-check"
+    ],
+    "P5.18-03": [
+      "p5.18-03-phase-docs-validation",
+      "p5.18-03-focused-vitest",
+      "p5.18-03-bass-practice-regression",
+      "p5.18-03-lint",
+      "p5.18-03-typecheck-app",
+      "p5.18-03-typecheck-e2e",
+      "p5.18-03-web-build",
+      "p5.18-03-production-default-playwright",
+      "p5.18-03-git-diff-check",
+      "p5.18-03-protected-surface-check"
+    ],
+    "P5.18-04": [
+      "p5.18-04-phase-docs-validation",
+      "p5.18-04-focused-vitest",
+      "p5.18-04-bass-practice-regression",
+      "p5.18-04-record-compare-regression",
+      "p5.18-04-tempo-history-persistence",
+      "p5.18-04-lint",
+      "p5.18-04-typecheck-app",
+      "p5.18-04-typecheck-e2e",
+      "p5.18-04-git-diff-check",
+      "p5.18-04-protected-surface-check"
     ]
   },
   "gateResults": {
@@ -65,8 +90,18 @@
     "p5.18-02-typecheck-app": "pass",
     "p5.18-02-typecheck-e2e": "pass",
     "p5.18-02-git-diff-check": "pass",
-    "p5.18-02-protected-surface-check": "pass"
+    "p5.18-02-protected-surface-check": "pass",
+    "p5.18-03-phase-docs-validation": "pass",
+    "p5.18-03-focused-vitest": "pass",
+    "p5.18-03-bass-practice-regression": "pass",
+    "p5.18-03-lint": "pass",
+    "p5.18-03-typecheck-app": "pass",
+    "p5.18-03-typecheck-e2e": "pass",
+    "p5.18-03-web-build": "pass",
+    "p5.18-03-production-default-playwright": "pass",
+    "p5.18-03-git-diff-check": "pass",
+    "p5.18-03-protected-surface-check": "pass"
   },
-  "nextAction": "P5.18-02 is complete. Resume P5.18-03 - Bassline Echo Listen / Play Integration - only under applicable human authorization.",
+  "nextAction": "P5.18-03 is complete. P5.18-04 — Record & Compare / Tempo / History — is the next authorized stage; do not start P5.18-05 until P5.18-04 is completed and committed.",
   "updatedAt": "2026-08-08"
 }
