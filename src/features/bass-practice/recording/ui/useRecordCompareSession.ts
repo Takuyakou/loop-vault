@@ -31,14 +31,14 @@ export interface RecordCompareSession {
   setChannel(mode: ChannelMode): void;
   startCountIn(): void;
   cancelCountIn(): void;
-  record(): Promise<void>;
+  record(): Promise<RecorderState | undefined>;
   stop(): Promise<void>;
   playTarget(): void;
   playTake(): void;
   playbackEnded(): void;
   retake(): void;
   discard(): void;
-  keep(context?: KeepContext): Promise<void>;
+  keep(context?: KeepContext): Promise<string | undefined>;
 }
 
 function defaultIsTypeSupported(mimeType: string): boolean {
@@ -98,7 +98,7 @@ export function useRecordCompareSession(
       withController((controller) => controller.cancelCountIn());
     },
     async record() {
-      await withController((controller) => controller.beginRecording({ mimeType: chooseMimeType() }));
+      return withController((controller) => controller.beginRecording({ mimeType: chooseMimeType() }));
     },
     async stop() {
       await withController((controller) => controller.stop());
@@ -119,7 +119,8 @@ export function useRecordCompareSession(
       withController((controller) => controller.discard());
     },
     async keep(context) {
-      await withController((controller) => controller.keep(context));
+      const result = await withController((controller) => controller.keep(context));
+      return result?.id;
     },
   };
 }

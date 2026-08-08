@@ -4,7 +4,9 @@ import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { describe, expect, it, vi } from "vitest";
 import type { PlaybackState } from "./audio/playbackController";
-import { CreateDialog, deleteIdeaForUndo, errorMessage, stopIdeaPlayback } from "./App";
+import { makeChordSymbol } from "./domain/chords";
+import { buildVaultChordContextSnapshotFromVault } from "./features/bass-practice/domain/chordContextSnapshot";
+import type { SavedProgressionBlock } from "./domain/types";import { clearTransientChordContextSnapshotForNavigation, CreateDialog, deleteIdeaForUndo, errorMessage, stopIdeaPlayback } from "./App";
 import { makeIdea } from "./domain/testFactory";
 import { appCopy } from "./i18n";
 
@@ -17,6 +19,55 @@ function playbackStub(state: PlaybackState) {
     stop: vi.fn(),
   };
 }
+
+describe("Chord Context navigation", () => {
+  it("clears a transient snapshot on route leave and normal Practice re-entry after its source was deleted", () => {
+    const sourceReference = { ideaId: "idea-1", blockId: "progression-1" };
+    const sourceBlock: SavedProgressionBlock = {
+      id: sourceReference.blockId,
+      summaryText: "C major practice progression",
+      detectedKey: "C major",
+      bpm: 108,
+      timeSignature: "4/4",
+      chords: [{
+        bar: 1,
+        beat: 1,
+        durationBeats: 4,
+        chord: makeChordSymbol(0, "maj7"),
+        confidence: 1,
+        alternatives: [],
+        warnings: [],
+      }],
+      tags: [],
+      capturedAt: "2026-01-01T00:00:00.000Z",
+      analyzerVersion: "fixture",
+    };
+    const created = buildVaultChordContextSnapshotFromVault(
+      [makeIdea({ id: sourceReference.ideaId, progressionBlocks: [sourceBlock] })],
+      sourceReference,
+    );
+    expect(created.ok).toBe(true);
+    if (!created.ok) throw new Error("Expected source handoff snapshot.");
+
+    const afterRouteLeave = clearTransientChordContextSnapshotForNavigation(
+      created.snapshot,
+      "practice",
+      "library",
+    );
+    const deletedSource = buildVaultChordContextSnapshotFromVault([], sourceReference);
+    expect(deletedSource).toMatchObject({ ok: false, error: { code: "source-unavailable" } });
+    // The source no longer exists, so no fresh handoff can occur. A generic
+    // Practice navigation must not revive the detached historical snapshot.
+    const afterGenericPracticeEntry = clearTransientChordContextSnapshotForNavigation(
+      afterRouteLeave,
+      "library",
+      "practice",
+    );
+
+    expect(afterRouteLeave).toBeUndefined();
+    expect(afterGenericPracticeEntry).toBeUndefined();
+  });
+});
 
 describe("errorMessage", () => {
   it("preserves string errors returned by Tauri commands", () => {

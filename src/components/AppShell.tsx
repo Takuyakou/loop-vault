@@ -81,7 +81,7 @@ export function AppShell({
   );
 
   return (
-    <div className="flex h-screen min-h-[520px] min-w-0 overflow-hidden bg-[var(--lv-bg)] text-[var(--lv-text)]">
+    <div className="flex h-full min-h-0 min-w-0 overflow-hidden bg-[var(--lv-bg)] text-[var(--lv-text)]">
       <aside
         className={`flex shrink-0 flex-col border-r border-[var(--lv-border)] bg-[var(--lv-sidebar)] transition-[width] duration-150 ${
           collapsed ? "w-[var(--lv-sidebar-collapsed)]" : "w-[var(--lv-sidebar-expanded)]"
@@ -158,7 +158,7 @@ export function AppShell({
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <header className="flex min-h-[var(--lv-topbar-height)] shrink-0 items-center gap-3 border-b border-[var(--lv-border)] bg-[var(--lv-topbar)] px-4 lg:px-6">
           <div className="min-w-0 flex-1">
             <p className="truncate text-lg font-bold text-[var(--lv-text)]">{pageTitle}</p>

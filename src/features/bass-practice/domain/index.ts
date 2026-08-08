@@ -1,4 +1,5 @@
 export * from "./bassline";
+export * from "./chordContextSnapshot";
 export * from "./constants";
 export * from "./determinism";
 export * from "./difficulty";
@@ -13,3 +14,4 @@ export * from "./transfer";
 export * from "./vaultBassline";
 export * from "./vocabulary";
 export type * from "./types";
+export * from "./chordContextHistory";

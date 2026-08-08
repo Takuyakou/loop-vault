@@ -1,0 +1,21 @@
+phase5.18/
+├─ README.md
+├─ CODEX-START-PROMPT.md
+├─ work-instructions.md
+├─ execution-state.json
+├─ audit/
+│  └─ P5.18-00-repository-audit.md
+├─ contracts/
+│  ├─ 01-scope-contract.md
+│  ├─ 02-vault-snapshot-contract.md
+│  ├─ 03-playback-contract.md
+│  ├─ 04-record-compare-integration-contract.md
+│  └─ 05-privacy-safety-contract.md
+└─ reports/
+   ├─ README.md
+   ├─ P5.18-00-audit-baseline.md
+   ├─ P5.18-01-chord-accompaniment.md
+   ├─ P5.18-02-vault-source-section.md
+   ├─ P5.18-03-bassline-integration.md
+   ├─ P5.18-04-record-tempo-history.md
+   └─ P5.18-05-product-acceptance.md

@@ -216,4 +216,16 @@ describe("AppShell", () => {
 
     await act(async () => root.unmount());
   });
-});
+
+  it("keeps one bounded app shell so main content owns vertical scrolling", async () => {
+    const { container, root } = await renderShell();
+    const shell = container.firstElementChild as HTMLElement;
+    const contentColumn = shell.children[1] as HTMLElement;
+
+    expect(shell.className).toContain("h-full");
+    expect(shell.className).toContain("min-h-0");
+    expect(shell.className).not.toContain("min-h-[520px]");
+    expect(contentColumn.className).toContain("min-h-0");
+
+    await act(async () => root.unmount());
+  });});

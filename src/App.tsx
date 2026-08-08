@@ -35,6 +35,10 @@ import { ProgressionDetailView } from "./views/ProgressionDetailView";
 import { PracticeView } from "./views/PracticeView";
 import { isBassPracticeBasslineEchoEnabled, isBassPracticeDegreeEchoEnabled, isBassPracticeRhythmEchoEnabled } from "./features/bass-practice/application/featureFlag";
 import {
+  buildVaultChordContextSnapshotCatalog,
+  type VaultChordContextSnapshot,
+} from "./features/bass-practice/domain";
+import {
   derivePracticeHistory,
   derivePracticeHomeSummary,
   createPracticeControllerIfEnabled,
@@ -95,10 +99,23 @@ import {
 type View = AppView;
 const pipeline: Status[] = ["idea", "loop", "arrange", "mix", "done"];
 const DISABLED_PRACTICE_DATA: PracticeDataSnapshot = { status: "disabled", quarantine: [] };
+const EMPTY_CHORD_CONTEXT_SNAPSHOTS: readonly VaultChordContextSnapshot[] = Object.freeze([]);
 const BassPracticeView = lazy(async () => {
   const module = await import("./features/bass-practice/ui/BassPracticeModeView");
   return { default: module.BassPracticeModeView };
 });
+
+/**
+ * Chord Context is a transient handoff only. Generic navigation never resumes it:
+ * a fresh Vault handoff must create a new snapshot from the current source.
+ */
+export function clearTransientChordContextSnapshotForNavigation<T>(
+  snapshot: T | undefined,
+  currentView: AppView,
+  nextView: AppView,
+): T | undefined {
+  return currentView === "practice" || nextView === "practice" ? undefined : snapshot;
+}
 
 export function errorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error) return error.message;
@@ -159,6 +176,7 @@ function App() {
   const [selectedId, setSelectedId] = useState<string>();
   const [selectedProgression, setSelectedProgression] = useState<{ ideaId: string; blockId: string }>();
   const [practiceTarget, setPracticeTarget] = useState<{ ideaId: string; blockId: string }>();
+  const [chordContextSnapshot, setChordContextSnapshot] = useState<VaultChordContextSnapshot>();
   const [isCreateOpen, setCreateOpen] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [toast, setToast] = useState<string>();
@@ -217,6 +235,13 @@ function App() {
     [ideas, pendingDeletions, vaultEpoch],
   );
 
+  const chordContextSnapshots = useMemo(
+    () => view === "practice" && practiceMode === "bass-practice"
+      ? buildVaultChordContextSnapshotCatalog(visibleIdeas)
+      : EMPTY_CHORD_CONTEXT_SNAPSHOTS,
+    [practiceMode, view, visibleIdeas],
+  );
+
   const selectedIdea = visibleIdeas.find((idea) => idea.id === selectedId) ?? visibleIdeas[0];
   const storedSelectedIdea = ideas.find((idea) => idea.id === selectedIdea?.id);
   const progressionIdea = selectedProgression
@@ -271,6 +296,10 @@ function App() {
 
     return undefined;
   }, [toast]);
+
+  useEffect(() => {
+    if (view !== "practice") setChordContextSnapshot(undefined);
+  }, [view]);
 
   useEffect(() => {
     if (previousViewRef.current === view) return undefined;
@@ -356,7 +385,10 @@ function App() {
   }
 
   function navigateTo(nextView: View) {
-    requestProgressionLeave(() => setView(nextView));
+    requestProgressionLeave(() => {
+      setChordContextSnapshot((snapshot) => clearTransientChordContextSnapshotForNavigation(snapshot, view, nextView));
+      setView(nextView);
+    });
   }
 
   function changeMasterVolume(value: number) {
@@ -371,8 +403,13 @@ function App() {
     setView("progression-detail");
   }
 
-  function openPractice(ideaId: string, blockId: string) {
-    setPracticeTarget({ ideaId, blockId });
+  /** Receives a detached P5.18 snapshot only; raw Vault data never crosses this boundary. */
+  function openPractice(snapshot: VaultChordContextSnapshot) {
+    setPracticeTarget({
+      ideaId: snapshot.source.reference.ideaId,
+      blockId: snapshot.source.reference.blockId,
+    });
+    setChordContextSnapshot(snapshot);
     setPracticeMode(bassPracticeEnabled ? "bass-practice" : "chord-dojo");
     setView("practice");
   }
@@ -380,10 +417,10 @@ function App() {
   function openBassPractice() {
     if (!bassPracticeEnabled) return;
     setPracticeTarget(undefined);
+    setChordContextSnapshot(undefined);
     setPracticeMode("bass-practice");
     setView("practice");
   }
-
   function handleCreate(title: string, status: Status) {
     requestProgressionLeave(() => {
       const id = createIdea(title, status);
@@ -554,7 +591,7 @@ async function analyzeMidiPath(path: string) {
           ref={mainContentRef}
           tabIndex={-1}
           aria-label={viewLabel(view, copy)}
-          className="min-w-0 flex-1 overflow-y-auto px-4 py-5 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--lv-accent)] lg:px-6"
+          className="min-h-0 min-w-0 flex-1 overflow-y-auto px-4 py-5 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--lv-accent)] lg:px-6"
         >
         <div className="mx-auto flex min-h-full w-full max-w-[1680px] min-w-0 flex-col">
         {loadStatus === "ready" ? (
@@ -661,7 +698,7 @@ async function analyzeMidiPath(path: string) {
                 openIdea={openDetail}
                 openVault={() => setView("library")}
                 requestDelete={requestProgressionDelete}
-                openPractice={() => openPractice(progressionIdea.id, progressionBlock.id)}
+                openPractice={openPractice}
                 requestLeave={requestProgressionLeave}
                 onDirtyChange={setProgressionDetailDirty}
                 setToast={setToast}
@@ -679,6 +716,9 @@ async function analyzeMidiPath(path: string) {
                     <Suspense fallback={<p role="status" className="py-8 text-sm text-[var(--lv-text-secondary)]">Degree Echoを読み込んでいます…</p>}>
                       {practiceData.status === "ready" ? <BassPracticeView
                         key={practiceSession.id}
+                        language={language}
+                        chordContextSnapshot={chordContextSnapshot}
+                        chordContextSnapshots={chordContextSnapshots}
                         initialClaim={practiceClaim}
                         initialRound={practiceSession.round}
                         initialSettings={practiceData.file?.settings}
@@ -686,6 +726,10 @@ async function analyzeMidiPath(path: string) {
                         onRhythmAttemptCompleted={(attempt) => {
                           const controller = practiceControllerRef.current;
                           return controller ? controller.recordRhythmAttempt(attempt) : Promise.reject(new Error("Practice progress is not ready."));
+                        }}
+                        onChordContextHistoryRecorded={(entry) => {
+                          const controller = practiceControllerRef.current;
+                          return controller ? controller.recordChordContextHistory(entry) : Promise.reject(new Error("Practice progress is not ready."));
                         }}
                         onAttemptCompleted={(attempt) => {
                           const controller = practiceControllerRef.current;
@@ -773,6 +817,7 @@ async function analyzeMidiPath(path: string) {
                 ideas={visibleIdeas}
                 language={language}
                 practiceHistory={practiceHistory}
+                chordContextHistory={practiceData.file?.chordContextHistory}
                 practiceHistoryTotal={practiceData.file ? practiceData.file.sessions.filter(({ completedCount }) => completedCount > 0).length + practiceData.file.rhythmSessions.filter(({ completedCount }) => completedCount > 0).length : 0}
                 openIdea={openDetail}
                 openProgression={openProgression}

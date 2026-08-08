@@ -90,11 +90,14 @@ export class BrowserPracticeRecorder implements PracticeRecorder {
   private chunks: Blob[] = [];
   private startedAt = 0;
   private options?: StartRecordingOptions;
+  /** Invalidates delayed getUserMedia results after stop/dispose. */
+  private generation = 0;
 
   async start(options: StartRecordingOptions): Promise<void> {
     this.dispose(); // never stack graphs; start from a clean slate
+    const generation = ++this.generation;
     this.options = options;
-    this.stream = await navigator.mediaDevices.getUserMedia({
+    const stream = await navigator.mediaDevices.getUserMedia({
       audio: {
         deviceId: options.deviceId ? { exact: options.deviceId } : undefined,
         channelCount: 2,
@@ -103,9 +106,14 @@ export class BrowserPracticeRecorder implements PracticeRecorder {
         autoGainControl: false,
       },
     });
+    if (generation !== this.generation) {
+      stream.getTracks().forEach((track) => track.stop());
+      return;
+    }
+    this.stream = stream;
     const context = new AudioContext();
     this.context = context;
-    const source = context.createMediaStreamSource(this.stream);
+    const source = context.createMediaStreamSource(stream);
     const splitter = context.createChannelSplitter(2);
     const merger = context.createChannelMerger(1);
     const destination = context.createMediaStreamDestination();
@@ -150,6 +158,7 @@ export class BrowserPracticeRecorder implements PracticeRecorder {
   }
 
   dispose(): void {
+    this.generation += 1;
     try {
       if (this.recorder && this.recorder.state !== "inactive") this.recorder.stop();
     } catch {

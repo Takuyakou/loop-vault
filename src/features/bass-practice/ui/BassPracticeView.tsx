@@ -14,7 +14,8 @@ import {
   RotateCcw,
   Square,
 } from "lucide-react";
-import { Badge, Button, Field, StatusMessage, Surface } from "../../../components/ui";
+import { Button, Field, StatusMessage, Surface } from "../../../components/ui";
+import type { AppLanguage } from "../../../i18n";
 import {
   degreeDifficultyPreset,
   createCompletedAttempt,
@@ -41,6 +42,7 @@ import { DegreeFretboard } from "./DegreeFretboard";
 import { RecordCompareSection } from "../recording/ui/RecordCompareSection";
 import { createTargetPlayer } from "../recording/application/playback";
 import { previewMidiNotes, stopPreview } from "../../../audio/chordPreview";
+import { EchoPracticeHeader, EchoPracticeProgress } from "./EchoPracticeChrome";
 
 export interface DegreeUiSettings {
   readonly stringCount: StringCount;
@@ -73,12 +75,16 @@ const ISSUES: readonly { value: PracticeIssue; label: string }[] = [
   { value: "fretboard", label: "Fretboard" },
 ];
 
-const FLOW_STEPS = ["Listen", "Sing", "Think", "Play", "Review", "Transfer"] as const;
+const FLOW_STEPS: Record<AppLanguage, readonly string[]> = {
+  en: ["Listen", "Sing", "Think", "Play", "Review", "Transfer"],
+  ja: ["聴く", "歌う", "考える", "演奏", "レビュー", "移調"],
+};
 
-export function BassPracticeView({ initialClaim, initialRound = 1, initialSettings, notice, onAttemptCompleted, onNextExercise, onSessionAbandoned, onSessionRestart, onSettingsChange, sessionId, sessionTargetCount = 8 }: {
+export function BassPracticeView({ initialClaim, initialRound = 1, initialSettings, language = "en", notice, onAttemptCompleted, onNextExercise, onSessionAbandoned, onSessionRestart, onSettingsChange, sessionId, sessionTargetCount = 8 }: {
   initialClaim?: ClaimedPracticeExercise;
   initialRound?: number;
   initialSettings?: PracticeSettings;
+  language?: AppLanguage;
   notice?: string;
   onAttemptCompleted?: (attempt: PracticeAttempt) => Promise<void>;
   onNextExercise?: () => Promise<ClaimedPracticeExercise | undefined>;
@@ -137,6 +143,7 @@ export function BassPracticeView({ initialClaim, initialRound = 1, initialSettin
         } finally { advancingRef.current = false; }
       })(); }}
       externalError={settingsError ?? notice}
+      language={language}
       onSettingsChange={(next) => {
         const previous = settings;
         setSettings(next);
@@ -158,6 +165,7 @@ function DegreeSessionWorkspace({
   claimedTransferOfAttemptId,
   exercise,
   externalError,
+  language,
   onAttemptCompleted,
   onNext,
   onSettingsChange,
@@ -170,6 +178,7 @@ function DegreeSessionWorkspace({
   claimedTransferOfAttemptId?: string;
   exercise: PracticeExercise;
   externalError?: string;
+  language: AppLanguage;
   onAttemptCompleted?: (attempt: PracticeAttempt) => Promise<void>;
   onNext: () => void;
   onSettingsChange: (settings: DegreeUiSettings) => void;
@@ -366,28 +375,18 @@ function DegreeSessionWorkspace({
       data-testid="degree-echo-view"
       data-practice-state={state.status}
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <p className="lv-section-kicker">Bass Practice</p>
-          <h2 className="mt-1 text-2xl font-bold text-[var(--lv-text)]">Degree Echo</h2>
-          <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--lv-text-secondary)]">
-            短いフレーズを聴き、歌い、度数で捉えてからベースで再現します。
-          </p>
-        </div>
-        <Badge tone="indigo" className="w-fit">自己評価 · 自動採点ではありません</Badge>
-      </div>
+      <EchoPracticeHeader
+        kicker="Bass Practice"
+        title="Degree Echo"
+        description="短いフレーズを聴き、歌い、度数で捉えてからベースで再現します。"
+        badge="自己評価 · 自動採点ではありません"
+      />
 
-      <ol className="grid grid-cols-3 gap-1 sm:grid-cols-6" aria-label="Degree Echo progress">
-        {FLOW_STEPS.map((step, index) => (
-          <li
-            key={step}
-            className={`rounded-[var(--lv-radius-sm)] border px-2 py-2 text-center text-[11px] font-semibold ${index === stepIndex ? "border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)]" : index < stepIndex ? "border-[var(--lv-success)] text-[var(--lv-success)]" : "border-[var(--lv-border)] text-[var(--lv-text-muted)]"}`}
-            aria-current={index === stepIndex ? "step" : undefined}
-          >
-            {step}
-          </li>
-        ))}
-      </ol>
+      <EchoPracticeProgress
+        ariaLabel={language === "ja" ? "Degree Echoの進行" : "Degree Echo progress"}
+        currentIndex={stepIndex}
+        steps={FLOW_STEPS[language]}
+      />
 
       {state.status === "completed" && sessionCompletedCount >= sessionTargetCount ? (
         <Surface className="p-4" data-testid="degree-session-summary">

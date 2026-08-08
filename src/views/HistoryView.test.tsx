@@ -5,6 +5,7 @@ import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { makeIdea } from "../domain/testFactory";
 import type { SavedProgressionBlock } from "../domain/types";
+import type { ChordContextHistoryEntry } from "../features/bass-practice/domain";
 import { buildHistoryEvents, HistoryView } from "./HistoryView";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
@@ -90,6 +91,38 @@ describe("HistoryView", () => {
     await act(async () => open.click());
     expect(openProgression).toHaveBeenCalledWith(idea.id, block.id);
 
+    await act(async () => root.unmount());
+  });
+
+
+  it("shows factual Chord Context History without resolving a current Vault source", async () => {
+    const container = document.createElement("div"); document.body.append(container); const root = createRoot(container);
+    const entry: ChordContextHistoryEntry = {
+      id: "chord-context-history-1",
+      version: 1,
+      completedAt: "2026-08-02T10:00:00.000Z",
+      source: { kind: "vault", safeLabel: "Archived progression", reference: { ideaId: "removed-idea", blockId: "removed-block" } },
+      snapshotSignature: "b".repeat(64),
+      section: { id: "section-1", startBar: 3, endBar: 4, lengthBeats: 8 },
+      originalBpm: 96,
+      effectiveBpm: 100,
+      listenMode: "bass-and-chords",
+      playMode: "chords-and-metronome",
+      metronomeUsed: true,
+      recordCompareUsed: true,
+      retainedTakeReference: "take-opaque-1",
+    };
+    await act(async () => root.render(
+      <HistoryView ideas={[]} language="en" openIdea={vi.fn()} openProgression={vi.fn()} chordContextHistory={[entry]} />,
+    ));
+
+    const section = container.querySelector("[data-testid='chord-context-history']");
+    expect(section?.textContent).toContain("Archived progression");
+    expect(section?.textContent).toContain("bars 3 to 4");
+    expect(section?.textContent).toContain("Original 96 BPM - session 100 BPM");
+    expect(section?.textContent).toContain("Metronome: used");
+    expect(section?.textContent).toContain("Retained take reference: take-opaque-1");
+    expect(section?.textContent).not.toMatch(/score|accuracy|audio/i);
     await act(async () => root.unmount());
   });
 

@@ -27,6 +27,20 @@ export interface RecordCompareSectionProps {
   readonly practiceSessionId?: string;
   /** Plays the exercise Target; when omitted, Hear Target is unavailable. */
   readonly targetPlayer?: TargetPlayer;
+  /** Lets an owning practice surface release unrelated accompaniment before target/take playback. */
+  readonly onPlaybackStart?: () => void;
+  /** Preloads optional accompaniment only; it must not schedule audible playback. */
+  readonly onRecordingPrepare?: () => boolean | void | Promise<boolean | void>;
+  /** Schedules optional accompaniment at the confirmed recording boundary; it is never routed into capture. */
+  readonly onRecordingStart?: () => boolean | void | Promise<boolean | void>;
+  /** Stops optional accompaniment when recording is stopped, discarded, reset, or unmounted. */
+  readonly onRecordingStop?: () => void;
+  /** Reports whether count-in/capture is live so owning controls can remain stable. */
+  readonly onRecordingActivityChange?: (active: boolean) => void;
+  /** Receives the opaque id returned by the existing P5.17 take repository. */
+  readonly onTakeKept?: (retainedTakeReference: string) => void;
+  /** Reports a successfully recorded but not-yet-kept ephemeral take. */
+  readonly onUnkeptTakeChange?: (hasUnkeptTake: boolean) => void;
   /** Milliseconds of count-in before recording starts (0 = immediate). */
   readonly countInMs?: number;
   /** Injected in tests. */
@@ -48,6 +62,13 @@ export function RecordCompareSection({
   resetKey,
   practiceSessionId,
   targetPlayer,
+  onPlaybackStart,
+  onRecordingPrepare,
+  onRecordingStart,
+  onRecordingStop,
+  onRecordingActivityChange,
+  onTakeKept,
+  onUnkeptTakeChange,
   countInMs = 0,
   controller,
   takePlayer,
@@ -57,6 +78,7 @@ export function RecordCompareSection({
   const enabled = enabledOverride ?? isBassPracticeRecordCompareEnabled();
   const [optedIn, setOptedIn] = useState(false);
   const [listenBackSkipped, setListenBackSkipped] = useState(false);
+  const [preparingRecording, setPreparingRecordingState] = useState(false);
   const [channel, setChannel] = useRecordChannel();
   const session = useRecordCompareSession({
     controllerFactory: controller ? () => controller : undefined,
@@ -77,10 +99,23 @@ export function RecordCompareSection({
   const playerRef = useRef<TakePlayer>(takePlayer ?? new BrowserTakePlayer());
   const activePlaybackRef = useRef<PlaybackHandle | null>(null);
   const countInTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const onRecordingStopRef = useRef(onRecordingStop);
+  const onRecordingActivityRef = useRef(onRecordingActivityChange);
+  const onUnkeptTakeRef = useRef(onUnkeptTakeChange);
+  const recordingActivityRef = useRef(false);
+  const preparingRecordingRef = useRef(false);
+  const unkeptTakeRef = useRef(false);
+  const recordingGenerationRef = useRef(0);
+  useEffect(() => { onRecordingStopRef.current = onRecordingStop; }, [onRecordingStop]);
+  useEffect(() => { onRecordingActivityRef.current = onRecordingActivityChange; }, [onRecordingActivityChange]);
+  useEffect(() => { onUnkeptTakeRef.current = onUnkeptTakeChange; }, [onUnkeptTakeChange]);
 
   const stopPlayback = () => {
     activePlaybackRef.current?.stop();
     activePlaybackRef.current = null;
+  };
+  const notifyPlaybackStart = () => {
+    try { onPlaybackStart?.(); } catch { /* An owning surface cannot break Record & Compare playback. */ }
   };
   const clearCountIn = () => {
     if (countInTimerRef.current !== undefined) {
@@ -89,14 +124,51 @@ export function RecordCompareSection({
     }
   };
 
+  const stopRecordingAccompaniment = () => {
+    try { onRecordingStopRef.current?.(); } catch { /* Optional playback must not affect capture cleanup. */ }
+  };
+  const setRecordingActivity = (active: boolean) => {
+    if (recordingActivityRef.current === active) return;
+    recordingActivityRef.current = active;
+    try { onRecordingActivityRef.current?.(active); } catch { /* Owning controls must not break capture cleanup. */ }
+  };
+  const setPreparingRecording = (preparing: boolean) => {
+    if (preparingRecordingRef.current === preparing) return;
+    preparingRecordingRef.current = preparing;
+    setPreparingRecordingState(preparing);
+  };
+  const setUnkeptTake = (hasUnkeptTake: boolean) => {
+    if (unkeptTakeRef.current === hasUnkeptTake) return;
+    unkeptTakeRef.current = hasUnkeptTake;
+    try { onUnkeptTakeRef.current?.(hasUnkeptTake); } catch { /* History state cannot break recorder cleanup. */ }
+  };
+
   useEffect(() => () => {
+    recordingGenerationRef.current += 1;
+    setPreparingRecording(false);
+    setRecordingActivity(false);
+    setUnkeptTake(false);
     stopPlayback();
     clearCountIn();
+    stopRecordingAccompaniment();
   }, []);
+
+
+  useEffect(() => {
+    if (recordingActivityRef.current && !preparingRecordingRef.current && !isLiveCaptureStatus(sessionStatus)) {
+      stopRecordingAccompaniment();
+      setRecordingActivity(false);
+    }
+    const hasUnkeptTake = session.currentTake() !== undefined
+      && sessionStatus !== "saved" && sessionStatus !== "discarded";
+    setUnkeptTake(hasUnkeptTake);
+  }, [session, sessionStatus]);
 
   if (!enabled) return null;
 
   const status = session.state?.status ?? "idle";
+  const controlsLocked = preparingRecording || isLiveCaptureStatus(status);
+
 
   if (!optedIn) {
     return (
@@ -109,6 +181,9 @@ export function RecordCompareSection({
         <p className="font-semibold text-[var(--lv-text)]">Record &amp; Compare</p>
         <p className="mt-1 text-xs text-[var(--lv-text-secondary)]">
           自分の演奏を録音してTargetと聴き比べできます。ローカルのみ・自動採点や分析はありません。
+        </p>
+        <p className="mt-1 text-xs text-[var(--lv-text-muted)]">
+          Use headphones when accompaniment plays during recording to reduce speaker bleed. App audio is never internally mixed into your captured take.
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <Button
@@ -133,25 +208,100 @@ export function RecordCompareSection({
 
   const startRecording = () => {
     setListenBackSkipped(false);
-    session.startCountIn();
     clearCountIn();
-    if (countInMs > 0) {
-      countInTimerRef.current = setTimeout(() => {
-        countInTimerRef.current = undefined;
-        void session.record().catch(() => undefined);
-      }, countInMs);
-    } else {
-      void session.record().catch(() => undefined);
-    }
+    const generation = recordingGenerationRef.current + 1;
+    recordingGenerationRef.current = generation;
+    setRecordingActivity(true);
+    setPreparingRecording(true);
+    void (async () => {
+      let prepared: boolean;
+      try {
+        const prepareResult = await onRecordingPrepare?.();
+        prepared = prepareResult !== false;
+      } catch {
+        prepared = false;
+      }
+      if (!prepared || recordingGenerationRef.current !== generation) {
+        stopRecordingAccompaniment();
+        setPreparingRecording(false);
+        setRecordingActivity(false);
+        return;
+      }
+      try {
+        session.startCountIn();
+        setPreparingRecording(false);
+      } catch {
+        stopRecordingAccompaniment();
+        setPreparingRecording(false);
+        setRecordingActivity(false);
+        return;
+      }
+      const beginRecording = () => {
+        void (async () => {
+          let started;
+          try {
+            started = await session.record();
+          } catch {
+            stopRecordingAccompaniment();
+            setRecordingActivity(false);
+            return;
+          }
+          if (started?.status !== "recording" || recordingGenerationRef.current !== generation) {
+            stopRecordingAccompaniment();
+            setRecordingActivity(false);
+            return;
+          }
+          try {
+            await onRecordingStart?.();
+          } catch {
+            // Capture is already live. Keep controls locked until its normal stop path.
+            stopRecordingAccompaniment();
+            return;
+          }
+          if (recordingGenerationRef.current !== generation) stopRecordingAccompaniment();
+        })();
+      };
+      if (countInMs > 0) {
+        countInTimerRef.current = setTimeout(() => {
+          countInTimerRef.current = undefined;
+          if (recordingGenerationRef.current === generation) beginRecording();
+        }, countInMs);
+      } else {
+        beginRecording();
+      }
+    })();
   };
 
   const cancelCountIn = () => {
+    recordingGenerationRef.current += 1;
     clearCountIn();
-    session.cancelCountIn();
+    stopRecordingAccompaniment();
+    setPreparingRecording(false);
+    if (session.state?.status === "counting-in") session.cancelCountIn();
+    setRecordingActivity(false);
+  };
+
+  const stopRecording = () => {
+    recordingGenerationRef.current += 1;
+    clearCountIn();
+    stopRecordingAccompaniment();
+    if (preparingRecordingRef.current) {
+      setPreparingRecording(false);
+      setRecordingActivity(false);
+      return;
+    }
+    if (session.state?.status !== "recording" && session.state?.status !== "starting") {
+      setRecordingActivity(false);
+      return;
+    }
+    void session.stop().catch(() => {
+      setRecordingActivity(false);
+    });
   };
 
   const hearTarget = () => {
     if (!targetPlayer) return;
+    notifyPlaybackStart();
     stopPlayback();
     session.playTarget();
     activePlaybackRef.current = targetPlayer.play(() => {
@@ -163,6 +313,7 @@ export function RecordCompareSection({
   const hearTake = () => {
     const take = session.currentTake();
     if (!take) return;
+    notifyPlaybackStart();
     stopPlayback();
     session.playTake();
     activePlaybackRef.current = playerRef.current.play(take, () => {
@@ -172,14 +323,20 @@ export function RecordCompareSection({
   };
 
   const retake = () => {
+    recordingGenerationRef.current += 1;
     stopPlayback();
     clearCountIn();
+    stopRecordingAccompaniment();
+    setRecordingActivity(false);
     setListenBackSkipped(false);
     session.retake();
   };
 
   const discard = () => {
+    recordingGenerationRef.current += 1;
     stopPlayback();
+    stopRecordingAccompaniment();
+    setRecordingActivity(false);
     session.discard();
   };
 
@@ -191,7 +348,7 @@ export function RecordCompareSection({
     <section
       aria-label="Record & Compare"
       data-testid="record-compare"
-      data-record-state={status}
+      data-record-state={preparingRecording ? "preparing-accompaniment" : status}
       data-record-mode={mode}
       className="mt-4 rounded-[var(--lv-radius-md)] border border-[var(--lv-accent)] p-3 text-sm"
     >
@@ -222,6 +379,7 @@ export function RecordCompareSection({
           aria-label="入力チャンネル"
           className="lv-input mt-1 w-full max-w-xs"
           value={channel}
+          disabled={controlsLocked}
           onChange={(event) => setChannel(event.target.value as ChannelMode)}
         >
           {CHANNELS.map((channel) => (
@@ -250,8 +408,8 @@ export function RecordCompareSection({
       ) : null}
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <Button variant="primary" size="sm" data-testid="record-start" disabled={status !== "ready"} onClick={startRecording}>Play / Record</Button>
-        <Button variant="secondary" size="sm" data-testid="record-stop" disabled={status !== "recording"} onClick={() => void session.stop().catch(() => undefined)}>Stop</Button>
+        <Button variant="primary" size="sm" data-testid="record-start" disabled={status !== "ready" || preparingRecording} onClick={startRecording}>Play / Record</Button>
+        <Button variant="secondary" size="sm" data-testid="record-stop" disabled={!preparingRecording && status !== "recording" && status !== "starting"} onClick={stopRecording}>Stop</Button>
         <Button variant="secondary" size="sm" data-testid="hear-target" disabled={status !== "recorded" || !targetPlayer} onClick={hearTarget}>Hear Target</Button>
         <Button variant="secondary" size="sm" data-testid="hear-take" disabled={status !== "recorded"} onClick={hearTake}>Hear My Take</Button>
         <Button variant="ghost" size="sm" data-testid="record-retake" disabled={status !== "recorded"} onClick={retake}>Retake</Button>
@@ -262,8 +420,10 @@ export function RecordCompareSection({
           mode,
           inputDeviceName: "Input",
           playedBackBeforeReview: session.state?.heardTake ?? false,
+        }).then((retainedTakeReference) => {
+          if (retainedTakeReference) onTakeKept?.(retainedTakeReference);
         }).catch(() => undefined)}>Keep Take</Button>
-        <Button variant="ghost" size="sm" data-testid="record-skip" onClick={() => { stopPlayback(); clearCountIn(); setOptedIn(false); }}>録音せず続ける</Button>
+        <Button variant="ghost" size="sm" data-testid="record-skip" disabled={controlsLocked} onClick={() => { recordingGenerationRef.current += 1; stopPlayback(); clearCountIn(); stopRecordingAccompaniment(); setPreparingRecording(false); setRecordingActivity(false); setOptedIn(false); }}>録音せず続ける</Button>
       </div>
 
       <p className="mt-2 text-[11px] text-[var(--lv-text-muted)]">
@@ -273,6 +433,10 @@ export function RecordCompareSection({
       <RetainedTakesPanel enabledOverride={enabled} />
     </section>
   );
+}
+
+function isLiveCaptureStatus(status: string): boolean {
+  return status === "counting-in" || status === "starting" || status === "recording" || status === "stopping";
 }
 
 function statusLabel(status: string): string {
