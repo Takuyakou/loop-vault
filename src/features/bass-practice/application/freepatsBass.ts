@@ -42,8 +42,19 @@ export function lowBassPitchOffsetSemitones(midiKey: number): number {
   return midiKey - 28;
 }
 
-export async function createFreepatsBassInstrument(timbre: BassTimbre): Promise<BassPreviewInstrument> {
-  if (readBassPracticeTimbreSetting() === "synth") return createSynthFallback(timbre);
+export interface FreepatsBassInstrumentOptions {
+  /**
+   * A caller may set a session-relative gain while retaining the existing
+   * global master-volume route. Omitted keeps the established preview level.
+   */
+  readonly volumeDb?: number;
+}
+
+export async function createFreepatsBassInstrument(
+  timbre: BassTimbre,
+  options: FreepatsBassInstrumentOptions = {},
+): Promise<BassPreviewInstrument> {
+  if (readBassPracticeTimbreSetting() === "synth") return createSynthFallback(timbre, options);
   try {
     const urls = Object.fromEntries((mapping.instruments[timbre].regions as readonly BassRegion[]).map((region) => {
       const key = `../assets/freepats-bass-yr/${region.samplePath}`;
@@ -55,7 +66,7 @@ export async function createFreepatsBassInstrument(timbre: BassTimbre): Promise<
     const highPass = new Tone.Filter({ frequency: 28, type: "highpass", Q: 0.7 });
     const compressor = new Tone.Compressor({ threshold: -10, ratio: 2 });
     sampler.chain(highPass, compressor, Tone.getDestination());
-    sampler.volume.value = -3;
+    sampler.volume.value = options.volumeDb ?? -3;
     await waitForSamples();
     return {
       source: "freepats",
@@ -64,11 +75,11 @@ export async function createFreepatsBassInstrument(timbre: BassTimbre): Promise<
       dispose() { sampler.dispose(); highPass.dispose(); compressor.dispose(); },
     };
   } catch {
-    return createSynthFallback(timbre);
+    return createSynthFallback(timbre, options);
   }
 }
 
-function createSynthFallback(timbre: BassTimbre): BassPreviewInstrument {
+function createSynthFallback(timbre: BassTimbre, options: FreepatsBassInstrumentOptions): BassPreviewInstrument {
   const highPass = new Tone.Filter({ frequency: 28, type: "highpass", Q: 0.7 });
   const lowPass = new Tone.Filter({ frequency: timbre === "finger" ? 1700 : 2200, type: "lowpass", Q: 0.8, rolloff: -24 });
   const synth = new Tone.PolySynth(Tone.FMSynth, {
@@ -79,7 +90,7 @@ function createSynthFallback(timbre: BassTimbre): BassPreviewInstrument {
     envelope: { attack: 0.004, decay: timbre === "finger" ? 0.18 : 0.05, sustain: timbre === "finger" ? 0.58 : 0.08, release: timbre === "finger" ? 0.22 : 0.08 },
     modulationEnvelope: { attack: 0.002, decay: 0.1, sustain: 0.12, release: 0.12 },
   }).chain(highPass, lowPass, Tone.getDestination());
-  synth.volume.value = -6;
+  synth.volume.value = options.volumeDb ?? -6;
   return {
     source: "synth-fallback",
     triggerAttackRelease(notes, duration, time, velocity) { synth.triggerAttackRelease(notes, duration, time, velocity); },

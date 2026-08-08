@@ -1,6 +1,7 @@
 import { useEffect, useState, type ComponentProps } from "react";
 import {
   isBassPracticeBasslineEchoEnabled,
+  isBassPracticeChordContextEnabled,
   isBassPracticeDegreeEchoEnabled,
   isBassPracticeRhythmEchoEnabled,
 } from "../application/featureFlag";
@@ -24,9 +25,11 @@ export function BassPracticeModeView({ onRhythmAttemptCompleted, chordContextSna
   const degreeEnabled = isBassPracticeDegreeEchoEnabled();
   const rhythmEnabled = isBassPracticeRhythmEchoEnabled();
   const basslineEnabled = isBassPracticeBasslineEchoEnabled();
+  const chordContextEnabled = isBassPracticeChordContextEnabled();
   const firstEnabledMode: Mode = degreeEnabled ? "degree" : rhythmEnabled ? "rhythm" : "bassline";
-  const [mode, setMode] = useState<Mode>(() => chordContextSnapshot && basslineEnabled ? "bassline" : firstEnabledMode);
-  useEffect(() => { if (chordContextSnapshot && basslineEnabled) setMode("bassline"); }, [basslineEnabled, chordContextSnapshot?.signature]);
+  const enabledChordContextSnapshot = chordContextEnabled ? chordContextSnapshot : undefined;
+  const [mode, setMode] = useState<Mode>(() => enabledChordContextSnapshot && basslineEnabled ? "bassline" : firstEnabledMode);
+  useEffect(() => { if (enabledChordContextSnapshot && basslineEnabled) setMode("bassline"); }, [basslineEnabled, enabledChordContextSnapshot?.signature]);
 
   if (!degreeEnabled && !rhythmEnabled && !basslineEnabled) return null;
   if (degreeEnabled && !rhythmEnabled && !basslineEnabled) return <BassPracticeView {...degreeProps} />;
@@ -47,7 +50,7 @@ export function BassPracticeModeView({ onRhythmAttemptCompleted, chordContextSna
       </div>
       {degreeEnabled ? <div hidden={mode !== "degree"}><BassPracticeView {...degreeProps} /></div> : null}
       {mode === "rhythm" && rhythmEnabled ? <RhythmPracticeView onAttemptCompleted={onRhythmAttemptCompleted} /> : null}
-      {mode === "bassline" && basslineEnabled ? <BasslinePracticeView chordContextSnapshot={chordContextSnapshot} /> : null}
+      {mode === "bassline" && basslineEnabled ? <BasslinePracticeView chordContextSnapshot={enabledChordContextSnapshot} chordContextEnabled={chordContextEnabled} /> : null}
     </div>
   );
 }

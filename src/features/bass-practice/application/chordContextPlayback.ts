@@ -62,8 +62,11 @@ export interface ChordContextPlayer { schedule(event: ChordContextScheduledEvent
 export interface ChordContextPlaybackLifecycle { onCompleted(): void; }
 export interface ChordContextPlaybackDriver { createPlayer(mix: ChordContextMix, lifecycle: ChordContextPlaybackLifecycle): ChordContextPlayer; }
 export interface ChordContextPlaybackEngine { start(input: ChordContextPlaybackInput): ChordContextPlanResult; stop(): void; dispose(): void; getActivePlan(): ChordContextPlaybackPlan | undefined; getLastError(): unknown | undefined; }
-/** Natural-completion cleanup errors are reported without throwing from a driver callback. */
-export interface ChordContextPlaybackEngineOptions { readonly onError?: (error: unknown) => void; }
+/** Natural-completion callbacks cannot throw into a browser audio callback. */
+export interface ChordContextPlaybackEngineOptions {
+  readonly onError?: (error: unknown) => void;
+  readonly onCompleted?: () => void;
+}
 
 const supportedQualities = new Set<ChordQuality>(["maj", "min", "dim", "aug", "maj7", "min7", "dom7", "min7b5", "dim7", "maj9", "min9", "dom9", "min11", "dom13", "sus2", "sus4", "dom7sus4", "add9", "six", "min6", "sixNine"]);
 const supportedTensions = new Set<Tension>(["9", "b9", "#9", "11", "#11", "13", "b13"]);
@@ -94,6 +97,7 @@ export function createChordContextPlaybackEngine(
     // cleanup operations run even when the driver reports an exception.
     const cleanupError = releaseActive();
     if (cleanupError !== undefined) reportNaturalCompletionError(cleanupError);
+    try { options.onCompleted?.(); } catch (error) { reportNaturalCompletionError(error); }
   };
 
   return {

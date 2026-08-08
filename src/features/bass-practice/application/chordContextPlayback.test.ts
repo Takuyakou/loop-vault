@@ -201,15 +201,17 @@ describe("Chord Context playback lifecycle", () => {
     expect(engine.getActivePlan()).toMatchObject({ bpm: 100 });
   });
 
-  it("releases a natural completion exactly once and keeps a completed session inactive", () => {
+  it("releases a natural completion exactly once, notifies the owner, and keeps a completed session inactive", () => {
     const { driver, players } = fakeDriver();
-    const engine = createChordContextPlaybackEngine(driver);
+    const onCompleted = vi.fn();
+    const engine = createChordContextPlaybackEngine(driver, { onCompleted });
     expect(engine.start(listenInput()).ok).toBe(true);
     players[0].complete();
     players[0].complete();
     expect(players[0].stop).toHaveBeenCalledOnce();
     expect(players[0].dispose).toHaveBeenCalledOnce();
     expect(engine.getActivePlan()).toBeUndefined();
+expect(onCompleted).toHaveBeenCalledOnce();
   });
 
   it("releases an old session for an empty plan without creating a new audio graph", () => {

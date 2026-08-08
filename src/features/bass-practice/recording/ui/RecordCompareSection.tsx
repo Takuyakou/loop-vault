@@ -27,6 +27,8 @@ export interface RecordCompareSectionProps {
   readonly practiceSessionId?: string;
   /** Plays the exercise Target; when omitted, Hear Target is unavailable. */
   readonly targetPlayer?: TargetPlayer;
+  /** Lets an owning practice surface release unrelated accompaniment before target/take playback. */
+  readonly onPlaybackStart?: () => void;
   /** Milliseconds of count-in before recording starts (0 = immediate). */
   readonly countInMs?: number;
   /** Injected in tests. */
@@ -48,6 +50,7 @@ export function RecordCompareSection({
   resetKey,
   practiceSessionId,
   targetPlayer,
+  onPlaybackStart,
   countInMs = 0,
   controller,
   takePlayer,
@@ -81,6 +84,9 @@ export function RecordCompareSection({
   const stopPlayback = () => {
     activePlaybackRef.current?.stop();
     activePlaybackRef.current = null;
+  };
+  const notifyPlaybackStart = () => {
+    try { onPlaybackStart?.(); } catch { /* An owning surface cannot break Record & Compare playback. */ }
   };
   const clearCountIn = () => {
     if (countInTimerRef.current !== undefined) {
@@ -152,6 +158,7 @@ export function RecordCompareSection({
 
   const hearTarget = () => {
     if (!targetPlayer) return;
+    notifyPlaybackStart();
     stopPlayback();
     session.playTarget();
     activePlaybackRef.current = targetPlayer.play(() => {
@@ -163,6 +170,7 @@ export function RecordCompareSection({
   const hearTake = () => {
     const take = session.currentTake();
     if (!take) return;
+    notifyPlaybackStart();
     stopPlayback();
     session.playTake();
     activePlaybackRef.current = playerRef.current.play(take, () => {

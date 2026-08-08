@@ -2,7 +2,7 @@
 
 import { act } from "react";
 import { createRoot } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { RecordCompareSection } from "./RecordCompareSection";
 import { setRecordChannel } from "../application/recordChannelStore";
 import { RecordingSessionController } from "../application/recordingSessionController";
@@ -134,6 +134,7 @@ describe("RecordCompareSection", () => {
 
   test("Hear My Take and Hear Target never play at once", async () => {
     const controller = fakeController();
+    const onPlaybackStart = vi.fn();
     const takePlayer = new FakePlayer();
     const targetPlayer = new FakePlayer();
     const { container, root } = mount();
@@ -143,6 +144,7 @@ describe("RecordCompareSection", () => {
         controller={controller}
         takePlayer={takePlayer}
         targetPlayer={targetPlayer}
+        onPlaybackStart={onPlaybackStart}
         enabledOverride
       />,
     ));
@@ -157,6 +159,7 @@ describe("RecordCompareSection", () => {
     await click(container, "hear-target");
     expect(targetPlayer.playing).toBe(true);
     expect(takePlayer.playing).toBe(false);
+    expect(onPlaybackStart).toHaveBeenCalledTimes(2);
     await act(async () => root.unmount());
     document.body.replaceChildren();
   });
