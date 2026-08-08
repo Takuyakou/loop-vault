@@ -6,6 +6,7 @@ import {
   buildGeneratedChordContextSnapshot,
   buildVaultChordContextSnapshot,
   buildVaultChordContextSnapshotFromVault,
+  buildVaultChordContextSnapshotCatalog,
   selectVaultChordContextSections,
   validateChordContextSnapshot,
   type ChordContextSnapshotChord,
@@ -130,6 +131,26 @@ describe("Vault Chord Context snapshot v1", () => {
       ok: false,
       error: { code: "source-unavailable" },
     });
+  });
+
+  it("builds a deterministic safe catalog of every supported Vault section", () => {
+    const supported = block();
+    const unsupported = block({ id: "unsupported", timeSignature: "3/4" });
+    const catalog = buildVaultChordContextSnapshotCatalog([
+      {
+        id: sourceReference.ideaId,
+        title: "Private catalog title",
+        progressionBlocks: [supported, unsupported],
+      } as SongIdea,
+    ]);
+
+    expect(catalog.length).toBeGreaterThan(1);
+    expect(Object.isFrozen(catalog)).toBe(true);
+    expect(catalog.every((snapshot) => Object.isFrozen(snapshot))).toBe(true);
+    expect(catalog.every((snapshot) => snapshot.source.kind === "vault")).toBe(true);
+    expect(new Set(catalog.map((snapshot) => snapshot.signature)).size).toBe(catalog.length);
+    expect(JSON.stringify(catalog)).not.toMatch(/Private catalog title|Private artist name|sourceAsset|sourceFileName|fingerprint|memo/i);
+    expect(catalog.map((snapshot) => snapshot.source.reference.blockId)).not.toContain("unsupported");
   });
 
   it("keeps generated Bassline sources compatible and adapts a valid Vault snapshot without the legacy clipper", () => {

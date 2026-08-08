@@ -72,7 +72,9 @@ vi.mock("../application/chordContextToneDriver", () => ({
   }),
 }));
 
-import { buildGeneratedChordContextSnapshot, type ChordContextSnapshot } from "../domain";
+import { makeChordSymbol } from "../../../domain/chords";
+import type { SavedProgressionBlock } from "../../../domain/types";
+import { buildGeneratedChordContextSnapshot, buildVaultChordContextSnapshot, type ChordContextSnapshot } from "../domain";
 import { BasslinePracticeView } from "./BasslinePracticeView";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
@@ -117,6 +119,57 @@ describe("Bassline Echo Chord Context", () => {
     expect(checkedLabel(container, "chord-context-play-mode")).toContain("Chords only");
     expect(container.textContent).toContain("Metronome only");
     expect(container.textContent).toContain("No accompaniment");
+  });
+
+  it("switches between the default and saved Vault progressions inside Bassline Echo", async () => {
+    const block = {
+      id: "selector-progression",
+      summaryText: "Private title must not enter Practice",
+      detectedKey: "D major",
+      bpm: 112,
+      timeSignature: "4/4",
+      chords: [
+        { bar: 1, beat: 1, durationBeats: 4, chord: makeChordSymbol(2, "maj7"), confidence: 1, alternatives: [], warnings: [] },
+      ],
+      tags: [],
+      capturedAt: "2026-01-01T00:00:00.000Z",
+      analyzerVersion: "fixture",
+    } as SavedProgressionBlock;
+    const result = buildVaultChordContextSnapshot({
+      sourceReference: { ideaId: "selector-idea", blockId: block.id },
+      block,
+    });
+    if (!result.ok) throw new Error(result.error.message);
+    const container = await renderView({ language: "ja", chordContextSnapshots: [result.snapshot] });
+    const selector = container.querySelector<HTMLSelectElement>("[data-testid='bassline-progression-select']")!;
+
+    expect(Array.from(selector.options).map((option) => option.textContent)).toEqual([
+      "既定進行 · Dm7 – G7 – Cmaj7",
+      "Vault · D major · 1–1小節 · Dmaj7",
+    ]);
+    expect(container.querySelector("[aria-label='ベースラインのコード進行']")?.textContent).toContain("Dm7G7Cmaj7");
+
+    await clickStart(container);
+    await act(async () => {
+      selector.value = result.snapshot.signature;
+      selector.dispatchEvent(new Event("change", { bubbles: true }));
+      await Promise.resolve();
+    });
+
+    expect(playback.sessions[0]!.stopped).toBeGreaterThan(0);
+    expect(playback.sessions[0]!.disposed).toBeGreaterThan(0);
+    expect(playback.driversDisposed).toBe(1);
+    expect(container.querySelector("[data-testid='bassline-source']")?.textContent).toContain("Vault進行 · D major · bars 1-1");
+    expect(container.querySelector("[aria-label='ベースラインのコード進行']")?.textContent).toBe("Dmaj7");
+    expect(container.querySelector<HTMLInputElement>("[data-testid='chord-context-effective-bpm']")?.value).toBe("112");
+    expect(container.textContent).not.toContain("Private title must not enter Practice");
+
+    await act(async () => {
+      selector.value = selector.options[0]!.value;
+      selector.dispatchEvent(new Event("change", { bubbles: true }));
+      await Promise.resolve();
+    });
+    expect(container.querySelector("[aria-label='ベースラインのコード進行']")?.textContent).toContain("Dm7G7Cmaj7");
   });
 
   it("offers Electric and Piano chord timbres and prepares the selected session sound", async () => {
@@ -418,6 +471,7 @@ describe("Bassline Echo Chord Context", () => {
     const container = await renderView({ chordContextEnabled: false });
 
     expect(container.querySelector("[data-testid='chord-context-controls']")).toBeNull();
+    expect(container.querySelector("[data-testid='bassline-progression-select']")).toBeNull();
     expect(container.querySelector("[data-testid='bassline-listen']")).not.toBeNull();
   });
 });

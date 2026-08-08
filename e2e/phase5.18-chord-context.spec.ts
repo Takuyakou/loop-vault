@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { assertNoHorizontalOverflow, openApp } from "./helpers/app";
+import { assertNoHorizontalOverflow, createSavedProgression, openApp, openVault } from "./helpers/app";
 
 test("P5.18 production default is keyboard-operable without 320px overflow", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 720 });
@@ -115,6 +115,34 @@ test("P5.18 remains operable with reduced motion and an effective 200% scale", a
   await assertNoHorizontalOverflow(page);
 });
 
+test("Bassline Echo changes between its default and a saved Vault progression in place", async ({ page }) => {
+  test.setTimeout(45_000);
+  await openApp(page);
+  await createSavedProgression(page, "P5.18 Bassline selector");
+  await openVault(page);
+  await page.locator(".lv-vault-row").first().getByRole("button", { name: /Open progression|進行を開く/ }).click();
+  const detail = page.locator("[data-progression-detail-view]");
+  await detail.getByRole("button", { name: /Practice|練習する/ }).click();
+
+  const bassline = page.getByTestId("bassline-echo-view");
+  const selector = bassline.getByTestId("bassline-progression-select");
+  await expect(bassline).toBeVisible();
+  expect(await selector.locator("option").count()).toBeGreaterThan(1);
+  const vaultValue = await selector.inputValue();
+  await expect(bassline.getByTestId("bassline-source")).toContainText(/Vault進行|Vault source/);
+
+  const defaultValue = await selector.locator("option").filter({ hasText: /既定進行|Default/ }).getAttribute("value");
+  expect(defaultValue).not.toBeNull();
+  await selector.selectOption(defaultValue!);
+  await expect(bassline.locator("[aria-label='ベースラインのコード進行']")).toContainText("Dm7G7Cmaj7");
+  await expect(bassline.getByTestId("chord-context-effective-bpm")).toHaveValue("96");
+
+  await selector.selectOption(vaultValue);
+  await expect(bassline.getByTestId("bassline-source")).toContainText(/Vault進行|Vault source/);
+  await expect(selector).toHaveValue(vaultValue);
+  await assertNoHorizontalOverflow(page);
+});
+
 test("P5.18 explicit rollback hides only Chord Context and preserves Bassline Echo", async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem("loop-vault:bass-practice-chord-context-enabled:v1", "false");
@@ -126,4 +154,5 @@ test("P5.18 explicit rollback hides only Chord Context and preserves Bassline Ec
   await expect(page.getByTestId("bassline-echo-view")).toBeVisible();
   await expect(page.getByTestId("bassline-listen")).toBeVisible();
   await expect(page.getByTestId("chord-context-controls")).toHaveCount(0);
+  await expect(page.getByTestId("bassline-progression-select")).toHaveCount(0);
 });

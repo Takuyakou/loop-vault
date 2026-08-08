@@ -200,6 +200,34 @@ export function buildVaultChordContextSnapshotFromVault(
   return buildVaultChordContextSnapshot({ sourceReference, block, sectionId });
 }
 
+/**
+ * Builds the safe, detached snapshot catalog exposed inside Bassline Echo.
+ * Unsupported sources are omitted; Vault objects never cross this boundary.
+ */
+export function buildVaultChordContextSnapshotCatalog(
+  ideas: readonly SongIdea[],
+): readonly VaultChordContextSnapshot[] {
+  const snapshots: VaultChordContextSnapshot[] = [];
+  const signatures = new Set<string>();
+  for (const idea of ideas) {
+    for (const block of idea.progressionBlocks ?? []) {
+      const sections = selectVaultChordContextSections(block);
+      if (!sections.ok) continue;
+      for (const section of sections.sections) {
+        const result = buildVaultChordContextSnapshot({
+          sourceReference: { ideaId: idea.id, blockId: block.id },
+          block,
+          sectionId: section.id,
+        });
+        if (!result.ok || signatures.has(result.snapshot.signature)) continue;
+        signatures.add(result.snapshot.signature);
+        snapshots.push(result.snapshot);
+      }
+    }
+  }
+  return Object.freeze(snapshots);
+}
+
 /** Existing generated Bassline sources can use the same source-neutral contract. */
 export function buildGeneratedChordContextSnapshot(input: {
   readonly key: string;
