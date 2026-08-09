@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "5.18.1",
   "status": "in-progress",
-  "activeStage": "P5.18.1-01",
-  "completedStages": ["P5.18.1-00"],
+  "activeStage": null,
+  "completedStages": ["P5.18.1-00", "P5.18.1-01"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "328462abfdacc3496eb4f13da799165bd09527ef",
-  "lastVerifiedCommit": "f91b28d3988786af4993f2f0ebb07837286b12d2",
+  "lastVerifiedCommit": "64828ae8d71240e13ef6cf61a11360a2f6f416b7",
   "currentBranch": "feat/p5181-bassline-preset-vault-picker",
   "requiredGates": {
     "P5.18.1-00": [
@@ -20,6 +20,15 @@
       "p5181-00-rust",
       "p5181-00-bass-practice-p518-regression",
       "p5181-00-git-diff-check"
+    ],
+    "P5.18.1-01": [
+      "p5181-01-app-typecheck",
+      "p5181-01-focused-domain-playback-tests",
+      "p5181-01-bass-practice-regression",
+      "p5181-01-lint",
+      "p5181-01-e2e-typecheck",
+      "p5181-01-phase-docs-validation",
+      "p5181-01-git-diff-check"
     ]
   },
   "gateResults": {
@@ -31,8 +40,15 @@
     "p5181-00-e2e-typecheck": "pass",
     "p5181-00-rust": "pass",
     "p5181-00-bass-practice-p518-regression": "pass",
-    "p5181-00-git-diff-check": "pass"
+    "p5181-00-git-diff-check": "pass",
+    "p5181-01-app-typecheck": "pass",
+    "p5181-01-focused-domain-playback-tests": "pass",
+    "p5181-01-bass-practice-regression": "pass",
+    "p5181-01-lint": "pass",
+    "p5181-01-e2e-typecheck": "pass",
+    "p5181-01-phase-docs-validation": "pass",
+    "p5181-01-git-diff-check": "pass"
   },
-  "nextAction": "Execute P5.18.1-01 — Preset Domain / Catalog only. Do not start P5.18.1-02.",
+  "nextAction": "P5.18.1-01 is complete. Await explicit human authorization before P5.18.1-02; do not start it automatically.",
   "updatedAt": "2026-08-09"
 }

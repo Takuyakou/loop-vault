@@ -4,7 +4,7 @@
 
 ## Status
 
-P5.18.1-01 ACTIVE — Preset Domain / Catalog
+P5.18.1-01 GATES PASS — Preset Domain / Catalog / Compatibility; awaiting P5.18.1-02 authorization
 
 
 
@@ -299,6 +299,5 @@ production 機能を実装しない。
 
 ## Next action
 
-`P5.18.1-00 — Repository Audit / Contract / Baseline`
-
-最初は監査だけを行い、P5.18.1-01 以降へ進まない。
+P5.18.1-01 is complete and recorded. Await explicit human authorization before starting
+`P5.18.1-02 — Vault Source Picker`; do not begin it automatically.
