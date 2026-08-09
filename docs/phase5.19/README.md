@@ -2,7 +2,7 @@
 # Phase 5.19 — Root Motion Echo
 
 ## Status
-`P5.19-05 RELEASE GATES PASS - human product acceptance pending`
+`P5.19-05 RELEASE GATES PASS after Transfer persistence hotfix - human re-acceptance pending`
 
 ## Required Reading Order
 
@@ -158,4 +158,4 @@ Practice schema破壊的migration、Vault schema変更、P5.15依存、虚偽sha
 停止時にreset/stash/discardしない。
 
 ## Next action
-P5.19-05 release gates are complete. Perform only the documented human product acceptance next. Do not merge, push, or start P5.20.
+P5.19-05 release gates were rerun after the Transfer persistence hotfix. Perform only the documented human re-acceptance against code candidate 702b0dd5df855958f2eb7e6580e683d117f17770. Do not merge, push, or start P5.20.
