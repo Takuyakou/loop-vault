@@ -2,20 +2,21 @@ import { describe, expect, it } from "vitest";
 import { buildVaultChordContextSnapshot } from "./chordContextSnapshot";
 import { STANDARD_BASS_TUNINGS } from "./constants";
 import { createVaultRootMotionExercise, rootPathSignedDelta } from "./rootMotionVault";
+import type { RootMotionNoteCount } from "./rootMotion";
 import type { SavedProgressionBlock } from "../../../domain/types";
 
 function block(roots: readonly number[]): SavedProgressionBlock {
   return {
     id: "block-safe", capturedAt: "2026-08-09T10:00:00.000Z", detectedKey: "C major", bpm: 96, timeSignature: "4/4", summaryText: "safe", tags: [], analyzerVersion: "test",
-    chords: roots.map((root, index) => ({ bar: 1, beat: index + 1, durationBeats: 1, confidence: 1, alternatives: [], warnings: [], chord: { root, quality: "maj", tensions: [], label: "C" } })),
+    chords: roots.map((root, index) => ({ bar: Math.floor(index / 4) + 1, beat: index % 4 + 1, durationBeats: 1, confidence: 1, alternatives: [], warnings: [], chord: { root, quality: "maj", tensions: [], label: "C" } })),
   };
 }
 function snapshot(roots: readonly number[]) {
-  const result = buildVaultChordContextSnapshot({ sourceReference: { ideaId: "idea-safe", blockId: "block-safe" }, block: block(roots), sectionId: "bars:1-1" });
+  const result = buildVaultChordContextSnapshot({ sourceReference: { ideaId: "idea-safe", blockId: "block-safe" }, block: block(roots), sectionId: `bars:1-${Math.ceil(roots.length / 4)}` });
   if (!result.ok) throw new Error(result.error.message);
   return result.snapshot;
 }
-const input = (roots: readonly number[], level: 1 | 2 | 3 | 4 | 5 = 4) => ({ snapshot: snapshot(roots), level, tuning: STANDARD_BASS_TUNINGS[5], stringCount: 5 as const, fretRange: { min: 0, max: 12 }, pitchSpan: { minMidi: 23, maxMidi: 55 }, handedness: "right" as const });
+const input = (roots: readonly number[], level: 1 | 2 | 3 | 4 | 5 = 4, noteCount: RootMotionNoteCount = 3) => ({ snapshot: snapshot(roots), level, noteCount, tuning: STANDARD_BASS_TUNINGS[5], stringCount: 5 as const, fretRange: { min: 0, max: 12 }, pitchSpan: { minMidi: 23, maxMidi: 55 }, handedness: "right" as const });
 
 describe("Vault-derived Root Motion", () => {
   it("uses policy v1 for repeated roots, downward fifths, and tritones", () => {
@@ -40,6 +41,19 @@ describe("Vault-derived Root Motion", () => {
     }
   });
 
+
+  it("honors an explicit eight-root chain and fails closed when the safe section is short", () => {
+    const full = createVaultRootMotionExercise(input([0, 0, 0, 0, 0, 0, 0, 0], 4, 8));
+    expect(full.ok).toBe(true);
+    if (!full.ok) throw new Error(full.error.message);
+    expect(full.exercise.targetEvents).toHaveLength(8);
+    expect(full.exercise.motions).toHaveLength(7);
+    expect(full.exercise.fingering).toHaveLength(7);
+    expect(full.exercise.generatorSnapshot).toMatchObject({ noteCount: 8, phraseLengthBeats: 16 });
+
+    const short = createVaultRootMotionExercise(input([0, 2, 4, 5], 4, 8));
+    expect(short).toMatchObject({ ok: false, error: { code: "source-unavailable" } });
+  });
   it("fails closed for an invalid or unplayable source", () => {
     const valid = snapshot([0, 2, 4, 5]);
     const invalid = createVaultRootMotionExercise({ ...input([0, 2, 4, 5], 4), snapshot: { ...valid, section: { ...valid.section, chords: [] } } as never });

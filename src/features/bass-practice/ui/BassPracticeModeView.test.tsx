@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import { BassPracticeModeView } from "./BassPracticeModeView";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
@@ -65,4 +65,18 @@ describe("Bass Practice production modes", () => {
     expect(bassline?.textContent).not.toContain("Session tempo");
     expect(bassline?.textContent).not.toContain("Listen layers");
    });
-});
+
+  test("passes the persisted Root Motion note-count setting through the mode boundary", async () => {
+    const container = document.createElement("div"); document.body.append(container); root = createRoot(container);
+    const onRootMotionNoteCountChange = vi.fn(async () => undefined);
+    const initialSettings = { version: 1 as const, singEnabled: true, singingReferenceMode: "auto" as const, stringCount: 4 as const, handedness: "right" as const, fretRange: { min: 0, max: 12 }, sessionTargetCount: 8, rootMotionNoteCount: 2 as const };
+    await act(async () => root?.render(<BassPracticeModeView initialSettings={initialSettings} onRootMotionNoteCountChange={onRootMotionNoteCountChange} />));
+    await act(async () => Array.from(container.querySelectorAll("button")).find((button) => button.textContent === "Root Motion Echo")?.click());
+    const noteCount = container.querySelector("[data-testid='root-motion-note-count']") as HTMLSelectElement;
+    await act(async () => {
+      const setValue = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value")?.set;
+      setValue?.call(noteCount, "8");
+      noteCount.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    expect(onRootMotionNoteCountChange).toHaveBeenCalledWith(8);
+  });});

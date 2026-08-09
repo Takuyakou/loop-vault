@@ -23,7 +23,7 @@ test("P5.19 production default exposes a keyboard-operable Root Motion Echo at 3
   await expect(view.getByTestId("root-motion-source")).toHaveValue("generated");
   await assertNoHorizontalOverflow(page);
 
-  const level = view.getByLabel("Root Motion level");
+  const level = view.locator("#root-motion-level");
   await level.focus();
   await page.keyboard.press("ArrowDown");
   await expect(level).toHaveValue("2");
@@ -77,4 +77,22 @@ test("P5.19 explicit local rollback hides Root Motion only", async ({ page }) =>
   await page.getByTestId("bass-practice-home-card").getByRole("button").click();
   await expect(page.getByRole("tab", { name: "Degree Echo" })).toBeVisible();
   await expect(page.getByRole("tab", { name: "Root Motion Echo" })).toHaveCount(0);
+});
+test("P5.19-06 exposes and persists an eight-note Root Motion chain at 320px", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 720 });
+  let view = await openRootMotion(page);
+  const noteCount = view.getByTestId("root-motion-note-count");
+  await noteCount.focus();
+  await page.keyboard.press("End");
+  await expect(noteCount).toHaveValue("8");
+  await assertNoHorizontalOverflow(page);
+  await expect.poll(() => page.evaluate(() => {
+    const stored = localStorage.getItem("loop-vault:practice-v1:data");
+    return stored ? (JSON.parse(stored) as { settings?: { rootMotionNoteCount?: number } }).settings?.rootMotionNoteCount : undefined;
+  })).toBe(8);
+
+  await page.reload();
+  view = await openRootMotion(page);
+  await expect(view.getByTestId("root-motion-note-count")).toHaveValue("8");
+  await assertNoHorizontalOverflow(page);
 });

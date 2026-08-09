@@ -2,11 +2,13 @@ import { createSeededRandom, stableHash } from "./determinism";
 import { fretboardPositions } from "./mapping";
 import type { FretboardPosition, Handedness, StringCount } from "./types";
 
-export const ROOT_MOTION_GENERATOR_VERSION = "p5.19-root-motion-v1";
+export const ROOT_MOTION_GENERATOR_VERSION = "p5.19-root-motion-v2";
 export const ROOT_MOTION_FINGERING_POLICY_VERSION = "root-motion-fingering-v1";
 export const ROOT_MOTION_MAX_ATTEMPTS = 32;
 
 export type RootMotionLevel = 1 | 2 | 3 | 4 | 5;
+export type RootMotionNoteCount = 2 | 3 | 4 | 5 | 6 | 7 | 8;
+export type RootMotionPhraseLengthBeats = 4 | 6 | 8 | 10 | 12 | 14 | 16;
 export type RootMotionDirection = "same" | "up" | "down";
 export type RootMotionCategory = "same" | "second" | "third" | "fourth" | "tritone" | "fifth";
 export type RootMotionAssistance = "independent" | "assisted" | "revealed";
@@ -53,8 +55,9 @@ export interface RootMotionGeneratorSnapshot {
   readonly generatorVersion: string;
   readonly seed: string;
   readonly level: RootMotionLevel;
-  readonly noteCount: 2 | 3 | 4;
-  readonly phraseLengthBeats: 2 | 4 | 6 | 8;
+  readonly noteCount: RootMotionNoteCount;
+  /** Root Motion Echo keeps two beats per note for every selectable chain length. */
+  readonly phraseLengthBeats: RootMotionPhraseLengthBeats;
   readonly tempo: number;
   readonly tuning: readonly number[];
   readonly stringCount: StringCount;
@@ -114,6 +117,12 @@ export function rootMotionFromSignedSemitones(signedSemitones: number): RootMoti
 
 export function rootMotionWeights(): readonly (readonly [RootMotion["signedSemitones"], number])[] {
   return MOTION_WEIGHTS;
+}
+
+/** Returns the fixed two-beats-per-note phrase length for a selectable chain. */
+export function rootMotionPhraseLengthBeats(noteCount: RootMotionNoteCount): RootMotionPhraseLengthBeats {
+  if (!isRootMotionNoteCount(noteCount)) throw new RangeError("Root Motion note count must be an integer between 2 and 8.");
+  return (noteCount * 2) as RootMotionPhraseLengthBeats;
 }
 
 export function solveRootMotionFingering(input: {
@@ -214,9 +223,8 @@ export function normalizeRootMotionSnapshot(input: RootMotionGeneratorSnapshot):
   | { readonly ok: true; readonly snapshot: RootMotionGeneratorSnapshot }
   | { readonly ok: false; readonly error: Extract<RootMotionGeneratorResult, { readonly ok: false }>["error"] } {
   if (!Number.isInteger(input.level) || input.level < 1 || input.level > 5) return invalidConfig("Level must be an integer between 1 and 5.");
-  if (!Number.isInteger(input.noteCount) || input.noteCount < 2 || input.noteCount > 4) return invalidConfig("Note count must be between 2 and 4.");
-  if ((input.level <= 3 && input.noteCount !== 2) || (input.level >= 4 && input.noteCount < 3)) return invalidConfig("The selected level and note count are incompatible.");
-  if (![2, 4, 6, 8].includes(input.phraseLengthBeats)) return invalidConfig("Phrase length must be 2, 4, 6, or 8 beats.");
+  if (!isRootMotionNoteCount(input.noteCount)) return invalidConfig("Note count must be between 2 and 8.");
+  if (input.phraseLengthBeats !== rootMotionPhraseLengthBeats(input.noteCount)) return invalidConfig("Phrase length must be exactly two beats per note (4 to 16 beats).");
   if (!Number.isInteger(input.tempo) || input.tempo < 30 || input.tempo > 240) return invalidConfig("Tempo must be an integer between 30 and 240 BPM.");
   if (input.tuning.length !== input.stringCount || (input.stringCount !== 4 && input.stringCount !== 5)) return invalidConfig("Tuning must match a four- or five-string bass.");
   if (input.tuning.some((note) => !Number.isInteger(note) || note < 0 || note > 127)) return invalidConfig("Tuning notes must be MIDI integers.");
@@ -260,6 +268,10 @@ function isLegalPath(start: number, motions: readonly RootMotion[], snapshot: Ro
     current = next;
   }
   return true;
+}
+
+function isRootMotionNoteCount(value: number): value is RootMotionNoteCount {
+  return Number.isInteger(value) && value >= 2 && value <= 8;
 }
 
 function isFretRange(value: { readonly min: number; readonly max: number }): boolean {

@@ -2,15 +2,17 @@ import { stableHash } from "./determinism";
 import { validateChordContextSnapshot, type VaultChordContextSnapshot } from "./chordContextSnapshot";
 import {  ROOT_MOTION_MAX_ATTEMPTS,
   rootMotionFromSignedSemitones,
+  rootMotionPhraseLengthBeats,
   solveRootMotionFingering,
   type RootMotion,
   type RootMotionExercise,
   type RootMotionFingeringPair,
   type RootMotionLevel,
+  type RootMotionNoteCount,
 } from "./rootMotion";
 import type { Handedness, StringCount } from "./types";
 
-export const ROOT_MOTION_VAULT_ROOT_PATH_VERSION = "p5.19-vault-root-path-v1" as const;
+export const ROOT_MOTION_VAULT_ROOT_PATH_VERSION = "p5.19-vault-root-path-v2" as const;
 export const ROOT_MOTION_ROOT_PATH_POLICY_VERSION = "v1" as const;
 
 export type VaultRootMotionResult =
@@ -20,6 +22,8 @@ export type VaultRootMotionResult =
 export interface VaultRootMotionInput {
   readonly snapshot: VaultChordContextSnapshot;
   readonly level: RootMotionLevel;
+  /** Explicit user-selected chain length. Root paths never silently shorten it. */
+  readonly noteCount: RootMotionNoteCount;
   readonly tuning: readonly number[];
   readonly stringCount: StringCount;
   readonly fretRange: { readonly min: number; readonly max: number };
@@ -37,9 +41,9 @@ export function createVaultRootMotionExercise(input: VaultRootMotionInput): Vaul
   if (!validation.ok) return unavailable("unsupported-source", "Vault-derived Root Motion needs a valid saved Chord Context snapshot.");
   const snapshot = validation.snapshot;
   if (snapshot.source.kind !== "vault") return unavailable("unsupported-source", "Vault-derived Root Motion needs a saved Vault Chord Context snapshot.");
-  const noteCount = input.level <= 3 ? 2 : input.level === 4 ? 3 : 4;
+  const noteCount = input.noteCount;
   if (snapshot.section.chords.length < noteCount) {
-    return unavailable("source-unavailable", "This Vault-derived root path does not have enough chord roots for the selected level.");
+    return unavailable("source-unavailable", "This Vault-derived root path does not have enough chord roots for the selected note count.");
   }
   if (input.tuning.length !== input.stringCount || !isValidConfig(input)) {
     return unavailable("unsupported-source", "Root Motion configuration is not playable for this Vault-derived path.");
@@ -55,16 +59,16 @@ export function createVaultRootMotionExercise(input: VaultRootMotionInput): Vaul
   }
   candidates.sort(compareCandidate);
   const selected = candidates[0];
-  const phraseLengthBeats = (noteCount * 2) as 4 | 6 | 8;
+  const phraseLengthBeats = rootMotionPhraseLengthBeats(noteCount);
   const durationBeats = phraseLengthBeats / noteCount;
   const source = snapshot.source;
   if (source.kind !== "vault") return unavailable("unsupported-source", "Vault-derived Root Motion needs a saved Vault Chord Context snapshot.");
   const referenceId = `${source.reference.ideaId}:${source.reference.blockId}:${snapshot.section.id}`;
   const generatorSnapshot = deepFreeze({
     generatorVersion: ROOT_MOTION_VAULT_ROOT_PATH_VERSION,
-    seed: `vault-root-path:${snapshot.signature}:level:${input.level}:strings:${input.stringCount}:frets:${input.fretRange.min}-${input.fretRange.max}`,
+    seed: `vault-root-path:${snapshot.signature}:level:${input.level}:notes:${noteCount}:strings:${input.stringCount}:frets:${input.fretRange.min}-${input.fretRange.max}`,
     level: input.level,
-    noteCount: noteCount as 2 | 3 | 4,
+    noteCount,
     phraseLengthBeats,
     tempo: Math.round(snapshot.originalBpm),
     tuning: [...input.tuning],
@@ -139,6 +143,7 @@ function compareCandidate(left: CandidatePath, right: CandidatePath): number {
 
 function isValidConfig(input: VaultRootMotionInput): boolean {
   return Number.isInteger(input.level) && input.level >= 1 && input.level <= 5
+    && Number.isInteger(input.noteCount) && input.noteCount >= 2 && input.noteCount <= 8
     && Number.isInteger(input.fretRange.min) && Number.isInteger(input.fretRange.max)
     && input.fretRange.min >= 0 && input.fretRange.max <= 36 && input.fretRange.min <= input.fretRange.max
     && Number.isInteger(input.pitchSpan.minMidi) && Number.isInteger(input.pitchSpan.maxMidi)

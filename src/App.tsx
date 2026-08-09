@@ -739,15 +739,21 @@ async function analyzeMidiPath(path: string) {
                         onRootMotionHistoryRecorded={(entry) => {
                           const controller = practiceControllerRef.current;
                           return controller ? controller.recordRootMotionHistory(entry) : Promise.reject(new Error("Practice progress is not ready."));
-                        }}                        onAttemptCompleted={(attempt) => {
+                        }}
+                        onRootMotionNoteCountChange={(rootMotionNoteCount) => {
+                          const controller = practiceControllerRef.current;
+                          return controller
+                            ? controller.patchSettings({ rootMotionNoteCount })
+                            : Promise.reject(new Error("Practice settings are not ready."));
+                        }}
+                        onAttemptCompleted={(attempt) => {
                           const controller = practiceControllerRef.current;
                           return controller ? controller.recordAttempt(attempt) : Promise.reject(new Error("Practice progress is not ready."));
                         }}
                         onSettingsChange={(next) => {
                           const controller = practiceControllerRef.current;
-                          const current = practiceData.file?.settings;
-                          return controller && current
-                            ? controller.updateSettings({ ...current, ...next, version: 1 })
+                          return controller
+                            ? controller.patchSettings(next)
                             : Promise.reject(new Error("Practice settings are not ready."));
                         }}
                         onNextExercise={() => {

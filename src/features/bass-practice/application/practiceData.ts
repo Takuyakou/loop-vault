@@ -31,6 +31,8 @@ export function createPracticeControllerIfEnabled(enabled: boolean, storageFacto
   return enabled ? new PracticeDataController(new JsonPracticeRepository(storageFactory())) : undefined;
 }
 
+export type PracticeSettingsPatch = Partial<Omit<PracticeSettings, "version">>;
+
 export type PracticeDataSnapshot =
   | { readonly status: "disabled" | "loading"; readonly file?: undefined; readonly quarantine: readonly PracticeQuarantine[]; readonly backups?: undefined; readonly error?: undefined }
   | { readonly status: "ready"; readonly file: PracticeFileV1; readonly quarantine: readonly PracticeQuarantine[]; readonly backups?: undefined; readonly error?: string }
@@ -190,10 +192,18 @@ export class PracticeDataController {
   }
 
   updateSettings(settings: PracticeSettings): Promise<void> {
+    return this.persistSettings(() => settings);
+  }
+
+  patchSettings(patch: PracticeSettingsPatch): Promise<void> {
+    return this.persistSettings((current) => ({ ...current, ...patch, version: 1 }));
+  }
+
+  private persistSettings(createSettings: (current: PracticeSettings) => PracticeSettings): Promise<void> {
     const operation = this.saveQueue.then(async () => {
       if (!this.file) throw new Error("Practice progress is not ready.");
       const updatedAt = new Date().toISOString();
-      this.file = await this.persistMutation((file) => ({ ...file, settings, updatedAt }));
+      this.file = await this.persistMutation((file) => ({ ...file, settings: createSettings(file.settings), updatedAt }));
       this.publish({ status: "ready", file: this.file, quarantine: this.snapshot.quarantine });
     });
     this.saveQueue = operation.catch(() => undefined);

@@ -8,6 +8,7 @@ import {
   generateRootMotionExercise,
   rootMotionFromSignedSemitones,
   rootMotionWeights,
+  rootMotionPhraseLengthBeats,
   solveRootMotionFingering,
   type RootMotionGeneratorSnapshot,
 } from "./rootMotion";
@@ -84,6 +85,12 @@ describe("canonical Root Motion fingering", () => {
 });
 
 describe("Root Motion generator", () => {
+
+  test.each([
+    [2, 4], [3, 6], [4, 8], [5, 10], [6, 12], [7, 14], [8, 16],
+  ] as const)("maps %i notes to %i beats", (noteCount, phraseLengthBeats) => {
+    expect(rootMotionPhraseLengthBeats(noteCount)).toBe(phraseLengthBeats);
+  });
   test("is deterministic and produces exact legal motion", () => {
     const first = generateRootMotionExercise(snapshot());
     const second = generateRootMotionExercise(snapshot());
@@ -105,6 +112,22 @@ describe("Root Motion generator", () => {
     expect(result.exercise.fingering).toHaveLength(2);
   });
 
+  test("generates deterministic legal eight-note chains with two beats per note", () => {
+    const input = snapshot({ level: 1, noteCount: 8, phraseLengthBeats: 16, seed: "eight-note-chain" });
+    const first = generateRootMotionExercise(input);
+    const second = generateRootMotionExercise(input);
+    expect(first).toEqual(second);
+    if (!first.ok) throw new Error(first.error.message);
+    expect(first.exercise.targetEvents).toHaveLength(8);
+    expect(first.exercise.motions).toHaveLength(7);
+    expect(first.exercise.fingering).toHaveLength(7);
+    expect(first.exercise.targetEvents.every((event) => event.durationBeats === 2)).toBe(true);
+    expect(rootMotionPhraseLengthBeats(8)).toBe(16);
+    for (let index = 1; index < first.exercise.targetEvents.length; index += 1) {
+      expect(first.exercise.targetEvents[index].midiNote - first.exercise.targetEvents[index - 1].midiNote)
+        .toBe(first.exercise.motions[index - 1].signedSemitones);
+    }
+  });
   test("supports the five-string low-B range without an octave substitution", () => {
     const result = generateRootMotionExercise(snapshot({
       tuning: STANDARD_BASS_TUNINGS[5], stringCount: 5, fretRange: { min: 0, max: 8 },
@@ -118,17 +141,19 @@ describe("Root Motion generator", () => {
     }
   });
 
-  test("fails closed for incompatible level configuration and non-fixed retry limits", () => {
-    expect(generateRootMotionExercise(snapshot({ level: 1, noteCount: 3 as 2 }))).toMatchObject({ ok: false, error: { code: "invalid-config" } });
+  test("fails closed for invalid note counts, timing contracts, and non-fixed retry limits", () => {
+    expect(generateRootMotionExercise(snapshot({ noteCount: 9 as unknown as 2, phraseLengthBeats: 16 }))).toMatchObject({ ok: false, error: { code: "invalid-config" } });
+    expect(generateRootMotionExercise(snapshot({ noteCount: 3, phraseLengthBeats: 4 }))).toMatchObject({ ok: false, error: { code: "invalid-config" } });
     expect(generateRootMotionExercise(snapshot({ maxAttempts: 1 as 32 }))).toMatchObject({ ok: false, error: { code: "invalid-config" } });
   });
 });
 test("Transfer preserves the signed sequence while selecting a different legal start", () => {
-  const source = generateRootMotionExercise(snapshot({ level: 4, noteCount: 3, phraseLengthBeats: 6, seed: "transfer-source" }));
+  const source = generateRootMotionExercise(snapshot({ level: 4, noteCount: 8, phraseLengthBeats: 16, seed: "transfer-source" }));
   if (!source.ok) throw new Error(source.error.message);
   const transferred = deriveRootMotionTransfer(source.exercise);
   expect(transferred.ok).toBe(true);
   if (!transferred.ok) return;
   expect(transferred.exercise.motions).toEqual(source.exercise.motions);
+  expect(transferred.exercise.motions).toHaveLength(7);
   expect(transferred.exercise.targetEvents[0].midiNote).not.toBe(source.exercise.targetEvents[0].midiNote);
 });
