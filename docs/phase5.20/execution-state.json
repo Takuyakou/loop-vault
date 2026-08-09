@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "5.20",
   "status": "in-progress",
-  "activeStage": "P5.20-01",
-  "completedStages": ["P5.20-00"],
+  "activeStage": "P5.20-02",
+  "completedStages": ["P5.20-00", "P5.20-01"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "1cec3fa920daeb4fb4942dfbd4a273d5624a0bfb",
-  "lastVerifiedCommit": "6b28bbb9886f876f938881b1af91c80f79ae6982",
+  "lastVerifiedCommit": "ac3ac1310ecb1669de06981a0412c9f846c32979",
   "currentBranch": "feat/p520-text-progression-entry",
   "requiredGates": {
     "P5.20-00": [
@@ -67,8 +67,15 @@
     "p520-00-e2e-typecheck": "pass",
     "p520-00-rust": "pass",
     "p520-00-diff-check": "pass",
-    "p520-00-protected-surface": "pass"
+    "p520-00-protected-surface": "pass",
+    "p520-01-parser-unit": "pass",
+    "p520-01-parser-property-fuzz": "pass",
+    "p520-01-capability-evaluator": "pass",
+    "p520-01-app-typecheck": "pass",
+    "p520-01-lint": "pass",
+    "p520-01-diff-check": "pass",
+    "p520-01-protected-surface": "pass"
   },
-  "nextAction": "P5.20-00 is complete. Await explicit human authorization before starting P5.20-01; do not merge or push.",
+  "nextAction": "P5.20-01 is complete. Continue with P5.20-02 Capture UI and the one-way Draft bridge; do not merge or push.",
   "updatedAt": "2026-08-10"
 }
