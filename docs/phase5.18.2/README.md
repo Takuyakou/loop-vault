@@ -3,7 +3,7 @@
 # Phase 5.18.2 窶・Vault Source Discoverability
 
 ## Status
-`IN PROGRESS — P5.18.2-01 complete; P5.18.2-02 not started`
+`IN PROGRESS — P5.18.2-02 complete; P5.18.2-03 not started`
 
 ## Single entry point
 縺薙・ `README.md` 繧・Phase 5.18.2 縺ｮ蜊倅ｸ蜈･蜿｣縺ｨ縺吶ｋ縲・
