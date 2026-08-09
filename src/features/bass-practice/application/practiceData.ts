@@ -1,6 +1,7 @@
 import {
   generateDegreeExercise,
   type ChordContextHistoryEntry,
+  type RootMotionHistoryEntry,
   type GeneratorSnapshot,
   type PracticeAttempt,
   type PracticeExercise,
@@ -12,6 +13,7 @@ import {
 } from "../domain";
 import {
   addChordContextHistoryEntry,
+  addRootMotionHistoryEntry,
   addCompletedAttempt,
   addCompletedRhythmAttempt,
   JsonPracticeRepository,
@@ -28,6 +30,8 @@ import {
 export function createPracticeControllerIfEnabled(enabled: boolean, storageFactory: () => PracticeStorage): PracticeDataController | undefined {
   return enabled ? new PracticeDataController(new JsonPracticeRepository(storageFactory())) : undefined;
 }
+
+export type PracticeSettingsPatch = Partial<Omit<PracticeSettings, "version">>;
 
 export type PracticeDataSnapshot =
   | { readonly status: "disabled" | "loading"; readonly file?: undefined; readonly quarantine: readonly PracticeQuarantine[]; readonly backups?: undefined; readonly error?: undefined }
@@ -116,6 +120,18 @@ export class PracticeDataController {
       throw error;
     });
   }
+  recordRootMotionHistory(entry: RootMotionHistoryEntry): Promise<void> {
+    const operation = this.saveQueue.then(async () => {
+      if (!this.file) throw new Error("Practice progress is not ready.");
+      this.file = await this.persistMutation((file) => addRootMotionHistoryEntry(file, entry));
+      this.publish({ status: "ready", file: this.file, quarantine: this.snapshot.quarantine });
+    });
+    this.saveQueue = operation.catch(() => undefined);
+    return operation.catch((error) => {
+      if (this.file) this.publish({ status: "ready", file: this.file, quarantine: this.snapshot.quarantine, error: errorMessage(error) });
+      throw error;
+    });
+  }
   claimNextExercise(sessionId: string, now: Date): Promise<ClaimedPracticeExercise | undefined> {
     const operation = this.saveQueue.then(async () => {
       if (!this.file) throw new Error("Practice progress is not ready.");
@@ -176,10 +192,18 @@ export class PracticeDataController {
   }
 
   updateSettings(settings: PracticeSettings): Promise<void> {
+    return this.persistSettings(() => settings);
+  }
+
+  patchSettings(patch: PracticeSettingsPatch): Promise<void> {
+    return this.persistSettings((current) => ({ ...current, ...patch, version: 1 }));
+  }
+
+  private persistSettings(createSettings: (current: PracticeSettings) => PracticeSettings): Promise<void> {
     const operation = this.saveQueue.then(async () => {
       if (!this.file) throw new Error("Practice progress is not ready.");
       const updatedAt = new Date().toISOString();
-      this.file = await this.persistMutation((file) => ({ ...file, settings, updatedAt }));
+      this.file = await this.persistMutation((file) => ({ ...file, settings: createSettings(file.settings), updatedAt }));
       this.publish({ status: "ready", file: this.file, quarantine: this.snapshot.quarantine });
     });
     this.saveQueue = operation.catch(() => undefined);

@@ -1,0 +1,28 @@
+phase5.19/
+├─ README.md
+├─ CODEX-START-PROMPT.md
+├─ CODEX-RUN-REMAINING-STAGES.md
+├─ work-instructions.md
+├─ execution-state.json
+├─ proposal/
+│  ├─ ORIGINAL-PROPOSAL.md
+│  └─ P5.19-DESIGN-REVIEW.md
+├─ audit/
+│  └─ P5.19-00-repository-audit.md
+├─ contracts/
+│  ├─ 01-scope-learning-contract.md
+│  ├─ 02-motion-objective-evidence-contract.md
+│  ├─ 03-fretboard-fingering-contract.md
+│  ├─ 04-generator-vault-source-contract.md
+│  ├─ 05-session-history-metrics-contract.md
+│  ├─ 06-privacy-safety-contract.md
+│  └─ 07-adjustable-chain-length-contract.md
+└─ reports/
+   ├─ README.md
+   ├─ P5.19-00-audit-baseline.md
+   ├─ P5.19-01-domain-generator.md
+   ├─ P5.19-02-identify-core-flow.md
+   ├─ P5.19-03-fretboard-transfer-history.md
+   ├─ P5.19-04-vault-chain-integration.md
+   ├─ P5.19-05-product-acceptance.md
+   └─ P5.19-06-adjustable-chain-length.md

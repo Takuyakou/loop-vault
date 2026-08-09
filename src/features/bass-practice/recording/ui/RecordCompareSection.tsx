@@ -20,7 +20,7 @@ import { RetainedTakesPanel } from "./RetainedTakesPanel";
  */
 
 export interface RecordCompareSectionProps {
-  readonly mode: "degree" | "rhythm" | "bassline";
+  readonly mode: "degree" | "rhythm" | "bassline" | "root-motion";
   /** Stable exercise signature; changing it resets the recorder for a new take. */
   readonly resetKey?: string;
   /** Practice session id recorded in kept-take metadata (non-identifying). */

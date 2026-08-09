@@ -25,6 +25,7 @@ const MODE_LABELS: Record<StoredRecordingMetadata["mode"], string> = {
   degree: "Degree Echo",
   rhythm: "Rhythm Echo",
   bassline: "Bassline Echo",
+  "root-motion": "Root Motion Echo",
 };
 
 export function RetainedTakesPanel({

@@ -165,6 +165,8 @@ export interface PracticeSettings {
     readonly max: number;
   };
   readonly sessionTargetCount: number;
+  /** Additive preference; omitted legacy files use the compatible two-note chain. */
+  readonly rootMotionNoteCount?: 2 | 3 | 4 | 5 | 6 | 7 | 8;
 }
 
 export interface ReviewQueueItem {
