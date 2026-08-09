@@ -8,6 +8,7 @@ import {
   ROOT_MOTION_MAX_ATTEMPTS,
   STANDARD_BASS_TUNINGS,
   createRootMotionHistoryEntry,
+  createVaultRootMotionExercise,
   deriveRootMotionTransfer,
   generateRootMotionExercise,
   type PracticeSettings,
@@ -16,6 +17,7 @@ import {
   type RootMotionExercise,
   type RootMotionHistoryEntry,
   type RootMotionLevel,
+  type VaultChordContextSnapshot,
 } from "../domain";
 import { RootMotionPracticeSession, type RootMotionIdentifyAnswer } from "../application/rootMotionSession";
 import { createTargetPlayer } from "../recording/application/playback";
@@ -37,11 +39,15 @@ export interface RootMotionPracticeViewProps {
   readonly playback?: RootMotionPlayback;
   readonly initialSettings?: PracticeSettings;
   readonly onHistoryRecorded?: (entry: RootMotionHistoryEntry) => Promise<void>;
+  /** Safe, title-free snapshots supplied by the existing Vault picker boundary. */
+  readonly vaultSnapshots?: readonly VaultChordContextSnapshot[];
 }
 
-export function RootMotionPracticeView({ language = "en", playback, initialSettings, onHistoryRecorded }: RootMotionPracticeViewProps) {
+export function RootMotionPracticeView({ language = "en", playback, initialSettings, onHistoryRecorded, vaultSnapshots = [] }: RootMotionPracticeViewProps) {
   const [level, setLevel] = useState<RootMotionLevel>(1);
   const [round, setRound] = useState(1);
+  const [sourceKind, setSourceKind] = useState<"generated" | "vault-root-path">("generated");
+  const [selectedVaultSignature, setSelectedVaultSignature] = useState<string>();
   const [transfer, setTransfer] = useState<RootMotionExercise>();
   const [transferOfExerciseId, setTransferOfExerciseId] = useState<string>();
   const [retainedTakeReference, setRetainedTakeReference] = useState<string>();
@@ -70,12 +76,28 @@ export function RootMotionPracticeView({ language = "en", playback, initialSetti
     handedness: settings.handedness,
     maxAttempts: ROOT_MOTION_MAX_ATTEMPTS,
   }), [level, round, settings]);
-  const baseExercise = generated.ok ? generated.exercise : undefined;
+  const selectedVaultSnapshot = useMemo(() => vaultSnapshots.find((snapshot) => snapshot.signature === selectedVaultSignature) ?? vaultSnapshots[0], [selectedVaultSignature, vaultSnapshots]);
+  const vaultGenerated = useMemo(() => selectedVaultSnapshot ? createVaultRootMotionExercise({
+    snapshot: selectedVaultSnapshot,
+    level,
+    tuning: STANDARD_BASS_TUNINGS[settings.stringCount],
+    stringCount: settings.stringCount,
+    fretRange: settings.fretRange,
+    pitchSpan: { minMidi: 28, maxMidi: 55 },
+    handedness: settings.handedness,
+  }) : undefined, [level, selectedVaultSnapshot, settings]);
+  const baseExercise = sourceKind === "vault-root-path"
+    ? vaultGenerated?.ok ? vaultGenerated.exercise : undefined
+    : generated.ok ? generated.exercise : undefined;
   const exercise = transfer ?? baseExercise;
   const session = useMemo(() => exercise ? new RootMotionPracticeSession(exercise) : undefined, [exercise]);
   const snapshot = session?.getSnapshot();
 
   useEffect(() => () => stopPreview(), []);
+  useEffect(() => {
+    if (!vaultSnapshots.length) { if (sourceKind === "vault-root-path") setSourceKind("generated"); return; }
+    if (!selectedVaultSignature || !vaultSnapshots.some((snapshot) => snapshot.signature === selectedVaultSignature)) setSelectedVaultSignature(vaultSnapshots[0]!.signature);
+  }, [selectedVaultSignature, sourceKind, vaultSnapshots]);
   useEffect(() => { setTransfer(undefined); setTransferOfExerciseId(undefined); }, [baseExercise?.id]);
   useEffect(() => { setSelectedDirection(undefined); setSelectedCategory(undefined); setSelectedSemitones(undefined); setRetainedTakeReference(undefined); setMessage(undefined); }, [exercise?.id]);
 
@@ -109,7 +131,7 @@ export function RootMotionPracticeView({ language = "en", playback, initialSetti
     });
   }, [exercise, onHistoryRecorded, retainedTakeReference, session, transferOfExerciseId]);
 
-  if (!exercise || !session || !snapshot) return <StatusMessage tone="error" title="Root Motion Echo">{generated.ok ? "Session is unavailable." : generated.error.message}</StatusMessage>;
+  if (!exercise || !session || !snapshot) return <StatusMessage tone="error" title="Root Motion Echo">{sourceKind === "vault-root-path" ? (vaultGenerated?.ok === false ? vaultGenerated.error.message : "Select a supported Vault-derived root path.") : (generated.ok ? "Session is unavailable." : generated.error.message)}</StatusMessage>;
   const currentStep = snapshot.status === "ready" || snapshot.status === "listening" ? 0
     : snapshot.status === "identify" ? 1 : snapshot.status === "sing" ? 2
       : snapshot.status === "play" ? 3 : snapshot.status === "review" || snapshot.status === "completed" ? 4 : 0;
@@ -131,8 +153,10 @@ export function RootMotionPracticeView({ language = "en", playback, initialSetti
     <EchoPracticeProgress ariaLabel={language === "ja" ? "Root Motion Echo\u306e\u9032\u884c" : "Root Motion Echo progress"} currentIndex={currentStep} steps={STEPS[language]} />
     <Surface className="space-y-5 border-[var(--lv-border)] bg-[var(--lv-surface)] p-5">
       <div className="flex flex-wrap items-end gap-3">
+        <Field label={language === "ja" ? "\u30bd\u30fc\u30b9" : "Source"} htmlFor="root-motion-source" className="w-64"><select id="root-motion-source" data-testid="root-motion-source" aria-label="Root Motion source" value={sourceKind} onChange={(event) => { setSourceKind(event.target.value as "generated" | "vault-root-path"); setRound((value) => value + 1); }}><option value="generated">{language === "ja" ? "\u751f\u6210\u3055\u308c\u305f\u30eb\u30fc\u30c8\u30e2\u30fc\u30b7\u30e7\u30f3" : "Generated Root Motion"}</option><option value="vault-root-path" disabled={!selectedVaultSnapshot}>{language === "ja" ? "Vault\u7531\u6765\u306e\u30eb\u30fc\u30c8\u30d1\u30b9" : "Vault-derived root path"}</option></select></Field>
+        {sourceKind === "vault-root-path" && vaultSnapshots.length > 1 ? <Field label={language === "ja" ? "\u30bb\u30af\u30b7\u30e7\u30f3" : "Vault section"} htmlFor="root-motion-vault-section" className="w-64"><select id="root-motion-vault-section" value={selectedVaultSnapshot?.signature ?? ""} onChange={(event) => { setSelectedVaultSignature(event.target.value); setRound((value) => value + 1); }}>{vaultSnapshots.map((snapshot) => <option key={snapshot.signature} value={snapshot.signature}>{snapshot.source.safeLabel}</option>)}</select></Field> : null}
         <Field label={labels.level} htmlFor="root-motion-level" className="w-44"><select id="root-motion-level" aria-label="Root Motion level" value={level} onChange={(event) => { setLevel(Number(event.target.value) as RootMotionLevel); setRound((value) => value + 1); }}><option value={1}>1 — {language === "ja" ? "\u65b9\u5411" : "Direction"}</option><option value={2}>2 — {language === "ja" ? "\u97f3\u7a0b\u306e\u7a2e\u985e" : "Category"}</option><option value={3}>3 — {language === "ja" ? "\u6b63\u78ba\u306a\u97f3\u7a0b" : "Exact interval"}</option><option value={4}>4 — {language === "ja" ? "\u30d5\u30ec\u30c3\u30c8\u30dc\u30fc\u30c9\u306e\u5f62" : "Shape"}</option><option value={5}>5 — {language === "ja" ? "\u79fb\u8abf" : "Transfer"}</option></select></Field>
-        <p className="pb-2 text-sm text-[var(--lv-text-secondary)]">{language === "ja" ? `\u8996\u8074 ${snapshot.listenCount}\u56de · \u30d2\u30f3\u30c8 ${snapshot.hintLevel}/4` : `${snapshot.listenCount} listens · Hint ${snapshot.hintLevel}/4`}</p>
+        <p className="pb-2 text-sm text-[var(--lv-text-secondary)]">{sourceKind === "vault-root-path" ? (language === "ja" ? "Vault\u7531\u6765\u306e\u30eb\u30fc\u30c8\u30d1\u30b9\u3002\u5143\u306e\u30d9\u30fc\u30b9\u30e9\u30a4\u30f3\u3067\u306f\u3042\u308a\u307e\u305b\u3093\u3002" : "Vault-derived root path — not an original bassline.") : (language === "ja" ? `\u8996\u8074 ${snapshot.listenCount}\u56de · \u30d2\u30f3\u30c8 ${snapshot.hintLevel}/4` : `${snapshot.listenCount} listens · Hint ${snapshot.hintLevel}/4`)}</p>
       </div>
       {snapshot.status === "ready" || snapshot.status === "identify" ? <div className="flex flex-wrap gap-2"><Button data-testid="root-motion-listen" onClick={listen}><Ear className="size-4" />{snapshot.listenCount > 0 ? labels.replay : labels.listen}</Button><Button variant="secondary" onClick={() => mutate(() => session.nextHint())} disabled={snapshot.status === "ready" || snapshot.hintLevel >= 4}><Lightbulb className="size-4" />{labels.hint}</Button></div> : null}
       {snapshot.status === "listening" ? <div className="flex items-center gap-2 text-sm text-[var(--lv-text-secondary)]"><Music2 className="size-4" />{language === "ja" ? "\u518d\u751f\u4e2d…" : "Playing…"}<Button variant="secondary" onClick={() => { stopPreview(); mutate(() => session.cancelListen()); }}><Square className="size-4" />{labels.stopped}</Button></div> : null}

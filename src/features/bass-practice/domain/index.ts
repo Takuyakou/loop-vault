@@ -10,6 +10,7 @@ export * from "./review";
 export * from "./progressionPresets";
 export * from "./rhythm";
 export * from "./rootMotion";
+export * from "./rootMotionVault";
 export * from "./rootMotionHistory";
 export * from "./singingReference";
 export * from "./stateMachine";

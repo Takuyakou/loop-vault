@@ -62,7 +62,7 @@ export function BassPracticeModeView({ language = "en", onRhythmAttemptCompleted
       </div>
       {degreeEnabled ? <div hidden={mode !== "degree"}><BassPracticeView language={language} {...degreeProps} /></div> : null}
       {mode === "rhythm" && rhythmEnabled ? <RhythmPracticeView language={language} onAttemptCompleted={onRhythmAttemptCompleted} /> : null}
-      {mode === "root-motion" && rootMotionEnabled ? <RootMotionPracticeView language={language} initialSettings={degreeProps.initialSettings} onHistoryRecorded={onRootMotionHistoryRecorded} /> : null}
+      {mode === "root-motion" && rootMotionEnabled ? <RootMotionPracticeView language={language} initialSettings={degreeProps.initialSettings} vaultSnapshots={chordContextEnabled ? (chordContextSnapshot ? [chordContextSnapshot, ...(chordContextSnapshots ?? []).filter((snapshot) => snapshot.signature !== chordContextSnapshot.signature)] : chordContextSnapshots) : undefined} onHistoryRecorded={onRootMotionHistoryRecorded} /> : null}
       {mode === "bassline" && basslineEnabled ? <BasslinePracticeView language={language} chordContextSnapshot={enabledChordContextSnapshot} chordContextSnapshots={chordContextEnabled ? chordContextSnapshots : undefined} vaultPickerCandidates={chordContextEnabled ? vaultPickerCandidates : undefined} chordContextEnabled={chordContextEnabled} onChordContextHistoryRecorded={onChordContextHistoryRecorded} /> : null}
     </div>
   );
