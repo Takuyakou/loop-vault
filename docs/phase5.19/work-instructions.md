@@ -236,3 +236,16 @@ Direct exe / MSI / NSIS。relative path, bytes, SHA-256, build commit, version/d
   without a separate user instruction.
 ## 22. Git rules
 Each Stage: status, diff, diff-check, intended paths, no add-A/add-dot, staged review, commit, post-commit clean, state update。master merge/push/P5.20禁止。
+
+## 23. P5.19-06 — Adjustable Chain Length
+
+The user-approved amendment adds a persisted selectable Root Motion phrase count
+from two through eight. It replaces the former level-to-count coupling: levels
+continue to govern only first-transition objective evidence. Use two beats per
+note (4..16 beats); generated and Transfer paths preserve every signed motion.
+Vault sources require the selected number of safe roots and fail closed when
+short. Expand factual Root Motion History validation to seven motions while
+keeping legacy files readable. Do not change Vault schema/mutation, P5.15,
+Analyzer, MIDI Exporter, automatic scoring, or P5.20. Run focused domain/Vault/
+persistence/UI tests, Bass Practice regression, app/E2E typechecks, lint,
+production build, diff/protected checks, and record the results in P5.19-06.

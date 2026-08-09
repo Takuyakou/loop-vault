@@ -2,7 +2,7 @@
 # Phase 5.19 — Root Motion Echo
 
 ## Status
-`P5.19-05 RELEASE GATES PASS after Transfer persistence hotfix - human re-acceptance pending`
+`P5.19-06 ADJUSTABLE CHAIN LENGTH — contract and implementation in progress`
 
 ## Required Reading Order
 
@@ -135,6 +135,7 @@ P5.18.2が正式完了・master統合済み、test-output hygieneがmasterに含
 - P5.19-03 — Fretboard / Transfer / History / Record & Compare
 - P5.19-04 — Vault-derived Source / Motion Chain
 - P5.19-05 — Product Hardening / Release / Human Acceptance
+- P5.19-06 — Adjustable Chain Length / Persistence / Compatibility
 
 ## Completion conditions
 - Identifyを客観判定できる
@@ -152,10 +153,12 @@ P5.18.2が正式完了・master統合済み、test-output hygieneがmasterに含
 - full gates PASS
 - human acceptance待ちでmaster未merge停止
 
+- Selectable two through eight-note Root Motion phrases, with factual first-transition evidence and full-sequence rehearsal.
+
 ## Stop conditions
 Practice schema破壊的migration、Vault schema変更、P5.15依存、虚偽shape、Vault root pathをoriginal basslineと誤認させる必要、Identify/Review合成、Analyzer/MIDI Exporter変更、test-output hygiene退行、resource leak、意図不明な既存変更。
 
 停止時にreset/stash/discardしない。
 
 ## Next action
-P5.19-05 release gates were rerun after the Transfer persistence hotfix. Perform only the documented human re-acceptance against code candidate 702b0dd5df855958f2eb7e6580e683d117f17770. Do not merge, push, or start P5.20.
+Implement only P5.19-06 adjustable Root Motion chain length. Do not merge, push, or start P5.20.
