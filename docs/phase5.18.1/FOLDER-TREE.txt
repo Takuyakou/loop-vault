@@ -1,0 +1,25 @@
+phase5.18.1/
+├─ README.md
+├─ CODEX-START-PROMPT.md
+├─ CODEX-RUN-REMAINING-STAGES.md
+├─ work-instructions.md
+├─ execution-state.json
+├─ proposal/
+│  ├─ PRESET-CATALOG.md
+│  └─ P5.18.1-DESIGN-REVIEW.md
+├─ audit/
+│  └─ P5.18.1-00-repository-audit.md
+├─ contracts/
+│  ├─ 01-scope-contract.md
+│  ├─ 02-preset-library-contract.md
+│  ├─ 03-source-picker-contract.md
+│  ├─ 04-history-migration-contract.md
+│  └─ 05-privacy-safety-contract.md
+└─ reports/
+   ├─ README.md
+   ├─ P5.18.1-00-audit-baseline.md
+   ├─ P5.18.1-01-preset-domain.md
+   ├─ P5.18.1-02-vault-picker.md
+   ├─ P5.18.1-03-source-integration.md
+   ├─ P5.18.1-04-product-hardening.md
+   └─ P5.18.1-05-product-acceptance.md
