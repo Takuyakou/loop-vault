@@ -74,7 +74,7 @@ vi.mock("../application/chordContextToneDriver", () => ({
 
 import { makeChordSymbol } from "../../../domain/chords";
 import type { SavedProgressionBlock } from "../../../domain/types";
-import { buildGeneratedChordContextSnapshot, buildVaultChordContextSnapshot, type ChordContextSnapshot } from "../domain";
+import { buildBasslinePresetSnapshot, buildGeneratedChordContextSnapshot, buildVaultChordContextSnapshot, type ChordContextSnapshot } from "../domain";
 import { BasslinePracticeView } from "./BasslinePracticeView";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
@@ -188,6 +188,74 @@ describe("Bassline Echo Chord Context", () => {
     expect(container.querySelector("[aria-label='ベースラインのコード進行']")?.textContent).toContain("Dm7G7Cmaj7");
   });
 
+  it("integrates preset sources with key changes across Bassline, Chord Context, Record & Compare, and factual History", async () => {
+    const onChordContextHistoryRecorded = vi.fn(async (_entry: unknown) => undefined);
+    const container = await renderView({ onChordContextHistoryRecorded });
+    const sourceSelect = container.querySelector<HTMLSelectElement>("[data-testid='bassline-progression-select']")!;
+
+    expect(sourceSelect.value).toBe("generated");
+    expect(sourceSelect.options).toHaveLength(10);
+    expect(container.querySelector("[data-testid='bassline-source-summary']")?.textContent).toContain("Default generated source");
+
+    await chooseSelect(sourceSelect, "pop-four-chords");
+    expect(sourceSelect.value).toBe("pop-four-chords");
+    expect(container.querySelector("[data-testid='bassline-source-kind']")?.textContent).toContain("Preset source · Pop Four Chords");
+    expect(container.querySelector("[data-testid='bassline-source-summary']")?.textContent).toContain("C major");
+    expect(container.querySelector("[data-testid='bassline-source-summary']")?.textContent).toContain("92 BPM");
+    expect(container.querySelector("[aria-label='Bassline progression strip']")?.textContent).toBe("CGAmF");
+    expect(container.querySelector<HTMLInputElement>("[data-testid='chord-context-effective-bpm']")?.value).toBe("92");
+
+    await clickStart(container);
+    const presetSession = playback.sessions[playback.sessions.length - 1]!;
+    expect(presetSession.events.filter((event) => event.layer === "chords")).toHaveLength(4);
+
+    const keySelect = container.querySelector<HTMLSelectElement>("[data-testid='bassline-preset-key-select']")!;
+    await chooseSelect(keySelect, "D major");
+    expect(presetSession.stopped).toBeGreaterThan(0);
+    expect(presetSession.disposed).toBeGreaterThan(0);
+    expect(container.querySelector("[aria-label='Bassline progression strip']")?.textContent).toBe("DABmG");
+    expect(container.querySelector("[data-testid='bassline-source-summary']")?.textContent).toContain("D major");
+
+    await act(async () => findButton(container, "Review")?.click());
+    const expectedPreset = buildBasslinePresetSnapshot({ presetId: "pop-four-chords", key: "D major" });
+    if (!expectedPreset.ok) throw new Error(expectedPreset.error.message);
+    expect(recordCompare.props?.resetKey).toContain(expectedPreset.snapshot.signature);
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>("[data-testid='chord-context-save-history']")?.click();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(onChordContextHistoryRecorded.mock.calls[0]![0]).toMatchObject({
+      source: {
+        kind: "preset",
+        presetId: "pop-four-chords",
+        catalogVersion: "bassline-preset-catalog-v1",
+        safeLabel: "Pop Four Chords",
+      },
+      section: { startBar: 1, endBar: 4, lengthBeats: 16 },
+      originalBpm: 92,
+      effectiveBpm: 92,
+    });
+
+    await chooseSelect(sourceSelect, "generated");
+    expect(sourceSelect.value).toBe("generated");
+    expect(container.querySelector("[data-testid='bassline-preset-key-select']")).toBeNull();
+    expect(container.querySelector("[aria-label='Bassline progression strip']")?.textContent).toBe("Dm7G7Cmaj7");
+    expect(container.querySelector<HTMLInputElement>("[data-testid='chord-context-effective-bpm']")?.value).toBe("96");
+  });
+  it("uses the full twelve-bar preset section without clipping in Chord Context", async () => {
+    const container = await renderView();
+    const sourceSelect = container.querySelector<HTMLSelectElement>("[data-testid='bassline-progression-select']")!;
+
+    await chooseSelect(sourceSelect, "twelve-bar-blues");
+    expect(container.querySelector("[data-testid='bassline-source-summary']")?.textContent).toContain("Bars 1-12");
+    expect(container.querySelector("[data-testid='bassline-source-summary']")?.textContent).toContain("96 BPM");
+    expect(container.querySelector<HTMLInputElement>("[data-testid='chord-context-effective-bpm']")?.value).toBe("96");
+
+    await clickStart(container);
+    const session = playback.sessions[playback.sessions.length - 1]!;
+    expect(session.events.filter((event) => event.layer === "chords")).toHaveLength(12);
+  });
   it("offers Electric and Piano chord timbres and prepares the selected session sound", async () => {
     const container = await renderView({ language: "ja" });
     const timbre = container.querySelector<HTMLSelectElement>("[data-testid='chord-context-timbre']")!;
@@ -518,6 +586,13 @@ async function chooseRadio(container: HTMLElement, name: string, label: string) 
   });
 }
 
+async function chooseSelect(select: HTMLSelectElement, value: string) {
+  await act(async () => {
+    select.value = value;
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    await Promise.resolve();
+  });
+}
 function setNumberInputValue(input: HTMLInputElement, value: string) {
   const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
   if (!setter) throw new Error("Missing HTMLInputElement value setter.");
