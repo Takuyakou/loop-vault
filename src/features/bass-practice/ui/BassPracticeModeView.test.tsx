@@ -19,7 +19,7 @@ describe("Bass Practice production modes", () => {
     expect(degree?.querySelector("[aria-label='Degree Echo progress']")?.textContent)
       .toContain("ListenSingThinkPlayReviewTransfer");
     expect(Array.from(container.querySelectorAll("[role='tab']")).map((tab) => tab.textContent)).toEqual([
-      "Degree Echo", "Rhythm Echo", "Bassline Echo",
+      "Degree Echo", "Rhythm Echo", "Bassline Echo", "Root Motion Echo",
     ]);
 
     await act(async () => Array.from(container.querySelectorAll("button")).find((button) => button.textContent === "Rhythm Echo")?.click());

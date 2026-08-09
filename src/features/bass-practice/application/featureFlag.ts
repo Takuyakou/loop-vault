@@ -5,6 +5,8 @@ export const BASS_PRACTICE_BASSLINE_ECHO_FEATURE_STORAGE_KEY = "loop-vault:bass-
 export const BASS_PRACTICE_RECORD_COMPARE_FEATURE_STORAGE_KEY = "loop-vault:bass-practice-record-compare-enabled:v1";
 /** P5.18 Chord Context, independent of the existing Echo and Record & Compare flags. */
 export const BASS_PRACTICE_CHORD_CONTEXT_FEATURE_STORAGE_KEY = "loop-vault:bass-practice-chord-context-enabled:v1";
+/** P5.19 Root Motion Echo ships on; explicit local false remains rollback. */
+export const BASS_PRACTICE_ROOT_MOTION_FEATURE_STORAGE_KEY = "loop-vault:bass-practice-root-motion-enabled:v1";
 
 /**
  * P5.16 is a shipped product surface. Keep it on in a normal build, while an
@@ -21,6 +23,7 @@ export const DEFAULT_BASS_PRACTICE_BASSLINE_ECHO_ENABLED = true;
 export const DEFAULT_BASS_PRACTICE_RECORD_COMPARE_ENABLED = true;
 /** Chord Context ships enabled; an explicit local `false` is a non-destructive rollback. */
 export const DEFAULT_BASS_PRACTICE_CHORD_CONTEXT_ENABLED = true;
+export const DEFAULT_BASS_PRACTICE_ROOT_MOTION_ENABLED = true;
 
 interface StorageLike { getItem(key: string): string | null; }
 
@@ -29,6 +32,7 @@ export function isBassPracticeRhythmEchoEnabled(storage?: StorageLike): boolean 
 export function isBassPracticeBasslineEchoEnabled(storage?: StorageLike): boolean { return readFlag(BASS_PRACTICE_BASSLINE_ECHO_FEATURE_STORAGE_KEY, DEFAULT_BASS_PRACTICE_BASSLINE_ECHO_ENABLED, storage); }
 export function isBassPracticeRecordCompareEnabled(storage?: StorageLike): boolean { return readFlag(BASS_PRACTICE_RECORD_COMPARE_FEATURE_STORAGE_KEY, DEFAULT_BASS_PRACTICE_RECORD_COMPARE_ENABLED, storage); }
 export function isBassPracticeChordContextEnabled(storage?: StorageLike): boolean { return readFlag(BASS_PRACTICE_CHORD_CONTEXT_FEATURE_STORAGE_KEY, DEFAULT_BASS_PRACTICE_CHORD_CONTEXT_ENABLED, storage); }
+export function isBassPracticeRootMotionEnabled(storage?: StorageLike): boolean { return readFlag(BASS_PRACTICE_ROOT_MOTION_FEATURE_STORAGE_KEY, DEFAULT_BASS_PRACTICE_ROOT_MOTION_ENABLED, storage); }
 
 function readFlag(key: string, fallback: boolean, storage?: StorageLike): boolean {
   let target = storage;
