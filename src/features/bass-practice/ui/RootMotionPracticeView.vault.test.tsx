@@ -1,14 +1,19 @@
 // @vitest-environment jsdom
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, expect, test } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 import { buildVaultChordContextSnapshot } from "../domain/chordContextSnapshot";
 import type { SavedProgressionBlock } from "../../../domain/types";
 import { RootMotionPracticeView } from "./RootMotionPracticeView";
 
+const previewAudio = vi.hoisted(() => ({ stopPreview: vi.fn(), previewMidiNotes: vi.fn() }));
+vi.mock("../../../audio/chordPreview", () => ({
+  previewMidiNotes: previewAudio.previewMidiNotes,
+  stopPreview: previewAudio.stopPreview,
+}));
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 let root: Root | undefined;
-afterEach(async () => { await act(async () => root?.unmount()); root = undefined; document.body.replaceChildren(); });
+afterEach(async () => { await act(async () => root?.unmount()); root = undefined; document.body.replaceChildren(); previewAudio.stopPreview.mockClear(); previewAudio.previewMidiNotes.mockClear(); });
 
 function button(container: HTMLElement, text: string): HTMLButtonElement {
   const element = Array.from(container.querySelectorAll("button")).find((candidate) => candidate.textContent === text);
@@ -36,4 +41,18 @@ test("uses a safe Vault-derived root path without treating it as an original bas
   await act(async () => button(container, "Record answer").click());
   expect(container.querySelector("[data-testid='root-motion-first-answer']")).not.toBeNull();
   expect(container.textContent).not.toContain("safe");
+});
+test("releases a listening preview when its Vault source is switched or removed", async () => {
+  const container = document.createElement("div"); document.body.append(container); root = createRoot(container);
+  await act(async () => root?.render(<RootMotionPracticeView vaultSnapshots={[safeSnapshot()]} playback={async () => new Promise<void>(() => undefined)} />));
+  await act(async () => button(container, "Listen to example").click());
+  expect(container.textContent).toContain("Playing");
+
+  const source = container.querySelector("[data-testid='root-motion-source']") as HTMLSelectElement;
+  await act(async () => { source.value = "vault-root-path"; source.dispatchEvent(new Event("change", { bubbles: true })); });
+  expect(previewAudio.stopPreview).toHaveBeenCalled();
+
+  await act(async () => root?.render(<RootMotionPracticeView vaultSnapshots={[]} playback={async () => undefined} />));
+  await act(async () => undefined);
+  expect((container.querySelector("[data-testid='root-motion-source']") as HTMLSelectElement).value).toBe("generated");
 });

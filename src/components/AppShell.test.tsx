@@ -65,6 +65,7 @@ describe("AppShell", () => {
   ] as const)("renders %s with full and compact status content", async (saveStatus, label, iconClass) => {
     const { container, root } = await renderShell({ saveStatus });
     const status = container.querySelector(`[data-save-status="${saveStatus}"]`);
+    expect(status?.getAttribute("role")).toBe("status");
     expect(status?.getAttribute("aria-label")).toBe(label);
     expect(status?.getAttribute("title")).toBe(label);
     expect(status?.querySelector(`.${iconClass}`)).not.toBeNull();

@@ -93,7 +93,8 @@ export function RootMotionPracticeView({ language = "en", playback, initialSetti
   const session = useMemo(() => exercise ? new RootMotionPracticeSession(exercise) : undefined, [exercise]);
   const snapshot = session?.getSnapshot();
 
-  useEffect(() => () => stopPreview(), []);
+  // A source, level, or transfer change replaces the exercise; release its preview before the replacement is usable.
+  useEffect(() => () => stopPreview(), [exercise?.id]);
   useEffect(() => {
     if (!vaultSnapshots.length) { if (sourceKind === "vault-root-path") setSourceKind("generated"); return; }
     if (!selectedVaultSignature || !vaultSnapshots.some((snapshot) => snapshot.signature === selectedVaultSignature)) setSelectedVaultSignature(vaultSnapshots[0]!.signature);

@@ -191,6 +191,7 @@ export function AppShell({
             </Button>
             <span
               className="ml-1 inline-flex h-10 min-w-10 items-center justify-center gap-1.5 border-l border-[var(--lv-border)] pl-3 text-xs text-[var(--lv-text-muted)]"
+              role="status"
               aria-live="polite"
               aria-label={saveLabel}
               title={saveLabel}
