@@ -34,10 +34,8 @@ import { VaultView } from "./views/VaultView";
 import { ProgressionDetailView } from "./views/ProgressionDetailView";
 import { PracticeView } from "./views/PracticeView";
 import { isBassPracticeBasslineEchoEnabled, isBassPracticeDegreeEchoEnabled, isBassPracticeRhythmEchoEnabled } from "./features/bass-practice/application/featureFlag";
-import {
-  buildVaultChordContextSnapshotCatalog,
-  type VaultChordContextSnapshot,
-} from "./features/bass-practice/domain";
+import { buildVaultPickerCandidateViews, type VaultPickerCandidateView } from "./features/bass-practice/application/vaultPickerCandidates";
+import type { VaultChordContextSnapshot } from "./features/bass-practice/domain";
 import {
   derivePracticeHistory,
   derivePracticeHomeSummary,
@@ -99,7 +97,7 @@ import {
 type View = AppView;
 const pipeline: Status[] = ["idea", "loop", "arrange", "mix", "done"];
 const DISABLED_PRACTICE_DATA: PracticeDataSnapshot = { status: "disabled", quarantine: [] };
-const EMPTY_CHORD_CONTEXT_SNAPSHOTS: readonly VaultChordContextSnapshot[] = Object.freeze([]);
+const EMPTY_VAULT_PICKER_CANDIDATES: readonly VaultPickerCandidateView[] = Object.freeze([]);
 const BassPracticeView = lazy(async () => {
   const module = await import("./features/bass-practice/ui/BassPracticeModeView");
   return { default: module.BassPracticeModeView };
@@ -235,13 +233,19 @@ function App() {
     [ideas, pendingDeletions, vaultEpoch],
   );
 
-  const chordContextSnapshots = useMemo(
+  const vaultPickerCandidates = useMemo(
     () => view === "practice" && practiceMode === "bass-practice"
-      ? buildVaultChordContextSnapshotCatalog(visibleIdeas)
-      : EMPTY_CHORD_CONTEXT_SNAPSHOTS,
-    [practiceMode, view, visibleIdeas],
+      ? buildVaultPickerCandidateViews(
+        visibleIdeas,
+        settings.language === "ja" ? "\u7121\u984c\u306e\u9032\u884c" : "Untitled progression",
+      )
+      : EMPTY_VAULT_PICKER_CANDIDATES,
+    [practiceMode, settings.language, view, visibleIdeas],
   );
-
+  const chordContextSnapshots = useMemo(
+    () => Object.freeze(vaultPickerCandidates.map((candidate) => candidate.safeSnapshot)),
+    [vaultPickerCandidates],
+  );
   const selectedIdea = visibleIdeas.find((idea) => idea.id === selectedId) ?? visibleIdeas[0];
   const storedSelectedIdea = ideas.find((idea) => idea.id === selectedIdea?.id);
   const progressionIdea = selectedProgression
@@ -719,6 +723,7 @@ async function analyzeMidiPath(path: string) {
                         language={language}
                         chordContextSnapshot={chordContextSnapshot}
                         chordContextSnapshots={chordContextSnapshots}
+                        vaultPickerCandidates={vaultPickerCandidates}
                         initialClaim={practiceClaim}
                         initialRound={practiceSession.round}
                         initialSettings={practiceData.file?.settings}

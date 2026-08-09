@@ -2,13 +2,14 @@ import { useDeferredValue, useMemo, useRef, useState, type KeyboardEvent } from 
 import type { AppLanguage } from "../../../i18n";
 import { Modal } from "../../../components/Modal";
 import { Button } from "../../../components/ui/primitives";
+import { filterVaultPickerCandidates, type VaultPickerCandidateView } from "../application/vaultPickerCandidates";
 import type { VaultChordContextSnapshot } from "../domain";
 
 const MAX_VISIBLE_CANDIDATES = 50;
 
 export interface VaultProgressionPickerProps {
   readonly language: AppLanguage;
-  readonly snapshots: readonly VaultChordContextSnapshot[];
+  readonly candidates: readonly VaultPickerCandidateView[];
   readonly activeSignature?: string;
   readonly disabled?: boolean;
   readonly loading?: boolean;
@@ -22,7 +23,7 @@ export interface VaultProgressionPickerProps {
  */
 export function VaultProgressionPicker({
   language,
-  snapshots,
+  candidates,
   activeSignature,
   disabled = false,
   loading = false,
@@ -36,38 +37,37 @@ export function VaultProgressionPicker({
   const deferredQuery = useDeferredValue(query);
   const candidateRefs = useRef(new Map<string, HTMLButtonElement>());
 
-  const filteredSnapshots = useMemo(
-    () => filterSnapshots(snapshots, deferredQuery),
-    [deferredQuery, snapshots],
+  const filteredCandidates = useMemo(
+    () => filterVaultPickerCandidates(candidates, deferredQuery),
+    [candidates, deferredQuery],
   );
-  const visibleSnapshots = useMemo(
-    () => filteredSnapshots.slice(0, MAX_VISIBLE_CANDIDATES),
-    [filteredSnapshots],
+  const visibleCandidates = useMemo(
+    () => filteredCandidates.slice(0, MAX_VISIBLE_CANDIDATES),
+    [filteredCandidates],
   );
-  const selectedSnapshot = visibleSnapshots.find((snapshot) => snapshot.signature === selectedSignature)
-    ?? visibleSnapshots[0];
-
+  const selectedCandidate = visibleCandidates.find((candidate) => candidate.safeSnapshot.signature === selectedSignature)
+    ?? visibleCandidates[0];
   const openPicker = () => {
     setQuery("");
     setSelectedSignature(
-      snapshots.find((snapshot) => snapshot.signature === activeSignature)?.signature
-      ?? snapshots[0]?.signature,
+      candidates.find((candidate) => candidate.safeSnapshot.signature === activeSignature)?.safeSnapshot.signature
+      ?? candidates[0]?.safeSnapshot.signature,
     );
     setOpen(true);
   };
   const closePicker = () => setOpen(false);
   const confirm = () => {
-    if (!selectedSnapshot || loading || error) return;
-    onConfirm(selectedSnapshot.signature);
+    if (!selectedCandidate || loading || error) return;
+    onConfirm(selectedCandidate.safeSnapshot.signature);
     closePicker();
   };
   const moveSelection = (event: KeyboardEvent<HTMLDivElement>, direction: -1 | 1) => {
-    if (!visibleSnapshots.length) return;
+    if (!visibleCandidates.length) return;
     event.preventDefault();
-    const current = Math.max(0, visibleSnapshots.findIndex((snapshot) => snapshot.signature === selectedSnapshot?.signature));
-    const next = visibleSnapshots[(current + direction + visibleSnapshots.length) % visibleSnapshots.length]!;
-    setSelectedSignature(next.signature);
-    candidateRefs.current.get(next.signature)?.focus();
+    const current = Math.max(0, visibleCandidates.findIndex((candidate) => candidate.safeSnapshot.signature === selectedCandidate?.safeSnapshot.signature));
+    const next = visibleCandidates[(current + direction + visibleCandidates.length) % visibleCandidates.length]!;
+    setSelectedSignature(next.safeSnapshot.signature);
+    candidateRefs.current.get(next.safeSnapshot.signature)?.focus();
   };
 
   return <>
@@ -115,10 +115,10 @@ export function VaultProgressionPicker({
 
         {loading ? <p className="mt-4 text-sm text-[var(--lv-text-secondary)]" role="status">{ja ? "Vaultの進行を読み込んでいます…" : "Loading Vault progressions…"}</p> : null}
         {!loading && error ? <p className="mt-4 text-sm text-[var(--lv-danger)]" role="alert">{error}</p> : null}
-        {!loading && !error && snapshots.length === 0 ? <p className="mt-4 text-sm text-[var(--lv-text-secondary)]" role="status">{ja ? "選択できる対応済みの4/4コード進行はまだありません。" : "There are no supported 4/4 Vault progressions to choose from yet."}</p> : null}
-        {!loading && !error && snapshots.length > 0 && filteredSnapshots.length === 0 ? <p className="mt-4 text-sm text-[var(--lv-text-secondary)]" role="status">{ja ? "検索に一致するコード進行はありません。" : "No Vault progressions match your search."}</p> : null}
+        {!loading && !error && candidates.length === 0 ? <p className="mt-4 text-sm text-[var(--lv-text-secondary)]" role="status">{ja ? "選択できる対応済みの4/4コード進行はまだありません。" : "There are no supported 4/4 Vault progressions to choose from yet."}</p> : null}
+        {!loading && !error && candidates.length > 0 && filteredCandidates.length === 0 ? <p className="mt-4 text-sm text-[var(--lv-text-secondary)]" role="status">{ja ? "検索に一致するコード進行はありません。" : "No Vault progressions match your search."}</p> : null}
 
-        {!loading && !error && visibleSnapshots.length > 0 ? <>
+        {!loading && !error && visibleCandidates.length > 0 ? <>
           <div
             className="mt-4 max-h-64 overflow-y-auto rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] p-2"
             role="group"
@@ -128,8 +128,9 @@ export function VaultProgressionPicker({
               if (event.key === "ArrowUp") moveSelection(event, -1);
             }}
           >
-            {visibleSnapshots.map((snapshot) => {
-              const selected = snapshot.signature === selectedSnapshot?.signature;
+            {visibleCandidates.map((candidate) => {
+              const snapshot = candidate.safeSnapshot;
+              const selected = snapshot.signature === selectedCandidate?.safeSnapshot.signature;
               return <button
                 key={snapshot.signature}
                 ref={(element) => {
@@ -147,38 +148,23 @@ export function VaultProgressionPicker({
               </button>;
             })}
           </div>
-          {filteredSnapshots.length > MAX_VISIBLE_CANDIDATES ? <p className="mt-2 text-xs text-[var(--lv-text-muted)]" role="status">{ja ? `最初の${MAX_VISIBLE_CANDIDATES}件を表示しています。検索で絞り込んでください。` : `Showing the first ${MAX_VISIBLE_CANDIDATES} matches. Refine your search to narrow the list.`}</p> : null}
-          {selectedSnapshot ? <section className="mt-4 rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] p-3" aria-live="polite" data-testid="vault-progression-picker-preview">
+          {filteredCandidates.length > MAX_VISIBLE_CANDIDATES ? <p className="mt-2 text-xs text-[var(--lv-text-muted)]" role="status">{ja ? `最初の${MAX_VISIBLE_CANDIDATES}件を表示しています。検索で絞り込んでください。` : `Showing the first ${MAX_VISIBLE_CANDIDATES} matches. Refine your search to narrow the list.`}</p> : null}
+          {selectedCandidate ? <section className="mt-4 rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] p-3" aria-live="polite" data-testid="vault-progression-picker-preview">
             <p className="text-xs font-semibold uppercase text-[var(--lv-text-muted)]">{ja ? "選択したセクション" : "Selected section"}</p>
-            <p className="mt-1 font-medium">{pickerSnapshotLabel(selectedSnapshot, language)}</p>
-            <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">{selectedSnapshot.section.chords.map((chord) => chord.label).join(" · ")}</p>
+            <p className="mt-1 font-medium">{pickerSnapshotLabel(selectedCandidate.safeSnapshot, language)}</p>
+            <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">{selectedCandidate.safeSnapshot.section.chords.map((chord) => chord.label).join(" · ")}</p>
           </section> : null}
         </> : null}
 
         <div className="mt-5 flex flex-wrap justify-end gap-2">
           <Button variant="secondary" onClick={closePicker}>{ja ? "キャンセル" : "Cancel"}</Button>
-          <Button data-testid="vault-progression-picker-confirm" variant="primary" disabled={!selectedSnapshot || loading || Boolean(error)} onClick={confirm}>
+          <Button data-testid="vault-progression-picker-confirm" variant="primary" disabled={!selectedCandidate || loading || Boolean(error)} onClick={confirm}>
             {ja ? "このセクションを使う" : "Use this section"}
           </Button>
         </div>
       </section>
     </Modal> : null}
   </>;
-}
-
-function filterSnapshots(snapshots: readonly VaultChordContextSnapshot[], query: string): readonly VaultChordContextSnapshot[] {
-  const normalizedQuery = query.trim().toLocaleLowerCase();
-  if (!normalizedQuery) return snapshots;
-  return snapshots.filter((snapshot) => searchableText(snapshot).includes(normalizedQuery));
-}
-
-function searchableText(snapshot: VaultChordContextSnapshot): string {
-  return [
-    snapshot.source.safeLabel,
-    snapshot.tonalContext.key,
-    `${snapshot.section.startBar}-${snapshot.section.endBar}`,
-    ...snapshot.section.chords.map((chord) => chord.label),
-  ].join(" ").toLocaleLowerCase();
 }
 
 function pickerSnapshotLabel(snapshot: VaultChordContextSnapshot, language: AppLanguage): string {

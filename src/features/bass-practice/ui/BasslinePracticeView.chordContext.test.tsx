@@ -140,7 +140,12 @@ describe("Bassline Echo Chord Context", () => {
       block,
     });
     if (!result.ok) throw new Error(result.error.message);
-    const container = await renderView({ language: "ja", chordContextSnapshots: [result.snapshot] });
+    const vaultPickerCandidates = Object.freeze([Object.freeze({
+      displayTitle: "Live Vault Title",
+      searchableTitle: "live vault title",
+      safeSnapshot: result.snapshot,
+    })]);
+    const container = await renderView({ language: "ja", chordContextSnapshots: [result.snapshot], vaultPickerCandidates });
     const openPicker = container.querySelector<HTMLButtonElement>("[data-testid='vault-progression-picker-open']")!;
 
     expect(openPicker.textContent).toContain("Vaultから選ぶ");
@@ -153,6 +158,14 @@ describe("Bassline Echo Chord Context", () => {
     });
     expect(document.querySelector("[role='dialog']")?.textContent).toContain("Vaultからコード進行を選ぶ");
     expect(document.querySelector("[data-testid='vault-progression-picker-preview']")?.textContent).toContain("Dmaj7");
+    const search = document.querySelector<HTMLInputElement>("[data-testid='vault-progression-picker-search']")!;
+    await act(async () => {
+      setTextInputValue(search, "LIVE VAULT");
+      search.dispatchEvent(new Event("input", { bubbles: true }));
+      await Promise.resolve();
+    });
+    expect(document.querySelectorAll("[data-testid='vault-progression-picker-candidate']")).toHaveLength(1);
+    expect(JSON.stringify(vaultPickerCandidates[0]!.safeSnapshot)).not.toContain("Live Vault Title");
     expect(document.body.textContent).not.toContain("Private title must not enter Practice");
     expect(container.querySelector("[aria-label='ベースラインのコード進行']")?.textContent).toContain("Dm7G7Cmaj7");
     expect(playback.sessions[0]!.stopped).toBe(0);
@@ -622,4 +635,9 @@ function checkedLabel(container: HTMLElement, name: string): string | undefined 
 function findButton(container: HTMLElement, text: string): HTMLButtonElement | undefined {
   return Array.from(container.querySelectorAll<HTMLButtonElement>("button"))
     .find((button) => button.textContent?.includes(text));
+}
+function setTextInputValue(input: HTMLInputElement, value: string) {
+  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+  if (!setter) throw new Error("Missing HTMLInputElement value setter.");
+  setter.call(input, value);
 }

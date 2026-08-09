@@ -7,6 +7,7 @@ import {
   isBassPracticeRhythmEchoEnabled,
 } from "../application/featureFlag";
 import type { ChordContextHistoryEntry, RhythmPracticeAttempt, VaultChordContextSnapshot } from "../domain";
+import type { VaultPickerCandidateView } from "../application/vaultPickerCandidates";
 import { BassPracticeView } from "./BassPracticeView";
 import { BasslinePracticeView } from "./BasslinePracticeView";
 import { RhythmPracticeView } from "./RhythmPracticeView";
@@ -17,6 +18,8 @@ type BassPracticeModeViewProps = ComponentProps<typeof BassPracticeView> & {
   readonly onRhythmAttemptCompleted?: (attempt: RhythmPracticeAttempt) => Promise<void>;
   readonly chordContextSnapshot?: VaultChordContextSnapshot;
   readonly chordContextSnapshots?: readonly VaultChordContextSnapshot[];
+  /** Live-title candidates are picker-only and never cross into Practice persistence. */
+  readonly vaultPickerCandidates?: readonly VaultPickerCandidateView[];
   readonly onChordContextHistoryRecorded?: (entry: ChordContextHistoryEntry) => Promise<void>;
 };
 
@@ -25,7 +28,7 @@ type BassPracticeModeViewProps = ComponentProps<typeof BassPracticeView> & {
  * live Practice session, so unmounting it merely to reveal another mode would
  * incorrectly mark that session abandoned.
  */
-export function BassPracticeModeView({ language = "en", onRhythmAttemptCompleted, chordContextSnapshot, chordContextSnapshots, onChordContextHistoryRecorded, ...degreeProps }: BassPracticeModeViewProps) {
+export function BassPracticeModeView({ language = "en", onRhythmAttemptCompleted, chordContextSnapshot, chordContextSnapshots, vaultPickerCandidates, onChordContextHistoryRecorded, ...degreeProps }: BassPracticeModeViewProps) {
   const degreeEnabled = isBassPracticeDegreeEchoEnabled();
   const rhythmEnabled = isBassPracticeRhythmEchoEnabled();
   const basslineEnabled = isBassPracticeBasslineEchoEnabled();
@@ -54,7 +57,7 @@ export function BassPracticeModeView({ language = "en", onRhythmAttemptCompleted
       </div>
       {degreeEnabled ? <div hidden={mode !== "degree"}><BassPracticeView language={language} {...degreeProps} /></div> : null}
       {mode === "rhythm" && rhythmEnabled ? <RhythmPracticeView language={language} onAttemptCompleted={onRhythmAttemptCompleted} /> : null}
-      {mode === "bassline" && basslineEnabled ? <BasslinePracticeView language={language} chordContextSnapshot={enabledChordContextSnapshot} chordContextSnapshots={chordContextEnabled ? chordContextSnapshots : undefined} chordContextEnabled={chordContextEnabled} onChordContextHistoryRecorded={onChordContextHistoryRecorded} /> : null}
+      {mode === "bassline" && basslineEnabled ? <BasslinePracticeView language={language} chordContextSnapshot={enabledChordContextSnapshot} chordContextSnapshots={chordContextEnabled ? chordContextSnapshots : undefined} vaultPickerCandidates={chordContextEnabled ? vaultPickerCandidates : undefined} chordContextEnabled={chordContextEnabled} onChordContextHistoryRecorded={onChordContextHistoryRecorded} /> : null}
     </div>
   );
 }
