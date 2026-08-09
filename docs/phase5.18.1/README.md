@@ -4,7 +4,7 @@
 
 ## Status
 
-P5.18.1-02 GATES PASS — Vault Source Picker; awaiting P5.18.1-03 authorization
+P5.18.1-03 GATES PASS — Bassline Echo Source Integration; awaiting P5.18.1-04 authorization
 
 
 
