@@ -6,25 +6,26 @@ import type { SavedProgressionBlock, SongIdea } from "../../../domain/types";
 import {
   buildVaultPickerCandidateViews,
   filterVaultPickerCandidates,
+  groupVaultPickerCandidates,
   normalizeDisplayTitle,
 } from "./vaultPickerCandidates";
 
-function progression(id: string, root: number = 0): SavedProgressionBlock {
+function progression(id: string, root: number = 0, bars: number = 1): SavedProgressionBlock {
   return {
     id,
     summaryText: "Synthetic test metadata that never reaches Practice",
     detectedKey: root === 2 ? "D major" : "C major",
     bpm: 96,
     timeSignature: "4/4",
-    chords: [{
-      bar: 1,
+    chords: Array.from({ length: bars }, (_, index) => ({
+      bar: index + 1,
       beat: 1,
       durationBeats: 4,
       chord: makeChordSymbol(root, "maj7"),
       confidence: 1,
       alternatives: [],
       warnings: [],
-    }],
+    })),
     tags: [],
     capturedAt: "2026-01-01T00:00:00.000Z",
     analyzerVersion: "fixture",
@@ -83,6 +84,19 @@ describe("Vault picker candidate ViewModel", () => {
     expect(candidates.map((candidate) => candidate.displayTitle)).toEqual([title, title]);
     expect(new Set(candidates.map((candidate) => candidate.safeSnapshot.signature)).size).toBe(2);
     expect(new Set(candidates.map((candidate) => candidate.safeSnapshot.source.reference.ideaId)).size).toBe(2);
+  });
+
+  it("groups safe sections under one stored progression while preserving explicit section choice", () => {
+    const candidates = buildVaultPickerCandidateViews([
+      idea("idea-long", "Eight bar progression", progression("long-block", 0, 8)),
+    ], "Untitled progression");
+    const groups = groupVaultPickerCandidates(candidates);
+
+    expect(candidates.length).toBeGreaterThan(1);
+    expect(groups).toHaveLength(1);
+    expect(groups[0]?.displayTitle).toBe("Eight bar progression");
+    expect(groups[0]?.candidates).toHaveLength(candidates.length);
+    expect(groups[0]?.preferredCandidate.safeSnapshot.section).toMatchObject({ startBar: 1, endBar: 8 });
   });
 
   it("keeps a large live catalog deterministic while reflecting title edits and source deletion", () => {
