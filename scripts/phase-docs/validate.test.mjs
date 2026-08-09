@@ -218,3 +218,24 @@ describe("validateRepository — committed docs are clean", () => {
     expect(result.issueCount, JSON.stringify(result, null, 2)).toBe(0);
   });
 });
+
+describe("phase-docs validator — three-part phase ids", () => {
+  it("accepts matching 5.18.1-style package and stage ids", () => {
+    const tmp = mkdtempSync(join(tmpdir(), "phase-docs-"));
+    const pkg = join(tmp, "phase9.9.1");
+    cpSync(validFixture, pkg, { recursive: true });
+    try {
+      const readmePath = join(pkg, "README.md");
+      writeFileSync(readmePath, readFileSync(readmePath, "utf8").replaceAll("9.9", "9.9.1"));
+      editState(pkg, (state) => {
+        state.phaseId = "9.9.1";
+        state.activeStage = "P9.9.1-00";
+        state.completedStages = [];
+        state.requiredGates = { "P9.9.1-00": ["unit-tests"] };
+      });
+      expect(validatePackage(pkg, { schema, repoRoot: tmp }).issues).toEqual([]);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+});

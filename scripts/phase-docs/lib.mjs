@@ -251,14 +251,14 @@ export function validatePackage(pkgDir, { schema, repoRoot = pkgDir } = {}) {
     }
   }
 
-  // 2. phase id agreement: readme marker == state.phaseId == dir name (if phaseX.Y)
-  const markerMatch = readme.match(/<!--\s*phase-id:\s*([0-9]+\.[0-9]+)\s*-->/);
+  // 2. phase id agreement: readme marker == state.phaseId == dir name (if phaseX.Y or phaseX.Y.Z)
+  const markerMatch = readme.match(/<!--\s*phase-id:\s*([0-9]+(?:\.[0-9]+)+)\s*-->/);
   const readmePhaseId = markerMatch ? markerMatch[1] : null;
-  const dirMatch = basename(pkgDir).match(/^phase([0-9]+\.[0-9]+)$/);
+  const dirMatch = basename(pkgDir).match(/^phase([0-9]+(?:\.[0-9]+)+)$/);
   const dirPhaseId = dirMatch ? dirMatch[1] : null;
   const phaseId = state?.phaseId ?? readmePhaseId ?? dirPhaseId ?? null;
   if (readme && !readmePhaseId) {
-    add("phase-id-mismatch", readmePath, "README is missing a <!-- phase-id: X.Y --> marker");
+    add("phase-id-mismatch", readmePath, "README is missing a <!-- phase-id: X.Y[.Z] --> marker");
   }
   const ids = [
     ["execution-state.json", state?.phaseId ?? null],
@@ -297,7 +297,7 @@ export function validatePackage(pkgDir, { schema, repoRoot = pkgDir } = {}) {
       add("required-reading-order", readmePath, "Required Reading Order section has no links");
     }
     // duplicate stage ids in README "## Stages" headings
-    const stageIds = [...readme.matchAll(/^###\s+(P[0-9]+\.[0-9]+-[0-9]{2})\b/gm)].map((m) => m[1]);
+    const stageIds = [...readme.matchAll(/^###\s+(P[0-9]+(?:\.[0-9]+)+-[0-9]{2})\b/gm)].map((m) => m[1]);
     const seen = new Set();
     for (const id of stageIds) {
       if (seen.has(id)) add("duplicate-stage", readmePath, `stage id appears twice: ${id}`);
