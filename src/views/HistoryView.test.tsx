@@ -5,7 +5,7 @@ import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { makeIdea } from "../domain/testFactory";
 import type { SavedProgressionBlock } from "../domain/types";
-import type { ChordContextHistoryEntry } from "../features/bass-practice/domain";
+import type { ChordContextHistoryEntry, RootMotionHistoryEntry } from "../features/bass-practice/domain";
 import { buildHistoryEvents, HistoryView } from "./HistoryView";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
@@ -126,6 +126,24 @@ describe("HistoryView", () => {
     await act(async () => root.unmount());
   });
 
+  it("shows Root Motion objective and self-rated History without resolving a Vault title", async () => {
+    const container = document.createElement("div"); document.body.append(container); const root = createRoot(container);
+    const entry: RootMotionHistoryEntry = {
+      id: "root-motion-history-1", version: 1, completedAt: "2026-08-09T10:00:00.000Z", exerciseSignature: "root-motion-safe", generatorVersion: "p5.19-root-motion-v1",
+      configuration: { tempo: 96, stringCount: 5, fretRange: { min: 0, max: 12 }, handedness: "left" }, source: { kind: "vault-root-path", referenceId: "idea-safe:block-safe", snapshotSignature: "c".repeat(64), rootPathPolicyVersion: "v1" }, level: 4,
+      motions: [{ signedSemitones: 5, direction: "up", category: "fourth" }, { signedSemitones: -2, direction: "down", category: "second" }],
+      firstAnswer: { submitted: { direction: "up", category: "fourth", semitones: 5 }, expected: { direction: "up", category: "fourth", semitones: 5, signedSemitones: 5 }, directionCorrect: true, categoryCorrect: true, exactIntervalCorrect: true, replayCountBeforeFirstAnswer: 0, answerAttempts: 1, assistance: "independent" },
+      selfRating: "good", retainedTakeReference: "take-opaque-1",
+    };
+    await act(async () => root.render(<HistoryView ideas={[]} language="en" openIdea={vi.fn()} openProgression={vi.fn()} rootMotionHistory={[entry]} />));
+    const section = container.querySelector("[data-testid='root-motion-history']");
+    expect(section?.textContent).toContain("Objective first answer: up 5 semitones · down 2 semitones");
+    expect(section?.textContent).toContain("Objective evidence: direction correct · assistance: independent");
+    expect(section?.textContent).toContain("Self-rated review: good");
+    expect(section?.textContent).toContain("5-string · fret 0–12 · left view");
+    expect(section?.textContent).not.toMatch(/title|path|audio|score/i);
+    await act(async () => root.unmount());
+  });
   it("shows persisted Practice summaries as self-rated facts without a fake score", async () => {
     const container = document.createElement("div"); document.body.append(container); const root = createRoot(container);
     await act(async () => root.render(<HistoryView ideas={[]} language="en" openIdea={vi.fn()} openProgression={vi.fn()} practiceHistory={[{

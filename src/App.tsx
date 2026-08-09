@@ -33,7 +33,7 @@ import { HistoryView } from "./views/HistoryView";
 import { VaultView } from "./views/VaultView";
 import { ProgressionDetailView } from "./views/ProgressionDetailView";
 import { PracticeView } from "./views/PracticeView";
-import { isBassPracticeBasslineEchoEnabled, isBassPracticeDegreeEchoEnabled, isBassPracticeRhythmEchoEnabled } from "./features/bass-practice/application/featureFlag";
+import { isBassPracticeBasslineEchoEnabled, isBassPracticeDegreeEchoEnabled, isBassPracticeRhythmEchoEnabled, isBassPracticeRootMotionEnabled } from "./features/bass-practice/application/featureFlag";
 import { buildVaultPickerCandidateViews, type VaultPickerCandidateView } from "./features/bass-practice/application/vaultPickerCandidates";
 import type { VaultChordContextSnapshot } from "./features/bass-practice/domain";
 import {
@@ -165,7 +165,7 @@ function App() {
   const clearAnalysis = useStore(defaultVaultStore, (state) => state.clearAnalysis);
 
   const [view, setView] = useState<View>("home");
-  const [bassPracticeEnabled] = useState(() => isBassPracticeDegreeEchoEnabled() || isBassPracticeRhythmEchoEnabled() || isBassPracticeBasslineEchoEnabled());
+  const [bassPracticeEnabled] = useState(() => isBassPracticeDegreeEchoEnabled() || isBassPracticeRhythmEchoEnabled() || isBassPracticeBasslineEchoEnabled() || isBassPracticeRootMotionEnabled());
   const practiceControllerRef = useRef<PracticeDataController>();
   const pendingPracticeSessionIdRef = useRef<string>();
   const [practiceSessionGeneration, setPracticeSessionGeneration] = useState(0);
@@ -736,7 +736,10 @@ async function analyzeMidiPath(path: string) {
                           const controller = practiceControllerRef.current;
                           return controller ? controller.recordChordContextHistory(entry) : Promise.reject(new Error("Practice progress is not ready."));
                         }}
-                        onAttemptCompleted={(attempt) => {
+                        onRootMotionHistoryRecorded={(entry) => {
+                          const controller = practiceControllerRef.current;
+                          return controller ? controller.recordRootMotionHistory(entry) : Promise.reject(new Error("Practice progress is not ready."));
+                        }}                        onAttemptCompleted={(attempt) => {
                           const controller = practiceControllerRef.current;
                           return controller ? controller.recordAttempt(attempt) : Promise.reject(new Error("Practice progress is not ready."));
                         }}
@@ -823,6 +826,7 @@ async function analyzeMidiPath(path: string) {
                 language={language}
                 practiceHistory={practiceHistory}
                 chordContextHistory={practiceData.file?.chordContextHistory}
+                rootMotionHistory={practiceData.file?.rootMotionHistory}
                 practiceHistoryTotal={practiceData.file ? practiceData.file.sessions.filter(({ completedCount }) => completedCount > 0).length + practiceData.file.rhythmSessions.filter(({ completedCount }) => completedCount > 0).length : 0}
                 openIdea={openDetail}
                 openProgression={openProgression}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createCompletedAttempt, generateRhythmExercise, RHYTHM_GENERATOR_VERSION, type RhythmPracticeAttempt, type ChordContextHistoryEntry } from "../domain";
+import { createCompletedAttempt, createRootMotionHistoryEntry, generateRhythmExercise, generateRootMotionExercise, RHYTHM_GENERATOR_VERSION, ROOT_MOTION_GENERATOR_VERSION, ROOT_MOTION_MAX_ATTEMPTS, STANDARD_BASS_TUNINGS, type RhythmPracticeAttempt, type ChordContextHistoryEntry } from "../domain";
 import { generatedExercise } from "../domain/testFixtures";
 import { addCompletedAttempt, createEmptyPracticeFile, JsonPracticeRepository, MemoryPracticeStorage, validatePracticeFile } from "../infra/repository";
 import { createPracticeControllerIfEnabled, derivePracticeHistory, derivePracticeHomeSummary, PracticeDataController, restoreClaimedExercise } from "./practiceData";
@@ -67,10 +67,25 @@ describe("Practice derived views", () => {
     expect(restarted.getSnapshot().file?.chordContextHistory).toEqual([entry]);
   });
 
+  it("persists Root Motion factual History across restart without raw recordings or Vault data", async () => {
+    const storage = new MemoryPracticeStorage();
+    const controller = new PracticeDataController(new JsonPracticeRepository(storage, () => now));
+    await controller.initialize();
+    const generated = generateRootMotionExercise({ generatorVersion: ROOT_MOTION_GENERATOR_VERSION, seed: "controller-history", level: 3, noteCount: 2, phraseLengthBeats: 4, tempo: 96, tuning: STANDARD_BASS_TUNINGS[4], stringCount: 4, fretRange: { min: 0, max: 12 }, pitchSpan: { minMidi: 28, maxMidi: 55 }, handedness: "right", maxAttempts: ROOT_MOTION_MAX_ATTEMPTS });
+    if (!generated.ok) throw new Error(generated.error.message);
+    const entry = createRootMotionHistoryEntry({ completedAt: now.toISOString(), exercise: generated.exercise, selfRating: "good", firstAnswer: { submitted: { direction: "same", category: "same", semitones: 0 }, expected: generated.exercise.motions[0], directionCorrect: true, categoryCorrect: true, exactIntervalCorrect: true, replayCountBeforeFirstAnswer: 0, answerAttempts: 1, assistance: "independent" } });
+    await controller.recordRootMotionHistory(entry);
+    expect(controller.getSnapshot().file?.rootMotionHistory).toEqual([entry]);
+    expect(storage.committed).toContain('"rootMotionHistory"');
+    expect(storage.committed).not.toMatch(/rawMidi|sourcePath|deviceId|audioBlob|score/i);
+    const restarted = new PracticeDataController(new JsonPracticeRepository(storage, () => now));
+    await restarted.initialize();
+    expect(restarted.getSnapshot().file?.rootMotionHistory).toEqual([entry]);
+  });
   it("loads legacy Practice data without Chord Context History or source settings unchanged", async () => {
     const storage = new MemoryPracticeStorage();
     const current = createEmptyPracticeFile(now);
-    const { chordContextHistory: _chordContextHistory, ...legacyBase } = current;
+    const { chordContextHistory: _chordContextHistory, rootMotionHistory: _rootMotionHistory, ...legacyBase } = current;
     const legacy = { ...legacyBase, revision: 1 };
     storage.committed = `${JSON.stringify(legacy)}\n`;
 
@@ -82,6 +97,7 @@ describe("Practice derived views", () => {
       file: {
         settings: current.settings,
         chordContextHistory: [],
+        rootMotionHistory: [],
       },
     });
     expect(storage.committed).toBe(`${JSON.stringify(legacy)}\n`);

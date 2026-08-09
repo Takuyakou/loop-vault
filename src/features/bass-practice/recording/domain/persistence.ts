@@ -21,7 +21,7 @@ export const MAX_TAKE_DURATION_MS = 60_000;
  */
 export const TOTAL_QUOTA_BYTES = 200 * 1024 * 1024;
 
-export type RecordingMode = "degree" | "rhythm" | "bassline";
+export type RecordingMode = "degree" | "rhythm" | "bassline" | "root-motion";
 
 /** Non-identifying metadata stored with a kept take (contract 02 §14.3). */
 export interface StoredRecordingMetadata {

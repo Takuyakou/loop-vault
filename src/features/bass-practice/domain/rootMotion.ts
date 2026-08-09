@@ -281,3 +281,23 @@ function deepFreeze<T>(value: T): T {
   }
   return value;
 }
+
+export function deriveRootMotionTransfer(source: RootMotionExercise): RootMotionGeneratorResult {
+  const snapshot = source.generatorSnapshot;
+  const random = createSeededRandom(`root-motion-transfer\u0000${source.id}`);
+  const candidates = playableMidiRange(snapshot).filter((start) => start !== source.targetEvents[0]?.midiNote && isLegalPath(start, source.motions, snapshot));
+  if (!candidates.length) return Object.freeze({ ok: false, error: Object.freeze({ code: "attempts-exhausted", message: "No legal alternate starting root is available for this Transfer.", attempts: ROOT_MOTION_MAX_ATTEMPTS }) });
+  const notes = [candidates[random.integer(0, candidates.length - 1)]];
+  for (const motion of source.motions) notes.push(notes[notes.length - 1] + motion.signedSemitones);
+  const pairs = notes.slice(1).map((target, index) => solveRootMotionFingering({ sourceMidi: notes[index], targetMidi: target, tuning: snapshot.tuning, fretRange: snapshot.fretRange }));
+  if (pairs.some((entry) => !entry.ok)) return Object.freeze({ ok: false, error: Object.freeze({ code: "attempts-exhausted", message: "No legal fingering is available for this Transfer.", attempts: ROOT_MOTION_MAX_ATTEMPTS }) });
+  const durationBeats = snapshot.phraseLengthBeats / snapshot.noteCount;
+  const exercise = deepFreeze<RootMotionExercise>({
+    id: `root-motion-transfer-${stableHash({ source: source.id, notes })}`,
+    version: 1, generatorVersion: snapshot.generatorVersion, seed: `transfer-v1:${source.id}`, mode: "root-motion", source: { kind: "generated" }, level: source.level, tempo: snapshot.tempo, meter: { numerator: 4, denominator: 4 },
+    targetEvents: notes.map((midiNote, index) => ({ index, midiNote, startBeat: index * durationBeats, durationBeats, velocity: 0.82 })),
+    motions: source.motions, fingering: pairs.map((entry) => (entry as Extract<RootMotionFingeringResult, { readonly ok: true }>).pair),
+    generatorSnapshot: deepFreeze({ ...snapshot, seed: `transfer-v1:${source.id}` }),
+  });
+  return Object.freeze({ ok: true, exercise });
+}

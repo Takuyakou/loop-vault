@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Activity, AudioWaveform, Dumbbell, ExternalLink, SearchX } from "lucide-react";
 import { formatProgressionText } from "../domain/progressionText";
 import type { AppLanguage, SongIdea } from "../domain/types";
-import type { ChordContextHistoryEntry } from "../features/bass-practice/domain";
+import type { ChordContextHistoryEntry, RootMotionHistoryEntry } from "../features/bass-practice/domain";
 import { Button, EmptyState, Surface } from "../components/ui";
 import type { PracticeHistorySummary } from "../features/bass-practice/application";
 import { RetainedTakesPanel } from "../features/bass-practice/recording/ui/RetainedTakesPanel";
@@ -25,6 +25,7 @@ export function HistoryView({
   language,
   practiceHistory = [],
   chordContextHistory = [],
+  rootMotionHistory = [],
   practiceHistoryTotal = practiceHistory.length,
   openIdea,
   openProgression,
@@ -33,6 +34,7 @@ export function HistoryView({
   language: AppLanguage;
   practiceHistory?: readonly PracticeHistorySummary[];
   chordContextHistory?: readonly ChordContextHistoryEntry[];
+  rootMotionHistory?: readonly RootMotionHistoryEntry[];
   practiceHistoryTotal?: number;
   openIdea: (ideaId: string) => void;
   openProgression: (ideaId: string, blockId: string) => void;
@@ -71,7 +73,16 @@ export function HistoryView({
         entry.playMode,
       ].some((value) => value.toLocaleLowerCase().includes(normalized)));
   }, [chordContextHistory, filter, query]);
-  const groups = useMemo(() => groupByDate(visible, language), [language, visible]);
+  const visibleRootMotionHistory = useMemo(() => {
+    if (filter !== "all" && filter !== "practice") return [];
+    const normalized = query.trim().toLocaleLowerCase();
+    return [...rootMotionHistory]
+      .sort((left, right) => right.completedAt.localeCompare(left.completedAt) || left.id.localeCompare(right.id))
+      .filter((entry) => !normalized || [
+        "root motion", "root motion echo", String(entry.level), entry.source.kind,
+        entry.firstAnswer.assistance, entry.selfRating,
+      ].some((value) => value.toLocaleLowerCase().includes(normalized)));
+  }, [filter, query, rootMotionHistory]);  const groups = useMemo(() => groupByDate(visible, language), [language, visible]);
 
   return (
     <div className="py-5">
@@ -110,7 +121,7 @@ export function HistoryView({
       </Surface>
 
       <p className="mt-3 text-xs text-[var(--lv-text-muted)]" role="status" aria-live="polite">
-        {text.count(visible.length + visiblePracticeHistory.length + visibleChordContextHistory.length)}
+        {text.count(visible.length + visiblePracticeHistory.length + visibleChordContextHistory.length + visibleRootMotionHistory.length)}
       </p>
 
       {visiblePracticeHistory.length ? (
@@ -156,9 +167,30 @@ export function HistoryView({
         </section>
       ) : null}
 
+      {visibleRootMotionHistory.length ? (
+        <section className="mt-4" aria-labelledby="root-motion-history-title" data-testid="root-motion-history">
+          <h3 id="root-motion-history-title" className="mb-2 text-xs font-semibold uppercase text-[var(--lv-text-muted)]">Root Motion Echo factual sessions</h3>
+          <div className="grid gap-3 lg:grid-cols-2">
+            {visibleRootMotionHistory.map((entry) => (
+              <Surface key={entry.id} className="p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <strong>Root Motion Echo · Level {entry.level}</strong>
+                  <time className="text-xs text-[var(--lv-text-muted)]" dateTime={entry.completedAt}>{formatTime(entry.completedAt)}</time>
+                </div>
+                <p className="mt-2 text-sm text-[var(--lv-text-secondary)]">Objective first answer: {entry.motions.map((motion) => `${motion.direction} ${Math.abs(motion.signedSemitones)} semitone${Math.abs(motion.signedSemitones) === 1 ? "" : "s"}`).join(" · ")}</p>
+                <p className="mt-1 text-xs text-[var(--lv-text-muted)]">Objective evidence: direction {entry.firstAnswer.directionCorrect ? "correct" : "not correct"} · assistance: {entry.firstAnswer.assistance}</p>
+                <p className="mt-1 text-xs text-[var(--lv-text-muted)]">Self-rated review: {entry.selfRating}</p>
+                <p className="mt-1 text-xs text-[var(--lv-text-muted)]">{entry.configuration.stringCount}-string · fret {entry.configuration.fretRange.min}–{entry.configuration.fretRange.max} · {entry.configuration.handedness} view</p>
+                {entry.transferOfExerciseId ? <p className="mt-1 text-xs text-[var(--lv-text-muted)]">Transfer exercise</p> : null}
+                {entry.retainedTakeReference ? <p className="mt-1 text-xs text-[var(--lv-text-muted)]">Retained take reference: {entry.retainedTakeReference}</p> : null}
+              </Surface>
+            ))}
+          </div>
+        </section>
+      ) : null}
       {filter === "all" || filter === "practice" ? <RetainedTakesPanel /> : null}
 
-      {groups.length === 0 && visiblePracticeHistory.length === 0 && visibleChordContextHistory.length === 0 ? (
+      {groups.length === 0 && visiblePracticeHistory.length === 0 && visibleChordContextHistory.length === 0 && visibleRootMotionHistory.length === 0 ? (
         <EmptyState
           className="mt-4"
           icon={<SearchX aria-hidden="true" size={20} />}

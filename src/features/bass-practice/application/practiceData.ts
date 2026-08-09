@@ -1,6 +1,7 @@
 import {
   generateDegreeExercise,
   type ChordContextHistoryEntry,
+  type RootMotionHistoryEntry,
   type GeneratorSnapshot,
   type PracticeAttempt,
   type PracticeExercise,
@@ -12,6 +13,7 @@ import {
 } from "../domain";
 import {
   addChordContextHistoryEntry,
+  addRootMotionHistoryEntry,
   addCompletedAttempt,
   addCompletedRhythmAttempt,
   JsonPracticeRepository,
@@ -108,6 +110,18 @@ export class PracticeDataController {
     const operation = this.saveQueue.then(async () => {
       if (!this.file) throw new Error("Practice progress is not ready.");
       this.file = await this.persistMutation((file) => addChordContextHistoryEntry(file, entry));
+      this.publish({ status: "ready", file: this.file, quarantine: this.snapshot.quarantine });
+    });
+    this.saveQueue = operation.catch(() => undefined);
+    return operation.catch((error) => {
+      if (this.file) this.publish({ status: "ready", file: this.file, quarantine: this.snapshot.quarantine, error: errorMessage(error) });
+      throw error;
+    });
+  }
+  recordRootMotionHistory(entry: RootMotionHistoryEntry): Promise<void> {
+    const operation = this.saveQueue.then(async () => {
+      if (!this.file) throw new Error("Practice progress is not ready.");
+      this.file = await this.persistMutation((file) => addRootMotionHistoryEntry(file, entry));
       this.publish({ status: "ready", file: this.file, quarantine: this.snapshot.quarantine });
     });
     this.saveQueue = operation.catch(() => undefined);

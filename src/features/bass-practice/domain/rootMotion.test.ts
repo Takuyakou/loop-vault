@@ -4,6 +4,7 @@ import {
   ROOT_MOTION_FINGERING_POLICY_VERSION,
   ROOT_MOTION_GENERATOR_VERSION,
   ROOT_MOTION_MAX_ATTEMPTS,
+  deriveRootMotionTransfer,
   generateRootMotionExercise,
   rootMotionFromSignedSemitones,
   rootMotionWeights,
@@ -121,4 +122,13 @@ describe("Root Motion generator", () => {
     expect(generateRootMotionExercise(snapshot({ level: 1, noteCount: 3 as 2 }))).toMatchObject({ ok: false, error: { code: "invalid-config" } });
     expect(generateRootMotionExercise(snapshot({ maxAttempts: 1 as 32 }))).toMatchObject({ ok: false, error: { code: "invalid-config" } });
   });
+});
+test("Transfer preserves the signed sequence while selecting a different legal start", () => {
+  const source = generateRootMotionExercise(snapshot({ level: 4, noteCount: 3, phraseLengthBeats: 6, seed: "transfer-source" }));
+  if (!source.ok) throw new Error(source.error.message);
+  const transferred = deriveRootMotionTransfer(source.exercise);
+  expect(transferred.ok).toBe(true);
+  if (!transferred.ok) return;
+  expect(transferred.exercise.motions).toEqual(source.exercise.motions);
+  expect(transferred.exercise.targetEvents[0].midiNote).not.toBe(source.exercise.targetEvents[0].midiNote);
 });
