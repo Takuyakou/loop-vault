@@ -19,7 +19,9 @@ describe("Root Motion Practice view", () => {
     const container = document.createElement("div"); document.body.append(container); root = createRoot(container);
     const recordedEntries: unknown[] = [];
     const onHistoryRecorded = vi.fn(async (entry: unknown) => { recordedEntries.push(entry); });
-    await act(async () => root?.render(<RootMotionPracticeView playback={async (_notes, _bpm, callbacks) => { callbacks.onEnded(); }} onHistoryRecorded={onHistoryRecorded} />));
+    const playback = async (_notes: unknown, _bpm: number, callbacks: { onEnded: () => void }) => { callbacks.onEnded(); };
+    const initialSettings = { version: 1 as const, singEnabled: true, singingReferenceMode: "auto" as const, stringCount: 4 as const, handedness: "right" as const, fretRange: { min: 0, max: 12 }, sessionTargetCount: 8 };
+    await act(async () => root?.render(<RootMotionPracticeView initialSettings={initialSettings} playback={playback} onHistoryRecorded={onHistoryRecorded} />));
     await act(async () => button(container, "Listen to example").click());
     await act(async () => button(container, "Same").click());
     await act(async () => button(container, "Record answer").click());
@@ -29,6 +31,11 @@ describe("Root Motion Practice view", () => {
     expect(container.querySelector("[data-testid='root-motion-fretboard']")).not.toBeNull();
     await act(async () => button(container, "good").click());
     expect(onHistoryRecorded).toHaveBeenCalledTimes(1);
+    expect(button(container, "Transfer to a new starting root")).toBeInstanceOf(HTMLButtonElement);
+    expect(container.querySelector("[aria-current='step']")?.textContent).toBe("Transfer");
+    await act(async () => root?.render(<RootMotionPracticeView initialSettings={{ ...initialSettings, fretRange: { min: 0, max: 12 } }} playback={playback} onHistoryRecorded={onHistoryRecorded} />));
+    expect(button(container, "Transfer to a new starting root")).toBeInstanceOf(HTMLButtonElement);
+    expect(container.querySelector("[aria-current='step']")?.textContent).toBe("Transfer");
     expect(JSON.stringify(recordedEntries[0])).not.toMatch(/path|device|audio|rawMidi/i);
   });
 

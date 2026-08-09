@@ -57,11 +57,17 @@ export function RootMotionPracticeView({ language = "en", playback, initialSetti
   const [message, setMessage] = useState<string>();
   const savedHistoryIds = useRef(new Set<string>());
   const [, forceRender] = useReducer((value: number) => value + 1, 0);
+  // Parent persistence publishes a fresh settings object. Keep semantically equal
+  // settings stable so History saves never reset an active Root Motion session.
+  const stringCount = initialSettings?.stringCount ?? 4;
+  const handedness = initialSettings?.handedness ?? "right";
+  const fretMin = initialSettings?.fretRange.min ?? 0;
+  const fretMax = initialSettings?.fretRange.max ?? 12;
   const settings = useMemo(() => ({
-    stringCount: initialSettings?.stringCount ?? 4,
-    handedness: initialSettings?.handedness ?? "right",
-    fretRange: initialSettings?.fretRange ?? { min: 0, max: 12 },
-  }), [initialSettings?.fretRange, initialSettings?.handedness, initialSettings?.stringCount]);
+    stringCount,
+    handedness,
+    fretRange: { min: fretMin, max: fretMax },
+  }), [fretMax, fretMin, handedness, stringCount]);
   const generated = useMemo(() => generateRootMotionExercise({
     generatorVersion: ROOT_MOTION_GENERATOR_VERSION,
     seed: `root-motion-ui-${level}-${round}-${settings.stringCount}-${settings.handedness}-${settings.fretRange.min}-${settings.fretRange.max}`,
@@ -135,7 +141,7 @@ export function RootMotionPracticeView({ language = "en", playback, initialSetti
   if (!exercise || !session || !snapshot) return <StatusMessage tone="error" title="Root Motion Echo">{sourceKind === "vault-root-path" ? (vaultGenerated?.ok === false ? vaultGenerated.error.message : "Select a supported Vault-derived root path.") : (generated.ok ? "Session is unavailable." : generated.error.message)}</StatusMessage>;
   const currentStep = snapshot.status === "ready" || snapshot.status === "listening" ? 0
     : snapshot.status === "identify" ? 1 : snapshot.status === "sing" ? 2
-      : snapshot.status === "play" ? 3 : snapshot.status === "review" || snapshot.status === "completed" ? 4 : 0;
+      : snapshot.status === "play" ? 3 : snapshot.status === "review" ? 4 : snapshot.status === "completed" ? 5 : 0;
   const labels = language === "ja" ? {
     title: "Root Motion Echo", kicker: "\u30d9\u30fc\u30b9\u7df4\u7fd2", badge: "\u81ea\u5df1\u8a55\u4fa1\u5f0f\u3001\u81ea\u52d5\u63a1\u70b9\u306f\u3057\u307e\u305b\u3093", description: "\u30eb\u30fc\u30c8\u9593\u306e\u52d5\u304d\u3092\u898b\u5206\u3051\u3001\u6b4c\u3063\u3066\u30d9\u30fc\u30b9\u3067\u518d\u73fe\u3057\u307e\u3059\u3002",
     level: "\u30ec\u30d9\u30eb", listen: "\u304a\u624b\u672c\u3092\u8074\u304f", replay: "\u3082\u3046\u4e00\u5ea6\u8074\u304f", hint: "\u30d2\u30f3\u30c8", identify: "\u56de\u7b54\u3092\u78ba\u5b9a", direction: "\u65b9\u5411", category: "\u97f3\u7a0b\u306e\u7a2e\u985e", exact: "\u6b63\u78ba\u306a\u534a\u97f3\u6570", sing: "\u6b4c\u3063\u3066\u6f14\u594f\u3078", play: "\u6f14\u594f\u3092\u7d42\u3048\u3066\u30ec\u30d3\u30e5\u30fc\u3078", review: "\u81ea\u5df1\u8a55\u4fa1", next: "\u6b21\u306e\u30d5\u30ec\u30fc\u30ba", transfer: "\u5225\u306e\u958b\u59cb\u97f3\u3067\u79fb\u8abf", first: "\u6700\u521d\u306e\u56de\u7b54\u3092\u8a18\u9332\u3057\u307e\u3057\u305f", stopped: "\u505c\u6b62", same: "\u540c\u3058", up: "\u4e0a\u884c", down: "\u4e0b\u884c",

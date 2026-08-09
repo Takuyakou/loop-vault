@@ -57,6 +57,18 @@ test("P5.19 Root Motion meets reduced-motion, effective 200% scale, and axe seri
   expect(result.violations.filter((violation) => violation.impact === "critical" || violation.impact === "serious")).toEqual([]);
 });
 
+test("P5.19 preserves a completed Root Motion session through History persistence and exposes Transfer", async ({ page }) => {
+  const view = await openRootMotion(page);
+  await view.getByTestId("root-motion-listen").click();
+  await view.getByRole("button", { name: /^(Same|\u540c\u3058)$/ }).waitFor({ state: "visible", timeout: 10_000 });
+  await view.getByRole("button", { name: /^(Same|\u540c\u3058)$/ }).click();
+  await view.getByRole("button", { name: /^(Record answer|\u56de\u7b54\u3092\u78ba\u5b9a)$/ }).click();
+  await view.getByRole("button", { name: /^(Continue to Play|\u6b4c\u3063\u3066\u6f14\u594f\u3078)$/ }).click();
+  await view.getByRole("button", { name: /^(Finish Play and review|\u6f14\u594f\u3092\u7d42\u3048\u3066\u30ec\u30d3\u30e5\u30fc\u3078)$/ }).click();
+  await view.getByRole("button", { name: "good", exact: true }).click();
+  await expect(view.getByRole("button", { name: /^(Transfer to a new starting root|\u5225\u306e\u958b\u59cb\u97f3\u3067\u79fb\u8abf)$/ })).toBeVisible();
+  await expect(view.locator("[aria-current='step']")).toHaveText(/^(Transfer|\u79fb\u8abf)$/);
+});
 test("P5.19 explicit local rollback hides Root Motion only", async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem("loop-vault:bass-practice-root-motion-enabled:v1", "false");
