@@ -2,7 +2,7 @@
 # Phase 5.19 — Root Motion Echo
 
 ## Status
-`P5.19-03 COMPLETE — P5.19-04 in progress`
+`P5.19-04 COMPLETE — P5.19-05 in progress`
 
 ## Required Reading Order
 
@@ -158,4 +158,4 @@ Practice schema破壊的migration、Vault schema変更、P5.15依存、虚偽sha
 停止時にreset/stash/discardしない。
 
 ## Next action
-`P5.19-00 — Repository Audit / Contract / Baseline` のみ。P5.19-01へ自動進行しない。
+P5.19-05 — Hardening / Release / Human Acceptance only. Do not merge, push, or start P5.20.

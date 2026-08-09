@@ -2,17 +2,18 @@
     "schemaVersion":  1,
     "phaseId":  "5.19",
     "status":  "in-progress",
-    "activeStage":  "P5.19-04",
+    "activeStage":  "P5.19-05",
     "completedStages":  [
                             "P5.19-00",
                             "P5.19-01",
                             "P5.19-02",
-                            "P5.19-03"
+                            "P5.19-03",
+                            "P5.19-04"
                         ],
     "blocked":  false,
     "blockerReason":  null,
     "baseCommit":  "854a5c909660e231dfafcc184c3881e99799911e",
-    "lastVerifiedCommit":  "1a3eca725ecdfa4b1264054f1c6ba237bcef4ce7",
+    "lastVerifiedCommit":  "ff33f80b5632ee03f461872eb0b77078e273a7d4",
     "currentBranch":  "feat/p519-root-motion-echo",
     "requiredGates":  {
                           "P5.19-00":  [
@@ -57,6 +58,16 @@
                                            "p519-03-lint",
                                            "p519-03-diff-check",
                                            "p519-03-protected-surface"
+                                       ],
+                          "P5.19-04":  [
+                                           "p519-04-phase-docs-validation",
+                                           "p519-04-vault-source-tests",
+                                           "p519-04-bass-practice-regression",
+                                           "p519-04-app-typecheck",
+                                           "p519-04-e2e-typecheck",
+                                           "p519-04-lint",
+                                           "p519-04-diff-check",
+                                           "p519-04-protected-surface"
                                        ]
                       },
     "gateResults":  {
@@ -94,8 +105,16 @@
                         "p519-03-e2e-typecheck":  "pass",
                         "p519-03-lint":  "pass",
                         "p519-03-diff-check":  "pass",
-                        "p519-03-protected-surface":  "pass"
+                        "p519-03-protected-surface":  "pass",
+                        "p519-04-phase-docs-validation":  "pass",
+                        "p519-04-vault-source-tests":  "pass",
+                        "p519-04-bass-practice-regression":  "pass",
+                        "p519-04-app-typecheck":  "pass",
+                        "p519-04-e2e-typecheck":  "pass",
+                        "p519-04-lint":  "pass",
+                        "p519-04-diff-check":  "pass",
+                        "p519-04-protected-surface":  "pass"
                     },
-    "nextAction":  "P5.19-04 is active. Continue through the explicitly authorized P5.19 stages in order; do not merge or push.",
+    "nextAction":  "P5.19-05 is active. Continue only through the explicitly authorized P5.19 release and human-acceptance preparation; do not merge or push.",
     "updatedAt":  "2026-08-09"
 }
