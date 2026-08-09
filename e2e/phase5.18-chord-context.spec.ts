@@ -169,3 +169,34 @@ test("P5.18 explicit rollback hides only Chord Context and preserves Bassline Ec
   await expect(page.getByTestId("chord-context-controls")).toHaveCount(0);
   await expect(page.getByTestId("bassline-progression-select")).toHaveCount(0);
 });
+
+test("P5.18.2 keeps the live Vault title discoverable and keyboard-operable at narrow and scaled layouts", async ({ page }) => {
+  test.setTimeout(45_000);
+  await page.setViewportSize({ width: 320, height: 720 });
+  await openApp(page);
+  await createSavedProgression(page, "P5.18.2 Responsive Vault Title");
+  await openVault(page);
+  await page.locator(".lv-vault-row").first().locator("button").last().click();
+  await page.getByTestId("chord-context-handoff").getByRole("button").click();
+
+  const bassline = page.getByTestId("bassline-echo-view");
+  await bassline.getByTestId("vault-progression-picker-open").click();
+  const picker = page.getByTestId("vault-progression-picker");
+  const candidate = picker.getByTestId("vault-progression-picker-candidate").first();
+  await expect(picker.getByTestId("vault-progression-picker-candidate-title").first()).toHaveText("P5.18.2 Responsive Vault Title");
+  await expect(candidate).toHaveAccessibleName(/P5\.18\.2 Responsive Vault Title.*C major.*BPM/);
+  await assertNoHorizontalOverflow(page);
+
+  const search = picker.getByTestId("vault-progression-picker-search");
+  await search.fill("responsive vault");
+  expect(await picker.getByTestId("vault-progression-picker-candidate").count()).toBeGreaterThan(0);
+  await search.focus();
+  await page.keyboard.press("ArrowDown");
+  const selectedCandidate = picker.locator("[data-testid='vault-progression-picker-candidate'][aria-pressed='true']");
+  await expect(selectedCandidate).toBeFocused();
+
+  await page.setViewportSize({ width: 640, height: 720 });
+  await page.evaluate(() => { document.documentElement.style.zoom = "2"; });
+  await expect(picker).toBeVisible();
+  await assertNoHorizontalOverflow(page);
+});

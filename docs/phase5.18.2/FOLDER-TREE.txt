@@ -1,0 +1,22 @@
+phase5.18.2/
+├─ README.md
+├─ CODEX-START-PROMPT.md
+├─ CODEX-RUN-REMAINING-STAGES.md
+├─ work-instructions.md
+├─ execution-state.json
+├─ proposal/
+│  └─ P5.18.2-DESIGN-REVIEW.md
+├─ audit/
+│  └─ P5.18.2-00-repository-audit.md
+├─ contracts/
+│  ├─ 01-scope-contract.md
+│  ├─ 02-live-title-boundary-contract.md
+│  ├─ 03-progression-detail-entry-contract.md
+│  ├─ 04-privacy-history-contract.md
+│  └─ 05-test-safety-contract.md
+└─ reports/
+   ├─ README.md
+   ├─ P5.18.2-00-audit-baseline.md
+   ├─ P5.18.2-01-title-search.md
+   ├─ P5.18.2-02-picker-progression-detail.md
+   └─ P5.18.2-03-product-acceptance.md

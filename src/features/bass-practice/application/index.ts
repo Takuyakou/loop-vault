@@ -6,3 +6,4 @@ export * from "./chordContextPlayback";
 export * from "./degreePracticeSession";
 export * from "./featureFlag";
 export * from "./practiceData";
+export * from "./vaultPickerCandidates";

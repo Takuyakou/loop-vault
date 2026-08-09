@@ -33,6 +33,7 @@ import {
 import { RecordCompareSection } from "../recording/ui/RecordCompareSection";
 import { createTargetPlayer } from "../recording/application/playback";
 import { EchoPracticeHeader, EchoPracticeProgress } from "./EchoPracticeChrome";
+import type { VaultPickerCandidateView } from "../application/vaultPickerCandidates";
 import { VaultProgressionPicker } from "./VaultProgressionPicker";
 
 const GENERATED_CONTEXT_CHORDS = [
@@ -63,6 +64,8 @@ export interface BasslinePracticeViewProps {
   readonly language?: AppLanguage;
   readonly chordContextSnapshot?: ChordContextSnapshot;
   readonly chordContextSnapshots?: readonly VaultChordContextSnapshot[];
+  /** Live Vault title projection for picker display and search only. */
+  readonly vaultPickerCandidates?: readonly VaultPickerCandidateView[];
   /** Feature-flag rollback preserves the P5.16 Bassline Echo surface. */
   readonly chordContextEnabled?: boolean;
   /** Persists only the factual P5.18 History record in the existing Practice document. */
@@ -73,6 +76,7 @@ export function BasslinePracticeView({
   language = "en",
   chordContextSnapshot,
   chordContextSnapshots,
+  vaultPickerCandidates,
   chordContextEnabled = true,
   onChordContextHistoryRecorded,
 }: BasslinePracticeViewProps) {
@@ -126,6 +130,14 @@ export function BasslinePracticeView({
   const vaultSnapshots = useMemo(
     () => Object.freeze(availableSnapshots.filter((snapshot): snapshot is VaultChordContextSnapshot => snapshot.source.kind === "vault")),
     [availableSnapshots],
+  );
+  const pickerCandidates = useMemo(
+    () => vaultPickerCandidates ?? Object.freeze(vaultSnapshots.map((safeSnapshot) => Object.freeze({
+      displayTitle: safeSnapshot.source.safeLabel,
+      searchableTitle: safeSnapshot.source.safeLabel.toLocaleLowerCase(),
+      safeSnapshot,
+    }))),
+    [vaultPickerCandidates, vaultSnapshots],
   );
   const [effectiveBpm, setEffectiveBpm] = useState(() => activeSnapshot?.originalBpm ?? 96);
   const [recordPlayMode, setRecordPlayMode] = useState<Extract<ChordContextPlayMode, "chords-only" | "chords-and-metronome">>("chords-only");
@@ -411,7 +423,7 @@ export function BasslinePracticeView({
       ? `${ja ? "プリセット進行" : "Preset source"} \u00b7 ${activeSnapshot.source.safeLabel}`
       : ja ? "既定の生成進行" : "Default generated source";
   const noContextSource = chordContextEnabled && !activeSnapshot;
-  const hasVaultProgressions = vaultSnapshots.length > 0;
+  const hasVaultProgressions = pickerCandidates.length > 0;
   const activePresetId = activeSnapshot?.source.kind === "preset" ? activeSnapshot.source.presetId : undefined;
   const activePreset = activePresetId === undefined
     ? undefined
@@ -467,7 +479,7 @@ export function BasslinePracticeView({
                 </select>
                 <VaultProgressionPicker
                   language={language}
-                  snapshots={vaultSnapshots}
+                  candidates={pickerCandidates}
                   activeSignature={activeSnapshot?.source.kind === "vault" ? activeSnapshot.signature : undefined}
                   disabled={recordingInFlight || preparing}
                   onConfirm={chooseProgression}

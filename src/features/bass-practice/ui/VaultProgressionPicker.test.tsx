@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { makeChordSymbol } from "../../../domain/chords";
 import type { SavedProgressionBlock } from "../../../domain/types";
 import { buildVaultChordContextSnapshot, type VaultChordContextSnapshot } from "../domain";
+import type { VaultPickerCandidateView } from "../application/vaultPickerCandidates";
 import { VaultProgressionPicker } from "./VaultProgressionPicker";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
@@ -22,16 +23,25 @@ afterEach(async () => {
 describe("VaultProgressionPicker", () => {
   it("keeps the active source unchanged until confirmation and supports cancel", async () => {
     const snapshots = [snapshot("d-major", "D major", "Dmaj7"), snapshot("g-major", "G major", "Gmaj7")];
+    const candidates = snapshots.map((safeSnapshot, index) => candidate(safeSnapshot, `Candidate ${index + 1}`));
     const onConfirm = vi.fn();
-    const container = await renderPicker({ snapshots, activeSignature: snapshots[0]!.signature, onConfirm });
+    const container = await renderPicker({ candidates, activeSignature: snapshots[0]!.signature, onConfirm });
 
     await click(container.querySelector<HTMLButtonElement>("[data-testid='vault-progression-picker-open']"));
     expect(document.querySelector("[role='dialog']")?.textContent).toContain("Choose a progression from Vault");
     expect(onConfirm).not.toHaveBeenCalled();
 
-    const candidates = document.querySelectorAll<HTMLButtonElement>("[data-testid='vault-progression-picker-candidate']");
-    await click(candidates[1]);
-    expect(document.querySelector("[data-testid='vault-progression-picker-preview']")?.textContent).toContain("G major");
+    const candidateButtons = document.querySelectorAll<HTMLButtonElement>("[data-testid='vault-progression-picker-candidate']");
+    const candidateTitles = document.querySelectorAll<HTMLElement>("[data-testid='vault-progression-picker-candidate-title']");
+    expect(candidateTitles[0]?.textContent).toBe("Candidate 1");
+    expect(candidateTitles[0]?.getAttribute("title")).toBe("Candidate 1");
+    expect(candidateButtons[0]?.getAttribute("aria-label")).toContain("Candidate 1");
+    expect(candidateButtons[0]?.getAttribute("aria-label")).toContain("Dmaj7");
+    expect(candidateButtons[0]?.getAttribute("aria-label")).toContain("D major");
+    await click(candidateButtons[1]);
+    expect(document.querySelector("[data-testid='vault-progression-picker-preview-title']")?.textContent).toBe("Candidate 2");
+    expect(document.querySelector("[data-testid='vault-progression-picker-preview-chords']")?.textContent).toContain("Gmaj7");
+    expect(document.querySelector("[data-testid='vault-progression-picker-preview-facts']")?.textContent).toContain("G major");
     expect(onConfirm).not.toHaveBeenCalled();
 
     await click(findButton(document.body, "Cancel"));
@@ -46,7 +56,8 @@ describe("VaultProgressionPicker", () => {
 
   it("searches safe snapshot facts and supports arrow-key selection", async () => {
     const snapshots = [snapshot("d-major", "D major", "Dmaj7"), snapshot("g-major", "G major", "Gmaj7")];
-    const container = await renderPicker({ snapshots, onConfirm: vi.fn() });
+    const candidates = snapshots.map((safeSnapshot, index) => candidate(safeSnapshot, index === 0 ? "Night Groove" : "Sunny section"));
+    const container = await renderPicker({ candidates, onConfirm: vi.fn() });
 
     await click(container.querySelector<HTMLButtonElement>("[data-testid='vault-progression-picker-open']"));
     const search = document.querySelector<HTMLInputElement>("[data-testid='vault-progression-picker-search']")!;
@@ -59,21 +70,52 @@ describe("VaultProgressionPicker", () => {
     expect(document.body.textContent).toContain("Gmaj7");
 
     await act(async () => {
+      setInputValue(search, "SUNNY");
+      search.dispatchEvent(new Event("input", { bubbles: true }));
+      await Promise.resolve();
+    });
+    expect(document.querySelectorAll("[data-testid='vault-progression-picker-candidate']")).toHaveLength(1);
+    expect(JSON.stringify(candidates[1]!.safeSnapshot)).not.toContain("Sunny section");
+
+    await act(async () => {
       setInputValue(search, "");
       search.dispatchEvent(new Event("input", { bubbles: true }));
       await Promise.resolve();
     });
-    const candidates = document.querySelectorAll<HTMLButtonElement>("[data-testid='vault-progression-picker-candidate']");
-    candidates[0]!.focus();
+    const candidateButtons = document.querySelectorAll<HTMLButtonElement>("[data-testid='vault-progression-picker-candidate']");
+    search.focus();
     await act(async () => {
-      candidates[0]!.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "ArrowDown" }));
+      search.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "ArrowDown" }));
       await Promise.resolve();
     });
-    expect(candidates[1]!.getAttribute("aria-pressed")).toBe("true");
+    expect(document.activeElement).toBe(candidateButtons[1]);
+    expect(candidateButtons[1]!.getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("shows one row per stored progression and exposes its safe sections in the preview", async () => {
+    const snapshots = longProgressionSnapshots();
+    const candidates = snapshots.map((safeSnapshot) => candidate(safeSnapshot, "Stored eight-bar progression"));
+    const onConfirm = vi.fn();
+    const container = await renderPicker({ candidates, onConfirm });
+
+    await click(container.querySelector<HTMLButtonElement>("[data-testid='vault-progression-picker-open']"));
+    expect(document.querySelectorAll("[data-testid='vault-progression-picker-candidate']")).toHaveLength(1);
+    const section = document.querySelector<HTMLSelectElement>("[data-testid='vault-progression-picker-section']");
+    expect(section?.options).toHaveLength(4);
+    expect(section?.value).toBe(snapshots[3]?.signature);
+
+    await act(async () => {
+      setSelectValue(section!, snapshots[1]!.signature);
+      section?.dispatchEvent(new Event("change", { bubbles: true }));
+      await Promise.resolve();
+    });
+    expect(document.querySelector("[data-testid='vault-progression-picker-preview-facts']")?.textContent).toContain("bars 1–2");
+    await click(document.querySelector<HTMLButtonElement>("[data-testid='vault-progression-picker-confirm']"));
+    expect(onConfirm).toHaveBeenCalledWith(snapshots[1]!.signature);
   });
 
   it("renders loading, empty, error, and bounded large-list states", async () => {
-    const container = await renderPicker({ snapshots: [], loading: true, onConfirm: vi.fn() });
+    const container = await renderPicker({ candidates: [], loading: true, onConfirm: vi.fn() });
     await click(container.querySelector<HTMLButtonElement>("[data-testid='vault-progression-picker-open']"));
     expect(document.querySelector("[role='status']")?.textContent).toContain("Loading Vault progressions");
     expect(document.querySelector<HTMLButtonElement>("[data-testid='vault-progression-picker-confirm']")?.disabled).toBe(true);
@@ -86,7 +128,8 @@ describe("VaultProgressionPicker", () => {
       ...snapshot(`candidate-${index}`, "C major", "Cmaj7"),
       signature: `test-candidate-${index}`,
     }));
-    const errorContainer = await renderPicker({ snapshots: many, error: "Vault unavailable", onConfirm: vi.fn() });
+    const manyCandidates = many.map((safeSnapshot, index) => candidate(safeSnapshot, `Candidate ${index + 1}`));
+    const errorContainer = await renderPicker({ candidates: manyCandidates, error: "Vault unavailable", onConfirm: vi.fn() });
     await click(errorContainer.querySelector<HTMLButtonElement>("[data-testid='vault-progression-picker-open']"));
     expect(document.querySelector("[role='alert']")?.textContent).toContain("Vault unavailable");
 
@@ -94,7 +137,7 @@ describe("VaultProgressionPicker", () => {
     root = undefined;
     document.body.replaceChildren();
 
-    const largeContainer = await renderPicker({ snapshots: many, onConfirm: vi.fn() });
+    const largeContainer = await renderPicker({ candidates: manyCandidates, onConfirm: vi.fn() });
     await click(largeContainer.querySelector<HTMLButtonElement>("[data-testid='vault-progression-picker-open']"));
     expect(document.querySelectorAll("[data-testid='vault-progression-picker-candidate']")).toHaveLength(50);
     expect(document.querySelector("[role='status']")?.textContent).toContain("Showing the first 50 matches");
@@ -106,7 +149,7 @@ async function renderPicker(props: Partial<Parameters<typeof VaultProgressionPic
   document.body.append(container);
   root = createRoot(container);
   await act(async () => {
-    root?.render(<VaultProgressionPicker language="en" snapshots={[]} onConfirm={vi.fn()} {...props} />);
+    root?.render(<VaultProgressionPicker language="en" candidates={[]} onConfirm={vi.fn()} {...props} />);
   });
   return container;
 }
@@ -129,6 +172,12 @@ function setInputValue(input: HTMLInputElement, value: string) {
   setter.call(input, value);
 }
 
+function setSelectValue(select: HTMLSelectElement, value: string) {
+  const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value")?.set;
+  if (!setter) throw new Error("Missing HTMLSelectElement value setter.");
+  setter.call(select, value);
+}
+
 function snapshot(id: string, key: string, _label: string): VaultChordContextSnapshot {
   const block = {
     id: `${id}-block`,
@@ -149,4 +198,43 @@ function snapshot(id: string, key: string, _label: string): VaultChordContextSna
   });
   if (!result.ok) throw new Error(result.error.message);
   return result.snapshot;
+}
+function longProgressionSnapshots(): readonly VaultChordContextSnapshot[] {
+  const block = {
+    id: "stored-eight-block",
+    summaryText: "not exposed",
+    detectedKey: "C major",
+    bpm: 96,
+    timeSignature: "4/4",
+    chords: Array.from({ length: 8 }, (_, index) => ({
+      bar: index + 1,
+      beat: 1,
+      durationBeats: 4,
+      chord: makeChordSymbol(index % 2 === 0 ? 0 : 7, index % 2 === 0 ? "maj7" : "dom7"),
+      confidence: 1,
+      alternatives: [],
+      warnings: [],
+    })),
+    tags: [],
+    capturedAt: "2026-01-01T00:00:00.000Z",
+    analyzerVersion: "fixture",
+  } as SavedProgressionBlock;
+  const ids = ["bars:1-1", "bars:1-2", "bars:1-4", "bars:1-8"];
+  return ids.map((sectionId) => {
+    const result = buildVaultChordContextSnapshot({
+      sourceReference: { ideaId: "stored-eight-idea", blockId: block.id },
+      block,
+      sectionId,
+    });
+    if (!result.ok) throw new Error(result.error.message);
+    return result.snapshot;
+  });
+}
+
+function candidate(safeSnapshot: VaultChordContextSnapshot, displayTitle: string): VaultPickerCandidateView {
+  return Object.freeze({
+    displayTitle,
+    searchableTitle: displayTitle.normalize("NFC").trim().toLocaleLowerCase(),
+    safeSnapshot,
+  });
 }
