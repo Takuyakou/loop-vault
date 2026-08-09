@@ -4,7 +4,7 @@
 
 ## Status
 
-P5.18.1-01 GATES PASS — Preset Domain / Catalog / Compatibility; awaiting P5.18.1-02 authorization
+P5.18.1-02 GATES PASS — Vault Source Picker; awaiting P5.18.1-03 authorization
 
 
 
@@ -299,5 +299,5 @@ production 機能を実装しない。
 
 ## Next action
 
-P5.18.1-01 is complete and recorded. Await explicit human authorization before starting
-`P5.18.1-02 — Vault Source Picker`; do not begin it automatically.
+P5.18.1-02 is complete and recorded. Await explicit human authorization before starting
+`P5.18.1-03 — Source Integration`; do not begin it automatically.
