@@ -32,8 +32,16 @@ describe("VaultProgressionPicker", () => {
     expect(onConfirm).not.toHaveBeenCalled();
 
     const candidateButtons = document.querySelectorAll<HTMLButtonElement>("[data-testid='vault-progression-picker-candidate']");
+    const candidateTitles = document.querySelectorAll<HTMLElement>("[data-testid='vault-progression-picker-candidate-title']");
+    expect(candidateTitles[0]?.textContent).toBe("Candidate 1");
+    expect(candidateTitles[0]?.getAttribute("title")).toBe("Candidate 1");
+    expect(candidateButtons[0]?.getAttribute("aria-label")).toContain("Candidate 1");
+    expect(candidateButtons[0]?.getAttribute("aria-label")).toContain("Dmaj7");
+    expect(candidateButtons[0]?.getAttribute("aria-label")).toContain("D major");
     await click(candidateButtons[1]);
-    expect(document.querySelector("[data-testid='vault-progression-picker-preview']")?.textContent).toContain("G major");
+    expect(document.querySelector("[data-testid='vault-progression-picker-preview-title']")?.textContent).toBe("Candidate 2");
+    expect(document.querySelector("[data-testid='vault-progression-picker-preview-chords']")?.textContent).toContain("Gmaj7");
+    expect(document.querySelector("[data-testid='vault-progression-picker-preview-facts']")?.textContent).toContain("G major");
     expect(onConfirm).not.toHaveBeenCalled();
 
     await click(findButton(document.body, "Cancel"));
@@ -75,11 +83,12 @@ describe("VaultProgressionPicker", () => {
       await Promise.resolve();
     });
     const candidateButtons = document.querySelectorAll<HTMLButtonElement>("[data-testid='vault-progression-picker-candidate']");
-    candidateButtons[0]!.focus();
+    search.focus();
     await act(async () => {
-      candidateButtons[0]!.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "ArrowDown" }));
+      search.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "ArrowDown" }));
       await Promise.resolve();
     });
+    expect(document.activeElement).toBe(candidateButtons[1]);
     expect(candidateButtons[1]!.getAttribute("aria-pressed")).toBe("true");
   });
 

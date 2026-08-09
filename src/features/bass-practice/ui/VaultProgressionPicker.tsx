@@ -61,7 +61,7 @@ export function VaultProgressionPicker({
     onConfirm(selectedCandidate.safeSnapshot.signature);
     closePicker();
   };
-  const moveSelection = (event: KeyboardEvent<HTMLDivElement>, direction: -1 | 1) => {
+  const moveSelection = (event: KeyboardEvent<HTMLElement>, direction: -1 | 1) => {
     if (!visibleCandidates.length) return;
     event.preventDefault();
     const current = Math.max(0, visibleCandidates.findIndex((candidate) => candidate.safeSnapshot.signature === selectedCandidate?.safeSnapshot.signature));
@@ -106,11 +106,16 @@ export function VaultProgressionPicker({
           id="vault-progression-picker-search"
           data-testid="vault-progression-picker-search"
           data-autofocus
+          aria-controls="vault-progression-picker-candidates"
           className="lv-input mt-2 w-full"
           value={query}
           disabled={loading}
           onChange={(event) => setQuery(event.currentTarget.value)}
-          placeholder={ja ? "キー、コード、セクションで検索" : "Search key, chords, or section"}
+          onKeyDown={(event) => {
+            if (event.key === "ArrowDown") moveSelection(event, 1);
+            if (event.key === "ArrowUp") moveSelection(event, -1);
+          }}
+          placeholder={ja ? "\u30bf\u30a4\u30c8\u30eb\u3001\u30ad\u30fc\u3001\u30b3\u30fc\u30c9\u3001\u30bb\u30af\u30b7\u30e7\u30f3\u3067\u691c\u7d22" : "Search title, key, chords, or section"}
         />
 
         {loading ? <p className="mt-4 text-sm text-[var(--lv-text-secondary)]" role="status">{ja ? "Vaultの進行を読み込んでいます…" : "Loading Vault progressions…"}</p> : null}
@@ -120,6 +125,7 @@ export function VaultProgressionPicker({
 
         {!loading && !error && visibleCandidates.length > 0 ? <>
           <div
+            id="vault-progression-picker-candidates"
             className="mt-4 max-h-64 overflow-y-auto rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] p-2"
             role="group"
             aria-label={ja ? "Vaultのコード進行候補" : "Vault progression candidates"}
@@ -131,6 +137,8 @@ export function VaultProgressionPicker({
             {visibleCandidates.map((candidate) => {
               const snapshot = candidate.safeSnapshot;
               const selected = snapshot.signature === selectedCandidate?.safeSnapshot.signature;
+              const chords = snapshot.section.chords.map((chord) => chord.label).join(" \u00b7 ");
+              const facts = pickerSnapshotLabel(snapshot, language);
               return <button
                 key={snapshot.signature}
                 ref={(element) => {
@@ -139,20 +147,29 @@ export function VaultProgressionPicker({
                 }}
                 type="button"
                 data-testid="vault-progression-picker-candidate"
+                aria-label={`${candidate.displayTitle}. ${chords}. ${facts}`}
                 aria-pressed={selected}
-                className={`block w-full rounded-[var(--lv-radius-sm)] px-3 py-2 text-left text-sm ${selected ? "bg-[var(--lv-accent-soft)] text-[var(--lv-text-primary)]" : "hover:bg-[var(--lv-surface-hover)]"}`}
+                className={`block min-w-0 w-full rounded-[var(--lv-radius-sm)] px-3 py-2 text-left text-sm ${selected ? "bg-[var(--lv-accent-soft)] text-[var(--lv-text-primary)]" : "hover:bg-[var(--lv-surface-hover)]"}`}
                 onClick={() => setSelectedSignature(snapshot.signature)}
               >
-                <span className="block font-medium">{pickerSnapshotLabel(snapshot, language)}</span>
-                <span className="mt-1 block text-xs text-[var(--lv-text-secondary)]">{snapshot.section.chords.map((chord) => chord.label).join(" · ")}</span>
+                <span
+                  data-testid="vault-progression-picker-candidate-title"
+                  className="block min-w-0 truncate font-medium"
+                  title={candidate.displayTitle}
+                >
+                  {candidate.displayTitle}
+                </span>
+                <span data-testid="vault-progression-picker-candidate-chords" className="mt-1 block break-words text-xs text-[var(--lv-text-secondary)]">{chords}</span>
+                <span data-testid="vault-progression-picker-candidate-facts" className="mt-1 block text-xs text-[var(--lv-text-muted)]">{facts}</span>
               </button>;
             })}
           </div>
           {filteredCandidates.length > MAX_VISIBLE_CANDIDATES ? <p className="mt-2 text-xs text-[var(--lv-text-muted)]" role="status">{ja ? `最初の${MAX_VISIBLE_CANDIDATES}件を表示しています。検索で絞り込んでください。` : `Showing the first ${MAX_VISIBLE_CANDIDATES} matches. Refine your search to narrow the list.`}</p> : null}
           {selectedCandidate ? <section className="mt-4 rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] p-3" aria-live="polite" data-testid="vault-progression-picker-preview">
             <p className="text-xs font-semibold uppercase text-[var(--lv-text-muted)]">{ja ? "選択したセクション" : "Selected section"}</p>
-            <p className="mt-1 font-medium">{pickerSnapshotLabel(selectedCandidate.safeSnapshot, language)}</p>
-            <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">{selectedCandidate.safeSnapshot.section.chords.map((chord) => chord.label).join(" · ")}</p>
+            <p data-testid="vault-progression-picker-preview-title" className="mt-1 break-words font-medium">{selectedCandidate.displayTitle}</p>
+            <p data-testid="vault-progression-picker-preview-chords" className="mt-1 break-words text-sm text-[var(--lv-text-secondary)]">{selectedCandidate.safeSnapshot.section.chords.map((chord) => chord.label).join(" \u00b7 ")}</p>
+            <p data-testid="vault-progression-picker-preview-facts" className="mt-1 text-xs text-[var(--lv-text-muted)]">{pickerSnapshotLabel(selectedCandidate.safeSnapshot, language)}</p>
           </section> : null}
         </> : null}
 

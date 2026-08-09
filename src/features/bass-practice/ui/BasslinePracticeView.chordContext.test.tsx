@@ -157,7 +157,9 @@ describe("Bassline Echo Chord Context", () => {
       await Promise.resolve();
     });
     expect(document.querySelector("[role='dialog']")?.textContent).toContain("Vaultからコード進行を選ぶ");
-    expect(document.querySelector("[data-testid='vault-progression-picker-preview']")?.textContent).toContain("Dmaj7");
+    expect(document.querySelector("[data-testid='vault-progression-picker-candidate-title']")?.textContent).toBe("Live Vault Title");
+    expect(document.querySelector("[data-testid='vault-progression-picker-preview-title']")?.textContent).toBe("Live Vault Title");
+    expect(document.querySelector("[data-testid='vault-progression-picker-preview-chords']")?.textContent).toContain("Dmaj7");
     const search = document.querySelector<HTMLInputElement>("[data-testid='vault-progression-picker-search']")!;
     await act(async () => {
       setTextInputValue(search, "LIVE VAULT");
