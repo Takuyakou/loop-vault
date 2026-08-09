@@ -11,7 +11,7 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "81a689088436015f16596fa757998926b017718a",
-  "lastVerifiedCommit": "9dee60b2b6d5a8d45aef88f770c8060429e6c8ba",
+  "lastVerifiedCommit": "4c3c0decb17118669e2bd05a124e7dfef23a5ad4",
   "currentBranch": "feat/p5182-vault-source-discoverability",
   "requiredGates": {
     "P5.18.2-00": [
@@ -105,6 +105,6 @@
     "p5182-03-git-diff-check": "pass",
     "p5182-03-protected-privacy": "pass"
   },
-  "nextAction": "Automated P5.18.2-03 release gates are complete on 9dee60b2. Human product acceptance is required before completing the stage; do not merge, push, or start another phase.",
+  "nextAction": "Automated P5.18.2-03 release gates, including the Vault picker section-grouping correction, are complete on 4c3c0de. Human product re-verification is required before completing the stage; do not merge, push, or start another phase.",
   "updatedAt": "2026-08-09"
 }
