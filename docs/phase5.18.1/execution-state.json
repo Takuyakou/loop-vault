@@ -1,14 +1,15 @@
 {
     "schemaVersion":  1,
     "phaseId":  "5.18.1",
-    "status":  "in-progress",
-    "activeStage":  "P5.18.1-05",
+    "status":  "completed",
+    "activeStage":  null,
     "completedStages":  [
                             "P5.18.1-00",
                             "P5.18.1-01",
                             "P5.18.1-02",
                             "P5.18.1-03",
-                            "P5.18.1-04"
+                            "P5.18.1-04",
+                            "P5.18.1-05"
                         ],
     "blocked":  false,
     "blockerReason":  null,
@@ -161,6 +162,6 @@
                         "p5181-05-git-diff-check":  "pass",
                         "p5181-05-protected-privacy":  "pass"
                     },
-    "nextAction":  "Automated P5.18.1-05 release gates passed. Perform the recorded human product acceptance on the direct executable or a fresh installer, then request merge authorization explicitly; do not merge automatically.",
+    "nextAction":  "P5.18.1 is complete and human product acceptance passed. Await a separate explicit merge instruction; do not merge automatically.",
     "updatedAt":  "2026-08-09"
 }

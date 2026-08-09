@@ -4,7 +4,7 @@
 
 ## Status
 
-P5.18.1 AUTOMATED RELEASE GATES PASS — READY FOR PRODUCT ACCEPTANCE; human acceptance and merge authorization remain pending.
+P5.18.1 COMPLETE — automated release gates and human product acceptance passed; merge authorization remains pending.
 
 
 
@@ -299,4 +299,4 @@ production 機能を実装しない。
 
 ## Next action
 
-P5.18.1 automated release gates are complete. Perform the recorded human product acceptance on the direct executable or a fresh installer, then request merge authorization explicitly. Do not merge automatically.
+P5.18.1 is complete. Await a separate explicit merge instruction; do not merge automatically.
