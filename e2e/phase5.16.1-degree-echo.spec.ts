@@ -6,6 +6,7 @@ const bassPracticeFeatureKeys = [
   "loop-vault:bass-practice-degree-echo-enabled:v1",
   "loop-vault:bass-practice-rhythm-echo-enabled:v1",
   "loop-vault:bass-practice-bassline-echo-enabled:v1",
+  "loop-vault:bass-practice-root-motion-enabled:v1",
 ] as const;
 
 async function disableBassPractice(page: Page) {
