@@ -4,7 +4,8 @@
 
 ## Status
 
-IN PROGRESS — P5.18.1-00 contract amendment and baseline refresh
+P5.18.1-00 GATES PASS — awaiting explicit authorization to start P5.18.1-01
+
 
 ## Single entry point
 

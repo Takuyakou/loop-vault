@@ -7,7 +7,7 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "328462abfdacc3496eb4f13da799165bd09527ef",
-  "lastVerifiedCommit": "328462abfdacc3496eb4f13da799165bd09527ef",
+  "lastVerifiedCommit": "f91b28d3988786af4993f2f0ebb07837286b12d2",
   "currentBranch": "feat/p5181-bassline-preset-vault-picker",
   "requiredGates": {
     "P5.18.1-00": [
@@ -23,16 +23,16 @@
     ]
   },
   "gateResults": {
-    "p5181-00-phase-docs-validation": "not-run",
-    "p5181-00-validator-tests": "not-run",
-    "p5181-00-full-vitest": "not-run",
-    "p5181-00-lint": "not-run",
-    "p5181-00-app-typecheck": "not-run",
-    "p5181-00-e2e-typecheck": "not-run",
-    "p5181-00-rust": "not-run",
-    "p5181-00-bass-practice-p518-regression": "not-run",
-    "p5181-00-git-diff-check": "not-run"
+    "p5181-00-phase-docs-validation": "pass",
+    "p5181-00-validator-tests": "pass",
+    "p5181-00-full-vitest": "pass",
+    "p5181-00-lint": "pass",
+    "p5181-00-app-typecheck": "pass",
+    "p5181-00-e2e-typecheck": "pass",
+    "p5181-00-rust": "pass",
+    "p5181-00-bass-practice-p518-regression": "pass",
+    "p5181-00-git-diff-check": "pass"
   },
-  "nextAction": "Commit Contract 06, run P5.18.1-00 baseline gates on that exact commit, then close Stage 00. Do not start P5.18.1-01 before closure.",
+  "nextAction": "P5.18.1-00 baseline gates passed on f91b28d. Await explicit authorization before starting P5.18.1-01 — Preset Domain / Catalog.",
   "updatedAt": "2026-08-09"
 }
