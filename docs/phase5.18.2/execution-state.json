@@ -1,12 +1,13 @@
 {
   "schemaVersion": 1,
   "phaseId": "5.18.2",
-  "status": "in-progress",
-  "activeStage": "P5.18.2-03",
+  "status": "completed",
+  "activeStage": null,
   "completedStages": [
     "P5.18.2-00",
     "P5.18.2-01",
-    "P5.18.2-02"
+    "P5.18.2-02",
+    "P5.18.2-03"
   ],
   "blocked": false,
   "blockerReason": null,
@@ -105,6 +106,6 @@
     "p5182-03-git-diff-check": "pass",
     "p5182-03-protected-privacy": "pass"
   },
-  "nextAction": "Automated P5.18.2-03 release gates, including the Vault picker section-grouping correction, are complete on 4c3c0de. Human product re-verification is required before completing the stage; do not merge, push, or start another phase.",
+  "nextAction": "P5.18.2 is complete and human product acceptance passed on 2026-08-09. The user authorized a clean --no-ff master merge; do not push or start another phase.",
   "updatedAt": "2026-08-09"
 }
