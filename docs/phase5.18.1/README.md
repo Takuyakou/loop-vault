@@ -4,7 +4,7 @@
 
 ## Status
 
-P5.18.1-03 GATES PASS — Bassline Echo Source Integration; awaiting P5.18.1-04 authorization
+P5.18.1-04 GATES PASS — Migration / Product Hardening; awaiting P5.18.1-05 authorization
 
 
 
@@ -299,5 +299,5 @@ production 機能を実装しない。
 
 ## Next action
 
-P5.18.1-02 is complete and recorded. Await explicit human authorization before starting
-`P5.18.1-03 — Source Integration`; do not begin it automatically.
+P5.18.1-04 is complete and recorded. Await explicit human authorization before starting
+`P5.18.1-05 — Release / Acceptance`; do not begin it automatically.
