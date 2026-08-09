@@ -2,7 +2,7 @@
 # Phase 5.19 — Root Motion Echo
 
 ## Status
-`P5.19-00 COMPLETE — awaiting explicit authorization for P5.19-01`
+`P5.19-01 COMPLETE — P5.19-02 in progress`
 
 ## Required Reading Order
 
