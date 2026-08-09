@@ -14,7 +14,7 @@
     "blocked":  false,
     "blockerReason":  null,
     "baseCommit":  "854a5c909660e231dfafcc184c3881e99799911e",
-    "lastVerifiedCommit":  "702b0dd5df855958f2eb7e6580e683d117f17770",
+    "lastVerifiedCommit":  "d09fb83e9127906cf66d11f087e14b49c6330ac4",
     "currentBranch":  "feat/p519-root-motion-echo",
     "requiredGates":  {
                           "P5.19-00":  [
@@ -156,8 +156,18 @@
                         "p519-05-web-build":  "pass",
                         "p519-05-tauri-build":  "pass",
                         "p519-05-release-benchmarks":  "pass",
-                        "p519-05-diff-and-protected-surface":  "pass"
+                        "p519-05-diff-and-protected-surface":  "pass",
+                        "p519-06-phase-docs-validation":  "pass",
+                        "p519-06-generator-vault-transfer":  "pass",
+                        "p519-06-history-compatibility":  "pass",
+                        "p519-06-ui-accessibility":  "pass",
+                        "p519-06-bass-practice-regression":  "pass",
+                        "p519-06-app-typecheck":  "pass",
+                        "p519-06-e2e-typecheck":  "pass",
+                        "p519-06-lint":  "pass",
+                        "p519-06-web-build":  "pass",
+                        "p519-06-diff-and-protected-surface":  "pass"
                     },
-    "nextAction":  "Implement P5.19-06 adjustable Root Motion chain length. Do not merge, push, or start P5.20 without a separate human instruction.",
+    "nextAction":  "Human product acceptance: verify P5.19-06 selectable two through eight-note Root Motion chains before any Phase 5.19 merge. Do not push or start P5.20 without a separate human instruction.",
     "updatedAt":  "2026-08-09"
 }

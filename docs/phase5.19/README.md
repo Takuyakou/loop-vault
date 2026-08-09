@@ -2,7 +2,7 @@
 # Phase 5.19 — Root Motion Echo
 
 ## Status
-`P5.19-06 ADJUSTABLE CHAIN LENGTH — contract and implementation in progress`
+`P5.19-06 ADJUSTABLE CHAIN LENGTH - automated gates pass; human product acceptance pending`
 
 ## Required Reading Order
 
