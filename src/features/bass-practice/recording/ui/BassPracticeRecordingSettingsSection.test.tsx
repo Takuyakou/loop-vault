@@ -45,7 +45,10 @@ describe("BassPracticeRecordingSettingsSection", () => {
     expect(container.textContent).toBe("");
 
     // flag on -> select reflects the store and writing it syncs back
-    setRecordChannel("left");
+    await act(async () => {
+      setRecordChannel("left");
+      await flush();
+    });
     await act(async () => { root.render(<BassPracticeRecordingSettingsSection enabledOverride />); await flush(); });
     const select = container.querySelector("[data-testid=settings-record-channel]") as HTMLSelectElement;
     expect(select.value).toBe("left");

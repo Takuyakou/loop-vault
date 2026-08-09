@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "../../../../components/ui";
 import { isBassPracticeRecordCompareEnabled } from "../../application/featureFlag";
 import { TOTAL_QUOTA_BYTES, type StoredRecordingMetadata } from "../domain/persistence";
@@ -45,12 +45,12 @@ export function RetainedTakesPanel({
   const [confirmingId, setConfirmingId] = useState<string>();
   const [playingId, setPlayingId] = useState<string>();
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     const repo = repoRef.current;
     if (!repo) return;
     setTakes(await repo.listStored());
     setUsedBytes(await repo.usedBytes());
-  };
+  }, []);
 
   useEffect(() => {
     if (!enabled) return undefined;
@@ -59,8 +59,7 @@ export function RetainedTakesPanel({
       activePlaybackRef.current?.stop();
       activePlaybackRef.current = null;
     };
-    // eslint-disable-next-line
-  }, [enabled]);
+  }, [enabled, refresh]);
 
   if (!enabled) return null;
   if (takes.length === 0 && !showWhenEmpty) return null;
