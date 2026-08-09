@@ -4,9 +4,9 @@
 ## Status
 
 - **Status:** in progress
-- **Active stage:** P5.20-00
-- **Completed stages:** none
-- **Next action:** commit the Stage00 audit and contract lock, then run fresh baseline gates against that exact commit.
+- **Active stage:** P5.20-01 (not started)
+- **Completed stages:** P5.20-00
+- **Next action:** await explicit human authorization before starting P5.20-01.
 
 ## Required Reading Order
 
@@ -111,12 +111,12 @@ P5.20は入力路のPhase。次コード候補・作曲支援は含めない。
 - FreePats assets
 - P5.17 RecordingTake store
 - P5.18〜P5.19 source/practice contracts
-- P5.19.1 UI/UX system
+- existing P5.18.2/P5.19 UI/UX system
 - test-output hygiene
 - `docs/CURRENT_STATE.md`
 
 ## Preconditions
-- P5.19.1が正式完了・master統合済み
+- P5.19が正式完了・master統合済み
 - P5.19 / P5.18.2 / P5.18.1 / P5.18 / P5.17が祖先
 - test-output hygieneが祖先
 - P5.15は非祖先
@@ -152,7 +152,7 @@ Vault/検索/Chord Dojo/Bass Practice/Chord Context/Root Motion、a11y、Web/Tau
 - full gates PASS
 
 ## Stop conditions
-- P5.19.1未完了
+- P5.19未完了
 - 2つ目のchord identity systemが必要
 - CaptureDraftにschema rewriteが必要
 - approved grammarのtimingを正確に表現できない

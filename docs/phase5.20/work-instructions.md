@@ -51,7 +51,7 @@ This section supersedes any tentative wording below.
 - `git status --short`
 - worktrees
 - merge/rebase/cherry-pick状態
-- P5.19.1 completion ancestor
+- P5.19 completion ancestor
 - P5.19〜P5.17 ancestors
 - test-output hygiene ancestor
 - P5.15 non-ancestor

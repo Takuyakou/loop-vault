@@ -6,7 +6,7 @@ Phase 5.20 — Text Progression Entry を開始してください。
 
 branch/worktree/HEAD/PR/git statusとstateを照合し、差異はGitを優先してreportへ記録してください。
 
-P5.19.1が正式完了・master統合済みであることを確認してください。未完了なら停止してください。
+P5.19が正式完了・master統合済みであることを確認してください。未完了なら停止してください。
 
 今回は `P5.20-00 — Repository Audit / Grammar / Contract / Baseline` のみ。
 
