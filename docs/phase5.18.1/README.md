@@ -4,7 +4,7 @@
 
 ## Status
 
-P5.18.1-04 GATES PASS — Migration / Product Hardening; awaiting P5.18.1-05 authorization
+P5.18.1 AUTOMATED RELEASE GATES PASS — READY FOR PRODUCT ACCEPTANCE; human acceptance and merge authorization remain pending.
 
 
 
@@ -299,5 +299,4 @@ production 機能を実装しない。
 
 ## Next action
 
-P5.18.1-04 is complete and recorded. Await explicit human authorization before starting
-`P5.18.1-05 — Release / Acceptance`; do not begin it automatically.
+P5.18.1 automated release gates are complete. Perform the recorded human product acceptance on the direct executable or a fresh installer, then request merge authorization explicitly. Do not merge automatically.

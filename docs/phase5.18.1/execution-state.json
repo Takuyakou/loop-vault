@@ -2,7 +2,7 @@
     "schemaVersion":  1,
     "phaseId":  "5.18.1",
     "status":  "in-progress",
-    "activeStage":  null,
+    "activeStage":  "P5.18.1-05",
     "completedStages":  [
                             "P5.18.1-00",
                             "P5.18.1-01",
@@ -13,7 +13,7 @@
     "blocked":  false,
     "blockerReason":  null,
     "baseCommit":  "328462abfdacc3496eb4f13da799165bd09527ef",
-    "lastVerifiedCommit":  "fd82def43a9ab351092942c65fa30b972c276f5e",
+    "lastVerifiedCommit":  "261cc63beaab9afaded752bc62e50857fe230779",
     "currentBranch":  "feat/p5181-source-integration",
     "requiredGates":  {
                           "P5.18.1-00":  [
@@ -71,6 +71,27 @@
                                              "p5181-04-production-e2e",
                                              "p5181-04-git-diff-check",
                                              "p5181-04-protected-privacy"
+                                         ],
+                          "P5.18.1-05":  [
+                                             "p5181-05-phase-docs-validation",
+                                             "p5181-05-validator-tests",
+                                             "p5181-05-lint",
+                                             "p5181-05-app-typecheck",
+                                             "p5181-05-e2e-typecheck",
+                                             "p5181-05-p5181-focused-tests",
+                                             "p5181-05-p518-tests",
+                                             "p5181-05-bass-practice-history-tests",
+                                             "p5181-05-full-vitest",
+                                             "p5181-05-rust",
+                                             "p5181-05-full-playwright",
+                                             "p5181-05-web-build",
+                                             "p5181-05-tauri-release-build",
+                                             "p5181-05-p516-benchmark",
+                                             "p5181-05-p517-resource-regression",
+                                             "p5181-05-p518-resource-benchmark",
+                                             "p5181-05-source-switch-benchmark",
+                                             "p5181-05-git-diff-check",
+                                             "p5181-05-protected-privacy"
                                          ]
                       },
     "gateResults":  {
@@ -119,8 +140,27 @@
                         "p5181-04-web-build":  "pass",
                         "p5181-04-production-e2e":  "pass",
                         "p5181-04-git-diff-check":  "pass",
-                        "p5181-04-protected-privacy":  "pass"
+                        "p5181-04-protected-privacy":  "pass",
+                        "p5181-05-phase-docs-validation":  "pass",
+                        "p5181-05-validator-tests":  "pass",
+                        "p5181-05-lint":  "pass",
+                        "p5181-05-app-typecheck":  "pass",
+                        "p5181-05-e2e-typecheck":  "pass",
+                        "p5181-05-p5181-focused-tests":  "pass",
+                        "p5181-05-p518-tests":  "pass",
+                        "p5181-05-bass-practice-history-tests":  "pass",
+                        "p5181-05-full-vitest":  "pass",
+                        "p5181-05-rust":  "pass",
+                        "p5181-05-full-playwright":  "pass",
+                        "p5181-05-web-build":  "pass",
+                        "p5181-05-tauri-release-build":  "pass",
+                        "p5181-05-p516-benchmark":  "pass",
+                        "p5181-05-p517-resource-regression":  "pass",
+                        "p5181-05-p518-resource-benchmark":  "pass",
+                        "p5181-05-source-switch-benchmark":  "pass",
+                        "p5181-05-git-diff-check":  "pass",
+                        "p5181-05-protected-privacy":  "pass"
                     },
-    "nextAction":  "P5.18.1-04 is complete. Await explicit human authorization before P5.18.1-05; do not start it automatically.",
+    "nextAction":  "Automated P5.18.1-05 release gates passed. Perform the recorded human product acceptance on the direct executable or a fresh installer, then request merge authorization explicitly; do not merge automatically.",
     "updatedAt":  "2026-08-09"
 }
