@@ -85,6 +85,37 @@ describe("Vault picker candidate ViewModel", () => {
     expect(new Set(candidates.map((candidate) => candidate.safeSnapshot.source.reference.ideaId)).size).toBe(2);
   });
 
+  it("keeps a large live catalog deterministic while reflecting title edits and source deletion", () => {
+    const source = Array.from({ length: 250 }, (_, index) => idea(
+      `idea-${index}`,
+      `Release ${index % 2 === 0 ? "\u30b5\u30f3\u30d7\u30eb" : "\u{1f3b8}"} title ${index}`,
+      progression(`block-${index}`, index % 2 === 0 ? 0 : 2),
+    ));
+
+    const first = buildVaultPickerCandidateViews(source, "Untitled progression");
+    const repeated = buildVaultPickerCandidateViews(source, "Untitled progression");
+    expect(first).toEqual(repeated);
+    expect(first).toHaveLength(250);
+    expect(filterVaultPickerCandidates(first, "release \u{1f3b8} title 149")).toHaveLength(1);
+
+    const original = first[149]!;
+    const edited = source.map((entry, index) => index === 149
+      ? { ...entry, title: "Edited live title" }
+      : entry);
+    const afterEdit = buildVaultPickerCandidateViews(edited, "Untitled progression");
+    const editedCandidate = afterEdit.find((candidate) =>
+      candidate.safeSnapshot.signature === original.safeSnapshot.signature);
+    if (!editedCandidate) throw new Error("Edited candidate was not found.");
+    expect(editedCandidate.displayTitle).toBe("Edited live title");
+    expect(JSON.stringify(editedCandidate.safeSnapshot)).not.toContain("Edited live title");
+
+    const afterDelete = buildVaultPickerCandidateViews(
+      edited.filter((entry) => entry.id !== original.safeSnapshot.source.reference.ideaId),
+      "Untitled progression",
+    );
+    expect(afterDelete.some((candidate) =>
+      candidate.safeSnapshot.signature === original.safeSnapshot.signature)).toBe(false);
+  });
   it("matches normalized live titles and retains the established key, section, and chord search", () => {
     const candidates = buildVaultPickerCandidateViews([
       idea("idea-night", "\u591c\u{1f31f} Groove", progression("night-block", 0)),
