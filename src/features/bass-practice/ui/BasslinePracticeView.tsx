@@ -30,6 +30,7 @@ import {
 import { RecordCompareSection } from "../recording/ui/RecordCompareSection";
 import { createTargetPlayer } from "../recording/application/playback";
 import { EchoPracticeHeader, EchoPracticeProgress } from "./EchoPracticeChrome";
+import { VaultProgressionPicker } from "./VaultProgressionPicker";
 
 const GENERATED_CONTEXT_CHORDS = [
   { id: "generated:0", root: 2, quality: "min7" as const, tensions: [] as const, label: "Dm7", startBeat: 0, durationBeats: 2 },
@@ -111,6 +112,10 @@ export function BasslinePracticeView({
   }, [chordContextSnapshot?.signature]);
   const activeSnapshot = availableSnapshots.find((snapshot) => snapshot.signature === selectedSnapshotSignature)
     ?? availableSnapshots[0];
+  const vaultSnapshots = useMemo(
+    () => Object.freeze(availableSnapshots.filter((snapshot): snapshot is VaultChordContextSnapshot => snapshot.source.kind === "vault")),
+    [availableSnapshots],
+  );
   const [effectiveBpm, setEffectiveBpm] = useState(() => activeSnapshot?.originalBpm ?? 96);
   const [recordPlayMode, setRecordPlayMode] = useState<Extract<ChordContextPlayMode, "chords-only" | "chords-and-metronome">>("chords-only");
   const [recordCompareUsed, setRecordCompareUsed] = useState(false);
@@ -365,9 +370,11 @@ export function BasslinePracticeView({
   if (!exercise.ok) return <p role="alert">{exercise.error.message}</p>;
   const sourceLabel = activeSnapshot?.source.kind === "vault"
     ? `${ja ? "Vault進行" : "Vault source"} \u00b7 ${activeSnapshot.source.safeLabel}`
-    : ja ? "既定の生成進行" : "Default generated source";
+    : activeSnapshot?.source.kind === "preset"
+      ? `${ja ? "プリセット進行" : "Preset source"} \u00b7 ${activeSnapshot.source.safeLabel}`
+      : ja ? "既定の生成進行" : "Default generated source";
   const noContextSource = chordContextEnabled && !activeSnapshot;
-  const hasVaultProgressions = availableSnapshots.some((snapshot) => snapshot.source.kind === "vault");
+  const hasVaultProgressions = vaultSnapshots.length > 0;
   const basslineStepIndex = review ? 3 : contextPlayback === "play" ? 2 : contextPlayback === "listen" || legacyPlaying ? 1 : 0;
   const basslineSteps = BASSLINE_STEPS[language];
 
@@ -392,27 +399,30 @@ export function BasslinePracticeView({
         </div>
         <div className={chordContextEnabled ? "grid w-full gap-3 sm:grid-cols-[minmax(0,1fr)_13rem] lg:w-[38rem]" : "w-full sm:w-52"}>
           {chordContextEnabled ? <Field
-            htmlFor="bassline-progression"
+            htmlFor="bassline-vault-picker-open"
             label={ja ? "コード進行" : "Chord progression"}
             helper={hasVaultProgressions
-              ? (ja ? "既定進行またはVaultの保存進行を選べます。" : "Choose the default or a saved Vault progression.")
+              ? (ja ? "Vaultの保存進行は、確認してから練習へ反映します。" : "A saved Vault progression changes practice only after you confirm it.")
               : (ja ? "Vaultに対応する4/4進行を保存すると、ここから選べます。" : "Save a supported 4/4 Vault progression to select it here.")}
           >
-            <select
-              id="bassline-progression"
-              name="bassline-progression"
-              data-testid="bassline-progression-select"
-              className="lv-input w-full"
-              disabled={recordingInFlight || preparing}
-              value={activeSnapshot?.signature ?? ""}
-              onChange={(event) => chooseProgression(event.currentTarget.value)}
-            >
-              {availableSnapshots.map((snapshot) => (
-                <option key={snapshot.signature} value={snapshot.signature}>
-                  {chordContextProgressionOptionLabel(snapshot, language)}
-                </option>
-              ))}
-            </select>
+            <div className="flex flex-wrap items-center gap-2">
+              <VaultProgressionPicker
+                language={language}
+                snapshots={vaultSnapshots}
+                activeSignature={activeSnapshot?.source.kind === "vault" ? activeSnapshot.signature : undefined}
+                disabled={recordingInFlight || preparing}
+                onConfirm={chooseProgression}
+              />
+              {activeSnapshot?.source.kind === "vault" && generatedSnapshot.ok ? <Button
+                data-testid="bassline-progression-use-default"
+                variant="ghost"
+                size="sm"
+                disabled={recordingInFlight || preparing}
+                onClick={() => chooseProgression(generatedSnapshot.snapshot.signature)}
+              >
+                {ja ? "既定進行に戻す" : "Use default"}
+              </Button> : null}
+            </div>
           </Field> : null}
           <Field htmlFor="bassline-level" label={ja ? "レベル" : "Level"}>
             <select id="bassline-level" name="bassline-level" className="lv-input w-full" aria-label={ja ? "ベースラインのレベル" : "Bassline level"} disabled={recordingInFlight} value={level} onChange={(event) => chooseLevel(Number(event.target.value) as 1 | 2 | 3)}><option value={1}>{ja ? "1 - ルート" : "1 - Roots"}</option><option value={2}>{ja ? "2 - コードトーン" : "2 - Chord tones"}</option><option value={3}>{ja ? "3 - アプローチ" : "3 - Approach"}</option></select>
@@ -693,14 +703,4 @@ function midiNoteName(midi: number): string {
   const name = PITCH_CLASS_NAMES[((rounded % 12) + 12) % 12];
   const octave = Math.floor(rounded / 12) - 1;
   return `${name}${octave}`;
-}
-function chordContextProgressionOptionLabel(snapshot: ChordContextSnapshot, language: AppLanguage): string {
-  const chords = snapshot.section.chords.map((chord) => chord.label).join(" – ");
-  if (snapshot.source.kind === "generated") {
-    return language === "ja" ? `既定進行 · ${chords}` : `Default · ${chords}`;
-  }
-  const bars = language === "ja"
-    ? `${snapshot.section.startBar}–${snapshot.section.endBar}小節`
-    : `bars ${snapshot.section.startBar}–${snapshot.section.endBar}`;
-  return `Vault · ${snapshot.tonalContext.key} · ${bars} · ${chords}`;
 }

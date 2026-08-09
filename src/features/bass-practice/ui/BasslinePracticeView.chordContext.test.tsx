@@ -121,7 +121,7 @@ describe("Bassline Echo Chord Context", () => {
     expect(container.textContent).toContain("No accompaniment");
   });
 
-  it("switches between the default and saved Vault progressions inside Bassline Echo", async () => {
+  it("uses a confirmation transaction when switching to a saved Vault progression", async () => {
     const block = {
       id: "selector-progression",
       summaryText: "Private title must not enter Practice",
@@ -141,18 +141,36 @@ describe("Bassline Echo Chord Context", () => {
     });
     if (!result.ok) throw new Error(result.error.message);
     const container = await renderView({ language: "ja", chordContextSnapshots: [result.snapshot] });
-    const selector = container.querySelector<HTMLSelectElement>("[data-testid='bassline-progression-select']")!;
+    const openPicker = container.querySelector<HTMLButtonElement>("[data-testid='vault-progression-picker-open']")!;
 
-    expect(Array.from(selector.options).map((option) => option.textContent)).toEqual([
-      "既定進行 · Dm7 – G7 – Cmaj7",
-      "Vault · D major · 1–1小節 · Dmaj7",
-    ]);
+    expect(openPicker.textContent).toContain("Vaultから選ぶ");
     expect(container.querySelector("[aria-label='ベースラインのコード進行']")?.textContent).toContain("Dm7G7Cmaj7");
 
     await clickStart(container);
     await act(async () => {
-      selector.value = result.snapshot.signature;
-      selector.dispatchEvent(new Event("change", { bubbles: true }));
+      openPicker.click();
+      await Promise.resolve();
+    });
+    expect(document.querySelector("[role='dialog']")?.textContent).toContain("Vaultからコード進行を選ぶ");
+    expect(document.querySelector("[data-testid='vault-progression-picker-preview']")?.textContent).toContain("Dmaj7");
+    expect(document.body.textContent).not.toContain("Private title must not enter Practice");
+    expect(container.querySelector("[aria-label='ベースラインのコード進行']")?.textContent).toContain("Dm7G7Cmaj7");
+    expect(playback.sessions[0]!.stopped).toBe(0);
+
+    await act(async () => {
+      findButton(document.body, "キャンセル")?.click();
+      await Promise.resolve();
+    });
+    expect(document.querySelector("[role='dialog']")).toBeNull();
+    expect(container.querySelector("[aria-label='ベースラインのコード進行']")?.textContent).toContain("Dm7G7Cmaj7");
+    expect(playback.sessions[0]!.stopped).toBe(0);
+
+    await act(async () => {
+      openPicker.click();
+      await Promise.resolve();
+    });
+    await act(async () => {
+      document.querySelector<HTMLButtonElement>("[data-testid='vault-progression-picker-confirm']")?.click();
       await Promise.resolve();
     });
 
@@ -162,11 +180,9 @@ describe("Bassline Echo Chord Context", () => {
     expect(container.querySelector("[data-testid='bassline-source']")?.textContent).toContain("Vault進行 · D major · bars 1-1");
     expect(container.querySelector("[aria-label='ベースラインのコード進行']")?.textContent).toBe("Dmaj7");
     expect(container.querySelector<HTMLInputElement>("[data-testid='chord-context-effective-bpm']")?.value).toBe("112");
-    expect(container.textContent).not.toContain("Private title must not enter Practice");
 
     await act(async () => {
-      selector.value = selector.options[0]!.value;
-      selector.dispatchEvent(new Event("change", { bubbles: true }));
+      container.querySelector<HTMLButtonElement>("[data-testid='bassline-progression-use-default']")?.click();
       await Promise.resolve();
     });
     expect(container.querySelector("[aria-label='ベースラインのコード進行']")?.textContent).toContain("Dm7G7Cmaj7");
@@ -471,7 +487,7 @@ describe("Bassline Echo Chord Context", () => {
     const container = await renderView({ chordContextEnabled: false });
 
     expect(container.querySelector("[data-testid='chord-context-controls']")).toBeNull();
-    expect(container.querySelector("[data-testid='bassline-progression-select']")).toBeNull();
+    expect(container.querySelector("[data-testid='vault-progression-picker-open']")).toBeNull();
     expect(container.querySelector("[data-testid='bassline-listen']")).not.toBeNull();
   });
 });
