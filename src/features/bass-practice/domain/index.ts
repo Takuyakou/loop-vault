@@ -9,6 +9,7 @@ export * from "./mapping";
 export * from "./review";
 export * from "./progressionPresets";
 export * from "./rhythm";
+export * from "./rootMotion";
 export * from "./singingReference";
 export * from "./stateMachine";
 export * from "./transfer";
