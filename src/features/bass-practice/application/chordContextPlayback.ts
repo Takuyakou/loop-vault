@@ -11,9 +11,9 @@ export const CHORD_CONTEXT_BASS_MIN_MIDI = 28;
 export const CHORD_CONTEXT_BASS_MAX_MIDI = 55;
 export const CHORD_CONTEXT_MIN_BPM = 30;
 export const CHORD_CONTEXT_MAX_BPM = 240;
-/** P5.18-00 locks a selected section to one or two complete 4/4 bars. */
-export const CHORD_CONTEXT_MAX_SECTION_BEATS = 8;
-/** Count-in is bounded to the same locked one-or-two-bar section. */
+/** Contract 06 bounds a selected section to a complete 1/2/4/8/12-bar 4/4 phrase. */
+export const CHORD_CONTEXT_MAX_SECTION_BEATS = 48;
+/** Count-in remains independently bounded to avoid a long preparation phase. */
 export const CHORD_CONTEXT_MAX_COUNT_IN_BEATS = 8;
 export const CHORD_CONTEXT_DEFAULT_MIX = Object.freeze({ bassDb: 0, chordsDb: -12, metronomeDb: -9 });
 
@@ -291,7 +291,7 @@ function validateTimedEvent(event: unknown): { readonly message: string; readonl
   const startBeat = event.startBeat;
   const durationBeats = event.durationBeats;
   if (!eventId || !Number.isFinite(startBeat) || typeof startBeat !== "number" || startBeat < 0 || !Number.isFinite(durationBeats) || typeof durationBeats !== "number" || durationBeats <= 0) return { message: "Chord Context events need an id, finite non-negative onset, and finite positive duration.", eventId };
-  if (startBeat + durationBeats > CHORD_CONTEXT_MAX_SECTION_BEATS) return { message: `Chord Context events must fit the locked ${CHORD_CONTEXT_MAX_SECTION_BEATS}-beat section.`, eventId };
+  if (startBeat + durationBeats > CHORD_CONTEXT_MAX_SECTION_BEATS) return { message: `Chord Context events must fit the bounded ${CHORD_CONTEXT_MAX_SECTION_BEATS}-beat section.`, eventId };
   return undefined;
 }
 function isNormalizedVelocity(velocity: unknown): velocity is number { return typeof velocity === "number" && Number.isFinite(velocity) && velocity >= 0 && velocity <= 1; }

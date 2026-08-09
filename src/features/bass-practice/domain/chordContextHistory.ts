@@ -1,5 +1,5 @@
 import type { ChordContextListenMode, ChordContextPlayMode } from "../application/chordContextPlayback";
-import type { ChordContextSnapshot } from "./chordContextSnapshot";
+import type { ChordContextSectionLengthBeats, ChordContextSnapshot } from "./chordContextSnapshot";
 
 /**
  * A factual, Vault-independent record of a completed Chord Context session.
@@ -15,19 +15,21 @@ export interface ChordContextHistoryEntry {
   readonly version: typeof CHORD_CONTEXT_HISTORY_VERSION;
   readonly completedAt: string;
   readonly source: {
-    readonly kind: "generated" | "vault";
+    readonly kind: "generated" | "vault" | "preset";
     readonly safeLabel: string;
     readonly reference?: {
       readonly ideaId: string;
       readonly blockId: string;
     };
+    readonly presetId?: string;
+    readonly catalogVersion?: string;
   };
   readonly snapshotSignature: string;
   readonly section: {
     readonly id: string;
     readonly startBar: number;
     readonly endBar: number;
-    readonly lengthBeats: 4 | 8;
+    readonly lengthBeats: ChordContextSectionLengthBeats;
   };
   readonly originalBpm: number;
   readonly effectiveBpm: number;
@@ -65,7 +67,14 @@ export function createChordContextHistoryEntry(
         blockId: snapshot.source.reference.blockId,
       },
     }
-    : { kind: "generated" as const, safeLabel: snapshot.source.safeLabel };
+    : snapshot.source.kind === "preset"
+      ? {
+        kind: "preset" as const,
+        safeLabel: snapshot.source.safeLabel,
+        presetId: snapshot.source.presetId,
+        catalogVersion: snapshot.source.catalogVersion,
+      }
+      : { kind: "generated" as const, safeLabel: snapshot.source.safeLabel };
   return {
     id: input.id,
     version: CHORD_CONTEXT_HISTORY_VERSION,
