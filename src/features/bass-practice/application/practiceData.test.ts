@@ -67,6 +67,25 @@ describe("Practice derived views", () => {
     expect(restarted.getSnapshot().file?.chordContextHistory).toEqual([entry]);
   });
 
+  it("loads legacy Practice data without Chord Context History or source settings unchanged", async () => {
+    const storage = new MemoryPracticeStorage();
+    const current = createEmptyPracticeFile(now);
+    const { chordContextHistory: _chordContextHistory, ...legacyBase } = current;
+    const legacy = { ...legacyBase, revision: 1 };
+    storage.committed = `${JSON.stringify(legacy)}\n`;
+
+    const controller = new PracticeDataController(new JsonPracticeRepository(storage, () => now));
+    await controller.initialize();
+
+    expect(controller.getSnapshot()).toMatchObject({
+      status: "ready",
+      file: {
+        settings: current.settings,
+        chordContextHistory: [],
+      },
+    });
+    expect(storage.committed).toBe(`${JSON.stringify(legacy)}\n`);
+  });
   it("does not publish a failed save and can retry without reconstructing the session", async () => {
     const storage = new MemoryPracticeStorage();
     const controller = new PracticeDataController(new JsonPracticeRepository(storage, () => now));

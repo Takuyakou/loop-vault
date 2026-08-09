@@ -311,6 +311,21 @@ describe("Bassline Echo Chord Context", () => {
     expect(playback.driversDisposed).toBe(20);
     expect(container.querySelector("[data-testid='chord-context-status']")?.textContent).toContain("Chord Context stopped");
   });
+  it("releases every active session across 20 generated and preset source switches", async () => {
+    const container = await renderView();
+    const sourceSelect = container.querySelector<HTMLSelectElement>("[data-testid='bassline-progression-select']")!;
+    const sources = ["pop-four-chords", "twelve-bar-blues", "minor-descent", "generated"];
+
+    for (let index = 0; index < 20; index += 1) {
+      await clickStart(container);
+      await chooseSelect(sourceSelect, sources[index % sources.length]!);
+    }
+
+    expect(playback.sessions).toHaveLength(20);
+    expect(playback.sessions.every((session) => session.stopped > 0 && session.disposed > 0)).toBe(true);
+    expect(playback.driversDisposed).toBe(20);
+    expect(container.querySelector("[data-testid='chord-context-status']")?.textContent).toContain("Chord Context stopped");
+  });
   it("fails closed and releases the prepared driver when an unsupported chord reaches playback", async () => {
     const built = buildGeneratedChordContextSnapshot({
       key: "C major",

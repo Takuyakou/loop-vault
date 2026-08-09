@@ -129,7 +129,7 @@ export interface BuildVaultChordContextSnapshotInput {
 }
 
 /**
- * Enumerates only complete, contiguous 4/4 one- or two-bar sections. It never
+ * Enumerates only complete, contiguous 4/4 one-, two-, four-, eight-, or twelve-bar sections. It never
  * clips a long source or adopts a neighboring progression as a substitute.
  */
 export function selectVaultChordContextSections(
