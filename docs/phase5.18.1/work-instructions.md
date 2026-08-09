@@ -22,7 +22,7 @@ Bassline Echo の練習用コード進行を、既定1件から実用的なプ�
 ## Non-goals
 
 - Random progression generation, source MIDI bassline extraction, automatic scoring, Root Motion Echo, Vault schema changes, Vault mutation, AI recommendation, and P5.19.
-- Changes to P5.15, the Analyzer, MIDI Exporter, Chord Dojo, Live MIDI, FreePats assets, P5.17 recording storage, or the P5.18 accompaniment engine contract.
+- Changes to P5.15, the Analyzer, MIDI Exporter, Chord Dojo, Live MIDI, FreePats assets, P5.17 recording storage, or an unbounded/unrelated P5.18 accompaniment-engine redesign outside Contract 06.
 
 ---
 # 1. Start-up audit
@@ -182,9 +182,9 @@ P5.18.1-00で停止する。承認なしに変更しない。
 ## 3.5 Sections
 
 - 4-bar preset は通常1 section
-- Descending Bass は現行 safe section contract に合わせて1つまたは複数 section
-- 12-bar Blues は current safe length が12未満なら 1–4 / 5–8 / 9–12 等に分割
-- UI が persisted model より長い課題を見せない
+- Descending Bass は1つの8-bar section とする
+- 12-bar Blues は1つの12-bar section とし、暗黙分割をしない
+- UI は Contract 06 の完全な 1 / 2 / 4 / 8 / 12-bar section だけを見せる
 
 ---
 

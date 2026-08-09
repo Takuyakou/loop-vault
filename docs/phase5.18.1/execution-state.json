@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "phaseId": "5.18.1",
-  "status": "blocked",
+  "status": "in-progress",
   "activeStage": "P5.18.1-00",
   "completedStages": [],
-  "blocked": true,
-  "blockerReason": "The required complete preset forms are 4, 8, or 12 bars, but the protected P5.18 Chord Context/Bassline section contract allows only complete 4/8-beat (1/2-bar) 4/4 phrases. Silent splitting is not authorized.",
+  "blocked": false,
+  "blockerReason": null,
   "baseCommit": "328462abfdacc3496eb4f13da799165bd09527ef",
   "lastVerifiedCommit": "328462abfdacc3496eb4f13da799165bd09527ef",
   "currentBranch": "feat/p5181-bassline-preset-vault-picker",
@@ -23,16 +23,16 @@
     ]
   },
   "gateResults": {
-    "p5181-00-phase-docs-validation": "pass",
-    "p5181-00-validator-tests": "pass",
-    "p5181-00-full-vitest": "pass",
-    "p5181-00-lint": "pass",
-    "p5181-00-app-typecheck": "pass",
-    "p5181-00-e2e-typecheck": "pass",
-    "p5181-00-rust": "pass",
-    "p5181-00-bass-practice-p518-regression": "pass",
-    "p5181-00-git-diff-check": "pass"
+    "p5181-00-phase-docs-validation": "not-run",
+    "p5181-00-validator-tests": "not-run",
+    "p5181-00-full-vitest": "not-run",
+    "p5181-00-lint": "not-run",
+    "p5181-00-app-typecheck": "not-run",
+    "p5181-00-e2e-typecheck": "not-run",
+    "p5181-00-rust": "not-run",
+    "p5181-00-bass-practice-p518-regression": "not-run",
+    "p5181-00-git-diff-check": "not-run"
   },
-  "nextAction": "Await human choice: define explicit selectable 1/2-bar windows per preset without changing P5.18, or separately authorize a scoped extension of the protected P5.18 section contract. Do not start P5.18.1-01.",
+  "nextAction": "Commit Contract 06, run P5.18.1-00 baseline gates on that exact commit, then close Stage 00. Do not start P5.18.1-01 before closure.",
   "updatedAt": "2026-08-09"
 }

@@ -10,7 +10,7 @@
 - Bassline Echo source selector
 - direct `Vaultから選ぶ`
 - read-only Vault picker
-- safe section selection
+- safe section selection`n- bounded P5.18 Chord Context/Bassline section-length extension as defined by Contract 06
 - Preset / Vault source integration
 - History factual metadata
 - product acceptance build
@@ -25,5 +25,5 @@
 - Vault mutation
 - new favorites/recents schema
 - AI recommendation
-- new bassline generator
+- new bassline generator`n- an unbounded or unrelated P5.18 accompaniment-engine redesign
 - P5.19

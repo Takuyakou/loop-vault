@@ -4,7 +4,7 @@
 
 ## Status
 
-
+IN PROGRESS — P5.18.1-00 contract amendment and baseline refresh
 
 ## Single entry point
 
@@ -24,7 +24,8 @@ Claude Code / Codex は着手・再開のたびに、次の順で読む。
 10. `docs/phase5.18.1/contracts/03-source-picker-contract.md`
 11. `docs/phase5.18.1/contracts/04-history-migration-contract.md`
 12. `docs/phase5.18.1/contracts/05-privacy-safety-contract.md`
-13. Active Stage に対応する `audit/` と `reports/` の既存成果物
+13. `docs/phase5.18.1/contracts/06-chord-context-section-extension-contract.md`
+14. Active Stage に対応する `audit/` と `reports/` の既存成果物
 
 Git の実態と `execution-state.json` が違う場合は、Git を優先して差異を Stage report に残す。
 
@@ -44,8 +45,9 @@ Git の実態と `execution-state.json` が違う場合は、Git を優先して
 10. [Source picker contract](contracts/03-source-picker-contract.md)
 11. [History migration contract](contracts/04-history-migration-contract.md)
 12. [Privacy and safety contract](contracts/05-privacy-safety-contract.md)
-13. [Stage 00 audit](audit/P5.18.1-00-repository-audit.md)
-14. [Stage 00 report](reports/P5.18.1-00-audit-baseline.md)
+13. [P5.18 section length extension](contracts/06-chord-context-section-extension-contract.md)
+14. [Stage 00 audit](audit/P5.18.1-00-repository-audit.md)
+15. [Stage 00 report](reports/P5.18.1-00-audit-baseline.md)
 ## Purpose
 
 Bassline Echo のコード進行ソースを、現在の既定1進行だけから次へ拡張する。
@@ -162,7 +164,7 @@ Bassline Echo 画面から直接 picker を開けること。
 - P5.15
 - P5.16 FreePats assets / mapping
 - P5.17 RecordingTake binary-store contract
-- P5.18 chord accompaniment engine contract
+- P5.18 chord accompaniment engine contract, except for the bounded P5.18.1 section-length amendment in Contract 06
 - `docs/CURRENT_STATE.md`（復活禁止）
 - 個人 MIDI / 実録音 / 個人絶対 path
 
@@ -284,7 +286,7 @@ production 機能を実装しない。
 - raw MIDI / private path を保持しないと picker が成立しない
 - P5.15 を取り込む必要がある
 - Analyzer / MIDI Exporter の変更が必要
-- P5.18 の section contract を破壊する必要がある
+- Contract 06 の境界内に section-length extension を閉じ込められない
 - preset quality を無断で別 quality に簡略化しないと表現できない
 - source switch で Practice / recording / playback resource leak が解消できない
 - 意図不明な既存変更がある

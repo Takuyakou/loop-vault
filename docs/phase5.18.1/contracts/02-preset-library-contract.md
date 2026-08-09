@@ -30,3 +30,9 @@ Borrowed degrees and slash bass are preserved.
 ## Representability
 
 Never silently replace unsupported chord identities.
+
+## Section length amendment
+
+Preset forms may use complete 4/4 sections of 1, 2, 4, 8, or 12 bars only,
+subject to Contract 06. The implementation must preserve the legacy one/two-bar
+behaviour and must not silently split a named form.
