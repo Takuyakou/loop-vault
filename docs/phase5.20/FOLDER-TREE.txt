@@ -1,0 +1,27 @@
+phase5.20/
+├─ README.md
+├─ CODEX-START-PROMPT.md
+├─ CODEX-RUN-REMAINING-STAGES.md
+├─ work-instructions.md
+├─ execution-state.json
+├─ proposal/
+│  ├─ ORIGINAL-PROPOSAL.md
+│  └─ P5.20-DESIGN-REVIEW.md
+├─ references/
+│  ├─ README.md
+│  └─ P5.20-UI-UX-MOCK.html
+├─ audit/
+│  └─ P5.20-00-repository-audit.md
+├─ contracts/
+│  ├─ 01-scope-input-contract.md
+│  ├─ 02-parser-grammar-contract.md
+│  ├─ 03-draft-voicing-contract.md
+│  ├─ 04-capability-downstream-contract.md
+│  ├─ 05-ui-card-inspector-contract.md
+│  └─ 06-privacy-safety-contract.md
+└─ reports/
+   ├─ README.md
+   ├─ P5.20-00-audit-baseline.md
+   ├─ P5.20-01-parser-diagnostics.md
+   ├─ P5.20-02-capture-ui-draft.md
+   └─ P5.20-03-product-acceptance.md
