@@ -9,7 +9,9 @@ import type {
 import { stableHash } from "./determinism";
 
 export const CHORD_CONTEXT_SNAPSHOT_VERSION = "chord-context-snapshot-v1" as const;
-export const CHORD_CONTEXT_SECTION_BEATS = [4, 8] as const;
+export const CHORD_CONTEXT_SECTION_BEATS = [4, 8, 16, 32, 48] as const;
+export type ChordContextSectionLengthBeats = (typeof CHORD_CONTEXT_SECTION_BEATS)[number];
+export const CHORD_CONTEXT_MAX_SECTION_CHORDS = 48;
 
 const supportedQualities = new Set<ChordQuality>([
   "maj", "min", "dim", "aug", "maj7", "min7", "dom7", "min7b5",
@@ -42,7 +44,7 @@ export interface VaultChordContextSection {
   readonly startBar: number;
   /** Inclusive source bar. */
   readonly endBar: number;
-  readonly lengthBeats: 4 | 8;
+  readonly lengthBeats: ChordContextSectionLengthBeats;
   readonly chords: readonly ChordContextSnapshotChord[];
 }
 
@@ -75,7 +77,22 @@ export interface GeneratedChordContextSnapshot {
   readonly signature: string;
 }
 
-export type ChordContextSnapshot = VaultChordContextSnapshot | GeneratedChordContextSnapshot;
+export interface PresetChordContextSnapshot {
+  readonly version: typeof CHORD_CONTEXT_SNAPSHOT_VERSION;
+  readonly source: {
+    readonly kind: "preset";
+    readonly presetId: string;
+    readonly catalogVersion: string;
+    readonly safeLabel: string;
+  };
+  readonly tonalContext: { readonly key: string; readonly mode?: "major" | "minor" };
+  readonly originalBpm: number;
+  readonly meter: { readonly numerator: 4; readonly denominator: 4 };
+  readonly section: VaultChordContextSection;
+  readonly signature: string;
+}
+
+export type ChordContextSnapshot = VaultChordContextSnapshot | GeneratedChordContextSnapshot | PresetChordContextSnapshot;
 
 export type VaultChordContextSnapshotErrorCode =
   | "source-unavailable"
@@ -96,6 +113,10 @@ export type VaultChordContextSnapshotResult =
   | { readonly ok: true; readonly snapshot: VaultChordContextSnapshot }
   | { readonly ok: false; readonly error: VaultChordContextSnapshotError };
 
+export type PresetChordContextSnapshotResult =
+  | { readonly ok: true; readonly snapshot: PresetChordContextSnapshot }
+  | { readonly ok: false; readonly error: VaultChordContextSnapshotError };
+
 export type GeneratedChordContextSnapshotResult =
   | { readonly ok: true; readonly snapshot: GeneratedChordContextSnapshot }
   | { readonly ok: false; readonly error: VaultChordContextSnapshotError };
@@ -108,7 +129,7 @@ export interface BuildVaultChordContextSnapshotInput {
 }
 
 /**
- * Enumerates only complete, contiguous 4/4 one- or two-bar sections. It never
+ * Enumerates only complete, contiguous 4/4 one-, two-, four-, eight-, or twelve-bar sections. It never
  * clips a long source or adopts a neighboring progression as a substitute.
  */
 export function selectVaultChordContextSections(
@@ -132,7 +153,7 @@ export function selectVaultChordContextSections(
         && candidate.absoluteBeat + candidate.durationBeats <= endAbsoluteBeat
       ));
       if (!isCompleteSection(contained, event.absoluteBeat, endAbsoluteBeat)) continue;
-      if (contained.length > 8) continue;
+      if (contained.length > CHORD_CONTEXT_MAX_SECTION_CHORDS) continue;
       const chords = contained.map((candidate, index) => freezeChord({
         id: `chord:${index}`,
         root: candidate.chord.root,
@@ -155,7 +176,7 @@ export function selectVaultChordContextSections(
   }
 
   if (!sections.length) {
-    return failure("unsupported-source", "Saved progression has no complete one- or two-bar 4/4 Chord Context section.");
+    return failure("unsupported-source", "Saved progression has no complete 1, 2, 4, 8, or 12-bar 4/4 Chord Context section.");
   }
   return { ok: true, sections: Object.freeze(sections) };
 }
@@ -244,6 +265,32 @@ export function buildGeneratedChordContextSnapshot(input: {
   return { ok: true, snapshot: createGeneratedSnapshot(input.key, input.bpm, section) };
 }
 
+/** Creates a detached immutable snapshot from a curated P5.18.1 preset. */
+export function buildPresetChordContextSnapshot(input: {
+  readonly presetId: string;
+  readonly catalogVersion: string;
+  readonly safeLabel: string;
+  readonly key: string;
+  readonly bpm: number;
+  readonly chords: readonly ChordContextSnapshotChord[];
+}): PresetChordContextSnapshotResult {
+  if (!isSafeLogicalIdentifier(input.presetId)
+    || !isSafeCatalogVersion(input.catalogVersion)
+    || !isSafePresetLabel(input.safeLabel)
+    || !isSafeKey(input.key)
+    || !isSupportedBpm(input.bpm)
+    || !Array.isArray(input.chords)
+    || !input.chords.every(isPresetInputChord)) {
+    return failure("unsupported-source", "Preset Chord Context source has unsupported identity, key, or BPM.");
+  }
+  const section = sectionFromDetachedChords(
+    input.chords.map((chord) => freezeChord(chord)),
+    `preset:${input.presetId}`,
+  );
+  if (!section) return failure("unsupported-source", "Preset Chord Context source has no supported complete section.");
+  return { ok: true, snapshot: createPresetSnapshot(input.presetId, input.catalogVersion, input.safeLabel, input.key, input.bpm, section) };
+}
+
 /** Validates detached historical snapshots without looking up the live Vault. */
 export function validateChordContextSnapshot(
   value: unknown,
@@ -255,7 +302,7 @@ export function validateChordContextSnapshot(
   const tonalContext = value.tonalContext;
   const meter = value.meter;
   const section = value.section;
-  if ((!isVaultSnapshotSource(source) && !isGeneratedSnapshotSource(source))
+  if ((!isVaultSnapshotSource(source) && !isGeneratedSnapshotSource(source) && !isPresetSnapshotSource(source))
     || !isTonalContext(tonalContext)
     || !isSupportedBpm(value.originalBpm)
     || !isFourFour(meter)
@@ -264,8 +311,11 @@ export function validateChordContextSnapshot(
   }
   const snapshot = source.kind === "vault"
     ? createVaultSnapshot(source.reference, tonalContext.key, value.originalBpm, section)
-    : createGeneratedSnapshot(tonalContext.key, value.originalBpm, section);
+    : source.kind === "preset"
+      ? createPresetSnapshot(source.presetId, source.catalogVersion, source.safeLabel, tonalContext.key, value.originalBpm, section)
+      : createGeneratedSnapshot(tonalContext.key, value.originalBpm, section);
   if ((source.kind === "vault" && !isVaultSection(snapshot.section))
+    || (source.kind === "preset" && !isPresetSection(snapshot.section, source.presetId))
     || (source.kind === "generated" && !isGeneratedSection(snapshot.section))) {
     return failure("invalid-snapshot", "Chord Context snapshot section does not match its source contract.");
   }
@@ -316,6 +366,26 @@ function createGeneratedSnapshot(
   return Object.freeze({ ...withoutSignature, signature: signatureForSnapshot(withoutSignature) });
 }
 
+function createPresetSnapshot(
+  presetId: string,
+  catalogVersion: string,
+  safeLabel: string,
+  key: string,
+  originalBpm: number,
+  section: VaultChordContextSection,
+): PresetChordContextSnapshot {
+  const canonicalSection = cloneSection(section);
+  const withoutSignature = Object.freeze({
+    version: CHORD_CONTEXT_SNAPSHOT_VERSION,
+    source: Object.freeze({ kind: "preset" as const, presetId, catalogVersion, safeLabel }),
+    tonalContext: canonicalTonalContext(key),
+    originalBpm,
+    meter: Object.freeze({ numerator: 4 as const, denominator: 4 as const }),
+    section: canonicalSection,
+  });
+  return Object.freeze({ ...withoutSignature, signature: signatureForSnapshot(withoutSignature) });
+}
+
 function canonicalTonalContext(key: string): { readonly key: string; readonly mode: "major" | "minor" } {
   const normalized = key.trim();
   return Object.freeze({ key: normalized, mode: modeFromKey(normalized)! });
@@ -359,7 +429,7 @@ function toSourceEvents(chords: readonly SavedProgressionBlock["chords"][number]
 }
 
 function isCompleteSection(events: readonly SourceEvent[], startBeat: number, endBeat: number): boolean {
-  if (!events.length || events.length > 8) return false;
+  if (!events.length || events.length > CHORD_CONTEXT_MAX_SECTION_CHORDS) return false;
   let cursor = startBeat;
   for (const event of events) {
     if (event.absoluteBeat !== cursor) return false;
@@ -368,16 +438,16 @@ function isCompleteSection(events: readonly SourceEvent[], startBeat: number, en
   return cursor === endBeat;
 }
 
-function sectionFromDetachedChords(chords: readonly ChordContextSnapshotChord[]): VaultChordContextSection | undefined {
-  if (!chords.length || chords.length > 8 || !chords.every(isSnapshotChord)) return undefined;
+function sectionFromDetachedChords(chords: readonly ChordContextSnapshotChord[], idPrefix = "generated"): VaultChordContextSection | undefined {
+  if (!chords.length || chords.length > CHORD_CONTEXT_MAX_SECTION_CHORDS || !chords.every(isSnapshotChord)) return undefined;
   const copied = [...chords].sort((left, right) => left.startBeat - right.startBeat || left.id.localeCompare(right.id));
   const end = copied.reduce((maximum, chord) => Math.max(maximum, chord.startBeat + chord.durationBeats), 0);
-  if ((end !== 4 && end !== 8) || !isCompleteDetachedSection(copied, end)) return undefined;
+  if (!isSupportedSectionLength(end) || !isCompleteDetachedSection(copied, end)) return undefined;
   return Object.freeze({
-    id: `generated:${end}`,
+    id: `${idPrefix}:${end}`,
     startBar: 1,
     endBar: end / 4,
-    lengthBeats: end as 4 | 8,
+    lengthBeats: end,
     chords: Object.freeze(copied.map(cloneChord)),
   });
 }
@@ -396,10 +466,11 @@ function isSection(value: unknown): value is VaultChordContextSection {
   const { id, startBar, endBar, lengthBeats, chords } = value;
   if (!isSafeLogicalIdentifier(id) || typeof startBar !== "number" || !Number.isInteger(startBar) || startBar < 1
     || typeof endBar !== "number" || !Number.isInteger(endBar) || endBar < startBar
-    || (lengthBeats !== 4 && lengthBeats !== 8)
+    || typeof lengthBeats !== "number"
+    || !isSupportedSectionLength(lengthBeats)
     || !Array.isArray(chords)
     || chords.length < 1
-    || chords.length > 8
+    || chords.length > CHORD_CONTEXT_MAX_SECTION_CHORDS
     || !chords.every(isSnapshotChord)) return false;
   const ordered = [...chords].sort(
     (left, right) => left.startBeat - right.startBeat || left.id.localeCompare(right.id),
@@ -418,6 +489,23 @@ function isGeneratedSection(section: VaultChordContextSection): boolean {
     && section.endBar === section.lengthBeats / 4;
 }
 
+function isPresetSection(section: VaultChordContextSection, presetId: string): boolean {
+  return section.id === `preset:${presetId}:${section.lengthBeats}`
+    && section.startBar === 1
+    && section.endBar === section.lengthBeats / 4;
+}
+
+function isPresetInputChord(value: unknown): value is ChordContextSnapshotChord {
+  if (!isRecord(value) || !isChordSymbol(value)) return false;
+  const { id, startBeat, durationBeats } = value;
+  return isSafeLogicalIdentifier(id)
+    && typeof startBeat === "number"
+    && Number.isFinite(startBeat)
+    && startBeat >= 0
+    && typeof durationBeats === "number"
+    && Number.isFinite(durationBeats)
+    && durationBeats > 0;
+}
 function isSnapshotChord(value: unknown): value is ChordContextSnapshotChord {
   if (!isRecord(value) || !isChordSymbol(value)) return false;
   const { id, label, startBeat, durationBeats } = value;
@@ -456,6 +544,14 @@ function isGeneratedSnapshotSource(value: unknown): value is GeneratedChordConte
   return isRecord(value)
     && value.kind === "generated"
     && value.safeLabel === "Generated progression";
+}
+
+function isPresetSnapshotSource(value: unknown): value is PresetChordContextSnapshot["source"] {
+  return isRecord(value)
+    && value.kind === "preset"
+    && isSafeLogicalIdentifier(value.presetId)
+    && isSafeCatalogVersion(value.catalogVersion)
+    && isSafePresetLabel(value.safeLabel);
 }
 
 function isTonalContext(value: unknown): value is ChordContextSnapshot["tonalContext"] {
@@ -543,6 +639,18 @@ function modeFromKey(key: string): "major" | "minor" | undefined {
 
 function normalizeMeter(value: unknown): string | undefined {
   return typeof value === "string" ? value.replace(/\s/g, "") : undefined;
+}
+
+function isSafeCatalogVersion(value: unknown): value is string {
+  return typeof value === "string" && /^[a-z][a-z0-9-]{0,63}$/.test(value);
+}
+
+function isSafePresetLabel(value: unknown): value is string {
+  return typeof value === "string" && /^[A-Za-z0-9][A-Za-z0-9 .–-]{0,80}$/u.test(value);
+}
+
+function isSupportedSectionLength(value: number): value is ChordContextSectionLengthBeats {
+  return (CHORD_CONTEXT_SECTION_BEATS as readonly number[]).includes(value);
 }
 
 function isSafeKey(value: unknown): value is string {

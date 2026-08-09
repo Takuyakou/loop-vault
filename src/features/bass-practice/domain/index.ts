@@ -7,6 +7,7 @@ export * from "./generator";
 export * from "./hints";
 export * from "./mapping";
 export * from "./review";
+export * from "./progressionPresets";
 export * from "./rhythm";
 export * from "./singingReference";
 export * from "./stateMachine";

@@ -15,6 +15,6 @@ describe("Bassline generator", () => {
     const l1 = generateBasslineExercise(snapshot(1)); const l3 = generateBasslineExercise(snapshot(3));
     expect(l1.ok && l3.ok && l1.exercise.targetEvents.map((event) => event.midiNote)).not.toEqual(l3.ok ? l3.exercise.targetEvents.map((event) => event.midiNote) : []);
     expect(generateBasslineExercise({ ...snapshot(), chords: [] }).ok).toBe(false);
-    expect(generateBasslineExercise({ ...snapshot(), chords: [{ root: 0, label: "C", startBeat: 0, durationBeats: 9 }] }).ok).toBe(false);
+    expect(generateBasslineExercise({ ...snapshot(), chords: [{ root: 0, label: "C", startBeat: 0, durationBeats: 49 }] }).ok).toBe(false);
   });
 });

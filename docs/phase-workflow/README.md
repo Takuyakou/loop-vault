@@ -8,13 +8,13 @@ of a long instruction dump.
 
 1. **Root [`AGENTS.md`](../../AGENTS.md)** — common, phase-independent safety
    rules. The single source of truth for safety.
-2. **`docs/phaseX.Y/README.md`** — the single entry point for one phase. An
+2. **`docs/phaseX.Y[.Z]/README.md`** — the single entry point for one phase. An
    agent reads this first (after `AGENTS.md`) and follows its required reading
    order.
-3. **The rest of `docs/phaseX.Y/`** — the phase's details:
+3. **The rest of `docs/phaseX.Y[.Z]/`** — the phase's details:
 
    ```text
-   docs/phaseX.Y/
+   docs/phaseX.Y[.Z]/
    ├─ README.md              single entry point (status, reading order, stages)
    ├─ work-instructions.md   full spec
    ├─ execution-state.json   machine-readable resume state
@@ -28,8 +28,8 @@ of a long instruction dump.
 
 ## Starting a new phase
 
-1. Copy [`phase-template/`](phase-template/) to `docs/phaseX.Y/`.
-2. Replace the phase id (`0.0` / `P0.0`) throughout with the real one.
+1. Copy [`phase-template/`](phase-template/) to `docs/phaseX.Y[.Z]/`.
+2. Replace the phase id (`0.0` / `P0.0`) throughout with the real one. Two- and three-part phase ids (for example `5.17` and `5.18.1`) are supported.
 3. Fill in `work-instructions.md`, the README stage list, and
    `execution-state.json`.
 4. Run `npm run validate:phase-docs` until it passes.
@@ -37,7 +37,7 @@ of a long instruction dump.
 ## Resuming a phase
 
 See the paste-in prompt: [`CODEX-START-PROMPT.md`](CODEX-START-PROMPT.md).
-In short: read `AGENTS.md`, read `docs/phaseX.Y/README.md`, follow its required
+In short: read `AGENTS.md`, read `docs/phaseX.Y[.Z]/README.md`, follow its required
 reading order, reconcile `execution-state.json` against Git (Git wins), and
 resume from the first incomplete stage or gate. Do not advance to an unassigned
 stage, the next phase, a merge, or a push.
@@ -63,7 +63,7 @@ discovers every phase package (any directory under `docs/` containing an
 | Check | Meaning |
 | --- | --- |
 | `missing-file` | required file absent (README, work-instructions, execution-state, reports/README) |
-| `phase-id-mismatch` | README marker, `execution-state.json`, and `phaseX.Y` dir name disagree, or the README marker is missing |
+| `phase-id-mismatch` | README marker, `execution-state.json`, and `phaseX.Y` or `phaseX.Y.Z` dir name disagree, or the README marker is missing |
 | `broken-link` | a relative link in the README points at a missing file (covers the required reading order targets) |
 | `required-reading-order` | the Required Reading Order section has no links |
 | `missing-heading` | a required README or work-instructions heading is absent |

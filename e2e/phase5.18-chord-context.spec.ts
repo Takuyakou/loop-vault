@@ -115,10 +115,10 @@ test("P5.18 remains operable with reduced motion and an effective 200% scale", a
   await assertNoHorizontalOverflow(page);
 });
 
-test("Bassline Echo changes between its default and a saved Vault progression in place", async ({ page }) => {
+test("P5.18.1 selects a preset and key before confirming a Vault source from Bassline Echo", async ({ page }) => {
   test.setTimeout(45_000);
   await openApp(page);
-  await createSavedProgression(page, "P5.18 Bassline selector");
+  await createSavedProgression(page, "P5.18.1 Bassline source picker");
   await openVault(page);
   await page.locator(".lv-vault-row").first().getByRole("button", { name: /Open progression|進行を開く/ }).click();
   const detail = page.locator("[data-progression-detail-view]");
@@ -127,22 +127,35 @@ test("Bassline Echo changes between its default and a saved Vault progression in
   const bassline = page.getByTestId("bassline-echo-view");
   const selector = bassline.getByTestId("bassline-progression-select");
   await expect(bassline).toBeVisible();
-  expect(await selector.locator("option").count()).toBeGreaterThan(1);
-  const vaultValue = await selector.inputValue();
-  await expect(bassline.getByTestId("bassline-source")).toContainText(/Vault進行|Vault source/);
+  await expect(selector).toHaveValue("vault");
+  await expect(bassline.getByTestId("bassline-source-summary")).toContainText(/Vault source|Vault進行/);
 
-  const defaultValue = await selector.locator("option").filter({ hasText: /既定進行|Default/ }).getAttribute("value");
-  expect(defaultValue).not.toBeNull();
-  await selector.selectOption(defaultValue!);
-  await expect(bassline.locator("[aria-label='ベースラインのコード進行']")).toContainText("Dm7G7Cmaj7");
-  await expect(bassline.getByTestId("chord-context-effective-bpm")).toHaveValue("96");
+  await selector.selectOption("generated");
+  await expect(selector).toHaveValue("generated");
+  await expect(bassline.getByLabel(/Bassline progression strip|ベースラインのコード進行/)).toContainText("Dm7");
 
-  await selector.selectOption(vaultValue);
-  await expect(bassline.getByTestId("bassline-source")).toContainText(/Vault進行|Vault source/);
-  await expect(selector).toHaveValue(vaultValue);
+  expect(await selector.locator("option").count()).toBeGreaterThanOrEqual(10);
+  await selector.selectOption("pop-four-chords");
+  await expect(selector).toHaveValue("pop-four-chords");
+  await expect(bassline.getByTestId("bassline-source-summary")).toContainText("Pop Four Chords");
+  await expect(bassline.getByLabel(/Bassline progression strip|ベースラインのコード進行/)).toContainText("Am");
+
+  const keySelector = bassline.getByTestId("bassline-preset-key-select");
+  await expect(keySelector).toHaveValue("C major");
+  await keySelector.selectOption("D major");
+  await expect(keySelector).toHaveValue("D major");
+  await expect(bassline.getByTestId("bassline-source-summary")).toContainText("D major");
+  await expect(bassline.getByLabel(/Bassline progression strip|ベースラインのコード進行/)).toContainText("Bm");
+
+  await bassline.getByTestId("vault-progression-picker-open").click();
+  await expect(page.getByTestId("vault-progression-picker")).toBeVisible();
+  await page.getByTestId("vault-progression-picker-candidate").first().click();
+  await page.getByTestId("vault-progression-picker-confirm").click();
+  await expect(selector).toHaveValue("vault");
+  await expect(bassline.getByTestId("bassline-source-summary")).toContainText(/Vault source|Vault進行/);
+  await expect(bassline.getByTestId("chord-context-controls")).toBeVisible();
   await assertNoHorizontalOverflow(page);
 });
-
 test("P5.18 explicit rollback hides only Chord Context and preserves Bassline Echo", async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem("loop-vault:bass-practice-chord-context-enabled:v1", "false");

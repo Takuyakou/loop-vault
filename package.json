@@ -89,6 +89,7 @@
     "benchmark:live-midi": "vite-node scripts/benchmark-live-midi-latency.ts",
     "benchmark:dojo": "vite-node scripts/benchmark-chord-dojo.ts",
     "benchmark:p518": "node --expose-gc node_modules/vite-node/vite-node.mjs scripts/p518-resource-benchmark.ts",
+    "benchmark:p5181": "node --expose-gc node_modules/vite-node/vite-node.mjs scripts/p5181-source-switch-benchmark.ts",
     "eval:advisor": "vite-node scripts/evaluate-progression-advisor.ts",
     "diagnose:llm-schema": "vite-node scripts/diagnose-llm-schema-compatibility.ts",
     "diagnose:midi-failures": "vite-node scripts/analyze-midi-failures.ts",
