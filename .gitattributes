@@ -1,0 +1,2 @@
+# Keep Cargo manifests stable across Windows Tauri tooling and Git checkouts.
+src-tauri/Cargo.toml text eol=lf

@@ -1,6 +1,6 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { copyFile, mkdir, writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import {
   assertNoHorizontalOverflow,
   createSavedProgression,
@@ -8,8 +8,6 @@ import {
   openVault,
 } from "./helpers/app";
 
-const afterDir = resolve(process.cwd(), "artifacts", "phase5.13-3", "after");
-const beforeDir = resolve(process.cwd(), "artifacts", "phase5.13-3", "before");
 const viewportMatrix = [
   { width: 1024, height: 720 },
   { width: 1280, height: 720 },
@@ -28,29 +26,19 @@ const viewportMetrics: Array<{
 }> = [];
 
 test.describe.serial("Phase 5.13-3 viewport recovery", () => {
-  test.beforeAll(async () => {
-    await mkdir(afterDir, { recursive: true });
-    await mkdir(beforeDir, { recursive: true });
-    await copyFile(
-      resolve(process.cwd(), "artifacts", "phase5.13-v2", "after", "live-midi.png"),
-      resolve(beforeDir, "live-midi-window.png"),
-    );
-    await copyFile(
-      resolve(process.cwd(), "artifacts", "phase5.13-v2", "after", "practice.png"),
-      resolve(beforeDir, "chord-dojo-bottom-clipped.png"),
-    );
-  });
-
-  test.afterAll(async () => {
-    await writeFile(
-      resolve(afterDir, "viewport-metrics.json"),
-      `${JSON.stringify(viewportMetrics, null, 2)}\n`,
-      "utf8",
-    );
-  });
-
-  test("Dojoの下端へマウスとキーボードで到達できる", async ({ page }) => {
+  test("Dojoの下端へマウスとキーボードで到達できる", async ({ page }, testInfo) => {
     test.setTimeout(90_000);
+    viewportMetrics.length = 0;
+    await copyHistoricalEvidence(
+      testInfo,
+      resolve(process.cwd(), "artifacts", "phase5.13-v2", "after", "live-midi.png"),
+      "before/live-midi-window.png",
+    );
+    await copyHistoricalEvidence(
+      testInfo,
+      resolve(process.cwd(), "artifacts", "phase5.13-v2", "after", "practice.png"),
+      "before/chord-dojo-bottom-clipped.png",
+    );
     await openApp(page);
     await createSavedProgression(
       page,
@@ -111,21 +99,20 @@ test.describe.serial("Phase 5.13-3 viewport recovery", () => {
         || (viewport.width === 1440 && viewport.height === 900)
         || (viewport.width === 1920 && viewport.height === 1080)
       ) {
-        await page.screenshot({
-          path: resolve(afterDir, `chord-dojo-${viewport.width}x${viewport.height}-bottom.png`),
-          animations: "disabled",
-        });
+        await captureEvidence(page, testInfo, `chord-dojo-${viewport.width}x${viewport.height}-bottom.png`);
       }
       if (viewport.width === 1280 && viewport.height === 720) {
-        await page.screenshot({
-          path: resolve(afterDir, "chord-dojo-bottom.png"),
-          animations: "disabled",
-        });
+        await captureEvidence(page, testInfo, "chord-dojo-bottom.png");
       }
     }
+    await writeEvidenceText(
+      testInfo,
+      "after/viewport-metrics.json",
+      `${JSON.stringify(viewportMetrics, null, 2)}\n`,
+    );
   });
 
-  test("メインを残したLive MIDI表示と常設レベルメーター", async ({ page }) => {
+  test("メインを残したLive MIDI表示と常設レベルメーター", async ({ page }, testInfo) => {
     await openApp(page);
     const meter = page.locator("[data-playback-level-meter]");
     await expect(meter).toBeVisible();
@@ -134,13 +121,28 @@ test.describe.serial("Phase 5.13-3 viewport recovery", () => {
     await page.getByRole("button", { name: "Live MIDI" }).click();
     await expect(page.getByText(/現在のコード|Current chord/)).toBeVisible();
     await expect(page.locator("#main-content")).toBeVisible();
-    await page.screenshot({
-      path: resolve(afterDir, "live-midi-and-main.png"),
-      animations: "disabled",
-    });
+    await captureEvidence(page, testInfo, "live-midi-and-main.png");
     await assertNoHorizontalOverflow(page);
   });
 });
+
+async function captureEvidence(page: Page, testInfo: TestInfo, fileName: string): Promise<void> {
+  const path = testInfo.outputPath("visual-evidence", "phase5.13-3", "after", fileName);
+  await mkdir(dirname(path), { recursive: true });
+  await page.screenshot({ path, animations: "disabled" });
+}
+
+async function copyHistoricalEvidence(testInfo: TestInfo, source: string, relativeName: string): Promise<void> {
+  const destination = testInfo.outputPath("visual-evidence", "phase5.13-3", relativeName);
+  await mkdir(dirname(destination), { recursive: true });
+  await copyFile(source, destination);
+}
+
+async function writeEvidenceText(testInfo: TestInfo, relativeName: string, content: string): Promise<void> {
+  const path = testInfo.outputPath("visual-evidence", "phase5.13-3", relativeName);
+  await mkdir(dirname(path), { recursive: true });
+  await writeFile(path, content, "utf8");
+}
 
 async function scrollDimensions(locator: ReturnType<Page["locator"]>) {
   return locator.evaluate((element) => ({
