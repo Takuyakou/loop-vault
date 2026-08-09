@@ -2,14 +2,15 @@
     "schemaVersion":  1,
     "phaseId":  "5.18.2",
     "status":  "in-progress",
-    "activeStage":  "P5.18.2-01",
+    "activeStage":  "P5.18.2-02",
     "completedStages":  [
-                            "P5.18.2-00"
+                            "P5.18.2-00",
+                            "P5.18.2-01"
                         ],
     "blocked":  false,
     "blockerReason":  null,
     "baseCommit":  "81a689088436015f16596fa757998926b017718a",
-    "lastVerifiedCommit":  "bd656624025724ba46fb6bb7a5640323c92dcf8d",
+    "lastVerifiedCommit":  "0392223e947784298c01d75b2497f2ff76bbbf44",
     "currentBranch":  "feat/p5182-vault-source-discoverability",
     "requiredGates":  {
                           "P5.18.2-00":  [
@@ -21,6 +22,17 @@
                                              "p5182-00-app-typecheck",
                                              "p5182-00-e2e-typecheck",
                                              "p5182-00-git-diff-check"
+                                         ],
+                          "P5.18.2-01":  [
+                                             "p5182-01-title-viewmodel-search-tests",
+                                             "p5182-01-privacy-boundary-regression",
+                                             "p5182-01-bass-practice-regression",
+                                             "p5182-01-lint",
+                                             "p5182-01-app-typecheck",
+                                             "p5182-01-e2e-typecheck",
+                                             "p5182-01-phase-docs-validation",
+                                             "p5182-01-git-diff-check",
+                                             "p5182-01-protected-privacy"
                                          ]
                       },
     "gateResults":  {
@@ -31,8 +43,17 @@
                         "p5182-00-lint":  "pass",
                         "p5182-00-app-typecheck":  "pass",
                         "p5182-00-e2e-typecheck":  "pass",
-                        "p5182-00-git-diff-check":  "pass"
+                        "p5182-00-git-diff-check":  "pass",
+                        "p5182-01-title-viewmodel-search-tests":  "pass",
+                        "p5182-01-privacy-boundary-regression":  "pass",
+                        "p5182-01-bass-practice-regression":  "pass",
+                        "p5182-01-lint":  "pass",
+                        "p5182-01-app-typecheck":  "pass",
+                        "p5182-01-e2e-typecheck":  "pass",
+                        "p5182-01-phase-docs-validation":  "pass",
+                        "p5182-01-git-diff-check":  "pass",
+                        "p5182-01-protected-privacy":  "pass"
                     },
-    "nextAction":  "P5.18.2-00 is complete. Await separate authorization before P5.18.2-01; do not merge, push, or start another phase.",
+    "nextAction":  "P5.18.2-01 is complete. Await separate authorization before P5.18.2-02; do not merge, push, or start another phase.",
     "updatedAt":  "2026-08-09"
 }
