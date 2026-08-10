@@ -1,38 +1,36 @@
 {
-    "schemaVersion":  1,
-    "phaseId":  "5.21",
-    "status":  "blocked",
-    "activeStage":  "P5.21-00",
-    "completedStages":  [
-
-                        ],
-    "blocked":  true,
-    "blockerReason":  "The current official Voice evaluation corpus and an approved, privacy-safe human Voice role ground-truth set are unavailable in the clean P5.21 worktree. P5.21-00 cannot lock a valid baseline or promotion gate.",
-    "baseCommit":  "747c70cc4ef078c0a086f641436443e134115d08",
-    "lastVerifiedCommit":  "747c70cc4ef078c0a086f641436443e134115d08",
-    "currentBranch":  "feat/p521-harmonic-core-role-v2",
-    "requiredGates":  {
-                          "P5.21-00":  [
-                                           "p521-00-phase-docs-validation",
-                                           "p521-00-repository-audit",
-                                           "p521-00-official-voice-baseline",
-                                           "p521-00-human-role-ground-truth",
-                                           "p521-00-promotion-gate-lock",
-                                           "p521-00-focused-role-tests",
-                                           "p521-00-lint-typecheck",
-                                           "p521-00-diff-and-protected-surface"
-                                       ]
-                      },
-    "gateResults":  {
-                        "p521-00-phase-docs-validation":  "pass",
-                        "p521-00-repository-audit":  "pass",
-                        "p521-00-official-voice-baseline":  "blocked",
-                        "p521-00-human-role-ground-truth":  "blocked",
-                        "p521-00-promotion-gate-lock":  "blocked",
-                        "p521-00-focused-role-tests":  "not-run",
-                        "p521-00-lint-typecheck":  "not-run",
-                        "p521-00-diff-and-protected-surface":  "pass"
-                    },
-    "nextAction":  "Supply or designate the approved, privacy-safe Voice role fixture set and current official evaluation corpus, then rerun P5.21-00 only. Do not start P5.21-01, P5.21.1, P5.22, merge, or push.",
-    "updatedAt":  "2026-08-10T00:00:00+09:00"
+  "schemaVersion": 1,
+  "phaseId": "5.21",
+  "status": "blocked",
+  "activeStage": "P5.21-00",
+  "completedStages": [],
+  "blocked": true,
+  "blockerReason": "The current official Voice evaluation corpus and approved, privacy-safe human Voice role ground truth remain unavailable in the clean P5.21 worktree. P5.21-00 cannot lock a valid baseline or promotion gate.",
+  "baseCommit": "747c70cc4ef078c0a086f641436443e134115d08",
+  "lastVerifiedCommit": "2ec0f7a",
+  "currentBranch": "feat/p521-harmonic-core-role-v2",
+  "requiredGates": {
+    "P5.21-00": [
+      "p521-00-phase-docs-validation",
+      "p521-00-repository-audit",
+      "p521-00-official-voice-baseline",
+      "p521-00-human-role-ground-truth",
+      "p521-00-promotion-gate-lock",
+      "p521-00-focused-role-tests",
+      "p521-00-lint-typecheck",
+      "p521-00-diff-and-protected-surface"
+    ]
+  },
+  "gateResults": {
+    "p521-00-phase-docs-validation": "pass",
+    "p521-00-repository-audit": "pass",
+    "p521-00-official-voice-baseline": "blocked",
+    "p521-00-human-role-ground-truth": "blocked",
+    "p521-00-promotion-gate-lock": "blocked",
+    "p521-00-focused-role-tests": "pass",
+    "p521-00-lint-typecheck": "pass",
+    "p521-00-diff-and-protected-surface": "pass"
+  },
+  "nextAction": "Run the local-only template helper for approved MIDI, fill expectedRole by human review, and supply or designate the existing approved manifests. Then rerun P5.21-00 only. Do not start P5.21-01, P5.21.1, P5.22, merge, or push.",
+  "updatedAt": "2026-08-10T19:00:00+09:00"
 }
