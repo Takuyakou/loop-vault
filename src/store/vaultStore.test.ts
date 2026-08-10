@@ -9,7 +9,9 @@ import {
   type VaultRepository,
 } from "../domain/repository";
 import { pickFocus } from "../domain/focus";
+import { parseChordLabel } from "../domain/chords";
 import type {
+  ChordTimelineItem,
   ProgressionBlockCandidate,
   SavedProgressionBlock,
   VaultFile,
@@ -87,6 +89,25 @@ class FakeRepository implements VaultRepository {
 
 const now = new Date("2026-07-20T12:00:00.000Z");
 const generatedId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+
+function textTimelineChord(
+  label: string,
+  bar: number,
+  beat = 1,
+  durationBeats = 4,
+): ChordTimelineItem {
+  const chord = parseChordLabel(label);
+  if (!chord) throw new Error(`Expected test chord label to parse: ${label}`);
+  return {
+    bar,
+    beat,
+    durationBeats,
+    chord,
+    confidence: 0,
+    alternatives: [],
+    warnings: [],
+  };
+}
 
 describe("vault store", () => {
   beforeEach(() => {
@@ -963,5 +984,173 @@ describe("vault store", () => {
       .not.toBe(block.chords[0]?.voicingMemory?.sourceVoicing?.midiNotes);
     expect(blocks[1]?.chords[0]?.chord.tensions).not.toBe(block.chords[0]?.chord.tensions);
     expect(blocks[1]?.tags).not.toBe(block.tags);
+  });
+  it("saves one- and twelve-bar text progressions with text-only provenance", async () => {
+    const repository = new FakeRepository();
+    let nextId = 0;
+    const store = createVaultStore({
+      repository,
+      idFactory: () => `text-id-${++nextId}`,
+      now: () => now,
+    });
+    await store.getState().initialize();
+
+    const oneBarId = store.getState().createIdeaFromTextProgression({
+      title: "  Cmaj7 text  ",
+      summaryText: "untrusted summary",
+      nextAction: "Practice it",
+      chords: [textTimelineChord("Cmaj7", 1)],
+      bpm: 120,
+      confirmedKey: "C major",
+    });
+    expect(oneBarId).toBe("text-id-1");
+    const oneBar = store.getState().ideas[0]?.progressionBlocks?.[0];
+    expect(oneBar).toMatchObject({
+      id: "text-id-2",
+      startBar: 1,
+      endBar: 1,
+      lengthBars: 1,
+      summaryText: "| Cmaj7 |",
+      bpm: 120,
+      detectedKey: "C major",
+      timeSignature: "4/4",
+      tags: [],
+      analyzerVersion: "text-progression-v1",
+    });
+    const oneBarRecord = oneBar as unknown as Record<string, unknown>;
+    for (const field of [
+      "origin",
+      "sourceAssetId",
+      "sourceFileName",
+      "sourceFingerprint",
+      "sourceAnalyzerVersion",
+      "sourceWeightsVersion",
+      "sourceStartBeat",
+      "sourceEndBeat",
+      "progressionAnalysis",
+    ]) {
+      expect(oneBarRecord).not.toHaveProperty(field);
+    }
+
+    const twelveBarId = store.getState().createIdeaFromTextProgression({
+      title: "Twelve bars",
+      summaryText: "ignored",
+      chords: Array.from({ length: 12 }, (_, index) => textTimelineChord("Cmaj7", index + 1)),
+    });
+    expect(twelveBarId).toBe("text-id-4");
+    const twelveBar = store.getState().ideas[1]?.progressionBlocks?.[0];
+    expect(twelveBar).toMatchObject({ startBar: 1, endBar: 12, lengthBars: 12 });
+    expect(twelveBar?.chords).toHaveLength(12);
+  });
+
+  it("saves a confirmed key and explicit BPM only, and preserves practice-only voicing", async () => {
+    const repository = new FakeRepository();
+    const store = createVaultStore({ repository, now: () => now });
+    await store.getState().initialize();
+
+    const practiceOnly = {
+      schemaVersion: 1 as const,
+      source: "live-played" as const,
+      representation: "simultaneous-voicing" as const,
+      midiNotes: [36, 43, 47, 52],
+      bassNote: 36,
+      capturedForChordKey: "0:maj7:-:-",
+      capturedForChordLabel: "Cmaj7",
+    };
+    const chord = textTimelineChord("Cmaj7", 1);
+    chord.voicingMemory = {
+      sourceVoicing: {
+        schemaVersion: 1,
+        source: "midi-extracted",
+        representation: "simultaneous-voicing",
+        midiNotes: [48, 52, 55, 59],
+        bassNote: 48,
+        capturedForChordKey: "0:maj7:-:-",
+      },
+      practiceVoicingOverride: practiceOnly,
+    };
+    expect(store.getState().createIdeaFromTextProgression({
+      title: "No inferred metadata",
+      summaryText: "ignored",
+      chords: [chord],
+    })).toBeDefined();
+    const saved = store.getState().ideas[0]?.progressionBlocks?.[0];
+    expect(saved).not.toHaveProperty("bpm");
+    expect(saved).not.toHaveProperty("detectedKey");
+    expect(saved?.chords[0]?.voicingMemory).toEqual({ practiceVoicingOverride: practiceOnly });
+
+    expect(store.getState().createIdeaFromTextProgression({
+      title: "Invalid BPM",
+      summaryText: "ignored",
+      chords: [textTimelineChord("Cmaj7", 1)],
+      bpm: 29,
+    })).toBeUndefined();
+    expect(store.getState().createIdeaFromTextProgression({
+      title: "Inferred key is not save metadata",
+      summaryText: "ignored",
+      chords: [textTimelineChord("Cmaj7", 1)],
+      confirmedKey: "not a key",
+    })).toBeUndefined();
+  });
+
+  it("canonicalizes direct text aliases and drops every unsafe practice override", async () => {
+    const repository = new FakeRepository();
+    const store = createVaultStore({ repository, now: () => now });
+    await store.getState().initialize();
+
+    const alias = textTimelineChord("Dmaj7", 1);
+    alias.chord = { ...alias.chord, label: "DM7" };
+    expect(store.getState().createIdeaFromTextProgression({
+      title: "Alias",
+      summaryText: "ignored",
+      chords: [alias],
+    })).toBeDefined();
+    expect(store.getState().ideas[0]?.progressionBlocks?.[0]?.chords[0]?.chord.label).toBe("Dmaj7");
+
+    const validPractice = {
+      schemaVersion: 1 as const,
+      source: "live-played" as const,
+      representation: "simultaneous-voicing" as const,
+      midiNotes: [36, 43, 47, 52],
+      bassNote: 36,
+      capturedForChordKey: "0:maj7:-:-",
+      capturedForChordLabel: "Cmaj7",
+    };
+    const unsafeSnapshots = [
+      { ...validPractice, source: "midi-extracted" as const },
+      { ...validPractice, representation: "aggregated-note-set" as const },
+      { ...validPractice, capturedForChordKey: "stale" },
+      { ...validPractice, midiNotes: [43, 36, 47, 52] },
+    ];
+    for (const snapshot of unsafeSnapshots) {
+      const chord = textTimelineChord("Cmaj7", 1);
+      chord.voicingMemory = { practiceVoicingOverride: snapshot };
+      expect(store.getState().createIdeaFromTextProgression({
+        title: `Unsafe ${store.getState().ideas.length}`,
+        summaryText: "ignored",
+        chords: [chord],
+      })).toBeDefined();
+      const ideas = store.getState().ideas;
+      const saved = ideas[ideas.length - 1]?.progressionBlocks?.[0]?.chords[0];
+      expect(saved?.voicingMemory).toBeUndefined();
+    }
+  });
+  it("fails closed for direct text saves that do not satisfy the text grammar", async () => {
+    const repository = new FakeRepository();
+    const store = createVaultStore({ repository, now: () => now });
+    await store.getState().initialize();
+    const attempt = (chords: ChordTimelineItem[]) => store.getState().createIdeaFromTextProgression({
+      title: "Unsafe direct input",
+      summaryText: "ignored",
+      chords,
+    });
+
+    expect(attempt([textTimelineChord("Cmaj7", 2)])).toBeUndefined();
+    expect(attempt([
+      textTimelineChord("Cmaj7", 1, 1, 1),
+      textTimelineChord("Dm7", 1, 2, 1),
+      textTimelineChord("Em7", 1, 3, 2),
+    ])).toBeUndefined();
+    expect(store.getState().ideas).toHaveLength(0);
   });
 });

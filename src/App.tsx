@@ -151,9 +151,11 @@ function App() {
   const importVault = useStore(defaultVaultStore, (state) => state.importVault);
   const createIdea = useStore(defaultVaultStore, (state) => state.createIdea);
   const createIdeaFromDraft = useStore(defaultVaultStore, (state) => state.createIdeaFromDraft);
+  const createIdeaFromTextProgression = useStore(defaultVaultStore, (state) => state.createIdeaFromTextProgression);
   const updateIdea = useStore(defaultVaultStore, (state) => state.updateIdea);
   const deleteIdea = useStore(defaultVaultStore, (state) => state.deleteIdea);
   const appendBlockToIdea = useStore(defaultVaultStore, (state) => state.appendBlockToIdea);
+  const appendTextProgressionToIdea = useStore(defaultVaultStore, (state) => state.appendTextProgressionToIdea);
   const updateProgressionBlock = useStore(defaultVaultStore, (state) => state.updateProgressionBlock);
   const duplicateProgressionBlock = useStore(defaultVaultStore, (state) => state.duplicateProgressionBlock);
   const removeProgressionBlock = useStore(defaultVaultStore, (state) => state.removeProgressionBlock);
@@ -660,7 +662,15 @@ async function analyzeMidiPath(path: string) {
                     }
                     return id;
                   }}
+                  createIdeaFromTextProgression={(draft) => {
+                    const id = createIdeaFromTextProgression(draft);
+                    if (id) {
+                      openDetail(id);
+                    }
+                    return id;
+                  }}
                   appendBlockToIdea={appendBlockToIdea}
+                  appendTextProgressionToIdea={appendTextProgressionToIdea}
                   updateIdea={updateIdea}
                   setToast={setToast}
                   copy={copy}

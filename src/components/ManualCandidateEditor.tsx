@@ -78,6 +78,14 @@ export interface ManualCandidateEditorProps {
   copy: AppCopy;
   language: AppLanguage;
   keySignature?: string;
+  /** Text-entry drafts have no source timeline to retarget. */
+  allowRangeAdjustment?: boolean;
+  /** Text grammar owns timing; text drafts permit chord replacement only. */
+  allowStructuralEdits?: boolean;
+  /** Text-entry drafts use confidence 0 as a no-analysis sentinel. */
+  showConfidenceReview?: boolean;
+  /** Defaults to the legacy candidate adapter; text provides a safe factory. */
+  createEditable?: (draft: ManualCandidateDraft) => EditableProgression;
   save?: ManualDraftSaveTarget;
   onChange(draft: ManualCandidateDraft): void;
   onDiscard(): void;
@@ -93,6 +101,10 @@ export function ManualCandidateEditor({
   copy,
   language,
   keySignature,
+  allowRangeAdjustment = true,
+  allowStructuralEdits = true,
+  showConfidenceReview = true,
+  createEditable = draftEditable,
   onChange,
   onDiscard,
   onReselect,
@@ -101,32 +113,38 @@ export function ManualCandidateEditor({
   save,
 }: ManualCandidateEditorProps) {
   const text = copy.capture.manualDraft;
-  const [editable, setEditable] = useState<EditableProgression>(() => draftEditable(draft));
+  const [editable, setEditable] = useState<EditableProgression>(() => createEditable(draft));
   const [pendingNudge, setPendingNudge] = useState<RangeNudge | null>(null);
   const editorRef = useRef<HTMLElement>(null);
 
   const validation = useMemo(() => validateDraft(draft), [draft]);
   const voicingSource = useMemo(
-    () => timelineVoicingSourceStatus(draftPreviewTimeline(draft)),
-    [draft],
+    () => timelineVoicingSourceStatus(
+      draft.source.type === "text-progression" ? timeline : draftPreviewTimeline(draft),
+    ),
+    [draft, timeline],
   );
   const sourceLabel = draft.source.type === "automatic-candidate"
     ? language === "ja"
       ? `自動候補から作成${draft.isDirty ? "・編集中" : ""}`
       : `Created from automatic candidate${draft.isDirty ? " · Editing" : ""}`
-    : language === "ja"
-      ? "手動範囲から作成"
-      : "Created from manual range";
+    : draft.source.type === "text-progression"
+      ? language === "ja"
+        ? "テキスト入力から作成"
+        : "Created from text entry"
+      : language === "ja"
+        ? "手動範囲から作成"
+        : "Created from manual range";
 
   useEffect(() => {
-    setEditable(draftEditable(draft));
+    setEditable(createEditable(draft));
     setPendingNudge(null);
-  }, [draft.draftId]);
+  }, [createEditable, draft.draftId]);
 
   const applyHistoryDraft = useCallback((next: ManualCandidateDraft) => {
-    setEditable(draftEditable(next));
+    setEditable(createEditable(next));
     onChange(next);
-  }, [onChange]);
+  }, [createEditable, onChange]);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -193,13 +211,13 @@ export function ManualCandidateEditor({
           operation: nudgeOperation(nudge, draft.beatsPerBar),
         },
       );
-      setEditable(draftEditable(next));
+      setEditable(createEditable(next));
       onChange(next);
     } catch {
       // An unusable range leaves the draft alone rather than emptying it.
     }
     setPendingNudge(null);
-  }, [draft, onChange, timeline, totalBars]);
+  }, [createEditable, draft, onChange, timeline, totalBars]);
 
   const requestNudge = useCallback((nudge: RangeNudge) => {
     if (draft.isDirty) setPendingNudge(nudge);
@@ -210,6 +228,8 @@ export function ManualCandidateEditor({
   const selectedIndex = editable.slots.findIndex((slot) => slot.id === selectedSlotId);
 
   function runContextAction(slotId: string, action: ChordContextAction): boolean {
+    if (!allowStructuralEdits) return false;
+    if (!allowRangeAdjustment && action === "cut-range-here") return false;
     if (action === "cut-range-here") {
       const nextDraft = cutDraftRangeAtEvent(draft, slotId);
       if (nextDraft === draft) return false;
@@ -286,7 +306,7 @@ export function ManualCandidateEditor({
         {text.lengthBars(draft.lengthBars)}
       </p>
 
-      <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label={text.rangeControls}>
+      {allowRangeAdjustment ? <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label={text.rangeControls}>
         {rangeNudges.map((nudge) => (
           <button
             key={`${nudge.edge}-${nudge.unit}-${nudge.delta}`}
@@ -305,7 +325,7 @@ export function ManualCandidateEditor({
         >
           {text.reselect}
         </button>
-      </div>
+      </div> : null}
 
       {pendingNudge === null ? null : (
         <div role="alertdialog" aria-label={text.confirmTitle} className="mt-3 border border-amber-300/60 p-3">
@@ -355,6 +375,7 @@ export function ManualCandidateEditor({
         >
           {text.redo}
         </button>
+        {allowStructuralEdits ? <>
         <button
           type="button"
           data-action="split"
@@ -411,6 +432,7 @@ export function ManualCandidateEditor({
         >
           {text.delete}
         </button>
+        </> : null}
       </div>
 
       <div className="mt-3">
@@ -420,13 +442,16 @@ export function ManualCandidateEditor({
           onNavigate={(slotId) => setEditable((current) => selectEditableSlot(current, slotId))}
           {...(keySignature === undefined ? {} : { keySignature })}
           language={language}
-          contextActions={{
-            canCutRange: (slotId) => {
-              const index = editable.slots.findIndex((slot) => slot.id === slotId);
-              return index >= 0 && index < editable.slots.length - 1;
+          showConfidenceReview={showConfidenceReview}
+          {...(allowStructuralEdits ? {
+            contextActions: {
+              canCutRange: (slotId: string) => {
+                const index = editable.slots.findIndex((slot) => slot.id === slotId);
+                return index >= 0 && index < editable.slots.length - 1;
+              },
+              onAction: runContextAction,
             },
-            onAction: runContextAction,
-          }}
+          } : {})}
           quickEditor={{
             onOpen: (slotId) => setEditable((current) => selectEditableSlot(current, slotId)),
             onPreview: (slotId) => setEditable((current) => selectEditableSlot(current, slotId)),
@@ -449,11 +474,11 @@ export function ManualCandidateEditor({
         />
       </div>
 
-      <DraftBoundaryHandles
+      {allowRangeAdjustment ? <DraftBoundaryHandles
         draft={draft}
         language={language}
         onChange={applyHistoryDraft}
-      />
+      /> : null}
 
       {validation.errors.length > 0 ? (
         <ul className="mt-3 text-xs text-red-300" aria-label={text.errors}>
@@ -478,6 +503,7 @@ export function ManualCandidateEditor({
         <VoicingSourceChip
           status={voicingSource.status}
           reason={voicingSource.reason}
+          sourceAbsentByDesign={draft.source.type === "text-progression"}
           language={language}
           testId="capture-voicing-source-chip"
         />

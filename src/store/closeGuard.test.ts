@@ -51,6 +51,8 @@ function state(overrides: Partial<VaultStoreState>): VaultStoreState {
     initialize: async () => undefined,
     createIdea: () => undefined,
     createIdeaFromDraft: () => undefined,
+    createIdeaFromTextProgression: () => undefined,
+    appendTextProgressionToIdea: () => false,
     updateIdea: () => undefined,
     deleteIdea: () => false,
     appendBlockToIdea: () => false,

@@ -21,6 +21,8 @@ interface VoicingPanelProps {
   generatedNotes: readonly number[];
   language: AppLanguage;
   sourceAvailable: boolean;
+  /** False for sources that do not exist (for example text entry), not missing files. */
+  sourceApplicable?: boolean;
   reextracting?: boolean;
   onMemoryChange: (memory: ChordVoicingMemory | undefined) => void;
   onReextract: () => void;
@@ -79,6 +81,7 @@ export function VoicingPanel({
   generatedNotes,
   language,
   sourceAvailable,
+  sourceApplicable = true,
   reextracting,
   onMemoryChange,
   onReextract,
@@ -91,19 +94,27 @@ export function VoicingPanel({
   const [stableNotes, setStableNotes] = useState<number[]>([]);
   const [stable, setStable] = useState(false);
   const ownedConnection = useRef(false);
-  const resolved = resolveVoicingForUse(chord, memory, [...generatedNotes]);
-  const sourceCompatibility = memory?.sourceVoicing
+  // Text has no source MIDI. Ignore a malformed caller-supplied source snapshot
+  // rather than letting it affect the generated/practice-only text path.
+  const usableMemory = sourceApplicable
+    ? memory
+    : memory?.practiceVoicingOverride
+      ? { practiceVoicingOverride: memory.practiceVoicingOverride }
+      : undefined;
+  const resolved = resolveVoicingForUse(chord, usableMemory, [...generatedNotes]);
+  const sourceCompatibility = sourceApplicable && memory?.sourceVoicing
     ? voicingCompatibility(memory.sourceVoicing, chord)
     : undefined;
   const displayedSnapshot = resolved.origin === "practice-override"
     ? memory?.practiceVoicingOverride
-    : resolved.origin.startsWith("source")
+    : sourceApplicable && resolved.origin.startsWith("source")
       ? memory?.sourceVoicing
       : undefined;
   const displayedNotes = displayedSnapshot?.midiNotes ?? resolved.midiNotes;
   const captureCoverage = chordCoverage(chord, stableNotes, stableNotes[0]);
-  const sourceStatus = voicingSourceStatus(chord, memory);
-
+  const sourceStatus = sourceApplicable
+    ? voicingSourceStatus(chord, memory)
+    : { status: "generated" as const, reason: undefined };
   useEffect(() => {
     if (!recording) return undefined;
     setStable(false);
@@ -178,6 +189,7 @@ export function VoicingPanel({
           <VoicingSourceChip
             status={sourceStatus.status}
             reason={sourceStatus.reason}
+            sourceAbsentByDesign={!sourceApplicable}
             language={language}
             testId="detail-voicing-source-chip"
           />
@@ -226,27 +238,29 @@ export function VoicingPanel({
           <button
             type="button"
             className="lv-button-secondary px-3 py-2 text-sm"
-            data-testid={sourceStatus.status === "source" ? undefined : "detail-voicing-recovery"}
+            data-testid={sourceApplicable && sourceStatus.status !== "source" ? "detail-voicing-recovery" : undefined}
             onClick={() => void startRecording()}
           >
-            {sourceStatus.status === "source" ? text.record : text.replace}
+            {sourceApplicable && sourceStatus.status !== "source" ? text.replace : text.record}
           </button>
-          <button type="button" className="lv-button-secondary px-3 py-2 text-sm" disabled={!sourceAvailable || reextracting} onClick={onReextract}>
-            {text.reextract}
-          </button>
+          {sourceApplicable ? (
+            <button type="button" className="lv-button-secondary px-3 py-2 text-sm" disabled={!sourceAvailable || reextracting} onClick={onReextract}>
+              {text.reextract}
+            </button>
+          ) : null}
           {memory?.practiceVoicingOverride ? (
             <button type="button" className="lv-button-ghost px-3 py-2 text-sm" onClick={() => onMemoryChange({ ...memory, practiceVoicingOverride: undefined })}>
               {text.clearPractice}
             </button>
           ) : null}
-          {memory?.sourceVoicing ? (
+          {sourceApplicable && memory?.sourceVoicing ? (
             <button type="button" className="lv-button-ghost px-3 py-2 text-sm" onClick={() => onMemoryChange({ ...memory, sourceVoicing: undefined })}>
               {text.clearSource}
             </button>
           ) : null}
         </div>
       )}
-      {!sourceAvailable ? <p className="mt-3 text-xs text-[var(--lv-text-muted)]">{text.missing}</p> : null}
+      {sourceApplicable && !sourceAvailable ? <p className="mt-3 text-xs text-[var(--lv-text-muted)]">{text.missing}</p> : null}
       <p className="mt-3 text-xs text-[var(--lv-text-muted)]" title={text.detail}>{text.detail}</p>
     </section>
   );

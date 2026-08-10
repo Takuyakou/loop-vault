@@ -42,6 +42,8 @@ interface EditableProgressionGridProps {
   keySignature?: string;
   authorReferenceIndex?: AuthorReferenceIndex;
   language: AppLanguage;
+  /** Suppresses confidence-review badges for sources without analyzer confidence. */
+  showConfidenceReview?: boolean;
   quickEditor?: QuickChordEditorControls;
   contextActions?: ChordContextActionControls;
 }
@@ -57,6 +59,7 @@ export function EditableProgressionGrid({
   keySignature,
   authorReferenceIndex,
   language,
+  showConfidenceReview = true,
   quickEditor,
   contextActions,
 }: EditableProgressionGridProps) {
@@ -148,6 +151,7 @@ export function EditableProgressionGrid({
                 : undefined}
               onInsertAfter={onInsertAfter ? () => onInsertAfter(slot.id) : undefined}
               buttonRef={(element) => { cardButtons.current[index] = element; }}
+              showConfidenceReview={showConfidenceReview}
               language={language}
             />
           ))}
