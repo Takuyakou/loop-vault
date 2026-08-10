@@ -8,7 +8,7 @@ import type {
   TrackRole,
   VoiceRole,
 } from "../types";
-import { annotateVoiceRoles, buildVoiceFeatureInputs } from "../voiceRoles";
+import { annotateVoiceRolesV2, sanitizeVoiceRoleOverrides } from "../voiceRoleV2";
 import { buildVoices, voiceId } from "../voices";
 import type {
   AnalysisSession,
@@ -136,7 +136,9 @@ export function buildPreparedMidiSongData(
       ...(voice.dominantProgram !== undefined
         ? { program: voice.dominantProgram }
         : {}),
-      roleOverride: trackRoleFor(voice.assignedRole),
+      roleOverride: voice.channel === 9
+        ? "percussion"
+        : trackRoleFor(voice.assignedRole),
     })),
     controlChanges: session.controlChanges.flatMap((change) => {
       const trackIndex = voiceOrder.get(change.voiceId);
@@ -159,26 +161,25 @@ function buildPreparedAnalysisInput(
 ): AnalysisInput {
   const normalized = normalizeNotes(data);
   const baseVoices = buildVoices(data);
-  const roleOverrides = Object.fromEntries(
-    selectedVoices.map((voice, index) => [
-      voiceId(index, voice.channel),
-      voiceRoleFor(voice.assignedRole),
-    ]),
+  const requestedOverrides = Object.fromEntries(
+    selectedVoices.flatMap((voice, index) => voice.channel === 9
+      ? []
+      : [[voiceId(index, voice.channel), voiceRoleFor(voice.assignedRole)] as const]),
   );
-  const voices = annotateVoiceRoles(
-    baseVoices,
-    buildVoiceFeatureInputs(baseVoices, normalized),
-    roleOverrides,
-  );
+  const roleOverrides = sanitizeVoiceRoleOverrides(baseVoices, requestedOverrides);
+  const voices = annotateVoiceRolesV2(baseVoices, normalized, roleOverrides);
   return {
     voices,
-    enabledVoiceIds: voices.map((voice) => voice.id),
+    enabledVoiceIds: voices
+      .filter((voice) => voice.channel !== 9)
+      .map((voice) => voice.id),
     roleOverrides,
   };
 }
 
 function isSelectedVoice(voice: AnalysisSessionVoice): boolean {
-  return voice.included
+  return !voice.isDrum
+    && voice.included
     && voice.assignedRole !== "exclude";
 }
 

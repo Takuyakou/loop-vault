@@ -159,6 +159,11 @@ export interface Voice {
   highestVoiceShare: number;
   inferredRole: VoiceRole;
   roleConfidence: number;
+  /** Runtime-only Role v2 review metadata. It is never added to Vault data. */
+  roleConfidenceBucket?: "high" | "medium" | "low";
+  /** Privacy-safe evidence categories, without a raw track name or MIDI data. */
+  roleEvidenceKinds?: readonly string[];
+  roleInferenceVersion?: "p521-role-v2-v1";
   roleEvidence: VoiceRoleEvidence;
 }
 

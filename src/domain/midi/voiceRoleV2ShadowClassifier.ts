@@ -2,9 +2,9 @@ import type { VoiceRole } from "./types";
 import type { RoleV2ShadowFeatures } from "./voiceRoleV2ShadowFeatures";
 
 /**
- * This candidate is intentionally shadow-only. Nothing in production imports
- * it: it evaluates the fixed Stage 01 aggregate feature vector without
- * changing Role v1, Analyzer inputs, or persisted state.
+ * Locked Role v2 classifier shared by the Stage 02 evaluator and the Stage 03
+ * production adapter. It evaluates the fixed Stage 01 aggregate feature
+ * vector without changing raw events or persisted state.
  */
 export const roleV2ShadowClassifierVersion = "p521-role-v2-shadow-v1";
 

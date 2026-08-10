@@ -47,6 +47,34 @@ export function buildVoiceRoleProfiles(
   }));
 }
 
+/**
+ * Builds profiles from an already-promoted Role v2 annotation. This keeps the
+ * role-aware reranker on the same decision that pre-analysis and source
+ * voicing display, while preserving authoritative non-drum manual overrides.
+ */
+export function buildAnnotatedVoiceRoleProfiles(
+  voices: readonly Voice[],
+  overrides: Readonly<Record<string, VoiceRole>> = {},
+): ReadonlyMap<string, VoiceRoleProfile> {
+  return new Map(voices.map((voice) => {
+    const override = voice.channel === 9 ? undefined : overrides[voice.id];
+    const role = voice.channel === 9 ? "percussion" : override ?? voice.inferredRole;
+    const inference: VoiceRoleInference = {
+      role,
+      confidence: override ? 1 : voice.roleConfidence,
+      scores: { bass: 0, harmony: 0, pad: 0, melody: 0, percussion: 0, mixed: 0 },
+      reasons: override
+        ? [`override:${override}`]
+        : [voice.roleInferenceVersion ?? "role-v1"],
+    };
+    return [voice.id, {
+      voiceId: voice.id,
+      inference,
+      contribution: contributionWeightsForRole(role),
+    }] as const;
+  }));
+}
+
 export function buildVoiceAwarePitchProfile(
   notes: readonly NormalizedTimedNote[],
   segment: SegmentRange,

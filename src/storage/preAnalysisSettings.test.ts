@@ -41,6 +41,16 @@ describe("pre-analysis source selection settings", () => {
     }))).toBe(true);
   });
 
+  it("uses a V2 Low confidence bucket even when legacy numeric confidence is high", () => {
+    expect(needsPreAnalysisReview({
+      sources: [{}],
+      voices: [{
+        isDrum: false,
+        autoRoleConfidenceBucket: "low",
+        autoRoleConfidence: 0.9,
+      }],
+    })).toBe(true);
+  });
   it("keeps one high-confidence pitched Voice in compact presentation", () => {
     const simple = reviewSession({
       pitchedVoiceConfidences: [0.9],

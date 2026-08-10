@@ -18,6 +18,7 @@ export interface PreAnalysisReviewSession {
     channel?: number;
     isDrum: boolean;
     autoRole?: string;
+    autoRoleConfidenceBucket?: "high" | "medium" | "low";
     autoRoleConfidence: number;
   }[];
   warnings?: readonly unknown[];
@@ -87,7 +88,7 @@ export function needsPreAnalysisReview(
     || pitchedVoices.length > 1
     || session.voices.some((voice) => voice.isDrum)
     || pitchedVoices.some((voice) => voice.autoRole === "melody-weak")
-    || pitchedVoices.some((voice) => voice.autoRoleConfidence < 0.45)
+    || pitchedVoices.some((voice) => voice.autoRoleConfidenceBucket === "low" || voice.autoRoleConfidence < 0.45)
     || Boolean(session.warnings?.length)
     || typeZeroMultiChannel;
 }

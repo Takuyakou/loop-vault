@@ -25,12 +25,12 @@ import type {
   VoiceEvidenceProfiles,
 } from "./types";
 import {
-  annotateVoiceRoles,
-  buildVoiceFeatureInputs,
-} from "./voiceRoles";
+  annotateVoiceRolesV2,
+  sanitizeVoiceRoleOverrides,
+} from "./voiceRoleV2";
 import {
+  buildAnnotatedVoiceRoleProfiles,
   buildVoiceAwarePitchProfile,
-  buildVoiceRoleProfiles,
 } from "./voiceProfiles";
 import { buildVoices, voiceId } from "./voices";
 import { defaultAnalyzerWeights, type AnalyzerWeights } from "./weights";
@@ -53,17 +53,23 @@ export function analyzeMidiVoiceAwareRerank(
   const normalizedNotes = normalizeNotes(data);
   const builtVoices = buildVoices(data);
   const suppliedInput = rerankerOptions.analysisInput ?? options.analysisInput;
-  const features = buildVoiceFeatureInputs(builtVoices, normalizedNotes);
-  const annotatedVoices = annotateVoiceRoles(
+  const safeRoleOverrides = sanitizeVoiceRoleOverrides(
     builtVoices,
-    features,
     suppliedInput?.roleOverrides,
+  );
+  const annotatedVoices = annotateVoiceRolesV2(
+    builtVoices,
+    normalizedNotes,
+    safeRoleOverrides,
+  );
+  const drumVoiceIds = new Set(
+    annotatedVoices.filter((voice) => voice.channel === 9).map((voice) => voice.id),
   );
   const analysisInput: AnalysisInput = suppliedInput
     ? {
         voices: annotatedVoices,
-        enabledVoiceIds: [...suppliedInput.enabledVoiceIds],
-        roleOverrides: { ...suppliedInput.roleOverrides },
+        enabledVoiceIds: suppliedInput.enabledVoiceIds.filter((voiceId) => !drumVoiceIds.has(voiceId)),
+        roleOverrides: safeRoleOverrides,
       }
     : {
         voices: annotatedVoices,
@@ -77,9 +83,8 @@ export function analyzeMidiVoiceAwareRerank(
     (note) => note.channel !== undefined && enabled.has(voiceId(note.trackIndex, note.channel)),
   );
   const weights: AnalyzerWeights = { ...defaultAnalyzerWeights, ...options.weights };
-  const roles = buildVoiceRoleProfiles(
+  const roles = buildAnnotatedVoiceRoleProfiles(
     annotatedVoices,
-    buildVoiceFeatureInputs(annotatedVoices, normalizedNotes),
     analysisInput.roleOverrides,
   );
   const ornaments = extractOrnamentFeatures(evidenceNotes, weights);

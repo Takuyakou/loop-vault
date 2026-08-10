@@ -197,7 +197,7 @@ describe("Phase 5.1 analyzer input", () => {
     expect(request.options.preparedData?.notes).toHaveLength(6);
   });
 
-  it("includes drums when explicitly selected in Custom", () => {
+  it("keeps Channel 10 excluded even when stale Custom state requests harmony", () => {
     const bytes = midi(480, [[
       noteOn(0, 60),
       noteOn(0, 64),
@@ -216,22 +216,39 @@ describe("Phase 5.1 analyzer input", () => {
     }]).session!;
     const drum = initial.voices.find((voice) => voice.isDrum)!;
     const session = {
-      ...updateAnalysisSessionVoice(initial, drum.id, {
-        assignedRole: "harmony",
-        included: true,
-      }),
+      ...initial,
       preset: "custom" as const,
+      voices: initial.voices.map((voice) => voice.id === drum.id
+        ? { ...voice, assignedRole: "harmony" as const, included: true }
+        : voice),
     };
 
     const request = buildSessionAnalysisRequest(session);
 
-    expect(request.selectedVoiceIds).toContain(drum.id);
+    expect(request.selectedVoiceIds).not.toContain(drum.id);
     expect(request.options.preparedData?.notes.some((note) =>
-      note.channel === 9)).toBe(true);
-    expect(request.options.preparedData?.tracks.find((track) =>
-      track.channel === 9)?.roleOverride).toBe("harmony");
+      note.channel === 9)).toBe(false);
+    expect(request.options.analysisInput?.enabledVoiceIds).not.toContain(drum.id);
+    expect(Object.keys(request.options.analysisInput?.roleOverrides ?? {})).not.toContain(drum.id);
   });
+  it("keeps Channel 10 percussion when legacy input carries a contradictory override", () => {
+    const roles = inferTrackRoles({
+      notes: [{
+        pitch: 36,
+        startTick: 0,
+        durationTick: 480,
+        velocity: 100,
+        trackIndex: 0,
+        channel: 9,
+      }],
+      ticksPerBeat: 480,
+      totalBars: 1,
+      tracks: [{ index: 0, name: "", channel: 9, roleOverride: "harmony" }],
+      controlChanges: [],
+    });
 
+    expect(roles.get(0)).toBe("percussion");
+  });
   it("preserves sustain controls for selected voices", () => {
     const bytes = midi(480, [[
       controlChange(0, 64, 127),

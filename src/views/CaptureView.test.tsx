@@ -148,6 +148,49 @@ describe("ProgressionCandidateCard", () => {
     });
   });
 
+  it("keeps a contradictory Channel 10 override as percussion in similarity context", () => {
+    const editable = createEditableProgression(candidate());
+    const analysisInput: AnalysisInput = {
+      voices: [{
+        id: "0:9",
+        trackIndex: 0,
+        channel: 9,
+        explicitPrograms: [],
+        dominantProgramExplicit: false,
+        noteCount: 8,
+        pitchRange: [36, 60],
+        medianPitch: 48,
+        avgDurationTick: 480,
+        noteDensity: 1,
+        maxPolyphony: 1,
+        simultaneousOnsetRatio: 0,
+        lowestVoiceShare: 1,
+        highestVoiceShare: 0,
+        inferredRole: "harmony",
+        roleConfidence: 0.9,
+        roleEvidence: {
+          measured: {
+            bass: 0,
+            harmony: 1,
+            pad: 0,
+            melody: 0,
+            percussion: 0,
+            mixed: 0,
+          },
+        },
+      }],
+      enabledVoiceIds: ["0:9"],
+      roleOverrides: { "0:9": "harmony" },
+    };
+
+    const context = captureSimilarityContext(editable, "F minor", analysisInput);
+    const sourceId = editable.slots[0]!.id;
+
+    expect(context.segments?.[sourceId]).toMatchObject({
+      enabledVoiceIds: ["0:9"],
+      roleProfiles: { "0:9": { role: "percussion", confidence: 1 } },
+    });
+  });
   it("keeps editing fields out of the default card view", () => {
     const markup = renderToStaticMarkup(
       <ProgressionCandidateCard

@@ -69,8 +69,14 @@ export function updateAnalysisSessionVoice(
 ): AnalysisSession {
   return {
     ...session,
-    voices: session.voices.map((voice) =>
-      voice.id === voiceId ? { ...voice, ...changes } : voice),
+    voices: session.voices.map((voice) => {
+      if (voice.id !== voiceId) return voice;
+      // Channel 10 may be visible/audible for review but never changes from
+      // percussion/excluded through a stale or manual session update.
+      return voice.isDrum
+        ? { ...voice, ...changes, assignedRole: "exclude", included: false }
+        : { ...voice, ...changes };
+    }),
   };
 }
 
@@ -80,9 +86,9 @@ export function applyAnalysisSessionPreset(
 ): AnalysisSession {
   if (preset === "custom") return { ...session, preset };
   const voices = session.voices.map((voice): AnalysisSessionVoice => {
-    const assignedRole = preset === "auto"
-      ? voice.autoRole
-      : voice.assignedRole;
+    const assignedRole = voice.isDrum
+      ? "exclude"
+      : (preset === "auto" ? voice.autoRole : voice.assignedRole);
     const included = voice.duplicateOf === undefined
       && !voice.isDrum
       && (
@@ -215,9 +221,10 @@ function applyDuplicateGuard(session: AnalysisSession): {
       } = voice;
       return {
         ...clean,
-        included: voice.duplicateOf
-          ? voice.autoRole !== "exclude"
-          : voice.included,
+        assignedRole: voice.isDrum ? "exclude" : clean.assignedRole,
+        included: voice.isDrum
+          ? false
+          : (voice.duplicateOf ? voice.autoRole !== "exclude" : voice.included),
       };
     },
   );

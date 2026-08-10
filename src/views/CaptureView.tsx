@@ -211,6 +211,22 @@ interface CaptureViewProps {
   analysisInput?: AnalysisInput;
 }
 
+type CaptureAnalysisTargetVoice = Pick<
+  AnalysisSession["voices"][number],
+  "assignedRole" | "displayName" | "duplicateOf" | "included" | "isDrum"
+>;
+
+export function captureAnalysisTargetLabel(
+  voices: readonly CaptureAnalysisTargetVoice[] | undefined,
+): string | undefined {
+  return voices?.filter((voice) =>
+    voice.included
+    && !voice.isDrum
+    && !voice.duplicateOf
+    && voice.assignedRole !== "exclude")
+    .map((voice) => voice.displayName)
+    .join(" / ");
+}
 export function CaptureView(props: CaptureViewProps) {
   const {
     ideas,
@@ -266,14 +282,10 @@ export function CaptureView(props: CaptureViewProps) {
   const result = analysis.result;
   const capturePlayback = usePlaybackState(controller);
   const authorReferenceIndex = useMemo(() => buildAuthorReferenceIndex(ideas), [ideas]);
-  const analysisTargetLabel = useMemo(() => preAnalysisSession?.voices
-    .filter((voice) =>
-      voice.included
-      && !voice.duplicateOf
-      && voice.assignedRole !== "exclude")
-    .map((voice) => voice.displayName)
-    .join(" / "), [preAnalysisSession]);
-
+  const analysisTargetLabel = useMemo(
+    () => captureAnalysisTargetLabel(preAnalysisSession?.voices),
+    [preAnalysisSession],
+  );
   useStickyInspectorHeight(inspectorHost, Boolean(expandedCandidateId));
 
   useEffect(() => {
@@ -3002,10 +3014,11 @@ function similarityVoiceContext(analysisInput: AnalysisInput): SimilarityVoiceCo
   const voices = new Map(analysisInput.voices.map((voice) => [voice.id, voice]));
   const roleProfiles = Object.fromEntries(enabledVoiceIds.map((voiceId) => {
     const voice = voices.get(voiceId);
-    const override = analysisInput.roleOverrides[voiceId];
+    const isChannel10 = voice?.channel === 9;
+    const override = isChannel10 ? undefined : analysisInput.roleOverrides[voiceId];
     return [voiceId, {
-      role: override ?? voice?.inferredRole ?? "mixed",
-      confidence: override ? 1 : voice?.roleConfidence ?? 0,
+      role: isChannel10 ? "percussion" : override ?? voice?.inferredRole ?? "mixed",
+      confidence: isChannel10 ? 1 : override ? 1 : voice?.roleConfidence ?? 0,
     }];
   }));
   return { enabledVoiceIds, roleProfiles };

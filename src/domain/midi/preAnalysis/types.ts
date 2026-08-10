@@ -50,6 +50,10 @@ export interface PreAnalysisVoice {
   averageDurationBeats?: number;
   averagePolyphony?: number;
   autoRole: PreAnalysisVoiceRole;
+  /** Role v2 category for display; the numeric compatibility field stays private. */
+  autoRoleConfidenceBucket?: "high" | "medium" | "low";
+  /** Privacy-safe Role v2 evidence categories; never raw MIDI or title data. */
+  autoRoleEvidenceKinds?: readonly string[];
   autoRoleConfidence: number;
   assignedRole: PreAnalysisVoiceRole;
   included: boolean;

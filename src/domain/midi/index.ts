@@ -56,6 +56,18 @@ export {
   buildVoiceRoleProfiles,
   contributionWeightsForRole,
 } from "./voiceProfiles";
+export {
+  annotateVoiceRolesV2,
+  inferVoiceRoleV2,
+  resolveVoiceRoleV2,
+  sanitizeVoiceRoleOverrides,
+  voiceRoleV2InferenceVersion,
+} from "./voiceRoleV2";
+export type {
+  VoiceRoleConfidenceBucket,
+  VoiceRoleEvidenceKind,
+  VoiceRoleV2Inference,
+} from "./voiceRoleV2";
 export { beatStrength, defaultAnalyzerWeights, noteFeatures } from "./weights";
 export { extractTrackFeatures, inferTrackRoleProfiles } from "./trackRoles";
 export { extractOrnamentFeatures } from "./ornaments";

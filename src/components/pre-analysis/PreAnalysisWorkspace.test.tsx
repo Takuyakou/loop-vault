@@ -59,6 +59,30 @@ describe("PreAnalysisWorkspace", () => {
     await unmount();
   });
 
+  it("shows Role v2 confidence buckets and privacy-safe evidence without percentages", async () => {
+    const base = fixtureSession();
+    const voice = base.voices.find((entry) => !entry.isDrum)!;
+    const session = {
+      ...base,
+      voices: base.voices.map((entry) => entry.id === voice.id
+        ? {
+            ...entry,
+            autoRoleConfidence: 0.9,
+            autoRoleConfidenceBucket: "low" as const,
+            autoRoleEvidenceKinds: ["high-pitch-center", "stepwise-motion"],
+          }
+        : entry),
+    };
+    const { container, unmount } = await renderWorkspace(session, { language: "en" });
+
+    expect(container.textContent).toContain("Confidence: Low");
+    expect(container.textContent).toContain("High register");
+    expect(container.textContent).toContain("Stepwise motion");
+    expect(container.textContent).toContain("Review");
+    expect(container.textContent).not.toContain("90%");
+
+    await unmount();
+  });
   it("keeps a simple one-Voice MIDI compact without adding a required step", async () => {
     const session = createAnalysisSession([{
       sourceId: "simple",
@@ -123,7 +147,7 @@ describe("PreAnalysisWorkspace", () => {
     await unmount();
   });
 
-  it("locks protected Voices by default and enables them in Custom", async () => {
+  it("keeps Channel 10 protected while enabling duplicate review in Custom", async () => {
     const base = fixtureSession();
     const target = base.voices.find((voice) =>
       !voice.isDrum && !voice.duplicateOf)!;
@@ -139,7 +163,9 @@ describe("PreAnalysisWorkspace", () => {
             assignedRole: "exclude",
             included: false,
           }
-        : voice),
+        : (voice.isDrum
+          ? { ...voice, assignedRole: "harmony" as const, included: true }
+          : voice)),
     };
     const { container, unmount } = await renderStatefulWorkspace(session);
     const controlsFor = (voiceId: string) => {
@@ -154,6 +180,7 @@ describe("PreAnalysisWorkspace", () => {
     expect(controlsFor(drum.id).checkbox.checked).toBe(false);
     expect(controlsFor(drum.id).checkbox.disabled).toBe(true);
     expect(controlsFor(drum.id).role.disabled).toBe(true);
+    expect(controlsFor(drum.id).role.value).toBe("exclude");
     expect(controlsFor(duplicate.id).checkbox.checked).toBe(false);
     expect(controlsFor(duplicate.id).checkbox.disabled).toBe(true);
     expect(controlsFor(duplicate.id).role.disabled).toBe(true);
@@ -164,21 +191,21 @@ describe("PreAnalysisWorkspace", () => {
       )?.click();
     });
 
-    expect(controlsFor(drum.id).checkbox.disabled).toBe(false);
-    expect(controlsFor(drum.id).role.disabled).toBe(false);
+    expect(controlsFor(drum.id).checkbox.disabled).toBe(true);
+    expect(controlsFor(drum.id).role.disabled).toBe(true);
+    expect(controlsFor(drum.id).role.value).toBe("exclude");
     expect(controlsFor(duplicate.id).checkbox.disabled).toBe(false);
     expect(controlsFor(duplicate.id).role.disabled).toBe(false);
 
     await act(async () => {
       controlsFor(target.id).checkbox.click();
-      controlsFor(drum.id).checkbox.click();
       controlsFor(duplicate.id).checkbox.click();
     });
 
     expect(controlsFor(target.id).checkbox.checked).toBe(true);
     expect(controlsFor(target.id).role.value).toBe("harmony");
-    expect(controlsFor(drum.id).checkbox.checked).toBe(true);
-    expect(controlsFor(drum.id).role.value).toBe("harmony");
+    expect(controlsFor(drum.id).checkbox.checked).toBe(false);
+    expect(controlsFor(drum.id).role.value).toBe("exclude");
     expect(controlsFor(duplicate.id).checkbox.checked).toBe(true);
     expect(controlsFor(duplicate.id).role.value).not.toBe("exclude");
     expect(container.querySelector<HTMLElement>(

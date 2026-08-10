@@ -10,7 +10,7 @@ import type { AnalyzeMidiOptions } from "../domain/midi/types";
 import { appCopy } from "../i18n";
 import { setPreAnalysisSourceSelectionSettings } from "../storage/preAnalysisSettings";
 import type { AnalysisState } from "../store/vaultStore";
-import { CaptureView } from "./CaptureView";
+import { CaptureView, captureAnalysisTargetLabel } from "./CaptureView";
 
 const tauriMocks = vi.hoisted(() => ({
   openFileDialog: vi.fn(),
@@ -52,6 +52,23 @@ afterEach(() => {
 });
 
 describe("Phase 5.12 Capture product path", () => {
+  it("keeps a stale Channel 10 voice out of the Capture analysis target label", () => {
+    expect(captureAnalysisTargetLabel([
+      {
+        displayName: "Piano",
+        included: true,
+        isDrum: false,
+        assignedRole: "harmony",
+      },
+      {
+        displayName: "Drums",
+        included: true,
+        isDrum: true,
+        assignedRole: "harmony",
+      },
+    ])).toBe("Piano");
+  });
+
   it("keeps an all-in-one drop inline until its only Analyze button is pressed", async () => {
     const analyzerCalls: AnalyzeMidiOptions[] = [];
     const mounted = await renderCaptureProduct(analyzerCalls);

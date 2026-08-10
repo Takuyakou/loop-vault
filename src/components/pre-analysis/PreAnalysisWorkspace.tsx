@@ -84,12 +84,12 @@ export function PreAnalysisWorkspace({
   const playheadTimerRef = useRef<ReturnType<typeof globalThis.setInterval>>();
   const { sound: previewSound } = usePreviewSound();
   const includedCount = session.voices.filter((voice) =>
-    voice.included && !voice.duplicateOf).length;
+    voice.included && !voice.isDrum && !voice.duplicateOf).length;
   const recommended = useMemo(() => {
     const harmony = session.voices.filter((voice) =>
-      voice.included && voice.assignedRole === "harmony").length;
+      voice.included && !voice.isDrum && voice.assignedRole === "harmony").length;
     const bass = session.voices.filter((voice) =>
-      voice.included && voice.assignedRole === "bass").length;
+      voice.included && !voice.isDrum && voice.assignedRole === "bass").length;
     const excluded = session.voices.length - includedCount;
     return copy.recommendation(harmony, bass, excluded);
   }, [copy, includedCount, session.voices]);
@@ -583,10 +583,10 @@ export function PreAnalysisWorkspace({
                               >
                                 <input
                                   type="checkbox"
-                                  checked={voice.included}
+                                  checked={!voice.isDrum && voice.included}
                                   disabled={
-                                    session.preset !== "custom"
-                                    && (voice.isDrum || Boolean(voice.duplicateOf))
+                                    voice.isDrum
+                                    || (session.preset !== "custom" && Boolean(voice.duplicateOf))
                                   }
                                   aria-label={copy.includeVoice(voice.displayName)}
                                   onChange={(event) => {
@@ -666,10 +666,10 @@ export function PreAnalysisWorkspace({
                                   <select
                                     className="min-h-9 border border-[var(--lv-border)] bg-[var(--lv-bg)] px-2 py-1 text-xs"
                                     aria-label={copy.roleFor(voice.displayName)}
-                                    value={voice.assignedRole}
+                                    value={voice.isDrum ? "exclude" : voice.assignedRole}
                                     disabled={
-                                      session.preset !== "custom"
-                                      && (voice.isDrum || Boolean(voice.duplicateOf))
+                                      voice.isDrum
+                                      || (session.preset !== "custom" && Boolean(voice.duplicateOf))
                                     }
                                     onChange={(event) => {
                                       const assignedRole = event.currentTarget.value as PreAnalysisVoiceRole;
@@ -684,9 +684,17 @@ export function PreAnalysisWorkspace({
                                     ))}
                                   </select>
                                   <span className="text-[10px] text-[var(--lv-text-muted)]">
-                                    {copy.roleConfidence(Math.round(voice.autoRoleConfidence * 100))}
+                                    {copy.roleConfidence(confidenceBucketForVoice(voice))}
                                   </span>
-                                  {voice.autoRoleConfidence < 0.45 ? (
+                                  {(voice.autoRoleEvidenceKinds ?? []).map((kind) => (
+                                    <span
+                                      key={kind}
+                                      className="border border-sky-400/50 px-2 py-0.5 text-[10px] text-sky-100"
+                                    >
+                                      {roleEvidenceLabel(kind, language)}
+                                    </span>
+                                  ))}
+                                  {confidenceBucketForVoice(voice) === "low" ? (
                                     <span className="border border-amber-400/60 px-2 py-0.5 text-[10px] text-amber-200">
                                       {copy.review}
                                     </span>
@@ -804,6 +812,48 @@ function formatClock(seconds: number): string {
 
 function clamp(value: number, minimum: number, maximum: number): number {
   return Math.min(maximum, Math.max(minimum, value));
+}
+
+function confidenceBucketForVoice(
+  voice: AnalysisSession["voices"][number],
+): "high" | "medium" | "low" {
+  if (voice.autoRoleConfidenceBucket) return voice.autoRoleConfidenceBucket;
+  if (voice.autoRoleConfidence >= 0.75) return "high";
+  if (voice.autoRoleConfidence >= 0.45) return "medium";
+  return "low";
+}
+
+function roleEvidenceLabel(kind: string, language: AppLanguage): string {
+  const labels = language === "ja"
+    ? {
+        "channel-10": "Channel 10",
+        "dominant-program": "主要プログラム",
+        "track-name-hint": "トラック名ヒント",
+        "low-pitch-center": "低い音域",
+        "high-pitch-center": "高い音域",
+        "time-weighted-monophony": "単音傾向",
+        "time-weighted-polyphony": "和音傾向",
+        "sustained-duration": "持続音",
+        "stepwise-motion": "順次進行",
+        "percussion-soft-signature": "打楽器傾向",
+        "mixed-fallback": "混在の可能性",
+        "manual-override": "手動指定",
+      }
+    : {
+        "channel-10": "Channel 10",
+        "dominant-program": "Dominant program",
+        "track-name-hint": "Track-name hint",
+        "low-pitch-center": "Low register",
+        "high-pitch-center": "High register",
+        "time-weighted-monophony": "Monophonic pattern",
+        "time-weighted-polyphony": "Polyphonic pattern",
+        "sustained-duration": "Sustained duration",
+        "stepwise-motion": "Stepwise motion",
+        "percussion-soft-signature": "Percussion pattern",
+        "mixed-fallback": "Mixed fallback",
+        "manual-override": "Manual override",
+      };
+  return labels[kind as keyof typeof labels] ?? (language === "ja" ? "追加の根拠" : "Additional evidence");
 }
 
 function selectableRoleFor(
@@ -935,7 +985,7 @@ function workspaceCopy(language: AppLanguage) {
       muteVoice: (name: string) => `${name}をミュート`,
       unmuteVoice: (name: string) => `${name}のミュートを解除`,
       roleFor: (name: string) => `${name}の解析役割`,
-      roleConfidence: (confidence: number) => `推定 ${confidence}%`,
+      roleConfidence: (bucket: "high" | "medium" | "low") => `信頼度: ${bucket === "high" ? "High" : bucket === "medium" ? "Medium" : "Low"}`,
       notes: (count: number) => `${count} notes`,
       unknownRange: "音域不明",
       solo: "Solo",
@@ -943,7 +993,7 @@ function workspaceCopy(language: AppLanguage) {
       bass: "ベース",
       melodyWeak: "メロディ（弱い証拠）",
       exclude: "除外",
-      review: "要確認",
+      review: "\u8981\u78ba\u8a8d",
       programChanges: "音色変更あり",
       duplicateExcluded: "重複除外",
       warnings: "確認事項",
@@ -995,7 +1045,7 @@ function workspaceCopy(language: AppLanguage) {
     muteVoice: (name: string) => `Mute ${name}`,
     unmuteVoice: (name: string) => `Unmute ${name}`,
     roleFor: (name: string) => `Analysis role for ${name}`,
-    roleConfidence: (confidence: number) => `Inferred ${confidence}%`,
+    roleConfidence: (bucket: "high" | "medium" | "low") => `Confidence: ${bucket === "high" ? "High" : bucket === "medium" ? "Medium" : "Low"}`,
     notes: (count: number) => `${count} notes`,
     unknownRange: "range unknown",
     solo: "Solo",
