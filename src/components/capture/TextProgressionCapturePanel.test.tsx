@@ -3,6 +3,23 @@
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { describe, expect, it, vi } from "vitest";
+
+const pianoMonitor = vi.hoisted(() => {
+  const updateNotes = vi.fn();
+  const stop = vi.fn();
+  const dispose = vi.fn();
+  return {
+    updateNotes,
+    stop,
+    dispose,
+    create: vi.fn(async () => ({ updateNotes, stop, dispose })),
+  };
+});
+
+vi.mock("../../audio/midiInputPianoMonitor", () => ({
+  createMidiInputPianoMonitor: pianoMonitor.create,
+}));
+
 import { TextProgressionCapturePanel } from "./TextProgressionCapturePanel";
 import { defaultLiveMidiStore } from "../../liveMidi/defaultLiveMidiStore";
 
@@ -418,8 +435,12 @@ describe("TextProgressionCapturePanel", () => {
       });
     }
   });
-  it("confirms the exact keyboard notes that will overwrite the selected chord on save", async () => {
+  it("latches released keyboard notes, monitors them as piano, and confirms the exact saved voicing", async () => {
     vi.useFakeTimers();
+    pianoMonitor.create.mockClear();
+    pianoMonitor.updateNotes.mockClear();
+    pianoMonitor.stop.mockClear();
+    pianoMonitor.dispose.mockClear();
     const original = defaultLiveMidiStore.getState();
     const activate = vi.fn(async () => undefined);
     const deactivate = vi.fn(async () => undefined);
@@ -438,6 +459,8 @@ describe("TextProgressionCapturePanel", () => {
     try {
       await changeValue(input(harness), "| Cmaj7 |");
       await click(buttonByText(harness, "Capture from keyboard"));
+      await act(async () => { await Promise.resolve(); });
+      expect(pianoMonitor.create).toHaveBeenCalledOnce();
       await act(async () => {
         defaultLiveMidiStore.setState({
           notes: {
@@ -453,7 +476,34 @@ describe("TextProgressionCapturePanel", () => {
         });
       });
       await act(async () => vi.advanceTimersByTime(100));
-      await click(buttonByText(harness, "Use these notes for saving"));
+      expect(pianoMonitor.updateNotes).toHaveBeenCalledWith([48, 52, 55, 59]);
+
+      for (const remaining of [
+        [48, 52, 55],
+        [48, 52],
+        [48],
+        [],
+      ]) {
+        await act(async () => {
+          defaultLiveMidiStore.setState({
+            notes: {
+              held: new Map(remaining.map((note) => [
+                `0:${note}`,
+                { count: 1, velocity: 100, sinceMs: 0, lastEventMs: 0 },
+              ])),
+              sustained: new Set(),
+              pedalByChannel: new Map(),
+            },
+          });
+        });
+        await act(async () => vi.advanceTimersByTime(120));
+      }
+      expect(pianoMonitor.updateNotes).toHaveBeenLastCalledWith([]);
+      expect(harness.container.textContent).toContain("Captured candidate: C3  E3  G3  B3");
+      const confirmButton = buttonByText(harness, "Use these notes for saving");
+      expect(confirmButton.disabled).toBe(false);
+      await click(confirmButton);
+      expect(pianoMonitor.dispose).toHaveBeenCalled();
 
       const confirmation = harness.container.querySelector<HTMLElement>(
         '[data-testid="voicing-capture-confirmation"]',
