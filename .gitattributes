@@ -1,2 +1,5 @@
 # Keep Cargo manifests stable across Windows Tauri tooling and Git checkouts.
 src-tauri/Cargo.toml text eol=lf
+
+# Preserve the upstream CC BY 3.0 legal text byte-for-byte on Windows.
+src/audio/assets/salamander-piano/LICENSE.txt -text
