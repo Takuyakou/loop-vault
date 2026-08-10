@@ -356,6 +356,6 @@ function stableJson(value: unknown): string {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
-if (process.argv.includes("--run-cli")) {
+if (process.argv[1]?.endsWith("importSuppliedRoleFixturePack.ts") && process.argv.includes("--run-cli")) {
   await main();
 }
