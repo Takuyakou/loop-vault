@@ -3,10 +3,10 @@
 
 ## Status
 
-- **Status:** complete — automated gates and human product acceptance passed at `12e4920`; master merge authorized.
+- **Status:** complete — sampled-piano hotfix gates and human hardware acceptance passed at `bc388a0`; hotfix merge authorized.
 - **Active stage:** none
 - **Completed stages:** P5.20-00, P5.20-01, P5.20-02, P5.20-03
-- **Next action:** merge the accepted source branch to local master with `--no-ff`; do not push or start P5.21.
+- **Next action:** merge `fix/p520-midi-monitor-piano-timbre` to local master with `--no-ff`; do not push or start P5.21.
 
 ## Required Reading Order
 

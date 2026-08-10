@@ -7,8 +7,8 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "1cec3fa920daeb4fb4942dfbd4a273d5624a0bfb",
-  "lastVerifiedCommit": "12e49206451a7265080f76d2e5b30b549d635548",
-  "currentBranch": "feat/p520-text-progression-entry",
+  "lastVerifiedCommit": "bc388a0e916904905680ac3660eaf25bb2e60a42",
+  "currentBranch": "fix/p520-midi-monitor-piano-timbre",
   "requiredGates": {
     "P5.20-00": [
       "p520-00-phase-docs-validation",
@@ -95,6 +95,6 @@
     "p520-03-test-output-hygiene": "pass",
     "p520-03-diff-and-protected-surface": "pass"
   },
-  "nextAction": "P5.20 is complete and product accepted at 12e49206451a7265080f76d2e5b30b549d635548. Merge the accepted source branch to local master with --no-ff; do not push or start P5.21.",
+  "nextAction": "P5.20 sampled-piano hotfix is accepted at bc388a0e916904905680ac3660eaf25bb2e60a42. Merge fix/p520-midi-monitor-piano-timbre to local master with --no-ff; do not push or start P5.21.",
   "updatedAt": "2026-08-10"
 }
