@@ -19,3 +19,11 @@ Only the explicit `npm run test:e2e:update-baselines` command may update
 Playwright screenshot baselines. Review and stage any resulting baseline diff
 intentionally. The legacy `npm run test:e2e:update` command delegates to that
 explicit baseline-update command for compatibility.
+
+For the Settings baseline alone, use
+`npm run test:e2e:settings-visual:update-baseline`. It runs only the named
+Settings visual test and can therefore update only `settings.png`.
+
+All Playwright commands above build with fixed test-only build metadata
+(`visual-test`, `2026-01-01T00:00:00.000Z`). Production builds retain their
+normal commit and build-date metadata.

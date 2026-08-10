@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { shouldReusePlaywrightWebServer } from "./scripts/playwright-web-server.js";
 
 const baseURL = "http://127.0.0.1:4174";
 
@@ -63,7 +64,7 @@ export default defineConfig({
   webServer: {
     command: "npm run preview -- --host 127.0.0.1 --port 4174 --strictPort",
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: shouldReusePlaywrightWebServer(),
     timeout: 30_000,
   },
 });

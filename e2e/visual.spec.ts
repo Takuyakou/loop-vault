@@ -94,7 +94,7 @@ test.describe.serial("Phase 5.13 visual evidence", () => {
     await evidence(page, testInfo, "long-content");
   });
 
-  test("global Live MIDI, Settings, dialog and toast states", async ({ page }, testInfo) => {
+  test("global Live MIDI, dialog and toast states", async ({ page }, testInfo) => {
     test.setTimeout(60_000);
     await openApp(page);
     await createSavedProgression(page, "History visual fixture", {
@@ -109,11 +109,6 @@ test.describe.serial("Phase 5.13 visual evidence", () => {
     await evidence(page, testInfo, "history");
     await expect(page).toHaveScreenshot("history.png", { fullPage: true });
 
-    await page.getByRole("button", { name: /設定|Settings/ }).first().click();
-    await expect(page.getByRole("dialog", { name: /設定|Settings/ })).toBeVisible();
-    await evidence(page, testInfo, "settings");
-    await expect(page).toHaveScreenshot("settings.png", { fullPage: true });
-    await page.keyboard.press("Escape");
 
     await page.getByRole("button", { name: "Idea", exact: true }).click();
     await expect(page.getByRole("dialog", { name: /新しいIdea|Create idea/i })).toBeVisible();
@@ -128,6 +123,17 @@ test.describe.serial("Phase 5.13 visual evidence", () => {
     await expect(page.locator("[data-toast-tone]")).toBeVisible();
     await evidence(page, testInfo, "toast", { preserveToast: true });
   });
+});
+test("Settings visual baseline", async ({ page }, testInfo) => {
+  await openApp(page);
+  await createSavedProgression(page, "History visual fixture", {
+    fileName: "history-visual-fixture.mid",
+  });
+  await page.getByRole("button", { name: "History", exact: true }).click();
+  await page.getByRole("button", { name: /設定|Settings/ }).first().click();
+  await expect(page.getByRole("dialog", { name: /設定|Settings/ })).toBeVisible();
+  await evidence(page, testInfo, "settings");
+  await expect(page).toHaveScreenshot("settings.png", { fullPage: true });
 });
 
 async function evidence(
