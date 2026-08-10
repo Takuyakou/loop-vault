@@ -3,10 +3,10 @@
 
 ## Status
 
-- **Status:** blocked — P5.21-00 cannot lock the current baseline without the official corpus and approved, privacy-safe human Voice role ground truth.
-- **Active stage:** P5.21-00
-- **Completed stages:** none
-- **Next action:** supply or designate the approved fixture set and current official evaluation corpus; do not start P5.21-01 until the baseline lock passes.
+- **Status:** P5.21-00 complete — the current Role v1 baseline and approved synthetic Voice ground truth are locked.
+- **Active stage:** P5.21-01 — not started; explicit human authorization is required.
+- **Completed stages:** P5.21-00
+- **Next action:** await explicit authorization for P5.21-01. Do not start P5.21.1, P5.22, a merge, or a push.
 
 Git is the source of truth. The shared worktree initially contained untracked
 phase documents on another branch, so this phase uses its own clean worktree

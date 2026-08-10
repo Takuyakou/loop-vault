@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "phaseId": "5.21",
-  "status": "blocked",
-  "activeStage": "P5.21-00",
-  "completedStages": [],
-  "blocked": true,
-  "blockerReason": "The local review registry is generated, but 0 of 2,800 Voice expectedRole values have human confirmation. The official baseline and promotion lock must not run until that review is complete.",
+  "status": "in-progress",
+  "activeStage": "P5.21-01",
+  "completedStages": ["P5.21-00"],
+  "blocked": false,
+  "blockerReason": null,
   "baseCommit": "747c70cc4ef078c0a086f641436443e134115d08",
-  "lastVerifiedCommit": "7c0064c",
+  "lastVerifiedCommit": "252ac2b1d9a16eacf7cef1541e782b127d82e8f3",
   "currentBranch": "feat/p521-harmonic-core-role-v2",
   "requiredGates": {
     "P5.21-00": [
@@ -24,13 +24,13 @@
   "gateResults": {
     "p521-00-phase-docs-validation": "pass",
     "p521-00-repository-audit": "pass",
-    "p521-00-official-voice-baseline": "blocked",
-    "p521-00-human-role-ground-truth": "blocked",
-    "p521-00-promotion-gate-lock": "blocked",
+    "p521-00-official-voice-baseline": "pass",
+    "p521-00-human-role-ground-truth": "pass",
+    "p521-00-promotion-gate-lock": "pass",
     "p521-00-focused-role-tests": "pass",
     "p521-00-lint-typecheck": "pass",
     "p521-00-diff-and-protected-surface": "pass"
   },
-  "nextAction": "Open the generated local role-review.html, explicitly confirm or correct expectedRole values, and keep the downloaded reviewed registry local. Then rerun P5.21-00 only; do not start P5.21-01, P5.21.1, P5.22, merge, or push.",
-  "updatedAt": "2026-08-10T20:00:00+09:00"
+  "nextAction": "P5.21-00 is complete. Await explicit human authorization before starting P5.21-01; do not start P5.21.1, P5.22, merge, or push.",
+  "updatedAt": "2026-08-10T20:38:00+09:00"
 }
