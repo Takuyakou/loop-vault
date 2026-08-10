@@ -3,10 +3,10 @@
 
 ## Status
 
-- **Status:** in progress
-- **Active stage:** P5.20-01 (not started)
-- **Completed stages:** P5.20-00
-- **Next action:** await explicit human authorization before starting P5.20-01.
+- **Status:** in progress — automated release verification is complete; human product acceptance is pending.
+- **Active stage:** P5.20-03 (human product acceptance pending)
+- **Completed stages:** P5.20-00, P5.20-01, P5.20-02
+- **Next action:** perform the documented human product acceptance on the final release candidate; do not merge or push.
 
 ## Required Reading Order
 

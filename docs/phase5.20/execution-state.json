@@ -7,7 +7,7 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "1cec3fa920daeb4fb4942dfbd4a273d5624a0bfb",
-  "lastVerifiedCommit": "e523406a5ce8a3cf8e2c6b5df909f120732dfdbc",
+  "lastVerifiedCommit": "12795debf1b0a8a69a7faa4b54849b09cfeef6a0",
   "currentBranch": "feat/p520-text-progression-entry",
   "requiredGates": {
     "P5.20-00": [
@@ -83,8 +83,18 @@
     "p520-02-e2e-typecheck": "pass",
     "p520-02-lint": "pass",
     "p520-02-diff-check": "pass",
-    "p520-02-protected-surface": "pass"
+    "p520-02-protected-surface": "pass",
+    "p520-03-phase-docs-validation": "pass",
+    "p520-03-focused-regressions": "pass",
+    "p520-03-full-vitest": "pass",
+    "p520-03-rust": "pass",
+    "p520-03-playwright": "pass",
+    "p520-03-web-build": "pass",
+    "p520-03-tauri-build": "pass",
+    "p520-03-accessibility-responsive": "pass",
+    "p520-03-test-output-hygiene": "pass",
+    "p520-03-diff-and-protected-surface": "pass"
   },
-  "nextAction": "P5.20-02 is complete at e523406a5ce8a3cf8e2c6b5df909f120732dfdbc. Continue only with P5.20-03 Release Gate / E2E / Artifacts; do not merge or push. Human product acceptance has not yet been run.",
+  "nextAction": "P5.20-03 automated release gates pass at 12795debf1b0a8a69a7faa4b54849b09cfeef6a0. Continue only with documented human product acceptance; do not merge, push, or start P5.21.",
   "updatedAt": "2026-08-10"
 }
