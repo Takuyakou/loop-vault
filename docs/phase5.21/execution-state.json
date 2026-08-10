@@ -5,9 +5,9 @@
   "activeStage": "P5.21-00",
   "completedStages": [],
   "blocked": true,
-  "blockerReason": "The current official Voice evaluation corpus and approved, privacy-safe human Voice role ground truth remain unavailable in the clean P5.21 worktree. P5.21-00 cannot lock a valid baseline or promotion gate.",
+  "blockerReason": "The local review registry is generated, but 0 of 2,800 Voice expectedRole values have human confirmation. The official baseline and promotion lock must not run until that review is complete.",
   "baseCommit": "747c70cc4ef078c0a086f641436443e134115d08",
-  "lastVerifiedCommit": "2ec0f7a",
+  "lastVerifiedCommit": "7c0064c",
   "currentBranch": "feat/p521-harmonic-core-role-v2",
   "requiredGates": {
     "P5.21-00": [
@@ -31,6 +31,6 @@
     "p521-00-lint-typecheck": "pass",
     "p521-00-diff-and-protected-surface": "pass"
   },
-  "nextAction": "Run the local-only template helper for approved MIDI, fill expectedRole by human review, and supply or designate the existing approved manifests. Then rerun P5.21-00 only. Do not start P5.21-01, P5.21.1, P5.22, merge, or push.",
-  "updatedAt": "2026-08-10T19:00:00+09:00"
+  "nextAction": "Open the generated local role-review.html, explicitly confirm or correct expectedRole values, and keep the downloaded reviewed registry local. Then rerun P5.21-00 only; do not start P5.21-01, P5.21.1, P5.22, merge, or push.",
+  "updatedAt": "2026-08-10T20:00:00+09:00"
 }
