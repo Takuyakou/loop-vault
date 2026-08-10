@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "phaseId": "5.20",
-  "status": "in-progress",
-  "activeStage": "P5.20-03",
-  "completedStages": ["P5.20-00", "P5.20-01", "P5.20-02"],
+  "status": "completed",
+  "activeStage": null,
+  "completedStages": ["P5.20-00", "P5.20-01", "P5.20-02", "P5.20-03"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "1cec3fa920daeb4fb4942dfbd4a273d5624a0bfb",
@@ -95,6 +95,6 @@
     "p520-03-test-output-hygiene": "pass",
     "p520-03-diff-and-protected-surface": "pass"
   },
-  "nextAction": "P5.20-03 automated re-verification passes at 12e49206451a7265080f76d2e5b30b549d635548 after the MIDI voicing-capture latch and piano-monitor fix. Continue only with documented human product re-acceptance; do not merge, push, or start P5.21.",
+  "nextAction": "P5.20 is complete and product accepted at 12e49206451a7265080f76d2e5b30b549d635548. Merge the accepted source branch to local master with --no-ff; do not push or start P5.21.",
   "updatedAt": "2026-08-10"
 }

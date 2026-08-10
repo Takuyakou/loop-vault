@@ -3,10 +3,10 @@
 
 ## Status
 
-- **Status:** in progress — automated re-verification is complete at `12e4920`; human product re-acceptance is pending.
-- **Active stage:** P5.20-03 (MIDI voicing-capture human re-acceptance pending)
-- **Completed stages:** P5.20-00, P5.20-01, P5.20-02
-- **Next action:** perform the documented MIDI voicing-capture human re-acceptance on `12e4920`; do not merge, push, or start P5.21.
+- **Status:** complete — automated gates and human product acceptance passed at `12e4920`; master merge authorized.
+- **Active stage:** none
+- **Completed stages:** P5.20-00, P5.20-01, P5.20-02, P5.20-03
+- **Next action:** merge the accepted source branch to local master with `--no-ff`; do not push or start P5.21.
 
 ## Required Reading Order
 
