@@ -45,6 +45,14 @@ const scan: PreAnalysisSourceScan = {
   }],
 };
 
+function role(role: "bass" | "harmony" | "pad" | "melody" | "percussion" | "mixed") {
+  return {
+    role,
+    confidence: 0.99,
+    evidence: [{ kind: "program" as const, role, confidence: 0.9 }],
+  };
+}
+
 describe("P5.21 role ground-truth template", () => {
   it("creates an anonymous fixture id without deriving it from source bytes or labels", () => {
     expect(createAnonymousFixtureId(() => "12345678-1234-5678-9012-123456789012"))
@@ -55,7 +63,7 @@ describe("P5.21 role ground-truth template", () => {
     const template = createGroundTruthTemplate(
       scan,
       "fixture-123456781234",
-      new Map([["0:0", "bass" as const]]),
+      new Map([["0:0", role("bass")]]),
     );
     const serialized = JSON.stringify(template);
 
@@ -70,6 +78,8 @@ describe("P5.21 role ground-truth template", () => {
       noteCount: 24,
       pitchRange: { min: 36, max: 55 },
       currentAutomaticRole: "bass",
+      currentAutomaticRoleConfidence: 0.99,
+      suggestedExpectedRole: "bass",
       expectedRole: null,
     });
     expect(serialized).not.toContain("untrusted track label");
@@ -84,11 +94,29 @@ describe("P5.21 role ground-truth template", () => {
         voices: [{ ...scan.voices[0], autoRole: "harmony" }],
       },
       "fixture-123456781234",
-      new Map([["0:0", "pad" as const]]),
+      new Map([["0:0", role("pad")]]),
     );
 
     expect(template.voices[0].currentAutomaticRole).toBe("pad");
     expect(template.voices[0].expectedRole).toBeNull();
+  });
+
+  it("suggests ambiguous for a low-confidence mixed prediction without confirming it", () => {
+    const template = createGroundTruthTemplate(
+      scan,
+      "fixture-123456781234",
+      new Map([["0:0", {
+        role: "mixed" as const,
+        confidence: 0.2,
+        evidence: [{ kind: "measured" as const, role: "mixed" as const, confidence: 0.2 }],
+      }]]),
+    );
+
+    expect(template.voices[0]).toMatchObject({
+      currentAutomaticRole: "mixed",
+      suggestedExpectedRole: "ambiguous",
+      expectedRole: null,
+    });
   });
 
   it("rejects missing roles and fixture IDs that could carry user titles", () => {

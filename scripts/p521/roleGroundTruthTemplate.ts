@@ -12,6 +12,19 @@ export const expectedRoleOptions = [
 ] as const;
 
 export type ExpectedRole = (typeof expectedRoleOptions)[number];
+export type GroundTruthEvidenceKind = "channel" | "program" | "track-name-hint" | "measured";
+
+export interface GroundTruthRoleEvidence {
+  kind: GroundTruthEvidenceKind;
+  role: VoiceRole;
+  confidence: number | null;
+}
+
+export interface CurrentAutomaticRole {
+  role: VoiceRole;
+  confidence: number;
+  evidence: readonly GroundTruthRoleEvidence[];
+}
 
 export interface GroundTruthVoiceTemplate {
   voiceId: string;
@@ -29,8 +42,11 @@ export interface GroundTruthVoiceTemplate {
   pitchRange: { min: number; max: number } | null;
   averageDurationBeats: number | null;
   averagePolyphony: number | null;
-  /** Product classifier output only. It is never copied into expectedRole. */
+  /** Product classifier evidence only. It is never copied into expectedRole. */
   currentAutomaticRole: VoiceRole;
+  currentAutomaticRoleConfidence: number;
+  evidence: readonly GroundTruthRoleEvidence[];
+  suggestedExpectedRole: ExpectedRole;
   expectedRole: ExpectedRole | null;
   humanReviewNote: string;
 }
@@ -54,7 +70,7 @@ export function createAnonymousFixtureId(randomUuid: () => string): string {
 export function createGroundTruthTemplate(
   scan: PreAnalysisSourceScan,
   fixtureId: string,
-  automaticRoles: ReadonlyMap<string, VoiceRole>,
+  automaticRoles: ReadonlyMap<string, CurrentAutomaticRole>,
 ): GroundTruthTemplate {
   assertFixtureId(fixtureId);
   const voices = [...scan.voices]
@@ -75,7 +91,7 @@ export function createGroundTruthTemplate(
     },
     expectedRoleOptions,
     reviewPolicy: [
-      "Set expectedRole only after human review; currentAutomaticRole is diagnostic evidence, not ground truth.",
+      "Set expectedRole only after human review; currentAutomaticRole and suggestedExpectedRole are diagnostic evidence, not ground truth.",
       "Use ambiguous when a single Voice cannot be assigned one role; ambiguous rows are excluded from accuracy and correction-burden metrics.",
       "Do not add source paths, titles, raw MIDI, raw notes, recordings, or private labels to this template or to Git.",
     ],
@@ -87,7 +103,7 @@ function toVoiceTemplate(
   voice: PreAnalysisVoice,
   fixtureId: string,
   voiceIndex: number,
-  automaticRole: VoiceRole | undefined,
+  automaticRole: CurrentAutomaticRole | undefined,
 ): GroundTruthVoiceTemplate {
   if (!automaticRole) {
     throw new Error("missing product automatic role for a scanned Voice");
@@ -110,10 +126,17 @@ function toVoiceTemplate(
       : { min: voice.minPitch, max: voice.maxPitch },
     averageDurationBeats: voice.averageDurationBeats ?? null,
     averagePolyphony: voice.averagePolyphony ?? null,
-    currentAutomaticRole: automaticRole,
+    currentAutomaticRole: automaticRole.role,
+    currentAutomaticRoleConfidence: automaticRole.confidence,
+    evidence: automaticRole.evidence.map((entry) => ({ ...entry })),
+    suggestedExpectedRole: suggestedExpectedRole(automaticRole),
     expectedRole: null,
     humanReviewNote: "",
   };
+}
+
+function suggestedExpectedRole(value: CurrentAutomaticRole): ExpectedRole {
+  return value.role === "mixed" && value.confidence < 0.5 ? "ambiguous" : value.role;
 }
 
 function voiceKey(voice: Pick<PreAnalysisVoice, "trackIndex" | "channel">): string {

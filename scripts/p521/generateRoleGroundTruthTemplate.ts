@@ -1,16 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve, sep } from "node:path";
-import { normalizeNotes } from "../../src/domain/midi/normalize";
-import { parseMidi } from "../../src/domain/midi/parser";
-import { preScanMidiSource } from "../../src/domain/midi/preAnalysis/voiceExtraction";
-import type { VoiceRole } from "../../src/domain/midi/types";
-import { annotateVoiceRoles, buildVoiceFeatureInputs } from "../../src/domain/midi/voiceRoles";
-import { buildVoices } from "../../src/domain/midi/voices";
-import {
-  createAnonymousFixtureId,
-  createGroundTruthTemplate,
-} from "./roleGroundTruthTemplate";
+import { createAnonymousFixtureId } from "./roleGroundTruthTemplate";
+import { scanMidiForGroundTruth } from "./roleGroundTruthScan";
 
 interface CliOptions {
   midiPath: string;
@@ -27,11 +19,7 @@ async function main(): Promise<void> {
 
   try {
     const bytes = new Uint8Array(await readFile(resolve(options.midiPath)));
-    const scan = preScanMidiSource(bytes, {
-      sourceId: fixtureId,
-      displayName: "Local MIDI input",
-    });
-    const template = createGroundTruthTemplate(scan, fixtureId, currentAutomaticRoles(bytes));
+    const template = scanMidiForGroundTruth(bytes, fixtureId);
     await mkdir(outputDirectory, { recursive: true });
     await writeFile(
       resolve(outputDirectory, `${fixtureId}.ground-truth.json`),
@@ -77,16 +65,6 @@ export function resolveIgnoredOutputDirectory(value: string): string {
     return outputDirectory;
   }
   throw new Error("--out must remain inside .local-evaluation");
-}
-
-function currentAutomaticRoles(bytes: Uint8Array): ReadonlyMap<string, VoiceRole> {
-  const data = parseMidi(bytes);
-  const voices = buildVoices(data);
-  const annotated = annotateVoiceRoles(voices, buildVoiceFeatureInputs(voices, normalizeNotes(data)));
-  return new Map(annotated.map((voice) => [
-    `${voice.trackIndex}:${voice.channel}`,
-    voice.inferredRole,
-  ]));
 }
 
 void main();
