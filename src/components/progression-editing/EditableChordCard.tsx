@@ -14,6 +14,8 @@ interface EditableChordCardProps {
   openActionLabel?: string;
   onInsertAfter?: () => void;
   buttonRef?: (element: HTMLButtonElement | null) => void;
+  /** Text-entry drafts use confidence 0 as a no-analysis sentinel, not a review signal. */
+  showConfidenceReview?: boolean;
   language: AppLanguage;
 }
 
@@ -29,10 +31,12 @@ export function EditableChordCard({
   openActionLabel,
   onInsertAfter,
   buttonRef,
+  showConfidenceReview = true,
   language,
 }: EditableChordCardProps) {
   const text = progressionEditorCopy[language];
-  const needsReview = (slot.confidence ?? 1) < 0.7 || slot.warnings.length > 0;
+  const needsReview = showConfidenceReview
+    && ((slot.confidence ?? 1) < 0.7 || slot.warnings.length > 0);
   return (
     <div
       className={`group relative min-h-20 overflow-hidden border text-left transition-colors ${

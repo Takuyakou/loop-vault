@@ -8,6 +8,8 @@ import type {
 interface VoicingSourceChipProps {
   status: VoicingSourceStatus;
   reason?: VoicingSourceReason;
+  /** True when the input has no source MIDI by design, such as text entry. */
+  sourceAbsentByDesign?: boolean;
   language: AppLanguage;
   testId?: string;
 }
@@ -46,18 +48,23 @@ const copy = {
 export function VoicingSourceChip({
   status,
   reason,
+  sourceAbsentByDesign = false,
   language,
   testId = "voicing-source-chip",
 }: VoicingSourceChipProps) {
   const text = copy[language];
   const label = text[status];
-  const description = reason
-    ? text.descriptions[reason]
-    : status === "source"
-      ? text.descriptions["source-ready"]
-      : status === "generated"
-        ? text.descriptions["source-missing"]
-        : text.descriptions["source-low-confidence"];
+  const description = sourceAbsentByDesign
+    ? language === "ja"
+      ? "\u30c6\u30ad\u30b9\u30c8\u5165\u529b\u304b\u3089\u81ea\u52d5\u751f\u6210\u3057\u305f\u30dc\u30a4\u30b7\u30f3\u30b0\u3067\u3059\u3002"
+      : "Auto-generated from this text entry."
+    : reason
+      ? text.descriptions[reason]
+      : status === "source"
+        ? text.descriptions["source-ready"]
+        : status === "generated"
+          ? text.descriptions["source-missing"]
+          : text.descriptions["source-low-confidence"];
   const Icon = status === "source"
     ? FileMusic
     : status === "generated"

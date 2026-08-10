@@ -77,13 +77,15 @@ import { romanNumeralHint } from "../domain/harmony/romanNumerals";
 import { formatProgressionText } from "../domain/progressionText";
 import type {
   ChordSymbol,
+  ChordVoicingMemory,
   ChordTimelineItem,
   MidiProgressionAnalysis,
   ProgressionBlockCandidate,
   SongIdea,
   Status,
 } from "../domain/types";
-import type { AnalysisState, ProgressionSaveMetadata } from "../store/vaultStore";
+import type { AnalysisState, ProgressionSaveMetadata, TextProgressionIdeaDraft } from "../store/vaultStore";
+import type { TextProgressionEvent } from "../domain/textProgression";
 import { progressionEditorCopy, type AppCopy, type AppLanguage } from "../i18n";
 import { ProgressionGrid, timelineStartBeat } from "../ui/ProgressionGrid";
 import { chordProgressFraction } from "../ui/playbackProgress";
@@ -117,6 +119,19 @@ import { SongMiniMap } from "../components/SongMiniMap";
 import { EditableProgressionGrid } from "../components/progression-editing/EditableProgressionGrid";
 import { TimelineRangeSelector } from "../components/TimelineRangeSelector";
 import { ManualCandidateEditor, type ManualDraftSaveTarget } from "../components/ManualCandidateEditor";
+import {
+  CaptureInputModeSelector,
+  type CaptureInputMode,
+} from "../components/capture/CaptureInputModeSelector";
+import {
+  TextProgressionCapturePanel,
+  type TextProgressionConvertedDraft,
+} from "../components/capture/TextProgressionCapturePanel";
+import {
+  textProgressionDraftEditable,
+  textProgressionDraftSavePayload,
+  textProgressionDraftTimeline,
+} from "../domain/textProgressionDraft";
 import {
   applyEditableToDraft,
   draftEditable,
@@ -154,6 +169,12 @@ import { usePlaybackState } from "../hooks/usePlaybackState";
 import { Copy, FileMusic } from "lucide-react";
 import { Button, StatusMessage } from "../components/ui";
 
+interface TextDraftContext {
+  readonly initialTitle: string;
+  readonly bpm?: number;
+  readonly confirmedKey?: string;
+}
+
 interface CaptureViewProps {
   ideas: SongIdea[];
   analysis: AnalysisState;
@@ -179,6 +200,8 @@ interface CaptureViewProps {
     analysis?: MidiProgressionAnalysis,
     metadata?: ProgressionSaveMetadata,
   ) => boolean;
+  createIdeaFromTextProgression?: (draft: TextProgressionIdeaDraft) => string | undefined;
+  appendTextProgressionToIdea?: (ideaId: string, draft: TextProgressionIdeaDraft) => boolean;
   updateIdea: (id: string, changes: Partial<SongIdea>) => void;
   setToast: (toast: string) => void;
   copy: AppCopy;
@@ -196,6 +219,8 @@ export function CaptureView(props: CaptureViewProps) {
     clearAnalysis,
     createIdeaFromDraft,
     appendBlockToIdea,
+    createIdeaFromTextProgression,
+    appendTextProgressionToIdea,
     updateIdea,
     setToast,
     copy,
@@ -233,6 +258,8 @@ export function CaptureView(props: CaptureViewProps) {
   const [intakeError, setIntakeError] = useState<string>();
   const { sound: previewSound, setSound: setPreviewSound } = usePreviewSound();
   const [activeDraft, setActiveDraft] = useState<ManualCandidateDraft | null>(null);
+  const [captureInputMode, setCaptureInputMode] = useState<CaptureInputMode>("midi");
+  const [textDraftContext, setTextDraftContext] = useState<TextDraftContext>();
   const [analysisProgress, setAnalysisProgress] = useState<CaptureAnalysisProgressStage>();
   const [rangeSelectorRequest, setRangeSelectorRequest] = useState(0);
   const candidateHeaderFocusIdRef = useRef<string>();
@@ -275,7 +302,7 @@ export function CaptureView(props: CaptureViewProps) {
     const changingDraft = activeDraft !== null
       && draftHasMusicEdits(activeDraft)
       && (
-        activeDraft.source.type === "manual-range"
+        activeDraft.source.type !== "automatic-candidate"
         || activeDraft.source.candidateId !== candidateId
       );
     const rangeOnlyDraftOwnsExpandedCandidate = activeDraft?.source.type === "automatic-candidate"
@@ -615,12 +642,16 @@ export function CaptureView(props: CaptureViewProps) {
         void previewSourceDraft(keyboardDraft);
       } else if (key === "b") {
         event.preventDefault();
-        void previewManualDraft(keyboardDraft);
+        if (keyboardDraft.source.type === "text-progression") {
+          void previewTextProgressionDraft(keyboardDraft);
+        } else {
+          void previewManualDraft(keyboardDraft);
+        }
       }
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [activeDraft, controller, previewSound, result?.bpm, result?.timeSignature]);
+  }, [activeDraft, controller, previewSound, result?.bpm, result?.timeSignature, textDraftContext?.bpm]);
 
   function saveNew(
     candidate: ProgressionBlockCandidate,
@@ -876,6 +907,231 @@ export function CaptureView(props: CaptureViewProps) {
     }
   }
 
+  const stopTextPlayback = useCallback(() => {
+    stopCapturePlayback(controller);
+  }, [controller]);
+
+  function changeCaptureInputMode(nextMode: CaptureInputMode) {
+    if (nextMode === captureInputMode || activeDraft !== null) return;
+    stopTextPlayback();
+    setCaptureInputMode(nextMode);
+  }
+
+  function openTextProgressionDraft(converted: TextProgressionConvertedDraft) {
+    stopTextPlayback();
+    setActiveDraft(converted.draft);
+    setTextDraftContext({
+      initialTitle: converted.title,
+      ...(converted.bpm === undefined ? {} : { bpm: converted.bpm }),
+      ...(converted.confirmedKey === undefined ? {} : { confirmedKey: converted.confirmedKey }),
+    });
+  }
+
+  function textDraftSavePayload(
+    draft: ManualCandidateDraft,
+    title: string,
+    nextAction: string,
+    userVerified: boolean,
+  ): TextProgressionIdeaDraft | undefined {
+    if (draft.source.type !== "text-progression" || !textDraftContext) return undefined;
+    return textProgressionDraftSavePayload(draft, {
+      title,
+      nextAction,
+      userVerified,
+      ...(textDraftContext.bpm === undefined ? {} : { bpm: textDraftContext.bpm }),
+      ...(textDraftContext.confirmedKey === undefined ? {} : { confirmedKey: textDraftContext.confirmedKey }),
+    });
+  }
+
+  function saveTextProgressionDraft(
+    draft: ManualCandidateDraft,
+    title: string,
+    nextAction: string,
+    userVerified: boolean,
+  ): boolean {
+    const payload = textDraftSavePayload(draft, title, nextAction, userVerified);
+    if (!payload || !createIdeaFromTextProgression) {
+      setToast(copy.capture.createFailed);
+      return false;
+    }
+    const id = createIdeaFromTextProgression(payload);
+    if (!id) {
+      setToast(copy.capture.createFailed);
+      return false;
+    }
+    setToast(copy.capture.savedToVault);
+    return true;
+  }
+
+  function appendTextProgressionDraft(
+    draft: ManualCandidateDraft,
+    ideaId: string,
+    userVerified: boolean,
+  ): boolean {
+    const payload = textDraftSavePayload(
+      draft,
+      textDraftContext?.initialTitle ?? "Text progression",
+      copy.capture.defaultNextAction,
+      userVerified,
+    );
+    if (!payload || !ideaId || !appendTextProgressionToIdea) {
+      setToast(ideaId ? copy.capture.appendFailed : copy.capture.chooseIdeaFirst);
+      return false;
+    }
+    const appended = appendTextProgressionToIdea(ideaId, payload);
+    setToast(appended ? copy.toast.blockSaved : copy.capture.appendFailed);
+    return appended;
+  }
+
+  async function previewTextProgressionEvent(
+    event: TextProgressionEvent,
+    memory: ChordVoicingMemory | undefined,
+    bpm: number,
+  ) {
+    try {
+      const eventId = `text-card:${event.bar}:${event.startBeat}:${event.durationBeats}:${event.canonical}`;
+      const notes = resolveVoicingForUse(
+        event.chord,
+        memory,
+        voiceChordForPreview(event.chord).notes,
+      ).midiNotes;
+      // A card audition is a one-event detached timeline. This makes the
+      // explicit text BPM and 4/4 meter part of the controller request rather
+      // than merely UI metadata, and avoids waiting through earlier text bars.
+      await controller.toggle(
+        { kind: "capture", id: `capture-${eventId}` },
+        {
+          type: "timeline",
+          timeline: [{
+            bar: 1,
+            beat: 1,
+            durationBeats: event.durationBeats,
+            chord: event.chord,
+            confidence: 0,
+            alternatives: [],
+            warnings: [],
+            eventId,
+          }],
+          bpm,
+          sound: previewSound,
+          beatsPerBar: 4,
+          explicitMidiNotesByEventId: { [eventId]: notes },
+        },
+      );
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
+    }
+  }
+
+  async function previewTextProgressionDraft(draft: ManualCandidateDraft) {
+    if (draft.source.type !== "text-progression") return;
+    if (textDraftContext?.bpm === undefined) {
+      setToast(language === "ja"
+        ? "\u30c6\u30ad\u30b9\u30c8\u9032\u884c\u306e\u518d\u751f\u306b\u306f30\u301c240 BPM\u3092\u8a2d\u5b9a\u3057\u3066\u304f\u3060\u3055\u3044\u3002"
+        : "Set an explicit BPM from 30 to 240 before previewing this text progression.");
+      return;
+    }
+    try {
+      const timeline = textProgressionDraftTimeline(draft).map((item, index) => ({
+        ...item,
+        eventId: `text-draft:${draft.draftId}:${index}`,
+      }));
+      const explicitMidiNotesByEventId = Object.fromEntries(timeline.map((item) => [
+        item.eventId!,
+        resolveVoicingForUse(
+          item.chord,
+          item.voicingMemory,
+          voiceChordForPreview(item.chord).notes,
+        ).midiNotes,
+      ]));
+      await controller.toggle(
+        { kind: "capture", id: `capture-text-draft:${draft.draftId}` },
+        {
+          type: "timeline",
+          timeline,
+          bpm: textDraftContext.bpm,
+          sound: previewSound,
+          beatsPerBar: 4,
+          explicitMidiNotesByEventId,
+        },
+      );
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed);
+    }
+  }
+
+  if (captureInputMode === "text") {
+    const textDraft = activeDraft?.source.type === "text-progression" ? activeDraft : null;
+    return (
+      <div className="py-5" data-capture-view-root data-capture-stage="text">
+        <div className="lv-capture-content grid gap-5">
+          <section className="flex flex-wrap items-center justify-between gap-3 border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-4">
+            <CaptureInputModeSelector
+              value={captureInputMode}
+              language={language}
+              disabled={textDraft !== null}
+              onChange={changeCaptureInputMode}
+            />
+            <PreviewSoundSelector
+              value={previewSound}
+              onChange={(sound) => {
+                stopTextPlayback();
+                setPreviewSound(sound);
+              }}
+              copy={copy}
+            />
+          </section>
+          <TextProgressionCapturePanel
+            language={language}
+            showRomanNumerals={showRomanNumerals}
+            draftActive={textDraft !== null}
+            onConvert={openTextProgressionDraft}
+            onPreview={(event, memory, bpm) => void previewTextProgressionEvent(event, memory, bpm)}
+            onStop={stopTextPlayback}
+          />
+          {textDraft ? (
+            <ManualCandidateEditor
+              key={textDraft.draftId}
+              draft={textDraft}
+              timeline={textProgressionDraftTimeline(textDraft)}
+              totalBars={textDraft.lengthBars}
+              copy={copy}
+              language={language}
+              {...(textDraftContext?.confirmedKey ? { keySignature: textDraftContext.confirmedKey } : {})}
+              allowRangeAdjustment={false}
+              allowStructuralEdits={false}
+              showConfidenceReview={false}
+              createEditable={textProgressionDraftEditable}
+              save={{
+                initialTitle: textDraftContext?.initialTitle ?? "Text progression",
+                ideas,
+                defaultNextAction: copy.capture.defaultNextAction,
+                onCreate: saveTextProgressionDraft,
+                onAppend: appendTextProgressionDraft,
+              }}
+              onPreview={(draft) => void previewTextProgressionDraft(draft)}
+              onChange={setActiveDraft}
+              onSave={() => {
+                stopTextPlayback();
+                setActiveDraft(null);
+                setTextDraftContext(undefined);
+              }}
+              onDiscard={() => {
+                stopTextPlayback();
+                setActiveDraft(null);
+                setTextDraftContext(undefined);
+              }}
+              onReselect={() => {
+                stopTextPlayback();
+                setActiveDraft(null);
+                setTextDraftContext(undefined);
+              }}
+            />
+          ) : null}
+        </div>
+      </div>
+    );
+  }
   if (!result) {
     if (preAnalysisSession) {
       const master = preAnalysisSession.sources.find((source) =>
@@ -887,6 +1143,14 @@ export function CaptureView(props: CaptureViewProps) {
           data-capture-midi-drop-zone
           {...dropHandlers}
         >
+          <div className="mb-4">
+            <CaptureInputModeSelector
+              value={captureInputMode}
+              language={language}
+              disabled={activeDraft !== null}
+              onChange={changeCaptureInputMode}
+            />
+          </div>
           {isDraggingMidi ? <DropOverlay copy={copy} /> : null}
           <PreAnalysisWorkspace
             session={preAnalysisSession}
@@ -932,6 +1196,14 @@ export function CaptureView(props: CaptureViewProps) {
         data-capture-midi-drop-zone
         {...dropHandlers}
       >
+        <div className="mb-4">
+          <CaptureInputModeSelector
+            value={captureInputMode}
+            language={language}
+            disabled={activeDraft !== null}
+            onChange={changeCaptureInputMode}
+          />
+        </div>
         <CaptureEmptyState
           status={intakeError ? "error" : analysis.status}
           error={intakeError ?? analysis.error}
@@ -1155,6 +1427,14 @@ export function CaptureView(props: CaptureViewProps) {
       {analysisProgress ? (
         <CaptureAnalysisProgress stage={analysisProgress} copy={copy} />
       ) : null}
+      <div className="mb-4">
+        <CaptureInputModeSelector
+          value={captureInputMode}
+          language={language}
+          disabled={activeDraft !== null}
+          onChange={changeCaptureInputMode}
+        />
+      </div>
       <div
         className="lv-capture-content grid gap-5 py-5"
         data-capture-midi-drop-zone

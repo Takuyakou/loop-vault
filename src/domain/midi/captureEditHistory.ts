@@ -95,6 +95,7 @@ export function jumpCaptureDraftHistory(
 export function captureOperationLabel(operation: ManualRepairOperation): string {
   switch (operation.type) {
     case "create-from-range": return "Create from range";
+    case "create-from-text": return "Create from text entry";
     case "edit-progression": return "Edit progression";
     case "extend-start": return "Extend range start";
     case "extend-end": return "Extend range end";

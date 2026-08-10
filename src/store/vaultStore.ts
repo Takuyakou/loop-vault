@@ -16,7 +16,10 @@ import {
   normalizeNotes,
   parseMidi,
 } from "../domain/midi";
-import { attachSourceVoicing, attachSourceVoicings } from "../domain/voicing";
+import { confirmedTextProgressionKeyState } from "../domain/textProgression";
+import { isTextProgressionStyleSnapshot } from "../domain/textProgressionVoicing";
+import { parseChordLabel } from "../domain/chords";
+import { attachSourceVoicing, attachSourceVoicings, isValidVoicingSnapshot, voicingCompatibility } from "../domain/voicing";
 import {
   transition,
   type TransitionOptions,
@@ -94,6 +97,23 @@ export interface SongIdeaDraft {
   progressionMetadata?: ProgressionSaveMetadata;
 }
 
+/**
+ * Text Progression Entry save data. It is intentionally distinct from MIDI
+ * analysis drafts: there is no source, analyzer result, asset, path, filename,
+ * fingerprint, or candidate-origin field to accidentally persist.
+ */
+export interface TextProgressionIdeaDraft {
+  title: string;
+  nextAction?: string;
+  chords: readonly ChordTimelineItem[];
+  summaryText: string;
+  userEdited?: boolean;
+  userVerified?: boolean;
+  /** Present only when explicitly supplied and valid. */
+  bpm?: number;
+  /** Present only when explicitly confirmed by the Text Progression UI. */
+  confirmedKey?: string;
+}
 export interface ProgressionSaveMetadata {
   sourcePath?: string;
   userEdited?: boolean;
@@ -117,7 +137,9 @@ export interface VaultStoreState {
   initialize: () => Promise<void>;
   createIdea: (title: string, status?: Status) => string | undefined;
   createIdeaFromDraft: (draft: SongIdeaDraft) => string | undefined;
+  createIdeaFromTextProgression: (draft: TextProgressionIdeaDraft) => string | undefined;
   updateIdea: (id: string, changes: Partial<SongIdea>) => void;
+  appendTextProgressionToIdea: (ideaId: string, draft: TextProgressionIdeaDraft) => boolean;
   deleteIdea: (deletion: PendingIdeaDeletion) => boolean;
   appendBlockToIdea: (
     ideaId: string,
@@ -355,6 +377,54 @@ export function createVaultStore(
         return applied ? id : undefined;
       },
 
+      createIdeaFromTextProgression(draft) {
+        const normalized = normalizeTextProgressionIdeaDraft(draft);
+        if (!normalized) return undefined;
+        const createdAt = now().toISOString();
+        const id = idFactory();
+        const block = createSavedTextProgressionBlock(normalized, { idFactory, createdAt });
+        const idea: SongIdea = {
+          id,
+          title: normalized.title,
+          ...(normalized.bpm === undefined ? {} : { bpm: normalized.bpm }),
+          ...(normalized.confirmedKey === undefined ? {} : { key: normalized.confirmedKey }),
+          moods: [],
+          status: "idea",
+          nextAction: { text: normalized.nextAction, updatedAt: createdAt },
+          chordMemo: normalized.summaryText,
+          references: [],
+          assets: [],
+          progressionBlocks: [block],
+          statusHistory: [{ status: "idea", at: createdAt }],
+          createdAt,
+          updatedAt: createdAt,
+        };
+        const applied = applyVaultChange((vault) => ({
+          ...vault,
+          ideas: [...vault.ideas, idea],
+        }));
+        return applied ? id : undefined;
+      },
+
+      appendTextProgressionToIdea(ideaId, draft) {
+        const normalized = normalizeTextProgressionIdeaDraft(draft);
+        if (!normalized || !get().ideas.some((idea) => idea.id === ideaId)) return false;
+        const updatedAt = now().toISOString();
+        const block = createSavedTextProgressionBlock(normalized, { idFactory, createdAt: updatedAt });
+        return applyVaultChange((vault) => ({
+          ...vault,
+          ideas: vault.ideas.map((idea) => idea.id === ideaId
+            ? {
+                ...idea,
+                progressionBlocks: [...(idea.progressionBlocks ?? []), block],
+                ...(idea.bpm === undefined && normalized.bpm !== undefined ? { bpm: normalized.bpm } : {}),
+                ...(idea.key === undefined && normalized.confirmedKey !== undefined ? { key: normalized.confirmedKey } : {}),
+                chordMemo: idea.chordMemo.trim() ? idea.chordMemo : normalized.summaryText,
+                updatedAt,
+              }
+            : idea),
+        }));
+      },
       updateIdea(id, changes) {
         const updatedAt = now().toISOString();
         applyVaultChange((vault) => ({
@@ -876,6 +946,193 @@ function currentVault(state: VaultStoreState): VaultFile {
   };
 }
 
+function normalizeTextProgressionIdeaDraft(
+  draft: TextProgressionIdeaDraft,
+): (TextProgressionIdeaDraft & {
+  title: string;
+  summaryText: string;
+  nextAction: string;
+  chords: ChordTimelineItem[];
+  bpm?: number;
+  confirmedKey?: string;
+}) | undefined {
+  const title = draft.title.trim().slice(0, 80);
+  if (!title || (draft.bpm !== undefined && !isValidTextProgressionBpm(draft.bpm))) {
+    return undefined;
+  }
+  const suppliedKey = draft.confirmedKey?.trim();
+  const keyState = confirmedTextProgressionKeyState(suppliedKey);
+  if (suppliedKey && keyState.kind !== "confirmed") return undefined;
+
+  // Deliberately discard every incoming MIDI-like field. The public adapter is
+  // fail-closed: only text-safe timing, chord identity, and Live MIDI practice
+  // overrides are copied into the normal SavedProgressionBlock shape.
+  const convertedChords = draft.chords.map(textProgressionChordForSave);
+  if (convertedChords.some((chord) => chord === undefined)) return undefined;
+  const chords = convertedChords.filter((chord): chord is ChordTimelineItem => chord !== undefined);
+  if (chords.length !== draft.chords.length || !isSaveSafeTextProgressionTimeline(chords)) return undefined;
+
+  return {
+    ...draft,
+    title,
+    summaryText: textProgressionSummary(chords),
+    nextAction: draft.nextAction ?? "",
+    chords,
+    ...(draft.bpm === undefined ? {} : { bpm: draft.bpm }),
+    ...(keyState.kind === "confirmed" ? { confirmedKey: keyState.key } : {}),
+  };
+}
+
+function createSavedTextProgressionBlock(
+  draft: TextProgressionIdeaDraft & {
+    summaryText: string;
+    chords: ChordTimelineItem[];
+    bpm?: number;
+    confirmedKey?: string;
+  },
+  context: { idFactory: () => string; createdAt: string },
+): SavedProgressionBlock {
+  const start = textAbsoluteBeat(draft.chords[0]!);
+  const end = textAbsoluteBeat(draft.chords[draft.chords.length - 1]!)
+    + draft.chords[draft.chords.length - 1]!.durationBeats;
+  const startBar = Math.floor(start / 4) + 1;
+  const endBar = Math.ceil(end / 4);
+  return {
+    id: context.idFactory(),
+    startBar,
+    endBar,
+    lengthBars: endBar - startBar + 1,
+    summaryText: draft.summaryText,
+    chords: persistChordEvents(draft.chords, context.idFactory),
+    ...(draft.confirmedKey === undefined ? {} : { detectedKey: draft.confirmedKey }),
+    ...(draft.bpm === undefined ? {} : { bpm: draft.bpm }),
+    timeSignature: "4/4",
+    tags: [],
+    capturedAt: context.createdAt,
+    // Required existing field; this is true text-parser provenance, not a MIDI
+    // analyzer, source-analyzer, or source-weight claim.
+    analyzerVersion: "text-progression-v1",
+    userEdited: draft.userEdited ?? false,
+    userVerified: draft.userVerified ?? false,
+  };
+}
+
+function textProgressionChordForSave(item: ChordTimelineItem): ChordTimelineItem | undefined {
+  const canonical = parseChordLabel(item.chord.label);
+  // Validate the supplied structural fields before canonicalising the label, so
+  // a direct caller cannot smuggle a mismatched chord object through this API.
+  if (!canonical || !sameTextProgressionChord(canonical, item.chord)) return undefined;
+  const memory = textPracticeVoicingForSave(item.voicingMemory, canonical);
+  return {
+    bar: item.bar,
+    beat: item.beat,
+    durationBeats: item.durationBeats,
+    chord: { ...canonical, tensions: [...canonical.tensions] },
+    // Text entry never supplies MIDI analyzer confidence or alternatives.
+    confidence: 0,
+    alternatives: [],
+    warnings: [],
+    ...(memory === undefined ? {} : { voicingMemory: memory }),
+  };
+}
+
+/** Only compatible Live MIDI or verified Text style snapshots can cross the text save boundary. */
+function textPracticeVoicingForSave(
+  memory: ChordTimelineItem["voicingMemory"],
+  chord: ChordTimelineItem["chord"],
+): ChordTimelineItem["voicingMemory"] | undefined {
+  const practice = memory?.practiceVoicingOverride;
+  if (
+    !practice
+    || (
+      practice.source !== "live-played"
+      && !isTextProgressionStyleSnapshot(practice, chord)
+    )
+    || practice.representation !== "simultaneous-voicing"
+    || !isValidVoicingSnapshot(practice)
+    || voicingCompatibility(practice, chord) !== "compatible"
+  ) return undefined;
+  return {
+    practiceVoicingOverride: {
+      ...practice,
+      midiNotes: [...practice.midiNotes],
+    },
+  };
+}
+/**
+ * The public store adapter revalidates the parser's save-safe boundary:
+ * contiguous exact 4/4 bars within 1..12, 48 chords at most, no gaps or
+ * overlaps, and chord identities accepted by the established parser.
+ */
+function isSaveSafeTextProgressionTimeline(chords: readonly ChordTimelineItem[]): boolean {
+  if (chords.length < 1 || chords.length > 48) return false;
+  const eventsByBar = new Map<number, ChordTimelineItem[]>();
+  let cursor: number | undefined;
+  for (const chord of chords) {
+    if (!isValidTextProgressionChord(chord)) return false;
+    const parsed = parseChordLabel(chord.chord.label);
+    if (!parsed || !sameTextProgressionChord(parsed, chord.chord)) return false;
+    const start = textAbsoluteBeat(chord);
+    const end = start + chord.durationBeats;
+    if (start < 0 || end > 48 || start % 4 + chord.durationBeats > 4) return false;
+    if (cursor === undefined) {
+      if (start !== 0) return false;
+    } else if (start !== cursor) {
+      return false;
+    }
+    cursor = end;
+    const events = eventsByBar.get(chord.bar) ?? [];
+    events.push(chord);
+    eventsByBar.set(chord.bar, events);
+  }
+  if (cursor === undefined || cursor % 4 !== 0) return false;
+  return [...eventsByBar.values()].every((events) => {
+    const duration = events.length === 1 ? 4 : events.length === 2 ? 2 : events.length === 4 ? 1 : undefined;
+    return duration !== undefined && events.every((event) => event.durationBeats === duration);
+  });
+}
+
+function isValidTextProgressionChord(item: ChordTimelineItem): boolean {
+  return Number.isInteger(item.bar)
+    && item.bar >= 1
+    && item.bar <= 12
+    && Number.isInteger(item.beat)
+    && item.beat >= 1
+    && item.beat <= 4
+    && Number.isInteger(item.durationBeats)
+    && (item.durationBeats === 1 || item.durationBeats === 2 || item.durationBeats === 4);
+}
+
+function sameTextProgressionChord(
+  parsed: NonNullable<ReturnType<typeof parseChordLabel>>,
+  supplied: ChordTimelineItem["chord"],
+): boolean {
+  return parsed.root === supplied.root
+    && parsed.quality === supplied.quality
+    && parsed.bass === supplied.bass
+    && parsed.tensions.length === supplied.tensions.length
+    && parsed.tensions.every((tension, index) => tension === supplied.tensions[index]);
+}
+
+function textProgressionSummary(chords: readonly ChordTimelineItem[]): string {
+  const firstBar = chords[0]!.bar;
+  const last = chords[chords.length - 1]!;
+  const lastBar = Math.ceil((textAbsoluteBeat(last) + last.durationBeats) / 4);
+  const cells: string[] = [];
+  for (let bar = firstBar; bar <= lastBar; bar += 1) {
+    const labels = chords.filter((chord) => chord.bar === bar).map((chord) => chord.chord.label);
+    cells.push(labels.join(" / "));
+  }
+  return `| ${cells.join(" | ")} |`;
+}
+
+function textAbsoluteBeat(item: Pick<ChordTimelineItem, "bar" | "beat">): number {
+  return (item.bar - 1) * 4 + item.beat - 1;
+}
+
+function isValidTextProgressionBpm(value: number | undefined): value is number {
+  return value !== undefined && Number.isFinite(value) && value >= 30 && value <= 240;
+}
 function toSavedProgressionBlock(
   block: SavedProgressionBlock | ProgressionBlockCandidate,
   analysis: MidiProgressionAnalysis | undefined,

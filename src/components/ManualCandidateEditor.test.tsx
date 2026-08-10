@@ -3,8 +3,15 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { describe, expect, it, vi } from "vitest";
-import { appCopy } from "../i18n";
+import { appCopy, progressionEditorCopy, quickChordEditorCopy } from "../i18n";
 import { labelFromSymbol, makeChordSymbol } from "../domain/chords";
+import { parseTextProgression } from "../domain/textProgression";
+import {
+  createTextProgressionDraft,
+  textProgressionDraftEditable,
+  textProgressionDraftTimeline,
+} from "../domain/textProgressionDraft";
+import type { EditableProgression } from "../domain/progressionEditing";
 import type { ChordTimelineItem } from "../domain/types";
 import { createManualDraft, type ManualCandidateDraft } from "../domain/midi/manualDraft";
 import { ManualCandidateEditor } from "./ManualCandidateEditor";
@@ -44,6 +51,15 @@ function draftOf(startBar: number, endBar: number): ManualCandidateDraft {
   });
 }
 
+interface EditorOptions {
+  timeline?: readonly ChordTimelineItem[];
+  totalBars?: number;
+  allowRangeAdjustment?: boolean;
+  allowStructuralEdits?: boolean;
+  showConfidenceReview?: boolean;
+  createEditable?: (draft: ManualCandidateDraft) => EditableProgression;
+}
+
 interface Harness {
   container: HTMLElement;
   root: Root;
@@ -54,7 +70,7 @@ interface Harness {
   render(draft: ManualCandidateDraft): Promise<void>;
 }
 
-async function mount(draft: ManualCandidateDraft): Promise<Harness> {
+async function mount(draft: ManualCandidateDraft, options: EditorOptions = {}): Promise<Harness> {
   const container = document.createElement("div");
   document.body.append(container);
   const root = createRoot(container);
@@ -68,10 +84,14 @@ async function mount(draft: ManualCandidateDraft): Promise<Harness> {
       await act(async () => root.render(
         <ManualCandidateEditor
           draft={next}
-          timeline={timeline}
-          totalBars={TOTAL_BARS}
+          timeline={options.timeline ?? timeline}
+          totalBars={options.totalBars ?? TOTAL_BARS}
           copy={appCopy.ja}
           language="ja"
+          {...(options.allowRangeAdjustment === undefined ? {} : { allowRangeAdjustment: options.allowRangeAdjustment })}
+          {...(options.allowStructuralEdits === undefined ? {} : { allowStructuralEdits: options.allowStructuralEdits })}
+          {...(options.showConfidenceReview === undefined ? {} : { showConfidenceReview: options.showConfidenceReview })}
+          {...(options.createEditable === undefined ? {} : { createEditable: options.createEditable })}
           onChange={onChange}
           onDiscard={onDiscard}
           onReselect={onReselect}
@@ -106,6 +126,19 @@ describe("opening a draft in the editor", () => {
       .toBe("自動候補から作成");
   });
 
+  it("labels a text-derived Draft without claiming a manual MIDI range", async () => {
+    const draft: ManualCandidateDraft = {
+      ...draftOf(14, 17),
+      source: { type: "text-progression" },
+    };
+    const harness = await mount(draft);
+
+    expect(harness.container.querySelector('[data-testid="draft-source"]')?.textContent)
+      .toBe("\u30c6\u30ad\u30b9\u30c8\u5165\u529b\u304b\u3089\u4f5c\u6210");
+    const sourceChip = harness.container.querySelector<HTMLElement>('[data-testid="capture-voicing-source-chip"]');
+    expect(sourceChip?.getAttribute("title")).toContain("\u30c6\u30ad\u30b9\u30c8\u5165\u529b");
+    expect(sourceChip?.getAttribute("title")).not.toContain("MIDI");
+  });
   it("shows the range, the length and that it is unsaved", async () => {
     const harness = await mount(draftOf(14, 32));
 
@@ -330,5 +363,53 @@ describe("validation before saving", () => {
     await click(action(harness, "discard"));
 
     expect(harness.onDiscard).toHaveBeenCalled();
+  });
+});
+describe("text-derived draft restrictions", () => {
+  it("hides structural actions, opens the quick replacement editor, and keeps a valid replacement saveable", async () => {
+    const result = parseTextProgression("| Cmaj7 Dm7 Em7 Fmaj7 |");
+    const draft = createTextProgressionDraft({ result, draftId: "text-grammar-lock" });
+    const harness = await mount(draft, {
+      timeline: textProgressionDraftTimeline(draft),
+      totalBars: draft.lengthBars,
+      allowRangeAdjustment: false,
+      allowStructuralEdits: false,
+      showConfidenceReview: false,
+      createEditable: textProgressionDraftEditable,
+    });
+
+    for (const name of ["split", "merge", "insert", "delete"]) {
+      expect(harness.container.querySelector(`button[data-action="${name}"]`)).toBeNull();
+    }
+    expect(harness.container.querySelectorAll("button[data-nudge]")).toHaveLength(0);
+    expect(harness.container.querySelector("[data-draft-boundary-handles]")).toBeNull();
+    expect(harness.container.querySelector("[data-chord-card]")?.textContent)
+      .not.toContain(progressionEditorCopy.ja.review);
+
+    const quickEdit = harness.container.querySelector<HTMLButtonElement>(
+      `button[aria-label="${progressionEditorCopy.ja.quickEdit}"]`,
+    );
+    if (!quickEdit) throw new Error("Expected a Quick Editor trigger for text Draft replacement.");
+    await click(quickEdit);
+    const quickEditor = document.querySelector<HTMLElement>("[data-quick-chord-editor]");
+    if (!quickEditor) throw new Error("Expected the Quick Editor to open for text Draft replacement.");
+    const nextRoot = quickEditor.querySelector<HTMLButtonElement>(
+      `button[aria-label="${quickChordEditorCopy.ja.nextRoot}"]`,
+    );
+    if (!nextRoot) throw new Error("Expected the Quick Editor root control.");
+    await click(nextRoot);
+    const apply = quickEditor.querySelector<HTMLButtonElement>("button.lv-button-primary");
+    if (!apply) throw new Error("Expected the Quick Editor apply control.");
+    await click(apply);
+
+    const edited = harness.onChange.mock.calls[harness.onChange.mock.calls.length - 1]?.[0] as ManualCandidateDraft;
+    expect(edited).toBeDefined();
+    expect(edited.events.map((event) => event.durationBeats)).toEqual([1, 1, 1, 1]);
+    await harness.render(edited);
+    expect(action(harness, "save").disabled).toBe(false);
+    await click(action(harness, "save"));
+    expect(harness.onSave).toHaveBeenCalledWith(expect.objectContaining({
+      source: { type: "text-progression" },
+    }));
   });
 });

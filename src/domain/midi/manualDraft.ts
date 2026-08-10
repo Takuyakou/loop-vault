@@ -27,6 +27,7 @@ import {
 /** Every action that changes a draft, for measuring how much repair costs. */
 export type ManualRepairOperation =
   | { type: "create-from-range" }
+  | { type: "create-from-text" }
   | { type: "edit-progression" }
   | { type: "extend-start"; beats: number }
   | { type: "extend-end"; beats: number }
@@ -50,6 +51,8 @@ export type ManualRepairOperation =
 
 export type CandidateDraftSource =
   | { type: "manual-range" }
+  /** Session-only text entry. It never carries MIDI or analyzer provenance. */
+  | { type: "text-progression" }
   | {
       type: "automatic-candidate";
       candidateId: string;
@@ -246,6 +249,7 @@ export function createDraftFromCandidate(
 export function editOperationCount(draft: ManualCandidateDraft): number {
   return draft.repairOperations.filter(
     (operation) => operation.type !== "create-from-range"
+      && operation.type !== "create-from-text"
       && operation.type !== "undo"
       && operation.type !== "redo",
   ).length;

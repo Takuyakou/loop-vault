@@ -1,0 +1,1397 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Loop Vault P5.20 — Text Progression Card UI Prototype</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #07101c;
+      --bg-elev: #0b1727;
+      --panel: #101d30;
+      --panel-2: #13243a;
+      --panel-3: #172a43;
+      --card: #0d1b2d;
+      --card-active: #152b42;
+      --line: #263b57;
+      --line-strong: #3a5577;
+      --text: #f7f9ff;
+      --muted: #9aabc2;
+      --subtle: #7185a2;
+      --accent: #55dfd0;
+      --accent-dark: #0e6f6a;
+      --accent-soft: rgba(85, 223, 208, .12);
+      --purple: #8176ff;
+      --purple-soft: rgba(129, 118, 255, .13);
+      --success: #63d99d;
+      --warning: #f0c66f;
+      --danger: #ff8294;
+      --info: #79aaff;
+      --shadow: 0 18px 60px rgba(0, 0, 0, .30);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --control-h: 42px;
+      --font: Inter, "Segoe UI", "Noto Sans JP", system-ui, -apple-system, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { background: var(--bg); }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.55;
+      background:
+        radial-gradient(circle at 9% -10%, rgba(129,118,255,.16), transparent 34%),
+        radial-gradient(circle at 96% -5%, rgba(85,223,208,.10), transparent 30%),
+        var(--bg);
+    }
+
+    button, input, select, textarea { font: inherit; }
+    button { color: inherit; }
+
+    .app {
+      display: grid;
+      grid-template-columns: 218px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 21px 15px;
+      border-right: 1px solid var(--line);
+      background: rgba(7,16,28,.90);
+      backdrop-filter: blur(18px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 8px 22px;
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    .brand-mark {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      color: #061318;
+      background: linear-gradient(135deg, var(--accent), #9af3e9);
+      box-shadow: 0 8px 26px rgba(85,223,208,.24);
+      font-weight: 900;
+    }
+
+    .nav-label {
+      margin: 13px 10px 8px;
+      color: var(--subtle);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .14em;
+    }
+
+    .nav { display: grid; gap: 5px; }
+
+    .nav-item {
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 0 11px;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    .nav-item.active {
+      color: var(--text);
+      border-color: rgba(85,223,208,.23);
+      background: var(--accent-soft);
+    }
+
+    .main {
+      min-width: 0;
+      padding: 30px clamp(18px, 3vw, 46px) 76px;
+    }
+
+    .page {
+      width: min(1240px, 100%);
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 24px;
+      margin-bottom: 20px;
+    }
+
+    .eyebrow {
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 4px 0 7px;
+      font-size: clamp(28px, 3.2vw, 41px);
+      line-height: 1.12;
+      letter-spacing: -.035em;
+    }
+
+    .lead {
+      max-width: 790px;
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .prototype-badge {
+      flex: none;
+      padding: 8px 11px;
+      border: 1px solid rgba(121,170,255,.30);
+      border-radius: 999px;
+      color: #c0d4ff;
+      background: rgba(121,170,255,.08);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 5px;
+      width: fit-content;
+      margin-bottom: 17px;
+      padding: 5px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(10,22,38,.80);
+    }
+
+    .tab {
+      min-height: 38px;
+      padding: 0 15px;
+      border: 0;
+      border-radius: 8px;
+      color: var(--muted);
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .tab[aria-selected="true"] {
+      color: #061318;
+      background: var(--accent);
+      font-weight: 800;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(18,34,55,.94), rgba(12,27,45,.96));
+      box-shadow: var(--shadow);
+    }
+
+    .panel + .panel { margin-top: 18px; }
+
+    .panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 19px 21px 15px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .step-title {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .step-num {
+      flex: none;
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(85,223,208,.22);
+      border-radius: 9px;
+      color: var(--accent);
+      background: var(--accent-soft);
+      font-weight: 900;
+    }
+
+    .panel h2 {
+      margin: 1px 0 4px;
+      font-size: 18px;
+      line-height: 1.3;
+    }
+
+    .panel-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .panel-body { padding: 21px; }
+
+    .input-block {
+      display: grid;
+      gap: 12px;
+    }
+
+    .label-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    label, .label {
+      color: #e0e9f7;
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .small-note {
+      color: var(--subtle);
+      font-size: 12px;
+    }
+
+    textarea, input, select {
+      width: 100%;
+      color: var(--text);
+      border: 1px solid var(--line-strong);
+      border-radius: 10px;
+      outline: none;
+      background: #091728;
+      transition: border-color .15s, box-shadow .15s, background .15s;
+    }
+
+    textarea:focus, input:focus, select:focus {
+      border-color: var(--accent);
+      background: #0c1b2e;
+      box-shadow: 0 0 0 3px rgba(85,223,208,.11);
+    }
+
+    textarea {
+      min-height: 118px;
+      padding: 16px;
+      resize: vertical;
+      font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+      font-size: 17px;
+      line-height: 1.75;
+    }
+
+    input, select {
+      height: var(--control-h);
+      padding: 0 11px;
+    }
+
+    select {
+      appearance: none;
+      padding-right: 37px;
+      background-image:
+        linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+        linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+      background-position:
+        calc(100% - 17px) 17px,
+        calc(100% - 12px) 17px;
+      background-size: 5px 5px, 5px 5px;
+      background-repeat: no-repeat;
+    }
+
+    .examples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .chip-btn {
+      min-height: 31px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(7,16,28,.52);
+      cursor: pointer;
+    }
+
+    .chip-btn:hover, .chip-btn:focus-visible {
+      color: var(--text);
+      border-color: var(--accent);
+      outline: none;
+    }
+
+    .input-footer {
+      display: grid;
+      grid-template-columns: minmax(240px, 1.1fr) repeat(3, minmax(130px, .5fr));
+      gap: 10px;
+      align-items: end;
+      padding-top: 2px;
+    }
+
+    .field { display: grid; gap: 6px; min-width: 0; }
+
+    .inline-control {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .inline-control select { flex: 1; }
+
+    .key-help {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 22px;
+      color: var(--subtle);
+      font-size: 12px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--info);
+      box-shadow: 0 0 0 4px rgba(121,170,255,.09);
+    }
+
+    .btn {
+      min-height: var(--control-h);
+      padding: 0 14px;
+      border: 1px solid var(--line-strong);
+      border-radius: 10px;
+      color: var(--text);
+      background: #13243a;
+      cursor: pointer;
+      font-weight: 750;
+    }
+
+    .btn:hover, .btn:focus-visible {
+      border-color: var(--accent);
+      outline: none;
+    }
+
+    .btn.primary {
+      color: #061318;
+      border-color: var(--accent);
+      background: var(--accent);
+    }
+
+    .btn.primary:disabled {
+      cursor: not-allowed;
+      color: #71828f;
+      border-color: #2d4255;
+      background: #273a48;
+    }
+
+    .btn.ghost {
+      color: var(--muted);
+      background: transparent;
+    }
+
+    .grammar {
+      padding: 11px 12px;
+      border: 1px solid rgba(121,170,255,.18);
+      border-radius: 10px;
+      color: var(--muted);
+      background: rgba(121,170,255,.05);
+      font-size: 12px;
+    }
+
+    .grammar code { color: #dce7ff; }
+
+    .analysis-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .analysis-state {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .state-icon {
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: var(--success);
+      background: rgba(99,217,157,.11);
+      font-weight: 900;
+    }
+
+    .analysis-metrics {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .metric {
+      padding: 5px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(7,16,28,.43);
+      font-size: 12px;
+    }
+
+    .progression-board {
+      display: grid;
+      gap: 14px;
+      margin-top: 15px;
+    }
+
+    .bar-group {
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      overflow: hidden;
+      background: rgba(7,16,28,.42);
+    }
+
+    .bar-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 37px;
+      padding: 0 12px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.025);
+    }
+
+    .bar-label {
+      color: var(--info);
+      font-size: 11px;
+      font-weight: 850;
+      letter-spacing: .08em;
+    }
+
+    .bar-fact {
+      color: var(--subtle);
+      font-size: 11px;
+    }
+
+    .card-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+      gap: 10px;
+      padding: 11px;
+    }
+
+    .chord-card {
+      position: relative;
+      min-height: 116px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      padding: 10px 11px 9px;
+      border: 1px solid #2c405b;
+      border-radius: 11px;
+      background:
+        linear-gradient(145deg, rgba(20,39,61,.97), rgba(10,24,40,.98));
+      cursor: pointer;
+      overflow: hidden;
+      transition: transform .12s, border-color .12s, background .12s;
+    }
+
+    .chord-card::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--purple), var(--accent));
+      opacity: .56;
+    }
+
+    .chord-card:hover, .chord-card:focus-visible {
+      transform: translateY(-1px);
+      border-color: var(--accent);
+      outline: none;
+    }
+
+    .chord-card.selected {
+      border-color: var(--accent);
+      background:
+        linear-gradient(145deg, rgba(24,52,72,.98), rgba(10,31,45,.98));
+      box-shadow: 0 0 0 2px rgba(85,223,208,.09);
+    }
+
+    .chord-card.invalid {
+      border-color: rgba(255,130,148,.48);
+      background: linear-gradient(145deg, rgba(73,29,43,.85), rgba(31,18,30,.95));
+    }
+
+    .chord-card.invalid::after {
+      background: var(--danger);
+      opacity: .9;
+    }
+
+    .card-top, .card-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .card-index {
+      color: var(--info);
+      font-size: 11px;
+      font-weight: 850;
+    }
+
+    .card-position {
+      color: var(--subtle);
+      font-size: 10px;
+      text-align: right;
+    }
+
+    .card-center {
+      align-self: center;
+      padding: 10px 0 7px;
+    }
+
+    .card-chord {
+      color: var(--text);
+      font-size: 20px;
+      font-weight: 850;
+      line-height: 1.15;
+      overflow-wrap: anywhere;
+    }
+
+    .invalid .card-chord { color: #ffd2d9; }
+
+    .card-raw {
+      margin-top: 3px;
+      color: var(--subtle);
+      font-size: 10px;
+    }
+
+    .card-degree {
+      color: #c8d2e4;
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .card-beats {
+      padding: 2px 7px;
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(255,255,255,.055);
+      font-size: 10px;
+    }
+
+    .card-beats.error {
+      color: #ffd3da;
+      background: rgba(255,130,148,.10);
+    }
+
+    .card-detail {
+      display: none;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      margin-top: 14px;
+      padding: 13px;
+      border: 1px solid rgba(129,118,255,.26);
+      border-radius: 12px;
+      background: var(--purple-soft);
+    }
+
+    .card-detail.visible { display: grid; }
+
+    .card-detail-title {
+      font-weight: 800;
+    }
+
+    .card-detail-copy {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .diagnostics {
+      display: none;
+      margin-top: 14px;
+      border: 1px solid rgba(255,130,148,.34);
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(255,130,148,.05);
+    }
+
+    .diagnostics.visible { display: block; }
+
+    .diag-head {
+      padding: 11px 13px;
+      color: #ffd5dc;
+      font-weight: 800;
+      border-bottom: 1px solid rgba(255,130,148,.19);
+    }
+
+    .diag-item {
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      gap: 12px;
+      padding: 10px 13px;
+      border-top: 1px solid rgba(255,130,148,.12);
+    }
+
+    .diag-item:first-child { border-top: 0; }
+
+    .diag-token {
+      color: var(--danger);
+      font-family: ui-monospace, Consolas, monospace;
+      font-weight: 800;
+    }
+
+    .diag-message { color: #e3bac1; }
+
+    .cap-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .cap-card {
+      display: grid;
+      grid-template-columns: 27px minmax(0, 1fr);
+      gap: 9px;
+      padding: 11px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: rgba(7,16,28,.42);
+    }
+
+    .cap-icon {
+      width: 26px;
+      height: 26px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      font-weight: 900;
+    }
+
+    .cap-card.ok .cap-icon {
+      color: var(--success);
+      background: rgba(99,217,157,.10);
+    }
+
+    .cap-card.no .cap-icon {
+      color: var(--danger);
+      background: rgba(255,130,148,.10);
+    }
+
+    .cap-card.info .cap-icon {
+      color: var(--info);
+      background: rgba(121,170,255,.10);
+    }
+
+    .cap-title { font-weight: 800; }
+
+    .cap-copy {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .action-bar {
+      position: sticky;
+      bottom: 14px;
+      z-index: 5;
+      display: grid;
+      grid-template-columns: minmax(240px, 1fr) auto;
+      align-items: end;
+      gap: 16px;
+      margin-top: 18px;
+      padding: 15px;
+      border: 1px solid var(--line-strong);
+      border-radius: 14px;
+      background: rgba(9,22,38,.95);
+      box-shadow: 0 18px 48px rgba(0,0,0,.35);
+      backdrop-filter: blur(18px);
+    }
+
+    .action-copy {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 9px;
+    }
+
+    .draft-panel {
+      display: none;
+      margin-top: 18px;
+      border-color: rgba(85,223,208,.32);
+      background: linear-gradient(180deg, rgba(22,50,66,.96), rgba(13,31,47,.97));
+    }
+
+    .draft-panel.visible { display: block; }
+
+    .success-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 13px;
+      border: 1px solid rgba(99,217,157,.24);
+      border-radius: 11px;
+      color: #cef3de;
+      background: rgba(99,217,157,.07);
+    }
+
+    .midi-placeholder {
+      display: none;
+      padding: 34px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .midi-placeholder.visible { display: block; }
+    .text-workspace.hidden { display: none; }
+
+    @media (max-width: 980px) {
+      .input-footer {
+        grid-template-columns: 1fr 1fr;
+      }
+      .cap-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+
+    @media (max-width: 860px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .main { padding: 22px 15px 62px; }
+      .action-bar { position: static; }
+    }
+
+    @media (max-width: 590px) {
+      .topbar { display: grid; }
+      .prototype-badge { width: fit-content; }
+      .tabs { width: 100%; }
+      .tab { flex: 1; }
+      .panel-header, .panel-body { padding-left: 14px; padding-right: 14px; }
+      .input-footer, .cap-grid { grid-template-columns: 1fr; }
+      .card-row { grid-template-columns: 1fr 1fr; }
+      .card-detail { grid-template-columns: 1fr; }
+      .action-bar { grid-template-columns: 1fr; }
+      .action-buttons { display: grid; grid-template-columns: 1fr 1fr; }
+      .diag-item { grid-template-columns: 1fr; gap: 2px; }
+    }
+
+    @media (max-width: 390px) {
+      .card-row { grid-template-columns: 1fr; }
+      .action-buttons { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="メインナビゲーション">
+      <div class="brand"><span class="brand-mark">L</span> Loop Vault</div>
+      <div class="nav-label">Library</div>
+      <nav class="nav">
+        <a class="nav-item" href="#">⌂　ホーム</a>
+        <a class="nav-item" href="#">▦　Vault</a>
+        <a class="nav-item active" href="#">＋　Capture</a>
+      </nav>
+      <div class="nav-label">Practice</div>
+      <nav class="nav">
+        <a class="nav-item" href="#">◫　Chord Dojo</a>
+        <a class="nav-item" href="#">♩　Bass Practice</a>
+        <a class="nav-item" href="#">◷　History</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div class="page">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">P5.20 UI/UX prototype — card first</div>
+            <h1>コード進行を入力</h1>
+            <p class="lead">
+              まずコード進行を入力し、その内容から直下にコードカードを生成します。
+              カードで小節・拍数・度数・表記を確認してから、既存のCapture Draftへ変換します。
+            </p>
+          </div>
+          <div class="prototype-badge">操作可能なHTMLモック</div>
+        </header>
+
+        <div class="tabs" role="tablist" aria-label="Capture入力方法">
+          <button class="tab" id="midiTab" role="tab" aria-selected="false">MIDIから</button>
+          <button class="tab" id="textTab" role="tab" aria-selected="true">コードを入力</button>
+        </div>
+
+        <section id="midiPanel" class="panel midi-placeholder" role="tabpanel">
+          既存のMIDI Capture画面を表示する領域です。このモックでは省略しています。
+        </section>
+
+        <div id="textPanel" class="text-workspace" role="tabpanel">
+          <section class="panel">
+            <header class="panel-header">
+              <div class="step-title">
+                <span class="step-num">1</span>
+                <div>
+                  <h2>コード進行を入力</h2>
+                  <p class="panel-copy">ここではテキストだけを編集します。下のコードカードが自動更新されます。</p>
+                </div>
+              </div>
+              <span class="prototype-badge" id="syntaxBadge">小節記法</span>
+            </header>
+
+            <div class="panel-body input-block">
+              <div class="label-row">
+                <label for="progressionInput">コード進行</label>
+                <span class="small-note">`|` は小節区切り、空白はコード区切り</span>
+              </div>
+
+              <textarea id="progressionInput" spellcheck="false">| Dm7 G7 | Cmaj9 | Am7 |</textarea>
+
+              <div class="examples" aria-label="入力例">
+                <button class="chip-btn" data-example="| Dm7 G7 | Cmaj9 | Am7 |">ii–V–I系</button>
+                <button class="chip-btn" data-example="C G Am F">Pop 4 chords</button>
+                <button class="chip-btn" data-example="| C/E G7/B | Am7 | Dm7 G7 | Cmaj7 |">スラッシュコード</button>
+                <button class="chip-btn" data-example="| Dm7 G7 | Cmajj9 | Am7 |">エラー表示</button>
+              </div>
+
+              <div class="input-footer">
+                <div class="field">
+                  <label for="keySelect">キー</label>
+                  <div class="inline-control">
+                    <select id="keySelect">
+                      <option value="auto">自動候補: C major</option>
+                      <option value="C major">C major</option>
+                      <option value="A minor">A minor</option>
+                      <option value="G major">G major</option>
+                      <option value="D minor">D minor</option>
+                    </select>
+                    <button class="btn ghost" id="lockKeyBtn" type="button">固定</button>
+                  </div>
+                  <div class="key-help"><span class="status-dot"></span><span id="keyStatus">推定候補。まだ確定値ではありません。</span></div>
+                </div>
+
+                <div class="field">
+                  <label for="bpmInput">BPM</label>
+                  <input id="bpmInput" type="number" min="30" max="300" value="96" />
+                </div>
+
+                <div class="field">
+                  <label for="meterSelect">拍子</label>
+                  <select id="meterSelect">
+                    <option value="4/4">4/4</option>
+                    <option value="3/4">3/4</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label for="voicingSelect">ボイシング</label>
+                  <select id="voicingSelect" disabled>
+                    <option>自動</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="grammar">
+                <strong>例：</strong>
+                <code>| Dm7 G7 | Cmaj9 |</code> は1小節目に2コード。
+                <code>Dm7 G7 Cmaj9</code> は1コード＝1小節。
+                <code>C/E</code> と <code>C6/9</code> の `/` はコードの一部です。
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <header class="panel-header">
+              <div class="step-title">
+                <span class="step-num">2</span>
+                <div>
+                  <h2>解析結果を確認</h2>
+                  <p class="panel-copy">入力した進行を、既存ProgressionGridへ渡す前のコードカードとして確認します。</p>
+                </div>
+              </div>
+              <button class="btn ghost" id="reparseBtn" type="button">再解析</button>
+            </header>
+
+            <div class="panel-body">
+              <div class="analysis-toolbar">
+                <div class="analysis-state" id="analysisState" aria-live="polite">
+                  <span class="state-icon">✓</span>
+                  <span>すべてのコードを解釈できました</span>
+                </div>
+                <div class="analysis-metrics" id="analysisMetrics"></div>
+              </div>
+
+              <div id="progressionBoard" class="progression-board"></div>
+
+              <div id="cardDetail" class="card-detail" aria-live="polite">
+                <div>
+                  <div class="card-detail-title" id="cardDetailTitle">カードを選択</div>
+                  <div class="card-detail-copy" id="cardDetailCopy">コードカードをクリックすると詳細を確認できます。</div>
+                </div>
+                <button class="btn ghost" type="button">Quick Editorで編集</button>
+              </div>
+
+              <div id="diagnostics" class="diagnostics" aria-live="assertive">
+                <div class="diag-head">修正が必要なコードがあります</div>
+                <div id="diagList"></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <header class="panel-header">
+              <div class="step-title">
+                <span class="step-num">3</span>
+                <div>
+                  <h2>保存後に使える機能</h2>
+                  <p class="panel-copy">保存可否と練習機能への適合を分けて表示します。</p>
+                </div>
+              </div>
+            </header>
+            <div class="panel-body">
+              <div id="capabilityGrid" class="cap-grid"></div>
+            </div>
+          </section>
+
+          <section class="action-bar" aria-label="Capture Draft作成">
+            <div>
+              <label for="titleInput">タイトル</label>
+              <input id="titleInput" value="C major・Dm7→G7→Cmaj9…" />
+              <div class="action-copy">まだVaultには保存しません。確認済みカードからCapture Draftを作成します。</div>
+            </div>
+            <div class="action-buttons">
+              <button class="btn ghost" id="clearBtn" type="button">クリア</button>
+              <button class="btn primary" id="createDraftBtn" type="button">このカードで進行を作成</button>
+            </div>
+          </section>
+
+          <section id="draftPanel" class="panel draft-panel">
+            <header class="panel-header">
+              <div class="step-title">
+                <span class="step-num">4</span>
+                <div>
+                  <h2>Capture Draftを作成しました</h2>
+                  <p class="panel-copy">ここから既存の境界編集・Undo/Redo・プレビュー・保存へ進みます。</p>
+                </div>
+              </div>
+              <span class="prototype-badge">Draftが正本</span>
+            </header>
+            <div class="panel-body">
+              <div class="success-banner">
+                <span>✓</span>
+                <div>
+                  <strong>コードカードからDraftへ一方向変換しました。</strong><br />
+                  以後は既存のProgressionGrid／Quick Editorで編集します。
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (() => {
+      const input = document.getElementById('progressionInput');
+      const progressionBoard = document.getElementById('progressionBoard');
+      const diagnostics = document.getElementById('diagnostics');
+      const diagList = document.getElementById('diagList');
+      const capabilityGrid = document.getElementById('capabilityGrid');
+      const analysisState = document.getElementById('analysisState');
+      const analysisMetrics = document.getElementById('analysisMetrics');
+      const syntaxBadge = document.getElementById('syntaxBadge');
+      const keySelect = document.getElementById('keySelect');
+      const keyStatus = document.getElementById('keyStatus');
+      const lockKeyBtn = document.getElementById('lockKeyBtn');
+      const meterSelect = document.getElementById('meterSelect');
+      const bpmInput = document.getElementById('bpmInput');
+      const titleInput = document.getElementById('titleInput');
+      const createDraftBtn = document.getElementById('createDraftBtn');
+      const draftPanel = document.getElementById('draftPanel');
+      const cardDetail = document.getElementById('cardDetail');
+      const cardDetailTitle = document.getElementById('cardDetailTitle');
+      const cardDetailCopy = document.getElementById('cardDetailCopy');
+
+      let parseTimer;
+      let keyLocked = false;
+      let lastResult = null;
+      let selectedCardId = null;
+
+      const aliases = new Map([
+        ['CM7','Cmaj7'], ['CΔ7','Cmaj7'], ['Cmin7','Cm7'], ['C-7','Cm7'],
+        ['C°','Cdim'], ['C+','Caug'],
+        ['DM7','Dmaj7'], ['DΔ7','Dmaj7'], ['Dmin7','Dm7'], ['D-7','Dm7'],
+        ['EM7','Emaj7'], ['EΔ7','Emaj7'], ['Emin7','Em7'], ['E-7','Em7'],
+        ['FM7','Fmaj7'], ['FΔ7','Fmaj7'], ['Fmin7','Fm7'], ['F-7','Fm7'],
+        ['GM7','Gmaj7'], ['GΔ7','Gmaj7'], ['Gmin7','Gm7'], ['G-7','Gm7'],
+        ['AM7','Amaj7'], ['AΔ7','Amaj7'], ['Amin7','Am7'], ['A-7','Am7'],
+        ['BM7','Bmaj7'], ['BΔ7','Bmaj7'], ['Bmin7','Bm7'], ['B-7','Bm7']
+      ]);
+
+      const rootPc = {
+        C:0,'C#':1,Db:1,D:2,'D#':3,Eb:3,E:4,F:5,'F#':6,Gb:6,G:7,'G#':8,Ab:8,A:9,'A#':10,Bb:10,B:11
+      };
+      const degrees = ['Ⅰ','♭Ⅱ','Ⅱ','♭Ⅲ','Ⅲ','Ⅳ','♯Ⅳ','Ⅴ','♭Ⅵ','Ⅵ','♭Ⅶ','Ⅶ'];
+
+      function esc(v) {
+        return String(v).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
+          .replaceAll('"','&quot;').replaceAll("'",'&#039;');
+      }
+
+      function normalizeAccidentals(s) {
+        return s.replaceAll('♯','#').replaceAll('♭','b').trim();
+      }
+
+      function canonicalize(raw) {
+        const n = normalizeAccidentals(raw);
+        if (aliases.has(n)) return aliases.get(n);
+        return n
+          .replace(/^([A-G][#b]?)Δ7$/, '$1maj7')
+          .replace(/^([A-G][#b]?)min/, '$1m')
+          .replace(/^([A-G][#b]?)-(?=\d|$)/, '$1m')
+          .replace(/^([A-G][#b]?)°$/, '$1dim')
+          .replace(/^([A-G][#b]?)\+$/, '$1aug');
+      }
+
+      function isRoman(token) {
+        return /^[b#♭♯]?(?:I{1,3}|IV|V|VI{0,2}|VII)(?:maj|min|m|dim|aug|sus|add|\d|[()+\-#b♭♯])*$/i.test(token);
+      }
+
+      function isChord(raw) {
+        if (isRoman(raw)) return keyLocked || keySelect.value !== 'auto';
+        const t = canonicalize(raw);
+        if (/^N\.?C\.?$/i.test(t)) return true;
+        if (/jj|mm|##|bb{2,}/i.test(t)) return false;
+        return /^([A-G](?:#|b)?)(?:(?:maj|min|m|dim|aug|sus|add|M|\+|°|ø|-)?[0-9]*(?:\([^)]*\))?(?:\/(?:[A-G](?:#|b)?|[0-9]+))?)?$/.test(t);
+      }
+
+      function parseRoot(chord) {
+        const m = canonicalize(chord).match(/^([A-G](?:#|b)?)/);
+        return m ? m[1] : null;
+      }
+
+      function inferKey(tokens) {
+        const s = tokens.map(canonicalize).join(' ');
+        if (/Dm7.*G7.*Cmaj/.test(s)) return 'C major';
+        if (/Am.*G.*F.*E7/.test(s)) return 'A minor';
+        if (/C.*G.*Am.*F/.test(s)) return 'C major';
+        return 'C major';
+      }
+
+      function degreeFor(chord, keyLabel) {
+        const root = parseRoot(chord);
+        if (!root || rootPc[root] === undefined) return '—';
+        const keyRoot = keyLabel.split(' ')[0] || 'C';
+        const keyPc = rootPc[keyRoot] ?? 0;
+        return degrees[(rootPc[root] - keyPc + 12) % 12];
+      }
+
+      function positionLabel(tokenIndex, tokenCount) {
+        if (tokenCount === 1) return '1小節';
+        if (tokenCount === 2) return tokenIndex === 0 ? '前半' : '後半';
+        if (tokenCount === 4) return `${tokenIndex + 1}拍目`;
+        return `${tokenIndex + 1}/${tokenCount}`;
+      }
+
+      function parseProgression(text) {
+        const hasBars = text.includes('|');
+        const rawBars = hasBars
+          ? text.split('|').map(s => s.trim()).filter(Boolean)
+          : text.trim().split(/\s+/).filter(Boolean).map(token => token);
+
+        const bars = [];
+        const errors = [];
+        const flat = [];
+        let globalIndex = 0;
+
+        rawBars.forEach((barText, barIdx) => {
+          const rawTokens = barText.split(/\s+/).filter(Boolean);
+          const beatValue = rawTokens.length ? 4 / rawTokens.length : 0;
+          const tokens = rawTokens.map((raw, tokenIdx) => {
+            globalIndex += 1;
+            const canonical = canonicalize(raw);
+            const valid = isChord(raw);
+            const id = `${barIdx + 1}-${tokenIdx + 1}`;
+            const item = {
+              id, raw, canonical, valid,
+              bar: barIdx + 1,
+              tokenIndex: tokenIdx,
+              globalIndex,
+              beatValue,
+              position: positionLabel(tokenIdx, rawTokens.length)
+            };
+            flat.push(item);
+            if (!valid) errors.push({
+              token: raw,
+              bar: barIdx + 1,
+              message: '解釈できません。コード表記を確認してください。'
+            });
+            return item;
+          });
+
+          if (![1,2,4].includes(tokens.length)) {
+            errors.push({
+              token: `Bar ${barIdx + 1}`,
+              bar: barIdx + 1,
+              message: `${tokens.length}コード/小節は、このモックの均等割り対象外です（1・2・4コードに対応）。`
+            });
+          }
+
+          bars.push({ index: barIdx + 1, tokens, beatValue });
+        });
+
+        return {
+          hasBars,
+          bars,
+          errors,
+          flat,
+          inferredKey: inferKey(flat.map(x => x.canonical))
+        };
+      }
+
+      function renderBoard(result) {
+        const keyLabel = keyLocked ? keySelect.value : result.inferredKey;
+        progressionBoard.innerHTML = result.bars.map(bar => `
+          <section class="bar-group" aria-label="Bar ${bar.index}">
+            <div class="bar-head">
+              <span class="bar-label">BAR ${String(bar.index).padStart(2,'0')}</span>
+              <span class="bar-fact">${bar.tokens.length}コード · ${meterSelect.value}</span>
+            </div>
+            <div class="card-row">
+              ${bar.tokens.map(token => {
+                const beats = Number.isInteger(token.beatValue) ? token.beatValue : token.beatValue.toFixed(2);
+                return `
+                  <button type="button"
+                    class="chord-card ${token.valid ? '' : 'invalid'} ${selectedCardId === token.id ? 'selected' : ''}"
+                    data-card-id="${token.id}">
+                    <div class="card-top">
+                      <span class="card-index">${String(token.globalIndex).padStart(2,'0')}</span>
+                      <span class="card-position">${esc(token.position)}</span>
+                    </div>
+                    <div class="card-center">
+                      <div class="card-chord">${esc(token.valid ? token.canonical : token.raw)}</div>
+                      ${token.raw !== token.canonical && token.valid ? `<div class="card-raw">入力: ${esc(token.raw)}</div>` : ''}
+                    </div>
+                    <div class="card-bottom">
+                      <span class="card-degree">${token.valid ? degreeFor(token.canonical, keyLabel) : '—'}</span>
+                      <span class="card-beats ${token.valid ? '' : 'error'}">${token.valid ? beats + '拍' : '要修正'}</span>
+                    </div>
+                  </button>`;
+              }).join('')}
+            </div>
+          </section>
+        `).join('');
+
+        progressionBoard.querySelectorAll('[data-card-id]').forEach(button => {
+          button.addEventListener('click', () => {
+            selectedCardId = button.dataset.cardId;
+            const card = result.flat.find(x => x.id === selectedCardId);
+            renderBoard(result);
+            showCardDetail(card, keyLabel);
+          });
+        });
+      }
+
+      function showCardDetail(card, keyLabel) {
+        if (!card) {
+          cardDetail.classList.remove('visible');
+          return;
+        }
+        cardDetail.classList.add('visible');
+        cardDetailTitle.textContent = card.valid
+          ? `${card.canonical} — ${degreeFor(card.canonical, keyLabel)}`
+          : `${card.raw} — 未解釈`;
+        cardDetailCopy.textContent = card.valid
+          ? `Bar ${card.bar}・${card.position}・${Number.isInteger(card.beatValue) ? card.beatValue : card.beatValue.toFixed(2)}拍。保存前に既存Quick Editorで変更できます。`
+          : `Bar ${card.bar}のコードを修正してください。未解決のカードがある間はDraftを作成できません。`;
+      }
+
+      function renderDiagnostics(result) {
+        diagnostics.classList.toggle('visible', result.errors.length > 0);
+        diagList.innerHTML = result.errors.map(error => `
+          <div class="diag-item">
+            <div class="diag-token">${esc(error.token)}</div>
+            <div class="diag-message">Bar ${error.bar}: ${esc(error.message)}</div>
+          </div>
+        `).join('');
+      }
+
+      function capabilityData(result) {
+        const clean = result.errors.length === 0 && result.bars.length > 0;
+        const bars = result.bars.length;
+        const meter = meterSelect.value;
+        const supportedBars = [1,2,4,8,12].includes(bars);
+        const supportedDurations = result.bars.every(b => [1,2,4].includes(b.tokens.length));
+        const validCount = result.flat.filter(x => x.valid).length;
+
+        return [
+          { kind: clean ? 'ok':'no', icon: clean ? '✓':'!', title:'Vault保存',
+            copy: clean ? '既存のVault形式へ保存できます。' : '未解決カードを修正すると保存できます。' },
+          { kind: clean ? 'ok':'no', icon: clean ? '✓':'!', title:'Chord Dojo',
+            copy: clean ? 'コードとタイミングを教材化できます。' : 'コード解決後に判定します。' },
+          { kind: clean && meter === '4/4' && supportedBars && supportedDurations ? 'ok':'no',
+            icon: clean && meter === '4/4' && supportedBars && supportedDurations ? '✓':'×',
+            title:'Bass Practice',
+            copy: clean && meter === '4/4' && supportedBars && supportedDurations
+              ? `Contract 06適合（${bars}小節）。`
+              : clean ? `${bars}小節 / ${meter} は現在の対象外。Vault保存は可能です。` : '未解決カードがあります。' },
+          { kind: clean && meter === '4/4' && supportedDurations ? 'ok':'no',
+            icon: clean && meter === '4/4' && supportedDurations ? '✓':'×', title:'Chord Context',
+            copy: clean && meter === '4/4' && supportedDurations ? '自動ボイシングで伴奏できます。' : '小節構造を確認してください。' },
+          { kind: clean && validCount >= 2 ? 'ok':'no', icon: clean && validCount >= 2 ? '✓':'×',
+            title:'Root Motion', copy: clean && validCount >= 2 ? 'コードroot列から教材化できます。' : '2コード以上必要です。' },
+          { kind:'info', icon:'i', title:'Voicing Memory',
+            copy:'なし。元MIDIの響きではなく、自動ボイシングです。' }
+        ];
+      }
+
+      function renderCapabilities(result) {
+        capabilityGrid.innerHTML = capabilityData(result).map(cap => `
+          <div class="cap-card ${cap.kind}">
+            <div class="cap-icon">${cap.icon}</div>
+            <div>
+              <div class="cap-title">${cap.title}</div>
+              <div class="cap-copy">${cap.copy}</div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      function updateSummary(result) {
+        const clean = result.errors.length === 0 && result.bars.length > 0;
+        analysisState.innerHTML = clean
+          ? '<span class="state-icon">✓</span><span>すべてのコードを解釈できました</span>'
+          : '<span class="state-icon" style="color:var(--danger);background:rgba(255,130,148,.10)">!</span><span>修正が必要なカードがあります</span>';
+
+        analysisMetrics.innerHTML = `
+          <span class="metric">${result.bars.length}小節</span>
+          <span class="metric">${result.flat.length}コード</span>
+          <span class="metric">${keyLocked ? keySelect.value : 'Key候補: ' + result.inferredKey}</span>
+          <span class="metric">${bpmInput.value} BPM</span>`;
+
+        syntaxBadge.textContent = result.hasBars ? '小節記法' : '簡易記法';
+        createDraftBtn.disabled = !clean;
+      }
+
+      function updateKey(result) {
+        const auto = keySelect.querySelector('option[value="auto"]');
+        auto.textContent = `自動候補: ${result.inferredKey}`;
+        keyStatus.textContent = keyLocked
+          ? `${keySelect.value}で固定中。`
+          : '推定候補。まだ確定値ではありません。';
+      }
+
+      function makeTitle(result) {
+        const names = result.flat.filter(x => x.valid).slice(0,3).map(x => x.canonical);
+        const suffix = result.flat.filter(x => x.valid).length > 3 ? '…' : '';
+        const key = keyLocked ? keySelect.value : result.inferredKey + '候補';
+        return names.length ? `${key}・${names.join('→')}${suffix}` : '新しいコード進行';
+      }
+
+      function renderAll() {
+        const result = parseProgression(input.value);
+        lastResult = result;
+        selectedCardId = null;
+        cardDetail.classList.remove('visible');
+        updateSummary(result);
+        updateKey(result);
+        renderBoard(result);
+        renderDiagnostics(result);
+        renderCapabilities(result);
+        titleInput.value = makeTitle(result);
+        draftPanel.classList.remove('visible');
+      }
+
+      input.addEventListener('input', () => {
+        clearTimeout(parseTimer);
+        parseTimer = setTimeout(renderAll, 150);
+      });
+
+      document.getElementById('reparseBtn').addEventListener('click', renderAll);
+      meterSelect.addEventListener('change', renderAll);
+      bpmInput.addEventListener('input', () => updateSummary(lastResult));
+
+      keySelect.addEventListener('change', () => {
+        if (keyLocked && keySelect.value === 'auto') keyLocked = false;
+        renderAll();
+      });
+
+      lockKeyBtn.addEventListener('click', () => {
+        if (!lastResult) return;
+        if (!keyLocked) {
+          if (keySelect.value === 'auto') keySelect.value = lastResult.inferredKey;
+          keyLocked = true;
+          lockKeyBtn.textContent = '解除';
+        } else {
+          keyLocked = false;
+          keySelect.value = 'auto';
+          lockKeyBtn.textContent = '固定';
+        }
+        renderAll();
+      });
+
+      document.querySelectorAll('[data-example]').forEach(button => {
+        button.addEventListener('click', () => {
+          input.value = button.dataset.example;
+          renderAll();
+          input.focus();
+        });
+      });
+
+      document.getElementById('clearBtn').addEventListener('click', () => {
+        input.value = '';
+        renderAll();
+        input.focus();
+      });
+
+      createDraftBtn.addEventListener('click', () => {
+        if (!lastResult || lastResult.errors.length) return;
+        draftPanel.classList.add('visible');
+        draftPanel.scrollIntoView({ behavior:'smooth', block:'start' });
+      });
+
+      const midiTab = document.getElementById('midiTab');
+      const textTab = document.getElementById('textTab');
+      const midiPanel = document.getElementById('midiPanel');
+      const textPanel = document.getElementById('textPanel');
+
+      midiTab.addEventListener('click', () => {
+        midiTab.setAttribute('aria-selected','true');
+        textTab.setAttribute('aria-selected','false');
+        midiPanel.classList.add('visible');
+        textPanel.classList.add('hidden');
+      });
+
+      textTab.addEventListener('click', () => {
+        midiTab.setAttribute('aria-selected','false');
+        textTab.setAttribute('aria-selected','true');
+        midiPanel.classList.remove('visible');
+        textPanel.classList.remove('hidden');
+      });
+
+      renderAll();
+    })();
+  </script>
+</body>
+</html>

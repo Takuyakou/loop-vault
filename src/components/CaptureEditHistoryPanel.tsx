@@ -82,6 +82,7 @@ function historyLabel(
   if (language === "en") return entry.label;
   switch (entry.operation.type) {
     case "create-from-range": return "範囲から作成";
+    case "create-from-text": return "テキスト入力から作成";
     case "edit-progression": return "進行を編集";
     case "extend-start": return "開始を前へ延長";
     case "extend-end": return "終了を後ろへ延長";
