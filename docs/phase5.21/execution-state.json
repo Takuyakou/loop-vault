@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "5.21",
   "status": "in-progress",
-  "activeStage": "P5.21-04",
-  "completedStages": ["P5.21-00", "P5.21-01", "P5.21-02", "P5.21-03"],
+  "activeStage": "P5.21-05",
+  "completedStages": ["P5.21-00", "P5.21-01", "P5.21-02", "P5.21-03", "P5.21-04"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "747c70cc4ef078c0a086f641436443e134115d08",
-  "lastVerifiedCommit": "bf0fef6bf637d6b18aa4839fb342ed9a162ff8ec",
+  "lastVerifiedCommit": "0e8a21bab6ee6de30ba36f97361c6e4ec31a314f",
   "currentBranch": "recovery/p521-role-v2-promotion",
   "requiredGates": {
     "P5.21-00": [
@@ -45,6 +45,19 @@
       "p521-03-production-build",
       "p521-03-phase-docs",
       "p521-03-diff-and-protected-surface"
+    ],
+    "P5.21-04": [
+      "p521-04-harmonic-core-focused-tests",
+      "p521-04-adjacent-role-regression-tests",
+      "p521-04-app-typecheck",
+      "p521-04-e2e-typecheck",
+      "p521-04-lint",
+      "p521-04-production-build",
+      "p521-04-phase-docs",
+      "p521-04-diff-check",
+      "p521-04-output-hygiene",
+      "p521-04-protected-privacy-p515",
+      "p521-04-post-gate-clean"
     ]
   },
   "gateResults": {
@@ -75,8 +88,19 @@
     "p521-03-lint": "pass",
     "p521-03-production-build": "pass",
     "p521-03-phase-docs": "pass",
-    "p521-03-diff-and-protected-surface": "pass"
+    "p521-03-diff-and-protected-surface": "pass",
+    "p521-04-harmonic-core-focused-tests": "pass",
+    "p521-04-adjacent-role-regression-tests": "pass",
+    "p521-04-app-typecheck": "pass",
+    "p521-04-e2e-typecheck": "pass",
+    "p521-04-lint": "pass",
+    "p521-04-production-build": "pass",
+    "p521-04-phase-docs": "pass",
+    "p521-04-diff-check": "pass",
+    "p521-04-output-hygiene": "pass",
+    "p521-04-protected-privacy-p515": "pass",
+    "p521-04-post-gate-clean": "pass"
   },
-  "nextAction": "P5.21-03 passed at code candidate bf0fef6bf637d6b18aa4839fb342ed9a162ff8ec on recovery/p521-role-v2-promotion. P5.21-04 is active; it may add only the separately contracted Harmonic Core preset. Do not start P5.21.1 or P5.22, merge, or push.",
-  "updatedAt": "2026-08-11T00:03:43+09:00"
+  "nextAction": "P5.21-04 passed at code candidate 0e8a21bab6ee6de30ba36f97361c6e4ec31a314f on recovery/p521-role-v2-promotion. P5.21-05 is active for release evaluation and human product acceptance preparation. Do not start P5.21.1 or P5.22, merge, or push.",
+  "updatedAt": "2026-08-11T00:48:00+09:00"
 }
