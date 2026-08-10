@@ -3,10 +3,10 @@
 
 ## Status
 
-- **Status:** P5.21-00 complete — the current Role v1 baseline and approved synthetic Voice ground truth are locked.
-- **Active stage:** P5.21-01 — not started; explicit human authorization is required.
-- **Completed stages:** P5.21-00
-- **Next action:** await explicit authorization for P5.21-01. Do not start P5.21.1, P5.22, a merge, or a push.
+- **Status:** P5.21-01 complete — feature-only Role v2 shadow extraction is recorded; production Role v1 is unchanged.
+- **Active stage:** P5.21-02 — Role Classifier v2 / Shadow Evaluation.
+- **Completed stages:** P5.21-00, P5.21-01
+- **Next action:** evaluate a Role v2 candidate in shadow mode against the locked baseline. Do not promote, start P5.21.1/P5.22, merge, or push before the applicable gates pass.
 
 Git is the source of truth. The shared worktree initially contained untracked
 phase documents on another branch, so this phase uses its own clean worktree
@@ -84,4 +84,4 @@ real MIDI + current official corpora + determinism + UI/build + protected diff�
 scoring / boundary / candidate generation / defaultAnalyzerMode / default preset / Vault schema / fileVersion / Voicing Memory / P5.15 / test-output hygiene。
 
 ## Next action
-P5.21-00のみ。P5.21-01へ自動で進まない。
+P5.21-02でRole v2 candidateをshadow評価する。Stage 02のpromotion gateがPASSするまで、production Role v1を変更しない。P5.21.1、P5.22、merge、pushには進まない。

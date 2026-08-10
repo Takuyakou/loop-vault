@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "5.21",
   "status": "in-progress",
-  "activeStage": "P5.21-01",
-  "completedStages": ["P5.21-00"],
+  "activeStage": "P5.21-02",
+  "completedStages": ["P5.21-00", "P5.21-01"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "747c70cc4ef078c0a086f641436443e134115d08",
-  "lastVerifiedCommit": "252ac2b1d9a16eacf7cef1541e782b127d82e8f3",
+  "lastVerifiedCommit": "25f708e866a66b321e00c8b89c31e07db6b000ca",
   "currentBranch": "feat/p521-harmonic-core-role-v2",
   "requiredGates": {
     "P5.21-00": [
@@ -19,6 +19,13 @@
       "p521-00-focused-role-tests",
       "p521-00-lint-typecheck",
       "p521-00-diff-and-protected-surface"
+    ],
+    "P5.21-01": [
+      "p521-01-shadow-feature-tests",
+      "p521-01-app-typecheck",
+      "p521-01-lint",
+      "p521-01-diff-check",
+      "p521-01-protected-surface"
     ]
   },
   "gateResults": {
@@ -29,8 +36,13 @@
     "p521-00-promotion-gate-lock": "pass",
     "p521-00-focused-role-tests": "pass",
     "p521-00-lint-typecheck": "pass",
-    "p521-00-diff-and-protected-surface": "pass"
+    "p521-00-diff-and-protected-surface": "pass",
+    "p521-01-shadow-feature-tests": "pass",
+    "p521-01-app-typecheck": "pass",
+    "p521-01-lint": "pass",
+    "p521-01-diff-check": "pass",
+    "p521-01-protected-surface": "pass"
   },
-  "nextAction": "P5.21-00 is complete. Await explicit human authorization before starting P5.21-01; do not start P5.21.1, P5.22, merge, or push.",
-  "updatedAt": "2026-08-10T20:38:00+09:00"
+  "nextAction": "P5.21-01 is complete at 25f708e866a66b321e00c8b89c31e07db6b000ca. P5.21-02 shadow evaluation is next; keep production Role v1 unchanged and do not start P5.21.1 or P5.22, merge, or push.",
+  "updatedAt": "2026-08-10T21:07:16+09:00"
 }
