@@ -3,10 +3,10 @@
 
 ## Status
 
-- **Status:** in progress — automated re-verification is complete at `571b651`; human product re-acceptance is pending.
-- **Active stage:** P5.20-03 (voicing-selection human re-acceptance pending)
+- **Status:** in progress — automated re-verification is complete at `12e4920`; human product re-acceptance is pending.
+- **Active stage:** P5.20-03 (MIDI voicing-capture human re-acceptance pending)
 - **Completed stages:** P5.20-00, P5.20-01, P5.20-02
-- **Next action:** perform the documented voicing-selection human re-acceptance on `571b651`; do not merge, push, or start P5.21.
+- **Next action:** perform the documented MIDI voicing-capture human re-acceptance on `12e4920`; do not merge, push, or start P5.21.
 
 ## Required Reading Order
 
