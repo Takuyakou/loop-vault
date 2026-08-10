@@ -102,7 +102,7 @@ console.log(JSON.stringify({
 function requireExercise(index: number) {
   const generated = generateRootMotionExercise({ ...generatedInput, seed: `${generatedInput.seed}:${index % 97}` });
   if (!generated.ok) throw new Error(generated.error.message);
-  const vault = createVaultRootMotionExercise({ snapshot: vaultSnapshot, level: 4, tuning: STANDARD_BASS_TUNINGS[5], stringCount: 5, fretRange: { min: 0, max: 12 }, pitchSpan: { minMidi: 23, maxMidi: 55 }, handedness: "right" });
+  const vault = createVaultRootMotionExercise({ snapshot: vaultSnapshot, level: 4, noteCount: 3, tuning: STANDARD_BASS_TUNINGS[5], stringCount: 5, fretRange: { min: 0, max: 12 }, pitchSpan: { minMidi: 23, maxMidi: 55 }, handedness: "right" });
   if (!vault.ok) throw new Error(vault.error.message);
   return index % 2 === 0 ? generated.exercise : vault.exercise;
 }
