@@ -7,7 +7,7 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "1cec3fa920daeb4fb4942dfbd4a273d5624a0bfb",
-  "lastVerifiedCommit": "12795debf1b0a8a69a7faa4b54849b09cfeef6a0",
+  "lastVerifiedCommit": "571b651dc9340742c7c2a1047dd584951672e1e9",
   "currentBranch": "feat/p520-text-progression-entry",
   "requiredGates": {
     "P5.20-00": [
@@ -95,6 +95,6 @@
     "p520-03-test-output-hygiene": "pass",
     "p520-03-diff-and-protected-surface": "pass"
   },
-  "nextAction": "P5.20-03 automated release gates pass at 12795debf1b0a8a69a7faa4b54849b09cfeef6a0. Continue only with documented human product acceptance; do not merge, push, or start P5.21.",
+  "nextAction": "P5.20-03 automated re-verification passes at 571b651dc9340742c7c2a1047dd584951672e1e9 after the voicing-selection acceptance fix. Continue only with documented human product re-acceptance; do not merge, push, or start P5.21.",
   "updatedAt": "2026-08-10"
 }
