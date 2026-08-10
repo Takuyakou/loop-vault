@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "5.21",
   "status": "in-progress",
-  "activeStage": "P5.21-02",
-  "completedStages": ["P5.21-00", "P5.21-01"],
+  "activeStage": "P5.21-03",
+  "completedStages": ["P5.21-00", "P5.21-01", "P5.21-02"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "747c70cc4ef078c0a086f641436443e134115d08",
-  "lastVerifiedCommit": "25f708e866a66b321e00c8b89c31e07db6b000ca",
+  "lastVerifiedCommit": "6468cb36bd469d234df763df7873c382757456aa",
   "currentBranch": "feat/p521-harmonic-core-role-v2",
   "requiredGates": {
     "P5.21-00": [
@@ -26,6 +26,15 @@
       "p521-01-lint",
       "p521-01-diff-check",
       "p521-01-protected-surface"
+    ],
+    "P5.21-02": [
+      "p521-02-approved-fixture-and-v1-lock",
+      "p521-02-shadow-evaluation",
+      "p521-02-official-chord-safety",
+      "p521-02-focused-tests",
+      "p521-02-lint-typecheck",
+      "p521-02-phase-docs",
+      "p521-02-diff-and-protected-surface"
     ]
   },
   "gateResults": {
@@ -41,8 +50,15 @@
     "p521-01-app-typecheck": "pass",
     "p521-01-lint": "pass",
     "p521-01-diff-check": "pass",
-    "p521-01-protected-surface": "pass"
+    "p521-01-protected-surface": "pass",
+    "p521-02-approved-fixture-and-v1-lock": "pass",
+    "p521-02-shadow-evaluation": "pass",
+    "p521-02-official-chord-safety": "pass",
+    "p521-02-focused-tests": "pass",
+    "p521-02-lint-typecheck": "pass",
+    "p521-02-phase-docs": "pass",
+    "p521-02-diff-and-protected-surface": "pass"
   },
-  "nextAction": "P5.21-01 is complete at 25f708e866a66b321e00c8b89c31e07db6b000ca. P5.21-02 shadow evaluation is next; keep production Role v1 unchanged and do not start P5.21.1 or P5.22, merge, or push.",
-  "updatedAt": "2026-08-10T21:07:16+09:00"
+  "nextAction": "P5.21-02 passed at code candidate 6468cb36bd469d234df763df7873c382757456aa. P5.21-03 is active; production Role v1 remains unchanged until that separately authorized promotion stage completes. Do not start P5.21-04, P5.21.1, or P5.22, merge, or push.",
+  "updatedAt": "2026-08-10T22:12:00+09:00"
 }

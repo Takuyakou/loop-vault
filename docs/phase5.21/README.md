@@ -3,10 +3,10 @@
 
 ## Status
 
-- **Status:** P5.21-01 complete — feature-only Role v2 shadow extraction is recorded; production Role v1 is unchanged.
-- **Active stage:** P5.21-02 — Role Classifier v2 / Shadow Evaluation.
-- **Completed stages:** P5.21-00, P5.21-01
-- **Next action:** evaluate a Role v2 candidate in shadow mode against the locked baseline. Do not promote, start P5.21.1/P5.22, merge, or push before the applicable gates pass.
+- **Status:** P5.21-02 complete — the Role v2 candidate passed its locked shadow promotion gate; production Role v1 is unchanged.
+- **Active stage:** P5.21-03 — Promote Role v2 / Confidence / Review UI.
+- **Completed stages:** P5.21-00, P5.21-01, P5.21-02
+- **Next action:** perform the separately authorized P5.21-03 promotion work. Do not start P5.21-04, P5.21.1/P5.22, merge, or push before the applicable Stage 03 gates pass.
 
 Git is the source of truth. The shared worktree initially contained untracked
 phase documents on another branch, so this phase uses its own clean worktree
