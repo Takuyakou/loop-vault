@@ -106,6 +106,8 @@ describe("SettingsDialog sections", () => {
     expect(text).toContain(appCopy.en.settingsUi.data);
     expect(text).toContain(appCopy.en.settingsUi.analysis);
     expect(text).toContain(appCopy.en.settingsUi.monthlyGoal);
+    expect(dialogs()[0]?.querySelector("[data-testid='piano-sample-attribution']")?.textContent)
+      .toContain("Salamander Grand Piano V3 by Alexander Holm");
     await mounted.unmount();
   });
 

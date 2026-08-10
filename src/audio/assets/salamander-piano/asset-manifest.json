@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "instrument": "Salamander Grand Piano V3",
+  "author": "Alexander Holm",
+  "license": "CC-BY-3.0",
+  "distributionCommit": "efd8296360f9526e379bfbe5c1698ff54d6a1d34",
+  "assets": [
+    { "path": "A0.mp3", "bytes": 113969, "sha256": "f62d50bd977679e1316063866ece754604b8c214d73b7e3033372c75d9064c03" },
+    { "path": "C1.mp3", "bytes": 110199, "sha256": "caba05f0be4d9f6030adcc033208b49ac54e47d58edc57b743085b095b4ea395" },
+    { "path": "C2.mp3", "bytes": 110357, "sha256": "7029a9e84f748433bc33d067ee13d37d0b866768f09ae6c7dac8e2e98e1e53ca" },
+    { "path": "C3.mp3", "bytes": 78036, "sha256": "bb70dd921d81b3dda561c19b5c029292ae5a6fba1947e364bf274218ce19a9d1" },
+    { "path": "C4.mp3", "bytes": 78718, "sha256": "689eaa4c2fd7f29a2cc0e386eec462156d523a87d701269e5e2458e66056f4f6" },
+    { "path": "C5.mp3", "bytes": 68920, "sha256": "2f5b0f7422063010fb379e684bfdf2daa3911dcd2251413d79fa2a53029fdc30" },
+    { "path": "C6.mp3", "bytes": 28065, "sha256": "0d3232edd13ba69fd5caf4a295060ae0fd533b8a1433ae0a038644d70715c907" },
+    { "path": "C7.mp3", "bytes": 18963, "sha256": "694b512fac99ba7f7290c045d9c18e94724a7ebcc319b937baabc62125814283" },
+    { "path": "LICENSE.txt", "bytes": 19467, "sha256": "e6bc9e9c474700b708f568bac9e5a8a9bcb2b1dad53442f5ba449fcb848b8e76" }
+  ]
+}

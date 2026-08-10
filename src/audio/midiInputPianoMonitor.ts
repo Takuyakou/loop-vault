@@ -1,5 +1,25 @@
 import * as Tone from "tone";
 
+const bundledPianoSamples = import.meta.glob(
+  "./assets/salamander-piano/*.mp3",
+  {
+    eager: true,
+    import: "default",
+    query: "?url",
+  },
+) as Record<string, string>;
+
+const PIANO_SAMPLE_FILES = {
+  A0: "A0.mp3",
+  C1: "C1.mp3",
+  C2: "C2.mp3",
+  C3: "C3.mp3",
+  C4: "C4.mp3",
+  C5: "C5.mp3",
+  C6: "C6.mp3",
+  C7: "C7.mp3",
+} as const;
+
 export interface MidiInputPianoMonitor {
   updateNotes(notes: readonly number[]): void;
   stop(): void;
@@ -7,40 +27,43 @@ export interface MidiInputPianoMonitor {
 }
 
 /**
- * A local, low-latency piano-like monitor for Live MIDI capture.
+ * A local, low-latency sampled-piano monitor for Live MIDI capture.
  * It is intentionally separate from the scheduled preview singleton so a
  * keyboard note cannot cancel a card/progression preview session.
  */
 export async function createMidiInputPianoMonitor(): Promise<MidiInputPianoMonitor> {
   await Tone.start();
 
-  const highpass = new Tone.Filter({ frequency: 55, type: "highpass" });
-  const lowpass = new Tone.Filter({
-    frequency: 5_200,
-    type: "lowpass",
-    Q: 0.5,
-    rolloff: -24,
-  });
+  const urls = Object.fromEntries(
+    Object.entries(PIANO_SAMPLE_FILES).map(([note, fileName]) => {
+      const url = bundledPianoSamples[`./assets/salamander-piano/${fileName}`];
+      if (!url) {
+        throw new Error(`Bundled Salamander piano sample is missing: ${fileName}`);
+      }
+      return [note, url];
+    }),
+  );
+  const sampler = new Tone.Sampler({ urls, release: 0.8 });
+  const highpass = new Tone.Filter({ frequency: 35, type: "highpass" });
   const compressor = new Tone.Compressor({ threshold: -18, ratio: 3 });
-  const reverb = new Tone.Freeverb(0.18, 3_200);
-  reverb.wet.value = 0.08;
-  const synth = new Tone.PolySynth(Tone.Synth, {
-    oscillator: { type: "triangle" },
-    envelope: {
-      attack: 0.003,
-      decay: 1.1,
-      sustain: 0.08,
-      release: 0.65,
-    },
-  }).chain(highpass, lowpass, compressor, reverb, Tone.getDestination());
-  synth.volume.value = -9;
+  sampler.chain(highpass, compressor, Tone.getDestination());
+  sampler.volume.value = -8;
+
+  try {
+    await waitForSamples();
+  } catch (error) {
+    sampler.dispose();
+    highpass.dispose();
+    compressor.dispose();
+    throw error;
+  }
 
   let sounding = new Set<number>();
   let disposed = false;
 
   const stop = () => {
     if (disposed) return;
-    synth.releaseAll();
+    sampler.releaseAll();
     sounding = new Set();
   };
 
@@ -53,10 +76,10 @@ export async function createMidiInputPianoMonitor(): Promise<MidiInputPianoMonit
           .sort((left, right) => left - right),
       );
       for (const note of sounding) {
-        if (!next.has(note)) synth.triggerRelease(midiToNoteName(note));
+        if (!next.has(note)) sampler.triggerRelease(midiToNoteName(note));
       }
       for (const note of next) {
-        if (!sounding.has(note)) synth.triggerAttack(midiToNoteName(note), undefined, 0.68);
+        if (!sounding.has(note)) sampler.triggerAttack(midiToNoteName(note), undefined, 0.68);
       }
       sounding = next;
     },
@@ -65,13 +88,30 @@ export async function createMidiInputPianoMonitor(): Promise<MidiInputPianoMonit
       if (disposed) return;
       stop();
       disposed = true;
-      synth.dispose();
+      sampler.dispose();
       highpass.dispose();
-      lowpass.dispose();
       compressor.dispose();
-      reverb.dispose();
     },
   };
+}
+
+function waitForSamples(timeoutMs = 10_000): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timeout = globalThis.setTimeout(
+      () => reject(new Error("Bundled piano samples did not preload before timeout.")),
+      timeoutMs,
+    );
+    Tone.loaded().then(
+      () => {
+        globalThis.clearTimeout(timeout);
+        resolve();
+      },
+      (error) => {
+        globalThis.clearTimeout(timeout);
+        reject(error);
+      },
+    );
+  });
 }
 
 function midiToNoteName(midi: number): string {
