@@ -82,6 +82,35 @@ test("P5.20 production Text Progression Entry saves and reaches its supported do
   await page.keyboard.press("Enter");
   await expect(inspector).toBeVisible();
   await expect(inspector.getByTestId("text-progression-auto-generated")).toContainText(/source MIDI|\u5143MIDI/);
+
+  const styleSelector = inspector.getByTestId("voicing-style-selector");
+  const inspectorSourceChip = inspector.getByTestId("detail-voicing-source-chip");
+  await expect(styleSelector).toHaveValue("generated-close");
+  await expect(inspectorSourceChip).toHaveAttribute("data-voicing-source", "generated");
+  expect(await inspector.evaluate((element) => {
+    const select = element.querySelector("[data-testid='voicing-style-selector']");
+    const chip = element.querySelector("[data-testid='detail-voicing-source-chip']");
+    return Boolean(select && chip && (select.compareDocumentPosition(chip) & Node.DOCUMENT_POSITION_FOLLOWING));
+  })).toBe(true);
+
+  const savedNotes = inspector.getByTestId("voicing-saved-notes");
+  const defaultSavedNotes = await savedNotes.textContent();
+  await styleSelector.selectOption("open-17");
+  await expect(styleSelector).toHaveValue("open-17");
+  await expect(savedNotes).not.toHaveText(defaultSavedNotes ?? "");
+  await expect(cards.first().getByTestId("text-progression-voicing-state")).toContainText(/Open|\u30aa\u30fc\u30d7\u30f3/);
+
+  const activeMidiNotes = await inspector.getByTestId("voicing-keyboard")
+    .locator("[data-active='true']")
+    .evaluateAll((keys) => keys.map((key) => Number((key as HTMLElement).dataset.midiNote)));
+  expect(activeMidiNotes.length).toBeGreaterThan(0);
+  for (const note of activeMidiNotes) {
+    await expect(savedNotes).toContainText(String(note));
+  }
+
+  // Selecting a card auditions the exact voicing currently planned for save.
+  await cards.nth(1).click();
+  await cards.first().click();
   await inspector.getByTestId("text-progression-preview").click();
   await inspector.getByRole("button", { name: /\u505c\u6b62|Stop/ }).click();
 

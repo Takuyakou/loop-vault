@@ -10,6 +10,7 @@ import {
 } from "../domain/repository";
 import { pickFocus } from "../domain/focus";
 import { parseChordLabel } from "../domain/chords";
+import { createTextProgressionStyleSnapshot } from "../domain/textProgressionVoicing";
 import type {
   ChordTimelineItem,
   ProgressionBlockCandidate,
@@ -1079,6 +1080,17 @@ describe("vault store", () => {
     expect(saved).not.toHaveProperty("detectedKey");
     expect(saved?.chords[0]?.voicingMemory).toEqual({ practiceVoicingOverride: practiceOnly });
 
+    const styleChord = textTimelineChord("Cmaj7", 1);
+    const styleOverride = createTextProgressionStyleSnapshot(styleChord.chord, "open-17")!;
+    styleChord.voicingMemory = { practiceVoicingOverride: styleOverride };
+    expect(store.getState().createIdeaFromTextProgression({
+      title: "Selected generated style",
+      summaryText: "ignored",
+      chords: [styleChord],
+    })).toBeDefined();
+    expect(store.getState().ideas[1]?.progressionBlocks?.[0]?.chords[0]?.voicingMemory)
+      .toEqual({ practiceVoicingOverride: styleOverride });
+
     expect(store.getState().createIdeaFromTextProgression({
       title: "Invalid BPM",
       summaryText: "ignored",
@@ -1118,6 +1130,12 @@ describe("vault store", () => {
     };
     const unsafeSnapshots = [
       { ...validPractice, source: "midi-extracted" as const },
+      {
+        ...validPractice,
+        source: "manual" as const,
+        extractorVersion: "text-style-v1:open-17",
+        userVerified: true,
+      },
       { ...validPractice, representation: "aggregated-note-set" as const },
       { ...validPractice, capturedForChordKey: "stale" },
       { ...validPractice, midiNotes: [43, 36, 47, 52] },

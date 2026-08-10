@@ -12,7 +12,11 @@ export function KeyboardVisualizer({ notes, bassNote }: KeyboardVisualizerProps)
   const keys = Array.from({ length: maximum - minimum + 1 }, (_, index) => minimum + index);
   return (
     <div className="mt-3">
-      <div className="flex h-16 overflow-hidden border border-[var(--lv-border)] bg-stone-950" aria-label="Voicing keyboard">
+      <div
+        className="flex h-16 overflow-hidden border border-[var(--lv-border)] bg-stone-950"
+        aria-label="Voicing keyboard"
+        data-testid="voicing-keyboard"
+      >
         {keys.map((note) => {
           const black = [1, 3, 6, 8, 10].includes(note % 12);
           const selected = active.has(note);
@@ -20,6 +24,8 @@ export function KeyboardVisualizer({ notes, bassNote }: KeyboardVisualizerProps)
             <span
               key={note}
               title={midiNoteName(note)}
+              data-midi-note={note}
+              data-active={selected ? "true" : "false"}
               className={[
                 "min-w-0 flex-1 border-r border-stone-700",
                 black ? "bg-stone-800" : "bg-stone-200",

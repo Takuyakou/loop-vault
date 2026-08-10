@@ -62,7 +62,12 @@ describe("CaptureView text progression entry", () => {
       );
       expect(chordCard?.textContent).toContain("Cmaj7");
       await act(async () => chordCard?.click());
-
+      expect(mounted.toggle).toHaveBeenCalledTimes(1);
+      expect(mounted.controller.getState().request).toMatchObject({
+        type: "timeline",
+        bpm: 120,
+        beatsPerBar: 4,
+      });
       const bpmInput = mounted.container.querySelector<HTMLInputElement>(
         "[data-testid='text-progression-bpm']",
       );
@@ -74,7 +79,7 @@ describe("CaptureView text progression entry", () => {
       expect(preview?.disabled).toBe(false);
       await act(async () => preview?.click());
 
-      expect(mounted.toggle).toHaveBeenCalledTimes(1);
+      expect(mounted.toggle).toHaveBeenCalledTimes(2);
       const request = mounted.controller.getState().request;
       if (!request || request.type !== "timeline") {
         throw new Error("Text chord preview must use a timeline playback request.");

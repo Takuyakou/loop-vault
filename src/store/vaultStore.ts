@@ -17,6 +17,7 @@ import {
   parseMidi,
 } from "../domain/midi";
 import { confirmedTextProgressionKeyState } from "../domain/textProgression";
+import { isTextProgressionStyleSnapshot } from "../domain/textProgressionVoicing";
 import { parseChordLabel } from "../domain/chords";
 import { attachSourceVoicing, attachSourceVoicings, isValidVoicingSnapshot, voicingCompatibility } from "../domain/voicing";
 import {
@@ -1035,7 +1036,7 @@ function textProgressionChordForSave(item: ChordTimelineItem): ChordTimelineItem
   };
 }
 
-/** Only compatible Live MIDI simultaneous snapshots can cross the text save boundary. */
+/** Only compatible Live MIDI or verified Text style snapshots can cross the text save boundary. */
 function textPracticeVoicingForSave(
   memory: ChordTimelineItem["voicingMemory"],
   chord: ChordTimelineItem["chord"],
@@ -1043,7 +1044,10 @@ function textPracticeVoicingForSave(
   const practice = memory?.practiceVoicingOverride;
   if (
     !practice
-    || practice.source !== "live-played"
+    || (
+      practice.source !== "live-played"
+      && !isTextProgressionStyleSnapshot(practice, chord)
+    )
     || practice.representation !== "simultaneous-voicing"
     || !isValidVoicingSnapshot(practice)
     || voicingCompatibility(practice, chord) !== "compatible"

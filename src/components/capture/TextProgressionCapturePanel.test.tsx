@@ -70,6 +70,14 @@ async function changeValue(
   });
 }
 
+
+async function changeSelect(element: HTMLSelectElement, value: string) {
+  const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value")?.set;
+  await act(async () => {
+    setter?.call(element, value);
+    element.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+}
 async function click(element: HTMLElement) {
   await act(async () => element.click());
 }
@@ -130,7 +138,7 @@ describe("TextProgressionCapturePanel", () => {
     expect(cards[0]?.getAttribute("type")).toBe("button");
     expect(cards[0]?.getAttribute("aria-pressed")).toBe("true");
     expect(cards[0]?.querySelector('[data-testid="text-progression-voicing-state"]')?.textContent)
-      .toContain("Auto / Generated");
+      .toContain("Default / Generated");
     // These are native buttons: focus/activation are keyboard reachable without
     // introducing a custom keyboard model. Browser key activation is covered by
     // the stage's Playwright accessibility gate.
@@ -139,6 +147,11 @@ describe("TextProgressionCapturePanel", () => {
     await click(cards[1]!);
 
     expect(cards[1]?.getAttribute("aria-pressed")).toBe("true");
+    expect(harness.onPreview).toHaveBeenLastCalledWith(
+      expect.objectContaining({ canonical: "Dm7" }),
+      undefined,
+      120,
+    );
     expect(harness.container.querySelector('[data-testid="text-progression-inspector"]')?.textContent)
       .toContain("Dm7");
     await harness.unmount();
@@ -322,5 +335,154 @@ describe("TextProgressionCapturePanel", () => {
     )?.disabled).toBe(true);
     expect(harness.container.querySelector('[data-testid="text-draft-authoritative"]')).not.toBeNull();
     await harness.unmount();
+  });
+  it("selects a generated voicing style and uses the same notes for the card audition and Draft save", async () => {
+    const harness = await mount();
+    await changeValue(input(harness), "| Cmaj7 Dm7 |");
+
+    const selector = harness.container.querySelector<HTMLSelectElement>(
+      '[data-testid="voicing-style-selector"]',
+    );
+    expect(selector).not.toBeNull();
+    expect([...selector!.options].map((option) => option.textContent)).toEqual([
+      "Default close",
+      "Shell 1–7",
+      "Open 1–7",
+      "Rootless A/B",
+    ]);
+
+    await changeSelect(selector!, "open-17");
+    const savedNotes = harness.container.querySelector<HTMLElement>(
+      '[data-testid="voicing-saved-notes"]',
+    );
+    expect(savedNotes?.textContent).toContain("Notes to save for this chord");
+    expect(savedNotes?.textContent).toContain("MIDI notes:");
+    expect(harness.container.querySelector('[data-testid="text-progression-voicing-state"]')?.textContent)
+      .toContain("Open 1–7");
+
+    const firstCard = harness.container.querySelector<HTMLButtonElement>(
+      '[data-testid="text-progression-card"]',
+    )!;
+    await click(firstCard);
+    const previewMemory = harness.onPreview.mock.calls[harness.onPreview.mock.calls.length - 1]?.[1];
+    const previewNotes = previewMemory?.practiceVoicingOverride?.midiNotes;
+    expect(previewMemory?.practiceVoicingOverride).toMatchObject({
+      source: "manual",
+      extractorVersion: "text-style-v1:open-17",
+      userVerified: true,
+    });
+    expect(savedNotes?.textContent).toContain(previewNotes.join(", "));
+
+    await click(button(harness, "text-progression-convert"));
+    const converted = harness.onConvert.mock.calls[0]?.[0];
+    expect(converted.draft.events[0]?.source.voicingMemory?.practiceVoicingOverride?.midiNotes)
+      .toEqual(previewNotes);
+    await harness.unmount();
+  });
+
+  it("stops an owned keyboard capture when the selected card changes", async () => {
+    const original = defaultLiveMidiStore.getState();
+    const activate = vi.fn(async () => undefined);
+    const deactivate = vi.fn(async () => undefined);
+    defaultLiveMidiStore.setState({
+      active: false,
+      activate,
+      deactivate,
+      notes: {
+        held: new Map(),
+        sustained: new Set(),
+        pedalByChannel: new Map(),
+      },
+    });
+    const harness = await mount();
+
+    try {
+      await changeValue(input(harness), "| Cmaj7 Cmaj7 |");
+      await click(buttonByText(harness, "Capture from keyboard"));
+      expect(activate).toHaveBeenCalledTimes(1);
+
+      const cards = harness.container.querySelectorAll<HTMLButtonElement>(
+        '[data-testid="text-progression-card"]',
+      );
+      await click(cards[1]!);
+      expect(deactivate).toHaveBeenCalledTimes(1);
+      expect(harness.container.querySelector('[data-testid="voicing-capture-confirmation"]'))
+        .toBeNull();
+    } finally {
+      await harness.unmount();
+      defaultLiveMidiStore.setState({
+        active: original.active,
+        activate: original.activate,
+        deactivate: original.deactivate,
+        notes: original.notes,
+      });
+    }
+  });
+  it("confirms the exact keyboard notes that will overwrite the selected chord on save", async () => {
+    vi.useFakeTimers();
+    const original = defaultLiveMidiStore.getState();
+    const activate = vi.fn(async () => undefined);
+    const deactivate = vi.fn(async () => undefined);
+    defaultLiveMidiStore.setState({
+      active: true,
+      activate,
+      deactivate,
+      notes: {
+        held: new Map(),
+        sustained: new Set(),
+        pedalByChannel: new Map(),
+      },
+    });
+    const harness = await mount();
+
+    try {
+      await changeValue(input(harness), "| Cmaj7 |");
+      await click(buttonByText(harness, "Capture from keyboard"));
+      await act(async () => {
+        defaultLiveMidiStore.setState({
+          notes: {
+            held: new Map([
+              ["0:48", { count: 1, velocity: 100, sinceMs: 0, lastEventMs: 0 }],
+              ["0:52", { count: 1, velocity: 100, sinceMs: 0, lastEventMs: 0 }],
+              ["0:55", { count: 1, velocity: 100, sinceMs: 0, lastEventMs: 0 }],
+              ["0:59", { count: 1, velocity: 100, sinceMs: 0, lastEventMs: 0 }],
+            ]),
+            sustained: new Set(),
+            pedalByChannel: new Map(),
+          },
+        });
+      });
+      await act(async () => vi.advanceTimersByTime(100));
+      await click(buttonByText(harness, "Use these notes for saving"));
+
+      const confirmation = harness.container.querySelector<HTMLElement>(
+        '[data-testid="voicing-capture-confirmation"]',
+      );
+      expect(confirmation?.textContent).toContain("Keyboard input recorded.");
+      expect(confirmation?.textContent).toContain("C3");
+      expect(harness.container.querySelector('[data-testid="voicing-saved-notes"]')?.textContent)
+        .toContain("48, 52, 55, 59");
+      expect(harness.container.querySelector<HTMLSelectElement>(
+        '[data-testid="voicing-style-selector"]',
+      )?.value).toBe("live-custom");
+
+      await click(button(harness, "text-progression-convert"));
+      const converted = harness.onConvert.mock.calls[0]?.[0];
+      expect(converted.draft.events[0]?.source.voicingMemory?.practiceVoicingOverride).toMatchObject({
+        source: "live-played",
+        midiNotes: [48, 52, 55, 59],
+        bassNote: 48,
+        userVerified: true,
+      });
+    } finally {
+      await harness.unmount();
+      defaultLiveMidiStore.setState({
+        active: original.active,
+        activate: original.activate,
+        deactivate: original.deactivate,
+        notes: original.notes,
+      });
+      vi.useRealTimers();
+    }
   });
 });

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { voiceChordForPreview } from "../../domain/chordVoicing";
 import { romanNumeralHint } from "../../domain/harmony/romanNumerals";
 import {
   confirmedTextProgressionKeyState,
@@ -16,6 +15,14 @@ import {
   textProgressionEventKey,
   type TextProgressionVoicingOverrides,
 } from "../../domain/textProgressionDraft";
+import {
+  createTextProgressionStyleSnapshot,
+  isTextProgressionVoicingStyleId,
+  TEXT_PROGRESSION_VOICING_STYLES,
+  textProgressionStyleFromSnapshot,
+  textProgressionVoicingNotes,
+  type TextProgressionVoicingStyleId,
+} from "../../domain/textProgressionVoicing";
 import type { ChordVoicingMemory } from "../../domain/types";
 import type { ManualCandidateDraft } from "../../domain/midi/manualDraft";
 import type { AppLanguage } from "../../i18n";
@@ -61,6 +68,7 @@ export function TextProgressionCapturePanel({
   const [bpmInput, setBpmInput] = useState("");
   const [selectedEventKey, setSelectedEventKey] = useState<string>();
   const [voicingOverrides, setVoicingOverrides] = useState<TextProgressionVoicingOverrides>(new Map());
+  const [voicingStyles, setVoicingStyles] = useState<ReadonlyMap<string, TextProgressionVoicingStyleId>>(new Map());
 
   const result = useMemo(() => parseTextProgression(input, {
     keyState: confirmedTextProgressionKeyState(confirmedKey),
@@ -75,6 +83,43 @@ export function TextProgressionCapturePanel({
   ) ?? result.events[0], [result.events, selectedEventKey]);
   const selectedKey = selectedEvent ? textProgressionEventKey(selectedEvent) : undefined;
   const selectedMemory = selectedKey === undefined ? undefined : voicingOverrides.get(selectedKey);
+  const storedStyle = selectedEvent
+    ? textProgressionStyleFromSnapshot(selectedMemory?.practiceVoicingOverride, selectedEvent.chord)
+    : undefined;
+  const selectedStyle = storedStyle
+    ?? (selectedKey === undefined ? undefined : voicingStyles.get(selectedKey))
+    ?? "generated-close";
+  const selectedGeneratedNotes = useMemo(
+    () => selectedEvent
+      ? textProgressionVoicingNotes(selectedEvent.chord, selectedStyle) ?? []
+      : [],
+    [selectedEvent, selectedStyle],
+  );
+  const styleOptions = useMemo(
+    () => TEXT_PROGRESSION_VOICING_STYLES.map((styleId) => ({
+      value: styleId,
+      label: voicingStyleLabel(styleId, language),
+      disabled: selectedEvent === undefined
+        || textProgressionVoicingNotes(selectedEvent.chord, styleId) === undefined,
+    })),
+    [language, selectedEvent],
+  );
+  const selectedStyleValue = selectedMemory?.practiceVoicingOverride?.source === "live-played"
+    ? "live-custom"
+    : selectedStyle;
+  const selectedStyleOptions = useMemo(
+    () => selectedStyleValue === "live-custom"
+      ? [
+          ...styleOptions,
+          {
+            value: "live-custom",
+            label: text(language, "Keyboard capture", "鍵盤で記録"),
+            disabled: true,
+          },
+        ]
+      : styleOptions,
+    [language, selectedStyleValue, styleOptions],
+  );
 
   useEffect(() => () => onStop(), [onStop]);
 
@@ -90,8 +135,10 @@ export function TextProgressionCapturePanel({
 
   function selectEvent(event: TextProgressionEvent) {
     if (draftActive) return;
+    const key = textProgressionEventKey(event);
     onStop();
-    setSelectedEventKey(textProgressionEventKey(event));
+    setSelectedEventKey(key);
+    onPreview(event, voicingOverrides.get(key), explicitBpm ?? 120);
   }
 
   function confirmKey() {
@@ -125,6 +172,11 @@ export function TextProgressionCapturePanel({
   function updateVoicing(memory: ChordVoicingMemory | undefined) {
     if (draftActive || selectedKey === undefined) return;
     const practice = memory?.practiceVoicingOverride;
+    setVoicingStyles((current) => {
+      const next = new Map(current);
+      next.delete(selectedKey);
+      return next;
+    });
     setVoicingOverrides((current) => {
       const next = new Map(current);
       if (!practice) {
@@ -137,6 +189,32 @@ export function TextProgressionCapturePanel({
           },
         });
       }
+      return next;
+    });
+  }
+
+  function selectVoicingStyle(value: string) {
+    if (
+      draftActive
+      || selectedKey === undefined
+      || selectedEvent === undefined
+      || !isTextProgressionVoicingStyleId(value)
+    ) return;
+    const snapshot = value === "generated-close"
+      ? undefined
+      : createTextProgressionStyleSnapshot(selectedEvent.chord, value);
+    if (value !== "generated-close" && snapshot === undefined) return;
+    onStop();
+    setVoicingStyles((current) => {
+      const next = new Map(current);
+      if (value === "generated-close") next.delete(selectedKey);
+      else next.set(selectedKey, value);
+      return next;
+    });
+    setVoicingOverrides((current) => {
+      const next = new Map(current);
+      if (snapshot === undefined) next.delete(selectedKey);
+      else next.set(selectedKey, { practiceVoicingOverride: snapshot });
       return next;
     });
   }
@@ -159,8 +237,8 @@ export function TextProgressionCapturePanel({
   }
 
   function previewSelected() {
-    if (draftActive || !selectedEvent || explicitBpm === undefined) return;
-    onPreview(selectedEvent, selectedMemory, explicitBpm);
+    if (draftActive || !selectedEvent) return;
+    onPreview(selectedEvent, selectedMemory, explicitBpm ?? 120);
   }
 
   const confirmed = result.keyState.kind === "confirmed";
@@ -283,8 +361,8 @@ export function TextProgressionCapturePanel({
           />
           <p className="mt-2 text-xs text-[var(--lv-text-muted)]">
             {bpmInput && explicitBpm === undefined
-              ? text(language, "Playback requires an explicit BPM from 30 to 240. Saving can still omit BPM.", "再生には30〜240の明示BPMが必要です。保存時はBPMなしでも構いません。")
-              : text(language, "Text has no source preview. Audition uses the generated chord voicing with an explicit BPM.", "テキストには元音源プレビューはありません。明示BPMで生成コードボイシングを試聴します。")}
+              ? text(language, "Enter 30–240 BPM to change audition speed. Cards use 120 BPM until then, and saving can still omit BPM.", "試聴速度を変えるには30〜240 BPMを入力してください。それまではカードを120 BPMで試聴し、保存時はBPMなしにもできます。")
+              : text(language, "Click a chord card to audition the exact notes currently planned for saving. Without BPM, audition uses 120 BPM only.", "コードカードをクリックすると、現在の保存予定音をそのまま試聴します。BPM未指定時は試聴だけ120 BPMを使用します。")}
           </p>
         </div>
       </section>
@@ -308,10 +386,10 @@ export function TextProgressionCapturePanel({
                 type="button"
                 className="lv-button-primary px-3 py-2 text-sm"
                 data-testid="text-progression-preview"
-                disabled={disabled || explicitBpm === undefined}
+                disabled={disabled}
                 onClick={previewSelected}
               >
-                {text(language, "Play Auto / Generated", "自動生成を再生")}
+                {text(language, "Play notes to save", "保存予定音を再生")}
               </button>
               <button
                 type="button"
@@ -324,18 +402,29 @@ export function TextProgressionCapturePanel({
             </div>
           </div>
           <p className="mt-3 text-xs text-[var(--lv-text-muted)]" data-testid="text-progression-auto-generated">
-            {text(language, "Auto / Generated — this is not source MIDI and does not claim progression-wide voice leading.", "自動生成です。元MIDIや進行全体のボイスリーディングを示すものではありません。")}
+            {text(
+              language,
+              `Generated style: ${voicingStyleLabel(selectedStyle, language)}. It is not source MIDI.`,
+              `生成スタイル: ${voicingStyleLabel(selectedStyle, language)}。元MIDIではありません。`,
+            )}
           </p>
           <TextCapabilityList capabilities={capabilities} language={language} />
           <VoicingPanel
+            key={selectedKey}
             chord={selectedEvent.chord}
             memory={selectedMemory}
-            generatedNotes={voiceChordForPreview(selectedEvent.chord).notes}
+            generatedNotes={selectedGeneratedNotes}
             language={language}
             sourceAvailable={false}
             sourceApplicable={false}
             onMemoryChange={updateVoicing}
             onReextract={() => undefined}
+            styleSelector={{
+              value: selectedStyleValue,
+              label: text(language, "Generated style", "生成スタイル"),
+              options: selectedStyleOptions,
+              onChange: selectVoicingStyle,
+            }}
           />
         </section>
       ) : null}
@@ -427,9 +516,14 @@ function TextProgressionCards({
                   );
                 }
                 const key = textProgressionEventKey(event);
-                const hasCustomPracticeVoicing = Boolean(
-                  voicingOverrides.get(key)?.practiceVoicingOverride,
-                );                const degree = confirmedKey && showRomanNumerals
+                const practice = voicingOverrides.get(key)?.practiceVoicingOverride;
+                const styleId = textProgressionStyleFromSnapshot(practice, event.chord);
+                const voicingState = practice?.source === "live-played"
+                  ? text(language, "Custom / Live MIDI", "カスタム / Live MIDI")
+                  : styleId
+                    ? voicingStyleLabel(styleId, language)
+                    : text(language, "Default / Generated", "標準 / 自動生成");
+                const degree = confirmedKey && showRomanNumerals
                   ? romanNumeralHint(event.chord, confirmedKey)?.label
                   : undefined;
                 return (
@@ -447,9 +541,7 @@ function TextProgressionCards({
                     <span className="mt-1 block text-xs text-[var(--lv-text-muted)]">{timingLabel(event, language)}</span>
                     {degree ? <span className="mt-1 block text-xs text-teal-200">{degree}</span> : null}
                     <span className="mt-1 block text-xs text-[var(--lv-text-muted)]" data-testid="text-progression-voicing-state">
-                      {hasCustomPracticeVoicing
-                        ? text(language, "Custom / Live MIDI", "\u30ab\u30b9\u30bf\u30e0 / Live MIDI")
-                        : text(language, "Auto / Generated", "\u81ea\u52d5 / \u751f\u6210")}
+                      {voicingState}
                     </span>                  </button>
                 );
               })}
@@ -595,6 +687,16 @@ function japaneseChordContextReason(reason: string): string | undefined {
   };
   return messages[reason];
 }
+function voicingStyleLabel(styleId: TextProgressionVoicingStyleId, language: AppLanguage): string {
+  const labels: Record<TextProgressionVoicingStyleId, readonly [string, string]> = {
+    "generated-close": ["Default close", "標準クローズ"],
+    "shell-17": ["Shell 1–7", "シェル 1–7"],
+    "open-17": ["Open 1–7", "オープン 1–7"],
+    "rootless-ab": ["Rootless A/B", "ルートレス A/B"],
+  };
+  return text(language, labels[styleId][0], labels[styleId][1]);
+}
+
 function parseExplicitBpm(value: string): number | undefined {
   if (!value.trim()) return undefined;
   const parsed = Number(value);

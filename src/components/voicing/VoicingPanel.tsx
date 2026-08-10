@@ -26,6 +26,12 @@ interface VoicingPanelProps {
   reextracting?: boolean;
   onMemoryChange: (memory: ChordVoicingMemory | undefined) => void;
   onReextract: () => void;
+  styleSelector?: {
+    value: string;
+    label: string;
+    options: readonly { value: string; label: string; disabled?: boolean }[];
+    onChange: (value: string) => void;
+  };
 }
 
 const copy = {
@@ -33,6 +39,7 @@ const copy = {
     title: "ボイシング",
     used: "使用中",
     practice: "鍵盤で記録",
+    selectedStyle: "選択スタイル",
     sourceEstimate: "元MIDIから推定",
     generated: "自動生成",
     aggregated: "区間内の音を集約",
@@ -41,7 +48,7 @@ const copy = {
     replace: "鍵盤で弾いて上書き",
     recordPrompt: "MIDIキーボードで押さえてください",
     stable: "安定",
-    confirm: "この押さえ方を使う",
+    confirm: "この音を保存予定にする",
     retry: "やり直す",
     cancel: "キャンセル",
     clearPractice: "練習用を解除",
@@ -50,11 +57,15 @@ const copy = {
     missing: "元MIDIファイルを見つけられませんでした。鍵盤で練習用ボイシングを記録できます。",
     mismatch: "現在のコードとの構成音一致が低いため、確認してください。",
     detail: "保存するのは音高とオクターブ配置です。音色、ベロシティ、発音順序は保存しません。",
+    savedNotes: "このコードの保存予定音",
+    midiNotes: "MIDIノート",
+    captured: "鍵盤入力を記録しました。Vault保存時にこのコードへ適用されます。",
   },
   en: {
     title: "Voicing",
     used: "In use",
     practice: "Keyboard capture",
+    selectedStyle: "Selected style",
     sourceEstimate: "Estimated from source MIDI",
     generated: "Generated",
     aggregated: "Aggregated note set",
@@ -63,7 +74,7 @@ const copy = {
     replace: "Play and replace",
     recordPrompt: "Hold a voicing on your MIDI keyboard",
     stable: "Stable",
-    confirm: "Use this voicing",
+    confirm: "Use these notes for saving",
     retry: "Try again",
     cancel: "Cancel",
     clearPractice: "Clear practice voicing",
@@ -72,6 +83,9 @@ const copy = {
     missing: "The source MIDI file was not found. You can capture a practice voicing from a keyboard.",
     mismatch: "The held notes have low coverage for the current chord. Please review them.",
     detail: "Only pitches and octave placement are saved. Sound, velocity, and note order are not saved.",
+    savedNotes: "Notes to save for this chord",
+    midiNotes: "MIDI notes",
+    captured: "Keyboard input recorded. These notes will be applied to this chord when you save to Vault.",
   },
 } as const;
 
@@ -85,6 +99,7 @@ export function VoicingPanel({
   reextracting,
   onMemoryChange,
   onReextract,
+  styleSelector,
 }: VoicingPanelProps) {
   const text = copy[language];
   const liveState = useStore(defaultLiveMidiStore, (state) => state.notes);
@@ -93,6 +108,10 @@ export function VoicingPanel({
   const [recording, setRecording] = useState(false);
   const [stableNotes, setStableNotes] = useState<number[]>([]);
   const [stable, setStable] = useState(false);
+  const [captureConfirmation, setCaptureConfirmation] = useState<{
+    chordKey: string;
+    notes: number[];
+  }>();
   const ownedConnection = useRef(false);
   // Text has no source MIDI. Ignore a malformed caller-supplied source snapshot
   // rather than letting it affect the generated/practice-only text path.
@@ -137,6 +156,7 @@ export function VoicingPanel({
   }, []);
 
   async function startRecording() {
+    setCaptureConfirmation(undefined);
     ownedConnection.current = !liveActive;
     if (!liveActive) await defaultLiveMidiStore.getState().activate();
     setStableNotes([]);
@@ -167,12 +187,19 @@ export function VoicingPanel({
       confidence: 1,
       userVerified: true,
     };
+    setCaptureConfirmation({
+      chordKey: normalizedChordKey(chord),
+      notes: [...stableNotes],
+    });
     onMemoryChange({ ...memory, practiceVoicingOverride: snapshot });
     void stopRecording();
   }
 
-  const originLabel = resolved.origin === "practice-override"
+  const practiceOriginLabel = displayedSnapshot?.source === "live-played"
     ? text.practice
+    : text.selectedStyle;
+  const originLabel = resolved.origin === "practice-override"
+    ? practiceOriginLabel
     : resolved.origin.startsWith("source")
       ? (
           displayedSnapshot?.representation === "aggregated-note-set"
@@ -186,6 +213,27 @@ export function VoicingPanel({
       <div className="flex items-center justify-between gap-3">
         <h3 className="text-sm font-semibold text-[var(--lv-text)]">{text.title}</h3>
         <div className="flex flex-wrap items-center justify-end gap-2">
+          {styleSelector ? (
+            <label className="flex items-center gap-2 text-xs text-[var(--lv-text-muted)]">
+              <span>{styleSelector.label}</span>
+              <select
+                className="min-h-9 border border-[var(--lv-border)] bg-[var(--lv-surface)] px-2 text-xs text-[var(--lv-text)]"
+                data-testid="voicing-style-selector"
+                value={styleSelector.value}
+                disabled={recording}
+                onChange={(event) => {
+                  setCaptureConfirmation(undefined);
+                  styleSelector.onChange(event.target.value);
+                }}
+              >
+                {styleSelector.options.map((option) => (
+                  <option key={option.value} value={option.value} disabled={option.disabled}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
           <VoicingSourceChip
             status={sourceStatus.status}
             reason={sourceStatus.reason}
@@ -198,16 +246,25 @@ export function VoicingPanel({
           </span>
         </div>
       </div>
-      <p className="mt-3 text-sm font-semibold text-[var(--lv-text)]">
-        {displayedNotes.map(midiNoteName).join("  ")}
-      </p>
-      <p className="mt-1 text-xs text-[var(--lv-text-muted)]">
-        Bass: {displayedNotes[0] !== undefined ? midiNoteName(displayedNotes[0]) : "-"}
-      </p>
+      <div className="mt-3 border border-[var(--lv-border)] bg-[var(--lv-bg)]/60 p-3" data-testid="voicing-saved-notes">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--lv-accent)]">{text.savedNotes}</p>
+        <p className="mt-2 text-sm font-semibold text-[var(--lv-text)]">
+          {displayedNotes.map(midiNoteName).join("  ")}
+        </p>
+        <p className="mt-1 text-xs text-[var(--lv-text-muted)]">
+          {text.midiNotes}: {displayedNotes.join(", ")} / Bass: {displayedNotes[0] !== undefined ? midiNoteName(displayedNotes[0]) : "-"}
+        </p>
+      </div>
       <KeyboardVisualizer
         notes={recording ? currentHeld : displayedNotes}
         bassNote={recording ? currentHeld[0] : displayedNotes[0]}
       />
+
+      {captureConfirmation?.chordKey === normalizedChordKey(chord) ? (
+        <p className="mt-3 border-l-2 border-teal-300 pl-3 text-sm text-teal-100" role="status" data-testid="voicing-capture-confirmation">
+          {text.captured} {captureConfirmation.notes.map(midiNoteName).join("  ")}
+        </p>
+      ) : null}
 
       {sourceCompatibility === "stale" ? (
         <p className="mt-3 border-l-2 border-amber-300 pl-3 text-xs text-amber-100">{text.stale}</p>
@@ -249,7 +306,7 @@ export function VoicingPanel({
             </button>
           ) : null}
           {memory?.practiceVoicingOverride ? (
-            <button type="button" className="lv-button-ghost px-3 py-2 text-sm" onClick={() => onMemoryChange({ ...memory, practiceVoicingOverride: undefined })}>
+            <button type="button" className="lv-button-ghost px-3 py-2 text-sm" onClick={() => { setCaptureConfirmation(undefined); onMemoryChange({ ...memory, practiceVoicingOverride: undefined }); }}>
               {text.clearPractice}
             </button>
           ) : null}

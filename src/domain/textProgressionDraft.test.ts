@@ -9,6 +9,7 @@ import {
   textProgressionDraftTitle,
   textProgressionEventKey,
 } from "./textProgressionDraft";
+import { createTextProgressionStyleSnapshot } from "./textProgressionVoicing";
 import { normalizedChordKey } from "./voicing";
 
 function liveOverride(label = "Cmaj7") {
@@ -110,7 +111,7 @@ describe("Text Progression ManualCandidateDraft bridge", () => {
     }
   });
 
-  test("binds only compatible Live MIDI practice overrides by post-conversion slot identity", () => {
+  test("binds only compatible Live MIDI and verified style overrides by post-conversion slot identity", () => {
     const result = parseTextProgression("| Cmaj7 Dm7 |", { confirmedKey: "C major" });
     const practiceOverride = liveOverride();
     const eventKey = textProgressionEventKey(result.events[0]!);
@@ -132,8 +133,27 @@ describe("Text Progression ManualCandidateDraft bridge", () => {
     });
     expect(draft.events[0]?.source.voicingMemory).not.toHaveProperty("sourceVoicing");
 
+    const styleEvent = result.events[1]!;
+    const styleOverride = createTextProgressionStyleSnapshot(styleEvent.chord, "shell-17")!;
+    const styleDraft = createTextProgressionDraft({
+      result,
+      voicingOverrides: new Map([[
+        textProgressionEventKey(styleEvent),
+        { practiceVoicingOverride: styleOverride },
+      ]]),
+    });
+    expect(styleDraft.events[1]?.source.voicingMemory).toEqual({
+      practiceVoicingOverride: styleOverride,
+    });
+
     const invalidOverrides = [
       { ...practiceOverride, source: "midi-extracted" as const },
+      {
+        ...practiceOverride,
+        source: "manual" as const,
+        extractorVersion: "text-style-v1:shell-17",
+        userVerified: true,
+      },
       { ...practiceOverride, representation: "aggregated-note-set" as const },
       { ...practiceOverride, capturedForChordKey: "wrong-chord" },
       { ...practiceOverride, midiNotes: [43, 36, 47, 52] },

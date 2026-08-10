@@ -10,6 +10,7 @@ import type { EditableProgression } from "./progressionEditing";
 import type { ChordVoicingMemory, ChordTimelineItem, VoicingSnapshot } from "./types";
 import { confirmedTextProgressionKeyState } from "./textProgression";
 import type { TextProgressionEvent, TextProgressionParseResult } from "./textProgression";
+import { isTextProgressionStyleSnapshot } from "./textProgressionVoicing";
 import { isValidVoicingSnapshot, voicingCompatibility } from "./voicing";
 
 /**
@@ -232,7 +233,7 @@ function applyTextVoicingOverrides(
   return { ...draft, events, originalEvents: events.map(cloneTextDraftEvent) };
 }
 
-/** Keep only a compatible Live MIDI practice override; no source voicing is valid here. */
+/** Keep only a compatible Live MIDI or verified Text style override; no source voicing is valid here. */
 function practiceOnlyMemory(
   memory: ChordVoicingMemory | undefined,
   chord: ChordTimelineItem["chord"],
@@ -240,7 +241,10 @@ function practiceOnlyMemory(
   const override = memory?.practiceVoicingOverride;
   if (
     !override
-    || override.source !== "live-played"
+    || (
+      override.source !== "live-played"
+      && !isTextProgressionStyleSnapshot(override, chord)
+    )
     || override.representation !== "simultaneous-voicing"
     || !isValidVoicingSnapshot(override)
     || voicingCompatibility(override, chord) !== "compatible"
