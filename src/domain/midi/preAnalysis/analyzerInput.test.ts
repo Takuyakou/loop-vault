@@ -7,6 +7,7 @@ import {
   addMidiSources,
   applyAnalysisSessionPreset,
   createAnalysisSession,
+  setAnalysisSessionVoiceContributionPreset,
   updateAnalysisSessionVoice,
 } from "./analysisSession";
 import {
@@ -44,6 +45,37 @@ describe("Phase 5.1 analyzer input", () => {
       fileName: "runtime-only.mid",
       ...phase5Options,
     }));
+  });
+
+  it("activates Harmonic Core only when explicitly selected and keeps manual roles authoritative", () => {
+    const initial = createAnalysisSession([{
+      sourceId: "master",
+      displayName: "harmonic-core.mid",
+      bytes: multiVoiceMidi(480),
+    }]).session!;
+    const firstVoice = initial.voices.find((voice) => !voice.isDrum)!;
+    const selected = {
+      ...initial,
+      voices: initial.voices.map((voice) => ({
+        ...voice,
+        included: voice.id === firstVoice.id,
+        autoRole: voice.id === firstVoice.id ? "harmony" : voice.autoRole,
+        assignedRole: voice.id === firstVoice.id ? "bass" : voice.assignedRole,
+      })),
+      preset: "custom" as const,
+    };
+    const request = buildSessionAnalysisRequest(
+      setAnalysisSessionVoiceContributionPreset(selected, "harmonic-core"),
+    );
+
+    expect(request.backwardEquivalent).toBe(false);
+    expect(request.options.mode).toBe("voice-aware-rerank-v1");
+    expect(request.options.analysisInput?.voiceContributionPreset).toBe("harmonic-core");
+    expect(Object.values(request.options.analysisInput?.roleOverrides ?? {})).toEqual(["bass"]);
+    expect(analyzeMidi(request.bytes, {
+      ...phase5Options,
+      ...request.options,
+    }).analyzerVersion).toBe("voice-aware-rerank-v1");
   });
 
   it("passes only selected voices and explicit manual roles downstream", () => {

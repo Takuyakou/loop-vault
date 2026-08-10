@@ -13,6 +13,7 @@ import type {
   PreAnalysisNote,
   PreAnalysisSelectionPreset,
 } from "./types";
+import type { VoiceContributionPreset } from "../types";
 
 const nearDuplicateThreshold = 0.9;
 
@@ -112,6 +113,20 @@ export function resetAnalysisSessionAuto(
   session: AnalysisSession,
 ): AnalysisSession {
   return applyAnalysisSessionPreset(session, "auto");
+}
+
+export function analysisSessionVoiceContributionPreset(
+  session: AnalysisSession,
+): VoiceContributionPreset {
+  return session.voiceContributionPreset ?? "standard";
+}
+
+export function setAnalysisSessionVoiceContributionPreset(
+  session: AnalysisSession,
+  preset: VoiceContributionPreset,
+): AnalysisSession {
+  if (analysisSessionVoiceContributionPreset(session) === preset) return session;
+  return { ...session, voiceContributionPreset: preset };
 }
 
 export function updateAnalysisSessionSource(

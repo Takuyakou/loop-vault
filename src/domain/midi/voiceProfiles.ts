@@ -9,6 +9,7 @@ import type {
   VoiceEvidenceProfiles,
   VoiceFeatureInput,
   VoiceRole,
+  VoiceContributionPreset,
   VoiceRoleInference,
 } from "./types";
 import { resolveVoiceRole } from "./voiceRoles";
@@ -21,7 +22,25 @@ export interface VoiceRoleProfile {
   contribution: VoiceContributionWeights;
 }
 
-export function contributionWeightsForRole(role: VoiceRole): VoiceContributionWeights {
+export const harmonicCoreRoleWeights: Readonly<Record<VoiceRole, number>> = Object.freeze({
+  bass: 0,
+  harmony: 1.3,
+  pad: 1.3,
+  melody: 0.15,
+  percussion: 0,
+  mixed: 0.8,
+});
+
+export function contributionWeightsForRole(
+  role: VoiceRole,
+  preset: VoiceContributionPreset = "standard",
+): VoiceContributionWeights {
+  const standard = standardContributionWeightsForRole(role);
+  if (preset === "standard") return standard;
+  return scaleContribution(standard, harmonicCoreRoleWeights[role]);
+}
+
+function standardContributionWeightsForRole(role: VoiceRole): VoiceContributionWeights {
   if (role === "bass") return { root: 0.9, bass: 1, quality: 0.25, tension: 0 };
   if (role === "harmony") return { root: 0.65, bass: 0.35, quality: 1, tension: 0.55 };
   if (role === "pad") return { root: 0.6, bass: 0.2, quality: 0.8, tension: 0.55 };
@@ -34,6 +53,7 @@ export function buildVoiceRoleProfiles(
   voices: readonly Voice[],
   features: ReadonlyMap<string, VoiceFeatureInput>,
   overrides: Readonly<Record<string, VoiceRole>> = {},
+  preset: VoiceContributionPreset = "standard",
 ): ReadonlyMap<string, VoiceRoleProfile> {
   return new Map(voices.flatMap((voice) => {
     const input = features.get(voice.id);
@@ -42,7 +62,7 @@ export function buildVoiceRoleProfiles(
     return [[voice.id, {
       voiceId: voice.id,
       inference,
-      contribution: contributionWeightsForRole(inference.role),
+      contribution: contributionWeightsForRole(inference.role, preset),
     }] as const];
   }));
 }
@@ -55,6 +75,7 @@ export function buildVoiceRoleProfiles(
 export function buildAnnotatedVoiceRoleProfiles(
   voices: readonly Voice[],
   overrides: Readonly<Record<string, VoiceRole>> = {},
+  preset: VoiceContributionPreset = "standard",
 ): ReadonlyMap<string, VoiceRoleProfile> {
   return new Map(voices.map((voice) => {
     const override = voice.channel === 9 ? undefined : overrides[voice.id];
@@ -70,7 +91,7 @@ export function buildAnnotatedVoiceRoleProfiles(
     return [voice.id, {
       voiceId: voice.id,
       inference,
-      contribution: contributionWeightsForRole(role),
+      contribution: contributionWeightsForRole(role, preset),
     }] as const;
   }));
 }
@@ -135,6 +156,18 @@ function emptyEvidenceProfile(): VoiceEvidenceProfiles {
 
 function zeroContribution(): VoiceContributionWeights {
   return { root: 0, bass: 0, quality: 0, tension: 0 };
+}
+
+function scaleContribution(
+  contribution: VoiceContributionWeights,
+  multiplier: number,
+): VoiceContributionWeights {
+  return {
+    root: contribution.root * multiplier,
+    bass: contribution.bass * multiplier,
+    quality: contribution.quality * multiplier,
+    tension: contribution.tension * multiplier,
+  };
 }
 
 function isZeroContribution(contribution: VoiceContributionWeights): boolean {

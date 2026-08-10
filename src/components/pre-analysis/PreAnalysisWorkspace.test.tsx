@@ -83,6 +83,61 @@ describe("PreAnalysisWorkspace", () => {
 
     await unmount();
   });
+  it("exposes an accessible, localized opt-in Harmonic Core contribution preset", async () => {
+    const { container, unmount } = await renderStatefulWorkspace(fixtureSession());
+    const standard = container.querySelector<HTMLButtonElement>(
+      "[data-analysis-contribution-preset='standard']",
+    )!;
+    const harmonicCore = container.querySelector<HTMLButtonElement>(
+      "[data-analysis-contribution-preset='harmonic-core']",
+    )!;
+
+    expect(standard.getAttribute("aria-checked")).toBe("true");
+    expect(harmonicCore.getAttribute("aria-checked")).toBe("false");
+    expect(harmonicCore.closest("[role='radiogroup']")
+      ?.getAttribute("aria-describedby")).toBe("pre-analysis-harmonic-core-description");
+    expect(container.querySelector("#pre-analysis-harmonic-core-description")?.textContent)
+      .toBe("テンションを取りこぼす代わりに、メロディ由来の誤検出を減らします");
+
+    document.body.append(container);
+    standard.focus();
+    expect(document.activeElement).toBe(standard);
+    expect(standard.tabIndex).toBe(0);
+    expect(harmonicCore.tabIndex).toBe(-1);
+
+    await act(async () => {
+      standard.dispatchEvent(new KeyboardEvent("keydown", {
+        key: "ArrowRight",
+        bubbles: true,
+      }));
+    });
+    expect(document.activeElement).toBe(harmonicCore);
+    expect(harmonicCore.getAttribute("aria-checked")).toBe("true");
+    expect(harmonicCore.tabIndex).toBe(0);
+    expect(standard.tabIndex).toBe(-1);
+
+    await act(async () => {
+      harmonicCore.dispatchEvent(new KeyboardEvent("keydown", {
+        key: "Home",
+        bubbles: true,
+      }));
+    });
+    expect(document.activeElement).toBe(standard);
+    expect(standard.getAttribute("aria-checked")).toBe("true");
+
+    await act(async () => {
+      standard.dispatchEvent(new KeyboardEvent("keydown", {
+        key: "End",
+        bubbles: true,
+      }));
+    });
+    expect(document.activeElement).toBe(harmonicCore);
+    expect(harmonicCore.getAttribute("aria-checked")).toBe("true");
+
+    await unmount();
+    container.remove();
+  });
+
   it("keeps a simple one-Voice MIDI compact without adding a required step", async () => {
     const session = createAnalysisSession([{
       sourceId: "simple",

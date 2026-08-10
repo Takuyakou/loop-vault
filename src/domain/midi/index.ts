@@ -128,6 +128,7 @@ export type {
   VoiceFeatureInput,
   VoiceRoleInference,
   VoiceContributionWeights,
+  VoiceContributionPreset,
   VoiceEvidenceProfiles,
   AnalysisInput,
   VoiceSelectionPreset,
@@ -150,6 +151,7 @@ export type { MidiChordCorrectionEvent } from "./feedback";
 export {
   addMidiSources,
   applyAnalysisSessionPreset,
+  analysisSessionVoiceContributionPreset,
   createAnalysisSession,
   createMidiSourceId,
   buildPreparedMidiSongData,
@@ -161,6 +163,7 @@ export {
   preScanMidiSource,
   removeMidiSource,
   resetAnalysisSessionAuto,
+  setAnalysisSessionVoiceContributionPreset,
   sessionPreviewNotes,
   selectedSessionNotes,
   updateAnalysisSessionSource,

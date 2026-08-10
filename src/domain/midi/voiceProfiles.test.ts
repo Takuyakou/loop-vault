@@ -4,6 +4,7 @@ import {
   buildVoiceAwarePitchProfile,
   buildVoiceRoleProfiles,
   contributionWeightsForRole,
+  harmonicCoreRoleWeights,
   type VoiceRoleProfile,
 } from "./voiceProfiles";
 
@@ -15,6 +16,30 @@ describe("Voice evidence profiles", () => {
     expect(contributionWeightsForRole("melody")).toEqual({ root: 0.15, bass: 0, quality: 0.22, tension: 0.35 });
     expect(contributionWeightsForRole("percussion")).toEqual({ root: 0, bass: 0, quality: 0, tension: 0 });
     expect(contributionWeightsForRole("mixed")).toEqual({ root: 0.35, bass: 0.15, quality: 0.45, tension: 0.25 });
+  });
+
+  it("keeps standard role contributions unchanged and scopes Harmonic Core weights to explicit opt-in", () => {
+    expect(harmonicCoreRoleWeights).toEqual({
+      bass: 0,
+      harmony: 1.3,
+      pad: 1.3,
+      melody: 0.15,
+      percussion: 0,
+      mixed: 0.8,
+    });
+    for (const [role, multiplier] of Object.entries(harmonicCoreRoleWeights)) {
+      const standard = contributionWeightsForRole(role as keyof typeof harmonicCoreRoleWeights);
+      const harmonicCore = contributionWeightsForRole(
+        role as keyof typeof harmonicCoreRoleWeights,
+        "harmonic-core",
+      );
+      expect(harmonicCore.root).toBeCloseTo(standard.root * multiplier);
+      expect(harmonicCore.bass).toBeCloseTo(standard.bass * multiplier);
+      expect(harmonicCore.quality).toBeCloseTo(standard.quality * multiplier);
+      expect(harmonicCore.tension).toBeCloseTo(standard.tension * multiplier);
+    }
+    expect(contributionWeightsForRole("melody"))
+      .toEqual({ root: 0.15, bass: 0, quality: 0.22, tension: 0.35 });
   });
 
   it("keeps same-channel notes in one Voice while strengthening low-note bass/root evidence", () => {

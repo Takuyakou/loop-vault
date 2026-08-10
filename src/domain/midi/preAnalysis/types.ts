@@ -1,3 +1,5 @@
+import type { VoiceContributionPreset } from "../types";
+
 export type PreAnalysisVoiceRole =
   | "harmony"
   | "bass"
@@ -125,6 +127,8 @@ export interface AnalysisSession {
   notes: PreAnalysisNote[];
   controlChanges: PreAnalysisControlChange[];
   preset: PreAnalysisSelectionPreset;
+  /** Session-only. It never changes the persisted correction-log schema. */
+  voiceContributionPreset?: VoiceContributionPreset;
   warnings: AnalysisSessionWarning[];
   latestSourceId?: string;
 }

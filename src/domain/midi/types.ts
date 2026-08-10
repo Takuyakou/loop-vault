@@ -196,10 +196,17 @@ export interface VoiceEvidenceProfiles {
   tensionEvidence: number[];
 }
 
+/**
+ * An explicit, per-analysis contribution profile for the role-aware reranker.
+ * Omitting it preserves the shipped role contribution behavior.
+ */
+export type VoiceContributionPreset = "standard" | "harmonic-core";
+
 export interface AnalysisInput {
   voices: Voice[];
   enabledVoiceIds: string[];
   roleOverrides: Record<string, VoiceRole>;
+  voiceContributionPreset?: VoiceContributionPreset;
 }
 
 export type VoiceSelectionPreset = "auto" | "harmony-and-bass" | "exclude-melody" | "all";

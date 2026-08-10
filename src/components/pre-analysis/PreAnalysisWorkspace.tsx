@@ -12,7 +12,7 @@ import {
   VolumeX,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 import {
   previewMidiNotes,
   stopPreview,
@@ -20,7 +20,9 @@ import {
 import { usePreviewSound } from "../PreviewSoundProvider";
 import {
   applyAnalysisSessionPreset,
+  analysisSessionVoiceContributionPreset,
   resetAnalysisSessionAuto,
+  setAnalysisSessionVoiceContributionPreset,
   sessionPreviewNotes,
   updateAnalysisSessionSource,
   updateAnalysisSessionVoice,
@@ -30,6 +32,7 @@ import {
   type PreAnalysisVoiceRole,
 } from "../../domain/midi/preAnalysis";
 import type { AppLanguage } from "../../i18n";
+import type { VoiceContributionPreset } from "../../domain/midi/types";
 import { needsPreAnalysisReview } from "../../storage/preAnalysisSettings";
 import {
   PreAnalysisPianoRoll,
@@ -85,6 +88,7 @@ export function PreAnalysisWorkspace({
   const { sound: previewSound } = usePreviewSound();
   const includedCount = session.voices.filter((voice) =>
     voice.included && !voice.isDrum && !voice.duplicateOf).length;
+  const voiceContributionPreset = analysisSessionVoiceContributionPreset(session);
   const recommended = useMemo(() => {
     const harmony = session.voices.filter((voice) =>
       voice.included && !voice.isDrum && voice.assignedRole === "harmony").length;
@@ -217,6 +221,37 @@ export function PreAnalysisWorkspace({
   function setPreset(preset: PreAnalysisSelectionPreset) {
     stopSessionPlayback();
     onSessionChange(applyAnalysisSessionPreset(session, preset));
+  }
+
+  function setVoiceContributionPreset(preset: VoiceContributionPreset) {
+    stopSessionPlayback();
+    onSessionChange(setAnalysisSessionVoiceContributionPreset(session, preset));
+  }
+
+  function moveVoiceContributionPreset(
+    event: KeyboardEvent<HTMLButtonElement>,
+    current: VoiceContributionPreset,
+  ) {
+    const presets: readonly VoiceContributionPreset[] = ["standard", "harmonic-core"];
+    const currentIndex = presets.indexOf(current);
+    const nextIndex = event.key === "ArrowRight" || event.key === "ArrowDown"
+      ? (currentIndex + 1) % presets.length
+      : event.key === "ArrowLeft" || event.key === "ArrowUp"
+        ? (currentIndex + presets.length - 1) % presets.length
+        : event.key === "Home"
+          ? 0
+          : event.key === "End"
+            ? presets.length - 1
+            : undefined;
+    if (nextIndex === undefined) return;
+
+    event.preventDefault();
+    const nextPreset = presets[nextIndex];
+    setVoiceContributionPreset(nextPreset);
+    event.currentTarget.closest<HTMLElement>("[role='radiogroup']")
+      ?.querySelector<HTMLButtonElement>(
+        `[data-analysis-contribution-preset='${nextPreset}']`,
+      )?.focus();
   }
 
   function updateVoice(
@@ -498,6 +533,43 @@ export function PreAnalysisWorkspace({
                       {option.label}
                     </button>
                   ))}
+                </div>
+                <div className="mt-4 border-t border-[var(--lv-border)] pt-4">
+                  <h4 id="pre-analysis-voice-contribution" className="text-sm font-semibold">
+                    {copy.voiceContributionPreset}
+                  </h4>
+                  <div
+                    className="mt-2 grid grid-cols-2 gap-2"
+                    role="radiogroup"
+                    aria-labelledby="pre-analysis-voice-contribution"
+                    aria-describedby="pre-analysis-harmonic-core-description"
+                  >
+                    {voiceContributionOptions(copy).map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        role="radio"
+                        data-analysis-contribution-preset={option.value}
+                        aria-checked={voiceContributionPreset === option.value}
+                        tabIndex={voiceContributionPreset === option.value ? 0 : -1}
+                        onKeyDown={(event) => moveVoiceContributionPreset(event, option.value)}
+                        className={`border px-3 py-2 text-left text-sm ${
+                          voiceContributionPreset === option.value
+                            ? "border-[var(--lv-accent)] bg-[var(--lv-accent-soft)]"
+                            : "border-[var(--lv-border)] hover:border-[var(--lv-border-strong)]"
+                        }`}
+                        onClick={() => setVoiceContributionPreset(option.value)}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                  <p
+                    id="pre-analysis-harmonic-core-description"
+                    className="mt-2 text-xs text-[var(--lv-text-secondary)]"
+                  >
+                    {copy.harmonicCoreDescription}
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -914,6 +986,16 @@ function presetOptions(copy: ReturnType<typeof workspaceCopy>): {
   ];
 }
 
+function voiceContributionOptions(copy: ReturnType<typeof workspaceCopy>): {
+  value: VoiceContributionPreset;
+  label: string;
+}[] {
+  return [
+    { value: "standard", label: copy.standardContribution },
+    { value: "harmonic-core", label: copy.harmonicCore },
+  ];
+}
+
 function roleOptions(copy: ReturnType<typeof workspaceCopy>): {
   value: PreAnalysisVoiceRole;
   label: string;
@@ -971,6 +1053,10 @@ function workspaceCopy(language: AppLanguage) {
       accompaniment: "伴奏のみ",
       allPitched: "全パート",
       custom: "カスタム",
+      voiceContributionPreset: "和声コアの重み",
+      standardContribution: "標準",
+      harmonicCore: "和声コア",
+      harmonicCoreDescription: "テンションを取りこぼす代わりに、メロディ由来の誤検出を減らします",
       resetAuto: "自動推定に戻す",
       loadedMidi: "読み込んだMIDI",
       hideSource: "ファイルを非表示",
@@ -1031,6 +1117,10 @@ function workspaceCopy(language: AppLanguage) {
     accompaniment: "Accompaniment only",
     allPitched: "All parts",
     custom: "Custom",
+    voiceContributionPreset: "Voice contribution",
+    standardContribution: "Standard",
+    harmonicCore: "Harmonic Core",
+    harmonicCoreDescription: "Reduces melody-derived false detections at the cost of some missed tensions.",
     resetAuto: "Reset to auto",
     loadedMidi: "Loaded MIDI",
     hideSource: "Hide file",

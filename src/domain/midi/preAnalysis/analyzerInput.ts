@@ -15,13 +15,15 @@ import type {
   AnalysisSessionVoice,
   PreAnalysisVoiceRole,
 } from "./types";
+import { analysisSessionVoiceContributionPreset } from "./analysisSession";
+import type { VoiceContributionPreset } from "../types";
 
 export interface SessionAnalysisRequest {
   bytes: Uint8Array;
   fileName: string;
   options: Pick<
     AnalyzeMidiOptions,
-    "preparedData" | "analysisInput" | "analysisFingerprint"
+    "preparedData" | "analysisInput" | "analysisFingerprint" | "mode"
   >;
   selectedVoiceIds: string[];
   backwardEquivalent: boolean;
@@ -50,14 +52,22 @@ export function buildSessionAnalysisRequest(
     throw new Error("Select at least one pitched Voice for analysis.");
   }
 
+  const voiceContributionPreset = analysisSessionVoiceContributionPreset(session);
   const preparedData = buildPreparedMidiSongData(session, selectedVoices);
   return {
     bytes: master.bytes,
     fileName: master.displayName,
     options: {
       preparedData,
-      analysisInput: buildPreparedAnalysisInput(preparedData, selectedVoices),
+      analysisInput: buildPreparedAnalysisInput(
+        preparedData,
+        selectedVoices,
+        voiceContributionPreset,
+      ),
       analysisFingerprint: fingerprintPreparedData(preparedData),
+      ...(voiceContributionPreset === "harmonic-core"
+        ? { mode: "voice-aware-rerank-v1" as const }
+        : {}),
     },
     selectedVoiceIds,
     backwardEquivalent: false,
@@ -69,6 +79,7 @@ export function isBackwardEquivalentSession(
 ): boolean {
   return session.sources.length === 1
     && session.preset === "auto"
+    && analysisSessionVoiceContributionPreset(session) === "standard"
     && session.warnings.every((warning) =>
       warning.code !== "exact-duplicate")
     && session.voices.every((voice) =>
@@ -158,11 +169,14 @@ export function buildPreparedMidiSongData(
 function buildPreparedAnalysisInput(
   data: MidiSongData,
   selectedVoices: readonly AnalysisSessionVoice[],
+  voiceContributionPreset: VoiceContributionPreset,
 ): AnalysisInput {
   const normalized = normalizeNotes(data);
   const baseVoices = buildVoices(data);
   const requestedOverrides = Object.fromEntries(
     selectedVoices.flatMap((voice, index) => voice.channel === 9
+      || (voiceContributionPreset === "harmonic-core"
+        && voice.assignedRole === voice.autoRole)
       ? []
       : [[voiceId(index, voice.channel), voiceRoleFor(voice.assignedRole)] as const]),
   );
@@ -174,6 +188,9 @@ function buildPreparedAnalysisInput(
       .filter((voice) => voice.channel !== 9)
       .map((voice) => voice.id),
     roleOverrides,
+    ...(voiceContributionPreset === "harmonic-core"
+      ? { voiceContributionPreset }
+      : {}),
   };
 }
 

@@ -3,10 +3,12 @@ import { writeMidi } from "midi-file";
 import { describe, expect, it } from "vitest";
 import {
   addMidiSources,
+  analysisSessionVoiceContributionPreset,
   applyAnalysisSessionPreset,
   createAnalysisSession,
   removeMidiSource,
   selectedSessionNotes,
+  setAnalysisSessionVoiceContributionPreset,
   updateAnalysisSessionVoice,
 } from "./analysisSession";
 
@@ -26,6 +28,19 @@ describe("Phase 5.1 Analysis Session", () => {
     });
     expect(result.session?.sources).toHaveLength(1);
     expect(result.session?.voices).toHaveLength(1);
+  });
+
+  it("keeps Harmonic Core as an explicit session-only contribution preset", () => {
+    const session = createAnalysisSession([
+      input("master", oneVoiceMidi(480, 0, 60)),
+    ]).session!;
+    const harmonicCore = setAnalysisSessionVoiceContributionPreset(session, "harmonic-core");
+
+    expect(analysisSessionVoiceContributionPreset(session)).toBe("standard");
+    expect(harmonicCore.preset).toBe("auto");
+    expect(harmonicCore.voiceContributionPreset).toBe("harmonic-core");
+    expect(setAnalysisSessionVoiceContributionPreset(harmonicCore, "harmonic-core"))
+      .toBe(harmonicCore);
   });
 
   it("adds multiple MIDI inputs in one deterministic operation", () => {

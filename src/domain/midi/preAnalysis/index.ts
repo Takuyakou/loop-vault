@@ -2,9 +2,11 @@ export { gmProgramName } from "./gmProgramNames";
 export {
   addMidiSources,
   applyAnalysisSessionPreset,
+  analysisSessionVoiceContributionPreset,
   createAnalysisSession,
   removeMidiSource,
   resetAnalysisSessionAuto,
+  setAnalysisSessionVoiceContributionPreset,
   selectedSessionNotes,
   updateAnalysisSessionSource,
   updateAnalysisSessionVoice,
