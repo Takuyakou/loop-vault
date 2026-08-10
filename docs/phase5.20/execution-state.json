@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "5.20",
   "status": "in-progress",
-  "activeStage": "P5.20-02",
-  "completedStages": ["P5.20-00", "P5.20-01"],
+  "activeStage": "P5.20-03",
+  "completedStages": ["P5.20-00", "P5.20-01", "P5.20-02"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "1cec3fa920daeb4fb4942dfbd4a273d5624a0bfb",
-  "lastVerifiedCommit": "ac3ac1310ecb1669de06981a0412c9f846c32979",
+  "lastVerifiedCommit": "e523406a5ce8a3cf8e2c6b5df909f120732dfdbc",
   "currentBranch": "feat/p520-text-progression-entry",
   "requiredGates": {
     "P5.20-00": [
@@ -74,8 +74,17 @@
     "p520-01-app-typecheck": "pass",
     "p520-01-lint": "pass",
     "p520-01-diff-check": "pass",
-    "p520-01-protected-surface": "pass"
+    "p520-01-protected-surface": "pass",
+    "p520-02-capture-ui": "pass",
+    "p520-02-draft-bridge": "pass",
+    "p520-02-voicing-inspector": "pass",
+    "p520-02-accessibility": "pass",
+    "p520-02-app-typecheck": "pass",
+    "p520-02-e2e-typecheck": "pass",
+    "p520-02-lint": "pass",
+    "p520-02-diff-check": "pass",
+    "p520-02-protected-surface": "pass"
   },
-  "nextAction": "P5.20-01 is complete. Continue with P5.20-02 Capture UI and the one-way Draft bridge; do not merge or push.",
+  "nextAction": "P5.20-02 is complete at e523406a5ce8a3cf8e2c6b5df909f120732dfdbc. Continue only with P5.20-03 Release Gate / E2E / Artifacts; do not merge or push. Human product acceptance has not yet been run.",
   "updatedAt": "2026-08-10"
 }
