@@ -1,9 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const tone = vi.hoisted(() => {
-  class Synth {}
   class AudioNode {
-    wet = { value: 0 };
     volume = { value: 0 };
     dispose = vi.fn();
     releaseAll = vi.fn();
@@ -11,18 +9,20 @@ const tone = vi.hoisted(() => {
     triggerRelease = vi.fn();
     chain() { return this; }
   }
-  const polySynths: AudioNode[] = [];
-  class PolySynth extends AudioNode {
-    constructor(_voice: unknown, _options: unknown) {
+  const samplers: Array<AudioNode & { options: unknown }> = [];
+  class Sampler extends AudioNode {
+    options: unknown;
+    constructor(options: unknown) {
       super();
-      polySynths.push(this);
+      this.options = options;
+      samplers.push(this);
     }
   }
   return {
     AudioNode,
-    PolySynth,
-    Synth,
-    polySynths,
+    Sampler,
+    samplers,
+    loaded: vi.fn(async () => undefined),
     start: vi.fn(async () => undefined),
   };
 });
@@ -30,44 +30,62 @@ const tone = vi.hoisted(() => {
 vi.mock("tone", () => ({
   Compressor: tone.AudioNode,
   Filter: tone.AudioNode,
-  Freeverb: tone.AudioNode,
-  PolySynth: tone.PolySynth,
-  Synth: tone.Synth,
+  Sampler: tone.Sampler,
   getDestination: vi.fn(() => new tone.AudioNode()),
+  loaded: tone.loaded,
   start: tone.start,
 }));
 
 import { createMidiInputPianoMonitor } from "./midiInputPianoMonitor";
 
 beforeEach(() => {
-  tone.polySynths.length = 0;
+  tone.samplers.length = 0;
+  tone.loaded.mockClear();
   tone.start.mockClear();
 });
 
 describe("MIDI input piano monitor", () => {
   it("tracks note-on and note-off without retriggering held notes", async () => {
     const monitor = await createMidiInputPianoMonitor();
-    const synth = tone.polySynths[0]!;
+    const sampler = tone.samplers[0]!;
 
     monitor.updateNotes([60, 64, 64, -1, 128]);
     expect(tone.start).toHaveBeenCalledOnce();
-    expect(synth.triggerAttack.mock.calls).toEqual([
+    expect(tone.loaded).toHaveBeenCalledOnce();
+    expect(sampler.triggerAttack.mock.calls).toEqual([
       ["C4", undefined, 0.68],
       ["E4", undefined, 0.68],
     ]);
 
     monitor.updateNotes([64, 67]);
-    expect(synth.triggerRelease).toHaveBeenCalledWith("C4");
-    expect(synth.triggerAttack).toHaveBeenLastCalledWith("G4", undefined, 0.68);
-    expect(synth.triggerAttack).toHaveBeenCalledTimes(3);
+    expect(sampler.triggerRelease).toHaveBeenCalledWith("C4");
+    expect(sampler.triggerAttack).toHaveBeenLastCalledWith("G4", undefined, 0.68);
+    expect(sampler.triggerAttack).toHaveBeenCalledTimes(3);
 
     monitor.stop();
-    expect(synth.releaseAll).toHaveBeenCalledOnce();
+    expect(sampler.releaseAll).toHaveBeenCalledOnce();
     monitor.dispose();
-    expect(synth.releaseAll).toHaveBeenCalledTimes(2);
-    expect(synth.dispose).toHaveBeenCalledOnce();
+    expect(sampler.releaseAll).toHaveBeenCalledTimes(2);
+    expect(sampler.dispose).toHaveBeenCalledOnce();
 
     monitor.updateNotes([72]);
-    expect(synth.triggerAttack).toHaveBeenCalledTimes(3);
+    expect(sampler.triggerAttack).toHaveBeenCalledTimes(3);
+  });
+
+  it("disposes the sampled graph instead of falling back to an electronic synth when decode fails", async () => {
+    tone.loaded.mockRejectedValueOnce(new Error("decode failed"));
+
+    await expect(createMidiInputPianoMonitor()).rejects.toThrow("decode failed");
+    expect(tone.samplers[0]?.dispose).toHaveBeenCalledOnce();
+  });
+  it("loads only bundled Salamander samples and never creates a synth fallback", async () => {
+    const monitor = await createMidiInputPianoMonitor();
+    const sampler = tone.samplers[0]!;
+    const urls = (sampler.options as { urls: Record<string, string> }).urls;
+
+    expect(Object.keys(urls)).toEqual(["A0", "C1", "C2", "C3", "C4", "C5", "C6", "C7"]);
+    expect(Object.values(urls)).toHaveLength(8);
+    expect(Object.values(urls).every((url) => !/^https?:/u.test(url))).toBe(true);
+    monitor.dispose();
   });
 });

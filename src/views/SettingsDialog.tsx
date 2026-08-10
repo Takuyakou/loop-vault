@@ -468,6 +468,9 @@ export function SettingsDialog({
             )}</span>
             <span>{ui.appFormat}</span>
             <span>{ui.dataFormat}</span>
+            <span className="sm:col-span-2" data-testid="piano-sample-attribution">
+              Salamander Grand Piano V3 by Alexander Holm · CC BY 3.0 · https://creativecommons.org/licenses/by/3.0/
+            </span>
           </div>
         </section>
 
