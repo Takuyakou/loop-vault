@@ -3,10 +3,10 @@
 
 ## Status
 
-- **Status:** P5.21-04 complete — the opt-in Harmonic Core preset is available.
+- **Status:** P5.21-05 automated release gates passed - human product acceptance has not run.
 - **Active stage:** P5.21-05 — Full Evaluation / Release / Product Acceptance.
 - **Completed stages:** P5.21-00, P5.21-01, P5.21-02, P5.21-03, P5.21-04
-- **Next action:** P5.21-05 may begin on the recovery branch. Do not start P5.21.1/P5.22, merge, or push before the applicable Stage 05 gates and human product acceptance pass.
+- **Next action:** Run human product acceptance against the recorded candidate. Do not start P5.21.1/P5.22, merge, or push before it passes and a separate human authorization is given.
 
 Git is the source of truth. The shared worktree initially contained untracked
 phase documents on another branch, so this phase uses its own clean worktree
@@ -84,4 +84,8 @@ real MIDI + current official corpora + determinism + UI/build + protected diff�
 scoring / boundary / candidate generation / defaultAnalyzerMode / default preset / Vault schema / fileVersion / Voicing Memory / P5.15 / test-output hygiene。
 
 ## Next action
-P5.21-04 completed at code candidate `0e8a21bab6ee6de30ba36f97361c6e4ec31a314f` on `recovery/p521-role-v2-promotion`. P5.21-05 may run the separately required release evaluation and prepare human product acceptance; P5.21.1, P5.22, merge, and push remain out of scope.
+P5.21-05 automated release gates passed at candidate
+`a2655d355f4679b9b424fdd193399c0780a20799` on
+`recovery/p521-role-v2-promotion`. Human product acceptance has not run, so
+the phase remains in progress with P5.21-05 active. P5.21.1, P5.22, merge,
+and push remain out of scope.

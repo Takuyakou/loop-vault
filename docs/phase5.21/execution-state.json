@@ -7,7 +7,7 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "747c70cc4ef078c0a086f641436443e134115d08",
-  "lastVerifiedCommit": "0e8a21bab6ee6de30ba36f97361c6e4ec31a314f",
+  "lastVerifiedCommit": "a2655d355f4679b9b424fdd193399c0780a20799",
   "currentBranch": "recovery/p521-role-v2-promotion",
   "requiredGates": {
     "P5.21-00": [
@@ -58,6 +58,29 @@
       "p521-04-output-hygiene",
       "p521-04-protected-privacy-p515",
       "p521-04-post-gate-clean"
+    ],
+    "P5.21-05": [
+      "p521-05-phase-docs-validation",
+      "p521-05-role-v2-focused-regression",
+      "p521-05-role-v2-shadow-evaluation",
+      "p521-05-official-locked-safety-wrapper",
+      "p521-05-real-midi-no-data-safety",
+      "p521-05-midi-benchmark",
+      "p521-05-full-vitest",
+      "p521-05-playwright-visual-runner",
+      "p521-05-settings-component",
+      "p521-05-settings-visual",
+      "p521-05-full-playwright",
+      "p521-05-app-typecheck",
+      "p521-05-e2e-typecheck",
+      "p521-05-lint",
+      "p521-05-web-production-build",
+      "p521-05-tauri-unit-tests",
+      "p521-05-tauri-release-build",
+      "p521-05-diff-check",
+      "p521-05-test-output-hygiene",
+      "p521-05-protected-privacy-p515",
+      "p521-05-post-gate-clean"
     ]
   },
   "gateResults": {
@@ -99,8 +122,29 @@
     "p521-04-diff-check": "pass",
     "p521-04-output-hygiene": "pass",
     "p521-04-protected-privacy-p515": "pass",
-    "p521-04-post-gate-clean": "pass"
+    "p521-04-post-gate-clean": "pass",
+    "p521-05-phase-docs-validation": "pass",
+    "p521-05-role-v2-focused-regression": "pass",
+    "p521-05-role-v2-shadow-evaluation": "pass",
+    "p521-05-official-locked-safety-wrapper": "pass",
+    "p521-05-real-midi-no-data-safety": "pass",
+    "p521-05-midi-benchmark": "pass",
+    "p521-05-full-vitest": "pass",
+    "p521-05-playwright-visual-runner": "pass",
+    "p521-05-settings-component": "pass",
+    "p521-05-settings-visual": "pass",
+    "p521-05-full-playwright": "pass",
+    "p521-05-app-typecheck": "pass",
+    "p521-05-e2e-typecheck": "pass",
+    "p521-05-lint": "pass",
+    "p521-05-web-production-build": "pass",
+    "p521-05-tauri-unit-tests": "pass",
+    "p521-05-tauri-release-build": "pass",
+    "p521-05-diff-check": "pass",
+    "p521-05-test-output-hygiene": "pass",
+    "p521-05-protected-privacy-p515": "pass",
+    "p521-05-post-gate-clean": "pass"
   },
-  "nextAction": "P5.21-04 passed at code candidate 0e8a21bab6ee6de30ba36f97361c6e4ec31a314f on recovery/p521-role-v2-promotion. P5.21-05 is active for release evaluation and human product acceptance preparation. Do not start P5.21.1 or P5.22, merge, or push.",
-  "updatedAt": "2026-08-11T00:48:00+09:00"
+  "nextAction": "P5.21-05 automated gates passed at candidate a2655d355f4679b9b424fdd193399c0780a20799. Run human product acceptance next; P5.21-05 remains active and is not completed. Do not start P5.21.1 or P5.22, merge, or push.",
+  "updatedAt": "2026-08-11T03:45:00+09:00"
 }
