@@ -1,19 +1,20 @@
 {
     "schemaVersion":  1,
     "phaseId":  "5.21.1",
-    "status":  "in-progress",
-    "activeStage":  "P5.21.1-05",
+    "status":  "completed",
+    "activeStage":  null,
     "completedStages":  [
                             "P5.21.1-00",
                             "P5.21.1-01",
                             "P5.21.1-02",
                             "P5.21.1-03",
-                            "P5.21.1-04"
+                            "P5.21.1-04",
+                            "P5.21.1-05"
                         ],
     "blocked":  false,
     "blockerReason":  null,
     "baseCommit":  "16eb4c0e751e3623b08fdc09c427bd4f2e287afe",
-    "lastVerifiedCommit":  "e6ef90f5d38f680bda6410b13ac38e57b94ac60d",
+    "lastVerifiedCommit":  "e46099e4bbe0de3568772bfa5f6b3e8fdf572688",
     "currentBranch":  "feat/p5211-mixed-voice-harmonic-extraction",
     "requiredGates":  {
                           "P5.21.1-00":  [
@@ -106,8 +107,9 @@
                         "p5211-05-web-build":  "pass",
                         "p5211-05-tauri-build":  "pass",
                         "p5211-05-test-output-hygiene":  "pass",
-                        "p5211-05-diff-protected-privacy-hygiene":  "pass"
+                        "p5211-05-diff-protected-privacy-hygiene":  "pass",
+                        "p5211-05-product-acceptance":  "pass"
                     },
-    "nextAction":  "Human product acceptance only: verify the release EXE with the anonymous real failure checklist. Do not merge, push, or start P5.22.",
-    "updatedAt":  "2026-08-11T19:13:00+09:00"
+    "nextAction":  "P5.21.1 is product accepted at e46099e4bbe0de3568772bfa5f6b3e8fdf572688. Merge feat/p5211-mixed-voice-harmonic-extraction to clean local master with --no-ff; do not push or start P5.22.",
+    "updatedAt":  "2026-08-11T21:10:00+09:00"
 }

@@ -5,7 +5,7 @@
 
 ## Status
 
-`P5.21.1-05 AUTOMATED GATES PASS — HUMAN ACCEPTANCE NOT RUN`
+`P5.21.1 COMPLETE — PRODUCT ACCEPTED`
 
 ## Required Reading Order
 
@@ -271,7 +271,5 @@ Only after Stage02 PASS.
 
 ## Next action
 
-`P5.21.1-00 — Failure-case Audit / Baseline / Contract Lock`
-
-最初は監査・fixture準備・baseline固定のみ。
-P5.21.1-01へ自動で進まない。
+Merge the accepted `feat/p5211-mixed-voice-harmonic-extraction` branch to clean
+local `master` with `--no-ff`. Do not push or start P5.22.
