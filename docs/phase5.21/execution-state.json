@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "phaseId": "5.21",
-  "status": "in-progress",
-  "activeStage": "P5.21-05",
-  "completedStages": ["P5.21-00", "P5.21-01", "P5.21-02", "P5.21-03", "P5.21-04"],
+  "status": "completed",
+  "activeStage": null,
+  "completedStages": ["P5.21-00", "P5.21-01", "P5.21-02", "P5.21-03", "P5.21-04", "P5.21-05"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "747c70cc4ef078c0a086f641436443e134115d08",
@@ -145,6 +145,6 @@
     "p521-05-protected-privacy-p515": "pass",
     "p521-05-post-gate-clean": "pass"
   },
-  "nextAction": "P5.21-05 automated gates passed at candidate 31767832814a009f0f53bb0036df3407d80ca627. Run human product acceptance next; P5.21-05 remains active and is not completed. Do not start P5.21.1 or P5.22, merge, or push.",
-  "updatedAt": "2026-08-11T16:24:00+09:00"
+  "nextAction": "P5.21 is product accepted at candidate 31767832814a009f0f53bb0036df3407d80ca627. Merge recovery/p521-role-v2-promotion to clean local master with --no-ff; do not push or start P5.21.1/P5.22.",
+  "updatedAt": "2026-08-11T16:36:00+09:00"
 }

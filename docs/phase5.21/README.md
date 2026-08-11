@@ -3,10 +3,10 @@
 
 ## Status
 
-- **Status:** P5.21-05 automated release gates passed - human product acceptance has not run.
-- **Active stage:** P5.21-05 — Full Evaluation / Release / Product Acceptance.
-- **Completed stages:** P5.21-00, P5.21-01, P5.21-02, P5.21-03, P5.21-04
-- **Next action:** Run human product acceptance against the recorded candidate. Do not start P5.21.1/P5.22, merge, or push before it passes and a separate human authorization is given.
+- **Status:** complete — automated release gates and human product acceptance passed at `3176783`; local master merge authorized.
+- **Active stage:** none
+- **Completed stages:** P5.21-00, P5.21-01, P5.21-02, P5.21-03, P5.21-04, P5.21-05
+- **Next action:** merge `recovery/p521-role-v2-promotion` to clean local `master` with `--no-ff`; do not push or start P5.21.1/P5.22.
 
 Git is the source of truth. The shared worktree initially contained untracked
 phase documents on another branch, so this phase uses its own clean worktree
@@ -84,8 +84,7 @@ real MIDI + current official corpora + determinism + UI/build + protected diff�
 scoring / boundary / candidate generation / defaultAnalyzerMode / default preset / Vault schema / fileVersion / Voicing Memory / P5.15 / test-output hygiene。
 
 ## Next action
-P5.21-05 automated release gates passed at candidate
-`31767832814a009f0f53bb0036df3407d80ca627` on
-`recovery/p521-role-v2-promotion`. Human product acceptance has not run, so
-the phase remains in progress with P5.21-05 active. P5.21.1, P5.22, merge,
-and push remain out of scope.
+P5.21 automated release gates and human product acceptance passed at
+candidate `31767832814a009f0f53bb0036df3407d80ca627` on
+`recovery/p521-role-v2-promotion`. Merge this accepted source to clean local
+`master` with `--no-ff`. Do not push or start P5.21.1/P5.22.
