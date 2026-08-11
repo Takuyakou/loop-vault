@@ -24,6 +24,29 @@ test("MIDIをドロップし、Voice確認から解析結果へ進める", async
   await expect(page.getByText("E2E harmony bass melody.mid", { exact: true }).first()).toBeVisible();
   await expect(page.getByTestId("pre-analysis-analyze")).toBeEnabled();
 
+  const pianoRoll = page.getByTestId("pre-analysis-piano-roll");
+  const standardVisibleNotes = Number(
+    await pianoRoll.getAttribute("data-visible-note-count"),
+  );
+  await page.locator(
+    "[data-analysis-contribution-preset='harmonic-core']",
+  ).click();
+  await expect(pianoRoll).toHaveAttribute(
+    "data-contribution-preset",
+    "harmonic-core",
+  );
+  await expect(page.getByTestId(
+    "pre-analysis-harmonic-core-preview",
+  )).toContainText(/和声を強調|harmony emphasized/);
+  expect(Number(await pianoRoll.getAttribute("data-visible-note-count")))
+    .toBeLessThan(standardVisibleNotes);
+  await expect(page.locator('[data-capture-stage="pre-analysis"]')).toBeVisible();
+
+  await page.locator(
+    "[data-analysis-contribution-preset='standard']",
+  ).click();
+  await expect(pianoRoll).toHaveAttribute("data-contribution-preset", "standard");
+
   await analyzeCurrentMidi(page);
   await chooseFirstCandidate(page);
 

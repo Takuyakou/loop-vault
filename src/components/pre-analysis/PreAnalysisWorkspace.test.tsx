@@ -307,12 +307,42 @@ describe("PreAnalysisWorkspace", () => {
         included: index < 3,
       })),
     };
-    const { container, unmount } = await renderStatefulWorkspace(session);
+    const { container, onAnalyze, unmount } = await renderStatefulWorkspace(session);
     const canvas = container.querySelector<HTMLCanvasElement>(
       "[data-testid='pre-analysis-piano-roll']",
     )!;
 
     expect(canvas.dataset.displayScope).toBe("analysis-targets");
+    expect(canvas.dataset.contributionPreset).toBe("standard");
+    expect(canvas.dataset.visibleNoteCount).toBe("3");
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>(
+        "[data-analysis-contribution-preset='harmonic-core']",
+      )?.click();
+    });
+    expect(onAnalyze).not.toHaveBeenCalled();
+    expect(canvas.dataset.contributionPreset).toBe("harmonic-core");
+    expect(canvas.getAttribute("aria-describedby")).toBe(
+      "pre-analysis-harmonic-core-piano-roll-preview",
+    );
+    expect(canvas.dataset.visibleNoteCount).toBe("2");
+    expect(canvas.dataset.boostedVoiceCount).toBe("1");
+    expect(canvas.dataset.reducedVoiceCount).toBe("1");
+    expect(canvas.dataset.excludedVoiceCount).toBe("2");
+    expect(container.querySelector(
+      "[data-testid='pre-analysis-harmonic-core-preview']",
+    )?.textContent).toContain("和声を強調");
+    expect(container.querySelector(
+      "[data-testid='pre-analysis-harmonic-core-preview']",
+    )?.textContent).toContain("ベースを解析対象から除外");
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>(
+        "[data-analysis-contribution-preset='standard']",
+      )?.click();
+    });
+    expect(canvas.dataset.contributionPreset).toBe("standard");
     expect(canvas.dataset.visibleNoteCount).toBe("3");
 
     await act(async () => {
@@ -594,6 +624,7 @@ async function renderStatefulWorkspace(initialSession: AnalysisSession) {
   const container = document.createElement("div");
   Object.defineProperty(container, "clientWidth", { value: 1000 });
   const root = createRoot(container);
+  const onAnalyze = vi.fn();
 
   function Harness() {
     const [session, setSession] = useState(initialSession);
@@ -604,7 +635,7 @@ async function renderStatefulWorkspace(initialSession: AnalysisSession) {
         onSessionChange={setSession}
         onAddMidi={vi.fn()}
         onRemoveSource={vi.fn()}
-        onAnalyze={vi.fn()}
+        onAnalyze={onAnalyze}
       />
     );
   }
@@ -612,6 +643,7 @@ async function renderStatefulWorkspace(initialSession: AnalysisSession) {
   await act(async () => root.render(<Harness />));
   return {
     container,
+    onAnalyze,
     unmount: async () => act(async () => root.unmount()),
   };
 }

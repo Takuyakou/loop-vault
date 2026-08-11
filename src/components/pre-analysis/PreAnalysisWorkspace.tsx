@@ -36,6 +36,7 @@ import type { VoiceContributionPreset } from "../../domain/midi/types";
 import { needsPreAnalysisReview } from "../../storage/preAnalysisSettings";
 import {
   PreAnalysisPianoRoll,
+  isPianoRollAnalysisTarget,
   preAnalysisVoiceColor,
   visibleBeatCount as pianoRollVisibleBeatCount,
 } from "./PreAnalysisPianoRoll";
@@ -135,14 +136,21 @@ export function PreAnalysisWorkspace({
       selected
       && (
         pianoRollDisplayScope === "all-voices"
-        || selected.included
+        || isPianoRollAnalysisTarget(selected, voiceContributionPreset)
       )
     ) return;
     const fallback = pianoRollDisplayScope === "analysis-targets"
-      ? session.voices.find((voice) => voice.included && voice.visible)
+      ? session.voices.find((voice) =>
+        voice.visible
+        && isPianoRollAnalysisTarget(voice, voiceContributionPreset))
       : session.voices.find((voice) => voice.visible);
     setSelectedVoiceId(fallback?.id ?? session.voices[0]?.id);
-  }, [pianoRollDisplayScope, selectedVoiceId, session.voices]);
+  }, [
+    pianoRollDisplayScope,
+    selectedVoiceId,
+    session.voices,
+    voiceContributionPreset,
+  ]);
 
   useEffect(() => {
     const totalBeats = sessionDuration(session);
@@ -457,6 +465,7 @@ export function PreAnalysisWorkspace({
                   showAnalysisTargetsOnly={
                     pianoRollDisplayScope === "analysis-targets"
                   }
+                  voiceContributionPreset={voiceContributionPreset}
                   onSelectVoice={setSelectedVoiceId}
                   onViewportStartChange={setViewportPosition}
                   onPlayheadBeatChange={(beat) => {
@@ -590,6 +599,16 @@ export function PreAnalysisWorkspace({
                   >
                     {copy.contributionApplyHint}
                   </p>
+                  {voiceContributionPreset === "harmonic-core" ? (
+                    <p
+                      id="pre-analysis-harmonic-core-piano-roll-preview"
+                      className="mt-2 rounded border border-[var(--lv-accent)]/40 bg-[var(--lv-accent-soft)] px-2 py-1.5 text-xs text-[var(--lv-text-secondary)]"
+                      data-testid="pre-analysis-harmonic-core-preview"
+                      role="status"
+                    >
+                      {copy.harmonicCorePianoRollPreview}
+                    </p>
+                  ) : null}
                 </div>
                 <button
                   type="button"
@@ -1078,6 +1097,7 @@ function workspaceCopy(language: AppLanguage) {
       harmonicCore: "和声コア",
       harmonicCoreDescription: "テンションを取りこぼす代わりに、メロディ由来の誤検出を減らします",
       contributionApplyHint: "選択後は「この設定で解析」を押すと結果に反映されます。",
+      harmonicCorePianoRollPreview: "ピアノロールに反映中: 和声を強調、メロディを抑制、ベースを解析対象から除外。結果へ適用するには「この設定で解析」を押してください。",
       reanalysisRequired: "再解析が必要です",
       reanalysisRequiredDescription: "変更した設定はまだ結果に反映されていません。「この設定で解析」を押してください。",
       resetAuto: "自動推定に戻す",
@@ -1145,6 +1165,7 @@ function workspaceCopy(language: AppLanguage) {
     harmonicCore: "Harmonic Core",
     harmonicCoreDescription: "Reduces melody-derived false detections at the cost of some missed tensions.",
     contributionApplyHint: "After selecting a mode, choose Analyze this configuration to apply it.",
+    harmonicCorePianoRollPreview: "Piano roll preview: harmony emphasized, melody reduced, bass excluded from analysis targets. Choose Analyze this configuration to apply it to results.",
     reanalysisRequired: "Analysis needs to be run again",
     reanalysisRequiredDescription: "Your changes are not reflected in the result yet. Choose Analyze this configuration.",
     resetAuto: "Reset to auto",
