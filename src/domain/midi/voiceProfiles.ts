@@ -103,6 +103,7 @@ export function buildVoiceAwarePitchProfile(
   ornaments: ReadonlyMap<NormalizedTimedNote, OrnamentFeatures>,
   beatsPerBar: number,
   weights: AnalyzerWeights = defaultAnalyzerWeights,
+  noteMultipliers?: ReadonlyMap<NormalizedTimedNote, number>,
 ): VoiceEvidenceProfiles {
   const profile = emptyEvidenceProfile();
   for (const note of notes) {
@@ -118,7 +119,9 @@ export function buildVoiceAwarePitchProfile(
       { beatsPerBar, roleWeight: 1, ornamentPenalty: ornaments.get(note)?.penalty },
       weights,
     );
-    const baseWeight = features.finalWeight * overlap.overlapBeats;
+    const noteMultiplier = noteMultipliers?.get(note) ?? 1;
+    if (!Number.isFinite(noteMultiplier) || !(noteMultiplier > 0)) throw new Error("note contribution multiplier must be finite and non-zero");
+    const baseWeight = features.finalWeight * overlap.overlapBeats * noteMultiplier;
     const pitchClass = normalizePc(note.pitch);
     const register = registerContribution(note.pitch, contribution);
 

@@ -1,9 +1,15 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
 import type {
   AnalysisSession,
   AnalysisSessionVoice,
+  PreAnalysisNote,
 } from "../../domain/midi/preAnalysis";
+import {
+  classifyNoteTextureFeatureSet,
+  type NoteTextureCandidateClass,
+} from "../../domain/midi/noteTextureClassifier";
+import { extractNoteTextureFeatures } from "../../domain/midi/noteTextureFeatures";
 import type { VoiceContributionPreset } from "../../domain/midi/types";
 import type { AppLanguage } from "../../i18n";
 
@@ -64,6 +70,10 @@ export function PreAnalysisPianoRoll({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const hitAreasRef = useRef<NoteHitArea[]>([]);
   const playheadPointerRef = useRef<number>();
+  const notePreview = useMemo(
+    () => harmonicCorePianoRollNotePreview(session, voiceContributionPreset),
+    [session, voiceContributionPreset],
+  );
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -87,6 +97,7 @@ export function PreAnalysisPianoRoll({
         playheadBeat,
         showAnalysisTargetsOnly,
         voiceContributionPreset,
+        notePreview,
       }, hitAreasRef);
     };
     render();
@@ -100,6 +111,7 @@ export function PreAnalysisPianoRoll({
     session,
     showAnalysisTargetsOnly,
     voiceContributionPreset,
+    notePreview,
     viewportStartBeat,
     zoom,
   ]);
@@ -198,6 +210,10 @@ export function PreAnalysisPianoRoll({
         voiceContributionPreset,
         "excluded",
       )}
+      data-harmonic-note-count={notePreview.classCounts.harmonic}
+      data-melody-like-note-count={notePreview.classCounts["melody-like"]}
+      data-uncertain-note-count={notePreview.classCounts.uncertain}
+      data-weighted-note-count={notePreview.weightedNoteCount}
       data-viewport-start-beat={viewportStartBeat}
       data-playhead-beat={playheadBeat}
       onKeyDown={handleKeyDown}
@@ -226,6 +242,7 @@ export interface PreAnalysisPianoRollDrawOptions {
   playheadBeat: number;
   showAnalysisTargetsOnly: boolean;
   voiceContributionPreset: VoiceContributionPreset;
+  notePreview?: HarmonicCorePianoRollNotePreview;
 }
 
 export function drawPianoRoll(
@@ -243,6 +260,10 @@ export function drawPianoRoll(
     playheadBeat,
     showAnalysisTargetsOnly,
     voiceContributionPreset,
+    notePreview = harmonicCorePianoRollNotePreview(
+      session,
+      voiceContributionPreset,
+    ),
   } = options;
   const voiceById = new Map(session.voices.map((voice, index) => [
     voice.id,
@@ -326,7 +347,7 @@ export function drawPianoRoll(
       voiceEntry.voice,
       voiceContributionPreset,
     );
-    context.globalAlpha = emphasis === "excluded"
+    const voiceAlpha = emphasis === "excluded"
       ? (selected ? 0.28 : 0.18)
       : emphasis === "reduced"
         ? (selected ? 0.52 : 0.38)
@@ -335,6 +356,7 @@ export function drawPianoRoll(
           : emphasis === "boosted"
             ? 0.95
             : 0.78;
+    context.globalAlpha = voiceAlpha * (notePreview.multipliers.get(note) ?? 1);
     context.fillStyle = preAnalysisVoiceColor(voiceEntry.index);
     context.fillRect(clippedX, y, rectWidth, rectHeight);
     if (selected) {
@@ -362,6 +384,67 @@ export function drawPianoRoll(
     context.stroke();
   }
   hitAreasRef.current = hitAreas;
+}
+
+export interface HarmonicCorePianoRollNotePreview {
+  readonly classes: ReadonlyMap<PreAnalysisNote, NoteTextureCandidateClass>;
+  readonly multipliers: ReadonlyMap<PreAnalysisNote, number>;
+  readonly weightedNoteCount: number;
+  readonly classCounts: Readonly<Record<NoteTextureCandidateClass, number>>;
+}
+
+/**
+ * Derives a non-destructive preview from the same locked texture classifier used
+ * by Harmonic Core analysis. Note positions and the source session stay intact.
+ */
+export function harmonicCorePianoRollNotePreview(
+  session: AnalysisSession,
+  preset: VoiceContributionPreset,
+): HarmonicCorePianoRollNotePreview {
+  const classes = new Map<PreAnalysisNote, NoteTextureCandidateClass>();
+  const multipliers = new Map<PreAnalysisNote, number>();
+  const classCounts: Record<NoteTextureCandidateClass, number> = {
+    harmonic: 0,
+    "melody-like": 0,
+    uncertain: 0,
+  };
+  if (preset === "standard") {
+    return { classes, multipliers, weightedNoteCount: 0, classCounts };
+  }
+  const eligibleVoiceIds = new Set(session.voices.filter((voice) =>
+    voice.included
+    && !voice.isDrum
+    && voice.assignedRole === "harmony").map((voice) => voice.id));
+  const grouped = new Map<string, Array<{ note: PreAnalysisNote; id: string }>>();
+  for (const [index, note] of session.notes.entries()) {
+    if (!eligibleVoiceIds.has(note.voiceId) || note.channel === 9) continue;
+    const entry = { note, id: `preview-note-${index}` };
+    const notes = grouped.get(note.voiceId);
+    if (notes) notes.push(entry);
+    else grouped.set(note.voiceId, [entry]);
+  }
+  for (const entries of grouped.values()) {
+    const noteById = new Map(entries.map((entry) => [entry.id, entry.note]));
+    const features = extractNoteTextureFeatures(entries.map((entry) => ({
+      id: entry.id,
+      pitch: entry.note.pitch,
+      startBeat: entry.note.startBeat,
+      endBeat: entry.note.startBeat + entry.note.durationBeats,
+    })));
+    for (const classification of classifyNoteTextureFeatureSet(features)) {
+      const note = noteById.get(classification.noteId);
+      if (!note) throw new Error("Harmonic Core piano-roll note mapping failed");
+      classes.set(note, classification.candidateClass);
+      multipliers.set(note, classification.proposedMultiplier);
+      classCounts[classification.candidateClass] += 1;
+    }
+  }
+  return {
+    classes,
+    multipliers,
+    weightedNoteCount: multipliers.size,
+    classCounts,
+  };
 }
 
 export function visiblePianoRollNotes(

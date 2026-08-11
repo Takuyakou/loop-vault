@@ -315,6 +315,7 @@ describe("PreAnalysisWorkspace", () => {
     expect(canvas.dataset.displayScope).toBe("analysis-targets");
     expect(canvas.dataset.contributionPreset).toBe("standard");
     expect(canvas.dataset.visibleNoteCount).toBe("3");
+    expect(canvas.dataset.weightedNoteCount).toBe("0");
 
     await act(async () => {
       container.querySelector<HTMLButtonElement>(
@@ -330,6 +331,8 @@ describe("PreAnalysisWorkspace", () => {
     expect(canvas.dataset.boostedVoiceCount).toBe("1");
     expect(canvas.dataset.reducedVoiceCount).toBe("1");
     expect(canvas.dataset.excludedVoiceCount).toBe("2");
+    expect(canvas.dataset.weightedNoteCount).toBe("1");
+    expect(canvas.dataset.uncertainNoteCount).toBe("1");
     expect(container.querySelector(
       "[data-testid='pre-analysis-harmonic-core-preview']",
     )?.textContent).toContain("和声を強調");
@@ -344,6 +347,7 @@ describe("PreAnalysisWorkspace", () => {
     });
     expect(canvas.dataset.contributionPreset).toBe("standard");
     expect(canvas.dataset.visibleNoteCount).toBe("3");
+    expect(canvas.dataset.weightedNoteCount).toBe("0");
 
     await act(async () => {
       container.querySelector<HTMLButtonElement>(

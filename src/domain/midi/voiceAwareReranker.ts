@@ -15,6 +15,7 @@ import {
 } from "./legacyBoundaryReranker";
 import { analyzeMidiWithRankingScores } from "./legacy";
 import { normalizeNotes } from "./normalize";
+import { buildHarmonicCoreNoteWeights } from "./harmonicCoreNoteWeights";
 import { extractOrnamentFeatures } from "./ornaments";
 import { parseMidi } from "./parser";
 import type { WeightedPitchProfile } from "./profiles";
@@ -66,6 +67,9 @@ export function analyzeMidiVoiceAwareRerank(
     (note) => note.channel !== undefined && enabled.has(voiceId(note.trackIndex, note.channel)),
   );
   const weights: AnalyzerWeights = { ...defaultAnalyzerWeights, ...options.weights };
+  const noteMultipliers = analysisInput.voiceContributionPreset === "harmonic-core"
+    ? buildHarmonicCoreNoteWeights(evidenceNotes, roles).multipliers
+    : undefined;
 
   const ornaments = extractOrnamentFeatures(evidenceNotes, weights);
   const barLengthBeats = beatsPerBar(data.timeSignature);
@@ -82,6 +86,7 @@ export function analyzeMidiVoiceAwareRerank(
           ornaments,
           barLengthBeats,
           weights,
+          noteMultipliers,
         );
         if (!hasChordEvidence(profile)) return retainedLegacyItem(item);
         const candidates = scoreVoiceAwareChordCandidates(profile);

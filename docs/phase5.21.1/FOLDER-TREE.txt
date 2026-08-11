@@ -1,0 +1,29 @@
+phase5.21.1/
+├─ README.md
+├─ CODEX-START-PROMPT.md
+├─ CODEX-RUN-REMAINING-STAGES.md
+├─ work-instructions.md
+├─ execution-state.json
+├─ proposal/
+│  └─ P5.21.1-DESIGN-REVIEW.md
+├─ audit/
+│  └─ P5.21.1-00-repository-audit.md
+├─ contracts/
+│  ├─ 01-scope-failure-case-contract.md
+│  ├─ 02-note-evidence-contract.md
+│  ├─ 03-shadow-promotion-contract.md
+│  ├─ 04-harmonic-core-integration-contract.md
+│  ├─ 05-evaluation-regression-contract.md
+│  └─ 06-privacy-test-hygiene-contract.md
+├─ evaluation/
+│  └─ LOCAL-FAILURE-FIXTURE.md
+├─ backlog/
+│  └─ README.md
+└─ reports/
+   ├─ README.md
+   ├─ P5.21.1-00-audit-baseline.md
+   ├─ P5.21.1-01-note-features-shadow.md
+   ├─ P5.21.1-02-note-classifier-shadow.md
+   ├─ P5.21.1-03-harmonic-core-integration.md
+   ├─ P5.21.1-04-regression-real-failure.md
+   └─ P5.21.1-05-product-acceptance.md
