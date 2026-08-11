@@ -1,0 +1,72 @@
+{
+    "schemaVersion":  1,
+    "phaseId":  "5.21.1",
+    "status":  "in-progress",
+    "activeStage":  "P5.21.1-00",
+    "completedStages":  [
+
+                        ],
+    "blocked":  false,
+    "blockerReason":  null,
+    "baseCommit":  "16eb4c0e751e3623b08fdc09c427bd4f2e287afe",
+    "lastVerifiedCommit":  "16eb4c0e751e3623b08fdc09c427bd4f2e287afe",
+    "currentBranch":  "feat/p5211-mixed-voice-harmonic-extraction",
+    "requiredGates":  {
+                          "P5.21.1-00":  [
+                                             "p5211-00-phase-docs-validation",
+                                             "p5211-00-exact-p521-base",
+                                             "p5211-00-local-failure-baseline",
+                                             "p5211-00-synthetic-ground-truth",
+                                             "p5211-00-insertion-seam-and-promotion-lock",
+                                             "p5211-00-official-corpus-baseline",
+                                             "p5211-00-focused-baseline-tests",
+                                             "p5211-00-lint-typecheck",
+                                             "p5211-00-diff-protected-privacy-hygiene"
+                                         ],
+                          "P5.21.1-01":  [
+                                             "p5211-01-shadow-feature-tests",
+                                             "p5211-01-production-output-isolation",
+                                             "p5211-01-determinism-properties",
+                                             "p5211-01-lint-typecheck",
+                                             "p5211-01-diff-protected-privacy-hygiene"
+                                         ],
+                          "P5.21.1-02":  [
+                                             "p5211-02-shadow-classifier-evaluation",
+                                             "p5211-02-protected-harmonic-retention",
+                                             "p5211-02-promotion-decision",
+                                             "p5211-02-official-corpus-safety",
+                                             "p5211-02-lint-typecheck",
+                                             "p5211-02-diff-protected-privacy-hygiene"
+                                         ],
+                          "P5.21.1-03":  [
+                                             "p5211-03-harmonic-core-only-integration",
+                                             "p5211-03-nonzero-multiplier",
+                                             "p5211-03-default-path-equivalence",
+                                             "p5211-03-focused-regressions",
+                                             "p5211-03-lint-typecheck",
+                                             "p5211-03-diff-protected-privacy-hygiene"
+                                         ],
+                          "P5.21.1-04":  [
+                                             "p5211-04-official-corpus-regression",
+                                             "p5211-04-real-failure-comparison",
+                                             "p5211-04-performance-resource",
+                                             "p5211-04-p521-regressions",
+                                             "p5211-04-diff-protected-privacy-hygiene"
+                                         ],
+                          "P5.21.1-05":  [
+                                             "p5211-05-phase-docs-validation",
+                                             "p5211-05-full-vitest",
+                                             "p5211-05-playwright",
+                                             "p5211-05-web-build",
+                                             "p5211-05-tauri-build",
+                                             "p5211-05-product-acceptance",
+                                             "p5211-05-test-output-hygiene",
+                                             "p5211-05-diff-protected-privacy-hygiene"
+                                         ]
+                      },
+    "gateResults":  {
+
+                    },
+    "nextAction":  "Complete P5.21.1-00 audit/baseline/contract lock only. Do not start P5.21.1-01, merge, push, or P5.22.",
+    "updatedAt":  "2026-08-11T17:35:00+09:00"
+}
