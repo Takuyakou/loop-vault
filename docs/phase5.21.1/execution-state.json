@@ -13,7 +13,7 @@
     "blocked":  false,
     "blockerReason":  null,
     "baseCommit":  "16eb4c0e751e3623b08fdc09c427bd4f2e287afe",
-    "lastVerifiedCommit":  "9b08c7db0e95f07c5da91c1a3eb5c4ba4020a691",
+    "lastVerifiedCommit":  "e6ef90f5d38f680bda6410b13ac38e57b94ac60d",
     "currentBranch":  "feat/p5211-mixed-voice-harmonic-extraction",
     "requiredGates":  {
                           "P5.21.1-00":  [
@@ -99,8 +99,15 @@
                         "p5211-04-real-failure-comparison":  "pass",
                         "p5211-04-performance-resource":  "pass",
                         "p5211-04-p521-regressions":  "pass",
-                        "p5211-04-diff-protected-privacy-hygiene":  "pass"
+                        "p5211-04-diff-protected-privacy-hygiene":  "pass",
+                        "p5211-05-phase-docs-validation":  "pass",
+                        "p5211-05-full-vitest":  "pass",
+                        "p5211-05-playwright":  "pass",
+                        "p5211-05-web-build":  "pass",
+                        "p5211-05-tauri-build":  "pass",
+                        "p5211-05-test-output-hygiene":  "pass",
+                        "p5211-05-diff-protected-privacy-hygiene":  "pass"
                     },
-    "nextAction":  "Run P5.21.1-05 full release gates and produce Web/Tauri artifacts, then stop for mandatory human product acceptance on the anonymous real failure.",
-    "updatedAt":  "2026-08-11T19:00:00+09:00"
+    "nextAction":  "Human product acceptance only: verify the release EXE with the anonymous real failure checklist. Do not merge, push, or start P5.22.",
+    "updatedAt":  "2026-08-11T19:13:00+09:00"
 }

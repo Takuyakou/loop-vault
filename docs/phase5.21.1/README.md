@@ -5,7 +5,7 @@
 
 ## Status
 
-`P5.21.1-04 PASS — P5.21.1-05 NOT STARTED`
+`P5.21.1-05 AUTOMATED GATES PASS — HUMAN ACCEPTANCE NOT RUN`
 
 ## Required Reading Order
 
