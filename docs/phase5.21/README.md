@@ -85,7 +85,7 @@ scoring / boundary / candidate generation / defaultAnalyzerMode / default preset
 
 ## Next action
 P5.21-05 automated release gates passed at candidate
-`a2655d355f4679b9b424fdd193399c0780a20799` on
+`3ba2496ca18482ea30fee2b3276dd4cf4bcb4ecf` on
 `recovery/p521-role-v2-promotion`. Human product acceptance has not run, so
 the phase remains in progress with P5.21-05 active. P5.21.1, P5.22, merge,
 and push remain out of scope.
