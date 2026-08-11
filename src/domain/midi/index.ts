@@ -56,6 +56,18 @@ export {
   buildVoiceRoleProfiles,
   contributionWeightsForRole,
 } from "./voiceProfiles";
+export {
+  annotateVoiceRolesV2,
+  inferVoiceRoleV2,
+  resolveVoiceRoleV2,
+  sanitizeVoiceRoleOverrides,
+  voiceRoleV2InferenceVersion,
+} from "./voiceRoleV2";
+export type {
+  VoiceRoleConfidenceBucket,
+  VoiceRoleEvidenceKind,
+  VoiceRoleV2Inference,
+} from "./voiceRoleV2";
 export { beatStrength, defaultAnalyzerWeights, noteFeatures } from "./weights";
 export { extractTrackFeatures, inferTrackRoleProfiles } from "./trackRoles";
 export { extractOrnamentFeatures } from "./ornaments";
@@ -116,6 +128,7 @@ export type {
   VoiceFeatureInput,
   VoiceRoleInference,
   VoiceContributionWeights,
+  VoiceContributionPreset,
   VoiceEvidenceProfiles,
   AnalysisInput,
   VoiceSelectionPreset,
@@ -138,6 +151,7 @@ export type { MidiChordCorrectionEvent } from "./feedback";
 export {
   addMidiSources,
   applyAnalysisSessionPreset,
+  analysisSessionVoiceContributionPreset,
   createAnalysisSession,
   createMidiSourceId,
   buildPreparedMidiSongData,
@@ -149,6 +163,7 @@ export {
   preScanMidiSource,
   removeMidiSource,
   resetAnalysisSessionAuto,
+  setAnalysisSessionVoiceContributionPreset,
   sessionPreviewNotes,
   selectedSessionNotes,
   updateAnalysisSessionSource,

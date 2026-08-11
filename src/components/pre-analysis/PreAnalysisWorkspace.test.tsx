@@ -59,6 +59,105 @@ describe("PreAnalysisWorkspace", () => {
     await unmount();
   });
 
+  it("shows Role v2 confidence buckets and privacy-safe evidence without percentages", async () => {
+    const base = fixtureSession();
+    const voice = base.voices.find((entry) => !entry.isDrum)!;
+    const session = {
+      ...base,
+      voices: base.voices.map((entry) => entry.id === voice.id
+        ? {
+            ...entry,
+            autoRoleConfidence: 0.9,
+            autoRoleConfidenceBucket: "low" as const,
+            autoRoleEvidenceKinds: ["high-pitch-center", "stepwise-motion"],
+          }
+        : entry),
+    };
+    const { container, unmount } = await renderWorkspace(session, { language: "en" });
+
+    expect(container.textContent).toContain("Confidence: Low");
+    expect(container.textContent).toContain("High register");
+    expect(container.textContent).toContain("Stepwise motion");
+    expect(container.textContent).toContain("Review");
+    expect(container.textContent).not.toContain("90%");
+
+    await unmount();
+  });
+  it("exposes an accessible, localized opt-in Harmonic Core contribution preset", async () => {
+    const { container, unmount } = await renderStatefulWorkspace(fixtureSession());
+    const standard = container.querySelector<HTMLButtonElement>(
+      "[data-analysis-contribution-preset='standard']",
+    )!;
+    const harmonicCore = container.querySelector<HTMLButtonElement>(
+      "[data-analysis-contribution-preset='harmonic-core']",
+    )!;
+
+    expect(standard.getAttribute("aria-checked")).toBe("true");
+    expect(harmonicCore.getAttribute("aria-checked")).toBe("false");
+    expect(harmonicCore.closest("[role='radiogroup']")
+      ?.getAttribute("aria-describedby")).toBe(
+        "pre-analysis-harmonic-core-description pre-analysis-contribution-apply-hint",
+      );
+    expect(container.querySelector("#pre-analysis-harmonic-core-description")?.textContent)
+      .toBe("テンションを取りこぼす代わりに、メロディ由来の誤検出を減らします");
+    expect(container.querySelector("#pre-analysis-contribution-apply-hint")?.textContent)
+      .toBe("選択後は「この設定で解析」を押すと結果に反映されます。");
+
+    document.body.append(container);
+    standard.focus();
+    expect(document.activeElement).toBe(standard);
+    expect(standard.tabIndex).toBe(0);
+    expect(harmonicCore.tabIndex).toBe(-1);
+
+    await act(async () => {
+      standard.dispatchEvent(new KeyboardEvent("keydown", {
+        key: "ArrowRight",
+        bubbles: true,
+      }));
+    });
+    expect(document.activeElement).toBe(harmonicCore);
+    expect(harmonicCore.getAttribute("aria-checked")).toBe("true");
+    expect(harmonicCore.tabIndex).toBe(0);
+    expect(standard.tabIndex).toBe(-1);
+
+    await act(async () => {
+      harmonicCore.dispatchEvent(new KeyboardEvent("keydown", {
+        key: "Home",
+        bubbles: true,
+      }));
+    });
+    expect(document.activeElement).toBe(standard);
+    expect(standard.getAttribute("aria-checked")).toBe("true");
+
+    await act(async () => {
+      standard.dispatchEvent(new KeyboardEvent("keydown", {
+        key: "End",
+        bubbles: true,
+      }));
+    });
+    expect(document.activeElement).toBe(harmonicCore);
+    expect(harmonicCore.getAttribute("aria-checked")).toBe("true");
+
+    await unmount();
+    container.remove();
+  });
+
+  it("announces when the current settings still need to be analyzed", async () => {
+    const { container, unmount } = await renderWorkspace(fixtureSession(), {
+      requiresReanalysis: true,
+    });
+
+    const warning = container.querySelector(
+      "[data-testid='pre-analysis-reanalysis-required']",
+    );
+    expect(warning?.textContent).toContain("再解析が必要です");
+    expect(warning?.textContent).toContain(
+      "変更した設定はまだ結果に反映されていません。「この設定で解析」を押してください。",
+    );
+
+    await unmount();
+  });
+
   it("keeps a simple one-Voice MIDI compact without adding a required step", async () => {
     const session = createAnalysisSession([{
       sourceId: "simple",
@@ -123,7 +222,7 @@ describe("PreAnalysisWorkspace", () => {
     await unmount();
   });
 
-  it("locks protected Voices by default and enables them in Custom", async () => {
+  it("keeps Channel 10 protected while enabling duplicate review in Custom", async () => {
     const base = fixtureSession();
     const target = base.voices.find((voice) =>
       !voice.isDrum && !voice.duplicateOf)!;
@@ -139,7 +238,9 @@ describe("PreAnalysisWorkspace", () => {
             assignedRole: "exclude",
             included: false,
           }
-        : voice),
+        : (voice.isDrum
+          ? { ...voice, assignedRole: "harmony" as const, included: true }
+          : voice)),
     };
     const { container, unmount } = await renderStatefulWorkspace(session);
     const controlsFor = (voiceId: string) => {
@@ -154,6 +255,7 @@ describe("PreAnalysisWorkspace", () => {
     expect(controlsFor(drum.id).checkbox.checked).toBe(false);
     expect(controlsFor(drum.id).checkbox.disabled).toBe(true);
     expect(controlsFor(drum.id).role.disabled).toBe(true);
+    expect(controlsFor(drum.id).role.value).toBe("exclude");
     expect(controlsFor(duplicate.id).checkbox.checked).toBe(false);
     expect(controlsFor(duplicate.id).checkbox.disabled).toBe(true);
     expect(controlsFor(duplicate.id).role.disabled).toBe(true);
@@ -164,21 +266,21 @@ describe("PreAnalysisWorkspace", () => {
       )?.click();
     });
 
-    expect(controlsFor(drum.id).checkbox.disabled).toBe(false);
-    expect(controlsFor(drum.id).role.disabled).toBe(false);
+    expect(controlsFor(drum.id).checkbox.disabled).toBe(true);
+    expect(controlsFor(drum.id).role.disabled).toBe(true);
+    expect(controlsFor(drum.id).role.value).toBe("exclude");
     expect(controlsFor(duplicate.id).checkbox.disabled).toBe(false);
     expect(controlsFor(duplicate.id).role.disabled).toBe(false);
 
     await act(async () => {
       controlsFor(target.id).checkbox.click();
-      controlsFor(drum.id).checkbox.click();
       controlsFor(duplicate.id).checkbox.click();
     });
 
     expect(controlsFor(target.id).checkbox.checked).toBe(true);
     expect(controlsFor(target.id).role.value).toBe("harmony");
-    expect(controlsFor(drum.id).checkbox.checked).toBe(true);
-    expect(controlsFor(drum.id).role.value).toBe("harmony");
+    expect(controlsFor(drum.id).checkbox.checked).toBe(false);
+    expect(controlsFor(drum.id).role.value).toBe("exclude");
     expect(controlsFor(duplicate.id).checkbox.checked).toBe(true);
     expect(controlsFor(duplicate.id).role.value).not.toBe("exclude");
     expect(container.querySelector<HTMLElement>(
@@ -205,12 +307,42 @@ describe("PreAnalysisWorkspace", () => {
         included: index < 3,
       })),
     };
-    const { container, unmount } = await renderStatefulWorkspace(session);
+    const { container, onAnalyze, unmount } = await renderStatefulWorkspace(session);
     const canvas = container.querySelector<HTMLCanvasElement>(
       "[data-testid='pre-analysis-piano-roll']",
     )!;
 
     expect(canvas.dataset.displayScope).toBe("analysis-targets");
+    expect(canvas.dataset.contributionPreset).toBe("standard");
+    expect(canvas.dataset.visibleNoteCount).toBe("3");
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>(
+        "[data-analysis-contribution-preset='harmonic-core']",
+      )?.click();
+    });
+    expect(onAnalyze).not.toHaveBeenCalled();
+    expect(canvas.dataset.contributionPreset).toBe("harmonic-core");
+    expect(canvas.getAttribute("aria-describedby")).toBe(
+      "pre-analysis-harmonic-core-piano-roll-preview",
+    );
+    expect(canvas.dataset.visibleNoteCount).toBe("2");
+    expect(canvas.dataset.boostedVoiceCount).toBe("1");
+    expect(canvas.dataset.reducedVoiceCount).toBe("1");
+    expect(canvas.dataset.excludedVoiceCount).toBe("2");
+    expect(container.querySelector(
+      "[data-testid='pre-analysis-harmonic-core-preview']",
+    )?.textContent).toContain("和声を強調");
+    expect(container.querySelector(
+      "[data-testid='pre-analysis-harmonic-core-preview']",
+    )?.textContent).toContain("ベースを解析対象から除外");
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>(
+        "[data-analysis-contribution-preset='standard']",
+      )?.click();
+    });
+    expect(canvas.dataset.contributionPreset).toBe("standard");
     expect(canvas.dataset.visibleNoteCount).toBe("3");
 
     await act(async () => {
@@ -492,6 +624,7 @@ async function renderStatefulWorkspace(initialSession: AnalysisSession) {
   const container = document.createElement("div");
   Object.defineProperty(container, "clientWidth", { value: 1000 });
   const root = createRoot(container);
+  const onAnalyze = vi.fn();
 
   function Harness() {
     const [session, setSession] = useState(initialSession);
@@ -502,7 +635,7 @@ async function renderStatefulWorkspace(initialSession: AnalysisSession) {
         onSessionChange={setSession}
         onAddMidi={vi.fn()}
         onRemoveSource={vi.fn()}
-        onAnalyze={vi.fn()}
+        onAnalyze={onAnalyze}
       />
     );
   }
@@ -510,6 +643,7 @@ async function renderStatefulWorkspace(initialSession: AnalysisSession) {
   await act(async () => root.render(<Harness />));
   return {
     container,
+    onAnalyze,
     unmount: async () => act(async () => root.unmount()),
   };
 }

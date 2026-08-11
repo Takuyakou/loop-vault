@@ -10,7 +10,7 @@ import type { AnalyzeMidiOptions } from "../domain/midi/types";
 import { appCopy } from "../i18n";
 import { setPreAnalysisSourceSelectionSettings } from "../storage/preAnalysisSettings";
 import type { AnalysisState } from "../store/vaultStore";
-import { CaptureView } from "./CaptureView";
+import { CaptureView, captureAnalysisTargetLabel } from "./CaptureView";
 
 const tauriMocks = vi.hoisted(() => ({
   openFileDialog: vi.fn(),
@@ -52,6 +52,23 @@ afterEach(() => {
 });
 
 describe("Phase 5.12 Capture product path", () => {
+  it("keeps a stale Channel 10 voice out of the Capture analysis target label", () => {
+    expect(captureAnalysisTargetLabel([
+      {
+        displayName: "Piano",
+        included: true,
+        isDrum: false,
+        assignedRole: "harmony",
+      },
+      {
+        displayName: "Drums",
+        included: true,
+        isDrum: true,
+        assignedRole: "harmony",
+      },
+    ])).toBe("Piano");
+  });
+
   it("keeps an all-in-one drop inline until its only Analyze button is pressed", async () => {
     const analyzerCalls: AnalyzeMidiOptions[] = [];
     const mounted = await renderCaptureProduct(analyzerCalls);
@@ -86,6 +103,65 @@ describe("Phase 5.12 Capture product path", () => {
     expect(analyzerCalls[0]).toMatchObject({ mode: "phase4-v1" });
     expect(mounted.container.querySelector("[data-capture-stage='result']"))
       .not.toBeNull();
+    await waitFor(() => mounted.container.querySelector(
+      "[data-testid='capture-analysis-preset-summary']",
+    )?.textContent?.includes("標準モードで解析済み") === true);
+
+    await mounted.unmount();
+  }, 20_000);
+
+  it("shows which Harmonic Core analysis produced the result and requires rerun after returning", async () => {
+    const analyzerCalls: AnalyzeMidiOptions[] = [];
+    const mounted = await renderCaptureProduct(analyzerCalls);
+
+    await dropMidi(mounted.container, "all_instruments.mid", allInstrumentsMidi());
+    await waitFor(() =>
+      mounted.container.querySelectorAll("[data-voice-id]").length === 11);
+
+    const harmonicCore = mounted.container.querySelector<HTMLButtonElement>(
+      "[data-analysis-contribution-preset='harmonic-core']",
+    )!;
+    expect(mounted.container.textContent).toContain(
+      "選択後は「この設定で解析」を押すと結果に反映されます。",
+    );
+
+    await act(async () => harmonicCore.click());
+    await act(async () => {
+      mounted.container.querySelector<HTMLButtonElement>(
+        "[data-testid='pre-analysis-analyze']",
+      )?.click();
+    });
+    await waitFor(() =>
+      mounted.container.querySelector("[data-capture-stage='result']") !== null);
+
+    expect(analyzerCalls).toHaveLength(1);
+    expect(analyzerCalls[0]).toMatchObject({
+      mode: "voice-aware-rerank-v1",
+      analysisInput: { voiceContributionPreset: "harmonic-core" },
+    });
+    await waitFor(() => mounted.container.querySelector(
+      "[data-testid='capture-analysis-preset-summary']",
+    )?.textContent?.includes("和声コアで解析済み") === true);
+    const summary = mounted.container.querySelector(
+      "[data-testid='capture-analysis-preset-summary']",
+    );
+    expect(summary?.textContent).toContain(
+      "候補が同じでも内部の重み付けには反映されています。",
+    );
+
+    await act(async () => {
+      mounted.container.querySelector<HTMLButtonElement>(
+        "[data-testid='capture-change-part-selection']",
+      )?.click();
+    });
+    await waitFor(() =>
+      mounted.container.querySelector("[data-capture-stage='pre-analysis']") !== null);
+
+    const warning = mounted.container.querySelector(
+      "[data-testid='pre-analysis-reanalysis-required']",
+    );
+    expect(warning?.textContent).toContain("再解析が必要です");
+    expect(warning?.textContent).toContain("この設定で解析");
 
     await mounted.unmount();
   }, 20_000);

@@ -283,6 +283,13 @@ export function inferTrackRoles(
   const thresholds = profile ? extractionRoleThresholds : defaultRoleThresholds;
 
   for (const track of data.tracks) {
+    // MIDI Channel 10 is a hard percussion rule even when stale pre-analysis
+    // data carries a contradictory manual track override.
+    if (track.channel === 9 || data.notes.some((note) =>
+      note.trackIndex === track.index && note.channel === 9)) {
+      roles.set(track.index, "percussion");
+      continue;
+    }
     if (track.roleOverride) {
       roles.set(track.index, track.roleOverride);
       continue;

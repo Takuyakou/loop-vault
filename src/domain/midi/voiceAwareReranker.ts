@@ -22,15 +22,18 @@ import { beatsPerBar } from "./timing";
 import type {
   AnalysisInput,
   AnalyzeMidiOptions,
+  NormalizedTimedNote,
+  Voice,
   VoiceEvidenceProfiles,
 } from "./types";
 import {
-  annotateVoiceRoles,
-  buildVoiceFeatureInputs,
-} from "./voiceRoles";
+  annotateVoiceRolesV2,
+  sanitizeVoiceRoleOverrides,
+} from "./voiceRoleV2";
 import {
+  buildAnnotatedVoiceRoleProfiles,
   buildVoiceAwarePitchProfile,
-  buildVoiceRoleProfiles,
+  type VoiceRoleProfile,
 } from "./voiceProfiles";
 import { buildVoices, voiceId } from "./voices";
 import { defaultAnalyzerWeights, type AnalyzerWeights } from "./weights";
@@ -52,36 +55,18 @@ export function analyzeMidiVoiceAwareRerank(
   const legacy = legacyInternal.analysis;
   const normalizedNotes = normalizeNotes(data);
   const builtVoices = buildVoices(data);
-  const suppliedInput = rerankerOptions.analysisInput ?? options.analysisInput;
-  const features = buildVoiceFeatureInputs(builtVoices, normalizedNotes);
-  const annotatedVoices = annotateVoiceRoles(
+  const roleContext = buildVoiceAwareRoleContext(
     builtVoices,
-    features,
-    suppliedInput?.roleOverrides,
+    normalizedNotes,
+    rerankerOptions.analysisInput ?? options.analysisInput,
   );
-  const analysisInput: AnalysisInput = suppliedInput
-    ? {
-        voices: annotatedVoices,
-        enabledVoiceIds: [...suppliedInput.enabledVoiceIds],
-        roleOverrides: { ...suppliedInput.roleOverrides },
-      }
-    : {
-        voices: annotatedVoices,
-        enabledVoiceIds: annotatedVoices
-          .filter((voice) => voice.inferredRole !== "percussion")
-          .map((voice) => voice.id),
-        roleOverrides: {},
-      };
+  const { analysisInput, roles } = roleContext;
   const enabled = new Set(analysisInput.enabledVoiceIds);
   const evidenceNotes = normalizedNotes.filter(
     (note) => note.channel !== undefined && enabled.has(voiceId(note.trackIndex, note.channel)),
   );
   const weights: AnalyzerWeights = { ...defaultAnalyzerWeights, ...options.weights };
-  const roles = buildVoiceRoleProfiles(
-    annotatedVoices,
-    buildVoiceFeatureInputs(annotatedVoices, normalizedNotes),
-    analysisInput.roleOverrides,
-  );
+
   const ornaments = extractOrnamentFeatures(evidenceNotes, weights);
   const barLengthBeats = beatsPerBar(data.timeSignature);
   const thresholds = rerankerOptions.thresholds ?? defaultLegacyBoundaryRerankerThresholds;
@@ -126,6 +111,61 @@ export function analyzeMidiVoiceAwareRerank(
       legacyInternal.timelineRankingScores,
     ),
     analyzerVersion: voiceAwareRerankerVersion,
+  };
+}
+
+export interface VoiceAwareRoleContext {
+  readonly analysisInput: AnalysisInput;
+  readonly annotatedVoices: readonly Voice[];
+  readonly roles: ReadonlyMap<string, VoiceRoleProfile>;
+}
+
+/**
+ * Resolves the normalized role input once for the reranker and its callers.
+ * The optional contribution preset is retained only when it was explicitly
+ * supplied, so standard analysis remains byte-for-byte equivalent.
+ */
+export function buildVoiceAwareRoleContext(
+  builtVoices: readonly Voice[],
+  normalizedNotes: readonly NormalizedTimedNote[],
+  suppliedInput?: AnalysisInput,
+): VoiceAwareRoleContext {
+  const safeRoleOverrides = sanitizeVoiceRoleOverrides(
+    builtVoices,
+    suppliedInput?.roleOverrides,
+  );
+  const annotatedVoices = annotateVoiceRolesV2(
+    builtVoices,
+    normalizedNotes,
+    safeRoleOverrides,
+  );
+  const drumVoiceIds = new Set(
+    annotatedVoices.filter((voice) => voice.channel === 9).map((voice) => voice.id),
+  );
+  const analysisInput: AnalysisInput = suppliedInput
+    ? {
+        voices: annotatedVoices,
+        enabledVoiceIds: suppliedInput.enabledVoiceIds.filter((voiceId) => !drumVoiceIds.has(voiceId)),
+        roleOverrides: safeRoleOverrides,
+        ...(suppliedInput.voiceContributionPreset !== undefined
+          ? { voiceContributionPreset: suppliedInput.voiceContributionPreset }
+          : {}),
+      }
+    : {
+        voices: annotatedVoices,
+        enabledVoiceIds: annotatedVoices
+          .filter((voice) => voice.inferredRole !== "percussion")
+          .map((voice) => voice.id),
+        roleOverrides: {},
+      };
+  return {
+    analysisInput,
+    annotatedVoices,
+    roles: buildAnnotatedVoiceRoleProfiles(
+      annotatedVoices,
+      analysisInput.roleOverrides,
+      analysisInput.voiceContributionPreset,
+    ),
   };
 }
 

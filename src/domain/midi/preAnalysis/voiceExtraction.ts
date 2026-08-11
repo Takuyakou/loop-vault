@@ -2,7 +2,7 @@ import { normalizeNotes } from "../normalize";
 import { parseMidi } from "../parser";
 import { parseRawSmf } from "../rawSmf";
 import type { VoiceRole } from "../types";
-import { annotateVoiceRoles, buildVoiceFeatureInputs } from "../voiceRoles";
+import { annotateVoiceRolesV2 } from "../voiceRoleV2";
 import { buildVoices } from "../voices";
 import { gmProgramName } from "./gmProgramNames";
 import type {
@@ -30,10 +30,7 @@ export function preScanMidiSource(
   const data = parseMidi(bytes);
   const normalized = normalizeNotes(data);
   const baseVoices = buildVoices(data);
-  const voices = annotateVoiceRoles(
-    baseVoices,
-    buildVoiceFeatureInputs(baseVoices, normalized),
-  );
+  const voices = annotateVoiceRolesV2(baseVoices, normalized);
   const source = buildSource(raw, options);
   const mappedVoices = voices.map((voice) => {
     const programNumbers = [...new Set(
@@ -71,6 +68,12 @@ export function preScanMidiSource(
         data.ticksPerBeat,
       ),
       autoRole,
+      ...(voice.roleConfidenceBucket
+        ? { autoRoleConfidenceBucket: voice.roleConfidenceBucket }
+        : {}),
+      ...(voice.roleEvidenceKinds
+        ? { autoRoleEvidenceKinds: voice.roleEvidenceKinds }
+        : {}),
       autoRoleConfidence: voice.roleConfidence,
       assignedRole: autoRole,
       included: autoRole !== "exclude",

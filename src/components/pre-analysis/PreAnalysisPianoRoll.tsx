@@ -1,6 +1,10 @@
 import { useEffect, useRef } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
-import type { AnalysisSession } from "../../domain/midi/preAnalysis";
+import type {
+  AnalysisSession,
+  AnalysisSessionVoice,
+} from "../../domain/midi/preAnalysis";
+import type { VoiceContributionPreset } from "../../domain/midi/types";
 import type { AppLanguage } from "../../i18n";
 
 const voiceColors = [
@@ -38,6 +42,7 @@ interface PreAnalysisPianoRollProps {
   viewportStartBeat: number;
   playheadBeat: number;
   showAnalysisTargetsOnly: boolean;
+  voiceContributionPreset: VoiceContributionPreset;
   onSelectVoice: (voiceId: string) => void;
   onViewportStartChange: (beat: number) => void;
   onPlayheadBeatChange: (beat: number) => void;
@@ -51,6 +56,7 @@ export function PreAnalysisPianoRoll({
   viewportStartBeat,
   playheadBeat,
   showAnalysisTargetsOnly,
+  voiceContributionPreset,
   onSelectVoice,
   onViewportStartChange,
   onPlayheadBeatChange,
@@ -80,6 +86,7 @@ export function PreAnalysisPianoRoll({
         viewportStartBeat,
         playheadBeat,
         showAnalysisTargetsOnly,
+        voiceContributionPreset,
       }, hitAreasRef);
     };
     render();
@@ -92,6 +99,7 @@ export function PreAnalysisPianoRoll({
     selectedVoiceId,
     session,
     showAnalysisTargetsOnly,
+    voiceContributionPreset,
     viewportStartBeat,
     zoom,
   ]);
@@ -160,13 +168,36 @@ export function PreAnalysisPianoRoll({
         ? "ドラッグして白い再生位置バーを移動"
         : "Drag to move the white playback cursor"}
       data-testid="pre-analysis-piano-roll"
+      aria-describedby={voiceContributionPreset === "harmonic-core"
+        ? "pre-analysis-harmonic-core-piano-roll-preview"
+        : undefined}
       data-voice-color-count={voiceColors.length}
       data-visible-note-count={
-        visiblePianoRollNotes(session, showAnalysisTargetsOnly).length
+        visiblePianoRollNotes(
+          session,
+          showAnalysisTargetsOnly,
+          voiceContributionPreset,
+        ).length
       }
       data-display-scope={
         showAnalysisTargetsOnly ? "analysis-targets" : "all-voices"
       }
+      data-contribution-preset={voiceContributionPreset}
+      data-boosted-voice-count={voiceEmphasisCount(
+        session,
+        voiceContributionPreset,
+        "boosted",
+      )}
+      data-reduced-voice-count={voiceEmphasisCount(
+        session,
+        voiceContributionPreset,
+        "reduced",
+      )}
+      data-excluded-voice-count={voiceEmphasisCount(
+        session,
+        voiceContributionPreset,
+        "excluded",
+      )}
       data-viewport-start-beat={viewportStartBeat}
       data-playhead-beat={playheadBeat}
       onKeyDown={handleKeyDown}
@@ -194,6 +225,7 @@ export interface PreAnalysisPianoRollDrawOptions {
   viewportStartBeat: number;
   playheadBeat: number;
   showAnalysisTargetsOnly: boolean;
+  voiceContributionPreset: VoiceContributionPreset;
 }
 
 export function drawPianoRoll(
@@ -210,6 +242,7 @@ export function drawPianoRoll(
     viewportStartBeat,
     playheadBeat,
     showAnalysisTargetsOnly,
+    voiceContributionPreset,
   } = options;
   const voiceById = new Map(session.voices.map((voice, index) => [
     voice.id,
@@ -218,6 +251,7 @@ export function drawPianoRoll(
   const visibleNotes = visiblePianoRollNotes(
     session,
     showAnalysisTargetsOnly,
+    voiceContributionPreset,
   );
   const pitches = visibleNotes.map((note) => note.pitch);
   const minPitch = Math.max(0, Math.min(...pitches, 48) - 2);
@@ -288,8 +322,19 @@ export function drawPianoRoll(
     const rectWidth = Math.max(2, clippedEnd - clippedX);
     const rectHeight = Math.max(2, pixelsPerPitch - 2);
     const selected = note.voiceId === selectedVoiceId;
-    const included = voiceEntry.voice.included;
-    context.globalAlpha = included ? (selected ? 1 : 0.78) : 0.28;
+    const emphasis = pianoRollVoiceEmphasis(
+      voiceEntry.voice,
+      voiceContributionPreset,
+    );
+    context.globalAlpha = emphasis === "excluded"
+      ? (selected ? 0.28 : 0.18)
+      : emphasis === "reduced"
+        ? (selected ? 0.52 : 0.38)
+        : selected
+          ? 1
+          : emphasis === "boosted"
+            ? 0.95
+            : 0.78;
     context.fillStyle = preAnalysisVoiceColor(voiceEntry.index);
     context.fillRect(clippedX, y, rectWidth, rectHeight);
     if (selected) {
@@ -322,6 +367,7 @@ export function drawPianoRoll(
 export function visiblePianoRollNotes(
   session: AnalysisSession,
   showAnalysisTargetsOnly: boolean,
+  voiceContributionPreset: VoiceContributionPreset = "standard",
 ) {
   const voiceById = new Map(session.voices.map((voice) => [voice.id, voice]));
   const sourceById = new Map(session.sources.map((source) => [source.id, source]));
@@ -331,9 +377,49 @@ export function visiblePianoRollNotes(
     return Boolean(
       voice?.visible
       && source?.visible
-      && (!showAnalysisTargetsOnly || voice.included),
+      && (
+        !showAnalysisTargetsOnly
+        || isPianoRollAnalysisTarget(voice, voiceContributionPreset)
+      ),
     );
   });
+}
+
+export type PianoRollVoiceEmphasis =
+  | "standard"
+  | "boosted"
+  | "reduced"
+  | "excluded";
+
+export function pianoRollVoiceEmphasis(
+  voice: AnalysisSessionVoice,
+  preset: VoiceContributionPreset,
+): PianoRollVoiceEmphasis {
+  if (
+    !voice.included
+    || voice.isDrum
+    || voice.assignedRole === "exclude"
+  ) return "excluded";
+  if (preset === "standard") return "standard";
+  if (voice.assignedRole === "harmony") return "boosted";
+  if (voice.assignedRole === "melody-weak") return "reduced";
+  return "excluded";
+}
+
+export function isPianoRollAnalysisTarget(
+  voice: AnalysisSessionVoice,
+  preset: VoiceContributionPreset,
+): boolean {
+  return pianoRollVoiceEmphasis(voice, preset) !== "excluded";
+}
+
+function voiceEmphasisCount(
+  session: AnalysisSession,
+  preset: VoiceContributionPreset,
+  emphasis: PianoRollVoiceEmphasis,
+): number {
+  return session.voices.filter((voice) =>
+    voice.visible && pianoRollVoiceEmphasis(voice, preset) === emphasis).length;
 }
 
 export function visibleBeatCount(

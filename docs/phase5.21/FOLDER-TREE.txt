@@ -1,0 +1,29 @@
+phase5.21/
+├─ README.md
+├─ CODEX-START-PROMPT.md
+├─ CODEX-RUN-REMAINING-STAGES.md
+├─ work-instructions.md
+├─ execution-state.json
+├─ proposal/
+│  ├─ ORIGINAL-PROPOSAL.md
+│  └─ P5.21-DESIGN-REVIEW.md
+├─ audit/
+│  └─ P5.21-00-repository-audit.md
+├─ contracts/
+│  ├─ 01-scope-non-goals-contract.md
+│  ├─ 02-role-ground-truth-baseline-contract.md
+│  ├─ 03-feature-extraction-contract.md
+│  ├─ 04-role-v2-shadow-promotion-contract.md
+│  ├─ 05-confidence-correction-log-contract.md
+│  ├─ 06-harmonic-core-preset-contract.md
+│  └─ 07-evaluation-safety-contract.md
+├─ backlog/
+│  └─ P5.21.1-MIXED-VOICE-NOTE-FILTERING.md
+└─ reports/
+   ├─ README.md
+   ├─ P5.21-00-audit-baseline.md
+   ├─ P5.21-01-feature-v2-shadow.md
+   ├─ P5.21-02-role-v2-shadow-evaluation.md
+   ├─ P5.21-03-role-v2-promotion.md
+   ├─ P5.21-04-harmonic-core.md
+   └─ P5.21-05-product-acceptance.md

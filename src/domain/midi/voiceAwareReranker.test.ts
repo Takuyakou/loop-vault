@@ -3,9 +3,14 @@ import { writeMidi } from "midi-file";
 import type { MidiEvent } from "midi-file";
 import { analyzeMidi, defaultAnalyzerMode } from "./analysis";
 import { analyzeMidi as analyzeMidiLegacy } from "./legacy";
+import { normalizeNotes } from "./normalize";
+import { parseMidi } from "./parser";
 import type { VoiceEvidenceProfiles } from "./types";
+import { contributionWeightsForRole } from "./voiceProfiles";
+import { buildVoices } from "./voices";
 import {
   analyzeMidiVoiceAwareRerank,
+  buildVoiceAwareRoleContext,
   scoreVoiceAwareChordCandidates,
   voiceAwareRerankerVersion,
 } from "./voiceAwareReranker";
@@ -18,6 +23,44 @@ describe("voice-aware legacy-boundary reranker", () => {
     expect(analyzeMidi(bytes).analyzerVersion).not.toBe(voiceAwareRerankerVersion);
     expect(analyzeMidi(bytes, { mode: "voice-aware-rerank-v1" }).analyzerVersion)
       .toBe(voiceAwareRerankerVersion);
+  });
+
+  it("retains Harmonic Core through the reranker context and applies its role exclusions", () => {
+    const bytes = mixedVoiceMidi();
+    const data = parseMidi(bytes);
+    const analysisInput = {
+      voices: [],
+      enabledVoiceIds: ["0:0", "0:1", "0:2", "0:9"],
+      roleOverrides: {
+        "0:0": "bass" as const,
+        "0:1": "harmony" as const,
+        "0:2": "melody" as const,
+        "0:9": "harmony" as const,
+      },
+      voiceContributionPreset: "harmonic-core" as const,
+    };
+    const context = buildVoiceAwareRoleContext(
+      buildVoices(data),
+      normalizeNotes(data),
+      analysisInput,
+    );
+
+    expect(context.analysisInput.voiceContributionPreset).toBe("harmonic-core");
+    expect(context.analysisInput.enabledVoiceIds).not.toContain("0:9");
+    expect(context.roles.get("0:0")?.contribution)
+      .toEqual(contributionWeightsForRole("bass", "harmonic-core"));
+    expect(context.roles.get("0:1")?.contribution)
+      .toEqual(contributionWeightsForRole("harmony", "harmonic-core"));
+    expect(context.roles.get("0:2")?.contribution)
+      .toEqual(contributionWeightsForRole("melody", "harmonic-core"));
+    expect(context.roles.get("0:9")?.contribution)
+      .toEqual(contributionWeightsForRole("percussion", "harmonic-core"));
+    expect(context.roles.get("0:0")?.contribution)
+      .toEqual({ root: 0, bass: 0, quality: 0, tension: 0 });
+    expect(context.roles.get("0:9")?.contribution)
+      .toEqual({ root: 0, bass: 0, quality: 0, tension: 0 });
+    expect(analyzeMidiVoiceAwareRerank(bytes, {}, { analysisInput }))
+      .toEqual(analyzeMidiVoiceAwareRerank(bytes, {}, { analysisInput }));
   });
 
   it("preserves every legacy timeline position and keeps the legacy chord available", () => {

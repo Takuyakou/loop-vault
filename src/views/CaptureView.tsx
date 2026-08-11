@@ -64,6 +64,7 @@ import {
   removeMidiSource,
   type AnalysisSession,
   type MidiSourceInput,
+  type SessionAnalysisRequest,
 } from "../domain/midi";
 import { buildLabelCorrectionLogs } from "../domain/midi/labelCorrectionLog";
 import type { AnalysisInput, AnalyzeMidiOptions } from "../domain/midi/types";
@@ -211,6 +212,83 @@ interface CaptureViewProps {
   analysisInput?: AnalysisInput;
 }
 
+type CaptureAnalysisTargetVoice = Pick<
+  AnalysisSession["voices"][number],
+  "assignedRole" | "displayName" | "duplicateOf" | "included" | "isDrum"
+>;
+
+export function captureAnalysisTargetLabel(
+  voices: readonly CaptureAnalysisTargetVoice[] | undefined,
+): string | undefined {
+  return voices?.filter((voice) =>
+    voice.included
+    && !voice.isDrum
+    && !voice.duplicateOf
+    && voice.assignedRole !== "exclude")
+    .map((voice) => voice.displayName)
+    .join(" / ");
+}
+export interface CaptureAnalysisRunSummary {
+  preset: "standard" | "harmonic-core";
+  amplifiedVoiceCount: number;
+  reducedVoiceCount: number;
+  excludedVoiceCount: number;
+}
+
+export function captureAnalysisRunSummary(
+  request: Pick<SessionAnalysisRequest, "options">,
+): CaptureAnalysisRunSummary {
+  const voices = request.options.analysisInput?.voices ?? [];
+  const roles = voices.map((voice) => voice.inferredRole);
+  return {
+    preset: request.options.analysisInput?.voiceContributionPreset === "harmonic-core"
+      ? "harmonic-core"
+      : "standard",
+    amplifiedVoiceCount: roles.filter((role) =>
+      role === "harmony" || role === "pad").length,
+    reducedVoiceCount: roles.filter((role) =>
+      role === "melody" || role === "mixed").length,
+    excludedVoiceCount: roles.filter((role) =>
+      role === "bass" || role === "percussion").length,
+  };
+}
+
+function captureAnalysisRunCopy(
+  summary: CaptureAnalysisRunSummary,
+  language: AppLanguage,
+): { title: string; description: string } {
+  if (summary.preset === "standard") {
+    return language === "ja"
+      ? {
+        title: "標準モードで解析済み",
+        description: "この結果には標準のVoice重み付けが適用されています。",
+      }
+      : {
+        title: "Analyzed with Standard mode",
+        description: "This result uses the standard Voice contribution weights.",
+      };
+  }
+  return language === "ja"
+    ? {
+      title: "和声コアで解析済み",
+      description: [
+        `和声を強調 ${summary.amplifiedVoiceCount} Voice`,
+        `メロディ系を抑制 ${summary.reducedVoiceCount} Voice`,
+        `ベース／ドラムを除外 ${summary.excludedVoiceCount} Voice`,
+        "候補が同じでも内部の重み付けには反映されています。",
+      ].join("・"),
+    }
+    : {
+      title: "Analyzed with Harmonic Core",
+      description: [
+        `${summary.amplifiedVoiceCount} harmony Voices boosted`,
+        `${summary.reducedVoiceCount} melody-related Voices reduced`,
+        `${summary.excludedVoiceCount} bass or percussion Voices excluded`,
+        "The weighting is applied even when the visible candidates stay the same.",
+      ].join(" · "),
+    };
+}
+
 export function CaptureView(props: CaptureViewProps) {
   const {
     ideas,
@@ -255,6 +333,8 @@ export function CaptureView(props: CaptureViewProps) {
   const [timelineScrollBar, setTimelineScrollBar] = useState<number>();
   const [sourcePath, setSourcePath] = useState<string>();
   const [preAnalysisSession, setPreAnalysisSession] = useState<AnalysisSession>();
+  const [completedAnalysisSummary, setCompletedAnalysisSummary] =
+    useState<CaptureAnalysisRunSummary>();
   const [intakeError, setIntakeError] = useState<string>();
   const { sound: previewSound, setSound: setPreviewSound } = usePreviewSound();
   const [activeDraft, setActiveDraft] = useState<ManualCandidateDraft | null>(null);
@@ -266,14 +346,13 @@ export function CaptureView(props: CaptureViewProps) {
   const result = analysis.result;
   const capturePlayback = usePlaybackState(controller);
   const authorReferenceIndex = useMemo(() => buildAuthorReferenceIndex(ideas), [ideas]);
-  const analysisTargetLabel = useMemo(() => preAnalysisSession?.voices
-    .filter((voice) =>
-      voice.included
-      && !voice.duplicateOf
-      && voice.assignedRole !== "exclude")
-    .map((voice) => voice.displayName)
-    .join(" / "), [preAnalysisSession]);
-
+  const analysisTargetLabel = useMemo(
+    () => captureAnalysisTargetLabel(preAnalysisSession?.voices),
+    [preAnalysisSession],
+  );
+  const completedAnalysisStatus = completedAnalysisSummary
+    ? captureAnalysisRunCopy(completedAnalysisSummary, language)
+    : undefined;
   useStickyInspectorHeight(inspectorHost, Boolean(expandedCandidateId));
 
   useEffect(() => {
@@ -391,6 +470,9 @@ export function CaptureView(props: CaptureViewProps) {
       options: { append?: boolean; sourcePath?: string } = {},
     ) => {
       stopCapturePlayback(controller);
+      if (!options.append) {
+        setCompletedAnalysisSummary(undefined);
+      }
       setAnalysisProgress("reading");
       await waitForNextPaint();
       const intake = options.append && preAnalysisSession
@@ -1156,6 +1238,7 @@ export function CaptureView(props: CaptureViewProps) {
             session={preAnalysisSession}
             language={language}
             busy={analysisProgress !== undefined}
+            requiresReanalysis={completedAnalysisSummary !== undefined}
             onSessionChange={setPreAnalysisSession}
             onAddMidi={() => void chooseMidi(true)}
             onRemoveSource={(sourceId) => {
@@ -1166,6 +1249,7 @@ export function CaptureView(props: CaptureViewProps) {
               if (!master) return;
               try {
                 const request = buildSessionAnalysisRequest(preAnalysisSession);
+                const runSummary = captureAnalysisRunSummary(request);
                 const roleEvents = buildRoleCorrectionLogEvents(
                   preAnalysisSession,
                   new Date().toISOString(),
@@ -1176,6 +1260,7 @@ export function CaptureView(props: CaptureViewProps) {
                   request.options,
                 ).then((analyzed) => {
                   if (!analyzed) return;
+                  setCompletedAnalysisSummary(runSummary);
                   void appendRoleCorrectionLog(roleEvents)
                     .catch(() => undefined);
                 });
@@ -1462,6 +1547,7 @@ export function CaptureView(props: CaptureViewProps) {
             {preAnalysisSession ? (
               <Button
                 variant="secondary"
+                data-testid="capture-change-part-selection"
                 onClick={() => {
                   stopCapturePlayback(controller);
                   clearAnalysis();
@@ -1473,11 +1559,22 @@ export function CaptureView(props: CaptureViewProps) {
             <Button variant="secondary" onClick={() => void chooseMidi(false)}>
               {copy.capture.chooseAnother}
             </Button>
-            <Button variant="ghost" onClick={() => { stopCapturePlayback(controller); clearAnalysis(); setPreAnalysisSession(undefined); setSourcePath(undefined); }}>
+            <Button variant="ghost" onClick={() => { stopCapturePlayback(controller); clearAnalysis(); setCompletedAnalysisSummary(undefined); setPreAnalysisSession(undefined); setSourcePath(undefined); }}>
               {copy.capture.clear}
             </Button>
           </div>
         </div>
+        {completedAnalysisStatus ? (
+          <div data-testid="capture-analysis-preset-summary">
+            <StatusMessage
+              className="mt-5"
+              tone="success"
+              title={completedAnalysisStatus.title}
+            >
+              {completedAnalysisStatus.description}
+            </StatusMessage>
+          </div>
+        ) : null}
         <div className="mt-5 grid gap-3 text-sm sm:grid-cols-4">
           <Metric label={copy.capture.file} value={result.fileName ?? "MIDI"} />
           <Metric label={copy.capture.bars} value={result.totalBars.toString()} />
@@ -3002,10 +3099,11 @@ function similarityVoiceContext(analysisInput: AnalysisInput): SimilarityVoiceCo
   const voices = new Map(analysisInput.voices.map((voice) => [voice.id, voice]));
   const roleProfiles = Object.fromEntries(enabledVoiceIds.map((voiceId) => {
     const voice = voices.get(voiceId);
-    const override = analysisInput.roleOverrides[voiceId];
+    const isChannel10 = voice?.channel === 9;
+    const override = isChannel10 ? undefined : analysisInput.roleOverrides[voiceId];
     return [voiceId, {
-      role: override ?? voice?.inferredRole ?? "mixed",
-      confidence: override ? 1 : voice?.roleConfidence ?? 0,
+      role: isChannel10 ? "percussion" : override ?? voice?.inferredRole ?? "mixed",
+      confidence: isChannel10 ? 1 : override ? 1 : voice?.roleConfidence ?? 0,
     }];
   }));
   return { enabledVoiceIds, roleProfiles };

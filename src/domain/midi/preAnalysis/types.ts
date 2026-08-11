@@ -1,3 +1,5 @@
+import type { VoiceContributionPreset } from "../types";
+
 export type PreAnalysisVoiceRole =
   | "harmony"
   | "bass"
@@ -50,6 +52,10 @@ export interface PreAnalysisVoice {
   averageDurationBeats?: number;
   averagePolyphony?: number;
   autoRole: PreAnalysisVoiceRole;
+  /** Role v2 category for display; the numeric compatibility field stays private. */
+  autoRoleConfidenceBucket?: "high" | "medium" | "low";
+  /** Privacy-safe Role v2 evidence categories; never raw MIDI or title data. */
+  autoRoleEvidenceKinds?: readonly string[];
   autoRoleConfidence: number;
   assignedRole: PreAnalysisVoiceRole;
   included: boolean;
@@ -121,6 +127,8 @@ export interface AnalysisSession {
   notes: PreAnalysisNote[];
   controlChanges: PreAnalysisControlChange[];
   preset: PreAnalysisSelectionPreset;
+  /** Session-only. It never changes the persisted correction-log schema. */
+  voiceContributionPreset?: VoiceContributionPreset;
   warnings: AnalysisSessionWarning[];
   latestSourceId?: string;
 }

@@ -48,10 +48,9 @@ import {
   undoProgressionEdit,
 } from "../domain/progressionEditing";
 import {
-  annotateVoiceRoles,
+  annotateVoiceRolesV2,
   beatsPerBar,
   buildCorrectionEvents,
-  buildVoiceFeatureInputs,
   buildVoices,
   normalizeNotes,
 } from "../domain/midi";
@@ -377,10 +376,7 @@ export function ProgressionDetailView({
       const sourceData = await loadMidiSource(sourceAsset.path);
       const normalized = normalizeNotes(sourceData);
       const baseVoices = buildVoices(sourceData);
-      const voices = annotateVoiceRoles(
-        baseVoices,
-        buildVoiceFeatureInputs(baseVoices, normalized),
-      );
+      const voices = annotateVoiceRolesV2(baseVoices, normalized);
       const updates = editable.slots.flatMap((slot) => {
         const startBeat = (slot.position.bar - 1) * editable.beatsPerBar + slot.position.beat - 1;
         const result = extractVoicing({

@@ -159,6 +159,11 @@ export interface Voice {
   highestVoiceShare: number;
   inferredRole: VoiceRole;
   roleConfidence: number;
+  /** Runtime-only Role v2 review metadata. It is never added to Vault data. */
+  roleConfidenceBucket?: "high" | "medium" | "low";
+  /** Privacy-safe evidence categories, without a raw track name or MIDI data. */
+  roleEvidenceKinds?: readonly string[];
+  roleInferenceVersion?: "p521-role-v2-v1";
   roleEvidence: VoiceRoleEvidence;
 }
 
@@ -191,10 +196,17 @@ export interface VoiceEvidenceProfiles {
   tensionEvidence: number[];
 }
 
+/**
+ * An explicit, per-analysis contribution profile for the role-aware reranker.
+ * Omitting it preserves the shipped role contribution behavior.
+ */
+export type VoiceContributionPreset = "standard" | "harmonic-core";
+
 export interface AnalysisInput {
   voices: Voice[];
   enabledVoiceIds: string[];
   roleOverrides: Record<string, VoiceRole>;
+  voiceContributionPreset?: VoiceContributionPreset;
 }
 
 export type VoiceSelectionPreset = "auto" | "harmony-and-bass" | "exclude-melody" | "all";

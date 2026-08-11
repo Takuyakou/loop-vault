@@ -8,9 +8,8 @@ import {
 } from "../domain/repository";
 import {
   analyzeMidi,
-  annotateVoiceRoles,
+  annotateVoiceRolesV2,
   beatsPerBar,
-  buildVoiceFeatureInputs,
   buildVoices,
   candidateEventsAsTimeline,
   normalizeNotes,
@@ -698,9 +697,9 @@ export function createVaultStore(
           const sourceData = analyzeOptions.preparedData ?? parseMidi(bytes);
           const normalized = normalizeNotes(sourceData);
           const baseVoices = buildVoices(sourceData);
-          const sourceVoices = annotateVoiceRoles(
+          const sourceVoices = annotateVoiceRolesV2(
             baseVoices,
-            buildVoiceFeatureInputs(baseVoices, normalized),
+            normalized,
             analyzeOptions.analysisInput?.roleOverrides,
           );
           // Attach the original MIDI voicing to the candidates now, so the
