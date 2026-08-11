@@ -76,6 +76,50 @@ describe("Voice evidence profiles", () => {
     expect(Object.values(evidence).flat().every((value) => value === 0)).toBe(true);
   });
 
+  it("applies transient note multipliers while leaving the default profile exact", () => {
+    const roles = new Map<string, VoiceRoleProfile>([["0:0", profile("harmony")]]);
+    const chordTone = note(60, 0, 1);
+    const defaultProfile = buildVoiceAwarePitchProfile(
+      [chordTone],
+      { startBeat: 0, endBeat: 1 },
+      roles,
+      new Map(),
+      4,
+    );
+    const explicitIdentity = buildVoiceAwarePitchProfile(
+      [chordTone],
+      { startBeat: 0, endBeat: 1 },
+      roles,
+      new Map(),
+      4,
+      undefined,
+      new Map([[chordTone, 1]]),
+    );
+    const reduced = buildVoiceAwarePitchProfile(
+      [chordTone],
+      { startBeat: 0, endBeat: 1 },
+      roles,
+      new Map(),
+      4,
+      undefined,
+      new Map([[chordTone, 0.25]]),
+    );
+
+    expect(explicitIdentity).toEqual(defaultProfile);
+    expect(reduced.rootEvidence[0]).toBeCloseTo(defaultProfile.rootEvidence[0] * 0.25);
+    expect(reduced.qualityEvidence[0]).toBeCloseTo(defaultProfile.qualityEvidence[0] * 0.25);
+    expect(reduced.tensionEvidence[0]).toBeCloseTo(defaultProfile.tensionEvidence[0] * 0.25);
+    expect(() => buildVoiceAwarePitchProfile(
+      [chordTone],
+      { startBeat: 0, endBeat: 1 },
+      roles,
+      new Map(),
+      4,
+      undefined,
+      new Map([[chordTone, Number.POSITIVE_INFINITY]]),
+    )).toThrow(/finite and non-zero/u);
+  });
+
   it("lets a non-channel-9 GM percussion Voice re-enter evidence through a role override", () => {
     const voice: Voice = {
       ...makeVoice(),
