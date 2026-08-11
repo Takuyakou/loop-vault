@@ -48,6 +48,7 @@ interface PreAnalysisWorkspaceProps {
   session: AnalysisSession;
   language: AppLanguage;
   busy?: boolean;
+  requiresReanalysis?: boolean;
   onSessionChange: (session: AnalysisSession) => void;
   onAddMidi: () => void;
   onRemoveSource: (sourceId: string) => void;
@@ -60,6 +61,7 @@ export function PreAnalysisWorkspace({
   session,
   language,
   busy = false,
+  requiresReanalysis = false,
   onSessionChange,
   onAddMidi,
   onRemoveSource,
@@ -357,6 +359,18 @@ export function PreAnalysisWorkspace({
           </div>
         </div>
 
+        {requiresReanalysis ? (
+          <div data-testid="pre-analysis-reanalysis-required">
+            <StatusMessage
+              className="mt-4"
+              tone="warning"
+              title={copy.reanalysisRequired}
+            >
+              {copy.reanalysisRequiredDescription}
+            </StatusMessage>
+          </div>
+        ) : null}
+
         <div className="mt-3 flex flex-wrap gap-2" aria-label={copy.loadedMidi}>
           {session.sources.map((source) => (
             <div
@@ -542,7 +556,7 @@ export function PreAnalysisWorkspace({
                     className="mt-2 grid grid-cols-2 gap-2"
                     role="radiogroup"
                     aria-labelledby="pre-analysis-voice-contribution"
-                    aria-describedby="pre-analysis-harmonic-core-description"
+                    aria-describedby="pre-analysis-harmonic-core-description pre-analysis-contribution-apply-hint"
                   >
                     {voiceContributionOptions(copy).map((option) => (
                       <button
@@ -569,6 +583,12 @@ export function PreAnalysisWorkspace({
                     className="mt-2 text-xs text-[var(--lv-text-secondary)]"
                   >
                     {copy.harmonicCoreDescription}
+                  </p>
+                  <p
+                    id="pre-analysis-contribution-apply-hint"
+                    className="mt-1 text-xs text-[var(--lv-text-muted)]"
+                  >
+                    {copy.contributionApplyHint}
                   </p>
                 </div>
                 <button
@@ -1057,6 +1077,9 @@ function workspaceCopy(language: AppLanguage) {
       standardContribution: "標準",
       harmonicCore: "和声コア",
       harmonicCoreDescription: "テンションを取りこぼす代わりに、メロディ由来の誤検出を減らします",
+      contributionApplyHint: "選択後は「この設定で解析」を押すと結果に反映されます。",
+      reanalysisRequired: "再解析が必要です",
+      reanalysisRequiredDescription: "変更した設定はまだ結果に反映されていません。「この設定で解析」を押してください。",
       resetAuto: "自動推定に戻す",
       loadedMidi: "読み込んだMIDI",
       hideSource: "ファイルを非表示",
@@ -1121,6 +1144,9 @@ function workspaceCopy(language: AppLanguage) {
     standardContribution: "Standard",
     harmonicCore: "Harmonic Core",
     harmonicCoreDescription: "Reduces melody-derived false detections at the cost of some missed tensions.",
+    contributionApplyHint: "After selecting a mode, choose Analyze this configuration to apply it.",
+    reanalysisRequired: "Analysis needs to be run again",
+    reanalysisRequiredDescription: "Your changes are not reflected in the result yet. Choose Analyze this configuration.",
     resetAuto: "Reset to auto",
     loadedMidi: "Loaded MIDI",
     hideSource: "Hide file",

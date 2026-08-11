@@ -95,9 +95,13 @@ describe("PreAnalysisWorkspace", () => {
     expect(standard.getAttribute("aria-checked")).toBe("true");
     expect(harmonicCore.getAttribute("aria-checked")).toBe("false");
     expect(harmonicCore.closest("[role='radiogroup']")
-      ?.getAttribute("aria-describedby")).toBe("pre-analysis-harmonic-core-description");
+      ?.getAttribute("aria-describedby")).toBe(
+        "pre-analysis-harmonic-core-description pre-analysis-contribution-apply-hint",
+      );
     expect(container.querySelector("#pre-analysis-harmonic-core-description")?.textContent)
       .toBe("テンションを取りこぼす代わりに、メロディ由来の誤検出を減らします");
+    expect(container.querySelector("#pre-analysis-contribution-apply-hint")?.textContent)
+      .toBe("選択後は「この設定で解析」を押すと結果に反映されます。");
 
     document.body.append(container);
     standard.focus();
@@ -136,6 +140,22 @@ describe("PreAnalysisWorkspace", () => {
 
     await unmount();
     container.remove();
+  });
+
+  it("announces when the current settings still need to be analyzed", async () => {
+    const { container, unmount } = await renderWorkspace(fixtureSession(), {
+      requiresReanalysis: true,
+    });
+
+    const warning = container.querySelector(
+      "[data-testid='pre-analysis-reanalysis-required']",
+    );
+    expect(warning?.textContent).toContain("再解析が必要です");
+    expect(warning?.textContent).toContain(
+      "変更した設定はまだ結果に反映されていません。「この設定で解析」を押してください。",
+    );
+
+    await unmount();
   });
 
   it("keeps a simple one-Voice MIDI compact without adding a required step", async () => {
