@@ -2,15 +2,16 @@
     "schemaVersion":  1,
     "phaseId":  "5.21.1",
     "status":  "in-progress",
-    "activeStage":  "P5.21.1-02",
+    "activeStage":  "P5.21.1-03",
     "completedStages":  [
                             "P5.21.1-00",
-                            "P5.21.1-01"
+                            "P5.21.1-01",
+                            "P5.21.1-02"
                         ],
     "blocked":  false,
     "blockerReason":  null,
     "baseCommit":  "16eb4c0e751e3623b08fdc09c427bd4f2e287afe",
-    "lastVerifiedCommit":  "84efddd9f95094cc6b8ff8072c4135f94b56c5be",
+    "lastVerifiedCommit":  "aad540f04071137dbf9637cdbfa09efed122ca72",
     "currentBranch":  "feat/p5211-mixed-voice-harmonic-extraction",
     "requiredGates":  {
                           "P5.21.1-00":  [
@@ -79,8 +80,14 @@
                         "p5211-01-production-output-isolation":  "pass",
                         "p5211-01-determinism-properties":  "pass",
                         "p5211-01-lint-typecheck":  "pass",
-                        "p5211-01-diff-protected-privacy-hygiene":  "pass"
+                        "p5211-01-diff-protected-privacy-hygiene":  "pass",
+                        "p5211-02-shadow-classifier-evaluation":  "pass",
+                        "p5211-02-protected-harmonic-retention":  "pass",
+                        "p5211-02-promotion-decision":  "pass",
+                        "p5211-02-official-corpus-safety":  "pass",
+                        "p5211-02-lint-typecheck":  "pass",
+                        "p5211-02-diff-protected-privacy-hygiene":  "pass"
                     },
-    "nextAction":  "Run P5.21.1-02 Shadow classifier/evaluation only. Do not integrate note multipliers unless every locked promotion gate passes.",
-    "updatedAt":  "2026-08-11T18:24:00+09:00"
+    "nextAction":  "Run P5.21.1-03 integration only: locked non-zero note multiplier in Harmonic Core, with every other path exact unchanged.",
+    "updatedAt":  "2026-08-11T18:32:00+09:00"
 }
