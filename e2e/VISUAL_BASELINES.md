@@ -24,6 +24,11 @@ For the Settings baseline alone, use
 `npm run test:e2e:settings-visual:update-baseline`. It runs only the named
 Settings visual test and can therefore update only `settings.png`.
 
+For Capture result baselines alone, use
+`npm run test:e2e:capture-results-visual:update-baseline`. It runs only the
+named Capture workflow visual test and updates only changed screenshots from
+that workflow.
+
 All Playwright commands above build with fixed test-only build metadata
 (`visual-test`, `2026-01-01T00:00:00.000Z`). Production builds retain their
 normal commit and build-date metadata.

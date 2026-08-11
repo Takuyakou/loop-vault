@@ -20,6 +20,8 @@
     "test:e2e:update": "npm run test:e2e:update-baselines",
     "test:e2e:settings-visual": "node scripts/run-playwright-visual-tests.mjs e2e/visual.spec.ts --grep \"Settings visual baseline\"",
     "test:e2e:settings-visual:update-baseline": "node scripts/run-playwright-visual-tests.mjs e2e/visual.spec.ts --grep \"Settings visual baseline\" --update-snapshots",
+    "test:e2e:capture-results-visual": "node scripts/run-playwright-visual-tests.mjs e2e/visual.spec.ts --grep \"Capture states and correction workflow\"",
+    "test:e2e:capture-results-visual:update-baseline": "node scripts/run-playwright-visual-tests.mjs e2e/visual.spec.ts --grep \"Capture states and correction workflow\" --update-snapshots=changed",
     "test:playwright-visual-runner": "node --test scripts/run-playwright-visual-tests.node-test.mjs",
     "test:e2e:report": "playwright show-report",
     "typecheck:e2e": "tsc -p tsconfig.e2e.json",
