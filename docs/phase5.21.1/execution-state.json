@@ -2,16 +2,17 @@
     "schemaVersion":  1,
     "phaseId":  "5.21.1",
     "status":  "in-progress",
-    "activeStage":  "P5.21.1-03",
+    "activeStage":  "P5.21.1-04",
     "completedStages":  [
                             "P5.21.1-00",
                             "P5.21.1-01",
-                            "P5.21.1-02"
+                            "P5.21.1-02",
+                            "P5.21.1-03"
                         ],
     "blocked":  false,
     "blockerReason":  null,
     "baseCommit":  "16eb4c0e751e3623b08fdc09c427bd4f2e287afe",
-    "lastVerifiedCommit":  "aad540f04071137dbf9637cdbfa09efed122ca72",
+    "lastVerifiedCommit":  "856355b850a078ed8d05a5f2bb6ac7cbaa64be16",
     "currentBranch":  "feat/p5211-mixed-voice-harmonic-extraction",
     "requiredGates":  {
                           "P5.21.1-00":  [
@@ -86,8 +87,14 @@
                         "p5211-02-promotion-decision":  "pass",
                         "p5211-02-official-corpus-safety":  "pass",
                         "p5211-02-lint-typecheck":  "pass",
-                        "p5211-02-diff-protected-privacy-hygiene":  "pass"
+                        "p5211-02-diff-protected-privacy-hygiene":  "pass",
+                        "p5211-03-harmonic-core-only-integration":  "pass",
+                        "p5211-03-nonzero-multiplier":  "pass",
+                        "p5211-03-default-path-equivalence":  "pass",
+                        "p5211-03-focused-regressions":  "pass",
+                        "p5211-03-lint-typecheck":  "pass",
+                        "p5211-03-diff-protected-privacy-hygiene":  "pass"
                     },
-    "nextAction":  "Run P5.21.1-03 integration only: locked non-zero note multiplier in Harmonic Core, with every other path exact unchanged.",
-    "updatedAt":  "2026-08-11T18:32:00+09:00"
+    "nextAction":  "Run P5.21.1-04 regression and hardening: official corpus, anonymous real failure comparison, P5.21 regressions, performance, and resource checks.",
+    "updatedAt":  "2026-08-11T18:46:00+09:00"
 }
