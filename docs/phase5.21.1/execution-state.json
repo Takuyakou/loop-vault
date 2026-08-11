@@ -2,14 +2,15 @@
     "schemaVersion":  1,
     "phaseId":  "5.21.1",
     "status":  "in-progress",
-    "activeStage":  "P5.21.1-01",
+    "activeStage":  "P5.21.1-02",
     "completedStages":  [
-                            "P5.21.1-00"
+                            "P5.21.1-00",
+                            "P5.21.1-01"
                         ],
     "blocked":  false,
     "blockerReason":  null,
     "baseCommit":  "16eb4c0e751e3623b08fdc09c427bd4f2e287afe",
-    "lastVerifiedCommit":  "506ce9bdec624c772fb33ede7d28fa5544ec8bcf",
+    "lastVerifiedCommit":  "84efddd9f95094cc6b8ff8072c4135f94b56c5be",
     "currentBranch":  "feat/p5211-mixed-voice-harmonic-extraction",
     "requiredGates":  {
                           "P5.21.1-00":  [
@@ -73,8 +74,13 @@
                         "p5211-00-official-corpus-baseline":  "pass",
                         "p5211-00-focused-baseline-tests":  "pass",
                         "p5211-00-lint-typecheck":  "pass",
-                        "p5211-00-diff-protected-privacy-hygiene":  "pass"
+                        "p5211-00-diff-protected-privacy-hygiene":  "pass",
+                        "p5211-01-shadow-feature-tests":  "pass",
+                        "p5211-01-production-output-isolation":  "pass",
+                        "p5211-01-determinism-properties":  "pass",
+                        "p5211-01-lint-typecheck":  "pass",
+                        "p5211-01-diff-protected-privacy-hygiene":  "pass"
                     },
-    "nextAction":  "P5.21.1-00 is complete. P5.21.1-01 is not started and awaits separate human approval. Do not merge, push, or start P5.22.",
-    "updatedAt":  "2026-08-11T17:48:00+09:00"
+    "nextAction":  "Run P5.21.1-02 Shadow classifier/evaluation only. Do not integrate note multipliers unless every locked promotion gate passes.",
+    "updatedAt":  "2026-08-11T18:24:00+09:00"
 }
