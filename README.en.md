@@ -1,112 +1,128 @@
-<div align="center">
-
 # Loop Vault
 
-**A music-production helper desktop app that analyzes chord progressions from MIDI, then lets you edit, preview, and practice them — all in one place.**
+**A Windows desktop app for collecting, refining, hearing, practicing, and producing with chord progressions**
 
-Built with Tauri v2 + React + TypeScript + Rust (developed and tested primarily on Windows).
-
-[日本語](README.md) | **English**
+[日本語](README.md) | [English](README.en.md)
 
 ![Loop Vault](docs/images/hero.png)
 
-</div>
+## Download
 
-> **About this public repository**
-> This repository does **not** include any MIDI files (for licensing reasons).
-> You do not need any MIDI data to read the source, build the app, or run the unit tests.
-> For reproducing the accuracy evaluation locally, see [`docs/local-data.md`](docs/local-data.md).
+**Latest Release: v1.1.0**
 
----
+Loop Vault supports Windows. Releases include both an **NSIS** setup executable and an **MSI**
+Windows Installer package.
 
-## Table of Contents
+[Download the latest version from GitHub Releases](https://github.com/Takuyakou/loop-vault/releases/latest)
 
-- [Overview](#overview)
-- [Features](#features)
-- [Screenshots](#screenshots)
-- [Tech Stack](#tech-stack)
-- [Architecture](#architecture)
-- [How Detection Accuracy Is Improved](#how-detection-accuracy-is-improved)
-- [AI-Assisted Development Flow](#ai-assisted-development-flow)
-- [Setup](#setup)
-- [Direction](#direction)
-- [License](#license)
+## What is Loop Vault?
 
----
+Loop Vault connects finding a chord progression with everything that comes next: editing, auditioning,
+practice, and production.
 
-## Overview
+- **Analyze MIDI** — Load one or more MIDI files and extract chord-progression candidates from the music.
+- **Write chord names** — Create a bar-structured progression directly, even when you do not have a MIDI file.
+- **Save and use it** — Edit and audition progressions in the Vault, practice them, export MIDI, or drag them into a DAW.
 
-Loop Vault supports a full workflow around "understanding chord progressions from MIDI, then
-organizing and practicing them as material" during DTM / songwriting.
-
-- Import a MIDI file and it automatically analyzes the chord progression and shows it as a timeline.
-- Rather than taking the analysis at face value, you can do **pre-analysis prep** (e.g. choosing which
-  voices to analyze) and **post-analysis touch-ups** (range selection, chord correction, preview).
-- Save loops and ideas you like into the "Vault" and manage them along with their production status.
-- It also includes practice modes for chord progressions (degrees, rhythm, bass, …) and a feature to
-  consult an LLM for development ideas.
-
-The app's core (its default analysis mode) uses a stable version fixed through the evaluation process
-described below.
+Analysis and editing never modify the source MIDI. Vault data, settings, and practice history are stored
+locally and are not uploaded automatically. Only Progression Advisor makes an explicit request using the
+OpenAI API key supplied by the user.
 
 ## Features
 
-Every item below corresponds to functionality that actually exists in the repository.
+### MIDI Capture & Analysis
 
-### MIDI import and chord-progression analysis (Capture)
-- Automatically analyzes the chord progression from MIDI files (multiple files can be imported).
-- Before analysis you can assign the role of each target voice (part) and adjust the analysis target
-  on a Canvas-based piano roll, then run the analysis.
-- Results are presented as **candidate blocks** such as 4 / 8 / 16 bars.
+- Load one or multiple MIDI files and analyze beats, bars, chord candidates, and sections
+- Pre-analyze Voices as bass, harmony, pad, melody, percussion, mixed, and related roles; review or correct
+  High / Medium / Low confidence results
+- Standard, automatic, and custom analysis presets, plus the opt-in **Harmonic Core** mode
+- Reduce the chord-detection contribution of melody-like notes when harmony and melody share one Voice
+- Inspect the result as compact cards, a piano roll, timelines, and candidate blocks, then refine it in a Draft
 
-### Manual candidate creation and editing (Candidate Catalog / manual candidates)
-- Beyond picking from the list (catalog) of automatically detected candidates, you can **select any
-  range on the timeline to create a candidate**.
-- You can edit candidate ranges and chord events (add / delete / replace / split / merge / move),
-  with Undo / Redo support.
+#### Harmonic Core
 
-### Progression detail, preview, and export (Progression Detail)
-- Review the chord progression on a timeline and edit each chord.
-- **Voicing Memory** retains the original MIDI voicing and reflects it in preview and practice.
-- Preview via [Tone.js](https://tonejs.github.io/).
-- Export the analyzed / edited progression as MIDI and hand it off to a DAW via **native
-  drag-and-drop** (implemented by the `midi_export` / `native_drag` commands on the Rust side).
+Harmonic Core is an **optional mode for prioritizing accompaniment harmony in MIDI that also contains a
+melody**. It reduces how strongly melody-like notes contribute to chord detection. It does not delete notes
+from the source, rewrite the MIDI file, or replace the default analysis path; enable it only when it fits the material.
 
-### Idea / loop management (Vault)
-- Save imported loops and ideas and manage them in a list alongside their production status
-  (Idea / Loop / Arrange / Mix / Done).
-- Supports organizing your work with things like Next Action and Focus to keep production moving.
+### Text Progression Entry
 
-### Practice modes (Practice / Bass Practice)
-- Practice modes that use chord progressions as material (transposition, mixing, etc.).
-- **Bass Practice** (added in P5.16) provides independent bass exercises such as Degree, Rhythm,
-  and Bassline Echo. It uses FreePats sounds for the bass timbre.
+Create and save a progression from the Text tab in Capture without supplying a MIDI file.
 
-### Progression Advisor (LLM)
-- A feature to consult OpenAI's API for chord-progression development ideas.
-- **The API key is never stored on the frontend.** The key entered in the app's settings is stored via
-  Tauri (Rust) in the **OS keychain** (Windows Credential Manager, etc.)
-  (implementation: [`src-tauri/src/llm/keychain.rs`](src-tauri/src/llm/keychain.rs)).
+```text
+| Dm7 G7 | Cmaj7 | Am7 |
+```
 
-### Data storage, backup, and recovery
-- In addition to saving / loading practice data, backup listing, restore, and quarantine are handled on
-  the Rust side (`practice_storage`).
+- Parse bar separators and chord names into compact code cards with clear diagnostics
+- Set a key and BPM, choose an automatically generated voicing style, and audition each chord
+- Play a voicing on a MIDI keyboard and explicitly mark those notes for the selected chord
+- Continue through the existing Capture Draft, Quick Editor, Preview, and Vault save flow
 
-### Localization
-- Supports switching between Japanese and English (`src/i18n.ts`).
+### Progression Detail & Vault
+
+- Edit and organize chord progressions, key, BPM, sections, titles, and workflow status
+- Use per-chord **Voicing Memory** from source MIDI, generated voicings, or notes captured from a keyboard
+- Audition a complete progression or individual chords with adjustable sound and tempo
+- Export MIDI and use native drag-and-drop into a supported DAW
+- Search and organize the Vault by title, key, chord, tag, status, and other metadata
+
+### Chord Dojo
+
+Practice saved progressions step by step with a MIDI keyboard.
+
+- Five levels: See and Play, Play by Name, Play by Degree, Nearby Keys, and Any Key
+- Step mode for one chord at a time and Flow mode for playing through the progression
+- Voicing practice with the resolved voicing, Auto, Shell, Open, and Rootless choices
+- Mix practice with 2–5 progressions plus adjustable BPM, leniency, and cycle count
+- Store practice level and progress with the Vault entry
+
+### Bass Practice
+
+A practice workspace built around listening, singing, thinking, playing, and reviewing.
+
+- **Degree Echo** — Hear a short phrase, sing it, understand it by degree, and reproduce it on bass
+- **Rhythm Echo** — Hear and remember a rhythm, sing it, then play it
+- **Bassline Echo** — Hear and reproduce a bassline over a progression from built-in presets or the Vault
+- **Root Motion Echo** — Hear 2–8 chord-root movements, reproduce them on the fretboard, and transpose them
+- Chord Context plus 4- or 5-string, right- or left-handed, and fret-range settings
+- **Record & Compare** your performance against the reference or an earlier take
+- Review results in Practice History
+
+### Progression Advisor
+
+Ask AI for possible continuations or substitutions based on a Vault progression. The OpenAI API key is
+kept in the OS keychain, and suggestions can be reviewed before they are saved.
+
+### Data and localization
+
+- Vault and practice-data persistence, backup, and recovery
+- Japanese and English UI
+- A workflow that keeps evaluation MIDI, recordings, and personal data out of the repository
 
 ## Screenshots
 
-All of the following were captured with **synthetic dummy MIDI / dummy data** (how they were captured:
-[`docs/images/README.md`](docs/images/README.md)).
+All screenshots show the v1.1.0 production UI with anonymous deterministic data.
 
-| Capture (MIDI analysis) | Vault (management) |
+| MIDI Capture / Harmonic Core | Text Progression Entry |
 | --- | --- |
-| ![Capture](docs/images/capture.png) | ![Vault](docs/images/vault.png) |
+| ![Capture with Harmonic Core](docs/images/capture.png) | ![Text Progression Entry](docs/images/text-progression.png) |
 
-| Progression Detail (detail / preview / export) | Bass Practice (Degree Echo) |
+| Vault | Progression Detail |
 | --- | --- |
-| ![Progression Detail](docs/images/progression-detail.png) | ![Bass Practice](docs/images/bass-practice.png) |
+| ![Vault](docs/images/vault.png) | ![Progression Detail](docs/images/progression-detail.png) |
+
+![Bass Practice — Root Motion Echo](docs/images/bass-practice.png)
+
+## v1.1.0 highlights
+
+- Create progressions from chord names without a MIDI file through Text Progression Entry
+- Expanded Bass Practice with Root Motion Echo, Chord Context, Record & Compare, and Vault sources
+- Expanded Chord Dojo levels, transposition, voicing, and Mix practice
+- Improved the analysis flow with MIDI Voice-role inference, Harmonic Core, and melody-like note weighting within a Voice
+- Improved Voicing Memory, MIDI export, DAW drag, history, UI consistency, and accessibility
+
+v1.1.0 has no known breaking changes. Existing Vault and practice data remain compatible without an
+additional migration. See the [v1.1.0 Release Notes](docs/releases/v1.1.0.md) for details.
 
 ## Tech Stack
 
@@ -118,162 +134,89 @@ All of the following were captured with **synthetic dummy MIDI / dummy data** (h
 | State management | Zustand 5 |
 | Schema / validation | Zod 3 |
 | Audio / MIDI playback | Tone.js 15 |
-| Native features (Rust) | OS keychain integration (LLM key), practice-data persistence, MIDI export, native drag to DAW |
-| Testing | Vitest |
-| Lint | ESLint |
+| Native features | OS keychain, practice-data persistence, MIDI export, native drag to a DAW |
+| Testing / QA | Vitest / Playwright / axe-core / Rust tests |
 
-## Architecture
+## Architecture / Accuracy Evaluation
 
-The frontend (React) and the Tauri (Rust) native commands are separated at a boundary. The core logic —
-music theory, MIDI analysis, and so on — lives in `src/domain/` as pure functions independent of the UI,
-and is verified with unit tests.
+The React frontend and Tauri (Rust) native commands are separated at a clear boundary. Core music-theory,
+MIDI-analysis, editing, and practice logic lives in `src/domain/` or a feature domain layer, independently
+from the UI, and is verified with unit and integration tests.
 
-```
+```text
 src/
-├─ domain/           Music theory / MIDI analysis / chord-progression logic (UI-independent, tested)
-│  ├─ midi/          MIDI analysis pipeline, candidate-block generation, manual candidate (Draft), etc.
-│  ├─ harmony/       Harmony-related logic
-│  ├─ practice*/     Practice / transposition / mixing
-│  └─ progressionAdvisor/  Domain logic for the LLM advisor
-├─ views/            Screens (Capture / Vault / Home / Practice / ProgressionDetail / History / Detail)
+├─ domain/           Music theory, MIDI analysis, progression editing, Chord Dojo
 ├─ features/
-│  └─ bass-practice/ Bass practice feature (application / domain / infra / ui / assets)
-├─ llm/              Bridge for LLM calls (via Tauri invoke)
+│  └─ bass-practice/ Bass Practice application / domain / infra / UI
+├─ views/            Capture / Vault / Practice / Detail / History
+├─ llm/              Tauri bridge for Progression Advisor
 └─ i18n.ts           Japanese / English
 
-src-tauri/           Tauri (Rust) side
-└─ src/
-   ├─ llm/keychain.rs      Manages the OpenAI API key in the OS keychain
-   ├─ practice_storage     Practice-data storage / backup / recovery
-   └─ midi_export / native_drag  MIDI export and native drag to a DAW
+src-tauri/
+└─ src/              Keychain, storage, MIDI export, native drag
 ```
 
-The detailed MIDI-analysis spec is in
-[`docs/current-midi-detection-spec.md`](docs/current-midi-detection-spec.md), and a technical handoff
-covering the whole app is in
-[`docs/current-app-technical-handoff.md`](docs/current-app-technical-handoff.md).
+See [`docs/current-midi-detection-spec.md`](docs/current-midi-detection-spec.md) for the current MIDI-analysis
+contract and [`docs/current-app-technical-handoff.md`](docs/current-app-technical-handoff.md) for the wider
+technical handoff.
 
-## How Detection Accuracy Is Improved
+Accuracy improvements are evaluated with fixed corpora, ablation, failure taxonomy, and determinism checks,
+not by impression. New detection ideas are first measured as disconnected shadows and are promoted only when
+they clear pre-registered thresholds. Declined changes and their rationale remain documented under `docs/`.
 
-The policy is to never judge chord-detection accuracy by "it feels a bit better." In this repository,
-changes to the detection logic are evaluated and recorded with the following process.
+- Local evaluation-data setup: [`docs/local-data.md`](docs/local-data.md)
+- Ablation example: [`docs/phase3.6.1-ablation-report.md`](docs/phase3.6.1-ablation-report.md)
+- Detector research record: [`docs/stage-f/09-detector-research-report.md`](docs/stage-f/09-detector-research-report.md)
 
-- **Fixing a baseline with a Gold corpus**
-  A set of MIDI whose correct labels have been human-verified (the Gold corpus) is fixed as the
-  evaluation baseline, and before/after are compared with the same metrics. The corpus itself is not
-  published for licensing reasons ([`docs/local-data.md`](docs/local-data.md)).
-
-- **Ablation**
-  Each element of the detection is individually enabled / disabled to isolate and measure how much each
-  contributes to accuracy (e.g. [`docs/phase3.6.1-ablation-report.md`](docs/phase3.6.1-ablation-report.md),
-  script `scripts/ablate-midi-analysis.ts`).
-
-- **Failure taxonomy**
-  Missed cases are classified by "why they were missed" and used to prioritize countermeasures
-  (script `scripts/analyze-midi-failures.ts`, and others).
-
-- **Decision Lock and shadow evaluation**
-  A new detection idea is first computed as a "shadow" that is not connected to the product, and
-  evaluated against the Gold corpus with pre-registered thresholds. If the effect does not clear the
-  bar, it is **not promoted to the product**, and that decision and its reasoning are kept as a record.
-  The Stage F research followed this policy to evaluate several detectors and documented the results —
-  **including the ones that were not promoted**
-  ([`docs/stage-f/09-detector-research-report.md`](docs/stage-f/09-detector-research-report.md),
-  [`docs/stage-f/08-stage-f-final-closeout.md`](docs/stage-f/08-stage-f-final-closeout.md),
-  [`docs/stage-f/03-stage-f-decisions.md`](docs/stage-f/03-stage-f-decisions.md)).
-
-By keeping a record of **not only adopted changes but also changes that were declined, with reasons**,
-the same verification does not have to be repeated.
+Evaluation corpora are not published for licensing and privacy reasons. Normal unit tests and builds run from
+a clean clone without those corpora.
 
 ## AI-Assisted Development Flow
 
-This project is developed in a ticket-driven way, with AI coding tools divided by role.
+Specifications, evaluation contracts, and acceptance criteria are fixed before implementation. AI coding tools
+then work in separate roles through staged implementation, independent review, verification, and documentation.
+Reports and decision records under `docs/` preserve why an implementation or default was chosen.
 
-- **Spec / design**: Claude Code is used to fix each phase's (ticket's) goals, evaluation contract, and
-  acceptance criteria up front, deciding the verification method before implementation.
-- **Implementation**: Codex (a separate AI) implements against the fixed spec.
-- **Ticket-driven**: Work is split into units of "phase number + stage" (e.g. P4.1.2-H4, P5.16), and
-  each stage's plan, prompts, and handoff content are kept as documentation
-  ([`docs/loop-vault-codex-plan.md`](docs/loop-vault-codex-plan.md),
-  [`docs/loop-vault-codex-prompts.md`](docs/loop-vault-codex-prompts.md),
-  [`docs/current-app-technical-handoff.md`](docs/current-app-technical-handoff.md)).
+- [`docs/loop-vault-codex-plan.md`](docs/loop-vault-codex-plan.md)
+- [`docs/loop-vault-codex-prompts.md`](docs/loop-vault-codex-prompts.md)
+- [`docs/current-app-technical-handoff.md`](docs/current-app-technical-handoff.md)
 
-Under `docs/`, work reports, evaluation results, and decision records for each phase accumulate, so that
-"on what grounds this implementation / this default was chosen" can be traced later.
-
-## Setup
+## Setup for developers
 
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) (LTS recommended)
-- [Rust toolchain](https://www.rust-lang.org/tools/install) (required to build Tauri)
-- Tauri v2 runtime prerequisites (on Windows, WebView2 and Microsoft C++ Build Tools, etc.). See the
-  [official Tauri prerequisites](https://tauri.app/start/prerequisites/) for details.
+- [Rust toolchain](https://www.rust-lang.org/tools/install)
+- [Tauri v2 prerequisites](https://tauri.app/start/prerequisites/), including WebView2 and the C++ Build Tools on Windows
 
-### Install dependencies
-
-```bash
-npm install
-```
-
-### Development
-
-To start only the frontend in a browser:
+### Install and develop
 
 ```bash
+npm ci
 npm run dev
 ```
 
-To start as a desktop app (Tauri):
+Run the Tauri desktop app:
 
 ```bash
 npm run tauri dev
 ```
 
-### Build
-
-Build the frontend:
-
-```bash
-npm run build
-```
-
-Build the distributable desktop app:
-
-```bash
-npm run tauri build
-```
-
-### Test / Lint
-
-```bash
-npm run test
-```
+### Verify and build
 
 ```bash
 npm run lint
+npm test
+npm run test:e2e
+npm run build
+npm run tauri build
 ```
-
-> The unit tests do not depend on the MIDI evaluation corpus and can run on a clean clone. Only when
-> running the accuracy-evaluation scripts (under `scripts/`) do you need to place MIDI following
-> [`docs/local-data.md`](docs/local-data.md).
-
-## Direction
-
-Development continues on a per-phase basis. The direction centers on improving chord-detection accuracy
-(the iteration based on the Gold corpus, ablation, and failure taxonomy described above) and expanding
-the practice features. Concrete changes are recorded in the per-phase reports under `docs/`.
 
 ## License
 
-**This repository is not open source.** The source code is published for **viewing and evaluation
-only** (see [LICENSE](LICENSE)).
+**This repository is not open source.** Its source code is published for viewing and evaluation only.
+See [LICENSE](LICENSE) for the complete terms.
 
-- Without the copyright holder's prior written permission, **commercial use, modification (derivative
-  works), and redistribution are prohibited**.
-- Beyond the above, essentially all use is not permitted (All Rights Reserved).
-- Viewing and forking on GitHub (within GitHub's Terms of Service) does not grant any of the withheld rights.
-- The FreePats ([electric-bass-YR](https://github.com/freepats/electric-bass-YR)) samples used for the
-  bass timbre are provided under their CC0-1.0 (public-domain equivalent) license, and are bundled under
-  `src/features/bass-practice/assets/freepats-bass-yr/` together with their license (`LICENSE.txt`).
-- Data such as the MIDI evaluation corpus is not included in the repository.
+- Commercial use, modification, and redistribution are prohibited without prior written permission from the copyright holder (All Rights Reserved).
+- The bundled FreePats [electric-bass-YR](https://github.com/freepats/electric-bass-YR) samples are CC0-1.0 and include their license.
+- MIDI evaluation corpora and personal data are not included in the repository.
