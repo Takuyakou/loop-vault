@@ -28,7 +28,7 @@ test("Record & Compare is available at the production default without flag injec
   const section = page.getByTestId("record-compare");
   await expect(section).toBeVisible();
   await expect(section).toHaveAttribute("data-record-state", "off");
-  await expect(section).toContainText("自動採点や分析はありません");
+  await expect(section).toContainText("自動採点や分析は行いません");
 });
 
 test("record, listen back and keep a take with a fake input device", async ({ page }) => {

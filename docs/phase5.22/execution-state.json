@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "phaseId": "5.22",
   "status": "in-progress",
-  "activeStage": null,
+  "activeStage": "P5.22-05",
   "completedStages": [
     "P5.22-00",
     "P5.22-01",
@@ -58,6 +58,20 @@
       "p522-04-production-e2e-responsive",
       "p522-04-diff-privacy-hygiene",
       "p522-04-phase-docs-validation"
+    ],
+    "P5.22-05": [
+      "p522-05-phase-docs-validation",
+      "p522-05-lint-typecheck",
+      "p522-05-focused-expanded-full-vitest",
+      "p522-05-locked-rust",
+      "p522-05-production-playwright-accessibility",
+      "p522-05-full-playwright-visual",
+      "p522-05-web-build",
+      "p522-05-tauri-release-artifacts",
+      "p522-05-security-audits",
+      "p522-05-deterministic-benchmark",
+      "p522-05-diff-privacy-hygiene",
+      "p522-05-human-acceptance"
     ]
   },
   "gateResults": {
@@ -93,8 +107,20 @@
     "p522-04-lint-typecheck-build": "pass",
     "p522-04-production-e2e-responsive": "pass",
     "p522-04-diff-privacy-hygiene": "pass",
-    "p522-04-phase-docs-validation": "pass"
+    "p522-04-phase-docs-validation": "pass",
+    "p522-05-phase-docs-validation": "pass",
+    "p522-05-lint-typecheck": "pass",
+    "p522-05-focused-expanded-full-vitest": "pass",
+    "p522-05-locked-rust": "pass",
+    "p522-05-production-playwright-accessibility": "pass",
+    "p522-05-full-playwright-visual": "pass",
+    "p522-05-web-build": "pass",
+    "p522-05-tauri-release-artifacts": "not-run",
+    "p522-05-security-audits": "pass",
+    "p522-05-deterministic-benchmark": "pass",
+    "p522-05-diff-privacy-hygiene": "pass",
+    "p522-05-human-acceptance": "not-run"
   },
-  "nextAction": "P5.22-04 is complete. P5.22-05 is NOT STARTED; begin the automated release-readiness stage through a separate next-stage workflow.",
-  "updatedAt": "2026-08-21T22:05:11+09:00"
+  "nextAction": "Create a two-file visual-baseline hygiene commit, then the explicit-path P5.22-05 hardening/report/state commit. Rerun full required gates and fresh Tauri artifacts on that exact Stage05 commit before human product acceptance. Do not merge or push without separate authorization.",
+  "updatedAt": "2026-08-22T02:34:00+09:00"
 }
