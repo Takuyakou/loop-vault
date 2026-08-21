@@ -300,12 +300,12 @@ Phase 2で主に使った外部依存:
 
 生成済みexe:
 
-- `C:\Users\<user>\Documents\Loop Vault\src-tauri\target\release\loop-vault.exe`
+- `./src-tauri\target\release\loop-vault.exe`
 
 生成済みinstaller:
 
-- `C:\Users\<user>\Documents\Loop Vault\src-tauri\target\release\bundle\msi\Loop Vault_0.1.0_x64_en-US.msi`
-- `C:\Users\<user>\Documents\Loop Vault\src-tauri\target\release\bundle\nsis\Loop Vault_0.1.0_x64-setup.exe`
+- `./src-tauri\target\release\bundle\msi\Loop Vault_0.1.0_x64_en-US.msi`
+- `./src-tauri\target\release\bundle\nsis\Loop Vault_0.1.0_x64-setup.exe`
 
 ## 既知の制約
 

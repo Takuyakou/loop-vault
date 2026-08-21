@@ -151,7 +151,7 @@ describe("JsonPracticeRepository", () => {
 
   it("rejects unknown fields and private/raw payloads", () => {
     const file = addCompletedAttempt(createEmptyPracticeFile(NOW), completed());
-    expect(() => validatePracticeFile({ ...file, absolutePath: "C:/Users/name/private.mid" } as PracticeFileV1)).toThrow("strict schema");
+    expect(() => validatePracticeFile({ ...file, absolutePath: "C:/Users/<username>/private.mid" } as PracticeFileV1)).toThrow("strict schema");
     expect(JSON.stringify(file)).not.toMatch(/rawMidi|audioData|sourceFileName|C:\\Users/i);
   });
 

@@ -4,6 +4,10 @@ import {
   type QuarantinedRecord,
 } from "./schema";
 import type { VaultFile } from "./types";
+import {
+  assertExternalVaultByteLength,
+  utf8ByteLength,
+} from "../security/intakeBudgets";
 
 export const VAULT_DIR = "loopvault";
 export const DATA_PATH = `${VAULT_DIR}/data.json`;
@@ -148,6 +152,7 @@ export class JsonVaultRepository implements VaultRepository {
     options: VaultImportOptions = {},
   ): Promise<VaultLoadResult> {
     const raw = await this.storage.readText(path, { external: true });
+    assertExternalVaultByteLength(utf8ByteLength(raw));
     const imported = this.parseLoadedVault(raw);
     const mode = options.mode ?? "replace";
     const vault =

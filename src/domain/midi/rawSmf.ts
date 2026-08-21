@@ -1,5 +1,10 @@
 import { parseMidi as parseMidiFile } from "midi-file";
-import type { MidiEvent } from "midi-file";
+import type { MidiData, MidiEvent } from "midi-file";
+import {
+  MIDI_INTAKE_LIMITS,
+  IntakeBudgetError,
+  assertMidiByteLength,
+} from "../../security/intakeBudgets";
 import type { MidiControlChange, MidiTempoChange, ParsedTimedNote, TimedNote } from "./types";
 
 export interface RawSmfTrack {
@@ -50,7 +55,9 @@ interface TimedChannelEvent {
 }
 
 export function parseRawSmf(bytes: Uint8Array): RawSmfSong {
+  assertMidiByteLength(bytes.byteLength);
   const midi = parseMidiFile(bytes);
+  assertRawSmfStructureBudget(midi);
   if (midi.header.format === 2) {
     throw new Error("MIDI format 2 is unsupported because it contains independent timelines");
   }
@@ -177,6 +184,64 @@ export function parseRawSmf(bytes: Uint8Array): RawSmfSong {
       (a, b) => a.tick - b.tick || a.trackIndex - b.trackIndex || a.number - b.number,
     ),
   };
+}
+
+export interface RawSmfStructureLimits {
+  maxTracks: number;
+  maxEvents: number;
+  maxNotes: number;
+  maxMetadataCodeUnitsPerEvent: number;
+  maxMetadataCodeUnitsTotal: number;
+  maxDurationBeats: number;
+}
+
+export function assertRawSmfStructureBudget(
+  midi: MidiData,
+  limits: RawSmfStructureLimits = MIDI_INTAKE_LIMITS,
+): void {
+  if (midi.tracks.length > limits.maxTracks) {
+    throw new IntakeBudgetError("midi-track-count");
+  }
+
+  const ticksPerBeat = midi.header.ticksPerBeat;
+  let eventCount = 0;
+  let noteCount = 0;
+  let metadataCodeUnits = 0;
+
+  for (const track of midi.tracks) {
+    let trackTicks = 0;
+    for (const event of track) {
+      eventCount += 1;
+      if (eventCount > limits.maxEvents) {
+        throw new IntakeBudgetError("midi-event-count");
+      }
+      if (!Number.isSafeInteger(event.deltaTime) || event.deltaTime < 0) {
+        throw new IntakeBudgetError("midi-invalid-delta");
+      }
+      trackTicks += event.deltaTime;
+      if (!Number.isSafeInteger(trackTicks)) {
+        throw new IntakeBudgetError("midi-duration");
+      }
+      if (ticksPerBeat && trackTicks / ticksPerBeat > limits.maxDurationBeats) {
+        throw new IntakeBudgetError("midi-duration");
+      }
+      if (event.type === "noteOn" && event.velocity > 0) {
+        noteCount += 1;
+        if (noteCount > limits.maxNotes) {
+          throw new IntakeBudgetError("midi-note-count");
+        }
+      }
+      if ("text" in event && typeof event.text === "string") {
+        if (event.text.length > limits.maxMetadataCodeUnitsPerEvent) {
+          throw new IntakeBudgetError("midi-metadata-event");
+        }
+        metadataCodeUnits += event.text.length;
+        if (metadataCodeUnits > limits.maxMetadataCodeUnitsTotal) {
+          throw new IntakeBudgetError("midi-metadata-total");
+        }
+      }
+    }
+  }
 }
 
 function isChannelEvent(event: MidiEvent): event is Extract<MidiEvent, { channel: number }> {

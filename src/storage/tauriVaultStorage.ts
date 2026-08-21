@@ -7,9 +7,14 @@ import {
   readTextFile,
   remove,
   rename,
+  stat,
   writeTextFile,
 } from "@tauri-apps/plugin-fs";
 import type { VaultStorage } from "../domain/repository";
+import {
+  assertExternalVaultByteLength,
+  utf8ByteLength,
+} from "../security/intakeBudgets";
 
 const appData = { baseDir: BaseDirectory.AppData };
 
@@ -30,7 +35,15 @@ export class TauriVaultStorage implements VaultStorage {
     path: string,
     readOptions: { external?: boolean } = {},
   ): Promise<string> {
-    return readTextFile(path, options(readOptions.external));
+    if (readOptions.external) {
+      const metadata = await stat(path);
+      assertExternalVaultByteLength(metadata.size);
+    }
+    const contents = await readTextFile(path, options(readOptions.external));
+    if (readOptions.external) {
+      assertExternalVaultByteLength(utf8ByteLength(contents));
+    }
+    return contents;
   }
 
   async writeText(

@@ -2,7 +2,6 @@ import { getCurrentWebview } from "@tauri-apps/api/webview";
 import {
   open as openFileDialog,
 } from "@tauri-apps/plugin-dialog";
-import { readFile } from "@tauri-apps/plugin-fs";
 import { voiceChordForPreview } from "../domain/chordVoicing";
 import { OccurrenceList } from "../components/OccurrenceList";
 import {
@@ -16,6 +15,8 @@ import {
 } from "../domain/voicing";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DragEvent, ReactNode } from "react";
+import { assertMidiTotalBytes } from "../security/intakeBudgets";
+import { readBoundedMidiPaths } from "../storage/boundedMidiReader";
 import { createPortal } from "react-dom";
 import {
   applyEditableProgression,
@@ -469,6 +470,7 @@ export function CaptureView(props: CaptureViewProps) {
       inputs: readonly MidiSourceInput[],
       options: { append?: boolean; sourcePath?: string } = {},
     ) => {
+      assertMidiTotalBytes(inputs.map(({ bytes }) => bytes.byteLength));
       stopCapturePlayback(controller);
       if (!options.append) {
         setCompletedAnalysisSummary(undefined);
@@ -537,10 +539,11 @@ export function CaptureView(props: CaptureViewProps) {
       try {
         setAnalysisProgress("reading");
         await waitForNextPaint();
-        const inputs = await Promise.all(midiPaths.map(async (path): Promise<MidiSourceInput> => ({
-          bytes: await readFile(path),
+        const byteArrays = await readBoundedMidiPaths(midiPaths);
+        const inputs = midiPaths.map((path, index): MidiSourceInput => ({
+          bytes: byteArrays[index],
           displayName: fileNameFromPath(path),
-        })));
+        }));
         await prepareMidiInputs(inputs, {
           append,
           sourcePath: append ? undefined : midiPaths[0],
@@ -566,10 +569,12 @@ export function CaptureView(props: CaptureViewProps) {
       try {
         setAnalysisProgress("reading");
         await waitForNextPaint();
+        assertMidiTotalBytes(midiFiles.map(({ size }) => size));
         const inputs = await Promise.all(midiFiles.map(async (file): Promise<MidiSourceInput> => ({
           bytes: new Uint8Array(await file.arrayBuffer()),
           displayName: file.name,
         })));
+        assertMidiTotalBytes(inputs.map(({ bytes }) => bytes.byteLength));
         await prepareMidiInputs(inputs, { append });
       } catch (error) {
         setAnalysisProgress(undefined);
