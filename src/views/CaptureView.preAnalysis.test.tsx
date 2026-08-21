@@ -15,6 +15,7 @@ import { CaptureView, captureAnalysisTargetLabel } from "./CaptureView";
 const tauriMocks = vi.hoisted(() => ({
   openFileDialog: vi.fn(),
   readFile: vi.fn(),
+  stat: vi.fn(),
   onDragDropEvent: vi.fn(async () => () => undefined),
 }));
 
@@ -24,6 +25,7 @@ vi.mock("@tauri-apps/plugin-dialog", () => ({
 vi.mock("@tauri-apps/plugin-fs", async (importOriginal) => ({
   ...await importOriginal<typeof import("@tauri-apps/plugin-fs")>(),
   readFile: tauriMocks.readFile,
+  stat: tauriMocks.stat,
 }));
 vi.mock("@tauri-apps/api/webview", () => ({
   getCurrentWebview: () => ({
@@ -222,6 +224,7 @@ describe("Phase 5.12 Capture product path", () => {
     const bytes = allInstrumentsMidi();
     tauriMocks.openFileDialog.mockResolvedValue("C:/fixtures/all_instruments.mid");
     tauriMocks.readFile.mockResolvedValue(bytes);
+    tauriMocks.stat.mockResolvedValue({ size: bytes.byteLength });
     const analyzerCalls: AnalyzeMidiOptions[] = [];
     const mounted = await renderCaptureProduct(analyzerCalls);
 
@@ -387,6 +390,7 @@ async function dropMidi(
   const file = {
     name,
     type: "audio/midi",
+    size: bytes.byteLength,
     arrayBuffer: async () => bytes.slice().buffer,
   };
   const event = new Event("drop", { bubbles: true, cancelable: true });

@@ -108,7 +108,10 @@
     "eval:midi:correction-cost": "vite-node scripts/evaluate-voice-aware-reranker.ts --run-cli --report artifacts/phase3.6.5-correction-cost",
     "eval:midi:correction-cost:report": "vite-node scripts/evaluate-voice-aware-reranker.ts --run-cli --report artifacts/phase3.6.5-correction-cost --report-only",
     "tauri": "tauri",
-    "audio:ab:freepats": "node scripts/render-freepats-bass-ab.mjs"
+    "audio:ab:freepats": "node scripts/render-freepats-bass-ab.mjs",
+    "security:scan": "node scripts/security/trackedSecurityScan.mjs",
+    "test:security-scripts": "node --test scripts/security/*.node-test.mjs",
+    "security:audit": "npm audit --audit-level=high && npm audit --omit=dev --audit-level=high"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0",

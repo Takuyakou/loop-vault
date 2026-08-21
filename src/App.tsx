@@ -1,6 +1,6 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { readFile } from "@tauri-apps/plugin-fs";
+import { readBoundedMidiPath } from "./storage/boundedMidiReader";
 import {
   FormEvent,
   lazy,
@@ -446,7 +446,7 @@ async function analyzeMidiPath(path: string) {
     }
 
     try {
-      const bytes = await readFile(path);
+      const bytes = await readBoundedMidiPath(path);
       const result = analyzeMidiBytes(bytes, { fileName: fileNameFromPath(path) });
       setView("capture");
       setToast(result ? copy.toast.midiAnalyzed : copy.toast.midiFailed);
@@ -456,7 +456,7 @@ async function analyzeMidiPath(path: string) {
   }
 
   async function loadMidiSource(path: string) {
-    return parseMidi(await readFile(path));
+    return parseMidi(await readBoundedMidiPath(path));
   }
 
   async function enterLiveMidiMode() {
