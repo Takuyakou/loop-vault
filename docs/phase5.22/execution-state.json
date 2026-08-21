@@ -121,6 +121,6 @@
     "p522-05-diff-privacy-hygiene": "pass",
     "p522-05-human-acceptance": "not-run"
   },
-  "nextAction": "Create an explicit-path docs-only closure commit for the Stage05 report and execution state, validate that closure commit, then request human product acceptance. Do not merge or push without separate authorization.",
-  "updatedAt": "2026-08-22T03:22:00+09:00"
+  "nextAction": "Run the human product acceptance checklist. Do not merge or push without separate authorization.",
+  "updatedAt": "2026-08-22T03:30:00+09:00"
 }
