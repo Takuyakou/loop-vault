@@ -2,14 +2,15 @@
   "schemaVersion": 1,
   "phaseId": "5.22",
   "status": "in-progress",
-  "activeStage": "P5.22-01",
+  "activeStage": null,
   "completedStages": [
-    "P5.22-00"
+    "P5.22-00",
+    "P5.22-01"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "c5e6c654fb60bf68d696046ae0c9e06829b79da7",
-  "lastVerifiedCommit": "8d38f6214bbd4afc675b1ad913922276dd307e46",
+  "lastVerifiedCommit": "ec2f30892f06bef0b2d675d93bfdb6bb4cc635d6",
   "currentBranch": "feat/p522-source-bassline-practice",
   "requiredGates": {
     "P5.22-00": [
@@ -40,13 +41,13 @@
     "p522-00-lint-typecheck": "pass",
     "p522-00-rust": "pass",
     "p522-00-diff-privacy-hygiene": "pass",
-    "p522-01-snapshot-extraction-compatibility": "pass-working-tree",
-    "p522-01-determinism-property": "pass-working-tree",
-    "p522-01-vault-practice-versioning": "pass-working-tree",
-    "p522-01-full-regression": "pass-working-tree",
-    "p522-01-lint-typecheck-rust": "pass-working-tree",
-    "p522-01-security-diff-privacy-hygiene": "pass-working-tree"
+    "p522-01-snapshot-extraction-compatibility": "pass",
+    "p522-01-determinism-property": "pass",
+    "p522-01-vault-practice-versioning": "pass",
+    "p522-01-full-regression": "pass",
+    "p522-01-lint-typecheck-rust": "pass",
+    "p522-01-security-diff-privacy-hygiene": "pass"
   },
-  "nextAction": "Review and commit P5.22-01 only, then rerun exact-commit gates. Do not start P5.22-02 in this stage.",
-  "updatedAt": "2026-08-21T14:06:00+09:00"
+  "nextAction": "P5.22-01 is complete. P5.22-02 is NOT STARTED; begin it through the next-stage workflow.",
+  "updatedAt": "2026-08-21T15:00:00+09:00"
 }

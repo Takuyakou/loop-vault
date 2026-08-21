@@ -5,7 +5,7 @@
 
 ## Status
 
-`PASS — P5.22-00 complete`
+`PASS — P5.22-01 complete`
 
 ## Required Reading Order
 
@@ -282,6 +282,6 @@ production featureを実装しない。
 
 ## Next action
 
-`P5.22-00`はStage commit `8d38f6214bbd4afc675b1ad913922276dd307e46`上の全GateがPASSし、完了。
+`P5.22-01`はStage commit `ec2f30892f06bef0b2d675d93bfdb6bb4cc635d6`上の全GateがPASSし、完了。
 
-P5.22-01は未着手。明示承認を待ち、承認前には開始しない。
+`P5.22-02`は未着手。次のStage workflowとして開始する。
