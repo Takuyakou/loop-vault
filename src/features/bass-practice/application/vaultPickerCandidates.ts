@@ -1,5 +1,16 @@
-import type { SongIdea } from "../../../domain/types";
-import { sourceBasslineSnapshotSchema, type SourceBasslineSnapshotV1 } from "../../../domain/sourceBassline";
+import type { SavedProgressionBlock, SongIdea } from "../../../domain/types";
+import {
+  addExactBeat,
+  capturedHarmonySignature,
+  compareExactBeat,
+  exactBeat,
+  sourceBasslineSnapshotSchema,
+  type CapturedHarmonySpan,
+  type ExactBeat,
+  type SourceBasslineSnapshotV1,
+} from "../../../domain/sourceBassline";
+import { chordPitchClasses } from "../../../domain/chordVoicing";
+import type { SourceBasslineHarmonyComparison } from "../domain";
 import {
   buildVaultChordContextSnapshotCatalog,
   type VaultChordContextSnapshot,
@@ -22,6 +33,7 @@ export interface VaultSourceBasslineCandidateView {
   readonly displayTitle: string;
   readonly reference: Readonly<{ readonly ideaId: string; readonly blockId: string }>;
   readonly sourceBassline: SourceBasslineSnapshotV1;
+  readonly harmonyComparison?: SourceBasslineHarmonyComparison;
 }
 
 /**
@@ -86,11 +98,67 @@ export function buildVaultSourceBasslineCandidateViews(
         displayTitle,
         reference: Object.freeze({ ideaId: idea.id, blockId: block.id }),
         sourceBassline: deepFreeze(parsed.data),
+        harmonyComparison: compareSourceBasslineCurrentHarmony(block, parsed.data),
       }));
     }
   }
   return Object.freeze(candidates);
 }
+export function compareSourceBasslineCurrentHarmony(
+  block: SavedProgressionBlock,
+  snapshot: SourceBasslineSnapshotV1,
+): SourceBasslineHarmonyComparison {
+  if (!snapshot.capturedHarmony || !block || block.timeSignature !== "4/4") return "comparison-unavailable";
+  const current = currentHarmonySpans(block.chords, snapshot.length);
+  if (!current) return "comparison-unavailable";
+  return capturedHarmonySignature(current) === snapshot.capturedHarmony.signature ? "match" : "mismatch";
+}
+
+function currentHarmonySpans(
+  chords: SavedProgressionBlock["chords"],
+  length: ExactBeat,
+): readonly CapturedHarmonySpan[] | undefined {
+  if (!Array.isArray(chords) || chords.length === 0) return undefined;
+  const spans: CapturedHarmonySpan[] = [];
+  for (const item of chords) {
+    if (!Number.isSafeInteger(item.bar) || item.bar < 1
+      || !Number.isSafeInteger(item.beat) || item.beat < 1 || item.beat > 4
+      || !Number.isSafeInteger(item.durationBeats) || item.durationBeats <= 0) return undefined;
+    const start = exactBeat((item.bar - 1) * 4 + item.beat - 1, 1);
+    const end = addExactBeat(start, exactBeat(item.durationBeats, 1));
+    if (compareExactBeat(end, ZERO_BEAT) <= 0 || compareExactBeat(start, length) >= 0) continue;
+    const clippedStart = compareExactBeat(start, ZERO_BEAT) < 0 ? ZERO_BEAT : start;
+    const clippedEnd = compareExactBeat(end, length) > 0 ? length : end;
+    const normalize = (value: number) => ((value % 12) + 12) % 12;
+    spans.push({
+      start: clippedStart,
+      duration: addExactBeat(clippedEnd, exactBeat(-clippedStart.numerator, clippedStart.denominator)),
+      rootPitchClass: normalize(item.chord.root),
+      bassPitchClass: item.chord.bass === undefined ? null : normalize(item.chord.bass),
+      allowedPitchClasses: [...new Set([
+        ...chordPitchClasses(item.chord),
+        ...(item.chord.bass === undefined ? [] : [item.chord.bass]),
+      ].map(normalize))].sort((left, right) => left - right),
+    });
+  }
+  spans.sort(compareCurrentHarmonySpans);
+  const deduplicated = spans.filter((span, index) => index === 0 || JSON.stringify(span) !== JSON.stringify(spans[index - 1]));
+  for (let index = 1; index < deduplicated.length; index += 1) {
+    const previous = deduplicated[index - 1]!;
+    if (compareExactBeat(addExactBeat(previous.start, previous.duration), deduplicated[index]!.start) > 0) return undefined;
+  }
+  return deduplicated.length ? Object.freeze(deduplicated) : undefined;
+}
+
+function compareCurrentHarmonySpans(left: CapturedHarmonySpan, right: CapturedHarmonySpan): number {
+  return compareExactBeat(left.start, right.start)
+    || compareExactBeat(left.duration, right.duration)
+    || left.rootPitchClass - right.rootPitchClass
+    || (left.bassPitchClass ?? -1) - (right.bassPitchClass ?? -1)
+    || JSON.stringify(left.allowedPitchClasses).localeCompare(JSON.stringify(right.allowedPitchClasses));
+}
+
+const ZERO_BEAT = Object.freeze(exactBeat(0, 1));
 /** Preserves the existing safe key/section/chord search while adding live-title matching. */
 export function filterVaultPickerCandidates(
   candidates: readonly VaultPickerCandidateView[],

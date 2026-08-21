@@ -20,3 +20,4 @@ export * from "./vocabulary";
 export type * from "./types";
 export * from "./chordContextHistory";
 export * from "./sourceBasslinePractice";
+export * from "./sourceBasslineHistory";

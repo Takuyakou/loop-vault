@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createCompletedAttempt, createRootMotionHistoryEntry, generateRhythmExercise, generateRootMotionExercise, RHYTHM_GENERATOR_VERSION, ROOT_MOTION_GENERATOR_VERSION, ROOT_MOTION_MAX_ATTEMPTS, STANDARD_BASS_TUNINGS, type RhythmPracticeAttempt, type ChordContextHistoryEntry } from "../domain";
+import { createCompletedAttempt, createRootMotionHistoryEntry, createSourceBasslineHistoryEntry, generateRhythmExercise, generateRootMotionExercise, RHYTHM_GENERATOR_VERSION, ROOT_MOTION_GENERATOR_VERSION, ROOT_MOTION_MAX_ATTEMPTS, STANDARD_BASS_TUNINGS, type RhythmPracticeAttempt, type ChordContextHistoryEntry } from "../domain";
 import { generatedExercise } from "../domain/testFixtures";
 import { addCompletedAttempt, createEmptyPracticeFile, JsonPracticeRepository, MemoryPracticeStorage, validatePracticeFile } from "../infra/repository";
 import { createPracticeControllerIfEnabled, derivePracticeHistory, derivePracticeHomeSummary, PracticeDataController, restoreClaimedExercise } from "./practiceData";
@@ -67,6 +67,38 @@ describe("Practice derived views", () => {
     expect(restarted.getSnapshot().file?.chordContextHistory).toEqual([entry]);
   });
 
+  it("persists Source Bassline factual references through the controller and restart", async () => {
+    const storage = new MemoryPracticeStorage();
+    const controller = new PracticeDataController(new JsonPracticeRepository(storage, () => now));
+    await controller.initialize();
+    const entry = createSourceBasslineHistoryEntry({
+      id: "source-history:controller",
+      completedAt: now.toISOString(),
+      reference: { ideaId: "idea-a", blockId: "block-a" },
+      snapshotSignature: "c".repeat(64),
+      capturedHarmonySignature: "d".repeat(64),
+      requestedBars: 2,
+      startBar: 3,
+      endBar: 3,
+      actualBars: 1,
+      level: 2,
+      croppedSourceNoteCount: 5,
+      projectedNoteCount: 4,
+      omittedSimultaneousNoteCount: 1,
+      boundaryClippedNoteCount: 1,
+      overlapClippedNoteCount: 0,
+      pitchReplacementCount: 2,
+      capturedHarmonyComparison: "mismatch",
+      retainedTakeReference: "take:opaque",
+    });
+    await controller.recordSourceBasslineHistory(entry);
+    expect(controller.getSnapshot().file?.sourceBasslineHistory).toEqual([entry]);
+    expect(storage.committed).not.toMatch(/"(?:notes|capturedHarmony|path|title|fileName|device|audio|voice)"\s*:/i);
+
+    const restarted = new PracticeDataController(new JsonPracticeRepository(storage, () => now));
+    await restarted.initialize();
+    expect(restarted.getSnapshot().file?.sourceBasslineHistory).toEqual([entry]);
+  });
   it("persists Root Motion factual History across restart without raw recordings or Vault data", async () => {
     const storage = new MemoryPracticeStorage();
     const controller = new PracticeDataController(new JsonPracticeRepository(storage, () => now));
@@ -86,7 +118,7 @@ describe("Practice derived views", () => {
   it("loads legacy Practice data without Chord Context History or source settings unchanged", async () => {
     const storage = new MemoryPracticeStorage();
     const current = createEmptyPracticeFile(now);
-    const { chordContextHistory: _chordContextHistory, rootMotionHistory: _rootMotionHistory, settings: _currentSettings, ...legacyBase } = current;
+    const { chordContextHistory: _chordContextHistory, rootMotionHistory: _rootMotionHistory, sourceBasslineHistory: _sourceBasslineHistory, settings: _currentSettings, ...legacyBase } = current;
     const { rootMotionNoteCount: _rootMotionNoteCount, ...legacySettings } = current.settings;
     const legacy = { ...legacyBase, settings: legacySettings, revision: 1 };
     storage.committed = `${JSON.stringify(legacy)}\n`;

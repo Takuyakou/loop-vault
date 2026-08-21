@@ -779,7 +779,11 @@ async function analyzeMidiPath(path: string) {
                           const controller = practiceControllerRef.current;
                           return controller ? controller.recordRhythmAttempt(attempt) : Promise.reject(new Error("Practice progress is not ready."));
                         }}
-                        onChordContextHistoryRecorded={(entry) => {
+                        sourceBasslineHistory={practiceData.file?.sourceBasslineHistory}
+                        onSourceBasslineHistoryRecorded={(entry) => {
+                          const controller = practiceControllerRef.current;
+                          return controller ? controller.recordSourceBasslineHistory(entry) : Promise.reject(new Error("Practice progress is not ready."));
+                        }}                        onChordContextHistoryRecorded={(entry) => {
                           const controller = practiceControllerRef.current;
                           return controller ? controller.recordChordContextHistory(entry) : Promise.reject(new Error("Practice progress is not ready."));
                         }}

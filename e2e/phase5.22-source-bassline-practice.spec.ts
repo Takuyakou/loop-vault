@@ -9,7 +9,7 @@ import {
 } from "./helpers/app";
 import { createMidiFixture } from "./helpers/midiFixture";
 
-test("Source Bassline Level 3 stays overflow-safe at 320px and effective 200% scale", async ({ page }) => {
+test("Source Bassline levels and reference-only History stay overflow-safe at 320px and effective 200% scale", async ({ page }) => {
   test.setTimeout(60_000);
   await page.setViewportSize({ width: 320, height: 812 });
   await openApp(page);
@@ -28,9 +28,19 @@ test("Source Bassline Level 3 stays overflow-safe at 320px and effective 200% sc
   await savedSource.selectOption({ index: 1 });
   await expect(bassline.getByTestId("source-bassline-window")).toBeVisible();
   await expect(bassline.getByTestId("source-bassline-projection-facts")).toContainText(/Cropped notes|切り出しノート/);
-  await expect(bassline.getByTestId("source-bassline-projection-facts")).toContainText(/projected target|単音ターゲット/);
+  await expect(bassline.getByTestId("source-bassline-projection-facts")).toContainText(/monophonic projection|単音投影/);
+  const level = bassline.locator("#bassline-level");
+  await expect(level).toHaveValue("3");
+  await expect(level.locator("option[value='1']")).toBeDisabled();
+  await expect(level.locator("option[value='2']")).toBeDisabled();
+  await expect(level.locator("option[value='3']")).toBeEnabled();
+  await expect(bassline.locator("#bassline-level-description")).toContainText(/exact captured harmony|正確な保存済み和声/);
+  await expect(bassline.getByTestId("source-bassline-projection-facts")).toContainText(/pitches replaced 0|pitch置換 0/);
+  await bassline.getByRole("button", { name: /Review|レビュー/, exact: false }).click();
+  await bassline.getByTestId("source-bassline-save-history").click();
+  await expect(bassline.getByTestId("source-bassline-history")).toBeVisible();
+  await expect(bassline.getByTestId("source-bassline-history")).toContainText(/Source line \(monophonic\)|元ライン（単音化）/);
   await assertNoHorizontalOverflow(page);
-
   await page.setViewportSize({ width: 640, height: 812 });
   await page.evaluate(() => { document.documentElement.style.zoom = "2"; });
   await expect(bassline.getByTestId("source-bassline-window")).toBeVisible();

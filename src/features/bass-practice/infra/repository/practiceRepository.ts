@@ -7,6 +7,7 @@ import {
   generateDegreeExercise,
   type ChordContextHistoryEntry,
   type RootMotionHistoryEntry,
+  type SourceBasslineHistoryEntry,
   type PracticeAttempt,
   type PracticeExercise,
   type PracticeSession,
@@ -77,6 +78,37 @@ const chordContextHistoryEntrySchema: z.ZodType<ChordContextHistoryEntry> = z.ob
   retainedTakeReference: z.string().min(1).max(200).optional(),
 }).strict();
 
+const sourceBasslineHistoryEntrySchema: z.ZodType<SourceBasslineHistoryEntry> = z.object({
+  id: z.string().min(1).max(200),
+  version: z.literal(1),
+  completedAt: z.string().datetime(),
+  source: z.object({
+    kind: z.literal("source-bassline"),
+    reference: z.object({ ideaId: z.string().min(1).max(200), blockId: z.string().min(1).max(200) }).strict(),
+    snapshotSchemaVersion: z.literal(1),
+    snapshotSignature: z.string().regex(/^[a-f0-9]{64}$/),
+    capturedHarmonySignature: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+  }).strict(),
+  window: z.object({
+    requestedBars: z.union([z.literal(1), z.literal(2)]),
+    startBar: z.number().int().min(1).max(12),
+    endBar: z.number().int().min(1).max(12),
+    actualBars: z.union([z.literal(1), z.literal(2)]),
+  }).strict(),
+  level: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+  monophonicProjection: z.literal(true),
+  facts: z.object({
+    croppedSourceNoteCount: z.number().int().min(0).max(8_192),
+    projectedNoteCount: z.number().int().min(0).max(8_192),
+    omittedSimultaneousNoteCount: z.number().int().min(0).max(8_192),
+    boundaryClippedNoteCount: z.number().int().min(0).max(8_192),
+    overlapClippedNoteCount: z.number().int().min(0).max(8_192),
+    pitchReplacementCount: z.number().int().min(0).max(8_192),
+  }).strict(),
+  capturedHarmonyComparison: z.enum(["match", "mismatch", "comparison-unavailable"]),
+  selfReview: z.literal("completed"),
+  retainedTakeReference: z.string().min(1).max(200).optional(),
+}).strict();
 const rootMotionSemitoneSchema = z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6), z.literal(7)]);
 const rootMotionSignedSemitoneSchema = z.union([z.literal(-7), z.literal(-6), z.literal(-5), z.literal(-4), z.literal(-3), z.literal(-2), z.literal(-1), z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6), z.literal(7)]);
 const rootMotionHistoryEntrySchema: z.ZodType<RootMotionHistoryEntry> = z.object({
@@ -86,11 +118,11 @@ const rootMotionHistoryEntrySchema: z.ZodType<RootMotionHistoryEntry> = z.object
   firstAnswer: z.object({ submitted: z.object({ direction: z.enum(["same", "up", "down"]).optional(), category: z.enum(["same", "second", "third", "fourth", "tritone", "fifth"]).optional(), semitones: rootMotionSemitoneSchema.optional() }).strict(), expected: z.object({ direction: z.enum(["same", "up", "down"]), semitones: rootMotionSemitoneSchema, signedSemitones: rootMotionSignedSemitoneSchema, category: z.enum(["same", "second", "third", "fourth", "tritone", "fifth"]) }).strict(), directionCorrect: z.boolean(), categoryCorrect: z.boolean(), exactIntervalCorrect: z.boolean(), replayCountBeforeFirstAnswer: z.number().int().nonnegative(), answerAttempts: z.number().int().positive(), assistance: z.enum(["independent", "assisted", "revealed"]) }).strict(),
   selfRating: ratingSchema, transferOfExerciseId: z.string().min(1).max(200).optional(), retainedTakeReference: z.string().min(1).max(200).optional(),
 }).strict();
-export interface PracticeFileV2 { readonly app: "loopvault-practice"; readonly fileVersion: 2; readonly revision: number; readonly settings: PracticeSettings; readonly exercises: readonly PracticeExercise[]; readonly attempts: readonly PracticeAttempt[]; readonly sessions: readonly PracticeSession[]; readonly reviewQueue: readonly ReviewQueueItem[]; readonly rhythmAttempts: readonly RhythmPracticeAttempt[]; readonly rhythmSessions: readonly RhythmPracticeSession[]; readonly chordContextHistory: readonly ChordContextHistoryEntry[]; readonly rootMotionHistory: readonly RootMotionHistoryEntry[]; readonly updatedAt: string; }
+export interface PracticeFileV2 { readonly app: "loopvault-practice"; readonly fileVersion: 2; readonly revision: number; readonly settings: PracticeSettings; readonly exercises: readonly PracticeExercise[]; readonly attempts: readonly PracticeAttempt[]; readonly sessions: readonly PracticeSession[]; readonly reviewQueue: readonly ReviewQueueItem[]; readonly rhythmAttempts: readonly RhythmPracticeAttempt[]; readonly rhythmSessions: readonly RhythmPracticeSession[]; readonly chordContextHistory: readonly ChordContextHistoryEntry[]; readonly rootMotionHistory: readonly RootMotionHistoryEntry[]; readonly sourceBasslineHistory: readonly SourceBasslineHistoryEntry[]; readonly updatedAt: string; }
 export interface PracticeQuarantine { readonly collection: "attempts"; readonly index: number; readonly issue: "invalid-schema" | "independent-success-mismatch" | "invalid-transfer-reference"; }
 export interface PracticeRecoveryMetadata { readonly kind: "invalid-json" | "invalid-schema" | "retained-corrupt"; readonly corruptPath: string; readonly backups: readonly PracticeBackupMetadata[]; }
 export interface PracticeLoadResult { readonly file: PracticeFileV2; readonly quarantine: readonly PracticeQuarantine[]; readonly created: boolean; readonly recovery?: PracticeRecoveryMetadata; }
-const envelopeSchema = z.object({ app: z.literal("loopvault-practice"), fileVersion: z.union([z.literal(1), z.literal(2)]), revision: z.number().int().nonnegative(), settings: settingsSchema, exercises: z.array(exerciseSchema), attempts: z.array(z.unknown()), sessions: z.array(sessionSchema), reviewQueue: z.array(queueSchema), rhythmAttempts: z.array(rhythmAttemptSchema).optional().default([]), rhythmSessions: z.array(rhythmSessionSchema).optional().default([]), chordContextHistory: z.array(chordContextHistoryEntrySchema).optional().default([]), rootMotionHistory: z.array(rootMotionHistoryEntrySchema).optional().default([]), updatedAt: z.string().datetime() }).strict();
+const envelopeSchema = z.object({ app: z.literal("loopvault-practice"), fileVersion: z.union([z.literal(1), z.literal(2)]), revision: z.number().int().nonnegative(), settings: settingsSchema, exercises: z.array(exerciseSchema), attempts: z.array(z.unknown()), sessions: z.array(sessionSchema), reviewQueue: z.array(queueSchema), rhythmAttempts: z.array(rhythmAttemptSchema).optional().default([]), rhythmSessions: z.array(rhythmSessionSchema).optional().default([]), chordContextHistory: z.array(chordContextHistoryEntrySchema).optional().default([]), rootMotionHistory: z.array(rootMotionHistoryEntrySchema).optional().default([]), sourceBasslineHistory: z.array(sourceBasslineHistoryEntrySchema).optional().default([]), updatedAt: z.string().datetime() }).strict();
 
 export interface PracticeStoredDocument { readonly contents: string; readonly revision: number; readonly token: string; }
 export interface PracticeBackupMetadata { readonly name: string; readonly revision: number; readonly token: string; }
@@ -248,7 +280,7 @@ export class JsonPracticeRepository {
   }
 }
 
-export function createEmptyPracticeFile(now: Date): PracticeFileV2 { return freezeFile({ app: "loopvault-practice", fileVersion: PRACTICE_FILE_VERSION, revision: 0, settings: { version: 1, singEnabled: true, singingReferenceMode: "auto", stringCount: 4, handedness: "right", fretRange: { min: 0, max: 12 }, sessionTargetCount: 8, rootMotionNoteCount: 2 }, exercises: [], attempts: [], sessions: [], reviewQueue: [], rhythmAttempts: [], rhythmSessions: [], chordContextHistory: [], rootMotionHistory: [], updatedAt: now.toISOString() }); }
+export function createEmptyPracticeFile(now: Date): PracticeFileV2 { return freezeFile({ app: "loopvault-practice", fileVersion: PRACTICE_FILE_VERSION, revision: 0, settings: { version: 1, singEnabled: true, singingReferenceMode: "auto", stringCount: 4, handedness: "right", fretRange: { min: 0, max: 12 }, sessionTargetCount: 8, rootMotionNoteCount: 2 }, exercises: [], attempts: [], sessions: [], reviewQueue: [], rhythmAttempts: [], rhythmSessions: [], chordContextHistory: [], rootMotionHistory: [], sourceBasslineHistory: [], updatedAt: now.toISOString() }); }
 export function addChordContextHistoryEntry(file: PracticeFileV2, entry: ChordContextHistoryEntry): PracticeFileV2 {
   if (file.chordContextHistory.some(({ id }) => id === entry.id)) {
     throw new PracticeRepositoryError("invalid-data", "Chord Context History entry " + entry.id + " has already been saved.");
@@ -256,6 +288,16 @@ export function addChordContextHistoryEntry(file: PracticeFileV2, entry: ChordCo
   return validatePracticeFile({
     ...file,
     chordContextHistory: [...file.chordContextHistory, entry],
+    updatedAt: entry.completedAt,
+  });
+}
+export function addSourceBasslineHistoryEntry(file: PracticeFileV2, entry: SourceBasslineHistoryEntry): PracticeFileV2 {
+  if (file.sourceBasslineHistory.some(({ id }) => id === entry.id)) {
+    throw new PracticeRepositoryError("invalid-data", `Source Bassline History entry ${entry.id} has already been saved.`);
+  }
+  return validatePracticeFile({
+    ...file,
+    sourceBasslineHistory: [...file.sourceBasslineHistory, entry],
     updatedAt: entry.completedAt,
   });
 }
@@ -308,11 +350,23 @@ export function validatePracticeFile(file: PracticeFileV2): PracticeFileV2 {
   if (!rhythmSessions) throw new PracticeRepositoryError("invalid-data", "Rhythm session references are inconsistent.");
   const chordContextHistory = parsed.data.chordContextHistory;
   const rootMotionHistory = parsed.data.rootMotionHistory;
+  const sourceBasslineHistory = parsed.data.sourceBasslineHistory;
   if (new Set(chordContextHistory.map(({ id }) => id)).size !== chordContextHistory.length) throw new PracticeRepositoryError("invalid-data", "Chord Context History entry IDs must be unique.");
   if (chordContextHistory.some((entry) => entry.section.endBar < entry.section.startBar)) throw new PracticeRepositoryError("invalid-data", "Chord Context History section bounds are invalid.");
+  if (new Set(sourceBasslineHistory.map(({ id }) => id)).size !== sourceBasslineHistory.length) throw new PracticeRepositoryError("invalid-data", "Source Bassline History entry IDs must be unique.");
+  if (sourceBasslineHistory.some((entry) => {
+    const actualBars = entry.window.endBar - entry.window.startBar + 1;
+    return actualBars !== entry.window.actualBars
+      || entry.window.actualBars > entry.window.requestedBars
+      || entry.facts.projectedNoteCount + entry.facts.omittedSimultaneousNoteCount !== entry.facts.croppedSourceNoteCount
+      || entry.facts.boundaryClippedNoteCount > entry.facts.croppedSourceNoteCount
+      || entry.facts.overlapClippedNoteCount > entry.facts.projectedNoteCount
+      || entry.facts.pitchReplacementCount > entry.facts.projectedNoteCount
+      || (entry.capturedHarmonyComparison !== "comparison-unavailable" && entry.source.capturedHarmonySignature === undefined);
+  })) throw new PracticeRepositoryError("invalid-data", "Source Bassline History facts are inconsistent.");
   if (new Set(rootMotionHistory.map(({ id }) => id)).size !== rootMotionHistory.length) throw new PracticeRepositoryError("invalid-data", "Root Motion History entry IDs must be unique.");
   if (rootMotionHistory.some((entry) => entry.configuration.fretRange.min > entry.configuration.fretRange.max)) throw new PracticeRepositoryError("invalid-data", "Root Motion History fret range is invalid.");
-  return freezeFile({ ...parsed.data, fileVersion: PRACTICE_FILE_VERSION, attempts, rhythmAttempts, rhythmSessions, chordContextHistory, rootMotionHistory });
+  return freezeFile({ ...parsed.data, fileVersion: PRACTICE_FILE_VERSION, attempts, rhythmAttempts, rhythmSessions, chordContextHistory, rootMotionHistory, sourceBasslineHistory });
 }
 function withoutClaim(item: ReviewQueueItem): ReviewQueueItem { const { claim: _claim, ...base } = item; return base; }
 function isValidPendingQueue(queue: readonly ReviewQueueItem[], attempts: readonly PracticeAttempt[], sessions: readonly PracticeSession[]): boolean {

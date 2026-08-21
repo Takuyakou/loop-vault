@@ -10,6 +10,8 @@ import {
   buildGeneratedChordContextSnapshot,
   createChordContextBasslineExercise,
   createChordContextHistoryEntry,
+  createSourceBasslineHistoryEntry,
+  resolveSourceBasslineHistory,
   buildSourceBasslinePracticeWindow,
   nextSourceBasslineWindowStart,
   previousSourceBasslineWindowStart,
@@ -18,6 +20,8 @@ import {
   type ChordContextHistoryEntry,
   type ChordContextSnapshot,
   type SourceBasslineHarmonyEvent,
+  type SourceBasslineHistoryEntry,
+  type SourceBasslinePracticeLevel,
   type SourceBasslineWindowBars,
   type VaultChordContextSnapshot,
 } from "../domain";
@@ -80,6 +84,8 @@ export interface BasslinePracticeViewProps {
   readonly chordContextEnabled?: boolean;
   /** Persists only the factual P5.18 History record in the existing Practice document. */
   readonly onChordContextHistoryRecorded?: (entry: ChordContextHistoryEntry) => Promise<void>;
+  readonly sourceBasslineHistory?: readonly SourceBasslineHistoryEntry[];
+  readonly onSourceBasslineHistoryRecorded?: (entry: SourceBasslineHistoryEntry) => Promise<void>;
 }
 
 export function BasslinePracticeView({
@@ -90,9 +96,11 @@ export function BasslinePracticeView({
   vaultSourceBasslines,
   chordContextEnabled = true,
   onChordContextHistoryRecorded,
+  sourceBasslineHistory = [],
+  onSourceBasslineHistoryRecorded,
 }: BasslinePracticeViewProps) {
   const ja = language === "ja";
-  const [level, setLevel] = useState<1 | 2 | 3>(1);
+  const [level, setLevel] = useState<SourceBasslinePracticeLevel>(1);
   const [basslineSource, setBasslineSource] = useState<"generated" | "source-bassline">("generated");
   const [sourceWindowBars, setSourceWindowBars] = useState<SourceBasslineWindowBars>(1);
   const [sourceWindowStartBar, setSourceWindowStartBar] = useState(1);
@@ -167,6 +175,9 @@ export function BasslinePracticeView({
   );
   const sourceWindow = sourceWindowResult?.ok ? sourceWindowResult.window : undefined;
   const sourceSelected = basslineSource === "source-bassline";
+  const sourceLevelResult = sourceWindow?.levels[level];
+  const sourceLevelAvailable = Boolean(sourceLevelResult?.available);
+  const sourcePitchReplacementCount = sourceLevelResult?.available ? sourceLevelResult.pitchReplacementCount : 0;
   const tempoBaselineBpm = sourceSelected ? SOURCE_SESSION_DEFAULT_BPM : activeSnapshot?.originalBpm ?? SOURCE_SESSION_DEFAULT_BPM;
   const sourceAvailable = Boolean(sourceSnapshot && sourceWindowResult?.ok);
   const previousWindowStart = sourceWindow ? previousSourceBasslineWindowStart(sourceWindow.requestedBars, sourceWindow.startBar) : undefined;
@@ -180,12 +191,22 @@ export function BasslinePracticeView({
   const [recordingFacts, setRecordingFacts] = useState<RecordedChordContextFacts>();
   const [retainedTakeReference, setRetainedTakeReference] = useState<string>();
   const [historyStatus, setHistoryStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [historyRestartMessage, setHistoryRestartMessage] = useState<string>();
   const historySavingRef = useRef(false);
+  const historyGenerationRef = useRef(0);
   const historyEntryIdRef = useRef<string>();
   const historyStatusRef = useRef(historyStatus);
   const basslineRecordSessionIdRef = useRef(newChordContextRecordSessionId());
   useEffect(() => { historyStatusRef.current = historyStatus; }, [historyStatus]);
+  useEffect(() => () => {
+    historyGenerationRef.current += 1;
+    historySavingRef.current = false;
+  }, []);
   const invalidateRecordedFacts = useCallback(() => {
+    historyGenerationRef.current += 1;
+    historySavingRef.current = false;
+    historyStatusRef.current = "idle";
+    setHistoryRestartMessage(undefined);
     setRecordCompareUsed(false);
     setMetronomeUsed(false);
     setRecordingFacts(undefined);
@@ -212,7 +233,7 @@ export function BasslinePracticeView({
       })),
     }), [activeSnapshot, level]);
 
-  const activeTargetEvents = sourceSelected ? (sourceWindow?.targetEvents ?? []) : (exercise.ok ? exercise.exercise.targetEvents : []);
+  const activeTargetEvents = sourceSelected ? (sourceLevelResult?.available ? sourceLevelResult.targetEvents : []) : (exercise.ok ? exercise.exercise.targetEvents : []);
   const hasPracticeTarget = activeTargetEvents.length > 0;
   const sourceContextPlayable = !sourceSelected || Boolean(
     sourceWindow?.harmonyEvents?.length
@@ -464,7 +485,10 @@ export function BasslinePracticeView({
     const facts = recordingFacts ?? { effectiveBpm, listenMode, playMode, metronomeUsed, recordCompareUsed: false };
     const id = historyEntryIdRef.current ?? newChordContextHistoryId();
     historyEntryIdRef.current = id;
+    const saveGeneration = historyGenerationRef.current + 1;
+    historyGenerationRef.current = saveGeneration;
     historySavingRef.current = true;
+    historyStatusRef.current = "saving";
     setHistoryStatus("saving");
     try {
       await onChordContextHistoryRecorded(createChordContextHistoryEntry({
@@ -478,14 +502,99 @@ export function BasslinePracticeView({
         recordCompareUsed: facts.recordCompareUsed,
         ...(retainedTakeReference === undefined ? {} : { retainedTakeReference }),
       }));
-      setHistoryStatus("saved");
+      if (historyGenerationRef.current === saveGeneration) {
+        historyStatusRef.current = "saved";
+        setHistoryStatus("saved");
+      }
     } catch {
-      setHistoryStatus("error");
+      if (historyGenerationRef.current === saveGeneration) {
+        historyStatusRef.current = "error";
+        setHistoryStatus("error");
+      }
     } finally {
-      historySavingRef.current = false;
+      if (historyGenerationRef.current === saveGeneration) historySavingRef.current = false;
     }
   }, [activeSnapshot, effectiveBpm, hasUnkeptRecordingTake, listenMode, metronomeUsed, onChordContextHistoryRecorded, playMode, recordCompareUsed, recordingFacts, recordingInFlight, retainedTakeReference]);
 
+  const saveSourceBasslineHistory = useCallback(async () => {
+    if (!sourceCandidate || !sourceWindow || !sourceLevelResult?.available || !onSourceBasslineHistoryRecorded
+      || recordingInFlight || hasUnkeptRecordingTake || historySavingRef.current || historyStatusRef.current === "saved") return;
+    const id = historyEntryIdRef.current ?? newSourceBasslineHistoryId();
+    historyEntryIdRef.current = id;
+    const saveGeneration = historyGenerationRef.current + 1;
+    historyGenerationRef.current = saveGeneration;
+    historySavingRef.current = true;
+    historyStatusRef.current = "saving";
+    setHistoryStatus("saving");
+    try {
+      await onSourceBasslineHistoryRecorded(createSourceBasslineHistoryEntry({
+        id,
+        completedAt: new Date().toISOString(),
+        reference: sourceCandidate.reference,
+        snapshotSignature: sourceWindow.snapshotSignature,
+        ...(sourceCandidate.sourceBassline.capturedHarmony === undefined
+          ? {}
+          : { capturedHarmonySignature: sourceCandidate.sourceBassline.capturedHarmony.signature }),
+        requestedBars: sourceWindow.requestedBars,
+        startBar: sourceWindow.startBar,
+        endBar: sourceWindow.endBar,
+        actualBars: sourceWindow.actualBars as SourceBasslineWindowBars,
+        level,
+        croppedSourceNoteCount: sourceWindow.croppedSourceNoteCount,
+        projectedNoteCount: sourceLevelResult.targetEvents.length,
+        omittedSimultaneousNoteCount: sourceWindow.omittedSimultaneousNoteCount,
+        boundaryClippedNoteCount: sourceWindow.boundaryClippedNoteCount,
+        overlapClippedNoteCount: sourceWindow.overlapClippedNoteCount,
+        pitchReplacementCount: sourceLevelResult.pitchReplacementCount,
+        capturedHarmonyComparison: sourceCandidate.harmonyComparison ?? "comparison-unavailable",
+        ...(retainedTakeReference === undefined ? {} : { retainedTakeReference }),
+      }));
+      if (historyGenerationRef.current === saveGeneration) {
+        historyStatusRef.current = "saved";
+        setHistoryStatus("saved");
+      }
+    } catch {
+      if (historyGenerationRef.current === saveGeneration) {
+        historyStatusRef.current = "error";
+        setHistoryStatus("error");
+      }
+    } finally {
+      if (historyGenerationRef.current === saveGeneration) historySavingRef.current = false;
+    }
+  }, [hasUnkeptRecordingTake, level, onSourceBasslineHistoryRecorded, recordingInFlight, retainedTakeReference, sourceCandidate, sourceLevelResult, sourceWindow]);
+
+  const restartSourceBasslineHistory = useCallback((entry: SourceBasslineHistoryEntry) => {
+    const resolution = resolveSourceBasslineHistory(entry, vaultSourceBasslines ?? []);
+    if (!resolution.available) {
+      setHistoryRestartMessage(resolution.reason === "snapshot-mismatch"
+        ? (ja ? "保存元は変更されているため、この履歴を再開できません。別のソースへ置き換えません。" : "This History source has changed, so it cannot be restarted. No substitute was selected.")
+        : (ja ? "保存元が削除または利用不可のため、この履歴を再開できません。別のソースへ置き換えません。" : "This History source is missing or unavailable, so it cannot be restarted. No substitute was selected."));
+      return;
+    }
+    const restoredWindow = buildSourceBasslinePracticeWindow(
+      resolution.asset.sourceBassline,
+      entry.window.requestedBars,
+      entry.window.startBar,
+    );
+    if (
+      !restoredWindow.ok
+      || restoredWindow.window.endBar !== entry.window.endBar
+      || restoredWindow.window.actualBars !== entry.window.actualBars
+      || !restoredWindow.window.levels[entry.level].available
+    ) {
+      setHistoryRestartMessage(ja
+        ? "保存済み条件を正確に復元できないため、この履歴を再開できません。"
+        : "This History entry cannot be restarted because its exact saved conditions are unavailable.");
+      return;
+    }
+    resetSourcePractice();
+    setBasslineSource("source-bassline");
+    setSelectedSourceReference(resolution.asset.reference);
+    setSourceWindowBars(entry.window.requestedBars);
+    setSourceWindowStartBar(entry.window.startBar);
+    setLevel(entry.level);
+    setHistoryRestartMessage(ja ? "履歴の元ベースライン条件を復元しました。" : "Restored the Source Bassline History settings.");
+  }, [ja, resetSourcePractice, vaultSourceBasslines]);
   const legacyListen = () => {
     stopChordContext();
     if (!exercise.ok) return;
@@ -522,16 +631,32 @@ export function BasslinePracticeView({
       : sourceWindowResult && !sourceWindowResult.ok
         ? (ja ? "保存済みの元ベースラインをこの区間で利用できません。" : "The saved Source Bassline is unavailable for this window.")
         : (ja ? "保存済みの元ベースラインを選んでください。" : "Select a saved Source Bassline.");
-  const sourceContextReason = sourceSelected && !sourceContextPlayable
+  const sourceLevelUnavailableReason = sourceSelected && sourceWindow && sourceLevelResult && !sourceLevelResult.available
+    ? sourceSimplificationReason(sourceLevelResult.reason, language)
+    : undefined;
+  const unavailableSimplification = sourceWindow
+    ? [sourceWindow.levels[1], sourceWindow.levels[2]].find((result) => !result.available)
+    : undefined;
+  const sourceSimplificationAvailabilityReason = unavailableSimplification && !unavailableSimplification.available
+    ? sourceSimplificationReason(unavailableSimplification.reason, language)
+    : undefined;  const sourceHarmonyComparisonLabel = sourceCandidate
+    ? sourceCandidate.harmonyComparison === "match"
+      ? (ja ? "保存時の和声と現在の進行: 一致" : "Captured harmony vs current progression: Match")
+      : sourceCandidate.harmonyComparison === "mismatch"
+        ? (ja ? "保存時の和声と現在の進行: 不一致（簡略化とChord Contextは保存時の和声を使用）" : "Captured harmony vs current progression: Mismatch (simplification and Chord Context use captured harmony)")
+        : (ja ? "保存時の和声と現在の進行: 比較できません" : "Captured harmony vs current progression: Comparison unavailable")
+    : undefined;  const sourceContextReason = sourceSelected && !sourceContextPlayable
     ? !sourceAvailable
       ? sourceUnavailableReason
       : sourceWindow?.harmonyUnavailableReason
         ? (ja ? "正確な保存済み和声がないため、Chord Contextは利用できません。録音は伴奏なしで利用できます。" : "Chord Context is unavailable because exact captured harmony was not saved. Recording remains available without accompaniment.")
         : (ja ? "この区間の音域はChord Contextの安全なベース範囲外です。録音は伴奏なしで利用できます。" : "This window is outside Chord Context's safe bass range. Recording remains available without accompaniment.")
     : undefined;
-  const sourceEmptyDescriptionId = sourceSelected && sourceWindow && !hasPracticeTarget ? "source-bassline-empty" : undefined;
+  const sourceLevelDescriptionId = sourceLevelUnavailableReason ? "source-bassline-level-unavailable" : undefined;
+  const sourceEmptyDescriptionId = sourceSelected && sourceWindow && sourceLevelAvailable && !hasPracticeTarget ? "source-bassline-empty" : undefined;
   const sourceUnavailableDescriptionId = sourceSelected && !sourceAvailable ? "source-bassline-unavailable" : undefined;
-  const chordContextDescriptionId = sourceEmptyDescriptionId
+  const chordContextDescriptionId = sourceLevelDescriptionId
+    ?? sourceEmptyDescriptionId
     ?? (sourceContextReason ? "source-bassline-context-reason" : sourceUnavailableDescriptionId);
   const noContextSource = chordContextEnabled && (!hasPracticeTarget || !sourceContextPlayable);
   const hasVaultProgressions = pickerCandidates.length > 0;
@@ -663,14 +788,34 @@ export function BasslinePracticeView({
               </select>
             </Field> : null}
           </div> : null}
-          <Field htmlFor="bassline-level" label={ja ? "レベル" : "Level"} helper={sourceSelected ? (ja ? "元ベースラインでは元ライン（単音化）を使用します。" : "Source Bassline currently uses the monophonic source line.") : undefined}>
-            <select id="bassline-level" name="bassline-level" className="lv-input w-full" aria-label={ja ? "ベースラインのレベル" : "Bassline level"} aria-describedby={sourceSelected ? "bassline-level-description" : undefined} disabled={recordingInFlight || sourceSelected} value={sourceSelected ? 3 : level} onChange={(event) => chooseLevel(Number(event.target.value) as 1 | 2 | 3)}>{sourceSelected ? <option value={3}>{ja ? "3 - 元ライン（単音化）" : "3 - Source line (monophonic)"}</option> : <><option value={1}>{ja ? "1 - ルート" : "1 - Roots"}</option><option value={2}>{ja ? "2 - コードトーン" : "2 - Chord tones"}</option><option value={3}>{ja ? "3 - アプローチ" : "3 - Approach"}</option></>}</select>
-          </Field>
-        </div>
+          <Field htmlFor="bassline-level" label={ja ? "レベル" : "Level"}>
+            <select
+              id="bassline-level"
+              name="bassline-level"
+              className="lv-input w-full"
+              aria-label={ja ? "ベースラインのレベル" : "Bassline level"}
+              aria-describedby={sourceSelected ? "bassline-level-description" : undefined}
+              disabled={recordingInFlight || (sourceSelected && !sourceWindow)}
+              value={level}
+              onChange={(event) => chooseLevel(Number(event.currentTarget.value) as SourceBasslinePracticeLevel)}
+            >
+              {sourceSelected ? <>
+                <option value={1} disabled={!sourceWindow?.levels[1].available}>{ja ? "1 - ルート中心の簡略版" : "1 - Root-focused simplification"}</option>
+                <option value={2} disabled={!sourceWindow?.levels[2].available}>{ja ? "2 - コードトーン簡略版" : "2 - Chord-tone simplification"}</option>
+                <option value={3}>{ja ? "3 - 元ライン（単音化）" : "3 - Source line (monophonic)"}</option>
+              </> : <>
+                <option value={1}>{ja ? "1 - ルート" : "1 - Roots"}</option>
+                <option value={2}>{ja ? "2 - コードトーン" : "2 - Chord tones"}</option>
+                <option value={3}>{ja ? "3 - アプローチ" : "3 - Approach"}</option>
+              </>}
+            </select>
+            {sourceSelected ? <p id="bassline-level-description" aria-live="polite" className="mt-1 text-xs text-[var(--lv-text-secondary)]">{sourceLevelUnavailableReason ?? sourceSimplificationAvailabilityReason ?? (ja ? "保存済み和声から決定的に導出します。元スナップショットは変更しません。" : "Derived deterministically from captured harmony. The source snapshot is not changed.")}</p> : null}
+          </Field>        </div>
       </div>
       {sourceSelected ? <section className="mt-4 min-w-0 rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] p-3" aria-labelledby="source-bassline-window-heading" data-testid="source-bassline-window">
-        <h3 id="source-bassline-window-heading" className="font-semibold">{ja ? "元ライン（単音化）" : "Source line (monophonic)"}</h3>
-        <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">{ja ? "保存済みの全ノートは変更せず、この練習区間だけを単音化します。" : "The stored all-note snapshot is unchanged; only this practice window is projected to one note at a time."}</p>
+        <h3 id="source-bassline-window-heading" className="font-semibold">{sourceLevelLabel(level, language)}</h3>
+        <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">{ja ? "保存済みの全ノートを変更せず、区間切り出し後の単音投影から選択レベルを導出します。" : "The stored all-note snapshot stays unchanged; the selected level derives from the monophonic projection after window crop."}</p>
+        {sourceHarmonyComparisonLabel ? <p role="status" aria-live="polite" data-testid="source-bassline-harmony-comparison" className="mt-2 break-words text-sm text-[var(--lv-text-secondary)]">{sourceHarmonyComparisonLabel}</p> : null}
         <div className="mt-3 flex flex-wrap items-end gap-3">
           <Field htmlFor="source-bassline-window-bars" label={ja ? "区間の長さ" : "Window length"} className="min-w-36 flex-1 sm:flex-none">
             <select id="source-bassline-window-bars" data-testid="source-bassline-window-bars" className="lv-input w-full" disabled={recordingInFlight || !sourceWindow} value={sourceWindowBars} onChange={(event) => chooseSourceWindowBars(Number(event.currentTarget.value) as SourceBasslineWindowBars)}>
@@ -686,8 +831,8 @@ export function BasslinePracticeView({
         <p id="source-bassline-previous-reason" className="sr-only">{previousWindowStart === undefined ? (ja ? "最初の区間です。" : "This is the first window.") : ""}</p>
         <p id="source-bassline-next-reason" className="sr-only">{nextWindowStart === undefined ? (ja ? "最後の区間です。" : "This is the last window.") : ""}</p>
         <p aria-live="polite" data-testid="source-bassline-range" className="mt-3 font-medium">{sourceWindow ? (ja ? `${sourceWindow.startBar}〜${sourceWindow.endBar}小節${sourceWindow.actualBars < sourceWindow.requestedBars ? "（最終区間）" : ""}` : `Bars ${sourceWindow.startBar}-${sourceWindow.endBar}${sourceWindow.actualBars < sourceWindow.requestedBars ? " (final partial window)" : ""}`) : sourceUnavailableReason}</p>
-        {sourceWindow ? <p data-testid="source-bassline-projection-facts" className="mt-2 break-words text-sm text-[var(--lv-text-secondary)]">{ja ? `切り出しノート ${sourceWindow.croppedSourceNoteCount} / 単音ターゲット ${sourceWindow.targetEvents.length} / 同時発音の省略 ${sourceWindow.omittedSimultaneousNoteCount} / 境界clip ${sourceWindow.boundaryClippedNoteCount} / 重なりduration clip ${sourceWindow.overlapClippedNoteCount}` : `Cropped notes ${sourceWindow.croppedSourceNoteCount} / projected target ${sourceWindow.targetEvents.length} / simultaneous notes omitted ${sourceWindow.omittedSimultaneousNoteCount} / boundary clips ${sourceWindow.boundaryClippedNoteCount} / overlap duration clips ${sourceWindow.overlapClippedNoteCount}`}</p> : null}
-        {sourceWindow && !hasPracticeTarget ? <p id="source-bassline-empty" role="status" data-testid="source-bassline-empty" className="mt-2 text-sm text-[var(--lv-warning)]">{ja ? "この区間にはベース音がありません。別の区間へ移動してください。" : "This window contains no bass notes. Move to another window."}</p> : null}
+        {sourceWindow ? <p data-testid="source-bassline-projection-facts" className="mt-2 break-words text-sm text-[var(--lv-text-secondary)]">{ja ? `切り出しノート ${sourceWindow.croppedSourceNoteCount} / 単音投影 ${sourceWindow.targetEvents.length} / レベル対象 ${activeTargetEvents.length} / 同時発音の省略 ${sourceWindow.omittedSimultaneousNoteCount} / 境界clip ${sourceWindow.boundaryClippedNoteCount} / 重なりduration clip ${sourceWindow.overlapClippedNoteCount} / pitch置換 ${sourcePitchReplacementCount}` : `Cropped notes ${sourceWindow.croppedSourceNoteCount} / monophonic projection ${sourceWindow.targetEvents.length} / level target ${activeTargetEvents.length} / simultaneous notes omitted ${sourceWindow.omittedSimultaneousNoteCount} / boundary clips ${sourceWindow.boundaryClippedNoteCount} / overlap duration clips ${sourceWindow.overlapClippedNoteCount} / pitches replaced ${sourcePitchReplacementCount}`}</p> : null}
+        {sourceLevelUnavailableReason ? <p id="source-bassline-level-unavailable" role="status" data-testid="source-bassline-level-unavailable" className="mt-2 text-sm text-[var(--lv-warning)]">{sourceLevelUnavailableReason}</p> : null}        {sourceWindow && sourceLevelAvailable && !hasPracticeTarget ? <p id="source-bassline-empty" role="status" data-testid="source-bassline-empty" className="mt-2 text-sm text-[var(--lv-warning)]">{ja ? "この区間にはベース音がありません。別の区間へ移動してください。" : "This window contains no bass notes. Move to another window."}</p> : null}
         <p className="mt-2 text-xs text-[var(--lv-text-secondary)]">{ja ? "Transferは元ベースラインでは利用できません。区間移動には前/次を使ってください。" : "Transfer is unavailable for Source Bassline. Use Previous/Next for window navigation."}</p>
       </section> : null}
       {!sourceSelected ? <div className="mt-4 rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] p-3" aria-label={ja ? "ベースラインのコード進行" : "Bassline progression strip"}>{exercise.exercise.chords.map((chord) => <span key={`${chord.startBeat}:${chord.label}`} className="mr-2 inline-block font-semibold">{chord.label}</span>)}</div> : null}
@@ -769,9 +914,9 @@ export function BasslinePracticeView({
     </section> : null}
 
     <div className="mt-4 flex flex-wrap gap-2">
-      <Button onClick={legacyListen} disabled={recordingInFlight || !hasPracticeTarget} aria-describedby={sourceEmptyDescriptionId ?? sourceUnavailableDescriptionId} data-testid="bassline-listen">{legacyPlaying ? <Square size={15} /> : <Ear size={15} />}{legacyPlaying ? ja ? "停止" : "Stop" : ja ? "お手本を聴く" : "Listen"}</Button>
-      <Button variant="ghost" disabled={recordingInFlight || !hasPracticeTarget} aria-describedby={sourceEmptyDescriptionId ?? sourceUnavailableDescriptionId} onClick={() => setHint((value) => Math.min(4, value + 1))}><Lightbulb size={15} /> {ja ? "ヒント" : "Hint"} {hint}/4</Button>
-      <Button disabled={recordingInFlight || !hasPracticeTarget} aria-describedby={sourceEmptyDescriptionId ?? sourceUnavailableDescriptionId} onClick={() => { legacyPreviewGenerationRef.current += 1; stopPreview(); setLegacyPlaying(false); stopChordContext(); setReview(true); }}><Ear size={15} /> {ja ? "レビュー" : "Review"}</Button>
+      <Button onClick={legacyListen} disabled={recordingInFlight || !hasPracticeTarget} aria-describedby={sourceLevelDescriptionId ?? sourceEmptyDescriptionId ?? sourceUnavailableDescriptionId} data-testid="bassline-listen">{legacyPlaying ? <Square size={15} /> : <Ear size={15} />}{legacyPlaying ? ja ? "停止" : "Stop" : ja ? "お手本を聴く" : "Listen"}</Button>
+      <Button variant="ghost" disabled={recordingInFlight || !hasPracticeTarget} aria-describedby={sourceLevelDescriptionId ?? sourceEmptyDescriptionId ?? sourceUnavailableDescriptionId} onClick={() => setHint((value) => Math.min(4, value + 1))}><Lightbulb size={15} /> {ja ? "ヒント" : "Hint"} {hint}/4</Button>
+      <Button disabled={recordingInFlight || !hasPracticeTarget} aria-describedby={sourceLevelDescriptionId ?? sourceEmptyDescriptionId ?? sourceUnavailableDescriptionId} onClick={() => { legacyPreviewGenerationRef.current += 1; stopPreview(); setLegacyPlaying(false); stopChordContext(); setReview(true); }}><Ear size={15} /> {ja ? "レビュー" : "Review"}</Button>
     </div>
     {review ? <section className="mt-4 rounded border p-3" aria-labelledby="record-accompaniment-heading" data-testid="record-accompaniment">
       <h3 id="record-accompaniment-heading" className="font-semibold">{ja ? "録音時の伴奏" : "Recording accompaniment"}</h3>
@@ -787,7 +932,7 @@ export function BasslinePracticeView({
     {review ? <RecordCompareSection
       language={language}
       mode="bassline"
-      resetKey={"bassline:" + (activeSnapshot?.signature ?? "generated") + ":" + basslineSource + ":" + (sourceWindow?.snapshotSignature ?? "no-source") + ":" + (sourceWindow?.startBar ?? 0) + ":" + sourceWindowBars + ":" + (sourceSelected ? 3 : level) + ":" + effectiveBpm + ":" + listenMode + ":" + playMode + ":" + recordPlayMode + ":" + chordTimbre}
+      resetKey={"bassline:" + (activeSnapshot?.signature ?? "generated") + ":" + basslineSource + ":" + (sourceWindow?.snapshotSignature ?? "no-source") + ":" + (sourceWindow?.startBar ?? 0) + ":" + sourceWindowBars + ":" + level + ":" + effectiveBpm + ":" + listenMode + ":" + playMode + ":" + recordPlayMode + ":" + chordTimbre}
       practiceSessionId={basslineRecordSessionIdRef.current}
       countInMs={Math.round((4 * 60_000) / effectiveBpm)}
       onPlaybackStart={stopForRecordComparePlayback}
@@ -833,15 +978,38 @@ export function BasslinePracticeView({
         stopPreview,
       )}
     /> : null}
-    {review && !sourceSelected ? <section className="mt-4 rounded border p-3" aria-labelledby="chord-context-history-heading" data-testid="chord-context-history-save">
-      <h3 id="chord-context-history-heading" className="font-semibold">{ja ? "練習履歴" : "Practice History"}</h3>
-      <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">{ja ? "進行、セクション、テンポ、選択レイヤー、保持したテイクの参照など、事実だけを保存します。演奏の採点は行いません。" : "Save factual source, section, tempo, selected layers, and retained-take reference only. This does not score your playing."}</p>
+    {review ? <section className="mt-4 rounded border p-3" aria-labelledby="bassline-history-heading" data-testid={sourceSelected ? "source-bassline-history-save" : "chord-context-history-save"}>
+      <h3 id="bassline-history-heading" className="font-semibold">{ja ? "練習履歴" : "Practice History"}</h3>
+      <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">{sourceSelected
+        ? (ja ? "Vault項目参照、スナップショット署名、区間、レベル、差分数、保持したテイク参照だけを保存します。ノート列や演奏の採点は保存しません。" : "Save only the Vault reference, snapshot signature, window, level, difference counts, and retained-take reference. Note arrays and performance scores are not stored.")
+        : (ja ? "進行、セクション、テンポ、選択レイヤー、保持したテイクの参照など、事実だけを保存します。演奏の採点は行いません。" : "Save factual source, section, tempo, selected layers, and retained-take reference only. This does not score your playing.")}</p>
       {historyStatus === "error" ? <p role="alert" className="mt-2 text-sm text-[var(--lv-danger)]">{ja ? "練習履歴を保存できませんでした。レビュー内容はこのまま残ります。" : "Practice History could not be saved. Your review remains available."}</p> : null}
       {hasUnkeptRecordingTake ? <p role="status" className="mt-2 text-sm">{ja ? "このセッションを保存する前に、録音したテイクを保持するか破棄してください。" : "Keep or discard the recorded take before saving this factual session."}</p> : null}
       <p aria-live="polite" className="mt-2 text-sm">{historyStatus === "saving" ? ja ? "練習履歴を保存しています。" : "Saving factual History." : historyStatus === "saved" ? ja ? "練習履歴へ保存しました。" : "Factual session saved to History." : ja ? "このセッションはまだ履歴へ保存されていません。" : "History is not yet saved."}</p>
-      <Button className="mt-3" onClick={() => void saveChordContextHistory()} disabled={!onChordContextHistoryRecorded || recordingInFlight || hasUnkeptRecordingTake || historyStatus === "saving" || historyStatus === "saved"} data-testid="chord-context-save-history">{historyStatus === "saved" ? ja ? "履歴へ保存済み" : "Saved to History" : ja ? "セッションを履歴へ保存" : "Save factual session"}</Button>
+      <Button
+        className="mt-3"
+        onClick={() => void (sourceSelected ? saveSourceBasslineHistory() : saveChordContextHistory())}
+        disabled={(sourceSelected ? !onSourceBasslineHistoryRecorded || !sourceLevelResult?.available : !onChordContextHistoryRecorded) || recordingInFlight || hasUnkeptRecordingTake || historyStatus === "saving" || historyStatus === "saved"}
+        data-testid={sourceSelected ? "source-bassline-save-history" : "chord-context-save-history"}
+      >{historyStatus === "saved" ? ja ? "履歴へ保存済み" : "Saved to History" : ja ? "セッションを履歴へ保存" : "Save factual session"}</Button>
     </section> : null}
-    </Surface>
+    {sourceBasslineHistory.length ? <section className="mt-4 rounded border p-3" aria-labelledby="source-bassline-history-heading" data-testid="source-bassline-history">
+      <h3 id="source-bassline-history-heading" className="font-semibold">{ja ? "元ベースライン履歴" : "Source Bassline History"}</h3>
+      <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">{ja ? "履歴は参照と事実だけを保持します。保存元がない場合は別のソースへ置き換えません。" : "History keeps references and facts only. A missing source is never replaced silently."}</p>
+      <ul className="mt-3 grid min-w-0 gap-2">
+        {[...sourceBasslineHistory].reverse().slice(0, 20).map((entry) => {
+          const resolution = resolveSourceBasslineHistory(entry, vaultSourceBasslines ?? []);
+          return <li key={entry.id} className="min-w-0 rounded border border-[var(--lv-border)] p-2 text-sm">
+            <p className="break-words font-medium">{sourceLevelLabel(entry.level, language)} · {ja ? `${entry.window.startBar}〜${entry.window.endBar}小節` : `Bars ${entry.window.startBar}-${entry.window.endBar}`}</p>
+            <p className="mt-1 break-words text-xs text-[var(--lv-text-secondary)]">{ja
+              ? `単音投影 ${entry.facts.projectedNoteCount} / pitch置換 ${entry.facts.pitchReplacementCount} / 保存元 ${resolution.available ? "利用可能" : resolution.reason === "snapshot-mismatch" ? "変更済み" : "なし"}`
+              : `Projected ${entry.facts.projectedNoteCount} / pitches replaced ${entry.facts.pitchReplacementCount} / source ${resolution.available ? "available" : resolution.reason === "snapshot-mismatch" ? "changed" : "missing"}`}</p>
+            <Button type="button" variant="ghost" size="sm" className="mt-2" onClick={() => restartSourceBasslineHistory(entry)}>{ja ? "この条件を再開" : "Restart these settings"}</Button>
+          </li>;
+        })}
+      </ul>
+      {historyRestartMessage ? <p aria-live="polite" className="mt-3 text-sm" data-testid="source-bassline-history-restart-status">{historyRestartMessage}</p> : null}
+    </section> : null}    </Surface>
   </div>;
 }
 
@@ -994,6 +1162,35 @@ function newChordContextHistoryId(): string {
   return "chord-context-history:" + value;
 }
 
+function newSourceBasslineHistoryId(): string {
+  const value = typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : Date.now().toString(36) + "-" + Math.random().toString(36).slice(2);
+  return "source-bassline-history:" + value;
+}
+function sourceLevelLabel(level: SourceBasslinePracticeLevel, language: AppLanguage): string {
+  if (level === 1) return language === "ja" ? "ルート中心の簡略版" : "Root-focused simplification";
+  if (level === 2) return language === "ja" ? "コードトーン簡略版" : "Chord-tone simplification";
+  return language === "ja" ? "元ライン（単音化）" : "Source line (monophonic)";
+}
+function sourceSimplificationReason(
+  reason: "missing-harmony" | "harmony-gap" | "conflicting-harmony" | "unsafe-playable-range",
+  language: AppLanguage,
+): string {
+  const ja = language === "ja";
+  if (reason === "missing-harmony") return ja
+    ? "正確な保存済み和声がないため、この簡略レベルは利用できません。レベル3は利用できます。"
+    : "This simplified level is unavailable because exact captured harmony was not saved. Level 3 remains available.";
+  if (reason === "harmony-gap") return ja
+    ? "ターゲット開始位置に保存済み和声の空白があるため、この簡略レベルは利用できません。"
+    : "This simplified level is unavailable because a target onset falls in a captured-harmony gap.";
+  if (reason === "conflicting-harmony") return ja
+    ? "保存済み和声が一意でないため、この簡略レベルは利用できません。"
+    : "This simplified level is unavailable because captured harmony is not unambiguous.";
+  return ja
+    ? "安全なベース音域へ決定的に割り当てられないため、この簡略レベルは利用できません。"
+    : "This simplified level is unavailable because it cannot be mapped deterministically into the safe bass range.";
+}
 const PITCH_CLASS_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"] as const;
 
 /** MIDI note number 竊・scientific pitch name (60 = C4), e.g. 45 竊・"A2". */

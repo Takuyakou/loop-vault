@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "phaseId": "5.22",
   "status": "in-progress",
-  "activeStage": null,
+  "activeStage": "P5.22-04",
   "completedStages": [
     "P5.22-00",
     "P5.22-01",
@@ -48,6 +48,15 @@
       "p522-03-lint-typecheck",
       "p522-03-diff-privacy-hygiene",
       "p522-03-phase-docs-validation"
+    ],
+    "P5.22-04": [
+      "p522-04-level1-level2-determinism",
+      "p522-04-history-reference-lifecycle",
+      "p522-04-bass-practice-integration",
+      "p522-04-lint-typecheck-build",
+      "p522-04-production-e2e-responsive",
+      "p522-04-diff-privacy-hygiene",
+      "p522-04-phase-docs-validation"
     ]
   },
   "gateResults": {
@@ -78,6 +87,6 @@
     "p522-03-diff-privacy-hygiene": "pass",
     "p522-03-phase-docs-validation": "pass"
   },
-  "nextAction": "P5.22-03 is complete. P5.22-04 is NOT STARTED; begin it through the next-stage workflow.",
-  "updatedAt": "2026-08-21T20:41:42+09:00"
+  "nextAction": "P5.22-04 is implemented on the working tree and is awaiting an independent Stage commit plus exact-commit gate verification. P5.22-05 is NOT STARTED.",
+  "updatedAt": "2026-08-21T21:20:00+09:00"
 }

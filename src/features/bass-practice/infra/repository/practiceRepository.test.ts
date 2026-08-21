@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { createCompletedAttempt, generateRhythmExercise, RHYTHM_GENERATOR_VERSION, type RhythmPracticeAttempt } from "../../domain";
+import { createCompletedAttempt, createSourceBasslineHistoryEntry, generateRhythmExercise, RHYTHM_GENERATOR_VERSION, type RhythmPracticeAttempt } from "../../domain";
 import { generatedExercise } from "../../domain/testFixtures";
 import {
   addCompletedAttempt,
   addCompletedRhythmAttempt,
+  addSourceBasslineHistoryEntry,
   createEmptyPracticeFile,
   JsonPracticeRepository,
   MemoryPracticeStorage,
@@ -273,4 +274,74 @@ describe("JsonPracticeRepository", () => {
     await expect(repository.save({ ...saved, rhythmAttempts: [{ ...saved.rhythmAttempts[0], independentSuccess: false }] })).rejects.toThrow("canonical");
     expect(storage.committed).toBe(lastGood);
   });
-});
+
+  it("migrates absent Source Bassline History and persists strict reference-only entries across restart", async () => {
+    const storage = new MemoryPracticeStorage();
+    const legacy = { ...createEmptyPracticeFile(NOW), fileVersion: 1, revision: 1 } as Record<string, unknown>;
+    delete legacy.sourceBasslineHistory;
+    storage.committed = `${JSON.stringify(legacy)}\n`;
+    const repository = new JsonPracticeRepository(storage, () => NOW);
+    const loaded = await repository.load();
+    expect(loaded.file.sourceBasslineHistory).toEqual([]);
+    expect(JSON.parse(storage.committed!).fileVersion).toBe(1);
+
+    const entry = createSourceBasslineHistoryEntry({
+      id: "source-history:repository",
+      completedAt: "2026-08-02T10:02:00.000Z",
+      reference: { ideaId: "idea-a", blockId: "block-a" },
+      snapshotSignature: "a".repeat(64),
+      capturedHarmonySignature: "c".repeat(64),
+      requestedBars: 2,
+      startBar: 3,
+      endBar: 3,
+      actualBars: 1,
+      level: 1,
+      croppedSourceNoteCount: 4,
+      projectedNoteCount: 3,
+      omittedSimultaneousNoteCount: 1,
+      boundaryClippedNoteCount: 1,
+      overlapClippedNoteCount: 0,
+      pitchReplacementCount: 2,
+      capturedHarmonyComparison: "match",
+    });
+    const saved = await repository.save(addSourceBasslineHistoryEntry(loaded.file, entry));
+    expect(saved.sourceBasslineHistory).toEqual([entry]);
+    const restarted = await new JsonPracticeRepository(storage, () => NOW).load();
+    expect(restarted.file.sourceBasslineHistory).toEqual([entry]);
+    expect(JSON.stringify(restarted.file.sourceBasslineHistory)).not.toMatch(/"(?:notes|capturedHarmony|path|title|fileName|device|audio|voice)"\s*:/i);
+  });
+
+  it("rejects duplicate, inconsistent, and unknown Source Bassline History data before write", async () => {
+    const storage = new MemoryPracticeStorage();
+    const repository = new JsonPracticeRepository(storage, () => NOW);
+    const initial = await repository.save(createEmptyPracticeFile(NOW));
+    const entry = createSourceBasslineHistoryEntry({
+      id: "source-history:strict",
+      completedAt: "2026-08-02T10:03:00.000Z",
+      reference: { ideaId: "idea-a", blockId: "block-a" },
+      snapshotSignature: "b".repeat(64),
+      requestedBars: 1,
+      startBar: 1,
+      endBar: 1,
+      actualBars: 1,
+      level: 3,
+      croppedSourceNoteCount: 1,
+      projectedNoteCount: 1,
+      omittedSimultaneousNoteCount: 0,
+      boundaryClippedNoteCount: 0,
+      overlapClippedNoteCount: 0,
+      pitchReplacementCount: 0,
+      capturedHarmonyComparison: "comparison-unavailable",
+    });
+    const once = addSourceBasslineHistoryEntry(initial, entry);
+    expect(() => addSourceBasslineHistoryEntry(once, entry)).toThrow(/already/);
+    const lastGood = storage.committed;
+    await expect(repository.save({ ...once, sourceBasslineHistory: [{ ...entry, sourcePath: "forbidden" } as never] })).rejects.toThrow(/strict schema/i);
+    await expect(repository.save({ ...once, sourceBasslineHistory: [{ ...entry, source: { ...entry.source, capturedHarmonySignature: "C".repeat(64) } }] })).rejects.toThrow(/strict schema/i);
+    await expect(repository.save({ ...once, sourceBasslineHistory: [{ ...entry, capturedHarmonyComparison: "match" }] })).rejects.toThrow(/inconsistent/i);
+    await expect(repository.save({ ...once, sourceBasslineHistory: [{ ...entry, facts: { ...entry.facts, omittedSimultaneousNoteCount: 1 } }] })).rejects.toThrow(/inconsistent/i);
+    await expect(repository.save({ ...once, sourceBasslineHistory: [{ ...entry, facts: { ...entry.facts, boundaryClippedNoteCount: 2 } }] })).rejects.toThrow(/inconsistent/i);
+    await expect(repository.save({ ...once, sourceBasslineHistory: [{ ...entry, facts: { ...entry.facts, overlapClippedNoteCount: 2 } }] })).rejects.toThrow(/inconsistent/i);
+    await expect(repository.save({ ...once, sourceBasslineHistory: [{ ...entry, facts: { ...entry.facts, pitchReplacementCount: 2 } }] })).rejects.toThrow(/inconsistent/i);
+    expect(storage.committed).toBe(lastGood);
+  });});

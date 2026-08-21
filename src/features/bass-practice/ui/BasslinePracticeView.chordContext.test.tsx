@@ -78,7 +78,7 @@ vi.mock("../application/chordContextToneDriver", () => ({
 import { makeChordSymbol } from "../../../domain/chords";
 import { extractSourceBasslineSnapshot } from "../../../domain/sourceBassline";
 import type { SavedProgressionBlock } from "../../../domain/types";
-import { buildBasslinePresetSnapshot, buildGeneratedChordContextSnapshot, buildVaultChordContextSnapshot, type ChordContextSnapshot } from "../domain";
+import { buildBasslinePresetSnapshot, buildGeneratedChordContextSnapshot, buildVaultChordContextSnapshot, createSourceBasslineHistoryEntry, type ChordContextSnapshot, type SourceBasslineHistoryEntry } from "../domain";
 import { BasslinePracticeView } from "./BasslinePracticeView";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
@@ -614,7 +614,7 @@ describe("Bassline Echo Chord Context", () => {
     const sourceCandidate = Array.from(sourceSelector.options).find((option) => option.value && !option.disabled)!;
     await chooseSelect(sourceSelector, sourceCandidate.value);
     const level = container.querySelector<HTMLSelectElement>("#bassline-level")!;
-    expect(level.disabled).toBe(true);
+    expect(level.disabled).toBe(false);
     expect(level.value).toBe("3");
     expect(container.querySelector("[data-testid='source-bassline-range']")?.textContent).toBe("Bars 1-1");
     const windowPanel = container.querySelector<HTMLElement>("[data-testid='source-bassline-window']")!;
@@ -626,7 +626,7 @@ describe("Bassline Echo Chord Context", () => {
     previous.focus();
     await act(async () => previous.click());
     expect(document.activeElement).toBe(previous);
-    expect(container.querySelector("[data-testid='source-bassline-projection-facts']")?.textContent).toContain("Cropped notes 3 / projected target 2 / simultaneous notes omitted 1");
+    expect(container.querySelector("[data-testid='source-bassline-projection-facts']")?.textContent).toContain("Cropped notes 3 / monophonic projection 2 / level target 2 / simultaneous notes omitted 1");
     expect(container.textContent).toContain("Transfer is unavailable for Source Bassline");
 
     const listen = container.querySelector<HTMLButtonElement>("[data-testid='bassline-listen']")!;
@@ -931,7 +931,243 @@ describe("Bassline Echo Chord Context", () => {
     });
     expect(prepared).toBe(true);
     expect(started).toBe(true);
-  });});
+  });
+
+  it("selects deterministic Level 1/2 targets, discloses replacements, and keeps the source immutable", async () => {
+    const fixture = sourceBasslineFixture(true);
+    const before = JSON.stringify(fixture.sourceCatalogEntry.sourceBassline);
+    const container = await renderView({ vaultSourceBasslines: [fixture.sourceCatalogEntry] });
+    await chooseSourceBassline(container);
+    const level = container.querySelector<HTMLSelectElement>("#bassline-level")!;
+    expect(Array.from(level.options).map(({ value, disabled }) => ({ value, disabled }))).toEqual([
+      { value: "1", disabled: false },
+      { value: "2", disabled: false },
+      { value: "3", disabled: false },
+    ]);
+
+    await chooseSelect(level, "1");
+    await act(async () => container.querySelector<HTMLButtonElement>("[data-testid='bassline-listen']")?.click());
+    expect(preview.lastNotes).toEqual([
+      expect.objectContaining({ pitch: 48, startBeat: 0 }),
+      expect.objectContaining({ pitch: 48, startBeat: 0.5 }),
+    ]);
+    expect(container.querySelector("[data-testid='source-bassline-projection-facts']")?.textContent).toContain("pitches replaced 2");
+
+    await chooseSelect(level, "2");
+    await act(async () => container.querySelector<HTMLButtonElement>("[data-testid='bassline-listen']")?.click());
+    expect(preview.lastNotes).toEqual([
+      expect.objectContaining({ pitch: 43, startBeat: 0 }),
+      expect.objectContaining({ pitch: 43, startBeat: 0.5 }),
+    ]);
+    expect(container.querySelector("[data-testid='source-bassline-harmony-comparison']")?.textContent).toContain("Match");
+    expect(JSON.stringify(fixture.sourceCatalogEntry.sourceBassline)).toBe(before);
+  });
+
+  it("changes Record & Compare identity and target when Source Level changes from 1 to 2", async () => {
+    const fixture = sourceBasslineFixture(true);
+    const container = await renderView({ vaultSourceBasslines: [fixture.sourceCatalogEntry] });
+    await chooseSourceBassline(container);
+    const level = container.querySelector<HTMLSelectElement>("#bassline-level")!;
+
+    await chooseSelect(level, "1");
+    await act(async () => findButton(container, "Review")?.click());
+    const level1ResetKey = recordCompare.props?.resetKey;
+    recordCompare.props?.targetPlayer?.play(() => undefined);
+    const level1Target = (preview.lastNotes as readonly { readonly pitch: number }[]).map(({ pitch }) => pitch);
+
+    await chooseSelect(level, "2");
+    await act(async () => findButton(container, "Review")?.click());
+    const level2ResetKey = recordCompare.props?.resetKey;
+    recordCompare.props?.targetPlayer?.play(() => undefined);
+    const level2Target = (preview.lastNotes as readonly { readonly pitch: number }[]).map(({ pitch }) => pitch);
+
+    expect(level2ResetKey).not.toBe(level1ResetKey);
+    expect(level1Target).toEqual([48, 48]);
+    expect(level2Target).toEqual([43, 43]);
+    const disclosure = container.querySelector("[data-testid='source-bassline-harmony-comparison']");
+    expect(disclosure?.getAttribute("role")).toBe("status");
+    expect(disclosure?.getAttribute("aria-live")).toBe("polite");
+  });
+  it("keeps unavailable simplifications explicit and leaves Level 3 selectable", async () => {
+    const fixture = sourceBasslineFixture(false);
+    const container = await renderView({ vaultSourceBasslines: [fixture.sourceCatalogEntry] });
+    await chooseSourceBassline(container);
+    const level = container.querySelector<HTMLSelectElement>("#bassline-level")!;
+    expect(level.value).toBe("3");
+    expect(Array.from(level.options).find(({ value }) => value === "1")?.disabled).toBe(true);
+    expect(Array.from(level.options).find(({ value }) => value === "2")?.disabled).toBe(true);
+    expect(Array.from(level.options).find(({ value }) => value === "3")?.disabled).toBe(false);
+    expect(container.querySelector("#bassline-level-description")?.textContent).toContain("captured harmony");
+  });
+
+  it("omits the captured-harmony signature when saving History for a source without harmony", async () => {
+    const fixture = sourceBasslineFixture(false);
+    const onSourceBasslineHistoryRecorded = vi.fn(async (_entry: SourceBasslineHistoryEntry) => undefined);
+    const container = await renderView({
+      vaultSourceBasslines: [fixture.sourceCatalogEntry],
+      onSourceBasslineHistoryRecorded,
+    });
+    await chooseSourceBassline(container);
+    await act(async () => findButton(container, "Review")?.click());
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>("[data-testid='source-bassline-save-history']")?.click();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    const entry = onSourceBasslineHistoryRecorded.mock.calls[0]?.[0];
+    expect(entry?.source).not.toHaveProperty("capturedHarmonySignature");
+    expect(entry?.capturedHarmonyComparison).toBe("comparison-unavailable");
+  });
+  it("saves factual Source History and restarts only an exact reference/signature", async () => {
+    const fixture = sourceBasslineFixture(true);
+    const onSourceBasslineHistoryRecorded = vi.fn(async (_entry: SourceBasslineHistoryEntry) => undefined);
+    const container = await renderView({
+      vaultSourceBasslines: [fixture.sourceCatalogEntry],
+      onSourceBasslineHistoryRecorded,
+    });
+    await chooseSourceBassline(container);
+    await chooseSelect(container.querySelector<HTMLSelectElement>("#bassline-level")!, "2");
+    await act(async () => findButton(container, "Review")?.click());
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>("[data-testid='source-bassline-save-history']")?.click();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(onSourceBasslineHistoryRecorded).toHaveBeenCalledTimes(1);
+    const entry = onSourceBasslineHistoryRecorded.mock.calls[0]![0];
+    expect(entry).toMatchObject({
+      source: { kind: "source-bassline", reference: fixture.sourceCatalogEntry.reference, snapshotSignature: fixture.sourceCatalogEntry.sourceBassline.snapshotSignature, capturedHarmonySignature: fixture.sourceCatalogEntry.sourceBassline.capturedHarmony?.signature },
+      level: 2,
+      monophonicProjection: true,
+      capturedHarmonyComparison: "match",
+      selfReview: "completed",
+      facts: { croppedSourceNoteCount: 3, projectedNoteCount: 2, pitchReplacementCount: 1 },
+    });
+    expect(JSON.stringify(entry)).not.toMatch(/"(?:notes|capturedHarmony|path|title|fileName|device|audio|voice)"\s*:/i);
+
+    await act(async () => root?.render(<BasslinePracticeView
+      vaultSourceBasslines={[fixture.sourceCatalogEntry]}
+      sourceBasslineHistory={[entry]}
+    />));
+    const restart = findButton(container, "Restart these settings")!;
+    await act(async () => restart.click());
+    expect(container.querySelector<HTMLSelectElement>("[data-testid='bassline-line-source']")?.value).toBe("source-bassline");
+    expect(container.querySelector<HTMLSelectElement>("#bassline-level")?.value).toBe("2");
+    expect(container.querySelector("[data-testid='source-bassline-history-restart-status']")?.textContent).toContain("Restored");
+    await chooseSelect(container.querySelector<HTMLSelectElement>("#bassline-level")!, "1");
+    expect(container.querySelector("[data-testid='source-bassline-history-restart-status']")).toBeNull();
+  });
+
+  it("keeps missing or changed History readable without selecting a substitute", async () => {
+    const fixture = sourceBasslineFixture(true);
+    const entry = createSourceBasslineHistoryEntry({
+      id: "source-history:missing",
+      completedAt: "2026-08-21T12:00:00.000Z",
+      reference: fixture.sourceCatalogEntry.reference,
+      snapshotSignature: fixture.sourceCatalogEntry.sourceBassline.snapshotSignature,
+      capturedHarmonySignature: "f".repeat(64),
+      requestedBars: 1,
+      startBar: 1,
+      endBar: 1,
+      actualBars: 1,
+      level: 3,
+      croppedSourceNoteCount: 3,
+      projectedNoteCount: 2,
+      omittedSimultaneousNoteCount: 1,
+      boundaryClippedNoteCount: 0,
+      overlapClippedNoteCount: 1,
+      pitchReplacementCount: 0,
+      capturedHarmonyComparison: "match",
+    });
+    const container = await renderView({ vaultSourceBasslines: [fixture.sourceCatalogEntry], sourceBasslineHistory: [entry] });
+    expect(container.querySelector("[data-testid='source-bassline-history']")?.textContent).toContain("source changed");
+    await act(async () => findButton(container, "Restart these settings")?.click());
+    expect(container.querySelector<HTMLSelectElement>("[data-testid='bassline-line-source']")?.value).toBe("generated");
+    expect(container.querySelector("[data-testid='source-bassline-history-restart-status']")?.textContent).toContain("No substitute was selected");
+    await chooseSourceBassline(container);
+    expect(container.querySelector("[data-testid='source-bassline-history-restart-status']")).toBeNull();
+  });
+
+  it("rejects a source-inconsistent saved end/actual range without substituting settings", async () => {
+    const fixture = sourceBasslineFixture(true);
+    const entry = createSourceBasslineHistoryEntry({
+      id: "source-history:range-mismatch",
+      completedAt: "2026-08-21T12:00:00.000Z",
+      reference: fixture.sourceCatalogEntry.reference,
+      snapshotSignature: fixture.sourceCatalogEntry.sourceBassline.snapshotSignature,
+      capturedHarmonySignature: fixture.sourceCatalogEntry.sourceBassline.capturedHarmony!.signature,
+      requestedBars: 2,
+      startBar: 1,
+      endBar: 1,
+      actualBars: 1,
+      level: 3,
+      croppedSourceNoteCount: 3,
+      projectedNoteCount: 2,
+      omittedSimultaneousNoteCount: 1,
+      boundaryClippedNoteCount: 0,
+      overlapClippedNoteCount: 1,
+      pitchReplacementCount: 0,
+      capturedHarmonyComparison: "match",
+    });
+    const container = await renderView({
+      vaultSourceBasslines: [fixture.sourceCatalogEntry],
+      sourceBasslineHistory: [entry],
+    });
+
+    await act(async () => findButton(container, "Restart these settings")?.click());
+    expect(container.querySelector<HTMLSelectElement>("[data-testid='bassline-line-source']")?.value).toBe("generated");
+    expect(container.querySelector("[data-testid='source-bassline-history-restart-status']")?.textContent).toContain("exact saved conditions are unavailable");
+  });
+
+  it("drops stale Source History save completion after a Level target change", async () => {
+    const fixture = sourceBasslineFixture(true);
+    let resolveSave: (() => void) | undefined;
+    const pending = new Promise<void>((resolve) => { resolveSave = resolve; });
+    const onSourceBasslineHistoryRecorded = vi.fn(() => pending);
+    const container = await renderView({
+      vaultSourceBasslines: [fixture.sourceCatalogEntry],
+      onSourceBasslineHistoryRecorded,
+    });
+    await chooseSourceBassline(container);
+    const level = container.querySelector<HTMLSelectElement>("#bassline-level")!;
+    await chooseSelect(level, "2");
+    await act(async () => findButton(container, "Review")?.click());
+    await act(async () => container.querySelector<HTMLButtonElement>("[data-testid='source-bassline-save-history']")?.click());
+    expect(container.textContent).toContain("Saving factual History.");
+
+    await chooseSelect(level, "1");
+    await act(async () => findButton(container, "Review")?.click());
+    expect(container.textContent).toContain("History is not yet saved.");
+    await act(async () => {
+      resolveSave?.();
+      await pending;
+      await Promise.resolve();
+    });
+    expect(container.textContent).toContain("History is not yet saved.");
+    expect(container.textContent).not.toContain("Factual session saved to History.");
+  });
+
+  it("drops stale Chord Context History rejection after the target changes", async () => {
+    let rejectSave: ((reason?: unknown) => void) | undefined;
+    const pending = new Promise<void>((_resolve, reject) => { rejectSave = reject; });
+    const onChordContextHistoryRecorded = vi.fn(() => pending);
+    const container = await renderView({ onChordContextHistoryRecorded });
+    await act(async () => findButton(container, "Review")?.click());
+    await act(async () => container.querySelector<HTMLButtonElement>("[data-testid='chord-context-save-history']")?.click());
+    expect(container.textContent).toContain("Saving factual History.");
+
+    await act(async () => container.querySelector<HTMLButtonElement>("[data-testid='chord-context-bpm-plus-four']")?.click());
+    expect(container.textContent).toContain("History is not yet saved.");
+    await act(async () => {
+      rejectSave?.(new Error("synthetic stale rejection"));
+      await pending.catch(() => undefined);
+      await Promise.resolve();
+    });
+    expect(container.textContent).toContain("History is not yet saved.");
+    expect(container.querySelector("[role='alert']")).toBeNull();
+  });
+});
 
 function sourceBasslineFixture(withHarmony: boolean) {
   const sourceId = "synthetic-source";
@@ -966,7 +1202,7 @@ function sourceBasslineFixture(withHarmony: boolean) {
   } as SavedProgressionBlock;
   const built = buildVaultChordContextSnapshot({ sourceReference: { ideaId: "source-idea", blockId: block.id }, block });
   if (!built.ok) throw new Error(built.error.message);
-  return Object.freeze({ displayTitle: "Synthetic source", searchableTitle: "synthetic source", safeSnapshot: built.snapshot, sourceCatalogEntry: Object.freeze({ displayTitle: "Synthetic source", reference: built.snapshot.source.reference, sourceBassline }) });
+  return Object.freeze({ displayTitle: "Synthetic source", searchableTitle: "synthetic source", safeSnapshot: built.snapshot, sourceCatalogEntry: Object.freeze({ displayTitle: "Synthetic source", reference: built.snapshot.source.reference, sourceBassline, harmonyComparison: withHarmony ? "match" as const : "comparison-unavailable" as const }) });
 }
 
 
