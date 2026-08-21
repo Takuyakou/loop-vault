@@ -2,17 +2,18 @@
   "schemaVersion": 1,
   "phaseId": "5.22",
   "status": "in-progress",
-  "activeStage": "P5.22-04",
+  "activeStage": null,
   "completedStages": [
     "P5.22-00",
     "P5.22-01",
     "P5.22-02",
-    "P5.22-03"
+    "P5.22-03",
+    "P5.22-04"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "c5e6c654fb60bf68d696046ae0c9e06829b79da7",
-  "lastVerifiedCommit": "51f9bd55ca275e6de0471d1d3bd418c6b9c69f8b",
+  "lastVerifiedCommit": "cc7dd62c407c50f7a8260f0b287189f1b29e37fe",
   "currentBranch": "feat/p522-source-bassline-practice",
   "requiredGates": {
     "P5.22-00": [
@@ -85,8 +86,15 @@
     "p522-03-bass-practice-regression": "pass",
     "p522-03-lint-typecheck": "pass",
     "p522-03-diff-privacy-hygiene": "pass",
-    "p522-03-phase-docs-validation": "pass"
+    "p522-03-phase-docs-validation": "pass",
+    "p522-04-level1-level2-determinism": "pass",
+    "p522-04-history-reference-lifecycle": "pass",
+    "p522-04-bass-practice-integration": "pass",
+    "p522-04-lint-typecheck-build": "pass",
+    "p522-04-production-e2e-responsive": "pass",
+    "p522-04-diff-privacy-hygiene": "pass",
+    "p522-04-phase-docs-validation": "pass"
   },
-  "nextAction": "P5.22-04 is implemented on the working tree and is awaiting an independent Stage commit plus exact-commit gate verification. P5.22-05 is NOT STARTED.",
-  "updatedAt": "2026-08-21T21:20:00+09:00"
+  "nextAction": "P5.22-04 is complete. P5.22-05 is NOT STARTED; begin the automated release-readiness stage through a separate next-stage workflow.",
+  "updatedAt": "2026-08-21T22:05:11+09:00"
 }
