@@ -2,16 +2,17 @@
   "schemaVersion": 1,
   "phaseId": "5.22",
   "status": "in-progress",
-  "activeStage": "P5.22-03",
+  "activeStage": null,
   "completedStages": [
     "P5.22-00",
     "P5.22-01",
-    "P5.22-02"
+    "P5.22-02",
+    "P5.22-03"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "c5e6c654fb60bf68d696046ae0c9e06829b79da7",
-  "lastVerifiedCommit": "ec414ef5018ac568f8d320bc467cbed684289b31",
+  "lastVerifiedCommit": "51f9bd55ca275e6de0471d1d3bd418c6b9c69f8b",
   "currentBranch": "feat/p522-source-bassline-practice",
   "requiredGates": {
     "P5.22-00": [
@@ -77,6 +78,6 @@
     "p522-03-diff-privacy-hygiene": "pass",
     "p522-03-phase-docs-validation": "pass"
   },
-  "nextAction": "P5.22-03 working-tree gates are complete. Independently review, explicitly stage/commit Stage03, and re-run required gates on the exact commit. Do not advance beyond the assigned stage.",
-  "updatedAt": "2026-08-21T20:30:04+09:00"
+  "nextAction": "P5.22-03 is complete. P5.22-04 is NOT STARTED; begin it through the next-stage workflow.",
+  "updatedAt": "2026-08-21T20:41:42+09:00"
 }
