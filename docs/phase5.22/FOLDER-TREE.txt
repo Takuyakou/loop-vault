@@ -1,0 +1,29 @@
+phase5.22/
+├─ README.md
+├─ CODEX-START-PROMPT.md
+├─ CODEX-RUN-REMAINING-STAGES.md
+├─ work-instructions.md
+├─ execution-state.json
+├─ proposal/
+│  ├─ ORIGINAL-PROPOSAL.md
+│  └─ P5.22-DESIGN-REVIEW.md
+├─ audit/
+│  └─ P5.22-00-repository-audit.md
+├─ contracts/
+│  ├─ 01-scope-product-contract.md
+│  ├─ 02-source-bassline-snapshot-contract.md
+│  ├─ 03-versioning-timing-bounds-contract.md
+│  ├─ 04-capture-opt-in-voice-selection-contract.md
+│  ├─ 05-practice-source-level-section-contract.md
+│  ├─ 06-lifecycle-history-export-contract.md
+│  └─ 07-security-privacy-contract.md
+├─ backlog/
+│  └─ FUTURE-EXTENSIONS.md
+└─ reports/
+   ├─ README.md
+   ├─ P5.22-00-audit-baseline.md
+   ├─ P5.22-01-snapshot-extraction.md
+   ├─ P5.22-02-capture-persistence.md
+   ├─ P5.22-03-source-bassline-practice.md
+   ├─ P5.22-04-simplification-history.md
+   └─ P5.22-05-product-acceptance.md
