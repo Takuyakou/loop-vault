@@ -41,7 +41,17 @@ describe.each([
     const restored = await storage.restoreBackup(backup.name, backup.token, 2, current?.token);
 
     expect(restored.revision).toBe(3);
-    expect(JSON.parse(restored.contents)).toMatchObject({ revision: 3, marker: "one" });
+    expect(JSON.parse(restored.contents)).toMatchObject({
+      app: "loopvault-practice",
+      fileVersion: 2,
+      revision: 3,
+      marker: "one",
+    });
+    await expect(storage.readCommitted()).resolves.toMatchObject({
+      contents: restored.contents,
+      revision: 3,
+      token: restored.token,
+    });
     await expect(storage.readBackup("../../private.json")).rejects.toThrow("invalid");
   });
 });
@@ -133,6 +143,23 @@ describe("BrowserPracticeStorage partial artifact cleanup", () => {
   });
 });
 
+describe("frozen release-v1 Practice reader contract", () => {
+  function parseWithReleaseV1Reader(contents: string): Record<string, unknown> {
+    const parsed = JSON.parse(contents) as Record<string, unknown>;
+    if (parsed.app !== "loopvault-practice" || parsed.fileVersion !== 1) {
+      throw new Error("release-v1 reader rejected fileVersion");
+    }
+    return parsed;
+  }
+
+  it("rejects v2 without mutating the document", () => {
+    const v2 = JSON.stringify({ app: "loopvault-practice", fileVersion: 2, revision: 1, marker: "v2" });
+    const unchanged = v2;
+    expect(() => parseWithReleaseV1Reader(v2)).toThrow(/release-v1 reader/);
+    expect(v2).toBe(unchanged);
+    expect(parseWithReleaseV1Reader(document(1, "v1"))).toMatchObject({ fileVersion: 1 });
+  });
+});
 describe("TauriPracticeStorage error normalization", () => {
   it.each([
     "Practice storage could not save stale revision.",

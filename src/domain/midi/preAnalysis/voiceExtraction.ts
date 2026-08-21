@@ -101,6 +101,9 @@ export function preScanMidiSource(
       velocity: note.velocity,
       startBeat: note.startTick / data.ticksPerBeat,
       durationBeats: note.durationTick / data.ticksPerBeat,
+      startTick: note.startTick,
+      durationTick: note.durationTick,
+      ticksPerQuarter: data.ticksPerBeat,
       ...(note.program !== undefined ? { program: note.program } : {}),
       ...(note.programExplicit !== undefined
         ? { programExplicit: note.programExplicit }

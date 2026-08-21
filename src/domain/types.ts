@@ -5,6 +5,7 @@ import type { RecommendationResult } from "./midi/candidateRecommendation";
 import type { Section } from "./midi/sections";
 import type { CandidateChordEvent, CandidateChordStats } from "./midi/candidateBlock";
 import type { ProgressionPracticeProgress } from "./practice/types";
+import type { SourceBasslineSnapshotV1 } from "./sourceBassline";
 
 export type Status =
   | "idea"
@@ -111,6 +112,7 @@ export interface SavedProgressionBlock {
   userEdited?: boolean;
   userVerified?: boolean;
   practice?: ProgressionPracticeProgress;
+  sourceBassline?: SourceBasslineSnapshotV1;
 }
 
 export interface ProgressionBlockCandidate {
@@ -216,7 +218,7 @@ export interface SongIdea {
 
 export interface VaultFile {
   app: "loopvault";
-  fileVersion: 1;
+  fileVersion: 2;
   settings: { monthlyGoal: number; language: AppLanguage; showRomanNumerals?: boolean };
   ideas: SongIdea[];
 }

@@ -34,7 +34,7 @@ const block: SavedProgressionBlock = {
 
 const vault: VaultFile = {
   app: "loopvault",
-  fileVersion: 1,
+  fileVersion: 2,
   settings: { monthlyGoal: 1, language: "ja" },
   ideas: [{
     id: "33333333-3333-4333-8333-333333333333",

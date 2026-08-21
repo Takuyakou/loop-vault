@@ -492,7 +492,7 @@ describe("vault store", () => {
     });
 
     await store.getState().flush();
-    expect(repository.saved[0]?.fileVersion).toBe(1);
+    expect(repository.saved[0]?.fileVersion).toBe(2);
     expect(repository.saved[0]?.ideas[0]?.chordMemo).toBe(originalMemo);
     const savedHistory = repository.saved[0]?.ideas[0]?.statusHistory ?? [];
     expect(savedHistory[savedHistory.length - 1]?.reason).toBe(

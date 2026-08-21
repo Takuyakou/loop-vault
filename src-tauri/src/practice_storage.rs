@@ -190,7 +190,7 @@ pub fn restore_practice_backup(
         return Err(storage_error("restore changed backup token"));
     }
     let next_revision = expected_revision.map_or(1, |revision| revision.saturating_add(1));
-    let restored_contents = with_revision(&backup.contents, next_revision)?;
+    let restored_contents = with_current_version_and_revision(&backup.contents, next_revision)?;
     let timestamp_token = backup_timestamp_token(&name)?;
     let revision = save_document_unlocked(
         &paths,
@@ -567,7 +567,10 @@ fn validate_document(contents: &str) -> Result<u64, String> {
     if object.get("app").and_then(Value::as_str) != Some("loopvault-practice") {
         return Err(storage_error("validate app marker"));
     }
-    if object.get("fileVersion").and_then(Value::as_u64) != Some(1) {
+    if !matches!(
+        object.get("fileVersion").and_then(Value::as_u64),
+        Some(1 | 2)
+    ) {
         return Err(storage_error("validate fileVersion"));
     }
     object
@@ -576,13 +579,14 @@ fn validate_document(contents: &str) -> Result<u64, String> {
         .ok_or_else(|| storage_error("validate revision"))
 }
 
-fn with_revision(contents: &str, revision: u64) -> Result<String, String> {
+fn with_current_version_and_revision(contents: &str, revision: u64) -> Result<String, String> {
     let mut value: Value =
         serde_json::from_str(contents).map_err(|_| storage_error("parse backup"))?;
-    value
+    let object = value
         .as_object_mut()
-        .ok_or_else(|| storage_error("validate backup envelope"))?
-        .insert("revision".to_string(), Value::from(revision));
+        .ok_or_else(|| storage_error("validate backup envelope"))?;
+    object.insert("fileVersion".to_string(), Value::from(2));
+    object.insert("revision".to_string(), Value::from(revision));
     let mut serialized = serde_json::to_string_pretty(&value)
         .map_err(|_| storage_error("serialize restored backup"))?;
     serialized.push('\n');
@@ -923,12 +927,37 @@ mod tests {
         assert_eq!(validate_document(&document(7, "ok")).unwrap(), 7);
         assert!(validate_document("{broken").is_err());
         assert!(validate_document("{\"app\":\"vault\",\"fileVersion\":1,\"revision\":1}").is_err());
+        assert_eq!(
+            validate_document(r#"{"app":"loopvault-practice","fileVersion":2,"revision":1}"#)
+                .unwrap(),
+            1
+        );
         assert!(validate_document(
-            "{\"app\":\"loopvault-practice\",\"fileVersion\":2,\"revision\":1}"
+            "{\"app\":\"loopvault-practice\",\"fileVersion\":3,\"revision\":1}"
         )
         .is_err());
     }
 
+    // Frozen test-only model of the public release-v1 reader contract.
+    fn validate_with_release_v1_reader(contents: &str) -> Result<(), String> {
+        let value: Value = serde_json::from_str(contents).map_err(|_| "release-v1 JSON")?;
+        let object = value.as_object().ok_or("release-v1 envelope")?;
+        if object.get("app").and_then(Value::as_str) != Some("loopvault-practice")
+            || object.get("fileVersion").and_then(Value::as_u64) != Some(1)
+        {
+            return Err("release-v1 fileVersion".to_string());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn frozen_release_v1_reader_rejects_v2_without_mutation() {
+        let v2 = r#"{"app":"loopvault-practice","fileVersion":2,"revision":1}"#.to_string() + "\n";
+        let unchanged = v2.clone();
+        assert!(validate_with_release_v1_reader(&v2).is_err());
+        assert_eq!(v2, unchanged);
+        assert!(validate_with_release_v1_reader(&document(1, "v1")).is_ok());
+    }
     #[test]
     fn cas_rejects_stale_save_and_preserves_committed_document() {
         let paths = test_paths("cas");
@@ -1097,7 +1126,7 @@ mod tests {
         save_document(&paths, &document(2, "two"), "20260802-123457", Some(1)).unwrap();
         let backup = list_valid_backups(&paths).unwrap().remove(0);
         let selected = read_document(&paths.backups.join(&backup.name)).unwrap();
-        let restored = with_revision(&selected.contents, 3).unwrap();
+        let restored = with_current_version_and_revision(&selected.contents, 3).unwrap();
         assert_eq!(
             save_document(
                 &paths,
@@ -1108,10 +1137,11 @@ mod tests {
             .unwrap(),
             3
         );
-        assert!(read_document(&paths.data)
-            .unwrap()
-            .contents
-            .contains("\"marker\": \"one\""));
+        let persisted = read_document(&paths.data).unwrap();
+        let value: Value = serde_json::from_str(&persisted.contents).unwrap();
+        assert_eq!(value.get("fileVersion").and_then(Value::as_u64), Some(2));
+        assert_eq!(value.get("revision").and_then(Value::as_u64), Some(3));
+        assert_eq!(value.get("marker").and_then(Value::as_str), Some("one"));
         cleanup(&paths);
     }
 }

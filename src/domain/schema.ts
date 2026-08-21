@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { normalizeVaultPracticeCompatibility } from "./practiceCompatibility";
 import type { SongIdea, VaultFile } from "./types";
+import { sourceBasslineSnapshotSchema } from "./sourceBassline";
 
 export const statusSchema = z.enum([
   "idea",
@@ -262,6 +263,7 @@ export const savedProgressionBlockSchema = z
     userEdited: z.boolean().optional(),
     userVerified: z.boolean().optional(),
     practice: progressionPracticeProgressSchema.optional(),
+    sourceBassline: sourceBasslineSnapshotSchema.optional(),
   })
   .strict();
 
@@ -304,7 +306,7 @@ export const vaultSettingsSchema = z
 export const vaultFileSchema: z.ZodType<VaultFile, z.ZodTypeDef, unknown> = z
   .object({
     app: z.literal("loopvault"),
-    fileVersion: z.literal(1),
+    fileVersion: z.literal(2),
     settings: vaultSettingsSchema,
     ideas: z.array(songIdeaSchema),
   })
@@ -313,7 +315,7 @@ export const vaultFileSchema: z.ZodType<VaultFile, z.ZodTypeDef, unknown> = z
 const vaultEnvelopeSchema = z
   .object({
     app: z.literal("loopvault"),
-    fileVersion: z.literal(1),
+    fileVersion: z.union([z.literal(1), z.literal(2)]),
     settings: vaultSettingsSchema,
     ideas: z.array(z.unknown()),
   })
@@ -351,6 +353,18 @@ export type VaultParseResult =
     };
 
 export function parseVaultFileJson(raw: string): VaultParseResult {
+  return parseVaultFileJsonWithMaximumVersion(raw, 2);
+}
+
+/** Compatibility evidence for the supported v1.1.0 TypeScript reader path. */
+export function parseVaultFileJsonAsLegacyV1(raw: string): VaultParseResult {
+  return parseVaultFileJsonWithMaximumVersion(raw, 1);
+}
+
+function parseVaultFileJsonWithMaximumVersion(
+  raw: string,
+  maximumVersion: 1 | 2,
+): VaultParseResult {
   let parsed: unknown;
 
   try {
@@ -365,18 +379,12 @@ export function parseVaultFileJson(raw: string): VaultParseResult {
     };
   }
 
-  const envelope = vaultEnvelopeSchema.safeParse(parsed);
-
-  if (!envelope.success) {
-    const futureVersion = futureFileVersion(parsed);
-    if (futureVersion !== undefined) {
-      return {
-        ok: false,
-        error: { kind: "future-version", fileVersion: futureVersion },
-      };
-    }
+  const detectedVersion = fileVersion(parsed);
+  if (detectedVersion !== undefined && detectedVersion > maximumVersion) {
+    return { ok: false, error: { kind: "future-version", fileVersion: detectedVersion } };
   }
 
+  const envelope = vaultEnvelopeSchema.safeParse(parsed);
   if (!envelope.success) {
     return {
       ok: false,
@@ -388,8 +396,10 @@ export function parseVaultFileJson(raw: string): VaultParseResult {
   const quarantine: QuarantinedRecord[] = [];
 
   envelope.data.ideas.forEach((idea, index) => {
-    const result = songIdeaSchema.safeParse(idea);
-    if (result.success) {
+    const result = envelope.data.fileVersion === 1 && containsSourceBassline(idea)
+      ? undefined
+      : songIdeaSchema.safeParse(idea);
+    if (result?.success) {
       ideas.push(result.data);
       return;
     }
@@ -397,36 +407,35 @@ export function parseVaultFileJson(raw: string): VaultParseResult {
     quarantine.push({
       index,
       value: idea,
-      issues: result.error.issues,
+      issues: result?.error.issues ?? [{
+        code: z.ZodIssueCode.custom,
+        path: ["progressionBlocks"],
+        message: "Vault v1 cannot contain a source bassline snapshot.",
+      }],
     });
   });
 
   const vault = normalizeVaultPracticeCompatibility({
     app: envelope.data.app,
-    fileVersion: envelope.data.fileVersion,
+    fileVersion: 2,
     settings: envelope.data.settings,
     ideas,
   });
-  return {
-    ok: true,
-    vault,
-    quarantine,
-  };
+  return { ok: true, vault, quarantine };
 }
 
-function futureFileVersion(value: unknown): number | undefined {
-  if (!value || typeof value !== "object") {
-    return undefined;
-  }
-
+function fileVersion(value: unknown): number | undefined {
+  if (!value || typeof value !== "object") return undefined;
   const record = value as Record<string, unknown>;
-  if (record.app !== "loopvault") {
-    return undefined;
-  }
+  return record.app === "loopvault" && typeof record.fileVersion === "number"
+    ? record.fileVersion
+    : undefined;
+}
 
-  if (typeof record.fileVersion !== "number") {
-    return undefined;
-  }
-
-  return record.fileVersion > 1 ? record.fileVersion : undefined;
+function containsSourceBassline(value: unknown): boolean {
+  if (!value || typeof value !== "object") return false;
+  const blocks = (value as Record<string, unknown>).progressionBlocks;
+  return Array.isArray(blocks) && blocks.some((block) => Boolean(block)
+    && typeof block === "object"
+    && Object.prototype.hasOwnProperty.call(block, "sourceBassline"));
 }

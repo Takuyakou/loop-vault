@@ -129,11 +129,11 @@ describe("saving a draft through the normal path", () => {
     expect(after.endBar).toBe(108);
   });
 
-  it("writes fileVersion 1 and nothing else", async () => {
+  it("writes fileVersion 2 and nothing else", async () => {
     const { repository } = await storeWithDraft(draftOf(14, 32));
     const written = repository.saved[repository.saved.length - 1];
 
-    expect(written.fileVersion).toBe(1);
+    expect(written.fileVersion).toBe(2);
     expect(() => vaultFileSchema.parse(JSON.parse(JSON.stringify(written)))).not.toThrow();
   });
 

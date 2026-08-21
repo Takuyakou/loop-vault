@@ -8,7 +8,7 @@ describe("real MIDI evaluation privacy", () => {
     const privatePath = "D:/Users/private/unreleased-song.mid";
     const vault: VaultFile = {
       app: "loopvault",
-      fileVersion: 1,
+      fileVersion: 2,
       settings: { monthlyGoal: 1, language: "ja" },
       ideas: [{
         id: "11111111-1111-4111-8111-111111111111",

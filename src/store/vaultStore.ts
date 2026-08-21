@@ -939,7 +939,7 @@ function futureVersionFromDetails(details: unknown): number | undefined {
 function currentVault(state: VaultStoreState): VaultFile {
   return {
     app: "loopvault",
-    fileVersion: 1,
+    fileVersion: 2,
     settings: state.settings,
     ideas: state.ideas,
   };

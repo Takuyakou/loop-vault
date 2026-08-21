@@ -239,7 +239,7 @@ describe("JsonVaultRepository", () => {
     const storage = new MemoryVaultStorage();
     const futureVault = JSON.stringify({
       ...createEmptyVault(),
-      fileVersion: 2,
+      fileVersion: 3,
     });
     storage.files.set(DATA_PATH, futureVault);
     const repo = new JsonVaultRepository(storage);
@@ -347,7 +347,7 @@ describe("JsonVaultRepository", () => {
     storage.files.set(DATA_PATH, serializeVault(createEmptyVault()));
     const imported = await repo.importFrom("C:/transposition-export.json");
 
-    expect(imported.vault.fileVersion).toBe(1);
+    expect(imported.vault.fileVersion).toBe(2);
     expect(imported.vault.ideas[0]?.progressionBlocks?.[0]?.practice)
       .toMatchObject({
         provisional: {

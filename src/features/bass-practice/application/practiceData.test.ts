@@ -149,7 +149,7 @@ describe("Practice derived views", () => {
     });
   });
   it("keeps an unsupported future-version canonical byte-for-byte read-only across every mutation path", async () => {
-    const storage = new MemoryPracticeStorage(); storage.committed = '{"app":"loopvault-practice","fileVersion":2,"revision":99,"future":"keep"}\n';
+    const storage = new MemoryPracticeStorage(); storage.committed = '{"app":"loopvault-practice","fileVersion":3,"revision":99,"future":"keep"}\n';
     const repository = new JsonPracticeRepository(storage, () => now); const controller = new PracticeDataController(repository);
     const before = await storage.readCommitted(); await controller.initialize();
     expect(controller.getSnapshot()).toMatchObject({ status: "future-version", error: expect.stringMatching(/read-only/i) });

@@ -73,6 +73,12 @@ export interface PreAnalysisNote {
   velocity: number;
   startBeat: number;
   durationBeats: number;
+  /** Raw-parser authority for detached source extraction; transient, never persisted. */
+  startTick?: number;
+  /** Raw-parser authority for detached source extraction; transient, never persisted. */
+  durationTick?: number;
+  /** Source PPQ paired with the raw ticks; transient, never persisted. */
+  ticksPerQuarter?: number;
   program?: number;
   programExplicit?: boolean;
 }

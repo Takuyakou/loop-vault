@@ -8,7 +8,7 @@ import {
   JsonPracticeRepository,
   MemoryPracticeStorage,
   validatePracticeFile,
-  type PracticeFileV1,
+  type PracticeFileV2,
 } from ".";
 
 const NOW = new Date("2026-08-02T10:00:00.000Z");
@@ -32,7 +32,7 @@ describe("JsonPracticeRepository", () => {
 
     await repository.save(addCompletedAttempt(initial.file, completed()));
     expect(storage.operations).toEqual(["read", "write-temp", "flush-close", "rename"]);
-    expect(JSON.parse(storage.committed!)).toMatchObject({ app: "loopvault-practice", fileVersion: 1 });
+    expect(JSON.parse(storage.committed!)).toMatchObject({ app: "loopvault-practice", fileVersion: 2 });
     expect(storage.committed).toMatch(/\n$/);
 
     const reloaded = await repository.load();
@@ -46,7 +46,7 @@ describe("JsonPracticeRepository", () => {
     const good = addCompletedAttempt(createEmptyPracticeFile(NOW), completed());
     await repository.save(good);
     const lastGood = storage.committed;
-    const corrupt: PracticeFileV1 = { ...good, attempts: [{ ...good.attempts[0], independentSuccess: false }] };
+    const corrupt: PracticeFileV2 = { ...good, attempts: [{ ...good.attempts[0], independentSuccess: false }] };
     await expect(repository.save(corrupt)).rejects.toThrow("independentSuccess");
     expect(storage.committed).toBe(lastGood);
   });
@@ -98,14 +98,14 @@ describe("JsonPracticeRepository", () => {
   });
 
   it("never overwrites future versions", async () => {
-    const storage = new MemoryPracticeStorage(); storage.committed = '{"app":"loopvault-practice","fileVersion":2}';
+    const storage = new MemoryPracticeStorage(); storage.committed = '{"app":"loopvault-practice","fileVersion":3}';
     storage.corrupt.set("loopvault/practice-v1.corrupt-20260802-123456-000000.json", "{old-broken");
     const repository = new JsonPracticeRepository(storage, () => NOW);
     await expect(repository.load()).rejects.toThrow("newer");
     await expect(repository.save(createEmptyPracticeFile(NOW))).rejects.toThrow(/read-only/i);
     await expect(repository.restoreBackup("practice-20260802-123456-000000.json")).rejects.toThrow(/read-only/i);
     await expect(repository.startFresh()).rejects.toThrow(/read-only/i);
-    expect(storage.committed).toContain('"fileVersion":2');
+    expect(storage.committed).toContain('"fileVersion":3');
     expect(storage.corrupt.size).toBe(1);
   });
 
@@ -116,7 +116,7 @@ describe("JsonPracticeRepository", () => {
     const [backup] = await storage.listBackups();
     storage.committed = "{broken";
     await repository.load();
-    const futureBytes = '{"app":"loopvault-practice","fileVersion":2}';
+    const futureBytes = '{"app":"loopvault-practice","fileVersion":3}';
     storage.committed = futureBytes;
 
     const load = repository.load();
@@ -130,7 +130,7 @@ describe("JsonPracticeRepository", () => {
   it("serializes concurrent saves, keeps latest revision, and bounds backups to 20", async () => {
     const storage = new MemoryPracticeStorage(); const repository = new JsonPracticeRepository(storage, () => NOW);
     let file = { ...createEmptyPracticeFile(NOW), settings: { ...createEmptyPracticeFile(NOW).settings, sessionTargetCount: 100 } };
-    const saves: Promise<PracticeFileV1>[] = [];
+    const saves: Promise<PracticeFileV2>[] = [];
     for (let index = 0; index < 23; index += 1) {
       const attempt = completed({ id: `attempt-${index}`, completedAt: `2026-08-02T10:00:${String(index).padStart(2, "0")}.000Z`, exercise: generatedExercise({ seed: `seed-${index}` }) });
       file = addCompletedAttempt(file, attempt); saves.push(repository.save(file));
@@ -151,7 +151,7 @@ describe("JsonPracticeRepository", () => {
 
   it("rejects unknown fields and private/raw payloads", () => {
     const file = addCompletedAttempt(createEmptyPracticeFile(NOW), completed());
-    expect(() => validatePracticeFile({ ...file, absolutePath: "C:/Users/<username>/private.mid" } as PracticeFileV1)).toThrow("strict schema");
+    expect(() => validatePracticeFile({ ...file, absolutePath: "C:/Users/<username>/private.mid" } as PracticeFileV2)).toThrow("strict schema");
     expect(JSON.stringify(file)).not.toMatch(/rawMidi|audioData|sourceFileName|C:\\Users/i);
   });
 
@@ -240,7 +240,7 @@ describe("JsonPracticeRepository", () => {
     const first = await repository.save(addCompletedAttempt(createEmptyPracticeFile(NOW), completed()));
     await repository.save(addCompletedAttempt(first, completed({ id: "second", completedAt: "2026-08-02T10:01:00.000Z", exercise: generatedExercise({ seed: "second-invalid-backup" }) })));
     const [backup] = await storage.listBackups(); const candidate = await storage.readBackup(backup.name);
-    const parsed = JSON.parse(candidate.contents) as PracticeFileV1;
+    const parsed = JSON.parse(candidate.contents) as PracticeFileV2;
     storage.backups.set(backup.name, `${JSON.stringify({ ...parsed, reviewQueue: [] })}\n`);
     storage.committed = "{broken";
     const recovery = await repository.load();
@@ -253,11 +253,13 @@ describe("JsonPracticeRepository", () => {
   });
   it("migrates legacy Practice data and atomically persists canonical Rhythm self-reviews", async () => {
     const storage = new MemoryPracticeStorage();
-    const legacy = { ...createEmptyPracticeFile(NOW), revision: 1 } as Record<string, unknown>;
+    const legacy = { ...createEmptyPracticeFile(NOW), fileVersion: 1, revision: 1 } as Record<string, unknown>;
     delete legacy.rhythmAttempts; delete legacy.rhythmSessions;
     storage.committed = `${JSON.stringify(legacy)}\n`;
     const repository = new JsonPracticeRepository(storage, () => NOW);
     const loaded = await repository.load();
+    expect(loaded.file.fileVersion).toBe(2);
+    expect(JSON.parse(storage.committed!).fileVersion).toBe(1);
     expect(loaded.file.rhythmAttempts).toEqual([]);
     expect(loaded.file.rhythmSessions).toEqual([]);
 

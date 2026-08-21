@@ -93,7 +93,7 @@ export class BrowserPracticeStorage implements PracticeStorage {
   async restoreBackup(name: string, backupToken: string, expectedRevision?: number, expectedToken?: string): Promise<PracticeStoredDocument> {
     const selected = await this.readBackup(name);
     if (selected.token !== backupToken) throw new Error("Practice storage rejected a changed backup token.");
-    const contents = withRevision(selected.contents, expectedRevision === undefined ? 1 : expectedRevision + 1);
+    const contents = withCurrentVersionAndRevision(selected.contents, expectedRevision === undefined ? 1 : expectedRevision + 1);
     const timestampToken = backupTimestamp(name) ?? timestampTokenFromDate(new Date());
     const revision = await this.commit(contents, timestampToken, expectedRevision, expectedToken);
     return { contents, revision, token: contentToken(contents) };
@@ -232,7 +232,7 @@ export class MemoryPracticeStorage implements PracticeStorage {
   async restoreBackup(name: string, backupToken: string, expectedRevision?: number, expectedToken?: string): Promise<PracticeStoredDocument> {
     const selected = await this.readBackup(name);
     if (selected.token !== backupToken) throw new Error("Practice storage rejected a changed backup token.");
-    const contents = withRevision(selected.contents, expectedRevision === undefined ? 1 : expectedRevision + 1);
+    const contents = withCurrentVersionAndRevision(selected.contents, expectedRevision === undefined ? 1 : expectedRevision + 1);
     const revision = await this.commit(contents, backupTimestamp(name) ?? timestampTokenFromDate(new Date()), expectedRevision, expectedToken);
     return { contents, revision, token: contentToken(contents) };
   }
@@ -249,7 +249,7 @@ function strictRevision(contents: string): number | undefined {
     const parsed = JSON.parse(contents) as Record<string, unknown>;
     const revision = parsed.revision;
     return parsed.app === "loopvault-practice"
-      && parsed.fileVersion === 1
+      && (parsed.fileVersion === 1 || parsed.fileVersion === 2)
       && Number.isSafeInteger(revision)
       && (revision as number) >= 1
       ? revision as number
@@ -266,9 +266,9 @@ function validatedNextRevision(contents: string, expectedRevision?: number): num
   return revision;
 }
 
-function withRevision(contents: string, revision: number): string {
+function withCurrentVersionAndRevision(contents: string, revision: number): string {
   const parsed = JSON.parse(contents) as Record<string, unknown>;
-  return `${JSON.stringify({ ...parsed, revision }, null, 2)}\n`;
+  return JSON.stringify({ ...parsed, fileVersion: 2, revision }, null, 2) + "\n";
 }
 
 function backupTimestamp(name: string): string | undefined {

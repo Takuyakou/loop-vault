@@ -51,7 +51,7 @@ function idea(overrides: Partial<SongIdea> = {}): SongIdea {
 function vault(overrides: Partial<VaultFile> = {}): VaultFile {
   return {
     app: "loopvault",
-    fileVersion: 1,
+    fileVersion: 2,
     settings: { monthlyGoal: 1, language: "ja" },
     ideas: [idea()],
     ...overrides,
@@ -110,14 +110,14 @@ describe("parseVaultFileJson", () => {
     expect(result.quarantine).toHaveLength(0);
   });
 
-  it("keeps fileVersion 1 and loads legacy status history without reasons", () => {
-    const result = parseVaultFileJson(JSON.stringify(vault()));
+  it("migrates to fileVersion 2 and loads legacy status history without reasons", () => {
+    const result = parseVaultFileJson(JSON.stringify({ ...vault(), fileVersion: 1 }));
 
     expect(result.ok).toBe(true);
     if (!result.ok) {
       return;
     }
-    expect(result.vault.fileVersion).toBe(1);
+    expect(result.vault.fileVersion).toBe(2);
     expect(result.vault.ideas[0]?.statusHistory).toEqual([
       { status: "idea", at: timestamp },
     ]);
@@ -244,11 +244,11 @@ describe("parseVaultFileJson", () => {
     const result = parseVaultFileJson(JSON.stringify(vault({ ideas: [withVoicing] })));
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.vault.fileVersion).toBe(1);
+    expect(result.vault.fileVersion).toBe(2);
     expect(result.vault.ideas[0]?.progressionBlocks?.[0]?.chords[0]?.eventId).toBe("event-1");
   });
 
-  it("loads optional practice progress while old blocks remain valid at fileVersion 1", () => {
+  it("loads optional practice progress while old blocks remain valid at fileVersion 2", () => {
     const withPractice = idea({
       progressionBlocks: [{
         id: "91d92f3c-fc9d-4fe5-8cc9-4bec2d7fb887",
@@ -268,11 +268,11 @@ describe("parseVaultFileJson", () => {
     const result = parseVaultFileJson(JSON.stringify(vault({ ideas: [withPractice] })));
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.vault.fileVersion).toBe(1);
+    expect(result.vault.fileVersion).toBe(2);
     expect(result.vault.ideas[0]?.progressionBlocks?.[0]?.practice?.confirmedLevel).toBe(2);
   });
 
-  it("loads optional L4/L5 transposition progress without changing fileVersion 1", () => {
+  it("loads optional L4/L5 transposition progress without changing fileVersion 2", () => {
     const withTransposition = idea({
       progressionBlocks: [{
         id: "91d92f3c-fc9d-4fe5-8cc9-4bec2d7fb887",
@@ -306,7 +306,7 @@ describe("parseVaultFileJson", () => {
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.vault.fileVersion).toBe(1);
+    expect(result.vault.fileVersion).toBe(2);
     expect(result.vault.ideas[0]?.progressionBlocks?.[0]?.practice)
       .toMatchObject({
         provisional: {
@@ -358,7 +358,7 @@ describe("parseVaultFileJson", () => {
     expect(result.ok).toBe(true);
     expect(reloaded.ok).toBe(true);
     if (!result.ok || !reloaded.ok) return;
-    expect(result.vault.fileVersion).toBe(1);
+    expect(result.vault.fileVersion).toBe(2);
     const firstKeys = result.vault.ideas[0]?.progressionBlocks
       ?.map((block) => block.practice?.provisional?.confirmationPitchClasses);
     expect(firstKeys?.[0]).toHaveLength(2);

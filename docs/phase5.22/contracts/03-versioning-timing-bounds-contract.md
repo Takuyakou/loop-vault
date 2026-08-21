@@ -42,7 +42,7 @@ Captured harmony is optional. It is created only when each user-confirmed chord 
 - one constant 4/4 range of 1..12 complete bars, maximum 48 quarter-note beats;
 - canonical note/harmony order and valid SHA-256 signatures.
 
-The note cap is 3.2768% of the P1 250,000-note MIDI intake cap (about 1/30.52), and permits more than 170 events per beat at maximum length. The 1 MiB snapshot cap is 1/16 of the aggregate Vault cap. These are security/synthetic bounds; no committable privacy-safe empirical user distribution is currently available, so the documentation makes no empirical percentile claim.
+The 8,192-note cap and 1 MiB canonical UTF-8 cap are independent security ceilings. With the current canonical note format, the byte cap binds first: a valid snapshot can reach the exact 1,048,576-byte boundary below 8,192 notes, while 8,191 and 8,192 minimally encoded notes exceed the byte budget. Therefore the note ratio does not imply that a maximum-length persisted snapshot can hold more than 170 events per beat. The note cap remains 3.2768% of the P1 250,000-note MIDI intake cap (about 1/30.52), and the 1 MiB snapshot cap is 1/16 of the aggregate Vault cap. These are security/synthetic bounds; no committable privacy-safe empirical user distribution is currently available, so the documentation makes no empirical percentile claim.
 
 ## Aggregate Vault bound
 

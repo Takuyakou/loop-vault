@@ -232,7 +232,7 @@ The existing P1 16 MiB check is import-only today; Stage02 must add operation-wi
 
 A structurally valid legacy v1 Vault already above 16 MiB enters localized size-recovery readonly mode, not quarantine or automatic rewrite. Add, duplicate, import, merge, and export are blocked. Only delete/shrink operations whose full canonical migrated v2 result is at or below 16 MiB may atomically commit; otherwise the legacy file remains unchanged.
 
-8,192 is 3.2768% of the 250,000-note MIDI intake cap (about 1/30.52). The 1 MiB snapshot cap is 1/16 of the aggregate Vault cap. No private corpus or empirical distribution is currently available, so Stage00 makes only synthetic/security-derived claims. Optional privacy-safe aggregate evidence may be added later without recording paths, titles, labels, or note dumps.
+The 8,192-note and 1 MiB canonical UTF-8 caps are independent security ceilings. With the current canonical note format, the byte cap binds first: exact-byte fixtures prove acceptance at 1,048,576 bytes and rejection at +1, while 8,191/8,192 minimally encoded notes exceed the byte budget and 8,193 is rejected by the note-count guard before sorting. The note cap is still 3.2768% of the 250,000-note MIDI intake cap (about 1/30.52), but that ratio is not a persisted density claim. The 1 MiB snapshot cap is 1/16 of the aggregate Vault cap. No private corpus or empirical distribution is currently available, so only synthetic/security-derived claims are made. Optional privacy-safe aggregate evidence may be added later without recording paths, titles, labels, or note dumps.
 
 Required tests:
 

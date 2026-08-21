@@ -258,7 +258,7 @@ export class JsonVaultRepository implements VaultRepository {
 export function createEmptyVault(): VaultFile {
   return {
     app: "loopvault",
-    fileVersion: 1,
+    fileVersion: 2,
     settings: { monthlyGoal: 1, language: "ja", showRomanNumerals: true },
     ideas: [],
   };
@@ -288,7 +288,7 @@ export function mergeVaults(current: VaultFile, incoming: VaultFile): VaultFile 
 
   return {
     app: "loopvault",
-    fileVersion: 1,
+    fileVersion: 2,
     settings: incoming.settings ?? current.settings,
     ideas: [...ideasById.values()].sort((a, b) =>
       b.updatedAt.localeCompare(a.updatedAt),

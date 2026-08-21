@@ -18,7 +18,7 @@ import {
   addCompletedRhythmAttempt,
   JsonPracticeRepository,
   PracticeRepositoryError,
-  type PracticeFileV1,
+  type PracticeFileV2,
   type PracticeBackupMetadata,
   type PracticeLoadResult,
   type PracticeQuarantine,
@@ -35,10 +35,10 @@ export type PracticeSettingsPatch = Partial<Omit<PracticeSettings, "version">>;
 
 export type PracticeDataSnapshot =
   | { readonly status: "disabled" | "loading"; readonly file?: undefined; readonly quarantine: readonly PracticeQuarantine[]; readonly backups?: undefined; readonly error?: undefined }
-  | { readonly status: "ready"; readonly file: PracticeFileV1; readonly quarantine: readonly PracticeQuarantine[]; readonly backups?: undefined; readonly error?: string }
+  | { readonly status: "ready"; readonly file: PracticeFileV2; readonly quarantine: readonly PracticeQuarantine[]; readonly backups?: undefined; readonly error?: string }
   | { readonly status: "recovery-required"; readonly file?: undefined; readonly quarantine: readonly PracticeQuarantine[]; readonly backups: readonly PracticeBackupMetadata[]; readonly recovery: PracticeRecoveryMetadata; readonly error: string }
   | { readonly status: "future-version"; readonly file?: undefined; readonly quarantine: readonly PracticeQuarantine[]; readonly backups?: undefined; readonly error: string }
-  | { readonly status: "error"; readonly file?: PracticeFileV1; readonly quarantine: readonly PracticeQuarantine[]; readonly backups: readonly PracticeBackupMetadata[]; readonly error: string };
+  | { readonly status: "error"; readonly file?: PracticeFileV2; readonly quarantine: readonly PracticeQuarantine[]; readonly backups: readonly PracticeBackupMetadata[]; readonly error: string };
 
 export interface ClaimedPracticeExercise {
   readonly claimId: string;
@@ -51,7 +51,7 @@ export interface ClaimedPracticeExercise {
 export class PracticeDataController {
   private snapshot: PracticeDataSnapshot = { status: "loading", quarantine: [] };
   private readonly listeners = new Set<() => void>();
-  private file?: PracticeFileV1;
+  private file?: PracticeFileV2;
   private saveQueue = Promise.resolve();
 
   constructor(private readonly repository: JsonPracticeRepository) {}
@@ -250,7 +250,7 @@ export class PracticeDataController {
   private async safeListBackups(): Promise<readonly PracticeBackupMetadata[]> {
     try { return await this.repository.listBackups(); } catch { return []; }
   }
-  private async persistMutation(create: (file: PracticeFileV1) => PracticeFileV1): Promise<PracticeFileV1> {
+  private async persistMutation(create: (file: PracticeFileV2) => PracticeFileV2): Promise<PracticeFileV2> {
     if (!this.file) throw new Error("Practice progress is not ready.");
     let candidate = create(this.file);
     if (candidate === this.file) return this.file;
@@ -270,7 +270,7 @@ export interface PracticeHomeSummary {
   readonly nextFocus: PracticeIssue | "degree-recall";
 }
 
-export function derivePracticeHomeSummary(file: PracticeFileV1, now: Date): PracticeHomeSummary {
+export function derivePracticeHomeSummary(file: PracticeFileV2, now: Date): PracticeHomeSummary {
   const day = now.toISOString().slice(0, 10);
   const validAttempts = file.attempts.filter((attempt) => attempt.completedAt && attempt.rating);
   const issueCounts = new Map<PracticeIssue, number>();
@@ -298,7 +298,7 @@ export interface PracticeHistorySummary {
   readonly nextFocus: PracticeIssue | "degree-recall";
 }
 
-export function derivePracticeHistory(file: PracticeFileV1, limit = 100): readonly PracticeHistorySummary[] {
+export function derivePracticeHistory(file: PracticeFileV2, limit = 100): readonly PracticeHistorySummary[] {
   const summarize = <T extends { readonly id: string; readonly startedAt: string; readonly completedAt?: string; readonly targetCount: number; readonly attemptIds: readonly string[] }>(session: T, attempts: readonly (PracticeAttempt | RhythmPracticeAttempt)[], mode: "degree" | "rhythm"): PracticeHistorySummary | undefined => {
     const byId = new Map(attempts.map((attempt) => [attempt.id, attempt]));
     const completed = session.attemptIds.map((id) => byId.get(id)).filter((attempt): attempt is PracticeAttempt | RhythmPracticeAttempt => Boolean(attempt));
@@ -309,7 +309,7 @@ export function derivePracticeHistory(file: PracticeFileV1, limit = 100): readon
   };
   return [...file.sessions.map((session) => summarize(session, file.attempts, "degree")), ...file.rhythmSessions.map((session) => summarize(session, file.rhythmAttempts, "rhythm"))].filter((summary): summary is PracticeHistorySummary => Boolean(summary)).sort((a, b) => b.at.localeCompare(a.at) || a.id.localeCompare(b.id)).slice(0, limit);
 }
-export function restoreClaimedExercise(file: PracticeFileV1, sessionId: string): ClaimedPracticeExercise | undefined {
+export function restoreClaimedExercise(file: PracticeFileV2, sessionId: string): ClaimedPracticeExercise | undefined {
   const item = file.reviewQueue.find((candidate) => candidate.claim?.sessionId === sessionId);
   if (!item?.claim) return undefined;
   return {
@@ -321,7 +321,7 @@ export function restoreClaimedExercise(file: PracticeFileV1, sessionId: string):
   };
 }
 
-function isQueueItemEligible(item: ReviewQueueItem, file: PracticeFileV1, sessionId: string, now: Date): boolean {
+function isQueueItemEligible(item: ReviewQueueItem, file: PracticeFileV2, sessionId: string, now: Date): boolean {
   if (item.claim) return false;
   const source = file.attempts.find(({ id }) => id === item.sourceAttemptId);
   const session = file.sessions.find(({ id }) => id === sessionId);
@@ -359,7 +359,7 @@ function recoveryMessage(result: PracticeLoadResult): string | undefined {
   return undefined;
 }
 function errorMessage(error: unknown): string { return error instanceof Error ? error.message : "Practice progress could not be loaded."; }
-function addAttemptAndAcknowledgeClaim(file: PracticeFileV1, attempt: PracticeAttempt): PracticeFileV1 {
+function addAttemptAndAcknowledgeClaim(file: PracticeFileV2, attempt: PracticeAttempt): PracticeFileV2 {
   return addCompletedAttempt(file, attempt);
 }
 function isStaleRevisionError(error: unknown): boolean {
