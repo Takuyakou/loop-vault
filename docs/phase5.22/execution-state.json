@@ -13,7 +13,7 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "c5e6c654fb60bf68d696046ae0c9e06829b79da7",
-  "lastVerifiedCommit": "cc7dd62c407c50f7a8260f0b287189f1b29e37fe",
+  "lastVerifiedCommit": "007f36555cacbeecbba5ac5e78c2414bcd9e6af6",
   "currentBranch": "feat/p522-source-bassline-practice",
   "requiredGates": {
     "P5.22-00": [
@@ -115,12 +115,12 @@
     "p522-05-production-playwright-accessibility": "pass",
     "p522-05-full-playwright-visual": "pass",
     "p522-05-web-build": "pass",
-    "p522-05-tauri-release-artifacts": "not-run",
+    "p522-05-tauri-release-artifacts": "pass",
     "p522-05-security-audits": "pass",
     "p522-05-deterministic-benchmark": "pass",
     "p522-05-diff-privacy-hygiene": "pass",
     "p522-05-human-acceptance": "not-run"
   },
-  "nextAction": "Create a two-file visual-baseline hygiene commit, then the explicit-path P5.22-05 hardening/report/state commit. Rerun full required gates and fresh Tauri artifacts on that exact Stage05 commit before human product acceptance. Do not merge or push without separate authorization.",
-  "updatedAt": "2026-08-22T02:34:00+09:00"
+  "nextAction": "Create an explicit-path docs-only closure commit for the Stage05 report and execution state, validate that closure commit, then request human product acceptance. Do not merge or push without separate authorization.",
+  "updatedAt": "2026-08-22T03:22:00+09:00"
 }
