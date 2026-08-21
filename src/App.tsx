@@ -35,7 +35,7 @@ import { VaultView } from "./views/VaultView";
 import { ProgressionDetailView } from "./views/ProgressionDetailView";
 import { PracticeView } from "./views/PracticeView";
 import { isBassPracticeBasslineEchoEnabled, isBassPracticeDegreeEchoEnabled, isBassPracticeRhythmEchoEnabled, isBassPracticeRootMotionEnabled } from "./features/bass-practice/application/featureFlag";
-import { buildVaultPickerCandidateViews, type VaultPickerCandidateView } from "./features/bass-practice/application/vaultPickerCandidates";
+import { buildVaultPickerCandidateViews, buildVaultSourceBasslineCandidateViews, type VaultPickerCandidateView, type VaultSourceBasslineCandidateView } from "./features/bass-practice/application/vaultPickerCandidates";
 import type { VaultChordContextSnapshot } from "./features/bass-practice/domain";
 import {
   derivePracticeHistory,
@@ -99,6 +99,7 @@ type View = AppView;
 const pipeline: Status[] = ["idea", "loop", "arrange", "mix", "done"];
 const DISABLED_PRACTICE_DATA: PracticeDataSnapshot = { status: "disabled", quarantine: [] };
 const EMPTY_VAULT_PICKER_CANDIDATES: readonly VaultPickerCandidateView[] = Object.freeze([]);
+const EMPTY_VAULT_SOURCE_BASSLINES: readonly VaultSourceBasslineCandidateView[] = Object.freeze([]);
 const BassPracticeView = lazy(async () => {
   const module = await import("./features/bass-practice/ui/BassPracticeModeView");
   return { default: module.BassPracticeModeView };
@@ -244,6 +245,15 @@ function App() {
         settings.language === "ja" ? "\u7121\u984c\u306e\u9032\u884c" : "Untitled progression",
       )
       : EMPTY_VAULT_PICKER_CANDIDATES,
+    [practiceMode, settings.language, view, visibleIdeas],
+  );
+  const vaultSourceBasslines = useMemo(
+    () => view === "practice" && practiceMode === "bass-practice"
+      ? buildVaultSourceBasslineCandidateViews(
+        visibleIdeas,
+        settings.language === "ja" ? "\u7121\u984c\u306e\u9032\u884c" : "Untitled progression",
+      )
+      : EMPTY_VAULT_SOURCE_BASSLINES,
     [practiceMode, settings.language, view, visibleIdeas],
   );
   const chordContextSnapshots = useMemo(
@@ -760,6 +770,7 @@ async function analyzeMidiPath(path: string) {
                         chordContextSnapshot={chordContextSnapshot}
                         chordContextSnapshots={chordContextSnapshots}
                         vaultPickerCandidates={vaultPickerCandidates}
+                        vaultSourceBasslines={vaultSourceBasslines}
                         initialClaim={practiceClaim}
                         initialRound={practiceSession.round}
                         initialSettings={practiceData.file?.settings}

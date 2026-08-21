@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "phaseId": "5.22",
   "status": "in-progress",
-  "activeStage": null,
+  "activeStage": "P5.22-03",
   "completedStages": [
     "P5.22-00",
     "P5.22-01",
@@ -39,6 +39,14 @@
       "p522-02-lint-typecheck-rust-build",
       "p522-02-security-diff-privacy-hygiene",
       "p522-02-phase-docs-validation"
+    ],
+    "P5.22-03": [
+      "p522-03-source-level3-window",
+      "p522-03-playback-record-compare",
+      "p522-03-bass-practice-regression",
+      "p522-03-lint-typecheck",
+      "p522-03-diff-privacy-hygiene",
+      "p522-03-phase-docs-validation"
     ]
   },
   "gateResults": {
@@ -61,8 +69,14 @@
     "p522-02-full-regression": "pass",
     "p522-02-lint-typecheck-rust-build": "pass",
     "p522-02-security-diff-privacy-hygiene": "pass",
-    "p522-02-phase-docs-validation": "pass"
+    "p522-02-phase-docs-validation": "pass",
+    "p522-03-source-level3-window": "pass",
+    "p522-03-playback-record-compare": "pass",
+    "p522-03-bass-practice-regression": "pass",
+    "p522-03-lint-typecheck": "pass",
+    "p522-03-diff-privacy-hygiene": "pass",
+    "p522-03-phase-docs-validation": "pass"
   },
-  "nextAction": "P5.22-02 is complete. P5.22-03 is NOT STARTED; begin it through the next-stage workflow.",
-  "updatedAt": "2026-08-21T18:41:33+09:00"
+  "nextAction": "P5.22-03 working-tree gates are complete. Independently review, explicitly stage/commit Stage03, and re-run required gates on the exact commit. Do not advance beyond the assigned stage.",
+  "updatedAt": "2026-08-21T20:30:04+09:00"
 }

@@ -259,7 +259,7 @@ export function RhythmPracticeView({
         ) : null}
 
         {error ? <p role="alert" className="mt-3 text-sm text-[var(--lv-danger)]">{error}</p> : null}
-        {status === "thinking" || status === "playing" || status === "review" ? <RecordCompareSection mode="rhythm" resetKey={`rhythm:${tempo}:${meter}:${countInBars}`} countInMs={Math.round(countInBars * Number(meter.split("/")[0]) * 60_000 / tempo)} targetPlayer={createTargetPlayer((onEnded) => void previewMidiNotes(exercise.targetEvents.map((event) => ({ pitch: 40, startBeat: event.startBeat, durationBeats: event.durationBeats, velocity: 100 })), tempo, "freepats-picked-bass", { onEnded }), stopPreview)} /> : null}
+        {status === "thinking" || status === "playing" || status === "review" ? <RecordCompareSection language={language} mode="rhythm" resetKey={`rhythm:${tempo}:${meter}:${countInBars}`} countInMs={Math.round(countInBars * Number(meter.split("/")[0]) * 60_000 / tempo)} targetPlayer={createTargetPlayer((onEnded) => void previewMidiNotes(exercise.targetEvents.map((event) => ({ pitch: 40, startBeat: event.startBeat, durationBeats: event.durationBeats, velocity: 100 })), tempo, "freepats-picked-bass", { onEnded }), stopPreview)} /> : null}
 
         <div className="mt-5">
           <Button data-primary-action disabled={(status === "review" && !rating) || saving} onClick={primary}>

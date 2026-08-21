@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { makeChordSymbol } from "../../../domain/chords";
+import { extractSourceBasslineSnapshot } from "../../../domain/sourceBassline";
 import { makeIdea } from "../../../domain/testFactory";
 import { createChordContextHistoryEntry } from "../domain/chordContextHistory";
 import type { SavedProgressionBlock, SongIdea } from "../../../domain/types";
 import {
   buildVaultPickerCandidateViews,
+  buildVaultSourceBasslineCandidateViews,
   filterVaultPickerCandidates,
   groupVaultPickerCandidates,
   normalizeDisplayTitle,
@@ -129,6 +131,44 @@ describe("Vault picker candidate ViewModel", () => {
     );
     expect(afterDelete.some((candidate) =>
       candidate.safeSnapshot.signature === original.safeSnapshot.signature)).toBe(false);
+  });
+  it("catalogues a strict immutable source independently from current Chord Context support", () => {
+    const sourceBassline = extractSourceBasslineSnapshot({
+      selectedSourceId: "synthetic-source",
+      selectedVoiceId: "synthetic-voice",
+      range: { authority: "raw-integer-ticks", constantMeterProven: true, barAlignmentProven: true, sourceId: "synthetic-source", startTick: 0, endTick: 16, sourceEndTick: 16, ticksPerQuarter: 4, meter: { numerator: 4, denominator: 4 } },
+      notes: [{ sourceId: "synthetic-source", voiceId: "synthetic-voice", pitch: 40, velocity: 0.8, startTick: 0, durationTick: 4, ticksPerQuarter: 4 }],
+    });
+    const block = { ...progression("source-block"), sourceBassline };
+    const source = idea("source-idea", "Live title is not detached data", block);
+    const first = buildVaultSourceBasslineCandidateViews([source], "Untitled progression")[0]!;
+    const reloaded = buildVaultSourceBasslineCandidateViews(structuredClone([source]), "Untitled progression")[0]!;
+    const unsupportedMeter = idea("source-idea", source.title, { ...block, timeSignature: "3/4" });
+    const currentChordMismatch = idea("source-idea", source.title, {
+      ...block,
+      detectedKey: "D major",
+      chords: progression("edited", 2).chords,
+    });
+
+    expect(first.displayTitle).toBe("Live title is not detached data");
+    expect(first.reference).toEqual({ ideaId: "source-idea", blockId: "source-block" });
+    expect(first.sourceBassline).toEqual(sourceBassline);
+    expect(first.sourceBassline).not.toBe(sourceBassline);
+    expect(reloaded.sourceBassline).toEqual(sourceBassline);
+    expect(buildVaultPickerCandidateViews([unsupportedMeter], "Untitled progression")).toEqual([]);
+    expect(buildVaultSourceBasslineCandidateViews([unsupportedMeter], "Untitled progression")[0]?.sourceBassline).toEqual(sourceBassline);
+    expect(buildVaultSourceBasslineCandidateViews([currentChordMismatch], "Untitled progression")[0]?.sourceBassline).toEqual(sourceBassline);
+    expect(Object.isFrozen(first)).toBe(true);
+    expect(Object.isFrozen(first.reference)).toBe(true);
+    expect(Object.isFrozen(first.sourceBassline)).toBe(true);
+    expect(Object.isFrozen(first.sourceBassline.notes)).toBe(true);
+    expect(JSON.stringify(first.sourceBassline)).not.toMatch(/title|path|voiceId|sourceId/i);
+
+    expect(buildVaultSourceBasslineCandidateViews([
+      { ...source, progressionBlocks: [] },
+    ], "Untitled progression")).toEqual([]);
+    const corrupt = { ...block, sourceBassline: { ...sourceBassline, voiceId: "forbidden" } as never };
+    expect(buildVaultSourceBasslineCandidateViews([idea("source-idea", "Corrupt", corrupt)], "Untitled progression")).toEqual([]);
   });
   it("matches normalized live titles and retains the established key, section, and chord search", () => {
     const candidates = buildVaultPickerCandidateViews([

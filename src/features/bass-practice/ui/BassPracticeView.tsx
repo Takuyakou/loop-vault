@@ -483,7 +483,7 @@ function DegreeSessionWorkspace({
           ) : null}
 
           {state.status === "thinking" || state.status === "playing" || state.status === "review" ? (
-            <RecordCompareSection
+            <RecordCompareSection language={language}
               mode="degree"
               resetKey={`degree:${activeExercise.id}`}
               countInMs={Math.round((4 * 60_000) / activeExercise.tempo)}

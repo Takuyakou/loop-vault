@@ -24,8 +24,11 @@ export const DEFAULT_CHORD_CONTEXT_LISTEN_MODE: ChordContextListenMode = "bass-a
 export const DEFAULT_CHORD_CONTEXT_PLAY_MODE: ChordContextPlayMode = "chords-only";
 
 export interface ChordContextMeter { readonly numerator: 4; readonly denominator: 4; }
-/** Source-neutral by design; the P5.18-02 Vault adapter owns snapshot conversion. */
-export interface ChordContextChordEvent { readonly id: string; readonly chord: ChordSymbol; readonly startBeat: number; readonly durationBeats: number; }
+/** Accepts either a validated chord symbol or strict captured pitch-class facts. */
+interface ChordContextChordEventBase { readonly id: string; readonly startBeat: number; readonly durationBeats: number; }
+export type ChordContextChordEvent =
+  | (ChordContextChordEventBase & { readonly chord: ChordSymbol; readonly pitchClasses?: never })
+  | (ChordContextChordEventBase & { readonly chord?: never; readonly pitchClasses: readonly number[] });
 export interface ChordContextBassEvent { readonly id: string; readonly pitch: number; readonly startBeat: number; readonly durationBeats: number; readonly velocity: number; }
 interface ChordContextPlaybackBase {
   readonly bpm: number;
@@ -189,7 +192,7 @@ export function buildChordContextPlaybackPlan(input: ChordContextPlaybackInput):
   for (const event of chords) {
     const timingError = validateTimedEvent(event);
     if (timingError) return failure("invalid-event", timingError.message, timingError.eventId);
-    if (!isSupportedChord(event.chord)) return failure("unsupported-chord", "Chord Context cannot voice this chord safely.", event.id);
+    if ("chord" in event ? !isSupportedChord(event.chord) : !isCanonicalPitchClasses(event.pitchClasses)) return failure("unsupported-chord", "Chord Context cannot voice this chord safely.", event.id);
   }
   for (const event of bass) {
     const timingError = validateTimedEvent(event);
@@ -201,7 +204,9 @@ export function buildChordContextPlaybackPlan(input: ChordContextPlaybackInput):
   const events: ChordContextScheduledEvent[] = [];
   let previousNotes: readonly number[] = [];
   for (const event of chords.sort(compareChordEvents)) {
-    const voicing = voiceChordContext(event.chord, previousNotes);
+    const voicing = "chord" in event
+      ? voiceChordContext(event.chord, previousNotes)
+      : voiceCapturedPitchClasses(event.pitchClasses, previousNotes);
     if (!voicing.ok) return failure("unsupported-chord", "Chord Context cannot voice this chord safely.", event.id);
     previousNotes = voicing.notes;
     if (layers.includes("chords")) events.push(Object.freeze({ id: event.id, layer: "chords" as const, beat: event.startBeat, timeSeconds: (countInBeats + event.startBeat) * beatSeconds, durationSeconds: event.durationBeats * beatSeconds, gainDb: CHORD_CONTEXT_DEFAULT_MIX.chordsDb, notes: voicing.notes }));
@@ -282,6 +287,18 @@ function midiCandidates(pitchClass: number): number[] {
 function voiceScore(note: number, previousNotes: readonly number[], center: number): number {
   const centerDistance = Math.abs(note - center);
   return previousNotes.length ? Math.min(...previousNotes.map((previous) => Math.abs(note - previous))) * 8 + centerDistance : centerDistance;
+}
+function voiceCapturedPitchClasses(pitchClasses: readonly number[], previousNotes: readonly number[]): ChordContextVoiceResult {
+  if (!isCanonicalPitchClasses(pitchClasses)) return { ok: false, error: "unsupported-chord" };
+  const notes = pitchClasses.map((pitchClass) => selectUpperVoice(pitchClass, previousNotes, 66)).sort((left, right) => left - right);
+  return notes.every((note) => note >= CHORD_CONTEXT_MIN_MIDI && note <= CHORD_CONTEXT_MAX_MIDI)
+    ? { ok: true, notes: Object.freeze(notes) }
+    : { ok: false, error: "unsupported-chord" };
+}
+function isCanonicalPitchClasses(value: unknown): value is readonly number[] {
+  return Array.isArray(value) && value.length > 0 && value.length <= 12
+    && value.every((pitchClass, index) => Number.isInteger(pitchClass) && pitchClass >= 0 && pitchClass <= 11
+      && (index === 0 || value[index - 1] < pitchClass));
 }
 function isSupportedChord(chord: ChordSymbol): boolean { return isRecord(chord) && Number.isInteger(chord.root) && (chord.bass === undefined || Number.isInteger(chord.bass)) && supportedQualities.has(chord.quality as ChordQuality) && Array.isArray(chord.tensions) && chord.tensions.every((tension) => supportedTensions.has(tension as Tension)); }
 function isSupportedMeter(meter: unknown): meter is ChordContextMeter { return isRecord(meter) && meter.numerator === 4 && meter.denominator === 4; }

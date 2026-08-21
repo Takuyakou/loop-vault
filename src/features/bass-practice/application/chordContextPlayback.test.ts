@@ -112,6 +112,24 @@ describe("Chord Context upper voicing", () => {
     expect(first.ok).toBe(true);
   });
 
+
+  it("voices canonical captured pitch classes without reconstructing a chord symbol", () => {
+    const result = buildChordContextPlaybackPlan(listenInput({
+      chordEvents: [{ id: "captured:0", pitchClasses: [0, 4, 7, 11], startBeat: 0, durationBeats: 4 }],
+    }));
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const event = result.plan.events.find((candidate) => candidate.id === "captured:0");
+    expect(event).toMatchObject({ layer: "chords" });
+    expect(event && "notes" in event ? event.notes.map((note) => note % 12) : []).toEqual([0, 4, 7, 11]);
+  });
+
+  it("rejects malformed captured pitch-class input before scheduling", () => {
+    const result = buildChordContextPlaybackPlan(listenInput({
+      chordEvents: [{ id: "captured:bad", pitchClasses: [7, 0, 7], startBeat: 0, durationBeats: 4 }],
+    }));
+    expect(result).toEqual(expect.objectContaining({ ok: false, error: expect.objectContaining({ code: "unsupported-chord", eventId: "captured:bad" }) }));
+  });
   it("rejects an unsupported chord before it can create an audio session", () => {
     const unsupported = { ...cMaj7, quality: "made-up" as unknown as ChordQuality };
     const result = buildChordContextPlaybackPlan(listenInput({ chordEvents: [{ id: "unsupported", chord: unsupported, startBeat: 0, durationBeats: 1 }] }));

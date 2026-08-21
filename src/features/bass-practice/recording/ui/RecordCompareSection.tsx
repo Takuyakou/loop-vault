@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../../../../components/ui";
+import type { AppLanguage } from "../../../../i18n";
 import { isBassPracticeRecordCompareEnabled } from "../../application/featureFlag";
 import type { ChannelMode } from "../domain/types";
 import { useRecordCompareSession } from "./useRecordCompareSession";
@@ -20,6 +21,7 @@ import { RetainedTakesPanel } from "./RetainedTakesPanel";
  */
 
 export interface RecordCompareSectionProps {
+  readonly language?: AppLanguage;
   readonly mode: "degree" | "rhythm" | "bassline" | "root-motion";
   /** Stable exercise signature; changing it resets the recorder for a new take. */
   readonly resetKey?: string;
@@ -50,14 +52,38 @@ export interface RecordCompareSectionProps {
   readonly isTypeSupported?: (mimeType: string) => boolean;
 }
 
-const CHANNELS: readonly { readonly value: ChannelMode; readonly label: string }[] = [
-  { value: "auto", label: "Auto" },
-  { value: "left", label: "Left / Input 1" },
-  { value: "right", label: "Right / Input 2" },
-  { value: "mono-sum", label: "Mono Sum" },
+const CHANNELS: readonly { readonly value: ChannelMode; readonly label: Record<AppLanguage, string> }[] = [
+  { value: "auto", label: { ja: "自動", en: "Auto" } },
+  { value: "left", label: { ja: "左 / 入力1", en: "Left / Input 1" } },
+  { value: "right", label: { ja: "右 / 入力2", en: "Right / Input 2" } },
+  { value: "mono-sum", label: { ja: "モノラル合成", en: "Mono Sum" } },
 ];
 
+const RECORD_COMPARE_COPY = {
+  ja: {
+    description: "自分の演奏を録音してお手本と聴き比べできます。ローカルのみで、自動採点や分析は行いません。",
+    headphones: "録音中に伴奏を鳴らす場合は、スピーカー音の回り込みを減らすためヘッドホンを使用してください。アプリの音は録音へ内部ミックスされません。",
+    enable: "Record & Compareを使う", optional: "使わない場合は録音せずそのまま続けられます",
+    permissionDenied: "マイクの使用が許可されませんでした。録音せずに続けられます。", recordingError: "録音を利用できませんでした。これまでどおり自己評価を続けられます。",
+    saveFailed: "保存できませんでしたが、この録音は再生できます。", inputChannel: "入力チャンネル", countingIn: "カウントイン中…", cancel: "キャンセル",
+    listenChoice: "レビューへ進む前に、自分のテイクを聴くか聴き返しをスキップしてください。", hearTake: "自分のテイクを聴く", skipListen: "聴き返しをスキップ",
+    start: "演奏 / 録音", stop: "停止", hearTarget: "お手本を聴く", retake: "録り直す", discard: "破棄", keep: "テイクを保持", skipRecord: "録音せず続ける",
+    privacy: "ローカル保存のみ・クラウド送信なし・自動分析や採点はありません。",
+  },
+  en: {
+    description: "Record your playing and compare it with the target. Everything stays local, with no automatic scoring or analysis.",
+    headphones: "Use headphones when accompaniment plays during recording to reduce speaker bleed. App audio is never internally mixed into your captured take.",
+    enable: "Use Record & Compare", optional: "You can continue without recording",
+    permissionDenied: "Microphone access was denied. You can continue without recording.", recordingError: "Recording is unavailable. You can continue with self-review as usual.",
+    saveFailed: "The take could not be saved, but you can still play it.", inputChannel: "Input channel", countingIn: "Counting in…", cancel: "Cancel",
+    listenChoice: "Before Review, hear your take or explicitly skip listening back.", hearTake: "Hear My Take", skipListen: "Skip Listen Back",
+    start: "Play / Record", stop: "Stop", hearTarget: "Hear Target", retake: "Retake", discard: "Discard", keep: "Keep Take", skipRecord: "Continue Without Recording",
+    privacy: "Local storage only · no cloud upload · no automatic analysis or scoring.",
+  },
+} as const;
+
 export function RecordCompareSection({
+  language = "ja",
   mode,
   resetKey,
   practiceSessionId,
@@ -76,6 +102,7 @@ export function RecordCompareSection({
   isTypeSupported,
 }: RecordCompareSectionProps) {
   const enabled = enabledOverride ?? isBassPracticeRecordCompareEnabled();
+  const copy = RECORD_COMPARE_COPY[language];
   const [optedIn, setOptedIn] = useState(false);
   const [listenBackSkipped, setListenBackSkipped] = useState(false);
   const [preparingRecording, setPreparingRecordingState] = useState(false);
@@ -180,10 +207,10 @@ export function RecordCompareSection({
       >
         <p className="font-semibold text-[var(--lv-text)]">Record &amp; Compare</p>
         <p className="mt-1 text-xs text-[var(--lv-text-secondary)]">
-          自分の演奏を録音してTargetと聴き比べできます。ローカルのみ・自動採点や分析はありません。
+          {copy.description}
         </p>
         <p className="mt-1 text-xs text-[var(--lv-text-muted)]">
-          Use headphones when accompaniment plays during recording to reduce speaker bleed. App audio is never internally mixed into your captured take.
+          {copy.headphones}
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <Button
@@ -195,13 +222,13 @@ export function RecordCompareSection({
               void session.enable().catch(() => undefined);
             }}
           >
-            Record &amp; Compareを使う
+            {copy.enable}
           </Button>
           <span className="self-center text-xs text-[var(--lv-text-muted)]">
-            使わない場合はそのまま録音せず続けられます
+            {copy.optional}
           </span>
         </div>
-        <RetainedTakesPanel enabledOverride={enabled} />
+        <RetainedTakesPanel language={language} enabledOverride={enabled} />
       </section>
     );
   }
@@ -355,65 +382,65 @@ export function RecordCompareSection({
       <div className="flex items-center justify-between">
         <p className="font-semibold text-[var(--lv-text)]">Record &amp; Compare</p>
         <p aria-live="polite" data-testid="record-compare-status" className="text-xs text-[var(--lv-text-muted)]">
-          {statusLabel(status)}
+          {statusLabel(status, language)}
         </p>
       </div>
 
       {status === "permission-denied" ? (
         <p role="alert" className="mt-2 text-xs">
-          マイクの使用が許可されませんでした。録音せずに続けられます。
+          {copy.permissionDenied}
         </p>
       ) : null}
       {status === "error" ? (
         <p role="alert" className="mt-2 text-xs">
-          録音を利用できませんでした。従来どおり自己評価を続けられます。
+          {copy.recordingError}
         </p>
       ) : null}
       {session.state?.saveFailed ? (
-        <p role="alert" className="mt-2 text-xs">保存できませんでしたが、この録音は再生できます。</p>
+        <p role="alert" className="mt-2 text-xs">{copy.saveFailed}</p>
       ) : null}
 
       <label className="mt-2 block text-xs text-[var(--lv-text-secondary)]">
-        入力チャンネル
+        {copy.inputChannel}
         <select
-          aria-label="入力チャンネル"
+          aria-label={copy.inputChannel}
           className="lv-input mt-1 w-full max-w-xs"
           value={channel}
           disabled={controlsLocked}
           onChange={(event) => setChannel(event.target.value as ChannelMode)}
         >
           {CHANNELS.map((channel) => (
-            <option key={channel.value} value={channel.value}>{channel.label}</option>
+            <option key={channel.value} value={channel.value}>{channel.label[language]}</option>
           ))}
         </select>
       </label>
 
       {status === "counting-in" ? (
         <div className="mt-3 flex items-center gap-2" data-testid="record-countin">
-          <span className="text-xs text-[var(--lv-accent)]">カウントイン中…</span>
-          <Button variant="ghost" size="sm" data-testid="record-cancel-countin" onClick={cancelCountIn}>キャンセル</Button>
+          <span className="text-xs text-[var(--lv-accent)]">{copy.countingIn}</span>
+          <Button variant="ghost" size="sm" data-testid="record-cancel-countin" onClick={cancelCountIn}>{copy.cancel}</Button>
         </div>
       ) : null}
 
       {needsListenChoice ? (
         <div className="mt-3 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] p-2" role="status" data-testid="listen-choice">
           <p className="text-xs text-[var(--lv-text-secondary)]">
-            Reviewへ進む前に、My Takeを聴くか聴き返しをスキップしてください。
+            {copy.listenChoice}
           </p>
           <div className="mt-2 flex gap-2">
-            <Button variant="secondary" size="sm" data-testid="listen-choice-hear" onClick={hearTake}>My Takeを聴く</Button>
-            <Button variant="ghost" size="sm" data-testid="listen-choice-skip" onClick={() => setListenBackSkipped(true)}>聴き返しをスキップ</Button>
+            <Button variant="secondary" size="sm" data-testid="listen-choice-hear" onClick={hearTake}>{copy.hearTake}</Button>
+            <Button variant="ghost" size="sm" data-testid="listen-choice-skip" onClick={() => setListenBackSkipped(true)}>{copy.skipListen}</Button>
           </div>
         </div>
       ) : null}
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <Button variant="primary" size="sm" data-testid="record-start" disabled={status !== "ready" || preparingRecording} onClick={startRecording}>Play / Record</Button>
-        <Button variant="secondary" size="sm" data-testid="record-stop" disabled={!preparingRecording && status !== "recording" && status !== "starting"} onClick={stopRecording}>Stop</Button>
-        <Button variant="secondary" size="sm" data-testid="hear-target" disabled={status !== "recorded" || !targetPlayer} onClick={hearTarget}>Hear Target</Button>
-        <Button variant="secondary" size="sm" data-testid="hear-take" disabled={status !== "recorded"} onClick={hearTake}>Hear My Take</Button>
-        <Button variant="ghost" size="sm" data-testid="record-retake" disabled={status !== "recorded"} onClick={retake}>Retake</Button>
-        <Button variant="danger" size="sm" data-testid="record-discard" disabled={status !== "recorded"} onClick={discard}>Discard</Button>
+        <Button variant="primary" size="sm" data-testid="record-start" disabled={status !== "ready" || preparingRecording} onClick={startRecording}>{copy.start}</Button>
+        <Button variant="secondary" size="sm" data-testid="record-stop" disabled={!preparingRecording && status !== "recording" && status !== "starting"} onClick={stopRecording}>{copy.stop}</Button>
+        <Button variant="secondary" size="sm" data-testid="hear-target" disabled={status !== "recorded" || !targetPlayer} onClick={hearTarget}>{copy.hearTarget}</Button>
+        <Button variant="secondary" size="sm" data-testid="hear-take" disabled={status !== "recorded"} onClick={hearTake}>{copy.hearTake}</Button>
+        <Button variant="ghost" size="sm" data-testid="record-retake" disabled={status !== "recorded"} onClick={retake}>{copy.retake}</Button>
+        <Button variant="danger" size="sm" data-testid="record-discard" disabled={status !== "recorded"} onClick={discard}>{copy.discard}</Button>
         <Button variant="primary" size="sm" data-testid="record-keep" disabled={status !== "recorded"} onClick={() => void session.keep({
           practiceSessionId: practiceSessionId ?? "practice-session",
           exerciseSignature: resetKey ?? `${mode}-exercise`,
@@ -422,15 +449,15 @@ export function RecordCompareSection({
           playedBackBeforeReview: session.state?.heardTake ?? false,
         }).then((retainedTakeReference) => {
           if (retainedTakeReference) onTakeKept?.(retainedTakeReference);
-        }).catch(() => undefined)}>Keep Take</Button>
-        <Button variant="ghost" size="sm" data-testid="record-skip" disabled={controlsLocked} onClick={() => { recordingGenerationRef.current += 1; stopPlayback(); clearCountIn(); stopRecordingAccompaniment(); setPreparingRecording(false); setRecordingActivity(false); setOptedIn(false); }}>録音せず続ける</Button>
+        }).catch(() => undefined)}>{copy.keep}</Button>
+        <Button variant="ghost" size="sm" data-testid="record-skip" disabled={controlsLocked} onClick={() => { recordingGenerationRef.current += 1; stopPlayback(); clearCountIn(); stopRecordingAccompaniment(); setPreparingRecording(false); setRecordingActivity(false); setOptedIn(false); }}>{copy.skipRecord}</Button>
       </div>
 
       <p className="mt-2 text-[11px] text-[var(--lv-text-muted)]">
-        ローカル保存のみ・cloud送信なし・自動分析や採点はありません。
+        {copy.privacy}
       </p>
 
-      <RetainedTakesPanel enabledOverride={enabled} />
+      <RetainedTakesPanel language={language} enabledOverride={enabled} />
     </section>
   );
 }
@@ -439,25 +466,22 @@ function isLiveCaptureStatus(status: string): boolean {
   return status === "counting-in" || status === "starting" || status === "recording" || status === "stopping";
 }
 
-function statusLabel(status: string): string {
-  const labels: Record<string, string> = {
-    idle: "準備中",
-    unavailable: "この環境では録音を利用できません",
-    "requesting-permission": "マイクの許可を確認中…",
-    "permission-denied": "許可されませんでした",
-    "device-missing": "入力デバイスが見つかりません",
-    ready: "録音できます",
-    "counting-in": "カウントイン中…",
-    starting: "録音開始中…",
-    recording: "録音中…",
-    stopping: "停止中…",
-    recorded: "録音済み — 聴き比べできます",
-    "playing-target": "Targetを再生中…",
-    "playing-take": "My Takeを再生中…",
-    saving: "保存中…",
-    saved: "保存しました",
-    discarded: "破棄しました",
-    error: "録音エラー",
+function statusLabel(status: string, language: AppLanguage): string {
+  const labels: Record<AppLanguage, Record<string, string>> = {
+    ja: {
+      idle: "準備中", unavailable: "この環境では録音を利用できません", "requesting-permission": "マイクの許可を確認中…",
+      "permission-denied": "許可されませんでした", "device-missing": "入力デバイスが見つかりません", ready: "録音できます",
+      "counting-in": "カウントイン中…", starting: "録音開始中…", recording: "録音中…", stopping: "停止中…",
+      recorded: "録音済み — 聴き比べできます", "playing-target": "お手本を再生中…", "playing-take": "自分のテイクを再生中…",
+      saving: "保存中…", saved: "保存しました", discarded: "破棄しました", error: "録音エラー",
+    },
+    en: {
+      idle: "Preparing", unavailable: "Recording is unavailable in this environment", "requesting-permission": "Checking microphone permission…",
+      "permission-denied": "Permission denied", "device-missing": "No input device found", ready: "Ready to record",
+      "counting-in": "Counting in…", starting: "Starting recording…", recording: "Recording…", stopping: "Stopping…",
+      recorded: "Recorded — ready to compare", "playing-target": "Playing Target…", "playing-take": "Playing My Take…",
+      saving: "Saving…", saved: "Saved", discarded: "Discarded", error: "Recording error",
+    },
   };
-  return labels[status] ?? status;
+  return labels[language][status] ?? status;
 }

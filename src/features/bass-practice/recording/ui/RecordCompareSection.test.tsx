@@ -68,6 +68,21 @@ describe("RecordCompareSection", () => {
     document.body.replaceChildren();
   });
 
+  test("renders the selected language without mixed instructional copy", async () => {
+    const { container, root } = mount();
+    await act(async () => root.render(<RecordCompareSection language="en" mode="bassline" enabledOverride />));
+    expect(container.textContent).toContain("Everything stays local");
+    expect(container.textContent).toContain("Use headphones");
+    expect(container.textContent).not.toMatch(/[ぁ-んァ-ヶ一-龠]/u);
+
+    await act(async () => root.render(<RecordCompareSection language="ja" mode="bassline" enabledOverride />));
+    expect(container.textContent).toContain("自分の演奏を録音してお手本と聴き比べできます");
+    expect(container.textContent).toContain("ヘッドホンを使用してください");
+    expect(container.textContent).not.toContain("Everything stays local");
+    expect(container.textContent).not.toContain("Use headphones");
+    await act(async () => root.unmount());
+    document.body.replaceChildren();
+  });
   test("is opt-in and only requests permission on enable", async () => {
     const devices = new FakeCaptureDeviceRepository();
     const controller = fakeController(devices);
@@ -182,6 +197,7 @@ describe("RecordCompareSection", () => {
     const { container, root } = mount();
     await act(async () => root.render(
       <RecordCompareSection
+        language="en"
         mode="bassline"
         controller={controller}
         enabledOverride

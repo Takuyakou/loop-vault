@@ -188,7 +188,7 @@ export function HistoryView({
           </div>
         </section>
       ) : null}
-      {filter === "all" || filter === "practice" ? <RetainedTakesPanel /> : null}
+      {filter === "all" || filter === "practice" ? <RetainedTakesPanel language={language} /> : null}
 
       {groups.length === 0 && visiblePracticeHistory.length === 0 && visibleChordContextHistory.length === 0 && visibleRootMotionHistory.length === 0 ? (
         <EmptyState

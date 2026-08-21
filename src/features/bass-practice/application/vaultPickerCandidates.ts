@@ -1,4 +1,5 @@
 import type { SongIdea } from "../../../domain/types";
+import { sourceBasslineSnapshotSchema, type SourceBasslineSnapshotV1 } from "../../../domain/sourceBassline";
 import {
   buildVaultChordContextSnapshotCatalog,
   type VaultChordContextSnapshot,
@@ -13,6 +14,14 @@ export interface VaultPickerCandidateView {
   readonly displayTitle: string;
   readonly searchableTitle: string;
   readonly safeSnapshot: VaultChordContextSnapshot;
+}
+
+/** Strict detached source asset, catalogued independently from Chord Context eligibility. */
+export interface VaultSourceBasslineCandidateView {
+  /** Presentation-only live title; never persisted in Practice or recording facts. */
+  readonly displayTitle: string;
+  readonly reference: Readonly<{ readonly ideaId: string; readonly blockId: string }>;
+  readonly sourceBassline: SourceBasslineSnapshotV1;
 }
 
 /**
@@ -57,6 +66,31 @@ export function buildVaultPickerCandidateViews(
   }));
 }
 
+/**
+ * Builds the strict source snapshot catalog without consulting current chord,
+ * key, meter, or Chord Context support. A later progression edit must not make
+ * an immutable saved performance disappear from Level 3.
+ */
+export function buildVaultSourceBasslineCandidateViews(
+  ideas: readonly SongIdea[],
+  fallbackTitle: string,
+): readonly VaultSourceBasslineCandidateView[] {
+  const candidates: VaultSourceBasslineCandidateView[] = [];
+  for (const idea of ideas) {
+    const displayTitle = normalizeDisplayTitle(idea.title, fallbackTitle);
+    for (const block of idea.progressionBlocks ?? []) {
+      if (!block.sourceBassline) continue;
+      const parsed = sourceBasslineSnapshotSchema.safeParse(block.sourceBassline);
+      if (!parsed.success) continue;
+      candidates.push(Object.freeze({
+        displayTitle,
+        reference: Object.freeze({ ideaId: idea.id, blockId: block.id }),
+        sourceBassline: deepFreeze(parsed.data),
+      }));
+    }
+  }
+  return Object.freeze(candidates);
+}
 /** Preserves the existing safe key/section/chord search while adding live-title matching. */
 export function filterVaultPickerCandidates(
   candidates: readonly VaultPickerCandidateView[],
@@ -129,4 +163,12 @@ function comparePickerSections(left: VaultPickerCandidateView, right: VaultPicke
   const leftSignature = left.safeSnapshot.signature;
   const rightSignature = right.safeSnapshot.signature;
   return leftSignature < rightSignature ? -1 : leftSignature > rightSignature ? 1 : 0;
+}
+
+function deepFreeze<T>(value: T): T {
+  if (value && typeof value === "object" && !Object.isFrozen(value)) {
+    for (const child of Object.values(value as Record<string, unknown>)) deepFreeze(child);
+    Object.freeze(value);
+  }
+  return value;
 }
