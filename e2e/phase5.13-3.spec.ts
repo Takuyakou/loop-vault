@@ -40,6 +40,13 @@ test.describe.serial("Phase 5.13-3 viewport recovery", () => {
       "before/chord-dojo-bottom-clipped.png",
     );
     await openApp(page);
+    for (let index = 0; index < 6; index += 1) {
+      await createSavedProgression(
+        page,
+        `Phase 5.13-3 queue fixture ${index + 1}`,
+        { fileName: `phase5.13-3-queue-${index + 1}.mid` },
+      );
+    }
     await createSavedProgression(
       page,
       "Phase 5.13-3 long Dojo progression title ".repeat(5),
@@ -168,8 +175,41 @@ async function assertQueueWheelChainsToMain(page: Page): Promise<void> {
   const main = page.locator("#main-content");
   const queue = page.getByTestId("practice-queue-scroll");
   await main.evaluate((element) => { element.scrollTop = 0; });
-  await queue.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+  await queue.evaluate((element) => { element.scrollTop = 0; });
+  await expect.poll(async () => (await scrollDimensions(main)).scrollTop).toBeLessThanOrEqual(1);
+  await expect.poll(async () => (await scrollDimensions(queue)).scrollTop).toBeLessThanOrEqual(1);
+
+  const queueBeforeScroll = await scrollDimensions(queue);
+  const queueMaxScroll = queueBeforeScroll.scrollHeight - queueBeforeScroll.clientHeight;
+  expect(queueMaxScroll).toBeGreaterThan(0);
   await queue.hover();
+  await page.evaluate(() => new Promise<void>((resolveFrame) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolveFrame()));
+  }));
+
+  await page.mouse.wheel(0, queueMaxScroll);
+  await expect.poll(async () => (await scrollDimensions(queue)).scrollTop).toBeGreaterThan(1);
+  await expect.poll(async () => {
+    const dimensions = await scrollDimensions(queue);
+    return Math.abs(dimensions.scrollTop - queueMaxScroll);
+  }).toBeLessThanOrEqual(1);
+  await page.evaluate(() => new Promise<void>((resolveFrame) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolveFrame()));
+  }));
+
+  const mainStableStart = await scrollDimensions(main);
+  await page.evaluate(() => new Promise<void>((resolveFrame) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolveFrame()));
+  }));
+  const mainBeforeWheel = await scrollDimensions(main);
+  expect(Math.abs(mainBeforeWheel.scrollTop - mainStableStart.scrollTop)).toBeLessThanOrEqual(1);
+  expect(mainBeforeWheel.scrollTop + 1).toBeLessThan(
+    mainBeforeWheel.scrollHeight - mainBeforeWheel.clientHeight,
+  );
+
   await page.mouse.wheel(0, 700);
-  await expect.poll(async () => (await scrollDimensions(main)).scrollTop).toBeGreaterThan(0);
+  await expect.poll(async () => (await scrollDimensions(main)).scrollTop)
+    .toBeGreaterThan(mainBeforeWheel.scrollTop + 1);
+  const queueAfterWheel = await scrollDimensions(queue);
+  expect(Math.abs(queueAfterWheel.scrollTop - queueMaxScroll)).toBeLessThanOrEqual(1);
 }
