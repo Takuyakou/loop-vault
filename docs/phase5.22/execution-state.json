@@ -2,12 +2,14 @@
   "schemaVersion": 1,
   "phaseId": "5.22",
   "status": "in-progress",
-  "activeStage": "P5.22-00",
-  "completedStages": [],
+  "activeStage": null,
+  "completedStages": [
+    "P5.22-00"
+  ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "c5e6c654fb60bf68d696046ae0c9e06829b79da7",
-  "lastVerifiedCommit": "",
+  "lastVerifiedCommit": "8d38f6214bbd4afc675b1ad913922276dd307e46",
   "currentBranch": "feat/p522-source-bassline-practice",
   "requiredGates": {
     "P5.22-00": [
@@ -31,6 +33,6 @@
     "p522-00-rust": "pass",
     "p522-00-diff-privacy-hygiene": "pass"
   },
-  "nextAction": "Create the docs-only P5.22-00 Stage commit, rerun all required gates on that exact commit, then record its hash in a docs-only state/report closure. Do not start P5.22-01.",
-  "updatedAt": "2026-08-21T13:12:00+09:00"
+  "nextAction": "Wait for explicit authorization before starting P5.22-01. P5.22-01 is queued but NOT STARTED.",
+  "updatedAt": "2026-08-21T13:20:00+09:00"
 }

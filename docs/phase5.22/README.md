@@ -5,7 +5,7 @@
 
 ## Status
 
-`P5.22-00 IN PROGRESS — WORKING-TREE CONTRACT AND BASELINE PASS, COMMIT PENDING`
+`PASS — P5.22-00 complete`
 
 ## Required Reading Order
 
@@ -282,6 +282,6 @@ production featureを実装しない。
 
 ## Next action
 
-`P5.22-00`の改訂contractとbaseline Gateはworking tree上でPASS。
+`P5.22-00`はStage commit `8d38f6214bbd4afc675b1ad913922276dd307e46`上の全GateがPASSし、完了。
 
-次にdocs-only Stage commitを作成し、そのexact commitでGateを再実行してstate/reportへhashを記録するclosureを行う。P5.22-01は開始しない。
+P5.22-01は未着手。明示承認を待ち、承認前には開始しない。
