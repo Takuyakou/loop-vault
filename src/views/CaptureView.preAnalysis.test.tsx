@@ -49,6 +49,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.unstubAllGlobals();
   Reflect.deleteProperty(window, "__TAURI_INTERNALS__");
   document.body.innerHTML = "";
 });
@@ -341,9 +342,115 @@ describe("Phase 5.12 Capture product path", () => {
 
     await mounted.unmount();
   });
+  it("does not update state or toast when unmounted while a desktop path read rejects", async () => {
+    Object.defineProperty(window, "__TAURI_INTERNALS__", { configurable: true, value: {} });
+    const read = deferred<Uint8Array>();
+    const setToast = vi.fn();
+    tauriMocks.openFileDialog.mockResolvedValue("C:/fixtures/synthetic.mid");
+    tauriMocks.stat.mockResolvedValue({ size: 4 });
+    tauriMocks.readFile.mockReturnValue(read.promise);
+    const mounted = await renderCaptureProduct([], setToast);
+    await act(async () => {
+      [...mounted.container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent === appCopy.ja.capture.loadMidi)?.click();
+    });
+    await waitFor(() => tauriMocks.readFile.mock.calls.length === 1);
+    await mounted.unmount();
+    await act(async () => {
+      read.reject(new Error("synthetic read failure"));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(setToast).not.toHaveBeenCalled();
+  });
+
+  it("does not update state or toast when unmounted while dropped bytes reject", async () => {
+    const bytes = deferred<ArrayBuffer>();
+    const setToast = vi.fn();
+    const mounted = await renderCaptureProduct([], setToast);
+    const arrayBuffer = vi.fn(() => bytes.promise);
+    await dispatchMidiDrop(mounted.container, {
+      name: "synthetic.mid", type: "audio/midi", size: 4, arrayBuffer,
+    });
+    await waitFor(() => arrayBuffer.mock.calls.length === 1);
+    await mounted.unmount();
+    await act(async () => {
+      bytes.reject(new Error("synthetic drop failure"));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(setToast).not.toHaveBeenCalled();
+  });
+
+  it("does not update state or toast when unmounted during the prepare paint wait", async () => {
+    const paints: FrameRequestCallback[] = [];
+    vi.stubGlobal("requestAnimationFrame", vi.fn((callback: FrameRequestCallback) => {
+      paints.push(callback);
+      return paints.length;
+    }));
+    const setToast = vi.fn();
+    const mounted = await renderCaptureProduct([], setToast);
+    await dispatchMidiDrop(mounted.container, {
+      name: "synthetic.mid",
+      type: "audio/midi",
+      size: simplePianoMidi().byteLength,
+      arrayBuffer: async () => simplePianoMidi().slice().buffer,
+    });
+    expect(paints).toHaveLength(1);
+    await act(async () => {
+      paints.shift()?.(0);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(paints).toHaveLength(1);
+    await mounted.unmount();
+    await act(async () => {
+      paints.shift()?.(16);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(setToast).not.toHaveBeenCalled();
+  });
+
+  it("stops state and toast updates when unmounted between analysis paint waits", async () => {
+    const analyzerCalls: AnalyzeMidiOptions[] = [];
+    const setToast = vi.fn();
+    const mounted = await renderCaptureProduct(analyzerCalls, setToast);
+    await dropMidi(mounted.container, "synthetic.mid", allInstrumentsMidi());
+    await waitFor(() => mounted.container.querySelector("[data-testid='pre-analysis-analyze']") !== null);
+
+    const paints: FrameRequestCallback[] = [];
+    vi.stubGlobal("requestAnimationFrame", vi.fn((callback: FrameRequestCallback) => {
+      paints.push(callback);
+      return paints.length;
+    }));
+    const analyze = mounted.container.querySelector<HTMLButtonElement>(
+      "[data-testid='pre-analysis-analyze']",
+    );
+    await act(async () => analyze?.click());
+    expect(paints).toHaveLength(1);
+    await act(async () => {
+      paints.shift()?.(0);
+      await Promise.resolve();
+    });
+    expect(analyzerCalls).toHaveLength(1);
+    expect(paints).toHaveLength(1);
+
+    await mounted.unmount();
+    await act(async () => {
+      paints.shift()?.(16);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(setToast).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
+  });
 });
 
-async function renderCaptureProduct(analyzerCalls: AnalyzeMidiOptions[]) {
+async function renderCaptureProduct(
+  analyzerCalls: AnalyzeMidiOptions[],
+  setToast: (message: string) => void = vi.fn(),
+) {
   const container = document.createElement("div");
   document.body.append(container);
   const root = createRoot(container);
@@ -364,7 +471,7 @@ async function renderCaptureProduct(analyzerCalls: AnalyzeMidiOptions[]) {
         createIdeaFromDraft={vi.fn()}
         appendBlockToIdea={vi.fn()}
         updateIdea={vi.fn()}
-        setToast={vi.fn()}
+        setToast={setToast}
         copy={appCopy.ja}
         language="ja"
         showRomanNumerals
@@ -384,15 +491,21 @@ async function dropMidi(
   name: string,
   bytes: Uint8Array,
 ) {
-  const target = container.querySelector<HTMLElement>(
-    "[data-capture-midi-drop-zone]",
-  )!;
-  const file = {
+  await dispatchMidiDrop(container, {
     name,
     type: "audio/midi",
     size: bytes.byteLength,
     arrayBuffer: async () => bytes.slice().buffer,
-  };
+  });
+}
+
+async function dispatchMidiDrop(
+  container: HTMLElement,
+  file: { name: string; type: string; size: number; arrayBuffer: () => Promise<ArrayBuffer> },
+) {
+  const target = container.querySelector<HTMLElement>(
+    "[data-capture-midi-drop-zone]",
+  )!;
   const event = new Event("drop", { bubbles: true, cancelable: true });
   Object.defineProperty(event, "dataTransfer", {
     value: {
@@ -402,6 +515,16 @@ async function dropMidi(
     },
   });
   await act(async () => target.dispatchEvent(event));
+}
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, resolve, reject };
 }
 
 async function waitFor(predicate: () => boolean) {

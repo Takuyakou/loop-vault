@@ -51,7 +51,7 @@ export function HomeView({
   openCapture: () => void;
   openCreate: () => void;
   openVault: () => void;
-  updateNextAction: (id: string, text: string, now?: Date) => void;
+  updateNextAction: (id: string, text: string, now?: Date) => boolean | "pending";
   transitionIdea: (id: string, to: Status, now?: Date) => TransitionResult;
   setToast: (toast: string) => void;
 }) {
@@ -76,7 +76,7 @@ export function HomeView({
   }, []);
 
   function completeNext(idea: SongIdea) {
-    updateNextAction(idea.id, "", new Date());
+    if (updateNextAction(idea.id, "", new Date()) !== true) return;
     setToast(copy.toast.nextCompleted);
   }
 

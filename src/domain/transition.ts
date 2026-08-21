@@ -11,7 +11,8 @@ export type TransitionErrorCode =
   | "invalid-jump"
   | "missing-restore-target"
   | "invalid-restore-target"
-  | "reason-too-long";
+  | "reason-too-long"
+  | "persistence-failed";
 
 export interface TransitionOptions {
   reason?: string;

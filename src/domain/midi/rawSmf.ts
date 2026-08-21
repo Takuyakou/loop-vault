@@ -17,6 +17,8 @@ export interface RawSmfTrack {
 export interface RawSmfSong {
   format: 0 | 1 | 2;
   ticksPerBeat: number;
+  /** Exact maximum end-of-track tick across the complete SMF source. */
+  durationTick: number;
   tempo?: number;
   tempoChanges: MidiTempoChange[];
   timeSignature: [number, number];
@@ -52,6 +54,14 @@ interface TimedChannelEvent {
   trackIndex: number;
   eventIndex: number;
   event: Extract<MidiEvent, { channel: number }>;
+}
+
+export function maxTrackEndTick(trackEndTicks: Iterable<number>): number {
+  let maximum = 0;
+  for (const endTick of trackEndTicks) {
+    if (endTick > maximum) maximum = endTick;
+  }
+  return maximum;
 }
 
 export function parseRawSmf(bytes: Uint8Array): RawSmfSong {
@@ -171,6 +181,7 @@ export function parseRawSmf(bytes: Uint8Array): RawSmfSong {
   return {
     format: midi.header.format,
     ticksPerBeat,
+    durationTick: maxTrackEndTick(trackEndTicks.values()),
     ...(tempo !== undefined ? { tempo } : {}),
     tempoChanges: orderedTempos.map(({ tick, value: bpm }) => ({ tick, bpm })),
     timeSignature,

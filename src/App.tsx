@@ -24,6 +24,7 @@ import {
 } from "./audio/masterVolume";
 import { AppShell, type AppView } from "./components/AppShell";
 import { CaptureRenderBoundary } from "./components/CaptureRenderBoundary";
+import { SizeRecoveryNotice } from "./components/SizeRecoveryNotice";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { Modal } from "./components/Modal";
 import { DetailView } from "./views/DetailView";
@@ -135,6 +136,7 @@ function App() {
   const quarantine = useStore(defaultVaultStore, (state) => state.quarantine);
   const recovery = useStore(defaultVaultStore, (state) => state.recovery);
   const readonly = useStore(defaultVaultStore, (state) => state.readonly);
+  const sizeRecovery = useStore(defaultVaultStore, (state) => state.sizeRecovery);
   const unsaved = useStore(defaultVaultStore, (state) => state.unsaved);
   const saving = useStore(defaultVaultStore, (state) => state.saving);
   const error = useStore(defaultVaultStore, (state) => state.error);
@@ -518,7 +520,7 @@ async function analyzeMidiPath(path: string) {
       request.endIndex,
       { id: crypto.randomUUID(), capturedAt: new Date().toISOString() },
     );
-    if (!ideaId || !block || !appendBlockToIdea(ideaId, block, undefined, { userVerified: false })) {
+    if (!ideaId || !block || appendBlockToIdea(ideaId, block, undefined, { userVerified: false }) !== true) {
       setToast(copy.liveMidi.importFailed);
       return;
     }
@@ -528,12 +530,23 @@ async function analyzeMidiPath(path: string) {
   }
 
   function requestDelete(idea: SongIdea) {
+    if (sizeRecovery) {
+      const snapshot = createUndoSnapshot(
+        ideas,
+        ideas.findIndex((entry) => entry.id === idea.id),
+        "vault",
+        ideaAnchor,
+      );
+      if (!snapshot) return;
+      deleteIdea({ kind: "idea", vaultEpoch, snapshot });
+      return;
+    }
     const deleted = deleteIdeaForUndo({
       idea,
       ideas,
       vaultEpoch,
       label: copy.undo.ideaDeleted(idea.title),
-      deleteIdea,
+      deleteIdea: (deletion) => deleteIdea(deletion) === true,
       enqueueUndo: undoQueue.enqueue,
     });
     if (!deleted) return;
@@ -557,11 +570,15 @@ async function analyzeMidiPath(path: string) {
       vaultEpoch,
       snapshot,
     };
+    if (sizeRecovery) {
+      removeProgressionBlock(deletion);
+      return;
+    }
     undoQueue.enqueue({
       label: copy.undo.blockDeleted,
       payload: deletion,
       undo: () => true,
-      commit: () => removeProgressionBlock(deletion),
+      commit: () => removeProgressionBlock(deletion) === true,
     });
     setSelectedProgression(undefined);
     setView("library");
@@ -602,7 +619,15 @@ async function analyzeMidiPath(path: string) {
         <div className="mx-auto flex min-h-full w-full max-w-[1680px] min-w-0 flex-col">
         {loadStatus === "ready" ? (
           <>
-            <QuarantineNotice count={quarantine.length} copy={copy} />
+            <QuarantineNotice count={quarantine.length} copy={copy} language={language} />
+            {sizeRecovery ? (
+              <SizeRecoveryNotice
+                language={language}
+                saving={saving}
+                error={error}
+                onOpenVault={() => navigateTo("library")}
+              />
+            ) : null}
             {view === "home" ? (
               <HomeView
                 bassPracticeCard={bassPracticeEnabled ? (
@@ -697,6 +722,7 @@ async function analyzeMidiPath(path: string) {
                 setToast={setToast}
                 copy={copy}
                 language={language}
+                recoveryPending={Boolean(sizeRecovery)}
               />
             ) : null}
             {view === "progression-detail" && progressionIdea && progressionBlock ? (
@@ -1126,11 +1152,16 @@ function StartupState({
   );
 }
 
-function QuarantineNotice({ count, copy }: { count: number; copy: AppCopy }) {
+function QuarantineNotice({ count, copy, language }: { count: number; copy: AppCopy; language: AppLanguage }) {
   if (count === 0) return null;
   return (
     <div className="mt-4 border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-100">
-      {copy.startup.quarantine(count)}
+      <p>{copy.startup.quarantine(count)}</p>
+      <p className="mt-1 text-xs">
+        {language === "ja"
+          ? "不完全な上書きを防ぐため現在は非書込みです。置換読み込みまたは正常なbackup復元で回復してください。"
+          : "This Vault is non-writing to prevent an incomplete overwrite. Recover with replace import or a valid backup."}
+      </p>
     </div>
   );
 }

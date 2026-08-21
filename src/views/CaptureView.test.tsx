@@ -26,6 +26,7 @@ import {
   isEditableKeyboardTarget,
   isMidiFileName,
   ProgressionCandidateCard,
+  persistCopiedProgressionMemo,
   timelinePlaybackPosition,
   TimelineDetails,
 } from "./CaptureView";
@@ -588,6 +589,20 @@ describe("ProgressionCandidateCard", () => {
       .toBe("Existing memo\n| C | G |");
   });
 
+  it.each([false, "pending"] as const)(
+    "does not announce or report a copied memo for %s persistence",
+    (outcome) => {
+      const idea = makeIdea({ chordMemo: "Existing memo" });
+      const updateIdea = vi.fn(() => outcome);
+      const onCopied = vi.fn();
+      expect(persistCopiedProgressionMemo(idea, candidate(), updateIdea, onCopied)).toBe(false);
+      expect(updateIdea).toHaveBeenCalledWith(idea.id, {
+        chordMemo: expect.stringContaining("Existing memo\n"),
+      });
+      expect(onCopied).not.toHaveBeenCalled();
+    },
+  );
+
   it("updates the dirty baseline after appending an edited progression", async () => {
     const firstChord = chord("Cmaj7", 1);
     firstChord.alternatives = [{
@@ -804,6 +819,55 @@ describe("CaptureView saving", () => {
       .toBe("自動候補から作成");
     expect(container.querySelector("[data-manual-range-selector]")).toBeNull();
 
+    await act(async () => root.unmount());
+    container.remove();
+  });
+
+  it("renders an actionable alert when aggregate persistence rejects the save", async () => {
+    const capturedCandidate = candidate();
+    const result: MidiProgressionAnalysis = {
+      fileName: "budget.mid",
+      totalBars: 4,
+      bpm: 100,
+      fullTimeline: capturedCandidate.chords,
+      blockCandidates: [capturedCandidate],
+      analyzedAt: "2026-07-15T00:00:00.000Z",
+      analyzerVersion: "test",
+    };
+    const message = "Vault全体が16 MiBを超えるため保存できません。不要な項目を削除してください。";
+    const createIdeaFromDraft = vi.fn((draft) => {
+      draft.progressionMetadata?.onPersistenceError?.(message);
+      return undefined;
+    });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <CaptureView
+        ideas={[]}
+        analysis={{ status: "done", result }}
+        analyzeMidiBytes={vi.fn()}
+        clearAnalysis={vi.fn()}
+        createIdeaFromDraft={createIdeaFromDraft}
+        appendBlockToIdea={vi.fn()}
+        updateIdea={vi.fn()}
+        setToast={vi.fn()}
+        copy={appCopy.ja}
+        language="ja"
+        showRomanNumerals
+      />,
+    ));
+    const saveButton = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent?.trim() === "Vaultに保存");
+    await act(async () => saveButton?.click());
+    const dialog = container.querySelector<HTMLElement>('[role="dialog"]');
+    await act(async () => {
+      dialog?.dispatchEvent(new KeyboardEvent("keydown", {
+        key: "Enter", ctrlKey: true, bubbles: true,
+      }));
+      await Promise.resolve();
+    });
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain(message);
     await act(async () => root.unmount());
     container.remove();
   });
@@ -1282,7 +1346,7 @@ describe("CaptureView saving", () => {
       chords: [chord("Fmaj7", 5), chord("G7", 6)],
     });
     const idea = makeIdea({ chordMemo: "Existing memo" });
-    const updateIdea = vi.fn();
+    const updateIdea = vi.fn(() => true);
     const result: MidiProgressionAnalysis = {
       totalBars: 8,
       bpm: 100,

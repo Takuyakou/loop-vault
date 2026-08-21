@@ -30,6 +30,8 @@ export interface PreAnalysisMidiSource {
   smfType: 0 | 1 | 2;
   ppq: number;
   durationBeats: number;
+  /** Raw-parser end of the complete source; transient exact range authority. */
+  durationTick?: number;
   tempoMap: PreAnalysisTempoPoint[];
   timeSignatures: PreAnalysisTimeSignaturePoint[];
 }

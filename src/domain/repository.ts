@@ -6,6 +6,7 @@ import {
 import type { VaultFile } from "./types";
 import {
   assertExternalVaultByteLength,
+  MAX_EXTERNAL_VAULT_BYTES,
   utf8ByteLength,
 } from "../security/intakeBudgets";
 
@@ -25,6 +26,8 @@ export interface VaultLoadResult {
   vault: VaultFile;
   quarantine: QuarantinedRecord[];
   created: boolean;
+  /** A valid legacy v1 document above the current aggregate budget. */
+  sizeRecovery?: true;
 }
 
 export interface VaultRepository {
@@ -61,6 +64,7 @@ type RepositoryErrorKind =
   | "invalid-json"
   | "invalid-vault"
   | "future-version"
+  | "vault-too-large"
   | "backup-not-found";
 
 export class VaultRepositoryError extends Error {
@@ -134,14 +138,15 @@ export class JsonVaultRepository implements VaultRepository {
   }
 
   async save(vault: VaultFile): Promise<void> {
-    await this.ensureVaultDirs();
     const serialized = serializeVault(vault);
+    await this.ensureVaultDirs();
     await this.storage.writeText(TEMP_DATA_PATH, serialized);
     await this.storage.rename(TEMP_DATA_PATH, DATA_PATH);
   }
 
   async exportTo(path: string): Promise<void> {
     const loadResult = await this.load();
+    assertNoQuarantinedRecords(loadResult, "exported");
     await this.storage.writeText(path, serializeVault(loadResult.vault), {
       external: true,
     });
@@ -154,14 +159,16 @@ export class JsonVaultRepository implements VaultRepository {
     const raw = await this.storage.readText(path, { external: true });
     assertExternalVaultByteLength(utf8ByteLength(raw));
     const imported = this.parseLoadedVault(raw);
+    assertNoQuarantinedRecords(imported, "imported");
     const mode = options.mode ?? "replace";
-    const vault =
-      mode === "merge"
-        ? mergeVaults(
-            (await this.load()).vault,
-            imported.vault,
-          )
-        : imported.vault;
+    let vault = imported.vault;
+    if (mode === "merge") {
+      const current = await this.readCurrentWithoutBackup();
+      assertNoQuarantinedRecords(current, "merged");
+      vault = mergeVaults(current.vault, imported.vault);
+    }
+    // Complete post-merge preflight occurs before any temp/destination write.
+    serializeVault(vault);
     const loadResult = {
       vault,
       quarantine: imported.quarantine,
@@ -207,8 +214,16 @@ export class JsonVaultRepository implements VaultRepository {
       ...this.parseLoadedVault(raw),
       created: false,
     };
+    assertNoQuarantinedRecords(loadResult, "restored");
     await this.save(loadResult.vault);
     return loadResult;
+  }
+
+  private async readCurrentWithoutBackup(): Promise<Omit<VaultLoadResult, "created">> {
+    if (!(await this.storage.exists(DATA_PATH))) {
+      return { vault: createEmptyVault(), quarantine: [] };
+    }
+    return this.parseLoadedVault(await this.storage.readText(DATA_PATH));
   }
 
   private async ensureVaultDirs(): Promise<void> {
@@ -248,13 +263,33 @@ export class JsonVaultRepository implements VaultRepository {
       );
     }
 
+    const oversized = vaultCanonicalSerializedByteLength(result.vault)
+      > MAX_EXTERNAL_VAULT_BYTES;
+    if (oversized && !isLegacyVaultV1(raw)) {
+      throw new VaultRepositoryError(
+        "vault-too-large",
+        "Vault exceeds Loop Vault's 16 MiB storage limit.",
+      );
+    }
     return {
       vault: result.vault,
       quarantine: result.quarantine,
+      ...(oversized ? { sizeRecovery: true as const } : {}),
     };
   }
 }
 
+function assertNoQuarantinedRecords(
+  result: Pick<VaultLoadResult, "quarantine">,
+  action: "imported" | "exported" | "restored" | "merged",
+): void {
+  if (result.quarantine.length === 0) return;
+  throw new VaultRepositoryError(
+    "invalid-vault",
+    `Vault with invalid records cannot be ${action}; destination bytes were not changed.`,
+    { quarantinedRecordCount: result.quarantine.length },
+  );
+}
 export function createEmptyVault(): VaultFile {
   return {
     app: "loopvault",
@@ -265,7 +300,39 @@ export function createEmptyVault(): VaultFile {
 }
 
 export function serializeVault(vault: VaultFile): string {
-  return `${JSON.stringify(vaultFileSchema.parse(vault), null, 2)}\n`;
+  const serialized = canonicalVaultJson(vaultFileSchema.parse(vault));
+  assertVaultSerializedByteLength(utf8ByteLength(serialized));
+  return serialized;
+}
+
+export function canonicalVaultJson(vault: VaultFile): string {
+  return `${JSON.stringify(vault, null, 2)}\n`;
+}
+
+export function vaultCanonicalSerializedByteLength(vault: VaultFile): number {
+  return utf8ByteLength(canonicalVaultJson(vault));
+}
+
+export function assertVaultCandidateSerializedBudget(vault: VaultFile): void {
+  assertVaultSerializedByteLength(vaultCanonicalSerializedByteLength(vault));
+}
+
+export function assertVaultSerializedByteLength(length: number): void {
+  if (!Number.isSafeInteger(length) || length < 1 || length > MAX_EXTERNAL_VAULT_BYTES) {
+    throw new VaultRepositoryError(
+      "vault-too-large",
+      "Vault exceeds Loop Vault's 16 MiB storage limit.",
+    );
+  }
+}
+
+function isLegacyVaultV1(raw: string): boolean {
+  try {
+    const value: unknown = JSON.parse(raw);
+    return isRecord(value) && value.app === "loopvault" && value.fileVersion === 1;
+  } catch {
+    return false;
+  }
 }
 
 export function mergeVaults(current: VaultFile, incoming: VaultFile): VaultFile {

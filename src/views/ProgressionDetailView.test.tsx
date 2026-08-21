@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { playbackController } from "../audio/playbackController";
 import type { PlaybackController } from "../audio/playbackController";
 import { progressionFingerprint } from "../domain/practice";
+import { extractSourceBasslineSnapshot } from "../domain/sourceBassline";
 import { makeIdea } from "../domain/testFactory";
 import type { SavedProgressionBlock } from "../domain/types";
 import { appCopy, progressionDetailCopy, progressionEditorCopy } from "../i18n";
@@ -357,7 +358,32 @@ describe("ProgressionDetailView", () => {
   });
 
   it("inserts a generated candidate after a chord card and saves it", async () => {
-    const idea = makeIdea({ id: "idea-add", progressionBlocks: [block] });
+    const sourceBassline = extractSourceBasslineSnapshot({
+      selectedSourceId: "source",
+      selectedVoiceId: "voice",
+      notes: [{
+        sourceId: "source",
+        voiceId: "voice",
+        pitch: 36,
+        velocity: 0.8,
+        startTick: 0,
+        durationTick: 480,
+        ticksPerQuarter: 480,
+      }],
+      range: {
+        authority: "raw-integer-ticks",
+        constantMeterProven: true,
+        barAlignmentProven: true,
+        sourceId: "source",
+        startTick: 0,
+        endTick: 1920,
+        sourceEndTick: 1920,
+        ticksPerQuarter: 480,
+        meter: { numerator: 4, denominator: 4 },
+      },
+    });
+    const blockWithSource = { ...block, sourceBassline };
+    const idea = makeIdea({ id: "idea-add", progressionBlocks: [blockWithSource] });
     const updateProgressionBlock = vi.fn((
       _ideaId: string,
       _blockId: string,
@@ -371,7 +397,7 @@ describe("ProgressionDetailView", () => {
       root.render(
         <ProgressionDetailView
           idea={idea}
-          block={block}
+          block={blockWithSource}
           updateProgressionBlock={updateProgressionBlock}
           duplicateProgressionBlock={vi.fn()}
           openProgression={vi.fn()}
@@ -410,6 +436,8 @@ describe("ProgressionDetailView", () => {
     expect(saved.chords).toHaveLength(2);
     expect(saved.chords?.[0]?.chord.label).toBe("Cmaj7");
     expect(saved.chords?.[1]?.chord.label).not.toBe("Cmaj7");
+    expect(Object.prototype.hasOwnProperty.call(saved, "sourceBassline")).toBe(false);
+    expect(blockWithSource.sourceBassline).toBe(sourceBassline);
 
     await act(async () => root.unmount());
   });

@@ -63,6 +63,7 @@ import {
 import { buildProgressionIndex } from "../domain/progressionClassification/mod";
 import { formatProgressionText } from "../domain/progressionText";
 import type { SavedProgressionBlock, SongIdea } from "../domain/types";
+import { sourceBasslineNoteFacts } from "../domain/sourceBassline";
 import { buildVaultChordContextSnapshot, selectVaultChordContextSections, type VaultChordContextSnapshot } from "../features/bass-practice/domain";
 import { extractVoicing, resolveVoicingForUse } from "../domain/voicing";
 import { advisorSuggestionToCandidate, appendAdvisorSuggestionToEditableProgression, selectAdvisorReferenceContexts } from "../domain/progressionAdvisor";
@@ -91,7 +92,7 @@ interface ProgressionDetailViewProps {
     ideaId: string,
     blockId: string,
     changes: Partial<SavedProgressionBlock>,
-  ) => boolean;
+  ) => boolean | "pending";
   duplicateProgressionBlock: (ideaId: string, blockId: string) => string | undefined;
   appendBlockToIdea?: (
     ideaId: string,
@@ -257,7 +258,12 @@ export function ProgressionDetailView({
   }, [editingBlock, idea.bpm, language, showMidiExport]);
 
   function saveChanges() {
-    const saved = updateProgressionBlock(idea.id, block.id, editingBlock);
+    const saved = updateProgressionBlock(
+      idea.id,
+      block.id,
+      progressionDetailUpdateChanges(block, editable),
+    );
+    if (saved === "pending") return;
     if (!saved) {
       setToast(text.saveFailed);
       return;
@@ -569,8 +575,8 @@ export function ProgressionDetailView({
         }}
         onApplyTags={(tagIds) => {
           const updated = updateProgressionBlock(idea.id, block.id, { tags: [...new Set([...editingBlock.tags, ...tagIds])] });
-          if (!updated) setToast(text.saveFailed);
-          return updated;
+          if (updated === false) setToast(text.saveFailed);
+          return updated === true;
         }}
         setToast={setToast}
         referenceContext={advisorReferenceContext}
@@ -632,6 +638,8 @@ export function ProgressionDetailView({
         </Button>
       </div>
 
+      <SourceBasslineStatus block={editingBlock} progressionEdited={dirty} language={language} />
+
       <div className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]" data-progression-detail-editor>
         <section className="min-w-0">
           <ProgressionEditorToolbar
@@ -650,7 +658,7 @@ export function ProgressionDetailView({
               language={language}
               onChange={(changes) => {
                 const updated = updateProgressionBlock(idea.id, block.id, changes);
-                if (!updated) setToast(text.saveFailed);
+                if (updated === false) setToast(text.saveFailed);
               }}
             />
             <dl className="grid gap-2 text-sm">
@@ -735,6 +743,94 @@ function fileNameFromPath(path: string | undefined): string | undefined {
   return path?.split(/[\\/]/).pop();
 }
 
+export function progressionDetailUpdateChanges(
+  block: SavedProgressionBlock,
+  editable: Parameters<typeof applyEditableProgressionToSavedBlock>[1],
+): Partial<SavedProgressionBlock> {
+  const edited = applyEditableProgressionToSavedBlock(block, editable);
+  const { sourceBassline, ...mutableChanges } = edited;
+  void sourceBassline;
+  return mutableChanges;
+}
+
+export function SourceBasslineStatus({
+  block,
+  progressionEdited,
+  language,
+}: {
+  block: SavedProgressionBlock;
+  progressionEdited: boolean;
+  language: AppLanguage;
+}) {
+  const snapshot = block.sourceBassline;
+  if (!snapshot) {
+    return (
+      <section className="border-b border-[var(--lv-border)] py-3 text-sm" data-testid="source-bassline-detail-status">
+        <p className="font-semibold text-[var(--lv-text-secondary)]">
+          {language === "ja" ? "元ベースライン: 未保存" : "Source bassline: Not saved"}
+        </p>
+      </section>
+    );
+  }
+  const bars = formatExactBars(snapshot.length);
+  const relationship = "unavailable" as const;
+  const noteFacts = sourceBasslineNoteFacts(snapshot.notes);
+  const harmonyCopy = language === "ja"
+    ? "保存時の和声比較は利用できません。"
+    : "Captured-harmony comparison is unavailable.";
+  return (
+    <section
+      className="min-w-0 border-b border-[var(--lv-border)] py-3 text-sm"
+      aria-labelledby="source-bassline-detail-title"
+      data-testid="source-bassline-detail-status"
+      data-harmony-relationship={relationship}
+    >
+      <h3 id="source-bassline-detail-title" className="font-semibold text-[var(--lv-text)]">
+        {language === "ja" ? "元ベースライン: 保存済み" : "Source bassline: Saved"}
+      </h3>
+      <p className="mt-1 break-words text-[var(--lv-text-secondary)]">
+        {language === "ja"
+          ? `${snapshot.notes.length}音・${bars}小節・Vault書き出しに含まれます`
+          : `${snapshot.notes.length} notes · ${bars} bars · Included in Vault export`}
+      </p>
+      <p className="mt-1 break-words text-xs text-[var(--lv-text-muted)]">
+        {language === "ja"
+          ? `${noteFacts.simultaneous ? "同時発音あり" : "同時発音なし"}・${noteFacts.overlap ? "重なりあり" : "重なりなし"}`
+          : `${noteFacts.simultaneous ? "Simultaneous notes present" : "No simultaneous notes"} · ${noteFacts.overlap ? "Overlaps present" : "No overlaps"}`}
+      </p>
+      <p className="mt-1 break-words text-xs text-[var(--lv-text-muted)]">
+        {harmonyCopy}
+      </p>
+      {progressionEdited ? (
+        <p className="mt-1 break-words text-xs text-amber-100" aria-live="polite">
+          {language === "ja"
+            ? "コード進行を編集中です。保存済みの元ベースラインは変更されません。"
+            : "The progression is being edited. The saved source bassline remains unchanged."}
+        </p>
+      ) : null}
+    </section>
+  );
+}
+
+function formatExactBars(length: { numerator: number; denominator: number }): string {
+  let numerator = BigInt(length.numerator);
+  let denominator = BigInt(length.denominator) * 4n;
+  const divisor = greatestCommonDivisor(numerator, denominator);
+  numerator /= divisor;
+  denominator /= divisor;
+  return denominator === 1n ? numerator.toString() : `${numerator}/${denominator}`;
+}
+
+function greatestCommonDivisor(left: bigint, right: bigint): bigint {
+  let a = left < 0n ? -left : left;
+  let b = right < 0n ? -right : right;
+  while (b !== 0n) {
+    const remainder = a % b;
+    a = b;
+    b = remainder;
+  }
+  return a === 0n ? 1n : a;
+}
 function progressionBarCount(block: SavedProgressionBlock): number {
   if (block.chords.length === 0) return 0;
   const bars = block.chords.map((item) => item.bar);

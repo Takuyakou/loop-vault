@@ -104,6 +104,19 @@ describe("HomeView hierarchy", () => {
       appCopy.en.home.openVault,
     ]));
   });
+  it.each([false, "pending"] as const)(
+    "does not announce Next Action completion for %s persistence",
+    async (outcome) => {
+      const updateNextAction = vi.fn(() => outcome);
+      const setToast = vi.fn();
+      const container = await renderHome(dashboardIdeas(), "ja", { updateNextAction, setToast });
+      const complete = [...container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent?.includes(appCopy.ja.home.completeNextAction));
+      await act(async () => complete?.click());
+      expect(updateNextAction).toHaveBeenCalledWith("focus", "", expect.any(Date));
+      expect(setToast).not.toHaveBeenCalledWith(appCopy.ja.toast.nextCompleted);
+    },
+  );
 });
 
 function dashboardIdeas(): SongIdea[] {
@@ -158,7 +171,14 @@ function progressionBlock(index: number): SavedProgressionBlock {
   };
 }
 
-async function renderHome(ideas: SongIdea[], language: AppLanguage = "ja") {
+async function renderHome(
+  ideas: SongIdea[],
+  language: AppLanguage = "ja",
+  overrides: {
+    updateNextAction?: (id: string, text: string, now?: Date) => boolean | "pending";
+    setToast?: (message: string) => void;
+  } = {},
+) {
   const container = document.createElement("div");
   document.body.append(container);
   const root = createRoot(container);
@@ -183,9 +203,9 @@ async function renderHome(ideas: SongIdea[], language: AppLanguage = "ja") {
         openCapture={vi.fn()}
         openCreate={vi.fn()}
         openVault={vi.fn()}
-        updateNextAction={vi.fn()}
+        updateNextAction={overrides.updateNextAction ?? vi.fn(() => true)}
         transitionIdea={transitionIdea}
-        setToast={vi.fn()}
+        setToast={overrides.setToast ?? vi.fn()}
       />,
     );
   });

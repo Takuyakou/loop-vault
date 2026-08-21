@@ -14,6 +14,17 @@ import type {
   PreAnalysisVoiceRole,
 } from "./types";
 
+export function lastNoteEndTick(
+  notes: readonly { startTick: number; durationTick: number }[],
+): number {
+  let lastTick = 0;
+  for (const note of notes) {
+    const endTick = note.startTick + note.durationTick;
+    if (endTick > lastTick) lastTick = endTick;
+  }
+  return lastTick;
+}
+
 export interface PreScanMidiSourceOptions {
   sourceId: string;
   displayName: string;
@@ -168,11 +179,6 @@ function buildSource(
   raw: ReturnType<typeof parseRawSmf>,
   options: PreScanMidiSourceOptions,
 ): PreAnalysisMidiSource {
-  const lastTick = raw.notes.reduce(
-    (maximum, note) =>
-      Math.max(maximum, note.startTick + note.durationTick),
-    0,
-  );
   const tempoMap = raw.tempoChanges.length
     ? raw.tempoChanges.map(({ tick, bpm }) => ({
         beat: tick / raw.ticksPerBeat,
@@ -195,7 +201,8 @@ function buildSource(
     displayName: options.displayName,
     smfType: raw.format,
     ppq: raw.ticksPerBeat,
-    durationBeats: lastTick / raw.ticksPerBeat,
+    durationBeats: lastNoteEndTick(raw.notes) / raw.ticksPerBeat,
+    durationTick: raw.durationTick,
     tempoMap,
     timeSignatures,
   };

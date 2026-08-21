@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "phaseId": "5.22",
   "status": "in-progress",
-  "activeStage": null,
+  "activeStage": "P5.22-02",
   "completedStages": [
     "P5.22-00",
     "P5.22-01"
@@ -30,6 +30,14 @@
       "p522-01-full-regression",
       "p522-01-lint-typecheck-rust",
       "p522-01-security-diff-privacy-hygiene"
+    ],
+    "P5.22-02": [
+      "p522-02-capture-persistence",
+      "p522-02-aggregate-budget-recovery",
+      "p522-02-full-regression",
+      "p522-02-lint-typecheck-rust-build",
+      "p522-02-security-diff-privacy-hygiene",
+      "p522-02-phase-docs-validation"
     ]
   },
   "gateResults": {
@@ -46,8 +54,14 @@
     "p522-01-vault-practice-versioning": "pass",
     "p522-01-full-regression": "pass",
     "p522-01-lint-typecheck-rust": "pass",
-    "p522-01-security-diff-privacy-hygiene": "pass"
+    "p522-01-security-diff-privacy-hygiene": "pass",
+    "p522-02-capture-persistence": "pass",
+    "p522-02-aggregate-budget-recovery": "pass",
+    "p522-02-full-regression": "pass",
+    "p522-02-lint-typecheck-rust-build": "pass",
+    "p522-02-security-diff-privacy-hygiene": "pass",
+    "p522-02-phase-docs-validation": "pass"
   },
-  "nextAction": "P5.22-01 is complete. P5.22-02 is NOT STARTED; begin it through the next-stage workflow.",
-  "updatedAt": "2026-08-21T15:00:00+09:00"
+  "nextAction": "P5.22-02 implementation and working-tree gates are complete; explicit-path review/stage/commit is pending. Do not start P5.22-03.",
+  "updatedAt": "2026-08-21T18:31:00+09:00"
 }

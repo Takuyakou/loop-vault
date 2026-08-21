@@ -235,6 +235,90 @@ describe("JsonVaultRepository", () => {
     expect(result.quarantine[0]?.index).toBe(1);
   });
 
+  it("rejects an external Vault when any source bassline record is quarantined", async () => {
+    const storage = new MemoryVaultStorage();
+    const current = serializeVault(createEmptyVault());
+    storage.files.set(DATA_PATH, current);
+    storage.files.set("external-invalid.json", JSON.stringify({
+      ...createEmptyVault(),
+      ideas: [makeIdea({
+        id: "45454545-4545-4545-8545-454545454545",
+        progressionBlocks: [{
+          id: "56565656-5656-4656-8656-565656565656",
+          summaryText: "Synthetic tampered source",
+          chords: [],
+          tags: [],
+          capturedAt: "2026-08-21T00:00:00.000Z",
+          analyzerVersion: "test",
+          sourceBassline: { schemaVersion: 1, signature: "tampered" } as never,
+        }],
+      })],
+    }));
+    const repo = new JsonVaultRepository(storage);
+
+    await expect(repo.importFrom("external-invalid.json", { mode: "replace" }))
+      .rejects.toMatchObject({ kind: "invalid-vault" });
+    expect(storage.files.get(DATA_PATH)).toBe(current);
+    expect(storage.files.has(TEMP_DATA_PATH)).toBe(false);
+    expect(storage.operations.some((operation) =>
+      operation.type === "writeText"
+      || operation.type === "rename"
+      || operation.type === "copyFile")).toBe(false);
+  });
+
+  it("does not merge into a local Vault when any current record is quarantined", async () => {
+    const storage = new MemoryVaultStorage();
+    const original = JSON.stringify({
+      ...createEmptyVault(),
+      ideas: [
+        makeIdea({ id: "46464646-4646-4646-8646-464646464646" }),
+        makeIdea({ id: "47474747-4747-4747-8747-474747474747", bpm: 10 }),
+      ],
+    });
+    storage.files.set(DATA_PATH, original);
+    storage.files.set("external-valid.json", serializeVault(createEmptyVault()));
+    const repo = new JsonVaultRepository(storage);
+
+    await expect(repo.importFrom("external-valid.json", { mode: "merge" }))
+      .rejects.toMatchObject({ kind: "invalid-vault" });
+    expect(storage.files.get(DATA_PATH)).toBe(original);
+    expect(storage.files.has(TEMP_DATA_PATH)).toBe(false);
+  });
+  it("does not export a local Vault when any record is quarantined", async () => {
+    const storage = new MemoryVaultStorage();
+    const original = JSON.stringify({
+      ...createEmptyVault(),
+      ideas: [
+        makeIdea({ id: "47474747-4747-4747-8747-474747474747" }),
+        makeIdea({ id: "48484848-4848-4848-8848-484848484848", bpm: 10 }),
+      ],
+    });
+    storage.files.set(DATA_PATH, original);
+    storage.files.set("external-target.json", "unchanged destination");
+    const repo = new JsonVaultRepository(storage);
+
+    await expect(repo.exportTo("external-target.json"))
+      .rejects.toMatchObject({ kind: "invalid-vault" });
+    expect(storage.files.get(DATA_PATH)).toBe(original);
+    expect(storage.files.get("external-target.json")).toBe("unchanged destination");
+    expect(storage.files.has(TEMP_DATA_PATH)).toBe(false);
+  });
+
+  it("does not restore a backup when any record is quarantined", async () => {
+    const storage = new MemoryVaultStorage();
+    const original = serializeVault(createEmptyVault());
+    const name = backupFileName(new Date("2026-08-21T01:02:03.000Z"));
+    storage.files.set(DATA_PATH, original);
+    storage.files.set(`${BACKUP_DIR}/${name}`, JSON.stringify({
+      ...createEmptyVault(),
+      ideas: [makeIdea({ id: "49494949-4949-4949-8949-494949494949", bpm: 10 })],
+    }));
+    const repo = new JsonVaultRepository(storage);
+
+    await expect(repo.restore(name)).rejects.toMatchObject({ kind: "invalid-vault" });
+    expect(storage.files.get(DATA_PATH)).toBe(original);
+    expect(storage.files.has(TEMP_DATA_PATH)).toBe(false);
+  });
   it("reports future fileVersion without modifying data.json", async () => {
     const storage = new MemoryVaultStorage();
     const futureVault = JSON.stringify({

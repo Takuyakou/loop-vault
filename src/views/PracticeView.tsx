@@ -125,7 +125,7 @@ interface PracticeViewProps {
     ideaId: string,
     blockId: string,
     changes: Partial<SavedProgressionBlock>,
-  ) => boolean;
+  ) => boolean | "pending";
   openProgression: (ideaId: string, blockId: string) => void;
   openSettings: () => void;
   setToast: (message: string) => void;
@@ -538,7 +538,7 @@ export function PracticeView({
         localDate: localDateString(new Date()),
       }, currentSelected.effectiveKeySignature),
     });
-    if (updated) lastPersistedSessionRef.current = current;
+    if (updated === true) lastPersistedSessionRef.current = current;
   }
 
   const selected = recommendations.find(
@@ -1495,7 +1495,9 @@ export function PracticeView({
         block,
         selected.effectiveKeySignature,
       );
-      if (!updateProgressionBlock(selected.ideaId, block.id, { practice: reset })) {
+      const resetResult = updateProgressionBlock(selected.ideaId, block.id, { practice: reset });
+      if (resetResult === "pending") return;
+      if (!resetResult) {
         setToast(text.saveFailed);
         return;
       }
@@ -1655,11 +1657,9 @@ export function PracticeView({
       nowIso: new Date().toISOString(),
       localDate: localDateString(new Date()),
     }, selected.effectiveKeySignature);
-    if (updateProgressionBlock(selected.ideaId, targetBlock.id, { practice })) {
-      setToast(text.saved);
-    } else {
-      setToast(text.saveFailed);
-    }
+    const saveResult = updateProgressionBlock(selected.ideaId, targetBlock.id, { practice });
+    if (saveResult === true) setToast(text.saved);
+    else if (saveResult === false) setToast(text.saveFailed);
   }
 
   function persistTranspositionRound(
@@ -1706,14 +1706,15 @@ export function PracticeView({
       },
     );
     if (!result.changed) return;
-    if (updateProgressionBlock(currentSelected.ideaId, currentBlock.id, {
+    const saveResult = updateProgressionBlock(currentSelected.ideaId, currentBlock.id, {
       practice: result.progress,
-    })) {
+    });
+    if (saveResult === true) {
       latestPracticeProgressRef.current = result.progress;
       setToast(text.saved);
-      return;
+    } else if (saveResult === false) {
+      setToast(text.saveFailed);
     }
-    setToast(text.saveFailed);
   }
 
   function prepareVoicingChange(): boolean {

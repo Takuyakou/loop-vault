@@ -1,5 +1,6 @@
 import { createStore, type StoreApi } from "zustand/vanilla";
 import {
+  assertVaultCandidateSerializedBudget,
   createEmptyVault,
   VaultRepositoryError,
   type VaultBackup,
@@ -28,6 +29,7 @@ import {
   MAX_PERSISTED_CHORD_ALTERNATIVES,
   type QuarantinedRecord,
 } from "../domain/schema";
+import { sourceBasslineSnapshotSchema, type SourceBasslineSnapshotV1 } from "../domain/sourceBassline";
 import type {
   ChordTimelineItem,
   MidiProgressionAnalysis,
@@ -117,7 +119,15 @@ export interface ProgressionSaveMetadata {
   sourcePath?: string;
   userEdited?: boolean;
   userVerified?: boolean;
+  /** Strict detached asset only; transient Voice/source identity must not cross this boundary. */
+  sourceBassline?: SourceBasslineSnapshotV1;
+  /** Transient UI confirmation, invoked only when the aggregate fits after omitting this snapshot. */
+  confirmSourceBasslineOmission?: () => boolean;
+  /** Transient localized rejection announcer; never persisted. */
+  onPersistenceError?: (message: string) => void;
 }
+
+export type VaultMutationResult = boolean | "pending";
 
 export interface VaultStoreState {
   ideas: SongIdea[];
@@ -125,6 +135,8 @@ export interface VaultStoreState {
   analysis: AnalysisState;
   loadStatus: LoadStatus;
   quarantine: QuarantinedRecord[];
+  /** Valid legacy v1 above 16 MiB; only a compliant delete/shrink may write. */
+  sizeRecovery?: boolean;
   recovery?: RecoveryState;
   readonly?: ReadonlyState;
   unsaved: boolean;
@@ -137,9 +149,9 @@ export interface VaultStoreState {
   createIdea: (title: string, status?: Status) => string | undefined;
   createIdeaFromDraft: (draft: SongIdeaDraft) => string | undefined;
   createIdeaFromTextProgression: (draft: TextProgressionIdeaDraft) => string | undefined;
-  updateIdea: (id: string, changes: Partial<SongIdea>) => void;
+  updateIdea: (id: string, changes: Partial<SongIdea>) => VaultMutationResult;
   appendTextProgressionToIdea: (ideaId: string, draft: TextProgressionIdeaDraft) => boolean;
-  deleteIdea: (deletion: PendingIdeaDeletion) => boolean;
+  deleteIdea: (deletion: PendingIdeaDeletion) => VaultMutationResult;
   appendBlockToIdea: (
     ideaId: string,
     block: SavedProgressionBlock | ProgressionBlockCandidate,
@@ -150,27 +162,27 @@ export interface VaultStoreState {
     ideaId: string,
     blockId: string,
     changes: Partial<SavedProgressionBlock>,
-  ) => boolean;
+  ) => VaultMutationResult;
   duplicateProgressionBlock: (
     ideaId: string,
     blockId: string,
   ) => string | undefined;
   removeProgressionBlock: (
     deletion: PendingProgressionBlockDeletion,
-  ) => boolean;
+  ) => VaultMutationResult;
   removeReference: (
     deletion: PendingReferenceDeletion,
-  ) => boolean;
+  ) => VaultMutationResult;
   unlinkAsset: (
     deletion: PendingAssetDeletion,
-  ) => boolean;
+  ) => VaultMutationResult;
   transitionIdea: (
     id: string,
     to: Status,
     now?: Date,
     options?: TransitionOptions,
   ) => TransitionResult;
-  updateNextAction: (id: string, text: string, now?: Date) => void;
+  updateNextAction: (id: string, text: string, now?: Date) => VaultMutationResult;
   analyzeMidiBytes: (
     bytes: Uint8Array,
     options?: AnalyzeMidiOptions,
@@ -204,6 +216,7 @@ export function createVaultStore(
   let savedRevision = 0;
   let vaultGeneration = 0;
   let activeFlush: { generation: number; promise: Promise<void> } | undefined;
+  let activeRecoveryCommit: Promise<void> | undefined;
 
   const store = createStore<VaultStoreState>((set, get) => {
     function clearSaveTimer() {
@@ -220,7 +233,7 @@ export function createVaultStore(
       }, debounceMs);
     }
 
-    function setVault(vault: VaultFile, quarantine: QuarantinedRecord[] = []) {
+    function setVault(vault: VaultFile, quarantine: QuarantinedRecord[] = [], sizeRecovery = false) {
       clearSaveTimer();
       vaultGeneration += 1;
       changeRevision = 0;
@@ -229,6 +242,7 @@ export function createVaultStore(
         ideas: vault.ideas,
         settings: vault.settings,
         quarantine,
+        sizeRecovery,
         loadStatus: "ready",
         unsaved: false,
         saving: false,
@@ -240,13 +254,111 @@ export function createVaultStore(
       });
     }
 
-    function applyVaultChange(mutator: (vault: VaultFile) => VaultFile) {
+    function applyVaultChange(
+      mutator: (vault: VaultFile) => VaultFile,
+      allowSizeRecoveryShrink?: false,
+      sourceBasslineFallback?: {
+        omit: (vault: VaultFile) => VaultFile;
+        confirm: () => boolean;
+      },
+      onPersistenceError?: (message: string) => void,
+    ): boolean;
+    function applyVaultChange(
+      mutator: (vault: VaultFile) => VaultFile,
+      allowSizeRecoveryShrink: true,
+      sourceBasslineFallback?: undefined,
+      onPersistenceError?: (message: string) => void,
+    ): VaultMutationResult;    function applyVaultChange(
+      mutator: (vault: VaultFile) => VaultFile,
+      allowSizeRecoveryShrink = false,
+      sourceBasslineFallback?: {
+        omit: (vault: VaultFile) => VaultFile;
+        confirm: () => boolean;
+      },
+      onPersistenceError?: (message: string) => void,
+    ) {
       const state = get();
-      if (state.loadStatus !== "ready") {
+      if (state.loadStatus !== "ready") return false;
+      if (state.quarantine.length > 0) {
+        set({ error: quarantineReadonlyMessage(state.settings.language, "mutation") });
+        return false;
+      }
+      if (state.sizeRecovery && activeRecoveryCommit) {
+        set({ error: sizeRecoveryMessage(state.settings.language, "saving") });
+        return false;
+      }
+      if (state.sizeRecovery && !allowSizeRecoveryShrink) {
+        set({ error: sizeRecoveryMessage(state.settings.language, "readonly") });
         return false;
       }
 
-      const vault = mutator(currentVault(state));
+      let vault = mutator(currentVault(state));
+      try {
+        assertVaultCandidateSerializedBudget(vault);
+      } catch (error) {
+        if (!(error instanceof VaultRepositoryError)
+          || error.kind !== "vault-too-large"
+          || !sourceBasslineFallback) {
+          const message = error instanceof VaultRepositoryError && error.kind === "vault-too-large"
+            ? vaultBudgetMessage(state.settings.language)
+            : error instanceof Error ? error.message : vaultBudgetMessage(state.settings.language);
+          set({ error: message });
+          onPersistenceError?.(message);
+          return false;
+        }
+        const withoutSourceBassline = sourceBasslineFallback.omit(vault);
+        try {
+          assertVaultCandidateSerializedBudget(withoutSourceBassline);
+        } catch {
+          const message = vaultBudgetMessage(state.settings.language);
+          set({ error: message });
+          onPersistenceError?.(message);
+          return false;
+        }
+        if (!sourceBasslineFallback.confirm()) {
+          set({
+            error: state.settings.language === "ja"
+              ? "元ベースラインを外した保存はキャンセルされました。"
+              : "Saving without the source bassline was cancelled.",
+          });
+          return false;
+        }
+        vault = withoutSourceBassline;
+      }
+      if (state.sizeRecovery) {
+        const generation = vaultGeneration;
+        set({ saving: true, error: undefined });
+        const commit = (async () => {
+          try {
+            await options.repository.save(vault);
+            if (generation !== vaultGeneration) return;
+            vaultGeneration += 1;
+            changeRevision = 0;
+            savedRevision = 0;
+            set({
+              ideas: vault.ideas,
+              settings: vault.settings,
+              sizeRecovery: false,
+              unsaved: false,
+              saving: false,
+              lastSavedAt: now().toISOString(),
+              vaultEpoch: get().vaultEpoch + 1,
+              error: undefined,
+            });
+          } catch {
+            if (generation !== vaultGeneration) return;
+            set({
+              saving: false,
+              error: sizeRecoveryMessage(state.settings.language, "save-failed"),
+            });
+          }
+        })();
+        activeRecoveryCommit = commit;
+        void commit.finally(() => {
+          if (activeRecoveryCommit === commit) activeRecoveryCommit = undefined;
+        });
+        return "pending" as const;
+      }
       changeRevision += 1;
       set({
         ideas: vault.ideas,
@@ -263,6 +375,7 @@ export function createVaultStore(
 
       async initialize() {
         clearSaveTimer();
+        if (activeRecoveryCommit) await activeRecoveryCommit;
         if (activeFlush) await activeFlush.promise;
         set({
           loadStatus: "loading",
@@ -273,7 +386,7 @@ export function createVaultStore(
 
         try {
           const result = await options.repository.load();
-          setVault(result.vault, result.quarantine);
+          setVault(result.vault, result.quarantine, result.sizeRecovery ?? false);
           void get().refreshBackups();
         } catch (error) {
           if (
@@ -369,10 +482,20 @@ export function createVaultStore(
           updatedAt: createdAt,
         };
 
-        const applied = applyVaultChange((vault) => ({
-          ...vault,
-          ideas: [...vault.ideas, idea],
-        }));
+        const applied = applyVaultChange(
+          (vault) => ({
+            ...vault,
+            ideas: [...vault.ideas, idea],
+          }),
+          false,
+          progressionBlock?.sourceBassline && draft.progressionMetadata?.confirmSourceBasslineOmission
+            ? {
+                omit: (vault) => omitSourceBasslineFromBlock(vault, id, progressionBlock.id),
+                confirm: draft.progressionMetadata.confirmSourceBasslineOmission,
+              }
+            : undefined,
+          draft.progressionMetadata?.onPersistenceError,
+        );
         return applied ? id : undefined;
       },
 
@@ -426,12 +549,12 @@ export function createVaultStore(
       },
       updateIdea(id, changes) {
         const updatedAt = now().toISOString();
-        applyVaultChange((vault) => ({
+        return applyVaultChange((vault) => ({
           ...vault,
           ideas: vault.ideas.map((idea) =>
             idea.id === id ? { ...idea, ...changes, updatedAt } : idea,
           ),
-        }));
+        }), true);
       },
 
       deleteIdea(deletion) {
@@ -442,7 +565,7 @@ export function createVaultStore(
         return applyVaultChange((vault) => ({
           ...vault,
           ideas: removeUndoSnapshot(vault.ideas, snapshot, ideaAnchor),
-        }));
+        }), true);
       },
 
       appendBlockToIdea(ideaId, block, analysis, metadata) {
@@ -460,32 +583,46 @@ export function createVaultStore(
           now,
           ...voicingSourceContext(get().analysis, analysis),
         }, metadata);
-        return applyVaultChange((vault) => ({
-          ...vault,
-          ideas: vault.ideas.map((idea) =>
-            idea.id === ideaId
-              ? {
-                  ...idea,
-                  progressionBlocks: [
-                    ...(idea.progressionBlocks ?? []),
-                    savedBlock,
-                  ],
-                  assets: metadata?.sourcePath && sourceAssetId && !existingAsset
-                    ? [...idea.assets, { id: sourceAssetId, type: "midi" as const, path: metadata.sourcePath }]
-                    : idea.assets,
-                  bpm: idea.bpm ?? savedBlock.bpm,
-                  key: idea.key ?? savedBlock.detectedKey,
-                  chordMemo: idea.chordMemo.trim()
-                    ? idea.chordMemo
-                    : savedBlock.summaryText,
-                  updatedAt: now().toISOString(),
-                }
-              : idea,
-          ),
-        }));
+        return applyVaultChange(
+          (vault) => ({
+            ...vault,
+            ideas: vault.ideas.map((idea) =>
+              idea.id === ideaId
+                ? {
+                    ...idea,
+                    progressionBlocks: [
+                      ...(idea.progressionBlocks ?? []),
+                      savedBlock,
+                    ],
+                    assets: metadata?.sourcePath && sourceAssetId && !existingAsset
+                      ? [...idea.assets, { id: sourceAssetId, type: "midi" as const, path: metadata.sourcePath }]
+                      : idea.assets,
+                    bpm: idea.bpm ?? savedBlock.bpm,
+                    key: idea.key ?? savedBlock.detectedKey,
+                    chordMemo: idea.chordMemo.trim()
+                      ? idea.chordMemo
+                      : savedBlock.summaryText,
+                    updatedAt: now().toISOString(),
+                  }
+                : idea,
+            ),
+          }),
+          false,
+          savedBlock.sourceBassline && metadata?.confirmSourceBasslineOmission
+            ? {
+                omit: (vault) => omitSourceBasslineFromBlock(vault, ideaId, savedBlock.id),
+                confirm: metadata.confirmSourceBasslineOmission,
+              }
+            : undefined,
+          metadata?.onPersistenceError,
+        );
       },
 
       updateProgressionBlock(ideaId, blockId, changes) {
+        if (Object.prototype.hasOwnProperty.call(changes, "sourceBassline")) {
+          set({ error: "Stored source bassline snapshots are immutable." });
+          return false;
+        }
         const idea = get().ideas.find((entry) => entry.id === ideaId);
         const block = idea?.progressionBlocks?.find((entry) => entry.id === blockId);
         if (!idea || !block) {
@@ -506,7 +643,7 @@ export function createVaultStore(
                 updatedAt,
               }
             : entry),
-        }));
+        }), true);
       },
 
       duplicateProgressionBlock(ideaId, blockId) {
@@ -554,6 +691,9 @@ export function createVaultStore(
           })),
           tags: [...block.tags],
           suppressedAutoTags: block.suppressedAutoTags?.map((tag) => ({ ...tag })),
+          ...(block.sourceBassline
+            ? { sourceBassline: cloneSourceBassline(block.sourceBassline) }
+            : {}),
           capturedAt,
         };
         const applied = applyVaultChange((vault) => ({
@@ -597,7 +737,7 @@ export function createVaultStore(
                 }
               : idea,
           ),
-        }));
+        }), true);
       },
 
       removeReference(deletion) {
@@ -622,7 +762,7 @@ export function createVaultStore(
                 }
               : entry,
           ),
-        }));
+        }), true);
       },
 
       unlinkAsset(deletion) {
@@ -648,7 +788,7 @@ export function createVaultStore(
                 }
               : entry,
           ),
-        }));
+        }), true);
       },
 
       transitionIdea(id, to, transitionNow = now(), transitionOptions = {}) {
@@ -665,18 +805,27 @@ export function createVaultStore(
           return result;
         }
 
-        applyVaultChange((vault) => ({
+        const applied = applyVaultChange((vault) => ({
           ...vault,
           ideas: vault.ideas.map((entry) =>
             entry.id === id ? result.idea : entry,
           ),
         }));
+        if (!applied) {
+          return {
+            ok: false,
+            error: {
+              code: "persistence-failed",
+              message: get().error ?? "The Vault update could not be saved.",
+            },
+          };
+        }
         return result;
       },
 
       updateNextAction(id, text, actionNow = now()) {
         const updatedAt = actionNow.toISOString();
-        applyVaultChange((vault) => ({
+        return applyVaultChange((vault) => ({
           ...vault,
           ideas: vault.ideas.map((idea) =>
             idea.id === id
@@ -687,7 +836,7 @@ export function createVaultStore(
                 }
               : idea,
           ),
-        }));
+        }), true);
       },
 
       analyzeMidiBytes(bytes, analyzeOptions = {}) {
@@ -769,6 +918,13 @@ export function createVaultStore(
       },
 
       async exportVault(path) {
+        if (get().quarantine.length > 0) {
+          set({ error: quarantineReadonlyMessage(get().settings.language, "export") });
+          return false;
+        }        if (get().sizeRecovery) {
+          set({ error: sizeRecoveryMessage(get().settings.language, "export") });
+          return false;
+        }
         await get().flush();
         set({ error: undefined });
         try {
@@ -786,11 +942,18 @@ export function createVaultStore(
       },
 
       async importVault(path, mode) {
+        if (get().quarantine.length > 0 && mode === "merge") {
+          set({ error: quarantineReadonlyMessage(get().settings.language, "merge") });
+          return false;
+        }        if (get().sizeRecovery) {
+          set({ error: sizeRecoveryMessage(get().settings.language, "import") });
+          return false;
+        }
         await get().flush();
         set({ loadStatus: "loading", error: undefined });
         try {
           const result = await options.repository.importFrom(path, { mode });
-          setVault(result.vault, result.quarantine);
+          setVault(result.vault, result.quarantine, result.sizeRecovery ?? false);
           await get().refreshBackups();
           return true;
         } catch (error) {
@@ -810,7 +973,7 @@ export function createVaultStore(
         set({ loadStatus: "loading", error: undefined });
         try {
           const result = await options.repository.restore(backupName);
-          setVault(result.vault, result.quarantine);
+          setVault(result.vault, result.quarantine, result.sizeRecovery ?? false);
           await get().refreshBackups();
         } catch (error) {
           set({
@@ -824,7 +987,12 @@ export function createVaultStore(
       },
 
       async flush() {
-        clearSaveTimer();
+        if (get().quarantine.length > 0) {
+          clearSaveTimer();
+          set({ error: quarantineReadonlyMessage(get().settings.language, "flush") });
+          return;
+        }        clearSaveTimer();
+        if (activeRecoveryCommit) await activeRecoveryCommit;
         if (activeFlush) {
           await activeFlush.promise;
           if (changeRevision > savedRevision) {
@@ -880,6 +1048,7 @@ export function initialState(): Pick<
   | "analysis"
   | "loadStatus"
   | "quarantine"
+  | "sizeRecovery"
   | "recovery"
   | "readonly"
   | "unsaved"
@@ -894,6 +1063,7 @@ export function initialState(): Pick<
     analysis: emptyAnalysisState(),
     loadStatus: "idle",
     quarantine: [],
+    sizeRecovery: false,
     recovery: undefined,
     readonly: undefined,
     unsaved: false,
@@ -916,6 +1086,48 @@ async function safeListBackups(
   } catch {
     return [];
   }
+}
+
+function vaultBudgetMessage(language: "ja" | "en"): string {
+  return language === "ja"
+    ? "Vault全体が16 MiB上限を超えるため保存できません。既存内容を減らすか、元ベースラインを付けずにもう一度保存してください。"
+    : "The complete Vault exceeds the 16 MiB limit. Reduce existing content or retry without the source bassline.";
+}
+function quarantineReadonlyMessage(
+  language: "ja" | "en",
+  kind: "mutation" | "flush" | "merge" | "export",
+): string {
+  const ja = language === "ja";
+  if (kind === "merge") return ja
+    ? "無効レコードを隔離中のVaultへは結合できません。置換読み込みまたは正常なbackup復元を使用してください。"
+    : "A Vault with quarantined records cannot be merged. Use replace import or restore a valid backup.";
+  if (kind === "export") return ja
+    ? "無効レコードを隔離中のVaultは、不完全な書き出しを防ぐためexportできません。"
+    : "A Vault with quarantined records cannot be exported because the export would be incomplete.";
+  return ja
+    ? "無効レコードを隔離中のため、このVaultは非書込みです。置換読み込みまたは正常なbackup復元で回復してください。"
+    : "This Vault is non-writing while invalid records are quarantined. Recover with replace import or a valid backup.";
+}
+function sizeRecoveryMessage(
+  language: "ja" | "en",
+  kind: "readonly" | "saving" | "save-failed" | "export" | "import",
+): string {
+  const ja = language === "ja";
+  if (kind === "saving") return ja
+    ? "Vaultの縮小保存中です。完了後にもう一度お試しください。"
+    : "The reduced Vault is being saved. Try again after it completes.";
+  if (kind === "save-failed") return ja
+    ? "Vaultを縮小保存できませんでした。元の読み取り専用データは変更されていません。"
+    : "The reduced Vault could not be saved. The original read-only data is unchanged.";
+  if (kind === "export") return ja
+    ? "16 MiB未満へ縮小するまでVaultを書き出せません。"
+    : "Reduce the Vault below 16 MiB before exporting.";
+  if (kind === "import") return ja
+    ? "16 MiB未満へ縮小するまでVaultを読み込めません。"
+    : "Reduce the Vault below 16 MiB before importing.";
+  return ja
+    ? "このVaultは上限超過のため読み取り専用です。削除または内容の縮小で16 MiB未満にしてください。"
+    : "This Vault is read-only because it exceeds the limit. Delete or reduce content below 16 MiB.";
 }
 
 function corruptPathFromDetails(details: unknown): string | undefined {
@@ -1147,6 +1359,9 @@ function toSavedProgressionBlock(
     return {
       ...block,
       chords: persistChordEvents(block.chords, context.idFactory),
+      ...(block.sourceBassline
+        ? { sourceBassline: cloneSourceBassline(block.sourceBassline) }
+        : {}),
     };
   }
 
@@ -1192,7 +1407,34 @@ function toSavedProgressionBlock(
     sourceWeightsVersion: "phase3.6-v1",
     userEdited: metadata.userEdited ?? false,
     userVerified: metadata.userVerified ?? false,
+    ...(metadata.sourceBassline
+      ? { sourceBassline: cloneSourceBassline(metadata.sourceBassline) }
+      : {}),
   };
+}
+
+function omitSourceBasslineFromBlock(
+  vault: VaultFile,
+  ideaId: string,
+  blockId: string,
+): VaultFile {
+  return {
+    ...vault,
+    ideas: vault.ideas.map((idea) => idea.id === ideaId
+      ? {
+          ...idea,
+          progressionBlocks: (idea.progressionBlocks ?? []).map((block) => {
+            if (block.id !== blockId) return block;
+            const { sourceBassline, ...withoutSourceBassline } = block;
+            void sourceBassline;
+            return withoutSourceBassline;
+          }),
+        }
+      : idea),
+  };
+}
+function cloneSourceBassline(snapshot: SourceBasslineSnapshotV1): SourceBasslineSnapshotV1 {
+  return sourceBasslineSnapshotSchema.parse(snapshot);
 }
 
 function voicingSourceContext(

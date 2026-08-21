@@ -170,6 +170,14 @@ import { ProgressionEditSummary } from "../components/progression-editing/Progre
 import { usePlaybackState } from "../hooks/usePlaybackState";
 import { Copy, FileMusic } from "lucide-react";
 import { Button, StatusMessage } from "../components/ui";
+import { SourceBasslineCapturePanel } from "../components/capture/SourceBasslineCapturePanel";
+import {
+  assessManualSourceBasslineCapture,
+  assessSourceBasslineCapture,
+  sourceBasslineAuthorizationKey,
+  sourceBasslineCandidateVoices,
+  type SourceBasslineSnapshotV1,
+} from "../domain/sourceBassline";
 
 interface TextDraftContext {
   readonly initialTitle: string;
@@ -204,7 +212,7 @@ interface CaptureViewProps {
   ) => boolean;
   createIdeaFromTextProgression?: (draft: TextProgressionIdeaDraft) => string | undefined;
   appendTextProgressionToIdea?: (ideaId: string, draft: TextProgressionIdeaDraft) => boolean;
-  updateIdea: (id: string, changes: Partial<SongIdea>) => void;
+  updateIdea: (id: string, changes: Partial<SongIdea>) => boolean | "pending";
   setToast: (toast: string) => void;
   copy: AppCopy;
   language: AppLanguage;
@@ -337,11 +345,25 @@ export function CaptureView(props: CaptureViewProps) {
   const [completedAnalysisSummary, setCompletedAnalysisSummary] =
     useState<CaptureAnalysisRunSummary>();
   const [intakeError, setIntakeError] = useState<string>();
+  const [persistenceError, setPersistenceError] = useState<string>();
   const { sound: previewSound, setSound: setPreviewSound } = usePreviewSound();
   const [activeDraft, setActiveDraft] = useState<ManualCandidateDraft | null>(null);
+  const [manualSourceBasslineVoiceId, setManualSourceBasslineVoiceId] = useState("");
+  const [manualSourceBasslineRangeKey, setManualSourceBasslineRangeKey] = useState("");
+  const [manualSourceBasslineAuthorization, setManualSourceBasslineAuthorization] = useState("");
+  const manualSourceBasslineSessionRef = useRef(preAnalysisSession);
+  const manualSourceBasslineDraftKeyRef = useRef("");
   const [captureInputMode, setCaptureInputMode] = useState<CaptureInputMode>("midi");
   const [textDraftContext, setTextDraftContext] = useState<TextDraftContext>();
   const [analysisProgress, setAnalysisProgress] = useState<CaptureAnalysisProgressStage>();
+  const [analysisRunGeneration, setAnalysisRunGeneration] = useState(0);
+  const captureViewMountedRef = useRef(true);
+  useEffect(() => {
+    captureViewMountedRef.current = true;
+    return () => {
+      captureViewMountedRef.current = false;
+    };
+  }, []);
   const [rangeSelectorRequest, setRangeSelectorRequest] = useState(0);
   const candidateHeaderFocusIdRef = useRef<string>();
   const result = analysis.result;
@@ -354,6 +376,75 @@ export function CaptureView(props: CaptureViewProps) {
   const completedAnalysisStatus = completedAnalysisSummary
     ? captureAnalysisRunCopy(completedAnalysisSummary, language)
     : undefined;
+  const manualSourceBasslineCandidate = useMemo(() => (
+    activeDraft?.source.type === "manual-range" ? draftToCandidate(activeDraft) : undefined
+  ), [activeDraft]);
+  const manualSourceBasslineVoices = useMemo(
+    () => sourceBasslineCandidateVoices(preAnalysisSession),
+    [preAnalysisSession],
+  );
+  const manualSourceBasslineAssessment = useMemo(() => {
+    if (!manualSourceBasslineCandidate || activeDraft?.source.type !== "manual-range") return undefined;
+    return assessManualSourceBasslineCapture(
+      preAnalysisSession,
+      manualSourceBasslineCandidate,
+      activeDraft.selectedRange,
+      activeDraft.beatsPerBar,
+      manualSourceBasslineVoiceId,
+      result?.sourceFingerprint,
+    );
+  }, [
+    activeDraft,
+    manualSourceBasslineCandidate,
+    manualSourceBasslineVoiceId,
+    preAnalysisSession,
+    result?.sourceFingerprint,
+  ]);
+  const manualSourceBasslineCurrentAuthorization = manualSourceBasslineCandidate
+    ? sourceBasslineAuthorizationKey(
+        manualSourceBasslineCandidate,
+        manualSourceBasslineVoiceId,
+        result?.sourceFingerprint,
+      )
+    : "";
+  const manualSourceBasslineRangeSelected = manualSourceBasslineAssessment !== undefined
+    && manualSourceBasslineRangeKey === manualSourceBasslineAssessment.rangeKey;
+  const manualSourceBasslineOptedIn = manualSourceBasslineAuthorization !== ""
+    && manualSourceBasslineAuthorization === manualSourceBasslineCurrentAuthorization;
+  const manualSourceBasslineContextKey = manualSourceBasslineCandidate
+    ? `${sourceBasslineAuthorizationKey(
+        manualSourceBasslineCandidate,
+        "",
+        result?.sourceFingerprint,
+      )}:${analysisRunGeneration}`
+    : `none:${analysisRunGeneration}`;
+  const manualSourceBasslineContextKeyRef = useRef(manualSourceBasslineContextKey);
+  useEffect(() => {
+    if (manualSourceBasslineContextKeyRef.current === manualSourceBasslineContextKey) return;
+    manualSourceBasslineContextKeyRef.current = manualSourceBasslineContextKey;
+    setManualSourceBasslineVoiceId("");
+    setManualSourceBasslineRangeKey("");
+    setManualSourceBasslineAuthorization("");
+  }, [manualSourceBasslineContextKey]);
+  useEffect(() => {
+    if (manualSourceBasslineSessionRef.current === preAnalysisSession) return;
+    manualSourceBasslineSessionRef.current = preAnalysisSession;
+    setManualSourceBasslineVoiceId("");
+    setManualSourceBasslineRangeKey("");
+    setManualSourceBasslineAuthorization("");
+  }, [preAnalysisSession]);
+
+  useEffect(() => {
+    const nextDraftKey = activeDraft?.source.type === "manual-range"
+      ? `${activeDraft.draftId}:${manualSourceBasslineAssessment?.rangeKey ?? ""}`
+      : "";
+    if (manualSourceBasslineDraftKeyRef.current === nextDraftKey) return;
+    manualSourceBasslineDraftKeyRef.current = nextDraftKey;
+    setManualSourceBasslineVoiceId("");
+    setManualSourceBasslineRangeKey("");
+    setManualSourceBasslineAuthorization("");
+  }, [activeDraft, manualSourceBasslineAssessment?.rangeKey]);
+
   useStickyInspectorHeight(inspectorHost, Boolean(expandedCandidateId));
 
   useEffect(() => {
@@ -448,17 +539,22 @@ export function CaptureView(props: CaptureViewProps) {
       stopCapturePlayback(controller);
       setAnalysisProgress("analyzing");
       await waitForNextPaint();
+      if (!captureViewMountedRef.current) return false;
       const analyzed = analyzeMidiBytes(bytes, {
         fileName,
         ...getAnalysisProfileAnalyzeOptions(),
         ...optionOverrides,
       });
+      if (!captureViewMountedRef.current) return false;
+      setAnalysisRunGeneration((current) => current + 1);
       setAnalysisProgress("finalizing");
       await waitForNextPaint();
+      if (!captureViewMountedRef.current) return false;
       setActiveDraft(null);
       setExpandedCandidateId(undefined);
       setToast(analyzed ? copy.toast.midiAnalyzed : copy.toast.midiFailed);
       await waitForStatusFeedback();
+      if (!captureViewMountedRef.current) return false;
       setAnalysisProgress(undefined);
       return Boolean(analyzed);
     },
@@ -477,6 +573,7 @@ export function CaptureView(props: CaptureViewProps) {
       }
       setAnalysisProgress("reading");
       await waitForNextPaint();
+      if (!captureViewMountedRef.current) return;
       const intake = options.append && preAnalysisSession
         ? addMidiSources(preAnalysisSession, inputs)
         : createAnalysisSession(inputs);
@@ -504,6 +601,7 @@ export function CaptureView(props: CaptureViewProps) {
           inputs[0].bytes,
           inputs[0].displayName,
         );
+        if (!captureViewMountedRef.current) return;
         return;
       }
       clearAnalysis();
@@ -539,7 +637,9 @@ export function CaptureView(props: CaptureViewProps) {
       try {
         setAnalysisProgress("reading");
         await waitForNextPaint();
+        if (!captureViewMountedRef.current) return;
         const byteArrays = await readBoundedMidiPaths(midiPaths);
+        if (!captureViewMountedRef.current) return;
         const inputs = midiPaths.map((path, index): MidiSourceInput => ({
           bytes: byteArrays[index],
           displayName: fileNameFromPath(path),
@@ -548,7 +648,9 @@ export function CaptureView(props: CaptureViewProps) {
           append,
           sourcePath: append ? undefined : midiPaths[0],
         });
+        if (!captureViewMountedRef.current) return;
       } catch (error) {
+        if (!captureViewMountedRef.current) return;
         setAnalysisProgress(undefined);
         const message = error instanceof Error ? error.message : copy.toast.midiReadFailed;
         setIntakeError(message);
@@ -569,14 +671,18 @@ export function CaptureView(props: CaptureViewProps) {
       try {
         setAnalysisProgress("reading");
         await waitForNextPaint();
+        if (!captureViewMountedRef.current) return;
         assertMidiTotalBytes(midiFiles.map(({ size }) => size));
         const inputs = await Promise.all(midiFiles.map(async (file): Promise<MidiSourceInput> => ({
           bytes: new Uint8Array(await file.arrayBuffer()),
           displayName: file.name,
         })));
+        if (!captureViewMountedRef.current) return;
         assertMidiTotalBytes(inputs.map(({ bytes }) => bytes.byteLength));
         await prepareMidiInputs(inputs, { append });
+        if (!captureViewMountedRef.current) return;
       } catch (error) {
+        if (!captureViewMountedRef.current) return;
         setAnalysisProgress(undefined);
         const message = error instanceof Error ? error.message : copy.toast.midiReadFailed;
         setIntakeError(message);
@@ -646,7 +752,7 @@ export function CaptureView(props: CaptureViewProps) {
           .enablePreAnalysisSourceSelection,
       filters: [{ name: "MIDI", extensions: ["mid", "midi"] }],
     });
-    if (!path) {
+    if (!captureViewMountedRef.current || !path) {
       return;
     }
 
@@ -740,6 +846,36 @@ export function CaptureView(props: CaptureViewProps) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [activeDraft, controller, previewSound, result?.bpm, result?.timeSignature, textDraftContext?.bpm]);
 
+  function resetManualSourceBassline() {
+    setManualSourceBasslineVoiceId("");
+    setManualSourceBasslineRangeKey("");
+    setManualSourceBasslineAuthorization("");
+  }
+
+  function manualSourceBasslineForSave(): SourceBasslineSnapshotV1 | undefined | null {
+    if (!manualSourceBasslineOptedIn) return undefined;
+    if (manualSourceBasslineRangeSelected && manualSourceBasslineAssessment?.snapshot) {
+      return manualSourceBasslineAssessment.snapshot;
+    }
+    return globalThis.confirm(language === "ja"
+      ? "元ベースラインを付けられません。コード進行だけを保存しますか？"
+      : "The source bassline cannot be attached. Save only the progression?")
+      ? undefined
+      : null;
+  }
+
+  function confirmAggregateSourceBasslineOmission(): boolean {
+    return globalThis.confirm(language === "ja"
+      ? "元ベースラインを含めるとVault全体が16 MiBを超えます。コード進行だけを保存しますか？"
+      : "Including the source bassline would exceed the 16 MiB Vault limit. Save only the progression?");
+  }
+  function announcePersistenceError(message: string): void {
+    queueMicrotask(() => {
+      if (!captureViewMountedRef.current) return;
+      setPersistenceError(message);
+      setToast(message);
+    });
+  }
   function saveNew(
     candidate: ProgressionBlockCandidate,
     title: string,
@@ -749,7 +885,9 @@ export function CaptureView(props: CaptureViewProps) {
     editable: EditableProgression,
     propagationEvents: readonly CorrectionPropagationFeedbackEvent[],
     userEditedOverride?: boolean,
+    sourceBassline?: SourceBasslineSnapshotV1,
   ): boolean {
+    setPersistenceError(undefined);
     const corrections = correctionEvents(original, candidate, editable);
     const userEdited = userEditedOverride ?? hasProgressionEdits(editable);
     const id = createIdeaFromDraft({
@@ -761,7 +899,7 @@ export function CaptureView(props: CaptureViewProps) {
       nextAction,
       progressionBlock: candidate,
       progressionAnalysis: analysis.result,
-      progressionMetadata: { sourcePath, userEdited, userVerified },
+      progressionMetadata: { sourcePath, userEdited, userVerified, onPersistenceError: announcePersistenceError, ...(sourceBassline ? { sourceBassline, confirmSourceBasslineOmission: confirmAggregateSourceBasslineOmission } : {}) },
     });
     if (id) {
       persistCorrectionEvents([
@@ -851,7 +989,9 @@ export function CaptureView(props: CaptureViewProps) {
     userVerified: boolean,
     propagationEvents: readonly CorrectionPropagationFeedbackEvent[],
     userEditedOverride?: boolean,
+    sourceBassline?: SourceBasslineSnapshotV1,
   ): boolean {
+    setPersistenceError(undefined);
     if (!ideaId) {
       setToast(copy.capture.chooseIdeaFirst);
       return false;
@@ -861,6 +1001,8 @@ export function CaptureView(props: CaptureViewProps) {
       sourcePath,
       userEdited: userEditedOverride ?? hasProgressionEdits(editable),
       userVerified,
+      onPersistenceError: announcePersistenceError,
+      ...(sourceBassline ? { sourceBassline, confirmSourceBasslineOmission: confirmAggregateSourceBasslineOmission } : {}),
     });
     if (appended) {
       const userEdited = userEditedOverride ?? hasProgressionEdits(editable);
@@ -890,11 +1032,12 @@ export function CaptureView(props: CaptureViewProps) {
       return false;
     }
 
-    updateIdea(ideaId, {
-      chordMemo: appendProgressionMemo(idea.chordMemo, formatProgressionText(candidate.chords)),
-    });
-    setToast(copy.toast.blockCopied);
-    return true;
+    return persistCopiedProgressionMemo(
+      idea,
+      candidate,
+      updateIdea,
+      () => setToast(copy.toast.blockCopied),
+    );
   }
 
   async function copyProgression(candidate: ProgressionBlockCandidate) {
@@ -1264,7 +1407,7 @@ export function CaptureView(props: CaptureViewProps) {
                   request.fileName,
                   request.options,
                 ).then((analyzed) => {
-                  if (!analyzed) return;
+                  if (!analyzed || !captureViewMountedRef.current) return;
                   setCompletedAnalysisSummary(runSummary);
                   void appendRoleCorrectionLog(roleEvents)
                     .catch(() => undefined);
@@ -1514,6 +1657,11 @@ export function CaptureView(props: CaptureViewProps) {
 
   return (
     <div data-capture-view-root data-capture-stage="result">
+      {persistenceError ? (
+        <p className="mb-4 border border-red-400/60 bg-red-950/20 p-3 text-sm text-red-100" role="alert">
+          {persistenceError}
+        </p>
+      ) : null}
       {analysisProgress ? (
         <CaptureAnalysisProgress stage={analysisProgress} copy={copy} />
       ) : null}
@@ -1703,6 +1851,8 @@ export function CaptureView(props: CaptureViewProps) {
                   analyzerVersion={result.analyzerVersion}
                   analysisInput={analysisInput}
                   sourceFileName={result.fileName}
+                  sourceBasslineSession={preAnalysisSession}
+                  sourceBasslineAnalysisGeneration={analysisRunGeneration}
                   ideas={ideas}
                   authorReferenceIndex={authorReferenceIndex}
                   patterns={result.candidatePatterns}
@@ -1737,7 +1887,7 @@ export function CaptureView(props: CaptureViewProps) {
                     setActiveDraft(null);
                     markCandidateDirty(candidate.id, false);
                   }}
-                  onCreate={(editedCandidate, title, nextAction, userVerified, editable, propagationEvents) => {
+                  onCreate={(editedCandidate, title, nextAction, userVerified, editable, propagationEvents, sourceBassline) => {
                     const currentDraft = activeDraft?.source.type === "automatic-candidate"
                       && activeDraft.source.candidateId === candidate.id
                       ? activeDraft
@@ -1754,9 +1904,10 @@ export function CaptureView(props: CaptureViewProps) {
                       editable,
                       propagationEvents,
                       currentDraft?.isDirty,
+                      sourceBassline,
                     );
                   }}
-                  onAppend={(editedCandidate, ideaId, userVerified, editable, propagationEvents) => {
+                  onAppend={(editedCandidate, ideaId, userVerified, editable, propagationEvents, sourceBassline) => {
                     const currentDraft = activeDraft?.source.type === "automatic-candidate"
                       && activeDraft.source.candidateId === candidate.id
                       ? activeDraft
@@ -1772,6 +1923,7 @@ export function CaptureView(props: CaptureViewProps) {
                       userVerified,
                       propagationEvents,
                       currentDraft?.isDirty,
+                      sourceBassline,
                     );
                   }}
                   onCopyMemo={(editedCandidate, ideaId) => {
@@ -1816,6 +1968,30 @@ export function CaptureView(props: CaptureViewProps) {
           copy={copy}
           language={language}
           {...(result.detectedKey ? { keySignature: result.detectedKey } : {})}
+          beforeSave={manualSourceBasslineAssessment ? (
+            <SourceBasslineCapturePanel
+              voices={manualSourceBasslineVoices}
+              selectedVoiceId={manualSourceBasslineVoiceId}
+              assessment={manualSourceBasslineAssessment}
+              rangeSelected={manualSourceBasslineRangeSelected}
+              optedIn={manualSourceBasslineOptedIn}
+              language={language}
+              onVoiceChange={(voiceId) => {
+                setManualSourceBasslineVoiceId(voiceId);
+                setManualSourceBasslineRangeKey("");
+                setManualSourceBasslineAuthorization("");
+              }}
+              onRangeChange={(selected) => {
+                setManualSourceBasslineRangeKey(
+                  selected ? manualSourceBasslineAssessment.rangeKey : "",
+                );
+                setManualSourceBasslineAuthorization("");
+              }}
+              onOptInChange={(enabled) => setManualSourceBasslineAuthorization(
+                enabled ? manualSourceBasslineCurrentAuthorization : "",
+              )}
+            />
+          ) : undefined}
           save={{
             initialTitle: copy.capture.manualDraft.defaultTitle,
             ideas,
@@ -1823,6 +1999,8 @@ export function CaptureView(props: CaptureViewProps) {
             onCreate: (draft, title, nextAction, userVerified) => {
               const candidate = draftToCandidate(draft);
               const original = draft.sourceCandidateSnapshot ?? candidate;
+              const sourceBassline = manualSourceBasslineForSave();
+              if (sourceBassline === null) return false;
               return saveNew(
                 candidate,
                 title,
@@ -1832,11 +2010,14 @@ export function CaptureView(props: CaptureViewProps) {
                 draftEditable(draft),
                 [],
                 draft.isDirty,
+                sourceBassline,
               );
             },
             onAppend: (draft, ideaId, userVerified) => {
               const candidate = draftToCandidate(draft);
               const original = draft.sourceCandidateSnapshot ?? candidate;
+              const sourceBassline = manualSourceBasslineForSave();
+              if (sourceBassline === null) return false;
               return appendExisting(
                 candidate,
                 original,
@@ -1845,20 +2026,24 @@ export function CaptureView(props: CaptureViewProps) {
                 userVerified,
                 [],
                 draft.isDirty,
+                sourceBassline,
               );
             },
           }}
           onPreview={(draft) => void previewManualDraft(draft)}
           onChange={setActiveDraft}
           onSave={() => {
+            resetManualSourceBassline();
             setActiveDraft(null);
             applyCandidateSelection(undefined);
           }}
           onDiscard={() => {
+            resetManualSourceBassline();
             setActiveDraft(null);
             applyCandidateSelection(undefined);
           }}
           onReselect={() => {
+            resetManualSourceBassline();
             setActiveDraft(null);
             applyCandidateSelection(undefined);
             setTimelineOpen(true);
@@ -2304,6 +2489,8 @@ export function ProgressionCandidateCard({
   analyzerVersion = "unknown",
   analysisInput,
   sourceFileName,
+  sourceBasslineSession,
+  sourceBasslineAnalysisGeneration = 0,
   ideas = [],
   authorReferenceIndex: providedAuthorReferenceIndex,
   onCopyProgression,
@@ -2343,6 +2530,8 @@ export function ProgressionCandidateCard({
   analyzerVersion?: string;
   analysisInput?: AnalysisInput;
   sourceFileName?: string;
+  sourceBasslineSession?: AnalysisSession;
+  sourceBasslineAnalysisGeneration?: number;
   ideas?: SongIdea[];
   authorReferenceIndex?: AuthorReferenceIndex;
   onCreate?: (
@@ -2352,6 +2541,7 @@ export function ProgressionCandidateCard({
     userVerified: boolean,
     editable: EditableProgression,
     propagationEvents: readonly CorrectionPropagationFeedbackEvent[],
+    sourceBassline?: SourceBasslineSnapshotV1,
   ) => boolean;
   onAppend?: (
     candidate: ProgressionBlockCandidate,
@@ -2359,6 +2549,7 @@ export function ProgressionCandidateCard({
     userVerified: boolean,
     editable: EditableProgression,
     propagationEvents: readonly CorrectionPropagationFeedbackEvent[],
+    sourceBassline?: SourceBasslineSnapshotV1,
   ) => boolean;
   onCopyMemo?: (
     candidate: ProgressionBlockCandidate,
@@ -2742,6 +2933,118 @@ export function ProgressionCandidateCard({
     () => timelineVoicingSourceStatus(editedCandidate.chords),
     [editedCandidate.chords],
   );
+  const sourceBasslineVoices = useMemo(
+    () => sourceBasslineCandidateVoices(sourceBasslineSession),
+    [sourceBasslineSession],
+  );
+  const [sourceBasslineVoiceId, setSourceBasslineVoiceId] = useState("");
+  const [sourceBasslineRangeKey, setSourceBasslineRangeKey] = useState("");
+  const [sourceBasslineAuthorization, setSourceBasslineAuthorization] = useState("");
+  const sourceBasslineSessionRef = useRef(sourceBasslineSession);
+  const sourceBasslineAssessment = useMemo(
+    () => assessSourceBasslineCapture(
+      sourceBasslineSession,
+      editedCandidate,
+      sourceBasslineVoiceId,
+      sourceFingerprint,
+    ),
+    [
+      editedCandidate.chords,
+      editedCandidate.endBar,
+      editedCandidate.id,
+      editedCandidate.startBar,
+      sourceBasslineSession,
+      sourceBasslineVoiceId,
+      sourceFingerprint,
+    ],
+  );
+  const sourceBasslineRangeSelected = sourceBasslineRangeKey === sourceBasslineAssessment.rangeKey;
+  const currentSourceBasslineAuthorization = sourceBasslineAuthorizationKey(
+    editedCandidate,
+    sourceBasslineVoiceId,
+    sourceFingerprint,
+  );
+  const sourceBasslineOptedIn = Boolean(isExpanded)
+    && sourceBasslineAuthorization === currentSourceBasslineAuthorization
+    && sourceBasslineAuthorization !== "";
+  const sourceBasslineContextKey = `${sourceBasslineAuthorizationKey(
+    editedCandidate,
+    "",
+    sourceFingerprint,
+  )}:${sourceBasslineAnalysisGeneration}`;
+  const sourceBasslineContextKeyRef = useRef(sourceBasslineContextKey);
+
+  useEffect(() => {
+    if (sourceBasslineContextKeyRef.current === sourceBasslineContextKey) return;
+    sourceBasslineContextKeyRef.current = sourceBasslineContextKey;
+    setSourceBasslineVoiceId("");
+    setSourceBasslineRangeKey("");
+    setSourceBasslineAuthorization("");
+  }, [sourceBasslineContextKey]);
+  useEffect(() => {
+    if (isExpanded || (!sourceBasslineRangeKey && !sourceBasslineAuthorization)) return;
+    setSourceBasslineVoiceId("");
+    setSourceBasslineRangeKey("");
+    setSourceBasslineAuthorization("");
+  }, [isExpanded, sourceBasslineAuthorization, sourceBasslineRangeKey]);
+
+  useEffect(() => {
+    if (sourceBasslineSessionRef.current === sourceBasslineSession) return;
+    sourceBasslineSessionRef.current = sourceBasslineSession;
+    setSourceBasslineVoiceId("");
+    setSourceBasslineRangeKey("");
+    setSourceBasslineAuthorization("");
+  }, [sourceBasslineSession]);
+
+  function sourceBasslineForSave(): SourceBasslineSnapshotV1 | undefined | null {
+    if (!sourceBasslineOptedIn) return undefined;
+    if (sourceBasslineRangeSelected && sourceBasslineAssessment.snapshot) {
+      return sourceBasslineAssessment.snapshot;
+    }
+    return globalThis.confirm(language === "ja"
+      ? "元ベースラインを付けられません。コード進行だけを保存しますか？"
+      : "The source bassline cannot be attached. Save the progression without it?")
+      ? undefined
+      : null;
+  }
+
+  const saveProgressionControl = (
+          <SaveProgressionPopover
+            initialTitle={captureSaveTitle(editedCandidate, sourceFileName, detectedKey, copy, language)}
+            ideas={ideas}
+            defaultNextAction={copy.capture.defaultNextAction}
+            copy={copy}
+            requestOpen={() => onSelect?.() !== false}
+            onCreate={(title, nextAction, userVerified) => {
+              const sourceBassline = sourceBasslineForSave();
+              if (sourceBassline === null) return false;
+              const events = activePropagationEvents(editable, propagationFeedback);
+              return sourceBassline === undefined
+                ? onCreate?.(editedCandidate, title, nextAction, userVerified, editable, events) ?? false
+                : onCreate?.(editedCandidate, title, nextAction, userVerified, editable, events, sourceBassline) ?? false;
+            }}
+            onAppend={(ideaId, userVerified) => {
+              const sourceBassline = sourceBasslineForSave();
+              if (sourceBassline === null) return false;
+              const events = activePropagationEvents(editable, propagationFeedback);
+              return sourceBassline === undefined
+                ? onAppend?.(editedCandidate, ideaId, userVerified, editable, events) ?? false
+                : onAppend?.(editedCandidate, ideaId, userVerified, editable, events, sourceBassline) ?? false;
+            }}
+            onCopyMemo={(ideaId) => onCopyMemo?.(editedCandidate, ideaId, editable) ?? false}
+            onSaved={() => {
+              setSavedSignature(currentSignature);
+              setPropagationProposal(undefined);
+              setPropagationFeedback([]);
+              setSourceBasslineAuthorization("");
+              if (captureDraft !== undefined && onDraftSaved !== undefined) {
+                onDraftSaved();
+              } else if (draft !== undefined && onDraftChange !== undefined) {
+                onDraftChange({ ...draft, isDirty: false });
+              }
+            }}
+          />
+  );
 
   return (
     <div
@@ -2777,6 +3080,48 @@ export function ProgressionCandidateCard({
             </p>
           ) : null}
         </button>
+
+        <div className={isExpanded ? "min-w-full basis-full" : "hidden"}>
+          {isExpanded ? (
+            <SourceBasslineCapturePanel
+              voices={sourceBasslineVoices}
+              selectedVoiceId={sourceBasslineVoiceId}
+              assessment={sourceBasslineAssessment}
+              rangeSelected={sourceBasslineRangeSelected}
+              optedIn={sourceBasslineOptedIn}
+              language={language}
+              onVoiceChange={(voiceId) => {
+                setSourceBasslineVoiceId(voiceId);
+                setSourceBasslineRangeKey("");
+                setSourceBasslineAuthorization("");
+              }}
+              onRangeChange={(selected) => {
+                setSourceBasslineRangeKey(selected ? sourceBasslineAssessment.rangeKey : "");
+                setSourceBasslineAuthorization("");
+              }}
+              onOptInChange={(enabled) => setSourceBasslineAuthorization(
+                enabled ? currentSourceBasslineAuthorization : "",
+              )}
+            />
+          ) : null}
+        </div>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {saveProgressionControl}
+          <PlayToggle
+            source={source}
+            request={{ type: "timeline", timeline: editedCandidate.chords, bpm, sound: previewSound, beatsPerBar }}
+            playLabel={copy.common.preview}
+            stopLabel={copy.common.stop}
+            className="grid h-9 w-9 place-items-center rounded bg-cyan-400 text-sm font-semibold text-stone-950"
+            showLabel={false}
+            onError={onPreviewError}
+            controller={controller}
+          />
+          <Button variant="secondary" size="sm" className="min-h-10" onClick={() => void onCopyProgression(editedCandidate)}>
+            <Copy aria-hidden="true" size={16} />
+            {copy.capture.copyProgression}
+          </Button>
+        </div>
         <OccurrenceList
           pattern={patterns?.find((entry) => entry.occurrences.some(
             (occurrence) => occurrence.id === candidate.id,
@@ -2789,59 +3134,6 @@ export function ProgressionCandidateCard({
           onPreview={(occurrence) => void onPreviewOccurrence?.(occurrence)}
           onSave={(occurrence) => onSaveOccurrence?.(occurrence)}
         />
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <PlayToggle
-            source={source}
-            request={{ type: "timeline", timeline: editedCandidate.chords, bpm, sound: previewSound, beatsPerBar }}
-            playLabel={copy.common.preview}
-            stopLabel={copy.common.stop}
-            className="grid h-9 w-9 place-items-center rounded bg-cyan-400 text-sm font-semibold text-stone-950"
-            showLabel={false}
-            onError={onPreviewError}
-            controller={controller}
-          />
-          <SaveProgressionPopover
-            initialTitle={captureSaveTitle(editedCandidate, sourceFileName, detectedKey, copy, language)}
-            ideas={ideas}
-            defaultNextAction={copy.capture.defaultNextAction}
-            copy={copy}
-            requestOpen={() => onSelect?.() !== false}
-            onCreate={(title, nextAction, userVerified) => (
-              onCreate?.(
-                editedCandidate,
-                title,
-                nextAction,
-                userVerified,
-                editable,
-                activePropagationEvents(editable, propagationFeedback),
-              ) ?? false
-            )}
-            onAppend={(ideaId, userVerified) => (
-              onAppend?.(
-                editedCandidate,
-                ideaId,
-                userVerified,
-                editable,
-                activePropagationEvents(editable, propagationFeedback),
-              ) ?? false
-            )}
-            onCopyMemo={(ideaId) => onCopyMemo?.(editedCandidate, ideaId, editable) ?? false}
-            onSaved={() => {
-              setSavedSignature(currentSignature);
-              setPropagationProposal(undefined);
-              setPropagationFeedback([]);
-              if (captureDraft !== undefined && onDraftSaved !== undefined) {
-                onDraftSaved();
-              } else if (draft !== undefined && onDraftChange !== undefined) {
-                onDraftChange({ ...draft, isDirty: false });
-              }
-            }}
-          />
-          <Button variant="secondary" size="sm" className="min-h-10" onClick={() => void onCopyProgression(editedCandidate)}>
-            <Copy aria-hidden="true" size={16} />
-            {copy.capture.copyProgression}
-          </Button>
-        </div>
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <span className="inline-flex rounded bg-[var(--lv-surface-raised)] px-2 py-1 text-xs text-teal-200">
@@ -2863,6 +3155,7 @@ export function ProgressionCandidateCard({
           </p>
         ) : null}
       {candidate.summaryText.trim() ? <p className="mt-3 text-sm text-[var(--lv-text-secondary)]">{candidate.summaryText}</p> : null}
+
       <div className="mt-4">
         <div>
           {isExpanded ? (
@@ -3417,6 +3710,20 @@ export function captureSaveTitle(
 
   const summary = candidate.summaryText.trim();
   return summary || copy.capture.savedProgression;
+}
+
+export function persistCopiedProgressionMemo(
+  idea: SongIdea,
+  candidate: ProgressionBlockCandidate,
+  updateIdea: (id: string, changes: Partial<SongIdea>) => boolean | "pending",
+  onCopied: () => void,
+): boolean {
+  const updated = updateIdea(idea.id, {
+    chordMemo: appendProgressionMemo(idea.chordMemo, formatProgressionText(candidate.chords)),
+  });
+  if (updated !== true) return false;
+  onCopied();
+  return true;
 }
 
 export function appendProgressionMemo(existingMemo: string, progressionText: string): string {

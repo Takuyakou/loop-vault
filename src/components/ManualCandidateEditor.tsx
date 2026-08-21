@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { AppCopy, AppLanguage } from "../i18n";
 import type { ChordTimelineItem } from "../domain/types";
 import { replaceEditableChord } from "../domain/progressionEditing/chordReplacement";
@@ -87,6 +87,7 @@ export interface ManualCandidateEditorProps {
   /** Defaults to the legacy candidate adapter; text provides a safe factory. */
   createEditable?: (draft: ManualCandidateDraft) => EditableProgression;
   save?: ManualDraftSaveTarget;
+  beforeSave?: ReactNode;
   onChange(draft: ManualCandidateDraft): void;
   onDiscard(): void;
   onReselect(): void;
@@ -111,6 +112,7 @@ export function ManualCandidateEditor({
   onPreview,
   onSave,
   save,
+  beforeSave,
 }: ManualCandidateEditorProps) {
   const text = copy.capture.manualDraft;
   const [editable, setEditable] = useState<EditableProgression>(() => createEditable(draft));
@@ -516,6 +518,8 @@ export function ManualCandidateEditor({
           jumpCaptureDraftHistory(draft, historyIndex),
         )}
       />
+
+      {beforeSave}
 
       <div className="mt-4 flex flex-wrap items-start gap-2">
         <button

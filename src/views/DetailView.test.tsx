@@ -560,6 +560,39 @@ describe("DetailView status reasons", () => {
     expect(badge?.textContent).toContain("L3");
     await mounted.unmount();
   });
+  it.each([false, "pending"] as const)(
+    "keeps Next Action and add-form input intact for %s persistence",
+    async (outcome) => {
+      const idea = makeIdea({
+        nextAction: { text: "Write the bass", updatedAt: "2026-07-15T00:00:00.000Z" },
+      });
+      const updateIdea = vi.fn(() => outcome);
+      const updateNextAction = vi.fn(() => outcome);
+      const setToast = vi.fn();
+      const mounted = await renderDetail(idea, { updateIdea, updateNextAction, setToast });
+      const nextAction = mounted.container.querySelector<HTMLTextAreaElement>(
+        `textarea[aria-label="${appCopy.ja.detail.fields.nextAction}"]`,
+      )!;
+      await clickButton(mounted.container, appCopy.ja.common.done);
+      expect(nextAction.value).toBe("Write the bass");
+      expect(setToast).not.toHaveBeenCalledWith(appCopy.ja.toast.nextCompleted);
+
+      const referenceTitle = mounted.container.querySelector<HTMLInputElement>(
+        `input[placeholder="${appCopy.ja.detail.placeholders.title}"]`,
+      )!;
+      await changeInput(referenceTitle, "Keep reference draft");
+      await clickButton(mounted.container, appCopy.ja.detail.addReference);
+      expect(referenceTitle.value).toBe("Keep reference draft");
+
+      const assetPath = mounted.container.querySelector<HTMLInputElement>(
+        `input[placeholder="${appCopy.ja.detail.absolutePath}"]`,
+      )!;
+      await changeInput(assetPath, "D:/synthetic.mid");
+      await clickButton(mounted.container, appCopy.ja.detail.addAsset);
+      expect(assetPath.value).toBe("D:/synthetic.mid");
+      await mounted.unmount();
+    },
+  );
 });
 
 async function renderDetail(

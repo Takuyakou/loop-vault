@@ -130,17 +130,18 @@ export function DetailView({
   setToast,
   copy,
   language,
+  recoveryPending = false,
 }: {
   idea: SongIdea;
   storedIdea?: SongIdea;
-  updateIdea: (id: string, changes: Partial<SongIdea>) => void;
-  updateNextAction: (id: string, text: string, now?: Date) => void;
+  updateIdea: (id: string, changes: Partial<SongIdea>) => boolean | "pending";
+  updateNextAction: (id: string, text: string, now?: Date) => boolean | "pending";
   removeProgressionBlock: (
     deletion: PendingProgressionBlockDeletion,
-  ) => boolean;
+  ) => boolean | "pending";
   openProgression?: (ideaId: string, blockId: string) => void;
-  removeReference?: (deletion: PendingReferenceDeletion) => boolean;
-  unlinkAsset?: (deletion: PendingAssetDeletion) => boolean;
+  removeReference?: (deletion: PendingReferenceDeletion) => boolean | "pending";
+  unlinkAsset?: (deletion: PendingAssetDeletion) => boolean | "pending";
   enqueueUndo?: <T>(request: UndoRequest<T>) => string;
   vaultEpoch?: number;
   analyzeMidiPath: (path: string) => Promise<void>;
@@ -154,6 +155,7 @@ export function DetailView({
   setToast: (toast: string) => void;
   copy: AppCopy;
   language: AppLanguage;
+  recoveryPending?: boolean;
 }) {
   const [referenceDraft, setReferenceDraft] = useState<Reference>({ title: "", url: "", memo: "" });
   const [assetDraft, setAssetDraft] = useState<Asset>({ id: "", type: "flp", path: "", memo: "" });
@@ -243,15 +245,16 @@ export function DetailView({
   }, [idea.id]);
 
   function completeNext() {
-    if (idea.nextAction.text || nextField.draft.trim()) {
-      updateNextAction(idea.id, "", new Date());
-    }
+    if (!(idea.nextAction.text || nextField.draft.trim())) return false;
+    const updated = updateNextAction(idea.id, "", new Date());
+    if (updated !== true) return false;
     nextField.setDraft("");
     setToast(copy.toast.nextCompleted);
+    return true;
   }
 
   function updateMeta(changes: Partial<SongIdea>) {
-    updateIdea(idea.id, changes);
+    return updateIdea(idea.id, changes);
   }
 
   function moveStatus(to: Status) {
@@ -290,7 +293,8 @@ export function DetailView({
       pendingPipelineTransition.options,
     );
     if (moved && !keepNextAction) {
-      updateNextAction(idea.id, "", new Date());
+      const cleared = updateNextAction(idea.id, "", new Date());
+      if (cleared !== true) return;
     }
     setPendingPipelineTransition(undefined);
   }
@@ -314,8 +318,8 @@ export function DetailView({
   function addReference(event: FormEvent) {
     event.preventDefault();
     if (!referenceDraft.title.trim()) return;
-    updateMeta({ references: [...storedIdea.references, { ...referenceDraft, title: referenceDraft.title.trim() }] });
-    setReferenceDraft({ title: "", url: "", memo: "" });
+    const updated = updateMeta({ references: [...storedIdea.references, { ...referenceDraft, title: referenceDraft.title.trim() }] });
+    if (updated === true) setReferenceDraft({ title: "", url: "", memo: "" });
   }
 
   function requestReferenceRemoval(index: number) {
@@ -327,11 +331,15 @@ export function DetailView({
       vaultEpoch,
       snapshot,
     };
+    if (recoveryPending) {
+      removeReference(deletion);
+      return;
+    }
     enqueueUndo({
       label: copy.undo.referenceDeleted,
       payload: deletion,
       undo: () => true,
-      commit: () => removeReference(deletion),
+      commit: () => removeReference(deletion) === true,
     });
   }
 
@@ -355,8 +363,8 @@ export function DetailView({
       path: assetDraft.path?.trim() || undefined,
       memo: assetDraft.memo?.trim() || undefined,
     };
-    updateMeta({ assets: [...storedIdea.assets, asset] });
-    setAssetDraft({ id: "", type: "flp", path: "", memo: "" });
+    const updated = updateMeta({ assets: [...storedIdea.assets, asset] });
+    if (updated === true) setAssetDraft({ id: "", type: "flp", path: "", memo: "" });
   }
 
   function requestAssetRemoval(id: string) {
@@ -373,16 +381,20 @@ export function DetailView({
       vaultEpoch,
       snapshot,
     };
+    if (recoveryPending) {
+      unlinkAsset(deletion);
+      return;
+    }
     enqueueUndo({
       label: copy.undo.assetUnlinked,
       payload: deletion,
       undo: () => true,
-      commit: () => unlinkAsset(deletion),
+      commit: () => unlinkAsset(deletion) === true,
     });
   }
 
   function updateAsset(assetId: string, changes: Partial<Asset>) {
-    updateMeta({
+    return updateMeta({
       assets: storedIdea.assets.map((entry) =>
         entry.id === assetId ? { ...entry, ...changes } : entry,
       ),
@@ -440,8 +452,8 @@ export function DetailView({
       ],
     });
     if (typeof path === "string") {
-      updateAsset(asset.id, { path, missing: false });
-      setToast(copy.toast.assetPathUpdated);
+      const updated = updateAsset(asset.id, { path, missing: false });
+      if (updated === true) setToast(copy.toast.assetPathUpdated);
     }
   }
 
@@ -573,11 +585,15 @@ export function DetailView({
                       vaultEpoch,
                       snapshot,
                     };
+                    if (recoveryPending) {
+                      removeProgressionBlock(deletion);
+                      return;
+                    }
                     enqueueUndo({
                       label: copy.undo.blockDeleted,
                       payload: deletion,
                       undo: () => true,
-                      commit: () => removeProgressionBlock(deletion),
+                      commit: () => removeProgressionBlock(deletion) === true,
                     });
                   }}
                   copy={copy}

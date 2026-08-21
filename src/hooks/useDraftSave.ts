@@ -20,7 +20,7 @@ export interface UseDraftSaveOptions<T> {
   value: T;
   format: (value: T) => string;
   parse: (draft: string) => DraftParseResult<T>;
-  onCommit: (scopeKey: string, value: T) => void;
+  onCommit: (scopeKey: string, value: T) => void | boolean | "pending";
   equals?: (left: T, right: T) => boolean;
   commitOnEnter?: boolean;
   debounceMs?: number;
@@ -99,7 +99,8 @@ export function useDraftSave<T>({
       return false;
     }
 
-    onCommitRef.current(expectedScope, parsed.value);
+    const outcome = onCommitRef.current(expectedScope, parsed.value);
+    if (outcome === false || outcome === "pending") return false;
     baselineRef.current = { scopeKey: expectedScope, value: parsed.value };
     draftRef.current = displayValue;
     if (updateUi) {

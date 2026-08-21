@@ -48,7 +48,7 @@ export function VaultView({
   openProgression?: (ideaId: string, blockId: string) => void;
   openCreate: () => void;
   openCapture: () => void;
-  updateIdea: (id: string, changes: Partial<SongIdea>) => void;
+  updateIdea: (id: string, changes: Partial<SongIdea>) => boolean | "pending";
   setToast: (toast: string) => void;
   copy: AppCopy;
   language: AppLanguage;

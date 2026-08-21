@@ -234,7 +234,7 @@ describe("vault store", () => {
     const store = createVaultStore({ repository, now: () => now });
     await store.getState().initialize();
 
-    store.getState().updateNextAction(generatedId, "Replace the bass", now);
+    expect(store.getState().updateNextAction(generatedId, "Replace the bass", now)).toBe(true);
 
     expect(store.getState().ideas[0]?.nextAction).toEqual({
       text: "Replace the bass",
