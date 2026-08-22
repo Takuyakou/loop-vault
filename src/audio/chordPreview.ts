@@ -45,6 +45,8 @@ export interface PreviewAudioClock {
   now(): number;
 }
 
+const PREVIEW_RELEASE_TAIL_MS = 1_100;
+
 const PIANO_SAMPLE_FILES = {
   A0: "A0.mp3",
   C1: "C1.mp3",
@@ -84,7 +86,7 @@ export async function previewChord(
   callbacks.onStarted?.();
   target.triggerAttackRelease(notes, 1.35, undefined, 0.72);
   scheduledTimers.push(
-    globalThis.setTimeout(() => finishPreview(session, "completed"), 1_350),
+    globalThis.setTimeout(() => finishPreview(session, "completed"), 1_350 + PREVIEW_RELEASE_TAIL_MS),
   );
 }
 
@@ -138,7 +140,7 @@ export async function previewChordTimeline(
   scheduledTimers.push(
     globalThis.setTimeout(
       () => finishPreview(session, "completed"),
-      completionDelayMs,
+      completionDelayMs + PREVIEW_RELEASE_TAIL_MS,
     ),
   );
 }
@@ -207,7 +209,7 @@ export async function previewMidiNotes(
     );
     scheduledTimers.push(globalThis.setTimeout(
       () => finishPreview(session, "completed"),
-      Math.max(0, (startedAt + lastEndSeconds - audioClock.now()) * 1000),
+      Math.max(0, (startedAt + lastEndSeconds - audioClock.now()) * 1000) + PREVIEW_RELEASE_TAIL_MS,
     ));
   };
   scheduleWindow();

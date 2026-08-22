@@ -145,6 +145,10 @@ describe("chord preview instruments", () => {
     await previewChord(chord, "electric-piano", { onEnded: ended });
     const electric = tone.polySynths[synthCount]!;
     await vi.advanceTimersByTimeAsync(1_350);
+    expect(ended).not.toHaveBeenCalled();
+    expect(electric.releaseAll).not.toHaveBeenCalled();
+    expect(electric.dispose).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1_100);
     expect(ended).toHaveBeenCalledTimes(1);
     expect(ended).toHaveBeenCalledWith("completed");
     expect(electric.releaseAll).toHaveBeenCalledOnce();
@@ -232,6 +236,8 @@ describe("chord preview instruments", () => {
     expect(bass.dispose).toHaveBeenCalledOnce();
     await vi.advanceTimersByTimeAsync(500);
     expect(reference.triggerAttackRelease).toHaveBeenCalled();
+    expect(referenceEnded).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1_100);
     expect(referenceEnded).toHaveBeenCalledWith("completed");
     stopPreview();
     vi.useRealTimers();
