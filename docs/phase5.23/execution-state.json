@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "5.23",
   "status": "in-progress",
-  "activeStage": "P5.23-00",
-  "completedStages": [],
+  "activeStage": null,
+  "completedStages": ["P5.23-00"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "305f9eb2728fe6af4e86444fae07899ef5dac757",
-  "lastVerifiedCommit": "305f9eb2728fe6af4e86444fae07899ef5dac757",
+  "lastVerifiedCommit": "3386014627e65b4856b0d5504108e444776f060d",
   "currentBranch": "feat/p523-timeline-candidate-legibility",
   "requiredGates": {
     "P5.23-00": [
@@ -45,6 +45,6 @@
     "p523-00-diff-privacy-generated-hygiene": "pass",
     "p523-00-security-audits": "pass"
   },
-  "nextAction": "Confirm working-tree gates PASS, create the explicit-path independent P5.23-00 commit, rerun Stage00 gates on that exact commit, record its hash in state/report, confirm clean status, and STOP. Do not start P5.23-01.",
-  "updatedAt": "2026-08-22T18:10:00+09:00"
+  "nextAction": "STOP. P5.23-01 is NOT STARTED. Do not advance automatically; wait for a separate human request to start P5.23-01.",
+  "updatedAt": "2026-08-22T18:25:00+09:00"
 }

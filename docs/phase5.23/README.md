@@ -2,7 +2,7 @@
 # Phase 5.23 — Timeline Candidate Legibility
 
 ## Status
-`IN PROGRESS — P5.23-00 working-tree gates PASS; explicit commit pending; P5.23-01 NOT STARTED`
+`IN PROGRESS — P5.23-00 COMPLETE at exact verified commit 3386014627e65b4856b0d5504108e444776f060d; P5.23-01 NOT STARTED`
 
 ## Purpose
 MIDI解析後のFull Timelineで、重複候補を表示層だけで整理し、初期採集範囲と和声活動の読みやすさを改善する。
@@ -28,7 +28,7 @@ MIDI解析後のFull Timelineで、重複候補を表示層だけで整理し、
 - variant visible: JA `<length>小節 · Bar <start>–<end>` / EN `<length> bars · Bars <start>–<end>`; ARIA: JA `候補グループ <g>、バリアント <v>。<length>小節、Bar <start>–<end>` / EN `Candidate group <g>, variant <v>. <length> bars, Bars <start>–<end>`
 
 ## Stages
-- P5.23-00 Audit / Baseline / Contract Lock
+- P5.23-00 Audit / Baseline / Contract Lock — COMPLETE (`3386014627e65b4856b0d5504108e444776f060d`)
 - P5.23-01 Candidate Grouping / Variant UI
 - P5.23-02 Initial Selection / Snap / Harmonic Activity
 - P5.23-03 Visual / Interaction Hardening
@@ -53,4 +53,4 @@ MIDI解析後のFull Timelineで、重複候補を表示層だけで整理し、
 16. [P5.23.1 deferred backlog](backlog/P5.23.1-CANDIDATE-DIVERSIFICATION.md)
 
 ## Next action
-Working-tree gates PASSを確認 → P5.23-00を明示pathだけで独立commit → exact commit上でStage00 gatesを再実行してhashをstate/reportへ記録 → clean status確認 → STOP。P5.23-01は開始しない。
+STOP。P5.23-01はNOT STARTED。自動進行せず、P5.23-01を開始する別途のhuman requestを待つ。
