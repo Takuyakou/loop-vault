@@ -27,6 +27,7 @@ const tone = vi.hoisted(() => {
 
   const voices: unknown[] = [];
   const samplers: AudioNode[] = [];
+  const samplerOptions: unknown[] = [];
   const polySynths: AudioNode[] = [];
   let audioNow = 0;
 
@@ -39,8 +40,9 @@ const tone = vi.hoisted(() => {
   }
 
   class Sampler extends AudioNode {
-    constructor() {
+    constructor(options?: unknown) {
       super();
+      samplerOptions.push(options);
       samplers.push(this);
     }
   }
@@ -55,6 +57,7 @@ const tone = vi.hoisted(() => {
     now: vi.fn(() => audioNow),
     polySynths,
     samplers,
+    samplerOptions,
     start: vi.fn().mockResolvedValue(undefined),
     setAudioNow(value: number) {
       audioNow = value;
@@ -99,13 +102,17 @@ describe("chord preview instruments", () => {
 
     expect(tone.start).toHaveBeenCalledTimes(2);
     expect(tone.samplers).toHaveLength(1);
+    const pianoUrls = (tone.samplerOptions[0] as { urls: Record<string, string> }).urls;
+    expect(Object.keys(pianoUrls)).toEqual(["A0", "C1", "C2", "C3", "C4", "C5", "C6", "C7"]);
+    expect(Object.values(pianoUrls)).toHaveLength(8);
+    expect(Object.values(pianoUrls).every((url) => !url.startsWith("http"))).toBe(true);
     expect(tone.voices).toEqual([tone.FMSynth]);
 
     tone.loaded.mockRejectedValueOnce(new Error("offline"));
-    await previewChord(chord, "piano");
+    await expect(previewChord(chord, "piano")).rejects.toThrow("offline");
 
     expect(tone.samplers).toHaveLength(2);
-    expect(tone.voices).toEqual([tone.FMSynth, tone.Synth]);
+    expect(tone.voices).toEqual([tone.FMSynth]);
     stopPreview();
   });
 
@@ -134,10 +141,14 @@ describe("chord preview instruments", () => {
   it("notifies natural completion exactly once", async () => {
     vi.useFakeTimers();
     const ended = vi.fn();
+    const synthCount = tone.polySynths.length;
     await previewChord(chord, "electric-piano", { onEnded: ended });
+    const electric = tone.polySynths[synthCount]!;
     await vi.advanceTimersByTimeAsync(1_350);
     expect(ended).toHaveBeenCalledTimes(1);
     expect(ended).toHaveBeenCalledWith("completed");
+    expect(electric.releaseAll).toHaveBeenCalledOnce();
+    expect(electric.dispose).toHaveBeenCalledOnce();
     stopPreview();
     expect(ended).toHaveBeenCalledTimes(1);
     vi.useRealTimers();

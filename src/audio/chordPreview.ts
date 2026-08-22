@@ -3,6 +3,15 @@ import { voiceChordForPreview } from "../domain/chordVoicing";
 import type { ChordSymbol, ChordTimelineItem } from "../domain/types";
 import { createFreepatsBassInstrument } from "../features/bass-practice/application/freepatsBass";
 
+const bundledPianoSamples = import.meta.glob(
+  "./assets/salamander-piano/*.mp3",
+  {
+    eager: true,
+    import: "default",
+    query: "?url",
+  },
+) as Record<string, string>;
+
 interface PreviewInstrument {
   triggerAttackRelease(
     notes: string | string[],
@@ -36,7 +45,7 @@ export interface PreviewAudioClock {
   now(): number;
 }
 
-const PIANO_SAMPLE_URLS = {
+const PIANO_SAMPLE_FILES = {
   A0: "A0.mp3",
   C1: "C1.mp3",
   C2: "C2.mp3",
@@ -49,7 +58,6 @@ const PIANO_SAMPLE_URLS = {
 
 let instrument: PreviewInstrument | undefined;
 let instrumentSound: MidiPreviewSound | undefined;
-let hasScheduledAudioEvents = false;
 let scheduledTimers: ReturnType<typeof globalThis.setTimeout>[] = [];
 let previewGeneration = 0;
 let activeSession: PreviewSession | undefined;
@@ -182,7 +190,6 @@ export async function previewMidiNotes(
         startedAt + note.startBeat * beatSeconds,
         normalizeMidiVelocity(note.velocity),
       );
-      hasScheduledAudioEvents = true;
     }
     if (nextIndex < ordered.length) {
       scheduledTimers.push(globalThis.setTimeout(
@@ -208,17 +215,8 @@ export async function previewMidiNotes(
 
 export function stopPreview(): void {
   previewGeneration += 1;
-  for (const timer of scheduledTimers) {
-    globalThis.clearTimeout(timer);
-  }
-  scheduledTimers = [];
-  instrument?.releaseAll();
-  if (instrument && hasScheduledAudioEvents) {
-    instrument.dispose();
-    instrument = undefined;
-    instrumentSound = undefined;
-    hasScheduledAudioEvents = false;
-  }
+  clearScheduledTimers();
+  disposePreviewInstrument();
   if (activeSession) {
     finishPreview(activeSession, "stopped", true);
   }
@@ -245,11 +243,30 @@ function finishPreview(
   if (session.ended || (!forced && !isActive(session))) {
     return;
   }
+  if (reason === "completed") {
+    clearScheduledTimers();
+    disposePreviewInstrument();
+  }
   session.ended = true;
   if (activeSession === session) {
     activeSession = undefined;
   }
   session.callbacks.onEnded?.(reason);
+}
+
+function clearScheduledTimers(): void {
+  for (const timer of scheduledTimers) {
+    globalThis.clearTimeout(timer);
+  }
+  scheduledTimers = [];
+}
+
+function disposePreviewInstrument(): void {
+  if (!instrument) return;
+  instrument.releaseAll();
+  instrument.dispose();
+  instrument = undefined;
+  instrumentSound = undefined;
 }
 
 async function preparePreviewAudio(
@@ -295,59 +312,27 @@ async function preparePreviewAudio(
 }
 
 async function createPianoInstrument(): Promise<PreviewInstrument> {
+  const urls = Object.fromEntries(
+    Object.entries(PIANO_SAMPLE_FILES).map(([note, fileName]) => {
+      const url = bundledPianoSamples[`./assets/salamander-piano/${fileName}`];
+      if (!url) {
+        throw new Error(`Bundled Salamander piano sample is missing: ${fileName}`);
+      }
+      return [note, url];
+    }),
+  );
   const sampler = new Tone.Sampler({
-    urls: PIANO_SAMPLE_URLS,
-    baseUrl: "https://tonejs.github.io/audio/salamander/",
+    urls,
     release: 1,
   }).toDestination();
 
   try {
     await waitForPianoSamples(6_000);
     return wrapInstrument(sampler);
-  } catch {
+  } catch (error) {
     sampler.dispose();
-    return createPianoFallbackInstrument();
+    throw error;
   }
-}
-
-function createPianoFallbackInstrument(): PreviewInstrument {
-  const highpass = new Tone.Filter({ frequency: 55, type: "highpass" });
-  const lowpass = new Tone.Filter({
-    frequency: 5200,
-    type: "lowpass",
-    Q: 0.5,
-    rolloff: -24,
-  });
-  const compressor = new Tone.Compressor({ threshold: -18, ratio: 3 });
-  const reverb = new Tone.Freeverb(0.18, 3200);
-  reverb.wet.value = 0.1;
-
-  const synth = new Tone.PolySynth(Tone.Synth, {
-    oscillator: { type: "triangle" },
-    envelope: {
-      attack: 0.003,
-      decay: 1.25,
-      sustain: 0.05,
-      release: 0.8,
-    },
-  }).chain(highpass, lowpass, compressor, reverb, Tone.getDestination());
-  synth.volume.value = -7;
-
-  return {
-    triggerAttackRelease(notes, duration, time, velocity) {
-      synth.triggerAttackRelease(notes, duration, time, velocity);
-    },
-    releaseAll() {
-      synth.releaseAll();
-    },
-    dispose() {
-      synth.dispose();
-      highpass.dispose();
-      lowpass.dispose();
-      compressor.dispose();
-      reverb.dispose();
-    },
-  };
 }
 
 function wrapInstrument(source: {
