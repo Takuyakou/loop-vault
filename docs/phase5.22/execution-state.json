@@ -121,6 +121,6 @@
     "p522-05-diff-privacy-hygiene": "pass",
     "p522-05-human-acceptance": "not-run"
   },
-  "nextAction": "Re-run the human product acceptance audio checks on the e13d10bf isolated-target artifacts: confirm bundled piano timbre, bounded natural release tail, and immediate Stop/replacement cleanup. Do not merge or push without separate authorization.",
-  "updatedAt": "2026-08-22T14:51:00+09:00"
+  "nextAction": "Re-run the human product acceptance audio checks on the e13d10bf isolated-target artifacts: confirm bundled piano timbre, bounded natural release tail, and immediate Stop/replacement cleanup. The local master merge is complete; do not push without separate authorization.",
+  "updatedAt": "2026-08-22T16:37:00+09:00"
 }
