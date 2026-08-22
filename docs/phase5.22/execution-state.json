@@ -13,7 +13,7 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "c5e6c654fb60bf68d696046ae0c9e06829b79da7",
-  "lastVerifiedCommit": "d5031b5440fd9032cf752f2d5ee35c7670ada410",
+  "lastVerifiedCommit": "e13d10bf728a68e661b34a0d268b46e9537a8144",
   "currentBranch": "feat/p522-source-bassline-practice",
   "requiredGates": {
     "P5.22-00": [
@@ -121,6 +121,6 @@
     "p522-05-diff-privacy-hygiene": "pass",
     "p522-05-human-acceptance": "not-run"
   },
-  "nextAction": "Re-run the human product acceptance audio checks on the d5031b5 artifacts, then continue the checklist. Do not merge or push without separate authorization.",
-  "updatedAt": "2026-08-22T14:21:00+09:00"
+  "nextAction": "Re-run the human product acceptance audio checks on the e13d10bf isolated-target artifacts: confirm bundled piano timbre, bounded natural release tail, and immediate Stop/replacement cleanup. Do not merge or push without separate authorization.",
+  "updatedAt": "2026-08-22T14:51:00+09:00"
 }
