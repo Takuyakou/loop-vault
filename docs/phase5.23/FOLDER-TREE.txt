@@ -1,0 +1,27 @@
+phase5.23/
+├─ README.md
+├─ CODEX-START-PROMPT.md
+├─ CODEX-RUN-REMAINING-STAGES.md
+├─ work-instructions.md
+├─ execution-state.json
+├─ proposal/
+│  ├─ ORIGINAL-PROPOSAL.md
+│  └─ P5.23-DESIGN-REVIEW.md
+├─ audit/
+│  └─ P5.23-00-repository-audit.md
+├─ contracts/
+│  ├─ 01-scope-legibility-contract.md
+│  ├─ 02-candidate-grouping-contract.md
+│  ├─ 03-selection-defaults-contract.md
+│  ├─ 04-harmonic-activity-contract.md
+│  ├─ 05-accessibility-interaction-contract.md
+│  └─ 06-regression-safety-contract.md
+├─ backlog/
+│  └─ P5.23.1-CANDIDATE-DIVERSIFICATION.md
+└─ reports/
+   ├─ README.md
+   ├─ P5.23-00-audit-baseline.md
+   ├─ P5.23-01-candidate-grouping.md
+   ├─ P5.23-02-selection-activity.md
+   ├─ P5.23-03-visual-interaction-hardening.md
+   └─ P5.23-04-product-acceptance.md

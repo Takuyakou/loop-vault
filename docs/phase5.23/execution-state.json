@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "5.23",
+  "status": "in-progress",
+  "activeStage": "P5.23-00",
+  "completedStages": [],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "305f9eb2728fe6af4e86444fae07899ef5dac757",
+  "lastVerifiedCommit": "305f9eb2728fe6af4e86444fae07899ef5dac757",
+  "currentBranch": "feat/p523-timeline-candidate-legibility",
+  "requiredGates": {
+    "P5.23-00": [
+      "p523-00-phase-docs-validation",
+      "p523-00-synthetic-grouping-activity",
+      "p523-00-timeline-interaction-regression",
+      "p523-00-analyzer-exact-regression",
+      "p523-00-lint-typecheck-build",
+      "p523-00-security-audits",
+      "p523-00-diff-privacy-generated-hygiene"
+    ],
+    "P5.23-01": [
+      "p523-01-focused",
+      "p523-01-protected-diff"
+    ],
+    "P5.23-02": [
+      "p523-02-focused",
+      "p523-02-protected-diff"
+    ],
+    "P5.23-03": [
+      "p523-03-visual-a11y",
+      "p523-03-protected-diff"
+    ],
+    "P5.23-04": [
+      "p523-04-full-gates",
+      "p523-04-human-acceptance"
+    ]
+  },
+  "gateResults": {
+    "p523-00-phase-docs-validation": "pass",
+    "p523-00-synthetic-grouping-activity": "pass",
+    "p523-00-timeline-interaction-regression": "pass",
+    "p523-00-analyzer-exact-regression": "pass",
+    "p523-00-lint-typecheck-build": "pass",
+    "p523-00-diff-privacy-generated-hygiene": "pass",
+    "p523-00-security-audits": "pass"
+  },
+  "nextAction": "Confirm working-tree gates PASS, create the explicit-path independent P5.23-00 commit, rerun Stage00 gates on that exact commit, record its hash in state/report, confirm clean status, and STOP. Do not start P5.23-01.",
+  "updatedAt": "2026-08-22T18:10:00+09:00"
+}
