@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "phaseId": "5.23",
   "status": "in-progress",
-  "activeStage": null,
+  "activeStage": "P5.23-01",
   "completedStages": ["P5.23-00"],
   "blocked": false,
   "blockerReason": null,
@@ -45,6 +45,6 @@
     "p523-00-diff-privacy-generated-hygiene": "pass",
     "p523-00-security-audits": "pass"
   },
-  "nextAction": "STOP. P5.23-01 is NOT STARTED. Do not advance automatically; wait for a separate human request to start P5.23-01.",
-  "updatedAt": "2026-08-22T18:25:00+09:00"
+  "nextAction": "Implement and verify P5.23-01 Candidate Grouping / Variant UI only. Do not start P5.23-02.",
+  "updatedAt": "2026-08-22T19:00:00+09:00"
 }

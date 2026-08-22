@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { act } from "react";
+import { act, startTransition, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
@@ -16,6 +16,12 @@ import { layoutSongMiniMapCandidates, SongMiniMap, type SongMiniMapCopy } from "
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
   .IS_REACT_ACT_ENVIRONMENT = true;
 
+const neverCommit = new Promise<void>(() => undefined);
+
+function NeverCommit(): never {
+  throw neverCommit;
+}
+
 const englishCopy: SongMiniMapCopy = {
   title: "Whole song",
   description: "Candidate positions",
@@ -26,6 +32,7 @@ const englishCopy: SongMiniMapCopy = {
 const editorProps = {
   beatsPerBar: 4,
   timeline: [],
+  candidateDatasetKey: "analysis-1",
   language: "en" as const,
   onDraftChange: vi.fn(),
   onManualRangeCreate: vi.fn(),
@@ -260,6 +267,511 @@ describe("SongMiniMap", () => {
     expect(displayed.getAttribute("aria-label")).toContain("bars 2-8");
     expect(sourceCandidate.startBar).toBe(1);
     expect(sourceCandidate.endBar).toBe(4);
+
+    await act(async () => root.unmount());
+  });
+
+  it("renders one representative bar and preserves every grouped candidate in the selector", async () => {
+    const onCandidateSelect = vi.fn();
+    const candidates = [
+      { ...candidate("nested-4", 37, 40), lengthBars: 4 as const, selectionScore: 0.82 },
+      { ...candidate("nested-8", 37, 44), lengthBars: 8 as const, selectionScore: 0.91 },
+      { ...candidate("nested-16", 37, 52), lengthBars: 16 as const, selectionScore: 0.88 },
+    ];
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <SongMiniMap
+        {...editorProps}
+        totalBars={64}
+        candidates={candidates}
+        copy={englishCopy}
+        onCandidateSelect={onCandidateSelect}
+      />,
+    ));
+
+    const groupButton = container.querySelector<HTMLButtonElement>(
+      '[data-song-minimap-group="nested-16"]',
+    )!;
+    expect(container.querySelectorAll("[data-song-minimap-candidate]")).toHaveLength(1);
+    expect(groupButton.dataset.songMinimapRepresentative).toBe("nested-16");
+    expect(groupButton.dataset.songMinimapSelectedVariant).toBe("nested-8");
+    expect(groupButton.getAttribute("aria-expanded")).toBe("false");
+
+    groupButton.focus();
+    groupButton.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+    expect(onCandidateSelect).not.toHaveBeenCalled();
+    await act(async () => groupButton.click());
+    expect(onCandidateSelect).not.toHaveBeenCalled();
+    expect(groupButton.getAttribute("aria-expanded")).toBe("true");
+
+    const variantButtons = [
+      ...container.querySelectorAll<HTMLButtonElement>("[data-song-minimap-variant]"),
+    ];
+    expect(variantButtons.map(({ dataset }) => dataset.songMinimapVariant)).toEqual([
+      "nested-16",
+      "nested-8",
+      "nested-4",
+    ]);
+    expect(new Set(variantButtons.map(({ dataset }) => dataset.songMinimapVariant)).size).toBe(3);
+    expect(variantButtons.map(({ textContent }) => textContent)).toEqual([
+      "16 bars · Bars 37–52",
+      "8 bars · Bars 37–44",
+      "4 bars · Bars 37–40",
+    ]);
+    expect(variantButtons.map((button) => button.getAttribute("aria-label"))).toEqual([
+      "Candidate group 1, variant 1. 16 bars, Bars 37–52",
+      "Candidate group 1, variant 2. 8 bars, Bars 37–44",
+      "Candidate group 1, variant 3. 4 bars, Bars 37–40",
+    ]);
+    expect(variantButtons[0]?.dataset.songMinimapVariantRepresentative).toBe("true");
+    expect(variantButtons[1]?.dataset.songMinimapVariantSelected).toBe("true");
+
+    await act(async () => variantButtons[1]?.dispatchEvent(
+      new MouseEvent("click", { bubbles: true, detail: 0 }),
+    ));
+    expect(onCandidateSelect).toHaveBeenCalledTimes(1);
+    expect(onCandidateSelect).toHaveBeenCalledWith("nested-8");
+    expect(container.querySelector("[data-song-minimap-variant-selector]")).toBeNull();
+
+    await act(async () => root.unmount());
+  });
+
+  it("closes the variant selector with Escape without changing selection", async () => {
+    const onCandidateSelect = vi.fn();
+    const candidates = [
+      { ...candidate("group-4", 9, 12), lengthBars: 4 as const },
+      { ...candidate("group-8", 9, 16), lengthBars: 8 as const },
+    ];
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <SongMiniMap
+        {...editorProps}
+        totalBars={24}
+        candidates={candidates}
+        copy={englishCopy}
+        onCandidateSelect={onCandidateSelect}
+      />,
+    ));
+
+    const groupButton = container.querySelector<HTMLButtonElement>(
+      '[data-song-minimap-group="group-8"]',
+    )!;
+    await act(async () => groupButton.click());
+    const selector = container.querySelector<HTMLElement>(
+      "[data-song-minimap-variant-selector]",
+    )!;
+    const firstVariant = selector.querySelector<HTMLButtonElement>(
+      "[data-song-minimap-variant]",
+    )!;
+    firstVariant.focus();
+    await act(async () => selector.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+    ));
+
+    expect(onCandidateSelect).not.toHaveBeenCalled();
+    expect(container.querySelector("[data-song-minimap-variant-selector]")).toBeNull();
+    expect(document.activeElement).toBe(groupButton);
+
+    await act(async () => root.unmount());
+    container.remove();
+  });
+
+  it("uses the exact Japanese visible and accessible variant labels", async () => {
+    const candidates = [
+      { ...candidate("ja-4", 17, 20), lengthBars: 4 as const },
+      { ...candidate("ja-8", 17, 24), lengthBars: 8 as const },
+    ];
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <SongMiniMap
+        {...editorProps}
+        language="ja"
+        totalBars={32}
+        candidates={candidates}
+        copy={{
+          ...englishCopy,
+          title: "全曲",
+          candidateLabel: (index, startBar, endBar) => `候補 ${index}: ${startBar}-${endBar}小節`,
+        }}
+        onCandidateSelect={vi.fn()}
+      />,
+    ));
+
+    await act(async () => container.querySelector<HTMLButtonElement>(
+      '[data-song-minimap-group="ja-8"]',
+    )?.click());
+    const variants = [
+      ...container.querySelectorAll<HTMLButtonElement>("[data-song-minimap-variant]"),
+    ];
+    expect(variants.map(({ textContent }) => textContent)).toEqual([
+      "8小節 · Bar 17–24",
+      "4小節 · Bar 17–20",
+    ]);
+    expect(variants.map((button) => button.getAttribute("aria-label"))).toEqual([
+      "候補グループ 1、バリアント 1。8小節、Bar 17–24",
+      "候補グループ 1、バリアント 2。4小節、Bar 17–20",
+    ]);
+
+    await act(async () => root.unmount());
+  });
+
+  it("invalidates an open selector when the analysis dataset generation changes", async () => {
+    const onCandidateSelect = vi.fn();
+    const candidates = [
+      { ...candidate("stable-4", 9, 12), lengthBars: 4 as const },
+      { ...candidate("stable-8", 9, 16), lengthBars: 8 as const },
+    ];
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    const renderDataset = async (candidateDatasetKey: string) => {
+      await act(async () => root.render(
+        <SongMiniMap
+          {...editorProps}
+          candidateDatasetKey={candidateDatasetKey}
+          totalBars={24}
+          candidates={candidates.map((entry) => ({ ...entry }))}
+          copy={englishCopy}
+          onCandidateSelect={onCandidateSelect}
+        />,
+      ));
+    };
+
+    await renderDataset("analysis-run-1");
+    await act(async () => container.querySelector<HTMLButtonElement>(
+      '[data-song-minimap-group="stable-8"]',
+    )?.click());
+    expect(container.querySelector("[data-song-minimap-variant-selector]")).not.toBeNull();
+    expect(onCandidateSelect).not.toHaveBeenCalled();
+
+    await renderDataset("analysis-run-2");
+    const replacementTrigger = container.querySelector<HTMLButtonElement>(
+      '[data-song-minimap-group="stable-8"]',
+    )!;
+    expect(container.querySelector("[data-song-minimap-variant-selector]")).toBeNull();
+    expect(replacementTrigger.getAttribute("aria-expanded")).toBe("false");
+    expect(onCandidateSelect).not.toHaveBeenCalled();
+
+    await renderDataset("analysis-run-1");
+    expect(container.querySelector("[data-song-minimap-variant-selector]")).toBeNull();
+    expect(onCandidateSelect).not.toHaveBeenCalled();
+
+    await act(async () => root.unmount());
+  });
+
+
+
+  it("cancels a pending pointer activation when the dataset key changes", async () => {
+    vi.useFakeTimers();
+    const onCandidateSelect = vi.fn();
+    const candidates = [
+      { ...candidate("key-4", 9, 12), lengthBars: 4 as const },
+      { ...candidate("key-8", 9, 16), lengthBars: 8 as const },
+    ];
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    const renderDataset = async (candidateDatasetKey: string) => {
+      await act(async () => root.render(
+        <SongMiniMap
+          {...editorProps}
+          candidateDatasetKey={candidateDatasetKey}
+          totalBars={24}
+          candidates={candidates}
+          copy={englishCopy}
+          onCandidateSelect={onCandidateSelect}
+        />,
+      ));
+    };
+    try {
+      await renderDataset("pending-run-1");
+      await act(async () => container.querySelector<HTMLButtonElement>(
+        '[data-song-minimap-group="key-8"]',
+      )?.click());
+      const variant = container.querySelector<HTMLButtonElement>(
+        '[data-song-minimap-variant="key-8"]',
+      )!;
+      await act(async () => variant.dispatchEvent(
+        new MouseEvent("click", { bubbles: true, cancelable: true, detail: 1 }),
+      ));
+
+      await renderDataset("pending-run-2");
+      await act(async () => vi.advanceTimersByTime(250));
+      expect(onCandidateSelect).not.toHaveBeenCalled();
+      expect(container.querySelector("[data-song-minimap-variant-selector]")).toBeNull();
+    } finally {
+      await act(async () => root.unmount());
+      vi.useRealTimers();
+    }
+  });
+
+
+
+  it("keeps a pending activation valid across an uncommitted dataset render", async () => {
+    vi.useFakeTimers();
+    const onCandidateSelect = vi.fn();
+    const candidates = [
+      { ...candidate("commit-4", 9, 12), lengthBars: 4 as const },
+      { ...candidate("commit-8", 9, 16), lengthBars: 8 as const },
+    ];
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    const tree = (candidateDatasetKey: string, suspend: boolean) => (
+      <Suspense fallback={<p>Pending analysis</p>}>
+        <SongMiniMap
+          {...editorProps}
+          candidateDatasetKey={candidateDatasetKey}
+          totalBars={24}
+          candidates={candidates}
+          copy={englishCopy}
+          onCandidateSelect={onCandidateSelect}
+        />
+        {suspend ? <NeverCommit /> : null}
+      </Suspense>
+    );
+    try {
+      await act(async () => root.render(tree("committed-run", false)));
+      await act(async () => container.querySelector<HTMLButtonElement>(
+        '[data-song-minimap-group="commit-8"]',
+      )?.click());
+      const variant = container.querySelector<HTMLButtonElement>(
+        '[data-song-minimap-variant="commit-8"]',
+      )!;
+      await act(async () => variant.dispatchEvent(
+        new MouseEvent("click", { bubbles: true, cancelable: true, detail: 1 }),
+      ));
+
+      await act(async () => {
+        startTransition(() => root.render(tree("speculative-run", true)));
+      });
+      expect(container.querySelector("[data-song-minimap-variant-selector]")).not.toBeNull();
+      await act(async () => vi.advanceTimersByTime(250));
+      expect(onCandidateSelect).toHaveBeenCalledTimes(1);
+      expect(onCandidateSelect).toHaveBeenCalledWith("commit-8");
+    } finally {
+      await act(async () => root.unmount());
+      vi.useRealTimers();
+    }
+  });  it("cancels a pending pointer activation when the minimap unmounts", async () => {
+    vi.useFakeTimers();
+    const onCandidateSelect = vi.fn();
+    const candidates = [
+      { ...candidate("unmount-4", 9, 12), lengthBars: 4 as const },
+      { ...candidate("unmount-8", 9, 16), lengthBars: 8 as const },
+    ];
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    try {
+      await act(async () => root.render(
+        <SongMiniMap
+          {...editorProps}
+          totalBars={24}
+          candidates={candidates}
+          copy={englishCopy}
+          onCandidateSelect={onCandidateSelect}
+        />,
+      ));
+      await act(async () => container.querySelector<HTMLButtonElement>(
+        '[data-song-minimap-group="unmount-8"]',
+      )?.click());
+      const variant = container.querySelector<HTMLButtonElement>(
+        '[data-song-minimap-variant="unmount-8"]',
+      )!;
+      await act(async () => variant.dispatchEvent(
+        new MouseEvent("click", { bubbles: true, cancelable: true, detail: 1 }),
+      ));
+
+      await act(async () => root.unmount());
+      await act(async () => vi.advanceTimersByTime(250));
+      expect(onCandidateSelect).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });  it("exposes an active grouped candidate semantically while the selector is closed", () => {
+    const candidates = [
+      { ...candidate("active-4", 9, 12), lengthBars: 4 as const },
+      { ...candidate("active-8", 9, 16), lengthBars: 8 as const },
+      { ...candidate("inactive", 21, 24), lengthBars: 4 as const },
+    ];
+    const markup = renderToStaticMarkup(
+      <SongMiniMap
+        {...editorProps}
+        totalBars={24}
+        candidates={candidates}
+        activeCandidateId="active-4"
+        copy={englishCopy}
+        onCandidateSelect={vi.fn()}
+      />,
+    );
+
+    expect(markup).toContain('data-song-minimap-group="active-8"');
+    expect(markup).toMatch(/data-song-minimap-group="active-8"[^>]*aria-pressed="true"/);
+    expect(markup).toMatch(/data-song-minimap-group="inactive"[^>]*aria-pressed="false"/);
+    expect(markup).not.toContain("data-song-minimap-variant-selector");
+  });
+
+  it("opens with Enter, focuses the selected variant, and restores trigger focus", async () => {
+    const onCandidateSelect = vi.fn();
+    const candidates = [
+      { ...candidate("keyboard-4", 17, 20), lengthBars: 4 as const, selectionScore: 0.8 },
+      { ...candidate("keyboard-8", 17, 24), lengthBars: 8 as const, selectionScore: 0.95 },
+    ];
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <SongMiniMap
+        {...editorProps}
+        totalBars={32}
+        candidates={candidates}
+        copy={englishCopy}
+        onCandidateSelect={onCandidateSelect}
+      />,
+    ));
+
+    const trigger = container.querySelector<HTMLButtonElement>(
+      '[data-song-minimap-group="keyboard-8"]',
+    )!;
+    trigger.focus();
+    await act(async () => trigger.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }),
+    ));
+    const selectedVariant = container.querySelector<HTMLButtonElement>(
+      '[data-song-minimap-variant="keyboard-8"]',
+    )!;
+    expect(document.activeElement).toBe(selectedVariant);
+    expect(onCandidateSelect).not.toHaveBeenCalled();
+
+    await act(async () => selectedVariant.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }),
+    ));
+    expect(container.querySelector("[data-song-minimap-variant-selector]")).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+    expect(onCandidateSelect).not.toHaveBeenCalled();
+
+    await act(async () => trigger.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }),
+    ));
+    const selectedAfterReopen = container.querySelector<HTMLButtonElement>(
+      '[data-song-minimap-variant="keyboard-8"]',
+    )!;
+    expect(document.activeElement).toBe(selectedAfterReopen);
+    await act(async () => selectedAfterReopen.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }),
+    ));
+    expect(onCandidateSelect).toHaveBeenCalledTimes(1);
+    expect(onCandidateSelect).toHaveBeenCalledWith("keyboard-8");
+    expect(container.querySelector("[data-song-minimap-variant-selector]")).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+
+    await act(async () => root.unmount());
+    container.remove();
+  });
+
+  it("distinguishes pointer single and double activation without dropping reveal semantics", async () => {
+    vi.useFakeTimers();
+    const onCandidateSelect = vi.fn();
+    const candidateCard = document.createElement("button");
+    candidateCard.textContent = "Candidate card";
+    document.body.append(candidateCard);
+    const onCandidateDoubleClick = vi.fn(() => candidateCard.focus());
+    const candidates = [
+      { ...candidate("pointer-4", 1, 4), lengthBars: 4 as const },
+      { ...candidate("pointer-8", 1, 8), lengthBars: 8 as const },
+    ];
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    try {
+      await act(async () => root.render(
+        <SongMiniMap
+          {...editorProps}
+          totalBars={16}
+          candidates={candidates}
+          copy={englishCopy}
+          onCandidateSelect={onCandidateSelect}
+          onCandidateDoubleClick={onCandidateDoubleClick}
+        />,
+      ));
+      const trigger = container.querySelector<HTMLButtonElement>(
+        '[data-song-minimap-group="pointer-8"]',
+      )!;
+
+      await act(async () => trigger.click());
+      const singleVariant = container.querySelector<HTMLButtonElement>(
+        '[data-song-minimap-variant="pointer-8"]',
+      )!;
+      await act(async () => singleVariant.dispatchEvent(
+        new MouseEvent("click", { bubbles: true, cancelable: true, detail: 1 }),
+      ));
+      expect(onCandidateSelect).not.toHaveBeenCalled();
+      expect(onCandidateDoubleClick).not.toHaveBeenCalled();
+      await act(async () => vi.advanceTimersByTime(250));
+      expect(onCandidateSelect).toHaveBeenCalledTimes(1);
+      expect(onCandidateSelect).toHaveBeenCalledWith("pointer-8");
+      expect(onCandidateDoubleClick).not.toHaveBeenCalled();
+      expect(document.activeElement).toBe(trigger);
+
+      onCandidateSelect.mockClear();
+      await act(async () => trigger.click());
+      const doubleVariant = container.querySelector<HTMLButtonElement>(
+        '[data-song-minimap-variant="pointer-8"]',
+      )!;
+      await act(async () => {
+        doubleVariant.dispatchEvent(
+          new MouseEvent("click", { bubbles: true, cancelable: true, detail: 1 }),
+        );
+        doubleVariant.dispatchEvent(
+          new MouseEvent("click", { bubbles: true, cancelable: true, detail: 2 }),
+        );
+        doubleVariant.dispatchEvent(
+          new MouseEvent("dblclick", { bubbles: true, cancelable: true, detail: 2 }),
+        );
+      });
+      expect(onCandidateSelect).not.toHaveBeenCalled();
+      expect(onCandidateDoubleClick).toHaveBeenCalledTimes(1);
+      expect(onCandidateDoubleClick).toHaveBeenCalledWith("pointer-8");
+      await act(async () => vi.runAllTimers());
+      expect(onCandidateSelect).not.toHaveBeenCalled();
+      expect(onCandidateDoubleClick).toHaveBeenCalledTimes(1);
+      expect(container.querySelector("[data-song-minimap-variant-selector]")).toBeNull();
+      expect(document.activeElement).toBe(candidateCard);
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+      candidateCard.remove();
+      vi.useRealTimers();
+    }
+  });
+
+  it("shows a non-color active marker without changing the exact variant label", async () => {
+    const candidates = [
+      { ...candidate("marked-4", 1, 4), lengthBars: 4 as const },
+      { ...candidate("marked-8", 1, 8), lengthBars: 8 as const },
+    ];
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <SongMiniMap
+        {...editorProps}
+        totalBars={16}
+        candidates={candidates}
+        activeCandidateId="marked-8"
+        copy={englishCopy}
+        onCandidateSelect={vi.fn()}
+      />,
+    ));
+    await act(async () => container.querySelector<HTMLButtonElement>(
+      '[data-song-minimap-group="marked-8"]',
+    )?.click());
+    const activeVariant = container.querySelector<HTMLButtonElement>(
+      '[data-song-minimap-variant="marked-8"]',
+    )!;
+    expect(activeVariant.textContent).toBe("8 bars · Bars 1–8");
+    expect(activeVariant.querySelector("svg")).not.toBeNull();
+    expect(activeVariant.getAttribute("aria-pressed")).toBe("true");
 
     await act(async () => root.unmount());
   });

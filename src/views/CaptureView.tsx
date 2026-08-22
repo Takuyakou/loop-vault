@@ -1741,6 +1741,7 @@ export function CaptureView(props: CaptureViewProps) {
         beatsPerBar={laneMeter}
         timeline={result.fullTimeline}
         candidates={result.blockCandidates}
+        candidateDatasetKey={`${captureAnalysisIdentity(result)}:${analysisRunGeneration}`}
         {...(activeDraft === null ? {} : { draft: activeDraft })}
         activeCandidateId={activeDraft?.source.type === "automatic-candidate"
           ? activeDraft.source.candidateId

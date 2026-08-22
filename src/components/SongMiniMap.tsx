@@ -1,7 +1,20 @@
+import {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
+} from "react";
 import type { ChordTimelineItem, ProgressionBlockCandidate } from "../domain/types";
 import type { TimelineRange } from "../domain/midi/manualRange";
 import type { ManualCandidateDraft } from "../domain/midi/manualDraft";
 import type { AppLanguage } from "../i18n";
+import {
+  groupTimelineCandidates,
+  type TimelineCandidateGroup,
+} from "../domain/timelineCandidateGrouping";
+import { Check } from "lucide-react";
 import { DraftRangeOverlay } from "./DraftRangeOverlay";
 
 export interface SongMiniMapCopy {
@@ -16,6 +29,7 @@ export interface SongMiniMapProps {
   beatsPerBar: number;
   timeline: readonly ChordTimelineItem[];
   candidates: readonly ProgressionBlockCandidate[];
+  candidateDatasetKey: string;
   draft?: ManualCandidateDraft;
   activeCandidateId?: string;
   language: AppLanguage;
@@ -74,6 +88,7 @@ export function SongMiniMap({
   beatsPerBar,
   timeline,
   candidates,
+  candidateDatasetKey,
   draft,
   activeCandidateId,
   language,
@@ -87,29 +102,164 @@ export function SongMiniMap({
   onRedo,
   onEnterSelection,
 }: SongMiniMapProps) {
+  const [openVariantSelector, setOpenVariantSelector] = useState<{
+    datasetKey: string;
+    anchorId: string;
+  }>();
+  const groupButtonRefs = useRef(new Map<string, HTMLButtonElement>());
+  const pendingVariantFocusAnchorRef = useRef<string>();
+  const pendingVariantActivationRef = useRef<{
+    timer: ReturnType<typeof setTimeout>;
+    datasetKey: string;
+  }>();
+  const committedCandidateDatasetKeyRef = useRef(candidateDatasetKey);
+  const mountedRef = useRef(false);
+  const candidateDatasetLifecycleRef = useCallback((node: HTMLElement | null) => {
+    if (node === null) {
+      mountedRef.current = false;
+      const pending = pendingVariantActivationRef.current;
+      if (pending) clearTimeout(pending.timer);
+      pendingVariantActivationRef.current = undefined;
+      return;
+    }
+    mountedRef.current = true;
+    if (committedCandidateDatasetKeyRef.current === candidateDatasetKey) return;
+    committedCandidateDatasetKeyRef.current = candidateDatasetKey;
+    const pending = pendingVariantActivationRef.current;
+    if (pending) clearTimeout(pending.timer);
+    pendingVariantActivationRef.current = undefined;
+    pendingVariantFocusAnchorRef.current = undefined;
+    setOpenVariantSelector(undefined);
+  }, [candidateDatasetKey]);
   const sourceCandidateId = draft && draft.source.type === "automatic-candidate"
     ? draft.source.candidateId
     : undefined;
-  const displayCandidates = candidates.map((candidate) => (
-    draft && candidate.id === sourceCandidateId
+  const grouping = useMemo(() => {
+    const groups = groupTimelineCandidates(candidates);
+    const byRepresentativeId = new Map<string, { group: TimelineCandidateGroup; index: number }>();
+    const byCandidateId = new Map<string, TimelineCandidateGroup>();
+    groups.forEach((group, index) => {
+      byRepresentativeId.set(group.representative.id, { group, index });
+      group.variants.forEach((variant) => byCandidateId.set(variant.id, group));
+    });
+    return { groups, byRepresentativeId, byCandidateId };
+  }, [candidates]);
+  const displayRepresentatives = useMemo(() => grouping.groups.map(({ representative }) => (
+    draft && representative.id === sourceCandidateId
       ? {
-          ...candidate,
+          ...representative,
           startBar: draft.selectedRange.startBar,
           endBar: draft.selectedRange.endBar,
           lengthBars: draft.lengthBars as ProgressionBlockCandidate["lengthBars"],
         }
-      : candidate
-  ));
-  const positionedCandidates = layoutSongMiniMapCandidates(displayCandidates, totalBars);
+      : representative
+  )), [draft, grouping.groups, sourceCandidateId]);
+  const positionedCandidates = useMemo(
+    () => layoutSongMiniMapCandidates(displayRepresentatives, totalBars),
+    [displayRepresentatives, totalBars],
+  );
   const laneCount = positionedCandidates.length > 0
     ? Math.max(...positionedCandidates.map(({ lane }) => lane)) + 1
     : 1;
   const sourceCandidateIndex = sourceCandidateId === undefined
     ? undefined
     : candidates.findIndex((candidate) => candidate.id === sourceCandidateId) + 1;
+  const openGroupAnchorId = openVariantSelector?.datasetKey === candidateDatasetKey
+    ? openVariantSelector.anchorId
+    : undefined;
+  const openGroup = openGroupAnchorId === undefined
+    ? undefined
+    : grouping.groups.find(({ anchor }) => anchor.id === openGroupAnchorId);
+  const openGroupIndex = openGroup === undefined
+    ? -1
+    : grouping.groups.indexOf(openGroup);
+  const activeGroup = activeCandidateId === undefined
+    ? undefined
+    : grouping.byCandidateId.get(activeCandidateId);
+
+  function cancelPendingVariantActivation() {
+    const pending = pendingVariantActivationRef.current;
+    if (pending) clearTimeout(pending.timer);
+    pendingVariantActivationRef.current = undefined;
+  }
+
+  function closeVariantSelector(group: TimelineCandidateGroup, restoreFocus: boolean) {
+    cancelPendingVariantActivation();
+    pendingVariantFocusAnchorRef.current = undefined;
+    setOpenVariantSelector(undefined);
+    if (restoreFocus) groupButtonRefs.current.get(group.anchor.id)?.focus();
+  }
+
+  function toggleVariantSelector(group: TimelineCandidateGroup) {
+    cancelPendingVariantActivation();
+    if (openGroupAnchorId === group.anchor.id) {
+      closeVariantSelector(group, true);
+      return;
+    }
+    pendingVariantFocusAnchorRef.current = group.anchor.id;
+    setOpenVariantSelector({
+      datasetKey: candidateDatasetKey,
+      anchorId: group.anchor.id,
+    });
+  }
+
+  function activateVariant(
+    candidateId: string,
+    group: TimelineCandidateGroup,
+    doubleClick: boolean,
+  ) {
+    cancelPendingVariantActivation();
+    if (doubleClick && onCandidateDoubleClick) {
+      closeVariantSelector(group, false);
+      onCandidateDoubleClick(candidateId);
+      return;
+    }
+    onCandidateSelect(candidateId);
+    closeVariantSelector(group, true);
+  }
+
+  function handleVariantClick(
+    event: ReactMouseEvent<HTMLButtonElement>,
+    candidateId: string,
+    group: TimelineCandidateGroup,
+  ) {
+    event.stopPropagation();
+    cancelPendingVariantActivation();
+    if (event.detail === 0) {
+      activateVariant(candidateId, group, false);
+      return;
+    }
+    if (event.detail > 1) return;
+    const datasetKey = candidateDatasetKey;
+    const timer = setTimeout(() => {
+      const pending = pendingVariantActivationRef.current;
+      if (!pending || pending.timer !== timer || pending.datasetKey !== datasetKey) return;
+      pendingVariantActivationRef.current = undefined;
+      if (
+        !mountedRef.current
+        || committedCandidateDatasetKeyRef.current !== datasetKey
+      ) return;
+      onCandidateSelect(candidateId);
+      pendingVariantFocusAnchorRef.current = undefined;
+      setOpenVariantSelector(undefined);
+      groupButtonRefs.current.get(group.anchor.id)?.focus();
+    }, 250);
+    pendingVariantActivationRef.current = { timer, datasetKey };
+  }
+
+  function handleVariantSelectorKeyDown(
+    event: ReactKeyboardEvent<HTMLDivElement>,
+    group: TimelineCandidateGroup,
+  ) {
+    if (event.key !== "Escape") return;
+    event.preventDefault();
+    event.stopPropagation();
+    closeVariantSelector(group, true);
+  }
 
   return (
     <section
+      ref={candidateDatasetLifecycleRef}
       data-song-minimap
       className="border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-5"
       aria-labelledby="song-minimap-title"
@@ -142,27 +292,53 @@ export function SongMiniMap({
           {...(onEnterSelection === undefined ? {} : { onEnter: onEnterSelection })}
         >
           {positionedCandidates.length > 0
-            ? positionedCandidates.map(({ candidate, candidateIndex, lane, left, width }) => {
+            ? positionedCandidates.map(({ candidate, lane, left, width }) => {
+              const entry = grouping.byRepresentativeId.get(candidate.id);
+              if (!entry) return null;
+              const { group, index: groupIndex } = entry;
+              const hasVariants = group.variants.length > 1;
+              const isActive = activeGroup?.anchor.id === group.anchor.id;
+              const isOpen = openGroup?.anchor.id === group.anchor.id;
               const baseLabel = copy.candidateLabel(
-                candidateIndex + 1,
+                groupIndex + 1,
                 candidate.startBar,
                 candidate.endBar,
               );
-              const label = language === "ja"
-                ? `${baseLabel}。採集範囲の選択プリセット`
-                : `${baseLabel}. Capture range selection preset`;
-              const isActive = candidate.id === activeCandidateId;
+              const label = hasVariants
+                ? language === "ja"
+                  ? `${baseLabel}。候補グループ ${groupIndex + 1}、${group.variants.length}個のバリアント`
+                  : `${baseLabel}. Candidate group ${groupIndex + 1}, ${group.variants.length} variants`
+                : language === "ja"
+                  ? `${baseLabel}。採集範囲の選択プリセット`
+                  : `${baseLabel}. Capture range selection preset`;
               return (
                 <button
-                  key={candidate.id}
+                  key={group.anchor.id}
+                  ref={(element) => {
+                    if (element) groupButtonRefs.current.set(group.anchor.id, element);
+                    else groupButtonRefs.current.delete(group.anchor.id);
+                  }}
                   type="button"
                   data-song-minimap-candidate={candidate.id}
+                  data-song-minimap-group={group.anchor.id}
                   data-song-minimap-lane={lane}
+                  data-song-minimap-representative={group.representative.id}
+                  data-song-minimap-selected-variant={group.selectedVariant.id}
                   aria-label={label}
                   aria-pressed={isActive}
-                  title={language === "ja"
-                    ? `${label}・ダブルクリックで候補カードへ移動`
-                    : `${label}. Double-click to reveal the candidate card`}
+                  {...(hasVariants
+                    ? {
+                        "aria-expanded": isOpen,
+                        "aria-controls": `song-minimap-variants-${groupIndex + 1}`,
+                      }
+                    : {})}
+                  title={hasVariants
+                    ? language === "ja"
+                      ? `${label}。クリックしてバリアントを表示`
+                      : `${label}. Click to show variants`
+                    : language === "ja"
+                      ? `${label}・ダブルクリックで候補カードへ移動`
+                      : `${label}. Double-click to reveal the candidate card`}
                   className={`absolute z-40 grid h-7 min-w-7 place-items-center overflow-hidden border px-1 text-xs font-semibold transition focus-visible:z-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] ${
                     isActive
                       ? "border-teal-100 bg-teal-200 text-stone-950 shadow-[0_0_0_2px_rgba(94,234,212,0.3)]"
@@ -174,13 +350,22 @@ export function SongMiniMap({
                     top: `${lane * 2 + 2}rem`,
                   }}
                   onPointerDown={(event) => event.stopPropagation()}
-                  onClick={() => onCandidateSelect(candidate.id)}
+                  onClick={() => {
+                    if (hasVariants) toggleVariantSelector(group);
+                    else onCandidateSelect(group.representative.id);
+                  }}
+                  onKeyDown={(event) => {
+                    if (!hasVariants || event.key !== "Enter") return;
+                    event.preventDefault();
+                    event.stopPropagation();
+                    toggleVariantSelector(group);
+                  }}
                   onDoubleClick={(event) => {
                     event.stopPropagation();
-                    onCandidateDoubleClick?.(candidate.id);
+                    if (!hasVariants) onCandidateDoubleClick?.(group.representative.id);
                   }}
                 >
-                  {candidateIndex + 1}
+                  {hasVariants ? `${groupIndex + 1} · ${group.variants.length}` : groupIndex + 1}
                 </button>
               );
             })
@@ -188,9 +373,117 @@ export function SongMiniMap({
         </DraftRangeOverlay>
       ) : null}
 
+      {openGroup && openGroupIndex >= 0 ? (
+        <div
+          id={`song-minimap-variants-${openGroupIndex + 1}`}
+          data-song-minimap-variant-selector={openGroup.anchor.id}
+          className="mt-3 border border-teal-300/40 bg-[var(--lv-surface)]/80 p-3"
+          role="group"
+          aria-label={language === "ja"
+            ? `候補グループ ${openGroupIndex + 1} のバリアント`
+            : `Candidate group ${openGroupIndex + 1} variants`}
+          onKeyDown={(event) => handleVariantSelectorKeyDown(event, openGroup)}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-semibold text-[var(--lv-text-secondary)]">
+              {language === "ja"
+                ? `候補グループ ${openGroupIndex + 1} · ${openGroup.variants.length}件`
+                : `Candidate group ${openGroupIndex + 1} · ${openGroup.variants.length} variants`}
+            </p>
+            <button
+              type="button"
+              className="min-h-8 border border-[var(--lv-border)] px-2 text-xs text-[var(--lv-text-muted)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--lv-accent)]"
+              onClick={() => closeVariantSelector(openGroup, true)}
+            >
+              {language === "ja" ? "閉じる" : "Close"}
+            </button>
+          </div>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            {openGroup.variants.map((variant, variantIndex) => {
+              const isActive = variant.id === activeCandidateId;
+              return (
+                <button
+                  key={variant.id}
+                  ref={(element) => {
+                    if (
+                      element
+                      && pendingVariantFocusAnchorRef.current === openGroup.anchor.id
+                      && variant.id === openGroup.selectedVariant.id
+                    ) {
+                      pendingVariantFocusAnchorRef.current = undefined;
+                      element.focus();
+                    }
+                  }}
+                  type="button"
+                  data-song-minimap-variant={variant.id}
+                  data-song-minimap-variant-index={variantIndex + 1}
+                  data-song-minimap-variant-representative={
+                    variant.id === openGroup.representative.id
+                  }
+                  data-song-minimap-variant-selected={
+                    variant.id === openGroup.selectedVariant.id
+                  }
+                  aria-label={variantAriaLabel(
+                    variant,
+                    openGroupIndex + 1,
+                    variantIndex + 1,
+                    language,
+                  )}
+                  aria-pressed={isActive}
+                  className={`flex min-h-10 items-center border px-3 py-2 text-left text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] ${
+                    isActive
+                      ? "border-teal-100 bg-teal-200 text-stone-950"
+                      : "border-teal-300/50 bg-teal-300/5 text-[var(--lv-text)] hover:bg-teal-300/10"
+                  }`}
+                  onClick={(event) => handleVariantClick(
+                    event,
+                    variant.id,
+                    openGroup,
+                  )}
+                  onDoubleClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    activateVariant(variant.id, openGroup, true);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key !== "Enter") return;
+                    event.preventDefault();
+                    event.stopPropagation();
+                    activateVariant(variant.id, openGroup, false);
+                  }}
+                >
+                  <span className="flex-1">{variantVisibleLabel(variant, language)}</span>
+                  {isActive ? <Check aria-hidden="true" className="ml-2 inline shrink-0" size={16} /> : null}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+
       {positionedCandidates.length > 0 ? null : (
         <p className="mt-4 text-sm text-[var(--lv-text-muted)]">{copy.empty}</p>
       )}
     </section>
   );
+}
+
+function variantVisibleLabel(
+  candidate: ProgressionBlockCandidate,
+  language: AppLanguage,
+): string {
+  return language === "ja"
+    ? `${candidate.lengthBars}小節 · Bar ${candidate.startBar}–${candidate.endBar}`
+    : `${candidate.lengthBars} bars · Bars ${candidate.startBar}–${candidate.endBar}`;
+}
+
+function variantAriaLabel(
+  candidate: ProgressionBlockCandidate,
+  groupIndex: number,
+  variantIndex: number,
+  language: AppLanguage,
+): string {
+  return language === "ja"
+    ? `候補グループ ${groupIndex}、バリアント ${variantIndex}。${candidate.lengthBars}小節、Bar ${candidate.startBar}–${candidate.endBar}`
+    : `Candidate group ${groupIndex}, variant ${variantIndex}. ${candidate.lengthBars} bars, Bars ${candidate.startBar}–${candidate.endBar}`;
 }

@@ -2,7 +2,7 @@
 # Phase 5.23 — Timeline Candidate Legibility
 
 ## Status
-`IN PROGRESS — P5.23-00 COMPLETE at exact verified commit 3386014627e65b4856b0d5504108e444776f060d; P5.23-01 NOT STARTED`
+`IN PROGRESS — P5.23-01 ACTIVE; implementation and working-tree gates pending exact stage commit`
 
 ## Purpose
 MIDI解析後のFull Timelineで、重複候補を表示層だけで整理し、初期採集範囲と和声活動の読みやすさを改善する。
