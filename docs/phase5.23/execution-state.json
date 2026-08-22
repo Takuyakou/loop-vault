@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "phaseId": "5.23",
   "status": "in-progress",
-  "activeStage": null,
+  "activeStage": "P5.23-02",
   "completedStages": ["P5.23-00", "P5.23-01"],
   "blocked": false,
   "blockerReason": null,
@@ -47,6 +47,6 @@
     "p523-01-focused": "pass",
     "p523-01-protected-diff": "pass"
   },
-  "nextAction": "STOP. P5.23-02 is NOT STARTED. Do not advance automatically; wait for a separate human request to start P5.23-02.",
-  "updatedAt": "2026-08-22T20:46:18+09:00"
+  "nextAction": "P5.23-02 working-tree implementation and gates are in progress. Do not start P5.23-03, merge, or push.",
+  "updatedAt": "2026-08-23T00:10:34+09:00"
 }

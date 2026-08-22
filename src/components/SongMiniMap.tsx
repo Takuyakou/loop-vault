@@ -14,6 +14,10 @@ import {
   groupTimelineCandidates,
   type TimelineCandidateGroup,
 } from "../domain/timelineCandidateGrouping";
+import {
+  buildTimelineHarmonicActivity,
+  type HarmonicActivityLevel,
+} from "../domain/timelineHarmonicActivity";
 import { Check } from "lucide-react";
 import { DraftRangeOverlay } from "./DraftRangeOverlay";
 
@@ -144,6 +148,10 @@ export function SongMiniMap({
     });
     return { groups, byRepresentativeId, byCandidateId };
   }, [candidates]);
+  const harmonicActivity = useMemo(
+    () => buildTimelineHarmonicActivity(timeline, totalBars, beatsPerBar),
+    [beatsPerBar, timeline, totalBars],
+  );
   const displayRepresentatives = useMemo(() => grouping.groups.map(({ representative }) => (
     draft && representative.id === sourceCandidateId
       ? {
@@ -370,8 +378,65 @@ export function SongMiniMap({
               );
             })
             : null}
+          {harmonicActivity.length > 0 ? (
+            <div
+              data-harmonic-activity-lane
+              className="pointer-events-none absolute inset-x-0 bottom-2 z-10 h-2 overflow-hidden border-y border-teal-100/10"
+              role="group"
+              aria-label={harmonicActivityLaneLabel(language)}
+            >
+              {harmonicActivity.map((activity) => (
+                <span
+                  key={activity.bar}
+                  data-harmonic-activity-bar={activity.bar}
+                  data-harmonic-activity-level={activity.level}
+                  role="img"
+                  aria-label={harmonicActivityAriaLabel(
+                    activity.bar,
+                    activity.level,
+                    language,
+                  )}
+                  className={`absolute bottom-0 ${harmonicActivityLevelClass(activity.level)}`}
+                  style={{
+                    left: `${((activity.bar - 1) / harmonicActivity.length) * 100}%`,
+                    width: `${100 / harmonicActivity.length}%`,
+                  }}
+                />
+              ))}
+            </div>
+          ) : null}
         </DraftRangeOverlay>
       ) : null}
+      {harmonicActivity.length > 0 ? (
+        <div
+          data-harmonic-activity-legend
+          className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--lv-text-muted)]"
+          role="group"
+          aria-label={language === "ja"
+            ? "\u548c\u58f0\u6d3b\u52d5\u306e\u51e1\u4f8b"
+            : "Harmonic activity legend"}
+        >
+          <span className="font-semibold text-[var(--lv-text-secondary)]">
+            {harmonicActivityLaneLabel(language)}
+          </span>
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-1" role="list">
+            {(["inactive", "low", "medium", "high"] as const).map((level) => (
+              <span
+                key={level}
+                data-harmonic-activity-legend-level={level}
+                className="inline-flex items-center gap-1"
+                role="listitem"
+              >
+                <span aria-hidden="true" className="w-3 text-center font-mono">
+                  {harmonicActivitySymbol(level)}
+                </span>
+                <span>{harmonicActivityTerm(level, language)}</span>
+              </span>
+            ))}
+          </span>
+        </div>
+      ) : null}
+
 
       {openGroup && openGroupIndex >= 0 ? (
         <div
@@ -486,4 +551,46 @@ function variantAriaLabel(
   return language === "ja"
     ? `候補グループ ${groupIndex}、バリアント ${variantIndex}。${candidate.lengthBars}小節、Bar ${candidate.startBar}–${candidate.endBar}`
     : `Candidate group ${groupIndex}, variant ${variantIndex}. ${candidate.lengthBars} bars, Bars ${candidate.startBar}–${candidate.endBar}`;
+}
+
+function harmonicActivityLaneLabel(language: AppLanguage): string {
+  return language === "ja" ? "\u548c\u58f0\u6d3b\u52d5" : "Harmonic activity";
+}
+
+function harmonicActivityTerm(
+  level: HarmonicActivityLevel,
+  language: AppLanguage,
+): string {
+  if (language === "ja") {
+    if (level === "inactive") return "\u6d3b\u52d5\u306a\u3057";
+    if (level === "low") return "\u4f4e";
+    if (level === "medium") return "\u4e2d";
+    return "\u9ad8";
+  }
+  return level;
+}
+
+function harmonicActivitySymbol(level: HarmonicActivityLevel): string {
+  if (level === "inactive") return "\u2014";
+  if (level === "low") return "\u2582";
+  if (level === "medium") return "\u2585";
+  return "\u2588";
+}
+
+function harmonicActivityAriaLabel(
+  bar: number,
+  level: HarmonicActivityLevel,
+  language: AppLanguage,
+): string {
+  const term = harmonicActivityTerm(level, language);
+  return language === "ja"
+    ? `\u548c\u58f0\u6d3b\u52d5: Bar ${bar}\u3001\u5f37\u5ea6 ${term}`
+    : `Harmonic activity: Bar ${bar}, intensity ${term}`;
+}
+
+function harmonicActivityLevelClass(level: HarmonicActivityLevel): string {
+  if (level === "inactive") return "h-px border-t border-dashed border-teal-100/35 bg-transparent";
+  if (level === "low") return "h-1 bg-teal-300/20";
+  if (level === "medium") return "h-1.5 bg-teal-300/40";
+  return "h-full bg-teal-200/65";
 }

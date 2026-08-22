@@ -776,3 +776,179 @@ describe("SongMiniMap", () => {
     await act(async () => root.unmount());
   });
 });
+
+function activityEvent(
+  bar: number,
+  durationBeats: number,
+): ChordTimelineItem {
+  return {
+    bar,
+    beat: 1,
+    durationBeats,
+    chord: parseChordLabel("Cmaj7")!,
+    confidence: 0.9,
+    alternatives: [],
+    warnings: [],
+  };
+}
+
+describe("SongMiniMap harmonic activity", () => {
+  it("uses exact English and Japanese lane and segment names", () => {
+    const timeline = [
+      activityEvent(2, 1),
+      activityEvent(3, 3),
+      activityEvent(4, 4),
+    ];
+    const english = renderToStaticMarkup(
+      <SongMiniMap
+        {...editorProps}
+        totalBars={4}
+        timeline={timeline}
+        candidates={[]}
+        copy={englishCopy}
+        onCandidateSelect={vi.fn()}
+      />,
+    );
+    const japanese = renderToStaticMarkup(
+      <SongMiniMap
+        {...editorProps}
+        totalBars={4}
+        timeline={timeline}
+        candidates={[]}
+        language="ja"
+        copy={englishCopy}
+        onCandidateSelect={vi.fn()}
+      />,
+    );
+
+    expect(english).toContain('aria-label="Harmonic activity"');
+    expect(english).toContain('aria-label="Harmonic activity: Bar 1, intensity inactive"');
+    expect(english).toContain('aria-label="Harmonic activity: Bar 2, intensity low"');
+    expect(english).toContain('aria-label="Harmonic activity: Bar 3, intensity medium"');
+    expect(english).toContain('aria-label="Harmonic activity: Bar 4, intensity high"');
+    expect(japanese).toContain('aria-label="\u548c\u58f0\u6d3b\u52d5"');
+    expect(japanese).toContain('aria-label="\u548c\u58f0\u6d3b\u52d5: Bar 1\u3001\u5f37\u5ea6 \u6d3b\u52d5\u306a\u3057"');
+    expect(japanese).toContain('aria-label="\u548c\u58f0\u6d3b\u52d5: Bar 2\u3001\u5f37\u5ea6 \u4f4e"');
+    expect(japanese).toContain('aria-label="\u548c\u58f0\u6d3b\u52d5: Bar 3\u3001\u5f37\u5ea6 \u4e2d"');
+    expect(japanese).toContain('aria-label="\u548c\u58f0\u6d3b\u52d5: Bar 4\u3001\u5f37\u5ea6 \u9ad8"');
+    expect(english).toContain('data-harmonic-activity-legend="true"');
+    expect(english).toContain('aria-label="Harmonic activity legend"');
+    expect(english).toContain(">Harmonic activity</span>");
+    expect(english).toContain("\u2014</span><span>inactive</span>");
+    expect(english).toContain("\u2582</span><span>low</span>");
+    expect(english).toContain("\u2585</span><span>medium</span>");
+    expect(english).toContain("\u2588</span><span>high</span>");
+    expect(japanese).toContain('aria-label="\u548c\u58f0\u6d3b\u52d5\u306e\u51e1\u4f8b"');
+    expect(japanese).toContain(">\u548c\u58f0\u6d3b\u52d5</span>");
+    expect(japanese).toContain("\u2014</span><span>\u6d3b\u52d5\u306a\u3057</span>");
+    expect(japanese).toContain("\u2582</span><span>\u4f4e</span>");
+    expect(japanese).toContain("\u2585</span><span>\u4e2d</span>");
+    expect(japanese).toContain("\u2588</span><span>\u9ad8</span>");
+  });
+
+  it("maps every legend strength to distinct segment geometry", async () => {
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <SongMiniMap
+        {...editorProps}
+        totalBars={4}
+        timeline={[
+          activityEvent(2, 1),
+          activityEvent(3, 3),
+          activityEvent(4, 4),
+        ]}
+        candidates={[]}
+        copy={englishCopy}
+        onCandidateSelect={vi.fn()}
+      />,
+    ));
+
+    const mappings = [
+      { level: "inactive", height: "h-px", symbolAndTerm: "\u2014inactive" },
+      { level: "low", height: "h-1", symbolAndTerm: "\u2582low" },
+      { level: "medium", height: "h-1.5", symbolAndTerm: "\u2585medium" },
+      { level: "high", height: "h-full", symbolAndTerm: "\u2588high" },
+    ] as const;
+    for (const mapping of mappings) {
+      const segment = container.querySelector<HTMLElement>(
+        `[data-harmonic-activity-level="${mapping.level}"]`,
+      );
+      const legendItem = container.querySelector<HTMLElement>(
+        `[data-harmonic-activity-legend-level="${mapping.level}"]`,
+      );
+      expect(segment?.classList.contains("bottom-0")).toBe(true);
+      expect(segment?.classList.contains(mapping.height)).toBe(true);
+      expect(legendItem?.textContent).toBe(mapping.symbolAndTerm);
+    }
+    const geometry = mappings.map(({ level }) => (
+      container.querySelector<HTMLElement>(
+        `[data-harmonic-activity-level="${level}"]`,
+      )?.className
+    ));
+    expect(new Set(geometry)).toHaveLength(4);
+    expect(container.querySelector('[data-harmonic-activity-level="inactive"]')
+      ?.classList.contains("border-dashed")).toBe(true);
+    expect(container.querySelector("[data-harmonic-activity-lane]")
+      ?.classList.contains("h-2")).toBe(true);
+
+    await act(async () => root.unmount());
+  });
+
+  it("renders a passive finite 145-bar strip in a narrow container", async () => {
+    const container = document.createElement("div");
+    container.style.width = "320px";
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <SongMiniMap
+        {...editorProps}
+        totalBars={145}
+        timeline={[activityEvent(1, 145 * 4)]}
+        candidates={[candidate("narrow-candidate", 1, 4)]}
+        copy={englishCopy}
+        onCandidateSelect={vi.fn()}
+      />,
+    ));
+
+    const lane = container.querySelector<HTMLElement>("[data-harmonic-activity-lane]");
+    const segments = [
+      ...container.querySelectorAll<HTMLElement>("[data-harmonic-activity-bar]"),
+    ];
+    expect(lane?.classList.contains("pointer-events-none")).toBe(true);
+    expect(lane?.querySelectorAll("button")).toHaveLength(0);
+    const legend = container.querySelector<HTMLElement>(
+      "[data-harmonic-activity-legend]",
+    );
+    const legendLevels = [
+      ...container.querySelectorAll<HTMLElement>(
+        "[data-harmonic-activity-legend-level]",
+      ),
+    ];
+    expect(legend?.textContent).toContain("Harmonic activity");
+    const candidateRange = container.querySelector<HTMLElement>(
+      '[data-song-minimap-candidate="narrow-candidate"]',
+    );
+    const track = container.querySelector<HTMLElement>("[data-song-minimap-track]");
+    expect(candidateRange?.classList.contains("z-40")).toBe(true);
+    expect(track?.contains(lane ?? null)).toBe(true);
+    expect(track?.contains(legend ?? null)).toBe(false);
+
+    expect(legend?.querySelectorAll("button")).toHaveLength(0);
+    expect(legendLevels.map((level) => level.textContent)).toEqual([
+      "\u2014inactive",
+      "\u2582low",
+      "\u2585medium",
+      "\u2588high",
+    ]);
+
+    expect(segments).toHaveLength(145);
+    expect(segments.every((segment) => (
+      !segment.style.left.includes("NaN")
+      && !segment.style.left.includes("Infinity")
+      && !segment.style.width.includes("NaN")
+      && !segment.style.width.includes("Infinity")
+    ))).toBe(true);
+
+    await act(async () => root.unmount());
+  });
+});

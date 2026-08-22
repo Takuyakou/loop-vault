@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 
-import { act } from "react";
+import { act, StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
+import type { AnalysisState } from "../store/vaultStore";
 import type { ChordTimelineItem, MidiProgressionAnalysis, ProgressionBlockCandidate } from "../domain/types";
 import type { AnalysisInput } from "../domain/midi/types";
 import {
@@ -1817,6 +1818,181 @@ describe("CaptureView song mini map", () => {
     } finally {
       await act(async () => root.unmount());
       container.remove();
+    }
+  });
+
+  it("initializes the global selected variant once with bar snap and preserves user snap", async () => {
+    const result = analysisWithCandidates();
+    result.blockCandidates[0]!.selectionScore = 0.8;
+    result.blockCandidates[1]!.selectionScore = 0.95;
+    const { container, root } = await renderCapture(result);
+
+    const firstRange = container.querySelector<HTMLButtonElement>(
+      '[data-song-minimap-candidate="candidate-1"]',
+    );
+    const secondRange = container.querySelector<HTMLButtonElement>(
+      '[data-song-minimap-candidate="candidate-2"]',
+    );
+    const snapButtons = [...container.querySelectorAll<HTMLButtonElement>("button")];
+    const barSnap = snapButtons.find((button) => button.textContent === "Bar");
+    const beatSnap = snapButtons.find((button) => button.textContent === "Beat");
+
+    expect(container.querySelectorAll("[data-song-minimap-candidate]")).toHaveLength(2);
+    expect(firstRange?.getAttribute("aria-pressed")).toBe("false");
+    expect(secondRange?.getAttribute("aria-pressed")).toBe("true");
+    expect(container.textContent).toContain("Selection: 5.1");
+    expect(container.textContent).toContain("8.4");
+    expect(barSnap?.getAttribute("aria-pressed")).toBe("true");
+    expect(beatSnap?.getAttribute("aria-pressed")).toBe("false");
+
+    await act(async () => beatSnap?.click());
+    await act(async () => Promise.resolve());
+    expect(barSnap?.getAttribute("aria-pressed")).toBe("false");
+    expect(beatSnap?.getAttribute("aria-pressed")).toBe("true");
+    expect(secondRange?.getAttribute("aria-pressed")).toBe("true");
+
+    await act(async () => root.unmount());
+    container.remove();
+  });
+
+  it("owns the initial Draft per dataset and remains stable under StrictMode", async () => {
+    const resultA = analysisWithCandidates();
+    resultA.sourceFingerprint = "dataset-a";
+    resultA.blockCandidates[0]!.selectionScore = 0.95;
+    resultA.blockCandidates[1]!.selectionScore = 0.8;
+    const candidateB = candidate({
+      id: "candidate-b",
+      startBar: 5,
+      endBar: 8,
+      lengthBars: 4,
+      chords: [
+        chord("Dm7", 5),
+        chord("G7", 6),
+        chord("Cmaj7", 7),
+        chord("Am7", 8),
+      ],
+      selectionScore: 0.99,
+    });
+    const resultB: MidiProgressionAnalysis = {
+      fileName: "dataset-b.mid",
+      sourceFingerprint: "dataset-b",
+      totalBars: 12,
+      bpm: 120,
+      fullTimeline: [...candidateB.chords, chord("Fmaj7", 9)],
+      blockCandidates: [candidateB],
+      analyzedAt: "2026-07-17T00:00:00.000Z",
+      analyzerVersion: "test",
+    };
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const originalToISOString = Date.prototype.toISOString;
+    const toISOStringSpy = vi.spyOn(Date.prototype, "toISOString")
+      .mockImplementation(function stableIsoString(this: Date) {
+        return originalToISOString.call(this);
+      });
+    let replaceAnalysis!: (next: AnalysisState) => void;
+
+    function Harness() {
+      const [currentAnalysis, setCurrentAnalysis] = useState<AnalysisState>({
+        status: "done",
+        result: resultA,
+      });
+      replaceAnalysis = (next) => setCurrentAnalysis(next);
+      return (
+        <CaptureView
+          ideas={[]}
+          analysis={currentAnalysis}
+          analyzeMidiBytes={vi.fn()}
+          clearAnalysis={vi.fn()}
+          createIdeaFromDraft={vi.fn()}
+          appendBlockToIdea={vi.fn()}
+          updateIdea={vi.fn()}
+          setToast={vi.fn()}
+          copy={appCopy.en}
+          language="en"
+          showRomanNumerals
+        />
+      );
+    }
+
+    const snapButton = (label: "Bar" | "Beat") => (
+      [...container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent === label)
+    );
+
+    try {
+      await act(async () => root.render(
+        <StrictMode>
+          <Harness />
+        </StrictMode>,
+      ));
+      expect(toISOStringSpy).toHaveBeenCalledTimes(1);
+      expect(container.textContent).toContain("Selection: 1.1\u20134.4");
+      expect(container.textContent).toContain("Chords: 2 events");
+      expect(snapButton("Bar")?.getAttribute("aria-pressed")).toBe("true");
+
+      await act(async () => replaceAnalysis({ status: "done", result: resultB }));
+      expect(toISOStringSpy).toHaveBeenCalledTimes(2);
+      expect(container.querySelector('[data-song-minimap-candidate="candidate-1"]')).toBeNull();
+      expect(container.querySelector('[data-song-minimap-candidate="candidate-b"]')
+        ?.getAttribute("aria-pressed")).toBe("true");
+      expect(container.textContent).toContain("Selection: 5.1\u20138.4");
+      expect(container.textContent).toContain("Chords: 4 events");
+      expect(snapButton("Bar")?.getAttribute("aria-pressed")).toBe("true");
+
+      await act(async () => snapButton("Beat")?.click());
+      const moveHandle = container.querySelector<HTMLButtonElement>(
+        "[data-selection-move-handle]",
+      );
+      await act(async () => {
+        moveHandle?.dispatchEvent(new KeyboardEvent("keydown", {
+          key: "ArrowRight",
+          shiftKey: true,
+          bubbles: true,
+        }));
+      });
+      expect(container.textContent).toContain("Selection: 5.1\u20139.1");
+      expect(snapButton("Beat")?.getAttribute("aria-pressed")).toBe("true");
+
+      await act(async () => replaceAnalysis({
+        status: "done",
+        result: {
+          ...resultB,
+          fullTimeline: [...resultB.fullTimeline],
+          blockCandidates: [...resultB.blockCandidates],
+        },
+      }));
+      expect(toISOStringSpy).toHaveBeenCalledTimes(2);
+      expect(container.textContent).toContain("Selection: 5.1\u20139.1");
+      expect(snapButton("Beat")?.getAttribute("aria-pressed")).toBe("true");
+
+      await act(async () => replaceAnalysis({
+        status: "done",
+        result: {
+          sourceFingerprint: "dataset-zero",
+          totalBars: 0,
+          fullTimeline: [],
+          blockCandidates: [],
+          analyzedAt: "2026-07-18T00:00:00.000Z",
+          analyzerVersion: "test",
+        },
+      }));
+      expect(toISOStringSpy).toHaveBeenCalledTimes(2);
+      expect(container.querySelector("[data-current-selection]")).toBeNull();
+      expect(container.textContent).toContain(appCopy.en.capture.songMiniMapEmpty);
+
+      await act(async () => replaceAnalysis({
+        status: "error",
+        error: "analysis failed",
+        result: resultB,
+      }));
+      expect(container.querySelector("[data-current-selection]")).toBeNull();
+      expect(toISOStringSpy).toHaveBeenCalledTimes(2);
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+      toISOStringSpy.mockRestore();
     }
   });
 

@@ -114,6 +114,21 @@ export function groupTimelineCandidates(
   return groups;
 }
 
+export function selectInitialTimelineCandidate(
+  candidates: readonly ProgressionBlockCandidate[],
+): ProgressionBlockCandidate | undefined {
+  let selected: ProgressionBlockCandidate | undefined;
+  for (const group of groupTimelineCandidates(candidates)) {
+    if (
+      selected === undefined
+      || compareTimelineCandidateSelectedVariants(group.selectedVariant, selected) < 0
+    ) {
+      selected = group.selectedVariant;
+    }
+  }
+  return selected;
+}
+
 function candidateScore(candidate: ProgressionBlockCandidate): number {
   return Number.isFinite(candidate.selectionScore)
     ? candidate.selectionScore!

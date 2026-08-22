@@ -87,6 +87,7 @@ import type {
   Status,
 } from "../domain/types";
 import type { AnalysisState, ProgressionSaveMetadata, TextProgressionIdeaDraft } from "../store/vaultStore";
+import { selectInitialTimelineCandidate } from "../domain/timelineCandidateGrouping";
 import type { TextProgressionEvent } from "../domain/textProgression";
 import { progressionEditorCopy, type AppCopy, type AppLanguage } from "../i18n";
 import { ProgressionGrid, timelineStartBeat } from "../ui/ProgressionGrid";
@@ -368,6 +369,37 @@ export function CaptureView(props: CaptureViewProps) {
   const candidateHeaderFocusIdRef = useRef<string>();
   const result = analysis.result;
   const capturePlayback = usePlaybackState(controller);
+  const analysisDatasetKey = result
+    ? `${captureAnalysisIdentity(result)}:${analysisRunGeneration}`
+    : undefined;
+  const initializedAnalysisDatasetKeyRef = useRef<string>();
+  const activeDraftDatasetKeyRef = useRef<string>();
+  useEffect(() => {
+    if (analysisProgress !== undefined) return;
+    if (analysis.status !== "done" || !result || analysisDatasetKey === undefined) {
+      initializedAnalysisDatasetKeyRef.current = undefined;
+      setActiveDraft(null);
+      activeDraftDatasetKeyRef.current = undefined;
+      return;
+    }
+    if (initializedAnalysisDatasetKeyRef.current === analysisDatasetKey) return;
+    initializedAnalysisDatasetKeyRef.current = analysisDatasetKey;
+
+    const initialCandidate = selectInitialTimelineCandidate(result.blockCandidates);
+    const initialMeter = beatsPerBarFor(result.timeSignature);
+    const initialDraft = initialCandidate === undefined
+      ? null
+      : createDraftFromCandidate({
+          candidate: initialCandidate,
+          timelineFingerprint: fingerprintTimeline(result.fullTimeline, initialMeter),
+          beatsPerBar: initialMeter,
+        });
+    const previousDatasetKey = activeDraftDatasetKeyRef.current;
+    activeDraftDatasetKeyRef.current = analysisDatasetKey;
+    setActiveDraft((current) => (
+      previousDatasetKey === analysisDatasetKey ? current : initialDraft
+    ));
+  }, [analysis.status, analysisDatasetKey, analysisProgress, result]);
   const authorReferenceIndex = useMemo(() => buildAuthorReferenceIndex(ideas), [ideas]);
   const analysisTargetLabel = useMemo(
     () => captureAnalysisTargetLabel(preAnalysisSession?.voices),
@@ -537,6 +569,8 @@ export function CaptureView(props: CaptureViewProps) {
       optionOverrides: AnalyzeMidiOptions = {},
     ) => {
       stopCapturePlayback(controller);
+      setActiveDraft(null);
+      setExpandedCandidateId(undefined);
       setAnalysisProgress("analyzing");
       await waitForNextPaint();
       if (!captureViewMountedRef.current) return false;
@@ -550,8 +584,6 @@ export function CaptureView(props: CaptureViewProps) {
       setAnalysisProgress("finalizing");
       await waitForNextPaint();
       if (!captureViewMountedRef.current) return false;
-      setActiveDraft(null);
-      setExpandedCandidateId(undefined);
       setToast(analyzed ? copy.toast.midiAnalyzed : copy.toast.midiFailed);
       await waitForStatusFeedback();
       if (!captureViewMountedRef.current) return false;

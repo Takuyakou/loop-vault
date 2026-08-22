@@ -4,6 +4,7 @@ import {
   areTimelineCandidatesRelated,
   compareTimelineCandidateSelectedVariants,
   groupTimelineCandidates,
+  selectInitialTimelineCandidate,
   timelineCandidateIntervalMetrics,
 } from "./timelineCandidateGrouping";
 
@@ -141,5 +142,27 @@ describe("timeline candidate grouping", () => {
       candidate("b-id", 1, 4, { selectionScore: 0.9 }),
       candidate("a-id", 1, 4, { selectionScore: 0.9 }),
     ])).toBe("a-id");
+  });
+});
+describe("timeline initial candidate selection", () => {
+  it("compares one selected variant per group and chooses the locked global winner", () => {
+    const candidates = [
+      candidate("initial-a", 1, 8, { selectionScore: 0.88, confidence: 0.88 }),
+      candidate("initial-b-16", 33, 48, { selectionScore: 0.82, confidence: 0.82 }),
+      candidate("initial-b-8", 33, 40, { selectionScore: 0.96, confidence: 0.96 }),
+      candidate("initial-c", 65, 72, { selectionScore: 0.91, confidence: 0.91 }),
+    ];
+
+    expect(selectInitialTimelineCandidate(candidates)?.id).toBe("initial-b-8");
+    expect(selectInitialTimelineCandidate([...candidates].reverse())?.id).toBe("initial-b-8");
+  });
+
+  it("keeps zero manual and selects the only candidate without changing input", () => {
+    const only = candidate("only", 17, 24, { selectionScore: 0.9 });
+    const input = [only];
+
+    expect(selectInitialTimelineCandidate([])).toBeUndefined();
+    expect(selectInitialTimelineCandidate(input)).toBe(only);
+    expect(input).toEqual([only]);
   });
 });
