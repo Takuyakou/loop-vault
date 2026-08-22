@@ -1,6 +1,6 @@
 # P5.23 Reports
-- [P5.23-00-audit-baseline.md](P5.23-00-audit-baseline.md) — COMPLETE at exact verified commit `3386014627e65b4856b0d5504108e444776f060d`; P5.23-01 NOT STARTED
-- P5.23-01-candidate-grouping.md
+- [P5.23-00-audit-baseline.md](P5.23-00-audit-baseline.md) — COMPLETE at exact verified commit `3386014627e65b4856b0d5504108e444776f060d`
+- [P5.23-01-candidate-grouping.md](P5.23-01-candidate-grouping.md) — COMPLETE at exact verified commit `ba359e7e03c9631a1ee5350d3f07add6ddc43283`; P5.23-02 NOT STARTED
 - P5.23-02-selection-activity.md
 - P5.23-03-visual-interaction-hardening.md
 - P5.23-04-product-acceptance.md

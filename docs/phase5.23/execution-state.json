@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "5.23",
   "status": "in-progress",
-  "activeStage": "P5.23-01",
-  "completedStages": ["P5.23-00"],
+  "activeStage": null,
+  "completedStages": ["P5.23-00", "P5.23-01"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "305f9eb2728fe6af4e86444fae07899ef5dac757",
-  "lastVerifiedCommit": "3386014627e65b4856b0d5504108e444776f060d",
+  "lastVerifiedCommit": "ba359e7e03c9631a1ee5350d3f07add6ddc43283",
   "currentBranch": "feat/p523-timeline-candidate-legibility",
   "requiredGates": {
     "P5.23-00": [
@@ -43,8 +43,10 @@
     "p523-00-analyzer-exact-regression": "pass",
     "p523-00-lint-typecheck-build": "pass",
     "p523-00-diff-privacy-generated-hygiene": "pass",
-    "p523-00-security-audits": "pass"
+    "p523-00-security-audits": "pass",
+    "p523-01-focused": "pass",
+    "p523-01-protected-diff": "pass"
   },
-  "nextAction": "Implement and verify P5.23-01 Candidate Grouping / Variant UI only. Do not start P5.23-02.",
-  "updatedAt": "2026-08-22T19:00:00+09:00"
+  "nextAction": "STOP. P5.23-02 is NOT STARTED. Do not advance automatically; wait for a separate human request to start P5.23-02.",
+  "updatedAt": "2026-08-22T20:46:18+09:00"
 }
