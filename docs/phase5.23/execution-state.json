@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "5.23",
   "status": "in-progress",
-  "activeStage": "P5.23-02",
-  "completedStages": ["P5.23-00", "P5.23-01"],
+  "activeStage": null,
+  "completedStages": ["P5.23-00", "P5.23-01", "P5.23-02"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "305f9eb2728fe6af4e86444fae07899ef5dac757",
-  "lastVerifiedCommit": "ba359e7e03c9631a1ee5350d3f07add6ddc43283",
+  "lastVerifiedCommit": "de27cd2c5ab0512e22b003d468b1a84a5fa324aa",
   "currentBranch": "feat/p523-timeline-candidate-legibility",
   "requiredGates": {
     "P5.23-00": [
@@ -45,8 +45,10 @@
     "p523-00-diff-privacy-generated-hygiene": "pass",
     "p523-00-security-audits": "pass",
     "p523-01-focused": "pass",
-    "p523-01-protected-diff": "pass"
+    "p523-01-protected-diff": "pass",
+    "p523-02-focused": "pass",
+    "p523-02-protected-diff": "pass"
   },
-  "nextAction": "P5.23-02 working-tree implementation and gates are in progress. Do not start P5.23-03, merge, or push.",
-  "updatedAt": "2026-08-23T00:10:34+09:00"
+  "nextAction": "STOP. P5.23-03 is NOT STARTED. Do not advance automatically; wait for a separate human request to start P5.23-03.",
+  "updatedAt": "2026-08-23T01:11:46+09:00"
 }

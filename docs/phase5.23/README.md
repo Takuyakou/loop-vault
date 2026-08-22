@@ -2,7 +2,7 @@
 # Phase 5.23 — Timeline Candidate Legibility
 
 ## Status
-`IN PROGRESS — P5.23-01 COMPLETE at exact verified commit ba359e7e03c9631a1ee5350d3f07add6ddc43283; P5.23-02 NOT STARTED`
+`IN PROGRESS — P5.23-02 COMPLETE at exact verified commit de27cd2c5ab0512e22b003d468b1a84a5fa324aa; P5.23-03 NOT STARTED`
 
 ## Purpose
 MIDI解析後のFull Timelineで、重複候補を表示層だけで整理し、初期採集範囲と和声活動の読みやすさを改善する。
@@ -30,7 +30,7 @@ MIDI解析後のFull Timelineで、重複候補を表示層だけで整理し、
 ## Stages
 - P5.23-00 Audit / Baseline / Contract Lock — COMPLETE (`3386014627e65b4856b0d5504108e444776f060d`)
 - P5.23-01 Candidate Grouping / Variant UI — COMPLETE (`ba359e7e03c9631a1ee5350d3f07add6ddc43283`)
-- P5.23-02 Initial Selection / Snap / Harmonic Activity
+- P5.23-02 Initial Selection / Snap / Harmonic Activity — COMPLETE (`de27cd2c5ab0512e22b003d468b1a84a5fa324aa`)
 - P5.23-03 Visual / Interaction Hardening
 - P5.23-04 Product Acceptance
 
@@ -49,8 +49,8 @@ MIDI解析後のFull Timelineで、重複候補を表示層だけで整理し、
 12. [Contract 05 — Accessibility / Interaction](contracts/05-accessibility-interaction-contract.md)
 13. [Contract 06 — Regression / Safety](contracts/06-regression-safety-contract.md)
 14. [active audit](audit/P5.23-00-repository-audit.md)
-15. [active report](reports/P5.23-01-candidate-grouping.md)
+15. [active report](reports/P5.23-02-selection-activity.md)
 16. [P5.23.1 deferred backlog](backlog/P5.23.1-CANDIDATE-DIVERSIFICATION.md)
 
 ## Next action
-STOP。P5.23-02はNOT STARTED。自動進行せず、P5.23-02を開始する別途のhuman requestを待つ。
+STOP. P5.23-03 is NOT STARTED. Do not advance automatically; wait for a separate human request to start P5.23-03.
