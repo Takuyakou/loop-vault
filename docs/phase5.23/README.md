@@ -53,4 +53,4 @@ MIDI解析後のFull Timelineで、重複候補を表示層だけで整理し、
 16. [P5.23.1 deferred backlog](backlog/P5.23.1-CANDIDATE-DIVERSIFICATION.md)
 
 ## Next action
-First independently review and explicit-path commit the four P5.23 readiness documents, then rerun the exact docs validation, validator tests, security scan, git diff --check, and final status on that committed docs closure. After that, run human Product Acceptance on the fresh isolated-target artifacts. Do not merge, push, release, tag, start P5.23.1, or start P5.24 without separate human authorization.
+Run human Product Acceptance on the fresh isolated-target artifacts recorded in the P5.23-04 report. The automated readiness record and its post-commit docs/security/diff/status closure are complete at `cb911a12f650510c632404ba6d9c1e9cd1ff1184`. Do not merge, push, release, tag, start P5.23.1, or start P5.24 without separate human authorization.
