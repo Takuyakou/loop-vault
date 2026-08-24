@@ -2,7 +2,7 @@
 # Phase 5.23 — Timeline Candidate Legibility
 
 ## Status
-`IN PROGRESS — P5.23-03 IMPLEMENTED IN WORKING TREE; AUTOMATED GATES PASS; STAGE COMMIT PENDING`
+`IN PROGRESS — P5.23-03 COMPLETE; P5.23-04 NOT STARTED`
 
 ## Purpose
 MIDI解析後のFull Timelineで、重複候補を表示層だけで整理し、初期採集範囲と和声活動の読みやすさを改善する。
@@ -31,7 +31,7 @@ MIDI解析後のFull Timelineで、重複候補を表示層だけで整理し、
 - P5.23-00 Audit / Baseline / Contract Lock — COMPLETE (`3386014627e65b4856b0d5504108e444776f060d`)
 - P5.23-01 Candidate Grouping / Variant UI — COMPLETE (`ba359e7e03c9631a1ee5350d3f07add6ddc43283`)
 - P5.23-02 Initial Selection / Snap / Harmonic Activity — COMPLETE (`de27cd2c5ab0512e22b003d468b1a84a5fa324aa`)
-- P5.23-03 Visual / Interaction Hardening
+- P5.23-03 Visual / Interaction Hardening — COMPLETE (`b370ee0906d1d3522288c6fee880f16be088e2bb`; visual baseline hygiene `c89b9940a14d9df9fbf385c06ff67f7b8b3ca008`)
 - P5.23-04 Product Acceptance
 
 ## Required Reading Order
@@ -53,4 +53,4 @@ MIDI解析後のFull Timelineで、重複候補を表示層だけで整理し、
 16. [P5.23.1 deferred backlog](backlog/P5.23.1-CANDIDATE-DIVERSIFICATION.md)
 
 ## Next action
-STOP. Create the independent P5.23-03 stage commit, rerun its exact-commit gates, and close its report/state. Do not start P5.23-04, merge, push, release, or tag.
+STOP. P5.23-04 is NOT STARTED. Do not advance automatically; wait for a separate human request to start P5.23-04. Do not merge, push, release, or tag.
