@@ -3,15 +3,25 @@
 import { act, StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, onTestFinished, vi } from "vitest";
+import { SongMiniMap } from "../components/SongMiniMap";
+import { buildCorrectionEvents } from "../domain/midi/feedback";
+import { buildLabelCorrectionLogs } from "../domain/midi/labelCorrectionLog";
 import type { AnalysisState } from "../store/vaultStore";
 import type { ChordTimelineItem, MidiProgressionAnalysis, ProgressionBlockCandidate } from "../domain/types";
 import type { AnalysisInput } from "../domain/midi/types";
 import {
+  type EditableProgression,
   createEditableProgression,
   LEGACY_SIMILARITY_VOICE_ID,
 } from "../domain/progressionEditing";
 import { makeIdea } from "../domain/testFactory";
+import { createDraftFromCandidate } from "../domain/midi/manualDraft";
+import {
+  captureDraftSnapshot,
+  redoCaptureDraft,
+  undoCaptureDraft,
+} from "../domain/midi/captureEditHistory";
 import { appCopy, progressionEditorCopy } from "../i18n";
 import {
   createPlaybackController,
@@ -19,6 +29,7 @@ import {
 } from "../audio/playbackController";
 import {
   appendProgressionMemo,
+  captureDraftRevisionIdentity,
   captureSimilarityContext,
   captureAnalysisIdentity,
   captureSaveTitle,
@@ -289,6 +300,562 @@ describe("ProgressionCandidateCard", () => {
     expect(markup).toContain("Chord structure");
     expect(markup).toContain("Split chord");
     expect(markup).toContain("Save to Vault");
+  });
+
+  it("synchronizes external Draft undo and redo without echoing stale editor state", async () => {
+    const sourceCandidate = candidate();
+    const initialDraft = createDraftFromCandidate({
+      candidate: sourceCandidate,
+      timelineFingerprint: "timeline-external-history",
+      now: "2026-01-01T00:00:00.000Z",
+      draftId: "draft-external-history",
+    });
+
+    function Harness() {
+      const [draft, setDraft] = useState(initialDraft);
+      return (
+        <>
+          <button
+            type="button"
+            data-testid="external-draft-undo"
+            onClick={() => setDraft((current) => undoCaptureDraft(current))}
+          >
+            External undo
+          </button>
+          <button
+            type="button"
+            data-testid="external-draft-redo"
+            onClick={() => setDraft((current) => redoCaptureDraft(current))}
+          >
+            External redo
+          </button>
+          <output data-testid="external-draft-state">
+            {draft.historyIndex}:{String(draft.isDirty)}
+          </output>
+          <ProgressionCandidateCard
+            candidate={sourceCandidate}
+            candidateIndex={0}
+            bpm={96}
+            onCopyProgression={vi.fn()}
+            onPreview={vi.fn()}
+            onPreviewChord={vi.fn()}
+            copy={appCopy.en}
+            language="en"
+            isExpanded
+            inspectorExpanded
+            draft={draft}
+            onDraftChange={setDraft}
+          />
+        </>
+      );
+    }
+
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    onTestFinished(async () => {
+      await act(async () => root.unmount());
+    });
+    await act(async () => root.render(<Harness />));
+
+    const chordInput = container.querySelector<HTMLInputElement>(
+      '[data-chord-inspector] input[id^="chord-label-"]',
+    )!;
+    const valueSetter = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      "value",
+    )?.set;
+    await act(async () => {
+      valueSetter?.call(chordInput, "Dm7");
+      chordInput.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await act(async () => {
+      chordInput.dispatchEvent(new KeyboardEvent("keydown", {
+        key: "Enter",
+        bubbles: true,
+      }));
+    });
+
+    const firstChord = () => container.querySelector<HTMLButtonElement>("[data-chord-card]");
+    const state = () => container.querySelector<HTMLOutputElement>(
+      '[data-testid="external-draft-state"]',
+    );
+    expect(firstChord()?.textContent).toContain("Dm7");
+    expect(state()?.textContent).toBe("0:true");
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>('[data-testid="external-draft-undo"]')?.click();
+    });
+    await act(async () => Promise.resolve());
+    expect(firstChord()?.textContent).toContain("Cmaj7");
+    expect(chordInput.value).toBe("Cmaj7");
+    expect(state()?.textContent).toBe("-1:false");
+
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>('[data-testid="external-draft-redo"]')?.click();
+    });
+    await act(async () => Promise.resolve());
+    expect(firstChord()?.textContent).toContain("Dm7");
+    expect(chordInput.value).toBe("Dm7");
+    expect(state()?.textContent).toBe("0:true");
+
+  });
+
+  it("synchronizes an external full Draft revision without echoing stale editable state", async () => {
+    const sourceCandidate = candidate();
+    const initialDraft = createDraftFromCandidate({
+      candidate: sourceCandidate,
+      timelineFingerprint: "timeline-external-full-revision",
+      now: "2026-01-01T00:00:00.000Z",
+      draftId: "draft-external-full-revision",
+    });
+    const externalChord = {
+      root: 2,
+      quality: "min7" as const,
+      tensions: [],
+      label: "Dm7",
+    };
+    const externalDraft = {
+      ...initialDraft,
+      isDirty: true,
+      events: initialDraft.events.map((event, index) => (
+        index === 0
+          ? {
+              ...event,
+              relativeStartBeat: event.relativeStartBeat + 0.25,
+              bar: 1,
+              beat: 1.25,
+              chord: externalChord,
+              identityKey: "external-dm7",
+              source: {
+                ...event.source,
+                bar: 1,
+                beat: 1.25,
+                chord: externalChord,
+              },
+            }
+          : event
+      )),
+    };
+    expect(externalDraft.draftId).toBe(initialDraft.draftId);
+    expect(externalDraft.historyIndex).toBe(initialDraft.historyIndex);
+    expect(externalDraft.selectedRange).toEqual(initialDraft.selectedRange);
+    expect(captureDraftRevisionIdentity(externalDraft))
+      .not.toBe(captureDraftRevisionIdentity(initialDraft));
+
+    const onDraftChange = vi.fn();
+    const renderCard = (draft: typeof initialDraft) => (
+      <ProgressionCandidateCard
+        candidate={sourceCandidate}
+        candidateIndex={0}
+        bpm={96}
+        onCopyProgression={vi.fn()}
+        onPreview={vi.fn()}
+        onPreviewChord={vi.fn()}
+        copy={appCopy.en}
+        language="en"
+        isExpanded
+        inspectorExpanded
+        draft={draft}
+        onDraftChange={onDraftChange}
+      />
+    );
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    onTestFinished(async () => {
+      await act(async () => root.unmount());
+    });
+    await act(async () => root.render(renderCard(initialDraft)));
+    expect(container.querySelector<HTMLButtonElement>("[data-chord-card]")?.textContent)
+      .toContain("Cmaj7");
+    onDraftChange.mockClear();
+
+    await act(async () => root.render(renderCard(externalDraft)));
+    await act(async () => Promise.resolve());
+
+    expect(container.querySelector<HTMLButtonElement>("[data-chord-card]")?.textContent)
+      .toContain("Dm7");
+    expect(container.querySelector<HTMLInputElement>(
+      '[data-chord-inspector] input[id^="chord-label-"]',
+    )?.value).toBe("Dm7");
+    expect(onDraftChange).not.toHaveBeenCalled();
+  });
+
+  it("uses the full Draft revision identity across draft and retained-history changes", () => {
+    const sourceCandidate = candidate();
+    const firstDraft = createDraftFromCandidate({
+      candidate: sourceCandidate,
+      timelineFingerprint: "timeline-revision-identity",
+      now: "2026-01-01T00:00:00.000Z",
+      draftId: "draft-revision-a",
+    });
+    const otherDraft = { ...firstDraft, draftId: "draft-revision-b" };
+    expect(captureDraftRevisionIdentity(otherDraft))
+      .not.toBe(captureDraftRevisionIdentity(firstDraft));
+
+    const snapshot = captureDraftSnapshot(firstDraft);
+    const firstEntry = {
+      id: "draft-revision-a-history-0",
+      label: "Edit progression",
+      operation: { type: "edit-progression" as const },
+      before: snapshot,
+      after: snapshot,
+      createdAt: firstDraft.createdAt,
+    };
+    const secondEntry = {
+      ...firstEntry,
+      id: "draft-revision-a-history-1",
+    };
+    const fullHistory = {
+      ...firstDraft,
+      history: [firstEntry, secondEntry],
+      historyIndex: 1,
+    };
+    const shiftedHistory = {
+      ...fullHistory,
+      history: [secondEntry],
+      historyIndex: 0,
+    };
+    expect(captureDraftRevisionIdentity(shiftedHistory))
+      .not.toBe(captureDraftRevisionIdentity(fullHistory));
+
+    const retimed = {
+      ...firstDraft,
+      events: firstDraft.events.map((event, index) => (
+        index === 0 ? { ...event, relativeStartBeat: event.relativeStartBeat + 0.25 } : event
+      )),
+    };
+    expect(captureDraftRevisionIdentity(retimed))
+      .not.toBe(captureDraftRevisionIdentity(firstDraft));
+  });
+
+  it("preserves known correction metadata through SongMiniMap undo, redo, and save", async () => {
+    const first = chord("Cmaj7", 1);
+    first.alternatives = [{
+      chord: { root: 2, quality: "min7", tensions: [], label: "Dm7" },
+      confidence: 0.75,
+    }];
+    const sourceCandidate = candidate({
+      chords: [first, chord("Am7", 2)],
+    });
+    const initialDraft = createDraftFromCandidate({
+      candidate: sourceCandidate,
+      timelineFingerprint: "timeline-external-history-metadata",
+      now: "2026-01-01T00:00:00.000Z",
+      draftId: "draft-external-history-metadata",
+    });
+    let savedCandidate: ProgressionBlockCandidate | undefined;
+    let savedEditable: EditableProgression | undefined;
+    const onCreate = vi.fn((
+      candidateToSave: ProgressionBlockCandidate,
+      _title: string,
+      _nextAction: string,
+      _userVerified: boolean,
+      editableToSave: EditableProgression,
+    ) => {
+      savedCandidate = candidateToSave;
+      savedEditable = editableToSave;
+      return true;
+    });
+
+    function Harness() {
+      const [draft, setDraft] = useState(initialDraft);
+      return (
+        <>
+          <SongMiniMap
+            totalBars={4}
+            beatsPerBar={4}
+            timeline={sourceCandidate.chords}
+            candidates={[sourceCandidate]}
+            candidateDatasetKey="timeline-external-history-metadata"
+            draft={draft}
+            activeCandidateId={sourceCandidate.id}
+            language="en"
+            copy={{
+              title: "Timeline",
+              description: "External Draft history",
+              empty: "Empty",
+              candidateLabel: (index, startBar, endBar) => (
+                `Candidate ${index}, bars ${startBar}-${endBar}`
+              ),
+            }}
+            onCandidateSelect={vi.fn()}
+            onDraftChange={setDraft}
+            onManualRangeCreate={vi.fn()}
+            onUndo={() => setDraft((current) => undoCaptureDraft(current))}
+            onRedo={() => setDraft((current) => redoCaptureDraft(current))}
+          />
+          <output data-testid="external-history-metadata-state">
+            {draft.historyIndex}:{String(draft.isDirty)}
+          </output>
+          <ProgressionCandidateCard
+            candidate={sourceCandidate}
+            candidateIndex={0}
+            bpm={96}
+            onCopyProgression={vi.fn()}
+            onPreview={vi.fn()}
+            onPreviewChord={vi.fn()}
+            copy={appCopy.en}
+            language="en"
+            isExpanded
+            inspectorExpanded
+            draft={draft}
+            onDraftChange={setDraft}
+            onCreate={onCreate}
+          />
+        </>
+      );
+    }
+
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    onTestFinished(async () => {
+      await act(async () => root.unmount());
+      container.remove();
+    });
+    await act(async () => root.render(<Harness />));
+
+    const alternativeButton = [...container.querySelectorAll<HTMLButtonElement>(
+      "[data-chord-inspector] button",
+    )].find((button) => button.textContent?.includes("Dm7"));
+    expect(alternativeButton).toBeDefined();
+    await act(async () => alternativeButton?.click());
+    const applyButton = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent === "Apply");
+    await act(async () => applyButton?.click());
+
+    const firstChord = () => container.querySelector<HTMLButtonElement>("[data-chord-card]");
+    const chordInput = () => container.querySelector<HTMLInputElement>(
+      '[data-chord-inspector] input[id^="chord-label-"]',
+    );
+    const state = () => container.querySelector<HTMLOutputElement>(
+      '[data-testid="external-history-metadata-state"]',
+    );
+    expect(firstChord()?.textContent).toContain("Dm7");
+    expect(state()?.textContent).toBe("0:true");
+
+    const selection = container.querySelector<HTMLButtonElement>(
+      "[data-song-minimap] [data-current-selection]",
+    );
+    expect(selection).not.toBeNull();
+    await act(async () => {
+      selection?.dispatchEvent(new KeyboardEvent("keydown", {
+        key: "z",
+        ctrlKey: true,
+        bubbles: true,
+      }));
+    });
+    await act(async () => Promise.resolve());
+    expect(firstChord()?.textContent).toContain("Cmaj7");
+    expect(chordInput()?.value).toBe("Cmaj7");
+    expect(state()?.textContent).toBe("-1:false");
+
+    await act(async () => {
+      selection?.dispatchEvent(new KeyboardEvent("keydown", {
+        key: "z",
+        ctrlKey: true,
+        shiftKey: true,
+        bubbles: true,
+      }));
+    });
+    await act(async () => Promise.resolve());
+    expect(firstChord()?.textContent).toContain("Dm7");
+    expect(chordInput()?.value).toBe("Dm7");
+    expect(state()?.textContent).toBe("0:true");
+
+    const saveToVault = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent?.trim() === "Save to Vault");
+    expect(saveToVault).toBeDefined();
+    await act(async () => saveToVault?.click());
+    const saveForm = container.querySelector<HTMLFormElement>('[role="dialog"]');
+    expect(saveForm).not.toBeNull();
+    await act(async () => saveForm?.requestSubmit());
+    expect(onCreate).toHaveBeenCalledTimes(1);
+    if (!savedCandidate || !savedEditable) {
+      throw new Error("Expected the edited candidate and editable metadata to be saved.");
+    }
+
+    const savedFirstSlot = savedEditable.slots[0]!;
+    expect(savedFirstSlot).toEqual(expect.objectContaining({
+      editSource: "alternative",
+      quickCandidateSelection: {
+        source: "analyzer",
+        candidateRank: 0,
+        displayedCandidateCount: expect.any(Number),
+      },
+    }));
+    expect(savedFirstSlot.quickCandidateSelection?.displayedCandidateCount)
+      .toBeGreaterThanOrEqual(1);
+
+    const analysisIdentity = {
+      sourceFingerprint: "fnv1a32-external-history",
+      timeSignature: "4/4" as const,
+      analyzerVersion: "test",
+    };
+    const correctionEvents = buildCorrectionEvents(
+      sourceCandidate,
+      savedCandidate,
+      analysisIdentity,
+      savedEditable.slots.map((slot) => slot.editSource),
+      savedEditable.slots.map((slot) => slot.quickCandidateSelection),
+    );
+    expect(correctionEvents).toEqual([
+      expect.objectContaining({
+        corrected: "Dm7",
+        editMethod: "alternative-selection",
+        quickCandidateSelection: expect.objectContaining({
+          source: "analyzer",
+          candidateRank: 0,
+        }),
+      }),
+    ]);
+
+    const labelLogs = buildLabelCorrectionLogs(
+      sourceCandidate,
+      savedEditable,
+      analysisIdentity,
+      { occurredAt: "2026-01-01T00:00:01.000Z" },
+    );
+    expect(labelLogs[0]).toEqual(expect.objectContaining({
+      finalSavedLabel: "Dm7",
+      editType: "selected-rank2",
+      selectedCandidateRank: 2,
+    }));
+
+  });
+
+  it("restores correction metadata through history-panel jumps before save", async () => {
+    const first = chord("Cmaj7", 1);
+    first.alternatives = [{
+      chord: { root: 2, quality: "min7", tensions: [], label: "Dm7" },
+      confidence: 0.75,
+    }];
+    const sourceCandidate = candidate({
+      chords: [first, chord("Am7", 2)],
+    });
+    const initialDraft = createDraftFromCandidate({
+      candidate: sourceCandidate,
+      timelineFingerprint: "timeline-history-panel-metadata",
+      now: "2026-01-01T00:00:00.000Z",
+      draftId: "draft-history-panel-metadata",
+    });
+    let savedCandidate: ProgressionBlockCandidate | undefined;
+    let savedEditable: EditableProgression | undefined;
+
+    function Harness() {
+      const [draft, setDraft] = useState(initialDraft);
+      return (
+        <ProgressionCandidateCard
+          candidate={sourceCandidate}
+          candidateIndex={0}
+          bpm={96}
+          onCopyProgression={vi.fn()}
+          onPreview={vi.fn()}
+          onPreviewChord={vi.fn()}
+          copy={appCopy.en}
+          language="en"
+          isExpanded
+          inspectorExpanded
+          draft={draft}
+          onDraftChange={setDraft}
+          onCreate={(
+            candidateToSave,
+            _title,
+            _nextAction,
+            _userVerified,
+            editableToSave,
+          ) => {
+            savedCandidate = candidateToSave;
+            savedEditable = editableToSave;
+            return true;
+          }}
+        />
+      );
+    }
+
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    onTestFinished(async () => {
+      await act(async () => root.unmount());
+      container.remove();
+    });
+    await act(async () => root.render(<Harness />));
+
+    const alternativeButton = [...container.querySelectorAll<HTMLButtonElement>(
+      "[data-chord-inspector] button",
+    )].find((button) => button.textContent?.includes("Dm7"));
+    await act(async () => alternativeButton?.click());
+    const applyButton = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent === "Apply");
+    await act(async () => applyButton?.click());
+
+    const chordInput = () => container.querySelector<HTMLInputElement>(
+      '[data-chord-inspector] input[id^="chord-label-"]',
+    );
+    const historyButtons = () => [...container.querySelectorAll<HTMLButtonElement>(
+      '[data-testid="capture-edit-history"] button',
+    )];
+    expect(chordInput()?.value).toBe("Dm7");
+    expect(historyButtons().map((button) => button.textContent?.trim()))
+      .toEqual(["Initial state", "1. Edit progression"]);
+
+    await act(async () => historyButtons()[0]?.click());
+    await act(async () => Promise.resolve());
+    expect(chordInput()?.value).toBe("Cmaj7");
+
+    await act(async () => historyButtons()[1]?.click());
+    await act(async () => Promise.resolve());
+    expect(chordInput()?.value).toBe("Dm7");
+
+    const saveToVault = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent?.trim() === "Save to Vault");
+    await act(async () => saveToVault?.click());
+    const saveForm = container.querySelector<HTMLFormElement>('[role="dialog"]');
+    expect(saveForm).not.toBeNull();
+    await act(async () => saveForm?.requestSubmit());
+    if (!savedCandidate || !savedEditable) {
+      throw new Error("Expected history-restored metadata to reach save.");
+    }
+
+    const savedFirstSlot = savedEditable.slots[0]!;
+    expect(savedFirstSlot).toEqual(expect.objectContaining({
+      editSource: "alternative",
+      quickCandidateSelection: {
+        source: "analyzer",
+        candidateRank: 0,
+        displayedCandidateCount: 5,
+      },
+    }));
+    const analysisIdentity = {
+      sourceFingerprint: "fnv1a32-history-panel",
+      timeSignature: "4/4" as const,
+      analyzerVersion: "test",
+    };
+    expect(buildCorrectionEvents(
+      sourceCandidate,
+      savedCandidate,
+      analysisIdentity,
+      savedEditable.slots.map((slot) => slot.editSource),
+      savedEditable.slots.map((slot) => slot.quickCandidateSelection),
+    )[0]).toEqual(expect.objectContaining({
+      corrected: "Dm7",
+      editMethod: "alternative-selection",
+      quickCandidateSelection: expect.objectContaining({
+        source: "analyzer",
+        candidateRank: 0,
+      }),
+    }));
+    expect(buildLabelCorrectionLogs(
+      sourceCandidate,
+      savedEditable,
+      analysisIdentity,
+      { occurredAt: "2026-01-01T00:00:01.000Z" },
+    )[0]).toEqual(expect.objectContaining({
+      finalSavedLabel: "Dm7",
+      editType: "selected-rank2",
+      selectedCandidateRank: 2,
+    }));
   });
 
   it("updates the inspector when a chord card is selected", async () => {

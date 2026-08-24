@@ -115,23 +115,37 @@ test("未保存のコード修正を残した候補切替では確認し、キ�
   );
   await analyzeCurrentMidi(page);
   await chooseFirstCandidate(page);
+  const analysisProgress = page.getByTestId("capture-analysis-progress");
+  await expect(analysisProgress).toBeVisible();
+  await expect(analysisProgress).toHaveAttribute("data-analysis-progress", "finalizing");
+  const selectedCandidate = page.locator('[data-candidate-state="selected"]');
+  const selectedCandidateId = await selectedCandidate.locator("[data-candidate-toggle]").getAttribute("data-candidate-id");
 
   await page.getByRole("button", { name: /展開|Expand/, exact: true }).click();
-  const chordLabel = page.locator('input[id^="chord-label-"]').first();
+  const chordLabel = page.locator("[data-chord-inspector]").locator('input[id^="chord-label-"]');
   await chordLabel.fill("Dm7");
   await chordLabel.press("Enter");
-  await expect(page.getByTestId("draft-source")).toContainText(/編集中|Editing/);
+  await expect(selectedCandidate.getByTestId("draft-source")).toContainText(/編集中|Editing/);
+  await expect(analysisProgress).toBeHidden();
+  await expect(selectedCandidate).toContainText("Dm7");
+  await expect(selectedCandidate.getByTestId("draft-source")).toContainText(/編集中|Editing/);
 
-  const secondCandidate = page.locator("[data-candidate-toggle]").nth(1);
+  const secondCandidate = page.locator("[data-candidate-toggle]").filter({
+    hasNotText: /選択中・編集対象|Selected for editing/,
+  }).first();
   await secondCandidate.click();
   const dialog = page.getByRole("dialog", { name: /未保存|Unsaved/i });
   await expect(dialog).toBeVisible();
   await dialog.getByRole("button", { name: /キャンセル|Cancel/i }).click();
 
   await expect(dialog).toBeHidden();
-  await expect(page.locator("[data-candidate-toggle]").first()).toHaveAttribute(
+  await expect(selectedCandidate.locator("[data-candidate-toggle]")).toHaveAttribute(
     "aria-expanded",
     "true",
+  );
+  await expect(selectedCandidate.locator("[data-candidate-toggle]")).toHaveAttribute(
+    "data-candidate-id",
+    selectedCandidateId!,
   );
   await expect(chordLabel).toHaveValue("Dm7");
 });

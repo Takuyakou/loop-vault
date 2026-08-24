@@ -2,7 +2,7 @@
 # Phase 5.23 — Timeline Candidate Legibility
 
 ## Status
-`IN PROGRESS — P5.23-02 COMPLETE at exact verified commit de27cd2c5ab0512e22b003d468b1a84a5fa324aa; P5.23-03 NOT STARTED`
+`IN PROGRESS — P5.23-03 IMPLEMENTED IN WORKING TREE; AUTOMATED GATES PASS; STAGE COMMIT PENDING`
 
 ## Purpose
 MIDI解析後のFull Timelineで、重複候補を表示層だけで整理し、初期採集範囲と和声活動の読みやすさを改善する。
@@ -49,8 +49,8 @@ MIDI解析後のFull Timelineで、重複候補を表示層だけで整理し、
 12. [Contract 05 — Accessibility / Interaction](contracts/05-accessibility-interaction-contract.md)
 13. [Contract 06 — Regression / Safety](contracts/06-regression-safety-contract.md)
 14. [active audit](audit/P5.23-00-repository-audit.md)
-15. [active report](reports/P5.23-02-selection-activity.md)
+15. [active report](reports/P5.23-03-visual-interaction-hardening.md)
 16. [P5.23.1 deferred backlog](backlog/P5.23.1-CANDIDATE-DIVERSIFICATION.md)
 
 ## Next action
-STOP. P5.23-03 is NOT STARTED. Do not advance automatically; wait for a separate human request to start P5.23-03.
+STOP. Create the independent P5.23-03 stage commit, rerun its exact-commit gates, and close its report/state. Do not start P5.23-04, merge, push, release, or tag.

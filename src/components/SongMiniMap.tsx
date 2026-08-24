@@ -269,13 +269,13 @@ export function SongMiniMap({
     <section
       ref={candidateDatasetLifecycleRef}
       data-song-minimap
-      className="border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-5"
+      className="min-w-0 border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-5"
       aria-labelledby="song-minimap-title"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <div>
+        <div className="min-w-0">
           <h2 id="song-minimap-title" className="text-lg font-semibold">{copy.title}</h2>
-          <p className="mt-1 text-sm text-[var(--lv-text-muted)]">{copy.description}</p>
+          <p className="mt-1 break-words text-sm text-[var(--lv-text-muted)]">{copy.description}</p>
         </div>
         <span className="text-xs text-[var(--lv-text-muted)]">1-{Math.max(0, totalBars)}</span>
       </div>
@@ -347,7 +347,7 @@ export function SongMiniMap({
                     : language === "ja"
                       ? `${label}・ダブルクリックで候補カードへ移動`
                       : `${label}. Double-click to reveal the candidate card`}
-                  className={`absolute z-40 grid h-7 min-w-7 place-items-center overflow-hidden border px-1 text-xs font-semibold transition focus-visible:z-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] ${
+                  className={`absolute z-40 grid h-7 min-w-7 place-items-center overflow-hidden border px-1 text-xs font-semibold transition-shadow focus-visible:z-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] ${
                     isActive
                       ? "border-teal-100 bg-teal-200 text-stone-950 shadow-[0_0_0_2px_rgba(94,234,212,0.3)]"
                       : "border-teal-300/80 bg-teal-400/35 text-teal-50 hover:bg-teal-300/55"
@@ -442,7 +442,7 @@ export function SongMiniMap({
         <div
           id={`song-minimap-variants-${openGroupIndex + 1}`}
           data-song-minimap-variant-selector={openGroup.anchor.id}
-          className="mt-3 border border-teal-300/40 bg-[var(--lv-surface)]/80 p-3"
+          className="mt-3 min-w-0 border border-teal-300/40 bg-[var(--lv-surface)]/80 p-3"
           role="group"
           aria-label={language === "ja"
             ? `候補グループ ${openGroupIndex + 1} のバリアント`
@@ -450,7 +450,7 @@ export function SongMiniMap({
           onKeyDown={(event) => handleVariantSelectorKeyDown(event, openGroup)}
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs font-semibold text-[var(--lv-text-secondary)]">
+            <p className="min-w-0 break-words text-xs font-semibold text-[var(--lv-text-secondary)]">
               {language === "ja"
                 ? `候補グループ ${openGroupIndex + 1} · ${openGroup.variants.length}件`
                 : `Candidate group ${openGroupIndex + 1} · ${openGroup.variants.length} variants`}
@@ -495,7 +495,7 @@ export function SongMiniMap({
                     language,
                   )}
                   aria-pressed={isActive}
-                  className={`flex min-h-10 items-center border px-3 py-2 text-left text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] ${
+                  className={`flex min-h-10 min-w-0 items-center border px-3 py-2 text-left text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] ${
                     isActive
                       ? "border-teal-100 bg-teal-200 text-stone-950"
                       : "border-teal-300/50 bg-teal-300/5 text-[var(--lv-text)] hover:bg-teal-300/10"
@@ -517,7 +517,7 @@ export function SongMiniMap({
                     activateVariant(variant.id, openGroup, false);
                   }}
                 >
-                  <span className="flex-1">{variantVisibleLabel(variant, language)}</span>
+                  <span className="min-w-0 flex-1 break-words">{variantVisibleLabel(variant, language)}</span>
                   {isActive ? <Check aria-hidden="true" className="ml-2 inline shrink-0" size={16} /> : null}
                 </button>
               );

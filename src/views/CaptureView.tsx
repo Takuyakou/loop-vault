@@ -154,6 +154,7 @@ import {
 } from "../domain/midi/manualDraft";
 import type { TimelineRange } from "../domain/midi/manualRange";
 import {
+  MAX_CAPTURE_EDIT_HISTORY,
   canRedoCaptureDraft,
   canUndoCaptureDraft,
   jumpCaptureDraftHistory,
@@ -375,7 +376,7 @@ export function CaptureView(props: CaptureViewProps) {
   const initializedAnalysisDatasetKeyRef = useRef<string>();
   const activeDraftDatasetKeyRef = useRef<string>();
   useEffect(() => {
-    if (analysisProgress !== undefined) return;
+    if (analysisProgress === "reading" || analysisProgress === "analyzing") return;
     if (analysis.status !== "done" || !result || analysisDatasetKey === undefined) {
       initializedAnalysisDatasetKeyRef.current = undefined;
       setActiveDraft(null);
@@ -2620,11 +2621,19 @@ export function ProgressionCandidateCard({
     && draft.source.candidateId === candidate.id
     ? draft
     : undefined;
+  const captureDraftRevision = captureDraft === undefined
+    ? undefined
+    : captureDraftRevisionIdentity(captureDraft);
   const captureDraftCandidate = captureDraft === undefined
     ? undefined
     : draftToCandidate(captureDraft);
   const baseCandidate = captureDraftCandidate ?? candidate;
   const skipEditableToDraftRef = useRef(false);
+  const locallyEmittedDraftRevisionRef = useRef<string>();
+  const editableDraftHistoryCacheRef = useRef<{
+    draftId?: string;
+    snapshots: Map<string, EditableProgression>;
+  }>({ snapshots: new Map() });
   const candidateRef = useRef(candidate);
   const captureDraftRef = useRef(captureDraft);
   candidateRef.current = candidate;
@@ -2662,20 +2671,31 @@ export function ProgressionCandidateCard({
   useEffect(() => {
     const incomingDraft = captureDraftRef.current;
     const incomingCandidate = candidateRef.current;
+    if (incomingDraft === undefined) {
+      editableDraftHistoryCacheRef.current.draftId = undefined;
+      editableDraftHistoryCacheRef.current.snapshots.clear();
+      locallyEmittedDraftRevisionRef.current = undefined;
+    }
+    const incomingRevision = captureDraftRevision;
+    if (
+      incomingRevision !== undefined
+      && locallyEmittedDraftRevisionRef.current === incomingRevision
+    ) {
+      locallyEmittedDraftRevisionRef.current = undefined;
+      return;
+    }
     skipEditableToDraftRef.current = incomingDraft !== undefined;
-    setEditable(
-      incomingDraft !== undefined
-        ? draftEditable(incomingDraft)
-        : createEditableProgression(incomingCandidate, beatsPerBar),
-    );
+    locallyEmittedDraftRevisionRef.current = undefined;
+    const resolved = incomingDraft === undefined
+      ? undefined
+      : resolveDraftEditable(incomingDraft, incomingCandidate);
+    setEditable(resolved !== undefined
+      ? resolved.editable
+        : createEditableProgression(incomingCandidate, beatsPerBar));
   }, [
     beatsPerBar,
     candidate.id,
-    captureDraft?.draftId,
-    captureDraft?.selectedRange.startBar,
-    captureDraft?.selectedRange.startBeat,
-    captureDraft?.selectedRange.endBar,
-    captureDraft?.selectedRange.endBeat,
+    captureDraftRevision,
   ]);
 
   useEffect(() => {
@@ -2729,10 +2749,11 @@ export function ProgressionCandidateCard({
     const originalSignature = draft.sourceCandidateSnapshot === undefined
       ? undefined
       : progressionSignature(draft.sourceCandidateSnapshot.chords);
-    onDraftChange({
+    const nextDraft = {
       ...next,
       isDirty: originalSignature === undefined || currentSignature !== originalSignature,
-    });
+    };
+    emitLocalDraftChange(nextDraft);
   }, [candidate.id, currentSignature, draft, editable, onDraftChange]);
 
   useEffect(() => {
@@ -2805,10 +2826,59 @@ export function ProgressionCandidateCard({
       controller.stop();
     }
   }
+  function editableDraftSnapshotsFor(draftId: string): Map<string, EditableProgression> {
+    const cache = editableDraftHistoryCacheRef.current;
+    if (cache.draftId !== draftId) {
+      cache.draftId = draftId;
+      cache.snapshots.clear();
+      locallyEmittedDraftRevisionRef.current = undefined;
+    }
+    return cache.snapshots;
+  }
+
+  function resolveDraftEditable(
+    next: ManualCandidateDraft,
+    incomingCandidate: ProgressionBlockCandidate,
+  ): { editable: EditableProgression; exactCacheHit: boolean } {
+    const revision = captureDraftRevisionIdentity(next);
+    const historySnapshot = editableDraftSnapshotsFor(next.draftId).get(revision);
+    const snapshotMatchesDraft = historySnapshot !== undefined
+      && progressionSignature(
+        applyEditableProgression(incomingCandidate, historySnapshot).chords,
+      ) === progressionSignature(draftToCandidate(next).chords);
+    return snapshotMatchesDraft
+      ? { editable: historySnapshot, exactCacheHit: true }
+      : { editable: draftEditable(next), exactCacheHit: false };
+  }
+
+  function emitLocalDraftChange(
+    next: ManualCandidateDraft,
+    nextEditable: EditableProgression = editable,
+    rememberEditable: boolean = true,
+  ) {
+    const revision = captureDraftRevisionIdentity(next);
+    if (rememberEditable) {
+      const snapshots = editableDraftSnapshotsFor(next.draftId);
+      snapshots.delete(revision);
+      snapshots.set(revision, nextEditable);
+      while (snapshots.size > MAX_CAPTURE_EDIT_HISTORY + 1) {
+        const oldest = snapshots.keys().next().value as string | undefined;
+        if (oldest === undefined) break;
+        snapshots.delete(oldest);
+      }
+    }
+    locallyEmittedDraftRevisionRef.current = revision;
+    onDraftChange?.(next);
+  }
 
   function applyCaptureHistory(next: ManualCandidateDraft) {
-    setEditable(draftEditable(next));
-    onDraftChange?.(next);
+    const resolved = resolveDraftEditable(next, candidateRef.current);
+    setEditable(resolved.editable);
+    emitLocalDraftChange(
+      next,
+      resolved.editable,
+      resolved.exactCacheHit,
+    );
   }
 
   function undoCurrentEdit() {
@@ -2817,10 +2887,11 @@ export function ProgressionCandidateCard({
       return;
     }
     const next = undoCaptureDraft(captureDraft);
-    setEditable((current) => canUndoProgressionEdit(current)
-      ? undoProgressionEdit(current)
-      : draftEditable(next));
-    onDraftChange?.(next);
+    const nextEditable = canUndoProgressionEdit(editable)
+      ? undoProgressionEdit(editable)
+      : draftEditable(next);
+    setEditable(nextEditable);
+    emitLocalDraftChange(next, nextEditable);
   }
 
   function redoCurrentEdit() {
@@ -2829,10 +2900,11 @@ export function ProgressionCandidateCard({
       return;
     }
     const next = redoCaptureDraft(captureDraft);
-    setEditable((current) => canRedoProgressionEdit(current)
-      ? redoProgressionEdit(current)
-      : draftEditable(next));
-    onDraftChange?.(next);
+    const nextEditable = canRedoProgressionEdit(editable)
+      ? redoProgressionEdit(editable)
+      : draftEditable(next);
+    setEditable(nextEditable);
+    emitLocalDraftChange(next, nextEditable);
   }
 
   async function selectChord(index: number) {
@@ -2929,7 +3001,10 @@ export function ProgressionCandidateCard({
     setPropagationProposal(undefined);
     setEditable(next);
     if (captureDraft && onDraftChange) {
-      onDraftChange(applyEditableToDraft(captureDraft, next, operations));
+      emitLocalDraftChange(
+        applyEditableToDraft(captureDraft, next, operations),
+        next,
+      );
     }
     return true;
   }
@@ -3762,6 +3837,42 @@ export function persistCopiedProgressionMemo(
 export function appendProgressionMemo(existingMemo: string, progressionText: string): string {
   if (!existingMemo) return progressionText;
   return `${existingMemo}${existingMemo.endsWith("\n") ? "" : "\n"}${progressionText}`;
+}
+
+/**
+ * Identifies one exact, session-local Draft revision without relying on a
+ * shifting history array index. This is deliberately not persisted.
+ */
+export function captureDraftRevisionIdentity(draft: ManualCandidateDraft): string {
+  const currentEntry = draft.historyIndex < 0
+    ? draft.history[0]
+    : draft.history[draft.historyIndex];
+  const boundary = draft.historyIndex < 0 ? "before" : "after";
+  const activeHistory = draft.history
+    .slice(0, Math.max(0, draft.historyIndex + 1))
+    .map((entry) => [entry.id, entry.createdAt, entry.operation]);
+  const events = draft.events.map((event) => ({
+    sourceEventId: event.sourceEventId ?? null,
+    identityKey: event.identityKey,
+    relativeStartBeat: event.relativeStartBeat,
+    durationBeats: event.durationBeats,
+    sourceDurationBeats: event.sourceDurationBeats,
+    carriedIn: event.carriedIn,
+    bar: event.bar,
+    beat: event.beat,
+    chord: event.chord,
+  }));
+  return JSON.stringify({
+    draftId: draft.draftId,
+    sourceTimelineFingerprint: draft.sourceTimelineFingerprint,
+    boundary,
+    currentEntryId: currentEntry?.id ?? null,
+    activeHistory,
+    selectedRange: draft.selectedRange,
+    events,
+    lengthBars: draft.lengthBars,
+    beatsPerBar: draft.beatsPerBar,
+  });
 }
 
 function progressionSignature(chords: readonly ChordTimelineItem[]): string {

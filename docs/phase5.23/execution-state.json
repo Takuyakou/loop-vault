@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "phaseId": "5.23",
   "status": "in-progress",
-  "activeStage": null,
+  "activeStage": "P5.23-03",
   "completedStages": ["P5.23-00", "P5.23-01", "P5.23-02"],
   "blocked": false,
   "blockerReason": null,
@@ -47,8 +47,10 @@
     "p523-01-focused": "pass",
     "p523-01-protected-diff": "pass",
     "p523-02-focused": "pass",
-    "p523-02-protected-diff": "pass"
+    "p523-02-protected-diff": "pass",
+    "p523-03-visual-a11y": "pass",
+    "p523-03-protected-diff": "pass"
   },
-  "nextAction": "STOP. P5.23-03 is NOT STARTED. Do not advance automatically; wait for a separate human request to start P5.23-03.",
-  "updatedAt": "2026-08-23T01:11:46+09:00"
+  "nextAction": "STOP. Create the independent P5.23-03 stage commit, rerun exact-commit gates, and close its report/state; do not start P5.23-04.",
+  "updatedAt": "2026-08-23T20:07:06+09:00"
 }
