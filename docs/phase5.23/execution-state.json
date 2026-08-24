@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "5.23",
   "status": "in-progress",
-  "activeStage": null,
+  "activeStage": "P5.23-04",
   "completedStages": ["P5.23-00", "P5.23-01", "P5.23-02", "P5.23-03"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "305f9eb2728fe6af4e86444fae07899ef5dac757",
-  "lastVerifiedCommit": "b370ee0906d1d3522288c6fee880f16be088e2bb",
+  "lastVerifiedCommit": "6ca60f5b1bf7b59dbc4d811efb40911c56a76110",
   "currentBranch": "feat/p523-timeline-candidate-legibility",
   "requiredGates": {
     "P5.23-00": [
@@ -49,8 +49,10 @@
     "p523-02-focused": "pass",
     "p523-02-protected-diff": "pass",
     "p523-03-visual-a11y": "pass",
-    "p523-03-protected-diff": "pass"
+    "p523-03-protected-diff": "pass",
+    "p523-04-full-gates": "pass",
+    "p523-04-human-acceptance": "not-run"
   },
-  "nextAction": "STOP. P5.23-04 is NOT STARTED. Do not advance automatically; wait for a separate human request to start P5.23-04.",
-  "updatedAt": "2026-08-24T21:12:46+09:00"
+  "nextAction": "First independently review and explicit-path commit the four P5.23 readiness documents, then rerun exact docs validation, validator tests, security scan, git diff --check, and final status on that committed docs closure. After that, run human Product Acceptance on the isolated-target artifacts. Do not merge, push, tag, release, start P5.23.1, or start P5.24.",
+  "updatedAt": "2026-08-24T21:45:29+09:00"
 }

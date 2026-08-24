@@ -2,7 +2,7 @@
 # Phase 5.23 — Timeline Candidate Legibility
 
 ## Status
-`IN PROGRESS — P5.23-03 COMPLETE; P5.23-04 NOT STARTED`
+`READY FOR PRODUCT ACCEPTANCE — Timeline Candidate Legibility; HUMAN ACCEPTANCE NOT RUN`
 
 ## Purpose
 MIDI解析後のFull Timelineで、重複候補を表示層だけで整理し、初期採集範囲と和声活動の読みやすさを改善する。
@@ -32,7 +32,7 @@ MIDI解析後のFull Timelineで、重複候補を表示層だけで整理し、
 - P5.23-01 Candidate Grouping / Variant UI — COMPLETE (`ba359e7e03c9631a1ee5350d3f07add6ddc43283`)
 - P5.23-02 Initial Selection / Snap / Harmonic Activity — COMPLETE (`de27cd2c5ab0512e22b003d468b1a84a5fa324aa`)
 - P5.23-03 Visual / Interaction Hardening — COMPLETE (`b370ee0906d1d3522288c6fee880f16be088e2bb`; visual baseline hygiene `c89b9940a14d9df9fbf385c06ff67f7b8b3ca008`)
-- P5.23-04 Product Acceptance
+- P5.23-04 Product Acceptance — AUTOMATED GATES PASS; HUMAN ACCEPTANCE NOT RUN
 
 ## Required Reading Order
 1. root [AGENTS.md](../../AGENTS.md)
@@ -49,8 +49,8 @@ MIDI解析後のFull Timelineで、重複候補を表示層だけで整理し、
 12. [Contract 05 — Accessibility / Interaction](contracts/05-accessibility-interaction-contract.md)
 13. [Contract 06 — Regression / Safety](contracts/06-regression-safety-contract.md)
 14. [active audit](audit/P5.23-00-repository-audit.md)
-15. [active report](reports/P5.23-03-visual-interaction-hardening.md)
+15. [active report](reports/P5.23-04-product-acceptance.md)
 16. [P5.23.1 deferred backlog](backlog/P5.23.1-CANDIDATE-DIVERSIFICATION.md)
 
 ## Next action
-STOP. P5.23-04 is NOT STARTED. Do not advance automatically; wait for a separate human request to start P5.23-04. Do not merge, push, release, or tag.
+First independently review and explicit-path commit the four P5.23 readiness documents, then rerun the exact docs validation, validator tests, security scan, git diff --check, and final status on that committed docs closure. After that, run human Product Acceptance on the fresh isolated-target artifacts. Do not merge, push, release, tag, start P5.23.1, or start P5.24 without separate human authorization.
