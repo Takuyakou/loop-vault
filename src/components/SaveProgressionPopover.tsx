@@ -20,6 +20,26 @@ interface SaveProgressionPopoverProps {
 }
 
 const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
+const floatingGutter = 8;
+const menuWidth = 224;
+const panelWidth = 352;
+
+interface FloatingPosition {
+  left: number;
+  top: number;
+  width: number;
+  maxHeight: number;
+}
+
+function initialFloatingPosition(): FloatingPosition {
+  const viewportHeight = typeof window === "undefined" ? 720 : window.innerHeight;
+  return {
+    left: floatingGutter,
+    top: floatingGutter,
+    width: menuWidth,
+    maxHeight: Math.max(1, viewportHeight - floatingGutter * 2),
+  };
+}
 
 export function SaveProgressionPopover({
   initialTitle,
@@ -41,11 +61,14 @@ export function SaveProgressionPopover({
   const rootRef = useRef<HTMLDivElement>(null);
   const primaryButtonRef = useRef<HTMLButtonElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLFormElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const ideaSelectRef = useRef<HTMLSelectElement>(null);
   const restoreFocusRef = useRef<HTMLButtonElement>();
   const componentId = useId();
   const menuId = `${componentId}-menu`;
+  const [floatingPosition, setFloatingPosition] = useState(initialFloatingPosition);
   const panelId = `${componentId}-panel`;
   const panelTitleId = `${componentId}-panel-title`;
 
@@ -55,7 +78,11 @@ export function SaveProgressionPopover({
     if (!isOpen) return undefined;
 
     function handlePointerDown(event: PointerEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const insideTrigger = rootRef.current?.contains(target);
+      const insideMenu = menuRef.current?.contains(target);
+      const insidePanel = panelRef.current?.contains(target);
+      if (!insideTrigger && !insideMenu && !insidePanel) {
         close(false);
       }
     }
@@ -77,8 +104,33 @@ export function SaveProgressionPopover({
   }, [isOpen]);
 
   useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const updatePosition = () => {
+      const anchor = rootRef.current;
+      const floating = menuOpen ? menuRef.current : panelRef.current;
+      if (!anchor || !floating) return;
+
+      const next = calculateFloatingPosition(
+        anchor,
+        floating,
+        menuOpen ? menuWidth : panelWidth,
+      );
+      setFloatingPosition((current) => sameFloatingPosition(current, next) ? current : next);
+    };
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, { capture: true, passive: true });
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [isOpen, menuOpen, panel]);
+
+  useEffect(() => {
     if (menuOpen) {
-      rootRef.current?.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus();
+      menuRef.current?.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus();
     } else if (panel === "new") {
       titleInputRef.current?.focus();
       titleInputRef.current?.select();
@@ -158,7 +210,7 @@ export function SaveProgressionPopover({
   const secondaryExpanded = menuOpen || secondaryPanelOpen;
 
   return (
-    <div ref={rootRef} className="relative inline-flex">
+    <div ref={rootRef} className="relative inline-flex" data-save-progression-root>
       <Button
         ref={primaryButtonRef}
         variant="primary"
@@ -195,10 +247,12 @@ export function SaveProgressionPopover({
 
       {menuOpen ? (
         <div
+          ref={menuRef}
           id={menuId}
           role="menu"
           aria-label={copy.capture.saveMenu}
-          className="absolute right-0 top-full z-40 mt-2 min-w-56 border border-[var(--lv-border-strong)] bg-[var(--lv-surface)] p-1 shadow-xl"
+          className="fixed z-40 overflow-y-auto border border-[var(--lv-border-strong)] bg-[var(--lv-surface)] p-1 shadow-xl"
+          style={floatingPosition}
           onKeyDown={(event) => {
             const items = [...event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')];
             const index = items.indexOf(document.activeElement as HTMLButtonElement);
@@ -230,11 +284,13 @@ export function SaveProgressionPopover({
 
       {panel ? (
         <form
+          ref={panelRef}
           id={panelId}
           role="dialog"
           aria-modal="false"
           aria-labelledby={panelTitleId}
-          className="absolute right-0 top-full z-50 mt-2 w-[min(22rem,calc(100vw-2rem))] border border-[var(--lv-border-strong)] bg-[var(--lv-surface)] p-4 shadow-xl"
+          className="fixed z-50 overflow-y-auto border border-[var(--lv-border-strong)] bg-[var(--lv-surface)] p-4 shadow-xl"
+          style={floatingPosition}
           onSubmit={(event) => {
             event.preventDefault();
             save();
@@ -291,4 +347,53 @@ export function SaveProgressionPopover({
       ) : null}
     </div>
   );
+}
+
+function calculateFloatingPosition(
+  anchorElement: HTMLElement,
+  floatingElement: HTMLElement,
+  preferredWidth: number,
+): FloatingPosition {
+  const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
+  const viewportHeight = document.documentElement.clientHeight || window.innerHeight;
+  const anchor = anchorElement.getBoundingClientRect();
+  const boundary = anchorElement.closest("main")?.getBoundingClientRect();
+  const boundaryLeft = Math.max(
+    floatingGutter,
+    boundary ? boundary.left + floatingGutter : floatingGutter,
+  );
+  const boundaryRight = Math.min(
+    viewportWidth - floatingGutter,
+    boundary ? boundary.right - floatingGutter : viewportWidth - floatingGutter,
+  );
+  const availableWidth = Math.max(1, boundaryRight - boundaryLeft);
+  const width = Math.min(preferredWidth, availableWidth);
+  const left = clamp(
+    anchor.right - width,
+    boundaryLeft,
+    Math.max(boundaryLeft, boundaryRight - width),
+  );
+  const maxHeight = Math.max(1, viewportHeight - floatingGutter * 2);
+  const floatingBounds = floatingElement.getBoundingClientRect();
+  const renderedHeight = Math.min(
+    Math.max(floatingBounds.height, floatingElement.scrollHeight),
+    maxHeight,
+  );
+  const below = anchor.bottom + floatingGutter;
+  const top = below + renderedHeight <= viewportHeight - floatingGutter
+    ? below
+    : Math.max(floatingGutter, anchor.top - renderedHeight - floatingGutter);
+
+  return { left, top, width, maxHeight };
+}
+
+function sameFloatingPosition(left: FloatingPosition, right: FloatingPosition): boolean {
+  return left.left === right.left
+    && left.top === right.top
+    && left.width === right.width
+    && left.maxHeight === right.maxHeight;
+}
+
+function clamp(value: number, minimum: number, maximum: number): number {
+  return Math.min(maximum, Math.max(minimum, value));
 }

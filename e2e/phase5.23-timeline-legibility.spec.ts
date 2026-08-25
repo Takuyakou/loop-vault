@@ -3,6 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import {
   analyzeCurrentMidi,
   assertNoHorizontalOverflow,
+  chooseFirstCandidate,
   loadMidiForPreAnalysis,
   openApp,
 } from "./helpers/app";
@@ -105,4 +106,51 @@ test("P5.23 Full Timeline remains stable, keyboard-operable, responsive, and axe
   const firstScreenshot = await minimap.screenshot({ animations: "disabled" });
   const secondScreenshot = await minimap.screenshot({ animations: "disabled" });
   expect(secondScreenshot.equals(firstScreenshot)).toBe(true);
+});
+
+test("Vault save form stays visible with the sidebar expanded at the reported narrow size", async ({ page }) => {
+  test.setTimeout(60_000);
+  await page.setViewportSize({ width: 786, height: 836 });
+  await openApp(page);
+
+  const sidebar = page.locator("[data-sidebar]");
+  if (await sidebar.getAttribute("data-sidebar") === "collapsed") {
+    await page.getByRole("button", { name: "Expand sidebar" }).click();
+  }
+  await expect(sidebar).toHaveAttribute("data-sidebar", "expanded");
+
+  await loadMidiForPreAnalysis(
+    page,
+    createMidiFixture({ bars: 20, voiceCount: 3 }),
+    "save-popover-narrow.mid",
+  );
+  await analyzeCurrentMidi(page);
+  await chooseFirstCandidate(page);
+
+  const selected = page.locator('[data-candidate-state="selected"]');
+  await selected
+    .getByRole("button", { name: /Vaultに保存|Save to Vault/, exact: true })
+    .click();
+  const form = page.locator('form[role="dialog"]:has(input[name="progression-title"])');
+  await expect(form).toBeVisible();
+
+  const bounds = await form.evaluate((element) => {
+    const formBounds = element.getBoundingClientRect();
+    const mainBounds = document.querySelector("main")!.getBoundingClientRect();
+    return {
+      formLeft: formBounds.left,
+      formRight: formBounds.right,
+      formTop: formBounds.top,
+      formBottom: formBounds.bottom,
+      mainLeft: mainBounds.left,
+      mainRight: mainBounds.right,
+      viewportHeight: window.innerHeight,
+    };
+  });
+  expect(bounds.formLeft).toBeGreaterThanOrEqual(bounds.mainLeft + 7);
+  expect(bounds.formRight).toBeLessThanOrEqual(bounds.mainRight - 7);
+  expect(bounds.formTop).toBeGreaterThanOrEqual(7);
+  expect(bounds.formBottom).toBeLessThanOrEqual(bounds.viewportHeight - 7);
+  await expect(form.locator('input[name="progression-title"]')).toBeFocused();
+  await assertNoHorizontalOverflow(page);
 });
