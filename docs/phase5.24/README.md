@@ -2,7 +2,7 @@
 # Phase 5.24 — Harmonic Rhythm & Performance Fragment Consolidation
 
 ## Status
-`IN PROGRESS — P5.24-00 audit and contract lock; awaiting independent stage commit`
+`IN PROGRESS — P5.24-01 Harmonic Rhythm + Bass Lane shadow`
 
 ## Purpose
 演奏キャプチャ由来MIDIで、演奏上の再打鍵・部分Voicing・Bass/上物の交互発音を
@@ -125,4 +125,4 @@ P5.24-03 Feature-flagged Integration / Real MIDI / Corpus
 P5.24-04 Product Acceptance
 
 ## Next action
-P5.24-00を独立commitで閉じてそのcommitを検証後、ユーザー承認済みの全Phase継続としてP5.24-01へ進む。Tier 3 GateはP5.24-04まで実行しない。
+P5.24-01をTier 1/2とPhase固有の安全Gateで実行する。Tier 3 GateはP5.24-04まで実行しない。
