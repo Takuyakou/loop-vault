@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "5.24",
   "status": "in-progress",
-  "activeStage": "P5.24-01",
-  "completedStages": ["P5.24-00"],
+  "activeStage": "P5.24-02",
+  "completedStages": ["P5.24-00", "P5.24-01"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "197e2de62b57139ed810fa0a2d28d208fd252800",
-  "lastVerifiedCommit": "a91e8da5b52999198bb299cb3012a1b78197ba87",
+  "lastVerifiedCommit": "bc23c90ef59a179bc0180bf9a1e22d63bdb2f0bd",
   "currentBranch": "feat/p524-harmonic-rhythm-fragment-consolidation",
   "requiredGates": {
     "P5.24-00": [
@@ -71,6 +71,6 @@
     "p524-04-final-security-audit-hygiene": "not-run",
     "p524-04-human-acceptance": "not-run"
   },
-  "nextAction": "P5.24-01 commit pending: commit the five verified Stage01 paths and record the exact commit hash. After commit verification, P5.24-02 must collect same-process legacy benchmark ratios. Tier 3 remains reserved for P5.24-04.",
-  "updatedAt": "2026-08-25T21:11:00+09:00"
+  "nextAction": "Run P5.24-02 shadow fragment consolidation and collect the locked A-K metrics, same-process legacy benchmark ratios, official regression, and promotion decision under Tier 1/2 plus phase-specific safety gates. Tier 3 remains reserved for P5.24-04.",
+  "updatedAt": "2026-08-25T21:30:00+09:00"
 }
