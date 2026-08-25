@@ -1,0 +1,28 @@
+phase5.24/
+├─ README.md
+├─ CODEX-START-PROMPT.md
+├─ CODEX-RUN-REMAINING-STAGES.md
+├─ work-instructions.md
+├─ execution-state.json
+├─ proposal/
+│  ├─ ORIGINAL-PROPOSAL.md
+│  └─ P5.24-DESIGN-REVIEW.md
+├─ audit/
+│  └─ P5.24-00-repository-audit.md
+├─ contracts/
+│  ├─ 01-scope-architecture-contract.md
+│  ├─ 02-harmonic-rhythm-contract.md
+│  ├─ 03-bass-lane-contract.md
+│  ├─ 04-fragment-consolidation-contract.md
+│  ├─ 05-evaluation-promotion-contract.md
+│  ├─ 06-flag-integration-regression-contract.md
+│  └─ 07-privacy-performance-contract.md
+├─ backlog/
+│  └─ LOCAL-HARMONIC-RHYTHM.md
+└─ reports/
+   ├─ README.md
+   ├─ P5.24-00-audit-baseline.md
+   ├─ P5.24-01-harmonic-rhythm-bass-lane-shadow.md
+   ├─ P5.24-02-fragment-consolidator-shadow.md
+   ├─ P5.24-03-flagged-integration.md
+   └─ P5.24-04-product-acceptance.md
