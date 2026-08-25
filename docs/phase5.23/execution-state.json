@@ -7,7 +7,7 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "305f9eb2728fe6af4e86444fae07899ef5dac757",
-  "lastVerifiedCommit": "6ca60f5b1bf7b59dbc4d811efb40911c56a76110",
+  "lastVerifiedCommit": "cdf615e1694ddcb1d0f4680c0ecb6363e9ce0285",
   "currentBranch": "feat/p523-timeline-candidate-legibility",
   "requiredGates": {
     "P5.23-00": [
@@ -53,6 +53,6 @@
     "p523-04-full-gates": "pass",
     "p523-04-human-acceptance": "not-run"
   },
-  "nextAction": "Run human Product Acceptance on the isolated-target artifacts recorded in the P5.23-04 report. Automated readiness and post-commit docs/security/diff/status closure are complete at cb911a12f650510c632404ba6d9c1e9cd1ff1184. Do not merge, push, tag, release, start P5.23.1, or start P5.24.",
-  "updatedAt": "2026-08-24T21:50:00+09:00"
+  "nextAction": "Rerun human Product Acceptance on the fixed isolated-target artifacts recorded in the P5.23-04 report, including the 786 x 836 expanded-sidebar Vault save form. Do not merge, push, tag, release, start P5.23.1, or start P5.24.",
+  "updatedAt": "2026-08-25T11:50:00+09:00"
 }
