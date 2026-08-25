@@ -52,10 +52,10 @@
     "p524-00-focused-analyzer": "pass",
     "p524-00-lint-typecheck": "pass",
     "p524-00-security-privacy-diff-hygiene": "pass",
-    "p524-01-harmonic-rhythm-bass-lane-focused": "not-run",
-    "p524-01-mixed-rhythm-fallback": "not-run",
-    "p524-01-shadow-production-equivalence": "not-run",
-    "p524-01-performance-safety": "not-run",
+    "p524-01-harmonic-rhythm-bass-lane-focused": "pass",
+    "p524-01-mixed-rhythm-fallback": "pass",
+    "p524-01-shadow-production-equivalence": "pass",
+    "p524-01-performance-safety": "pass",
     "p524-02-a-k-shadow-metrics": "not-run",
     "p524-02-promotion-decision": "not-run",
     "p524-02-focused-regression": "not-run",
@@ -71,6 +71,6 @@
     "p524-04-final-security-audit-hygiene": "not-run",
     "p524-04-human-acceptance": "not-run"
   },
-  "nextAction": "Begin P5.24-01 Harmonic Rhythm + Bass Lane shadow implementation under Tier 1/2 and the phase-specific safety gates. Tier 3 gates remain reserved for P5.24-04. Do not merge, push, tag, release, or start P5.25.",
-  "updatedAt": "2026-08-25T18:46:00+09:00"
+  "nextAction": "P5.24-01 commit pending: commit the five verified Stage01 paths and record the exact commit hash. After commit verification, P5.24-02 must collect same-process legacy benchmark ratios. Tier 3 remains reserved for P5.24-04.",
+  "updatedAt": "2026-08-25T21:11:00+09:00"
 }
