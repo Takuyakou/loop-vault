@@ -56,10 +56,10 @@
     "p524-01-mixed-rhythm-fallback": "pass",
     "p524-01-shadow-production-equivalence": "pass",
     "p524-01-performance-safety": "pass",
-    "p524-02-a-k-shadow-metrics": "not-run",
-    "p524-02-promotion-decision": "not-run",
-    "p524-02-focused-regression": "not-run",
-    "p524-02-performance-safety": "not-run",
+    "p524-02-a-k-shadow-metrics": "pass",
+    "p524-02-promotion-decision": "pass",
+    "p524-02-focused-regression": "pass",
+    "p524-02-performance-safety": "pass",
     "p524-03-off-deep-equality": "not-run",
     "p524-03-on-focused-behavior": "not-run",
     "p524-03-official-corpus-regression": "not-run",
@@ -71,6 +71,6 @@
     "p524-04-final-security-audit-hygiene": "not-run",
     "p524-04-human-acceptance": "not-run"
   },
-  "nextAction": "Run P5.24-02 shadow fragment consolidation and collect the locked A-K metrics, same-process legacy benchmark ratios, official regression, and promotion decision under Tier 1/2 plus phase-specific safety gates. Tier 3 remains reserved for P5.24-04.",
-  "updatedAt": "2026-08-25T21:30:00+09:00"
+  "nextAction": "Independently review and explicitly stage the exact 14-path P5.24-02 tree, rerun exact commit-bound verification, and create the independent Stage02 commit. Do not begin P5.24-03 before that verification.",
+  "updatedAt": "2026-08-26T00:35:00+09:00"
 }
