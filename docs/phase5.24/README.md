@@ -2,7 +2,9 @@
 # Phase 5.24 — Harmonic Rhythm & Performance Fragment Consolidation
 
 ## Status
-`IN PROGRESS — P5.24-04 automated gates passed; independent verification and commit pending`
+`READY FOR PRODUCT ACCEPTANCE — Harmonic Rhythm & Performance Fragment Consolidation`
+
+Human Acceptance is `NOT RUN`.
 
 ## Purpose
 演奏キャプチャ由来MIDIで、演奏上の再打鍵・部分Voicing・Bass/上物の交互発音を
@@ -125,4 +127,4 @@ P5.24-03 Feature-flagged Integration / Real MIDI / Corpus
 P5.24-04 Product Acceptance
 
 ## Next action
-P5.24-04のreport/state-only diffを独立検証してStage04 evidence commitにする。その後、Human Acceptance未実施のまま `READY FOR PRODUCT ACCEPTANCE — Harmonic Rhythm & Performance Fragment Consolidation` で停止する。merge / push / tag / release / P5.25は禁止。
+packaged candidateでHuman Acceptanceの11項目を実行する。別途人間の承認があるまでmerge / push / tag / release / P5.25は禁止。

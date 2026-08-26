@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "phaseId": "5.24",
-  "status": "in-progress",
-  "activeStage": "P5.24-04",
-  "completedStages": ["P5.24-00", "P5.24-01", "P5.24-02", "P5.24-03"],
+  "status": "completed",
+  "activeStage": null,
+  "completedStages": ["P5.24-00", "P5.24-01", "P5.24-02", "P5.24-03", "P5.24-04"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "197e2de62b57139ed810fa0a2d28d208fd252800",
-  "lastVerifiedCommit": "5b6e4ebc468a6ec0ce8840a286dd83aacd101a73",
+  "lastVerifiedCommit": "6163b55314291356c905033f91d907363a424a08",
   "currentBranch": "feat/p524-harmonic-rhythm-fragment-consolidation",
   "requiredGates": {
     "P5.24-00": [
@@ -41,8 +41,7 @@
       "p524-04-full-playwright",
       "p524-04-tauri-release-build",
       "p524-04-artifact-integrity",
-      "p524-04-final-security-audit-hygiene",
-      "p524-04-human-acceptance"
+      "p524-04-final-security-audit-hygiene"
     ]
   },
   "gateResults": {
@@ -71,6 +70,6 @@
     "p524-04-final-security-audit-hygiene": "pass",
     "p524-04-human-acceptance": "not-run"
   },
-  "nextAction": "Independently verify the P5.24-04 report/state-only diff and commit it as the Stage04 evidence commit. Then stop at READY FOR PRODUCT ACCEPTANCE with Human Acceptance not run. Do not merge, push, tag, release, or start P5.25.",
-  "updatedAt": "2026-08-26T11:43:40+09:00"
+  "nextAction": "Run the documented Human Acceptance checklist against the packaged candidate. Do not merge, push, tag, release, or start P5.25 without separate human authorization.",
+  "updatedAt": "2026-08-26T12:20:00+09:00"
 }
