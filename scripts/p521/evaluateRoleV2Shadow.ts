@@ -705,7 +705,7 @@ function isApprovedFixtureRegistry(value: unknown): value is ApprovedFixtureRegi
     && candidate.provenance.rawMidiIncluded === false
     && Array.isArray(candidate.fixtures)
     && candidate.fixtures.length > 0
-    && candidate.fixtures.every((fixture) => fixture.fixture.sourceIdentity === "local-midi-not-recorded"
+    && candidate.fixtures.every((fixture: ApprovedFixtureRegistry["fixtures"][number]) => fixture.fixture.sourceIdentity === "local-midi-not-recorded"
       && fixture.voices.length > 0
       && fixture.voices.every((voice) => voice.expectedRole !== null));
 }

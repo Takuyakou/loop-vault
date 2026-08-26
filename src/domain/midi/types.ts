@@ -113,6 +113,13 @@ export interface AnalyzeMidiOptions {
   preparedData?: MidiSongData;
   /** Privacy-safe fingerprint for a prepared multi-source input. */
   analysisFingerprint?: string;
+  /**
+   * Runtime-only P5.24 integration. Only the literal boolean true enables
+   * Harmonic State consolidation; omission and every other value keep the
+   * exact legacy analyzer input.
+   */
+  enableHarmonicStateConsolidation?: boolean;
+
 }
 
 export type AnalyzeMidiResult = MidiProgressionAnalysis;

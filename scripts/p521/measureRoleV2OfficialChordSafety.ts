@@ -107,9 +107,16 @@ function readOfficialSafetySummary(reportBytes: Uint8Array): { deterministic: bo
     boundaryRecall: finiteNumber(metrics.boundaryRecall),
   } : undefined;
   const deterministic = asRecord(report?.determinism)?.passed === true;
+  const p524OffDeepEquality = asRecord(report?.p524OffDeepEquality);
   if (!report || report.sourceCaseCount !== lockedP521OfficialSafetyCorpus.clean.caseCount
     || report.evaluatedCaseLimitPerCategory !== null
     || nonCleanCaseCount !== lockedP521OfficialSafetyCorpus.dirty.caseCount
+    || p524OffDeepEquality?.featureFlag !== "enableHarmonicStateConsolidation"
+    || p524OffDeepEquality.expectedCaseCount
+      !== lockedP521OfficialSafetyCorpus.clean.caseCount + lockedP521OfficialSafetyCorpus.dirty.caseCount
+    || p524OffDeepEquality.evaluatedCaseCount
+      !== lockedP521OfficialSafetyCorpus.clean.caseCount + lockedP521OfficialSafetyCorpus.dirty.caseCount
+    || p524OffDeepEquality.passed !== true
     || !summary || Object.values(summary).some((value) => value === undefined)) {
     throw new Error("official evaluator did not produce the required full safety report");
   }

@@ -18,6 +18,10 @@ import {
   applyAccuracyCandidateUnion,
 } from "./accuracyCandidateUnion";
 
+import {
+  harmonicStateConsolidationAnalyzerVersion,
+  prepareHarmonicStateAnalyzerOptions,
+} from "./harmonicStateConsolidation";
 /** Kept for rollback: the analyzer promoted in Phase 4.0. */
 export const phase40DefaultAnalyzerMode = "phase4-v1" as const;
 
@@ -51,9 +55,11 @@ export {
 export { buildWeightedWindows, extractBlockCandidates, inferTrackRoles, matchWindow, smoothTimeline } from "./legacy";
 
 export function analyzeMidi(bytes: Uint8Array, options: AnalyzeMidiOptions = {}): MidiProgressionAnalysis {
-  const mode = options.mode ?? defaultAnalyzerMode;
-  const primary = runAnalyzer(bytes, options, mode);
-  const analysis = options.accuracyFirst?.enableAccuracyCandidateUnion
+  const integration = prepareHarmonicStateAnalyzerOptions(bytes, options);
+  const analyzerOptions = integration.options;
+  const mode = analyzerOptions.mode ?? defaultAnalyzerMode;
+  const primary = runAnalyzer(bytes, analyzerOptions, mode);
+  const analysis = analyzerOptions.accuracyFirst?.enableAccuracyCandidateUnion
     ? applyAccuracyCandidateUnion(
         primary,
         accuracyCandidateUnionModes
@@ -61,9 +67,9 @@ export function analyzeMidi(bytes: Uint8Array, options: AnalyzeMidiOptions = {})
           .map((sourceMode) => ({
             mode: sourceMode,
             analysis: runAnalyzer(bytes, {
-              ...options,
+              ...analyzerOptions,
               accuracyFirst: {
-                ...options.accuracyFirst,
+                ...analyzerOptions.accuracyFirst,
                 enableAccuracyCandidateUnion: false,
               },
             }, sourceMode),
@@ -73,6 +79,7 @@ export function analyzeMidi(bytes: Uint8Array, options: AnalyzeMidiOptions = {})
   return {
     ...analysis,
     sourceFingerprint: options.analysisFingerprint ?? fingerprintMidiBytes(bytes),
+    ...(integration.applied ? { analyzerVersion: harmonicStateConsolidationAnalyzerVersion } : {}),
   };
 }
 

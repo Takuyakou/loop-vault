@@ -242,6 +242,8 @@ async function main(): Promise<void> {
     { mode: "voice-aware-rerank-v1", version: voiceAwareRerankerVersion },
   ];
   const results: EvaluationResult[] = [];
+  let p524OffDeepEqualityCaseCount = 0;
+  let p524OffDeepEqualityPassed = true;
 
   for (const category of categories) {
     const allCases = grouped.get(category) ?? [];
@@ -253,6 +255,19 @@ async function main(): Promise<void> {
         input.bytes,
         analyzeMidi(input.bytes, { mode: analyzer.mode }),
       ]));
+      if (analyzer.mode === "voice-aware-rerank-v1") {
+        for (const input of cases) {
+          const legacyOutput = requiredAnalysis(analyses, input.bytes);
+          const explicitOffOutput = analyzeMidi(input.bytes, {
+            mode: analyzer.mode,
+            enableHarmonicStateConsolidation: false,
+          });
+          p524OffDeepEqualityCaseCount += 1;
+          if (JSON.stringify(explicitOffOutput) !== JSON.stringify(legacyOutput)) {
+            p524OffDeepEqualityPassed = false;
+          }
+        }
+      }
       if (analyzer.mode === "legacy") legacyAnalyses = analyses;
       const report = evaluateAnalyzer(
         cases,
@@ -341,6 +356,13 @@ async function main(): Promise<void> {
     improvedCategoryCount,
     regressedCategoryCount,
     determinism,
+    p524OffDeepEquality: {
+      featureFlag: "enableHarmonicStateConsolidation",
+      expectedCaseCount: clean.allCases.length + dirty.allCases.length,
+      evaluatedCaseCount: p524OffDeepEqualityCaseCount,
+      passed: p524OffDeepEqualityPassed
+        && p524OffDeepEqualityCaseCount === clean.allCases.length + dirty.allCases.length,
+    },
     realGold: realGoldCaseCount > 0
       ? { status: "available", caseCount: realGoldCaseCount }
       : { status: "not-evaluable", caseCount: 0 },
