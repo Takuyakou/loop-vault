@@ -150,6 +150,8 @@ export interface LegacyScoringOptions {
   /** Add E1 observed b9 beside a complete dominant-seventh core. */
   useObservedFlatNineDominantCandidate?: boolean;
   analyzerVersion?: string;
+  /** Skip only the legacy A-B-A singleton smoother for locked P5.24 states. */
+  preserveHarmonicStateBoundaries?: boolean;
 }
 
 export function analyzeMidiWithRankingScores(
@@ -180,7 +182,11 @@ export function analyzeMidiWithRankingScores(
       scoring,
     ));
   }
-  const smoothedTimeline = smoothTimelineWithRankingScores(rankedTimeline, barLengthBeats);
+  const smoothedTimeline = smoothTimelineWithRankingScores(
+    rankedTimeline,
+    barLengthBeats,
+    scoring.preserveHarmonicStateBoundaries === true,
+  );
   const fullTimeline = smoothedTimeline.map(({ item }) => item);
   const timelineRankingScores = smoothedTimeline.map(({ rankingScore }) => rankingScore);
   const coverage = scoring.usePatternSelection
@@ -592,13 +598,14 @@ export function extractBlockCandidates(
 function smoothTimelineWithRankingScores(
   items: readonly RankedTimelineItem[],
   barLengthBeats: number,
+  preserveHarmonicStateBoundaries = false,
 ): RankedTimelineItem[] {
   const adjusted = items.map((entry) => ({
     ...entry,
     item: { ...entry.item },
   }));
 
-  for (let index = 1; index < adjusted.length - 1; index += 1) {
+  for (let index = preserveHarmonicStateBoundaries ? adjusted.length : 1; index < adjusted.length - 1; index += 1) {
     const previous = adjusted[index - 1].item;
     const current = adjusted[index].item;
     const next = adjusted[index + 1].item;

@@ -6,7 +6,10 @@ import { describe, expect, it } from "vitest";
 import { roleV2ShadowClassifierVersion } from "../../src/domain/midi/voiceRoleV2ShadowClassifier";
 import { lockedP521OfficialSafetyCorpus } from "../p521/roleV2OfficialSafetyContract";
 import {
+  hashScopedCandidateContent,
   validateP524FreshOfficialEvidence,
+  p524ScopedCandidatePathCount,
+  p524ScopedCandidatePaths,
   type P524FreshOfficialValidationInput,
   type P524OfficialFreshnessEnvelope,
 } from "./officialEvidence";
@@ -62,7 +65,7 @@ function fixture(): P524FreshOfficialValidationInput {
     codeCandidateCommit: currentCommit,
     observedAfterWriteAtMs: 2_100,
     candidateContentSha256,
-    candidatePathCount: 14,
+    candidatePathCount: p524ScopedCandidatePathCount,
     reportSha256: sha256(reportBytes),
     attestationSha256: sha256(attestationBytes),
     cleanCaseCount: 100,
@@ -83,6 +86,24 @@ function fixture(): P524FreshOfficialValidationInput {
 }
 
 describe("P5.24-02 fresh official evidence binding", () => {
+  it("binds every Stage03 runtime adapter and promoted production dependency", () => {
+    expect(p524ScopedCandidatePathCount).toBe(30);
+    expect(p524ScopedCandidatePaths).toEqual(expect.arrayContaining([
+      "scripts/p524/fragmentConsolidator.ts",
+      "scripts/p524/fragmentConsolidatorCore.ts",
+      "scripts/p524/harmonicIdentity.ts",
+      "scripts/p524/shadowEvidence.ts",
+      "src/domain/midi/harmonicState/contracts.ts",
+      "src/domain/midi/harmonicStateConsolidation.ts",
+      "src/domain/midi/analysis.ts",
+      "src/domain/midi/phase4Analyzer.ts",
+    ]));
+  });
+
+  it("hashes all scoped candidate paths from the repository", async () => {
+    await expect(hashScopedCandidateContent()).resolves.toMatch(/^[a-f0-9]{64}$/);
+  });
+
   it("accepts a same-run nonce, current HEAD, full corpus, hash-linked pair", () => {
     expect(validateP524FreshOfficialEvidence(fixture())).toMatchObject({
       status: "pass",

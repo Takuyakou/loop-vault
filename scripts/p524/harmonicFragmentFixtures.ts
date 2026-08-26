@@ -257,7 +257,7 @@ function validateStateCoverage(fixture: P524SyntheticFixture): void {
       throw new Error(`${fixture.id} harmonic states are not a finite contiguous timeline`);
     }
   });
-  if (fixture.expectedStates.at(-1)?.endBeat !== fixture.totalBeats) {
+  if (fixture.expectedStates[fixture.expectedStates.length - 1]?.endBeat !== fixture.totalBeats) {
     throw new Error(`${fixture.id} harmonic states do not cover the fixture`);
   }
 }
@@ -280,7 +280,7 @@ function validateBassStateCoverage(fixture: P524SyntheticFixture): void {
   if (countP524UnsupportedBassEvidence(fixture.notes, fixture.expectedBassStates) !== 0) {
     throw new Error(`${fixture.id} Bass Lane state has no related stable/transient bass-note evidence`);
   }
-  if (fixture.expectedBassStates.at(-1)?.endBeat !== fixture.totalBeats) {
+  if (fixture.expectedBassStates[fixture.expectedBassStates.length - 1]?.endBeat !== fixture.totalBeats) {
     throw new Error(`${fixture.id} Bass Lane states do not cover the fixture`);
   }
 }

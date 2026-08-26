@@ -1,5 +1,6 @@
 import type { MidiProgressionAnalysis } from "../types";
 import { analyzeMidiWithRankingScores } from "./legacy";
+import { hasAppliedHarmonicStateTimeline } from "./harmonicStateConsolidation";
 import type { QualityEvidenceOptions } from "./qualityEvidence";
 import type { AnalyzeMidiOptions } from "./types";
 
@@ -42,6 +43,7 @@ export function analyzeMidiPhase4(
     useBassCompanionCandidates: options.accuracyFirst?.bassCompanionCandidates ?? false,
     useObservedFlatNineDominantCandidate:
       options.accuracyFirst?.enableObservedFlatNineDominantCandidate ?? false,
+    preserveHarmonicStateBoundaries: hasAppliedHarmonicStateTimeline(options),
     analyzerVersion: (
       options.accuracyFirst?.bassCompanionCandidates
       || options.accuracyFirst?.enableObservedFlatNineDominantCandidate

@@ -60,10 +60,10 @@
     "p524-02-promotion-decision": "pass",
     "p524-02-focused-regression": "pass",
     "p524-02-performance-safety": "pass",
-    "p524-03-off-deep-equality": "not-run",
-    "p524-03-on-focused-behavior": "not-run",
-    "p524-03-official-corpus-regression": "not-run",
-    "p524-03-protected-surface-hygiene": "not-run",
+    "p524-03-off-deep-equality": "pass",
+    "p524-03-on-focused-behavior": "pass",
+    "p524-03-official-corpus-regression": "pass",
+    "p524-03-protected-surface-hygiene": "pass",
     "p524-04-full-vitest": "not-run",
     "p524-04-full-playwright": "not-run",
     "p524-04-tauri-release-build": "not-run",
@@ -71,6 +71,6 @@
     "p524-04-final-security-audit-hygiene": "not-run",
     "p524-04-human-acceptance": "not-run"
   },
-  "nextAction": "Run P5.24-03 default-OFF feature-flagged production integration. Prove OFF deep equality and ON focused behavior using Tier 1/2 plus phase-specific safety gates; keep full Vitest, full Playwright, and Tauri release build reserved for P5.24-04.",
-  "updatedAt": "2026-08-26T01:47:57+09:00"
+  "nextAction": "Parent verification and independent P5.24-03 commit are pending. Keep activeStage at P5.24-03 and do not add it to completedStages until the commit is created and verified. After the exact Stage03 commit, rerun the Stage02 authoritative clean-tree binding on committed HEAD; the pre-commit rebind is deferred because protectedProductionTreeIsClean remains enforced. Reserve full Vitest, full Playwright, and Tauri release build for P5.24-04.",
+  "updatedAt": "2026-08-26T10:33:10+09:00"
 }

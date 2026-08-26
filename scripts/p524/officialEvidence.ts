@@ -22,7 +22,11 @@ const filesystemTimestampToleranceMs = 2_000;
 export const p524ScopedCandidatePaths = Object.freeze([
   "docs/phase5.24/execution-state.json",
   "docs/phase5.24/reports/P5.24-02-fragment-consolidator-shadow.md",
+  "docs/phase5.24/reports/P5.24-03-flagged-integration.md",
+  "scripts/evaluate-voice-aware-reranker.ts",
   "scripts/p521/evaluateRoleV2Shadow.ts",
+  "scripts/p521/measureRoleV2OfficialChordSafety.ts",
+  "scripts/p524/harmonicFragmentFixtures.ts",
   "scripts/p524/fragmentConsolidator.test.ts",
   "scripts/p524/fragmentConsolidator.ts",
   "scripts/p524/fragmentConsolidatorBenchmark.ts",
@@ -30,11 +34,24 @@ export const p524ScopedCandidatePaths = Object.freeze([
   "scripts/p524/fragmentConsolidatorSafety.test.ts",
   "scripts/p524/fragmentConsolidatorScale.test.ts",
   "scripts/p524/harmonicIdentity.ts",
+  "scripts/p524/shadowEvidence.ts",
   "scripts/p524/officialEvidence.test.ts",
   "scripts/p524/officialEvidence.ts",
   "scripts/p524/stage02Promotion.test.ts",
   "scripts/p524/stage02Promotion.ts",
+  "src/domain/midi/analysis.ts",
+  "src/domain/midi/legacy.ts",
+  "src/domain/midi/phase4Analyzer.ts",
+  "src/domain/midi/types.ts",
+  "src/domain/midi/harmonicState/contracts.ts",
+  "src/domain/midi/harmonicState/fragmentConsolidator.ts",
+  "src/domain/midi/harmonicState/fragmentConsolidatorCore.ts",
+  "src/domain/midi/harmonicState/harmonicIdentity.ts",
+  "src/domain/midi/harmonicState/shadowEvidence.ts",
+  "src/domain/midi/harmonicStateConsolidation.ts",
+  "src/domain/midi/harmonicStateConsolidation.test.ts",
 ] as const);
+export const p524ScopedCandidatePathCount = p524ScopedCandidatePaths.length;
 
 
 export interface P524OfficialFreshnessEnvelope {
@@ -45,7 +62,7 @@ export interface P524OfficialFreshnessEnvelope {
   readonly completedAtMs: number;
   readonly observedAfterWriteAtMs: number;
   readonly candidateContentSha256: string;
-  readonly candidatePathCount: 14;
+  readonly candidatePathCount: typeof p524ScopedCandidatePathCount;
   readonly codeCandidateCommit: string;
   readonly reportSha256: string;
   readonly attestationSha256: string;
@@ -102,7 +119,7 @@ export async function measureP524FreshOfficialEvidence(): Promise<P524FreshOffic
       completedAtMs,
       observedAfterWriteAtMs,
       candidateContentSha256: startingCandidateContentSha256,
-      candidatePathCount: p524ScopedCandidatePaths.length,
+      candidatePathCount: p524ScopedCandidatePathCount,
       codeCandidateCommit: startingCommit,
       reportSha256: sha256(reportBytes),
       attestationSha256: sha256(attestationBytes),
@@ -155,7 +172,7 @@ export function validateP524FreshOfficialEvidence(
     if (envelope.promotionRunNonce !== input.expectedNonce) reasons.push("freshness nonce is stale or copied");
     if (envelope.codeCandidateCommit !== input.currentCommit) reasons.push("freshness envelope targets another HEAD");
     if (envelope.candidateContentSha256 !== input.candidateContentSha256
-      || envelope.candidatePathCount !== p524ScopedCandidatePaths.length) {
+      || envelope.candidatePathCount !== p524ScopedCandidatePathCount) {
       reasons.push("freshness envelope does not match scoped candidate content");
     }
     if (envelope.reportSha256 !== sha256(input.reportBytes)
@@ -231,7 +248,7 @@ function asEnvelope(value: unknown): P524OfficialFreshnessEnvelope | undefined {
     && typeof candidate.codeCandidateCommit === "string"
     && typeof candidate.observedAfterWriteAtMs === "number"
     && typeof candidate.candidateContentSha256 === "string"
-    && candidate.candidatePathCount === p524ScopedCandidatePaths.length
+    && candidate.candidatePathCount === p524ScopedCandidatePathCount
     && typeof candidate.reportSha256 === "string"
     && typeof candidate.attestationSha256 === "string"
     && typeof candidate.cleanCaseCount === "number"
