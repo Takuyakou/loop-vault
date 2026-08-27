@@ -37,6 +37,7 @@ export function parseMidi(bytes: Uint8Array): MidiSongData {
     notes: raw.notes,
     ...(raw.tempo !== undefined ? { tempo: raw.tempo } : {}),
     tempoChanges: raw.tempoChanges,
+    tempoDiagnostics: raw.tempoDiagnostics,
     timeSignature: `${timeSignatureParts[0]}/${timeSignatureParts[1]}`,
     ticksPerBeat: raw.ticksPerBeat,
     totalBars,

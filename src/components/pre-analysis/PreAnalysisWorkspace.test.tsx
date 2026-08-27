@@ -35,6 +35,35 @@ describe("PreAnalysisWorkspace", () => {
     await unmount();
   });
 
+  it("shows only a robust real-time weighted tempo range", async () => {
+    const base = fixtureSession();
+    const master = base.sources[0]!;
+    const session = {
+      ...base,
+      sources: base.sources.map((source) => source.id === master.id
+        ? {
+            ...source,
+            tempoMap: [{ beat: 0, bpm: 161.29 }, { beat: 0.1, bpm: 108 }],
+            representativeBpm: 108,
+            tempoDiagnostics: {
+              effectiveTempoEventCount: 2,
+              effectiveTempoSegmentCount: 2,
+              rawMinBpm: 108,
+              rawMaxBpm: 161.29,
+              weightedP05Bpm: 90,
+              weightedMedianBpm: 108,
+              weightedP95Bpm: 120,
+            },
+          }
+        : source),
+    };
+    const { container, unmount } = await renderWorkspace(session);
+
+    expect(container.textContent).toContain("108 BPM");
+    expect(container.textContent).toContain("テンポ変動あり 90〜120 BPM");
+    await unmount();
+  });
+
   it("renders every Voice from an all-in-one Type 0 MIDI", async () => {
     const session = createAnalysisSession([{
       sourceId: "all-in-one",

@@ -18,6 +18,7 @@ import {
   stopPreview,
 } from "../../audio/chordPreview";
 import { usePreviewSound } from "../PreviewSoundProvider";
+import { hasRobustTempoVariation } from "../../domain/midi/tempoAnalysis";
 import {
   applyAnalysisSessionPreset,
   analysisSessionVoiceContributionPreset,
@@ -187,7 +188,7 @@ export function PreAnalysisWorkspace({
     setPlaybackError(undefined);
     const master = session.sources.find((source) =>
       source.id === session.masterSourceId) ?? session.sources[0];
-    const bpm = master?.tempoMap[0]?.bpm ?? 96;
+    const bpm = master?.representativeBpm ?? 96;
     const totalBeats = sessionDuration(session);
     const playbackStartBeat = playheadBeat >= totalBeats ? 0 : playheadBeat;
     const previewNotes = sessionPreviewNotes(session, playbackStartBeat);
@@ -403,7 +404,7 @@ export function PreAnalysisWorkspace({
                 {source.displayName}
               </p>
               <p className="mt-1 text-xs text-[var(--lv-text-muted)]">
-                {sourceSummary(source)}
+                {sourceSummary(source, language)}
               </p>
             </div>
           ))}
@@ -983,8 +984,11 @@ function selectableRoleFor(
   return role === "exclude" ? "harmony" : role;
 }
 
-function sourceSummary(source: AnalysisSession["sources"][number]): string {
-  const bpm = source.tempoMap[0]?.bpm ?? 120;
+function sourceSummary(
+  source: AnalysisSession["sources"][number],
+  language: AppLanguage,
+): string {
+  const bpm = source.representativeBpm ?? 120;
   const meter = source.timeSignatures[0];
   const durationSeconds = Math.max(
     0,
@@ -995,7 +999,24 @@ function sourceSummary(source: AnalysisSession["sources"][number]): string {
     formatClock(durationSeconds),
     `${Math.round(bpm)} BPM`,
     meter ? `${meter.numerator}/${meter.denominator}` : "4/4",
-  ].join(" · ");
+    tempoVariationLabel(source, language),
+  ].filter(Boolean).join(" · ");
+}
+
+function tempoVariationLabel(
+  source: AnalysisSession["sources"][number],
+  language: AppLanguage,
+): string | undefined {
+  const lowBpm = source.tempoDiagnostics?.weightedP05Bpm;
+  const highBpm = source.tempoDiagnostics?.weightedP95Bpm;
+  if (!hasRobustTempoVariation(source.tempoDiagnostics)
+    || lowBpm === undefined
+    || highBpm === undefined) return undefined;
+  const low = Math.round(lowBpm);
+  const high = Math.round(highBpm);
+  return language === "ja"
+    ? `テンポ変動あり ${low}〜${high} BPM`
+    : `Tempo changes ${low}–${high} BPM`;
 }
 
 function voiceMetadata(

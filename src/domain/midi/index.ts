@@ -40,6 +40,8 @@ export { parseMidi } from "./parser";
 export { parseRawSmf } from "./rawSmf";
 export { normalizeNotes, overlapWithSegment } from "./normalize";
 export { beatsPerBar, tickToSeconds } from "./timing";
+export { analyzeMidiTempo, hasRobustTempoVariation } from "./tempoAnalysis";
+export type { MidiTempoAnalysis, MidiTempoDiagnostics, TempoChangePoint } from "./tempoAnalysis";
 export { buildVoices, isPercussionEvidence, selectChordEvidenceNotes, voiceId } from "./voices";
 export { gmProgramRole, isGmPercussionProgram } from "./gmRoles";
 export {

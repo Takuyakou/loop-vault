@@ -1,4 +1,5 @@
 import type { MidiProgressionAnalysis } from "../types";
+import type { MidiTempoDiagnostics } from "./tempoAnalysis";
 import type { AnalyzerWeights } from "./weights";
 
 export type TrackRole = "bass" | "harmony" | "mixed" | "melody" | "percussion";
@@ -46,6 +47,8 @@ export interface MidiSongData {
   notes: TimedNote[];
   tempo?: number;
   tempoChanges?: MidiTempoChange[];
+  /** Runtime-only representative-tempo evidence; never persisted in Vault data. */
+  tempoDiagnostics?: MidiTempoDiagnostics;
   timeSignature?: string;
   ticksPerBeat: number;
   totalBars: number;

@@ -74,6 +74,7 @@ export function analyzeMidiHybrid(bytes: Uint8Array, options: AnalyzeMidiOptions
     ...(options.fileName ? { fileName: options.fileName } : {}),
     totalBars: data.totalBars,
     ...(data.tempo ? { bpm: Math.round(data.tempo) } : {}),
+    ...(data.tempoDiagnostics ? { tempoDiagnostics: data.tempoDiagnostics } : {}),
     ...(data.timeSignature ? { timeSignature: data.timeSignature } : {}),
     ...(key ? { detectedKey: `${pitchNames[key.tonicPitchClass]} ${key.mode}` } : {}),
     fullTimeline,
@@ -152,7 +153,9 @@ function neutralTrackRoles(data: MidiSongData, notes: ReturnType<typeof normaliz
 function analyzeEmpty(data: ReturnType<typeof parseMidi>, options: AnalyzeMidiOptions): MidiProgressionAnalysis {
   return { ...(options.sourceAssetId ? { sourceAssetId: options.sourceAssetId } : {}),
     ...(options.fileName ? { fileName: options.fileName } : {}), totalBars: data.totalBars,
-    ...(data.tempo ? { bpm: Math.round(data.tempo) } : {}), ...(data.timeSignature ? { timeSignature: data.timeSignature } : {}),
+    ...(data.tempo ? { bpm: Math.round(data.tempo) } : {}),
+    ...(data.tempoDiagnostics ? { tempoDiagnostics: data.tempoDiagnostics } : {}),
+    ...(data.timeSignature ? { timeSignature: data.timeSignature } : {}),
     fullTimeline: [], blockCandidates: [], analyzedAt: "1970-01-01T00:00:00.000Z", analyzerVersion: hybridAnalyzerVersion };
 }
 

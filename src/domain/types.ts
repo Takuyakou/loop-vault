@@ -6,6 +6,7 @@ import type { Section } from "./midi/sections";
 import type { CandidateChordEvent, CandidateChordStats } from "./midi/candidateBlock";
 import type { ProgressionPracticeProgress } from "./practice/types";
 import type { SourceBasslineSnapshotV1 } from "./sourceBassline";
+import type { MidiTempoDiagnostics } from "./midi/tempoAnalysis";
 
 export type Status =
   | "idea"
@@ -155,6 +156,8 @@ export interface MidiProgressionAnalysis {
   sourceFingerprint?: string;
   totalBars: number;
   bpm?: number;
+  /** Runtime-only diagnostics used to audit representative BPM selection. */
+  tempoDiagnostics?: MidiTempoDiagnostics;
   timeSignature?: string;
   detectedKey?: string;
   fullTimeline: ChordTimelineItem[];

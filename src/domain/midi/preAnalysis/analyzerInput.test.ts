@@ -303,6 +303,36 @@ describe("Phase 5.1 analyzer input", () => {
     ]);
   });
 
+  it("uses the same weighted representative BPM for pre-analysis, prepared analysis, and capture output", () => {
+    const bytes = midi(480, [[
+      setTempo(372_000),
+      setTempo(555_556, 48),
+      noteOn(0, 60),
+      noteOff(0, 60, 480 * 16),
+      endOfTrack(),
+    ]]);
+    const base = createAnalysisSession([{
+      sourceId: "master",
+      displayName: "tempo-test.mid",
+      bytes,
+    }]).session!;
+    const session = { ...base, preset: "custom" as const };
+    const request = buildSessionAnalysisRequest(session);
+    const analysis = analyzeMidi(request.bytes, {
+      ...phase5Options,
+      ...request.options,
+    });
+
+    expect(base.sources[0]?.representativeBpm).toBeCloseTo(108, 3);
+    expect(request.options.preparedData?.tempo).toBeCloseTo(108, 3);
+    expect(analysis.bpm).toBe(108);
+    expect(analysis.tempoDiagnostics).toMatchObject({
+      effectiveTempoEventCount: 2,
+      effectiveTempoSegmentCount: 2,
+    });
+    expect(analysis.tempoDiagnostics?.weightedMedianBpm).toBeCloseTo(108, 3);
+  });
+
   it("is deterministic for the same session", () => {
     const session = {
       ...createAnalysisSession([{
@@ -397,6 +427,10 @@ function controlChange(
     controllerType,
     value,
   };
+}
+
+function setTempo(microsecondsPerBeat: number, deltaTime = 0): MidiEvent {
+  return { deltaTime, meta: true, type: "setTempo", microsecondsPerBeat };
 }
 
 function endOfTrack(deltaTime = 0): MidiEvent {

@@ -1,3 +1,4 @@
+import type { MidiTempoDiagnostics } from "../tempoAnalysis";
 import type { VoiceContributionPreset } from "../types";
 
 export type PreAnalysisVoiceRole =
@@ -33,6 +34,9 @@ export interface PreAnalysisMidiSource {
   /** Raw-parser end of the complete source; transient exact range authority. */
   durationTick?: number;
   tempoMap: PreAnalysisTempoPoint[];
+  representativeBpm?: number;
+  /** Runtime-only and privacy-safe; contains counts and BPM statistics only. */
+  tempoDiagnostics?: MidiTempoDiagnostics;
   timeSignatures: PreAnalysisTimeSignaturePoint[];
 }
 

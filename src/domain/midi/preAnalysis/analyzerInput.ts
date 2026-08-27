@@ -132,7 +132,8 @@ export function buildPreparedMidiSongData(
 
   return {
     notes,
-    ...(master.tempoMap[0] ? { tempo: master.tempoMap[0].bpm } : {}),
+    ...(master.representativeBpm !== undefined ? { tempo: master.representativeBpm } : {}),
+    ...(master.tempoDiagnostics ? { tempoDiagnostics: master.tempoDiagnostics } : {}),
     tempoChanges: master.tempoMap.map((point) => ({
       tick: stableTick(point.beat, ppq),
       bpm: point.bpm,

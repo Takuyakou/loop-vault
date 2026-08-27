@@ -204,6 +204,8 @@ function buildSource(
     durationBeats: lastNoteEndTick(raw.notes) / raw.ticksPerBeat,
     durationTick: raw.durationTick,
     tempoMap,
+    representativeBpm: raw.tempo ?? 120,
+    tempoDiagnostics: raw.tempoDiagnostics,
     timeSignatures,
   };
 }

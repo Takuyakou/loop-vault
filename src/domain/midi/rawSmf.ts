@@ -5,6 +5,8 @@ import {
   IntakeBudgetError,
   assertMidiByteLength,
 } from "../../security/intakeBudgets";
+import { analyzeMidiTempo } from "./tempoAnalysis";
+import type { MidiTempoDiagnostics } from "./tempoAnalysis";
 import type { MidiControlChange, MidiTempoChange, ParsedTimedNote, TimedNote } from "./types";
 
 export interface RawSmfTrack {
@@ -21,6 +23,7 @@ export interface RawSmfSong {
   durationTick: number;
   tempo?: number;
   tempoChanges: MidiTempoChange[];
+  tempoDiagnostics: MidiTempoDiagnostics;
   timeSignature: [number, number];
   timeSignatureChanges: {
     tick: number;
@@ -175,15 +178,20 @@ export function parseRawSmf(bytes: Uint8Array): RawSmfSong {
 
   const orderedTempos = orderTimed(tempos);
   const orderedTimeSignatures = orderTimed(timeSignatures);
-  const tempo = orderedTempos[0]?.value;
+  const durationTick = maxTrackEndTick(trackEndTicks.values());
+  const tempoChanges = orderedTempos.map(({ tick, value: bpm }) => ({ tick, bpm }));
+  const tempoAnalysis = analyzeMidiTempo({ tempoChanges, ticksPerBeat, durationTick });
   const timeSignature = orderedTimeSignatures[0]?.value ?? [4, 4];
 
   return {
     format: midi.header.format,
     ticksPerBeat,
-    durationTick: maxTrackEndTick(trackEndTicks.values()),
-    ...(tempo !== undefined ? { tempo } : {}),
-    tempoChanges: orderedTempos.map(({ tick, value: bpm }) => ({ tick, bpm })),
+    durationTick,
+    ...(tempoAnalysis.representativeBpm !== undefined
+      ? { tempo: tempoAnalysis.representativeBpm }
+      : {}),
+    tempoChanges,
+    tempoDiagnostics: tempoAnalysis.diagnostics,
     timeSignature,
     timeSignatureChanges: orderedTimeSignatures.map(({
       tick,
