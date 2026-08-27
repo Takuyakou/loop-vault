@@ -18,7 +18,15 @@ const candidate: ProgressionBlockCandidate = {
   startBar: 1,
   endBar: 2,
   lengthBars: 2,
-  chords: [],
+  chords: [{
+    bar: 1,
+    beat: 1,
+    durationBeats: 4,
+    chord: { root: 0, quality: "maj7", tensions: [], label: "Cmaj7" },
+    confidence: 1,
+    alternatives: [],
+    warnings: [],
+  }],
   summaryText: "Synthetic",
   confidence: 1,
   labels: [],
@@ -72,6 +80,12 @@ describe("Capture source bassline save integration", () => {
     );
     await act(async () => root.render(card(sourceFingerprint)));
     const panel = host.querySelector('[data-testid="source-bassline-capture-panel"]')!;
+    const chordCard = host.querySelector("[data-chord-card]")!;
+    const details = host.querySelector("[data-chord-inspector]")!;
+    expect(chordCard.compareDocumentPosition(panel) & Node.DOCUMENT_POSITION_FOLLOWING)
+      .toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(panel.compareDocumentPosition(details) & Node.DOCUMENT_POSITION_FOLLOWING)
+      .toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     const selects = panel.querySelectorAll<HTMLSelectElement>("select");
     const optIn = panel.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
     expect(selects[0]!.value).toBe("");
@@ -126,7 +140,7 @@ describe("Capture source bassline save integration", () => {
 
     const open = [...host.querySelectorAll<HTMLButtonElement>("button")]
       .find((button) => button.textContent?.trim() === "Vaultに保存")!;
-    expect(panel.compareDocumentPosition(open) & Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(open.compareDocumentPosition(panel) & Node.DOCUMENT_POSITION_FOLLOWING)
       .toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     await act(async () => open.click());
     const form = host.querySelector<HTMLFormElement>('form[role="dialog"]')!;
