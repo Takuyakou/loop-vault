@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const tone = vi.hoisted(() => {
   class Synth {}
@@ -96,6 +96,16 @@ const chord = {
 };
 
 describe("chord preview instruments", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(async () => {
+    stopPreview();
+    await vi.runAllTimersAsync();
+    vi.useRealTimers();
+  });
+
   it("creates the selected sampled piano and electric-piano synth", async () => {
     await previewChord(chord, "piano");
     await previewChord(chord, "electric-piano");
@@ -113,7 +123,6 @@ describe("chord preview instruments", () => {
 
     expect(tone.samplers).toHaveLength(2);
     expect(tone.voices).toEqual([tone.FMSynth]);
-    stopPreview();
   });
 
   it("cancels a request while audio startup is pending", async () => {
@@ -139,7 +148,6 @@ describe("chord preview instruments", () => {
   });
 
   it("notifies natural completion exactly once", async () => {
-    vi.useFakeTimers();
     const ended = vi.fn();
     const synthCount = tone.polySynths.length;
     await previewChord(chord, "electric-piano", { onEnded: ended });
@@ -155,11 +163,35 @@ describe("chord preview instruments", () => {
     expect(electric.dispose).toHaveBeenCalledOnce();
     stopPreview();
     expect(ended).toHaveBeenCalledTimes(1);
-    vi.useRealTimers();
   });
 
+  it.each(["piano", "electric-piano"] as const)(
+    "reuses the %s instrument when chord cards are clicked rapidly",
+    async (sound) => {
+      const ended = vi.fn();
+      const instruments = sound === "piano" ? tone.samplers : tone.polySynths;
+      const instrumentCount = instruments.length;
+
+      await previewChord(chord, sound, { onEnded: ended });
+      const active = instruments[instrumentCount]!;
+      await previewChord(
+        { ...chord, root: 2, label: "Dm7" },
+        sound,
+      );
+
+      expect(instruments).toHaveLength(instrumentCount + 1);
+      expect(active.triggerAttackRelease).toHaveBeenCalledTimes(2);
+      expect(active.releaseAll).toHaveBeenCalledOnce();
+      expect(active.dispose).not.toHaveBeenCalled();
+      expect(ended).toHaveBeenCalledOnce();
+      expect(ended).toHaveBeenCalledWith("stopped");
+
+      await vi.advanceTimersByTimeAsync(PREVIEW_RELEASE_TAIL_MS_FOR_TEST);
+      expect(active.dispose).not.toHaveBeenCalled();
+    },
+  );
+
   it("plays raw MIDI notes in bounded windows and releases them on stop", async () => {
-    vi.useFakeTimers();
     tone.setAudioNow(0);
     const started = vi.fn();
     const ended = vi.fn();
@@ -181,15 +213,13 @@ describe("chord preview instruments", () => {
     stopPreview();
     expect(ended).toHaveBeenCalledWith("stopped");
     expect(electric.releaseAll).toHaveBeenCalled();
-    expect(electric.dispose).toHaveBeenCalled();
+    expect(electric.dispose).toHaveBeenCalledOnce();
     const triggerCount = electric.triggerAttackRelease.mock.calls.length;
     await vi.advanceTimersByTimeAsync(5_000);
     expect(electric.triggerAttackRelease).toHaveBeenCalledTimes(triggerCount);
-    vi.useRealTimers();
   });
 
   it("keeps note offsets on the audio clock when the rolling timer stalls", async () => {
-    vi.useFakeTimers();
     tone.setAudioNow(10);
     await previewMidiNotes([
       { pitch: 60, startBeat: 0, durationBeats: 1, velocity: 100 },
@@ -214,12 +244,10 @@ describe("chord preview instruments", () => {
       100 / 127,
     );
     stopPreview();
-    expect(bass.dispose).toHaveBeenCalled();
-    vi.useRealTimers();
+    expect(bass.dispose).toHaveBeenCalledOnce();
   });
 
   it("replaces the active practice timbre without leaving a second graph sounding", async () => {
-    vi.useFakeTimers();
     const bassEnded = vi.fn();
     const referenceEnded = vi.fn();
     const note = [{ pitch: 40, startBeat: 0, durationBeats: 1, velocity: 96 }];
@@ -239,7 +267,7 @@ describe("chord preview instruments", () => {
     expect(referenceEnded).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(1_100);
     expect(referenceEnded).toHaveBeenCalledWith("completed");
-    stopPreview();
-    vi.useRealTimers();
   });
 });
+
+const PREVIEW_RELEASE_TAIL_MS_FOR_TEST = 1_100;

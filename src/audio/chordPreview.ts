@@ -60,6 +60,11 @@ const PIANO_SAMPLE_FILES = {
 
 let instrument: PreviewInstrument | undefined;
 let instrumentSound: MidiPreviewSound | undefined;
+let instrumentHasScheduledAudioEvents = false;
+const retiringInstruments = new Map<
+  PreviewInstrument,
+  ReturnType<typeof globalThis.setTimeout>
+>();
 let scheduledTimers: ReturnType<typeof globalThis.setTimeout>[] = [];
 let previewGeneration = 0;
 let activeSession: PreviewSession | undefined;
@@ -192,6 +197,7 @@ export async function previewMidiNotes(
         startedAt + note.startBeat * beatSeconds,
         normalizeMidiVelocity(note.velocity),
       );
+      instrumentHasScheduledAudioEvents = true;
     }
     if (nextIndex < ordered.length) {
       scheduledTimers.push(globalThis.setTimeout(
@@ -218,7 +224,11 @@ export async function previewMidiNotes(
 export function stopPreview(): void {
   previewGeneration += 1;
   clearScheduledTimers();
-  disposePreviewInstrument();
+  if (instrumentHasScheduledAudioEvents) {
+    disposePreviewInstrument();
+  } else {
+    releasePreviewInstrument();
+  }
   if (activeSession) {
     finishPreview(activeSession, "stopped", true);
   }
@@ -265,10 +275,37 @@ function clearScheduledTimers(): void {
 
 function disposePreviewInstrument(): void {
   if (!instrument) return;
+  cancelInstrumentRetirement(instrument);
   instrument.releaseAll();
   instrument.dispose();
   instrument = undefined;
   instrumentSound = undefined;
+  instrumentHasScheduledAudioEvents = false;
+}
+
+function releasePreviewInstrument(): void {
+  if (!instrument || retiringInstruments.has(instrument)) return;
+  const releasedInstrument = instrument;
+  releasedInstrument.releaseAll();
+  retiringInstruments.set(
+    releasedInstrument,
+    globalThis.setTimeout(() => {
+      retiringInstruments.delete(releasedInstrument);
+      releasedInstrument.dispose();
+      if (instrument === releasedInstrument) {
+        instrument = undefined;
+        instrumentSound = undefined;
+        instrumentHasScheduledAudioEvents = false;
+      }
+    }, PREVIEW_RELEASE_TAIL_MS),
+  );
+}
+
+function cancelInstrumentRetirement(target: PreviewInstrument): void {
+  const timer = retiringInstruments.get(target);
+  if (timer === undefined) return;
+  globalThis.clearTimeout(timer);
+  retiringInstruments.delete(target);
 }
 
 async function preparePreviewAudio(
@@ -282,6 +319,7 @@ async function preparePreviewAudio(
     }
 
     if (instrument && instrumentSound === sound) {
+      cancelInstrumentRetirement(instrument);
       return instrument;
     }
 
@@ -301,9 +339,9 @@ async function preparePreviewAudio(
       return undefined;
     }
 
-    instrument?.dispose();
     instrument = nextInstrument;
     instrumentSound = sound;
+    instrumentHasScheduledAudioEvents = false;
     return instrument;
   } catch (error) {
     if (isActive(session)) {
