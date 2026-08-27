@@ -64,6 +64,17 @@ describe("pre-analysis source selection settings", () => {
     )).toBe(true);
   });
 
+  it("opens details for one high-confidence keyboard Voice", () => {
+    expect(needsPreAnalysisReview({
+      sources: [{}],
+      voices: [{
+        dominantProgram: 0,
+        isDrum: false,
+        autoRoleConfidence: 0.9,
+      }],
+    })).toBe(true);
+  });
+
   it("can always show the preparation screen in Stable", () => {
     setPreAnalysisSourceSelectionSettings({
       enablePreAnalysisSourceSelection: true,

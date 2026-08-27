@@ -16,6 +16,7 @@ export interface PreAnalysisReviewSession {
   voices: readonly {
     sourceId?: string;
     channel?: number;
+    dominantProgram?: number;
     isDrum: boolean;
     autoRole?: string;
     autoRoleConfidenceBucket?: "high" | "medium" | "low";
@@ -86,6 +87,11 @@ export function needsPreAnalysisReview(
   ));
   return session.sources.length > 1
     || pitchedVoices.length > 1
+    || pitchedVoices.some((voice) => (
+      voice.dominantProgram !== undefined
+      && voice.dominantProgram >= 0
+      && voice.dominantProgram <= 23
+    ))
     || session.voices.some((voice) => voice.isDrum)
     || pitchedVoices.some((voice) => voice.autoRole === "melody-weak")
     || pitchedVoices.some((voice) => voice.autoRoleConfidenceBucket === "low" || voice.autoRoleConfidence < 0.45)
