@@ -50,10 +50,12 @@ interface PreAnalysisWorkspaceProps {
   language: AppLanguage;
   busy?: boolean;
   requiresReanalysis?: boolean;
+  defaultDetailsExpanded?: boolean;
   onSessionChange: (session: AnalysisSession) => void;
   onAddMidi: () => void;
   onRemoveSource: (sourceId: string) => void;
   onAnalyze: () => void;
+  onDetailsExpandedChange?: (expanded: boolean) => void;
   onPlay?: () => void;
   onStop?: () => void;
 }
@@ -63,10 +65,12 @@ export function PreAnalysisWorkspace({
   language,
   busy = false,
   requiresReanalysis = false,
+  defaultDetailsExpanded = false,
   onSessionChange,
   onAddMidi,
   onRemoveSource,
   onAnalyze,
+  onDetailsExpandedChange,
   onPlay,
   onStop,
 }: PreAnalysisWorkspaceProps) {
@@ -83,7 +87,9 @@ export function PreAnalysisWorkspace({
   const [playbackActive, setPlaybackActive] = useState(false);
   const [playbackError, setPlaybackError] = useState<string>();
   const autoExpanded = needsPreAnalysisReview(session);
-  const [detailsExpanded, setDetailsExpanded] = useState(autoExpanded);
+  const [detailsExpanded, setDetailsExpanded] = useState(
+    autoExpanded || defaultDetailsExpanded,
+  );
   const [highlightedSourceId, setHighlightedSourceId] = useState(
     session.latestSourceId,
   );
@@ -327,7 +333,11 @@ export function PreAnalysisWorkspace({
               className="justify-start px-3"
               aria-expanded={detailsExpanded}
               aria-controls="pre-analysis-part-details"
-              onClick={() => setDetailsExpanded((expanded) => !expanded)}
+              onClick={() => setDetailsExpanded((expanded) => {
+                const next = !expanded;
+                onDetailsExpandedChange?.(next);
+                return next;
+              })}
             >
               {detailsExpanded
                 ? <ChevronDown size={16} aria-hidden="true" />

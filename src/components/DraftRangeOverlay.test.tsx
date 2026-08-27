@@ -55,15 +55,22 @@ async function mount() {
 function pointerEvent(
   type: string,
   clientX: number,
-  options: { pointerId?: number; altKey?: boolean } = {},
+  options: {
+    pointerId?: number;
+    altKey?: boolean;
+    buttons?: number;
+    pointerType?: string;
+  } = {},
 ) {
   const event = new MouseEvent(type, {
     bubbles: true,
     button: 0,
+    buttons: options.buttons ?? (type === "pointerup" || type === "pointercancel" ? 0 : 1),
     clientX,
     altKey: options.altKey ?? false,
   });
   Object.defineProperty(event, "pointerId", { value: options.pointerId ?? 1 });
+  Object.defineProperty(event, "pointerType", { value: options.pointerType ?? "mouse" });
   return event;
 }
 
@@ -275,6 +282,48 @@ describe("DraftRangeOverlay", () => {
     });
     await harness.render(changed);
     expect(harness.container.textContent).toContain("Current 1-12 · 12 bars · changed");
+    await act(async () => harness.root.unmount());
+  });
+
+  it("cancels an interrupted resize when pointer capture is lost", async () => {
+    const harness = await mountPrimary();
+    const endHandle = harness.container.querySelector<HTMLElement>(
+      "[data-selection-handle='end']",
+    )!;
+
+    await act(async () => {
+      endHandle.dispatchEvent(pointerEvent("pointerdown", 200));
+      harness.track.dispatchEvent(pointerEvent("pointermove", 360));
+    });
+    expect(harness.container.textContent).toContain("changing");
+
+    await act(async () => {
+      harness.track.dispatchEvent(pointerEvent("lostpointercapture", 360, { buttons: 0 }));
+      harness.track.dispatchEvent(pointerEvent("pointermove", 440, { buttons: 1 }));
+      harness.track.dispatchEvent(pointerEvent("pointerup", 440));
+    });
+
+    expect(harness.onChange).not.toHaveBeenCalled();
+    expect(harness.container.textContent).toContain("Selection: 2.1–5.4");
+    expect(harness.container.textContent).not.toContain("changing");
+    await act(async () => harness.root.unmount());
+  });
+
+  it("drops a stale mouse drag before a later pointer move", async () => {
+    const harness = await mountPrimary();
+    const startHandle = harness.container.querySelector<HTMLElement>(
+      "[data-selection-handle='start']",
+    )!;
+
+    await act(async () => {
+      startHandle.dispatchEvent(pointerEvent("pointerdown", 40));
+      harness.track.dispatchEvent(pointerEvent("pointermove", 20));
+      harness.track.dispatchEvent(pointerEvent("pointermove", 400, { buttons: 0 }));
+      harness.track.dispatchEvent(pointerEvent("pointerup", 400));
+    });
+
+    expect(harness.onChange).not.toHaveBeenCalled();
+    expect(harness.container.textContent).toContain("Selection: 2.1–5.4");
     await act(async () => harness.root.unmount());
   });
 

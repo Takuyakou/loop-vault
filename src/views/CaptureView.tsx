@@ -344,6 +344,7 @@ export function CaptureView(props: CaptureViewProps) {
   const [timelineScrollBar, setTimelineScrollBar] = useState<number>();
   const [sourcePath, setSourcePath] = useState<string>();
   const [preAnalysisSession, setPreAnalysisSession] = useState<AnalysisSession>();
+  const [preAnalysisDetailsExpanded, setPreAnalysisDetailsExpanded] = useState(false);
   const [completedAnalysisSummary, setCompletedAnalysisSummary] =
     useState<CaptureAnalysisRunSummary>();
   const [intakeError, setIntakeError] = useState<string>();
@@ -1420,7 +1421,9 @@ export function CaptureView(props: CaptureViewProps) {
             language={language}
             busy={analysisProgress !== undefined}
             requiresReanalysis={completedAnalysisSummary !== undefined}
+            defaultDetailsExpanded={preAnalysisDetailsExpanded}
             onSessionChange={setPreAnalysisSession}
+            onDetailsExpandedChange={setPreAnalysisDetailsExpanded}
             onAddMidi={() => void chooseMidi(true)}
             onRemoveSource={(sourceId) => {
               const next = removeMidiSource(preAnalysisSession, sourceId);

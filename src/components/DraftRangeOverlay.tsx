@@ -334,18 +334,25 @@ interface AbsoluteRange {
   endBeat: number;
 }
 
+interface PendingAbsoluteRange {
+  draftRevision: string;
+  range: AbsoluteRange;
+}
+
 type PointerDrag =
   | {
       kind: "create";
       pointerId: number;
       anchorBeat: number;
       initial: AbsoluteRange;
+      draftRevision?: string;
     }
   | {
       kind: "move" | "start" | "end";
       pointerId: number;
       anchorBeat: number;
       initial: AbsoluteRange;
+      draftRevision?: string;
     };
 
 function PrimaryDraftRangeOverlay({
@@ -366,24 +373,46 @@ function PrimaryDraftRangeOverlay({
 }: PrimaryDraftRangeOverlayProps) {
   const maximum = Math.max(beatsPerBar, totalBars * beatsPerBar);
   const current = draft ? draftRangeAbsoluteBeats(draft) : undefined;
-  const [pending, setPendingState] = useState<AbsoluteRange | undefined>(current);
-  const pendingRef = useRef<AbsoluteRange | undefined>(current);
+  const draftRevision = draft && current
+    ? `${draft.draftId}:${draft.historyIndex}:${current.startBeat}:${current.endBeat}`
+    : undefined;
+  const [pendingState, setPendingState] = useState<PendingAbsoluteRange>();
+  const pendingRef = useRef<PendingAbsoluteRange>();
   const dragRef = useRef<PointerDrag>();
   const trackRef = useRef<HTMLDivElement>(null);
   const selectionRef = useRef<HTMLButtonElement>(null);
   const [confirmDraft, setConfirmDraft] = useState<ManualCandidateDraft>();
 
   useEffect(() => {
-    const next = draft ? draftRangeAbsoluteBeats(draft) : undefined;
-    pendingRef.current = next;
-    setPendingState(next);
     setConfirmDraft(undefined);
     dragRef.current = undefined;
-  }, [draft?.draftId, draft?.historyIndex, draft?.selectedRange]);
+  }, [draftRevision]);
+
+  const pending = pendingState !== undefined
+    && pendingState.draftRevision === draftRevision
+    ? pendingState.range
+    : current;
 
   function setPending(next: AbsoluteRange | undefined) {
-    pendingRef.current = next;
-    setPendingState(next);
+    const tagged = next && draftRevision
+      ? { draftRevision, range: next }
+      : undefined;
+    pendingRef.current = tagged;
+    setPendingState(tagged);
+  }
+
+  function activePending(): AbsoluteRange | undefined {
+    const tagged = pendingRef.current;
+    return tagged !== undefined && tagged.draftRevision === draftRevision
+      ? tagged.range
+      : current;
+  }
+
+  function cancelPointerDrag(pointerId?: number) {
+    const drag = dragRef.current;
+    if (!drag || (pointerId !== undefined && drag.pointerId !== pointerId)) return;
+    dragRef.current = undefined;
+    setPending(current);
   }
 
   function beatFromPointer(clientX: number): number {
@@ -432,10 +461,16 @@ function PrimaryDraftRangeOverlay({
     if (event.button !== 0) return;
     event.preventDefault();
     event.stopPropagation();
-    const initial = pendingRef.current;
+    const initial = activePending();
     if (!initial) return;
     const anchorBeat = beatFromPointer(event.clientX);
-    dragRef.current = { kind, pointerId: event.pointerId, anchorBeat, initial };
+    dragRef.current = {
+      kind,
+      pointerId: event.pointerId,
+      anchorBeat,
+      initial,
+      ...(draftRevision === undefined ? {} : { draftRevision }),
+    };
     trackRef.current?.setPointerCapture?.(event.pointerId);
     selectionRef.current?.focus();
   }
@@ -458,6 +493,7 @@ function PrimaryDraftRangeOverlay({
       pointerId: event.pointerId,
       anchorBeat,
       initial,
+      ...(draftRevision === undefined ? {} : { draftRevision }),
     };
     setPending(initial);
     event.currentTarget.setPointerCapture?.(event.pointerId);
@@ -465,7 +501,11 @@ function PrimaryDraftRangeOverlay({
 
   function rangeForPointer(event: ReactPointerEvent<HTMLDivElement>): AbsoluteRange | undefined {
     const drag = dragRef.current;
-    if (!drag || drag.pointerId !== event.pointerId) return undefined;
+    if (
+      !drag
+      || drag.pointerId !== event.pointerId
+      || drag.draftRevision !== draftRevision
+    ) return undefined;
     const raw = beatFromPointer(event.clientX);
     const value = snap(raw, event.altKey);
     const minimumLength = 0.25;
@@ -501,6 +541,14 @@ function PrimaryDraftRangeOverlay({
   }
 
   function updatePointer(event: ReactPointerEvent<HTMLDivElement>) {
+    if (
+      dragRef.current?.pointerId === event.pointerId
+      && event.pointerType === "mouse"
+      && event.buttons === 0
+    ) {
+      cancelPointerDrag(event.pointerId);
+      return;
+    }
     const next = rangeForPointer(event);
     if (next) setPending(next);
   }
@@ -508,7 +556,12 @@ function PrimaryDraftRangeOverlay({
   function finishPointer(event: ReactPointerEvent<HTMLDivElement>) {
     const drag = dragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
-    const next = rangeForPointer(event) ?? pendingRef.current ?? drag.initial;
+    if (drag.draftRevision !== draftRevision) {
+      dragRef.current = undefined;
+      event.currentTarget.releasePointerCapture?.(event.pointerId);
+      return;
+    }
+    const next = rangeForPointer(event) ?? activePending() ?? drag.initial;
     dragRef.current = undefined;
     event.currentTarget.releasePointerCapture?.(event.pointerId);
     if (drag.kind === "create") {
@@ -627,15 +680,12 @@ function PrimaryDraftRangeOverlay({
         className="relative mt-4 touch-none overflow-hidden border border-[var(--lv-border)] bg-[var(--lv-surface)]"
         style={{ height: `${Math.max(5.5, trackHeightRem)}rem` }}
         data-song-minimap-track
+        onPointerDownCapture={() => cancelPointerDrag()}
         onPointerDown={beginCreate}
         onPointerMove={updatePointer}
         onPointerUp={finishPointer}
-        onPointerCancel={(event) => {
-          if (dragRef.current?.pointerId === event.pointerId) {
-            dragRef.current = undefined;
-            setPending(current);
-          }
-        }}
+        onPointerCancel={(event) => cancelPointerDrag(event.pointerId)}
+        onLostPointerCapture={(event) => cancelPointerDrag(event.pointerId)}
       >
         <div aria-hidden="true" className="absolute inset-0 grid grid-cols-4">
           {Array.from({ length: 4 }, (_unused, index) => (
