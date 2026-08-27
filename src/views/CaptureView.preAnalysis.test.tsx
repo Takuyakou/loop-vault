@@ -278,6 +278,49 @@ describe("Phase 5.12 Capture product path", () => {
     await mounted.unmount();
   });
 
+  it("restores expanded Voice and Role details after clear and reload", async () => {
+    const analyzerCalls: AnalyzeMidiOptions[] = [];
+    const mounted = await renderCaptureProduct(analyzerCalls);
+    const bytes = simplePianoMidi();
+
+    await dropMidi(mounted.container, "piano.mid", bytes);
+    await waitFor(() =>
+      mounted.container.querySelector("[data-capture-stage='pre-analysis']") !== null);
+
+    const details = [...mounted.container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent?.includes("パート詳細"));
+    await act(async () => details?.click());
+    expect(mounted.container.querySelector("[data-pre-analysis-mode='expanded']"))
+      .not.toBeNull();
+    expect(mounted.container.querySelectorAll("[data-voice-id]")).toHaveLength(1);
+
+    await act(async () => {
+      mounted.container.querySelector<HTMLButtonElement>(
+        "[data-testid='pre-analysis-analyze']",
+      )?.click();
+    });
+    await waitFor(() =>
+      mounted.container.querySelector("[data-capture-stage='result']") !== null);
+
+    await act(async () => {
+      [...mounted.container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent === appCopy.ja.capture.clear)
+        ?.click();
+    });
+    await waitFor(() =>
+      mounted.container.querySelector("[data-capture-stage='empty']") !== null);
+
+    await dropMidi(mounted.container, "piano.mid", bytes);
+    await waitFor(() =>
+      mounted.container.querySelector("[data-capture-stage='pre-analysis']") !== null);
+
+    expect(mounted.container.querySelector("[data-pre-analysis-mode='expanded']"))
+      .not.toBeNull();
+    expect(mounted.container.querySelectorAll("[data-voice-id]")).toHaveLength(1);
+
+    await mounted.unmount();
+  });
+
   it("restores the Phase 5 direct path when the feature flag is off", async () => {
     setPreAnalysisSourceSelectionSettings({
       enablePreAnalysisSourceSelection: false,
