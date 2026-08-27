@@ -252,7 +252,7 @@ describe("Phase 5.12 Capture product path", () => {
     await mounted.unmount();
   });
 
-  it("keeps simple MIDI compact and preserves its two-action product path", async () => {
+  it("shows simple keyboard details and preserves its two-action product path", async () => {
     const analyzerCalls: AnalyzeMidiOptions[] = [];
     const mounted = await renderCaptureProduct(analyzerCalls);
 
@@ -261,9 +261,9 @@ describe("Phase 5.12 Capture product path", () => {
       mounted.container.querySelector("[data-capture-stage='pre-analysis']") !== null);
 
     expect(analyzerCalls).toHaveLength(0);
-    expect(mounted.container.querySelector("[data-pre-analysis-mode='compact']"))
+    expect(mounted.container.querySelector("[data-pre-analysis-mode='expanded']"))
       .not.toBeNull();
-    expect(mounted.container.querySelector("canvas")).toBeNull();
+    expect(mounted.container.querySelectorAll("canvas")).toHaveLength(1);
     expect(mounted.container.querySelectorAll("[data-testid='pre-analysis-analyze']"))
       .toHaveLength(1);
 
@@ -278,7 +278,7 @@ describe("Phase 5.12 Capture product path", () => {
     await mounted.unmount();
   });
 
-  it("restores expanded Voice and Role details after clear and reload", async () => {
+  it("keeps keyboard Voice and Role details expanded after clear and reload", async () => {
     const analyzerCalls: AnalyzeMidiOptions[] = [];
     const mounted = await renderCaptureProduct(analyzerCalls);
     const bytes = simplePianoMidi();
@@ -287,9 +287,6 @@ describe("Phase 5.12 Capture product path", () => {
     await waitFor(() =>
       mounted.container.querySelector("[data-capture-stage='pre-analysis']") !== null);
 
-    const details = [...mounted.container.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent?.includes("パート詳細"));
-    await act(async () => details?.click());
     expect(mounted.container.querySelector("[data-pre-analysis-mode='expanded']"))
       .not.toBeNull();
     expect(mounted.container.querySelectorAll("[data-voice-id]")).toHaveLength(1);

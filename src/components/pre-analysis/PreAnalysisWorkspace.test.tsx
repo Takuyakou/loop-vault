@@ -158,7 +158,7 @@ describe("PreAnalysisWorkspace", () => {
     await unmount();
   });
 
-  it("keeps a simple one-Voice MIDI compact without adding a required step", async () => {
+  it("opens details for a simple one-Voice piano without adding a required step", async () => {
     const session = createAnalysisSession([{
       sourceId: "simple",
       displayName: "piano.mid",
@@ -167,17 +167,11 @@ describe("PreAnalysisWorkspace", () => {
     const { container, unmount } = await renderWorkspace(session);
     const workspace = container.querySelector("[data-testid='pre-analysis-workspace']");
 
-    expect(workspace?.getAttribute("data-pre-analysis-mode")).toBe("compact");
-    expect(container.querySelector("canvas")).toBeNull();
+    expect(workspace?.getAttribute("data-pre-analysis-mode")).toBe("expanded");
+    expect(container.querySelectorAll("canvas")).toHaveLength(1);
     expect(container.textContent).toContain("解析対象:");
     expect(container.querySelectorAll("[data-testid='pre-analysis-analyze']"))
       .toHaveLength(1);
-
-    const details = [...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find((button) => button.textContent?.includes("パート詳細"));
-    await act(async () => details?.click());
-    expect(workspace?.getAttribute("data-pre-analysis-mode")).toBe("expanded");
-    expect(container.querySelectorAll("canvas")).toHaveLength(1);
 
     await unmount();
   });

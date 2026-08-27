@@ -1604,7 +1604,7 @@ export function CaptureView(props: CaptureViewProps) {
   }
 
   function requestManualRangeDraft(range: TimelineRange) {
-    if (activeDraft?.isDirty) {
+    if (activeDraft && draftHasMusicEdits(activeDraft)) {
       setPendingCandidateSelection({
         candidateId: undefined,
         manualRange: range,

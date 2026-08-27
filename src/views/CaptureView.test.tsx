@@ -91,6 +91,18 @@ function candidate(overrides: Partial<ProgressionBlockCandidate> = {}): Progress
   };
 }
 
+function timelinePointerEvent(type: string, clientX: number): MouseEvent {
+  const event = new MouseEvent(type, {
+    bubbles: true,
+    button: 0,
+    buttons: type === "pointerup" ? 0 : 1,
+    clientX,
+  });
+  Object.defineProperty(event, "pointerId", { value: 1 });
+  Object.defineProperty(event, "pointerType", { value: "mouse" });
+  return event;
+}
+
 function playbackHarness() {
   const driver: PlaybackAudioDriver = {
     playChord: vi.fn(async (_chord, _sound, callbacks) => callbacks.onStarted?.()),
@@ -2382,6 +2394,52 @@ describe("CaptureView song mini map", () => {
       expect(document.querySelector('[role="dialog"]')).toBeNull();
       expect(candidateHeaders[1]?.getAttribute("aria-expanded")).toBe("true");
       expect(container.textContent).toContain("Selection: 5.1–8.4");
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+    }
+  });
+
+  it("switches to a clicked empty timeline range after a range-only adjustment", async () => {
+    const { container, root } = await renderCapture(analysisWithCandidates());
+
+    try {
+      const firstRange = container.querySelector<HTMLButtonElement>(
+        '[data-song-minimap-candidate="candidate-1"]',
+      );
+      await act(async () => firstRange?.click());
+
+      const moveHandle = container.querySelector<HTMLButtonElement>(
+        "[data-selection-move-handle]",
+      );
+      await act(async () => {
+        moveHandle?.dispatchEvent(new KeyboardEvent("keydown", {
+          key: "ArrowRight",
+          shiftKey: true,
+          bubbles: true,
+        }));
+      });
+
+      const track = container.querySelector<HTMLElement>("[data-song-minimap-track]")!;
+      track.getBoundingClientRect = () => ({
+        x: 0,
+        y: 0,
+        left: 0,
+        top: 0,
+        right: 800,
+        bottom: 100,
+        width: 800,
+        height: 100,
+        toJSON: () => ({}),
+      });
+      await act(async () => {
+        track.dispatchEvent(timelinePointerEvent("pointerdown", 500));
+        track.dispatchEvent(timelinePointerEvent("pointerup", 500));
+      });
+
+      expect(document.querySelector('[role="dialog"]')).toBeNull();
+      expect(container.textContent).toContain("Selection: 6.1–6.4");
+      expect(container.textContent).toContain("Created from a manual range");
     } finally {
       await act(async () => root.unmount());
       container.remove();
