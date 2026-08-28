@@ -7,6 +7,18 @@ const packageMetadata = JSON.parse(
   readFileSync(new URL("./package.json", import.meta.url), "utf8"),
 ) as { version: string };
 
+const p524WatchdogTests = [
+  "scripts/p524/shadowEvidence.test.ts",
+  "scripts/p524/stage02Promotion.test.ts",
+];
+
+const defaultTestExcludes = [
+  "e2e/**",
+  "node_modules/**",
+  "dist/**",
+  ...p524WatchdogTests,
+];
+
 export default defineConfig({
   plugins: [react()],
   clearScreen: false,
@@ -29,7 +41,26 @@ export default defineConfig({
     sourcemap: Boolean(process.env.TAURI_ENV_DEBUG),
   },
   test: {
-    exclude: ["e2e/**", "node_modules/**", "dist/**"],
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "default",
+          exclude: defaultTestExcludes,
+          sequence: { groupOrder: 0 },
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "p524-watchdog",
+          include: p524WatchdogTests,
+          pool: "forks",
+          poolOptions: { forks: { singleFork: true, isolate: true } },
+          sequence: { groupOrder: 1 },
+        },
+      },
+    ],
   },
 });
 
