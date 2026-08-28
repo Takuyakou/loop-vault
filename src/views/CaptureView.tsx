@@ -3192,30 +3192,6 @@ export function ProgressionCandidateCard({
           ) : null}
         </button>
 
-        <div className={isExpanded ? "min-w-full basis-full" : "hidden"}>
-          {isExpanded ? (
-            <SourceBasslineCapturePanel
-              voices={sourceBasslineVoices}
-              selectedVoiceId={sourceBasslineVoiceId}
-              assessment={sourceBasslineAssessment}
-              rangeSelected={sourceBasslineRangeSelected}
-              optedIn={sourceBasslineOptedIn}
-              language={language}
-              onVoiceChange={(voiceId) => {
-                setSourceBasslineVoiceId(voiceId);
-                setSourceBasslineRangeKey("");
-                setSourceBasslineAuthorization("");
-              }}
-              onRangeChange={(selected) => {
-                setSourceBasslineRangeKey(selected ? sourceBasslineAssessment.rangeKey : "");
-                setSourceBasslineAuthorization("");
-              }}
-              onOptInChange={(enabled) => setSourceBasslineAuthorization(
-                enabled ? currentSourceBasslineAuthorization : "",
-              )}
-            />
-          ) : null}
-        </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
           {saveProgressionControl}
           <PlayToggle
@@ -3327,6 +3303,28 @@ export function ProgressionCandidateCard({
               },
             }}
           />
+          {isExpanded ? (
+            <SourceBasslineCapturePanel
+              voices={sourceBasslineVoices}
+              selectedVoiceId={sourceBasslineVoiceId}
+              assessment={sourceBasslineAssessment}
+              rangeSelected={sourceBasslineRangeSelected}
+              optedIn={sourceBasslineOptedIn}
+              language={language}
+              onVoiceChange={(voiceId) => {
+                setSourceBasslineVoiceId(voiceId);
+                setSourceBasslineRangeKey("");
+                setSourceBasslineAuthorization("");
+              }}
+              onRangeChange={(selected) => {
+                setSourceBasslineRangeKey(selected ? sourceBasslineAssessment.rangeKey : "");
+                setSourceBasslineAuthorization("");
+              }}
+              onOptInChange={(enabled) => setSourceBasslineAuthorization(
+                enabled ? currentSourceBasslineAuthorization : "",
+              )}
+            />
+          ) : null}
           {captureDraft === undefined ? null : (
             <DraftBoundaryHandles
               draft={captureDraft}
