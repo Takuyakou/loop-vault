@@ -3,12 +3,15 @@
 
 ## Status
 
-`P5.25-00 COMPLETE — P5.25-01 NOT STARTED — AWAIT EXPLICIT HUMAN AUTHORIZATION`
+`P5.25-00 / P5.25-01 COMPLETE — P5.25-02 AUTHORIZED, NOT YET IMPLEMENTED`
 
 The repository is feasible without changing the stored source snapshot, Vault
 schema, or existing saved progression BPM. Stage 00 audit, contracts, tests,
 static checks, security scan, and hygiene gates passed at
-`63674153ec3089f15681039313b4546fd40d8c75`. P5.25-01 has not started.
+`63674153ec3089f15681039313b4546fd40d8c75`. P5.25-01 domain/preference work
+passed its focused, regression, static, security, and protected-surface gates at
+`ee3e071faf45335c3abfbfee1fb8f639c5513249`. P5.25-02 is authorized by the
+remaining-stages workflow but is not yet implemented.
 
 ## Purpose
 
@@ -97,15 +100,17 @@ locked; all seven required Stage 00 gates passed. Production code did not change
 
 ### P5.25-01 Domain / Window Expansion
 
-`NOT STARTED — STOP / AWAIT EXPLICIT HUMAN AUTHORIZATION`.
-
-After explicit authorization, implement domain/type/default, slicing,
-partial-window, projection-order, and preference parsing rules.
+Complete at `ee3e071faf45335c3abfbfee1fb8f639c5513249`. Requested/actual
+domain, default/parser, slicing/navigation, partial windows, and
+crop-before-projection are implemented and verified.
 
 ### P5.25-02 UI / Record / History Integration
 
-Implement selector, user-selection settings patch/rollback wiring, lifecycle,
-Record-only eligibility, and History compatibility.
+`AUTHORIZED — NOT YET IMPLEMENTED`.
+
+Next, implement selector, generation-safe user-selection settings
+patch/rollback wiring, lifecycle, Record-only eligibility, and History
+compatibility under the authorized remaining-stages workflow.
 
 ### P5.25-03 Hardening / Product Acceptance
 
@@ -124,5 +129,6 @@ Run consolidated Tier 3 gates and stop at human product acceptance.
 
 ## Next Action
 
-Stop. P5.25-01 is not started. Await explicit human authorization before any
-production change; do not merge, push, tag, release, or begin P5.26.
+Begin P5.25-02 under the authorized remaining-stages workflow. P5.25-02 is not
+yet implemented. Keep P5.25-03 Tier 3 gates deferred until its final candidate;
+do not merge, push, tag, release, or begin P5.26.

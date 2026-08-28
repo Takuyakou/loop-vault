@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "5.25",
   "status": "in-progress",
-  "activeStage": "P5.25-01",
-  "completedStages": ["P5.25-00"],
+  "activeStage": "P5.25-02",
+  "completedStages": ["P5.25-00", "P5.25-01"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "99448c1f2be9d17d9a3a83e00d7396fa28d21f02",
-  "lastVerifiedCommit": "63674153ec3089f15681039313b4546fd40d8c75",
+  "lastVerifiedCommit": "ee3e071faf45335c3abfbfee1fb8f639c5513249",
   "currentBranch": "feat/p525-source-bassline-window-expansion",
   "requiredGates": {
     "P5.25-00": [
@@ -50,10 +50,10 @@
     "p525-00-lint-typecheck": "pass",
     "p525-00-security-privacy-hygiene": "pass",
     "p525-00-diff-check": "pass",
-    "p525-01-window-domain-focused": "not-run",
-    "p525-01-preference-domain-default": "not-run",
-    "p525-01-level-regression": "not-run",
-    "p525-01-protected-diff": "not-run",
+    "p525-01-window-domain-focused": "pass",
+    "p525-01-preference-domain-default": "pass",
+    "p525-01-level-regression": "pass",
+    "p525-01-protected-diff": "pass",
     "p525-02-ui-record-history-focused": "not-run",
     "p525-02-preference-persistence-rollback": "not-run",
     "p525-02-a11y-lifecycle-regression": "not-run",
@@ -67,6 +67,6 @@
     "p525-03-final-diff-status": "not-run",
     "p525-03-human-acceptance": "not-run"
   },
-  "nextAction": "P5.25-01 is implemented in the working tree. Complete independent review, required gates, and the Stage01 commit before starting P5.25-02.",
-  "updatedAt": "2026-08-29T00:38:36+09:00"
+  "nextAction": "Begin P5.25-02 under the authorized remaining-stages workflow. P5.25-02 is not yet implemented; keep P5.25-03 deferred.",
+  "updatedAt": "2026-08-29T00:50:00+09:00"
 }
