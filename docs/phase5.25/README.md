@@ -3,11 +3,12 @@
 
 ## Status
 
-`P5.25-00 AUDIT / CONTRACT LOCK COMPLETE — PRE-CLOSURE GATES PENDING`
+`P5.25-00 COMPLETE — P5.25-01 NOT STARTED — AWAIT EXPLICIT HUMAN AUTHORIZATION`
 
 The repository is feasible without changing the stored source snapshot, Vault
-schema, or existing saved progression BPM. Stage 00 remains active until its
-gates are rerun on the current documentation candidate, recorded, and committed.
+schema, or existing saved progression BPM. Stage 00 audit, contracts, tests,
+static checks, security scan, and hygiene gates passed at
+`63674153ec3089f15681039313b4546fd40d8c75`. P5.25-01 has not started.
 
 ## Purpose
 
@@ -91,13 +92,15 @@ Git reality outranks this package.
 
 ### P5.25-00 Audit / Baseline / Contract Lock
 
-Audit and contracts are locked. Current-docs gates and the independent docs-only
-commit remain pending. Production code must not change.
+Complete at `63674153ec3089f15681039313b4546fd40d8c75`. Audit/contracts are
+locked; all seven required Stage 00 gates passed. Production code did not change.
 
 ### P5.25-01 Domain / Window Expansion
 
-Implement domain/type/default, slicing, partial-window, projection-order, and
-preference parsing rules after Stage 00 closes.
+`NOT STARTED — STOP / AWAIT EXPLICIT HUMAN AUTHORIZATION`.
+
+After explicit authorization, implement domain/type/default, slicing,
+partial-window, projection-order, and preference parsing rules.
 
 ### P5.25-02 UI / Record / History Integration
 
@@ -121,5 +124,5 @@ Run consolidated Tier 3 gates and stop at human product acceptance.
 
 ## Next Action
 
-Rerun P5.25-00 gates on this documentation candidate, record results and the
-Stage 00 commit, then stop. Do not begin P5.25-01 automatically.
+Stop. P5.25-01 is not started. Await explicit human authorization before any
+production change; do not merge, push, tag, release, or begin P5.26.
