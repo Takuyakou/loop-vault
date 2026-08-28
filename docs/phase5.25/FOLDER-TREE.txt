@@ -1,0 +1,18 @@
+phase5.25/
+├─ README.md
+├─ CODEX-START-PROMPT.md
+├─ CODEX-RUN-REMAINING-STAGES.md
+├─ work-instructions.md
+├─ execution-state.json
+├─ audit/
+│  └─ P5.25-00-repository-audit.md
+├─ contracts/
+│  ├─ 01-scope-contract.md
+│  ├─ 02-window-slicing-contract.md
+│  └─ 03-record-history-contract.md
+└─ reports/
+   ├─ README.md
+   ├─ P5.25-00-audit-baseline.md
+   ├─ P5.25-01-window-domain.md
+   ├─ P5.25-02-ui-record-history.md
+   └─ P5.25-03-product-acceptance.md
