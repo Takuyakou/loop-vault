@@ -9,6 +9,7 @@ import {
   type SourceBasslineSnapshotV1,
 } from "../../../domain/sourceBassline";
 import type { BasslineTargetEvent } from "./types";
+import { MAX_TAKE_DURATION_MS } from "../recording/domain/persistence";
 
 export type SourceBasslineWindowBars = 1 | 2 | 4 | 8;
 export type SourceBasslineActualBars = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
@@ -386,4 +387,20 @@ export function isSourceBasslineWindowBars(value: unknown): value is SourceBassl
 
 export function isSourceBasslineActualBars(value: unknown): value is SourceBasslineActualBars {
   return Number.isInteger(value) && typeof value === "number" && value >= 1 && value <= 8;
+}
+
+export function sourceBasslineRecordDurationMs(
+  actualBars: SourceBasslineActualBars,
+  effectiveBpm: number,
+): number | undefined {
+  if (!isSourceBasslineActualBars(actualBars) || !Number.isFinite(effectiveBpm) || effectiveBpm <= 0) return undefined;
+  return (actualBars * 4 * 60_000) / effectiveBpm;
+}
+
+export function isSourceBasslineRecordEligible(
+  actualBars: SourceBasslineActualBars,
+  effectiveBpm: number,
+): boolean {
+  const durationMs = sourceBasslineRecordDurationMs(actualBars, effectiveBpm);
+  return durationMs !== undefined && durationMs <= MAX_TAKE_DURATION_MS;
 }

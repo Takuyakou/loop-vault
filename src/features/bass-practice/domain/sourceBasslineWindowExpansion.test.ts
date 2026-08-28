@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
+import { MAX_TAKE_DURATION_MS } from "../recording/domain/persistence";
 import { extractSourceBasslineSnapshot, type ExactSourceBasslineNote, type SourceBasslineSnapshotV1 } from "../../../domain/sourceBassline";
 import {
   buildSourceBasslinePracticeWindow,
   DEFAULT_SOURCE_BASSLINE_WINDOW_BARS,
   isSourceBasslineActualBars,
+  isSourceBasslineRecordEligible,
   nextSourceBasslineWindowStart,
   previousSourceBasslineWindowStart,
+  sourceBasslineRecordDurationMs,
   type SourceBasslineWindowBars,
 } from "./sourceBasslinePractice";
 
@@ -139,6 +142,20 @@ describe("P5.25 Source Bassline practice windows", () => {
     expect(one.ok && one.window).toMatchObject({ requestedBars: 1, startBar: 2, endBar: 2, actualBars: 1 });
     expect(two.ok && two.window).toMatchObject({ requestedBars: 2, startBar: 3, endBar: 3, actualBars: 1 });
     expect(buildSourceBasslinePracticeWindow(snapshot, 2, 2)).toEqual({ ok: false, reason: "invalid-window" });
+  });
+
+  it("preflights the unchanged 60-second Record cap from actual bars and effective BPM", () => {
+    expect(sourceBasslineRecordDurationMs(8, 32)).toBe(MAX_TAKE_DURATION_MS);
+    expect(isSourceBasslineRecordEligible(8, 33)).toBe(true);
+    expect(isSourceBasslineRecordEligible(8, 32)).toBe(true);
+    expect(isSourceBasslineRecordEligible(8, 31)).toBe(false);
+    expect(isSourceBasslineRecordEligible(3, 30)).toBe(true);
+    expect(sourceBasslineRecordDurationMs(1, 0)).toBeUndefined();
+    expect(sourceBasslineRecordDurationMs(1, Number.NaN)).toBeUndefined();
+    expect(sourceBasslineRecordDurationMs(1, Number.POSITIVE_INFINITY)).toBeUndefined();
+    expect(isSourceBasslineRecordEligible(1, 0)).toBe(false);
+    expect(isSourceBasslineRecordEligible(1, Number.NaN)).toBe(false);
+    expect(isSourceBasslineRecordEligible(1, Number.NEGATIVE_INFINITY)).toBe(false);
   });
 });
 

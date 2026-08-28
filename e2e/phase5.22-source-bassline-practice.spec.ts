@@ -58,9 +58,28 @@ test("Source Bassline levels and reference-only History stay overflow-safe at 32
   const level = bassline.locator("#bassline-level");
   await expect(level).toBeFocused();
   const windowLength = bassline.getByTestId("source-bassline-window-bars");
-  await windowLength.focus();
-  await page.keyboard.press("ArrowDown");
-  await expect(windowLength).toHaveValue("2");
+  const oneBar = windowLength.getByRole("button", { name: "1", exact: true });
+  const twoBars = windowLength.getByRole("button", { name: "2", exact: true });
+  const fourBars = windowLength.getByRole("button", { name: "4", exact: true });
+  const eightBars = windowLength.getByRole("button", { name: "8", exact: true });
+  await expect(windowLength.getByRole("button")).toHaveCount(4);
+  await expect(twoBars).toHaveAttribute("aria-pressed", "true");
+  await fourBars.focus();
+  await page.keyboard.press("Enter");
+  await expect(fourBars).toHaveAttribute("aria-pressed", "true");
+  await page.waitForTimeout(250);
+  await eightBars.focus();
+  await page.keyboard.press("Enter");
+  await expect(eightBars).toHaveAttribute("aria-pressed", "true");
+  await page.waitForTimeout(250);
+  await oneBar.focus();
+  await page.keyboard.press("Enter");
+  await expect(oneBar).toHaveAttribute("aria-pressed", "true");
+  await page.waitForTimeout(250);
+  await twoBars.focus();
+  await page.keyboard.press("Enter");
+  await expect(twoBars).toHaveAttribute("aria-pressed", "true");
+  await page.waitForTimeout(250);
   const nextWindow = bassline.getByTestId("source-bassline-next");
   await nextWindow.focus();
   await page.keyboard.press("Enter");
@@ -83,6 +102,17 @@ test("Source Bassline levels and reference-only History stay overflow-safe at 32
   await page.keyboard.press("Enter");
   await expect(bassline.getByTestId("source-bassline-history")).toBeVisible();
   await expect(bassline.getByTestId("source-bassline-history")).toContainText(/Source line \(monophonic\)|元ライン（単音化）/);
+  await eightBars.focus();
+  await page.keyboard.press("Enter");
+  await expect(eightBars).toHaveAttribute("aria-pressed", "true");
+  await page.waitForTimeout(250);
+  await bassline.getByTestId("chord-context-effective-bpm").fill("31");
+  await bassline.getByRole("button", { name: /Review|レビュー/, exact: false }).click();
+  await bassline.getByTestId("record-compare-enable").click();
+  await expect(bassline.getByTestId("record-start")).toBeDisabled();
+  await expect(bassline.getByRole("alert")).toContainText(/Microphone permission was denied|マイクの使用が許可されませんでした/);
+  await expect(bassline.getByTestId("bassline-listen")).toBeEnabled();
+  await expect(bassline.getByTestId("source-bassline-save-history")).toBeEnabled();
   await assertNoHorizontalOverflow(page);
   await page.setViewportSize({ width: 640, height: 812 });
   await page.evaluate(() => { document.documentElement.style.zoom = "2"; });
@@ -118,7 +148,7 @@ test("Source Bassline is axe-clean and honors reduced motion at effective 200% s
 });
 
 async function saveSyntheticSourceBassline(page: Page): Promise<void> {
-  await loadMidiForPreAnalysis(page, createMidiFixture({ bars: 8, voiceCount: 3 }), "synthetic-source-practice.mid");
+  await loadMidiForPreAnalysis(page, createMidiFixture({ bars: 16, voiceCount: 3 }), "synthetic-source-practice.mid");
   await analyzeCurrentMidi(page);
   await chooseFirstCandidate(page);
   const selected = page.locator('[data-candidate-state="selected"]');

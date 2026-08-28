@@ -1,4 +1,4 @@
-import type { SourceBasslinePracticeLevel, SourceBasslineWindowBars } from "./sourceBasslinePractice";
+import type { SourceBasslineActualBars, SourceBasslinePracticeLevel, SourceBasslineWindowBars } from "./sourceBasslinePractice";
 
 export const SOURCE_BASSLINE_HISTORY_VERSION = 1 as const;
 
@@ -22,7 +22,7 @@ export interface SourceBasslineHistoryEntry {
     readonly requestedBars: SourceBasslineWindowBars;
     readonly startBar: number;
     readonly endBar: number;
-    readonly actualBars: SourceBasslineWindowBars;
+    readonly actualBars: SourceBasslineActualBars;
   };
   readonly level: SourceBasslinePracticeLevel;
   readonly monophonicProjection: true;
@@ -49,7 +49,7 @@ export interface CreateSourceBasslineHistoryEntryInput {
   readonly requestedBars: SourceBasslineWindowBars;
   readonly startBar: number;
   readonly endBar: number;
-  readonly actualBars: SourceBasslineWindowBars;
+  readonly actualBars: SourceBasslineActualBars;
   readonly level: SourceBasslinePracticeLevel;
   readonly croppedSourceNoteCount: number;
   readonly projectedNoteCount: number;

@@ -797,6 +797,12 @@ async function analyzeMidiPath(path: string) {
                             ? controller.patchSettings({ rootMotionNoteCount })
                             : Promise.reject(new Error("Practice settings are not ready."));
                         }}
+                        onSourceBasslineWindowBarsChange={(sourceBasslineWindowBars) => {
+                          const controller = practiceControllerRef.current;
+                          return controller
+                            ? controller.patchSettings({ sourceBasslineWindowBars })
+                            : Promise.reject(new Error("Practice settings are not ready."));
+                        }}
                         onAttemptCompleted={(attempt) => {
                           const controller = practiceControllerRef.current;
                           return controller ? controller.recordAttempt(attempt) : Promise.reject(new Error("Practice progress is not ready."));

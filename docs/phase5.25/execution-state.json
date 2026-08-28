@@ -67,6 +67,6 @@
     "p525-03-final-diff-status": "not-run",
     "p525-03-human-acceptance": "not-run"
   },
-  "nextAction": "Begin P5.25-02 under the authorized remaining-stages workflow. P5.25-02 is not yet implemented; keep P5.25-03 deferred.",
-  "updatedAt": "2026-08-29T00:50:00+09:00"
+  "nextAction": "P5.25-02 is implemented in the working tree. Complete independent review, required closure gates, and the Stage02 commit before starting P5.25-03.",
+  "updatedAt": "2026-08-29T02:08:00+09:00"
 }

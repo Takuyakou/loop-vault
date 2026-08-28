@@ -13,6 +13,8 @@ import {
   createSourceBasslineHistoryEntry,
   resolveSourceBasslineHistory,
   buildSourceBasslinePracticeWindow,
+  DEFAULT_SOURCE_BASSLINE_WINDOW_BARS,
+  isSourceBasslineRecordEligible,
   nextSourceBasslineWindowStart,
   previousSourceBasslineWindowStart,
   generateBasslineExercise,
@@ -66,6 +68,11 @@ type ChordContextPlaybackActivity = {
   readonly started: boolean;
   readonly metronomeUsed: boolean;
 };
+type SourceWindowPreferenceTransaction = {
+  readonly bars: SourceBasslineWindowBars;
+  readonly visibleIntent: number;
+  outcome?: "success" | "failure";
+};
 const NO_CHORD_CONTEXT_ACTIVITY: ChordContextPlaybackActivity = Object.freeze({ started: false, metronomeUsed: false });
 const BASSLINE_STEPS = {
   en: ["Setup", "Listen", "Play", "Review"],
@@ -86,6 +93,8 @@ export interface BasslinePracticeViewProps {
   readonly onChordContextHistoryRecorded?: (entry: ChordContextHistoryEntry) => Promise<void>;
   readonly sourceBasslineHistory?: readonly SourceBasslineHistoryEntry[];
   readonly onSourceBasslineHistoryRecorded?: (entry: SourceBasslineHistoryEntry) => Promise<void>;
+  readonly initialWindowBars?: SourceBasslineWindowBars;
+  readonly onSourceBasslineWindowBarsChange?: (bars: SourceBasslineWindowBars) => Promise<void>;
 }
 
 export function BasslinePracticeView({
@@ -98,11 +107,31 @@ export function BasslinePracticeView({
   onChordContextHistoryRecorded,
   sourceBasslineHistory = [],
   onSourceBasslineHistoryRecorded,
+  initialWindowBars = DEFAULT_SOURCE_BASSLINE_WINDOW_BARS,
+  onSourceBasslineWindowBarsChange,
 }: BasslinePracticeViewProps) {
   const ja = language === "ja";
   const [level, setLevel] = useState<SourceBasslinePracticeLevel>(1);
   const [basslineSource, setBasslineSource] = useState<"generated" | "source-bassline">("generated");
-  const [sourceWindowBars, setSourceWindowBars] = useState<SourceBasslineWindowBars>(1);
+  const [sourceWindowBars, setSourceWindowBars] = useState<SourceBasslineWindowBars>(initialWindowBars);
+  const sourceWindowBarsRef = useRef(sourceWindowBars);
+  const confirmedSourceWindowBarsRef = useRef(sourceWindowBars);
+  const sourceWindowPreferenceGenerationRef = useRef(0);
+  const processedSourceWindowPreferenceGenerationRef = useRef(0);
+  const sourceWindowPreferenceTransactionsRef = useRef(new Map<number, SourceWindowPreferenceTransaction>());
+  const sourceWindowPreferenceMountedRef = useRef(true);
+  const sourceWindowVisibleIntentRef = useRef(0);
+  const [sourceWindowPreferenceError, setSourceWindowPreferenceError] = useState<string>();
+  useEffect(() => {
+    sourceWindowPreferenceMountedRef.current = true;
+    return () => {
+      sourceWindowPreferenceMountedRef.current = false;
+      sourceWindowVisibleIntentRef.current += 1;
+      sourceWindowPreferenceGenerationRef.current += 1;
+      processedSourceWindowPreferenceGenerationRef.current = sourceWindowPreferenceGenerationRef.current;
+      sourceWindowPreferenceTransactionsRef.current.clear();
+    };
+  }, []);
   const [sourceWindowStartBar, setSourceWindowStartBar] = useState(1);
   const [selectedSourceReference, setSelectedSourceReference] = useState<VaultSourceBasslineCandidateView["reference"]>();
   const [hint, setHint] = useState(0);
@@ -183,6 +212,8 @@ export function BasslinePracticeView({
   const previousWindowStart = sourceWindow ? previousSourceBasslineWindowStart(sourceWindow.requestedBars, sourceWindow.startBar) : undefined;
   const nextWindowStart = sourceWindow ? nextSourceBasslineWindowStart(sourceWindow.totalBars, sourceWindow.requestedBars, sourceWindow.startBar) : undefined;
   const [effectiveBpm, setEffectiveBpm] = useState(() => activeSnapshot?.originalBpm ?? SOURCE_SESSION_DEFAULT_BPM);
+  const sourceRecordEligible = !sourceSelected || !sourceWindow
+    || isSourceBasslineRecordEligible(sourceWindow.actualBars, effectiveBpm);
   const [recordPlayMode, setRecordPlayMode] = useState<Extract<ChordContextPlayMode, "chords-only" | "chords-and-metronome">>("chords-only");
   const [recordCompareUsed, setRecordCompareUsed] = useState(false);
   const [metronomeUsed, setMetronomeUsed] = useState(false);
@@ -366,6 +397,7 @@ export function BasslinePracticeView({
   }, [invalidateRecordedFacts, stopChordContext]);
   const chooseBasslineSource = useCallback((next: "generated" | "source-bassline") => {
     if (next === basslineSource || (next === "source-bassline" && !sourceCatalogAvailable)) return;
+    sourceWindowVisibleIntentRef.current += 1;
     resetSourcePractice();
     setBasslineSource(next);
     setSourceWindowStartBar(1);
@@ -374,18 +406,70 @@ export function BasslinePracticeView({
   const chooseSourceReference = useCallback((referenceKey: string) => {
     const candidate = vaultSourceBasslines?.find(({ reference }) => sourceReferenceKey(reference) === referenceKey);
     if (!candidate || (selectedSourceReference && sameSourceReference(candidate.reference, selectedSourceReference))) return;
+    sourceWindowVisibleIntentRef.current += 1;
     resetSourcePractice();
     setSelectedSourceReference(candidate.reference);
     setSourceWindowStartBar(1);
   }, [resetSourcePractice, selectedSourceReference, vaultSourceBasslines]);
+  const settleSourceWindowPreference = useCallback((generation: number, outcome: "success" | "failure") => {
+    const transaction = sourceWindowPreferenceTransactionsRef.current.get(generation);
+    if (!transaction || !sourceWindowPreferenceMountedRef.current) return;
+    transaction.outcome = outcome;
+    let currentOutcome: "success" | "failure" | undefined;
+    while (true) {
+      const nextGeneration = processedSourceWindowPreferenceGenerationRef.current + 1;
+      const next = sourceWindowPreferenceTransactionsRef.current.get(nextGeneration);
+      if (!next?.outcome) break;
+      if (next.outcome === "success") confirmedSourceWindowBarsRef.current = next.bars;
+      if (next.visibleIntent === sourceWindowVisibleIntentRef.current) currentOutcome = next.outcome;
+      sourceWindowPreferenceTransactionsRef.current.delete(nextGeneration);
+      processedSourceWindowPreferenceGenerationRef.current = nextGeneration;
+    }
+    if (!currentOutcome) return;
+    if (currentOutcome === "success") {
+      setSourceWindowPreferenceError(undefined);
+      return;
+    }
+    resetSourcePractice();
+    const confirmed = confirmedSourceWindowBarsRef.current;
+    sourceWindowBarsRef.current = confirmed;
+    setSourceWindowBars(confirmed);
+    setSourceWindowStartBar(1);
+    setSourceWindowPreferenceError(ja
+      ? "区間の長さを保存できませんでした。保存済みの選択へ戻しました。"
+      : "Window length could not be saved. The last saved selection was restored.");
+  }, [ja, resetSourcePractice]);
   const chooseSourceWindowBars = useCallback((next: SourceBasslineWindowBars) => {
-    if (next === sourceWindowBars) return;
+    if (next === sourceWindowBarsRef.current) return;
+    const generation = sourceWindowPreferenceGenerationRef.current + 1;
+    sourceWindowPreferenceGenerationRef.current = generation;
+    const visibleIntent = sourceWindowVisibleIntentRef.current + 1;
+    sourceWindowVisibleIntentRef.current = visibleIntent;
+    sourceWindowPreferenceTransactionsRef.current.set(generation, { bars: next, visibleIntent });
+    sourceWindowBarsRef.current = next;
     resetSourcePractice();
     setSourceWindowBars(next);
     setSourceWindowStartBar(1);
-  }, [resetSourcePractice, sourceWindowBars]);
+    setSourceWindowPreferenceError(undefined);
+    let save: Promise<void> | undefined;
+    try {
+      save = onSourceBasslineWindowBarsChange?.(next);
+    } catch {
+      settleSourceWindowPreference(generation, "failure");
+      return;
+    }
+    if (!save) {
+      settleSourceWindowPreference(generation, "success");
+      return;
+    }
+    void save.then(
+      () => settleSourceWindowPreference(generation, "success"),
+      () => settleSourceWindowPreference(generation, "failure"),
+    );
+  }, [onSourceBasslineWindowBarsChange, resetSourcePractice, settleSourceWindowPreference]);
   const moveSourceWindow = useCallback((nextStartBar: number | undefined) => {
     if (nextStartBar === undefined || nextStartBar === sourceWindowStartBar) return;
+    sourceWindowVisibleIntentRef.current += 1;
     resetSourcePractice();
     setSourceWindowStartBar(nextStartBar);
   }, [resetSourcePractice, sourceWindowStartBar]);
@@ -538,7 +622,7 @@ export function BasslinePracticeView({
         requestedBars: sourceWindow.requestedBars,
         startBar: sourceWindow.startBar,
         endBar: sourceWindow.endBar,
-        actualBars: sourceWindow.actualBars as SourceBasslineWindowBars,
+        actualBars: sourceWindow.actualBars,
         level,
         croppedSourceNoteCount: sourceWindow.croppedSourceNoteCount,
         projectedNoteCount: sourceLevelResult.targetEvents.length,
@@ -588,8 +672,10 @@ export function BasslinePracticeView({
       return;
     }
     resetSourcePractice();
+    sourceWindowVisibleIntentRef.current += 1;
     setBasslineSource("source-bassline");
     setSelectedSourceReference(resolution.asset.reference);
+    sourceWindowBarsRef.current = entry.window.requestedBars;
     setSourceWindowBars(entry.window.requestedBars);
     setSourceWindowStartBar(entry.window.startBar);
     setLevel(entry.level);
@@ -817,17 +903,33 @@ export function BasslinePracticeView({
         <p className="mt-1 text-sm text-[var(--lv-text-secondary)]">{ja ? "保存済みの全ノートを変更せず、区間切り出し後の単音投影から選択レベルを導出します。" : "The stored all-note snapshot stays unchanged; the selected level derives from the monophonic projection after window crop."}</p>
         {sourceHarmonyComparisonLabel ? <p role="status" aria-live="polite" data-testid="source-bassline-harmony-comparison" className="mt-2 break-words text-sm text-[var(--lv-text-secondary)]">{sourceHarmonyComparisonLabel}</p> : null}
         <div className="mt-3 flex flex-wrap items-end gap-3">
-          <Field htmlFor="source-bassline-window-bars" label={ja ? "区間の長さ" : "Window length"} className="min-w-36 flex-1 sm:flex-none">
-            <select id="source-bassline-window-bars" data-testid="source-bassline-window-bars" className="lv-input w-full" disabled={recordingInFlight || !sourceWindow} value={sourceWindowBars} onChange={(event) => chooseSourceWindowBars(Number(event.currentTarget.value) as SourceBasslineWindowBars)}>
-              <option value={1}>{ja ? "1小節" : "1 bar"}</option>
-              <option value={2}>{ja ? "2小節" : "2 bars"}</option>
-            </select>
-          </Field>
+          <fieldset className="min-w-0 flex-1" aria-describedby="source-bassline-window-selector-reason">
+            <legend className="text-sm font-medium">{ja ? "区間の長さ" : "Window length"}</legend>
+            <div role="group" aria-label={ja ? "元ベースラインの区間の長さ" : "Source Bassline window length"} data-testid="source-bassline-window-bars" className="mt-1 grid w-full max-w-xs grid-cols-4 overflow-hidden rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)]">
+              {([1, 2, 4, 8] as const).map((bars) => <button
+                key={bars}
+                type="button"
+                aria-pressed={sourceWindowBars === bars}
+                disabled={recordingInFlight || !sourceWindow}
+                className={`min-h-10 border-r border-[var(--lv-border)] px-2 text-sm font-semibold last:border-r-0 focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--lv-accent)] ${sourceWindowBars === bars ? "bg-[var(--lv-accent-soft)] text-[var(--lv-accent)]" : "bg-[var(--lv-surface)] text-[var(--lv-text-secondary)]"}`}
+                onKeyDown={(event) => {
+                  if (event.key !== "Enter" && event.key !== " ") return;
+                  event.preventDefault();
+                  chooseSourceWindowBars(bars);
+                }}
+                onClick={() => chooseSourceWindowBars(bars)}
+              >{bars}</button>)}
+            </div>
+          </fieldset>
           <div className="flex min-w-0 flex-wrap gap-2">
             <Button type="button" variant="ghost" className="aria-disabled:cursor-not-allowed aria-disabled:opacity-50" data-testid="source-bassline-previous" aria-disabled={recordingInFlight || previousWindowStart === undefined || undefined} aria-describedby={previousWindowStart === undefined ? "source-bassline-previous-reason" : undefined} disabled={recordingInFlight} onClick={() => moveSourceWindow(previousWindowStart)}>{ja ? "前の区間" : "Previous"}</Button>
             <Button type="button" variant="ghost" className="aria-disabled:cursor-not-allowed aria-disabled:opacity-50" data-testid="source-bassline-next" aria-disabled={recordingInFlight || nextWindowStart === undefined || undefined} aria-describedby={nextWindowStart === undefined ? "source-bassline-next-reason" : undefined} disabled={recordingInFlight} onClick={() => moveSourceWindow(nextWindowStart)}>{ja ? "次の区間" : "Next"}</Button>
           </div>
         </div>
+        <p id="source-bassline-window-selector-reason" className="mt-2 text-xs text-[var(--lv-text-secondary)]">{recordingInFlight
+          ? (ja ? "録音中は区間の長さを変更できません。" : "Window length cannot change while recording.")
+          : !sourceWindow ? sourceUnavailableReason : (ja ? "1、2、4、8小節から選べます。" : "Choose 1, 2, 4, or 8 bars.")}</p>
+        {sourceWindowPreferenceError ? <p role="alert" className="mt-2 text-sm text-[var(--lv-danger)]" data-testid="source-bassline-window-save-error">{sourceWindowPreferenceError}</p> : null}
         <p id="source-bassline-previous-reason" className="sr-only">{previousWindowStart === undefined ? (ja ? "最初の区間です。" : "This is the first window.") : ""}</p>
         <p id="source-bassline-next-reason" className="sr-only">{nextWindowStart === undefined ? (ja ? "最後の区間です。" : "This is the last window.") : ""}</p>
         <p aria-live="polite" data-testid="source-bassline-range" className="mt-3 font-medium">{sourceWindow ? (ja ? `${sourceWindow.startBar}〜${sourceWindow.endBar}小節${sourceWindow.actualBars < sourceWindow.requestedBars ? "（最終区間）" : ""}` : `Bars ${sourceWindow.startBar}-${sourceWindow.endBar}${sourceWindow.actualBars < sourceWindow.requestedBars ? " (final partial window)" : ""}`) : sourceUnavailableReason}</p>
@@ -935,6 +1037,11 @@ export function BasslinePracticeView({
       resetKey={"bassline:" + (activeSnapshot?.signature ?? "generated") + ":" + basslineSource + ":" + (sourceWindow?.snapshotSignature ?? "no-source") + ":" + (sourceWindow?.startBar ?? 0) + ":" + sourceWindowBars + ":" + level + ":" + effectiveBpm + ":" + listenMode + ":" + playMode + ":" + recordPlayMode + ":" + chordTimbre}
       practiceSessionId={basslineRecordSessionIdRef.current}
       countInMs={Math.round((4 * 60_000) / effectiveBpm)}
+      recordStartDisabledReason={!sourceRecordEligible
+        ? (ja
+          ? `この${sourceWindow?.actualBars ?? 0}小節区間は${effectiveBpm} BPMで60秒を超えるため、新しい録音を開始できません。`
+          : `This ${sourceWindow?.actualBars ?? 0}-bar window exceeds 60 seconds at ${effectiveBpm} BPM, so a new recording cannot start.`)
+        : undefined}
       onPlaybackStart={stopForRecordComparePlayback}
       onRecordingActivityChange={setRecordingInFlight}
       onUnkeptTakeChange={setHasUnkeptRecordingTake}

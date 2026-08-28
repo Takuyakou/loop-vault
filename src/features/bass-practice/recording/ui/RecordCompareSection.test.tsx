@@ -3,7 +3,7 @@
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { RecordCompareSection } from "./RecordCompareSection";
+import { RecordCompareSection, runRecordStartGuard } from "./RecordCompareSection";
 import { setRecordChannel } from "../application/recordChannelStore";
 import { RecordingSessionController } from "../application/recordingSessionController";
 import {
@@ -14,6 +14,7 @@ import {
 } from "../application/fakes";
 import { FakePlayer } from "../application/playback";
 import type { KeepContext, RecordingTake } from "../application/ports";
+import { InMemoryRecordingStore, PersistentRecordingTakeRepository } from "../application/recordingStore";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
   .IS_REACT_ACT_ENVIRONMENT = true;
@@ -444,6 +445,46 @@ describe("RecordCompareSection", () => {
     expect(container.querySelector("[data-testid=listen-choice]")).not.toBeNull();
     await click(container, "listen-choice-skip");
     expect(container.querySelector("[data-testid=listen-choice]")).toBeNull();
+    await act(async () => root.unmount());
+    document.body.replaceChildren();
+  });
+
+  test("blocks only new Record start when the owning window is over the cap", async () => {
+    const controller = fakeController();
+    const onRecordingPrepare = vi.fn(async () => true);
+    const defensiveStart = vi.fn();
+    const retainedRepository = new PersistentRecordingTakeRepository(new InMemoryRecordingStore());
+    await retainedRepository.keep({
+      data: new Uint8Array(800),
+      metadata: { mimeType: "audio/webm;codecs=opus", durationMs: 2_500, byteSize: 800, channelMode: "mono-sum", resolvedChannel: "mono-sum", startOffsetMs: 0 },
+    }, { practiceSessionId: "seed", exerciseSignature: "bassline:seed", mode: "bassline", inputDeviceName: "Input", playedBackBeforeReview: true });
+    expect(runRecordStartGuard("over limit", defensiveStart)).toBe(false);
+    expect(defensiveStart).not.toHaveBeenCalled();
+    const { container, root } = mount();
+    await act(async () => root.render(
+      <RecordCompareSection
+        language="en"
+        mode="bassline"
+        controller={controller}
+        enabledOverride
+        onRecordingPrepare={onRecordingPrepare}
+        retainedTakeRepository={retainedRepository}
+        recordStartDisabledReason="This window exceeds 60 seconds."
+      />,
+    ));
+    await click(container, "record-compare-enable");
+    const start = container.querySelector<HTMLButtonElement>("[data-testid=record-start]")!;
+    expect(start.disabled).toBe(true);
+    expect(start.getAttribute("aria-describedby")).toBe("record-start-disabled-reason");
+    expect(container.querySelector("#record-start-disabled-reason")?.textContent).toContain("exceeds 60 seconds");
+    await click(container, "record-start");
+    expect(onRecordingPrepare).not.toHaveBeenCalled();
+    expect(controller.getState().status).toBe("ready");
+    expect(container.querySelector("[data-testid=record-skip]")).not.toBeNull();
+    await act(async () => { await flush(); });
+    expect(container.querySelector("[data-testid=retained-take]")).not.toBeNull();
+    expect(container.querySelector<HTMLButtonElement>("[data-testid=retained-take-play]")?.disabled).toBe(false);
+    expect(container.querySelector<HTMLButtonElement>("[data-testid=retained-take-delete]")?.disabled).toBe(false);
     await act(async () => root.unmount());
     document.body.replaceChildren();
   });

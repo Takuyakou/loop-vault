@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { act } from "react";
+import { act, StrictMode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -18,6 +18,7 @@ const recordCompare = vi.hoisted(() => ({
     readonly onTakeKept?: (retainedTakeReference: string) => void;
     readonly onUnkeptTakeChange?: (hasUnkeptTake: boolean) => void;
     readonly onRecordingActivityChange?: (active: boolean) => void;
+    readonly recordStartDisabledReason?: string;
     readonly targetPlayer?: { play(onEnded: () => void): { stop(): void } };
   },
 }));
@@ -662,8 +663,8 @@ describe("Bassline Echo Chord Context", () => {
     expect(next.getAttribute("aria-disabled")).toBe("true");
     expect(document.activeElement).toBe(next);
 
-    const windowLength = container.querySelector<HTMLSelectElement>("[data-testid='source-bassline-window-bars']")!;
-    await chooseSelect(windowLength, "2");
+    const windowLength = container.querySelector<HTMLElement>("[data-testid='source-bassline-window-bars']")!;
+    await act(async () => windowButton(windowLength, 2)?.click());
     expect(container.querySelector("[data-testid='source-bassline-range']")?.textContent).toBe("Bars 1-2");
     const finalNext = container.querySelector<HTMLButtonElement>("[data-testid='source-bassline-next']")!;
     finalNext.focus();
@@ -678,7 +679,7 @@ describe("Bassline Echo Chord Context", () => {
     expect(document.activeElement).toBe(finalPrevious);
     expect(finalPrevious.getAttribute("aria-disabled")).toBe("true");
 
-    await chooseSelect(windowLength, "1");
+    await act(async () => windowButton(windowLength, 1)?.click());
     await act(async () => findButton(container, "Review")?.click());
     expect(recordCompare.props?.resetKey).toContain("source-bassline:");
     expect(recordCompare.props?.resetKey).toContain(fixture.sourceCatalogEntry.sourceBassline.snapshotSignature);
@@ -1167,26 +1168,240 @@ describe("Bassline Echo Chord Context", () => {
     expect(container.textContent).toContain("History is not yet saved.");
     expect(container.querySelector("[role='alert']")).toBeNull();
   });
+
+  it("uses default two and exposes an accessible 1/2/4/8 segmented selector", async () => {
+    const fixture = sourceBasslineFixture(true, 8);
+    const onSourceBasslineWindowBarsChange = vi.fn(async () => undefined);
+    const container = await renderView({
+      initialWindowBars: undefined,
+      vaultSourceBasslines: [fixture.sourceCatalogEntry],
+      onSourceBasslineWindowBarsChange,
+    });
+    await chooseSourceBassline(container);
+    const group = container.querySelector<HTMLElement>("[data-testid='source-bassline-window-bars']")!;
+    expect(group.getAttribute("role")).toBe("group");
+    expect(group.getAttribute("aria-label")).toBe("Source Bassline window length");
+    expect(Array.from(group.querySelectorAll("button")).map((button) => button.textContent)).toEqual(["1", "2", "4", "8"]);
+    expect(windowButton(group, 2)?.getAttribute("aria-pressed")).toBe("true");
+    const four = windowButton(group, 4)!;
+    four.focus();
+    await act(async () => four.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })));
+    expect(document.activeElement).toBe(four);
+    expect(four.getAttribute("aria-pressed")).toBe("true");
+    expect(onSourceBasslineWindowBarsChange).toHaveBeenCalledWith(4);
+    const eight = windowButton(group, 8)!;
+    eight.focus();
+    await act(async () => eight.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true })));
+    expect(document.activeElement).toBe(eight);
+    expect(eight.getAttribute("aria-pressed")).toBe("true");
+    expect(onSourceBasslineWindowBarsChange).toHaveBeenCalledWith(8);
+  });
+
+  it("rolls back only the current failed preference and ignores stale failure", async () => {
+    const fixture = sourceBasslineFixture(true, 8);
+    let rejectFour: ((reason?: unknown) => void) | undefined;
+    let resolveEight: (() => void) | undefined;
+    const fourPending = new Promise<void>((_resolve, reject) => { rejectFour = reject; });
+    const eightPending = new Promise<void>((resolve) => { resolveEight = resolve; });
+    const save = vi.fn((bars: number) => bars === 4 ? fourPending : eightPending);
+    const container = await renderView({ vaultSourceBasslines: [fixture.sourceCatalogEntry], onSourceBasslineWindowBarsChange: save });
+    await chooseSourceBassline(container);
+    const group = container.querySelector<HTMLElement>("[data-testid='source-bassline-window-bars']")!;
+    await act(async () => windowButton(group, 4)?.click());
+    await act(async () => windowButton(group, 8)?.click());
+    await act(async () => {
+      rejectFour?.(new Error("stale"));
+      await fourPending.catch(() => undefined);
+    });
+    expect(windowButton(group, 8)?.getAttribute("aria-pressed")).toBe("true");
+    expect(container.querySelector("[data-testid='source-bassline-window-save-error']")).toBeNull();
+    await act(async () => { resolveEight?.(); await eightPending; });
+    expect(windowButton(group, 8)?.getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("keeps the newest valid fallback when the current save fails before stale success completes", async () => {
+    const fixture = sourceBasslineFixture(true, 8);
+    let resolveFour: (() => void) | undefined;
+    let rejectEight: ((reason?: unknown) => void) | undefined;
+    const fourPending = new Promise<void>((resolve) => { resolveFour = resolve; });
+    const eightPending = new Promise<void>((_resolve, reject) => { rejectEight = reject; });
+    const save = vi.fn((bars: number) => bars === 4 ? fourPending : eightPending);
+    const container = await renderView({ initialWindowBars: 2, vaultSourceBasslines: [fixture.sourceCatalogEntry], onSourceBasslineWindowBarsChange: save });
+    await chooseSourceBassline(container);
+    const group = container.querySelector<HTMLElement>("[data-testid='source-bassline-window-bars']")!;
+    await act(async () => windowButton(group, 4)?.click());
+    await act(async () => windowButton(group, 8)?.click());
+    await act(async () => { rejectEight?.(new Error("current")); await eightPending.catch(() => undefined); });
+    expect(windowButton(group, 8)?.getAttribute("aria-pressed")).toBe("true");
+    expect(container.querySelector("[data-testid='source-bassline-window-save-error']")).toBeNull();
+    await act(async () => { resolveFour?.(); await fourPending; });
+    expect(windowButton(group, 4)?.getAttribute("aria-pressed")).toBe("true");
+    expect(container.querySelector("[data-testid='source-bassline-window-save-error']")).not.toBeNull();
+  });
+
+  it("rolls back a still-current failed preference with a localized notice", async () => {
+    const fixture = sourceBasslineFixture(true, 8);
+    const save = vi.fn(async () => { throw new Error("private backend detail"); });
+    const container = await renderView({ language: "ja", initialWindowBars: 2, vaultSourceBasslines: [fixture.sourceCatalogEntry], onSourceBasslineWindowBarsChange: save });
+    await chooseSourceBassline(container);
+    const group = container.querySelector<HTMLElement>("[data-testid='source-bassline-window-bars']")!;
+    await act(async () => { windowButton(group, 4)?.click(); await Promise.resolve(); await Promise.resolve(); });
+    expect(windowButton(group, 2)?.getAttribute("aria-pressed")).toBe("true");
+    expect(container.querySelector("[data-testid='source-bassline-window-save-error']")?.textContent).toContain("保存済みの選択へ戻しました");
+    expect(container.textContent).not.toContain("private backend detail");
+  });
+
+  it("derives exact and over-limit Record eligibility without disabling practice playback", async () => {
+    const fixture = sourceBasslineFixture(true, 8);
+    const container = await renderView({
+      vaultSourceBasslines: [fixture.sourceCatalogEntry],
+      onSourceBasslineHistoryRecorded: vi.fn(async () => undefined),
+    });
+    await chooseSourceBassline(container);
+    const group = container.querySelector<HTMLElement>("[data-testid='source-bassline-window-bars']")!;
+    await act(async () => windowButton(group, 8)?.click());
+    const bpm = container.querySelector<HTMLInputElement>("[data-testid='chord-context-effective-bpm']")!;
+    await act(async () => { setNumberInputValue(bpm, "32"); bpm.dispatchEvent(new Event("change", { bubbles: true })); });
+    await act(async () => findButton(container, "Review")?.click());
+    expect(recordCompare.props?.recordStartDisabledReason).toBeUndefined();
+    await act(async () => { setNumberInputValue(bpm, "31"); bpm.dispatchEvent(new Event("change", { bubbles: true })); });
+    expect(recordCompare.props?.recordStartDisabledReason).toContain("exceeds 60 seconds");
+    expect(container.querySelector<HTMLButtonElement>("[data-testid='bassline-listen']")?.disabled).toBe(false);
+    expect(container.querySelector<HTMLButtonElement>("[data-testid='source-bassline-save-history']")?.disabled).toBe(false);
+  });
+
+  for (const rejectOrder of ["older-first", "newer-first"] as const) {
+    it(`returns to persisted two when rapid 4/8 saves both fail (${rejectOrder})`, async () => {
+      const fixture = sourceBasslineFixture(true, 8);
+      let rejectFour: ((reason?: unknown) => void) | undefined;
+      let rejectEight: ((reason?: unknown) => void) | undefined;
+      const fourPending = new Promise<void>((_resolve, reject) => { rejectFour = reject; });
+      const eightPending = new Promise<void>((_resolve, reject) => { rejectEight = reject; });
+      const save = vi.fn((bars: number) => bars === 4 ? fourPending : eightPending);
+      const container = await renderView({ initialWindowBars: 2, vaultSourceBasslines: [fixture.sourceCatalogEntry], onSourceBasslineWindowBarsChange: save });
+      await chooseSourceBassline(container);
+      const group = container.querySelector<HTMLElement>("[data-testid='source-bassline-window-bars']")!;
+      await act(async () => windowButton(group, 4)?.click());
+      await act(async () => windowButton(group, 8)?.click());
+      if (rejectOrder === "older-first") {
+        await act(async () => { rejectFour?.(new Error("four")); await fourPending.catch(() => undefined); });
+        await act(async () => { rejectEight?.(new Error("eight")); await eightPending.catch(() => undefined); });
+      } else {
+        await act(async () => { rejectEight?.(new Error("eight")); await eightPending.catch(() => undefined); });
+        await act(async () => { rejectFour?.(new Error("four")); await fourPending.catch(() => undefined); });
+      }
+      expect(windowButton(group, 2)?.getAttribute("aria-pressed")).toBe("true");
+      expect(container.querySelector("[data-testid='source-bassline-window-save-error']")).not.toBeNull();
+    });
+  }
+
+  it("ignores a preference settlement after unmount", async () => {
+    const fixture = sourceBasslineFixture(true, 8);
+    let rejectSave: ((reason?: unknown) => void) | undefined;
+    const pending = new Promise<void>((_resolve, reject) => { rejectSave = reject; });
+    const container = await renderView({
+      initialWindowBars: 2,
+      vaultSourceBasslines: [fixture.sourceCatalogEntry],
+      onSourceBasslineWindowBarsChange: vi.fn(() => pending),
+    });
+    await chooseSourceBassline(container);
+    const group = container.querySelector<HTMLElement>("[data-testid='source-bassline-window-bars']")!;
+    await act(async () => windowButton(group, 4)?.click());
+    await act(async () => root?.unmount());
+    root = undefined;
+    await act(async () => {
+      rejectSave?.(new Error("late failure"));
+      await pending.catch(() => undefined);
+    });
+    expect(container.childElementCount).toBe(0);
+  });
+
+  it("keeps confirmed preference rollback correct under StrictMode effect replay", async () => {
+    const fixture = sourceBasslineFixture(true, 8);
+    const save = vi.fn((bars: number) => bars === 4 ? Promise.resolve() : Promise.reject(new Error("eight failed")));
+    const container = await renderView({ initialWindowBars: 2, vaultSourceBasslines: [fixture.sourceCatalogEntry], onSourceBasslineWindowBarsChange: save }, true);
+    await chooseSourceBassline(container);
+    const group = container.querySelector<HTMLElement>("[data-testid='source-bassline-window-bars']")!;
+    await act(async () => { windowButton(group, 4)?.click(); await Promise.resolve(); });
+    expect(windowButton(group, 4)?.getAttribute("aria-pressed")).toBe("true");
+    await act(async () => { windowButton(group, 8)?.click(); await Promise.resolve(); await Promise.resolve(); });
+    expect(windowButton(group, 4)?.getAttribute("aria-pressed")).toBe("true");
+    expect(container.querySelector("[data-testid='source-bassline-window-save-error']")).not.toBeNull();
+  });
+
+  it("turns a synchronous preference callback throw into rollback and a safe notice", async () => {
+    const fixture = sourceBasslineFixture(true, 8);
+    const save = vi.fn(() => { throw new Error("synchronous private detail"); });
+    const container = await renderView({ initialWindowBars: 2, vaultSourceBasslines: [fixture.sourceCatalogEntry], onSourceBasslineWindowBarsChange: save });
+    await chooseSourceBassline(container);
+    const group = container.querySelector<HTMLElement>("[data-testid='source-bassline-window-bars']")!;
+    await act(async () => windowButton(group, 4)?.click());
+    expect(windowButton(group, 2)?.getAttribute("aria-pressed")).toBe("true");
+    expect(container.querySelector("[data-testid='source-bassline-window-save-error']")).not.toBeNull();
+    expect(container.textContent).not.toContain("synchronous private detail");
+  });
+
+  for (const outcome of ["success", "failure"] as const) {
+    it(`does not let a late preference ${outcome} replace an exact History restart`, async () => {
+      const fixture = sourceBasslineFixture(true, 12);
+      let resolveSave: (() => void) | undefined;
+      let rejectSave: ((reason?: unknown) => void) | undefined;
+      const pending = new Promise<void>((resolve, reject) => { resolveSave = resolve; rejectSave = reject; });
+      const entry = createSourceBasslineHistoryEntry({
+        id: `source-history:race-${outcome}`, completedAt: "2026-08-21T12:00:00.000Z",
+        reference: fixture.sourceCatalogEntry.reference,
+        snapshotSignature: fixture.sourceCatalogEntry.sourceBassline.snapshotSignature,
+        capturedHarmonySignature: fixture.sourceCatalogEntry.sourceBassline.capturedHarmony!.signature,
+        requestedBars: 8, startBar: 9, endBar: 12, actualBars: 4, level: 3,
+        croppedSourceNoteCount: 4, projectedNoteCount: 4, omittedSimultaneousNoteCount: 0,
+        boundaryClippedNoteCount: 0, overlapClippedNoteCount: 0, pitchReplacementCount: 0,
+        capturedHarmonyComparison: "match",
+      });
+      const container = await renderView({ initialWindowBars: 2, vaultSourceBasslines: [fixture.sourceCatalogEntry], sourceBasslineHistory: [entry], onSourceBasslineWindowBarsChange: vi.fn(() => pending) });
+      await chooseSourceBassline(container);
+      const group = container.querySelector<HTMLElement>("[data-testid='source-bassline-window-bars']")!;
+      await act(async () => windowButton(group, 4)?.click());
+      await act(async () => findButton(container, "Restart these settings")?.click());
+      expect(windowButton(group, 8)?.getAttribute("aria-pressed")).toBe("true");
+      expect(container.querySelector("[data-testid='source-bassline-range']")?.textContent).toBe("Bars 9-12 (final partial window)");
+      await act(async () => { if (outcome === "success") resolveSave?.(); else rejectSave?.(new Error("late failure")); await pending.catch(() => undefined); });
+      expect(windowButton(group, 8)?.getAttribute("aria-pressed")).toBe("true");
+      expect(container.querySelector("[data-testid='source-bassline-range']")?.textContent).toBe("Bars 9-12 (final partial window)");
+      expect(container.querySelector("[data-testid='source-bassline-window-save-error']")).toBeNull();
+    });
+  }
+
+  it("does not let a late failed preference replace a source lifecycle choice", async () => {
+    const fixture = sourceBasslineFixture(true, 8);
+    let rejectSave: ((reason?: unknown) => void) | undefined;
+    const pending = new Promise<void>((_resolve, reject) => { rejectSave = reject; });
+    const container = await renderView({ vaultSourceBasslines: [fixture.sourceCatalogEntry], onSourceBasslineWindowBarsChange: vi.fn(() => pending) });
+    await chooseSourceBassline(container);
+    const group = container.querySelector<HTMLElement>("[data-testid='source-bassline-window-bars']")!;
+    await act(async () => windowButton(group, 4)?.click());
+    await chooseSelect(container.querySelector<HTMLSelectElement>("[data-testid='bassline-line-source']")!, "generated");
+    await act(async () => { rejectSave?.(new Error("late")); await pending.catch(() => undefined); });
+    expect(container.querySelector<HTMLSelectElement>("[data-testid='bassline-line-source']")?.value).toBe("generated");
+    expect(container.querySelector("[data-testid='source-bassline-window-save-error']")).toBeNull();
+  });
 });
 
-function sourceBasslineFixture(withHarmony: boolean) {
+function sourceBasslineFixture(withHarmony: boolean, bars = 3) {
   const sourceId = "synthetic-source";
   const voiceId = "synthetic-bass";
+  const endTick = bars * 16;
   const sourceBassline = extractSourceBasslineSnapshot({
     selectedSourceId: sourceId,
     selectedVoiceId: voiceId,
-    range: { authority: "raw-integer-ticks", constantMeterProven: true, barAlignmentProven: true, sourceId, startTick: 0, endTick: 48, sourceEndTick: 48, ticksPerQuarter: 4, meter: { numerator: 4, denominator: 4 } },
+    range: { authority: "raw-integer-ticks", constantMeterProven: true, barAlignmentProven: true, sourceId, startTick: 0, endTick, sourceEndTick: endTick, ticksPerQuarter: 4, meter: { numerator: 4, denominator: 4 } },
     notes: [
       { sourceId, voiceId, pitch: 48, velocity: 0.9, startTick: 0, durationTick: 8, ticksPerQuarter: 4 },
       { sourceId, voiceId, pitch: 43, velocity: 0.7, startTick: 0, durationTick: 4, ticksPerQuarter: 4 },
       { sourceId, voiceId, pitch: 45, velocity: 0.8, startTick: 2, durationTick: 4, ticksPerQuarter: 4 },
       { sourceId, voiceId, pitch: 40, velocity: 0.8, startTick: 32, durationTick: 4, ticksPerQuarter: 4 },
+      ...Array.from({ length: Math.max(0, bars - 3) }, (_, index) => ({ sourceId, voiceId, pitch: 40 + index, velocity: 0.8, startTick: (index + 3) * 16, durationTick: 4, ticksPerQuarter: 4 })),
     ],
-    ...(withHarmony ? { capturedHarmony: { authority: "raw-integer-ticks" as const, sourceId, rangeStartTick: 0, rangeEndTick: 48, ticksPerQuarter: 4, spans: [
-      { sourceId, startTick: 0, durationTick: 16, ticksPerQuarter: 4, chord: makeChordSymbol(0, "maj7") },
-      { sourceId, startTick: 16, durationTick: 16, ticksPerQuarter: 4, chord: makeChordSymbol(5, "maj7") },
-      { sourceId, startTick: 32, durationTick: 16, ticksPerQuarter: 4, chord: makeChordSymbol(7, "dom7") },
-    ] } } : {}),
+    ...(withHarmony ? { capturedHarmony: { authority: "raw-integer-ticks" as const, sourceId, rangeStartTick: 0, rangeEndTick: endTick, ticksPerQuarter: 4, spans: Array.from({ length: bars }, (_, index) => ({ sourceId, startTick: index * 16, durationTick: 16, ticksPerQuarter: 4, chord: makeChordSymbol([0, 5, 7][index % 3]!, index % 3 === 2 ? "dom7" : "maj7") })) } } : {}),
   });
   const block = {
     id: "source-block",
@@ -1194,7 +1409,7 @@ function sourceBasslineFixture(withHarmony: boolean) {
     detectedKey: "C major",
     bpm: 96,
     timeSignature: "4/4",
-    chords: [0, 5, 7].map((root, index) => ({ bar: index + 1, beat: 1, durationBeats: 4, chord: makeChordSymbol(root, index === 2 ? "dom7" : "maj7"), confidence: 1, alternatives: [], warnings: [] })),
+    chords: Array.from({ length: bars }, (_, index) => ({ bar: index + 1, beat: 1, durationBeats: 4, chord: makeChordSymbol([0, 5, 7][index % 3]!, index % 3 === 2 ? "dom7" : "maj7"), confidence: 1, alternatives: [], warnings: [] })),
     tags: [],
     capturedAt: "2026-01-01T00:00:00.000Z",
     analyzerVersion: "fixture",
@@ -1232,11 +1447,12 @@ function replacementChordContextSnapshot(reference: { readonly ideaId: string; r
     ],
   });
   return Object.freeze({ displayTitle: "Synthetic replacement", reference, sourceBassline });
-}async function renderView(props: Partial<Parameters<typeof BasslinePracticeView>[0]> = {}) {
+}async function renderView(props: Partial<Parameters<typeof BasslinePracticeView>[0]> = {}, strictMode = false) {
   const container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
-  await act(async () => root?.render(<BasslinePracticeView {...props} />));
+  const view = <BasslinePracticeView initialWindowBars={1} {...props} />;
+  await act(async () => root?.render(strictMode ? <StrictMode>{view}</StrictMode> : view));
   return container;
 }
 
@@ -1289,6 +1505,11 @@ function checkedLabel(container: HTMLElement, name: string): string | undefined 
 function findButton(container: HTMLElement, text: string): HTMLButtonElement | undefined {
   return Array.from(container.querySelectorAll<HTMLButtonElement>("button"))
     .find((button) => button.textContent?.includes(text));
+}
+
+function windowButton(container: ParentNode, bars: number): HTMLButtonElement | undefined {
+  return Array.from(container.querySelectorAll<HTMLButtonElement>("button"))
+    .find((button) => button.textContent?.trim() === String(bars));
 }
 function setTextInputValue(input: HTMLInputElement, value: string) {
   const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;

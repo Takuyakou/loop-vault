@@ -91,10 +91,10 @@ const sourceBasslineHistoryEntrySchema: z.ZodType<SourceBasslineHistoryEntry> = 
     capturedHarmonySignature: z.string().regex(/^[a-f0-9]{64}$/).optional(),
   }).strict(),
   window: z.object({
-    requestedBars: z.union([z.literal(1), z.literal(2)]),
+    requestedBars: z.union([z.literal(1), z.literal(2), z.literal(4), z.literal(8)]),
     startBar: z.number().int().min(1).max(12),
     endBar: z.number().int().min(1).max(12),
-    actualBars: z.union([z.literal(1), z.literal(2)]),
+    actualBars: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6), z.literal(7), z.literal(8)]),
   }).strict(),
   level: z.union([z.literal(1), z.literal(2), z.literal(3)]),
   monophonicProjection: z.literal(true),
@@ -359,6 +359,8 @@ export function validatePracticeFile(file: PracticeFileV2): PracticeFileV2 {
     const actualBars = entry.window.endBar - entry.window.startBar + 1;
     return actualBars !== entry.window.actualBars
       || entry.window.actualBars > entry.window.requestedBars
+      || (entry.window.startBar - 1) % entry.window.requestedBars !== 0
+      || entry.window.endBar < entry.window.startBar
       || entry.facts.projectedNoteCount + entry.facts.omittedSimultaneousNoteCount !== entry.facts.croppedSourceNoteCount
       || entry.facts.boundaryClippedNoteCount > entry.facts.croppedSourceNoteCount
       || entry.facts.overlapClippedNoteCount > entry.facts.projectedNoteCount
