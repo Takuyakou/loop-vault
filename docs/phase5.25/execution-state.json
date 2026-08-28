@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "5.25",
+  "status": "in-progress",
+  "activeStage": "P5.25-03",
+  "completedStages": ["P5.25-00", "P5.25-01", "P5.25-02"],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "99448c1f2be9d17d9a3a83e00d7396fa28d21f02",
+  "lastVerifiedCommit": "7c8018f6ccfdb0636f5bc853d3fde5e78731f7fa",
+  "currentBranch": "feat/p525-source-bassline-window-expansion",
+  "requiredGates": {
+    "P5.25-00": [
+      "p525-00-phase-docs-validation",
+      "p525-00-focused-baseline",
+      "p525-00-legacy-window-regression",
+      "p525-00-record-history-regression",
+      "p525-00-lint-typecheck",
+      "p525-00-security-privacy-hygiene",
+      "p525-00-diff-check"
+    ],
+    "P5.25-01": [
+      "p525-01-window-domain-focused",
+      "p525-01-preference-domain-default",
+      "p525-01-level-regression",
+      "p525-01-protected-diff"
+    ],
+    "P5.25-02": [
+      "p525-02-ui-record-history-focused",
+      "p525-02-preference-persistence-rollback",
+      "p525-02-a11y-lifecycle-regression",
+      "p525-02-protected-diff"
+    ],
+    "P5.25-03": [
+      "p525-03-full-vitest",
+      "p525-03-full-playwright",
+      "p525-03-web-build",
+      "p525-03-tauri-release",
+      "p525-03-security-dependency-hygiene",
+      "p525-03-cargo-protected-diff",
+      "p525-03-final-diff-status",
+      "p525-03-human-acceptance"
+    ]
+  },
+  "gateResults": {
+    "p525-00-phase-docs-validation": "pass",
+    "p525-00-focused-baseline": "pass",
+    "p525-00-legacy-window-regression": "pass",
+    "p525-00-record-history-regression": "pass",
+    "p525-00-lint-typecheck": "pass",
+    "p525-00-security-privacy-hygiene": "pass",
+    "p525-00-diff-check": "pass",
+    "p525-01-window-domain-focused": "pass",
+    "p525-01-preference-domain-default": "pass",
+    "p525-01-level-regression": "pass",
+    "p525-01-protected-diff": "pass",
+    "p525-02-ui-record-history-focused": "pass",
+    "p525-02-preference-persistence-rollback": "pass",
+    "p525-02-a11y-lifecycle-regression": "pass",
+    "p525-02-protected-diff": "pass",
+    "p525-03-full-vitest": "pass",
+    "p525-03-full-playwright": "pass",
+    "p525-03-web-build": "pass",
+    "p525-03-tauri-release": "pass",
+    "p525-03-security-dependency-hygiene": "pass",
+    "p525-03-cargo-protected-diff": "pass",
+    "p525-03-final-diff-status": "pass",
+    "p525-03-human-acceptance": "not-run"
+  },
+  "nextAction": "Run Human Acceptance from the P5.25-03 report. Do not merge, push, tag, release, or begin P5.26 without separate human authorization.",
+  "updatedAt": "2026-08-29T03:05:00+09:00"
+}

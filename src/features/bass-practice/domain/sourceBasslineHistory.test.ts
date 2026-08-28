@@ -25,6 +25,31 @@ function entry(capturedHarmonySignature: string | null = "c".repeat(64)) {
 }
 
 describe("Source Bassline reference-only History", () => {
+  it("keeps version 1 and represents partial actual lengths without note data", () => {
+    for (const actualBars of [3, 5, 6, 7] as const) {
+      const created = createSourceBasslineHistoryEntry({
+        id: `source-history:partial-${actualBars}`,
+        completedAt: "2026-08-21T12:00:00.000Z",
+        reference: { ideaId: "idea-a", blockId: "block-a" },
+        snapshotSignature: "a".repeat(64),
+        requestedBars: 8,
+        startBar: 1,
+        endBar: actualBars,
+        actualBars,
+        level: 3,
+        croppedSourceNoteCount: actualBars,
+        projectedNoteCount: actualBars,
+        omittedSimultaneousNoteCount: 0,
+        boundaryClippedNoteCount: 0,
+        overlapClippedNoteCount: 0,
+        pitchReplacementCount: 0,
+        capturedHarmonyComparison: "comparison-unavailable",
+      });
+      expect(created.version).toBe(1);
+      expect(created.window).toMatchObject({ requestedBars: 8, actualBars });
+      expect(JSON.stringify(created)).not.toMatch(/"notes"\s*:/i);
+    }
+  });
   it("stores source and captured-harmony signatures without duplicating harmony spans", () => {
     const created = entry();
     expect(created).toMatchObject({

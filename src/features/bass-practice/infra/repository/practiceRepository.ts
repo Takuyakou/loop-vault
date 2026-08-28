@@ -47,7 +47,8 @@ const attemptSchema: z.ZodType<PracticeAttempt> = z.object({
   mainIssue: z.enum(["pitch", "rhythm", "duration", "recall", "fretboard"]).optional(), independentSuccess: z.boolean(), transferOfAttemptId: z.string().min(1).optional(), reviewQueueClaimId: z.string().min(1).optional(), exerciseSnapshot: exerciseSchema,
 }).strict();
 const rootMotionNoteCountSchema = z.union([z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6), z.literal(7), z.literal(8)]);
-const settingsSchema: z.ZodType<PracticeSettings> = z.object({ version: z.literal(1), singEnabled: z.boolean(), singingReferenceMode: singingModeSchema, stringCount: z.union([z.literal(4), z.literal(5)]), handedness: z.enum(["right", "left"]), fretRange: z.object({ min: z.number().int().nonnegative(), max: z.number().int().nonnegative() }).strict(), sessionTargetCount: z.number().int().positive().max(100), rootMotionNoteCount: rootMotionNoteCountSchema.optional().default(2) }).strict();
+const sourceBasslineWindowBarsSchema = z.union([z.literal(1), z.literal(2), z.literal(4), z.literal(8)]);
+const settingsSchema: z.ZodType<PracticeSettings> = z.object({ version: z.literal(1), singEnabled: z.boolean(), singingReferenceMode: singingModeSchema, stringCount: z.union([z.literal(4), z.literal(5)]), handedness: z.enum(["right", "left"]), fretRange: z.object({ min: z.number().int().nonnegative(), max: z.number().int().nonnegative() }).strict(), sessionTargetCount: z.number().int().positive().max(100), rootMotionNoteCount: rootMotionNoteCountSchema.optional().default(2), sourceBasslineWindowBars: sourceBasslineWindowBarsSchema.optional().default(2) }).strict();
 const sessionSchema: z.ZodType<PracticeSession> = z.object({ id: z.string().min(1), startedAt: z.string().datetime(), completedAt: z.string().datetime().optional(), targetCount: z.number().int().positive(), completedCount: z.number().int().nonnegative(), mode: z.literal("degree"), attemptIds: z.array(z.string().min(1)), abandoned: z.boolean() }).strict();
 const queueSchema: z.ZodType<ReviewQueueItem> = z.object({
   exerciseId: z.string().min(1), dueAt: z.string().datetime(), reason: z.enum(["again", "hard", "good", "easy", "transfer"]), difficultyAdjustment: z.union([z.literal(-1), z.literal(0), z.literal(1)]), sourceAttemptId: z.string().min(1), stableOrder: z.number().int(),
@@ -90,10 +91,10 @@ const sourceBasslineHistoryEntrySchema: z.ZodType<SourceBasslineHistoryEntry> = 
     capturedHarmonySignature: z.string().regex(/^[a-f0-9]{64}$/).optional(),
   }).strict(),
   window: z.object({
-    requestedBars: z.union([z.literal(1), z.literal(2)]),
+    requestedBars: z.union([z.literal(1), z.literal(2), z.literal(4), z.literal(8)]),
     startBar: z.number().int().min(1).max(12),
     endBar: z.number().int().min(1).max(12),
-    actualBars: z.union([z.literal(1), z.literal(2)]),
+    actualBars: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6), z.literal(7), z.literal(8)]),
   }).strict(),
   level: z.union([z.literal(1), z.literal(2), z.literal(3)]),
   monophonicProjection: z.literal(true),
@@ -280,7 +281,7 @@ export class JsonPracticeRepository {
   }
 }
 
-export function createEmptyPracticeFile(now: Date): PracticeFileV2 { return freezeFile({ app: "loopvault-practice", fileVersion: PRACTICE_FILE_VERSION, revision: 0, settings: { version: 1, singEnabled: true, singingReferenceMode: "auto", stringCount: 4, handedness: "right", fretRange: { min: 0, max: 12 }, sessionTargetCount: 8, rootMotionNoteCount: 2 }, exercises: [], attempts: [], sessions: [], reviewQueue: [], rhythmAttempts: [], rhythmSessions: [], chordContextHistory: [], rootMotionHistory: [], sourceBasslineHistory: [], updatedAt: now.toISOString() }); }
+export function createEmptyPracticeFile(now: Date): PracticeFileV2 { return freezeFile({ app: "loopvault-practice", fileVersion: PRACTICE_FILE_VERSION, revision: 0, settings: { version: 1, singEnabled: true, singingReferenceMode: "auto", stringCount: 4, handedness: "right", fretRange: { min: 0, max: 12 }, sessionTargetCount: 8, rootMotionNoteCount: 2, sourceBasslineWindowBars: 2 }, exercises: [], attempts: [], sessions: [], reviewQueue: [], rhythmAttempts: [], rhythmSessions: [], chordContextHistory: [], rootMotionHistory: [], sourceBasslineHistory: [], updatedAt: now.toISOString() }); }
 export function addChordContextHistoryEntry(file: PracticeFileV2, entry: ChordContextHistoryEntry): PracticeFileV2 {
   if (file.chordContextHistory.some(({ id }) => id === entry.id)) {
     throw new PracticeRepositoryError("invalid-data", "Chord Context History entry " + entry.id + " has already been saved.");
@@ -358,6 +359,8 @@ export function validatePracticeFile(file: PracticeFileV2): PracticeFileV2 {
     const actualBars = entry.window.endBar - entry.window.startBar + 1;
     return actualBars !== entry.window.actualBars
       || entry.window.actualBars > entry.window.requestedBars
+      || (entry.window.startBar - 1) % entry.window.requestedBars !== 0
+      || entry.window.endBar < entry.window.startBar
       || entry.facts.projectedNoteCount + entry.facts.omittedSimultaneousNoteCount !== entry.facts.croppedSourceNoteCount
       || entry.facts.boundaryClippedNoteCount > entry.facts.croppedSourceNoteCount
       || entry.facts.overlapClippedNoteCount > entry.facts.projectedNoteCount

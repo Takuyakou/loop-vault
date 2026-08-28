@@ -8,6 +8,7 @@ import { useRecordChannel } from "../application/recordChannelStore";
 import type { RecordingSessionController } from "../application/recordingSessionController";
 import { BrowserTakePlayer, type PlaybackHandle, type TakePlayer, type TargetPlayer } from "../application/playback";
 import { RetainedTakesPanel } from "./RetainedTakesPanel";
+import type { PersistentRecordingTakeRepository } from "../application/recordingStore";
 
 /**
  * Shared Record & Compare panel for all three Echo modes (P5.17-02). It is
@@ -45,9 +46,13 @@ export interface RecordCompareSectionProps {
   readonly onUnkeptTakeChange?: (hasUnkeptTake: boolean) => void;
   /** Milliseconds of count-in before recording starts (0 = immediate). */
   readonly countInMs?: number;
+  /** Disables only new recording start; retained takes and playback stay available. */
+  readonly recordStartDisabledReason?: string;
   /** Injected in tests. */
   readonly controller?: RecordingSessionController;
   readonly takePlayer?: TakePlayer;
+  /** Injected only to make retained-take availability independently testable. */
+  readonly retainedTakeRepository?: PersistentRecordingTakeRepository;
   readonly enabledOverride?: boolean;
   readonly isTypeSupported?: (mimeType: string) => boolean;
 }
@@ -96,8 +101,10 @@ export function RecordCompareSection({
   onTakeKept,
   onUnkeptTakeChange,
   countInMs = 0,
+  recordStartDisabledReason,
   controller,
   takePlayer,
+  retainedTakeRepository,
   enabledOverride,
   isTypeSupported,
 }: RecordCompareSectionProps) {
@@ -228,12 +235,12 @@ export function RecordCompareSection({
             {copy.optional}
           </span>
         </div>
-        <RetainedTakesPanel language={language} enabledOverride={enabled} />
+        <RetainedTakesPanel language={language} repository={retainedTakeRepository} enabledOverride={enabled} />
       </section>
     );
   }
 
-  const startRecording = () => {
+  const beginRecordingFlow = () => {
     setListenBackSkipped(false);
     clearCountIn();
     const generation = recordingGenerationRef.current + 1;
@@ -297,6 +304,9 @@ export function RecordCompareSection({
         beginRecording();
       }
     })();
+  };
+  const startRecording = () => {
+    runRecordStartGuard(recordStartDisabledReason, beginRecordingFlow);
   };
 
   const cancelCountIn = () => {
@@ -435,7 +445,7 @@ export function RecordCompareSection({
       ) : null}
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <Button variant="primary" size="sm" data-testid="record-start" disabled={status !== "ready" || preparingRecording} onClick={startRecording}>{copy.start}</Button>
+        <Button variant="primary" size="sm" data-testid="record-start" aria-describedby={recordStartDisabledReason ? "record-start-disabled-reason" : undefined} disabled={status !== "ready" || preparingRecording || Boolean(recordStartDisabledReason)} onClick={startRecording}>{copy.start}</Button>
         <Button variant="secondary" size="sm" data-testid="record-stop" disabled={!preparingRecording && status !== "recording" && status !== "starting"} onClick={stopRecording}>{copy.stop}</Button>
         <Button variant="secondary" size="sm" data-testid="hear-target" disabled={status !== "recorded" || !targetPlayer} onClick={hearTarget}>{copy.hearTarget}</Button>
         <Button variant="secondary" size="sm" data-testid="hear-take" disabled={status !== "recorded"} onClick={hearTake}>{copy.hearTake}</Button>
@@ -453,17 +463,25 @@ export function RecordCompareSection({
         <Button variant="ghost" size="sm" data-testid="record-skip" disabled={controlsLocked} onClick={() => { recordingGenerationRef.current += 1; stopPlayback(); clearCountIn(); stopRecordingAccompaniment(); setPreparingRecording(false); setRecordingActivity(false); setOptedIn(false); }}>{copy.skipRecord}</Button>
       </div>
 
+      {recordStartDisabledReason ? <p id="record-start-disabled-reason" role="status" className="mt-2 text-xs text-[var(--lv-warning)]">{recordStartDisabledReason}</p> : null}
+
       <p className="mt-2 text-[11px] text-[var(--lv-text-muted)]">
         {copy.privacy}
       </p>
 
-      <RetainedTakesPanel language={language} enabledOverride={enabled} />
+      <RetainedTakesPanel language={language} repository={retainedTakeRepository} enabledOverride={enabled} />
     </section>
   );
 }
 
 function isLiveCaptureStatus(status: string): boolean {
   return status === "counting-in" || status === "starting" || status === "recording" || status === "stopping";
+}
+
+export function runRecordStartGuard(reason: string | undefined, start: () => void): boolean {
+  if (reason) return false;
+  start();
+  return true;
 }
 
 function statusLabel(status: string, language: AppLanguage): string {
