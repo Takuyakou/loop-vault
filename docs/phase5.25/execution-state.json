@@ -67,6 +67,6 @@
     "p525-03-final-diff-status": "not-run",
     "p525-03-human-acceptance": "not-run"
   },
-  "nextAction": "P5.25-01 is not started. Stop and await explicit human authorization before any production change.",
+  "nextAction": "P5.25-01 is implemented in the working tree. Complete independent review, required gates, and the Stage01 commit before starting P5.25-02.",
   "updatedAt": "2026-08-29T00:38:36+09:00"
 }

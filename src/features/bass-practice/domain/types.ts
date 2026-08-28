@@ -167,6 +167,8 @@ export interface PracticeSettings {
   readonly sessionTargetCount: number;
   /** Additive preference; omitted legacy files use the compatible two-note chain. */
   readonly rootMotionNoteCount?: 2 | 3 | 4 | 5 | 6 | 7 | 8;
+  /** Additive preference; omitted legacy files use the two-bar Source Bassline window. */
+  readonly sourceBasslineWindowBars?: 1 | 2 | 4 | 8;
 }
 
 export interface ReviewQueueItem {

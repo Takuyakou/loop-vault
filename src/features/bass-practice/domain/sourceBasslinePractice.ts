@@ -10,7 +10,9 @@ import {
 } from "../../../domain/sourceBassline";
 import type { BasslineTargetEvent } from "./types";
 
-export type SourceBasslineWindowBars = 1 | 2;
+export type SourceBasslineWindowBars = 1 | 2 | 4 | 8;
+export type SourceBasslineActualBars = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+export const DEFAULT_SOURCE_BASSLINE_WINDOW_BARS: SourceBasslineWindowBars = 2;
 export type SourceBasslinePracticeLevel = 1 | 2 | 3;
 export type SourceBasslineSimplificationUnavailableReason =
   | "missing-harmony"
@@ -45,7 +47,7 @@ export interface SourceBasslinePracticeWindow {
   readonly totalBars: number;
   readonly startBar: number;
   readonly endBar: number;
-  readonly actualBars: number;
+  readonly actualBars: SourceBasslineActualBars;
   readonly croppedSourceNoteCount: number;
   readonly boundaryClippedNoteCount: number;
   readonly omittedSimultaneousNoteCount: number;
@@ -90,13 +92,14 @@ export function buildSourceBasslinePracticeWindow(
   if (!parsed.success) return { ok: false, reason: "invalid-snapshot" };
   const snapshot = parsed.data;
   const totalBars = exactIntegerBars(snapshot.length);
-  if (!totalBars || (requestedBars !== 1 && requestedBars !== 2)
+  if (!totalBars || !isSourceBasslineWindowBars(requestedBars)
     || !Number.isInteger(startBar) || startBar < 1 || startBar > totalBars
     || (startBar - 1) % requestedBars !== 0) {
     return { ok: false, reason: "invalid-window" };
   }
 
   const actualBars = Math.min(requestedBars, totalBars - startBar + 1);
+  if (!isSourceBasslineActualBars(actualBars)) return { ok: false, reason: "invalid-window" };
   const windowStart = exactBeat((startBar - 1) * 4, 1);
   const windowLength = exactBeat(actualBars * 4, 1);
   const windowEnd = addExactBeat(windowStart, windowLength);
@@ -376,3 +379,11 @@ function normalizePitchClass(value: number): number {
 const ZERO = Object.freeze(exactBeat(0, 1));
 const PLAYABLE_MIN_MIDI = 28;
 const PLAYABLE_MAX_MIDI = 55;
+
+export function isSourceBasslineWindowBars(value: unknown): value is SourceBasslineWindowBars {
+  return value === 1 || value === 2 || value === 4 || value === 8;
+}
+
+export function isSourceBasslineActualBars(value: unknown): value is SourceBasslineActualBars {
+  return Number.isInteger(value) && typeof value === "number" && value >= 1 && value <= 8;
+}
