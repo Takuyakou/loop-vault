@@ -3,15 +3,17 @@
 
 ## Status
 
-`P5.25-00 / P5.25-01 COMPLETE — P5.25-02 AUTHORIZED, NOT YET IMPLEMENTED`
+`P5.25-00 / 01 / 02 COMPLETE — P5.25-03 AUTHORIZED, NOT YET COMPLETE`
 
 The repository is feasible without changing the stored source snapshot, Vault
 schema, or existing saved progression BPM. Stage 00 audit, contracts, tests,
 static checks, security scan, and hygiene gates passed at
 `63674153ec3089f15681039313b4546fd40d8c75`. P5.25-01 domain/preference work
 passed its focused, regression, static, security, and protected-surface gates at
-`ee3e071faf45335c3abfbfee1fb8f639c5513249`. P5.25-02 is authorized by the
-remaining-stages workflow but is not yet implemented.
+`ee3e071faf45335c3abfbfee1fb8f639c5513249`. P5.25-02 UI, persistence,
+Record guard, History, lifecycle, accessibility, and focused Playwright work
+passed at `3bf5f7243c0e06565a9489b6a46b5d4a7a8f1f2e`. P5.25-03 is authorized
+but its consolidated Tier 3 gates are not yet complete.
 
 ## Purpose
 
@@ -106,13 +108,13 @@ crop-before-projection are implemented and verified.
 
 ### P5.25-02 UI / Record / History Integration
 
-`AUTHORIZED — NOT YET IMPLEMENTED`.
-
-Next, implement selector, generation-safe user-selection settings
-patch/rollback wiring, lifecycle, Record-only eligibility, and History
-compatibility under the authorized remaining-stages workflow.
+Complete at `3bf5f7243c0e06565a9489b6a46b5d4a7a8f1f2e`. Selector,
+generation-safe preference persistence/rollback, lifecycle, Record eligibility,
+History widening, and accessibility behavior are implemented and verified.
 
 ### P5.25-03 Hardening / Product Acceptance
+
+`AUTHORIZED — NOT YET COMPLETE`.
 
 Run consolidated Tier 3 gates and stop at human product acceptance.
 
@@ -129,6 +131,5 @@ Run consolidated Tier 3 gates and stop at human product acceptance.
 
 ## Next Action
 
-Begin P5.25-02 under the authorized remaining-stages workflow. P5.25-02 is not
-yet implemented. Keep P5.25-03 Tier 3 gates deferred until its final candidate;
-do not merge, push, tag, release, or begin P5.26.
+Run the consolidated P5.25-03 gates against the exact final production
+candidate. Do not merge, push, tag, release, or begin P5.26.

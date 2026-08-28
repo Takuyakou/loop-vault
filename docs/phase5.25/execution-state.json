@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "5.25",
   "status": "in-progress",
-  "activeStage": "P5.25-02",
-  "completedStages": ["P5.25-00", "P5.25-01"],
+  "activeStage": "P5.25-03",
+  "completedStages": ["P5.25-00", "P5.25-01", "P5.25-02"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "99448c1f2be9d17d9a3a83e00d7396fa28d21f02",
-  "lastVerifiedCommit": "ee3e071faf45335c3abfbfee1fb8f639c5513249",
+  "lastVerifiedCommit": "3bf5f7243c0e06565a9489b6a46b5d4a7a8f1f2e",
   "currentBranch": "feat/p525-source-bassline-window-expansion",
   "requiredGates": {
     "P5.25-00": [
@@ -54,10 +54,10 @@
     "p525-01-preference-domain-default": "pass",
     "p525-01-level-regression": "pass",
     "p525-01-protected-diff": "pass",
-    "p525-02-ui-record-history-focused": "not-run",
-    "p525-02-preference-persistence-rollback": "not-run",
-    "p525-02-a11y-lifecycle-regression": "not-run",
-    "p525-02-protected-diff": "not-run",
+    "p525-02-ui-record-history-focused": "pass",
+    "p525-02-preference-persistence-rollback": "pass",
+    "p525-02-a11y-lifecycle-regression": "pass",
+    "p525-02-protected-diff": "pass",
     "p525-03-full-vitest": "not-run",
     "p525-03-full-playwright": "not-run",
     "p525-03-web-build": "not-run",
@@ -67,6 +67,6 @@
     "p525-03-final-diff-status": "not-run",
     "p525-03-human-acceptance": "not-run"
   },
-  "nextAction": "P5.25-02 is implemented in the working tree. Complete independent review, required closure gates, and the Stage02 commit before starting P5.25-03.",
-  "updatedAt": "2026-08-29T02:08:00+09:00"
+  "nextAction": "Run the consolidated P5.25-03 gates against the exact final production candidate. Do not merge or push.",
+  "updatedAt": "2026-08-29T02:20:00+09:00"
 }
