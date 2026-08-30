@@ -122,6 +122,11 @@ export interface AnalyzeMidiOptions {
    * exact legacy analyzer input.
    */
   enableHarmonicStateConsolidation?: boolean;
+  /**
+   * Runtime-only P5.26 surface adapter. Only the literal boolean true enables
+   * key-aware chord-label spelling; omission and false preserve exact output.
+   */
+  enableKeyAwareChordSpelling?: boolean;
 
 }
 
