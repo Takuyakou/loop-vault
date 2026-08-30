@@ -1,0 +1,32 @@
+phase5.26/
+├─ README.md
+├─ CODEX-START-PROMPT.md
+├─ CODEX-RUN-REMAINING-STAGES.md
+├─ work-instructions.md
+├─ execution-state.json
+├─ proposal/
+│  ├─ ORIGINAL-PROPOSAL.md
+│  └─ P5.26-DESIGN-REVIEW-INTEGRATED.md
+├─ audit/
+│  └─ P5.26-00-repository-audit.md
+├─ contracts/
+│  ├─ 01-scope-architecture-contract.md
+│  ├─ 02-local-harmonic-rhythm-contract.md
+│  ├─ 03-structural-bass-consolidation-contract.md
+│  ├─ 04-spelling-contract.md
+│  ├─ 05-altered-tensions-shadow-contract.md
+│  ├─ 06-evaluation-promotion-contract.md
+│  ├─ 07-flags-regression-contract.md
+│  └─ 08-privacy-performance-contract.md
+├─ fixtures/
+│  └─ README.md
+├─ backlog/
+│  └─ SLASH-BASS-UPPER-STRUCTURE-SEMANTICS.md
+└─ reports/
+   ├─ README.md
+   ├─ P5.26-00-audit-baseline.md
+   ├─ P5.26-01-key-aware-spelling.md
+   ├─ P5.26-02-local-hr-shadow.md
+   ├─ P5.26-03-local-hr-integration.md
+   ├─ P5.26-04-altered-tensions-shadow.md
+   └─ P5.26-05-product-acceptance.md

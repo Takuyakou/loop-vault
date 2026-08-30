@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "5.26",
+  "status": "in-progress",
+  "activeStage": "P5.26-00",
+  "completedStages": [],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "9593036a4f8348c0b6b362c55b434ab8a45ec797",
+  "lastVerifiedCommit": "",
+  "currentBranch": "feat/p526-local-harmonic-rhythm-spelling-tensions",
+  "requiredGates": {
+    "P5.26-00": [
+      "focused-contract-tests",
+      "p526-typecheck",
+      "p524-regression",
+      "phase-docs",
+      "privacy-hygiene",
+      "production-source-unchanged",
+      "diff-check"
+    ]
+  },
+  "gateResults": {},
+  "nextAction": "Finish fresh P5.26-00 verification, record gates against the Stage00 commit, then stop before P5.26-01.",
+  "updatedAt": "2026-08-31T00:01:00+09:00"
+}
