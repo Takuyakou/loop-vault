@@ -2,7 +2,7 @@
 # Phase 5.26 — Local Harmonic Rhythm / Structural Bass Evidence / Spelling / Altered Tensions
 
 ## Status
-`IN PROGRESS — P5.26-00 COMPLETE; P5.26-01 AWAITING HUMAN AUTHORIZATION`
+`IN PROGRESS — P5.26-00 / P5.26-01 COMPLETE; P5.26-02 AWAITING HUMAN AUTHORIZATION`
 
 ## Purpose
 演奏MIDIの誤りを、境界、Structural Bass、surface spelling、altered tensionの独立軸で改善する。
@@ -37,7 +37,8 @@ Synthetic 8-bar truthは `1,1,2,2,1,1,2,2` statesで、Bar 2は1 state。
 Complete at tested implementation commit `e1861dcbb17027b992c809012819c6ba7a0563b3`; no production behavior change.
 
 ### P5.26-01 Key-aware Spelling
-Pending explicit human authorization; do not start automatically.
+Complete at tested implementation commit `fb09649a2e6e91093042e7a0f6db0c4571ecd86e`.
+Key-aware surface spelling is runtime-only and literal-true-gated; no schema migration was made.
 
 ### P5.26-02 Local HR / Structural Bass Shadow
 Pending.
@@ -56,4 +57,4 @@ Global HR deletion, MIDI/timing or Voice Role changes, persistence migration, br
 mandatory `Amaj9/B` normalization, merge, push, P5.27。
 
 ## Next Action
-停止。明示的なhuman authorizationがある場合のみP5.26-01を開始する。merge、push、P5.27は禁止。
+停止。明示的なhuman authorizationがある場合のみP5.26-02を開始する。merge、push、P5.27は禁止。
