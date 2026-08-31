@@ -69,15 +69,15 @@ export function buildP526EightBarPreparedData(): MidiSongData {
   const noteSpecs = [
     ...segmentNotes(0, 4, [40, 49, 54, 56, 59]),
     ...segmentNotes(4, 2, [44, 48, 51, 54, 64]),
-    ...segmentNotes(6, 2, [42, 48, 51, 54, 64]),
+    ...segmentNotes(6, 2, [42, 48, 51, 54, 64], 0.42, 0.45),
     ...segmentNotes(8, 2, [37, 52, 56, 59, 63]),
     ...segmentNotes(10, 2, [36, 52, 55, 59]),
     ...segmentNotes(12, 2, [35, 50, 54, 57, 61]),
     ...segmentNotes(14, 2, [40, 49, 50, 54, 56, 59]),
     ...segmentNotes(16, 2, [45, 49, 52, 56, 59]),
-    ...segmentNotes(18, 2, [44, 45, 49, 52, 56, 59]),
+    ...segmentNotes(18, 2, [44, 45, 49, 52, 56, 59], 0.42, 0.45),
     ...segmentNotes(20, 2, [45, 48, 52, 54]),
-    ...segmentNotes(22, 2, [42, 48, 52, 57]),
+    ...segmentNotes(22, 2, [42, 48, 52, 57], 0.42, 0.45),
     ...segmentNotes(24, 2, [44, 52, 56, 59]),
     ...segmentNotes(26, 2, [37, 49, 53, 56, 59]),
     ...segmentNotes(28, 2, [42, 49, 52, 56, 57]),
@@ -88,7 +88,7 @@ export function buildP526EightBarPreparedData(): MidiSongData {
       pitch: note.pitch,
       startTick: note.startBeat * ticksPerBeat,
       durationTick: note.durationBeats * ticksPerBeat,
-      velocity: 0.8,
+      velocity: note.velocity,
       trackIndex: note.lane === "bass" ? 0 : 1,
       channel: note.lane === "bass" ? 0 : 1,
       program: note.lane === "bass" ? 33 : 0,
@@ -164,19 +164,21 @@ function chordPulses(
       pitch,
       startBeat,
       durationBeats: 0.42,
-      velocity: 0.8,
+      velocity: index === 0 && secondHalf && !structuralSecondHalf ? 0.45 : 0.8,
       expectedLane: index === 0 ? "bass" as const : "upper" as const,
     }));
   }).flat();
 }
 
-function segmentNotes(startBeat: number, durationBeats: number, pitches: readonly number[]) {
+function segmentNotes(startBeat: number, durationBeats: number, pitches: readonly number[],
+  bassDurationBeats = 0.42, bassVelocity = 0.8) {
   return Array.from({ length: durationBeats * 2 }, (_, pulse) => {
     const attack = startBeat + pulse * 0.5;
     return pitches.map((pitch, index) => ({
       pitch,
       startBeat: attack,
-      durationBeats: 0.42,
+      durationBeats: index === 0 ? bassDurationBeats : 0.42,
+      velocity: index === 0 ? bassVelocity : 0.8,
       lane: index === 0 ? "bass" as const : "upper" as const,
     }));
   }).flat();
