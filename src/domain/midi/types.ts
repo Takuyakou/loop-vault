@@ -122,6 +122,17 @@ export interface AnalyzeMidiOptions {
    * exact legacy analyzer input.
    */
   enableHarmonicStateConsolidation?: boolean;
+  /**
+   * Runtime-only P5.26 integration. Only the literal boolean true enables
+   * Local Harmonic Rhythm plus Structural Bass derived projection; omission
+   * and false preserve the exact pre-P5.26 analyzer path.
+   */
+  enableLocalHarmonicStateConsolidation?: boolean;
+  /**
+   * Runtime-only P5.26 surface adapter. Only the literal boolean true enables
+   * key-aware chord-label spelling; omission and false preserve exact output.
+   */
+  enableKeyAwareChordSpelling?: boolean;
 
 }
 

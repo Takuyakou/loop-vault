@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "5.26.1",
+  "status": "completed",
+  "activeStage": null,
+  "completedStages": ["P5.26.1-00"],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "1f40da34931bb85e018d810680fea61a315ff814",
+  "lastVerifiedCommit": "7ece75645f0ad86394235cb8f3902850cf85fc6d",
+  "currentBranch": "fix/p5261-source-voicing-full-playback",
+  "requiredGates": {
+    "P5.26.1-00": [
+      "focused-unit-tests",
+      "relevant-playback-regression",
+      "application-typecheck",
+      "lint",
+      "phase-docs",
+      "security-scan",
+      "privacy-generated-hygiene",
+      "protected-surface-diff",
+      "diff-check",
+      "final-status"
+    ]
+  },
+  "gateResults": {
+    "focused-unit-tests": "pass",
+    "relevant-playback-regression": "pass",
+    "application-typecheck": "pass",
+    "lint": "pass",
+    "phase-docs": "pass",
+    "security-scan": "pass",
+    "privacy-generated-hygiene": "pass",
+    "protected-surface-diff": "pass",
+    "diff-check": "pass",
+    "final-status": "pass"
+  },
+  "nextAction": "P5.26.1 is complete. Stop and await separate human authorization for merge; do not push, tag, release, or begin a later phase.",
+  "updatedAt": "2026-08-31T21:30:00+09:00"
+}

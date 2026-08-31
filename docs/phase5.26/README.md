@@ -1,0 +1,64 @@
+<!-- phase-id: 5.26 -->
+# Phase 5.26 — Local Harmonic Rhythm / Structural Bass Evidence / Spelling / Altered Tensions
+
+## Status
+`READY FOR PRODUCT ACCEPTANCE — Local Harmonic Rhythm / Spelling / Altered Tensions`
+
+## Purpose
+演奏MIDIの誤りを、境界、Structural Bass、surface spelling、altered tensionの独立軸で改善する。
+Synthetic 8-bar truthは `1,1,2,2,1,1,2,2` statesで、Bar 2は1 state。
+
+## Required Reading Order
+1. [root AGENTS.md](../../AGENTS.md)
+2. [root CLAUDE.md](../../CLAUDE.md)
+3. [execution-state.json](execution-state.json)
+4. [work-instructions.md](work-instructions.md)
+5. [original proposal](proposal/ORIGINAL-PROPOSAL.md)
+6. [integrated design review](proposal/P5.26-DESIGN-REVIEW-INTEGRATED.md)
+7. [scope / architecture contract](contracts/01-scope-architecture-contract.md)
+8. [local harmonic rhythm contract](contracts/02-local-harmonic-rhythm-contract.md)
+9. [structural bass consolidation contract](contracts/03-structural-bass-consolidation-contract.md)
+10. [spelling contract](contracts/04-spelling-contract.md)
+11. [altered tensions shadow contract](contracts/05-altered-tensions-shadow-contract.md)
+12. [evaluation / promotion contract](contracts/06-evaluation-promotion-contract.md)
+13. [flags / regression contract](contracts/07-flags-regression-contract.md)
+14. [privacy / performance contract](contracts/08-privacy-performance-contract.md)
+15. [active audit](audit/P5.26-00-repository-audit.md)
+16. [active report](reports/P5.26-05-product-acceptance.md)
+17. [slash-bass naming backlog](backlog/SLASH-BASS-UPPER-STRUCTURE-SEMANTICS.md)
+
+## Tracks
+- A: Local Harmonic Rhythm + Structural Bass evidence fusion
+- B: Key-aware surface spelling
+- C: Altered-tension generation/ranking shadow
+
+## Stages
+### P5.26-00 Audit / Fixture / Metrics / Baseline
+Complete at tested implementation commit `e1861dcbb17027b992c809012819c6ba7a0563b3`; no production behavior change.
+
+### P5.26-01 Key-aware Spelling
+Complete at tested implementation commit `fb09649a2e6e91093042e7a0f6db0c4571ecd86e`.
+Key-aware surface spelling is runtime-only and literal-true-gated; no schema migration was made.
+
+### P5.26-02 Local HR / Structural Bass Shadow
+Complete at tested implementation commit `47b6a3733640b41649a392cfd3be702c6e83479b`; shadow-only with no production analyzer connection.
+
+### P5.26-03 Feature-flagged Integration
+Complete at tested implementation commit `74d0d38138245989c6a1489ee7aede56d7d74c34`.
+Track A is runtime-only and literal-true-gated; default OFF remains exact.
+
+### P5.26-04 Altered Tensions Shadow
+Complete at tested implementation commit `960cc6af564921dcd9820e7b0143af48d96181f0`.
+Track C closes as `SHADOW PASS — NOT PROMOTED`; production rank 1 is unchanged.
+
+### P5.26-05 Product Acceptance
+Automated gates pass; Human Acceptance is `NOT RUN`. This stage remains active
+and does not authorize merge, push, tag, release, or P5.27.
+
+## Non-goals
+Global HR deletion, MIDI/timing or Voice Role changes, persistence migration, broad scoring retune,
+mandatory `Amaj9/B` normalization, merge, push, P5.27。
+
+## Next Action
+停止。packaged direct executableでHuman Acceptanceを実施する。
+Human Acceptance合格前のmerge、push、tag、release、P5.27は禁止。

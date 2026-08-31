@@ -84,9 +84,11 @@ vi.mock("tone", () => ({
 
 import {
   previewChord,
+  previewChordTimeline,
   previewMidiNotes,
   stopPreview,
 } from "./chordPreview";
+import { voiceChordForPreview } from "../domain/chordVoicing";
 
 const chord = {
   root: 0,
@@ -191,6 +193,65 @@ describe("chord preview instruments", () => {
     },
   );
 
+  it("uses explicit notes per timeline event and preserves generated fallback", async () => {
+    const fallbackChord = {
+      root: 2,
+      quality: "min7" as const,
+      tensions: [],
+      label: "Dm7",
+    };
+    const timeline = [
+      {
+        eventId: "source",
+        bar: 1,
+        beat: 1,
+        durationBeats: 2,
+        chord,
+        confidence: 1,
+        alternatives: [],
+        warnings: [],
+      },
+      {
+        eventId: "fallback",
+        bar: 1,
+        beat: 3,
+        durationBeats: 2,
+        chord: fallbackChord,
+        confidence: 1,
+        alternatives: [],
+        warnings: [],
+      },
+    ];
+    const sourceNotes = [40, 52, 56, 59, 63];
+    const synthCount = tone.polySynths.length;
+
+    await previewChordTimeline(
+      timeline,
+      120,
+      "electric-piano",
+      {},
+      4,
+      { source: sourceNotes },
+    );
+    const electric = tone.polySynths[synthCount]!;
+    await vi.advanceTimersByTimeAsync(0);
+    expect(electric.triggerAttackRelease).toHaveBeenNthCalledWith(
+      1,
+      sourceNotes.map(midiNoteName),
+      0.9,
+      undefined,
+      0.7,
+    );
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(electric.triggerAttackRelease).toHaveBeenNthCalledWith(
+      2,
+      voiceChordForPreview(fallbackChord).notes.map(midiNoteName),
+      0.9,
+      undefined,
+      0.7,
+    );
+  });
+
   it("plays raw MIDI notes in bounded windows and releases them on stop", async () => {
     tone.setAudioNow(0);
     const started = vi.fn();
@@ -269,5 +330,12 @@ describe("chord preview instruments", () => {
     expect(referenceEnded).toHaveBeenCalledWith("completed");
   });
 });
+
+function midiNoteName(note: number): string {
+  const pitchClasses = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+  const pitchClass = pitchClasses[((note % 12) + 12) % 12]!;
+  const octave = Math.floor(note / 12) - 1;
+  return `${pitchClass}${octave}`;
+}
 
 const PREVIEW_RELEASE_TAIL_MS_FOR_TEST = 1_100;
