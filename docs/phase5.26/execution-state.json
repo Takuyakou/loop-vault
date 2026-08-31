@@ -13,7 +13,7 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "9593036a4f8348c0b6b362c55b434ab8a45ec797",
-  "lastVerifiedCommit": "960cc6af564921dcd9820e7b0143af48d96181f0",
+  "lastVerifiedCommit": "facc5ba4a6810a27d8812f3fc518ad48654d0e8a",
   "currentBranch": "feat/p526-local-harmonic-rhythm-spelling-tensions",
   "requiredGates": {
     "P5.26-00": [
@@ -113,6 +113,30 @@
       "p52604-default-deep-equal",
       "p52604-rank-one-delta-zero",
       "p52604-diff-check"
+    ],
+    "P5.26-05": [
+      "p52605-focused-regression",
+      "p52605-full-vitest",
+      "p52605-application-typecheck",
+      "p52605-e2e-typecheck",
+      "p52605-lint",
+      "p52605-phase-docs",
+      "p52605-web-production-build",
+      "p52605-full-playwright",
+      "p52605-visual-unintended-diff-zero",
+      "p52605-cargo-test",
+      "p52605-cargo-check",
+      "p52605-tauri-release-build",
+      "p52605-direct-exe-smoke",
+      "p52605-artifact-integrity",
+      "p52605-security-scan",
+      "p52605-security-script-tests",
+      "p52605-dependency-audit",
+      "p52605-cargo-protected-diff",
+      "p52605-privacy-generated-hygiene",
+      "p52605-real-local-aggregate",
+      "p52605-diff-check",
+      "p52605-final-status"
     ]
   },
   "gateResults": {
@@ -203,8 +227,30 @@
     "p52604-shadow-only": "pass",
     "p52604-default-deep-equal": "pass",
     "p52604-rank-one-delta-zero": "pass",
-    "p52604-diff-check": "pass"
+    "p52604-diff-check": "pass",
+    "p52605-focused-regression": "pass",
+    "p52605-full-vitest": "pass",
+    "p52605-application-typecheck": "pass",
+    "p52605-e2e-typecheck": "pass",
+    "p52605-lint": "pass",
+    "p52605-phase-docs": "pass",
+    "p52605-web-production-build": "pass",
+    "p52605-full-playwright": "pass",
+    "p52605-visual-unintended-diff-zero": "pass",
+    "p52605-cargo-test": "pass",
+    "p52605-cargo-check": "pass",
+    "p52605-tauri-release-build": "pass",
+    "p52605-direct-exe-smoke": "pass",
+    "p52605-artifact-integrity": "pass",
+    "p52605-security-scan": "pass",
+    "p52605-security-script-tests": "pass",
+    "p52605-dependency-audit": "pass",
+    "p52605-cargo-protected-diff": "pass",
+    "p52605-privacy-generated-hygiene": "pass",
+    "p52605-real-local-aggregate": "pass",
+    "p52605-diff-check": "pass",
+    "p52605-final-status": "pass"
   },
-  "nextAction": "P5.26-05 Product Acceptance is authorized but not started. Do not merge, push, release, tag, or begin P5.27.",
-  "updatedAt": "2026-08-31T17:09:00+09:00"
+  "nextAction": "READY FOR PRODUCT ACCEPTANCE. Human Acceptance is not run; do not merge, push, tag, release, or begin P5.27.",
+  "updatedAt": "2026-08-31T17:32:00+09:00"
 }

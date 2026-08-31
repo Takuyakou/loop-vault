@@ -2,7 +2,7 @@
 # Phase 5.26 — Local Harmonic Rhythm / Structural Bass Evidence / Spelling / Altered Tensions
 
 ## Status
-`IN PROGRESS — P5.26-00 / P5.26-01 / P5.26-02 / P5.26-03 / P5.26-04 COMPLETE; P5.26-05 AUTHORIZED / NOT STARTED`
+`READY FOR PRODUCT ACCEPTANCE — Local Harmonic Rhythm / Spelling / Altered Tensions`
 
 ## Purpose
 演奏MIDIの誤りを、境界、Structural Bass、surface spelling、altered tensionの独立軸で改善する。
@@ -52,12 +52,13 @@ Complete at tested implementation commit `960cc6af564921dcd9820e7b0143af48d96181
 Track C closes as `SHADOW PASS — NOT PROMOTED`; production rank 1 is unchanged.
 
 ### P5.26-05 Product Acceptance
-Authorized; not started.
+Automated gates pass; Human Acceptance is `NOT RUN`. This stage remains active
+and does not authorize merge, push, tag, release, or P5.27.
 
 ## Non-goals
 Global HR deletion, MIDI/timing or Voice Role changes, persistence migration, broad scoring retune,
 mandatory `Amaj9/B` normalization, merge, push, P5.27。
 
 ## Next Action
-P5.26-05 Product Acceptanceを独立stageとして開始する。
-merge、push、P5.27は禁止。
+停止。packaged direct executableでHuman Acceptanceを実施する。
+Human Acceptance合格前のmerge、push、tag、release、P5.27は禁止。
