@@ -79,6 +79,11 @@ export function prepareHarmonicStateAnalyzerOptions(
   }
 }
 
+/** Marks a prepared derived-state timeline for exact boundary preservation. */
+export function markHarmonicStateTimelineApplied(options: AnalyzeMidiOptions): AnalyzeMidiOptions {
+  return { ...options, [harmonicStateTimelineApplied]: true } as AppliedAnalyzeMidiOptions;
+}
+
 export function hasAppliedHarmonicStateTimeline(options: AnalyzeMidiOptions): boolean {
   return (options as AppliedAnalyzeMidiOptions)[harmonicStateTimelineApplied] === true;
 }

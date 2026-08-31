@@ -267,8 +267,9 @@ function decideBoundary(left: P526LocalEvidenceCell, right: P526LocalEvidenceCel
   const persistentArrivalOnUpperTone = persistentBassChange
     && !left.upperPitchClasses.includes(left.bassPitchClass!)
     && right.upperPitchClasses.includes(right.bassPitchClass!);
+  const structuralBarBoundary = right.startBeat % beatsPerBar === 0;
   if (stableUpper) {
-    if (persistentBassChange && (largePersistentBassChange || persistentArrivalOnUpperTone || !allSignalsStrong)) {
+    if (persistentBassChange && (structuralBarBoundary || largePersistentBassChange || persistentArrivalOnUpperTone || !allSignalsStrong)) {
       return split(right.startBeat, signals, ["stable-upper-structure", "persistent-bass-change", ...(metricStrong ? ["strong-metric-placement" as const] : []), ...(pcStrong ? ["pitch-class-support" as const] : []), ...(continuityStrong ? ["temporal-continuity" as const] : []), ...(localStrong ? ["local-rhythm-support" as const] : [])]);
     }
     const independentSameState = (pcStrong ? 1 : 0) + (continuityStrong ? 1 : 0) + (localStrong ? 1 : 0);
@@ -278,7 +279,7 @@ function decideBoundary(left: P526LocalEvidenceCell, right: P526LocalEvidenceCel
   const samePitchMaterial = setEqual([...left.upperPitchClasses, ...(left.bassPitchClass === undefined ? [] : [left.bassPitchClass])],
     [...right.upperPitchClasses, ...(right.bassPitchClass === undefined ? [] : [right.bassPitchClass])]);
   const atBarBoundary = right.startBeat % beatsPerBar === 0;
-  if (samePitchMaterial && atBarBoundary && left.endBeat - left.startBeat >= 2 && right.endBeat - right.startBeat >= 2 && pcStrong && continuityStrong) {
+  if (samePitchMaterial && atBarBoundary && pcStrong && continuityStrong) {
     return merge(right.startBeat, signals, ["same-pitch-material", "bar-scale-inversion", "pitch-class-support", "temporal-continuity"]);
   }
   const nextApproach = samePitchMaterial && nextBarCell !== undefined && right.bassPitchClass !== undefined
@@ -387,7 +388,7 @@ function parseInput(value: unknown): P526LocalHarmonicStateShadowInput | undefin
 
 function compareCells(left: P526LocalEvidenceCell, right: P526LocalEvidenceCell): number { return left.startBeat - right.startBeat || left.endBeat - right.endBeat || compareNumberArrays(left.upperPitchClasses, right.upperPitchClasses) || (left.bassPitchClass ?? -1) - (right.bassPitchClass ?? -1); }
 function compareNumberArrays(left: readonly number[], right: readonly number[]): number { for (let index = 0; index < Math.min(left.length, right.length); index += 1) if (left[index] !== right[index]) return left[index]! - right[index]!; return left.length - right.length; }
-function hasUnboundedDensity(input: P526LocalHarmonicStateShadowInput): boolean { const counts = new Uint8Array(input.totalBeats / beatsPerBar); for (const cell of input.cells) { const first = Math.floor(cell.startBeat / beatsPerBar); const final = Math.min(counts.length - 1, Math.floor((cell.endBeat - Number.EPSILON) / beatsPerBar)); for (let bar = first; bar <= final; bar += 1) { counts[bar]! += 1; if (counts[bar]! > maximumCandidateCellsPerBar) return true; } } return false; }
+function hasUnboundedDensity(input: P526LocalHarmonicStateShadowInput): boolean { const counts = new Uint8Array(input.totalBeats / beatsPerBar); for (const cell of input.cells) { const first = Math.floor(cell.startBeat / beatsPerBar); const final = Math.min(counts.length - 1, Math.ceil(cell.endBeat / beatsPerBar) - 1); for (let bar = first; bar <= final; bar += 1) { counts[bar]! += 1; if (counts[bar]! > maximumCandidateCellsPerBar) return true; } } return false; }
 function hasUnsupportedMeter(value: unknown): boolean { return isRecord(value) && isDenseArray(value.meter) && value.meter.length === 2 && (value.meter[0] !== 4 || value.meter[1] !== 4); }
 function unknownResult(reason: P526LocalHarmonicStateShadowUnknown["reason"], inputCells = 0, bars = 0): P526LocalHarmonicStateShadowUnknown {
   return { status: "unknown", bars: [], states: [], boundaries: [], operations: {

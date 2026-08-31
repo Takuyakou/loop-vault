@@ -22,6 +22,10 @@ import {
   harmonicStateConsolidationAnalyzerVersion,
   prepareHarmonicStateAnalyzerOptions,
 } from "./harmonicStateConsolidation";
+import {
+  localHarmonicStateConsolidationAnalyzerVersion,
+  prepareLocalHarmonicStateAnalyzerOptions,
+} from "./localHarmonicStateIntegration";
 import { applyKeyAwareChordSpelling } from "./keyAwareChordSpelling";
 /** Kept for rollback: the analyzer promoted in Phase 4.0. */
 export const phase40DefaultAnalyzerMode = "phase4-v1" as const;
@@ -56,7 +60,9 @@ export {
 export { buildWeightedWindows, extractBlockCandidates, inferTrackRoles, matchWindow, smoothTimeline } from "./legacy";
 
 export function analyzeMidi(bytes: Uint8Array, options: AnalyzeMidiOptions = {}): MidiProgressionAnalysis {
-  const integration = prepareHarmonicStateAnalyzerOptions(bytes, options);
+  const integration = options.enableLocalHarmonicStateConsolidation === true
+    ? prepareLocalHarmonicStateAnalyzerOptions(bytes, options)
+    : prepareHarmonicStateAnalyzerOptions(bytes, options);
   const analyzerOptions = integration.options;
   const mode = analyzerOptions.mode ?? defaultAnalyzerMode;
   const primary = runAnalyzer(bytes, analyzerOptions, mode);
@@ -80,7 +86,11 @@ export function analyzeMidi(bytes: Uint8Array, options: AnalyzeMidiOptions = {})
   const finalized = {
     ...analysis,
     sourceFingerprint: options.analysisFingerprint ?? fingerprintMidiBytes(bytes),
-    ...(integration.applied ? { analyzerVersion: harmonicStateConsolidationAnalyzerVersion } : {}),
+    ...(integration.applied ? {
+      analyzerVersion: options.enableLocalHarmonicStateConsolidation === true
+        ? localHarmonicStateConsolidationAnalyzerVersion
+        : harmonicStateConsolidationAnalyzerVersion,
+    } : {}),
   };
   return options.enableKeyAwareChordSpelling === true
     ? applyKeyAwareChordSpelling(finalized)

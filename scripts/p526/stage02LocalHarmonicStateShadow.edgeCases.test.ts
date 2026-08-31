@@ -237,6 +237,23 @@ describe("P5.26-02 local harmonic state shadow edge cases", () => {
     }
   });
 
+  it("splits a persistent small Bass change at a structural bar boundary", () => {
+    const result = estimateP526LocalHarmonicStateShadow({
+      meter: [4, 4], totalBeats: 8,
+      cells: [cell(0, 4, [0, 4, 7], 0), cell(4, 8, [0, 4, 7], 9)],
+      globalHarmonicRhythm: { status: "supported", quarterBeats: 4 },
+    });
+    expect(result.status).toBe("supported");
+    if (result.status === "supported") {
+      expect(result.states).toHaveLength(2);
+      expect(result.boundaries[0]).toMatchObject({
+        beat: 4,
+        decision: "split-structural-change",
+        evidence: expect.arrayContaining(["stable-upper-structure", "persistent-bass-change"]),
+      });
+    }
+  });
+
   it("fails the entire result closed when a valid bar has non-periodic Local splits", () => {
     const result = estimateP526LocalHarmonicStateShadow({
       meter: [4, 4], totalBeats: 4,
@@ -363,6 +380,29 @@ describe("P5.26-02 local harmonic state shadow edge cases", () => {
         stateAssignments: barCount,
       });
       expect(result.operations.contextLookups).toBeLessThanOrEqual(Math.max(0, barCount - 2));
+    }
+  });
+
+  it("does not double-count cells ending exactly at a bar boundary", () => {
+    const cells = Array.from({ length: 8 }, (_, index) => (
+      cell(index, index + 1, [0, 4, 7], 0)
+    ));
+    const result = estimateP526LocalHarmonicStateShadow({
+      meter: [4, 4], totalBeats: 8, cells,
+      globalHarmonicRhythm: { status: "supported", quarterBeats: 4 },
+    });
+    expect(result.status).toBe("supported");
+    if (result.status === "supported") {
+      expect(result.bars).toHaveLength(2);
+      expect(result.states).toEqual([{
+        startBeat: 0, endBeat: 8,
+        upperPitchClasses: [0, 4, 7], structuralBassPitchClasses: [0],
+      }]);
+      expect(result.operations).toMatchObject({
+        inputCells: 8, bars: 2,
+        barIndexCellVisits: 8, barIndexAssignments: 8,
+        candidateCellVisits: 8,
+      });
     }
   });
 

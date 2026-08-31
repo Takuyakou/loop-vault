@@ -63,6 +63,27 @@
       "p52602-shadow-only",
       "p52602-persistence-unchanged",
       "p52602-diff-check"
+    ],
+    "P5.26-03": [
+      "p52603-focused-tests",
+      "p52603-related-regression",
+      "p52603-typecheck",
+      "p52603-repository-typecheck",
+      "p52603-lint",
+      "p52603-phase-docs",
+      "p52603-security-scan",
+      "p52603-security-script-tests",
+      "p52603-dependency-audit",
+      "p52603-privacy-hygiene",
+      "p52603-generated-output-hygiene",
+      "p52603-whitespace-hygiene",
+      "p52603-flag-default-off-on",
+      "p52603-global-retention",
+      "p52603-unknown-fallback",
+      "p52603-persistence-schema-protected",
+      "p52603-bounded-determinism",
+      "p52603-p02-regression-hardening",
+      "p52603-diff-check"
     ]
   },
   "gateResults": {
@@ -113,8 +134,27 @@
     "p52602-bounded-performance": "pass",
     "p52602-shadow-only": "pass",
     "p52602-persistence-unchanged": "pass",
-    "p52602-diff-check": "pass"
+    "p52602-diff-check": "pass",
+    "p52603-focused-tests": "pass",
+    "p52603-related-regression": "pass",
+    "p52603-typecheck": "pass",
+    "p52603-repository-typecheck": "pass",
+    "p52603-lint": "pass",
+    "p52603-phase-docs": "pass",
+    "p52603-security-scan": "pass",
+    "p52603-security-script-tests": "pass",
+    "p52603-dependency-audit": "pass",
+    "p52603-privacy-hygiene": "pass",
+    "p52603-generated-output-hygiene": "pass",
+    "p52603-whitespace-hygiene": "pass",
+    "p52603-flag-default-off-on": "pass",
+    "p52603-global-retention": "pass",
+    "p52603-unknown-fallback": "pass",
+    "p52603-persistence-schema-protected": "pass",
+    "p52603-bounded-determinism": "pass",
+    "p52603-p02-regression-hardening": "pass",
+    "p52603-diff-check": "pass"
   },
-  "nextAction": "Stop. P5.26-03 requires explicit human authorization. Do not merge, push, or begin P5.27.",
-  "updatedAt": "2026-08-31T14:29:00+09:00"
+  "nextAction": "Commit P5.26-03 independently, then reverify the exact commit. Do not begin P5.26-04, merge, push, or begin P5.27.",
+  "updatedAt": "2026-08-31T15:18:00+09:00"
 }
