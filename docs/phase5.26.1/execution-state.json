@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "phaseId": "5.26.1",
-  "status": "in-progress",
-  "activeStage": "P5.26.1-00",
-  "completedStages": [],
+  "status": "completed",
+  "activeStage": null,
+  "completedStages": ["P5.26.1-00"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "1f40da34931bb85e018d810680fea61a315ff814",
-  "lastVerifiedCommit": "",
+  "lastVerifiedCommit": "7ece75645f0ad86394235cb8f3902850cf85fc6d",
   "currentBranch": "fix/p5261-source-voicing-full-playback",
   "requiredGates": {
     "P5.26.1-00": [
@@ -23,7 +23,18 @@
       "final-status"
     ]
   },
-  "gateResults": {},
-  "nextAction": "Audit and implement Capture full-playback source-voicing parity; do not merge or push.",
-  "updatedAt": "2026-08-31T18:30:00+09:00"
+  "gateResults": {
+    "focused-unit-tests": "pass",
+    "relevant-playback-regression": "pass",
+    "application-typecheck": "pass",
+    "lint": "pass",
+    "phase-docs": "pass",
+    "security-scan": "pass",
+    "privacy-generated-hygiene": "pass",
+    "protected-surface-diff": "pass",
+    "diff-check": "pass",
+    "final-status": "pass"
+  },
+  "nextAction": "P5.26.1 is complete. Stop and await separate human authorization for merge; do not push, tag, release, or begin a later phase.",
+  "updatedAt": "2026-08-31T21:30:00+09:00"
 }
