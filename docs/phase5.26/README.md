@@ -2,7 +2,7 @@
 # Phase 5.26 — Local Harmonic Rhythm / Structural Bass Evidence / Spelling / Altered Tensions
 
 ## Status
-`IN PROGRESS — P5.26-00 / P5.26-01 / P5.26-02 / P5.26-03 COMPLETE; P5.26-04 AUTHORIZED / NOT STARTED`
+`IN PROGRESS — P5.26-00 / P5.26-01 / P5.26-02 / P5.26-03 COMPLETE; P5.26-04 WORKING-TREE PASS / COMMIT PENDING`
 
 ## Purpose
 演奏MIDIの誤りを、境界、Structural Bass、surface spelling、altered tensionの独立軸で改善する。
@@ -24,7 +24,7 @@ Synthetic 8-bar truthは `1,1,2,2,1,1,2,2` statesで、Bar 2は1 state。
 13. [flags / regression contract](contracts/07-flags-regression-contract.md)
 14. [privacy / performance contract](contracts/08-privacy-performance-contract.md)
 15. [active audit](audit/P5.26-00-repository-audit.md)
-16. [active report](reports/P5.26-03-local-hr-integration.md)
+16. [active report](reports/P5.26-04-altered-tensions-shadow.md)
 17. [slash-bass naming backlog](backlog/SLASH-BASS-UPPER-STRUCTURE-SEMANTICS.md)
 
 ## Tracks
@@ -48,7 +48,8 @@ Complete at tested implementation commit `74d0d38138245989c6a1489ee7aede56d7d74c
 Track A is runtime-only and literal-true-gated; default OFF remains exact.
 
 ### P5.26-04 Altered Tensions Shadow
-Pending.
+Working-tree gates pass; the independent implementation commit and exact-commit
+verification are pending. Promotion is `SHADOW PASS — NOT PROMOTED`.
 
 ### P5.26-05 Product Acceptance
 Pending.
@@ -58,5 +59,5 @@ Global HR deletion, MIDI/timing or Voice Role changes, persistence migration, br
 mandatory `Amaj9/B` normalization, merge, push, P5.27。
 
 ## Next Action
-停止。P5.26-04はauthorizedだが未開始。別stageとして開始する。
+停止。P5.26-04の独立commitとexact-commit再検証を行う。
 merge、push、P5.27は禁止。
