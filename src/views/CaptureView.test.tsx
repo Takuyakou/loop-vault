@@ -16,6 +16,7 @@ import {
   LEGACY_SIMILARITY_VOICE_ID,
 } from "../domain/progressionEditing";
 import { makeIdea } from "../domain/testFactory";
+import { normalizedChordKey } from "../domain/voicing";
 import { createDraftFromCandidate } from "../domain/midi/manualDraft";
 import {
   captureDraftSnapshot,
@@ -2822,6 +2823,63 @@ describe("TimelineDetails", () => {
     await act(async () => playbackButton()?.click());
     expect(playbackButton()?.textContent).toContain("曲全体を再生");
     expect(driver.stop).toHaveBeenCalledTimes(2);
+
+    await act(async () => root.unmount());
+  });
+
+  it("passes the same source voicing used by cards to full playback", async () => {
+    const sourceNotes = [
+      [40, 52, 56, 59, 63],
+      [43, 50, 55, 59],
+    ];
+    const fullTimeline = [chord("Cmaj7", 1), chord("Am7", 2)].map((event, index) => ({
+      ...event,
+      voicingMemory: {
+        sourceVoicing: {
+          schemaVersion: 1 as const,
+          source: "midi-extracted" as const,
+          representation: "simultaneous-voicing" as const,
+          midiNotes: sourceNotes[index]!,
+          capturedForChordKey: normalizedChordKey(event.chord),
+          confidence: 1,
+          userVerified: true,
+        },
+      },
+    }));
+    const result: MidiProgressionAnalysis = {
+      fileName: "synthetic.mid",
+      totalBars: 2,
+      bpm: 100,
+      fullTimeline,
+      blockCandidates: [],
+      analyzedAt: "2026-07-15T00:00:00.000Z",
+      analyzerVersion: "test",
+    };
+    const { controller, driver } = playbackHarness();
+    const container = document.createElement("div");
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <TimelineDetails
+          result={result}
+          copy={appCopy.ja}
+          language="ja"
+          previewSound="piano"
+          onPreviewSoundChange={vi.fn()}
+          controller={controller}
+        />,
+      );
+    });
+
+    await act(async () => container.querySelector<HTMLButtonElement>("button.lv-button-primary")?.click());
+
+    const [playedTimeline, , , , , explicitMidiNotesByEventId] =
+      vi.mocked(driver.playTimeline).mock.calls[0]!;
+    expect(playedTimeline).toHaveLength(2);
+    playedTimeline.forEach((event, index) => {
+      expect(explicitMidiNotesByEventId?.[event.eventId!]).toEqual(sourceNotes[index]);
+    });
 
     await act(async () => root.unmount());
   });

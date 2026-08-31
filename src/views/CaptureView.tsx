@@ -10,7 +10,9 @@ import {
 import type { CandidateOccurrence, CandidatePattern } from "../domain/midi/occurrence";
 import type { Section } from "../domain/midi/sections";
 import {
+  createTimelineVoicingPlaybackPlan,
   resolveVoicingForUse,
+  resolveTimelineItemVoicing,
   timelineVoicingSourceStatus,
 } from "../domain/voicing";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -2357,6 +2359,10 @@ export function TimelineDetails({
   const playback = usePlaybackState(controller);
   const source = captureFullTimelineSource(result);
   const playing = playback.status !== "idle" && samePlaybackSource(playback.source, source);
+  const fullPlaybackPlan = useMemo(
+    () => createTimelineVoicingPlaybackPlan(result.fullTimeline, "capture-full"),
+    [result.fullTimeline],
+  );
   const [, forcePlaybackTick] = useState(0);
 
   useEffect(() => {
@@ -2428,10 +2434,11 @@ export function TimelineDetails({
             source={source}
             request={{
               type: "timeline",
-              timeline: result.fullTimeline,
+              timeline: fullPlaybackPlan.timeline,
               bpm: result.bpm,
               sound: previewSound,
               beatsPerBar: beatsPerBarFor(result.timeSignature),
+              explicitMidiNotesByEventId: fullPlaybackPlan.explicitMidiNotesByEventId,
             }}
             playLabel={copy.capture.previewFullTimeline}
             stopLabel={copy.common.stop}
@@ -3683,17 +3690,13 @@ export function captureAnalysisIdentity(result: MidiProgressionAnalysis | undefi
  * auditioned in capture sounded different from the same chord in Progression
  * Detail and Chord Dojo. This resolves it the same way those screens do.
  *
- * `resolveVoicingForUse` checks the stored voicing against the chord, so an
+ * `resolveTimelineItemVoicing` checks the stored voicing against the chord, so an
  * edited chord falls back to a generated voicing instead of replaying the
  * voicing of the chord it replaced.
  */
 function singleChordVoicing(event: ChordTimelineItem | undefined): readonly number[] | undefined {
   if (!event) return undefined;
-  return resolveVoicingForUse(
-    event.chord,
-    event.voicingMemory,
-    voiceChordForPreview(event.chord).notes,
-  ).midiNotes;
+  return resolveTimelineItemVoicing(event).midiNotes;
 }
 
 type CandidateLaneKind = "progression" | "vamp" | "fragment";

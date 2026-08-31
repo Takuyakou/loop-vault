@@ -45,17 +45,53 @@ export function resolveVoicingForUse(
   return { midiNotes: [...generatedFallback], origin: "generated" };
 }
 
+export function resolveTimelineItemVoicing(item: ChordTimelineItem): ResolvedVoicing {
+  return resolveVoicingForUse(
+    item.chord,
+    item.voicingMemory,
+    voiceChordForPreview(item.chord).notes,
+  );
+}
+
+export interface TimelineVoicingPlaybackPlan {
+  timeline: ChordTimelineItem[];
+  explicitMidiNotesByEventId: Record<string, readonly number[]>;
+}
+
+/**
+ * Builds one atomic timeline/voicing plan for playback.
+ *
+ * Analyzer timelines do not have persisted event ids yet, so the playback-only
+ * clones receive deterministic ids. Building the ids and explicit-note map in
+ * the same pass prevents a Local HR boundary change from leaving an index-based
+ * voicing lookup stale. Generated results are intentionally omitted from the
+ * map so the audio driver keeps its existing per-event fallback.
+ */
+export function createTimelineVoicingPlaybackPlan(
+  timeline: readonly ChordTimelineItem[],
+  eventIdPrefix = "timeline-preview",
+): TimelineVoicingPlaybackPlan {
+  const explicitMidiNotesByEventId: Record<string, readonly number[]> = {};
+  const playbackTimeline = timeline.map((item, index) => {
+    const sourceIdentity = item.eventId ?? `${item.bar}:${item.beat}:${item.durationBeats}`;
+    const eventId = `${eventIdPrefix}:${index}:${sourceIdentity}`;
+    const resolved = resolveTimelineItemVoicing(item);
+    if (resolved.origin !== "generated") {
+      explicitMidiNotesByEventId[eventId] = resolved.midiNotes;
+    }
+    return { ...item, eventId };
+  });
+
+  return { timeline: playbackTimeline, explicitMidiNotesByEventId };
+}
+
 export function resolveTimelineVoicings(
   timeline: readonly ChordTimelineItem[],
 ): Record<string, readonly number[]> {
   return Object.fromEntries(timeline.flatMap((item) => item.eventId
     ? [[
         item.eventId,
-        resolveVoicingForUse(
-          item.chord,
-          item.voicingMemory,
-          voiceChordForPreview(item.chord).notes,
-        ).midiNotes,
+        resolveTimelineItemVoicing(item).midiNotes,
       ]]
     : []));
 }
