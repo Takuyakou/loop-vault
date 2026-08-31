@@ -2,7 +2,7 @@
 # Phase 5.26 — Local Harmonic Rhythm / Structural Bass Evidence / Spelling / Altered Tensions
 
 ## Status
-`IN PROGRESS — P5.26-00 / P5.26-01 / P5.26-02 COMPLETE; P5.26-03 WORKING-TREE GATES PASS / COMMIT PENDING`
+`IN PROGRESS — P5.26-00 / P5.26-01 / P5.26-02 / P5.26-03 COMPLETE; P5.26-04 AUTHORIZED / NOT STARTED`
 
 ## Purpose
 演奏MIDIの誤りを、境界、Structural Bass、surface spelling、altered tensionの独立軸で改善する。
@@ -44,8 +44,8 @@ Key-aware surface spelling is runtime-only and literal-true-gated; no schema mig
 Complete at tested implementation commit `47b6a3733640b41649a392cfd3be702c6e83479b`; shadow-only with no production analyzer connection.
 
 ### P5.26-03 Feature-flagged Integration
-Implementation and working-tree gates pass. Independent stage commit and
-exact-commit verification remain pending.
+Complete at tested implementation commit `74d0d38138245989c6a1489ee7aede56d7d74c34`.
+Track A is runtime-only and literal-true-gated; default OFF remains exact.
 
 ### P5.26-04 Altered Tensions Shadow
 Pending.
@@ -58,5 +58,5 @@ Global HR deletion, MIDI/timing or Voice Role changes, persistence migration, br
 mandatory `Amaj9/B` normalization, merge, push, P5.27。
 
 ## Next Action
-P5.26-03を独立commitし、そのexact commitでrequired gatesを再検証する。
-P5.26-04、merge、push、P5.27は禁止。
+停止。P5.26-04はauthorizedだが未開始。別stageとして開始する。
+merge、push、P5.27は禁止。
