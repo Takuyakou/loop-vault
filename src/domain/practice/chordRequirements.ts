@@ -111,6 +111,28 @@ export function buildPracticeChordRequirements(
   };
 }
 
+/**
+ * Keeps chord-based leniency requirements while accepting color tones that are
+ * present in the resolved practice guide. The guide is still one suggested
+ * shape, so its extra tones stay optional rather than becoming required.
+ */
+export function includeResolvedVoicingPitchClasses(
+  requirements: PracticeChordRequirements,
+  midiNotes: readonly number[],
+): PracticeChordRequirements {
+  const guidePitchClasses = unique(midiNotes);
+  return {
+    ...requirements,
+    optionalPitchClasses: unique([
+      ...requirements.optionalPitchClasses,
+      ...guidePitchClasses.filter((pitchClass) => (
+        !requirements.requiredPitchClasses.includes(pitchClass)
+      )),
+    ]),
+    allowedPitchClasses: unique([...requirements.allowedPitchClasses, ...guidePitchClasses]),
+  };
+}
+
 function unique(values: readonly number[]): number[] {
   return [...new Set(values.map(normalizePc))].sort((left, right) => left - right);
 }

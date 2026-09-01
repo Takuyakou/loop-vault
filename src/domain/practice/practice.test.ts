@@ -5,6 +5,7 @@ import { normalizedChordKey } from "../voicing";
 import {
   buildPracticeChordRequirements,
   createPracticeSessionState,
+  includeResolvedVoicingPitchClasses,
   matchPerformance,
   practiceProgressForCurrentFingerprint,
   practiceProgressState,
@@ -43,6 +44,27 @@ describe("practice chord requirements", () => {
     const slash = makeChordSymbol(0, "maj", [], 4);
     expect(buildPracticeChordRequirements(slash, "normal").requiredBassPitchClass).toBeUndefined();
     expect(buildPracticeChordRequirements(slash, "strict").requiredBassPitchClass).toBe(4);
+  });
+
+  it("accepts resolved voicing color tones without requiring them", () => {
+    const chordRequirements = buildPracticeChordRequirements(
+      makeChordSymbol(8, "dom7"),
+      "normal",
+    );
+    const resolvedRequirements = includeResolvedVoicingPitchClasses(
+      chordRequirements,
+      [44, 54, 60, 63, 64],
+    );
+
+    expect(chordRequirements.allowedPitchClasses).not.toContain(4);
+    expect(resolvedRequirements.allowedPitchClasses).toContain(4);
+    expect(resolvedRequirements.optionalPitchClasses).toContain(4);
+    expect(resolvedRequirements.requiredPitchClasses).not.toContain(4);
+    expect(matchPerformance(resolvedRequirements, input([64], 1, 0)).state)
+      .toBe("partial");
+    const foreign = matchPerformance(resolvedRequirements, input([65], 1, 0));
+    expect(foreign.state).toBe("wrong");
+    expect(foreign.foreignPitchClasses).toEqual([5]);
   });
 });
 

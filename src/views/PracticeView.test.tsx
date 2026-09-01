@@ -292,6 +292,93 @@ describe("PracticeView", () => {
     await act(async () => root.unmount());
   });
 
+  it("accepts resolved source color tones while rejecting unrelated notes", async () => {
+    const alteredChord = makeChordSymbol(8, "dom7");
+    const sourceBlock: SavedProgressionBlock = {
+      ...block,
+      id: "00000000-0000-4000-8000-000000000136",
+      summaryText: "Resolved source color tone",
+      chords: [{
+        ...block.chords[0],
+        chord: alteredChord,
+        voicingMemory: {
+          sourceVoicing: {
+            schemaVersion: 1,
+            source: "midi-extracted",
+            representation: "simultaneous-voicing",
+            midiNotes: [44, 54, 60, 63, 64],
+            bassNote: 44,
+            capturedForChordKey: normalizedChordKey(alteredChord),
+            confidence: 1,
+            userVerified: true,
+          },
+        },
+      }],
+    };
+    const idea = makeIdea({
+      id: "00000000-0000-4000-8000-000000000137",
+      title: "Resolved altered source",
+      progressionBlocks: [sourceBlock],
+    });
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={[idea]}
+        language="ja"
+        updateProgressionBlock={vi.fn(() => true)}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={vi.fn()}
+      />,
+    ));
+
+    expect(container.querySelector(
+      '[data-testid="dojo-voicing-source-chip"]',
+    )?.getAttribute("data-voicing-source")).toBe("source");
+    expect(container.textContent).toContain("E5");
+
+    await setMidiNotesImmediately([64]);
+    expect(container.textContent).not.toContain("構成外音があります");
+    expect(container.textContent).toContain("入力: E5");
+
+    await setMidiNotesImmediately([65]);
+    expect(container.textContent).toContain("構成外音があります");
+
+    await act(async () => root.unmount());
+  });
+
+  it("keeps generated fallback color tones outside chord requirements", async () => {
+    const alteredChord = makeChordSymbol(8, "dom7");
+    const generatedBlock: SavedProgressionBlock = {
+      ...block,
+      id: "00000000-0000-4000-8000-000000000138",
+      chords: [{ ...block.chords[0], chord: alteredChord, voicingMemory: undefined }],
+    };
+    const idea = makeIdea({
+      id: "00000000-0000-4000-8000-000000000139",
+      title: "Generated dominant",
+      progressionBlocks: [generatedBlock],
+    });
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <PracticeView
+        ideas={[idea]}
+        language="ja"
+        updateProgressionBlock={vi.fn(() => true)}
+        openProgression={vi.fn()}
+        openSettings={vi.fn()}
+        setToast={vi.fn()}
+      />,
+    ));
+
+    await setMidiNotesImmediately([64]);
+    expect(container.textContent).toContain("構成外音があります");
+
+    await act(async () => root.unmount());
+  });
+
   it("shows the progression key beside the current chord in every level", async () => {
     const idea = makeIdea({
       id: "00000000-0000-4000-8000-000000000104",

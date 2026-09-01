@@ -29,6 +29,7 @@ import { beatsPerBar } from "../domain/midi/timing";
 import {
   buildPracticeChordRequirements,
   createPracticeSessionState,
+  includeResolvedVoicingPitchClasses,
   practiceInputFromLiveState,
   practiceProgressForCurrentFingerprint,
   practiceProgressState,
@@ -653,8 +654,9 @@ export function PracticeView({
     [generatedGuides, resolvedGuides, styleMode],
   );
   const sourceRequirements = useMemo(
-    () => styleMode
-      ? sourceGuides.map((guide, index) => {
+    () => {
+      if (styleMode) {
+        return sourceGuides.map((guide, index) => {
           const pitchClasses = uniquePitchClasses(guide?.midiNotes ?? []);
           return {
             requiredPitchClasses: pitchClasses,
@@ -662,8 +664,15 @@ export function PracticeView({
             allowedPitchClasses: pitchClasses,
             chordKey: standardRequirements[index]?.chordKey ?? "",
           };
-        })
-      : standardRequirements,
+        });
+      }
+      return standardRequirements.map((requirements, index) => {
+        const guide = sourceGuides[index];
+        return guide && guide.origin !== "generated"
+          ? includeResolvedVoicingPitchClasses(requirements, guide.midiNotes)
+          : requirements;
+      });
+    },
     [sourceGuides, standardRequirements, styleMode],
   );
   const styleMatchInput = useMemo(
