@@ -1,34 +1,50 @@
 import { useRef, type KeyboardEvent, type ReactNode } from "react";
 
-export type PracticeWorkspaceMode = "chord-dojo" | "bass-practice";
+export type PracticeWorkspaceMode = "chord-dojo" | "voicing-loop" | "bass-practice";
 
 export function PracticeWorkspace({
   bassPractice,
+  bassPracticeAvailable = true,
   chordDojo,
   mode,
   onModeChange,
+  voicingLoop,
 }: {
   bassPractice: ReactNode;
+  bassPracticeAvailable?: boolean;
   chordDojo: ReactNode;
   mode: PracticeWorkspaceMode;
   onModeChange: (mode: PracticeWorkspaceMode) => void;
+  voicingLoop: ReactNode;
 }) {
   const chordTabRef = useRef<HTMLButtonElement>(null);
+  const voicingTabRef = useRef<HTMLButtonElement>(null);
   const bassTabRef = useRef<HTMLButtonElement>(null);
+  const availableModes: readonly PracticeWorkspaceMode[] = bassPracticeAvailable
+    ? ["chord-dojo", "voicing-loop", "bass-practice"]
+    : ["chord-dojo", "voicing-loop"];
 
   function selectMode(next: PracticeWorkspaceMode) {
+    if (!availableModes.includes(next)) return;
     onModeChange(next);
-    (next === "chord-dojo" ? chordTabRef : bassTabRef).current?.focus();
+    const target = next === "chord-dojo"
+      ? chordTabRef
+      : next === "voicing-loop"
+        ? voicingTabRef
+        : bassTabRef;
+    target.current?.focus();
   }
 
   function handleTabKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
     let next: PracticeWorkspaceMode | undefined;
     if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
-      next = mode === "chord-dojo" ? "bass-practice" : "chord-dojo";
+      const direction = event.key === "ArrowRight" ? 1 : -1;
+      const currentIndex = Math.max(0, availableModes.indexOf(mode));
+      next = availableModes[(currentIndex + direction + availableModes.length) % availableModes.length];
     } else if (event.key === "Home") {
-      next = "chord-dojo";
+      next = availableModes[0];
     } else if (event.key === "End") {
-      next = "bass-practice";
+      next = availableModes[availableModes.length - 1];
     }
     if (!next) return;
     event.preventDefault();
@@ -53,6 +69,21 @@ export function PracticeWorkspace({
           Chord Dojo
         </button>
         <button
+          id="practice-tab-voicing-loop"
+          ref={voicingTabRef}
+          type="button"
+          className={`min-h-10 rounded-[var(--lv-radius-sm)] px-4 text-sm font-semibold transition-colors ${mode === "voicing-loop" ? "bg-[var(--lv-accent-soft)] text-[var(--lv-accent)]" : "text-[var(--lv-text-secondary)] hover:text-[var(--lv-text)]"}`}
+          aria-controls="practice-workspace-panel"
+          aria-selected={mode === "voicing-loop"}
+          onClick={() => selectMode("voicing-loop")}
+          onKeyDown={handleTabKeyDown}
+          role="tab"
+          tabIndex={mode === "voicing-loop" ? 0 : -1}
+        >
+          Voicing Loop
+        </button>
+        {bassPracticeAvailable ? (
+        <button
           id="practice-tab-bass-practice"
           ref={bassTabRef}
           type="button"
@@ -66,15 +97,24 @@ export function PracticeWorkspace({
         >
           Bass Practice
         </button>
+        ) : null}
       </nav>
       <div
         id="practice-workspace-panel"
-        aria-labelledby={mode === "chord-dojo" ? "practice-tab-chord-dojo" : "practice-tab-bass-practice"}
+        aria-labelledby={mode === "chord-dojo"
+          ? "practice-tab-chord-dojo"
+          : mode === "voicing-loop"
+            ? "practice-tab-voicing-loop"
+            : "practice-tab-bass-practice"}
         role="tabpanel"
         tabIndex={-1}
         className="min-w-0 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-focus)]"
       >
-        {mode === "bass-practice" ? bassPractice : chordDojo}
+        {mode === "bass-practice"
+          ? bassPractice
+          : mode === "voicing-loop"
+            ? voicingLoop
+            : chordDojo}
       </div>
     </div>
   );

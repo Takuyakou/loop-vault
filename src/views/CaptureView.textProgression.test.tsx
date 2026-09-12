@@ -179,6 +179,22 @@ describe("CaptureView text progression entry", () => {
       expect(payload).not.toHaveProperty("sourcePath");
       expect(mounted.analyzeMidiBytes).not.toHaveBeenCalled();
       expect(mounted.clearAnalysis).not.toHaveBeenCalled();
+
+      expect(mounted.container.textContent).toContain("Your saved progression is ready to practice");
+      const voicingLoop = [...mounted.container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent?.trim() === "Voicing Loop");
+      const viewSaved = [...mounted.container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent?.trim() === "View saved progression");
+      await act(async () => voicingLoop?.click());
+      await act(async () => viewSaved?.click());
+      expect(mounted.openSavedTextProgressionPractice).toHaveBeenCalledWith({
+        ideaId: "text-idea",
+        blockId: "text-block",
+      });
+      expect(mounted.openSavedTextProgression).toHaveBeenCalledWith({
+        ideaId: "text-idea",
+        blockId: "text-block",
+      });
     } finally {
       await mounted.unmount();
     }
@@ -200,9 +216,11 @@ async function renderCapture() {
   let savedTextDraft: TextProgressionIdeaDraft | undefined;
   const createIdeaFromTextProgression = vi.fn((draft: TextProgressionIdeaDraft) => {
     savedTextDraft = draft;
-    return "text-idea";
+    return { ideaId: "text-idea", blockId: "text-block" };
   });
   const appendBlockToIdea = vi.fn(() => true);
+  const openSavedTextProgression = vi.fn();
+  const openSavedTextProgressionPractice = vi.fn();
   const container = document.createElement("div");
   document.body.append(container);
   const root = createRoot(container);
@@ -218,6 +236,8 @@ async function renderCapture() {
         createIdeaFromTextProgression={createIdeaFromTextProgression}
         appendBlockToIdea={appendBlockToIdea}
         appendTextProgressionToIdea={vi.fn(() => true)}
+        openSavedTextProgression={openSavedTextProgression}
+        openSavedTextProgressionPractice={openSavedTextProgressionPractice}
         updateIdea={vi.fn()}
         setToast={vi.fn()}
         copy={appCopy.en}
@@ -235,6 +255,8 @@ async function renderCapture() {
     createIdeaFromDraft,
     createIdeaFromTextProgression,
     appendBlockToIdea,
+    openSavedTextProgression,
+    openSavedTextProgressionPractice,
     controller,
     stop,
     toggle,

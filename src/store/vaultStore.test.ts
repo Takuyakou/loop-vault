@@ -10,6 +10,11 @@ import {
 } from "../domain/repository";
 import { pickFocus } from "../domain/focus";
 import { parseChordLabel } from "../domain/chords";
+import { buildProgressionVoicingPracticeHandoffFromVault } from "../domain/progressionVoicingPractice";
+import {
+  TEXT_PROGRESSION_ANALYZER_VERSION,
+  TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM,
+} from "../domain/textProgression";
 import { createTextProgressionStyleSnapshot } from "../domain/textProgressionVoicing";
 import type {
   ChordTimelineItem,
@@ -1042,6 +1047,62 @@ describe("vault store", () => {
     const twelveBar = store.getState().ideas[1]?.progressionBlocks?.[0];
     expect(twelveBar).toMatchObject({ startBar: 1, endBar: 12, lengthBars: 12 });
     expect(twelveBar?.chords).toHaveLength(12);
+  });
+
+  it("hands off created and appended BPM-less Text saves with the runtime default only", async () => {
+    const repository = new FakeRepository();
+    const store = createVaultStore({ repository, now: () => now });
+    await store.getState().initialize();
+
+    const ideaId = store.getState().createIdeaFromTextProgression({
+      title: "BPM-less create",
+      summaryText: "ignored",
+      chords: [textTimelineChord("Cmaj7", 1)],
+    });
+    expect(ideaId).toBeDefined();
+    const createdIdea = store.getState().ideas.find((idea) => idea.id === ideaId)!;
+    const createdBlock = createdIdea.progressionBlocks![0]!;
+    expect(createdIdea).not.toHaveProperty("bpm");
+    expect(createdBlock).not.toHaveProperty("bpm");
+    expect(createdBlock.analyzerVersion).toBe(TEXT_PROGRESSION_ANALYZER_VERSION);
+
+    const createdHandoff = buildProgressionVoicingPracticeHandoffFromVault(
+      store.getState().ideas,
+      { ideaId: createdIdea.id, blockId: createdBlock.id },
+    );
+    expect(createdHandoff.ok && createdHandoff.handoff.snapshots["basic-full"]?.bpm)
+      .toBe(TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM);
+
+    expect(store.getState().appendTextProgressionToIdea(createdIdea.id, {
+      title: "BPM-less append",
+      summaryText: "ignored",
+      chords: [textTimelineChord("Dm7", 1)],
+    })).toBe(true);
+    const appendedIdea = store.getState().ideas.find((idea) => idea.id === createdIdea.id)!;
+    const appendedBlock = appendedIdea.progressionBlocks![1]!;
+    expect(appendedIdea).not.toHaveProperty("bpm");
+    expect(appendedBlock).not.toHaveProperty("bpm");
+
+    const appendedHandoff = buildProgressionVoicingPracticeHandoffFromVault(
+      store.getState().ideas,
+      { ideaId: appendedIdea.id, blockId: appendedBlock.id },
+    );
+    expect(appendedHandoff.ok && appendedHandoff.handoff.snapshots["basic-full"]?.bpm)
+      .toBe(TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM);
+
+    const explicitId = store.getState().createIdeaFromTextProgression({
+      title: "Explicit BPM",
+      summaryText: "ignored",
+      chords: [textTimelineChord("G7", 1)],
+      bpm: 132,
+    });
+    const explicitIdea = store.getState().ideas.find((idea) => idea.id === explicitId)!;
+    const explicitBlock = explicitIdea.progressionBlocks![0]!;
+    const explicitHandoff = buildProgressionVoicingPracticeHandoffFromVault(
+      store.getState().ideas,
+      { ideaId: explicitIdea.id, blockId: explicitBlock.id },
+    );
+    expect(explicitHandoff.ok && explicitHandoff.handoff.snapshots["basic-full"]?.bpm).toBe(132);
   });
 
   it("saves a confirmed key and explicit BPM only, and preserves practice-only voicing", async () => {

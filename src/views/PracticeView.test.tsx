@@ -175,6 +175,75 @@ describe("PracticeView", () => {
     await act(async () => root.unmount());
   });
 
+  it("consumes MIDI activation failure and allows a later Reconnect retry", async () => {
+    const original = defaultLiveMidiStore.getState();
+    let attempts = 0;
+    const activate = vi.fn(async () => {
+      attempts += 1;
+      if (attempts < 3) throw new Error("device busy");
+      defaultLiveMidiStore.setState({ active: true, status: "connected" });
+    });
+    const deactivate = vi.fn(async () => { defaultLiveMidiStore.setState({ active: false }); });
+    defaultLiveMidiStore.setState({ active: false, status: "disconnected", activate, deactivate });
+    const idea = makeIdea({
+      id: "00000000-0000-4000-8000-000000000193",
+      title: "MIDI retry",
+      progressionBlocks: [block],
+    });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const setToast = vi.fn();
+    try {
+      await act(async () => root.render(
+        <PracticeView
+          ideas={[idea]}
+          language="ja"
+          updateProgressionBlock={vi.fn(() => true)}
+          openProgression={vi.fn()}
+          openSettings={vi.fn()}
+          setToast={setToast}
+        />,
+      ));
+      await act(async () => { await Promise.resolve(); });
+      const start = () => [...container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((candidate) => candidate.textContent?.includes("練習を開始"));
+      const reconnect = () => [...container.querySelectorAll<HTMLButtonElement>("button")]
+        .find((candidate) => candidate.textContent?.includes("再接続"));
+      expect(start()?.disabled).toBe(true);
+      await act(async () => reconnect()?.click());
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+      expect(setToast).toHaveBeenCalledWith("MIDI入力を開始できませんでした。接続を確認して再接続してください。");
+      expect(start()?.disabled).toBe(true);
+
+      await act(async () => reconnect()?.click());
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+      expect(activate).toHaveBeenCalledTimes(3);
+      expect(defaultLiveMidiStore.getState().active).toBe(true);
+      expect(start()?.disabled).toBe(false);
+      await act(async () => start()?.click());
+      expect([...container.querySelectorAll("button")].some((candidate) => candidate.textContent?.includes("終了"))).toBe(true);
+    } finally {
+      await act(async () => root.unmount());
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+      defaultLiveMidiStore.setState({
+        active: original.active,
+        status: original.status,
+        activate: original.activate,
+        deactivate: original.deactivate,
+      });
+    }
+  });
+
   it("flushes session progress through updateProgressionBlock when leaving the view", async () => {
     const idea = makeIdea({
       id: "00000000-0000-4000-8000-000000000094",

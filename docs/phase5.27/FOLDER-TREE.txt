@@ -1,0 +1,35 @@
+phase5.27/
+├─ README.md
+├─ CODEX-START-PROMPT.md
+├─ CODEX-RUN-REMAINING-STAGES.md
+├─ work-instructions.md
+├─ execution-state.json
+├─ proposal/
+│  ├─ DESIGN-v0.1.md
+│  └─ REVIEW-INTEGRATED-v0.2.md
+├─ audit/
+│  └─ P5.27-00-repository-audit.md
+├─ contracts/
+│  ├─ 01-product-session-contract.md
+│  ├─ 02-no-scoring-contract.md
+│  ├─ 03-practice-clock-contract.md
+│  ├─ 04-voicing-source-contract.md
+│  ├─ 05-lesson-rule-contract.md
+│  ├─ 06-source-custom-fidelity-contract.md
+│  ├─ 07-open-voicing-deferred-contract.md
+│  ├─ 08-ui-ux-skill-contract.md
+│  ├─ 09-persistence-privacy-contract.md
+│  └─ 10-integration-protection-contract.md
+├─ references/
+│  ├─ UI-SKILL.md
+│  └─ LESSON-RULE-AUDIT.md
+├─ mock/
+│  └─ progression-voicing-practice-approved-mock.html
+└─ reports/
+   ├─ README.md
+   ├─ P5.27-00-audit-baseline.md
+   ├─ P5.27-01-practice-domain-clock.md
+   ├─ P5.27-02-voicing-resolution.md
+   ├─ P5.27-03-ui-integration.md
+   ├─ P5.27-04-text-vault-integration.md
+   └─ P5.27-05-product-acceptance.md

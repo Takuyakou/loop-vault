@@ -10,6 +10,7 @@ export const visualTestBuildMetadata = Object.freeze({
 
 export const visualTestEnvironmentOverrides = Object.freeze({
   ...visualTestBuildMetadata,
+  VITE_P527_E2E_FIXTURE: "1",
   [visualPlaywrightTestEnvironmentKey]: "1",
 });
 

@@ -31,6 +31,7 @@ export interface PianoKeyboardVisualizerProps {
   matchState?: "idle" | "partial" | "match" | "wrong";
   language: "ja" | "en";
   concealNoteNames?: boolean;
+  interactionMode?: "practice" | "neutral-monitor";
 }
 
 const copy = {
@@ -43,8 +44,11 @@ const copy = {
     sustain: "ペダル保持",
     outside: "範囲外の入力",
     outsideCount: (count: number) => `${count}音`,
+    region: "ピアノ鍵盤",
     keyboard: (count: number, guide: number, held: number, foreign: number, sustained: number) =>
       `${count}鍵のピアノ鍵盤。お手本${guide}音、押鍵中${held}音、構成外${foreign}音、ペダル保持${sustained}音。`,
+    neutralKeyboard: (count: number, guide: number, held: number, sustained: number) =>
+      `${count}鍵のピアノ鍵盤。お手本${guide}音、押鍵中${held}音、ペダル保持${sustained}音。`,
   },
   en: {
     guide: "Guide",
@@ -55,8 +59,11 @@ const copy = {
     sustain: "Sustain",
     outside: "Input outside visible range",
     outsideCount: (count: number) => `${count} notes`,
+    region: "Piano keyboard",
     keyboard: (count: number, guide: number, held: number, foreign: number, sustained: number) =>
       `${count}-key piano keyboard. ${guide} guide, ${held} held, ${foreign} foreign, ${sustained} sustained notes.`,
+    neutralKeyboard: (count: number, guide: number, held: number, sustained: number) =>
+      `${count}-key piano keyboard. ${guide} guide, ${held} held, ${sustained} sustained notes.`,
   },
 } as const;
 
@@ -79,6 +86,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
   matchState = "idle",
   language,
   concealNoteNames = false,
+  interactionMode = "practice",
 }: PianoKeyboardVisualizerProps) {
   const text = copy[language];
   const range = useMemo(
@@ -110,17 +118,29 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
   );
   const visibleKeys = geometry.keys.filter((key) => !key.black);
   const blackKeys = geometry.keys.filter((key) => key.black);
-  const ariaLabel = text.keyboard(
-    geometry.keys.length,
-    display.guideNotes.length,
-    display.heldNotes.length,
-    display.foreignHeldNotes.length,
-    display.sustainedNotes.length,
-  );
+  const ariaLabel = interactionMode === "neutral-monitor"
+    ? text.neutralKeyboard(
+      geometry.keys.length,
+      display.guideNotes.length,
+      display.heldNotes.length,
+      display.sustainedNotes.length,
+    )
+    : text.keyboard(
+      geometry.keys.length,
+      display.guideNotes.length,
+      display.heldNotes.length,
+      display.foreignHeldNotes.length,
+      display.sustainedNotes.length,
+    );
 
   return (
     <div data-match-state={matchState}>
-      <div className="relative overflow-x-auto border border-[var(--lv-border)] bg-[#09090b] p-2">
+      <div
+        className="relative overflow-x-auto border border-[var(--lv-border)] bg-[#09090b] p-2"
+        role="region"
+        aria-label={text.region}
+        tabIndex={0}
+      >
         {outside.below.length > 0 ? (
           <OutsideIndicator
             direction="left"
@@ -219,7 +239,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
           <Legend visualState="guide" label={text.guide} />
         ) : null}
         <Legend visualState="held-correct" label={text.held} />
-        <Legend visualState="held-foreign" label={text.foreign} />
+        {interactionMode === "practice" ? <Legend visualState="held-foreign" label={text.foreign} /> : null}
         <Legend visualState="sustained" label={text.sustain} />
       </div>
     </div>

@@ -1,19 +1,20 @@
 import type { ChordSymbol } from "../types";
 import {
   enumerateSplitCandidates,
-  pitchClass,
   type CandidateBuildOptions,
   type StyleVoicingCandidate,
 } from "./candidateTools";
 import {
   chordToneDescriptors,
   getStyleTonePolicy,
+  pitchClassForDegreeLabel,
+  type DegreeLabel,
 } from "./tonePolicy";
 
-interface RootlessTemplate {
-  variant: "A" | "B";
-  labels: string[];
-  addedColors: string[];
+export interface RootlessTemplate {
+  readonly variant: "A" | "B";
+  readonly labels: readonly DegreeLabel[];
+  readonly addedColors: readonly DegreeLabel[];
 }
 
 export function generateRootlessCandidates(
@@ -23,24 +24,27 @@ export function generateRootlessCandidates(
   const tones = chordToneDescriptors(chord);
   const byLabel = new Map(tones.map((tone) => [tone.label, tone]));
   const policy = getStyleTonePolicy(chord, "rootless-ab");
-  return rootlessTemplates(chord).flatMap((template) => {
+  return rootlessTemplatesForChord(chord).flatMap((template) => {
+    const templateLabelSet = new Set<string>(template.labels);
     const pitchClasses = template.labels.map((label) => {
       const existing = byLabel.get(label);
-      return existing?.pitchClass ?? pitchClass(chord.root + intervalForLabel(label));
+      return existing?.pitchClass ?? pitchClassForDegreeLabel(chord, label);
     });
+    if (pitchClasses.some((value) => value === undefined)) return [];
+    const resolvedPitchClasses = pitchClasses.filter(isNumber);
     const leftCount = 2;
     return enumerateSplitCandidates(
       chord,
       "rootless-ab",
-      pitchClasses.slice(0, leftCount),
-      pitchClasses.slice(leftCount),
+      resolvedPitchClasses.slice(0, leftCount),
+      resolvedPitchClasses.slice(leftCount),
       {
         variant: template.variant,
         requiredIntervals: policy.requiredIntervals,
-        addedColorIntervals: template.addedColors,
+        addedColorIntervals: [...template.addedColors],
         omittedIntervals: tones
           .map((tone) => tone.label)
-          .filter((label) => label !== "R" && !template.labels.includes(label)),
+          .filter((label) => label !== "R" && !templateLabelSet.has(label)),
         warnings: template.addedColors.length > 0
           ? ["added-neutral-color"]
           : [],
@@ -50,7 +54,7 @@ export function generateRootlessCandidates(
   });
 }
 
-function rootlessTemplates(chord: ChordSymbol): RootlessTemplate[] {
+export function rootlessTemplatesForChord(chord: ChordSymbol): readonly RootlessTemplate[] {
   if (chord.quality === "min7b5") {
     return variants(["b3", "b5", "b7", "9"], ["b7", "9", "b3", "b5"], chord);
   }
@@ -72,8 +76,8 @@ function rootlessTemplates(chord: ChordSymbol): RootlessTemplate[] {
 }
 
 function variants(
-  a: string[],
-  b: string[],
+  a: readonly DegreeLabel[],
+  b: readonly DegreeLabel[],
   chord: ChordSymbol,
 ): RootlessTemplate[] {
   return [
@@ -82,30 +86,11 @@ function variants(
   ];
 }
 
-function addedColors(labels: readonly string[], chord: ChordSymbol): string[] {
+function addedColors(labels: readonly DegreeLabel[], chord: ChordSymbol): DegreeLabel[] {
   const existing = new Set(chordToneDescriptors(chord).map((tone) => tone.label));
   return [...new Set(labels.filter((label) => !existing.has(label) && ["9", "13"].includes(label)))];
 }
 
-function intervalForLabel(label: string): number {
-  const intervals: Record<string, number> = {
-    R: 0,
-    b3: 3,
-    "3": 4,
-    b5: 6,
-    "5": 7,
-    "#5": 8,
-    "6": 9,
-    bb7: 9,
-    b7: 10,
-    "7": 11,
-    b9: 13,
-    "9": 14,
-    "#9": 15,
-    "11": 17,
-    "#11": 18,
-    b13: 20,
-    "13": 21,
-  };
-  return intervals[label] ?? 0;
+function isNumber(value: number | undefined): value is number {
+  return value !== undefined;
 }

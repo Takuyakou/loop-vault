@@ -115,4 +115,43 @@ describe("Progression Detail Chord Context handoff", () => {
     expect(openPractice).not.toHaveBeenCalled();
     await act(async () => root.unmount());
   });
+
+  it("opens Voicing Loop from the saved block independently of Chord Context sections", async () => {
+    const unavailableForChordContext = { ...block, timeSignature: "3/4" };
+    const idea = makeIdea({ id: "idea-voicing-loop", progressionBlocks: [unavailableForChordContext] });
+    const openPractice = vi.fn();
+    const openVoicingPractice = vi.fn();
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(
+        <ProgressionDetailView
+          idea={idea}
+          block={unavailableForChordContext}
+          updateProgressionBlock={vi.fn(() => true)}
+          duplicateProgressionBlock={vi.fn()}
+          openProgression={vi.fn()}
+          openIdea={vi.fn()}
+          openVault={vi.fn()}
+          requestDelete={vi.fn()}
+          openPractice={openPractice}
+          openVoicingPractice={openVoicingPractice}
+          setToast={vi.fn()}
+          copy={appCopy.en}
+          language="en"
+        />,
+      );
+    });
+
+    const chordContext = [...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent?.trim() === "Practice")!;
+    expect(chordContext.disabled).toBe(true);
+    const voicingLoop = container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-handoff']")!;
+    expect(voicingLoop.disabled).toBe(false);
+    await act(async () => voicingLoop.click());
+    expect(openPractice).not.toHaveBeenCalled();
+    expect(openVoicingPractice).toHaveBeenCalledWith(idea.id, unavailableForChordContext.id);
+    await act(async () => root.unmount());
+  });
 });

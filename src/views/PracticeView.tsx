@@ -95,6 +95,7 @@ import {
 } from "../domain/voicingPractice";
 import { usePlaybackState } from "../hooks/usePlaybackState";
 import { defaultLiveMidiStore } from "../liveMidi/defaultLiveMidiStore";
+import { liveMidiActivation, type LiveMidiActivationLease } from "../liveMidi/activationLease";
 import { PracticeClock } from "../practice/PracticeClock";
 import { registerClosePreparation } from "../store/closePreparation";
 import {
@@ -175,6 +176,7 @@ const copy = {
     connecting: "接続中",
     disconnected: "未接続",
     reconnect: "再接続",
+    midiActivationFailed: "MIDI入力を開始できませんでした。接続を確認して再接続してください。",
     settings: "設定",
     start: "練習を開始",
     pause: "一時停止",
@@ -299,6 +301,7 @@ const copy = {
     connecting: "Connecting",
     disconnected: "Not connected",
     reconnect: "Reconnect",
+    midiActivationFailed: "MIDI input could not start. Check the connection and reconnect.",
     settings: "Settings",
     start: "Start practice",
     pause: "Pause",
@@ -457,7 +460,7 @@ export function PracticeView({
   const clockRef = useRef<
     Pick<PracticeClock, "start" | "stop" | "pause" | "resume">
   >(practiceClock ?? new PracticeClock());
-  const ownsMidiRef = useRef(false);
+  const midiLeaseRef = useRef<LiveMidiActivationLease>();
   const persistedRoundRef = useRef(0);
   const flowRestartingRef = useRef(false);
   const flowClockGenerationRef = useRef(0);
@@ -497,8 +500,9 @@ export function PracticeView({
   }, [initialTarget]);
 
   useEffect(() => {
-    ownsMidiRef.current = !defaultLiveMidiStore.getState().active;
-    if (ownsMidiRef.current) void defaultLiveMidiStore.getState().activate();
+    const midiLease = liveMidiActivation.acquire();
+    midiLeaseRef.current = midiLease;
+    void midiLease.ready.catch(() => undefined);
     const unregisterClosePreparation = registerClosePreparation(() => {
       persistPendingSession();
     });
@@ -510,7 +514,8 @@ export function PracticeView({
       flowClockReadyRef.current = false;
       clockRef.current.stop();
       persistPendingSession();
-      if (ownsMidiRef.current) void defaultLiveMidiStore.getState().deactivate();
+      midiLease.release();
+      if (midiLeaseRef.current === midiLease) midiLeaseRef.current = undefined;
     };
   }, [updateProgressionBlock]);
 
@@ -1551,8 +1556,12 @@ export function PracticeView({
       setToast(text.staleReset);
     }
     if (!defaultLiveMidiStore.getState().active) {
-      ownsMidiRef.current = true;
-      await defaultLiveMidiStore.getState().activate();
+      try {
+        await midiLeaseRef.current?.ensureActive();
+      } catch {
+        setToast(text.midiActivationFailed);
+        return;
+      }
     }
     playbackController.stop();
     setAuditionEventIndex(undefined);
@@ -1828,8 +1837,11 @@ export function PracticeView({
   async function reconnectMidi() {
     const store = defaultLiveMidiStore.getState();
     if (!store.active) {
-      ownsMidiRef.current = true;
-      await store.activate();
+      try {
+        await midiLeaseRef.current?.ensureActive();
+      } catch {
+        setToast(text.midiActivationFailed);
+      }
       return;
     }
     await store.refreshDevices();

@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Loop Vault — Progression Voicing Practice</title>
+<style>
+:root{--bg:#0b0f15;--panel:#131923;--panel2:#191f2b;--line:#2b3544;--text:#eef2f7;--muted:#95a1b2;--gold:#d8b86b;--gold2:#ffe1a1}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 15% 0%,#1a1920 0,#0b0f15 30%),#0b0f15;color:var(--text);font-family:Inter,"Yu Gothic UI",system-ui,sans-serif;padding:22px}
+button{font:inherit;color:inherit}.app{max-width:1220px;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.brand{display:flex;gap:10px;align-items:center}.logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(145deg,#efd18a,#98783a)}h1{font-size:18px;margin:0}.sub{font-size:11px;color:var(--muted);margin-top:3px}.badge{border:1px solid var(--line);padding:6px 10px;border-radius:99px;color:var(--muted);font-size:11px}
+.grid{display:grid;grid-template-columns:310px 1fr;gap:16px}.card{background:linear-gradient(#171d27,#111720);border:1px solid var(--line);border-radius:16px}.side{padding:17px;display:flex;flex-direction:column;gap:18px}.sect{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:7px}.btn,.mode,.ghost,.mainbtn{border:1px solid var(--line);background:#111721;border-radius:10px;padding:10px;cursor:pointer}.btn.active,.mode.active{border-color:#816e42;background:#2a261c;color:var(--gold2)}.mode{display:block;width:100%;text-align:left;margin-bottom:7px}.mode b{font-size:13px}.mode small{display:block;color:var(--muted);margin-top:3px;line-height:1.4}.tag{float:right;border:1px solid #4b5668;border-radius:99px;padding:2px 6px;font-size:9px;color:var(--muted)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}.step{display:flex;gap:6px;align-items:center}.mini{width:34px;height:34px;padding:0;border:1px solid var(--line);background:#121822;border-radius:9px;color:var(--text);cursor:pointer}.num{width:52px;text-align:center;font-weight:800}.switch{width:42px;height:24px;border-radius:99px;background:#26303f;border:1px solid #354255;position:relative;cursor:pointer}.switch:after{content:"";position:absolute;left:2px;top:2px;width:18px;height:18px;border-radius:50%;background:#aeb7c4;transition:.18s}.switch.on{background:#41391f;border-color:#7b6637}.switch.on:after{left:20px;background:var(--gold2)}.callout{font-size:11px;line-height:1.55;color:#bed6c5;border:1px solid #30513a;background:#132219;padding:11px;border-radius:10px}
+.main{padding:18px;min-width:0}.head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.eyebrow{font-size:10px;color:var(--gold);letter-spacing:.14em}.head h2{font-size:22px;margin:4px 0}.chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.chip{font-size:11px;color:var(--muted);border:1px solid var(--line);padding:5px 8px;border-radius:99px}
+.progression{display:flex;gap:7px;overflow:auto;padding:10px 0}.cp{min-width:110px;border:1px solid var(--line);background:#10151d;border-radius:10px;padding:9px 10px;color:#cad1da}.cp.current{border-color:var(--gold);background:#2c271b;color:var(--gold2)}.cp.next{border-color:#52627b}.cp small{display:block;color:var(--muted);font-size:9px;margin-top:3px}
+.practice{display:grid;grid-template-columns:1fr 235px;gap:12px}.focus{min-height:425px;border:1px solid var(--line);background:linear-gradient(#1b2230,#111720);border-radius:13px;padding:22px;display:flex;flex-direction:column}.label{text-align:center;font-size:10px;letter-spacing:.15em;color:var(--muted)}.chord{text-align:center;font-size:46px;font-weight:850;margin:8px 0}.timing{text-align:center;font-size:11px;color:var(--muted)}
+.voicing{max-width:620px;width:100%;margin:20px auto 8px;border:1px solid var(--line);background:#0f141c;border-radius:12px;padding:14px}.vhead{display:flex;justify-content:space-between;align-items:center;font-size:12px}.src{font-size:9px;padding:3px 6px;border:1px solid #4d5a6d;border-radius:99px;color:#b8c2ce}.notes{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:12px}.note{text-align:center;min-width:55px}.pitch{font-size:19px;font-weight:800}.degree{font-size:10px;color:var(--gold);margin-top:3px}.hidden .pitch,.hidden .degree{filter:blur(7px);opacity:.4;user-select:none}
+.keyboard{height:105px;display:flex;justify-content:center;align-items:flex-start;margin:18px auto 6px;overflow:hidden;border-radius:8px}.w{height:100px;width:42px;background:linear-gradient(#f7f8fa,#d9dde3);border:1px solid #8d939c;border-radius:0 0 4px 4px;z-index:1}.w.on{background:linear-gradient(#f6dda0,#cda85e)}.b{height:64px;width:27px;background:linear-gradient(#30343a,#08090c);border:1px solid #000;border-radius:0 0 4px 4px;margin:0 -13.5px;z-index:2}.b.on{background:linear-gradient(#a78647,#423316)}
+.beatwrap{margin-top:auto}.beats,.beatnums{display:flex;justify-content:center;gap:11px}.beat{width:15px;height:15px;border-radius:50%;border:2px solid #5b687c}.beat.now{background:var(--gold);border-color:var(--gold2);box-shadow:0 0 14px #a88842}.beat.done{background:#5a6575}.beatnums{font-size:9px;color:var(--muted);margin-top:5px}.beatnums span{width:15px;text-align:center}
+.transport{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:17px}.mainbtn{background:linear-gradient(#ddbd70,#ad8c46);border-color:#efd18c;color:#181209;font-weight:850;min-width:108px}.ghost{min-width:96px}.infoCol{display:flex;flex-direction:column;gap:10px}.info{border:1px solid var(--line);background:#111720;border-radius:11px;padding:13px}.info h3{margin:0 0 9px;font-size:10px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}.big{font-size:27px;font-weight:850}.next{font-size:23px;font-weight:800}.kv{display:flex;justify-content:space-between;gap:10px;margin-top:7px;font-size:10px;color:var(--muted)}.kv b{color:var(--text)}.bar{height:7px;border-radius:99px;background:#0b1017;border:1px solid #252e3b;overflow:hidden}.bar>div{height:100%;width:25%;background:linear-gradient(90deg,#90753b,#e1c376);transition:.2s}.foot{font-size:10px;color:var(--muted);text-align:center;margin-top:12px}
+@media(max-width:900px){body{padding:10px}.grid{grid-template-columns:1fr}.practice{grid-template-columns:1fr}.infoCol{display:grid;grid-template-columns:1fr 1fr}}@media(max-width:560px){.head{flex-direction:column}.chips{justify-content:flex-start}.infoCol{grid-template-columns:1fr}.chord{font-size:36px}.focus{padding:14px}}
+</style></head>
+<body>
+<div class="app">
+<div class="top"><div class="brand"><div class="logo"></div><div><h1>Loop Vault</h1><div class="sub">Progression Voicing Practice</div></div></div><div class="badge">P5.27 Mock</div></div>
+<div class="grid">
+<aside class="card side">
+<div><div class="sect">Source</div><div class="tabs"><button class="btn active">Vault</button><button class="btn">Text</button></div></div>
+<div><div class="sect">Practice Voicing</div>
+<button class="mode active" data-mode="source"><span class="tag">MY</span><b>Source MIDI</b><small>取り込んだ元MIDIのVoicing</small></button>
+<button class="mode" data-mode="custom"><span class="tag">MY</span><b>Custom</b><small>自分で保存したVoicing</small></button>
+<button class="mode" data-mode="basic"><span class="tag">LESSON</span><b>Basic 1–7–3</b><small>Shellからコードの骨格を覚える</small></button>
+<button class="mode" data-mode="left"><span class="tag">LESSON</span><b>Left-hand</b><small>レッスン規則に基づくVoicing</small></button>
+</div>
+<div><div class="sect">Tempo</div><div class="row"><span style="font-size:12px;color:var(--muted)">BPM</span><div class="step"><button class="mini" id="minus">−</button><div class="num" id="bpm">80</div><button class="mini" id="plus">＋</button></div></div></div>
+<div><div class="sect">Session</div>
+<div class="row" style="margin:9px 0"><span>Metronome</span><div class="switch on"></div></div>
+<div class="row" style="margin:9px 0"><span>Voicing表示</span><div class="switch on" id="show"></div></div>
+<div class="row" style="margin:9px 0"><span>Count-in</span><div class="switch on"></div></div>
+</div>
+<div class="callout">採点なし。コードは時間で自動的に進み、最後まで行くと先頭へ戻ります。</div>
+</aside>
+
+<main class="card main">
+<div class="head"><div><div class="eyebrow">VOICING LOOP</div><h2>Aqua Bossa — Practice</h2></div><div class="chips"><span class="chip">E major</span><span class="chip">4/4</span><span class="chip" id="modechip">Source MIDI</span></div></div>
+<div class="progression" id="progression"></div>
+<div class="practice">
+<section class="focus">
+<div class="label">CURRENT</div><div class="chord" id="current">E6/9</div><div class="timing" id="timing">4 beats</div>
+<div class="voicing" id="voicing"><div class="vhead"><b id="vtitle">Source Voicing</b><span class="src" id="vbadge">SOURCE</span></div><div class="notes" id="notes"></div></div>
+<div class="keyboard" id="keyboard"></div>
+<div class="beatwrap"><div class="beats" id="beats"></div><div class="beatnums" id="beatnums"></div>
+<div class="transport"><button class="ghost" id="ref">♪ お手本</button><button class="mainbtn" id="play">▶ Start</button><button class="ghost" id="restart">↺ Restart</button></div></div>
+</section>
+<aside class="infoCol">
+<div class="info"><h3>Next</h3><div class="next" id="next">G#7(b13)</div><div class="kv"><span>In</span><b id="nextin">4 beats</b></div></div>
+<div class="info"><h3>Loop</h3><div class="big" id="loops">0</div><div class="kv"><span>Mode</span><b>Infinite</b></div></div>
+<div class="info"><h3>Progress</h3><div class="bar"><div id="bar"></div></div><div class="kv"><span>Chord</span><b id="ptext">1 / 8</b></div></div>
+<div class="info"><h3>Learning intent</h3><div style="font-size:11px;line-height:1.55;color:#c6ced7">好きな進行とVoicingを何周も弾き、作曲語彙として身体化する。</div></div>
+</aside>
+</div>
+<div class="foot">Mock only — score / pass / automatic stop are intentionally absent.</div>
+</main>
+</div></div>
+<script>
+const P=[["E6/9",4],["G#7(b13)",4],["C#m9",2],["Cmaj7",2],["Bm9",2],["E13",2],["Amaj9",4],["Am6",4]];
+const V={
+source:["Source Voicing","SOURCE",{"E6/9":[["E2","1"],["B2","5"],["C#3","6"],["F#3","9"],["G#3","3"]],"G#7(b13)":[["G#2","1"],["F#3","♭7"],["B#3","3"],["E4","♭13"]],"C#m9":[["C#2","1"],["B2","♭7"],["D#3","9"],["E3","♭3"],["G#3","5"]],"Cmaj7":[["C2","1"],["B2","7"],["E3","3"],["G3","5"]],"Bm9":[["B1","1"],["A2","♭7"],["C#3","9"],["D3","♭3"]],"E13":[["E2","1"],["D3","♭7"],["G#3","3"],["C#4","13"],["F#4","9"]],"Amaj9":[["A2","1"],["G#3","7"],["B3","9"],["C#4","3"]],"Am6":[["A2","1"],["F#3","6"],["C4","♭3"],["E4","5"]]}],
+custom:["Custom Voicing","CUSTOM",{"E6/9":[["E2","1"],["C#3","6"],["G#3","3"],["F#4","9"]],"G#7(b13)":[["G#2","1"],["F#3","♭7"],["B#3","3"],["E4","♭13"]],"C#m9":[["C#2","1"],["B2","♭7"],["E3","♭3"],["D#4","9"]],"Cmaj7":[["C2","1"],["B2","7"],["E3","3"]],"Bm9":[["B2","1"],["A3","♭7"],["D4","♭3"]],"E13":[["E2","1"],["D3","♭7"],["G#3","3"],["C#4","13"]],"Amaj9":[["A2","1"],["G#3","7"],["C#4","3"]],"Am6":[["A2","1"],["F#3","6"],["C4","♭3"]]}],
+basic:["Basic 1–7–3","LESSON",{"E6/9":[["E2","1"],["C#3","6"],["G#3","3"]],"G#7(b13)":[["G#2","1"],["F#3","♭7"],["B#3","3"]],"C#m9":[["C#2","1"],["B2","♭7"],["E3","♭3"]],"Cmaj7":[["C2","1"],["B2","7"],["E3","3"]],"Bm9":[["B2","1"],["A3","♭7"],["D4","♭3"]],"E13":[["E2","1"],["D3","♭7"],["G#3","3"]],"Amaj9":[["A2","1"],["G#3","7"],["C#4","3"]],"Am6":[["A2","1"],["F#3","6"],["C4","♭3"]]}],
+left:["Left-hand Voicing","LESSON",{"E6/9":[["G#2","3"],["C#3","6"],["F#3","9"]],"G#7(b13)":[["F#2","♭7"],["B#2","3"],["E3","♭13"]],"C#m9":[["E2","♭3"],["G#2","5"],["B2","♭7"],["D#3","9"]],"Cmaj7":[["E2","3"],["G2","5"],["B2","7"],["D3","9"]],"Bm9":[["D2","♭3"],["F#2","5"],["A2","♭7"],["C#3","9"]],"E13":[["D2","♭7"],["G#2","3"],["C#3","13"],["F#3","9"]],"Amaj9":[["C#2","3"],["E2","5"],["G#2","7"],["B2","9"]],"Am6":[["C2","♭3"],["E2","5"],["F#2","6"]]}]
+};
+let mode="source",bpm=80,i=0,beat=0,loops=0,running=false,timer=null,visible=true;
+const $=x=>document.getElementById(x), pcs=n=>({"B#":"C","Cb":"B","Db":"C#","Eb":"D#","Gb":"F#","Ab":"G#","Bb":"A#"}[n.replace(/[0-9]/g,"")]||n.replace(/[0-9]/g,""));
+function render(){
+ const c=P[i],n=P[(i+1)%P.length],d=V[mode],notes=d[2][c[0]]||[];
+ $("current").textContent=c[0];$("timing").textContent=c[1]+" beats";$("next").textContent=n[0];$("nextin").textContent=Math.max(1,c[1]-beat)+" beats";$("loops").textContent=loops;$("ptext").textContent=(i+1)+" / "+P.length;$("bar").style.width=((i+beat/c[1])/P.length*100)+"%";$("bpm").textContent=bpm;$("modechip").textContent=d[0];$("vtitle").textContent=d[0];$("vbadge").textContent=d[1];
+ $("progression").innerHTML=P.map((x,j)=>`<div class="cp ${j===i?"current":j===(i+1)%P.length?"next":""}"><b>${x[0]}</b><small>${x[1]} beats</small></div>`).join("");
+ $("notes").innerHTML=notes.map(x=>`<div class="note"><div class="pitch">${x[0]}</div><div class="degree">${x[1]}</div></div>`).join("");$("voicing").classList.toggle("hidden",!visible);
+ $("beats").innerHTML=[...Array(c[1])].map((_,j)=>`<div class="beat ${j===beat?"now":j<beat?"done":""}"></div>`).join("");$("beatnums").innerHTML=[...Array(c[1])].map((_,j)=>`<span>${j+1}</span>`).join("");
+ const act=new Set(notes.map(x=>pcs(x[0]))), whites=["C","D","E","F","G","A","B"], black={C:"C#",D:"D#",F:"F#",G:"G#",A:"A#"};let k="";
+ for(let o=0;o<2;o++)for(const w of whites){k+=`<div class="w ${act.has(w)?"on":""}"></div>`;if(black[w])k+=`<div class="b ${act.has(black[w])?"on":""}"></div>`}$("keyboard").innerHTML=k;
+}
+function tick(){beat++;if(beat>=P[i][1]){beat=0;i++;if(i>=P.length){i=0;loops++}}render()}
+function start(){if(running)return;running=true;$("play").textContent="Ⅱ Pause";timer=setInterval(tick,60000/bpm)}
+function pause(){running=false;clearInterval(timer);timer=null;$("play").textContent="▶ Resume"}
+$("play").onclick=()=>running?pause():start();$("restart").onclick=()=>{pause();i=0;beat=0;loops=0;$("play").textContent="▶ Start";render()};
+$("minus").onclick=()=>{bpm=Math.max(30,bpm-5);if(running){pause();start()}render()};$("plus").onclick=()=>{bpm=Math.min(240,bpm+5);if(running){pause();start()}render()};
+document.querySelectorAll(".mode").forEach(x=>x.onclick=()=>{document.querySelectorAll(".mode").forEach(y=>y.classList.remove("active"));x.classList.add("active");mode=x.dataset.mode;render()});
+document.querySelectorAll(".switch").forEach(x=>x.onclick=()=>x.classList.toggle("on"));$("show").onclick=()=>{visible=!visible;$("show").classList.toggle("on",visible);render()};
+$("ref").onclick=()=>{let t=$("ref").textContent;$("ref").textContent="♪ Playing…";setTimeout(()=>$("ref").textContent=t,650)};
+document.addEventListener("keydown",e=>{if(e.code==="Space"){e.preventDefault();running?pause():start()}if(e.key.toLowerCase()==="r")$("restart").click();if(e.key.toLowerCase()==="v"){$("show").click()}});
+render();
+</script>
+</body></html>

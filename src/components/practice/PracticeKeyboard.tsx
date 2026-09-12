@@ -26,6 +26,7 @@ interface PracticeKeyboardProps {
   accidentalStyle?: NoteAccidentalStyle;
   matchState?: PracticeMatchState;
   concealNoteNames?: boolean;
+  interactionMode?: "practice" | "neutral-monitor";
 }
 
 const copy = {
@@ -44,6 +45,7 @@ const copy = {
     notes: (count: number) => `${count} notes`,
   },
 } as const;
+const ALL_PITCH_CLASSES = Object.freeze(Array.from({ length: 12 }, (_, index) => index));
 
 export const PracticeKeyboard = memo(function PracticeKeyboard({
   range,
@@ -57,6 +59,7 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
   accidentalStyle = "flat",
   matchState = "empty",
   concealNoteNames = false,
+  interactionMode = "practice",
 }: PracticeKeyboardProps) {
   const liveNoteState = useStore(defaultLiveMidiStore, (state) => state.notes);
   const currentHeldNotes = useMemo(() => heldNotes(liveNoteState), [liveNoteState]);
@@ -68,10 +71,10 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
     () => new Set(currentHeldNotes.map(positivePitchClass)),
     [currentHeldNotes],
   );
-  const missingPitchClasses = requiredPitchClasses.filter(
+  const missingPitchClasses = interactionMode === "neutral-monitor" ? [] : requiredPitchClasses.filter(
     (pitchClass) => !heldPitchClasses.has(positivePitchClass(pitchClass)),
   );
-  const foreignNotes = currentHeldNotes.filter(
+  const foreignNotes = interactionMode === "neutral-monitor" ? [] : currentHeldNotes.filter(
     (note) => !allowedPitchClasses.includes(positivePitchClass(note)),
   );
   const heldBassNote = currentHeldNotes[0];
@@ -88,8 +91,8 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
         rightHandGuideNotes={rightHandGuideNotes}
         heldNotes={currentHeldNotes}
         sustainedNotes={currentSustainedNotes}
-        allowedPitchClasses={allowedPitchClasses}
-        requiredPitchClasses={requiredPitchClasses}
+        allowedPitchClasses={interactionMode === "neutral-monitor" ? ALL_PITCH_CLASSES : allowedPitchClasses}
+        requiredPitchClasses={interactionMode === "neutral-monitor" ? [] : requiredPitchClasses}
         guideBassNote={guideBassNote}
         heldBassNote={heldBassNote}
         showGuide={level === 1}
@@ -99,6 +102,7 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
         matchState={visualMatchState}
         language={language}
         concealNoteNames={concealNoteNames}
+        interactionMode={interactionMode}
       />
       <p
         className={`mt-3 min-h-5 text-sm ${
@@ -115,6 +119,7 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
           level,
           matchState,
           missingPitchClasses,
+          neutralMonitor: interactionMode === "neutral-monitor",
         })}
       </p>
     </div>
@@ -130,6 +135,7 @@ function inputSummary({
   level,
   matchState,
   missingPitchClasses,
+  neutralMonitor,
 }: {
   accidentalStyle: NoteAccidentalStyle;
   foreignCount: number;
@@ -139,8 +145,17 @@ function inputSummary({
   level: PracticeSessionLevel;
   matchState: PracticeMatchState;
   missingPitchClasses: readonly number[];
+  neutralMonitor: boolean;
 }): string {
   const text = copy[language];
+  if (neutralMonitor) {
+    const input = currentHeldNotes.length > 0
+      ? currentHeldNotes
+        .map((note) => formatMidiNoteForDisplay(note, "fl-studio", accidentalStyle))
+        .join(" · ")
+      : "-";
+    return `${text.input}: ${input}`;
+  }
   if (foreignCount > 0 || matchState === "wrong") return text.foreign;
   if (matchState === "match") return text.matched;
 

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, expectTypeOf, it } from "vitest";
 import { voiceChordForPreview } from "../chordVoicing";
 import { makeChordSymbol } from "../chords";
 import type { ChordTimelineItem } from "../types";
@@ -9,6 +9,10 @@ import {
   generateStyleVoicingPlan,
   handSpan,
   handsDoNotCross,
+  intervalForDegreeLabel,
+  pitchClassForDegreeLabel,
+  rootlessTemplatesForChord,
+  type DegreeLabel,
   MAX_STYLE_CANDIDATES_PER_EVENT,
   styleVoicingTransitionCost,
 } from ".";
@@ -63,6 +67,22 @@ describe("style voicing candidate generation", () => {
       candidate.allNotes.every((note) => note % 12 !== 0)
     ))).toBe(true);
     expect(candidates.some((candidate) => candidate.addedColorIntervals.includes("9"))).toBe(true);
+  });
+
+  it("keeps Rootless template pitch classes on the shared degree-interval contract", () => {
+    expect(["3", "b7", "9", "13"].map(intervalForDegreeLabel)).toEqual([4, 10, 14, 21]);
+    const dominant = generateStyleCandidates(makeChordSymbol(0, "dom7"), "rootless-ab", options);
+    expect(new Set(dominant[0]?.allNotes.map((note) => note % 12))).toEqual(new Set([2, 4, 9, 10]));
+    const altered = generateStyleCandidates(
+      makeChordSymbol(0, "dom7", ["b9", "#9"]),
+      "rootless-ab",
+      options,
+    );
+    expect(new Set(altered[0]?.allNotes.map((note) => note % 12))).toEqual(new Set([1, 3, 4, 10]));
+    expect(intervalForDegreeLabel("4")).toBe(5);
+    expect(pitchClassForDegreeLabel(makeChordSymbol(0, "maj7"), "not-a-degree")).toBeUndefined();
+    expectTypeOf(rootlessTemplatesForChord(makeChordSymbol(0, "maj7"))[0]!.labels)
+      .toEqualTypeOf<readonly DegreeLabel[]>();
   });
 });
 

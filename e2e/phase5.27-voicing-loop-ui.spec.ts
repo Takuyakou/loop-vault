@@ -1,0 +1,70 @@
+import AxeBuilder from "@axe-core/playwright";
+import { expect, test } from "@playwright/test";
+import { assertNoHorizontalOverflow, openApp } from "./helpers/app";
+
+test("P5.27 Voicing Loop route is keyboard-operable and overflow-safe at 320px", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 812 });
+  await openApp(page);
+  await page.locator("nav").getByRole("button", { name: /Practice/ }).click();
+
+  const dojo = page.getByRole("tab", { name: "Chord Dojo" });
+  await dojo.focus();
+  await page.keyboard.press("ArrowRight");
+  const voicingLoop = page.getByRole("tab", { name: "Voicing Loop" });
+  await expect(voicingLoop).toBeFocused();
+  await expect(voicingLoop).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("heading", { name: "Voicing Loop", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Cmaj7", exact: true }).first()).toBeVisible();
+  await expect(page.getByText("Dm7", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText(/構成音: C4 · G4 · B4/)).toBeVisible();
+  await expect(page.getByRole("group", { name: "Voicing表示モード" })).toBeVisible();
+  await expect(page.getByRole("progressbar", { name: "コード" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Source MIDI" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Basic Full 1–7–3" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /開始/ })).toBeEnabled();
+  await assertNoHorizontalOverflow(page);
+
+  await page.getByLabel("カウントイン").selectOption("0");
+  await page.getByRole("button", { name: /開始/ }).click();
+  await expect(page.getByRole("button", { name: /一時停止/ })).toBeVisible();
+  await page.getByRole("button", { name: /一時停止/ }).click();
+  await expect(page.getByRole("button", { name: /再開/ })).toBeVisible();
+  await page.getByRole("button", { name: /再開/ }).click();
+  await page.getByRole("button", { name: /最初から/ }).click();
+  await page.getByRole("button", { name: "停止", exact: true }).click();
+  await expect(page.getByText("停止しました")).toBeVisible();
+});
+
+test("P5.27 Voicing Loop populated surface is reduced-motion, 200% scale, and axe-clean", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 640, height: 812 });
+  await openApp(page);
+  await page.locator("nav").getByRole("button", { name: /Practice/ }).click();
+  await page.getByRole("tab", { name: "Voicing Loop" }).click();
+  await page.evaluate(() => { document.documentElement.style.zoom = "2"; });
+
+  const workspace = page.getByTestId("voicing-loop-workspace");
+  await expect(workspace).toBeVisible();
+  await assertNoHorizontalOverflow(page);
+  expect(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(true);
+
+  const axe = await new AxeBuilder({ page: page as never }).include("[data-testid='voicing-loop-workspace']").analyze();
+  expect(axe.violations.filter((violation) => violation.impact === "serious" || violation.impact === "critical")).toEqual([]);
+});
+
+test("P5.27 populated harness exposes every resolver status without fallback", async ({ page }) => {
+  const scenarios = [
+    ["", "Cmaj7"],
+    ["unavailable", "選択したVoicingを利用できません"],
+    ["unsupported", "選択中Lesson Voicingの規則がありません"],
+    ["generation-error", "Voicingを生成できませんでした"],
+  ] as const;
+  for (const [status, expected] of scenarios) {
+    await page.goto(status ? `/?p527Status=${status}` : "/");
+    await page.evaluate(() => document.fonts.ready);
+    await page.locator("nav").getByRole("button", { name: /Practice/ }).click();
+    await page.getByRole("tab", { name: "Voicing Loop" }).click();
+    await expect(page.getByTestId("voicing-loop-workspace")).toContainText(expected);
+    if (status) await expect(page.getByRole("button", { name: /開始/ })).toBeDisabled();
+  }
+});

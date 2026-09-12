@@ -399,8 +399,8 @@ describe("TextProgressionCapturePanel", () => {
 
   it("stops an owned keyboard capture when the selected card changes", async () => {
     const original = defaultLiveMidiStore.getState();
-    const activate = vi.fn(async () => undefined);
-    const deactivate = vi.fn(async () => undefined);
+    const activate = vi.fn(async () => { defaultLiveMidiStore.setState({ active: true }); });
+    const deactivate = vi.fn(async () => { defaultLiveMidiStore.setState({ active: false }); });
     defaultLiveMidiStore.setState({
       active: false,
       activate,
@@ -422,11 +422,16 @@ describe("TextProgressionCapturePanel", () => {
         '[data-testid="text-progression-card"]',
       );
       await click(cards[1]!);
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
       expect(deactivate).toHaveBeenCalledTimes(1);
       expect(harness.container.querySelector('[data-testid="voicing-capture-confirmation"]'))
         .toBeNull();
     } finally {
       await harness.unmount();
+      await act(async () => { await Promise.resolve(); });
       defaultLiveMidiStore.setState({
         active: original.active,
         activate: original.activate,

@@ -142,6 +142,13 @@ test("P5.20 production Text Progression Entry saves and reaches its supported do
   await expect(saveForm).toBeHidden();
   await expect(editor).toHaveCount(0);
 
+  await page.getByRole("button", { name: "Voicing Loop", exact: true }).click();
+  const voicingLoop = page.getByTestId("voicing-loop-workspace");
+  await expect(voicingLoop).toBeVisible();
+  await expect(voicingLoop.getByRole("heading", { level: 2, name: "C", exact: true })).toBeVisible();
+  await expect(voicingLoop.getByRole("button", { name: "Basic Full 1–7–3" }))
+    .toHaveAttribute("aria-pressed", "true");
+
   await openVault(page);
   await page.locator("#vault-search").fill(textTitle);
   const row = page.locator(".lv-vault-row").filter({ hasText: textTitle });
@@ -153,6 +160,16 @@ test("P5.20 production Text Progression Entry saves and reaches its supported do
   const detail = page.locator("[data-progression-detail-view]");
   await expect(detail).toBeVisible();
   await expect(detail).toContainText(textTitle);
+  await detail.getByTestId("voicing-loop-handoff").click();
+  await expect(page.getByTestId("voicing-loop-workspace")).toBeVisible();
+  await expect(page.getByTestId("voicing-loop-workspace").getByRole("heading", { level: 2, name: "C", exact: true })).toBeVisible();
+
+  await openVault(page);
+  await page.locator("#vault-search").fill(textTitle);
+  await page.locator(".lv-vault-row").filter({ hasText: textTitle })
+    .getByRole("button", { name: /\u9032\u884c\u3092\u958b\u304f|Open progression/ })
+    .click();
+  await expect(detail).toBeVisible();
   await detail.getByTestId("chord-context-handoff").getByRole("button").click();
 
   const bassline = page.getByTestId("bassline-echo-view");

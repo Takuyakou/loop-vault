@@ -21,7 +21,10 @@ afterEach(() => {
   defaultLiveMidiStore.setState({ notes: createLiveNoteState() });
 });
 
-function renderKeyboard(level: PracticeSessionLevel = 1): HTMLElement {
+function renderKeyboard(
+  level: PracticeSessionLevel = 1,
+  interactionMode: "practice" | "neutral-monitor" = "practice",
+): HTMLElement {
   const container = document.createElement("div");
   document.body.appendChild(container);
   const root = createRoot(container);
@@ -34,6 +37,7 @@ function renderKeyboard(level: PracticeSessionLevel = 1): HTMLElement {
       level={level}
       language="ja"
       matchState="partial"
+      interactionMode={interactionMode}
     />,
   ));
   cleanups.push(() => {
@@ -129,5 +133,23 @@ describe("PracticeKeyboard", () => {
     expect(summary).toContain("入力: 1音");
     expect(summary).not.toContain("あと");
     expect(summary).not.toContain("2音");
+  });
+
+  it("uses factual input-only copy and ARIA in neutral monitor mode", () => {
+    const container = renderKeyboard(1, "neutral-monitor");
+    const notes = reduceLiveNoteState(createLiveNoteState(), {
+      timestampMs: 1,
+      status: 0x90,
+      channel: 0,
+      data1: 61,
+      data2: 100,
+    });
+    act(() => defaultLiveMidiStore.setState({ notes }));
+
+    expect(container.querySelector('[data-midi-note="61"]')?.getAttribute("data-visual-state"))
+      .toBe("held-correct");
+    expect(container.textContent).toContain("入力: Db5");
+    expect(container.textContent).not.toMatch(/構成外|あと|一致/);
+    expect(container.querySelector("svg")?.getAttribute("aria-label")).not.toContain("構成外");
   });
 });
