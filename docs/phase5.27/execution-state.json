@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "5.27",
   "status": "in-progress",
-  "activeStage": "P5.27-01",
-  "completedStages": ["P5.27-00"],
+  "activeStage": "P5.27-02",
+  "completedStages": ["P5.27-00", "P5.27-01"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "084d05c53a3fe2a39f9250a89697c154c0464354",
-  "lastVerifiedCommit": "4319387e8cb9619084659c9eb75175283e176082",
+  "lastVerifiedCommit": "80e13c3a4a3d80cf20414bea480dc523e743204e",
   "currentBranch": "feat/p527-progression-voicing-practice",
   "requiredGates": {
     "P5.27-00": [
@@ -44,8 +44,9 @@
     "e2e-typecheck": "pass",
     "lint": "pass",
     "production-source-unchanged": "pass",
-    "diff-check": "pass"
+    "diff-check": "pass",
+    "practice-domain-clock": "pass"
   },
-  "nextAction": "Stop after P5.27-00. Await explicit authorization for P5.27-01. Before P5.27-03, install and verify emil-design-eng if it remains unavailable.",
-  "updatedAt": "2026-09-12T19:11:48+09:00"
+  "nextAction": "Proceed with P5.27-02 under the current human authorization. Before P5.27-03, verify emil-design-eng remains available.",
+  "updatedAt": "2026-09-12T20:42:24+09:00"
 }
