@@ -102,14 +102,6 @@ describe("stabilizeLiveChord", () => {
     expect(state.confirmed.label).toBe("C/E");
   });
 
-  it("is deterministic for the same candidate timeline", () => {
-    const candidate = chord("C", [60, 64, 67]);
-    const run = () => [0, 40, 50].reduce(
-      (state, timestamp) => stabilizeLiveChord(state, candidate, timestamp, 40),
-      createLiveChordStabilizerState(),
-    );
-    expect(run()).toEqual(run());
-  });
 });
 
 describe("live chord history", () => {

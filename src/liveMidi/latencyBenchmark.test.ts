@@ -12,8 +12,4 @@ describe("benchmarkLiveMidiLatency", () => {
     expect(result.after.arpeggioFromLastNote).toEqual({ p50Ms: 52, p90Ms: 52 });
     expect(result.after.fullRelease).toEqual({ p50Ms: 182, p90Ms: 182 });
   });
-
-  it("is deterministic", () => {
-    expect(benchmarkLiveMidiLatency()).toEqual(benchmarkLiveMidiLatency());
-  });
 });

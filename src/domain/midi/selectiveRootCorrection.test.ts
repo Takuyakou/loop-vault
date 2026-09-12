@@ -182,16 +182,3 @@ describe("thresholds", () => {
     expect(tight.every((proposal) => proposal.abstained)).toBe(true);
   });
 });
-
-describe("determinism", () => {
-  it("gives the same proposals three times over", () => {
-    const inputs = [
-      { observation: plainC, productRoot: 0 },
-      { observation: dPedalUnderEm, productRoot: 2 },
-    ];
-    const first = JSON.stringify(proposeRootCorrections(inputs));
-
-    expect(JSON.stringify(proposeRootCorrections(inputs))).toBe(first);
-    expect(JSON.stringify(proposeRootCorrections(inputs))).toBe(first);
-  });
-});

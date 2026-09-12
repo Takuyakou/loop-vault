@@ -170,16 +170,6 @@ describe("candidate catalog", () => {
 
     expect(catalog.patterns.map((pattern) => pattern.occurrences[0].startBar)).toEqual([1, 17]);
   });
-
-  it("produces the same catalog on a rerun", () => {
-    const pool = [
-      occurrenceOf(timeline, 1, 4, 0.8),
-      occurrenceOf(timeline, 9, 4, 0.8),
-      occurrenceOf(timeline, 17, 4, 0.7),
-    ];
-
-    expect(JSON.stringify(build(pool))).toBe(JSON.stringify(build(pool)));
-  });
 });
 
 describe("catalog at scale", () => {

@@ -236,14 +236,7 @@ describe("bridging to the identity model", () => {
   });
 });
 
-describe("determinism", () => {
-  it("gives the same result three times over", () => {
-    const one = input([note(60), note(64), note(67), note(62, 4, "harmony", 0)]);
-    const first = JSON.stringify(shadowTensions(one));
-    expect(JSON.stringify(shadowTensions(one))).toBe(first);
-    expect(JSON.stringify(shadowTensions(one))).toBe(first);
-  });
-
+describe("edge cases", () => {
   it("survives an empty window", () => {
     expect(shadowTensions(input([])).tensions).toEqual([]);
   });

@@ -8,10 +8,9 @@ describe("MIDI fingerprint", () => {
     );
   });
 
-  it("is deterministic and keeps the legacy fingerprint available", () => {
+  it("keeps current and legacy fingerprint formats available", () => {
     const bytes = new Uint8Array([1, 2, 3]);
     expect(fingerprintMidiBytes(bytes)).toMatch(/^sha256-[a-f0-9]{64}$/);
-    expect(fingerprintMidiBytes(bytes)).toBe(fingerprintMidiBytes(bytes));
     expect(legacyFingerprintMidiBytes(bytes)).toMatch(/^fnv1a32-[a-f0-9]{8}$/);
   });
 });

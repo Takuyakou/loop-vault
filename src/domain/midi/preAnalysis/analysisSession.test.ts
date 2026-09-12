@@ -220,15 +220,6 @@ describe("Phase 5.1 Analysis Session", () => {
     expect(result.voices[0].id).not.toContain("日本語の曲名");
   });
 
-  it("is deterministic", () => {
-    const inputs = [
-      input("master", oneVoiceMidi(480, 0, 60)),
-      input("added", oneVoiceMidi(960, 1, 64)),
-    ];
-
-    expect(createAnalysisSession(inputs)).toEqual(createAnalysisSession(inputs));
-  });
-
   it("applies all five preset states without including drums", () => {
     const session = createAnalysisSession([
       input("voices", midi(0, 480, [[

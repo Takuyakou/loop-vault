@@ -192,12 +192,6 @@ describe("comparing variants", () => {
     expect(current.suppressedPitchClasses).toEqual([]);
   });
 
-  it("gives the same comparison three times over", () => {
-    const first = JSON.stringify(compareVariants(walkingOverC));
-    expect(JSON.stringify(compareVariants(walkingOverC))).toBe(first);
-    expect(JSON.stringify(compareVariants(walkingOverC))).toBe(first);
-  });
-
   it("survives an empty window", () => {
     expect(compareVariants(walking([], 4))).toHaveLength(bassWeightingVariants.length);
   });

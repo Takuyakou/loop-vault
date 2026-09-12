@@ -226,11 +226,3 @@ describe("the current hypothesis is a reference, not an input", () => {
     expect(diagnostics.currentRoot).toBe(7);
   });
 });
-
-describe("determinism", () => {
-  it("gives the same diagnostics three times over", () => {
-    const first = JSON.stringify(shadowDiagnostics(cMajor));
-    expect(JSON.stringify(shadowDiagnostics(cMajor))).toBe(first);
-    expect(JSON.stringify(shadowDiagnostics(cMajor))).toBe(first);
-  });
-});

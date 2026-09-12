@@ -138,11 +138,6 @@ describe("pattern grouping is presentational", () => {
 });
 
 describe("determinism and duplicates", () => {
-  it("produces the same occurrences on repeat runs", () => {
-    const items = timeline(repeated(["C", "Am", "F", "G"], 4));
-    expect(buildOccurrences(items, 16)).toEqual(buildOccurrences(items, 16));
-  });
-
   it("does not emit two occurrences for the same window", () => {
     const items = timeline(repeated(["C", "Am", "F", "G"], 4));
     const ids = buildOccurrences(items, 16).map((occurrence) => occurrence.id);

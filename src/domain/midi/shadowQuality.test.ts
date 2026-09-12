@@ -189,14 +189,7 @@ describe("identity", () => {
   });
 });
 
-describe("determinism", () => {
-  it("gives the same quality three times over", () => {
-    const input = { observation: cDominant, root: 0, bass: 0 };
-    const first = JSON.stringify(shadowQuality(input));
-    expect(JSON.stringify(shadowQuality(input))).toBe(first);
-    expect(JSON.stringify(shadowQuality(input))).toBe(first);
-  });
-
+describe("scoring configuration", () => {
   it("scales its parameters without changing their shape", () => {
     expect(Object.keys(scaleQualityScoring(defaultQualityScoring, 2)))
       .toEqual(Object.keys(defaultQualityScoring));

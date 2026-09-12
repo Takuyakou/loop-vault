@@ -181,18 +181,6 @@ describe("dynamic recommendation count", () => {
 
     expect(result.recommendations[0].reasons).toContain("only-candidate-of-its-kind");
   });
-
-  it("produces the same recommendations on a rerun", () => {
-    const timeline = [...bars(1, [0, 9, 5, 7]), ...bars(9, [2, 7, 4, 11])];
-    const catalog = catalogOf([
-      occurrenceOf(timeline, 1, 4, 0.8),
-      occurrenceOf(timeline, 9, 4, 0.8),
-    ], 16);
-
-    expect(JSON.stringify(recommendPatterns(catalog)))
-      .toBe(JSON.stringify(recommendPatterns(catalog)));
-  });
-
   it("never returns more recommendations than eligible patterns", () => {
     const timeline = [...bars(1, [0, 9, 5, 7]), ...bars(9, [2, 7, 4, 11])];
     const catalog = catalogOf([

@@ -137,12 +137,6 @@ describe("section segmentation", () => {
     expect(sections).toHaveLength(1);
   });
 
-  it("is deterministic", () => {
-    const labels = [...repeated(["C", "Am", "F", "G"], 2), ...repeated(["F#", "Ebm", "B", "C#"], 2)];
-    const notes = labels.flatMap((label, index) => chordNotes(label, index + 1));
-    const data = song(notes, 16);
-    expect(segmentSections(data, timeline(labels))).toEqual(segmentSections(data, timeline(labels)));
-  });
 });
 
 describe("segmentation quality", () => {

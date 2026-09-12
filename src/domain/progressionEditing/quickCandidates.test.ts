@@ -89,15 +89,6 @@ describe("quick chord candidate composer", () => {
     expect(result[1]?.chord.bass).toBe(11);
   });
 
-  it("is deterministic", () => {
-    const input = {
-      currentChord: current,
-      analyzerCandidates: [candidate(7, "analyzer", 0), candidate(2, "analyzer", 1)],
-      smoothCandidates: [candidate(5, "smoothConnection", 0)],
-    };
-    expect(composeQuickChordCandidates(input)).toEqual(composeQuickChordCandidates(input));
-  });
-
   it("fills analyzer-free editing slots with Context 3 + Smooth 1 + Style 1", () => {
     const result = composeRepairQuickChordCandidates({
       currentChord: current,

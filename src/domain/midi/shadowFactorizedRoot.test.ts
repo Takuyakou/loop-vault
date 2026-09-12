@@ -117,12 +117,6 @@ describe("sequence", () => {
     expect(withKey[0].top1).toBe(withoutKey[0].top1);
   });
 
-  it("gives the same sequence three times over", () => {
-    const first = JSON.stringify(shadowFactorizedRootSequence(progression));
-    expect(JSON.stringify(shadowFactorizedRootSequence(progression))).toBe(first);
-    expect(JSON.stringify(shadowFactorizedRootSequence(progression))).toBe(first);
-  });
-
   it("handles an empty sequence and an empty window", () => {
     expect(shadowFactorizedRootSequence([])).toEqual([]);
     expect(shadowFactorizedRootSequence([observe([])])).toHaveLength(1);

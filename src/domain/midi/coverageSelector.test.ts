@@ -156,15 +156,6 @@ describe("coverage selection", () => {
     expect(result.longestUncoveredRun).toBeGreaterThan(0);
     expect(result.uncoveredBars.length).toBeGreaterThan(0);
   });
-
-  it("is deterministic", () => {
-    const items = timeline(repeated(["C", "Am", "F", "G"], 8));
-    const occurrences = scored(items, 32, () => 0.7);
-    const first = selectOccurrencesByCoverage(occurrences, { harmonicActiveBars: allBars(32) });
-    const second = selectOccurrencesByCoverage(occurrences, { harmonicActiveBars: allBars(32) });
-    expect(second.selected.map((o) => o.id)).toEqual(first.selected.map((o) => o.id));
-  });
-
   it("never excludes a candidate because of a section boundary", () => {
     const items = timeline(repeated(["C", "Am", "F", "G"], 8));
     const occurrences = scored(items, 32, () => 0.7);

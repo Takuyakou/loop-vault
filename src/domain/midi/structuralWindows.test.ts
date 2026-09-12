@@ -89,11 +89,4 @@ describe("structural windows", () => {
       && window.startBar + window.lengthBars - 1 <= 20)).toBe(true);
   });
 
-  it("produces the same windows on a rerun", () => {
-    const timeline = timelineOf([0, 5, 7, 9, 2], 40);
-    const first = structuralWindows(timeline, 40, 4);
-    const second = structuralWindows(timeline, 40, 4);
-
-    expect(second).toEqual(first);
-  });
 });

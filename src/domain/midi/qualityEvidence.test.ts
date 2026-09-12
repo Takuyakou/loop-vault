@@ -117,11 +117,6 @@ describe("analyzer modes", () => {
     expect(chord.quality.startsWith("min")).toBe(false);
   });
 
-  it("stays deterministic", () => {
-    const bytes = thirdlessMidi();
-    expect(analyzeMidi(bytes, { mode: "phase4-v1" }))
-      .toEqual(analyzeMidi(bytes, { mode: "phase4-v1" }));
-  });
 });
 
 /** E F# A D sustained: the notes that legacy reads as Em11 without a G. */

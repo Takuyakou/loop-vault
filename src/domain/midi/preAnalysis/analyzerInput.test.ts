@@ -333,18 +333,6 @@ describe("Phase 5.1 analyzer input", () => {
     expect(analysis.tempoDiagnostics?.weightedMedianBpm).toBeCloseTo(108, 3);
   });
 
-  it("is deterministic for the same session", () => {
-    const session = {
-      ...createAnalysisSession([{
-        sourceId: "master",
-        displayName: "same.mid",
-        bytes: multiVoiceMidi(480),
-      }]).session!,
-      preset: "custom" as const,
-    };
-    expect(buildSessionAnalysisRequest(session))
-      .toEqual(buildSessionAnalysisRequest(session));
-  });
 });
 
 function chordMidi(

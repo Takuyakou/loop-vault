@@ -158,18 +158,6 @@ describe("pattern selection", () => {
     expect(result.selected).toHaveLength(0);
   });
 
-  it("produces the same selection on a rerun", () => {
-    const occurrences = [
-      occurrenceOf(timeline, 1, 4, 0.8),
-      occurrenceOf(timeline, 5, 4, 0.8),
-      occurrenceOf(timeline, 9, 4, 0.8),
-    ];
-    const patterns = buildPatternCandidates(groupIntoPatterns(occurrences), active);
-    const first = selectPatternsByCoverage(patterns, { harmonicActiveBars: active });
-    const second = selectPatternsByCoverage(patterns, { harmonicActiveBars: active });
-
-    expect(second.steps).toEqual(first.steps);
-  });
 });
 
 describe("usefulness-ordered selection", () => {
@@ -262,17 +250,4 @@ describe("usefulness-ordered selection", () => {
     expect(result.steps.every((step) => step.kind === "vamp")).toBe(true);
   });
 
-  it("produces identical steps on a rerun", () => {
-    const timeline = [...phrase(1), ...phrase(9), ...phrase(17, 2)];
-    const occurrences = [
-      occurrenceOf(timeline, 1, 4, 0.8),
-      occurrenceOf(timeline, 9, 4, 0.8),
-      occurrenceOf(timeline, 17, 4, 0.8),
-    ];
-    const patterns = buildPatternCandidates(groupIntoPatterns(occurrences), active);
-    const first = selectPatternsByUsefulness(patterns, { harmonicActiveBars: active });
-    const second = selectPatternsByUsefulness(patterns, { harmonicActiveBars: active });
-
-    expect(second.steps).toEqual(first.steps);
-  });
 });

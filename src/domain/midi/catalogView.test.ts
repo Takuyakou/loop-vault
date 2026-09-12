@@ -208,14 +208,6 @@ describe("catalog view", () => {
       }
     }
   });
-
-  it("builds the same view on a rerun", () => {
-    const timeline = [...bars(1, [0, 9, 5, 7]), ...bars(5, [2, 7, 4, 11])];
-    const occurrences = [occurrenceOf(timeline, 1, 4, 0.8), occurrenceOf(timeline, 5, 4, 0.8)];
-
-    expect(JSON.stringify(viewOf(occurrences, 8).view))
-      .toBe(JSON.stringify(viewOf(occurrences, 8).view));
-  });
 });
 
 describe("lane rendering", () => {

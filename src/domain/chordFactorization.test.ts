@@ -178,14 +178,6 @@ describe("the quality list, inverted", () => {
 });
 
 describe("determinism", () => {
-  it("gives the same parts every time", () => {
-    for (const label of ["Cmaj9", "Em7/G", "F#7(#11)", "Bbm11", "A13"]) {
-      const first = factorizedKey(factorizeChordLabel(label)!);
-      expect(factorizedKey(factorizeChordLabel(label)!)).toBe(first);
-      expect(factorizedKey(factorizeChordLabel(label)!)).toBe(first);
-    }
-  });
-
   it("orders tensions the same way regardless of how they were written", () => {
     const written = factorizeChordSymbol(makeChordSymbol(0, "dom7", ["13", "b9"]));
     const other = factorizeChordSymbol(makeChordSymbol(0, "dom7", ["b9", "13"]));

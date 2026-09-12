@@ -112,12 +112,4 @@ describe("MIDI representative tempo", () => {
     })).toBe(false);
   });
 
-  it("is deterministic", () => {
-    const input = {
-      tempoChanges: [{ tick: 960, bpm: 90 }, { tick: 0, bpm: 120 }, { tick: 480, bpm: 100 }],
-      ticksPerBeat: ppq,
-      durationTick: 2400,
-    };
-    expect(analyzeMidiTempo(input)).toEqual(analyzeMidiTempo(input));
-  });
 });

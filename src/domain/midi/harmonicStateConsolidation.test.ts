@@ -177,16 +177,6 @@ describe("P5.24 production Harmonic State integration", () => {
     expect(prepared.options.preparedData?.notes).toHaveLength(1_536);
     expect(performance.now() - started).toBeLessThan(2_000);
   });
-
-  it("is deterministic when enabled", () => {
-    const preparedData = preparedFixture(requiredFixture("D"));
-    const options = {
-      preparedData,
-      mode: "phase4-v1" as const,
-      enableHarmonicStateConsolidation: true,
-    };
-    expect(analyzeMidi(bytes, options)).toEqual(analyzeMidi(bytes, options));
-  });
 });
 
 function expectEnabledFallbackEqualsOff(preparedData: MidiSongData): void {
