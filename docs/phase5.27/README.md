@@ -3,7 +3,7 @@
 # Phase 5.27 — Progression Voicing Practice
 
 ## Status
-`P5.27-02 COMPLETE — P5.27-03 ACTIVE`
+`P5.27-03 COMPLETE — P5.27-04 ACTIVE`
 
 ## Product goal
 
@@ -534,7 +534,10 @@ Must prove:
 
 # Next action
 
-P5.27-02 completed at `3ad0db9e44145120126a952762d4c3f44eeae368`.
+P5.27-03 implementation, focused tests, and report were committed at
+`fa1f444416a7c45f1d7e52ec68daf75026ec9303`. The accepted Practice workspace
+visual baseline was refreshed independently at
+`e3c77fb39fc46ed2aeba85b624cc8d2563593f12`.
 
-Proceed with P5.27-03 under the current human authorization, using the verified
-available `$emil-design-eng` skill for the user-facing UI implementation.
+Proceed with P5.27-04 Text / Vault Flow Integration under the current human
+authorization.
