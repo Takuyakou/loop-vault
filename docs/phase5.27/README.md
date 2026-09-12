@@ -3,7 +3,7 @@
 # Phase 5.27 — Progression Voicing Practice
 
 ## Status
-`P5.27-04 COMPLETE — P5.27-05 ACTIVE`
+`READY FOR PRODUCT ACCEPTANCE — Progression Voicing Practice`
 
 ## Product goal
 
@@ -534,11 +534,11 @@ Must prove:
 
 # Next action
 
-P5.27-04 implementation, focused tests, and report were committed at
-`9ef1403195356a2dbbb76b20b238bced78977117`. The accepted Progression Detail
-visual baseline was refreshed independently at
-`6f8164ed0d332bac160d7d56e598aeef09dfefcf`.
+P5.27-05 hardening was committed at
+`16b9fbee7b862b899afa88ac5e4c79c308847cbd`, the audited development dependency
+refresh at `722e05c05ea0718dd961a8654c13207295a6b39d`, and the automated
+acceptance report at `a5daac35e8068edfdcc585c7ad03494414e0979e`.
 
-Proceed with P5.27-05 Hardening / Product Acceptance under the current human
-authorization, applying the Test / Build Optimization Policy and all required
-Stage05 gates.
+Automated gates pass. Human Acceptance is `NOT RUN`; stop for packaged direct
+executable acceptance. Do not merge, push, tag, release, or begin P5.28 before
+Human Acceptance passes and separate authorization is given.
