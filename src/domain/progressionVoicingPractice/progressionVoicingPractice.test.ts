@@ -6,6 +6,9 @@ import {
   buildProgressionPracticeClockSchedule,
   buildProgressionVoicingPracticeSnapshot,
   createProgressionPracticeClockState,
+  progressionPracticeBeatAtTick,
+  PROGRESSION_VOICING_PRACTICE_PPQ,
+  progressionPracticeTicksAtBeat,
   progressionEventTransportBeat,
   projectProgressionPracticeClock,
   reduceProgressionPracticeClock,
@@ -114,6 +117,70 @@ describe("P5.27 detached practice snapshot", () => {
     });
   });
 
+  it("preserves E-major sharp-family labels while keeping numeric chord identity unchanged", () => {
+    const sharpDominant = event(1, 1, 1, 8, "dom7");
+    sharpDominant.chord = { ...makeChordSymbol(8, "dom7", ["b13"]), label: "G#7(b13)" };
+    const slash = event(1, 2, 1, 4, "maj");
+    slash.chord = { ...makeChordSymbol(4, "maj", [], 8), label: "E/G#" };
+    const flatNine = event(1, 3, 2, 1, "dom7");
+    flatNine.chord = { ...makeChordSymbol(1, "dom7", ["b9"]), label: "C#7(b9)" };
+    const block = progression([sharpDominant, slash, flatNine]);
+    block.detectedKey = "E major";
+
+    const result = buildProgressionVoicingPracticeSnapshot({
+      sourceReference: { ideaId: "idea-1", blockId: block.id },
+      block,
+      selection: "basic-full",
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.snapshot.events.map(({ chord }) => chord.label))
+      .toEqual(["G#7(b13)", "E/G#", "C#7(b9)"]);
+    expect(result.snapshot.events.map(({ chord }) => ({
+      root: chord.root,
+      bass: chord.bass,
+      tensions: chord.tensions,
+    }))).toEqual([
+      { root: 8, bass: undefined, tensions: ["b13"] },
+      { root: 4, bass: 8, tensions: [] },
+      { root: 1, bass: undefined, tensions: ["b9"] },
+    ]);
+  });
+
+  it("preserves validated non-diatonic saved spelling and canonicalizes unsafe labels", () => {
+    const flatDominant = event(1, 1, 1, 10, "dom7");
+    flatDominant.chord = { ...makeChordSymbol(10, "dom7"), label: "Bb7" };
+    const flatSlash = event(1, 2, 1, 4, "maj");
+    flatSlash.chord = { ...makeChordSymbol(4, "maj", [], 10), label: "E/Bb" };
+    const malformed = event(1, 3, 1, 8, "dom7");
+    malformed.chord = { ...makeChordSymbol(8, "dom7"), label: "not-a-chord" };
+    const mismatched = event(1, 4, 1, 8, "dom7");
+    mismatched.chord = { ...makeChordSymbol(8, "dom7"), label: "Cmaj7" };
+    const block = progression([flatDominant, flatSlash, malformed, mismatched]);
+    block.detectedKey = "E major";
+
+    const result = buildProgressionVoicingPracticeSnapshot({
+      sourceReference: { ideaId: "idea-1", blockId: block.id },
+      block,
+      selection: "basic-full",
+    });
+    expect(result.ok && result.snapshot.events.map(({ chord }) => chord.label))
+      .toEqual(["Bb7", "E/Bb", "Ab7", "Ab7"]);
+  });
+
+  it("keeps the legacy context-free spelling when no key is saved", () => {
+    const chordEvent = event(1, 1, 4, 8, "dom7");
+    const block = progression([chordEvent]);
+    block.detectedKey = undefined;
+    const result = buildProgressionVoicingPracticeSnapshot({
+      sourceReference: { ideaId: "idea-1", blockId: block.id },
+      block,
+      selection: "basic-full",
+    });
+    expect(result.ok && result.snapshot.events[0]?.chord)
+      .toMatchObject({ root: 8, label: "Ab7" });
+  });
+
   it("fails closed for unsafe references, discontinuous timing, and unsupported meter", () => {
     const valid = progression([event(1, 1, 2, 0), event(1, 4, 1, 5)]);
     expect(buildProgressionVoicingPracticeSnapshot({
@@ -124,6 +191,12 @@ describe("P5.27 detached practice snapshot", () => {
     })).toMatchObject({ ok: false, error: { code: "invalid-reference" } });
     expect(buildProgressionVoicingPracticeSnapshot({
       sourceReference: { ideaId: "idea", blockId: valid.id }, block: valid, selection: "basic-shell",
+    })).toMatchObject({ ok: false, error: { code: "invalid-timing" } });
+    const simultaneous = progression([event(1, 1, 1, 0), event(1, 1, 1, 5)]);
+    expect(buildProgressionVoicingPracticeSnapshot({
+      sourceReference: { ideaId: "idea", blockId: simultaneous.id },
+      block: simultaneous,
+      selection: "basic-shell",
     })).toMatchObject({ ok: false, error: { code: "invalid-timing" } });
     expect(buildProgressionVoicingPracticeSnapshot({
       sourceReference: { ideaId: "idea", blockId: "block" },
@@ -157,6 +230,27 @@ describe("P5.27 detached practice snapshot", () => {
     expect(buildProgressionVoicingPracticeSnapshot({
       sourceReference: { ideaId: "idea", blockId: invalid.id }, block: invalid, selection: "basic-shell",
     })).toMatchObject({ ok: false, error: { code: "invalid-chord" } });
+
+    const hugeDuration = progression([event(1, 1, 1e300, 0)]);
+    expect(buildProgressionVoicingPracticeSnapshot({
+      sourceReference: { ideaId: "idea", blockId: hugeDuration.id },
+      block: hugeDuration,
+      selection: "basic-shell",
+    })).toMatchObject({ ok: false, error: { code: "invalid-timing" } });
+
+    const unsafeBar = progression([event(Number.MAX_SAFE_INTEGER + 1, 1, 4, 0)]);
+    expect(buildProgressionVoicingPracticeSnapshot({
+      sourceReference: { ideaId: "idea", blockId: unsafeBar.id },
+      block: unsafeBar,
+      selection: "basic-shell",
+    })).toMatchObject({ ok: false, error: { code: "invalid-timing" } });
+
+    const largeSafeBeat = Math.floor(
+      Number.MAX_SAFE_INTEGER / PROGRESSION_VOICING_PRACTICE_PPQ,
+    ) - 1;
+    expect(progressionPracticeBeatAtTick(progressionPracticeTicksAtBeat(largeSafeBeat)))
+      .toBe(largeSafeBeat);
+    expect(() => progressionPracticeTicksAtBeat(largeSafeBeat + 2)).toThrow(RangeError);
   });
 
   it("is deterministic for equivalent owned inputs", () => {
@@ -231,6 +325,15 @@ describe("P5.27 single non-scoring clock", () => {
     ]));
     const countInBeats = 4;
     const completedLoops = 1_000;
+    expect(snapshot.lengthBeats).toBe(211 / PROGRESSION_VOICING_PRACTICE_PPQ);
+    expect(snapshot.events.map(({ startBeat, durationBeats }) => [
+      progressionPracticeTicksAtBeat(startBeat),
+      progressionPracticeTicksAtBeat(durationBeats),
+    ])).toEqual([[0, 77], [77, 134]]);
+    expect(snapshotFrom(progression([
+      event(1, 1, 0.4, 0),
+      event(1, 1.4, 0.7, 7),
+    ]))).toEqual(snapshot);
     const exactBoundary = countInBeats + completedLoops * snapshot.lengthBeats;
     const adjacentDelta = 1e-7;
     const projectAt = (absoluteBeat: number) => {
@@ -275,6 +378,14 @@ describe("P5.27 single non-scoring clock", () => {
       currentEventIndex: 0,
       nextEventIndex: 1,
     });
+
+    const musicalThirtyMinutes = 30 * 80;
+    const longProjection = projectAt(countInBeats + musicalThirtyMinutes);
+    expect(longProjection.loopCount).toBe(Math.floor(musicalThirtyMinutes / snapshot.lengthBeats));
+    expect(longProjection.progressionBeat).toBeCloseTo(
+      musicalThirtyMinutes % snapshot.lengthBeats,
+      10,
+    );
   });
 
   it("preserves position across pause/resume and BPM changes, while restart reapplies count-in", () => {
@@ -361,6 +472,34 @@ describe("P5.27 single non-scoring clock", () => {
     expect(Object.keys(first)).not.toEqual(expect.arrayContaining([
       "score", "accuracy", "correct", "success", "streak", "mastery", "performance",
     ]));
+  });
+
+  it("projects an exact 30-minute musical run without waiting on wall-clock time", () => {
+    const snapshot = snapshotFrom(progression([
+      event(1, 1, 1, 0), event(1, 2, 1, 2), event(1, 3, 2, 5),
+    ]));
+    const bpm = 80;
+    const musicalRuntimeMinutes = 30;
+    const elapsedBeats = musicalRuntimeMinutes * bpm;
+    const expectedLoops = elapsedBeats / snapshot.lengthBeats;
+    const run = () => {
+      let state = createProgressionPracticeClockState(snapshot, { bpm, countInBars: 0 });
+      state = reduceProgressionPracticeClock(snapshot, state, { type: "START" });
+      state = reduceProgressionPracticeClock(snapshot, state, {
+        type: "SYNC_TRANSPORT", absoluteBeat: elapsedBeats,
+      });
+      return projectProgressionPracticeClock(snapshot, state);
+    };
+
+    expect(expectedLoops).toBe(600);
+    expect(run()).toEqual(run());
+    expect(run()).toMatchObject({
+      status: "running",
+      loopCount: expectedLoops,
+      progressionBeat: 0,
+      currentEventIndex: 0,
+      nextEventIndex: 1,
+    });
   });
 
   it("stops only on the explicit user stop action", () => {

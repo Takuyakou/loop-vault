@@ -90,6 +90,33 @@ describe("P5.27 saved Vault handoff", () => {
     expect(legacyKey.ok && legacyKey.handoff.snapshots["basic-full"]?.key).toBeUndefined();
   });
 
+  it("carries E-major altered and slash spelling through the detached Vault handoff", () => {
+    const dominant = event(1, 1, 2, 8);
+    dominant.chord = { ...makeChordSymbol(8, "dom7", ["b13"]), label: "G#7(b13)" };
+    const slash = event(1, 3, 2, 4);
+    slash.chord = { ...makeChordSymbol(4, "maj", [], 8), label: "E/G#" };
+    const block = progression([dominant, slash]);
+    block.detectedKey = "E major";
+    const idea = makeIdea({ id: "idea-e-major", progressionBlocks: [block] });
+
+    const result = buildProgressionVoicingPracticeHandoffFromVault(
+      [idea],
+      { ideaId: idea.id, blockId: block.id },
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.handoff.snapshots["basic-full"]?.events.map(({ chord }) => chord.label))
+      .toEqual(["G#7(b13)", "E/G#"]);
+    expect(result.handoff.snapshots["basic-full"]?.events.map(({ chord }) => ({
+      root: chord.root,
+      bass: chord.bass,
+      tensions: chord.tensions,
+    }))).toEqual([
+      { root: 8, bass: undefined, tensions: ["b13"] },
+      { root: 4, bass: 8, tensions: [] },
+    ]);
+  });
+
   it("fails closed when the saved source is missing, deleted, or invalid", () => {
     const block = progression([event(1, 1, 4, 0)]);
     const idea = makeIdea({ id: "idea-1", progressionBlocks: [block] });

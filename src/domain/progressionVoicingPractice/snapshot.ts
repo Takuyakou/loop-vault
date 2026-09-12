@@ -1,4 +1,4 @@
-import { labelFromSymbol } from "../chords";
+import { labelFromSymbol, parseChordLabel } from "../chords";
 import type { ChordQuality, ChordSymbol, ChordTimelineItem, SavedProgressionBlock, Tension, VoicingSnapshot } from "../types";
 import { voicingCompatibility, voicingSourceStatus } from "../voicing";
 import {
@@ -10,6 +10,7 @@ import {
   type ProgressionPracticeSourceReference,
   type ProgressionVoicingSelection,
 } from "./types";
+import { progressionPracticeBeatAtTick, progressionPracticeTicksAtBeat } from "./timingGrid";
 
 const supportedQualities = new Set<ChordQuality>([
   "maj", "min", "dim", "aug", "maj7", "min7", "dom7", "min7b5", "dim7",
@@ -60,6 +61,7 @@ export function buildProgressionVoicingPracticeSnapshot(
     return failure("empty-progression", "Voicing Loop requires at least one chord.");
   }
 
+  const normalizedKey = input.block.detectedKey?.trim();
   const normalized = normalizeEvents(input.block.chords, input.selection);
   if (!normalized.ok) return normalized;
   const source = Object.freeze({
@@ -73,7 +75,7 @@ export function buildProgressionVoicingPracticeSnapshot(
     version: PROGRESSION_VOICING_PRACTICE_SNAPSHOT_VERSION,
     source,
     selection: input.selection,
-    ...(input.block.detectedKey === undefined ? {} : { key: input.block.detectedKey.trim() }),
+    ...(normalizedKey === undefined ? {} : { key: normalizedKey }),
     bpm: input.block.bpm,
     meter: Object.freeze({ numerator: 4 as const, denominator: 4 as const }),
     lengthBeats: normalized.lengthBeats,
@@ -95,36 +97,50 @@ function normalizeEvents(
     absoluteBeat: absoluteBeat(event.bar, event.beat),
   }));
   for (const candidate of candidates) {
-    if (!Number.isFinite(candidate.absoluteBeat)
-      || !Number.isFinite(candidate.event.durationBeats)
+    if (!Number.isFinite(candidate.event.durationBeats)
       || candidate.event.durationBeats <= 0
       || !isChordSymbol(candidate.event.chord)) {
       return failure("invalid-chord", "Voicing Loop contains an invalid chord or duration.");
     }
+    if (!Number.isFinite(candidate.absoluteBeat)) {
+      return failure("invalid-timing", "Voicing Loop contains an invalid event position.");
+    }
   }
   candidates.sort((left, right) => left.absoluteBeat - right.absoluteBeat || left.sourceIndex - right.sourceIndex);
   const firstBeat = candidates[0]!.absoluteBeat;
-  let cursor = firstBeat;
+  let sourceCursor = firstBeat;
+  let previousEndTick = 0;
   const events: ProgressionPracticeEvent[] = [];
   for (let index = 0; index < candidates.length; index += 1) {
     const { event, absoluteBeat: onset } = candidates[index]!;
-    if (Math.abs(onset - cursor) > TIMING_EPSILON) {
+    if (Math.abs(onset - sourceCursor) > TIMING_EPSILON) {
       return failure("invalid-timing", "Voicing Loop requires a continuous non-overlapping progression.");
+    }
+    let startTick: number;
+    let endTick: number;
+    try {
+      progressionPracticeTicksAtBeat(onset);
+      startTick = progressionPracticeTicksAtBeat(onset - firstBeat);
+      endTick = progressionPracticeTicksAtBeat(onset + event.durationBeats - firstBeat);
+    } catch {
+      return failure("invalid-timing", "Voicing Loop timing is outside its safe playback grid.");
+    }
+    if (startTick !== previousEndTick || endTick <= startTick) {
+      return failure("invalid-timing", "Voicing Loop timing cannot be represented on its playback grid.");
     }
     const chord = cloneChord(event.chord);
     const selectedVoicing = selectVoicing(event, selection);
-    const canonicalStartBeat = normalizeBeat(cursor - firstBeat);
-    const canonicalDurationBeats = normalizeBeat(event.durationBeats);
     events.push(Object.freeze({
       id: `event-${index + 1}`,
-      startBeat: canonicalStartBeat,
-      durationBeats: canonicalDurationBeats,
+      startBeat: progressionPracticeBeatAtTick(startTick),
+      durationBeats: progressionPracticeBeatAtTick(endTick - startTick),
       chord,
       ...(selectedVoicing === undefined ? {} : { voicing: selectedVoicing }),
     }));
-    cursor += canonicalDurationBeats;
+    sourceCursor = onset + event.durationBeats;
+    previousEndTick = endTick;
   }
-  const lengthBeats = normalizeBeat(cursor - firstBeat);
+  const lengthBeats = progressionPracticeBeatAtTick(previousEndTick);
   if (!(lengthBeats > 0)) {
     return failure("invalid-timing", "Voicing Loop progression length must be positive.");
   }
@@ -144,8 +160,24 @@ function cloneChord(chord: ChordSymbol): ProgressionPracticeEvent["chord"] {
     quality: canonical.quality,
     tensions: Object.freeze([...canonical.tensions]),
     ...(canonical.bass === undefined ? {} : { bass: canonical.bass }),
-    label: labelFromSymbol(canonical),
+    label: validatedSavedChordLabel(chord, canonical) ?? labelFromSymbol(canonical),
   });
+}
+
+function validatedSavedChordLabel(source: ChordSymbol, canonical: ChordSymbol): string | undefined {
+  if (typeof source.label !== "string") return undefined;
+  const label = source.label.trim();
+  if (label.length === 0 || label.length > 64) return undefined;
+  const parsed = parseChordLabel(label);
+  if (!parsed || !sameChordSemantics(parsed, canonical)) return undefined;
+  return label;
+}
+
+function sameChordSemantics(left: ChordSymbol, right: ChordSymbol): boolean {
+  return left.root === right.root
+    && left.quality === right.quality
+    && left.bass === right.bass
+    && [...left.tensions].sort().join("|") === [...right.tensions].sort().join("|");
 }
 
 function selectVoicing(
@@ -185,11 +217,18 @@ function isChordSymbol(value: ChordSymbol): boolean {
 }
 
 function absoluteBeat(bar: number, beat: number): number {
-  if (!Number.isInteger(bar) || bar < 1 || !Number.isFinite(beat) || beat < 1 || beat > 4) return Number.NaN;
-  return (bar - 1) * 4 + beat - 1;
+  if (!Number.isSafeInteger(bar) || bar < 1 || !Number.isFinite(beat) || beat < 1 || beat > 4) {
+    return Number.NaN;
+  }
+  const value = (bar - 1) * 4 + beat - 1;
+  try {
+    progressionPracticeTicksAtBeat(value);
+    return value;
+  } catch {
+    return Number.NaN;
+  }
 }
 
-function normalizeBeat(value: number): number { return Number(value.toFixed(9)); }
 function normalizeMeter(value: unknown): string | undefined {
   return typeof value === "string" ? value.replace(/\s/g, "") : undefined;
 }

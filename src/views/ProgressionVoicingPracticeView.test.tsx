@@ -227,6 +227,67 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.textContent).toContain("停止しました");
     expect(runtime.stop).toHaveBeenCalled();
   });
+
+  it("advances only from the practice clock with no, wrong, or extra MIDI notes", async () => {
+    const originalNotes = defaultLiveMidiStore.getState().notes;
+    try {
+      const runtime = new FakeTransport();
+      const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full");
+      await act(async () => button(container, "開始").click());
+      const sync = runtime.options!.onTransportBeat;
+
+      await act(async () => sync(5));
+      expect(container.querySelector("[aria-current='step']")?.textContent).toContain("Cmaj7");
+
+      await act(async () => {
+        defaultLiveMidiStore.setState({
+          notes: {
+            held: new Map([
+              ["0:61", { count: 1, velocity: 100, sinceMs: 0, lastEventMs: 0 }],
+              ["0:70", { count: 1, velocity: 100, sinceMs: 0, lastEventMs: 0 }],
+            ]),
+            sustained: new Set(),
+            pedalByChannel: new Map(),
+          },
+        });
+      });
+      await act(async () => sync(6.5));
+      expect(container.querySelector("[aria-current='step']")?.textContent).toContain("Dm7");
+      expect(container.textContent).not.toMatch(/正解|不正解|スコア|accuracy|streak|mastery/i);
+
+      await act(async () => {
+        defaultLiveMidiStore.setState({
+          notes: { held: new Map(), sustained: new Set(), pedalByChannel: new Map() },
+        });
+      });
+      await act(async () => sync(8));
+      expect(container.textContent).toContain("1 周完了");
+    } finally {
+      await act(async () => defaultLiveMidiStore.setState({ notes: originalNotes }));
+    }
+  });
+
+  it("invalidates the old clock and stops runtime on source switch and route exit", async () => {
+    const runtime = new FakeTransport();
+    const container = await renderView(runtime, {
+      "source-midi": snapshot("source-midi"),
+      custom: snapshot("custom"),
+    }, "source-midi");
+    await act(async () => button(container, "開始").click());
+    const staleSync = runtime.options!.onTransportBeat;
+    const stopsBeforeSwitch = runtime.stop.mock.calls.length;
+
+    await act(async () => button(container, "Custom").click());
+    expect(runtime.stop.mock.calls.length).toBeGreaterThan(stopsBeforeSwitch);
+    await act(async () => staleSync(8));
+    expect(container.textContent).toContain("0 周完了");
+
+    await act(async () => button(container, "開始").click());
+    const stopsBeforeExit = runtime.stop.mock.calls.length;
+    await act(async () => root?.unmount());
+    root = undefined;
+    expect(runtime.stop.mock.calls.length).toBeGreaterThan(stopsBeforeExit);
+  });
 });
 
 async function renderView(

@@ -3,6 +3,10 @@ import type {
   ProgressionPracticeVoicingPlan,
   ProgressionVoicingPracticeSnapshot,
 } from "../domain/progressionVoicingPractice";
+import {
+  PROGRESSION_VOICING_PRACTICE_PPQ,
+  progressionPracticeTicksAtBeat,
+} from "../domain/progressionVoicingPractice";
 
 export interface ProgressionVoicingTransportStartOptions {
   readonly snapshot: ProgressionVoicingPracticeSnapshot;
@@ -35,6 +39,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
   private voicingSynth?: Tone.PolySynth<Tone.FMSynth>;
   private clickSynth?: Tone.Synth;
   private generation = 0;
+  private projectionEpoch = 0;
   private startingGeneration?: number;
   private ownsTransport = false;
   private running = false;
@@ -53,8 +58,9 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.startingGeneration = undefined;
 
     const ppq = this.transport.PPQ;
+    assertCompatibleRuntimePpq(ppq);
     const countInBeats = options.countInBars * options.snapshot.meter.numerator;
-    const loopTicks = Math.max(1, Math.round(options.snapshot.lengthBeats * ppq));
+    const loopTicks = Math.max(1, runtimeTickAtPracticeBeat(options.snapshot.lengthBeats, ppq));
     const startBeat = Math.max(0, options.startBeat ?? 0);
     this.ownsTransport = true;
     this.transport.stop();
@@ -67,7 +73,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     options.snapshot.events.forEach((event, eventIndex) => {
       const resolution = options.plan.events[eventIndex];
       if (!resolution || resolution.status !== "SUPPORTED") return;
-      const startTicks = Math.round((countInBeats + event.startBeat) * ppq);
+      const startTicks = runtimeTickAtPracticeBeat(countInBeats + event.startBeat, ppq);
       this.scheduleIds.push(this.transport.scheduleRepeat((time) => {
         if (!this.acceptsCallback(generation)) return;
         this.attackCurrentVoicing(this.absoluteBeatAtTime(time, ppq), time);
@@ -86,8 +92,11 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.scheduleIds.push(this.transport.scheduleRepeat((time) => {
       if (!this.acceptsCallback(generation)) return;
       const absoluteBeat = this.absoluteBeatAtTime(time, ppq);
+      const projectionEpoch = this.projectionEpoch;
       Tone.getDraw().schedule(() => {
-        if (this.acceptsCallback(generation)) options.onTransportBeat(absoluteBeat);
+        if (projectionEpoch === this.projectionEpoch && this.acceptsCallback(generation)) {
+          options.onTransportBeat(absoluteBeat);
+        }
       }, time);
     }, "16n", 0));
 
@@ -101,10 +110,12 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
   pause(): boolean {
     if (this.startingGeneration !== undefined && !this.ownsTransport) {
       this.generation += 1;
+      this.projectionEpoch += 1;
       this.startingGeneration = undefined;
       return false;
     }
     if (!this.running || this.paused || !this.ownsTransport) return false;
+    this.projectionEpoch += 1;
     this.paused = true;
     this.transport.pause();
     this.disposeInstruments();
@@ -113,6 +124,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
 
   resume(): boolean {
     if (!this.running || !this.paused || !this.ownsTransport) return false;
+    this.projectionEpoch += 1;
     this.recreateInstruments();
     this.paused = false;
     this.attackCurrentVoicing(this.transport.ticks / this.transport.PPQ, Tone.now());
@@ -123,10 +135,12 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
   restart(): boolean {
     if (this.startingGeneration !== undefined && !this.ownsTransport) {
       this.generation += 1;
+      this.projectionEpoch += 1;
       this.startingGeneration = undefined;
       return false;
     }
     if (!this.running || !this.ownsTransport) return false;
+    this.projectionEpoch += 1;
     this.disposeInstruments();
     this.recreateInstruments();
     this.transport.stop();
@@ -162,6 +176,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
 
   private invalidateAndClear(): number {
     this.generation += 1;
+    this.projectionEpoch += 1;
     this.startingGeneration = undefined;
     if (this.ownsTransport) {
       this.transport.stop();
@@ -243,4 +258,17 @@ function midiToNoteName(note: number): string {
   const names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
   const normalized = Math.max(0, Math.min(127, Math.round(note)));
   return `${names[normalized % 12]}${Math.floor(normalized / 12) - 1}`;
+}
+
+function runtimeTickAtPracticeBeat(beat: number, runtimePpq: number): number {
+  const practiceTicks = progressionPracticeTicksAtBeat(beat);
+  return Math.round(practiceTicks * runtimePpq / PROGRESSION_VOICING_PRACTICE_PPQ);
+}
+
+function assertCompatibleRuntimePpq(runtimePpq: number): void {
+  if (!Number.isInteger(runtimePpq)
+    || runtimePpq <= 0
+    || runtimePpq % PROGRESSION_VOICING_PRACTICE_PPQ !== 0) {
+    throw new RangeError("Voicing Loop requires a Tone PPQ that exactly represents its practice grid.");
+  }
 }
