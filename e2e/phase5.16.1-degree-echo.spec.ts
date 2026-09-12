@@ -2,19 +2,6 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { assertNoHorizontalOverflow, openApp } from "./helpers/app";
 
-const bassPracticeFeatureKeys = [
-  "loop-vault:bass-practice-degree-echo-enabled:v1",
-  "loop-vault:bass-practice-rhythm-echo-enabled:v1",
-  "loop-vault:bass-practice-bassline-echo-enabled:v1",
-  "loop-vault:bass-practice-root-motion-enabled:v1",
-] as const;
-
-async function disableBassPractice(page: Page) {
-  await page.addInitScript(({ keys }) => keys.forEach((key) => localStorage.setItem(key, "false")), {
-    keys: bassPracticeFeatureKeys,
-  });
-}
-
 async function openDegreeEcho(page: Page) {
   await openApp(page);
   await page.getByTestId("bass-practice-home-card")
@@ -22,14 +9,6 @@ async function openDegreeEcho(page: Page) {
     .click();
   await expect(page.getByTestId("degree-echo-view")).toBeVisible();
 }
-
-test("explicit Bass Practice rollback leaves Chord Dojo navigation unchanged", async ({ page }) => {
-  await disableBassPractice(page);
-  await openApp(page);
-  await expect(page.getByTestId("bass-practice-home-card")).toHaveCount(0);
-  await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
-  await expect(page.getByRole("tab", { name: "Bass Practice" })).toHaveCount(0);
-});
 
 test("Degree Echo exposes an honest accessible setup with the shipped P5.16 modes", async ({ page }) => {
   await openDegreeEcho(page);

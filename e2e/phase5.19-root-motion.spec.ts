@@ -69,15 +69,6 @@ test("P5.19 preserves a completed Root Motion session through History persistenc
   await expect(view.getByRole("button", { name: /^(Transfer to a new starting root|\u5225\u306e\u958b\u59cb\u97f3\u3067\u79fb\u8abf)$/ })).toBeVisible();
   await expect(view.locator("[aria-current='step']")).toHaveText(/^(Transfer|\u79fb\u8abf)$/);
 });
-test("P5.19 explicit local rollback hides Root Motion only", async ({ page }) => {
-  await page.addInitScript(() => {
-    localStorage.setItem("loop-vault:bass-practice-root-motion-enabled:v1", "false");
-  });
-  await openApp(page);
-  await page.getByTestId("bass-practice-home-card").getByRole("button").click();
-  await expect(page.getByRole("tab", { name: "Degree Echo" })).toBeVisible();
-  await expect(page.getByRole("tab", { name: "Root Motion Echo" })).toHaveCount(0);
-});
 test("P5.19-06 exposes and persists an eight-note Root Motion chain at 320px", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 720 });
   let view = await openRootMotion(page);

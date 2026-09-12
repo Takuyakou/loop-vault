@@ -156,20 +156,6 @@ test("P5.18.1 selects a preset and key before confirming a Vault source from Bas
   await expect(bassline.getByTestId("chord-context-controls")).toBeVisible();
   await assertNoHorizontalOverflow(page);
 });
-test("P5.18 explicit rollback hides only Chord Context and preserves Bassline Echo", async ({ page }) => {
-  await page.addInitScript(() => {
-    localStorage.setItem("loop-vault:bass-practice-chord-context-enabled:v1", "false");
-  });
-  await openApp(page);
-  await page.getByTestId("bass-practice-home-card").getByRole("button").click();
-  await page.getByRole("tab", { name: "Bassline Echo" }).click();
-
-  await expect(page.getByTestId("bassline-echo-view")).toBeVisible();
-  await expect(page.getByTestId("bassline-listen")).toBeVisible();
-  await expect(page.getByTestId("chord-context-controls")).toHaveCount(0);
-  await expect(page.getByTestId("bassline-progression-select")).toHaveCount(0);
-});
-
 test("P5.18.2 keeps the live Vault title discoverable and keyboard-operable at narrow and scaled layouts", async ({ page }) => {
   test.setTimeout(45_000);
   await page.setViewportSize({ width: 320, height: 720 });

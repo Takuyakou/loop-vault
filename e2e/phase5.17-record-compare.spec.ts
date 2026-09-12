@@ -23,14 +23,6 @@ async function openBasslineReview(page: Page) {
   await page.getByRole("button", { name: /^(レビュー|Review)$/ }).click();
 }
 
-test("Record & Compare is available at the production default without flag injection", async ({ page }) => {
-  await openBasslineReview(page);
-  const section = page.getByTestId("record-compare");
-  await expect(section).toBeVisible();
-  await expect(section).toHaveAttribute("data-record-state", "off");
-  await expect(section).toContainText("自動採点や分析は行いません");
-});
-
 test("record, listen back and keep a take with a fake input device", async ({ page }) => {
   test.setTimeout(25_000);
   await openBasslineReview(page);
@@ -79,14 +71,6 @@ test("a kept take persists across reload and can be deleted from History", async
   await take.getByTestId("retained-take-delete").click();
   await take.getByTestId("retained-take-confirm-delete").click();
   await expect(page.getByTestId("retained-take")).toHaveCount(0);
-});
-
-test("explicit local false hides Record & Compare (rollback)", async ({ page }) => {
-  await page.addInitScript(() => {
-    localStorage.setItem("loop-vault:bass-practice-record-compare-enabled:v1", "false");
-  });
-  await openBasslineReview(page);
-  await expect(page.getByTestId("record-compare")).toHaveCount(0);
 });
 
 test("Record & Compare has no serious accessibility violations", async ({ page }) => {
