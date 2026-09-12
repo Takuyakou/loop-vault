@@ -10,7 +10,13 @@ import {
   harmonicStateConsolidationFeatureFlag,
   prepareHarmonicStateAnalyzerOptions,
 } from "./harmonicStateConsolidation";
+import { prepareLocalHarmonicStateAnalyzerOptions } from "./localHarmonicStateIntegration";
 import type { MidiAnalyzerMode, MidiSongData } from "./types";
+import {
+  buildP526EightBarPreparedData,
+  generateP526Fixtures,
+  p526ExpectedEightBarTruth,
+} from "../../../scripts/p526/fixtures";
 
 const bytes = new Uint8Array([0x4d, 0x54, 0x68, 0x64]);
 
@@ -179,6 +185,98 @@ describe("P5.24 production Harmonic State integration", () => {
   });
 });
 
+describe("Local Harmonic State production integration", () => {
+  it("stays off by default and applies the mixed eight-bar timeline only when enabled", () => {
+    const preparedData = buildP526EightBarPreparedData();
+    const before = structuredClone(preparedData);
+    const options = { preparedData, mode: "phase4-v1" as const };
+
+    expect(analyzeMidi(bytes, {
+      ...options,
+      enableLocalHarmonicStateConsolidation: false,
+    })).toEqual(analyzeMidi(bytes, options));
+
+    const preparation = prepareLocalHarmonicStateAnalyzerOptions(bytes, {
+      ...options,
+      enableLocalHarmonicStateConsolidation: true,
+    });
+    expect(preparation).toMatchObject({
+      applied: true,
+      reason: "applied",
+      diagnostics: {
+        projectionSource: "local-derived",
+        globalQuarterBeats: "unknown",
+        localPeriods: [4, 4, 2, 2, 4, 4, 2, 2],
+        stateCount: 12,
+      },
+    });
+    expect(preparedData).toEqual(before);
+
+    const result = analyzeMidi(bytes, {
+      ...options,
+      enableLocalHarmonicStateConsolidation: true,
+    });
+    expect(result.fullTimeline.map((item) => {
+      const start = (item.bar - 1) * 4 + item.beat - 1;
+      return [start, start + item.durationBeats];
+    })).toEqual(p526ExpectedEightBarTruth.map((state) => [state.startBeat, state.endBeat]));
+  });
+
+  it("preserves the L-Q passing-bass and true-change decisions through the production seam", () => {
+    for (const fixture of generateP526Fixtures()) {
+      const preparation = prepareLocalHarmonicStateAnalyzerOptions(bytes, {
+        preparedData: preparedNotes(fixture.notes, 4),
+        enableLocalHarmonicStateConsolidation: true,
+      });
+      expect(preparation.applied, fixture.id).toBe(true);
+      expect(preparation.diagnostics?.stateCount, fixture.id)
+        .toBe(fixture.expectedDecision === "same" ? 1 : 2);
+    }
+  });
+
+  it("reports work bounded by indexed notes and beat cells", () => {
+    const preparation = prepareLocalHarmonicStateAnalyzerOptions(bytes, {
+      preparedData: repeatedPreparedData(256),
+      enableLocalHarmonicStateConsolidation: true,
+    });
+
+    expect(preparation).toMatchObject({
+      applied: true,
+      diagnostics: {
+        inputNotes: 4_096,
+        indexedBeatCells: 1_024,
+        candidateEvaluations: 1_024,
+      },
+    });
+    expect(preparation.diagnostics!.noteCellAssignments).toBeLessThanOrEqual(4_096);
+  });
+
+  it("counts a long sustain once for every beat cell it covers", () => {
+    const base = repeatedPreparedData(2);
+    const bassTemplate = base.notes.find((note) => note.trackIndex === 0)!;
+    const preparation = prepareLocalHarmonicStateAnalyzerOptions(bytes, {
+      preparedData: {
+        ...base,
+        notes: [
+          { ...bassTemplate, startTick: 0, durationTick: base.ticksPerBeat * 8 },
+          ...base.notes.filter((note) => note.trackIndex !== 0),
+        ],
+      },
+      enableLocalHarmonicStateConsolidation: true,
+    });
+
+    expect(preparation).toMatchObject({
+      applied: true,
+      diagnostics: {
+        inputNotes: 25,
+        indexedBeatCells: 8,
+        noteCellAssignments: 32,
+        candidateEvaluations: 8,
+      },
+    });
+  });
+});
+
 function expectEnabledFallbackEqualsOff(preparedData: MidiSongData): void {
   const off = analyzeMidi(bytes, { preparedData, mode: "phase4-v1" });
   const on = analyzeMidi(bytes, {
@@ -283,4 +381,12 @@ function preparedFixture(fixture: P524SyntheticFixture): MidiSongData {
     ],
     controlChanges: [],
   };
+}
+
+function repeatedPreparedData(bars: number): MidiSongData {
+  return preparedStateSequence(
+    Array.from({ length: bars * 4 }, () => [36, 52, 55, 60]),
+    1,
+    1,
+  );
 }
