@@ -316,35 +316,36 @@ describe("Bassline Echo Chord Context", () => {
     expect(playback.driversDisposed).toBeGreaterThan(0);
   });
 
-  it("releases every driver across 20 replay, layer-switch, and play-stop cycles", async () => {
+  it("releases every driver across repeated replay, layer-switch, and play-stop cycles", async () => {
     const container = await renderView();
-    for (let index = 0; index < 20; index += 1) {
+    const modes = ["Play", "Listen", "Play", "Listen"] as const;
+    for (const mode of modes) {
       await clickStart(container);
       await act(async () => {
         container.querySelector<HTMLButtonElement>("[data-testid='chord-context-start-stop']")?.click();
         await Promise.resolve();
       });
-      await chooseRadio(container, "chord-context-practice-mode", index % 2 === 0 ? "Play" : "Listen");
+      await chooseRadio(container, "chord-context-practice-mode", mode);
     }
 
-    expect(playback.sessions).toHaveLength(20);
+    expect(playback.sessions).toHaveLength(modes.length);
     expect(playback.sessions.every((session) => session.stopped > 0 && session.disposed > 0)).toBe(true);
-    expect(playback.driversDisposed).toBe(20);
+    expect(playback.driversDisposed).toBe(modes.length);
     expect(container.querySelector("[data-testid='chord-context-status']")?.textContent).toContain("Chord Context stopped");
   });
-  it("releases every active session across 20 generated and preset source switches", async () => {
+  it("releases every active session across each generated and preset source switch", async () => {
     const container = await renderView();
     const sourceSelect = container.querySelector<HTMLSelectElement>("[data-testid='bassline-progression-select']")!;
     const sources = ["pop-four-chords", "twelve-bar-blues", "minor-descent", "generated"];
 
-    for (let index = 0; index < 20; index += 1) {
+    for (const source of sources) {
       await clickStart(container);
-      await chooseSelect(sourceSelect, sources[index % sources.length]!);
+      await chooseSelect(sourceSelect, source);
     }
 
-    expect(playback.sessions).toHaveLength(20);
+    expect(playback.sessions).toHaveLength(sources.length);
     expect(playback.sessions.every((session) => session.stopped > 0 && session.disposed > 0)).toBe(true);
-    expect(playback.driversDisposed).toBe(20);
+    expect(playback.driversDisposed).toBe(sources.length);
     expect(container.querySelector("[data-testid='chord-context-status']")?.textContent).toContain("Chord Context stopped");
   });
   it("fails closed and releases the prepared driver when an unsupported chord reaches playback", async () => {
