@@ -3,7 +3,7 @@
 # Phase 5.27 — Progression Voicing Practice
 
 ## Status
-`P5.27-03 COMPLETE — P5.27-04 ACTIVE`
+`P5.27-04 COMPLETE — P5.27-05 ACTIVE`
 
 ## Product goal
 
@@ -534,10 +534,11 @@ Must prove:
 
 # Next action
 
-P5.27-03 implementation, focused tests, and report were committed at
-`fa1f444416a7c45f1d7e52ec68daf75026ec9303`. The accepted Practice workspace
+P5.27-04 implementation, focused tests, and report were committed at
+`9ef1403195356a2dbbb76b20b238bced78977117`. The accepted Progression Detail
 visual baseline was refreshed independently at
-`e3c77fb39fc46ed2aeba85b624cc8d2563593f12`.
+`6f8164ed0d332bac160d7d56e598aeef09dfefcf`.
 
-Proceed with P5.27-04 Text / Vault Flow Integration under the current human
-authorization.
+Proceed with P5.27-05 Hardening / Product Acceptance under the current human
+authorization, applying the Test / Build Optimization Policy and all required
+Stage05 gates.

@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "5.27",
   "status": "in-progress",
-  "activeStage": "P5.27-04",
-  "completedStages": ["P5.27-00", "P5.27-01", "P5.27-02", "P5.27-03"],
+  "activeStage": "P5.27-05",
+  "completedStages": ["P5.27-00", "P5.27-01", "P5.27-02", "P5.27-03", "P5.27-04"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "084d05c53a3fe2a39f9250a89697c154c0464354",
-  "lastVerifiedCommit": "e3c77fb39fc46ed2aeba85b624cc8d2563593f12",
+  "lastVerifiedCommit": "6f8164ed0d332bac160d7d56e598aeef09dfefcf",
   "currentBranch": "feat/p527-progression-voicing-practice",
   "requiredGates": {
     "P5.27-00": [
@@ -48,8 +48,9 @@
     "practice-domain-clock": "pass",
     "voicing-resolution": "pass",
     "ui-integration": "pass",
-    "accessibility": "pass"
+    "accessibility": "pass",
+    "text-vault-integration": "pass"
   },
-  "nextAction": "Proceed with P5.27-04 Text / Vault Flow Integration under the current human authorization.",
-  "updatedAt": "2026-09-12T23:47:19+09:00"
+  "nextAction": "Proceed with P5.27-05 Hardening / Product Acceptance under the current human authorization, applying the Test / Build Optimization Policy and all required Stage05 gates.",
+  "updatedAt": "2026-09-13T00:33:38+09:00"
 }
