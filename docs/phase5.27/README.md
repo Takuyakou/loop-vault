@@ -3,7 +3,7 @@
 # Phase 5.27 — Progression Voicing Practice
 
 ## Status
-`NOT STARTED`
+`P5.27-00 COMPLETE — STOPPED BEFORE P5.27-01`
 
 ## Product goal
 
@@ -534,6 +534,6 @@ Must prove:
 
 # Next action
 
-Run `P5.27-00` only.
+P5.27-00 completed at `4319387e8cb9619084659c9eb75175283e176082`.
 
-Do not automatically begin Stage01.
+Await explicit human authorization for P5.27-01. Do not automatically begin Stage01.
