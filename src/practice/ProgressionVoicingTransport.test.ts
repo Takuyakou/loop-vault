@@ -1,0 +1,229 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type {
+  ProgressionPracticeVoicingPlan,
+  ProgressionVoicingPracticeSnapshot,
+} from "../domain/progressionVoicingPractice";
+import { ProgressionVoicingTransport } from "./ProgressionVoicingTransport";
+
+const toneMock = vi.hoisted(() => {
+  const scheduled: Array<{ callback: (time: number) => void; interval: string; start?: string | number }> = [];
+  const instruments: PolySynth[] = [];
+  const transport = {
+    PPQ: 192,
+    ticks: 0,
+    getTicksAtTime: vi.fn((_time: number) => 0),
+    position: 0 as number | string,
+    bpm: { value: 80, rampTo: vi.fn() },
+    start: vi.fn(),
+    stop: vi.fn(),
+    pause: vi.fn(),
+    clear: vi.fn(),
+    scheduleRepeat: vi.fn((callback: (time: number) => void, interval: string, start?: string | number) => {
+      scheduled.push({ callback, interval, start });
+      return scheduled.length;
+    }),
+  };
+  class PolySynth {
+    volume = { value: 0 };
+    triggerAttackRelease = vi.fn();
+    triggerAttack = vi.fn();
+    releaseAll = vi.fn();
+    dispose = vi.fn();
+    constructor() { instruments.push(this); }
+    toDestination() { return this; }
+  }
+  class Synth extends PolySynth {}
+  return { transport, scheduled, instruments, PolySynth, Synth, start: vi.fn(), now: vi.fn(() => 1), draw: { schedule: vi.fn((callback: () => void) => callback()) } };
+});
+
+vi.mock("tone", () => ({
+  FMSynth: class FMSynth {},
+  PolySynth: toneMock.PolySynth,
+  Synth: toneMock.Synth,
+  getTransport: () => toneMock.transport,
+  getDraw: () => toneMock.draw,
+  start: toneMock.start,
+  now: toneMock.now,
+}));
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  toneMock.scheduled.length = 0;
+  toneMock.instruments.length = 0;
+  toneMock.transport.ticks = 0;
+  toneMock.transport.getTicksAtTime.mockImplementation(() => toneMock.transport.ticks);
+  toneMock.start.mockResolvedValue(undefined);
+});
+
+describe("ProgressionVoicingTransport", () => {
+  it("schedules voicings, click, and visual projection on one Tone Transport", async () => {
+    const onTransportBeat = vi.fn();
+    const runtime = new ProgressionVoicingTransport();
+    await runtime.start({ snapshot, plan, bpm: 96, countInBars: 1, metronomeEnabled: true, onTransportBeat });
+
+    expect(toneMock.transport.bpm.value).toBe(96);
+    expect(toneMock.scheduled.map(({ interval, start }) => [interval, start])).toEqual([
+      ["1536i", "768i"],
+      ["1536i", "1152i"],
+      ["4n", 0],
+      ["16n", 0],
+    ]);
+    expect(toneMock.transport.start).toHaveBeenCalledWith("+0.05");
+    expect(onTransportBeat).toHaveBeenCalledWith(0);
+
+    toneMock.transport.getTicksAtTime.mockReturnValueOnce(1152);
+    toneMock.scheduled[0]?.callback(1.5);
+    expect(toneMock.instruments[0]?.releaseAll).toHaveBeenCalledWith(1.5);
+    expect(toneMock.instruments[0]?.triggerAttack).toHaveBeenCalledWith(["D3", "A3", "C4"], 1.5, 0.72);
+
+    toneMock.transport.getTicksAtTime.mockReturnValueOnce(768);
+    toneMock.scheduled[2]?.callback(1.75);
+    expect(toneMock.instruments[1]?.triggerAttackRelease).toHaveBeenCalledWith("C6", "32n", 1.75);
+
+    toneMock.transport.ticks = 0;
+    toneMock.transport.getTicksAtTime.mockReturnValueOnce(960);
+    toneMock.scheduled[3]?.callback(2);
+    expect(toneMock.transport.getTicksAtTime).toHaveBeenCalledWith(2);
+    expect(onTransportBeat).toHaveBeenLastCalledWith(5);
+  });
+
+  it("pauses, resumes, restarts without rebuilding, and clears every owned schedule", async () => {
+    const runtime = new ProgressionVoicingTransport();
+    await runtime.start({ snapshot, plan, bpm: 80, countInBars: 0, metronomeEnabled: false, onTransportBeat: vi.fn() });
+    const scheduleCount = toneMock.scheduled.length;
+    const boundary = toneMock.scheduled[0]!;
+    const originalVoicingSynth = toneMock.instruments[0]!;
+    runtime.pause();
+    boundary.callback(1);
+    expect(originalVoicingSynth.triggerAttack).not.toHaveBeenCalled();
+    expect(originalVoicingSynth.dispose).toHaveBeenCalledTimes(1);
+    runtime.resume();
+    toneMock.instruments[2]?.triggerAttack.mockClear();
+    boundary.callback(2);
+    expect(toneMock.instruments[2]?.triggerAttack).toHaveBeenCalledTimes(1);
+    runtime.restart();
+    expect(toneMock.scheduled).toHaveLength(scheduleCount);
+    expect(toneMock.transport.pause).toHaveBeenCalledTimes(1);
+    expect(toneMock.transport.position).toBe(0);
+
+    runtime.setBpm(122);
+    expect(toneMock.transport.bpm.rampTo).toHaveBeenCalledWith(122, 0.1);
+    runtime.stop();
+    expect(toneMock.transport.clear).toHaveBeenCalledTimes(scheduleCount);
+  });
+
+  it("invalidates a pending audio start so it cannot create duplicate schedules", async () => {
+    let release!: () => void;
+    toneMock.start.mockReturnValueOnce(new Promise<void>((resolve) => { release = resolve; }));
+    const runtime = new ProgressionVoicingTransport();
+    const pending = runtime.start({ snapshot, plan, bpm: 80, countInBars: 0, metronomeEnabled: true, onTransportBeat: vi.fn() });
+    runtime.stop();
+    release();
+    await pending;
+    expect(toneMock.scheduled).toHaveLength(0);
+  });
+
+  it("gives a pending full Start priority over reference audition", async () => {
+    let release!: () => void;
+    toneMock.start.mockReturnValueOnce(new Promise<void>((resolve) => { release = resolve; }));
+    const runtime = new ProgressionVoicingTransport();
+    const pending = runtime.start({ snapshot, plan, bpm: 80, countInBars: 0, metronomeEnabled: true, onTransportBeat: vi.fn() });
+    await runtime.audition([60, 64, 67]);
+    expect(toneMock.start).toHaveBeenCalledTimes(1);
+    expect(toneMock.instruments).toHaveLength(0);
+    release();
+    await pending;
+    expect(toneMock.scheduled).toHaveLength(4);
+    expect(toneMock.instruments).toHaveLength(2);
+  });
+
+  it("applies the latest BPM and metronome preference when pending Start completes", async () => {
+    let release!: () => void;
+    toneMock.start.mockReturnValueOnce(new Promise<void>((resolve) => { release = resolve; }));
+    const runtime = new ProgressionVoicingTransport();
+    const pending = runtime.start({ snapshot, plan, bpm: 80, countInBars: 0, metronomeEnabled: true, onTransportBeat: vi.fn() });
+    runtime.setBpm(132);
+    runtime.setMetronomeEnabled(false);
+    release();
+    await pending;
+    expect(toneMock.transport.bpm.value).toBe(132);
+    toneMock.scheduled[2]?.callback(1);
+    expect(toneMock.instruments[1]?.triggerAttackRelease).not.toHaveBeenCalled();
+  });
+
+  it("lets Pause invalidate a pending Tone.start without touching an unowned Transport", async () => {
+    let release!: () => void;
+    toneMock.start.mockReturnValueOnce(new Promise<void>((resolve) => { release = resolve; }));
+    const runtime = new ProgressionVoicingTransport();
+    const pending = runtime.start({ snapshot, plan, bpm: 80, countInBars: 0, metronomeEnabled: true, onTransportBeat: vi.fn() });
+    expect(runtime.pause()).toBe(false);
+    release();
+    await pending;
+    expect(toneMock.scheduled).toHaveLength(0);
+    expect(toneMock.transport.stop).not.toHaveBeenCalled();
+  });
+
+  it("keeps the sounding chord boundary on musical ticks across a mid-chord BPM change", async () => {
+    const runtime = new ProgressionVoicingTransport();
+    await runtime.start({ snapshot, plan, bpm: 80, countInBars: 0, metronomeEnabled: true, onTransportBeat: vi.fn() });
+    const firstBoundary = toneMock.scheduled[0]!;
+    firstBoundary.callback(1);
+    runtime.setBpm(160);
+    const secondBoundary = toneMock.scheduled[1]!;
+    toneMock.transport.getTicksAtTime.mockReturnValueOnce(384);
+    secondBoundary.callback(1.5);
+    expect(firstBoundary.start).toBe("0i");
+    expect(secondBoundary.start).toBe("384i");
+    expect(toneMock.instruments[0]?.triggerAttackRelease).not.toHaveBeenCalled();
+    expect(toneMock.instruments[0]?.releaseAll).toHaveBeenLastCalledWith(1.5);
+    expect(toneMock.instruments[0]?.triggerAttack).toHaveBeenLastCalledWith(["D3", "A3", "C4"], 1.5, 0.72);
+    expect(toneMock.transport.bpm.rampTo).toHaveBeenCalledWith(160, 0.1);
+  });
+
+  it("does not stop or clear a shared Transport it does not own", () => {
+    const runtime = new ProgressionVoicingTransport();
+    runtime.stop();
+    expect(toneMock.transport.stop).not.toHaveBeenCalled();
+    expect(toneMock.transport.clear).not.toHaveBeenCalled();
+  });
+
+  it("cancels a pending audition before it can create or retain an instrument", async () => {
+    let release!: () => void;
+    toneMock.start.mockReturnValueOnce(new Promise<void>((resolve) => { release = resolve; }));
+    const runtime = new ProgressionVoicingTransport();
+    const pending = runtime.audition([48, 55, 59]);
+    runtime.stop();
+    release();
+    await pending;
+    expect(toneMock.instruments).toHaveLength(0);
+  });
+});
+
+const snapshot: ProgressionVoicingPracticeSnapshot = {
+  version: 1,
+  fingerprint: "safe-fixture",
+  source: { kind: "vault", reference: { ideaId: "idea", blockId: "block" } },
+  selection: "source-midi",
+  bpm: 80,
+  meter: { numerator: 4, denominator: 4 },
+  lengthBeats: 8,
+  events: [
+    { id: "a", startBeat: 0, durationBeats: 2, chord: { root: 0, quality: "maj7", tensions: [], label: "Cmaj7" }, voicing: { kind: "source-midi", midiNotes: [48, 55, 59] } },
+    { id: "b", startBeat: 2, durationBeats: 6, chord: { root: 2, quality: "min7", tensions: [], label: "Dm7" }, voicing: { kind: "source-midi", midiNotes: [50, 57, 60] } },
+  ],
+};
+
+const plan: ProgressionPracticeVoicingPlan = {
+  snapshotFingerprint: snapshot.fingerprint,
+  selection: "source-midi",
+  events: snapshot.events.map((event) => ({
+    eventId: event.id,
+    status: "SUPPORTED" as const,
+    voicing: {
+      origin: "source-midi" as const,
+      midiNotes: event.voicing!.midiNotes,
+      addedColorDegrees: [],
+      notes: event.voicing!.midiNotes.map((midiNote) => ({ midiNote, pitchClass: midiNote % 12, octave: Math.floor(midiNote / 12) - 1, degree: null })),
+    },
+  })),
+};

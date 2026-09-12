@@ -110,7 +110,10 @@ describe("PianoKeyboardVisualizer", () => {
     expect(container.textContent).toContain("Guide");
     expect(container.textContent).toContain("Input outside visible range");
     expect(container.querySelectorAll('[role="img"]')).toHaveLength(1);
-    expect(container.querySelectorAll("button, [tabindex]").length).toBe(0);
+    expect(container.querySelectorAll("button, [tabindex]")).toHaveLength(1);
+    expect(container.querySelector('[role="region"]')?.getAttribute("tabindex")).toBe("0");
+    expect(container.querySelector('[role="region"]')?.getAttribute("aria-label")).toBe("Piano keyboard");
+    expect(container.querySelector('[role="img"]')?.getAttribute("aria-label")).not.toBe("Piano keyboard");
     expect(container.querySelector('[data-outside-direction="left"]')?.textContent)
       .toContain("C3");
     expect(container.querySelector('[data-outside-direction="right"]')?.textContent)

@@ -6,9 +6,18 @@ import { describe, expect, it, vi } from "vitest";
 import type { PlaybackState } from "./audio/playbackController";
 import { makeChordSymbol } from "./domain/chords";
 import { buildVaultChordContextSnapshotFromVault } from "./features/bass-practice/domain/chordContextSnapshot";
-import type { SavedProgressionBlock } from "./domain/types";import { clearTransientChordContextSnapshotForNavigation, CreateDialog, deleteIdeaForUndo, errorMessage, stopIdeaPlayback } from "./App";
+import type { SavedProgressionBlock } from "./domain/types";
+import {
+  clearTransientChordContextSnapshotForNavigation,
+  closeLiveMidiModeSafely,
+  CreateDialog,
+  deleteIdeaForUndo,
+  errorMessage,
+  stopIdeaPlayback,
+} from "./App";
 import { makeIdea } from "./domain/testFactory";
 import { appCopy } from "./i18n";
+import { LiveMidiOpenGate } from "./liveMidi/activationLease";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
   .IS_REACT_ACT_ENVIRONMENT = true;
@@ -77,6 +86,40 @@ describe("errorMessage", () => {
 
   it("falls back for non-message values", () => {
     expect(errorMessage({ code: "UNKNOWN" }, "fallback")).toBe("fallback");
+  });
+});
+
+describe("closeLiveMidiModeSafely", () => {
+  it("consumes a rejecting window close while releasing the lease and hiding the preview", async () => {
+    const releaseLease = vi.fn();
+    const preserveHistory = vi.fn();
+    const rawFailure = new Error("private adapter failure");
+    let previewVisible = true;
+    let feedback: string | undefined;
+
+    await expect(closeLiveMidiModeSafely({
+      gate: new LiveMidiOpenGate(),
+      getHistory: () => [{
+        id: "history-1",
+        chord: makeChordSymbol(0, "maj7"),
+        label: "Cmaj7",
+        notes: [60, 64, 67, 71],
+        startedAtMs: 1,
+        committedAtMs: 2,
+      }],
+      releaseLease,
+      closeWindow: async () => { throw rawFailure; },
+      saveBounds: vi.fn(),
+      hidePreview: () => { previewVisible = false; },
+      preserveHistory,
+      reportFailure: () => { feedback = appCopy.en.liveMidi.miniModeCloseFailed; },
+    })).resolves.toBeUndefined();
+
+    expect(releaseLease).toHaveBeenCalledOnce();
+    expect(previewVisible).toBe(false);
+    expect(preserveHistory).toHaveBeenCalledOnce();
+    expect(feedback).toBe("Could not close Mini Mode. The main window returned safely.");
+    expect(feedback).not.toContain(rawFailure.message);
   });
 });
 

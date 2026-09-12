@@ -14,6 +14,7 @@ import {
   voicingCompatibility,
 } from "../../domain/voicing";
 import { defaultLiveMidiStore } from "../../liveMidi/defaultLiveMidiStore";
+import { liveMidiActivation, type LiveMidiActivationLease } from "../../liveMidi/activationLease";
 import type { AppLanguage } from "../../i18n";
 import { KeyboardVisualizer } from "./KeyboardVisualizer";
 import { midiNoteName } from "./midiNoteName";
@@ -113,7 +114,6 @@ export function VoicingPanel({
 }: VoicingPanelProps) {
   const text = copy[language];
   const liveState = useStore(defaultLiveMidiStore, (state) => state.notes);
-  const liveActive = useStore(defaultLiveMidiStore, (state) => state.active);
   const currentHeld = useMemo(() => heldNotes(liveState), [liveState]);
   const [recording, setRecording] = useState(false);
   const [preparing, setPreparing] = useState(false);
@@ -123,7 +123,7 @@ export function VoicingPanel({
     chordKey: string;
     notes: number[];
   }>();
-  const ownedConnection = useRef(false);
+  const midiLeaseRef = useRef<LiveMidiActivationLease>();
   const monitorRef = useRef<MidiInputPianoMonitor>();
   const captureGeneration = useRef(0);
   const releasedSinceCandidate = useRef(false);
@@ -183,7 +183,8 @@ export function VoicingPanel({
     captureGeneration.current += 1;
     monitorRef.current?.dispose();
     monitorRef.current = undefined;
-    if (ownedConnection.current) void defaultLiveMidiStore.getState().deactivate();
+    midiLeaseRef.current?.release();
+    midiLeaseRef.current = undefined;
   }, []);
 
   async function startRecording() {
@@ -192,24 +193,26 @@ export function VoicingPanel({
     captureGeneration.current = generation;
     setPreparing(true);
     setCaptureConfirmation(undefined);
-    ownedConnection.current = !liveActive;
+    const midiLease = liveMidiActivation.acquire();
+    midiLeaseRef.current = midiLease;
     const monitorPromise = createMidiInputPianoMonitor().catch(() => undefined);
-    const activationPromise = liveActive
-      ? Promise.resolve(true)
-      : defaultLiveMidiStore.getState().activate().then(
-          () => true,
-          () => false,
-        );
+    const activationPromise = midiLease.ready.then(
+      () => true,
+      () => false,
+    );
     try {
       const [monitor, activated] = await Promise.all([monitorPromise, activationPromise]);
       if (!activated) {
-        ownedConnection.current = false;
+        midiLease.release();
+        if (midiLeaseRef.current === midiLease) midiLeaseRef.current = undefined;
         monitor?.dispose();
-        setMonitorAvailable(false);
+        if (captureGeneration.current === generation) setMonitorAvailable(false);
         return;
       }
       if (captureGeneration.current !== generation) {
         monitor?.dispose();
+        midiLease.release();
+        if (midiLeaseRef.current === midiLease) midiLeaseRef.current = undefined;
         return;
       }
       monitorRef.current?.dispose();
@@ -231,10 +234,8 @@ export function VoicingPanel({
     releasedSinceCandidate.current = false;
     setStableNotes([]);
     setPreparing(false);
-    if (ownedConnection.current) {
-      ownedConnection.current = false;
-      await defaultLiveMidiStore.getState().deactivate();
-    }
+    midiLeaseRef.current?.release();
+    midiLeaseRef.current = undefined;
   }
 
   function confirmCapture() {
