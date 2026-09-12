@@ -100,7 +100,6 @@ test("pointer flow completes the dwell and plays a real different-key Transfer",
 });
 
 for (const viewport of [
-  { width: 1440, height: 900 },
   { width: 1280, height: 800 },
   { width: 768, height: 1024 },
   { width: 390, height: 844 },

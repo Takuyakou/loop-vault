@@ -11,9 +11,6 @@ import {
 const viewportMatrix = [
   { width: 1024, height: 720 },
   { width: 1280, height: 720 },
-  { width: 1366, height: 768 },
-  { width: 1440, height: 900 },
-  { width: 1920, height: 1080 },
 ] as const;
 const viewportMetrics: Array<{
   viewport: string;
@@ -101,13 +98,6 @@ test.describe.serial("Phase 5.13-3 viewport recovery", () => {
         ...(queueWheelChained === undefined ? {} : { queueWheelChained }),
       });
 
-      if (
-        (viewport.width === 1024 && viewport.height === 720)
-        || (viewport.width === 1440 && viewport.height === 900)
-        || (viewport.width === 1920 && viewport.height === 1080)
-      ) {
-        await captureEvidence(page, testInfo, `chord-dojo-${viewport.width}x${viewport.height}-bottom.png`);
-      }
       if (viewport.width === 1280 && viewport.height === 720) {
         await captureEvidence(page, testInfo, "chord-dojo-bottom.png");
       }

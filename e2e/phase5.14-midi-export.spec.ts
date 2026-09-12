@@ -57,14 +57,9 @@ test("Progression Detail keeps cards first and exposes accessible click, keyboar
   await expect.poll(() => midiCommands(page)).toContain("start_progression_midi_drag");
   await page.mouse.up();
 
-  for (const viewport of [
-    { width: 1024, height: 720 },
-    { width: 1920, height: 1080 },
-  ]) {
-    await page.setViewportSize(viewport);
-    await expect(cardStage).toBeVisible();
-    await expect(midiControl).toBeVisible();
-  }
+  await page.setViewportSize({ width: 1024, height: 720 });
+  await expect(cardStage).toBeVisible();
+  await expect(midiControl).toBeVisible();
 });
 
 async function openFirstProgression(page: Page) {

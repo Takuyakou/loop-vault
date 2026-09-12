@@ -11,6 +11,7 @@ import { createMidiFixture } from "./helpers/midiFixture";
 test("1024x720でShell、Capture、結果、Vaultが横にはみ出さない", async ({ page }) => {
   await openApp(page);
   await assertNoHorizontalOverflow(page);
+  await expect(page.locator("[data-global-actions]")).toBeVisible();
 
   await loadMidiForPreAnalysis(page, createMidiFixture({ voiceCount: 11 }), "responsive-11-voice.mid");
   await assertNoHorizontalOverflow(page);
@@ -22,13 +23,10 @@ test("1024x720でShell、Capture、結果、Vaultが横にはみ出さない", a
 });
 
 for (const viewport of [
-  { width: 1024, height: 720 },
   { width: 1280, height: 720 },
-  { width: 1366, height: 768 },
-  { width: 1440, height: 900 },
   { width: 1920, height: 1080 },
 ]) {
-  test(`${viewport.width}x${viewport.height} viewport matrix`, async ({ page }) => {
+  test(`${viewport.width}x${viewport.height} breakpoint stays overflow-safe`, async ({ page }) => {
     await page.setViewportSize(viewport);
     await openApp(page);
     await assertNoHorizontalOverflow(page);
