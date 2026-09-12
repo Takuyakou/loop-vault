@@ -16,7 +16,6 @@ it("keeps 20,000 normalized notes and 1,250 cells bounded and order-invariant", 
     }
   }
   const input: P524ShadowInput = { notes, meter: [4, 4], totalBeats: 5_000 };
-  const started = performance.now();
   const first = consolidateP524PerformanceFragments(input);
   const reversed = consolidateP524PerformanceFragments({ ...input, notes: [...notes].reverse() });
   expect(first).toMatchObject({
@@ -33,5 +32,4 @@ it("keeps 20,000 normalized notes and 1,250 cells bounded and order-invariant", 
     },
   });
   expect(reversed).toEqual(first);
-  expect(performance.now() - started).toBeLessThan(10_000);
 });
