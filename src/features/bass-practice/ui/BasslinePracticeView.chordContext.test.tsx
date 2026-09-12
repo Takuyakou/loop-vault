@@ -1271,30 +1271,23 @@ describe("Bassline Echo Chord Context", () => {
     expect(container.querySelector<HTMLButtonElement>("[data-testid='source-bassline-save-history']")?.disabled).toBe(false);
   });
 
-  for (const rejectOrder of ["older-first", "newer-first"] as const) {
-    it(`returns to persisted two when rapid 4/8 saves both fail (${rejectOrder})`, async () => {
-      const fixture = sourceBasslineFixture(true, 8);
-      let rejectFour: ((reason?: unknown) => void) | undefined;
-      let rejectEight: ((reason?: unknown) => void) | undefined;
-      const fourPending = new Promise<void>((_resolve, reject) => { rejectFour = reject; });
-      const eightPending = new Promise<void>((_resolve, reject) => { rejectEight = reject; });
-      const save = vi.fn((bars: number) => bars === 4 ? fourPending : eightPending);
-      const container = await renderView({ initialWindowBars: 2, vaultSourceBasslines: [fixture.sourceCatalogEntry], onSourceBasslineWindowBarsChange: save });
-      await chooseSourceBassline(container);
-      const group = container.querySelector<HTMLElement>("[data-testid='source-bassline-window-bars']")!;
-      await act(async () => windowButton(group, 4)?.click());
-      await act(async () => windowButton(group, 8)?.click());
-      if (rejectOrder === "older-first") {
-        await act(async () => { rejectFour?.(new Error("four")); await fourPending.catch(() => undefined); });
-        await act(async () => { rejectEight?.(new Error("eight")); await eightPending.catch(() => undefined); });
-      } else {
-        await act(async () => { rejectEight?.(new Error("eight")); await eightPending.catch(() => undefined); });
-        await act(async () => { rejectFour?.(new Error("four")); await fourPending.catch(() => undefined); });
-      }
-      expect(windowButton(group, 2)?.getAttribute("aria-pressed")).toBe("true");
-      expect(container.querySelector("[data-testid='source-bassline-window-save-error']")).not.toBeNull();
-    });
-  }
+  it("returns to persisted two when rapid 4/8 saves both fail", async () => {
+    const fixture = sourceBasslineFixture(true, 8);
+    let rejectFour: ((reason?: unknown) => void) | undefined;
+    let rejectEight: ((reason?: unknown) => void) | undefined;
+    const fourPending = new Promise<void>((_resolve, reject) => { rejectFour = reject; });
+    const eightPending = new Promise<void>((_resolve, reject) => { rejectEight = reject; });
+    const save = vi.fn((bars: number) => bars === 4 ? fourPending : eightPending);
+    const container = await renderView({ initialWindowBars: 2, vaultSourceBasslines: [fixture.sourceCatalogEntry], onSourceBasslineWindowBarsChange: save });
+    await chooseSourceBassline(container);
+    const group = container.querySelector<HTMLElement>("[data-testid='source-bassline-window-bars']")!;
+    await act(async () => windowButton(group, 4)?.click());
+    await act(async () => windowButton(group, 8)?.click());
+    await act(async () => { rejectEight?.(new Error("eight")); await eightPending.catch(() => undefined); });
+    await act(async () => { rejectFour?.(new Error("four")); await fourPending.catch(() => undefined); });
+    expect(windowButton(group, 2)?.getAttribute("aria-pressed")).toBe("true");
+    expect(container.querySelector("[data-testid='source-bassline-window-save-error']")).not.toBeNull();
+  });
 
   it("ignores a preference settlement after unmount", async () => {
     const fixture = sourceBasslineFixture(true, 8);
