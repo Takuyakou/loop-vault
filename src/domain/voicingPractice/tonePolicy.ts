@@ -9,7 +9,31 @@ import type {
   VoicingStyleId,
 } from "./types";
 
-const qualityIntervals: Record<ChordQuality, readonly [number, string][]> = {
+const degreeIntervals = {
+  R: 0,
+  "2": 2,
+  b3: 3,
+  "3": 4,
+  "4": 5,
+  b5: 6,
+  "5": 7,
+  "#5": 8,
+  "6": 9,
+  bb7: 9,
+  b7: 10,
+  "7": 11,
+  b9: 13,
+  "9": 14,
+  "#9": 15,
+  "11": 17,
+  "#11": 18,
+  b13: 20,
+  "13": 21,
+} as const satisfies Readonly<Record<Tension, number> & Record<string, number>>;
+
+export type DegreeLabel = keyof typeof degreeIntervals;
+
+const qualityIntervals: Record<ChordQuality, ReadonlyArray<readonly [number, DegreeLabel]>> = {
   maj: [[0, "R"], [4, "3"], [7, "5"]],
   min: [[0, "R"], [3, "b3"], [7, "5"]],
   dim: [[0, "R"], [3, "b3"], [6, "b5"]],
@@ -33,16 +57,6 @@ const qualityIntervals: Record<ChordQuality, readonly [number, string][]> = {
   sixNine: [[0, "R"], [4, "3"], [7, "5"], [9, "6"], [14, "9"]],
 };
 
-const tensionIntervals: Record<Tension, number> = {
-  "9": 14,
-  b9: 13,
-  "#9": 15,
-  "11": 17,
-  "#11": 18,
-  "13": 21,
-  b13: 20,
-};
-
 const thirdOrSus = new Set(["3", "b3", "2", "4"]);
 const sevenths = new Set(["7", "b7", "bb7"]);
 const alteredFifths = new Set(["b5", "#5"]);
@@ -56,7 +70,7 @@ export function chordToneDescriptors(chord: ChordSymbol): ChordToneDescriptor[] 
     explicit: characteristicExtensions.has(label),
   }));
   const tensions = chord.tensions.map((tension) => {
-    const interval = tensionIntervals[tension];
+    const interval = degreeIntervals[tension];
     return {
       interval,
       label: tension,
@@ -121,6 +135,24 @@ export function toneByLabel(
 
 export function normalizePitchClass(value: number): number {
   return ((Math.trunc(value) % 12) + 12) % 12;
+}
+
+/** Shared degree knowledge for generated labels not present in the chord itself. */
+export function intervalForDegreeLabel(label: string): number | undefined {
+  return Object.prototype.hasOwnProperty.call(degreeIntervals, label)
+    ? degreeIntervals[label as DegreeLabel]
+    : undefined;
+}
+
+export function pitchClassForDegreeLabel(
+  chord: ChordSymbol,
+  label: string,
+): number | undefined {
+  if (label === "Bass") {
+    return chord.bass === undefined ? undefined : normalizePitchClass(chord.bass);
+  }
+  const interval = intervalForDegreeLabel(label);
+  return interval === undefined ? undefined : normalizePitchClass(chord.root + interval);
 }
 
 function unique(values: readonly string[]): string[] {
