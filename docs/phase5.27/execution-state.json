@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "5.27",
+  "status": "in-progress",
+  "activeStage": "P5.27-00",
+  "completedStages": [],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "084d05c53a3fe2a39f9250a89697c154c0464354",
+  "lastVerifiedCommit": "",
+  "currentBranch": "feat/p527-progression-voicing-practice",
+  "requiredGates": {
+    "P5.27-00": [
+      "phase-docs-validation",
+      "focused-practice-baseline",
+      "chord-dojo-regression",
+      "practice-regression",
+      "typescript",
+      "e2e-typecheck",
+      "lint",
+      "production-source-unchanged",
+      "diff-check"
+    ],
+    "P5.27-01": ["practice-domain-clock"],
+    "P5.27-02": ["voicing-resolution"],
+    "P5.27-03": ["ui-integration", "accessibility"],
+    "P5.27-04": ["text-vault-integration"],
+    "P5.27-05": [
+      "long-loop-lifecycle",
+      "full-vitest",
+      "playwright",
+      "web-build",
+      "tauri-build",
+      "security-privacy",
+      "product-acceptance"
+    ]
+  },
+  "gateResults": {},
+  "nextAction": "Complete P5.27-00 verification and stop. Do not begin P5.27-01 without explicit authorization. Before P5.27-03, install and verify emil-design-eng if it remains unavailable.",
+  "updatedAt": "2026-09-12T19:02:01+09:00"
+}
