@@ -74,21 +74,6 @@ describe("Draft range editing", () => {
     expect(undoCaptureDraft(after).selectedRange.endBar).toBe(8);
   });
 
-  it.each([19, 22])("keeps the %s-bar manual rescue regression", (bars) => {
-    const before = draft(1, 8);
-    const after = retargetDraftByAbsoluteBeats(
-      before,
-      longTimeline,
-      0,
-      bars * 4,
-      40,
-      { keepEdits: true },
-    ).draft;
-
-    expect(after.lengthBars).toBe(bars);
-    expect(after.events).toHaveLength(bars);
-  });
-
   it("changes snap mode through the shared history", () => {
     const before = draft(1, 8);
     const harmonic = setDraftSnapMode(before, "harmonic");

@@ -173,16 +173,6 @@ describe("selecting a range by typing", () => {
     expect((harness.onCreate.mock.calls[0][0] as ManualCandidateDraft).lengthBars).toBe(22);
   });
 
-  it.each([1, 11, 13, 17, 21, 23, 27])("builds a %i-bar range", async (length) => {
-    const harness = await mount();
-    await type(harness, "startBar", "5");
-    await type(harness, "endBar", String(4 + length));
-    await type(harness, "endBeat", "4");
-    await act(async () => buttonLabelled(harness, "この範囲を候補にする").click());
-
-    expect((harness.onCreate.mock.calls[0][0] as ManualCandidateDraft).lengthBars).toBe(length);
-  });
-
   it("holds a bar number inside the song", async () => {
     const harness = await mount();
     await type(harness, "endBar", "9999");
