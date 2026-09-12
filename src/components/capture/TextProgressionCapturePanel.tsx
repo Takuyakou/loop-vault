@@ -4,6 +4,7 @@ import {
   confirmedTextProgressionKeyState,
   evaluateTextProgressionCapabilities,
   parseTextProgression,
+  TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM,
   type TextProgressionCapability,
   type TextProgressionDiagnostic,
   type TextProgressionEvent,
@@ -138,7 +139,7 @@ export function TextProgressionCapturePanel({
     const key = textProgressionEventKey(event);
     onStop();
     setSelectedEventKey(key);
-    onPreview(event, voicingOverrides.get(key), explicitBpm ?? 120);
+    onPreview(event, voicingOverrides.get(key), explicitBpm ?? TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM);
   }
 
   function confirmKey() {
@@ -238,7 +239,7 @@ export function TextProgressionCapturePanel({
 
   function previewSelected() {
     if (draftActive || !selectedEvent) return;
-    onPreview(selectedEvent, selectedMemory, explicitBpm ?? 120);
+    onPreview(selectedEvent, selectedMemory, explicitBpm ?? TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM);
   }
 
   const confirmed = result.keyState.kind === "confirmed";
@@ -361,8 +362,8 @@ export function TextProgressionCapturePanel({
           />
           <p className="mt-2 text-xs text-[var(--lv-text-muted)]">
             {bpmInput && explicitBpm === undefined
-              ? text(language, "Enter 30–240 BPM to change audition speed. Cards use 120 BPM until then, and saving can still omit BPM.", "試聴速度を変えるには30〜240 BPMを入力してください。それまではカードを120 BPMで試聴し、保存時はBPMなしにもできます。")
-              : text(language, "Click a chord card to audition the exact notes currently planned for saving. Without BPM, audition uses 120 BPM only.", "コードカードをクリックすると、現在の保存予定音をそのまま試聴します。BPM未指定時は試聴だけ120 BPMを使用します。")}
+              ? text(language, `Enter 30–240 BPM to change audition speed. Cards use ${TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM} BPM until then, and saving can still omit BPM.`, `試聴速度を変えるには30〜240 BPMを入力してください。それまではカードを${TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM} BPMで試聴し、保存時はBPMなしにもできます。`)
+              : text(language, `Click a chord card to audition the exact notes currently planned for saving. Without BPM, audition uses ${TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM} BPM only.`, `コードカードをクリックすると、現在の保存予定音をそのまま試聴します。BPM未指定時は試聴だけ${TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM} BPMを使用します。`)}
           </p>
         </div>
       </section>

@@ -1,9 +1,9 @@
 import type {
+  ProgressionVoicingPracticeSnapshots,
   ProgressionVoicingPracticeSnapshot,
   ProgressionVoicingSelection,
   ResolveProgressionPracticeVoicingsOptions,
 } from "../domain/progressionVoicingPractice";
-import type { ProgressionVoicingPracticeSnapshots } from "../views/ProgressionVoicingPracticeView";
 
 export interface ProgressionVoicingPracticeE2eFixture {
   readonly snapshots: ProgressionVoicingPracticeSnapshots;

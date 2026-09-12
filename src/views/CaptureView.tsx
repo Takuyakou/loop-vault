@@ -172,7 +172,7 @@ import { cutDraftRangeAtEvent } from "../domain/midi/draftRangeEditing";
 import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
 import { ProgressionEditSummary } from "../components/progression-editing/ProgressionEditSummary";
 import { usePlaybackState } from "../hooks/usePlaybackState";
-import { Copy, FileMusic } from "lucide-react";
+import { Copy, Dumbbell, ExternalLink, FileMusic } from "lucide-react";
 import { Button, StatusMessage } from "../components/ui";
 import { SourceBasslineCapturePanel } from "../components/capture/SourceBasslineCapturePanel";
 import {
@@ -214,8 +214,15 @@ interface CaptureViewProps {
     analysis?: MidiProgressionAnalysis,
     metadata?: ProgressionSaveMetadata,
   ) => boolean;
-  createIdeaFromTextProgression?: (draft: TextProgressionIdeaDraft) => string | undefined;
-  appendTextProgressionToIdea?: (ideaId: string, draft: TextProgressionIdeaDraft) => boolean;
+  createIdeaFromTextProgression?: (
+    draft: TextProgressionIdeaDraft,
+  ) => string | SavedTextProgressionTarget | undefined;
+  appendTextProgressionToIdea?: (
+    ideaId: string,
+    draft: TextProgressionIdeaDraft,
+  ) => boolean | SavedTextProgressionTarget;
+  openSavedTextProgression?: (target: SavedTextProgressionTarget) => void;
+  openSavedTextProgressionPractice?: (target: SavedTextProgressionTarget) => void;
   updateIdea: (id: string, changes: Partial<SongIdea>) => boolean | "pending";
   setToast: (toast: string) => void;
   copy: AppCopy;
@@ -223,6 +230,11 @@ interface CaptureViewProps {
   showRomanNumerals: boolean;
   controller?: PlaybackController;
   analysisInput?: AnalysisInput;
+}
+
+export interface SavedTextProgressionTarget {
+  readonly ideaId: string;
+  readonly blockId: string;
 }
 
 type CaptureAnalysisTargetVoice = Pick<
@@ -312,6 +324,8 @@ export function CaptureView(props: CaptureViewProps) {
     appendBlockToIdea,
     createIdeaFromTextProgression,
     appendTextProgressionToIdea,
+    openSavedTextProgression,
+    openSavedTextProgressionPractice,
     updateIdea,
     setToast,
     copy,
@@ -360,6 +374,7 @@ export function CaptureView(props: CaptureViewProps) {
   const manualSourceBasslineDraftKeyRef = useRef("");
   const [captureInputMode, setCaptureInputMode] = useState<CaptureInputMode>("midi");
   const [textDraftContext, setTextDraftContext] = useState<TextDraftContext>();
+  const [savedTextProgressionTarget, setSavedTextProgressionTarget] = useState<SavedTextProgressionTarget>();
   const [analysisProgress, setAnalysisProgress] = useState<CaptureAnalysisProgressStage>();
   const [analysisRunGeneration, setAnalysisRunGeneration] = useState(0);
   const captureViewMountedRef = useRef(true);
@@ -1185,6 +1200,7 @@ export function CaptureView(props: CaptureViewProps) {
 
   function openTextProgressionDraft(converted: TextProgressionConvertedDraft) {
     stopTextPlayback();
+    setSavedTextProgressionTarget(undefined);
     setActiveDraft(converted.draft);
     setTextDraftContext({
       initialTitle: converted.title,
@@ -1220,11 +1236,12 @@ export function CaptureView(props: CaptureViewProps) {
       setToast(copy.capture.createFailed);
       return false;
     }
-    const id = createIdeaFromTextProgression(payload);
-    if (!id) {
+    const saved = createIdeaFromTextProgression(payload);
+    if (!saved) {
       setToast(copy.capture.createFailed);
       return false;
     }
+    if (typeof saved === "object") setSavedTextProgressionTarget(saved);
     setToast(copy.capture.savedToVault);
     return true;
   }
@@ -1245,8 +1262,9 @@ export function CaptureView(props: CaptureViewProps) {
       return false;
     }
     const appended = appendTextProgressionToIdea(ideaId, payload);
+    if (typeof appended === "object") setSavedTextProgressionTarget(appended);
     setToast(appended ? copy.toast.blockSaved : copy.capture.appendFailed);
-    return appended;
+    return Boolean(appended);
   }
 
   async function previewTextProgressionEvent(
@@ -1355,6 +1373,42 @@ export function CaptureView(props: CaptureViewProps) {
             onPreview={(event, memory, bpm) => void previewTextProgressionEvent(event, memory, bpm)}
             onStop={stopTextPlayback}
           />
+          {!textDraft && savedTextProgressionTarget ? (
+            <StatusMessage
+              title={language === "ja" ? "保存した進行を練習できます" : "Your saved progression is ready to practice"}
+              tone="success"
+              action={(
+                <div className="flex min-w-0 flex-wrap gap-2">
+                  {openSavedTextProgressionPractice ? (
+                    <Button
+                      type="button"
+                      variant="primary"
+                      size="sm"
+                      onClick={() => openSavedTextProgressionPractice(savedTextProgressionTarget)}
+                    >
+                      <Dumbbell aria-hidden="true" size={16} />
+                      Voicing Loop
+                    </Button>
+                  ) : null}
+                  {openSavedTextProgression ? (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => openSavedTextProgression(savedTextProgressionTarget)}
+                    >
+                      <ExternalLink aria-hidden="true" size={16} />
+                      {language === "ja" ? "保存した進行を見る" : "View saved progression"}
+                    </Button>
+                  ) : null}
+                </div>
+              )}
+            >
+              {language === "ja"
+                ? "Vaultへ保存した内容から安全な練習用snapshotを作成します。"
+                : "Voicing Loop will build a safe practice snapshot from the saved Vault block."}
+            </StatusMessage>
+          ) : null}
           {textDraft ? (
             <ManualCandidateEditor
               key={textDraft.draftId}

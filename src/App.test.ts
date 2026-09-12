@@ -13,6 +13,7 @@ import {
   CreateDialog,
   deleteIdeaForUndo,
   errorMessage,
+  findSavedTextProgressionTarget,
   stopIdeaPlayback,
 } from "./App";
 import { makeIdea } from "./domain/testFactory";
@@ -26,6 +27,28 @@ function playbackStub(state: PlaybackState) {
   return {
     getState: vi.fn(() => state),
     stop: vi.fn(),
+  };
+}
+
+function savedProgressionBlock(id: string): SavedProgressionBlock {
+  return {
+    id,
+    summaryText: "Cmaj7",
+    detectedKey: "C major",
+    bpm: 108,
+    timeSignature: "4/4",
+    chords: [{
+      bar: 1,
+      beat: 1,
+      durationBeats: 4,
+      chord: makeChordSymbol(0, "maj7"),
+      confidence: 1,
+      alternatives: [],
+      warnings: [],
+    }],
+    tags: [],
+    capturedAt: "2026-01-01T00:00:00.000Z",
+    analyzerVersion: "fixture",
   };
 }
 
@@ -86,6 +109,19 @@ describe("errorMessage", () => {
 
   it("falls back for non-message values", () => {
     expect(errorMessage({ code: "UNKNOWN" }, "fallback")).toBe("fallback");
+  });
+});
+
+describe("saved Text Progression target", () => {
+  it("returns only the exact newly saved block and never substitutes an older block", () => {
+    const older = savedProgressionBlock("older-block");
+    const saved = savedProgressionBlock("saved-block");
+    const idea = makeIdea({ id: "text-idea", progressionBlocks: [older, saved] });
+    expect(findSavedTextProgressionTarget([idea], idea.id, new Set([older.id])))
+      .toEqual({ ideaId: idea.id, blockId: saved.id });
+    expect(findSavedTextProgressionTarget([idea], idea.id, new Set([older.id, saved.id])))
+      .toBeUndefined();
+    expect(findSavedTextProgressionTarget([], idea.id)).toBeUndefined();
   });
 });
 

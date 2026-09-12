@@ -16,7 +16,10 @@ import {
   normalizeNotes,
   parseMidi,
 } from "../domain/midi";
-import { confirmedTextProgressionKeyState } from "../domain/textProgression";
+import {
+  confirmedTextProgressionKeyState,
+  TEXT_PROGRESSION_ANALYZER_VERSION,
+} from "../domain/textProgression";
 import { isTextProgressionStyleSnapshot } from "../domain/textProgressionVoicing";
 import { parseChordLabel } from "../domain/chords";
 import { attachSourceVoicing, attachSourceVoicings, isValidVoicingSnapshot, voicingCompatibility } from "../domain/voicing";
@@ -1222,7 +1225,7 @@ function createSavedTextProgressionBlock(
     capturedAt: context.createdAt,
     // Required existing field; this is true text-parser provenance, not a MIDI
     // analyzer, source-analyzer, or source-weight claim.
-    analyzerVersion: "text-progression-v1",
+    analyzerVersion: TEXT_PROGRESSION_ANALYZER_VERSION,
     userEdited: draft.userEdited ?? false,
     userVerified: draft.userVerified ?? false,
   };

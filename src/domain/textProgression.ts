@@ -8,6 +8,9 @@ export const TEXT_PROGRESSION_MAX_INPUT_CODE_UNITS = 4_096;
 export const TEXT_PROGRESSION_MAX_BARS = 12;
 export const TEXT_PROGRESSION_MAX_TOKENS = 48;
 export const TEXT_PROGRESSION_BEATS_PER_BAR = 4;
+/** Runtime-only fallback used when a valid Text progression intentionally omits BPM. */
+export const TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM = 120;
+export const TEXT_PROGRESSION_ANALYZER_VERSION = "text-progression-v1";
 
 const chordCounts = new Set([1, 2, 4]);
 /** Mirrors the existing Vault Chord Context section lengths (in beats). */

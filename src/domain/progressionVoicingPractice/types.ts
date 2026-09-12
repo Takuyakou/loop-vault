@@ -52,6 +52,26 @@ export interface ProgressionVoicingPracticeSnapshot {
   readonly events: readonly ProgressionPracticeEvent[];
 }
 
+export type ProgressionVoicingPracticeSnapshots = Readonly<
+  Partial<Record<ProgressionVoicingSelection, ProgressionVoicingPracticeSnapshot>>
+>;
+
+export interface ProgressionVoicingPracticeHandoff {
+  readonly sourceReference: ProgressionPracticeSourceReference;
+  readonly snapshots: ProgressionVoicingPracticeSnapshots;
+  readonly initialSelection: ProgressionVoicingSelection;
+}
+
+export type ProgressionVoicingPracticeHandoffResult =
+  | { readonly ok: true; readonly handoff: ProgressionVoicingPracticeHandoff }
+  | {
+      readonly ok: false;
+      readonly error: {
+        readonly code: "source-unavailable" | "invalid-source";
+        readonly cause?: ProgressionPracticeSnapshotErrorCode;
+      };
+    };
+
 export type ProgressionVoicingResolutionStatus =
   | "SUPPORTED"
   | "UNAVAILABLE"

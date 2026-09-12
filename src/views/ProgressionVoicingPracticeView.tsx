@@ -17,6 +17,7 @@ import {
   type ProgressionPracticeVoicingPlan,
   type ProgressionPracticeClockStatus,
   type ProgressionVoicingPracticeSnapshot,
+  type ProgressionVoicingPracticeSnapshots,
   type ProgressionVoicingSelection,
 } from "../domain/progressionVoicingPractice";
 import type { AppLanguage } from "../domain/types";
@@ -29,10 +30,6 @@ import {
 
 const ALL_PITCH_CLASSES = Object.freeze(Array.from({ length: 12 }, (_, index) => index));
 const EMPTY_NOTES: readonly number[] = Object.freeze([]);
-
-export type ProgressionVoicingPracticeSnapshots = Readonly<
-  Partial<Record<ProgressionVoicingSelection, ProgressionVoicingPracticeSnapshot>>
->;
 
 export interface ProgressionVoicingPracticeViewProps {
   readonly language: AppLanguage;

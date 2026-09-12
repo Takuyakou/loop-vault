@@ -63,6 +63,10 @@ import { statusLabel } from "./domain/displayLabels";
 import { parseMidi } from "./domain/midi";
 import type { SavedProgressionBlock, SongIdea, Status } from "./domain/types";
 import {
+  buildProgressionVoicingPracticeHandoffFromVault,
+  type ProgressionVoicingPracticeHandoff,
+} from "./domain/progressionVoicingPractice";
+import {
   applyPendingDeletions,
   createUndoSnapshot,
   ideaAnchor,
@@ -83,7 +87,7 @@ import {
   registerTauriCloseGuard,
 } from "./store/closeGuard";
 import { defaultVaultStore } from "./store/defaultVaultStore";
-import { CaptureView } from "./views/CaptureView";
+import { CaptureView, type SavedTextProgressionTarget } from "./views/CaptureView";
 import { useUndoQueue } from "./hooks/useUndoQueue";
 import type { UndoRequest } from "./hooks/useUndoQueue";
 import { defaultLiveMidiStore } from "./liveMidi/defaultLiveMidiStore";
@@ -127,6 +131,16 @@ export function errorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error) return error.message;
   if (typeof error === "string" && error.trim()) return error;
   return fallback;
+}
+
+export function findSavedTextProgressionTarget(
+  ideas: readonly SongIdea[],
+  ideaId: string,
+  excludedBlockIds: ReadonlySet<string> = new Set(),
+): SavedTextProgressionTarget | undefined {
+  const block = ideas.find((candidate) => candidate.id === ideaId)
+    ?.progressionBlocks?.find((candidate) => !excludedBlockIds.has(candidate.id));
+  return block ? { ideaId, blockId: block.id } : undefined;
 }
 
 export async function closeLiveMidiModeSafely(options: {
@@ -229,6 +243,7 @@ function App() {
   const [selectedProgression, setSelectedProgression] = useState<{ ideaId: string; blockId: string }>();
   const [practiceTarget, setPracticeTarget] = useState<{ ideaId: string; blockId: string }>();
   const [chordContextSnapshot, setChordContextSnapshot] = useState<VaultChordContextSnapshot>();
+  const [voicingPracticeHandoff, setVoicingPracticeHandoff] = useState<ProgressionVoicingPracticeHandoff>();
   const [isCreateOpen, setCreateOpen] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [toast, setToast] = useState<string>();
@@ -379,6 +394,10 @@ function App() {
   }, [view]);
 
   useEffect(() => {
+    if (view !== "practice") setVoicingPracticeHandoff(undefined);
+  }, [view]);
+
+  useEffect(() => {
     if (previousViewRef.current === view) return undefined;
     previousViewRef.current = view;
     const frame = window.requestAnimationFrame(() => {
@@ -498,6 +517,23 @@ function App() {
     setPracticeMode("bass-practice");
     setView("practice");
   }
+
+  function openProgressionVoicingPractice(sourceReference: { ideaId: string; blockId: string }) {
+    const result = buildProgressionVoicingPracticeHandoffFromVault(visibleIdeas, sourceReference);
+    if (!result.ok) {
+      setToast(language === "ja"
+        ? "保存済み進行を確認できないため、Voicing Loopを開始できません。"
+        : "Voicing Loop could not start because the saved progression is unavailable or invalid.");
+      return false;
+    }
+    setPracticeTarget(undefined);
+    setChordContextSnapshot(undefined);
+    setVoicingPracticeHandoff(result.handoff);
+    setPracticeMode("voicing-loop");
+    setView("practice");
+    return true;
+  }
+
   function handleCreate(title: string, status: Status) {
     requestProgressionLeave(() => {
       const id = createIdea(title, status);
@@ -779,13 +815,32 @@ async function analyzeMidiPath(path: string) {
                   }}
                   createIdeaFromTextProgression={(draft) => {
                     const id = createIdeaFromTextProgression(draft);
-                    if (id) {
-                      openDetail(id);
-                    }
-                    return id;
+                    if (!id) return undefined;
+                    return findSavedTextProgressionTarget(defaultVaultStore.getState().ideas, id);
                   }}
                   appendBlockToIdea={appendBlockToIdea}
-                  appendTextProgressionToIdea={appendTextProgressionToIdea}
+                  appendTextProgressionToIdea={(ideaId, draft) => {
+                    const previousIds = new Set(
+                      defaultVaultStore.getState().ideas
+                        .find((candidate) => candidate.id === ideaId)
+                        ?.progressionBlocks?.map((block) => block.id) ?? [],
+                    );
+                    if (!appendTextProgressionToIdea(ideaId, draft)) return false;
+                    return findSavedTextProgressionTarget(
+                      defaultVaultStore.getState().ideas,
+                      ideaId,
+                      previousIds,
+                    ) ?? false;
+                  }}
+                  openSavedTextProgression={({ ideaId, blockId }) => {
+                    if (visibleIdeas.some((idea) => idea.id === ideaId
+                      && idea.progressionBlocks?.some((block) => block.id === blockId))) {
+                      openProgression(ideaId, blockId);
+                    } else {
+                      setToast(language === "ja" ? "保存済み進行を確認できません。" : "The saved progression is unavailable.");
+                    }
+                  }}
+                  openSavedTextProgressionPractice={openProgressionVoicingPractice}
                   updateIdea={updateIdea}
                   setToast={setToast}
                   copy={copy}
@@ -829,6 +884,7 @@ async function analyzeMidiPath(path: string) {
                 openVault={() => setView("library")}
                 requestDelete={requestProgressionDelete}
                 openPractice={openPractice}
+                openVoicingPractice={(ideaId, blockId) => openProgressionVoicingPractice({ ideaId, blockId })}
                 requestLeave={requestProgressionLeave}
                 onDirtyChange={setProgressionDetailDirty}
                 setToast={setToast}
@@ -949,9 +1005,12 @@ async function analyzeMidiPath(path: string) {
                   )}
                   voicingLoop={(
                     <ProgressionVoicingPracticeView
+                      key={voicingPracticeHandoff?.snapshots[voicingPracticeHandoff.initialSelection]?.fingerprint
+                        ?? P527_E2E_FIXTURE?.snapshots[P527_E2E_FIXTURE.initialSelection]?.fingerprint
+                        ?? "empty-voicing-loop"}
                       language={language}
-                      snapshots={P527_E2E_FIXTURE?.snapshots}
-                      initialSelection={P527_E2E_FIXTURE?.initialSelection}
+                      snapshots={voicingPracticeHandoff?.snapshots ?? P527_E2E_FIXTURE?.snapshots}
+                      initialSelection={voicingPracticeHandoff?.initialSelection ?? P527_E2E_FIXTURE?.initialSelection}
                       resolutionOptions={P527_E2E_FIXTURE?.resolutionOptions}
                     />
                   )}

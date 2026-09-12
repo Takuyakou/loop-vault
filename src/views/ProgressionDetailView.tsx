@@ -105,6 +105,7 @@ interface ProgressionDetailViewProps {
   openVault: () => void;
   requestDelete: (idea: SongIdea, block: SavedProgressionBlock) => void;
   openPractice?: (snapshot: VaultChordContextSnapshot) => void;
+  openVoicingPractice?: (ideaId: string, blockId: string) => void;
   requestLeave?: (action: () => void) => void;
   onDirtyChange?: (dirty: boolean) => void;
   setToast: (message: string) => void;
@@ -128,6 +129,7 @@ export function ProgressionDetailView({
   openVault,
   requestDelete,
   openPractice,
+  openVoicingPractice,
   requestLeave,
   onDirtyChange,
   setToast,
@@ -324,6 +326,11 @@ export function ProgressionDetailView({
     }
     runLeaveAction(() => openPractice(snapshot.snapshot));
   }
+
+  function startVoicingLoop() {
+    if (!openVoicingPractice) return;
+    runLeaveAction(() => openVoicingPractice(idea.id, block.id));
+  }
   async function copyForChordDrip() {
     if (!navigator.clipboard?.writeText) {
       setToast(text.copyFailed);
@@ -494,6 +501,18 @@ export function ProgressionDetailView({
           </span>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
+          {openVoicingPractice ? (
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              data-testid="voicing-loop-handoff"
+              onClick={startVoicingLoop}
+            >
+              <Dumbbell aria-hidden="true" size={16} />
+              Voicing Loop
+            </Button>
+          ) : null}
           {openPractice ? (
             <div className="flex flex-wrap items-center justify-end gap-2" data-testid="chord-context-handoff">
               {selectedChordContextSection ? (
