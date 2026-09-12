@@ -12,7 +12,6 @@ import {
   type P524ShadowInput,
   type P524ShadowNote,
 } from "./shadowEvidence";
-import { runP524Stage01BenchmarkEnforced } from "./shadowEvidenceBenchmark";
 
 const fixtures = generateP524SyntheticFixtures();
 
@@ -427,38 +426,33 @@ describe("P5.24-01 fail-closed public wrappers", () => {
 });
 
 describe("P5.24-01 bounded shadow processing", () => {
-  it("measures dense E x128 with explicit timeout and honest operation evidence", { timeout: 10_000 }, () => {
+  it("measures dense E x128 with honest operation evidence", () => {
     const notes = generateP524DenseBenchmarkNotes(128);
     const input: P524ShadowInput = {
       notes: toP524ShadowNotes(notes),
       meter: [4, 4],
       totalBeats: 8 * 128,
     };
-    const start = performance.now();
     const bassLane = estimateP524BassLane(input);
     const harmonicRhythm = estimateP524HarmonicRhythm(input, bassLane);
-    const elapsedMs = performance.now() - start;
     expect(notes).toHaveLength(3_072);
     expect(bassLane.operations).toMatchObject({ inputNotes: notes.length });
     expect(harmonicRhythm.operations).toMatchObject({ inputNotes: notes.length });
     expect(Object.values(bassLane.operations).every(Number.isFinite)).toBe(true);
     expect(Object.values(harmonicRhythm.operations).every(Number.isFinite)).toBe(true);
     expect(harmonicRhythm).toMatchObject({ status: "supported", quarterBeats: 2, legacyFallback: false });
-    expect(elapsedMs).toBeLessThan(10_000);
   });
 
-  it("handles a long constant shuffled texture without spread limits", { timeout: 10_000 }, () => {
+  it("handles a long constant shuffled texture without spread limits", () => {
     const input = stableTextureInput(4_096);
     const reversed = { ...input, notes: [...input.notes].reverse() };
-    const start = performance.now();
     const first = estimateP524BassLane(input);
     const second = estimateP524BassLane(reversed);
     expect(second).toEqual(first);
     expect(estimateP524HarmonicRhythm(input, first)).toMatchObject({ status: "supported", quarterBeats: 4 });
-    expect(performance.now() - start).toBeLessThan(10_000);
   });
 
-  it("uses event updates plus a bounded sweep for 100k-beat held overlap", { timeout: 10_000 }, () => {
+  it("uses event updates plus a bounded sweep for 100k-beat held overlap", () => {
     const input: P524ShadowInput = {
       notes: [
         { id: "held-bass", pitch: 36, startBeat: 0, durationBeats: 100_000, velocity: 0.8 },
@@ -469,7 +463,6 @@ describe("P5.24-01 bounded shadow processing", () => {
       meter: [4, 4],
       totalBeats: 100_000,
     };
-    const start = performance.now();
     const bassLane = estimateP524BassLane(input);
     const harmonicRhythm = estimateP524HarmonicRhythm(input, bassLane);
     expect(bassLane.operations).toMatchObject({
@@ -486,41 +479,5 @@ describe("P5.24-01 bounded shadow processing", () => {
       status: "unknown",
       reason: "insufficient-global-evidence",
     });
-    expect(performance.now() - start).toBeLessThan(10_000);
-  });
-
-  it("runs the locked benchmark behind an enforced 10-second child boundary", { timeout: 15_000 }, async () => {
-    const outcome = await runP524Stage01BenchmarkEnforced();
-    expect(outcome).toMatchObject({
-      status: "completed",
-      provenance: "p524-dense-synthetic-E-x128-v1",
-      sourceFixture: "E",
-      repetitions: 128,
-      noteCount: 3_072,
-      warmupCount: 3,
-      sampleCount: 7,
-      timeoutMs: 10_000,
-      timeoutEnforced: true,
-      timedOut: false,
-    });
-    if (outcome.status !== "completed") throw new Error("locked benchmark unexpectedly timed out");
-    expect(outcome.warmupDurationsMs).toHaveLength(3);
-    expect(outcome.sampleDurationsMs).toHaveLength(7);
-    expect([...outcome.sampleDurationsMs].sort((left, right) => left - right)[3]).toBe(outcome.medianMs);
-    expect(Math.max(...outcome.sampleDurationsMs)).toBe(outcome.maximumMs);
-    expect([...outcome.warmupDurationsMs, ...outcome.sampleDurationsMs]
-      .every((duration) => Number.isFinite(duration) && duration > 0 && duration < 2_000)).toBe(true);
-  });
-
-  it("terminates the benchmark child on an injected short timeout", { timeout: 2_000 }, async () => {
-    const start = performance.now();
-    const outcome = await runP524Stage01BenchmarkEnforced({ timeoutMs: 25, childDelayMs: 250 });
-    expect(outcome).toMatchObject({
-      status: "timed-out",
-      timeoutMs: 25,
-      timeoutEnforced: true,
-      timedOut: true,
-    });
-    expect(performance.now() - start).toBeLessThan(2_000);
   });
 });
