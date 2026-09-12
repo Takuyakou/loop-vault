@@ -213,14 +213,6 @@ describe("moving the range", () => {
 });
 
 describe("chord operations", () => {
-  it("offers split, merge, insert, delete, undo and redo", async () => {
-    const harness = await mount(draftOf(14, 17));
-
-    for (const name of ["split", "merge", "insert", "delete", "undo", "redo"]) {
-      expect(action(harness, name)).toBeTruthy();
-    }
-  });
-
   it("splits the selected chord", async () => {
     const harness = await mount(draftOf(14, 17));
     await click(action(harness, "split"));
@@ -247,7 +239,7 @@ describe("chord operations", () => {
     expect((harness.onChange.mock.calls[0][0] as ManualCandidateDraft).events).toHaveLength(3);
   });
 
-  it("starts with undo and redo unavailable and enables undo after an edit", async () => {
+  it("enables undo after an edit and can undo then redo the change", async () => {
     const harness = await mount(draftOf(14, 17));
     expect(action(harness, "undo").disabled).toBe(true);
     expect(action(harness, "redo").disabled).toBe(true);
@@ -255,28 +247,13 @@ describe("chord operations", () => {
     await click(action(harness, "split"));
     await harness.render(harness.onChange.mock.calls[0][0] as ManualCandidateDraft);
     expect(action(harness, "undo").disabled).toBe(false);
-  });
-
-  it("undoes back to the original chords", async () => {
-    const draft = draftOf(14, 17);
-    const harness = await mount(draft);
-    await click(action(harness, "split"));
-    await harness.render(harness.onChange.mock.calls[0][0] as ManualCandidateDraft);
     await click(action(harness, "undo"));
 
     const undone = harness.onChange.mock.calls[harness.onChange.mock.calls.length - 1][0] as ManualCandidateDraft;
     expect(undone.events).toHaveLength(4);
     expect(undone.repairOperations.some((operation) => operation.type === "split-event")).toBe(false);
-  });
-
-  it("redoes what was undone", async () => {
-    const harness = await mount(draftOf(14, 17));
-    await click(action(harness, "split"));
-    await harness.render(harness.onChange.mock.calls[0][0] as ManualCandidateDraft);
-    await click(action(harness, "undo"));
-    const undone: ManualCandidateDraft =
-      harness.onChange.mock.calls[harness.onChange.mock.calls.length - 1][0];
     await harness.render(undone);
+    expect(action(harness, "redo").disabled).toBe(false);
     await click(action(harness, "redo"));
 
     expect((harness.onChange.mock.calls[harness.onChange.mock.calls.length - 1][0] as ManualCandidateDraft).events)
