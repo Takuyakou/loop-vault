@@ -3,7 +3,7 @@
 # Phase 5.27 — Progression Voicing Practice
 
 ## Status
-`P5.27-01 COMPLETE — P5.27-02 ACTIVE`
+`P5.27-02 COMPLETE — P5.27-03 ACTIVE`
 
 ## Product goal
 
@@ -534,6 +534,7 @@ Must prove:
 
 # Next action
 
-P5.27-01 completed at `80e13c3a4a3d80cf20414bea480dc523e743204e`.
+P5.27-02 completed at `3ad0db9e44145120126a952762d4c3f44eeae368`.
 
-Proceed with P5.27-02 under the current human authorization to complete P5.27.
+Proceed with P5.27-03 under the current human authorization, using the verified
+available `$emil-design-eng` skill for the user-facing UI implementation.
