@@ -6,13 +6,16 @@
   "completedStages": [
     "P5.28-00",
     "P5.28-01",
-    "P5.28-02"
+    "P5.28-02",
+    "P5.28-03",
+    "P5.28-04",
+    "P5.28-05"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "df971c2cec121199296eb8e394dc18bec5bbe21f",
-  "lastVerifiedCommit": "93436df1d72b989221af008ac3a8d19324ff0614",
-  "currentBranch": "feat/p528-voicing-loop-navigation",
+  "lastVerifiedCommit": "368f74d23225b060db53a914c423126d4420e633",
+  "currentBranch": "feat/p528-voicing-loop-inline-vault",
   "requiredGates": {
     "P5.28-00": [
       "phase-docs-validation",
@@ -33,6 +36,27 @@
       "phase-docs-validation",
       "privacy-hygiene",
       "clean-status"
+    ],
+    "P5.28-03": [
+      "inline-selection-audit",
+      "phase-docs-validation",
+      "production-source-unchanged",
+      "diff-check"
+    ],
+    "P5.28-04": [
+      "focused-inline-selection-tests",
+      "existing-handoff-regression",
+      "diff-check"
+    ],
+    "P5.28-05": [
+      "focused-vitest",
+      "vault-practice-regression",
+      "focused-playwright",
+      "accessibility-responsive",
+      "typescript-lint-build",
+      "phase-docs-validation",
+      "privacy-hygiene",
+      "clean-status"
     ]
   },
   "gateResults": {
@@ -47,8 +71,11 @@
     "accessibility-responsive": "pass",
     "typescript-lint-build": "pass",
     "privacy-hygiene": "pass",
-    "clean-status": "pass"
+    "clean-status": "pass",
+    "inline-selection-audit": "pass",
+    "focused-inline-selection-tests": "pass",
+    "vault-practice-regression": "pass"
   },
-  "nextAction": "P5.28 is complete. Automated acceptance passed at 93436df1d72b989221af008ac3a8d19324ff0614 and its report is committed at e87e89591a56bf3dbc5c226f6f8f86e21c844508. Stop for human review and separate merge authorization; do not push.",
-  "updatedAt": "2026-09-13T12:29:27+09:00"
+  "nextAction": "Await human review and separate merge authorization. Do not push.",
+  "updatedAt": "2026-09-13T15:00:00+09:00"
 }

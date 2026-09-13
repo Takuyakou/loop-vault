@@ -4,8 +4,10 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type {
+  ProgressionPracticeSourceReference,
   ProgressionVoicingPracticeSnapshot,
   ProgressionVoicingSelection,
+  VoicingLoopVaultCandidate,
 } from "../domain/progressionVoicingPractice";
 import type {
   ProgressionVoicingTransportPort,
@@ -13,6 +15,11 @@ import type {
 } from "../practice/ProgressionVoicingTransport";
 import { defaultLiveMidiStore } from "../liveMidi/defaultLiveMidiStore";
 import { ProgressionVoicingPracticeView } from "./ProgressionVoicingPracticeView";
+import {
+  loadRecentVoicingLoopProgressions,
+  recordRecentVoicingLoopProgression,
+  saveRecentVoicingLoopProgressions,
+} from "../voicingPractice/recentProgressions";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
   .IS_REACT_ACT_ENVIRONMENT = true;
@@ -23,14 +30,15 @@ afterEach(async () => {
   await act(async () => root?.unmount());
   root = undefined;
   document.body.replaceChildren();
+  window.localStorage.clear();
 });
 
 describe("ProgressionVoicingPracticeView", () => {
-  it("shows an actionable source-less empty state without Source controls or a MIDI lease", async () => {
+  it("shows an inline source-less Vault list without Source controls or a MIDI lease", async () => {
     const original = defaultLiveMidiStore.getState();
     const activate = vi.fn(async () => defaultLiveMidiStore.setState({ active: true }));
     const deactivate = vi.fn(async () => defaultLiveMidiStore.setState({ active: false }));
-    const onChooseVault = vi.fn();
+    const onSelectProgression = vi.fn(() => true);
     const onEnterText = vi.fn();
     defaultLiveMidiStore.setState({ active: false, activate, deactivate });
     try {
@@ -39,20 +47,21 @@ describe("ProgressionVoicingPracticeView", () => {
         undefined,
         "source-midi",
         true,
-        { onChooseVault, onEnterText },
+        { onSelectProgression, onEnterText },
       );
       await act(async () => { await Promise.resolve(); });
 
       expect(container.querySelector("h2")?.textContent).toBe("Voicing Loop");
-      expect(container.textContent).toContain("練習するコード進行を選択してください。");
+      expect(container.textContent).toContain("練習する進行");
+      expect(container.textContent).toContain("練習できる保存済み進行はまだありません。");
+      expect(container.querySelector("#voicing-loop-progression-search")).not.toBeNull();
       expect(container.textContent).not.toContain("Source MIDI");
       expect(container.querySelector("fieldset")).toBeNull();
       expect(container.querySelector("#voicing-loop-bpm")).toBeNull();
       expect(activate).not.toHaveBeenCalled();
 
-      await act(async () => button(container, "My Vaultから選ぶ").click());
-      await act(async () => button(container, "Textで進行を入力").click());
-      expect(onChooseVault).toHaveBeenCalledOnce();
+      await act(async () => button(container, "Textで新しい進行を入力").click());
+      expect(onSelectProgression).not.toHaveBeenCalled();
       expect(onEnterText).toHaveBeenCalledOnce();
     } finally {
       defaultLiveMidiStore.setState({
@@ -63,11 +72,61 @@ describe("ProgressionVoicingPracticeView", () => {
     }
   });
 
+  it("searches all eligible progressions, expands in place, and records only a successful one-click choice", async () => {
+    const candidates = Array.from({ length: 6 }, (_, index) => vaultCandidate(index));
+    const onSelectProgression = vi.fn((reference: ProgressionPracticeSourceReference) => {
+      saveRecentVoicingLoopProgressions(recordRecentVoicingLoopProgression(
+        loadRecentVoicingLoopProgressions(),
+        reference,
+      ));
+      return true;
+    });
+    const container = await renderView(
+      new FakeTransport(),
+      undefined,
+      "source-midi",
+      false,
+      { onSelectProgression, onEnterText: vi.fn() },
+      candidates,
+    );
+
+    expect(container.querySelectorAll("[data-testid='voicing-loop-progression-choice']")).toHaveLength(5);
+    await act(async () => button(container, "すべての進行を見る").click());
+    expect(container.querySelectorAll("[data-testid='voicing-loop-progression-choice']")).toHaveLength(6);
+
+    const search = container.querySelector<HTMLInputElement>("#voicing-loop-progression-search")!;
+    await act(async () => {
+      const valueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+      valueSetter?.call(search, "F# major");
+      search.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    expect(container.querySelectorAll("[data-testid='voicing-loop-progression-choice']")).toHaveLength(1);
+    await act(async () => container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-progression-choice']")!.click());
+    expect(onSelectProgression).toHaveBeenCalledWith(candidates[5]!.sourceReference);
+    expect(loadRecentVoicingLoopProgressions()).toEqual([candidates[5]!.sourceReference]);
+  });
+
+  it("does not record an invalid or deleted source when click-time validation fails", async () => {
+    const candidate = vaultCandidate(0);
+    const container = await renderView(
+      new FakeTransport(),
+      undefined,
+      "source-midi",
+      false,
+      { onSelectProgression: vi.fn(() => false), onEnterText: vi.fn() },
+      [candidate],
+    );
+    await act(async () => container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-progression-choice']")!.click());
+    expect(loadRecentVoicingLoopProgressions()).toEqual([]);
+  });
+
   it("releases a loaded session MIDI lease once when it becomes direct-entry empty and does not reacquire", async () => {
     const original = defaultLiveMidiStore.getState();
     const activate = vi.fn(async () => defaultLiveMidiStore.setState({ active: true }));
     const deactivate = vi.fn(async () => defaultLiveMidiStore.setState({ active: false }));
     defaultLiveMidiStore.setState({ active: false, activate, deactivate });
+    const retainedReference = { ideaId: "idea", blockId: "block" };
+    saveRecentVoicingLoopProgressions([retainedReference]);
     try {
       const runtime = new FakeTransport();
       const container = document.createElement("div");
@@ -75,13 +134,16 @@ describe("ProgressionVoicingPracticeView", () => {
       root = createRoot(container);
       const render = async (
         snapshots?: Partial<Record<ProgressionVoicingSelection, ProgressionVoicingPracticeSnapshot>>,
+        vaultProgressions: readonly VoicingLoopVaultCandidate[] = [],
+        onSelectProgression = vi.fn(() => true),
       ) => act(async () => root?.render(
         <ProgressionVoicingPracticeView
           language="ja"
           snapshots={snapshots}
           initialSelection="basic-full"
           monitorMidi
-          onChooseVault={vi.fn()}
+          vaultProgressions={vaultProgressions}
+          onSelectProgression={onSelectProgression}
           onEnterText={vi.fn()}
           transportFactory={() => runtime}
         />,
@@ -90,12 +152,21 @@ describe("ProgressionVoicingPracticeView", () => {
       await render({ "basic-full": snapshot("basic-full") });
       await act(async () => { await Promise.resolve(); await Promise.resolve(); });
       expect(activate).toHaveBeenCalledOnce();
+      expect(loadRecentVoicingLoopProgressions()).toEqual([retainedReference]);
+      await act(async () => button(container, "開始").click());
+      const stopsBeforeSelector = runtime.stop.mock.calls.length;
 
-      await render(undefined);
+      const nextCandidate = vaultCandidate(2);
+      const onSelectProgression = vi.fn(() => true);
+      await render(undefined, [nextCandidate], onSelectProgression);
       await act(async () => { await Promise.resolve(); await Promise.resolve(); });
-      expect(container.textContent).toContain("練習するコード進行を選択してください。");
+      expect(container.textContent).toContain("練習する進行");
       expect(deactivate).toHaveBeenCalledOnce();
       expect(activate).toHaveBeenCalledOnce();
+      expect(loadRecentVoicingLoopProgressions()).toEqual([]);
+      expect(runtime.stop.mock.calls.length).toBeGreaterThan(stopsBeforeSelector);
+      await act(async () => container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-progression-choice']")!.click());
+      expect(onSelectProgression).toHaveBeenCalledWith(nextCandidate.sourceReference);
     } finally {
       await act(async () => root?.unmount());
       root = undefined;
@@ -377,9 +448,10 @@ async function renderView(
   initialSelection: ProgressionVoicingSelection,
   monitorMidi = false,
   callbacks: {
-    onChooseVault: () => void;
+    onSelectProgression: (reference: ProgressionPracticeSourceReference) => boolean;
     onEnterText: () => void;
-  } = { onChooseVault: vi.fn(), onEnterText: vi.fn() },
+  } = { onSelectProgression: vi.fn(() => true), onEnterText: vi.fn() },
+  vaultProgressions: readonly VoicingLoopVaultCandidate[] = [],
 ): Promise<HTMLDivElement> {
   const container = document.createElement("div");
   document.body.append(container);
@@ -390,12 +462,25 @@ async function renderView(
       snapshots={snapshots}
       initialSelection={initialSelection}
       monitorMidi={monitorMidi}
-      onChooseVault={callbacks.onChooseVault}
+      vaultProgressions={vaultProgressions}
+      onSelectProgression={callbacks.onSelectProgression}
       onEnterText={callbacks.onEnterText}
       transportFactory={() => runtime}
     />,
   ));
   return container;
+}
+
+function vaultCandidate(index: number): VoicingLoopVaultCandidate {
+  return {
+    id: JSON.stringify([`idea-${index}`, `block-${index}`]),
+    sourceReference: { ideaId: `idea-${index}`, blockId: `block-${index}` },
+    title: `Progression ${index}`,
+    key: index === 5 ? "F# major" : "C major",
+    bpm: 80 + index,
+    chordLabels: index === 5 ? ["F#maj7", "C#7"] : ["Cmaj7", "G7"],
+    capturedAt: `2026-01-0${index + 1}T00:00:00.000Z`,
+  };
 }
 
 function button(container: HTMLElement, label: string): HTMLButtonElement {

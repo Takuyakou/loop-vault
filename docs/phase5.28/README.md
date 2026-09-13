@@ -1,20 +1,20 @@
 <!-- phase-id: 5.28 -->
 
-# Phase 5.28 — Voicing Loop Direct Navigation
+# Phase 5.28 — Voicing Loop Direct Navigation and Selection
 
-P5.27のProgression Voicing Practiceを、保存済み進行やText保存のhandoffだけでなく、
-左sidebarから直接開けるようにする小規模なnavigation / empty-state phase。
+P5.27のProgression Voicing Practiceを左sidebarから直接開き、保存済みVault進行を
+同じ画面で1クリック選択できるようにするnavigation / selection phase。
 
 安全規則のsingle source of truthは[root `AGENTS.md`](../../AGENTS.md)。
 
 ## Status
 
-- **Status:** completed
+- **Status:** complete
 - **Active stage:** none
-- **Completed stages:** P5.28-00, P5.28-01, P5.28-02
+- **Completed stages:** P5.28-00, P5.28-01, P5.28-02, P5.28-03, P5.28-04, P5.28-05
 - **Base:** `df971c2cec121199296eb8e394dc18bec5bbe21f`
-- **Branch:** `feat/p528-voicing-loop-navigation`
-- **Next action:** P5.28は完了。人間による確認と別途明示されたmerge authorizationを待つ。pushはしない
+- **Branch:** `feat/p528-voicing-loop-inline-vault`
+- **Next action:** human reviewと別途のmerge承認を待つ。pushは行わない
 
 この節、[`execution-state.json`](execution-state.json)、active stage reportを各stage末に同期する。
 
@@ -31,6 +31,11 @@ P5.27のProgression Voicing Practiceを、保存済み進行やText保存のhand
 9. [`../phase5.27/contracts/06-source-custom-fidelity-contract.md`](../phase5.27/contracts/06-source-custom-fidelity-contract.md) — exact pitch/octave and no-fallback contract
 10. [`../phase5.27/contracts/10-integration-protection-contract.md`](../phase5.27/contracts/10-integration-protection-contract.md) — protected surfaces
 11. [`../phase5.27/reports/P5.27-05-product-acceptance.md`](../phase5.27/reports/P5.27-05-product-acceptance.md) — inherited handoff acceptance
+12. [`contracts/02-inline-vault-selection-contract.md`](contracts/02-inline-vault-selection-contract.md) — inline list / recent / transaction contract
+13. [`audit/P5.28-03-inline-vault-selection-audit.md`](audit/P5.28-03-inline-vault-selection-audit.md) — extension repository and UX audit
+14. [`reports/P5.28-03-extension-bootstrap.md`](reports/P5.28-03-extension-bootstrap.md) — extension contract closeout
+15. [`reports/P5.28-04-inline-vault-selection.md`](reports/P5.28-04-inline-vault-selection.md) — inline selection implementation
+16. [`reports/P5.28-05-focused-acceptance.md`](reports/P5.28-05-focused-acceptance.md) — extension acceptance and closeout
 
 ## Locked product shape
 
@@ -69,6 +74,22 @@ empty state、Vault/Text seam、P5.27 handoff、keyboard/responsive/axe、visual
 
 Focused Vitest、navigation regression、focused Playwright、320 px、effective 200%、
 keyboard、reduced motion、axe serious/critical 0、build/lint/docs/diff hygieneをfresh HEADで確認する。
+
+### P5.28-03 — Inline Vault selection audit / contract
+
+既存Vault search、P5.27 handoff、transport cleanup、preference storageを監査し、
+eligible saved progressionのinline list、最大5件recent LRU、1-click selection、
+fail-closed source lifecycleの契約を固定する。Production behaviorは変更しない。
+
+### P5.28-04 — Inline Vault selection implementation
+
+source未選択Voicing Loopへcompact list、検索、recent、同一画面の全件展開、
+secondary Text actionを追加する。既存pickerとP5.27 practice UIは維持する。
+
+### P5.28-05 — Focused acceptance / extension closeout
+
+focused Vitest、Vault/Practice regression、focused Playwright、keyboard、320 px、
+effective 200%、reduced motion、axe、privacy、diff hygieneをfresh candidateで確認する。
 
 ## Rules recap
 

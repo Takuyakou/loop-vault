@@ -17,23 +17,19 @@ async function openDirectVoicingLoopWithKeyboard(page: Page) {
   return directItem;
 }
 
-test("P5.28 direct sidebar entry is keyboard-operable and its empty CTAs route correctly at 320px", async ({ page }) => {
+test("P5.28 direct sidebar entry shows the inline Vault selector and Text fallback at 320px", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 812 });
   await openEmptyApp(page);
   await openDirectVoicingLoopWithKeyboard(page);
 
-  await expect(page.getByText("練習するコード進行を選択してください。")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "練習する進行" })).toBeVisible();
+  await expect(page.getByRole("searchbox", { name: "進行を検索" })).toBeVisible();
+  await expect(page.getByText("練習できる保存済み進行はまだありません。")).toBeVisible();
   await expect(page.getByRole("button", { name: "Source MIDI" })).toHaveCount(0);
   await expect(page.locator("#voicing-loop-bpm")).toHaveCount(0);
   await assertNoHorizontalOverflow(page);
 
-  const vaultCta = page.getByRole("button", { name: "My Vaultから選ぶ" });
-  await vaultCta.focus();
-  await page.keyboard.press("Enter");
-  await expect(page.locator("#main-content")).toHaveAttribute("aria-label", "Vault");
-
-  await openDirectVoicingLoopWithKeyboard(page);
-  const textCta = page.getByRole("button", { name: "Textで進行を入力" });
+  const textCta = page.getByRole("button", { name: /Textで新しい進行を入力/ });
   await textCta.focus();
   await page.keyboard.press("Enter");
   await expect(page.locator("[data-capture-stage='text']")).toBeVisible();
@@ -48,11 +44,11 @@ test("P5.28 direct sidebar entry is keyboard-operable and its empty CTAs route c
   await assertNoHorizontalOverflow(page);
 });
 
-test("P5.28 Text and Vault handoffs survive direct-entry stale-session clearing", async ({ page }) => {
+test("P5.28 Text handoff becomes a recent one-click Vault source without picker or stale session", async ({ page }) => {
   test.setTimeout(60_000);
   await openEmptyApp(page);
   await openDirectVoicingLoopWithKeyboard(page);
-  await page.getByRole("button", { name: "Textで進行を入力" }).click();
+  await page.getByRole("button", { name: /Textで新しい進行を入力/ }).click();
 
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-progression-input").fill("| C G | Am F |");
@@ -78,22 +74,28 @@ test("P5.28 Text and Vault handoffs survive direct-entry stale-session clearing"
   await expect(workspace.locator("#voicing-loop-bpm")).toHaveValue("120");
 
   await page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true }).click();
-  await expect(page.getByText("練習するコード進行を選択してください。")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "最近使った進行" })).toBeVisible();
   await expect(workspace.getByRole("heading", { level: 2, name: "C", exact: true })).toHaveCount(0);
 
-  await page.getByRole("button", { name: "My Vaultから選ぶ" }).click();
-  await page.locator("#vault-search").fill("P5.28 Direct Entry E2E");
-  const row = page.locator(".lv-vault-row").filter({ hasText: "P5.28 Direct Entry E2E" });
-  await row.getByRole("button", { name: /進行を開く|Open progression/ }).click();
-  const detail = page.locator("[data-progression-detail-view]");
-  await detail.getByTestId("voicing-loop-handoff").click();
+  const search = page.getByRole("searchbox", { name: "進行を検索" });
+  await search.fill("P5.28 Direct Entry E2E");
+  const row = page.getByTestId("voicing-loop-progression-choice").filter({ hasText: "P5.28 Direct Entry E2E" });
+  await expect(row).toHaveCount(1);
+  await row.focus();
+  await page.keyboard.press("Enter");
   await expect(workspace.getByRole("heading", { level: 2, name: "C", exact: true })).toBeVisible();
   await expect(workspace.locator("#voicing-loop-bpm")).toHaveValue("120");
 
   await page.locator("nav").getByRole("button", { name: "Home", exact: true }).click();
   await page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true }).click();
-  await expect(page.getByText("練習するコード進行を選択してください。")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "最近使った進行" })).toBeVisible();
   await expect(workspace.getByRole("heading", { level: 2, name: "C", exact: true })).toHaveCount(0);
+  await page.getByTestId("voicing-loop-progression-choice").filter({ hasText: "P5.28 Direct Entry E2E" }).click();
+  await page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true }).click();
+  expect(await page.evaluate(() => {
+    const raw = localStorage.getItem("loop-vault:voicing-loop-recents:v1");
+    return raw ? JSON.parse(raw).references.length : 0;
+  })).toBe(1);
 
   const chordDojo = page.getByRole("tab", { name: "Chord Dojo" });
   await chordDojo.click();
@@ -113,7 +115,7 @@ test("P5.28 empty state is reduced-motion, effective-200-percent, overflow-safe,
   await openDirectVoicingLoopWithKeyboard(page);
   await page.evaluate(() => { document.documentElement.style.zoom = "2"; });
 
-  await expect(page.getByText("練習するコード進行を選択してください。")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "練習する進行" })).toBeVisible();
   expect(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(true);
   await assertNoHorizontalOverflow(page);
 
