@@ -8,6 +8,9 @@
 source未選択でもerrorや空白にならず、VaultまたはText入力へ進める状態を提供する。
 既存P5.27 handoffのsource、duration、key、BPM、Source MIDI / Custom exact voicing契約は維持する。
 
+追加scopeでは、source未選択Voicing Loopにeligible Vault進行を直接表示し、
+pickerやProgression Detailを挟まず1クリックで既存P5.27 sessionを開始する。
+
 ## Scope
 
 - 現行flat sidebarの`Practice`直後へ明示的な`Voicing Loop` itemを追加する。
@@ -28,6 +31,7 @@ source未選択でもerrorや空白にならず、VaultまたはText入力へ進
 - P5.27 practice clock、transport、playback engine、voicing resolver変更
 - router導入、URL routing導入、sidebar hierarchy/redesign
 - Bass Practice専用`VaultProgressionPicker`の汎用化またはVoicing Loopへの流用
+- 前回sessionの永続化または再開、Practice History redesign、Vault schema/fileVersion変更
 
 ## Contracts
 
@@ -89,6 +93,28 @@ Relevant gate set:
 - affected visual: existing `practice.png`にはsidebarが写るため、差分を意図確認してからbaselineを扱う
 - `npm run typecheck:e2e`、`npm run lint`、`npm run build`
 - `npm run validate:phase-docs`、`git diff --check`
+
+### P5.28-03 — Inline Vault selection audit / contract
+
+1. current Vault projection/search、P5.27 handoff builder、transport cleanup、preference storageを監査する。
+2. Bass Practice pickerは4/4 Chord Context専用のため、そのeligibilityをVoicing Loopへ流用しない。
+3. `contracts/02-inline-vault-selection-contract.md`で表示、recent、transaction、privacyを固定する。
+4. Production/test codeを変更せず、phase docs validationとdiff checkを実行する。
+
+### P5.28-04 — Inline Vault selection implementation
+
+1. current VaultからP5.27 handoff可能な進行だけをpresentation projectionへ変換する。
+2. source未選択画面へ検索、compact whole-row button、recent/default list、同一領域の全件展開を追加する。
+3. successful selection後だけ最大5件のID-only LRUをlocalStorageへ保存する。
+4. missing/invalid sourceはclick時にもcurrent Vaultを再読してfail closedとする。
+5. Text入力をsecondary actionとして維持し、既存pickerは削除しない。
+6. source選択後のP5.27 UI、clock、transport、voicing engineは変更しない。
+
+### P5.28-05 — Focused acceptance / extension closeout
+
+最低限、inline list、1-click handoff facts、recent dedupe/prune、search、all expansion、
+Text、old transport stop、stale source fail-closed、Vault/Practice navigation、keyboard、
+320 px、effective 200%、reduced motion、overflow、axe serious/critical 0をfresh candidateで証明する。
 
 ## Definition of Done
 
