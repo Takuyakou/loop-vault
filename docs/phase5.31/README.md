@@ -3,7 +3,7 @@
 
 ## Status
 
-Stage00 audit; full fixture and Left-hand slash tracks blocked. See [report](reports/P5.31-00-report.md) and [live state](execution-state.json).
+Stage00 audit complete; full fixture and Left-hand slash tracks blocked. See [report](reports/P5.31-00-report.md) and [live state](execution-state.json).
 
 ## Required Reading Order
 
