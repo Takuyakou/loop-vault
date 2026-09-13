@@ -4,12 +4,12 @@
 
 ## Status
 
-- **Status:** in_progress
-- **Active stage:** P5.30-04
-- **Completed stages:** P5.30-00, P5.30-01, P5.30-02, P5.30-03
+- **Status:** completed
+- **Active stage:** none
+- **Completed stages:** P5.30-00, P5.30-01, P5.30-02, P5.30-03, P5.30-04
 - **Base:** `15b1ed8222105abb0b57c3e19c0ecdc912dc9476`
 - **Branch:** `feat/p530-voicing-loop-polish`
-- **Next action:** run P5.30-04 hardening and product-acceptance gates
+- **Next action:** human product acceptance; do not merge, push, tag, release, or start P5.31
 
 ## Purpose
 
