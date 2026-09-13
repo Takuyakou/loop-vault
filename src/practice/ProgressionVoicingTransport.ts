@@ -71,11 +71,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     assertCompatibleRuntimePpq(ppq);
 
     const sound = options.sound ?? "electric-piano";
-    const voicingInstrument = await createPreviewInstrument(sound);
-    if (generation !== this.generation || this.startingGeneration !== generation) {
-      voicingInstrument.dispose();
-      return;
-    }
+    const voicingInstrumentPromise = createPreviewInstrument(sound);
     this.startingGeneration = undefined;
 
     const countInBeats = options.countInBars * options.snapshot.meter.numerator;
@@ -86,7 +82,6 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.transport.position = `${Math.round(startBeat * ppq)}i`;
     this.transport.bpm.value = this.desiredBpm;
     this.activeOptions = options;
-    this.voicingInstrument = voicingInstrument;
     this.voicingSound = sound;
     this.clickSynth = createClickSynth();
 
@@ -123,8 +118,23 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.running = true;
     this.paused = false;
     options.onTransportBeat(startBeat);
-    if (startBeat > countInBeats) this.attackCurrentVoicing(startBeat, Tone.now() + 0.05);
     this.transport.start("+0.05");
+
+    try {
+      const voicingInstrument = await voicingInstrumentPromise;
+      if (generation !== this.generation || !this.ownsTransport || !this.running) {
+        voicingInstrument.dispose();
+        return;
+      }
+      this.voicingInstrument = voicingInstrument;
+      const currentBeat = this.transport.ticks / ppq;
+      if (!this.paused && (startBeat > countInBeats || currentBeat > startBeat)) {
+        this.attackCurrentVoicing(currentBeat, Tone.now() + 0.05);
+      }
+    } catch (error) {
+      if (generation === this.generation) this.invalidateAndClear();
+      throw error;
+    }
   }
 
   pause(): boolean {

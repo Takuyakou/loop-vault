@@ -267,6 +267,12 @@ describe("ProgressionVoicingPracticeView", () => {
       .toContain("MIDI入力未接続");
     expect(container.querySelector("[data-testid='voicing-loop-beat-indicator']")).not.toBeNull();
     expect(container.querySelector("[data-keyboard-alignment='center-when-fitted']")).not.toBeNull();
+    expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent)
+      .toContain("位置1 / 1 小節");
+    expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent)
+      .toContain("次Dm7構成音: D4 · C5 · F5");
+    expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent)
+      .toContain("2拍後に切り替わります");
     expect(container.querySelectorAll("[role='progressbar']")).toHaveLength(2);
 
     const recall = button(container, "Recall（コード名のみ）");

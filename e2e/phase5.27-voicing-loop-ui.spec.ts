@@ -24,6 +24,8 @@ test("P5.27 Voicing Loop route is keyboard-operable and overflow-safe at 320px",
   await expect(page.getByRole("group", { name: "Voicing表示モード" })).toBeVisible();
   await expect(page.getByRole("progressbar", { name: "コード" })).toBeVisible();
   await expect(page.getByTestId("voicing-loop-beat-indicator")).toBeVisible();
+  await expect(page.getByTestId("voicing-loop-current-next")).toContainText("位置");
+  await expect(page.getByTestId("voicing-loop-current-next")).toContainText("2拍後に切り替わります");
   await expect(page.getByTestId("voicing-loop-midi-status")).toContainText("MIDI入力");
   await expect(page.getByTestId("voicing-loop-current-next")).not.toContainText("MIDI monitor");
   await expect(page.getByRole("button", { name: "Source MIDI" })).toBeVisible();

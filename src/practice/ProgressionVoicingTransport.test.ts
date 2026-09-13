@@ -116,6 +116,36 @@ describe("ProgressionVoicingTransport", () => {
     expect(createPreviewInstrument).toHaveBeenLastCalledWith("electric-piano");
   });
 
+  it("starts clock, click, and visual projection without waiting for Piano samples", async () => {
+    let releaseInstrument!: (instrument: InstanceType<typeof toneMock.PolySynth>) => void;
+    vi.mocked(createPreviewInstrument).mockReturnValueOnce(new Promise((resolve) => {
+      releaseInstrument = resolve;
+    }));
+    const onTransportBeat = vi.fn();
+    const runtime = new ProgressionVoicingTransport();
+    const pending = runtime.start({
+      snapshot,
+      plan,
+      bpm: 80,
+      countInBars: 1,
+      metronomeEnabled: true,
+      sound: "piano",
+      onTransportBeat,
+    });
+    await Promise.resolve();
+
+    expect(toneMock.transport.start).toHaveBeenCalledWith("+0.05");
+    expect(toneMock.scheduled).toHaveLength(4);
+    expect(onTransportBeat).toHaveBeenCalledWith(0);
+    toneMock.transport.getTicksAtTime.mockReturnValueOnce(192);
+    toneMock.scheduled[3]?.callback(1);
+    toneMock.drawCallbacks.shift()?.();
+    expect(onTransportBeat).toHaveBeenLastCalledWith(1);
+
+    releaseInstrument(new toneMock.PolySynth());
+    await pending;
+  });
+
   it("schedules voicings, click, and visual projection on one Tone Transport", async () => {
     const onTransportBeat = vi.fn();
     const runtime = new ProgressionVoicingTransport();

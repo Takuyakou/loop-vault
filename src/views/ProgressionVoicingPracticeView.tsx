@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Pause, Play, RefreshCw, Search, Settings, Square, Volume2 } from "lucide-react";
 import { useStore } from "zustand";
 import {
@@ -83,6 +83,7 @@ const copy = {
     countIn: "カウントイン",
     chordProgress: "コード",
     progressionProgress: "進行",
+    position: "位置",
     timeline: "進行タイムライン",
     loop: "Loop",
     pitches: "構成音",
@@ -140,6 +141,8 @@ const copy = {
     reconnect: "再接続",
     settings: "設定",
     midiActivationFailed: "MIDI入力を開始できませんでした。",
+    positionLabel: (bar: number, total: number) => `${bar} / ${total} 小節`,
+    nextSwitch: (beats: string) => `${beats}拍後に切り替わります`,
     beatLabel: (beat: number, total: number) => `${beat} / ${total} 拍`,
     loopLabel: (count: number) => `${count} 周完了`,
   },
@@ -154,6 +157,7 @@ const copy = {
     countIn: "Count-in",
     chordProgress: "Chord",
     progressionProgress: "Progression",
+    position: "Position",
     timeline: "Progression timeline",
     loop: "Loop",
     pitches: "Pitches",
@@ -211,6 +215,8 @@ const copy = {
     reconnect: "Reconnect",
     settings: "Settings",
     midiActivationFailed: "MIDI input could not be activated.",
+    positionLabel: (bar: number, total: number) => `Bar ${bar} / ${total}`,
+    nextSwitch: (beats: string) => `Changes after ${beats} ${beats === "1" ? "beat" : "beats"}`,
     beatLabel: (beat: number, total: number) => `Beat ${beat} of ${total}`,
     loopLabel: (count: number) => `${count} completed`,
   },
@@ -329,7 +335,9 @@ export function ProgressionVoicingPracticeView({
   const currentEvent = snapshot?.events[currentIndex];
   const nextEvent = snapshot?.events[nextIndex];
   const currentResolution = plan?.events[currentIndex];
+  const nextResolution = plan?.events[nextIndex];
   const currentVoicing = currentResolution?.status === "SUPPORTED" ? currentResolution.voicing : undefined;
+  const nextVoicing = nextResolution?.status === "SUPPORTED" ? nextResolution.voicing : undefined;
   const guideVoicings = useMemo(
     () => plan?.events.flatMap((resolution) => resolution.status === "SUPPORTED" ? [resolution.voicing.midiNotes] : []) ?? [],
     [plan],
@@ -341,6 +349,9 @@ export function ProgressionVoicingPracticeView({
     + (projection?.chordProgress ?? 0) * TIMELINE_CARD_WIDTH_PX;
   const allEventsPlayable = Boolean(plan?.events.length)
     && plan!.events.every((resolution) => resolution.status === "SUPPORTED");
+  const beatsPerBar = snapshot?.meter.numerator ?? 4;
+  const currentBar = Math.floor((currentEvent?.startBeat ?? 0) / beatsPerBar) + 1;
+  const totalBars = Math.max(1, Math.ceil((snapshot?.lengthBeats ?? 1) / beatsPerBar));
 
   useEffect(() => {
     const viewport = timelineViewportRef.current;
@@ -673,16 +684,16 @@ export function ProgressionVoicingPracticeView({
                   value={projection?.inCountIn
                     ? text.beatLabel(projection.countInBeat ?? 1, snapshot.meter.numerator)
                     : text.beatLabel(projection?.beatInChord ?? 1, projection?.beatsInChord ?? Math.ceil(currentEvent?.durationBeats ?? 1))}
-                />
-                <Metric label={text.progressionProgress} value={`${Math.round((projection?.progressionProgress ?? 0) * 100)}%`} />
+                >
+                  <BeatIndicator
+                    current={projection?.inCountIn ? projection.countInBeat ?? 1 : projection?.beatInChord ?? 1}
+                    total={projection?.inCountIn ? snapshot.meter.numerator : projection?.beatsInChord ?? 1}
+                    label={text.beat}
+                  />
+                </Metric>
                 <Metric label={text.loop} value={text.loopLabel(projection?.loopCount ?? 0)} />
+                <Metric label={text.position} value={text.positionLabel(currentBar, totalBars)} />
               </div>
-
-              <BeatIndicator
-                current={projection?.inCountIn ? projection.countInBeat ?? 1 : projection?.beatInChord ?? 1}
-                total={projection?.inCountIn ? snapshot.meter.numerator : projection?.beatsInChord ?? 1}
-                label={text.beat}
-              />
 
               <div className="mt-5 space-y-3">
                 <ProgressMeter label={text.chordProgress} value={projection?.chordProgress ?? 0} />
@@ -693,6 +704,15 @@ export function ProgressionVoicingPracticeView({
             <Surface className="min-w-0 p-5">
               <p className="lv-section-kicker">{text.next}</p>
               <p className="mt-3 break-words text-2xl font-bold text-[var(--lv-text)]">{nextEvent?.chord.label}</p>
+              {displayMode === "learn" && nextVoicing ? (
+                <div className="mt-4 space-y-1 text-sm leading-5 text-[var(--lv-text-secondary)]">
+                  <p>{text.pitches}: {nextVoicing.notes.map((note) => formatMidiNoteForDisplay(note.midiNote, "fl-studio", "flat")).join(" · ")}</p>
+                  <p>{text.degrees}: {nextVoicing.notes.map((note) => note.degree ?? "—").join(" · ")}</p>
+                </div>
+              ) : null}
+              <p className="mt-5 border-t border-[var(--lv-border)] pt-4 text-xs text-[var(--lv-text-muted)]">
+                {text.nextSwitch(formatPracticeBeat(currentEvent?.durationBeats ?? 1))}
+              </p>
             </Surface>
           </div>
 
@@ -880,13 +900,12 @@ function BeatIndicator({ current, label, total }: { current: number; label: stri
   const safeTotal = Math.max(1, Math.ceil(total));
   const activeIndex = Math.min(safeTotal - 1, Math.max(0, Math.floor(current) - 1));
   return (
-    <div
-      className="mt-5 flex min-w-0 items-center gap-3"
+    <span
+      className="mt-2 flex min-w-0 flex-wrap gap-2"
       data-testid="voicing-loop-beat-indicator"
       role="img"
       aria-label={`${label} ${activeIndex + 1} / ${safeTotal}`}
     >
-      <span className="text-xs font-semibold text-[var(--lv-text-muted)]">{label}</span>
       <span className="flex flex-wrap gap-2" aria-hidden="true">
         {Array.from({ length: safeTotal }, (_, index) => (
           <span
@@ -896,7 +915,7 @@ function BeatIndicator({ current, label, total }: { current: number; label: stri
           />
         ))}
       </span>
-    </div>
+    </span>
   );
 }
 
@@ -937,11 +956,12 @@ function sameReferences(
     && left.every((reference, index) => voicingLoopSourceId(reference) === voicingLoopSourceId(right[index]!));
 }
 
-function Metric({ label, value }: { readonly label: string; readonly value: string }) {
+function Metric({ children, label, value }: { readonly children?: ReactNode; readonly label: string; readonly value: string }) {
   return (
     <div className="min-w-0 border-l-2 border-[var(--lv-accent)] pl-3">
       <p className="text-xs text-[var(--lv-text-muted)]">{label}</p>
       <p className="mt-1 break-words text-base font-semibold text-[var(--lv-text)]">{value}</p>
+      {children}
     </div>
   );
 }
