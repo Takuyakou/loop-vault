@@ -2,17 +2,18 @@
   "schemaVersion": 1,
   "phaseId": "5.28",
   "status": "in-progress",
-  "activeStage": "P5.28-04",
+  "activeStage": "P5.28-05",
   "completedStages": [
     "P5.28-00",
     "P5.28-01",
     "P5.28-02",
-    "P5.28-03"
+    "P5.28-03",
+    "P5.28-04"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "df971c2cec121199296eb8e394dc18bec5bbe21f",
-  "lastVerifiedCommit": "652426cf6e175b8407fdfd30e5f593118b4c20dd",
+  "lastVerifiedCommit": "f934658a0c6fed8e2d6d1e0fcf0f27b1651516bd",
   "currentBranch": "feat/p528-voicing-loop-inline-vault",
   "requiredGates": {
     "P5.28-00": [
@@ -70,8 +71,9 @@
     "typescript-lint-build": "pass",
     "privacy-hygiene": "pass",
     "clean-status": "pass",
-    "inline-selection-audit": "pass"
+    "inline-selection-audit": "pass",
+    "focused-inline-selection-tests": "pass"
   },
-  "nextAction": "Implement P5.28-04 inline Vault selection and run its focused gates.",
-  "updatedAt": "2026-09-13T13:10:00+09:00"
+  "nextAction": "Run P5.28-05 fresh focused acceptance and close the extension.",
+  "updatedAt": "2026-09-13T14:52:00+09:00"
 }
