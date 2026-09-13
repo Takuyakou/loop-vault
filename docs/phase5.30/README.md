@@ -5,11 +5,11 @@
 ## Status
 
 - **Status:** in_progress
-- **Active stage:** P5.30-01
-- **Completed stages:** P5.30-00
+- **Active stage:** P5.30-02
+- **Completed stages:** P5.30-00, P5.30-01
 - **Base:** `15b1ed8222105abb0b57c3e19c0ecdc912dc9476`
 - **Branch:** `feat/p530-voicing-loop-polish`
-- **Next action:** await explicit authorization before starting P5.30-01
+- **Next action:** implement P5.30-02 compact layout and playhead
 
 ## Purpose
 
