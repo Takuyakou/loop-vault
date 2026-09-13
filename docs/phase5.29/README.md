@@ -5,11 +5,11 @@
 ## Status
 
 - **Status:** in_progress
-- **Active stage:** P5.29-00
-- **Completed stages:** none
+- **Active stage:** P5.29-01
+- **Completed stages:** P5.29-00
 - **Base:** 9ced9ceb24c3c9c6780f073bba3c95e6498d9452
 - **Branch:** feat/p529-voicing-loop-harmonic-rhythm
-- **Next action:** lock the audited timing contract, then strengthen the existing seams
+- **Next action:** add the canonical end-to-end timing fixture and compact strip metadata
 
 ## Required Reading Order
 
