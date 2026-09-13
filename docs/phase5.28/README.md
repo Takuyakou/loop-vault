@@ -10,11 +10,11 @@ P5.27のProgression Voicing Practiceを左sidebarから直接開き、保存済�
 ## Status
 
 - **Status:** in_progress
-- **Active stage:** P5.28-03
-- **Completed stages:** P5.28-00, P5.28-01, P5.28-02
+- **Active stage:** P5.28-04
+- **Completed stages:** P5.28-00, P5.28-01, P5.28-02, P5.28-03
 - **Base:** `df971c2cec121199296eb8e394dc18bec5bbe21f`
 - **Branch:** `feat/p528-voicing-loop-inline-vault`
-- **Next action:** P5.28-03のinline Vault selection契約を確定し、P5.28-04実装へ進む
+- **Next action:** P5.28-04のinline Vault selectionを実装し、focused gatesを実行する
 
 この節、[`execution-state.json`](execution-state.json)、active stage reportを各stage末に同期する。
 

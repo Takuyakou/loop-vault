@@ -2,11 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "5.28",
   "status": "in-progress",
-  "activeStage": "P5.28-03",
+  "activeStage": "P5.28-04",
   "completedStages": [
     "P5.28-00",
     "P5.28-01",
-    "P5.28-02"
+    "P5.28-02",
+    "P5.28-03"
   ],
   "blocked": false,
   "blockerReason": null,
@@ -68,8 +69,9 @@
     "accessibility-responsive": "pass",
     "typescript-lint-build": "pass",
     "privacy-hygiene": "pass",
-    "clean-status": "pass"
+    "clean-status": "pass",
+    "inline-selection-audit": "pass"
   },
-  "nextAction": "Complete P5.28-03 inline Vault selection audit and contract, then stop at its commit boundary before production implementation.",
-  "updatedAt": "2026-09-13T13:00:00+09:00"
+  "nextAction": "Implement P5.28-04 inline Vault selection and run its focused gates.",
+  "updatedAt": "2026-09-13T13:10:00+09:00"
 }
