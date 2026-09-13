@@ -124,7 +124,7 @@ type CandidateResult =
 
 function basicCandidates(
   chord: ProgressionPracticeChord,
-  selection: "basic-shell" | "basic-full",
+  selection: "basic-shell" | "basic-full" | "full-shell",
   options: { readonly maxLeftHandSpanSemitones: number; readonly maxRightHandSpanSemitones: number },
 ): CandidateResult {
   const labels = basicLessonLabels(chord, selection);
@@ -193,9 +193,22 @@ function leftHandCandidates(
 
 function basicLessonLabels(
   chord: ProgressionPracticeChord,
-  selection: "basic-shell" | "basic-full",
+  selection: "basic-shell" | "basic-full" | "full-shell",
 ): string[] | undefined {
   const bass = chord.bass !== undefined && chord.bass !== chord.root ? "Bass" : "R";
+  if (selection === "full-shell") {
+    const shellLabels = basicLessonLabels(chord, "basic-shell");
+    if (!shellLabels) return undefined;
+    const leftLabels = shellLabels.slice(0, 2);
+    let remainingChordTones = chordToneDescriptors(asChordSymbol(chord))
+      .map((tone) => tone.label)
+      .filter((label) => !leftLabels.includes(label));
+    const alteredCount = remainingChordTones.filter((label) => ALTERED_DEGREES.has(label)).length;
+    if (alteredCount > 1 && remainingChordTones.includes("5")) {
+      remainingChordTones = remainingChordTones.filter((label) => label !== "5");
+    }
+    return unique([...leftLabels, ...remainingChordTones]);
+  }
   const full = selection === "basic-full";
   let anchor: string;
   let defining: string;

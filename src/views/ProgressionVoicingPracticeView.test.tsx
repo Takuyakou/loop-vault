@@ -342,6 +342,26 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(runtime.options?.plan.events.every((event) => event.status === "SUPPORTED")).toBe(true);
   });
 
+  it("offers Full Shell with left-hand 1-7 and the remaining chord tones in the right hand", async () => {
+    const runtime = new FakeTransport();
+    const container = await renderView(runtime, { "full-shell": snapshot("full-shell") }, "full-shell");
+
+    expect(container.textContent).toContain("Full Shell Voicing");
+    expect(container.querySelector("[data-testid='voicing-loop-selection-help']")?.textContent)
+      .toContain("左手に1度と7度、右手に3度・5度");
+    expect(container.textContent).toContain("左手の目安");
+    expect(container.textContent).toContain("右手の目安");
+    expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
+      .toContain("度数: 1 · 7 · 3 · 5");
+
+    await act(async () => button(container, "現在のコードを試聴").click());
+    const [auditionNotes] = runtime.audition.mock.calls[0] as unknown as [readonly number[]];
+    expect(auditionNotes).toHaveLength(4);
+    await act(async () => button(container, "開始").click());
+    expect(runtime.options?.plan.selection).toBe("full-shell");
+    expect(runtime.options?.plan.events.every((event) => event.status === "SUPPORTED")).toBe(true);
+  });
+
   it("keeps timeline audition available during playback and current audition available while paused", async () => {
     const runtime = new FakeTransport();
     const container = await renderView(runtime, { "source-midi": snapshot("source-midi") }, "source-midi");

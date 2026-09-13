@@ -68,6 +68,7 @@ const selections: readonly {
   { id: "custom", group: "MY", ja: "Custom", en: "Custom" },
   { id: "basic-shell", group: "LESSON", ja: "Basic Shell 1–7", en: "Basic Shell 1–7" },
   { id: "basic-full", group: "LESSON", ja: "Basic Full 1–7–3", en: "Basic Full 1–7–3" },
+  { id: "full-shell", group: "LESSON", ja: "Full Shell Voicing", en: "Full Shell Voicing" },
   { id: "left-hand", group: "LESSON", ja: "Left-hand", en: "Left-hand" },
 ] as const;
 
@@ -78,6 +79,7 @@ const copy = {
     source: "Voicingを選択",
     sourceHelp: "MYは保存済みの音をそのまま使い、LESSONは承認済みの規則だけを使います。",
     basicShellHelp: "ルートと7度を左手だけで練習します。3度と右手ガイドはBasic Full 1–7–3で表示します。",
+    fullShellHelp: "左手に1度と7度、右手に3度・5度・コード記号のテンションを配置します。複数のaltered tensionで手幅を超える場合のみ5度を省略し、スラッシュコードでは指定ベースを左手で保持します。",
     leftHandHelp: "Rootless A/Bを練習します。ベース指定を安全に維持できないスラッシュコードは未対応です。",
     current: "現在",
     next: "次",
@@ -155,6 +157,7 @@ const copy = {
     source: "Choose voicing",
     sourceHelp: "MY preserves saved notes; LESSON uses approved rules only.",
     basicShellHelp: "Practice root and seventh with the left hand only. Basic Full 1–7–3 adds the third and right-hand guide.",
+    fullShellHelp: "Play root and seventh with the left hand, then place the third, fifth, and written tensions in the right hand. Only the fifth may be omitted for dense altered tensions; slash bass is preserved in the left hand.",
     leftHandHelp: "Practice Rootless A/B. Slash chords are unsupported when their explicit bass cannot be preserved safely.",
     current: "Current",
     next: "Next",
@@ -662,9 +665,13 @@ export function ProgressionVoicingPracticeView({
                 </div>
               </div>
             ))}
-            {selection === "basic-shell" || selection === "left-hand" ? (
+            {selection === "basic-shell" || selection === "full-shell" || selection === "left-hand" ? (
               <p className="mt-3 max-w-3xl text-xs leading-5 text-[var(--lv-text-muted)]" data-testid="voicing-loop-selection-help">
-                {selection === "basic-shell" ? text.basicShellHelp : text.leftHandHelp}
+                {selection === "basic-shell"
+                  ? text.basicShellHelp
+                  : selection === "full-shell"
+                    ? text.fullShellHelp
+                    : text.leftHandHelp}
               </p>
             ) : null}
           </fieldset>
@@ -1075,6 +1082,7 @@ function selectionLabel(selection: ProgressionVoicingSelection): string {
     case "custom": return "Custom";
     case "basic-shell": return "Basic Shell 1–7";
     case "basic-full": return "Basic Full 1–7–3";
+    case "full-shell": return "Full Shell Voicing";
     case "left-hand": return "Left-hand";
   }
 }

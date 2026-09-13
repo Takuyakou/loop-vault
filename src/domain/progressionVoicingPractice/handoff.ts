@@ -17,6 +17,7 @@ const HANDOFF_SELECTIONS: readonly ProgressionVoicingSelection[] = Object.freeze
   "custom",
   "basic-shell",
   "basic-full",
+  "full-shell",
   "left-hand",
 ]);
 

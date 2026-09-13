@@ -136,6 +136,16 @@ test("P5.30 128-event timeline stays local, auto-reveals, reduced-motion, and ax
   await workspace.getByRole("button", { name: "現在のコードを試聴", exact: true }).click();
   await expect(workspace.getByRole("button", { name: /開始/ })).toBeEnabled();
 
+  await workspace.getByRole("button", { name: "Full Shell Voicing", exact: true }).click();
+  await expect(workspace.getByTestId("voicing-loop-selection-help"))
+    .toContainText("左手に1度と7度、右手に3度・5度");
+  await expect(workspace.getByTestId("voicing-loop-detail").locator("svg[role='img']"))
+    .toHaveAttribute("aria-label", /お手本4音/);
+  await expect(workspace.getByText("左手の目安", { exact: true })).toBeVisible();
+  await expect(workspace.getByText("右手の目安", { exact: true })).toBeVisible();
+  await workspace.getByRole("button", { name: "現在のコードを試聴", exact: true }).click();
+  await expect(workspace.getByRole("button", { name: /開始/ })).toBeEnabled();
+
   const axe = await new AxeBuilder({ page: page as never })
     .include("[data-testid='voicing-loop-workspace']")
     .analyze();

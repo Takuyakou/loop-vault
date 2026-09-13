@@ -7,6 +7,7 @@ export type ProgressionVoicingSelection =
   | "custom"
   | "basic-shell"
   | "basic-full"
+  | "full-shell"
   | "left-hand";
 
 export interface ProgressionPracticeSourceReference {

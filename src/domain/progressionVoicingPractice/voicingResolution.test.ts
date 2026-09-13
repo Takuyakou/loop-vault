@@ -198,6 +198,57 @@ describe("P5.27 Basic 1-7-3 locked lesson table", () => {
   );
 });
 
+describe("Full Shell Voicing", () => {
+  it.each([
+    ["maj7", [], ["1", "3", "5", "7"]],
+    ["min11", [], ["1", "b3", "5", "b7", "9", "11"]],
+    ["dom13", [], ["1", "3", "5", "b7", "9", "13"]],
+    ["sixNine", [], ["1", "3", "5", "6", "9"]],
+    ["min7b5", [], ["1", "b3", "b5", "b7"]],
+    ["dom7", ["b9", "#9", "b13"], ["1", "3", "b7", "b9", "#9", "b13"]],
+  ] satisfies ReadonlyArray<readonly [ChordQuality, Tension[], readonly string[]]>)(
+    "keeps the 1-7 shell in the left hand and all remaining %s chord tones in the right hand",
+    (quality, tensions, expectedDegrees) => {
+      const result = resolveOne("full-shell", chord(quality, tensions));
+      expect(result.status).toBe("SUPPORTED");
+      if (result.status !== "SUPPORTED") return;
+      expect(degrees(result)).toEqual(expectedDegrees);
+      expect(result.voicing.leftHandNotes).toHaveLength(2);
+      const expectedLeftDegrees = quality === "sixNine"
+        ? ["1", "6"]
+        : quality === "maj7"
+          ? ["1", "7"]
+          : ["1", "b7"];
+      expect(handDegrees(result, result.voicing.leftHandNotes)).toHaveLength(2);
+      expect(handDegrees(result, result.voicing.leftHandNotes))
+        .toEqual(expect.arrayContaining(expectedLeftDegrees));
+      expect(result.voicing.rightHandNotes?.length).toBe(expectedDegrees.length - 2);
+    },
+  );
+
+  it("preserves an explicit slash bass while moving the chord root and remaining tones right", () => {
+    const result = resolveOne("full-shell", makeChordSymbol(9, "min11", [], 11));
+    expect(result.status).toBe("SUPPORTED");
+    if (result.status !== "SUPPORTED") return;
+    expect(handDegrees(result, result.voicing.leftHandNotes)).toHaveLength(2);
+    expect(handDegrees(result, result.voicing.leftHandNotes))
+      .toEqual(expect.arrayContaining(["b7", "Bass"]));
+    expect(handDegrees(result, result.voicing.rightHandNotes)).toHaveLength(5);
+    expect(handDegrees(result, result.voicing.rightHandNotes))
+      .toEqual(expect.arrayContaining(["1", "b3", "5", "9", "11"]));
+    expect(result.voicing.bassNote).toBeDefined();
+  });
+
+  it("is deterministic and keeps unaudited non-shell families unsupported", () => {
+    const snapshot = makeSnapshot("full-shell", [chord("min11"), chord("dom13"), chord("maj9")]);
+    const expected = resolveProgressionPracticeVoicings(snapshot);
+    for (let run = 0; run < 50; run += 1) {
+      expect(resolveProgressionPracticeVoicings(snapshot)).toEqual(expected);
+    }
+    expect(resolveOne("full-shell", chord("maj")).status).toBe("UNSUPPORTED_RULE");
+  });
+});
+
 describe("P5.27 Left-hand locked lesson table", () => {
   it.each([
     "maj7", "maj9", "min7", "min9", "min11", "dom7", "dom9", "dom13", "min7b5",
@@ -373,8 +424,17 @@ function degrees(result: ProgressionPracticeVoicingResolution): string[] {
     .sort((left, right) => degreeOrder.indexOf(left) - degreeOrder.indexOf(right));
 }
 
-function isString(value: string | null): value is string {
-  return value !== null;
+function handDegrees(
+  result: ProgressionPracticeVoicingResolution,
+  handNotes: readonly number[] | undefined,
+): string[] {
+  if (result.status !== "SUPPORTED" || !handNotes) return [];
+  const byMidiNote = new Map(result.voicing.notes.map((note) => [note.midiNote, note.degree]));
+  return handNotes.map((midiNote) => byMidiNote.get(midiNote)).filter(isString);
+}
+
+function isString(value: string | null | undefined): value is string {
+  return typeof value === "string";
 }
 
 function playableMidiNotes(result: ProgressionPracticeVoicingResolution): readonly number[] {

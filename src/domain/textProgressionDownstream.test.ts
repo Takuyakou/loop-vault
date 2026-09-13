@@ -176,6 +176,7 @@ describe("Text Progression downstream persistence", () => {
       "custom",
       "basic-shell",
       "basic-full",
+      "full-shell",
       "left-hand",
     ] as const) {
       const snapshot = handoff.handoff.snapshots[selection];
@@ -220,6 +221,7 @@ describe("Text Progression downstream persistence", () => {
       "custom",
       "basic-shell",
       "basic-full",
+      "full-shell",
       "left-hand",
     ];
     const expectedTiming = [[0, 4], [4, 2], [6, 2], [8, 4], [12, 4]];
