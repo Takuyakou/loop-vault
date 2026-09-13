@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "5.31",
+  "status": "blocked",
+  "activeStage": "P5.31-00",
+  "completedStages": [],
+  "blocked": true,
+  "blockerReason": "Full fixture #5 identity unsupported; Left-hand slash NEEDS HUMAN RULE APPROVAL.",
+  "baseCommit": "f075618037f1a2a5326d8d7ae7cc474d081f95ac",
+  "lastVerifiedCommit": "",
+  "currentBranch": "audit/p531-stage00",
+  "requiredGates": {
+    "P5.31-00": [
+      "baseline-tests",
+      "typescript-lint",
+      "phase-docs",
+      "production-unchanged",
+      "diff-check"
+    ]
+  },
+  "gateResults": {},
+  "nextAction": "Close Stage00 evidence, then obtain stage assignment and resolve #5 identity and Left-hand slash policy.",
+  "updatedAt": "2026-09-14T00:00:00+09:00"
+}

@@ -1,0 +1,18 @@
+{
+  "phase": "5.31",
+  "status": "active",
+  "active_stage": "P5.31-00",
+  "completed_stages": [],
+  "base_commit": null,
+  "branch": null,
+  "merge_authorized": false,
+  "push_authorized": false,
+  "tag_authorized": false,
+  "release_authorized": false,
+  "next_phase_authorized": false,
+  "notes": [
+    "Git is truth. Resolve exact P5.30-integrated base at Stage00.",
+    "Do not invent slash-chord Left-hand rules without lesson evidence.",
+    "ReChord compatibility is bounded to the contracts in this package."
+  ]
+}
