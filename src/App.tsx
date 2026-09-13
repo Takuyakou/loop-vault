@@ -108,6 +108,7 @@ const DISABLED_PRACTICE_DATA: PracticeDataSnapshot = { status: "disabled", quara
 const EMPTY_VAULT_PICKER_CANDIDATES: readonly VaultPickerCandidateView[] = Object.freeze([]);
 const EMPTY_VAULT_SOURCE_BASSLINES: readonly VaultSourceBasslineCandidateView[] = Object.freeze([]);
 const P527_E2E_FIXTURE = import.meta.env.VITE_P527_E2E_FIXTURE === "1"
+  && new URLSearchParams(window.location.search).get("p528Direct") !== "1"
   ? progressionVoicingPracticeE2eFixture(window.location.search)
   : undefined;
 const BassPracticeView = lazy(async () => {
@@ -239,6 +240,7 @@ function App() {
   const [practiceSessionGeneration, setPracticeSessionGeneration] = useState(0);
   const [practiceData, setPracticeData] = useState<PracticeDataSnapshot>(DISABLED_PRACTICE_DATA);
   const [practiceMode, setPracticeMode] = useState<PracticeWorkspaceMode>("chord-dojo");
+  const [captureInitialInputMode, setCaptureInitialInputMode] = useState<"midi" | "text">("midi");
   const [selectedId, setSelectedId] = useState<string>();
   const [selectedProgression, setSelectedProgression] = useState<{ ideaId: string; blockId: string }>();
   const [practiceTarget, setPracticeTarget] = useState<{ ideaId: string; blockId: string }>();
@@ -483,7 +485,25 @@ function App() {
   function navigateTo(nextView: View) {
     requestProgressionLeave(() => {
       setChordContextSnapshot((snapshot) => clearTransientChordContextSnapshotForNavigation(snapshot, view, nextView));
+      if (nextView === "capture") setCaptureInitialInputMode("midi");
       setView(nextView);
+    });
+  }
+
+  function openDirectVoicingLoop() {
+    requestProgressionLeave(() => {
+      setVoicingPracticeHandoff(undefined);
+      setPracticeTarget(undefined);
+      setChordContextSnapshot(undefined);
+      setPracticeMode("voicing-loop");
+      setView("practice");
+    });
+  }
+
+  function openTextProgressionInput() {
+    requestProgressionLeave(() => {
+      setCaptureInitialInputMode("text");
+      setView("capture");
     });
   }
 
@@ -555,6 +575,7 @@ async function analyzeMidiPath(path: string) {
     try {
       const bytes = await readBoundedMidiPath(path);
       const result = analyzeMidiBytes(bytes, { fileName: fileNameFromPath(path) });
+      setCaptureInitialInputMode("midi");
       setView("capture");
       setToast(result ? copy.toast.midiAnalyzed : copy.toast.midiFailed);
     } catch (error) {
@@ -720,11 +741,13 @@ async function analyzeMidiPath(path: string) {
         setView={navigateTo}
         openCreate={() => setCreateOpen(true)}
         openLiveMidi={() => requestProgressionLeave(() => { void enterLiveMidiMode(); })}
+        openVoicingLoop={openDirectVoicingLoop}
         openSettings={() => {
           setSettingsOpen(true);
           void refreshBackups();
         }}
         settingsOpen={isSettingsOpen}
+        voicingLoopActive={view === "practice" && practiceMode === "voicing-loop"}
         copy={copy}
         saveStatus={saving ? "saving" : unsaved ? "unsaved" : "saved"}
         masterVolume={masterVolume}
@@ -765,7 +788,7 @@ async function analyzeMidiPath(path: string) {
                 language={language}
                 showRomanNumerals={settings.showRomanNumerals ?? true}
                 openDetail={openDetail}
-                openCapture={() => setView("capture")}
+                openCapture={() => navigateTo("capture")}
                 openCreate={() => setCreateOpen(true)}
                 openVault={() => setView("library")}
                 updateNextAction={updateNextAction}
@@ -780,7 +803,7 @@ async function analyzeMidiPath(path: string) {
                 openDetail={openDetail}
                 openProgression={openProgression}
                 openCreate={() => setCreateOpen(true)}
-                openCapture={() => setView("capture")}
+                openCapture={() => navigateTo("capture")}
                 updateIdea={updateIdea}
                 setToast={setToast}
                 copy={copy}
@@ -802,6 +825,7 @@ async function analyzeMidiPath(path: string) {
                 }}
               >
                 <CaptureView
+                  initialInputMode={captureInitialInputMode}
                   ideas={visibleIdeas}
                   analysis={analysis}
                   analyzeMidiBytes={analyzeMidiBytes}
@@ -1012,6 +1036,8 @@ async function analyzeMidiPath(path: string) {
                       snapshots={voicingPracticeHandoff?.snapshots ?? P527_E2E_FIXTURE?.snapshots}
                       initialSelection={voicingPracticeHandoff?.initialSelection ?? P527_E2E_FIXTURE?.initialSelection}
                       resolutionOptions={P527_E2E_FIXTURE?.resolutionOptions}
+                      onChooseVault={() => navigateTo("library")}
+                      onEnterText={openTextProgressionInput}
                     />
                   )}
               />

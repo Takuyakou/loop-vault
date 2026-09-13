@@ -15,6 +15,7 @@ import {
   PanelLeftOpen,
   Piano,
   Plus,
+  Repeat2,
   Settings,
 } from "lucide-react";
 import { MasterVolumeKnob } from "./MasterVolumeKnob";
@@ -38,6 +39,8 @@ interface AppShellProps {
   openCreate: () => void;
   openLiveMidi: () => void;
   openSettings: () => void;
+  openVoicingLoop: () => void;
+  voicingLoopActive?: boolean;
   settingsOpen?: boolean;
   copy: AppCopy;
   saveStatus: SaveStatus;
@@ -65,12 +68,14 @@ export function AppShell({
   openCreate,
   openLiveMidi,
   openSettings,
+  openVoicingLoop,
   pageContext,
   pageTitle,
   saveStatus,
   settingsOpen = false,
   setView,
   view,
+  voicingLoopActive = false,
 }: AppShellProps) {
   const playback = usePlaybackState(controller);
   const saveLabel = copy.save[saveStatus];
@@ -106,13 +111,22 @@ export function AppShell({
             {workspaceItems.map((item) => (
               <SidebarItem
                 key={item.view}
-                active={!settingsOpen && isRouteActive(view, item.view)}
+                active={!settingsOpen
+                  && isRouteActive(view, item.view)
+                  && (item.view !== "practice" || !voicingLoopActive)}
                 collapsed={collapsed}
                 icon={item.icon}
                 label={item.label}
                 onClick={() => setView(item.view)}
               />
             ))}
+            <SidebarItem
+              active={!settingsOpen && voicingLoopActive}
+              collapsed={collapsed}
+              icon={Repeat2}
+              label="Voicing Loop"
+              onClick={openVoicingLoop}
+            />
             <SidebarItem
               active={false}
               collapsed={collapsed}

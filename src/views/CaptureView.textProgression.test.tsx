@@ -31,6 +31,26 @@ afterEach(() => {
 });
 
 describe("CaptureView text progression entry", () => {
+  it("mounts directly in Text mode when requested while preserving the normal MIDI default", async () => {
+    const mounted = await renderCapture("text");
+
+    try {
+      const mode = mounted.container.querySelector<HTMLElement>("[data-testid='capture-input-mode']");
+      const midiButton = [...(mode?.querySelectorAll<HTMLButtonElement>("button") ?? [])]
+        .find((button) => button.textContent === "MIDI");
+      const textButton = [...(mode?.querySelectorAll<HTMLButtonElement>("button") ?? [])]
+        .find((button) => button.textContent === "Text");
+
+      expect(mounted.container.querySelector("[data-capture-stage='text']")).not.toBeNull();
+      expect(textButton?.getAttribute("aria-pressed")).toBe("true");
+      expect(midiButton?.getAttribute("aria-pressed")).toBe("false");
+      expect(mounted.analyzeMidiBytes).not.toHaveBeenCalled();
+      expect(mounted.clearAnalysis).not.toHaveBeenCalled();
+    } finally {
+      await mounted.unmount();
+    }
+  });
+
   it("switches from the default MIDI input without MIDI analysis and previews one text chord through a 4/4 timeline", async () => {
     const mounted = await renderCapture();
 
@@ -201,7 +221,7 @@ describe("CaptureView text progression entry", () => {
   });
 });
 
-async function renderCapture() {
+async function renderCapture(initialInputMode: "midi" | "text" = "midi") {
   const stop = vi.fn();
   const driver: PlaybackAudioDriver = {
     playChord: vi.fn(async (_chord, _sound, callbacks) => callbacks.onStarted?.()),
@@ -228,6 +248,7 @@ async function renderCapture() {
   await act(async () => {
     root.render(
       <CaptureView
+        initialInputMode={initialInputMode}
         ideas={[]}
         analysis={{ status: "idle" }}
         analyzeMidiBytes={analyzeMidiBytes}

@@ -142,7 +142,9 @@ test("P5.20 production Text Progression Entry saves and reaches its supported do
   await expect(saveForm).toBeHidden();
   await expect(editor).toHaveCount(0);
 
-  await page.getByRole("button", { name: "Voicing Loop", exact: true }).click();
+  await page.locator("#main-content")
+    .getByRole("button", { name: "Voicing Loop", exact: true })
+    .click();
   const voicingLoop = page.getByTestId("voicing-loop-workspace");
   await expect(voicingLoop).toBeVisible();
   await expect(voicingLoop.getByRole("heading", { level: 2, name: "C", exact: true })).toBeVisible();
