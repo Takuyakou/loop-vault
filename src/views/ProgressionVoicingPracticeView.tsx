@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Pause, Play, RefreshCw, Square, Volume2 } from "lucide-react";
+import { Pause, Play, RefreshCw, Search, Square, Volume2 } from "lucide-react";
 import { useStore } from "zustand";
 import {
   computePracticeKeyboardRange,
@@ -19,6 +19,10 @@ import {
   type ProgressionVoicingPracticeSnapshot,
   type ProgressionVoicingPracticeSnapshots,
   type ProgressionVoicingSelection,
+  filterVoicingLoopVaultCandidates,
+  voicingLoopSourceId,
+  type ProgressionPracticeSourceReference,
+  type VoicingLoopVaultCandidate,
 } from "../domain/progressionVoicingPractice";
 import type { AppLanguage } from "../domain/types";
 import { defaultLiveMidiStore } from "../liveMidi/defaultLiveMidiStore";
@@ -27,16 +31,23 @@ import {
   ProgressionVoicingTransport,
   type ProgressionVoicingTransportPort,
 } from "../practice/ProgressionVoicingTransport";
+import {
+  loadRecentVoicingLoopProgressions,
+  retainAvailableRecentVoicingLoopProgressions,
+  saveRecentVoicingLoopProgressions,
+} from "../voicingPractice/recentProgressions";
 
 const ALL_PITCH_CLASSES = Object.freeze(Array.from({ length: 12 }, (_, index) => index));
 const EMPTY_NOTES: readonly number[] = Object.freeze([]);
+const EMPTY_VAULT_PROGRESSIONS: readonly VoicingLoopVaultCandidate[] = Object.freeze([]);
 
 export interface ProgressionVoicingPracticeViewProps {
   readonly language: AppLanguage;
   readonly snapshots?: ProgressionVoicingPracticeSnapshots;
   readonly initialSelection?: ProgressionVoicingSelection;
   readonly monitorMidi?: boolean;
-  readonly onChooseVault: () => void;
+  readonly vaultProgressions?: readonly VoicingLoopVaultCandidate[];
+  readonly onSelectProgression: (reference: ProgressionPracticeSourceReference) => boolean;
   readonly onEnterText: () => void;
   readonly transportFactory?: () => ProgressionVoicingTransportPort;
   readonly resolutionOptions?: ResolveProgressionPracticeVoicingsOptions;
@@ -89,10 +100,19 @@ const copy = {
     running: "自動送り中",
     paused: "一時停止中",
     stopped: "停止しました",
-    chooseProgression: "練習するコード進行を選択してください。",
-    chooseProgressionBody: "My Vaultの保存済み進行、またはText入力から練習を始められます。",
-    chooseVault: "My Vaultから選ぶ",
-    enterText: "Textで進行を入力",
+    chooseProgression: "練習する進行",
+    chooseProgressionBody: "My Vaultの保存済み進行を選ぶと、すぐに練習を始められます。",
+    search: "進行を検索",
+    searchPlaceholder: "タイトル、コード、Keyで検索",
+    recent: "最近使った進行",
+    saved: "保存済み進行",
+    all: "すべての進行",
+    results: "検索結果",
+    noSaved: "練習できる保存済み進行はまだありません。",
+    noMatches: "検索に一致する進行はありません。",
+    showAll: "すべての進行を見る",
+    practice: "練習する",
+    enterText: "＋ Textで新しい進行を入力",
     unavailable: "選択したVoicingを利用できません",
     unavailableBody: "このコードには選択したSource/Custom Voicingが保存されていません。別の明示的なVoicingを選んでください。",
     unsupported: "このコードには選択中Lesson Voicingの規則がありません",
@@ -143,10 +163,19 @@ const copy = {
     running: "Auto-advancing",
     paused: "Paused",
     stopped: "Stopped",
-    chooseProgression: "Choose a chord progression to practice.",
-    chooseProgressionBody: "Start with a saved progression in My Vault or enter one as text.",
-    chooseVault: "Choose from My Vault",
-    enterText: "Enter a progression as text",
+    chooseProgression: "Progression to practice",
+    chooseProgressionBody: "Choose a saved progression from My Vault to start practicing immediately.",
+    search: "Search progressions",
+    searchPlaceholder: "Search title, chords, or key",
+    recent: "Recently practiced",
+    saved: "Saved progressions",
+    all: "All progressions",
+    results: "Search results",
+    noSaved: "There are no saved progressions available for practice yet.",
+    noMatches: "No progressions match your search.",
+    showAll: "View all progressions",
+    practice: "Practice",
+    enterText: "+ Enter a new progression as text",
     unavailable: "The selected voicing is unavailable",
     unavailableBody: "This chord has no saved Source/Custom voicing. Choose another explicit voicing.",
     unsupported: "This chord has no rule for the selected Lesson voicing",
@@ -170,16 +199,47 @@ export function ProgressionVoicingPracticeView({
   initialSelection = "source-midi",
   language,
   monitorMidi = true,
-  onChooseVault,
+  onSelectProgression,
   onEnterText,
   resolutionOptions,
   snapshots,
   transportFactory = createDefaultTransport,
+  vaultProgressions = EMPTY_VAULT_PROGRESSIONS,
 }: ProgressionVoicingPracticeViewProps) {
   const text = copy[language];
   const [selection, setSelection] = useState<ProgressionVoicingSelection>(initialSelection);
   const snapshot = snapshots?.[selection];
   const progressionLoaded = Boolean(snapshots && Object.values(snapshots).some(Boolean));
+  const [query, setQuery] = useState("");
+  const [showAllProgressions, setShowAllProgressions] = useState(false);
+  const [recentReferences, setRecentReferences] = useState(loadRecentVoicingLoopProgressions);
+  const retainedRecentReferences = useMemo(
+    () => retainAvailableRecentVoicingLoopProgressions(
+      recentReferences,
+      vaultProgressions.map(({ sourceReference }) => sourceReference),
+    ),
+    [recentReferences, vaultProgressions],
+  );
+  const recentProgressions = useMemo(() => {
+    const candidatesById = new Map(vaultProgressions.map((candidate) => [candidate.id, candidate]));
+    return retainedRecentReferences.flatMap((reference) => {
+      const candidate = candidatesById.get(voicingLoopSourceId(reference));
+      return candidate ? [candidate] : [];
+    });
+  }, [retainedRecentReferences, vaultProgressions]);
+  const filteredProgressions = useMemo(
+    () => filterVoicingLoopVaultCandidates(vaultProgressions, query),
+    [query, vaultProgressions],
+  );
+  const defaultProgressions = recentProgressions.length
+    ? recentProgressions
+    : vaultProgressions.slice(0, 5);
+  const visibleProgressions = query.trim()
+    ? filteredProgressions
+    : showAllProgressions ? vaultProgressions : defaultProgressions;
+  const progressionListTitle = query.trim()
+    ? text.results
+    : showAllProgressions ? text.all : recentProgressions.length ? text.recent : text.saved;
   const plan = useMemo(
     () => snapshot ? resolveProgressionPracticeVoicings(snapshot, resolutionOptions) : undefined,
     [resolutionOptions, snapshot],
@@ -222,6 +282,13 @@ export function ProgressionVoicingPracticeView({
     };
   }, [monitorMidi, progressionLoaded]);
 
+  useEffect(() => {
+    if (progressionLoaded) return;
+    if (sameReferences(recentReferences, retainedRecentReferences)) return;
+    saveRecentVoicingLoopProgressions(retainedRecentReferences);
+    setRecentReferences(retainedRecentReferences);
+  }, [progressionLoaded, recentReferences, retainedRecentReferences]);
+
   const projection = useMemo(
     () => snapshot && clockState ? projectProgressionPracticeClock(snapshot, clockState) : undefined,
     [clockState, snapshot],
@@ -245,6 +312,11 @@ export function ProgressionVoicingPracticeView({
     runtimeRequestRef.current += 1;
     transportRef.current?.stop();
     setSelection(next);
+  }
+
+  function chooseProgression(candidate: VoicingLoopVaultCandidate) {
+    if (!onSelectProgression(candidate.sourceReference)) return;
+    setRecentReferences(loadRecentVoicingLoopProgressions());
   }
 
   async function start() {
@@ -362,16 +434,69 @@ export function ProgressionVoicingPracticeView({
           title={text.title}
           description={text.description}
         />
-        <EmptyState
-          title={text.chooseProgression}
-          description={text.chooseProgressionBody}
-          action={(
-            <div className="flex min-w-0 flex-wrap justify-center gap-2">
-              <Button variant="primary" onClick={onChooseVault}>{text.chooseVault}</Button>
-              <Button variant="secondary" onClick={onEnterText}>{text.enterText}</Button>
+        <Surface className="min-w-0 p-4 sm:p-5">
+          <SectionHeading
+            level={3}
+            title={text.chooseProgression}
+            description={text.chooseProgressionBody}
+          />
+          <Field htmlFor="voicing-loop-progression-search" label={text.search} className="mt-4">
+            <div className="relative">
+              <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--lv-text-muted)]" size={16} />
+              <input
+                id="voicing-loop-progression-search"
+                className="lv-input min-h-10 w-full min-w-0 pl-9 pr-3 text-sm"
+                type="search"
+                autoComplete="off"
+                value={query}
+                placeholder={text.searchPlaceholder}
+                onChange={(event) => setQuery(event.target.value)}
+              />
             </div>
+          </Field>
+
+          <div className="mt-5 flex min-w-0 items-center justify-between gap-3">
+            <h3 className="lv-section-title">{progressionListTitle}</h3>
+            <span className="shrink-0 text-xs text-[var(--lv-text-muted)]">{visibleProgressions.length}</span>
+          </div>
+
+          {visibleProgressions.length ? (
+            <div className="mt-3 grid min-w-0 gap-2" data-testid="voicing-loop-progression-list">
+              {visibleProgressions.map((candidate) => (
+                <ProgressionChoice
+                  key={candidate.id}
+                  candidate={candidate}
+                  practiceLabel={text.practice}
+                  onChoose={() => chooseProgression(candidate)}
+                />
+              ))}
+            </div>
+          ) : vaultProgressions.length ? (
+            <p className="mt-4 text-sm text-[var(--lv-text-secondary)]" role="status">{text.noMatches}</p>
+          ) : (
+            <EmptyState
+              className="mt-4"
+              title={text.noSaved}
+              description={text.chooseProgressionBody}
+            />
           )}
-        />
+
+          {!query.trim() && !showAllProgressions && visibleProgressions.length < vaultProgressions.length ? (
+            <Button
+              className="mt-4"
+              size="sm"
+              variant="secondary"
+              aria-expanded="false"
+              onClick={() => setShowAllProgressions(true)}
+            >
+              {text.showAll}
+            </Button>
+          ) : null}
+
+          <div className="mt-5 border-t border-[var(--lv-border)] pt-4">
+            <Button variant="ghost" onClick={onEnterText}>{text.enterText}</Button>
+          </div>
+        </Surface>
       </div>
     );
   }
@@ -563,6 +688,43 @@ export function ProgressionVoicingPracticeView({
       )}
     </div>
   );
+}
+
+function ProgressionChoice({
+  candidate,
+  onChoose,
+  practiceLabel,
+}: {
+  readonly candidate: VoicingLoopVaultCandidate;
+  readonly onChoose: () => void;
+  readonly practiceLabel: string;
+}) {
+  const facts = [candidate.key, `${candidate.bpm} BPM`].filter(Boolean).join(" · ");
+  const chords = candidate.chordLabels.join(" → ");
+  return (
+    <button
+      type="button"
+      data-testid="voicing-loop-progression-choice"
+      className="w-full min-w-0 rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] bg-[var(--lv-bg-subtle)] p-3 text-left hover:border-[var(--lv-accent)] hover:bg-[var(--lv-surface-raised)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)]"
+      aria-label={`${candidate.title}. ${facts}. ${chords}. ${practiceLabel}`}
+      onClick={onChoose}
+    >
+      <span className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <span className="min-w-0 break-words text-sm font-semibold text-[var(--lv-text)]">{candidate.title}</span>
+        <span className="shrink-0 text-xs text-[var(--lv-text-muted)]">{facts}</span>
+      </span>
+      <span className="mt-1 line-clamp-2 break-words text-xs leading-5 text-[var(--lv-text-secondary)]">{chords}</span>
+      <span className="mt-2 block text-xs font-semibold text-[var(--lv-accent)]">{practiceLabel}</span>
+    </button>
+  );
+}
+
+function sameReferences(
+  left: readonly ProgressionPracticeSourceReference[],
+  right: readonly ProgressionPracticeSourceReference[],
+): boolean {
+  return left.length === right.length
+    && left.every((reference, index) => voicingLoopSourceId(reference) === voicingLoopSourceId(right[index]!));
 }
 
 function Metric({ label, value }: { readonly label: string; readonly value: string }) {

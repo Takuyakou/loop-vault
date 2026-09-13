@@ -63,8 +63,10 @@ import { statusLabel } from "./domain/displayLabels";
 import { parseMidi } from "./domain/midi";
 import type { SavedProgressionBlock, SongIdea, Status } from "./domain/types";
 import {
+  buildVoicingLoopVaultCandidates,
   buildProgressionVoicingPracticeHandoffFromVault,
   type ProgressionVoicingPracticeHandoff,
+  type VoicingLoopVaultCandidate,
 } from "./domain/progressionVoicingPractice";
 import {
   applyPendingDeletions,
@@ -96,6 +98,11 @@ import { createTauriMiniWindowAdapter, MiniWindowController } from "./liveMidi/m
 import { loadLiveMidiPreferences, saveLiveMidiPreferences, type WindowBounds } from "./liveMidi/preferences";
 import { historyToSavedProgressionBlock, type LiveChordHistoryEntry } from "./domain/liveMidi";
 import {
+  loadRecentVoicingLoopProgressions,
+  recordRecentVoicingLoopProgression,
+  saveRecentVoicingLoopProgressions,
+} from "./voicingPractice/recentProgressions";
+import {
   createLiveMidiWindowSnapshot,
   LIVE_MIDI_COMMAND_EVENT,
   sendLiveMidiSnapshot,
@@ -107,6 +114,7 @@ const pipeline: Status[] = ["idea", "loop", "arrange", "mix", "done"];
 const DISABLED_PRACTICE_DATA: PracticeDataSnapshot = { status: "disabled", quarantine: [] };
 const EMPTY_VAULT_PICKER_CANDIDATES: readonly VaultPickerCandidateView[] = Object.freeze([]);
 const EMPTY_VAULT_SOURCE_BASSLINES: readonly VaultSourceBasslineCandidateView[] = Object.freeze([]);
+const EMPTY_VOICING_LOOP_VAULT_CANDIDATES: readonly VoicingLoopVaultCandidate[] = Object.freeze([]);
 const P527_E2E_FIXTURE = import.meta.env.VITE_P527_E2E_FIXTURE === "1"
   && new URLSearchParams(window.location.search).get("p528Direct") !== "1"
   ? progressionVoicingPracticeE2eFixture(window.location.search)
@@ -332,6 +340,15 @@ function App() {
       : EMPTY_VAULT_SOURCE_BASSLINES,
     [practiceMode, settings.language, view, visibleIdeas],
   );
+  const voicingLoopVaultCandidates = useMemo(
+    () => view === "practice" && practiceMode === "voicing-loop" && !voicingPracticeHandoff
+      ? buildVoicingLoopVaultCandidates(
+        visibleIdeas,
+        settings.language === "ja" ? "無題の進行" : "Untitled progression",
+      )
+      : EMPTY_VOICING_LOOP_VAULT_CANDIDATES,
+    [practiceMode, settings.language, view, visibleIdeas, voicingPracticeHandoff],
+  );
   const chordContextSnapshots = useMemo(
     () => Object.freeze(vaultPickerCandidates.map((candidate) => candidate.safeSnapshot)),
     [vaultPickerCandidates],
@@ -548,6 +565,10 @@ function App() {
     }
     setPracticeTarget(undefined);
     setChordContextSnapshot(undefined);
+    saveRecentVoicingLoopProgressions(recordRecentVoicingLoopProgression(
+      loadRecentVoicingLoopProgressions(),
+      sourceReference,
+    ));
     setVoicingPracticeHandoff(result.handoff);
     setPracticeMode("voicing-loop");
     setView("practice");
@@ -1036,7 +1057,8 @@ async function analyzeMidiPath(path: string) {
                       snapshots={voicingPracticeHandoff?.snapshots ?? P527_E2E_FIXTURE?.snapshots}
                       initialSelection={voicingPracticeHandoff?.initialSelection ?? P527_E2E_FIXTURE?.initialSelection}
                       resolutionOptions={P527_E2E_FIXTURE?.resolutionOptions}
-                      onChooseVault={() => navigateTo("library")}
+                      vaultProgressions={voicingLoopVaultCandidates}
+                      onSelectProgression={openProgressionVoicingPractice}
                       onEnterText={openTextProgressionInput}
                     />
                   )}
