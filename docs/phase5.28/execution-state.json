@@ -1,19 +1,20 @@
 {
   "schemaVersion": 1,
   "phaseId": "5.28",
-  "status": "in-progress",
-  "activeStage": "P5.28-05",
+  "status": "completed",
+  "activeStage": null,
   "completedStages": [
     "P5.28-00",
     "P5.28-01",
     "P5.28-02",
     "P5.28-03",
-    "P5.28-04"
+    "P5.28-04",
+    "P5.28-05"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "df971c2cec121199296eb8e394dc18bec5bbe21f",
-  "lastVerifiedCommit": "f934658a0c6fed8e2d6d1e0fcf0f27b1651516bd",
+  "lastVerifiedCommit": "368f74d23225b060db53a914c423126d4420e633",
   "currentBranch": "feat/p528-voicing-loop-inline-vault",
   "requiredGates": {
     "P5.28-00": [
@@ -72,8 +73,9 @@
     "privacy-hygiene": "pass",
     "clean-status": "pass",
     "inline-selection-audit": "pass",
-    "focused-inline-selection-tests": "pass"
+    "focused-inline-selection-tests": "pass",
+    "vault-practice-regression": "pass"
   },
-  "nextAction": "Run P5.28-05 fresh focused acceptance and close the extension.",
-  "updatedAt": "2026-09-13T14:52:00+09:00"
+  "nextAction": "Await human review and separate merge authorization. Do not push.",
+  "updatedAt": "2026-09-13T15:00:00+09:00"
 }

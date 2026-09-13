@@ -9,12 +9,12 @@ P5.27のProgression Voicing Practiceを左sidebarから直接開き、保存済�
 
 ## Status
 
-- **Status:** in_progress
-- **Active stage:** P5.28-05
-- **Completed stages:** P5.28-00, P5.28-01, P5.28-02, P5.28-03, P5.28-04
+- **Status:** complete
+- **Active stage:** none
+- **Completed stages:** P5.28-00, P5.28-01, P5.28-02, P5.28-03, P5.28-04, P5.28-05
 - **Base:** `df971c2cec121199296eb8e394dc18bec5bbe21f`
 - **Branch:** `feat/p528-voicing-loop-inline-vault`
-- **Next action:** P5.28-05のfresh focused acceptanceを実行する
+- **Next action:** human reviewと別途のmerge承認を待つ。pushは行わない
 
 この節、[`execution-state.json`](execution-state.json)、active stage reportを各stage末に同期する。
 
@@ -33,7 +33,9 @@ P5.27のProgression Voicing Practiceを左sidebarから直接開き、保存済�
 11. [`../phase5.27/reports/P5.27-05-product-acceptance.md`](../phase5.27/reports/P5.27-05-product-acceptance.md) — inherited handoff acceptance
 12. [`contracts/02-inline-vault-selection-contract.md`](contracts/02-inline-vault-selection-contract.md) — inline list / recent / transaction contract
 13. [`audit/P5.28-03-inline-vault-selection-audit.md`](audit/P5.28-03-inline-vault-selection-audit.md) — extension repository and UX audit
-14. [`reports/P5.28-03-extension-bootstrap.md`](reports/P5.28-03-extension-bootstrap.md) — active extension stage report
+14. [`reports/P5.28-03-extension-bootstrap.md`](reports/P5.28-03-extension-bootstrap.md) — extension contract closeout
+15. [`reports/P5.28-04-inline-vault-selection.md`](reports/P5.28-04-inline-vault-selection.md) — inline selection implementation
+16. [`reports/P5.28-05-focused-acceptance.md`](reports/P5.28-05-focused-acceptance.md) — extension acceptance and closeout
 
 ## Locked product shape
 
