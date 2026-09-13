@@ -14,6 +14,7 @@ export interface ProgressionVoicingTransportStartOptions {
   readonly bpm: number;
   readonly countInBars: 0 | 1 | 2;
   readonly metronomeEnabled: boolean;
+  readonly referenceSoundEnabled?: boolean;
   readonly startBeat?: number;
   readonly onTransportBeat: (absoluteBeat: number) => void;
 }
@@ -26,6 +27,7 @@ export interface ProgressionVoicingTransportPort {
   stop(): void;
   setBpm(bpm: number): void;
   setMetronomeEnabled(enabled: boolean): void;
+  setReferenceSoundEnabled(enabled: boolean): void;
   audition(midiNotes: readonly number[]): Promise<void>;
 }
 
@@ -45,6 +47,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
   private running = false;
   private paused = false;
   private metronomeEnabled = true;
+  private referenceSoundEnabled = true;
   private desiredBpm = 120;
   private activeOptions?: ProgressionVoicingTransportStartOptions;
 
@@ -52,6 +55,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     const generation = this.invalidateAndClear();
     this.desiredBpm = options.bpm;
     this.metronomeEnabled = options.metronomeEnabled;
+    this.referenceSoundEnabled = options.referenceSoundEnabled ?? true;
     this.startingGeneration = generation;
     await Tone.start();
     if (generation !== this.generation || this.startingGeneration !== generation) return;
@@ -164,6 +168,11 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.metronomeEnabled = enabled;
   }
 
+  setReferenceSoundEnabled(enabled: boolean): void {
+    this.referenceSoundEnabled = enabled;
+    if (!enabled) this.voicingSynth?.releaseAll();
+  }
+
   async audition(midiNotes: readonly number[]): Promise<void> {
     if (midiNotes.length === 0 || this.startingGeneration !== undefined || this.running || this.ownsTransport) return;
     const generation = ++this.generation;
@@ -214,7 +223,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
 
   private attackCurrentVoicing(absoluteBeat: number, time: number): void {
     const options = this.activeOptions;
-    if (!options || !this.voicingSynth) return;
+    if (!options || !this.voicingSynth || !this.referenceSoundEnabled) return;
     const countInBeats = options.countInBars * options.snapshot.meter.numerator;
     if (absoluteBeat < countInBeats) return;
     const progressionBeat = (absoluteBeat - countInBeats) % options.snapshot.lengthBeats;

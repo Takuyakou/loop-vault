@@ -42,6 +42,34 @@ test("P5.30 compact workspace follows the approved order and fixed timeline geom
   await assertNoHorizontalOverflow(page);
 });
 
+test("P5.30 card audition is keyboard-operable and reference sound is session-local", async ({ page }) => {
+  const workspace = await openPopulatedVoicingLoop(page);
+  const currentHeading = workspace.getByRole("heading", { level: 2, name: "Cmaj7", exact: true });
+  const secondCard = workspace.getByRole("button", { name: /2\/2: Dm7.*このコードを試聴/ });
+  const initialBox = await secondCard.boundingBox();
+  await secondCard.focus();
+  await page.keyboard.press("Enter");
+  await expect(secondCard).toHaveAttribute("aria-pressed", "true");
+  await expect(currentHeading).toBeVisible();
+  await expect(workspace).toContainText("0 周完了");
+  const auditionedBox = await secondCard.boundingBox();
+  expect({ width: auditionedBox?.width, height: auditionedBox?.height }).toEqual({
+    width: initialBox?.width,
+    height: initialBox?.height,
+  });
+
+  const referenceSound = workspace.getByRole("checkbox", { name: "お手本音" });
+  await expect(referenceSound).toBeChecked();
+  await referenceSound.uncheck();
+  await expect(referenceSound).not.toBeChecked();
+  await page.getByLabel("カウントイン").selectOption("0");
+  await page.getByRole("button", { name: /開始/ }).click();
+  await expect(workspace.locator("[data-testid='voicing-loop-event'][aria-current='step']"))
+    .toContainText("Dm7", { timeout: 5_000 });
+  await page.getByRole("button", { name: "停止", exact: true }).click();
+  await expect(referenceSound).not.toBeChecked();
+});
+
 test("P5.30 128-event timeline stays local, auto-reveals, reduced-motion, and axe-clean", async ({ page }) => {
   test.setTimeout(120_000);
   await page.emulateMedia({ reducedMotion: "reduce" });

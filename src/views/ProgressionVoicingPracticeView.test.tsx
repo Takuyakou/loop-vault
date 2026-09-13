@@ -271,6 +271,41 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("svg[role='img']")?.getAttribute("aria-label")).toContain("お手本0音");
   });
 
+  it("auditions any playable timeline card without seeking or changing the practice clock", async () => {
+    const runtime = new FakeTransport();
+    const container = await renderView(runtime, { "source-midi": snapshot("source-midi") }, "source-midi");
+    const timelineCards = container.querySelectorAll<HTMLButtonElement>("[data-testid='voicing-loop-event']");
+    expect(timelineCards).toHaveLength(2);
+    expect(timelineCards[1]?.getAttribute("aria-label")).toContain("2/2: Dm7");
+
+    await act(async () => timelineCards[1]?.click());
+    expect(runtime.audition).toHaveBeenLastCalledWith([50, 57, 60]);
+    expect(timelineCards[1]?.getAttribute("aria-pressed")).toBe("true");
+    expect(container.querySelector("[aria-current='step']")?.textContent).toContain("Cmaj7");
+    expect(container.textContent).toContain("0 周完了");
+
+    await act(async () => button(container, "現在のコードを試聴").click());
+    expect(runtime.audition).toHaveBeenLastCalledWith([48, 55, 59]);
+    expect(timelineCards[0]?.getAttribute("aria-pressed")).toBe("true");
+    expect(runtime.start).not.toHaveBeenCalled();
+  });
+
+  it("defaults reference sound on, passes session state to Start, and keeps visual transport available off", async () => {
+    const runtime = new FakeTransport();
+    const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full");
+    const referenceSound = container.querySelector<HTMLInputElement>("input[type='checkbox']")!;
+    expect(referenceSound.checked).toBe(true);
+    await act(async () => referenceSound.click());
+    expect(referenceSound.checked).toBe(false);
+    expect(runtime.setReferenceSoundEnabled).toHaveBeenCalledWith(false);
+
+    await act(async () => button(container, "開始").click());
+    expect(runtime.options?.referenceSoundEnabled).toBe(false);
+    await act(async () => runtime.options?.onTransportBeat(6.5));
+    expect(container.querySelector("[aria-current='step']")?.textContent).toContain("Dm7");
+    expect(button(container, "一時停止")).not.toBeNull();
+  });
+
   it("keeps optional monitoring non-blocking after activation failure and retries on remount", async () => {
     const original = defaultLiveMidiStore.getState();
     let attempts = 0;
@@ -587,6 +622,7 @@ class FakeTransport implements ProgressionVoicingTransportPort {
   stop = vi.fn();
   setBpm = vi.fn();
   setMetronomeEnabled = vi.fn();
+  setReferenceSoundEnabled = vi.fn();
   audition = vi.fn(async () => undefined);
 }
 

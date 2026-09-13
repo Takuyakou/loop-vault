@@ -90,6 +90,7 @@ const copy = {
     displayMode: "Voicing表示モード",
     bpm: "BPM",
     metronome: "メトロノーム",
+    referenceSound: "お手本音",
     countInBars: "カウントイン",
     noCountIn: "なし",
     oneBar: "1小節",
@@ -100,6 +101,7 @@ const copy = {
     restart: "最初から",
     stop: "停止",
     reference: "現在のコードを試聴",
+    auditionCard: "このコードを試聴",
     ready: "開始できます",
     running: "自動送り中",
     paused: "一時停止中",
@@ -154,6 +156,7 @@ const copy = {
     displayMode: "Voicing display mode",
     bpm: "BPM",
     metronome: "Metronome",
+    referenceSound: "Reference sound",
     countInBars: "Count-in",
     noCountIn: "Off",
     oneBar: "1 bar",
@@ -164,6 +167,7 @@ const copy = {
     restart: "Restart",
     stop: "Stop",
     reference: "Play current chord",
+    auditionCard: "Audition this chord",
     ready: "Ready to start",
     running: "Auto-advancing",
     paused: "Paused",
@@ -255,12 +259,14 @@ export function ProgressionVoicingPracticeView({
   );
   const [displayMode, setDisplayMode] = useState<"learn" | "recall">("learn");
   const [metronomeEnabled, setMetronomeEnabled] = useState(true);
+  const [referenceSoundEnabled, setReferenceSoundEnabled] = useState(true);
+  const [auditionedIndex, setAuditionedIndex] = useState<number>();
   const [runtimeError, setRuntimeError] = useState<string>();
   const transportRef = useRef<ProgressionVoicingTransportPort>();
   const runtimeRequestRef = useRef(0);
   const midiLeaseRef = useRef<LiveMidiActivationLease>();
   const timelineViewportRef = useRef<HTMLDivElement | null>(null);
-  const timelineEventRefs = useRef<Array<HTMLSpanElement | null>>([]);
+  const timelineEventRefs = useRef<Array<HTMLButtonElement | null>>([]);
   if (!transportRef.current) transportRef.current = transportFactory();
   const midiStatus = useStore(defaultLiveMidiStore, (state) => state.status);
 
@@ -269,6 +275,7 @@ export function ProgressionVoicingPracticeView({
     runtimeRequestRef.current += 1;
     transport?.stop();
     setRuntimeError(undefined);
+    setAuditionedIndex(undefined);
     setClockState(snapshot
       ? createProgressionPracticeClockState(snapshot, { countInBars })
       : undefined);
@@ -359,6 +366,7 @@ export function ProgressionVoicingPracticeView({
         bpm,
         countInBars,
         metronomeEnabled,
+        referenceSoundEnabled,
         startBeat,
         onTransportBeat(absoluteBeat) {
           if (runtimeRequestRef.current !== request) return;
@@ -424,12 +432,14 @@ export function ProgressionVoicingPracticeView({
       : state);
   }
 
-  async function auditionCurrent() {
-    if (!snapshot || !currentVoicing || active || paused) return;
+  async function auditionResolved(index: number) {
+    const resolution = plan?.events[index];
+    if (!snapshot || resolution?.status !== "SUPPORTED" || active || paused) return;
     const request = ++runtimeRequestRef.current;
     setRuntimeError(undefined);
+    setAuditionedIndex(index);
     try {
-      await transportRef.current?.audition(currentVoicing.midiNotes);
+      await transportRef.current?.audition(resolution.voicing.midiNotes);
     } catch {
       if (runtimeRequestRef.current !== request) return;
       transportRef.current?.stop();
@@ -440,11 +450,20 @@ export function ProgressionVoicingPracticeView({
     }
   }
 
+  function auditionCurrent() {
+    return auditionResolved(currentIndex);
+  }
+
   function toggleMetronome() {
     setMetronomeEnabled((enabled) => {
       transportRef.current?.setMetronomeEnabled(!enabled);
       return !enabled;
     });
+  }
+
+  function changeReferenceSound(enabled: boolean) {
+    setReferenceSoundEnabled(enabled);
+    transportRef.current?.setReferenceSoundEnabled(enabled);
   }
 
   if (!progressionLoaded) {
@@ -627,27 +646,38 @@ export function ProgressionVoicingPracticeView({
                   className="pointer-events-none absolute inset-y-0 left-0 z-10 w-0.5 bg-[var(--lv-accent)]"
                   style={{ transform: `translateX(${playheadX}px)` }}
                 />
-                {snapshot.events.map((event, index) => (
-                  <span
-                    key={event.id}
-                    ref={(element) => { timelineEventRefs.current[index] = element; }}
-                    data-testid="voicing-loop-event"
-                    data-duration-beats={event.durationBeats}
-                    className={`flex h-[46px] max-h-[46px] min-h-[46px] w-[92px] min-w-[92px] max-w-[92px] flex-none flex-col justify-center overflow-hidden rounded-[var(--lv-radius-sm)] border px-2 text-sm font-semibold ${index === currentIndex ? "border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)]" : "border-[var(--lv-border)] text-[var(--lv-text-secondary)]"}`}
-                    aria-current={index === currentIndex ? "step" : undefined}
-                  >
-                    <span className="flex min-w-0 items-baseline gap-1.5">
-                      <span className="shrink-0 text-[10px] font-normal text-[var(--lv-text-muted)]">{index + 1}</span>
-                      <span className="min-w-0 truncate">{event.chord.label}</span>
-                    </span>
-                    <span
-                      data-testid="voicing-loop-event-timing"
-                      className="mt-0.5 block truncate whitespace-nowrap text-[10px] font-normal leading-3 text-[var(--lv-text-muted)]"
+                {snapshot.events.map((event, index) => {
+                  const resolution = plan?.events[index];
+                  const playable = resolution?.status === "SUPPORTED";
+                  const selected = index === currentIndex;
+                  const auditioned = index === auditionedIndex;
+                  return (
+                    <button
+                      key={event.id}
+                      ref={(element) => { timelineEventRefs.current[index] = element; }}
+                      type="button"
+                      data-testid="voicing-loop-event"
+                      data-duration-beats={event.durationBeats}
+                      className={`flex h-[46px] max-h-[46px] min-h-[46px] w-[92px] min-w-[92px] max-w-[92px] flex-none flex-col justify-center overflow-hidden rounded-[var(--lv-radius-sm)] border px-2 text-left text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-60 ${selected ? "border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)]" : auditioned ? "border-[var(--lv-accent)] bg-[var(--lv-surface-raised)] text-[var(--lv-text)]" : "border-[var(--lv-border)] bg-transparent text-[var(--lv-text-secondary)]"}`}
+                      aria-current={selected ? "step" : undefined}
+                      aria-pressed={auditioned}
+                      aria-label={`${index + 1}/${snapshot.events.length}: ${event.chord.label}, ${practiceTimingLabel(event, snapshot.meter.numerator, language)}. ${text.auditionCard}`}
+                      disabled={!playable || active || paused}
+                      onClick={() => void auditionResolved(index)}
                     >
-                      {practiceTimingLabel(event, snapshot.meter.numerator, language)}
-                    </span>
-                  </span>
-                ))}
+                      <span className="flex min-w-0 items-baseline gap-1.5">
+                        <span className="shrink-0 text-[10px] font-normal text-[var(--lv-text-muted)]">{index + 1}</span>
+                        <span className="min-w-0 truncate">{event.chord.label}</span>
+                      </span>
+                      <span
+                        data-testid="voicing-loop-event-timing"
+                        className="mt-0.5 block truncate whitespace-nowrap text-[10px] font-normal leading-3 text-[var(--lv-text-muted)]"
+                      >
+                        {practiceTimingLabel(event, snapshot.meter.numerator, language)}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </Surface>
@@ -719,7 +749,17 @@ export function ProgressionVoicingPracticeView({
                 </select>
               </Field>
               <div className="sm:col-span-2">
-                <p className="text-sm font-medium text-[var(--lv-text-secondary)]">{sessionStatus(clockState?.status, text)}</p>
+                <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm font-medium text-[var(--lv-text-secondary)]">{sessionStatus(clockState?.status, text)}</p>
+                  <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 text-sm font-medium text-[var(--lv-text-secondary)] focus-within:text-[var(--lv-text)]">
+                    <input
+                      type="checkbox"
+                      checked={referenceSoundEnabled}
+                      onChange={(event) => changeReferenceSound(event.currentTarget.checked)}
+                    />
+                    {text.referenceSound}
+                  </label>
+                </div>
                 <div className="mt-2 flex min-w-0 flex-wrap gap-2">
                   {!active && !paused ? (
                     <Button variant="primary" disabled={!allEventsPlayable} onClick={() => void start()}><Play aria-hidden="true" size={16} />{text.start}</Button>

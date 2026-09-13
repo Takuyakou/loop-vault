@@ -117,6 +117,71 @@ describe("ProgressionVoicingTransport", () => {
     expect(onTransportBeat).toHaveBeenLastCalledWith(5);
   });
 
+  it("gates automatic reference attacks without stopping click, projection, or manual audition", async () => {
+    const onTransportBeat = vi.fn();
+    const runtime = new ProgressionVoicingTransport();
+    await runtime.start({
+      snapshot,
+      plan,
+      bpm: 80,
+      countInBars: 0,
+      metronomeEnabled: true,
+      referenceSoundEnabled: false,
+      onTransportBeat,
+    });
+    const referenceSynth = toneMock.instruments[0]!;
+    toneMock.scheduled[0]?.callback(1);
+    expect(referenceSynth.triggerAttack).not.toHaveBeenCalled();
+    toneMock.scheduled[2]?.callback(1.25);
+    expect(toneMock.instruments[1]?.triggerAttackRelease).toHaveBeenCalledTimes(1);
+    toneMock.scheduled[3]?.callback(1.5);
+    toneMock.drawCallbacks.shift()?.();
+    expect(onTransportBeat).toHaveBeenCalledTimes(2);
+
+    runtime.setReferenceSoundEnabled(true);
+    toneMock.scheduled[0]?.callback(2);
+    toneMock.transport.getTicksAtTime.mockReturnValueOnce(384);
+    toneMock.scheduled[1]?.callback(2.5);
+    expect(referenceSynth.triggerAttack).toHaveBeenCalledTimes(2);
+    expect(referenceSynth.triggerAttack.mock.calls.map(([notes]) => notes)).toEqual([
+      ["C3", "G3", "B3"],
+      ["D3", "A3", "C4"],
+    ]);
+
+    runtime.setReferenceSoundEnabled(false);
+    expect(referenceSynth.releaseAll).toHaveBeenCalled();
+    toneMock.scheduled[0]?.callback(3);
+    expect(referenceSynth.triggerAttack).toHaveBeenCalledTimes(2);
+    expect(runtime.pause()).toBe(true);
+    expect(runtime.resume()).toBe(true);
+    expect(toneMock.instruments[2]?.triggerAttack).not.toHaveBeenCalled();
+    runtime.stop();
+
+    const transportPosition = toneMock.transport.position;
+    await runtime.audition([60, 64, 67]);
+    expect(toneMock.transport.position).toBe(transportPosition);
+    expect(toneMock.instruments[toneMock.instruments.length - 1]?.triggerAttackRelease).toHaveBeenCalledWith(
+      ["C4", "E4", "G4"],
+      "1n",
+      1,
+      0.72,
+    );
+    runtime.stop();
+    expect(toneMock.activeInstruments.size).toBe(0);
+  });
+
+  it("never attacks a reference chord before count-in completes", async () => {
+    const runtime = new ProgressionVoicingTransport();
+    await runtime.start({ snapshot, plan, bpm: 80, countInBars: 1, metronomeEnabled: false, onTransportBeat: vi.fn() });
+    const referenceSynth = toneMock.instruments[0]!;
+    toneMock.transport.getTicksAtTime.mockReturnValueOnce(384);
+    toneMock.scheduled[0]?.callback(1);
+    expect(referenceSynth.triggerAttack).not.toHaveBeenCalled();
+    toneMock.transport.getTicksAtTime.mockReturnValueOnce(768);
+    toneMock.scheduled[0]?.callback(2);
+    expect(referenceSynth.triggerAttack).toHaveBeenCalledTimes(1);
+  });
+
   it("pauses, resumes, restarts without rebuilding, and clears every owned schedule", async () => {
     const runtime = new ProgressionVoicingTransport();
     await runtime.start({ snapshot, plan, bpm: 80, countInBars: 0, metronomeEnabled: false, onTransportBeat: vi.fn() });
