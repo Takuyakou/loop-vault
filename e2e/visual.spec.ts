@@ -12,6 +12,8 @@ import {
 } from "./helpers/app";
 import { createMidiFixture } from "./helpers/midiFixture";
 
+const HISTORY_VISUAL_NOW = new Date("2026-07-30T09:40:00.000Z");
+
 test.describe.serial("Phase 5.13 visual evidence", () => {
   test("Home", async ({ page }, testInfo) => {
     await openApp(page);
@@ -96,6 +98,7 @@ test.describe.serial("Phase 5.13 visual evidence", () => {
 
   test("global Live MIDI, dialog and toast states", async ({ page }, testInfo) => {
     test.setTimeout(60_000);
+    await page.clock.setFixedTime(HISTORY_VISUAL_NOW);
     await openApp(page);
     await createSavedProgression(page, "History visual fixture", {
       fileName: "history-visual-fixture.mid",
