@@ -190,6 +190,7 @@ interface TextDraftContext {
 }
 
 interface CaptureViewProps {
+  initialInputMode?: CaptureInputMode;
   ideas: SongIdea[];
   analysis: AnalysisState;
   analyzeMidiBytes: (
@@ -317,6 +318,7 @@ function captureAnalysisRunCopy(
 export function CaptureView(props: CaptureViewProps) {
   const {
     ideas,
+    initialInputMode = "midi",
     analysis,
     analyzeMidiBytes,
     clearAnalysis,
@@ -372,7 +374,7 @@ export function CaptureView(props: CaptureViewProps) {
   const [manualSourceBasslineAuthorization, setManualSourceBasslineAuthorization] = useState("");
   const manualSourceBasslineSessionRef = useRef(preAnalysisSession);
   const manualSourceBasslineDraftKeyRef = useRef("");
-  const [captureInputMode, setCaptureInputMode] = useState<CaptureInputMode>("midi");
+  const [captureInputMode, setCaptureInputMode] = useState<CaptureInputMode>(initialInputMode);
   const [textDraftContext, setTextDraftContext] = useState<TextDraftContext>();
   const [savedTextProgressionTarget, setSavedTextProgressionTarget] = useState<SavedTextProgressionTarget>();
   const [analysisProgress, setAnalysisProgress] = useState<CaptureAnalysisProgressStage>();

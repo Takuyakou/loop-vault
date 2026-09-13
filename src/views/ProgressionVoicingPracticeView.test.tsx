@@ -26,6 +26,87 @@ afterEach(async () => {
 });
 
 describe("ProgressionVoicingPracticeView", () => {
+  it("shows an actionable source-less empty state without Source controls or a MIDI lease", async () => {
+    const original = defaultLiveMidiStore.getState();
+    const activate = vi.fn(async () => defaultLiveMidiStore.setState({ active: true }));
+    const deactivate = vi.fn(async () => defaultLiveMidiStore.setState({ active: false }));
+    const onChooseVault = vi.fn();
+    const onEnterText = vi.fn();
+    defaultLiveMidiStore.setState({ active: false, activate, deactivate });
+    try {
+      const container = await renderView(
+        new FakeTransport(),
+        undefined,
+        "source-midi",
+        true,
+        { onChooseVault, onEnterText },
+      );
+      await act(async () => { await Promise.resolve(); });
+
+      expect(container.querySelector("h2")?.textContent).toBe("Voicing Loop");
+      expect(container.textContent).toContain("練習するコード進行を選択してください。");
+      expect(container.textContent).not.toContain("Source MIDI");
+      expect(container.querySelector("fieldset")).toBeNull();
+      expect(container.querySelector("#voicing-loop-bpm")).toBeNull();
+      expect(activate).not.toHaveBeenCalled();
+
+      await act(async () => button(container, "My Vaultから選ぶ").click());
+      await act(async () => button(container, "Textで進行を入力").click());
+      expect(onChooseVault).toHaveBeenCalledOnce();
+      expect(onEnterText).toHaveBeenCalledOnce();
+    } finally {
+      defaultLiveMidiStore.setState({
+        active: original.active,
+        activate: original.activate,
+        deactivate: original.deactivate,
+      });
+    }
+  });
+
+  it("releases a loaded session MIDI lease once when it becomes direct-entry empty and does not reacquire", async () => {
+    const original = defaultLiveMidiStore.getState();
+    const activate = vi.fn(async () => defaultLiveMidiStore.setState({ active: true }));
+    const deactivate = vi.fn(async () => defaultLiveMidiStore.setState({ active: false }));
+    defaultLiveMidiStore.setState({ active: false, activate, deactivate });
+    try {
+      const runtime = new FakeTransport();
+      const container = document.createElement("div");
+      document.body.append(container);
+      root = createRoot(container);
+      const render = async (
+        snapshots?: Partial<Record<ProgressionVoicingSelection, ProgressionVoicingPracticeSnapshot>>,
+      ) => act(async () => root?.render(
+        <ProgressionVoicingPracticeView
+          language="ja"
+          snapshots={snapshots}
+          initialSelection="basic-full"
+          monitorMidi
+          onChooseVault={vi.fn()}
+          onEnterText={vi.fn()}
+          transportFactory={() => runtime}
+        />,
+      ));
+
+      await render({ "basic-full": snapshot("basic-full") });
+      await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+      expect(activate).toHaveBeenCalledOnce();
+
+      await render(undefined);
+      await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+      expect(container.textContent).toContain("練習するコード進行を選択してください。");
+      expect(deactivate).toHaveBeenCalledOnce();
+      expect(activate).toHaveBeenCalledOnce();
+    } finally {
+      await act(async () => root?.unmount());
+      root = undefined;
+      defaultLiveMidiStore.setState({
+        active: original.active,
+        activate: original.activate,
+        deactivate: original.deactivate,
+      });
+    }
+  });
+
   it("projects Current, Next, Beat, progress, and Loop from the runtime transport callback", async () => {
     const runtime = new FakeTransport();
     const container = await renderView(runtime, {
@@ -292,9 +373,13 @@ describe("ProgressionVoicingPracticeView", () => {
 
 async function renderView(
   runtime: FakeTransport,
-  snapshots: Partial<Record<ProgressionVoicingSelection, ProgressionVoicingPracticeSnapshot>>,
+  snapshots: Partial<Record<ProgressionVoicingSelection, ProgressionVoicingPracticeSnapshot>> | undefined,
   initialSelection: ProgressionVoicingSelection,
   monitorMidi = false,
+  callbacks: {
+    onChooseVault: () => void;
+    onEnterText: () => void;
+  } = { onChooseVault: vi.fn(), onEnterText: vi.fn() },
 ): Promise<HTMLDivElement> {
   const container = document.createElement("div");
   document.body.append(container);
@@ -305,6 +390,8 @@ async function renderView(
       snapshots={snapshots}
       initialSelection={initialSelection}
       monitorMidi={monitorMidi}
+      onChooseVault={callbacks.onChooseVault}
+      onEnterText={callbacks.onEnterText}
       transportFactory={() => runtime}
     />,
   ));

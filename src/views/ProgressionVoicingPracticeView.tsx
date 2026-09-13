@@ -6,7 +6,7 @@ import {
   formatMidiNoteForDisplay,
 } from "../components/music-keyboard";
 import { PracticeKeyboard } from "../components/practice/PracticeKeyboard";
-import { Badge, Button, Field, SectionHeading, StatusMessage, Surface } from "../components/ui";
+import { Badge, Button, EmptyState, Field, SectionHeading, StatusMessage, Surface } from "../components/ui";
 import {
   createProgressionPracticeClockState,
   projectProgressionPracticeClock,
@@ -36,6 +36,8 @@ export interface ProgressionVoicingPracticeViewProps {
   readonly snapshots?: ProgressionVoicingPracticeSnapshots;
   readonly initialSelection?: ProgressionVoicingSelection;
   readonly monitorMidi?: boolean;
+  readonly onChooseVault: () => void;
+  readonly onEnterText: () => void;
   readonly transportFactory?: () => ProgressionVoicingTransportPort;
   readonly resolutionOptions?: ResolveProgressionPracticeVoicingsOptions;
 }
@@ -87,8 +89,10 @@ const copy = {
     running: "自動送り中",
     paused: "一時停止中",
     stopped: "停止しました",
-    noProgression: "練習する進行を選択してください",
-    noProgressionBody: "Vaultの進行詳細からVoicing Loopを開くと、ここに安全な練習用snapshotが表示されます。",
+    chooseProgression: "練習するコード進行を選択してください。",
+    chooseProgressionBody: "My Vaultの保存済み進行、またはText入力から練習を始められます。",
+    chooseVault: "My Vaultから選ぶ",
+    enterText: "Textで進行を入力",
     unavailable: "選択したVoicingを利用できません",
     unavailableBody: "このコードには選択したSource/Custom Voicingが保存されていません。別の明示的なVoicingを選んでください。",
     unsupported: "このコードには選択中Lesson Voicingの規則がありません",
@@ -139,8 +143,10 @@ const copy = {
     running: "Auto-advancing",
     paused: "Paused",
     stopped: "Stopped",
-    noProgression: "Choose a progression to practice",
-    noProgressionBody: "Open Voicing Loop from a Vault progression to load its safe practice snapshot here.",
+    chooseProgression: "Choose a chord progression to practice.",
+    chooseProgressionBody: "Start with a saved progression in My Vault or enter one as text.",
+    chooseVault: "Choose from My Vault",
+    enterText: "Enter a progression as text",
     unavailable: "The selected voicing is unavailable",
     unavailableBody: "This chord has no saved Source/Custom voicing. Choose another explicit voicing.",
     unsupported: "This chord has no rule for the selected Lesson voicing",
@@ -164,6 +170,8 @@ export function ProgressionVoicingPracticeView({
   initialSelection = "source-midi",
   language,
   monitorMidi = true,
+  onChooseVault,
+  onEnterText,
   resolutionOptions,
   snapshots,
   transportFactory = createDefaultTransport,
@@ -171,6 +179,7 @@ export function ProgressionVoicingPracticeView({
   const text = copy[language];
   const [selection, setSelection] = useState<ProgressionVoicingSelection>(initialSelection);
   const snapshot = snapshots?.[selection];
+  const progressionLoaded = Boolean(snapshots && Object.values(snapshots).some(Boolean));
   const plan = useMemo(
     () => snapshot ? resolveProgressionPracticeVoicings(snapshot, resolutionOptions) : undefined,
     [resolutionOptions, snapshot],
@@ -203,7 +212,7 @@ export function ProgressionVoicingPracticeView({
   }, [countInBars, snapshot]);
 
   useEffect(() => {
-    if (!monitorMidi) return undefined;
+    if (!monitorMidi || !progressionLoaded) return undefined;
     const midiLease = liveMidiActivation.acquire();
     midiLeaseRef.current = midiLease;
     void midiLease.ready.catch(() => undefined);
@@ -211,7 +220,7 @@ export function ProgressionVoicingPracticeView({
       midiLease.release();
       if (midiLeaseRef.current === midiLease) midiLeaseRef.current = undefined;
     };
-  }, [monitorMidi]);
+  }, [monitorMidi, progressionLoaded]);
 
   const projection = useMemo(
     () => snapshot && clockState ? projectProgressionPracticeClock(snapshot, clockState) : undefined,
@@ -232,11 +241,6 @@ export function ProgressionVoicingPracticeView({
   const paused = clockState?.status === "paused";
   const allEventsPlayable = Boolean(plan?.events.length)
     && plan!.events.every((resolution) => resolution.status === "SUPPORTED");
-  const progressionLoaded = Boolean(snapshots && Object.values(snapshots).some(Boolean));
-  const selectedMyVoicingMissing = progressionLoaded
-    && (selection === "source-midi" || selection === "custom")
-    && !snapshot;
-
   function changeSelection(next: ProgressionVoicingSelection) {
     runtimeRequestRef.current += 1;
     transportRef.current?.stop();
@@ -350,6 +354,28 @@ export function ProgressionVoicingPracticeView({
     });
   }
 
+  if (!progressionLoaded) {
+    return (
+      <div className="min-w-0 space-y-4" data-testid="voicing-loop-workspace">
+        <SectionHeading
+          kicker="PRACTICE"
+          title={text.title}
+          description={text.description}
+        />
+        <EmptyState
+          title={text.chooseProgression}
+          description={text.chooseProgressionBody}
+          action={(
+            <div className="flex min-w-0 flex-wrap justify-center gap-2">
+              <Button variant="primary" onClick={onChooseVault}>{text.chooseVault}</Button>
+              <Button variant="secondary" onClick={onEnterText}>{text.enterText}</Button>
+            </div>
+          )}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-w-0 space-y-4" data-testid="voicing-loop-workspace">
       <SectionHeading
@@ -386,10 +412,10 @@ export function ProgressionVoicingPracticeView({
 
       {!snapshot ? (
         <StatusMessage
-          title={selectedMyVoicingMissing ? text.unavailable : text.noProgression}
-          tone={selectedMyVoicingMissing ? "warning" : "info"}
+          title={text.unavailable}
+          tone="warning"
         >
-          {selectedMyVoicingMissing ? text.unavailableBody : text.noProgressionBody}
+          {text.unavailableBody}
         </StatusMessage>
       ) : (
         <>

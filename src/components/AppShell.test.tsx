@@ -19,15 +19,19 @@ async function renderShell({
   saveStatus = "saved",
   controller,
   setView = vi.fn(),
+  openVoicingLoop = vi.fn(),
+  voicingLoopActive = false,
   openSettings = vi.fn(),
   settingsOpen = false,
   masterVolume = 100,
   onMasterVolumeChange = vi.fn(),
 }: {
-  view?: "home" | "capture" | "library" | "detail";
+  view?: "home" | "capture" | "library" | "detail" | "practice";
   saveStatus?: SaveStatus;
   controller?: ReturnType<typeof createPlaybackController>;
   setView?: ReturnType<typeof vi.fn>;
+  openVoicingLoop?: ReturnType<typeof vi.fn>;
+  voicingLoopActive?: boolean;
   openSettings?: ReturnType<typeof vi.fn>;
   settingsOpen?: boolean;
   masterVolume?: number;
@@ -41,8 +45,10 @@ async function renderShell({
       setView={setView}
       openCreate={vi.fn()}
       openLiveMidi={vi.fn()}
+      openVoicingLoop={openVoicingLoop}
       openSettings={openSettings}
       settingsOpen={settingsOpen}
+      voicingLoopActive={voicingLoopActive}
       copy={appCopy.en}
       saveStatus={saveStatus}
       masterVolume={masterVolume}
@@ -85,6 +91,7 @@ describe("AppShell", () => {
       "Chord Capture",
       "Vault",
       "Practice",
+      "Voicing Loop",
       "Live MIDI",
       "History",
       "Settings",
@@ -101,6 +108,27 @@ describe("AppShell", () => {
     expect(settingsByText?.className).toContain("min-h-10");
     await act(async () => settingsByText?.click());
     expect(openSettings).toHaveBeenCalledOnce();
+    await act(async () => root.unmount());
+  });
+
+  it("opens the explicit Voicing Loop item and gives only it current-page semantics", async () => {
+    const openVoicingLoop = vi.fn();
+    const { container, root } = await renderShell({
+      view: "practice",
+      openVoicingLoop,
+      voicingLoopActive: true,
+    });
+    const practice = [...container.querySelectorAll<HTMLButtonElement>("nav button")]
+      .find((button) => button.textContent === "Practice");
+    const voicingLoop = [...container.querySelectorAll<HTMLButtonElement>("nav button")]
+      .find((button) => button.textContent === "Voicing Loop");
+
+    expect(practice?.getAttribute("aria-current")).toBeNull();
+    expect(voicingLoop?.getAttribute("aria-current")).toBe("page");
+    expect(voicingLoop?.previousElementSibling).toBe(practice);
+    await act(async () => voicingLoop?.click());
+    expect(openVoicingLoop).toHaveBeenCalledOnce();
+
     await act(async () => root.unmount());
   });
 
