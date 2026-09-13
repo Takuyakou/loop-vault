@@ -292,6 +292,10 @@ describe("ProgressionVoicingPracticeView", () => {
       .toContain("位置1 / 1 小節");
     expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent)
       .toContain("次Dm7構成音: D4 · C5 · F5");
+    expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
+      .toContain("構成音: C4 · B4 · E5");
+    expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
+      .toContain("度数: 1 · 7 · 3");
     expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent)
       .toContain("2拍後に切り替わります");
     expect(container.querySelectorAll("[role='progressbar']")).toHaveLength(2);
@@ -320,6 +324,22 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(runtime.audition).toHaveBeenLastCalledWith([48, 55, 59], "piano");
     expect(timelineCards[0]?.getAttribute("aria-pressed")).toBe("true");
     expect(runtime.start).not.toHaveBeenCalled();
+  });
+
+  it("explains the left-only Basic Shell guide and keeps its resolved notes playable", async () => {
+    const runtime = new FakeTransport();
+    const container = await renderView(runtime, { "basic-shell": snapshot("basic-shell") }, "basic-shell");
+    expect(container.querySelector("[data-testid='voicing-loop-selection-help']")?.textContent)
+      .toContain("ルートと7度を左手だけで練習します");
+    expect(container.textContent).toContain("左手の目安");
+    expect(container.textContent).not.toContain("右手の目安");
+
+    await act(async () => button(container, "現在のコードを試聴").click());
+    expect(runtime.audition).toHaveBeenCalledOnce();
+    const [auditionNotes] = runtime.audition.mock.calls[0] as unknown as [readonly number[]];
+    expect(auditionNotes).toHaveLength(2);
+    await act(async () => button(container, "開始").click());
+    expect(runtime.options?.plan.events.every((event) => event.status === "SUPPORTED")).toBe(true);
   });
 
   it("keeps timeline audition available during playback and current audition available while paused", async () => {
@@ -483,6 +503,23 @@ describe("ProgressionVoicingPracticeView", () => {
     const container = await renderView(runtime, { "source-midi": partial }, "source-midi");
     expect(container.textContent).toContain("1個のコードを再生できません");
     expect(container.textContent).toContain("Dm7: 利用不可");
+    expect(button(container, "開始").disabled).toBe(true);
+  });
+
+  it("groups repeated Left-hand slash failures and explains the preserved-bass limitation", async () => {
+    const runtime = new FakeTransport();
+    const base = snapshot("left-hand");
+    const slash = {
+      ...base,
+      events: base.events.map((event) => ({
+        ...event,
+        chord: { root: 0, quality: "min11" as const, tensions: [], bass: 2, label: "Cm11/D" },
+      })),
+    };
+    const container = await renderView(runtime, { "left-hand": slash }, "left-hand");
+    expect(container.textContent).toContain("2個のコードを再生できません");
+    expect(container.textContent).toContain("Cm11/D ×2: スラッシュコードのベース指定を維持するLeft-hand規則がありません");
+    expect(container.querySelectorAll("li")).toHaveLength(1);
     expect(button(container, "開始").disabled).toBe(true);
   });
 

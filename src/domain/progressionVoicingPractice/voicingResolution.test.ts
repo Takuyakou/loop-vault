@@ -166,6 +166,17 @@ describe("P5.27 Basic 1-7-3 locked lesson table", () => {
     expect(resolveOne("basic-shell", chord("dim", [], 7)).status).toBe("UNSUPPORTED_RULE");
   });
 
+  it("keeps a minor-11 slash chord playable as a two-note left-hand shell", () => {
+    const slash = makeChordSymbol(9, "min11", [], 11);
+    const result = resolveOne("basic-shell", slash);
+    expect(result.status).toBe("SUPPORTED");
+    if (result.status !== "SUPPORTED") return;
+    expect(result.voicing.midiNotes).toHaveLength(2);
+    expect(result.voicing.leftHandNotes).toEqual(result.voicing.midiNotes);
+    expect(result.voicing.rightHandNotes).toEqual([]);
+    expect(degrees(result)).toEqual(["b7", "Bass"]);
+  });
+
   it.each([
     [4, "3", 2],
     [11, "7", 2],

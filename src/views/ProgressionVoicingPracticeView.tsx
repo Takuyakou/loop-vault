@@ -77,6 +77,8 @@ const copy = {
     description: "保存した進行とVoicingを、採点なしで何周でも練習します。",
     source: "Voicingを選択",
     sourceHelp: "MYは保存済みの音をそのまま使い、LESSONは承認済みの規則だけを使います。",
+    basicShellHelp: "ルートと7度を左手だけで練習します。3度と右手ガイドはBasic Full 1–7–3で表示します。",
+    leftHandHelp: "Rootless A/Bを練習します。ベース指定を安全に維持できないスラッシュコードは未対応です。",
     current: "現在",
     next: "次",
     beat: "拍",
@@ -132,6 +134,7 @@ const copy = {
     playbackErrorBody: "音声を安全に停止しました。もう一度お試しください。",
     unavailableStatus: "利用不可",
     unsupportedStatus: "未対応の規則",
+    leftHandSlashUnsupported: "スラッシュコードのベース指定を維持するLeft-hand規則がありません",
     generationErrorStatus: "生成エラー",
     unresolvedSummary: (count: number) => `${count}個のコードを再生できません`,
     midi: "MIDI入力",
@@ -151,6 +154,8 @@ const copy = {
     description: "Loop through a saved progression and voicing without scoring.",
     source: "Choose voicing",
     sourceHelp: "MY preserves saved notes; LESSON uses approved rules only.",
+    basicShellHelp: "Practice root and seventh with the left hand only. Basic Full 1–7–3 adds the third and right-hand guide.",
+    leftHandHelp: "Practice Rootless A/B. Slash chords are unsupported when their explicit bass cannot be preserved safely.",
     current: "Current",
     next: "Next",
     beat: "Beat",
@@ -206,6 +211,7 @@ const copy = {
     playbackErrorBody: "Audio was stopped safely. Please try again.",
     unavailableStatus: "Unavailable",
     unsupportedStatus: "Unsupported rule",
+    leftHandSlashUnsupported: "No Left-hand rule safely preserves this slash-bass note",
     generationErrorStatus: "Generation error",
     unresolvedSummary: (count: number) => `${count} chords cannot be played`,
     midi: "MIDI input",
@@ -656,6 +662,11 @@ export function ProgressionVoicingPracticeView({
                 </div>
               </div>
             ))}
+            {selection === "basic-shell" || selection === "left-hand" ? (
+              <p className="mt-3 max-w-3xl text-xs leading-5 text-[var(--lv-text-muted)]" data-testid="voicing-loop-selection-help">
+                {selection === "basic-shell" ? text.basicShellHelp : text.leftHandHelp}
+              </p>
+            ) : null}
           </fieldset>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-[var(--lv-text)]">{text.displayMode}</p>
@@ -686,6 +697,12 @@ export function ProgressionVoicingPracticeView({
                   </h2>
                   <p className="sr-only" aria-live="polite" aria-atomic="true">{currentEvent?.chord.label}</p>
                 </div>
+                {displayMode === "learn" && currentVoicing ? (
+                  <div className="min-w-0 max-w-full space-y-1 text-sm leading-5 text-[var(--lv-text-secondary)] sm:max-w-[58%]" data-testid="voicing-loop-current-voicing">
+                    <p className="break-words">{text.pitches}: {currentVoicing.notes.map((note) => formatMidiNoteForDisplay(note.midiNote, "fl-studio", "flat")).join(" · ")}</p>
+                    <p className="break-words">{text.degrees}: {currentVoicing.notes.map((note) => note.degree ?? "—").join(" · ")}</p>
+                  </div>
+                ) : null}
               </div>
 
               <div className="mt-6 grid gap-3 sm:grid-cols-3">
@@ -1080,14 +1097,27 @@ function UnresolvedSummary({ plan, snapshot, language }: {
 }) {
   const unresolved = plan.events.flatMap((resolution, index) => resolution.status === "SUPPORTED"
     ? []
-    : [{ eventIndex: index, label: snapshot.events[index]?.chord.label ?? `${index + 1}`, status: resolution.status }]);
+    : [{
+        eventIndex: index,
+        label: snapshot.events[index]?.chord.label ?? `${index + 1}`,
+        status: resolution.status,
+        detail: resolutionStatusLabel(resolution.status, snapshot, index, language),
+      }]);
   if (unresolved.length === 0) return null;
+  const grouped = new Map<string, { label: string; detail: string; count: number }>();
+  for (const item of unresolved) {
+    const key = `${item.label}:${item.status}:${item.detail}`;
+    const existing = grouped.get(key);
+    grouped.set(key, existing
+      ? { ...existing, count: existing.count + 1 }
+      : { label: item.label, detail: item.detail, count: 1 });
+  }
   return (
     <StatusMessage title={copy[language].unresolvedSummary(unresolved.length)} tone="warning">
       <ul className="list-disc space-y-1 pl-5">
-        {unresolved.map((item) => (
-          <li key={`${item.eventIndex}:${item.status}`}>
-            {item.label}: {resolutionStatusLabel(item.status, language)}
+        {[...grouped.entries()].map(([key, item]) => (
+          <li key={key}>
+            {item.label}{item.count > 1 ? ` ×${item.count}` : ""}: {item.detail}
           </li>
         ))}
       </ul>
@@ -1097,12 +1127,21 @@ function UnresolvedSummary({ plan, snapshot, language }: {
 
 function resolutionStatusLabel(
   status: Exclude<ProgressionPracticeVoicingResolution["status"], "SUPPORTED">,
+  snapshot: ProgressionVoicingPracticeSnapshot,
+  eventIndex: number,
   language: AppLanguage,
 ): string {
   const text = copy[language];
   switch (status) {
     case "UNAVAILABLE": return text.unavailableStatus;
-    case "UNSUPPORTED_RULE": return text.unsupportedStatus;
+    case "UNSUPPORTED_RULE": {
+      const chord = snapshot.events[eventIndex]?.chord;
+      return snapshot.selection === "left-hand"
+        && chord?.bass !== undefined
+        && chord.bass !== chord.root
+        ? text.leftHandSlashUnsupported
+        : text.unsupportedStatus;
+    }
     case "GENERATION_ERROR": return text.generationErrorStatus;
   }
 }
