@@ -8,3 +8,4 @@ commit. Common safety rules remain in root AGENTS.md.
 - `P5.30-00-audit.md`
 - `P5.30-01-text-capacity.md`
 - `P5.30-02-layout-playhead.md`
+- `P5.30-03-audio-interactions.md`
