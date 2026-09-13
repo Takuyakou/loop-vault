@@ -260,6 +260,48 @@ describe("ProgressionVoicingTransport", () => {
     expect(onTransportBeat).toHaveBeenLastCalledWith(1);
   });
 
+  it("schedules the canonical P5.29 4,2,2,4,4 boundaries from the shared snapshot", async () => {
+    const starts = [0, 4, 6, 8, 12] as const;
+    const durations = [4, 2, 2, 4, 4] as const;
+    const harmonicSnapshot: ProgressionVoicingPracticeSnapshot = {
+      ...snapshot,
+      fingerprint: "p529-harmonic-rhythm-fixture",
+      lengthBeats: 16,
+      events: starts.map((startBeat, index) => ({
+        ...snapshot.events[index % snapshot.events.length]!,
+        id: `p529-${index}`,
+        startBeat,
+        durationBeats: durations[index]!,
+      })),
+    };
+    const harmonicPlan: ProgressionPracticeVoicingPlan = {
+      ...plan,
+      snapshotFingerprint: harmonicSnapshot.fingerprint,
+      events: harmonicSnapshot.events.map((event, index) => ({
+        ...plan.events[index % plan.events.length]!,
+        eventId: event.id,
+      })),
+    };
+
+    const runtime = new ProgressionVoicingTransport();
+    await runtime.start({
+      snapshot: harmonicSnapshot,
+      plan: harmonicPlan,
+      bpm: 96,
+      countInBars: 1,
+      metronomeEnabled: false,
+      onTransportBeat: vi.fn(),
+    });
+
+    expect(toneMock.scheduled.slice(0, 5).map(({ interval, start }) => [interval, start])).toEqual([
+      ["3072i", "768i"],
+      ["3072i", "1536i"],
+      ["3072i", "1920i"],
+      ["3072i", "2304i"],
+      ["3072i", "3072i"],
+    ]);
+  });
+
   it("schedules canonical fractional loop and event boundaries on the clock grid", async () => {
     const fractionalSnapshot: ProgressionVoicingPracticeSnapshot = {
       ...snapshot,

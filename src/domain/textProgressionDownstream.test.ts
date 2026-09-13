@@ -9,6 +9,13 @@ import { createVaultRootMotionExercise } from "../features/bass-practice/domain/
 import { createVaultStore } from "../store/vaultStore";
 import { filterAndSortProgressions } from "./progressionFilters";
 import {
+  buildProgressionVoicingPracticeHandoffFromVault,
+  createProgressionPracticeClockState,
+  projectProgressionPracticeClock,
+  reduceProgressionPracticeClock,
+  type ProgressionVoicingSelection,
+} from "./progressionVoicingPractice";
+import {
   JsonVaultRepository,
   type VaultStorage,
 } from "./repository";
@@ -146,6 +153,73 @@ const noFilters = {
 };
 
 describe("Text Progression downstream persistence", () => {
+  it("preserves the canonical P5.29 4,2,2,4,4 rhythm through Vault and every Voicing Loop mode", async () => {
+    const result = parsed("| Cmaj9 | Am9 Dm9 | G13 | Cmaj9 |", "C major");
+    expect(result.events.map((event) => [event.bar, event.startBeat, event.durationBeats])).toEqual([
+      [1, 1, 4],
+      [2, 1, 2],
+      [2, 3, 2],
+      [3, 1, 4],
+      [4, 1, 4],
+    ]);
+
+    const { idea, block } = await saveThenReload(savePayload(result, {
+      title: "P5.29 harmonic rhythm fixture",
+      bpm: 96,
+      confirmedKey: "C major",
+    }));
+    expect(block.chords.map((event) => [event.bar, event.beat, event.durationBeats])).toEqual([
+      [1, 1, 4],
+      [2, 1, 2],
+      [2, 3, 2],
+      [3, 1, 4],
+      [4, 1, 4],
+    ]);
+
+    const handoff = buildProgressionVoicingPracticeHandoffFromVault(
+      [idea],
+      { ideaId: idea.id, blockId: block.id },
+    );
+    expect(handoff.ok).toBe(true);
+    if (!handoff.ok) throw new Error(handoff.error.code);
+
+    const selections: readonly ProgressionVoicingSelection[] = [
+      "source-midi",
+      "custom",
+      "basic-shell",
+      "basic-full",
+      "left-hand",
+    ];
+    const expectedTiming = [[0, 4], [4, 2], [6, 2], [8, 4], [12, 4]];
+    for (const selection of selections) {
+      const snapshot = handoff.handoff.snapshots[selection];
+      expect(snapshot?.events.map((event) => [event.startBeat, event.durationBeats])).toEqual(expectedTiming);
+      expect(snapshot).toMatchObject({ bpm: 96, key: "C major", lengthBeats: 16 });
+    }
+
+    const snapshot = handoff.handoff.snapshots["basic-full"]!;
+    let state = reduceProgressionPracticeClock(
+      snapshot,
+      createProgressionPracticeClockState(snapshot, { countInBars: 0 }),
+      { type: "START" },
+    );
+    const projectionAt = (absoluteBeat: number) => {
+      state = reduceProgressionPracticeClock(snapshot, state, { type: "SYNC_TRANSPORT", absoluteBeat });
+      return projectProgressionPracticeClock(snapshot, state);
+    };
+    expect([0, 3.999, 4, 5.999, 6, 7.999, 8, 12, 16].map(
+      (beat) => projectionAt(beat).currentEventIndex,
+    )).toEqual([0, 0, 1, 1, 2, 2, 3, 4, 0]);
+    expect(projectionAt(20)).toMatchObject({
+      currentEventIndex: 1,
+      nextEventIndex: 2,
+      beatInChord: 1,
+      beatsInChord: 2,
+      progressionBeat: 4,
+      loopCount: 1,
+    });
+  });
+
   it("round-trips an eligible text progression into Vault search, Chord Context, and an eight-root Root Motion path", async () => {
     const result = parsed("| Cmaj7 Cmaj7 | Cmaj7 Cmaj7 | Cmaj7 Cmaj7 | Cmaj7 Cmaj7 |", "C major");
     const capabilities = evaluateTextProgressionCapabilities({ result, bpm: 104, rootMotionNoteCount: 8 });

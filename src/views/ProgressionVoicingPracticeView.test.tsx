@@ -187,6 +187,11 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.textContent).toContain("Cmaj7");
     expect(container.textContent).toContain("Dm7");
     expect(container.textContent).toContain("0 周完了");
+    expect(Array.from(container.querySelectorAll("[data-testid='voicing-loop-event-timing']"))
+      .map((element) => element.textContent)).toEqual([
+      "1小節・1拍目・2拍",
+      "1小節・3拍目・2拍",
+    ]);
     const start = button(container, "開始");
     await act(async () => start.click());
     expect(runtime.start).toHaveBeenCalledTimes(1);

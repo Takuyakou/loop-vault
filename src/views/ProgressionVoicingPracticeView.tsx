@@ -16,6 +16,7 @@ import {
   type ProgressionPracticeVoicingResolution,
   type ProgressionPracticeVoicingPlan,
   type ProgressionPracticeClockStatus,
+  type ProgressionPracticeEvent,
   type ProgressionVoicingPracticeSnapshot,
   type ProgressionVoicingPracticeSnapshots,
   type ProgressionVoicingSelection,
@@ -675,11 +676,18 @@ export function ProgressionVoicingPracticeView({
               {snapshot.events.map((event, index) => (
                 <span
                   key={event.id}
+                  data-testid="voicing-loop-event"
                   className={`min-w-0 rounded-[var(--lv-radius-sm)] border px-3 py-2 text-sm font-semibold ${index === currentIndex ? "border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)]" : "border-[var(--lv-border)] text-[var(--lv-text-secondary)]"}`}
                   aria-current={index === currentIndex ? "step" : undefined}
                 >
                   <span className="mr-2 text-xs font-normal text-[var(--lv-text-muted)]">{index + 1}</span>
                   {event.chord.label}
+                  <span
+                    data-testid="voicing-loop-event-timing"
+                    className="mt-1 block whitespace-nowrap text-[11px] font-normal leading-4 text-[var(--lv-text-muted)]"
+                  >
+                    {practiceTimingLabel(event, snapshot.meter.numerator, language)}
+                  </span>
                 </span>
               ))}
             </div>
@@ -688,6 +696,24 @@ export function ProgressionVoicingPracticeView({
       )}
     </div>
   );
+}
+
+function practiceTimingLabel(
+  event: Pick<ProgressionPracticeEvent, "startBeat" | "durationBeats">,
+  beatsPerBar: number,
+  language: AppLanguage,
+): string {
+  const bar = Math.floor(event.startBeat / beatsPerBar) + 1;
+  const beat = (event.startBeat % beatsPerBar) + 1;
+  const beatLabel = formatPracticeBeat(beat);
+  const durationLabel = formatPracticeBeat(event.durationBeats);
+  return language === "ja"
+    ? `${bar}小節・${beatLabel}拍目・${durationLabel}拍`
+    : `Bar ${bar} · beat ${beatLabel} · ${durationLabel} ${event.durationBeats === 1 ? "beat" : "beats"}`;
+}
+
+function formatPracticeBeat(value: number): string {
+  return Number.isInteger(value) ? String(value) : String(Number(value.toFixed(3)));
 }
 
 function ProgressionChoice({
