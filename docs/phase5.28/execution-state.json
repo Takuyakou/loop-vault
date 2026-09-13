@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "5.28",
+  "status": "in-progress",
+  "activeStage": "P5.28-00",
+  "completedStages": [],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "df971c2cec121199296eb8e394dc18bec5bbe21f",
+  "lastVerifiedCommit": "",
+  "currentBranch": "feat/p528-voicing-loop-navigation",
+  "requiredGates": {
+    "P5.28-00": [
+      "phase-docs-validation",
+      "production-source-unchanged",
+      "diff-check"
+    ],
+    "P5.28-01": [
+      "focused-navigation-tests",
+      "existing-handoff-regression",
+      "diff-check"
+    ],
+    "P5.28-02": [
+      "focused-vitest",
+      "navigation-regression",
+      "focused-playwright",
+      "accessibility-responsive",
+      "typescript-lint-build",
+      "phase-docs-validation",
+      "privacy-hygiene",
+      "clean-status"
+    ]
+  },
+  "gateResults": {
+    "phase-docs-validation": "pass",
+    "production-source-unchanged": "pass",
+    "diff-check": "pass"
+  },
+  "nextAction": "Close P5.28-00 as a docs-only independent commit, then stop before production implementation",
+  "updatedAt": "2026-09-13T00:00:00+09:00"
+}
