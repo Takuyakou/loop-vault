@@ -1,8 +1,28 @@
 import AxeBuilder from "@axe-core/playwright";
+import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { assertNoHorizontalOverflow, openApp } from "./helpers/app";
 
+const tauriCsp = (JSON.parse(readFileSync(
+  new URL("../src-tauri/tauri.conf.json", import.meta.url),
+  "utf8",
+)) as { app: { security: { csp: string } } }).app.security.csp;
+
+async function applyTauriDocumentCsp(page: import("@playwright/test").Page) {
+  await page.route(/http:\/\/127\.0\.0\.1:4174\/(?:\?.*)?$/, async (route) => {
+    const response = await route.fetch();
+    await route.fulfill({
+      response,
+      headers: {
+        ...response.headers(),
+        "content-security-policy": tauriCsp,
+      },
+    });
+  });
+}
+
 test("P5.27 Voicing Loop route is keyboard-operable and overflow-safe at 320px", async ({ page }) => {
+  await applyTauriDocumentCsp(page);
   await page.setViewportSize({ width: 320, height: 812 });
   await openApp(page);
   await page.locator("nav").getByRole("button", { name: /Practice/ }).click();

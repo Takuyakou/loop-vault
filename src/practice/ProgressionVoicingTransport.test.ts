@@ -265,7 +265,7 @@ describe("ProgressionVoicingTransport", () => {
     await runtime.restart();
     expect(toneMock.scheduled).toHaveLength(scheduleCount);
     expect(toneMock.transport.pause).toHaveBeenCalledTimes(1);
-    expect(toneMock.transport.position).toBe(0);
+    expect(toneMock.transport.start).toHaveBeenLastCalledWith("+0.05", "0i");
 
     runtime.setBpm(122);
     expect(toneMock.transport.bpm.rampTo).toHaveBeenCalledWith(122, 0.1);
@@ -294,7 +294,7 @@ describe("ProgressionVoicingTransport", () => {
     await expect(runtime.restart()).resolves.toBe(true);
     expect(toneMock.start).toHaveBeenCalledOnce();
     expect(toneMock.transport.stop).toHaveBeenCalledOnce();
-    expect(toneMock.transport.position).toBe(0);
+    expect(toneMock.transport.start).toHaveBeenLastCalledWith("+0.05", "0i");
   });
 
   it("invalidates a pending audio start so it cannot create duplicate schedules", async () => {

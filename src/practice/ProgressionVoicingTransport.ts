@@ -178,9 +178,8 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.projectionEpoch += 1;
     this.voicingInstrument?.releaseAll();
     this.transport.stop();
-    this.transport.position = 0;
     this.paused = false;
-    this.transport.start("+0.05");
+    this.transport.start("+0.05", "0i");
     return true;
   }
 
