@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "phaseId": "5.29",
-  "status": "in-progress",
-  "activeStage": "P5.29-01",
-  "completedStages": ["P5.29-00"],
+  "status": "completed",
+  "activeStage": null,
+  "completedStages": ["P5.29-00", "P5.29-01", "P5.29-02"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "9ced9ceb24c3c9c6780f073bba3c95e6498d9452",
-  "lastVerifiedCommit": "8bbe89c94eef4cb75ca77c48d3410ffff042751b",
+  "lastVerifiedCommit": "55f8c59ee1a3ed5be24ed4b1b61f997f7275fda5",
   "currentBranch": "feat/p529-voicing-loop-harmonic-rhythm",
   "requiredGates": {
     "P5.29-00": ["phase-docs-validation", "production-source-unchanged", "diff-check"],
@@ -17,8 +17,16 @@
   "gateResults": {
     "phase-docs-validation": "pass",
     "production-source-unchanged": "pass",
-    "diff-check": "pass"
+    "focused-harmonic-rhythm": "pass",
+    "existing-clock-playback-regression": "pass",
+    "focused-vitest": "pass",
+    "text-vault-practice-regression": "pass",
+    "focused-playwright": "pass",
+    "typescript-lint": "pass",
+    "privacy-hygiene": "pass",
+    "diff-check": "pass",
+    "clean-status": "pass"
   },
-  "nextAction": "Implement P5.29-01 focused timing hardening.",
-  "updatedAt": "2026-09-13T15:52:00+09:00"
+  "nextAction": "Await human review and separate merge authorization. Do not push.",
+  "updatedAt": "2026-09-13T16:02:00+09:00"
 }

@@ -4,12 +4,12 @@
 
 ## Status
 
-- **Status:** in_progress
-- **Active stage:** P5.29-01
-- **Completed stages:** P5.29-00
+- **Status:** complete
+- **Active stage:** none
+- **Completed stages:** P5.29-00, P5.29-01, P5.29-02
 - **Base:** 9ced9ceb24c3c9c6780f073bba3c95e6498d9452
 - **Branch:** feat/p529-voicing-loop-harmonic-rhythm
-- **Next action:** add the canonical end-to-end timing fixture and compact strip metadata
+- **Next action:** await human review and separate merge authorization; do not push
 
 ## Required Reading Order
 
@@ -20,9 +20,10 @@
 5. [Harmonic rhythm contract](contracts/01-harmonic-rhythm-contract.md)
 6. [Repository audit](audit/P5.29-00-timing-audit.md)
 7. [Reports](reports/README.md)
-8. [P5.27 single clock](../phase5.27/contracts/03-practice-clock-contract.md)
-9. [P5.27 integration protection](../phase5.27/contracts/10-integration-protection-contract.md)
-10. [P5.28 source selection](../phase5.28/contracts/02-inline-vault-selection-contract.md)
+8. [P5.29 focused acceptance](reports/P5.29-02-focused-acceptance.md)
+9. [P5.27 single clock](../phase5.27/contracts/03-practice-clock-contract.md)
+10. [P5.27 integration protection](../phase5.27/contracts/10-integration-protection-contract.md)
+11. [P5.28 source selection](../phase5.28/contracts/02-inline-vault-selection-contract.md)
 
 ## Stages
 
