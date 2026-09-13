@@ -5,11 +5,11 @@
 ## Status
 
 - **Status:** in_progress
-- **Active stage:** P5.30-00
-- **Completed stages:** none
+- **Active stage:** P5.30-01
+- **Completed stages:** P5.30-00
 - **Base:** `15b1ed8222105abb0b57c3e19c0ecdc912dc9476`
 - **Branch:** `feat/p530-voicing-loop-polish`
-- **Next action:** complete the audit-only Stage00 gates and stop
+- **Next action:** await explicit authorization before starting P5.30-01
 
 ## Purpose
 

@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "5.30",
   "status": "in-progress",
-  "activeStage": "P5.30-00",
-  "completedStages": [],
+  "activeStage": "P5.30-01",
+  "completedStages": ["P5.30-00"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "15b1ed8222105abb0b57c3e19c0ecdc912dc9476",
-  "lastVerifiedCommit": "15b1ed8222105abb0b57c3e19c0ecdc912dc9476",
+  "lastVerifiedCommit": "b9c41b39ce2dbaa60848a5090b864d6d464c45b7",
   "currentBranch": "feat/p530-voicing-loop-polish",
   "requiredGates": {
     "P5.30-00": ["phase-docs-validation", "baseline-ancestry", "intake-manifest-integrity", "production-source-unchanged", "diff-check"],
@@ -16,7 +16,13 @@
     "P5.30-03": ["focused-audio-interactions", "audio-lifecycle-stress", "all-mode-regression", "focused-playwright", "typescript-lint", "diff-check"],
     "P5.30-04": ["related-vitest", "playwright-regression", "production-build", "phase-docs-validation", "privacy-hygiene", "generated-output-hygiene", "diff-check", "clean-status"]
   },
-  "gateResults": {},
-  "nextAction": "Finish P5.30-00 audit gates, record its commit, and stop.",
-  "updatedAt": "2026-09-13T16:20:00+09:00"
+  "gateResults": {
+    "phase-docs-validation": "pass",
+    "baseline-ancestry": "pass",
+    "intake-manifest-integrity": "pass",
+    "production-source-unchanged": "pass",
+    "diff-check": "pass"
+  },
+  "nextAction": "Await explicit authorization before starting P5.30-01.",
+  "updatedAt": "2026-09-13T17:43:16+09:00"
 }
