@@ -10,11 +10,11 @@ P5.27のProgression Voicing Practiceを、保存済み進行やText保存のhand
 ## Status
 
 - **Status:** in progress
-- **Active stage:** P5.28-00
-- **Completed stages:** none
+- **Active stage:** P5.28-01
+- **Completed stages:** P5.28-00
 - **Base:** `df971c2cec121199296eb8e394dc18bec5bbe21f`
 - **Branch:** `feat/p528-voicing-loop-navigation`
-- **Next action:** Stage 00文書を独立commitとしてcloseし、Stage 01のproduction変更前に停止する
+- **Next action:** Stage 01のnavigation / empty-state implementationを開始する
 
 この節、[`execution-state.json`](execution-state.json)、active stage reportを各stage末に同期する。
 
