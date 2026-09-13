@@ -1,4 +1,9 @@
 import * as Tone from "tone";
+import {
+  createPreviewInstrument,
+  type PreviewInstrument,
+  type PreviewSound,
+} from "../audio/chordPreview";
 import type {
   ProgressionPracticeVoicingPlan,
   ProgressionVoicingPracticeSnapshot,
@@ -15,6 +20,7 @@ export interface ProgressionVoicingTransportStartOptions {
   readonly countInBars: 0 | 1 | 2;
   readonly metronomeEnabled: boolean;
   readonly referenceSoundEnabled?: boolean;
+  readonly sound?: PreviewSound;
   readonly startBeat?: number;
   readonly onTransportBeat: (absoluteBeat: number) => void;
 }
@@ -22,13 +28,13 @@ export interface ProgressionVoicingTransportStartOptions {
 export interface ProgressionVoicingTransportPort {
   start(options: ProgressionVoicingTransportStartOptions): Promise<void>;
   pause(): boolean;
-  resume(): boolean;
-  restart(): boolean;
+  resume(): Promise<boolean>;
+  restart(): Promise<boolean>;
   stop(): void;
   setBpm(bpm: number): void;
   setMetronomeEnabled(enabled: boolean): void;
   setReferenceSoundEnabled(enabled: boolean): void;
-  audition(midiNotes: readonly number[]): Promise<void>;
+  audition(midiNotes: readonly number[], sound?: PreviewSound): Promise<void>;
 }
 
 /**
@@ -38,7 +44,8 @@ export interface ProgressionVoicingTransportPort {
 export class ProgressionVoicingTransport implements ProgressionVoicingTransportPort {
   private readonly transport = Tone.getTransport();
   private scheduleIds: number[] = [];
-  private voicingSynth?: Tone.PolySynth<Tone.FMSynth>;
+  private voicingInstrument?: PreviewInstrument;
+  private voicingSound?: PreviewSound;
   private clickSynth?: Tone.Synth;
   private generation = 0;
   private projectionEpoch = 0;
@@ -59,10 +66,18 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.startingGeneration = generation;
     await Tone.start();
     if (generation !== this.generation || this.startingGeneration !== generation) return;
-    this.startingGeneration = undefined;
 
     const ppq = this.transport.PPQ;
     assertCompatibleRuntimePpq(ppq);
+
+    const sound = options.sound ?? "electric-piano";
+    const voicingInstrument = await createPreviewInstrument(sound);
+    if (generation !== this.generation || this.startingGeneration !== generation) {
+      voicingInstrument.dispose();
+      return;
+    }
+    this.startingGeneration = undefined;
+
     const countInBeats = options.countInBars * options.snapshot.meter.numerator;
     const loopTicks = Math.max(1, runtimeTickAtPracticeBeat(options.snapshot.lengthBeats, ppq));
     const startBeat = Math.max(0, options.startBeat ?? 0);
@@ -71,7 +86,8 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.transport.position = `${Math.round(startBeat * ppq)}i`;
     this.transport.bpm.value = this.desiredBpm;
     this.activeOptions = options;
-    this.voicingSynth = createVoicingSynth();
+    this.voicingInstrument = voicingInstrument;
+    this.voicingSound = sound;
     this.clickSynth = createClickSynth();
 
     options.snapshot.events.forEach((event, eventIndex) => {
@@ -122,21 +138,23 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.projectionEpoch += 1;
     this.paused = true;
     this.transport.pause();
-    this.disposeInstruments();
+    this.voicingInstrument?.releaseAll();
     return true;
   }
 
-  resume(): boolean {
+  async resume(): Promise<boolean> {
     if (!this.running || !this.paused || !this.ownsTransport) return false;
+    const generation = this.generation;
+    await Tone.start();
+    if (generation !== this.generation || !this.running || !this.paused || !this.ownsTransport) return false;
     this.projectionEpoch += 1;
-    this.recreateInstruments();
     this.paused = false;
     this.attackCurrentVoicing(this.transport.ticks / this.transport.PPQ, Tone.now());
     this.transport.start();
     return true;
   }
 
-  restart(): boolean {
+  async restart(): Promise<boolean> {
     if (this.startingGeneration !== undefined && !this.ownsTransport) {
       this.generation += 1;
       this.projectionEpoch += 1;
@@ -144,9 +162,11 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
       return false;
     }
     if (!this.running || !this.ownsTransport) return false;
+    const generation = this.generation;
+    await Tone.start();
+    if (generation !== this.generation || !this.running || !this.ownsTransport) return false;
     this.projectionEpoch += 1;
-    this.disposeInstruments();
-    this.recreateInstruments();
+    this.voicingInstrument?.releaseAll();
     this.transport.stop();
     this.transport.position = 0;
     this.paused = false;
@@ -170,17 +190,26 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
 
   setReferenceSoundEnabled(enabled: boolean): void {
     this.referenceSoundEnabled = enabled;
-    if (!enabled) this.voicingSynth?.releaseAll();
+    if (!enabled) this.voicingInstrument?.releaseAll();
   }
 
-  async audition(midiNotes: readonly number[]): Promise<void> {
+  async audition(midiNotes: readonly number[], sound: PreviewSound = "electric-piano"): Promise<void> {
     if (midiNotes.length === 0 || this.startingGeneration !== undefined || this.running || this.ownsTransport) return;
     const generation = ++this.generation;
     await Tone.start();
     if (generation !== this.generation || this.running || this.ownsTransport) return;
-    this.voicingSynth ??= createVoicingSynth();
-    this.voicingSynth.releaseAll();
-    this.voicingSynth.triggerAttackRelease(midiNotes.map(midiToNoteName), "1n", Tone.now(), 0.72);
+    if (!this.voicingInstrument || this.voicingSound !== sound) {
+      this.disposeInstruments();
+      const instrument = await createPreviewInstrument(sound);
+      if (generation !== this.generation || this.running || this.ownsTransport) {
+        instrument.dispose();
+        return;
+      }
+      this.voicingInstrument = instrument;
+      this.voicingSound = sound;
+    }
+    this.voicingInstrument.releaseAll();
+    this.voicingInstrument.triggerAttackRelease(midiNotes.map(midiToNoteName), 2, Tone.now(), 0.72);
   }
 
   private invalidateAndClear(): number {
@@ -208,22 +237,18 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     return Math.max(0, this.transport.getTicksAtTime(time) / ppq);
   }
 
-  private recreateInstruments(): void {
-    this.voicingSynth = createVoicingSynth();
-    this.clickSynth = createClickSynth();
-  }
-
   private disposeInstruments(): void {
-    this.voicingSynth?.releaseAll();
-    this.voicingSynth?.dispose();
+    this.voicingInstrument?.releaseAll();
+    this.voicingInstrument?.dispose();
     this.clickSynth?.dispose();
-    this.voicingSynth = undefined;
+    this.voicingInstrument = undefined;
+    this.voicingSound = undefined;
     this.clickSynth = undefined;
   }
 
   private attackCurrentVoicing(absoluteBeat: number, time: number): void {
     const options = this.activeOptions;
-    if (!options || !this.voicingSynth || !this.referenceSoundEnabled) return;
+    if (!options || !this.voicingInstrument || !this.referenceSoundEnabled) return;
     const countInBeats = options.countInBars * options.snapshot.meter.numerator;
     if (absoluteBeat < countInBeats) return;
     const progressionBeat = (absoluteBeat - countInBeats) % options.snapshot.lengthBeats;
@@ -236,22 +261,18 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     }
     const resolution = options.plan.events[eventIndex];
     if (resolution?.status !== "SUPPORTED") return;
-    this.voicingSynth.releaseAll(time);
-    this.voicingSynth.triggerAttack(resolution.voicing.midiNotes.map(midiToNoteName), time, 0.72);
+    const event = options.snapshot.events[eventIndex]!;
+    const elapsedBeats = progressionBeat - event.startBeat;
+    const remainingBeats = Math.max(0.05, event.durationBeats - elapsedBeats);
+    const durationSeconds = Math.max(0.05, remainingBeats * 60 / this.desiredBpm);
+    this.voicingInstrument.releaseAll(time);
+    this.voicingInstrument.triggerAttackRelease(
+      resolution.voicing.midiNotes.map(midiToNoteName),
+      durationSeconds,
+      time,
+      0.72,
+    );
   }
-}
-
-function createVoicingSynth(): Tone.PolySynth<Tone.FMSynth> {
-  const synth = new Tone.PolySynth(Tone.FMSynth, {
-    harmonicity: 1,
-    modulationIndex: 1.8,
-    oscillator: { type: "sine" },
-    modulation: { type: "sine" },
-    envelope: { attack: 0.006, decay: 0.75, sustain: 0.24, release: 0.32 },
-    modulationEnvelope: { attack: 0.006, decay: 0.15, sustain: 0.04, release: 0.2 },
-  }).toDestination();
-  synth.volume.value = -8;
-  return synth;
 }
 
 function createClickSynth(): Tone.Synth {

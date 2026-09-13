@@ -8,6 +8,7 @@ import {
   PROGRESSION_VOICING_PRACTICE_PPQ,
   progressionPracticeTicksAtBeat,
 } from "../domain/progressionVoicingPractice";
+import { createPreviewInstrument } from "../audio/chordPreview";
 import { ProgressionVoicingTransport } from "./ProgressionVoicingTransport";
 
 const toneMock = vi.hoisted(() => {
@@ -71,6 +72,10 @@ vi.mock("tone", () => ({
   now: toneMock.now,
 }));
 
+vi.mock("../audio/chordPreview", () => ({
+  createPreviewInstrument: vi.fn(async () => new toneMock.PolySynth()),
+}));
+
 beforeEach(() => {
   vi.clearAllMocks();
   toneMock.scheduled.length = 0;
@@ -85,6 +90,32 @@ beforeEach(() => {
 });
 
 describe("ProgressionVoicingTransport", () => {
+  it("creates the selected Piano or Electric Piano preview instrument", async () => {
+    const runtime = new ProgressionVoicingTransport();
+    await runtime.start({
+      snapshot,
+      plan,
+      bpm: 80,
+      countInBars: 0,
+      metronomeEnabled: false,
+      sound: "piano",
+      onTransportBeat: vi.fn(),
+    });
+    expect(createPreviewInstrument).toHaveBeenLastCalledWith("piano");
+    runtime.stop();
+
+    await runtime.start({
+      snapshot,
+      plan,
+      bpm: 80,
+      countInBars: 0,
+      metronomeEnabled: false,
+      sound: "electric-piano",
+      onTransportBeat: vi.fn(),
+    });
+    expect(createPreviewInstrument).toHaveBeenLastCalledWith("electric-piano");
+  });
+
   it("schedules voicings, click, and visual projection on one Tone Transport", async () => {
     const onTransportBeat = vi.fn();
     const runtime = new ProgressionVoicingTransport();
@@ -102,8 +133,13 @@ describe("ProgressionVoicingTransport", () => {
 
     toneMock.transport.getTicksAtTime.mockReturnValueOnce(1152);
     toneMock.scheduled[0]?.callback(1.5);
-    expect(toneMock.instruments[0]?.releaseAll).toHaveBeenCalledWith(1.5);
-    expect(toneMock.instruments[0]?.triggerAttack).toHaveBeenCalledWith(["D3", "A3", "C4"], 1.5, 0.72);
+    expect(toneMock.instruments[0]?.releaseAll).toHaveBeenCalled();
+    expect(toneMock.instruments[0]?.triggerAttackRelease).toHaveBeenCalledWith(
+      ["D3", "A3", "C4"],
+      expect.any(Number),
+      1.5,
+      0.72,
+    );
 
     toneMock.transport.getTicksAtTime.mockReturnValueOnce(768);
     toneMock.scheduled[2]?.callback(1.75);
@@ -131,7 +167,7 @@ describe("ProgressionVoicingTransport", () => {
     });
     const referenceSynth = toneMock.instruments[0]!;
     toneMock.scheduled[0]?.callback(1);
-    expect(referenceSynth.triggerAttack).not.toHaveBeenCalled();
+    expect(referenceSynth.triggerAttackRelease).not.toHaveBeenCalled();
     toneMock.scheduled[2]?.callback(1.25);
     expect(toneMock.instruments[1]?.triggerAttackRelease).toHaveBeenCalledTimes(1);
     toneMock.scheduled[3]?.callback(1.5);
@@ -142,8 +178,8 @@ describe("ProgressionVoicingTransport", () => {
     toneMock.scheduled[0]?.callback(2);
     toneMock.transport.getTicksAtTime.mockReturnValueOnce(384);
     toneMock.scheduled[1]?.callback(2.5);
-    expect(referenceSynth.triggerAttack).toHaveBeenCalledTimes(2);
-    expect(referenceSynth.triggerAttack.mock.calls.map(([notes]) => notes)).toEqual([
+    expect(referenceSynth.triggerAttackRelease).toHaveBeenCalledTimes(2);
+    expect(referenceSynth.triggerAttackRelease.mock.calls.map(([notes]) => notes)).toEqual([
       ["C3", "G3", "B3"],
       ["D3", "A3", "C4"],
     ]);
@@ -151,10 +187,10 @@ describe("ProgressionVoicingTransport", () => {
     runtime.setReferenceSoundEnabled(false);
     expect(referenceSynth.releaseAll).toHaveBeenCalled();
     toneMock.scheduled[0]?.callback(3);
-    expect(referenceSynth.triggerAttack).toHaveBeenCalledTimes(2);
+    expect(referenceSynth.triggerAttackRelease).toHaveBeenCalledTimes(2);
     expect(runtime.pause()).toBe(true);
-    expect(runtime.resume()).toBe(true);
-    expect(toneMock.instruments[2]?.triggerAttack).not.toHaveBeenCalled();
+    await expect(runtime.resume()).resolves.toBe(true);
+    expect(referenceSynth.triggerAttackRelease).toHaveBeenCalledTimes(2);
     runtime.stop();
 
     const transportPosition = toneMock.transport.position;
@@ -162,7 +198,7 @@ describe("ProgressionVoicingTransport", () => {
     expect(toneMock.transport.position).toBe(transportPosition);
     expect(toneMock.instruments[toneMock.instruments.length - 1]?.triggerAttackRelease).toHaveBeenCalledWith(
       ["C4", "E4", "G4"],
-      "1n",
+      2,
       1,
       0.72,
     );
@@ -176,10 +212,10 @@ describe("ProgressionVoicingTransport", () => {
     const referenceSynth = toneMock.instruments[0]!;
     toneMock.transport.getTicksAtTime.mockReturnValueOnce(384);
     toneMock.scheduled[0]?.callback(1);
-    expect(referenceSynth.triggerAttack).not.toHaveBeenCalled();
+    expect(referenceSynth.triggerAttackRelease).not.toHaveBeenCalled();
     toneMock.transport.getTicksAtTime.mockReturnValueOnce(768);
     toneMock.scheduled[0]?.callback(2);
-    expect(referenceSynth.triggerAttack).toHaveBeenCalledTimes(1);
+    expect(referenceSynth.triggerAttackRelease).toHaveBeenCalledTimes(1);
   });
 
   it("pauses, resumes, restarts without rebuilding, and clears every owned schedule", async () => {
@@ -190,13 +226,13 @@ describe("ProgressionVoicingTransport", () => {
     const originalVoicingSynth = toneMock.instruments[0]!;
     runtime.pause();
     boundary.callback(1);
-    expect(originalVoicingSynth.triggerAttack).not.toHaveBeenCalled();
-    expect(originalVoicingSynth.dispose).toHaveBeenCalledTimes(1);
-    runtime.resume();
-    toneMock.instruments[2]?.triggerAttack.mockClear();
+    expect(originalVoicingSynth.triggerAttackRelease).not.toHaveBeenCalled();
+    expect(originalVoicingSynth.dispose).not.toHaveBeenCalled();
+    await runtime.resume();
+    originalVoicingSynth.triggerAttackRelease.mockClear();
     boundary.callback(2);
-    expect(toneMock.instruments[2]?.triggerAttack).toHaveBeenCalledTimes(1);
-    runtime.restart();
+    expect(originalVoicingSynth.triggerAttackRelease).toHaveBeenCalledTimes(1);
+    await runtime.restart();
     expect(toneMock.scheduled).toHaveLength(scheduleCount);
     expect(toneMock.transport.pause).toHaveBeenCalledTimes(1);
     expect(toneMock.transport.position).toBe(0);
@@ -205,6 +241,30 @@ describe("ProgressionVoicingTransport", () => {
     expect(toneMock.transport.bpm.rampTo).toHaveBeenCalledWith(122, 0.1);
     runtime.stop();
     expect(toneMock.transport.clear).toHaveBeenCalledTimes(scheduleCount);
+  });
+
+  it("resumes the audio context before resuming or restarting progression and reference audio", async () => {
+    const runtime = new ProgressionVoicingTransport();
+    await runtime.start({ snapshot, plan, bpm: 80, countInBars: 0, metronomeEnabled: false, onTransportBeat: vi.fn() });
+    expect(runtime.pause()).toBe(true);
+    toneMock.start.mockClear();
+    toneMock.transport.start.mockClear();
+    let release!: () => void;
+    toneMock.start.mockReturnValueOnce(new Promise<void>((resolve) => { release = resolve; }));
+
+    const resumed = runtime.resume();
+    expect(toneMock.transport.start).not.toHaveBeenCalled();
+    release();
+    await expect(resumed).resolves.toBe(true);
+    expect(toneMock.transport.start).toHaveBeenCalledOnce();
+    expect(toneMock.instruments[0]?.triggerAttackRelease).toHaveBeenCalled();
+
+    toneMock.start.mockClear();
+    toneMock.transport.stop.mockClear();
+    await expect(runtime.restart()).resolves.toBe(true);
+    expect(toneMock.start).toHaveBeenCalledOnce();
+    expect(toneMock.transport.stop).toHaveBeenCalledOnce();
+    expect(toneMock.transport.position).toBe(0);
   });
 
   it("invalidates a pending audio start so it cannot create duplicate schedules", async () => {
@@ -269,9 +329,13 @@ describe("ProgressionVoicingTransport", () => {
     secondBoundary.callback(1.5);
     expect(firstBoundary.start).toBe("0i");
     expect(secondBoundary.start).toBe("384i");
-    expect(toneMock.instruments[0]?.triggerAttackRelease).not.toHaveBeenCalled();
-    expect(toneMock.instruments[0]?.releaseAll).toHaveBeenLastCalledWith(1.5);
-    expect(toneMock.instruments[0]?.triggerAttack).toHaveBeenLastCalledWith(["D3", "A3", "C4"], 1.5, 0.72);
+    expect(toneMock.instruments[0]?.releaseAll).toHaveBeenCalled();
+    expect(toneMock.instruments[0]?.triggerAttackRelease).toHaveBeenLastCalledWith(
+      ["D3", "A3", "C4"],
+      expect.any(Number),
+      1.5,
+      0.72,
+    );
     expect(toneMock.transport.bpm.rampTo).toHaveBeenCalledWith(160, 0.1);
   });
 
@@ -303,7 +367,7 @@ describe("ProgressionVoicingTransport", () => {
     toneMock.transport.getTicksAtTime.mockReturnValueOnce(192);
     visual.callback(1);
     expect(runtime.pause()).toBe(true);
-    expect(runtime.resume()).toBe(true);
+    await expect(runtime.resume()).resolves.toBe(true);
     toneMock.drawCallbacks.shift()?.();
     expect(onTransportBeat).not.toHaveBeenCalled();
 
@@ -315,7 +379,7 @@ describe("ProgressionVoicingTransport", () => {
     onTransportBeat.mockClear();
     toneMock.transport.getTicksAtTime.mockReturnValueOnce(576);
     visual.callback(3);
-    expect(runtime.restart()).toBe(true);
+    await expect(runtime.restart()).resolves.toBe(true);
     toneMock.drawCallbacks.shift()?.();
     expect(onTransportBeat).not.toHaveBeenCalled();
 
@@ -456,7 +520,7 @@ describe("ProgressionVoicingTransport", () => {
     const onTransportBeat = vi.fn();
     const cycles = 20;
     const schedulesPerCycle = 4;
-    const instrumentsPerCycle = 6;
+    const instrumentsPerCycle = 2;
 
     for (let cycle = 0; cycle < cycles; cycle += 1) {
       await runtime.start({
@@ -482,8 +546,8 @@ describe("ProgressionVoicingTransport", () => {
       expect(toneMock.activeInstruments.size).toBe(2);
 
       expect(runtime.pause()).toBe(true);
-      expect(runtime.resume()).toBe(true);
-      expect(runtime.restart()).toBe(true);
+      await expect(runtime.resume()).resolves.toBe(true);
+      await expect(runtime.restart()).resolves.toBe(true);
       runtime.stop();
       expect(toneMock.activeScheduleIds.size).toBe(0);
       expect(toneMock.activeInstruments.size).toBe(0);

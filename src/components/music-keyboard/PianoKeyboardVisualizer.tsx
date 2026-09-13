@@ -32,6 +32,7 @@ export interface PianoKeyboardVisualizerProps {
   language: "ja" | "en";
   concealNoteNames?: boolean;
   interactionMode?: "practice" | "neutral-monitor";
+  centerWhenFitted?: boolean;
 }
 
 const copy = {
@@ -87,6 +88,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
   language,
   concealNoteNames = false,
   interactionMode = "practice",
+  centerWhenFitted = false,
 }: PianoKeyboardVisualizerProps) {
   const text = copy[language];
   const range = useMemo(
@@ -161,16 +163,20 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
             countLabel={text.outsideCount}
           />
         ) : null}
-        <svg
-          role="img"
-          aria-label={ariaLabel}
-          viewBox={`0 0 ${geometry.width} ${KEYBOARD_HEIGHT}`}
-          width={geometry.width}
-          height={KEYBOARD_HEIGHT}
-          className="block h-[clamp(6rem,13vw,8rem)] max-w-none"
-          style={{ minWidth: `${geometry.width}px` }}
-          preserveAspectRatio="none"
+        <div
+          className={centerWhenFitted ? "w-max min-w-full" : "w-max"}
+          data-keyboard-alignment={centerWhenFitted ? "center-when-fitted" : "start"}
         >
+          <svg
+            role="img"
+            aria-label={ariaLabel}
+            viewBox={`0 0 ${geometry.width} ${KEYBOARD_HEIGHT}`}
+            width={geometry.width}
+            height={KEYBOARD_HEIGHT}
+            className={`block h-[clamp(6rem,13vw,8rem)] max-w-none ${centerWhenFitted ? "mx-auto" : ""}`}
+            style={{ minWidth: `${geometry.width}px` }}
+            preserveAspectRatio="none"
+          >
           <g data-key-layer="white">
             {visibleKeys.map((key) => (
               <PianoKey
@@ -223,7 +229,8 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
               />
             ))}
           </g>
-        </svg>
+          </svg>
+        </div>
       </div>
       <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-xs text-[var(--lv-text-muted)]">
         {showGuide && (leftHandGuideNotes.length > 0 || rightHandGuideNotes.length > 0) ? (

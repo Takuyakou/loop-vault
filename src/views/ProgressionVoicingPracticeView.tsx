@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Pause, Play, RefreshCw, Search, Square, Volume2 } from "lucide-react";
+import { Pause, Play, RefreshCw, Search, Settings, Square, Volume2 } from "lucide-react";
 import { useStore } from "zustand";
 import {
   computePracticeKeyboardRange,
   formatMidiNoteForDisplay,
 } from "../components/music-keyboard";
 import { PracticeKeyboard } from "../components/practice/PracticeKeyboard";
+import { usePreviewSound } from "../components/PreviewSoundProvider";
 import { Badge, Button, EmptyState, Field, SectionHeading, StatusMessage, Surface } from "../components/ui";
 import {
   createProgressionPracticeClockState,
@@ -52,6 +53,7 @@ export interface ProgressionVoicingPracticeViewProps {
   readonly vaultProgressions?: readonly VoicingLoopVaultCandidate[];
   readonly onSelectProgression: (reference: ProgressionPracticeSourceReference) => boolean;
   readonly onEnterText: () => void;
+  readonly openMidiSettings?: () => void;
   readonly transportFactory?: () => ProgressionVoicingTransportPort;
   readonly resolutionOptions?: ResolveProgressionPracticeVoicingsOptions;
 }
@@ -131,8 +133,13 @@ const copy = {
     unsupportedStatus: "未対応の規則",
     generationErrorStatus: "生成エラー",
     unresolvedSummary: (count: number) => `${count}個のコードを再生できません`,
-    midiOn: "MIDI monitor 接続中",
-    midiOff: "MIDI monitor は任意です",
+    midi: "MIDI入力",
+    connected: "接続済み",
+    connecting: "接続中",
+    disconnected: "未接続",
+    reconnect: "再接続",
+    settings: "設定",
+    midiActivationFailed: "MIDI入力を開始できませんでした。",
     beatLabel: (beat: number, total: number) => `${beat} / ${total} 拍`,
     loopLabel: (count: number) => `${count} 周完了`,
   },
@@ -197,8 +204,13 @@ const copy = {
     unsupportedStatus: "Unsupported rule",
     generationErrorStatus: "Generation error",
     unresolvedSummary: (count: number) => `${count} chords cannot be played`,
-    midiOn: "MIDI monitor connected",
-    midiOff: "MIDI monitor is optional",
+    midi: "MIDI input",
+    connected: "Connected",
+    connecting: "Connecting",
+    disconnected: "Disconnected",
+    reconnect: "Reconnect",
+    settings: "Settings",
+    midiActivationFailed: "MIDI input could not be activated.",
     beatLabel: (beat: number, total: number) => `Beat ${beat} of ${total}`,
     loopLabel: (count: number) => `${count} completed`,
   },
@@ -210,12 +222,14 @@ export function ProgressionVoicingPracticeView({
   monitorMidi = true,
   onSelectProgression,
   onEnterText,
+  openMidiSettings,
   resolutionOptions,
   snapshots,
   transportFactory = createDefaultTransport,
   vaultProgressions = EMPTY_VAULT_PROGRESSIONS,
 }: ProgressionVoicingPracticeViewProps) {
   const text = copy[language];
+  const { sound: previewSound } = usePreviewSound();
   const [selection, setSelection] = useState<ProgressionVoicingSelection>(initialSelection);
   const snapshot = snapshots?.[selection];
   const progressionLoaded = Boolean(snapshots && Object.values(snapshots).some(Boolean));
@@ -262,6 +276,7 @@ export function ProgressionVoicingPracticeView({
   const [referenceSoundEnabled, setReferenceSoundEnabled] = useState(true);
   const [auditionedIndex, setAuditionedIndex] = useState<number>();
   const [runtimeError, setRuntimeError] = useState<string>();
+  const [midiReconnectError, setMidiReconnectError] = useState<string>();
   const transportRef = useRef<ProgressionVoicingTransportPort>();
   const runtimeRequestRef = useRef(0);
   const midiLeaseRef = useRef<LiveMidiActivationLease>();
@@ -269,6 +284,8 @@ export function ProgressionVoicingPracticeView({
   const timelineEventRefs = useRef<Array<HTMLButtonElement | null>>([]);
   if (!transportRef.current) transportRef.current = transportFactory();
   const midiStatus = useStore(defaultLiveMidiStore, (state) => state.status);
+  const selectedMidiDevice = useStore(defaultLiveMidiStore, (state) => state.selected);
+  const midiStoreError = useStore(defaultLiveMidiStore, (state) => state.error);
 
   useEffect(() => {
     const transport = transportRef.current;
@@ -283,7 +300,7 @@ export function ProgressionVoicingPracticeView({
       runtimeRequestRef.current += 1;
       transport?.stop();
     };
-  }, [countInBars, snapshot]);
+  }, [countInBars, previewSound, snapshot]);
 
   useEffect(() => {
     if (!monitorMidi || !progressionLoaded) return undefined;
@@ -367,6 +384,7 @@ export function ProgressionVoicingPracticeView({
         countInBars,
         metronomeEnabled,
         referenceSoundEnabled,
+        sound: previewSound,
         startBeat,
         onTransportBeat(absoluteBeat) {
           if (runtimeRequestRef.current !== request) return;
@@ -394,24 +412,68 @@ export function ProgressionVoicingPracticeView({
       : state);
   }
 
-  function resume() {
+  async function resume() {
     if (!snapshot || !clockState) return;
-    const resumed = transportRef.current?.resume() ?? false;
-    setClockState((state) => state
-      ? reduceProgressionPracticeClock(snapshot, state, { type: "RESUME" })
-      : state);
-    if (!resumed) void launchRuntime(clockState.transportBeat, clockState.bpm);
+    const request = runtimeRequestRef.current;
+    try {
+      const resumed = await transportRef.current?.resume() ?? false;
+      if (runtimeRequestRef.current !== request) return;
+      setClockState((state) => state
+        ? reduceProgressionPracticeClock(snapshot, state, { type: "RESUME" })
+        : state);
+      if (!resumed) await launchRuntime(clockState.transportBeat, clockState.bpm);
+    } catch {
+      if (runtimeRequestRef.current !== request) return;
+      handleRuntimeFailure();
+    }
   }
 
-  function restart() {
+  async function restart() {
     if (!snapshot || !clockState) return;
-    const restarted = transportRef.current?.restart() ?? false;
+    const request = runtimeRequestRef.current;
+    try {
+      const restarted = await transportRef.current?.restart() ?? false;
+      if (runtimeRequestRef.current !== request) return;
+      setClockState((state) => state
+        ? reduceProgressionPracticeClock(snapshot, state, { type: "RESTART" })
+        : state);
+      if (!restarted) {
+        runtimeRequestRef.current += 1;
+        await launchRuntime(0, clockState.bpm);
+      }
+    } catch {
+      if (runtimeRequestRef.current !== request) return;
+      handleRuntimeFailure();
+    }
+  }
+
+  function handleRuntimeFailure() {
+    if (!snapshot) return;
+    runtimeRequestRef.current += 1;
+    transportRef.current?.stop();
     setClockState((state) => state
-      ? reduceProgressionPracticeClock(snapshot, state, { type: "RESTART" })
+      ? reduceProgressionPracticeClock(snapshot, state, { type: "STOP" })
       : state);
-    if (!restarted) {
-      runtimeRequestRef.current += 1;
-      void launchRuntime(0, clockState.bpm);
+    setRuntimeError(text.playbackErrorBody);
+  }
+
+  async function reconnectMidi() {
+    setMidiReconnectError(undefined);
+    const store = defaultLiveMidiStore.getState();
+    try {
+      if (!store.active) {
+        await midiLeaseRef.current?.ensureActive();
+        return;
+      }
+      await store.refreshDevices();
+      const refreshed = defaultLiveMidiStore.getState();
+      const preferred = refreshed.preferences.preferredInput;
+      const device = refreshed.devices.find((candidate) => (
+        candidate.backendId === preferred?.backendId || candidate.name === preferred?.name
+      ));
+      if (device) await refreshed.selectDevice(device.backendId);
+    } catch {
+      setMidiReconnectError(text.midiActivationFailed);
     }
   }
 
@@ -439,7 +501,7 @@ export function ProgressionVoicingPracticeView({
     setRuntimeError(undefined);
     setAuditionedIndex(index);
     try {
-      await transportRef.current?.audition(resolution.voicing.midiNotes);
+    await transportRef.current?.audition(resolution.voicing.midiNotes, previewSound);
     } catch {
       if (runtimeRequestRef.current !== request) return;
       transportRef.current?.stop();
@@ -616,6 +678,12 @@ export function ProgressionVoicingPracticeView({
                 <Metric label={text.loop} value={text.loopLabel(projection?.loopCount ?? 0)} />
               </div>
 
+              <BeatIndicator
+                current={projection?.inCountIn ? projection.countInBeat ?? 1 : projection?.beatInChord ?? 1}
+                total={projection?.inCountIn ? snapshot.meter.numerator : projection?.beatsInChord ?? 1}
+                label={text.beat}
+              />
+
               <div className="mt-5 space-y-3">
                 <ProgressMeter label={text.chordProgress} value={projection?.chordProgress ?? 0} />
                 <ProgressMeter label={text.progressionProgress} value={projection?.progressionProgress ?? 0} />
@@ -625,9 +693,6 @@ export function ProgressionVoicingPracticeView({
             <Surface className="min-w-0 p-5">
               <p className="lv-section-kicker">{text.next}</p>
               <p className="mt-3 break-words text-2xl font-bold text-[var(--lv-text)]">{nextEvent?.chord.label}</p>
-              <p className="mt-5 text-xs text-[var(--lv-text-muted)]">
-                {midiStatus === "connected" ? text.midiOn : text.midiOff}
-              </p>
             </Surface>
           </div>
 
@@ -718,6 +783,7 @@ export function ProgressionVoicingPracticeView({
                 language={language}
                 concealNoteNames={displayMode === "recall"}
                 interactionMode="neutral-monitor"
+                centerWhenFitted
               />
             </div>
           </Surface>
@@ -766,12 +832,22 @@ export function ProgressionVoicingPracticeView({
                   ) : active ? (
                     <Button variant="primary" onClick={pause}><Pause aria-hidden="true" size={16} />{text.pause}</Button>
                   ) : (
-                    <Button variant="primary" onClick={resume}><Play aria-hidden="true" size={16} />{text.resume}</Button>
+                    <Button variant="primary" onClick={() => void resume()}><Play aria-hidden="true" size={16} />{text.resume}</Button>
                   )}
-                  <Button variant="secondary" disabled={!active && !paused} onClick={restart}><RefreshCw aria-hidden="true" size={16} />{text.restart}</Button>
+                  <Button variant="secondary" disabled={!active && !paused} onClick={() => void restart()}><RefreshCw aria-hidden="true" size={16} />{text.restart}</Button>
                   <Button variant="secondary" disabled={!active && !paused} onClick={stop}><Square aria-hidden="true" size={16} />{text.stop}</Button>
                   <Button variant={metronomeEnabled ? "secondary" : "ghost"} aria-pressed={metronomeEnabled} onClick={toggleMetronome}>{text.metronome}: {metronomeEnabled ? "ON" : "OFF"}</Button>
+                  <span className={`inline-flex min-h-10 items-center gap-1.5 px-1 text-sm ${midiStatus === "connected" ? "text-teal-200" : "text-amber-200"}`} data-testid="voicing-loop-midi-status">
+                    <span aria-hidden="true" className={`h-2 w-2 rounded-full ${midiStatus === "connected" ? "bg-teal-300" : "bg-amber-300"}`} />
+                    <span className="font-semibold">{text.midi}</span>
+                    <span>{midiStatus === "connected"
+                      ? `${text.connected}${selectedMidiDevice ? ` · ${selectedMidiDevice.name}` : ""}`
+                      : midiStatus === "connecting" ? text.connecting : text.disconnected}</span>
+                  </span>
+                  <Button variant="ghost" size="sm" onClick={() => void reconnectMidi()}><RefreshCw aria-hidden="true" size={16} />{text.reconnect}</Button>
+                  <Button variant="ghost" size="sm" onClick={openMidiSettings}><Settings aria-hidden="true" size={16} />{text.settings}</Button>
                 </div>
+                {midiReconnectError || midiStoreError ? <p className="mt-2 text-xs text-amber-200">{midiReconnectError ?? midiStoreError}</p> : null}
               </div>
             </div>
           </Surface>
@@ -798,6 +874,30 @@ function practiceTimingLabel(
 
 function formatPracticeBeat(value: number): string {
   return Number.isInteger(value) ? String(value) : String(Number(value.toFixed(3)));
+}
+
+function BeatIndicator({ current, label, total }: { current: number; label: string; total: number }) {
+  const safeTotal = Math.max(1, Math.ceil(total));
+  const activeIndex = Math.min(safeTotal - 1, Math.max(0, Math.floor(current) - 1));
+  return (
+    <div
+      className="mt-5 flex min-w-0 items-center gap-3"
+      data-testid="voicing-loop-beat-indicator"
+      role="img"
+      aria-label={`${label} ${activeIndex + 1} / ${safeTotal}`}
+    >
+      <span className="text-xs font-semibold text-[var(--lv-text-muted)]">{label}</span>
+      <span className="flex flex-wrap gap-2" aria-hidden="true">
+        {Array.from({ length: safeTotal }, (_, index) => (
+          <span
+            key={index}
+            data-active={index === activeIndex ? "true" : "false"}
+            className={`h-2.5 w-2.5 rounded-full border ${index === activeIndex ? "border-[var(--lv-accent)] bg-[var(--lv-accent)]" : "border-[var(--lv-border-strong)] bg-transparent"}`}
+          />
+        ))}
+      </span>
+    </div>
+  );
 }
 
 function ProgressionChoice({

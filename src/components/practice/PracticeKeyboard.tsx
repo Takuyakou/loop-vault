@@ -27,6 +27,7 @@ interface PracticeKeyboardProps {
   matchState?: PracticeMatchState;
   concealNoteNames?: boolean;
   interactionMode?: "practice" | "neutral-monitor";
+  centerWhenFitted?: boolean;
 }
 
 const copy = {
@@ -60,6 +61,7 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
   matchState = "empty",
   concealNoteNames = false,
   interactionMode = "practice",
+  centerWhenFitted = false,
 }: PracticeKeyboardProps) {
   const liveNoteState = useStore(defaultLiveMidiStore, (state) => state.notes);
   const currentHeldNotes = useMemo(() => heldNotes(liveNoteState), [liveNoteState]);
@@ -103,6 +105,7 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
         language={language}
         concealNoteNames={concealNoteNames}
         interactionMode={interactionMode}
+        centerWhenFitted={centerWhenFitted}
       />
       <p
         className={`mt-3 min-h-5 text-sm ${

@@ -1060,6 +1060,10 @@ async function analyzeMidiPath(path: string) {
                       vaultProgressions={voicingLoopVaultCandidates}
                       onSelectProgression={openProgressionVoicingPractice}
                       onEnterText={openTextProgressionInput}
+                      openMidiSettings={() => {
+                        setSettingsOpen(true);
+                        void refreshBackups();
+                      }}
                     />
                   )}
               />

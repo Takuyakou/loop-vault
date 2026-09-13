@@ -14,6 +14,8 @@ import type {
   ProgressionVoicingTransportStartOptions,
 } from "../practice/ProgressionVoicingTransport";
 import { defaultLiveMidiStore } from "../liveMidi/defaultLiveMidiStore";
+import { PreviewSoundProvider } from "../components/PreviewSoundProvider";
+import { savePreviewSound } from "../audio/previewSoundPreference";
 import { ProgressionVoicingPracticeView } from "./ProgressionVoicingPracticeView";
 import {
   loadRecentVoicingLoopProgressions,
@@ -261,7 +263,10 @@ describe("ProgressionVoicingPracticeView", () => {
     const runtime = new FakeTransport();
     const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full");
     expect(button(container, "開始").disabled).toBe(false);
-    expect(container.textContent).toContain("MIDI monitor は任意です");
+    expect(container.querySelector("[data-testid='voicing-loop-midi-status']")?.textContent)
+      .toContain("MIDI入力未接続");
+    expect(container.querySelector("[data-testid='voicing-loop-beat-indicator']")).not.toBeNull();
+    expect(container.querySelector("[data-keyboard-alignment='center-when-fitted']")).not.toBeNull();
     expect(container.querySelectorAll("[role='progressbar']")).toHaveLength(2);
 
     const recall = button(container, "Recall（コード名のみ）");
@@ -279,13 +284,13 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(timelineCards[1]?.getAttribute("aria-label")).toContain("2/2: Dm7");
 
     await act(async () => timelineCards[1]?.click());
-    expect(runtime.audition).toHaveBeenLastCalledWith([50, 57, 60]);
+    expect(runtime.audition).toHaveBeenLastCalledWith([50, 57, 60], "piano");
     expect(timelineCards[1]?.getAttribute("aria-pressed")).toBe("true");
     expect(container.querySelector("[aria-current='step']")?.textContent).toContain("Cmaj7");
     expect(container.textContent).toContain("0 周完了");
 
     await act(async () => button(container, "現在のコードを試聴").click());
-    expect(runtime.audition).toHaveBeenLastCalledWith([48, 55, 59]);
+    expect(runtime.audition).toHaveBeenLastCalledWith([48, 55, 59], "piano");
     expect(timelineCards[0]?.getAttribute("aria-pressed")).toBe("true");
     expect(runtime.start).not.toHaveBeenCalled();
   });
@@ -301,9 +306,48 @@ describe("ProgressionVoicingPracticeView", () => {
 
     await act(async () => button(container, "開始").click());
     expect(runtime.options?.referenceSoundEnabled).toBe(false);
+    expect(runtime.options?.sound).toBe("piano");
     await act(async () => runtime.options?.onTransportBeat(6.5));
     expect(container.querySelector("[aria-current='step']")?.textContent).toContain("Dm7");
     expect(button(container, "一時停止")).not.toBeNull();
+  });
+
+  it("uses the shared Electric Piano selection for full playback and card audition", async () => {
+    savePreviewSound("electric-piano");
+    const runtime = new FakeTransport();
+    const container = await renderView(runtime, { "source-midi": snapshot("source-midi") }, "source-midi");
+    await act(async () => button(container, "開始").click());
+    expect(runtime.options?.sound).toBe("electric-piano");
+    await act(async () => Array.from(container.querySelectorAll("button"))
+      .find((entry) => entry.textContent === "停止")?.click());
+    await act(async () => button(container, "現在のコードを試聴").click());
+    expect(runtime.audition).toHaveBeenLastCalledWith([48, 55, 59], "electric-piano");
+  });
+
+  it("shows the real MIDI device beside transport controls and opens its settings", async () => {
+    const original = defaultLiveMidiStore.getState();
+    const openMidiSettings = vi.fn();
+    defaultLiveMidiStore.setState({
+      status: "connected",
+      selected: { backendId: "keyboard", name: "Studio Keyboard", index: 0 },
+    });
+    try {
+      const container = await renderView(
+        new FakeTransport(),
+        { "basic-full": snapshot("basic-full") },
+        "basic-full",
+        false,
+        { onSelectProgression: vi.fn(() => true), onEnterText: vi.fn(), openMidiSettings },
+      );
+      expect(container.querySelector("[data-testid='voicing-loop-midi-status']")?.textContent)
+        .toContain("MIDI入力接続済み · Studio Keyboard");
+      expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent)
+        .not.toContain("MIDI");
+      await act(async () => button(container, "設定").click());
+      expect(openMidiSettings).toHaveBeenCalledOnce();
+    } finally {
+      await act(async () => defaultLiveMidiStore.setState({ status: original.status, selected: original.selected }));
+    }
   });
 
   it("keeps optional monitoring non-blocking after activation failure and retries on remount", async () => {
@@ -444,6 +488,20 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("[aria-current='step']")?.textContent).toContain("Dm7");
   });
 
+  it("does not relaunch a stale resume after Stop", async () => {
+    const runtime = new FakeTransport();
+    let release!: (result: boolean) => void;
+    runtime.resume.mockImplementationOnce(() => new Promise<boolean>((resolve) => { release = resolve; }));
+    const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full");
+    await act(async () => button(container, "開始").click());
+    await act(async () => button(container, "一時停止").click());
+    await act(async () => button(container, "再開").click());
+    await act(async () => button(container, "停止").click());
+    await act(async () => release(false));
+    expect(runtime.start).toHaveBeenCalledOnce();
+    expect(container.textContent).toContain("停止しました");
+  });
+
   it("applies BPM to the latest synchronized transport position", async () => {
     const runtime = new FakeTransport();
     const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full");
@@ -540,6 +598,7 @@ async function renderView(
   callbacks: {
     onSelectProgression: (reference: ProgressionPracticeSourceReference) => boolean;
     onEnterText: () => void;
+    openMidiSettings?: () => void;
   } = { onSelectProgression: vi.fn(() => true), onEnterText: vi.fn() },
   vaultProgressions: readonly VoicingLoopVaultCandidate[] = [],
 ): Promise<HTMLDivElement> {
@@ -547,16 +606,19 @@ async function renderView(
   document.body.append(container);
   root = createRoot(container);
   await act(async () => root?.render(
-    <ProgressionVoicingPracticeView
-      language="ja"
-      snapshots={snapshots}
-      initialSelection={initialSelection}
-      monitorMidi={monitorMidi}
-      vaultProgressions={vaultProgressions}
-      onSelectProgression={callbacks.onSelectProgression}
-      onEnterText={callbacks.onEnterText}
-      transportFactory={() => runtime}
-    />,
+    <PreviewSoundProvider>
+      <ProgressionVoicingPracticeView
+        language="ja"
+        snapshots={snapshots}
+        initialSelection={initialSelection}
+        monitorMidi={monitorMidi}
+        vaultProgressions={vaultProgressions}
+        onSelectProgression={callbacks.onSelectProgression}
+        onEnterText={callbacks.onEnterText}
+        openMidiSettings={callbacks.openMidiSettings}
+        transportFactory={() => runtime}
+      />
+    </PreviewSoundProvider>,
   ));
   return container;
 }
@@ -617,8 +679,8 @@ class FakeTransport implements ProgressionVoicingTransportPort {
   options?: ProgressionVoicingTransportStartOptions;
   start = vi.fn(async (options: ProgressionVoicingTransportStartOptions) => { this.options = options; });
   pause = vi.fn(() => true);
-  resume = vi.fn(() => true);
-  restart = vi.fn(() => true);
+  resume = vi.fn(async () => true);
+  restart = vi.fn(async () => true);
   stop = vi.fn();
   setBpm = vi.fn();
   setMetronomeEnabled = vi.fn();
@@ -634,7 +696,7 @@ class PendingTransport extends FakeTransport {
     return new Promise<void>((resolve) => { this.resolveFirst = resolve; });
   });
   override pause = vi.fn(() => false);
-  override resume = vi.fn(() => false);
+  override resume = vi.fn(async () => false);
   releaseFirstStart() { this.resolveFirst?.(); }
 }
 

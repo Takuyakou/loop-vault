@@ -12,18 +12,24 @@ const bundledPianoSamples = import.meta.glob(
   },
 ) as Record<string, string>;
 
-interface PreviewInstrument {
+export interface PreviewInstrument {
   triggerAttackRelease(
     notes: string | string[],
     duration: number,
     time?: number,
     velocity?: number,
   ): void;
-  releaseAll(): void;
+  releaseAll(time?: number): void;
   dispose(): void;
 }
 
 export type PreviewSound = "piano" | "electric-piano";
+
+export async function createPreviewInstrument(sound: PreviewSound): Promise<PreviewInstrument> {
+  return sound === "piano"
+    ? createPianoInstrument()
+    : createElectricPianoInstrument();
+}
 
 export type MidiPreviewSound = PreviewSound | "clean-bass" | "singing-reference" | "freepats-finger-bass" | "freepats-picked-bass";
 
@@ -323,8 +329,8 @@ async function preparePreviewAudio(
       return instrument;
     }
 
-    const nextInstrument = sound === "piano"
-      ? await createPianoInstrument()
+    const nextInstrument = sound === "piano" || sound === "electric-piano"
+      ? await createPreviewInstrument(sound)
       : sound === "clean-bass"
         ? createCleanBassInstrument()
         : sound === "singing-reference"
@@ -382,15 +388,15 @@ function wrapInstrument(source: {
     time?: number,
     velocity?: number,
   ): unknown;
-  releaseAll?(): unknown;
+  releaseAll?(time?: number): unknown;
   dispose(): unknown;
 }): PreviewInstrument {
   return {
     triggerAttackRelease(notes, duration, time, velocity) {
       source.triggerAttackRelease(notes, duration, time, velocity);
     },
-    releaseAll() {
-      source.releaseAll?.();
+    releaseAll(time) {
+      source.releaseAll?.(time);
     },
     dispose() {
       source.dispose();
@@ -457,8 +463,8 @@ function createElectricPianoInstrument(): PreviewInstrument {
     triggerAttackRelease(notes, duration, time, velocity) {
       synth.triggerAttackRelease(notes, duration, time, velocity);
     },
-    releaseAll() {
-      synth.releaseAll();
+    releaseAll(time) {
+      synth.releaseAll(time);
     },
     dispose() {
       synth.dispose();

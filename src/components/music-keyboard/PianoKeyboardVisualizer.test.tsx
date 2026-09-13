@@ -47,6 +47,13 @@ function renderKeyboard(
 }
 
 describe("PianoKeyboardVisualizer", () => {
+  it("centers a fitted keyboard only when requested", () => {
+    const container = renderKeyboard({ centerWhenFitted: true });
+    expect(container.querySelector("[data-keyboard-alignment='center-when-fitted']")?.className)
+      .toContain("min-w-full");
+    expect(container.querySelector("svg")?.getAttribute("class")).toContain("mx-auto");
+  });
+
   it("renders white keys below shorter black keys with C-only labels", () => {
     const container = renderKeyboard();
     const white = container.querySelector('[data-midi-note="60"]');
