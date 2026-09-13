@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "5.29",
+  "status": "in-progress",
+  "activeStage": "P5.29-00",
+  "completedStages": [],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "9ced9ceb24c3c9c6780f073bba3c95e6498d9452",
+  "lastVerifiedCommit": "9ced9ceb24c3c9c6780f073bba3c95e6498d9452",
+  "currentBranch": "feat/p529-voicing-loop-harmonic-rhythm",
+  "requiredGates": {
+    "P5.29-00": ["phase-docs-validation", "production-source-unchanged", "diff-check"],
+    "P5.29-01": ["focused-harmonic-rhythm", "existing-clock-playback-regression", "diff-check"],
+    "P5.29-02": ["focused-vitest", "text-vault-practice-regression", "focused-playwright", "typescript-lint", "phase-docs-validation", "privacy-hygiene", "clean-status"]
+  },
+  "gateResults": {},
+  "nextAction": "Lock the timing audit contract, then implement P5.29-01.",
+  "updatedAt": "2026-09-13T15:49:00+09:00"
+}
