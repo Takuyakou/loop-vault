@@ -13,6 +13,7 @@ import { parseChordLabel } from "../domain/chords";
 import { buildProgressionVoicingPracticeHandoffFromVault } from "../domain/progressionVoicingPractice";
 import {
   TEXT_PROGRESSION_ANALYZER_VERSION,
+  TEXT_PROGRESSION_MAX_BARS,
   TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM,
 } from "../domain/textProgression";
 import { createTextProgressionStyleSnapshot } from "../domain/textProgressionVoicing";
@@ -991,7 +992,7 @@ describe("vault store", () => {
     expect(blocks[1]?.chords[0]?.chord.tensions).not.toBe(block.chords[0]?.chord.tensions);
     expect(blocks[1]?.tags).not.toBe(block.tags);
   });
-  it("saves one- and twelve-bar text progressions with text-only provenance", async () => {
+  it("saves one-bar and maximum-bar text progressions with text-only provenance", async () => {
     const repository = new FakeRepository();
     let nextId = 0;
     const store = createVaultStore({
@@ -1038,15 +1039,19 @@ describe("vault store", () => {
       expect(oneBarRecord).not.toHaveProperty(field);
     }
 
-    const twelveBarId = store.getState().createIdeaFromTextProgression({
-      title: "Twelve bars",
+    const maximumBarId = store.getState().createIdeaFromTextProgression({
+      title: "Maximum bars",
       summaryText: "ignored",
-      chords: Array.from({ length: 12 }, (_, index) => textTimelineChord("Cmaj7", index + 1)),
+      chords: Array.from({ length: TEXT_PROGRESSION_MAX_BARS }, (_, index) => textTimelineChord("Cmaj7", index + 1)),
     });
-    expect(twelveBarId).toBe("text-id-4");
-    const twelveBar = store.getState().ideas[1]?.progressionBlocks?.[0];
-    expect(twelveBar).toMatchObject({ startBar: 1, endBar: 12, lengthBars: 12 });
-    expect(twelveBar?.chords).toHaveLength(12);
+    expect(maximumBarId).toBe("text-id-4");
+    const maximumBar = store.getState().ideas[1]?.progressionBlocks?.[0];
+    expect(maximumBar).toMatchObject({
+      startBar: 1,
+      endBar: TEXT_PROGRESSION_MAX_BARS,
+      lengthBars: TEXT_PROGRESSION_MAX_BARS,
+    });
+    expect(maximumBar?.chords).toHaveLength(TEXT_PROGRESSION_MAX_BARS);
   });
 
   it("hands off created and appended BPM-less Text saves with the runtime default only", async () => {

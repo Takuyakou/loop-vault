@@ -4,6 +4,9 @@ import {
   confirmedTextProgressionKeyState,
   evaluateTextProgressionCapabilities,
   parseTextProgression,
+  TEXT_PROGRESSION_MAX_BARS,
+  TEXT_PROGRESSION_MAX_INPUT_CODE_UNITS,
+  TEXT_PROGRESSION_MAX_TOKENS,
   TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM,
   type TextProgressionCapability,
   type TextProgressionDiagnostic,
@@ -282,7 +285,11 @@ export function TextProgressionCapturePanel({
         onChange={(event) => { onStop(); setInput(event.target.value); }}
       />
       <p id="text-progression-format" className="mt-2 text-xs text-[var(--lv-text-muted)]">
-        {text(language, "Strict v1: 4/4 only; each bar has 1, 2, or 4 chord tokens; maximum 12 bars / 48 tokens.", "v1は4/4のみ。各小節は1・2・4コード、最大12小節・48コードです。")}
+        {text(
+          language,
+          `Strict v1: 4/4 only; each bar has 1, 2, or 4 chord tokens; maximum ${TEXT_PROGRESSION_MAX_BARS} bars / ${TEXT_PROGRESSION_MAX_TOKENS} tokens.`,
+          `v1は4/4のみ。各小節は1・2・4コード、最大${TEXT_PROGRESSION_MAX_BARS}小節・${TEXT_PROGRESSION_MAX_TOKENS}コードです。`,
+        )}
       </p>
 
       <TextProgressionCards
@@ -601,12 +608,12 @@ function diagnosticMessage(diagnostic: TextProgressionDiagnostic, language: AppL
   if (language !== "ja") return diagnostic.message;
   const messages: Record<TextProgressionDiagnostic["code"], string> = {
     "empty-input": "少なくとも1つのコード・トークンを入力してください。",
-    "input-too-long": "テキスト進行入力は最大4,096 UTF-16コード単位です。",
+    "input-too-long": `テキスト進行入力は最大${TEXT_PROGRESSION_MAX_INPUT_CODE_UNITS.toLocaleString("en-US")} UTF-16コード単位です。`,
     "unsupported-meter": "テキスト進行入力 v1 は4/4のみに対応しています。",
     "malformed-bar-notation": "小節表記は `|` で始まり `|` で終える必要があります。",
     "empty-bar": "空の小節はテキスト進行入力では使用できません。",
-    "too-many-bars": "テキスト進行入力は最大12小節です。",
-    "too-many-tokens": "テキスト進行入力は最大48個のコード・トークンです。",
+    "too-many-bars": `テキスト進行入力は最大${TEXT_PROGRESSION_MAX_BARS}小節です。`,
+    "too-many-tokens": `テキスト進行入力は最大${TEXT_PROGRESSION_MAX_TOKENS}個のコード・トークンです。`,
     "three-chord-bar": "1小節に3つのコードは、v1の文法では正確に表現できません。",
     "invalid-chord-count": "4/4の各小節には、コード・トークンを1つ、2つ、または4つだけ入力できます。",
     "invalid-chord": "このトークンは対応するコード表記ではありません。",

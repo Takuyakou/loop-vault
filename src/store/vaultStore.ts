@@ -19,6 +19,9 @@ import {
 import {
   confirmedTextProgressionKeyState,
   TEXT_PROGRESSION_ANALYZER_VERSION,
+  TEXT_PROGRESSION_BEATS_PER_BAR,
+  TEXT_PROGRESSION_MAX_BARS,
+  TEXT_PROGRESSION_MAX_TOKENS,
 } from "../domain/textProgression";
 import { isTextProgressionStyleSnapshot } from "../domain/textProgressionVoicing";
 import { parseChordLabel } from "../domain/chords";
@@ -1275,11 +1278,11 @@ function textPracticeVoicingForSave(
 }
 /**
  * The public store adapter revalidates the parser's save-safe boundary:
- * contiguous exact 4/4 bars within 1..12, 48 chords at most, no gaps or
+ * contiguous exact 4/4 bars within the Text Progression bounds, no gaps or
  * overlaps, and chord identities accepted by the established parser.
  */
 function isSaveSafeTextProgressionTimeline(chords: readonly ChordTimelineItem[]): boolean {
-  if (chords.length < 1 || chords.length > 48) return false;
+  if (chords.length < 1 || chords.length > TEXT_PROGRESSION_MAX_TOKENS) return false;
   const eventsByBar = new Map<number, ChordTimelineItem[]>();
   let cursor: number | undefined;
   for (const chord of chords) {
@@ -1288,7 +1291,11 @@ function isSaveSafeTextProgressionTimeline(chords: readonly ChordTimelineItem[])
     if (!parsed || !sameTextProgressionChord(parsed, chord.chord)) return false;
     const start = textAbsoluteBeat(chord);
     const end = start + chord.durationBeats;
-    if (start < 0 || end > 48 || start % 4 + chord.durationBeats > 4) return false;
+    if (
+      start < 0
+      || end > TEXT_PROGRESSION_MAX_BARS * TEXT_PROGRESSION_BEATS_PER_BAR
+      || start % TEXT_PROGRESSION_BEATS_PER_BAR + chord.durationBeats > TEXT_PROGRESSION_BEATS_PER_BAR
+    ) return false;
     if (cursor === undefined) {
       if (start !== 0) return false;
     } else if (start !== cursor) {
@@ -1309,7 +1316,7 @@ function isSaveSafeTextProgressionTimeline(chords: readonly ChordTimelineItem[])
 function isValidTextProgressionChord(item: ChordTimelineItem): boolean {
   return Number.isInteger(item.bar)
     && item.bar >= 1
-    && item.bar <= 12
+    && item.bar <= TEXT_PROGRESSION_MAX_BARS
     && Number.isInteger(item.beat)
     && item.beat >= 1
     && item.beat <= 4

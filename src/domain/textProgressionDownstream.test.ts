@@ -110,14 +110,10 @@ async function saveThenReload(payload: ReturnType<typeof savePayload>): Promise<
   const ids = [
     IDEA_ID,
     BLOCK_ID,
-    "33333333-3333-4333-8333-333333333333",
-    "44444444-4444-4444-8444-444444444444",
-    "55555555-5555-4555-8555-555555555555",
-    "66666666-6666-4666-8666-666666666666",
-    "77777777-7777-4777-8777-777777777777",
-    "88888888-8888-4888-8888-888888888888",
-    "99999999-9999-4999-8999-999999999999",
-    "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    ...Array.from(
+      { length: 256 },
+      (_, index) => `00000000-0000-4000-8000-${(index + 1).toString(16).padStart(12, "0")}`,
+    ),
   ];
   const store = createVaultStore({
     repository,
@@ -153,6 +149,42 @@ const noFilters = {
 };
 
 describe("Text Progression downstream persistence", () => {
+  it("round-trips the 32-bar and 128-event envelope into every Voicing Loop mode", async () => {
+    const input = `| ${Array(32).fill("Cmaj7 Cmaj7 Cmaj7 Cmaj7").join(" | ")} |`;
+    const result = parsed(input, "C major");
+    expect(result).toMatchObject({ bars: 32, canConvert: true });
+    expect(result.events).toHaveLength(128);
+
+    const { idea, block } = await saveThenReload(savePayload(result, {
+      title: "Maximum text progression",
+      bpm: 108,
+      confirmedKey: "C major",
+    }));
+    expect(block).toMatchObject({ lengthBars: 32, endBar: 32, bpm: 108 });
+    expect(block.chords).toHaveLength(128);
+    expect(block.chords[127]).toMatchObject({ bar: 32, beat: 4, durationBeats: 1 });
+
+    const handoff = buildProgressionVoicingPracticeHandoffFromVault(
+      [idea],
+      { ideaId: idea.id, blockId: block.id },
+    );
+    expect(handoff.ok).toBe(true);
+    if (!handoff.ok) throw new Error(handoff.error.code);
+
+    for (const selection of [
+      "source-midi",
+      "custom",
+      "basic-shell",
+      "basic-full",
+      "left-hand",
+    ] as const) {
+      const snapshot = handoff.handoff.snapshots[selection];
+      expect(snapshot).toMatchObject({ lengthBeats: 128, bpm: 108, key: "C major" });
+      expect(snapshot?.events).toHaveLength(128);
+      expect(snapshot?.events[127]).toMatchObject({ startBeat: 127, durationBeats: 1 });
+    }
+  });
+
   it("preserves the canonical P5.29 4,2,2,4,4 rhythm through Vault and every Voicing Loop mode", async () => {
     const result = parsed("| Cmaj9 | Am9 Dm9 | G13 | Cmaj9 |", "C major");
     expect(result.events.map((event) => [event.bar, event.startBeat, event.durationBeats])).toEqual([

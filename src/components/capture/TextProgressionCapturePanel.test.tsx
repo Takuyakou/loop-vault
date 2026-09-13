@@ -137,6 +137,13 @@ function buttonByText(harness: Harness, label: string) {
 }
 
 describe("TextProgressionCapturePanel", () => {
+  it("shows the extended bounded input contract", async () => {
+    const harness = await mount();
+
+    expect(harness.container.textContent).toContain("maximum 32 bars / 128 tokens");
+    await harness.unmount();
+  });
+
   it("groups valid 1/2/4-token bars into native selectable cards and updates the inspector", async () => {
     const harness = await mount();
     await changeValue(input(harness), "| C | Dm7 G7 | C D E F |");

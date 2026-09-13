@@ -86,9 +86,12 @@ describe("Text Progression Entry grammar v1", () => {
   });
 
   test("enforces text, bar, and token bounds without parsing oversized input", () => {
-    const tooManyBars = parseTextProgression(Array.from({ length: 13 }, () => "C").join(" "));
+    const maximumBars = parseTextProgression(Array.from({ length: TEXT_PROGRESSION_MAX_BARS }, () => "C").join(" "));
+    const tooManyBars = parseTextProgression(Array.from({ length: TEXT_PROGRESSION_MAX_BARS + 1 }, () => "C").join(" "));
     const tooLong = parseTextProgression("C".repeat(TEXT_PROGRESSION_MAX_INPUT_CODE_UNITS + 1));
 
+    expect(maximumBars.canConvert).toBe(true);
+    expect(maximumBars.bars).toBe(TEXT_PROGRESSION_MAX_BARS);
     expect(tooManyBars.canConvert).toBe(false);
     expect(tooManyBars.diagnostics.map((issue) => issue.code)).toEqual(expect.arrayContaining([
       "too-many-bars",
@@ -98,7 +101,11 @@ describe("Text Progression Entry grammar v1", () => {
   });
 
   test("fails closed for parser bounds, unsupported meter, and unconfirmed degree input", () => {
-    const overflow = parseTextProgression(`| ${[...Array(11).fill("C C C C"), "C C C C C"].join(" | ")} |`);
+    const maximumTokens = parseTextProgression(`| ${Array(TEXT_PROGRESSION_MAX_BARS).fill("C C C C").join(" | ")} |`);
+    const overflow = parseTextProgression(`| ${[
+      ...Array(TEXT_PROGRESSION_MAX_BARS).fill("C C C C"),
+      "C",
+    ].join(" | ")} |`);
     const threeFour = parseTextProgression("C", { meter: { numerator: 3, denominator: 4 } });
     const blank = parseTextProgression(" \t\n ");
     const noChordPhrase = parseTextProgression("| no chord |");
@@ -106,10 +113,15 @@ describe("Text Progression Entry grammar v1", () => {
     const inferredDegree = parseTextProgression("ii7 V7", { keyState: inferred });
     const malformedConfirmedDegree = parseTextProgression("Ihello", { confirmedKey: "C major" });
 
+    expect(maximumTokens.canConvert).toBe(true);
+    expect(maximumTokens.events).toHaveLength(TEXT_PROGRESSION_MAX_TOKENS);
     expect(overflow.bars).toBe(TEXT_PROGRESSION_MAX_BARS);
     expect(overflow.tokens.length).toBeLessThanOrEqual(TEXT_PROGRESSION_MAX_TOKENS);
     expect(overflow.canConvert).toBe(false);
-    expect(overflow.diagnostics.map((issue) => issue.code)).toContain("too-many-tokens");
+    expect(overflow.diagnostics.map((issue) => issue.code)).toEqual(expect.arrayContaining([
+      "too-many-bars",
+      "too-many-tokens",
+    ]));
     expect(threeFour.canConvert).toBe(false);
     expect(threeFour.diagnostics.map((issue) => issue.code)).toContain("unsupported-meter");
     expect(blank.diagnostics.map((issue) => issue.code)).toEqual(["empty-input"]);

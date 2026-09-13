@@ -4,9 +4,9 @@ import { parseKeySignature } from "./progressionEditing/chordSuggestions";
 import type { ChordSymbol } from "./types";
 
 /** P5.20 Grammar v1 is deliberately small so conversion stays exact. */
-export const TEXT_PROGRESSION_MAX_INPUT_CODE_UNITS = 4_096;
-export const TEXT_PROGRESSION_MAX_BARS = 12;
-export const TEXT_PROGRESSION_MAX_TOKENS = 48;
+export const TEXT_PROGRESSION_MAX_INPUT_CODE_UNITS = 8_192;
+export const TEXT_PROGRESSION_MAX_BARS = 32;
+export const TEXT_PROGRESSION_MAX_TOKENS = 128;
 export const TEXT_PROGRESSION_BEATS_PER_BAR = 4;
 /** Runtime-only fallback used when a valid Text progression intentionally omits BPM. */
 export const TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM = 120;

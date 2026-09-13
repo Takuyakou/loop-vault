@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { parseChordLabel } from "./chords";
-import { parseTextProgression } from "./textProgression";
+import { parseTextProgression, TEXT_PROGRESSION_MAX_BARS } from "./textProgression";
 import {
   createTextProgressionDraft,
   textProgressionDraftEditable,
@@ -58,8 +58,8 @@ describe("Text Progression ManualCandidateDraft bridge", () => {
     expect(textProgressionDraftTimeline(draft).every((event) => event.eventId === undefined)).toBe(true);
   });
 
-  test("keeps the parser's full one-to-twelve bar range out of generic candidates", () => {
-    for (const bars of [1, 12]) {
+  test("keeps the parser's full bounded bar range out of generic candidates", () => {
+    for (const bars of [1, TEXT_PROGRESSION_MAX_BARS]) {
       const result = parseTextProgression(Array.from({ length: bars }, () => "Cmaj7").join(" "));
       const draft = createTextProgressionDraft({ result });
       const editable = textProgressionDraftEditable(draft);

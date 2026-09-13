@@ -8,7 +8,7 @@ import type { ManualCandidateDraft } from "./midi/manualDraft";
 import { createEditableProgression, setEditableVoicingMemory } from "./progressionEditing";
 import type { EditableProgression } from "./progressionEditing";
 import type { ChordVoicingMemory, ChordTimelineItem, VoicingSnapshot } from "./types";
-import { confirmedTextProgressionKeyState } from "./textProgression";
+import { confirmedTextProgressionKeyState, TEXT_PROGRESSION_MAX_BARS } from "./textProgression";
 import type { TextProgressionEvent, TextProgressionParseResult } from "./textProgression";
 import { isTextProgressionStyleSnapshot } from "./textProgressionVoicing";
 import { isValidVoicingSnapshot, voicingCompatibility } from "./voicing";
@@ -55,13 +55,18 @@ export interface CreateTextProgressionDraftSavePayloadInput {
  * Converts a fully valid transient text result into the existing session-only
  * ManualCandidateDraft. It deliberately builds CandidateChordEvent records
  * directly from the text timeline rather than creating a ProgressionBlockCandidate:
- * the text grammar allows every whole-bar length from one through twelve.
+ * the text grammar allows every whole-bar length through its bounded maximum.
  */
 export function createTextProgressionDraft(
   input: CreateTextProgressionDraftInput,
 ): ManualCandidateDraft {
   const { result } = input;
-  if (!result.canConvert || result.events.length === 0 || result.bars < 1 || result.bars > 12) {
+  if (
+    !result.canConvert
+    || result.events.length === 0
+    || result.bars < 1
+    || result.bars > TEXT_PROGRESSION_MAX_BARS
+  ) {
     throw new Error("A fully valid Text Progression result is required before conversion.");
   }
 
