@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "5.30",
   "status": "in-progress",
-  "activeStage": "P5.30-02",
-  "completedStages": ["P5.30-00", "P5.30-01"],
+  "activeStage": "P5.30-03",
+  "completedStages": ["P5.30-00", "P5.30-01", "P5.30-02"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "15b1ed8222105abb0b57c3e19c0ecdc912dc9476",
-  "lastVerifiedCommit": "731d65b7e5ef31ddf120e65875034f31f8002dd7",
+  "lastVerifiedCommit": "a3e9e39145252ed996780a47db85742e6dd30157",
   "currentBranch": "feat/p530-voicing-loop-polish",
   "requiredGates": {
     "P5.30-00": ["phase-docs-validation", "baseline-ancestry", "intake-manifest-integrity", "production-source-unchanged", "diff-check"],
@@ -25,8 +25,11 @@
     "focused-text-capacity": "pass",
     "maximum-envelope-roundtrip": "pass",
     "text-related-regression": "pass",
-    "typescript-lint": "pass"
+    "typescript-lint": "pass",
+    "focused-layout-playhead": "pass",
+    "fixed-geometry-stress": "pass",
+    "accessibility-responsive": "pass"
   },
-  "nextAction": "Implement P5.30-02 compact layout and playhead.",
-  "updatedAt": "2026-09-13T18:00:00+09:00"
+  "nextAction": "Implement P5.30-03 audio interactions.",
+  "updatedAt": "2026-09-13T18:10:00+09:00"
 }
