@@ -163,7 +163,7 @@ describe("ProgressionVoicingTransport", () => {
 
     toneMock.transport.getTicksAtTime.mockReturnValueOnce(1152);
     toneMock.scheduled[0]?.callback(1.5);
-    expect(toneMock.instruments[0]?.releaseAll).toHaveBeenCalled();
+    expect(toneMock.instruments[0]?.releaseAll).not.toHaveBeenCalled();
     expect(toneMock.instruments[0]?.triggerAttackRelease).toHaveBeenCalledWith(
       ["D3", "A3", "C4"],
       expect.any(Number),
@@ -348,7 +348,7 @@ describe("ProgressionVoicingTransport", () => {
     expect(toneMock.transport.stop).not.toHaveBeenCalled();
   });
 
-  it("keeps the sounding chord boundary on musical ticks across a mid-chord BPM change", async () => {
+  it("keeps consecutive chord attacks independent from all-notes-off at their shared boundary", async () => {
     const runtime = new ProgressionVoicingTransport();
     await runtime.start({ snapshot, plan, bpm: 80, countInBars: 0, metronomeEnabled: true, onTransportBeat: vi.fn() });
     const firstBoundary = toneMock.scheduled[0]!;
@@ -359,7 +359,8 @@ describe("ProgressionVoicingTransport", () => {
     secondBoundary.callback(1.5);
     expect(firstBoundary.start).toBe("0i");
     expect(secondBoundary.start).toBe("384i");
-    expect(toneMock.instruments[0]?.releaseAll).toHaveBeenCalled();
+    expect(toneMock.instruments[0]?.releaseAll).not.toHaveBeenCalled();
+    expect(toneMock.instruments[0]?.triggerAttackRelease).toHaveBeenCalledTimes(2);
     expect(toneMock.instruments[0]?.triggerAttackRelease).toHaveBeenLastCalledWith(
       ["D3", "A3", "C4"],
       expect.any(Number),

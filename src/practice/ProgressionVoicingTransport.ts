@@ -275,7 +275,6 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     const elapsedBeats = progressionBeat - event.startBeat;
     const remainingBeats = Math.max(0.05, event.durationBeats - elapsedBeats);
     const durationSeconds = Math.max(0.05, remainingBeats * 60 / this.desiredBpm);
-    this.voicingInstrument.releaseAll(time);
     this.voicingInstrument.triggerAttackRelease(
       resolution.voicing.midiNotes.map(midiToNoteName),
       durationSeconds,

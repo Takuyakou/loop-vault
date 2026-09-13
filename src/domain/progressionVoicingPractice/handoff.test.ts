@@ -5,6 +5,7 @@ import { TEXT_PROGRESSION_ANALYZER_VERSION } from "../textProgression";
 import type { ChordTimelineItem, SavedProgressionBlock, VoicingSnapshot } from "../types";
 import { normalizedChordKey } from "../voicing";
 import { buildProgressionVoicingPracticeHandoffFromVault } from "./handoff";
+import { resolveProgressionPracticeVoicings } from "./voicingResolution";
 
 describe("P5.27 saved Vault handoff", () => {
   it("detaches every selection and prefers complete Source MIDI without retaining private fields", () => {
@@ -68,6 +69,25 @@ describe("P5.27 saved Vault handoff", () => {
     expect(partialResult.handoff.snapshots.custom?.events[1]?.voicing).toBeUndefined();
     expect(partialResult.handoff.snapshots["source-midi"]?.events.every((item) => !item.voicing))
       .toBe(true);
+  });
+
+  it("keeps a pre-voicing-memory Vault progression playable through Basic Full", () => {
+    const block = progression([
+      event(1, 1, 4, 0),
+      event(2, 1, 4, 7),
+    ]);
+    const result = buildProgressionVoicingPracticeHandoffFromVault(
+      [makeIdea({ id: "idea-pre-voicing-memory", progressionBlocks: [block] })],
+      { ideaId: "idea-pre-voicing-memory", blockId: block.id },
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.handoff.initialSelection).toBe("basic-full");
+    const snapshot = result.handoff.snapshots["basic-full"]!;
+    expect(resolveProgressionPracticeVoicings(snapshot).events.every(
+      (resolution) => resolution.status === "SUPPORTED",
+    )).toBe(true);
   });
 
   it("uses saved Idea BPM/key only as the detached block fallback", () => {
