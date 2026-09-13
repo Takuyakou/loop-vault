@@ -91,7 +91,9 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
       const startTicks = runtimeTickAtPracticeBeat(countInBeats + event.startBeat, ppq);
       this.scheduleIds.push(this.transport.scheduleRepeat((time) => {
         if (!this.acceptsCallback(generation)) return;
-        this.attackCurrentVoicing(this.absoluteBeatAtTime(time, ppq), time);
+        const absoluteBeat = this.absoluteBeatAtTime(time, ppq);
+        if (absoluteBeat + 1 / ppq < countInBeats) return;
+        this.attackVoicing(eventIndex, 0, time);
       }, `${loopTicks}i`, `${startTicks}i`));
     });
 
@@ -113,7 +115,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
           options.onTransportBeat(absoluteBeat);
         }
       }, time);
-    }, "16n", 0));
+    }, "64n", 0));
 
     this.running = true;
     this.paused = false;
@@ -268,10 +270,16 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
         break;
       }
     }
+    const event = options.snapshot.events[eventIndex]!;
+    this.attackVoicing(eventIndex, progressionBeat - event.startBeat, time);
+  }
+
+  private attackVoicing(eventIndex: number, elapsedBeats: number, time: number): void {
+    const options = this.activeOptions;
+    if (!options || !this.voicingInstrument || !this.referenceSoundEnabled) return;
     const resolution = options.plan.events[eventIndex];
     if (resolution?.status !== "SUPPORTED") return;
     const event = options.snapshot.events[eventIndex]!;
-    const elapsedBeats = progressionBeat - event.startBeat;
     const remainingBeats = Math.max(0.05, event.durationBeats - elapsedBeats);
     const durationSeconds = Math.max(0.05, remainingBeats * 60 / this.desiredBpm);
     this.voicingInstrument.triggerAttackRelease(

@@ -156,13 +156,13 @@ describe("ProgressionVoicingTransport", () => {
       ["1536i", "768i"],
       ["1536i", "1152i"],
       ["4n", 0],
-      ["16n", 0],
+      ["64n", 0],
     ]);
     expect(toneMock.transport.start).toHaveBeenCalledWith("+0.05");
     expect(onTransportBeat).toHaveBeenCalledWith(0);
 
     toneMock.transport.getTicksAtTime.mockReturnValueOnce(1152);
-    toneMock.scheduled[0]?.callback(1.5);
+    toneMock.scheduled[1]?.callback(1.5);
     expect(toneMock.instruments[0]?.releaseAll).not.toHaveBeenCalled();
     expect(toneMock.instruments[0]?.triggerAttackRelease).toHaveBeenCalledWith(
       ["D3", "A3", "C4"],
@@ -348,22 +348,26 @@ describe("ProgressionVoicingTransport", () => {
     expect(toneMock.transport.stop).not.toHaveBeenCalled();
   });
 
-  it("keeps consecutive chord attacks independent from all-notes-off at their shared boundary", async () => {
+  it("uses scheduled event identity despite late-boundary clock rounding", async () => {
     const runtime = new ProgressionVoicingTransport();
     await runtime.start({ snapshot, plan, bpm: 80, countInBars: 0, metronomeEnabled: true, onTransportBeat: vi.fn() });
     const firstBoundary = toneMock.scheduled[0]!;
     firstBoundary.callback(1);
     runtime.setBpm(160);
     const secondBoundary = toneMock.scheduled[1]!;
-    toneMock.transport.getTicksAtTime.mockReturnValueOnce(384);
+    toneMock.transport.getTicksAtTime.mockReturnValueOnce(383);
     secondBoundary.callback(1.5);
     expect(firstBoundary.start).toBe("0i");
     expect(secondBoundary.start).toBe("384i");
     expect(toneMock.instruments[0]?.releaseAll).not.toHaveBeenCalled();
     expect(toneMock.instruments[0]?.triggerAttackRelease).toHaveBeenCalledTimes(2);
+    expect(toneMock.instruments[0]?.triggerAttackRelease.mock.calls.map(([notes]) => notes)).toEqual([
+      ["C3", "G3", "B3"],
+      ["D3", "A3", "C4"],
+    ]);
     expect(toneMock.instruments[0]?.triggerAttackRelease).toHaveBeenLastCalledWith(
       ["D3", "A3", "C4"],
-      expect.any(Number),
+      2.25,
       1.5,
       0.72,
     );
