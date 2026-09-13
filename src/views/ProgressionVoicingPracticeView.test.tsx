@@ -207,6 +207,56 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.textContent).toContain("b7");
   });
 
+  it("orders the compact workspace and traverses fixed cards using each clock duration", async () => {
+    const runtime = new FakeTransport();
+    const mixed = snapshot("basic-full");
+    const durations = [4, 2, 1, 1];
+    let startBeat = 0;
+    const events = durations.map((durationBeats, index) => {
+      const event = {
+        ...mixed.events[index % mixed.events.length]!,
+        id: `mixed-${index}`,
+        startBeat,
+        durationBeats,
+      };
+      startBeat += durationBeats;
+      return event;
+    });
+    const container = await renderView(runtime, {
+      "basic-full": { ...mixed, events, lengthBeats: startBeat },
+    }, "basic-full");
+    const sections = ["controls", "current-next", "timeline", "detail", "transport"]
+      .map((id) => container.querySelector(`[data-testid='voicing-loop-${id}']`)!);
+    for (let index = 1; index < sections.length; index += 1) {
+      expect(sections[index - 1]!.compareDocumentPosition(sections[index]!)
+        & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    }
+    expect(sections[1]!.querySelector("[role='group']")).toBeNull();
+    const playhead = container.querySelector<HTMLElement>("[data-testid='voicing-loop-playhead']")!;
+    expect(playhead.style.transform).toBe("translateX(0px)");
+    await act(async () => button(container, "開始").click());
+    for (const [transportBeat, expectedX] of [[6, 46], [9, 144], [10.5, 242]]) {
+      await act(async () => runtime.options?.onTransportBeat(transportBeat!));
+      expect(playhead.style.transform).toBe(`translateX(${expectedX}px)`);
+    }
+    await act(async () => button(container, "一時停止").click());
+    expect(playhead.style.transform).toBe("translateX(242px)");
+    await act(async () => button(container, "再開").click());
+    await act(async () => runtime.options?.onTransportBeat(11));
+    expect(playhead.style.transform).toBe("translateX(294px)");
+    await act(async () => runtime.options?.onTransportBeat(12));
+    expect(playhead.style.transform).toBe("translateX(0px)");
+    expect(container.textContent).toContain("1 周完了");
+    for (const card of container.querySelectorAll("[data-testid='voicing-loop-event']")) {
+      expect(card.className).toContain("h-[46px]");
+      expect(card.className).toContain("min-h-[46px]");
+      expect(card.className).toContain("max-h-[46px]");
+      expect(card.className).toContain("w-[92px]");
+      expect(card.className).toContain("min-w-[92px]");
+      expect(card.className).toContain("max-w-[92px]");
+    }
+  });
+
   it("keeps Learn/Recall explicit, provides accessible controls, and never gates Start on MIDI", async () => {
     const runtime = new FakeTransport();
     const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full");

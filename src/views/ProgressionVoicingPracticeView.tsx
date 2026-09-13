@@ -41,6 +41,8 @@ import {
 const ALL_PITCH_CLASSES = Object.freeze(Array.from({ length: 12 }, (_, index) => index));
 const EMPTY_NOTES: readonly number[] = Object.freeze([]);
 const EMPTY_VAULT_PROGRESSIONS: readonly VoicingLoopVaultCandidate[] = Object.freeze([]);
+const TIMELINE_CARD_WIDTH_PX = 92;
+const TIMELINE_CARD_GAP_PX = 6;
 
 export interface ProgressionVoicingPracticeViewProps {
   readonly language: AppLanguage;
@@ -79,6 +81,7 @@ const copy = {
     countIn: "カウントイン",
     chordProgress: "コード",
     progressionProgress: "進行",
+    timeline: "進行タイムライン",
     loop: "Loop",
     pitches: "構成音",
     degrees: "度数",
@@ -142,6 +145,7 @@ const copy = {
     countIn: "Count-in",
     chordProgress: "Chord",
     progressionProgress: "Progression",
+    timeline: "Progression timeline",
     loop: "Loop",
     pitches: "Pitches",
     degrees: "Degrees",
@@ -255,6 +259,8 @@ export function ProgressionVoicingPracticeView({
   const transportRef = useRef<ProgressionVoicingTransportPort>();
   const runtimeRequestRef = useRef(0);
   const midiLeaseRef = useRef<LiveMidiActivationLease>();
+  const timelineViewportRef = useRef<HTMLDivElement | null>(null);
+  const timelineEventRefs = useRef<Array<HTMLSpanElement | null>>([]);
   if (!transportRef.current) transportRef.current = transportFactory();
   const midiStatus = useStore(defaultLiveMidiStore, (state) => state.status);
 
@@ -307,8 +313,22 @@ export function ProgressionVoicingPracticeView({
   const keyboardRange = useMemo(() => computePracticeKeyboardRange(guideVoicings), [guideVoicings]);
   const active = clockState?.status === "running" || clockState?.status === "count-in";
   const paused = clockState?.status === "paused";
+  const playheadX = currentIndex * (TIMELINE_CARD_WIDTH_PX + TIMELINE_CARD_GAP_PX)
+    + (projection?.chordProgress ?? 0) * TIMELINE_CARD_WIDTH_PX;
   const allEventsPlayable = Boolean(plan?.events.length)
     && plan!.events.every((resolution) => resolution.status === "SUPPORTED");
+
+  useEffect(() => {
+    const viewport = timelineViewportRef.current;
+    const eventElement = timelineEventRefs.current[currentIndex];
+    if (!viewport || !eventElement || viewport.clientWidth <= 0) return;
+    const eventLeft = eventElement.offsetLeft;
+    const eventRight = eventLeft + eventElement.offsetWidth;
+    if (eventLeft < viewport.scrollLeft) viewport.scrollLeft = eventLeft;
+    else if (eventRight > viewport.scrollLeft + viewport.clientWidth) {
+      viewport.scrollLeft = eventRight - viewport.clientWidth;
+    }
+  }, [currentIndex, snapshot]);
   function changeSelection(next: ProgressionVoicingSelection) {
     runtimeRequestRef.current += 1;
     transportRef.current?.stop();
@@ -511,29 +531,38 @@ export function ProgressionVoicingPracticeView({
         action={<Badge tone="teal">{selectionLabel(selection)}</Badge>}
       />
 
-      <Surface className="p-4 sm:p-5">
-        <fieldset>
-          <legend className="text-sm font-semibold text-[var(--lv-text)]">{text.source}</legend>
-          <p className="mt-1 text-xs leading-5 text-[var(--lv-text-muted)]">{text.sourceHelp}</p>
-          {(["MY", "LESSON"] as const).map((group) => (
-            <div className="mt-4" key={group}>
-              <p className="lv-section-kicker">{group}</p>
-              <div className="mt-2 flex min-w-0 flex-wrap gap-2">
-                {selections.filter((item) => item.group === group).map((item) => (
-                  <Button
-                    key={item.id}
-                    size="sm"
-                    variant={selection === item.id ? "primary" : "secondary"}
-                    aria-pressed={selection === item.id}
-                    onClick={() => changeSelection(item.id)}
-                  >
-                    {language === "ja" ? item.ja : item.en}
-                  </Button>
-                ))}
+      <Surface className="p-4 sm:p-5" data-testid="voicing-loop-controls">
+        <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+          <fieldset className="min-w-0">
+            <legend className="text-sm font-semibold text-[var(--lv-text)]">{text.source}</legend>
+            <p className="mt-1 text-xs leading-5 text-[var(--lv-text-muted)]">{text.sourceHelp}</p>
+            {(["MY", "LESSON"] as const).map((group) => (
+              <div className="mt-4" key={group}>
+                <p className="lv-section-kicker">{group}</p>
+                <div className="mt-2 flex min-w-0 flex-wrap gap-2">
+                  {selections.filter((item) => item.group === group).map((item) => (
+                    <Button
+                      key={item.id}
+                      size="sm"
+                      variant={selection === item.id ? "primary" : "secondary"}
+                      aria-pressed={selection === item.id}
+                      onClick={() => changeSelection(item.id)}
+                    >
+                      {language === "ja" ? item.ja : item.en}
+                    </Button>
+                  ))}
+                </div>
               </div>
+            ))}
+          </fieldset>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-[var(--lv-text)]">{text.displayMode}</p>
+            <div className="mt-2 flex min-w-0 flex-wrap gap-2" role="group" aria-label={text.displayMode}>
+              <Button size="sm" variant={displayMode === "learn" ? "primary" : "secondary"} aria-pressed={displayMode === "learn"} onClick={() => setDisplayMode("learn")}>{text.learn}</Button>
+              <Button size="sm" variant={displayMode === "recall" ? "primary" : "secondary"} aria-pressed={displayMode === "recall"} onClick={() => setDisplayMode("recall")}>{text.recall}</Button>
             </div>
-          ))}
-        </fieldset>
+          </div>
+        </div>
       </Surface>
 
       {!snapshot ? (
@@ -545,7 +574,7 @@ export function ProgressionVoicingPracticeView({
         </StatusMessage>
       ) : (
         <>
-          <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(15rem,0.8fr)]">
+          <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(15rem,0.8fr)]" data-testid="voicing-loop-current-next">
             <Surface variant="primary" className="min-w-0 p-5 sm:p-6">
               <div className="flex min-w-0 flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0">
@@ -577,21 +606,57 @@ export function ProgressionVoicingPracticeView({
             <Surface className="min-w-0 p-5">
               <p className="lv-section-kicker">{text.next}</p>
               <p className="mt-3 break-words text-2xl font-bold text-[var(--lv-text)]">{nextEvent?.chord.label}</p>
-              <div className="mt-5 flex flex-wrap gap-2" role="group" aria-label={text.displayMode}>
-                <Button size="sm" variant={displayMode === "learn" ? "primary" : "secondary"} aria-pressed={displayMode === "learn"} onClick={() => setDisplayMode("learn")}>{text.learn}</Button>
-                <Button size="sm" variant={displayMode === "recall" ? "primary" : "secondary"} aria-pressed={displayMode === "recall"} onClick={() => setDisplayMode("recall")}>{text.recall}</Button>
-              </div>
               <p className="mt-5 text-xs text-[var(--lv-text-muted)]">
                 {midiStatus === "connected" ? text.midiOn : text.midiOff}
               </p>
             </Surface>
           </div>
 
+          <Surface className="min-w-0 overflow-hidden p-4 sm:p-5" aria-label={text.progressionProgress} data-testid="voicing-loop-timeline">
+            <div
+              ref={timelineViewportRef}
+              className="min-w-0 overflow-x-auto overflow-y-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)]"
+              data-testid="voicing-loop-timeline-viewport"
+              tabIndex={0}
+              aria-label={text.timeline}
+            >
+              <div className="relative flex w-max min-w-full gap-1.5 pb-1">
+                <span
+                  aria-hidden="true"
+                  data-testid="voicing-loop-playhead"
+                  className="pointer-events-none absolute inset-y-0 left-0 z-10 w-0.5 bg-[var(--lv-accent)]"
+                  style={{ transform: `translateX(${playheadX}px)` }}
+                />
+                {snapshot.events.map((event, index) => (
+                  <span
+                    key={event.id}
+                    ref={(element) => { timelineEventRefs.current[index] = element; }}
+                    data-testid="voicing-loop-event"
+                    data-duration-beats={event.durationBeats}
+                    className={`flex h-[46px] max-h-[46px] min-h-[46px] w-[92px] min-w-[92px] max-w-[92px] flex-none flex-col justify-center overflow-hidden rounded-[var(--lv-radius-sm)] border px-2 text-sm font-semibold ${index === currentIndex ? "border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)]" : "border-[var(--lv-border)] text-[var(--lv-text-secondary)]"}`}
+                    aria-current={index === currentIndex ? "step" : undefined}
+                  >
+                    <span className="flex min-w-0 items-baseline gap-1.5">
+                      <span className="shrink-0 text-[10px] font-normal text-[var(--lv-text-muted)]">{index + 1}</span>
+                      <span className="min-w-0 truncate">{event.chord.label}</span>
+                    </span>
+                    <span
+                      data-testid="voicing-loop-event-timing"
+                      className="mt-0.5 block truncate whitespace-nowrap text-[10px] font-normal leading-3 text-[var(--lv-text-muted)]"
+                    >
+                      {practiceTimingLabel(event, snapshot.meter.numerator, language)}
+                    </span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          </Surface>
+
           {runtimeError ? <StatusMessage title={text.playbackError} tone="error">{runtimeError}</StatusMessage> : null}
           {plan ? <UnresolvedSummary plan={plan} snapshot={snapshot} language={language} /> : null}
           <ResolutionStatus resolution={currentResolution} language={language} />
 
-          <Surface className="min-w-0 p-4 sm:p-5">
+          <Surface className="min-w-0 p-4 sm:p-5" data-testid="voicing-loop-detail">
             <SectionHeading
               level={3}
               title={currentEvent?.chord.label ?? "—"}
@@ -627,7 +692,7 @@ export function ProgressionVoicingPracticeView({
             </div>
           </Surface>
 
-          <Surface className="p-4 sm:p-5">
+          <Surface className="p-4 sm:p-5" data-testid="voicing-loop-transport">
             <div className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Field htmlFor="voicing-loop-bpm" label={text.bpm}>
                 <input
@@ -671,27 +736,6 @@ export function ProgressionVoicingPracticeView({
             </div>
           </Surface>
 
-          <Surface className="p-4 sm:p-5" aria-label={text.progressionProgress}>
-            <div className="flex min-w-0 flex-wrap gap-2">
-              {snapshot.events.map((event, index) => (
-                <span
-                  key={event.id}
-                  data-testid="voicing-loop-event"
-                  className={`min-w-0 rounded-[var(--lv-radius-sm)] border px-3 py-2 text-sm font-semibold ${index === currentIndex ? "border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)]" : "border-[var(--lv-border)] text-[var(--lv-text-secondary)]"}`}
-                  aria-current={index === currentIndex ? "step" : undefined}
-                >
-                  <span className="mr-2 text-xs font-normal text-[var(--lv-text-muted)]">{index + 1}</span>
-                  {event.chord.label}
-                  <span
-                    data-testid="voicing-loop-event-timing"
-                    className="mt-1 block whitespace-nowrap text-[11px] font-normal leading-4 text-[var(--lv-text-muted)]"
-                  >
-                    {practiceTimingLabel(event, snapshot.meter.numerator, language)}
-                  </span>
-                </span>
-              ))}
-            </div>
-          </Surface>
         </>
       )}
     </div>
