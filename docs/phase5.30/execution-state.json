@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "5.30",
+  "status": "in-progress",
+  "activeStage": "P5.30-00",
+  "completedStages": [],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "15b1ed8222105abb0b57c3e19c0ecdc912dc9476",
+  "lastVerifiedCommit": "15b1ed8222105abb0b57c3e19c0ecdc912dc9476",
+  "currentBranch": "feat/p530-voicing-loop-polish",
+  "requiredGates": {
+    "P5.30-00": ["phase-docs-validation", "baseline-ancestry", "intake-manifest-integrity", "production-source-unchanged", "diff-check"],
+    "P5.30-01": ["focused-text-capacity", "maximum-envelope-roundtrip", "text-related-regression", "typescript-lint", "diff-check"],
+    "P5.30-02": ["focused-layout-playhead", "fixed-geometry-stress", "accessibility-responsive", "typescript-lint", "diff-check"],
+    "P5.30-03": ["focused-audio-interactions", "audio-lifecycle-stress", "all-mode-regression", "focused-playwright", "typescript-lint", "diff-check"],
+    "P5.30-04": ["related-vitest", "playwright-regression", "production-build", "phase-docs-validation", "privacy-hygiene", "generated-output-hygiene", "diff-check", "clean-status"]
+  },
+  "gateResults": {},
+  "nextAction": "Finish P5.30-00 audit gates, record its commit, and stop.",
+  "updatedAt": "2026-09-13T16:20:00+09:00"
+}

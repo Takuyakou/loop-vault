@@ -1,0 +1,1024 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Loop Vault — Voicing Loop Mock</title>
+<style>
+  :root{
+    --bg:#07111d;
+    --panel:#0f1d2e;
+    --panel2:#13243a;
+    --panel3:#0a1726;
+    --line:#26394d;
+    --line2:#31506b;
+    --text:#f3f7fb;
+    --muted:#8ca7c4;
+    --muted2:#6f8ba8;
+    --accent:#3be0ce;
+    --accent2:#16bbaa;
+    --accentSoft:rgba(59,224,206,.14);
+    --shadow:0 8px 30px rgba(0,0,0,.22);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    color:var(--text);
+    background:var(--bg);
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Yu Gothic UI","Meiryo",sans-serif;
+    font-size:14px;
+  }
+  button,input,select{font:inherit}
+  button{cursor:pointer}
+
+  .app{
+    min-height:100vh;
+    display:grid;
+    grid-template-columns:180px minmax(0,1fr);
+  }
+
+  /* Sidebar */
+  .sidebar{
+    background:#0a1524;
+    border-right:1px solid #1d2d3f;
+    position:sticky;
+    top:0;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    height:48px;
+    padding:7px 12px;
+    border-bottom:1px solid #1c2c3c;
+  }
+  .logo{
+    width:28px;height:28px;border-radius:8px;
+    display:grid;place-items:center;
+    border:1px solid var(--line2);
+    color:var(--accent);
+    font-weight:800;
+    background:radial-gradient(circle at 50% 50%,rgba(59,224,206,.18),transparent 64%);
+  }
+  .brand b{display:block;font-size:13px;letter-spacing:.2px}
+  .brand small{display:block;color:#72a9db;font-size:9px;margin-top:1px}
+  .nav{padding:16px 7px}
+  .nav-section{
+    color:#6e99c9;
+    font-size:10px;
+    margin:0 6px 8px;
+    letter-spacing:.04em;
+  }
+  .nav-item{
+    height:38px;
+    display:flex;
+    align-items:center;
+    gap:11px;
+    padding:0 10px;
+    margin:1px 0;
+    border-radius:8px;
+    color:#b7d0ee;
+    text-decoration:none;
+    font-weight:650;
+    font-size:13px;
+  }
+  .nav-item:hover{background:#102239}
+  .nav-item.active{
+    background:#12463f;
+    color:white;
+  }
+  .nav-icon{
+    width:18px;text-align:center;color:#94acc5;font-size:15px;
+  }
+  .nav-item.active .nav-icon{color:var(--accent)}
+  .sidebar-foot{
+    margin-top:auto;
+    border-top:1px solid #1d2d3f;
+    padding:14px;
+    color:#6f8ba8;
+  }
+
+  /* Main */
+  .main{
+    min-width:0;
+    padding-bottom:28px;
+  }
+  .topbar{
+    height:48px;
+    border-bottom:1px solid #1c2d40;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 18px;
+    position:sticky;
+    top:0;
+    z-index:10;
+    background:rgba(7,17,29,.96);
+    backdrop-filter:blur(10px);
+  }
+  .title-wrap{display:flex;align-items:center;gap:14px;min-width:0}
+  .screen-title{font-weight:800;font-size:18px;line-height:1.05}
+  .screen-sub{font-size:10px;color:#7295bd;margin-top:3px}
+  .active-progression{
+    display:flex;align-items:center;gap:8px;
+    min-width:0;
+    padding-left:12px;
+    border-left:1px solid #22374d;
+  }
+  .active-progression span{
+    max-width:360px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    color:#a8c5e4;
+    font-size:12px;
+  }
+  .change-btn{
+    border:1px solid #31506b;
+    background:#0d1d2f;
+    color:#cce0f6;
+    padding:6px 10px;
+    border-radius:7px;
+    font-weight:700;
+  }
+  .change-btn:hover{border-color:var(--accent);color:white}
+  .top-actions{display:flex;align-items:center;gap:8px}
+  .tiny{
+    width:30px;height:30px;border-radius:7px;border:1px solid #2c4056;background:#0a1726;color:#a9bfd5;
+  }
+  .pill{
+    border:1px solid #2f485f;background:#0c1a2b;color:#b9d0e8;
+    padding:7px 11px;border-radius:7px;font-weight:750;
+  }
+  .pill.active{background:var(--accent);border-color:var(--accent);color:#04211d}
+
+  .content{
+    max-width:1460px;
+    margin:0 auto;
+    padding:16px 18px 0;
+  }
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    box-shadow:var(--shadow);
+  }
+
+  /* Mode Bar */
+  .mode-card{
+    padding:13px 16px;
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:18px;
+    margin-bottom:14px;
+  }
+  .mode-groups{display:flex;gap:28px;flex-wrap:wrap}
+  .mode-label{
+    color:var(--accent);
+    font-size:10px;
+    font-weight:800;
+    margin-bottom:6px;
+    letter-spacing:.04em;
+  }
+  .seg{display:flex;gap:6px;flex-wrap:wrap}
+  .seg button{
+    border:1px solid #31465b;
+    color:#bcd1e8;
+    background:#0a1726;
+    padding:8px 12px;
+    border-radius:7px;
+    font-weight:750;
+    font-size:12px;
+  }
+  .seg button.active{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#05231f;
+  }
+  .mode-side{
+    min-width:250px;
+    display:flex;
+    justify-content:flex-end;
+  }
+
+  /* Current / Next */
+  .hero-grid{
+    display:grid;
+    grid-template-columns:minmax(0,2.25fr) minmax(270px,1fr);
+    gap:14px;
+    margin-bottom:14px;
+  }
+  .current-card{
+    min-height:224px;
+    padding:19px 21px 16px;
+    border-color:#2e6b7c;
+  }
+  .eyebrow{
+    color:var(--accent);
+    font-size:11px;
+    font-weight:850;
+    letter-spacing:.04em;
+  }
+  .current-code{
+    font-size:44px;
+    font-weight:850;
+    line-height:1;
+    margin:8px 0 14px;
+    letter-spacing:-.03em;
+  }
+  .metrics{
+    display:flex;
+    gap:18px;
+    align-items:stretch;
+    margin-bottom:15px;
+  }
+  .metric{
+    min-width:160px;
+    border-left:2px solid var(--accent);
+    padding-left:11px;
+  }
+  .metric-label{font-size:10px;color:#7995b3;margin-bottom:4px}
+  .metric strong{font-size:14px}
+  .beats{
+    display:flex;gap:8px;align-items:center;margin-top:4px;
+  }
+  .beat{
+    width:18px;height:18px;border-radius:50%;
+    border:1px solid #44627f;
+    color:#7590ad;
+    font-size:9px;
+    display:grid;place-items:center;
+  }
+  .beat.on{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#06201e;
+    box-shadow:0 0 0 4px rgba(59,224,206,.08);
+  }
+  .progress-wrap{margin-top:12px}
+  .progress-head{display:flex;justify-content:space-between;color:#7693b0;font-size:10px;margin-bottom:6px}
+  .progress{
+    height:10px;border-radius:2px;background:#17283d;overflow:hidden;
+  }
+  .progress > i{
+    display:block;height:100%;width:25%;
+    background:linear-gradient(90deg,var(--accent2),var(--accent));
+  }
+
+  .next-card{padding:19px 18px}
+  .next-code{font-size:23px;font-weight:850;margin:14px 0 8px}
+  .next-meta{color:#93b0ce;font-size:12px;line-height:1.7}
+  .next-degree{color:#cfe0f2;margin-top:3px}
+  .next-hint{
+    margin-top:18px;
+    padding-top:13px;
+    border-top:1px solid #233a50;
+    color:#6686a6;
+    font-size:11px;
+  }
+
+  /* Keyboard */
+  .keyboard-card{padding:17px;margin-bottom:14px}
+  .keyboard-head{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;
+  }
+  .voicing-title strong{font-size:16px}
+  .voicing-meta{margin-top:4px;color:#a6c2df;font-size:12px}
+  .degree-line{color:#78a9d6;margin-top:3px;font-size:11px}
+  .listen{
+    border:1px solid #2f465d;background:#0d1b2a;color:#9ab4ce;
+    padding:7px 10px;border-radius:7px;font-weight:650;
+  }
+  .keyboard-shell{
+    background:#03070b;
+    border:1px solid #162638;
+    min-height:156px;
+    display:grid;
+    place-items:center;
+    padding:12px 16px;
+  }
+  .keyboard{
+    height:116px;
+    width:min(860px,100%);
+    position:relative;
+    display:flex;
+    box-shadow:0 0 0 1px #22303f;
+    user-select:none;
+  }
+  .white-key{
+    position:relative;
+    flex:1;
+    background:linear-gradient(#fafafa,#e9edf1);
+    border-right:1px solid #87919b;
+    border-bottom-left-radius:2px;
+    border-bottom-right-radius:2px;
+  }
+  .white-key.active{
+    background:linear-gradient(#d4fff9,#8df1e4);
+    box-shadow:inset 0 0 0 2px #1cbfae;
+  }
+  .white-key .key-label{
+    position:absolute;bottom:3px;left:4px;color:#3d4b58;font-size:7px;font-weight:700;
+  }
+  .black-key{
+    position:absolute;
+    top:0;
+    width:3.3%;
+    height:66%;
+    transform:translateX(-50%);
+    background:linear-gradient(#13171b,#020405);
+    border:1px solid #000;
+    z-index:2;
+    border-bottom-left-radius:2px;
+    border-bottom-right-radius:2px;
+  }
+  .black-key.active{
+    background:linear-gradient(#63e7d8,#159a8d);
+    box-shadow:0 0 0 2px rgba(59,224,206,.6);
+  }
+  .legend{
+    display:flex;gap:14px;align-items:center;color:#89a7c4;font-size:10px;margin-top:9px;
+  }
+  .legend i{
+    width:9px;height:9px;display:inline-block;margin-right:4px;border:1px solid #4f6e8c;vertical-align:-1px;
+  }
+  .legend .pressed i{background:#9ef8ec;border-color:#bafcf4}
+  .legend .held i{background:repeating-linear-gradient(135deg,#2b94c8 0 2px,#15334f 2px 4px)}
+
+  /* Controls */
+  .controls{
+    display:grid;
+    grid-template-columns:minmax(130px,1fr) minmax(180px,1.05fr) minmax(420px,1.7fr);
+    gap:12px;
+    padding:14px 16px;
+    margin-bottom:14px;
+    align-items:end;
+  }
+  .field label{display:block;color:#a6c0dc;font-weight:800;font-size:11px;margin-bottom:6px}
+  .field input,.field select{
+    width:100%;
+    height:38px;
+    border:1px solid #2f465e;
+    border-radius:7px;
+    background:#0a1726;color:#fff;
+    padding:0 11px;
+    outline:none;
+  }
+  .transport{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .transport button{
+    height:38px;border-radius:7px;border:1px solid #314b64;background:#0b1a2b;color:#b7cee5;padding:0 12px;font-weight:750;
+  }
+  .transport .primary{background:var(--accent);border-color:var(--accent);color:#05231f}
+  .transport button:hover{border-color:#4f708f}
+
+  .reference-check{
+    height:38px;
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    padding:0 10px;
+    border:1px solid #314b64;
+    border-radius:7px;
+    background:#0b1a2b;
+    color:#b7cee5;
+    font-weight:750;
+    white-space:nowrap;
+    user-select:none;
+  }
+  .reference-check:hover{border-color:#4f708f}
+  .reference-check input{
+    appearance:none;
+    width:15px;
+    height:15px;
+    margin:0;
+    border:1px solid #56718d;
+    border-radius:3px;
+    background:#081524;
+    display:grid;
+    place-items:center;
+  }
+  .reference-check input:checked{
+    background:var(--accent);
+    border-color:var(--accent);
+  }
+  .reference-check input:checked::after{
+    content:"✓";
+    color:#05231f;
+    font-size:12px;
+    line-height:1;
+    font-weight:900;
+  }
+  .reference-check input:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:2px;
+  }
+
+  /* Timeline */
+  .timeline-card{padding:14px 16px 16px}
+  .timeline-head{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px;
+  }
+  .timeline-title{font-weight:850}
+  .timeline-sub{color:#7897b6;font-size:10px;margin-top:2px}
+  .timeline-viewport{
+    position:relative;
+    overflow-x:auto;
+    overflow-y:hidden;
+    padding:7px 1px 8px;
+    scrollbar-gutter:stable;
+  }
+  .timeline{
+    display:flex;
+    gap:6px;
+    min-width:max-content;
+    align-items:stretch;
+    position:relative;
+  }
+  .event{
+    flex:0 0 92px;
+    width:92px;
+    min-width:92px;
+    max-width:92px;
+    height:46px;
+    min-height:46px;
+    max-height:46px;
+    border:1px solid #30485f;
+    background:#0b1929;
+    border-radius:8px;
+    padding:6px 9px;
+    color:#bad0e6;
+    text-align:left;
+    position:relative;
+    overflow:hidden;
+  }
+  .event:hover{border-color:#4f708d;background:#102136}
+  .event.current{
+    border-color:var(--accent);
+    background:var(--accentSoft);
+    box-shadow:inset 0 0 0 1px rgba(59,224,206,.12);
+  }
+  .event.audition{
+    outline:2px solid rgba(126,246,232,.8);
+    outline-offset:2px;
+  }
+  .playhead{
+    position:absolute;
+    top:0;
+    bottom:0;
+    width:2px;
+    background:var(--accent);
+    z-index:5;
+    pointer-events:none;
+    transform:translateX(-1px);
+    box-shadow:0 0 12px rgba(59,224,206,.75);
+  }
+  .playhead::before{
+    content:"";
+    position:absolute;
+    top:0;
+    left:50%;
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:var(--accent);
+    transform:translate(-50%,-45%);
+    box-shadow:0 0 10px rgba(59,224,206,.85);
+  }
+  .event .n{color:#6d8baa;font-size:9px;margin-right:5px}
+  .event .name{font-size:13px;font-weight:850;color:#dce8f4}
+  .event.current .name{color:var(--accent)}
+  .event .dur{position:absolute;left:9px;bottom:5px;color:#6f8da9;font-size:8px}
+  .event.current .dur{color:#94e9de}
+  .event .bar{
+    position:absolute;right:0;top:0;height:100%;width:1px;background:#24394f;
+  }
+
+  .beat-rail{
+    position:absolute;
+    left:8px;
+    right:8px;
+    bottom:3px;
+    height:2px;
+    display:flex;
+    gap:2px;
+    opacity:.55;
+  }
+  .beat-rail i{
+    flex:1;
+    height:2px;
+    border-radius:2px;
+    background:#45617d;
+  }
+  .event.current .beat-rail i{background:#5fe7d8}
+  .timeline-note{
+    margin-top:9px;color:#6f8ba5;font-size:10px;
+  }
+
+  /* modal-ish progression selector */
+  .selector{
+    margin-top:14px;
+    display:none;
+    padding:14px 16px;
+  }
+  .selector.open{display:block}
+  .selector h3{margin:0 0 10px;font-size:14px}
+  .quick-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .quick{
+    border:1px solid #2c455e;background:#0a1726;color:#bcd0e5;border-radius:8px;padding:10px;text-align:left;
+  }
+  .quick strong{display:block;color:#f0f6fb;margin-bottom:3px}
+  .quick small{color:#7696b4}
+
+  @media (max-width: 980px){
+    .app{grid-template-columns:150px minmax(0,1fr)}
+    .hero-grid{grid-template-columns:1fr}
+    .mode-card{align-items:stretch;flex-direction:column}
+    .mode-side{justify-content:flex-start}
+    .controls{grid-template-columns:1fr 1fr}
+    .controls .transport-wrap{grid-column:1/-1}
+    .active-progression span{max-width:170px}
+  }
+  @media (max-width: 700px){
+    .app{grid-template-columns:1fr}
+    .sidebar{display:none}
+    .content{padding:10px}
+    .topbar{padding:0 10px}
+    .active-progression{display:none}
+    .metrics{gap:9px;flex-wrap:wrap}
+    .metric{min-width:120px}
+    .controls{grid-template-columns:1fr}
+    .quick-list{grid-template-columns:1fr}
+    .timeline-viewport{overflow:auto}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">◉</div>
+      <div><b>LOOP VAULT</b><small>MUSIC WORKSPACE</small></div>
+    </div>
+    <div class="nav">
+      <div class="nav-section">WORKSPACE</div>
+      <a class="nav-item" href="#"><span class="nav-icon">⌂</span>Home</a>
+      <a class="nav-item" href="#"><span class="nav-icon">♬</span>Chord Capture</a>
+      <a class="nav-item" href="#"><span class="nav-icon">◇</span>Vault</a>
+      <a class="nav-item" href="#"><span class="nav-icon">⚒</span>Practice</a>
+      <a class="nav-item active" href="#"><span class="nav-icon">↔</span>Voicing Loop</a>
+      <a class="nav-item" href="#"><span class="nav-icon">⌨</span>Live MIDI</a>
+      <div class="nav-section" style="margin-top:18px">SYSTEM</div>
+      <a class="nav-item" href="#"><span class="nav-icon">◷</span>History</a>
+      <a class="nav-item" href="#"><span class="nav-icon">⚙</span>Settings</a>
+    </div>
+    <div class="sidebar-foot">◧</div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="title-wrap">
+        <div>
+          <div class="screen-title">練習</div>
+          <div class="screen-sub">保存進行を自分の手で覚える</div>
+        </div>
+        <div class="active-progression">
+          <span>練習中: Favorite DNA / Bm progression</span>
+          <button class="change-btn" id="changeProgression">進行を変更</button>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="tiny">☰</button>
+        <button class="pill active">ピアノ</button>
+        <button class="pill">エレピ</button>
+        <button class="pill">＋ Idea</button>
+      </div>
+    </header>
+
+    <div class="content">
+      <section class="card mode-card">
+        <div class="mode-groups">
+          <div>
+            <div class="mode-label">MY VOICINGS</div>
+            <div class="seg" data-group="voicing">
+              <button>Source MIDI</button>
+              <button>Custom</button>
+            </div>
+          </div>
+          <div>
+            <div class="mode-label">LESSON</div>
+            <div class="seg" data-group="voicing">
+              <button class="active">Basic Shell 1–7</button>
+              <button>Basic Full 1–7–3</button>
+              <button>Left-hand</button>
+            </div>
+          </div>
+        </div>
+        <div class="mode-side">
+          <div>
+            <div class="mode-label">DISPLAY</div>
+            <div class="seg" data-group="display">
+              <button class="active">Learn（Voicing表示）</button>
+              <button>Recall（コード名のみ）</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="hero-grid">
+        <article class="card current-card">
+          <div class="eyebrow">CURRENT ・ 1 / 10</div>
+          <div class="current-code">Bm7</div>
+          <div class="metrics">
+            <div class="metric">
+              <div class="metric-label">BEAT</div>
+              <strong>1 / 4</strong>
+              <div class="beats">
+                <span class="beat on">1</span><span class="beat">2</span><span class="beat">3</span><span class="beat">4</span>
+              </div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">LOOP</div>
+              <strong>0 周完了</strong>
+            </div>
+            <div class="metric">
+              <div class="metric-label">POSITION</div>
+              <strong>Bar 1 / 7</strong>
+            </div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-head"><span>現在のコード</span><span>1 / 4 拍</span></div>
+            <div class="progress"><i></i></div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-head"><span>進行</span><span>1 / 10 chord events</span></div>
+            <div class="progress"><i style="width:10%"></i></div>
+          </div>
+        </article>
+
+        <aside class="card next-card">
+          <div class="eyebrow">NEXT</div>
+          <div class="next-code">Bm11</div>
+          <div class="next-meta">構成音: B3 · D4 · A4 · C#5 · E5</div>
+          <div class="next-degree">度数: 1 · ♭3 · ♭7 · 9 · 11</div>
+          <div class="next-hint">2拍後に切り替わります</div>
+        </aside>
+      </section>
+
+      <section class="card timeline-card">
+        <div class="timeline-head">
+          <div>
+            <div class="timeline-title">進行</div>
+            <div class="timeline-sub">カード幅は固定。2拍/4拍はラベルと再生速度で表します。</div>
+          </div>
+          <div class="eyebrow">4/4 ・ HARMONIC RHYTHM</div>
+        </div>
+
+        <div class="timeline-viewport" id="timelineViewport">
+          <div class="timeline" id="timeline">
+            <div class="playhead" id="playhead" aria-hidden="true"></div>
+          <button class="event current" style="--beats:4" data-name="Bm7" data-midi="59,69,74,78" data-beats="4"><span class="n">1</span><span class="name">Bm7</span><span class="dur">4拍</span><span class="beat-rail"><i></i><i></i><i></i><i></i></span></button>
+          <button class="event" style="--beats:2" data-name="Bm11" data-midi="59,62,69,73,76" data-beats="2"><span class="n">2</span><span class="name">Bm11</span><span class="dur">2拍</span><span class="beat-rail"><i></i><i></i></span></button>
+          <button class="event" style="--beats:2" data-name="Em11" data-midi="52,55,62,66,69" data-beats="2"><span class="n">3</span><span class="name">Em11</span><span class="dur">2拍</span><span class="beat-rail"><i></i><i></i></span></button>
+          <button class="event" style="--beats:4" data-name="A13" data-midi="57,61,67,71,78" data-beats="4"><span class="n">4</span><span class="name">A13</span><span class="dur">4拍</span><span class="beat-rail"><i></i><i></i><i></i><i></i></span></button>
+          <button class="event" style="--beats:4" data-name="Am11/B" data-midi="47,57,60,67,71,74" data-beats="4"><span class="n">5</span><span class="name">Am11/B</span><span class="dur">4拍</span><span class="beat-rail"><i></i><i></i><i></i><i></i></span></button>
+          <button class="event" style="--beats:2" data-name="Bm11" data-midi="59,62,69,73,76" data-beats="2"><span class="n">6</span><span class="name">Bm11</span><span class="dur">2拍</span><span class="beat-rail"><i></i><i></i></span></button>
+          <button class="event" style="--beats:2" data-name="E13" data-midi="52,56,62,66,73" data-beats="2"><span class="n">7</span><span class="name">E13</span><span class="dur">2拍</span><span class="beat-rail"><i></i><i></i></span></button>
+          <button class="event" style="--beats:4" data-name="D7" data-midi="50,54,60,64" data-beats="4"><span class="n">8</span><span class="name">D7</span><span class="dur">4拍</span><span class="beat-rail"><i></i><i></i><i></i><i></i></span></button>
+          <button class="event" style="--beats:2" data-name="Am11/B" data-midi="47,57,60,67,71,74" data-beats="2"><span class="n">9</span><span class="name">Am11/B</span><span class="dur">2拍</span><span class="beat-rail"><i></i><i></i></span></button>
+          <button class="event" style="--beats:2" data-name="Bm7" data-midi="59,69,74,78" data-beats="2"><span class="n">10</span><span class="name">Bm7</span><span class="dur">2拍</span><span class="beat-rail"><i></i><i></i></span></button>
+          </div>
+        </div>
+        <div class="timeline-note">※ 縦のシアン線が再生位置です。カードは常に同じスリム幅・高さです。4拍はゆっくり、2拍は速く通過します。カードクリックは試聴のみ。「お手本音」をONにすると再生時にも各コードを鳴らします。</div>
+      </section>
+
+      <section class="card keyboard-card">
+        <div class="keyboard-head">
+          <div class="voicing-title">
+            <strong>Bm7</strong>
+            <div class="voicing-meta">構成音: B3 · A4</div>
+            <div class="degree-line">度数: 1 · ♭7</div>
+          </div>
+          <button class="listen">◖ 現在のコードを試聴</button>
+        </div>
+
+        <div class="keyboard-shell">
+          <div class="keyboard" id="keyboard"></div>
+        </div>
+        <div class="legend">
+          <span><i></i>左手の目安</span>
+          <span class="pressed"><i></i>押鍵中</span>
+          <span class="held"><i></i>ペダル保持</span>
+        </div>
+      </section>
+
+      <section class="card controls">
+        <div class="field">
+          <label>BPM</label>
+          <input value="130" aria-label="BPM" />
+        </div>
+        <div class="field">
+          <label>カウントイン</label>
+          <select aria-label="Count in">
+            <option>1小節</option>
+            <option>2小節</option>
+            <option>なし</option>
+          </select>
+        </div>
+        <div class="transport-wrap">
+          <div class="field">
+            <label>TRANSPORT</label>
+            <div class="transport">
+              <button class="primary" id="playBtn">▶ 再開</button>
+              <button>↻ 最初から</button>
+              <button>■ 停止</button>
+              <label class="reference-check" title="再生時に各コードのお手本Voicingを鳴らします">
+                <input id="referenceSound" type="checkbox" checked />
+                <span>お手本音</span>
+              </label>
+              <button id="metroBtn">メトロノーム: ON</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      <section class="card selector" id="selector">
+        <h3>進行を変更</h3>
+        <div class="quick-list">
+          <button class="quick"><strong>Favorite DNA</strong><small>Bm7 → Bm11 → Em11 → …</small></button>
+          <button class="quick"><strong>Aqua Bossa</strong><small>E6/9 → G#7(b13) → C#m9 → …</small></button>
+          <button class="quick"><strong>雨上がりの待ち合わせ</strong><small>Fmaj9 → …</small></button>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+  // Tiny interactions for layout review.
+  document.querySelectorAll('.seg').forEach(seg => {
+    seg.addEventListener('click', e => {
+      const b = e.target.closest('button');
+      if(!b) return;
+      // All voicing buttons across MY/LESSON share one selection.
+      if(seg.dataset.group === 'voicing'){
+        document.querySelectorAll('.seg[data-group="voicing"] button').forEach(x => x.classList.remove('active'));
+      }else{
+        seg.querySelectorAll('button').forEach(x => x.classList.remove('active'));
+      }
+      b.classList.add('active');
+    });
+  });
+
+  const selector = document.getElementById('selector');
+  document.getElementById('changeProgression').addEventListener('click', () => {
+    selector.classList.toggle('open');
+    if(selector.classList.contains('open')) selector.scrollIntoView({behavior:'smooth', block:'nearest'});
+  });
+
+  const play = document.getElementById('playBtn');
+  const bpmInput = document.querySelector('input[aria-label="BPM"]');
+  const timeline = document.getElementById('timeline');
+  const timelineViewport = document.getElementById('timelineViewport');
+  const playhead = document.getElementById('playhead');
+  const events = [...timeline.querySelectorAll('.event')];
+
+  let playing = false;
+  let currentIndex = 0;
+  let beatPosition = 0;
+  let completedLoops = 0;
+  let lastFrame = null;
+  let rafId = null;
+
+  function beatsOf(i){
+    return Number(events[i].dataset.beats || 4);
+  }
+
+  function updateTransportUI(){
+    const event = events[currentIndex];
+    const totalBeats = beatsOf(currentIndex);
+    const beatNumber = Math.min(totalBeats, Math.floor(beatPosition) + 1);
+
+    events.forEach((x,i) => x.classList.toggle('current', i === currentIndex));
+    document.querySelector('.current-code').textContent = event.dataset.name;
+    document.querySelector('.voicing-title strong').textContent = event.dataset.name;
+
+    const next = events[(currentIndex + 1) % events.length];
+    document.querySelector('.next-code').textContent = next.dataset.name;
+    document.querySelector('.next-hint').textContent =
+      Math.max(1, Math.ceil(totalBeats - beatPosition)) + '拍後に切り替わります';
+
+    const metricStrong = document.querySelectorAll('.metric strong');
+    metricStrong[0].textContent = beatNumber + ' / ' + totalBeats;
+    metricStrong[1].textContent = completedLoops + ' 周完了';
+
+    const beats = document.querySelector('.beats');
+    beats.innerHTML = '';
+    for(let i=1;i<=totalBeats;i++){
+      const b = document.createElement('span');
+      b.className = 'beat' + (i === beatNumber ? ' on' : '');
+      b.textContent = i;
+      beats.appendChild(b);
+    }
+
+    const codeProgress = document.querySelectorAll('.progress > i')[0];
+    codeProgress.style.width = Math.min(100, (beatPosition / totalBeats) * 100) + '%';
+    document.querySelectorAll('.progress-head span:last-child')[0].textContent =
+      beatNumber + ' / ' + totalBeats + ' 拍';
+
+    const progressionProgress = document.querySelectorAll('.progress > i')[1];
+    const eventProgress = (currentIndex + beatPosition / totalBeats) / events.length;
+    progressionProgress.style.width = (eventProgress * 100) + '%';
+    document.querySelectorAll('.progress-head span:last-child')[1].textContent =
+      (currentIndex + 1) + ' / ' + events.length + ' chord events';
+
+    // Playhead: all cards stay the same compact width.
+    // Harmonic duration is represented by how long the playhead takes to cross the card.
+    const x = event.offsetLeft + (beatPosition / totalBeats) * event.offsetWidth;
+    playhead.style.left = x + 'px';
+
+    // Keep the active card visible without changing card width.
+    const left = event.offsetLeft;
+    const right = left + event.offsetWidth;
+    const viewLeft = timelineViewport.scrollLeft;
+    const viewRight = viewLeft + timelineViewport.clientWidth;
+    if(left < viewLeft + 20) timelineViewport.scrollLeft = Math.max(0, left - 20);
+    else if(right > viewRight - 20) timelineViewport.scrollLeft = right - timelineViewport.clientWidth + 20;
+  }
+
+  let lastTransportAuditionIndex = -1;
+
+  function maybeAuditionTransport(force = false){
+    const checked = document.getElementById('referenceSound')?.checked;
+    if(!checked) return;
+    if(force || lastTransportAuditionIndex !== currentIndex){
+      lastTransportAuditionIndex = currentIndex;
+      auditionMidi(events[currentIndex].dataset.midi);
+    }
+  }
+
+  function frame(ts){
+    if(!playing) return;
+    if(lastFrame == null) lastFrame = ts;
+    const dt = Math.min(0.1, (ts - lastFrame) / 1000);
+    lastFrame = ts;
+    const bpm = Math.max(30, Math.min(240, Number(bpmInput.value) || 120));
+    beatPosition += dt * bpm / 60;
+
+    while(beatPosition >= beatsOf(currentIndex)){
+      beatPosition -= beatsOf(currentIndex);
+      currentIndex += 1;
+      if(currentIndex >= events.length){
+        currentIndex = 0;
+        completedLoops += 1;
+      }
+      maybeAuditionTransport();
+    }
+    updateTransportUI();
+    rafId = requestAnimationFrame(frame);
+  }
+
+  play.addEventListener('click', () => {
+    playing = !playing;
+    play.textContent = playing ? 'Ⅱ 一時停止' : '▶ 再開';
+    lastFrame = null;
+    if(playing){
+      lastTransportAuditionIndex = -1;
+      maybeAuditionTransport(true);
+      rafId = requestAnimationFrame(frame);
+    }else if(rafId){
+      cancelAnimationFrame(rafId);
+      stopPreview();
+    }
+    updateTransportUI();
+  });
+
+  document.querySelectorAll('.transport button').forEach(btn => {
+    if(btn.textContent.includes('最初から')){
+      btn.addEventListener('click', () => {
+        currentIndex = 0;
+        beatPosition = 0;
+        completedLoops = 0;
+        lastFrame = null;
+        lastTransportAuditionIndex = -1;
+        if(playing) maybeAuditionTransport(true);
+        updateTransportUI();
+      });
+    }
+    if(btn.textContent.includes('停止')){
+      btn.addEventListener('click', () => {
+        playing = false;
+        if(rafId) cancelAnimationFrame(rafId);
+        currentIndex = 0;
+        beatPosition = 0;
+        completedLoops = 0;
+        lastFrame = null;
+        lastTransportAuditionIndex = -1;
+        stopPreview();
+        play.textContent = '▶ 再開';
+        updateTransportUI();
+      });
+    }
+  });
+
+  const referenceSound = document.getElementById('referenceSound');
+  referenceSound.addEventListener('change', () => {
+    lastTransportAuditionIndex = -1;
+    if(!referenceSound.checked){
+      stopPreview();
+    }else if(playing){
+      maybeAuditionTransport(true);
+    }
+  });
+
+  const metro = document.getElementById('metroBtn');
+  let metroOn = true;
+  metro.addEventListener('click', () => {
+    metroOn = !metroOn;
+    metro.textContent = 'メトロノーム: ' + (metroOn ? 'ON' : 'OFF');
+  });
+
+  // Mock-only audition synth.
+  // Production Loop Vault should use the existing resolved-voicing/audio path instead.
+  let audioCtx = null;
+  let activePreviewNodes = [];
+  function stopPreview(){
+    activePreviewNodes.forEach(n => {
+      try { n.stop(); } catch {}
+    });
+    activePreviewNodes = [];
+  }
+  function auditionMidi(csv){
+    if(!csv) return;
+    audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
+    stopPreview();
+    const now = audioCtx.currentTime;
+    csv.split(',').map(Number).forEach((m, idx) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.value = 440 * Math.pow(2, (m - 69) / 12);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.045 / Math.max(1, idx/2+1), now + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.72);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.75);
+      activePreviewNodes.push(osc);
+    });
+  }
+
+  timeline.addEventListener('click', e => {
+    const event = e.target.closest('.event');
+    if(!event) return;
+
+    // Important: audition only. Do not resize the card and do not seek transport.
+    auditionMidi(event.dataset.midi);
+    event.classList.add('audition');
+    setTimeout(() => event.classList.remove('audition'), 180);
+  });
+
+  updateTransportUI();
+
+  // Build a centered 3-octave-ish piano visual with highlighted B and A.
+  const keyboard = document.getElementById('keyboard');
+  const whiteNames = ['C','D','E','F','G','A','B'];
+  const octaves = [3,4,5];
+  const whites = [];
+  octaves.forEach(o => whiteNames.forEach(n => whites.push(n+o)));
+  whites.push('C6');
+
+  whites.forEach((name, idx) => {
+    const k = document.createElement('div');
+    k.className = 'white-key';
+    if(name === 'B3' || name === 'A4') k.classList.add('active');
+    if(name.startsWith('C')){
+      const lab = document.createElement('span');
+      lab.className = 'key-label';
+      lab.textContent = name;
+      k.appendChild(lab);
+    }
+    keyboard.appendChild(k);
+  });
+
+  // black-key positions between white keys
+  const blackAfter = new Set(['C','D','F','G','A']);
+  const whiteCount = whites.length;
+  whites.forEach((name, idx) => {
+    const letter = name[0];
+    if(!blackAfter.has(letter) || idx === whites.length - 1) return;
+    const k = document.createElement('div');
+    k.className = 'black-key';
+    const leftPct = ((idx + 1) / whiteCount) * 100;
+    k.style.left = leftPct + '%';
+    keyboard.appendChild(k);
+  });
+</script>
+</body>
+</html>
