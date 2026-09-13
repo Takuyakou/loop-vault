@@ -15,6 +15,8 @@ describe("Tauri security configuration", () => {
     expect(csp).toContain("default-src 'self'");
     expect(csp).toContain("object-src 'none'");
     expect(csp).toContain("base-uri 'none'");
+    expect(csp).toContain("worker-src 'self' blob:");
+    expect(csp).not.toContain("script-src 'self' blob:");
     expect(csp).not.toContain("https:");
     expect(csp).not.toContain("*;");
   });
