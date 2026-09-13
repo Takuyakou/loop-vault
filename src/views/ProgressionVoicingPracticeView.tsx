@@ -285,6 +285,7 @@ export function ProgressionVoicingPracticeView({
   const [midiReconnectError, setMidiReconnectError] = useState<string>();
   const transportRef = useRef<ProgressionVoicingTransportPort>();
   const runtimeRequestRef = useRef(0);
+  const auditionRequestRef = useRef(0);
   const midiLeaseRef = useRef<LiveMidiActivationLease>();
   const timelineViewportRef = useRef<HTMLDivElement | null>(null);
   const timelineEventRefs = useRef<Array<HTMLButtonElement | null>>([]);
@@ -296,6 +297,7 @@ export function ProgressionVoicingPracticeView({
   useEffect(() => {
     const transport = transportRef.current;
     runtimeRequestRef.current += 1;
+    auditionRequestRef.current += 1;
     transport?.stop();
     setRuntimeError(undefined);
     setAuditionedIndex(undefined);
@@ -304,6 +306,7 @@ export function ProgressionVoicingPracticeView({
       : undefined);
     return () => {
       runtimeRequestRef.current += 1;
+      auditionRequestRef.current += 1;
       transport?.stop();
     };
   }, [countInBars, previewSound, snapshot]);
@@ -347,6 +350,10 @@ export function ProgressionVoicingPracticeView({
   const paused = clockState?.status === "paused";
   const playheadX = currentIndex * (TIMELINE_CARD_WIDTH_PX + TIMELINE_CARD_GAP_PX)
     + (projection?.chordProgress ?? 0) * TIMELINE_CARD_WIDTH_PX;
+  const visualStepMilliseconds = Math.max(
+    16,
+    Math.min(140, 60_000 / (clockState?.bpm ?? snapshot?.bpm ?? 120) / 16),
+  );
   const allEventsPlayable = Boolean(plan?.events.length)
     && plan!.events.every((resolution) => resolution.status === "SUPPORTED");
   const beatsPerBar = snapshot?.meter.numerator ?? 4;
@@ -366,6 +373,7 @@ export function ProgressionVoicingPracticeView({
   }, [currentIndex, snapshot]);
   function changeSelection(next: ProgressionVoicingSelection) {
     runtimeRequestRef.current += 1;
+    auditionRequestRef.current += 1;
     transportRef.current?.stop();
     setSelection(next);
   }
@@ -491,6 +499,7 @@ export function ProgressionVoicingPracticeView({
   function stop() {
     if (!snapshot) return;
     runtimeRequestRef.current += 1;
+    auditionRequestRef.current += 1;
     transportRef.current?.stop();
     setClockState((state) => state
       ? reduceProgressionPracticeClock(snapshot, state, { type: "STOP" })
@@ -507,14 +516,15 @@ export function ProgressionVoicingPracticeView({
 
   async function auditionResolved(index: number) {
     const resolution = plan?.events[index];
-    if (!snapshot || resolution?.status !== "SUPPORTED" || active || paused) return;
-    const request = ++runtimeRequestRef.current;
+    if (!snapshot || resolution?.status !== "SUPPORTED") return;
+    const request = ++auditionRequestRef.current;
     setRuntimeError(undefined);
     setAuditionedIndex(index);
     try {
-    await transportRef.current?.audition(resolution.voicing.midiNotes, previewSound);
+      await transportRef.current?.audition(resolution.voicing.midiNotes, previewSound);
     } catch {
-      if (runtimeRequestRef.current !== request) return;
+      if (auditionRequestRef.current !== request) return;
+      runtimeRequestRef.current += 1;
       transportRef.current?.stop();
       setClockState((state) => state
         ? reduceProgressionPracticeClock(snapshot, state, { type: "STOP" })
@@ -696,8 +706,18 @@ export function ProgressionVoicingPracticeView({
               </div>
 
               <div className="mt-5 space-y-3">
-                <ProgressMeter label={text.chordProgress} value={projection?.chordProgress ?? 0} />
-                <ProgressMeter label={text.progressionProgress} value={projection?.progressionProgress ?? 0} />
+                <ProgressMeter
+                  active={active}
+                  label={text.chordProgress}
+                  transitionMilliseconds={visualStepMilliseconds}
+                  value={projection?.chordProgress ?? 0}
+                />
+                <ProgressMeter
+                  active={active}
+                  label={text.progressionProgress}
+                  transitionMilliseconds={visualStepMilliseconds}
+                  value={projection?.progressionProgress ?? 0}
+                />
               </div>
             </Surface>
 
@@ -724,13 +744,20 @@ export function ProgressionVoicingPracticeView({
               tabIndex={0}
               aria-label={text.timeline}
             >
-              <div className="relative flex w-max min-w-full gap-1.5 pb-1">
+              <div className="relative flex w-max min-w-full gap-1.5 py-2">
                 <span
                   aria-hidden="true"
                   data-testid="voicing-loop-playhead"
-                  className="pointer-events-none absolute inset-y-0 left-0 z-10 w-0.5 bg-[var(--lv-accent)]"
-                  style={{ transform: `translateX(${playheadX}px)` }}
-                />
+                  className="pointer-events-none absolute inset-y-2 left-0 z-10 w-0.5 bg-[var(--lv-accent)] shadow-[0_0_12px_rgba(59,224,206,0.75)] motion-reduce:transition-none"
+                  style={{
+                    transform: `translateX(${playheadX}px)`,
+                    transitionDuration: active ? `${visualStepMilliseconds}ms` : "0ms",
+                    transitionProperty: "transform",
+                    transitionTimingFunction: "linear",
+                  }}
+                >
+                  <span data-testid="voicing-loop-playhead-marker" className="absolute left-1/2 top-0 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--lv-accent)] shadow-[0_0_10px_rgba(59,224,206,0.85)]" />
+                </span>
                 {snapshot.events.map((event, index) => {
                   const resolution = plan?.events[index];
                   const playable = resolution?.status === "SUPPORTED";
@@ -743,11 +770,11 @@ export function ProgressionVoicingPracticeView({
                       type="button"
                       data-testid="voicing-loop-event"
                       data-duration-beats={event.durationBeats}
-                      className={`flex h-[46px] max-h-[46px] min-h-[46px] w-[92px] min-w-[92px] max-w-[92px] flex-none flex-col justify-center overflow-hidden rounded-[var(--lv-radius-sm)] border px-2 text-left text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-60 ${selected ? "border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)]" : auditioned ? "border-[var(--lv-accent)] bg-[var(--lv-surface-raised)] text-[var(--lv-text)]" : "border-[var(--lv-border)] bg-transparent text-[var(--lv-text-secondary)]"}`}
+                      className={`relative flex h-[46px] max-h-[46px] min-h-[46px] w-[92px] min-w-[92px] max-w-[92px] flex-none flex-col justify-start overflow-hidden rounded-[var(--lv-radius-sm)] border px-2 pb-3 pt-1.5 text-left text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-60 ${selected ? "border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)] shadow-[inset_0_0_0_1px_rgba(59,224,206,0.12)]" : auditioned ? "border-[var(--lv-accent)] bg-[var(--lv-surface-raised)] text-[var(--lv-text)]" : "border-[var(--lv-border)] bg-transparent text-[var(--lv-text-secondary)]"}`}
                       aria-current={selected ? "step" : undefined}
                       aria-pressed={auditioned}
                       aria-label={`${index + 1}/${snapshot.events.length}: ${event.chord.label}, ${practiceTimingLabel(event, snapshot.meter.numerator, language)}. ${text.auditionCard}`}
-                      disabled={!playable || active || paused}
+                      disabled={!playable}
                       onClick={() => void auditionResolved(index)}
                     >
                       <span className="flex min-w-0 items-baseline gap-1.5">
@@ -756,9 +783,17 @@ export function ProgressionVoicingPracticeView({
                       </span>
                       <span
                         data-testid="voicing-loop-event-timing"
-                        className="mt-0.5 block truncate whitespace-nowrap text-[10px] font-normal leading-3 text-[var(--lv-text-muted)]"
+                        className={`mt-0.5 block truncate whitespace-nowrap text-[10px] font-normal leading-3 ${selected ? "text-teal-200" : "text-[var(--lv-text-muted)]"}`}
                       >
-                        {practiceTimingLabel(event, snapshot.meter.numerator, language)}
+                        {compactDurationLabel(event.durationBeats, language)}
+                      </span>
+                      <span aria-hidden="true" data-testid="voicing-loop-event-beat-rail" className="absolute inset-x-2 bottom-1 flex h-0.5 gap-0.5 opacity-60">
+                        {Array.from({ length: Math.max(1, Math.min(16, Math.ceil(event.durationBeats))) }, (_, beatIndex) => (
+                          <span
+                            key={beatIndex}
+                            className={`h-0.5 min-w-0 flex-1 rounded-full ${selected ? "bg-[var(--lv-accent)]" : "bg-slate-600"}`}
+                          />
+                        ))}
                       </span>
                     </button>
                   );
@@ -782,7 +817,7 @@ export function ProgressionVoicingPracticeView({
                 <Button
                   size="sm"
                   variant="secondary"
-                  disabled={!currentVoicing || active || paused}
+                  disabled={!currentVoicing || active}
                   onClick={() => void auditionCurrent()}
                 >
                   <Volume2 aria-hidden="true" size={16} />
@@ -896,6 +931,12 @@ function formatPracticeBeat(value: number): string {
   return Number.isInteger(value) ? String(value) : String(Number(value.toFixed(3)));
 }
 
+function compactDurationLabel(value: number, language: AppLanguage): string {
+  const formatted = formatPracticeBeat(value);
+  if (language === "ja") return `${formatted}拍`;
+  return `${formatted} ${value === 1 ? "beat" : "beats"}`;
+}
+
 function BeatIndicator({ current, label, total }: { current: number; label: string; total: number }) {
   const safeTotal = Math.max(1, Math.ceil(total));
   const activeIndex = Math.min(safeTotal - 1, Math.max(0, Math.floor(current) - 1));
@@ -966,13 +1007,33 @@ function Metric({ children, label, value }: { readonly children?: ReactNode; rea
   );
 }
 
-function ProgressMeter({ label, value }: { readonly label: string; readonly value: number }) {
-  const percent = Math.round(Math.max(0, Math.min(1, value)) * 100);
+function ProgressMeter({
+  active,
+  label,
+  transitionMilliseconds,
+  value,
+}: {
+  readonly active: boolean;
+  readonly label: string;
+  readonly transitionMilliseconds: number;
+  readonly value: number;
+}) {
+  const normalized = Math.max(0, Math.min(1, value));
+  const percent = Math.round(normalized * 100);
   return (
     <div>
       <div className="mb-1 flex justify-between gap-3 text-xs text-[var(--lv-text-muted)]"><span>{label}</span><span>{percent}%</span></div>
       <div className="h-1.5 overflow-hidden rounded-full bg-[var(--lv-bg-subtle)]" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}>
-        <div className="h-full origin-left bg-[var(--lv-accent)]" style={{ transform: `scaleX(${percent / 100})` }} />
+        <div
+          className="h-full origin-left bg-[var(--lv-accent)] motion-reduce:transition-none"
+          data-testid="voicing-loop-progress-fill"
+          style={{
+            transform: `scaleX(${normalized})`,
+            transitionDuration: active ? `${transitionMilliseconds}ms` : "0ms",
+            transitionProperty: "transform",
+            transitionTimingFunction: "linear",
+          }}
+        />
       </div>
     </div>
   );

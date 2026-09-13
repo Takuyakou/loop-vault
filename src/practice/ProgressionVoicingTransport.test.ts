@@ -255,6 +255,15 @@ describe("ProgressionVoicingTransport", () => {
     const boundary = toneMock.scheduled[0]!;
     const originalVoicingSynth = toneMock.instruments[0]!;
     runtime.pause();
+    const pausedPosition = toneMock.transport.position;
+    await runtime.audition([60, 64, 67]);
+    expect(toneMock.transport.position).toBe(pausedPosition);
+    expect(toneMock.instruments[2]?.triggerAttackRelease).toHaveBeenCalledWith(
+      ["C4", "E4", "G4"],
+      2,
+      1,
+      0.72,
+    );
     boundary.callback(1);
     expect(originalVoicingSynth.triggerAttackRelease).not.toHaveBeenCalled();
     expect(originalVoicingSynth.dispose).not.toHaveBeenCalled();
@@ -264,13 +273,44 @@ describe("ProgressionVoicingTransport", () => {
     expect(originalVoicingSynth.triggerAttackRelease).toHaveBeenCalledTimes(1);
     await runtime.restart();
     expect(toneMock.scheduled).toHaveLength(scheduleCount);
-    expect(toneMock.transport.pause).toHaveBeenCalledTimes(1);
-    expect(toneMock.transport.start).toHaveBeenLastCalledWith("+0.05", "0i");
+    expect(toneMock.transport.pause).toHaveBeenCalledTimes(2);
+    expect(toneMock.transport.position).toBe("0i");
+    expect(toneMock.transport.start).toHaveBeenLastCalledWith("+0.05");
 
     runtime.setBpm(122);
     expect(toneMock.transport.bpm.rampTo).toHaveBeenCalledWith(122, 0.1);
     runtime.stop();
     expect(toneMock.transport.clear).toHaveBeenCalledTimes(scheduleCount);
+    expect(toneMock.activeInstruments.size).toBe(0);
+  });
+
+  it("auditions one card voice group during playback without invalidating transport callbacks", async () => {
+    const onTransportBeat = vi.fn();
+    const runtime = new ProgressionVoicingTransport();
+    await runtime.start({ snapshot, plan, bpm: 80, countInBars: 0, metronomeEnabled: false, onTransportBeat });
+
+    await runtime.audition([60, 64, 67]);
+    const auditionInstrument = toneMock.instruments[2]!;
+    expect(auditionInstrument.triggerAttackRelease).toHaveBeenLastCalledWith(
+      ["C4", "E4", "G4"],
+      2,
+      1,
+      0.72,
+    );
+    await runtime.audition([62, 65, 69]);
+    expect(auditionInstrument.releaseAll).toHaveBeenCalledTimes(2);
+    expect(auditionInstrument.triggerAttackRelease).toHaveBeenLastCalledWith(
+      ["D4", "F4", "A4"],
+      2,
+      1,
+      0.72,
+    );
+
+    toneMock.transport.getTicksAtTime.mockReturnValueOnce(192);
+    toneMock.scheduled[3]?.callback(2);
+    toneMock.drawCallbacks.shift()?.();
+    expect(onTransportBeat).toHaveBeenLastCalledWith(1);
+    expect(toneMock.transport.stop).toHaveBeenCalledTimes(1);
   });
 
   it("resumes the audio context before resuming or restarting progression and reference audio", async () => {
@@ -290,11 +330,12 @@ describe("ProgressionVoicingTransport", () => {
     expect(toneMock.instruments[0]?.triggerAttackRelease).toHaveBeenCalled();
 
     toneMock.start.mockClear();
-    toneMock.transport.stop.mockClear();
+    toneMock.transport.pause.mockClear();
     await expect(runtime.restart()).resolves.toBe(true);
     expect(toneMock.start).toHaveBeenCalledOnce();
-    expect(toneMock.transport.stop).toHaveBeenCalledOnce();
-    expect(toneMock.transport.start).toHaveBeenLastCalledWith("+0.05", "0i");
+    expect(toneMock.transport.pause).toHaveBeenCalledOnce();
+    expect(toneMock.transport.position).toBe("0i");
+    expect(toneMock.transport.start).toHaveBeenLastCalledWith("+0.05");
   });
 
   it("invalidates a pending audio start so it cannot create duplicate schedules", async () => {
@@ -592,7 +633,7 @@ describe("ProgressionVoicingTransport", () => {
     expect(toneMock.transport.clear).toHaveBeenCalledTimes(cycles * schedulesPerCycle);
     expect(toneMock.instruments).toHaveLength(cycles * instrumentsPerCycle);
     expect(toneMock.instruments.every((instrument) => instrument.dispose.mock.calls.length === 1)).toBe(true);
-    expect(toneMock.transport.pause).toHaveBeenCalledTimes(cycles);
+    expect(toneMock.transport.pause).toHaveBeenCalledTimes(cycles * 2);
     expect(toneMock.activeScheduleIds.size).toBe(0);
     expect(toneMock.activeInstruments.size).toBe(0);
   });

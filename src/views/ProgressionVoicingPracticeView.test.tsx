@@ -191,8 +191,8 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.textContent).toContain("0 周完了");
     expect(Array.from(container.querySelectorAll("[data-testid='voicing-loop-event-timing']"))
       .map((element) => element.textContent)).toEqual([
-      "1小節・1拍目・2拍",
-      "1小節・3拍目・2拍",
+      "2拍",
+      "2拍",
     ]);
     const start = button(container, "開始");
     await act(async () => start.click());
@@ -236,6 +236,8 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(sections[1]!.querySelector("[role='group']")).toBeNull();
     const playhead = container.querySelector<HTMLElement>("[data-testid='voicing-loop-playhead']")!;
     expect(playhead.style.transform).toBe("translateX(0px)");
+    expect(playhead.style.transitionTimingFunction).toBe("linear");
+    expect(container.querySelector("[data-testid='voicing-loop-playhead-marker']")).not.toBeNull();
     await act(async () => button(container, "開始").click());
     for (const [transportBeat, expectedX] of [[6, 46], [9, 144], [10.5, 242]]) {
       await act(async () => runtime.options?.onTransportBeat(transportBeat!));
@@ -257,6 +259,25 @@ describe("ProgressionVoicingPracticeView", () => {
       expect(card.className).toContain("min-w-[92px]");
       expect(card.className).toContain("max-w-[92px]");
     }
+    expect(Array.from(container.querySelectorAll("[data-testid='voicing-loop-event-beat-rail']"))
+      .map((rail) => rail.children.length)).toEqual([4, 2, 1, 1]);
+  });
+
+  it("renders exact clock projection values with linear interpolation instead of rounded progress steps", async () => {
+    const runtime = new FakeTransport();
+    const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full");
+    await act(async () => button(container, "開始").click());
+    await act(async () => runtime.options?.onTransportBeat(4.013));
+
+    const fills = container.querySelectorAll<HTMLElement>("[data-testid='voicing-loop-progress-fill']");
+    const chordScale = Number(fills[0]?.style.transform.match(/scaleX\((.+)\)/)?.[1]);
+    const progressionScale = Number(fills[1]?.style.transform.match(/scaleX\((.+)\)/)?.[1]);
+    expect(chordScale).toBeGreaterThan(0);
+    expect(chordScale).toBeLessThan(0.01);
+    expect(progressionScale).toBeGreaterThan(0);
+    expect(progressionScale).toBeLessThan(chordScale);
+    expect(fills[0]?.style.transitionTimingFunction).toBe("linear");
+    expect(fills[0]?.className).toContain("motion-reduce:transition-none");
   });
 
   it("keeps Learn/Recall explicit, provides accessible controls, and never gates Start on MIDI", async () => {
@@ -299,6 +320,26 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(runtime.audition).toHaveBeenLastCalledWith([48, 55, 59], "piano");
     expect(timelineCards[0]?.getAttribute("aria-pressed")).toBe("true");
     expect(runtime.start).not.toHaveBeenCalled();
+  });
+
+  it("keeps timeline audition available during playback and current audition available while paused", async () => {
+    const runtime = new FakeTransport();
+    const container = await renderView(runtime, { "source-midi": snapshot("source-midi") }, "source-midi");
+    const timelineCards = container.querySelectorAll<HTMLButtonElement>("[data-testid='voicing-loop-event']");
+
+    await act(async () => button(container, "開始").click());
+    expect(timelineCards[1]?.disabled).toBe(false);
+    await act(async () => timelineCards[1]?.click());
+    expect(runtime.audition).toHaveBeenLastCalledWith([50, 57, 60], "piano");
+
+    await act(async () => runtime.options?.onTransportBeat(6.5));
+    expect(container.querySelector("[aria-current='step']")?.textContent).toContain("Dm7");
+
+    await act(async () => button(container, "一時停止").click());
+    const currentAudition = button(container, "現在のコードを試聴");
+    expect(currentAudition.disabled).toBe(false);
+    await act(async () => currentAudition.click());
+    expect(runtime.audition).toHaveBeenLastCalledWith([50, 57, 60], "piano");
   });
 
   it("defaults reference sound on, passes session state to Start, and keeps visual transport available off", async () => {

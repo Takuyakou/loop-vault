@@ -46,6 +46,9 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
   private scheduleIds: number[] = [];
   private voicingInstrument?: PreviewInstrument;
   private voicingSound?: PreviewSound;
+  private auditionInstrument?: PreviewInstrument;
+  private auditionSound?: PreviewSound;
+  private auditionGeneration = 0;
   private clickSynth?: Tone.Synth;
   private generation = 0;
   private projectionEpoch = 0;
@@ -179,9 +182,10 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     if (generation !== this.generation || !this.running || !this.ownsTransport) return false;
     this.projectionEpoch += 1;
     this.voicingInstrument?.releaseAll();
-    this.transport.stop();
+    if (!this.paused) this.transport.pause();
+    this.transport.position = "0i";
     this.paused = false;
-    this.transport.start("+0.05", "0i");
+    this.transport.start("+0.05");
     return true;
   }
 
@@ -205,26 +209,27 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
   }
 
   async audition(midiNotes: readonly number[], sound: PreviewSound = "electric-piano"): Promise<void> {
-    if (midiNotes.length === 0 || this.startingGeneration !== undefined || this.running || this.ownsTransport) return;
-    const generation = ++this.generation;
+    if (midiNotes.length === 0 || this.startingGeneration !== undefined) return;
+    const generation = ++this.auditionGeneration;
     await Tone.start();
-    if (generation !== this.generation || this.running || this.ownsTransport) return;
-    if (!this.voicingInstrument || this.voicingSound !== sound) {
-      this.disposeInstruments();
+    if (generation !== this.auditionGeneration || this.startingGeneration !== undefined) return;
+    if (!this.auditionInstrument || this.auditionSound !== sound) {
+      this.disposeAuditionInstrument();
       const instrument = await createPreviewInstrument(sound);
-      if (generation !== this.generation || this.running || this.ownsTransport) {
+      if (generation !== this.auditionGeneration || this.startingGeneration !== undefined) {
         instrument.dispose();
         return;
       }
-      this.voicingInstrument = instrument;
-      this.voicingSound = sound;
+      this.auditionInstrument = instrument;
+      this.auditionSound = sound;
     }
-    this.voicingInstrument.releaseAll();
-    this.voicingInstrument.triggerAttackRelease(midiNotes.map(midiToNoteName), 2, Tone.now(), 0.72);
+    this.auditionInstrument.releaseAll();
+    this.auditionInstrument.triggerAttackRelease(midiNotes.map(midiToNoteName), 2, Tone.now(), 0.72);
   }
 
   private invalidateAndClear(): number {
     this.generation += 1;
+    this.auditionGeneration += 1;
     this.projectionEpoch += 1;
     this.startingGeneration = undefined;
     if (this.ownsTransport) {
@@ -255,6 +260,14 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.voicingInstrument = undefined;
     this.voicingSound = undefined;
     this.clickSynth = undefined;
+    this.disposeAuditionInstrument();
+  }
+
+  private disposeAuditionInstrument(): void {
+    this.auditionInstrument?.releaseAll();
+    this.auditionInstrument?.dispose();
+    this.auditionInstrument = undefined;
+    this.auditionSound = undefined;
   }
 
   private attackCurrentVoicing(absoluteBeat: number, time: number): void {

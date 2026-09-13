@@ -39,6 +39,8 @@ test("P5.30 compact workspace follows the approved order and fixed timeline geom
   }));
   expect(boxes.every(({ width, height }) => width === 92 && height === 46)).toBe(true);
   await expect(timeline.getByTestId("voicing-loop-playhead")).toHaveAttribute("aria-hidden", "true");
+  await expect(timeline.getByTestId("voicing-loop-playhead-marker")).toBeVisible();
+  await expect(timeline.getByTestId("voicing-loop-event-beat-rail")).toHaveCount(await cards.count());
   await assertNoHorizontalOverflow(page);
 });
 
@@ -64,8 +66,14 @@ test("P5.30 card audition is keyboard-operable and reference sound is session-lo
   await expect(referenceSound).not.toBeChecked();
   await page.getByLabel("カウントイン").selectOption("0");
   await page.getByRole("button", { name: /開始/ }).click();
+  await expect(secondCard).toBeEnabled();
+  await secondCard.click();
   await expect(workspace.locator("[data-testid='voicing-loop-event'][aria-current='step']"))
     .toContainText("Dm7", { timeout: 5_000 });
+  await page.getByRole("button", { name: "一時停止", exact: true }).click();
+  await expect(workspace.getByRole("button", { name: "現在のコードを試聴", exact: true })).toBeEnabled();
+  await workspace.getByRole("button", { name: "現在のコードを試聴", exact: true }).click();
+  await page.getByRole("button", { name: "再開", exact: true }).click();
   await page.getByRole("button", { name: "停止", exact: true }).click();
   await expect(referenceSound).not.toBeChecked();
 });
