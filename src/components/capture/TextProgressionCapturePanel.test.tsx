@@ -137,10 +137,27 @@ function buttonByText(harness: Harness, label: string) {
 }
 
 describe("TextProgressionCapturePanel", () => {
+  it("renders accepted rest/hold cells honestly and converts an all-rest score without a chord inspector", async () => {
+    const harness = await mount();
+    await changeValue(input(harness), "| Cmaj7 _ | % = |");
+    expect(harness.container.querySelectorAll('[data-testid="text-progression-control-card"]')).toHaveLength(2);
+    expect(harness.container.querySelectorAll('[data-testid="text-progression-invalid-card"]')).toHaveLength(0);
+    expect(harness.container.textContent).toContain("Hold");
+    await changeValue(input(harness), "| _ |");
+    expect(harness.container.querySelector('[data-testid="text-progression-inspector"]')).toBeNull();
+    const convert = harness.container.querySelector<HTMLButtonElement>('[data-testid="text-progression-convert"]')!;
+    expect(convert.disabled).toBe(false);
+    await click(convert);
+    expect(harness.onConvert).toHaveBeenCalledOnce();
+    await changeValue(input(harness), "| _ = |");
+    expect(convert.disabled).toBe(true);
+    expect(harness.container.querySelector('[data-testid="text-progression-diagnostics"]')).not.toBeNull();
+    await harness.unmount();
+  });
   it("shows the extended bounded input contract", async () => {
     const harness = await mount();
 
-    expect(harness.container.textContent).toContain("maximum 32 bars / 128 tokens");
+    expect(harness.container.textContent).toContain("maximum 32 bars / 128 cells");
     await harness.unmount();
   });
 

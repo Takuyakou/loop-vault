@@ -16,9 +16,9 @@ export function segmentScoreBar(
   parse: (raw: string) => ChordSymbol | undefined,
 ): ScoreSegmentation {
   const source = input.slice(start, end);
-  const parsed = new Map<string, ChordSymbol | undefined>();
+  const parsed = new Map<string, ChordSymbol | "%" | "_" | "=" | undefined>();
   const parseCached = (raw: string) => {
-    if (!parsed.has(raw)) parsed.set(raw, parse(raw));
+    if (!parsed.has(raw)) parsed.set(raw, raw === "%" || raw === "_" || raw === "=" ? raw : parse(raw));
     return parsed.get(raw);
   };
   // Preserve valid legacy whitespace-token grammar, including arbitrary long
@@ -35,13 +35,14 @@ export function segmentScoreBar(
     if (char === "(") depth += 1;
     if (char === ")") depth -= 1;
     if (depth < 0 || depth > 1) return { kind: "invalid" };
-    if (depth === 0 && /[A-G]/.test(char) && source[i - 1] !== "/") boundaries.push(i);
+    if (depth === 0 && /[A-G%_=]/.test(char) && source[i - 1] !== "/") boundaries.push(i);
   }
   if (depth !== 0) return { kind: "invalid" };
   boundaries.push(source.length);
   const memo = new Map<string, readonly ScoreToken[][]>();
   const identity = (tokens: readonly ScoreToken[]) => tokens.map(token => {
     const chord = parseCached(token.raw)!;
+    if (typeof chord === "string") return chord;
     return [chord.root, chord.quality, [...chord.tensions].sort(), chord.bass ?? chord.root];
   });
   const search = (offset: number, remaining: number): readonly ScoreToken[][] => {

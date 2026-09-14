@@ -5,6 +5,7 @@ import {
   PROGRESSION_VOICING_PRACTICE_SNAPSHOT_VERSION,
   type DetachedPracticeVoicing,
   type ProgressionPracticeEvent,
+  type ProgressionPracticeSpan,
   type ProgressionPracticeSnapshotError,
   type ProgressionPracticeSnapshotResult,
   type ProgressionPracticeSourceReference,
@@ -57,12 +58,13 @@ export function buildProgressionVoicingPracticeSnapshot(
   if (input.block.detectedKey !== undefined && !isSafeKey(input.block.detectedKey)) {
     return failure("invalid-key", "Voicing Loop key metadata is not supported.");
   }
-  if (!Array.isArray(input.block.chords) || input.block.chords.length === 0) {
+  if (!Array.isArray(input.block.chords) || (input.block.chords.length === 0
+    && (input.block.sourceStartBeat === undefined || input.block.sourceEndBeat === undefined))) {
     return failure("empty-progression", "Voicing Loop requires at least one chord.");
   }
 
   const normalizedKey = input.block.detectedKey?.trim();
-  const normalized = normalizeEvents(input.block.chords, input.selection);
+  const normalized = normalizeEvents(input.block.chords, input.selection, input.block.sourceStartBeat, input.block.sourceEndBeat);
   if (!normalized.ok) return normalized;
   const source = Object.freeze({
     kind: "vault" as const,
@@ -80,6 +82,7 @@ export function buildProgressionVoicingPracticeSnapshot(
     meter: Object.freeze({ numerator: 4 as const, denominator: 4 as const }),
     lengthBeats: normalized.lengthBeats,
     events: normalized.events,
+    spans: normalized.spans,
   });
   const fingerprint = `p527-snapshot-v1-${fnv1a(JSON.stringify(withoutFingerprint))}`;
   return { ok: true, snapshot: Object.freeze({ ...withoutFingerprint, fingerprint }) };
@@ -88,8 +91,10 @@ export function buildProgressionVoicingPracticeSnapshot(
 function normalizeEvents(
   sourceEvents: readonly SavedProgressionBlock["chords"][number][],
   selection: ProgressionVoicingSelection,
+  explicitStart?: number,
+  explicitEnd?: number,
 ):
-  | { readonly ok: true; readonly events: readonly ProgressionPracticeEvent[]; readonly lengthBeats: number }
+  | { readonly ok: true; readonly events: readonly ProgressionPracticeEvent[]; readonly spans: readonly ProgressionPracticeSpan[]; readonly lengthBeats: number }
   | { readonly ok: false; readonly error: ProgressionPracticeSnapshotError } {
   const candidates = sourceEvents.map((event, sourceIndex) => ({
     event,
@@ -107,13 +112,29 @@ function normalizeEvents(
     }
   }
   candidates.sort((left, right) => left.absoluteBeat - right.absoluteBeat || left.sourceIndex - right.sourceIndex);
-  const firstBeat = candidates[0]!.absoluteBeat;
+  // Historical files permit independently optional bounds. A one-sided bound
+  // is not a score extent and retains the old contiguous-event interpretation.
+  const hasExtent = explicitStart !== undefined && explicitEnd !== undefined;
+  if (hasExtent && (explicitStart === undefined || explicitEnd === undefined
+    || !Number.isFinite(explicitStart) || !Number.isFinite(explicitEnd)
+    || explicitStart < 0 || explicitEnd <= explicitStart)) {
+    return failure("invalid-timing", "Voicing Loop requires complete valid score bounds.");
+  }
+  const firstBeat = hasExtent ? explicitStart! : candidates[0]!.absoluteBeat;
+  let scoreEndTick: number | undefined;
+  if (hasExtent) {
+    try {
+      progressionPracticeTicksAtBeat(firstBeat);
+      scoreEndTick = progressionPracticeTicksAtBeat(explicitEnd! - firstBeat);
+    }
+    catch { return failure("invalid-timing", "Voicing Loop score extent is outside its safe playback grid."); }
+  }
   let sourceCursor = firstBeat;
   let previousEndTick = 0;
   const events: ProgressionPracticeEvent[] = [];
   for (let index = 0; index < candidates.length; index += 1) {
     const { event, absoluteBeat: onset } = candidates[index]!;
-    if (Math.abs(onset - sourceCursor) > TIMING_EPSILON) {
+    if ((hasExtent ? onset < sourceCursor - TIMING_EPSILON : Math.abs(onset - sourceCursor) > TIMING_EPSILON)) {
       return failure("invalid-timing", "Voicing Loop requires a continuous non-overlapping progression.");
     }
     let startTick: number;
@@ -125,7 +146,8 @@ function normalizeEvents(
     } catch {
       return failure("invalid-timing", "Voicing Loop timing is outside its safe playback grid.");
     }
-    if (startTick !== previousEndTick || endTick <= startTick) {
+    if ((hasExtent ? startTick < previousEndTick : startTick !== previousEndTick)
+      || endTick <= startTick || (scoreEndTick !== undefined && endTick > scoreEndTick)) {
       return failure("invalid-timing", "Voicing Loop timing cannot be represented on its playback grid.");
     }
     const chord = cloneChord(event.chord);
@@ -140,11 +162,19 @@ function normalizeEvents(
     sourceCursor = onset + event.durationBeats;
     previousEndTick = endTick;
   }
-  const lengthBeats = progressionPracticeBeatAtTick(previousEndTick);
+  const lengthBeats = progressionPracticeBeatAtTick(scoreEndTick ?? previousEndTick);
   if (!(lengthBeats > 0)) {
     return failure("invalid-timing", "Voicing Loop progression length must be positive.");
   }
-  return { ok: true, events: Object.freeze(events), lengthBeats };
+  const spans: ProgressionPracticeSpan[] = [];
+  let cursor = 0;
+  events.forEach((event, eventIndex) => {
+    if (event.startBeat > cursor) spans.push(Object.freeze({ kind: "rest", startBeat: cursor, durationBeats: event.startBeat - cursor }));
+    spans.push(Object.freeze({ kind: "chord", startBeat: event.startBeat, durationBeats: event.durationBeats, eventIndex }));
+    cursor = event.startBeat + event.durationBeats;
+  });
+  if (cursor < lengthBeats) spans.push(Object.freeze({ kind: "rest", startBeat: cursor, durationBeats: lengthBeats - cursor }));
+  return { ok: true, events: Object.freeze(events), spans: Object.freeze(spans), lengthBeats };
 }
 
 function cloneChord(chord: ChordSymbol): ProgressionPracticeEvent["chord"] {

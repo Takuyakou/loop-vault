@@ -68,6 +68,7 @@ export type TextProgressionDiagnosticCode =
   | "degree-requires-confirmed-key"
   | "no-chord-not-supported"
   | "unsupported-repeat"
+  | "invalid-control"
   | "unsupported-comment"
   | "unsupported-section-header"
   | "lyric-mixed-text";
@@ -102,7 +103,7 @@ export interface TextProgressionEvent {
   readonly bar: number;
   /** One-based beat inside the 4/4 bar. */
   readonly startBeat: number;
-  readonly durationBeats: 1 | 2 | 4;
+  readonly durationBeats: number;
   readonly chord: ChordSymbol;
 }
 
@@ -110,6 +111,7 @@ export interface TextProgressionParseResult {
   readonly input: string;
   readonly notation: TextProgressionNotation;
   readonly bars: number;
+  readonly scoreLengthBeats: number;
   readonly tokens: readonly TextProgressionToken[];
   /** Valid, exactly-timed transient events only. */
   readonly events: readonly TextProgressionEvent[];
@@ -310,6 +312,11 @@ export function parseTextProgression(
         continue;
       }
 
+      if (isControlToken(rawToken.raw)) {
+        tokens.push(createToken(index, rawToken.raw, rawToken.range, bar.bar, allocation, tokenIndex, undefined, []));
+        index += 1;
+        continue;
+      }
       const unsupported = unsupportedTokenDiagnostic(rawToken, bar.bar);
       if (unsupported) {
         diagnostics.push(unsupported);
@@ -337,19 +344,32 @@ export function parseTextProgression(
     }
   }
 
-  const events = tokens.flatMap((token): TextProgressionEvent[] => (
-    token.chord && token.canonical && token.startBeat !== undefined && token.durationBeats !== undefined
-      ? [{
-        raw: token.raw,
-        canonical: token.canonical,
-        range: token.range,
-        bar: token.bar,
-        startBeat: token.startBeat,
-        durationBeats: token.durationBeats,
-        chord: cloneChord(token.chord),
-      }]
-      : []
-  ));
+  const events: TextProgressionEvent[] = [];
+  let precedingChord: ChordSymbol | undefined;
+  let soundingEvent: number | undefined;
+  for (const token of tokens) {
+    if (token.startBeat === undefined || token.durationBeats === undefined) continue;
+    if (token.raw === "_") { soundingEvent = undefined; continue; }
+    if (token.raw === "=") {
+      const prior = soundingEvent === undefined ? undefined : events[soundingEvent];
+      if (!prior) diagnostics.push(diagnostic("invalid-control", "Hold requires an immediately preceding sounding chord.", token.range, token.bar));
+      else events[soundingEvent!] = { ...prior, durationBeats: prior.durationBeats + token.durationBeats };
+      continue;
+    }
+    const chord = token.raw === "%" ? precedingChord : token.chord;
+    if (!chord) {
+      if (token.raw === "%") diagnostics.push(diagnostic("invalid-control", "Repeat requires a preceding chord.", token.range, token.bar));
+      soundingEvent = undefined;
+      continue;
+    }
+    precedingChord = chord;
+    soundingEvent = events.length;
+    events.push({
+      raw: token.raw, canonical: labelFromSymbol(chord), range: token.range,
+      bar: token.bar, startBeat: token.startBeat, durationBeats: token.durationBeats,
+      chord: cloneChord(chord),
+    });
+  }
   const keyState = resolveResultKeyState(initialKeyState, events);
   return createResult(input, notation, boundedBars.length, tokens, diagnostics, keyState, events);
 }
@@ -408,18 +428,18 @@ export function evaluateTextProgressionCapabilities(
   const vaultSave = valid
     ? capability("vault-save", "supported", "A valid text result can enter the existing session-only Draft and normal Vault save path.")
     : capability("vault-save", "unsupported", "Resolve every parser diagnostic before creating a Draft.");
-  const chordDojo = valid
+  const chordDojo = valid && result.events.length > 0
     ? capability("chord-dojo", "supported", "A normally saved valid block remains eligible for Chord Dojo through the existing Vault path.")
-    : capability("chord-dojo", "unsupported", "Chord Dojo receives only a normally saved valid block.");
+    : capability("chord-dojo", "unsupported", "Chord Dojo requires a valid saved block with a sounding chord.");
   const chordContextEligibility = evaluateChordContextCapability(result, bpm);
   const chordContext = chordContextEligibility.capability;
   const bassPractice = chordContext.status === "supported"
     ? capability("bass-practice", "supported", "The progression meets the existing Chord Context source requirements for Bass Practice.")
     : capability("bass-practice", chordContext.status, `Bass Practice is ${chordContext.status}: ${chordContext.reason}`);
   const rootMotion = evaluateRootMotionCapability(rootMotionNoteCount, chordContextEligibility);
-  const voicingMemory = valid
+  const voicingMemory = valid && result.events.length > 0
     ? capability("voicing-memory", "supported", "Auto voicing remains available; compatible Live MIDI practice overrides use the existing Voicing Memory contract.")
-    : capability("voicing-memory", "unsupported", "Voicing Memory is available after a valid text result reaches the existing Draft path.");
+    : capability("voicing-memory", "unsupported", "Voicing Memory requires a sounding chord in a valid Text Draft.");
   return [vaultSave, chordDojo, bassPractice, chordContext, rootMotion, voicingMemory];
 }
 
@@ -566,11 +586,12 @@ function createResult(
     input,
     notation,
     bars,
+    scoreLengthBeats: bars * TEXT_PROGRESSION_BEATS_PER_BAR,
     tokens: copiedTokens,
     events: copiedEvents,
     diagnostics: copiedDiagnostics,
     keyState: cloneKeyState(keyState),
-    canConvert: copiedDiagnostics.length === 0 && copiedEvents.length > 0,
+    canConvert: copiedDiagnostics.length === 0 && copiedTokens.length > 0 && bars > 0,
   };
 }
 
@@ -611,6 +632,8 @@ function parseTextChordToken(raw: string, keyState: TextProgressionKeyState): Ch
   if (!isConfirmedTextProgressionKey(keyState)) return undefined;
   return parseFastChordEntry(raw, keyState.key) ?? undefined;
 }
+
+function isControlToken(raw: string): boolean { return raw === "%" || raw === "_" || raw === "="; }
 
 function parseAbsoluteChordToken(raw: string): ChordSymbol | undefined {
   const normalized = normalizeScoreChord(raw);

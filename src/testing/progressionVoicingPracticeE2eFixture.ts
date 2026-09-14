@@ -53,6 +53,10 @@ function snapshot(
     bpm: 96,
     meter: { numerator: 4 as const, denominator: 4 as const },
     lengthBeats: 4,
+    spans: Object.freeze([
+      { kind: "chord" as const, eventIndex: 0, startBeat: 0, durationBeats: 2 },
+      { kind: "chord" as const, eventIndex: 1, startBeat: 2, durationBeats: 2 },
+    ]),
     events: Object.freeze([
       Object.freeze({
         id: "e2e-event-1",

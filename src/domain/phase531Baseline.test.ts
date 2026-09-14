@@ -24,9 +24,9 @@ const snapshot = (value: SavedProgressionBlock, selection: "basic-full" | "left-
   buildProgressionVoicingPracticeSnapshot({ block: value, selection, sourceReference: { ideaId: "audit", blockId: value.id } });
 
 describe("P5.31 baseline advanced by explicitly accepted stage behavior", () => {
-  it("accepts compact notation while control semantics remain the next stage", () => {
+  it("accepts compact notation and explicitly timed controls", () => {
     expect(parseTextProgression(fixture("rechord-user-example.txt")).canConvert).toBe(true);
-    expect(parseTextProgression(fixture("rechord-control-example.txt")).canConvert).toBe(false);
+    expect(parseTextProgression(fixture("rechord-control-example.txt")).canConvert).toBe(true);
     const bars = fixture("rechord-user-example-expanded.txt").trim().split(/\r?\n/).flatMap(
       line => line.split("|").map(value => value.trim()).filter(Boolean),
     );
@@ -66,7 +66,7 @@ describe("P5.31 baseline advanced by explicitly accepted stage behavior", () => 
     }
   });
 
-  it("locates current gap/hold rejection at Text save and gap normalization at Voicing Loop", async () => {
+  it("accepts explicit score extent while preserving legacy unbounded save and snapshot validation", async () => {
     const store = createVaultStore({ repository: new JsonVaultRepository(new BrowserMemoryVaultStorage()) });
     await store.getState().initialize();
     const draft = createTextProgressionDraft({ result: parseTextProgression("| Cmaj7 | G7 |"), now: "2026-09-14T00:00:00.000Z" });
@@ -75,7 +75,8 @@ describe("P5.31 baseline advanced by explicitly accepted stage behavior", () => 
       [event("Cmaj7",0,2),event("G7",4,4)],
       [event("Cmaj7",0,6),event("G7",6,2)],
     ]) {
-      expect(store.getState().createIdeaFromTextProgression({ ...payload, chords })).toBeUndefined();
+      expect(store.getState().createIdeaFromTextProgression({ ...payload, chords })).toEqual(expect.any(String));
+      expect(store.getState().createIdeaFromTextProgression({ ...payload, scoreLengthBeats: undefined, chords })).toBeUndefined();
     }
     expect(snapshot(block([event("Cmaj7",0,2),event("G7",4,4)]))).toMatchObject({ ok: false, error: { code: "invalid-timing" } });
     const leadingRest = snapshot(block([event("Cmaj7",2,2)]));

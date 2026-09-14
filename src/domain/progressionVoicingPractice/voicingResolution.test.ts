@@ -391,6 +391,7 @@ function makeSnapshot(
     bpm: 100,
     meter: { numerator: 4, denominator: 4 },
     lengthBeats: chords.length * 4,
+    spans: chords.map((_, eventIndex) => ({ kind: "chord", eventIndex, startBeat: eventIndex * 4, durationBeats: 4 })),
     events: chords.map((sourceChord, index) => ({
       id: `event-${index + 1}`,
       startBeat: index * 4,

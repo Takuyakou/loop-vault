@@ -36,6 +36,56 @@ afterEach(async () => {
 });
 
 describe("ProgressionVoicingPracticeView", () => {
+  it("shows Rest as Current/Next without a keyboard target while one clock crosses silent spans", async () => {
+    const runtime = new FakeTransport();
+    const base = snapshot("source-midi");
+    const value: ProgressionVoicingPracticeSnapshot = {
+      ...base,
+      lengthBeats: 8,
+      events: [base.events[0]!, { ...base.events[1]!, startBeat: 4, durationBeats: 4 }],
+      spans: [
+        { kind: "chord", eventIndex: 0, startBeat: 0, durationBeats: 2 },
+        { kind: "rest", startBeat: 2, durationBeats: 2 },
+        { kind: "chord", eventIndex: 1, startBeat: 4, durationBeats: 4 },
+      ],
+    };
+    const container = await renderView(runtime, { "source-midi": value }, "source-midi");
+    expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent).toContain("次休符");
+    const cards = container.querySelectorAll<HTMLButtonElement>("[data-testid='voicing-loop-event']");
+    expect(cards).toHaveLength(3);
+    expect(cards[1]!.disabled).toBe(true);
+    await act(async () => button(container, "開始").click());
+    await act(async () => runtime.options?.onTransportBeat(6.5));
+    expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent).toBe("休符");
+    expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")).toBeNull();
+    expect(container.querySelector("svg[role='img']")?.getAttribute("aria-label")).toContain("お手本0音");
+    expect(container.querySelector("[aria-current='step']")?.textContent).toContain("休符");
+    expect(container.querySelector<HTMLElement>("[data-testid='voicing-loop-playhead']")?.style.transform).toBe("translateX(121px)");
+    await act(async () => cards[2]!.click());
+    expect(runtime.audition).toHaveBeenLastCalledWith([50, 57, 60], "piano");
+    expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent).toBe("休符");
+    await act(async () => runtime.options?.onTransportBeat(8));
+    expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent).toContain("位置2 / 2 小節");
+  });
+
+  it("can run a 32-bar all-rest score with bounded beat dots and no fake chord or audition", async () => {
+    const runtime = new FakeTransport();
+    const value: ProgressionVoicingPracticeSnapshot = {
+      ...snapshot("basic-full"), lengthBeats: 128, events: [], spans: [{ kind: "rest", startBeat: 0, durationBeats: 128 }],
+    };
+    const container = await renderView(runtime, { "basic-full": value }, "basic-full");
+    expect(button(container, "開始").disabled).toBe(false);
+    expect(button(container, "現在のコードを試聴").disabled).toBe(true);
+    await act(async () => button(container, "開始").click());
+    await act(async () => runtime.options?.onTransportBeat(70));
+    const indicator = container.querySelector("[data-testid='voicing-loop-beat-indicator']")!;
+    expect(indicator.getAttribute("aria-label")).toBe("拍 67 / 128");
+    expect(indicator.querySelectorAll("[data-active]")).toHaveLength(16);
+    expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent).toContain("位置17 / 32 小節");
+    expect(runtime.audition).not.toHaveBeenCalled();
+    await act(async () => runtime.options?.onTransportBeat(132));
+    expect(container.textContent).toContain("1 周完了");
+  });
   it("shows an inline source-less Vault list without Source controls or a MIDI lease", async () => {
     const original = defaultLiveMidiStore.getState();
     const activate = vi.fn(async () => defaultLiveMidiStore.setState({ active: true }));
@@ -225,7 +275,7 @@ describe("ProgressionVoicingPracticeView", () => {
       return event;
     });
     const container = await renderView(runtime, {
-      "basic-full": { ...mixed, events, lengthBeats: startBeat },
+      "basic-full": { ...mixed, events, spans: events.map((event, eventIndex) => ({ kind: "chord", eventIndex, startBeat: event.startBeat, durationBeats: event.durationBeats })), lengthBeats: startBeat },
     }, "basic-full");
     const sections = ["controls", "current-next", "timeline", "detail", "transport"]
       .map((id) => container.querySelector(`[data-testid='voicing-loop-${id}']`)!);
@@ -760,6 +810,10 @@ function snapshot(
     bpm: 80,
     meter: { numerator: 4, denominator: 4 },
     lengthBeats: 4,
+    spans: [
+      { kind: "chord", eventIndex: 0, startBeat: 0, durationBeats: 2 },
+      { kind: "chord", eventIndex: 1, startBeat: 2, durationBeats: 2 },
+    ],
     events: [
       {
         id: "one",

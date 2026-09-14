@@ -68,7 +68,7 @@ describe("Text Progression Entry grammar v1", () => {
     ]));
   });
 
-  test("accepts optional outer pipes and diagnoses repeats, unsupported comments, headers and lyrics", () => {
+  test("accepts optional outer pipes and diagnoses unsupported comments, headers and lyrics", () => {
     const unframed = parseTextProgression("C | D |");
     const empty = parseTextProgression("|");
     const unsupported = parseTextProgression("| C % | // note | Verse: | hello |");
@@ -78,7 +78,6 @@ describe("Text Progression Entry grammar v1", () => {
     expect(empty.diagnostics.map((issue) => issue.code)).toContain("empty-bar");
     expect(unsupported.canConvert).toBe(false);
     expect(unsupported.diagnostics.map((issue) => issue.code)).toEqual(expect.arrayContaining([
-      "unsupported-repeat",
       "unsupported-comment",
       "unsupported-section-header",
       "lyric-mixed-text",

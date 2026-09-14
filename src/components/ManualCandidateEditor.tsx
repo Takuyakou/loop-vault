@@ -120,6 +120,7 @@ export function ManualCandidateEditor({
   const editorRef = useRef<HTMLElement>(null);
 
   const validation = useMemo(() => validateDraft(draft), [draft]);
+  const restOnly = draft.source.type === "text-progression" && draft.events.length === 0;
   const voicingSource = useMemo(
     () => timelineVoicingSourceStatus(
       draft.source.type === "text-progression" ? timeline : draftPreviewTimeline(draft),
@@ -502,13 +503,15 @@ export function ManualCandidateEditor({
       ) : null}
 
       <div className="mt-3" data-testid="draft-voicing">
-        <VoicingSourceChip
+        {restOnly ? <p className="text-sm text-[var(--lv-text-secondary)]" data-testid="draft-rest-only">
+          {language === "ja" ? `休符のみ · ${draft.lengthBars}小節（発音なし）` : `Rests only · ${draft.lengthBars} bars (silent)`}
+        </p> : <VoicingSourceChip
           status={voicingSource.status}
           reason={voicingSource.reason}
           sourceAbsentByDesign={draft.source.type === "text-progression"}
           language={language}
           testId="capture-voicing-source-chip"
-        />
+        />}
       </div>
 
       <CaptureEditHistoryPanel
@@ -525,6 +528,7 @@ export function ManualCandidateEditor({
         <button
           type="button"
           data-action="preview"
+          disabled={restOnly}
           className="min-h-10 border border-[var(--lv-border)] px-4 text-sm"
           onClick={() => onPreview?.(draft)}
         >

@@ -41,6 +41,7 @@ describe("P5.27 detached practice snapshot", () => {
     expect(snapshot).toEqual({
       version: 1,
       fingerprint: snapshot.fingerprint,
+      spans: [{ kind: "chord", eventIndex: 0, startBeat: 0, durationBeats: 4 }],
       source: { kind: "vault", reference: { ideaId: "idea-1", blockId: "block-1" } },
       selection: "source-midi",
       key: "C major",
@@ -56,10 +57,10 @@ describe("P5.27 detached practice snapshot", () => {
       }],
     });
     expect([...collectKeys(snapshot)].sort()).toEqual([
-      "bassNote", "blockId", "bpm", "chord", "denominator", "durationBeats", "events",
+      "bassNote", "blockId", "bpm", "chord", "denominator", "durationBeats", "eventIndex", "events",
       "fingerprint", "id", "ideaId", "key", "kind", "label", "lengthBeats", "meter",
       "midiNotes", "numerator", "quality", "reference", "root", "selection", "source",
-      "startBeat", "tensions", "version", "voicing",
+      "spans", "startBeat", "tensions", "version", "voicing",
     ]);
     const serialized = JSON.stringify(snapshot);
     for (const forbidden of [

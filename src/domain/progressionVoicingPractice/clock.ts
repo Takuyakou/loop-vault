@@ -32,6 +32,9 @@ export interface ProgressionPracticeClockProjection {
   readonly countInBeat?: number;
   readonly currentEventIndex: number;
   readonly nextEventIndex: number;
+  readonly currentSpanIndex: number;
+  readonly nextSpanIndex: number;
+  readonly isRest: boolean;
   readonly beatInChord: number;
   readonly beatsInChord: number;
   readonly beatInBar: number;
@@ -118,8 +121,11 @@ export function projectProgressionPracticeClock(
   const inCountIn = (state.status === "count-in" || state.status === "paused") && beforeProgression;
   const elapsed = Math.max(0, state.transportBeat - schedule.progressionStartBeat);
   const { loopCount, progressionBeat } = splitLoopPosition(elapsed, schedule.loopBeats);
-  const currentEventIndex = findCurrentEventIndex(snapshot, progressionBeat);
-  const current = snapshot.events[currentEventIndex]!;
+  const currentSpanIndex = findCurrentSpanIndex(snapshot, progressionBeat);
+  const current = snapshot.spans[currentSpanIndex]!;
+  const nextSpanIndex = (currentSpanIndex + 1) % snapshot.spans.length;
+  const next = snapshot.spans[nextSpanIndex]!;
+  const currentEventIndex = current.kind === "chord" ? current.eventIndex : -1;
   const beatWithinChord = Math.max(0, progressionBeat - current.startBeat);
   const beatsInChord = Math.max(1, Math.ceil(current.durationBeats));
   return Object.freeze({
@@ -127,7 +133,10 @@ export function projectProgressionPracticeClock(
     inCountIn,
     ...(inCountIn ? { countInBeat: Math.floor(state.transportBeat % snapshot.meter.numerator) + 1 } : {}),
     currentEventIndex,
-    nextEventIndex: (currentEventIndex + 1) % snapshot.events.length,
+    nextEventIndex: next.kind === "chord" ? next.eventIndex : -1,
+    currentSpanIndex,
+    nextSpanIndex,
+    isRest: current.kind === "rest",
     beatInChord: Math.min(beatsInChord, Math.floor(beatWithinChord) + 1),
     beatsInChord,
     beatInBar: Math.floor(progressionBeat % snapshot.meter.numerator) + 1,
@@ -153,9 +162,9 @@ export function progressionEventTransportBeat(
   return schedule.progressionStartBeat + schedule.eventStarts[eventIndex]! + loopIndex * schedule.loopBeats;
 }
 
-function findCurrentEventIndex(snapshot: ProgressionVoicingPracticeSnapshot, progressionBeat: number): number {
-  for (let index = snapshot.events.length - 1; index >= 0; index -= 1) {
-    if (progressionBeat >= snapshot.events[index]!.startBeat) return index;
+function findCurrentSpanIndex(snapshot: ProgressionVoicingPracticeSnapshot, progressionBeat: number): number {
+  for (let index = snapshot.spans.length - 1; index >= 0; index -= 1) {
+    if (progressionBeat >= snapshot.spans[index]!.startBeat) return index;
   }
   return 0;
 }
