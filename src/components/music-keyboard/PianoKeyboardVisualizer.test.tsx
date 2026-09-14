@@ -144,4 +144,16 @@ describe("PianoKeyboardVisualizer", () => {
       .not.toContain("C8");
     expect(container.querySelector('[data-c-label="C5"]')).not.toBeNull();
   });
+
+  it("shows finger labels on exact keys and includes note, hand, and finger in the accessible title", () => {
+    const container = renderKeyboard({
+      heldNotes: [],
+      sustainedNotes: [],
+      fingerLabels: new Map([[60, "R1"], [64, "R3"], [67, "R5"]]),
+    });
+    expect(Array.from(container.querySelectorAll("[data-finger-label]")).map((node) => node.textContent))
+      .toEqual(["R1", "R3", "R5"]);
+    expect(container.querySelector('[data-midi-note="60"] title')?.textContent)
+      .toContain("C5 (60), R1");
+  });
 });

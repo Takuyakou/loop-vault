@@ -14,6 +14,7 @@ interface PianoKeyProps {
   guideBass: boolean;
   heldBass: boolean;
   guideHand?: PianoGuideHand;
+  fingerLabel?: string;
   accidentalStyle: NoteAccidentalStyle;
   concealNoteName?: boolean;
 }
@@ -35,6 +36,7 @@ export const PianoKey = memo(function PianoKey({
   guideBass,
   heldBass,
   guideHand,
+  fingerLabel,
   accidentalStyle,
   concealNoteName = false,
 }: PianoKeyProps) {
@@ -61,7 +63,7 @@ export const PianoKey = memo(function PianoKey({
       data-guide-hand={guideHand}
     >
       {!concealNoteName ? (
-        <title>{`${formatMidiNoteForDisplay(note, "fl-studio", accidentalStyle)} (${note})`}</title>
+        <title>{`${formatMidiNoteForDisplay(note, "fl-studio", accidentalStyle)} (${note})${fingerLabel ? `, ${fingerLabel}` : ""}`}</title>
       ) : null}
       <rect
         x={x}
@@ -155,6 +157,19 @@ export const PianoKey = memo(function PianoKey({
           fill={isHeld ? "#042f2e" : "#525252"}
         >
           {label}
+        </text>
+      ) : null}
+      {fingerLabel ? (
+        <text
+          data-finger-label={fingerLabel}
+          x={x + width / 2}
+          y={black ? height - 8 : height * 0.68}
+          textAnchor="middle"
+          fontSize={black ? 7 : 9}
+          fontWeight={800}
+          fill={black ? "#ccfbf1" : "#042f2e"}
+        >
+          {fingerLabel}
         </text>
       ) : null}
     </g>
