@@ -3,7 +3,10 @@
 
 ## Status
 
-Stage00 audit complete; full fixture and Left-hand slash tracks blocked. See [report](reports/P5.31-00-report.md) and [live state](execution-state.json).
+Stage00 audit complete. The user has authorized remaining stages through Stage04
+and resolved the two approval blockers via [product decisions](contracts/11-human-approved-product-decisions.md).
+Implementation resumes at Stage01; no later stage is marked complete. See the
+historical [audit report](reports/P5.31-00-report.md) and [live state](execution-state.json).
 
 ## Required Reading Order
 
@@ -12,6 +15,7 @@ Stage00 audit complete; full fixture and Left-hand slash tracks blocked. See [re
 3. [Live state](execution-state.json)
 4. [Work instructions](work-instructions.md)
 5. All supplied contracts and references listed by [start prompt](00-start-prompt.md)
+6. [Human-approved product decisions](contracts/11-human-approved-product-decisions.md)
 
 ## Purpose
 
@@ -59,8 +63,9 @@ P5.30 commit hash.
 8. The supplied 16-bar compact fixture parses with **34 chord attacks** and the
    intended 4/2/1-beat harmonic rhythm.
 9. Save/reload preserves timing and Voicing Loop behavior.
-10. Left-hand slash-chord handling is extended only from the existing Lesson Rule
-    Table / lesson evidence. No generic jazz rule may be invented silently.
+10. Left-hand slash-chord handling follows the explicitly approved Upper Structure
+    + Separate Slash Bass product policy, reusing the existing Lesson Rule Table
+    for the upper structure. Do not label this product policy as teacher evidence.
 11. Unsupported results remain explicit and same-reason duplicate diagnostics are
     presented compactly.
 12. P5.30 Playhead, slim timeline, card audition, reference sound, keyboard,
@@ -75,8 +80,8 @@ P5.30 commit hash.
 - No swing/bossa accompaniment generator.
 - No scoring/mastery/XP.
 - No Analyzer/chord-detection change.
-- No Vault schema/fileVersion change unless Stage00 proves the requested notation
-  is impossible without one. If that happens: **stop and report; do not improvise**.
+- Only the approved minimal `#5` chord type/save-validation extension; no existing
+  data rewrite, migration, or fileVersion change.
 - No duplicate voicing generator.
 - No silent fallback for Lesson Left-hand slash chords.
 - No auto merge/push/tag/release/P5.32.
@@ -91,4 +96,5 @@ P5.30 commit hash.
 | P5.31-03 | Lesson Left-hand slash-chord rules + unsupported diagnostic aggregation |
 | P5.31-04 | End-to-end hardening, full regressions, product-acceptance report |
 
-Start only with **P5.31-00** unless the user explicitly authorizes running remaining stages.
+The user has authorized sequential completion through **P5.31-04**, subject to
+each stage's gates. Stop at product acceptance; no merge/push/release.

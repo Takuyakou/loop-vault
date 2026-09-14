@@ -40,7 +40,7 @@ export const chordQualitySchema = z.enum([
   "sixNine",
 ]);
 
-export const tensionSchema = z.enum(["9", "b9", "#9", "11", "#11", "13", "b13"]);
+export const tensionSchema = z.enum(["9", "b9", "#9", "11", "#11", "13", "b13", "#5"]);
 
 const isoDateSchema = z.string().datetime({ offset: true });
 

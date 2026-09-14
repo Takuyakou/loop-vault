@@ -6,7 +6,8 @@ Before each stage:
 
 1. read root instructions;
 2. read `docs/phase5.31/README.md`;
-3. read `docs/phase5.31/P5.31-execution-state.json`;
+3. read canonical `docs/phase5.31/execution-state.json` and the approved
+   `docs/phase5.31/contracts/11-human-approved-product-decisions.md`;
 4. read the prior stage report;
 5. verify Git state and stage authorization;
 6. preserve unrelated user changes.

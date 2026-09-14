@@ -23,9 +23,9 @@ const block = (chords: ChordTimelineItem[]): SavedProgressionBlock => ({
 const snapshot = (value: SavedProgressionBlock, selection: "basic-full" | "left-hand" = "basic-full") =>
   buildProgressionVoicingPracticeSnapshot({ block: value, selection, sourceReference: { ideaId: "audit", blockId: value.id } });
 
-describe("P5.31-00 current baseline (not future acceptance)", () => {
-  it("rejects supplied compact/control input and confirms the expanded fixture has 34 attack cells", () => {
-    expect(parseTextProgression(fixture("rechord-user-example.txt")).canConvert).toBe(false);
+describe("P5.31 baseline advanced by explicitly accepted stage behavior", () => {
+  it("accepts compact notation while control semantics remain the next stage", () => {
+    expect(parseTextProgression(fixture("rechord-user-example.txt")).canConvert).toBe(true);
     expect(parseTextProgression(fixture("rechord-control-example.txt")).canConvert).toBe(false);
     const bars = fixture("rechord-user-example-expanded.txt").trim().split(/\r?\n/).flatMap(
       line => line.split("|").map(value => value.trim()).filter(Boolean),
@@ -33,19 +33,19 @@ describe("P5.31-00 current baseline (not future acceptance)", () => {
     expect(bars).toHaveLength(16);
     expect(bars.map(bar => bar.split(/\s+/).length)).toEqual([2,2,2,4,2,2,2,2,2,2,2,2,2,2,2,2]);
     expect(bars.flatMap(bar => bar.split(/\s+/))).toHaveLength(34);
-    expect(parseTextProgression("| " + bars.join(" | ") + " |").canConvert).toBe(false);
+    expect(parseTextProgression("| " + bars.join(" | ") + " |").canConvert).toBe(true);
   });
 
   it("locks the alias matrix including alteration loss rather than mistaking parser success for fidelity", () => {
     const labels = ["BbM7","CM7","Cmaj7","C△7","CΔ7","Cm7","Caug","Csus2","Csus4","Cadd9","Cadd11","Cdim","Co7","C7(b9)","C7(#9,#5)","C7(b9,#11,b13)","Comit3","Am9/C","Dm7/G","C#5"];
     const actual = labels.map(label => [label, parseChordLabel(label)]);
     expect(actual.map(([, parsed]) => parsed === null)).toEqual([
-      false,false,false,false,true,false,false,false,false,false,true,false,true,false,true,false,true,false,false,true,
+      false,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false,true,false,false,true,
     ]);
     expect(parseChordLabel("Am11/B")).toMatchObject({ root: 9, quality: "min11", bass: 11 });
     expect(parseChordLabel("Am9/C")).toMatchObject({ root: 9, quality: "min9", bass: 0 });
     expect(parseChordLabel("C#5")).toBeNull();
-    expect(parseChordLabel("C7(#9,#5)")).toBeNull();
+    expect(parseChordLabel("C7(#9,#5)")).toMatchObject({ quality: "dom7", tensions: ["#9", "#5"] });
   });
 
   it("preserves gaps, cross-bar holds, leading/trailing rests and all-rest length in existing Vault v2 JSON", async () => {

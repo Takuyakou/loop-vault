@@ -11,6 +11,7 @@ export interface CandidateDiversityOptions {
 }
 
 const tensionIntervals: Readonly<Record<Tension, number>> = {
+  "#5": 8,
   "9": 2,
   b9: 1,
   "#9": 3,
@@ -74,7 +75,8 @@ export function chordPitchSet(chord: ChordSymbol): number[] {
   const intervals = template
     ? [...template.required, ...template.important, ...template.optional]
     : [0];
-  const pitches = intervals.map((interval) => normalizePc(chord.root + interval));
+  const pitches = intervals.filter((interval) => !chord.tensions.includes("#5") || interval !== 7)
+    .map((interval) => normalizePc(chord.root + interval));
   pitches.push(...chord.tensions.map((tension) => normalizePc(chord.root + tensionIntervals[tension])));
   if (chord.bass !== undefined) pitches.push(normalizePc(chord.bass));
   return [...new Set(pitches)].sort((left, right) => left - right);

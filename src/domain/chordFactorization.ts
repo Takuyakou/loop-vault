@@ -35,7 +35,7 @@ export type SeventhKind = ChordSeventh;
 export type TensionKind =
   | "9" | "b9" | "#9"
   | "11" | "#11"
-  | "13" | "b13"
+  | "13" | "b13" | "#5"
   | "6";
 
 export interface FactorizedChordIdentity {
@@ -57,7 +57,7 @@ export interface FactorizedChordIdentity {
  * sixth, and treating it as its own triad kind would make `C6` and `Cmaj` fail
  * to share the triad they audibly share.
  */
-const TENSION_ORDER: TensionKind[] = ["b9", "9", "#9", "11", "#11", "b13", "13", "6"];
+const TENSION_ORDER: TensionKind[] = ["b9", "9", "#9", "11", "#11", "b13", "13", "6", "#5"];
 
 function sortTensions(tensions: readonly TensionKind[]): TensionKind[] {
   return [...new Set(tensions)].sort(

@@ -30,6 +30,7 @@ const qualityIntervals: Record<ChordQuality, number[]> = {
 };
 
 const tensionIntervals: Record<Tension, number> = {
+  "#5": 8,
   "9": 14,
   b9: 13,
   "#9": 15,
@@ -43,7 +44,7 @@ export function voiceChordForPreview(symbol: ChordSymbol): PreviewVoicing {
   const bassPc = symbol.bass ?? symbol.root;
   const bassNote = nearestMidiForPc(bassPc, 43, 55);
   const pcs = uniquePitchClasses([
-    ...qualityIntervals[symbol.quality],
+    ...qualityIntervals[symbol.quality].filter((interval) => !symbol.tensions.includes("#5") || interval !== 7),
     ...symbol.tensions.map((tension) => tensionIntervals[tension]),
   ].map((interval) => symbol.root + interval));
   const upper = pcs
@@ -60,7 +61,7 @@ export function voiceChordForPreview(symbol: ChordSymbol): PreviewVoicing {
 
 export function chordPitchClasses(symbol: ChordSymbol): number[] {
   return uniquePitchClasses([
-    ...qualityIntervals[symbol.quality],
+    ...qualityIntervals[symbol.quality].filter((interval) => !symbol.tensions.includes("#5") || interval !== 7),
     ...symbol.tensions.map((tension) => tensionIntervals[tension]),
   ].map((interval) => symbol.root + interval));
 }

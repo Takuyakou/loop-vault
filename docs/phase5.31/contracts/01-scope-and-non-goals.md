@@ -11,7 +11,9 @@
 - slash-bass preservation;
 - chord alias normalization only where unambiguous;
 - Text → Vault → Voicing Loop round-trip;
-- lesson-evidence-based Left-hand slash support;
+- human-approved Upper Structure + Separate Slash Bass policy using existing
+  Left-hand upper-structure lesson rules (see [decision](11-human-approved-product-decisions.md));
+- minimal explicit `#5` chord type/save-validation support without old-data rewrite;
 - compact unsupported diagnostics.
 
 ## Out

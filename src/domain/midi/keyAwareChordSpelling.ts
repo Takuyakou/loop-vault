@@ -66,6 +66,7 @@ const qualityDegrees: Readonly<Record<ChordQuality, readonly GenericDegree[]>> =
 };
 
 const tensionDegrees: Readonly<Record<Tension, GenericDegree>> = {
+  "#5": degree(8, 4),
   "9": degree(14, 1),
   b9: degree(13, 1),
   "#9": degree(15, 1),
@@ -193,7 +194,8 @@ function spellBassFromChord(
   const rootLetter = rootSpelling.charAt(0);
   const rootIndex = letters.indexOf(rootLetter as (typeof letters)[number]);
   if (rootIndex < 0) return legacySpelling;
-  const configured = qualityDegrees[chord.quality];
+  const configured = qualityDegrees[chord.quality]
+    .filter((entry) => !chord.tensions.includes("#5") || entry.interval !== 7);
   if (!configured || chord.bass === undefined) return legacySpelling;
   const relativeBass = normalizePc(chord.bass - chord.root);
   const candidates = [...configured, ...chord.tensions.map((tension) => tensionDegrees[tension])]

@@ -2,6 +2,7 @@ import { labelFromSymbol, parseChordLabel } from "./chords";
 import { parseFastChordEntry } from "./progressionEditing/fastLabelEntry";
 import { parseKeySignature } from "./progressionEditing/chordSuggestions";
 import type { ChordSymbol } from "./types";
+import { maskScoreComments, normalizeScoreChord, segmentScoreBar } from "./textScoreTokenizer";
 
 /** P5.20 Grammar v1 is deliberately small so conversion stays exact. */
 export const TEXT_PROGRESSION_MAX_INPUT_CODE_UNITS = 8_192;
@@ -63,6 +64,7 @@ export type TextProgressionDiagnosticCode =
   | "three-chord-bar"
   | "invalid-chord-count"
   | "invalid-chord"
+  | "ambiguous-compact-progression"
   | "degree-requires-confirmed-key"
   | "no-chord-not-supported"
   | "unsupported-repeat"
@@ -241,16 +243,17 @@ export function parseTextProgression(
     return createResult(input, "invalid", 0, [], diagnostics, initialKeyState);
   }
 
-  const boundary = nonWhitespaceBoundary(input);
+  const scoreInput = maskScoreComments(input);
+  const boundary = nonWhitespaceBoundary(scoreInput);
   if (!boundary) {
     diagnostics.push(diagnostic("empty-input", "Enter at least one chord token.", wholeRange(input)));
     return createResult(input, "invalid", 0, [], diagnostics, initialKeyState);
   }
 
-  const containsBarDelimiter = input.includes("|");
+  const containsBarDelimiter = scoreInput.includes("|");
   const bars = containsBarDelimiter
-    ? parseBarNotation(input, boundary, diagnostics)
-    : parseSimpleNotation(input, boundary);
+    ? parseBarNotation(scoreInput, boundary, diagnostics, initialKeyState)
+    : parseSimpleNotation(scoreInput, boundary, initialKeyState, diagnostics);
   const notation: TextProgressionNotation = containsBarDelimiter
     ? bars ? "bar" : "invalid"
     : "simple";
@@ -431,19 +434,34 @@ function parseBarNotation(
   input: string,
   boundary: TextProgressionRange,
   diagnostics: TextProgressionDiagnostic[],
+  keyState: TextProgressionKeyState,
 ): readonly BarInput[] | undefined {
-  if (input[boundary.start] !== "|" || input[boundary.end - 1] !== "|") {
-    diagnostics.push(diagnostic(
-      "malformed-bar-notation",
-      "Bar notation must begin and end with a `|` delimiter.",
-      boundary,
-    ));
-    return undefined;
+  // Unframed ReChord lines each carry complete bars. Framed legacy input keeps
+  // newlines within a bar as whitespace (for example "| C\n D |").
+  if (input[boundary.start] !== "|" && /[\r\n]/.test(input.slice(boundary.start, boundary.end))) {
+    const lines: BarInput[] = [];
+    for (const match of input.slice(boundary.start, boundary.end).matchAll(/[^\r\n]+/g)) {
+      const lineBoundary = nonWhitespaceBoundary(match[0]);
+      if (!lineBoundary) continue;
+      const offset = boundary.start + match.index!;
+      const issues: TextProgressionDiagnostic[] = [];
+      const baseBar = lines.length;
+      const parsed = parseBarNotation(input,
+        { start: offset + lineBoundary.start, end: offset + lineBoundary.end }, issues, keyState) ?? [];
+      diagnostics.push(...issues.map(issue => ({ ...issue, bar: baseBar + (issue.bar ?? 1) })));
+      for (const item of parsed) {
+        const bar = lines.length + 1;
+        lines.push({ ...item, bar });
+      }
+    }
+    return lines;
   }
   const delimiters: number[] = [];
+  if (input[boundary.start] !== "|") delimiters.push(boundary.start - 1);
   for (let offset = boundary.start; offset < boundary.end; offset += 1) {
     if (input[offset] === "|") delimiters.push(offset);
   }
+  if (input[boundary.end - 1] !== "|") delimiters.push(boundary.end);
   if (delimiters.length < 2) {
     diagnostics.push(diagnostic(
       "empty-bar",
@@ -457,17 +475,49 @@ function parseBarNotation(
   for (let index = 0; index < delimiters.length - 1; index += 1) {
     const start = delimiters[index]! + 1;
     const end = delimiters[index + 1]!;
+    // Repeated outer pipes on separately pasted score lines are not empty bars.
+    if (/^[\s]*[\r\n][\s]*$/.test(input.slice(start, end))) continue;
+    const bar = bars.length + 1;
+    const segmented = segmentScoreBar(input, start, end, raw => parseTextChordToken(raw, keyState));
+    if (segmented.kind === "ambiguous") {
+      diagnostics.push(diagnostic("ambiguous-compact-progression",
+        "この小節を一意に解釈できません。コード間に空白を入れてください。", { start, end }, bar));
+    }
     bars.push({
-      bar: index + 1,
-      tokens: lexWhitespaceTokens(input, start, end),
+      bar,
+      tokens: segmented.kind === "ok" ? segmented.tokens : lexWhitespaceTokens(input, start, end),
       range: { start, end },
     });
   }
   return bars;
 }
 
-function parseSimpleNotation(input: string, boundary: TextProgressionRange): readonly BarInput[] {
-  return lexWhitespaceTokens(input, boundary.start, boundary.end).map((token, index) => ({
+function parseSimpleNotation(input: string, boundary: TextProgressionRange, keyState: TextProgressionKeyState,
+  diagnostics: TextProgressionDiagnostic[]): readonly BarInput[] {
+  const original = lexWhitespaceTokens(input, boundary.start, boundary.end);
+  // Simple notation remains one chord/bar; join only an unambiguous root/type
+  // pair, never convert the whitespace-separated progression into one bar.
+  const joined: RawToken[] = [];
+  for (let index = 0; index < original.length; index += 1) {
+    const token = original[index]!;
+    const next = original[index + 1];
+    if (/^[A-G](?:#|b)*$/.test(token.raw) && next && !parseTextChordToken(next.raw, keyState)) {
+      const raw = input.slice(token.range.start, next.range.end);
+      if (parseTextChordToken(raw, keyState)) {
+        joined.push({ raw, range: { start: token.range.start, end: next.range.end } });
+        index += 1;
+        continue;
+      }
+    }
+    joined.push(token);
+  }
+  if (joined.some(token => !parseTextChordToken(token.raw, keyState))) {
+    const compact = segmentScoreBar(input, boundary.start, boundary.end, raw => parseTextChordToken(raw, keyState));
+    if (compact.kind === "ok") return [{ bar: 1, tokens: compact.tokens, range: boundary }];
+    if (compact.kind === "ambiguous") diagnostics.push(diagnostic("ambiguous-compact-progression",
+      "この小節を一意に解釈できません。コード間に空白を入れてください。", boundary, 1));
+  }
+  return joined.map((token, index) => ({
     bar: index + 1,
     tokens: [token],
     range: token.range,
@@ -563,12 +613,13 @@ function parseTextChordToken(raw: string, keyState: TextProgressionKeyState): Ch
 }
 
 function parseAbsoluteChordToken(raw: string): ChordSymbol | undefined {
-  const direct = parseChordLabel(raw);
+  const normalized = normalizeScoreChord(raw);
+  const direct = parseChordLabel(normalized);
   if (direct) return direct;
   // Existing Fast Label Entry accepts the normal `m` spelling. This local alias
   // keeps `C-7` in the text grammar as the documented shorthand without
   // widening the global chord parser contract.
-  const minorHyphen = /^([A-G](?:#|b)*?)-(.*)$/.exec(raw);
+  const minorHyphen = /^([A-G](?:#|b)*?)-(.*)$/.exec(normalized);
   if (!minorHyphen) return undefined;
   return parseChordLabel(`${minorHyphen[1]}m${minorHyphen[2]}`) ?? undefined;
 }

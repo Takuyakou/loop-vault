@@ -2,6 +2,10 @@
 
 Use the existing Loop Vault chord identity parser as authority.
 
+The user has approved the minimal explicit `#5` representation extension described
+in [product decisions](11-human-approved-product-decisions.md). This is not an alias
+to `b13`; preserve identity and protect existing saved data.
+
 Test at least:
 
 ```text

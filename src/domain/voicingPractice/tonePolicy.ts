@@ -63,7 +63,9 @@ const alteredFifths = new Set(["b5", "#5"]);
 const characteristicExtensions = new Set(["6", "9", "b9", "#9", "11", "#11", "13", "b13"]);
 
 export function chordToneDescriptors(chord: ChordSymbol): ChordToneDescriptor[] {
-  const qualityTones = qualityIntervals[chord.quality].map(([interval, label]) => ({
+  const qualityTones = qualityIntervals[chord.quality]
+    .filter(([, label]) => !chord.tensions.includes("#5") || label !== "5")
+    .map(([interval, label]) => ({
     interval,
     label,
     pitchClass: normalizePitchClass(chord.root + interval),
@@ -118,7 +120,9 @@ export function getStyleTonePolicy(
       ...(definingTone ? [definingTone] : []),
       ...(seventh ? [seventh] : []),
       ...altered,
-      ...explicit.slice(0, 1),
+      // An altered fifth is already mandatory above; it must not consume the
+      // existing explicit-color slot (for example #9 in B7(#9,#5)).
+      ...explicit.filter((label) => !alteredFifths.has(label)).slice(0, 1),
     ]),
     preferredIntervals: ["9", "13", "11", "6", "5"],
     droppableIntervals: ["5", "13", "11", "9"],

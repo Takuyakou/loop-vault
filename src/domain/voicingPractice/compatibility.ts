@@ -29,6 +29,9 @@ export function getStyleCompatibility(
   if (styleId !== "rootless-ab") {
     return { supported: true };
   }
+  if (chord.tensions.includes("#5")) {
+    return unsupported("#5を保持するルートレスA/Bの練習規則は未承認です。");
+  }
   if (chord.bass !== undefined && chord.bass !== chord.root) {
     return unsupported("スラッシュコードはルートレスA/BのMVP対象外です。");
   }

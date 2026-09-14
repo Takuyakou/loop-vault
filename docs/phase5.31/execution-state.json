@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "phaseId": "5.31",
-  "status": "blocked",
-  "activeStage": null,
+  "status": "in-progress",
+  "activeStage": "P5.31-01",
   "completedStages": ["P5.31-00"],
-  "blocked": true,
-  "blockerReason": "Full fixture #5 identity unsupported; Left-hand slash NEEDS HUMAN RULE APPROVAL.",
+  "blocked": false,
+  "blockerReason": null,
   "baseCommit": "f075618037f1a2a5326d8d7ae7cc474d081f95ac",
   "lastVerifiedCommit": "a6f581370a67ca1e9f7ed7d05382b9ace9857ba5",
   "currentBranch": "audit/p531-stage00",
@@ -16,7 +16,11 @@
       "phase-docs",
       "production-unchanged",
       "diff-check"
-    ]
+    ],
+    "P5.31-01": ["01-tokenizer-regression", "01-full-fixture", "01-typescript-lint", "01-phase-docs-diff"],
+    "P5.31-02": ["02-control-timing-roundtrip", "02-transport-lifecycle", "02-focused-ui", "02-typescript-lint", "02-phase-docs-diff"],
+    "P5.31-03": ["03-approved-slash-target-playback", "03-keyboard-roles", "03-fail-closed-regression", "03-typescript-lint", "03-phase-docs-diff"],
+    "P5.31-04": ["04-paste-to-practice-parity", "04-full-vitest", "04-full-playwright", "04-accessibility-responsive", "04-typescript-e2e-lint-contracts", "04-production-build", "04-security-privacy", "04-generated-output-hygiene", "04-phase-docs-diff-clean"]
   },
   "gateResults": {
     "baseline-tests": "pass",
@@ -25,6 +29,6 @@
     "production-unchanged": "pass",
     "diff-check": "pass"
   },
-  "nextAction": "Stage00 complete. Stop; obtain stage assignment and resolve #5 identity and Left-hand slash policy before implementing affected tracks.",
+  "nextAction": "Implement Stage01 using contracts/11-human-approved-product-decisions.md; user authorized sequential completion through Stage04. Verify and close each stage independently; no merge/push/release.",
   "updatedAt": "2026-09-14T00:00:00+09:00"
 }

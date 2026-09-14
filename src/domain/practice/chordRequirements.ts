@@ -62,6 +62,7 @@ const alteredFifthIntervals: Partial<Record<ChordQuality, number>> = {
 };
 
 const tensionIntervals = {
+  "#5": 8,
   "9": 2,
   b9: 1,
   "#9": 3,
@@ -85,6 +86,7 @@ export function buildPracticeChordRequirements(
     ...(alteredFifthIntervals[chord.quality] === undefined
       ? []
       : [chord.root + alteredFifthIntervals[chord.quality]!]),
+    ...(chord.tensions.includes("#5") ? [chord.root + 8] : []),
   ]);
   const characteristic = unique([
     ...(characteristicIntervals[chord.quality] ?? []).map((interval) => chord.root + interval),

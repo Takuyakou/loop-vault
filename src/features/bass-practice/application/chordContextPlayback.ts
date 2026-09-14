@@ -72,7 +72,7 @@ export interface ChordContextPlaybackEngineOptions {
 }
 
 const supportedQualities = new Set<ChordQuality>(["maj", "min", "dim", "aug", "maj7", "min7", "dom7", "min7b5", "dim7", "maj9", "min9", "dom9", "min11", "dom13", "sus2", "sus4", "dom7sus4", "add9", "six", "min6", "sixNine"]);
-const supportedTensions = new Set<Tension>(["9", "b9", "#9", "11", "#11", "13", "b13"]);
+const supportedTensions = new Set<Tension>(["9", "b9", "#9", "11", "#11", "13", "b13", "#5"]);
 const layerOrder: Record<ChordContextLayer, number> = { metronome: 0, chords: 1, bass: 2 };
 
 export function createChordContextPlaybackEngine(

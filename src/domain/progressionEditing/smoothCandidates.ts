@@ -181,12 +181,12 @@ function canonicalVoicing(chord: ChordSymbol): CanonicalVoicing {
 function chordPitchClasses(chord: ChordSymbol): number[] {
   const [third, fifth, seventh] = qualityIntervals(chord.quality);
   const tensionIntervals: Record<Tension, number> = {
-    "9": 2, b9: 1, "#9": 3, "11": 5, "#11": 6, "13": 9, b13: 8,
+    "#5": 8, "9": 2, b9: 1, "#9": 3, "11": 5, "#11": 6, "13": 9, b13: 8,
   };
   return [...new Set([
     chord.root,
     normalizePc(chord.root + third),
-    normalizePc(chord.root + fifth),
+    normalizePc(chord.root + (chord.tensions.includes("#5") && fifth === 7 ? 8 : fifth)),
     ...(seventh === undefined ? [] : [normalizePc(chord.root + seventh)]),
     ...chord.tensions.map((tension) => normalizePc(chord.root + tensionIntervals[tension])),
   ])];

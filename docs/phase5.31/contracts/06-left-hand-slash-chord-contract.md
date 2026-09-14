@@ -19,7 +19,15 @@ The chord parser may support these while the Lesson Left-hand generator does not
 
 must remain distinct.
 
-## Allowed only with lesson evidence
+## Approved product policy
+
+The user has approved [Upper Structure + Separate Slash Bass](11-human-approved-product-decisions.md).
+That product decision supersedes the initial evidence-only blocker below without
+claiming new teacher evidence. Use existing lesson rules for `X`; preserve `X/Y`,
+keep `Y` separate, combine them only for reference playback, and distinguish their
+keyboard roles. Unsupported upper structures remain fail closed.
+
+## Original evidence categories (historical audit context)
 
 A rule may explicitly state one of:
 

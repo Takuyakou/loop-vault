@@ -617,6 +617,7 @@ function diagnosticMessage(diagnostic: TextProgressionDiagnostic, language: AppL
     "three-chord-bar": "1小節に3つのコードは、v1の文法では正確に表現できません。",
     "invalid-chord-count": "4/4の各小節には、コード・トークンを1つ、2つ、または4つだけ入力できます。",
     "invalid-chord": "このトークンは対応するコード表記ではありません。",
+    "ambiguous-compact-progression": "この小節を一意に解釈できません。コード間に空白を入れてください。",
     "degree-requires-confirmed-key": "ローマ数字または数字のコード表記には、ユーザーが確認したキーが必要です。",
     "no-chord-not-supported": "N.C. とコードなしの休符は、テキスト進行入力 v1 では使用できません。",
     "unsupported-repeat": "繰り返し記法は、テキスト進行入力 v1 では使用できません。",
