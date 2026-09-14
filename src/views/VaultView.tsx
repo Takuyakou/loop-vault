@@ -38,6 +38,7 @@ type ProgressionViewMode = Exclude<VaultMode, "idea">;
 
 const progressionViewModeSessionKey = "loop-vault.progression-view-mode";
 const progressionVirtualizationThreshold = 50;
+const progressionPreviewChordLimit = 8;
 
 export function VaultView({
   ideas, storedIdeas = ideas, openDetail, openProgression, openCreate, openCapture, updateIdea, setToast, copy, language, showRomanNumerals,
@@ -501,6 +502,7 @@ function ProgressionRow({ entry, selected, showDegrees, language, copy, displayT
   const source = sourceOf(entry);
   const playing = playback.status !== "idle" && samePlaybackSource(playback.source, source);
   const progressionText = entry.block.chords.map((item) => item.chord.label).join(" · ");
+  const progressionPreview = formatProgressionPreview(entry.block.chords.map((item) => item.chord.label));
   const sourceAndTitle = entry.block.sourceFileName
     ? `${entry.block.sourceFileName} · ${entry.idea.title}`
     : entry.idea.title;
@@ -522,7 +524,7 @@ function ProgressionRow({ entry, selected, showDegrees, language, copy, displayT
       }}
       onDoubleClick={(event) => { event.stopPropagation(); onOpen(); }}
     >
-      <p className={`lv-vault-progression-primary font-mono ${compact ? "truncate" : ""}`}>{progressionText}</p>
+      <p className={`lv-vault-progression-primary font-mono ${compact ? "truncate" : ""}`}>{progressionPreview}</p>
       <p className={`lv-vault-progression-secondary mt-1 text-xs text-[var(--lv-text-muted)] ${compact ? "truncate" : ""}`}>
         {sourceAndTitle}{showDegrees && degrees.length ? ` · ${degrees.join(" · ")}` : ""}
       </p>
@@ -568,6 +570,11 @@ function ProgressionRow({ entry, selected, showDegrees, language, copy, displayT
       </IconButton>
     </div>
   </div>;
+}
+
+function formatProgressionPreview(chordLabels: readonly string[]): string {
+  const preview = chordLabels.slice(0, progressionPreviewChordLimit).join(" · ");
+  return chordLabels.length > progressionPreviewChordLimit ? `${preview} · …` : preview;
 }
 
 function IdeaList({ ideas, openDetail, copy }: { ideas: SongIdea[]; openDetail: (id: string) => void; copy: AppCopy }) {

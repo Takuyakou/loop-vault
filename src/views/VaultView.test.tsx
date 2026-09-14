@@ -472,6 +472,56 @@ describe("VaultView keyboard shortcuts", () => {
     await act(async () => root.unmount());
   });
 
+  it("shows only the first eight chords while keeping later chords searchable", async () => {
+    const longProgression = {
+      ...progressionBlock,
+      id: "block-long-preview",
+      chords: Array.from({ length: 10 }, (_, index) => ({
+        ...progressionBlock.chords[0],
+        bar: index + 1,
+        chord: {
+          ...progressionBlock.chords[0].chord,
+          label: index === 9 ? "HiddenChord10" : `Chord${index + 1}`,
+        },
+      })),
+    };
+    const idea = makeIdea({
+      id: "idea-long-preview",
+      progressionBlocks: [longProgression],
+    });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <VaultView
+          ideas={[idea]}
+          openDetail={vi.fn()}
+          openCreate={vi.fn()}
+          openCapture={vi.fn()}
+          updateIdea={vi.fn()}
+          setToast={vi.fn()}
+          copy={appCopy.en}
+          language="en"
+          showRomanNumerals={false}
+        />,
+      );
+    });
+
+    const expectedPreview = "Chord1 · Chord2 · Chord3 · Chord4 · Chord5 · Chord6 · Chord7 · Chord8 · …";
+    expect(container.querySelector(".lv-vault-progression-primary")?.textContent).toBe(expectedPreview);
+    expect(container.textContent).not.toContain("Chord9");
+    expect(container.textContent).not.toContain("HiddenChord10");
+
+    const search = container.querySelector<HTMLInputElement>("#vault-search")!;
+    await setInputValue(search, "HiddenChord10");
+    expect(container.querySelectorAll(".lv-vault-row")).toHaveLength(1);
+    expect(container.querySelector(".lv-vault-progression-primary")?.textContent).toBe(expectedPreview);
+
+    await act(async () => root.unmount());
+  });
+
   it("uses the latest language for a Space playback failure", async () => {
     const setToast = vi.fn();
     vi.spyOn(playbackController, "toggle").mockRejectedValue(undefined);
