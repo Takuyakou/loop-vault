@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "5.31",
   "status": "in-progress",
-  "activeStage": "P5.31-02",
-  "completedStages": ["P5.31-00", "P5.31-01"],
+  "activeStage": "P5.31-03",
+  "completedStages": ["P5.31-00", "P5.31-01", "P5.31-02"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "f075618037f1a2a5326d8d7ae7cc474d081f95ac",
-  "lastVerifiedCommit": "5cf54904118cfa97a9a176a086186e88d4846682",
+  "lastVerifiedCommit": "e857190acd2108c23b592aef0f4109f58472b4f9",
   "currentBranch": "audit/p531-stage00",
   "requiredGates": {
     "P5.31-00": [
@@ -31,8 +31,13 @@
     "01-tokenizer-regression": "pass",
     "01-full-fixture": "pass",
     "01-typescript-lint": "pass",
-    "01-phase-docs-diff": "pass"
+    "01-phase-docs-diff": "pass",
+    "02-control-timing-roundtrip": "pass",
+    "02-transport-lifecycle": "pass",
+    "02-focused-ui": "pass",
+    "02-typescript-lint": "pass",
+    "02-phase-docs-diff": "pass"
   },
-  "nextAction": "Stage01 verified at 5cf54904118cfa97a9a176a086186e88d4846682. Continue authorized Stage02 control-token timing; then Stage03 approved slash policy and Stage04 gates. No merge/push/release.",
+  "nextAction": "Stage02 verified at e857190acd2108c23b592aef0f4109f58472b4f9 with 326 focused tests and 5 fresh-production focused Playwright tests. Continue authorized Stage03 Upper Structure + Separate Slash Bass product rule, then Stage04 gates. No merge/push/release.",
   "updatedAt": "2026-09-14T00:00:00+09:00"
 }
