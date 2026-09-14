@@ -1,4 +1,5 @@
 import type { SavedProgressionBlock, SongIdea } from "../types";
+import { voicingSourceStatus } from "../voicing";
 import {
   TEXT_PROGRESSION_ANALYZER_VERSION,
   TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM,
@@ -73,7 +74,7 @@ export function buildProgressionVoicingPracticeHandoffFromVault(
     handoff: Object.freeze({
       sourceReference: Object.freeze({ ...sourceReference }),
       snapshots: detachedSnapshots,
-      initialSelection: preferredInitialSelection(detachedSnapshots),
+      initialSelection: preferredInitialSelection(detachedSnapshots, effectiveBlock),
     }),
   };
 }
@@ -84,8 +85,12 @@ function isCanonicalPracticeKey(value: string | undefined): value is string {
 
 function preferredInitialSelection(
   snapshots: ProgressionVoicingPracticeSnapshots,
+  block: SavedProgressionBlock,
 ): ProgressionVoicingSelection {
-  if (hasCompleteExactVoicing(snapshots["source-midi"], "source-midi")) return "source-midi";
+  if (hasCompleteExactVoicing(snapshots["source-midi"], "source-midi")
+    && block.chords.every((event) => voicingSourceStatus(event.chord, event.voicingMemory).status === "source")) {
+    return "source-midi";
+  }
   if (hasCompleteExactVoicing(snapshots.custom, "custom")) return "custom";
   return "basic-full";
 }

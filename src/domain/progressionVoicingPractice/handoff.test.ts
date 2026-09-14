@@ -3,7 +3,7 @@ import { makeChordSymbol } from "../chords";
 import { makeIdea } from "../testFactory";
 import { TEXT_PROGRESSION_ANALYZER_VERSION } from "../textProgression";
 import type { ChordTimelineItem, SavedProgressionBlock, VoicingSnapshot } from "../types";
-import { normalizedChordKey } from "../voicing";
+import { normalizedChordKey, VOICING_AUTO_USE_CONFIDENCE } from "../voicing";
 import { buildProgressionVoicingPracticeHandoffFromVault } from "./handoff";
 import { resolveProgressionPracticeVoicings } from "./voicingResolution";
 
@@ -69,6 +69,32 @@ describe("P5.27 saved Vault handoff", () => {
     expect(partialResult.handoff.snapshots.custom?.events[1]?.voicing).toBeUndefined();
     expect(partialResult.handoff.snapshots["source-midi"]?.events.every((item) => !item.voicing))
       .toBe(true);
+  });
+
+  it("keeps low-confidence exact Source available for explicit selection without auto-selecting it", () => {
+    const block = progression([
+      event(1, 1, 2, 0, "source-midi"),
+      event(1, 3, 2, 7, "source-midi"),
+    ]);
+    for (const item of block.chords) {
+      Object.assign(item.voicingMemory!.sourceVoicing!, {
+        confidence: VOICING_AUTO_USE_CONFIDENCE - 0.01,
+        userVerified: false,
+      });
+    }
+
+    const result = buildProgressionVoicingPracticeHandoffFromVault(
+      [makeIdea({ id: "idea-low-confidence", progressionBlocks: [block] })],
+      { ideaId: "idea-low-confidence", blockId: block.id },
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.handoff.initialSelection).toBe("basic-full");
+    expect(result.handoff.snapshots["source-midi"]?.events.map((item) => item.voicing?.midiNotes))
+      .toEqual([[48, 55, 59], [43, 50, 53]]);
+    expect(resolveProgressionPracticeVoicings(result.handoff.snapshots["source-midi"]!).events
+      .every((resolution) => resolution.status === "SUPPORTED")).toBe(true);
   });
 
   it("keeps a pre-voicing-memory Vault progression playable through Basic Full", () => {

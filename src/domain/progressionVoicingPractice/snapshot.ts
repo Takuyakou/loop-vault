@@ -1,7 +1,7 @@
 import { parseChordLabel } from "../chords";
 import { explicitSlashLabel } from "../explicitSlashLabel";
 import type { ChordQuality, ChordSymbol, ChordTimelineItem, SavedProgressionBlock, Tension, VoicingSnapshot } from "../types";
-import { voicingCompatibility, voicingSourceStatus } from "../voicing";
+import { isExplicitSourceMidiVoicingAvailable, voicingCompatibility } from "../voicing";
 import {
   PROGRESSION_VOICING_PRACTICE_SNAPSHOT_VERSION,
   type DetachedPracticeVoicing,
@@ -216,7 +216,7 @@ function selectVoicing(
   selection: ProgressionVoicingSelection,
 ): DetachedPracticeVoicing | undefined {
   if (selection === "source-midi") {
-    if (voicingSourceStatus(event.chord, event.voicingMemory).status !== "source") return undefined;
+    if (!isExplicitSourceMidiVoicingAvailable(event.chord, event.voicingMemory)) return undefined;
     return cloneSelectedVoicing(event.voicingMemory!.sourceVoicing!, "source-midi");
   }
   if (selection === "custom") {

@@ -47,6 +47,22 @@ export function voicingSourceStatus(
   return { status: "source", reason: "source-ready" };
 }
 
+/**
+ * Explicit Source MIDI practice may use a saved exact voicing even when its
+ * confidence is below the automatic-use threshold. Invalid, stale, aggregated,
+ * or non-MIDI snapshots remain unavailable.
+ */
+export function isExplicitSourceMidiVoicingAvailable(
+  chord: ChordSymbol,
+  memory: ChordVoicingMemory | undefined,
+): boolean {
+  const source = memory?.sourceVoicing;
+  if (!source) return false;
+  return voicingCompatibility(source, chord) === "compatible"
+    && source.source === "midi-extracted"
+    && source.representation === "simultaneous-voicing";
+}
+
 export function timelineVoicingSourceStatus(
   timeline: readonly { chord: ChordSymbol; voicingMemory?: ChordVoicingMemory }[],
 ): VoicingSourceStatusResult {

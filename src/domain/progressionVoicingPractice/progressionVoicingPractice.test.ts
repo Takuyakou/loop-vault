@@ -80,7 +80,7 @@ describe("P5.27 detached practice snapshot", () => {
     expect(Object.isFrozen(snapshot.events[0]?.voicing?.midiNotes)).toBe(true);
   });
 
-  it("reuses P5.26.1 Source readiness and never substitutes Custom or generated voicing", () => {
+  it("uses compatible exact Source on explicit selection without substituting Custom or generated voicing", () => {
     const source = (overrides: Partial<VoicingSnapshot>) => {
       const block = progression([event(1, 1, 4, 0, "maj7", [48, 55, 59])]);
       Object.assign(block.chords[0]!.voicingMemory!.sourceVoicing!, overrides);
@@ -99,8 +99,11 @@ describe("P5.27 detached practice snapshot", () => {
     expect(source({ userVerified: false, confidence: VOICING_AUTO_USE_CONFIDENCE })).toEqual({
       kind: "source-midi", midiNotes: [48, 55, 59], bassNote: 48,
     });
-    expect(source({ userVerified: false, confidence: VOICING_AUTO_USE_CONFIDENCE - 0.01 })).toBeUndefined();
+    expect(source({ userVerified: false, confidence: VOICING_AUTO_USE_CONFIDENCE - 0.01 })).toEqual({
+      kind: "source-midi", midiNotes: [48, 55, 59], bassNote: 48,
+    });
     expect(source({ representation: "aggregated-note-set", userVerified: true })).toBeUndefined();
+    expect(source({ source: "manual", userVerified: true })).toBeUndefined();
     expect(source({ capturedForChordKey: "stale", userVerified: true })).toBeUndefined();
     expect(source({ midiNotes: [48], bassNote: 48, userVerified: true })).toBeUndefined();
   });
