@@ -8,9 +8,9 @@ integrated product.
 ## Status
 
 - **Status:** in progress
-- **Active stage:** P5.32-00
-- **Completed stages:** none
-- **Next action:** complete the Stage00 audit and baseline gates, then stop
+- **Active stage:** P5.32-01 (not authorized)
+- **Completed stages:** P5.32-00
+- **Next action:** stop and wait for separate authorization before P5.32-01
 
 ## Required Reading Order
 

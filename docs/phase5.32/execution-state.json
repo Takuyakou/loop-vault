@@ -2,17 +2,23 @@
   "schemaVersion": 1,
   "phaseId": "5.32",
   "status": "in-progress",
-  "activeStage": "P5.32-00",
-  "completedStages": [],
+  "activeStage": "P5.32-01",
+  "completedStages": ["P5.32-00"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "70b30d456456060045e908b05bbe7bde7bb51cd3",
-  "lastVerifiedCommit": "",
+  "lastVerifiedCommit": "68a042657b17a7abf313640e9a079d21c281d67d",
   "currentBranch": "feat/p532-suggested-fingering",
   "requiredGates": {
     "P5.32-00": ["baseline-tests", "typescript-lint", "phase-docs", "production-unchanged", "diff-check"]
   },
-  "gateResults": {},
-  "nextAction": "Complete P5.32-00 audit and baseline gates, commit, then stop",
+  "gateResults": {
+    "baseline-tests": "pass",
+    "typescript-lint": "pass",
+    "phase-docs": "pass",
+    "production-unchanged": "pass",
+    "diff-check": "pass"
+  },
+  "nextAction": "P5.32-00 complete at 68a042657b17a7abf313640e9a079d21c281d67d; stop and await separate authorization for P5.32-01",
   "updatedAt": "2026-09-14T00:00:00+09:00"
 }
