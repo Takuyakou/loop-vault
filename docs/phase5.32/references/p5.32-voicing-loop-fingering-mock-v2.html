@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Loop Vault — Voicing Loop Fingering Mock v2</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#07111d;--panel:#0b1827;--panel2:#0d1e30;--line:#20364a;
+  --text:#e8f1f8;--muted:#88a0b5;--accent:#45e0d0;--accent2:#70baff;
+  --good:#8fe4b2;--shadow:0 14px 34px rgba(0,0,0,.26)
+}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 30% -10%,rgba(69,224,208,.08),transparent 30%),var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI","Noto Sans JP",sans-serif}
+button,input{font:inherit}button{cursor:pointer}
+.app{min-height:100vh;display:grid;grid-template-columns:210px minmax(0,1fr)}
+aside{border-right:1px solid #14283a;background:#08131f;padding:18px 12px}.brand{font-weight:900;font-size:19px;padding:8px 10px 20px}.nav{display:grid;gap:4px}.nav button{border:0;background:transparent;color:#9eb3c6;padding:9px 10px;border-radius:8px;text-align:left}.nav .active{background:#102438;color:white}
+main{min-width:0;padding:18px 22px 34px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center}.top h1{font-size:23px;margin:0 0 3px}.top p{margin:0;color:var(--muted);font-size:13px}
+.card{border:1px solid var(--line);border-radius:10px;background:linear-gradient(180deg,var(--panel2),var(--panel));box-shadow:var(--shadow)}
+.controls{margin-top:14px;padding:10px 12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}.label{font-size:11px;font-weight:900;letter-spacing:.09em;color:#738aa0}.group{display:flex;gap:6px;flex-wrap:wrap}
+.pill{height:31px;padding:0 10px;border-radius:7px;border:1px solid #28445b;background:#0a1725;color:#adc2d4;font-weight:800;font-size:12px}.pill.active{border-color:#2fa99e;background:#0d2b2d;color:#d2fffa}.pill.locked{opacity:.55}
+.switch{display:inline-flex;align-items:center;gap:7px;height:31px;padding:0 9px;border:1px solid #28445b;border-radius:7px;background:#091726;color:#bdd0df;font-size:12px;font-weight:800}.switch input{accent-color:var(--accent)}
+.grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(260px,.75fr);gap:12px;margin-top:12px}
+.current,.next{padding:15px 17px}.eyebrow{font-size:11px;font-weight:900;letter-spacing:.12em;color:#66e8dc}.next .eyebrow{color:#78baf4}.chord{font-size:38px;font-weight:900;margin:2px 0 7px;letter-spacing:-.03em}.next .chord{font-size:29px}
+.mode-line{display:flex;gap:7px;align-items:center;margin:0 0 11px;flex-wrap:wrap}.mode-tag{font-size:11px;font-weight:850;color:#97aec2;border:1px solid #29455d;background:#091826;border-radius:6px;padding:4px 7px}.mode-tag.hand{border-color:#2f756f;color:#bff9f1;background:#0d2729}
+.facts{display:grid;grid-template-columns:86px minmax(0,1fr);gap:7px 12px;align-items:center;font-variant-numeric:tabular-nums}.next .facts{grid-template-columns:70px 1fr}.k{font-size:11px;color:#758ca1;font-weight:900;letter-spacing:.06em}.v{font-size:15px;font-weight:780;word-spacing:10px}.next .v{font-size:13px}.finger-v{color:#dffff9}.badge{display:inline-flex;margin-left:8px;word-spacing:normal;padding:4px 8px;border-radius:7px;border:1px solid #23786f;background:#0d2b2d;color:#bafff6;font-size:11px;font-weight:900}
+.foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid #1d3549;margin-top:11px;padding-top:10px}.foot small{color:#8098ad;line-height:1.5}.actions{display:flex;gap:7px;flex-wrap:wrap}.mini{border:1px solid #31516d;background:#0b1a2a;color:#c3d4e2;border-radius:7px;padding:7px 9px;font-size:12px;font-weight:800}.mini.primary{border-color:#2d8078;background:#0d2a2b;color:#c9fff8}.mini.saved{border-color:#498c68;background:#10261c;color:#bef1cf}
+.next-tip{margin-top:10px;padding-top:9px;border-top:1px solid #1d3549;color:#91a8bd;font-size:12px;line-height:1.55}
+.timeline-card{margin-top:12px;padding:12px}.head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}.head h2{font-size:12px;color:#9db3c6;letter-spacing:.08em;margin:0}.head small{color:#70889d}.viewport{height:58px;overflow-x:auto;overflow-y:hidden;padding:2px 2px 7px}.timeline{height:46px;display:flex;gap:6px;min-width:max-content;position:relative}.event{flex:0 0 92px;width:92px;min-width:92px;max-width:92px;height:46px;min-height:46px;max-height:46px;border:1px solid #29445c;background:#0a1724;color:#b7cada;border-radius:7px;padding:5px 7px;text-align:left;position:relative;overflow:hidden}.event.current-event{border-color:#32c8ba;background:#0c292b;color:#e4fffb}.event .n{font-size:10px;color:#70879b}.event .name{font-size:12px;font-weight:900;margin-top:2px}.event .beats{position:absolute;right:5px;bottom:3px;color:#667f95;font-size:9px}.playhead{position:absolute;top:0;left:2px;width:2px;height:46px;background:var(--accent);box-shadow:0 0 8px rgba(69,224,208,.65);z-index:5}
+.keyboard-card{margin-top:12px;padding:13px 14px}.keyboard-wrap{overflow-x:auto}.keyboard{position:relative;min-width:820px;height:188px;background:#09121a;border:1px solid #1b3245;border-radius:8px;overflow:hidden}.white-keys{height:100%;display:flex}.white{flex:1;background:#f0f3f5;border-right:1px solid #59636c;position:relative}.white:last-child{border-right:0}.black{position:absolute;top:0;width:3.25%;height:60%;background:#15191e;border:1px solid #525b65;border-radius:0 0 4px 4px;z-index:3}.active-key{background:#bfece8!important}.active-key.black{background:#34756f!important}.note-tag{position:absolute;left:50%;bottom:7px;transform:translateX(-50%);font-size:10px;font-weight:900;color:#0b1720;white-space:nowrap}.black .note-tag{color:#e8fffb}.finger-tag{position:absolute;left:50%;top:7px;transform:translateX(-50%);z-index:7;min-width:26px;height:24px;padding:0 5px;border-radius:999px;display:grid;place-items:center;border:1px solid #39c8ba;background:#0b2730;color:#bffff7;font-size:10px;font-weight:900}.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;color:#8198ad;font-size:11px}.dot{width:8px;height:8px;display:inline-block;border-radius:50%;background:var(--accent);margin-right:5px}
+.transport{margin-top:12px;padding:10px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.transport button{height:36px;border:1px solid #2a475f;border-radius:7px;background:#0b1a2a;color:#c4d5e4;padding:0 11px;font-weight:800}.transport .play{border-color:#2a8279;background:#0d292b;color:#cafff8}.ref{height:36px;display:inline-flex;align-items:center;gap:7px;border:1px solid #2a475f;border-radius:7px;background:#0b1a2a;padding:0 10px;color:#bdd0df;font-size:12px;font-weight:800}.ref input{accent-color:var(--accent)}.spacer{flex:1}.status{color:#7e97ad;font-size:11px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);padding:9px 12px;border:1px solid #365a75;background:#0e2435;color:#dceaf4;border-radius:8px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .12s}.toast.show{opacity:1}
+.modal{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.55);padding:18px;z-index:20}.modal.open{display:grid}.dialog{width:min(470px,100%);border:1px solid #31516d;background:#0a1724;border-radius:10px;padding:16px}.dialog h3{margin:0 0 6px}.dialog p{margin:0 0 12px;color:#8fa6ba;font-size:12px;line-height:1.6}.edit-row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px}.edit-row select{background:#0b1b2a;color:#e5eef6;border:1px solid #31516d;border-radius:7px;padding:8px 10px}
+@media(max-width:900px){.app{grid-template-columns:1fr}aside{display:none}main{padding:12px}.grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside><div class="brand">LOOP VAULT</div><div class="nav"><button>My Vault</button><button>Capture</button><button class="active">Voicing Loop</button><button>Chord Dojo</button><button>Bass Practice</button><button>Settings</button></div></aside>
+<main>
+  <div class="top"><div><h1>Voicing Loop</h1><p>コード進行を止めずに反復して、形・音・指使いを身体に入れる</p></div><button class="mini">進行を変更</button></div>
+
+  <section class="card controls">
+    <span class="label">VOICING</span>
+    <div id="voicingButtons" class="group">
+      <button class="pill" data-mode="source">Source MIDI</button>
+      <button class="pill" data-mode="custom">Custom</button>
+      <button class="pill" data-mode="shell">Basic Shell</button>
+      <button class="pill active" data-mode="full">Basic Full</button>
+      <button class="pill" data-mode="left">Left-hand</button>
+    </div>
+    <span class="label">HAND</span>
+    <div id="handButtons" class="group">
+      <button class="pill active" data-hand="R">右手</button>
+      <button class="pill" data-hand="L">左手</button>
+    </div>
+    <span class="label">DISPLAY</span>
+    <div class="group"><button class="pill active">Learn</button><button class="pill">Recall</button></div>
+    <label class="switch"><input id="fingerToggle" type="checkbox" checked>おすすめ運指</label>
+  </section>
+
+  <div class="grid">
+    <section class="card current">
+      <div class="eyebrow">CURRENT</div>
+      <div id="currentChord" class="chord">Dm9</div>
+      <div class="mode-line"><span id="currentMode" class="mode-tag">Basic Full</span><span id="currentHand" class="mode-tag hand">右手</span></div>
+      <div class="facts">
+        <div class="k">PITCH</div><div id="currentPitch" class="v">F3 A3 C4 E4</div>
+        <div class="k">DEGREE</div><div id="currentDegree" class="v">♭3 5 ♭7 9</div>
+        <div class="k finger-line">FINGER</div><div id="currentFinger" class="v finger-v finger-line">1 2 3 5 <span class="badge">おすすめ</span></div>
+      </div>
+      <div class="foot finger-line">
+        <small id="currentReason">4音Voicingの右手第一候補。前後の接続を優先して選ぶ。</small>
+        <div class="actions"><button id="editFinger" class="mini">運指を編集</button><button id="saveFinger" class="mini primary">この運指を保存</button></div>
+      </div>
+    </section>
+
+    <section class="card next">
+      <div class="eyebrow">NEXT</div>
+      <div id="nextChord" class="chord">G13</div>
+      <div class="mode-line"><span id="nextMode" class="mode-tag">Basic Full</span><span id="nextHand" class="mode-tag hand">右手</span></div>
+      <div class="facts">
+        <div class="k">PITCH</div><div id="nextPitch" class="v">F3 A3 B3 E4</div>
+        <div class="k">DEGREE</div><div id="nextDegree" class="v">♭7 9 3 13</div>
+        <div class="k finger-line">FINGER</div><div id="nextFinger" class="v finger-line">1 2 3 5</div>
+      </div>
+      <div id="nextTip" class="next-tip finger-line">F3・A3・E4を保ち、C4→B3。右手は指3だけを隣へ動かすイメージ。</div>
+    </section>
+  </div>
+
+  <section class="card timeline-card">
+    <div class="head"><h2>PROGRESSION</h2><small>クリック = 試聴のみ / 再生位置は変更しません</small></div>
+    <div class="viewport"><div id="timeline" class="timeline">
+      <button class="event current-event"><span class="n">1</span><div class="name">Dm9</div><span class="beats">4拍</span></button>
+      <button class="event"><span class="n">2</span><div class="name">G13</div><span class="beats">4拍</span></button>
+      <button class="event"><span class="n">3</span><div class="name">Cmaj9</div><span class="beats">4拍</span></button>
+      <button class="event"><span class="n">4</span><div class="name">Am9</div><span class="beats">4拍</span></button>
+      <button class="event"><span class="n">5</span><div class="name">D13</div><span class="beats">4拍</span></button>
+      <button class="event"><span class="n">6</span><div class="name">Gmaj9</div><span class="beats">4拍</span></button>
+      <button class="event"><span class="n">7</span><div class="name">Cmaj9</div><span class="beats">4拍</span></button>
+      <button class="event"><span class="n">8</span><div class="name">Em9</div><span class="beats">4拍</span></button>
+      <div id="playhead" class="playhead"></div>
+    </div></div>
+  </section>
+
+  <section class="card keyboard-card">
+    <div class="head"><h2>KEYBOARD</h2><small class="finger-line">R = 右手 / L = 左手 / 数字 = 指番号</small></div>
+    <div class="keyboard-wrap">
+      <div id="keyboard" class="keyboard">
+        <div id="whiteKeys" class="white-keys"></div>
+        <div id="blackKeys"></div>
+      </div>
+    </div>
+    <div class="legend"><span><span class="dot"></span>現在のVoicing</span><span class="finger-line">1 親指 / 2 人差し指 / 3 中指 / 4 薬指 / 5 小指</span><span class="finger-line">運指は「おすすめ」。保存した自分の運指を優先できる想定。</span></div>
+  </section>
+
+  <section class="card transport">
+    <button id="play" class="play">▶ 再開</button><button id="restart">↺ 最初から</button><button id="stop">■ 停止</button>
+    <label class="ref"><input type="checkbox" checked>お手本音</label><button>メトロノーム: ON</button>
+    <div class="spacer"></div><div id="status" class="status">停止中 ・ 1 / 8 ・ Loop 0</div>
+  </section>
+</main>
+</div>
+
+<div id="toast" class="toast"></div>
+<div id="modal" class="modal"><div class="dialog"><h3 id="modalTitle">自分の運指</h3><p>低い音 → 高い音の順。モックでは保存操作だけ確認できます。</p><div id="editRow" class="edit-row"></div><div class="actions" style="justify-content:flex-end"><button id="cancel" class="mini">キャンセル</button><button id="apply" class="mini primary">保存</button></div></div></div>
+
+<script>
+(function(){
+const data = {
+  source:{
+    label:'Source MIDI',
+    R:{current:{chord:'Dm9',pitch:['F3','A3','C4','E4'],degree:['♭3','5','♭7','9'],finger:[1,2,3,5],reason:'元MIDIの実Voicingに対する Suggested Fingering。固定ルールではなく実音配置から推定。'},
+       next:{chord:'G13',pitch:['F3','A3','B3','E4'],degree:['♭7','9','3','13'],finger:[1,2,3,5],tip:'元MIDIの実Voicingを保ったまま、前後の移動量が小さい運指候補を表示。'}},
+    L:{current:{chord:'Dm9',pitch:['F3','A3','C4','E4'],degree:['♭3','5','♭7','9'],finger:[5,3,2,1],reason:'元MIDIの実Voicingを左手で弾く場合の Suggested Fingering。'},
+       next:{chord:'G13',pitch:['F3','A3','B3','E4'],degree:['♭7','9','3','13'],finger:[5,3,2,1],tip:'左手ではC4→B3を指2で移す候補。'}}
+  },
+  custom:{
+    label:'Custom',
+    R:{current:{chord:'Dm9',pitch:['C4','E4','F4','A4'],degree:['♭7','9','♭3','5'],finger:[1,2,3,5],reason:'Custom Voicingの実配置に対して Suggested Fingering を生成。'},
+       next:{chord:'G13',pitch:['B3','E4','F4','A4'],degree:['3','13','♭7','9'],finger:[1,2,3,5],tip:'自分で作ったVoicingでも、現在→次の接続を見ておすすめ運指を出す想定。'}},
+    L:{current:{chord:'Dm9',pitch:['C4','E4','F4','A4'],degree:['♭7','9','♭3','5'],finger:[5,3,2,1],reason:'Custom Voicingを左手で使う場合の Suggested Fingering。'},
+       next:{chord:'G13',pitch:['B3','E4','F4','A4'],degree:['3','13','♭7','9'],finger:[5,3,2,1],tip:'左手の幅と前後移動を見て候補を選ぶ。'}}
+  },
+  shell:{
+    label:'Basic Shell',
+    R:{current:{chord:'Dm7',pitch:['F4','C5'],degree:['♭3','♭7'],finger:[1,5],reason:'3度・7度の2音Shell。右手は1–5を第一候補。'},
+       next:{chord:'G7',pitch:['F4','B4'],degree:['♭7','3'],finger:[1,5],tip:'F4を同じ場所に残し、C5→B4。右手1–5のまま接続。'}},
+    L:{current:{chord:'Dm7',pitch:['F3','C4'],degree:['♭3','♭7'],finger:[5,1],reason:'2音Shellを左手で弾く場合の第一候補。'},
+       next:{chord:'G7',pitch:['F3','B3'],degree:['♭7','3'],finger:[5,1],tip:'Fを保ち、C→Bへ。左手5–1の候補。'}}
+  },
+  full:{
+    label:'Basic Full',
+    R:{current:{chord:'Dm9',pitch:['F3','A3','C4','E4'],degree:['♭3','5','♭7','9'],finger:[1,2,3,5],reason:'4音Voicingの右手第一候補。前後の接続を優先して選ぶ。'},
+       next:{chord:'G13',pitch:['F3','A3','B3','E4'],degree:['♭7','9','3','13'],finger:[1,2,3,5],tip:'F3・A3・E4を保ち、C4→B3。右手は指3だけを隣へ動かすイメージ。'}},
+    L:{current:{chord:'Dm9',pitch:['F3','A3','C4','E4'],degree:['♭3','5','♭7','9'],finger:[5,3,2,1],reason:'同じ4音Voicingを左手で弾く場合の第一候補。'},
+       next:{chord:'G13',pitch:['F3','A3','B3','E4'],degree:['♭7','9','3','13'],finger:[5,3,2,1],tip:'左手は指2のC4だけをB3へ移すイメージ。'}}
+  },
+  left:{
+    label:'Left-hand',
+    L:{current:{chord:'Dm9',pitch:['F3','A3','C4','E4'],degree:['♭3','5','♭7','9'],finger:[5,3,2,1],reason:'Left-hand Lesson Voicing。低い音→高い音で5–3–2–1を第一候補。'},
+       next:{chord:'G13',pitch:['F3','A3','B3','E4'],degree:['♭7','9','3','13'],finger:[5,3,2,1],tip:'F3・A3・E4を保ち、C4→B3。左手では指2だけを移すイメージ。'}}
+  }
+};
+
+let mode='full', hand='R';
+const q=id=>document.getElementById(id);
+const fingerToggle=q('fingerToggle');
+function showToast(msg){const t=q('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._x);t._x=setTimeout(()=>t.classList.remove('show'),1300)}
+function fingerHtml(arr){return arr.join(' ')+' <span class="badge">おすすめ</span>'}
+function updateButtons(){
+  document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
+  const locked = mode==='left';
+  document.querySelectorAll('[data-hand]').forEach(b=>{
+    b.classList.toggle('active',b.dataset.hand===hand);
+    b.classList.toggle('locked',locked && b.dataset.hand==='R');
+    b.disabled = locked && b.dataset.hand==='R';
+  });
+}
+function render(){
+  if(mode==='left') hand='L';
+  updateButtons();
+  const d=data[mode][hand] || data[mode].R || data[mode].L;
+  const c=d.current,n=d.next;
+  q('currentChord').textContent=c.chord;q('nextChord').textContent=n.chord;
+  q('currentMode').textContent=data[mode].label;q('nextMode').textContent=data[mode].label;
+  q('currentHand').textContent=hand==='R'?'右手':'左手';q('nextHand').textContent=hand==='R'?'右手':'左手';
+  q('currentPitch').textContent=c.pitch.join(' ');q('nextPitch').textContent=n.pitch.join(' ');
+  q('currentDegree').textContent=c.degree.join(' ');q('nextDegree').textContent=n.degree.join(' ');
+  q('currentFinger').innerHTML=fingerHtml(c.finger);q('nextFinger').textContent=n.finger.join(' ');
+  q('currentReason').textContent=c.reason;q('nextTip').textContent=n.tip;
+  renderKeyboard(c.pitch,c.finger,hand);
+}
+document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.mode;if(mode==='left')hand='L';render()}));
+document.querySelectorAll('[data-hand]').forEach(b=>b.addEventListener('click',()=>{if(mode==='left'&&b.dataset.hand==='R')return;hand=b.dataset.hand;render()}));
+fingerToggle.addEventListener('change',()=>document.querySelectorAll('.finger-line').forEach(el=>el.style.display=fingerToggle.checked?'':'none'));
+
+const whiteNames=['C','D','E','F','G','A','B','C','D','E','F','G','A','B'];
+const whiteMidis=[48,50,52,53,55,57,59,60,62,64,65,67,69,71];
+const blackData=[{m:49,l:5.5},{m:51,l:12.6},{m:54,l:26.7},{m:56,l:33.8},{m:58,l:40.9},{m:61,l:55.2},{m:63,l:62.3},{m:66,l:76.6},{m:68,l:83.7},{m:70,l:90.8}];
+function noteToMidi(note){
+  const m=note.match(/^([A-G])([#♯b♭]?)(-?\d+)$/); if(!m)return null;
+  const pc={C:0,D:2,E:4,F:5,G:7,A:9,B:11}[m[1]]+(m[2]==='#'||m[2]==='♯'?1:(m[2]==='b'||m[2]==='♭'?-1:0));
+  return 12*(Number(m[3])+1)+pc;
+}
+function renderKeyboard(notes,fingers,h){
+  const wm=q('whiteKeys'); const bm=q('blackKeys'); wm.innerHTML='';bm.innerHTML='';
+  const active=new Map(notes.map((n,i)=>[noteToMidi(n),{note:n,f:fingers[i]}]));
+  whiteMidis.forEach((m,i)=>{
+    const el=document.createElement('div');el.className='white'+(active.has(m)?' active-key':'');
+    if(active.has(m)){const a=active.get(m);el.innerHTML='<span class="note-tag">'+a.note+'</span><span class="finger-tag finger-line">'+h+a.f+'</span>'}
+    wm.appendChild(el);
+  });
+  blackData.forEach(k=>{
+    const el=document.createElement('div');el.className='black'+(active.has(k.m)?' active-key':'');el.style.left=k.l+'%';
+    if(active.has(k.m)){const a=active.get(k.m);el.innerHTML='<span class="note-tag">'+a.note+'</span><span class="finger-tag finger-line">'+h+a.f+'</span>'}
+    bm.appendChild(el);
+  });
+  if(!fingerToggle.checked)document.querySelectorAll('.finger-line').forEach(el=>el.style.display='none');
+}
+document.querySelectorAll('.event').forEach(e=>e.addEventListener('click',()=>showToast(e.querySelector('.name').textContent+' を試聴（seekしません）')));
+
+const modal=q('modal');
+q('editFinger').addEventListener('click',()=>{
+  const d=data[mode][hand]||data[mode].R||data[mode].L; q('modalTitle').textContent=d.current.chord+' の自分の運指';
+  const row=q('editRow');row.innerHTML='';d.current.finger.forEach(f=>{const s=document.createElement('select');[1,2,3,4,5].forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;if(n===f)o.selected=true;s.appendChild(o)});row.appendChild(s)});
+  modal.classList.add('open')
+});
+q('cancel').addEventListener('click',()=>modal.classList.remove('open'));
+q('apply').addEventListener('click',()=>{modal.classList.remove('open');q('saveFinger').textContent='✓ 自分の運指';q('saveFinger').classList.add('saved');showToast('自分の運指を保存しました')});
+q('saveFinger').addEventListener('click',()=>{q('saveFinger').textContent='✓ 保存済み';q('saveFinger').classList.add('saved');showToast('現在のおすすめ運指を保存しました')});
+modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});
+
+const events=[...document.querySelectorAll('.event')],ph=q('playhead'),play=q('play'),status=q('status');
+let playing=false,index=0,progress=0,loop=0,last=null,raf=null;
+function sync(){events.forEach((e,i)=>e.classList.toggle('current-event',i===index));ph.style.transform='translateX('+(2+index*98+progress*92)+'px)';status.textContent=(playing?'再生中':'停止中')+' ・ '+(index+1)+' / '+events.length+' ・ Loop '+loop}
+function frame(ts){if(!playing)return;if(last==null)last=ts;const dt=(ts-last)/1000;last=ts;progress+=dt/(4*.45);if(progress>=1){progress=0;index++;if(index>=events.length){index=0;loop++}}sync();raf=requestAnimationFrame(frame)}
+play.addEventListener('click',()=>{playing=!playing;play.textContent=playing?'Ⅱ 一時停止':'▶ 再開';last=null;if(playing)raf=requestAnimationFrame(frame);else if(raf)cancelAnimationFrame(raf);sync()});
+q('restart').addEventListener('click',()=>{index=0;progress=0;loop=0;last=null;sync();showToast('先頭へ戻しました')});
+q('stop').addEventListener('click',()=>{playing=false;index=0;progress=0;loop=0;last=null;play.textContent='▶ 再開';if(raf)cancelAnimationFrame(raf);sync()});
+render();sync();
+})();
+</script>
+</body></html>

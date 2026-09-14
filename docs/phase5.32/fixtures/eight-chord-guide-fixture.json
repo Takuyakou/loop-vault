@@ -1,0 +1,149 @@
+{
+  "progression": [
+    {
+      "chord": "Am9",
+      "lh": [
+        45
+      ],
+      "rh": [
+        55,
+        59,
+        60,
+        64
+      ],
+      "rhGuide": [
+        1,
+        2,
+        3,
+        5
+      ]
+    },
+    {
+      "chord": "D13",
+      "lh": [
+        38
+      ],
+      "rh": [
+        54,
+        59,
+        60,
+        64
+      ],
+      "rhGuide": [
+        1,
+        2,
+        3,
+        5
+      ]
+    },
+    {
+      "chord": "Gmaj9",
+      "lh": [
+        43
+      ],
+      "rh": [
+        54,
+        57,
+        59,
+        62
+      ],
+      "rhGuide": [
+        1,
+        2,
+        3,
+        5
+      ]
+    },
+    {
+      "chord": "Cmaj9",
+      "lh": [
+        48
+      ],
+      "rh": [
+        52,
+        55,
+        59,
+        62
+      ],
+      "rhGuide": [
+        1,
+        2,
+        3,
+        5
+      ]
+    },
+    {
+      "chord": "F#m7(b5)",
+      "lh": [
+        42
+      ],
+      "rh": [
+        52,
+        54,
+        57,
+        60
+      ],
+      "rhGuide": [
+        1,
+        2,
+        3,
+        5
+      ]
+    },
+    {
+      "chord": "B7(#5)",
+      "lh": [
+        47
+      ],
+      "rh": [
+        51,
+        55,
+        57,
+        59
+      ],
+      "rhGuide": [
+        1,
+        2,
+        3,
+        5
+      ]
+    },
+    {
+      "chord": "Em9",
+      "lh": [
+        40
+      ],
+      "rh": [
+        50,
+        54,
+        55,
+        59
+      ],
+      "rhGuide": [
+        1,
+        2,
+        3,
+        5
+      ]
+    },
+    {
+      "chord": "E7(#5)",
+      "lh": [
+        40
+      ],
+      "rh": [
+        50,
+        52,
+        56,
+        60
+      ],
+      "rhGuide": [
+        1,
+        2,
+        3,
+        5
+      ]
+    }
+  ],
+  "note": "Pitch arrays are transcribed from the user-supplied guide for deterministic tests. Enharmonic labels are represented by MIDI identity here."
+}

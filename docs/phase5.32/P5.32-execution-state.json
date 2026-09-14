@@ -1,0 +1,18 @@
+{
+  "phase": "5.32",
+  "status": "active",
+  "active_stage": "P5.32-00",
+  "completed_stages": [],
+  "base_commit": null,
+  "branch": null,
+  "persistence_track": "audit-required",
+  "merge_authorized": false,
+  "push_authorized": false,
+  "release_authorized": false,
+  "next_phase_authorized": false,
+  "notes": [
+    "Git is truth; resolve exact P5.31-integrated base in Stage00.",
+    "Fingering is Suggested, never correctness.",
+    "Resolved voicing pitches are immutable input to the fingering engine."
+  ]
+}

@@ -1,0 +1,772 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="ピアノのコード運指・ポジショニングとジャズの声部進行を、出典と操作できる鍵盤図で解説。"><title>ピアノのコード進行：押さえ方・指使い・ポジショニング</title><style>
+:root{color-scheme:light;--ink:#17191c;--muted:#555b64;--line:#d7dadd;--soft:#f3f4f5;--blue:#124d8f}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{margin:0;background:#fff;color:var(--ink);font-family:"Noto Sans CJK JP","Noto Sans JP","Yu Gothic",Meiryo,sans-serif;font-size:16px;line-height:1.9}a{color:var(--blue);text-underline-offset:3px}a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #124d8f;outline-offset:3px}.layout{max-width:1420px;margin:auto;display:grid;grid-template-columns:238px minmax(0,1fr);gap:52px;padding:42px 42px 80px}nav{position:sticky;top:24px;align-self:start;max-height:calc(100vh - 48px);overflow:auto;font-size:13px;border-right:1px solid var(--line);padding-right:20px}nav strong{display:block;margin:0 0 16px;font-size:15px}nav a{display:block;color:#343a40;text-decoration:none;margin:0 0 13px;line-height:1.6}nav a:hover{text-decoration:underline}main{min-width:0;max-width:1080px}h1{font-size:34px;letter-spacing:-.025em;line-height:1.5;margin:0 0 26px;font-weight:750}h2{font-size:25px;line-height:1.5;margin:0 0 25px}h3{font-size:20px;line-height:1.6;margin:30px 0 15px}p{margin:0 0 21px}.lead{font-size:22px;line-height:1.8;font-weight:650;margin-bottom:24px}main>section{margin-top:58px;padding-top:32px;border-top:1px solid var(--line)}table{border-collapse:collapse;width:100%;font-size:14px;line-height:1.7;margin:24px 0}th,td{padding:13px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{font-weight:700;background:var(--soft);border-top:1px solid var(--line)}tr:nth-child(even) td{background:#fafafa}.table-scroll{overflow-x:auto;margin:12px 0 24px}.table-scroll table{margin:0}.exercise-table{min-width:640px}.exercise-table th:first-child{width:45px}.exercise-table td:nth-child(2){width:21%}.notes{font-variant-numeric:tabular-nums;white-space:nowrap}.fingers{color:var(--muted);font-size:13px}.citation{font-size:12px;white-space:nowrap;vertical-align:super;line-height:0}.keyboard-figures{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:25px;margin:28px 0}.keyboard-figures figure{margin:0;min-width:0}.keyboard-figures svg{width:100%;display:block}.single-keyboard{max-width:640px;margin:28px 0}.single-keyboard svg{width:100%;display:block}figcaption{font-size:13px;line-height:1.8;padding-top:8px;color:#424850}.progression{font-weight:600;font-size:17px}ol{padding-left:25px}li{padding-left:4px;margin:0 0 12px}.sources{font-size:13px;line-height:1.8}.sources li{margin-bottom:20px;overflow-wrap:anywhere}.source-use{color:var(--muted)}.skip-link{position:absolute;top:-80px;left:20px;padding:8px;background:white;z-index:5}.skip-link:focus{top:10px}.report-actions{display:flex;gap:12px;align-items:center;justify-content:flex-end;margin-bottom:22px;font-size:13px}.report-actions button{border:1px solid #aaa;background:#fff;padding:6px 14px;color:#333;cursor:pointer;font:inherit}.report-actions a{color:#444}
+@media(max-width:1120px){.layout{grid-template-columns:190px minmax(0,1fr);gap:28px;padding:32px 24px}h1{font-size:30px}body{font-size:15px}}
+@media(max-width:820px){.layout{display:block;padding:24px 20px 60px}nav{position:static;border:0;border-bottom:1px solid var(--line);max-height:none;padding:0 0 16px;margin-bottom:30px;display:grid;grid-template-columns:1fr 1fr;gap:8px 18px}nav strong{grid-column:1/-1;margin:0 0 4px}nav a{margin:0;font-size:12px}h1{font-size:27px}.lead{font-size:19px}h2{font-size:23px}th,td{padding:10px 9px}.report-actions{justify-content:flex-start}.keyboard-figures{grid-template-columns:1fr;max-width:600px}}
+@media print{@page{size:A4;margin:17mm 15mm}html{scroll-behavior:auto}body{font-size:9.5pt;line-height:1.7}.layout{display:block;max-width:none;padding:0}nav,.skip-link,.report-actions{display:none}main{max-width:none}h1{font-size:22pt}h2{font-size:16pt;break-after:avoid}h3{font-size:12pt;break-after:avoid}.lead{font-size:13pt}main>section{margin-top:24px;padding-top:20px}p{orphans:3;widows:3;margin-bottom:12px}table{font-size:8pt;line-height:1.6}th,td{padding:7px}tr,figure{break-inside:avoid}thead{display:table-header-group}.table-scroll{overflow:visible}.exercise-table{min-width:0}.keyboard-figures{grid-template-columns:1fr 1fr;gap:15px}figcaption,.fingers{font-size:8pt}.sources{font-size:8pt}a{color:#111}#explorer{display:none}.notes{white-space:normal}.single-keyboard{max-width:500px}}
+
+#piano-explorer {
+  box-sizing: border-box;
+  max-width: 100%;
+  margin: 1.5rem 0 2rem;
+  padding: 1.25rem 0;
+  border-top: 2px solid #222a33;
+  border-bottom: 1px solid #737c85;
+  background: #fff;
+  color: #17202a;
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+#piano-explorer *,
+#piano-explorer *::before,
+#piano-explorer *::after {
+  box-sizing: border-box;
+}
+#piano-explorer p {
+  margin: 0.6rem 0;
+}
+#piano-explorer .piano-intro {
+  margin-top: 0;
+}
+#piano-explorer label {
+  font-weight: 700;
+}
+#piano-explorer select,
+#piano-explorer button,
+#piano-explorer input {
+  font: inherit;
+}
+#piano-explorer select,
+#piano-explorer button {
+  min-height: 44px;
+  max-width: 100%;
+  border: 1px solid #747d87;
+  border-radius: 0;
+  background: #fff;
+  color: #17202a;
+  box-shadow: none;
+  line-height: 1.5;
+}
+#piano-explorer select {
+  padding: 0.45rem 2rem 0.45rem 0.6rem;
+}
+#piano-explorer button {
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+}
+#piano-explorer button:hover:not(:disabled) {
+  background: #eef1f4;
+  border-color: #202a34;
+}
+#piano-explorer button:disabled {
+  color: #66707b;
+  background: #f1f3f5;
+  cursor: default;
+}
+#piano-explorer :focus-visible {
+  outline: 3px solid #124d8f;
+  outline-offset: 3px;
+}
+#piano-explorer .piano-exercise-control {
+  display: grid;
+  gap: 0.4rem;
+}
+#piano-explorer .piano-exercise-control select {
+  width: 100%;
+}
+#piano-explorer .piano-description {
+  margin-bottom: 1rem;
+}
+#piano-explorer .piano-controls,
+#piano-explorer .piano-audio-controls,
+#piano-explorer .piano-tempo-control,
+#piano-explorer .piano-hand-control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+#piano-explorer .piano-audio-controls {
+  margin-top: 0.9rem;
+  gap: 1rem 2rem;
+}
+#piano-explorer .piano-tempo-control input {
+  width: 150px;
+  min-height: 44px;
+  margin: 0;
+  accent-color: #34404b;
+}
+#piano-explorer .piano-tempo-control output {
+  min-width: 2.5ch;
+  font-variant-numeric: tabular-nums;
+}
+#piano-explorer .piano-audio-note {
+  font-size: 0.88rem;
+  color: #4e5964;
+}
+#piano-explorer .piano-status {
+  min-height: 1.75em;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #c1c7cd;
+  font-size: 0.93rem;
+}
+#piano-explorer .piano-current-heading {
+  margin: 1.2rem 0 0.5rem;
+  color: #17202a;
+  font-size: 1.55rem;
+  line-height: 1.4;
+}
+#piano-explorer .piano-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 1.2rem;
+  font-size: 0.87rem;
+}
+#piano-explorer .piano-left-label {
+  color: #124d8f;
+  font-weight: 700;
+}
+#piano-explorer .piano-right-label {
+  color: #914100;
+  font-weight: 700;
+}
+#piano-explorer .piano-keyboard-scroll {
+  width: 100%;
+  max-width: 100%;
+  margin-top: 0.8rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-gutter: stable;
+}
+#piano-explorer .piano-keyboard-scroll svg {
+  display: block;
+  width: 100%;
+  min-width: 928px;
+  height: auto;
+  font-family: Arial, sans-serif;
+}
+#piano-explorer .piano-step-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 1.5rem;
+  margin-top: 0.6rem;
+}
+#piano-explorer .piano-step-details section {
+  min-width: 0;
+  padding: 0.75rem 0;
+  border-top: 1px solid #c1c7cd;
+}
+#piano-explorer .piano-step-details h4 {
+  margin: 0 0 0.45rem;
+  color: #17202a;
+  font-size: 1.05rem;
+  line-height: 1.5;
+}
+#piano-explorer .piano-step-details p {
+  margin: 0.3rem 0;
+  overflow-wrap: anywhere;
+  font-size: 0.93rem;
+}
+#piano-explorer .piano-explanation {
+  padding: 0.6rem 0 0.6rem 0.9rem;
+  border-left: 3px solid #58636e;
+}
+#piano-explorer .piano-range-warning {
+  font-weight: 700;
+}
+@media (max-width: 640px) {
+  #piano-explorer .piano-step-details {
+    grid-template-columns: 1fr;
+  }
+  #piano-explorer .piano-controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  #piano-explorer .piano-controls button {
+    width: 100%;
+    padding: 0.55rem 0.4rem;
+    font-size: 0.92rem;
+  }
+  #piano-explorer .piano-controls button:nth-child(4) {
+    grid-column: 1 / -1;
+  }
+}
+@media print {
+  #piano-explorer {
+    display: none !important;
+  }
+}
+</style></head><body><a class="skip-link" href="#main">本文へ移動</a><div class="layout"><nav aria-label="目次"><strong>目次</strong><a href="#rules">1. 最初に使う6つの原則</a><a href="#explorer">2. 鍵盤で配置と指番号を確認する</a><a href="#position">3. 手の位置を先に整える</a><a href="#fingering">4. 指使いの基本形と、変えてよい条件</a><a href="#triads">5. 三和音で「手を飛ばさない」感覚を作る</a><a href="#guide-tones">6. ジャズの入口は「根音＋3度＋7度」</a><a href="#rootless">7. 4音のルートレス配置を、1セットだけ覚える</a><a href="#melody">8. 左手で伴奏し、右手で旋律を弾く</a><a href="#application">9. 9th・13thを含む8小節への応用</a><a href="#practice">10. 15分で両方の弾き方を練習する</a><a href="#troubleshooting">11. 迷ったときの修正表</a><a href="#evidence">12. 根拠の強さと、まだ判断できないこと</a><a href="#sources">Sources / 参考資料</a></nav><main id="main"><div class="report-actions"><a href="#explorer">鍵盤練習を開く</a><button type="button" onclick="window.print()">印刷する</button></div><h1>ピアノのコード進行：押さえ方・指使い・ポジショニング</h1>
+<p class="lead">コードは「必要な音を選ぶ → 近くに配置する → 前後をつなぐ指を決める」の順で考えると、押さえ方を整理できます。</p>
+<p>三和音の転回形、3度と7度の接続、根音を省くジャズの配置を、同じ判断手順で扱うガイドです。両手でのコード伴奏と、左手で伴奏しながら右手で旋律を弾く方法を扱います。譜読みよりも、鍵盤上で音と手の動きを対応させることを優先します。</p>
+<p><strong>根拠の位置づけ：</strong>音名・音程・コード構成は検算できる事実です。奏法の原則は、音楽教育機関とピアニスト・教師本人の公開教材に基づきます。個々の運指と練習時間は、それらを組み合わせた本稿の提案です。<strong>一般原則の確信度：高。個人に最適な運指の確信度：中。</strong>演奏動画を見ていないため、どの運指が最も楽かまではわかりません。</p>
+
+<section id="rules"><h2>1. 最初に使う6つの原則</h2>
+<table><thead><tr><th>原則</th><th>鍵盤で行うこと</th><th>適用の限界</th></tr></thead><tbody>
+<tr><td>コード名と手の形を分ける</td><td>CならC・E・Gを認識し、その音順と音域を選ぶ。</td><td>コード記号だけでは指番号まで決まらない。</td></tr>
+<tr><td>共通音を目印にする</td><td>前後の和音にある同じ高さの音を残す。ほかの音は近くへ。</td><td>必ず同じ指で押し続ける、という意味ではない。</td></tr>
+<tr><td>まず少ない音で弾く</td><td>7th系では根音＋3度＋7度から始める。</td><td>sus、♭5、♯5など、性格を変える音は別に必要。</td></tr>
+<tr><td>指番号は出発点を持つ</td><td>右手三和音135、左手531などを試し、前後2コードで確かめる。</td><td>黒鍵・間隔・次の音によって変更する。</td></tr>
+<tr><td>手全体の位置も変える</td><td>左右だけでなく、黒鍵に合わせて前後にも手を運ぶ。</td><td>指だけを伸ばして届かせ続けない。</td></tr>
+<tr><td>旋律とリズムを優先する</td><td>旋律の位置を確保し、止まらず弾ける音数にする。</td><td>最短移動・最多音数が常に音楽的な正解とは限らない。</td></tr>
+</tbody></table>
+<p>音を近くへつなぐ考え方は、<strong>ボイスリーディング（声部進行）</strong>と呼ばれます。Berkleeの教材は共通音の保持と小さな音程の移動を基本とし、ジャズ／ポップでは伝統的な四声体の規則と区別して扱っています。ここでの目的は、和声課題の禁則をすべて守ることではなく、各音の流れを意識して弾くことです。 <a class="citation" href="https://online.berklee.edu/takenote/voice-leading-paradigms-for-harmony-in-music-composition/" target="_blank" rel="noopener noreferrer" title="Berklee Online: Voice Leading Paradigms for Harmony in Music Composition">[2]</a></p>
+<p><strong>本稿の判断順：</strong>弾く役割 → 旋律と低音 → 必要な構成音 → 音域と配置 → 指番号 → リズム。この順序なら、「押さえやすいから選んだ形」が旋律を邪魔していないかも確認できます。</p>
+</section>
+
+<section id="explorer"><h2>2. 鍵盤で配置と指番号を確認する</h2>
+<p>まず「2｜根音＋3度・7度」を選び、Dm7からG7へ進めてください。右手で動く音はC→Bだけです。「3」と「5」は同じ4音配置を右手・左手で弾く例なので、手によって指番号が逆向きになる点も確認できます。</p>
+<p><strong>表記：</strong>1＝親指、2＝人差し指、3＝中指、4＝薬指、5＝小指。和音表と鍵盤図の音名・指番号は<strong>低い音 → 高い音</strong>の順、旋律フレーズは<strong>演奏する順</strong>です。L＝左手、R＝右手。C4は中央のド（MIDIノート60）です。ソフトによってオクターブ番号の表示が違う場合は、中央のドを基準に照合してください。</p>
+<div id="piano-explorer"></div>
+<noscript><p>操作する鍵盤図にはJavaScriptが必要です。以下の静的な図・音名・指番号表だけでも練習できます。</p></noscript>
+</section>
+
+<section id="position"><h2>3. 手の位置を先に整える</h2>
+<p>コードが押さえにくい原因は、運指だけとは限りません。椅子が近すぎて肘が詰まる、白鍵の先端に手を固定して黒鍵へ届かせる、広げた手を和音の間も固め続ける、といった条件も点検します。姿勢は一枚の静止画の形を守るものではなく、次の鍵盤へ動ける状態を作るものです。</p>
+<table><thead><tr><th>点検する場所</th><th>最初に試す位置</th><th>弾きながらの確認</th></tr></thead><tbody>
+<tr><td>椅子と足</td><td>足を床か足台で支え、前腕が概ね水平になる高さ。肘が胴体に詰まらない距離。</td><td>肩を上げなくても鍵盤へ手が届くか。</td></tr>
+<tr><td>手首と前腕</td><td>強く折り曲げず、自然な位置を出発点にする。</td><td>左右への移動に腕がついてくるか。手首を「水平に固定」していないか。</td></tr>
+<tr><td>指の形</td><td>自然なカーブ。関節を強く丸め込まない。</td><td>広い和音では必要な分だけ開き、音を離した後に戻せるか。</td></tr>
+<tr><td>打鍵後</td><td>音を出した後も鍵盤の底を強く押し込み続けない。</td><td>保持に必要な力と、余分な力みを区別できるか。</td></tr>
+</tbody></table>
+<p>Yamahaのピアノ教育記事は、椅子の高さ・距離、腕の位置、柔軟な手首と個人差を扱っています。Graham Fitchは自然な手のカーブを出発点とし、過度な丸め込みや指だけを孤立させる考え方を避けています。したがって「常にこの角度」「広いコードでも必ず卵を持つ形」と一律に固定する説明は採用しません。 <a class="citation" href="https://hub.yamaha.com/music-educators/instruments/piano/piano-pedagogy-fix-basic-technique/" target="_blank" rel="noopener noreferrer" title="Dr. Diana Dumlavwalla / Yamaha: Piano Pedagogy: Fix Basic Technique">[7]</a> <a class="citation" href="https://practisingthepiano.com/finding-your-natural-hand-position/" target="_blank" rel="noopener noreferrer" title="Graham Fitch / Practising the Piano: Finding Your Natural Hand Position">[6]</a></p>
+
+<h3>黒鍵は親指で弾いてよい</h3>
+<p><strong>「親指を黒鍵に置いてはいけない」は、和音の絶対規則ではありません。</strong>Ron DrotosはB♭–D–Fを右手1–3–5で弾き、Dに触れる中指を少し鍵盤の奥へ置く例を示しています。音階で親指をくぐらせる運指の話を、そのまま同時打鍵の和音へ当てはめないことが重要です。 <a class="citation" href="https://keyboardimprov.com/yes-pianists-you-can-use-your-thumbs-on-the-black-keys/" target="_blank" rel="noopener noreferrer" title="Ron Drotos / Keyboard Improv: Yes, pianists, you can use your thumbs on the black keys!">[5]</a></p>
+<figure class="single-keyboard"><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="B♭：右手B♭3–D4–F4、指1–3–5" viewBox="0 0 432 164"><title>B♭：右手B♭3–D4–F4、指1–3–5</title><rect x="0" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="36" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="72" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="108" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="144" y="1" width="36" height="160" fill="#fff" stroke="#555"/><text x="162.0" y="152" text-anchor="middle" font-size="11" fill="#555">C4</text><rect x="180" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="198.0" y="134" text-anchor="middle" font-size="12" fill="#111">D4</text><text x="198.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R3</text><rect x="216" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="252" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="270.0" y="134" text-anchor="middle" font-size="12" fill="#111">F4</text><text x="270.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R5</text><rect x="288" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="324" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="360" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="396" y="1" width="36" height="160" fill="#fff" stroke="#555"/><text x="414.0" y="152" text-anchor="middle" font-size="11" fill="#555">C5</text><rect x="25" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="61" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="97" y="1" width="22" height="98" fill="#ffe2c2" stroke="#555"/><text x="108.0" y="72" text-anchor="middle" font-size="11" fill="#111">B♭3</text><text x="108.0" y="90" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R1</text><rect x="169" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="205" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="277" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="313" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="349" y="1" width="22" height="98" fill="#24282c" stroke="#555"/></svg><figcaption>B♭：右手B♭3–D4–F4、指1–3–5。親指1は黒鍵。</figcaption></figure>
+<p><strong>実践手順：</strong>B♭3に親指1、D4に中指3、F4に小指5を置く → 親指が黒鍵へ届く分だけ手全体を奥へ → D4を白鍵の先端に残そうとせず、自然に触れられる場所で押す。図は触れる鍵盤を示すもので、鍵盤の奥行きに対する接触位置を計測したものではありません。</p>
+<p>オクターブが無理なく届いても、4音の間隔が変われば弾きにくさは変わります。外側の幅だけでなく、内側の2–3・3–4の指が詰まらないかを確認してください。痛みが出る場合は練習を止め、押さえ方を実際に見てもらってください。</p>
+</section>
+
+<section id="fingering"><h2>4. 指使いの基本形と、変えてよい条件</h2>
+<p>指番号を決める前に、<strong>度数と指番号を混同しない</strong>ようにします。「3度を弾く」は音の役割の話であり、「指3で弾く」という意味ではありません。Cの3度Eを、右手の中指3で弾く場合も、転回して親指1で弾く場合もあります。</p>
+<p>英字の音名はC＝ド、D＝レ、E＝ミ、F＝ファ、G＝ソ、A＝ラ、B＝シ。♯は半音上、♭は半音下です。ここで使う度数は根音からの関係で、Cを根音とすると3＝E、♭3＝E♭、7＝B、♭7＝B♭、9＝D、13＝Aです。9は2と、13は6と同じ音名ですが、和音の拡張音としての役割を表します。</p>
+<table><thead><tr><th>配置</th><th>音の例：低 → 高</th><th>右手の第一候補</th><th>左手の第一候補</th></tr></thead><tbody>
+<tr><td>三和音・基本形</td><td>C4–E4–G4</td><td>1–3–5</td><td>5–3–1</td></tr>
+<tr><td>三和音・第1転回形</td><td>E4–G4–C5</td><td>1–2–5</td><td>5–3–1</td></tr>
+<tr><td>三和音・第2転回形</td><td>G3–C4–E4</td><td>1–3–5</td><td>5–2–1</td></tr>
+<tr><td>7th和音・基本形</td><td>C4–E4–G4–B4</td><td>1–2–3–5</td><td>5–3–2–1</td></tr>
+</tbody></table>
+<p>三和音の候補はLisa Wittの実例、7thの候補はJonny Mayの基礎練習で確認できます。これは指使いを試す入口です。例えば右手4音で1–2–4–5の方が楽な人や配置もあり、上表から外れたことだけで誤りにはなりません。 <a class="citation" href="https://www.pianote.com/blog/beautiful-chord-patterns/" target="_blank" rel="noopener noreferrer" title="Lisa Witt / Pianote: Beautiful Chord Patterns">[3]</a> <a class="citation" href="https://pianowithjonny.com/piano-lessons/7th-chords-for-piano-the-complete-guide/" target="_blank" rel="noopener noreferrer" title="Jonny May / Piano With Jonny: 7th Chords for Piano—The Complete Guide">[4]</a></p>
+
+<h3>指番号を決める5段階</h3>
+<ol>
+<li><strong>押さえる音を決める。</strong>根音形か転回形か、何音にするかを先に確定する。</li>
+<li><strong>第一候補を置く。</strong>まず音を鳴らさず、無理なく各鍵盤に触れられるかを確認する。</li>
+<li><strong>次のコードまで弾く。</strong>単体で楽でも、次へ移ると窮屈なら変更する。</li>
+<li><strong>比較する候補を2つに絞る。</strong>例えば1235と1245を、それぞれ同じ2コードで3回試す。</li>
+<li><strong>採用案を記録して反復する。</strong>毎回ゼロから迷わないよう、当面の指番号を固定する。</li>
+</ol>
+<p>この5段階は本稿の実践提案です。Jerry Kovarskyは運指を事前に考えて反復する重要性を説明し、Melanie Spanswickは手の大きさや形に合わせて運指を変更することを認めています。<strong>「一時的に固定して練習する」ことと「唯一の正解だと決めつける」ことは別です。</strong> <a class="citation" href="https://hub.yamaha.com/keyboards/k-how-to/the-basics-of-piano-keyboard-fingering/" target="_blank" rel="noopener noreferrer" title="Jerry Kovarsky / Yamaha: The Basics of Piano/Keyboard Fingering">[9]</a> <a class="citation" href="https://melaniespanswick.com/2018/09/30/fingering-part-1/" target="_blank" rel="noopener noreferrer" title="Melanie Spanswick: Fingering Part 1">[8]</a></p>
+
+<h3>同じ音を残すときの指替え</h3>
+<p>前後のコードにE4がある場合、E4を同じ高さに配置することが声部進行上の保持です。それを親指から人差し指へ替えても、音高の配置は同じです。鍵盤を下げたまま指を交換してレガートを保つ技法もありますが、最初からその動作を必修にしなくて構いません。Spanswickはこの指替えを、音をつないだまま次の位置を準備する方法として説明しています。 <a class="citation" href="https://melaniespanswick.com/2018/09/30/fingering-part-1/" target="_blank" rel="noopener noreferrer" title="Melanie Spanswick: Fingering Part 1">[8]</a></p>
+<p><strong>初期練習の提案：</strong>共通音を同じ場所に置き、コード全体をいったん打ち直す。それでも「移動する音」と「同じ場所の音」は学べます。音高の接続に慣れてから、必要な場所だけ指の保持やペダルを加えます。</p>
+</section>
+
+<section id="triads"><h2>5. 三和音で「手を飛ばさない」感覚を作る</h2>
+<p>転回形は、コード構成音の並びを替えたものです。ボイシングはさらに広い概念で、音域、音の間隔、重複、省略、両手への分配を含みます。まずC→F→G→Cで、右手をC4付近にまとめる配置を試します。</p>
+<div class="table-scroll"><table class="exercise-table"><thead><tr><th>順</th><th>コード</th><th>左手：音名／指</th><th>右手：音名／指</th></tr></thead><tbody><tr><td>1</td><td>C</td><td><span class="notes">C3</span><br><span class="fingers">指 5</span></td><td><span class="notes">C4–E4–G4</span><br><span class="fingers">指 1–3–5</span></td></tr><tr><td>2</td><td>F</td><td><span class="notes">F2</span><br><span class="fingers">指 5</span></td><td><span class="notes">C4–F4–A4</span><br><span class="fingers">指 1–3–5</span></td></tr><tr><td>3</td><td>G</td><td><span class="notes">G2</span><br><span class="fingers">指 5</span></td><td><span class="notes">B3–D4–G4</span><br><span class="fingers">指 1–2–5</span></td></tr><tr><td>4</td><td>C</td><td><span class="notes">C3</span><br><span class="fingers">指 5</span></td><td><span class="notes">C4–E4–G4</span><br><span class="fingers">指 1–3–5</span></td></tr></tbody></table></div>
+<div class="keyboard-figures"><figure><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="C｜右手 C4–E4–G4" viewBox="0 0 540 164"><title>C｜右手 C4–E4–G4</title><rect x="0" y="1" width="36" height="160" fill="#fff" stroke="#555"/><text x="18.0" y="152" text-anchor="middle" font-size="11" fill="#555">C3</text><rect x="36" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="72" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="108" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="144" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="180" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="216" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="252" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="270.0" y="134" text-anchor="middle" font-size="12" fill="#111">C4</text><text x="270.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R1</text><rect x="288" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="324" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="342.0" y="134" text-anchor="middle" font-size="12" fill="#111">E4</text><text x="342.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R3</text><rect x="360" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="396" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="414.0" y="134" text-anchor="middle" font-size="12" fill="#111">G4</text><text x="414.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R5</text><rect x="432" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="468" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="504" y="1" width="36" height="160" fill="#fff" stroke="#555"/><text x="522.0" y="152" text-anchor="middle" font-size="11" fill="#555">C5</text><rect x="25" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="61" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="133" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="169" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="205" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="277" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="313" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="385" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="421" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="457" y="1" width="22" height="98" fill="#24282c" stroke="#555"/></svg><figcaption><strong>C</strong> — 右手のみ。指 1–3–5</figcaption></figure><figure><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="F｜右手 C4–F4–A4" viewBox="0 0 540 164"><title>F｜右手 C4–F4–A4</title><rect x="0" y="1" width="36" height="160" fill="#fff" stroke="#555"/><text x="18.0" y="152" text-anchor="middle" font-size="11" fill="#555">C3</text><rect x="36" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="72" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="108" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="144" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="180" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="216" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="252" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="270.0" y="134" text-anchor="middle" font-size="12" fill="#111">C4</text><text x="270.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R1</text><rect x="288" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="324" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="360" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="378.0" y="134" text-anchor="middle" font-size="12" fill="#111">F4</text><text x="378.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R3</text><rect x="396" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="432" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="450.0" y="134" text-anchor="middle" font-size="12" fill="#111">A4</text><text x="450.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R5</text><rect x="468" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="504" y="1" width="36" height="160" fill="#fff" stroke="#555"/><text x="522.0" y="152" text-anchor="middle" font-size="11" fill="#555">C5</text><rect x="25" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="61" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="133" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="169" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="205" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="277" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="313" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="385" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="421" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="457" y="1" width="22" height="98" fill="#24282c" stroke="#555"/></svg><figcaption><strong>F</strong> — 右手のみ。指 1–3–5</figcaption></figure><figure><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="G｜右手 B3–D4–G4" viewBox="0 0 540 164"><title>G｜右手 B3–D4–G4</title><rect x="0" y="1" width="36" height="160" fill="#fff" stroke="#555"/><text x="18.0" y="152" text-anchor="middle" font-size="11" fill="#555">C3</text><rect x="36" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="72" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="108" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="144" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="180" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="216" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="234.0" y="134" text-anchor="middle" font-size="12" fill="#111">B3</text><text x="234.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R1</text><rect x="252" y="1" width="36" height="160" fill="#fff" stroke="#555"/><text x="270.0" y="152" text-anchor="middle" font-size="11" fill="#555">C4</text><rect x="288" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="306.0" y="134" text-anchor="middle" font-size="12" fill="#111">D4</text><text x="306.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R2</text><rect x="324" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="360" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="396" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="414.0" y="134" text-anchor="middle" font-size="12" fill="#111">G4</text><text x="414.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R5</text><rect x="432" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="468" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="504" y="1" width="36" height="160" fill="#fff" stroke="#555"/><text x="522.0" y="152" text-anchor="middle" font-size="11" fill="#555">C5</text><rect x="25" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="61" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="133" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="169" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="205" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="277" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="313" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="385" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="421" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="457" y="1" width="22" height="98" fill="#24282c" stroke="#555"/></svg><figcaption><strong>G</strong> — 右手のみ。指 1–2–5</figcaption></figure><figure><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="C｜右手 C4–E4–G4" viewBox="0 0 540 164"><title>C｜右手 C4–E4–G4</title><rect x="0" y="1" width="36" height="160" fill="#fff" stroke="#555"/><text x="18.0" y="152" text-anchor="middle" font-size="11" fill="#555">C3</text><rect x="36" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="72" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="108" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="144" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="180" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="216" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="252" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="270.0" y="134" text-anchor="middle" font-size="12" fill="#111">C4</text><text x="270.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R1</text><rect x="288" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="324" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="342.0" y="134" text-anchor="middle" font-size="12" fill="#111">E4</text><text x="342.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R3</text><rect x="360" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="396" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="414.0" y="134" text-anchor="middle" font-size="12" fill="#111">G4</text><text x="414.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R5</text><rect x="432" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="468" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="504" y="1" width="36" height="160" fill="#fff" stroke="#555"/><text x="522.0" y="152" text-anchor="middle" font-size="11" fill="#555">C5</text><rect x="25" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="61" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="133" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="169" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="205" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="277" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="313" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="385" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="421" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="457" y="1" width="22" height="98" fill="#24282c" stroke="#555"/></svg><figcaption><strong>C</strong> — 右手のみ。指 1–3–5</figcaption></figure></div>
+<p>右手の最高音はG4→A4→G4→G4と動きます。C→FでC4、G→CでG4が共通音になるため、それを次の形の目印にできます。F→Gには共通音がありませんが、各音をB3・D4・G4へ近く動かせます。各声部を「和音の中の短い旋律」として追ってみてください。</p>
+<p><strong>転回形と分数コードの注意：</strong>右手がE–G–Cでも、左手でそれより低いCを弾けば、全体の最低音はCです。右手だけを転回したから自動的にC/Eになるわけではありません。C/Eのスラッシュ右側は、全体で狙うベース音Eの指定です。</p>
+<p><strong>練習判定：</strong>メトロノーム50 BPM、1コード4拍で3周。音を間違えず止まらず弾けたら、次はF→Gだけを取り出し、指135→125の交換を確かめます。速さを上げるより、何を動かしているか説明できることを先に目標にします。</p>
+</section>
+
+<section id="guide-tones"><h2>6. ジャズの入口は「根音＋3度＋7度」</h2>
+<p>7th系の和音では、3度が長短、7度がmaj7・7・m7などの響きの違いを作る重要な材料です。ジャズの教材では3度と7度を<strong>ガイドトーン</strong>として扱います。通常の5度を省いて、この2音と低音だけで進行を聴くと、コードの変化が見つけやすくなります。Berkleeは一方で、m7(♭5)や7(♯5)のような変化した5度を和音の基本的な性格の一部としています。 <a class="citation" href="https://online.berklee.edu/takenote/basic-piano-voicing-techniques/" target="_blank" rel="noopener noreferrer" title="Berklee Online / Randy Felts: Piano Voicing Techniques">[1]</a></p>
+<div class="table-scroll"><table class="exercise-table"><thead><tr><th>順</th><th>コード</th><th>左手：音名／指</th><th>右手：音名／指</th></tr></thead><tbody><tr><td>1</td><td>Dm7</td><td><span class="notes">D3</span><br><span class="fingers">指 5</span></td><td><span class="notes">F4–C5</span><br><span class="fingers">指 1–5</span></td></tr><tr><td>2</td><td>G7</td><td><span class="notes">G2</span><br><span class="fingers">指 5</span></td><td><span class="notes">F4–B4</span><br><span class="fingers">指 1–5</span></td></tr><tr><td>3</td><td>Cmaj7</td><td><span class="notes">C3</span><br><span class="fingers">指 5</span></td><td><span class="notes">E4–B4</span><br><span class="fingers">指 1–5</span></td></tr></tbody></table></div>
+<div class="keyboard-figures"><figure><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dm7｜右手 F4–C5" viewBox="0 0 288 164"><title>Dm7｜右手 F4–C5</title><rect x="0" y="1" width="36" height="160" fill="#fff" stroke="#555"/><text x="18.0" y="152" text-anchor="middle" font-size="11" fill="#555">C4</text><rect x="36" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="72" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="108" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="126.0" y="134" text-anchor="middle" font-size="12" fill="#111">F4</text><text x="126.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R1</text><rect x="144" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="180" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="216" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="252" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="270.0" y="134" text-anchor="middle" font-size="12" fill="#111">C5</text><text x="270.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R5</text><rect x="25" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="61" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="133" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="169" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="205" y="1" width="22" height="98" fill="#24282c" stroke="#555"/></svg><figcaption><strong>Dm7</strong> — 右手のみ。指 1–5</figcaption></figure><figure><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="G7｜右手 F4–B4" viewBox="0 0 288 164"><title>G7｜右手 F4–B4</title><rect x="0" y="1" width="36" height="160" fill="#fff" stroke="#555"/><text x="18.0" y="152" text-anchor="middle" font-size="11" fill="#555">C4</text><rect x="36" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="72" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="108" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="126.0" y="134" text-anchor="middle" font-size="12" fill="#111">F4</text><text x="126.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R1</text><rect x="144" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="180" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="216" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="234.0" y="134" text-anchor="middle" font-size="12" fill="#111">B4</text><text x="234.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R5</text><rect x="252" y="1" width="36" height="160" fill="#fff" stroke="#555"/><text x="270.0" y="152" text-anchor="middle" font-size="11" fill="#555">C5</text><rect x="25" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="61" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="133" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="169" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="205" y="1" width="22" height="98" fill="#24282c" stroke="#555"/></svg><figcaption><strong>G7</strong> — 右手のみ。指 1–5</figcaption></figure><figure><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cmaj7｜右手 E4–B4" viewBox="0 0 288 164"><title>Cmaj7｜右手 E4–B4</title><rect x="0" y="1" width="36" height="160" fill="#fff" stroke="#555"/><text x="18.0" y="152" text-anchor="middle" font-size="11" fill="#555">C4</text><rect x="36" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="72" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="90.0" y="134" text-anchor="middle" font-size="12" fill="#111">E4</text><text x="90.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R1</text><rect x="108" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="144" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="180" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="216" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="234.0" y="134" text-anchor="middle" font-size="12" fill="#111">B4</text><text x="234.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R5</text><rect x="252" y="1" width="36" height="160" fill="#fff" stroke="#555"/><text x="270.0" y="152" text-anchor="middle" font-size="11" fill="#555">C5</text><rect x="25" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="61" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="133" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="169" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="205" y="1" width="22" height="98" fill="#24282c" stroke="#555"/></svg><figcaption><strong>Cmaj7</strong> — 右手のみ。指 1–5</figcaption></figure></div>
+<table><thead><tr><th>右手の声部</th><th>Dm7</th><th>G7</th><th>Cmaj7</th></tr></thead><tbody>
+<tr><td>低い側</td><td>F4：短3度</td><td>F4：短7度（同じ鍵盤）</td><td>E4：長3度（半音下）</td></tr>
+<tr><td>高い側</td><td>C5：短7度</td><td>B4：長3度（半音下）</td><td>B4：長7度（同じ鍵盤）</td></tr>
+</tbody></table>
+<p><strong>規則性：</strong>根音がD→G→Cと進む一方、右手の3度・7度は役割を入れ替えながらつながります。Dm7→G7ではFが残りCだけ動く。G7→Cmaj7ではBが残りFだけ動く。毎回コードを根音から積み直す必要はありません。</p>
+<p>ただし、これはCmaj7へ着地する一例です。Cの三和音へ強く終止したいとき、G7のBをCへ上げる選択も自然です。「ジャズではBを必ず残す」という規則にはしません。</p>
+<p><strong>何を省いてはいけないか：</strong>Csus4ならEではなくFが特徴です。F♯m7(♭5)ならC、B7(♯5)ならF𝄪が特徴です。これらを全部「3度と7度だけ」にすると、コード記号の違いを十分に表せない場合があります。</p>
+</section>
+
+<section id="rootless"><h2>7. 4音のルートレス配置を、1セットだけ覚える</h2>
+<p><strong>ルートレス・ボイシング</strong>は、ある和音配置から根音を省いたものです。一般には片手で弾く4音のジャズ配置を指すことが多く、3度と7度に9度や13度などを加えます。「楽曲全体から根音を消す」という意味ではありません。</p>
+<p>Adam ManessとPeter Martinの公式トランスクリプトには、Cmaj9のE–G–B–DやB–D–E–G、Dm9のF–A–C–E、G13のB–E–F–Aという具体的な配置が登場します。ジャズピアニストのアプローチを取り入れるなら、まずこうした再利用できる小さな音の集合を、進行の中でつなぐ方法が実用的です。 <a class="citation" href="https://youllhearit.com/episodes/jazz-chords-for-beginners/transcript" target="_blank" rel="noopener noreferrer" title="Adam Maness / Peter Martin — Open Studio, You’ll Hear It: Jazz Chords For Beginners — Transcript">[12]</a></p>
+
+<h3>両手伴奏：左手に根音、右手に4音</h3>
+<div class="table-scroll"><table class="exercise-table"><thead><tr><th>順</th><th>コード</th><th>左手：音名／指</th><th>右手：音名／指</th></tr></thead><tbody><tr><td>1</td><td>Dm9</td><td><span class="notes">D2</span><br><span class="fingers">指 5</span></td><td><span class="notes">F3–A3–C4–E4</span><br><span class="fingers">指 1–2–3–5</span></td></tr><tr><td>2</td><td>G13</td><td><span class="notes">G2</span><br><span class="fingers">指 5</span></td><td><span class="notes">F3–A3–B3–E4</span><br><span class="fingers">指 1–2–3–5</span></td></tr><tr><td>3</td><td>Cmaj9</td><td><span class="notes">C3</span><br><span class="fingers">指 5</span></td><td><span class="notes">E3–G3–B3–D4</span><br><span class="fingers">指 1–2–3–5</span></td></tr></tbody></table></div>
+<div class="keyboard-figures"><figure><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Dm9｜右手 F3–A3–C4–E4" viewBox="0 0 540 164"><title>Dm9｜右手 F3–A3–C4–E4</title><rect x="0" y="1" width="36" height="160" fill="#fff" stroke="#555"/><text x="18.0" y="152" text-anchor="middle" font-size="11" fill="#555">C3</text><rect x="36" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="72" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="108" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="126.0" y="134" text-anchor="middle" font-size="12" fill="#111">F3</text><text x="126.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R1</text><rect x="144" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="180" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="198.0" y="134" text-anchor="middle" font-size="12" fill="#111">A3</text><text x="198.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R2</text><rect x="216" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="252" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="270.0" y="134" text-anchor="middle" font-size="12" fill="#111">C4</text><text x="270.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R3</text><rect x="288" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="324" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="342.0" y="134" text-anchor="middle" font-size="12" fill="#111">E4</text><text x="342.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R5</text><rect x="360" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="396" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="432" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="468" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="504" y="1" width="36" height="160" fill="#fff" stroke="#555"/><text x="522.0" y="152" text-anchor="middle" font-size="11" fill="#555">C5</text><rect x="25" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="61" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="133" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="169" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="205" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="277" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="313" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="385" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="421" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="457" y="1" width="22" height="98" fill="#24282c" stroke="#555"/></svg><figcaption><strong>Dm9</strong> — 右手のみ。指 1–2–3–5</figcaption></figure><figure><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="G13｜右手 F3–A3–B3–E4" viewBox="0 0 540 164"><title>G13｜右手 F3–A3–B3–E4</title><rect x="0" y="1" width="36" height="160" fill="#fff" stroke="#555"/><text x="18.0" y="152" text-anchor="middle" font-size="11" fill="#555">C3</text><rect x="36" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="72" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="108" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="126.0" y="134" text-anchor="middle" font-size="12" fill="#111">F3</text><text x="126.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R1</text><rect x="144" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="180" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="198.0" y="134" text-anchor="middle" font-size="12" fill="#111">A3</text><text x="198.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R2</text><rect x="216" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="234.0" y="134" text-anchor="middle" font-size="12" fill="#111">B3</text><text x="234.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R3</text><rect x="252" y="1" width="36" height="160" fill="#fff" stroke="#555"/><text x="270.0" y="152" text-anchor="middle" font-size="11" fill="#555">C4</text><rect x="288" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="324" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="342.0" y="134" text-anchor="middle" font-size="12" fill="#111">E4</text><text x="342.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R5</text><rect x="360" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="396" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="432" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="468" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="504" y="1" width="36" height="160" fill="#fff" stroke="#555"/><text x="522.0" y="152" text-anchor="middle" font-size="11" fill="#555">C5</text><rect x="25" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="61" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="133" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="169" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="205" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="277" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="313" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="385" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="421" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="457" y="1" width="22" height="98" fill="#24282c" stroke="#555"/></svg><figcaption><strong>G13</strong> — 右手のみ。指 1–2–3–5</figcaption></figure><figure><svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cmaj9｜右手 E3–G3–B3–D4" viewBox="0 0 540 164"><title>Cmaj9｜右手 E3–G3–B3–D4</title><rect x="0" y="1" width="36" height="160" fill="#fff" stroke="#555"/><text x="18.0" y="152" text-anchor="middle" font-size="11" fill="#555">C3</text><rect x="36" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="72" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="90.0" y="134" text-anchor="middle" font-size="12" fill="#111">E3</text><text x="90.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R1</text><rect x="108" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="144" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="162.0" y="134" text-anchor="middle" font-size="12" fill="#111">G3</text><text x="162.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R2</text><rect x="180" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="216" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="234.0" y="134" text-anchor="middle" font-size="12" fill="#111">B3</text><text x="234.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R3</text><rect x="252" y="1" width="36" height="160" fill="#fff" stroke="#555"/><text x="270.0" y="152" text-anchor="middle" font-size="11" fill="#555">C4</text><rect x="288" y="1" width="36" height="160" fill="#ffe2c2" stroke="#555"/><text x="306.0" y="134" text-anchor="middle" font-size="12" fill="#111">D4</text><text x="306.0" y="152" text-anchor="middle" font-weight="700" font-size="13" fill="#914100">R5</text><rect x="324" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="360" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="396" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="432" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="468" y="1" width="36" height="160" fill="#fff" stroke="#555"/><rect x="504" y="1" width="36" height="160" fill="#fff" stroke="#555"/><text x="522.0" y="152" text-anchor="middle" font-size="11" fill="#555">C5</text><rect x="25" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="61" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="133" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="169" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="205" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="277" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="313" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="385" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="421" y="1" width="22" height="98" fill="#24282c" stroke="#555"/><rect x="457" y="1" width="22" height="98" fill="#24282c" stroke="#555"/></svg><figcaption><strong>Cmaj9</strong> — 右手のみ。指 1–2–3–5</figcaption></figure></div>
+<p>Dm9→G13は、<strong>F3・A3・E4はそのまま、C4だけB3へ半音下</strong>です。右手1235で始めれば、指3だけを左隣の白鍵へ移せます。G13→Cmaj9はF→E、A→G、E→Dが下がり、Bは同じ位置です。まずこの2つの移動だけを練習してください。</p>
+<p>Cmaj9の右手E–G–B–Dだけを見るとEm7と同じ音です。それでも低音Cが鳴っていれば、Cに対する3・5・7・9として聴けます。<strong>同じ鍵盤の形でも、低音と文脈でコードの意味が変わる</strong>ことが、根音省略を理解する鍵です。</p>
+
+<h3>2つの基本配置を度数で覚える</h3>
+<table><thead><tr><th>和音</th><th>3度を最低音にする配置</th><th>7度を最低音にする配置</th></tr></thead><tbody>
+<tr><td>maj9</td><td>3–5–7–9</td><td>7–9–3–5</td></tr>
+<tr><td>m9</td><td>♭3–5–♭7–9</td><td>♭7–9–♭3–5</td></tr>
+<tr><td>13（ドミナント）</td><td>3–13–♭7–9</td><td>♭7–9–3–13</td></tr>
+</tbody></table>
+<p>ここでは3度開始をA、7度開始をBとするJonny Mayの教材の定義を採用します。上のDm9→G13→Cmaj9はA→B→Aです。A/Bという呼び方に頼り切らず、最低音が何度かで確認してください。この13の配置は5度を13度へ置き換えた一例で、13thコードのすべての構成音を同時に弾くという意味ではありません。 <a class="citation" href="https://pianowithjonny.com/piano-lessons/rootless-voicings-for-piano-the-complete-guide/" target="_blank" rel="noopener noreferrer" title="Jonny May（講師）・Michael LaDisa（執筆）/ Piano With Jonny: Rootless Voicings for Piano: The Complete Guide">[10]</a></p>
+<p>右手の最高音を変えたい場合には、反対側のセットもあります：Dm9＝C4–E4–F4–A4、G13＝B3–E4–F4–A4、Cmaj9＝B3–D4–E4–G4。こちらはB→A→Bです。まず一方を止まらず弾けるようにし、もう一方は必要になってから追加します。</p>
+
+<h3>低すぎるとき・高すぎるとき</h3>
+<p>Earl MacDonaldは左手ルートレスの最高音をC4〜C5付近に置く目安を提示し、Jazz Night Schoolは低音域で密集した4音を鳴らすと濁りやすいことを説明しています。これらは実用的な音域の目安であり、すべてのピアノ・音色・強さに共通する禁止境界ではありません。 <a class="citation" href="https://www.earlmacdonald.com/jazz-piano-lessons/rootless-left-hand-piano-voicings/" target="_blank" rel="noopener noreferrer" title="Earl MacDonald: Rootless Left Hand Piano Voicings">[11]</a> <a class="citation" href="https://jazznightschool.org/pages/left-hand-rootless-voicing-for-piano-part-1" target="_blank" rel="noopener noreferrer" title="Jazz Night School: Left Hand Rootless Voicings — Part 1">[15]</a></p>
+<p><strong>調整する順序の提案：</strong>ペダルを外して聴く → 和音部分を1オクターブ上げて比べる → 低音は単音や広い間隔にする → 内声を1音減らす。音域を変えると旋律と重なる場合は、両手への分配から見直します。今回の例は、低い根音と、中音域のコンパクトな和音を分けています。</p>
+</section>
+
+<section id="melody"><h2>8. 左手で伴奏し、右手で旋律を弾く</h2>
+<p>右手に旋律を任せるときは、左手だけで何を担当するかを先に選びます。根音を含む少数の音で和声を示す、ベース伴奏を使って根音を省く、低音と和音を時間差で弾く、という3つの方法があります。状況に応じて切り替えるもので、1種類を全曲へ固定する必要はありません。</p>
+
+<h3>A. 一人で弾く最初の形：左手の3音シェル</h3>
+<p>本稿では根音・3度・7度の3音を<strong>シェル</strong>と呼びます。教材によっては根音＋3度／7度の2音をシェルと呼ぶ場合もあるため、用語よりも実際の音を確認してください。</p>
+<div class="table-scroll"><table class="exercise-table"><thead><tr><th>順</th><th>コード</th><th>左手：音名／指</th><th>右手：音名／指</th></tr></thead><tbody><tr><td>1</td><td>Dm7</td><td><span class="notes">D3–F3–C4</span><br><span class="fingers">指 5–3–1</span></td><td><span class="notes">A4</span><br><span class="fingers">指 5</span></td></tr><tr><td>2</td><td>G7</td><td><span class="notes">G2–B2–F3</span><br><span class="fingers">指 5–3–1</span></td><td><span class="notes">D4</span><br><span class="fingers">指 1</span></td></tr><tr><td>3</td><td>Cmaj7</td><td><span class="notes">C3–E3–B3</span><br><span class="fingers">指 5–3–1</span></td><td><span class="notes">C5</span><br><span class="fingers">指 5</span></td></tr></tbody></table></div>
+<p>鍵盤図の右手は旋律の着地点1音です。旋律として動かすときは、以下の短いオリジナル練習フレーズを使えます。1音1拍、各コード1小節。左手は各小節の1拍目に1回だけ弾きます。</p>
+<table><thead><tr><th>小節</th><th>コード</th><th>右手：1拍目 → 4拍目</th><th>指番号</th></tr></thead><tbody>
+<tr><td>1</td><td>Dm7</td><td>A4 → G4 → F4 → E4</td><td>5 → 4 → 3 → 2</td></tr>
+<tr><td>2</td><td>G7</td><td>D4 → F4 → A4 → B4</td><td>1 → 2 → 3 → 4</td></tr>
+<tr><td>3</td><td>Cmaj7</td><td>C5 → B4 → G4 → E4</td><td>5 → 4 → 2 → 1</td></tr>
+<tr><td>4</td><td>Cmaj7</td><td>E4を伸ばす、または休む</td><td>1、または手を休める</td></tr>
+</tbody></table>
+<p>旋律の運指も一例です。指を広げたまま固定せず、旋律に合わせて手の位置も動かします。</p>
+<p>Dm7上のEとG7上のAは9度として働きます。ここでは短い旋律中の色彩音として使用しています。右手のフレーズに集中できない場合は、まず各小節の1音目だけに戻します。</p>
+<p>この左手は根音を低く置くため、Dm7→G7で位置が動きます。<strong>根音の配置を守ることと、全声部を最小移動にすることは、同時に満たせない場合があります。</strong>飛ぶ直前に次の最低音を見る、腕ごと移す、最初は和音の間に隙間を置く、という順で練習します。</p>
+<p>G2–B2が濁る場合は、左手をG2–F3へ減らし、長3度Bを右手フレーズで示す方法があります。コードの各構成音を全拍ずっと鳴らす必要はありません。ただしBを完全に省くとG7の長3度の情報は弱くなるため、音を減らす際は「誰がその音を担当するか」を意識します。</p>
+
+<h3>B. ベース伴奏がある形：左手4音ルートレス</h3>
+<div class="table-scroll"><table class="exercise-table"><thead><tr><th>順</th><th>コード</th><th>左手：音名／指</th><th>右手：音名／指</th></tr></thead><tbody><tr><td>1</td><td>Dm9（左手は根音省略）</td><td><span class="notes">F3–A3–C4–E4</span><br><span class="fingers">指 5–3–2–1</span></td><td><span class="notes">A4</span><br><span class="fingers">指 5</span></td></tr><tr><td>2</td><td>G13（左手は根音省略）</td><td><span class="notes">F3–A3–B3–E4</span><br><span class="fingers">指 5–3–2–1</span></td><td><span class="notes">G4</span><br><span class="fingers">指 4</span></td></tr><tr><td>3</td><td>Cmaj9（左手は根音省略）</td><td><span class="notes">E3–G3–B3–D4</span><br><span class="fingers">指 5–3–2–1</span></td><td><span class="notes">G4</span><br><span class="fingers">指 4</span></td></tr></tbody></table></div>
+<p>第7節で右手に置いていた4音を左手へ移します。指番号の第一候補は5–3–2–1です。右手は自由に旋律を弾けます。鍵盤試聴の練習5には独立したベーストラックがないため、根音を含む練習3と交互に聴くと和音の意味を確かめやすくなります。</p>
+
+<h3>C. ソロでもルートレスを使う：低音と和音を時間で分ける</h3>
+<p>Hayden Hillはソロのバラードで、1・3拍に低音、2・4拍に中音域の和音を置くストライド系の伴奏を示しています。したがって「ルートレスはベーシストがいないと使えない」は誤りです。ただし左手が大きく移動するため、現在の基礎課題が安定してから加える方法にします。 <a class="citation" href="https://www.pianogroove.com/jazz-piano-lessons/stride-style-for-ballads/" target="_blank" rel="noopener noreferrer" title="Hayden Hill / PianoGroove: Stride Left Hand Style For Ballads">[13]</a></p>
+<p>例えばDm9なら左手でD2を鳴らし、次にF3–A3–C4–E4を鳴らす。この低音と和音は同時に片手でつかみません。最初は拍を止めて着地点を確認し、後から連続した動きへ変えます。</p>
+
+<h3>旋律を最上音に置く場合</h3>
+<p>ソロアレンジで旋律も和音の一部として弾くときは、旋律を右手の一番上へ置き、その下へ必要な内声を足します。PianoGrooveのリードシート教材は、低音・旋律・その間の3度／7度を整理し、内声を両手へ分担してよいと説明しています。 <a class="citation" href="https://www.pianogroove.com/jazz-piano-lessons/how-to-read-lead-sheets-georgia/" target="_blank" rel="noopener noreferrer" title="Hayden Hill / PianoGroove: How to Read Lead Sheets: Georgia">[14]</a></p>
+<p>一方、右手で単旋律を弾き、左手で伴奏する場合は、右手の全音に和音を付ける必要はありません。「メロディをトップにする」は、和音で旋律を支える場面の設計原則です。</p>
+</section>
+
+<section id="application"><h2>9. 9th・13thを含む8小節への応用</h2>
+<p>次の進行は、同じ規則を長い流れへ適用する例です。最初から8小節を暗記せず、1→2、3→4、5→6、7→8を2小節ずつ扱います。右手の音名は低→高、指番号は第一候補です。</p>
+<p class="progression">Am9 → D13 → Gmaj9 → Cmaj9 → F♯m7(♭5) → B7(♯5) → Em9 → E7(♯5)</p>
+<div class="table-scroll"><table class="exercise-table"><thead><tr><th>順</th><th>コード</th><th>左手：音名／指</th><th>右手：音名／指</th></tr></thead><tbody><tr><td>1</td><td>Am9</td><td><span class="notes">A2</span><br><span class="fingers">指 5</span></td><td><span class="notes">G3–B3–C4–E4</span><br><span class="fingers">指 1–2–3–5</span></td></tr><tr><td>2</td><td>D13</td><td><span class="notes">D2</span><br><span class="fingers">指 5</span></td><td><span class="notes">F♯3–B3–C4–E4</span><br><span class="fingers">指 1–2–3–5</span></td></tr><tr><td>3</td><td>Gmaj9</td><td><span class="notes">G2</span><br><span class="fingers">指 5</span></td><td><span class="notes">F♯3–A3–B3–D4</span><br><span class="fingers">指 1–2–3–5</span></td></tr><tr><td>4</td><td>Cmaj9</td><td><span class="notes">C3</span><br><span class="fingers">指 5</span></td><td><span class="notes">E3–G3–B3–D4</span><br><span class="fingers">指 1–2–3–5</span></td></tr><tr><td>5</td><td>F♯m7(♭5)</td><td><span class="notes">F♯2</span><br><span class="fingers">指 5</span></td><td><span class="notes">E3–F♯3–A3–C4</span><br><span class="fingers">指 1–2–3–5</span></td></tr><tr><td>6</td><td>B7(♯5)</td><td><span class="notes">B2</span><br><span class="fingers">指 5</span></td><td><span class="notes">D♯3–F𝄪3–A3–B3</span><br><span class="fingers">指 1–2–3–5</span></td></tr><tr><td>7</td><td>Em9</td><td><span class="notes">E2</span><br><span class="fingers">指 5</span></td><td><span class="notes">D3–F♯3–G3–B3</span><br><span class="fingers">指 1–2–3–5</span></td></tr><tr><td>8</td><td>E7(♯5)</td><td><span class="notes">E2</span><br><span class="fingers">指 5</span></td><td><span class="notes">D3–E3–G♯3–B♯3</span><br><span class="fingers">指 1–2–3–5</span></td></tr></tbody></table></div>
+<p><strong>1→2：</strong>右手G3をF♯3へ動かすだけ。<strong>3→4：</strong>F♯3→E3、A3→G3で、B3とD4は残る。<strong>5→6：</strong>半減和音と変化したドミナントなので、♭5・♯5を省かず形を組み直す。<strong>8→1：</strong>句切りで右手を置き直し、一巡の最初の音域へ戻す。</p>
+<p>F𝄪3はG3と同じ鍵盤、B♯3はC4と同じ鍵盤です。Bの5度F♯をさらに上げるのでF𝄪、Eの5度Bを上げるのでB♯と綴ります。鍵盤の場所と、コードに対する理論上の名前を分けて確認してください。</p>
+<p>5・6・8小節目の右手には根音が含まれます。これは「すべてを根音省略にする」という規則を優先せず、特徴的な音と弾きやすい音域を両立させた配置です。各手はオクターブ以内ですが、黒鍵と隣接音の組み合わせがあるため、実際の快適さは試して調整します。</p>
+<p>後半は右手も低めです。とくにB7(♯5)とEm9で濁りが気になる場合は、右手パート全体を1オクターブ上げ、同じ運指・同じ声部の流れで聴き比べてください。</p>
+<p><strong>9度や13度の追加は自動ではありません。</strong>本例は指定した和音の響きを練習するための配置です。既存曲に適用するときは、旋律、ベース、ほかの伴奏、編曲意図とぶつからないかを耳で確認してください。</p>
+</section>
+
+<section id="practice"><h2>10. 15分で両方の弾き方を練習する</h2>
+<p>以下は学習負荷を抑えるための本稿の提案です。「この時間配分が科学的に最適」と確認されたものではありません。テンポと音数を同時に増やさず、1つの進行で身体の動きと音の流れを覚えます。</p>
+<table><thead><tr><th>時間</th><th>行うこと</th><th>終了条件・記録</th></tr></thead><tbody>
+<tr><td>0〜2分</td><td>椅子と手の位置を確認。Dm7とG7を無音で各3回置く。</td><td>各鍵盤に同時に触れる。つらければ音数を減らす。</td></tr>
+<tr><td>2〜6分</td><td>両手伴奏：根音＋3度・7度。50 BPM、Dm7→G7→Cmaj7→Cmaj7、各4拍。</td><td>3周連続、音の間違い・停止なし。</td></tr>
+<tr><td>6〜10分</td><td>左手シェル＋右手旋律。最初は各小節の着地点1音、その後4音フレーズ。</td><td>左手は1小節1回。2周、拍を止めず通す。</td></tr>
+<tr><td>10〜13分</td><td>詰まった前後2コードだけを、テンポを外して3回。その後同じテンポへ戻す。</td><td>採用した指番号を1箇所だけ書く。</td></tr>
+<tr><td>13〜15分</td><td>両手伴奏と左手伴奏を、それぞれ4小節ずつ録音する。</td><td>記録は「BPM／停止回数／次に直す2コード」だけ。</td></tr>
+</tbody></table>
+<p>最初の合格ラインは音の正確さと拍の継続です。その後、打鍵がそろうか、旋律が伴奏より聴き取りやすいか、和音間で手が力み続けていないかを確認します。正確に弾けないテンポでは40 BPMへ下げるか、メトロノームを外して2コードの位置を確かめます。</p>
+
+<table><thead><tr><th>段階</th><th>増やすもの</th><th>次へ進む条件</th></tr></thead><tbody>
+<tr><td>1</td><td>Cの三和音と、Cメジャーのii–V–Iの骨格</td><td>同じ運指で3周止まらない。</td></tr>
+<tr><td>2</td><td>4音ルートレスを右手と左手でそれぞれ試す</td><td>C→Bだけが動く箇所を説明しながら弾ける。</td></tr>
+<tr><td>3</td><td>別の1調へ移す。例：Gm9→C13→Fmaj9</td><td>音名より先に3度・7度の役割を見つけられる。</td></tr>
+<tr><td>4</td><td>8小節例、または練習中の曲の4〜8小節</td><td>途中で音域が偏ったら、句切りで配置を選び直せる。</td></tr>
+</tbody></table>
+<p>Earl MacDonaldの教材にも、1種類の和音から始め、配置の種類・調・コード交換の速さを段階的に増やす順序があります。本稿ではその考え方を、最初は1つの調と短い進行に絞る形へ調整しました。 <a class="citation" href="https://www.earlmacdonald.com/jazz-piano-lessons/rootless-left-hand-piano-voicings/" target="_blank" rel="noopener noreferrer" title="Earl MacDonald: Rootless Left Hand Piano Voicings">[11]</a></p>
+<p><strong>移調の具体例：</strong>左手G2→C3→F2、右手B♭3–D4–F4–A4 → B♭3–D4–E4–A4 → A3–C4–E4–G4。Gm9→C13ではF4だけE4に下がります。Cメジャーで覚えた「ii→Vは1音が半音下がる」という型を、別の鍵盤配置へ移せます。右手1235をまず試し、親指B♭で手を奥に置く点を確認します。</p>
+<p><strong>作曲やMIDI練習への接続：</strong>最初に「根音＋3度・7度」の音数で進行を聴き、気に入った場所だけ9度／13度やリズムを追加します。MIDIの鍵盤表示では音の場所は確認できますが、それだけで身体に適した指番号は決まりません。2コードを実際に弾いて運指を記録する工程を残してください。</p>
+</section>
+
+<section id="troubleshooting"><h2>11. 迷ったときの修正表</h2>
+<table><thead><tr><th>起きていること</th><th>まず確かめること</th><th>最初の修正</th></tr></thead><tbody>
+<tr><td>コードごとに手が大きく飛ぶ</td><td>毎回根音形へ戻していないか。</td><td>右手の共通音を1つ見つけ、転回して近づける。</td></tr>
+<tr><td>音は近いのに指が詰まる</td><td>単体の和音だけで指番号を決めていないか。</td><td>前後2コードで1235／1245などを比較する。</td></tr>
+<tr><td>黒鍵入りで手首がねじれる</td><td>白鍵を先端でしか弾かないようにしていないか。</td><td>親指の黒鍵も認め、手全体を少し奥へ移す。</td></tr>
+<tr><td>ジャズの音が濁る</td><td>密集和音が低すぎないか、ペダルが残っていないか。</td><td>ペダルなしで和音部分を1オクターブ上げて比較する。</td></tr>
+<tr><td>左手を意識すると右手が止まる</td><td>左手の音数と打鍵回数が多すぎないか。</td><td>左手は1小節1回、右手は着地点1音に戻す。</td></tr>
+<tr><td>近い配置を続けるとどんどん低くなる</td><td>1つ先の最短移動だけを選んでいないか。</td><td>フレーズの区切りで別の転回形へ置き直す。</td></tr>
+<tr><td>共通音を保持すると次へ行けない</td><td>音高を残すことと、同じ指で押し続けることを混同していないか。</td><td>一度離して同じ鍵盤を打ち直す。保持は後から追加。</td></tr>
+<tr><td>音数は増えたが伴奏が重い</td><td>旋律と同じ場所を埋め続けていないか。</td><td>内声を減らし、和音を弾かない拍を作る。</td></tr>
+</tbody></table>
+<p>Jazz Night Schoolは、最初に使う配置を少数へ絞り、選択に迷ってグルーヴを止めないことを勧めています。まず安定した配置を1〜2種類持つ方が、知っている和音の種類だけを増やすより、今回の「毎回なんとなく探す」状態への直接的な対策になります。後半の比較は本稿の判断です。 <a class="citation" href="https://jazznightschool.org/pages/left-hand-rootless-voicing-for-piano-part-1" target="_blank" rel="noopener noreferrer" title="Jazz Night School: Left Hand Rootless Voicings — Part 1">[15]</a></p>
+
+<h3>高度なジャズ配置を学ぶ順番</h3>
+<p>基本が安定したら、旋律をトップにした配置、Drop 2、4度積み、アッパーストラクチャーへ広げられます。これらは豊かな響きを作る道具ですが、基本の運指の迷いを一度に解決する万能公式ではありません。</p>
+<table><thead><tr><th>奏法</th><th>何をするか</th><th>今の段階での位置づけ</th></tr></thead><tbody>
+<tr><td>Drop 2</td><td>密集した4声の、上から2番目の音を1オクターブ下げる。</td><td>両手への分配を学ぶ次の題材。</td></tr>
+<tr><td>4度積み</td><td>主に4度の間隔で構成する。</td><td>響きの選択肢。3度積みの運指をそのまま当てない。</td></tr>
+<tr><td>アッパーストラクチャー</td><td>ドミナントの骨格に、上側の三和音などを組み合わせる。</td><td>テンションの役割を理解してから追加する。</td></tr>
+</tbody></table>
+<p>Julian Bradleyの公開教材は4度積み・アッパーストラクチャーを、Hayden Hillの教材は旋律に合わせた配置やDrop 2を扱っています。本稿では入口の位置づけに留め、広い音域の配置を片手で無理につかむ課題にはしません。 <a class="citation" href="https://jazztutorial.com/articles/chord-voicings-used-by-a-professional-jazz-pianist" target="_blank" rel="noopener noreferrer" title="Julian Bradley / Jazz Tutorial: 7 Jazz Piano Voicings That Make You Sound Professional">[16]</a> <a class="citation" href="https://www.pianogroove.com/jazz-piano-lessons/major-voicing-variations/" target="_blank" rel="noopener noreferrer" title="Hayden Hill / PianoGroove: Major Chord Voicings Tutorial">[17]</a></p>
+</section>
+
+<section id="evidence"><h2>12. 根拠の強さと、まだ判断できないこと</h2>
+<table><thead><tr><th>判断</th><th>根拠と確信度</th></tr></thead><tbody>
+<tr><td>共通音と小さな移動は、コード接続を整理する基本手段</td><td>音楽教育機関の教材と複数のピアノ教材で一致。確信度：高。</td></tr>
+<tr><td>三和音・7thには便利な基本運指があるが、全員・全進行に唯一ではない</td><td>具体的運指例と、教師本人による個人差・変更の説明。確信度：高。</td></tr>
+<tr><td>和音で親指を黒鍵に置いてよい</td><td>演奏家本人の音名・指番号を伴う具体例。確信度：高。</td></tr>
+<tr><td>ルートレスは、伴奏の役割と音域を考えて使う</td><td>演奏家の説明、音楽学校教材、ソロでの使用例で確認。確信度：高。</td></tr>
+<tr><td>本稿の指番号が、そのまま個人に最適である</td><td>実際の手・動作を未確認。最適かはわかりません。提案としての確信度：中。</td></tr>
+<tr><td>15分メニューが他の練習法より優れる</td><td>比較実験による優越性は未確認。時間・負荷を管理する実践提案です。</td></tr>
+</tbody></table>
+<p>参照した主資料は、演奏家・教師が自分の教育方針を説明した一次教材です。運指の効果を全員に対して実験的に証明した研究としては扱っていません。公開されている本文・教材説明・公式トランスクリプトの範囲を根拠とし、有料教材の全内容を読んだという意味ではありません。</p>
+<p>調査で見つかる「必ず」「正しい」という表現の中には、特定の様式や練習条件を前提としたものがあります。このガイドでは、声部進行の条件、音域の目安、片手・両手の役割を分けて記載しました。実際の快適さを調べる次の材料は、同じ2コードを違う運指で弾いた短い演奏動画です。</p>
+<p><strong>最初に着手する課題：</strong>左手D3→G2→C3、右手F4–C5→F4–B4→E4–B4を50 BPMで3周。右手の「1音だけ半音移動」を覚えたら、4音配置へ進みます。</p>
+</section>
+
+<section id="sources"><h2>Sources / 参考資料</h2>
+<p>確認日：2026年9月14日。音名と運指の表、鍵盤図、練習フレーズ、8小節配置は本稿の説明用に作成したものです。資料の譜面画像を転載していません。公開日の確認ができなかったページは、その旨を記載しています。</p>
+<ol class="sources"><li id="source-1"><span>Berklee Online / Randy Felts.</span> <a href="https://online.berklee.edu/takenote/basic-piano-voicing-techniques/" target="_blank" rel="noopener noreferrer">Piano Voicing Techniques</a>. 2015-10-02。<br><span class="source-use">Reharmonization Techniquesからの公開抜粋。3度・7度、変化した5度、声部進行。</span></li><li id="source-2"><span>Berklee Online.</span> <a href="https://online.berklee.edu/takenote/voice-leading-paradigms-for-harmony-in-music-composition/" target="_blank" rel="noopener noreferrer">Voice Leading Paradigms for Harmony in Music Composition</a>. 2023-03-22。<br><span class="source-use">共通音、順次進行、三和音の転回。複数講師の公式コース抜粋。</span></li><li id="source-3"><span>Lisa Witt / Pianote.</span> <a href="https://www.pianote.com/blog/beautiful-chord-patterns/" target="_blank" rel="noopener noreferrer">Beautiful Chord Patterns</a>. 更新 2023-10-13。<br><span class="source-use">三和音の基本形・転回形を両手で弾く具体的運指。</span></li><li id="source-4"><span>Jonny May / Piano With Jonny.</span> <a href="https://pianowithjonny.com/piano-lessons/7th-chords-for-piano-the-complete-guide/" target="_blank" rel="noopener noreferrer">7th Chords for Piano—The Complete Guide</a>. 本文中の公開日未確認。<br><span class="source-use">七の和音の基本運指と転回による接続。</span></li><li id="source-5"><span>Ron Drotos / Keyboard Improv.</span> <a href="https://keyboardimprov.com/yes-pianists-you-can-use-your-thumbs-on-the-black-keys/" target="_blank" rel="noopener noreferrer">Yes, pianists, you can use your thumbs on the black keys!</a>. 2015-04-13。<br><span class="source-use">B♭–D–Fを右手135で弾く例と鍵盤の奥への配置。</span></li><li id="source-6"><span>Graham Fitch / Practising the Piano.</span> <a href="https://practisingthepiano.com/finding-your-natural-hand-position/" target="_blank" rel="noopener noreferrer">Finding Your Natural Hand Position</a>. 公開日の本文確認なし。<br><span class="source-use">自然なカーブ、広げた手を戻すこと、固定的な手の形の限界。</span></li><li id="source-7"><span>Dr. Diana Dumlavwalla / Yamaha.</span> <a href="https://hub.yamaha.com/music-educators/instruments/piano/piano-pedagogy-fix-basic-technique/" target="_blank" rel="noopener noreferrer">Piano Pedagogy: Fix Basic Technique</a>. 2021-11-29。<br><span class="source-use">椅子・腕・手首の位置と個人差。</span></li><li id="source-8"><span>Melanie Spanswick.</span> <a href="https://melaniespanswick.com/2018/09/30/fingering-part-1/" target="_blank" rel="noopener noreferrer">Fingering Part 1</a>. 2018-09-30／更新表示 2025-06-26。<br><span class="source-use">手の大きさ・形による運指の変更、指替え。</span></li><li id="source-9"><span>Jerry Kovarsky / Yamaha.</span> <a href="https://hub.yamaha.com/keyboards/k-how-to/the-basics-of-piano-keyboard-fingering/" target="_blank" rel="noopener noreferrer">The Basics of Piano/Keyboard Fingering</a>. 2023-11-28。<br><span class="source-use">事前の運指計画、複数の選択肢、反復練習。</span></li><li id="source-10"><span>Jonny May（講師）・Michael LaDisa（執筆）/ Piano With Jonny.</span> <a href="https://pianowithjonny.com/piano-lessons/rootless-voicings-for-piano-the-complete-guide/" target="_blank" rel="noopener noreferrer">Rootless Voicings for Piano: The Complete Guide</a>. 本文中の公開日未確認。<br><span class="source-use">maj9・m9・13のA/B配置と進行。表の該当項目のみ参照。</span></li><li id="source-11"><span>Earl MacDonald.</span> <a href="https://www.earlmacdonald.com/jazz-piano-lessons/rootless-left-hand-piano-voicings/" target="_blank" rel="noopener noreferrer">Rootless Left Hand Piano Voicings</a>. 公開日記載なし。<br><span class="source-use">左手最高音の音域目安と、段階的な練習方法。</span></li><li id="source-12"><span>Adam Maness / Peter Martin — Open Studio, You’ll Hear It.</span> <a href="https://youllhearit.com/episodes/jazz-chords-for-beginners/transcript" target="_blank" rel="noopener noreferrer">Jazz Chords For Beginners — Transcript</a>. 2024-09-19。<br><span class="source-use">18:38〜20:29付近の具体音名と、22:34以降の接続。公式文字起こし。</span></li><li id="source-13"><span>Hayden Hill / PianoGroove.</span> <a href="https://www.pianogroove.com/jazz-piano-lessons/stride-style-for-ballads/" target="_blank" rel="noopener noreferrer">Stride Left Hand Style For Ballads</a>. 公開日記載なし。<br><span class="source-use">ソロで低音とルートレス和音を拍ごとに分配する例。</span></li><li id="source-14"><span>Hayden Hill / PianoGroove.</span> <a href="https://www.pianogroove.com/jazz-piano-lessons/how-to-read-lead-sheets-georgia/" target="_blank" rel="noopener noreferrer">How to Read Lead Sheets: Georgia</a>. 公開日記載なし。<br><span class="source-use">低音・旋律・3度／7度の配置と両手への分配。</span></li><li id="source-15"><span>Jazz Night School.</span> <a href="https://jazznightschool.org/pages/left-hand-rootless-voicing-for-piano-part-1" target="_blank" rel="noopener noreferrer">Left Hand Rootless Voicings — Part 1</a>. 公開日記載なし。<br><span class="source-use">中音域の配置、低音域の濁り、少数の配置でグルーヴを守る考え方。</span></li><li id="source-16"><span>Julian Bradley / Jazz Tutorial.</span> <a href="https://jazztutorial.com/articles/chord-voicings-used-by-a-professional-jazz-pianist" target="_blank" rel="noopener noreferrer">7 Jazz Piano Voicings That Make You Sound Professional</a>. 公開日記載なし。<br><span class="source-use">4度積みとアッパーストラクチャー。宣伝上の優劣表現は採用せず。</span></li><li id="source-17"><span>Hayden Hill / PianoGroove.</span> <a href="https://www.pianogroove.com/jazz-piano-lessons/major-voicing-variations/" target="_blank" rel="noopener noreferrer">Major Chord Voicings Tutorial</a>. 公開日記載なし。<br><span class="source-use">旋律の最高音から配置を選ぶ考え方、Drop 2の説明。</span></li></ol>
+</section>
+</main></div><script>window.PIANO_EXERCISES=[{"id":"triads","title":"1｜三和音：C → F → G → C","description":"左手は根音、右手は転回した三和音。右手の同じ高さのCやGを目印に、次の形へ移ります。","steps":[{"chord":"C","lh":[{"m":48,"n":"C3","f":5}],"rh":[{"m":60,"n":"C4","f":1},{"m":64,"n":"E4","f":3},{"m":67,"n":"G4","f":5}],"explanation":"次のFではC4を同じ場所に残し、E4→F4、G4→A4。右手の指番号は1–3–5のままです。"},{"chord":"F","lh":[{"m":41,"n":"F2","f":5}],"rh":[{"m":60,"n":"C4","f":1},{"m":65,"n":"F4","f":3},{"m":69,"n":"A4","f":5}],"explanation":"次のGへはC4→B3、F4→D4、A4→G4。右手は1–2–5へ。音が近くても指の組み合わせは変わります。"},{"chord":"G","lh":[{"m":43,"n":"G2","f":5}],"rh":[{"m":59,"n":"B3","f":1},{"m":62,"n":"D4","f":2},{"m":67,"n":"G4","f":5}],"explanation":"次のCではG4を同じ場所に残し、B3→C4、D4→E4。右手は1–3–5へ戻します。"},{"chord":"C","lh":[{"m":48,"n":"C3","f":5}],"rh":[{"m":60,"n":"C4","f":1},{"m":64,"n":"E4","f":3},{"m":67,"n":"G4","f":5}],"explanation":"一巡の終わりです。左手が根音を弾いているため、右手の音順を変えても全体の最低音は各コードの根音です。"}]},{"id":"guide","title":"2｜両手伴奏：根音 ＋ 3度・7度","description":"Dm7 → G7 → Cmaj7。右手2音から、ジャズの和音接続の仕組みを確認します。","steps":[{"chord":"Dm7","lh":[{"m":50,"n":"D3","f":5}],"rh":[{"m":65,"n":"F4","f":1},{"m":72,"n":"C5","f":5}],"explanation":"F4はDm7の短3度、C5は短7度。次はF4を残し、C5だけB4へ半音下げます。"},{"chord":"G7","lh":[{"m":43,"n":"G2","f":5}],"rh":[{"m":65,"n":"F4","f":1},{"m":71,"n":"B4","f":5}],"explanation":"F4はG7の短7度、B4は長3度。次はB4を残し、F4だけE4へ半音下げます。"},{"chord":"Cmaj7","lh":[{"m":48,"n":"C3","f":5}],"rh":[{"m":64,"n":"E4","f":1},{"m":71,"n":"B4","f":5}],"explanation":"E4は長3度、B4は長7度。終止先がC三和音ならB→Cにする案もあり、これはCmaj7の響きを保つ例です。"}]},{"id":"rootless_rh","title":"3｜両手伴奏：根音 ＋ 4音のジャズ配置","description":"Dm9 → G13 → Cmaj9。根音は左手、右手は根音を省いた4音。最初に覚える1セットです。","steps":[{"chord":"Dm9","lh":[{"m":38,"n":"D2","f":5}],"rh":[{"m":53,"n":"F3","f":1},{"m":57,"n":"A3","f":2},{"m":60,"n":"C4","f":3},{"m":64,"n":"E4","f":5}],"explanation":"次のG13はF3・A3・E4を残し、C4だけB3へ半音下げます。右手の音の移動は1音だけです。"},{"chord":"G13","lh":[{"m":43,"n":"G2","f":5}],"rh":[{"m":53,"n":"F3","f":1},{"m":57,"n":"A3","f":2},{"m":59,"n":"B3","f":3},{"m":64,"n":"E4","f":5}],"explanation":"次のCmaj9へF3→E3、A3→G3、B3は同じ、E4→D4。B3は同じ指3のままにできます。"},{"chord":"Cmaj9","lh":[{"m":48,"n":"C3","f":5}],"rh":[{"m":52,"n":"E3","f":1},{"m":55,"n":"G3","f":2},{"m":59,"n":"B3","f":3},{"m":62,"n":"D4","f":5}],"explanation":"右手の音だけではEm7と同じ構成です。左手Cと前後の進行が、Cmaj9としての意味を与えます。"}]},{"id":"shell_melody","title":"4｜左手シェル ＋ 右手の旋律音","description":"左手は根音・3度・7度、右手は旋律の着地点1音。本編に右手の4音フレーズもあります。","steps":[{"chord":"Dm7","lh":[{"m":50,"n":"D3","f":5},{"m":53,"n":"F3","f":3},{"m":60,"n":"C4","f":1}],"rh":[{"m":69,"n":"A4","f":5}],"explanation":"1拍目は両手を合わせ、その後は右手の旋律を続けます。次の左手G2–B2–F3へは腕ごと位置を変えて構いません。"},{"chord":"G7","lh":[{"m":43,"n":"G2","f":5},{"m":47,"n":"B2","f":3},{"m":53,"n":"F3","f":1}],"rh":[{"m":62,"n":"D4","f":1}],"explanation":"G2–B2の低い3度が濁る音色なら、左手をG2–F3の2音にし、Bは右手フレーズで補う案があります。"},{"chord":"Cmaj7","lh":[{"m":48,"n":"C3","f":5},{"m":52,"n":"E3","f":3},{"m":59,"n":"B3","f":1}],"rh":[{"m":72,"n":"C5","f":5}],"explanation":"左手C3–B3は長7度です。届いても力むなら2音に減らすか、音を両手へ分けます。"}]},{"id":"rootless_lh","title":"5｜左手4音 ＋ 右手の旋律音","description":"ベース伴奏がある場面を想定。ここでは別のベース音は再生されません。根音の意味は練習3と聴き比べてください。","steps":[{"chord":"Dm9（左手は根音省略）","lh":[{"m":53,"n":"F3","f":5},{"m":57,"n":"A3","f":3},{"m":60,"n":"C4","f":2},{"m":64,"n":"E4","f":1}],"rh":[{"m":69,"n":"A4","f":5}],"explanation":"左手の第一候補は低→高で5–3–2–1。次は人差し指2のC4だけB3へ。A4は旋律の着地点です。"},{"chord":"G13（左手は根音省略）","lh":[{"m":53,"n":"F3","f":5},{"m":57,"n":"A3","f":3},{"m":59,"n":"B3","f":2},{"m":64,"n":"E4","f":1}],"rh":[{"m":67,"n":"G4","f":4}],"explanation":"次のCmaj9へはF3→E3、A3→G3、B3は共通音、E4→D4。右手のG4は根音ですが、左手配置には根音がありません。"},{"chord":"Cmaj9（左手は根音省略）","lh":[{"m":52,"n":"E3","f":5},{"m":55,"n":"G3","f":3},{"m":59,"n":"B3","f":2},{"m":62,"n":"D4","f":1}],"rh":[{"m":67,"n":"G4","f":4}],"explanation":"左手を毎拍押し続けず、まず1小節に1回で旋律を弾く余裕を作ります。ソロで低音が欲しければ本編の時間分配へ。"}]},{"id":"eight","title":"6｜応用8小節：Am9からの循環進行","description":"9th・13thと変化した5度を含む例。根音は左手、右手は原則4音。最初の課題ではありません。","steps":[{"chord":"Am9","lh":[{"m":45,"n":"A2","f":5}],"rh":[{"m":55,"n":"G3","f":1},{"m":59,"n":"B3","f":2},{"m":60,"n":"C4","f":3},{"m":64,"n":"E4","f":5}],"explanation":"右手は♭7・9・♭3・5。次のD13へG3だけF♯3に下げ、残り3音は同じ場所です。"},{"chord":"D13","lh":[{"m":38,"n":"D2","f":5}],"rh":[{"m":54,"n":"F♯3","f":1},{"m":59,"n":"B3","f":2},{"m":60,"n":"C4","f":3},{"m":64,"n":"E4","f":5}],"explanation":"右手は3・13・♭7・9。次のGmaj9へF♯3を残し、B3→A3、C4→B3、E4→D4。"},{"chord":"Gmaj9","lh":[{"m":43,"n":"G2","f":5}],"rh":[{"m":54,"n":"F♯3","f":1},{"m":57,"n":"A3","f":2},{"m":59,"n":"B3","f":3},{"m":62,"n":"D4","f":5}],"explanation":"右手は7・9・3・5。次のCmaj9へF♯3→E3、A3→G3。B3とD4は共通音です。"},{"chord":"Cmaj9","lh":[{"m":48,"n":"C3","f":5}],"rh":[{"m":52,"n":"E3","f":1},{"m":55,"n":"G3","f":2},{"m":59,"n":"B3","f":3},{"m":62,"n":"D4","f":5}],"explanation":"右手は3・5・7・9。次のF♯m7(♭5)では、この練習では和音の性格を示すC（♭5）を含めます。"},{"chord":"F♯m7(♭5)","lh":[{"m":42,"n":"F♯2","f":5}],"rh":[{"m":52,"n":"E3","f":1},{"m":54,"n":"F♯3","f":2},{"m":57,"n":"A3","f":3},{"m":60,"n":"C4","f":5}],"explanation":"右手は♭7・根音・♭3・♭5。この配置には根音F♯も含まれます。全てを機械的にrootless化しません。"},{"chord":"B7(♯5)","lh":[{"m":47,"n":"B2","f":5}],"rh":[{"m":51,"n":"D♯3","f":1},{"m":55,"n":"F𝄪3","f":2},{"m":57,"n":"A3","f":3},{"m":59,"n":"B3","f":5}],"explanation":"右手は3・♯5・♭7・根音。F𝄪3はG3と同じ鍵盤。次はD♯→D、F𝄪→F♯、A→G、Bは同じ。"},{"chord":"Em9","lh":[{"m":40,"n":"E2","f":5}],"rh":[{"m":50,"n":"D3","f":1},{"m":54,"n":"F♯3","f":2},{"m":55,"n":"G3","f":3},{"m":59,"n":"B3","f":5}],"explanation":"右手は♭7・9・♭3・5。次のE7(♯5)へD3を残し、F♯3→E3、G3→G♯3、B3→B♯3。"},{"chord":"E7(♯5)","lh":[{"m":40,"n":"E2","f":5}],"rh":[{"m":50,"n":"D3","f":1},{"m":52,"n":"E3","f":2},{"m":56,"n":"G♯3","f":3},{"m":60,"n":"B♯3","f":5}],"explanation":"B♯3はC4と同じ鍵盤。一巡して最初のAm9に戻るときは、句切りとして手全体を少し右へ置き直します。"}]}];</script><script>(function () {
+  'use strict';
+
+  var root = document.getElementById('piano-explorer');
+  if (!root) return;
+  var exercises = (Array.isArray(window.PIANO_EXERCISES) ? window.PIANO_EXERCISES : []).filter(function (exercise) {
+    return exercise && Array.isArray(exercise.steps) && exercise.steps.length;
+  });
+  root.replaceChildren();
+  if (!exercises.length) {
+    root.textContent = '表示できる練習データがありません。本文の静的な練習表をご覧ください。';
+    return;
+  }
+
+  var exerciseIndex = 0;
+  var stepIndex = 0;
+  var audioContext = null;
+  var activeVoices = [];
+  var timer = null;
+  var playing = false;
+  var actionToken = 0;
+  var SVG_NS = 'http://www.w3.org/2000/svg';
+  var WHITE_WIDTH = 32;
+  var KEYBOARD_WIDTH = WHITE_WIDTH * 29;
+
+  function element(tag, text, className, parent) {
+    var node = document.createElement(tag);
+    if (text !== undefined && text !== null) node.textContent = String(text);
+    if (className) node.className = className;
+    if (parent) parent.appendChild(node);
+    return node;
+  }
+
+  function svgElement(tag, attributes, text, parent) {
+    var node = document.createElementNS(SVG_NS, tag);
+    Object.keys(attributes || {}).forEach(function (key) { node.setAttribute(key, String(attributes[key])); });
+    if (text !== undefined && text !== null) node.textContent = String(text);
+    if (parent) parent.appendChild(node);
+    return node;
+  }
+
+  function currentExercise() { return exercises[exerciseIndex]; }
+  function currentStep() { return currentExercise().steps[stepIndex] || {}; }
+  function nextStep() { return currentExercise().steps[(stepIndex + 1) % currentExercise().steps.length] || {}; }
+  function notesFor(step, hand) {
+    return Array.isArray(step[hand]) ? step[hand].filter(function (note) { return note && Number.isFinite(note.m); }) : [];
+  }
+  function noteLabel(note) { return note.n === undefined ? '音名未指定' : String(note.n); }
+  function fingerLabel(note) { return note.f === undefined || note.f === null ? '指未指定' : String(note.f); }
+  function chordLabel(step) { return step.chord === undefined ? '和音名未指定' : String(step.chord); }
+  function handText(step, hand) {
+    var notes = notesFor(step, hand);
+    return notes.length ? notes.map(function (note) {
+      return noteLabel(note) + '：' + (note.f === undefined || note.f === null ? '指未指定' : fingerLabel(note) + '指');
+    }).join(' ／ ') : 'なし';
+  }
+
+  element('p', '練習を選び、コードごとに鍵盤と指の対応を確認できます。指番号は一例です。音名の数字はオクターブ、L は左手、R は右手です。', 'piano-intro', root);
+
+  var exerciseControl = element('div', null, 'piano-exercise-control', root);
+  var exerciseLabel = element('label', '練習を選択', null, exerciseControl);
+  exerciseLabel.htmlFor = 'piano-exercise-select';
+  var exerciseSelect = element('select', null, null, exerciseControl);
+  exerciseSelect.id = 'piano-exercise-select';
+  exercises.forEach(function (exercise, index) {
+    var option = element('option', exercise.title || ('練習 ' + (index + 1)), null, exerciseSelect);
+    option.value = String(index);
+  });
+  var description = element('p', '', 'piano-description', root);
+
+  var controls = element('div', null, 'piano-controls', root);
+  var previousButton = element('button', '← 前のコード', null, controls);
+  var nextButton = element('button', '次のコード →', null, controls);
+  var auditionButton = element('button', '現在の和音を聴く', null, controls);
+  var playButton = element('button', '進行を最初から一巡再生', null, controls);
+  var stopButton = element('button', '停止', null, controls);
+  [previousButton, nextButton, auditionButton, playButton, stopButton].forEach(function (button) { button.type = 'button'; });
+
+  var audioControls = element('div', null, 'piano-audio-controls', root);
+  var tempoGroup = element('div', null, 'piano-tempo-control', audioControls);
+  var tempoLabel = element('label', 'BPM', null, tempoGroup);
+  tempoLabel.htmlFor = 'piano-tempo';
+  var tempoInput = element('input', null, null, tempoGroup);
+  tempoInput.id = 'piano-tempo';
+  tempoInput.type = 'range';
+  tempoInput.min = '40';
+  tempoInput.max = '100';
+  tempoInput.step = '1';
+  tempoInput.value = '60';
+  var tempoValue = element('output', '60', null, tempoGroup);
+  tempoValue.htmlFor = tempoInput.id;
+
+  var handGroup = element('div', null, 'piano-hand-control', audioControls);
+  var handLabel = element('label', '鳴らす手', null, handGroup);
+  handLabel.htmlFor = 'piano-audio-hand';
+  var handSelect = element('select', null, null, handGroup);
+  handSelect.id = 'piano-audio-hand';
+  [{ value: 'both', label: '両手' }, { value: 'lh', label: '左手のみ' }, { value: 'rh', label: '右手のみ' }].forEach(function (hand) {
+    var option = element('option', hand.label, null, handSelect);
+    option.value = hand.value;
+  });
+
+  element('p', '試聴は簡易合成音です（ピアノの実音ではありません）。1 コードを 4 拍で再生します。テンポの変更は次のコードから反映されます。', 'piano-audio-note', root);
+  var status = element('p', '停止中', 'piano-status', root);
+  status.setAttribute('role', 'status');
+  status.setAttribute('aria-live', 'polite');
+  status.setAttribute('aria-atomic', 'true');
+
+  var currentHeading = element('h3', '', 'piano-current-heading', root);
+  var legend = element('p', null, 'piano-legend', root);
+  element('span', 'L：左手', 'piano-left-label', legend);
+  element('span', 'R：右手', 'piano-right-label', legend);
+  element('span', '1＝親指・2＝人差し指・3＝中指・4＝薬指・5＝小指', null, legend);
+  var keyboardScroll = element('div', null, 'piano-keyboard-scroll', root);
+  keyboardScroll.tabIndex = 0;
+  keyboardScroll.setAttribute('role', 'region');
+  keyboardScroll.setAttribute('aria-label', 'C2 から C6 の鍵盤。狭い画面では横にスクロールできます。音名と指番号は下の表でも確認できます。');
+  var svg = svgElement('svg', { viewBox: '0 0 ' + KEYBOARD_WIDTH + ' 250', role: 'img', 'aria-labelledby': 'piano-keyboard-title piano-keyboard-description' }, null, keyboardScroll);
+  var rangeWarning = element('p', '', 'piano-range-warning', root);
+
+  var details = element('div', null, 'piano-step-details', root);
+  var currentDetails = element('section', null, null, details);
+  var currentDetailsHeading = element('h4', '現在のコード', null, currentDetails);
+  var currentLeft = element('p', '', null, currentDetails);
+  var currentRight = element('p', '', null, currentDetails);
+  var nextDetails = element('section', null, null, details);
+  var nextDetailsHeading = element('h4', '', null, nextDetails);
+  var nextLeft = element('p', '', null, nextDetails);
+  var nextRight = element('p', '', null, nextDetails);
+  var explanation = element('p', '', 'piano-explanation', root);
+
+  function renderKeyboard(step) {
+    svg.replaceChildren();
+    svgElement('title', { id: 'piano-keyboard-title' }, '現在の和音：' + chordLabel(step), svg);
+    svgElement('desc', { id: 'piano-keyboard-description' }, '左手：' + handText(step, 'lh') + '。右手：' + handText(step, 'rh') + '。', svg);
+    var active = new Map();
+    ['lh', 'rh'].forEach(function (hand) {
+      notesFor(step, hand).forEach(function (note) {
+        if (!active.has(note.m)) active.set(note.m, []);
+        active.get(note.m).push({ hand: hand, note: note });
+      });
+    });
+
+    function paintKey(midi, x, width, height, black) {
+      var entries = active.get(midi) || [];
+      var key = svgElement('g', {}, null, svg);
+      svgElement('rect', { x: x, y: 0, width: width, height: height, fill: black ? '#20242a' : '#ffffff', stroke: '#535b64', 'stroke-width': 1 }, null, key);
+      var hasLeft = entries.some(function (entry) { return entry.hand === 'lh'; });
+      var hasRight = entries.some(function (entry) { return entry.hand === 'rh'; });
+      if (hasLeft || hasRight) {
+        if (hasLeft && hasRight) {
+          svgElement('rect', { x: x + 1, y: 1, width: width / 2 - 1, height: height - 2, fill: '#d9eaff' }, null, key);
+          svgElement('rect', { x: x + width / 2, y: 1, width: width / 2 - 1, height: height - 2, fill: '#ffe2c2' }, null, key);
+        } else {
+          svgElement('rect', { x: x + 1, y: 1, width: width - 2, height: height - 2, fill: hasLeft ? '#d9eaff' : '#ffe2c2' }, null, key);
+        }
+        var labelY = height - 25;
+        var names = Array.from(new Set(entries.map(function (entry) { return noteLabel(entry.note); }))).join('/');
+        svgElement('text', { x: x + width / 2, y: labelY, 'text-anchor': 'middle', fill: '#111820', 'font-size': black ? 8 : 10, 'font-weight': 700 }, names, key);
+        var labels = svgElement('text', { x: x + width / 2, y: height - 9, 'text-anchor': 'middle', 'font-size': black ? 8 : 10, 'font-weight': 700 }, null, key);
+        entries.forEach(function (entry, index) {
+          svgElement('tspan', { fill: entry.hand === 'lh' ? '#124d8f' : '#914100' }, (index ? ' ' : '') + (entry.hand === 'lh' ? 'L' : 'R') + fingerLabel(entry.note), labels);
+        });
+      } else if (midi % 12 === 0) {
+        svgElement('text', { x: x + width / 2, y: height - 11, 'text-anchor': 'middle', fill: '#565f69', 'font-size': 10 }, 'C' + (Math.floor(midi / 12) - 1), key);
+      }
+    }
+
+    var whiteIndex = 0;
+    var blackKeys = [];
+    for (var midi = 36; midi <= 84; midi += 1) {
+      var black = [1, 3, 6, 8, 10].indexOf(midi % 12) !== -1;
+      if (black) blackKeys.push({ midi: midi, x: whiteIndex * WHITE_WIDTH - 10 });
+      else {
+        paintKey(midi, whiteIndex * WHITE_WIDTH, WHITE_WIDTH, 238, false);
+        whiteIndex += 1;
+      }
+    }
+    blackKeys.forEach(function (key) { paintKey(key.midi, key.x, 20, 146, true); });
+    var outOfRange = Array.from(active.keys()).filter(function (midi) { return midi < 36 || midi > 84 || !Number.isInteger(midi); });
+    rangeWarning.hidden = !outOfRange.length;
+    rangeWarning.textContent = outOfRange.length ? '表示範囲外の音があります。各手の音名一覧を確認してください。' : '';
+  }
+
+  function render() {
+    var exercise = currentExercise();
+    var step = currentStep();
+    var next = nextStep();
+    description.textContent = exercise.description || '';
+    currentHeading.textContent = (stepIndex + 1) + ' / ' + exercise.steps.length + '　' + chordLabel(step);
+    currentDetailsHeading.textContent = '現在：' + chordLabel(step);
+    currentLeft.textContent = '左手（低い音 → 高い音）：' + handText(step, 'lh');
+    currentRight.textContent = '右手（低い音 → 高い音）：' + handText(step, 'rh');
+    nextDetailsHeading.textContent = (stepIndex === exercise.steps.length - 1 ? '次（冒頭へ）：' : '次：') + chordLabel(next);
+    nextLeft.textContent = '左手（低い音 → 高い音）：' + handText(next, 'lh');
+    nextRight.textContent = '右手（低い音 → 高い音）：' + handText(next, 'rh');
+    explanation.textContent = step.explanation || '';
+    explanation.hidden = !step.explanation;
+    renderKeyboard(step);
+    playButton.disabled = playing;
+  }
+
+  function announce(message) { status.textContent = message; }
+
+  function stopVoices() {
+    activeVoices.forEach(function (voice) {
+      try {
+        var now = audioContext.currentTime;
+        voice.gain.gain.cancelScheduledValues(now);
+        voice.gain.gain.setTargetAtTime(0, now, 0.015);
+        voice.oscillators.forEach(function (oscillator) { try { oscillator.stop(now + 0.08); } catch (error) { /* Already stopped. */ } });
+      } catch (error) { /* A closed context has no voices to stop. */ }
+    });
+    activeVoices = [];
+  }
+
+  function stopPlayback(message) {
+    actionToken += 1;
+    if (timer !== null) { window.clearTimeout(timer); timer = null; }
+    playing = false;
+    stopVoices();
+    playButton.disabled = false;
+    if (message) announce(message);
+  }
+
+  async function prepareAudio(token) {
+    try {
+      var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) throw new Error('unsupported');
+      if (!audioContext || audioContext.state === 'closed') audioContext = new AudioContextClass();
+      if (audioContext.state !== 'running') await audioContext.resume();
+      if (token !== actionToken) return false;
+      if (audioContext.state !== 'running') throw new Error('not-running');
+      return true;
+    } catch (error) {
+      if (token === actionToken) {
+        stopPlayback('音声を開始できませんでした。HTML をブラウザで開き、もう一度再生ボタンを押してください。');
+      }
+      return false;
+    }
+  }
+
+  function soundStep(step, duration) {
+    stopVoices();
+    var selectedHands = handSelect.value === 'both' ? ['lh', 'rh'] : [handSelect.value];
+    var midis = [];
+    selectedHands.forEach(function (hand) {
+      notesFor(step, hand).forEach(function (note) {
+        if (note.m >= 0 && note.m <= 127 && Number.isInteger(note.m) && midis.indexOf(note.m) === -1) midis.push(note.m);
+      });
+    });
+    if (!midis.length) return false;
+    var now = audioContext.currentTime;
+    midis.forEach(function (midi) {
+      var frequency = 440 * Math.pow(2, (midi - 69) / 12);
+      var gain = audioContext.createGain();
+      var amplitude = 0.16 / Math.sqrt(midis.length);
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(amplitude, now + 0.015);
+      gain.gain.exponentialRampToValueAtTime(amplitude * 0.32, now + Math.min(duration * 0.7, 0.6));
+      gain.gain.setValueAtTime(amplitude * 0.32, now + duration);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration + 0.22);
+      gain.connect(audioContext.destination);
+      var oscillator = audioContext.createOscillator();
+      oscillator.type = 'triangle';
+      oscillator.frequency.setValueAtTime(frequency, now);
+      oscillator.connect(gain);
+      var voice = { gain: gain, oscillators: [oscillator] };
+      activeVoices.push(voice);
+      oscillator.onended = function () {
+        oscillator.disconnect();
+        gain.disconnect();
+        var index = activeVoices.indexOf(voice);
+        if (index !== -1) activeVoices.splice(index, 1);
+      };
+      oscillator.start(now);
+      oscillator.stop(now + duration + 0.25);
+    });
+    return true;
+  }
+
+  function tempo() { return Math.min(100, Math.max(40, Number(tempoInput.value) || 60)); }
+
+  async function audition() {
+    stopPlayback();
+    var token = actionToken;
+    if (!(await prepareAudio(token))) return;
+    var audible = soundStep(currentStep(), 1.5);
+    announce(audible ? chordLabel(currentStep()) + ' を試聴中。' : '選択した手に音がありません。');
+    if (audible) timer = window.setTimeout(function () { timer = null; if (token === actionToken) announce('試聴終了。'); }, 1800);
+  }
+
+  async function startProgression() {
+    stopPlayback();
+    var token = actionToken;
+    playing = true;
+    playButton.disabled = true;
+    if (!(await prepareAudio(token))) return;
+    stepIndex = 0;
+    function tick() {
+      if (!playing || token !== actionToken) return;
+      render();
+      var seconds = 4 * 60 / tempo();
+      soundStep(currentStep(), Math.max(0.2, seconds - 0.24));
+      announce('再生中：' + (stepIndex + 1) + ' / ' + currentExercise().steps.length + '、' + chordLabel(currentStep()));
+      timer = window.setTimeout(function () {
+        timer = null;
+        if (!playing || token !== actionToken) return;
+        if (stepIndex + 1 >= currentExercise().steps.length) {
+          stopPlayback('一巡再生が終了しました。');
+          return;
+        }
+        stepIndex += 1;
+        tick();
+      }, seconds * 1000);
+    }
+    tick();
+  }
+
+  exerciseSelect.addEventListener('change', function () {
+    stopPlayback();
+    exerciseIndex = Math.min(exercises.length - 1, Math.max(0, Number(exerciseSelect.value) || 0));
+    stepIndex = 0;
+    render();
+    announce((currentExercise().title || '練習') + ' を選択。' + chordLabel(currentStep()));
+  });
+  previousButton.addEventListener('click', function () {
+    stopPlayback();
+    stepIndex = (stepIndex - 1 + currentExercise().steps.length) % currentExercise().steps.length;
+    render();
+    announce('表示：' + (stepIndex + 1) + ' / ' + currentExercise().steps.length + '、' + chordLabel(currentStep()));
+  });
+  nextButton.addEventListener('click', function () {
+    stopPlayback();
+    stepIndex = (stepIndex + 1) % currentExercise().steps.length;
+    render();
+    announce('表示：' + (stepIndex + 1) + ' / ' + currentExercise().steps.length + '、' + chordLabel(currentStep()));
+  });
+  auditionButton.addEventListener('click', audition);
+  playButton.addEventListener('click', startProgression);
+  stopButton.addEventListener('click', function () { stopPlayback('停止しました。'); });
+  tempoInput.addEventListener('input', function () { tempoValue.textContent = String(tempo()); });
+  handSelect.addEventListener('change', function () {
+    stopVoices();
+    announce(playing ? '鳴らす手を変更しました。次のコードから反映します。' : '鳴らす手を変更しました。試聴ボタンで確認できます。');
+  });
+  window.addEventListener('pagehide', function () { stopPlayback(); });
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) stopPlayback('画面が非表示になったため停止しました。');
+  });
+  render();
+}());
+</script></body></html>
