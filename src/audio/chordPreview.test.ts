@@ -11,10 +11,10 @@ const tone = vi.hoisted(() => {
     cancel = vi.fn();
     releaseAll = vi.fn();
     triggerAttackRelease = vi.fn();
+    triggerAttack = vi.fn();
+    connect = vi.fn(() => this);
 
-    chain() {
-      return this;
-    }
+    chain = vi.fn((..._nodes: AudioNode[]) => this);
 
     start() {
       return this;
@@ -83,6 +83,7 @@ vi.mock("tone", () => ({
 }));
 
 import {
+  createPreviewInstrument,
   previewChord,
   previewChordTimeline,
   previewMidiNotes,
@@ -98,6 +99,30 @@ const chord = {
 };
 
 describe("chord preview instruments", () => {
+  it("routes sampled Piano and every Electric Piano effect into the caller-owned output without changing default audition routing", async () => {
+    const output = new tone.AudioNode();
+    const piano = await createPreviewInstrument("piano", output as never);
+    const sampler = tone.samplers[tone.samplers.length - 1]!;
+    expect(sampler.connect).toHaveBeenCalledWith(output);
+    piano.triggerAttack?.(["C4"], 1, 0.72);
+    expect(sampler.triggerAttack).toHaveBeenCalledWith(["C4"], 1, 0.72);
+    const ep = await createPreviewInstrument("electric-piano", output as never);
+    const synth = tone.polySynths[tone.polySynths.length - 1]!;
+    const chain = synth.chain.mock.calls[0]!;
+    expect(chain).toHaveLength(6);
+    expect(chain[chain.length - 1]).toBe(output);
+    // Reverb is the final FX, upstream of the gate (its wet output cannot bypass rest silence).
+    expect(chain[chain.length - 2]?.wet.value).toBe(0.12);
+    ep.triggerAttack?.(["C4"], 2, 0.72);
+    expect(synth.triggerAttack).toHaveBeenCalledWith(["C4"], 2, 0.72);
+    ep.dispose();
+    piano.dispose();
+    expect(output.dispose).not.toHaveBeenCalled();
+    tone.samplers.length = 0;
+    tone.polySynths.length = 0;
+    tone.voices.length = 0;
+    tone.samplerOptions.length = 0;
+  });
   beforeEach(() => {
     vi.useFakeTimers();
   });

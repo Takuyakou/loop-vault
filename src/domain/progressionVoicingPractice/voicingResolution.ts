@@ -1,4 +1,5 @@
 import type { ChordSymbol } from "../types";
+import { labelFromSymbol } from "../chords";
 import {
   chordToneDescriptors,
   generateStyleCandidates,
@@ -167,6 +168,10 @@ function leftHandCandidates(
   variant: "auto" | "A" | "B",
 ): CandidateResult {
   const chordSymbol = asChordSymbol(chord);
+  // Product policy: resolve X without changing the canonical event's X/Y.
+  // Y is attached only after optimization, never influencing lesson targets.
+  delete chordSymbol.bass;
+  chordSymbol.label = labelFromSymbol(chordSymbol);
   if (!getStyleCompatibility(chordSymbol, "rootless-ab").supported) {
     return { status: "UNSUPPORTED_RULE" };
   }
@@ -270,12 +275,16 @@ function supportedLessonResolution(
   const midiNotes = Object.freeze([...candidate.allNotes]);
   const addedColorDegrees = Object.freeze([...candidate.addedColorIntervals]);
   const bassNote = facts.bassNote;
+  const referenceBassNote = selection === "left-hand" && event.chord.bass !== undefined
+    ? separateBassRegister(event.chord.bass, midiNotes)
+    : undefined;
   return freezeResolution({
     eventId: event.id,
     status: "SUPPORTED",
     voicing: freezeVoicing({
       origin: selection,
       midiNotes,
+      ...(referenceBassNote === undefined ? {} : { referenceBassNote }),
       ...(bassNote === undefined ? {} : { bassNote }),
       leftHandNotes: Object.freeze([...candidate.leftHandNotes]),
       rightHandNotes: Object.freeze([...candidate.rightHandNotes]),
@@ -292,6 +301,20 @@ function supportedLessonResolution(
       ),
     }),
   });
+}
+
+/** Shared by reference playback, card audition and keyboard range, not targets. */
+export function progressionPracticePlaybackNotes(voicing: ResolvedProgressionPracticeVoicing): readonly number[] {
+  if (voicing.referenceBassNote === undefined) return voicing.midiNotes;
+  return Object.freeze([...new Set([voicing.referenceBassNote, ...voicing.midiNotes])].sort((a, b) => a - b));
+}
+
+function separateBassRegister(bass: number, targets: readonly number[]): number {
+  // Same C2–B2 starting register as the existing canonical bass reference.
+  // Move below the unchanged upper targets, preventing a same-pitch role clash.
+  let note = 36 + pitchClass(bass);
+  while (note >= Math.min(...targets)) note -= 12;
+  return note;
 }
 
 function noteFacts(

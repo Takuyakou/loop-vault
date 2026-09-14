@@ -15,6 +15,13 @@ const toneMock = vi.hoisted(() => {
   const scheduled: Array<{ callback: (time: number) => void; interval: string; start?: string | number }> = [];
   const drawCallbacks: Array<() => void> = [];
   const instruments: PolySynth[] = [];
+  const gains: Gain[] = [];
+  class Gain {
+    gain = { setValueAtTime: vi.fn(), cancelScheduledValues: vi.fn(), linearRampToValueAtTime: vi.fn(), getValueAtTime: vi.fn(() => 1) };
+    dispose = vi.fn();
+    constructor(_value?: number) { gains.push(this); }
+    toDestination() { return this; }
+  }
   const activeScheduleIds = new Set<number>();
   const activeInstruments = new Set<PolySynth>();
   const transport = {
@@ -37,7 +44,6 @@ const toneMock = vi.hoisted(() => {
   class PolySynth {
     volume = { value: 0 };
     triggerAttackRelease = vi.fn();
-    triggerAttack = vi.fn();
     releaseAll = vi.fn();
     dispose = vi.fn(() => { activeInstruments.delete(this); });
     constructor() {
@@ -49,6 +55,8 @@ const toneMock = vi.hoisted(() => {
   class Synth extends PolySynth {}
   return {
     transport,
+    gains,
+    Gain,
     scheduled,
     instruments,
     activeScheduleIds,
@@ -66,6 +74,7 @@ vi.mock("tone", () => ({
   FMSynth: class FMSynth {},
   PolySynth: toneMock.PolySynth,
   Synth: toneMock.Synth,
+  Gain: toneMock.Gain,
   getTransport: () => toneMock.transport,
   getDraw: () => toneMock.draw,
   start: toneMock.start,
@@ -81,6 +90,7 @@ beforeEach(() => {
   toneMock.scheduled.length = 0;
   toneMock.drawCallbacks.length = 0;
   toneMock.instruments.length = 0;
+  toneMock.gains.length = 0;
   toneMock.activeScheduleIds.clear();
   toneMock.activeInstruments.clear();
   toneMock.transport.PPQ = 192;
@@ -90,6 +100,131 @@ beforeEach(() => {
 });
 
 describe("ProgressionVoicingTransport", () => {
+  it.each([false, true])("plays separate slash reference with upper targets through sustained=%s", async (sustained) => {
+    const instrument = Object.assign(new toneMock.PolySynth(), sustained ? { triggerAttack: vi.fn() } : {});
+    vi.mocked(createPreviewInstrument).mockResolvedValueOnce(instrument);
+    const first = plan.events[0]!;
+    if (first.status !== "SUPPORTED") throw new Error("Fixture expected");
+    const combinedPlan = { ...plan, events: [{ ...first, voicing: { ...first.voicing, referenceBassNote: 35 } }, plan.events[1]!] };
+    const runtime = new ProgressionVoicingTransport();
+    await runtime.start({ snapshot, plan: combinedPlan, bpm: 80, countInBars: 0, metronomeEnabled: false, onTransportBeat: vi.fn() });
+    toneMock.scheduled[0]!.callback(1);
+    const attack = sustained ? instrument.triggerAttack! : instrument.triggerAttackRelease;
+    expect(attack.mock.calls[0]![0]).toEqual(["B1", "C3", "G3", "B3"]);
+    expect(combinedPlan.events[0]!.voicing!.midiNotes).toEqual([48, 55, 59]);
+    runtime.stop();
+  });
+
+  it("sustains hold across BPM changes, silences rest after FX, and keeps repeated attacks plus audition independent", async () => {
+    const sustained = Object.assign(new toneMock.PolySynth(), { triggerAttack: vi.fn() });
+    vi.mocked(createPreviewInstrument).mockResolvedValueOnce(sustained);
+    const controlled: ProgressionVoicingPracticeSnapshot = {
+      ...snapshot,
+      lengthBeats: 8,
+      events: [
+        { ...snapshot.events[0]!, durationBeats: 6 },
+        { ...snapshot.events[0]!, id: "repeat", startBeat: 7, durationBeats: 1 },
+      ],
+      spans: [
+        { kind: "chord", eventIndex: 0, startBeat: 0, durationBeats: 6 },
+        { kind: "rest", startBeat: 6, durationBeats: 1 },
+        { kind: "chord", eventIndex: 1, startBeat: 7, durationBeats: 1 },
+      ],
+    };
+    const runtime = new ProgressionVoicingTransport();
+    await runtime.start({ snapshot: controlled, plan: { ...plan, events: [plan.events[0]!, plan.events[0]!] }, bpm: 120, countInBars: 0, metronomeEnabled: false, onTransportBeat: vi.fn() });
+    toneMock.scheduled[0]!.callback(1);
+    expect(sustained.triggerAttack).toHaveBeenCalledWith(["C3", "G3", "B3"], 1, 0.72);
+    expect(sustained.triggerAttackRelease).not.toHaveBeenCalled();
+    toneMock.transport.ticks = 4 * 192;
+    runtime.setBpm(60);
+    expect(sustained.triggerAttack).toHaveBeenCalledTimes(1);
+    expect(sustained.releaseAll).toHaveBeenCalledTimes(1);
+    toneMock.transport.ticks = 6 * 192;
+    toneMock.scheduled[2]!.callback(3);
+    expect(toneMock.gains[0]!.gain.linearRampToValueAtTime).toHaveBeenLastCalledWith(0, 3);
+    expect(sustained.releaseAll).toHaveBeenLastCalledWith(3);
+    runtime.pause();
+    await runtime.resume();
+    expect(sustained.triggerAttack).toHaveBeenCalledTimes(1);
+    await runtime.audition([60, 64, 67], "piano");
+    expect(toneMock.instruments[toneMock.instruments.length - 1]!.triggerAttackRelease).toHaveBeenCalledWith(["C4", "E4", "G4"], 2, 1, 0.72);
+    runtime.setReferenceSoundEnabled(false);
+    expect(toneMock.instruments[toneMock.instruments.length - 1]!.releaseAll).toHaveBeenCalledTimes(1);
+    runtime.setReferenceSoundEnabled(true);
+    toneMock.transport.ticks = 7 * 192;
+    toneMock.scheduled[1]!.callback(4);
+    expect(sustained.triggerAttack).toHaveBeenCalledTimes(2);
+    expect(sustained.triggerAttack.mock.calls.map(([notes]) => notes)).toEqual([["C3", "G3", "B3"], ["C3", "G3", "B3"]]);
+    await runtime.restart();
+    expect(toneMock.gains[0]!.gain.cancelScheduledValues).toHaveBeenCalled();
+    runtime.stop();
+    expect(toneMock.gains[0]!.dispose).toHaveBeenCalledOnce();
+    expect(toneMock.activeScheduleIds.size).toBe(0);
+  });
+
+  it("defers a BPM ramp past already delivered look-ahead release and rest gate without moving either boundary", async () => {
+    const controlled: ProgressionVoicingPracticeSnapshot = {
+      ...snapshot,
+      events: [{ ...snapshot.events[0]!, durationBeats: 1 }],
+      spans: [{ kind: "chord", eventIndex: 0, startBeat: 0, durationBeats: 1 }, { kind: "rest", startBeat: 1, durationBeats: 7 }],
+    };
+    const runtime = new ProgressionVoicingTransport();
+    await runtime.start({ snapshot: controlled, plan: { ...plan, events: [plan.events[0]!] }, bpm: 120, countInBars: 0, metronomeEnabled: false, onTransportBeat: vi.fn() });
+    toneMock.transport.getTicksAtTime.mockImplementation((time) => time > 1 ? 192 : 96);
+    toneMock.scheduled[1]!.callback(1.1);
+    expect(toneMock.gains[0]!.gain.linearRampToValueAtTime).toHaveBeenLastCalledWith(0, 1.1);
+    runtime.setBpm(60);
+    expect(toneMock.transport.bpm.rampTo).toHaveBeenLastCalledWith(60, 0.1, 1.101);
+    expect(toneMock.gains[0]!.gain.linearRampToValueAtTime).toHaveBeenLastCalledWith(0, 1.1);
+    expect(toneMock.instruments[0]!.releaseAll).toHaveBeenLastCalledWith(1.1);
+    expect(toneMock.gains[0]!.gain.cancelScheduledValues).not.toHaveBeenCalled();
+    runtime.setBpm(90);
+    expect(toneMock.transport.bpm.rampTo).toHaveBeenLastCalledWith(90, 0.1, 1.101);
+  });
+
+  it("does not reopen a rest when Piano loads immediately before its scheduled boundary", async () => {
+    let loaded!: (instrument: InstanceType<typeof toneMock.PolySynth>) => void;
+    vi.mocked(createPreviewInstrument).mockReturnValueOnce(new Promise((resolve) => { loaded = resolve; }));
+    const controlled: ProgressionVoicingPracticeSnapshot = {
+      ...snapshot,
+      events: [{ ...snapshot.events[0]!, durationBeats: 1 }],
+      spans: [{ kind: "chord", eventIndex: 0, startBeat: 0, durationBeats: 1 }, { kind: "rest", startBeat: 1, durationBeats: 7 }],
+    };
+    const runtime = new ProgressionVoicingTransport();
+    const pending = runtime.start({ snapshot: controlled, plan, bpm: 120, countInBars: 0, metronomeEnabled: false, onTransportBeat: vi.fn() });
+    await Promise.resolve();
+    toneMock.transport.ticks = 190;
+    toneMock.transport.getTicksAtTime.mockReturnValue(200);
+    const instrument = Object.assign(new toneMock.PolySynth(), { triggerAttack: vi.fn() });
+    loaded(instrument);
+    await pending;
+    expect(instrument.triggerAttack).not.toHaveBeenCalled();
+    expect(instrument.triggerAttackRelease).not.toHaveBeenCalled();
+    expect(toneMock.gains[0]!.gain.setValueAtTime.mock.calls.some(([value]) => value === 1)).toBe(true);
+    expect(toneMock.gains[0]!.gain.linearRampToValueAtTime).toHaveBeenLastCalledWith(0, 1.05);
+  });
+
+  it("advances all-rest clock and silences unsupported boundaries without fabricating fallback attacks", async () => {
+    const runtime = new ProgressionVoicingTransport();
+    await runtime.start({ snapshot: { ...snapshot, events: [], spans: [{ kind: "rest", startBeat: 0, durationBeats: 8 }] }, plan: { ...plan, events: [] }, bpm: 80, countInBars: 1, metronomeEnabled: false, onTransportBeat: vi.fn() });
+    toneMock.transport.ticks = 5 * 192;
+    toneMock.scheduled[0]!.callback(2);
+    runtime.pause();
+    await runtime.resume();
+    expect(toneMock.instruments[0]!.triggerAttackRelease).not.toHaveBeenCalled();
+    runtime.stop();
+    const sustained = Object.assign(new toneMock.PolySynth(), { triggerAttack: vi.fn() });
+    vi.mocked(createPreviewInstrument).mockResolvedValueOnce(sustained);
+    toneMock.transport.ticks = 0;
+    const offset = toneMock.scheduled.length;
+    await runtime.start({ snapshot, plan: { ...plan, events: [plan.events[0]!, { eventId: "b", status: "UNSUPPORTED_RULE", reason: "no-approved-lesson-rule" }] }, bpm: 80, countInBars: 0, metronomeEnabled: false, onTransportBeat: vi.fn() });
+    toneMock.scheduled[offset]!.callback(1);
+    toneMock.scheduled[offset + 1]!.callback(2);
+    expect(sustained.triggerAttack).toHaveBeenCalledTimes(1);
+    expect(sustained.releaseAll).toHaveBeenLastCalledWith(2);
+    expect(toneMock.gains[toneMock.gains.length - 1]!.gain.linearRampToValueAtTime).toHaveBeenLastCalledWith(0, 2);
+  });
   it("creates the selected Piano or Electric Piano preview instrument", async () => {
     const runtime = new ProgressionVoicingTransport();
     await runtime.start({
@@ -101,7 +236,7 @@ describe("ProgressionVoicingTransport", () => {
       sound: "piano",
       onTransportBeat: vi.fn(),
     });
-    expect(createPreviewInstrument).toHaveBeenLastCalledWith("piano");
+    expect(createPreviewInstrument).toHaveBeenLastCalledWith("piano", toneMock.gains[0]);
     runtime.stop();
 
     await runtime.start({
@@ -113,7 +248,7 @@ describe("ProgressionVoicingTransport", () => {
       sound: "electric-piano",
       onTransportBeat: vi.fn(),
     });
-    expect(createPreviewInstrument).toHaveBeenLastCalledWith("electric-piano");
+    expect(createPreviewInstrument).toHaveBeenLastCalledWith("electric-piano", toneMock.gains[1]);
   });
 
   it("starts clock, click, and visual projection without waiting for Piano samples", async () => {
@@ -278,7 +413,7 @@ describe("ProgressionVoicingTransport", () => {
     expect(toneMock.transport.start).toHaveBeenLastCalledWith("+0.05");
 
     runtime.setBpm(122);
-    expect(toneMock.transport.bpm.rampTo).toHaveBeenCalledWith(122, 0.1);
+    expect(toneMock.transport.bpm.rampTo).toHaveBeenCalledWith(122, 0.1, expect.any(Number));
     runtime.stop();
     expect(toneMock.transport.clear).toHaveBeenCalledTimes(scheduleCount);
     expect(toneMock.activeInstruments.size).toBe(0);
@@ -412,7 +547,7 @@ describe("ProgressionVoicingTransport", () => {
       1.5,
       0.72,
     );
-    expect(toneMock.transport.bpm.rampTo).toHaveBeenCalledWith(160, 0.1);
+    expect(toneMock.transport.bpm.rampTo).toHaveBeenCalledWith(160, 0.1, expect.any(Number));
   });
 
   it("does not stop or clear a shared Transport it does not own", () => {
@@ -647,6 +782,10 @@ const snapshot: ProgressionVoicingPracticeSnapshot = {
   bpm: 80,
   meter: { numerator: 4, denominator: 4 },
   lengthBeats: 8,
+  spans: [
+    { kind: "chord", eventIndex: 0, startBeat: 0, durationBeats: 2 },
+    { kind: "chord", eventIndex: 1, startBeat: 2, durationBeats: 6 },
+  ],
   events: [
     { id: "a", startBeat: 0, durationBeats: 2, chord: { root: 0, quality: "maj7", tensions: [], label: "Cmaj7" }, voicing: { kind: "source-midi", midiNotes: [48, 55, 59] } },
     { id: "b", startBeat: 2, durationBeats: 6, chord: { root: 2, quality: "min7", tensions: [], label: "Dm7" }, voicing: { kind: "source-midi", midiNotes: [50, 57, 60] } },

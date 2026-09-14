@@ -43,14 +43,14 @@ const labelQualities: Array<[RegExp, ChordQuality]> = [
   [/^maj9$/i, "maj9"],
   [/^M9$/, "maj9"],
   [/^maj7$/i, "maj7"],
-  [/^(M7|△7)$/, "maj7"],
+  [/^(M7|△7|Δ7)$/, "maj7"],
   [/^(m7b5|ø)$/i, "min7b5"],
   [/^(min11|m11)$/i, "min11"],
   [/^(min9|m9)$/i, "min9"],
   [/^(min7|m7)$/i, "min7"],
   [/^(min6|m6)$/i, "min6"],
   [/^(min|m)$/i, "min"],
-  [/^(dim7)$/i, "dim7"],
+  [/^(dim7|o7)$/i, "dim7"],
   [/^(dim|o)$/i, "dim"],
   [/^(aug|\+)$/i, "aug"],
   [/^(dom13|13)$/i, "dom13"],
@@ -66,10 +66,10 @@ const labelQualities: Array<[RegExp, ChordQuality]> = [
 ];
 
 /** Canonical display order for tensions that stay outside the quality token. */
-const tensionOrder: readonly Tension[] = ["9", "b9", "#9", "11", "#11", "13", "b13"];
+const tensionOrder: readonly Tension[] = ["9", "b9", "#9", "11", "#11", "13", "b13", "#5"];
 
 /** Longest-first so "b13" is consumed before "13" and "#11" before "11". */
-const tensionTokens: readonly Tension[] = ["b13", "#11", "b9", "#9", "13", "11", "9"];
+const tensionTokens: readonly Tension[] = ["b13", "#11", "b9", "#9", "#5", "13", "11", "9"];
 
 /**
  * Tensions that a richer quality already spells out. Folding at parse time keeps

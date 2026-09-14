@@ -66,6 +66,7 @@ const qualityIntervals: Record<ChordQuality, readonly number[]> = {
 };
 
 const tensionIntervals = {
+  "#5": 8,
   "9": 2,
   b9: 1,
   "#9": 3,
@@ -335,6 +336,7 @@ function chordsEqual(left: ChordSymbol, right: ChordSymbol): boolean {
 function chordPitchProfile(chord: ChordSymbol): number[] {
   const profile = zeros();
   for (const interval of qualityIntervals[chord.quality]) {
+    if (interval === 7 && chord.tensions.includes("#5")) continue;
     profile[normalizePitchClass(chord.root + interval)] += 1;
   }
   for (const tension of chord.tensions) {

@@ -35,7 +35,7 @@ const chordQualities = new Set([
   "maj9", "min9", "dom9", "min11", "dom13", "sus2", "sus4", "dom7sus4",
   "add9", "six", "min6", "sixNine",
 ]);
-const tensions = new Set(["9", "b9", "#9", "11", "#11", "13", "b13"]);
+const tensions = new Set(["9", "b9", "#9", "11", "#11", "13", "b13", "#5"]);
 
 export function preflightMixSession(
   input: MixPreflightInput,

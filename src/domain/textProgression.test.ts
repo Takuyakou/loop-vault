@@ -68,17 +68,16 @@ describe("Text Progression Entry grammar v1", () => {
     ]));
   });
 
-  test("diagnoses malformed bars, repeats, comments, section headers, and lyric-mixed text", () => {
-    const malformed = parseTextProgression("C | D |");
+  test("accepts optional outer pipes and diagnoses unsupported comments, headers and lyrics", () => {
+    const unframed = parseTextProgression("C | D |");
     const empty = parseTextProgression("|");
     const unsupported = parseTextProgression("| C % | // note | Verse: | hello |");
 
-    expect(malformed.canConvert).toBe(false);
-    expect(malformed.diagnostics.map((issue) => issue.code)).toContain("malformed-bar-notation");
+    expect(unframed.canConvert).toBe(true);
+    expect(unframed.events.map(event => event.durationBeats)).toEqual([4, 4]);
     expect(empty.diagnostics.map((issue) => issue.code)).toContain("empty-bar");
     expect(unsupported.canConvert).toBe(false);
     expect(unsupported.diagnostics.map((issue) => issue.code)).toEqual(expect.arrayContaining([
-      "unsupported-repeat",
       "unsupported-comment",
       "unsupported-section-header",
       "lyric-mixed-text",

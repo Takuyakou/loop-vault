@@ -19,7 +19,7 @@ const supportedQualities = new Set<ChordQuality>([
   "dom7sus4", "add9", "six", "min6", "sixNine",
 ]);
 const supportedTensions = new Set<Tension>([
-  "9", "b9", "#9", "11", "#11", "13", "b13",
+  "9", "b9", "#9", "11", "#11", "13", "b13", "#5",
 ]);
 
 export interface VaultChordContextSourceReference {

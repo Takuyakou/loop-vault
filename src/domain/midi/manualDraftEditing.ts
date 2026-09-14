@@ -7,6 +7,7 @@ import { summaryFromEvents, type CandidateChordEvent } from "./candidateBlock";
 import { recordCaptureDraftChange } from "./captureEditHistory";
 import { createCandidateFromTimelineRange, timelineRangeBeats, timelineRangeIssues } from "./manualRange";
 import type { ManualCandidateDraft, ManualRepairOperation } from "./manualDraft";
+import { TEXT_PROGRESSION_MAX_BARS } from "../textProgression";
 
 /**
  * Editing a manual draft with the editor that already exists.
@@ -289,7 +290,17 @@ export function validateDraft(draft: ManualCandidateDraft): DraftValidation {
     }
   });
 
-  return { errors, warnings, canSave: errors.length === 0 && draft.events.length > 0 };
+  const emptyTextScore = draft.source.type === "text-progression"
+    && draft.events.length === 0
+    && draft.beatsPerBar === 4
+    && Number.isSafeInteger(draft.lengthBars)
+    && draft.lengthBars >= 1
+    && draft.lengthBars <= TEXT_PROGRESSION_MAX_BARS
+    && draft.selectedRange.startBar === 1
+    && draft.selectedRange.startBeat === 1
+    && draft.selectedRange.endBar === draft.lengthBars
+    && draft.selectedRange.endBeat === 4;
+  return { errors, warnings, canSave: errors.length === 0 && (draft.events.length > 0 || emptyTextScore) };
 }
 
 function identityKeyOf(label: string): string {

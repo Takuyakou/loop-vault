@@ -30,7 +30,7 @@ export type ChordQuality =
   | "maj" | "min" | "dim" | "aug" | "maj7" | "min7" | "dom7" | "min7b5" | "dim7"
   | "maj9" | "min9" | "dom9" | "min11" | "dom13" | "sus2" | "sus4" | "dom7sus4"
   | "add9" | "six" | "min6" | "sixNine";
-export type Tension = "9" | "b9" | "#9" | "11" | "#11" | "13" | "b13";
+export type Tension = "9" | "b9" | "#9" | "11" | "#11" | "13" | "b13" | "#5";
 
 export interface ChordSymbol {
   root: number;

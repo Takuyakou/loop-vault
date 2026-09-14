@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { makeChordSymbol } from "../chords";
+import { makeChordSymbol, parseChordLabel } from "../chords";
 import type { ChordQuality, ChordSymbol, Tension } from "../types";
 import {
   resolveProgressionPracticeVoicings,
+  progressionPracticePlaybackNotes,
+  buildProgressionVoicingPracticeSnapshot,
   type DetachedPracticeVoicing,
   type ProgressionPracticeChord,
   type ProgressionPracticeVoicingResolution,
@@ -302,12 +304,71 @@ describe("P5.27 Left-hand locked lesson table", () => {
     });
   });
 
-  it("keeps slash chords explicitly unsupported instead of dropping the bass", () => {
-    expect(resolveOne("left-hand", chord("maj7", [], 7))).toEqual({
+  it("keeps unsupported upper structures unsupported even with approved separate slash bass", () => {
+    expect(resolveOne("left-hand", chord("dim", [], 7))).toEqual({
       eventId: "event-1",
       status: "UNSUPPORTED_RULE",
       reason: "no-approved-lesson-rule",
     });
+  });
+});
+
+describe("P5.31 product-approved upper structure with separate bass", () => {
+  it("restores explicit same-root slash display from parsed structural identity", () => {
+    const chord = parseChordLabel("Am9/A")!;
+    const result = buildProgressionVoicingPracticeSnapshot({
+      selection: "left-hand", sourceReference: { ideaId: "idea", blockId: "block" },
+      block: { id: "block", summaryText: "Synthetic", bpm: 100, timeSignature: "4/4", tags: [], capturedAt: "2026-09-14T00:00:00Z", analyzerVersion: "test",
+        chords: [{ bar: 1, beat: 1, durationBeats: 4, chord, confidence: 1, alternatives: [], warnings: [] }] },
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error(result.error.code);
+    expect(result.snapshot.events[0]!.chord).toMatchObject({ label: "Am9/A", bass: 9 });
+    const resolution = resolveProgressionPracticeVoicings(result.snapshot).events[0]!;
+    expect(resolution.status).toBe("SUPPORTED");
+    if (resolution.status !== "SUPPORTED") throw new Error("Expected approved rule");
+    expect(resolution.voicing.referenceBassNote! % 12).toBe(9);
+  });
+
+  it.each(["auto", "A", "B"] as const)("keeps upper targets identical with variant %s and attaches bass after optimization", (leftHandVariant) => {
+    const upper = [makeChordSymbol(9, "min11"), makeChordSymbol(9, "min9")];
+    const slash = [makeChordSymbol(9, "min11", [], 11), makeChordSymbol(9, "min9", [], 0)];
+    const source = makeSnapshot("left-hand", slash);
+    const original = JSON.stringify(source);
+    const resolved = resolveProgressionPracticeVoicings(source, { leftHandVariant });
+    const plain = resolveProgressionPracticeVoicings(makeSnapshot("left-hand", upper), { leftHandVariant });
+    resolved.events.forEach((event, index) => {
+      const control = plain.events[index]!;
+      expect(event.status).toBe("SUPPORTED");
+      if (event.status !== "SUPPORTED" || control.status !== "SUPPORTED") throw new Error("Expected approved rule");
+      expect(event.voicing.midiNotes).toEqual(control.voicing.midiNotes);
+      expect(event.voicing.notes).toEqual(control.voicing.notes);
+      expect(event.voicing.variant).toBe(control.voicing.variant);
+      const bass = event.voicing.referenceBassNote!;
+      expect(bass % 12).toBe(index === 0 ? 11 : 0);
+      expect(bass).toBeLessThan(Math.min(...event.voicing.midiNotes));
+      expect(event.voicing.leftHandNotes).not.toContain(bass);
+      expect(event.voicing.rightHandNotes).not.toContain(bass);
+      expect(progressionPracticePlaybackNotes(event.voicing)).toEqual([bass, ...control.voicing.midiNotes]);
+      expect(control.voicing.referenceBassNote).toBeUndefined();
+    });
+    expect(JSON.stringify(source)).toBe(original);
+    expect(resolveProgressionPracticeVoicings(source, { leftHandVariant })).toEqual(resolved);
+  });
+
+  it("leaves other modes' exact playback rules and unavailable-source handling unchanged", () => {
+    const slash = makeChordSymbol(9, "min9", [], 0);
+    for (const mode of ["basic-shell", "basic-full", "full-shell", "source-midi", "custom"] as const) {
+      const result = resolveOne(mode, slash, mode === "source-midi" || mode === "custom"
+        ? { kind: mode, midiNotes: [48, 57, 60, 64], bassNote: 48 } : undefined);
+      expect(result.status).toBe("SUPPORTED");
+      if (result.status !== "SUPPORTED") throw new Error("Expected supported");
+      expect(result.voicing.referenceBassNote).toBeUndefined();
+      expect(progressionPracticePlaybackNotes(result.voicing)).toBe(result.voicing.midiNotes);
+      if (mode === "source-midi" || mode === "custom") expect(result.voicing.midiNotes).toEqual([48, 57, 60, 64]);
+    }
+    expect(resolveOne("source-midi", slash).status).toBe("UNAVAILABLE");
+    expect(resolveOne("left-hand", makeChordSymbol(11, "dom7", ["#9", "#5"], 0)).status).toBe("UNSUPPORTED_RULE");
   });
 });
 
@@ -391,6 +452,7 @@ function makeSnapshot(
     bpm: 100,
     meter: { numerator: 4, denominator: 4 },
     lengthBeats: chords.length * 4,
+    spans: chords.map((_, eventIndex) => ({ kind: "chord", eventIndex, startBeat: eventIndex * 4, durationBeats: 4 })),
     events: chords.map((sourceChord, index) => ({
       id: `event-${index + 1}`,
       startBeat: index * 4,

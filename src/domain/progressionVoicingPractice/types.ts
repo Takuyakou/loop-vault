@@ -38,6 +38,10 @@ export interface ProgressionPracticeEvent {
   readonly voicing?: DetachedPracticeVoicing;
 }
 
+export type ProgressionPracticeSpan =
+  | { readonly kind: "chord"; readonly startBeat: number; readonly durationBeats: number; readonly eventIndex: number }
+  | { readonly kind: "rest"; readonly startBeat: number; readonly durationBeats: number };
+
 export interface ProgressionVoicingPracticeSnapshot {
   readonly version: typeof PROGRESSION_VOICING_PRACTICE_SNAPSHOT_VERSION;
   readonly fingerprint: string;
@@ -51,6 +55,8 @@ export interface ProgressionVoicingPracticeSnapshot {
   readonly meter: { readonly numerator: 4; readonly denominator: 4 };
   readonly lengthBeats: number;
   readonly events: readonly ProgressionPracticeEvent[];
+  /** Continuous clock coverage; sounding event indices remain stable. */
+  readonly spans: readonly ProgressionPracticeSpan[];
 }
 
 export type ProgressionVoicingPracticeSnapshots = Readonly<
@@ -90,7 +96,9 @@ export interface ProgressionVoicingNoteFact {
 
 export interface ResolvedProgressionPracticeVoicing {
   readonly origin: ProgressionVoicingSelection;
+  /** Practice targets only; a product-approved slash Bass is separate. */
   readonly midiNotes: readonly number[];
+  readonly referenceBassNote?: number;
   readonly bassNote?: number;
   readonly leftHandNotes?: readonly number[];
   readonly rightHandNotes?: readonly number[];

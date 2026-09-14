@@ -18,7 +18,7 @@ export interface PracticeDegreeSymbol {
 }
 
 const tensionOrder: readonly Tension[] = [
-  "b9", "#9", "9", "11", "#11", "b13", "13",
+  "b9", "#9", "9", "11", "#11", "b13", "#5", "13",
 ];
 const bassLabels = [
   "root", "b2nd", "2nd", "b3rd", "3rd", "4th",

@@ -13,6 +13,8 @@ const bundledPianoSamples = import.meta.glob(
 ) as Record<string, string>;
 
 export interface PreviewInstrument {
+  /** Optional sustained attack for a caller that owns musical release boundaries. */
+  triggerAttack?(notes: string | string[], time?: number, velocity?: number): void;
   triggerAttackRelease(
     notes: string | string[],
     duration: number,
@@ -25,10 +27,10 @@ export interface PreviewInstrument {
 
 export type PreviewSound = "piano" | "electric-piano";
 
-export async function createPreviewInstrument(sound: PreviewSound): Promise<PreviewInstrument> {
+export async function createPreviewInstrument(sound: PreviewSound, output?: Tone.ToneAudioNode): Promise<PreviewInstrument> {
   return sound === "piano"
-    ? createPianoInstrument()
-    : createElectricPianoInstrument();
+    ? createPianoInstrument(output)
+    : createElectricPianoInstrument(output);
 }
 
 export type MidiPreviewSound = PreviewSound | "clean-bass" | "singing-reference" | "freepats-finger-bass" | "freepats-picked-bass";
@@ -357,7 +359,7 @@ async function preparePreviewAudio(
   }
 }
 
-async function createPianoInstrument(): Promise<PreviewInstrument> {
+async function createPianoInstrument(output?: Tone.ToneAudioNode): Promise<PreviewInstrument> {
   const urls = Object.fromEntries(
     Object.entries(PIANO_SAMPLE_FILES).map(([note, fileName]) => {
       const url = bundledPianoSamples[`./assets/salamander-piano/${fileName}`];
@@ -370,7 +372,9 @@ async function createPianoInstrument(): Promise<PreviewInstrument> {
   const sampler = new Tone.Sampler({
     urls,
     release: 1,
-  }).toDestination();
+  });
+  if (output) sampler.connect(output);
+  else sampler.toDestination();
 
   try {
     await waitForPianoSamples(6_000);
@@ -382,6 +386,7 @@ async function createPianoInstrument(): Promise<PreviewInstrument> {
 }
 
 function wrapInstrument(source: {
+  triggerAttack?(notes: string | string[], time?: number, velocity?: number): unknown;
   triggerAttackRelease(
     notes: string | string[],
     duration: number,
@@ -392,6 +397,7 @@ function wrapInstrument(source: {
   dispose(): unknown;
 }): PreviewInstrument {
   return {
+    triggerAttack: source.triggerAttack ? (notes, time, velocity) => { source.triggerAttack!(notes, time, velocity); } : undefined,
     triggerAttackRelease(notes, duration, time, velocity) {
       source.triggerAttackRelease(notes, duration, time, velocity);
     },
@@ -423,7 +429,7 @@ function waitForPianoSamples(timeoutMs: number): Promise<void> {
   });
 }
 
-function createElectricPianoInstrument(): PreviewInstrument {
+function createElectricPianoInstrument(output?: Tone.ToneAudioNode): PreviewInstrument {
   const highpass = new Tone.Filter({ frequency: 75, type: "highpass" });
   const lowpass = new Tone.Filter({
     frequency: 3200,
@@ -456,10 +462,13 @@ function createElectricPianoInstrument(): PreviewInstrument {
       sustain: 0.04,
       release: 0.25,
     },
-  }).chain(highpass, saturation, lowpass, chorus, reverb, Tone.getDestination());
+  }).chain(highpass, saturation, lowpass, chorus, reverb, output ?? Tone.getDestination());
   synth.volume.value = -8;
 
   return {
+    triggerAttack(notes, time, velocity) {
+      synth.triggerAttack(notes, time, velocity);
+    },
     triggerAttackRelease(notes, duration, time, velocity) {
       synth.triggerAttackRelease(notes, duration, time, velocity);
     },

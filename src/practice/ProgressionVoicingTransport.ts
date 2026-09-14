@@ -10,6 +10,7 @@ import type {
 } from "../domain/progressionVoicingPractice";
 import {
   PROGRESSION_VOICING_PRACTICE_PPQ,
+  progressionPracticePlaybackNotes,
   progressionPracticeTicksAtBeat,
 } from "../domain/progressionVoicingPractice";
 
@@ -45,6 +46,9 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
   private readonly transport = Tone.getTransport();
   private scheduleIds: number[] = [];
   private voicingInstrument?: PreviewInstrument;
+  // After all instrument effects: release envelopes/reverb must not fill rests.
+  private referenceOutput?: Tone.Gain;
+  private latestScheduledAudioTime = 0;
   private voicingSound?: PreviewSound;
   private auditionInstrument?: PreviewInstrument;
   private auditionSound?: PreviewSound;
@@ -74,7 +78,8 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     assertCompatibleRuntimePpq(ppq);
 
     const sound = options.sound ?? "electric-piano";
-    const voicingInstrumentPromise = createPreviewInstrument(sound);
+    this.referenceOutput = new Tone.Gain(0).toDestination();
+    const voicingInstrumentPromise = createPreviewInstrument(sound, this.referenceOutput);
     this.startingGeneration = undefined;
 
     const countInBeats = options.countInBars * options.snapshot.meter.numerator;
@@ -89,14 +94,21 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.clickSynth = createClickSynth();
 
     options.snapshot.events.forEach((event, eventIndex) => {
-      const resolution = options.plan.events[eventIndex];
-      if (!resolution || resolution.status !== "SUPPORTED") return;
       const startTicks = runtimeTickAtPracticeBeat(countInBeats + event.startBeat, ppq);
       this.scheduleIds.push(this.transport.scheduleRepeat((time) => {
         if (!this.acceptsCallback(generation)) return;
         const absoluteBeat = this.absoluteBeatAtTime(time, ppq);
         if (absoluteBeat + 1 / ppq < countInBeats) return;
         this.attackVoicing(eventIndex, 0, time);
+      }, `${loopTicks}i`, `${startTicks}i`));
+    });
+
+    options.snapshot.spans.filter((span) => span.kind === "rest").forEach((span) => {
+      const startTicks = runtimeTickAtPracticeBeat(countInBeats + span.startBeat, ppq);
+      this.scheduleIds.push(this.transport.scheduleRepeat((time) => {
+        if (!this.acceptsCallback(generation)) return;
+        this.closeReferenceOutput(time);
+        this.voicingInstrument?.releaseAll(time);
       }, `${loopTicks}i`, `${startTicks}i`));
     });
 
@@ -134,7 +146,8 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
       this.voicingInstrument = voicingInstrument;
       const currentBeat = this.transport.ticks / ppq;
       if (!this.paused && (startBeat > countInBeats || currentBeat > startBeat)) {
-        this.attackCurrentVoicing(currentBeat, Tone.now() + 0.05);
+        const time = Tone.now() + 0.05;
+        this.attackCurrentVoicing(this.absoluteBeatAtTime(time, ppq), time);
       }
     } catch (error) {
       if (generation === this.generation) this.invalidateAndClear();
@@ -153,6 +166,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.projectionEpoch += 1;
     this.paused = true;
     this.transport.pause();
+    this.closeReferenceOutput(Tone.now(), true);
     this.voicingInstrument?.releaseAll();
     return true;
   }
@@ -181,6 +195,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     await Tone.start();
     if (generation !== this.generation || !this.running || !this.ownsTransport) return false;
     this.projectionEpoch += 1;
+    this.closeReferenceOutput(Tone.now(), true);
     this.voicingInstrument?.releaseAll();
     if (!this.paused) this.transport.pause();
     this.transport.position = "0i";
@@ -196,7 +211,14 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
   setBpm(bpm: number): void {
     if (!Number.isFinite(bpm) || bpm < 30 || bpm > 240) return;
     this.desiredBpm = bpm;
-    if (this.ownsTransport) this.transport.bpm.rampTo(bpm, 0.1);
+    if (this.ownsTransport) {
+      // Preserve already queued attack/release/gate times together. Changing
+      // tempo before a delivered look-ahead boundary would invalidate only its
+      // clock time, not its audio envelope. Start the same Transport's ramp
+      // immediately after those committed actions (bounded by its look-ahead).
+      const rampStart = Math.max(Tone.now(), this.latestScheduledAudioTime) + 0.001;
+      this.transport.bpm.rampTo(bpm, 0.1, rampStart);
+    }
   }
 
   setMetronomeEnabled(enabled: boolean): void {
@@ -205,7 +227,10 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
 
   setReferenceSoundEnabled(enabled: boolean): void {
     this.referenceSoundEnabled = enabled;
-    if (!enabled) this.voicingInstrument?.releaseAll();
+    if (!enabled) {
+      this.closeReferenceOutput(Tone.now(), true);
+      this.voicingInstrument?.releaseAll();
+    }
   }
 
   async audition(midiNotes: readonly number[], sound: PreviewSound = "electric-piano"): Promise<void> {
@@ -250,12 +275,16 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
   }
 
   private absoluteBeatAtTime(time: number, ppq: number): number {
+    this.latestScheduledAudioTime = Math.max(this.latestScheduledAudioTime, time);
     return Math.max(0, this.transport.getTicksAtTime(time) / ppq);
   }
 
   private disposeInstruments(): void {
     this.voicingInstrument?.releaseAll();
     this.voicingInstrument?.dispose();
+    this.referenceOutput?.dispose();
+    this.referenceOutput = undefined;
+    this.latestScheduledAudioTime = 0;
     this.clickSynth?.dispose();
     this.voicingInstrument = undefined;
     this.voicingSound = undefined;
@@ -271,32 +300,67 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
   }
 
   private attackCurrentVoicing(absoluteBeat: number, time: number): void {
+    const current = this.currentSoundingEvent(absoluteBeat);
+    if (!current) {
+      this.closeReferenceOutput(time, true);
+      return;
+    }
+    this.attackVoicing(current.eventIndex, current.elapsedBeats, time);
+  }
+
+  private currentSoundingEvent(absoluteBeat: number): { eventIndex: number; elapsedBeats: number } | undefined {
     const options = this.activeOptions;
-    if (!options || !this.voicingInstrument || !this.referenceSoundEnabled) return;
+    if (!options) return;
     const countInBeats = options.countInBars * options.snapshot.meter.numerator;
     if (absoluteBeat < countInBeats) return;
     const progressionBeat = (absoluteBeat - countInBeats) % options.snapshot.lengthBeats;
-    let eventIndex = 0;
-    for (let index = options.snapshot.events.length - 1; index >= 0; index -= 1) {
-      if (progressionBeat >= options.snapshot.events[index]!.startBeat) {
-        eventIndex = index;
-        break;
-      }
+    const eventIndex = options.snapshot.events.findIndex((event) => progressionBeat >= event.startBeat
+      && progressionBeat < event.startBeat + event.durationBeats);
+    if (eventIndex < 0) return;
+    return { eventIndex, elapsedBeats: progressionBeat - options.snapshot.events[eventIndex]!.startBeat };
+  }
+
+  private closeReferenceOutput(time: number, cancel = false): void {
+    if (cancel) {
+      this.referenceOutput?.gain.cancelScheduledValues(Tone.now());
     }
-    const event = options.snapshot.events[eventIndex]!;
-    this.attackVoicing(eventIndex, progressionBeat - event.startBeat, time);
+    this.scheduleReferenceGate(0, time);
+  }
+
+  private scheduleReferenceGate(value: 0 | 1, time: number): void {
+    const gain = this.referenceOutput?.gain;
+    if (!gain) return;
+    const now = Tone.now();
+    this.latestScheduledAudioTime = Math.max(this.latestScheduledAudioTime, time);
+    if (value === 0 && time - now >= 0.003) {
+      const rampStart = time - 0.003;
+      gain.setValueAtTime(gain.getValueAtTime(rampStart), rampStart);
+      gain.linearRampToValueAtTime(0, time);
+    } else gain.setValueAtTime(value, time);
   }
 
   private attackVoicing(eventIndex: number, elapsedBeats: number, time: number): void {
     const options = this.activeOptions;
     if (!options || !this.voicingInstrument || !this.referenceSoundEnabled) return;
     const resolution = options.plan.events[eventIndex];
-    if (resolution?.status !== "SUPPORTED") return;
+    if (resolution?.status !== "SUPPORTED") {
+      this.closeReferenceOutput(time);
+      this.voicingInstrument.releaseAll(time);
+      return;
+    }
     const event = options.snapshot.events[eventIndex]!;
+    this.scheduleReferenceGate(1, time);
+    if (this.voicingInstrument.triggerAttack) {
+      // Release at the next canonical attack/rest, not at a wall-time duration
+      // guessed before a BPM change. A held event has only one boundary attack.
+      this.voicingInstrument.releaseAll(time);
+      this.voicingInstrument.triggerAttack(progressionPracticePlaybackNotes(resolution.voicing).map(midiToNoteName), time, 0.72);
+      return;
+    }
     const remainingBeats = Math.max(0.05, event.durationBeats - elapsedBeats);
     const durationSeconds = Math.max(0.05, remainingBeats * 60 / this.desiredBpm);
     this.voicingInstrument.triggerAttackRelease(
-      resolution.voicing.midiNotes.map(midiToNoteName),
+      progressionPracticePlaybackNotes(resolution.voicing).map(midiToNoteName),
       durationSeconds,
       time,
       0.72,

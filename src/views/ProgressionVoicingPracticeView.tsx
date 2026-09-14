@@ -13,6 +13,7 @@ import {
   projectProgressionPracticeClock,
   reduceProgressionPracticeClock,
   resolveProgressionPracticeVoicings,
+  progressionPracticePlaybackNotes,
   type ResolveProgressionPracticeVoicingsOptions,
   type ProgressionPracticeVoicingResolution,
   type ProgressionPracticeVoicingPlan,
@@ -80,7 +81,7 @@ const copy = {
     sourceHelp: "MYは保存済みの音をそのまま使い、LESSONは承認済みの規則だけを使います。",
     basicShellHelp: "ルートと7度を左手だけで練習します。3度と右手ガイドはBasic Full 1–7–3で表示します。",
     fullShellHelp: "左手に1度と7度、右手に3度・5度・コード記号のテンションを配置します。複数のaltered tensionで手幅を超える場合のみ5度を省略し、スラッシュコードでは指定ベースを左手で保持します。",
-    leftHandHelp: "Rootless A/Bを練習します。ベース指定を安全に維持できないスラッシュコードは未対応です。",
+    leftHandHelp: "上部コードのRootless A/Bを左手で練習します。スラッシュベースは独立した参照音として鳴り、練習対象には含みません。",
     current: "現在",
     next: "次",
     beat: "拍",
@@ -136,7 +137,7 @@ const copy = {
     playbackErrorBody: "音声を安全に停止しました。もう一度お試しください。",
     unavailableStatus: "利用不可",
     unsupportedStatus: "未対応の規則",
-    leftHandSlashUnsupported: "スラッシュコードのベース指定を維持するLeft-hand規則がありません",
+    leftHandUpperUnsupported: "上部コードに対応するLeft-hand規則がありません",
     generationErrorStatus: "生成エラー",
     unresolvedSummary: (count: number) => `${count}個のコードを再生できません`,
     midi: "MIDI入力",
@@ -158,7 +159,7 @@ const copy = {
     sourceHelp: "MY preserves saved notes; LESSON uses approved rules only.",
     basicShellHelp: "Practice root and seventh with the left hand only. Basic Full 1–7–3 adds the third and right-hand guide.",
     fullShellHelp: "Play root and seventh with the left hand, then place the third, fifth, and written tensions in the right hand. Only the fifth may be omitted for dense altered tensions; slash bass is preserved in the left hand.",
-    leftHandHelp: "Practice Rootless A/B. Slash chords are unsupported when their explicit bass cannot be preserved safely.",
+    leftHandHelp: "Practice the upper chord's Rootless A/B in the left hand. Slash bass plays as a separate reference, not a practice target.",
     current: "Current",
     next: "Next",
     beat: "Beat",
@@ -214,7 +215,7 @@ const copy = {
     playbackErrorBody: "Audio was stopped safely. Please try again.",
     unavailableStatus: "Unavailable",
     unsupportedStatus: "Unsupported rule",
-    leftHandSlashUnsupported: "No Left-hand rule safely preserves this slash-bass note",
+    leftHandUpperUnsupported: "No approved Left-hand rule for this upper chord",
     generationErrorStatus: "Generation error",
     unresolvedSummary: (count: number) => `${count} chords cannot be played`,
     midi: "MIDI input",
@@ -343,6 +344,9 @@ export function ProgressionVoicingPracticeView({
     [clockState, snapshot],
   );
   const currentIndex = projection?.currentEventIndex ?? 0;
+  const currentSpanIndex = projection?.currentSpanIndex ?? 0;
+  const currentSpan = snapshot?.spans[currentSpanIndex];
+  const restLabel = language === "ja" ? "休符" : "Rest";
   const nextIndex = projection?.nextEventIndex ?? (snapshot && snapshot.events.length > 1 ? 1 : 0);
   const currentEvent = snapshot?.events[currentIndex];
   const nextEvent = snapshot?.events[nextIndex];
@@ -351,27 +355,27 @@ export function ProgressionVoicingPracticeView({
   const currentVoicing = currentResolution?.status === "SUPPORTED" ? currentResolution.voicing : undefined;
   const nextVoicing = nextResolution?.status === "SUPPORTED" ? nextResolution.voicing : undefined;
   const guideVoicings = useMemo(
-    () => plan?.events.flatMap((resolution) => resolution.status === "SUPPORTED" ? [resolution.voicing.midiNotes] : []) ?? [],
+    () => plan?.events.flatMap((resolution) => resolution.status === "SUPPORTED" ? [progressionPracticePlaybackNotes(resolution.voicing)] : []) ?? [],
     [plan],
   );
   const keyboardRange = useMemo(() => computePracticeKeyboardRange(guideVoicings), [guideVoicings]);
   const active = clockState?.status === "running" || clockState?.status === "count-in";
   const paused = clockState?.status === "paused";
-  const playheadX = currentIndex * (TIMELINE_CARD_WIDTH_PX + TIMELINE_CARD_GAP_PX)
+  const playheadX = currentSpanIndex * (TIMELINE_CARD_WIDTH_PX + TIMELINE_CARD_GAP_PX)
     + (projection?.chordProgress ?? 0) * TIMELINE_CARD_WIDTH_PX;
   const visualStepMilliseconds = Math.max(
     16,
     Math.min(140, 60_000 / (clockState?.bpm ?? snapshot?.bpm ?? 120) / 16),
   );
-  const allEventsPlayable = Boolean(plan?.events.length)
+  const allEventsPlayable = Boolean(plan && snapshot?.spans.length)
     && plan!.events.every((resolution) => resolution.status === "SUPPORTED");
   const beatsPerBar = snapshot?.meter.numerator ?? 4;
-  const currentBar = Math.floor((currentEvent?.startBeat ?? 0) / beatsPerBar) + 1;
+  const currentBar = Math.floor((projection?.progressionBeat ?? 0) / beatsPerBar) + 1;
   const totalBars = Math.max(1, Math.ceil((snapshot?.lengthBeats ?? 1) / beatsPerBar));
 
   useEffect(() => {
     const viewport = timelineViewportRef.current;
-    const eventElement = timelineEventRefs.current[currentIndex];
+    const eventElement = timelineEventRefs.current[currentSpanIndex];
     if (!viewport || !eventElement || viewport.clientWidth <= 0) return;
     const eventLeft = eventElement.offsetLeft;
     const eventRight = eventLeft + eventElement.offsetWidth;
@@ -379,7 +383,7 @@ export function ProgressionVoicingPracticeView({
     else if (eventRight > viewport.scrollLeft + viewport.clientWidth) {
       viewport.scrollLeft = eventRight - viewport.clientWidth;
     }
-  }, [currentIndex, snapshot]);
+  }, [currentSpanIndex, snapshot]);
   function changeSelection(next: ProgressionVoicingSelection) {
     runtimeRequestRef.current += 1;
     auditionRequestRef.current += 1;
@@ -530,7 +534,7 @@ export function ProgressionVoicingPracticeView({
     setRuntimeError(undefined);
     setAuditionedIndex(index);
     try {
-      await transportRef.current?.audition(resolution.voicing.midiNotes, previewSound);
+      await transportRef.current?.audition(progressionPracticePlaybackNotes(resolution.voicing), previewSound);
     } catch {
       if (auditionRequestRef.current !== request) return;
       runtimeRequestRef.current += 1;
@@ -596,6 +600,7 @@ export function ProgressionVoicingPracticeView({
             <div className="mt-3 grid min-w-0 gap-2" data-testid="voicing-loop-progression-list">
               {visibleProgressions.map((candidate) => (
                 <ProgressionChoice
+                  language={language}
                   key={candidate.id}
                   candidate={candidate}
                   practiceLabel={text.practice}
@@ -698,11 +703,11 @@ export function ProgressionVoicingPracticeView({
             <Surface variant="primary" className="min-w-0 p-5 sm:p-6">
               <div className="flex min-w-0 flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="lv-section-kicker">{text.current} · {currentIndex + 1}/{snapshot.events.length}</p>
+                  <p className="lv-section-kicker">{text.current} · {currentSpanIndex + 1}/{snapshot.spans.length}</p>
                   <h2 className="mt-2 break-words text-4xl font-bold tracking-tight text-[var(--lv-text)] sm:text-5xl">
-                    {currentEvent?.chord.label}
+                    {currentEvent?.chord.label ?? restLabel}
                   </h2>
-                  <p className="sr-only" aria-live="polite" aria-atomic="true">{currentEvent?.chord.label}</p>
+                  <p className="sr-only" aria-live="polite" aria-atomic="true">{currentEvent?.chord.label ?? restLabel}</p>
                 </div>
                 {displayMode === "learn" && currentVoicing ? (
                   <div className="min-w-0 max-w-full space-y-1 text-sm leading-5 text-[var(--lv-text-secondary)] sm:max-w-[58%]" data-testid="voicing-loop-current-voicing">
@@ -747,7 +752,7 @@ export function ProgressionVoicingPracticeView({
 
             <Surface className="min-w-0 p-5">
               <p className="lv-section-kicker">{text.next}</p>
-              <p className="mt-3 break-words text-2xl font-bold text-[var(--lv-text)]">{nextEvent?.chord.label}</p>
+              <p className="mt-3 break-words text-2xl font-bold text-[var(--lv-text)]">{nextEvent?.chord.label ?? restLabel}</p>
               {displayMode === "learn" && nextVoicing ? (
                 <div className="mt-4 space-y-1 text-sm leading-5 text-[var(--lv-text-secondary)]">
                   <p>{text.pitches}: {nextVoicing.notes.map((note) => formatMidiNoteForDisplay(note.midiNote, "fl-studio", "flat")).join(" · ")}</p>
@@ -755,7 +760,7 @@ export function ProgressionVoicingPracticeView({
                 </div>
               ) : null}
               <p className="mt-5 border-t border-[var(--lv-border)] pt-4 text-xs text-[var(--lv-text-muted)]">
-                {text.nextSwitch(formatPracticeBeat(currentEvent?.durationBeats ?? 1))}
+                {text.nextSwitch(formatPracticeBeat(currentSpan?.durationBeats ?? 1))}
               </p>
             </Surface>
           </div>
@@ -782,37 +787,40 @@ export function ProgressionVoicingPracticeView({
                 >
                   <span data-testid="voicing-loop-playhead-marker" className="absolute left-1/2 top-0 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--lv-accent)] shadow-[0_0_10px_rgba(59,224,206,0.85)]" />
                 </span>
-                {snapshot.events.map((event, index) => {
-                  const resolution = plan?.events[index];
+                {snapshot.spans.map((span, index) => {
+                  const eventIndex = span.kind === "chord" ? span.eventIndex : -1;
+                  const event = snapshot.events[eventIndex];
+                  const resolution = plan?.events[eventIndex];
                   const playable = resolution?.status === "SUPPORTED";
-                  const selected = index === currentIndex;
-                  const auditioned = index === auditionedIndex;
+                  const selected = index === currentSpanIndex;
+                  const auditioned = eventIndex >= 0 && eventIndex === auditionedIndex;
                   return (
                     <button
-                      key={event.id}
+                      key={event?.id ?? `rest-${span.startBeat}`}
                       ref={(element) => { timelineEventRefs.current[index] = element; }}
                       type="button"
                       data-testid="voicing-loop-event"
-                      data-duration-beats={event.durationBeats}
+                      data-duration-beats={span.durationBeats}
+                      data-span-kind={span.kind}
                       className={`relative flex h-[46px] max-h-[46px] min-h-[46px] w-[92px] min-w-[92px] max-w-[92px] flex-none flex-col justify-start overflow-hidden rounded-[var(--lv-radius-sm)] border px-2 pb-3 pt-1.5 text-left text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-60 ${selected ? "border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)] shadow-[inset_0_0_0_1px_rgba(59,224,206,0.12)]" : auditioned ? "border-[var(--lv-accent)] bg-[var(--lv-surface-raised)] text-[var(--lv-text)]" : "border-[var(--lv-border)] bg-transparent text-[var(--lv-text-secondary)]"}`}
                       aria-current={selected ? "step" : undefined}
                       aria-pressed={auditioned}
-                      aria-label={`${index + 1}/${snapshot.events.length}: ${event.chord.label}, ${practiceTimingLabel(event, snapshot.meter.numerator, language)}. ${text.auditionCard}`}
+                      aria-label={`${index + 1}/${snapshot.spans.length}: ${event?.chord.label ?? restLabel}, ${practiceTimingLabel(span, snapshot.meter.numerator, language)}.${event ? ` ${text.auditionCard}` : ""}`}
                       disabled={!playable}
-                      onClick={() => void auditionResolved(index)}
+                      onClick={() => void auditionResolved(eventIndex)}
                     >
                       <span className="flex min-w-0 items-baseline gap-1.5">
                         <span className="shrink-0 text-[10px] font-normal text-[var(--lv-text-muted)]">{index + 1}</span>
-                        <span className="min-w-0 truncate">{event.chord.label}</span>
+                        <span className="min-w-0 truncate">{event?.chord.label ?? restLabel}</span>
                       </span>
                       <span
                         data-testid="voicing-loop-event-timing"
                         className={`mt-0.5 block truncate whitespace-nowrap text-[10px] font-normal leading-3 ${selected ? "text-teal-200" : "text-[var(--lv-text-muted)]"}`}
                       >
-                        {compactDurationLabel(event.durationBeats, language)}
+                        {compactDurationLabel(span.durationBeats, language)}
                       </span>
                       <span aria-hidden="true" data-testid="voicing-loop-event-beat-rail" className="absolute inset-x-2 bottom-1 flex h-0.5 gap-0.5 opacity-60">
-                        {Array.from({ length: Math.max(1, Math.min(16, Math.ceil(event.durationBeats))) }, (_, beatIndex) => (
+                        {Array.from({ length: Math.max(1, Math.min(16, Math.ceil(span.durationBeats))) }, (_, beatIndex) => (
                           <span
                             key={beatIndex}
                             className={`h-0.5 min-w-0 flex-1 rounded-full ${selected ? "bg-[var(--lv-accent)]" : "bg-slate-600"}`}
@@ -833,7 +841,7 @@ export function ProgressionVoicingPracticeView({
           <Surface className="min-w-0 p-4 sm:p-5" data-testid="voicing-loop-detail">
             <SectionHeading
               level={3}
-              title={currentEvent?.chord.label ?? "—"}
+              title={currentEvent?.chord.label ?? restLabel}
               description={displayMode === "learn" && currentVoicing
                 ? `${text.pitches}: ${currentVoicing.notes.map((note) => formatMidiNoteForDisplay(note.midiNote, "fl-studio", "flat")).join(" · ")} · ${text.degrees}: ${currentVoicing.notes.map((note) => note.degree ?? "—").join(" · ")}`
                 : undefined}
@@ -853,8 +861,9 @@ export function ProgressionVoicingPracticeView({
               <PracticeKeyboard
                 range={keyboardRange}
                 guideNotes={currentVoicing?.midiNotes ?? EMPTY_NOTES}
-                leftHandGuideNotes={currentVoicing?.leftHandNotes ?? EMPTY_NOTES}
-                rightHandGuideNotes={currentVoicing?.rightHandNotes ?? EMPTY_NOTES}
+                referenceBassNote={currentVoicing?.referenceBassNote}
+                leftHandGuideNotes={selection === "left-hand" ? currentVoicing?.midiNotes ?? EMPTY_NOTES : currentVoicing?.leftHandNotes ?? EMPTY_NOTES}
+                rightHandGuideNotes={selection === "left-hand" ? EMPTY_NOTES : currentVoicing?.rightHandNotes ?? EMPTY_NOTES}
                 allowedPitchClasses={ALL_PITCH_CLASSES}
                 requiredPitchClasses={EMPTY_NOTES}
                 level={displayMode === "learn" ? 1 : 4}
@@ -964,6 +973,7 @@ function compactDurationLabel(value: number, language: AppLanguage): string {
 function BeatIndicator({ current, label, total }: { current: number; label: string; total: number }) {
   const safeTotal = Math.max(1, Math.ceil(total));
   const activeIndex = Math.min(safeTotal - 1, Math.max(0, Math.floor(current) - 1));
+  const windowStart = Math.floor(activeIndex / 16) * 16;
   return (
     <span
       className="mt-2 flex min-w-0 flex-wrap gap-2"
@@ -972,7 +982,7 @@ function BeatIndicator({ current, label, total }: { current: number; label: stri
       aria-label={`${label} ${activeIndex + 1} / ${safeTotal}`}
     >
       <span className="flex flex-wrap gap-2" aria-hidden="true">
-        {Array.from({ length: safeTotal }, (_, index) => (
+        {Array.from({ length: Math.min(16, safeTotal - windowStart) }, (_, offset) => windowStart + offset).map((index) => (
           <span
             key={index}
             data-active={index === activeIndex ? "true" : "false"}
@@ -986,15 +996,17 @@ function BeatIndicator({ current, label, total }: { current: number; label: stri
 
 function ProgressionChoice({
   candidate,
+  language,
   onChoose,
   practiceLabel,
 }: {
   readonly candidate: VoicingLoopVaultCandidate;
+  readonly language: AppLanguage;
   readonly onChoose: () => void;
   readonly practiceLabel: string;
 }) {
   const facts = [candidate.key, `${candidate.bpm} BPM`].filter(Boolean).join(" · ");
-  const chords = candidate.chordLabels.join(" → ");
+  const chords = candidate.chordLabels.join(" → ") || (language === "ja" ? "休符のみ" : "Rests only");
   return (
     <button
       type="button"
@@ -1109,12 +1121,15 @@ function UnresolvedSummary({ plan, snapshot, language }: {
         eventIndex: index,
         label: snapshot.events[index]?.chord.label ?? `${index + 1}`,
         status: resolution.status,
+        reason: resolution.reason,
         detail: resolutionStatusLabel(resolution.status, snapshot, index, language),
       }]);
   if (unresolved.length === 0) return null;
   const grouped = new Map<string, { label: string; detail: string; count: number }>();
   for (const item of unresolved) {
-    const key = `${item.label}:${item.status}:${item.detail}`;
+    const chord = snapshot.events[item.eventIndex]?.chord;
+    const key = JSON.stringify([chord?.root, chord?.quality, chord ? [...chord.tensions].sort() : [],
+      chord?.bass, item.status, item.reason, item.detail]);
     const existing = grouped.get(key);
     grouped.set(key, existing
       ? { ...existing, count: existing.count + 1 }
@@ -1147,7 +1162,7 @@ function resolutionStatusLabel(
       return snapshot.selection === "left-hand"
         && chord?.bass !== undefined
         && chord.bass !== chord.root
-        ? text.leftHandSlashUnsupported
+        ? text.leftHandUpperUnsupported
         : text.unsupportedStatus;
     }
     case "GENERATION_ERROR": return text.generationErrorStatus;

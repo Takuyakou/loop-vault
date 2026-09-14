@@ -287,13 +287,14 @@ export function TextProgressionCapturePanel({
       <p id="text-progression-format" className="mt-2 text-xs text-[var(--lv-text-muted)]">
         {text(
           language,
-          `Strict v1: 4/4 only; each bar has 1, 2, or 4 chord tokens; maximum ${TEXT_PROGRESSION_MAX_BARS} bars / ${TEXT_PROGRESSION_MAX_TOKENS} tokens.`,
-          `v1は4/4のみ。各小節は1・2・4コード、最大${TEXT_PROGRESSION_MAX_BARS}小節・${TEXT_PROGRESSION_MAX_TOKENS}コードです。`,
+          `4/4 only; each bar has 1, 2, or 4 cells; maximum ${TEXT_PROGRESSION_MAX_BARS} bars / ${TEXT_PROGRESSION_MAX_TOKENS} cells. % repeats, _ rests, = holds without re-attack.`,
+          `4/4のみ。各小節は1・2・4セル、最大${TEXT_PROGRESSION_MAX_BARS}小節・${TEXT_PROGRESSION_MAX_TOKENS}セルです。% は再発音、_ は休符、= は再発音せず保持します。`,
         )}
       </p>
 
       <TextProgressionCards
         events={result.events}
+        valid={result.canConvert}
         tokens={result.tokens}
         voicingOverrides={voicingOverrides}
         selectedKey={selectedKey}
@@ -459,6 +460,7 @@ export function TextProgressionCapturePanel({
 
 function TextProgressionCards({
   events,
+  valid,
   tokens,
   voicingOverrides,
   selectedKey,
@@ -469,6 +471,7 @@ function TextProgressionCards({
   onSelect,
 }: {
   readonly events: readonly TextProgressionEvent[];
+  readonly valid: boolean;
   readonly tokens: readonly TextProgressionToken[];
   readonly voicingOverrides: TextProgressionVoicingOverrides;
   readonly selectedKey?: string;
@@ -506,6 +509,14 @@ function TextProgressionCards({
             <div className="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
               {barTokens.map((token) => {
                 const event = eventsByToken.get(`${token.bar}:${token.range.start}:${token.range.end}`);
+                if (!event && valid && (token.raw === "_" || token.raw === "=")) {
+                  return (
+                    <div key={`${token.index}:${token.range.start}`} className="min-w-0 border border-[var(--lv-border)] bg-[var(--lv-surface)] p-3" data-testid="text-progression-control-card">
+                      <span className="block font-semibold">{token.raw === "_" ? text(language, "Rest", "休符") : text(language, "Hold", "保持（再発音なし）")}</span>
+                      <span className="mt-1 block text-xs text-[var(--lv-text-muted)]">{tokenLocation(token, language)}</span>
+                    </div>
+                  );
+                }
                 if (!event) {
                   return (
                     <div
@@ -617,6 +628,8 @@ function diagnosticMessage(diagnostic: TextProgressionDiagnostic, language: AppL
     "three-chord-bar": "1小節に3つのコードは、v1の文法では正確に表現できません。",
     "invalid-chord-count": "4/4の各小節には、コード・トークンを1つ、2つ、または4つだけ入力できます。",
     "invalid-chord": "このトークンは対応するコード表記ではありません。",
+    "invalid-control": "繰り返しには前のコードが必要です。保持は直前の発音中コードにのみ使用でき、先頭や休符の後には置けません。",
+    "ambiguous-compact-progression": "この小節を一意に解釈できません。コード間に空白を入れてください。",
     "degree-requires-confirmed-key": "ローマ数字または数字のコード表記には、ユーザーが確認したキーが必要です。",
     "no-chord-not-supported": "N.C. とコードなしの休符は、テキスト進行入力 v1 では使用できません。",
     "unsupported-repeat": "繰り返し記法は、テキスト進行入力 v1 では使用できません。",

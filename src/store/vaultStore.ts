@@ -1,4 +1,5 @@
 import { createStore, type StoreApi } from "zustand/vanilla";
+import { explicitSlashLabel } from "../domain/explicitSlashLabel";
 import {
   assertVaultCandidateSerializedBudget,
   createEmptyVault,
@@ -120,6 +121,8 @@ export interface TextProgressionIdeaDraft {
   bpm?: number;
   /** Present only when explicitly confirmed by the Text Progression UI. */
   confirmedKey?: string;
+  /** Transient exact score extent, persisted through existing source beat bounds. */
+  scoreLengthBeats?: number;
 }
 export interface ProgressionSaveMetadata {
   sourcePath?: string;
@@ -1187,7 +1190,7 @@ function normalizeTextProgressionIdeaDraft(
   const convertedChords = draft.chords.map(textProgressionChordForSave);
   if (convertedChords.some((chord) => chord === undefined)) return undefined;
   const chords = convertedChords.filter((chord): chord is ChordTimelineItem => chord !== undefined);
-  if (chords.length !== draft.chords.length || !isSaveSafeTextProgressionTimeline(chords)) return undefined;
+  if (chords.length !== draft.chords.length || !isSaveSafeTextProgressionTimeline(chords, draft.scoreLengthBeats)) return undefined;
 
   return {
     ...draft,
@@ -1209,9 +1212,9 @@ function createSavedTextProgressionBlock(
   },
   context: { idFactory: () => string; createdAt: string },
 ): SavedProgressionBlock {
-  const start = textAbsoluteBeat(draft.chords[0]!);
-  const end = textAbsoluteBeat(draft.chords[draft.chords.length - 1]!)
-    + draft.chords[draft.chords.length - 1]!.durationBeats;
+  const start = draft.scoreLengthBeats === undefined ? textAbsoluteBeat(draft.chords[0]!) : 0;
+  const end = draft.scoreLengthBeats ?? (textAbsoluteBeat(draft.chords[draft.chords.length - 1]!)
+    + draft.chords[draft.chords.length - 1]!.durationBeats);
   const startBar = Math.floor(start / 4) + 1;
   const endBar = Math.ceil(end / 4);
   return {
@@ -1219,6 +1222,7 @@ function createSavedTextProgressionBlock(
     startBar,
     endBar,
     lengthBars: endBar - startBar + 1,
+    ...(draft.scoreLengthBeats === undefined ? {} : { sourceStartBeat: start, sourceEndBeat: end }),
     summaryText: draft.summaryText,
     chords: persistChordEvents(draft.chords, context.idFactory),
     ...(draft.confirmedKey === undefined ? {} : { detectedKey: draft.confirmedKey }),
@@ -1244,7 +1248,7 @@ function textProgressionChordForSave(item: ChordTimelineItem): ChordTimelineItem
     bar: item.bar,
     beat: item.beat,
     durationBeats: item.durationBeats,
-    chord: { ...canonical, tensions: [...canonical.tensions] },
+    chord: { ...canonical, label: explicitSlashLabel(canonical), tensions: [...canonical.tensions] },
     // Text entry never supplies MIDI analyzer confidence or alternatives.
     confidence: 0,
     alternatives: [],
@@ -1278,10 +1282,23 @@ function textPracticeVoicingForSave(
 }
 /**
  * The public store adapter revalidates the parser's save-safe boundary:
- * contiguous exact 4/4 bars within the Text Progression bounds, no gaps or
- * overlaps, and chord identities accepted by the established parser.
+ * Explicit score extents allow bounded integer-beat rests and holds, never
+ * overlaps. Legacy callers retain contiguous 1/2/4-cell bar validation.
  */
-function isSaveSafeTextProgressionTimeline(chords: readonly ChordTimelineItem[]): boolean {
+function isSaveSafeTextProgressionTimeline(chords: readonly ChordTimelineItem[], scoreLengthBeats?: number): boolean {
+  if (scoreLengthBeats !== undefined) {
+    if (!Number.isSafeInteger(scoreLengthBeats) || scoreLengthBeats < 4
+      || scoreLengthBeats > TEXT_PROGRESSION_MAX_BARS * 4 || scoreLengthBeats % 4 !== 0
+      || chords.length > TEXT_PROGRESSION_MAX_TOKENS) return false;
+    let end = 0;
+    for (const event of chords) {
+      if (!isValidTextProgressionChord(event)) return false;
+      const onset = textAbsoluteBeat(event);
+      if (onset < end || onset + event.durationBeats > scoreLengthBeats) return false;
+      end = onset + event.durationBeats;
+    }
+    return true;
+  }
   if (chords.length < 1 || chords.length > TEXT_PROGRESSION_MAX_TOKENS) return false;
   const eventsByBar = new Map<number, ChordTimelineItem[]>();
   let cursor: number | undefined;
@@ -1321,7 +1338,8 @@ function isValidTextProgressionChord(item: ChordTimelineItem): boolean {
     && item.beat >= 1
     && item.beat <= 4
     && Number.isInteger(item.durationBeats)
-    && (item.durationBeats === 1 || item.durationBeats === 2 || item.durationBeats === 4);
+    && item.durationBeats > 0
+    && item.durationBeats <= TEXT_PROGRESSION_MAX_BARS * 4;
 }
 
 function sameTextProgressionChord(
@@ -1336,6 +1354,7 @@ function sameTextProgressionChord(
 }
 
 function textProgressionSummary(chords: readonly ChordTimelineItem[]): string {
+  if (!chords.length) return "Rest";
   const firstBar = chords[0]!.bar;
   const last = chords[chords.length - 1]!;
   const lastBar = Math.ceil((textAbsoluteBeat(last) + last.durationBeats) / 4);

@@ -38,6 +38,7 @@ export interface TextProgressionDraftSavePayload {
   readonly userVerified: boolean;
   readonly bpm?: number;
   readonly confirmedKey?: string;
+  readonly scoreLengthBeats?: number;
 }
 
 export interface CreateTextProgressionDraftSavePayloadInput {
@@ -63,7 +64,6 @@ export function createTextProgressionDraft(
   const { result } = input;
   if (
     !result.canConvert
-    || result.events.length === 0
     || result.bars < 1
     || result.bars > TEXT_PROGRESSION_MAX_BARS
   ) {
@@ -162,6 +162,7 @@ export function textProgressionDraftSavePayload(
     title: editedTitle || canonicalTitle,
     nextAction: input.nextAction,
     chords,
+    scoreLengthBeats: draft.lengthBars * draft.beatsPerBar,
     summaryText: summaryFromEvents(draft.events, draft.lengthBars, draft.beatsPerBar),
     userEdited: draft.isDirty,
     userVerified: input.userVerified,
