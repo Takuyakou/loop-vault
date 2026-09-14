@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "5.31",
   "status": "in-progress",
-  "activeStage": "P5.31-03",
-  "completedStages": ["P5.31-00", "P5.31-01", "P5.31-02"],
+  "activeStage": "P5.31-04",
+  "completedStages": ["P5.31-00", "P5.31-01", "P5.31-02", "P5.31-03"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "f075618037f1a2a5326d8d7ae7cc474d081f95ac",
-  "lastVerifiedCommit": "e857190acd2108c23b592aef0f4109f58472b4f9",
+  "lastVerifiedCommit": "e1e43e07ddbadca2c314aa960086de675410946e",
   "currentBranch": "audit/p531-stage00",
   "requiredGates": {
     "P5.31-00": [
@@ -36,8 +36,13 @@
     "02-transport-lifecycle": "pass",
     "02-focused-ui": "pass",
     "02-typescript-lint": "pass",
-    "02-phase-docs-diff": "pass"
+    "02-phase-docs-diff": "pass",
+    "03-approved-slash-target-playback": "pass",
+    "03-keyboard-roles": "pass",
+    "03-fail-closed-regression": "pass",
+    "03-typescript-lint": "pass",
+    "03-phase-docs-diff": "pass"
   },
-  "nextAction": "Stage02 verified at e857190acd2108c23b592aef0f4109f58472b4f9 with 326 focused tests and 5 fresh-production focused Playwright tests. Continue authorized Stage03 Upper Structure + Separate Slash Bass product rule, then Stage04 gates. No merge/push/release.",
+  "nextAction": "Stage03 verified at e1e43e07ddbadca2c314aa960086de675410946e with 276 focused tests and 6 fresh-production focused Playwright tests. Continue authorized Stage04 full-fixture integration and final regression/security/product-acceptance gates. No merge/push/release.",
   "updatedAt": "2026-09-14T00:00:00+09:00"
 }
