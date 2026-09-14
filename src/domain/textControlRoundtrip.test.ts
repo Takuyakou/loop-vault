@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import { BrowserMemoryVaultStorage } from "../storage/browserMemoryVaultStorage";
 import { createVaultStore } from "../store/vaultStore";
 import { parseChordLabel } from "./chords";
@@ -16,6 +17,7 @@ import {
 import type { ChordTimelineItem, SavedProgressionBlock, VoicingSnapshot } from "./types";
 
 const NOW = new Date("2026-09-14T00:00:00.000Z");
+const fixture = (name: string) => readFileSync(new URL(`../../docs/phase5.31/fixtures/${name}`, import.meta.url), "utf8");
 
 function payloadFor(input: string) {
   const parsed = parseTextProgression(input);
@@ -50,6 +52,51 @@ async function roundtrip(input: string) {
 }
 
 describe("P5.31 control timing across public save and practice boundaries", () => {
+  it("round-trips the exact compact and expanded 16-bar fixtures to identical detached plans", async () => {
+    const compact = await roundtrip(fixture("rechord-user-example.txt"));
+    const expanded = await roundtrip(fixture("rechord-user-example-expanded.txt"));
+    expect(compact.handoff).toEqual(expanded.handoff);
+    expect(compact.block.chords).toEqual(expanded.block.chords);
+    const snapshot = compact.handoff.snapshots["basic-full"]!;
+    expect(snapshot).toMatchObject({ key: "C major", bpm: 108, lengthBeats: 64 });
+    const expectedTiming = Array.from({ length: 16 }, (_, bar) => bar === 3
+      ? [0, 1, 2, 3].map(beat => [bar * 4 + beat, 1])
+      : [0, 2].map(beat => [bar * 4 + beat, 2])).flat();
+    expect(snapshot.events.map(event => [event.startBeat, event.durationBeats])).toEqual(expectedTiming);
+    expect(snapshot.events.map(({ chord }) => [chord.root, chord.quality, chord.tensions, chord.bass ?? null])).toEqual([
+      [0,"dom9",[],null], [11,"dom7",["#9","#5"],null],
+      [4,"min9",[],null], [1,"dom7",["#9"],null],
+      [0,"dom9",[],null], [11,"dom7",["#9"],null],
+      [4,"min9",[],null], [3,"dom7",["#9"],null], [2,"min9",[],null], [1,"dom7",["#9"],null],
+      [0,"dom9",[],null], [11,"dom7",["#9","#5"],null],
+      [4,"min9",[],null], [1,"dom7",["#9"],null],
+      [0,"dom9",[],null], [11,"dom7",["#9","#5"],null],
+      [4,"min9",[],null], [5,"min9",[],null],
+      [6,"dom9",[],null], [11,"dom7",["#9"],null],
+      [10,"maj7",[],null], [3,"dom9",[],null],
+      [9,"min9",[],null], [9,"min9",[],0],
+      [11,"min7",[],null], [4,"dom7",["b9"],null],
+      [0,"min9",[],null], [5,"dom13",[],null],
+      [10,"maj7",[],null], [3,"dom9",[],null],
+      [9,"min9",[],null], [9,"min9",[],0],
+      [2,"min11",[],null], [1,"dom7",["#9"],null],
+    ]);
+    for (const [mode, value] of Object.entries(compact.handoff.snapshots)) {
+      expect(value.events.map(event => [event.startBeat, event.durationBeats])).toEqual(expectedTiming);
+      const plan = resolveProgressionPracticeVoicings(value);
+      const expected = Array.from({ length: 34 }, (_, index) => mode === "source-midi" || mode === "custom"
+        ? "UNAVAILABLE" : mode === "left-hand" && [1, 11, 15].includes(index) ? "UNSUPPORTED_RULE" : "SUPPORTED");
+      expect(plan.events.map(event => event.status), mode).toEqual(expected);
+      if (mode === "left-hand") {
+        for (const index of [23, 31]) {
+          const event = plan.events[index]!;
+          if (event.status !== "SUPPORTED") throw new Error("Approved slash upper structure must resolve");
+          expect(event.voicing.referenceBassNote! % 12).toBe(0);
+        }
+      }
+    }
+  });
+
   it("preserves explicit same-root slash through Text, public save, JSON and practice", async () => {
     const { block, handoff, idea } = await roundtrip("| Am9/A | Am11/B |");
     expect(block.chords.map(event => [event.chord.label, event.chord.bass])).toEqual([["Am9/A", 9], ["Am11/B", 11]]);
@@ -60,7 +107,7 @@ describe("P5.31 control timing across public save and practice boundaries", () =
   });
 
   it("preserves repeat attacks, silence and cross-bar hold through Draft, JSON reload and all six modes", async () => {
-    const { payload, block, idea, handoff } = await roundtrip("| E7%_Am7 | =G |");
+    const { payload, block, idea, handoff } = await roundtrip(fixture("rechord-control-example.txt"));
     const expected = [[0, 1], [1, 1], [3, 3], [6, 2]];
     const savedTiming = (events: readonly ChordTimelineItem[]) => events.map(event => [
       (event.bar - 1) * 4 + event.beat - 1, event.durationBeats,

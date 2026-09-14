@@ -1,6 +1,9 @@
 import AxeBuilder from "@axe-core/playwright";
+import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { assertNoHorizontalOverflow } from "./helpers/app";
+
+const suppliedFixture = (name: string) => readFileSync(`docs/phase5.31/fixtures/${name}`, "utf8");
 
 async function saveTextToLoop(page: Page, input: string) {
   await page.goto("/?p528Direct=1");
@@ -24,6 +27,61 @@ async function saveTextToLoop(page: Page, input: string) {
   await savedNotice.getByRole("button", { name: "Voicing Loop", exact: true }).click();
   return page.getByTestId("voicing-loop-workspace");
 }
+
+test("P5.31 exact compact and expanded full scores reach direct selection and real practice", async ({ page }) => {
+  test.setTimeout(60_000);
+  const observed: string[][] = [];
+  for (const name of ["rechord-user-example.txt", "rechord-user-example-expanded.txt"]) {
+    const workspace = await saveTextToLoop(page, suppliedFixture(name));
+    await page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true }).click();
+    await page.getByRole("searchbox", { name: "進行を検索" }).fill("P5.31 control timing fixture");
+    const choice = page.getByTestId("voicing-loop-progression-choice").filter({ hasText: "P5.31 control timing fixture" });
+    await expect(choice).toHaveCount(1);
+    await choice.focus();
+    await page.keyboard.press("Enter");
+    const cards = workspace.getByTestId("voicing-loop-event");
+    await expect(cards).toHaveCount(34);
+    const expectedDurations = Array.from({ length: 16 }, (_, bar) => bar === 3 ? ["1", "1", "1", "1"] : ["2", "2"]).flat();
+    expect(await cards.evaluateAll(items => items.map(item => item.getAttribute("data-duration-beats")))).toEqual(expectedDurations);
+    observed.push(await cards.evaluateAll(items => items.map(item => item.getAttribute("aria-label") ?? "")));
+    await expect(workspace.locator("#voicing-loop-bpm")).toHaveValue("120");
+    await workspace.getByRole("button", { name: "Left-hand", exact: true }).click();
+    await expect(workspace).toContainText("3個のコードを再生できません");
+    await expect(workspace.getByRole("button", { name: /開始/ })).toBeDisabled();
+    await workspace.getByRole("button", { name: "Basic Full 1–7–3", exact: true }).click();
+    const current = workspace.getByTestId("voicing-loop-current-next").getByRole("heading", { level: 2 });
+    await expect(current).toHaveText("C9");
+    await cards.nth(1).focus();
+    await page.keyboard.press("Enter");
+    await expect(cards.nth(1)).toHaveAttribute("aria-pressed", "true");
+    await expect(current).toHaveText("C9");
+    await workspace.getByRole("button", { name: "現在のコードを試聴", exact: true }).click();
+    await page.getByLabel("カウントイン").selectOption("0");
+    await workspace.getByRole("button", { name: /開始/ }).click();
+    await expect(cards.nth(1)).toHaveAttribute("aria-current", "step");
+    await workspace.getByRole("button", { name: "一時停止", exact: true }).click();
+    await expect(workspace.getByRole("button", { name: "再開", exact: true })).toBeVisible();
+    await workspace.getByRole("button", { name: "停止", exact: true }).click();
+  }
+  expect(observed[0]).toEqual(observed[1]);
+});
+
+test("P5.31 exact official control score saves timing without inventing a G triad lesson fallback", async ({ page }) => {
+  const workspace = await saveTextToLoop(page, suppliedFixture("rechord-control-example.txt"));
+  const cards = workspace.getByTestId("voicing-loop-event");
+  await expect(cards).toHaveCount(5);
+  expect(await cards.evaluateAll(items => items.map(item => item.getAttribute("data-duration-beats"))))
+    .toEqual(["1", "1", "1", "3", "2"]);
+  expect(await cards.evaluateAll(items => items.map(item => item.getAttribute("data-span-kind"))))
+    .toEqual(["chord", "chord", "rest", "chord", "chord"]);
+  await expect(cards.nth(4)).toContainText("G");
+  await expect(workspace).toContainText("1個のコードを再生できません");
+  await expect(workspace.getByRole("button", { name: /開始/ })).toBeDisabled();
+  await cards.nth(1).focus();
+  await page.keyboard.press("Enter");
+  await expect(cards.nth(1)).toHaveAttribute("aria-pressed", "true");
+  await expect(cards.nth(0)).toHaveAttribute("aria-current", "step");
+});
 
 test("P5.31 Text rest/repeat/hold reaches the real single-clock practice transport", async ({ page }) => {
   test.setTimeout(60_000);
