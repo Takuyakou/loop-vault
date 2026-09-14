@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "phaseId": "5.31",
-  "status": "in-progress",
-  "activeStage": "P5.31-04",
-  "completedStages": ["P5.31-00", "P5.31-01", "P5.31-02", "P5.31-03"],
+  "status": "completed",
+  "activeStage": null,
+  "completedStages": ["P5.31-00", "P5.31-01", "P5.31-02", "P5.31-03", "P5.31-04"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "f075618037f1a2a5326d8d7ae7cc474d081f95ac",
-  "lastVerifiedCommit": "e1e43e07ddbadca2c314aa960086de675410946e",
+  "lastVerifiedCommit": "c4bd94a64d4142662fe60b81030100e58e59593f",
   "currentBranch": "audit/p531-stage00",
   "requiredGates": {
     "P5.31-00": [
@@ -41,8 +41,17 @@
     "03-keyboard-roles": "pass",
     "03-fail-closed-regression": "pass",
     "03-typescript-lint": "pass",
-    "03-phase-docs-diff": "pass"
+    "03-phase-docs-diff": "pass",
+    "04-paste-to-practice-parity": "pass",
+    "04-full-vitest": "pass",
+    "04-full-playwright": "pass",
+    "04-accessibility-responsive": "pass",
+    "04-typescript-e2e-lint-contracts": "pass",
+    "04-production-build": "pass",
+    "04-security-privacy": "pass",
+    "04-generated-output-hygiene": "pass",
+    "04-phase-docs-diff-clean": "pass"
   },
-  "nextAction": "Stage03 verified at e1e43e07ddbadca2c314aa960086de675410946e with 276 focused tests and 6 fresh-production focused Playwright tests. Continue authorized Stage04 full-fixture integration and final regression/security/product-acceptance gates. No merge/push/release.",
+  "nextAction": "READY FOR PRODUCT ACCEPTANCE at c4bd94a64d4142662fe60b81030100e58e59593f: 2953 full Vitest tests and 71 fresh-production Playwright tests PASS. Human listening/device and desktop persistence acceptance pending; retain explicit unsupported lesson cases. No merge/push/tag/release/P5.32.",
   "updatedAt": "2026-09-14T00:00:00+09:00"
 }

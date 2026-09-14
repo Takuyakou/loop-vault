@@ -5,7 +5,7 @@
 
 Stage00 audit complete. The user has authorized remaining stages through Stage04
 and resolved the two approval blockers via [product decisions](contracts/11-human-approved-product-decisions.md).
-Stage01 tokenizer/normalization, Stage02 control timing and Stage03 approved slash roles are verified; Stage04 is next. No later stage is marked complete. See the
+Stages00-04 are complete. READY FOR PRODUCT ACCEPTANCE at candidate `c4bd94a64d4142662fe60b81030100e58e59593f`; human/device acceptance remains pending. See the [final report](reports/P5.31-04-report.md),
 historical [audit report](reports/P5.31-00-report.md) and [live state](execution-state.json).
 
 ## Required Reading Order
