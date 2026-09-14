@@ -5,7 +5,7 @@
 
 Stage00 audit complete. The user has authorized remaining stages through Stage04
 and resolved the two approval blockers via [product decisions](contracts/11-human-approved-product-decisions.md).
-Implementation resumes at Stage01; no later stage is marked complete. See the
+Stage01 tokenizer/normalization is verified; Stage02 is next. No later stage is marked complete. See the
 historical [audit report](reports/P5.31-00-report.md) and [live state](execution-state.json).
 
 ## Required Reading Order

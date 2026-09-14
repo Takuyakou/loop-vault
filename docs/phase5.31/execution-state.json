@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "5.31",
   "status": "in-progress",
-  "activeStage": "P5.31-01",
-  "completedStages": ["P5.31-00"],
+  "activeStage": "P5.31-02",
+  "completedStages": ["P5.31-00", "P5.31-01"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "f075618037f1a2a5326d8d7ae7cc474d081f95ac",
-  "lastVerifiedCommit": "a6f581370a67ca1e9f7ed7d05382b9ace9857ba5",
+  "lastVerifiedCommit": "5cf54904118cfa97a9a176a086186e88d4846682",
   "currentBranch": "audit/p531-stage00",
   "requiredGates": {
     "P5.31-00": [
@@ -27,8 +27,12 @@
     "typescript-lint": "pass",
     "phase-docs": "pass",
     "production-unchanged": "pass",
-    "diff-check": "pass"
+    "diff-check": "pass",
+    "01-tokenizer-regression": "pass",
+    "01-full-fixture": "pass",
+    "01-typescript-lint": "pass",
+    "01-phase-docs-diff": "pass"
   },
-  "nextAction": "Implement Stage01 using contracts/11-human-approved-product-decisions.md; user authorized sequential completion through Stage04. Verify and close each stage independently; no merge/push/release.",
+  "nextAction": "Stage01 verified at 5cf54904118cfa97a9a176a086186e88d4846682. Continue authorized Stage02 control-token timing; then Stage03 approved slash policy and Stage04 gates. No merge/push/release.",
   "updatedAt": "2026-09-14T00:00:00+09:00"
 }
