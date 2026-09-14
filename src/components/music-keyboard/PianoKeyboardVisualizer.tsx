@@ -33,6 +33,7 @@ export interface PianoKeyboardVisualizerProps {
   concealNoteNames?: boolean;
   interactionMode?: "practice" | "neutral-monitor";
   centerWhenFitted?: boolean;
+  fingerLabels?: ReadonlyMap<number, string>;
 }
 
 const copy = {
@@ -89,6 +90,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
   concealNoteNames = false,
   interactionMode = "practice",
   centerWhenFitted = false,
+  fingerLabels,
 }: PianoKeyboardVisualizerProps) {
   const text = copy[language];
   const range = useMemo(
@@ -198,6 +200,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
                       ? "right"
                       : undefined
                   : undefined}
+                fingerLabel={showGuide ? fingerLabels?.get(key.note) : undefined}
                 accidentalStyle={accidentalStyle}
                 concealNoteName={concealNoteNames}
               />
@@ -224,6 +227,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
                       ? "right"
                       : undefined
                   : undefined}
+                fingerLabel={showGuide ? fingerLabels?.get(key.note) : undefined}
                 accidentalStyle={accidentalStyle}
                 concealNoteName={concealNoteNames}
               />

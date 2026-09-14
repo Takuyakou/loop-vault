@@ -436,7 +436,8 @@ describe("ProgressionVoicingPracticeView", () => {
   it("defaults reference sound on, passes session state to Start, and keeps visual transport available off", async () => {
     const runtime = new FakeTransport();
     const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full");
-    const referenceSound = container.querySelector<HTMLInputElement>("input[type='checkbox']")!;
+    const referenceSound = Array.from(container.querySelectorAll<HTMLInputElement>("input[type='checkbox']"))
+      .find((input) => input.parentElement?.textContent?.includes("お手本音"))!;
     expect(referenceSound.checked).toBe(true);
     await act(async () => referenceSound.click());
     expect(referenceSound.checked).toBe(false);
@@ -772,6 +773,69 @@ describe("ProgressionVoicingPracticeView", () => {
     await act(async () => root?.unmount());
     root = undefined;
     expect(runtime.stop.mock.calls.length).toBeGreaterThan(stopsBeforeExit);
+  });
+
+  it("shows Suggested Fingering for all six voicing modes without changing playback pitches", async () => {
+    const runtime = new FakeTransport();
+    const allSnapshots = Object.fromEntries([
+      "source-midi", "custom", "basic-shell", "basic-full", "full-shell", "left-hand",
+    ].map((selection) => [selection, snapshot(selection as ProgressionVoicingSelection)]));
+    const container = await renderView(runtime, allSnapshots, "source-midi");
+
+    expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
+      .toContain("現在の運指: R1 · R3 · R5");
+    expect(container.querySelector("[data-finger-label='R1']")).not.toBeNull();
+
+    for (const label of ["Custom", "Basic Full 1–7–3", "Full Shell Voicing"]) {
+      await act(async () => button(container, label).click());
+      expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
+        .toContain("現在の運指:");
+      expect(container.querySelector("[data-testid='voicing-loop-fingering-unavailable']")).toBeNull();
+    }
+
+    await act(async () => button(container, "Basic Shell 1–7").click());
+    expect(button(container, "右手 R").disabled).toBe(true);
+    expect(button(container, "左手 L").getAttribute("aria-pressed")).toBe("true");
+    expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
+      .toContain("現在の運指: L5 · L1");
+
+    await act(async () => button(container, "Left-hand").click());
+    expect(button(container, "右手 R").disabled).toBe(true);
+    expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
+      .toContain("現在の運指: L");
+
+    await act(async () => button(container, "開始").click());
+    expect(runtime.options?.plan.events.map((entry) => entry.status)).toEqual(["SUPPORTED", "SUPPORTED"]);
+  });
+
+  it("can hide, save, and reset a personal fingering by exact physical pitch signature", async () => {
+    const container = await renderView(
+      new FakeTransport(),
+      { "source-midi": snapshot("source-midi") },
+      "source-midi",
+    );
+    const selects = container.querySelectorAll<HTMLSelectElement>("[data-testid='voicing-loop-fingering-editor'] select");
+    expect(selects).toHaveLength(3);
+    await act(async () => {
+      const valueSetter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value")?.set;
+      valueSetter?.call(selects[1], "2");
+      selects[1]!.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    await act(async () => button(container, "この運指を保存").click());
+    expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
+      .toContain("R1 · R2 · R5(自分の運指)");
+    expect(window.localStorage.getItem("loop-vault:voicing-loop-fingering-preferences:v1"))
+      .toContain("R:48,55,59");
+
+    await act(async () => button(container, "おすすめに戻す").click());
+    expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
+      .toContain("R1 · R3 · R5(おすすめ)");
+
+    const toggle = Array.from(container.querySelectorAll<HTMLInputElement>("input[type='checkbox']"))
+      .find((input) => input.parentElement?.textContent?.includes("おすすめ運指を表示"));
+    await act(async () => toggle?.click());
+    expect(container.querySelector("[data-testid='voicing-loop-fingering-summary']")).toBeNull();
+    expect(container.querySelector("[data-finger-label]")).toBeNull();
   });
 });
 

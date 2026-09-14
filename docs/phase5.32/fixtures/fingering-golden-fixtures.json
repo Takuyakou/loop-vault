@@ -1,0 +1,158 @@
+{
+  "triads": [
+    {
+      "id": "c-root-rh",
+      "hand": "right",
+      "chord": "C",
+      "midi": [
+        60,
+        64,
+        67
+      ],
+      "preferred": [
+        1,
+        3,
+        5
+      ]
+    },
+    {
+      "id": "c-root-lh",
+      "hand": "left",
+      "chord": "C",
+      "midi": [
+        48,
+        52,
+        55
+      ],
+      "preferred": [
+        5,
+        3,
+        1
+      ]
+    },
+    {
+      "id": "c-first-rh",
+      "hand": "right",
+      "chord": "C/E",
+      "midi": [
+        64,
+        67,
+        72
+      ],
+      "preferred": [
+        1,
+        2,
+        5
+      ]
+    },
+    {
+      "id": "c-first-lh",
+      "hand": "left",
+      "chord": "C/E",
+      "midi": [
+        52,
+        55,
+        60
+      ],
+      "preferred": [
+        5,
+        3,
+        1
+      ]
+    },
+    {
+      "id": "c-second-rh",
+      "hand": "right",
+      "chord": "C/G",
+      "midi": [
+        55,
+        60,
+        64
+      ],
+      "preferred": [
+        1,
+        3,
+        5
+      ]
+    },
+    {
+      "id": "c-second-lh",
+      "hand": "left",
+      "chord": "C/G",
+      "midi": [
+        43,
+        48,
+        52
+      ],
+      "preferred": [
+        5,
+        2,
+        1
+      ]
+    }
+  ],
+  "guideTones": [
+    {
+      "id": "dm7-guide-rh",
+      "hand": "right",
+      "chord": "Dm7",
+      "midi": [
+        65,
+        72
+      ],
+      "preferred": [
+        1,
+        5
+      ]
+    },
+    {
+      "id": "dm7-guide-lh",
+      "hand": "left",
+      "chord": "Dm7",
+      "midi": [
+        53,
+        60
+      ],
+      "preferred": [
+        5,
+        1
+      ]
+    }
+  ],
+  "fourNote": [
+    {
+      "id": "dm9-rh",
+      "hand": "right",
+      "chord": "Dm9",
+      "midi": [
+        53,
+        57,
+        60,
+        64
+      ],
+      "preferred": [
+        1,
+        2,
+        3,
+        5
+      ]
+    },
+    {
+      "id": "dm9-lh",
+      "hand": "left",
+      "chord": "Dm9",
+      "midi": [
+        53,
+        57,
+        60,
+        64
+      ],
+      "preferred": [
+        5,
+        3,
+        2,
+        1
+      ]
+    }
+  ]
+}
