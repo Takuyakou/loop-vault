@@ -96,13 +96,13 @@ describe("P5.31 baseline advanced by explicitly accepted stage behavior", () => 
     expect(hold.snapshot.events[0]!.durationBeats).toBe(6);
   });
 
-  it("rejects Left-hand slash shapes despite accepting their unslashed families", () => {
+  it("accepts Left-hand slash shapes only after the approved product rule", () => {
     for (const label of ["Am11/B","Am9/C","Am11","Am9"]) {
       const value = snapshot(block([event(label,0,8)]), "left-hand");
       expect(value.ok).toBe(true);
       if (!value.ok) return;
       expect(resolveProgressionPracticeVoicings(value.snapshot).events[0]!.status)
-        .toBe(label.includes("/") ? "UNSUPPORTED_RULE" : "SUPPORTED");
+        .toBe("SUPPORTED");
     }
   });
 });

@@ -1,4 +1,5 @@
 import { createStore, type StoreApi } from "zustand/vanilla";
+import { explicitSlashLabel } from "../domain/explicitSlashLabel";
 import {
   assertVaultCandidateSerializedBudget,
   createEmptyVault,
@@ -1247,7 +1248,7 @@ function textProgressionChordForSave(item: ChordTimelineItem): ChordTimelineItem
     bar: item.bar,
     beat: item.beat,
     durationBeats: item.durationBeats,
-    chord: { ...canonical, tensions: [...canonical.tensions] },
+    chord: { ...canonical, label: explicitSlashLabel(canonical), tensions: [...canonical.tensions] },
     // Text entry never supplies MIDI analyzer confidence or alternatives.
     confidence: 0,
     alternatives: [],

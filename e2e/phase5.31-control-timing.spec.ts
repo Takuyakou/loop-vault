@@ -53,6 +53,31 @@ test("P5.31 Text rest/repeat/hold reaches the real single-clock practice transpo
   await page.getByRole("button", { name: "停止", exact: true }).click();
 });
 
+test("P5.31 Left-hand slash keeps identity and separates reference bass from targets", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 812 });
+  const workspace = await saveTextToLoop(page, "| Am9/A | Am11/B | Am9/C |");
+  await workspace.getByRole("button", { name: "Left-hand", exact: true }).click();
+  await expect(workspace.getByTestId("voicing-loop-current-next").getByRole("heading", { level: 2 })).toHaveText("Am9/A");
+  await expect(workspace.getByTestId("slash-bass-reference")).toContainText("練習対象外");
+  await expect(workspace.locator("[data-guide-hand='left']")).toHaveCount(4);
+  await expect(workspace.locator("[data-guide-hand='right']")).toHaveCount(0);
+  await expect(workspace.getByRole("button", { name: /開始/ })).toBeEnabled();
+  const card = workspace.getByTestId("voicing-loop-event").nth(1);
+  await card.focus();
+  await page.keyboard.press("Enter");
+  await expect(card).toHaveAttribute("aria-pressed", "true");
+  await expect(workspace.getByTestId("voicing-loop-current-next").getByRole("heading", { level: 2 })).toHaveText("Am9/A");
+  await assertNoHorizontalOverflow(page);
+  const axe = await new AxeBuilder({ page: page as never }).include("[data-testid='voicing-loop-workspace']").analyze();
+  expect(axe.violations.filter((violation) => violation.impact === "serious" || violation.impact === "critical")).toEqual([]);
+  await workspace.getByRole("button", { name: "Recall（コード名のみ）", exact: true }).click();
+  await expect(workspace.getByTestId("slash-bass-reference")).toHaveCount(0);
+  await expect(workspace.locator("[data-guide-hand]")).toHaveCount(0);
+  await page.setViewportSize({ width: 640, height: 900 });
+  await page.evaluate(() => { document.documentElement.style.zoom = "2"; });
+  await assertNoHorizontalOverflow(page);
+});
+
 test("P5.31 all-rest maximum score is saveable and honest at 320px, 200% and reduced motion", async ({ page }) => {
   test.setTimeout(60_000);
   await page.setViewportSize({ width: 320, height: 812 });

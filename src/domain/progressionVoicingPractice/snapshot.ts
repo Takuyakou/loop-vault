@@ -1,4 +1,5 @@
-import { labelFromSymbol, parseChordLabel } from "../chords";
+import { parseChordLabel } from "../chords";
+import { explicitSlashLabel } from "../explicitSlashLabel";
 import type { ChordQuality, ChordSymbol, ChordTimelineItem, SavedProgressionBlock, Tension, VoicingSnapshot } from "../types";
 import { voicingCompatibility, voicingSourceStatus } from "../voicing";
 import {
@@ -190,7 +191,7 @@ function cloneChord(chord: ChordSymbol): ProgressionPracticeEvent["chord"] {
     quality: canonical.quality,
     tensions: Object.freeze([...canonical.tensions]),
     ...(canonical.bass === undefined ? {} : { bass: canonical.bass }),
-    label: validatedSavedChordLabel(chord, canonical) ?? labelFromSymbol(canonical),
+    label: validatedSavedChordLabel(chord, canonical) ?? explicitSlashLabel(canonical),
   });
 }
 

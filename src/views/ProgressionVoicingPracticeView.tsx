@@ -13,6 +13,7 @@ import {
   projectProgressionPracticeClock,
   reduceProgressionPracticeClock,
   resolveProgressionPracticeVoicings,
+  progressionPracticePlaybackNotes,
   type ResolveProgressionPracticeVoicingsOptions,
   type ProgressionPracticeVoicingResolution,
   type ProgressionPracticeVoicingPlan,
@@ -80,7 +81,7 @@ const copy = {
     sourceHelp: "MYは保存済みの音をそのまま使い、LESSONは承認済みの規則だけを使います。",
     basicShellHelp: "ルートと7度を左手だけで練習します。3度と右手ガイドはBasic Full 1–7–3で表示します。",
     fullShellHelp: "左手に1度と7度、右手に3度・5度・コード記号のテンションを配置します。複数のaltered tensionで手幅を超える場合のみ5度を省略し、スラッシュコードでは指定ベースを左手で保持します。",
-    leftHandHelp: "Rootless A/Bを練習します。ベース指定を安全に維持できないスラッシュコードは未対応です。",
+    leftHandHelp: "上部コードのRootless A/Bを左手で練習します。スラッシュベースは独立した参照音として鳴り、練習対象には含みません。",
     current: "現在",
     next: "次",
     beat: "拍",
@@ -136,7 +137,7 @@ const copy = {
     playbackErrorBody: "音声を安全に停止しました。もう一度お試しください。",
     unavailableStatus: "利用不可",
     unsupportedStatus: "未対応の規則",
-    leftHandSlashUnsupported: "スラッシュコードのベース指定を維持するLeft-hand規則がありません",
+    leftHandUpperUnsupported: "上部コードに対応するLeft-hand規則がありません",
     generationErrorStatus: "生成エラー",
     unresolvedSummary: (count: number) => `${count}個のコードを再生できません`,
     midi: "MIDI入力",
@@ -158,7 +159,7 @@ const copy = {
     sourceHelp: "MY preserves saved notes; LESSON uses approved rules only.",
     basicShellHelp: "Practice root and seventh with the left hand only. Basic Full 1–7–3 adds the third and right-hand guide.",
     fullShellHelp: "Play root and seventh with the left hand, then place the third, fifth, and written tensions in the right hand. Only the fifth may be omitted for dense altered tensions; slash bass is preserved in the left hand.",
-    leftHandHelp: "Practice Rootless A/B. Slash chords are unsupported when their explicit bass cannot be preserved safely.",
+    leftHandHelp: "Practice the upper chord's Rootless A/B in the left hand. Slash bass plays as a separate reference, not a practice target.",
     current: "Current",
     next: "Next",
     beat: "Beat",
@@ -214,7 +215,7 @@ const copy = {
     playbackErrorBody: "Audio was stopped safely. Please try again.",
     unavailableStatus: "Unavailable",
     unsupportedStatus: "Unsupported rule",
-    leftHandSlashUnsupported: "No Left-hand rule safely preserves this slash-bass note",
+    leftHandUpperUnsupported: "No approved Left-hand rule for this upper chord",
     generationErrorStatus: "Generation error",
     unresolvedSummary: (count: number) => `${count} chords cannot be played`,
     midi: "MIDI input",
@@ -354,7 +355,7 @@ export function ProgressionVoicingPracticeView({
   const currentVoicing = currentResolution?.status === "SUPPORTED" ? currentResolution.voicing : undefined;
   const nextVoicing = nextResolution?.status === "SUPPORTED" ? nextResolution.voicing : undefined;
   const guideVoicings = useMemo(
-    () => plan?.events.flatMap((resolution) => resolution.status === "SUPPORTED" ? [resolution.voicing.midiNotes] : []) ?? [],
+    () => plan?.events.flatMap((resolution) => resolution.status === "SUPPORTED" ? [progressionPracticePlaybackNotes(resolution.voicing)] : []) ?? [],
     [plan],
   );
   const keyboardRange = useMemo(() => computePracticeKeyboardRange(guideVoicings), [guideVoicings]);
@@ -533,7 +534,7 @@ export function ProgressionVoicingPracticeView({
     setRuntimeError(undefined);
     setAuditionedIndex(index);
     try {
-      await transportRef.current?.audition(resolution.voicing.midiNotes, previewSound);
+      await transportRef.current?.audition(progressionPracticePlaybackNotes(resolution.voicing), previewSound);
     } catch {
       if (auditionRequestRef.current !== request) return;
       runtimeRequestRef.current += 1;
@@ -860,8 +861,9 @@ export function ProgressionVoicingPracticeView({
               <PracticeKeyboard
                 range={keyboardRange}
                 guideNotes={currentVoicing?.midiNotes ?? EMPTY_NOTES}
-                leftHandGuideNotes={currentVoicing?.leftHandNotes ?? EMPTY_NOTES}
-                rightHandGuideNotes={currentVoicing?.rightHandNotes ?? EMPTY_NOTES}
+                referenceBassNote={currentVoicing?.referenceBassNote}
+                leftHandGuideNotes={selection === "left-hand" ? currentVoicing?.midiNotes ?? EMPTY_NOTES : currentVoicing?.leftHandNotes ?? EMPTY_NOTES}
+                rightHandGuideNotes={selection === "left-hand" ? EMPTY_NOTES : currentVoicing?.rightHandNotes ?? EMPTY_NOTES}
                 allowedPitchClasses={ALL_PITCH_CLASSES}
                 requiredPitchClasses={EMPTY_NOTES}
                 level={displayMode === "learn" ? 1 : 4}
@@ -1119,12 +1121,15 @@ function UnresolvedSummary({ plan, snapshot, language }: {
         eventIndex: index,
         label: snapshot.events[index]?.chord.label ?? `${index + 1}`,
         status: resolution.status,
+        reason: resolution.reason,
         detail: resolutionStatusLabel(resolution.status, snapshot, index, language),
       }]);
   if (unresolved.length === 0) return null;
   const grouped = new Map<string, { label: string; detail: string; count: number }>();
   for (const item of unresolved) {
-    const key = `${item.label}:${item.status}:${item.detail}`;
+    const chord = snapshot.events[item.eventIndex]?.chord;
+    const key = JSON.stringify([chord?.root, chord?.quality, chord ? [...chord.tensions].sort() : [],
+      chord?.bass, item.status, item.reason, item.detail]);
     const existing = grouped.get(key);
     grouped.set(key, existing
       ? { ...existing, count: existing.count + 1 }
@@ -1157,7 +1162,7 @@ function resolutionStatusLabel(
       return snapshot.selection === "left-hand"
         && chord?.bass !== undefined
         && chord.bass !== chord.root
-        ? text.leftHandSlashUnsupported
+        ? text.leftHandUpperUnsupported
         : text.unsupportedStatus;
     }
     case "GENERATION_ERROR": return text.generationErrorStatus;

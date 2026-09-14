@@ -1,4 +1,5 @@
-import { labelFromSymbol, parseChordLabel } from "./chords";
+import { parseChordLabel } from "./chords";
+import { explicitSlashLabel } from "./explicitSlashLabel";
 import { parseFastChordEntry } from "./progressionEditing/fastLabelEntry";
 import { parseKeySignature } from "./progressionEditing/chordSuggestions";
 import type { ChordSymbol } from "./types";
@@ -365,7 +366,7 @@ export function parseTextProgression(
     precedingChord = chord;
     soundingEvent = events.length;
     events.push({
-      raw: token.raw, canonical: labelFromSymbol(chord), range: token.range,
+      raw: token.raw, canonical: explicitSlashLabel(chord), range: token.range,
       bar: token.bar, startBeat: token.startBeat, durationBeats: token.durationBeats,
       chord: cloneChord(chord),
     });
@@ -614,7 +615,7 @@ function createToken(
     range: { ...range },
     bar,
     ...timing,
-    ...(chord === undefined ? {} : { canonical: labelFromSymbol(chord), chord: cloneChord(chord) }),
+    ...(chord === undefined ? {} : { canonical: explicitSlashLabel(chord), chord: cloneChord(chord) }),
     diagnostics: diagnostics.map(cloneDiagnostic),
   };
 }
@@ -839,7 +840,7 @@ function isFourFour(meter: TextProgressionMeter): boolean {
 }
 
 function cloneChord(chord: ChordSymbol): ChordSymbol {
-  return { ...chord, tensions: [...chord.tensions] };
+  return { ...chord, label: explicitSlashLabel(chord), tensions: [...chord.tensions] };
 }
 
 function cloneDiagnostic(value: TextProgressionDiagnostic): TextProgressionDiagnostic {

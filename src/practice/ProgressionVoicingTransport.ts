@@ -10,6 +10,7 @@ import type {
 } from "../domain/progressionVoicingPractice";
 import {
   PROGRESSION_VOICING_PRACTICE_PPQ,
+  progressionPracticePlaybackNotes,
   progressionPracticeTicksAtBeat,
 } from "../domain/progressionVoicingPractice";
 
@@ -353,13 +354,13 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
       // Release at the next canonical attack/rest, not at a wall-time duration
       // guessed before a BPM change. A held event has only one boundary attack.
       this.voicingInstrument.releaseAll(time);
-      this.voicingInstrument.triggerAttack(resolution.voicing.midiNotes.map(midiToNoteName), time, 0.72);
+      this.voicingInstrument.triggerAttack(progressionPracticePlaybackNotes(resolution.voicing).map(midiToNoteName), time, 0.72);
       return;
     }
     const remainingBeats = Math.max(0.05, event.durationBeats - elapsedBeats);
     const durationSeconds = Math.max(0.05, remainingBeats * 60 / this.desiredBpm);
     this.voicingInstrument.triggerAttackRelease(
-      resolution.voicing.midiNotes.map(midiToNoteName),
+      progressionPracticePlaybackNotes(resolution.voicing).map(midiToNoteName),
       durationSeconds,
       time,
       0.72,

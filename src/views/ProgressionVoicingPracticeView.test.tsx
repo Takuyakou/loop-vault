@@ -17,6 +17,7 @@ import { defaultLiveMidiStore } from "../liveMidi/defaultLiveMidiStore";
 import { PreviewSoundProvider } from "../components/PreviewSoundProvider";
 import { savePreviewSound } from "../audio/previewSoundPreference";
 import { ProgressionVoicingPracticeView } from "./ProgressionVoicingPracticeView";
+import { resolveProgressionPracticeVoicings } from "../domain/progressionVoicingPractice";
 import {
   loadRecentVoicingLoopProgressions,
   recordRecentVoicingLoopProgression,
@@ -576,21 +577,51 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(button(container, "開始").disabled).toBe(true);
   });
 
-  it("groups repeated Left-hand slash failures and explains the preserved-bass limitation", async () => {
+  it("groups repeated unsupported upper structures without dropping slash identity", async () => {
     const runtime = new FakeTransport();
     const base = snapshot("left-hand");
     const slash = {
       ...base,
       events: base.events.map((event) => ({
         ...event,
-        chord: { root: 0, quality: "min11" as const, tensions: [], bass: 2, label: "Cm11/D" },
+        chord: { root: 0, quality: "dim" as const, tensions: [], bass: 2, label: "Cdim/D" },
       })),
     };
     const container = await renderView(runtime, { "left-hand": slash }, "left-hand");
     expect(container.textContent).toContain("2個のコードを再生できません");
-    expect(container.textContent).toContain("Cm11/D ×2: スラッシュコードのベース指定を維持するLeft-hand規則がありません");
+    expect(container.textContent).toContain("Cdim/D ×2: 上部コードに対応するLeft-hand規則がありません");
     expect(container.querySelectorAll("li")).toHaveLength(1);
     expect(button(container, "開始").disabled).toBe(true);
+  });
+
+  it("separates slash bass from LH targets, combines both auditions, and conceals all guidance in Recall", async () => {
+    const runtime = new FakeTransport();
+    const base = snapshot("left-hand");
+    const value: ProgressionVoicingPracticeSnapshot = { ...base, events: base.events.map((event, index) => ({
+      ...event, chord: { root: 9, quality: index === 0 ? "min11" : "min9", tensions: [], bass: index === 0 ? 11 : 0, label: index === 0 ? "Am11/B" : "Am9/C" },
+    })) };
+    const resolution = resolveProgressionPracticeVoicings(value).events[0]!;
+    if (resolution.status !== "SUPPORTED") throw new Error("Approved upper rule expected");
+    const bass = resolution.voicing.referenceBassNote!;
+    const playback = [bass, ...resolution.voicing.midiNotes];
+    const container = await renderView(runtime, { "left-hand": value }, "left-hand");
+    expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent).toBe("Am11/B");
+    expect(container.querySelector("[data-testid='slash-bass-reference']")?.textContent).toContain("練習対象外");
+    const bassKey = container.querySelector(`[data-midi-note='${bass}']`)!;
+    expect(bassKey.textContent).toContain("BASS");
+    expect(bassKey.getAttribute("data-guide-hand")).toBeNull();
+    expect(container.querySelectorAll("[data-guide-hand='left']")).toHaveLength(resolution.voicing.midiNotes.length);
+    expect(container.querySelectorAll("[data-guide-hand='right']")).toHaveLength(0);
+    await act(async () => button(container, "現在のコードを試聴").click());
+    expect(runtime.audition).toHaveBeenLastCalledWith(playback, "piano");
+    await act(async () => container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-event']")!.click());
+    expect(runtime.audition).toHaveBeenLastCalledWith(playback, "piano");
+    await act(async () => button(container, "開始").click());
+    expect(runtime.options!.plan.events[0]).toEqual(resolution);
+    await act(async () => button(container, "Recall").click());
+    expect(container.querySelector("[data-testid='slash-bass-reference']")).toBeNull();
+    expect(container.querySelectorAll("[data-guide-hand]")).toHaveLength(0);
+    expect(container.querySelector("svg[role='img']")?.getAttribute("aria-label")).toContain("お手本0音");
   });
 
   it("cancels a pending Start on Pause and resumes from the retained musical position", async () => {

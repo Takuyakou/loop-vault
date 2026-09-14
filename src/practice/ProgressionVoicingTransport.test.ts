@@ -100,6 +100,21 @@ beforeEach(() => {
 });
 
 describe("ProgressionVoicingTransport", () => {
+  it.each([false, true])("plays separate slash reference with upper targets through sustained=%s", async (sustained) => {
+    const instrument = Object.assign(new toneMock.PolySynth(), sustained ? { triggerAttack: vi.fn() } : {});
+    vi.mocked(createPreviewInstrument).mockResolvedValueOnce(instrument);
+    const first = plan.events[0]!;
+    if (first.status !== "SUPPORTED") throw new Error("Fixture expected");
+    const combinedPlan = { ...plan, events: [{ ...first, voicing: { ...first.voicing, referenceBassNote: 35 } }, plan.events[1]!] };
+    const runtime = new ProgressionVoicingTransport();
+    await runtime.start({ snapshot, plan: combinedPlan, bpm: 80, countInBars: 0, metronomeEnabled: false, onTransportBeat: vi.fn() });
+    toneMock.scheduled[0]!.callback(1);
+    const attack = sustained ? instrument.triggerAttack! : instrument.triggerAttackRelease;
+    expect(attack.mock.calls[0]![0]).toEqual(["B1", "C3", "G3", "B3"]);
+    expect(combinedPlan.events[0]!.voicing!.midiNotes).toEqual([48, 55, 59]);
+    runtime.stop();
+  });
+
   it("sustains hold across BPM changes, silences rest after FX, and keeps repeated attacks plus audition independent", async () => {
     const sustained = Object.assign(new toneMock.PolySynth(), { triggerAttack: vi.fn() });
     vi.mocked(createPreviewInstrument).mockResolvedValueOnce(sustained);

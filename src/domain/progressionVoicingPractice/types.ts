@@ -96,7 +96,9 @@ export interface ProgressionVoicingNoteFact {
 
 export interface ResolvedProgressionPracticeVoicing {
   readonly origin: ProgressionVoicingSelection;
+  /** Practice targets only; a product-approved slash Bass is separate. */
   readonly midiNotes: readonly number[];
+  readonly referenceBassNote?: number;
   readonly bassNote?: number;
   readonly leftHandNotes?: readonly number[];
   readonly rightHandNotes?: readonly number[];

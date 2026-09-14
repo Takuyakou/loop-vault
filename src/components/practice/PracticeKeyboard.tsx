@@ -17,6 +17,7 @@ import { defaultLiveMidiStore } from "../../liveMidi/defaultLiveMidiStore";
 interface PracticeKeyboardProps {
   range: KeyboardRange;
   guideNotes: readonly number[];
+  referenceBassNote?: number;
   leftHandGuideNotes?: readonly number[];
   rightHandGuideNotes?: readonly number[];
   allowedPitchClasses: readonly number[];
@@ -51,6 +52,7 @@ const ALL_PITCH_CLASSES = Object.freeze(Array.from({ length: 12 }, (_, index) =>
 export const PracticeKeyboard = memo(function PracticeKeyboard({
   range,
   guideNotes,
+  referenceBassNote,
   leftHandGuideNotes = [],
   rightHandGuideNotes = [],
   allowedPitchClasses,
@@ -80,7 +82,9 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
     (note) => !allowedPitchClasses.includes(positivePitchClass(note)),
   );
   const heldBassNote = currentHeldNotes[0];
-  const guideBassNote = guideNotes.length > 0 ? Math.min(...guideNotes) : undefined;
+  const displayGuideNotes = useMemo(() => referenceBassNote === undefined ? guideNotes
+    : [...new Set([...guideNotes, referenceBassNote])], [guideNotes, referenceBassNote]);
+  const guideBassNote = referenceBassNote ?? (guideNotes.length > 0 ? Math.min(...guideNotes) : undefined);
   const visualMatchState = matchState === "empty" ? "idle" : matchState;
 
   return (
@@ -88,7 +92,7 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
       <PianoKeyboardVisualizer
         minMidiNote={range.minMidiNote}
         maxMidiNote={range.maxMidiNote}
-        guideNotes={guideNotes}
+        guideNotes={displayGuideNotes}
         leftHandGuideNotes={leftHandGuideNotes}
         rightHandGuideNotes={rightHandGuideNotes}
         heldNotes={currentHeldNotes}
@@ -107,6 +111,12 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
         interactionMode={interactionMode}
         centerWhenFitted={centerWhenFitted}
       />
+      {level === 1 && referenceBassNote !== undefined ? (
+        <p className="mt-2 text-xs text-[var(--lv-text-muted)]" data-testid="slash-bass-reference">
+          {language === "ja" ? "BASS：独立したベース参照（左手の練習対象外）" : "BASS: separate bass reference (not a left-hand target)"}
+          {` · ${formatMidiNoteForDisplay(referenceBassNote, "fl-studio", accidentalStyle)}`}
+        </p>
+      ) : null}
       <p
         className={`mt-3 min-h-5 text-sm ${
           foreignNotes.length > 0 ? "text-amber-200" : "text-[var(--lv-text-muted)]"

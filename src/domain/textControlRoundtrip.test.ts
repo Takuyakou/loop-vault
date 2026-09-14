@@ -50,6 +50,15 @@ async function roundtrip(input: string) {
 }
 
 describe("P5.31 control timing across public save and practice boundaries", () => {
+  it("preserves explicit same-root slash through Text, public save, JSON and practice", async () => {
+    const { block, handoff, idea } = await roundtrip("| Am9/A | Am11/B |");
+    expect(block.chords.map(event => [event.chord.label, event.chord.bass])).toEqual([["Am9/A", 9], ["Am11/B", 11]]);
+    expect(handoff.snapshots["left-hand"]!.events[0]!.chord.label).toBe("Am9/A");
+    expect(buildVoicingLoopVaultCandidates([idea], "Untitled")[0]!.chordLabels).toEqual(["Am9/A", "Am11/B"]);
+    const plan = resolveProgressionPracticeVoicings(handoff.snapshots["left-hand"]!);
+    expect(plan.events.every(event => event.status === "SUPPORTED")).toBe(true);
+  });
+
   it("preserves repeat attacks, silence and cross-bar hold through Draft, JSON reload and all six modes", async () => {
     const { payload, block, idea, handoff } = await roundtrip("| E7%_Am7 | =G |");
     const expected = [[0, 1], [1, 1], [3, 3], [6, 2]];
