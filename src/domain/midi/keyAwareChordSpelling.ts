@@ -194,11 +194,11 @@ function spellBassFromChord(
   const rootLetter = rootSpelling.charAt(0);
   const rootIndex = letters.indexOf(rootLetter as (typeof letters)[number]);
   if (rootIndex < 0) return legacySpelling;
-  const configured = qualityDegrees[chord.quality]
-    .filter((entry) => !chord.tensions.includes("#5") || entry.interval !== 7);
+  const configured = qualityDegrees[chord.quality];
   if (!configured || chord.bass === undefined) return legacySpelling;
+  const retainedDegrees = configured.filter((entry) => !chord.tensions.includes("#5") || entry.interval !== 7);
   const relativeBass = normalizePc(chord.bass - chord.root);
-  const candidates = [...configured, ...chord.tensions.map((tension) => tensionDegrees[tension])]
+  const candidates = [...retainedDegrees, ...chord.tensions.map((tension) => tensionDegrees[tension])]
     .filter((candidate) => normalizePc(candidate.interval) === relativeBass);
   const uniqueDegrees = new Map(candidates.map((candidate) => [
     `${normalizePc(candidate.interval)}:${candidate.letterSteps}`,
