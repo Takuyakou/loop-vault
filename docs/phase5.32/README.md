@@ -7,10 +7,10 @@ integrated product.
 
 ## Status
 
-- **Status:** in progress
-- **Active stage:** P5.32-01 (not authorized)
-- **Completed stages:** P5.32-00
-- **Next action:** stop and wait for separate authorization before P5.32-01
+- **Status:** completed
+- **Active stage:** none
+- **Completed stages:** P5.32-00 through P5.32-04
+- **Next action:** human product acceptance; no merge/push/tag/release
 
 ## Required Reading Order
 
