@@ -106,7 +106,7 @@ describe("P5.31 control timing across public save and practice boundaries", () =
     expect(plan.events.every(event => event.status === "SUPPORTED")).toBe(true);
   });
 
-  it("preserves repeat attacks, silence and cross-bar hold through Draft, JSON reload and all six modes", async () => {
+  it("preserves repeat attacks, silence and cross-bar hold through Draft, JSON reload and all internal modes", async () => {
     const { payload, block, idea, handoff } = await roundtrip(fixture("rechord-control-example.txt"));
     const expected = [[0, 1], [1, 1], [3, 3], [6, 2]];
     const savedTiming = (events: readonly ChordTimelineItem[]) => events.map(event => [
@@ -116,7 +116,7 @@ describe("P5.31 control timing across public save and practice boundaries", () =
     expect(savedTiming(block.chords)).toEqual(expected);
     expect(block.lengthBars).toBe(2);
     expect(block.chords.map(event => event.chord.label)).toEqual(["E7", "E7", "Am7", "G"]);
-    expect(Object.keys(handoff.snapshots)).toHaveLength(6);
+    expect(Object.keys(handoff.snapshots)).toHaveLength(7);
     for (const snapshot of Object.values(handoff.snapshots)) {
       expect(snapshot.lengthBeats).toBe(8);
       expect(snapshot.bpm).toBe(108);
