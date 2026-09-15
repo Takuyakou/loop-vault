@@ -31,6 +31,9 @@ test("P5.30 compact workspace follows the approved order and fixed timeline geom
   await expectBefore(detail, transport);
   await expect(currentNext.getByRole("group", { name: "Voicing表示モード" })).toHaveCount(0);
   await expect(controls.getByRole("group", { name: "Voicing表示モード" })).toBeVisible();
+  await expect(controls).not.toContainText(/\bMY\b|\bLESSON\b|SHELL TYPE/);
+  await expect(workspace.getByTestId("voicing-loop-shell-type")).toHaveCount(0);
+  await expect(workspace.getByText("Root Shell 1·3·7", { exact: true })).toHaveCount(0);
 
   const cards = timeline.getByTestId("voicing-loop-event");
   const boxes = await cards.evaluateAll((elements) => elements.map((element) => {
@@ -41,6 +44,7 @@ test("P5.30 compact workspace follows the approved order and fixed timeline geom
   await expect(timeline.getByTestId("voicing-loop-playhead")).toHaveAttribute("aria-hidden", "true");
   await expect(timeline.getByTestId("voicing-loop-playhead-marker")).toBeVisible();
   await expect(timeline.getByTestId("voicing-loop-event-beat-rail")).toHaveCount(await cards.count());
+  await expect(controls.evaluate((element) => element.scrollWidth <= element.clientWidth)).resolves.toBe(true);
   await assertNoHorizontalOverflow(page);
 });
 
@@ -131,6 +135,9 @@ test("P5.30 128-event timeline stays local, auto-reveals, reduced-motion, and ax
     .toHaveAttribute("aria-pressed", "true");
   await expect(workspace.getByRole("button", { name: "Root Shell 1·3·7", exact: true }))
     .toHaveAttribute("aria-pressed", "true");
+  await expect(workspace.getByTestId("voicing-loop-shell-type"))
+    .toContainText("Root 1·3·7Rootless 3·7");
+  await expect(workspace.getByText("SHELL TYPE", { exact: true })).toHaveCount(0);
   await expect(workspace.getByRole("button", { name: "Basic Shell 1–7", exact: true })).toHaveCount(0);
   await expect(workspace.getByRole("button", { name: "Basic Full 1–7–3", exact: true })).toHaveCount(0);
   await expect(workspace.getByRole("button", { name: "Full Shell Voicing", exact: true })).toHaveCount(0);

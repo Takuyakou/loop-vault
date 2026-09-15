@@ -128,13 +128,13 @@ function basicCandidates(
   selection: "basic-shell" | "basic-full" | "rootless-shell" | "full-shell",
   options: { readonly maxLeftHandSpanSemitones: number; readonly maxRightHandSpanSemitones: number },
 ): CandidateResult {
-  const labels = basicLessonLabels(chord, selection);
-  if (!labels) return { status: "UNSUPPORTED_RULE" };
+  const split = basicLessonHandLabels(chord, selection);
+  if (!split) return { status: "UNSUPPORTED_RULE" };
 
   const chordSymbol = asChordSymbol(chord);
   const canonicalTones = chordToneDescriptors(chordSymbol);
-  const leftLabels = labels.slice(0, 2);
-  const rightLabels = labels.slice(2);
+  const { leftLabels, rightLabels } = split;
+  const labels = [...leftLabels, ...rightLabels];
   const leftPitchClasses = resolveDegreePitchClasses(chordSymbol, leftLabels);
   const rightPitchClasses = resolveDegreePitchClasses(chordSymbol, rightLabels);
   if (!leftPitchClasses || !rightPitchClasses) return { status: "GENERATION_ERROR" };
@@ -160,6 +160,33 @@ function basicCandidates(
   return resolved.length > 0
     ? { status: "SUPPORTED", candidates: resolved }
     : { status: "GENERATION_ERROR" };
+}
+
+interface LessonHandLabels {
+  readonly leftLabels: readonly string[];
+  readonly rightLabels: readonly string[];
+}
+
+function basicLessonHandLabels(
+  chord: ProgressionPracticeChord,
+  selection: "basic-shell" | "basic-full" | "rootless-shell" | "full-shell",
+): LessonHandLabels | undefined {
+  const hasSeparateSlashBass = chord.bass !== undefined && chord.bass !== chord.root;
+  if (hasSeparateSlashBass && (selection === "basic-full" || selection === "rootless-shell")) {
+    if (chord.quality === "add9") {
+      if (selection === "rootless-shell" || pitchClass(chord.bass!) !== pitchClass(chord.root + 2)) {
+        return undefined;
+      }
+      return { leftLabels: ["Bass"], rightLabels: ["R", "3", "5"] };
+    }
+    const numerator = basicLessonLabels({ ...chord, bass: undefined }, selection);
+    if (!numerator) return undefined;
+    return { leftLabels: ["Bass"], rightLabels: numerator };
+  }
+
+  const labels = basicLessonLabels(chord, selection);
+  if (!labels) return undefined;
+  return { leftLabels: labels.slice(0, 2), rightLabels: labels.slice(2) };
 }
 
 function leftHandCandidates(

@@ -164,7 +164,7 @@ describe("P5.27 Basic 1-7-3 locked lesson table", () => {
   it("replaces root with explicit slash Bass only for an otherwise supported Basic family", () => {
     const slash = chord("maj7", [], 7);
     expect(degrees(resolveOne("basic-shell", slash))).toEqual(["7", "Bass"]);
-    expect(degrees(resolveOne("basic-full", slash))).toEqual(["3", "7", "Bass"]);
+    expect(degrees(resolveOne("basic-full", slash))).toEqual(["1", "3", "7", "Bass"]);
     expect(resolveOne("basic-shell", chord("dim", [], 7)).status).toBe("UNSUPPORTED_RULE");
   });
 
@@ -236,6 +236,68 @@ describe("P5.32 Shell lesson taxonomy", () => {
         reason: "no-approved-lesson-rule",
       });
     }
+  });
+});
+describe("P5.32 slash Shell upper structure", () => {
+  it.each([
+    [makeChordSymbol(4, "add9", [], 6), [6], [4, 8, 11], 3],
+    [makeChordSymbol(2, "add9", [], 4), [4], [2, 6, 9], 1],
+    [makeChordSymbol(7, "maj9", [], 9), [9], [6, 7, 11], undefined],
+  ] as const)("keeps %s intact while splitting slash Bass left and numerator Shell right", (
+    sourceChord,
+    expectedLeftPitchClasses,
+    expectedRightPitchClasses,
+    forbiddenRightPitchClass,
+  ) => {
+    const snapshot = makeSnapshot("basic-full", sourceChord);
+    const before = JSON.stringify(snapshot);
+    const result = resolveProgressionPracticeVoicings(snapshot);
+    const resolution = result.events[0]!;
+
+    expect(JSON.stringify(snapshot)).toBe(before);
+    expect(snapshot.events[0]!.chord.label).toBe(sourceChord.label);
+    expect(resolution.status).toBe("SUPPORTED");
+    if (resolution.status !== "SUPPORTED") return;
+    const leftHandNotes = resolution.voicing.leftHandNotes ?? [];
+    const rightHandNotes = resolution.voicing.rightHandNotes ?? [];
+    expect(leftHandNotes.map(pitchClass)).toEqual(expectedLeftPitchClasses);
+    expect(leftHandNotes).toHaveLength(1);
+    expect(resolution.voicing.bassNote).toBe(leftHandNotes[0]);
+    expect(rightHandNotes.map(pitchClass).sort((a, b) => a - b))
+      .toEqual([...expectedRightPitchClasses]);
+    expect(handDegrees(resolution, leftHandNotes)).toEqual(["Bass"]);
+    expect(handDegrees(resolution, rightHandNotes)).toContain("1");
+    if (forbiddenRightPitchClass !== undefined) {
+      expect(rightHandNotes.map(pitchClass)).not.toContain(forbiddenRightPitchClass);
+    }
+  });
+
+  it("keeps Rootless slash Bass separate while preserving the approved numerator guide tones", () => {
+    const sourceChord = makeChordSymbol(7, "maj9", [], 9);
+    const resolution = resolveOne("rootless-shell", sourceChord);
+    expect(resolution.status).toBe("SUPPORTED");
+    if (resolution.status !== "SUPPORTED") return;
+    const leftHandNotes = resolution.voicing.leftHandNotes ?? [];
+    const rightHandNotes = resolution.voicing.rightHandNotes ?? [];
+    expect(leftHandNotes.map(pitchClass)).toEqual([9]);
+    expect(rightHandNotes.map(pitchClass).sort((a, b) => a - b)).toEqual([6, 11]);
+    expect(handDegrees(resolution, rightHandNotes))
+      .toEqual(expect.arrayContaining(["3", "7"]));
+  });
+
+  it("fails closed when add9 is not supplied by slash Bass or the numerator family is unaudited", () => {
+    expect(resolveOne("rootless-shell", makeChordSymbol(4, "add9", [], 6)).status)
+      .toBe("UNSUPPORTED_RULE");
+    expect(resolveOne("basic-full", makeChordSymbol(4, "add9", [], 7)).status)
+      .toBe("UNSUPPORTED_RULE");
+    expect(resolveOne("basic-full", makeChordSymbol(4, "aug", [], 6)).status)
+      .toBe("UNSUPPORTED_RULE");
+
+    const characteristic = resolveOne("basic-full", makeChordSymbol(0, "min7b5", [], 2));
+    expect(characteristic.status).toBe("SUPPORTED");
+    if (characteristic.status !== "SUPPORTED") return;
+    expect(handDegrees(characteristic, characteristic.voicing.rightHandNotes))
+      .toEqual(expect.arrayContaining(["1", "b3", "b5", "b7"]));
   });
 });
 describe("Full Shell Voicing", () => {
@@ -535,6 +597,10 @@ function handDegrees(
 
 function isString(value: string | null | undefined): value is string {
   return typeof value === "string";
+}
+
+function pitchClass(midiNote: number): number {
+  return ((midiNote % 12) + 12) % 12;
 }
 
 function playableMidiNotes(result: ProgressionPracticeVoicingResolution): readonly number[] {

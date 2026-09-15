@@ -441,12 +441,12 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.textContent).not.toContain("Basic Shell 1–7");
     expect(container.textContent).not.toContain("Basic Full 1–7–3");
     expect(container.textContent).not.toContain("Full Shell Voicing");
-    expect(button(container, "Root Shell 1·3·7").getAttribute("aria-pressed")).toBe("true");
+    expect(button(container, "Root 1·3·7").getAttribute("aria-pressed")).toBe("true");
     expect(container.querySelector("[data-testid='voicing-loop-selection-help']")?.textContent)
       .toContain("Root・3rd・7th");
 
-    await act(async () => button(container, "Rootless Shell 3·7").click());
-    expect(button(container, "Rootless Shell 3·7").getAttribute("aria-pressed")).toBe("true");
+    await act(async () => button(container, "Rootless 3·7").click());
+    expect(button(container, "Rootless 3·7").getAttribute("aria-pressed")).toBe("true");
     expect(container.querySelector("[data-testid='voicing-loop-selection-help']")?.textContent)
       .toContain("Rootを省き");
     expect(container.querySelector("[data-testid='voicing-loop-left-hand']")?.textContent)
@@ -456,11 +456,57 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(runtime.options?.plan.selection).toBe("rootless-shell");
   });
 
+  it("renders slash add9 Shell as an exact two-hand lesson with fingerprints and compact toolbar", async () => {
+    const runtime = new FakeTransport();
+    const base = snapshot("basic-full");
+    const slash: ProgressionVoicingPracticeSnapshot = {
+      ...base,
+      events: base.events.map((event, index) => index === 0 ? {
+        ...event,
+        chord: { root: 4, quality: "add9", tensions: [], bass: 6, label: "Eadd9/F#" },
+      } : {
+        ...event,
+        chord: { root: 2, quality: "add9", tensions: [], bass: 4, label: "Dadd9/E" },
+      }),
+    };
+    const container = await renderView(runtime, { "basic-full": slash }, "basic-full");
+    const current = container.querySelector("[data-testid='voicing-loop-current-voicing']")!;
+    const next = container.querySelector("[data-testid='voicing-loop-next-voicing']")!;
+    expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent).toBe("Eadd9/F#");
+    expect(container.querySelector("[data-testid='voicing-loop-left-hand']")?.textContent)
+      .toContain("CHORD TONEBass");
+    expect(container.querySelector("[data-testid='voicing-loop-right-hand']")?.textContent)
+      .toContain("CHORD TONE1 · 3 · 5");
+    expect(current.textContent).toContain("FINGERL5");
+    expect(current.textContent).toContain("FINGERR");
+    expect(next.textContent).toContain("LEFT HAND");
+    expect(container.querySelector("[data-testid='voicing-loop-next-left-hand']")?.textContent)
+      .toContain("LEFT HAND");
+    expect(container.querySelector("[data-testid='voicing-loop-next-right-hand']")?.textContent)
+      .toContain("RIGHT HAND");
+    const plan = resolveProgressionPracticeVoicings(slash);
+    const currentResolution = plan.events[0]!;
+    expect(currentResolution.status).toBe("SUPPORTED");
+    if (currentResolution.status !== "SUPPORTED") return;
+    const bass = currentResolution.voicing.bassNote!;
+    expect(container.querySelector(`[data-midi-note='${bass}'] [data-finger-label='L5']`)).not.toBeNull();
+    for (const pitch of currentResolution.voicing.rightHandNotes ?? []) {
+      expect(container.querySelector(`[data-midi-note='${pitch}'] [data-finger-label^='R']`)).not.toBeNull();
+    }
+    const toolbar = container.querySelector("[data-testid='voicing-loop-controls']")!;
+    expect(toolbar.textContent).not.toMatch(/\bMY\b|\bLESSON\b|SHELL TYPE/);
+    expect(container.querySelector("[data-testid='voicing-loop-shell-type']")?.textContent)
+      .toBe("Root 1·3·7Rootless 3·7");
+    expect(container.querySelector("[data-testid='voicing-loop-workspace']")?.textContent)
+      .not.toContain("Root Shell 1·3·7");
+    await act(async () => button(container, "開始").click());
+    expect(runtime.options?.plan.events.every((entry) => entry.status === "SUPPORTED")).toBe(true);
+  });
   it("loads legacy Shell IDs without exposing them as new top-level choices or rewriting their plan", async () => {
     const runtime = new FakeTransport();
     const container = await renderView(runtime, { "full-shell": snapshot("full-shell") }, "full-shell");
 
-    expect(container.textContent).toContain("Legacy Full-chord Shell");
+    expect(container.textContent).not.toContain("Legacy Full-chord Shell");
     expect(container.textContent).not.toContain("Full Shell Voicing");
     expect(button(container, "Shell").getAttribute("aria-pressed")).toBe("true");
     await act(async () => button(container, "開始").click());
@@ -871,7 +917,7 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("[data-finger-label='L5']")).not.toBeNull();
     expect(container.querySelector("[data-finger-label='R1']")).not.toBeNull();
 
-    for (const label of ["Custom", "Shell", "Rootless Shell 3·7", "Left-hand"]) {
+    for (const label of ["Custom", "Shell", "Rootless 3·7", "Left-hand"]) {
       await act(async () => button(container, label).click());
       expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
         .toContain("FINGER");

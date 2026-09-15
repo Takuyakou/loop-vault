@@ -8,7 +8,7 @@ import {
 import { Modal } from "../components/Modal";
 import { PracticeKeyboard } from "../components/practice/PracticeKeyboard";
 import { usePreviewSound } from "../components/PreviewSoundProvider";
-import { Badge, Button, EmptyState, Field, SectionHeading, StatusMessage, Surface } from "../components/ui";
+import { Button, EmptyState, Field, SectionHeading, StatusMessage, Surface } from "../components/ui";
 import {
   createProgressionPracticeClockState,
   projectProgressionPracticeClock,
@@ -83,14 +83,13 @@ export interface ProgressionVoicingPracticeViewProps {
 
 const selections: readonly {
   readonly id: "source-midi" | "custom" | "shell" | "left-hand";
-  readonly group: "MY" | "LESSON";
   readonly ja: string;
   readonly en: string;
 }[] = [
-  { id: "source-midi", group: "MY", ja: "Source MIDI", en: "Source MIDI" },
-  { id: "custom", group: "MY", ja: "Custom", en: "Custom" },
-  { id: "shell", group: "LESSON", ja: "Shell", en: "Shell" },
-  { id: "left-hand", group: "LESSON", ja: "Left-hand", en: "Left-hand" },
+  { id: "source-midi", ja: "Source MIDI", en: "Source MIDI" },
+  { id: "custom", ja: "Custom", en: "Custom" },
+  { id: "shell", ja: "Shell", en: "Shell" },
+  { id: "left-hand", ja: "Left-hand", en: "Left-hand" },
 ] as const;
 
 const copy = {
@@ -98,10 +97,11 @@ const copy = {
     title: "Voicing Loop",
     description: "コードを見た瞬間に、左手・右手それぞれ何指か分かる。",
     source: "Voicingを選択",
-    sourceHelp: "MYは保存済みの音をそのまま使い、LESSONは承認済みの規則だけを使います。",
-    shellType: "SHELL TYPE",
+    sourceHelp: "Source MIDIとCustomは保存済みの音をそのまま使い、ShellとLeft-handは承認済みの規則だけを使います。",
     rootShell: "Root Shell 1·3·7",
+    rootShellShort: "Root 1·3·7",
     rootlessShell: "Rootless Shell 3·7",
+    rootlessShellShort: "Rootless 3·7",
     rootShellHelp: "Root・3rd・7thと、コード識別に必要な承認済み特徴音を練習します。表記は固定pitch順ではありません。",
     rootlessShellHelp: "Rootを省き、3rd・7thのvoice leadingと、コード識別に必要な承認済み特徴音を練習します。",
     leftHandHelp: "上部コードのRootless A/Bを左手で練習します。スラッシュベースは独立した参照音として鳴り、練習対象には含みません。",
@@ -201,10 +201,11 @@ const copy = {
     title: "Voicing Loop",
     description: "See the chord and know where each hand and finger goes.",
     source: "Choose voicing",
-    sourceHelp: "MY preserves saved notes; LESSON uses approved rules only.",
-    shellType: "SHELL TYPE",
+    sourceHelp: "Source MIDI and Custom preserve saved notes; Shell and Left-hand use approved rules only.",
     rootShell: "Root Shell 1·3·7",
+    rootShellShort: "Root 1·3·7",
     rootlessShell: "Rootless Shell 3·7",
+    rootlessShellShort: "Rootless 3·7",
     rootShellHelp: "Practice root, third, seventh, and any approved characteristic tone needed for chord identity. The label does not prescribe pitch order.",
     rootlessShellHelp: "Omit the root and practice third/seventh voice leading plus any approved characteristic tone needed for chord identity.",
     leftHandHelp: "Practice the upper chord's Rootless A/B in the left hand. Slash bass plays as a separate reference, not a practice target.",
@@ -880,7 +881,6 @@ export function ProgressionVoicingPracticeView({
       <SectionHeading
         title={text.title}
         description={text.description}
-        action={<Badge tone="teal">{selectionLabel(selection)}</Badge>}
         className="shrink-0"
       />
 
@@ -898,32 +898,26 @@ export function ProgressionVoicingPracticeView({
                     ? text.leftHandHelp
                     : text.sourceHelp}
             </p>
-            {(["MY", "LESSON"] as const).map((group) => (
-              <span key={group} className="inline-flex min-w-0 flex-wrap items-center gap-2">
-                <span className="lv-section-kicker">{group}</span>
-                {selections.filter((item) => item.group === group).map((item) => {
-                  const pressed = item.id === "shell"
-                    ? isShellLessonSelection(selection)
-                    : selection === item.id;
-                  return (
-                    <Button
-                      key={item.id}
-                      size="sm"
-                      variant={pressed ? "primary" : "secondary"}
-                      aria-pressed={pressed}
-                      onClick={() => changeSelection(item.id === "shell" ? "basic-full" : item.id)}
-                    >
-                      {language === "ja" ? item.ja : item.en}
-                    </Button>
-                  );
-                })}
-              </span>
-            ))}
+            {selections.map((item) => {
+              const pressed = item.id === "shell"
+                ? isShellLessonSelection(selection)
+                : selection === item.id;
+              return (
+                <Button
+                  key={item.id}
+                  size="sm"
+                  variant={pressed ? "primary" : "secondary"}
+                  aria-pressed={pressed}
+                  onClick={() => changeSelection(item.id === "shell" ? "basic-full" : item.id)}
+                >
+                  {language === "ja" ? item.ja : item.en}
+                </Button>
+              );
+            })}
             {isShellLessonSelection(selection) ? (
-              <span className="inline-flex min-w-0 flex-wrap items-center gap-2" data-testid="voicing-loop-shell-type">
-                <span className="lv-section-kicker">{text.shellType}</span>
-                <Button size="sm" variant={selection === "basic-full" ? "primary" : "secondary"} aria-pressed={selection === "basic-full"} onClick={() => changeSelection("basic-full")}>{text.rootShell}</Button>
-                <Button size="sm" variant={selection === "rootless-shell" ? "primary" : "secondary"} aria-pressed={selection === "rootless-shell"} onClick={() => changeSelection("rootless-shell")}>{text.rootlessShell}</Button>
+              <span className="inline-flex min-w-0 flex-wrap items-center gap-2 border-l border-[var(--lv-border)] pl-2" data-testid="voicing-loop-shell-type">
+                <Button size="sm" variant={selection === "basic-full" ? "primary" : "secondary"} aria-label={text.rootShell} title={text.rootShell} aria-pressed={selection === "basic-full"} onClick={() => changeSelection("basic-full")}>{text.rootShellShort}</Button>
+                <Button size="sm" variant={selection === "rootless-shell" ? "primary" : "secondary"} aria-label={text.rootlessShell} title={text.rootlessShell} aria-pressed={selection === "rootless-shell"} onClick={() => changeSelection("rootless-shell")}>{text.rootlessShellShort}</Button>
               </span>
             ) : null}
           </fieldset>
@@ -1722,18 +1716,6 @@ function isShellLessonSelection(selection: ProgressionVoicingSelection): boolean
     || selection === "basic-full"
     || selection === "rootless-shell"
     || selection === "full-shell";
-}
-
-function selectionLabel(selection: ProgressionVoicingSelection): string {
-  switch (selection) {
-    case "source-midi": return "Source MIDI";
-    case "custom": return "Custom";
-    case "basic-shell": return "Legacy Root–7th";
-    case "basic-full": return "Root Shell 1·3·7";
-    case "rootless-shell": return "Rootless Shell 3·7";
-    case "full-shell": return "Legacy Full-chord Shell";
-    case "left-hand": return "Left-hand";
-  }
 }
 
 function sessionStatus(status: ProgressionPracticeClockStatus | undefined, text: typeof copy.ja | typeof copy.en): string {
