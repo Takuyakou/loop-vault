@@ -106,6 +106,7 @@ test("保存、Vault検索、詳細、Dojo開始をキーボードで辿れる",
     .getByRole("button", { name: /練習する|Practice/ });
   await practice.focus();
   await page.keyboard.press("Enter");
+  await expect(page.locator("#main-content")).toBeFocused();
   const dojo = page.getByRole("tab", { name: "Chord Dojo" });
   await dojo.focus();
   await expect(dojo).toBeFocused();
