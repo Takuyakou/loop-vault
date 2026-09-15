@@ -3,6 +3,9 @@
 Human Acceptance follow-up:
 [resolved two-hand UX report](P5.32-human-acceptance-follow-up-report.md).
 
+Shell lesson taxonomy follow-up:
+[resolver audit and product UI report](P5.32-shell-taxonomy-follow-up-report.md).
+
 Compact one-screen follow-up:
 [practice layout report](P5.32-compact-one-screen-layout-follow-up-report.md).
 

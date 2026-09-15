@@ -7,8 +7,8 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "70b30d456456060045e908b05bbe7bde7bb51cd3",
-  "lastVerifiedCommit": "d0a125fc48441497d9faa5c07b4ef23f6ec53a09",
-  "currentBranch": "fix/p532-compact-one-screen-layout-ux",
+  "lastVerifiedCommit": "41307d58fd40410be31cb683817e61a2a066f80b",
+  "currentBranch": "fix/p532-shell-taxonomy-follow-up",
   "requiredGates": {
     "P5.32-00": ["baseline-tests", "typescript-lint", "phase-docs", "production-unchanged", "diff-check"],
     "P5.32-01": ["candidate-domain", "guide-priors", "candidate-bounds", "01-typescript-lint-diff"],
@@ -42,6 +42,6 @@
     "generated-private-cargo-hygiene": "pass",
     "phase-docs-diff-clean": "pass"
   },
-  "nextAction": "READY FOR RENEWED HUMAN ACCEPTANCE at d0a125fc48441497d9faa5c07b4ef23f6ec53a09: 2979 full Vitest tests and 74 fresh-production Playwright tests PASS. Human desktop height, LEFT/RIGHT readability, slim progression, keyboard size, and one-screen usability acceptance pending. No merge/push/tag/release/P5.33.",
-  "updatedAt": "2026-09-15T00:00:00+09:00"
+  "nextAction": "READY FOR RENEWED HUMAN ACCEPTANCE at 41307d58fd40410be31cb683817e61a2a066f80b: Shell is one product lesson with Root Shell 1·3·7 default and Rootless Shell 3·7 subtype; 2995 full Vitest tests and 74 fresh-production Playwright tests PASS. Human taxonomy, sound, LH/RH fingering, and no-scroll acceptance pending. No merge/push/tag/release/P5.33.",
+  "updatedAt": "2026-09-15T19:39:25+09:00"
 }
