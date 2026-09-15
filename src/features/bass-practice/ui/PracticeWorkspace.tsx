@@ -17,6 +17,46 @@ export function PracticeWorkspace({
   onModeChange: (mode: PracticeWorkspaceMode) => void;
   voicingLoop: ReactNode;
 }) {
+  const compact = mode === "voicing-loop";
+
+  return (
+    <div className={compact ? "flex h-full min-h-0 min-w-0 flex-col gap-2" : "min-w-0 space-y-4"}>
+      <div className="shrink-0 lg:hidden">
+        <PracticeModeTabs
+          bassPracticeAvailable={bassPracticeAvailable}
+          idPrefix="practice-workspace-tab"
+          mode={mode}
+          onModeChange={onModeChange}
+        />
+      </div>
+      <div
+        id="practice-workspace-panel"
+        aria-label="Practice workspace"
+        role="tabpanel"
+        tabIndex={-1}
+        className={`min-w-0 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-focus)] ${compact ? "min-h-0 flex-1 overflow-x-hidden overflow-y-auto [@media(min-height:900px)]:overflow-y-hidden" : ""}`}
+      >
+        {mode === "bass-practice"
+          ? bassPractice
+          : mode === "voicing-loop"
+            ? voicingLoop
+            : chordDojo}
+      </div>
+    </div>
+  );
+}
+
+export function PracticeModeTabs({
+  bassPracticeAvailable = true,
+  idPrefix = "practice-header-tab",
+  mode,
+  onModeChange,
+}: {
+  bassPracticeAvailable?: boolean;
+  idPrefix?: string;
+  mode: PracticeWorkspaceMode;
+  onModeChange: (mode: PracticeWorkspaceMode) => void;
+}) {
   const chordTabRef = useRef<HTMLButtonElement>(null);
   const voicingTabRef = useRef<HTMLButtonElement>(null);
   const bassTabRef = useRef<HTMLButtonElement>(null);
@@ -51,14 +91,11 @@ export function PracticeWorkspace({
     selectMode(next);
   }
 
-  const compact = mode === "voicing-loop";
-  const tabClassName = compact ? "min-h-8 px-3 text-xs" : "min-h-10 px-4 text-sm";
-
+  const tabClassName = mode === "voicing-loop" ? "min-h-8 px-3 text-xs" : "min-h-10 px-4 text-sm";
   return (
-    <div className={compact ? "flex h-full min-h-0 min-w-0 flex-col gap-2" : "min-w-0 space-y-4"}>
       <nav className="flex w-fit max-w-full shrink-0 gap-1 rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] bg-[var(--lv-surface)] p-1" aria-label="Practice mode" role="tablist">
         <button
-          id="practice-tab-chord-dojo"
+          id={`${idPrefix}-chord-dojo`}
           ref={chordTabRef}
           type="button"
           className={`${tabClassName} rounded-[var(--lv-radius-sm)] font-semibold transition-colors ${mode === "chord-dojo" ? "bg-[var(--lv-accent-soft)] text-[var(--lv-accent)]" : "text-[var(--lv-text-secondary)] hover:text-[var(--lv-text)]"}`}
@@ -72,7 +109,7 @@ export function PracticeWorkspace({
           Chord Dojo
         </button>
         <button
-          id="practice-tab-voicing-loop"
+          id={`${idPrefix}-voicing-loop`}
           ref={voicingTabRef}
           type="button"
           className={`${tabClassName} rounded-[var(--lv-radius-sm)] font-semibold transition-colors ${mode === "voicing-loop" ? "bg-[var(--lv-accent-soft)] text-[var(--lv-accent)]" : "text-[var(--lv-text-secondary)] hover:text-[var(--lv-text)]"}`}
@@ -87,7 +124,7 @@ export function PracticeWorkspace({
         </button>
         {bassPracticeAvailable ? (
         <button
-          id="practice-tab-bass-practice"
+          id={`${idPrefix}-bass-practice`}
           ref={bassTabRef}
           type="button"
           className={`${tabClassName} rounded-[var(--lv-radius-sm)] font-semibold transition-colors ${mode === "bass-practice" ? "bg-[var(--lv-accent-soft)] text-[var(--lv-accent)]" : "text-[var(--lv-text-secondary)] hover:text-[var(--lv-text)]"}`}
@@ -102,23 +139,5 @@ export function PracticeWorkspace({
         </button>
         ) : null}
       </nav>
-      <div
-        id="practice-workspace-panel"
-        aria-labelledby={mode === "chord-dojo"
-          ? "practice-tab-chord-dojo"
-          : mode === "voicing-loop"
-            ? "practice-tab-voicing-loop"
-            : "practice-tab-bass-practice"}
-        role="tabpanel"
-        tabIndex={-1}
-        className={`min-w-0 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-focus)] ${compact ? "min-h-0 flex-1 overflow-x-hidden overflow-y-auto [@media(min-height:900px)]:overflow-y-hidden" : ""}`}
-      >
-        {mode === "bass-practice"
-          ? bassPractice
-          : mode === "voicing-loop"
-            ? voicingLoop
-            : chordDojo}
-      </div>
-    </div>
   );
 }

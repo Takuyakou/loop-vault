@@ -34,7 +34,7 @@ export interface PianoKeyboardVisualizerProps {
   interactionMode?: "practice" | "neutral-monitor";
   centerWhenFitted?: boolean;
   fingerLabels?: ReadonlyMap<number, string>;
-  layout?: "default" | "wide-61";
+  layout?: "default" | "wide-61" | "wide-88";
 }
 
 const copy = {
@@ -138,11 +138,12 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
       display.foreignHeldNotes.length,
       display.sustainedNotes.length,
     );
+  const wideLayout = layout !== "default";
 
   return (
-    <div className={layout === "wide-61" ? "flex min-h-0 flex-1 flex-col" : ""} data-match-state={matchState}>
+    <div className={wideLayout ? "flex min-h-0 flex-1 flex-col" : ""} data-match-state={matchState}>
       <div
-        className={`relative overflow-x-auto overflow-y-hidden border border-[var(--lv-border)] bg-[#09090b] p-2 ${layout === "wide-61" ? "min-h-0 flex-1 [@media(min-height:900px)]:min-h-[10rem]" : ""}`}
+        className={`relative overflow-x-auto overflow-y-hidden border border-[var(--lv-border)] bg-[#09090b] p-2 ${wideLayout ? "min-h-0 flex-1 [@media(min-height:900px)]:min-h-[10rem]" : ""}`}
         role="region"
         aria-label={text.region}
         tabIndex={0}
@@ -168,8 +169,8 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
           />
         ) : null}
         <div
-          className={layout === "wide-61"
-            ? "h-full w-full min-w-[72rem]"
+          className={wideLayout
+            ? `h-full w-full ${layout === "wide-88" ? "min-w-[78rem]" : "min-w-[72rem]"}`
             : centerWhenFitted ? "w-max min-w-full" : "w-max"}
           data-keyboard-alignment={centerWhenFitted ? "center-when-fitted" : "start"}
           data-keyboard-layout={layout}
@@ -178,13 +179,13 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
             role="img"
             aria-label={ariaLabel}
             viewBox={`0 0 ${geometry.width} ${KEYBOARD_HEIGHT}`}
-            width={layout === "wide-61" ? "100%" : geometry.width}
+            width={wideLayout ? "100%" : geometry.width}
             height={KEYBOARD_HEIGHT}
-            className={layout === "wide-61"
+            className={wideLayout
               ? "block h-full min-h-0 max-h-[17rem] w-full max-w-none [@media(min-height:900px)]:min-h-[10rem]"
               : `block h-[clamp(6rem,13vw,8rem)] max-w-none ${centerWhenFitted ? "mx-auto" : ""}`}
-            style={layout === "wide-61" ? undefined : { minWidth: `${geometry.width}px` }}
-            preserveAspectRatio={layout === "wide-61" ? "xMidYMid meet" : "none"}
+            style={wideLayout ? undefined : { minWidth: `${geometry.width}px` }}
+            preserveAspectRatio={wideLayout ? "xMidYMid meet" : "none"}
           >
           <g data-key-layer="white">
             {visibleKeys.map((key) => (
@@ -243,7 +244,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
           </svg>
         </div>
       </div>
-      <div className={`${layout === "wide-61" ? "mt-1 gap-y-1" : "mt-2 gap-y-2"} flex flex-wrap gap-x-4 text-xs text-[var(--lv-text-muted)]`}>
+      <div className={`${wideLayout ? "mt-1 gap-y-1" : "mt-2 gap-y-2"} flex flex-wrap gap-x-4 text-xs text-[var(--lv-text-muted)]`}>
         {showGuide && (leftHandGuideNotes.length > 0 || rightHandGuideNotes.length > 0) ? (
           <>
             {leftHandGuideNotes.length > 0 ? (

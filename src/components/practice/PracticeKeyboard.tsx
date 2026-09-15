@@ -30,7 +30,7 @@ interface PracticeKeyboardProps {
   interactionMode?: "practice" | "neutral-monitor";
   centerWhenFitted?: boolean;
   fingerLabels?: ReadonlyMap<number, string>;
-  keyboardLayout?: "default" | "wide-61";
+  keyboardLayout?: "default" | "wide-61" | "wide-88";
 }
 
 const copy = {
@@ -91,7 +91,7 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
   const guideBassNote = referenceBassNote ?? (guideNotes.length > 0 ? Math.min(...guideNotes) : undefined);
   const visualMatchState = matchState === "empty" ? "idle" : matchState;
 
-  const compactWideLayout = keyboardLayout === "wide-61";
+  const compactWideLayout = keyboardLayout !== "default";
   return (
     <div className={compactWideLayout ? "flex h-full min-h-0 flex-col" : ""}>
       <PianoKeyboardVisualizer

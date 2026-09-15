@@ -67,7 +67,7 @@ export const PianoKey = memo(function PianoKey({
       data-guide-hand={guideHand}
     >
       {!concealNoteName ? (
-        <title>{`${formatMidiNoteForDisplay(note, "fl-studio", accidentalStyle)} (${note})${fingerLabel ? `, ${fingerLabel}` : ""}`}</title>
+        <title>{`${formatMidiNoteForDisplay(note, "fl-studio", accidentalStyle)} (${note})${fingerLabel ? `, ${fingerLabel}` : ""}${guideBass ? ", BASS reference" : ""}`}</title>
       ) : null}
       <rect
         x={x}
@@ -127,7 +127,7 @@ export const PianoKey = memo(function PianoKey({
         />
       ) : null}
       {guideBass || heldBass ? (
-        <g aria-hidden="true">
+        <g aria-hidden="true" data-bass-reference={guideBass ? "guide" : "held"}>
           <line
             x1={x + 3}
             y1={height - 7}
@@ -136,18 +136,6 @@ export const PianoKey = memo(function PianoKey({
             stroke={heldBass ? "#0f766e" : "#14b8a6"}
             strokeWidth={heldBass ? 3 : 1.5}
           />
-          {guideBass ? (
-            <text
-              x={x + width / 2}
-              y={height - 10}
-              textAnchor="middle"
-              fontSize={5.5}
-              fontWeight={700}
-              fill={black ? "#ccfbf1" : "#134e4a"}
-            >
-              BASS
-            </text>
-          ) : null}
         </g>
       ) : null}
       {label && !black ? (

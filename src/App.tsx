@@ -51,6 +51,7 @@ import { createRuntimePracticeStorage } from "./features/bass-practice/infra/rep
 import { BassPracticeHomeCard } from "./features/bass-practice/ui/BassPracticeHomeCard";
 import { PracticeRecoveryPanel } from "./features/bass-practice/ui/PracticeRecoveryPanel";
 import {
+  PracticeModeTabs,
   PracticeWorkspace,
   type PracticeWorkspaceMode,
 } from "./features/bass-practice/ui/PracticeWorkspace";
@@ -775,6 +776,13 @@ async function analyzeMidiPath(path: string) {
         onMasterVolumeChange={changeMasterVolume}
         pageTitle={viewLabel(view, copy)}
         pageContext={viewContext(view, language)}
+        pageNavigation={view === "practice" ? (
+          <PracticeModeTabs
+            bassPracticeAvailable={bassPracticeEnabled}
+            mode={practiceMode}
+            onModeChange={setPracticeMode}
+          />
+        ) : undefined}
       >
         <h1 ref={undoFallbackFocusRef} tabIndex={-1} className="sr-only">
           Loop Vault

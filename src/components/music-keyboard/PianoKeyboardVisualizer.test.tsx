@@ -70,6 +70,34 @@ describe("PianoKeyboardVisualizer", () => {
     expect(svg?.getAttribute("preserveAspectRatio")).toBe("xMidYMid meet");
   });
 
+  it("renders the full 88-key A0-C8 piano with proportional scaling", () => {
+    const container = renderKeyboard({
+      minMidiNote: 9,
+      maxMidiNote: 96,
+      layout: "wide-88",
+    });
+    expect(container.querySelectorAll("[data-midi-note]")).toHaveLength(88);
+    expect(container.querySelector('[data-midi-note="9"]')).not.toBeNull();
+    expect(container.querySelector('[data-midi-note="96"]')).not.toBeNull();
+    expect(container.querySelector("svg")?.getAttribute("preserveAspectRatio")).toBe("xMidYMid meet");
+  });
+
+  it("keeps a black-key finger label clear of the separate bass marker", () => {
+    const container = renderKeyboard({
+      guideNotes: [61],
+      leftHandGuideNotes: [61],
+      guideBassNote: 61,
+      fingerLabels: new Map([[61, "L2"]]),
+      heldNotes: [],
+      sustainedNotes: [],
+    });
+    const key = container.querySelector('[data-midi-note="61"]');
+    expect(key?.textContent).toContain("L2");
+    expect(Array.from(key?.querySelectorAll("text") ?? []).map((node) => node.textContent)).toEqual(["L2"]);
+    expect(key?.querySelector("[data-bass-reference='guide']")).not.toBeNull();
+    expect(key?.querySelector("title")?.textContent).toContain("BASS reference");
+  });
+
   it("renders white keys below shorter black keys with C-only labels", () => {
     const container = renderKeyboard();
     const white = container.querySelector('[data-midi-note="60"]');

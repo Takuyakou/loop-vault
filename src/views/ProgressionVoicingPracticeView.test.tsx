@@ -337,12 +337,15 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("[data-testid='voicing-loop-midi-status']")?.textContent)
       .toContain("MIDI入力未接続");
     expect(container.querySelector("[data-testid='voicing-loop-beat-indicator']")).not.toBeNull();
-    expect(container.querySelector("[data-keyboard-layout='wide-61']")).not.toBeNull();
-    expect(container.querySelectorAll("[data-midi-note]")).toHaveLength(61);
-    expect(container.querySelector("[data-midi-note='24']")).not.toBeNull();
-    expect(container.querySelector("[data-midi-note='84']")).not.toBeNull();
-    expect(container.querySelector("[data-c-label='C2']")).not.toBeNull();
-    expect(container.querySelector("[data-c-label='C7']")).not.toBeNull();
+    expect(container.querySelector("[data-keyboard-layout='wide-88']")).not.toBeNull();
+    expect(container.querySelectorAll("[data-midi-note]")).toHaveLength(88);
+    expect(container.querySelector("[data-midi-note='9']")).not.toBeNull();
+    expect(container.querySelector("[data-midi-note='96']")).not.toBeNull();
+    expect(container.querySelector("[data-c-label='C1']")).not.toBeNull();
+    expect(container.querySelector("[data-c-label='C8']")).not.toBeNull();
+    expect(container.querySelector("[data-testid='voicing-loop-current-degree']")?.textContent).toBe("Ⅰ");
+    expect(container.querySelector("[data-testid='voicing-loop-next-degree']")?.textContent).toBe("Ⅱ");
+    expect(Array.from(container.querySelectorAll("[data-testid='voicing-loop-event-degree']")).map((node) => node.textContent)).toEqual(["Ⅰ", "Ⅱ"]);
     expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent)
       .toContain("位置1 / 1 小節");
     expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent)
@@ -376,11 +379,54 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(timelineCards[1]?.getAttribute("aria-pressed")).toBe("true");
     expect(container.querySelector("[aria-current='step']")?.textContent).toContain("Cmaj7");
     expect(container.textContent).toContain("0 周完了");
+    expect(container.querySelector("[data-keyboard-event-index='1']")).not.toBeNull();
+    expect(container.querySelector("[data-midi-note='50']")?.getAttribute("data-visual-state")).toBe("guide");
+    expect(container.querySelector("[data-midi-note='48']")?.getAttribute("data-visual-state")).toBe("idle");
 
     await act(async () => button(container, "現在のコードを試聴").click());
     expect(runtime.audition).toHaveBeenLastCalledWith([48, 55, 59], "piano");
     expect(timelineCards[0]?.getAttribute("aria-pressed")).toBe("true");
     expect(runtime.start).not.toHaveBeenCalled();
+  });
+
+  it("transposes labels, exact voicings, keyboard guidance, playback, and degrees from the original key", async () => {
+    const runtime = new FakeTransport();
+    const source = snapshot("source-midi");
+    const container = await renderView(runtime, { "source-midi": source }, "source-midi");
+    const key = container.querySelector<HTMLSelectElement>("#voicing-loop-key")!;
+    expect(key.value).toBe("0");
+    expect(key.options[key.selectedIndex]?.textContent).toContain("元");
+
+    await act(async () => {
+      const valueSetter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value")?.set;
+      valueSetter?.call(key, "2");
+      key.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent).toBe("Dmaj7");
+    expect(container.querySelector("[data-testid='voicing-loop-current-degree']")?.textContent).toBe("Ⅰ");
+    expect(container.querySelector("[data-testid='voicing-loop-next-degree']")?.textContent).toBe("Ⅱ");
+    expect(source.events[0]?.chord.label).toBe("Cmaj7");
+    expect(source.events[0]?.voicing?.midiNotes).toEqual([48, 55, 59]);
+
+    const cards = container.querySelectorAll<HTMLButtonElement>("[data-testid='voicing-loop-event']");
+    await act(async () => cards[1]?.click());
+    expect(runtime.audition).toHaveBeenLastCalledWith([52, 59, 62], "piano");
+    expect(container.querySelector("[data-midi-note='52']")?.getAttribute("data-visual-state")).toBe("guide");
+    expect(container.querySelector("[data-midi-note='50']")?.getAttribute("data-visual-state")).toBe("idle");
+    expect(runtime.stop).toHaveBeenCalled();
+  });
+
+  it("changes BPM by dragging vertically while retaining direct number input", async () => {
+    const runtime = new FakeTransport();
+    const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full");
+    const drag = container.querySelector<HTMLElement>("[data-testid='voicing-loop-bpm-drag']")!;
+    await act(async () => {
+      dispatchPointer(drag, "pointerdown", { button: 0, clientY: 100, pointerId: 7 });
+      dispatchPointer(drag, "pointermove", { button: 0, clientY: 70, pointerId: 7 });
+      dispatchPointer(drag, "pointerup", { button: 0, clientY: 70, pointerId: 7 });
+    });
+    expect(container.querySelector<HTMLInputElement>("#voicing-loop-bpm")?.value).toBe("90");
+    expect(runtime.setBpm).toHaveBeenLastCalledWith(90);
   });
 
   it("explains the left-only Basic Shell guide and keeps its resolved notes playable", async () => {
@@ -617,7 +663,8 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent).toBe("Am11/B");
     expect(container.querySelector("[data-testid='slash-bass-reference']")?.textContent).toContain("練習対象外");
     const bassKey = container.querySelector(`[data-midi-note='${bass}']`)!;
-    expect(bassKey.textContent).toContain("BASS");
+    expect(Array.from(bassKey.querySelectorAll("text")).some((node) => node.textContent === "BASS")).toBe(false);
+    expect(bassKey.querySelector("[data-bass-reference='guide']")).not.toBeNull();
     expect(bassKey.getAttribute("data-guide-hand")).toBeNull();
     expect(container.querySelectorAll("[data-guide-hand='left']")).toHaveLength(resolution.voicing.midiNotes.length);
     expect(container.querySelectorAll("[data-guide-hand='right']")).toHaveLength(0);
@@ -945,6 +992,7 @@ function snapshot(
     fingerprint: `fixture-${selection}-${quality}`,
     source: { kind: "vault", reference: { ideaId: "idea", blockId: "block" } },
     selection,
+    key: "C major",
     bpm: 80,
     meter: { numerator: 4, denominator: 4 },
     lengthBeats: 4,
@@ -969,6 +1017,20 @@ function snapshot(
       },
     ],
   };
+}
+
+function dispatchPointer(
+  target: HTMLElement,
+  type: string,
+  values: { button: number; clientY: number; pointerId: number },
+) {
+  const event = new Event(type, { bubbles: true, cancelable: true });
+  Object.defineProperties(event, {
+    button: { value: values.button },
+    clientY: { value: values.clientY },
+    pointerId: { value: values.pointerId },
+  });
+  target.dispatchEvent(event);
 }
 
 class FakeTransport implements ProgressionVoicingTransportPort {

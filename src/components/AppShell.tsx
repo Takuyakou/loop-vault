@@ -48,6 +48,7 @@ interface AppShellProps {
   onMasterVolumeChange: (value: number) => void;
   pageTitle: string;
   pageContext?: string;
+  pageNavigation?: ReactNode;
   children?: ReactNode;
   controller?: PlaybackController;
 }
@@ -70,6 +71,7 @@ export function AppShell({
   openSettings,
   openVoicingLoop,
   pageContext,
+  pageNavigation,
   pageTitle,
   saveStatus,
   settingsOpen = false,
@@ -174,11 +176,14 @@ export function AppShell({
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <header className="flex min-h-[var(--lv-topbar-height)] shrink-0 items-center gap-3 border-b border-[var(--lv-border)] bg-[var(--lv-topbar)] px-4 lg:px-6">
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-lg font-bold text-[var(--lv-text)]">{pageTitle}</p>
-            {pageContext ? (
-              <p className="truncate text-xs text-[var(--lv-text-muted)]">{pageContext}</p>
-            ) : null}
+          <div className="flex min-w-0 flex-1 items-center gap-4">
+            <div className="min-w-0 shrink-0">
+              <p className="truncate text-lg font-bold text-[var(--lv-text)]">{pageTitle}</p>
+              {pageContext ? (
+                <p className="truncate text-xs text-[var(--lv-text-muted)]">{pageContext}</p>
+              ) : null}
+            </div>
+            {pageNavigation ? <div className="hidden min-w-0 lg:block">{pageNavigation}</div> : null}
           </div>
           <div className="flex min-w-0 shrink-0 items-center justify-end gap-1.5" data-global-actions>
             <PlaybackLevelMeter

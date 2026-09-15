@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Pause, Play, RefreshCw, Search, Settings, Square, Volume2 } from "lucide-react";
+import { GripVertical, Pause, Play, RefreshCw, Search, Settings, Square, Volume2 } from "lucide-react";
 import { useStore } from "zustand";
 import {
   formatMidiNoteForDisplay,
@@ -15,6 +15,8 @@ import {
   reduceProgressionPracticeClock,
   resolveProgressionPracticeVoicings,
   progressionPracticePlaybackNotes,
+  progressionPracticeDegreeLabel,
+  transposeProgressionVoicingPracticeSnapshot,
   type ResolveProgressionPracticeVoicingsOptions,
   type ProgressionPracticeVoicingResolution,
   type ProgressionPracticeVoicingPlan,
@@ -31,6 +33,7 @@ import {
 } from "../domain/progressionVoicingPractice";
 import type { AppLanguage } from "../domain/types";
 import { accidentalPreferenceForKey } from "../domain/chords";
+import { keyCatalogForMode, parseKeySignature } from "../domain/practiceTransposition";
 import {
   rankCyclicFingerings,
   type FingerNumber,
@@ -61,7 +64,7 @@ import { progressionFingeringHandTargets } from "../voicingPractice/fingeringDis
 const ALL_PITCH_CLASSES = Object.freeze(Array.from({ length: 12 }, (_, index) => index));
 const EMPTY_NOTES: readonly number[] = Object.freeze([]);
 const EMPTY_VAULT_PROGRESSIONS: readonly VoicingLoopVaultCandidate[] = Object.freeze([]);
-const VOICING_LOOP_KEYBOARD_RANGE = Object.freeze({ minMidiNote: 24, maxMidiNote: 84 });
+const VOICING_LOOP_KEYBOARD_RANGE = Object.freeze({ minMidiNote: 9, maxMidiNote: 96 });
 const TIMELINE_CARD_WIDTH_PX = 92;
 const TIMELINE_CARD_GAP_PX = 6;
 
@@ -111,7 +114,7 @@ const copy = {
     timeline: "進行タイムライン",
     progressionSection: "PROGRESSION",
     cardAuditionOnly: "カードクリック = 試聴のみ",
-    keyboardTitle: "KEYBOARD — 61 KEYS / C2–C7",
+    keyboardTitle: "KEYBOARD — 88 KEYS / A0–C8",
     loop: "Loop",
     pitches: "PITCH",
     chordTone: "CHORD TONE",
@@ -135,6 +138,9 @@ const copy = {
     recall: "Recall（コード名のみ）",
     displayMode: "Voicing表示モード",
     bpm: "BPM",
+    key: "KEY",
+    originalKey: "元",
+    bpmDrag: "上下にドラッグしてBPMを変更",
     metronome: "メトロノーム",
     referenceSound: "お手本音",
     countInBars: "カウントイン",
@@ -208,7 +214,7 @@ const copy = {
     timeline: "Progression timeline",
     progressionSection: "PROGRESSION",
     cardAuditionOnly: "Card click = audition only",
-    keyboardTitle: "KEYBOARD — 61 KEYS / C2–C7",
+    keyboardTitle: "KEYBOARD — 88 KEYS / A0–C8",
     loop: "Loop",
     pitches: "PITCH",
     chordTone: "CHORD TONE",
@@ -232,6 +238,9 @@ const copy = {
     recall: "Recall (chord only)",
     displayMode: "Voicing display mode",
     bpm: "BPM",
+    key: "KEY",
+    originalKey: "Original",
+    bpmDrag: "Drag up or down to change BPM",
     metronome: "Metronome",
     referenceSound: "Reference sound",
     countInBars: "Count-in",
@@ -304,7 +313,31 @@ export function ProgressionVoicingPracticeView({
   const text = copy[language];
   const { sound: previewSound } = usePreviewSound();
   const [selection, setSelection] = useState<ProgressionVoicingSelection>(initialSelection);
-  const snapshot = snapshots?.[selection];
+  const sourceSnapshot = snapshots?.[selection];
+  const sourceKey = useMemo(
+    () => sourceSnapshot?.key ? parseKeySignature(sourceSnapshot.key) : undefined,
+    [sourceSnapshot?.key],
+  );
+  const sourceIdentity = sourceSnapshot
+    ? `${sourceSnapshot.source.reference.ideaId}:${sourceSnapshot.source.reference.blockId}`
+    : undefined;
+  const [targetKeyChoice, setTargetKeyChoice] = useState<{ sourceIdentity: string; tonicPitchClass: number }>();
+  const targetTonicPitchClass = sourceKey
+    ? targetKeyChoice && targetKeyChoice.sourceIdentity === sourceIdentity
+      ? targetKeyChoice.tonicPitchClass
+      : sourceKey.tonicPitchClass
+    : undefined;
+  const transposition = useMemo(
+    () => sourceSnapshot && targetTonicPitchClass !== undefined
+      ? transposeProgressionVoicingPracticeSnapshot(sourceSnapshot, targetTonicPitchClass)
+      : undefined,
+    [sourceSnapshot, targetTonicPitchClass],
+  );
+  const snapshot = transposition
+    ? transposition.ok ? transposition.snapshot : undefined
+    : sourceSnapshot;
+  const targetKey = transposition?.ok ? transposition.targetKey : sourceKey;
+  const keyOptions = sourceKey ? keyCatalogForMode(sourceKey.mode) : [];
   const progressionLoaded = Boolean(snapshots && Object.values(snapshots).some(Boolean));
   const [query, setQuery] = useState("");
   const [showAllProgressions, setShowAllProgressions] = useState(false);
@@ -416,6 +449,8 @@ export function ProgressionVoicingPracticeView({
   const nextEvent = snapshot?.events[nextIndex];
   const currentResolution = plan?.events[currentIndex];
   const nextResolution = plan?.events[nextIndex];
+  const currentDegree = progressionPracticeDegreeLabel(currentEvent?.chord, targetKey);
+  const nextDegree = progressionPracticeDegreeLabel(nextEvent?.chord, targetKey);
   const currentVoicing = currentResolution?.status === "SUPPORTED" ? currentResolution.voicing : undefined;
   const nextVoicing = nextResolution?.status === "SUPPORTED" ? nextResolution.voicing : undefined;
   const currentHandTargets = currentVoicing
@@ -452,22 +487,43 @@ export function ProgressionVoicingPracticeView({
     () => effectiveFingering(nextRightSuggested, fingeringPreferences),
     [nextRightSuggested, fingeringPreferences],
   );
+  const keyboardEventIndex = auditionedIndex ?? currentIndex;
+  const keyboardEvent = snapshot?.events[keyboardEventIndex];
+  const keyboardResolution = plan?.events[keyboardEventIndex];
+  const keyboardVoicing = keyboardResolution?.status === "SUPPORTED" ? keyboardResolution.voicing : undefined;
+  const keyboardHandTargets = keyboardVoicing
+    ? progressionFingeringHandTargets(selection, keyboardVoicing)
+    : { left: EMPTY_NOTES, right: EMPTY_NOTES };
+  const keyboardLeftFingering = useMemo(
+    () => effectiveFingering(
+      keyboardEvent ? leftFingeringById.get(keyboardEvent.id) : undefined,
+      fingeringPreferences,
+    ),
+    [fingeringPreferences, keyboardEvent, leftFingeringById],
+  );
+  const keyboardRightFingering = useMemo(
+    () => effectiveFingering(
+      keyboardEvent ? rightFingeringById.get(keyboardEvent.id) : undefined,
+      fingeringPreferences,
+    ),
+    [fingeringPreferences, keyboardEvent, rightFingeringById],
+  );
   const currentLeftPersonal = findPersonalFingering(fingeringPreferences, currentLeftFingering?.signature);
   const currentRightPersonal = findPersonalFingering(fingeringPreferences, currentRightFingering?.signature);
   const accidentalStyle: NoteAccidentalStyle = accidentalPreferenceForKey(snapshot?.key) ?? "flat";
-  const keyboardRange = currentVoicing?.referenceBassNote === undefined
+  const keyboardRange = keyboardVoicing?.referenceBassNote === undefined
     ? VOICING_LOOP_KEYBOARD_RANGE
     : {
-        minMidiNote: Math.min(VOICING_LOOP_KEYBOARD_RANGE.minMidiNote, currentVoicing.referenceBassNote),
-        maxMidiNote: Math.max(VOICING_LOOP_KEYBOARD_RANGE.maxMidiNote, currentVoicing.referenceBassNote),
+        minMidiNote: Math.min(VOICING_LOOP_KEYBOARD_RANGE.minMidiNote, keyboardVoicing.referenceBassNote),
+        maxMidiNote: Math.max(VOICING_LOOP_KEYBOARD_RANGE.maxMidiNote, keyboardVoicing.referenceBassNote),
       };
   const keyboardFingerLabels = useMemo(() => {
     if (!showFingering || displayMode !== "learn") return undefined;
     const labels = new Map<number, string>();
-    addKeyboardFingerLabels(labels, currentLeftFingering, "L");
-    addKeyboardFingerLabels(labels, currentRightFingering, "R");
+    addKeyboardFingerLabels(labels, keyboardLeftFingering, "L");
+    addKeyboardFingerLabels(labels, keyboardRightFingering, "R");
     return labels;
-  }, [currentLeftFingering, currentRightFingering, displayMode, showFingering]);
+  }, [displayMode, keyboardLeftFingering, keyboardRightFingering, showFingering]);
   const active = clockState?.status === "running" || clockState?.status === "count-in";
   const paused = clockState?.status === "paused";
   const playheadX = currentSpanIndex * (TIMELINE_CARD_WIDTH_PX + TIMELINE_CARD_GAP_PX)
@@ -487,6 +543,10 @@ export function ProgressionVoicingPracticeView({
   }, [currentEvent?.id, selection]);
 
   useEffect(() => {
+    if (active) setAuditionedIndex(undefined);
+  }, [active, currentIndex]);
+
+  useEffect(() => {
     const viewport = timelineViewportRef.current;
     const eventElement = timelineEventRefs.current[currentSpanIndex];
     if (!viewport || !eventElement || viewport.clientWidth <= 0) return;
@@ -502,6 +562,16 @@ export function ProgressionVoicingPracticeView({
     auditionRequestRef.current += 1;
     transportRef.current?.stop();
     setSelection(next);
+  }
+
+  function changeTargetKey(tonicPitchClass: number) {
+    if (!sourceKey || !sourceIdentity || tonicPitchClass === targetTonicPitchClass) return;
+    runtimeRequestRef.current += 1;
+    auditionRequestRef.current += 1;
+    transportRef.current?.stop();
+    setAuditionedIndex(undefined);
+    setRuntimeError(undefined);
+    setTargetKeyChoice({ sourceIdentity, tonicPitchClass });
   }
 
   function chooseProgression(candidate: VoicingLoopVaultCandidate) {
@@ -869,9 +939,12 @@ export function ProgressionVoicingPracticeView({
               <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="lv-section-kicker">{text.current} · {currentSpanIndex + 1}/{snapshot.spans.length}</p>
-                  <h2 className="mt-1 break-words text-3xl font-bold tracking-tight text-[var(--lv-text)] sm:text-4xl">
-                    {currentEvent?.chord.label ?? restLabel}
-                  </h2>
+                  <div className="mt-1 flex min-w-0 items-baseline gap-2">
+                    <h2 className="break-words text-3xl font-bold tracking-tight text-[var(--lv-text)] sm:text-4xl">
+                      {currentEvent?.chord.label ?? restLabel}
+                    </h2>
+                    {currentDegree ? <span className="shrink-0 text-sm font-bold text-[var(--lv-accent)]" data-testid="voicing-loop-current-degree">{currentDegree}</span> : null}
+                  </div>
                   <p className="sr-only" aria-live="polite" aria-atomic="true">{currentEvent?.chord.label ?? restLabel}</p>
                 </div>
                 {displayMode === "learn" && showFingering
@@ -911,7 +984,10 @@ export function ProgressionVoicingPracticeView({
 
             <Surface className="min-w-0 p-3">
               <p className="lv-section-kicker">{text.next}</p>
-              <p className="mt-1 break-words text-xl font-bold text-[var(--lv-text)]">{nextEvent?.chord.label ?? restLabel}</p>
+              <div className="mt-1 flex min-w-0 items-baseline gap-2">
+                <p className="break-words text-xl font-bold text-[var(--lv-text)]">{nextEvent?.chord.label ?? restLabel}</p>
+                {nextDegree ? <span className="shrink-0 text-xs font-bold text-[var(--lv-accent)]" data-testid="voicing-loop-next-degree">{nextDegree}</span> : null}
+              </div>
               {displayMode === "learn" && nextVoicing ? (
                 <div className="mt-2 space-y-2 text-xs leading-4 text-[var(--lv-text-secondary)]" data-testid="voicing-loop-next-voicing">
                   <CompactHandVoicing
@@ -989,6 +1065,7 @@ export function ProgressionVoicingPracticeView({
                   const playable = resolution?.status === "SUPPORTED";
                   const selected = index === currentSpanIndex;
                   const auditioned = eventIndex >= 0 && eventIndex === auditionedIndex;
+                  const degree = progressionPracticeDegreeLabel(event?.chord, targetKey);
                   return (
                     <button
                       key={event?.id ?? `rest-${span.startBeat}`}
@@ -1000,7 +1077,7 @@ export function ProgressionVoicingPracticeView({
                       className={`relative flex h-[46px] max-h-[46px] min-h-[46px] w-[92px] min-w-[92px] max-w-[92px] flex-none flex-col justify-start overflow-hidden rounded-[var(--lv-radius-sm)] border px-2 pb-3 pt-1.5 text-left text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-60 ${selected ? "border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)] shadow-[inset_0_0_0_1px_rgba(59,224,206,0.12)]" : auditioned ? "border-[var(--lv-accent)] bg-[var(--lv-surface-raised)] text-[var(--lv-text)]" : "border-[var(--lv-border)] bg-transparent text-[var(--lv-text-secondary)]"}`}
                       aria-current={selected ? "step" : undefined}
                       aria-pressed={auditioned}
-                      aria-label={`${index + 1}/${snapshot.spans.length}: ${event?.chord.label ?? restLabel}, ${practiceTimingLabel(span, snapshot.meter.numerator, language)}.${event ? ` ${text.auditionCard}` : ""}`}
+                      aria-label={`${index + 1}/${snapshot.spans.length}: ${event?.chord.label ?? restLabel}${degree ? `, ${degree}` : ""}, ${practiceTimingLabel(span, snapshot.meter.numerator, language)}.${event ? ` ${text.auditionCard}` : ""}`}
                       disabled={!playable}
                       onClick={() => void auditionResolved(eventIndex)}
                     >
@@ -1014,7 +1091,12 @@ export function ProgressionVoicingPracticeView({
                       >
                         {compactDurationLabel(span.durationBeats, language)}
                       </span>
-                      <span aria-hidden="true" data-testid="voicing-loop-event-beat-rail" className="absolute inset-x-2 bottom-1 flex h-0.5 gap-0.5 opacity-60">
+                      {degree ? (
+                        <span className="absolute bottom-0.5 right-1.5 text-[9px] font-bold leading-none text-[var(--lv-accent)]" data-testid="voicing-loop-event-degree">
+                          {degree}
+                        </span>
+                      ) : null}
+                      <span aria-hidden="true" data-testid="voicing-loop-event-beat-rail" className={`absolute bottom-1 left-2 flex h-0.5 gap-0.5 opacity-60 ${degree ? "right-7" : "right-2"}`}>
                         {Array.from({ length: Math.max(1, Math.min(16, Math.ceil(span.durationBeats))) }, (_, beatIndex) => (
                           <span
                             key={beatIndex}
@@ -1048,13 +1130,13 @@ export function ProgressionVoicingPracticeView({
                 </Button>
               )}
             </div>
-            <div className="min-h-0 min-w-0 flex-1">
+            <div className="min-h-0 min-w-0 flex-1" data-keyboard-event-index={keyboardEventIndex}>
               <PracticeKeyboard
                 range={keyboardRange}
-                guideNotes={currentVoicing?.midiNotes ?? EMPTY_NOTES}
-                referenceBassNote={currentVoicing?.referenceBassNote}
-                leftHandGuideNotes={currentHandTargets.left}
-                rightHandGuideNotes={currentHandTargets.right}
+                guideNotes={keyboardVoicing?.midiNotes ?? EMPTY_NOTES}
+                referenceBassNote={keyboardVoicing?.referenceBassNote}
+                leftHandGuideNotes={keyboardHandTargets.left}
+                rightHandGuideNotes={keyboardHandTargets.right}
                 allowedPitchClasses={ALL_PITCH_CLASSES}
                 requiredPitchClasses={EMPTY_NOTES}
                 level={displayMode === "learn" ? 1 : 4}
@@ -1063,7 +1145,7 @@ export function ProgressionVoicingPracticeView({
                 concealNoteNames={displayMode === "recall"}
                 interactionMode="neutral-monitor"
                 fingerLabels={keyboardFingerLabels}
-                keyboardLayout="wide-61"
+                keyboardLayout="wide-88"
               />
             </div>
           </Surface>
@@ -1090,18 +1172,30 @@ export function ProgressionVoicingPracticeView({
 
           <Surface className="shrink-0 px-2 py-1.5" data-testid="voicing-loop-transport">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <label className="inline-flex min-h-8 items-center gap-2 text-[10px] font-bold tracking-[0.08em] text-[var(--lv-text-muted)]" htmlFor="voicing-loop-bpm">
-                {text.bpm}
-                <input
-                  id="voicing-loop-bpm"
-                  className="lv-field-control min-h-8 w-20 px-2 text-sm"
-                  type="number"
-                  min={30}
-                  max={240}
-                  value={clockState?.bpm ?? snapshot.bpm}
-                  onChange={(event) => changeBpm(event.currentTarget.valueAsNumber)}
-                />
-              </label>
+              <BpmDragControl
+                label={text.bpm}
+                dragLabel={text.bpmDrag}
+                value={clockState?.bpm ?? snapshot.bpm}
+                onChange={changeBpm}
+              />
+              {sourceKey && targetTonicPitchClass !== undefined ? (
+                <label className="inline-flex min-h-8 items-center gap-2 text-[10px] font-bold tracking-[0.08em] text-[var(--lv-text-muted)]" htmlFor="voicing-loop-key">
+                  {text.key}
+                  <select
+                    id="voicing-loop-key"
+                    className="lv-field-control min-h-8 w-32 px-2 text-xs"
+                    value={targetTonicPitchClass}
+                    disabled={active || paused}
+                    onChange={(event) => changeTargetKey(Number(event.currentTarget.value))}
+                  >
+                    {keyOptions.map((key) => (
+                      <option key={key.tonicPitchClass} value={key.tonicPitchClass}>
+                        {key.labels[language]}{key.tonicPitchClass === sourceKey.tonicPitchClass ? ` (${text.originalKey})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
               <label className="inline-flex min-h-8 items-center gap-2 text-[10px] font-bold tracking-[0.08em] text-[var(--lv-text-muted)]" htmlFor="voicing-loop-count-in">
                 {text.countInBars}
                 <select
@@ -1150,6 +1244,83 @@ export function ProgressionVoicingPracticeView({
 
         </>
       )}
+    </div>
+  );
+}
+
+function BpmDragControl({
+  dragLabel,
+  label,
+  onChange,
+  value,
+}: {
+  readonly dragLabel: string;
+  readonly label: string;
+  readonly onChange: (value: number) => void;
+  readonly value: number;
+}) {
+  const dragCleanup = useRef<() => void>();
+
+  useEffect(() => () => dragCleanup.current?.(), []);
+
+  function startDrag(event: React.PointerEvent<HTMLSpanElement>) {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    dragCleanup.current?.();
+    const pointerId = event.pointerId;
+    const startValue = value;
+    const startY = event.clientY;
+    let lastValue = value;
+    const cleanup = () => {
+      window.removeEventListener("pointermove", moveDrag);
+      window.removeEventListener("pointerup", endDrag);
+      window.removeEventListener("pointercancel", endDrag);
+      if (dragCleanup.current === cleanup) dragCleanup.current = undefined;
+    };
+    const moveDrag = (moveEvent: PointerEvent) => {
+      if (moveEvent.pointerId !== pointerId) return;
+      const next = Math.max(30, Math.min(240, startValue + Math.round((startY - moveEvent.clientY) / 3)));
+      if (next === lastValue) return;
+      lastValue = next;
+      moveEvent.preventDefault();
+      onChange(next);
+    };
+    const endDrag = (endEvent: PointerEvent) => {
+      if (endEvent.pointerId === pointerId) cleanup();
+    };
+    dragCleanup.current = cleanup;
+    window.addEventListener("pointermove", moveDrag, { passive: false });
+    window.addEventListener("pointerup", endDrag);
+    window.addEventListener("pointercancel", endDrag);
+  }
+
+  return (
+    <div className="inline-flex min-h-8 items-center gap-2 text-[10px] font-bold tracking-[0.08em] text-[var(--lv-text-muted)]">
+      <label htmlFor="voicing-loop-bpm">{label}</label>
+      <div
+        className="relative"
+      >
+        <input
+          id="voicing-loop-bpm"
+          aria-describedby="voicing-loop-bpm-drag-help"
+          className="lv-field-control min-h-8 w-20 px-2 pr-6 text-sm"
+          type="number"
+          min={30}
+          max={240}
+          value={value}
+          onChange={(event) => onChange(event.currentTarget.valueAsNumber)}
+        />
+        <span
+          aria-hidden="true"
+          className="absolute inset-y-0 right-0 flex w-6 touch-none select-none items-center justify-center text-[var(--lv-text-muted)] cursor-ns-resize"
+          data-testid="voicing-loop-bpm-drag"
+          title={dragLabel}
+          onPointerDown={startDrag}
+        >
+          <GripVertical size={16} />
+        </span>
+        <span className="sr-only" id="voicing-loop-bpm-drag-help">{dragLabel}</span>
+      </div>
     </div>
   );
 }

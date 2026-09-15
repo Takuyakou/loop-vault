@@ -13,6 +13,10 @@ async function openPopulatedVoicingLoop(page: Page, status = "both-hands") {
 
 test("P5.32 shows the resolved two-hand plan, edits personal fingering, and preserves playback", async ({ page }) => {
   const workspace = await openPopulatedVoicingLoop(page);
+  await expect(page.locator("header").getByRole("tab", { name: "Voicing Loop" })).toBeVisible();
+  await expect(workspace.getByTestId("voicing-loop-current-degree")).toHaveText("Ⅰ");
+  await expect(workspace.getByTestId("voicing-loop-next-degree")).toHaveText("Ⅱ");
+  await expect(workspace.getByTestId("voicing-loop-event-degree")).toHaveText(["Ⅰ", "Ⅱ"]);
   await expect(workspace.getByRole("checkbox", { name: "おすすめ運指を表示" })).toBeChecked();
   await expect(workspace.getByTestId("voicing-loop-left-hand")).toContainText("PITCH");
   await expect(workspace.getByTestId("voicing-loop-left-hand")).toContainText("CHORD TONE");
@@ -27,6 +31,28 @@ test("P5.32 shows the resolved two-hand plan, edits personal fingering, and pres
   await expect(workspace.locator("[data-finger-label]")).not.toHaveCount(0);
   await expect(workspace.locator("[data-midi-note] title").filter({ hasText: /, L[1-5]/ }).first()).toBeAttached();
   await expect(workspace.locator("[data-midi-note] title").filter({ hasText: /, R[1-5]/ }).first()).toBeAttached();
+
+  const cards = workspace.getByTestId("voicing-loop-event");
+  await cards.nth(1).click();
+  await expect(workspace.locator("[data-keyboard-event-index='1']")).toBeAttached();
+  await expect(workspace.locator('[data-midi-note="50"]')).toHaveAttribute("data-visual-state", "guide");
+
+  const key = workspace.locator("#voicing-loop-key");
+  await expect(key).toHaveValue("0");
+  await key.selectOption("2");
+  await expect(workspace.getByTestId("voicing-loop-current-next").locator("h2")).toHaveText("Dmaj7");
+  await cards.nth(1).click();
+  await expect(workspace.locator('[data-midi-note="52"]')).toHaveAttribute("data-visual-state", "guide");
+
+  const bpmDrag = workspace.getByTestId("voicing-loop-bpm-drag");
+  await bpmDrag.scrollIntoViewIfNeeded();
+  const bpmBox = await bpmDrag.boundingBox();
+  expect(bpmBox).not.toBeNull();
+  await page.mouse.move(bpmBox!.x + bpmBox!.width / 2, bpmBox!.y + bpmBox!.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(bpmBox!.x + bpmBox!.width / 2, bpmBox!.y + bpmBox!.height / 2 - 30, { steps: 5 });
+  await page.mouse.up();
+  await expect(workspace.locator("#voicing-loop-bpm")).toHaveValue("106");
 
   await workspace.getByRole("button", { name: "運指を編集", exact: true }).click();
   const editor = page.getByRole("dialog", { name: "運指を編集" });
@@ -115,10 +141,11 @@ test("P5.32 compact practice surface fits a 1920x1080 desktop without page scrol
   expect(keyboardBox!.height).toBeGreaterThanOrEqual(160);
   expect(await keyboard.evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
   await expect(keyboardSvg).toHaveAttribute("preserveAspectRatio", "xMidYMid meet");
-  await expect(keyboard.locator('[data-midi-note="24"]')).toBeAttached();
-  await expect(keyboard.locator('[data-midi-note="84"]')).toBeAttached();
-  await expect(keyboard.locator('[data-c-label="C2"]')).toBeAttached();
-  await expect(keyboard.locator('[data-c-label="C7"]')).toBeAttached();
+  await expect(keyboard.locator('[data-midi-note="9"]')).toBeAttached();
+  await expect(keyboard.locator('[data-midi-note="96"]')).toBeAttached();
+  await expect(keyboard.locator('[data-c-label="C1"]')).toBeAttached();
+  await expect(keyboard.locator('[data-c-label="C8"]')).toBeAttached();
+  await expect(keyboard.locator("[data-midi-note]")).toHaveCount(88);
   const keyboardScale = await keyboard.locator("[data-key-layer='white']").evaluate((element) => {
     const matrix = (element as SVGGraphicsElement).getScreenCTM();
     if (!matrix) throw new Error("Keyboard transform matrix is unavailable");
