@@ -102,6 +102,8 @@ const copy = {
     source: "Voicingを選択",
     sourceHelp: "MYは保存済みの音をそのまま使い、LESSONは承認済みの規則だけを使います。",
     basicShellHelp: "ルートと7度を左手だけで練習します。3度と右手ガイドはBasic Full 1–7–3で表示します。",
+    basicShellRightEmpty: "このモードは左手の1度・7度だけを練習します。",
+    showBothHands: "Full Shellで両手表示",
     fullShellHelp: "左手に1度と7度、右手に3度・5度・コード記号のテンションを配置します。複数のaltered tensionで手幅を超える場合のみ5度を省略し、スラッシュコードでは指定ベースを左手で保持します。",
     leftHandHelp: "上部コードのRootless A/Bを左手で練習します。スラッシュベースは独立した参照音として鳴り、練習対象には含みません。",
     current: "現在",
@@ -202,6 +204,8 @@ const copy = {
     source: "Choose voicing",
     sourceHelp: "MY preserves saved notes; LESSON uses approved rules only.",
     basicShellHelp: "Practice root and seventh with the left hand only. Basic Full 1–7–3 adds the third and right-hand guide.",
+    basicShellRightEmpty: "This mode practices root and seventh with the left hand only.",
+    showBothHands: "Show both hands in Full Shell",
     fullShellHelp: "Play root and seventh with the left hand, then place the third, fifth, and written tensions in the right hand. Only the fifth may be omitted for dense altered tensions; slash bass is preserved in the left hand.",
     leftHandHelp: "Practice the upper chord's Rootless A/B in the left hand. Slash bass plays as a separate reference, not a practice target.",
     current: "Current",
@@ -977,6 +981,15 @@ export function ProgressionVoicingPracticeView({
                     voicing={currentVoicing}
                     showFingering={showFingering}
                   />
+                  {selection === "basic-shell" ? (
+                    <section className="flex min-w-0 flex-col justify-between rounded-[var(--lv-radius-sm)] border border-dashed border-[var(--lv-border)] p-2" data-testid="voicing-loop-basic-shell-right-empty">
+                      <div>
+                        <p className="text-xs font-bold tracking-[0.12em] text-[var(--lv-text-muted)]">{text.rightHandDisplay}</p>
+                        <p className="mt-1 text-xs leading-4 text-[var(--lv-text-muted)]">{text.basicShellRightEmpty}</p>
+                      </div>
+                      <Button className="mt-2 self-start" size="sm" variant="ghost" onClick={() => changeSelection("full-shell")}>{text.showBothHands}</Button>
+                    </section>
+                  ) : null}
                 </div>
               ) : null}
 
@@ -989,7 +1002,7 @@ export function ProgressionVoicingPracticeView({
                 {nextDegree ? <span className="shrink-0 text-xs font-bold text-[var(--lv-accent)]" data-testid="voicing-loop-next-degree">{nextDegree}</span> : null}
               </div>
               {displayMode === "learn" && nextVoicing ? (
-                <div className="mt-2 space-y-2 text-xs leading-4 text-[var(--lv-text-secondary)]" data-testid="voicing-loop-next-voicing">
+                <div className={`mt-2 grid gap-2 text-xs leading-4 text-[var(--lv-text-secondary)] ${nextHandTargets.left.length > 0 && nextHandTargets.right.length > 0 ? "grid-cols-2" : "grid-cols-1"}`} data-testid="voicing-loop-next-voicing">
                   <CompactHandVoicing
                     accidentalStyle={accidentalStyle}
                     fingering={nextLeftFingering}

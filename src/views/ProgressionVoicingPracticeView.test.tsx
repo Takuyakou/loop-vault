@@ -436,6 +436,10 @@ describe("ProgressionVoicingPracticeView", () => {
       .toContain("ルートと7度を左手だけで練習します");
     expect(container.textContent).toContain("左手の目安");
     expect(container.textContent).not.toContain("右手の目安");
+    expect(container.querySelector("[data-testid='voicing-loop-right-hand']")).toBeNull();
+    expect(container.querySelector("[data-testid='voicing-loop-basic-shell-right-empty']")?.textContent)
+      .toContain("このモードは左手の1度・7度だけを練習します");
+    expect(button(container, "Full Shellで両手表示")).not.toBeNull();
 
     await act(async () => button(container, "現在のコードを試聴").click());
     expect(runtime.audition).toHaveBeenCalledOnce();
