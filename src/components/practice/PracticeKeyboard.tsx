@@ -91,8 +91,9 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
   const guideBassNote = referenceBassNote ?? (guideNotes.length > 0 ? Math.min(...guideNotes) : undefined);
   const visualMatchState = matchState === "empty" ? "idle" : matchState;
 
+  const compactWideLayout = keyboardLayout === "wide-61";
   return (
-    <div>
+    <div className={compactWideLayout ? "flex h-full min-h-0 flex-col" : ""}>
       <PianoKeyboardVisualizer
         minMidiNote={range.minMidiNote}
         maxMidiNote={range.maxMidiNote}
@@ -118,13 +119,13 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
         layout={keyboardLayout}
       />
       {level === 1 && referenceBassNote !== undefined ? (
-        <p className="mt-2 text-xs text-[var(--lv-text-muted)]" data-testid="slash-bass-reference">
+        <p className={`${compactWideLayout ? "mt-1" : "mt-2"} text-xs text-[var(--lv-text-muted)]`} data-testid="slash-bass-reference">
           {language === "ja" ? "BASS：独立したベース参照（左手の練習対象外）" : "BASS: separate bass reference (not a left-hand target)"}
           {` · ${formatMidiNoteForDisplay(referenceBassNote, "fl-studio", accidentalStyle)}`}
         </p>
       ) : null}
       <p
-        className={`mt-3 min-h-5 text-sm ${
+        className={`${compactWideLayout ? "mt-1 min-h-4 text-xs" : "mt-3 min-h-5 text-sm"} ${
           foreignNotes.length > 0 ? "text-amber-200" : "text-[var(--lv-text-muted)]"
         }`}
         aria-live="polite"

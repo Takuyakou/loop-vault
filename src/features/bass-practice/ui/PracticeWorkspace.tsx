@@ -51,14 +51,17 @@ export function PracticeWorkspace({
     selectMode(next);
   }
 
+  const compact = mode === "voicing-loop";
+  const tabClassName = compact ? "min-h-8 px-3 text-xs" : "min-h-10 px-4 text-sm";
+
   return (
-    <div className="min-w-0 space-y-4">
-      <nav className="flex w-fit max-w-full gap-1 rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] bg-[var(--lv-surface)] p-1" aria-label="Practice mode" role="tablist">
+    <div className={compact ? "flex h-full min-h-0 min-w-0 flex-col gap-2" : "min-w-0 space-y-4"}>
+      <nav className="flex w-fit max-w-full shrink-0 gap-1 rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] bg-[var(--lv-surface)] p-1" aria-label="Practice mode" role="tablist">
         <button
           id="practice-tab-chord-dojo"
           ref={chordTabRef}
           type="button"
-          className={`min-h-10 rounded-[var(--lv-radius-sm)] px-4 text-sm font-semibold transition-colors ${mode === "chord-dojo" ? "bg-[var(--lv-accent-soft)] text-[var(--lv-accent)]" : "text-[var(--lv-text-secondary)] hover:text-[var(--lv-text)]"}`}
+          className={`${tabClassName} rounded-[var(--lv-radius-sm)] font-semibold transition-colors ${mode === "chord-dojo" ? "bg-[var(--lv-accent-soft)] text-[var(--lv-accent)]" : "text-[var(--lv-text-secondary)] hover:text-[var(--lv-text)]"}`}
           aria-controls="practice-workspace-panel"
           aria-selected={mode === "chord-dojo"}
           onClick={() => selectMode("chord-dojo")}
@@ -72,7 +75,7 @@ export function PracticeWorkspace({
           id="practice-tab-voicing-loop"
           ref={voicingTabRef}
           type="button"
-          className={`min-h-10 rounded-[var(--lv-radius-sm)] px-4 text-sm font-semibold transition-colors ${mode === "voicing-loop" ? "bg-[var(--lv-accent-soft)] text-[var(--lv-accent)]" : "text-[var(--lv-text-secondary)] hover:text-[var(--lv-text)]"}`}
+          className={`${tabClassName} rounded-[var(--lv-radius-sm)] font-semibold transition-colors ${mode === "voicing-loop" ? "bg-[var(--lv-accent-soft)] text-[var(--lv-accent)]" : "text-[var(--lv-text-secondary)] hover:text-[var(--lv-text)]"}`}
           aria-controls="practice-workspace-panel"
           aria-selected={mode === "voicing-loop"}
           onClick={() => selectMode("voicing-loop")}
@@ -87,7 +90,7 @@ export function PracticeWorkspace({
           id="practice-tab-bass-practice"
           ref={bassTabRef}
           type="button"
-          className={`min-h-10 rounded-[var(--lv-radius-sm)] px-4 text-sm font-semibold transition-colors ${mode === "bass-practice" ? "bg-[var(--lv-accent-soft)] text-[var(--lv-accent)]" : "text-[var(--lv-text-secondary)] hover:text-[var(--lv-text)]"}`}
+          className={`${tabClassName} rounded-[var(--lv-radius-sm)] font-semibold transition-colors ${mode === "bass-practice" ? "bg-[var(--lv-accent-soft)] text-[var(--lv-accent)]" : "text-[var(--lv-text-secondary)] hover:text-[var(--lv-text)]"}`}
           aria-controls="practice-workspace-panel"
           aria-selected={mode === "bass-practice"}
           onClick={() => selectMode("bass-practice")}
@@ -108,7 +111,7 @@ export function PracticeWorkspace({
             : "practice-tab-bass-practice"}
         role="tabpanel"
         tabIndex={-1}
-        className="min-w-0 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-focus)]"
+        className={`min-w-0 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-focus)] ${compact ? "min-h-0 flex-1 overflow-x-hidden overflow-y-auto [@media(min-height:900px)]:overflow-y-hidden" : ""}`}
       >
         {mode === "bass-practice"
           ? bassPractice

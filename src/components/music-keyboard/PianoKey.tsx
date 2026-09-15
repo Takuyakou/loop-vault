@@ -44,7 +44,11 @@ export const PianoKey = memo(function PianoKey({
   const label = showCLabel ? formatCLabel(note) : undefined;
   const baseFill = black ? "#171717" : "#f5f5f4";
   const baseStroke = black ? "#525252" : "#737373";
-  const guideColor = guideHand === "right" ? "#5eead4" : "#0f766e";
+  const guideColor = guideHand === "left"
+    ? "#f59e0b"
+    : guideHand === "right"
+      ? "#22d3ee"
+      : "#0f766e";
   const overlayFill = isGuideState(visualState) ? guideColor : stateColors[visualState];
   const isHeld = visualState === "held-correct"
     || visualState === "held-foreign"
@@ -167,7 +171,11 @@ export const PianoKey = memo(function PianoKey({
           textAnchor="middle"
           fontSize={black ? 7 : 9}
           fontWeight={800}
-          fill={black ? "#ccfbf1" : "#042f2e"}
+          fill={guideHand === "left"
+            ? black ? "#fef3c7" : "#451a03"
+            : guideHand === "right"
+              ? black ? "#cffafe" : "#083344"
+              : black ? "#ccfbf1" : "#042f2e"}
         >
           {fingerLabel}
         </text>

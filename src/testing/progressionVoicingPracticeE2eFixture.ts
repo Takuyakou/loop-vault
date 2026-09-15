@@ -29,6 +29,9 @@ export function progressionVoicingPracticeE2eFixture(search: string): Progressio
   if (status === "both-hands") {
     return oneSelection("source-midi", snapshot("source-midi", "maj7", true, true));
   }
+  if (status === "both-hands-long") {
+    return oneSelection("source-midi", snapshot("source-midi", "maj7", true, true, 12));
+  }
   return oneSelection("source-midi", snapshot("source-midi", "maj7", true));
 }
 
@@ -44,6 +47,7 @@ function snapshot(
   quality: "maj7" | "dim",
   includeVoicing: boolean,
   includeBassRole = false,
+  eventCount = 2,
 ): ProgressionVoicingPracticeSnapshot {
   const mySelection = selection === "source-midi" || selection === "custom";
   const firstLabel = quality === "dim" ? "Cdim" : "Cmaj7";
@@ -56,43 +60,36 @@ function snapshot(
     key: "C major",
     bpm: 96,
     meter: { numerator: 4 as const, denominator: 4 as const },
-    lengthBeats: 4,
-    spans: Object.freeze([
-      { kind: "chord" as const, eventIndex: 0, startBeat: 0, durationBeats: 2 },
-      { kind: "chord" as const, eventIndex: 1, startBeat: 2, durationBeats: 2 },
-    ]),
-    events: Object.freeze([
-      Object.freeze({
-        id: "e2e-event-1",
-        startBeat: 0,
+    lengthBeats: eventCount * 2,
+    spans: Object.freeze(Array.from({ length: eventCount }, (_, eventIndex) => ({
+      kind: "chord" as const,
+      eventIndex,
+      startBeat: eventIndex * 2,
+      durationBeats: 2,
+    }))),
+    events: Object.freeze(Array.from({ length: eventCount }, (_, eventIndex) => {
+      const first = eventIndex % 2 === 0;
+      const bassNote = first ? 48 : 50;
+      return Object.freeze({
+        id: `e2e-event-${eventIndex + 1}`,
+        startBeat: eventIndex * 2,
         durationBeats: 2,
-        chord: Object.freeze({ root: 0, quality, tensions: Object.freeze([]), label: firstLabel }),
+        chord: first
+          ? Object.freeze({ root: 0, quality, tensions: Object.freeze([]), label: firstLabel })
+          : Object.freeze({
+              root: 2,
+              quality: quality === "dim" ? "dim" : "min7",
+              tensions: Object.freeze([]),
+              label: secondLabel,
+            }),
         ...(mySelection && includeVoicing
           ? { voicing: Object.freeze({
               kind: selection as "source-midi" | "custom",
-              midiNotes: Object.freeze([48, 55, 59]),
-              ...(includeBassRole ? { bassNote: 48 } : {}),
+              midiNotes: Object.freeze(first ? [48, 55, 59] : [50, 57, 60]),
+              ...(includeBassRole ? { bassNote } : {}),
             }) }
           : {}),
-      }),
-      Object.freeze({
-        id: "e2e-event-2",
-        startBeat: 2,
-        durationBeats: 2,
-        chord: Object.freeze({
-          root: 2,
-          quality: quality === "dim" ? "dim" : "min7",
-          tensions: Object.freeze([]),
-          label: secondLabel,
-        }),
-        ...(mySelection && includeVoicing
-          ? { voicing: Object.freeze({
-              kind: selection as "source-midi" | "custom",
-              midiNotes: Object.freeze([50, 57, 60]),
-              ...(includeBassRole ? { bassNote: 50 } : {}),
-            }) }
-          : {}),
-      }),
-    ]),
+      });
+    })),
   });
 }

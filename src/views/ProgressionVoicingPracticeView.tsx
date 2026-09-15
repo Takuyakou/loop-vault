@@ -95,7 +95,7 @@ const selections: readonly {
 const copy = {
   ja: {
     title: "Voicing Loop",
-    description: "保存した進行とVoicingを、採点なしで何周でも練習します。",
+    description: "コードを見た瞬間に、左手・右手それぞれ何指か分かる。",
     source: "Voicingを選択",
     sourceHelp: "MYは保存済みの音をそのまま使い、LESSONは承認済みの規則だけを使います。",
     basicShellHelp: "ルートと7度を左手だけで練習します。3度と右手ガイドはBasic Full 1–7–3で表示します。",
@@ -109,6 +109,9 @@ const copy = {
     progressionProgress: "進行",
     position: "位置",
     timeline: "進行タイムライン",
+    progressionSection: "PROGRESSION",
+    cardAuditionOnly: "カードクリック = 試聴のみ",
+    keyboardTitle: "KEYBOARD — 61 KEYS / C2–C7",
     loop: "Loop",
     pitches: "PITCH",
     chordTone: "CHORD TONE",
@@ -117,6 +120,8 @@ const copy = {
     showFingering: "おすすめ運指を表示",
     rightHand: "RIGHT HAND",
     leftHand: "LEFT HAND",
+    rightHandDisplay: "RIGHT HAND｜右手",
+    leftHandDisplay: "LEFT HAND｜左手",
     personal: "自分の運指",
     automatic: "おすすめ",
     editFingering: "運指を編集",
@@ -187,7 +192,7 @@ const copy = {
   },
   en: {
     title: "Voicing Loop",
-    description: "Loop through a saved progression and voicing without scoring.",
+    description: "See the chord and know where each hand and finger goes.",
     source: "Choose voicing",
     sourceHelp: "MY preserves saved notes; LESSON uses approved rules only.",
     basicShellHelp: "Practice root and seventh with the left hand only. Basic Full 1–7–3 adds the third and right-hand guide.",
@@ -201,6 +206,9 @@ const copy = {
     progressionProgress: "Progression",
     position: "Position",
     timeline: "Progression timeline",
+    progressionSection: "PROGRESSION",
+    cardAuditionOnly: "Card click = audition only",
+    keyboardTitle: "KEYBOARD — 61 KEYS / C2–C7",
     loop: "Loop",
     pitches: "PITCH",
     chordTone: "CHORD TONE",
@@ -209,6 +217,8 @@ const copy = {
     showFingering: "Show Suggested Fingering",
     rightHand: "RIGHT HAND",
     leftHand: "LEFT HAND",
+    rightHandDisplay: "RIGHT HAND｜右手",
+    leftHandDisplay: "LEFT HAND｜左手",
     personal: "Personal fingering",
     automatic: "Suggested",
     editFingering: "Edit fingering",
@@ -792,54 +802,47 @@ export function ProgressionVoicingPracticeView({
   }
 
   return (
-    <div className="min-w-0 space-y-4" data-testid="voicing-loop-workspace">
+    <div className="flex h-full min-h-0 min-w-0 flex-col gap-2 overflow-x-hidden overflow-y-auto [@media(min-height:900px)]:overflow-y-hidden" data-testid="voicing-loop-workspace">
       <SectionHeading
-        kicker="PRACTICE"
         title={text.title}
         description={text.description}
         action={<Badge tone="teal">{selectionLabel(selection)}</Badge>}
+        className="shrink-0"
       />
 
-      <Surface className="p-4 sm:p-5" data-testid="voicing-loop-controls">
-        <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-          <fieldset className="min-w-0">
-            <legend className="text-sm font-semibold text-[var(--lv-text)]">{text.source}</legend>
-            <p className="mt-1 text-xs leading-5 text-[var(--lv-text-muted)]">{text.sourceHelp}</p>
-            {(["MY", "LESSON"] as const).map((group) => (
-              <div className="mt-4" key={group}>
-                <p className="lv-section-kicker">{group}</p>
-                <div className="mt-2 flex min-w-0 flex-wrap gap-2">
-                  {selections.filter((item) => item.group === group).map((item) => (
-                    <Button
-                      key={item.id}
-                      size="sm"
-                      variant={selection === item.id ? "primary" : "secondary"}
-                      aria-pressed={selection === item.id}
-                      onClick={() => changeSelection(item.id)}
-                    >
-                      {language === "ja" ? item.ja : item.en}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+      <Surface className="shrink-0 px-3 py-2" data-testid="voicing-loop-controls">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-5 gap-y-2">
+          <fieldset className="flex min-w-0 flex-wrap items-center gap-2" aria-describedby="voicing-loop-source-help">
+            <legend className="lv-section-kicker mr-1 float-left">VOICING</legend>
+            <p id="voicing-loop-source-help" className="sr-only">{text.sourceHelp}</p>
+            <p className="sr-only" data-testid="voicing-loop-selection-help">
+              {selection === "basic-shell"
+                ? text.basicShellHelp
+                : selection === "full-shell"
+                  ? text.fullShellHelp
+                  : selection === "left-hand"
+                    ? text.leftHandHelp
+                    : text.sourceHelp}
+            </p>
+            {selections.map((item) => (
+              <Button
+                key={item.id}
+                size="sm"
+                variant={selection === item.id ? "primary" : "secondary"}
+                aria-pressed={selection === item.id}
+                onClick={() => changeSelection(item.id)}
+              >
+                {language === "ja" ? item.ja : item.en}
+              </Button>
             ))}
-            {selection === "basic-shell" || selection === "full-shell" || selection === "left-hand" ? (
-              <p className="mt-3 max-w-3xl text-xs leading-5 text-[var(--lv-text-muted)]" data-testid="voicing-loop-selection-help">
-                {selection === "basic-shell"
-                  ? text.basicShellHelp
-                  : selection === "full-shell"
-                    ? text.fullShellHelp
-                    : text.leftHandHelp}
-              </p>
-            ) : null}
           </fieldset>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-[var(--lv-text)]">{text.displayMode}</p>
-            <div className="mt-2 flex min-w-0 flex-wrap gap-2" role="group" aria-label={text.displayMode}>
+          <fieldset className="flex min-w-0 flex-wrap items-center gap-2">
+            <legend className="lv-section-kicker mr-1 float-left">DISPLAY</legend>
+            <div className="flex min-w-0 flex-wrap gap-2" role="group" aria-label={text.displayMode}>
               <Button size="sm" variant={displayMode === "learn" ? "primary" : "secondary"} aria-pressed={displayMode === "learn"} onClick={() => setDisplayMode("learn")}>{text.learn}</Button>
               <Button size="sm" variant={displayMode === "recall" ? "primary" : "secondary"} aria-pressed={displayMode === "recall"} onClick={() => setDisplayMode("recall")}>{text.recall}</Button>
             </div>
-            <label className="mt-4 inline-flex min-h-10 cursor-pointer items-center gap-2 text-sm font-medium text-[var(--lv-text-secondary)]">
+            <label className="inline-flex min-h-8 cursor-pointer items-center gap-2 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] px-2 text-xs font-medium text-[var(--lv-text-secondary)]">
               <input
                 type="checkbox"
                 checked={showFingering}
@@ -847,7 +850,7 @@ export function ProgressionVoicingPracticeView({
               />
               {text.showFingering}
             </label>
-          </div>
+          </fieldset>
         </div>
       </Surface>
 
@@ -860,12 +863,13 @@ export function ProgressionVoicingPracticeView({
         </StatusMessage>
       ) : (
         <>
-          <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(15rem,0.8fr)]" data-testid="voicing-loop-current-next">
-            <Surface variant="primary" className="min-w-0 p-5 sm:p-6">
-              <div className="flex min-w-0 flex-wrap items-start justify-between gap-4">
+          <div className="shrink-0 space-y-2" data-testid="voicing-loop-current-next">
+            <div className="grid min-w-0 gap-2 lg:grid-cols-[minmax(0,1.65fr)_minmax(16rem,0.55fr)]">
+            <Surface variant="primary" className="min-w-0 p-3">
+              <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="lv-section-kicker">{text.current} · {currentSpanIndex + 1}/{snapshot.spans.length}</p>
-                  <h2 className="mt-2 break-words text-4xl font-bold tracking-tight text-[var(--lv-text)] sm:text-5xl">
+                  <h2 className="mt-1 break-words text-3xl font-bold tracking-tight text-[var(--lv-text)] sm:text-4xl">
                     {currentEvent?.chord.label ?? restLabel}
                   </h2>
                   <p className="sr-only" aria-live="polite" aria-atomic="true">{currentEvent?.chord.label ?? restLabel}</p>
@@ -879,7 +883,7 @@ export function ProgressionVoicingPracticeView({
               </div>
 
               {displayMode === "learn" && currentVoicing ? (
-                <div className="mt-5 grid min-w-0 gap-3 sm:grid-cols-2" data-testid="voicing-loop-current-voicing">
+                <div className="mt-2 grid min-w-0 grid-cols-2 gap-2" data-testid="voicing-loop-current-voicing">
                   <HandVoicingSummary
                     accidentalStyle={accidentalStyle}
                     fingering={currentLeftFingering}
@@ -903,44 +907,13 @@ export function ProgressionVoicingPracticeView({
                 </div>
               ) : null}
 
-              <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                <Metric
-                  label={projection?.inCountIn ? text.countIn : text.beat}
-                  value={projection?.inCountIn
-                    ? text.beatLabel(projection.countInBeat ?? 1, snapshot.meter.numerator)
-                    : text.beatLabel(projection?.beatInChord ?? 1, projection?.beatsInChord ?? Math.ceil(currentEvent?.durationBeats ?? 1))}
-                >
-                  <BeatIndicator
-                    current={projection?.inCountIn ? projection.countInBeat ?? 1 : projection?.beatInChord ?? 1}
-                    total={projection?.inCountIn ? snapshot.meter.numerator : projection?.beatsInChord ?? 1}
-                    label={text.beat}
-                  />
-                </Metric>
-                <Metric label={text.loop} value={text.loopLabel(projection?.loopCount ?? 0)} />
-                <Metric label={text.position} value={text.positionLabel(currentBar, totalBars)} />
-              </div>
-
-              <div className="mt-5 space-y-3">
-                <ProgressMeter
-                  active={active}
-                  label={text.chordProgress}
-                  transitionMilliseconds={visualStepMilliseconds}
-                  value={projection?.chordProgress ?? 0}
-                />
-                <ProgressMeter
-                  active={active}
-                  label={text.progressionProgress}
-                  transitionMilliseconds={visualStepMilliseconds}
-                  value={projection?.progressionProgress ?? 0}
-                />
-              </div>
             </Surface>
 
-            <Surface className="min-w-0 p-5">
+            <Surface className="min-w-0 p-3">
               <p className="lv-section-kicker">{text.next}</p>
-              <p className="mt-3 break-words text-2xl font-bold text-[var(--lv-text)]">{nextEvent?.chord.label ?? restLabel}</p>
+              <p className="mt-1 break-words text-xl font-bold text-[var(--lv-text)]">{nextEvent?.chord.label ?? restLabel}</p>
               {displayMode === "learn" && nextVoicing ? (
-                <div className="mt-4 space-y-3 text-sm leading-5 text-[var(--lv-text-secondary)]" data-testid="voicing-loop-next-voicing">
+                <div className="mt-2 space-y-2 text-xs leading-4 text-[var(--lv-text-secondary)]" data-testid="voicing-loop-next-voicing">
                   <CompactHandVoicing
                     accidentalStyle={accidentalStyle}
                     fingering={nextLeftFingering}
@@ -959,13 +932,35 @@ export function ProgressionVoicingPracticeView({
                   />
                 </div>
               ) : null}
-              <p className="mt-5 border-t border-[var(--lv-border)] pt-4 text-xs text-[var(--lv-text-muted)]">
+              <p className="mt-2 border-t border-[var(--lv-border)] pt-2 text-[10px] text-[var(--lv-text-muted)]">
                 {text.nextSwitch(formatPracticeBeat(currentSpan?.durationBeats ?? 1))}
               </p>
             </Surface>
+            </div>
+
+            <div className="grid min-w-0 grid-cols-3 gap-2" data-testid="voicing-loop-status">
+              <Metric
+                label={projection?.inCountIn ? text.countIn : text.beat}
+                value={projection?.inCountIn
+                  ? text.beatLabel(projection.countInBeat ?? 1, snapshot.meter.numerator)
+                  : text.beatLabel(projection?.beatInChord ?? 1, projection?.beatsInChord ?? Math.ceil(currentEvent?.durationBeats ?? 1))}
+              >
+                <BeatIndicator
+                  current={projection?.inCountIn ? projection.countInBeat ?? 1 : projection?.beatInChord ?? 1}
+                  total={projection?.inCountIn ? snapshot.meter.numerator : projection?.beatsInChord ?? 1}
+                  label={text.beat}
+                />
+              </Metric>
+              <Metric label={text.position} value={text.positionLabel(currentBar, totalBars)} />
+              <Metric label={text.loop} value={text.loopLabel(projection?.loopCount ?? 0)} />
+            </div>
           </div>
 
-          <Surface className="min-w-0 overflow-hidden p-4 sm:p-5" aria-label={text.progressionProgress} data-testid="voicing-loop-timeline">
+          <Surface className="min-w-0 shrink-0 overflow-hidden px-2 py-1.5" aria-label={text.timeline} data-testid="voicing-loop-timeline">
+            <div className="flex min-w-0 items-center justify-between gap-3 px-1 text-[10px]">
+              <span className="font-bold tracking-[0.1em] text-[var(--lv-text-secondary)]">{text.progressionSection}</span>
+              <span className="text-[var(--lv-text-muted)]">{text.cardAuditionOnly}</span>
+            </div>
             <div
               ref={timelineViewportRef}
               className="min-w-0 overflow-x-auto overflow-y-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)]"
@@ -973,11 +968,11 @@ export function ProgressionVoicingPracticeView({
               tabIndex={0}
               aria-label={text.timeline}
             >
-              <div className="relative flex w-max min-w-full gap-1.5 py-2">
+              <div className="relative flex w-max gap-1.5 py-1">
                 <span
                   aria-hidden="true"
                   data-testid="voicing-loop-playhead"
-                  className="pointer-events-none absolute inset-y-2 left-0 z-10 w-0.5 bg-[var(--lv-accent)] shadow-[0_0_12px_rgba(59,224,206,0.75)] motion-reduce:transition-none"
+                  className="pointer-events-none absolute inset-y-1 left-0 z-10 w-0.5 bg-[var(--lv-accent)] shadow-[0_0_12px_rgba(59,224,206,0.75)] motion-reduce:transition-none"
                   style={{
                     transform: `translateX(${playheadX}px)`,
                     transitionDuration: active ? `${visualStepMilliseconds}ms` : "0ms",
@@ -1038,14 +1033,10 @@ export function ProgressionVoicingPracticeView({
           {plan ? <UnresolvedSummary plan={plan} snapshot={snapshot} language={language} /> : null}
           <ResolutionStatus resolution={currentResolution} language={language} />
 
-          <Surface className="min-w-0 p-4 sm:p-5" data-testid="voicing-loop-detail">
-            <SectionHeading
-              level={3}
-              title={currentEvent?.chord.label ?? restLabel}
-              description={displayMode === "learn" && currentVoicing
-                ? `${text.pitches}: ${currentVoicing.notes.map((note) => formatMidiNoteForDisplay(note.midiNote, "fl-studio", accidentalStyle)).join(" · ")} · ${text.chordTone}: ${currentVoicing.notes.map((note) => note.degree ?? "—").join(" · ")}`
-                : undefined}
-              action={(
+          <Surface className="flex min-h-[11rem] min-w-0 flex-1 flex-col overflow-hidden p-2 [@media(min-height:900px)]:min-h-0" data-testid="voicing-loop-detail">
+            <div className="flex min-w-0 shrink-0 items-center justify-between gap-3 pb-1">
+              <h3 className="text-[10px] font-bold tracking-[0.1em] text-[var(--lv-text-secondary)]">{text.keyboardTitle}</h3>
+              {(
                 <Button
                   size="sm"
                   variant="secondary"
@@ -1056,8 +1047,8 @@ export function ProgressionVoicingPracticeView({
                   {text.reference}
                 </Button>
               )}
-            />
-            <div className="mt-5 min-w-0">
+            </div>
+            <div className="min-h-0 min-w-0 flex-1">
               <PracticeKeyboard
                 range={keyboardRange}
                 guideNotes={currentVoicing?.midiNotes ?? EMPTY_NOTES}
@@ -1097,23 +1088,25 @@ export function ProgressionVoicingPracticeView({
             </Modal>
           ) : null}
 
-          <Surface className="p-4 sm:p-5" data-testid="voicing-loop-transport">
-            <div className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Field htmlFor="voicing-loop-bpm" label={text.bpm}>
+          <Surface className="shrink-0 px-2 py-1.5" data-testid="voicing-loop-transport">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <label className="inline-flex min-h-8 items-center gap-2 text-[10px] font-bold tracking-[0.08em] text-[var(--lv-text-muted)]" htmlFor="voicing-loop-bpm">
+                {text.bpm}
                 <input
                   id="voicing-loop-bpm"
-                  className="lv-field-control px-3"
+                  className="lv-field-control min-h-8 w-20 px-2 text-sm"
                   type="number"
                   min={30}
                   max={240}
                   value={clockState?.bpm ?? snapshot.bpm}
                   onChange={(event) => changeBpm(event.currentTarget.valueAsNumber)}
                 />
-              </Field>
-              <Field htmlFor="voicing-loop-count-in" label={text.countInBars}>
+              </label>
+              <label className="inline-flex min-h-8 items-center gap-2 text-[10px] font-bold tracking-[0.08em] text-[var(--lv-text-muted)]" htmlFor="voicing-loop-count-in">
+                {text.countInBars}
                 <select
                   id="voicing-loop-count-in"
-                  className="lv-field-control px-3"
+                  className="lv-field-control min-h-8 w-24 px-2 text-xs"
                   value={countInBars}
                   disabled={active || paused}
                   onChange={(event) => setCountInBars(Number(event.currentTarget.value) as 0 | 1 | 2)}
@@ -1122,42 +1115,36 @@ export function ProgressionVoicingPracticeView({
                   <option value={1}>{text.oneBar}</option>
                   <option value={2}>{text.twoBars}</option>
                 </select>
-              </Field>
-              <div className="sm:col-span-2">
-                <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
-                  <p className="text-sm font-medium text-[var(--lv-text-secondary)]">{sessionStatus(clockState?.status, text)}</p>
-                  <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 text-sm font-medium text-[var(--lv-text-secondary)] focus-within:text-[var(--lv-text)]">
-                    <input
-                      type="checkbox"
-                      checked={referenceSoundEnabled}
-                      onChange={(event) => changeReferenceSound(event.currentTarget.checked)}
-                    />
-                    {text.referenceSound}
-                  </label>
-                </div>
-                <div className="mt-2 flex min-w-0 flex-wrap gap-2">
-                  {!active && !paused ? (
-                    <Button variant="primary" disabled={!allEventsPlayable} onClick={() => void start()}><Play aria-hidden="true" size={16} />{text.start}</Button>
-                  ) : active ? (
-                    <Button variant="primary" onClick={pause}><Pause aria-hidden="true" size={16} />{text.pause}</Button>
-                  ) : (
-                    <Button variant="primary" onClick={() => void resume()}><Play aria-hidden="true" size={16} />{text.resume}</Button>
-                  )}
-                  <Button variant="secondary" disabled={!active && !paused} onClick={() => void restart()}><RefreshCw aria-hidden="true" size={16} />{text.restart}</Button>
-                  <Button variant="secondary" disabled={!active && !paused} onClick={stop}><Square aria-hidden="true" size={16} />{text.stop}</Button>
-                  <Button variant={metronomeEnabled ? "secondary" : "ghost"} aria-pressed={metronomeEnabled} onClick={toggleMetronome}>{text.metronome}: {metronomeEnabled ? "ON" : "OFF"}</Button>
-                  <span className={`inline-flex min-h-10 items-center gap-1.5 px-1 text-sm ${midiStatus === "connected" ? "text-teal-200" : "text-amber-200"}`} data-testid="voicing-loop-midi-status">
-                    <span aria-hidden="true" className={`h-2 w-2 rounded-full ${midiStatus === "connected" ? "bg-teal-300" : "bg-amber-300"}`} />
-                    <span className="font-semibold">{text.midi}</span>
-                    <span>{midiStatus === "connected"
-                      ? `${text.connected}${selectedMidiDevice ? ` · ${selectedMidiDevice.name}` : ""}`
-                      : midiStatus === "connecting" ? text.connecting : text.disconnected}</span>
-                  </span>
-                  <Button variant="ghost" size="sm" onClick={() => void reconnectMidi()}><RefreshCw aria-hidden="true" size={16} />{text.reconnect}</Button>
-                  <Button variant="ghost" size="sm" onClick={openMidiSettings}><Settings aria-hidden="true" size={16} />{text.settings}</Button>
-                </div>
-                {midiReconnectError || midiStoreError ? <p className="mt-2 text-xs text-amber-200">{midiReconnectError ?? midiStoreError}</p> : null}
-              </div>
+              </label>
+              {!active && !paused ? (
+                <Button size="sm" variant="primary" disabled={!allEventsPlayable} onClick={() => void start()}><Play aria-hidden="true" size={16} />{text.start}</Button>
+              ) : active ? (
+                <Button size="sm" variant="primary" onClick={pause}><Pause aria-hidden="true" size={16} />{text.pause}</Button>
+              ) : (
+                <Button size="sm" variant="primary" onClick={() => void resume()}><Play aria-hidden="true" size={16} />{text.resume}</Button>
+              )}
+              <Button size="sm" variant="secondary" disabled={!active && !paused} onClick={() => void restart()}><RefreshCw aria-hidden="true" size={16} />{text.restart}</Button>
+              <Button size="sm" variant="secondary" disabled={!active && !paused} onClick={stop}><Square aria-hidden="true" size={16} />{text.stop}</Button>
+              <label className="inline-flex min-h-8 cursor-pointer items-center gap-2 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] px-2 text-xs font-medium text-[var(--lv-text-secondary)] focus-within:text-[var(--lv-text)]">
+                <input
+                  type="checkbox"
+                  checked={referenceSoundEnabled}
+                  onChange={(event) => changeReferenceSound(event.currentTarget.checked)}
+                />
+                {text.referenceSound}
+              </label>
+              <Button size="sm" variant={metronomeEnabled ? "secondary" : "ghost"} aria-pressed={metronomeEnabled} onClick={toggleMetronome}>{text.metronome}: {metronomeEnabled ? "ON" : "OFF"}</Button>
+              <span className={`inline-flex min-h-8 items-center gap-1.5 px-1 text-xs ${midiStatus === "connected" ? "text-teal-200" : "text-amber-200"}`} data-testid="voicing-loop-midi-status">
+                <span aria-hidden="true" className={`h-2 w-2 rounded-full ${midiStatus === "connected" ? "bg-teal-300" : "bg-amber-300"}`} />
+                <span className="font-semibold">{text.midi}</span>
+                <span>{midiStatus === "connected"
+                  ? `${text.connected}${selectedMidiDevice ? ` · ${selectedMidiDevice.name}` : ""}`
+                  : midiStatus === "connecting" ? text.connecting : text.disconnected}</span>
+              </span>
+              <Button variant="ghost" size="sm" onClick={() => void reconnectMidi()}><RefreshCw aria-hidden="true" size={16} />{text.reconnect}</Button>
+              <Button variant="ghost" size="sm" onClick={openMidiSettings}><Settings aria-hidden="true" size={16} />{text.settings}</Button>
+              <span className="ml-auto text-xs font-medium text-[var(--lv-text-secondary)]">{sessionStatus(clockState?.status, text)}</span>
+              {midiReconnectError || midiStoreError ? <p className="basis-full text-xs text-amber-200">{midiReconnectError ?? midiStoreError}</p> : null}
             </div>
           </Surface>
 
@@ -1246,17 +1233,19 @@ function HandVoicingSummary({
 }) {
   if (!pitches.length) return null;
   const prefix = hand === "left" ? "L" : "R";
-  const handBorder = hand === "left" ? "border-amber-400/40" : "border-teal-300/40";
+  const handBorder = hand === "left"
+    ? "border-amber-400/50 bg-amber-400/[0.08]"
+    : "border-teal-300/50 bg-teal-300/[0.08]";
   const handText = hand === "left" ? "text-amber-200" : "text-teal-200";
   return (
     <section
-      className={`min-w-0 rounded-[var(--lv-radius-sm)] border bg-[var(--lv-bg-subtle)] p-3 ${handBorder}`}
+      className={`min-w-0 rounded-[var(--lv-radius-sm)] border p-2 ${handBorder}`}
       data-testid={`voicing-loop-${hand}-hand`}
     >
       <p className={`text-xs font-bold tracking-[0.12em] ${handText}`}>
-        {hand === "left" ? text.leftHand : text.rightHand}
+        {hand === "left" ? text.leftHandDisplay : text.rightHandDisplay}
       </p>
-      <dl className="mt-2 grid min-w-0 gap-1 text-sm leading-5">
+      <dl className="mt-1 grid min-w-0 gap-0.5 text-xs leading-4">
         <HandFact label={text.pitches} value={formatPitchList(pitches, accidentalStyle)} />
         <HandFact label={text.chordTone} value={formatChordToneList(voicing, pitches)} />
         {showFingering ? (
@@ -1290,17 +1279,19 @@ function CompactHandVoicing({
 }) {
   if (!pitches.length) return null;
   const prefix = hand === "left" ? "L" : "R";
-  const handBorder = hand === "left" ? "border-amber-400/60" : "border-[var(--lv-accent)]";
+  const handBorder = hand === "left"
+    ? "border-amber-400/60 bg-amber-400/[0.08]"
+    : "border-[var(--lv-accent)] bg-teal-300/[0.08]";
   const handText = hand === "left" ? "text-amber-200" : "text-[var(--lv-accent)]";
   return (
-    <div className={`min-w-0 border-l-2 pl-3 ${handBorder}`} data-testid={`voicing-loop-next-${hand}-hand`}>
+    <div className={`min-w-0 rounded-[var(--lv-radius-sm)] border px-2 py-1.5 ${handBorder}`} data-testid={`voicing-loop-next-${hand}-hand`}>
       <p className={`text-xs font-bold tracking-[0.1em] ${handText}`}>
-        {hand === "left" ? text.leftHand : text.rightHand}
+        {hand === "left" ? text.leftHandDisplay : text.rightHandDisplay}
       </p>
-      <p className="mt-1 break-words">{text.pitches}: {formatPitchList(pitches, accidentalStyle)}</p>
+      <p className="mt-0.5 break-words">{formatPitchList(pitches, accidentalStyle)}</p>
       {showFingering ? (
-        <p className="break-words font-semibold text-teal-200">
-          {text.finger}: {fingering
+        <p className={`break-words font-semibold ${handText}`}>
+          {fingering
             ? fingering.fingers.map((finger) => `${prefix}${finger}`).join(" · ")
             : text.fingeringUnavailable}
         </p>
@@ -1319,8 +1310,8 @@ function HandFact({
   readonly value: string;
 }) {
   return (
-    <div className="grid min-w-0 gap-1 sm:grid-cols-[7.5rem_minmax(0,1fr)]">
-      <dt className="text-xs font-semibold text-[var(--lv-text-muted)]">{label}</dt>
+    <div className="grid min-w-0 grid-cols-[4.75rem_minmax(0,1fr)] gap-1">
+      <dt className="text-xs font-semibold text-[var(--lv-text-secondary)]">{label}</dt>
       <dd className={`min-w-0 break-words ${emphasize ? "font-semibold text-teal-200" : "text-[var(--lv-text-secondary)]"}`}>{value}</dd>
     </div>
   );
@@ -1452,17 +1443,17 @@ function BeatIndicator({ current, label, total }: { current: number; label: stri
   const windowStart = Math.floor(activeIndex / 16) * 16;
   return (
     <span
-      className="mt-2 flex min-w-0 flex-wrap gap-2"
+      className="flex min-w-0 flex-wrap gap-1"
       data-testid="voicing-loop-beat-indicator"
       role="img"
       aria-label={`${label} ${activeIndex + 1} / ${safeTotal}`}
     >
-      <span className="flex flex-wrap gap-2" aria-hidden="true">
+        <span className="flex flex-wrap gap-1" aria-hidden="true">
         {Array.from({ length: Math.min(16, safeTotal - windowStart) }, (_, offset) => windowStart + offset).map((index) => (
           <span
             key={index}
             data-active={index === activeIndex ? "true" : "false"}
-            className={`h-2.5 w-2.5 rounded-full border ${index === activeIndex ? "border-[var(--lv-accent)] bg-[var(--lv-accent)]" : "border-[var(--lv-border-strong)] bg-transparent"}`}
+            className={`h-2 w-2 rounded-full border ${index === activeIndex ? "border-[var(--lv-accent)] bg-[var(--lv-accent)]" : "border-[var(--lv-border-strong)] bg-transparent"}`}
           />
         ))}
       </span>
@@ -1511,41 +1502,11 @@ function sameReferences(
 
 function Metric({ children, label, value }: { readonly children?: ReactNode; readonly label: string; readonly value: string }) {
   return (
-    <div className="min-w-0 border-l-2 border-[var(--lv-accent)] pl-3">
-      <p className="text-xs text-[var(--lv-text-muted)]">{label}</p>
-      <p className="mt-1 break-words text-base font-semibold text-[var(--lv-text)]">{value}</p>
-      {children}
-    </div>
-  );
-}
-
-function ProgressMeter({
-  active,
-  label,
-  transitionMilliseconds,
-  value,
-}: {
-  readonly active: boolean;
-  readonly label: string;
-  readonly transitionMilliseconds: number;
-  readonly value: number;
-}) {
-  const normalized = Math.max(0, Math.min(1, value));
-  const percent = Math.round(normalized * 100);
-  return (
-    <div>
-      <div className="mb-1 flex justify-between gap-3 text-xs text-[var(--lv-text-muted)]"><span>{label}</span><span>{percent}%</span></div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-[var(--lv-bg-subtle)]" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}>
-        <div
-          className="h-full origin-left bg-[var(--lv-accent)] motion-reduce:transition-none"
-          data-testid="voicing-loop-progress-fill"
-          style={{
-            transform: `scaleX(${normalized})`,
-            transitionDuration: active ? `${transitionMilliseconds}ms` : "0ms",
-            transitionProperty: "transform",
-            transitionTimingFunction: "linear",
-          }}
-        />
+    <div className="flex min-w-0 items-center justify-between gap-2 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] bg-[var(--lv-bg-subtle)] px-3 py-1.5">
+      <p className="text-[10px] font-semibold tracking-[0.08em] text-[var(--lv-text-muted)]">{label}</p>
+      <div className="flex min-w-0 items-center gap-2">
+        <p className="break-words text-sm font-semibold text-[var(--lv-text)]">{value}</p>
+        {children}
       </div>
     </div>
   );

@@ -784,9 +784,15 @@ async function analyzeMidiPath(path: string) {
           ref={mainContentRef}
           tabIndex={-1}
           aria-label={viewLabel(view, copy)}
-          className="min-h-0 min-w-0 flex-1 overflow-y-auto px-4 py-5 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--lv-accent)] lg:px-6"
+          className={`min-h-0 min-w-0 flex-1 px-4 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--lv-accent)] lg:px-6 ${
+            view === "practice" && practiceMode === "voicing-loop"
+              ? "overflow-x-hidden overflow-y-auto py-2 [@media(min-height:900px)]:overflow-y-hidden"
+              : "overflow-y-auto py-5"
+          }`}
         >
-        <div className="mx-auto flex min-h-full w-full max-w-[1680px] min-w-0 flex-col">
+        <div className={`mx-auto flex w-full max-w-[1680px] min-w-0 flex-col ${
+          view === "practice" && practiceMode === "voicing-loop" ? "h-full min-h-0" : "min-h-full"
+        }`}>
         {loadStatus === "ready" ? (
           <>
             <QuarantineNotice count={quarantine.length} copy={copy} language={language} />

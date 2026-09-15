@@ -231,7 +231,7 @@ describe("ProgressionVoicingPracticeView", () => {
     }
   });
 
-  it("projects Current, Next, Beat, progress, and Loop from the runtime transport callback", async () => {
+  it("projects Current, Next, Beat, Position, and Loop without score-like progress UI", async () => {
     const runtime = new FakeTransport();
     const container = await renderView(runtime, {
       "basic-full": snapshot("basic-full"),
@@ -251,7 +251,9 @@ describe("ProgressionVoicingPracticeView", () => {
 
     await act(async () => runtime.options?.onTransportBeat(8.5));
     expect(container.textContent).toContain("1 周完了");
-    expect(container.textContent).toContain("25%");
+    expect(container.querySelector("[data-testid='voicing-loop-status']")?.textContent).toContain("位置");
+    expect(container.querySelectorAll("[role='progressbar']")).toHaveLength(0);
+    expect(container.textContent).not.toContain("25%");
     expect(container.querySelector("[aria-current='step']")?.textContent).toContain("Cmaj7");
 
     await act(async () => runtime.options?.onTransportBeat(10.5));
@@ -314,21 +316,18 @@ describe("ProgressionVoicingPracticeView", () => {
       .map((rail) => rail.children.length)).toEqual([4, 2, 1, 1]);
   });
 
-  it("renders exact clock projection values with linear interpolation instead of rounded progress steps", async () => {
+  it("renders exact playhead projection values with linear interpolation instead of rounded steps", async () => {
     const runtime = new FakeTransport();
     const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full");
     await act(async () => button(container, "開始").click());
     await act(async () => runtime.options?.onTransportBeat(4.013));
 
-    const fills = container.querySelectorAll<HTMLElement>("[data-testid='voicing-loop-progress-fill']");
-    const chordScale = Number(fills[0]?.style.transform.match(/scaleX\((.+)\)/)?.[1]);
-    const progressionScale = Number(fills[1]?.style.transform.match(/scaleX\((.+)\)/)?.[1]);
-    expect(chordScale).toBeGreaterThan(0);
-    expect(chordScale).toBeLessThan(0.01);
-    expect(progressionScale).toBeGreaterThan(0);
-    expect(progressionScale).toBeLessThan(chordScale);
-    expect(fills[0]?.style.transitionTimingFunction).toBe("linear");
-    expect(fills[0]?.className).toContain("motion-reduce:transition-none");
+    const playhead = container.querySelector<HTMLElement>("[data-testid='voicing-loop-playhead']")!;
+    const offset = Number(playhead.style.transform.match(/translateX\((.+)px\)/)?.[1]);
+    expect(offset).toBeGreaterThan(0);
+    expect(offset).toBeLessThan(1);
+    expect(playhead.style.transitionTimingFunction).toBe("linear");
+    expect(playhead.className).toContain("motion-reduce:transition-none");
   });
 
   it("keeps Learn/Recall explicit, provides accessible controls, and never gates Start on MIDI", async () => {
@@ -350,7 +349,9 @@ describe("ProgressionVoicingPracticeView", () => {
       .toContain("CHORD TONE");
     expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent)
       .toContain("2拍後に切り替わります");
-    expect(container.querySelectorAll("[role='progressbar']")).toHaveLength(2);
+    expect(container.querySelectorAll("[role='progressbar']")).toHaveLength(0);
+    expect(container.textContent).not.toContain("コード 0%");
+    expect(container.textContent).not.toContain("進行 0%");
 
     const recall = button(container, "Recall（コード名のみ）");
     await act(async () => recall.click());

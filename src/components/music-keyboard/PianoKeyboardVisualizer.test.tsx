@@ -93,6 +93,10 @@ describe("PianoKeyboardVisualizer", () => {
       .toBe("left");
     expect(container.querySelector('[data-midi-note="64"]')?.getAttribute("data-guide-hand"))
       .toBe("right");
+    expect(container.querySelectorAll('[data-midi-note="60"] rect')[1]?.getAttribute("stroke"))
+      .toBe("#f59e0b");
+    expect(container.querySelectorAll('[data-midi-note="64"] rect')[1]?.getAttribute("stroke"))
+      .toBe("#22d3ee");
     expect(container.textContent).toContain("左手の目安");
     expect(container.textContent).toContain("右手の目安");
   });

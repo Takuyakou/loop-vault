@@ -140,9 +140,9 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
     );
 
   return (
-    <div data-match-state={matchState}>
+    <div className={layout === "wide-61" ? "flex min-h-0 flex-1 flex-col" : ""} data-match-state={matchState}>
       <div
-        className="relative overflow-x-auto border border-[var(--lv-border)] bg-[#09090b] p-2"
+        className={`relative overflow-x-auto overflow-y-hidden border border-[var(--lv-border)] bg-[#09090b] p-2 ${layout === "wide-61" ? "min-h-0 flex-1 [@media(min-height:900px)]:min-h-[10rem]" : ""}`}
         role="region"
         aria-label={text.region}
         tabIndex={0}
@@ -169,7 +169,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
         ) : null}
         <div
           className={layout === "wide-61"
-            ? "w-full min-w-[72rem]"
+            ? "h-full w-full min-w-[72rem]"
             : centerWhenFitted ? "w-max min-w-full" : "w-max"}
           data-keyboard-alignment={centerWhenFitted ? "center-when-fitted" : "start"}
           data-keyboard-layout={layout}
@@ -181,7 +181,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
             width={layout === "wide-61" ? "100%" : geometry.width}
             height={KEYBOARD_HEIGHT}
             className={layout === "wide-61"
-              ? "block h-[clamp(12rem,22vw,20rem)] w-full max-w-none"
+              ? "block h-full min-h-0 max-h-[17rem] w-full max-w-none [@media(min-height:900px)]:min-h-[10rem]"
               : `block h-[clamp(6rem,13vw,8rem)] max-w-none ${centerWhenFitted ? "mx-auto" : ""}`}
             style={layout === "wide-61" ? undefined : { minWidth: `${geometry.width}px` }}
             preserveAspectRatio="none"
@@ -243,7 +243,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
           </svg>
         </div>
       </div>
-      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-xs text-[var(--lv-text-muted)]">
+      <div className={`${layout === "wide-61" ? "mt-1 gap-y-1" : "mt-2 gap-y-2"} flex flex-wrap gap-x-4 text-xs text-[var(--lv-text-muted)]`}>
         {showGuide && (leftHandGuideNotes.length > 0 || rightHandGuideNotes.length > 0) ? (
           <>
             {leftHandGuideNotes.length > 0 ? (
@@ -308,8 +308,8 @@ function Legend({
 }) {
   const className = visualState === "guide"
     ? guideHand === "right"
-      ? "border-2 border-teal-200 bg-teal-300/30"
-      : "border-2 border-teal-700 bg-teal-800/30"
+      ? "border-2 border-cyan-300 bg-cyan-300/30"
+      : "border-2 border-amber-400 bg-amber-400/30"
     : visualState === "held-correct"
       ? "border-2 border-teal-100 bg-teal-300"
       : visualState === "held-foreign"
