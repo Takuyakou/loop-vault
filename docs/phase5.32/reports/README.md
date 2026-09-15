@@ -3,6 +3,9 @@
 Human Acceptance follow-up:
 [resolved two-hand UX report](P5.32-human-acceptance-follow-up-report.md).
 
+Compact one-screen follow-up:
+[practice layout report](P5.32-compact-one-screen-layout-follow-up-report.md).
+
 The completed stage reports are:
 
 - [`P5.32-00-report.md`](P5.32-00-report.md) — audit and contract lock

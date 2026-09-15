@@ -10,7 +10,7 @@ integrated product.
 - **Status:** completed
 - **Active stage:** none
 - **Completed stages:** P5.32-00 through P5.32-04
-- **Next action:** renewed human product acceptance for the follow-up UI; no merge/push/tag/release
+- **Next action:** renewed human acceptance for the compact one-screen practice layout; no merge/push/tag/release
 
 ## Required Reading Order
 

@@ -7,8 +7,8 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "70b30d456456060045e908b05bbe7bde7bb51cd3",
-  "lastVerifiedCommit": "9f3b057967579135646a66e0c7b7b3a0a6d946c8",
-  "currentBranch": "fix/p532-human-acceptance-follow-up",
+  "lastVerifiedCommit": "d0a125fc48441497d9faa5c07b4ef23f6ec53a09",
+  "currentBranch": "fix/p532-compact-one-screen-layout-ux",
   "requiredGates": {
     "P5.32-00": ["baseline-tests", "typescript-lint", "phase-docs", "production-unchanged", "diff-check"],
     "P5.32-01": ["candidate-domain", "guide-priors", "candidate-bounds", "01-typescript-lint-diff"],
@@ -42,6 +42,6 @@
     "generated-private-cargo-hygiene": "pass",
     "phase-docs-diff-clean": "pass"
   },
-  "nextAction": "READY FOR RENEWED PRODUCT ACCEPTANCE at 9f3b057967579135646a66e0c7b7b3a0a6d946c8: 2979 full Vitest tests and 73 fresh-production Playwright tests PASS. Human two-hand readability, hand comfort and desktop preference-reload acceptance pending. No merge/push/tag/release/P5.33.",
+  "nextAction": "READY FOR RENEWED HUMAN ACCEPTANCE at d0a125fc48441497d9faa5c07b4ef23f6ec53a09: 2979 full Vitest tests and 74 fresh-production Playwright tests PASS. Human desktop height, LEFT/RIGHT readability, slim progression, keyboard size, and one-screen usability acceptance pending. No merge/push/tag/release/P5.33.",
   "updatedAt": "2026-09-15T00:00:00+09:00"
 }
