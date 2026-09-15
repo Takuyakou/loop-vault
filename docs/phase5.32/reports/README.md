@@ -6,6 +6,9 @@ Human Acceptance follow-up:
 Shell lesson taxonomy follow-up:
 [resolver audit and product UI report](P5.32-shell-taxonomy-follow-up-report.md).
 
+Slash Shell and compact-toolbar follow-up:
+[slash resolver and toolbar report](P5.32-slash-shell-toolbar-follow-up-report.md).
+
 Compact one-screen follow-up:
 [practice layout report](P5.32-compact-one-screen-layout-follow-up-report.md).
 
