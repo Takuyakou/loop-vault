@@ -429,43 +429,40 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(runtime.setBpm).toHaveBeenLastCalledWith(90);
   });
 
-  it("explains the left-only Basic Shell guide and keeps its resolved notes playable", async () => {
+  it("presents one Shell lesson with Root Shell default and a compact Rootless subtype", async () => {
     const runtime = new FakeTransport();
-    const container = await renderView(runtime, { "basic-shell": snapshot("basic-shell") }, "basic-shell");
-    expect(container.querySelector("[data-testid='voicing-loop-selection-help']")?.textContent)
-      .toContain("ルートと7度を左手だけで練習します");
-    expect(container.textContent).toContain("左手の目安");
-    expect(container.textContent).not.toContain("右手の目安");
-    expect(container.querySelector("[data-testid='voicing-loop-right-hand']")).toBeNull();
-    expect(container.querySelector("[data-testid='voicing-loop-basic-shell-right-empty']")?.textContent)
-      .toContain("このモードは左手の1度・7度だけを練習します");
-    expect(button(container, "Full Shellで両手表示")).not.toBeNull();
+    const container = await renderView(runtime, {
+      "basic-full": snapshot("basic-full"),
+      "rootless-shell": snapshot("rootless-shell"),
+    }, "basic-full");
 
-    await act(async () => button(container, "現在のコードを試聴").click());
-    expect(runtime.audition).toHaveBeenCalledOnce();
-    const [auditionNotes] = runtime.audition.mock.calls[0] as unknown as [readonly number[]];
-    expect(auditionNotes).toHaveLength(2);
+    const buttonLabels = Array.from(container.querySelectorAll("button"), (entry) => entry.textContent?.trim());
+    expect(buttonLabels.filter((label) => label === "Shell")).toHaveLength(1);
+    expect(container.textContent).not.toContain("Basic Shell 1–7");
+    expect(container.textContent).not.toContain("Basic Full 1–7–3");
+    expect(container.textContent).not.toContain("Full Shell Voicing");
+    expect(button(container, "Root Shell 1·3·7").getAttribute("aria-pressed")).toBe("true");
+    expect(container.querySelector("[data-testid='voicing-loop-selection-help']")?.textContent)
+      .toContain("Root・3rd・7th");
+
+    await act(async () => button(container, "Rootless Shell 3·7").click());
+    expect(button(container, "Rootless Shell 3·7").getAttribute("aria-pressed")).toBe("true");
+    expect(container.querySelector("[data-testid='voicing-loop-selection-help']")?.textContent)
+      .toContain("Rootを省き");
+    expect(container.querySelector("[data-testid='voicing-loop-left-hand']")?.textContent)
+      .toContain("CHORD TONE3 · 7");
+    expect(container.querySelector("[data-testid='voicing-loop-right-hand']")).toBeNull();
     await act(async () => button(container, "開始").click());
-    expect(runtime.options?.plan.events.every((event) => event.status === "SUPPORTED")).toBe(true);
+    expect(runtime.options?.plan.selection).toBe("rootless-shell");
   });
 
-  it("offers Full Shell with left-hand 1-7 and the remaining chord tones in the right hand", async () => {
+  it("loads legacy Shell IDs without exposing them as new top-level choices or rewriting their plan", async () => {
     const runtime = new FakeTransport();
     const container = await renderView(runtime, { "full-shell": snapshot("full-shell") }, "full-shell");
 
-    expect(container.textContent).toContain("Full Shell Voicing");
-    expect(container.querySelector("[data-testid='voicing-loop-selection-help']")?.textContent)
-      .toContain("左手に1度と7度、右手に3度・5度");
-    expect(container.textContent).toContain("左手の目安");
-    expect(container.textContent).toContain("右手の目安");
-    expect(container.querySelector("[data-testid='voicing-loop-left-hand']")?.textContent)
-      .toContain("CHORD TONE1 · 7");
-    expect(container.querySelector("[data-testid='voicing-loop-right-hand']")?.textContent)
-      .toContain("CHORD TONE3 · 5");
-
-    await act(async () => button(container, "現在のコードを試聴").click());
-    const [auditionNotes] = runtime.audition.mock.calls[0] as unknown as [readonly number[]];
-    expect(auditionNotes).toHaveLength(4);
+    expect(container.textContent).toContain("Legacy Full-chord Shell");
+    expect(container.textContent).not.toContain("Full Shell Voicing");
+    expect(button(container, "Shell").getAttribute("aria-pressed")).toBe("true");
     await act(async () => button(container, "開始").click());
     expect(runtime.options?.plan.selection).toBe("full-shell");
     expect(runtime.options?.plan.events.every((event) => event.status === "SUPPORTED")).toBe(true);
@@ -604,7 +601,7 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.textContent).toContain("選択したVoicingを利用できません");
     expect(button(container, "開始").disabled).toBe(true);
 
-    await act(async () => button(container, "Basic Full 1–7–3").click());
+    await act(async () => button(container, "Shell").click());
     expect(container.textContent).toContain("選択中Lesson Voicingの規則がありません");
     expect(button(container, "開始").disabled).toBe(true);
     expect(runtime.start).not.toHaveBeenCalled();
@@ -860,10 +857,10 @@ describe("ProgressionVoicingPracticeView", () => {
       .not.toContain("Gb4");
   });
 
-  it("shows Suggested Fingering for all six voicing modes without changing playback pitches", async () => {
+  it("shows Suggested Fingering for every product voicing choice without changing playback pitches", async () => {
     const runtime = new FakeTransport();
     const allSnapshots = Object.fromEntries([
-      "source-midi", "custom", "basic-shell", "basic-full", "full-shell", "left-hand",
+      "source-midi", "custom", "basic-full", "rootless-shell", "left-hand",
     ].map((selection) => [selection, snapshot(selection as ProgressionVoicingSelection)]));
     const container = await renderView(runtime, allSnapshots, "source-midi");
 
@@ -874,24 +871,14 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("[data-finger-label='L5']")).not.toBeNull();
     expect(container.querySelector("[data-finger-label='R1']")).not.toBeNull();
 
-    for (const label of ["Custom", "Basic Full 1–7–3", "Full Shell Voicing"]) {
+    for (const label of ["Custom", "Shell", "Rootless Shell 3·7", "Left-hand"]) {
       await act(async () => button(container, label).click());
       expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
         .toContain("FINGER");
     }
-
-    await act(async () => button(container, "Basic Shell 1–7").click());
-    expect(container.querySelector("[data-testid='voicing-loop-right-hand']")).toBeNull();
-    expect(container.querySelector("[data-testid='voicing-loop-left-hand']")?.textContent)
-      .toContain("FINGERL5 · L1");
-
-    await act(async () => button(container, "Left-hand").click());
     expect(container.querySelector("[data-testid='voicing-loop-right-hand']")).toBeNull();
     expect(container.querySelector("[data-testid='voicing-loop-left-hand']")?.textContent)
       .toContain("FINGERL");
-
-    await act(async () => button(container, "開始").click());
-    expect(runtime.options?.plan.events.map((entry) => entry.status)).toEqual(["SUPPORTED", "SUPPORTED"]);
   });
 
   it("can hide, save, and reset a personal fingering by exact physical pitch signature", async () => {

@@ -126,27 +126,32 @@ test("P5.30 128-event timeline stays local, auto-reveals, reduced-motion, and ax
   await expect(workspace.locator("[data-testid='voicing-loop-event'][aria-current='step']")).toHaveCount(1);
   await page.getByRole("button", { name: "停止", exact: true }).click();
 
-  await workspace.getByRole("button", { name: "Basic Shell 1–7", exact: true }).click();
+  await workspace.getByRole("button", { name: "Shell", exact: true }).click();
+  await expect(workspace.getByRole("button", { name: "Shell", exact: true }))
+    .toHaveAttribute("aria-pressed", "true");
+  await expect(workspace.getByRole("button", { name: "Root Shell 1·3·7", exact: true }))
+    .toHaveAttribute("aria-pressed", "true");
+  await expect(workspace.getByRole("button", { name: "Basic Shell 1–7", exact: true })).toHaveCount(0);
+  await expect(workspace.getByRole("button", { name: "Basic Full 1–7–3", exact: true })).toHaveCount(0);
+  await expect(workspace.getByRole("button", { name: "Full Shell Voicing", exact: true })).toHaveCount(0);
   await expect(workspace.getByTestId("voicing-loop-selection-help"))
-    .toContainText("ルートと7度を左手だけで練習します");
-  await expect(workspace.getByTestId("voicing-loop-basic-shell-right-empty"))
-    .toContainText("このモードは左手の1度・7度だけを練習します");
+    .toContainText("Root・3rd・7th");
+  await expect(workspace.getByTestId("voicing-loop-detail").locator("svg[role='img']"))
+    .toHaveAttribute("aria-label", /お手本3音/);
+  await expect(workspace.getByText("左手の目安", { exact: true })).toBeVisible();
+  await expect(workspace.getByText("右手の目安", { exact: true })).toBeVisible();
+  await workspace.getByRole("button", { name: "現在のコードを試聴", exact: true }).click();
+  await expect(workspace.getByRole("button", { name: /開始/ })).toBeEnabled();
+
+  await workspace.getByRole("button", { name: "Rootless Shell 3·7", exact: true }).click();
+  await expect(workspace.getByRole("button", { name: "Rootless Shell 3·7", exact: true }))
+    .toHaveAttribute("aria-pressed", "true");
+  await expect(workspace.getByTestId("voicing-loop-selection-help"))
+    .toContainText("Rootを省き");
   await expect(workspace.getByTestId("voicing-loop-detail").locator("svg[role='img']"))
     .toHaveAttribute("aria-label", /お手本2音/);
   await expect(workspace.getByText("左手の目安", { exact: true })).toBeVisible();
   await expect(workspace.getByText("右手の目安", { exact: true })).toHaveCount(0);
-  await workspace.getByRole("button", { name: "現在のコードを試聴", exact: true }).click();
-  await expect(workspace.getByRole("button", { name: /開始/ })).toBeEnabled();
-
-  await workspace.getByRole("button", { name: "Full Shellで両手表示", exact: true }).click();
-  await expect(workspace.getByRole("button", { name: "Full Shell Voicing", exact: true }))
-    .toHaveAttribute("aria-pressed", "true");
-  await expect(workspace.getByTestId("voicing-loop-selection-help"))
-    .toContainText("左手に1度と7度、右手に3度・5度");
-  await expect(workspace.getByTestId("voicing-loop-detail").locator("svg[role='img']"))
-    .toHaveAttribute("aria-label", /お手本4音/);
-  await expect(workspace.getByText("左手の目安", { exact: true })).toBeVisible();
-  await expect(workspace.getByText("右手の目安", { exact: true })).toBeVisible();
   await workspace.getByRole("button", { name: "現在のコードを試聴", exact: true }).click();
   await expect(workspace.getByRole("button", { name: /開始/ })).toBeEnabled();
 
@@ -158,10 +163,10 @@ test("P5.30 128-event timeline stays local, auto-reveals, reduced-motion, and ax
 
   await page.setViewportSize({ width: 1920, height: 1080 });
   const keyboard = workspace.getByTestId("voicing-loop-detail").locator("svg[role='img']");
-  await workspace.getByRole("button", { name: "Basic Shell 1–7", exact: true }).click();
+  await workspace.getByRole("button", { name: "Rootless Shell 3·7", exact: true }).click();
   const shellBox = await keyboard.boundingBox();
   expect(shellBox).not.toBeNull();
-  await workspace.getByRole("button", { name: "Basic Full 1–7–3", exact: true }).click();
+  await workspace.getByRole("button", { name: "Root Shell 1·3·7", exact: true }).click();
   const fullBox = await keyboard.boundingBox();
   expect(fullBox).not.toBeNull();
   expect(Math.abs(fullBox!.height - shellBox!.height)).toBeLessThanOrEqual(2);

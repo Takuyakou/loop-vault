@@ -200,6 +200,44 @@ describe("P5.27 Basic 1-7-3 locked lesson table", () => {
   );
 });
 
+describe("P5.32 Shell lesson taxonomy", () => {
+  const cadence = [
+    [makeChordSymbol(2, "min7"), ["1", "b3", "b7"], ["b3", "b7"]],
+    [makeChordSymbol(7, "dom7"), ["1", "3", "b7"], ["3", "b7"]],
+    [makeChordSymbol(0, "maj7"), ["1", "3", "7"], ["3", "7"]],
+  ] as const;
+
+  it.each(cadence)("resolves %s as the approved Root Shell tone set", (sourceChord, rootShellDegrees) => {
+    const result = resolveOne("basic-full", sourceChord);
+    expect(result.status).toBe("SUPPORTED");
+    expect(degrees(result)).toEqual(rootShellDegrees);
+  });
+
+  it.each(cadence)("resolves %s as the approved Rootless Shell tone set", (sourceChord, _rootShellDegrees, rootlessDegrees) => {
+    const result = resolveOne("rootless-shell", sourceChord);
+    expect(result.status).toBe("SUPPORTED");
+    expect(degrees(result)).toEqual(rootlessDegrees);
+    if (result.status !== "SUPPORTED") return;
+    expect(result.voicing.leftHandNotes).toEqual(result.voicing.midiNotes);
+    expect(result.voicing.rightHandNotes).toEqual([]);
+  });
+
+  it("preserves approved characteristic tones and fails closed when 3rd/7th has no approved meaning", () => {
+    expect(degrees(resolveOne("rootless-shell", chord("min7b5"))))
+      .toEqual(["b3", "b5", "b7"]);
+    expect(degrees(resolveOne("rootless-shell", chord("dom7", ["#5"]))))
+      .toEqual(["3", "#5", "b7"]);
+    expect(degrees(resolveOne("rootless-shell", chord("dom7sus4"))))
+      .toEqual(["4", "b7"]);
+    for (const quality of ["six", "sixNine", "min6"] as const) {
+      expect(resolveOne("rootless-shell", chord(quality))).toEqual({
+        eventId: "event-1",
+        status: "UNSUPPORTED_RULE",
+        reason: "no-approved-lesson-rule",
+      });
+    }
+  });
+});
 describe("Full Shell Voicing", () => {
   it.each([
     ["maj7", [], ["1", "3", "5", "7"]],

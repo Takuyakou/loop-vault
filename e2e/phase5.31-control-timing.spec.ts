@@ -48,7 +48,7 @@ test("P5.31 exact compact and expanded full scores reach direct selection and re
     await workspace.getByRole("button", { name: "Left-hand", exact: true }).click();
     await expect(workspace).toContainText("3個のコードを再生できません");
     await expect(workspace.getByRole("button", { name: /開始/ })).toBeDisabled();
-    await workspace.getByRole("button", { name: "Basic Full 1–7–3", exact: true }).click();
+    await workspace.getByRole("button", { name: "Shell", exact: true }).click();
     const current = workspace.getByTestId("voicing-loop-current-next").getByRole("heading", { level: 2 });
     await expect(current).toHaveText("C9");
     await cards.nth(1).focus();

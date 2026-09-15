@@ -29,7 +29,7 @@ describe("P5.27 saved Vault handoff", () => {
     if (!result.ok) return;
     expect(result.handoff.initialSelection).toBe("source-midi");
     expect(Object.keys(result.handoff.snapshots).sort()).toEqual([
-      "basic-full", "basic-shell", "custom", "full-shell", "left-hand", "source-midi",
+      "basic-full", "basic-shell", "custom", "full-shell", "left-hand", "rootless-shell", "source-midi",
     ]);
     expect(result.handoff.snapshots["source-midi"]?.events.map((item) => item.voicing?.midiNotes))
       .toEqual([[48, 55, 59], [43, 50, 53]]);

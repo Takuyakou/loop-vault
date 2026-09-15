@@ -125,7 +125,7 @@ type CandidateResult =
 
 function basicCandidates(
   chord: ProgressionPracticeChord,
-  selection: "basic-shell" | "basic-full" | "full-shell",
+  selection: "basic-shell" | "basic-full" | "rootless-shell" | "full-shell",
   options: { readonly maxLeftHandSpanSemitones: number; readonly maxRightHandSpanSemitones: number },
 ): CandidateResult {
   const labels = basicLessonLabels(chord, selection);
@@ -198,7 +198,7 @@ function leftHandCandidates(
 
 function basicLessonLabels(
   chord: ProgressionPracticeChord,
-  selection: "basic-shell" | "basic-full" | "full-shell",
+  selection: "basic-shell" | "basic-full" | "rootless-shell" | "full-shell",
 ): string[] | undefined {
   const bass = chord.bass !== undefined && chord.bass !== chord.root ? "Bass" : "R";
   if (selection === "full-shell") {
@@ -214,6 +214,7 @@ function basicLessonLabels(
     }
     return unique([...leftLabels, ...remainingChordTones]);
   }
+  const rootless = selection === "rootless-shell";
   const full = selection === "basic-full";
   let anchor: string;
   let defining: string;
@@ -245,10 +246,12 @@ function basicLessonLabels(
     case "sixNine":
       anchor = "6";
       defining = "3";
+      if (rootless) return undefined;
       break;
     case "min6":
       anchor = "6";
       defining = "b3";
+      if (rootless) return undefined;
       break;
     case "min7b5":
       anchor = "b7";
@@ -263,6 +266,9 @@ function basicLessonLabels(
       return undefined;
   }
 
+  if (rootless) {
+    return unique([defining, anchor, ...identity]);
+  }
   return unique([bass, anchor, ...(full ? [defining] : []), ...identity]);
 }
 

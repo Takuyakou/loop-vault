@@ -69,7 +69,7 @@ test("P5.28 Text handoff becomes a recent one-click Vault source without picker 
   await savedNotice.getByRole("button", { name: "Voicing Loop", exact: true }).click();
   const workspace = page.getByTestId("voicing-loop-workspace");
   await expect(workspace.getByRole("heading", { level: 2, name: "C", exact: true })).toBeVisible();
-  await expect(workspace.getByRole("button", { name: "Basic Full 1–7–3" }))
+  await expect(workspace.getByRole("button", { name: "Shell", exact: true }))
     .toHaveAttribute("aria-pressed", "true");
   await expect(workspace.locator("#voicing-loop-bpm")).toHaveValue("120");
 

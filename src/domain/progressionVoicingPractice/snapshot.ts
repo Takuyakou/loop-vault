@@ -21,7 +21,7 @@ const supportedQualities = new Set<ChordQuality>([
 ]);
 const supportedTensions = new Set<Tension>(["9", "b9", "#9", "11", "#11", "13", "b13", "#5"]);
 const supportedSelections = new Set<ProgressionVoicingSelection>([
-  "source-midi", "custom", "basic-shell", "basic-full", "full-shell", "left-hand",
+  "source-midi", "custom", "basic-shell", "basic-full", "rootless-shell", "full-shell", "left-hand",
 ]);
 const TIMING_EPSILON = 1e-6;
 

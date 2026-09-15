@@ -176,6 +176,7 @@ describe("Text Progression downstream persistence", () => {
       "custom",
       "basic-shell",
       "basic-full",
+      "rootless-shell",
       "full-shell",
       "left-hand",
     ] as const) {
@@ -221,6 +222,7 @@ describe("Text Progression downstream persistence", () => {
       "custom",
       "basic-shell",
       "basic-full",
+      "rootless-shell",
       "full-shell",
       "left-hand",
     ];

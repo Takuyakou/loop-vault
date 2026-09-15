@@ -9,7 +9,7 @@ import {
 } from "./progressionVoicingPractice";
 
 const selections = [
-  "source-midi", "custom", "basic-shell", "basic-full", "full-shell", "left-hand",
+  "source-midi", "custom", "basic-shell", "basic-full", "rootless-shell", "full-shell", "left-hand",
 ] as const satisfies readonly ProgressionVoicingSelection[];
 
 function snapshot(
@@ -40,7 +40,7 @@ function snapshot(
 }
 
 describe("P5.32 Stage00 integrated baseline", () => {
-  it("locks the six-mode resolver inventory without generated fallback", () => {
+  it("locks the internal resolver inventory without generated fallback", () => {
     for (const selection of selections) {
       const exact = selection === "source-midi" || selection === "custom"
         ? { kind: selection, midiNotes: [48, 52, 55, 59] } as const

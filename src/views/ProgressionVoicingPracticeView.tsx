@@ -82,16 +82,14 @@ export interface ProgressionVoicingPracticeViewProps {
 }
 
 const selections: readonly {
-  readonly id: ProgressionVoicingSelection;
+  readonly id: "source-midi" | "custom" | "shell" | "left-hand";
   readonly group: "MY" | "LESSON";
   readonly ja: string;
   readonly en: string;
 }[] = [
   { id: "source-midi", group: "MY", ja: "Source MIDI", en: "Source MIDI" },
   { id: "custom", group: "MY", ja: "Custom", en: "Custom" },
-  { id: "basic-shell", group: "LESSON", ja: "Basic Shell 1–7", en: "Basic Shell 1–7" },
-  { id: "basic-full", group: "LESSON", ja: "Basic Full 1–7–3", en: "Basic Full 1–7–3" },
-  { id: "full-shell", group: "LESSON", ja: "Full Shell Voicing", en: "Full Shell Voicing" },
+  { id: "shell", group: "LESSON", ja: "Shell", en: "Shell" },
   { id: "left-hand", group: "LESSON", ja: "Left-hand", en: "Left-hand" },
 ] as const;
 
@@ -101,10 +99,11 @@ const copy = {
     description: "コードを見た瞬間に、左手・右手それぞれ何指か分かる。",
     source: "Voicingを選択",
     sourceHelp: "MYは保存済みの音をそのまま使い、LESSONは承認済みの規則だけを使います。",
-    basicShellHelp: "ルートと7度を左手だけで練習します。3度と右手ガイドはBasic Full 1–7–3で表示します。",
-    basicShellRightEmpty: "このモードは左手の1度・7度だけを練習します。",
-    showBothHands: "Full Shellで両手表示",
-    fullShellHelp: "左手に1度と7度、右手に3度・5度・コード記号のテンションを配置します。複数のaltered tensionで手幅を超える場合のみ5度を省略し、スラッシュコードでは指定ベースを左手で保持します。",
+    shellType: "SHELL TYPE",
+    rootShell: "Root Shell 1·3·7",
+    rootlessShell: "Rootless Shell 3·7",
+    rootShellHelp: "Root・3rd・7thと、コード識別に必要な承認済み特徴音を練習します。表記は固定pitch順ではありません。",
+    rootlessShellHelp: "Rootを省き、3rd・7thのvoice leadingと、コード識別に必要な承認済み特徴音を練習します。",
     leftHandHelp: "上部コードのRootless A/Bを左手で練習します。スラッシュベースは独立した参照音として鳴り、練習対象には含みません。",
     current: "現在",
     next: "次",
@@ -176,7 +175,7 @@ const copy = {
     unavailable: "選択したVoicingを利用できません",
     unavailableBody: "このコードには選択したSource/Custom Voicingが保存されていません。別の明示的なVoicingを選んでください。",
     unsupported: "このコードには選択中Lesson Voicingの規則がありません",
-    unsupportedBody: "Source MIDI、Custom、または対応しているBasicへ切り替えてください。",
+    unsupportedBody: "Source MIDI、Custom、または対応しているLesson Voicingへ切り替えてください。",
     generationError: "Voicingを生成できませんでした",
     generationErrorBody: "選択中のLesson規則は対応していますが、安全な音域へ配置できませんでした。",
     playbackError: "再生できませんでした",
@@ -203,10 +202,11 @@ const copy = {
     description: "See the chord and know where each hand and finger goes.",
     source: "Choose voicing",
     sourceHelp: "MY preserves saved notes; LESSON uses approved rules only.",
-    basicShellHelp: "Practice root and seventh with the left hand only. Basic Full 1–7–3 adds the third and right-hand guide.",
-    basicShellRightEmpty: "This mode practices root and seventh with the left hand only.",
-    showBothHands: "Show both hands in Full Shell",
-    fullShellHelp: "Play root and seventh with the left hand, then place the third, fifth, and written tensions in the right hand. Only the fifth may be omitted for dense altered tensions; slash bass is preserved in the left hand.",
+    shellType: "SHELL TYPE",
+    rootShell: "Root Shell 1·3·7",
+    rootlessShell: "Rootless Shell 3·7",
+    rootShellHelp: "Practice root, third, seventh, and any approved characteristic tone needed for chord identity. The label does not prescribe pitch order.",
+    rootlessShellHelp: "Omit the root and practice third/seventh voice leading plus any approved characteristic tone needed for chord identity.",
     leftHandHelp: "Practice the upper chord's Rootless A/B in the left hand. Slash bass plays as a separate reference, not a practice target.",
     current: "Current",
     next: "Next",
@@ -278,7 +278,7 @@ const copy = {
     unavailable: "The selected voicing is unavailable",
     unavailableBody: "This chord has no saved Source/Custom voicing. Choose another explicit voicing.",
     unsupported: "This chord has no rule for the selected Lesson voicing",
-    unsupportedBody: "Choose Source MIDI, Custom, or a supported Basic voicing.",
+    unsupportedBody: "Choose Source MIDI, Custom, or a supported Lesson voicing.",
     generationError: "The voicing could not be generated",
     generationErrorBody: "The Lesson rule is supported, but no safe register placement could be built.",
     playbackError: "Playback could not start",
@@ -890,25 +890,42 @@ export function ProgressionVoicingPracticeView({
             <legend className="lv-section-kicker mr-1 float-left">VOICING</legend>
             <p id="voicing-loop-source-help" className="sr-only">{text.sourceHelp}</p>
             <p className="sr-only" data-testid="voicing-loop-selection-help">
-              {selection === "basic-shell"
-                ? text.basicShellHelp
-                : selection === "full-shell"
-                  ? text.fullShellHelp
+              {selection === "basic-full"
+                ? text.rootShellHelp
+                : selection === "rootless-shell"
+                  ? text.rootlessShellHelp
                   : selection === "left-hand"
                     ? text.leftHandHelp
                     : text.sourceHelp}
             </p>
-            {selections.map((item) => (
-              <Button
-                key={item.id}
-                size="sm"
-                variant={selection === item.id ? "primary" : "secondary"}
-                aria-pressed={selection === item.id}
-                onClick={() => changeSelection(item.id)}
-              >
-                {language === "ja" ? item.ja : item.en}
-              </Button>
+            {(["MY", "LESSON"] as const).map((group) => (
+              <span key={group} className="inline-flex min-w-0 flex-wrap items-center gap-2">
+                <span className="lv-section-kicker">{group}</span>
+                {selections.filter((item) => item.group === group).map((item) => {
+                  const pressed = item.id === "shell"
+                    ? isShellLessonSelection(selection)
+                    : selection === item.id;
+                  return (
+                    <Button
+                      key={item.id}
+                      size="sm"
+                      variant={pressed ? "primary" : "secondary"}
+                      aria-pressed={pressed}
+                      onClick={() => changeSelection(item.id === "shell" ? "basic-full" : item.id)}
+                    >
+                      {language === "ja" ? item.ja : item.en}
+                    </Button>
+                  );
+                })}
+              </span>
             ))}
+            {isShellLessonSelection(selection) ? (
+              <span className="inline-flex min-w-0 flex-wrap items-center gap-2" data-testid="voicing-loop-shell-type">
+                <span className="lv-section-kicker">{text.shellType}</span>
+                <Button size="sm" variant={selection === "basic-full" ? "primary" : "secondary"} aria-pressed={selection === "basic-full"} onClick={() => changeSelection("basic-full")}>{text.rootShell}</Button>
+                <Button size="sm" variant={selection === "rootless-shell" ? "primary" : "secondary"} aria-pressed={selection === "rootless-shell"} onClick={() => changeSelection("rootless-shell")}>{text.rootlessShell}</Button>
+              </span>
+            ) : null}
           </fieldset>
           <fieldset className="flex min-w-0 flex-wrap items-center gap-2">
             <legend className="lv-section-kicker mr-1 float-left">DISPLAY</legend>
@@ -981,15 +998,6 @@ export function ProgressionVoicingPracticeView({
                     voicing={currentVoicing}
                     showFingering={showFingering}
                   />
-                  {selection === "basic-shell" ? (
-                    <section className="flex min-w-0 flex-col justify-between rounded-[var(--lv-radius-sm)] border border-dashed border-[var(--lv-border)] p-2" data-testid="voicing-loop-basic-shell-right-empty">
-                      <div>
-                        <p className="text-xs font-bold tracking-[0.12em] text-[var(--lv-text-muted)]">{text.rightHandDisplay}</p>
-                        <p className="mt-1 text-xs leading-4 text-[var(--lv-text-muted)]">{text.basicShellRightEmpty}</p>
-                      </div>
-                      <Button className="mt-2 self-start" size="sm" variant="ghost" onClick={() => changeSelection("full-shell")}>{text.showBothHands}</Button>
-                    </section>
-                  ) : null}
                 </div>
               ) : null}
 
@@ -1709,13 +1717,21 @@ function ResolutionStatus({ resolution, language }: { readonly resolution?: Prog
   }
 }
 
+function isShellLessonSelection(selection: ProgressionVoicingSelection): boolean {
+  return selection === "basic-shell"
+    || selection === "basic-full"
+    || selection === "rootless-shell"
+    || selection === "full-shell";
+}
+
 function selectionLabel(selection: ProgressionVoicingSelection): string {
   switch (selection) {
     case "source-midi": return "Source MIDI";
     case "custom": return "Custom";
-    case "basic-shell": return "Basic Shell 1–7";
-    case "basic-full": return "Basic Full 1–7–3";
-    case "full-shell": return "Full Shell Voicing";
+    case "basic-shell": return "Legacy Root–7th";
+    case "basic-full": return "Root Shell 1·3·7";
+    case "rootless-shell": return "Rootless Shell 3·7";
+    case "full-shell": return "Legacy Full-chord Shell";
     case "left-hand": return "Left-hand";
   }
 }

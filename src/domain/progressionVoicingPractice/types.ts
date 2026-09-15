@@ -7,6 +7,7 @@ export type ProgressionVoicingSelection =
   | "custom"
   | "basic-shell"
   | "basic-full"
+  | "rootless-shell"
   | "full-shell"
   | "left-hand";
 
