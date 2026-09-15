@@ -8,12 +8,15 @@ For pitches low→high:
 - LH simultaneous fingers strictly descend.
 
 Left-hand Voicing mode is LH-only.
-Other modes expose hand selection only where their actual resolver supports it.
+Hand is not a user-selectable voicing property. The UI displays every actual,
+non-empty hand group in the resolved performance plan.
 
 Integrated mode lock:
 
-- Source MIDI / Custom have one exact pitch set and no stored hand split; the
-  user may designate that unchanged set as R or L for a suggestion.
+- Source MIDI / Custom never alter their exact saved pitch set. When the saved
+  voicing has an exact bassNote role, that pitch is shown as L and the
+  remaining exact pitches as R. Without a saved Bass role, the unchanged exact
+  set is shown as R only; the UI does not invent a split.
 - Basic Shell / Basic Full / Full Shell use only the resolver's existing
   `rightHandNotes` or `leftHandNotes`; an empty side is unavailable for that
   event and must not be synthesized.

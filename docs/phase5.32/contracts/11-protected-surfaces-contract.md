@@ -7,7 +7,7 @@ No regression/change unless strictly necessary and explicitly documented:
 - playhead;
 - card audition ≠ seek;
 - `お手本音`;
-- Current/Next/Pitch/Degree/Keyboard;
+- Current/Next/PITCH/CHORD TONE/Keyboard;
 - P5.31 text/control/slash semantics;
 - Source MIDI/Custom exact pitches;
 - Lesson voicing generation;

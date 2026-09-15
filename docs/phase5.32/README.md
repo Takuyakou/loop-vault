@@ -10,7 +10,7 @@ integrated product.
 - **Status:** completed
 - **Active stage:** none
 - **Completed stages:** P5.32-00 through P5.32-04
-- **Next action:** human product acceptance; no merge/push/tag/release
+- **Next action:** renewed human product acceptance for the follow-up UI; no merge/push/tag/release
 
 ## Required Reading Order
 
@@ -28,13 +28,13 @@ Reduce the repeated decision cost of:
 
 > 「このVoicingは、どの指で押さえればいい？」
 
-Voicing Loop already tells the user **what chord / pitches / degrees / keys** to
+Voicing Loop already tells the user **what chord / pitches / chord tones / keys** to
 play. P5.32 adds a fourth layer:
 
 ```text
 Chord
 → Pitch
-→ Degree
+→ Chord Tone
 → Suggested Fingering
 → Keyboard
 ```
@@ -96,12 +96,16 @@ engine plus user override.
   - Basic Full
   - Full Shell
   - Left-hand
-- Right/Left hand selector where the current Voicing mode allows it.
+- Actual Left/Right hand groups from the resolved performance plan; hand is not a user selector.
 - Left-hand mode stays left-hand only.
 - Finger numbers shown in:
   - CURRENT
   - NEXT
   - keyboard keys
+- PITCH, CHORD TONE, and FINGER are separated per actual hand.
+- The default Voicing Loop keyboard is a large 61-key C2–C7 surface; any
+  required separate slash-bass reference may extend that local keyboard range.
+- Personal fingering selects appear only inside the explicit edit dialog.
 - Fingering display can be turned on/off.
 - Suggestions derive from exact resolved pitches; voicing pitches are never mutated.
 - Progression-aware ranking considers neighboring chords and the loop boundary.
