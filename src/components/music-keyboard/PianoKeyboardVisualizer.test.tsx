@@ -54,6 +54,22 @@ describe("PianoKeyboardVisualizer", () => {
     expect(container.querySelector("svg")?.getAttribute("class")).toContain("mx-auto");
   });
 
+  it("renders the wide 61-key layout from C2 through C7 without stretching it", () => {
+    const container = renderKeyboard({
+      minMidiNote: 24,
+      maxMidiNote: 84,
+      layout: "wide-61",
+    });
+    const svg = container.querySelector("svg");
+
+    expect(container.querySelectorAll("[data-midi-note]")).toHaveLength(61);
+    expect(container.querySelector('[data-midi-note="24"]')).not.toBeNull();
+    expect(container.querySelector('[data-midi-note="84"]')).not.toBeNull();
+    expect(container.querySelector('[data-c-label="C2"]')).not.toBeNull();
+    expect(container.querySelector('[data-c-label="C7"]')).not.toBeNull();
+    expect(svg?.getAttribute("preserveAspectRatio")).toBe("xMidYMid meet");
+  });
+
   it("renders white keys below shorter black keys with C-only labels", () => {
     const container = renderKeyboard();
     const white = container.querySelector('[data-midi-note="60"]');

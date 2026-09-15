@@ -184,7 +184,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
               ? "block h-full min-h-0 max-h-[17rem] w-full max-w-none [@media(min-height:900px)]:min-h-[10rem]"
               : `block h-[clamp(6rem,13vw,8rem)] max-w-none ${centerWhenFitted ? "mx-auto" : ""}`}
             style={layout === "wide-61" ? undefined : { minWidth: `${geometry.width}px` }}
-            preserveAspectRatio="none"
+            preserveAspectRatio={layout === "wide-61" ? "xMidYMid meet" : "none"}
           >
           <g data-key-layer="white">
             {visibleKeys.map((key) => (
