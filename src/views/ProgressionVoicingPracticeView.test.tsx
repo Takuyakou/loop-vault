@@ -339,6 +339,10 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("[data-testid='voicing-loop-beat-indicator']")).not.toBeNull();
     expect(container.querySelector("[data-keyboard-layout='wide-61']")).not.toBeNull();
     expect(container.querySelectorAll("[data-midi-note]")).toHaveLength(61);
+    expect(container.querySelector("[data-midi-note='24']")).not.toBeNull();
+    expect(container.querySelector("[data-midi-note='84']")).not.toBeNull();
+    expect(container.querySelector("[data-c-label='C2']")).not.toBeNull();
+    expect(container.querySelector("[data-c-label='C7']")).not.toBeNull();
     expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent)
       .toContain("位置1 / 1 小節");
     expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent)

@@ -109,10 +109,25 @@ test("P5.32 compact practice surface fits a 1920x1080 desktop without page scrol
   expect(mainOverflow.scrollWidth).toBeLessThanOrEqual(mainOverflow.clientWidth + 1);
 
   const keyboard = workspace.getByRole("region", { name: "ピアノ鍵盤" });
+  const keyboardSvg = keyboard.locator("svg");
   const keyboardBox = await keyboard.boundingBox();
   expect(keyboardBox).not.toBeNull();
   expect(keyboardBox!.height).toBeGreaterThanOrEqual(160);
   expect(await keyboard.evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
+  await expect(keyboardSvg).toHaveAttribute("preserveAspectRatio", "xMidYMid meet");
+  await expect(keyboard.locator('[data-midi-note="24"]')).toBeAttached();
+  await expect(keyboard.locator('[data-midi-note="84"]')).toBeAttached();
+  await expect(keyboard.locator('[data-c-label="C2"]')).toBeAttached();
+  await expect(keyboard.locator('[data-c-label="C7"]')).toBeAttached();
+  const keyboardScale = await keyboard.locator("[data-key-layer='white']").evaluate((element) => {
+    const matrix = (element as SVGGraphicsElement).getScreenCTM();
+    if (!matrix) throw new Error("Keyboard transform matrix is unavailable");
+    return {
+      x: Math.hypot(matrix.a, matrix.b),
+      y: Math.hypot(matrix.c, matrix.d),
+    };
+  });
+  expect(Math.abs(keyboardScale.x - keyboardScale.y)).toBeLessThan(0.01);
 
   const timelineCards = workspace.getByTestId("voicing-loop-event");
   const widths = await timelineCards.evaluateAll((cards) => cards.map((card) => card.getBoundingClientRect().width));

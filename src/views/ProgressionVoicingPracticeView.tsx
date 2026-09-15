@@ -61,7 +61,7 @@ import { progressionFingeringHandTargets } from "../voicingPractice/fingeringDis
 const ALL_PITCH_CLASSES = Object.freeze(Array.from({ length: 12 }, (_, index) => index));
 const EMPTY_NOTES: readonly number[] = Object.freeze([]);
 const EMPTY_VAULT_PROGRESSIONS: readonly VoicingLoopVaultCandidate[] = Object.freeze([]);
-const VOICING_LOOP_KEYBOARD_RANGE = Object.freeze({ minMidiNote: 36, maxMidiNote: 96 });
+const VOICING_LOOP_KEYBOARD_RANGE = Object.freeze({ minMidiNote: 24, maxMidiNote: 84 });
 const TIMELINE_CARD_WIDTH_PX = 92;
 const TIMELINE_CARD_GAP_PX = 6;
 
