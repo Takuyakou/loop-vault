@@ -30,6 +30,7 @@ interface PracticeKeyboardProps {
   interactionMode?: "practice" | "neutral-monitor";
   centerWhenFitted?: boolean;
   fingerLabels?: ReadonlyMap<number, string>;
+  keyboardLayout?: "default" | "wide-61";
 }
 
 const copy = {
@@ -66,6 +67,7 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
   interactionMode = "practice",
   centerWhenFitted = false,
   fingerLabels,
+  keyboardLayout = "default",
 }: PracticeKeyboardProps) {
   const liveNoteState = useStore(defaultLiveMidiStore, (state) => state.notes);
   const currentHeldNotes = useMemo(() => heldNotes(liveNoteState), [liveNoteState]);
@@ -113,6 +115,7 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
         interactionMode={interactionMode}
         centerWhenFitted={centerWhenFitted}
         fingerLabels={fingerLabels}
+        layout={keyboardLayout}
       />
       {level === 1 && referenceBassNote !== undefined ? (
         <p className="mt-2 text-xs text-[var(--lv-text-muted)]" data-testid="slash-bass-reference">

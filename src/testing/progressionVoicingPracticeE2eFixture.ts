@@ -26,6 +26,9 @@ export function progressionVoicingPracticeE2eFixture(search: string): Progressio
       resolutionOptions: { maxLeftHandSpanSemitones: 0, maxRightHandSpanSemitones: 0 },
     };
   }
+  if (status === "both-hands") {
+    return oneSelection("source-midi", snapshot("source-midi", "maj7", true, true));
+  }
   return oneSelection("source-midi", snapshot("source-midi", "maj7", true));
 }
 
@@ -40,6 +43,7 @@ function snapshot(
   selection: ProgressionVoicingSelection,
   quality: "maj7" | "dim",
   includeVoicing: boolean,
+  includeBassRole = false,
 ): ProgressionVoicingPracticeSnapshot {
   const mySelection = selection === "source-midi" || selection === "custom";
   const firstLabel = quality === "dim" ? "Cdim" : "Cmaj7";
@@ -64,7 +68,11 @@ function snapshot(
         durationBeats: 2,
         chord: Object.freeze({ root: 0, quality, tensions: Object.freeze([]), label: firstLabel }),
         ...(mySelection && includeVoicing
-          ? { voicing: Object.freeze({ kind: selection as "source-midi" | "custom", midiNotes: Object.freeze([48, 55, 59]) }) }
+          ? { voicing: Object.freeze({
+              kind: selection as "source-midi" | "custom",
+              midiNotes: Object.freeze([48, 55, 59]),
+              ...(includeBassRole ? { bassNote: 48 } : {}),
+            }) }
           : {}),
       }),
       Object.freeze({
@@ -78,7 +86,11 @@ function snapshot(
           label: secondLabel,
         }),
         ...(mySelection && includeVoicing
-          ? { voicing: Object.freeze({ kind: selection as "source-midi" | "custom", midiNotes: Object.freeze([50, 57, 60]) }) }
+          ? { voicing: Object.freeze({
+              kind: selection as "source-midi" | "custom",
+              midiNotes: Object.freeze([50, 57, 60]),
+              ...(includeBassRole ? { bassNote: 50 } : {}),
+            }) }
           : {}),
       }),
     ]),

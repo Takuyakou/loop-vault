@@ -148,13 +148,17 @@ export function pitchClassFromNoteToken(token: string): number | undefined {
   return normalizePc(base + offset);
 }
 
-function accidentalPreferenceFor(options?: ChordFormatOptions): AccidentalPreference | undefined {
-  if (options?.accidentalPreference) return options.accidentalPreference;
-  const tonic = options?.keyContext?.trim().split(/\s+/)[0];
+export function accidentalPreferenceForKey(keyContext?: string): AccidentalPreference | undefined {
+  const tonic = keyContext?.trim().split(/\s+/)[0];
   if (!tonic) return undefined;
   if (flatKeyTonics.has(tonic)) return "flat";
   if (sharpKeyTonics.has(tonic)) return "sharp";
   return undefined;
+}
+
+function accidentalPreferenceFor(options?: ChordFormatOptions): AccidentalPreference | undefined {
+  if (options?.accidentalPreference) return options.accidentalPreference;
+  return accidentalPreferenceForKey(options?.keyContext);
 }
 
 function spell(pitchClass: number, preference?: AccidentalPreference): string {

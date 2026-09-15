@@ -338,15 +338,16 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("[data-testid='voicing-loop-midi-status']")?.textContent)
       .toContain("MIDI入力未接続");
     expect(container.querySelector("[data-testid='voicing-loop-beat-indicator']")).not.toBeNull();
-    expect(container.querySelector("[data-keyboard-alignment='center-when-fitted']")).not.toBeNull();
+    expect(container.querySelector("[data-keyboard-layout='wide-61']")).not.toBeNull();
+    expect(container.querySelectorAll("[data-midi-note]")).toHaveLength(61);
     expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent)
       .toContain("位置1 / 1 小節");
     expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent)
-      .toContain("次Dm7構成音: D4 · C5 · F5");
+      .toContain("次Dm7");
     expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
-      .toContain("構成音: C4 · B4 · E5");
+      .toContain("LEFT HAND");
     expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
-      .toContain("度数: 1 · 7 · 3");
+      .toContain("CHORD TONE");
     expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent)
       .toContain("2拍後に切り替わります");
     expect(container.querySelectorAll("[role='progressbar']")).toHaveLength(2);
@@ -354,7 +355,7 @@ describe("ProgressionVoicingPracticeView", () => {
     const recall = button(container, "Recall（コード名のみ）");
     await act(async () => recall.click());
     expect(recall.getAttribute("aria-pressed")).toBe("true");
-    expect(container.textContent).not.toContain("構成音:");
+    expect(container.textContent).not.toContain("CHORD TONE");
     expect(container.querySelector("svg[role='img']")?.getAttribute("aria-label")).toContain("お手本0音");
   });
 
@@ -402,8 +403,10 @@ describe("ProgressionVoicingPracticeView", () => {
       .toContain("左手に1度と7度、右手に3度・5度");
     expect(container.textContent).toContain("左手の目安");
     expect(container.textContent).toContain("右手の目安");
-    expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
-      .toContain("度数: 1 · 7 · 3 · 5");
+    expect(container.querySelector("[data-testid='voicing-loop-left-hand']")?.textContent)
+      .toContain("CHORD TONE1 · 7");
+    expect(container.querySelector("[data-testid='voicing-loop-right-hand']")?.textContent)
+      .toContain("CHORD TONE3 · 5");
 
     await act(async () => button(container, "現在のコードを試聴").click());
     const [auditionNotes] = runtime.audition.mock.calls[0] as unknown as [readonly number[]];
@@ -775,6 +778,32 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(runtime.stop.mock.calls.length).toBeGreaterThan(stopsBeforeExit);
   });
 
+  it("keeps slash identity and key-aware sharp spelling in a two-hand Source plan", async () => {
+    const base = snapshot("source-midi");
+    const value: ProgressionVoicingPracticeSnapshot = {
+      ...base,
+      key: "G major",
+      events: base.events.map((event, index) => index === 0 ? {
+        ...event,
+        chord: { root: 7, quality: "maj9", tensions: [], bass: 9, label: "Gmaj9/A" },
+        voicing: { kind: "source-midi", midiNotes: [45, 54, 59, 62, 66], bassNote: 45 },
+      } : event),
+    };
+    const container = await renderView(
+      new FakeTransport(),
+      { "source-midi": value },
+      "source-midi",
+    );
+    expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent)
+      .toBe("Gmaj9/A");
+    expect(container.querySelector("[data-testid='voicing-loop-left-hand']")?.textContent)
+      .toContain("PITCHA3");
+    expect(container.querySelector("[data-testid='voicing-loop-right-hand']")?.textContent)
+      .toContain("F#4");
+    expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
+      .not.toContain("Gb4");
+  });
+
   it("shows Suggested Fingering for all six voicing modes without changing playback pitches", async () => {
     const runtime = new FakeTransport();
     const allSnapshots = Object.fromEntries([
@@ -782,27 +811,28 @@ describe("ProgressionVoicingPracticeView", () => {
     ].map((selection) => [selection, snapshot(selection as ProgressionVoicingSelection)]));
     const container = await renderView(runtime, allSnapshots, "source-midi");
 
-    expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
-      .toContain("現在の運指: R1 · R3 · R5");
+    expect(container.querySelector("[data-testid='voicing-loop-left-hand']")?.textContent)
+      .toContain("FINGERL5");
+    expect(container.querySelector("[data-testid='voicing-loop-right-hand']")?.textContent)
+      .toContain("FINGERR1 · R5");
+    expect(container.querySelector("[data-finger-label='L5']")).not.toBeNull();
     expect(container.querySelector("[data-finger-label='R1']")).not.toBeNull();
 
     for (const label of ["Custom", "Basic Full 1–7–3", "Full Shell Voicing"]) {
       await act(async () => button(container, label).click());
       expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
-        .toContain("現在の運指:");
-      expect(container.querySelector("[data-testid='voicing-loop-fingering-unavailable']")).toBeNull();
+        .toContain("FINGER");
     }
 
     await act(async () => button(container, "Basic Shell 1–7").click());
-    expect(button(container, "右手 R").disabled).toBe(true);
-    expect(button(container, "左手 L").getAttribute("aria-pressed")).toBe("true");
-    expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
-      .toContain("現在の運指: L5 · L1");
+    expect(container.querySelector("[data-testid='voicing-loop-right-hand']")).toBeNull();
+    expect(container.querySelector("[data-testid='voicing-loop-left-hand']")?.textContent)
+      .toContain("FINGERL5 · L1");
 
     await act(async () => button(container, "Left-hand").click());
-    expect(button(container, "右手 R").disabled).toBe(true);
-    expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
-      .toContain("現在の運指: L");
+    expect(container.querySelector("[data-testid='voicing-loop-right-hand']")).toBeNull();
+    expect(container.querySelector("[data-testid='voicing-loop-left-hand']")?.textContent)
+      .toContain("FINGERL");
 
     await act(async () => button(container, "開始").click());
     expect(runtime.options?.plan.events.map((entry) => entry.status)).toEqual(["SUPPORTED", "SUPPORTED"]);
@@ -814,27 +844,35 @@ describe("ProgressionVoicingPracticeView", () => {
       { "source-midi": snapshot("source-midi") },
       "source-midi",
     );
-    const selects = container.querySelectorAll<HTMLSelectElement>("[data-testid='voicing-loop-fingering-editor'] select");
+    await act(async () => button(container, "運指を編集").click());
+    const selects = document.body.querySelectorAll<HTMLSelectElement>("[data-testid='voicing-loop-fingering-editor'] select");
     expect(selects).toHaveLength(3);
     await act(async () => {
       const valueSetter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value")?.set;
       valueSetter?.call(selects[1], "2");
       selects[1]!.dispatchEvent(new Event("change", { bubbles: true }));
     });
-    await act(async () => button(container, "この運指を保存").click());
-    expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
-      .toContain("R1 · R2 · R5(自分の運指)");
+    await act(async () => button(document.body, "保存").click());
+    expect(container.querySelector("[data-testid='voicing-loop-right-hand']")?.textContent)
+      .toContain("R2 · R5 (自分の運指)");
     expect(window.localStorage.getItem("loop-vault:voicing-loop-fingering-preferences:v1"))
-      .toContain("R:48,55,59");
+      .toContain("R:55,59");
 
-    await act(async () => button(container, "おすすめに戻す").click());
-    expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
-      .toContain("R1 · R3 · R5(おすすめ)");
+    await act(async () => button(container, "運指を編集").click());
+    await act(async () => button(document.body, "おすすめに戻す").click());
+    expect(container.querySelector("[data-testid='voicing-loop-right-hand']")?.textContent)
+      .toContain("R1 · R5 (おすすめ)");
+    await act(async () => button(document.body, "キャンセル").click());
 
     const toggle = Array.from(container.querySelectorAll<HTMLInputElement>("input[type='checkbox']"))
       .find((input) => input.parentElement?.textContent?.includes("おすすめ運指を表示"));
     await act(async () => toggle?.click());
-    expect(container.querySelector("[data-testid='voicing-loop-fingering-summary']")).toBeNull();
+    expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
+      .not.toContain("FINGER");
+    expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
+      .toContain("PITCH");
+    expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
+      .toContain("CHORD TONE");
     expect(container.querySelector("[data-finger-label]")).toBeNull();
   });
 });
@@ -915,14 +953,14 @@ function snapshot(
         startBeat: 0,
         durationBeats: 2,
         chord: { root: 0, quality, tensions: [], label: quality === "dim" ? "Cdim" : "Cmaj7" },
-        ...(isMy && withVoicing ? { voicing: { kind: selection, midiNotes: [48, 55, 59] } } : {}),
+        ...(isMy && withVoicing ? { voicing: { kind: selection, midiNotes: [48, 55, 59], bassNote: 48 } } : {}),
       },
       {
         id: "two",
         startBeat: 2,
         durationBeats: 2,
         chord: { root: 2, quality: quality === "dim" ? "dim" : "min7", tensions: [], label: quality === "dim" ? "Ddim" : "Dm7" },
-        ...(isMy && withVoicing ? { voicing: { kind: selection, midiNotes: [50, 57, 60] } } : {}),
+        ...(isMy && withVoicing ? { voicing: { kind: selection, midiNotes: [50, 57, 60], bassNote: 50 } } : {}),
       },
     ],
   };

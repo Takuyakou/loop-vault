@@ -34,6 +34,7 @@ export interface PianoKeyboardVisualizerProps {
   interactionMode?: "practice" | "neutral-monitor";
   centerWhenFitted?: boolean;
   fingerLabels?: ReadonlyMap<number, string>;
+  layout?: "default" | "wide-61";
 }
 
 const copy = {
@@ -91,6 +92,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
   interactionMode = "practice",
   centerWhenFitted = false,
   fingerLabels,
+  layout = "default",
 }: PianoKeyboardVisualizerProps) {
   const text = copy[language];
   const range = useMemo(
@@ -166,17 +168,22 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
           />
         ) : null}
         <div
-          className={centerWhenFitted ? "w-max min-w-full" : "w-max"}
+          className={layout === "wide-61"
+            ? "w-full min-w-[72rem]"
+            : centerWhenFitted ? "w-max min-w-full" : "w-max"}
           data-keyboard-alignment={centerWhenFitted ? "center-when-fitted" : "start"}
+          data-keyboard-layout={layout}
         >
           <svg
             role="img"
             aria-label={ariaLabel}
             viewBox={`0 0 ${geometry.width} ${KEYBOARD_HEIGHT}`}
-            width={geometry.width}
+            width={layout === "wide-61" ? "100%" : geometry.width}
             height={KEYBOARD_HEIGHT}
-            className={`block h-[clamp(6rem,13vw,8rem)] max-w-none ${centerWhenFitted ? "mx-auto" : ""}`}
-            style={{ minWidth: `${geometry.width}px` }}
+            className={layout === "wide-61"
+              ? "block h-[clamp(12rem,22vw,20rem)] w-full max-w-none"
+              : `block h-[clamp(6rem,13vw,8rem)] max-w-none ${centerWhenFitted ? "mx-auto" : ""}`}
+            style={layout === "wide-61" ? undefined : { minWidth: `${geometry.width}px` }}
             preserveAspectRatio="none"
           >
           <g data-key-layer="white">

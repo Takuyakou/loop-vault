@@ -1,28 +1,52 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { assertNoHorizontalOverflow, openApp } from "./helpers/app";
+import { assertNoHorizontalOverflow } from "./helpers/app";
 
 async function openPopulatedVoicingLoop(page: Page) {
-  await openApp(page);
+  await page.goto("/?p527Status=both-hands");
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page.locator("#main-content")).toBeVisible();
   await page.locator("nav").getByRole("button", { name: /Practice/ }).click();
   await page.getByRole("tab", { name: "Voicing Loop" }).click();
   return page.getByTestId("voicing-loop-workspace");
 }
 
-test("P5.32 suggests exact-key fingering, supports hand selection, and preserves playback", async ({ page }) => {
+test("P5.32 shows the resolved two-hand plan, edits personal fingering, and preserves playback", async ({ page }) => {
   const workspace = await openPopulatedVoicingLoop(page);
   await expect(workspace.getByRole("checkbox", { name: "おすすめ運指を表示" })).toBeChecked();
-  await expect(workspace.getByTestId("voicing-loop-current-voicing")).toContainText("現在の運指:");
-  await expect(workspace.getByText(/次の運指:/)).toBeVisible();
+  await expect(workspace.getByTestId("voicing-loop-left-hand")).toContainText("PITCH");
+  await expect(workspace.getByTestId("voicing-loop-left-hand")).toContainText("CHORD TONE");
+  await expect(workspace.getByTestId("voicing-loop-left-hand")).toContainText("FINGER");
+  await expect(workspace.getByTestId("voicing-loop-right-hand")).toContainText("FINGER");
+  await expect(workspace.getByTestId("voicing-loop-next-left-hand")).toBeVisible();
+  await expect(workspace.getByTestId("voicing-loop-next-right-hand")).toBeVisible();
+  await expect(workspace).not.toContainText("DEGREE");
+  await expect(workspace).not.toContainText("度数");
+  await expect(workspace.getByRole("button", { name: "左手 L", exact: true })).toHaveCount(0);
+  await expect(workspace.getByRole("button", { name: "右手 R", exact: true })).toHaveCount(0);
   await expect(workspace.locator("[data-finger-label]")).not.toHaveCount(0);
+  await expect(workspace.locator("[data-midi-note] title").filter({ hasText: /, L[1-5]/ }).first()).toBeAttached();
   await expect(workspace.locator("[data-midi-note] title").filter({ hasText: /, R[1-5]/ }).first()).toBeAttached();
 
-  await workspace.getByRole("button", { name: "左手 L", exact: true }).click();
-  await expect(workspace.getByTestId("voicing-loop-current-voicing")).toContainText("現在の運指: L");
-  await expect(workspace.locator("[data-finger-label^='L']")).not.toHaveCount(0);
+  await workspace.getByRole("button", { name: "運指を編集", exact: true }).click();
+  const editor = page.getByRole("dialog", { name: "運指を編集" });
+  await expect(editor.getByText("LEFT HAND", { exact: true })).toBeVisible();
+  await expect(editor.getByText("RIGHT HAND", { exact: true })).toBeVisible();
+  await editor.getByRole("combobox").nth(1).selectOption("2");
+  await editor.getByRole("button", { name: "保存", exact: true }).click();
+  await expect(workspace.getByTestId("voicing-loop-right-hand")).toContainText("自分の運指");
+
+  await workspace.getByRole("button", { name: "運指を編集", exact: true }).click();
+  await page.getByRole("dialog", { name: "運指を編集" })
+    .getByRole("button", { name: "おすすめに戻す", exact: true }).click();
+  await page.getByRole("dialog", { name: "運指を編集" })
+    .getByRole("button", { name: "キャンセル", exact: true }).click();
+  await expect(workspace.getByTestId("voicing-loop-right-hand")).toContainText("おすすめ");
 
   await workspace.getByRole("checkbox", { name: "おすすめ運指を表示" }).uncheck();
-  await expect(workspace.getByTestId("voicing-loop-fingering-summary")).toHaveCount(0);
+  await expect(workspace.getByTestId("voicing-loop-current-voicing")).not.toContainText("FINGER");
+  await expect(workspace.getByTestId("voicing-loop-current-voicing")).toContainText("PITCH");
+  await expect(workspace.getByTestId("voicing-loop-current-voicing")).toContainText("CHORD TONE");
   await expect(workspace.locator("[data-finger-label]")).toHaveCount(0);
   await workspace.getByRole("checkbox", { name: "おすすめ運指を表示" }).check();
 
@@ -36,13 +60,18 @@ test("P5.32 is keyboard-operable, 320px/200%, reduced-motion, and axe clean", as
   await page.setViewportSize({ width: 320, height: 812 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   const workspace = await openPopulatedVoicingLoop(page);
-  const hand = workspace.getByRole("button", { name: "左手 L", exact: true });
-  await hand.focus();
+  const edit = workspace.getByRole("button", { name: "運指を編集", exact: true });
+  await edit.focus();
   await page.keyboard.press("Enter");
-  await expect(hand).toHaveAttribute("aria-pressed", "true");
-  const firstFinger = workspace.getByTestId("voicing-loop-fingering-editor").getByRole("combobox").first();
+  const editor = page.getByRole("dialog", { name: "運指を編集" });
+  await expect(editor).toBeVisible();
+  const firstFinger = editor.getByRole("combobox").first();
   await firstFinger.focus();
   await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Escape");
+  await expect(editor).toBeHidden();
+  const keyboardRegion = workspace.getByRole("region", { name: "ピアノ鍵盤" });
+  expect(await keyboardRegion.evaluate((element) => element.scrollWidth > element.clientWidth)).toBe(true);
   await assertNoHorizontalOverflow(page);
   const axe = await new AxeBuilder({ page: page as never })
     .include("[data-testid='voicing-loop-workspace']")

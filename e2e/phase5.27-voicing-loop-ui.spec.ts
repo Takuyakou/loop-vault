@@ -36,8 +36,10 @@ test("P5.27 Voicing Loop route is keyboard-operable and overflow-safe at 320px",
   await expect(page.getByRole("heading", { name: "Voicing Loop", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Cmaj7", exact: true }).first()).toBeVisible();
   await expect(page.getByText("Dm7", { exact: true }).first()).toBeVisible();
-  await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("構成音: C4 · G4 · B4");
-  await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("度数: 1 · 5 · 7");
+  await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("PITCH");
+  await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("C4 · G4 · B4");
+  await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("CHORD TONE");
+  await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("1 · 5 · 7");
   await expect(page.getByTestId("voicing-loop-event-timing")).toHaveText([
     "2拍",
     "2拍",
@@ -73,7 +75,7 @@ test("P5.27 Voicing Loop route is keyboard-operable and overflow-safe at 320px",
   await expect(page.getByText("停止しました")).toBeVisible();
 });
 
-test("P5.27 Voicing Loop centers a fitted keyboard and exposes MIDI settings beside transport", async ({ page }) => {
+test("P5.27 Voicing Loop fills the keyboard region and exposes MIDI settings beside transport", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openApp(page);
   await page.locator("nav").getByRole("button", { name: /Practice/ }).click();
@@ -84,9 +86,7 @@ test("P5.27 Voicing Loop centers a fitted keyboard and exposes MIDI settings bes
   const [regionBox, keyboardBox] = await Promise.all([keyboardRegion.boundingBox(), keyboard.boundingBox()]);
   expect(regionBox).not.toBeNull();
   expect(keyboardBox).not.toBeNull();
-  expect(Math.abs(
-    (regionBox!.x + regionBox!.width / 2) - (keyboardBox!.x + keyboardBox!.width / 2),
-  )).toBeLessThan(2);
+  expect(keyboardBox!.width).toBeGreaterThan(regionBox!.width * 0.9);
 
   const transport = page.getByTestId("voicing-loop-transport");
   await expect(transport.getByRole("button", { name: "設定", exact: true })).toBeVisible();

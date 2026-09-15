@@ -2,9 +2,10 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Pause, Play, RefreshCw, Search, Settings, Square, Volume2 } from "lucide-react";
 import { useStore } from "zustand";
 import {
-  computePracticeKeyboardRange,
   formatMidiNoteForDisplay,
+  type NoteAccidentalStyle,
 } from "../components/music-keyboard";
+import { Modal } from "../components/Modal";
 import { PracticeKeyboard } from "../components/practice/PracticeKeyboard";
 import { usePreviewSound } from "../components/PreviewSoundProvider";
 import { Badge, Button, EmptyState, Field, SectionHeading, StatusMessage, Surface } from "../components/ui";
@@ -29,6 +30,7 @@ import {
   type VoicingLoopVaultCandidate,
 } from "../domain/progressionVoicingPractice";
 import type { AppLanguage } from "../domain/types";
+import { accidentalPreferenceForKey } from "../domain/chords";
 import {
   rankCyclicFingerings,
   type FingerNumber,
@@ -54,10 +56,12 @@ import {
   savePersonalFingering,
   type FingeringPreferenceCollection,
 } from "../voicingPractice/fingeringPreferences";
+import { progressionFingeringHandTargets } from "../voicingPractice/fingeringDisplay";
 
 const ALL_PITCH_CLASSES = Object.freeze(Array.from({ length: 12 }, (_, index) => index));
 const EMPTY_NOTES: readonly number[] = Object.freeze([]);
 const EMPTY_VAULT_PROGRESSIONS: readonly VoicingLoopVaultCandidate[] = Object.freeze([]);
+const VOICING_LOOP_KEYBOARD_RANGE = Object.freeze({ minMidiNote: 36, maxMidiNote: 96 });
 const TIMELINE_CARD_WIDTH_PX = 92;
 const TIMELINE_CARD_GAP_PX = 6;
 
@@ -106,20 +110,19 @@ const copy = {
     position: "位置",
     timeline: "進行タイムライン",
     loop: "Loop",
-    pitches: "構成音",
-    degrees: "度数",
+    pitches: "PITCH",
+    chordTone: "CHORD TONE",
     suggestedFingering: "おすすめ運指",
-    currentFinger: "現在の運指",
-    nextFinger: "次の運指",
+    finger: "FINGER",
     showFingering: "おすすめ運指を表示",
-    rightHand: "右手 R",
-    leftHand: "左手 L",
-    hand: "運指の手",
+    rightHand: "RIGHT HAND",
+    leftHand: "LEFT HAND",
     personal: "自分の運指",
     automatic: "おすすめ",
-    editFingering: "運指を調整",
-    saveFingering: "この運指を保存",
+    editFingering: "運指を編集",
+    saveFingering: "保存",
     resetFingering: "おすすめに戻す",
+    cancel: "キャンセル",
     fingeringUnavailable: "この手では運指を表示できません",
     fingeringUnavailableBody: "選択中のVoicingに1〜5音の練習対象がある場合に表示します。音やVoicingは変更されません。",
     fingerForNote: (note: string) => `${note}の指`,
@@ -199,20 +202,19 @@ const copy = {
     position: "Position",
     timeline: "Progression timeline",
     loop: "Loop",
-    pitches: "Pitches",
-    degrees: "Degrees",
+    pitches: "PITCH",
+    chordTone: "CHORD TONE",
     suggestedFingering: "Suggested Fingering",
-    currentFinger: "Current Finger",
-    nextFinger: "Next Finger",
+    finger: "FINGER",
     showFingering: "Show Suggested Fingering",
-    rightHand: "Right hand R",
-    leftHand: "Left hand L",
-    hand: "Fingering hand",
+    rightHand: "RIGHT HAND",
+    leftHand: "LEFT HAND",
     personal: "Personal fingering",
     automatic: "Suggested",
-    editFingering: "Adjust fingering",
-    saveFingering: "Save this fingering",
+    editFingering: "Edit fingering",
+    saveFingering: "Save",
     resetFingering: "Reset to suggestion",
+    cancel: "Cancel",
     fingeringUnavailable: "Fingering is unavailable for this hand",
     fingeringUnavailableBody: "It appears when this voicing has a one-to-five-note practice target. Notes and voicing are never changed.",
     fingerForNote: (note: string) => `Finger for ${note}`,
@@ -333,10 +335,13 @@ export function ProgressionVoicingPracticeView({
     () => snapshot ? createProgressionPracticeClockState(snapshot, { countInBars }) : undefined,
   );
   const [displayMode, setDisplayMode] = useState<"learn" | "recall">("learn");
-  const [fingeringHand, setFingeringHand] = useState<FingeringHand>("right");
   const [showFingering, setShowFingering] = useState(true);
   const [fingeringPreferences, setFingeringPreferences] = useState(loadFingeringPreferences);
-  const [draftFingers, setDraftFingers] = useState<readonly FingerNumber[]>([]);
+  const [draftFingers, setDraftFingers] = useState<Readonly<Record<FingeringHand, readonly FingerNumber[]>>>({
+    left: [],
+    right: [],
+  });
+  const [fingeringEditorOpen, setFingeringEditorOpen] = useState(false);
   const [metronomeEnabled, setMetronomeEnabled] = useState(true);
   const [referenceSoundEnabled, setReferenceSoundEnabled] = useState(true);
   const [auditionedIndex, setAuditionedIndex] = useState<number>();
@@ -403,49 +408,56 @@ export function ProgressionVoicingPracticeView({
   const nextResolution = plan?.events[nextIndex];
   const currentVoicing = currentResolution?.status === "SUPPORTED" ? currentResolution.voicing : undefined;
   const nextVoicing = nextResolution?.status === "SUPPORTED" ? nextResolution.voicing : undefined;
-  const rightHandAvailable = selection === "source-midi" || selection === "custom"
-    || Boolean(plan?.events.some((resolution) => resolution.status === "SUPPORTED" && resolution.voicing.rightHandNotes?.length));
-  const leftHandAvailable = selection === "source-midi" || selection === "custom" || selection === "left-hand"
-    || Boolean(plan?.events.some((resolution) => resolution.status === "SUPPORTED" && resolution.voicing.leftHandNotes?.length));
-  const rankedFingerings = useMemo(() => snapshot && plan ? rankCyclicFingerings(snapshot.events.map((event, index) => {
-    const resolution = plan.events[index];
-    return {
-      id: event.id,
-      hand: fingeringHand,
-      midiPitches: resolution?.status === "SUPPORTED"
-        ? practiceFingeringPitches(resolution.voicing, selection, fingeringHand)
-        : EMPTY_NOTES,
-      chord: event.chord,
-      family: selection,
-    };
-  })) : [], [fingeringHand, plan, selection, snapshot]);
-  const fingeringById = useMemo(
-    () => new Map(rankedFingerings.map((entry) => [entry.id, entry])),
-    [rankedFingerings],
+  const currentHandTargets = currentVoicing
+    ? progressionFingeringHandTargets(selection, currentVoicing)
+    : { left: EMPTY_NOTES, right: EMPTY_NOTES };
+  const nextHandTargets = nextVoicing
+    ? progressionFingeringHandTargets(selection, nextVoicing)
+    : { left: EMPTY_NOTES, right: EMPTY_NOTES };
+  const leftFingeringById = useMemo(
+    () => new Map(rankFingeringsForHand(snapshot, plan, selection, "left").map((entry) => [entry.id, entry])),
+    [plan, selection, snapshot],
   );
-  const currentSuggested = currentEvent ? fingeringById.get(currentEvent.id) : undefined;
-  const nextSuggested = nextEvent ? fingeringById.get(nextEvent.id) : undefined;
-  const currentFingering = useMemo(
-    () => effectiveFingering(currentSuggested, fingeringPreferences),
-    [currentSuggested, fingeringPreferences],
+  const rightFingeringById = useMemo(
+    () => new Map(rankFingeringsForHand(snapshot, plan, selection, "right").map((entry) => [entry.id, entry])),
+    [plan, selection, snapshot],
   );
-  const nextFingering = useMemo(
-    () => effectiveFingering(nextSuggested, fingeringPreferences),
-    [nextSuggested, fingeringPreferences],
+  const currentLeftSuggested = currentEvent ? leftFingeringById.get(currentEvent.id) : undefined;
+  const currentRightSuggested = currentEvent ? rightFingeringById.get(currentEvent.id) : undefined;
+  const nextLeftSuggested = nextEvent ? leftFingeringById.get(nextEvent.id) : undefined;
+  const nextRightSuggested = nextEvent ? rightFingeringById.get(nextEvent.id) : undefined;
+  const currentLeftFingering = useMemo(
+    () => effectiveFingering(currentLeftSuggested, fingeringPreferences),
+    [currentLeftSuggested, fingeringPreferences],
   );
-  const currentPersonal = currentFingering?.signature
-    ? findPersonalFingering(fingeringPreferences, currentFingering.signature)
-    : undefined;
+  const currentRightFingering = useMemo(
+    () => effectiveFingering(currentRightSuggested, fingeringPreferences),
+    [currentRightSuggested, fingeringPreferences],
+  );
+  const nextLeftFingering = useMemo(
+    () => effectiveFingering(nextLeftSuggested, fingeringPreferences),
+    [nextLeftSuggested, fingeringPreferences],
+  );
+  const nextRightFingering = useMemo(
+    () => effectiveFingering(nextRightSuggested, fingeringPreferences),
+    [nextRightSuggested, fingeringPreferences],
+  );
+  const currentLeftPersonal = findPersonalFingering(fingeringPreferences, currentLeftFingering?.signature);
+  const currentRightPersonal = findPersonalFingering(fingeringPreferences, currentRightFingering?.signature);
+  const accidentalStyle: NoteAccidentalStyle = accidentalPreferenceForKey(snapshot?.key) ?? "flat";
+  const keyboardRange = currentVoicing?.referenceBassNote === undefined
+    ? VOICING_LOOP_KEYBOARD_RANGE
+    : {
+        minMidiNote: Math.min(VOICING_LOOP_KEYBOARD_RANGE.minMidiNote, currentVoicing.referenceBassNote),
+        maxMidiNote: Math.max(VOICING_LOOP_KEYBOARD_RANGE.maxMidiNote, currentVoicing.referenceBassNote),
+      };
   const keyboardFingerLabels = useMemo(() => {
-    if (!showFingering || displayMode !== "learn" || !currentFingering) return undefined;
-    const prefix = fingeringHand === "right" ? "R" : "L";
-    return new Map(currentFingering.pitches.map((pitch, index) => [pitch, `${prefix}${currentFingering.fingers[index]}`]));
-  }, [currentFingering, displayMode, fingeringHand, showFingering]);
-  const guideVoicings = useMemo(
-    () => plan?.events.flatMap((resolution) => resolution.status === "SUPPORTED" ? [progressionPracticePlaybackNotes(resolution.voicing)] : []) ?? [],
-    [plan],
-  );
-  const keyboardRange = useMemo(() => computePracticeKeyboardRange(guideVoicings), [guideVoicings]);
+    if (!showFingering || displayMode !== "learn") return undefined;
+    const labels = new Map<number, string>();
+    addKeyboardFingerLabels(labels, currentLeftFingering, "L");
+    addKeyboardFingerLabels(labels, currentRightFingering, "R");
+    return labels;
+  }, [currentLeftFingering, currentRightFingering, displayMode, showFingering]);
   const active = clockState?.status === "running" || clockState?.status === "count-in";
   const paused = clockState?.status === "paused";
   const playheadX = currentSpanIndex * (TIMELINE_CARD_WIDTH_PX + TIMELINE_CARD_GAP_PX)
@@ -461,13 +473,8 @@ export function ProgressionVoicingPracticeView({
   const totalBars = Math.max(1, Math.ceil((snapshot?.lengthBeats ?? 1) / beatsPerBar));
 
   useEffect(() => {
-    if (selection === "left-hand" || (!rightHandAvailable && leftHandAvailable)) setFingeringHand("left");
-    else if (!leftHandAvailable && rightHandAvailable) setFingeringHand("right");
-  }, [leftHandAvailable, rightHandAvailable, selection]);
-
-  useEffect(() => {
-    setDraftFingers(currentFingering?.fingers ?? []);
-  }, [currentFingering]);
+    setFingeringEditorOpen(false);
+  }, [currentEvent?.id, selection]);
 
   useEffect(() => {
     const viewport = timelineViewportRef.current;
@@ -658,26 +665,54 @@ export function ProgressionVoicingPracticeView({
     transportRef.current?.setReferenceSoundEnabled(enabled);
   }
 
-  function changeDraftFinger(index: number, value: number) {
+  function changeDraftFinger(hand: FingeringHand, index: number, value: number) {
     if (!Number.isInteger(value) || value < 1 || value > 5) return;
-    setDraftFingers((fingers) => fingers.map((finger, fingerIndex) => (
-      fingerIndex === index ? value as FingerNumber : finger
-    )));
-  }
-
-  function saveCurrentFingering() {
-    if (!currentFingering || !isValidFingering(fingeringHand, currentFingering.pitches, draftFingers)) return;
-    setFingeringPreferences((collection) => savePersonalFingering(collection, {
-      hand: fingeringHand,
-      pitches: currentFingering.pitches,
-      fingers: draftFingers,
+    setDraftFingers((fingers) => ({
+      ...fingers,
+      [hand]: fingers[hand].map((finger, fingerIndex) => (
+        fingerIndex === index ? value as FingerNumber : finger
+      )),
     }));
   }
 
+  function openFingeringEditor() {
+    setDraftFingers({
+      left: currentLeftFingering?.fingers ?? [],
+      right: currentRightFingering?.fingers ?? [],
+    });
+    setFingeringEditorOpen(true);
+  }
+
+  function saveCurrentFingering() {
+    const entries = [
+      { hand: "left" as const, fingering: currentLeftFingering },
+      { hand: "right" as const, fingering: currentRightFingering },
+    ].filter((entry): entry is { hand: FingeringHand; fingering: RankedFingering } => Boolean(entry.fingering));
+    if (!entries.length || entries.some(({ hand, fingering }) => (
+      !isValidFingering(hand, fingering.pitches, draftFingers[hand])
+    ))) return;
+    setFingeringPreferences((collection) => entries.reduce(
+      (next, { hand, fingering }) => savePersonalFingering(next, {
+        hand,
+        pitches: fingering.pitches,
+        fingers: draftFingers[hand],
+      }),
+      collection,
+    ));
+    setFingeringEditorOpen(false);
+  }
+
   function resetCurrentFingering() {
-    if (!currentFingering) return;
-    setFingeringPreferences((collection) => resetPersonalFingering(collection, currentFingering.signature));
-    if (currentSuggested?.status === "supported") setDraftFingers(currentSuggested.fingers);
+    const signatures = [currentLeftFingering?.signature, currentRightFingering?.signature]
+      .filter((signature): signature is string => Boolean(signature));
+    setFingeringPreferences((collection) => signatures.reduce(
+      (next, signature) => resetPersonalFingering(next, signature),
+      collection,
+    ));
+    setDraftFingers({
+      left: currentLeftSuggested?.status === "supported" ? currentLeftSuggested.fingers : [],
+      right: currentRightSuggested?.status === "supported" ? currentRightSuggested.fingers : [],
+    });
   }
 
   if (!progressionLoaded) {
@@ -804,29 +839,6 @@ export function ProgressionVoicingPracticeView({
               <Button size="sm" variant={displayMode === "learn" ? "primary" : "secondary"} aria-pressed={displayMode === "learn"} onClick={() => setDisplayMode("learn")}>{text.learn}</Button>
               <Button size="sm" variant={displayMode === "recall" ? "primary" : "secondary"} aria-pressed={displayMode === "recall"} onClick={() => setDisplayMode("recall")}>{text.recall}</Button>
             </div>
-            <fieldset className="mt-4 min-w-0">
-              <legend className="text-sm font-semibold text-[var(--lv-text)]">{text.hand}</legend>
-              <div className="mt-2 flex min-w-0 flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  variant={fingeringHand === "right" ? "primary" : "secondary"}
-                  aria-pressed={fingeringHand === "right"}
-                  disabled={!rightHandAvailable || selection === "left-hand"}
-                  onClick={() => setFingeringHand("right")}
-                >
-                  {text.rightHand}
-                </Button>
-                <Button
-                  size="sm"
-                  variant={fingeringHand === "left" ? "primary" : "secondary"}
-                  aria-pressed={fingeringHand === "left"}
-                  disabled={!leftHandAvailable}
-                  onClick={() => setFingeringHand("left")}
-                >
-                  {text.leftHand}
-                </Button>
-              </div>
-            </fieldset>
             <label className="mt-4 inline-flex min-h-10 cursor-pointer items-center gap-2 text-sm font-medium text-[var(--lv-text-secondary)]">
               <input
                 type="checkbox"
@@ -858,22 +870,38 @@ export function ProgressionVoicingPracticeView({
                   </h2>
                   <p className="sr-only" aria-live="polite" aria-atomic="true">{currentEvent?.chord.label ?? restLabel}</p>
                 </div>
-                {displayMode === "learn" && currentVoicing ? (
-                  <div className="min-w-0 max-w-full space-y-1 text-sm leading-5 text-[var(--lv-text-secondary)] sm:max-w-[58%]" data-testid="voicing-loop-current-voicing">
-                    <p className="break-words">{text.pitches}: {currentVoicing.notes.map((note) => formatMidiNoteForDisplay(note.midiNote, "fl-studio", "flat")).join(" · ")}</p>
-                    <p className="break-words">{text.degrees}: {currentVoicing.notes.map((note) => note.degree ?? "—").join(" · ")}</p>
-                    {showFingering ? (
-                      <FingeringSummary
-                        fingering={currentFingering}
-                        hand={fingeringHand}
-                        label={text.currentFinger}
-                        sourceLabel={currentPersonal ? text.personal : text.automatic}
-                        unavailable={text.fingeringUnavailable}
-                      />
-                    ) : null}
-                  </div>
-                ) : null}
+                {displayMode === "learn" && showFingering
+                  && (currentLeftFingering || currentRightFingering) ? (
+                    <Button size="sm" variant="secondary" onClick={openFingeringEditor}>
+                      {text.editFingering}
+                    </Button>
+                  ) : null}
               </div>
+
+              {displayMode === "learn" && currentVoicing ? (
+                <div className="mt-5 grid min-w-0 gap-3 sm:grid-cols-2" data-testid="voicing-loop-current-voicing">
+                  <HandVoicingSummary
+                    accidentalStyle={accidentalStyle}
+                    fingering={currentLeftFingering}
+                    hand="left"
+                    isPersonal={Boolean(currentLeftPersonal)}
+                    pitches={currentHandTargets.left}
+                    text={text}
+                    voicing={currentVoicing}
+                    showFingering={showFingering}
+                  />
+                  <HandVoicingSummary
+                    accidentalStyle={accidentalStyle}
+                    fingering={currentRightFingering}
+                    hand="right"
+                    isPersonal={Boolean(currentRightPersonal)}
+                    pitches={currentHandTargets.right}
+                    text={text}
+                    voicing={currentVoicing}
+                    showFingering={showFingering}
+                  />
+                </div>
+              ) : null}
 
               <div className="mt-6 grid gap-3 sm:grid-cols-3">
                 <Metric
@@ -912,18 +940,23 @@ export function ProgressionVoicingPracticeView({
               <p className="lv-section-kicker">{text.next}</p>
               <p className="mt-3 break-words text-2xl font-bold text-[var(--lv-text)]">{nextEvent?.chord.label ?? restLabel}</p>
               {displayMode === "learn" && nextVoicing ? (
-                <div className="mt-4 space-y-1 text-sm leading-5 text-[var(--lv-text-secondary)]">
-                  <p>{text.pitches}: {nextVoicing.notes.map((note) => formatMidiNoteForDisplay(note.midiNote, "fl-studio", "flat")).join(" · ")}</p>
-                  <p>{text.degrees}: {nextVoicing.notes.map((note) => note.degree ?? "—").join(" · ")}</p>
-                  {showFingering ? (
-                    <FingeringSummary
-                      fingering={nextFingering}
-                      hand={fingeringHand}
-                      label={text.nextFinger}
-                      sourceLabel={findPersonalFingering(fingeringPreferences, nextFingering?.signature) ? text.personal : text.automatic}
-                      unavailable={text.fingeringUnavailable}
-                    />
-                  ) : null}
+                <div className="mt-4 space-y-3 text-sm leading-5 text-[var(--lv-text-secondary)]" data-testid="voicing-loop-next-voicing">
+                  <CompactHandVoicing
+                    accidentalStyle={accidentalStyle}
+                    fingering={nextLeftFingering}
+                    hand="left"
+                    pitches={nextHandTargets.left}
+                    showFingering={showFingering}
+                    text={text}
+                  />
+                  <CompactHandVoicing
+                    accidentalStyle={accidentalStyle}
+                    fingering={nextRightFingering}
+                    hand="right"
+                    pitches={nextHandTargets.right}
+                    showFingering={showFingering}
+                    text={text}
+                  />
                 </div>
               ) : null}
               <p className="mt-5 border-t border-[var(--lv-border)] pt-4 text-xs text-[var(--lv-text-muted)]">
@@ -1010,7 +1043,7 @@ export function ProgressionVoicingPracticeView({
               level={3}
               title={currentEvent?.chord.label ?? restLabel}
               description={displayMode === "learn" && currentVoicing
-                ? `${text.pitches}: ${currentVoicing.notes.map((note) => formatMidiNoteForDisplay(note.midiNote, "fl-studio", "flat")).join(" · ")} · ${text.degrees}: ${currentVoicing.notes.map((note) => note.degree ?? "—").join(" · ")}`
+                ? `${text.pitches}: ${currentVoicing.notes.map((note) => formatMidiNoteForDisplay(note.midiNote, "fl-studio", accidentalStyle)).join(" · ")} · ${text.chordTone}: ${currentVoicing.notes.map((note) => note.degree ?? "—").join(" · ")}`
                 : undefined}
               action={(
                 <Button
@@ -1024,38 +1057,45 @@ export function ProgressionVoicingPracticeView({
                 </Button>
               )}
             />
-            {displayMode === "learn" && showFingering ? (
-              <FingeringEditor
-                draftFingers={draftFingers}
-                fingering={currentFingering}
-                hand={fingeringHand}
-                isPersonal={Boolean(currentPersonal)}
-                language={language}
-                onChange={changeDraftFinger}
-                onReset={resetCurrentFingering}
-                onSave={saveCurrentFingering}
-                text={text}
-              />
-            ) : null}
             <div className="mt-5 min-w-0">
               <PracticeKeyboard
                 range={keyboardRange}
                 guideNotes={currentVoicing?.midiNotes ?? EMPTY_NOTES}
                 referenceBassNote={currentVoicing?.referenceBassNote}
-                leftHandGuideNotes={selection === "left-hand" ? currentVoicing?.midiNotes ?? EMPTY_NOTES : currentVoicing?.leftHandNotes ?? EMPTY_NOTES}
-                rightHandGuideNotes={selection === "left-hand" ? EMPTY_NOTES : currentVoicing?.rightHandNotes ?? EMPTY_NOTES}
+                leftHandGuideNotes={currentHandTargets.left}
+                rightHandGuideNotes={currentHandTargets.right}
                 allowedPitchClasses={ALL_PITCH_CLASSES}
                 requiredPitchClasses={EMPTY_NOTES}
                 level={displayMode === "learn" ? 1 : 4}
-                accidentalStyle="flat"
+                accidentalStyle={accidentalStyle}
                 language={language}
                 concealNoteNames={displayMode === "recall"}
                 interactionMode="neutral-monitor"
-                centerWhenFitted
                 fingerLabels={keyboardFingerLabels}
+                keyboardLayout="wide-61"
               />
             </div>
           </Surface>
+
+          {fingeringEditorOpen ? (
+            <Modal
+              ariaLabel={text.editFingering}
+              onClose={() => setFingeringEditorOpen(false)}
+              panelClassName="w-full max-w-3xl"
+            >
+              <FingeringEditor
+                accidentalStyle={accidentalStyle}
+                draftFingers={draftFingers}
+                fingerings={{ left: currentLeftFingering, right: currentRightFingering }}
+                language={language}
+                onCancel={() => setFingeringEditorOpen(false)}
+                onChange={changeDraftFinger}
+                onReset={resetCurrentFingering}
+                onSave={saveCurrentFingering}
+                text={text}
+              />
+            </Modal>
+          ) : null}
 
           <Surface className="p-4 sm:p-5" data-testid="voicing-loop-transport">
             <div className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -1141,16 +1181,27 @@ function practiceTimingLabel(
     : `Bar ${bar} · beat ${beatLabel} · ${durationLabel} ${event.durationBeats === 1 ? "beat" : "beats"}`;
 }
 
-function practiceFingeringPitches(
-  voicing: ResolvedProgressionPracticeVoicing,
+function rankFingeringsForHand(
+  snapshot: ProgressionVoicingPracticeSnapshot | undefined,
+  plan: ProgressionPracticeVoicingPlan | undefined,
   selection: ProgressionVoicingSelection,
   hand: FingeringHand,
-): readonly number[] {
-  if (selection === "source-midi" || selection === "custom") return voicing.midiNotes;
-  if (selection === "left-hand") return hand === "left" ? voicing.midiNotes : EMPTY_NOTES;
-  return hand === "left"
-    ? voicing.leftHandNotes ?? EMPTY_NOTES
-    : voicing.rightHandNotes ?? EMPTY_NOTES;
+): ReturnType<typeof rankCyclicFingerings> {
+  if (!snapshot || !plan) return [];
+  const events = snapshot.events.flatMap((event, index) => {
+    const resolution = plan.events[index];
+    if (resolution?.status !== "SUPPORTED") return [];
+    const pitches = progressionFingeringHandTargets(selection, resolution.voicing)[hand];
+    if (!pitches.length) return [];
+    return [{
+      id: event.id,
+      hand,
+      midiPitches: pitches,
+      chord: event.chord,
+      family: selection,
+    }];
+  });
+  return rankCyclicFingerings(events);
 }
 
 function effectiveFingering(
@@ -1162,85 +1213,224 @@ function effectiveFingering(
   return personal ? { ...suggestion, fingers: personal.fingers } : suggestion;
 }
 
-function FingeringSummary({
-  fingering,
-  hand,
-  label,
-  sourceLabel,
-  unavailable,
-}: {
-  readonly fingering?: RankedFingering;
-  readonly hand: FingeringHand;
-  readonly label: string;
-  readonly sourceLabel: string;
-  readonly unavailable: string;
-}) {
-  if (!fingering) return <p className="break-words text-[var(--lv-text-muted)]">{label}: {unavailable}</p>;
-  const prefix = hand === "right" ? "R" : "L";
-  return (
-    <p className="break-words font-semibold text-teal-200" data-testid="voicing-loop-fingering-summary">
-      {label}: {fingering.fingers.map((finger) => `${prefix}${finger}`).join(" · ")}
-      <span className="ml-2 font-normal text-[var(--lv-text-muted)]">({sourceLabel})</span>
-    </p>
-  );
+function addKeyboardFingerLabels(
+  labels: Map<number, string>,
+  fingering: RankedFingering | undefined,
+  prefix: "L" | "R",
+) {
+  fingering?.pitches.forEach((pitch, index) => {
+    const next = `${prefix}${fingering.fingers[index]}`;
+    const current = labels.get(pitch);
+    labels.set(pitch, current ? `${current}/${next}` : next);
+  });
 }
 
-function FingeringEditor({
-  draftFingers,
+function HandVoicingSummary({
+  accidentalStyle,
   fingering,
   hand,
   isPersonal,
+  pitches,
+  showFingering,
+  text,
+  voicing,
+}: {
+  readonly accidentalStyle: NoteAccidentalStyle;
+  readonly fingering?: RankedFingering;
+  readonly hand: FingeringHand;
+  readonly isPersonal: boolean;
+  readonly pitches: readonly number[];
+  readonly showFingering: boolean;
+  readonly text: typeof copy.ja | typeof copy.en;
+  readonly voicing: ResolvedProgressionPracticeVoicing;
+}) {
+  if (!pitches.length) return null;
+  const prefix = hand === "left" ? "L" : "R";
+  const handBorder = hand === "left" ? "border-amber-400/40" : "border-teal-300/40";
+  const handText = hand === "left" ? "text-amber-200" : "text-teal-200";
+  return (
+    <section
+      className={`min-w-0 rounded-[var(--lv-radius-sm)] border bg-[var(--lv-bg-subtle)] p-3 ${handBorder}`}
+      data-testid={`voicing-loop-${hand}-hand`}
+    >
+      <p className={`text-xs font-bold tracking-[0.12em] ${handText}`}>
+        {hand === "left" ? text.leftHand : text.rightHand}
+      </p>
+      <dl className="mt-2 grid min-w-0 gap-1 text-sm leading-5">
+        <HandFact label={text.pitches} value={formatPitchList(pitches, accidentalStyle)} />
+        <HandFact label={text.chordTone} value={formatChordToneList(voicing, pitches)} />
+        {showFingering ? (
+          <HandFact
+            label={text.finger}
+            value={fingering
+              ? `${fingering.fingers.map((finger) => `${prefix}${finger}`).join(" · ")} (${isPersonal ? text.personal : text.automatic})`
+              : text.fingeringUnavailable}
+            emphasize={Boolean(fingering)}
+          />
+        ) : null}
+      </dl>
+    </section>
+  );
+}
+
+function CompactHandVoicing({
+  accidentalStyle,
+  fingering,
+  hand,
+  pitches,
+  showFingering,
+  text,
+}: {
+  readonly accidentalStyle: NoteAccidentalStyle;
+  readonly fingering?: RankedFingering;
+  readonly hand: FingeringHand;
+  readonly pitches: readonly number[];
+  readonly showFingering: boolean;
+  readonly text: typeof copy.ja | typeof copy.en;
+}) {
+  if (!pitches.length) return null;
+  const prefix = hand === "left" ? "L" : "R";
+  const handBorder = hand === "left" ? "border-amber-400/60" : "border-[var(--lv-accent)]";
+  const handText = hand === "left" ? "text-amber-200" : "text-[var(--lv-accent)]";
+  return (
+    <div className={`min-w-0 border-l-2 pl-3 ${handBorder}`} data-testid={`voicing-loop-next-${hand}-hand`}>
+      <p className={`text-xs font-bold tracking-[0.1em] ${handText}`}>
+        {hand === "left" ? text.leftHand : text.rightHand}
+      </p>
+      <p className="mt-1 break-words">{text.pitches}: {formatPitchList(pitches, accidentalStyle)}</p>
+      {showFingering ? (
+        <p className="break-words font-semibold text-teal-200">
+          {text.finger}: {fingering
+            ? fingering.fingers.map((finger) => `${prefix}${finger}`).join(" · ")
+            : text.fingeringUnavailable}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function HandFact({
+  emphasize = false,
+  label,
+  value,
+}: {
+  readonly emphasize?: boolean;
+  readonly label: string;
+  readonly value: string;
+}) {
+  return (
+    <div className="grid min-w-0 gap-1 sm:grid-cols-[7.5rem_minmax(0,1fr)]">
+      <dt className="text-xs font-semibold text-[var(--lv-text-muted)]">{label}</dt>
+      <dd className={`min-w-0 break-words ${emphasize ? "font-semibold text-teal-200" : "text-[var(--lv-text-secondary)]"}`}>{value}</dd>
+    </div>
+  );
+}
+
+function formatPitchList(pitches: readonly number[], accidentalStyle: NoteAccidentalStyle): string {
+  return pitches
+    .map((pitch) => formatMidiNoteForDisplay(pitch, "fl-studio", accidentalStyle))
+    .join(" · ");
+}
+
+function formatChordToneList(
+  voicing: ResolvedProgressionPracticeVoicing,
+  pitches: readonly number[],
+): string {
+  const degrees = new Map(voicing.notes.map((note) => [note.midiNote, note.degree ?? "—"]));
+  return pitches.map((pitch) => degrees.get(pitch) ?? "—").join(" · ");
+}
+
+function FingeringEditor({
+  accidentalStyle,
+  draftFingers,
+  fingerings,
   language,
+  onCancel,
   onChange,
   onReset,
   onSave,
   text,
 }: {
-  readonly draftFingers: readonly FingerNumber[];
-  readonly fingering?: RankedFingering;
-  readonly hand: FingeringHand;
-  readonly isPersonal: boolean;
+  readonly accidentalStyle: NoteAccidentalStyle;
+  readonly draftFingers: Readonly<Record<FingeringHand, readonly FingerNumber[]>>;
+  readonly fingerings: Readonly<Record<FingeringHand, RankedFingering | undefined>>;
   readonly language: AppLanguage;
-  readonly onChange: (index: number, value: number) => void;
+  readonly onCancel: () => void;
+  readonly onChange: (hand: FingeringHand, index: number, value: number) => void;
   readonly onReset: () => void;
   readonly onSave: () => void;
   readonly text: typeof copy.ja | typeof copy.en;
 }) {
-  if (!fingering) {
-    return (
-      <p className="mt-4 text-xs leading-5 text-[var(--lv-text-muted)]" data-testid="voicing-loop-fingering-unavailable">
-        {text.fingeringUnavailableBody}
-      </p>
-    );
-  }
-  const valid = isValidFingering(hand, fingering.pitches, draftFingers);
+  const entries = (["left", "right"] as const)
+    .flatMap((hand) => fingerings[hand] ? [{ hand, fingering: fingerings[hand] }] : []);
+  const valid = entries.length > 0 && entries.every(({ hand, fingering }) => (
+    Boolean(fingering) && isValidFingering(hand, fingering!.pitches, draftFingers[hand])
+  ));
   return (
-    <fieldset className="mt-4 min-w-0 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] p-3" data-testid="voicing-loop-fingering-editor">
-      <legend className="px-1 text-xs font-semibold text-[var(--lv-text-secondary)]">{text.editFingering}</legend>
+    <div className="min-w-0 p-4 sm:p-6" data-testid="voicing-loop-fingering-editor">
+      <h2 className="text-xl font-bold text-[var(--lv-text)]">{text.editFingering}</h2>
+      <p className="mt-2 text-xs leading-5 text-[var(--lv-text-muted)]">
+        {language === "ja" ? "音の低い順。Voicingの音程・オクターブは変わりません。" : "Low to high. Pitch and octave never change."}
+      </p>
+      <div className="mt-5 grid min-w-0 gap-4 sm:grid-cols-2">
+        {entries.map(({ hand, fingering }) => (
+          <FingeringEditorHand
+            accidentalStyle={accidentalStyle}
+            draftFingers={draftFingers[hand]}
+            fingering={fingering!}
+            hand={hand}
+            key={hand}
+            onChange={onChange}
+            text={text}
+          />
+        ))}
+      </div>
+      <div className="mt-6 flex min-w-0 flex-wrap justify-end gap-2 border-t border-[var(--lv-border)] pt-4">
+        <Button size="sm" variant="ghost" onClick={onReset}>{text.resetFingering}</Button>
+        <Button size="sm" variant="secondary" onClick={onCancel}>{text.cancel}</Button>
+        <Button size="sm" variant="primary" disabled={!valid} onClick={onSave}>{text.saveFingering}</Button>
+      </div>
+    </div>
+  );
+}
+
+function FingeringEditorHand({
+  accidentalStyle,
+  draftFingers,
+  fingering,
+  hand,
+  onChange,
+  text,
+}: {
+  readonly accidentalStyle: NoteAccidentalStyle;
+  readonly draftFingers: readonly FingerNumber[];
+  readonly fingering: RankedFingering;
+  readonly hand: FingeringHand;
+  readonly onChange: (hand: FingeringHand, index: number, value: number) => void;
+  readonly text: typeof copy.ja | typeof copy.en;
+}) {
+  const prefix = hand === "left" ? "L" : "R";
+  const handLabel = hand === "left" ? text.leftHand : text.rightHand;
+  return (
+    <fieldset className="min-w-0 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] p-3">
+      <legend className="px-1 text-xs font-bold tracking-[0.1em] text-[var(--lv-accent)]">{handLabel}</legend>
       <div className="flex min-w-0 flex-wrap gap-2">
         {fingering.pitches.map((pitch, index) => {
-          const note = formatMidiNoteForDisplay(pitch, "fl-studio", "flat");
+          const note = formatMidiNoteForDisplay(pitch, "fl-studio", accidentalStyle);
           return (
-            <label key={pitch} className="min-w-[4.5rem] text-xs text-[var(--lv-text-muted)]">
+            <label key={pitch} className="min-w-[4.5rem] flex-1 text-xs text-[var(--lv-text-muted)]">
               <span className="block truncate">{note}</span>
               <select
                 className="lv-field-control mt-1 min-h-9 w-full px-2"
-                aria-label={text.fingerForNote(note)}
+                aria-label={`${handLabel}: ${text.fingerForNote(note)}`}
                 value={draftFingers[index] ?? ""}
-                onChange={(event) => onChange(index, Number(event.currentTarget.value))}
+                onChange={(event) => onChange(hand, index, Number(event.currentTarget.value))}
               >
-                {[1, 2, 3, 4, 5].map((finger) => <option key={finger} value={finger}>{hand === "right" ? "R" : "L"}{finger}</option>)}
+                {[1, 2, 3, 4, 5].map((finger) => <option key={finger} value={finger}>{prefix}{finger}</option>)}
               </select>
             </label>
           );
         })}
-      </div>
-      <div className="mt-3 flex min-w-0 flex-wrap items-center gap-2">
-        <Button size="sm" variant="secondary" disabled={!valid} onClick={onSave}>{text.saveFingering}</Button>
-        {isPersonal ? <Button size="sm" variant="ghost" onClick={onReset}>{text.resetFingering}</Button> : null}
-        <span className="text-xs text-[var(--lv-text-muted)]">
-          {language === "ja" ? "音の低い順。Voicingの音程・オクターブは変わりません。" : "Low to high. Pitch and octave never change."}
-        </span>
       </div>
     </fieldset>
   );
