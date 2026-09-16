@@ -8,9 +8,9 @@ integrated product.
 ## Status
 
 - **Status:** in progress
-- **Active stage:** P5.33-00
-- **Completed stages:** none
-- **Next action:** finish the Stage00 audit and stop before runtime rule work
+- **Active stage:** none
+- **Completed stages:** P5.33-00
+- **Next action:** stop and await explicit authorization for P5.33-01
 
 ## Required Reading Order
 
