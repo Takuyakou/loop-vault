@@ -1783,6 +1783,10 @@ function sourceLabel(source: VoicingRuleExplanation["source"]): string {
 
 function ruleFamilyLabel(family: VoicingRuleFamily, language: AppLanguage): string {
   const labels: Record<VoicingRuleFamily, readonly [string, string]> = {
+    "teacher-style": ["Teacher Style", "Teacher Style"],
+    "family-core": ["Family Core", "Family Core"],
+    "family-color": ["Family Color", "Family Color"],
+    "open-spread": ["Open / Spread", "Open / Spread"],
     "teacher-open": ["Teacher Open", "Teacher Open"],
     "bass-guide-tones": ["Bass + Guide Tones", "Bass + Guide Tones"],
     "slash-bass-upper-structure": ["Slash Bass + Upper Structure", "Slash Bass + Upper Structure"],

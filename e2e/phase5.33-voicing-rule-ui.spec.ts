@@ -55,17 +55,17 @@ test("P5.33 exposes independent source/study axes and explains the active rule",
   await expect(controls.getByRole("button", { name: "Core", exact: true })).toHaveAttribute("aria-pressed", "true");
 
   const explanation = workspace.getByTestId("voicing-loop-current-explanation");
-  await expect(explanation).toContainText("Bass + Guide Tones");
+  await expect(explanation).toContainText("Family Core");
   await expect(explanation).toContainText("演奏用省略");
   await expect(explanation).toContainText("Candidate");
   await expect(explanation).not.toContainText("RULEP5.31-MIN11");
-  await expect(explanation).toContainText("RULEV04");
+  await expect(explanation).toContainText("RULEP5.33-GEN-CORE-MAJ7");
   await expect(explanation).toContainText("OMIT5");
   await expect(explanation).toContainText("TOPVoicing Top");
 
   await controls.getByRole("button", { name: "Teacher", exact: true }).click();
-  await expect(explanation).toContainText("Teacher Open");
-  await expect(explanation).toContainText("RULEV06");
+  await expect(explanation).toContainText("Teacher Style");
+  await expect(explanation).toContainText("RULEP5.33-GEN-TEACHER-MAJ7");
   await expect(explanation).toContainText("TOPTop Candidate");
   await expect(explanation).not.toContainText("Melody");
 
@@ -78,6 +78,21 @@ test("P5.33 exposes independent source/study axes and explains the active rule",
   await expect(explanation).toHaveText("Custom");
 });
 
+test("P5.33 supports all eight acceptance chords in every generalized Study", async ({ page }) => {
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  const workspace = await openRuleFixture(page);
+  const controls = workspace.getByTestId("voicing-loop-controls");
+
+  await expect(workspace.getByTestId("voicing-loop-event")).toHaveCount(8);
+  for (const study of ["Teacher", "Core", "Color", "Open"]) {
+    await controls.getByRole("button", { name: study, exact: true }).click();
+    await expect(workspace.getByText(/個のコードを再生できません/)).toHaveCount(0);
+    await expect(workspace.getByTestId("voicing-loop-transport").getByRole("button", {
+      name: "開始",
+      exact: true,
+    })).toBeEnabled();
+  }
+});
 test("P5.33 keeps one 88-key A0-C8 geometry across source and study changes", async ({ page }) => {
   await page.setViewportSize({ width: 1920, height: 1080 });
   const workspace = await openRuleFixture(page);

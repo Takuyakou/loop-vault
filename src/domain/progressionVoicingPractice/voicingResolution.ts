@@ -1,8 +1,8 @@
 import type { ChordSymbol } from "../types";
 import { labelFromSymbol } from "../chords";
 import {
-  generateFirstWaveCandidates,
-  type FirstWaveCandidate,
+  generateStudyCandidates,
+  type StudyGeneratedCandidate,
   type VoicingRuleContext,
   type VoicingStudyCategory,
 } from "../voicingRules";
@@ -64,7 +64,7 @@ export function resolveProgressionPracticeVoicings(
   }
 
   if (options.lessonStudyCategory && selection !== "left-hand") {
-    return resolveFirstWaveVoicings(
+    return resolveStudyVoicings(
       snapshot,
       options.lessonStudyCategory,
       options.lessonContext ?? { bass: "self-played", top: "normal-voicing-top" },
@@ -140,7 +140,7 @@ function resolveMyVoicing(
   });
 }
 
-function resolveFirstWaveVoicings(
+function resolveStudyVoicings(
   snapshot: ProgressionVoicingPracticeSnapshot,
   study: VoicingStudyCategory,
   context: VoicingRuleContext,
@@ -149,11 +149,11 @@ function resolveFirstWaveVoicings(
   const resolutions: ProgressionPracticeVoicingResolution[] = [];
   const candidateGroups: StyleVoicingCandidate[][] = [];
   const candidateIndexes: number[] = [];
-  const metadataByCandidate = new Map<StyleVoicingCandidate, FirstWaveCandidate>();
+  const metadataByCandidate = new Map<StyleVoicingCandidate, StudyGeneratedCandidate>();
   const factsByCandidate = new Map<StyleVoicingCandidate, CandidateFacts>();
 
   snapshot.events.forEach((event, eventIndex) => {
-    const candidates = generateFirstWaveCandidates(asChordSymbol(event.chord), study, context, options);
+    const candidates = generateStudyCandidates(asChordSymbol(event.chord), study, context, options);
     const resolved = candidates.flatMap((metadata) => {
       const facts = candidateFacts(
         asChordSymbol(event.chord),
@@ -182,7 +182,7 @@ function resolveFirstWaveVoicings(
     const facts = candidate ? factsByCandidate.get(candidate) : undefined;
     const group = candidateGroups[optimizedIndex] ?? [];
     resolutions[eventIndex] = candidate && metadata && facts
-      ? supportedFirstWaveResolution(
+      ? supportedStudyResolution(
           event,
           candidate,
           metadata,
@@ -197,10 +197,10 @@ function resolveFirstWaveVoicings(
   return freezePlan(snapshot, resolutions);
 }
 
-function supportedFirstWaveResolution(
+function supportedStudyResolution(
   event: ProgressionPracticeEvent,
   candidate: StyleVoicingCandidate,
-  metadata: FirstWaveCandidate,
+  metadata: StudyGeneratedCandidate,
   facts: CandidateFacts,
   context: VoicingRuleContext,
   candidateIndex: number,
