@@ -1,0 +1,36 @@
+{
+  "literal": [
+    {
+      "chord": "Eadd9/F#",
+      "added": [],
+      "omitted": []
+    },
+    {
+      "chord": "Dadd9/E",
+      "added": [],
+      "omitted": []
+    }
+  ],
+  "reduction": [
+    {
+      "chord": "Am11/B",
+      "omitted": [
+        "5"
+      ]
+    },
+    {
+      "chord": "Gmaj9/A",
+      "variant": "compact",
+      "omitted": [
+        "5"
+      ]
+    }
+  ],
+  "enrichment": [
+    {
+      "chord": "C13(#11)",
+      "rule": "upper-structure",
+      "note": "only if Color/enrichment is intentionally selected"
+    }
+  ]
+}

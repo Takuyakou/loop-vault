@@ -141,9 +141,9 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
   const wideLayout = layout !== "default";
 
   return (
-    <div className={wideLayout ? "flex min-h-0 flex-1 flex-col" : ""} data-match-state={matchState}>
+    <div className={wideLayout ? "min-w-0" : ""} data-match-state={matchState}>
       <div
-        className={`relative overflow-x-auto overflow-y-hidden border border-[var(--lv-border)] bg-[#09090b] p-2 ${wideLayout ? "min-h-0 flex-1 [@media(min-height:900px)]:min-h-[10rem]" : ""}`}
+        className="relative overflow-x-auto overflow-y-hidden border border-[var(--lv-border)] bg-[#09090b] p-2"
         role="region"
         aria-label={text.region}
         tabIndex={0}
@@ -170,7 +170,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
         ) : null}
         <div
           className={wideLayout
-            ? `h-full w-full ${layout === "wide-88" ? "min-w-[78rem]" : "min-w-[72rem]"}`
+            ? `w-full ${layout === "wide-88" ? "min-w-[78rem]" : "min-w-[72rem]"}`
             : centerWhenFitted ? "w-max min-w-full" : "w-max"}
           data-keyboard-alignment={centerWhenFitted ? "center-when-fitted" : "start"}
           data-keyboard-layout={layout}
@@ -182,7 +182,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
             width={wideLayout ? "100%" : geometry.width}
             height={KEYBOARD_HEIGHT}
             className={wideLayout
-              ? "block h-full min-h-0 max-h-[17rem] w-full max-w-none [@media(min-height:900px)]:min-h-[10rem]"
+              ? "block h-auto w-full max-w-none"
               : `block h-[clamp(6rem,13vw,8rem)] max-w-none ${centerWhenFitted ? "mx-auto" : ""}`}
             style={wideLayout ? undefined : { minWidth: `${geometry.width}px` }}
             preserveAspectRatio={wideLayout ? "xMidYMid meet" : "none"}

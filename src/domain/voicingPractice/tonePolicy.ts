@@ -155,7 +155,7 @@ export function pitchClassForDegreeLabel(
   if (label === "Bass") {
     return chord.bass === undefined ? undefined : normalizePitchClass(chord.bass);
   }
-  const interval = intervalForDegreeLabel(label);
+  const interval = intervalForDegreeLabel(label === "1" ? "R" : label);
   return interval === undefined ? undefined : normalizePitchClass(chord.root + interval);
 }
 

@@ -2,6 +2,7 @@ import { describe, expect, expectTypeOf, it } from "vitest";
 import { voiceChordForPreview } from "../chordVoicing";
 import { makeChordSymbol } from "../chords";
 import type { ChordTimelineItem } from "../types";
+import type { StyleVoicingCandidate } from "./candidateTools";
 import {
   adaptGeneratedCloseVoicing,
   findLowIntervalViolation,
@@ -103,20 +104,13 @@ describe("progression optimization", () => {
     expect(first.events.every((event) => event.styleId === "rootless-ab")).toBe(true);
   });
 
-  it("does not choose a transition more expensive than the first-candidate path", () => {
+  it("does not choose a cyclic path more expensive than the first-candidate loop", () => {
     const plan = generateStyleVoicingPlan(progression, "shell-17", options);
-    const selectedCost = plan.events.slice(1).reduce((sum, event, index) => (
-      sum + styleVoicingTransitionCost(
-        asCandidate(plan.events[index]),
-        asCandidate(event),
-      )
-    ), 0);
+    const selectedCost = cyclicTransitionCost(plan.events.map(asCandidate));
     const firstCandidates = progression.map((event) => (
       generateStyleCandidates(event.chord, "shell-17", options)[0]
     ));
-    const firstCost = firstCandidates.slice(1).reduce((sum, event, index) => (
-      sum + styleVoicingTransitionCost(firstCandidates[index], event)
-    ), 0);
+    const firstCost = cyclicTransitionCost(firstCandidates);
     expect(selectedCost).toBeLessThanOrEqual(firstCost);
   });
 
@@ -175,6 +169,14 @@ function width(notes: readonly number[]): number {
   return Math.max(...notes) - Math.min(...notes);
 }
 
+function cyclicTransitionCost(events: readonly StyleVoicingCandidate[]): number {
+  if (events.length < 2) return 0;
+  let cost = 0;
+  for (let index = 1; index < events.length; index += 1) {
+    cost += styleVoicingTransitionCost(events[index - 1], events[index]);
+  }
+  return cost + styleVoicingTransitionCost(events[events.length - 1], events[0]);
+}
 function asCandidate(event: ReturnType<typeof generateStyleVoicingPlan>["events"][number]) {
   return event;
 }

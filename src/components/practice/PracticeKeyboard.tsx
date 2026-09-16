@@ -93,7 +93,7 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
 
   const compactWideLayout = keyboardLayout !== "default";
   return (
-    <div className={compactWideLayout ? "flex h-full min-h-0 flex-col" : ""}>
+    <div className={compactWideLayout ? "min-w-0" : ""}>
       <PianoKeyboardVisualizer
         minMidiNote={range.minMidiNote}
         maxMidiNote={range.maxMidiNote}

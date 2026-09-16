@@ -1,6 +1,12 @@
 import type { ChordSymbol } from "../types";
 import { labelFromSymbol } from "../chords";
 import {
+  generateFirstWaveCandidates,
+  type FirstWaveCandidate,
+  type VoicingRuleContext,
+  type VoicingStudyCategory,
+} from "../voicingRules";
+import {
   chordToneDescriptors,
   generateStyleCandidates,
   getStyleCompatibility,
@@ -34,6 +40,8 @@ export interface ResolveProgressionPracticeVoicingsOptions {
   readonly maxLeftHandSpanSemitones?: number;
   readonly maxRightHandSpanSemitones?: number;
   readonly leftHandVariant?: "auto" | "A" | "B";
+  readonly lessonStudyCategory?: VoicingStudyCategory;
+  readonly lessonContext?: VoicingRuleContext;
 }
 
 /**
@@ -53,6 +61,15 @@ export function resolveProgressionPracticeVoicings(
   const selection = snapshot.selection;
   if (selection === "source-midi" || selection === "custom") {
     return freezePlan(snapshot, snapshot.events.map((event) => resolveMyVoicing(event, selection)));
+  }
+
+  if (options.lessonStudyCategory && selection !== "left-hand") {
+    return resolveFirstWaveVoicings(
+      snapshot,
+      options.lessonStudyCategory,
+      options.lessonContext ?? { bass: "self-played", top: "normal-voicing-top" },
+      candidateOptions,
+    );
   }
 
   const resolutions: ProgressionPracticeVoicingResolution[] = [];
@@ -114,10 +131,126 @@ function resolveMyVoicing(
       ...(event.voicing.bassNote === undefined ? {} : { bassNote: event.voicing.bassNote }),
       addedColorDegrees: Object.freeze([]),
       notes: noteFacts(event.chord, midiNotes, [], event.voicing.bassNote),
+      explanation: Object.freeze({
+        source: selection,
+        omittedDegrees: Object.freeze([]),
+        addedDegrees: Object.freeze([]),
+      }),
     }),
   });
 }
 
+function resolveFirstWaveVoicings(
+  snapshot: ProgressionVoicingPracticeSnapshot,
+  study: VoicingStudyCategory,
+  context: VoicingRuleContext,
+  options: { readonly maxLeftHandSpanSemitones: number; readonly maxRightHandSpanSemitones: number },
+): ProgressionPracticeVoicingPlan {
+  const resolutions: ProgressionPracticeVoicingResolution[] = [];
+  const candidateGroups: StyleVoicingCandidate[][] = [];
+  const candidateIndexes: number[] = [];
+  const metadataByCandidate = new Map<StyleVoicingCandidate, FirstWaveCandidate>();
+  const factsByCandidate = new Map<StyleVoicingCandidate, CandidateFacts>();
+
+  snapshot.events.forEach((event, eventIndex) => {
+    const candidates = generateFirstWaveCandidates(asChordSymbol(event.chord), study, context, options);
+    const resolved = candidates.flatMap((metadata) => {
+      const facts = candidateFacts(
+        asChordSymbol(event.chord),
+        metadata.candidate,
+        metadata.rule.leftDegrees,
+        metadata.rule.rightDegrees,
+      );
+      if (!facts) return [];
+      metadataByCandidate.set(metadata.candidate, metadata);
+      factsByCandidate.set(metadata.candidate, facts);
+      return [metadata.candidate];
+    });
+    if (resolved.length === 0) {
+      resolutions[eventIndex] = unsupportedRule(event.id);
+      return;
+    }
+    candidateGroups.push(resolved);
+    candidateIndexes.push(eventIndex);
+  });
+
+  const optimized = optimizeCandidateGroups(candidateGroups);
+  candidateIndexes.forEach((eventIndex, optimizedIndex) => {
+    const event = snapshot.events[eventIndex]!;
+    const candidate = optimized[optimizedIndex];
+    const metadata = candidate ? metadataByCandidate.get(candidate) : undefined;
+    const facts = candidate ? factsByCandidate.get(candidate) : undefined;
+    const group = candidateGroups[optimizedIndex] ?? [];
+    resolutions[eventIndex] = candidate && metadata && facts
+      ? supportedFirstWaveResolution(
+          event,
+          candidate,
+          metadata,
+          facts,
+          context,
+          Math.max(0, group.indexOf(candidate)) + 1,
+          group.length,
+        )
+      : generationError(event.id);
+  });
+
+  return freezePlan(snapshot, resolutions);
+}
+
+function supportedFirstWaveResolution(
+  event: ProgressionPracticeEvent,
+  candidate: StyleVoicingCandidate,
+  metadata: FirstWaveCandidate,
+  facts: CandidateFacts,
+  context: VoicingRuleContext,
+  candidateIndex: number,
+  candidateCount: number,
+): ProgressionPracticeVoicingResolution {
+  const midiNotes = Object.freeze([...candidate.allNotes]);
+  const selfPlayedBass = metadata.rule.requiredBassContext === "self-played"
+    ? candidate.leftHandNotes[0]
+    : undefined;
+  const referenceBassNote = metadata.rule.requiredBassContext === "external-bass"
+    ? separateBassRegister(event.chord.root, midiNotes)
+    : undefined;
+  const addedDegrees = Object.freeze([...metadata.rule.addedDegrees]);
+  return freezeResolution({
+    eventId: event.id,
+    status: "SUPPORTED",
+    voicing: freezeVoicing({
+      origin: "basic-full",
+      midiNotes,
+      ...(selfPlayedBass === undefined ? {} : { bassNote: selfPlayedBass }),
+      ...(referenceBassNote === undefined ? {} : { referenceBassNote }),
+      leftHandNotes: Object.freeze([...candidate.leftHandNotes]),
+      rightHandNotes: Object.freeze([...candidate.rightHandNotes]),
+      ...(candidate.variant === "A" || candidate.variant === "B" ? { variant: candidate.variant } : {}),
+      addedColorDegrees: addedDegrees,
+      notes: noteFacts(event.chord, midiNotes, addedDegrees, selfPlayedBass, facts.degreeByMidiNote),
+      explanation: Object.freeze({
+        source: "lesson-rules",
+        study: metadata.rule.study,
+        identity: Object.freeze({
+          ruleId: metadata.rule.id,
+          family: metadata.rule.family,
+          variantId: metadata.rule.variantId,
+        }),
+        coverage: metadata.rule.coverage,
+        context: Object.freeze({
+          ...context,
+          bass: metadata.rule.requiredBassContext,
+          top: metadata.rule.topRole,
+        }),
+        provenance: metadata.rule.provenance,
+        omittedDegrees: Object.freeze([...metadata.rule.omittedDegrees]),
+        addedDegrees,
+        topRole: metadata.rule.topRole,
+        candidateIndex,
+        candidateCount,
+      }),
+    }),
+  });
+}
 type CandidateResult =
   | { readonly status: "SUPPORTED"; readonly candidates: ResolvedCandidate[] }
   | { readonly status: "UNSUPPORTED_RULE" }
@@ -332,6 +465,29 @@ function supportedLessonResolution(
         bassNote,
         facts.degreeByMidiNote,
       ),
+      explanation: Object.freeze({
+        source: "lesson-rules",
+        study: "core",
+        identity: Object.freeze({
+          ruleId: "legacy-" + selection,
+          family: selection === "left-hand" ? "bass-guide-tones" : "characteristic-core",
+          variantId: candidate.variant ?? "default",
+        }),
+        coverage: candidate.addedColorIntervals.length > 0
+          ? "creative-enrichment"
+          : candidate.omittedIntervals.length > 0
+            ? "performance-reduction"
+            : "literal",
+        context: Object.freeze({ bass: "self-played", top: "normal-voicing-top" }),
+        provenance: Object.freeze({
+          kind: "legacy-product-rule",
+          sourceIds: Object.freeze([]),
+          note: "Existing approved product rule retained at the compatibility boundary.",
+        }),
+        omittedDegrees: Object.freeze([...candidate.omittedIntervals]),
+        addedDegrees: addedColorDegrees,
+        topRole: "normal-voicing-top",
+      }),
     }),
   });
 }
@@ -375,11 +531,11 @@ function noteFacts(
     midiNote,
     pitchClass: pitchClass(midiNote),
     octave: Math.floor(midiNote / 12) - 1,
-    degree: exactSlashBassNote === midiNote
-      ? "Bass"
-      : approvedDegreeByMidiNote?.get(midiNote)
-        ?? degreeByPitchClass.get(pitchClass(midiNote))
-        ?? null,
+    degree: approvedDegreeByMidiNote?.get(midiNote)
+      ?? (exactSlashBassNote === midiNote
+        ? "Bass"
+        : degreeByPitchClass.get(pitchClass(midiNote))
+          ?? null),
   })));
 }
 

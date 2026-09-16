@@ -32,9 +32,40 @@ export function progressionVoicingPracticeE2eFixture(search: string): Progressio
   if (status === "both-hands-long") {
     return oneSelection("source-midi", snapshot("source-midi", "maj7", true, true, 12));
   }
+  if (status === "p533-rules") {
+    return {
+      snapshots: {
+        "source-midi": p533Snapshot("source-midi", true),
+        custom: p533Snapshot("custom", true),
+        "basic-full": p533Snapshot("basic-full", false),
+      },
+      initialSelection: "basic-full",
+    };
+  }
   return oneSelection("source-midi", snapshot("source-midi", "maj7", true));
 }
 
+function p533Snapshot(
+  selection: "source-midi" | "custom" | "basic-full",
+  includeVoicing: boolean,
+): ProgressionVoicingPracticeSnapshot {
+  const base = snapshot(selection, "maj7", includeVoicing, true);
+  return Object.freeze({
+    ...base,
+    fingerprint: `p533-e2e-${selection}`,
+    events: Object.freeze(base.events.map((event, index) => Object.freeze({
+      ...event,
+      chord: Object.freeze({ root: 2, quality: "min7" as const, tensions: Object.freeze([]), label: "Dm7" }),
+      ...(includeVoicing ? {
+        voicing: Object.freeze({
+          kind: selection as "source-midi" | "custom",
+          midiNotes: Object.freeze(index === 0 ? [50, 57, 60, 65] : [50, 60, 65, 69]),
+          bassNote: 50,
+        }),
+      } : { voicing: undefined }),
+    }))),
+  });
+}
 function oneSelection(
   selection: ProgressionVoicingSelection,
   value: ProgressionVoicingPracticeSnapshot,

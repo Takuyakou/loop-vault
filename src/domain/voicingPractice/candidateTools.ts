@@ -8,11 +8,10 @@ import { findLowIntervalViolation } from "./lowIntervalLimit";
 import type {
   GeneratedVoicingStyleId,
   StyleVoicingWarning,
-  VoicingStyleId,
 } from "./types";
 
 export interface StyleVoicingCandidate {
-  styleId: GeneratedVoicingStyleId;
+  styleId: GeneratedVoicingStyleId | "lesson-v2";
   leftHandNotes: number[];
   rightHandNotes: number[];
   allNotes: number[];
@@ -31,7 +30,7 @@ export interface CandidateBuildOptions {
 
 export function enumerateSplitCandidates(
   chord: ChordSymbol,
-  styleId: VoicingStyleId,
+  styleId: GeneratedVoicingStyleId | "lesson-v2",
   leftPitchClasses: readonly number[],
   rightPitchClasses: readonly number[],
   metadata: Omit<StyleVoicingCandidate,

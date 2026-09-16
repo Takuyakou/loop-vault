@@ -1,4 +1,5 @@
 import type { ChordQuality, Tension } from "../types";
+import type { VoicingRuleExplanation } from "../voicingRules";
 
 export const PROGRESSION_VOICING_PRACTICE_SNAPSHOT_VERSION = 1 as const;
 
@@ -106,6 +107,7 @@ export interface ResolvedProgressionPracticeVoicing {
   readonly variant?: "A" | "B";
   readonly addedColorDegrees: readonly string[];
   readonly notes: readonly ProgressionVoicingNoteFact[];
+  readonly explanation?: VoicingRuleExplanation;
 }
 
 export type ProgressionPracticeVoicingResolution =

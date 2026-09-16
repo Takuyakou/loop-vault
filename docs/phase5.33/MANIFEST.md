@@ -1,0 +1,49 @@
+# MANIFEST
+
+Files retained before manifest: 45 (one protected binary intake excluded from Git)
+
+- `00-run-remaining-prompt.md` — SHA-256 `8fee77e443770623cd564cf690fe2f6b0632d749ee2ea5902a6766949b493d20`
+- `00-start-prompt.md` — SHA-256 `03c19da3a9c6912a060001fd6e5c14c3b1e3adc3b508a674dc76c69ce49c3b84`
+- `P5.33-design.md` — SHA-256 `03eee7c02714e6e7c05fa58e2bdc2d53c0e4af1b54856fb7a2f72f2af7717117`
+- `P5.33-execution-state.json` — SHA-256 `b719fb792c0cb05db4069faab0a90f339d1effcc01236f16ac090dbaaebcb350`
+- `P5.33-human-acceptance-checklist.md` — SHA-256 `247215bfcbf95b8452d64ea34a6488a1cb3befd175a6838fe9b7dd05c7cbc423`
+- `P5.33-work-instructions.md` — SHA-256 `867b338314d3a55a971992369019f8bd5476c66de44341bc92681eb6b9d2916b`
+- `README.md` — SHA-256 `4d34ca51560a29f2487dd94fffd321b32b17778093d48c0e83df7347ee883e71`
+- `contracts/01-research-promotion-contract.md` — SHA-256 `be0590d663786f24612866ec5910513349ce7c88da25aaca86a816219d07105d`
+- `contracts/02-domain-axes-contract.md` — SHA-256 `31b1f61dde6ecc82d42f9a3e16f4da0f1aaa79dcd3a6d43d588968f7758796ff`
+- `contracts/03-source-exactness-contract.md` — SHA-256 `22f078578e424213b291aaa04c41e4d08858cc11d4e7897301adbd2869cb11e1`
+- `contracts/04-coverage-contract.md` — SHA-256 `94807c9914fd677e2038000e1524d42056a7376a268f91511b93ac8dbedecbb9`
+- `contracts/05-slash-contract.md` — SHA-256 `eb7b1eb16baf4d7845b9fb2bd9a0c9624bdcc2908d0419b1dc5c8271aade8d49`
+- `contracts/06-characteristic-tone-contract.md` — SHA-256 `25358953a5370d0f21dc7af49ca22896cafba27b9ac995a6007e95553ce828cc`
+- `contracts/07-teacher-provenance-contract.md` — SHA-256 `5d32cde06e1580eb1f1454e25775ddcbbe7b996ba4bd53a8e0a95db083d1edeb`
+- `contracts/08-candidate-ranking-contract.md` — SHA-256 `39a1c80fd79577f124d6eb6325a4413f2084cac147d60816a5cdf7d2fd640290`
+- `contracts/09-fingering-boundary-contract.md` — SHA-256 `bd693b4737c9fae990429affde28d9540d5e4814478eff3c29d4368357f94674`
+- `contracts/10-adopted-ui-contract.md` — SHA-256 `3d42faa2a3079dab9486ea3f258d4c5158fa948d50bd94967c3745cc7c5fd9bf`
+- `contracts/11-current-explanation-contract.md` — SHA-256 `2a7cbfc0f97ba3ab52e39b537372d3303dd84fcdca656e28ed60bb8bf67e4ffd`
+- `contracts/12-no-scroll-and-protected-ui.md` — SHA-256 `36953f12d0ecbd270a23aeaa6c91a4d531a268e98df11c6ab095299b11242951`
+- `contracts/13-no-scoring-schema-security.md` — SHA-256 `ba6ab8be0e253b9728558fcdc92893c7992c0a791e652e188507d1e77418242c`
+- `contracts/14-git-discipline.md` — SHA-256 `2e5395345885630fd7c0480b62c60b60c00e1b5c7fb3ee800afd0116af615437`
+- `contracts/15-keyboard-transport-layout-contract.md` — SHA-256 `a95f85a4bd81b191a460e9e170e103ec1dc24e8f42ef0182672fabaf60f981a9`
+- `fixtures/coverage-examples.json` — SHA-256 `742477ff49910decadd1ce34d256c374ad72dafc28e5c76e1c97d0374d274d27`
+- `fixtures/semantic-first-wave.md` — SHA-256 `b7b039ab135dab09e03a4021487c6beffe3bf7990f485024b293218394e51f5d`
+- `fixtures/ui-adopted-top.md` — SHA-256 `5c1e181bdf5eef9933299cbb53c8cde6702fd3c9adf455f36ab4c9786c3d79ea`
+- `references/RESEARCH-PROMOTION-NOTES.md` — SHA-256 `4d24c7577bd944d0df0d45ef3c64d825604ba6784e46a99efc66ed2c37a7bf07`
+- `references/research/RULE-INDEX.md` — SHA-256 `b0a88260f1d0bd94d0988f1c0b230caca7e8c2afd8301325e63cd3b0c7e9c605`
+- `references/research/voicing_rules_33.json` — SHA-256 `75f8190c666d8ef5f353305937c7b65755475908245967991a24658038da673b`
+- `references/research/作曲用Voicing — Rulebook.html` — SHA-256 `00fc245c5579359e114f447a65c0c09bb55197070f3a120ccdea08278e0510d5`
+- `references/ui/ADOPTED-UI-SCOPE.md` — SHA-256 `aa9dcff035f8c4c8b688e2e39ff72c4fb2eb7ab75b4e933010dd9abf10201a1b`
+- `references/ui/adopted-top-region.png` — SHA-256 `ec5d1380f30cb44eba9e8df3cffd93c546541dba40ebf8c3bd7c012892e876bb`
+- `references/ui/keyboard-transport-current-issue.png` — SHA-256 `2cdf6802023c24e90732fac5ed1e2682e7953de8cc19e213f2af67c088cc21c4`
+- `references/ui/voicing-loop-research-architecture-mock.html` — SHA-256 `72108693fffe09e4dad05fb15ee1c1115f28cca3703ace969329c9cebdd2d806`
+- `reports/P5.33-00-report.md` — SHA-256 `bbc50b445b662679907b4a9b8fd2cb277f74b539603e2f1d6bbf19905039ef66`
+- `reports/P5.33-01-report.md` — SHA-256 `1b3b20f7de98ec1fc4ddd2aa5de34a335022e2ad2b23ace38e1419c12ca18883`
+- `reports/P5.33-02-report.md` — SHA-256 `b58917729c6b8772cb37638a262a2ddada76fffa2b316f85686202c894e6304f`
+- `reports/P5.33-03-report.md` — SHA-256 `53c24f4820d7833cb4f4b680cd73bd95a0cabc15669f0070e5c646845522c849`
+- `reports/P5.33-04-report.md` — SHA-256 `aa94c09deec6dbad68d2b7540ced9dbf063438c2ac472e9728b61bd25f1a7817`
+- `reports/P5.33-05-report.md` — SHA-256 `43b46108ca17c166e3441e0b8c3713eed3bc828ccf0284cf8f1ab7c208ae22db`
+- `stages/P5.33-00-audit.md` — SHA-256 `9ea0e9b9d30ba1128fc6ae98cae75586eca256180adbc64d305e220bf8a93959`
+- `stages/P5.33-01-domain-golden-corpus.md` — SHA-256 `3080332832be0ca3ad65c2aa8e324097ae9d7331d14545ad2289a685f54c1440`
+- `stages/P5.33-02-first-wave-rules.md` — SHA-256 `adbc3b7554cae1a8eef42216db13781eafdb085684a81a96ad71ed18c95a7225`
+- `stages/P5.33-03-candidates-voice-leading.md` — SHA-256 `6bbd4563234f8956c2fae6bfee12d9701ca7d5e98b6d2348bcf4b75568a4d9c9`
+- `stages/P5.33-04-adopted-upper-ui.md` — SHA-256 `ac2bddf784bd29721cf72771f55ea2c2614f7264310135420d4fc30c181022ae`
+- `stages/P5.33-05-hardening-acceptance.md` — SHA-256 `5a405d2361acb3eaef3c6cda70f3417773b7d03c96ac1e65ebc677ece6be90a5`
