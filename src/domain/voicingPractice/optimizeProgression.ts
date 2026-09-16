@@ -116,6 +116,9 @@ function toGeneratedVoicing(
   index: number,
   candidate: StyleVoicingCandidate,
 ): GeneratedStyleVoicing {
+  if (candidate.styleId === "lesson-v2") {
+    throw new Error("lesson-v2 candidates cannot be persisted as legacy style voicings");
+  }
   return {
     eventId: event.eventId ?? `style-event-${index}`,
     chordKey: normalizedChordKey(event.chord),
