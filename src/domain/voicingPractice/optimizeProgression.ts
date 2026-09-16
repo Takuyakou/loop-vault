@@ -93,22 +93,30 @@ export function optimizeCandidateGroups(
   candidateGroups: readonly StyleVoicingCandidate[][],
 ): StyleVoicingCandidate[] {
   if (candidateGroups.length === 0) return [];
-  let states = candidateGroups[0].map((candidate) => ({
-    cost: styleVoicingStartCost(candidate),
-    path: [candidate],
-  }));
-
-  for (let groupIndex = 1; groupIndex < candidateGroups.length; groupIndex += 1) {
-    const group = candidateGroups[groupIndex];
-    states = group.map((candidate) => {
-      const paths = states.map((state) => ({
-        cost: state.cost + styleVoicingTransitionCost(last(state.path), candidate),
-        path: [...state.path, candidate],
-      }));
-      return paths.sort(comparePathState)[0];
-    });
+  if (candidateGroups.length === 1) {
+    return candidateGroups[0]
+      .map((candidate) => ({ cost: styleVoicingStartCost(candidate), path: [candidate] }))
+      .sort(comparePathState)[0]?.path ?? [];
   }
-  return states.sort(comparePathState)[0]?.path ?? [];
+
+  const completed: PathState[] = [];
+  for (const start of candidateGroups[0]) {
+    let states: PathState[] = [{ cost: styleVoicingStartCost(start), path: [start] }];
+    for (let groupIndex = 1; groupIndex < candidateGroups.length; groupIndex += 1) {
+      states = candidateGroups[groupIndex].map((candidate) => {
+        const paths = states.map((state) => ({
+          cost: state.cost + styleVoicingTransitionCost(last(state.path), candidate),
+          path: [...state.path, candidate],
+        }));
+        return paths.sort(comparePathState)[0]!;
+      });
+    }
+    completed.push(...states.map((state) => ({
+      cost: state.cost + styleVoicingTransitionCost(last(state.path), start),
+      path: state.path,
+    })));
+  }
+  return completed.sort(comparePathState)[0]?.path ?? [];
 }
 
 function toGeneratedVoicing(
