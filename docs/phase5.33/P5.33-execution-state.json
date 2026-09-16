@@ -1,0 +1,22 @@
+{
+  "phase": "5.33",
+  "status": "active",
+  "active_stage": "P5.33-00",
+  "completed_stages": [],
+  "base_commit": null,
+  "branch": null,
+  "research_runtime_import_authorized": false,
+  "schema_change_authorized": false,
+  "merge_authorized": false,
+  "push_authorized": false,
+  "release_authorized": false,
+  "next_phase_authorized": false,
+  "notes": [
+    "Research JSON is a Golden Corpus / promotion source, not runtime truth.",
+    "Only the upper UI region from the research mock is adopted.",
+    "Sidebar/progression/keyboard/transport production layout remains protected.",
+    "Git is truth for exact P5.32 follow-up state.",
+    "Keyboard is now an explicit P5.33 normalization surface: fixed 88 keys A0-C8 in every mode/source.",
+    "Remove keyboard dead black space and reallocate height to larger Transport controls; no transport semantic changes."
+  ]
+}

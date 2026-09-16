@@ -1,0 +1,803 @@
+<!doctype html><html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>作曲用Voicing — 33 Rule Records</title><style>
+:root{color-scheme:light;--ink:#172b3b;--muted:#516373;--line:#dbe3e8;--accent:#186f70;--paper:#f3f6f7}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.85 system-ui,-apple-system,"Yu Gothic UI","Meiryo",sans-serif}header{background:#142d3c;color:white;padding:36px max(24px,calc((100vw - 1080px)/2));}header .eyebrow{color:#9ed7cd;letter-spacing:.16em;font-size:12px}header h1{font-size:clamp(25px,4vw,42px);margin:7px 0}header p{margin:0;max-width:860px}nav{position:sticky;top:0;background:#fffffff5;border-bottom:1px solid var(--line);padding:12px 24px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;z-index:3}nav a{font-size:14px;color:var(--accent)}input{font:inherit;padding:8px 12px;border:1px solid #afbec7;border-radius:6px;min-width:220px;max-width:100%}main{max-width:1080px;margin:24px auto;background:white;padding:24px 44px 64px;border:1px solid var(--line);border-radius:10px}h1{font-size:27px}h2{border-top:3px solid var(--accent);padding-top:18px;margin-top:48px;scroll-margin-top:96px}h3{background:#edf4f4;padding:10px 14px;margin-top:30px;border-radius:5px;font-size:19px;scroll-margin-top:96px}p{margin:10px 0;overflow-wrap:anywhere}main,h1,h2,h3{overflow-wrap:anywhere}button{font:inherit;padding:7px 13px;border:1px solid #afbec7;border-radius:6px;background:#edf4f4;cursor:pointer}li{margin:6px 0;overflow-wrap:anywhere}a{color:#126c78}strong{color:#143e50}code{background:#edf1f4;padding:2px 5px;border-radius:3px}.hint{font-size:13px;color:#617582}footer{max-width:1080px;margin:0 auto 32px;padding:0 24px;color:var(--muted);font-size:13px}@media(max-width:650px){main{padding:18px;margin:8px;border-radius:0}nav{position:static;padding:12px}header{padding:25px 20px}h3{font-size:17px}}@media print{nav,header{position:static}nav{display:none}body,main{background:white;border:0}main{max-width:none;padding:0}h2,h3{break-after:avoid}a{color:inherit;text-decoration:none}p{orphans:3;widows:3}}
+</style><header><div class="eyebrow">COMPOSITION / VOICING / IMPLEMENTATION</div><h1>作曲用Voicing — Rulebook</h1><p>33の実装候補、先生資料の目視監査、16の受入テスト仕様。<br>音の出所・構成音・左右の分担・音域・声部進行を分離して扱う設計。</p></header><nav><input id="q" type="search" placeholder="本文を検索：例 Gmaj9/A"><button id="find" type="button">次を検索</button><span class="hint">Ctrl+Fでも検索できます。記載の指番号は候補です。</span></nav><main><h1>作曲用Voicing：実装候補33ルール</h1>
+<p>研究・設計提案。Loop Vault現行スキーマ互換を意味しない。実装・マージ・実機テストは未実施。</p>
+<h2>読み方</h2>
+<p>C4=MIDI60。音は低い順。指番号は1=親指、2=人差し指、3=中指、4=薬指、5=小指。L/Rは左右。</p>
+<p>全具体例の音高・オクターブ・運指は今回の提案です。先生資料の逐音転記ではありません。理論構造の出典と分けてください。</p>
+<p>「省略なし」は音名集合の被覆です。実際に聴こえる声部、重複、音域、機能まで同一であるという意味ではありません。</p>
+<h2>重要な訂正・判定</h2>
+<ul>
+<li><p>Eadd9/F# = LH F# + RH E,G#,Bで全構成音を満たす。add9には7thを自動追加しない。</p>
+</li>
+<li><p>Gmaj9/A = LH A + RH G,B,F#はD(5)省略。Dがないため厳密なA13sus4ではない。</p>
+</li>
+<li><p>Am11/BのBは9th。基本三和音／7th coreの外でも、拡張和音の外音ではない。</p>
+</li>
+<li><p>Shellの語義は教材で違う。指番号ではなく具体的な度数式を実装上の契約にする。</p>
+</li>
+<li><p>Slash Bassを低音として鳴らすことと、機能Rootと認定することは別。</p>
+</li>
+</ul>
+<h2>先生資料の目視抽出</h2>
+<h3>T01：1.jfif p.1 — オープン・ヴォイシング（シンプルな形）</h3>
+<p>[先生資料由来] LHにRootと7系の音、RHに3度とMelodyを配する図。major7はRootの半音下、7/m7/m7b5は半音2つ下、dim7/6は半音3つ下という算出メモ。</p>
+<p>[今回の分析・推論] dim7の減7度と6の長6度は異なる度数。ピッチクラスが一致することと和声機能は別。</p>
+<p>未確認：具体的なオクターブ、必須の指番号、Shellという呼称。</p>
+<p>確信度：高</p>
+<h3>T03：3.jpg p.1 — 分数コード・onコード</h3>
+<p>[先生資料由来] A on B = A/B。右手はAのコードから数音を選ぶ、BassはBを指定という説明。Ab/Bb（Melodyソ）、C/E（Melodyレ）の例。</p>
+<p>[今回の分析・推論] RHにXの全音を入れる義務を資料自体が課していない。旋律は別レイヤーとして考えている。</p>
+<p>未確認：全Slashに対する省略優先順位、各音の具体的指番号。</p>
+<p>確信度：高</p>
+<h3>T04：4.jpg p.1 — テンション9th</h3>
+<p>[先生資料由来] maj7/m7はRHにRootの全音上、3、Melody、LHに1/7。7の欄ではRH追加音がRootの半音上と書かれている。</p>
+<p>[今回の分析・推論] 後者は数学的にはb9。全てのDominantを常にb9にする規則とは断定できない。</p>
+<p>未確認：7欄のb9がこの課題限定なのか、説明上の代表例なのか。</p>
+<p>確信度：高（記載）／中（意図）</p>
+<h3>T08：8.jpg p.1 — ポリコード ○7</h3>
+<p>[先生資料由来] RH三和音候補に#Im、VI、VIm、bVI、#IVm、bV、II。LHに1/7または1/3/7の図。C7の上にC#mの例。</p>
+<p>[今回の分析・推論] 実装ではDominant Shell + Upper Structure Triadとして扱える。教師の表記名ポリコードも保持する。</p>
+<p>未確認：全候補を全Dominantで常に使用するという指示、固定の転回形や指。</p>
+<p>確信度：高</p>
+<h3>T09：9.pdf p.1 — ウラコード</h3>
+<p>[先生資料由来] G7とDb7の3/7の共通性、Dm7–G7–Cmaj7と置換例を記載。</p>
+<p>[今回の分析・推論] コード置換はReharmonization。Voicingの配置変更とは別の処理として保存する。</p>
+<p>未確認：どの曲でも同じ置換を採用する規則。</p>
+<p>確信度：高</p>
+<h3>T16：スクリーンショット 2023-04-16 115446.png p.1 — ii–V–Iと分数コードの比較</h3>
+<p>[先生資料由来] Dm7–G7–C△、Dm7–F/G–C△、G7/F→C/E、Dm7/C、G/B等。下段にAbm/G7とD/C7をポリコードと記載。</p>
+<p>[今回の分析・推論] Bassが変わる転回・ペダル的構造と、下段も和音であるポリコードをUI上で区別する必要がある。</p>
+<p>未確認：各例の全構成音・音域・運指。</p>
+<p>確信度：高</p>
+<h3>T23：レッスンノート11-13-5.pdf p.1 — 下段：レフトハンドヴォイシング L.H.</h3>
+<p>[先生資料由来] C7～F7は下から3、7、b9/自然9/#9。F#7～B7は下から7、3、b13/自然13。</p>
+<p>[今回の分析・推論] Guide Tones + Colorの3音型。4音Rootless全般やA/B唯一の定義とは区別する。</p>
+<p>未確認：Root範囲による区分を選ぶ具体的な音域・前後進行の条件。</p>
+<p>確信度：高（図式）／中（選択条件）</p>
+<h3>T27：レフトハンドボイシング.pdf p.1 — コード種別ごとの操作メモ</h3>
+<p>[先生資料由来] m7とmajorの欄にRootを全音上げる操作。7はT23と同様の9/13の3音型。m7b5はそのまま／3を全音上げる、dim7はそのまま／Top Noteを全音上げるという別図。</p>
+<p>[今回の分析・推論] Root→9の置換は確認できるが、全てを同じrootless型に分類してはいけない。m7b5の3の変更はコア省略を伴うため課題文脈の確認が必要。</p>
+<p>未確認：major欄の第2操作の完全な文字判読と適用意図。全図のオクターブを断定した逐音採譜。</p>
+<p>確信度：高（判読部分）／低（未判読の操作）</p>
+<h3>T28：レフトハンドボイシングその1.pdf p.1 — Just the Two of Us の練習用コード譜</h3>
+<p>[先生資料由来] 曲の旋律・コードを用いた適用資料。</p>
+<p>[今回の分析・推論] ファイル名だけから全コードの具体的なLH/RH配置は復元しない。</p>
+<p>未確認：全小節の確定Voicingと運指。</p>
+<p>確信度：高（資料種別）</p>
+<h3>T29：レフトハンドボイシングその2.pdf p.1 — Feel Like Makin' Love の練習用コード譜</h3>
+<p>[先生資料由来] 旋律・コードとAb/Bb等のSlashを含む適用資料。</p>
+<p>[今回の分析・推論] 同じ進行・旋律を使ってVoicingを比較する学習に利用可能。ただし今回の配置提案は別物。</p>
+<p>未確認：全小節の確定Voicingと運指。</p>
+<p>確信度：高（資料種別）</p>
+<h2>実装の契約（提案）</h2>
+<ul>
+<li><p>Source MIDI / Customは生成Familyではなく出所。元の音高・オクターブ・時刻・重複を保ち、変換は別Variantへ明示コピーする。</p>
+</li>
+<li><p>指定Bass、固定Melody、可聴の外部パートを含む構成音被覆をHard Constraint候補として扱う。架空のBass補完でPASSにしない。</p>
+</li>
+<li><p>Literal / Performance reduction / Creative enrichmentを分離。省略音と追加音を説明に残す。</p>
+</li>
+<li><p>Slash BassはupperRootを置換しない。Bass起点の別解釈は候補メタデータに留める。</p>
+</li>
+<li><p>Closed/Open/Drop2、左右分担、A/B、出所、コード種別を単一enumへ混在させない。</p>
+</li>
+<li><p>Drop2は指定された上声4音群の上から2番目だけを1oct下げる。Bass制約が壊れる候補は拒否する。</p>
+</li>
+<li><p>音域・最大手幅・音色・運指候補・近接コードを別途評価。C4=MIDI60で内部処理し表示オクターブの差に依存しない。</p>
+</li>
+<li><p>候補間最適化は途中の遷移だけでなく、Loop末尾→先頭も評価。最小距離だけを音楽の唯一の正しさにしない。</p>
+</li>
+<li><p>Bass+5th追加はSlashでは和声の変更になり得る。Eadd9/F#へC#を加えれば別の構成音が増える。</p>
+</li>
+<li><p>手指推定は候補とConfidenceを返す。MIDIだけから実演奏者の指を確定しない。</p>
+</li>
+<li><p>Reharmonization（裏コード等）はVoicingの変更とは別に履歴保存する。</p>
+</li>
+<li><p>既存Source/Custom fail-closed、unsupportedとgeneration-errorの分離、single-clock、無採点の保護仕様を保持する。</p>
+</li>
+</ul>
+<p>Melodyは独立レイヤー。指定Chord Toneの被覆には使えるが、短い非和声音を全てコード記号へ追加しない。C/E上のD旋律が常にCadd9/Eへの改名を要求するわけではない。</p>
+<h2>Rule Records</h2>
+<h3>V01 — Bass + Triad / inversion</h3>
+<p><strong>Voicing Family:</strong> Bass + Triad / inversion</p>
+<p><strong>Chord Family:</strong> major triad</p>
+<p><strong>Example Chord:</strong> C/E</p>
+<p><strong>Bass Context:</strong> 自分でBass。Eを最低音に保つ</p>
+<p><strong>LEFT HAND:</strong> E3（3、MIDI 52）</p>
+<p><strong>RIGHT HAND:</strong> G3（5、MIDI 55） / C4（1、MIDI 60） / E4（3、MIDI 64）</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root C; Bass自身を自動的にRootにしない。省略：なし。外部音：担当なし／別パート</p>
+<p><strong>Register:</strong> LH E3–E3、RH G3–E4。手内最大幅 {'LH': 0, 'RH': 9} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5 / RH R1-R3-R5（候補）。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> Top E4。転回でG/Cにも変更可</p>
+<p><strong>Voice-leading rule:</strong> 次のFではE→F、G→A、C保持などを候補化。Bass線は別に設計。</p>
+<p><strong>When to use:</strong> 転回形とBass線の差を聴く。Pop作曲の基本。</p>
+<p><strong>When NOT to use:</strong> Bass指定を無視してCをEより下に加える場合。</p>
+<p><strong>Slash Chord handling:</strong> Yが構成音でも必ずRHから除くわけではない。ここではEを重複。</p>
+<p><strong>Source / Evidence:</strong> T03, W07。A/Bで指定したBassとRHの音選択を分離する。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V02 — Bass + sixth core</h3>
+<p><strong>Voicing Family:</strong> Bass + sixth core</p>
+<p><strong>Chord Family:</strong> major sixth</p>
+<p><strong>Example Chord:</strong> C6</p>
+<p><strong>Bass Context:</strong> Bass自己担当</p>
+<p><strong>LEFT HAND:</strong> C3（1、MIDI 48）</p>
+<p><strong>RIGHT HAND:</strong> E4（3、MIDI 64） / A4（6、MIDI 69）</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root C; Bass自身を自動的にRootにしない。省略：G。外部音：担当なし／別パート</p>
+<p><strong>Register:</strong> LH C3–C3、RH E4–A4。手内最大幅 {'LH': 0, 'RH': 5} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5 / RH R1-R5。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> Top A4=6を保持または進行に合わせる</p>
+<p><strong>Voice-leading rule:</strong> 6をmaj7へ勝手に変えず、次のコードへの最短候補を比較。</p>
+<p><strong>When to use:</strong> 7thを足さずに6thの響きを確認する。</p>
+<p><strong>When NOT to use:</strong> maj7指定への無断代用。完全な5thを必要とする教材の厳密モード。</p>
+<p><strong>Slash Chord handling:</strong> Slash時はYを優先し、3/6の被覆を全パートで確認。</p>
+<p><strong>Source / Evidence:</strong> W01。コア3/6を使う今回の省略例。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V03 — Slash Bass covers 9 + RH triad</h3>
+<p><strong>Voicing Family:</strong> Slash Bass covers 9 + RH triad</p>
+<p><strong>Chord Family:</strong> major add9</p>
+<p><strong>Example Chord:</strong> Eadd9/F#</p>
+<p><strong>Bass Context:</strong> Bass自己担当</p>
+<p><strong>LEFT HAND:</strong> F#2（9、MIDI 42）</p>
+<p><strong>RIGHT HAND:</strong> E4（1、MIDI 64） / G#4（3、MIDI 68） / B4（5、MIDI 71）</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root E; Bass自身を自動的にRootにしない。省略：なし。外部音：担当なし／別パート</p>
+<p><strong>Register:</strong> LH F#2–F#2、RH E4–B4。手内最大幅 {'LH': 0, 'RH': 7} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5 / RH R1-R3-R5。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> Top B4=5</p>
+<p><strong>Voice-leading rule:</strong> Gmaj9/AのF#4-G4-B4へ：E→F#、G#→G、B保持。</p>
+<p><strong>When to use:</strong> 右手を3音に保ち、add9の全音を左右合算で満たす。</p>
+<p><strong>When NOT to use:</strong> Rootless自動化でEを消す、D#を追加してmaj9化する、Bassの5度C#を無断追加する場合。</p>
+<p><strong>Slash Chord handling:</strong> F#は9を既に担当。RHへのF#重複は任意。E/F#と同じPitch Classだが元表記を保持。</p>
+<p><strong>Source / Evidence:</strong> T03, W07, W18。E,G#,B,F#の4 Pitch Classesを全て含むことを検算。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V04 — Bass + RH Guide Tones</h3>
+<p><strong>Voicing Family:</strong> Bass + RH Guide Tones</p>
+<p><strong>Chord Family:</strong> minor seventh</p>
+<p><strong>Example Chord:</strong> Dm7</p>
+<p><strong>Bass Context:</strong> Bass自己担当</p>
+<p><strong>LEFT HAND:</strong> D3（1、MIDI 50）</p>
+<p><strong>RIGHT HAND:</strong> F4（b3、MIDI 65） / C5（b7、MIDI 72）</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root D; Bass自身を自動的にRootにしない。省略：A。外部音：担当なし／別パート</p>
+<p><strong>Register:</strong> LH D3–D3、RH F4–C5。手内最大幅 {'LH': 0, 'RH': 7} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5 / RH R1-R5。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> C5をB4へ導く</p>
+<p><strong>Voice-leading rule:</strong> G7ではF4保持、C5→B4。次のCmaj7ではF→E、B保持。</p>
+<p><strong>When to use:</strong> 和声の骨格とVoice Leadingを少ない音で確認。</p>
+<p><strong>When NOT to use:</strong> 5thがメロディ・リフ・音色の核として必要なとき。m7b5へ同じ省略規則を適用するとき。</p>
+<p><strong>Slash Chord handling:</strong> YをLHに置く。Root省略は別途判断。</p>
+<p><strong>Source / Evidence:</strong> W13, W06。典型的Guide Tones学習を具体化。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V05 — LH rooted 3-note shell + RH melody</h3>
+<p><strong>Voicing Family:</strong> LH rooted 3-note shell + RH melody</p>
+<p><strong>Chord Family:</strong> minor seventh</p>
+<p><strong>Example Chord:</strong> Dm7</p>
+<p><strong>Bass Context:</strong> Bass自己担当・RH旋律</p>
+<p><strong>LEFT HAND:</strong> D3（1、MIDI 50） / F3（b3、MIDI 53） / C4（b7、MIDI 60）</p>
+<p><strong>RIGHT HAND:</strong> A4（5、MIDI 69）</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root D; Bass自身を自動的にRootにしない。省略：なし。外部音：担当なし／別パート</p>
+<p><strong>Register:</strong> LH D3–C4、RH A4–A4。手内最大幅 {'LH': 10, 'RH': 0} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5-L3-L1 / RH R4またはR5。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> A4は旋律の5度</p>
+<p><strong>Voice-leading rule:</strong> 旋律を固定し、LHを最短距離だけでなく手の開きで選別。</p>
+<p><strong>When to use:</strong> RHを旋律に使い、LHだけでRoot/3/7を支える。</p>
+<p><strong>When NOT to use:</strong> LH短7度の開きが無理なとき。Bass奏者の低域を覆うとき。</p>
+<p><strong>Slash Chord handling:</strong> LH単体の定形ではなくBass/Guideの分担を再配置。</p>
+<p><strong>Source / Evidence:</strong> W02, W06。Root+3+7というShell例。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V06 — Teacher Open: LH R+7 / RH 3+Melody</h3>
+<p><strong>Voicing Family:</strong> Teacher Open: LH R+7 / RH 3+Melody</p>
+<p><strong>Chord Family:</strong> minor seventh</p>
+<p><strong>Example Chord:</strong> Dm7</p>
+<p><strong>Bass Context:</strong> Bass自己担当・両手で伴奏と旋律</p>
+<p><strong>LEFT HAND:</strong> D3（1、MIDI 50） / C4（b7、MIDI 60）</p>
+<p><strong>RIGHT HAND:</strong> F4（b3、MIDI 65） / A4（5、MIDI 69）</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root D; Bass自身を自動的にRootにしない。省略：なし。外部音：担当なし／別パート</p>
+<p><strong>Register:</strong> LH D3–C4、RH F4–A4。手内最大幅 {'LH': 10, 'RH': 4} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5-L1 / RH R1-R3またはR1-R5。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> A4=旋律。3より上の声として維持</p>
+<p><strong>Voice-leading rule:</strong> LH7とRH3のどちらを保持するかを次コードの役割から決める。</p>
+<p><strong>When to use:</strong> 先生のOpenの役割分担を少数音で体験。</p>
+<p><strong>When NOT to use:</strong> 固定のMelodyがこの配置より低い場合。LHの開きが合わない場合。</p>
+<p><strong>Slash Chord handling:</strong> Slash Bassへ差替後にRootが消えるかをチェックして分担し直す。</p>
+<p><strong>Source / Evidence:</strong> T01, W06。役割分担はT01。Dm7の具体的オクターブ・運指は今回提案。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V07 — Guide Tones only</h3>
+<p><strong>Voicing Family:</strong> Guide Tones only</p>
+<p><strong>Chord Family:</strong> minor seventh</p>
+<p><strong>Example Chord:</strong> Dm7</p>
+<p><strong>Bass Context:</strong> 実際にD2を鳴らす別Bassが存在</p>
+<p><strong>LEFT HAND:</strong> F3（b3、MIDI 53） / C4（b7、MIDI 60）</p>
+<p><strong>RIGHT HAND:</strong> 担当なし／別パート</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root D; Bass自身を自動的にRootにしない。省略：A。外部音：D2（1、MIDI 38）</p>
+<p><strong>Register:</strong> LH F3–C4、RH 休止／担当なし。手内最大幅 {'LH': 7, 'RH': 0} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5-L1 / RH自由。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> KeyboardのTop C4。旋律は別パート可</p>
+<p><strong>Voice-leading rule:</strong> LH F3-C4→F3-B3。根音を鳴らすのは外部Bass。</p>
+<p><strong>When to use:</strong> Bass伴奏に合わせて、LHだけで和声を示す。</p>
+<p><strong>When NOT to use:</strong> Bassも和声文脈もない状態でDm7を一意に伝える必要があるとき。</p>
+<p><strong>Slash Chord handling:</strong> 外部Bassが指定Yを演奏していると確認する。</p>
+<p><strong>Source / Evidence:</strong> W13, W04。Rootlessは演奏パート上の性質。合奏全体にはRootがある。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V08 — LH Root+7 shell</h3>
+<p><strong>Voicing Family:</strong> LH Root+7 shell</p>
+<p><strong>Chord Family:</strong> minor seventh</p>
+<p><strong>Example Chord:</strong> Dm7</p>
+<p><strong>Bass Context:</strong> Bass自己担当、RHが3度を旋律として補う</p>
+<p><strong>LEFT HAND:</strong> D3（1、MIDI 50） / C4（b7、MIDI 60）</p>
+<p><strong>RIGHT HAND:</strong> F4（b3、MIDI 65）</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root D; Bass自身を自動的にRootにしない。省略：A。外部音：担当なし／別パート</p>
+<p><strong>Register:</strong> LH D3–C4、RH F4–F4。手内最大幅 {'LH': 10, 'RH': 0} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5-L1 / RH R1または旋律の運指。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> F4=b3</p>
+<p><strong>Voice-leading rule:</strong> Dm7→G7ではD/CからG/FなどBassとShellを別線として考える。</p>
+<p><strong>When to use:</strong> LHを2音にしRH旋律の自由度を確保。</p>
+<p><strong>When NOT to use:</strong> RHや他楽器にも3度がなく長短を明示したい場合。</p>
+<p><strong>Slash Chord handling:</strong> YにRootを置換すると別のShell構造になるため再評価。</p>
+<p><strong>Source / Evidence:</strong> W02, W06。R+7というShell部分構造と全体和音を区別。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V09 — LH Guide Tones + 9</h3>
+<p><strong>Voicing Family:</strong> LH Guide Tones + 9</p>
+<p><strong>Chord Family:</strong> dominant ninth</p>
+<p><strong>Example Chord:</strong> C9</p>
+<p><strong>Bass Context:</strong> 別Bass C2、RH Melody用に空ける</p>
+<p><strong>LEFT HAND:</strong> E3（3、MIDI 52） / Bb3（b7、MIDI 58） / D4（9、MIDI 62）</p>
+<p><strong>RIGHT HAND:</strong> 担当なし／別パート</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root C; Bass自身を自動的にRootにしない。省略：G。外部音：C2（1、MIDI 36）</p>
+<p><strong>Register:</strong> LH E3–D4、RH 休止／担当なし。手内最大幅 {'LH': 10, 'RH': 0} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5-L2-L1（候補）。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> LH Top D4=9。RH旋律は別途</p>
+<p><strong>Voice-leading rule:</strong> F系に進むときE→F、Bb→A等を候補化。9も解決先を選ぶ。</p>
+<p><strong>When to use:</strong> 先生の3音LH型を理解し、9の色を加える。</p>
+<p><strong>When NOT to use:</strong> C7b9やC7#9の指定を自然9で上書きするとき。</p>
+<p><strong>Slash Chord handling:</strong> Slash Bassが9を担えば重複は任意。外部BassをRootと混同しない。</p>
+<p><strong>Source / Evidence:</strong> T23, T27, W03。3-b7-9は先生資料に記載。ここでの音域は今回提案。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V10 — LH Guide Tones + 13</h3>
+<p><strong>Voicing Family:</strong> LH Guide Tones + 13</p>
+<p><strong>Chord Family:</strong> dominant thirteenth</p>
+<p><strong>Example Chord:</strong> G13</p>
+<p><strong>Bass Context:</strong> 別Bass G2</p>
+<p><strong>LEFT HAND:</strong> F3（b7、MIDI 53） / B3（3、MIDI 59） / E4（13、MIDI 64）</p>
+<p><strong>RIGHT HAND:</strong> 担当なし／別パート</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root G; Bass自身を自動的にRootにしない。省略：D A。外部音：G2（1、MIDI 43）</p>
+<p><strong>Register:</strong> LH F3–E4、RH 休止／担当なし。手内最大幅 {'LH': 11, 'RH': 0} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5-L2-L1（候補）。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> LH Top E4=13</p>
+<p><strong>Voice-leading rule:</strong> Cmaj7へF→E、B保持、Eを共通音として使う等。</p>
+<p><strong>When to use:</strong> 先生のb7-3-13型でLHを小さくまとめる。</p>
+<p><strong>When NOT to use:</strong> 自然13が旋律のb13と競合する場合。完全9が必要な厳密課題。</p>
+<p><strong>Slash Chord handling:</strong> Bass基準で13を計算し直さない。基準RootはG。</p>
+<p><strong>Source / Evidence:</strong> T23, T27, W03。9と5の省略を明示したG13演奏形。自然11はこのG13の参照集合に要求しない。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V11 — Rootless 4-note / A-position</h3>
+<p><strong>Voicing Family:</strong> Rootless 4-note / A-position</p>
+<p><strong>Chord Family:</strong> minor ninth</p>
+<p><strong>Example Chord:</strong> Dm9</p>
+<p><strong>Bass Context:</strong> 別Bass D2、RH旋律用</p>
+<p><strong>LEFT HAND:</strong> F3（b3、MIDI 53） / A3（5、MIDI 57） / C4（b7、MIDI 60） / E4（9、MIDI 64）</p>
+<p><strong>RIGHT HAND:</strong> 担当なし／別パート</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root D; Bass自身を自動的にRootにしない。省略：なし。外部音：D2（1、MIDI 38）</p>
+<p><strong>Register:</strong> LH F3–E4、RH 休止／担当なし。手内最大幅 {'LH': 11, 'RH': 0} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5-L3-L2-L1。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> E4=9をLH上声として認識</p>
+<p><strong>Voice-leading rule:</strong> 次のG13にF-A-B-Eを候補化。CだけをBへ。</p>
+<p><strong>When to use:</strong> 4音の質感をLHに集約する。</p>
+<p><strong>When NOT to use:</strong> 外部Bassがないのに完全なRoot感を必須とする場面。</p>
+<p><strong>Slash Chord handling:</strong> AはこのFamily内でb3最下声。Slash音の最下声とは別。</p>
+<p><strong>Source / Evidence:</strong> W03, W04, W16。A/Bのm9定形に対応する今回のDの例。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V12 — Rootless 4-note / B-position</h3>
+<p><strong>Voicing Family:</strong> Rootless 4-note / B-position</p>
+<p><strong>Chord Family:</strong> minor ninth</p>
+<p><strong>Example Chord:</strong> Dm9</p>
+<p><strong>Bass Context:</strong> 別Bass D2</p>
+<p><strong>LEFT HAND:</strong> C4（b7、MIDI 60） / E4（9、MIDI 64） / F4（b3、MIDI 65） / A4（5、MIDI 69）</p>
+<p><strong>RIGHT HAND:</strong> 担当なし／別パート</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root D; Bass自身を自動的にRootにしない。省略：なし。外部音：D2（1、MIDI 38）</p>
+<p><strong>Register:</strong> LH C4–A4、RH 休止／担当なし。手内最大幅 {'LH': 9, 'RH': 0} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5-L3-L2-L1。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> A4=5</p>
+<p><strong>Voice-leading rule:</strong> 前後が高めの中音域ならBを候補にし、Aとの移動量と手の形を比較。</p>
+<p><strong>When to use:</strong> 同じコードの音域とTopを選び直す。</p>
+<p><strong>When NOT to use:</strong> 旋律域を塞ぐ場合。A/Bの切替を毎回義務化するとき。</p>
+<p><strong>Slash Chord handling:</strong> BはこのFamily内でb7最下声。Bassの音名Bとは無関係。</p>
+<p><strong>Source / Evidence:</strong> W03。b7-9-b3-5を今回の音域で例示。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V13 — Rootless 4-note / major A variant</h3>
+<p><strong>Voicing Family:</strong> Rootless 4-note / major A variant</p>
+<p><strong>Chord Family:</strong> major ninth</p>
+<p><strong>Example Chord:</strong> Cmaj9</p>
+<p><strong>Bass Context:</strong> 別Bass C2</p>
+<p><strong>LEFT HAND:</strong> E3（3、MIDI 52） / G3（5、MIDI 55） / B3（7、MIDI 59） / D4（9、MIDI 62）</p>
+<p><strong>RIGHT HAND:</strong> 担当なし／別パート</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root C; Bass自身を自動的にRootにしない。省略：なし。外部音：C2（1、MIDI 36）</p>
+<p><strong>Register:</strong> LH E3–D4、RH 休止／担当なし。手内最大幅 {'LH': 10, 'RH': 0} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5-L3-L2-L1。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> D4=9</p>
+<p><strong>Voice-leading rule:</strong> Dm9等から保持できるEを利用しつつ3/7の動きを比較。</p>
+<p><strong>When to use:</strong> Major9のLH和声、RH旋律。</p>
+<p><strong>When NOT to use:</strong> C6/9の指定をmaj9に変えてしまうとき。</p>
+<p><strong>Slash Chord handling:</strong> Rootlessを全種類へ一律適用しない。指定Bassは別に保持。</p>
+<p><strong>Source / Evidence:</strong> W03, W04。3-5-7-9の一例。Earl資料の全A/B形をこの式に統一しない。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V14 — Rootless 4-note / dominant B variant</h3>
+<p><strong>Voicing Family:</strong> Rootless 4-note / dominant B variant</p>
+<p><strong>Chord Family:</strong> dominant thirteenth</p>
+<p><strong>Example Chord:</strong> G13</p>
+<p><strong>Bass Context:</strong> 別Bass G2</p>
+<p><strong>LEFT HAND:</strong> F3（b7、MIDI 53） / A3（9、MIDI 57） / B3（3、MIDI 59） / E4（13、MIDI 64）</p>
+<p><strong>RIGHT HAND:</strong> 担当なし／別パート</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root G; Bass自身を自動的にRootにしない。省略：D。外部音：G2（1、MIDI 43）</p>
+<p><strong>Register:</strong> LH F3–E4、RH 休止／担当なし。手内最大幅 {'LH': 11, 'RH': 0} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5-L3-L2-L1。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> E4=13</p>
+<p><strong>Voice-leading rule:</strong> Dm9 F-A-C-EからC→Bのみ変更。</p>
+<p><strong>When to use:</strong> ii–Vの滑らかな接続と9/13を両立。</p>
+<p><strong>When NOT to use:</strong> b9やb13が指定されたDominantへの一律使用。</p>
+<p><strong>Slash Chord handling:</strong> 上部RootG基準の度数を維持。Slash Bassの情報を別途検証。</p>
+<p><strong>Source / Evidence:</strong> W03, W16。自然13型。G13の省略可能5を省く。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V15 — Two-handed extended spread</h3>
+<p><strong>Voicing Family:</strong> Two-handed extended spread</p>
+<p><strong>Chord Family:</strong> minor ninth</p>
+<p><strong>Example Chord:</strong> Dm9</p>
+<p><strong>Bass Context:</strong> Bass自己担当、両手Harmony</p>
+<p><strong>LEFT HAND:</strong> D3（1、MIDI 50） / C4（b7、MIDI 60）</p>
+<p><strong>RIGHT HAND:</strong> F4（b3、MIDI 65） / A4（5、MIDI 69） / E5（9、MIDI 76）</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root D; Bass自身を自動的にRootにしない。省略：なし。外部音：担当なし／別パート</p>
+<p><strong>Register:</strong> LH D3–C4、RH F4–E5。手内最大幅 {'LH': 10, 'RH': 11} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5-L1 / RH R1-R2-R5（手幅要確認）。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> E5=9を聴かせる</p>
+<p><strong>Voice-leading rule:</strong> 9を含む上声を基準に隣コードの形を選ぶ。</p>
+<p><strong>When to use:</strong> 音域を広げ、旋律が別にある制作時や長いコード。</p>
+<p><strong>When NOT to use:</strong> RH長7度の開きが負担、短い高速コードチェンジ。</p>
+<p><strong>Slash Chord handling:</strong> YをBassに置いた後は内声のRoot補完と最大手幅を再評価。</p>
+<p><strong>Source / Evidence:</strong> W01, W06。少数音のOpen構造を9まで広げた今回の配置。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V16 — Open triad</h3>
+<p><strong>Voicing Family:</strong> Open triad</p>
+<p><strong>Chord Family:</strong> major triad</p>
+<p><strong>Example Chord:</strong> C</p>
+<p><strong>Bass Context:</strong> Bass自己担当、両手Harmony</p>
+<p><strong>LEFT HAND:</strong> C3（1、MIDI 48） / G3（5、MIDI 55）</p>
+<p><strong>RIGHT HAND:</strong> E4（3、MIDI 64） / C5（1、MIDI 72）</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root C; Bass自身を自動的にRootにしない。省略：なし。外部音：担当なし／別パート</p>
+<p><strong>Register:</strong> LH C3–G3、RH E4–C5。手内最大幅 {'LH': 7, 'RH': 8} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5-L1 / RH R1-R5。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> C5=1。Melodyが別なら他Topを選択</p>
+<p><strong>Voice-leading rule:</strong> 全声部平行も、共通音保持も、作曲の狙いから比較する。</p>
+<p><strong>When to use:</strong> 7thを追加せずに広さを作る。</p>
+<p><strong>When NOT to use:</strong> 低域で過剰なオクターブ重複を増やす場合。</p>
+<p><strong>Slash Chord handling:</strong> Slash時にLH Rootを追加してYより下げない。</p>
+<p><strong>Source / Evidence:</strong> W18, W01。音数・和音の種類を変えずに配置を広げる例。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V17 — Drop 2 transform of closed 4-note group</h3>
+<p><strong>Voicing Family:</strong> Drop 2 transform of closed 4-note group</p>
+<p><strong>Chord Family:</strong> major seventh</p>
+<p><strong>Example Chord:</strong> Cmaj7</p>
+<p><strong>Bass Context:</strong> 別Bass C2を実際に鳴らす</p>
+<p><strong>LEFT HAND:</strong> G3（5、MIDI 55）</p>
+<p><strong>RIGHT HAND:</strong> C4（1、MIDI 60） / E4（3、MIDI 64） / B4（7、MIDI 71）</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root C; Bass自身を自動的にRootにしない。省略：なし。外部音：C2（1、MIDI 36）</p>
+<p><strong>Register:</strong> LH G3–G3、RH C4–B4。手内最大幅 {'LH': 0, 'RH': 11} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5 / RH R1-R2-R5（手幅要確認）。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> 元のTop B4は保存</p>
+<p><strong>Voice-leading rule:</strong> C4-E4-G4-B4の上から2番目G4のみ12半音下げる。次は変換後の声部として最適化。</p>
+<p><strong>When to use:</strong> 4声Closeを開き、同じTopを保つ。</p>
+<p><strong>When NOT to use:</strong> 外部C BassなしでC最低音を必須とする場合。この配置単独のBassはG。</p>
+<p><strong>Slash Chord handling:</strong> Slash Bassを変換対象外として固定。Drop2をBass込みの全配列へ盲目的適用しない。</p>
+<p><strong>Source / Evidence:</strong> W10。変換前後と全体Bassを分離した今回例。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V18 — Quartal fragment</h3>
+<p><strong>Voicing Family:</strong> Quartal fragment</p>
+<p><strong>Chord Family:</strong> minor seventh + add11</p>
+<p><strong>Example Chord:</strong> Dm7(add11)</p>
+<p><strong>Bass Context:</strong> Bass自己担当</p>
+<p><strong>LEFT HAND:</strong> D3（1、MIDI 50） / G3（11、MIDI 55）</p>
+<p><strong>RIGHT HAND:</strong> C4（b7、MIDI 60） / F4（b3、MIDI 65）</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root D; Bass自身を自動的にRootにしない。省略：A。外部音：担当なし／別パート</p>
+<p><strong>Register:</strong> LH D3–G3、RH C4–F4。手内最大幅 {'LH': 5, 'RH': 5} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5-L1 / RH R1-R5。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> F4=b3</p>
+<p><strong>Voice-leading rule:</strong> 形を平行移動するなら、新たに生まれる和音を明示。最短接続だけを唯一目的にしない。</p>
+<p><strong>When to use:</strong> 4度中心の配置を軽く試す。</p>
+<p><strong>When NOT to use:</strong> 5thや明確な旋律Topを必須とする場面。</p>
+<p><strong>Slash Chord handling:</strong> 別Bassを加えると別の解釈になる。勝手にRoot認定しない。</p>
+<p><strong>Source / Evidence:</strong> W05。D-G-C-Fの4度堆積。5を省いた例。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V19 — So What voicing</h3>
+<p><strong>Voicing Family:</strong> So What voicing</p>
+<p><strong>Chord Family:</strong> minor seventh + add11</p>
+<p><strong>Example Chord:</strong> Dm7(add11)</p>
+<p><strong>Bass Context:</strong> Bass自己担当、両手Harmony</p>
+<p><strong>LEFT HAND:</strong> D3（1、MIDI 50） / G3（11、MIDI 55）</p>
+<p><strong>RIGHT HAND:</strong> C4（b7、MIDI 60） / F4（b3、MIDI 65） / A4（5、MIDI 69）</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root D; Bass自身を自動的にRootにしない。省略：なし。外部音：担当なし／別パート</p>
+<p><strong>Register:</strong> LH D3–G3、RH C4–A4。手内最大幅 {'LH': 5, 'RH': 9} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5-L1 / RH R1-R3-R5。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> Top A4=5。この形を選ぶ重要条件</p>
+<p><strong>Voice-leading rule:</strong> D-G-C-F-Aを維持または隣のSo What shapeと比較。</p>
+<p><strong>When to use:</strong> minorで5thをTopにしたい、4度中心の空間を作りたい。</p>
+<p><strong>When NOT to use:</strong> Topが必ず9や11でなければならないとき。</p>
+<p><strong>Slash Chord handling:</strong> 別Bass時は別の和音解釈候補を表示。9(E)は鳴っていないためDm11の完全音集合としない。</p>
+<p><strong>Source / Evidence:</strong> W05。3つの4度と頂部の長3度。Dm11(no9)とも説明できるが本例はadd11と明記。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V20 — Dominant shell + Upper Structure Triad</h3>
+<p><strong>Voicing Family:</strong> Dominant shell + Upper Structure Triad</p>
+<p><strong>Chord Family:</strong> dominant 13 #11</p>
+<p><strong>Example Chord:</strong> C13(#11)</p>
+<p><strong>Bass Context:</strong> 別Bass C2、両手Harmony</p>
+<p><strong>LEFT HAND:</strong> E3（3、MIDI 52） / Bb3（b7、MIDI 58）</p>
+<p><strong>RIGHT HAND:</strong> D4（9、MIDI 62） / F#4（#11、MIDI 66） / A4（13、MIDI 69）</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root C; Bass自身を自動的にRootにしない。省略：G。外部音：C2（1、MIDI 36）</p>
+<p><strong>Register:</strong> LH E3–Bb3、RH D4–A4。手内最大幅 {'LH': 6, 'RH': 7} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5-L1 / RH R1-R3-R5。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> Top A4=13。D majorの転回で変更可</p>
+<p><strong>Voice-leading rule:</strong> D-F#-Aを塊でも声部別でも評価。解決先の旋律と摩擦しない候補を選ぶ。</p>
+<p><strong>When to use:</strong> 複数Tensionを既知の三和音で記憶する。</p>
+<p><strong>When NOT to use:</strong> 全Dominantへ無差別に適用する場合。C7altと完全同一の音集合として扱う場合。</p>
+<p><strong>Slash Chord handling:</strong> これはChord/BassというよりShell+Triad構成。Slash記法の下段型をBassNote/Chordで分ける。</p>
+<p><strong>Source / Evidence:</strong> T08, W08。C7 guide E/Bb + D major = 9,#11,13。5省略。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V21 — Altered dominant + minor Upper Structure</h3>
+<p><strong>Voicing Family:</strong> Altered dominant + minor Upper Structure</p>
+<p><strong>Chord Family:</strong> dominant b9 b13</p>
+<p><strong>Example Chord:</strong> C7(b9,b13)</p>
+<p><strong>Bass Context:</strong> Bass自己担当</p>
+<p><strong>LEFT HAND:</strong> C3（1、MIDI 48） / Bb3（b7、MIDI 58）</p>
+<p><strong>RIGHT HAND:</strong> Db4（b9、MIDI 61） / E4（3、MIDI 64） / Ab4（b13、MIDI 68）</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root C; Bass自身を自動的にRootにしない。省略：G。外部音：担当なし／別パート</p>
+<p><strong>Register:</strong> LH C3–Bb3、RH Db4–Ab4。手内最大幅 {'LH': 10, 'RH': 7} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5-L1 / RH R1-R2-R5。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> Ab4=b13を解決先G/A等へ導く</p>
+<p><strong>Voice-leading rule:</strong> F majorへの例：E→F、Bb→A、Db→C。全音を同時解決する義務はない。</p>
+<p><strong>When to use:</strong> 強い色と解決感を1か所作る。</p>
+<p><strong>When NOT to use:</strong> b9/b13を指定していない和音の忠実再現。旋律と矛盾する場合。</p>
+<p><strong>Slash Chord handling:</strong> T08のC#m triadはPitch ClassとしてDb-E-Ab。原表記C#mを出典側に保持。</p>
+<p><strong>Source / Evidence:</strong> T08, T04, W08, W19。先生のC7+C#m構造を度数表示用に異名同音整理。オクターブと指は新規。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V22 — Slash Bass covers b3 + RH extensions</h3>
+<p><strong>Voicing Family:</strong> Slash Bass covers b3 + RH extensions</p>
+<p><strong>Chord Family:</strong> minor ninth inversion</p>
+<p><strong>Example Chord:</strong> Am9/C</p>
+<p><strong>Bass Context:</strong> Bass自己担当</p>
+<p><strong>LEFT HAND:</strong> C3（b3、MIDI 48）</p>
+<p><strong>RIGHT HAND:</strong> A3（1、MIDI 57） / B3（9、MIDI 59） / E4（5、MIDI 64） / G4（b7、MIDI 67）</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root A; Bass自身を自動的にRootにしない。省略：なし。外部音：担当なし／別パート</p>
+<p><strong>Register:</strong> LH C3–C3、RH A3–G4。手内最大幅 {'LH': 0, 'RH': 10} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5 / RH R1-R2-R3-R5。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> Top G4=b7</p>
+<p><strong>Voice-leading rule:</strong> C BassからD等へ進めながら、Gの保持やF#への下降を候補化。</p>
+<p><strong>When to use:</strong> 拡張コードの転回で、LH/RHに同じ3度を重複させず整理。</p>
+<p><strong>When NOT to use:</strong> 常にRootをLHへ置くモード。RH内の2度間隔が音色上望ましくない場合。</p>
+<p><strong>Slash Chord handling:</strong> Cはb3。Bassがコアの3度を担うのでRHにCは必須でない。</p>
+<p><strong>Source / Evidence:</strong> T03, W07。左右合算でAm9を完全被覆。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V23 — Slash Bass covers 9 + reduced m11 upper</h3>
+<p><strong>Voicing Family:</strong> Slash Bass covers 9 + reduced m11 upper</p>
+<p><strong>Chord Family:</strong> minor eleventh with 9 in bass</p>
+<p><strong>Example Chord:</strong> Am11/B</p>
+<p><strong>Bass Context:</strong> Bass自己担当</p>
+<p><strong>LEFT HAND:</strong> B2（9、MIDI 47）</p>
+<p><strong>RIGHT HAND:</strong> A3（1、MIDI 57） / C4（b3、MIDI 60） / D4（11、MIDI 62） / G4（b7、MIDI 67）</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root A; Bass自身を自動的にRootにしない。省略：E。外部音：担当なし／別パート</p>
+<p><strong>Register:</strong> LH B2–B2、RH A3–G4。手内最大幅 {'LH': 0, 'RH': 10} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5 / RH R1-R2-R3-R5。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> Top G4=b7</p>
+<p><strong>Voice-leading rule:</strong> B/Cの摩擦を保持したいかを聴き、Cを別オクターブへ逃がす候補も比較。</p>
+<p><strong>When to use:</strong> Tension Bassと複数内声による浮遊感を比較する。</p>
+<p><strong>When NOT to use:</strong> 低いBとすぐ上のCを密集させて明瞭さが失われるとき。</p>
+<p><strong>Slash Chord handling:</strong> Bは上部Am11の9であり、拡張集合の外音ではない。E(5)省略を明示。</p>
+<p><strong>Source / Evidence:</strong> T03, W07, W09。Am11 = A,C,E,G,B,Dという参照集合から検算。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V24 — Slash Bass covers 9 + RH triad</h3>
+<p><strong>Voicing Family:</strong> Slash Bass covers 9 + RH triad</p>
+<p><strong>Chord Family:</strong> major add9</p>
+<p><strong>Example Chord:</strong> Dadd9/E</p>
+<p><strong>Bass Context:</strong> Bass自己担当</p>
+<p><strong>LEFT HAND:</strong> E2（9、MIDI 40）</p>
+<p><strong>RIGHT HAND:</strong> D4（1、MIDI 62） / F#4（3、MIDI 66） / A4（5、MIDI 69）</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root D; Bass自身を自動的にRootにしない。省略：なし。外部音：担当なし／別パート</p>
+<p><strong>Register:</strong> LH E2–E2、RH D4–A4。手内最大幅 {'LH': 0, 'RH': 7} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5 / RH R1-R3-R5。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> Top A4=5</p>
+<p><strong>Voice-leading rule:</strong> Aを保持しD/F#を近接音へ動かす等、Bassと別に候補生成。</p>
+<p><strong>When to use:</strong> add9を左手が担当しRHを三和音にする。</p>
+<p><strong>When NOT to use:</strong> C#を勝手に足してDmaj9化する場合。</p>
+<p><strong>Slash Chord handling:</strong> D/Eと同じPitch Classes。E9sus4(no5)というBass基準の別解釈も文脈次第。</p>
+<p><strong>Source / Evidence:</strong> T03, W07, W18。Eadd9/F#の同型だが、原コード記号は保持。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V25 — Slash Bass + RH root/3/7 core</h3>
+<p><strong>Voicing Family:</strong> Slash Bass + RH root/3/7 core</p>
+<p><strong>Chord Family:</strong> major ninth over its 9</p>
+<p><strong>Example Chord:</strong> Gmaj9/A</p>
+<p><strong>Bass Context:</strong> Bass自己担当</p>
+<p><strong>LEFT HAND:</strong> A2（9、MIDI 45）</p>
+<p><strong>RIGHT HAND:</strong> F#4（7、MIDI 66） / G4（1、MIDI 67） / B4（3、MIDI 71）</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root G; Bass自身を自動的にRootにしない。省略：D。外部音：担当なし／別パート</p>
+<p><strong>Register:</strong> LH A2–A2、RH F#4–B4。手内最大幅 {'LH': 0, 'RH': 5} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5 / RH R1-R2-R5。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> Top B4=3</p>
+<p><strong>Voice-leading rule:</strong> Eadd9/F#のE4-G#4-B4→F#4-G4-B4。Top Bを保持。</p>
+<p><strong>When to use:</strong> 3音RHでmaj7の色を残しながらSlash Bassを鳴らす。</p>
+<p><strong>When NOT to use:</strong> A13sus4と同一音集合として表示する場合。D=sus4がない。</p>
+<p><strong>Slash Chord handling:</strong> Aが9を被覆し、D(5)だけ省略。G/B/F#は三和音ではなくrooted seventh core。</p>
+<p><strong>Source / Evidence:</strong> T03, W07, W13。Gmaj9の5省略として妥当。A基準のsus4成分欠落を明示。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V26 — Slash Bass + complete RH maj7 structure</h3>
+<p><strong>Voicing Family:</strong> Slash Bass + complete RH maj7 structure</p>
+<p><strong>Chord Family:</strong> major ninth over its 9</p>
+<p><strong>Example Chord:</strong> Gmaj9/A</p>
+<p><strong>Bass Context:</strong> Bass自己担当</p>
+<p><strong>LEFT HAND:</strong> A2（9、MIDI 45）</p>
+<p><strong>RIGHT HAND:</strong> D4（5、MIDI 62） / F#4（7、MIDI 66） / G4（1、MIDI 67） / B4（3、MIDI 71）</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root G; Bass自身を自動的にRootにしない。省略：なし。外部音：担当なし／別パート</p>
+<p><strong>Register:</strong> LH A2–A2、RH D4–B4。手内最大幅 {'LH': 0, 'RH': 9} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5 / RH R1-R2-R3-R5。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> B4を前コードから保持</p>
+<p><strong>Voice-leading rule:</strong> Eadd9/F#のE4-F#4-G#4-B4→D4-F#4-G4-B4。F#とBを保持。</p>
+<p><strong>When to use:</strong> 全構成音と滑らかな接続を両立する。</p>
+<p><strong>When NOT to use:</strong> RH4音の密度が過大な場合。外部旋律とTopが競合する場合。</p>
+<p><strong>Slash Chord handling:</strong> 完全集合はA13sus4(no5)と一致。ただし機能と原表記を自動変更しない。</p>
+<p><strong>Source / Evidence:</strong> T03, W07。A,G,B,D,F#を完全被覆。Bass基準の別名も検算。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V27 — Pedal Bass + changing upper chord</h3>
+<p><strong>Voicing Family:</strong> Pedal Bass + changing upper chord</p>
+<p><strong>Chord Family:</strong> major triad over pedal</p>
+<p><strong>Example Chord:</strong> F/C</p>
+<p><strong>Bass Context:</strong> Cを前後の別和音でも持続／反復する</p>
+<p><strong>LEFT HAND:</strong> C3（5、MIDI 48）</p>
+<p><strong>RIGHT HAND:</strong> F3（1、MIDI 53） / A3（3、MIDI 57） / C4（5、MIDI 60）</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root F; Bass自身を自動的にRootにしない。省略：なし。外部音：担当なし／別パート</p>
+<p><strong>Register:</strong> LH C3–C3、RH F3–C4。手内最大幅 {'LH': 0, 'RH': 7} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5 / RH R1-R3-R5。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> C4を共通Topにする案</p>
+<p><strong>Voice-leading rule:</strong> 前コードのC PedalからCを保持。和音ごとのRootへ自動置換しない。</p>
+<p><strong>When to use:</strong> Bassを止めたまま上部和声を変えて展開・緊張を作る。</p>
+<p><strong>When NOT to use:</strong> 単一F/Cだけを見てPedalと断定する場合。</p>
+<p><strong>Slash Chord handling:</strong> F/C単独は転回形とも読める。pedalは前後イベントの属性。</p>
+<p><strong>Source / Evidence:</strong> W15, T16。ここでは時系列上Cを保つという条件を付けてPedalと分類。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V28 — Melody-first two-hand core + color</h3>
+<p><strong>Voicing Family:</strong> Melody-first two-hand core + color</p>
+<p><strong>Chord Family:</strong> major ninth</p>
+<p><strong>Example Chord:</strong> Cmaj9</p>
+<p><strong>Bass Context:</strong> Bass自己担当、RH旋律固定</p>
+<p><strong>LEFT HAND:</strong> C3（1、MIDI 48） / B3（7、MIDI 59）</p>
+<p><strong>RIGHT HAND:</strong> E4（3、MIDI 64） / D5（9、MIDI 74）</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root C; Bass自身を自動的にRootにしない。省略：G。外部音：担当なし／別パート</p>
+<p><strong>Register:</strong> LH C3–B3、RH E4–D5。手内最大幅 {'LH': 11, 'RH': 10} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5-L1 / RH R1-R5（手幅要確認）。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> 固定Melody D5。Harmonyの都合で上下させない</p>
+<p><strong>Voice-leading rule:</strong> Top固定後、3/7を最短かつ手幅内で割り振る。</p>
+<p><strong>When to use:</strong> メロディを作りながら和声を選ぶ。</p>
+<p><strong>When NOT to use:</strong> RH短7度やLH長7度の同時開きが負担な場合。別指・再分担を優先。</p>
+<p><strong>Slash Chord handling:</strong> Slash Bassを固定したまま必要Coreを両手へ再配分。</p>
+<p><strong>Source / Evidence:</strong> T01, T04, W06。先生資料のMelody/3とRoot/7という役割を9 melodyへ適用した今回例。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V29 — Bass + altered-fifth core</h3>
+<p><strong>Voicing Family:</strong> Bass + altered-fifth core</p>
+<p><strong>Chord Family:</strong> half-diminished seventh</p>
+<p><strong>Example Chord:</strong> Bm7b5</p>
+<p><strong>Bass Context:</strong> Bass自己担当</p>
+<p><strong>LEFT HAND:</strong> B2（1、MIDI 47）</p>
+<p><strong>RIGHT HAND:</strong> A3（b7、MIDI 57） / D4（b3、MIDI 62） / F4（b5、MIDI 65）</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root B; Bass自身を自動的にRootにしない。省略：なし。外部音：担当なし／別パート</p>
+<p><strong>Register:</strong> LH B2–B2、RH A3–F4。手内最大幅 {'LH': 0, 'RH': 8} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5 / RH R1-R3-R5。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> F4=b5を意識する</p>
+<p><strong>Voice-leading rule:</strong> E7へDを保持し、F→EまたはF→G#など解決先の配置を比較。</p>
+<p><strong>When to use:</strong> m7とm7b5の差を実際の音で確認。</p>
+<p><strong>When NOT to use:</strong> 通常m7のようにb5を常に省いてしまう場合。</p>
+<p><strong>Slash Chord handling:</strong> Slash Bassがb5でも全体Coreを確認。普通の5と同じ省略順位にしない。</p>
+<p><strong>Source / Evidence:</strong> W01, W13。b5はこのコードの識別に重要。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V30 — Bass + diminished seventh structure</h3>
+<p><strong>Voicing Family:</strong> Bass + diminished seventh structure</p>
+<p><strong>Chord Family:</strong> fully diminished seventh</p>
+<p><strong>Example Chord:</strong> Cdim7</p>
+<p><strong>Bass Context:</strong> Bass自己担当</p>
+<p><strong>LEFT HAND:</strong> C3（1、MIDI 48）</p>
+<p><strong>RIGHT HAND:</strong> Eb4（b3、MIDI 63） / Gb4（b5、MIDI 66） / Bbb4（bb7、MIDI 69）</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root C; Bass自身を自動的にRootにしない。省略：なし。外部音：担当なし／別パート</p>
+<p><strong>Register:</strong> LH C3–C3、RH Eb4–Bbb4。手内最大幅 {'LH': 0, 'RH': 6} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5 / RH R1-R3-R5。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> Bbb4（実音A4）=減7度</p>
+<p><strong>Voice-leading rule:</strong> 綴りと解決先を別管理。実音が同じAでもC6へ自動統合しない。</p>
+<p><strong>When to use:</strong> dim7を6やm7b5と区別して学ぶ。</p>
+<p><strong>When NOT to use:</strong> 異名同音だけで別Root/別機能へ自動確定するとき。</p>
+<p><strong>Slash Chord handling:</strong> SlashのBassを含め、Root由来のbb7という度数を保持。</p>
+<p><strong>Source / Evidence:</strong> T01, T27, W01。減7度の綴りを維持する例。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V31 — Upper triad over non-triad Bass</h3>
+<p><strong>Voicing Family:</strong> Upper triad over non-triad Bass</p>
+<p><strong>Chord Family:</strong> triad over non-chord-tone bass</p>
+<p><strong>Example Chord:</strong> D/C</p>
+<p><strong>Bass Context:</strong> Bass自己担当</p>
+<p><strong>LEFT HAND:</strong> C3（b7、MIDI 48）</p>
+<p><strong>RIGHT HAND:</strong> D4（1、MIDI 62） / F#4（3、MIDI 66） / A4（5、MIDI 69）</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root D; Bass自身を自動的にRootにしない。省略：なし。外部音：担当なし／別パート</p>
+<p><strong>Register:</strong> LH C3–C3、RH D4–A4。手内最大幅 {'LH': 0, 'RH': 7} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5 / RH R1-R3-R5。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> A4=5</p>
+<p><strong>Voice-leading rule:</strong> C Bassを保つかBへ動かすかで別の流れを比較。</p>
+<p><strong>When to use:</strong> 上部D triadとC Bassの複層を作る。</p>
+<p><strong>When NOT to use:</strong> これを完全なCmaj13(#11)と同一音集合だと説明する場合。EとBがない。</p>
+<p><strong>Slash Chord handling:</strong> CはD triadには含まれない。拡張再解釈ではD7/Cとも同じPitch Classes。</p>
+<p><strong>Source / Evidence:</strong> T03, W07, W14。分類の基準集合をD triadとして明示。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V32 — Bass + sixth/ninth color</h3>
+<p><strong>Voicing Family:</strong> Bass + sixth/ninth color</p>
+<p><strong>Chord Family:</strong> major sixth ninth</p>
+<p><strong>Example Chord:</strong> C6/9</p>
+<p><strong>Bass Context:</strong> Bass自己担当、両手Harmony</p>
+<p><strong>LEFT HAND:</strong> C3（1、MIDI 48） / A3（6、MIDI 57）</p>
+<p><strong>RIGHT HAND:</strong> D4（9、MIDI 62） / E4（3、MIDI 64） / G4（5、MIDI 67）</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root C; Bass自身を自動的にRootにしない。省略：なし。外部音：担当なし／別パート</p>
+<p><strong>Register:</strong> LH C3–A3、RH D4–G4。手内最大幅 {'LH': 9, 'RH': 5} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5-L1 / RH R1-R2-R5。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> G4=5。D/E/Gの転回で変更可</p>
+<p><strong>Voice-leading rule:</strong> 6と9を保持できる進行を探す。maj7へ無断変換しない。</p>
+<p><strong>When to use:</strong> 7thを使わず6/9の語彙を増やす。</p>
+<p><strong>When NOT to use:</strong> Cmaj9指定をこの音集合にすり替える場合。</p>
+<p><strong>Slash Chord handling:</strong> 6/9中のスラッシュはChord/Bass区切りではない。C6/9/Eなら末尾EだけがBass指定。</p>
+<p><strong>Source / Evidence:</strong> W01, W18。パーサーで6/9とSlash Bassを区別する実装例。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h3>V33 — Bass + suspended core</h3>
+<p><strong>Voicing Family:</strong> Bass + suspended core</p>
+<p><strong>Chord Family:</strong> dominant seventh suspended fourth</p>
+<p><strong>Example Chord:</strong> G7sus4</p>
+<p><strong>Bass Context:</strong> Bass自己担当</p>
+<p><strong>LEFT HAND:</strong> G2（1、MIDI 43） / F3（b7、MIDI 53）</p>
+<p><strong>RIGHT HAND:</strong> C4（4、MIDI 60） / D4（5、MIDI 62）</p>
+<p><strong>Chord Tone / Degree:</strong> upper/root G; Bass自身を自動的にRootにしない。省略：なし。外部音：担当なし／別パート</p>
+<p><strong>Register:</strong> LH G2–F3、RH C4–D4。手内最大幅 {'LH': 10, 'RH': 2} 半音。例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。</p>
+<p><strong>Fingering:</strong> LH L5-L1 / RH R1-R2またはR1-R3。今回の提案。先生資料の運指ではない。</p>
+<p><strong>Top Note policy:</strong> D4=5。C4=4を別声部として識別</p>
+<p><strong>Voice-leading rule:</strong> C→BでG7へ解決する案と、susを保つ案を比較。</p>
+<p><strong>When to use:</strong> 3度を置かずにsusの和声を明確にする。</p>
+<p><strong>When NOT to use:</strong> Guide Tone generatorがB(3)を常に強制する場合。</p>
+<p><strong>Slash Chord handling:</strong> F/GならF triad上のA=Gの9も加わる。G7sus4と完全に同じ集合ではない。</p>
+<p><strong>Source / Evidence:</strong> W01, W18。susは単純3/7法の例外。</p>
+<p><strong>Confidence:</strong> 音名集合の検算＝高。学習適合・運指＝中。聴感・実演奏による検証＝未実施。</p>
+<h2>受入テスト仕様（現行アプリで実行した結果ではありません）</h2>
+<ul>
+<li><p>S01 / Eadd9/F#: 全4 Pitch Classesを被覆。RHにF#がなくても9は欠けない。</p>
+</li>
+<li><p>S02 / Eadd9/F#: D#を加える自動7th enrichmentをLiteralモードでは拒否。</p>
+</li>
+<li><p>S03 / Gmaj9/A: D=5省略を表示。A13sus4への厳密同一視は禁止。</p>
+</li>
+<li><p>S04 / Gmaj9/A: 完全集合。A13sus4(no5)とのPitch Class一致は成立するが機能は未確定。</p>
+</li>
+<li><p>S05 / Am11/B: BをAm11の9として分類。拡張集合の外音扱いをしない。</p>
+</li>
+<li><p>S06 / C/E: 全体最低音Eを保持。自動Root追加で下にCを置かない。</p>
+</li>
+<li><p>S07 / C6/9: スラッシュをBass数値9と誤解析しない。C6/9/Eも別途テスト。</p>
+</li>
+<li><p>S08 / G7sus4: 3=Bを常に必須にしない。4=Cを保持。</p>
+</li>
+<li><p>S09 / Bm7b5: b5を通常の完全5と同じ優先順位で無条件省略しない。</p>
+</li>
+<li><p>S10 / Cdim7: Bbbの綴りとbb7という度数を保持。C6のA/6と同一視しない。</p>
+</li>
+<li><p>S11 / C4 E4 G4 B4 / Drop2: G4→G3だけを移動。C4 E4 B4の音高は不変。</p>
+</li>
+<li><p>S12 / Drop2 + fixed Bass C: G3がBassになる単独演奏候補は固定C Bassを満たさない。可聴外部C等を必要条件とする。</p>
+</li>
+<li><p>S13 / Source MIDI / Custom missing: 生成Shellへの無断Fallbackなし。音高・オクターブの修正なし。</p>
+</li>
+<li><p>S14 / Bass+fifth for Eadd9/F#: F#の5度C#は原集合にない。追加和音色として明示、Literalでは拒否。</p>
+</li>
+<li><p>S15 / Loop candidate sequence: 最後→最初を含め声部の跳躍と手幅を採点する。ユーザー演奏自体の点数にはしない。</p>
+</li>
+<li><p>S16 / Dm11 / So What D G C F A: 9=Eは鳴っていない。Dm11の全音被覆としない。Dm7(add11)というラベルは可能。</p>
+</li>
+</ul>
+<h2>外部一次資料</h2>
+<ul>
+<li><p>W01 — Berklee Online / Randy Felts / <a href="https://online.berklee.edu/takenote/basic-piano-voicing-techniques/">Piano Voicing Techniques</a>。コード種別ごとのコア、音域の実用指針。数値は絶対的な音響境界ではない。（確認2026-09-16）</p>
+</li>
+<li><p>W02 — Earl MacDonald / <a href="https://www.earlmacdonald.com/jazz-piano-lessons/left-hand-shells/">Left Hand Shells</a>。Root+7、Root+3/10、Root+7+10等。Shellの単一定義を支持しない。（確認2026-09-16）</p>
+</li>
+<li><p>W03 — Earl MacDonald / <a href="https://www.earlmacdonald.com/jazz-piano-lessons/rootless-left-hand-piano-voicings/">Rootless Left Hand Piano Voicings</a>。A/Bと音域。掲載群にはRootを含む例外があり、Bill Evans-styleという表現を提案している。（確認2026-09-16）</p>
+</li>
+<li><p>W04 — Earl MacDonald / <a href="https://www.earlmacdonald.com/jazz-piano-lessons/rootless-voicings-demonstrated/">Rootless Voicings Demonstrated</a>。LH和音+RH旋律、RH和音+LH Root/Shell/Walking Bassという配置の違い。（確認2026-09-16）</p>
+</li>
+<li><p>W05 — Earl MacDonald / <a href="https://www.earlmacdonald.com/jazz-piano-lessons/fourths-piano-voicings/">Fourths Piano Voicings</a>。Quartal、So What。A/Bの意味はこの教材の体系内で読む。（確認2026-09-16）</p>
+</li>
+<li><p>W06 — PianoGroove / Hayden Hill / <a href="https://www.pianogroove.com/jazz-piano-lessons/shell-voicings-for-jazz-piano/">Shell Voicings for Jazz Piano</a>。R+3+7、R+7/R+3という部分構造、旋律を上に置く説明。（確認2026-09-16）</p>
+</li>
+<li><p>W07 — PianoGroove / Hayden Hill / <a href="https://www.pianogroove.com/jazz-piano-lessons/slash-chords/">Slash Chords</a>。上部和音とBass、Bass線、音の重複。別コード名との同一視は完全音集合と演奏上の略記を分けて検証する。（確認2026-09-16）</p>
+</li>
+<li><p>W08 — PianoGroove / Hayden Hill / <a href="https://www.pianogroove.com/jazz-piano-lessons/upper-structure-triads/">Upper Structure Triads</a>。Dominant Shellと三和音の組合せ。全Upper Structureの普遍定義ではなく、このレッスンの対象。（確認2026-09-16）</p>
+</li>
+<li><p>W09 — PianoGroove / Hayden Hill / <a href="https://www.pianogroove.com/jazz-piano-lessons/chord-extensions-9ths-11ths-13ths/">Jazz Piano Chord Extensions</a>。9/11/13。長3度と自然11の摩擦を説明。禁止音という意味ではない。（確認2026-09-16）</p>
+</li>
+<li><p>W10 — PianoGroove / Hayden Hill / <a href="https://community.pianogroove.com/t/two-handed-comping/2391">Two Handed Comping</a>。講師回答：Closedから上から2番目を下げるDrop 2。（確認2026-09-16）</p>
+</li>
+<li><p>W11 — PianoGroove / Hayden Hill / <a href="https://community.pianogroove.com/t/how-about-indicating-fingerings-on-pdfs/11998">How about indicating fingerings on PDFs?</a>。講師回答：SpreadのBass小指とMelody外側の指は出発点。前後の文脈で変わる。（確認2026-09-16）</p>
+</li>
+<li><p>W12 — PianoGroove / Hayden Hill / <a href="https://community.pianogroove.com/t/piano-fingering-for-beginner-jazz-standards/13761">Piano fingering for beginner jazz standards</a>。講師回答：手の大きさ、指替え、L5+L2で親指を空ける選択。（確認2026-09-16）</p>
+</li>
+<li><p>W13 — University of Puget Sound / Robert Hutchinson / <a href="https://musictheory.pugetsound.edu/mt21c/JazzChordVoicings.html">Jazz Chord Voicings</a>。Guide Tonesと進行中の動き。（確認2026-09-16）</p>
+</li>
+<li><p>W14 — University of Puget Sound / Robert Hutchinson / <a href="https://musictheory.pugetsound.edu/mt21c/polychords.html">Polychords</a>。複数の三和音・七の和音等を同時に鳴らす構造。（確認2026-09-16）</p>
+</li>
+<li><p>W15 — University of Puget Sound / Robert Hutchinson / <a href="https://musictheory.pugetsound.edu/mt21c/PedalPoint.html">Pedal Point</a>。和声が変化する間の持続音。単一コードからは判定できない。（確認2026-09-16）</p>
+</li>
+<li><p>W16 — Open Studio / Adam Maness / <a href="https://www.openstudiojazz.com/5-easy-jazz-piano-chords-that-sound-great/">5 Easy Jazz Piano Chords That Sound Great</a>。Rootと上声を分けたii–V–Iの具体的学習。（確認2026-09-16）</p>
+</li>
+<li><p>W17 — Open Studio / <a href="https://www.facebook.com/openstudiojazz/videos/root-shell-prettypiano-jazz-music-openstudio-instajazz/2529369034126995/">Root Shell Pretty（公式動画）</a>。公式公開動画の検索可能な説明でRootとShell（3/7）を分けている。動画全編の独自逐語検証はしていない。（確認2026-09-16）</p>
+</li>
+<li><p>W18 — Berklee Online / <a href="https://online.berklee.edu/courses/pop-rock-keyboard">Pop/Rock Keyboard</a>。教育課程にTriad inversion、add9、fourths、line cliché等を含む。ジャンルごとの効果の実験的証明ではない。（確認2026-09-16）</p>
+</li>
+<li><p>W19 — University of Puget Sound / Robert Hutchinson / <a href="https://musictheory.pugetsound.edu/mt21c/AlteredDominantSeventhChords.html">Altered Dominant Seventh Chords</a>。Dominantの変化音。altを一つの固定配置と同一視しない。（確認2026-09-16）</p>
+</li>
+</ul>
+<h2>ZIP全件インベントリ</h2>
+<p>29ファイル、画像・PDF合計32ページ相当。全ページを一覧し、役割分担・Voicing式の資料を重点的に拡大目視確認。商用曲譜の全小節再採譜はしていません。</p>
+<ul>
+<li><p>T01：1.jfif / 1ページ相当 / SHA-256 68359b89c9f49c40a198af0de850bfb84c5494f091b8049c600af87a190ef6b1</p>
+</li>
+<li><p>T02：2.jfif / 1ページ相当 / SHA-256 481084c1fe97ce66063678c3bc7ca9f1ab94f5545d16e9cda75a3e31d07029bb</p>
+</li>
+<li><p>T03：3.jpg / 1ページ相当 / SHA-256 bebd75b86e49799ecee61d6d0417241ffa87c8ee8c2f1fe7493d9dcda07f96ef</p>
+</li>
+<li><p>T04：4.jpg / 1ページ相当 / SHA-256 b400c76ee1cceae55ae3ad813fa85df32a5322f0cd73004c64f4189820d42f4f</p>
+</li>
+<li><p>T05：5.jpg / 1ページ相当 / SHA-256 4cdcaa1bc603c89c3fd52b064887db0142c726e95089bdf69d6b6f916c13acf5</p>
+</li>
+<li><p>T06：6.jpg / 1ページ相当 / SHA-256 baa9c10b6ca955940d8e234819ad7dcb50391352483a7d358376d7cddf2e03b6</p>
+</li>
+<li><p>T07：7.jpg / 1ページ相当 / SHA-256 01be180a3c384bd4628078284cb1cd90767e4d58d8bb1a36c43417b6f65adf2f</p>
+</li>
+<li><p>T08：8.jpg / 1ページ相当 / SHA-256 675b509c36486abd259f8fb8a68263ab28c1e3054998efc5ef1e9ddb7acc692d</p>
+</li>
+<li><p>T09：9.pdf / 1ページ相当 / SHA-256 20e802169a870dec6c929ed8ed8021496db77524753711cffca8af95e74e6a38</p>
+</li>
+<li><p>T10：スクリーンショット 2022-09-11 112521.png / 1ページ相当 / SHA-256 95a89bdb3622e60ebc7060d5cebd8052be3094060a622149083a76ea46a904fd</p>
+</li>
+<li><p>T11：スクリーンショット 2022-09-11 115854.png / 1ページ相当 / SHA-256 8c4128cc1ee50052d1f041d2aacfa431b657590a06c1536c27a5af91e37c273a</p>
+</li>
+<li><p>T12：スクリーンショット 2022-10-23 111622.png / 1ページ相当 / SHA-256 6668c4f71a19ba35fd463255b24937597f92c4f08587a052237abb8bc32f1817</p>
+</li>
+<li><p>T13：スクリーンショット 2023-03-19 113139.png / 1ページ相当 / SHA-256 8cf9804d7b639dc180a4761d583a51573368a7e2082f424ed27eb23ae44ebed9</p>
+</li>
+<li><p>T14：スクリーンショット 2023-03-19 113953.png / 1ページ相当 / SHA-256 4c7be2e9457096af49382a9a53fa21bb97e1d53ae60a17cc6f5ec4503b87bf70</p>
+</li>
+<li><p>T15：スクリーンショット 2023-04-16 115329.png / 1ページ相当 / SHA-256 0e3ca1cbc9b988f208f7bc16456476f29c25d04d35e5c9a704b7f965acf4115d</p>
+</li>
+<li><p>T16：スクリーンショット 2023-04-16 115446.png / 1ページ相当 / SHA-256 72fecd8eb2a2e0dd2e2f9c52949c11f300d4ec662e40b122be9efa959340a789</p>
+</li>
+<li><p>T17：スクリーンショット 2023-04-16 115933.png / 1ページ相当 / SHA-256 a8a2d0d8bd159b5880d4df12af8c6abc0d46ca44348e9fae3f712f6dcd35ead3</p>
+</li>
+<li><p>T18：パズル.pdf / 4ページ相当 / SHA-256 164e38e80b61b62442791d05ba65b3083fb1a4664cb7e74198a4be46db95248b</p>
+</li>
+<li><p>T19：レッスンノート11-13-1.pdf / 1ページ相当 / SHA-256 20b15287e0070d15e7b0f4742f2a0963add239e721b760f542da074791d53223</p>
+</li>
+<li><p>T20：レッスンノート11-13-2.pdf / 1ページ相当 / SHA-256 c36bea7bd6ec590a902f060918626f1df6d5ca5726ee287b36bb9c67447253a4</p>
+</li>
+<li><p>T21：レッスンノート11-13-3.pdf / 1ページ相当 / SHA-256 e19a44174697578e3bf48f746c94077c3b895f2c853ab127eb96cfdbf94a461f</p>
+</li>
+<li><p>T22：レッスンノート11-13-4.pdf / 1ページ相当 / SHA-256 f7a4176700146a79573f42d15c2e063ec5a41102bd0086ad60e8980f3325e9ad</p>
+</li>
+<li><p>T23：レッスンノート11-13-5.pdf / 1ページ相当 / SHA-256 eba4611b47ed9a02758981b89f8543395fb1bb5ecc3762dd25308ba6df1612c8</p>
+</li>
+<li><p>T24：レッスンノート3.pdf / 1ページ相当 / SHA-256 48281b794f50d79e3dcc1e0467a3440f2bb435167c87394541d61f9642e4313e</p>
+</li>
+<li><p>T25：レッスン理論1.pdf / 1ページ相当 / SHA-256 07d1bb15357b718f8a6135b049ebf7e232a3afd372aeb9a961c77ae1a262fc27</p>
+</li>
+<li><p>T26：レッスン理論2.pdf / 1ページ相当 / SHA-256 0b805f606ba60b87dd3ff7d7eb0d6f4176184b68fceeaae2be1f0513d0970923</p>
+</li>
+<li><p>T27：レフトハンドボイシング.pdf / 1ページ相当 / SHA-256 f1c8cb26190ffa927f15c86d42398acdcca5b31e08da8e719c83b6dc297ef42a</p>
+</li>
+<li><p>T28：レフトハンドボイシングその1.pdf / 1ページ相当 / SHA-256 95f0c35e2a443f99338eaaf91e0d9c6d086aad616b2ee3f128f3aec0feac75ba</p>
+</li>
+<li><p>T29：レフトハンドボイシングその2.pdf / 1ページ相当 / SHA-256 9d2b3154579da375e9ad98edc3535d36d8bcfa71c1a019f1a658ff849e793f06</p>
+</li>
+</ul>
+<h2>未確定事項</h2>
+<p>T04のb9の適用文脈、T27のmajor欄の第2操作、T23のRoot範囲分けの前提音域、個人の手幅に適した指、現行アプリの内部Rule式・最新実行結果は未確定です。先生や実装担当者による確認が必要です。</p>
+</main><footer>2026-09-16 / 提案資料。Loop Vaultの現行コード改変や実機検証は行っていません。</footer><script>document.querySelectorAll('h2').forEach((h,i)=>{h.id='section-'+i});document.getElementById('find').addEventListener('click',()=>{const v=document.getElementById('q').value.trim();if(v&&window.find)window.find(v,false,false,true)});document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('find').click()});</script></html>

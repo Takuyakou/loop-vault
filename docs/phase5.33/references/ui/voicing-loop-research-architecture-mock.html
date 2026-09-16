@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Loop Vault — Voicing Research Architecture Mock</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#08111c; --sidebar:#0a1420; --panel:#0f1b2b; --panel2:#132238;
+  --line:#263c51; --line2:#35546e; --text:#edf6fb; --muted:#8ca4b8;
+  --cyan:#49d8cd; --cyan-soft:#0f3535; --gold:#efbd69; --gold-soft:#392b17;
+  --blue:#72baff; --violet:#b29aff; --shadow:0 9px 26px rgba(0,0,0,.24);
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI","Noto Sans JP",sans-serif}
+body{overflow:hidden}
+button,input{font:inherit}
+button{cursor:pointer}
+.app{width:100%;height:100vh;display:grid;grid-template-columns:180px minmax(0,1fr)}
+/* Sidebar intentionally mirrors current product and is not part of this redesign. */
+aside{background:var(--sidebar);border-right:1px solid #1b2d3f;padding:14px 10px}
+.brand{font-size:16px;font-weight:950;line-height:1.2;padding:5px 8px 15px}
+.brand small{display:block;margin-top:3px;color:#6fa2bf;font-size:8px;font-weight:700}
+.nav{display:grid;gap:3px}
+.nav .section{margin:12px 8px 4px;color:#6f879b;font-size:8px;font-weight:900;letter-spacing:.08em}
+.nav button{border:0;background:transparent;color:#9db2c4;text-align:left;padding:8px 10px;border-radius:7px;font-size:11px}
+.nav button.active{background:#123b39;color:#dcfff9}
+main{
+  min-width:0;height:100vh;padding:10px 14px 10px;
+  display:grid;grid-template-rows:auto auto auto auto minmax(0,1fr) auto;gap:7px;overflow:hidden
+}
+.top{min-height:36px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.top h1{font-size:19px;margin:0 0 2px}.top p{margin:0;color:var(--muted);font-size:10px}
+.btn{border:1px solid var(--line2);background:#0b1927;color:#c7d8e6;border-radius:7px;padding:7px 9px;font-size:10px;font-weight:850}
+.btn.primary{border-color:#2f857c;background:#102d2e;color:#d2fff9}
+.toolbar{
+  min-height:42px;border:1px solid var(--line);background:var(--panel);border-radius:8px;
+  display:flex;align-items:center;gap:12px;padding:6px 8px;white-space:nowrap
+}
+.group{display:flex;align-items:center;gap:5px}.group-label{font-size:8px;color:#71899e;font-weight:950;letter-spacing:.09em}
+.pill{height:28px;border:1px solid #2d485f;background:#0a1724;color:#acc0d2;border-radius:6px;padding:0 9px;font-size:9px;font-weight:850}
+.pill.active{border-color:#2f9e93;background:#103130;color:#d8fff9}
+.pill.secondary-active{border-color:#5b6ea2;background:#18223a;color:#dce5ff}
+.sep{width:1px;height:20px;background:#294054}
+.check{display:inline-flex;align-items:center;gap:5px;height:28px;border:1px solid #2d485f;border-radius:6px;padding:0 8px;color:#bcd0df;font-size:9px;font-weight:800}
+.check input{accent-color:var(--cyan)}
+.practice{
+  display:grid;grid-template-columns:minmax(0,1.55fr) minmax(285px,.56fr);gap:7px
+}
+.card{border:1px solid var(--line);background:linear-gradient(180deg,var(--panel2),var(--panel));border-radius:8px;box-shadow:var(--shadow)}
+.current{padding:9px 10px}
+.current-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:6px}
+.eyebrow{color:var(--cyan);font-size:8px;font-weight:950;letter-spacing:.1em}
+.chord-row{display:flex;align-items:baseline;gap:7px}
+.chord{font-size:29px;line-height:1;font-weight:950;letter-spacing:-.03em}
+.degree-fn{color:var(--cyan);font-size:10px;font-weight:900}
+.rule-box{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.rule-chip{border:1px solid #53687d;background:#0b1927;color:#bfd0de;border-radius:999px;padding:4px 7px;font-size:8px;font-weight:850}
+.rule-chip.teacher{border-color:#806535;background:#332817;color:#f8d58f}
+.rule-chip.literal{border-color:#2b7a73;background:#102b2c;color:#c8fff7}
+.hands{display:grid;grid-template-columns:minmax(0,.72fr) minmax(0,1.28fr);gap:7px}
+.hand{padding:7px 8px;border-radius:7px}
+.hand.left{border:1px solid #775a30;background:linear-gradient(180deg,#3b2d19,#251c12)}
+.hand.right{border:1px solid #2e7b74;background:linear-gradient(180deg,#103333,#0c2425)}
+.hand-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}
+.hand-name{font-size:9px;font-weight:950;letter-spacing:.04em}.left .hand-name{color:#ffdc9f}.right .hand-name{color:#cafff8}
+.role{font-size:7px;color:#8da2b4}
+.hand-grid{display:grid;grid-template-columns:72px 1fr;gap:4px 7px;align-items:center}
+.k{font-size:7px;color:#7790a4;font-weight:950;letter-spacing:.05em}.left .k{color:#b69a6d}
+.v{font-size:11px;font-weight:800;word-spacing:6px}
+.finger{font-size:13px}.left .finger{color:#ffe1ab}.right .finger{color:#d8fffb}
+.small-note{
+  margin-top:6px;padding-top:5px;border-top:1px solid #203548;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:#7f96aa;font-size:8px
+}
+.small-note b{color:#c2d3df}
+.next{padding:9px 10px}
+.next .eyebrow{color:var(--blue)}
+.next-title{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.next-chord{font-size:20px;font-weight:900}
+.next-rule{font-size:7px;color:#7f96aa;text-align:right}
+.next-hands{display:grid;gap:5px;margin-top:6px}
+.next-hand{border-radius:6px;padding:5px 7px;font-size:8px}
+.next-hand.left{border:1px solid #684f2b;background:#2d2215}
+.next-hand.right{border:1px solid #2b716b;background:#0d2828}
+.next-hand strong{display:block;font-size:8px;margin-bottom:2px}.next-hand.left strong{color:#ffd99d}.next-hand.right strong{color:#c9fff8}
+.next-line{color:#9db1c2}.next-line b{color:#ecf4fa}
+.next-prepare{margin-top:6px;padding-top:5px;border-top:1px solid #213649;color:#7e96aa;font-size:7px}
+
+.status{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px
+}
+.stat{
+  min-height:34px;border:1px solid var(--line);background:#0d1927;border-radius:7px;padding:5px 8px;
+  display:flex;justify-content:space-between;align-items:center
+}
+.stat span:first-child{color:#788fa3;font-size:8px;font-weight:900}
+.stat strong{font-size:11px}.stat strong em{font-style:normal;color:var(--cyan)}
+.timeline-card{padding:6px 7px}
+.timeline-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px}
+.timeline-head span{color:#90a8bb;font-size:8px;font-weight:950;letter-spacing:.07em}
+.timeline-head small{color:#6e8598;font-size:7px}
+.timeline{height:40px;display:flex;gap:5px;position:relative;overflow:hidden}
+.event{
+  flex:0 0 88px;width:88px;height:39px;border:1px solid #29445c;background:#0a1724;color:#b7cad9;
+  border-radius:6px;padding:4px 6px;text-align:left;position:relative;overflow:hidden
+}
+.event.current-event{border-color:#34c8bc;background:#0d2b2c;color:#e7fffb}
+.event .n{font-size:7px;color:#71889b}.event .name{font-size:9px;font-weight:900;margin-top:1px;white-space:nowrap}
+.event .degree{position:absolute;right:4px;bottom:2px;color:#48d9ce;font-size:7px;font-weight:900}
+.playhead{position:absolute;top:0;left:2px;width:2px;height:39px;background:var(--cyan);box-shadow:0 0 8px rgba(73,216,205,.72);z-index:6}
+
+.keyboard-card{min-height:0;padding:7px 8px 8px;display:grid;grid-template-rows:auto minmax(0,1fr) auto}
+.keyboard-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:4px}
+.keyboard-head h2{margin:0;color:#9eb4c7;font-size:9px;letter-spacing:.07em}
+.keyboard-meta{display:flex;align-items:center;gap:10px;color:#7f97aa;font-size:7px}
+.legend{display:inline-flex;align-items:center;gap:4px}.dot{width:7px;height:7px;border-radius:50%}.dot.lh{background:var(--gold)}.dot.rh{background:var(--cyan)}
+.keyboard-wrap{min-height:0;border:1px solid #1d3244;border-radius:7px;background:#05090d;overflow:hidden}
+.keyboard{position:relative;width:100%;height:100%;min-height:245px;background:#05090d}
+.white-keys{height:100%;display:flex}.white{position:relative;flex:1;background:#f2f4f5;border-right:1px solid #5c646c}.white:last-child{border-right:0}
+.black{position:absolute;top:0;height:60%;width:1.65%;background:#171b20;border:1px solid #4e565e;border-radius:0 0 3px 3px;z-index:4}
+.key-lh{background:#efd09c!important}.key-lh.black{background:#8d6732!important}.key-rh{background:#bcebe6!important}.key-rh.black{background:#326f6a!important}
+.note-label{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);font-size:8px;font-weight:900;color:#0c1720;white-space:nowrap}.black .note-label{color:#f5fbff;bottom:5px}
+.finger-tag{position:absolute;left:50%;top:7px;transform:translateX(-50%);min-width:32px;height:24px;padding:0 5px;border-radius:999px;display:grid;place-items:center;font-size:9px;font-weight:950;z-index:8}
+.finger-tag.lh{border:1px solid #d7a95b;background:#402f18;color:#ffe3ad}.finger-tag.rh{border:1px solid #3ac7bc;background:#0d2b31;color:#c8fff9}
+.keyboard-foot{margin-top:4px;display:flex;justify-content:space-between;gap:10px;color:#768ea2;font-size:7px}
+.keyboard-foot b{color:#b8cedd}
+
+.transport{
+  min-height:38px;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:5px 7px;
+  display:flex;align-items:center;gap:6px
+}
+.transport .btn{height:28px;padding:0 8px}
+.field{display:inline-flex;align-items:center;gap:5px;color:#7d94a8;font-size:7px}
+.field strong{color:#dbe7ef;font-size:9px}
+.ref{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 7px;border:1px solid #2d475f;border-radius:6px;color:#bdd0df;font-size:8px}
+.ref input{accent-color:var(--cyan)}
+.spacer{flex:1}.summary{color:#7c94a8;font-size:8px}
+
+.toast{position:fixed;left:50%;bottom:11px;transform:translateX(-50%);background:#0f2435;border:1px solid #365b76;color:#dbe8f2;padding:7px 10px;border-radius:7px;font-size:9px;opacity:0;pointer-events:none;transition:opacity .12s;z-index:20}
+.toast.show{opacity:1}
+
+@media(max-width:1100px){
+  .toolbar{gap:7px}.pill{padding:0 6px}.group-label{display:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="brand">LOOP VAULT<small>MUSIC WORKSPACE</small></div>
+    <div class="nav">
+      <div class="section">WORKSPACE</div>
+      <button>⌂ Home</button>
+      <button>〽 Chord Capture</button>
+      <button>◇ Vault</button>
+      <button>♧ Practice</button>
+      <button class="active">↪ Voicing Loop</button>
+      <button>▤ Live MIDI</button>
+      <div class="section">SYSTEM</div>
+      <button>◴ History</button>
+      <button>⚙ Settings</button>
+    </div>
+  </aside>
+
+  <main>
+    <header class="top">
+      <div>
+        <h1>Voicing Loop</h1>
+        <p>先生由来の作曲Voicingと一般的なVoicing体系を、進行の中で身体に覚える。</p>
+      </div>
+      <button class="btn">進行を変更</button>
+    </header>
+
+    <section class="toolbar">
+      <div class="group">
+        <span class="group-label">SOURCE</span>
+        <button class="pill active" data-source="rules">Lesson Rules</button>
+        <button class="pill" data-source="midi">Source MIDI</button>
+        <button class="pill" data-source="custom">Custom</button>
+      </div>
+      <div class="sep"></div>
+      <div class="group" id="studyGroup">
+        <span class="group-label">STUDY</span>
+        <button class="pill secondary-active" data-study="teacher">Teacher</button>
+        <button class="pill" data-study="core">Core</button>
+        <button class="pill" data-study="color">Color</button>
+        <button class="pill" data-study="open">Open</button>
+      </div>
+      <div class="sep"></div>
+      <div class="group">
+        <span class="group-label">DISPLAY</span>
+        <button class="pill active">Learn</button>
+        <button class="pill">Recall</button>
+        <label class="check"><input id="fingerToggle" type="checkbox" checked>指番号</label>
+      </div>
+    </section>
+
+    <section class="practice">
+      <article class="card current">
+        <div class="current-head">
+          <div>
+            <div class="eyebrow">CURRENT · <span id="currentIndex">1</span>/8</div>
+            <div class="chord-row">
+              <div id="currentChord" class="chord">Dmaj7</div>
+              <div id="currentDegree" class="degree-fn">IV</div>
+            </div>
+          </div>
+          <div class="rule-box">
+            <span id="ruleChip" class="rule-chip teacher">Teacher Open</span>
+            <span id="modeChip" class="rule-chip literal">Literal</span>
+            <button class="btn">候補 1/1</button>
+          </div>
+        </div>
+
+        <div class="hands">
+          <section class="hand left">
+            <div class="hand-title"><span class="hand-name">LEFT HAND｜左手</span><span id="leftRole" class="role">Root + 7</span></div>
+            <div class="hand-grid">
+              <div class="k">PITCH</div><div id="leftPitch" class="v">D3 C#4</div>
+              <div class="k">CHORD TONE</div><div id="leftTone" class="v">1 7</div>
+              <div class="k finger-line">FINGER</div><div id="leftFinger" class="v finger finger-line">L5 L1</div>
+            </div>
+          </section>
+          <section class="hand right">
+            <div class="hand-title"><span class="hand-name">RIGHT HAND｜右手</span><span id="rightRole" class="role">3 + Melody</span></div>
+            <div class="hand-grid">
+              <div class="k">PITCH</div><div id="rightPitch" class="v">F#4 A4</div>
+              <div class="k">CHORD TONE</div><div id="rightTone" class="v">3 5</div>
+              <div class="k finger-line">FINGER</div><div id="rightFinger" class="v finger finger-line">R1 R3</div>
+            </div>
+          </section>
+        </div>
+
+        <div class="small-note">
+          <span>RULE <b id="ruleText">LH 1+7 / RH 3+Melody</b></span>
+          <span>OMIT <b id="omitText">なし</b></span>
+          <span>TOP <b id="topText">A4 = Melody</b></span>
+        </div>
+      </article>
+
+      <article class="card next">
+        <div class="next-title">
+          <div><div class="eyebrow">NEXT</div><div id="nextChord" class="next-chord">Dm7</div></div>
+          <div id="nextRule" class="next-rule">Teacher Open</div>
+        </div>
+        <div class="next-hands">
+          <div class="next-hand left"><strong>LEFT HAND｜左手</strong><div id="nextLeft" class="next-line">D3 C4 · <b class="finger-line">L5 L1</b></div></div>
+          <div class="next-hand right"><strong>RIGHT HAND｜右手</strong><div id="nextRight" class="next-line">F4 A4 · <b class="finger-line">R1 R3</b></div></div>
+        </div>
+        <div id="nextPrepare" class="next-prepare">共通音・半音移動を先読み</div>
+      </article>
+    </section>
+
+    <section class="status">
+      <div class="stat"><span>BEAT</span><strong><em>1</em> / 4</strong></div>
+      <div class="stat"><span>POSITION</span><strong><em id="positionValue">1</em> / 8</strong></div>
+      <div class="stat"><span>LOOP</span><strong><em>0</em></strong></div>
+    </section>
+
+    <section class="card timeline-card">
+      <div class="timeline-head"><span>PROGRESSION</span><small>クリック = 試聴 / このモックでは表示も切替</small></div>
+      <div id="timeline" class="timeline">
+        <button class="event current-event" data-i="0"><span class="n">1</span><div class="name">Dmaj7</div><span class="degree">IV</span></button>
+        <button class="event" data-i="1"><span class="n">2</span><div class="name">Dm7</div><span class="degree">iv</span></button>
+        <button class="event" data-i="2"><span class="n">3</span><div class="name">C#m7</div><span class="degree">iii</span></button>
+        <button class="event" data-i="3"><span class="n">4</span><div class="name">Eadd9/F#</div><span class="degree">V</span></button>
+        <button class="event" data-i="4"><span class="n">5</span><div class="name">C7</div><span class="degree">♭III</span></button>
+        <button class="event" data-i="5"><span class="n">6</span><div class="name">Bm7</div><span class="degree">ii</span></button>
+        <button class="event" data-i="6"><span class="n">7</span><div class="name">Dadd9/E</div><span class="degree">IV</span></button>
+        <button class="event" data-i="7"><span class="n">8</span><div class="name">Gmaj9/A</div><span class="degree">♭VII</span></button>
+        <div id="playhead" class="playhead"></div>
+      </div>
+    </section>
+
+    <section class="card keyboard-card">
+      <div class="keyboard-head">
+        <h2>KEYBOARD — 88 KEYS / A0–C8</h2>
+        <div class="keyboard-meta">
+          <span class="legend"><span class="dot lh"></span>LEFT HAND</span>
+          <span class="legend"><span class="dot rh"></span>RIGHT HAND</span>
+          <span class="finger-line">L/R + 指番号</span>
+        </div>
+      </div>
+      <div class="keyboard-wrap"><div id="keyboard" class="keyboard"><div id="whiteKeys" class="white-keys"></div><div id="blackKeys"></div></div></div>
+      <div class="keyboard-foot">
+        <b id="keyboardNote">Teacher Open · Dmaj7</b>
+        <span>Source MIDI / Custom選択時は保存済みの実音をそのまま表示</span>
+      </div>
+    </section>
+
+    <section class="transport">
+      <div class="field">BPM <strong>125</strong></div>
+      <div class="field">KEY <strong>Aメジャー</strong></div>
+      <div class="field">COUNT-IN <strong>1小節</strong></div>
+      <button class="btn primary">▶ 開始</button>
+      <button class="btn">↺ 最初から</button>
+      <button class="btn">■ 停止</button>
+      <label class="ref"><input type="checkbox" checked>お手本音</label>
+      <button class="btn">メトロノーム ON</button>
+      <div class="spacer"></div>
+      <div class="summary">開始できます</div>
+    </section>
+  </main>
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+(function(){
+const eventsData=[
+  {ch:'Dmaj7',deg:'IV',rule:'Teacher Open',mode:'Literal',lh:['D3','C#4'],lht:['1','7'],lhf:['L5','L1'],lhr:'Root + 7',rh:['F#4','A4'],rht:['3','5'],rhf:['R1','R3'],rhr:'3 + Melody',ruleText:'LH 1+7 / RH 3+Melody',omit:'なし',top:'A4 = Melody',prep:'C#→C / F#→F を意識',midis:[{m:50,h:'lh',f:'L5',n:'D3'},{m:61,h:'lh',f:'L1',n:'C#4'},{m:66,h:'rh',f:'R1',n:'F#4'},{m:69,h:'rh',f:'R3',n:'A4'}]},
+  {ch:'Dm7',deg:'iv',rule:'Teacher Open',mode:'Literal',lh:['D3','C4'],lht:['1','b7'],lhf:['L5','L1'],lhr:'Root + b7',rh:['F4','A4'],rht:['b3','5'],rhf:['R1','R3'],rhr:'b3 + Melody',ruleText:'LH 1+b7 / RH b3+Melody',omit:'なし',top:'A4 = Melody',prep:'Cを保持し次へ',midis:[{m:50,h:'lh',f:'L5',n:'D3'},{m:60,h:'lh',f:'L1',n:'C4'},{m:65,h:'rh',f:'R1',n:'F4'},{m:69,h:'rh',f:'R3',n:'A4'}]},
+  {ch:'C#m7',deg:'iii',rule:'Teacher Open',mode:'Literal',lh:['C#3','B3'],lht:['1','b7'],lhf:['L5','L1'],lhr:'Root + b7',rh:['E4','G#4'],rht:['b3','5'],rhf:['R1','R3'],rhr:'b3 + Melody',ruleText:'LH 1+b7 / RH b3+Melody',omit:'なし',top:'G#4 = Melody',prep:'次はSlash Bass F#',midis:[{m:49,h:'lh',f:'L5',n:'C#3'},{m:59,h:'lh',f:'L1',n:'B3'},{m:64,h:'rh',f:'R1',n:'E4'},{m:68,h:'rh',f:'R3',n:'G#4'}]},
+  {ch:'Eadd9/F#',deg:'V',rule:'Slash Bass + RH Triad',mode:'Literal',lh:['F#2'],lht:['9'],lhf:['L5'],lhr:'Slash Bass = 9',rh:['E4','G#4','B4'],rht:['1','3','5'],rhf:['R1','R3','R5'],rhr:'Upper Triad',ruleText:'LH Slash Bass / RH 1·3·5',omit:'なし',top:'B4 = 5',prep:'Bを保持し G#→G',midis:[{m:42,h:'lh',f:'L5',n:'F#2'},{m:64,h:'rh',f:'R1',n:'E4'},{m:68,h:'rh',f:'R3',n:'G#4'},{m:71,h:'rh',f:'R5',n:'B4'}]},
+  {ch:'C7',deg:'♭III',rule:'Teacher Open',mode:'Reduction',lh:['C3','Bb3'],lht:['1','b7'],lhf:['L5','L1'],lhr:'Root + b7',rh:['E4','G4'],rht:['3','5'],rhf:['R1','R3'],rhr:'3 + Melody',ruleText:'LH 1+b7 / RH 3+Melody',omit:'なし',top:'G4 = Melody',prep:'次のBm7へ半音接続',midis:[{m:48,h:'lh',f:'L5',n:'C3'},{m:58,h:'lh',f:'L1',n:'Bb3'},{m:64,h:'rh',f:'R1',n:'E4'},{m:67,h:'rh',f:'R3',n:'G4'}]},
+  {ch:'Bm7',deg:'ii',rule:'Teacher Open',mode:'Literal',lh:['B2','A3'],lht:['1','b7'],lhf:['L5','L1'],lhr:'Root + b7',rh:['D4','F#4'],rht:['b3','5'],rhf:['R1','R3'],rhr:'b3 + Melody',ruleText:'LH 1+b7 / RH b3+Melody',omit:'なし',top:'F#4 = Melody',prep:'次はE Bassへ',midis:[{m:47,h:'lh',f:'L5',n:'B2'},{m:57,h:'lh',f:'L1',n:'A3'},{m:62,h:'rh',f:'R1',n:'D4'},{m:66,h:'rh',f:'R3',n:'F#4'}]},
+  {ch:'Dadd9/E',deg:'IV',rule:'Slash Bass + RH Triad',mode:'Literal',lh:['E2'],lht:['9'],lhf:['L5'],lhr:'Slash Bass = 9',rh:['D4','F#4','A4'],rht:['1','3','5'],rhf:['R1','R3','R5'],rhr:'Upper Triad',ruleText:'LH Slash Bass / RH 1·3·5',omit:'なし',top:'A4 = 5',prep:'A Bassへ / F#を保持',midis:[{m:40,h:'lh',f:'L5',n:'E2'},{m:62,h:'rh',f:'R1',n:'D4'},{m:66,h:'rh',f:'R3',n:'F#4'},{m:69,h:'rh',f:'R5',n:'A4'}]},
+  {ch:'Gmaj9/A',deg:'♭VII',rule:'Slash Bass + RH Core',mode:'Reduction',lh:['A2'],lht:['9'],lhf:['L5'],lhr:'Slash Bass = 9',rh:['F#4','G4','B4'],rht:['7','1','3'],rhf:['R1','R2','R5'],rhr:'Root·3·7 Core',ruleText:'LH 9 / RH 7·1·3',omit:'5 (D)',top:'B4 = 3',prep:'Loop先頭のDmaj7へ',midis:[{m:45,h:'lh',f:'L5',n:'A2'},{m:66,h:'rh',f:'R1',n:'F#4'},{m:67,h:'rh',f:'R2',n:'G4'},{m:71,h:'rh',f:'R5',n:'B4'}]},
+];
+
+const q=id=>document.getElementById(id);
+let current=0;
+let fingerOn=true;
+const whitePcs=new Set([0,2,4,5,7,9,11]);
+const start=21,end=108;
+const whites=[],blacks=[];
+for(let m=start;m<=end;m++)(whitePcs.has(m%12)?whites:blacks).push(m);
+
+function whiteIndex(midi){let c=0;for(let m=start;m<midi;m++)if(whitePcs.has(m%12))c++;return c}
+function noteName(m){const n=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];return n[m%12]+(Math.floor(m/12)-1)}
+function renderKeyboard(){
+  const wk=q('whiteKeys'),bk=q('blackKeys');wk.innerHTML='';bk.innerHTML='';
+  const active=new Map(eventsData[current].midis.map(x=>[x.m,x]));
+  const wc=whites.length;
+  whites.forEach(m=>{
+    const a=active.get(m),el=document.createElement('div');el.className='white'+(a?' key-'+a.h:'');
+    if(a){el.innerHTML=(fingerOn?'<span class="finger-tag '+a.h+' finger-line">'+a.f+'</span>':'')+'<span class="note-label">'+a.n+'</span>'}
+    else if(m%12===0){el.innerHTML='<span class="note-label" style="color:#69737c;font-weight:700">'+noteName(m)+'</span>'}
+    wk.appendChild(el);
+  });
+  blacks.forEach(m=>{
+    const a=active.get(m),el=document.createElement('div');el.className='black'+(a?' key-'+a.h:'');
+    el.style.left=((whiteIndex(m)/wc)*100-(100/wc)*.33)+'%';
+    if(a){el.innerHTML=(fingerOn?'<span class="finger-tag '+a.h+' finger-line">'+a.f+'</span>':'')+'<span class="note-label">'+a.n+'</span>'}
+    bk.appendChild(el);
+  });
+}
+function render(){
+  const d=eventsData[current],n=eventsData[(current+1)%eventsData.length];
+  q('currentIndex').textContent=current+1;q('positionValue').textContent=current+1;
+  q('currentChord').textContent=d.ch;q('currentDegree').textContent=d.deg;
+  q('ruleChip').textContent=d.rule;q('modeChip').textContent=d.mode;
+  q('leftRole').textContent=d.lhr;q('rightRole').textContent=d.rhr;
+  q('leftPitch').textContent=d.lh.join(' ');q('leftTone').textContent=d.lht.join(' ');q('leftFinger').textContent=d.lhf.join(' ');
+  q('rightPitch').textContent=d.rh.join(' ');q('rightTone').textContent=d.rht.join(' ');q('rightFinger').textContent=d.rhf.join(' ');
+  q('ruleText').textContent=d.ruleText;q('omitText').textContent=d.omit;q('topText').textContent=d.top;
+  q('nextChord').textContent=n.ch;q('nextRule').textContent=n.rule;
+  q('nextLeft').innerHTML=n.lh.join(' ')+' · <b class="finger-line">'+n.lhf.join(' ')+'</b>';
+  q('nextRight').innerHTML=n.rh.join(' ')+' · <b class="finger-line">'+n.rhf.join(' ')+'</b>';
+  q('nextPrepare').textContent=d.prep;
+  q('keyboardNote').textContent=d.rule+' · '+d.ch;
+  document.querySelectorAll('.event').forEach((e,i)=>e.classList.toggle('current-event',i===current));
+  q('playhead').style.transform='translateX('+(2+current*93)+'px)';
+  renderKeyboard();
+  document.querySelectorAll('.finger-line').forEach(el=>el.style.display=fingerOn?'':'none');
+}
+document.querySelectorAll('.event').forEach(btn=>btn.addEventListener('click',()=>{current=Number(btn.dataset.i);render()}));
+q('fingerToggle').addEventListener('change',e=>{fingerOn=e.target.checked;render()});
+
+document.querySelectorAll('[data-source]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-source]').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+  const rules=b.dataset.source==='rules';q('studyGroup').style.opacity=rules?'1':'.38';q('studyGroup').style.pointerEvents=rules?'auto':'none';
+}));
+document.querySelectorAll('[data-study]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-study]').forEach(x=>x.classList.remove('secondary-active'));b.classList.add('secondary-active');
+}));
+render();
+})();
+</script>
+</body>
+</html>

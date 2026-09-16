@@ -1,0 +1,4243 @@
+{
+  "schema_version": "research-proposal-1.0",
+  "created": "2026-09-16",
+  "title": "作曲用Voicing：実装候補33ルール",
+  "status": "研究・設計提案。Loop Vault現行スキーマ互換を意味しない。実装・マージ・実機テストは未実施。",
+  "notation": {
+    "middle_c": "C4 = MIDI note 60",
+    "note_order": "各Hand内で低音→高音",
+    "fingers": "L/R=左手/右手、1=親指、2=人差し指、3=中指、4=薬指、5=小指",
+    "degree_basis": "各コードの上部Root。Slash Bass基準の分析は別フィールドで扱う。"
+  },
+  "provenance_policy": [
+    "[先生資料由来]は目視確認できた記載のみ。",
+    "[一般理論・外部資料由来]はSourcesの対象範囲内。",
+    "[今回の分析・推論]には全ての新規オクターブ・運指・実装規則・具体的配置例を含む。"
+  ],
+  "sources": [
+    {
+      "id": "W01",
+      "author": "Berklee Online / Randy Felts",
+      "title": "Piano Voicing Techniques",
+      "url": "https://online.berklee.edu/takenote/basic-piano-voicing-techniques/",
+      "evidence_scope": "コード種別ごとのコア、音域の実用指針。数値は絶対的な音響境界ではない。",
+      "accessed": "2026-09-16"
+    },
+    {
+      "id": "W02",
+      "author": "Earl MacDonald",
+      "title": "Left Hand Shells",
+      "url": "https://www.earlmacdonald.com/jazz-piano-lessons/left-hand-shells/",
+      "evidence_scope": "Root+7、Root+3/10、Root+7+10等。Shellの単一定義を支持しない。",
+      "accessed": "2026-09-16"
+    },
+    {
+      "id": "W03",
+      "author": "Earl MacDonald",
+      "title": "Rootless Left Hand Piano Voicings",
+      "url": "https://www.earlmacdonald.com/jazz-piano-lessons/rootless-left-hand-piano-voicings/",
+      "evidence_scope": "A/Bと音域。掲載群にはRootを含む例外があり、Bill Evans-styleという表現を提案している。",
+      "accessed": "2026-09-16"
+    },
+    {
+      "id": "W04",
+      "author": "Earl MacDonald",
+      "title": "Rootless Voicings Demonstrated",
+      "url": "https://www.earlmacdonald.com/jazz-piano-lessons/rootless-voicings-demonstrated/",
+      "evidence_scope": "LH和音+RH旋律、RH和音+LH Root/Shell/Walking Bassという配置の違い。",
+      "accessed": "2026-09-16"
+    },
+    {
+      "id": "W05",
+      "author": "Earl MacDonald",
+      "title": "Fourths Piano Voicings",
+      "url": "https://www.earlmacdonald.com/jazz-piano-lessons/fourths-piano-voicings/",
+      "evidence_scope": "Quartal、So What。A/Bの意味はこの教材の体系内で読む。",
+      "accessed": "2026-09-16"
+    },
+    {
+      "id": "W06",
+      "author": "PianoGroove / Hayden Hill",
+      "title": "Shell Voicings for Jazz Piano",
+      "url": "https://www.pianogroove.com/jazz-piano-lessons/shell-voicings-for-jazz-piano/",
+      "evidence_scope": "R+3+7、R+7/R+3という部分構造、旋律を上に置く説明。",
+      "accessed": "2026-09-16"
+    },
+    {
+      "id": "W07",
+      "author": "PianoGroove / Hayden Hill",
+      "title": "Slash Chords",
+      "url": "https://www.pianogroove.com/jazz-piano-lessons/slash-chords/",
+      "evidence_scope": "上部和音とBass、Bass線、音の重複。別コード名との同一視は完全音集合と演奏上の略記を分けて検証する。",
+      "accessed": "2026-09-16"
+    },
+    {
+      "id": "W08",
+      "author": "PianoGroove / Hayden Hill",
+      "title": "Upper Structure Triads",
+      "url": "https://www.pianogroove.com/jazz-piano-lessons/upper-structure-triads/",
+      "evidence_scope": "Dominant Shellと三和音の組合せ。全Upper Structureの普遍定義ではなく、このレッスンの対象。",
+      "accessed": "2026-09-16"
+    },
+    {
+      "id": "W09",
+      "author": "PianoGroove / Hayden Hill",
+      "title": "Jazz Piano Chord Extensions",
+      "url": "https://www.pianogroove.com/jazz-piano-lessons/chord-extensions-9ths-11ths-13ths/",
+      "evidence_scope": "9/11/13。長3度と自然11の摩擦を説明。禁止音という意味ではない。",
+      "accessed": "2026-09-16"
+    },
+    {
+      "id": "W10",
+      "author": "PianoGroove / Hayden Hill",
+      "title": "Two Handed Comping",
+      "url": "https://community.pianogroove.com/t/two-handed-comping/2391",
+      "evidence_scope": "講師回答：Closedから上から2番目を下げるDrop 2。",
+      "accessed": "2026-09-16"
+    },
+    {
+      "id": "W11",
+      "author": "PianoGroove / Hayden Hill",
+      "title": "How about indicating fingerings on PDFs?",
+      "url": "https://community.pianogroove.com/t/how-about-indicating-fingerings-on-pdfs/11998",
+      "evidence_scope": "講師回答：SpreadのBass小指とMelody外側の指は出発点。前後の文脈で変わる。",
+      "accessed": "2026-09-16"
+    },
+    {
+      "id": "W12",
+      "author": "PianoGroove / Hayden Hill",
+      "title": "Piano fingering for beginner jazz standards",
+      "url": "https://community.pianogroove.com/t/piano-fingering-for-beginner-jazz-standards/13761",
+      "evidence_scope": "講師回答：手の大きさ、指替え、L5+L2で親指を空ける選択。",
+      "accessed": "2026-09-16"
+    },
+    {
+      "id": "W13",
+      "author": "University of Puget Sound / Robert Hutchinson",
+      "title": "Jazz Chord Voicings",
+      "url": "https://musictheory.pugetsound.edu/mt21c/JazzChordVoicings.html",
+      "evidence_scope": "Guide Tonesと進行中の動き。",
+      "accessed": "2026-09-16"
+    },
+    {
+      "id": "W14",
+      "author": "University of Puget Sound / Robert Hutchinson",
+      "title": "Polychords",
+      "url": "https://musictheory.pugetsound.edu/mt21c/polychords.html",
+      "evidence_scope": "複数の三和音・七の和音等を同時に鳴らす構造。",
+      "accessed": "2026-09-16"
+    },
+    {
+      "id": "W15",
+      "author": "University of Puget Sound / Robert Hutchinson",
+      "title": "Pedal Point",
+      "url": "https://musictheory.pugetsound.edu/mt21c/PedalPoint.html",
+      "evidence_scope": "和声が変化する間の持続音。単一コードからは判定できない。",
+      "accessed": "2026-09-16"
+    },
+    {
+      "id": "W16",
+      "author": "Open Studio / Adam Maness",
+      "title": "5 Easy Jazz Piano Chords That Sound Great",
+      "url": "https://www.openstudiojazz.com/5-easy-jazz-piano-chords-that-sound-great/",
+      "evidence_scope": "Rootと上声を分けたii–V–Iの具体的学習。",
+      "accessed": "2026-09-16"
+    },
+    {
+      "id": "W17",
+      "author": "Open Studio",
+      "title": "Root Shell Pretty（公式動画）",
+      "url": "https://www.facebook.com/openstudiojazz/videos/root-shell-prettypiano-jazz-music-openstudio-instajazz/2529369034126995/",
+      "evidence_scope": "公式公開動画の検索可能な説明でRootとShell（3/7）を分けている。動画全編の独自逐語検証はしていない。",
+      "accessed": "2026-09-16"
+    },
+    {
+      "id": "W18",
+      "author": "Berklee Online",
+      "title": "Pop/Rock Keyboard",
+      "url": "https://online.berklee.edu/courses/pop-rock-keyboard",
+      "evidence_scope": "教育課程にTriad inversion、add9、fourths、line cliché等を含む。ジャンルごとの効果の実験的証明ではない。",
+      "accessed": "2026-09-16"
+    },
+    {
+      "id": "W19",
+      "author": "University of Puget Sound / Robert Hutchinson",
+      "title": "Altered Dominant Seventh Chords",
+      "url": "https://musictheory.pugetsound.edu/mt21c/AlteredDominantSeventhChords.html",
+      "evidence_scope": "Dominantの変化音。altを一つの固定配置と同一視しない。",
+      "accessed": "2026-09-16"
+    }
+  ],
+  "teacher_evidence": [
+    {
+      "id": "T01",
+      "file": "1.jfif",
+      "page": 1,
+      "section": "オープン・ヴォイシング（シンプルな形）",
+      "observed": "LHにRootと7系の音、RHに3度とMelodyを配する図。major7はRootの半音下、7/m7/m7b5は半音2つ下、dim7/6は半音3つ下という算出メモ。",
+      "analysis": "dim7の減7度と6の長6度は異なる度数。ピッチクラスが一致することと和声機能は別。",
+      "not_established": "具体的なオクターブ、必須の指番号、Shellという呼称。",
+      "confidence": "高"
+    },
+    {
+      "id": "T03",
+      "file": "3.jpg",
+      "page": 1,
+      "section": "分数コード・onコード",
+      "observed": "A on B = A/B。右手はAのコードから数音を選ぶ、BassはBを指定という説明。Ab/Bb（Melodyソ）、C/E（Melodyレ）の例。",
+      "analysis": "RHにXの全音を入れる義務を資料自体が課していない。旋律は別レイヤーとして考えている。",
+      "not_established": "全Slashに対する省略優先順位、各音の具体的指番号。",
+      "confidence": "高"
+    },
+    {
+      "id": "T04",
+      "file": "4.jpg",
+      "page": 1,
+      "section": "テンション9th",
+      "observed": "maj7/m7はRHにRootの全音上、3、Melody、LHに1/7。7の欄ではRH追加音がRootの半音上と書かれている。",
+      "analysis": "後者は数学的にはb9。全てのDominantを常にb9にする規則とは断定できない。",
+      "not_established": "7欄のb9がこの課題限定なのか、説明上の代表例なのか。",
+      "confidence": "高（記載）／中（意図）"
+    },
+    {
+      "id": "T08",
+      "file": "8.jpg",
+      "page": 1,
+      "section": "ポリコード ○7",
+      "observed": "RH三和音候補に#Im、VI、VIm、bVI、#IVm、bV、II。LHに1/7または1/3/7の図。C7の上にC#mの例。",
+      "analysis": "実装ではDominant Shell + Upper Structure Triadとして扱える。教師の表記名ポリコードも保持する。",
+      "not_established": "全候補を全Dominantで常に使用するという指示、固定の転回形や指。",
+      "confidence": "高"
+    },
+    {
+      "id": "T09",
+      "file": "9.pdf",
+      "page": 1,
+      "section": "ウラコード",
+      "observed": "G7とDb7の3/7の共通性、Dm7–G7–Cmaj7と置換例を記載。",
+      "analysis": "コード置換はReharmonization。Voicingの配置変更とは別の処理として保存する。",
+      "not_established": "どの曲でも同じ置換を採用する規則。",
+      "confidence": "高"
+    },
+    {
+      "id": "T16",
+      "file": "スクリーンショット 2023-04-16 115446.png",
+      "page": 1,
+      "section": "ii–V–Iと分数コードの比較",
+      "observed": "Dm7–G7–C△、Dm7–F/G–C△、G7/F→C/E、Dm7/C、G/B等。下段にAbm/G7とD/C7をポリコードと記載。",
+      "analysis": "Bassが変わる転回・ペダル的構造と、下段も和音であるポリコードをUI上で区別する必要がある。",
+      "not_established": "各例の全構成音・音域・運指。",
+      "confidence": "高"
+    },
+    {
+      "id": "T23",
+      "file": "レッスンノート11-13-5.pdf",
+      "page": 1,
+      "section": "下段：レフトハンドヴォイシング L.H.",
+      "observed": "C7～F7は下から3、7、b9/自然9/#9。F#7～B7は下から7、3、b13/自然13。",
+      "analysis": "Guide Tones + Colorの3音型。4音Rootless全般やA/B唯一の定義とは区別する。",
+      "not_established": "Root範囲による区分を選ぶ具体的な音域・前後進行の条件。",
+      "confidence": "高（図式）／中（選択条件）"
+    },
+    {
+      "id": "T27",
+      "file": "レフトハンドボイシング.pdf",
+      "page": 1,
+      "section": "コード種別ごとの操作メモ",
+      "observed": "m7とmajorの欄にRootを全音上げる操作。7はT23と同様の9/13の3音型。m7b5はそのまま／3を全音上げる、dim7はそのまま／Top Noteを全音上げるという別図。",
+      "analysis": "Root→9の置換は確認できるが、全てを同じrootless型に分類してはいけない。m7b5の3の変更はコア省略を伴うため課題文脈の確認が必要。",
+      "not_established": "major欄の第2操作の完全な文字判読と適用意図。全図のオクターブを断定した逐音採譜。",
+      "confidence": "高（判読部分）／低（未判読の操作）"
+    },
+    {
+      "id": "T28",
+      "file": "レフトハンドボイシングその1.pdf",
+      "page": 1,
+      "section": "Just the Two of Us の練習用コード譜",
+      "observed": "曲の旋律・コードを用いた適用資料。",
+      "analysis": "ファイル名だけから全コードの具体的なLH/RH配置は復元しない。",
+      "not_established": "全小節の確定Voicingと運指。",
+      "confidence": "高（資料種別）"
+    },
+    {
+      "id": "T29",
+      "file": "レフトハンドボイシングその2.pdf",
+      "page": 1,
+      "section": "Feel Like Makin' Love の練習用コード譜",
+      "observed": "旋律・コードとAb/Bb等のSlashを含む適用資料。",
+      "analysis": "同じ進行・旋律を使ってVoicingを比較する学習に利用可能。ただし今回の配置提案は別物。",
+      "not_established": "全小節の確定Voicingと運指。",
+      "confidence": "高（資料種別）"
+    }
+  ],
+  "archive_inventory": [
+    {
+      "id": "T01",
+      "file": "1.jfif",
+      "relative": "piano資料/1.jfif",
+      "bytes": 1011417,
+      "sha256": "68359b89c9f49c40a198af0de850bfb84c5494f091b8049c600af87a190ef6b1",
+      "size": [
+        3024,
+        4032
+      ],
+      "previews": [
+        "T01_p1.png"
+      ]
+    },
+    {
+      "id": "T02",
+      "file": "2.jfif",
+      "relative": "piano資料/2.jfif",
+      "bytes": 1679868,
+      "sha256": "481084c1fe97ce66063678c3bc7ca9f1ab94f5545d16e9cda75a3e31d07029bb",
+      "size": [
+        3024,
+        4032
+      ],
+      "previews": [
+        "T02_p1.png"
+      ]
+    },
+    {
+      "id": "T03",
+      "file": "3.jpg",
+      "relative": "piano資料/3.jpg",
+      "bytes": 2096448,
+      "sha256": "bebd75b86e49799ecee61d6d0417241ffa87c8ee8c2f1fe7493d9dcda07f96ef",
+      "size": [
+        3024,
+        4032
+      ],
+      "previews": [
+        "T03_p1.png"
+      ]
+    },
+    {
+      "id": "T04",
+      "file": "4.jpg",
+      "relative": "piano資料/4.jpg",
+      "bytes": 1667778,
+      "sha256": "b400c76ee1cceae55ae3ad813fa85df32a5322f0cd73004c64f4189820d42f4f",
+      "size": [
+        3024,
+        4032
+      ],
+      "previews": [
+        "T04_p1.png"
+      ]
+    },
+    {
+      "id": "T05",
+      "file": "5.jpg",
+      "relative": "piano資料/5.jpg",
+      "bytes": 1244151,
+      "sha256": "4cdcaa1bc603c89c3fd52b064887db0142c726e95089bdf69d6b6f916c13acf5",
+      "size": [
+        3024,
+        4032
+      ],
+      "previews": [
+        "T05_p1.png"
+      ]
+    },
+    {
+      "id": "T06",
+      "file": "6.jpg",
+      "relative": "piano資料/6.jpg",
+      "bytes": 1784288,
+      "sha256": "baa9c10b6ca955940d8e234819ad7dcb50391352483a7d358376d7cddf2e03b6",
+      "size": [
+        3024,
+        4032
+      ],
+      "previews": [
+        "T06_p1.png"
+      ]
+    },
+    {
+      "id": "T07",
+      "file": "7.jpg",
+      "relative": "piano資料/7.jpg",
+      "bytes": 1959529,
+      "sha256": "01be180a3c384bd4628078284cb1cd90767e4d58d8bb1a36c43417b6f65adf2f",
+      "size": [
+        3024,
+        4032
+      ],
+      "previews": [
+        "T07_p1.png"
+      ]
+    },
+    {
+      "id": "T08",
+      "file": "8.jpg",
+      "relative": "piano資料/8.jpg",
+      "bytes": 1247168,
+      "sha256": "675b509c36486abd259f8fb8a68263ab28c1e3054998efc5ef1e9ddb7acc692d",
+      "size": [
+        3024,
+        4032
+      ],
+      "previews": [
+        "T08_p1.png"
+      ]
+    },
+    {
+      "id": "T09",
+      "file": "9.pdf",
+      "relative": "piano資料/9.pdf",
+      "bytes": 616345,
+      "sha256": "20e802169a870dec6c929ed8ed8021496db77524753711cffca8af95e74e6a38",
+      "pages": 1,
+      "text_chars": 113,
+      "previews": [
+        "T09_p1.png"
+      ]
+    },
+    {
+      "id": "T10",
+      "file": "スクリーンショット 2022-09-11 112521.png",
+      "relative": "piano資料/スクリーンショット 2022-09-11 112521.png",
+      "bytes": 459731,
+      "sha256": "95a89bdb3622e60ebc7060d5cebd8052be3094060a622149083a76ea46a904fd",
+      "size": [
+        837,
+        1079
+      ],
+      "previews": [
+        "T10_p1.png"
+      ]
+    },
+    {
+      "id": "T11",
+      "file": "スクリーンショット 2022-09-11 115854.png",
+      "relative": "piano資料/スクリーンショット 2022-09-11 115854.png",
+      "bytes": 418680,
+      "sha256": "8c4128cc1ee50052d1f041d2aacfa431b657590a06c1536c27a5af91e37c273a",
+      "size": [
+        828,
+        1073
+      ],
+      "previews": [
+        "T11_p1.png"
+      ]
+    },
+    {
+      "id": "T12",
+      "file": "スクリーンショット 2022-10-23 111622.png",
+      "relative": "piano資料/スクリーンショット 2022-10-23 111622.png",
+      "bytes": 95297,
+      "sha256": "6668c4f71a19ba35fd463255b24937597f92c4f08587a052237abb8bc32f1817",
+      "size": [
+        837,
+        1016
+      ],
+      "previews": [
+        "T12_p1.png"
+      ]
+    },
+    {
+      "id": "T13",
+      "file": "スクリーンショット 2023-03-19 113139.png",
+      "relative": "piano資料/スクリーンショット 2023-03-19 113139.png",
+      "bytes": 495343,
+      "sha256": "8cf9804d7b639dc180a4761d583a51573368a7e2082f424ed27eb23ae44ebed9",
+      "size": [
+        824,
+        1077
+      ],
+      "previews": [
+        "T13_p1.png"
+      ]
+    },
+    {
+      "id": "T14",
+      "file": "スクリーンショット 2023-03-19 113953.png",
+      "relative": "piano資料/スクリーンショット 2023-03-19 113953.png",
+      "bytes": 487865,
+      "sha256": "4c7be2e9457096af49382a9a53fa21bb97e1d53ae60a17cc6f5ec4503b87bf70",
+      "size": [
+        821,
+        1061
+      ],
+      "previews": [
+        "T14_p1.png"
+      ]
+    },
+    {
+      "id": "T15",
+      "file": "スクリーンショット 2023-04-16 115329.png",
+      "relative": "piano資料/スクリーンショット 2023-04-16 115329.png",
+      "bytes": 416908,
+      "sha256": "0e3ca1cbc9b988f208f7bc16456476f29c25d04d35e5c9a704b7f965acf4115d",
+      "size": [
+        823,
+        1050
+      ],
+      "previews": [
+        "T15_p1.png"
+      ]
+    },
+    {
+      "id": "T16",
+      "file": "スクリーンショット 2023-04-16 115446.png",
+      "relative": "piano資料/スクリーンショット 2023-04-16 115446.png",
+      "bytes": 291152,
+      "sha256": "72fecd8eb2a2e0dd2e2f9c52949c11f300d4ec662e40b122be9efa959340a789",
+      "size": [
+        819,
+        1063
+      ],
+      "previews": [
+        "T16_p1.png"
+      ]
+    },
+    {
+      "id": "T17",
+      "file": "スクリーンショット 2023-04-16 115933.png",
+      "relative": "piano資料/スクリーンショット 2023-04-16 115933.png",
+      "bytes": 187628,
+      "sha256": "a8a2d0d8bd159b5880d4df12af8c6abc0d46ca44348e9fae3f712f6dcd35ead3",
+      "size": [
+        818,
+        1070
+      ],
+      "previews": [
+        "T17_p1.png"
+      ]
+    },
+    {
+      "id": "T18",
+      "file": "パズル.pdf",
+      "relative": "piano資料/パズル.pdf",
+      "bytes": 522633,
+      "sha256": "164e38e80b61b62442791d05ba65b3083fb1a4664cb7e74198a4be46db95248b",
+      "pages": 4,
+      "text_chars": 214,
+      "previews": [
+        "T18_p1.png",
+        "T18_p2.png",
+        "T18_p3.png",
+        "T18_p4.png"
+      ]
+    },
+    {
+      "id": "T19",
+      "file": "レッスンノート11-13-1.pdf",
+      "relative": "piano資料/レッスンノート11-13-1.pdf",
+      "bytes": 718336,
+      "sha256": "20b15287e0070d15e7b0f4742f2a0963add239e721b760f542da074791d53223",
+      "pages": 1,
+      "text_chars": 30,
+      "previews": [
+        "T19_p1.png"
+      ]
+    },
+    {
+      "id": "T20",
+      "file": "レッスンノート11-13-2.pdf",
+      "relative": "piano資料/レッスンノート11-13-2.pdf",
+      "bytes": 728734,
+      "sha256": "c36bea7bd6ec590a902f060918626f1df6d5ca5726ee287b36bb9c67447253a4",
+      "pages": 1,
+      "text_chars": 44,
+      "previews": [
+        "T20_p1.png"
+      ]
+    },
+    {
+      "id": "T21",
+      "file": "レッスンノート11-13-3.pdf",
+      "relative": "piano資料/レッスンノート11-13-3.pdf",
+      "bytes": 871933,
+      "sha256": "e19a44174697578e3bf48f746c94077c3b895f2c853ab127eb96cfdbf94a461f",
+      "pages": 1,
+      "text_chars": 102,
+      "previews": [
+        "T21_p1.png"
+      ]
+    },
+    {
+      "id": "T22",
+      "file": "レッスンノート11-13-4.pdf",
+      "relative": "piano資料/レッスンノート11-13-4.pdf",
+      "bytes": 1444703,
+      "sha256": "f7a4176700146a79573f42d15c2e063ec5a41102bd0086ad60e8980f3325e9ad",
+      "pages": 1,
+      "text_chars": 175,
+      "previews": [
+        "T22_p1.png"
+      ]
+    },
+    {
+      "id": "T23",
+      "file": "レッスンノート11-13-5.pdf",
+      "relative": "piano資料/レッスンノート11-13-5.pdf",
+      "bytes": 636190,
+      "sha256": "eba4611b47ed9a02758981b89f8543395fb1bb5ecc3762dd25308ba6df1612c8",
+      "pages": 1,
+      "text_chars": 130,
+      "previews": [
+        "T23_p1.png"
+      ]
+    },
+    {
+      "id": "T24",
+      "file": "レッスンノート3.pdf",
+      "relative": "piano資料/レッスンノート3.pdf",
+      "bytes": 636952,
+      "sha256": "48281b794f50d79e3dcc1e0467a3440f2bb435167c87394541d61f9642e4313e",
+      "pages": 1,
+      "text_chars": 110,
+      "previews": [
+        "T24_p1.png"
+      ]
+    },
+    {
+      "id": "T25",
+      "file": "レッスン理論1.pdf",
+      "relative": "piano資料/レッスン理論1.pdf",
+      "bytes": 1176240,
+      "sha256": "07d1bb15357b718f8a6135b049ebf7e232a3afd372aeb9a961c77ae1a262fc27",
+      "pages": 1,
+      "text_chars": 132,
+      "previews": [
+        "T25_p1.png"
+      ]
+    },
+    {
+      "id": "T26",
+      "file": "レッスン理論2.pdf",
+      "relative": "piano資料/レッスン理論2.pdf",
+      "bytes": 988818,
+      "sha256": "0b805f606ba60b87dd3ff7d7eb0d6f4176184b68fceeaae2be1f0513d0970923",
+      "pages": 1,
+      "text_chars": 86,
+      "previews": [
+        "T26_p1.png"
+      ]
+    },
+    {
+      "id": "T27",
+      "file": "レフトハンドボイシング.pdf",
+      "relative": "piano資料/レフトハンドボイシング.pdf",
+      "bytes": 675307,
+      "sha256": "f1c8cb26190ffa927f15c86d42398acdcca5b31e08da8e719c83b6dc297ef42a",
+      "pages": 1,
+      "text_chars": 163,
+      "previews": [
+        "T27_p1.png"
+      ]
+    },
+    {
+      "id": "T28",
+      "file": "レフトハンドボイシングその1.pdf",
+      "relative": "piano資料/レフトハンドボイシングその1.pdf",
+      "bytes": 1013993,
+      "sha256": "95f0c35e2a443f99338eaaf91e0d9c6d086aad616b2ee3f128f3aec0feac75ba",
+      "pages": 1,
+      "text_chars": 275,
+      "previews": [
+        "T28_p1.png"
+      ]
+    },
+    {
+      "id": "T29",
+      "file": "レフトハンドボイシングその2.pdf",
+      "relative": "piano資料/レフトハンドボイシングその2.pdf",
+      "bytes": 1109092,
+      "sha256": "9d2b3154579da375e9ad98edc3535d36d8bcfa71c1a019f1a658ff849e793f06",
+      "pages": 1,
+      "text_chars": 175,
+      "previews": [
+        "T29_p1.png"
+      ]
+    }
+  ],
+  "architecture_contracts": [
+    "Source MIDI / Customは生成Familyではなく出所。元の音高・オクターブ・時刻・重複を保ち、変換は別Variantへ明示コピーする。",
+    "指定Bass、固定Melody、可聴の外部パートを含む構成音被覆をHard Constraint候補として扱う。架空のBass補完でPASSにしない。",
+    "Literal / Performance reduction / Creative enrichmentを分離。省略音と追加音を説明に残す。",
+    "Slash BassはupperRootを置換しない。Bass起点の別解釈は候補メタデータに留める。",
+    "Closed/Open/Drop2、左右分担、A/B、出所、コード種別を単一enumへ混在させない。",
+    "Drop2は指定された上声4音群の上から2番目だけを1oct下げる。Bass制約が壊れる候補は拒否する。",
+    "音域・最大手幅・音色・運指候補・近接コードを別途評価。C4=MIDI60で内部処理し表示オクターブの差に依存しない。",
+    "候補間最適化は途中の遷移だけでなく、Loop末尾→先頭も評価。最小距離だけを音楽の唯一の正しさにしない。",
+    "Bass+5th追加はSlashでは和声の変更になり得る。Eadd9/F#へC#を加えれば別の構成音が増える。",
+    "手指推定は候補とConfidenceを返す。MIDIだけから実演奏者の指を確定しない。",
+    "Reharmonization（裏コード等）はVoicingの変更とは別に履歴保存する。",
+    "既存Source/Custom fail-closed、unsupportedとgeneration-errorの分離、single-clock、無採点の保護仕様を保持する。",
+    "Melodyは独立レイヤー。指定Chord Toneの被覆には使えるが、短い非和声音を全てコード記号へ追加しない。C/E上のD旋律が常にCadd9/Eへの改名を要求するわけではない。"
+  ],
+  "semantic_test_specifications": [
+    {
+      "id": "S01",
+      "input": "Eadd9/F#",
+      "LH": [
+        "F#2"
+      ],
+      "RH": [
+        "E4",
+        "G#4",
+        "B4"
+      ],
+      "assertion": "全4 Pitch Classesを被覆。RHにF#がなくても9は欠けない。"
+    },
+    {
+      "id": "S02",
+      "input": "Eadd9/F#",
+      "assertion": "D#を加える自動7th enrichmentをLiteralモードでは拒否。"
+    },
+    {
+      "id": "S03",
+      "input": "Gmaj9/A",
+      "LH": [
+        "A2"
+      ],
+      "RH": [
+        "F#4",
+        "G4",
+        "B4"
+      ],
+      "assertion": "D=5省略を表示。A13sus4への厳密同一視は禁止。"
+    },
+    {
+      "id": "S04",
+      "input": "Gmaj9/A",
+      "LH": [
+        "A2"
+      ],
+      "RH": [
+        "D4",
+        "F#4",
+        "G4",
+        "B4"
+      ],
+      "assertion": "完全集合。A13sus4(no5)とのPitch Class一致は成立するが機能は未確定。"
+    },
+    {
+      "id": "S05",
+      "input": "Am11/B",
+      "assertion": "BをAm11の9として分類。拡張集合の外音扱いをしない。"
+    },
+    {
+      "id": "S06",
+      "input": "C/E",
+      "assertion": "全体最低音Eを保持。自動Root追加で下にCを置かない。"
+    },
+    {
+      "id": "S07",
+      "input": "C6/9",
+      "assertion": "スラッシュをBass数値9と誤解析しない。C6/9/Eも別途テスト。"
+    },
+    {
+      "id": "S08",
+      "input": "G7sus4",
+      "assertion": "3=Bを常に必須にしない。4=Cを保持。"
+    },
+    {
+      "id": "S09",
+      "input": "Bm7b5",
+      "assertion": "b5を通常の完全5と同じ優先順位で無条件省略しない。"
+    },
+    {
+      "id": "S10",
+      "input": "Cdim7",
+      "assertion": "Bbbの綴りとbb7という度数を保持。C6のA/6と同一視しない。"
+    },
+    {
+      "id": "S11",
+      "input": "C4 E4 G4 B4 / Drop2",
+      "assertion": "G4→G3だけを移動。C4 E4 B4の音高は不変。"
+    },
+    {
+      "id": "S12",
+      "input": "Drop2 + fixed Bass C",
+      "assertion": "G3がBassになる単独演奏候補は固定C Bassを満たさない。可聴外部C等を必要条件とする。"
+    },
+    {
+      "id": "S13",
+      "input": "Source MIDI / Custom missing",
+      "assertion": "生成Shellへの無断Fallbackなし。音高・オクターブの修正なし。"
+    },
+    {
+      "id": "S14",
+      "input": "Bass+fifth for Eadd9/F#",
+      "assertion": "F#の5度C#は原集合にない。追加和音色として明示、Literalでは拒否。"
+    },
+    {
+      "id": "S15",
+      "input": "Loop candidate sequence",
+      "assertion": "最後→最初を含め声部の跳躍と手幅を採点する。ユーザー演奏自体の点数にはしない。"
+    },
+    {
+      "id": "S16",
+      "input": "Dm11 / So What D G C F A",
+      "assertion": "9=Eは鳴っていない。Dm11の全音被覆としない。Dm7(add11)というラベルは可能。"
+    }
+  ],
+  "rules": [
+    {
+      "id": "V01",
+      "voicing_family": "Bass + Triad / inversion",
+      "chord_family": "major triad",
+      "example_chord": "C/E",
+      "bass_context": "自分でBass。Eを最低音に保つ",
+      "left_hand": [
+        {
+          "pitch": "E3",
+          "midi": 52,
+          "degree": "3",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [
+        {
+          "pitch": "G3",
+          "midi": 55,
+          "degree": "5",
+          "hand": "RH"
+        },
+        {
+          "pitch": "C4",
+          "midi": 60,
+          "degree": "1",
+          "hand": "RH"
+        },
+        {
+          "pitch": "E4",
+          "midi": 64,
+          "degree": "3",
+          "hand": "RH"
+        }
+      ],
+      "chord_tone_degree": {
+        "basis": "upper/root C; Bass自身を自動的にRootにしない",
+        "LH": [
+          "3"
+        ],
+        "RH": [
+          "5",
+          "1",
+          "3"
+        ],
+        "external": []
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "E3–E3",
+          "RH": "G3–E4"
+        },
+        "hand_span_semitones": {
+          "LH": 0,
+          "RH": 9
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5 / RH R1-R3-R5（候補）",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "Top E4。転回でG/Cにも変更可",
+      "voice_leading_rule": "次のFではE→F、G→A、C保持などを候補化。Bass線は別に設計。",
+      "when_to_use": "転回形とBass線の差を聴く。Pop作曲の基本。",
+      "when_not_to_use": "Bass指定を無視してCをEより下に加える場合。",
+      "slash_chord_handling": "Yが構成音でも必ずRHから除くわけではない。ここではEを重複。",
+      "source_evidence": {
+        "source_ids": [
+          "T03",
+          "W07"
+        ],
+        "basis": "A/Bで指定したBassとRHの音選択を分離する。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "C/E",
+        "root": "C",
+        "literal_reference_notes": [
+          "C",
+          "E",
+          "G"
+        ],
+        "omitted_notes": [],
+        "external_sounding_notes": [],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "literal",
+        "require_external_sounding_part": false
+      },
+      "spacing": "RH closed",
+      "learning_level": 1
+    },
+    {
+      "id": "V02",
+      "voicing_family": "Bass + sixth core",
+      "chord_family": "major sixth",
+      "example_chord": "C6",
+      "bass_context": "Bass自己担当",
+      "left_hand": [
+        {
+          "pitch": "C3",
+          "midi": 48,
+          "degree": "1",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [
+        {
+          "pitch": "E4",
+          "midi": 64,
+          "degree": "3",
+          "hand": "RH"
+        },
+        {
+          "pitch": "A4",
+          "midi": 69,
+          "degree": "6",
+          "hand": "RH"
+        }
+      ],
+      "chord_tone_degree": {
+        "basis": "upper/root C; Bass自身を自動的にRootにしない",
+        "LH": [
+          "1"
+        ],
+        "RH": [
+          "3",
+          "6"
+        ],
+        "external": []
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "C3–C3",
+          "RH": "E4–A4"
+        },
+        "hand_span_semitones": {
+          "LH": 0,
+          "RH": 5
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5 / RH R1-R5",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "Top A4=6を保持または進行に合わせる",
+      "voice_leading_rule": "6をmaj7へ勝手に変えず、次のコードへの最短候補を比較。",
+      "when_to_use": "7thを足さずに6thの響きを確認する。",
+      "when_not_to_use": "maj7指定への無断代用。完全な5thを必要とする教材の厳密モード。",
+      "slash_chord_handling": "Slash時はYを優先し、3/6の被覆を全パートで確認。",
+      "source_evidence": {
+        "source_ids": [
+          "W01"
+        ],
+        "basis": "コア3/6を使う今回の省略例。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "C6",
+        "root": "C",
+        "literal_reference_notes": [
+          "C",
+          "E",
+          "G",
+          "A"
+        ],
+        "omitted_notes": [
+          "G"
+        ],
+        "external_sounding_notes": [],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "performance-reduction",
+        "require_external_sounding_part": false
+      },
+      "spacing": "contextual",
+      "learning_level": 1
+    },
+    {
+      "id": "V03",
+      "voicing_family": "Slash Bass covers 9 + RH triad",
+      "chord_family": "major add9",
+      "example_chord": "Eadd9/F#",
+      "bass_context": "Bass自己担当",
+      "left_hand": [
+        {
+          "pitch": "F#2",
+          "midi": 42,
+          "degree": "9",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [
+        {
+          "pitch": "E4",
+          "midi": 64,
+          "degree": "1",
+          "hand": "RH"
+        },
+        {
+          "pitch": "G#4",
+          "midi": 68,
+          "degree": "3",
+          "hand": "RH"
+        },
+        {
+          "pitch": "B4",
+          "midi": 71,
+          "degree": "5",
+          "hand": "RH"
+        }
+      ],
+      "chord_tone_degree": {
+        "basis": "upper/root E; Bass自身を自動的にRootにしない",
+        "LH": [
+          "9"
+        ],
+        "RH": [
+          "1",
+          "3",
+          "5"
+        ],
+        "external": []
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "F#2–F#2",
+          "RH": "E4–B4"
+        },
+        "hand_span_semitones": {
+          "LH": 0,
+          "RH": 7
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5 / RH R1-R3-R5",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "Top B4=5",
+      "voice_leading_rule": "Gmaj9/AのF#4-G4-B4へ：E→F#、G#→G、B保持。",
+      "when_to_use": "右手を3音に保ち、add9の全音を左右合算で満たす。",
+      "when_not_to_use": "Rootless自動化でEを消す、D#を追加してmaj9化する、Bassの5度C#を無断追加する場合。",
+      "slash_chord_handling": "F#は9を既に担当。RHへのF#重複は任意。E/F#と同じPitch Classだが元表記を保持。",
+      "source_evidence": {
+        "source_ids": [
+          "T03",
+          "W07",
+          "W18"
+        ],
+        "basis": "E,G#,B,F#の4 Pitch Classesを全て含むことを検算。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "Eadd9/F#",
+        "root": "E",
+        "literal_reference_notes": [
+          "E",
+          "G#",
+          "B",
+          "F#"
+        ],
+        "omitted_notes": [],
+        "external_sounding_notes": [],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "literal",
+        "require_external_sounding_part": false
+      },
+      "spacing": "bass + RH triad",
+      "learning_level": 3
+    },
+    {
+      "id": "V04",
+      "voicing_family": "Bass + RH Guide Tones",
+      "chord_family": "minor seventh",
+      "example_chord": "Dm7",
+      "bass_context": "Bass自己担当",
+      "left_hand": [
+        {
+          "pitch": "D3",
+          "midi": 50,
+          "degree": "1",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [
+        {
+          "pitch": "F4",
+          "midi": 65,
+          "degree": "b3",
+          "hand": "RH"
+        },
+        {
+          "pitch": "C5",
+          "midi": 72,
+          "degree": "b7",
+          "hand": "RH"
+        }
+      ],
+      "chord_tone_degree": {
+        "basis": "upper/root D; Bass自身を自動的にRootにしない",
+        "LH": [
+          "1"
+        ],
+        "RH": [
+          "b3",
+          "b7"
+        ],
+        "external": []
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "D3–D3",
+          "RH": "F4–C5"
+        },
+        "hand_span_semitones": {
+          "LH": 0,
+          "RH": 7
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5 / RH R1-R5",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "C5をB4へ導く",
+      "voice_leading_rule": "G7ではF4保持、C5→B4。次のCmaj7ではF→E、B保持。",
+      "when_to_use": "和声の骨格とVoice Leadingを少ない音で確認。",
+      "when_not_to_use": "5thがメロディ・リフ・音色の核として必要なとき。m7b5へ同じ省略規則を適用するとき。",
+      "slash_chord_handling": "YをLHに置く。Root省略は別途判断。",
+      "source_evidence": {
+        "source_ids": [
+          "W13",
+          "W06"
+        ],
+        "basis": "典型的Guide Tones学習を具体化。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "Dm7",
+        "root": "D",
+        "literal_reference_notes": [
+          "D",
+          "F",
+          "A",
+          "C"
+        ],
+        "omitted_notes": [
+          "A"
+        ],
+        "external_sounding_notes": [],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "performance-reduction",
+        "require_external_sounding_part": false
+      },
+      "spacing": "contextual",
+      "learning_level": 2
+    },
+    {
+      "id": "V05",
+      "voicing_family": "LH rooted 3-note shell + RH melody",
+      "chord_family": "minor seventh",
+      "example_chord": "Dm7",
+      "bass_context": "Bass自己担当・RH旋律",
+      "left_hand": [
+        {
+          "pitch": "D3",
+          "midi": 50,
+          "degree": "1",
+          "hand": "LH"
+        },
+        {
+          "pitch": "F3",
+          "midi": 53,
+          "degree": "b3",
+          "hand": "LH"
+        },
+        {
+          "pitch": "C4",
+          "midi": 60,
+          "degree": "b7",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [
+        {
+          "pitch": "A4",
+          "midi": 69,
+          "degree": "5",
+          "hand": "RH"
+        }
+      ],
+      "chord_tone_degree": {
+        "basis": "upper/root D; Bass自身を自動的にRootにしない",
+        "LH": [
+          "1",
+          "b3",
+          "b7"
+        ],
+        "RH": [
+          "5"
+        ],
+        "external": []
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "D3–C4",
+          "RH": "A4–A4"
+        },
+        "hand_span_semitones": {
+          "LH": 10,
+          "RH": 0
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5-L3-L1 / RH R4またはR5",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "A4は旋律の5度",
+      "voice_leading_rule": "旋律を固定し、LHを最短距離だけでなく手の開きで選別。",
+      "when_to_use": "RHを旋律に使い、LHだけでRoot/3/7を支える。",
+      "when_not_to_use": "LH短7度の開きが無理なとき。Bass奏者の低域を覆うとき。",
+      "slash_chord_handling": "LH単体の定形ではなくBass/Guideの分担を再配置。",
+      "source_evidence": {
+        "source_ids": [
+          "W02",
+          "W06"
+        ],
+        "basis": "Root+3+7というShell例。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "Dm7",
+        "root": "D",
+        "literal_reference_notes": [
+          "D",
+          "F",
+          "A",
+          "C"
+        ],
+        "omitted_notes": [],
+        "external_sounding_notes": [],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "literal",
+        "require_external_sounding_part": false
+      },
+      "spacing": "contextual",
+      "learning_level": 2
+    },
+    {
+      "id": "V06",
+      "voicing_family": "Teacher Open: LH R+7 / RH 3+Melody",
+      "chord_family": "minor seventh",
+      "example_chord": "Dm7",
+      "bass_context": "Bass自己担当・両手で伴奏と旋律",
+      "left_hand": [
+        {
+          "pitch": "D3",
+          "midi": 50,
+          "degree": "1",
+          "hand": "LH"
+        },
+        {
+          "pitch": "C4",
+          "midi": 60,
+          "degree": "b7",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [
+        {
+          "pitch": "F4",
+          "midi": 65,
+          "degree": "b3",
+          "hand": "RH"
+        },
+        {
+          "pitch": "A4",
+          "midi": 69,
+          "degree": "5",
+          "hand": "RH"
+        }
+      ],
+      "chord_tone_degree": {
+        "basis": "upper/root D; Bass自身を自動的にRootにしない",
+        "LH": [
+          "1",
+          "b7"
+        ],
+        "RH": [
+          "b3",
+          "5"
+        ],
+        "external": []
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "D3–C4",
+          "RH": "F4–A4"
+        },
+        "hand_span_semitones": {
+          "LH": 10,
+          "RH": 4
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5-L1 / RH R1-R3またはR1-R5",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "A4=旋律。3より上の声として維持",
+      "voice_leading_rule": "LH7とRH3のどちらを保持するかを次コードの役割から決める。",
+      "when_to_use": "先生のOpenの役割分担を少数音で体験。",
+      "when_not_to_use": "固定のMelodyがこの配置より低い場合。LHの開きが合わない場合。",
+      "slash_chord_handling": "Slash Bassへ差替後にRootが消えるかをチェックして分担し直す。",
+      "source_evidence": {
+        "source_ids": [
+          "T01",
+          "W06"
+        ],
+        "basis": "役割分担はT01。Dm7の具体的オクターブ・運指は今回提案。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "Dm7",
+        "root": "D",
+        "literal_reference_notes": [
+          "D",
+          "F",
+          "A",
+          "C"
+        ],
+        "omitted_notes": [],
+        "external_sounding_notes": [],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "literal",
+        "require_external_sounding_part": false
+      },
+      "spacing": "two-hand spread",
+      "learning_level": 2
+    },
+    {
+      "id": "V07",
+      "voicing_family": "Guide Tones only",
+      "chord_family": "minor seventh",
+      "example_chord": "Dm7",
+      "bass_context": "実際にD2を鳴らす別Bassが存在",
+      "left_hand": [
+        {
+          "pitch": "F3",
+          "midi": 53,
+          "degree": "b3",
+          "hand": "LH"
+        },
+        {
+          "pitch": "C4",
+          "midi": 60,
+          "degree": "b7",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [],
+      "chord_tone_degree": {
+        "basis": "upper/root D; Bass自身を自動的にRootにしない",
+        "LH": [
+          "b3",
+          "b7"
+        ],
+        "RH": [],
+        "external": [
+          "1"
+        ]
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "F3–C4",
+          "RH": "休止／担当なし"
+        },
+        "hand_span_semitones": {
+          "LH": 7,
+          "RH": 0
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5-L1 / RH自由",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "KeyboardのTop C4。旋律は別パート可",
+      "voice_leading_rule": "LH F3-C4→F3-B3。根音を鳴らすのは外部Bass。",
+      "when_to_use": "Bass伴奏に合わせて、LHだけで和声を示す。",
+      "when_not_to_use": "Bassも和声文脈もない状態でDm7を一意に伝える必要があるとき。",
+      "slash_chord_handling": "外部Bassが指定Yを演奏していると確認する。",
+      "source_evidence": {
+        "source_ids": [
+          "W13",
+          "W04"
+        ],
+        "basis": "Rootlessは演奏パート上の性質。合奏全体にはRootがある。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "Dm7",
+        "root": "D",
+        "literal_reference_notes": [
+          "D",
+          "F",
+          "A",
+          "C"
+        ],
+        "omitted_notes": [
+          "A"
+        ],
+        "external_sounding_notes": [
+          {
+            "pitch": "D2",
+            "midi": 38,
+            "degree": "1",
+            "hand": "external"
+          }
+        ],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "performance-reduction",
+        "require_external_sounding_part": true
+      },
+      "spacing": "contextual",
+      "learning_level": 4
+    },
+    {
+      "id": "V08",
+      "voicing_family": "LH Root+7 shell",
+      "chord_family": "minor seventh",
+      "example_chord": "Dm7",
+      "bass_context": "Bass自己担当、RHが3度を旋律として補う",
+      "left_hand": [
+        {
+          "pitch": "D3",
+          "midi": 50,
+          "degree": "1",
+          "hand": "LH"
+        },
+        {
+          "pitch": "C4",
+          "midi": 60,
+          "degree": "b7",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [
+        {
+          "pitch": "F4",
+          "midi": 65,
+          "degree": "b3",
+          "hand": "RH"
+        }
+      ],
+      "chord_tone_degree": {
+        "basis": "upper/root D; Bass自身を自動的にRootにしない",
+        "LH": [
+          "1",
+          "b7"
+        ],
+        "RH": [
+          "b3"
+        ],
+        "external": []
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "D3–C4",
+          "RH": "F4–F4"
+        },
+        "hand_span_semitones": {
+          "LH": 10,
+          "RH": 0
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5-L1 / RH R1または旋律の運指",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "F4=b3",
+      "voice_leading_rule": "Dm7→G7ではD/CからG/FなどBassとShellを別線として考える。",
+      "when_to_use": "LHを2音にしRH旋律の自由度を確保。",
+      "when_not_to_use": "RHや他楽器にも3度がなく長短を明示したい場合。",
+      "slash_chord_handling": "YにRootを置換すると別のShell構造になるため再評価。",
+      "source_evidence": {
+        "source_ids": [
+          "W02",
+          "W06"
+        ],
+        "basis": "R+7というShell部分構造と全体和音を区別。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "Dm7",
+        "root": "D",
+        "literal_reference_notes": [
+          "D",
+          "F",
+          "A",
+          "C"
+        ],
+        "omitted_notes": [
+          "A"
+        ],
+        "external_sounding_notes": [],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "performance-reduction",
+        "require_external_sounding_part": false
+      },
+      "spacing": "contextual",
+      "learning_level": 2
+    },
+    {
+      "id": "V09",
+      "voicing_family": "LH Guide Tones + 9",
+      "chord_family": "dominant ninth",
+      "example_chord": "C9",
+      "bass_context": "別Bass C2、RH Melody用に空ける",
+      "left_hand": [
+        {
+          "pitch": "E3",
+          "midi": 52,
+          "degree": "3",
+          "hand": "LH"
+        },
+        {
+          "pitch": "Bb3",
+          "midi": 58,
+          "degree": "b7",
+          "hand": "LH"
+        },
+        {
+          "pitch": "D4",
+          "midi": 62,
+          "degree": "9",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [],
+      "chord_tone_degree": {
+        "basis": "upper/root C; Bass自身を自動的にRootにしない",
+        "LH": [
+          "3",
+          "b7",
+          "9"
+        ],
+        "RH": [],
+        "external": [
+          "1"
+        ]
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "E3–D4",
+          "RH": "休止／担当なし"
+        },
+        "hand_span_semitones": {
+          "LH": 10,
+          "RH": 0
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5-L2-L1（候補）",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "LH Top D4=9。RH旋律は別途",
+      "voice_leading_rule": "F系に進むときE→F、Bb→A等を候補化。9も解決先を選ぶ。",
+      "when_to_use": "先生の3音LH型を理解し、9の色を加える。",
+      "when_not_to_use": "C7b9やC7#9の指定を自然9で上書きするとき。",
+      "slash_chord_handling": "Slash Bassが9を担えば重複は任意。外部BassをRootと混同しない。",
+      "source_evidence": {
+        "source_ids": [
+          "T23",
+          "T27",
+          "W03"
+        ],
+        "basis": "3-b7-9は先生資料に記載。ここでの音域は今回提案。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "C9",
+        "root": "C",
+        "literal_reference_notes": [
+          "C",
+          "E",
+          "G",
+          "Bb",
+          "D"
+        ],
+        "omitted_notes": [
+          "G"
+        ],
+        "external_sounding_notes": [
+          {
+            "pitch": "C2",
+            "midi": 36,
+            "degree": "1",
+            "hand": "external"
+          }
+        ],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "performance-reduction",
+        "require_external_sounding_part": true
+      },
+      "spacing": "contextual",
+      "learning_level": 4
+    },
+    {
+      "id": "V10",
+      "voicing_family": "LH Guide Tones + 13",
+      "chord_family": "dominant thirteenth",
+      "example_chord": "G13",
+      "bass_context": "別Bass G2",
+      "left_hand": [
+        {
+          "pitch": "F3",
+          "midi": 53,
+          "degree": "b7",
+          "hand": "LH"
+        },
+        {
+          "pitch": "B3",
+          "midi": 59,
+          "degree": "3",
+          "hand": "LH"
+        },
+        {
+          "pitch": "E4",
+          "midi": 64,
+          "degree": "13",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [],
+      "chord_tone_degree": {
+        "basis": "upper/root G; Bass自身を自動的にRootにしない",
+        "LH": [
+          "b7",
+          "3",
+          "13"
+        ],
+        "RH": [],
+        "external": [
+          "1"
+        ]
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "F3–E4",
+          "RH": "休止／担当なし"
+        },
+        "hand_span_semitones": {
+          "LH": 11,
+          "RH": 0
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5-L2-L1（候補）",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "LH Top E4=13",
+      "voice_leading_rule": "Cmaj7へF→E、B保持、Eを共通音として使う等。",
+      "when_to_use": "先生のb7-3-13型でLHを小さくまとめる。",
+      "when_not_to_use": "自然13が旋律のb13と競合する場合。完全9が必要な厳密課題。",
+      "slash_chord_handling": "Bass基準で13を計算し直さない。基準RootはG。",
+      "source_evidence": {
+        "source_ids": [
+          "T23",
+          "T27",
+          "W03"
+        ],
+        "basis": "9と5の省略を明示したG13演奏形。自然11はこのG13の参照集合に要求しない。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "G13",
+        "root": "G",
+        "literal_reference_notes": [
+          "G",
+          "B",
+          "D",
+          "F",
+          "A",
+          "E"
+        ],
+        "omitted_notes": [
+          "D",
+          "A"
+        ],
+        "external_sounding_notes": [
+          {
+            "pitch": "G2",
+            "midi": 43,
+            "degree": "1",
+            "hand": "external"
+          }
+        ],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "performance-reduction",
+        "require_external_sounding_part": true
+      },
+      "spacing": "contextual",
+      "learning_level": 4
+    },
+    {
+      "id": "V11",
+      "voicing_family": "Rootless 4-note / A-position",
+      "chord_family": "minor ninth",
+      "example_chord": "Dm9",
+      "bass_context": "別Bass D2、RH旋律用",
+      "left_hand": [
+        {
+          "pitch": "F3",
+          "midi": 53,
+          "degree": "b3",
+          "hand": "LH"
+        },
+        {
+          "pitch": "A3",
+          "midi": 57,
+          "degree": "5",
+          "hand": "LH"
+        },
+        {
+          "pitch": "C4",
+          "midi": 60,
+          "degree": "b7",
+          "hand": "LH"
+        },
+        {
+          "pitch": "E4",
+          "midi": 64,
+          "degree": "9",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [],
+      "chord_tone_degree": {
+        "basis": "upper/root D; Bass自身を自動的にRootにしない",
+        "LH": [
+          "b3",
+          "5",
+          "b7",
+          "9"
+        ],
+        "RH": [],
+        "external": [
+          "1"
+        ]
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "F3–E4",
+          "RH": "休止／担当なし"
+        },
+        "hand_span_semitones": {
+          "LH": 11,
+          "RH": 0
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5-L3-L2-L1",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "E4=9をLH上声として認識",
+      "voice_leading_rule": "次のG13にF-A-B-Eを候補化。CだけをBへ。",
+      "when_to_use": "4音の質感をLHに集約する。",
+      "when_not_to_use": "外部Bassがないのに完全なRoot感を必須とする場面。",
+      "slash_chord_handling": "AはこのFamily内でb3最下声。Slash音の最下声とは別。",
+      "source_evidence": {
+        "source_ids": [
+          "W03",
+          "W04",
+          "W16"
+        ],
+        "basis": "A/Bのm9定形に対応する今回のDの例。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "Dm9",
+        "root": "D",
+        "literal_reference_notes": [
+          "D",
+          "F",
+          "A",
+          "C",
+          "E"
+        ],
+        "omitted_notes": [],
+        "external_sounding_notes": [
+          {
+            "pitch": "D2",
+            "midi": 38,
+            "degree": "1",
+            "hand": "external"
+          }
+        ],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "literal",
+        "require_external_sounding_part": true
+      },
+      "spacing": "closed rootless",
+      "learning_level": 4
+    },
+    {
+      "id": "V12",
+      "voicing_family": "Rootless 4-note / B-position",
+      "chord_family": "minor ninth",
+      "example_chord": "Dm9",
+      "bass_context": "別Bass D2",
+      "left_hand": [
+        {
+          "pitch": "C4",
+          "midi": 60,
+          "degree": "b7",
+          "hand": "LH"
+        },
+        {
+          "pitch": "E4",
+          "midi": 64,
+          "degree": "9",
+          "hand": "LH"
+        },
+        {
+          "pitch": "F4",
+          "midi": 65,
+          "degree": "b3",
+          "hand": "LH"
+        },
+        {
+          "pitch": "A4",
+          "midi": 69,
+          "degree": "5",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [],
+      "chord_tone_degree": {
+        "basis": "upper/root D; Bass自身を自動的にRootにしない",
+        "LH": [
+          "b7",
+          "9",
+          "b3",
+          "5"
+        ],
+        "RH": [],
+        "external": [
+          "1"
+        ]
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "C4–A4",
+          "RH": "休止／担当なし"
+        },
+        "hand_span_semitones": {
+          "LH": 9,
+          "RH": 0
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5-L3-L2-L1",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "A4=5",
+      "voice_leading_rule": "前後が高めの中音域ならBを候補にし、Aとの移動量と手の形を比較。",
+      "when_to_use": "同じコードの音域とTopを選び直す。",
+      "when_not_to_use": "旋律域を塞ぐ場合。A/Bの切替を毎回義務化するとき。",
+      "slash_chord_handling": "BはこのFamily内でb7最下声。Bassの音名Bとは無関係。",
+      "source_evidence": {
+        "source_ids": [
+          "W03"
+        ],
+        "basis": "b7-9-b3-5を今回の音域で例示。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "Dm9",
+        "root": "D",
+        "literal_reference_notes": [
+          "D",
+          "F",
+          "A",
+          "C",
+          "E"
+        ],
+        "omitted_notes": [],
+        "external_sounding_notes": [
+          {
+            "pitch": "D2",
+            "midi": 38,
+            "degree": "1",
+            "hand": "external"
+          }
+        ],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "literal",
+        "require_external_sounding_part": true
+      },
+      "spacing": "closed rootless",
+      "learning_level": 4
+    },
+    {
+      "id": "V13",
+      "voicing_family": "Rootless 4-note / major A variant",
+      "chord_family": "major ninth",
+      "example_chord": "Cmaj9",
+      "bass_context": "別Bass C2",
+      "left_hand": [
+        {
+          "pitch": "E3",
+          "midi": 52,
+          "degree": "3",
+          "hand": "LH"
+        },
+        {
+          "pitch": "G3",
+          "midi": 55,
+          "degree": "5",
+          "hand": "LH"
+        },
+        {
+          "pitch": "B3",
+          "midi": 59,
+          "degree": "7",
+          "hand": "LH"
+        },
+        {
+          "pitch": "D4",
+          "midi": 62,
+          "degree": "9",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [],
+      "chord_tone_degree": {
+        "basis": "upper/root C; Bass自身を自動的にRootにしない",
+        "LH": [
+          "3",
+          "5",
+          "7",
+          "9"
+        ],
+        "RH": [],
+        "external": [
+          "1"
+        ]
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "E3–D4",
+          "RH": "休止／担当なし"
+        },
+        "hand_span_semitones": {
+          "LH": 10,
+          "RH": 0
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5-L3-L2-L1",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "D4=9",
+      "voice_leading_rule": "Dm9等から保持できるEを利用しつつ3/7の動きを比較。",
+      "when_to_use": "Major9のLH和声、RH旋律。",
+      "when_not_to_use": "C6/9の指定をmaj9に変えてしまうとき。",
+      "slash_chord_handling": "Rootlessを全種類へ一律適用しない。指定Bassは別に保持。",
+      "source_evidence": {
+        "source_ids": [
+          "W03",
+          "W04"
+        ],
+        "basis": "3-5-7-9の一例。Earl資料の全A/B形をこの式に統一しない。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "Cmaj9",
+        "root": "C",
+        "literal_reference_notes": [
+          "C",
+          "E",
+          "G",
+          "B",
+          "D"
+        ],
+        "omitted_notes": [],
+        "external_sounding_notes": [
+          {
+            "pitch": "C2",
+            "midi": 36,
+            "degree": "1",
+            "hand": "external"
+          }
+        ],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "literal",
+        "require_external_sounding_part": true
+      },
+      "spacing": "closed rootless",
+      "learning_level": 4
+    },
+    {
+      "id": "V14",
+      "voicing_family": "Rootless 4-note / dominant B variant",
+      "chord_family": "dominant thirteenth",
+      "example_chord": "G13",
+      "bass_context": "別Bass G2",
+      "left_hand": [
+        {
+          "pitch": "F3",
+          "midi": 53,
+          "degree": "b7",
+          "hand": "LH"
+        },
+        {
+          "pitch": "A3",
+          "midi": 57,
+          "degree": "9",
+          "hand": "LH"
+        },
+        {
+          "pitch": "B3",
+          "midi": 59,
+          "degree": "3",
+          "hand": "LH"
+        },
+        {
+          "pitch": "E4",
+          "midi": 64,
+          "degree": "13",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [],
+      "chord_tone_degree": {
+        "basis": "upper/root G; Bass自身を自動的にRootにしない",
+        "LH": [
+          "b7",
+          "9",
+          "3",
+          "13"
+        ],
+        "RH": [],
+        "external": [
+          "1"
+        ]
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "F3–E4",
+          "RH": "休止／担当なし"
+        },
+        "hand_span_semitones": {
+          "LH": 11,
+          "RH": 0
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5-L3-L2-L1",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "E4=13",
+      "voice_leading_rule": "Dm9 F-A-C-EからC→Bのみ変更。",
+      "when_to_use": "ii–Vの滑らかな接続と9/13を両立。",
+      "when_not_to_use": "b9やb13が指定されたDominantへの一律使用。",
+      "slash_chord_handling": "上部RootG基準の度数を維持。Slash Bassの情報を別途検証。",
+      "source_evidence": {
+        "source_ids": [
+          "W03",
+          "W16"
+        ],
+        "basis": "自然13型。G13の省略可能5を省く。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "G13",
+        "root": "G",
+        "literal_reference_notes": [
+          "G",
+          "B",
+          "D",
+          "F",
+          "A",
+          "E"
+        ],
+        "omitted_notes": [
+          "D"
+        ],
+        "external_sounding_notes": [
+          {
+            "pitch": "G2",
+            "midi": 43,
+            "degree": "1",
+            "hand": "external"
+          }
+        ],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "performance-reduction",
+        "require_external_sounding_part": true
+      },
+      "spacing": "closed rootless",
+      "learning_level": 4
+    },
+    {
+      "id": "V15",
+      "voicing_family": "Two-handed extended spread",
+      "chord_family": "minor ninth",
+      "example_chord": "Dm9",
+      "bass_context": "Bass自己担当、両手Harmony",
+      "left_hand": [
+        {
+          "pitch": "D3",
+          "midi": 50,
+          "degree": "1",
+          "hand": "LH"
+        },
+        {
+          "pitch": "C4",
+          "midi": 60,
+          "degree": "b7",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [
+        {
+          "pitch": "F4",
+          "midi": 65,
+          "degree": "b3",
+          "hand": "RH"
+        },
+        {
+          "pitch": "A4",
+          "midi": 69,
+          "degree": "5",
+          "hand": "RH"
+        },
+        {
+          "pitch": "E5",
+          "midi": 76,
+          "degree": "9",
+          "hand": "RH"
+        }
+      ],
+      "chord_tone_degree": {
+        "basis": "upper/root D; Bass自身を自動的にRootにしない",
+        "LH": [
+          "1",
+          "b7"
+        ],
+        "RH": [
+          "b3",
+          "5",
+          "9"
+        ],
+        "external": []
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "D3–C4",
+          "RH": "F4–E5"
+        },
+        "hand_span_semitones": {
+          "LH": 10,
+          "RH": 11
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5-L1 / RH R1-R2-R5（手幅要確認）",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "E5=9を聴かせる",
+      "voice_leading_rule": "9を含む上声を基準に隣コードの形を選ぶ。",
+      "when_to_use": "音域を広げ、旋律が別にある制作時や長いコード。",
+      "when_not_to_use": "RH長7度の開きが負担、短い高速コードチェンジ。",
+      "slash_chord_handling": "YをBassに置いた後は内声のRoot補完と最大手幅を再評価。",
+      "source_evidence": {
+        "source_ids": [
+          "W01",
+          "W06"
+        ],
+        "basis": "少数音のOpen構造を9まで広げた今回の配置。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "Dm9",
+        "root": "D",
+        "literal_reference_notes": [
+          "D",
+          "F",
+          "A",
+          "C",
+          "E"
+        ],
+        "omitted_notes": [],
+        "external_sounding_notes": [],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "literal",
+        "require_external_sounding_part": false
+      },
+      "spacing": "open spread",
+      "learning_level": 5
+    },
+    {
+      "id": "V16",
+      "voicing_family": "Open triad",
+      "chord_family": "major triad",
+      "example_chord": "C",
+      "bass_context": "Bass自己担当、両手Harmony",
+      "left_hand": [
+        {
+          "pitch": "C3",
+          "midi": 48,
+          "degree": "1",
+          "hand": "LH"
+        },
+        {
+          "pitch": "G3",
+          "midi": 55,
+          "degree": "5",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [
+        {
+          "pitch": "E4",
+          "midi": 64,
+          "degree": "3",
+          "hand": "RH"
+        },
+        {
+          "pitch": "C5",
+          "midi": 72,
+          "degree": "1",
+          "hand": "RH"
+        }
+      ],
+      "chord_tone_degree": {
+        "basis": "upper/root C; Bass自身を自動的にRootにしない",
+        "LH": [
+          "1",
+          "5"
+        ],
+        "RH": [
+          "3",
+          "1"
+        ],
+        "external": []
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "C3–G3",
+          "RH": "E4–C5"
+        },
+        "hand_span_semitones": {
+          "LH": 7,
+          "RH": 8
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5-L1 / RH R1-R5",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "C5=1。Melodyが別なら他Topを選択",
+      "voice_leading_rule": "全声部平行も、共通音保持も、作曲の狙いから比較する。",
+      "when_to_use": "7thを追加せずに広さを作る。",
+      "when_not_to_use": "低域で過剰なオクターブ重複を増やす場合。",
+      "slash_chord_handling": "Slash時にLH Rootを追加してYより下げない。",
+      "source_evidence": {
+        "source_ids": [
+          "W18",
+          "W01"
+        ],
+        "basis": "音数・和音の種類を変えずに配置を広げる例。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "C",
+        "root": "C",
+        "literal_reference_notes": [
+          "C",
+          "E",
+          "G"
+        ],
+        "omitted_notes": [],
+        "external_sounding_notes": [],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "literal",
+        "require_external_sounding_part": false
+      },
+      "spacing": "open",
+      "learning_level": 5
+    },
+    {
+      "id": "V17",
+      "voicing_family": "Drop 2 transform of closed 4-note group",
+      "chord_family": "major seventh",
+      "example_chord": "Cmaj7",
+      "bass_context": "別Bass C2を実際に鳴らす",
+      "left_hand": [
+        {
+          "pitch": "G3",
+          "midi": 55,
+          "degree": "5",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [
+        {
+          "pitch": "C4",
+          "midi": 60,
+          "degree": "1",
+          "hand": "RH"
+        },
+        {
+          "pitch": "E4",
+          "midi": 64,
+          "degree": "3",
+          "hand": "RH"
+        },
+        {
+          "pitch": "B4",
+          "midi": 71,
+          "degree": "7",
+          "hand": "RH"
+        }
+      ],
+      "chord_tone_degree": {
+        "basis": "upper/root C; Bass自身を自動的にRootにしない",
+        "LH": [
+          "5"
+        ],
+        "RH": [
+          "1",
+          "3",
+          "7"
+        ],
+        "external": [
+          "1"
+        ]
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "G3–G3",
+          "RH": "C4–B4"
+        },
+        "hand_span_semitones": {
+          "LH": 0,
+          "RH": 11
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5 / RH R1-R2-R5（手幅要確認）",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "元のTop B4は保存",
+      "voice_leading_rule": "C4-E4-G4-B4の上から2番目G4のみ12半音下げる。次は変換後の声部として最適化。",
+      "when_to_use": "4声Closeを開き、同じTopを保つ。",
+      "when_not_to_use": "外部C BassなしでC最低音を必須とする場合。この配置単独のBassはG。",
+      "slash_chord_handling": "Slash Bassを変換対象外として固定。Drop2をBass込みの全配列へ盲目的適用しない。",
+      "source_evidence": {
+        "source_ids": [
+          "W10"
+        ],
+        "basis": "変換前後と全体Bassを分離した今回例。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "Cmaj7",
+        "root": "C",
+        "literal_reference_notes": [
+          "C",
+          "E",
+          "G",
+          "B"
+        ],
+        "omitted_notes": [],
+        "external_sounding_notes": [
+          {
+            "pitch": "C2",
+            "midi": 36,
+            "degree": "1",
+            "hand": "external"
+          }
+        ],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "literal",
+        "require_external_sounding_part": true
+      },
+      "spacing": "drop2",
+      "learning_level": 5
+    },
+    {
+      "id": "V18",
+      "voicing_family": "Quartal fragment",
+      "chord_family": "minor seventh + add11",
+      "example_chord": "Dm7(add11)",
+      "bass_context": "Bass自己担当",
+      "left_hand": [
+        {
+          "pitch": "D3",
+          "midi": 50,
+          "degree": "1",
+          "hand": "LH"
+        },
+        {
+          "pitch": "G3",
+          "midi": 55,
+          "degree": "11",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [
+        {
+          "pitch": "C4",
+          "midi": 60,
+          "degree": "b7",
+          "hand": "RH"
+        },
+        {
+          "pitch": "F4",
+          "midi": 65,
+          "degree": "b3",
+          "hand": "RH"
+        }
+      ],
+      "chord_tone_degree": {
+        "basis": "upper/root D; Bass自身を自動的にRootにしない",
+        "LH": [
+          "1",
+          "11"
+        ],
+        "RH": [
+          "b7",
+          "b3"
+        ],
+        "external": []
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "D3–G3",
+          "RH": "C4–F4"
+        },
+        "hand_span_semitones": {
+          "LH": 5,
+          "RH": 5
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5-L1 / RH R1-R5",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "F4=b3",
+      "voice_leading_rule": "形を平行移動するなら、新たに生まれる和音を明示。最短接続だけを唯一目的にしない。",
+      "when_to_use": "4度中心の配置を軽く試す。",
+      "when_not_to_use": "5thや明確な旋律Topを必須とする場面。",
+      "slash_chord_handling": "別Bassを加えると別の解釈になる。勝手にRoot認定しない。",
+      "source_evidence": {
+        "source_ids": [
+          "W05"
+        ],
+        "basis": "D-G-C-Fの4度堆積。5を省いた例。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "Dm7(add11)",
+        "root": "D",
+        "literal_reference_notes": [
+          "D",
+          "F",
+          "A",
+          "C",
+          "G"
+        ],
+        "omitted_notes": [
+          "A"
+        ],
+        "external_sounding_notes": [],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "performance-reduction",
+        "require_external_sounding_part": false
+      },
+      "spacing": "quartal",
+      "learning_level": 6
+    },
+    {
+      "id": "V19",
+      "voicing_family": "So What voicing",
+      "chord_family": "minor seventh + add11",
+      "example_chord": "Dm7(add11)",
+      "bass_context": "Bass自己担当、両手Harmony",
+      "left_hand": [
+        {
+          "pitch": "D3",
+          "midi": 50,
+          "degree": "1",
+          "hand": "LH"
+        },
+        {
+          "pitch": "G3",
+          "midi": 55,
+          "degree": "11",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [
+        {
+          "pitch": "C4",
+          "midi": 60,
+          "degree": "b7",
+          "hand": "RH"
+        },
+        {
+          "pitch": "F4",
+          "midi": 65,
+          "degree": "b3",
+          "hand": "RH"
+        },
+        {
+          "pitch": "A4",
+          "midi": 69,
+          "degree": "5",
+          "hand": "RH"
+        }
+      ],
+      "chord_tone_degree": {
+        "basis": "upper/root D; Bass自身を自動的にRootにしない",
+        "LH": [
+          "1",
+          "11"
+        ],
+        "RH": [
+          "b7",
+          "b3",
+          "5"
+        ],
+        "external": []
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "D3–G3",
+          "RH": "C4–A4"
+        },
+        "hand_span_semitones": {
+          "LH": 5,
+          "RH": 9
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5-L1 / RH R1-R3-R5",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "Top A4=5。この形を選ぶ重要条件",
+      "voice_leading_rule": "D-G-C-F-Aを維持または隣のSo What shapeと比較。",
+      "when_to_use": "minorで5thをTopにしたい、4度中心の空間を作りたい。",
+      "when_not_to_use": "Topが必ず9や11でなければならないとき。",
+      "slash_chord_handling": "別Bass時は別の和音解釈候補を表示。9(E)は鳴っていないためDm11の完全音集合としない。",
+      "source_evidence": {
+        "source_ids": [
+          "W05"
+        ],
+        "basis": "3つの4度と頂部の長3度。Dm11(no9)とも説明できるが本例はadd11と明記。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "Dm7(add11)",
+        "root": "D",
+        "literal_reference_notes": [
+          "D",
+          "F",
+          "A",
+          "C",
+          "G"
+        ],
+        "omitted_notes": [],
+        "external_sounding_notes": [],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "literal",
+        "require_external_sounding_part": false
+      },
+      "spacing": "So What: 4+4+4+M3",
+      "learning_level": 6
+    },
+    {
+      "id": "V20",
+      "voicing_family": "Dominant shell + Upper Structure Triad",
+      "chord_family": "dominant 13 #11",
+      "example_chord": "C13(#11)",
+      "bass_context": "別Bass C2、両手Harmony",
+      "left_hand": [
+        {
+          "pitch": "E3",
+          "midi": 52,
+          "degree": "3",
+          "hand": "LH"
+        },
+        {
+          "pitch": "Bb3",
+          "midi": 58,
+          "degree": "b7",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [
+        {
+          "pitch": "D4",
+          "midi": 62,
+          "degree": "9",
+          "hand": "RH"
+        },
+        {
+          "pitch": "F#4",
+          "midi": 66,
+          "degree": "#11",
+          "hand": "RH"
+        },
+        {
+          "pitch": "A4",
+          "midi": 69,
+          "degree": "13",
+          "hand": "RH"
+        }
+      ],
+      "chord_tone_degree": {
+        "basis": "upper/root C; Bass自身を自動的にRootにしない",
+        "LH": [
+          "3",
+          "b7"
+        ],
+        "RH": [
+          "9",
+          "#11",
+          "13"
+        ],
+        "external": [
+          "1"
+        ]
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "E3–Bb3",
+          "RH": "D4–A4"
+        },
+        "hand_span_semitones": {
+          "LH": 6,
+          "RH": 7
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5-L1 / RH R1-R3-R5",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "Top A4=13。D majorの転回で変更可",
+      "voice_leading_rule": "D-F#-Aを塊でも声部別でも評価。解決先の旋律と摩擦しない候補を選ぶ。",
+      "when_to_use": "複数Tensionを既知の三和音で記憶する。",
+      "when_not_to_use": "全Dominantへ無差別に適用する場合。C7altと完全同一の音集合として扱う場合。",
+      "slash_chord_handling": "これはChord/BassというよりShell+Triad構成。Slash記法の下段型をBassNote/Chordで分ける。",
+      "source_evidence": {
+        "source_ids": [
+          "T08",
+          "W08"
+        ],
+        "basis": "C7 guide E/Bb + D major = 9,#11,13。5省略。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "C13(#11)",
+        "root": "C",
+        "literal_reference_notes": [
+          "C",
+          "E",
+          "G",
+          "Bb",
+          "D",
+          "F#",
+          "A"
+        ],
+        "omitted_notes": [
+          "G"
+        ],
+        "external_sounding_notes": [
+          {
+            "pitch": "C2",
+            "midi": 36,
+            "degree": "1",
+            "hand": "external"
+          }
+        ],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "performance-reduction",
+        "require_external_sounding_part": true
+      },
+      "spacing": "upper structure",
+      "learning_level": 7
+    },
+    {
+      "id": "V21",
+      "voicing_family": "Altered dominant + minor Upper Structure",
+      "chord_family": "dominant b9 b13",
+      "example_chord": "C7(b9,b13)",
+      "bass_context": "Bass自己担当",
+      "left_hand": [
+        {
+          "pitch": "C3",
+          "midi": 48,
+          "degree": "1",
+          "hand": "LH"
+        },
+        {
+          "pitch": "Bb3",
+          "midi": 58,
+          "degree": "b7",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [
+        {
+          "pitch": "Db4",
+          "midi": 61,
+          "degree": "b9",
+          "hand": "RH"
+        },
+        {
+          "pitch": "E4",
+          "midi": 64,
+          "degree": "3",
+          "hand": "RH"
+        },
+        {
+          "pitch": "Ab4",
+          "midi": 68,
+          "degree": "b13",
+          "hand": "RH"
+        }
+      ],
+      "chord_tone_degree": {
+        "basis": "upper/root C; Bass自身を自動的にRootにしない",
+        "LH": [
+          "1",
+          "b7"
+        ],
+        "RH": [
+          "b9",
+          "3",
+          "b13"
+        ],
+        "external": []
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "C3–Bb3",
+          "RH": "Db4–Ab4"
+        },
+        "hand_span_semitones": {
+          "LH": 10,
+          "RH": 7
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5-L1 / RH R1-R2-R5",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "Ab4=b13を解決先G/A等へ導く",
+      "voice_leading_rule": "F majorへの例：E→F、Bb→A、Db→C。全音を同時解決する義務はない。",
+      "when_to_use": "強い色と解決感を1か所作る。",
+      "when_not_to_use": "b9/b13を指定していない和音の忠実再現。旋律と矛盾する場合。",
+      "slash_chord_handling": "T08のC#m triadはPitch ClassとしてDb-E-Ab。原表記C#mを出典側に保持。",
+      "source_evidence": {
+        "source_ids": [
+          "T08",
+          "T04",
+          "W08",
+          "W19"
+        ],
+        "basis": "先生のC7+C#m構造を度数表示用に異名同音整理。オクターブと指は新規。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "C7(b9,b13)",
+        "root": "C",
+        "literal_reference_notes": [
+          "C",
+          "E",
+          "G",
+          "Bb",
+          "Db",
+          "Ab"
+        ],
+        "omitted_notes": [
+          "G"
+        ],
+        "external_sounding_notes": [],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "performance-reduction",
+        "require_external_sounding_part": false
+      },
+      "spacing": "upper structure",
+      "learning_level": 7
+    },
+    {
+      "id": "V22",
+      "voicing_family": "Slash Bass covers b3 + RH extensions",
+      "chord_family": "minor ninth inversion",
+      "example_chord": "Am9/C",
+      "bass_context": "Bass自己担当",
+      "left_hand": [
+        {
+          "pitch": "C3",
+          "midi": 48,
+          "degree": "b3",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [
+        {
+          "pitch": "A3",
+          "midi": 57,
+          "degree": "1",
+          "hand": "RH"
+        },
+        {
+          "pitch": "B3",
+          "midi": 59,
+          "degree": "9",
+          "hand": "RH"
+        },
+        {
+          "pitch": "E4",
+          "midi": 64,
+          "degree": "5",
+          "hand": "RH"
+        },
+        {
+          "pitch": "G4",
+          "midi": 67,
+          "degree": "b7",
+          "hand": "RH"
+        }
+      ],
+      "chord_tone_degree": {
+        "basis": "upper/root A; Bass自身を自動的にRootにしない",
+        "LH": [
+          "b3"
+        ],
+        "RH": [
+          "1",
+          "9",
+          "5",
+          "b7"
+        ],
+        "external": []
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "C3–C3",
+          "RH": "A3–G4"
+        },
+        "hand_span_semitones": {
+          "LH": 0,
+          "RH": 10
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5 / RH R1-R2-R3-R5",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "Top G4=b7",
+      "voice_leading_rule": "C BassからD等へ進めながら、Gの保持やF#への下降を候補化。",
+      "when_to_use": "拡張コードの転回で、LH/RHに同じ3度を重複させず整理。",
+      "when_not_to_use": "常にRootをLHへ置くモード。RH内の2度間隔が音色上望ましくない場合。",
+      "slash_chord_handling": "Cはb3。Bassがコアの3度を担うのでRHにCは必須でない。",
+      "source_evidence": {
+        "source_ids": [
+          "T03",
+          "W07"
+        ],
+        "basis": "左右合算でAm9を完全被覆。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "Am9/C",
+        "root": "A",
+        "literal_reference_notes": [
+          "A",
+          "C",
+          "E",
+          "G",
+          "B"
+        ],
+        "omitted_notes": [],
+        "external_sounding_notes": [],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "literal",
+        "require_external_sounding_part": false
+      },
+      "spacing": "contextual",
+      "learning_level": 3
+    },
+    {
+      "id": "V23",
+      "voicing_family": "Slash Bass covers 9 + reduced m11 upper",
+      "chord_family": "minor eleventh with 9 in bass",
+      "example_chord": "Am11/B",
+      "bass_context": "Bass自己担当",
+      "left_hand": [
+        {
+          "pitch": "B2",
+          "midi": 47,
+          "degree": "9",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [
+        {
+          "pitch": "A3",
+          "midi": 57,
+          "degree": "1",
+          "hand": "RH"
+        },
+        {
+          "pitch": "C4",
+          "midi": 60,
+          "degree": "b3",
+          "hand": "RH"
+        },
+        {
+          "pitch": "D4",
+          "midi": 62,
+          "degree": "11",
+          "hand": "RH"
+        },
+        {
+          "pitch": "G4",
+          "midi": 67,
+          "degree": "b7",
+          "hand": "RH"
+        }
+      ],
+      "chord_tone_degree": {
+        "basis": "upper/root A; Bass自身を自動的にRootにしない",
+        "LH": [
+          "9"
+        ],
+        "RH": [
+          "1",
+          "b3",
+          "11",
+          "b7"
+        ],
+        "external": []
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "B2–B2",
+          "RH": "A3–G4"
+        },
+        "hand_span_semitones": {
+          "LH": 0,
+          "RH": 10
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5 / RH R1-R2-R3-R5",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "Top G4=b7",
+      "voice_leading_rule": "B/Cの摩擦を保持したいかを聴き、Cを別オクターブへ逃がす候補も比較。",
+      "when_to_use": "Tension Bassと複数内声による浮遊感を比較する。",
+      "when_not_to_use": "低いBとすぐ上のCを密集させて明瞭さが失われるとき。",
+      "slash_chord_handling": "Bは上部Am11の9であり、拡張集合の外音ではない。E(5)省略を明示。",
+      "source_evidence": {
+        "source_ids": [
+          "T03",
+          "W07",
+          "W09"
+        ],
+        "basis": "Am11 = A,C,E,G,B,Dという参照集合から検算。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "Am11/B",
+        "root": "A",
+        "literal_reference_notes": [
+          "A",
+          "C",
+          "E",
+          "G",
+          "B",
+          "D"
+        ],
+        "omitted_notes": [
+          "E"
+        ],
+        "external_sounding_notes": [],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "performance-reduction",
+        "require_external_sounding_part": false
+      },
+      "spacing": "contextual",
+      "learning_level": 3
+    },
+    {
+      "id": "V24",
+      "voicing_family": "Slash Bass covers 9 + RH triad",
+      "chord_family": "major add9",
+      "example_chord": "Dadd9/E",
+      "bass_context": "Bass自己担当",
+      "left_hand": [
+        {
+          "pitch": "E2",
+          "midi": 40,
+          "degree": "9",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [
+        {
+          "pitch": "D4",
+          "midi": 62,
+          "degree": "1",
+          "hand": "RH"
+        },
+        {
+          "pitch": "F#4",
+          "midi": 66,
+          "degree": "3",
+          "hand": "RH"
+        },
+        {
+          "pitch": "A4",
+          "midi": 69,
+          "degree": "5",
+          "hand": "RH"
+        }
+      ],
+      "chord_tone_degree": {
+        "basis": "upper/root D; Bass自身を自動的にRootにしない",
+        "LH": [
+          "9"
+        ],
+        "RH": [
+          "1",
+          "3",
+          "5"
+        ],
+        "external": []
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "E2–E2",
+          "RH": "D4–A4"
+        },
+        "hand_span_semitones": {
+          "LH": 0,
+          "RH": 7
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5 / RH R1-R3-R5",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "Top A4=5",
+      "voice_leading_rule": "Aを保持しD/F#を近接音へ動かす等、Bassと別に候補生成。",
+      "when_to_use": "add9を左手が担当しRHを三和音にする。",
+      "when_not_to_use": "C#を勝手に足してDmaj9化する場合。",
+      "slash_chord_handling": "D/Eと同じPitch Classes。E9sus4(no5)というBass基準の別解釈も文脈次第。",
+      "source_evidence": {
+        "source_ids": [
+          "T03",
+          "W07",
+          "W18"
+        ],
+        "basis": "Eadd9/F#の同型だが、原コード記号は保持。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "Dadd9/E",
+        "root": "D",
+        "literal_reference_notes": [
+          "D",
+          "F#",
+          "A",
+          "E"
+        ],
+        "omitted_notes": [],
+        "external_sounding_notes": [],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "literal",
+        "require_external_sounding_part": false
+      },
+      "spacing": "contextual",
+      "learning_level": 3
+    },
+    {
+      "id": "V25",
+      "voicing_family": "Slash Bass + RH root/3/7 core",
+      "chord_family": "major ninth over its 9",
+      "example_chord": "Gmaj9/A",
+      "bass_context": "Bass自己担当",
+      "left_hand": [
+        {
+          "pitch": "A2",
+          "midi": 45,
+          "degree": "9",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [
+        {
+          "pitch": "F#4",
+          "midi": 66,
+          "degree": "7",
+          "hand": "RH"
+        },
+        {
+          "pitch": "G4",
+          "midi": 67,
+          "degree": "1",
+          "hand": "RH"
+        },
+        {
+          "pitch": "B4",
+          "midi": 71,
+          "degree": "3",
+          "hand": "RH"
+        }
+      ],
+      "chord_tone_degree": {
+        "basis": "upper/root G; Bass自身を自動的にRootにしない",
+        "LH": [
+          "9"
+        ],
+        "RH": [
+          "7",
+          "1",
+          "3"
+        ],
+        "external": []
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "A2–A2",
+          "RH": "F#4–B4"
+        },
+        "hand_span_semitones": {
+          "LH": 0,
+          "RH": 5
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5 / RH R1-R2-R5",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "Top B4=3",
+      "voice_leading_rule": "Eadd9/F#のE4-G#4-B4→F#4-G4-B4。Top Bを保持。",
+      "when_to_use": "3音RHでmaj7の色を残しながらSlash Bassを鳴らす。",
+      "when_not_to_use": "A13sus4と同一音集合として表示する場合。D=sus4がない。",
+      "slash_chord_handling": "Aが9を被覆し、D(5)だけ省略。G/B/F#は三和音ではなくrooted seventh core。",
+      "source_evidence": {
+        "source_ids": [
+          "T03",
+          "W07",
+          "W13"
+        ],
+        "basis": "Gmaj9の5省略として妥当。A基準のsus4成分欠落を明示。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "Gmaj9/A",
+        "root": "G",
+        "literal_reference_notes": [
+          "G",
+          "B",
+          "D",
+          "F#",
+          "A"
+        ],
+        "omitted_notes": [
+          "D"
+        ],
+        "external_sounding_notes": [],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "performance-reduction",
+        "require_external_sounding_part": false
+      },
+      "spacing": "RH compact with semitone",
+      "learning_level": 3
+    },
+    {
+      "id": "V26",
+      "voicing_family": "Slash Bass + complete RH maj7 structure",
+      "chord_family": "major ninth over its 9",
+      "example_chord": "Gmaj9/A",
+      "bass_context": "Bass自己担当",
+      "left_hand": [
+        {
+          "pitch": "A2",
+          "midi": 45,
+          "degree": "9",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [
+        {
+          "pitch": "D4",
+          "midi": 62,
+          "degree": "5",
+          "hand": "RH"
+        },
+        {
+          "pitch": "F#4",
+          "midi": 66,
+          "degree": "7",
+          "hand": "RH"
+        },
+        {
+          "pitch": "G4",
+          "midi": 67,
+          "degree": "1",
+          "hand": "RH"
+        },
+        {
+          "pitch": "B4",
+          "midi": 71,
+          "degree": "3",
+          "hand": "RH"
+        }
+      ],
+      "chord_tone_degree": {
+        "basis": "upper/root G; Bass自身を自動的にRootにしない",
+        "LH": [
+          "9"
+        ],
+        "RH": [
+          "5",
+          "7",
+          "1",
+          "3"
+        ],
+        "external": []
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "A2–A2",
+          "RH": "D4–B4"
+        },
+        "hand_span_semitones": {
+          "LH": 0,
+          "RH": 9
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5 / RH R1-R2-R3-R5",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "B4を前コードから保持",
+      "voice_leading_rule": "Eadd9/F#のE4-F#4-G#4-B4→D4-F#4-G4-B4。F#とBを保持。",
+      "when_to_use": "全構成音と滑らかな接続を両立する。",
+      "when_not_to_use": "RH4音の密度が過大な場合。外部旋律とTopが競合する場合。",
+      "slash_chord_handling": "完全集合はA13sus4(no5)と一致。ただし機能と原表記を自動変更しない。",
+      "source_evidence": {
+        "source_ids": [
+          "T03",
+          "W07"
+        ],
+        "basis": "A,G,B,D,F#を完全被覆。Bass基準の別名も検算。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "Gmaj9/A",
+        "root": "G",
+        "literal_reference_notes": [
+          "G",
+          "B",
+          "D",
+          "F#",
+          "A"
+        ],
+        "omitted_notes": [],
+        "external_sounding_notes": [],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "literal",
+        "require_external_sounding_part": false
+      },
+      "spacing": "RH compact",
+      "learning_level": 3
+    },
+    {
+      "id": "V27",
+      "voicing_family": "Pedal Bass + changing upper chord",
+      "chord_family": "major triad over pedal",
+      "example_chord": "F/C",
+      "bass_context": "Cを前後の別和音でも持続／反復する",
+      "left_hand": [
+        {
+          "pitch": "C3",
+          "midi": 48,
+          "degree": "5",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [
+        {
+          "pitch": "F3",
+          "midi": 53,
+          "degree": "1",
+          "hand": "RH"
+        },
+        {
+          "pitch": "A3",
+          "midi": 57,
+          "degree": "3",
+          "hand": "RH"
+        },
+        {
+          "pitch": "C4",
+          "midi": 60,
+          "degree": "5",
+          "hand": "RH"
+        }
+      ],
+      "chord_tone_degree": {
+        "basis": "upper/root F; Bass自身を自動的にRootにしない",
+        "LH": [
+          "5"
+        ],
+        "RH": [
+          "1",
+          "3",
+          "5"
+        ],
+        "external": []
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "C3–C3",
+          "RH": "F3–C4"
+        },
+        "hand_span_semitones": {
+          "LH": 0,
+          "RH": 7
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5 / RH R1-R3-R5",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "C4を共通Topにする案",
+      "voice_leading_rule": "前コードのC PedalからCを保持。和音ごとのRootへ自動置換しない。",
+      "when_to_use": "Bassを止めたまま上部和声を変えて展開・緊張を作る。",
+      "when_not_to_use": "単一F/Cだけを見てPedalと断定する場合。",
+      "slash_chord_handling": "F/C単独は転回形とも読める。pedalは前後イベントの属性。",
+      "source_evidence": {
+        "source_ids": [
+          "W15",
+          "T16"
+        ],
+        "basis": "ここでは時系列上Cを保つという条件を付けてPedalと分類。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "F/C",
+        "root": "F",
+        "literal_reference_notes": [
+          "F",
+          "A",
+          "C"
+        ],
+        "omitted_notes": [],
+        "external_sounding_notes": [],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "literal",
+        "require_external_sounding_part": false
+      },
+      "spacing": "contextual",
+      "learning_level": 3
+    },
+    {
+      "id": "V28",
+      "voicing_family": "Melody-first two-hand core + color",
+      "chord_family": "major ninth",
+      "example_chord": "Cmaj9",
+      "bass_context": "Bass自己担当、RH旋律固定",
+      "left_hand": [
+        {
+          "pitch": "C3",
+          "midi": 48,
+          "degree": "1",
+          "hand": "LH"
+        },
+        {
+          "pitch": "B3",
+          "midi": 59,
+          "degree": "7",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [
+        {
+          "pitch": "E4",
+          "midi": 64,
+          "degree": "3",
+          "hand": "RH"
+        },
+        {
+          "pitch": "D5",
+          "midi": 74,
+          "degree": "9",
+          "hand": "RH"
+        }
+      ],
+      "chord_tone_degree": {
+        "basis": "upper/root C; Bass自身を自動的にRootにしない",
+        "LH": [
+          "1",
+          "7"
+        ],
+        "RH": [
+          "3",
+          "9"
+        ],
+        "external": []
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "C3–B3",
+          "RH": "E4–D5"
+        },
+        "hand_span_semitones": {
+          "LH": 11,
+          "RH": 10
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5-L1 / RH R1-R5（手幅要確認）",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "固定Melody D5。Harmonyの都合で上下させない",
+      "voice_leading_rule": "Top固定後、3/7を最短かつ手幅内で割り振る。",
+      "when_to_use": "メロディを作りながら和声を選ぶ。",
+      "when_not_to_use": "RH短7度やLH長7度の同時開きが負担な場合。別指・再分担を優先。",
+      "slash_chord_handling": "Slash Bassを固定したまま必要Coreを両手へ再配分。",
+      "source_evidence": {
+        "source_ids": [
+          "T01",
+          "T04",
+          "W06"
+        ],
+        "basis": "先生資料のMelody/3とRoot/7という役割を9 melodyへ適用した今回例。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "Cmaj9",
+        "root": "C",
+        "literal_reference_notes": [
+          "C",
+          "E",
+          "G",
+          "B",
+          "D"
+        ],
+        "omitted_notes": [
+          "G"
+        ],
+        "external_sounding_notes": [],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "performance-reduction",
+        "require_external_sounding_part": false
+      },
+      "spacing": "melody-first spread",
+      "learning_level": 2
+    },
+    {
+      "id": "V29",
+      "voicing_family": "Bass + altered-fifth core",
+      "chord_family": "half-diminished seventh",
+      "example_chord": "Bm7b5",
+      "bass_context": "Bass自己担当",
+      "left_hand": [
+        {
+          "pitch": "B2",
+          "midi": 47,
+          "degree": "1",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [
+        {
+          "pitch": "A3",
+          "midi": 57,
+          "degree": "b7",
+          "hand": "RH"
+        },
+        {
+          "pitch": "D4",
+          "midi": 62,
+          "degree": "b3",
+          "hand": "RH"
+        },
+        {
+          "pitch": "F4",
+          "midi": 65,
+          "degree": "b5",
+          "hand": "RH"
+        }
+      ],
+      "chord_tone_degree": {
+        "basis": "upper/root B; Bass自身を自動的にRootにしない",
+        "LH": [
+          "1"
+        ],
+        "RH": [
+          "b7",
+          "b3",
+          "b5"
+        ],
+        "external": []
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "B2–B2",
+          "RH": "A3–F4"
+        },
+        "hand_span_semitones": {
+          "LH": 0,
+          "RH": 8
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5 / RH R1-R3-R5",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "F4=b5を意識する",
+      "voice_leading_rule": "E7へDを保持し、F→EまたはF→G#など解決先の配置を比較。",
+      "when_to_use": "m7とm7b5の差を実際の音で確認。",
+      "when_not_to_use": "通常m7のようにb5を常に省いてしまう場合。",
+      "slash_chord_handling": "Slash Bassがb5でも全体Coreを確認。普通の5と同じ省略順位にしない。",
+      "source_evidence": {
+        "source_ids": [
+          "W01",
+          "W13"
+        ],
+        "basis": "b5はこのコードの識別に重要。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "Bm7b5",
+        "root": "B",
+        "literal_reference_notes": [
+          "B",
+          "D",
+          "F",
+          "A"
+        ],
+        "omitted_notes": [],
+        "external_sounding_notes": [],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "literal",
+        "require_external_sounding_part": false
+      },
+      "spacing": "contextual",
+      "learning_level": 2
+    },
+    {
+      "id": "V30",
+      "voicing_family": "Bass + diminished seventh structure",
+      "chord_family": "fully diminished seventh",
+      "example_chord": "Cdim7",
+      "bass_context": "Bass自己担当",
+      "left_hand": [
+        {
+          "pitch": "C3",
+          "midi": 48,
+          "degree": "1",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [
+        {
+          "pitch": "Eb4",
+          "midi": 63,
+          "degree": "b3",
+          "hand": "RH"
+        },
+        {
+          "pitch": "Gb4",
+          "midi": 66,
+          "degree": "b5",
+          "hand": "RH"
+        },
+        {
+          "pitch": "Bbb4",
+          "midi": 69,
+          "degree": "bb7",
+          "hand": "RH"
+        }
+      ],
+      "chord_tone_degree": {
+        "basis": "upper/root C; Bass自身を自動的にRootにしない",
+        "LH": [
+          "1"
+        ],
+        "RH": [
+          "b3",
+          "b5",
+          "bb7"
+        ],
+        "external": []
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "C3–C3",
+          "RH": "Eb4–Bbb4"
+        },
+        "hand_span_semitones": {
+          "LH": 0,
+          "RH": 6
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5 / RH R1-R3-R5",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "Bbb4（実音A4）=減7度",
+      "voice_leading_rule": "綴りと解決先を別管理。実音が同じAでもC6へ自動統合しない。",
+      "when_to_use": "dim7を6やm7b5と区別して学ぶ。",
+      "when_not_to_use": "異名同音だけで別Root/別機能へ自動確定するとき。",
+      "slash_chord_handling": "SlashのBassを含め、Root由来のbb7という度数を保持。",
+      "source_evidence": {
+        "source_ids": [
+          "T01",
+          "T27",
+          "W01"
+        ],
+        "basis": "減7度の綴りを維持する例。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "Cdim7",
+        "root": "C",
+        "literal_reference_notes": [
+          "C",
+          "Eb",
+          "Gb",
+          "Bbb"
+        ],
+        "omitted_notes": [],
+        "external_sounding_notes": [],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "literal",
+        "require_external_sounding_part": false
+      },
+      "spacing": "contextual",
+      "learning_level": 2
+    },
+    {
+      "id": "V31",
+      "voicing_family": "Upper triad over non-triad Bass",
+      "chord_family": "triad over non-chord-tone bass",
+      "example_chord": "D/C",
+      "bass_context": "Bass自己担当",
+      "left_hand": [
+        {
+          "pitch": "C3",
+          "midi": 48,
+          "degree": "b7",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [
+        {
+          "pitch": "D4",
+          "midi": 62,
+          "degree": "1",
+          "hand": "RH"
+        },
+        {
+          "pitch": "F#4",
+          "midi": 66,
+          "degree": "3",
+          "hand": "RH"
+        },
+        {
+          "pitch": "A4",
+          "midi": 69,
+          "degree": "5",
+          "hand": "RH"
+        }
+      ],
+      "chord_tone_degree": {
+        "basis": "upper/root D; Bass自身を自動的にRootにしない",
+        "LH": [
+          "b7"
+        ],
+        "RH": [
+          "1",
+          "3",
+          "5"
+        ],
+        "external": []
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "C3–C3",
+          "RH": "D4–A4"
+        },
+        "hand_span_semitones": {
+          "LH": 0,
+          "RH": 7
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5 / RH R1-R3-R5",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "A4=5",
+      "voice_leading_rule": "C Bassを保つかBへ動かすかで別の流れを比較。",
+      "when_to_use": "上部D triadとC Bassの複層を作る。",
+      "when_not_to_use": "これを完全なCmaj13(#11)と同一音集合だと説明する場合。EとBがない。",
+      "slash_chord_handling": "CはD triadには含まれない。拡張再解釈ではD7/Cとも同じPitch Classes。",
+      "source_evidence": {
+        "source_ids": [
+          "T03",
+          "W07",
+          "W14"
+        ],
+        "basis": "分類の基準集合をD triadとして明示。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "D/C",
+        "root": "D",
+        "literal_reference_notes": [
+          "D",
+          "F#",
+          "A",
+          "C"
+        ],
+        "omitted_notes": [],
+        "external_sounding_notes": [],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "literal",
+        "require_external_sounding_part": false
+      },
+      "spacing": "contextual",
+      "learning_level": 3
+    },
+    {
+      "id": "V32",
+      "voicing_family": "Bass + sixth/ninth color",
+      "chord_family": "major sixth ninth",
+      "example_chord": "C6/9",
+      "bass_context": "Bass自己担当、両手Harmony",
+      "left_hand": [
+        {
+          "pitch": "C3",
+          "midi": 48,
+          "degree": "1",
+          "hand": "LH"
+        },
+        {
+          "pitch": "A3",
+          "midi": 57,
+          "degree": "6",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [
+        {
+          "pitch": "D4",
+          "midi": 62,
+          "degree": "9",
+          "hand": "RH"
+        },
+        {
+          "pitch": "E4",
+          "midi": 64,
+          "degree": "3",
+          "hand": "RH"
+        },
+        {
+          "pitch": "G4",
+          "midi": 67,
+          "degree": "5",
+          "hand": "RH"
+        }
+      ],
+      "chord_tone_degree": {
+        "basis": "upper/root C; Bass自身を自動的にRootにしない",
+        "LH": [
+          "1",
+          "6"
+        ],
+        "RH": [
+          "9",
+          "3",
+          "5"
+        ],
+        "external": []
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "C3–A3",
+          "RH": "D4–G4"
+        },
+        "hand_span_semitones": {
+          "LH": 9,
+          "RH": 5
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5-L1 / RH R1-R2-R5",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "G4=5。D/E/Gの転回で変更可",
+      "voice_leading_rule": "6と9を保持できる進行を探す。maj7へ無断変換しない。",
+      "when_to_use": "7thを使わず6/9の語彙を増やす。",
+      "when_not_to_use": "Cmaj9指定をこの音集合にすり替える場合。",
+      "slash_chord_handling": "6/9中のスラッシュはChord/Bass区切りではない。C6/9/Eなら末尾EだけがBass指定。",
+      "source_evidence": {
+        "source_ids": [
+          "W01",
+          "W18"
+        ],
+        "basis": "パーサーで6/9とSlash Bassを区別する実装例。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "C6/9",
+        "root": "C",
+        "literal_reference_notes": [
+          "C",
+          "E",
+          "G",
+          "A",
+          "D"
+        ],
+        "omitted_notes": [],
+        "external_sounding_notes": [],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "literal",
+        "require_external_sounding_part": false
+      },
+      "spacing": "spread + RH seconds",
+      "learning_level": 3
+    },
+    {
+      "id": "V33",
+      "voicing_family": "Bass + suspended core",
+      "chord_family": "dominant seventh suspended fourth",
+      "example_chord": "G7sus4",
+      "bass_context": "Bass自己担当",
+      "left_hand": [
+        {
+          "pitch": "G2",
+          "midi": 43,
+          "degree": "1",
+          "hand": "LH"
+        },
+        {
+          "pitch": "F3",
+          "midi": 53,
+          "degree": "b7",
+          "hand": "LH"
+        }
+      ],
+      "right_hand": [
+        {
+          "pitch": "C4",
+          "midi": 60,
+          "degree": "4",
+          "hand": "RH"
+        },
+        {
+          "pitch": "D4",
+          "midi": 62,
+          "degree": "5",
+          "hand": "RH"
+        }
+      ],
+      "chord_tone_degree": {
+        "basis": "upper/root G; Bass自身を自動的にRootにしない",
+        "LH": [
+          "1",
+          "b7"
+        ],
+        "RH": [
+          "4",
+          "5"
+        ],
+        "external": []
+      },
+      "register": {
+        "notation": "C4 = MIDI 60",
+        "example": {
+          "LH": "G2–F3",
+          "RH": "C4–D4"
+        },
+        "hand_span_semitones": {
+          "LH": 10,
+          "RH": 2
+        },
+        "policy": "例示音域。移調後は再判定し、固定オクターブ・固定運指を保証しない。"
+      },
+      "fingering": {
+        "candidates": "LH L5-L1 / RH R1-R2またはR1-R3",
+        "status": "今回の提案。先生資料の運指ではない。",
+        "confidence": "中",
+        "policy": "手の大きさ、前後の音、黒鍵、レガートで変更。痛い開きは分担・分散・移高で回避。"
+      },
+      "top_note_policy": "D4=5。C4=4を別声部として識別",
+      "voice_leading_rule": "C→BでG7へ解決する案と、susを保つ案を比較。",
+      "when_to_use": "3度を置かずにsusの和声を明確にする。",
+      "when_not_to_use": "Guide Tone generatorがB(3)を常に強制する場合。",
+      "slash_chord_handling": "F/GならF triad上のA=Gの9も加わる。G7sus4と完全に同じ集合ではない。",
+      "source_evidence": {
+        "source_ids": [
+          "W01",
+          "W18"
+        ],
+        "basis": "susは単純3/7法の例外。",
+        "provenance": "資料の構造／一般理論を参考に今回作成した具体例。教師の逐音転記ではない。"
+      },
+      "confidence": {
+        "pitch_class_accounting": "高（自動検証済み）",
+        "pedagogical_fit": "中（提案）",
+        "fingering": "中（候補）",
+        "audition_and_human_playability": "未実施"
+      },
+      "harmonic_spec": {
+        "original_symbol": "G7sus4",
+        "root": "G",
+        "literal_reference_notes": [
+          "G",
+          "C",
+          "D",
+          "F"
+        ],
+        "omitted_notes": [],
+        "external_sounding_notes": [],
+        "contains_unlisted_pitch_classes": false,
+        "coverage_mode": "literal",
+        "require_external_sounding_part": false
+      },
+      "spacing": "contextual",
+      "learning_level": 1
+    }
+  ]
+}
