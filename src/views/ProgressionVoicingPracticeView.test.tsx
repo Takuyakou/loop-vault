@@ -429,33 +429,43 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(runtime.setBpm).toHaveBeenLastCalledWith(90);
   });
 
-  it("presents one Shell lesson with Root Shell default and a compact Rootless subtype", async () => {
+  it("separates SOURCE, STUDY, and DISPLAY while keeping exact sources independent from study", async () => {
     const runtime = new FakeTransport();
     const container = await renderView(runtime, {
+      "source-midi": snapshot("source-midi"),
+      custom: snapshot("custom"),
       "basic-full": snapshot("basic-full"),
-      "rootless-shell": snapshot("rootless-shell"),
-    }, "basic-full");
+    }, "source-midi");
 
-    const buttonLabels = Array.from(container.querySelectorAll("button"), (entry) => entry.textContent?.trim());
-    expect(buttonLabels.filter((label) => label === "Shell")).toHaveLength(1);
-    expect(container.textContent).not.toContain("Basic Shell 1–7");
-    expect(container.textContent).not.toContain("Basic Full 1–7–3");
-    expect(container.textContent).not.toContain("Full Shell Voicing");
-    expect(button(container, "Root 1·3·7").getAttribute("aria-pressed")).toBe("true");
-    expect(container.querySelector("[data-testid='voicing-loop-selection-help']")?.textContent)
-      .toContain("Root・3rd・7th");
+    const toolbar = container.querySelector("[data-testid='voicing-loop-controls']")!;
+    expect(Array.from(toolbar.querySelectorAll("legend"), (entry) => entry.textContent)).toEqual([
+      "SOURCE", "STUDY", "DISPLAY",
+    ]);
+    expect(["Lesson Rules", "Source MIDI", "Custom", "Teacher", "Core", "Color", "Open"]
+      .every((label) => Array.from(toolbar.querySelectorAll("button")).some((entry) => entry.textContent === label)))
+      .toBe(true);
+    expect(toolbar.textContent).not.toContain("SHELL TYPE");
+    expect(button(container, "Source MIDI").getAttribute("aria-pressed")).toBe("true");
+    for (const label of ["Teacher", "Core", "Color", "Open"]) {
+      expect(button(container, label).disabled).toBe(true);
+    }
 
-    await act(async () => button(container, "Rootless 3·7").click());
-    expect(button(container, "Rootless 3·7").getAttribute("aria-pressed")).toBe("true");
-    expect(container.querySelector("[data-testid='voicing-loop-selection-help']")?.textContent)
-      .toContain("Rootを省き");
-    expect(container.querySelector("[data-testid='voicing-loop-left-hand']")?.textContent)
-      .toContain("CHORD TONE3 · 7");
-    expect(container.querySelector("[data-testid='voicing-loop-right-hand']")).toBeNull();
-    await act(async () => button(container, "開始").click());
-    expect(runtime.options?.plan.selection).toBe("rootless-shell");
+    await act(async () => button(container, "Lesson Rules").click());
+    expect(button(container, "Core").disabled).toBe(false);
+    expect(button(container, "Core").getAttribute("aria-pressed")).toBe("true");
+    const explanation = container.querySelector("[data-testid='voicing-loop-current-explanation']")!;
+    expect(explanation.textContent).toContain("Bass + Guide Tones");
+    expect(explanation.textContent).toContain("演奏用省略");
+    expect(explanation.textContent).toContain("Candidate");
+    expect(explanation.textContent).toContain("RULEP5.31-MAJ7");
+    expect(explanation.textContent).toContain("OMIT5");
+    expect(explanation.textContent).toContain("TOPVoicing Top");
+
+    await act(async () => button(container, "Custom").click());
+    expect(button(container, "Core").disabled).toBe(true);
+    expect(container.querySelector("[data-testid='voicing-loop-current-explanation']")?.textContent)
+      .toBe("Custom");
   });
-
   it("renders slash add9 Shell as an exact two-hand lesson with fingerprints and compact toolbar", async () => {
     const runtime = new FakeTransport();
     const base = snapshot("basic-full");
@@ -474,7 +484,7 @@ describe("ProgressionVoicingPracticeView", () => {
     const next = container.querySelector("[data-testid='voicing-loop-next-voicing']")!;
     expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent).toBe("Eadd9/F#");
     expect(container.querySelector("[data-testid='voicing-loop-left-hand']")?.textContent)
-      .toContain("CHORD TONEBass");
+      .toContain("CHORD TONE9");
     expect(container.querySelector("[data-testid='voicing-loop-right-hand']")?.textContent)
       .toContain("CHORD TONE1 · 3 · 5");
     expect(current.textContent).toContain("FINGERL5");
@@ -484,7 +494,10 @@ describe("ProgressionVoicingPracticeView", () => {
       .toContain("LEFT HAND");
     expect(container.querySelector("[data-testid='voicing-loop-next-right-hand']")?.textContent)
       .toContain("RIGHT HAND");
-    const plan = resolveProgressionPracticeVoicings(slash);
+    const plan = resolveProgressionPracticeVoicings(slash, {
+      lessonStudyCategory: "core",
+      lessonContext: { bass: "self-played", top: "normal-voicing-top" },
+    });
     const currentResolution = plan.events[0]!;
     expect(currentResolution.status).toBe("SUPPORTED");
     if (currentResolution.status !== "SUPPORTED") return;
@@ -495,10 +508,15 @@ describe("ProgressionVoicingPracticeView", () => {
     }
     const toolbar = container.querySelector("[data-testid='voicing-loop-controls']")!;
     expect(toolbar.textContent).not.toMatch(/\bMY\b|\bLESSON\b|SHELL TYPE/);
-    expect(container.querySelector("[data-testid='voicing-loop-shell-type']")?.textContent)
-      .toBe("Root 1·3·7Rootless 3·7");
-    expect(container.querySelector("[data-testid='voicing-loop-workspace']")?.textContent)
-      .not.toContain("Root Shell 1·3·7");
+    expect(Array.from(toolbar.querySelectorAll("legend"), (entry) => entry.textContent)).toEqual([
+      "SOURCE", "STUDY", "DISPLAY",
+    ]);
+    expect(["Lesson Rules", "Source MIDI", "Custom", "Teacher", "Core", "Color", "Open"]
+      .every((label) => Array.from(toolbar.querySelectorAll("button")).some((entry) => entry.textContent === label)))
+      .toBe(true);
+    expect(container.querySelector("[data-testid='voicing-loop-shell-type']")).toBeNull();
+    expect(container.querySelector("[data-testid='voicing-loop-current-explanation']")?.textContent)
+      .toContain("Slash Bass + Upper Structure");
     await act(async () => button(container, "開始").click());
     expect(runtime.options?.plan.events.every((entry) => entry.status === "SUPPORTED")).toBe(true);
   });
@@ -508,7 +526,7 @@ describe("ProgressionVoicingPracticeView", () => {
 
     expect(container.textContent).not.toContain("Legacy Full-chord Shell");
     expect(container.textContent).not.toContain("Full Shell Voicing");
-    expect(button(container, "Shell").getAttribute("aria-pressed")).toBe("true");
+    expect(button(container, "Lesson Rules").getAttribute("aria-pressed")).toBe("true");
     await act(async () => button(container, "開始").click());
     expect(runtime.options?.plan.selection).toBe("full-shell");
     expect(runtime.options?.plan.events.every((event) => event.status === "SUPPORTED")).toBe(true);
@@ -647,7 +665,7 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.textContent).toContain("選択したVoicingを利用できません");
     expect(button(container, "開始").disabled).toBe(true);
 
-    await act(async () => button(container, "Shell").click());
+    await act(async () => button(container, "Lesson Rules").click());
     expect(container.textContent).toContain("選択中Lesson Voicingの規則がありません");
     expect(button(container, "開始").disabled).toBe(true);
     expect(runtime.start).not.toHaveBeenCalled();
@@ -917,14 +935,15 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("[data-finger-label='L5']")).not.toBeNull();
     expect(container.querySelector("[data-finger-label='R1']")).not.toBeNull();
 
-    for (const label of ["Custom", "Shell", "Rootless 3·7", "Left-hand"]) {
+    for (const label of ["Custom", "Lesson Rules"]) {
       await act(async () => button(container, label).click());
       expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
         .toContain("FINGER");
     }
-    expect(container.querySelector("[data-testid='voicing-loop-right-hand']")).toBeNull();
     expect(container.querySelector("[data-testid='voicing-loop-left-hand']")?.textContent)
       .toContain("FINGERL");
+    expect(container.querySelector("[data-testid='voicing-loop-right-hand']")?.textContent)
+      .toContain("FINGERR");
   });
 
   it("can hide, save, and reset a personal fingering by exact physical pitch signature", async () => {

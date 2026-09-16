@@ -32,6 +32,13 @@ import {
   type VoicingLoopVaultCandidate,
 } from "../domain/progressionVoicingPractice";
 import type { AppLanguage } from "../domain/types";
+import type {
+  VoicingCoverage,
+  VoicingRuleExplanation,
+  VoicingRuleFamily,
+  VoicingStudyCategory,
+  VoicingTopContext,
+} from "../domain/voicingRules";
 import { accidentalPreferenceForKey } from "../domain/chords";
 import { keyCatalogForMode, parseKeySignature } from "../domain/practiceTransposition";
 import {
@@ -81,15 +88,25 @@ export interface ProgressionVoicingPracticeViewProps {
   readonly resolutionOptions?: ResolveProgressionPracticeVoicingsOptions;
 }
 
-const selections: readonly {
-  readonly id: "source-midi" | "custom" | "shell" | "left-hand";
+const sourceSelections: readonly {
+  readonly id: "lesson-rules" | "source-midi" | "custom";
   readonly ja: string;
   readonly en: string;
 }[] = [
+  { id: "lesson-rules", ja: "Lesson Rules", en: "Lesson Rules" },
   { id: "source-midi", ja: "Source MIDI", en: "Source MIDI" },
   { id: "custom", ja: "Custom", en: "Custom" },
-  { id: "shell", ja: "Shell", en: "Shell" },
-  { id: "left-hand", ja: "Left-hand", en: "Left-hand" },
+] as const;
+
+const studySelections: readonly {
+  readonly id: VoicingStudyCategory;
+  readonly ja: string;
+  readonly en: string;
+}[] = [
+  { id: "teacher", ja: "Teacher", en: "Teacher" },
+  { id: "core", ja: "Core", en: "Core" },
+  { id: "color", ja: "Color", en: "Color" },
+  { id: "open", ja: "Open", en: "Open" },
 ] as const;
 
 const copy = {
@@ -97,7 +114,8 @@ const copy = {
     title: "Voicing Loop",
     description: "コードを見た瞬間に、左手・右手それぞれ何指か分かる。",
     source: "Voicingを選択",
-    sourceHelp: "Source MIDIとCustomは保存済みの音をそのまま使い、ShellとLeft-handは承認済みの規則だけを使います。",
+    sourceHelp: "Source MIDIとCustomは保存済みの音をそのまま使い、Lesson Rulesは承認済みの規則だけを使います。",
+    studyHelp: "Lesson Rulesの学習カテゴリを選びます。Source MIDIとCustomでは変更できません。",
     rootShell: "Root Shell 1·3·7",
     rootShellShort: "Root 1·3·7",
     rootlessShell: "Rootless Shell 3·7",
@@ -138,6 +156,10 @@ const copy = {
     learn: "Learn（Voicing表示）",
     recall: "Recall（コード名のみ）",
     displayMode: "Voicing表示モード",
+    rule: "RULE",
+    omit: "OMIT",
+    top: "TOP",
+    none: "なし",
     bpm: "BPM",
     key: "KEY",
     originalKey: "元",
@@ -201,7 +223,8 @@ const copy = {
     title: "Voicing Loop",
     description: "See the chord and know where each hand and finger goes.",
     source: "Choose voicing",
-    sourceHelp: "Source MIDI and Custom preserve saved notes; Shell and Left-hand use approved rules only.",
+    sourceHelp: "Source MIDI and Custom preserve saved notes; Lesson Rules use approved rules only.",
+    studyHelp: "Choose a Lesson Rules study category. It is inactive for Source MIDI and Custom.",
     rootShell: "Root Shell 1·3·7",
     rootShellShort: "Root 1·3·7",
     rootlessShell: "Rootless Shell 3·7",
@@ -242,6 +265,10 @@ const copy = {
     learn: "Learn (show voicing)",
     recall: "Recall (chord only)",
     displayMode: "Voicing display mode",
+    rule: "RULE",
+    omit: "OMIT",
+    top: "TOP",
+    none: "None",
     bpm: "BPM",
     key: "KEY",
     originalKey: "Original",
@@ -318,6 +345,8 @@ export function ProgressionVoicingPracticeView({
   const text = copy[language];
   const { sound: previewSound } = usePreviewSound();
   const [selection, setSelection] = useState<ProgressionVoicingSelection>(initialSelection);
+  const [studyCategory, setStudyCategory] = useState<VoicingStudyCategory>("core");
+  const lessonRulesSelected = selection !== "source-midi" && selection !== "custom";
   const sourceSnapshot = snapshots?.[selection];
   const sourceKey = useMemo(
     () => sourceSnapshot?.key ? parseKeySignature(sourceSnapshot.key) : undefined,
@@ -374,9 +403,20 @@ export function ProgressionVoicingPracticeView({
   const progressionListTitle = query.trim()
     ? text.results
     : showAllProgressions ? text.all : recentProgressions.length ? text.recent : text.saved;
+  const effectiveResolutionOptions = useMemo<ResolveProgressionPracticeVoicingsOptions>(
+    () => lessonRulesSelected ? {
+      ...resolutionOptions,
+      lessonStudyCategory: studyCategory,
+      lessonContext: resolutionOptions?.lessonContext ?? {
+        bass: "self-played",
+        top: "normal-voicing-top",
+      },
+    } : resolutionOptions ?? {},
+    [lessonRulesSelected, resolutionOptions, studyCategory],
+  );
   const plan = useMemo(
-    () => snapshot ? resolveProgressionPracticeVoicings(snapshot, resolutionOptions) : undefined,
-    [resolutionOptions, snapshot],
+    () => snapshot ? resolveProgressionPracticeVoicings(snapshot, effectiveResolutionOptions) : undefined,
+    [effectiveResolutionOptions, snapshot],
   );
   const [countInBars, setCountInBars] = useState<0 | 1 | 2>(1);
   const [clockState, setClockState] = useState(
@@ -516,12 +556,6 @@ export function ProgressionVoicingPracticeView({
   const currentLeftPersonal = findPersonalFingering(fingeringPreferences, currentLeftFingering?.signature);
   const currentRightPersonal = findPersonalFingering(fingeringPreferences, currentRightFingering?.signature);
   const accidentalStyle: NoteAccidentalStyle = accidentalPreferenceForKey(snapshot?.key) ?? "flat";
-  const keyboardRange = keyboardVoicing?.referenceBassNote === undefined
-    ? VOICING_LOOP_KEYBOARD_RANGE
-    : {
-        minMidiNote: Math.min(VOICING_LOOP_KEYBOARD_RANGE.minMidiNote, keyboardVoicing.referenceBassNote),
-        maxMidiNote: Math.max(VOICING_LOOP_KEYBOARD_RANGE.maxMidiNote, keyboardVoicing.referenceBassNote),
-      };
   const keyboardFingerLabels = useMemo(() => {
     if (!showFingering || displayMode !== "learn") return undefined;
     const labels = new Map<number, string>();
@@ -567,6 +601,17 @@ export function ProgressionVoicingPracticeView({
     auditionRequestRef.current += 1;
     transportRef.current?.stop();
     setSelection(next);
+  }
+
+  function changeStudyCategory(next: VoicingStudyCategory) {
+    if (!lessonRulesSelected || (next === studyCategory && selection === "basic-full")) return;
+    runtimeRequestRef.current += 1;
+    auditionRequestRef.current += 1;
+    transportRef.current?.stop();
+    setAuditionedIndex(undefined);
+    setRuntimeError(undefined);
+    setSelection("basic-full");
+    setStudyCategory(next);
   }
 
   function changeTargetKey(tonicPitchClass: number) {
@@ -887,39 +932,38 @@ export function ProgressionVoicingPracticeView({
       <Surface className="shrink-0 px-3 py-2" data-testid="voicing-loop-controls">
         <div className="flex min-w-0 flex-wrap items-center gap-x-5 gap-y-2">
           <fieldset className="flex min-w-0 flex-wrap items-center gap-2" aria-describedby="voicing-loop-source-help">
-            <legend className="lv-section-kicker mr-1 float-left">VOICING</legend>
+            <legend className="lv-section-kicker mr-1 float-left">SOURCE</legend>
             <p id="voicing-loop-source-help" className="sr-only">{text.sourceHelp}</p>
-            <p className="sr-only" data-testid="voicing-loop-selection-help">
-              {selection === "basic-full"
-                ? text.rootShellHelp
-                : selection === "rootless-shell"
-                  ? text.rootlessShellHelp
-                  : selection === "left-hand"
-                    ? text.leftHandHelp
-                    : text.sourceHelp}
-            </p>
-            {selections.map((item) => {
-              const pressed = item.id === "shell"
-                ? isShellLessonSelection(selection)
-                : selection === item.id;
+            {sourceSelections.map((item) => {
+              const pressed = item.id === "lesson-rules" ? lessonRulesSelected : selection === item.id;
               return (
                 <Button
                   key={item.id}
                   size="sm"
                   variant={pressed ? "primary" : "secondary"}
                   aria-pressed={pressed}
-                  onClick={() => changeSelection(item.id === "shell" ? "basic-full" : item.id)}
+                  onClick={() => changeSelection(item.id === "lesson-rules" ? "basic-full" : item.id)}
                 >
                   {language === "ja" ? item.ja : item.en}
                 </Button>
               );
             })}
-            {isShellLessonSelection(selection) ? (
-              <span className="inline-flex min-w-0 flex-wrap items-center gap-2 border-l border-[var(--lv-border)] pl-2" data-testid="voicing-loop-shell-type">
-                <Button size="sm" variant={selection === "basic-full" ? "primary" : "secondary"} aria-label={text.rootShell} title={text.rootShell} aria-pressed={selection === "basic-full"} onClick={() => changeSelection("basic-full")}>{text.rootShellShort}</Button>
-                <Button size="sm" variant={selection === "rootless-shell" ? "primary" : "secondary"} aria-label={text.rootlessShell} title={text.rootlessShell} aria-pressed={selection === "rootless-shell"} onClick={() => changeSelection("rootless-shell")}>{text.rootlessShellShort}</Button>
-              </span>
-            ) : null}
+          </fieldset>
+          <fieldset className="flex min-w-0 flex-wrap items-center gap-2" aria-describedby="voicing-loop-study-help">
+            <legend className="lv-section-kicker mr-1 float-left">STUDY</legend>
+            <p id="voicing-loop-study-help" className="sr-only">{text.studyHelp}</p>
+            {studySelections.map((item) => (
+              <Button
+                key={item.id}
+                size="sm"
+                variant={lessonRulesSelected && studyCategory === item.id ? "primary" : "secondary"}
+                aria-pressed={lessonRulesSelected ? studyCategory === item.id : false}
+                disabled={!lessonRulesSelected}
+                onClick={() => changeStudyCategory(item.id)}
+              >
+                {language === "ja" ? item.ja : item.en}
+              </Button>
+            ))}
           </fieldset>
           <fieldset className="flex min-w-0 flex-wrap items-center gap-2">
             <legend className="lv-section-kicker mr-1 float-left">DISPLAY</legend>
@@ -993,6 +1037,13 @@ export function ProgressionVoicingPracticeView({
                     showFingering={showFingering}
                   />
                 </div>
+              ) : null}
+              {displayMode === "learn" && currentVoicing ? (
+                <CurrentRuleExplanation
+                  explanation={currentVoicing.explanation}
+                  language={language}
+                  text={text}
+                />
               ) : null}
 
             </Surface>
@@ -1130,7 +1181,7 @@ export function ProgressionVoicingPracticeView({
           {plan ? <UnresolvedSummary plan={plan} snapshot={snapshot} language={language} /> : null}
           <ResolutionStatus resolution={currentResolution} language={language} />
 
-          <Surface className="flex min-h-[11rem] min-w-0 flex-1 flex-col overflow-hidden p-2 [@media(min-height:900px)]:min-h-0" data-testid="voicing-loop-detail">
+          <Surface className="min-w-0 shrink-0 overflow-hidden p-2" data-testid="voicing-loop-detail">
             <div className="flex min-w-0 shrink-0 items-center justify-between gap-3 pb-1">
               <h3 className="text-[10px] font-bold tracking-[0.1em] text-[var(--lv-text-secondary)]">{text.keyboardTitle}</h3>
               {(
@@ -1145,9 +1196,9 @@ export function ProgressionVoicingPracticeView({
                 </Button>
               )}
             </div>
-            <div className="min-h-0 min-w-0 flex-1" data-keyboard-event-index={keyboardEventIndex}>
+            <div className="min-w-0" data-keyboard-event-index={keyboardEventIndex}>
               <PracticeKeyboard
-                range={keyboardRange}
+                range={VOICING_LOOP_KEYBOARD_RANGE}
                 guideNotes={keyboardVoicing?.midiNotes ?? EMPTY_NOTES}
                 referenceBassNote={keyboardVoicing?.referenceBassNote}
                 leftHandGuideNotes={keyboardHandTargets.left}
@@ -1185,7 +1236,7 @@ export function ProgressionVoicingPracticeView({
             </Modal>
           ) : null}
 
-          <Surface className="shrink-0 px-2 py-1.5" data-testid="voicing-loop-transport">
+          <Surface className="min-h-12 shrink-0 px-2 py-1.5" data-testid="voicing-loop-transport">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
               <BpmDragControl
                 label={text.bpm}
@@ -1226,14 +1277,14 @@ export function ProgressionVoicingPracticeView({
                 </select>
               </label>
               {!active && !paused ? (
-                <Button size="sm" variant="primary" disabled={!allEventsPlayable} onClick={() => void start()}><Play aria-hidden="true" size={16} />{text.start}</Button>
+                <Button size="md" variant="primary" disabled={!allEventsPlayable} onClick={() => void start()}><Play aria-hidden="true" size={16} />{text.start}</Button>
               ) : active ? (
-                <Button size="sm" variant="primary" onClick={pause}><Pause aria-hidden="true" size={16} />{text.pause}</Button>
+                <Button size="md" variant="primary" onClick={pause}><Pause aria-hidden="true" size={16} />{text.pause}</Button>
               ) : (
-                <Button size="sm" variant="primary" onClick={() => void resume()}><Play aria-hidden="true" size={16} />{text.resume}</Button>
+                <Button size="md" variant="primary" onClick={() => void resume()}><Play aria-hidden="true" size={16} />{text.resume}</Button>
               )}
-              <Button size="sm" variant="secondary" disabled={!active && !paused} onClick={() => void restart()}><RefreshCw aria-hidden="true" size={16} />{text.restart}</Button>
-              <Button size="sm" variant="secondary" disabled={!active && !paused} onClick={stop}><Square aria-hidden="true" size={16} />{text.stop}</Button>
+              <Button size="sm" className="min-h-9" variant="secondary" disabled={!active && !paused} onClick={() => void restart()}><RefreshCw aria-hidden="true" size={16} />{text.restart}</Button>
+              <Button size="sm" className="min-h-9" variant="secondary" disabled={!active && !paused} onClick={stop}><Square aria-hidden="true" size={16} />{text.stop}</Button>
               <label className="inline-flex min-h-8 cursor-pointer items-center gap-2 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] px-2 text-xs font-medium text-[var(--lv-text-secondary)] focus-within:text-[var(--lv-text)]">
                 <input
                   type="checkbox"
@@ -1686,6 +1737,80 @@ function sameReferences(
     && left.every((reference, index) => voicingLoopSourceId(reference) === voicingLoopSourceId(right[index]!));
 }
 
+function CurrentRuleExplanation({
+  explanation,
+  language,
+  text,
+}: {
+  readonly explanation?: VoicingRuleExplanation;
+  readonly language: AppLanguage;
+  readonly text: typeof copy.ja | typeof copy.en;
+}) {
+  if (!explanation) return null;
+  const family = explanation.identity
+    ? ruleFamilyLabel(explanation.identity.family, language)
+    : sourceLabel(explanation.source);
+  const coverage = explanation.coverage
+    ? coverageLabel(explanation.coverage, language)
+    : undefined;
+  const candidate = explanation.candidateIndex && explanation.candidateCount
+    ? `${explanation.candidateIndex}/${explanation.candidateCount}`
+    : undefined;
+
+  return (
+    <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 border-t border-[var(--lv-border)] pt-2 text-[10px] text-[var(--lv-text-secondary)]" data-testid="voicing-loop-current-explanation">
+      <span className="rounded-full border border-[var(--lv-border)] bg-[var(--lv-bg-subtle)] px-2 py-0.5 font-semibold text-[var(--lv-text)]">{family}</span>
+      {coverage ? <span className="rounded-full border border-[var(--lv-border)] px-2 py-0.5">{coverage}</span> : null}
+      {candidate ? <span className="rounded-full border border-[var(--lv-border)] px-2 py-0.5">Candidate {candidate}</span> : null}
+      {explanation.identity ? (
+        <>
+          <span><strong className="mr-1 text-[var(--lv-text-muted)]">{text.rule}</strong>{explanation.identity.ruleId} · {explanation.identity.variantId}</span>
+          <span><strong className="mr-1 text-[var(--lv-text-muted)]">{text.omit}</strong>{explanation.omittedDegrees.length ? explanation.omittedDegrees.join(" · ") : text.none}</span>
+          <span><strong className="mr-1 text-[var(--lv-text-muted)]">{text.top}</strong>{topRoleLabel(explanation.topRole, language)}</span>
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+function sourceLabel(source: VoicingRuleExplanation["source"]): string {
+  switch (source) {
+    case "source-midi": return "Source MIDI";
+    case "custom": return "Custom";
+    case "lesson-rules": return "Lesson Rules";
+  }
+}
+
+function ruleFamilyLabel(family: VoicingRuleFamily, language: AppLanguage): string {
+  const labels: Record<VoicingRuleFamily, readonly [string, string]> = {
+    "teacher-open": ["Teacher Open", "Teacher Open"],
+    "bass-guide-tones": ["Bass + Guide Tones", "Bass + Guide Tones"],
+    "slash-bass-upper-structure": ["Slash Bass + Upper Structure", "Slash Bass + Upper Structure"],
+    "characteristic-core": ["Characteristic Core", "Characteristic Core"],
+    "dominant-upper-structure": ["Dominant + Upper Structure", "Dominant + Upper Structure"],
+    "two-hand-open": ["Two-hand Open", "Two-hand Open"],
+    "drop-2": ["Drop 2", "Drop 2"],
+  };
+  return labels[family][language === "ja" ? 0 : 1];
+}
+
+function coverageLabel(coverage: VoicingCoverage, language: AppLanguage): string {
+  const labels: Record<VoicingCoverage, readonly [string, string]> = {
+    literal: ["Literal", "Literal"],
+    "performance-reduction": ["演奏用省略", "Performance Reduction"],
+    "creative-enrichment": ["創造的追加", "Creative Enrichment"],
+  };
+  return labels[coverage][language === "ja" ? 0 : 1];
+}
+
+function topRoleLabel(role: VoicingTopContext | undefined, language: AppLanguage): string {
+  switch (role) {
+    case "fixed-melody": return language === "ja" ? "固定Melody" : "Fixed Melody";
+    case "top-candidate": return "Top Candidate";
+    case "normal-voicing-top":
+    case undefined: return "Voicing Top";
+  }
+}
 function Metric({ children, label, value }: { readonly children?: ReactNode; readonly label: string; readonly value: string }) {
   return (
     <div className="flex min-w-0 items-center justify-between gap-2 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] bg-[var(--lv-bg-subtle)] px-3 py-1.5">
@@ -1711,12 +1836,6 @@ function ResolutionStatus({ resolution, language }: { readonly resolution?: Prog
   }
 }
 
-function isShellLessonSelection(selection: ProgressionVoicingSelection): boolean {
-  return selection === "basic-shell"
-    || selection === "basic-full"
-    || selection === "rootless-shell"
-    || selection === "full-shell";
-}
 
 function sessionStatus(status: ProgressionPracticeClockStatus | undefined, text: typeof copy.ja | typeof copy.en): string {
   switch (status) {
