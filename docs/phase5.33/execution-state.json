@@ -14,8 +14,8 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "c78a2a6ebe8d4172037a639cbdbf8f751cabac9c",
-  "lastVerifiedCommit": "990e2205b2cb889897bd4f15f1a868881f321d93",
-  "currentBranch": "feat/p533-voicing-rule-engine-v2",
+  "lastVerifiedCommit": "978fe650deba33b57c3e3d5fe9a4e0e1b7cbf616",
+  "currentBranch": "fix/p533-study-generator-generalization",
   "requiredGates": {
     "P5.33-00": [
       "intake-manifest",
@@ -103,6 +103,6 @@
     "generated-private-cargo-hygiene": "pass",
     "phase-docs-diff-clean": "pass"
   },
-  "nextAction": "READY FOR RENEWED HUMAN ACCEPTANCE at 990e2205b2cb889897bd4f15f1a868881f321d93: 3,042 full Vitest tests and 78 fresh-production Playwright tests PASS with zero visual baseline updates. Verify the documented musical rules, Source MIDI/Custom exactness, fixed 88-key geometry, no-scroll layout, and transport/audio behavior. No merge/push/tag/release/P5.34.",
-  "updatedAt": "2026-09-16T15:30:24+09:00"
+  "nextAction": "READY FOR RENEWED HUMAN ACCEPTANCE at 978fe650deba33b57c3e3d5fe9a4e0e1b7cbf616: generalized Teacher/Core/Color/Open resolve the formal 8-chord fixture 8/8; 3,080 Vitest and 79 fresh-production Playwright tests PASS with zero visual baseline updates. Verify musical usefulness, exact Source MIDI/Custom, slash and characteristic-family behavior, fixed 88-key geometry, no-scroll layout, and transport/audio. No merge/push/tag/release/P5.34.",
+  "updatedAt": "2026-09-16T17:04:59+09:00"
 }

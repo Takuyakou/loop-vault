@@ -49,6 +49,19 @@ It is:
 > exactly what LEFT/RIGHT hands do, explain reductions/omissions, and let the
 > player repeat that vocabulary through the progression.
 
+## Human Acceptance follow-up — generalized Study Generator
+
+The current runtime no longer treats promoted research record IDs as a chord
+whitelist. Teacher, Core, Color and Open are chord-family generation
+strategies. The research JSON and S01-S16 remain non-runtime semantic
+validation evidence. Ordinary supported chord families are generated first,
+then validated, cyclically ranked and passed to the existing fingering engine.
+Source MIDI and Custom remain exact, separate sources.
+
+Teacher output is internally identified as `teacher-derived-generalized`:
+the principles derive from teacher evidence, while concrete pitches, octaves
+and suggested fingering are app-generated.
+
 ## Research inputs
 
 This package contains the user-supplied research artifacts:
@@ -164,7 +177,12 @@ PROVENANCE
 
 These axes must not collapse back into one enum.
 
-## P5.33 first production scope
+## Original P5.33 first production scope (historical foundation)
+
+The bounded promotion below established the original engine and Golden Corpus.
+The Human Acceptance follow-up above supersedes exact promoted-rule lookup in
+runtime resolution; these records remain semantic fixtures and provenance
+evidence rather than a production chord whitelist.
 
 P5.33 does **not** productionize all 33 research records.
 

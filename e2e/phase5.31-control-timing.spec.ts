@@ -28,7 +28,7 @@ async function saveTextToLoop(page: Page, input: string) {
   return page.getByTestId("voicing-loop-workspace");
 }
 
-test("P5.31 exact compact and expanded full scores keep timing with honest promoted-rule coverage", async ({ page }) => {
+test("P5.31 exact compact and expanded full scores keep timing with generalized family coverage", async ({ page }) => {
   test.setTimeout(60_000);
   const observed: string[][] = [];
   for (const name of ["rechord-user-example.txt", "rechord-user-example-expanded.txt"]) {
@@ -51,8 +51,8 @@ test("P5.31 exact compact and expanded full scores keep timing with honest promo
       .toHaveAttribute("aria-pressed", "true");
     const current = workspace.getByTestId("voicing-loop-current-next").getByRole("heading", { level: 2 });
     await expect(current).toHaveText("C9");
-    await expect(workspace.getByRole("button", { name: /開始/ })).toBeDisabled();
-    await expect(workspace).toContainText(/コードを再生できません/);
+    await expect(workspace.getByRole("button", { name: /開始/ })).toBeEnabled();
+    await expect(workspace.getByText(/個のコードを再生できません/)).toHaveCount(0);
     const playableCards = workspace.locator("[data-testid='voicing-loop-event']:not(:disabled)");
     await expect(playableCards.first()).toBeEnabled();
     await playableCards.first().focus();
@@ -63,7 +63,7 @@ test("P5.31 exact compact and expanded full scores keep timing with honest promo
   expect(observed[0]).toEqual(observed[1]);
 });
 
-test("P5.31 exact official control score saves timing without inventing a G triad lesson fallback", async ({ page }) => {
+test("P5.31 exact official control score saves timing with generalized G triad support", async ({ page }) => {
   const workspace = await saveTextToLoop(page, suppliedFixture("rechord-control-example.txt"));
   const cards = workspace.getByTestId("voicing-loop-event");
   await expect(cards).toHaveCount(5);
@@ -72,8 +72,8 @@ test("P5.31 exact official control score saves timing without inventing a G tria
   expect(await cards.evaluateAll(items => items.map(item => item.getAttribute("data-span-kind"))))
     .toEqual(["chord", "chord", "rest", "chord", "chord"]);
   await expect(cards.nth(4)).toContainText("G");
-  await expect(workspace).toContainText("1個のコードを再生できません");
-  await expect(workspace.getByRole("button", { name: /開始/ })).toBeDisabled();
+  await expect(workspace.getByText(/個のコードを再生できません/)).toHaveCount(0);
+  await expect(workspace.getByRole("button", { name: /開始/ })).toBeEnabled();
   await cards.nth(1).focus();
   await page.keyboard.press("Enter");
   await expect(cards.nth(1)).toHaveAttribute("aria-pressed", "true");
@@ -117,7 +117,7 @@ test("P5.31 slash identity remains playable through promoted Core upper-structur
     .toHaveAttribute("aria-pressed", "true");
   await expect(workspace.getByTestId("voicing-loop-current-next").getByRole("heading", { level: 2 })).toHaveText("Am9/C");
   await expect(workspace.getByTestId("voicing-loop-current-explanation"))
-    .toContainText("Slash Bass + Upper Structure");
+    .toContainText("Family Core");
   await expect(workspace.getByTestId("slash-bass-reference")).toHaveCount(0);
   await expect(workspace.locator("[data-guide-hand='left']")).toHaveCount(1);
   await expect(workspace.locator("[data-guide-hand='right']")).toHaveCount(4);

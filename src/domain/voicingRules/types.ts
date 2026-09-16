@@ -3,6 +3,10 @@ export type VoicingRuleSource = "lesson-rules" | "source-midi" | "custom";
 export type VoicingStudyCategory = "teacher" | "core" | "color" | "open";
 
 export type VoicingRuleFamily =
+  | "teacher-style"
+  | "family-core"
+  | "family-color"
+  | "open-spread"
   | "teacher-open"
   | "bass-guide-tones"
   | "slash-bass-upper-structure"
@@ -27,6 +31,7 @@ export interface VoicingRuleContext {
 }
 
 export type VoicingRuleProvenanceKind =
+  | "teacher-derived-generalized"
   | "teacher-evidence"
   | "external-theory"
   | "analysis-proposal"

@@ -22,14 +22,14 @@ describe("P5.33 first-wave rules", () => {
   });
 
   it.each([
-    ["Eadd9/F#", "V03", "literal", ["9", "1", "3", "5"], []],
-    ["Dadd9/E", "V24", "literal", ["9", "1", "3", "5"], []],
-    ["Am9/C", "V22", "literal", ["b3", "1", "9", "5", "b7"], []],
-    ["Am11/B", "V23", "performance-reduction", ["9", "1", "b3", "11", "b7"], ["5"]],
-    ["Bm7b5", "V29", "literal", ["1", "b7", "b3", "b5"], []],
-    ["Cdim7", "V30", "literal", ["1", "b3", "b5", "bb7"], []],
-    ["C6/9", "V32", "literal", ["1", "6", "9", "3", "5"], []],
-    ["G7sus4", "V33", "literal", ["1", "b7", "4", "5"], []],
+    ["Eadd9/F#", "P5.33-GEN-CORE-ADD9", "literal", ["9", "1", "3", "5"], []],
+    ["Dadd9/E", "P5.33-GEN-CORE-ADD9", "literal", ["9", "1", "3", "5"], []],
+    ["Am9/C", "P5.33-GEN-CORE-MIN9", "literal", ["b3", "1", "9", "5", "b7"], []],
+    ["Am11/B", "P5.33-GEN-CORE-MIN11", "literal", ["9", "1", "b3", "11", "5", "b7"], []],
+    ["Bm7b5", "P5.33-GEN-CORE-MIN7B5", "literal", ["1", "b7", "b3", "b5"], []],
+    ["Cdim7", "P5.33-GEN-CORE-DIM7", "literal", ["1", "b3", "b5", "bb7"], []],
+    ["C6/9", "P5.33-GEN-CORE-SIXNINE", "performance-reduction", ["1", "6", "9", "3"], ["5"]],
+    ["G7sus4", "P5.33-GEN-CORE-DOM7SUS4", "literal", ["1", "b7", "4", "5"], []],
   ] as const)("resolves %s with explicit harmonic accounting", (label, ruleId, coverage, expectedDegrees, omitted) => {
     const resolution = resolveOne(label, "core");
     expect(resolution.status).toBe("SUPPORTED");
@@ -87,10 +87,10 @@ describe("P5.33 first-wave rules", () => {
     expect(resolution.status).toBe("SUPPORTED");
     if (resolution.status !== "SUPPORTED") return;
     expect(resolution.voicing.explanation).toMatchObject({
-      identity: { ruleId: "V06" },
+      identity: { ruleId: "P5.33-GEN-TEACHER-MIN7" },
       topRole: "top-candidate",
       context: { top: "top-candidate" },
-      provenance: { kind: "teacher-evidence" },
+      provenance: { kind: "teacher-derived-generalized" },
     });
   });
 

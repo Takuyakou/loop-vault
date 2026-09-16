@@ -1,3 +1,4 @@
+import { parseChordLabel } from "../domain/chords";
 import type {
   ProgressionVoicingPracticeSnapshots,
   ProgressionVoicingPracticeSnapshot,
@@ -18,7 +19,7 @@ export function progressionVoicingPracticeE2eFixture(search: string): Progressio
     return oneSelection("custom", snapshot("custom", "maj7", false));
   }
   if (status === "unsupported") {
-    return oneSelection("basic-full", snapshot("basic-full", "dim", false));
+    return oneSelection("left-hand", snapshot("left-hand", "dim", false));
   }
   if (status === "generation-error") {
     return {
@@ -49,21 +50,53 @@ function p533Snapshot(
   selection: "source-midi" | "custom" | "basic-full",
   includeVoicing: boolean,
 ): ProgressionVoicingPracticeSnapshot {
-  const base = snapshot(selection, "maj7", includeVoicing, true);
+  const labels = [
+    "Dmaj7", "Dm7", "C#m7", "Eadd9/F#",
+    "C7", "Bm7", "Dadd9/E", "Gmaj9/A",
+  ] as const;
+  const exactVoicings = [
+    [50, 54, 57, 61],
+    [50, 53, 57, 60],
+    [49, 52, 56, 59],
+    [42, 52, 56, 59],
+    [48, 52, 55, 58],
+    [47, 50, 54, 57],
+    [40, 50, 54, 57],
+    [45, 55, 59, 62, 66],
+  ] as const;
   return Object.freeze({
-    ...base,
+    version: 1,
     fingerprint: `p533-e2e-${selection}`,
-    events: Object.freeze(base.events.map((event, index) => Object.freeze({
-      ...event,
-      chord: Object.freeze({ root: 2, quality: "min7" as const, tensions: Object.freeze([]), label: "Dm7" }),
-      ...(includeVoicing ? {
-        voicing: Object.freeze({
-          kind: selection as "source-midi" | "custom",
-          midiNotes: Object.freeze(index === 0 ? [50, 57, 60, 65] : [50, 60, 65, 69]),
-          bassNote: 50,
-        }),
-      } : { voicing: undefined }),
+    source: { kind: "vault" as const, reference: { ideaId: "p533-e2e", blockId: "generalized-study" } },
+    selection,
+    key: "D major",
+    bpm: 100,
+    meter: { numerator: 4 as const, denominator: 4 as const },
+    lengthBeats: labels.length * 4,
+    spans: Object.freeze(labels.map((_, eventIndex) => Object.freeze({
+      kind: "chord" as const,
+      eventIndex,
+      startBeat: eventIndex * 4,
+      durationBeats: 4,
     }))),
+    events: Object.freeze(labels.map((label, index) => {
+      const chord = parseChordLabel(label);
+      if (!chord) throw new Error(`P5.33 E2E fixture did not parse: ${label}`);
+      const notes = exactVoicings[index];
+      return Object.freeze({
+        id: `p533-event-${index + 1}`,
+        startBeat: index * 4,
+        durationBeats: 4,
+        chord: Object.freeze(chord),
+        ...(includeVoicing ? {
+          voicing: Object.freeze({
+            kind: selection as "source-midi" | "custom",
+            midiNotes: Object.freeze([...notes]),
+            bassNote: notes[0],
+          }),
+        } : {}),
+      });
+    })),
   });
 }
 function oneSelection(

@@ -7,6 +7,7 @@ import type {
   ProgressionPracticeSourceReference,
   ProgressionVoicingPracticeSnapshot,
   ProgressionVoicingSelection,
+  ResolveProgressionPracticeVoicingsOptions,
   VoicingLoopVaultCandidate,
 } from "../domain/progressionVoicingPractice";
 import type {
@@ -454,10 +455,10 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(button(container, "Core").disabled).toBe(false);
     expect(button(container, "Core").getAttribute("aria-pressed")).toBe("true");
     const explanation = container.querySelector("[data-testid='voicing-loop-current-explanation']")!;
-    expect(explanation.textContent).toContain("Bass + Guide Tones");
+    expect(explanation.textContent).toContain("Family Core");
     expect(explanation.textContent).toContain("演奏用省略");
     expect(explanation.textContent).toContain("Candidate");
-    expect(explanation.textContent).toContain("RULEP5.31-MAJ7");
+    expect(explanation.textContent).toContain("RULEP5.33-GEN-CORE-MAJ7");
     expect(explanation.textContent).toContain("OMIT5");
     expect(explanation.textContent).toContain("TOPVoicing Top");
 
@@ -516,7 +517,7 @@ describe("ProgressionVoicingPracticeView", () => {
       .toBe(true);
     expect(container.querySelector("[data-testid='voicing-loop-shell-type']")).toBeNull();
     expect(container.querySelector("[data-testid='voicing-loop-current-explanation']")?.textContent)
-      .toContain("Slash Bass + Upper Structure");
+      .toContain("Family Core");
     await act(async () => button(container, "開始").click());
     expect(runtime.options?.plan.events.every((entry) => entry.status === "SUPPORTED")).toBe(true);
   });
@@ -661,7 +662,10 @@ describe("ProgressionVoicingPracticeView", () => {
     const container = await renderView(runtime, {
       "source-midi": source,
       "basic-full": unsupported,
-    }, "source-midi");
+    }, "source-midi", false, undefined, [], {
+      maxLeftHandSpanSemitones: 0,
+      maxRightHandSpanSemitones: 0,
+    });
     expect(container.textContent).toContain("選択したVoicingを利用できません");
     expect(button(container, "開始").disabled).toBe(true);
 
@@ -996,6 +1000,7 @@ async function renderView(
     openMidiSettings?: () => void;
   } = { onSelectProgression: vi.fn(() => true), onEnterText: vi.fn() },
   vaultProgressions: readonly VoicingLoopVaultCandidate[] = [],
+  resolutionOptions?: ResolveProgressionPracticeVoicingsOptions,
 ): Promise<HTMLDivElement> {
   const container = document.createElement("div");
   document.body.append(container);
@@ -1012,6 +1017,7 @@ async function renderView(
         onEnterText={callbacks.onEnterText}
         openMidiSettings={callbacks.openMidiSettings}
         transportFactory={() => runtime}
+        resolutionOptions={resolutionOptions}
       />
     </PreviewSoundProvider>,
   ));
