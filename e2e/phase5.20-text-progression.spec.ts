@@ -148,7 +148,7 @@ test("P5.20 production Text Progression Entry saves and reaches its supported do
   const voicingLoop = page.getByTestId("voicing-loop-workspace");
   await expect(voicingLoop).toBeVisible();
   await expect(voicingLoop.getByRole("heading", { level: 2, name: "C", exact: true })).toBeVisible();
-  await expect(voicingLoop.getByRole("button", { name: "Shell", exact: true }))
+  await expect(voicingLoop.getByRole("button", { name: "Lesson Rules", exact: true }))
     .toHaveAttribute("aria-pressed", "true");
 
   await openVault(page);

@@ -28,7 +28,7 @@ async function saveTextToLoop(page: Page, input: string) {
   return page.getByTestId("voicing-loop-workspace");
 }
 
-test("P5.31 exact compact and expanded full scores reach direct selection and real practice", async ({ page }) => {
+test("P5.31 exact compact and expanded full scores keep timing with honest promoted-rule coverage", async ({ page }) => {
   test.setTimeout(60_000);
   const observed: string[][] = [];
   for (const name of ["rechord-user-example.txt", "rechord-user-example-expanded.txt"]) {
@@ -45,23 +45,20 @@ test("P5.31 exact compact and expanded full scores reach direct selection and re
     expect(await cards.evaluateAll(items => items.map(item => item.getAttribute("data-duration-beats")))).toEqual(expectedDurations);
     observed.push(await cards.evaluateAll(items => items.map(item => item.getAttribute("aria-label") ?? "")));
     await expect(workspace.locator("#voicing-loop-bpm")).toHaveValue("120");
-    await workspace.getByRole("button", { name: "Left-hand", exact: true }).click();
-    await expect(workspace).toContainText("3個のコードを再生できません");
-    await expect(workspace.getByRole("button", { name: /開始/ })).toBeDisabled();
-    await workspace.getByRole("button", { name: "Shell", exact: true }).click();
+    await expect(workspace.getByRole("button", { name: "Lesson Rules", exact: true }))
+      .toHaveAttribute("aria-pressed", "true");
+    await expect(workspace.getByRole("button", { name: "Core", exact: true }))
+      .toHaveAttribute("aria-pressed", "true");
     const current = workspace.getByTestId("voicing-loop-current-next").getByRole("heading", { level: 2 });
     await expect(current).toHaveText("C9");
-    await cards.nth(1).focus();
+    await expect(workspace.getByRole("button", { name: /開始/ })).toBeDisabled();
+    await expect(workspace).toContainText(/コードを再生できません/);
+    const playableCards = workspace.locator("[data-testid='voicing-loop-event']:not(:disabled)");
+    await expect(playableCards.first()).toBeEnabled();
+    await playableCards.first().focus();
     await page.keyboard.press("Enter");
-    await expect(cards.nth(1)).toHaveAttribute("aria-pressed", "true");
+    await expect(playableCards.first()).toHaveAttribute("aria-pressed", "true");
     await expect(current).toHaveText("C9");
-    await workspace.getByRole("button", { name: "現在のコードを試聴", exact: true }).click();
-    await page.getByLabel("カウントイン").selectOption("0");
-    await workspace.getByRole("button", { name: /開始/ }).click();
-    await expect(cards.nth(1)).toHaveAttribute("aria-current", "step");
-    await workspace.getByRole("button", { name: "一時停止", exact: true }).click();
-    await expect(workspace.getByRole("button", { name: "再開", exact: true })).toBeVisible();
-    await workspace.getByRole("button", { name: "停止", exact: true }).click();
   }
   expect(observed[0]).toEqual(observed[1]);
 });
@@ -111,31 +108,34 @@ test("P5.31 Text rest/repeat/hold reaches the real single-clock practice transpo
   await page.getByRole("button", { name: "停止", exact: true }).click();
 });
 
-test("P5.31 Left-hand slash keeps identity and separates reference bass from targets", async ({ page }) => {
+test("P5.31 slash identity remains playable through promoted Core upper-structure rules", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 812 });
-  const workspace = await saveTextToLoop(page, "| Am9/A | Am11/B | Am9/C |");
-  await workspace.getByRole("button", { name: "Left-hand", exact: true }).click();
-  await expect(workspace.getByTestId("voicing-loop-current-next").getByRole("heading", { level: 2 })).toHaveText("Am9/A");
-  await expect(workspace.getByTestId("slash-bass-reference")).toContainText("練習対象外");
-  await expect(workspace.locator("[data-guide-hand='left']")).toHaveCount(4);
-  await expect(workspace.locator("[data-guide-hand='right']")).toHaveCount(0);
+  const workspace = await saveTextToLoop(page, "| Am9/C | Am11/B | Am9/C |");
+  await expect(workspace.getByRole("button", { name: "Lesson Rules", exact: true }))
+    .toHaveAttribute("aria-pressed", "true");
+  await expect(workspace.getByRole("button", { name: "Core", exact: true }))
+    .toHaveAttribute("aria-pressed", "true");
+  await expect(workspace.getByTestId("voicing-loop-current-next").getByRole("heading", { level: 2 })).toHaveText("Am9/C");
+  await expect(workspace.getByTestId("voicing-loop-current-explanation"))
+    .toContainText("Slash Bass + Upper Structure");
+  await expect(workspace.getByTestId("slash-bass-reference")).toHaveCount(0);
+  await expect(workspace.locator("[data-guide-hand='left']")).toHaveCount(1);
+  await expect(workspace.locator("[data-guide-hand='right']")).toHaveCount(4);
   await expect(workspace.getByRole("button", { name: /開始/ })).toBeEnabled();
   const card = workspace.getByTestId("voicing-loop-event").nth(1);
   await card.focus();
   await page.keyboard.press("Enter");
   await expect(card).toHaveAttribute("aria-pressed", "true");
-  await expect(workspace.getByTestId("voicing-loop-current-next").getByRole("heading", { level: 2 })).toHaveText("Am9/A");
+  await expect(workspace.getByTestId("voicing-loop-current-next").getByRole("heading", { level: 2 })).toHaveText("Am9/C");
   await assertNoHorizontalOverflow(page);
   const axe = await new AxeBuilder({ page: page as never }).include("[data-testid='voicing-loop-workspace']").analyze();
   expect(axe.violations.filter((violation) => violation.impact === "serious" || violation.impact === "critical")).toEqual([]);
   await workspace.getByRole("button", { name: "Recall（コード名のみ）", exact: true }).click();
-  await expect(workspace.getByTestId("slash-bass-reference")).toHaveCount(0);
   await expect(workspace.locator("[data-guide-hand]")).toHaveCount(0);
   await page.setViewportSize({ width: 640, height: 900 });
   await page.evaluate(() => { document.documentElement.style.zoom = "2"; });
   await assertNoHorizontalOverflow(page);
 });
-
 test("P5.31 all-rest maximum score is saveable and honest at 320px, 200% and reduced motion", async ({ page }) => {
   test.setTimeout(60_000);
   await page.setViewportSize({ width: 320, height: 812 });

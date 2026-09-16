@@ -53,7 +53,8 @@ test("P5.27 Voicing Loop route is keyboard-operable and overflow-safe at 320px",
   await expect(page.getByTestId("voicing-loop-midi-status")).toContainText("MIDI入力");
   await expect(page.getByTestId("voicing-loop-current-next")).not.toContainText("MIDI monitor");
   await expect(page.getByRole("button", { name: "Source MIDI" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Shell" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Lesson Rules", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Core", exact: true })).toBeDisabled();
   await expect(page.getByRole("button", { name: /開始/ })).toBeEnabled();
   await assertNoHorizontalOverflow(page);
 
