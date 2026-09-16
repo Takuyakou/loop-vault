@@ -100,6 +100,45 @@ beforeEach(() => {
 });
 
 describe("ProgressionVoicingTransport", () => {
+  it("hot-swaps a compatible plan at the next chord boundary without stopping the clock", async () => {
+    const sustained = Object.assign(new toneMock.PolySynth(), { triggerAttack: vi.fn() });
+    vi.mocked(createPreviewInstrument).mockResolvedValueOnce(sustained);
+    const runtime = new ProgressionVoicingTransport();
+    await runtime.start({ snapshot, plan, bpm: 80, countInBars: 0, metronomeEnabled: false, onTransportBeat: vi.fn() });
+    const stopCalls = toneMock.transport.stop.mock.calls.length;
+    const clearCalls = toneMock.transport.clear.mock.calls.length;
+    const shiftedPlan: ProgressionPracticeVoicingPlan = {
+      ...plan,
+      events: plan.events.map((resolution) => resolution.status === "SUPPORTED" ? {
+        ...resolution,
+        voicing: {
+          ...resolution.voicing,
+          midiNotes: resolution.voicing.midiNotes.map((note) => note + 12),
+          notes: resolution.voicing.notes.map((note) => ({
+            ...note,
+            midiNote: note.midiNote + 12,
+            octave: note.octave + 1,
+          })),
+        },
+      } : resolution),
+    };
+
+    toneMock.scheduled[0]!.callback(1);
+    expect(sustained.triggerAttack).toHaveBeenLastCalledWith(["C3", "G3", "B3"], 1, 0.72);
+    expect(runtime.updatePlan(shiftedPlan)).toBe(true);
+    expect(toneMock.transport.stop).toHaveBeenCalledTimes(stopCalls);
+    expect(toneMock.transport.clear).toHaveBeenCalledTimes(clearCalls);
+    toneMock.scheduled[1]!.callback(2);
+    expect(sustained.triggerAttack).toHaveBeenLastCalledWith(["D4", "A4", "C5"], 2, 0.72);
+
+    const incompatiblePlan: ProgressionPracticeVoicingPlan = {
+      ...shiftedPlan,
+      events: shiftedPlan.events.map((resolution, index) =>
+        index === 0 ? { ...resolution, eventId: "different-event" } : resolution),
+    };
+    expect(runtime.updatePlan(incompatiblePlan)).toBe(false);
+  });
+
   it.each([false, true])("plays separate slash reference with upper targets through sustained=%s", async (sustained) => {
     const instrument = Object.assign(new toneMock.PolySynth(), sustained ? { triggerAttack: vi.fn() } : {});
     vi.mocked(createPreviewInstrument).mockResolvedValueOnce(instrument);

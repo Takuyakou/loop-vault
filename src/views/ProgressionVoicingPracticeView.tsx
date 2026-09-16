@@ -366,7 +366,7 @@ export function ProgressionVoicingPracticeView({
   const [studyCategory, setStudyCategory] = useState<VoicingBaseStudy>("teacher");
   const [colorEnabled, setColorEnabled] = useState(false);
   const [openEnabled, setOpenEnabled] = useState(false);
-  const [progressionOptimizationEnabled, setProgressionOptimizationEnabled] = useState(true);
+  const [progressionOptimizationEnabled, setProgressionOptimizationEnabled] = useState(false);
   const lessonRulesSelected = selection !== "source-midi" && selection !== "custom";
   const sourceSnapshot = snapshots?.[selection];
   const sourceKey = useMemo(
@@ -491,6 +491,10 @@ export function ProgressionVoicingPracticeView({
       transport?.stop();
     };
   }, [countInBars, previewSound, snapshot]);
+
+  useEffect(() => {
+    if (plan) transportRef.current?.updatePlan(plan);
+  }, [plan]);
 
   useEffect(() => {
     if (!monitorMidi || !progressionLoaded) return undefined;
@@ -654,12 +658,8 @@ export function ProgressionVoicingPracticeView({
 
   function changeLessonModifier(update: () => void) {
     if (!lessonRulesSelected) return;
-    runtimeRequestRef.current += 1;
     auditionRequestRef.current += 1;
-    transportRef.current?.stop();
-    setAuditionedIndex(undefined);
     setRuntimeError(undefined);
-    setSelection("basic-full");
     update();
   }
 
@@ -675,10 +675,7 @@ export function ProgressionVoicingPracticeView({
 
   function changeOctave(value: -2 | -1 | 0 | 1 | 2) {
     if (!sourceIdentity || value === octaveShift) return;
-    runtimeRequestRef.current += 1;
     auditionRequestRef.current += 1;
-    transportRef.current?.stop();
-    setAuditionedIndex(undefined);
     setRuntimeError(undefined);
     setOctaveChoice({ sourceIdentity, value });
   }
@@ -1379,7 +1376,7 @@ export function ProgressionVoicingPracticeView({
                   size="sm"
                   variant="secondary"
                   aria-label={text.octaveDown}
-                  disabled={active || paused || octaveShift <= -2}
+                  disabled={octaveShift <= -2}
                   onClick={() => changeOctave((octaveShift - 1) as -2 | -1 | 0 | 1 | 2)}
                 >
                   <Minus aria-hidden="true" size={16} />
@@ -1391,7 +1388,7 @@ export function ProgressionVoicingPracticeView({
                   size="sm"
                   variant="secondary"
                   aria-label={text.octaveUp}
-                  disabled={active || paused || octaveShift >= 2}
+                  disabled={octaveShift >= 2}
                   onClick={() => changeOctave((octaveShift + 1) as -2 | -1 | 0 | 1 | 2)}
                 >
                   <Plus aria-hidden="true" size={16} />

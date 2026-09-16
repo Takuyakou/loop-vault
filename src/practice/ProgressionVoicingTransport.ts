@@ -28,6 +28,7 @@ export interface ProgressionVoicingTransportStartOptions {
 
 export interface ProgressionVoicingTransportPort {
   start(options: ProgressionVoicingTransportStartOptions): Promise<void>;
+  updatePlan(plan: ProgressionPracticeVoicingPlan): boolean;
   pause(): boolean;
   resume(): Promise<boolean>;
   restart(): Promise<boolean>;
@@ -73,11 +74,22 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.metronomeEnabled = options.metronomeEnabled;
     this.referenceSoundEnabled = options.referenceSoundEnabled ?? true;
     this.startingGeneration = generation;
-    await Tone.start();
+    this.activeOptions = options;
+    try {
+      await Tone.start();
+    } catch (error) {
+      if (generation === this.generation) this.invalidateAndClear();
+      throw error;
+    }
     if (generation !== this.generation || this.startingGeneration !== generation) return;
 
     const ppq = this.transport.PPQ;
-    assertCompatibleRuntimePpq(ppq);
+    try {
+      assertCompatibleRuntimePpq(ppq);
+    } catch (error) {
+      if (generation === this.generation) this.invalidateAndClear();
+      throw error;
+    }
 
     const sound = options.sound ?? "electric-piano";
     this.referenceOutput = new Tone.Gain(0).toDestination();
@@ -91,7 +103,6 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.transport.stop();
     this.transport.position = `${Math.round(startBeat * ppq)}i`;
     this.transport.bpm.value = this.desiredBpm;
-    this.activeOptions = options;
     this.voicingSound = sound;
     this.clickSynth = createClickSynth();
 
@@ -157,11 +168,19 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     }
   }
 
+  updatePlan(plan: ProgressionPracticeVoicingPlan): boolean {
+    const activeOptions = this.activeOptions;
+    if (!activeOptions || !isCompatiblePlan(activeOptions.snapshot, plan)) return false;
+    this.activeOptions = { ...activeOptions, plan };
+    return true;
+  }
+
   pause(): boolean {
     if (this.startingGeneration !== undefined && !this.ownsTransport) {
       this.generation += 1;
       this.projectionEpoch += 1;
       this.startingGeneration = undefined;
+      this.activeOptions = undefined;
       return false;
     }
     if (!this.running || this.paused || !this.ownsTransport) return false;
@@ -190,6 +209,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
       this.generation += 1;
       this.projectionEpoch += 1;
       this.startingGeneration = undefined;
+      this.activeOptions = undefined;
       return false;
     }
     if (!this.running || !this.ownsTransport) return false;
@@ -377,6 +397,16 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
       0.72,
     );
   }
+}
+
+function isCompatiblePlan(
+  snapshot: ProgressionVoicingPracticeSnapshot,
+  plan: ProgressionPracticeVoicingPlan,
+): boolean {
+  return plan.snapshotFingerprint === snapshot.fingerprint
+    && plan.selection === snapshot.selection
+    && plan.events.length === snapshot.events.length
+    && plan.events.every((event, index) => event.eventId === snapshot.events[index]?.id);
 }
 
 function createClickSynth(): Tone.Synth {

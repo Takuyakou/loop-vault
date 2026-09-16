@@ -55,7 +55,7 @@ test("P5.33 exposes independent source/study axes and explains the active rule",
   await expect(controls.getByRole("button", { name: "Teacher", exact: true })).toHaveAttribute("aria-pressed", "true");
   await expect(controls.getByRole("checkbox", { name: "Colorを加える", exact: true })).not.toBeChecked();
   await expect(controls.getByRole("checkbox", { name: "Open配置", exact: true })).not.toBeChecked();
-  await expect(controls.getByRole("checkbox", { name: "進行に合わせて最適化", exact: true })).toBeChecked();
+  await expect(controls.getByRole("checkbox", { name: "進行に合わせて最適化", exact: true })).not.toBeChecked();
 
   const explanation = workspace.getByTestId("voicing-loop-current-explanation");
   await expect(explanation).toContainText("Teacher Style");
@@ -155,6 +155,36 @@ test("P5.33 fits desktop without page scroll and keeps Transport keyboard-operab
   expect(mainOverflow.scrollHeight).toBeLessThanOrEqual(mainOverflow.clientHeight + 1);
   expect(mainOverflow.scrollWidth).toBeLessThanOrEqual(mainOverflow.clientWidth + 1);
   await assertNoHorizontalOverflow(page);
+});
+
+test("P5.33 applies lesson modifiers and OCT live without pausing playback", async ({ page }) => {
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  const workspace = await openRuleFixture(page);
+  const controls = workspace.getByTestId("voicing-loop-controls");
+  const transport = workspace.getByTestId("voicing-loop-transport");
+
+  await transport.getByRole("button", { name: "開始", exact: true }).click();
+  const pause = transport.getByRole("button", { name: "一時停止", exact: true });
+  await expect(pause).toBeVisible();
+
+  for (const label of ["Colorを加える", "Open配置", "進行に合わせて最適化"]) {
+    await controls.getByRole("checkbox", { name: label, exact: true }).check();
+    await expect(pause).toBeVisible();
+  }
+
+  const octaveUp = transport.getByRole("button", { name: "1オクターブ上げる", exact: true });
+  await expect(octaveUp).toBeEnabled();
+  await octaveUp.click();
+  await expect(transport.getByTestId("voicing-loop-transport-primary")).toContainText("OCT+1");
+  await expect(pause).toBeVisible();
+
+  await pause.click();
+  await expect(transport.getByRole("button", { name: "再開", exact: true })).toBeVisible();
+  const octaveDown = transport.getByRole("button", { name: "1オクターブ下げる", exact: true });
+  await expect(octaveDown).toBeEnabled();
+  await octaveDown.click();
+  await expect(transport.getByTestId("voicing-loop-transport-primary")).toContainText("OCT元");
+  await expect(transport.getByRole("button", { name: "再開", exact: true })).toBeVisible();
 });
 
 test("P5.33 remains usable at 320px/effective 200%, reduced motion, and axe clean", async ({ page }) => {
