@@ -52,11 +52,12 @@ It is:
 ## Human Acceptance follow-up — generalized Study Generator
 
 The current runtime no longer treats promoted research record IDs as a chord
-whitelist. Teacher, Core, Color and Open are chord-family generation
-strategies. The research JSON and S01-S16 remain non-runtime semantic
-validation evidence. Ordinary supported chord families are generated first,
-then validated, cyclically ranked and passed to the existing fingering engine.
-Source MIDI and Custom remain exact, separate sources.
+whitelist. Teacher and Core are exclusive chord-family base strategies; Color
+and Open are independent modifiers. The research JSON and S01-S16 remain
+non-runtime semantic validation evidence. Ordinary supported chord families
+are generated first, then validated, optionally ranked across the complete
+cycle, and passed to the existing fingering engine. Source MIDI and Custom
+remain exact, separate sources.
 
 Teacher output is internally identified as `teacher-derived-generalized`:
 the principles derive from teacher evidence, while concrete pitches, octaves
