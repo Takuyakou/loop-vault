@@ -10,3 +10,4 @@ and an exact verified commit is recorded.
 - [`P5.33-03-report.md`](P5.33-03-report.md) — candidates and cyclic ranking
 - [`P5.33-04-report.md`](P5.33-04-report.md) — adopted upper UI
 - [`P5.33-05-report.md`](P5.33-05-report.md) — hardening and acceptance
+- [`P5.33-study-generator-generalization-follow-up-report.md`](P5.33-study-generator-generalization-follow-up-report.md) — Human Acceptance follow-up replacing runtime rule whitelisting with chord-family generation
