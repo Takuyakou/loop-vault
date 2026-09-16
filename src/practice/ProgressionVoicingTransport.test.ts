@@ -148,7 +148,7 @@ describe("ProgressionVoicingTransport", () => {
     await runtime.resume();
     expect(sustained.triggerAttack).toHaveBeenCalledTimes(1);
     await runtime.audition([60, 64, 67], "piano");
-    expect(toneMock.instruments[toneMock.instruments.length - 1]!.triggerAttackRelease).toHaveBeenCalledWith(["C4", "E4", "G4"], 2, 1, 0.72);
+    expect(toneMock.instruments[toneMock.instruments.length - 1]!.triggerAttackRelease).toHaveBeenCalledWith(["C4", "E4", "G4"], 2, 1.012, 0.72);
     runtime.setReferenceSoundEnabled(false);
     expect(toneMock.instruments[toneMock.instruments.length - 1]!.releaseAll).toHaveBeenCalledTimes(1);
     runtime.setReferenceSoundEnabled(true);
@@ -364,7 +364,7 @@ describe("ProgressionVoicingTransport", () => {
     expect(toneMock.instruments[toneMock.instruments.length - 1]?.triggerAttackRelease).toHaveBeenCalledWith(
       ["C4", "E4", "G4"],
       2,
-      1,
+      1.012,
       0.72,
     );
     runtime.stop();
@@ -396,7 +396,7 @@ describe("ProgressionVoicingTransport", () => {
     expect(toneMock.instruments[2]?.triggerAttackRelease).toHaveBeenCalledWith(
       ["C4", "E4", "G4"],
       2,
-      1,
+      1.012,
       0.72,
     );
     boundary.callback(1);
@@ -429,7 +429,7 @@ describe("ProgressionVoicingTransport", () => {
     expect(auditionInstrument.triggerAttackRelease).toHaveBeenLastCalledWith(
       ["C4", "E4", "G4"],
       2,
-      1,
+      1.012,
       0.72,
     );
     await runtime.audition([62, 65, 69]);
@@ -437,7 +437,15 @@ describe("ProgressionVoicingTransport", () => {
     expect(auditionInstrument.triggerAttackRelease).toHaveBeenLastCalledWith(
       ["D4", "F4", "A4"],
       2,
-      1,
+      1.012,
+      0.72,
+    );
+
+    await runtime.audition([45, 54, 59, 62, 66]);
+    expect(auditionInstrument.triggerAttackRelease).toHaveBeenLastCalledWith(
+      ["A2", "F#3", "B3", "D4", "F#4"],
+      2,
+      1.012,
       0.72,
     );
 

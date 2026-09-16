@@ -6,6 +6,7 @@ import {
 const UNMATCHED_VOICE_PENALTY = 7;
 const NOTE_COUNT_CHANGE_PENALTY = 3;
 const COMMON_TONE_BONUS = 4;
+const TOP_VOICE_MOTION_WEIGHT = 3;
 
 export function styleVoicingStartCost(candidate: StyleVoicingCandidate): number {
   return candidateStaticCost(candidate);
@@ -25,6 +26,7 @@ export function styleVoicingTransitionCost(
   const unmatchedVoicePenalty = Math.abs(previousNotes.length - currentNotes.length)
     * UNMATCHED_VOICE_PENALTY;
   const topVoiceLeapPenalty = leapPenalty(last(previousNotes), last(currentNotes));
+  const topVoiceMotion = distance(last(previousNotes), last(currentNotes)) * TOP_VOICE_MOTION_WEIGHT;
   const lowestVoiceLeapPenalty = leapPenalty(previousNotes[0], currentNotes[0]);
   const noteCountChangePenalty = Math.abs(previousNotes.length - currentNotes.length)
     * NOTE_COUNT_CHANGE_PENALTY;
@@ -32,11 +34,16 @@ export function styleVoicingTransitionCost(
     * COMMON_TONE_BONUS;
 
   return totalVoiceMotion
+    + topVoiceMotion
     + unmatchedVoicePenalty
     + topVoiceLeapPenalty
     + lowestVoiceLeapPenalty
     + noteCountChangePenalty
     - commonToneBonus;
+}
+
+function distance(previous: number | undefined, current: number | undefined): number {
+  return previous === undefined || current === undefined ? 0 : Math.abs(previous - current);
 }
 
 function leapPenalty(previous: number | undefined, current: number | undefined): number {

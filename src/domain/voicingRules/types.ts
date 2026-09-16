@@ -1,6 +1,15 @@
 export type VoicingRuleSource = "lesson-rules" | "source-midi" | "custom";
 
+/** Historical corpus category. Runtime Study uses VoicingBaseStudy. */
 export type VoicingStudyCategory = "teacher" | "core" | "color" | "open";
+
+/** The exclusive runtime lesson strategy. Color and Open are independent modifiers. */
+export type VoicingBaseStudy = "teacher" | "core";
+
+export interface VoicingStudyModifiers {
+  readonly color: boolean;
+  readonly open: boolean;
+}
 
 export type VoicingRuleFamily =
   | "teacher-style"

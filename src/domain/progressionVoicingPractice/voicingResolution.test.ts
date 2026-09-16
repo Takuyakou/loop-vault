@@ -528,6 +528,41 @@ describe("P5.27 resolution status and determinism", () => {
       reason: "selected-source-unavailable",
     });
   });
+
+  it("applies one session-only octave shift to every playback/display pitch without mutating exact source", () => {
+    const source = makeSnapshot("source-midi", chord("maj9"), {
+      kind: "source-midi",
+      midiNotes: [45, 54, 59, 62, 66],
+      bassNote: 45,
+    });
+    const event = resolveProgressionPracticeVoicings(source, { octaveShift: 1 }).events[0]!;
+    expect(event).toMatchObject({
+      status: "SUPPORTED",
+      voicing: {
+        midiNotes: [57, 66, 71, 74, 78],
+        bassNote: 57,
+        explanation: { source: "source-midi" },
+      },
+    });
+    if (event.status === "SUPPORTED") {
+      expect(event.voicing.notes.map(({ midiNote }) => midiNote)).toEqual([57, 66, 71, 74, 78]);
+      expect(event.voicing.notes.map(({ octave }) => octave)).toEqual([3, 4, 4, 5, 5]);
+    }
+    expect(source.events[0]?.voicing?.midiNotes).toEqual([45, 54, 59, 62, 66]);
+  });
+
+  it("fails closed when an octave shift would leave the MIDI range", () => {
+    const source = makeSnapshot("custom", chord("maj7"), {
+      kind: "custom",
+      midiNotes: [120, 124],
+      bassNote: 120,
+    });
+    expect(resolveProgressionPracticeVoicings(source, { octaveShift: 1 }).events[0]).toEqual({
+      eventId: "event-1",
+      status: "GENERATION_ERROR",
+      reason: "candidate-generation-failed",
+    });
+  });
 });
 
 function resolveOne(

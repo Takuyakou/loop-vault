@@ -38,6 +38,8 @@ export interface ProgressionVoicingTransportPort {
   audition(midiNotes: readonly number[], sound?: PreviewSound): Promise<void>;
 }
 
+const AUDITION_RETRIGGER_DELAY_SECONDS = 0.012;
+
 /**
  * Runtime adapter for P5.27. Tone.Transport is the only musical clock: the
  * same scheduled ticks drive audio and the domain projection shown by React.
@@ -248,8 +250,17 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
       this.auditionInstrument = instrument;
       this.auditionSound = sound;
     }
-    this.auditionInstrument.releaseAll();
-    this.auditionInstrument.triggerAttackRelease(midiNotes.map(midiToNoteName), 2, Tone.now(), 0.72);
+    const releaseTime = Tone.now();
+    this.auditionInstrument.releaseAll(releaseTime);
+    // Keep the old chord's release and the new polyphonic attack on distinct
+    // audio instants. Some hardware/browser combinations otherwise apply the
+    // release to voices allocated by the same-timestamp attack (often the top).
+    this.auditionInstrument.triggerAttackRelease(
+      midiNotes.map(midiToNoteName),
+      2,
+      releaseTime + AUDITION_RETRIGGER_DELAY_SECONDS,
+      0.72,
+    );
   }
 
   private invalidateAndClear(): number {
