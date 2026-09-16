@@ -119,6 +119,13 @@ export function optimizeCandidateGroups(
   return completed.sort(comparePathState)[0]?.path ?? [];
 }
 
+/** Selects each generator's deterministic chord-local default without transition cost. */
+export function selectChordLocalCandidates(
+  candidateGroups: readonly StyleVoicingCandidate[][],
+): StyleVoicingCandidate[] {
+  return candidateGroups.flatMap((group) => group[0] ? [group[0]] : []);
+}
+
 function toGeneratedVoicing(
   event: SavedChordEvent,
   index: number,

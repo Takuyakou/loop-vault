@@ -50,13 +50,13 @@ test("P5.30 compact workspace follows the approved order and fixed timeline geom
 
 test("P5.30 card audition is keyboard-operable and reference sound is session-local", async ({ page }) => {
   const workspace = await openPopulatedVoicingLoop(page);
-  const currentHeading = workspace.getByRole("heading", { level: 2, name: "Cmaj7", exact: true });
+  const currentHeading = workspace.getByTestId("voicing-loop-current-next").getByRole("heading", { level: 2 });
   const secondCard = workspace.getByRole("button", { name: /2\/2: Dm7.*このコードを試聴/ });
   const initialBox = await secondCard.boundingBox();
   await secondCard.focus();
   await page.keyboard.press("Enter");
   await expect(secondCard).toHaveAttribute("aria-pressed", "true");
-  await expect(currentHeading).toBeVisible();
+  await expect(currentHeading).toHaveText("Dm7");
   await expect(workspace).toContainText("0 周完了");
   const auditionedBox = await secondCard.boundingBox();
   expect({ width: auditionedBox?.width, height: auditionedBox?.height }).toEqual({
@@ -133,6 +133,7 @@ test("P5.30 128-event timeline stays local, auto-reveals, reduced-motion, and ax
   await workspace.getByRole("button", { name: "Lesson Rules", exact: true }).click();
   await expect(workspace.getByRole("button", { name: "Lesson Rules", exact: true }))
     .toHaveAttribute("aria-pressed", "true");
+  await workspace.getByRole("button", { name: "Core", exact: true }).click();
   await expect(workspace.getByRole("button", { name: "Core", exact: true }))
     .toHaveAttribute("aria-pressed", "true");
   await expect(workspace.getByTestId("voicing-loop-shell-type")).toHaveCount(0);

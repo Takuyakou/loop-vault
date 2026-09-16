@@ -3,8 +3,8 @@ import { labelFromSymbol } from "../chords";
 import {
   generateStudyCandidates,
   type StudyGeneratedCandidate,
+  type VoicingBaseStudy,
   type VoicingRuleContext,
-  type VoicingStudyCategory,
 } from "../voicingRules";
 import {
   chordToneDescriptors,
@@ -13,6 +13,7 @@ import {
   getStyleTonePolicy,
   intervalForDegreeLabel,
   optimizeCandidateGroups,
+  selectChordLocalCandidates,
   pitchClassForDegreeLabel,
   rootlessTemplatesForChord,
 } from "../voicingPractice";
@@ -40,8 +41,13 @@ export interface ResolveProgressionPracticeVoicingsOptions {
   readonly maxLeftHandSpanSemitones?: number;
   readonly maxRightHandSpanSemitones?: number;
   readonly leftHandVariant?: "auto" | "A" | "B";
-  readonly lessonStudyCategory?: VoicingStudyCategory;
+  readonly lessonStudyCategory?: VoicingBaseStudy;
+  readonly lessonColorEnabled?: boolean;
+  readonly lessonOpenEnabled?: boolean;
+  readonly lessonProgressionOptimization?: boolean;
   readonly lessonContext?: VoicingRuleContext;
+  /** Session-only octave displacement. The detached source snapshot stays unchanged. */
+  readonly octaveShift?: -2 | -1 | 0 | 1 | 2;
 }
 
 /**
@@ -60,15 +66,26 @@ export function resolveProgressionPracticeVoicings(
 
   const selection = snapshot.selection;
   if (selection === "source-midi" || selection === "custom") {
-    return freezePlan(snapshot, snapshot.events.map((event) => resolveMyVoicing(event, selection)));
+    return applyOctaveShift(
+      freezePlan(snapshot, snapshot.events.map((event) => resolveMyVoicing(event, selection))),
+      options.octaveShift ?? 0,
+    );
   }
 
   if (options.lessonStudyCategory && selection !== "left-hand") {
-    return resolveStudyVoicings(
-      snapshot,
-      options.lessonStudyCategory,
-      options.lessonContext ?? { bass: "self-played", top: "normal-voicing-top" },
-      candidateOptions,
+    return applyOctaveShift(
+      resolveStudyVoicings(
+        snapshot,
+        options.lessonStudyCategory,
+        options.lessonContext ?? { bass: "self-played", top: "normal-voicing-top" },
+        {
+          ...candidateOptions,
+          color: options.lessonColorEnabled ?? false,
+          open: options.lessonOpenEnabled ?? false,
+          optimize: options.lessonProgressionOptimization ?? true,
+        },
+      ),
+      options.octaveShift ?? 0,
     );
   }
 
@@ -107,7 +124,7 @@ export function resolveProgressionPracticeVoicings(
       : generationError(event.id);
   });
 
-  return freezePlan(snapshot, resolutions);
+  return applyOctaveShift(freezePlan(snapshot, resolutions), options.octaveShift ?? 0);
 }
 
 function resolveMyVoicing(
@@ -142,9 +159,15 @@ function resolveMyVoicing(
 
 function resolveStudyVoicings(
   snapshot: ProgressionVoicingPracticeSnapshot,
-  study: VoicingStudyCategory,
+  study: VoicingBaseStudy,
   context: VoicingRuleContext,
-  options: { readonly maxLeftHandSpanSemitones: number; readonly maxRightHandSpanSemitones: number },
+  options: {
+    readonly maxLeftHandSpanSemitones: number;
+    readonly maxRightHandSpanSemitones: number;
+    readonly color: boolean;
+    readonly open: boolean;
+    readonly optimize: boolean;
+  },
 ): ProgressionPracticeVoicingPlan {
   const resolutions: ProgressionPracticeVoicingResolution[] = [];
   const candidateGroups: StyleVoicingCandidate[][] = [];
@@ -153,7 +176,10 @@ function resolveStudyVoicings(
   const factsByCandidate = new Map<StyleVoicingCandidate, CandidateFacts>();
 
   snapshot.events.forEach((event, eventIndex) => {
-    const candidates = generateStudyCandidates(asChordSymbol(event.chord), study, context, options);
+    const candidates = generateStudyCandidates(asChordSymbol(event.chord), study, context, {
+      ...options,
+      modifiers: { color: options.color, open: options.open },
+    });
     const resolved = candidates.flatMap((metadata) => {
       const facts = candidateFacts(
         asChordSymbol(event.chord),
@@ -174,7 +200,9 @@ function resolveStudyVoicings(
     candidateIndexes.push(eventIndex);
   });
 
-  const optimized = optimizeCandidateGroups(candidateGroups);
+  const optimized = options.optimize
+    ? optimizeCandidateGroups(candidateGroups)
+    : selectChordLocalCandidates(candidateGroups);
   candidateIndexes.forEach((eventIndex, optimizedIndex) => {
     const event = snapshot.events[eventIndex]!;
     const candidate = optimized[optimizedIndex];
@@ -558,6 +586,61 @@ function freezeVoicing(
   voicing: ResolvedProgressionPracticeVoicing,
 ): ResolvedProgressionPracticeVoicing {
   return Object.freeze(voicing);
+}
+
+function applyOctaveShift(
+  plan: ProgressionPracticeVoicingPlan,
+  octaves: -2 | -1 | 0 | 1 | 2,
+): ProgressionPracticeVoicingPlan {
+  if (octaves === 0) return plan;
+  const semitones = octaves * 12;
+  const playable = plan.events.every((resolution) => {
+    if (resolution.status !== "SUPPORTED") return true;
+    const notes = [
+      ...resolution.voicing.midiNotes,
+      ...(resolution.voicing.referenceBassNote === undefined ? [] : [resolution.voicing.referenceBassNote]),
+    ];
+    return notes.every((note) => note + semitones >= 0 && note + semitones <= 127);
+  });
+  if (!playable) {
+    return Object.freeze({
+      ...plan,
+      events: Object.freeze(plan.events.map((resolution) => (
+        resolution.status === "SUPPORTED" ? generationError(resolution.eventId) : resolution
+      ))),
+    });
+  }
+  return Object.freeze({
+    ...plan,
+    snapshotFingerprint: `${plan.snapshotFingerprint}:octave:${octaves}`,
+    events: Object.freeze(plan.events.map((resolution) => {
+      if (resolution.status !== "SUPPORTED") return resolution;
+      const voicing = resolution.voicing;
+      return freezeResolution({
+        eventId: resolution.eventId,
+        status: "SUPPORTED" as const,
+        voicing: freezeVoicing({
+          ...voicing,
+          midiNotes: shiftNotes(voicing.midiNotes, semitones),
+          ...(voicing.leftHandNotes ? { leftHandNotes: shiftNotes(voicing.leftHandNotes, semitones) } : {}),
+          ...(voicing.rightHandNotes ? { rightHandNotes: shiftNotes(voicing.rightHandNotes, semitones) } : {}),
+          ...(voicing.bassNote === undefined ? {} : { bassNote: voicing.bassNote + semitones }),
+          ...(voicing.referenceBassNote === undefined
+            ? {}
+            : { referenceBassNote: voicing.referenceBassNote + semitones }),
+          notes: Object.freeze(voicing.notes.map((note) => Object.freeze({
+            ...note,
+            midiNote: note.midiNote + semitones,
+            octave: note.octave + octaves,
+          }))),
+        }),
+      });
+    })),
+  });
+}
+
+function shiftNotes(notes: readonly number[], semitones: number): readonly number[] {
+  return Object.freeze(notes.map((note) => note + semitones));
 }
 
 function unique(values: readonly string[]): string[] {

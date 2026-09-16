@@ -65,7 +65,8 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector<HTMLElement>("[data-testid='voicing-loop-playhead']")?.style.transform).toBe("translateX(121px)");
     await act(async () => cards[2]!.click());
     expect(runtime.audition).toHaveBeenLastCalledWith([50, 57, 60], "piano");
-    expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent).toBe("休符");
+    expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent).toBe("Dm7");
+    expect(container.querySelector("[aria-current='step']")?.textContent).toContain("休符");
     await act(async () => runtime.options?.onTransportBeat(8));
     expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent).toContain("位置2 / 2 小節");
   });
@@ -379,14 +380,16 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(runtime.audition).toHaveBeenLastCalledWith([50, 57, 60], "piano");
     expect(timelineCards[1]?.getAttribute("aria-pressed")).toBe("true");
     expect(container.querySelector("[aria-current='step']")?.textContent).toContain("Cmaj7");
+    expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent).toBe("Dm7");
+    expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent).toContain("次Cmaj7");
     expect(container.textContent).toContain("0 周完了");
     expect(container.querySelector("[data-keyboard-event-index='1']")).not.toBeNull();
     expect(container.querySelector("[data-midi-note='50']")?.getAttribute("data-visual-state")).toBe("guide");
     expect(container.querySelector("[data-midi-note='48']")?.getAttribute("data-visual-state")).toBe("idle");
 
     await act(async () => button(container, "現在のコードを試聴").click());
-    expect(runtime.audition).toHaveBeenLastCalledWith([48, 55, 59], "piano");
-    expect(timelineCards[0]?.getAttribute("aria-pressed")).toBe("true");
+    expect(runtime.audition).toHaveBeenLastCalledWith([50, 57, 60], "piano");
+    expect(timelineCards[1]?.getAttribute("aria-pressed")).toBe("true");
     expect(runtime.start).not.toHaveBeenCalled();
   });
 
@@ -417,6 +420,29 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(runtime.stop).toHaveBeenCalled();
   });
 
+  it("shifts the detached practice plan by octave from the Key-adjacent control", async () => {
+    const runtime = new FakeTransport();
+    const source = snapshot("source-midi");
+    const container = await renderView(runtime, { "source-midi": source }, "source-midi");
+    const primary = container.querySelector("[data-testid='voicing-loop-transport-primary']")!;
+    const midiRow = container.querySelector("[data-testid='voicing-loop-transport-midi-row']")!;
+    expect(primary.textContent).toContain("BPM");
+    expect(primary.textContent).toContain("KEY");
+    expect(primary.textContent).toContain("OCT元");
+    expect(midiRow.textContent).toContain("MIDI入力");
+    expect(midiRow.textContent).toContain("再接続");
+    expect(midiRow.textContent).toContain("設定");
+    expect(midiRow.textContent).not.toContain("BPM");
+
+    await act(async () => container.querySelector<HTMLButtonElement>("[aria-label='1オクターブ上げる']")?.click());
+    expect(primary.textContent).toContain("OCT+1");
+    expect(container.querySelector("[data-midi-note='60']")?.getAttribute("data-visual-state")).toBe("guide");
+    expect(container.querySelector("[data-midi-note='48']")?.getAttribute("data-visual-state")).toBe("idle");
+    await act(async () => button(container, "現在のコードを試聴").click());
+    expect(runtime.audition).toHaveBeenLastCalledWith([60, 67, 71], "piano");
+    expect(source.events[0]?.voicing?.midiNotes).toEqual([48, 55, 59]);
+  });
+
   it("changes BPM by dragging vertically while retaining direct number input", async () => {
     const runtime = new FakeTransport();
     const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full");
@@ -442,25 +468,35 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(Array.from(toolbar.querySelectorAll("legend"), (entry) => entry.textContent)).toEqual([
       "SOURCE", "STUDY", "DISPLAY",
     ]);
-    expect(["Lesson Rules", "Source MIDI", "Custom", "Teacher", "Core", "Color", "Open"]
+    expect(["Lesson Rules", "Source MIDI", "Custom", "Teacher", "Core"]
       .every((label) => Array.from(toolbar.querySelectorAll("button")).some((entry) => entry.textContent === label)))
       .toBe(true);
+    expect(toolbar.textContent).toContain("Colorを加える");
+    expect(toolbar.textContent).toContain("Open配置");
+    expect(toolbar.textContent).toContain("進行に合わせて最適化");
     expect(toolbar.textContent).not.toContain("SHELL TYPE");
     expect(button(container, "Source MIDI").getAttribute("aria-pressed")).toBe("true");
-    for (const label of ["Teacher", "Core", "Color", "Open"]) {
+    for (const label of ["Teacher", "Core"]) {
       expect(button(container, label).disabled).toBe(true);
+    }
+    const sourceCheckboxes = Array.from(toolbar.querySelectorAll<HTMLInputElement>("input[type='checkbox']"));
+    for (const label of ["Colorを加える", "Open配置", "進行に合わせて最適化"]) {
+      expect(sourceCheckboxes.find((input) => input.parentElement?.textContent?.includes(label))?.disabled).toBe(true);
     }
 
     await act(async () => button(container, "Lesson Rules").click());
+    expect(button(container, "Teacher").getAttribute("aria-pressed")).toBe("true");
     expect(button(container, "Core").disabled).toBe(false);
-    expect(button(container, "Core").getAttribute("aria-pressed")).toBe("true");
+    expect(button(container, "Core").getAttribute("aria-pressed")).toBe("false");
+    const lessonCheckboxes = Array.from(toolbar.querySelectorAll<HTMLInputElement>("input[type='checkbox']"));
+    expect(lessonCheckboxes.find((input) => input.parentElement?.textContent?.includes("Colorを加える"))?.checked).toBe(false);
+    expect(lessonCheckboxes.find((input) => input.parentElement?.textContent?.includes("Open配置"))?.checked).toBe(false);
+    expect(lessonCheckboxes.find((input) => input.parentElement?.textContent?.includes("進行に合わせて最適化"))?.checked).toBe(true);
     const explanation = container.querySelector("[data-testid='voicing-loop-current-explanation']")!;
-    expect(explanation.textContent).toContain("Family Core");
-    expect(explanation.textContent).toContain("演奏用省略");
+    expect(explanation.textContent).toContain("Teacher Style");
     expect(explanation.textContent).toContain("Candidate");
-    expect(explanation.textContent).toContain("RULEP5.33-GEN-CORE-MAJ7");
-    expect(explanation.textContent).toContain("OMIT5");
-    expect(explanation.textContent).toContain("TOPVoicing Top");
+    expect(explanation.textContent).toContain("RULEP5.33-GEN-TEACHER-MAJ7");
+    expect(explanation.textContent).toContain("TOPTop Candidate");
 
     await act(async () => button(container, "Custom").click());
     expect(button(container, "Core").disabled).toBe(true);
@@ -481,13 +517,14 @@ describe("ProgressionVoicingPracticeView", () => {
       }),
     };
     const container = await renderView(runtime, { "basic-full": slash }, "basic-full");
+    await act(async () => button(container, "Core").click());
     const current = container.querySelector("[data-testid='voicing-loop-current-voicing']")!;
     const next = container.querySelector("[data-testid='voicing-loop-next-voicing']")!;
     expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent).toBe("Eadd9/F#");
     expect(container.querySelector("[data-testid='voicing-loop-left-hand']")?.textContent)
       .toContain("CHORD TONE9");
     expect(container.querySelector("[data-testid='voicing-loop-right-hand']")?.textContent)
-      .toContain("CHORD TONE1 · 3 · 5");
+      .toContain("CHORD TONE5 · 1 · 3");
     expect(current.textContent).toContain("FINGERL5");
     expect(current.textContent).toContain("FINGERR");
     expect(next.textContent).toContain("LEFT HAND");
@@ -512,9 +549,11 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(Array.from(toolbar.querySelectorAll("legend"), (entry) => entry.textContent)).toEqual([
       "SOURCE", "STUDY", "DISPLAY",
     ]);
-    expect(["Lesson Rules", "Source MIDI", "Custom", "Teacher", "Core", "Color", "Open"]
+    expect(["Lesson Rules", "Source MIDI", "Custom", "Teacher", "Core"]
       .every((label) => Array.from(toolbar.querySelectorAll("button")).some((entry) => entry.textContent === label)))
       .toBe(true);
+    expect(toolbar.textContent).toContain("Colorを加える");
+    expect(toolbar.textContent).toContain("Open配置");
     expect(container.querySelector("[data-testid='voicing-loop-shell-type']")).toBeNull();
     expect(container.querySelector("[data-testid='voicing-loop-current-explanation']")?.textContent)
       .toContain("Family Core");
@@ -551,6 +590,13 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(currentAudition.disabled).toBe(false);
     await act(async () => currentAudition.click());
     expect(runtime.audition).toHaveBeenLastCalledWith([50, 57, 60], "piano");
+
+    await act(async () => timelineCards[0]?.click());
+    expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent).toBe("Cmaj7");
+    expect(container.querySelector("[aria-current='step']")?.textContent).toContain("Dm7");
+    await act(async () => button(container, "再開").click());
+    expect(runtime.resume).toHaveBeenCalledOnce();
+    expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent).toBe("Dm7");
   });
 
   it("defaults reference sound on, passes session state to Start, and keeps visual transport available off", async () => {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { StyleVoicingCandidate } from "./candidateTools";
 import { compareCandidate } from "./candidateTools";
-import { optimizeCandidateGroups } from "./optimizeProgression";
+import { optimizeCandidateGroups, selectChordLocalCandidates } from "./optimizeProgression";
 import { styleVoicingStartCost, styleVoicingTransitionCost } from "./transitionCost";
 
 describe("P5.33 cyclic candidate optimization", () => {
@@ -42,6 +42,16 @@ describe("P5.33 cyclic candidate optimization", () => {
     ))[0];
     expect(optimizeCandidateGroups([group])).toEqual([expected]);
   });
+
+  it("uses top-note continuity when ON and each chord-local default when OFF", () => {
+    const groups = [
+      [candidate([48], [60, 72]), candidate([48], [60, 69])],
+      [candidate([50], [62, 74]), candidate([50], [62, 69])],
+      [candidate([47], [59, 71]), candidate([47], [59, 68])],
+    ];
+    expect(selectChordLocalCandidates(groups).map(topNote)).toEqual([72, 74, 71]);
+    expect(optimizeCandidateGroups(groups).map(topNote)).toEqual([69, 69, 68]);
+  });
 });
 
 function candidate(leftHandNotes: number[], rightHandNotes: number[]): StyleVoicingCandidate {
@@ -55,6 +65,10 @@ function candidate(leftHandNotes: number[], rightHandNotes: number[]): StyleVoic
     omittedIntervals: [],
     warnings: [],
   };
+}
+
+function topNote(value: StyleVoicingCandidate): number | undefined {
+  return value.allNotes[value.allNotes.length - 1];
 }
 
 function cartesian(groups: readonly StyleVoicingCandidate[][]): StyleVoicingCandidate[][] {

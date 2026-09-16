@@ -100,7 +100,10 @@ describe("P5.33 first-wave rules", () => {
       midiNotes: [42, 64, 68, 71],
       bassNote: 42,
     });
-    const plan = resolveProgressionPracticeVoicings(exact, { lessonStudyCategory: "color" });
+    const plan = resolveProgressionPracticeVoicings(exact, {
+      lessonStudyCategory: "teacher",
+      lessonColorEnabled: true,
+    });
     expect(plan.events[0]).toMatchObject({
       status: "SUPPORTED",
       voicing: {
@@ -121,7 +124,9 @@ describe("P5.33 first-wave rules", () => {
 
 function resolveOne(label: string, study: "teacher" | "core" | "color" | "open") {
   return resolveProgressionPracticeVoicings(makeSnapshot(label), {
-    lessonStudyCategory: study,
+    lessonStudyCategory: study === "teacher" ? "teacher" : "core",
+    lessonColorEnabled: study === "color",
+    lessonOpenEnabled: study === "open",
   }).events[0]!;
 }
 

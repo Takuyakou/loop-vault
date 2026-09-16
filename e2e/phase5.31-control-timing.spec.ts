@@ -47,6 +47,7 @@ test("P5.31 exact compact and expanded full scores keep timing with generalized 
     await expect(workspace.locator("#voicing-loop-bpm")).toHaveValue("120");
     await expect(workspace.getByRole("button", { name: "Lesson Rules", exact: true }))
       .toHaveAttribute("aria-pressed", "true");
+    await workspace.getByRole("button", { name: "Core", exact: true }).click();
     await expect(workspace.getByRole("button", { name: "Core", exact: true }))
       .toHaveAttribute("aria-pressed", "true");
     const current = workspace.getByTestId("voicing-loop-current-next").getByRole("heading", { level: 2 });
@@ -101,8 +102,9 @@ test("P5.31 Text rest/repeat/hold reaches the real single-clock practice transpo
   await cards.nth(2).focus();
   await page.keyboard.press("Enter");
   await expect(cards.nth(2)).toHaveAttribute("aria-pressed", "true");
-  await expect(heading).toHaveText("休符");
+  await expect(heading).toHaveText("Cmaj7");
   await page.getByRole("button", { name: "再開", exact: true }).click();
+  await expect(heading).toHaveText("休符");
   await expect(cards.nth(2)).toHaveAttribute("aria-current", "step");
   await expect(workspace).toContainText("1 周完了");
   await page.getByRole("button", { name: "停止", exact: true }).click();
@@ -113,6 +115,7 @@ test("P5.31 slash identity remains playable through promoted Core upper-structur
   const workspace = await saveTextToLoop(page, "| Am9/C | Am11/B | Am9/C |");
   await expect(workspace.getByRole("button", { name: "Lesson Rules", exact: true }))
     .toHaveAttribute("aria-pressed", "true");
+  await workspace.getByRole("button", { name: "Core", exact: true }).click();
   await expect(workspace.getByRole("button", { name: "Core", exact: true }))
     .toHaveAttribute("aria-pressed", "true");
   await expect(workspace.getByTestId("voicing-loop-current-next").getByRole("heading", { level: 2 })).toHaveText("Am9/C");
@@ -126,7 +129,7 @@ test("P5.31 slash identity remains playable through promoted Core upper-structur
   await card.focus();
   await page.keyboard.press("Enter");
   await expect(card).toHaveAttribute("aria-pressed", "true");
-  await expect(workspace.getByTestId("voicing-loop-current-next").getByRole("heading", { level: 2 })).toHaveText("Am9/C");
+  await expect(workspace.getByTestId("voicing-loop-current-next").getByRole("heading", { level: 2 })).toHaveText("Am11/B");
   await assertNoHorizontalOverflow(page);
   const axe = await new AxeBuilder({ page: page as never }).include("[data-testid='voicing-loop-workspace']").analyze();
   expect(axe.violations.filter((violation) => violation.impact === "serious" || violation.impact === "critical")).toEqual([]);

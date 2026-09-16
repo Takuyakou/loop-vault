@@ -8,18 +8,20 @@ import {
   chordToneDescriptors,
   pitchClassForDegreeLabel,
 } from "../voicingPractice/tonePolicy";
+import { STYLE_VOICING_REGISTER } from "../voicingPractice/register";
 import type {
   VoicingCoverage,
   VoicingRuleContext,
   VoicingRuleFamily,
   VoicingRuleProvenance,
-  VoicingStudyCategory,
+  VoicingBaseStudy,
+  VoicingStudyModifiers,
   VoicingTopContext,
 } from "./types";
 
 export interface StudyRuleDefinition {
   readonly id: string;
-  readonly study: VoicingStudyCategory;
+  readonly study: VoicingBaseStudy;
   readonly family: VoicingRuleFamily;
   readonly variantId: string;
   readonly coverage: VoicingCoverage;
@@ -40,6 +42,7 @@ export interface StudyGeneratedCandidate {
 export interface GenerateStudyCandidatesOptions {
   readonly maxLeftHandSpanSemitones: number;
   readonly maxRightHandSpanSemitones: number;
+  readonly modifiers?: Partial<VoicingStudyModifiers>;
 }
 
 interface StudyTemplate {
@@ -62,15 +65,19 @@ const REDUCIBLE_FIFTH = "5";
  */
 export function generateStudyCandidates(
   chord: ChordSymbol,
-  study: VoicingStudyCategory,
+  study: VoicingBaseStudy,
   context: VoicingRuleContext,
   options: GenerateStudyCandidatesOptions,
 ): readonly StudyGeneratedCandidate[] {
-  const templates = templatesForStudy(chord, study, context);
-  const family = familyForStudy(study);
-  const topRole: VoicingTopContext = study === "teacher"
-    ? "top-candidate"
-    : "normal-voicing-top";
+  const modifiers = {
+    color: options.modifiers?.color ?? false,
+    open: options.modifiers?.open ?? false,
+  };
+  const templates = templatesForStudy(chord, study, context, modifiers);
+  const family = familyForStudy(study, modifiers);
+  const topRole: VoicingTopContext = context.top === "fixed-melody"
+    ? "fixed-melody"
+    : study === "teacher" ? "top-candidate" : "normal-voicing-top";
   const provenance = provenanceForStudy(study);
 
   return templates.flatMap((template) => {
@@ -110,9 +117,16 @@ export function generateStudyCandidates(
         requireOpenWidth: template.requireOpenWidth,
       },
     );
-    const rankedPlacements = study === "open"
-      ? [...placements].sort(compareOpenPlacement)
+    const slashAnchoredPlacements = hasSlashBass(chord)
+      ? placements.filter(({ leftHandNotes }) => leftHandNotes[0] === stableSlashBassNote(chord))
       : placements;
+    const fixedTopPlacements = context.top === "fixed-melody"
+      && context.fixedMelodyMidiNote !== undefined
+      ? slashAnchoredPlacements.filter(({ allNotes }) => allNotes[allNotes.length - 1] === context.fixedMelodyMidiNote)
+      : slashAnchoredPlacements;
+    const rankedPlacements = modifiers.open
+      ? [...fixedTopPlacements].sort(compareOpenPlacement)
+      : fixedTopPlacements;
     return rankedPlacements.slice(0, MAX_CANDIDATES_PER_TEMPLATE).map((candidate) => ({
       candidate,
       rule,
@@ -122,22 +136,36 @@ export function generateStudyCandidates(
 
 function templatesForStudy(
   chord: ChordSymbol,
-  study: VoicingStudyCategory,
+  study: VoicingBaseStudy,
   context: VoicingRuleContext,
+  modifiers: VoicingStudyModifiers,
 ): readonly StudyTemplate[] {
   const literalDegrees = chordDegrees(chord);
   if (literalDegrees.length === 0) return [];
+  const base = study === "teacher"
+    ? fullAndReductionTemplates(chord, literalDegrees, context, "teacher")
+    : coreTemplates(chord, literalDegrees, context);
+  return base.map((template) => applyModifiers(chord, literalDegrees, template, modifiers));
+}
 
-  switch (study) {
-    case "teacher":
-      return fullAndReductionTemplates(chord, literalDegrees, context, "teacher");
-    case "core":
-      return coreTemplates(chord, literalDegrees, context);
-    case "color":
-      return colorTemplates(chord, literalDegrees, context);
-    case "open":
-      return fullAndReductionTemplates(chord, literalDegrees, context, "open", true);
-  }
+function applyModifiers(
+  chord: ChordSymbol,
+  literalDegrees: readonly string[],
+  template: StudyTemplate,
+  modifiers: VoicingStudyModifiers,
+): StudyTemplate {
+  const additions = modifiers.color ? safeColorAdditions(chord, literalDegrees) : [];
+  const rightDegrees = unique([...template.rightDegrees, ...additions]);
+  return createTemplate(
+    literalDegrees,
+    [template.variantId, modifiers.color ? "color" : "", modifiers.open ? "open" : ""]
+      .filter(Boolean)
+      .join("-"),
+    template.leftDegrees,
+    rightDegrees,
+    unique([...template.addedDegrees, ...additions]),
+    modifiers.open,
+  );
 }
 
 function fullAndReductionTemplates(
@@ -200,36 +228,6 @@ function coreTemplates(
     [],
   );
   return [compact, literal];
-}
-
-function colorTemplates(
-  chord: ChordSymbol,
-  literalDegrees: readonly string[],
-  context: VoicingRuleContext,
-): readonly StudyTemplate[] {
-  const additions = safeColorAdditions(chord, literalDegrees);
-  const split = splitDegrees(chord, literalDegrees, context);
-  const rightWithColor = unique([...split.right, ...additions]);
-  const full = createTemplate(
-    literalDegrees,
-    additions.length > 0 ? "color-enrichment" : "color-literal",
-    split.left,
-    rightWithColor,
-    additions,
-  );
-  const reducedRight = rightWithColor.filter((degree) => degree !== REDUCIBLE_FIFTH);
-  if (!rightWithColor.includes(REDUCIBLE_FIFTH) || rightWithColor.length < 4) return [full];
-
-  return [
-    full,
-    createTemplate(
-      literalDegrees,
-      additions.length > 0 ? "color-enrichment-omit-5" : "color-literal-omit-5",
-      split.left,
-      reducedRight,
-      additions,
-    ),
-  ];
 }
 
 function createTemplate(
@@ -393,16 +391,16 @@ function degreePitchClasses(
   return values.every(isNumber) ? values : undefined;
 }
 
-function familyForStudy(study: VoicingStudyCategory): VoicingRuleFamily {
-  switch (study) {
-    case "teacher": return "teacher-style";
-    case "core": return "family-core";
-    case "color": return "family-color";
-    case "open": return "open-spread";
-  }
+function familyForStudy(
+  study: VoicingBaseStudy,
+  modifiers: VoicingStudyModifiers,
+): VoicingRuleFamily {
+  if (modifiers.open) return study === "teacher" ? "teacher-open" : "open-spread";
+  if (modifiers.color) return "family-color";
+  return study === "teacher" ? "teacher-style" : "family-core";
 }
 
-function provenanceForStudy(study: VoicingStudyCategory): VoicingRuleProvenance {
+function provenanceForStudy(study: VoicingBaseStudy): VoicingRuleProvenance {
   if (study === "teacher") {
     return Object.freeze({
       kind: "teacher-derived-generalized",
@@ -417,7 +415,7 @@ function provenanceForStudy(study: VoicingStudyCategory): VoicingRuleProvenance 
   });
 }
 
-function generatorRuleId(study: VoicingStudyCategory, quality: ChordQuality): string {
+function generatorRuleId(study: VoicingBaseStudy, quality: ChordQuality): string {
   return "P5.33-GEN-" + study.toUpperCase() + "-" + quality.toUpperCase();
 }
 
@@ -450,6 +448,24 @@ function handSpan(notes: readonly number[]): number {
 }
 function hasSlashBass(chord: ChordSymbol): boolean {
   return chord.bass !== undefined && pitchClass(chord.bass) !== pitchClass(chord.root);
+}
+
+function stableSlashBassNote(chord: ChordSymbol): number | undefined {
+  if (!hasSlashBass(chord)) return undefined;
+  const bassPitchClass = pitchClass(chord.bass!);
+  const candidates: number[] = [];
+  for (
+    let note = STYLE_VOICING_REGISTER.leftHandMin;
+    note <= STYLE_VOICING_REGISTER.leftHandMax;
+    note += 1
+  ) {
+    if (pitchClass(note) === bassPitchClass) candidates.push(note);
+  }
+  return candidates.sort((left, right) => (
+    Math.abs(left - STYLE_VOICING_REGISTER.leftHandCenter)
+    - Math.abs(right - STYLE_VOICING_REGISTER.leftHandCenter)
+    || left - right
+  ))[0];
 }
 
 function unique(values: readonly string[]): string[] {
