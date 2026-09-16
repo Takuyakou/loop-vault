@@ -4,6 +4,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type {
+  ProgressionPracticeVoicingPlan,
   ProgressionPracticeSourceReference,
   ProgressionVoicingPracticeSnapshot,
   ProgressionVoicingSelection,
@@ -491,7 +492,7 @@ describe("ProgressionVoicingPracticeView", () => {
     const lessonCheckboxes = Array.from(toolbar.querySelectorAll<HTMLInputElement>("input[type='checkbox']"));
     expect(lessonCheckboxes.find((input) => input.parentElement?.textContent?.includes("Colorを加える"))?.checked).toBe(false);
     expect(lessonCheckboxes.find((input) => input.parentElement?.textContent?.includes("Open配置"))?.checked).toBe(false);
-    expect(lessonCheckboxes.find((input) => input.parentElement?.textContent?.includes("進行に合わせて最適化"))?.checked).toBe(true);
+    expect(lessonCheckboxes.find((input) => input.parentElement?.textContent?.includes("進行に合わせて最適化"))?.checked).toBe(false);
     const explanation = container.querySelector("[data-testid='voicing-loop-current-explanation']")!;
     expect(explanation.textContent).toContain("Teacher Style");
     expect(explanation.textContent).toContain("Candidate");
@@ -503,6 +504,53 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("[data-testid='voicing-loop-current-explanation']")?.textContent)
       .toBe("Custom");
   });
+
+  it("hot-swaps lesson modifiers and OCT without stopping the running or paused clock", async () => {
+    const runtime = new FakeTransport();
+    const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full");
+    const toolbar = container.querySelector("[data-testid='voicing-loop-controls']")!;
+    const checkbox = (label: string) => Array.from(
+      toolbar.querySelectorAll<HTMLInputElement>("input[type='checkbox']"),
+    ).find((input) => input.parentElement?.textContent?.includes(label))!;
+
+    for (const label of ["Colorを加える", "Open配置", "進行に合わせて最適化"]) {
+      expect(checkbox(label).checked).toBe(false);
+    }
+
+    await act(async () => button(container, "開始").click());
+    runtime.stop.mockClear();
+    runtime.pause.mockClear();
+    runtime.updatePlan.mockClear();
+
+    for (const label of ["Colorを加える", "Open配置", "進行に合わせて最適化"]) {
+      await act(async () => checkbox(label).click());
+      expect(button(container, "一時停止")).not.toBeNull();
+    }
+    expect(runtime.stop).not.toHaveBeenCalled();
+    expect(runtime.pause).not.toHaveBeenCalled();
+    expect(runtime.updatePlan).toHaveBeenCalledTimes(3);
+
+    const beforeOctave = runtime.options!.plan.events.map((entry) =>
+      entry.status === "SUPPORTED" ? [...entry.voicing.midiNotes] : []);
+    const octaveUp = container.querySelector<HTMLButtonElement>("[aria-label='1オクターブ上げる']")!;
+    expect(octaveUp.disabled).toBe(false);
+    await act(async () => octaveUp.click());
+    expect(container.querySelector("[data-testid='voicing-loop-transport-primary']")?.textContent).toContain("OCT+1");
+    expect(runtime.stop).not.toHaveBeenCalled();
+    expect(runtime.options!.plan.events.map((entry) =>
+      entry.status === "SUPPORTED" ? entry.voicing.midiNotes : [])).toEqual(
+      beforeOctave.map((notes) => notes.map((note) => note + 12)),
+    );
+
+    await act(async () => button(container, "一時停止").click());
+    expect(button(container, "再開")).not.toBeNull();
+    const octaveDown = container.querySelector<HTMLButtonElement>("[aria-label='1オクターブ下げる']")!;
+    expect(octaveDown.disabled).toBe(false);
+    await act(async () => octaveDown.click());
+    expect(button(container, "再開")).not.toBeNull();
+    expect(runtime.stop).not.toHaveBeenCalled();
+  });
+
   it("renders slash add9 Shell as an exact two-hand lesson with fingerprints and compact toolbar", async () => {
     const runtime = new FakeTransport();
     const base = snapshot("basic-full");
@@ -524,7 +572,7 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("[data-testid='voicing-loop-left-hand']")?.textContent)
       .toContain("CHORD TONE9");
     expect(container.querySelector("[data-testid='voicing-loop-right-hand']")?.textContent)
-      .toContain("CHORD TONE5 · 1 · 3");
+      .toContain("CHORD TONE1 · 3 · 5");
     expect(current.textContent).toContain("FINGERL5");
     expect(current.textContent).toContain("FINGERR");
     expect(next.textContent).toContain("LEFT HAND");
@@ -534,6 +582,7 @@ describe("ProgressionVoicingPracticeView", () => {
       .toContain("RIGHT HAND");
     const plan = resolveProgressionPracticeVoicings(slash, {
       lessonStudyCategory: "core",
+      lessonProgressionOptimization: false,
       lessonContext: { bass: "self-played", top: "normal-voicing-top" },
     });
     const currentResolution = plan.events[0]!;
@@ -1144,6 +1193,11 @@ function dispatchPointer(
 class FakeTransport implements ProgressionVoicingTransportPort {
   options?: ProgressionVoicingTransportStartOptions;
   start = vi.fn(async (options: ProgressionVoicingTransportStartOptions) => { this.options = options; });
+  updatePlan = vi.fn((plan: ProgressionPracticeVoicingPlan) => {
+    if (!this.options) return false;
+    this.options = { ...this.options, plan };
+    return true;
+  });
   pause = vi.fn(() => true);
   resume = vi.fn(async () => true);
   restart = vi.fn(async () => true);
