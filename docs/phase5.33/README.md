@@ -7,10 +7,11 @@ integrated product.
 
 ## Status
 
-- **Status:** in progress
+- **Status:** completed — ready for renewed human acceptance
 - **Active stage:** none
-- **Completed stages:** P5.33-00
-- **Next action:** stop and await explicit authorization for P5.33-01
+- **Completed stages:** P5.33-00 through P5.33-05
+- **Next action:** run the renewed Human Acceptance checklist; no merge, push,
+  tag, release, or P5.34 without separate authorization
 
 ## Required Reading Order
 
