@@ -70,6 +70,14 @@ verified implementation commit is
 `5821b46d3950ea886e84b99479dc82aaadd96f70`; renewed human musical acceptance
 is still required.
 
+The extended-reduction follow-up now generalizes degree-based m11, dominant 11,
+m13, dominant 13 and maj13 candidates across roots. Literal, OMIT 5 and
+OMIT 5 · 9 remain comparable; explicit b9/#9/#11/b13 is preserved, slash
+bass stays fixed, and chromatic clusters are redistributed across register/hands
+rather than silently deleted. The verified implementation commit is
+`8c5e14111ad3de09ab3457decfca83938ecaf8c3`; renewed human musical
+acceptance is required.
+
 ## Research inputs
 
 This package contains the user-supplied research artifacts:
