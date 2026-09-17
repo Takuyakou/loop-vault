@@ -653,7 +653,7 @@ export function ProgressionVoicingPracticeView({
   const beatProgress = projection?.inCountIn
     ? ((clockState?.transportBeat ?? 0) % beatsPerBar) / beatsPerBar
     : projection?.chordProgress ?? 0;
-  const barProgress = currentBar / totalBars;
+  const positionProgress = projection?.progressionProgress ?? 0;
 
   useEffect(() => {
     setFingeringEditorOpen(false);
@@ -1269,11 +1269,11 @@ export function ProgressionVoicingPracticeView({
               </Metric>
               <Metric label={text.position} testId="voicing-loop-position-metric" value={text.positionLabel(currentBar, totalBars)}>
                 <ProgressMeter
-                  active={false}
+                  active={active}
                   label={text.position}
                   testId="voicing-loop-position-progress-fill"
                   transitionMilliseconds={visualStepMilliseconds}
-                  value={barProgress}
+                  value={positionProgress}
                 />
               </Metric>
               <Metric label={text.loop} value={text.loopLabel(projection?.loopCount ?? 0)} />
