@@ -97,6 +97,7 @@ beforeEach(() => {
   toneMock.transport.ticks = 0;
   toneMock.transport.getTicksAtTime.mockImplementation(() => toneMock.transport.ticks);
   toneMock.start.mockResolvedValue(undefined);
+  toneMock.now.mockReturnValue(1);
 });
 
 describe("ProgressionVoicingTransport", () => {
@@ -137,6 +138,50 @@ describe("ProgressionVoicingTransport", () => {
         index === 0 ? { ...resolution, eventId: "different-event" } : resolution),
     };
     expect(runtime.updatePlan(incompatiblePlan)).toBe(false);
+  });
+
+  it("queues a transposed session until the next bar without stopping the clock", async () => {
+    const sustained = Object.assign(new toneMock.PolySynth(), { triggerAttack: vi.fn() });
+    vi.mocked(createPreviewInstrument).mockResolvedValueOnce(sustained);
+    const runtime = new ProgressionVoicingTransport();
+    await runtime.start({ snapshot, plan, bpm: 80, countInBars: 0, metronomeEnabled: false, onTransportBeat: vi.fn() });
+    const shiftedSnapshot: ProgressionVoicingPracticeSnapshot = {
+      ...snapshot,
+      fingerprint: "safe-fixture-transposed",
+      key: "D major",
+      events: snapshot.events.map((event) => ({
+        ...event,
+        chord: { ...event.chord, root: (event.chord.root + 2) % 12, label: `${event.chord.label}+2` },
+      })),
+    };
+    const shiftedPlan: ProgressionPracticeVoicingPlan = {
+      ...plan,
+      snapshotFingerprint: shiftedSnapshot.fingerprint,
+      events: plan.events.map((resolution) => resolution.status === "SUPPORTED" ? {
+        ...resolution,
+        voicing: {
+          ...resolution.voicing,
+          midiNotes: resolution.voicing.midiNotes.map((note) => note + 12),
+          notes: resolution.voicing.notes.map((note) => ({
+            ...note,
+            midiNote: note.midiNote + 12,
+            octave: note.octave + 1,
+          })),
+        },
+      } : resolution),
+    };
+    const stopCalls = toneMock.transport.stop.mock.calls.length;
+
+    toneMock.transport.ticks = 192;
+    expect(runtime.updatePlan(shiftedPlan, { snapshot: shiftedSnapshot, applyAtBeat: 4 })).toBe(true);
+    toneMock.transport.ticks = 2 * 192;
+    toneMock.scheduled[1]!.callback(2);
+    expect(sustained.triggerAttack).toHaveBeenLastCalledWith(["D3", "A3", "C4"], 2, 0.72);
+
+    toneMock.transport.ticks = 4 * 192;
+    toneMock.scheduled[2]!.callback(4);
+    expect(sustained.triggerAttack).toHaveBeenLastCalledWith(["D4", "A4", "C5"], 4, 0.72);
+    expect(toneMock.transport.stop).toHaveBeenCalledTimes(stopCalls);
   });
 
   it.each([false, true])("plays separate slash reference with upper targets through sustained=%s", async (sustained) => {
@@ -318,6 +363,30 @@ describe("ProgressionVoicingTransport", () => {
 
     releaseInstrument(new toneMock.PolySynth());
     await pending;
+  });
+
+  it("attacks the first chord as soon as a no-count-in instrument finishes loading", async () => {
+    let releaseInstrument!: (instrument: InstanceType<typeof toneMock.PolySynth>) => void;
+    vi.mocked(createPreviewInstrument).mockReturnValueOnce(new Promise((resolve) => {
+      releaseInstrument = resolve;
+    }));
+    const runtime = new ProgressionVoicingTransport();
+    const pending = runtime.start({
+      snapshot,
+      plan,
+      bpm: 80,
+      countInBars: 0,
+      metronomeEnabled: false,
+      onTransportBeat: vi.fn(),
+    });
+    await Promise.resolve();
+    const instrument = new toneMock.PolySynth();
+    toneMock.now.mockReturnValue(1.1);
+    releaseInstrument(instrument);
+    await pending;
+
+    expect(instrument.triggerAttackRelease).toHaveBeenCalledOnce();
+    expect(instrument.triggerAttackRelease.mock.calls[0]?.[0]).toEqual(["C3", "G3", "B3"]);
   });
 
   it("schedules voicings, click, and visual projection on one Tone Transport", async () => {

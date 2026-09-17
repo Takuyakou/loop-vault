@@ -28,7 +28,13 @@ export interface ProgressionVoicingTransportStartOptions {
 
 export interface ProgressionVoicingTransportPort {
   start(options: ProgressionVoicingTransportStartOptions): Promise<void>;
-  updatePlan(plan: ProgressionPracticeVoicingPlan): boolean;
+  updatePlan(
+    plan: ProgressionPracticeVoicingPlan,
+    options?: {
+      readonly snapshot?: ProgressionVoicingPracticeSnapshot;
+      readonly applyAtBeat?: number;
+    },
+  ): boolean;
   pause(): boolean;
   resume(): Promise<boolean>;
   restart(): Promise<boolean>;
@@ -67,6 +73,11 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
   private referenceSoundEnabled = true;
   private desiredBpm = 120;
   private activeOptions?: ProgressionVoicingTransportStartOptions;
+  private pendingSessionUpdate?: {
+    readonly snapshot: ProgressionVoicingPracticeSnapshot;
+    readonly plan: ProgressionPracticeVoicingPlan;
+    readonly applyAtBeat: number;
+  };
 
   async start(options: ProgressionVoicingTransportStartOptions): Promise<void> {
     const generation = this.invalidateAndClear();
@@ -112,6 +123,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
         if (!this.acceptsCallback(generation)) return;
         const absoluteBeat = this.absoluteBeatAtTime(time, ppq);
         if (absoluteBeat + 1 / ppq < countInBeats) return;
+        this.applyPendingSessionUpdate(absoluteBeat);
         this.attackVoicing(eventIndex, 0, time);
       }, `${loopTicks}i`, `${startTicks}i`));
     });
@@ -129,6 +141,10 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
       if (!this.acceptsCallback(generation)) return;
       const absoluteBeat = this.absoluteBeatAtTime(time, ppq);
       const beatInBar = Math.floor(absoluteBeat) % options.snapshot.meter.numerator;
+      const applied = beatInBar === 0 && this.applyPendingSessionUpdate(absoluteBeat);
+      if (applied && !this.hasEventAttackAt(absoluteBeat)) {
+        this.attackCurrentVoicing(absoluteBeat, time);
+      }
       if (this.metronomeEnabled) {
         this.clickSynth?.triggerAttackRelease(beatInBar === 0 ? "C6" : "C5", "32n", time);
       }
@@ -148,6 +164,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.running = true;
     this.paused = false;
     options.onTransportBeat(startBeat);
+    const transportStartAudioTime = Tone.now() + 0.05;
     this.transport.start("+0.05");
 
     try {
@@ -158,7 +175,12 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
       }
       this.voicingInstrument = voicingInstrument;
       const currentBeat = this.transport.ticks / ppq;
-      if (!this.paused && (startBeat > countInBeats || currentBeat > startBeat)) {
+      const missedImmediateAttack = countInBeats === 0 && Tone.now() >= transportStartAudioTime;
+      if (!this.paused && (
+        startBeat > countInBeats
+        || currentBeat > startBeat
+        || missedImmediateAttack
+      )) {
         const time = Tone.now() + 0.05;
         this.attackCurrentVoicing(this.absoluteBeatAtTime(time, ppq), time);
       }
@@ -168,10 +190,27 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     }
   }
 
-  updatePlan(plan: ProgressionPracticeVoicingPlan): boolean {
+  updatePlan(
+    plan: ProgressionPracticeVoicingPlan,
+    options: {
+      readonly snapshot?: ProgressionVoicingPracticeSnapshot;
+      readonly applyAtBeat?: number;
+    } = {},
+  ): boolean {
     const activeOptions = this.activeOptions;
-    if (!activeOptions || !isCompatiblePlan(activeOptions.snapshot, plan)) return false;
-    this.activeOptions = { ...activeOptions, plan };
+    if (!activeOptions) return false;
+    const pending = this.pendingSessionUpdate;
+    const nextSnapshot = options.snapshot ?? pending?.snapshot ?? activeOptions.snapshot;
+    if (!isCompatibleSessionTiming(activeOptions.snapshot, nextSnapshot)
+      || !isCompatiblePlan(nextSnapshot, plan)) return false;
+    const applyAtBeat = options.applyAtBeat ?? pending?.applyAtBeat;
+    if (applyAtBeat !== undefined && Number.isFinite(applyAtBeat)
+      && applyAtBeat > this.transport.ticks / this.transport.PPQ) {
+      this.pendingSessionUpdate = { snapshot: nextSnapshot, plan, applyAtBeat };
+      return true;
+    }
+    this.pendingSessionUpdate = undefined;
+    this.activeOptions = { ...activeOptions, snapshot: nextSnapshot, plan };
     return true;
   }
 
@@ -298,6 +337,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.running = false;
     this.paused = false;
     this.activeOptions = undefined;
+    this.pendingSessionUpdate = undefined;
     return this.generation;
   }
 
@@ -337,6 +377,30 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
       return;
     }
     this.attackVoicing(current.eventIndex, current.elapsedBeats, time);
+  }
+
+  private applyPendingSessionUpdate(absoluteBeat: number): boolean {
+    const pending = this.pendingSessionUpdate;
+    const activeOptions = this.activeOptions;
+    if (!pending || !activeOptions || absoluteBeat + 1 / this.transport.PPQ < pending.applyAtBeat) return false;
+    this.pendingSessionUpdate = undefined;
+    this.activeOptions = {
+      ...activeOptions,
+      snapshot: pending.snapshot,
+      plan: pending.plan,
+    };
+    return true;
+  }
+
+  private hasEventAttackAt(absoluteBeat: number): boolean {
+    const options = this.activeOptions;
+    if (!options) return false;
+    const countInBeats = options.countInBars * options.snapshot.meter.numerator;
+    if (absoluteBeat < countInBeats) return false;
+    const progressionBeat = (absoluteBeat - countInBeats) % options.snapshot.lengthBeats;
+    return options.snapshot.events.some((event) => (
+      Math.abs(event.startBeat - progressionBeat) <= 1 / this.transport.PPQ
+    ));
   }
 
   private currentSoundingEvent(absoluteBeat: number): { eventIndex: number; elapsedBeats: number } | undefined {
@@ -407,6 +471,32 @@ function isCompatiblePlan(
     && plan.selection === snapshot.selection
     && plan.events.length === snapshot.events.length
     && plan.events.every((event, index) => event.eventId === snapshot.events[index]?.id);
+}
+
+function isCompatibleSessionTiming(
+  active: ProgressionVoicingPracticeSnapshot,
+  next: ProgressionVoicingPracticeSnapshot,
+): boolean {
+  return active.selection === next.selection
+    && active.meter.numerator === next.meter.numerator
+    && active.meter.denominator === next.meter.denominator
+    && active.lengthBeats === next.lengthBeats
+    && active.events.length === next.events.length
+    && active.events.every((event, index) => {
+      const candidate = next.events[index];
+      return candidate?.id === event.id
+        && candidate.startBeat === event.startBeat
+        && candidate.durationBeats === event.durationBeats;
+    })
+    && active.spans.length === next.spans.length
+    && active.spans.every((span, index) => {
+      const candidate = next.spans[index];
+      return candidate?.kind === span.kind
+        && candidate.startBeat === span.startBeat
+        && candidate.durationBeats === span.durationBeats
+        && (span.kind !== "chord"
+          || candidate.kind === "chord" && candidate.eventIndex === span.eventIndex);
+    });
 }
 
 function createClickSynth(): Tone.Synth {

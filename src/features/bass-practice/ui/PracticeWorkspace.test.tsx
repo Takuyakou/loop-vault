@@ -102,4 +102,31 @@ describe("PracticeWorkspace", () => {
     expect(container.textContent).toContain("voicing panel");
     expect(container.textContent).not.toContain("Bass Practice");
   });
+
+  test("keeps one tab size across every Practice mode", async () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    root = createRoot(container);
+
+    function Harness() {
+      const [mode, setMode] = useState<PracticeWorkspaceMode>("chord-dojo");
+      return (
+        <PracticeWorkspace
+          mode={mode}
+          onModeChange={setMode}
+          chordDojo={<div>dojo panel</div>}
+          voicingLoop={<div>voicing panel</div>}
+          bassPractice={<div>bass panel</div>}
+        />
+      );
+    }
+    await act(async () => root?.render(<Harness />));
+    const tabs = Array.from(container.querySelectorAll<HTMLButtonElement>("[role='tab']"));
+    expect(tabs.every((tab) => tab.className.includes("min-h-10")
+      && tab.className.includes("text-sm"))).toBe(true);
+    await act(async () => tabs[1]!.click());
+    expect(Array.from(container.querySelectorAll<HTMLButtonElement>("[role='tab']"))
+      .every((tab) => tab.className.includes("min-h-10")
+        && tab.className.includes("text-sm"))).toBe(true);
+  });
 });

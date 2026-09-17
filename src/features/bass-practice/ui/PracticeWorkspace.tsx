@@ -91,7 +91,7 @@ export function PracticeModeTabs({
     selectMode(next);
   }
 
-  const tabClassName = mode === "voicing-loop" ? "min-h-8 px-3 text-xs" : "min-h-10 px-4 text-sm";
+  const tabClassName = "min-h-10 px-4 text-sm";
   return (
       <nav className="flex w-fit max-w-full shrink-0 gap-1 rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] bg-[var(--lv-surface)] p-1" aria-label="Practice mode" role="tablist">
         <button
