@@ -151,7 +151,8 @@ test("P5.31 all-rest maximum score is saveable and honest at 320px, 200% and red
   await page.getByLabel("カウントイン").selectOption("0");
   await workspace.getByRole("button", { name: /開始/ }).click();
   await expect(workspace).toContainText("自動送り中");
-  await expect(workspace.getByTestId("voicing-loop-beat-indicator").locator("[data-active]")).toHaveCount(16);
+  await expect(workspace.getByRole("progressbar", { name: "拍" })).toBeVisible();
+  await expect(workspace.getByRole("progressbar", { name: "位置" })).toBeVisible();
   await assertNoHorizontalOverflow(page);
   await page.getByRole("button", { name: "一時停止", exact: true }).click();
   const axe = await new AxeBuilder({ page: page as never }).include("[data-testid='voicing-loop-workspace']").analyze();
