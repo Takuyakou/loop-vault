@@ -1,5 +1,6 @@
 import type { ChordQuality, ChordSymbol } from "../types";
 import {
+  compareCandidate,
   enumerateSplitCandidates,
   pitchClass,
   type StyleVoicingCandidate,
@@ -80,7 +81,7 @@ export function generateStudyCandidates(
     : study === "teacher" ? "top-candidate" : "normal-voicing-top";
   const provenance = provenanceForStudy(study);
 
-  return templates.flatMap((template) => {
+  const generated = templates.flatMap((template) => {
     const leftPitchClasses = degreePitchClasses(chord, template.leftDegrees);
     const rightPitchClasses = degreePitchClasses(chord, template.rightDegrees);
     if (!leftPitchClasses || !rightPitchClasses) return [];
@@ -128,10 +129,18 @@ export function generateStudyCandidates(
       ? [...fixedTopPlacements].sort(compareOpenPlacement)
       : fixedTopPlacements;
     return rankedPlacements.slice(0, MAX_CANDIDATES_PER_TEMPLATE).map((candidate) => ({
-      candidate,
+      candidate: {
+        ...candidate,
+        intrinsicCost: studyCandidateIntrinsicCost(study, chord, template),
+        guideToneNotes: guideToneNotes(chord, candidate),
+      },
       rule,
     }));
   });
+  return generated.sort((left, right) => (
+    compareCandidate(left.candidate, right.candidate)
+    || left.rule.variantId.localeCompare(right.rule.variantId)
+  ));
 }
 
 function templatesForStudy(
@@ -185,8 +194,9 @@ function fullAndReductionTemplates(
     requireOpenWidth,
   );
   const reducedRight = split.right.filter((degree) => degree !== REDUCIBLE_FIFTH);
+  const extendedFamily = ["maj9", "min9", "dom9", "min11", "dom13"].includes(chord.quality);
   const canReduceFifth = split.right.includes(REDUCIBLE_FIFTH)
-    && split.right.length >= 4
+    && (split.right.length >= 4 || (extendedFamily && split.right.length >= 3))
     && reducedRight.length > 0;
   if (!canReduceFifth) return [full];
 
@@ -218,7 +228,7 @@ function coreTemplates(
     [],
   );
 
-  if (!hasSlashBass(chord) || compact.omittedDegrees.length === 0) return [compact];
+  if (compact.omittedDegrees.length === 0) return [compact];
   const literalSplit = splitDegrees(chord, literalDegrees, context);
   const literal = createTemplate(
     literalDegrees,
@@ -228,6 +238,44 @@ function coreTemplates(
     [],
   );
   return [compact, literal];
+}
+
+function studyCandidateIntrinsicCost(
+  study: VoicingBaseStudy,
+  chord: ChordSymbol,
+  template: StudyTemplate,
+): number {
+  const noteCount = unique([...template.leftDegrees, ...template.rightDegrees]).length;
+  const omissionCount = template.omittedDegrees.length;
+  const omissionBudget = omissionBudgetFor(chord.quality);
+  const omissionPenalty = omissionCount * (
+    study === "teacher" ? 2 : hasSlashBass(chord) ? 5 : 1
+  );
+  const excessiveOmissionPenalty = Math.max(0, omissionCount - omissionBudget) * 10;
+  const minimumDensity = study === "teacher" ? 4 : 3;
+  const maximumDensity = study === "teacher" ? 5 : 4;
+  const sparsePenalty = Math.max(0, minimumDensity - noteCount) * 8;
+  const densePenalty = Math.max(0, noteCount - maximumDensity) * (study === "teacher" ? 3 : 2);
+  const enrichmentPenalty = template.addedDegrees.length;
+  return omissionPenalty + excessiveOmissionPenalty + sparsePenalty + densePenalty + enrichmentPenalty;
+}
+
+function omissionBudgetFor(quality: ChordQuality): number {
+  if (quality === "dom13") return 2;
+  if (["maj9", "min9", "dom9", "min11"].includes(quality)) return 1;
+  return 1;
+}
+
+function guideToneNotes(
+  chord: ChordSymbol,
+  candidate: StyleVoicingCandidate,
+): number[] {
+  const guideDegrees = ["3", "b3", "4", "7", "b7", "bb7"];
+  const guidePitchClasses = new Set(guideDegrees.flatMap((degree) => {
+    const value = pitchClassForDegreeLabel(chord, degree);
+    return value === undefined ? [] : [value];
+  }));
+  return candidate.allNotes.filter((note) => guidePitchClasses.has(pitchClass(note)));
 }
 
 function createTemplate(

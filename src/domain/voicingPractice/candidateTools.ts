@@ -20,6 +20,10 @@ export interface StyleVoicingCandidate {
   addedColorIntervals: string[];
   omittedIntervals: string[];
   warnings: StyleVoicingWarning[];
+  /** Candidate-local quality cost; progression transitions must not reward sparsity by itself. */
+  intrinsicCost?: number;
+  /** Approved 3rd/7th-family voices used only by the progression ranker. */
+  guideToneNotes?: number[];
 }
 
 export interface CandidateBuildOptions {
@@ -84,7 +88,8 @@ export function enumerateSplitCandidates(
 export function candidateStaticCost(candidate: StyleVoicingCandidate): number {
   const leftCenter = average(candidate.leftHandNotes);
   const rightCenter = average(candidate.rightHandNotes);
-  return Math.abs(leftCenter - STYLE_VOICING_REGISTER.leftHandCenter)
+  return (candidate.intrinsicCost ?? 0)
+    + Math.abs(leftCenter - STYLE_VOICING_REGISTER.leftHandCenter)
     + Math.abs(rightCenter - STYLE_VOICING_REGISTER.rightHandCenter)
     + handSpan(candidate.leftHandNotes) * 0.25
     + handSpan(candidate.rightHandNotes) * 0.25;

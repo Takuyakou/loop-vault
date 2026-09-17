@@ -97,6 +97,58 @@ describe("P5.33 generalized study generator", () => {
       && rule.coverage === "literal" && rule.omittedDegrees.length === 0)).toBe(true);
   });
 
+  it("keeps formal Am11/B Literal and Practical Reduction candidates comparable", () => {
+    const chord = parsed("Am11/B");
+    const candidates = generateStudyCandidates(chord, "teacher", context, spans);
+    const literal = candidates.find(({ rule }) => rule.coverage === "literal");
+    const reduction = candidates.find(({ rule }) => (
+      rule.coverage === "performance-reduction" && rule.omittedDegrees.join() === "5"
+    ));
+    expect(literal?.rule).toMatchObject({ leftDegrees: ["9"], omittedDegrees: [] });
+    expect(new Set(literal?.rule.rightDegrees)).toEqual(new Set(["1", "b3", "5", "b7", "11"]));
+    expect(reduction?.rule).toMatchObject({ leftDegrees: ["9"], omittedDegrees: ["5"] });
+    expect(new Set(reduction?.rule.rightDegrees)).toEqual(new Set(["1", "b3", "b7", "11"]));
+    expect(candidates[0]?.rule.coverage).toBe("performance-reduction");
+  });
+
+  it.each(["Bm11", "Em11", "G13", "A13"])("offers a bounded practical fifth omission for %s without losing its explicit extension", (label) => {
+    const candidates = generateStudyCandidates(parsed(label), "teacher", context, spans);
+    const reductions = candidates.filter(({ rule }) => rule.coverage === "performance-reduction");
+    expect(reductions.length).toBeGreaterThan(0);
+    expect(reductions.every(({ rule }) => rule.omittedDegrees.length <= (label.endsWith("13") ? 2 : 1))).toBe(true);
+    const requiredExtension = label.endsWith("13") ? "13" : "11";
+    expect(reductions.every(({ rule }) => (
+      rule.omittedDegrees.includes("5")
+      && [...rule.leftDegrees, ...rule.rightDegrees].includes(requiredExtension)
+    ))).toBe(true);
+  });
+
+  it("lets a session-only candidate override switch coverage without changing chord identity", () => {
+    const value = snapshot(["Am11/B"]);
+    const candidates = generateStudyCandidates(parsed("Am11/B"), "teacher", context, spans);
+    const literalIndex = candidates.findIndex(({ rule }) => rule.coverage === "literal");
+    const reductionIndex = candidates.findIndex(({ rule }) => rule.coverage === "performance-reduction");
+    const literal = resolveProgressionPracticeVoicings(value, {
+      lessonStudyCategory: "teacher",
+      lessonCandidateIndexes: { "event-1": literalIndex },
+    }).events[0]!;
+    const reduction = resolveProgressionPracticeVoicings(value, {
+      lessonStudyCategory: "teacher",
+      lessonCandidateIndexes: { "event-1": reductionIndex },
+    }).events[0]!;
+    expect(literal).toMatchObject({ status: "SUPPORTED", voicing: { explanation: {
+      coverage: "literal", omittedDegrees: [], candidateIndex: literalIndex + 1,
+    } } });
+    expect(reduction).toMatchObject({ status: "SUPPORTED", voicing: { explanation: {
+      coverage: "performance-reduction", omittedDegrees: ["5"], candidateIndex: reductionIndex + 1,
+    } } });
+    if (literal.status === "SUPPORTED" && reduction.status === "SUPPORTED") {
+      expect(literal.voicing.notes.map(({ degree }) => degree)).toContain("5");
+      expect(reduction.voicing.notes.map(({ degree }) => degree)).not.toContain("5");
+    }
+    expect(value.events[0]?.chord.label).toBe("Am11/B");
+  });
+
   it.each([
     ["Bm7b5", ["b3", "b5", "b7"], []],
     ["Cdim7", ["b3", "b5", "bb7"], []],
