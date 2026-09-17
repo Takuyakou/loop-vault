@@ -18,6 +18,14 @@ async function openRuleFixture(page: Page): Promise<Locator> {
   return page.getByTestId("voicing-loop-workspace");
 }
 
+async function openExtendedReductionFixture(page: Page): Promise<Locator> {
+  await page.goto("/?p527Status=p533-extended-reductions");
+  await page.evaluate(() => document.fonts.ready);
+  await page.locator("nav").getByRole("button", { name: /Practice/ }).click();
+  await page.getByRole("tab", { name: "Voicing Loop" }).click();
+  return page.getByTestId("voicing-loop-workspace");
+}
+
 async function keyboardGeometry(workspace: Locator): Promise<KeyboardGeometry> {
   const region = workspace.getByRole("region", { name: "ピアノ鍵盤" });
   const svg = region.locator("svg");
@@ -104,6 +112,28 @@ test("P5.33 switches the current voicing candidate without moving the practice p
       .map((key) => key.getAttribute("data-midi-note"))
   ));
   expect(afterGuides).not.toEqual(beforeGuides);
+});
+
+test("P5.33 compares Literal, OMIT 5, and OMIT 5/9 extended-chord candidates", async ({ page }) => {
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  const workspace = await openExtendedReductionFixture(page);
+  const explanation = workspace.getByTestId("voicing-loop-current-explanation");
+  const navigation = workspace.getByTestId("voicing-loop-candidate-navigation");
+  const label = navigation.locator("span[aria-label]");
+  const initial = await label.textContent();
+  const count = Number(initial?.match(/\/(\d+)/)?.[1] ?? 0);
+  expect(count).toBeGreaterThan(2);
+
+  const states = new Set<string>();
+  for (let index = 0; index < count; index += 1) {
+    states.add((await explanation.textContent()) ?? "");
+    await navigation.getByRole("button", { name: "次のVoicing候補", exact: true }).click();
+  }
+
+  expect([...states].some((value) => value.includes("Literal") && value.includes("OMITなし"))).toBe(true);
+  expect([...states].some((value) => value.includes("演奏用省略") && value.includes("OMIT5"))).toBe(true);
+  expect([...states].some((value) => value.includes("演奏用省略") && value.includes("OMIT5 · 9"))).toBe(true);
+  await expect(label).toHaveText(initial ?? "");
 });
 
 test("P5.33 supports all eight acceptance chords in every base/modifier combination", async ({ page }) => {

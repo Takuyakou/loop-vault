@@ -13,9 +13,9 @@
   ],
   "blocked": false,
   "blockerReason": null,
-  "baseCommit": "c83152630bb633ab2d2dee0bd7f6205213245750",
-  "lastVerifiedCommit": "5821b46d3950ea886e84b99479dc82aaadd96f70",
-  "currentBranch": "fix/p533-candidate-reduction-follow-up",
+  "baseCommit": "61956ea16f5df2f6970411b0801a65ff15c45025",
+  "lastVerifiedCommit": "8c5e14111ad3de09ab3457decfca83938ecaf8c3",
+  "currentBranch": "fix/p533-extended-reduction-generalization",
   "requiredGates": {
     "P5.33-00": [
       "intake-manifest",
@@ -103,6 +103,6 @@
     "generated-private-cargo-hygiene": "pass",
     "phase-docs-diff-clean": "pass"
   },
-  "nextAction": "READY FOR RENEWED HUMAN ACCEPTANCE at 5821b46d3950ea886e84b99479dc82aaadd96f70: Candidate navigation, bounded Literal/Practical Reduction comparison and candidate-quality-aware cyclic optimization are complete; 3,100 Vitest and 82 fresh-production Playwright tests PASS. Compare Am11/B Literal/OMIT 5, Bm11/Em11/G13/A13 reductions and optimization ON/OFF on the real setup. No merge/push/tag/release/P5.34.",
-  "updatedAt": "2026-09-17T09:46:29+09:00"
+  "nextAction": "READY FOR RENEWED HUMAN ACCEPTANCE at 8c5e14111ad3de09ab3457decfca83938ecaf8c3: root-independent m11/11/m13/13/maj13 Practical Reduction, explicit alteration preservation and chromatic-cluster register relief are complete; 3,123 Vitest and 83 fresh-production Playwright tests PASS. Compare Literal, OMIT 5 and OMIT 5/9 for the eight acceptance chords on the real setup. No merge/push/tag/release/P5.34.",
+  "updatedAt": "2026-09-17T11:04:18+09:00"
 }
