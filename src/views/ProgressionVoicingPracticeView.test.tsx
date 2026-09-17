@@ -237,7 +237,7 @@ describe("ProgressionVoicingPracticeView", () => {
     }
   });
 
-  it("projects Current, Next, Beat, Position, and Loop without score-like progress UI", async () => {
+  it("projects Current, Next, Beat, Position progress, and Loop from one clock", async () => {
     const runtime = new FakeTransport();
     const container = await renderView(runtime, {
       "basic-full": snapshot("basic-full"),
@@ -258,7 +258,8 @@ describe("ProgressionVoicingPracticeView", () => {
     await act(async () => runtime.options?.onTransportBeat(8.5));
     expect(container.textContent).toContain("1 周完了");
     expect(container.querySelector("[data-testid='voicing-loop-status']")?.textContent).toContain("位置");
-    expect(container.querySelectorAll("[role='progressbar']")).toHaveLength(0);
+    expect(container.querySelectorAll("[role='progressbar']")).toHaveLength(1);
+    expect(container.querySelector("[role='progressbar']")?.getAttribute("aria-label")).toBe("進行");
     expect(container.textContent).not.toContain("25%");
     expect(container.querySelector("[aria-current='step']")?.textContent).toContain("Cmaj7");
 
@@ -362,7 +363,7 @@ describe("ProgressionVoicingPracticeView", () => {
       .toContain("CHORD TONE");
     expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent)
       .toContain("2拍後に切り替わります");
-    expect(container.querySelectorAll("[role='progressbar']")).toHaveLength(0);
+    expect(container.querySelectorAll("[role='progressbar']")).toHaveLength(1);
     expect(container.textContent).not.toContain("コード 0%");
     expect(container.textContent).not.toContain("進行 0%");
 
@@ -552,6 +553,48 @@ describe("ProgressionVoicingPracticeView", () => {
     await act(async () => octaveDown.click());
     expect(button(container, "再開")).not.toBeNull();
     expect(runtime.stop).not.toHaveBeenCalled();
+  });
+
+  it("queues KEY and OCT for the next bar while playback keeps running", async () => {
+    const runtime = new FakeTransport();
+    const container = await renderView(runtime, { "source-midi": snapshot("source-midi") }, "source-midi");
+    await act(async () => button(container, "開始").click());
+    await act(async () => runtime.options?.onTransportBeat(1.5));
+    runtime.updatePlan.mockClear();
+    runtime.stop.mockClear();
+
+    const key = container.querySelector<HTMLSelectElement>("#voicing-loop-key")!;
+    expect(key.disabled).toBe(false);
+    await act(async () => {
+      const valueSetter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value")?.set;
+      valueSetter?.call(key, "2");
+      key.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    expect(button(container, "一時停止")).not.toBeNull();
+    expect(runtime.stop).not.toHaveBeenCalled();
+    expect(runtime.updatePlan).toHaveBeenLastCalledWith(
+      expect.any(Object),
+      expect.objectContaining({ applyAtBeat: 4, snapshot: expect.objectContaining({ key: "D major" }) }),
+    );
+
+    await act(async () => container.querySelector<HTMLButtonElement>("[aria-label='1オクターブ上げる']")!.click());
+    expect(button(container, "一時停止")).not.toBeNull();
+    expect(runtime.stop).not.toHaveBeenCalled();
+    expect(runtime.updatePlan).toHaveBeenLastCalledWith(
+      expect.any(Object),
+      expect.objectContaining({ applyAtBeat: 4 }),
+    );
+  });
+
+  it("starts immediately without a silent count-in when the metronome is off", async () => {
+    const runtime = new FakeTransport();
+    const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full");
+    expect((container.querySelector<HTMLSelectElement>("#voicing-loop-count-in"))?.value).toBe("1");
+    await act(async () => button(container, "メトロノーム").click());
+    await act(async () => button(container, "開始").click());
+    expect(runtime.start).toHaveBeenLastCalledWith(expect.objectContaining({ countInBars: 0 }));
+    expect(container.querySelector("[data-testid='voicing-loop-status']")?.textContent).not.toContain("カウントイン");
+    expect(button(container, "一時停止")).not.toBeNull();
   });
 
   it("switches the displayed candidate and hot-swaps pitches, fingering, keyboard, coverage, and audition without moving the clock", async () => {
@@ -1267,9 +1310,12 @@ function dispatchPointer(
 class FakeTransport implements ProgressionVoicingTransportPort {
   options?: ProgressionVoicingTransportStartOptions;
   start = vi.fn(async (options: ProgressionVoicingTransportStartOptions) => { this.options = options; });
-  updatePlan = vi.fn((plan: ProgressionPracticeVoicingPlan) => {
+  updatePlan = vi.fn((
+    plan: ProgressionPracticeVoicingPlan,
+    options: { readonly snapshot?: ProgressionVoicingPracticeSnapshot; readonly applyAtBeat?: number } = {},
+  ) => {
     if (!this.options) return false;
-    this.options = { ...this.options, plan };
+    this.options = { ...this.options, snapshot: options.snapshot ?? this.options.snapshot, plan };
     return true;
   });
   pause = vi.fn(() => true);

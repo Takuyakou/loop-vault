@@ -489,6 +489,9 @@ export function ProgressionVoicingPracticeView({
   const transportRef = useRef<ProgressionVoicingTransportPort>();
   const runtimeRequestRef = useRef(0);
   const auditionRequestRef = useRef(0);
+  const boundarySessionUpdateRef = useRef(false);
+  const clockStateRef = useRef(clockState);
+  clockStateRef.current = clockState;
   const midiLeaseRef = useRef<LiveMidiActivationLease>();
   const timelineViewportRef = useRef<HTMLDivElement | null>(null);
   const timelineEventRefs = useRef<Array<HTMLButtonElement | null>>([]);
@@ -504,19 +507,26 @@ export function ProgressionVoicingPracticeView({
     transport?.stop();
     setRuntimeError(undefined);
     setAuditionedIndex(undefined);
-    setClockState(snapshot
-      ? createProgressionPracticeClockState(snapshot, { countInBars })
+    setClockState(sourceSnapshot
+      ? createProgressionPracticeClockState(sourceSnapshot, { countInBars })
       : undefined);
     return () => {
       runtimeRequestRef.current += 1;
       auditionRequestRef.current += 1;
       transport?.stop();
     };
-  }, [countInBars, previewSound, snapshot]);
+  }, [countInBars, previewSound, sourceSnapshot]);
 
   useEffect(() => {
-    if (plan) transportRef.current?.updatePlan(plan);
-  }, [plan]);
+    if (!plan || !snapshot) return;
+    const state = clockStateRef.current;
+    const applyAtBeat = boundarySessionUpdateRef.current
+      && (state?.status === "running" || state?.status === "count-in")
+      ? nextPracticeBarBoundary(state.transportBeat, snapshot.meter.numerator)
+      : undefined;
+    boundarySessionUpdateRef.current = false;
+    transportRef.current?.updatePlan(plan, { snapshot, applyAtBeat });
+  }, [plan, snapshot]);
 
   useEffect(() => {
     if (!monitorMidi || !progressionLoaded) return undefined;
@@ -704,9 +714,8 @@ export function ProgressionVoicingPracticeView({
 
   function changeTargetKey(tonicPitchClass: number) {
     if (!sourceKey || !sourceIdentity || tonicPitchClass === targetTonicPitchClass) return;
-    runtimeRequestRef.current += 1;
     auditionRequestRef.current += 1;
-    transportRef.current?.stop();
+    boundarySessionUpdateRef.current = clockState?.status === "running" || clockState?.status === "count-in";
     setAuditionedIndex(undefined);
     setRuntimeError(undefined);
     setTargetKeyChoice({ sourceIdentity, tonicPitchClass });
@@ -715,6 +724,7 @@ export function ProgressionVoicingPracticeView({
   function changeOctave(value: -2 | -1 | 0 | 1 | 2) {
     if (!sourceIdentity || value === octaveShift) return;
     auditionRequestRef.current += 1;
+    boundarySessionUpdateRef.current = clockState?.status === "running" || clockState?.status === "count-in";
     setRuntimeError(undefined);
     setOctaveChoice({ sourceIdentity, value });
   }
@@ -726,14 +736,21 @@ export function ProgressionVoicingPracticeView({
 
   async function start() {
     if (!snapshot || !plan || !clockState || !allEventsPlayable) return;
+    const runtimeCountInBars = metronomeEnabled ? countInBars : 0;
+    const ready = createProgressionPracticeClockState(snapshot, {
+      bpm: clockState.bpm,
+      countInBars: runtimeCountInBars,
+    });
     setRuntimeError(undefined);
-    setClockState((state) => state
-      ? reduceProgressionPracticeClock(snapshot, state, { type: "START" })
-      : state);
-    await launchRuntime(0, clockState.bpm);
+    setClockState(reduceProgressionPracticeClock(snapshot, ready, { type: "START" }));
+    await launchRuntime(0, clockState.bpm, runtimeCountInBars);
   }
 
-  async function launchRuntime(startBeat: number, bpm: number) {
+  async function launchRuntime(
+    startBeat: number,
+    bpm: number,
+    runtimeCountInBars = clockStateRef.current?.countInBars ?? countInBars,
+  ) {
     if (!snapshot || !plan) return;
     const request = ++runtimeRequestRef.current;
     try {
@@ -741,7 +758,7 @@ export function ProgressionVoicingPracticeView({
         snapshot,
         plan,
         bpm,
-        countInBars,
+        countInBars: runtimeCountInBars,
         metronomeEnabled,
         referenceSoundEnabled,
         sound: previewSound,
@@ -1243,7 +1260,14 @@ export function ProgressionVoicingPracticeView({
                   label={text.beat}
                 />
               </Metric>
-              <Metric label={text.position} value={text.positionLabel(currentBar, totalBars)} />
+              <Metric label={text.position} value={text.positionLabel(currentBar, totalBars)}>
+                <ProgressMeter
+                  active={active}
+                  label={text.progressionProgress}
+                  transitionMilliseconds={visualStepMilliseconds}
+                  value={projection?.progressionProgress ?? 0}
+                />
+              </Metric>
               <Metric label={text.loop} value={text.loopLabel(projection?.loopCount ?? 0)} />
             </div>
           </div>
@@ -1402,7 +1426,6 @@ export function ProgressionVoicingPracticeView({
                     id="voicing-loop-key"
                     className="lv-field-control min-h-8 w-32 px-2 text-xs"
                     value={targetTonicPitchClass}
-                    disabled={active || paused}
                     onChange={(event) => changeTargetKey(Number(event.currentTarget.value))}
                   >
                     {keyOptions.map((key) => (
@@ -2035,6 +2058,42 @@ function Metric({ children, label, value }: { readonly children?: ReactNode; rea
   );
 }
 
+function ProgressMeter({
+  active,
+  label,
+  transitionMilliseconds,
+  value,
+}: {
+  readonly active: boolean;
+  readonly label: string;
+  readonly transitionMilliseconds: number;
+  readonly value: number;
+}) {
+  const normalized = Math.max(0, Math.min(1, value));
+  const percent = Math.round(normalized * 100);
+  return (
+    <div
+      className="h-1.5 w-20 min-w-8 overflow-hidden rounded-full bg-[var(--lv-border)] sm:w-28"
+      role="progressbar"
+      aria-label={label}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={percent}
+    >
+      <div
+        className="h-full origin-left bg-[var(--lv-accent)] motion-reduce:transition-none"
+        data-testid="voicing-loop-progress-fill"
+        style={{
+          transform: `scaleX(${normalized})`,
+          transitionDuration: active ? `${transitionMilliseconds}ms` : "0ms",
+          transitionProperty: "transform",
+          transitionTimingFunction: "linear",
+        }}
+      />
+    </div>
+  );
+}
+
 function ResolutionStatus({ resolution, language }: { readonly resolution?: ProgressionPracticeVoicingResolution; readonly language: AppLanguage }) {
   if (!resolution || resolution.status === "SUPPORTED") return null;
   const text = copy[language];
@@ -2058,6 +2117,12 @@ function sessionStatus(status: ProgressionPracticeClockStatus | undefined, text:
     case "ready":
     case undefined: return text.ready;
   }
+}
+
+function nextPracticeBarBoundary(absoluteBeat: number, beatsPerBar: number): number {
+  const safeBeat = Number.isFinite(absoluteBeat) ? Math.max(0, absoluteBeat) : 0;
+  const safeBeatsPerBar = Number.isFinite(beatsPerBar) && beatsPerBar > 0 ? beatsPerBar : 4;
+  return (Math.floor(safeBeat / safeBeatsPerBar) + 1) * safeBeatsPerBar;
 }
 
 function UnresolvedSummary({ plan, snapshot, language }: {

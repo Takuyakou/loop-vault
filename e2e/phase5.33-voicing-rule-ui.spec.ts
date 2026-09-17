@@ -194,6 +194,9 @@ test("P5.33 fits desktop without page scroll and keeps Transport keyboard-operab
   const start = transport.getByRole("button", { name: "開始", exact: true });
 
   await expect(transport).toBeInViewport();
+  const tabHeights = await page.locator("header").getByRole("tab").evaluateAll((tabs) =>
+    tabs.map((tab) => Math.round(tab.getBoundingClientRect().height)));
+  expect(new Set(tabHeights).size).toBe(1);
   await expect(start).toBeEnabled();
   const startBox = await start.boundingBox();
   expect(startBox?.height).toBeGreaterThanOrEqual(38);
@@ -233,6 +236,11 @@ test("P5.33 applies lesson modifiers and OCT live without pausing playback", asy
   await octaveUp.click();
   await expect(transport.getByTestId("voicing-loop-transport-primary")).toContainText("OCT+1");
   await expect(pause).toBeVisible();
+  const key = transport.locator("#voicing-loop-key");
+  await expect(key).toBeEnabled();
+  await key.selectOption("2");
+  await expect(pause).toBeVisible();
+  await expect(workspace.getByRole("progressbar", { name: "進行" })).toBeVisible();
 
   await pause.click();
   await expect(transport.getByRole("button", { name: "再開", exact: true })).toBeVisible();
