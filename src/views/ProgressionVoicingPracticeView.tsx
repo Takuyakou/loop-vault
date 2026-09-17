@@ -650,6 +650,10 @@ export function ProgressionVoicingPracticeView({
   const beatsPerBar = snapshot?.meter.numerator ?? 4;
   const currentBar = Math.floor((projection?.progressionBeat ?? 0) / beatsPerBar) + 1;
   const totalBars = Math.max(1, Math.ceil((snapshot?.lengthBeats ?? 1) / beatsPerBar));
+  const beatProgress = projection?.inCountIn
+    ? ((clockState?.transportBeat ?? 0) % beatsPerBar) / beatsPerBar
+    : projection?.chordProgress ?? 0;
+  const barProgress = currentBar / totalBars;
 
   useEffect(() => {
     setFingeringEditorOpen(false);
@@ -1250,22 +1254,26 @@ export function ProgressionVoicingPracticeView({
             <div className="grid min-w-0 grid-cols-3 gap-2" data-testid="voicing-loop-status">
               <Metric
                 label={projection?.inCountIn ? text.countIn : text.beat}
+                testId="voicing-loop-beat-metric"
                 value={projection?.inCountIn
                   ? text.beatLabel(projection.countInBeat ?? 1, snapshot.meter.numerator)
                   : text.beatLabel(projection?.beatInChord ?? 1, projection?.beatsInChord ?? Math.ceil(currentEvent?.durationBeats ?? 1))}
               >
-                <BeatIndicator
-                  current={projection?.inCountIn ? projection.countInBeat ?? 1 : projection?.beatInChord ?? 1}
-                  total={projection?.inCountIn ? snapshot.meter.numerator : projection?.beatsInChord ?? 1}
-                  label={text.beat}
-                />
-              </Metric>
-              <Metric label={text.position} value={text.positionLabel(currentBar, totalBars)}>
                 <ProgressMeter
                   active={active}
-                  label={text.progressionProgress}
+                  label={projection?.inCountIn ? text.countIn : text.beat}
+                  testId="voicing-loop-beat-progress-fill"
                   transitionMilliseconds={visualStepMilliseconds}
-                  value={projection?.progressionProgress ?? 0}
+                  value={beatProgress}
+                />
+              </Metric>
+              <Metric label={text.position} testId="voicing-loop-position-metric" value={text.positionLabel(currentBar, totalBars)}>
+                <ProgressMeter
+                  active={false}
+                  label={text.position}
+                  testId="voicing-loop-position-progress-fill"
+                  transitionMilliseconds={visualStepMilliseconds}
+                  value={barProgress}
                 />
               </Metric>
               <Metric label={text.loop} value={text.loopLabel(projection?.loopCount ?? 0)} />
@@ -1875,30 +1883,6 @@ function compactDurationLabel(value: number, language: AppLanguage): string {
   return `${formatted} ${value === 1 ? "beat" : "beats"}`;
 }
 
-function BeatIndicator({ current, label, total }: { current: number; label: string; total: number }) {
-  const safeTotal = Math.max(1, Math.ceil(total));
-  const activeIndex = Math.min(safeTotal - 1, Math.max(0, Math.floor(current) - 1));
-  const windowStart = Math.floor(activeIndex / 16) * 16;
-  return (
-    <span
-      className="flex min-w-0 flex-wrap gap-1"
-      data-testid="voicing-loop-beat-indicator"
-      role="img"
-      aria-label={`${label} ${activeIndex + 1} / ${safeTotal}`}
-    >
-        <span className="flex flex-wrap gap-1" aria-hidden="true">
-        {Array.from({ length: Math.min(16, safeTotal - windowStart) }, (_, offset) => windowStart + offset).map((index) => (
-          <span
-            key={index}
-            data-active={index === activeIndex ? "true" : "false"}
-            className={`h-2 w-2 rounded-full border ${index === activeIndex ? "border-[var(--lv-accent)] bg-[var(--lv-accent)]" : "border-[var(--lv-border-strong)] bg-transparent"}`}
-          />
-        ))}
-      </span>
-    </span>
-  );
-}
-
 function ProgressionChoice({
   candidate,
   language,
@@ -2046,14 +2030,25 @@ function topRoleLabel(role: VoicingTopContext | undefined, language: AppLanguage
     case undefined: return "Voicing Top";
   }
 }
-function Metric({ children, label, value }: { readonly children?: ReactNode; readonly label: string; readonly value: string }) {
+function Metric({
+  children,
+  label,
+  testId,
+  value,
+}: {
+  readonly children?: ReactNode;
+  readonly label: string;
+  readonly testId?: string;
+  readonly value: string;
+}) {
   return (
-    <div className="flex min-w-0 items-center justify-between gap-2 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] bg-[var(--lv-bg-subtle)] px-3 py-1.5">
+    <div
+      className="grid min-w-0 grid-cols-[auto_minmax(2rem,1fr)_auto] items-center gap-2 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] bg-[var(--lv-bg-subtle)] px-3 py-1.5"
+      data-testid={testId}
+    >
       <p className="text-[10px] font-semibold tracking-[0.08em] text-[var(--lv-text-muted)]">{label}</p>
-      <div className="flex min-w-0 items-center gap-2">
-        <p className="break-words text-sm font-semibold text-[var(--lv-text)]">{value}</p>
-        {children}
-      </div>
+      <div className="min-w-0">{children}</div>
+      <p className="whitespace-nowrap text-sm font-semibold text-[var(--lv-text)]">{value}</p>
     </div>
   );
 }
@@ -2061,11 +2056,13 @@ function Metric({ children, label, value }: { readonly children?: ReactNode; rea
 function ProgressMeter({
   active,
   label,
+  testId,
   transitionMilliseconds,
   value,
 }: {
   readonly active: boolean;
   readonly label: string;
+  readonly testId: string;
   readonly transitionMilliseconds: number;
   readonly value: number;
 }) {
@@ -2073,7 +2070,7 @@ function ProgressMeter({
   const percent = Math.round(normalized * 100);
   return (
     <div
-      className="h-1.5 w-20 min-w-8 overflow-hidden rounded-full bg-[var(--lv-border)] sm:w-28"
+      className="h-1.5 w-full min-w-8 overflow-hidden rounded-full bg-[var(--lv-border)]"
       role="progressbar"
       aria-label={label}
       aria-valuemin={0}
@@ -2082,7 +2079,7 @@ function ProgressMeter({
     >
       <div
         className="h-full origin-left bg-[var(--lv-accent)] motion-reduce:transition-none"
-        data-testid="voicing-loop-progress-fill"
+        data-testid={testId}
         style={{
           transform: `scaleX(${normalized})`,
           transitionDuration: active ? `${transitionMilliseconds}ms` : "0ms",

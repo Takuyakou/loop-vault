@@ -45,9 +45,10 @@ test("P5.27 Voicing Loop route is keyboard-operable and overflow-safe at 320px",
     "2拍",
   ]);
   await expect(page.getByRole("group", { name: "Voicing表示モード" })).toBeVisible();
-  await expect(page.getByRole("progressbar")).toHaveCount(0);
+  await expect(page.getByRole("progressbar")).toHaveCount(2);
   await expect(page.getByTestId("voicing-loop-status")).toBeVisible();
-  await expect(page.getByTestId("voicing-loop-beat-indicator")).toBeVisible();
+  await expect(page.getByRole("progressbar", { name: "拍" })).toBeVisible();
+  await expect(page.getByRole("progressbar", { name: "位置" })).toBeVisible();
   await expect(page.getByTestId("voicing-loop-current-next")).toContainText("位置");
   await expect(page.getByTestId("voicing-loop-current-next")).toContainText("2拍後に切り替わります");
   await expect(page.getByTestId("voicing-loop-midi-status")).toContainText("MIDI入力");

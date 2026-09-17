@@ -240,7 +240,7 @@ test("P5.33 applies lesson modifiers and OCT live without pausing playback", asy
   await expect(key).toBeEnabled();
   await key.selectOption("2");
   await expect(pause).toBeVisible();
-  await expect(workspace.getByRole("progressbar", { name: "進行" })).toBeVisible();
+  await expect(workspace.getByRole("progressbar", { name: "位置" })).toBeVisible();
 
   await pause.click();
   await expect(transport.getByRole("button", { name: "再開", exact: true })).toBeVisible();

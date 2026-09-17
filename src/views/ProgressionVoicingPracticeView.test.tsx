@@ -75,7 +75,7 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent).toContain("位置2 / 2 小節");
   });
 
-  it("can run a 32-bar all-rest score with bounded beat dots and no fake chord or audition", async () => {
+  it("can run a 32-bar all-rest score with bounded progress indicators and no fake chord or audition", async () => {
     const runtime = new FakeTransport();
     const value: ProgressionVoicingPracticeSnapshot = {
       ...snapshot("basic-full"), lengthBeats: 128, events: [], spans: [{ kind: "rest", startBeat: 0, durationBeats: 128 }],
@@ -85,9 +85,10 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(button(container, "現在のコードを試聴").disabled).toBe(true);
     await act(async () => button(container, "開始").click());
     await act(async () => runtime.options?.onTransportBeat(70));
-    const indicator = container.querySelector("[data-testid='voicing-loop-beat-indicator']")!;
-    expect(indicator.getAttribute("aria-label")).toBe("拍 67 / 128");
-    expect(indicator.querySelectorAll("[data-active]")).toHaveLength(16);
+    const beatIndicator = container.querySelector("[role='progressbar'][aria-label='拍']")!;
+    const positionIndicator = container.querySelector("[role='progressbar'][aria-label='位置']")!;
+    expect(beatIndicator.getAttribute("aria-valuenow")).toBe("52");
+    expect(positionIndicator.getAttribute("aria-valuenow")).toBe("53");
     expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent).toContain("位置17 / 32 小節");
     expect(runtime.audition).not.toHaveBeenCalled();
     await act(async () => runtime.options?.onTransportBeat(132));
@@ -258,8 +259,9 @@ describe("ProgressionVoicingPracticeView", () => {
     await act(async () => runtime.options?.onTransportBeat(8.5));
     expect(container.textContent).toContain("1 周完了");
     expect(container.querySelector("[data-testid='voicing-loop-status']")?.textContent).toContain("位置");
-    expect(container.querySelectorAll("[role='progressbar']")).toHaveLength(1);
-    expect(container.querySelector("[role='progressbar']")?.getAttribute("aria-label")).toBe("進行");
+    expect(container.querySelectorAll("[role='progressbar']")).toHaveLength(2);
+    expect(Array.from(container.querySelectorAll("[role='progressbar']")).map((element) => element.getAttribute("aria-label")))
+      .toEqual(["拍", "位置"]);
     expect(container.textContent).not.toContain("25%");
     expect(container.querySelector("[aria-current='step']")?.textContent).toContain("Cmaj7");
 
@@ -267,6 +269,54 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("[aria-current='step']")?.textContent).toContain("Dm7");
     expect(container.textContent).toContain("G3");
     expect(container.textContent).toContain("b7");
+  });
+
+  it("places both indicators between label and value, smooths beats, and steps position by bar", async () => {
+    const runtime = new FakeTransport();
+    const base = snapshot("basic-full");
+    const events = [
+      { ...base.events[0]!, id: "bar-1-a", startBeat: 0, durationBeats: 2 },
+      { ...base.events[1]!, id: "bar-1-b", startBeat: 2, durationBeats: 2 },
+      { ...base.events[0]!, id: "bar-2-a", startBeat: 4, durationBeats: 2 },
+      { ...base.events[1]!, id: "bar-2-b", startBeat: 6, durationBeats: 2 },
+    ];
+    const value: ProgressionVoicingPracticeSnapshot = {
+      ...base,
+      lengthBeats: 8,
+      events,
+      spans: events.map((event, eventIndex) => ({
+        kind: "chord" as const,
+        eventIndex,
+        startBeat: event.startBeat,
+        durationBeats: event.durationBeats,
+      })),
+    };
+    const container = await renderView(runtime, { "basic-full": value }, "basic-full");
+    await act(async () => button(container, "開始").click());
+    await act(async () => runtime.options?.onTransportBeat(4.5));
+
+    const beatMetric = container.querySelector("[data-testid='voicing-loop-beat-metric']")!;
+    const positionMetric = container.querySelector("[data-testid='voicing-loop-position-metric']")!;
+    expect(beatMetric.children[0]?.textContent).toBe("拍");
+    expect(beatMetric.children[1]?.querySelector("[role='progressbar']")).not.toBeNull();
+    expect(beatMetric.children[2]?.textContent).toBe("1 / 2 拍");
+    expect(positionMetric.children[0]?.textContent).toBe("位置");
+    expect(positionMetric.children[1]?.querySelector("[role='progressbar']")).not.toBeNull();
+    expect(positionMetric.children[2]?.textContent).toBe("1 / 2 小節");
+
+    const beatFill = container.querySelector<HTMLElement>("[data-testid='voicing-loop-beat-progress-fill']")!;
+    const positionFill = container.querySelector<HTMLElement>("[data-testid='voicing-loop-position-progress-fill']")!;
+    expect(beatFill.style.transform).toBe("scaleX(0.25)");
+    expect(beatFill.style.transitionTimingFunction).toBe("linear");
+    expect(positionFill.style.transform).toBe("scaleX(0.5)");
+    expect(positionFill.style.transitionDuration).toBe("0ms");
+
+    await act(async () => runtime.options?.onTransportBeat(5));
+    expect(beatFill.style.transform).toBe("scaleX(0.5)");
+    expect(positionFill.style.transform).toBe("scaleX(0.5)");
+    await act(async () => runtime.options?.onTransportBeat(8));
+    expect(positionMetric.children[2]?.textContent).toBe("2 / 2 小節");
+    expect(positionFill.style.transform).toBe("scaleX(1)");
   });
 
   it("orders the compact workspace and traverses fixed cards using each clock duration", async () => {
@@ -343,7 +393,7 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(button(container, "開始").disabled).toBe(false);
     expect(container.querySelector("[data-testid='voicing-loop-midi-status']")?.textContent)
       .toContain("MIDI入力未接続");
-    expect(container.querySelector("[data-testid='voicing-loop-beat-indicator']")).not.toBeNull();
+    expect(container.querySelector("[data-testid='voicing-loop-beat-progress-fill']")).not.toBeNull();
     expect(container.querySelector("[data-keyboard-layout='wide-88']")).not.toBeNull();
     expect(container.querySelectorAll("[data-midi-note]")).toHaveLength(88);
     expect(container.querySelector("[data-midi-note='9']")).not.toBeNull();
@@ -363,7 +413,7 @@ describe("ProgressionVoicingPracticeView", () => {
       .toContain("CHORD TONE");
     expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent)
       .toContain("2拍後に切り替わります");
-    expect(container.querySelectorAll("[role='progressbar']")).toHaveLength(1);
+    expect(container.querySelectorAll("[role='progressbar']")).toHaveLength(2);
     expect(container.textContent).not.toContain("コード 0%");
     expect(container.textContent).not.toContain("進行 0%");
 
