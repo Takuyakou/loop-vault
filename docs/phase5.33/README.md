@@ -63,6 +63,13 @@ Teacher output is internally identified as `teacher-derived-generalized`:
 the principles derive from teacher evidence, while concrete pitches, octaves
 and suggested fingering are app-generated.
 
+The latest follow-up makes Candidate n/N directly operable, keeps manual
+comparison session-only, and ranks Literal/Practical Reduction alternatives
+with bounded density/omission cost across the full cyclic progression. The
+verified implementation commit is
+`5821b46d3950ea886e84b99479dc82aaadd96f70`; renewed human musical acceptance
+is still required.
+
 ## Research inputs
 
 This package contains the user-supplied research artifacts:
