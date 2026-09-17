@@ -52,6 +52,20 @@ describe("P5.33 cyclic candidate optimization", () => {
     expect(selectChordLocalCandidates(groups).map(topNote)).toEqual([72, 74, 71]);
     expect(optimizeCandidateGroups(groups).map(topNote)).toEqual([69, 69, 68]);
   });
+
+  it("charges candidate intrinsic quality at every event instead of rewarding sparse motion", () => {
+    const sparseA = candidate([48], [60]);
+    const sparseB = candidate([48], [60]);
+    sparseA.intrinsicCost = 80;
+    sparseB.intrinsicCost = 80;
+    const fullA = candidate([43, 50], [59, 64, 69]);
+    const fullB = candidate([45, 52], [60, 65, 71]);
+
+    expect(optimizeCandidateGroups([
+      [sparseA, fullA],
+      [sparseB, fullB],
+    ])).toEqual([fullA, fullB]);
+  });
 });
 
 function candidate(leftHandNotes: number[], rightHandNotes: number[]): StyleVoicingCandidate {
@@ -82,6 +96,7 @@ function loopCost(path: readonly StyleVoicingCandidate[]): number {
   if (path.length === 0) return 0;
   let cost = styleVoicingStartCost(path[0]);
   for (let index = 1; index < path.length; index += 1) {
+    cost += styleVoicingStartCost(path[index]);
     cost += styleVoicingTransitionCost(path[index - 1], path[index]);
   }
   if (path.length > 1) cost += styleVoicingTransitionCost(path[path.length - 1], path[0]);

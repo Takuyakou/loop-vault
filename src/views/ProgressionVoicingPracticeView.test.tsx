@@ -19,7 +19,10 @@ import { defaultLiveMidiStore } from "../liveMidi/defaultLiveMidiStore";
 import { PreviewSoundProvider } from "../components/PreviewSoundProvider";
 import { savePreviewSound } from "../audio/previewSoundPreference";
 import { ProgressionVoicingPracticeView } from "./ProgressionVoicingPracticeView";
-import { resolveProgressionPracticeVoicings } from "../domain/progressionVoicingPractice";
+import {
+  progressionPracticePlaybackNotes,
+  resolveProgressionPracticeVoicings,
+} from "../domain/progressionVoicingPractice";
 import {
   loadRecentVoicingLoopProgressions,
   recordRecentVoicingLoopProgression,
@@ -492,7 +495,7 @@ describe("ProgressionVoicingPracticeView", () => {
     const lessonCheckboxes = Array.from(toolbar.querySelectorAll<HTMLInputElement>("input[type='checkbox']"));
     expect(lessonCheckboxes.find((input) => input.parentElement?.textContent?.includes("Colorを加える"))?.checked).toBe(false);
     expect(lessonCheckboxes.find((input) => input.parentElement?.textContent?.includes("Open配置"))?.checked).toBe(false);
-    expect(lessonCheckboxes.find((input) => input.parentElement?.textContent?.includes("進行に合わせて最適化"))?.checked).toBe(false);
+    expect(lessonCheckboxes.find((input) => input.parentElement?.textContent?.includes("進行に合わせて最適化"))?.checked).toBe(true);
     const explanation = container.querySelector("[data-testid='voicing-loop-current-explanation']")!;
     expect(explanation.textContent).toContain("Teacher Style");
     expect(explanation.textContent).toContain("Candidate");
@@ -513,9 +516,9 @@ describe("ProgressionVoicingPracticeView", () => {
       toolbar.querySelectorAll<HTMLInputElement>("input[type='checkbox']"),
     ).find((input) => input.parentElement?.textContent?.includes(label))!;
 
-    for (const label of ["Colorを加える", "Open配置", "進行に合わせて最適化"]) {
-      expect(checkbox(label).checked).toBe(false);
-    }
+    expect(checkbox("Colorを加える").checked).toBe(false);
+    expect(checkbox("Open配置").checked).toBe(false);
+    expect(checkbox("進行に合わせて最適化").checked).toBe(true);
 
     await act(async () => button(container, "開始").click());
     runtime.stop.mockClear();
@@ -549,6 +552,77 @@ describe("ProgressionVoicingPracticeView", () => {
     await act(async () => octaveDown.click());
     expect(button(container, "再開")).not.toBeNull();
     expect(runtime.stop).not.toHaveBeenCalled();
+  });
+
+  it("switches the displayed candidate and hot-swaps pitches, fingering, keyboard, coverage, and audition without moving the clock", async () => {
+    const runtime = new FakeTransport();
+    const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full");
+    const navigation = container.querySelector("[data-testid='voicing-loop-candidate-navigation']")!;
+    const next = navigation.querySelector<HTMLButtonElement>("[aria-label='次のVoicing候補']")!;
+    await act(async () => button(container, "開始").click());
+    const beforeClock = container.querySelector("[data-testid='voicing-loop-status']")?.textContent;
+    const beforePlan = runtime.options!.plan.events[0];
+    const beforeText = container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent;
+    runtime.updatePlan.mockClear();
+    runtime.stop.mockClear();
+    runtime.pause.mockClear();
+
+    expect(next.disabled).toBe(false);
+    await act(async () => next.click());
+
+    const afterPlan = runtime.options!.plan.events[0];
+    expect(afterPlan).not.toEqual(beforePlan);
+    expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent).not.toBe(beforeText);
+    expect(container.querySelector("[data-testid='voicing-loop-status']")?.textContent).toBe(beforeClock);
+    expect(runtime.updatePlan).toHaveBeenCalledTimes(1);
+    expect(runtime.stop).not.toHaveBeenCalled();
+    expect(runtime.pause).not.toHaveBeenCalled();
+    expect(container.querySelector("[data-testid='voicing-loop-current-explanation']")?.textContent).toContain("Candidate");
+    if (afterPlan?.status === "SUPPORTED") {
+      for (const note of afterPlan.voicing.midiNotes) {
+        expect(container.querySelector(`[data-midi-note='${note}']`)).not.toBeNull();
+      }
+    }
+
+    const previous = navigation.querySelector<HTMLButtonElement>("[aria-label='前のVoicing候補']")!;
+    await act(async () => previous.click());
+    expect(runtime.options!.plan.events[0]).toEqual(beforePlan);
+    await act(async () => next.click());
+    expect(runtime.options!.plan.events[0]).toEqual(afterPlan);
+    expect(runtime.updatePlan).toHaveBeenCalledTimes(3);
+
+    await act(async () => button(container, "一時停止").click());
+    await act(async () => button(container, "現在のコードを試聴").click());
+    if (afterPlan?.status === "SUPPORTED") {
+      expect(runtime.audition).toHaveBeenLastCalledWith(
+        progressionPracticePlaybackNotes(afterPlan.voicing),
+        expect.any(String),
+      );
+    }
+  });
+
+  it("disables candidate navigation when a fixed top leaves one valid voicing", async () => {
+    const base = snapshot("basic-full");
+    const fixed: ProgressionVoicingPracticeSnapshot = {
+      ...base,
+      events: base.events.map((event) => ({
+        ...event,
+        chord: { root: 4, quality: "add9", tensions: [], bass: 6, label: "Eadd9/F#" },
+      })),
+    };
+    const container = await renderView(
+      new FakeTransport(),
+      { "basic-full": fixed },
+      "basic-full",
+      false,
+      { onSelectProgression: vi.fn(() => true), onEnterText: vi.fn() },
+      [],
+      { lessonContext: { bass: "self-played", top: "fixed-melody", fixedMelodyMidiNote: 71 } },
+    );
+    const navigation = container.querySelector("[data-testid='voicing-loop-candidate-navigation']")!;
+    expect(navigation.textContent).toContain("Candidate 1/1");
+    expect(navigation.querySelector<HTMLButtonElement>("[aria-label='前のVoicing候補']")?.disabled).toBe(true);
+    expect(navigation.querySelector<HTMLButtonElement>("[aria-label='次のVoicing候補']")?.disabled).toBe(true);
   });
 
   it("renders slash add9 Shell as an exact two-hand lesson with fingerprints and compact toolbar", async () => {

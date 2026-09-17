@@ -121,9 +121,11 @@ test("P5.31 slash identity remains playable through promoted Core upper-structur
   await expect(workspace.getByTestId("voicing-loop-current-next").getByRole("heading", { level: 2 })).toHaveText("Am9/C");
   await expect(workspace.getByTestId("voicing-loop-current-explanation"))
     .toContainText("Family Core");
+  await expect(workspace.getByTestId("voicing-loop-current-explanation"))
+    .toContainText("Literal");
   await expect(workspace.getByTestId("slash-bass-reference")).toHaveCount(0);
   await expect(workspace.locator("[data-guide-hand='left']")).toHaveCount(1);
-  await expect(workspace.locator("[data-guide-hand='right']")).toHaveCount(3);
+  await expect(workspace.locator("[data-guide-hand='right']")).toHaveCount(4);
   await expect(workspace.getByRole("button", { name: /開始/ })).toBeEnabled();
   const card = workspace.getByTestId("voicing-loop-event").nth(1);
   await card.focus();

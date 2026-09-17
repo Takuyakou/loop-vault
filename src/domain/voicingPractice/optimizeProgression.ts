@@ -105,7 +105,9 @@ export function optimizeCandidateGroups(
     for (let groupIndex = 1; groupIndex < candidateGroups.length; groupIndex += 1) {
       states = candidateGroups[groupIndex].map((candidate) => {
         const paths = states.map((state) => ({
-          cost: state.cost + styleVoicingTransitionCost(last(state.path), candidate),
+          cost: state.cost
+            + styleVoicingStartCost(candidate)
+            + styleVoicingTransitionCost(last(state.path), candidate),
           path: [...state.path, candidate],
         }));
         return paths.sort(comparePathState)[0]!;

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { GripVertical, Minus, Pause, Play, Plus, RefreshCw, Search, Settings, Square, Volume2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, GripVertical, Minus, Pause, Play, Plus, RefreshCw, Search, Settings, Square, Volume2 } from "lucide-react";
 import { useStore } from "zustand";
 import {
   formatMidiNoteForDisplay,
@@ -114,12 +114,17 @@ const copy = {
     source: "Voicingを選択",
     sourceHelp: "Source MIDIとCustomは保存済みの音をそのまま使い、Lesson Rulesは承認済みの規則だけを使います。",
     studyHelp: "TeacherまたはCoreを土台にし、ColorとOpenを必要に応じて加えます。Source MIDIとCustomでは変更できません。",
+    teacherHelp: "先生由来の考え方を一般化した実用Voicing",
+    coreHelp: "コードの骨格・特徴音を中心に練習",
     colorModifier: "Colorを加える",
-    colorHelp: "安全な9th等をCreative Enrichmentとして追加します。元のコード構成音は変更しません。",
+    colorHelp: "9th/11th/13thなどの安全な色付けをCreative Enrichmentとして加えます。元のコード構成音は変更しません。",
     openModifier: "Open配置",
-    openHelp: "上声部を広げた配置候補を使います。スラッシュベースは固定します。",
+    openHelp: "同じ和音を広い音域へ配置します。スラッシュベースは固定します。",
     optimizeProgression: "進行に合わせて最適化",
     optimizeHelp: "最後から先頭まで含む進行全体で、トップノートと内声のつながりを選びます。OFFでは各コード単体の代表候補を使います。",
+    candidateHelp: "同じコードで使える別のVoicing候補",
+    previousCandidate: "前のVoicing候補",
+    nextCandidate: "次のVoicing候補",
     rootShell: "Root Shell 1·3·7",
     rootShellShort: "Root 1·3·7",
     rootlessShell: "Rootless Shell 3·7",
@@ -233,12 +238,17 @@ const copy = {
     source: "Choose voicing",
     sourceHelp: "Source MIDI and Custom preserve saved notes; Lesson Rules use approved rules only.",
     studyHelp: "Choose Teacher or Core as the base, then add Color or Open as needed. It is inactive for Source MIDI and Custom.",
+    teacherHelp: "A practical voicing generalized from teacher-derived principles.",
+    coreHelp: "Practice the chord skeleton and characteristic tones.",
     colorModifier: "Add Color",
-    colorHelp: "Adds safe tones such as a 9th as Creative Enrichment without changing the original chord tones.",
+    colorHelp: "Adds safe color such as 9ths, 11ths, or 13ths as Creative Enrichment without changing the original chord tones.",
     openModifier: "Open placement",
-    openHelp: "Uses wider upper-voice candidates while keeping slash bass fixed.",
+    openHelp: "Places the same harmony across a wider register while keeping slash bass fixed.",
     optimizeProgression: "Optimize for progression",
     optimizeHelp: "Chooses top and inner voice flow across the entire loop, including last to first. Off uses each chord's local default.",
+    candidateHelp: "Another usable voicing candidate for the same chord.",
+    previousCandidate: "Previous voicing candidate",
+    nextCandidate: "Next voicing candidate",
     rootShell: "Root Shell 1·3·7",
     rootShellShort: "Root 1·3·7",
     rootlessShell: "Rootless Shell 3·7",
@@ -366,7 +376,7 @@ export function ProgressionVoicingPracticeView({
   const [studyCategory, setStudyCategory] = useState<VoicingBaseStudy>("teacher");
   const [colorEnabled, setColorEnabled] = useState(false);
   const [openEnabled, setOpenEnabled] = useState(false);
-  const [progressionOptimizationEnabled, setProgressionOptimizationEnabled] = useState(false);
+  const [progressionOptimizationEnabled, setProgressionOptimizationEnabled] = useState(true);
   const lessonRulesSelected = selection !== "source-midi" && selection !== "custom";
   const sourceSnapshot = snapshots?.[selection];
   const sourceKey = useMemo(
@@ -395,6 +405,17 @@ export function ProgressionVoicingPracticeView({
   const snapshot = transposition
     ? transposition.ok ? transposition.snapshot : undefined
     : sourceSnapshot;
+  const candidateSessionKey = snapshot
+    ? [snapshot.fingerprint, selection, studyCategory, colorEnabled, openEnabled, progressionOptimizationEnabled].join(":")
+    : undefined;
+  const [manualCandidateSelection, setManualCandidateSelection] = useState<{
+    readonly key: string;
+    readonly indexes: Readonly<Record<string, number>>;
+  }>();
+  const lessonCandidateIndexes = candidateSessionKey
+    && manualCandidateSelection?.key === candidateSessionKey
+    ? manualCandidateSelection.indexes
+    : undefined;
   const targetKey = transposition?.ok ? transposition.targetKey : sourceKey;
   const keyOptions = sourceKey ? keyCatalogForMode(sourceKey.mode) : [];
   const progressionLoaded = Boolean(snapshots && Object.values(snapshots).some(Boolean));
@@ -435,13 +456,14 @@ export function ProgressionVoicingPracticeView({
       lessonColorEnabled: colorEnabled,
       lessonOpenEnabled: openEnabled,
       lessonProgressionOptimization: progressionOptimizationEnabled,
+      lessonCandidateIndexes,
       octaveShift,
       lessonContext: resolutionOptions?.lessonContext ?? {
         bass: "self-played",
         top: "normal-voicing-top",
       },
     } : { ...resolutionOptions, octaveShift },
-    [colorEnabled, lessonRulesSelected, octaveShift, openEnabled, progressionOptimizationEnabled, resolutionOptions, studyCategory],
+    [colorEnabled, lessonCandidateIndexes, lessonRulesSelected, octaveShift, openEnabled, progressionOptimizationEnabled, resolutionOptions, studyCategory],
   );
   const plan = useMemo(
     () => snapshot ? resolveProgressionPracticeVoicings(snapshot, effectiveResolutionOptions) : undefined,
@@ -661,6 +683,23 @@ export function ProgressionVoicingPracticeView({
     auditionRequestRef.current += 1;
     setRuntimeError(undefined);
     update();
+  }
+
+  function changeCurrentCandidate(offset: -1 | 1) {
+    const explanation = currentVoicing?.explanation;
+    const count = explanation?.candidateCount ?? 0;
+    const current = explanation?.candidateIndex ?? 0;
+    if (!candidateSessionKey || !currentEvent || count <= 1 || current <= 0) return;
+    const nextIndex = (current - 1 + offset + count) % count;
+    auditionRequestRef.current += 1;
+    setRuntimeError(undefined);
+    setManualCandidateSelection((previous) => ({
+      key: candidateSessionKey,
+      indexes: {
+        ...(previous?.key === candidateSessionKey ? previous.indexes : {}),
+        [currentEvent.id]: nextIndex,
+      },
+    }));
   }
 
   function changeTargetKey(tonicPitchClass: number) {
@@ -1014,6 +1053,8 @@ export function ProgressionVoicingPracticeView({
                 size="sm"
                 variant={lessonRulesSelected && studyCategory === item.id ? "primary" : "secondary"}
                 aria-pressed={lessonRulesSelected ? studyCategory === item.id : false}
+                aria-description={item.id === "teacher" ? text.teacherHelp : text.coreHelp}
+                title={item.id === "teacher" ? text.teacherHelp : text.coreHelp}
                 disabled={!lessonRulesSelected}
                 onClick={() => changeStudyCategory(item.id)}
               >
@@ -1149,6 +1190,8 @@ export function ProgressionVoicingPracticeView({
                 <CurrentRuleExplanation
                   explanation={currentVoicing.explanation}
                   language={language}
+                  onNextCandidate={() => changeCurrentCandidate(1)}
+                  onPreviousCandidate={() => changeCurrentCandidate(-1)}
                   text={text}
                 />
               ) : null}
@@ -1875,10 +1918,14 @@ function sameReferences(
 function CurrentRuleExplanation({
   explanation,
   language,
+  onNextCandidate,
+  onPreviousCandidate,
   text,
 }: {
   readonly explanation?: VoicingRuleExplanation;
   readonly language: AppLanguage;
+  readonly onNextCandidate: () => void;
+  readonly onPreviousCandidate: () => void;
   readonly text: typeof copy.ja | typeof copy.en;
 }) {
   if (!explanation) return null;
@@ -1896,7 +1943,33 @@ function CurrentRuleExplanation({
     <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 border-t border-[var(--lv-border)] pt-2 text-[10px] text-[var(--lv-text-secondary)]" data-testid="voicing-loop-current-explanation">
       <span className="rounded-full border border-[var(--lv-border)] bg-[var(--lv-bg-subtle)] px-2 py-0.5 font-semibold text-[var(--lv-text)]">{family}</span>
       {coverage ? <span className="rounded-full border border-[var(--lv-border)] px-2 py-0.5">{coverage}</span> : null}
-      {candidate ? <span className="rounded-full border border-[var(--lv-border)] px-2 py-0.5">Candidate {candidate}</span> : null}
+      {candidate ? (
+        <span
+          className="inline-flex items-center rounded-full border border-[var(--lv-border)]"
+          data-testid="voicing-loop-candidate-navigation"
+          title={text.candidateHelp}
+        >
+          <button
+            type="button"
+            className="inline-flex h-6 w-6 items-center justify-center rounded-l-full text-[var(--lv-text-secondary)] hover:bg-[var(--lv-surface-raised)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-35"
+            aria-label={text.previousCandidate}
+            disabled={(explanation.candidateCount ?? 0) <= 1}
+            onClick={onPreviousCandidate}
+          >
+            <ChevronLeft aria-hidden="true" size={16} />
+          </button>
+          <span className="px-1 font-semibold" aria-label={`${text.candidateHelp}: ${candidate}`}>Candidate {candidate}</span>
+          <button
+            type="button"
+            className="inline-flex h-6 w-6 items-center justify-center rounded-r-full text-[var(--lv-text-secondary)] hover:bg-[var(--lv-surface-raised)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-35"
+            aria-label={text.nextCandidate}
+            disabled={(explanation.candidateCount ?? 0) <= 1}
+            onClick={onNextCandidate}
+          >
+            <ChevronRight aria-hidden="true" size={16} />
+          </button>
+        </span>
+      ) : null}
       {explanation.identity ? (
         <>
           <span><strong className="mr-1 text-[var(--lv-text-muted)]">{text.rule}</strong>{explanation.identity.ruleId} · {explanation.identity.variantId}</span>

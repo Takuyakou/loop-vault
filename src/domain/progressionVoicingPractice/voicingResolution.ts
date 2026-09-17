@@ -45,6 +45,8 @@ export interface ResolveProgressionPracticeVoicingsOptions {
   readonly lessonColorEnabled?: boolean;
   readonly lessonOpenEnabled?: boolean;
   readonly lessonProgressionOptimization?: boolean;
+  /** Session-only, zero-based candidate overrides keyed by immutable event id. */
+  readonly lessonCandidateIndexes?: Readonly<Record<string, number>>;
   readonly lessonContext?: VoicingRuleContext;
   /** Session-only octave displacement. The detached source snapshot stays unchanged. */
   readonly octaveShift?: -2 | -1 | 0 | 1 | 2;
@@ -83,6 +85,7 @@ export function resolveProgressionPracticeVoicings(
           color: options.lessonColorEnabled ?? false,
           open: options.lessonOpenEnabled ?? false,
           optimize: options.lessonProgressionOptimization ?? true,
+          candidateIndexes: options.lessonCandidateIndexes,
         },
       ),
       options.octaveShift ?? 0,
@@ -167,6 +170,7 @@ function resolveStudyVoicings(
     readonly color: boolean;
     readonly open: boolean;
     readonly optimize: boolean;
+    readonly candidateIndexes?: Readonly<Record<string, number>>;
   },
 ): ProgressionPracticeVoicingPlan {
   const resolutions: ProgressionPracticeVoicingResolution[] = [];
@@ -205,10 +209,14 @@ function resolveStudyVoicings(
     : selectChordLocalCandidates(candidateGroups);
   candidateIndexes.forEach((eventIndex, optimizedIndex) => {
     const event = snapshot.events[eventIndex]!;
-    const candidate = optimized[optimizedIndex];
+    const automaticCandidate = optimized[optimizedIndex];
+    const group = candidateGroups[optimizedIndex] ?? [];
+    const manualIndex = options.candidateIndexes?.[event.id];
+    const candidate = manualIndex !== undefined && manualIndex >= 0 && manualIndex < group.length
+      ? group[manualIndex]
+      : automaticCandidate;
     const metadata = candidate ? metadataByCandidate.get(candidate) : undefined;
     const facts = candidate ? factsByCandidate.get(candidate) : undefined;
-    const group = candidateGroups[optimizedIndex] ?? [];
     resolutions[eventIndex] = candidate && metadata && facts
       ? supportedStudyResolution(
           event,

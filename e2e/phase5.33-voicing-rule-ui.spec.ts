@@ -55,7 +55,7 @@ test("P5.33 exposes independent source/study axes and explains the active rule",
   await expect(controls.getByRole("button", { name: "Teacher", exact: true })).toHaveAttribute("aria-pressed", "true");
   await expect(controls.getByRole("checkbox", { name: "Colorを加える", exact: true })).not.toBeChecked();
   await expect(controls.getByRole("checkbox", { name: "Open配置", exact: true })).not.toBeChecked();
-  await expect(controls.getByRole("checkbox", { name: "進行に合わせて最適化", exact: true })).not.toBeChecked();
+  await expect(controls.getByRole("checkbox", { name: "進行に合わせて最適化", exact: true })).toBeChecked();
 
   const explanation = workspace.getByTestId("voicing-loop-current-explanation");
   await expect(explanation).toContainText("Teacher Style");
@@ -78,6 +78,32 @@ test("P5.33 exposes independent source/study axes and explains the active rule",
   }
   await controls.getByRole("button", { name: "Custom", exact: true }).click();
   await expect(explanation).toHaveText("Custom");
+});
+
+test("P5.33 switches the current voicing candidate without moving the practice position", async ({ page }) => {
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  const workspace = await openRuleFixture(page);
+  const navigation = workspace.getByTestId("voicing-loop-candidate-navigation");
+  const candidateLabel = navigation.locator("span[aria-label]");
+  const currentVoicing = workspace.getByTestId("voicing-loop-current-voicing");
+  const beforeCandidate = await candidateLabel.textContent();
+  const beforeVoicing = await currentVoicing.textContent();
+  const beforeGuides = await workspace.getByRole("region", { name: "ピアノ鍵盤" }).locator("[data-midi-note]").evaluateAll((keys) => (
+    keys.filter((key) => key.getAttribute("data-visual-state") !== "idle")
+      .map((key) => key.getAttribute("data-midi-note"))
+  ));
+  const beforeCurrent = await workspace.locator("[aria-current='step']").getAttribute("aria-label");
+
+  await navigation.getByRole("button", { name: "次のVoicing候補", exact: true }).click();
+
+  await expect(candidateLabel).not.toHaveText(beforeCandidate ?? "");
+  await expect(currentVoicing).not.toHaveText(beforeVoicing ?? "");
+  await expect(workspace.locator("[aria-current='step']")).toHaveAttribute("aria-label", beforeCurrent ?? "");
+  const afterGuides = await workspace.getByRole("region", { name: "ピアノ鍵盤" }).locator("[data-midi-note]").evaluateAll((keys) => (
+    keys.filter((key) => key.getAttribute("data-visual-state") !== "idle")
+      .map((key) => key.getAttribute("data-midi-note"))
+  ));
+  expect(afterGuides).not.toEqual(beforeGuides);
 });
 
 test("P5.33 supports all eight acceptance chords in every base/modifier combination", async ({ page }) => {
