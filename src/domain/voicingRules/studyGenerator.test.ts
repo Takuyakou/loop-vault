@@ -115,12 +115,141 @@ describe("P5.33 generalized study generator", () => {
     const candidates = generateStudyCandidates(parsed(label), "teacher", context, spans);
     const reductions = candidates.filter(({ rule }) => rule.coverage === "performance-reduction");
     expect(reductions.length).toBeGreaterThan(0);
-    expect(reductions.every(({ rule }) => rule.omittedDegrees.length <= (label.endsWith("13") ? 2 : 1))).toBe(true);
+    expect(reductions.every(({ rule }) => rule.omittedDegrees.length <= 2)).toBe(true);
     const requiredExtension = label.endsWith("13") ? "13" : "11";
     expect(reductions.every(({ rule }) => (
       rule.omittedDegrees.includes("5")
       && [...rule.leftDegrees, ...rule.rightDegrees].includes(requiredExtension)
     ))).toBe(true);
+  });
+
+  it.each(["Am11", "Bm11", "Cm11", "F#m11"])("generalizes minor-11 reductions by degree for %s", (label) => {
+    for (const study of ["teacher", "core"] as const) {
+      const candidates = generateStudyCandidates(parsed(label), study, context, spans);
+      expect(candidateWithOmissions(candidates, [])).toBeDefined();
+      expect(candidateWithOmissions(candidates, ["5"])).toBeDefined();
+      expect(candidateWithOmissions(candidates, ["5", "9"])).toBeDefined();
+      for (const { rule } of candidates) {
+        expect([...rule.leftDegrees, ...rule.rightDegrees]).toEqual(
+          expect.arrayContaining(["b3", "b7", "11"]),
+        );
+        expect(rule.omittedDegrees.length).toBeLessThanOrEqual(2);
+      }
+    }
+  });
+
+  it.each(["C13", "D13", "G13", "A13", "Bb13"])("generalizes dominant-13 reductions by degree for %s", (label) => {
+    for (const study of ["teacher", "core"] as const) {
+      const candidates = generateStudyCandidates(parsed(label), study, context, spans);
+      expect(candidateWithOmissions(candidates, [])).toBeDefined();
+      expect(candidateWithOmissions(candidates, ["5"])).toBeDefined();
+      expect(candidateWithOmissions(candidates, ["5", "9"])).toBeDefined();
+      for (const { rule } of candidates) {
+        expect([...rule.leftDegrees, ...rule.rightDegrees]).toEqual(
+          expect.arrayContaining(["3", "b7", "13"]),
+        );
+        expect(rule.omittedDegrees.length).toBeLessThanOrEqual(2);
+      }
+    }
+  });
+
+  it.each([
+    ["Cm13", ["b3", "b7", "13"]],
+    ["Cmaj13", ["3", "7", "13"]],
+  ] as const)("uses the existing parser representation to reduce %s safely", (label, preserved) => {
+    const chord = parsed(label);
+    const candidates = generateStudyCandidates(chord, "teacher", context, spans);
+    expect(candidateWithOmissions(candidates, ["5"])).toBeDefined();
+    expect(candidateWithOmissions(candidates, ["5", "9"])).toBeDefined();
+    for (const { rule } of candidates) {
+      expect([...rule.leftDegrees, ...rule.rightDegrees]).toEqual(expect.arrayContaining([...preserved]));
+    }
+  });
+
+  it("supports dominant-11 reductions through the existing C7(11)/C9(11) domain forms", () => {
+    const withoutNine = generateStudyCandidates(parsed("C7(11)"), "teacher", context, spans);
+    const withImplicitNine = generateStudyCandidates(parsed("C9(11)"), "teacher", context, spans);
+    expect(candidateWithOmissions(withoutNine, ["5"])).toBeDefined();
+    expect(candidateWithOmissions(withImplicitNine, ["5"])).toBeDefined();
+    expect(candidateWithOmissions(withImplicitNine, ["5", "9"])).toBeDefined();
+    for (const { rule } of [...withoutNine, ...withImplicitNine]) {
+      expect([...rule.leftDegrees, ...rule.rightDegrees]).toEqual(expect.arrayContaining(["3", "b7", "11"]));
+    }
+  });
+
+  it.each([
+    ["C7(11,b9)", "b9"],
+    ["C7(11,#9)", "#9"],
+  ] as const)("preserves explicit altered ninths in supported dominant-11 forms for %s", (label, alteration) => {
+    for (const study of ["teacher", "core"] as const) {
+      const candidates = generateStudyCandidates(parsed(label), study, context, spans);
+      expect(candidateWithOmissions(candidates, ["5"])).toBeDefined();
+      for (const { rule } of candidates) {
+        expect([...rule.leftDegrees, ...rule.rightDegrees]).toContain("11");
+        expect([...rule.leftDegrees, ...rule.rightDegrees]).toContain(alteration);
+        expect(rule.omittedDegrees).not.toContain(alteration);
+      }
+    }
+  });
+
+  it.each([
+    ["C13(b9)", "b9"],
+    ["D13(#9)", "#9"],
+    ["G13(b13)", "b13"],
+    ["A13(#11)", "#11"],
+  ] as const)("preserves the explicit alteration in every reduction for %s", (label, alteration) => {
+    for (const study of ["teacher", "core"] as const) {
+      const candidates = generateStudyCandidates(parsed(label), study, context, spans);
+      expect(candidateWithOmissions(candidates, ["5", "9"])).toBeDefined();
+      for (const { rule } of candidates) {
+        expect([...rule.leftDegrees, ...rule.rightDegrees]).toContain(alteration);
+        expect(rule.omittedDegrees).not.toContain(alteration);
+      }
+    }
+  });
+
+  it("preserves an explicitly requested natural 9 while allowing an implicit 9 to be omitted", () => {
+    const explicit = generateStudyCandidates(parsed("C13(9)"), "teacher", context, spans);
+    const implicit = generateStudyCandidates(parsed("C13"), "teacher", context, spans);
+    expect(explicit.every(({ rule }) => (
+      [...rule.leftDegrees, ...rule.rightDegrees].includes("9")
+      && !rule.omittedDegrees.includes("9")
+    ))).toBe(true);
+    expect(candidateWithOmissions(implicit, ["5", "9"])).toBeDefined();
+  });
+
+  it("keeps stronger reductions more expensive than a single fifth omission in Teacher", () => {
+    const candidates = generateStudyCandidates(parsed("C13"), "teacher", context, spans);
+    const omitFifth = candidateWithOmissions(candidates, ["5"]);
+    const omitFifthAndNinth = candidateWithOmissions(candidates, ["5", "9"]);
+    expect(omitFifth?.candidate.intrinsicCost).toBeTypeOf("number");
+    expect(omitFifthAndNinth?.candidate.intrinsicCost).toBeGreaterThan(
+      omitFifth?.candidate.intrinsicCost ?? Number.POSITIVE_INFINITY,
+    );
+  });
+
+  it("keeps 11th/13th identity and explicit alterations in optimizer-selected plans", () => {
+    const labels = ["Am11", "Bm11", "F#m11", "G13", "A13", "C13(b9)", "D13(#9)"] as const;
+    const requirements = [
+      ["b3", "b7", "11"], ["b3", "b7", "11"], ["b3", "b7", "11"],
+      ["3", "b7", "13"], ["3", "b7", "13"],
+      ["3", "b7", "13", "b9"], ["3", "b7", "13", "#9"],
+    ] as const;
+    for (const study of ["teacher", "core"] as const) {
+      for (const optimize of [false, true]) {
+        const plan = resolveProgressionPracticeVoicings(snapshot(labels), {
+          lessonStudyCategory: study,
+          lessonProgressionOptimization: optimize,
+        });
+        plan.events.forEach((event, index) => {
+          expect(event.status).toBe("SUPPORTED");
+          if (event.status !== "SUPPORTED") return;
+          expect(event.voicing.notes.map(({ degree }) => degree)).toEqual(
+            expect.arrayContaining([...requirements[index]!]),
+          );
+        });
+      }
+    }
   });
 
   it("lets a session-only candidate override switch coverage without changing chord identity", () => {
@@ -165,6 +294,19 @@ describe("P5.33 generalized study generator", () => {
       const degrees = event.voicing.notes.map(({ degree }) => degree);
       for (const degree of required) expect(degrees).toContain(degree);
       for (const degree of forbidden) expect(degrees).not.toContain(degree);
+    }
+  });
+
+  it("keeps add9 distinct from seventh families while preserving its ninth", () => {
+    for (const study of ["teacher", "core"] as const) {
+      const candidates = generateStudyCandidates(parsed("Cadd9"), study, context, spans);
+      for (const { rule } of candidates) {
+        const degrees = [...rule.leftDegrees, ...rule.rightDegrees];
+        expect(degrees).toContain("9");
+        expect(degrees).not.toContain("7");
+        expect(degrees).not.toContain("b7");
+        expect(rule.omittedDegrees).not.toContain("9");
+      }
     }
   });
 
@@ -285,4 +427,14 @@ function parsed(label: string): ChordSymbol {
 
 function handSpan(notes: readonly number[]): number {
   return notes.length < 2 ? 0 : notes[notes.length - 1]! - notes[0]!;
+}
+
+function candidateWithOmissions(
+  candidates: ReturnType<typeof generateStudyCandidates>,
+  omittedDegrees: readonly string[],
+) {
+  return candidates.find(({ rule }) => (
+    rule.omittedDegrees.length === omittedDegrees.length
+    && omittedDegrees.every((degree) => rule.omittedDegrees.includes(degree))
+  ));
 }

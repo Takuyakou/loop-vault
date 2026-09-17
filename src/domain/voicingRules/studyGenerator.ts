@@ -58,6 +58,7 @@ interface StudyTemplate {
 
 const MAX_CANDIDATES_PER_TEMPLATE = 4;
 const REDUCIBLE_FIFTH = "5";
+const OPTIONAL_NATURAL_NINTH = "9";
 
 /**
  * Generates lesson candidates from chord-family semantics. Research rule IDs are
@@ -151,10 +152,118 @@ function templatesForStudy(
 ): readonly StudyTemplate[] {
   const literalDegrees = chordDegrees(chord);
   if (literalDegrees.length === 0) return [];
-  const base = study === "teacher"
+  const extended = extendedReductionTemplates(
+    chord,
+    literalDegrees,
+    context,
+    study === "teacher" ? "teacher" : "core",
+  );
+  const base = extended ?? (study === "teacher"
     ? fullAndReductionTemplates(chord, literalDegrees, context, "teacher")
-    : coreTemplates(chord, literalDegrees, context);
+    : coreTemplates(chord, literalDegrees, context));
   return base.map((template) => applyModifiers(chord, literalDegrees, template, modifiers));
+}
+
+function extendedReductionTemplates(
+  chord: ChordSymbol,
+  literalDegrees: readonly string[],
+  context: VoicingRuleContext,
+  prefix: "teacher" | "core",
+): readonly StudyTemplate[] | undefined {
+  if (!isExtendedReductionFamily(literalDegrees)) return undefined;
+
+  const split = splitDegrees(chord, literalDegrees, context);
+  const splits = [split, ...chromaticClusterReliefSplits(chord, split)];
+  return splits.flatMap((candidateSplit, index) => reductionSeries(
+    chord,
+    literalDegrees,
+    candidateSplit,
+    index === 0 ? prefix : prefix + "-cluster-spread",
+  ));
+}
+
+function reductionSeries(
+  chord: ChordSymbol,
+  literalDegrees: readonly string[],
+  split: { readonly left: readonly string[]; readonly right: readonly string[] },
+  prefix: string,
+): readonly StudyTemplate[] {
+  const templates: StudyTemplate[] = [createTemplate(
+    literalDegrees,
+    prefix + "-literal",
+    split.left,
+    split.right,
+    [],
+  )];
+  const canOmitFifth = split.right.includes(REDUCIBLE_FIFTH);
+  if (canOmitFifth) {
+    templates.push(createTemplate(
+      literalDegrees,
+      prefix + "-omit-5",
+      split.left,
+      split.right.filter((degree) => degree !== REDUCIBLE_FIFTH),
+      [],
+    ));
+  }
+
+  const canOmitNaturalNinth = split.right.includes(OPTIONAL_NATURAL_NINTH)
+    && !chord.tensions.includes(OPTIONAL_NATURAL_NINTH);
+  if (canOmitNaturalNinth) {
+    const removable = canOmitFifth
+      ? [REDUCIBLE_FIFTH, OPTIONAL_NATURAL_NINTH]
+      : [OPTIONAL_NATURAL_NINTH];
+    templates.push(createTemplate(
+      literalDegrees,
+      prefix + "-omit-" + removable.join("-"),
+      split.left,
+      split.right.filter((degree) => !removable.includes(degree)),
+      [],
+    ));
+  }
+
+  return templates;
+}
+
+function chromaticClusterReliefSplits(
+  chord: ChordSymbol,
+  split: { readonly left: readonly string[]; readonly right: readonly string[] },
+): readonly { readonly left: readonly string[]; readonly right: readonly string[] }[] {
+  if (hasSlashBass(chord)) return [];
+  const pitchClasses = split.right.flatMap((degree) => {
+    const value = pitchClassForDegreeLabel(chord, degree);
+    return value === undefined ? [] : [value];
+  });
+  if (!hasChromaticRunOfThree(pitchClasses)) return [];
+  const movableGuide = ["3", "b3"].find((degree) => split.right.includes(degree));
+  const leftAnchor = ["7", "b7", "bb7", "6"].find((degree) => split.left.includes(degree));
+  if (!movableGuide || !leftAnchor) return [];
+  return [{
+    left: Object.freeze([
+      ...split.left.filter((degree) => degree !== leftAnchor),
+      movableGuide,
+    ]),
+    right: Object.freeze([
+      ...split.right.filter((degree) => degree !== movableGuide),
+      leftAnchor,
+    ]),
+  }];
+}
+
+function hasChromaticRunOfThree(pitchClasses: readonly number[]): boolean {
+  const values = new Set(pitchClasses.map(pitchClass));
+  return [...values].some((value) => (
+    values.has(pitchClass(value + 1)) && values.has(pitchClass(value + 2))
+  ));
+}
+
+function isExtendedReductionFamily(literalDegrees: readonly string[]): boolean {
+  const hasSeventhIdentity = ["7", "b7", "bb7"].some((degree) => (
+    literalDegrees.includes(degree)
+  ));
+  const hasExtendedIdentity = ["11", "#11", "13", "b13"].some((degree) => (
+    literalDegrees.includes(degree)
+  ));
+  return hasSeventhIdentity && hasExtendedIdentity;
 }
 
 function applyModifiers(
@@ -247,7 +356,7 @@ function studyCandidateIntrinsicCost(
 ): number {
   const noteCount = unique([...template.leftDegrees, ...template.rightDegrees]).length;
   const omissionCount = template.omittedDegrees.length;
-  const omissionBudget = omissionBudgetFor(chord.quality);
+  const omissionBudget = omissionBudgetFor(chord, template);
   const omissionPenalty = omissionCount * (
     study === "teacher" ? 2 : hasSlashBass(chord) ? 5 : 1
   );
@@ -260,9 +369,11 @@ function studyCandidateIntrinsicCost(
   return omissionPenalty + excessiveOmissionPenalty + sparsePenalty + densePenalty + enrichmentPenalty;
 }
 
-function omissionBudgetFor(quality: ChordQuality): number {
-  if (quality === "dom13") return 2;
-  if (["maj9", "min9", "dom9", "min11"].includes(quality)) return 1;
+function omissionBudgetFor(chord: ChordSymbol, template: StudyTemplate): number {
+  const representedDegrees = unique([...template.leftDegrees, ...template.rightDegrees]);
+  const literalDegrees = unique([...representedDegrees, ...template.omittedDegrees]);
+  if (isExtendedReductionFamily(literalDegrees)) return 2;
+  if (["maj9", "min9", "dom9", "min11", "dom13"].includes(chord.quality)) return 1;
   return 1;
 }
 

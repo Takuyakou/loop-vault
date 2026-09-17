@@ -43,7 +43,42 @@ export function progressionVoicingPracticeE2eFixture(search: string): Progressio
       initialSelection: "basic-full",
     };
   }
+  if (status === "p533-extended-reductions") {
+    return oneSelection("basic-full", p533ExtendedReductionSnapshot());
+  }
   return oneSelection("source-midi", snapshot("source-midi", "maj7", true));
+}
+
+function p533ExtendedReductionSnapshot(): ProgressionVoicingPracticeSnapshot {
+  const labels = [
+    "Am11", "Bm11", "F#m11", "G13", "A13", "C13", "C13(b9)", "D13(#9)",
+  ] as const;
+  return Object.freeze({
+    version: 1,
+    fingerprint: "p533-e2e-extended-reductions",
+    source: { kind: "vault" as const, reference: { ideaId: "p533-e2e", blockId: "extended-reductions" } },
+    selection: "basic-full" as const,
+    key: "A minor",
+    bpm: 100,
+    meter: { numerator: 4 as const, denominator: 4 as const },
+    lengthBeats: labels.length * 4,
+    spans: Object.freeze(labels.map((_, eventIndex) => Object.freeze({
+      kind: "chord" as const,
+      eventIndex,
+      startBeat: eventIndex * 4,
+      durationBeats: 4,
+    }))),
+    events: Object.freeze(labels.map((label, index) => {
+      const chord = parseChordLabel(label);
+      if (!chord) throw new Error(`P5.33 extended reduction fixture did not parse: ${label}`);
+      return Object.freeze({
+        id: `p533-extended-event-${index + 1}`,
+        startBeat: index * 4,
+        durationBeats: 4,
+        chord: Object.freeze(chord),
+      });
+    })),
+  });
 }
 
 function p533Snapshot(

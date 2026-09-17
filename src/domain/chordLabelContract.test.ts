@@ -62,6 +62,11 @@ describe("chord label contract: parenthesized tensions", () => {
     const parsed = parseChordLabel("Amaj13(9)/C#");
     expect(parsed).toMatchObject({ root: 9, quality: "maj9", tensions: ["13"], bass: 1 });
   });
+
+  it("keeps uppercase M13 major and lowercase m13 minor in their existing identities", () => {
+    expect(parseChordLabel("CM13")).toMatchObject({ quality: "maj9", tensions: ["13"] });
+    expect(parseChordLabel("Cm13")).toMatchObject({ quality: "min9", tensions: ["13"] });
+  });
 });
 
 describe("chord label contract: note tokens", () => {

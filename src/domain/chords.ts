@@ -96,7 +96,8 @@ const suspendedExtensions: readonly Tension[] = ["13", "9"];
  * the parser read corpus and user labels such as `Amaj13`.
  */
 const qualityAliases: ReadonlyArray<readonly [RegExp, ChordQuality, readonly Tension[]]> = [
-  [/^(maj13|M13|△13)$/i, "maj9", ["13"]],
+  [/^(maj13|△13)$/i, "maj9", ["13"]],
+  [/^M13$/, "maj9", ["13"]],
   [/^(min13|m13)$/i, "min9", ["13"]],
 ];
 
