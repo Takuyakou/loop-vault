@@ -88,7 +88,7 @@ describe("ProgressionVoicingPracticeView", () => {
     const beatIndicator = container.querySelector("[role='progressbar'][aria-label='拍']")!;
     const positionIndicator = container.querySelector("[role='progressbar'][aria-label='位置']")!;
     expect(beatIndicator.getAttribute("aria-valuenow")).toBe("52");
-    expect(positionIndicator.getAttribute("aria-valuenow")).toBe("53");
+    expect(positionIndicator.getAttribute("aria-valuenow")).toBe("52");
     expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent).toContain("位置17 / 32 小節");
     expect(runtime.audition).not.toHaveBeenCalled();
     await act(async () => runtime.options?.onTransportBeat(132));
@@ -271,7 +271,7 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.textContent).toContain("b7");
   });
 
-  it("places both indicators between label and value, smooths beats, and steps position by bar", async () => {
+  it("places both indicators between label and value and smooths beat and position progress", async () => {
     const runtime = new FakeTransport();
     const base = snapshot("basic-full");
     const events = [
@@ -308,15 +308,16 @@ describe("ProgressionVoicingPracticeView", () => {
     const positionFill = container.querySelector<HTMLElement>("[data-testid='voicing-loop-position-progress-fill']")!;
     expect(beatFill.style.transform).toBe("scaleX(0.25)");
     expect(beatFill.style.transitionTimingFunction).toBe("linear");
-    expect(positionFill.style.transform).toBe("scaleX(0.5)");
-    expect(positionFill.style.transitionDuration).toBe("0ms");
+    expect(positionFill.style.transform).toBe("scaleX(0.0625)");
+    expect(positionFill.style.transitionDuration).not.toBe("0ms");
+    expect(positionFill.style.transitionTimingFunction).toBe("linear");
 
     await act(async () => runtime.options?.onTransportBeat(5));
     expect(beatFill.style.transform).toBe("scaleX(0.5)");
-    expect(positionFill.style.transform).toBe("scaleX(0.5)");
+    expect(positionFill.style.transform).toBe("scaleX(0.125)");
     await act(async () => runtime.options?.onTransportBeat(8));
     expect(positionMetric.children[2]?.textContent).toBe("2 / 2 小節");
-    expect(positionFill.style.transform).toBe("scaleX(1)");
+    expect(positionFill.style.transform).toBe("scaleX(0.5)");
   });
 
   it("orders the compact workspace and traverses fixed cards using each clock duration", async () => {
