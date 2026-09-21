@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "5.34",
   "status": "in-progress",
-  "activeStage": "P5.34-01",
-  "completedStages": ["P5.34-00"],
+  "activeStage": null,
+  "completedStages": ["P5.34-00", "P5.34-01"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "bb21930e888ef7b7fa35c994b7f8916b85903e4e",
-  "lastVerifiedCommit": "2c881ff185d048fde0499f6f5b62ff53f51fe261",
+  "lastVerifiedCommit": "e00e35e6aa7e5e6edffbe9afb32cbd01e5fd0736",
   "currentBranch": "feat/p534-midi-import-failure-isolation",
   "requiredGates": {
     "P5.34-00": ["validate:phase-docs", "validate:ai-handoff"],
@@ -15,8 +15,9 @@
   },
   "gateResults": {
     "validate:phase-docs": "pass",
-    "validate:ai-handoff": "pass"
+    "validate:ai-handoff": "pass",
+    "isolation-harness-tests": "pass"
   },
-  "nextAction": "P5.34-01 — build the isolation harness (in progress)",
+  "nextAction": "P5.34-02 — run A/B/C/D experiment (await explicit authorization)",
   "updatedAt": "2026-09-21"
 }
