@@ -104,6 +104,49 @@ export const genuineTransition = song([
   ...chord([45, 57, 60, 64], 2 * BEAT, 2), // Am at window 1
 ]);
 
+/**
+ * Unrearticulated common tone (P5.35-01 §2 hard negative): Cmaj -> Am where the
+ * shared E begins under C, sustains into the Am window, is NOT re-attacked, yet is
+ * a legitimate chord tone of Am (the 5th). It must be protected as current/shared
+ * evidence via runtime harmonic support (bass A + attacked A/C imply Am, which
+ * contains E) — NOT demoted to CARRIED_IN_SUSTAIN merely because its onset was
+ * under C. No fixture chord label reaches the classifier (anti-oracle, §6).
+ */
+export const unrearticulatedCommonTone = song([
+  { pitch: 48, startTick: 0, durationTick: 2 * BEAT }, // C (window 0 only)
+  { pitch: 55, startTick: 0, durationTick: 2 * BEAT }, // G (window 0 only)
+  { pitch: 52, startTick: 0, durationTick: 4 * BEAT }, // E sustains through window 1, NOT re-attacked
+  { pitch: 45, startTick: 2 * BEAT, durationTick: 2 * BEAT }, // A (bass) attacks window 1
+  { pitch: 60, startTick: 2 * BEAT, durationTick: 2 * BEAT }, // C attacks window 1
+]);
+
+/**
+ * Carried structural bass (P5.35-01 §3): a prior low C bass sustains briefly across
+ * a genuine change to F#m (F# A C#, its own fresh bass). The stale C is the lowest
+ * note (structuralBass flag) yet is foreign to F#m, so it must be representable as
+ * temporalRole = CARRIED_IN_SUSTAIN AND structuralBass = true — without being
+ * forced to dominate the current harmony. New current attack evidence (F#m) exists.
+ */
+export const carriedStructuralBass = song([
+  { pitch: 36, startTick: 0, durationTick: 4 * BEAT }, // C2 low bass sustains across the change
+  ...chord([48, 52, 55], 0, 2), // C major (window 0 harmony over the C bass)
+  { pitch: 42, startTick: 2 * BEAT, durationTick: 2 * BEAT }, // F# (fresh bass of F#m) window 1
+  { pitch: 45, startTick: 2 * BEAT, durationTick: 2 * BEAT }, // A window 1
+  { pitch: 49, startTick: 2 * BEAT, durationTick: 2 * BEAT }, // C# window 1
+]);
+
+/**
+ * Short current characteristic tone (P5.35-01 §4): the current C-major 3rd (E)
+ * attacks in the current window but is very short. It must keep BOTH facts —
+ * temporalRole = CURRENT_ATTACK AND shortTransient = true — so the transient flag
+ * never erases that E is current defining harmonic evidence.
+ */
+export const shortCurrentCharacteristicTone = song([
+  { pitch: 48, startTick: 0, durationTick: 2 * BEAT }, // C root, held
+  { pitch: 55, startTick: 0, durationTick: 2 * BEAT }, // G 5th, held
+  { pitch: 52, startTick: 0, durationTick: 24 }, // E 3rd — current, but 0.25 beat (short)
+]);
+
 /** Boundary robustness: Bm7 attacks at the window-1 boundary offset by `offset` ticks. */
 export function boundaryCase(offsetTicks: number): MidiSongData {
   return song([

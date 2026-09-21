@@ -11,7 +11,8 @@
   "currentBranch": "feat/p535-context-aware-harmonic-evidence",
   "requiredGates": {
     "P5.35-00": ["validate:phase-docs", "validate:ai-handoff", "analyzer-regression-baseline", "p534-corpus-baseline", "production-top1-unchanged"],
-    "P5.35-01": ["p535-classifier-tests", "p534-regression", "analyzer-regression", "validate:phase-docs", "validate:ai-handoff", "diff-check", "production-diff-zero"]
+    "P5.35-01": ["p535-classifier-tests", "p534-regression", "analyzer-regression", "validate:phase-docs", "validate:ai-handoff", "diff-check", "production-diff-zero"],
+    "P5.35-01-hardening": ["orthogonal-role-flags", "unrearticulated-common-tone", "carried-structural-bass", "short-current-characteristic-tone", "anti-oracle", "isolated-test-scope", "production-diff-zero"]
   },
   "gateResults": {
     "validate:phase-docs": "pass",
@@ -23,7 +24,13 @@
     "p534-regression": "pass",
     "analyzer-regression": "pass",
     "diff-check": "pass",
-    "production-diff-zero": "pass"
+    "production-diff-zero": "pass",
+    "orthogonal-role-flags": "pass",
+    "unrearticulated-common-tone": "pass",
+    "carried-structural-bass": "pass",
+    "short-current-characteristic-tone": "pass",
+    "anti-oracle": "pass",
+    "isolated-test-scope": "pass"
   },
   "nextAction": "P5.35-02 — shadow carryover-resistant ranking (shadow-only; compare shadow top-1 vs production top-1; still no production connection). AWAIT explicit review/continuation. Promotion NOT evaluated; production integration NOT authorized (Contracts 04/06). Stop after P5.35-05.",
   "updatedAt": "2026-09-21"
