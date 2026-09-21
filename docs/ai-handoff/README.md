@@ -20,6 +20,11 @@ This is an index. Jump to the one document your current task needs.
 - [`KNOWN-FAILURES.md`](KNOWN-FAILURES.md) — current known failures (anonymous IDs) and the next isolation experiments.
 - `docs/current-midi-detection-spec.md` — historical detection spec. Verify against current code before trusting it; the default analyzer has since changed.
 
+## Voicing / practice
+
+- [`ARCHITECTURE-MAP.md`](ARCHITECTURE-MAP.md) — Voicing Rules engine, Source Bassline, Text Progression Entry, Progression Voicing Practice.
+- [`GLOSSARY.md`](GLOSSARY.md) — the voicing / practice vocabulary.
+
 ## Tests
 
 - [`TEST-STRATEGY.md`](TEST-STRATEGY.md) — test layers and how private MIDI is kept out of commits.

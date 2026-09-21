@@ -52,10 +52,10 @@ repository-absent information, and unknown items marked unknown.
 
 Hard fail (unconditional FAIL) if any of these is wrong:
 
-- Item 3: Source MIDI exactness
+- Item 3: Source MIDI exactness (source voicing / source bassline are exact; practice rendering is derived)
 - Item 5: private MIDI policy
 - Item 7: cause of the MIDI import failure is undetermined
-- Item 8: Source Truth / Harmony Interpretation / Practice Rendering is PROPOSED, not a shipped fact
+- Item 8: the agent must distinguish Source Truth from Harmony Interpretation from Practice Rendering, and must not label a practice rendering as a source fact
 - Item 10: Git safety
 
 On FAIL, return to `Stage 0.1 — Handoff Correction` (docs only; no runtime/product change).

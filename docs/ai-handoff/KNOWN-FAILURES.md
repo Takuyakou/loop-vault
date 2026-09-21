@@ -39,6 +39,13 @@ note dumps. Synthetic pitch examples are allowed.
 - Evidence: user report only; no committed fixture yet.
 - Privacy note: no real MIDI names, paths, or full note dumps are recorded here.
 
+### Relationship to current source-exact capture
+
+The trunk now has `src/domain/sourceBassline/` (exact-beat bass capture) and
+`src/domain/timelineHarmonicActivity.ts`. These improve source fidelity but do
+not by themselves resolve the analyzer-based degradation above; the default
+analyzer remains `phase4-v1`. Treat LF-MIDI-001 as still open.
+
 ### Synthetic semantic examples (privacy-safe)
 
 Example 1:

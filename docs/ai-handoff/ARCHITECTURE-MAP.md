@@ -8,8 +8,8 @@ Do not read this for unrelated UI-only tasks.
 
 Paths below are verified against the current working tree. `src/`, `scripts/`,
 and `docs/ai-handoff/` references are machine-validated (HARD); docs/phase
-references are historical (SOFT). Co-located `*.test.ts` files exist beside most
-domain modules.
+references are historical (SOFT). Co-located `*.test.ts` / `*.test.tsx` files
+exist beside most modules.
 
 ---
 
@@ -17,7 +17,7 @@ domain modules.
 
 - Paths: `src/App.tsx`, `src/main.tsx`, `src/components/AppShell.tsx`, `src/views/`
 - Responsibilities: view switching, startup/recovery states, close guards, master volume, undo queue, Vault/practice wiring.
-- Views: Home, Library, Detail, Capture, Progression Detail, Practice, History, Settings.
+- Views: Home, Library, Detail, Capture, Progression Detail, Progression Voicing Practice, Practice, History, Settings.
 
 ## 2. Vault (data model + persistence + store)
 
@@ -27,8 +27,8 @@ domain modules.
 
 ## 3. MIDI Import / Capture
 
-- Paths: `src/domain/midi/rawSmf.ts`, `src/domain/midi/parser.ts`, `src/domain/midi/timing.ts`, `src/domain/midi/voices.ts`, `src/views/CaptureView.tsx`
-- Responsibilities: SMF parse to `MidiSongData`, tempo/meter/total bars, track/voice role inference, pre-analysis voice selection UI.
+- Paths: `src/domain/midi/rawSmf.ts`, `src/domain/midi/parser.ts`, `src/domain/midi/timing.ts`, `src/domain/midi/voices.ts`, `src/views/CaptureView.tsx`, `src/components/capture/`
+- Responsibilities: SMF parse to `MidiSongData`, tempo/meter/total bars, track/voice role inference, pre-analysis voice selection, Source Bassline and Text Progression entry panels.
 
 ## 4. Analyzer (deterministic symbolic chord detection)
 
@@ -44,53 +44,72 @@ domain modules.
 
 ## 6. Voicing Memory / Source Voicing
 
-- Paths: `src/domain/voicing/`, `src/domain/voicing/sourceVoicing.ts`, `src/domain/voicing/extractVoicing.ts`, `src/domain/types.ts` (`ChordVoicingMemory`, `VoicingSnapshot`)
+- Paths: `src/domain/voicing/`, `src/domain/types.ts` (`ChordVoicingMemory`, `VoicingSnapshot`)
 - Responsibilities: capture the original MIDI pitches for a chord (`sourceVoicing`) and a practice override (`practiceVoicingOverride`); keep capture preview and save path identical.
 - Protected: source voicing is never quantized / retimed / transposed / rewritten.
 
-## 7. Progression editing / classification
+## 7. Source Bassline (exact-beat source capture)
 
-- Paths: `src/domain/progressionEditing/`, `src/domain/progressionClassification/`, `src/domain/progressionText.ts`
-- Responsibilities: editable progression slots, quick candidates, style candidates, split/merge, edit history; automatic mood/source/use tags; text formatting.
+- Paths: `src/domain/sourceBassline/`, `src/components/capture/SourceBasslineCapturePanel.tsx`
+- Responsibilities: capture a selected bass voice as `SourceBasslineSnapshotV1` with exact beats and captured harmony spans; keep source truth independent of interpretation.
 
-## 8. Practice (Chord Dojo + voicing + transposition + mix)
+## 8. Text Progression Entry
+
+- Paths: `src/domain/textProgression.ts`, `src/domain/textProgressionDraft.ts`, `src/domain/textProgressionVoicing.ts`, `src/domain/textScoreTokenizer.ts`, `src/components/capture/TextProgressionCapturePanel.tsx`
+- Responsibilities: parse a text progression (with slash/control semantics) into chord events, then build a draft for the Vault.
+
+## 9. Voicing Rules engine (P5.33 first wave)
+
+- Paths: `src/domain/voicingRules/`, `src/domain/voicingRules/firstWaveRules.ts`, `src/domain/voicingRules/goldenCorpus.ts`, `src/domain/voicingRules/studyGenerator.ts`
+- Responsibilities: deterministic promotion of a bounded first wave of voicing rules with source / study / coverage / context / provenance axes (not a wholesale import of all research records).
+
+## 10. Progression Voicing Practice (Voicing Loop surface)
+
+- Paths: `src/domain/progressionVoicingPractice/`, `src/domain/progressionVoicingPractice/clock.ts`, `src/domain/progressionVoicingPractice/handoff.ts`, `src/domain/progressionVoicingPractice/voicingResolution.ts`, `src/views/ProgressionVoicingPracticeView.tsx`
+- Responsibilities: re-open a saved Vault block, resolve a voicing selection, and rehearse it with a practice clock and count-in.
+
+## 11. Practice (Chord Dojo + voicing + transposition + mix)
 
 - Paths: `src/domain/voicingPractice/`, `src/domain/practiceTransposition/`, `src/domain/practiceMix/`, `src/views/PracticeView.tsx`, `src/components/practice/`
 - Responsibilities: voicing generation (shell/open/rootless, style generator, transition cost), transposition practice, mix sessions, keyboard practice UI.
 
-## 9. Bass Practice (+ Record & Compare)
+## 12. Bass Practice (+ Record & Compare)
 
 - Paths: `src/features/bass-practice/`, `src-tauri/src/practice_storage.rs`
 - Responsibilities: Degree Echo / Rhythm Echo / Bassline Echo exercises, Record & Compare self-review, local practice history; Rust persistence of practice data and backups.
 
-## 10. Live MIDI
+## 13. Live MIDI
 
 - Paths: `src/domain/liveMidi/`, `src/liveMidi/`, `src-tauri/src/live_midi/`
 - Responsibilities: real-time chord detection from a physical MIDI keyboard, mini-window, device selection, latency metrics. Separate detector from file analysis.
 
-## 11. Progression Advisor (LLM)
+## 14. Progression Advisor (LLM)
 
 - Paths: `src/domain/progressionAdvisor/`, `src/llm/`, `src-tauri/src/llm/`
 - Responsibilities: build/validate LLM prompts and responses for progression ideas; API key kept in the OS keychain (never in the frontend).
 
-## 12. MIDI Export / native DAW drag
+## 15. MIDI Export / native DAW drag
 
 - Paths: `src/domain/midiExport/`, `src/midiExport/`, `src-tauri/src/midi_export.rs`, `src-tauri/src/native_drag.rs`
 - Responsibilities: write a saved progression to MIDI; native drag-and-drop into a DAW.
 
-## 13. i18n
+## 16. Security
+
+- Paths: `src/security/`
+- Responsibilities: intake budgets and Tauri security configuration (CSP, capability grants).
+
+## 17. i18n
 
 - Paths: `src/i18n.ts`
 - Responsibilities: Japanese / English strings and language toggle.
 
-## 14. Test & validation infrastructure
+## 18. Test & validation infrastructure
 
-- Paths: `src/**/*.test.ts`, `src/**/*.test.tsx`, `e2e/`, `test/`, `scripts/phase-docs/`, `scripts/check-staged-files.mjs`, `scripts/ai-handoff/`
-- Responsibilities: Vitest unit/domain tests, Playwright E2E/visual tests, phase-doc validator, staged-file privacy guard, handoff validator.
+- Paths: `scripts/ai-handoff/`, `scripts/phase-docs/`, `scripts/check-staged-files.mjs`, `src/testing/`
+- Responsibilities: handoff validator, phase-doc validator, staged-file privacy guard, E2E fixtures.
 - See `TEST-STRATEGY.md`.
 
-## Historical direction (SOFT references, not current runtime)
+## Historical direction (SOFT references)
 
 - `docs/current-midi-detection-spec.md` describes an earlier default analyzer (`legacy-v1`); current default is `phase4-v1`.
-- `docs/phase5.18.2/README.md` records the completed Vault source-discoverability phase.
-- Voicing rule engine v2 (P5.33) and Source Truth / Harmony Interpretation / Practice Rendering are PROPOSED, not yet implemented in committed code.
+- `docs/phase5.33/README.md` records the adopted Voicing Rule engine v2 scope; the first wave is now in committed code.

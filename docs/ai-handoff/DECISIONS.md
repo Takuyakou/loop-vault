@@ -18,20 +18,20 @@ code/tests; `PROPOSED` items are direction only.
 - Status: CONFIRMED
 - Decision: When a chord is auditioned or saved from source MIDI, the original pitches/octaves are used as-is.
 - Reason: The chord the user hears must be the chord they save.
-- Evidence: `src/domain/voicing/sourceVoicing.ts`, `src/domain/voicing/extractVoicing.ts`, `src/domain/voicing/sourceVoicing.test.ts`.
-- Consequences: `voicingMemory.sourceVoicing` stores the extracted pitches; preview and save share one code path.
+- Evidence: `src/domain/voicing/`, `src/domain/voicing/sourceVoicing.ts`, `src/domain/sourceBassline/`.
+- Consequences: `voicingMemory.sourceVoicing` and `SourceBasslineSnapshotV1` store exact source pitches/beats; preview and save share one code path.
 - Do not: quantize, retime, transpose, or rewrite source notes.
 
 ## ADR-002 — Source Truth vs Harmony Interpretation vs Practice Rendering
 
 - ID: ADR-002
 - Title: Source Truth / Harmony Interpretation / Practice Rendering separation
-- Status: PROPOSED
-- Decision: Long-term architecture separates the source's actual notes, the analyzer's inferred chord identity, and practice-specific voicing renderings.
+- Status: CONFIRMED (realized; still evolving)
+- Decision: The architecture separates the source's actual notes/timing, the analyzer's inferred chord identity and voicing rules, and practice-specific rendering.
 - Reason: Prevents practice/lesson voicing from being mistaken for source facts.
-- Evidence: partial only — `voicingMemory.sourceVoicing` (source) vs `practiceVoicingOverride` (rendering seed).
+- Evidence: `src/domain/sourceBassline/` (truth), `src/domain/voicingRules/` + `src/domain/midi/` (interpretation), `src/domain/progressionVoicingPractice/` (rendering).
 - Consequences: New voicing work must not collapse these axes back into one enum.
-- Do not: treat this separation as an already-shipped fact.
+- Do not: label a practice rendering as a source fact.
 
 ## ADR-003 — Voicing Memory two-slot design
 
@@ -48,12 +48,12 @@ code/tests; `PROPOSED` items are direction only.
 
 - ID: ADR-004
 - Title: Simple Text Contract for progressions
-- Status: CONFIRMED (formatting) / PROPOSED (full text entry parser)
-- Decision: A progression renders as a plain "| C Am F G |" text form.
+- Status: CONFIRMED
+- Decision: A progression renders as a plain "| C Am F G |" text form, and text parses back into chord events (slash / control semantics included).
 - Reason: Human-readable, searchable, shareable shorthand.
-- Evidence: `src/domain/progressionText.ts`, `src/domain/progressionEditing/fastLabelEntry.ts`.
-- Consequences: Text formatting is deterministic; a full text-entry parser (text → chords with slash/control semantics) is not yet in committed runtime.
-- Do not: assume arbitrary text parses back into chords without a confirmed parser.
+- Evidence: `src/domain/progressionText.ts`, `src/domain/textProgression.ts`, `src/domain/textScoreTokenizer.ts`.
+- Consequences: Text entry and text formatting are both deterministic and covered by tests.
+- Do not: assume arbitrary text parses without the confirmed parser.
 
 ## ADR-005 — Default analyzer rollback to phase4-v1
 
@@ -76,3 +76,14 @@ code/tests; `PROPOSED` items are direction only.
 - Evidence: `scripts/check-staged-files.mjs`, `scripts/phase-docs/lib.mjs`, `.gitignore`.
 - Consequences: `.local-evaluation/` and `test/private-midi/` are ignored; synthetic fixtures live under `test/fixtures/`.
 - Do not: commit raw audio/MIDI or `.local-evaluation` inputs.
+
+## ADR-007 — Source Bassline exact-beat capture
+
+- ID: ADR-007
+- Title: Source Bassline exact-beat capture
+- Status: CONFIRMED
+- Decision: A selected bass voice is captured as `SourceBasslineSnapshotV1` with exact beats and captured harmony spans; identity and raw ticks stay transient.
+- Reason: Preserve the source bassline as source truth rather than re-deriving it from analysis.
+- Evidence: `src/domain/sourceBassline/types.ts`, `src/domain/sourceBassline/snapshot.ts`.
+- Consequences: Meter is captured as proven 4/4 with raw-integer-tick authority; transient identity never enters the persisted snapshot.
+- Do not: extend source bassline to all polyphonic voices without a separate decision.
