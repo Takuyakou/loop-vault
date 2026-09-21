@@ -2,23 +2,29 @@
   "schemaVersion": 1,
   "phaseId": "5.35",
   "status": "in-progress",
-  "activeStage": "P5.35-01",
-  "completedStages": ["P5.35-00"],
+  "activeStage": "P5.35-02",
+  "completedStages": ["P5.35-00", "P5.35-01"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "5fa26e06dcadfe0483bf6a135895504f4cad56b6",
-  "lastVerifiedCommit": "5fa26e06dcadfe0483bf6a135895504f4cad56b6",
+  "lastVerifiedCommit": "bea4582be07b8da621e4ed504c622f4439d6aada",
   "currentBranch": "feat/p535-context-aware-harmonic-evidence",
   "requiredGates": {
-    "P5.35-00": ["validate:phase-docs", "validate:ai-handoff", "analyzer-regression-baseline", "p534-corpus-baseline", "production-top1-unchanged"]
+    "P5.35-00": ["validate:phase-docs", "validate:ai-handoff", "analyzer-regression-baseline", "p534-corpus-baseline", "production-top1-unchanged"],
+    "P5.35-01": ["p535-classifier-tests", "p534-regression", "analyzer-regression", "validate:phase-docs", "validate:ai-handoff", "diff-check", "production-diff-zero"]
   },
   "gateResults": {
     "validate:phase-docs": "pass",
     "validate:ai-handoff": "pass",
     "analyzer-regression-baseline": "pass",
     "p534-corpus-baseline": "pass",
-    "production-top1-unchanged": "pass"
+    "production-top1-unchanged": "pass",
+    "p535-classifier-tests": "pass",
+    "p534-regression": "pass",
+    "analyzer-regression": "pass",
+    "diff-check": "pass",
+    "production-diff-zero": "pass"
   },
-  "nextAction": "P5.35-01 — shadow temporal-evidence classifier (shadow-only, no production connection; await explicit continuation). Promotion NOT evaluated; production integration NOT authorized (Contracts 04/06). Depends on P5.34 closeout 5fa26e0. Stop after P5.35-05.",
+  "nextAction": "P5.35-02 — shadow carryover-resistant ranking (shadow-only; compare shadow top-1 vs production top-1; still no production connection). AWAIT explicit review/continuation. Promotion NOT evaluated; production integration NOT authorized (Contracts 04/06). Stop after P5.35-05.",
   "updatedAt": "2026-09-21"
 }
