@@ -3,7 +3,7 @@
   "phaseId": "5.34",
   "status": "in-progress",
   "activeStage": null,
-  "completedStages": ["P5.34-00", "P5.34-01", "P5.34-02"],
+  "completedStages": ["P5.34-00", "P5.34-01", "P5.34-02", "P5.34-03"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "bb21930e888ef7b7fa35c994b7f8916b85903e4e",
@@ -12,14 +12,16 @@
   "requiredGates": {
     "P5.34-00": ["validate:phase-docs", "validate:ai-handoff"],
     "P5.34-01": ["validate:phase-docs", "isolation-harness-tests"],
-    "P5.34-02": ["validate:phase-docs", "isolation-harness-tests", "analyzer-regression"]
+    "P5.34-02": ["validate:phase-docs", "isolation-harness-tests", "analyzer-regression"],
+    "P5.34-03": ["validate:phase-docs", "semantic-regression-tests", "analyzer-regression"]
   },
   "gateResults": {
     "validate:phase-docs": "pass",
     "validate:ai-handoff": "pass",
     "isolation-harness-tests": "pass",
-    "analyzer-regression": "pass"
+    "analyzer-regression": "pass",
+    "semantic-regression-tests": "pass"
   },
-  "nextAction": "P5.34-03 — synthetic regression corpus (await explicit authorization)",
+  "nextAction": "P5.34-04 — causal report / next-phase design (await explicit authorization; private LF-MIDI-001 fixture still needed)",
   "updatedAt": "2026-09-21"
 }

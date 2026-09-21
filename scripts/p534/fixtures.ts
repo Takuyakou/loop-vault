@@ -122,11 +122,11 @@ export const semanticPitchSets: ReadonlyArray<{
   pitches: number[];
   note: string;
 }> = [
-  { id: "S01", pitches: [57, 60, 63, 67, 70], note: "Ab C Eb G Bb -> Abmaj9" },
-  { id: "S02", pitches: [55, 59, 62, 63, 65], note: "G B Bb Eb F -> G7(#9,b13,no5) family" },
+  { id: "S01", pitches: [56, 60, 63, 67, 70], note: "Ab C Eb G Bb -> Abmaj9" },
+  { id: "S02", pitches: [55, 59, 58, 63, 65], note: "G B Bb Eb F -> G7(#9,b13,no5) family" },
   { id: "S03", pitches: [59, 62, 66, 69], note: "B D F# A -> Bm7" },
   { id: "S04", pitches: [59, 63, 69, 61, 64], note: "B D# A C# E -> B11(no5) family" },
-  { id: "S05", pitches: [40, 64, 67, 52], note: "C/E with structural E bass" },
+  { id: "S05", pitches: [52, 60, 64, 67], note: "C/E with structural E bass" },
   { id: "S06", pitches: [55, 60, 62, 65], note: "G C D F -> G7sus4" },
   { id: "S07", pitches: [59, 62, 65, 69], note: "B D F A -> Bm7b5" },
 ];
@@ -233,8 +233,8 @@ export const timingFixtures: ReadonlyArray<{
         numerator: 4,
         denominator: 4,
         notes: [
-          ... [48, 60, 64, 67].map((pitch) => ({ pitch, startTick: 0, durationTick: 96 })),
-          ... [45, 57, 60, 64].map((pitch) => ({ pitch, startTick: 96, durationTick: 96 })),
+          ... [48, 60, 64, 67].map((pitch) => ({ pitch, startTick: 0, durationTick: 192 })),
+          ... [45, 57, 60, 64].map((pitch) => ({ pitch, startTick: 192, durationTick: 192 })),
         ],
       }),
   },
@@ -263,8 +263,8 @@ export const timingFixtures: ReadonlyArray<{
         numerator: 4,
         denominator: 4,
         notes: [
-          ... [40, 64, 67].map((pitch) => ({ pitch, startTick: 0, durationTick: 96 })), // C/E
-          ... [47, 62, 67].map((pitch) => ({ pitch, startTick: 96, durationTick: 96 })), // G/B
+          ... [40, 60, 64, 67].map((pitch) => ({ pitch, startTick: 0, durationTick: 192 })), // C/E
+          ... [47, 59, 62, 67].map((pitch) => ({ pitch, startTick: 192, durationTick: 192 })), // G/B
         ],
       }),
   },
