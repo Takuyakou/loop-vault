@@ -5,9 +5,9 @@
 ## Status
 
 - **Status:** in-progress
-- **Active stage:** P5.35-03 (promotion evaluation)
-- **Completed stages:** P5.35-00 (audit / baseline / contract lock), P5.35-01 (shadow temporal-evidence classifier + hardening — [`reports/P5.35-01-shadow-temporal-evidence.md`](reports/P5.35-01-shadow-temporal-evidence.md)), P5.35-02 (shadow carryover-resistant ranking — [`reports/P5.35-02-shadow-carryover-resistant-ranking.md`](reports/P5.35-02-shadow-carryover-resistant-ranking.md))
-- **Promotion:** NOT_EVALUATED · production integration NOT authorized (Contracts 04/06)
+- **Active stage:** P5.35-03 complete — awaiting direction (PROMOTION = FAIL)
+- **Completed stages:** P5.35-00 (audit / baseline / contract lock), P5.35-01 (shadow temporal-evidence classifier + hardening — [`reports/P5.35-01-shadow-temporal-evidence.md`](reports/P5.35-01-shadow-temporal-evidence.md)), P5.35-02 (shadow carryover-resistant ranking — [`reports/P5.35-02-shadow-carryover-resistant-ranking.md`](reports/P5.35-02-shadow-carryover-resistant-ranking.md)), P5.35-03 (promotion evaluation — [`reports/P5.35-03-promotion-evaluation.md`](reports/P5.35-03-promotion-evaluation.md))
+- **Promotion:** **FAIL** (Gate A — LF-MIDI-001 failure is meter-fragmentation, not carryover; wrong-root slashes unchanged) · production integration NOT authorized (Contracts 04/06) · P5.35-04 NOT authorized
 - **Depends on:** P5.34 closeout `5fa26e0` (PASS — FAILURE ISOLATION COMPLETE), in ancestry
 - **Baseline / seam:** [`reports/P5.35-00-audit-baseline.md`](reports/P5.35-00-audit-baseline.md)
 

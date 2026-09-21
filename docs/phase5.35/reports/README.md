@@ -9,6 +9,9 @@ Carryover-Resistant Ranking phase.
   (orthogonal temporalRole + structuralBass/shortTransient flags) + hardening.
 - `P5.35-02-shadow-carryover-resistant-ranking.md` — shadow re-ranking on a
   carryover-attenuated histogram (same candidate set / same scorer; anti-oracle).
+- `P5.35-03-promotion-evaluation.md` — Contract-04 gate A–J evaluation;
+  `PROMOTION = FAIL` (Gate A: LF-MIDI-001 failure is meter-fragmentation, not
+  carryover); production integration NOT authorized.
 - `templates/P5.35-shadow-window-template.md` — shadow window diagnostic template.
 - `templates/P5.35-promotion-report-template.md` — promotion decision template.
 

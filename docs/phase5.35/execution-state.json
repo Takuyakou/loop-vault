@@ -1,19 +1,20 @@
 {
   "schemaVersion": 1,
   "phaseId": "5.35",
-  "status": "in-progress",
+  "status": "blocked",
   "activeStage": "P5.35-03",
   "completedStages": ["P5.35-00", "P5.35-01", "P5.35-02"],
-  "blocked": false,
-  "blockerReason": null,
+  "blocked": true,
+  "blockerReason": "PROMOTION = FAIL at P5.35-03 Gate A: LF-MIDI-001 contextual failure does not materially improve (wrong-root slash mislabels Am11/B, Fm11/G unchanged; ~no carryover under 1/4-meter windowing — dominated by meter-fragmentation family, out of P5.35 scope). Gates B–J PASS. P5.35-04 production integration NOT authorized; awaiting human direction on proposed next shadow research.",
   "baseCommit": "5fa26e06dcadfe0483bf6a135895504f4cad56b6",
-  "lastVerifiedCommit": "8069ff5",
+  "lastVerifiedCommit": "17d7ba6",
   "currentBranch": "feat/p535-context-aware-harmonic-evidence",
   "requiredGates": {
     "P5.35-00": ["validate:phase-docs", "validate:ai-handoff", "analyzer-regression-baseline", "p534-corpus-baseline", "production-top1-unchanged"],
     "P5.35-01": ["p535-classifier-tests", "p534-regression", "analyzer-regression", "validate:phase-docs", "validate:ai-handoff", "diff-check", "production-diff-zero"],
     "P5.35-01-hardening": ["orthogonal-role-flags", "unrearticulated-common-tone", "carried-structural-bass", "short-current-characteristic-tone", "anti-oracle", "isolated-test-scope", "production-diff-zero"],
-    "P5.35-02": ["mirror-histogram-guard", "attenuation-1-noop-control", "legitimate-harmony-safety", "carryover-reranks-contamination", "ablation-sensitivity", "anti-oracle", "determinism-immutability", "analyzer-regression", "p534-regression", "production-diff-zero"]
+    "P5.35-02": ["mirror-histogram-guard", "attenuation-1-noop-control", "legitimate-harmony-safety", "carryover-reranks-contamination", "ablation-sensitivity", "anti-oracle", "determinism-immutability", "analyzer-regression", "p534-regression", "production-diff-zero"],
+    "P5.35-03": ["gateA-lf-midi-001-contextual", "gateB-corrected-corpus", "gateC-representability-limit", "gateD-held-pad-legato", "gateE-common-tones", "gateF-rich-extended-harmony", "gateG-slash-inversion", "gateH-boundary-arpeggio-restrike", "gateI-analyzer-regression-clean-scope", "gateJ-determinism-bounded"]
   },
   "gateResults": {
     "validate:phase-docs": "pass",
@@ -39,8 +40,19 @@
     "ablation-sensitivity": "pass",
     "determinism-immutability": "pass",
     "analyzer-regression": "pass",
-    "p534-regression": "pass"
+    "p534-regression": "pass",
+    "gateA-lf-midi-001-contextual": "fail",
+    "gateB-corrected-corpus": "pass",
+    "gateC-representability-limit": "pass",
+    "gateD-held-pad-legato": "pass",
+    "gateE-common-tones": "pass",
+    "gateF-rich-extended-harmony": "pass",
+    "gateG-slash-inversion": "pass",
+    "gateH-boundary-arpeggio-restrike": "pass",
+    "gateI-analyzer-regression-clean-scope": "pass",
+    "gateJ-determinism-bounded": "pass",
+    "PROMOTION": "FAIL"
   },
-  "nextAction": "P5.35-03 — promotion evaluation against Contract-04 gates A–J (needs private LF-MIDI-001, corrected P5.34 corpus safety, held/legato/common-tone safety, analyzer regression, determinism, bounded cost). AWAIT explicit review/continuation. Promotion NOT evaluated; production integration NOT authorized (Contracts 04/06). Stop after P5.35-05.",
+  "nextAction": "PROMOTION = FAIL (Gate A: LF-MIDI-001 wrong-root slash mislabels Am11/B, Fm11/G unchanged; fixture carries ~no carryover under 1/4-meter windowing — failure is meter-fragmentation family, out of P5.35 scope). Gates B–J PASS. Production diff = 0. P5.35-04 production integration NOT authorized. Awaiting human direction on proposed next shadow research (meter-normalized evidence view first; separate attacked-evidence wrong-root-slash scoring study). Do not start P5.35-04.",
   "updatedAt": "2026-09-22"
 }
