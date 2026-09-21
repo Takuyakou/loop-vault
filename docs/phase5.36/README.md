@@ -5,8 +5,8 @@
 ## Status
 
 - **Status:** in-progress (diagnostic / causal-validation only — no production integration)
-- **Active stage:** P5.36-03 (sub-window / score-decomposition experiment)
-- **Completed stages:** P5.36-00 (audit / baseline / contract lock — [`reports/P5.36-00-audit-baseline.md`](reports/P5.36-00-audit-baseline.md)), P5.36-01 (attack provenance — [`reports/P5.36-01-attack-provenance.md`](reports/P5.36-01-attack-provenance.md); `SUPPORTED-HYPOTHESIS`), P5.36-02 (meter-normalized identity A/B — [`reports/P5.36-02-meter-normalized-identity.md`](reports/P5.36-02-meter-normalized-identity.md); Outcome M2 — meter tag alone does not move identity)
+- **Active stage:** P5.36-04 (causal verdict + P5.37 proposal)
+- **Completed stages:** P5.36-00 (audit / baseline — [`reports/P5.36-00-audit-baseline.md`](reports/P5.36-00-audit-baseline.md)), P5.36-01 (attack provenance — [`reports/P5.36-01-attack-provenance.md`](reports/P5.36-01-attack-provenance.md); `SUPPORTED-HYPOTHESIS`), P5.36-02 (meter A/B — [`reports/P5.36-02-meter-normalized-identity.md`](reports/P5.36-02-meter-normalized-identity.md); Outcome M2), P5.36-03 (sub-window score decomposition — [`reports/P5.36-03-subwindow-score-decomposition.md`](reports/P5.36-03-subwindow-score-decomposition.md); **CONFIRMED** — fixed-2-beat evidence mixing)
 - **Depends on:** P5.35 closeout `93282e0` (PASS — SHADOW RESEARCH COMPLETE; NOT PROMOTED), in ancestry
 - **Production behavior:** NOT authorized (Contract 01) · production/runtime diff = 0
 

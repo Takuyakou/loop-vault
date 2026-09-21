@@ -2,17 +2,18 @@
   "schemaVersion": 1,
   "phaseId": "5.36",
   "status": "in-progress",
-  "activeStage": "P5.36-03",
-  "completedStages": ["P5.36-00", "P5.36-01", "P5.36-02"],
+  "activeStage": "P5.36-04",
+  "completedStages": ["P5.36-00", "P5.36-01", "P5.36-02", "P5.36-03"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "93282e0",
-  "lastVerifiedCommit": "476c8a3",
+  "lastVerifiedCommit": "e2d5440",
   "currentBranch": "feat/p535-context-aware-harmonic-evidence",
   "requiredGates": {
     "P5.36-00": ["p534-corpus-baseline", "p535-focused-baseline", "official-clean-analyzer-scope", "lf-midi-001-legacy-freeze", "determinism", "privacy-path-media", "production-diff-zero", "validate:phase-docs", "validate:ai-handoff"],
     "P5.36-01": ["current-attack-not-harmony", "wrong-root-4-targets-privacy-safe", "clean-controls-compared", "beat-bucket-provenance", "exact-onset-provenance", "pc-inflation-measured", "same-chord-reattack-hardneg", "rolled-arpeggio-hardneg", "layered-extended-hardneg", "true-two-harmony-observed", "source-immutable", "determinism", "production-rank-top1-unchanged", "runtime-diff-zero"],
-    "P5.36-02": ["meter-view-only-changed", "source-immutable", "ab-window-membership", "ab-histogram", "ab-topn-rank", "ab-bass-root-slash", "private-4-targets", "clean-controls", "downstream-vs-semantic-separated", "synthetic-hardneg-preserved", "determinism", "runtime-diff-zero"]
+    "P5.36-02": ["meter-view-only-changed", "source-immutable", "ab-window-membership", "ab-histogram", "ab-topn-rank", "ab-bass-root-slash", "private-4-targets", "clean-controls", "downstream-vs-semantic-separated", "synthetic-hardneg-preserved", "determinism", "runtime-diff-zero"],
+    "P5.36-03": ["w2-legacy-parity", "b0-b1-deterministic", "ac-deterministic", "generation-vs-ranking-separated", "oracle-isolated", "wrong-root-support-provenance", "union-only-winner-checked", "bass-root-slash-provenance", "synthetic-two-harmony-positive", "same-chord-reattack-hardneg", "rolled-arpeggio-hardneg", "layered-extended-hardneg", "genuine-slash-hardneg", "syncopation-hardneg", "private-4-targets-last", "source-immutable", "production-score-rank-top1-untouched", "runtime-diff-zero"]
   },
   "gateResults": {
     "p534-corpus-baseline": "pass",
@@ -45,8 +46,21 @@
     "private-4-targets": "pass",
     "clean-controls": "pass",
     "downstream-vs-semantic-separated": "pass",
-    "synthetic-hardneg-preserved": "pass"
+    "synthetic-hardneg-preserved": "pass",
+    "w2-legacy-parity": "pass",
+    "b0-b1-deterministic": "pass",
+    "ac-deterministic": "pass",
+    "generation-vs-ranking-separated": "pass",
+    "oracle-isolated": "pass",
+    "wrong-root-support-provenance": "pass",
+    "union-only-winner-checked": "pass",
+    "bass-root-slash-provenance": "pass",
+    "synthetic-two-harmony-positive": "pass",
+    "genuine-slash-hardneg": "pass",
+    "syncopation-hardneg": "pass",
+    "private-4-targets-last": "pass",
+    "production-score-rank-top1-untouched": "pass"
   },
-  "nextAction": "P5.36-03 — sub-window score decomposition (diagnostic only; partition the fixed 2-beat window at beat/attack-region level, decompose correct vs wrong-root candidate support by bucket/bass/defining-tones; bounded by P5.36-01 over-split hard negatives; no window-width or scoring change). P5.36-02 result: Outcome M2 — meter metadata alone does NOT change legacy 2-beat chord identity (membership identical; histogram differs only by a score-neutral per-window scalar 1.5/1.2; top-1/root/slash identical on all 33 windows incl. 4 wrong-root targets). CONFIRMED 1/4 drives downstream fragmentation (65->17 bars); SUPPORTED wrong-root = fixed 2-beat aggregation merging distinct beat regions (not raised to CONFIRMED before P5.36-03). AWAIT explicit review/continuation. Diagnostic only; production behavior NOT authorized. Stop after P5.36-05.",
+  "nextAction": "P5.36-04 — causal verdict + exact P5.37 proposal (diagnostic/proposal only; do NOT implement or start P5.37). P5.36-03 result: CONFIRMED — wrong-root/broad-slash failure is fixed-2-beat evidence mixing: all 4 LF-MIDI-001 targets are union-only winners (4/4) whose root wins neither beat (4/4) and whose support spans both beats (4/4); each beat resolves to a coherent chord (Am11/B -> B1=Bm7, root=slash bass = Case B). Scorer parity 98/98. Full causal picture: 1/4 meter -> downstream fragmentation (separate, CONFIRMED P5.36-02); wrong-root -> fixed-window mixing (CONFIRMED); NOT meter metadata / carryover / bass extraction / density. Naive 1-beat production window REJECTED by hard negatives (rolled/syncopation/layered/slash degrade). AWAIT explicit review/continuation. Diagnostic only; production behavior NOT authorized. Stop after P5.36-05.",
   "updatedAt": "2026-09-22"
 }
