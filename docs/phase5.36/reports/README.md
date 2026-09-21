@@ -16,6 +16,12 @@ phase.
   fixed-2-beat evidence mixing (union-only winner, root wins neither beat, support
   spans both, Case B slash reinterpretation); naïve 1-beat split rejected by hard
   negatives.
+- `P5.36-04-causal-verdict.md` — finalized causal model: Family A (meter →
+  fragmentation) + Family B (fixed-2-beat mixing) both CONFIRMED; carryover / bass /
+  density / generation / meter-semantic REJECTED; representability kept separate.
+- `P5.36-04-p537-proposal.md` — P5.37 target, existing-engine reuse audit
+  (PARTIAL-REUSE of the 4/4-gated P5.24/P5.26 local-harmonic-state path), strategy
+  comparison, exact seam, stages, promotion gates, rollback, complexity bound.
 - `templates/P5.36-attack-provenance-template.md` — per-window attack-provenance
   diagnostic template.
 - `templates/P5.36-causal-verdict-template.md` — causal verdict + P5.37 proposal

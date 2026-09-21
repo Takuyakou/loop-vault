@@ -5,8 +5,8 @@
 ## Status
 
 - **Status:** in-progress (diagnostic / causal-validation only — no production integration)
-- **Active stage:** P5.36-04 (causal verdict + P5.37 proposal)
-- **Completed stages:** P5.36-00 (audit / baseline — [`reports/P5.36-00-audit-baseline.md`](reports/P5.36-00-audit-baseline.md)), P5.36-01 (attack provenance — [`reports/P5.36-01-attack-provenance.md`](reports/P5.36-01-attack-provenance.md); `SUPPORTED-HYPOTHESIS`), P5.36-02 (meter A/B — [`reports/P5.36-02-meter-normalized-identity.md`](reports/P5.36-02-meter-normalized-identity.md); Outcome M2), P5.36-03 (sub-window score decomposition — [`reports/P5.36-03-subwindow-score-decomposition.md`](reports/P5.36-03-subwindow-score-decomposition.md); **CONFIRMED** — fixed-2-beat evidence mixing)
+- **Active stage:** P5.36-05 (hardening / closeout)
+- **Completed stages:** P5.36-00 (audit — [`reports/P5.36-00-audit-baseline.md`](reports/P5.36-00-audit-baseline.md)), P5.36-01 (attack provenance — `SUPPORTED-HYPOTHESIS`), P5.36-02 (meter A/B — Outcome M2), P5.36-03 (sub-window decomposition — **CONFIRMED**), P5.36-04 (causal verdict + P5.37 proposal — [`reports/P5.36-04-causal-verdict.md`](reports/P5.36-04-causal-verdict.md), [`reports/P5.36-04-p537-proposal.md`](reports/P5.36-04-p537-proposal.md); target = generalize existing P5.24/P5.26 local-harmonic-state engine off its 4/4 guard)
 - **Depends on:** P5.35 closeout `93282e0` (PASS — SHADOW RESEARCH COMPLETE; NOT PROMOTED), in ancestry
 - **Production behavior:** NOT authorized (Contract 01) · production/runtime diff = 0
 

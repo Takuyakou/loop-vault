@@ -2,18 +2,19 @@
   "schemaVersion": 1,
   "phaseId": "5.36",
   "status": "in-progress",
-  "activeStage": "P5.36-04",
-  "completedStages": ["P5.36-00", "P5.36-01", "P5.36-02", "P5.36-03"],
+  "activeStage": "P5.36-05",
+  "completedStages": ["P5.36-00", "P5.36-01", "P5.36-02", "P5.36-03", "P5.36-04"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "93282e0",
-  "lastVerifiedCommit": "e2d5440",
+  "lastVerifiedCommit": "00deca9",
   "currentBranch": "feat/p535-context-aware-harmonic-evidence",
   "requiredGates": {
     "P5.36-00": ["p534-corpus-baseline", "p535-focused-baseline", "official-clean-analyzer-scope", "lf-midi-001-legacy-freeze", "determinism", "privacy-path-media", "production-diff-zero", "validate:phase-docs", "validate:ai-handoff"],
     "P5.36-01": ["current-attack-not-harmony", "wrong-root-4-targets-privacy-safe", "clean-controls-compared", "beat-bucket-provenance", "exact-onset-provenance", "pc-inflation-measured", "same-chord-reattack-hardneg", "rolled-arpeggio-hardneg", "layered-extended-hardneg", "true-two-harmony-observed", "source-immutable", "determinism", "production-rank-top1-unchanged", "runtime-diff-zero"],
     "P5.36-02": ["meter-view-only-changed", "source-immutable", "ab-window-membership", "ab-histogram", "ab-topn-rank", "ab-bass-root-slash", "private-4-targets", "clean-controls", "downstream-vs-semantic-separated", "synthetic-hardneg-preserved", "determinism", "runtime-diff-zero"],
-    "P5.36-03": ["w2-legacy-parity", "b0-b1-deterministic", "ac-deterministic", "generation-vs-ranking-separated", "oracle-isolated", "wrong-root-support-provenance", "union-only-winner-checked", "bass-root-slash-provenance", "synthetic-two-harmony-positive", "same-chord-reattack-hardneg", "rolled-arpeggio-hardneg", "layered-extended-hardneg", "genuine-slash-hardneg", "syncopation-hardneg", "private-4-targets-last", "source-immutable", "production-score-rank-top1-untouched", "runtime-diff-zero"]
+    "P5.36-03": ["w2-legacy-parity", "b0-b1-deterministic", "ac-deterministic", "generation-vs-ranking-separated", "oracle-isolated", "wrong-root-support-provenance", "union-only-winner-checked", "bass-root-slash-provenance", "synthetic-two-harmony-positive", "same-chord-reattack-hardneg", "rolled-arpeggio-hardneg", "layered-extended-hardneg", "genuine-slash-hardneg", "syncopation-hardneg", "private-4-targets-last", "source-immutable", "production-score-rank-top1-untouched", "runtime-diff-zero"],
+    "P5.36-04": ["mixing-cause-confirmed", "meter-semantic-separated", "carryover-separated", "bass-extraction-separated", "naive-1beat-rejected", "global-broad-penalty-rejected", "existing-local-state-audited", "strategies-compared", "one-bounded-target-selected", "exact-seam-identified", "p537-automated-gates-defined", "private-fixture-gates-defined", "rollback-defined", "meter-family-inclusion-decided", "runtime-diff-zero"]
   },
   "gateResults": {
     "p534-corpus-baseline": "pass",
@@ -59,8 +60,22 @@
     "genuine-slash-hardneg": "pass",
     "syncopation-hardneg": "pass",
     "private-4-targets-last": "pass",
-    "production-score-rank-top1-untouched": "pass"
+    "production-score-rank-top1-untouched": "pass",
+    "mixing-cause-confirmed": "pass",
+    "meter-semantic-separated": "pass",
+    "carryover-separated": "pass",
+    "bass-extraction-separated": "pass",
+    "naive-1beat-rejected": "pass",
+    "global-broad-penalty-rejected": "pass",
+    "existing-local-state-audited": "pass",
+    "strategies-compared": "pass",
+    "one-bounded-target-selected": "pass",
+    "exact-seam-identified": "pass",
+    "p537-automated-gates-defined": "pass",
+    "private-fixture-gates-defined": "pass",
+    "rollback-defined": "pass",
+    "meter-family-inclusion-decided": "pass"
   },
-  "nextAction": "P5.36-04 — causal verdict + exact P5.37 proposal (diagnostic/proposal only; do NOT implement or start P5.37). P5.36-03 result: CONFIRMED — wrong-root/broad-slash failure is fixed-2-beat evidence mixing: all 4 LF-MIDI-001 targets are union-only winners (4/4) whose root wins neither beat (4/4) and whose support spans both beats (4/4); each beat resolves to a coherent chord (Am11/B -> B1=Bm7, root=slash bass = Case B). Scorer parity 98/98. Full causal picture: 1/4 meter -> downstream fragmentation (separate, CONFIRMED P5.36-02); wrong-root -> fixed-window mixing (CONFIRMED); NOT meter metadata / carryover / bass extraction / density. Naive 1-beat production window REJECTED by hard negatives (rolled/syncopation/layered/slash degrade). AWAIT explicit review/continuation. Diagnostic only; production behavior NOT authorized. Stop after P5.36-05.",
+  "nextAction": "P5.36-05 — hardening / closeout of the P5.36 causal-validation phase (diagnostic phase closeout; NOT P5.37). P5.36-04 result: causal model finalized (Family A meter->fragmentation CONFIRMED; Family B fixed-2-beat mixing CONFIRMED; carryover/bass/density/generation/meter-semantic REJECTED; representability separate). P5.37 target selected: generalize the existing P5.24/P5.26 local-harmonic-state consolidation off its 4/4-only guard (localHarmonicStateIntegration.ts prepareLocalHarmonicStateAnalyzerOptions; flag enableLocalHarmonicStateConsolidation; OFF=exact legacy) to partition mixed 2-beat evidence at bass-change/upper-change boundaries, scorer+vocabulary unchanged. PARTIAL-REUSE (strong). Family A = separate optional workstream. P5.37 NOT started/authorized. AWAIT explicit review/continuation. Production behavior NOT authorized. Stop after P5.36-05.",
   "updatedAt": "2026-09-22"
 }
