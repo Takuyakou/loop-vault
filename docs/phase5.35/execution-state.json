@@ -1,20 +1,21 @@
 {
   "schemaVersion": 1,
   "phaseId": "5.35",
-  "status": "blocked",
-  "activeStage": "P5.35-03",
-  "completedStages": ["P5.35-00", "P5.35-01", "P5.35-02"],
-  "blocked": true,
-  "blockerReason": "PROMOTION = FAIL at P5.35-03 Gate A: LF-MIDI-001 contextual failure does not materially improve (wrong-root slash mislabels Am11/B, Fm11/G unchanged; ~no carryover under 1/4-meter windowing — dominated by meter-fragmentation family, out of P5.35 scope). Gates B–J PASS. P5.35-04 production integration NOT authorized; awaiting human direction on proposed next shadow research.",
+  "status": "completed",
+  "activeStage": null,
+  "completedStages": ["P5.35-00", "P5.35-01", "P5.35-02", "P5.35-05"],
+  "blocked": false,
+  "blockerReason": null,
   "baseCommit": "5fa26e06dcadfe0483bf6a135895504f4cad56b6",
-  "lastVerifiedCommit": "17d7ba6",
+  "lastVerifiedCommit": "84a673a",
   "currentBranch": "feat/p535-context-aware-harmonic-evidence",
   "requiredGates": {
     "P5.35-00": ["validate:phase-docs", "validate:ai-handoff", "analyzer-regression-baseline", "p534-corpus-baseline", "production-top1-unchanged"],
     "P5.35-01": ["p535-classifier-tests", "p534-regression", "analyzer-regression", "validate:phase-docs", "validate:ai-handoff", "diff-check", "production-diff-zero"],
     "P5.35-01-hardening": ["orthogonal-role-flags", "unrearticulated-common-tone", "carried-structural-bass", "short-current-characteristic-tone", "anti-oracle", "isolated-test-scope", "production-diff-zero"],
     "P5.35-02": ["mirror-histogram-guard", "attenuation-1-noop-control", "legitimate-harmony-safety", "carryover-reranks-contamination", "ablation-sensitivity", "anti-oracle", "determinism-immutability", "analyzer-regression", "p534-regression", "production-diff-zero"],
-    "P5.35-03": ["gateA-lf-midi-001-contextual", "gateB-corrected-corpus", "gateC-representability-limit", "gateD-held-pad-legato", "gateE-common-tones", "gateF-rich-extended-harmony", "gateG-slash-inversion", "gateH-boundary-arpeggio-restrike", "gateI-analyzer-regression-clean-scope", "gateJ-determinism-bounded"]
+    "P5.35-03": ["gateA-lf-midi-001-contextual", "gateB-corrected-corpus", "gateC-representability-limit", "gateD-held-pad-legato", "gateE-common-tones", "gateF-rich-extended-harmony", "gateG-slash-inversion", "gateH-boundary-arpeggio-restrike", "gateI-analyzer-regression-clean-scope", "gateJ-determinism-bounded"],
+    "P5.35-05": ["p535-focused-tests", "p534-regression", "official-clean-analyzer-regression", "determinism", "bounded-cost", "validate:phase-docs", "validate:ai-handoff", "git-diff-check", "privacy-path-media", "production-diff-zero"]
   },
   "gateResults": {
     "validate:phase-docs": "pass",
@@ -51,8 +52,15 @@
     "gateH-boundary-arpeggio-restrike": "pass",
     "gateI-analyzer-regression-clean-scope": "pass",
     "gateJ-determinism-bounded": "pass",
-    "PROMOTION": "FAIL"
+    "PROMOTION": "FAIL",
+    "p535-focused-tests": "pass",
+    "official-clean-analyzer-regression": "pass",
+    "determinism": "pass",
+    "bounded-cost": "pass",
+    "git-diff-check": "pass",
+    "privacy-path-media": "pass",
+    "P5.35-04": "SKIPPED-NOT-AUTHORIZED"
   },
-  "nextAction": "PROMOTION = FAIL (Gate A: LF-MIDI-001 wrong-root slash mislabels Am11/B, Fm11/G unchanged; fixture carries ~no carryover under 1/4-meter windowing — failure is meter-fragmentation family, out of P5.35 scope). Gates B–J PASS. Production diff = 0. P5.35-04 production integration NOT authorized. Awaiting human direction on proposed next shadow research (meter-normalized evidence view first; separate attacked-evidence wrong-root-slash scoring study). Do not start P5.35-04.",
+  "nextAction": "PHASE CLOSED: PASS — SHADOW RESEARCH COMPLETE; NOT PROMOTED. PROMOTION = FAIL at P5.35-03 Gate A (LF-MIDI-001 failure is 577 CURRENT_ATTACK / 1 CARRIED_IN_SUSTAIN; wrong-root slashes Am11/B, Fm11/G unchanged — meter-fragmentation family, out of P5.35 scope; the real contamination is NOT primarily sustained carryover). P5.35-04 SKIPPED / NOT AUTHORIZED. Gates B–J PASS; shadow diagnostic retained under scripts/p535/. Production diff = 0. No next phase auto-created; leading (UNCONFIRMED) next hypothesis: multiple current attacks grouped into one fixed window under 1/4-meter topology. Awaiting explicit human authorization for any follow-up.",
   "updatedAt": "2026-09-22"
 }

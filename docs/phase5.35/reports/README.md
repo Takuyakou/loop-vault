@@ -12,6 +12,9 @@ Carryover-Resistant Ranking phase.
 - `P5.35-03-promotion-evaluation.md` — Contract-04 gate A–J evaluation;
   `PROMOTION = FAIL` (Gate A: LF-MIDI-001 failure is meter-fragmentation, not
   carryover); production integration NOT authorized.
+- `P5.35-05-hardening-closeout.md` — non-promoted shadow-research closeout;
+  `PASS — SHADOW RESEARCH COMPLETE; NOT PROMOTED`; P5.35-04 SKIPPED; test-scope
+  correction (official clean scope 387 files / 3167 tests).
 - `templates/P5.35-shadow-window-template.md` — shadow window diagnostic template.
 - `templates/P5.35-promotion-report-template.md` — promotion decision template.
 
