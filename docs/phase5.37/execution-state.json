@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "5.37",
+  "status": "in-progress",
+  "activeStage": "P5.37-01",
+  "completedStages": ["P5.37-00"],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "77c8b0e",
+  "lastVerifiedCommit": "77c8b0e",
+  "currentBranch": "feat/p535-context-aware-harmonic-evidence",
+  "requiredGates": {
+    "P5.37-00": ["collision-check", "p536-closed-in-ancestry", "default-path-failure-confirmed", "meter-gate-located", "gates-frozen", "baselines-frozen", "family-a-decision", "validate:phase-docs", "validate:ai-handoff", "production-diff-zero"]
+  },
+  "gateResults": {
+    "collision-check": "pass",
+    "p536-closed-in-ancestry": "pass",
+    "default-path-failure-confirmed": "pass",
+    "meter-gate-located": "pass",
+    "gates-frozen": "pass",
+    "baselines-frozen": "pass",
+    "family-a-decision": "pass",
+    "validate:phase-docs": "pass",
+    "validate:ai-handoff": "pass",
+    "production-diff-zero": "pass"
+  },
+  "nextAction": "P5.37-01 — meter-independent local-state SHADOW prototype (non-production; demonstrate the P5.24/P5.26 local-state path operating on the 1/4 fixture without the 4/4 gate, OFF=exact legacy parity, private-target improvement, hard-negative safety, determinism, bounded cost). Do NOT integrate into production. Order: shadow -> promotion -> production. Promotion (P5.37-02) is a hard PASS/FAIL gate; production integration (P5.37-03) only if PROMOTION=PASS. Family A = OPTIONAL/DEFERRED (not a phase-completion requirement). AWAIT explicit review/continuation. Production behavior NOT authorized. Stop after P5.37-06.",
+  "updatedAt": "2026-09-22"
+}
