@@ -4,9 +4,10 @@
 
 ## Status
 
-- **Status:** in-progress
-- **Active stage:** P5.34-00 (audit / baseline / contract lock)
-- **Completed stages:** none
+- **Status:** completed
+- **Active stage:** none (phase complete)
+- **Completed stages:** P5.34-00, P5.34-01, P5.34-02, P5.34-03, P5.34-04, P5.34-05
+- **Final determination:** PASS — FAILURE ISOLATION COMPLETE; IMPLEMENTATION PLAN READY (see [`reports/P5.34-05-hardening-closeout.md`](reports/P5.34-05-hardening-closeout.md))
 - **Known failure:** LF-MIDI-001
 - **Cold-start handoff:** ACCEPTED
 
