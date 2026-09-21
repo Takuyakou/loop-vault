@@ -40,7 +40,7 @@ Source Truth → Harmony Interpretation → Practice Rendering
 ## 2. Vault (data model + persistence + store)
 
 - Paths: `src/domain/types.ts`, `src/domain/schema.ts`, `src/domain/repository.ts`, `src/domain/transition.ts`, `src/store/vaultStore.ts`, `src/storage/`
-- Responsibilities: `VaultFile` (`fileVersion: 1`) with `SongIdea[]`; Zod parsing with quarantine; atomic save + backup rotation; status transitions; autosave.
+- Responsibilities: `VaultFile` (`fileVersion: 2`) with `SongIdea[]`; Zod parsing with quarantine; v1→v2 migration; atomic save + backup rotation; status transitions; autosave.
 - Protected: Vault schema / `fileVersion` must not change without authorization.
 
 ## 3. MIDI Import / Capture

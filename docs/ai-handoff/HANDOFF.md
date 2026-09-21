@@ -11,6 +11,12 @@ This is a short navigation summary. Read ARCHITECTURE-MAP / DECISIONS / KNOWN-FA
 - commit: e0bef0316e2fa7586e76b625b337a22ff886c030
 - date: 2026-09-21
 
+Freshness note: the verified commit is the code/docs state this handoff was
+checked against. It is expected to be behind HEAD after later handoff-only
+commits; being behind HEAD is not itself stale. Only a missing commit (FAIL) or
+a non-ancestor commit (WARN / freshness review) is treated as a freshness
+problem by the validator.
+
 Refresh this file when:
 
 - major architecture changes
