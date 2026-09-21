@@ -8,7 +8,7 @@ This is a short navigation summary. Read ARCHITECTURE-MAP / DECISIONS / KNOWN-FA
 
 ## Last verified against
 
-- commit: 31242c0b39539c8cbeb00f59415bc8fb04bb3d9b
+- commit: e0bef0316e2fa7586e76b625b337a22ff886c030
 - date: 2026-09-21
 
 Refresh this file when:
@@ -31,8 +31,7 @@ progression vocabulary. It is **not** a chord detector.
 
 ## Situation summary (CONFIRMED)
 
-- The trunk (master) is well past the V1.1 "Record & Compare" milestone. Phase 5.18.2 (Vault source discoverability) is long since merged.
-- The trunk now includes the P5.33 first-wave **Voicing Rules engine** (`src/domain/voicingRules/`), the **Progression Voicing Practice** surface (the Voicing Loop), **Source Bassline** exact capture, and **Text Progression Entry**.
+- The trunk (master) includes the P5.33 first-wave **Voicing Rules engine** (`src/domain/voicingRules/`), the **Progression Voicing Practice** surface (the Voicing Loop), **Source Bassline** exact capture, and **Text Progression Entry**.
 - The default MIDI analyzer is `phase4-v1` (rolled back from `phase4.1-v1`).
 
 ## Major systems (see ARCHITECTURE-MAP for paths)
@@ -62,17 +61,39 @@ is recorded as `LF-MIDI-001` in KNOWN-FAILURES.md. The root cause is **not**
 confirmed; it is one of several hypotheses. Do not declare 1/4 meter, onset
 clustering, or any single factor as the cause.
 
-## Architecture direction (CONFIRMED, still evolving)
+## Confirmed building blocks
 
-The separation is now realized in committed code:
+These exist in committed code and are independently verified:
+
+- per-chord `sourceVoicing` (exact pitch/octave snapshot for one chord; no timing).
+- selected-bass `SourceBasslineSnapshotV1` (exact-beat start/duration, velocity; 4/4).
+- the analyzer's chord identity (segmentation / ranking / confidence).
+- Voicing Rules (first wave) and generated practice voicings.
+- Progression Voicing Practice rendering (clock, library, voicing resolution).
+
+## Architecture direction (PROPOSED)
+
+The following is a design direction, **not** a completed repository-wide
+contract, and it is **not** yet extended to general MIDI import fidelity:
 
 ```text
 Source Truth  →  Harmony Interpretation  →  Practice Rendering
 ```
 
-- Source Truth: `src/domain/sourceBassline/` (exact-beat bass capture), `src/domain/voicing/` source voicing, `src/domain/textProgression.ts` (text as source).
-- Harmony Interpretation: the analyzer's chord identity (`phase4-v1`) and `src/domain/voicingRules/` (golden corpus + first-wave rules with provenance).
-- Practice Rendering: `src/domain/progressionVoicingPractice/` (clock, library, voicing resolution), bass practice.
+- Source Truth = facts observed/kept directly from a source (`sourceVoicing`, `Source Bassline`).
+- Harmony Interpretation = harmonic estimates (the analyzer; chord identity).
+- Practice Rendering = practice voicings derived from chord identity / rules.
+
+The presence of the building blocks above does **not** mean the three-layer
+contract is fully realized, nor that a general exact full-polyphonic
+source-performance snapshot exists.
+
+## Text Progression (separate input contract)
+
+Text Progression parses chord notation into chord identity and timing semantics.
+It is **not** an exact MIDI performance representation: it does not recover the
+original pitch voicing, octave, doubling, hand allocation, or exact note timing /
+articulation.
 
 ## Protected contracts
 
@@ -81,7 +102,7 @@ Repository safety rules: see root `AGENTS.md` (canonical; do not duplicate here)
 Product-level invariants to never break without explicit authorization:
 
 - Vault schema / `fileVersion` must not change.
-- Source MIDI exactness: source voicing / source bassline are not quantized / retimed / transposed / rewritten.
+- Source exactness is scoped: `sourceVoicing` keeps pitch/octave; `Source Bassline` keeps a selected bass voice. A general full-polyphonic source snapshot is not yet a contract.
 - Private MIDI / audio / personal paths are never committed.
 - Analyzer / MIDI exporter / playback behavior are not changed incidentally.
 

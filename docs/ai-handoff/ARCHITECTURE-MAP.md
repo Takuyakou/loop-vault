@@ -13,6 +13,24 @@ exist beside most modules.
 
 ---
 
+## Cross-cutting architecture status
+
+Confirmed building blocks (each exists independently in committed code):
+
+- `sourceVoicing` (per-chord pitch/octave)
+- `Source Bassline` (selected bass voice, exact beats)
+- Analyzer (chord identity / segmentation / ranking)
+- Voicing Rules (first wave)
+- Progression Voicing Practice rendering
+
+Proposed unifying contract (not yet fully realized):
+
+```text
+Source Truth → Harmony Interpretation → Practice Rendering
+```
+
+---
+
 ## 1. App shell & view routing
 
 - Paths: `src/App.tsx`, `src/main.tsx`, `src/components/AppShell.tsx`, `src/views/`
@@ -34,6 +52,7 @@ exist beside most modules.
 
 - Paths: `src/domain/midi/analysis.ts`, `src/domain/midi/legacy.ts`, `src/domain/midi/hybrid.ts`, `src/domain/midi/legacyBoundaryReranker.ts`, `src/domain/midi/voiceAwareReranker.ts`, `src/domain/midi/phase4Analyzer.ts`
 - Responsibilities: weighted note scoring against chord templates, timeline smoothing, candidate-block selection.
+- Role: Harmony Interpretation — it estimates chord identity; it is not a source-truth recorder.
 - Modes: `legacy`, `hybrid-v1`, `legacy-boundary-rerank`, `voice-aware-rerank-v1`, `phase4-v1` (default), `phase4.1-v1`, `phase4.1.2-v1`, `phase4.1.2-core-v1`, `phase4.1.2-g2-v1`, `phase4.1.2-core-g2-v1`.
 - Protected: do not change detection / ranking incidentally.
 
@@ -45,23 +64,24 @@ exist beside most modules.
 ## 6. Voicing Memory / Source Voicing
 
 - Paths: `src/domain/voicing/`, `src/domain/types.ts` (`ChordVoicingMemory`, `VoicingSnapshot`)
-- Responsibilities: capture the original MIDI pitches for a chord (`sourceVoicing`) and a practice override (`practiceVoicingOverride`); keep capture preview and save path identical.
+- Responsibilities: capture a per-chord pitch/octave snapshot (`sourceVoicing`, no timing) and a practice override (`practiceVoicingOverride`); keep capture preview and save path identical.
 - Protected: source voicing is never quantized / retimed / transposed / rewritten.
 
 ## 7. Source Bassline (exact-beat source capture)
 
 - Paths: `src/domain/sourceBassline/`, `src/components/capture/SourceBasslineCapturePanel.tsx`
-- Responsibilities: capture a selected bass voice as `SourceBasslineSnapshotV1` with exact beats and captured harmony spans; keep source truth independent of interpretation.
+- Responsibilities: capture a selected bass voice as `SourceBasslineSnapshotV1` with exact beats (4/4) and captured harmony spans; bass-specific, not full polyphonic source.
 
 ## 8. Text Progression Entry
 
 - Paths: `src/domain/textProgression.ts`, `src/domain/textProgressionDraft.ts`, `src/domain/textProgressionVoicing.ts`, `src/domain/textScoreTokenizer.ts`, `src/components/capture/TextProgressionCapturePanel.tsx`
-- Responsibilities: parse a text progression (with slash/control semantics) into chord events, then build a draft for the Vault.
+- Responsibilities: parse a text progression (with slash/control semantics) into chord events, then build a draft for the Vault. A separate input path, not an exact MIDI performance representation.
 
 ## 9. Voicing Rules engine (P5.33 first wave)
 
 - Paths: `src/domain/voicingRules/`, `src/domain/voicingRules/firstWaveRules.ts`, `src/domain/voicingRules/goldenCorpus.ts`, `src/domain/voicingRules/studyGenerator.ts`
 - Responsibilities: deterministic promotion of a bounded first wave of voicing rules with source / study / coverage / context / provenance axes (not a wholesale import of all research records).
+- Role: Practice Rendering — voicing selection/generation; distinct from the analyzer's chord interpretation.
 
 ## 10. Progression Voicing Practice (Voicing Loop surface)
 

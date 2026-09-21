@@ -52,10 +52,10 @@ repository-absent information, and unknown items marked unknown.
 
 Hard fail (unconditional FAIL) if any of these is wrong:
 
-- Item 3: Source MIDI exactness (source voicing / source bassline are exact; practice rendering is derived)
-- Item 5: private MIDI policy
-- Item 7: cause of the MIDI import failure is undetermined
-- Item 8: the agent must distinguish Source Truth from Harmony Interpretation from Practice Rendering, and must not label a practice rendering as a source fact
+- Item 3: LF-MIDI-001 — the cause of the current MIDI import failure is undetermined
+- Item 4: the repository-wide three-layer architecture contract is PROPOSED; existing building blocks do not mean a completed contract
+- Item 5: the difference between source snapshots and generated/lesson voicing, and the scope of source exactness
+- Item 8: private MIDI testing / commit policy
 - Item 10: Git safety
 
 On FAIL, return to `Stage 0.1 — Handoff Correction` (docs only; no runtime/product change).

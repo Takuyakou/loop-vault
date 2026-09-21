@@ -39,12 +39,14 @@ note dumps. Synthetic pitch examples are allowed.
 - Evidence: user report only; no committed fixture yet.
 - Privacy note: no real MIDI names, paths, or full note dumps are recorded here.
 
-### Relationship to current source-exact capture
+### Relationship to current source-preserving building blocks
 
-The trunk now has `src/domain/sourceBassline/` (exact-beat bass capture) and
-`src/domain/timelineHarmonicActivity.ts`. These improve source fidelity but do
-not by themselves resolve the analyzer-based degradation above; the default
-analyzer remains `phase4-v1`. Treat LF-MIDI-001 as still open.
+Existing source-preserving building blocks include per-chord `sourceVoicing`
+(pitch/octave) and selected-bass `Source Bassline` capture (exact beats, 4/4).
+They do **not**, by themselves, establish a general exact full-polyphonic
+source-performance preservation path, and they do not resolve the analyzer-based
+degradation above (the default analyzer remains `phase4-v1`). Treat LF-MIDI-001
+as still open.
 
 ### Synthetic semantic examples (privacy-safe)
 

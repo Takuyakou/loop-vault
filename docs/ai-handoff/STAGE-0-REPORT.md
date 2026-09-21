@@ -1,5 +1,11 @@
 # Stage 0 — AI Handoff Infrastructure: Report
 
+> Correction:
+> The architecture-status statement in this report is superseded by
+> `STAGE-0.1-REPORT.md`. The current handoff treats the repository-wide
+> three-layer contract (Source Truth → Harmony Interpretation → Practice
+> Rendering) as PROPOSED, while its supporting building blocks are CONFIRMED.
+
 When to read:
 Read when reviewing what Stage 0 built, or when deciding whether to accept it.
 
