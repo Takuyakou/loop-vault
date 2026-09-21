@@ -40,3 +40,7 @@ The short prompt to paste at the start of a session lives in
 Loop Vault is a Tauri v2 + React + TypeScript + Vite desktop app. Rust lives in
 `src-tauri/`, the web app in `src/`, evaluation and tooling scripts in
 `scripts/`, and phase documentation in `docs/`.
+
+For a cross-phase orientation, start at `docs/ai-handoff/README.md` (then
+`docs/ai-handoff/HANDOFF.md`); the phase process itself lives in
+`docs/phase-workflow/README.md`.

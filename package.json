@@ -12,6 +12,7 @@
     "lint:source-contracts": "node scripts/lint-source-contracts.mjs",
     "check:staged": "node scripts/check-staged-files.mjs",
     "validate:phase-docs": "node scripts/phase-docs/validate.mjs",
+    "validate:ai-handoff": "node scripts/ai-handoff/validate.mjs",
     "hooks:install": "git config core.hooksPath .githooks",
     "preview": "vite preview",
     "test": "vitest run",
