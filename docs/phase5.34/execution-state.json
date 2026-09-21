@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "5.34",
+  "status": "in-progress",
+  "activeStage": "P5.34-00",
+  "completedStages": [],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "bb21930e888ef7b7fa35c994b7f8916b85903e4e",
+  "lastVerifiedCommit": "bb21930e888ef7b7fa35c994b7f8916b85903e4e",
+  "currentBranch": "feat/p534-midi-import-failure-isolation",
+  "requiredGates": {
+    "P5.34-00": ["validate:phase-docs", "validate:ai-handoff"]
+  },
+  "gateResults": {},
+  "nextAction": "P5.34-01 — build the isolation harness (source-immutability assertion + A/B/C/D runners + synthetic fixtures)",
+  "updatedAt": "2026-09-21"
+}
