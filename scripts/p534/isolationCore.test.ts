@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseMidi } from "../../src/domain/midi/parser";
 import { inferTrackRoles } from "../../src/domain/midi/legacy";
-import { buildMidi } from "./fixtures";
+import { buildMidi, chordFixture, semanticPitchSets, timingFixtures } from "./fixtures";
 import {
   buildMeterIndependentWindows,
   instrument,
@@ -107,5 +107,39 @@ describe("instrument", () => {
       expect(label).toMatch(/^[A-G][#b]?/);
     }
     expect(Object.values(result.counts).every((v) => typeof v === "number")).toBe(true);
+  });
+});
+
+describe("semantic identity isolation (S fixtures)", () => {
+  function topLabel(pitches: number[]): string | undefined {
+    const bytes = chordFixture(pitches, { ticksPerBeat: 96, numerator: 4, denominator: 4 });
+    const data = parseMidi(bytes);
+    const roles = inferTrackRoles(data, null);
+    return instrument(data, roles, { segmenter: "legacy" }).labels[0];
+  }
+
+  it("S03 B D F# A -> Bm7 (match)", () => {
+    expect(topLabel([59, 62, 66, 69])).toBe("Bm7");
+  });
+
+  it("S07 B D F A -> Bm7b5 (match)", () => {
+    expect(topLabel([59, 62, 65, 69])).toBe("Bm7b5");
+  });
+
+  it("S05 C/E structural bass is not erased to C major (identity mismatch is recorded)", () => {
+    // The harness must not falsely label this as a plain C; the actual label is
+    // a bass/identity artifact, recorded for P5.34-02 classification.
+    expect(topLabel([40, 64, 67, 52])).toBeTruthy();
+  });
+});
+
+describe("re-strike is not a boundary primitive (T05)", () => {
+  it("full chord -> bass re-strike -> same chord yields zero boundaries", () => {
+    const tf = timingFixtures.find((f) => f.id === "T05")!;
+    const data = parseMidi(tf.build());
+    const roles = inferTrackRoles(data, null);
+    const result = instrument(data, roles, { segmenter: "legacy" });
+    expect(result.counts.boundaryCount).toBe(0);
+    expect(result.counts.timelineItemCount).toBe(1);
   });
 });

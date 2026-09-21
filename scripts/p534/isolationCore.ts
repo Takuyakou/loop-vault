@@ -16,6 +16,7 @@
  */
 
 import { normalizePc } from "../../src/domain/chords";
+import { chordIdentityKey, normalizeChordLabel } from "../../src/domain/chordIdentity";
 import {
   buildWeightedWindows,
   extractBlockCandidates,
@@ -29,20 +30,30 @@ import { selectChordEvidenceNotes } from "../../src/domain/midi/voices";
 import type { ChordSymbol } from "../../src/domain/types";
 
 export interface IsolationCounts {
+  sourceNoteCount: number;
+  evidenceNoteCount: number;
   windowCount: number;
+  rawTimelineItemCount: number;
   timelineItemCount: number;
   blockItemCount: number;
   occupiedBarCount: number;
   formattedBarCount: number;
   dashCount: number;
+  boundaryCount: number;
 }
 
 export interface IsolationResult {
   counts: IsolationCounts;
-  /** Privacy-safe chord labels, in timeline order. */
+  /** Privacy-safe chord labels (smoothed timeline), in order. */
   labels: string[];
   /** Bar numbers of the smoothed timeline items. */
   timelineBars: number[];
+}
+
+/** Spelling-independent identity key for semantic comparison. */
+export function semanticKey(label: string): string | null {
+  const identity = normalizeChordLabel(label);
+  return identity ? chordIdentityKey(identity) : null;
 }
 
 export type Segmenter = "legacy" | "meter-independent";
@@ -232,14 +243,25 @@ export function instrument(
   const occupiedBarCount = new Set(bars).size;
   const dashCount = Math.max(0, formattedBarCount - occupiedBarCount);
 
+  let boundaryCount = 0;
+  for (let index = 1; index < smoothed.length; index += 1) {
+    if (smoothed[index].chord.label !== smoothed[index - 1].chord.label) {
+      boundaryCount += 1;
+    }
+  }
+
   return {
     counts: {
+      sourceNoteCount: data.notes.length,
+      evidenceNoteCount: evidenceData.notes.length,
       windowCount: windows.length,
+      rawTimelineItemCount: ranked.length,
       timelineItemCount: smoothed.length,
       blockItemCount: blocks.length,
       occupiedBarCount,
       formattedBarCount,
       dashCount,
+      boundaryCount,
     },
     labels: smoothed.map((item) => item.chord.label),
     timelineBars: bars,

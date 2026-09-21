@@ -130,3 +130,142 @@ export const semanticPitchSets: ReadonlyArray<{
   { id: "S06", pitches: [55, 60, 62, 65], note: "G C D F -> G7sus4" },
   { id: "S07", pitches: [59, 62, 65, 69], note: "B D F A -> Bm7b5" },
 ];
+
+/** A four-chord progression (C Am F G) under a given meter, PPQ96. */
+export function progressionFixture(numerator: number, denominator: number): Uint8Array {
+  const chords: Array<{ start: number; pitches: number[] }> = [
+    { start: 0, pitches: [48, 60, 64, 67] }, // C
+    { start: 192, pitches: [45, 57, 60, 64] }, // Am
+    { start: 384, pitches: [41, 53, 57, 60] }, // F
+    { start: 576, pitches: [43, 55, 59, 62] }, // G
+  ];
+  return buildMidi({
+    ticksPerBeat: 96,
+    numerator,
+    denominator,
+    tempoMicrosPerBeat: 500_000,
+    notes: chords.flatMap(({ start, pitches }) =>
+      pitches.map((pitch) => ({ pitch, startTick: start, durationTick: 192 })),
+    ),
+  });
+}
+
+/** Contract-03 timing fixtures (T01–T08), PPQ96, single C-major-ish topology. */
+export const timingFixtures: ReadonlyArray<{
+  id: string;
+  note: string;
+  build: () => Uint8Array;
+}> = [
+  {
+    id: "T01",
+    note: "all simultaneous",
+    build: () =>
+      buildMidi({
+        ticksPerBeat: 96,
+        numerator: 4,
+        denominator: 4,
+        notes: [48, 60, 64, 67].map((pitch) => ({ pitch, startTick: 0, durationTick: 192 })),
+      }),
+  },
+  {
+    id: "T02",
+    note: "bass +1 tick",
+    build: () =>
+      buildMidi({
+        ticksPerBeat: 96,
+        numerator: 4,
+        denominator: 4,
+        notes: [
+          { pitch: 48, startTick: 1, durationTick: 192 },
+          ... [60, 64, 67].map((pitch) => ({ pitch, startTick: 0, durationTick: 192 })),
+        ],
+      }),
+  },
+  {
+    id: "T03",
+    note: "bass +4 ticks",
+    build: () =>
+      buildMidi({
+        ticksPerBeat: 96,
+        numerator: 4,
+        denominator: 4,
+        notes: [
+          { pitch: 48, startTick: 4, durationTick: 192 },
+          ... [60, 64, 67].map((pitch) => ({ pitch, startTick: 0, durationTick: 192 })),
+        ],
+      }),
+  },
+  {
+    id: "T04",
+    note: "distributed micro-jitter",
+    build: () =>
+      buildMidi({
+        ticksPerBeat: 96,
+        numerator: 4,
+        denominator: 4,
+        notes: [48, 60, 64, 67].map((pitch, index) => ({
+          pitch,
+          startTick: index,
+          durationTick: 192,
+        })),
+      }),
+  },
+  {
+    id: "T05",
+    note: "full chord -> bass re-strike -> same chord",
+    build: () =>
+      buildMidi({
+        ticksPerBeat: 96,
+        numerator: 4,
+        denominator: 4,
+        notes: [
+          ... [48, 60, 64, 67].map((pitch) => ({ pitch, startTick: 0, durationTick: 96 })),
+          { pitch: 48, startTick: 96, durationTick: 96 },
+        ],
+      }),
+  },
+  {
+    id: "T06",
+    note: "genuine two-chord boundary (C -> Am)",
+    build: () =>
+      buildMidi({
+        ticksPerBeat: 96,
+        numerator: 4,
+        denominator: 4,
+        notes: [
+          ... [48, 60, 64, 67].map((pitch) => ({ pitch, startTick: 0, durationTick: 96 })),
+          ... [45, 57, 60, 64].map((pitch) => ({ pitch, startTick: 96, durationTick: 96 })),
+        ],
+      }),
+  },
+  {
+    id: "T07",
+    note: "arpeggio hard negative (C E G sequential)",
+    build: () =>
+      buildMidi({
+        ticksPerBeat: 96,
+        numerator: 4,
+        denominator: 4,
+        notes: [
+          { pitch: 48, startTick: 0, durationTick: 48 },
+          { pitch: 60, startTick: 48, durationTick: 48 },
+          { pitch: 64, startTick: 96, durationTick: 48 },
+          { pitch: 67, startTick: 144, durationTick: 48 },
+        ],
+      }),
+  },
+  {
+    id: "T08",
+    note: "structural slash-bass change (C/E -> G/B)",
+    build: () =>
+      buildMidi({
+        ticksPerBeat: 96,
+        numerator: 4,
+        denominator: 4,
+        notes: [
+          ... [40, 64, 67].map((pitch) => ({ pitch, startTick: 0, durationTick: 96 })), // C/E
+          ... [47, 62, 67].map((pitch) => ({ pitch, startTick: 96, durationTick: 96 })), // G/B
+        ],
+      }),
+  },
+];

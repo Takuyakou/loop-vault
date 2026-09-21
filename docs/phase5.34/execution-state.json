@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "phaseId": "5.34",
   "status": "in-progress",
-  "activeStage": null,
+  "activeStage": "P5.34-02",
   "completedStages": ["P5.34-00", "P5.34-01"],
   "blocked": false,
   "blockerReason": null,
@@ -11,13 +11,15 @@
   "currentBranch": "feat/p534-midi-import-failure-isolation",
   "requiredGates": {
     "P5.34-00": ["validate:phase-docs", "validate:ai-handoff"],
-    "P5.34-01": ["validate:phase-docs", "isolation-harness-tests"]
+    "P5.34-01": ["validate:phase-docs", "isolation-harness-tests"],
+    "P5.34-02": ["validate:phase-docs", "isolation-harness-tests", "analyzer-regression"]
   },
   "gateResults": {
     "validate:phase-docs": "pass",
     "validate:ai-handoff": "pass",
-    "isolation-harness-tests": "pass"
+    "isolation-harness-tests": "pass",
+    "analyzer-regression": "pass"
   },
-  "nextAction": "P5.34-02 — run A/B/C/D experiment (await explicit authorization)",
+  "nextAction": "P5.34-02 — run A/B/C/D experiment (report in progress)",
   "updatedAt": "2026-09-21"
 }
