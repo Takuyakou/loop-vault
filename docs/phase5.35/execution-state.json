@@ -2,17 +2,18 @@
   "schemaVersion": 1,
   "phaseId": "5.35",
   "status": "in-progress",
-  "activeStage": "P5.35-02",
-  "completedStages": ["P5.35-00", "P5.35-01"],
+  "activeStage": "P5.35-03",
+  "completedStages": ["P5.35-00", "P5.35-01", "P5.35-02"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "5fa26e06dcadfe0483bf6a135895504f4cad56b6",
-  "lastVerifiedCommit": "bea4582be07b8da621e4ed504c622f4439d6aada",
+  "lastVerifiedCommit": "8069ff5",
   "currentBranch": "feat/p535-context-aware-harmonic-evidence",
   "requiredGates": {
     "P5.35-00": ["validate:phase-docs", "validate:ai-handoff", "analyzer-regression-baseline", "p534-corpus-baseline", "production-top1-unchanged"],
     "P5.35-01": ["p535-classifier-tests", "p534-regression", "analyzer-regression", "validate:phase-docs", "validate:ai-handoff", "diff-check", "production-diff-zero"],
-    "P5.35-01-hardening": ["orthogonal-role-flags", "unrearticulated-common-tone", "carried-structural-bass", "short-current-characteristic-tone", "anti-oracle", "isolated-test-scope", "production-diff-zero"]
+    "P5.35-01-hardening": ["orthogonal-role-flags", "unrearticulated-common-tone", "carried-structural-bass", "short-current-characteristic-tone", "anti-oracle", "isolated-test-scope", "production-diff-zero"],
+    "P5.35-02": ["mirror-histogram-guard", "attenuation-1-noop-control", "legitimate-harmony-safety", "carryover-reranks-contamination", "ablation-sensitivity", "anti-oracle", "determinism-immutability", "analyzer-regression", "p534-regression", "production-diff-zero"]
   },
   "gateResults": {
     "validate:phase-docs": "pass",
@@ -30,8 +31,16 @@
     "carried-structural-bass": "pass",
     "short-current-characteristic-tone": "pass",
     "anti-oracle": "pass",
-    "isolated-test-scope": "pass"
+    "isolated-test-scope": "pass",
+    "mirror-histogram-guard": "pass",
+    "attenuation-1-noop-control": "pass",
+    "legitimate-harmony-safety": "pass",
+    "carryover-reranks-contamination": "pass",
+    "ablation-sensitivity": "pass",
+    "determinism-immutability": "pass",
+    "analyzer-regression": "pass",
+    "p534-regression": "pass"
   },
-  "nextAction": "P5.35-02 — shadow carryover-resistant ranking (shadow-only; compare shadow top-1 vs production top-1; still no production connection). AWAIT explicit review/continuation. Promotion NOT evaluated; production integration NOT authorized (Contracts 04/06). Stop after P5.35-05.",
-  "updatedAt": "2026-09-21"
+  "nextAction": "P5.35-03 — promotion evaluation against Contract-04 gates A–J (needs private LF-MIDI-001, corrected P5.34 corpus safety, held/legato/common-tone safety, analyzer regression, determinism, bounded cost). AWAIT explicit review/continuation. Promotion NOT evaluated; production integration NOT authorized (Contracts 04/06). Stop after P5.35-05.",
+  "updatedAt": "2026-09-22"
 }

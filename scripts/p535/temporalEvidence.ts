@@ -184,7 +184,7 @@ function attackPcSet(
  * (a common tone), separating it from a foreign carryover — without any fixture
  * label. Bounded: templates × attacks.
  */
-function currentHarmonicSupport(pc: number, currentRoot: number | undefined, attackPcs: Set<number>): boolean {
+function currentHarmonicSupport(pc: number, currentRoot: number | undefined, attackPcs: ReadonlySet<number>): boolean {
   if (currentRoot === undefined) return false;
   for (const template of SUPPORT_TEMPLATES) {
     const tset = new Set(template.map((interval) => normalizePc(currentRoot + interval)));
@@ -198,6 +198,121 @@ function currentHarmonicSupport(pc: number, currentRoot: number | undefined, att
     if (coversAttacks && tset.has(pc)) return true;
   }
   return false;
+}
+
+/** Onset tolerance + transient threshold, resolved from options. */
+interface WindowOptions {
+  readonly tol: number;
+  readonly transientMaxBeats: number;
+  readonly ticksPerBeat: number;
+}
+
+/** One note's temporal classification within a single window (note-carrying). */
+export interface NoteRole {
+  readonly note: TimedNote;
+  readonly pc: number;
+  readonly temporalRole: TemporalRole;
+  readonly structuralBass: boolean;
+  readonly shortTransient: boolean;
+  readonly reason: ReasonCode;
+  readonly confidence: number;
+}
+
+export interface WindowRoleResult {
+  readonly heldWindow: boolean;
+  readonly roles: readonly NoteRole[];
+}
+
+/**
+ * Classifies the temporal role + orthogonal flags of every note overlapping ONE
+ * window. Shared by the Stage-01 classifier and the Stage-02 shadow ranking so
+ * the role logic has a single source of truth. `attackPcs`/`prevAttackPcs` are
+ * supplied by the caller (this window's and the previous window's attack sets).
+ * Pure and deterministic.
+ */
+export function classifyWindow(
+  overlapping: readonly TimedNote[],
+  startTick: number,
+  endTick: number,
+  attackPcs: ReadonlySet<number>,
+  prevAttackPcs: ReadonlySet<number>,
+  roles: Map<number, TrackRole>,
+  opts: WindowOptions,
+): WindowRoleResult {
+  const { tol, transientMaxBeats, ticksPerBeat } = opts;
+
+  // Sustained set = pcs of notes that started before this window (minus tolerance).
+  const sustainedPcs = new Set<number>();
+  for (const note of overlapping) {
+    if (note.startTick < startTick - tol) sustainedPcs.add(normalizePc(note.pitch));
+  }
+  // A held window introduces no NEW pitch class via its attacks.
+  const newAttackPcs = [...attackPcs].filter((pc) => !sustainedPcs.has(pc));
+  const heldWindow = newAttackPcs.length === 0;
+  const competingNewHarmony = newAttackPcs.length >= 2; // ponytail: heuristic threshold; ablated in P5.35-02, not hardened.
+
+  // Structural-bass FLAG = the lowest-pitch bass-ish contribution (pitch<60 or
+  // bass role). Purely a functional attribute — it does NOT decide temporalRole.
+  let bassNote: TimedNote | undefined;
+  // Current-harmony root = the lowest-pitch note that ATTACKS in this window
+  // (the freshly-articulated bass), used only by the runtime support check.
+  let currentRoot: number | undefined;
+  let currentRootPitch = Infinity;
+  for (const note of overlapping) {
+    const role = roles.get(note.trackIndex) ?? "mixed";
+    if (note.pitch < 60 || role === "bass") {
+      if (!bassNote || note.pitch < bassNote.pitch) bassNote = note;
+    }
+    const attackInWindow = note.startTick >= startTick - tol && note.startTick < endTick;
+    if (attackInWindow && note.pitch < currentRootPitch) {
+      currentRootPitch = note.pitch;
+      currentRoot = normalizePc(note.pitch);
+    }
+  }
+
+  const rolesOut: NoteRole[] = overlapping.map((note) => {
+    const pc = normalizePc(note.pitch);
+    const durationBeatsNote = note.durationTick / ticksPerBeat;
+    const attackInWindow = note.startTick >= startTick - tol && note.startTick < endTick;
+    const startedBefore = note.startTick < startTick - tol;
+
+    // Orthogonal functional attributes (independent of the temporal decision).
+    const structuralBass = note === bassNote;
+    const shortTransient = durationBeatsNote < transientMaxBeats;
+
+    let temporalRole: TemporalRole;
+    let reason: ReasonCode;
+
+    if (attackInWindow) {
+      // Freshly struck in the current window — a current attack regardless of
+      // duration (a short defining tone keeps this; shortTransient flags it).
+      temporalRole = "CURRENT_ATTACK";
+      reason = "attack-in-current";
+    } else if (heldWindow) {
+      // Sustained, but the window has no competing new harmony -> held chord/pad.
+      temporalRole = "CURRENT_SUSTAIN";
+      reason = "held-window-no-new-harmony";
+    } else if (attackPcs.has(pc)) {
+      // Sustained AND freshly attacked in the current state -> re-articulated common tone.
+      temporalRole = "COMMON_TONE";
+      reason = "shared-with-adjacent-state";
+    } else if (competingNewHarmony && currentHarmonicSupport(pc, currentRoot, attackPcs)) {
+      // Sustained, NOT re-attacked, but fits the current harmony -> unrearticulated common tone.
+      temporalRole = "COMMON_TONE";
+      reason = "current-harmonic-support";
+    } else if (competingNewHarmony && (prevAttackPcs.has(pc) || startedBefore)) {
+      // Sustained, foreign to the current harmony, supported by the prior state -> carryover.
+      temporalRole = "CARRIED_IN_SUSTAIN";
+      reason = "prior-state-only-support";
+    } else {
+      temporalRole = "UNCERTAIN";
+      reason = "ambiguous-context";
+    }
+
+    return { note, pc, temporalRole, structuralBass, shortTransient, reason, confidence: ROLE_CONFIDENCE[temporalRole] };
+  });
+
+  return { heldWindow, roles: rolesOut };
 }
 
 /**
@@ -239,83 +354,23 @@ export function classifyTemporalEvidence(
     const startTick = startBeat * ticksPerBeat;
     const endTick = (startBeat + durationBeats) * ticksPerBeat;
     const overlapping = evidence.filter((note) => overlaps(note, startTick, endTick));
-
-    const attackPcs = attackSets[windowIndex];
     const prevAttackPcs = windowIndex > 0 ? attackSets[windowIndex - 1] : new Set<number>();
 
-    // Sustained set = pcs of notes that started before this window (minus tolerance).
-    const sustainedPcs = new Set<number>();
-    for (const note of overlapping) {
-      if (note.startTick < startTick - tol) sustainedPcs.add(normalizePc(note.pitch));
-    }
-    // A held window introduces no NEW pitch class via its attacks.
-    const newAttackPcs = [...attackPcs].filter((pc) => !sustainedPcs.has(pc));
-    const heldWindow = newAttackPcs.length === 0;
-    const competingNewHarmony = newAttackPcs.length >= 2; // ponytail: heuristic threshold; ablate in P5.35-02, do not harden.
+    const { heldWindow, roles: windowRoles } = classifyWindow(
+      overlapping, startTick, endTick, attackSets[windowIndex], prevAttackPcs, roles,
+      { tol, transientMaxBeats, ticksPerBeat },
+    );
 
-    // Structural-bass FLAG = the lowest-pitch bass-ish contribution (pitch<60 or
-    // bass role). Purely a functional attribute — it does NOT decide temporalRole.
-    let bassNote: TimedNote | undefined;
-    // Current-harmony root = the lowest-pitch note that ATTACKS in this window
-    // (the freshly-articulated bass), used only by the runtime support check.
-    let currentRoot: number | undefined;
-    let currentRootPitch = Infinity;
-    for (const note of overlapping) {
-      const role = roles.get(note.trackIndex) ?? "mixed";
-      if (note.pitch < 60 || role === "bass") {
-        if (!bassNote || note.pitch < bassNote.pitch) bassNote = note;
-      }
-      const attackInWindow = note.startTick >= startTick - tol && note.startTick < endTick;
-      if (attackInWindow && note.pitch < currentRootPitch) {
-        currentRootPitch = note.pitch;
-        currentRoot = normalizePc(note.pitch);
-      }
-    }
-
-    const contributions: NoteEvidence[] = overlapping.map((note, id) => {
+    const contributions: NoteEvidence[] = windowRoles.map((r, id) => {
       contributionsProcessed += 1;
-      const pc = normalizePc(note.pitch);
-      const durationBeatsNote = note.durationTick / ticksPerBeat;
-      const attackInWindow = note.startTick >= startTick - tol && note.startTick < endTick;
-      const startedBefore = note.startTick < startTick - tol;
-
-      // Orthogonal functional attributes (independent of the temporal decision).
-      const structuralBass = note === bassNote;
-      const shortTransient = durationBeatsNote < transientMaxBeats;
-
-      let temporalRole: TemporalRole;
-      let reason: ReasonCode;
-
-      if (attackInWindow) {
-        // Freshly struck in the current window — a current attack regardless of
-        // duration (a short defining tone keeps this; shortTransient flags it).
-        temporalRole = "CURRENT_ATTACK";
-        reason = "attack-in-current";
-      } else if (heldWindow) {
-        // Sustained, but the window has no competing new harmony -> held chord/pad.
-        temporalRole = "CURRENT_SUSTAIN";
-        reason = "held-window-no-new-harmony";
-      } else if (attackPcs.has(pc)) {
-        // Sustained AND freshly attacked in the current state -> re-articulated common tone.
-        temporalRole = "COMMON_TONE";
-        reason = "shared-with-adjacent-state";
-      } else if (competingNewHarmony && currentHarmonicSupport(pc, currentRoot, attackPcs)) {
-        // Sustained, NOT re-attacked, but fits the current harmony -> unrearticulated common tone.
-        temporalRole = "COMMON_TONE";
-        reason = "current-harmonic-support";
-      } else if (competingNewHarmony && (prevAttackPcs.has(pc) || startedBefore)) {
-        // Sustained, foreign to the current harmony, supported by the prior state -> carryover.
-        temporalRole = "CARRIED_IN_SUSTAIN";
-        reason = "prior-state-only-support";
-      } else {
-        temporalRole = "UNCERTAIN";
-        reason = "ambiguous-context";
-      }
-
-      roleCounts[temporalRole] += 1;
-      if (structuralBass) structuralBassCount += 1;
-      if (shortTransient) shortTransientCount += 1;
-      return { id, pc, temporalRole, structuralBass, shortTransient, reason, confidence: ROLE_CONFIDENCE[temporalRole] };
+      roleCounts[r.temporalRole] += 1;
+      if (r.structuralBass) structuralBassCount += 1;
+      if (r.shortTransient) shortTransientCount += 1;
+      return {
+        id, pc: r.pc, temporalRole: r.temporalRole,
+        structuralBass: r.structuralBass, shortTransient: r.shortTransient,
+        reason: r.reason, confidence: r.confidence,
+      };
     });
 
     windows.push({ windowIndex, startBeat, durationBeats, heldWindow, contributions });
@@ -327,4 +382,14 @@ export function classifyTemporalEvidence(
     flagCounts: { structuralBass: structuralBassCount, shortTransient: shortTransientCount },
     contributionsProcessed,
   };
+}
+
+/** Exposed for shadow ranking: pcs whose notes ATTACK within [start-tol, end). */
+export function windowAttackPcs(
+  notes: readonly TimedNote[],
+  startTick: number,
+  endTick: number,
+  tol: number,
+): Set<number> {
+  return attackPcSet(notes, startTick, endTick, tol);
 }

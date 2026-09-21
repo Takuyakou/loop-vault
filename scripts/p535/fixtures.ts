@@ -155,5 +155,17 @@ export function boundaryCase(offsetTicks: number): MidiSongData {
   ]);
 }
 
+/**
+ * Sparse / guide-tone change (P5.35-01 §5 sensitivity): only two new tones (a
+ * guide-tone pair) attack at the change while a prior C sustains. Exercises the
+ * `competingNewHarmony >= 2` threshold at its boundary. Reporting fixture.
+ */
+export const guideToneChange = song([
+  { pitch: 48, startTick: 0, durationTick: 2 * BEAT }, // C (window 0)
+  { pitch: 40, startTick: 0, durationTick: 4 * BEAT }, // low C-ish bass sustains
+  { pitch: 47, startTick: 2 * BEAT, durationTick: 2 * BEAT }, // B guide tone (window 1)
+  { pitch: 53, startTick: 2 * BEAT, durationTick: 2 * BEAT }, // F guide tone (window 1)
+]);
+
 export const WINDOW_TICKS = WIN;
 export const TICKS_PER_BEAT = TPB;
