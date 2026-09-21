@@ -8,6 +8,9 @@ phase.
 - `P5.36-01-attack-provenance.md` — beat-bucket attack provenance + PC-inflation /
   cross-bucket / bass metrics; `SUPPORTED-HYPOTHESIS` (wrong-root windows merge two
   divergent beat-buckets; density is not the discriminator).
+- `P5.36-02-meter-normalized-identity.md` — 1/4 vs 4/4 A/B; Outcome M2 (meter tag
+  alone does not change legacy 2-beat identity; wrong-root failure lives in the
+  fixed 2-beat aggregation; 1/4 drives downstream 65→17 bar fragmentation).
 - `templates/P5.36-attack-provenance-template.md` — per-window attack-provenance
   diagnostic template.
 - `templates/P5.36-causal-verdict-template.md` — causal verdict + P5.37 proposal

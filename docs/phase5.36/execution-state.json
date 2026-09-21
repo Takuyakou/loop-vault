@@ -2,16 +2,17 @@
   "schemaVersion": 1,
   "phaseId": "5.36",
   "status": "in-progress",
-  "activeStage": "P5.36-02",
-  "completedStages": ["P5.36-00", "P5.36-01"],
+  "activeStage": "P5.36-03",
+  "completedStages": ["P5.36-00", "P5.36-01", "P5.36-02"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "93282e0",
-  "lastVerifiedCommit": "a692d2f",
+  "lastVerifiedCommit": "476c8a3",
   "currentBranch": "feat/p535-context-aware-harmonic-evidence",
   "requiredGates": {
     "P5.36-00": ["p534-corpus-baseline", "p535-focused-baseline", "official-clean-analyzer-scope", "lf-midi-001-legacy-freeze", "determinism", "privacy-path-media", "production-diff-zero", "validate:phase-docs", "validate:ai-handoff"],
-    "P5.36-01": ["current-attack-not-harmony", "wrong-root-4-targets-privacy-safe", "clean-controls-compared", "beat-bucket-provenance", "exact-onset-provenance", "pc-inflation-measured", "same-chord-reattack-hardneg", "rolled-arpeggio-hardneg", "layered-extended-hardneg", "true-two-harmony-observed", "source-immutable", "determinism", "production-rank-top1-unchanged", "runtime-diff-zero"]
+    "P5.36-01": ["current-attack-not-harmony", "wrong-root-4-targets-privacy-safe", "clean-controls-compared", "beat-bucket-provenance", "exact-onset-provenance", "pc-inflation-measured", "same-chord-reattack-hardneg", "rolled-arpeggio-hardneg", "layered-extended-hardneg", "true-two-harmony-observed", "source-immutable", "determinism", "production-rank-top1-unchanged", "runtime-diff-zero"],
+    "P5.36-02": ["meter-view-only-changed", "source-immutable", "ab-window-membership", "ab-histogram", "ab-topn-rank", "ab-bass-root-slash", "private-4-targets", "clean-controls", "downstream-vs-semantic-separated", "synthetic-hardneg-preserved", "determinism", "runtime-diff-zero"]
   },
   "gateResults": {
     "p534-corpus-baseline": "pass",
@@ -35,8 +36,17 @@
     "true-two-harmony-observed": "pass",
     "source-immutable": "pass",
     "production-rank-top1-unchanged": "pass",
-    "runtime-diff-zero": "pass"
+    "runtime-diff-zero": "pass",
+    "meter-view-only-changed": "pass",
+    "ab-window-membership": "pass",
+    "ab-histogram": "pass",
+    "ab-topn-rank": "pass",
+    "ab-bass-root-slash": "pass",
+    "private-4-targets": "pass",
+    "clean-controls": "pass",
+    "downstream-vs-semantic-separated": "pass",
+    "synthetic-hardneg-preserved": "pass"
   },
-  "nextAction": "P5.36-02 — meter-normalized chord-identity A/B experiment (diagnostic only; same notes under original 1/4 vs diagnostic 4/4 via withMeterView, compare top-1 identity on the 4 wrong-root targets; no note mutation, no production change). P5.36-01 result: SUPPORTED-HYPOTHESIS — wrong-root windows merge two beat-buckets with distinct pitch evidence (pcInflation mean 3.0 vs clean 0.0; Jaccard 0.22 vs 1.0) and a bass change (4/4 vs 0/4); density is NOT the discriminator (clean 16.8 >= wrong-root 12.8 contributions). AWAIT explicit review/continuation. Diagnostic only; production behavior NOT authorized. Stop after P5.36-05.",
+  "nextAction": "P5.36-03 — sub-window score decomposition (diagnostic only; partition the fixed 2-beat window at beat/attack-region level, decompose correct vs wrong-root candidate support by bucket/bass/defining-tones; bounded by P5.36-01 over-split hard negatives; no window-width or scoring change). P5.36-02 result: Outcome M2 — meter metadata alone does NOT change legacy 2-beat chord identity (membership identical; histogram differs only by a score-neutral per-window scalar 1.5/1.2; top-1/root/slash identical on all 33 windows incl. 4 wrong-root targets). CONFIRMED 1/4 drives downstream fragmentation (65->17 bars); SUPPORTED wrong-root = fixed 2-beat aggregation merging distinct beat regions (not raised to CONFIRMED before P5.36-03). AWAIT explicit review/continuation. Diagnostic only; production behavior NOT authorized. Stop after P5.36-05.",
   "updatedAt": "2026-09-22"
 }
