@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "5.36",
+  "status": "in-progress",
+  "activeStage": "P5.36-01",
+  "completedStages": ["P5.36-00"],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "93282e0",
+  "lastVerifiedCommit": "93282e0",
+  "currentBranch": "feat/p535-context-aware-harmonic-evidence",
+  "requiredGates": {
+    "P5.36-00": ["p534-corpus-baseline", "p535-focused-baseline", "official-clean-analyzer-scope", "lf-midi-001-legacy-freeze", "determinism", "privacy-path-media", "production-diff-zero", "validate:phase-docs", "validate:ai-handoff"]
+  },
+  "gateResults": {
+    "p534-corpus-baseline": "pass",
+    "p535-focused-baseline": "pass",
+    "official-clean-analyzer-scope": "pass",
+    "lf-midi-001-legacy-freeze": "pass",
+    "determinism": "pass",
+    "privacy-path-media": "pass",
+    "production-diff-zero": "pass",
+    "validate:phase-docs": "pass",
+    "validate:ai-handoff": "pass"
+  },
+  "nextAction": "P5.36-01 — attack provenance instrumentation (shadow/diagnostic only; attribute every attacked contribution in the frozen LF-MIDI-001 target windows w5/w8/w16/w21 to beat / relative-beat / sub-window bucket / voice-role / structural-bass / pc / attack-cluster). AWAIT explicit review/continuation. Diagnostic only; production behavior NOT authorized (Contract 01). CURRENT_ATTACK must not be equated with SAME_HARMONIC_STATE_ATTACK. Stop after P5.36-05.",
+  "updatedAt": "2026-09-22"
+}

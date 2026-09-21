@@ -1,0 +1,30 @@
+{
+  "package": "Loop Vault P5.36 Current-Attack / Meter Causal Validation",
+  "phaseIdAssumption": "5.36; stop if already allocated",
+  "dependsOn": "P5.35 closed as SHADOW RESEARCH COMPLETE; NOT PROMOTED",
+  "purpose": "Prove or reject fixed-window/meter/multiple-current-attack mechanism and produce exact P5.37 target",
+  "productionBehaviorChangesAuthorized": false,
+  "nextPhaseIntent": "P5.37 production fix/integration only if P5.36 identifies a bounded causal target",
+  "files": [
+    "00-START-HERE.md",
+    "README.md",
+    "acceptance/P5.36-acceptance-checklist.md",
+    "contracts/01-scope-and-stop-boundary.md",
+    "contracts/02-attack-provenance-model.md",
+    "contracts/03-meter-normalized-identity-experiment.md",
+    "contracts/04-subwindow-shadow-experiment.md",
+    "contracts/05-wrong-root-slash-score-decomposition.md",
+    "contracts/06-synthetic-and-private-gates.md",
+    "contracts/07-p537-entry-criteria.md",
+    "execution-state.json",
+    "reports/templates/P5.36-attack-provenance-template.md",
+    "reports/templates/P5.36-causal-verdict-template.md",
+    "stages/P5.36-00-audit-baseline.md",
+    "stages/P5.36-01-attack-provenance.md",
+    "stages/P5.36-02-meter-normalized-identity.md",
+    "stages/P5.36-03-subwindow-score-decomposition.md",
+    "stages/P5.36-04-causal-verdict-p537-proposal.md",
+    "stages/P5.36-05-hardening-closeout.md",
+    "work-instructions.md"
+  ]
+}
