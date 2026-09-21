@@ -7,7 +7,7 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "bb21930e888ef7b7fa35c994b7f8916b85903e4e",
-  "lastVerifiedCommit": "439a9b08fa90b1a213b302d8e3a9309a6caf3c0d",
+  "lastVerifiedCommit": "b533f475920789689bd88ed783b670d8632c7ac2",
   "currentBranch": "feat/p534-midi-import-failure-isolation",
   "requiredGates": {
     "P5.34-00": ["validate:phase-docs", "validate:ai-handoff"],
