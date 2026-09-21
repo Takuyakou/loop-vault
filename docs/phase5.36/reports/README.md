@@ -22,6 +22,9 @@ phase.
 - `P5.36-04-p537-proposal.md` — P5.37 target, existing-engine reuse audit
   (PARTIAL-REUSE of the 4/4-gated P5.24/P5.26 local-harmonic-state path), strategy
   comparison, exact seam, stages, promotion gates, rollback, complexity bound.
+- `P5.36-05-hardening-closeout.md` — phase closeout; `PASS — CURRENT-ATTACK / METER
+  CAUSAL VALIDATION COMPLETE; P5.37 TARGET READY`; frozen causal model, rejected
+  causes, P5.37 target/seam/gates/rollback; P5.37 not created.
 - `templates/P5.36-attack-provenance-template.md` — per-window attack-provenance
   diagnostic template.
 - `templates/P5.36-causal-verdict-template.md` — causal verdict + P5.37 proposal
