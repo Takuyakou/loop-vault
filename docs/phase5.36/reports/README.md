@@ -5,6 +5,9 @@ phase.
 
 - `P5.36-00-audit-baseline.md` — audit / seams / baselines / frozen LF-MIDI-001
   target windows / contract lock.
+- `P5.36-01-attack-provenance.md` — beat-bucket attack provenance + PC-inflation /
+  cross-bucket / bass metrics; `SUPPORTED-HYPOTHESIS` (wrong-root windows merge two
+  divergent beat-buckets; density is not the discriminator).
 - `templates/P5.36-attack-provenance-template.md` — per-window attack-provenance
   diagnostic template.
 - `templates/P5.36-causal-verdict-template.md` — causal verdict + P5.37 proposal

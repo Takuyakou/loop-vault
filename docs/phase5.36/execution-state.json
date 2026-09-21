@@ -2,15 +2,16 @@
   "schemaVersion": 1,
   "phaseId": "5.36",
   "status": "in-progress",
-  "activeStage": "P5.36-01",
-  "completedStages": ["P5.36-00"],
+  "activeStage": "P5.36-02",
+  "completedStages": ["P5.36-00", "P5.36-01"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "93282e0",
-  "lastVerifiedCommit": "93282e0",
+  "lastVerifiedCommit": "a692d2f",
   "currentBranch": "feat/p535-context-aware-harmonic-evidence",
   "requiredGates": {
-    "P5.36-00": ["p534-corpus-baseline", "p535-focused-baseline", "official-clean-analyzer-scope", "lf-midi-001-legacy-freeze", "determinism", "privacy-path-media", "production-diff-zero", "validate:phase-docs", "validate:ai-handoff"]
+    "P5.36-00": ["p534-corpus-baseline", "p535-focused-baseline", "official-clean-analyzer-scope", "lf-midi-001-legacy-freeze", "determinism", "privacy-path-media", "production-diff-zero", "validate:phase-docs", "validate:ai-handoff"],
+    "P5.36-01": ["current-attack-not-harmony", "wrong-root-4-targets-privacy-safe", "clean-controls-compared", "beat-bucket-provenance", "exact-onset-provenance", "pc-inflation-measured", "same-chord-reattack-hardneg", "rolled-arpeggio-hardneg", "layered-extended-hardneg", "true-two-harmony-observed", "source-immutable", "determinism", "production-rank-top1-unchanged", "runtime-diff-zero"]
   },
   "gateResults": {
     "p534-corpus-baseline": "pass",
@@ -21,8 +22,21 @@
     "privacy-path-media": "pass",
     "production-diff-zero": "pass",
     "validate:phase-docs": "pass",
-    "validate:ai-handoff": "pass"
+    "validate:ai-handoff": "pass",
+    "current-attack-not-harmony": "pass",
+    "wrong-root-4-targets-privacy-safe": "pass",
+    "clean-controls-compared": "pass",
+    "beat-bucket-provenance": "pass",
+    "exact-onset-provenance": "pass",
+    "pc-inflation-measured": "pass",
+    "same-chord-reattack-hardneg": "pass",
+    "rolled-arpeggio-hardneg": "pass",
+    "layered-extended-hardneg": "pass",
+    "true-two-harmony-observed": "pass",
+    "source-immutable": "pass",
+    "production-rank-top1-unchanged": "pass",
+    "runtime-diff-zero": "pass"
   },
-  "nextAction": "P5.36-01 — attack provenance instrumentation (shadow/diagnostic only; attribute every attacked contribution in the frozen LF-MIDI-001 target windows w5/w8/w16/w21 to beat / relative-beat / sub-window bucket / voice-role / structural-bass / pc / attack-cluster). AWAIT explicit review/continuation. Diagnostic only; production behavior NOT authorized (Contract 01). CURRENT_ATTACK must not be equated with SAME_HARMONIC_STATE_ATTACK. Stop after P5.36-05.",
+  "nextAction": "P5.36-02 — meter-normalized chord-identity A/B experiment (diagnostic only; same notes under original 1/4 vs diagnostic 4/4 via withMeterView, compare top-1 identity on the 4 wrong-root targets; no note mutation, no production change). P5.36-01 result: SUPPORTED-HYPOTHESIS — wrong-root windows merge two beat-buckets with distinct pitch evidence (pcInflation mean 3.0 vs clean 0.0; Jaccard 0.22 vs 1.0) and a bass change (4/4 vs 0/4); density is NOT the discriminator (clean 16.8 >= wrong-root 12.8 contributions). AWAIT explicit review/continuation. Diagnostic only; production behavior NOT authorized. Stop after P5.36-05.",
   "updatedAt": "2026-09-22"
 }
