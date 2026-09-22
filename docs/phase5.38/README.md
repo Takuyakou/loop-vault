@@ -4,10 +4,10 @@
 
 ## Status
 
-- **Status:** blocked after Shadow v2 Promotion Evaluation addendum —
-  `PROMOTION = PASS`; production behavior unchanged
-- **Active stage:** none; P5.38-03 requires explicit authorization
-- **Completed stages:** P5.38-00 ([`reports/P5.38-00-audit-baseline-gate-freeze.md`](reports/P5.38-00-audit-baseline-gate-freeze.md)), P5.38-01 ([`reports/P5.38-01-presentation-grouping-shadow.md`](reports/P5.38-01-presentation-grouping-shadow.md)), P5.38-02 ([`reports/P5.38-02-promotion-evaluation.md`](reports/P5.38-02-promotion-evaluation.md))
+- **Status:** blocked after P5.38-03 production integration; promoted v2 is
+  integrated behind a default-OFF runtime flag
+- **Active stage:** none; P5.38-04 requires explicit authorization
+- **Completed stages:** P5.38-00 ([`reports/P5.38-00-audit-baseline-gate-freeze.md`](reports/P5.38-00-audit-baseline-gate-freeze.md)), P5.38-01 ([`reports/P5.38-01-presentation-grouping-shadow.md`](reports/P5.38-01-presentation-grouping-shadow.md)), P5.38-02 ([`reports/P5.38-02-promotion-evaluation.md`](reports/P5.38-02-promotion-evaluation.md)), P5.38-03 ([`reports/P5.38-03-production-integration.md`](reports/P5.38-03-production-integration.md))
 - **Base:** local `master` at `50b0a5a`, which contains the P5.37 closeout and default-on Family-B integration
 - **Current branch:** `feat/p538-family-a-downstream`
 - **P5.38-01 result:** runtime-only source/presentation separation, meter parity,
@@ -24,8 +24,14 @@
   v2 policy. See
   [`reports/P5.38-02b-v2-promotion-evaluation.md`](reports/P5.38-02b-v2-promotion-evaluation.md).
   The historical v1 `PROMOTION = FAIL` remains recorded separately.
-- **Stop boundary:** await explicit human authorization for P5.38-03; do not
-  start production integration automatically
+- **P5.38-03 result:** the exact promoted v2 implementation is shared by
+  research and production, attached only after the resolved `fullTimeline`,
+  and guarded by `enablePresentationGrouping`. Omitted/false is exact legacy;
+  Stage03 default remains OFF. Production ON reproduces the privacy-safe
+  65 -> 25 presentation-group, 40 -> 0 dash, and 10 -> 8 block aggregate while
+  source truth and harmonic identity remain unchanged.
+- **Stop boundary:** await explicit human authorization for P5.38-04; do not
+  start hardening/default-on evaluation automatically
 
 ## Required Reading Order
 
