@@ -14,7 +14,7 @@ note dumps. Synthetic pitch examples are allowed.
 ## LF-MIDI-001 — Clean structured chord MIDI may be degraded by analyzer interpretation
 
 - ID: LF-MIDI-001
-- Status: CAUSE CONFIRMED (P5.36); production fix PROPOSED (P5.37), not implemented
+- Status: CAUSE CONFIRMED (P5.36); **Family-B production fix IMPLEMENTED, PROMOTED, HARDENED, DEFAULT ON (P5.37)**; Family A (meter-derived downstream fragmentation) and vocabulary/representability remain **separate open work**
 - Observed facts (USER-REPORTED — not reproducible from committed repo alone):
   - meter metadata reads 1/4 (privacy-safe PPQ metadata);
   - approximately 65 quarter-note beats;
@@ -62,15 +62,27 @@ Two independent, co-occurring causes (see `docs/phase5.36/reports/` and
 - **Separate family:** vocabulary/representability limits (S02/S04) are a distinct
   known issue; the P5.37 fix does not address them.
 
-### Proposed fix (P5.37 — NOT implemented; awaits human authorization)
+### Implemented fix (P5.37 — union-chimera partition, DEFAULT ON)
 
-Generalize the existing P5.24/P5.26 local-harmonic-state segmentation/consolidation
-path (`localHarmonicStateIntegration.ts`, `segmentation.ts`, `harmonicState/*`,
-behind flag `enableLocalHarmonicStateConsolidation`, OFF = exact legacy) from its
-current **4/4-only** hard gate to meter-independent operation, so a mixed 2-beat
-region is partitioned into coherent local states before the EXISTING scorer and
-vocabulary rank it. The source meter fact is preserved (this is not a 1/4→4/4
-rewrite). Full proposal: `docs/phase5.36/reports/P5.36-04-p537-proposal.md`.
+The P5.24/P5.26 local-state engine could not be reused (its bar-period model and
+per-cell evidence gate are 4/4-dependent — P5.37-01). Instead, a bounded,
+oracle-free **union-chimera partition** was added at the candidate-ranking layer:
+`src/domain/midi/unionChimera.ts` (shared pure trigger, frozen policy v1,
+`minBucketPcs = 3`) is called from `analyzeMidiWithRankingScores` in
+`src/domain/midi/legacy.ts` (`partitionUnionChimeras`), between per-window ranking
+and `smoothTimelineWithRankingScores`. A fixed 2-beat window whose top-1 candidate
+is supported by neither beat (two materially different coherent local harmonies
+merged) is split into its two beats' coherent candidates before smoothing, ranked
+with the **existing** vocabulary/scorer; coherent windows are left byte-for-byte
+unchanged. The source meter fact is preserved (no 1/4→4/4 rewrite).
+
+- Flag `enableUnionChimeraPartition`: omitted / `true` → the promoted fix (DEFAULT
+  ON); `false` → exact-legacy rollback (retained, test-locked).
+- Promotion PASS (P5.37-02), production-integrated (P5.37-03), hardened (P5.37-05),
+  DEFAULT-ON APPROVED (P5.37-05a), closed out (P5.37-06).
+- On the private fixture: 4/4 known targets improve; `Am11/B`, `Fm11/G` are removed
+  from the corrected final timeline and do not reappear after smoothing.
+- Full history: `docs/phase5.37/reports/` (see `P5.37-06-closeout.md`).
 
 ### Relationship to current source-preserving building blocks
 

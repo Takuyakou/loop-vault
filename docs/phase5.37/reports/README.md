@@ -33,6 +33,14 @@ Stage and promotion reports for the Production Fix / Integration phase.
   (`enableUnionChimeraPartition !== false`); `false` = exact-legacy rollback,
   flag retained and test-locked; full existing suite green with default ON
   (3236 tests). Frozen policy v1 unchanged; perf optimization deferred.
+- `P5.37-06-closeout.md` — **phase closeout.** Final status `PASS — PRODUCTION
+  UNION-CHIMERA FIX INTEGRATED, HARDENED, AND ENABLED BY DEFAULT`. Records Git
+  binding, causal model, production seam, default-ON + rollback, promotion, private
+  known result (33 W2 / 8 triggered / 4 CONFIRMED + 4 SUPPORTED / 0 SUSPICIOUS /
+  19→25), hard-negative + corpus safety, official regression (395 files / 3279
+  tests, 0 failures, default ON), determinism/boundedness/source-fidelity,
+  Family A DEFERRED, representability OPEN, future optimization note. No new
+  implementation/policy/perf change. No merge/push/tag.
 - `templates/` — shadow/promotion/integration report templates.
 
 Reports carry only privacy-safe aggregates. Never commit the private MIDI

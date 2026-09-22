@@ -77,6 +77,32 @@ code/tests; `PROPOSED` items are direction only.
 - Consequences: `.local-evaluation/` and `test/private-midi/` are ignored; synthetic fixtures live under `test/fixtures/`.
 - Do not: commit raw audio/MIDI or `.local-evaluation` inputs.
 
+## ADR-008 — Union-chimera partition is default ON (Family B fix)
+
+- ID: ADR-008
+- Title: `enableUnionChimeraPartition` default ON, `false` = exact-legacy rollback
+- Status: CONFIRMED (P5.37)
+- Decision: The union-chimera partition (frozen policy v1, `minBucketPcs = 3`) is the
+  product default. Omitting the flag or `true` applies the promoted fix; only the
+  literal `false` restores exact legacy. The flag is retained (not deleted).
+- Reason: Family B (fixed 2-beat evidence mixing → wrong-root/broad-slash chimera) is
+  a CONFIRMED cause of LF-MIDI-001; the fix corrects the known targets and 4 further
+  SUPPORTED-LIKELY-CORRECTION windows with 0 SUSPICIOUS, and Loop Vault prioritizes
+  harmonic accuracy + reduced human-correction effort over a small analysis-time
+  increase. Absolute overhead ~+20 ms (≈13→33 ms) is imperceptible for one-shot
+  import, so performance is informational, not a default-ON blocker.
+- Evidence: `src/domain/midi/unionChimera.ts`, `src/domain/midi/legacy.ts`
+  (`partitionUnionChimeras` in `analyzeMidiWithRankingScores`); `docs/phase5.37/`
+  (`reports/P5.37-06-closeout.md`). Test-locked: `analyzeMidi(x)` ==
+  `analyzeMidi(x, {enableUnionChimeraPartition: true})`; `{false}` == legacy baseline.
+- Consequences: The default MIDI timeline now partitions confirmed chimera windows.
+  Coherent windows are unchanged; source notes/meter/vocabulary/scorer are unchanged.
+  Rollback stays trivial via the flag.
+- Do not: delete the flag; change frozen policy v1 (trigger/threshold/scorer/
+  heuristic) without a new authorized stage; claim Family A or representability is
+  fixed. A future performance optimization (reuse main-loop ranking) must not change
+  policy v1.
+
 ## ADR-007 — Source Bassline is a selected-bass contract
 
 - ID: ADR-007

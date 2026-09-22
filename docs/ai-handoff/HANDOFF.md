@@ -59,13 +59,24 @@ progression vocabulary. It is **not** a chord detector.
 15. Security (intake budgets / CSP)
 16. i18n
 
-## Current active concern (USER-REPORTED, cause undetermined)
+## Current concern (LF-MIDI-001 — cause CONFIRMED; Family B fixed, others open)
 
-Clean, structured chord MIDI may be degraded by the analyzer's interpretation
-(for example a simple minor-7 shape reported as an unrelated slash chord). This
-is recorded as `LF-MIDI-001` in KNOWN-FAILURES.md. The root cause is **not**
-confirmed; it is one of several hypotheses. Do not declare 1/4 meter, onset
-clustering, or any single factor as the cause.
+Clean, structured chord MIDI could be degraded by the analyzer's interpretation
+(a simple minor-7 shape reported as an unrelated slash chord). Recorded as
+`LF-MIDI-001` in KNOWN-FAILURES.md. As of P5.37 the causes are confirmed and split:
+
+- **Family B (wrong-root / broad-slash mislabel) — CONFIRMED + FIXED, DEFAULT ON.**
+  A fixed 2-beat evidence window unioned two distinct local harmonic states so a
+  chimera candidate won on evidence neither beat supported. The P5.37 union-chimera
+  partition (`enableUnionChimeraPartition`, default ON; `false` = exact-legacy
+  rollback) detects only that narrow signature and partitions those windows into
+  coherent local states before smoothing. Promoted, hardened, default-on.
+- **Family A (1/4 meter → downstream bar/block/text fragmentation) — CONFIRMED,
+  DEFERRED.** A formatting/structure effect only; not fixed in P5.37.
+- **Representability (extended/altered/omission-sensitive vocabulary, e.g. S02/S04)
+  — separate OPEN family.** P5.37 does not address it.
+
+Do not claim all MIDI-import issues are solved: only Family B is fixed.
 
 ## Confirmed building blocks
 

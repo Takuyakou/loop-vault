@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "phaseId": "5.37",
-  "status": "in-progress",
-  "activeStage": "P5.37-06",
-  "completedStages": ["P5.37-00", "P5.37-01", "P5.37-02", "P5.37-03", "P5.37-05"],
+  "status": "completed",
+  "activeStage": null,
+  "completedStages": ["P5.37-00", "P5.37-01", "P5.37-02", "P5.37-03", "P5.37-05", "P5.37-06"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "77c8b0e",
@@ -14,7 +14,8 @@
     "P5.37-01": ["p526-reuse-verdict-updated", "b-prime-parameterization-reverted", "production-source-runtime-baseline-restored", "no-410-line-fork", "candidate-scorer-unchanged", "candidate-vocabulary-unchanged", "oracle-free-trigger", "synthetic-chimera-detected", "synthetic-local-states-restored", "hard-negatives-safe", "corrected-corpus-safe", "policy-frozen-before-private", "lf-4-targets-triggered", "whole-file-trigger-prevalence-reported", "deterministic", "bounded", "source-immutable"],
     "P5.37-02": ["gateA-known-targets", "gateB-whole-file", "gateC-corpus", "gateD-perf-negatives", "gateE-rich-layered", "gateF-slash", "gateG-held-common-tone", "gateH-source-fidelity", "gateI-determinism", "gateJ-bounded", "gateK-analyzer-regression", "gateL-e2e-semantic-preservation", "gateM-boundary-stability", "e2e-baseline-parity", "no-retuning", "oracle-isolated", "production-diff-zero"],
     "P5.37-03": ["dedicated-branch", "frozen-v1-unchanged", "insertion-before-smoothing", "flag-default-off", "off-exact-legacy", "on-equals-shadow", "lf-4-targets-improve", "whole-file-reproduces-promotion", "zero-suspicious-private-regressions", "hard-negatives-safe", "semantic-corpus-safe", "scorer-vocab-bass-unchanged", "source-immutable", "deterministic", "bounded", "official-regression-green", "production-runtime-default-unchanged", "single-trigger-implementation", "no-unrelated-refactor"],
-    "P5.37-05": ["frozen-policy-unchanged", "off-legacy-reconfirmed", "on-shadow-reconfirmed", "default-on-safety-experiment", "hard-gates-pass-on-behavior", "extended-harmony-safe", "slash-safe", "syncopation-safe", "extra-triggers-classified", "trigger-prevalence-recorded", "performance-measured", "e2e-production-confirmed", "boundary-stability", "determinism", "bounded", "source-immutable", "official-regression-green", "family-a-deferred", "production-diff-zero"]
+    "P5.37-05": ["frozen-policy-unchanged", "off-legacy-reconfirmed", "on-shadow-reconfirmed", "default-on-safety-experiment", "hard-gates-pass-on-behavior", "extended-harmony-safe", "slash-safe", "syncopation-safe", "extra-triggers-classified", "trigger-prevalence-recorded", "performance-measured", "e2e-production-confirmed", "boundary-stability", "determinism", "bounded", "source-immutable", "official-regression-green", "family-a-deferred", "production-diff-zero"],
+    "P5.37-06": ["final-status-recorded", "official-regression-green", "default-on-parity", "off-rollback-parity", "determinism", "bounded", "source-immutable", "single-trigger-implementation", "rollback-retained", "family-a-deferred", "representability-open", "closeout-report", "no-next-phase", "validate:phase-docs", "validate:ai-handoff", "git-diff-check-clean", "privacy-clean"]
   },
   "gateResults": {
     "4-4-assumptions-classified": "pass",
@@ -95,6 +96,15 @@
     "default-on-absolute-latency-acceptable": "pass",
     "default-on-test-lock": "pass",
     "production-default-on": "pass",
+    "final-status-recorded": "pass",
+    "default-on-parity": "pass",
+    "off-rollback-parity": "pass",
+    "rollback-retained": "pass",
+    "representability-open": "pass",
+    "closeout-report": "pass",
+    "no-next-phase": "pass",
+    "git-diff-check-clean": "pass",
+    "privacy-clean": "pass",
     "collision-check": "pass",
     "p536-closed-in-ancestry": "pass",
     "default-path-failure-confirmed": "pass",
@@ -106,6 +116,6 @@
     "validate:ai-handoff": "pass",
     "production-diff-zero": "pass"
   },
-  "nextAction": "P5.37-05a DEFAULT-ON ADDENDUM COMPLETE. One-time re-evaluation supersedes the P5.37-05 NOT-APPROVED: DEFAULT-ON = APPROVED. enableUnionChimeraPartition default is now ON (`!== false`); the literal `false` is the exact-legacy rollback (test-locked, flag retained, NOT deleted). Rationale: (1) the ~2.5x relative overhead was over-weighted — absolute overhead is ~+20ms (13->33ms), imperceptible for one-shot import; per Loop Vault priority (accuracy + reduced human correction > speed) performance is informational, NOT a hard gate; (2) the 4 additional LF triggers were re-examined privacy-safe and are all SUPPORTED-LIKELY-CORRECTION (two-different-root coherent partitions, 0 unsupported winner tones, moving structural bass, buckets-different-identity=true) -> 0 SUSPICIOUS, 0 UNRESOLVED. All §6 criteria met: 4 known failures improve, hard negatives + corpus 0 triggers, full existing suite green with default ON (393 files / 3236 tests, 0 failures -> 0 existing-behavior change), smoothing/determinism/bounded/source-immutable safe, OFF = exact-legacy rollback. Test-locked: analyzeMidi(x) == analyzeMidi(x,{true}); analyzeMidi(x,{false}) = legacy rollback. Frozen policy v1 (minBucketPcs=3) UNCHANGED — no trigger/threshold/scorer/heuristic change. Production source diff is now NON-ZERO (default flip in legacy.ts + types.ts doc). Performance optimization (reuse main-loop ranking) DEFERRED, not implemented. See reports/P5.37-05a-default-on-addendum.md. Family A = DEFERRED (open). Next: P5.37-06 closeout. AWAIT explicit review before P5.37-06. No push/merge/tag.",
+  "nextAction": "P5.37 CLOSED (P5.37-06 complete). Final status: PASS — PRODUCTION UNION-CHIMERA FIX INTEGRATED, HARDENED, AND ENABLED BY DEFAULT. enableUnionChimeraPartition: omitted/true = promoted policy v1 (DEFAULT ON); false = exact-legacy rollback (retained, test-locked, NOT deleted). Frozen policy v1 (minBucketPcs=3) unchanged in closeout. Seam: src/domain/midi/unionChimera.ts (shared pure trigger) + legacy.ts analyzeMidiWithRankingScores (per-window ranking -> partitionUnionChimeras -> smoothTimelineWithRankingScores); one shared implementation for production + tests. Verification (current actual): p537 focused 41; official clean scope 395 files / 3279 tests, 0 failures (default ON; includes P5.34/35/36 regression + default-ON parity + explicit-OFF rollback parity); determinism/bounded/source-immutable locked; validate:phase-docs + validate:ai-handoff PASS; git diff --check clean; privacy clean. Private LF-MIDI-001 aggregate: 33 W2 regions, 8 triggered (4 CONFIRMED + 4 SUPPORTED-LIKELY-CORRECTION, 0 SUSPICIOUS, 0 UNRESOLVED), 19->25; Am11/B & Fm11/G removed and do not reappear after smoothing. Performance OFF~13ms ON~33ms (+20ms absolute) accepted (informational, not a hard gate). Issue map: Family A (meter-derived downstream fragmentation) CONFIRMED+DEFERRED; Family B (fixed-window union chimera) CONFIRMED+FIX IMPLEMENTED+DEFAULT ON; Family C (vocabulary/representability, S02/S04) OPEN/separate. P5.37-04 = SKIPPED/DEFERRED (Family A open). Future optimization (reuse main-loop ranking, no policy change) DEFERRED. DO NOT start P5.38, Family A fix, performance optimization, or representability expansion automatically. No merge/push/tag/release. See reports/P5.37-06-closeout.md.",
   "updatedAt": "2026-09-22"
 }
