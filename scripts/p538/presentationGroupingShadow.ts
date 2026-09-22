@@ -103,15 +103,37 @@ export interface PresentationGroupingShadowInput {
   legacyBlocks: readonly ProgressionBlockCandidate[];
 }
 
-export interface PresentationGroupingShadowResult {
-  policyId: typeof PRESENTATION_GROUPING_POLICY_V1.id;
+export interface PresentationGroupingProjectionResult<
+  PolicyId extends string = string,
+  ReasonCode extends string = string,
+  Evidence = FragmentationEvidence,
+> {
+  policyId: PolicyId;
   applied: boolean;
-  reasonCodes: PresentationGroupingReasonCode[];
-  evidence: FragmentationEvidence;
+  reasonCodes: ReasonCode[];
+  evidence: Evidence;
   groups: PresentationGroup[];
   formattedCells: PresentationFormattedCell[];
   formattedText: string;
   projectedBlocks: PresentationBlockProjection[];
+}
+
+export type PresentationGroupingShadowResult = PresentationGroupingProjectionResult<
+  typeof PRESENTATION_GROUPING_POLICY_V1.id,
+  PresentationGroupingReasonCode,
+  FragmentationEvidence
+>;
+
+export interface PresentationGroupingProjectionDecision<
+  PolicyId extends string,
+  ReasonCode extends string,
+  Evidence,
+> {
+  policyId: PolicyId;
+  applied: boolean;
+  reasonCodes: ReasonCode[];
+  evidence: Evidence;
+  maximumProjectedBlocks: number;
 }
 
 export interface HarmonicIdentitySnapshot {
@@ -130,6 +152,28 @@ export function buildPresentationGroupingShadow(
   const evidence = fragmentationEvidence(input);
   const reasonCodes = groupingReasonCodes(input, evidence);
   const applied = reasonCodes.includes("presentation-projection-applied");
+  return buildPresentationGroupingProjection(input, {
+    policyId: PRESENTATION_GROUPING_POLICY_V1.id,
+    applied,
+    reasonCodes,
+    evidence,
+    maximumProjectedBlocks: PRESENTATION_GROUPING_POLICY_V1.maximumProjectedBlocks,
+  });
+}
+
+/**
+ * Shared frozen projection architecture. Shadow policies decide only whether
+ * to apply it; source coordinates and projection construction remain common.
+ */
+export function buildPresentationGroupingProjection<
+  PolicyId extends string,
+  ReasonCode extends string,
+  Evidence,
+>(
+  input: PresentationGroupingShadowInput,
+  decision: PresentationGroupingProjectionDecision<PolicyId, ReasonCode, Evidence>,
+): PresentationGroupingProjectionResult<PolicyId, ReasonCode, Evidence> {
+  const { applied } = decision;
   const groups = applied
     ? buildHarmonicPresentationGroups(input)
     : buildLegacyPresentationGroups(input);
@@ -140,14 +184,14 @@ export function buildPresentationGroupingShadow(
     ? formatPresentationCells(formattedCells)
     : formatProgressionText(input.timeline);
   const projectedBlocks = applied
-    ? buildProjectedBlocks(input, groups)
+    ? buildProjectedBlocks(input, groups, decision.maximumProjectedBlocks)
     : buildLegacyBlockProjections(input, groups);
 
   return {
-    policyId: PRESENTATION_GROUPING_POLICY_V1.id,
+    policyId: decision.policyId,
     applied,
-    reasonCodes,
-    evidence,
+    reasonCodes: decision.reasonCodes,
+    evidence: decision.evidence,
     groups,
     formattedCells,
     formattedText,
@@ -212,7 +256,7 @@ export function buildPresentationBlockCells(
   });
 }
 
-function fragmentationEvidence(
+export function fragmentationEvidence(
   input: PresentationGroupingShadowInput,
 ): FragmentationEvidence {
   const legacyCells = cellsFromLegacyText(formatProgressionText(input.timeline));
@@ -383,11 +427,12 @@ function buildLegacyBlockProjections(
 function buildProjectedBlocks(
   input: PresentationGroupingShadowInput,
   groups: readonly PresentationGroup[],
+  maximumProjectedBlocks: number,
 ): PresentationBlockProjection[] {
   const projected: PresentationBlockProjection[] = [];
   const seen = new Set<string>();
   for (const [sourceCandidateIndex, candidate] of input.legacyBlocks
-    .slice(0, PRESENTATION_GROUPING_POLICY_V1.maximumProjectedBlocks)
+    .slice(0, maximumProjectedBlocks)
     .entries()) {
     const sourceStartBeat = (candidate.startBar - 1) * input.sourceBeatsPerGroup;
     const sourceEndBeat = candidate.endBar * input.sourceBeatsPerGroup;
