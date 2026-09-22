@@ -7,6 +7,7 @@ import type { CandidateChordEvent, CandidateChordStats } from "./midi/candidateB
 import type { ProgressionPracticeProgress } from "./practice/types";
 import type { SourceBasslineSnapshotV1 } from "./sourceBassline";
 import type { MidiTempoDiagnostics } from "./midi/tempoAnalysis";
+import type { PresentationGroupingResult } from "./midi/presentationGrouping";
 
 export type Status =
   | "idea"
@@ -162,6 +163,12 @@ export interface MidiProgressionAnalysis {
   detectedKey?: string;
   fullTimeline: ChordTimelineItem[];
   blockCandidates: ProgressionBlockCandidate[];
+  /**
+   * Runtime-only Family-A presentation projection. Presentation groups are
+   * variable-duration harmonic spans, not source bars or rewritten meter bars.
+   * This value is never persisted into SavedProgressionBlock or Vault data.
+   */
+  presentationGrouping?: PresentationGroupingResult;
   /**
    * Every appearance of each progression, grouped by shape. Non-persistent:
    * it exists so the UI can offer the other positions of a progression instead

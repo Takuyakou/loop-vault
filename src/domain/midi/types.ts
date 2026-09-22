@@ -141,6 +141,13 @@ export interface AnalyzeMidiOptions {
    * merged) is partitioned into its two beats' coherent candidates before smoothing.
    */
   enableUnionChimeraPartition?: boolean;
+  /**
+   * Runtime-only P5.38 Family-A presentation projection. Default OFF in
+   * P5.38-03; only literal true attaches the promoted v2 projection after the
+   * resolved harmonic timeline. Source meter, bars, timeline and saved block
+   * coordinates remain unchanged.
+   */
+  enablePresentationGrouping?: boolean;
 
 }
 

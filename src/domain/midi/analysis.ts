@@ -27,6 +27,7 @@ import {
   prepareLocalHarmonicStateAnalyzerOptions,
 } from "./localHarmonicStateIntegration";
 import { applyKeyAwareChordSpelling } from "./keyAwareChordSpelling";
+import { withPresentationGrouping } from "./presentationGrouping";
 /** Kept for rollback: the analyzer promoted in Phase 4.0. */
 export const phase40DefaultAnalyzerMode = "phase4-v1" as const;
 
@@ -92,9 +93,12 @@ export function analyzeMidi(bytes: Uint8Array, options: AnalyzeMidiOptions = {})
         : harmonicStateConsolidationAnalyzerVersion,
     } : {}),
   };
-  return options.enableKeyAwareChordSpelling === true
+  const spelled = options.enableKeyAwareChordSpelling === true
     ? applyKeyAwareChordSpelling(finalized)
     : finalized;
+  return options.enablePresentationGrouping === true
+    ? withPresentationGrouping(spelled)
+    : spelled;
 }
 
 function runAnalyzer(
