@@ -10,6 +10,9 @@ import {
 } from "../domain/repository";
 import { pickFocus } from "../domain/focus";
 import { parseChordLabel } from "../domain/chords";
+import { analyzeMidi } from "../domain/midi/analysis";
+import { parseVaultFileJson } from "../domain/schema";
+import { progressionFixture } from "../../scripts/p534/fixtures";
 import { buildProgressionVoicingPracticeHandoffFromVault } from "../domain/progressionVoicingPractice";
 import {
   TEXT_PROGRESSION_ANALYZER_VERSION,
@@ -147,6 +150,60 @@ describe("vault store", () => {
     expect(store.getState().loadStatus).toBe("ready");
   });
 
+  it("round-trips source candidate coordinates without persisting presentation topology", async () => {
+    const repository = new FakeRepository();
+    const store = createVaultStore({
+      repository,
+      idFactory: () => generatedId,
+      now: () => now,
+    });
+    await store.getState().initialize();
+    const analysis = analyzeMidi(progressionFixture(1, 4));
+    const sourceCandidate = analysis.blockCandidates[0]!;
+    expect(analysis.presentationGrouping?.applied).toBe(true);
+
+    expect(store.getState().createIdeaFromDraft({
+      title: "Family A source truth",
+      progressionBlock: sourceCandidate,
+      progressionAnalysis: analysis,
+    })).toBe(generatedId);
+    await store.getState().flush();
+
+    const persisted = repository.saved[repository.saved.length - 1]!;
+    const serialized = JSON.stringify(persisted);
+    expect(serialized).not.toContain("presentationGrouping");
+    expect(serialized).not.toContain("p538-presentation-grouping-shadow-v2");
+    const savedBlock = persisted.ideas[0]!.progressionBlocks![0]!;
+    expect(savedBlock.startBar).toBe(sourceCandidate.startBar);
+    expect(savedBlock.endBar).toBe(sourceCandidate.endBar);
+    expect(savedBlock.chords.map(({ bar, beat, durationBeats, chord }) => ({
+      bar,
+      beat,
+      durationBeats,
+      label: chord.label,
+    }))).toEqual(sourceCandidate.chords.map(({ bar, beat, durationBeats, chord }) => ({
+      bar,
+      beat,
+      durationBeats,
+      label: chord.label,
+    })));
+
+    const parsed = parseVaultFileJson(serialized);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(parsed.quarantine).toHaveLength(0);
+    const loadedBlock = parsed.vault.ideas[0]!.progressionBlocks![0]!;
+    expect(loadedBlock).toMatchObject({
+      startBar: savedBlock.startBar,
+      endBar: savedBlock.endBar,
+      lengthBars: savedBlock.lengthBars,
+      sourceStartBeat: savedBlock.sourceStartBeat,
+      sourceEndBeat: savedBlock.sourceEndBeat,
+      timeSignature: savedBlock.timeSignature,
+      chords: savedBlock.chords,
+    });
+    expect(JSON.stringify(loadedBlock)).not.toContain("presentationGrouping");
+  });
   it("updates the UI language setting through autosave", async () => {
     const repository = new FakeRepository();
     const store = createVaultStore({ repository });

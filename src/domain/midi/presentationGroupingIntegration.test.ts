@@ -4,25 +4,29 @@ import { progressionFixture } from "../../../scripts/p534/fixtures";
 import {
   buildPresentationGrouping,
   PRESENTATION_GROUPING_POLICY_V2,
+  presentationConsumerModel,
 } from "./presentationGrouping";
 import { analyzeMidi } from "./analysis";
 import { beatsPerBar } from "./timing";
 import { formatProgressionText } from "../progressionText";
 
 describe("P5.38 Family-A production presentation grouping", () => {
-  it("keeps the runtime default and explicit OFF on the exact legacy result", () => {
+  it("locks omitted to explicit ON and explicit OFF to the exact legacy result", () => {
     const bytes = progressionFixture(1, 4);
-    const baseline = analyzeMidi(bytes);
+    const defaultOn = analyzeMidi(bytes);
+    const explicitOn = analyzeMidi(bytes, { enablePresentationGrouping: true });
     const explicitOff = analyzeMidi(bytes, { enablePresentationGrouping: false });
 
-    expect(explicitOff).toEqual(baseline);
-    expect(baseline).not.toHaveProperty("presentationGrouping");
+    expect(defaultOn).toEqual(explicitOn);
+    expect(JSON.stringify(defaultOn)).toBe(JSON.stringify(explicitOn));
+    expect(defaultOn.presentationGrouping?.policyId)
+      .toBe(PRESENTATION_GROUPING_POLICY_V2.id);
     expect(explicitOff).not.toHaveProperty("presentationGrouping");
   });
 
   it("makes production ON byte-equivalent to the promoted shared v2 projection", () => {
     const bytes = progressionFixture(1, 4);
-    const legacy = analyzeMidi(bytes);
+    const legacy = analyzeMidi(bytes, { enablePresentationGrouping: false });
     const production = analyzeMidi(bytes, { enablePresentationGrouping: true });
     const promoted = buildPresentationGrouping({
       sourceMeter: legacy.timeSignature ?? "4/4",
@@ -41,7 +45,7 @@ describe("P5.38 Family-A production presentation grouping", () => {
 
   it("projects only presentation consumers and preserves all source/save inputs", () => {
     const bytes = progressionFixture(1, 4);
-    const legacy = analyzeMidi(bytes);
+    const legacy = analyzeMidi(bytes, { enablePresentationGrouping: false });
     const production = analyzeMidi(bytes, { enablePresentationGrouping: true });
     const projection = production.presentationGrouping!;
 
@@ -59,12 +63,43 @@ describe("P5.38 Family-A production presentation grouping", () => {
     expect(production.bpm).toBe(legacy.bpm);
     expect(JSON.stringify(production.blockCandidates))
       .not.toContain("presentationGrouping");
+
+    const consumers = presentationConsumerModel(production)!;
+    expect(consumers.formattedText).toBe(projection.formattedText);
+    expect(consumers.presentationGroupCount).toBe(projection.groups.length);
+    expect(consumers.cards).toHaveLength(projection.projectedBlocks.length);
+    expect(consumers.cards.map((card) => card.summaryText))
+      .toEqual(projection.projectedBlocks.map((block) => block.summaryText));
+    expect(consumers.cards.every((card) =>
+      card.sourceCandidate === production.blockCandidates[card.sourceCandidateIndex]
+    )).toBe(true);
+    consumers.cards.forEach((card, index) => {
+      expect(card.presentationBlock).toBe(projection.projectedBlocks[index]);
+    });
   });
 
+  it("fails the consumer adapter closed when projected provenance is invalid", () => {
+    const production = analyzeMidi(progressionFixture(1, 4), {
+      enablePresentationGrouping: true,
+    });
+    const projection = production.presentationGrouping!;
+    const invalid = {
+      ...production,
+      presentationGrouping: {
+        ...projection,
+        projectedBlocks: [{
+          ...projection.projectedBlocks[0]!,
+          sourceCandidateIndex: production.blockCandidates.length,
+        }],
+      },
+    };
+
+    expect(presentationConsumerModel(invalid)).toBeUndefined();
+  });
   it("keeps 4/4, 3/4, and 2/4 text, summaries, and block topology exact", () => {
     for (const numerator of [4, 3, 2] as const) {
       const bytes = progressionFixture(numerator, 4);
-      const legacy = analyzeMidi(bytes);
+      const legacy = analyzeMidi(bytes, { enablePresentationGrouping: false });
       const production = analyzeMidi(bytes, { enablePresentationGrouping: true });
       const projection = production.presentationGrouping!;
 

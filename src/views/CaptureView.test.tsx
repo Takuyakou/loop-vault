@@ -6,6 +6,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, onTestFinished, vi } from "vitest";
 import { SongMiniMap } from "../components/SongMiniMap";
 import { buildCorrectionEvents } from "../domain/midi/feedback";
+import { analyzeMidi } from "../domain/midi/analysis";
+import { progressionFixture } from "../../scripts/p534/fixtures";
 import { buildLabelCorrectionLogs } from "../domain/midi/labelCorrectionLog";
 import type { AnalysisState } from "../store/vaultStore";
 import type { ChordTimelineItem, MidiProgressionAnalysis, ProgressionBlockCandidate } from "../domain/types";
@@ -1404,6 +1406,42 @@ describe("CaptureView saving", () => {
     container.remove();
   });
 
+  it("renders projected block topology and summaries while retaining source candidates", async () => {
+    const result = analyzeMidi(progressionFixture(1, 4));
+    const projection = result.presentationGrouping!;
+    expect(projection.applied).toBe(true);
+
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => root.render(
+      <CaptureView
+        ideas={[]}
+        analysis={{ status: "done", result }}
+        analyzeMidiBytes={vi.fn()}
+        clearAnalysis={vi.fn()}
+        createIdeaFromDraft={vi.fn()}
+        appendBlockToIdea={vi.fn()}
+        updateIdea={vi.fn()}
+        setToast={vi.fn()}
+        copy={appCopy.ja}
+        language="ja"
+        showRomanNumerals
+      />,
+    ));
+
+    const cards = [...container.querySelectorAll<HTMLElement>("[data-candidate-state]")];
+    expect(cards).toHaveLength(projection.projectedBlocks.length);
+    projection.projectedBlocks.forEach((block, index) => {
+      expect(cards[index]?.textContent).toContain(block.summaryText);
+      expect(cards[index]?.querySelector("[data-candidate-toggle]")?.getAttribute("data-candidate-id"))
+        .toBe(result.blockCandidates[block.sourceCandidateIndex]?.id);
+    });
+    expect(container.textContent).toContain(appCopy.ja.capture.itemCount(projection.projectedBlocks.length));
+
+    await act(async () => root.unmount());
+    container.remove();
+  });
   it("renders an actionable alert when aggregate persistence rejects the save", async () => {
     const capturedCandidate = candidate();
     const result: MidiProgressionAnalysis = {

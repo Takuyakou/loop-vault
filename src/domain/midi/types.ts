@@ -142,10 +142,10 @@ export interface AnalyzeMidiOptions {
    */
   enableUnionChimeraPartition?: boolean;
   /**
-   * Runtime-only P5.38 Family-A presentation projection. Default OFF in
-   * P5.38-03; only literal true attaches the promoted v2 projection after the
-   * resolved harmonic timeline. Source meter, bars, timeline and saved block
-   * coordinates remain unchanged.
+   * Runtime-only P5.38 Family-A presentation projection. Default ON after
+   * P5.38-04 acceptance; only literal false restores exact legacy downstream
+   * presentation. Source meter, bars, timeline and saved block coordinates
+   * remain unchanged.
    */
   enablePresentationGrouping?: boolean;
 

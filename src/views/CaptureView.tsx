@@ -7,6 +7,7 @@ import { OccurrenceList } from "../components/OccurrenceList";
 import {
   buildCatalogView, catalogPageSize, laneCandidate, laneRenderPlan, type CatalogLaneKind,
 } from "../domain/midi/catalogView";
+import { presentationConsumerModel } from "../domain/midi/presentationGrouping";
 import type { CandidateOccurrence, CandidatePattern } from "../domain/midi/occurrence";
 import type { Section } from "../domain/midi/sections";
 import {
@@ -1093,9 +1094,12 @@ export function CaptureView(props: CaptureViewProps) {
     );
   }
 
-  async function copyProgression(candidate: ProgressionBlockCandidate) {
+  async function copyProgression(
+    candidate: ProgressionBlockCandidate,
+    presentationText?: string,
+  ) {
     try {
-      await writeClipboardText(formatProgressionText(candidate.chords));
+      await writeClipboardText(presentationText ?? formatProgressionText(candidate.chords));
       setToast(copy.capture.copiedProgression);
     } catch {
       setToast(copy.capture.copyFailed);
@@ -1578,7 +1582,25 @@ export function CaptureView(props: CaptureViewProps) {
    * old shortlist path is used unchanged, so a mode without a catalog behaves
    * exactly as before.
    */
-  const displayLanes = catalogView !== undefined
+  const presentationConsumers = presentationConsumerModel(result);
+  const displayLanes = presentationConsumers !== undefined
+    ? [{
+      key: "presentation-projection",
+      kind: "progression" as CatalogLaneKind,
+      heading: null,
+      note: null,
+      totalCount: presentationConsumers.cards.length,
+      recommendedElsewhere: 0,
+      collapsible: false,
+      open: true,
+      remaining: 0,
+      visible: presentationConsumers.cards.map((entry, index) => ({
+        candidate: entry.sourceCandidate,
+        index,
+        presentationSummaryText: entry.summaryText,
+      })),
+    }]
+    : catalogView !== undefined
     ? catalogView.lanes.map((lane, laneIndex) => {
       const key = `${lane.kind}-${laneIndex}`;
       const open = openLanes[key] ?? !lane.initiallyCollapsed;
@@ -1601,6 +1623,7 @@ export function CaptureView(props: CaptureViewProps) {
         visible: plan.visible.map((entry, index) => ({
           candidate: laneCandidate(entry, laneMeter),
           index: offset + index,
+          presentationSummaryText: undefined as string | undefined,
         })),
       };
     })
@@ -1614,7 +1637,10 @@ export function CaptureView(props: CaptureViewProps) {
       collapsible: false,
       open: true,
       remaining: 0,
-      visible: lane.candidates,
+      visible: lane.candidates.map((entry) => ({
+        ...entry,
+        presentationSummaryText: undefined as string | undefined,
+      })),
     }));
 
   function openCandidateDraft(candidate: ProgressionBlockCandidate) {
@@ -1893,7 +1919,7 @@ export function CaptureView(props: CaptureViewProps) {
               copy={copy}
             />
             <span className="rounded bg-[var(--lv-surface-raised)] px-3 py-1 text-sm text-teal-200">
-              {copy.capture.itemCount(result.blockCandidates.length)}
+              {copy.capture.itemCount(presentationConsumers?.cards.length ?? result.blockCandidates.length)}
             </span>
           </div>
         </div>
@@ -1934,11 +1960,12 @@ export function CaptureView(props: CaptureViewProps) {
                     )}
                   </div>
                 ),
-                ...lane.visible.map(({ candidate, index }) => (
+                ...lane.visible.map(({ candidate, index, presentationSummaryText }) => (
                 <ProgressionCandidateCard
-                  key={candidate.id}
+                  key={`${candidate.id}-${index}`}
                   candidate={candidate}
                   candidateIndex={index}
+                  presentationSummaryText={presentationSummaryText}
                   bpm={result.bpm ?? 96}
                   beatsPerBar={beatsPerBarFor(result.timeSignature)}
                   detectedKey={result.detectedKey}
@@ -2580,6 +2607,7 @@ export function TimelineDetails({
 export function ProgressionCandidateCard({
   candidate,
   candidateIndex,
+  presentationSummaryText,
   patterns,
   sections,
   bpm,
@@ -2620,6 +2648,7 @@ export function ProgressionCandidateCard({
 }: {
   candidate: ProgressionBlockCandidate;
   candidateIndex: number;
+  presentationSummaryText?: string;
   /** Other appearances of this progression, so none of them is unreachable. */
   patterns?: readonly CandidatePattern[];
   sections?: readonly Section[];
@@ -2658,7 +2687,10 @@ export function ProgressionCandidateCard({
   ) => boolean;
   onPreviewOccurrence?: (occurrence: CandidateOccurrence) => void | Promise<void>;
   onSaveOccurrence?: (occurrence: CandidateOccurrence) => void;
-  onCopyProgression: (candidate: ProgressionBlockCandidate) => void | Promise<void>;
+  onCopyProgression: (
+    candidate: ProgressionBlockCandidate,
+    presentationText?: string,
+  ) => void | Promise<void>;
   onPreview?: (candidate: ProgressionBlockCandidate) => void | Promise<void>;
   onPreviewChord: (
     candidate: ProgressionBlockCandidate,
@@ -3267,7 +3299,10 @@ export function ProgressionCandidateCard({
             onError={onPreviewError}
             controller={controller}
           />
-          <Button variant="secondary" size="sm" className="min-h-10" onClick={() => void onCopyProgression(editedCandidate)}>
+          <Button variant="secondary" size="sm" className="min-h-10" onClick={() => void onCopyProgression(
+            editedCandidate,
+            hasProgressionEdits(editable) ? undefined : presentationSummaryText,
+          )}>
             <Copy aria-hidden="true" size={16} />
             {copy.capture.copyProgression}
           </Button>
@@ -3304,7 +3339,11 @@ export function ProgressionCandidateCard({
               : `Created from automatic candidate${draft.isDirty ? " · Editing" : ""}`}
           </p>
         ) : null}
-      {candidate.summaryText.trim() ? <p className="mt-3 text-sm text-[var(--lv-text-secondary)]">{candidate.summaryText}</p> : null}
+      {(presentationSummaryText ?? candidate.summaryText).trim() ? (
+        <p className="mt-3 text-sm text-[var(--lv-text-secondary)]">
+          {presentationSummaryText ?? candidate.summaryText}
+        </p>
+      ) : null}
 
       <div className="mt-4">
         <div>

@@ -7,7 +7,7 @@ import {
   type PresentationGroupingReasonCode,
   type PresentationGroupingShadowInput,
 } from "./presentationGroupingCore";
-import type { MidiProgressionAnalysis } from "../types";
+import type { MidiProgressionAnalysis, ProgressionBlockCandidate } from "../types";
 import { beatsPerBar } from "./timing";
 
 export {
@@ -67,6 +67,56 @@ export type PresentationGroupingShadowV2Result = PresentationGroupingProjectionR
 
 /** Runtime-only production result. A PresentationGroup is never a source bar. */
 export type PresentationGroupingResult = PresentationGroupingShadowV2Result;
+
+/**
+ * Presentation-only view of a projected candidate card.
+ *
+ * `sourceCandidate` deliberately remains the original analysis object. Save,
+ * edit, preview and export consumers must use it (and its source coordinates),
+ * while only the visible summary/topology comes from `presentationBlock`.
+ */
+export interface PresentationCandidateConsumer {
+  sourceCandidateIndex: number;
+  sourceCandidate: ProgressionBlockCandidate;
+  presentationBlock: PresentationGroupingResult["projectedBlocks"][number];
+  summaryText: string;
+}
+
+export interface PresentationConsumerModel {
+  formattedText: string;
+  presentationGroupCount: number;
+  cards: PresentationCandidateConsumer[];
+}
+
+/**
+ * Connects the runtime projection to presentation-facing consumers without
+ * rewriting source truth. Invalid projection references fail closed to no
+ * projected consumer model rather than guessing a source candidate.
+ */
+export function presentationConsumerModel(
+  analysis: MidiProgressionAnalysis,
+): PresentationConsumerModel | undefined {
+  const projection = analysis.presentationGrouping;
+  if (projection?.applied !== true) return undefined;
+
+  const cards: PresentationCandidateConsumer[] = [];
+  for (const presentationBlock of projection.projectedBlocks) {
+    const sourceCandidate = analysis.blockCandidates[presentationBlock.sourceCandidateIndex];
+    if (sourceCandidate === undefined) return undefined;
+    cards.push({
+      sourceCandidateIndex: presentationBlock.sourceCandidateIndex,
+      sourceCandidate,
+      presentationBlock,
+      summaryText: presentationBlock.summaryText,
+    });
+  }
+
+  return {
+    formattedText: projection.formattedText,
+    presentationGroupCount: projection.groups.length,
+    cards,
+  };
+}
 
 export function buildPresentationGrouping(
   input: PresentationGroupingShadowInput,

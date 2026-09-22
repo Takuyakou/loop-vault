@@ -96,7 +96,7 @@ export function analyzeMidi(bytes: Uint8Array, options: AnalyzeMidiOptions = {})
   const spelled = options.enableKeyAwareChordSpelling === true
     ? applyKeyAwareChordSpelling(finalized)
     : finalized;
-  return options.enablePresentationGrouping === true
+  return options.enablePresentationGrouping !== false
     ? withPresentationGrouping(spelled)
     : spelled;
 }
