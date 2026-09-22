@@ -4,8 +4,8 @@
 
 ## Status
 
-- **Status:** in-progress (production-fix phase; production behavior NOT authorized until PROMOTION = PASS)
-- **Active stage:** P5.37-01 (meter-independent local-state shadow prototype)
+- **Status:** **BLOCKED at P5.37-01** — reuse-based meter-independent shadow needs an authorized decision (minimal production parameterization vs 410-line fork); production behavior NOT authorized
+- **Active stage:** P5.37-01 (meter-independent local-state shadow — [`reports/P5.37-01-meter-independent-shadow.md`](reports/P5.37-01-meter-independent-shadow.md))
 - **Completed stages:** P5.37-00 (audit / gate freeze — [`reports/P5.37-00-audit-gate-freeze.md`](reports/P5.37-00-audit-gate-freeze.md))
 - **Depends on:** P5.36 closeout `77c8b0e` (PASS — CURRENT-ATTACK / METER CAUSAL VALIDATION COMPLETE; P5.37 TARGET READY), in ancestry
 - **Primary target:** Family B (fixed-2-beat evidence mixing). Family A = OPTIONAL / DEFERRED workstream.

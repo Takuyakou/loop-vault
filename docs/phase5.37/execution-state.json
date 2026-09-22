@@ -1,18 +1,24 @@
 {
   "schemaVersion": 1,
   "phaseId": "5.37",
-  "status": "in-progress",
+  "status": "blocked",
   "activeStage": "P5.37-01",
   "completedStages": ["P5.37-00"],
-  "blocked": false,
-  "blockerReason": null,
+  "blocked": true,
+  "blockerReason": "P5.37-01 reuse-based meter-independent shadow is not feasible on the existing architecture without an authorized decision. The exported estimateP526LocalHarmonicStateShadow has no meter knob (private module constant `const beatsPerBar = 4`; hasUnsupportedMeter rejects non-4/4), and the generalizable logic (buildBeatCells, decideBoundary, consolidation, ~410 lines) is un-exported. Contract-04 Gate I / §9 4/4-parity requires a faithful replica to compare against production, forcing either (b, RECOMMENDED) a minimal behavior-preserving production parameterization of beatsPerBar + flag-gated meter generalization with the Type-B bar-position prior NEUTRALIZED for non-4/4 (default 4/4 bit-identical; OFF=exact legacy), or (a, discouraged) a ~410-line private-internals fork in scripts/p537/. Per work-instructions §6/§29, Stage-01 forbids unilateral production changes -> STOP + report. 4/4-assumption classification (A/B/C/D) delivered. Awaiting authorization for option (a), (b), or (c) keep audit-only.",
   "baseCommit": "77c8b0e",
   "lastVerifiedCommit": "77c8b0e",
   "currentBranch": "feat/p535-context-aware-harmonic-evidence",
   "requiredGates": {
-    "P5.37-00": ["collision-check", "p536-closed-in-ancestry", "default-path-failure-confirmed", "meter-gate-located", "gates-frozen", "baselines-frozen", "family-a-decision", "validate:phase-docs", "validate:ai-handoff", "production-diff-zero"]
+    "P5.37-00": ["collision-check", "p536-closed-in-ancestry", "default-path-failure-confirmed", "meter-gate-located", "gates-frozen", "baselines-frozen", "family-a-decision", "validate:phase-docs", "validate:ai-handoff", "production-diff-zero"],
+    "P5.37-01": ["4-4-assumptions-classified", "meter-position-prior-not-blind-replaced", "reuse-feasibility-determined", "shadow-policy-designed", "production-diff-zero", "authorization-decision"]
   },
   "gateResults": {
+    "4-4-assumptions-classified": "pass",
+    "meter-position-prior-not-blind-replaced": "pass",
+    "reuse-feasibility-determined": "pass",
+    "shadow-policy-designed": "pass",
+    "authorization-decision": "blocked",
     "collision-check": "pass",
     "p536-closed-in-ancestry": "pass",
     "default-path-failure-confirmed": "pass",
@@ -24,6 +30,6 @@
     "validate:ai-handoff": "pass",
     "production-diff-zero": "pass"
   },
-  "nextAction": "P5.37-01 — meter-independent local-state SHADOW prototype (non-production; demonstrate the P5.24/P5.26 local-state path operating on the 1/4 fixture without the 4/4 gate, OFF=exact legacy parity, private-target improvement, hard-negative safety, determinism, bounded cost). Do NOT integrate into production. Order: shadow -> promotion -> production. Promotion (P5.37-02) is a hard PASS/FAIL gate; production integration (P5.37-03) only if PROMOTION=PASS. Family A = OPTIONAL/DEFERRED (not a phase-completion requirement). AWAIT explicit review/continuation. Production behavior NOT authorized. Stop after P5.37-06.",
+  "nextAction": "BLOCKED at P5.37-01: a reuse-based meter-independent shadow cannot be built on the existing architecture without an authorized decision (no meter knob on the exported estimator; ~410-line generalizable logic is private; §9 4/4-parity needs a faithful replica). 4/4 assumptions classified A/B/C/D; Type-B bar-position prior must NOT be blind-replaced (beat % 1 for 1/4). RECOMMENDED next: authorize option (b) a minimal behavior-preserving production parameterization of beatsPerBar + flag-gated meter generalization with the bar-position prior neutralized for non-4/4 (default 4/4 bit-identical; OFF=exact legacy). Alternatives: (a) discouraged ~410-line replica fork; (c) keep audit-only. Do NOT start P5.37-02/03. Production behavior NOT authorized.",
   "updatedAt": "2026-09-22"
 }
