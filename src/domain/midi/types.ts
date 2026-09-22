@@ -134,11 +134,11 @@ export interface AnalyzeMidiOptions {
    */
   enableKeyAwareChordSpelling?: boolean;
   /**
-   * P5.37 union-chimera partition (frozen policy v1). Only the literal boolean true
-   * enables it; omission and false preserve exact legacy behavior. When true, a
-   * fixed 2-beat window whose top-1 candidate is supported by neither beat (two
-   * materially different coherent local harmonies merged) is partitioned into its
-   * two beats' coherent candidates before smoothing. Default OFF.
+   * P5.37 union-chimera partition (frozen policy v1). Default ON (approved in
+   * P5.37-05); only the literal boolean `false` disables it (exact-legacy
+   * rollback). When enabled, a fixed 2-beat window whose top-1 candidate is
+   * supported by neither beat (two materially different coherent local harmonies
+   * merged) is partitioned into its two beats' coherent candidates before smoothing.
    */
   enableUnionChimeraPartition?: boolean;
 

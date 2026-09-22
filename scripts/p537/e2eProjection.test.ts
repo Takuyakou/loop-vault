@@ -58,8 +58,9 @@ describe("e2e projection — baseline parity (faithful reconstruction)", () => {
     ["held Cmaj9", heldCmaj9Bytes],
     ["same-chord re-attack", reattackBytes],
   ] as const) {
-    it(`${name}: diagnostic baseline == production analyzeMidi timeline`, () => {
-      const prod = analyzeMidi(bytes).fullTimeline.map((it) => it.chord.label);
+    it(`${name}: diagnostic baseline == production analyzeMidi legacy (flag OFF) timeline`, () => {
+      // The partition default is ON, so the legacy baseline is the explicit-OFF path.
+      const prod = analyzeMidi(bytes, { enableUnionChimeraPartition: false }).fullTimeline.map((it) => it.chord.label);
       expect(project(bytes).baselineTimeline).toEqual(prod);
     });
   }

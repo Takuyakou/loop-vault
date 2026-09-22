@@ -184,13 +184,14 @@ export function analyzeMidiWithRankingScores(
       scoring,
     ));
   }
-  // P5.37 union-chimera partition (frozen policy v1). Default OFF -> exact legacy.
-  // When ON, a fixed 2-beat window whose top-1 candidate is supported by neither
+  // P5.37 union-chimera partition (frozen policy v1). Default ON (approved in
+  // P5.37-05); set `enableUnionChimeraPartition: false` for the exact-legacy
+  // rollback. A fixed 2-beat window whose top-1 candidate is supported by neither
   // beat (two materially different coherent local harmonies merged) is partitioned
   // into its two beats' coherent candidates BEFORE smoothing. No scorer/vocabulary
   // change; the trigger uses the default (non-quality) scoring the policy was frozen
   // on, and the smoother consolidates as usual.
-  const partitionedTimeline = options.enableUnionChimeraPartition === true
+  const partitionedTimeline = options.enableUnionChimeraPartition !== false
     ? partitionUnionChimeras(rankedTimeline, windows, analysisData, roles)
     : rankedTimeline;
   const smoothedTimeline = smoothTimelineWithRankingScores(

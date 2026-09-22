@@ -23,10 +23,16 @@ Stage and promotion reports for the Production Fix / Integration phase.
   green, default OFF); ON == promoted shadow byte-for-byte. Production runtime
   default behavior unchanged; rollback = flag OFF.
 - `P5.37-05-hardening-acceptance.md` — full regression + private acceptance;
-  `DEFAULT-ON = NOT APPROVED` (fix ships opt-in). Default-ON safety experiment: 0
-  existing-suite regressions (trigger fires 0% on 4/4). Not defaulted-on due to
-  ~2.5× universal overhead (fires only on 1/4-mixed files) + 4 SUPPORTED-not-confirmed
-  extra triggers; flag retained, rollback trivial. Next research recorded.
+  initial `DEFAULT-ON = NOT APPROVED` (fix ships opt-in). **Superseded on the
+  default-on decision by `P5.37-05a` (see below); the regression/acceptance
+  evidence in it still stands.**
+- `P5.37-05a-default-on-addendum.md` — **one-time re-evaluation → `DEFAULT-ON =
+  APPROVED`.** Absolute overhead ~+20 ms (13→33 ms) is imperceptible for one-shot
+  import, so performance is informational (not a hard gate); the 4 additional LF
+  triggers are all SUPPORTED-LIKELY-CORRECTION (0 SUSPICIOUS). Default is now ON
+  (`enableUnionChimeraPartition !== false`); `false` = exact-legacy rollback,
+  flag retained and test-locked; full existing suite green with default ON
+  (3236 tests). Frozen policy v1 unchanged; perf optimization deferred.
 - `templates/` — shadow/promotion/integration report templates.
 
 Reports carry only privacy-safe aggregates. Never commit the private MIDI

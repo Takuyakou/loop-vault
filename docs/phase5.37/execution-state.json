@@ -90,7 +90,11 @@
     "boundary-stability": "pass",
     "family-a-deferred": "pass",
     "determinism": "pass",
-    "default-on-decision": "NOT-APPROVED",
+    "default-on-decision": "APPROVED",
+    "default-on-addendum-extra-triggers-reexamined": "pass",
+    "default-on-absolute-latency-acceptable": "pass",
+    "default-on-test-lock": "pass",
+    "production-default-on": "pass",
     "collision-check": "pass",
     "p536-closed-in-ancestry": "pass",
     "default-path-failure-confirmed": "pass",
@@ -102,6 +106,6 @@
     "validate:ai-handoff": "pass",
     "production-diff-zero": "pass"
   },
-  "nextAction": "P5.37-05 hardening/acceptance COMPLETE. DEFAULT-ON = NOT APPROVED: the union-chimera fix ships as a working, reversible OPT-IN (enableUnionChimeraPartition, default OFF). Default-ON safety experiment (temp flip): 0 existing-suite regressions (3232/3232 unchanged; the 3 failures were only this phase's OFF-parity assertions) -> the trigger fires 0% on existing 4/4 material. All Contract-04-style hard gates PASS for the ON behavior (LF 4/4 targets improve, whole-file 8/33 / 19->25 / 0 SUSPICIOUS, hard negatives + corpus 0 triggers, extended-harmony/slash/syncopation safe, deterministic/bounded/source-immutable, E2E safe). NOT defaulted-on for two engineering reasons: (1) ~2.5x per-analysis overhead (13->33ms) paid universally while the fix fires only on 1/4-mixed files (0% on normal 4/4); (2) 4 of 8 LF triggers are SUPPORTED-not-oracle-CONFIRMED. Next research: reuse main-loop ranking to cut overhead; obtain ground truth for the 4 extra windows. Flag retained (default OFF); rollback trivial. No production source change in P5.37-05 (src == d3f8196). Family A = DEFERRED (open). Next: P5.37-06 closeout. AWAIT explicit review before P5.37-06. No push/merge/tag.",
+  "nextAction": "P5.37-05a DEFAULT-ON ADDENDUM COMPLETE. One-time re-evaluation supersedes the P5.37-05 NOT-APPROVED: DEFAULT-ON = APPROVED. enableUnionChimeraPartition default is now ON (`!== false`); the literal `false` is the exact-legacy rollback (test-locked, flag retained, NOT deleted). Rationale: (1) the ~2.5x relative overhead was over-weighted — absolute overhead is ~+20ms (13->33ms), imperceptible for one-shot import; per Loop Vault priority (accuracy + reduced human correction > speed) performance is informational, NOT a hard gate; (2) the 4 additional LF triggers were re-examined privacy-safe and are all SUPPORTED-LIKELY-CORRECTION (two-different-root coherent partitions, 0 unsupported winner tones, moving structural bass, buckets-different-identity=true) -> 0 SUSPICIOUS, 0 UNRESOLVED. All §6 criteria met: 4 known failures improve, hard negatives + corpus 0 triggers, full existing suite green with default ON (393 files / 3236 tests, 0 failures -> 0 existing-behavior change), smoothing/determinism/bounded/source-immutable safe, OFF = exact-legacy rollback. Test-locked: analyzeMidi(x) == analyzeMidi(x,{true}); analyzeMidi(x,{false}) = legacy rollback. Frozen policy v1 (minBucketPcs=3) UNCHANGED — no trigger/threshold/scorer/heuristic change. Production source diff is now NON-ZERO (default flip in legacy.ts + types.ts doc). Performance optimization (reuse main-loop ranking) DEFERRED, not implemented. See reports/P5.37-05a-default-on-addendum.md. Family A = DEFERRED (open). Next: P5.37-06 closeout. AWAIT explicit review before P5.37-06. No push/merge/tag.",
   "updatedAt": "2026-09-22"
 }

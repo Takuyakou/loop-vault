@@ -36,22 +36,26 @@ const reattackBytes = buildMidi({
   notes: [0, 1, 2, 3].flatMap((b) => [47, 50, 54, 57].map((pitch) => ({ pitch, startTick: b * TPB, durationTick: TPB }))),
 });
 
-const labelsOff = (bytes: Uint8Array) => analyzeMidi(bytes).fullTimeline.map((it) => it.chord.label);
-const labelsOffExplicit = (bytes: Uint8Array) => analyzeMidi(bytes, { enableUnionChimeraPartition: false }).fullTimeline.map((it) => it.chord.label);
+const labelsDefault = (bytes: Uint8Array) => analyzeMidi(bytes).fullTimeline.map((it) => it.chord.label);
+const labelsOff = (bytes: Uint8Array) => analyzeMidi(bytes, { enableUnionChimeraPartition: false }).fullTimeline.map((it) => it.chord.label);
 const labelsOn = (bytes: Uint8Array) => analyzeMidi(bytes, { enableUnionChimeraPartition: true }).fullTimeline.map((it) => it.chord.label);
 const shadowCorrected = (bytes: Uint8Array) => {
   const data = parseMidi(bytes);
   return projectUnionChimeraEndToEnd(bytes, data, inferTrackRoles(data)).correctedTimeline;
 };
 
-describe("production integration — OFF == exact legacy (rollback guarantee)", () => {
+describe("production integration — default ON, OFF = exact-legacy rollback", () => {
   for (const [name, bytes] of [
     ["two-harmony", twoHarmonyBytes], ["held Cmaj9", heldCmaj9Bytes], ["same-chord re-attack", reattackBytes],
   ] as const) {
-    it(`${name}: default == explicit OFF`, () => {
-      expect(labelsOff(bytes)).toEqual(labelsOffExplicit(bytes));
+    it(`${name}: default == explicit ON (default-ON approved)`, () => {
+      expect(labelsDefault(bytes)).toEqual(labelsOn(bytes));
     });
   }
+  it("explicit OFF is the legacy rollback: keeps the chimera that ON removes", () => {
+    // For the two-harmony chimera, OFF (legacy) differs from ON (partitioned).
+    expect(labelsOff(twoHarmonyBytes)).not.toEqual(labelsOn(twoHarmonyBytes));
+  });
 });
 
 describe("production integration — ON == promoted shadow v1", () => {
@@ -65,7 +69,7 @@ describe("production integration — ON == promoted shadow v1", () => {
 });
 
 describe("production integration — behavior", () => {
-  it("two-harmony: ON partitions the chimera (differs from OFF), OFF unchanged", () => {
+  it("two-harmony: ON partitions the chimera (differs from OFF)", () => {
     expect(labelsOn(twoHarmonyBytes)).not.toEqual(labelsOff(twoHarmonyBytes));
     expect(labelsOn(twoHarmonyBytes)).toContain("F");
   });
