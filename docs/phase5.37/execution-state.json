@@ -5,20 +5,27 @@
   "activeStage": "P5.37-01",
   "completedStages": ["P5.37-00"],
   "blocked": true,
-  "blockerReason": "P5.37-01 reuse-based meter-independent shadow is not feasible on the existing architecture without an authorized decision. The exported estimateP526LocalHarmonicStateShadow has no meter knob (private module constant `const beatsPerBar = 4`; hasUnsupportedMeter rejects non-4/4), and the generalizable logic (buildBeatCells, decideBoundary, consolidation, ~410 lines) is un-exported. Contract-04 Gate I / §9 4/4-parity requires a faithful replica to compare against production, forcing either (b, RECOMMENDED) a minimal behavior-preserving production parameterization of beatsPerBar + flag-gated meter generalization with the Type-B bar-position prior NEUTRALIZED for non-4/4 (default 4/4 bit-identical; OFF=exact legacy), or (a, discouraged) a ~410-line private-internals fork in scripts/p537/. Per work-instructions §6/§29, Stage-01 forbids unilateral production changes -> STOP + report. 4/4-assumption classification (A/B/C/D) delivered. Awaiting authorization for option (a), (b), or (c) keep audit-only.",
+  "blockerReason": "P5.37-01: authorized Option (b') implemented — behavior-preserving beatsPerBar parameterization + test/shadow-only seam (estimateLocalHarmonicStatesForShadow). 4/4 parity EXACT (p526 tests + 3200-test clean scope green); production runtime behavior diff = 0 (production source diff != 0); production non-4/4 path still unsupported-meter (test-locked). FINDING: the shadow evaluation shows the existing engine FALLS BACK on non-4/4 at deeper 4/4-tuned layers a minimal parameterization does NOT generalize — S1 (beatsPerBar=1) and S2 (neutralized prior) both return ambiguous-local-evidence (bar-level 1/2/4/8 quarter-beat period model is degenerate for 1-beat bars), and beatsPerBar=2/4 return insufficient-local-evidence (strict per-cell evidence gate vs sparse 1/4 cells). LF-MIDI-001 falls back under all configs -> 4 targets unchanged, no policy can be frozen. P5.36-04 'PARTIAL-REUSE (strong)' is downgraded to REUSE INSUFFICIENT VIA MINIMAL PARAMETERIZATION. Decision requested: (1) deeper generalization of bar-period + cell-evidence layers (larger, non-minimal; weigh §8 'don't invent'), (2) alternative Family-B fix at the candidate-ranking layer, or (3) keep/revert the (b') parameterization. Do NOT start P5.37-02/03.",
   "baseCommit": "77c8b0e",
-  "lastVerifiedCommit": "77c8b0e",
+  "lastVerifiedCommit": "63c6f50",
   "currentBranch": "feat/p535-context-aware-harmonic-evidence",
   "requiredGates": {
     "P5.37-00": ["collision-check", "p536-closed-in-ancestry", "default-path-failure-confirmed", "meter-gate-located", "gates-frozen", "baselines-frozen", "family-a-decision", "validate:phase-docs", "validate:ai-handoff", "production-diff-zero"],
-    "P5.37-01": ["4-4-assumptions-classified", "meter-position-prior-not-blind-replaced", "reuse-feasibility-determined", "shadow-policy-designed", "production-diff-zero", "authorization-decision"]
+    "P5.37-01": ["4-4-assumptions-classified", "meter-position-prior-not-blind-replaced", "beatsPerBar-parameterized-behavior-preserving", "4-4-parity-exact", "production-runtime-behavior-diff-zero", "production-non-4-4-path-unchanged", "source-immutable", "deterministic", "no-410-line-fork", "reuse-feasibility-determined", "reuse-insufficient-finding", "rescope-decision"]
   },
   "gateResults": {
     "4-4-assumptions-classified": "pass",
     "meter-position-prior-not-blind-replaced": "pass",
+    "beatsPerBar-parameterized-behavior-preserving": "pass",
+    "4-4-parity-exact": "pass",
+    "production-runtime-behavior-diff-zero": "pass",
+    "production-non-4-4-path-unchanged": "pass",
+    "source-immutable": "pass",
+    "deterministic": "pass",
+    "no-410-line-fork": "pass",
     "reuse-feasibility-determined": "pass",
-    "shadow-policy-designed": "pass",
-    "authorization-decision": "blocked",
+    "reuse-insufficient-finding": "pass",
+    "rescope-decision": "blocked",
     "collision-check": "pass",
     "p536-closed-in-ancestry": "pass",
     "default-path-failure-confirmed": "pass",
@@ -30,6 +37,6 @@
     "validate:ai-handoff": "pass",
     "production-diff-zero": "pass"
   },
-  "nextAction": "BLOCKED at P5.37-01: a reuse-based meter-independent shadow cannot be built on the existing architecture without an authorized decision (no meter knob on the exported estimator; ~410-line generalizable logic is private; §9 4/4-parity needs a faithful replica). 4/4 assumptions classified A/B/C/D; Type-B bar-position prior must NOT be blind-replaced (beat % 1 for 1/4). RECOMMENDED next: authorize option (b) a minimal behavior-preserving production parameterization of beatsPerBar + flag-gated meter generalization with the bar-position prior neutralized for non-4/4 (default 4/4 bit-identical; OFF=exact legacy). Alternatives: (a) discouraged ~410-line replica fork; (c) keep audit-only. Do NOT start P5.37-02/03. Production behavior NOT authorized.",
+  "nextAction": "BLOCKED at P5.37-01 pending a re-scope decision. Authorized Option (b') implemented: behavior-preserving beatsPerBar parameterization + test/shadow-only seam; 4/4 parity exact; production runtime behavior diff = 0 (source diff != 0); production 1/4 path still unsupported-meter (test-locked). FINDING: the existing engine falls back on non-4/4 at deeper 4/4-tuned layers (bar-level 1/2/4/8 quarter-beat period model degenerate for 1-beat bars -> ambiguous-local-evidence; strict per-cell evidence gate -> insufficient-local-evidence). LF-MIDI-001 falls back under all configs; the 4 targets are unchanged; no S2 policy can be frozen. REUSE INSUFFICIENT VIA MINIMAL PARAMETERIZATION (P5.36-04 PARTIAL-REUSE downgraded). Decision requested: (1) deeper generalization of bar-period + cell-evidence layers (larger; weigh 'don't invent new segmentation'), (2) alternative Family-B fix at the candidate-ranking layer, or (3) keep/revert the (b') parameterization. Do NOT start P5.37-02/03; production non-4/4 gate stays until PROMOTION PASS.",
   "updatedAt": "2026-09-22"
 }

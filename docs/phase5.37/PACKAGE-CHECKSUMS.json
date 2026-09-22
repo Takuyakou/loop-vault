@@ -1,7 +1,7 @@
 {
   "00-START-HERE.md": "10afb2c330d0b63784f96aa2edc09f6be616e03311d78f43891f52c97ac82362",
   "PACKAGE-MANIFEST.json": "fdb0432c257d827dd46719d3710c532f900951c7969b1a78006fa47263db0d2f",
-  "README.md": "6630fc15df4e9d9a058f740373aaec0c822a70c7a692cdb752989f568c8d247f",
+  "README.md": "3a0e169165baf07e6f5d182f08283a9d03e69ce5a25622343813e91e5090f515",
   "acceptance/P5.37-acceptance-checklist.md": "09f24bd7534379a43ea0d7551118310f64a15fe6e17d41fc66009274bdb0afd9",
   "contracts/01-scope-and-authority.md": "c779f39c43904717fab8419fc73aa87bfe2d02400a733796fae524c4d4594a19",
   "contracts/02-semantic-fix-contract.md": "785527a791a80de75dd4315fac32e0bdec262cf01b65a5272d0795ea1e7bf43a",
@@ -11,7 +11,7 @@
   "contracts/06-private-fixture-and-whole-file.md": "4cb13adb542ce17e1e0b549e3902623c4af89901dbce16a87e46828d531b0af1",
   "contracts/07-performance-and-determinism.md": "d12b696e9e47f23dec9075f81668c08b90af5967b1c67af0ecaf10842c76e2ce",
   "contracts/08-p537-success-and-failure.md": "596fd75f6e925a3a4c1947d9e250d4dbc989e9217a89053841eadc41a48cb1d5",
-  "execution-state.json": "ddc2607f6a8b315902e9a7f287ae44a543c0da7a7bbd9e6f0468f5a1271becd0",
+  "execution-state.json": "bb5b0552eac1bb86ca345363ee54de27db7b6f8d9e93be241e9887672a681231",
   "reports/templates/P5.37-integration-diff-template.md": "02504e709c69557399429a8b5b4fbba72376cd3cde3669b76b3d34eeac235dd2",
   "reports/templates/P5.37-private-whole-file-template.md": "25af4620e67a55628409a6727a60d6820578ab19fbe73b0237797a6fb96be83e",
   "reports/templates/P5.37-promotion-table-template.md": "aa6ebf3651a1e3403354722bdad3581c9a7dd28f7fe77c010bd7f126698154f2",

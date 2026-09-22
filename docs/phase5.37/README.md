@@ -4,9 +4,10 @@
 
 ## Status
 
-- **Status:** **BLOCKED at P5.37-01** — reuse-based meter-independent shadow needs an authorized decision (minimal production parameterization vs 410-line fork); production behavior NOT authorized
+- **Status:** **BLOCKED at P5.37-01 (re-scope decision)** — Option (b') implemented + parity-safe, but the shadow shows the existing engine is **insufficient via minimal parameterization** for non-4/4; production behavior NOT changed
 - **Active stage:** P5.37-01 (meter-independent local-state shadow — [`reports/P5.37-01-meter-independent-shadow.md`](reports/P5.37-01-meter-independent-shadow.md))
 - **Completed stages:** P5.37-00 (audit / gate freeze — [`reports/P5.37-00-audit-gate-freeze.md`](reports/P5.37-00-audit-gate-freeze.md))
+- **P5.37-01 finding:** behavior-preserving `beatsPerBar` parameterization + shadow seam done (4/4 parity exact; runtime diff 0); the engine falls back on 1/4 at its 4/4-shaped bar-period + cell-evidence layers → reuse insufficient via minimal parameterization; awaiting a re-scope decision
 - **Depends on:** P5.36 closeout `77c8b0e` (PASS — CURRENT-ATTACK / METER CAUSAL VALIDATION COMPLETE; P5.37 TARGET READY), in ancestry
 - **Primary target:** Family B (fixed-2-beat evidence mixing). Family A = OPTIONAL / DEFERRED workstream.
 - **Order (locked):** shadow → promotion → production. Production integration only if PROMOTION = PASS.
