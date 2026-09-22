@@ -2,16 +2,17 @@
   "schemaVersion": 1,
   "phaseId": "5.37",
   "status": "in-progress",
-  "activeStage": "P5.37-02",
-  "completedStages": ["P5.37-00", "P5.37-01"],
+  "activeStage": "P5.37-03",
+  "completedStages": ["P5.37-00", "P5.37-01", "P5.37-02"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "77c8b0e",
-  "lastVerifiedCommit": "83b55f4",
+  "lastVerifiedCommit": "4e22823",
   "currentBranch": "feat/p535-context-aware-harmonic-evidence",
   "requiredGates": {
     "P5.37-00": ["collision-check", "p536-closed-in-ancestry", "default-path-failure-confirmed", "meter-gate-located", "gates-frozen", "baselines-frozen", "family-a-decision", "validate:phase-docs", "validate:ai-handoff", "production-diff-zero"],
-    "P5.37-01": ["p526-reuse-verdict-updated", "b-prime-parameterization-reverted", "production-source-runtime-baseline-restored", "no-410-line-fork", "candidate-scorer-unchanged", "candidate-vocabulary-unchanged", "oracle-free-trigger", "synthetic-chimera-detected", "synthetic-local-states-restored", "hard-negatives-safe", "corrected-corpus-safe", "policy-frozen-before-private", "lf-4-targets-triggered", "whole-file-trigger-prevalence-reported", "deterministic", "bounded", "source-immutable"]
+    "P5.37-01": ["p526-reuse-verdict-updated", "b-prime-parameterization-reverted", "production-source-runtime-baseline-restored", "no-410-line-fork", "candidate-scorer-unchanged", "candidate-vocabulary-unchanged", "oracle-free-trigger", "synthetic-chimera-detected", "synthetic-local-states-restored", "hard-negatives-safe", "corrected-corpus-safe", "policy-frozen-before-private", "lf-4-targets-triggered", "whole-file-trigger-prevalence-reported", "deterministic", "bounded", "source-immutable"],
+    "P5.37-02": ["gateA-known-targets", "gateB-whole-file", "gateC-corpus", "gateD-perf-negatives", "gateE-rich-layered", "gateF-slash", "gateG-held-common-tone", "gateH-source-fidelity", "gateI-determinism", "gateJ-bounded", "gateK-analyzer-regression", "gateL-e2e-semantic-preservation", "gateM-boundary-stability", "e2e-baseline-parity", "no-retuning", "oracle-isolated", "production-diff-zero"]
   },
   "gateResults": {
     "4-4-assumptions-classified": "pass",
@@ -39,6 +40,23 @@
     "lf-4-targets-triggered": "pass",
     "whole-file-trigger-prevalence-reported": "pass",
     "bounded": "pass",
+    "gateA-known-targets": "pass",
+    "gateB-whole-file": "pass",
+    "gateC-corpus": "pass",
+    "gateD-perf-negatives": "pass",
+    "gateE-rich-layered": "pass",
+    "gateF-slash": "pass",
+    "gateG-held-common-tone": "pass",
+    "gateH-source-fidelity": "pass",
+    "gateI-determinism": "pass",
+    "gateJ-bounded": "pass",
+    "gateK-analyzer-regression": "pass",
+    "gateL-e2e-semantic-preservation": "pass",
+    "gateM-boundary-stability": "pass",
+    "e2e-baseline-parity": "pass",
+    "no-retuning": "pass",
+    "oracle-isolated": "pass",
+    "PROMOTION": "PASS",
     "collision-check": "pass",
     "p536-closed-in-ancestry": "pass",
     "default-path-failure-confirmed": "pass",
@@ -50,6 +68,6 @@
     "validate:ai-handoff": "pass",
     "production-diff-zero": "pass"
   },
-  "nextAction": "P5.37-02 — promotion evaluation of the frozen union-chimera local-evidence shadow (Contract-04 gates A-K + whole-file regression; PROMOTION = PASS|FAIL only). P5.37-01 result: PASS — Option (b') reverted (production source == baseline 77c8b0e, runtime unchanged); new scripts/p537/unionChimera.ts (reuses the P5.36-03 parity-guarded scorer + W2/B0/B1 decomposition, no scorer/vocab change) detects ONLY the confirmed union-chimera signature and partitions those windows into coherent local states. Synthetic chimera reproduced+resolved (A7 -> C|A); all hard negatives + corpus safe (0 triggers); LF-MIDI-001 4/4 targets trigger with coherent partitions (Am11/B -> Cm7|Bm7, Case B undone); whole-file trigger prevalence 8/33 (24%, bounded; 4 targets + 4 same-family broad chimeras). Deterministic/bounded/source-immutable. AWAIT explicit review before P5.37-02. Production non-4/4 gate stays closed until PROMOTION PASS; do NOT start P5.37-02/03 yet.",
+  "nextAction": "PROMOTION = PASS. P5.37-02 evaluated the frozen union-chimera policy v1 end-to-end through the DEFAULT analyzer (baseline parity test-locked: diagnose+smooth == analyzeMidi). All gates A-M PASS: 4/4 known LF targets improve end-to-end (Am11/B -> Cm7|Bm7 removed after smoothing, Case B undone; Fm11/G -> Abmaj9|Ebadd9/G); Gate L confirms the correction survives downstream smoothing; whole-file 8/33 triggered (24%, bounded), 4 confirmed targets + 4 SUPPORTED same-family (0 SUSPICIOUS; buckets-different-identity guard blocks same-root over-splits); hard negatives + corpus 0 triggers; official clean scope 3225 green; deterministic/bounded/source-immutable; production diff = 0. Next: P5.37-03 production semantic integration (proposed seam: legacy.ts analyzeMidiWithRankingScores between per-window ranking and smoothing, behind a new default-OFF flag enableUnionChimeraPartition; OFF=exact legacy). AWAIT explicit human authorization + dedicated feat/p537-* branch before P5.37-03. Do NOT start P5.37-03 yet; production behavior unchanged.",
   "updatedAt": "2026-09-22"
 }

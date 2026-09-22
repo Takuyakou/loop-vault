@@ -4,9 +4,9 @@
 
 ## Status
 
-- **Status:** in-progress — **P5.37-01 PASS (union-chimera shadow ready for promotion)**; production behavior unchanged (source == baseline)
-- **Active stage:** P5.37-02 (promotion evaluation — not started; awaiting review)
-- **Completed stages:** P5.37-00 (audit / gate freeze — [`reports/P5.37-00-audit-gate-freeze.md`](reports/P5.37-00-audit-gate-freeze.md)), P5.37-01 (union-chimera local-evidence shadow, Option 2 — [`reports/P5.37-01-meter-independent-shadow.md`](reports/P5.37-01-meter-independent-shadow.md))
+- **Status:** in-progress — **P5.37-02 `PROMOTION = PASS`**; production behavior unchanged (source == baseline)
+- **Active stage:** P5.37-03 (production semantic integration — NOT started; awaiting human authorization)
+- **Completed stages:** P5.37-00 (audit / gate freeze — [`reports/P5.37-00-audit-gate-freeze.md`](reports/P5.37-00-audit-gate-freeze.md)), P5.37-01 (union-chimera local-evidence shadow, Option 2 — [`reports/P5.37-01-meter-independent-shadow.md`](reports/P5.37-01-meter-independent-shadow.md)), P5.37-02 (promotion evaluation — [`reports/P5.37-02-promotion-evaluation.md`](reports/P5.37-02-promotion-evaluation.md); PROMOTION = PASS, all gates A–M)
 - **P5.37-01 result:** P5.26 reuse insufficient (minimal parameterization); Option (b') reverted to baseline; new `scripts/p537/unionChimera.ts` detects only the P5.36-confirmed union-chimera signature and partitions those windows into coherent local states (reuses the parity-guarded scorer; no scorer/vocab change). LF 4/4 targets trigger with coherent partitions; whole-file trigger 8/33 (bounded); all hard negatives + corpus safe
 - **Depends on:** P5.36 closeout `77c8b0e` (PASS — CURRENT-ATTACK / METER CAUSAL VALIDATION COMPLETE; P5.37 TARGET READY), in ancestry
 - **Primary target:** Family B (fixed-2-beat evidence mixing). Family A = OPTIONAL / DEFERRED workstream.

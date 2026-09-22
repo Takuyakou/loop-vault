@@ -12,6 +12,11 @@ Stage and promotion reports for the Production Fix / Integration phase.
   windows into coherent local states (reuses the parity-guarded scorer; no
   scorer/vocab change). `PASS — READY FOR PROMOTION`; LF 4/4 targets trigger;
   whole-file trigger 8/33 (bounded); hard negatives + corpus safe.
+- `P5.37-02-promotion-evaluation.md` — end-to-end DEFAULT-analyzer promotion
+  evaluation (baseline parity test-locked; Gate L confirms the correction survives
+  smoothing). `PROMOTION = PASS` (all gates A–M); 4/4 known targets improve E2E;
+  whole-file 8/33 (4 confirmed + 4 SUPPORTED, 0 SUSPICIOUS). Includes the P5.37-03
+  integration proposal. Production diff = 0.
 - `templates/` — shadow/promotion/integration report templates.
 
 Reports carry only privacy-safe aggregates. Never commit the private MIDI
