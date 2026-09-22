@@ -4,9 +4,9 @@
 
 ## Status
 
-- **Status:** in-progress — **P5.37-03 production integration COMPLETE** (branch `feat/p537-union-chimera-production`); flag default OFF → production default behavior unchanged
-- **Active stage:** P5.37-05 (hardening / acceptance — NOT started; P5.37-04 Family A DEFERRED)
-- **Completed stages:** P5.37-00 (audit / gate freeze — [`reports/P5.37-00-audit-gate-freeze.md`](reports/P5.37-00-audit-gate-freeze.md)), P5.37-01 (union-chimera shadow, Option 2 — [`reports/P5.37-01-meter-independent-shadow.md`](reports/P5.37-01-meter-independent-shadow.md)), P5.37-02 (promotion — [`reports/P5.37-02-promotion-evaluation.md`](reports/P5.37-02-promotion-evaluation.md); PROMOTION = PASS), P5.37-03 (production integration — [`reports/P5.37-03-production-semantic-integration.md`](reports/P5.37-03-production-semantic-integration.md); flag `enableUnionChimeraPartition` default OFF, OFF=legacy, ON=shadow)
+- **Status:** in-progress — **P5.37-05 complete: `DEFAULT-ON = NOT APPROVED`** (fix ships as opt-in, default OFF); production default behavior unchanged
+- **Active stage:** P5.37-06 (closeout — NOT started; P5.37-04 Family A DEFERRED)
+- **Completed stages:** P5.37-00 (audit / gate freeze), P5.37-01 (union-chimera shadow, Option 2), P5.37-02 (promotion — PROMOTION = PASS), P5.37-03 (production integration — [`reports/P5.37-03-production-semantic-integration.md`](reports/P5.37-03-production-semantic-integration.md)), P5.37-05 (hardening / acceptance — [`reports/P5.37-05-hardening-acceptance.md`](reports/P5.37-05-hardening-acceptance.md); DEFAULT-ON = NOT APPROVED, opt-in retained)
 - **P5.37-01 result:** P5.26 reuse insufficient (minimal parameterization); Option (b') reverted to baseline; new `scripts/p537/unionChimera.ts` detects only the P5.36-confirmed union-chimera signature and partitions those windows into coherent local states (reuses the parity-guarded scorer; no scorer/vocab change). LF 4/4 targets trigger with coherent partitions; whole-file trigger 8/33 (bounded); all hard negatives + corpus safe
 - **Depends on:** P5.36 closeout `77c8b0e` (PASS — CURRENT-ATTACK / METER CAUSAL VALIDATION COMPLETE; P5.37 TARGET READY), in ancestry
 - **Primary target:** Family B (fixed-2-beat evidence mixing). Family A = OPTIONAL / DEFERRED workstream.

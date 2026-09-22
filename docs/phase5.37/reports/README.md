@@ -22,6 +22,11 @@ Stage and promotion reports for the Production Fix / Integration phase.
   trigger `src/domain/midi/unionChimera.ts`. OFF = exact legacy (clean scope 3235
   green, default OFF); ON == promoted shadow byte-for-byte. Production runtime
   default behavior unchanged; rollback = flag OFF.
+- `P5.37-05-hardening-acceptance.md` — full regression + private acceptance;
+  `DEFAULT-ON = NOT APPROVED` (fix ships opt-in). Default-ON safety experiment: 0
+  existing-suite regressions (trigger fires 0% on 4/4). Not defaulted-on due to
+  ~2.5× universal overhead (fires only on 1/4-mixed files) + 4 SUPPORTED-not-confirmed
+  extra triggers; flag retained, rollback trivial. Next research recorded.
 - `templates/` — shadow/promotion/integration report templates.
 
 Reports carry only privacy-safe aggregates. Never commit the private MIDI
