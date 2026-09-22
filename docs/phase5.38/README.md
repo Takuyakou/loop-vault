@@ -4,8 +4,9 @@
 
 ## Status
 
-- **Status:** blocked after P5.38-02 — `PROMOTION = FAIL`; production behavior unchanged
-- **Active stage:** none; production integration is forbidden for frozen v1
+- **Status:** blocked after Shadow v2 research addendum — v2 is
+  `READY FOR PROMOTION`; production behavior unchanged
+- **Active stage:** none; a new Promotion Evaluation requires explicit review
 - **Completed stages:** P5.38-00 ([`reports/P5.38-00-audit-baseline-gate-freeze.md`](reports/P5.38-00-audit-baseline-gate-freeze.md)), P5.38-01 ([`reports/P5.38-01-presentation-grouping-shadow.md`](reports/P5.38-01-presentation-grouping-shadow.md)), P5.38-02 ([`reports/P5.38-02-promotion-evaluation.md`](reports/P5.38-02-promotion-evaluation.md))
 - **Base:** local `master` at `50b0a5a`, which contains the P5.37 closeout and default-on Family-B integration
 - **Current branch:** `feat/p538-family-a-downstream`
@@ -15,8 +16,12 @@
   No post-private retuning was performed.
 - **P5.38-02 decision:** `PROMOTION = FAIL`. Architecture evidence remains
   useful, but frozen v1 cannot enter production because hard Gate A failed.
-- **Stop boundary:** await explicit human direction for a new shadow research
-  stage or closeout; do not start P5.38-03 automatically
+- **Shadow v2 addendum:** synthetic-only policy freeze `871da02` passes all
+  hard negatives and private Gate A (65/40 -> 25/0). See
+  [`reports/P5.38-shadow-v2-redesign-addendum.md`](reports/P5.38-shadow-v2-redesign-addendum.md).
+  This does not overwrite the v1 `PROMOTION = FAIL` decision.
+- **Stop boundary:** await explicit human direction for a new Promotion
+  Evaluation; do not start P5.38-03 automatically
 
 ## Required Reading Order
 

@@ -5,9 +5,9 @@
   "activeStage": null,
   "completedStages": ["P5.38-00", "P5.38-01", "P5.38-02"],
   "blocked": true,
-  "blockerReason": "Frozen presentation-grouping v1 failed hard Gate A, so production integration is forbidden. Await explicit human direction for a new shadow research stage or closeout.",
+  "blockerReason": "Frozen presentation-grouping v1 remains PROMOTION = FAIL. The separately frozen Shadow v2 research addendum is READY FOR PROMOTION, but a new Promotion Evaluation requires explicit human authorization before any production integration.",
   "baseCommit": "50b0a5a",
-  "lastVerifiedCommit": "71fca7c",
+  "lastVerifiedCommit": "871da02",
   "currentBranch": "feat/p538-family-a-downstream",
   "requiredGates": {
     "P5.38-00": [
@@ -140,8 +140,19 @@
     "gate-i-determinism": "pass",
     "gate-j-bounded-cost": "pass",
     "gate-k-official-regression": "pass",
-    "PROMOTION": "FAIL"
+    "PROMOTION": "FAIL",
+    "shadow-v2-policy-frozen-before-private": "pass",
+    "shadow-v2-expanded-synthetic-matrix": "pass",
+    "shadow-v2-hard-negative-false-positive-zero": "pass",
+    "shadow-v2-normal-meter-parity": "pass",
+    "shadow-v2-family-b-regression": "pass",
+    "shadow-v2-source-round-trip": "pass",
+    "shadow-v2-placeholder-block-semantics": "pass",
+    "shadow-v2-deterministic-bounded": "pass",
+    "shadow-v2-private-gate-a": "pass",
+    "shadow-v2-production-diff-zero": "pass",
+    "shadow-v2-ready-for-promotion": "pass"
   },
-  "nextAction": "P5.38-02 is complete with PROMOTION = FAIL for frozen presentation-grouping v1. Production/UI/schema integration is forbidden. STOP and await explicit human direction before either a separately scoped Family-A shadow redesign or closeout. Do not lower the 0.50 threshold, implement Shadow v2, start Family C, merge, or push automatically.",
+  "nextAction": "Shadow v2 research addendum is complete and READY FOR PROMOTION at frozen commit 871da02. Historical v1 PROMOTION = FAIL remains unchanged. STOP and await explicit human authorization before a new Promotion Evaluation. Do not start P5.38-03, production/UI/schema work, Family C, merge, or push automatically.",
   "updatedAt": "2026-09-22"
 }
