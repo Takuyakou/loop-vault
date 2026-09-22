@@ -1,0 +1,41 @@
+{
+  "package": "Loop Vault P5.38 Family A Downstream Fragmentation",
+  "phaseIdAssumption": "5.38; stop if already allocated",
+  "dependsOn": "P5.37 closed with union-chimera production fix enabled by default",
+  "primaryTarget": "Preserve source meter truth while decoupling downstream progression/block/text grouping from pathological one-beat source bars",
+  "protectedFamilyB": "Union-chimera production behavior must remain unchanged",
+  "outOfScope": "Family C vocabulary/representability",
+  "workflow": [
+    "P5.38-00 audit/gate freeze",
+    "P5.38-01 shadow grouping",
+    "P5.38-02 promotion",
+    "P5.38-03 production integration after PASS",
+    "P5.38-04 hardening/acceptance",
+    "P5.38-05 closeout"
+  ],
+  "privateFixtureId": "LF-MIDI-001",
+  "productionIntegrationRequiresPromotionPass": true,
+  "files": [
+    "00-START-HERE.md",
+    "CODEX-HANDOFF.md",
+    "README.md",
+    "acceptance/P5.38-acceptance-checklist.md",
+    "contracts/01-scope-and-non-goals.md",
+    "contracts/02-source-meter-vs-presentation-group.md",
+    "contracts/03-shadow-strategy-comparison.md",
+    "contracts/04-promotion-gates.md",
+    "contracts/05-private-fixture-and-privacy.md",
+    "contracts/06-family-b-protection.md",
+    "contracts/07-default-and-rollback.md",
+    "execution-state.json",
+    "reports/templates/P5.38-downstream-comparison-template.md",
+    "reports/templates/P5.38-promotion-table-template.md",
+    "stages/P5.38-00-audit-baseline-gate-freeze.md",
+    "stages/P5.38-01-shadow-downstream-grouping.md",
+    "stages/P5.38-02-promotion-evaluation.md",
+    "stages/P5.38-03-production-integration.md",
+    "stages/P5.38-04-hardening-acceptance.md",
+    "stages/P5.38-05-closeout.md",
+    "work-instructions.md"
+  ]
+}
