@@ -17,6 +17,11 @@ Stage and promotion reports for the Production Fix / Integration phase.
   smoothing). `PROMOTION = PASS` (all gates A–M); 4/4 known targets improve E2E;
   whole-file 8/33 (4 confirmed + 4 SUPPORTED, 0 SUSPICIOUS). Includes the P5.37-03
   integration proposal. Production diff = 0.
+- `P5.37-03-production-semantic-integration.md` — production wiring of frozen v1 in
+  `legacy.ts` behind `enableUnionChimeraPartition` (default OFF) with a shared pure
+  trigger `src/domain/midi/unionChimera.ts`. OFF = exact legacy (clean scope 3235
+  green, default OFF); ON == promoted shadow byte-for-byte. Production runtime
+  default behavior unchanged; rollback = flag OFF.
 - `templates/` — shadow/promotion/integration report templates.
 
 Reports carry only privacy-safe aggregates. Never commit the private MIDI

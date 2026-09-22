@@ -133,6 +133,14 @@ export interface AnalyzeMidiOptions {
    * key-aware chord-label spelling; omission and false preserve exact output.
    */
   enableKeyAwareChordSpelling?: boolean;
+  /**
+   * P5.37 union-chimera partition (frozen policy v1). Only the literal boolean true
+   * enables it; omission and false preserve exact legacy behavior. When true, a
+   * fixed 2-beat window whose top-1 candidate is supported by neither beat (two
+   * materially different coherent local harmonies merged) is partitioned into its
+   * two beats' coherent candidates before smoothing. Default OFF.
+   */
+  enableUnionChimeraPartition?: boolean;
 
 }
 
