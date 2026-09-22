@@ -4,16 +4,19 @@
 
 ## Status
 
-- **Status:** in-progress (Stage 01 complete; production behavior unchanged)
-- **Active stage:** P5.38-02 (promotion evaluation; not started/authorized)
-- **Completed stages:** P5.38-00 ([`reports/P5.38-00-audit-baseline-gate-freeze.md`](reports/P5.38-00-audit-baseline-gate-freeze.md)), P5.38-01 ([`reports/P5.38-01-presentation-grouping-shadow.md`](reports/P5.38-01-presentation-grouping-shadow.md))
+- **Status:** blocked after P5.38-02 — `PROMOTION = FAIL`; production behavior unchanged
+- **Active stage:** none; production integration is forbidden for frozen v1
+- **Completed stages:** P5.38-00 ([`reports/P5.38-00-audit-baseline-gate-freeze.md`](reports/P5.38-00-audit-baseline-gate-freeze.md)), P5.38-01 ([`reports/P5.38-01-presentation-grouping-shadow.md`](reports/P5.38-01-presentation-grouping-shadow.md)), P5.38-02 ([`reports/P5.38-02-promotion-evaluation.md`](reports/P5.38-02-promotion-evaluation.md))
 - **Base:** local `master` at `50b0a5a`, which contains the P5.37 closeout and default-on Family-B integration
 - **Current branch:** `feat/p538-family-a-downstream`
 - **P5.38-01 result:** runtime-only source/presentation separation, meter parity,
   source round-trip, and synthetic improvement are proven. Frozen shadow v1
   fails closed on LF-MIDI-001 and therefore misses Gate A (65/40 remain 65/40).
   No post-private retuning was performed.
-- **Stop boundary:** P5.38-01 complete; await explicit continuation before P5.38-02
+- **P5.38-02 decision:** `PROMOTION = FAIL`. Architecture evidence remains
+  useful, but frozen v1 cannot enter production because hard Gate A failed.
+- **Stop boundary:** await explicit human direction for a new shadow research
+  stage or closeout; do not start P5.38-03 automatically
 
 ## Required Reading Order
 
