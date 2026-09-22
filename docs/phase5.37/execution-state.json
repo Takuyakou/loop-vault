@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
   "phaseId": "5.37",
-  "status": "blocked",
-  "activeStage": "P5.37-01",
-  "completedStages": ["P5.37-00"],
-  "blocked": true,
-  "blockerReason": "P5.37-01: authorized Option (b') implemented — behavior-preserving beatsPerBar parameterization + test/shadow-only seam (estimateLocalHarmonicStatesForShadow). 4/4 parity EXACT (p526 tests + 3200-test clean scope green); production runtime behavior diff = 0 (production source diff != 0); production non-4/4 path still unsupported-meter (test-locked). FINDING: the shadow evaluation shows the existing engine FALLS BACK on non-4/4 at deeper 4/4-tuned layers a minimal parameterization does NOT generalize — S1 (beatsPerBar=1) and S2 (neutralized prior) both return ambiguous-local-evidence (bar-level 1/2/4/8 quarter-beat period model is degenerate for 1-beat bars), and beatsPerBar=2/4 return insufficient-local-evidence (strict per-cell evidence gate vs sparse 1/4 cells). LF-MIDI-001 falls back under all configs -> 4 targets unchanged, no policy can be frozen. P5.36-04 'PARTIAL-REUSE (strong)' is downgraded to REUSE INSUFFICIENT VIA MINIMAL PARAMETERIZATION. Decision requested: (1) deeper generalization of bar-period + cell-evidence layers (larger, non-minimal; weigh §8 'don't invent'), (2) alternative Family-B fix at the candidate-ranking layer, or (3) keep/revert the (b') parameterization. Do NOT start P5.37-02/03.",
+  "status": "in-progress",
+  "activeStage": "P5.37-02",
+  "completedStages": ["P5.37-00", "P5.37-01"],
+  "blocked": false,
+  "blockerReason": null,
   "baseCommit": "77c8b0e",
-  "lastVerifiedCommit": "63c6f50",
+  "lastVerifiedCommit": "83b55f4",
   "currentBranch": "feat/p535-context-aware-harmonic-evidence",
   "requiredGates": {
     "P5.37-00": ["collision-check", "p536-closed-in-ancestry", "default-path-failure-confirmed", "meter-gate-located", "gates-frozen", "baselines-frozen", "family-a-decision", "validate:phase-docs", "validate:ai-handoff", "production-diff-zero"],
-    "P5.37-01": ["4-4-assumptions-classified", "meter-position-prior-not-blind-replaced", "beatsPerBar-parameterized-behavior-preserving", "4-4-parity-exact", "production-runtime-behavior-diff-zero", "production-non-4-4-path-unchanged", "source-immutable", "deterministic", "no-410-line-fork", "reuse-feasibility-determined", "reuse-insufficient-finding", "rescope-decision"]
+    "P5.37-01": ["p526-reuse-verdict-updated", "b-prime-parameterization-reverted", "production-source-runtime-baseline-restored", "no-410-line-fork", "candidate-scorer-unchanged", "candidate-vocabulary-unchanged", "oracle-free-trigger", "synthetic-chimera-detected", "synthetic-local-states-restored", "hard-negatives-safe", "corrected-corpus-safe", "policy-frozen-before-private", "lf-4-targets-triggered", "whole-file-trigger-prevalence-reported", "deterministic", "bounded", "source-immutable"]
   },
   "gateResults": {
     "4-4-assumptions-classified": "pass",
@@ -25,7 +25,20 @@
     "no-410-line-fork": "pass",
     "reuse-feasibility-determined": "pass",
     "reuse-insufficient-finding": "pass",
-    "rescope-decision": "blocked",
+    "p526-reuse-verdict-updated": "pass",
+    "b-prime-parameterization-reverted": "pass",
+    "production-source-runtime-baseline-restored": "pass",
+    "candidate-scorer-unchanged": "pass",
+    "candidate-vocabulary-unchanged": "pass",
+    "oracle-free-trigger": "pass",
+    "synthetic-chimera-detected": "pass",
+    "synthetic-local-states-restored": "pass",
+    "hard-negatives-safe": "pass",
+    "corrected-corpus-safe": "pass",
+    "policy-frozen-before-private": "pass",
+    "lf-4-targets-triggered": "pass",
+    "whole-file-trigger-prevalence-reported": "pass",
+    "bounded": "pass",
     "collision-check": "pass",
     "p536-closed-in-ancestry": "pass",
     "default-path-failure-confirmed": "pass",
@@ -37,6 +50,6 @@
     "validate:ai-handoff": "pass",
     "production-diff-zero": "pass"
   },
-  "nextAction": "BLOCKED at P5.37-01 pending a re-scope decision. Authorized Option (b') implemented: behavior-preserving beatsPerBar parameterization + test/shadow-only seam; 4/4 parity exact; production runtime behavior diff = 0 (source diff != 0); production 1/4 path still unsupported-meter (test-locked). FINDING: the existing engine falls back on non-4/4 at deeper 4/4-tuned layers (bar-level 1/2/4/8 quarter-beat period model degenerate for 1-beat bars -> ambiguous-local-evidence; strict per-cell evidence gate -> insufficient-local-evidence). LF-MIDI-001 falls back under all configs; the 4 targets are unchanged; no S2 policy can be frozen. REUSE INSUFFICIENT VIA MINIMAL PARAMETERIZATION (P5.36-04 PARTIAL-REUSE downgraded). Decision requested: (1) deeper generalization of bar-period + cell-evidence layers (larger; weigh 'don't invent new segmentation'), (2) alternative Family-B fix at the candidate-ranking layer, or (3) keep/revert the (b') parameterization. Do NOT start P5.37-02/03; production non-4/4 gate stays until PROMOTION PASS.",
+  "nextAction": "P5.37-02 — promotion evaluation of the frozen union-chimera local-evidence shadow (Contract-04 gates A-K + whole-file regression; PROMOTION = PASS|FAIL only). P5.37-01 result: PASS — Option (b') reverted (production source == baseline 77c8b0e, runtime unchanged); new scripts/p537/unionChimera.ts (reuses the P5.36-03 parity-guarded scorer + W2/B0/B1 decomposition, no scorer/vocab change) detects ONLY the confirmed union-chimera signature and partitions those windows into coherent local states. Synthetic chimera reproduced+resolved (A7 -> C|A); all hard negatives + corpus safe (0 triggers); LF-MIDI-001 4/4 targets trigger with coherent partitions (Am11/B -> Cm7|Bm7, Case B undone); whole-file trigger prevalence 8/33 (24%, bounded; 4 targets + 4 same-family broad chimeras). Deterministic/bounded/source-immutable. AWAIT explicit review before P5.37-02. Production non-4/4 gate stays closed until PROMOTION PASS; do NOT start P5.37-02/03 yet.",
   "updatedAt": "2026-09-22"
 }

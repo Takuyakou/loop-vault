@@ -1,10 +1,8 @@
 import {
   estimateP526LocalHarmonicStateShadow,
   type P526LocalEvidenceCell,
-  type P526LocalHarmonicStateShadowResult,
   type P526LocalHarmonicStateShadowSupported,
 } from "./harmonicState/localHarmonicStateShadow";
-import { beatsPerBar as beatsPerBarOfMeter } from "./timing";
 import {
   estimateP524BassLane,
   estimateP524HarmonicRhythm,
@@ -172,45 +170,6 @@ export function prepareLocalHarmonicStateAnalyzerOptions(
 
 export function hasAppliedLocalHarmonicStateTimeline(options: AnalyzeMidiOptions): boolean {
   return (options as AppliedAnalyzeMidiOptions)[localHarmonicStateTimelineApplied] === true;
-}
-
-export interface LocalHarmonicStateShadowProbe {
-  readonly applied: boolean;
-  readonly reason: string;
-  readonly beatsPerBar: number;
-  readonly totalBeats: number;
-  readonly result?: P526LocalHarmonicStateShadowResult;
-}
-
-/**
- * P5.37-01 TEST / SHADOW-ONLY seam. It runs the (now meter-parameterized) local
- * harmonic-state estimator on the real production evidence with an explicit
- * `beatsPerBar` and the 4/4 gate bypassed, so the shadow can evaluate non-4/4
- * material. It is NEVER called by `analyzeMidi` / any production/runtime path, so
- * production runtime behavior is unchanged; it exists only for P5.37 shadow
- * evaluation and tests. It does not mutate source notes/meter.
- */
-export function estimateLocalHarmonicStatesForShadow(
-  bytes: Uint8Array,
-  shadow: { readonly beatsPerBar?: number; readonly neutralizeBarPositionPrior?: boolean; readonly preparedData?: MidiSongData } = {},
-): LocalHarmonicStateShadowProbe {
-  const production = buildProductionInput(bytes, shadow.preparedData ? { preparedData: shadow.preparedData } : {});
-  if (production === undefined) return { applied: false, reason: "invalid-input", beatsPerBar: 0, totalBeats: 0 };
-  const beatsPerBar = shadow.beatsPerBar ?? beatsPerBarOfMeter(production.data.timeSignature);
-  const totalBeats = production.data.totalBars * beatsPerBar;
-  const cellBuild = buildBeatCells(production.input.notes, totalBeats);
-  if (cellBuild === undefined) return { applied: false, reason: "invalid-input", beatsPerBar, totalBeats };
-  const result = estimateP526LocalHarmonicStateShadow(
-    { meter: [beatsPerBar, 4], totalBeats, cells: cellBuild.cells, globalHarmonicRhythm: { status: "unknown", quarterBeats: "unknown" } },
-    { beatsPerBar, neutralizeBarPositionPrior: shadow.neutralizeBarPositionPrior ?? false, allowNonQuadrupleMeter: true },
-  );
-  return {
-    applied: result.status === "supported",
-    reason: result.status === "supported" ? "applied" : result.reason,
-    beatsPerBar,
-    totalBeats,
-    result,
-  };
 }
 
 function buildProductionInput(bytes: Uint8Array, options: AnalyzeMidiOptions): ProductionInput | undefined {

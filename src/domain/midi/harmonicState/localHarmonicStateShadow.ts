@@ -23,24 +23,10 @@ export interface P526GlobalHarmonicRhythmEvidence {
 }
 
 export interface P526LocalHarmonicStateShadowInput {
-  readonly meter: readonly [number, number];
+  readonly meter: readonly [4, 4];
   readonly totalBeats: number;
   readonly cells: readonly P526LocalEvidenceCell[];
   readonly globalHarmonicRhythm: P526GlobalHarmonicRhythmEvidence;
-}
-
-/**
- * P5.37-01 shadow-enablement options (behavior-preserving). Defaults reproduce the
- * exact 4/4 behavior: `beatsPerBar = 4`, no meter generalization, bar-position prior
- * active. Non-default values are used ONLY by the P5.37 shadow/test seam — the
- * production analyzer call path never sets them, so runtime behavior is unchanged.
- */
-export interface P526LocalHarmonicStateShadowOptions {
-  readonly beatsPerBar?: number;
-  /** When true, the 4/4-derived bar-position prior does not force splits (meter-neutral, non-4/4). */
-  readonly neutralizeBarPositionPrior?: boolean;
-  /** When true, the internal 4/4 meter gate is bypassed (shadow evaluation of non-4/4 only). */
-  readonly allowNonQuadrupleMeter?: boolean;
 }
 
 export type P526BoundaryEvidence =
@@ -131,7 +117,7 @@ export type P526LocalHarmonicStateShadowResult =
   | P526LocalHarmonicStateShadowSupported
   | P526LocalHarmonicStateShadowUnknown;
 
-const defaultBeatsPerBar = 4;
+const beatsPerBar = 4;
 const maximumCandidateCellsPerBar = 4;
 const maximumBars = 4_096;
 const minimumPersistentEvidence = 0.5;
@@ -143,31 +129,25 @@ const localOverrideMargin = 0.15;
  * it is deliberately disconnected from production chord selection and never
  * consumes a final chord identity or user metadata.
  */
-export function estimateP526LocalHarmonicStateShadow(
-  input: unknown,
-  options: P526LocalHarmonicStateShadowOptions = {},
-): P526LocalHarmonicStateShadowResult {
-  const beatsPerBar = options.beatsPerBar ?? defaultBeatsPerBar;
-  const neutralizeBarPositionPrior = options.neutralizeBarPositionPrior ?? false;
-  const allowNonQuadrupleMeter = options.allowNonQuadrupleMeter ?? false;
+export function estimateP526LocalHarmonicStateShadow(input: unknown): P526LocalHarmonicStateShadowResult {
   try {
-    if (!allowNonQuadrupleMeter && hasUnsupportedMeter(input)) return unknownResult("unsupported-meter");
-    const parsed = parseInput(input, beatsPerBar, allowNonQuadrupleMeter);
+    if (hasUnsupportedMeter(input)) return unknownResult("unsupported-meter");
+    const parsed = parseInput(input);
     if (parsed === undefined) return unknownResult("invalid-input");
-    if (hasUnboundedDensity(parsed, beatsPerBar)) return unknownResult("unbounded-candidate-density", parsed.cells.length, parsed.totalBeats / beatsPerBar);
+    if (hasUnboundedDensity(parsed)) return unknownResult("unbounded-candidate-density", parsed.cells.length, parsed.totalBeats / beatsPerBar);
     if (parsed.cells.some((cell) => cell.upperPitchClasses.length === 0 || cell.upperPersistence < minimumPersistentEvidence)) {
       return unknownResult("insufficient-local-evidence", parsed.cells.length, parsed.totalBeats / beatsPerBar);
     }
     if (parsed.globalHarmonicRhythm.status === "unknown" && averageEvidence(parsed.cells) < minimumPersistentEvidence) {
       return unknownResult("ambiguous-local-evidence", parsed.cells.length, parsed.totalBeats / beatsPerBar);
     }
-    return estimateInternal(parsed, beatsPerBar, neutralizeBarPositionPrior);
+    return estimateInternal(parsed);
   } catch {
     return unknownResult("invalid-input");
   }
 }
 
-function estimateInternal(input: P526LocalHarmonicStateShadowInput, beatsPerBar: number, neutralizeBarPositionPrior: boolean): P526LocalHarmonicStateShadowResult {
+function estimateInternal(input: P526LocalHarmonicStateShadowInput): P526LocalHarmonicStateShadowResult {
   const boundaries: P526LocalBoundaryDecision[] = [];
   let contextLookups = 0;
   const cellByStartBeat = new Map<number, P526LocalEvidenceCell>();
@@ -181,7 +161,7 @@ function estimateInternal(input: P526LocalHarmonicStateShadowInput, beatsPerBar:
     const nextBarCell = cellByStartBeat.get((Math.floor(right.startBeat / beatsPerBar) + 1) * beatsPerBar);
     if (previousBarCell !== undefined) contextLookups += 1;
     if (nextBarCell !== undefined) contextLookups += 1;
-    boundaries.push(decideBoundary(left, right, previousBarCell, nextBarCell, beatsPerBar, neutralizeBarPositionPrior));
+    boundaries.push(decideBoundary(left, right, previousBarCell, nextBarCell));
   }
 
   const states: P526LocalStructuralState[] = [];
@@ -271,8 +251,7 @@ function estimateInternal(input: P526LocalHarmonicStateShadowInput, beatsPerBar:
 }
 
 function decideBoundary(left: P526LocalEvidenceCell, right: P526LocalEvidenceCell,
-  previousBarCell: P526LocalEvidenceCell | undefined, nextBarCell: P526LocalEvidenceCell | undefined,
-  beatsPerBar: number, neutralizeBarPositionPrior: boolean): P526LocalBoundaryDecision {
+  previousBarCell: P526LocalEvidenceCell | undefined, nextBarCell: P526LocalEvidenceCell | undefined): P526LocalBoundaryDecision {
   const signals = boundarySignals(left, right);
   const metricStrong = signals.normalizedBeatStrength >= 0.75;
   const pcStrong = signals.pitchClassSupport >= 0.75;
@@ -288,7 +267,7 @@ function decideBoundary(left: P526LocalEvidenceCell, right: P526LocalEvidenceCel
   const persistentArrivalOnUpperTone = persistentBassChange
     && !left.upperPitchClasses.includes(left.bassPitchClass!)
     && right.upperPitchClasses.includes(right.bassPitchClass!);
-  const structuralBarBoundary = neutralizeBarPositionPrior ? false : right.startBeat % beatsPerBar === 0;
+  const structuralBarBoundary = right.startBeat % beatsPerBar === 0;
   if (stableUpper) {
     if (persistentBassChange && (structuralBarBoundary || largePersistentBassChange || persistentArrivalOnUpperTone || !allSignalsStrong)) {
       return split(right.startBeat, signals, ["stable-upper-structure", "persistent-bass-change", ...(metricStrong ? ["strong-metric-placement" as const] : []), ...(pcStrong ? ["pitch-class-support" as const] : []), ...(continuityStrong ? ["temporal-continuity" as const] : []), ...(localStrong ? ["local-rhythm-support" as const] : [])]);
@@ -299,7 +278,7 @@ function decideBoundary(left: P526LocalEvidenceCell, right: P526LocalEvidenceCel
   }
   const samePitchMaterial = setEqual([...left.upperPitchClasses, ...(left.bassPitchClass === undefined ? [] : [left.bassPitchClass])],
     [...right.upperPitchClasses, ...(right.bassPitchClass === undefined ? [] : [right.bassPitchClass])]);
-  const atBarBoundary = neutralizeBarPositionPrior ? false : right.startBeat % beatsPerBar === 0;
+  const atBarBoundary = right.startBeat % beatsPerBar === 0;
   if (samePitchMaterial && atBarBoundary && pcStrong && continuityStrong) {
     return merge(right.startBeat, signals, ["same-pitch-material", "bar-scale-inversion", "pitch-class-support", "temporal-continuity"]);
   }
@@ -385,11 +364,9 @@ function exactLocalPeriod(splitBeats: readonly number[]): P526LocalHarmonicRhyth
   return "unknown";
 }
 
-function parseInput(value: unknown, beatsPerBar: number, allowNonQuadrupleMeter: boolean): P526LocalHarmonicStateShadowInput | undefined {
-  if (!isRecord(value)) return undefined;
-  const meterOk = isDenseArray(value.meter) && value.meter.length === 2
-    && (allowNonQuadrupleMeter ? true : (value.meter[0] === 4 && value.meter[1] === 4));
-  if (!meterOk || !Number.isInteger(value.totalBeats) || (value.totalBeats as number) <= 0 || (value.totalBeats as number) % beatsPerBar !== 0
+function parseInput(value: unknown): P526LocalHarmonicStateShadowInput | undefined {
+  if (!isRecord(value) || !isDenseArray(value.meter) || value.meter.length !== 2 || value.meter[0] !== 4 || value.meter[1] !== 4
+    || !Number.isInteger(value.totalBeats) || (value.totalBeats as number) <= 0 || (value.totalBeats as number) % beatsPerBar !== 0
     || (value.totalBeats as number) / beatsPerBar > maximumBars || !isDenseArray(value.cells) || value.cells.length === 0 || !isRecord(value.globalHarmonicRhythm)) return undefined;
   const totalBeats = value.totalBeats as number;
   const global = value.globalHarmonicRhythm;
@@ -406,13 +383,12 @@ function parseInput(value: unknown, beatsPerBar: number, allowNonQuadrupleMeter:
   }
   cells.sort(compareCells);
   if (cells[0]?.startBeat !== 0 || cells[cells.length - 1]?.endBeat !== totalBeats || cells.some((cell, index) => index > 0 && cells[index - 1]?.endBeat !== cell.startBeat)) return undefined;
-  const meter = (value as { meter: readonly [number, number] }).meter;
-  return { meter: [meter[0], meter[1]], totalBeats, cells, globalHarmonicRhythm: { status: global.status, quarterBeats: global.quarterBeats as P526LocalHarmonicRhythm } };
+  return { meter: [4, 4], totalBeats, cells, globalHarmonicRhythm: { status: global.status, quarterBeats: global.quarterBeats as P526LocalHarmonicRhythm } };
 }
 
 function compareCells(left: P526LocalEvidenceCell, right: P526LocalEvidenceCell): number { return left.startBeat - right.startBeat || left.endBeat - right.endBeat || compareNumberArrays(left.upperPitchClasses, right.upperPitchClasses) || (left.bassPitchClass ?? -1) - (right.bassPitchClass ?? -1); }
 function compareNumberArrays(left: readonly number[], right: readonly number[]): number { for (let index = 0; index < Math.min(left.length, right.length); index += 1) if (left[index] !== right[index]) return left[index]! - right[index]!; return left.length - right.length; }
-function hasUnboundedDensity(input: P526LocalHarmonicStateShadowInput, beatsPerBar: number): boolean { const counts = new Uint8Array(input.totalBeats / beatsPerBar); for (const cell of input.cells) { const first = Math.floor(cell.startBeat / beatsPerBar); const final = Math.min(counts.length - 1, Math.ceil(cell.endBeat / beatsPerBar) - 1); for (let bar = first; bar <= final; bar += 1) { counts[bar]! += 1; if (counts[bar]! > maximumCandidateCellsPerBar) return true; } } return false; }
+function hasUnboundedDensity(input: P526LocalHarmonicStateShadowInput): boolean { const counts = new Uint8Array(input.totalBeats / beatsPerBar); for (const cell of input.cells) { const first = Math.floor(cell.startBeat / beatsPerBar); const final = Math.min(counts.length - 1, Math.ceil(cell.endBeat / beatsPerBar) - 1); for (let bar = first; bar <= final; bar += 1) { counts[bar]! += 1; if (counts[bar]! > maximumCandidateCellsPerBar) return true; } } return false; }
 function hasUnsupportedMeter(value: unknown): boolean { return isRecord(value) && isDenseArray(value.meter) && value.meter.length === 2 && (value.meter[0] !== 4 || value.meter[1] !== 4); }
 function unknownResult(reason: P526LocalHarmonicStateShadowUnknown["reason"], inputCells = 0, bars = 0): P526LocalHarmonicStateShadowUnknown {
   return { status: "unknown", bars: [], states: [], boundaries: [], operations: {
