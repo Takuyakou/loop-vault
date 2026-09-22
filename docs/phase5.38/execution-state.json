@@ -5,7 +5,7 @@
   "activeStage": null,
   "completedStages": ["P5.38-00", "P5.38-01", "P5.38-02"],
   "blocked": true,
-  "blockerReason": "Frozen presentation-grouping v1 remains PROMOTION = FAIL. The separately frozen Shadow v2 research addendum is READY FOR PROMOTION, but a new Promotion Evaluation requires explicit human authorization before any production integration.",
+  "blockerReason": "Frozen presentation-grouping v1 remains the historical PROMOTION = FAIL. The separately evaluated frozen Shadow v2 is PROMOTION = PASS, but P5.38-03 production integration requires explicit human authorization.",
   "baseCommit": "50b0a5a",
   "lastVerifiedCommit": "871da02",
   "currentBranch": "feat/p538-family-a-downstream",
@@ -151,8 +151,20 @@
     "shadow-v2-deterministic-bounded": "pass",
     "shadow-v2-private-gate-a": "pass",
     "shadow-v2-production-diff-zero": "pass",
-    "shadow-v2-ready-for-promotion": "pass"
+    "shadow-v2-ready-for-promotion": "pass",
+    "shadow-v2-promotion-gate-a": "pass",
+    "shadow-v2-promotion-gate-b": "pass",
+    "shadow-v2-promotion-gate-c": "pass",
+    "shadow-v2-promotion-gate-d": "pass",
+    "shadow-v2-promotion-gate-e": "pass",
+    "shadow-v2-promotion-gate-f": "pass",
+    "shadow-v2-promotion-gate-g": "pass",
+    "shadow-v2-promotion-gate-h": "pass",
+    "shadow-v2-promotion-gate-i": "pass",
+    "shadow-v2-promotion-gate-j": "pass",
+    "shadow-v2-promotion-gate-k": "pass",
+    "PROMOTION_V2": "PASS"
   },
-  "nextAction": "Shadow v2 research addendum is complete and READY FOR PROMOTION at frozen commit 871da02. Historical v1 PROMOTION = FAIL remains unchanged. STOP and await explicit human authorization before a new Promotion Evaluation. Do not start P5.38-03, production/UI/schema work, Family C, merge, or push automatically.",
+  "nextAction": "Shadow v2 Promotion Evaluation is complete with PROMOTION = PASS for frozen commit 871da02. Historical v1 PROMOTION = FAIL remains unchanged. STOP and await explicit human authorization before P5.38-03. Do not start production/UI/schema work, Family C, merge, or push automatically.",
   "updatedAt": "2026-09-22"
 }

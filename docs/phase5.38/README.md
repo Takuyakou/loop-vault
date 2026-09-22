@@ -4,9 +4,9 @@
 
 ## Status
 
-- **Status:** blocked after Shadow v2 research addendum — v2 is
-  `READY FOR PROMOTION`; production behavior unchanged
-- **Active stage:** none; a new Promotion Evaluation requires explicit review
+- **Status:** blocked after Shadow v2 Promotion Evaluation addendum —
+  `PROMOTION = PASS`; production behavior unchanged
+- **Active stage:** none; P5.38-03 requires explicit authorization
 - **Completed stages:** P5.38-00 ([`reports/P5.38-00-audit-baseline-gate-freeze.md`](reports/P5.38-00-audit-baseline-gate-freeze.md)), P5.38-01 ([`reports/P5.38-01-presentation-grouping-shadow.md`](reports/P5.38-01-presentation-grouping-shadow.md)), P5.38-02 ([`reports/P5.38-02-promotion-evaluation.md`](reports/P5.38-02-promotion-evaluation.md))
 - **Base:** local `master` at `50b0a5a`, which contains the P5.37 closeout and default-on Family-B integration
 - **Current branch:** `feat/p538-family-a-downstream`
@@ -20,8 +20,12 @@
   hard negatives and private Gate A (65/40 -> 25/0). See
   [`reports/P5.38-shadow-v2-redesign-addendum.md`](reports/P5.38-shadow-v2-redesign-addendum.md).
   This does not overwrite the v1 `PROMOTION = FAIL` decision.
-- **Stop boundary:** await explicit human direction for a new Promotion
-  Evaluation; do not start P5.38-03 automatically
+- **Shadow v2 Promotion Evaluation:** `PROMOTION = PASS` for the exact frozen
+  v2 policy. See
+  [`reports/P5.38-02b-v2-promotion-evaluation.md`](reports/P5.38-02b-v2-promotion-evaluation.md).
+  The historical v1 `PROMOTION = FAIL` remains recorded separately.
+- **Stop boundary:** await explicit human authorization for P5.38-03; do not
+  start production integration automatically
 
 ## Required Reading Order
 
