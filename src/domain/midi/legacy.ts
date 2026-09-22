@@ -34,6 +34,8 @@ import type { AnalyzeMidiOptions, MidiSongData, TimedNote, TrackRole } from "./t
 import { selectChordEvidenceNotes } from "./voices";
 import { addBassPlainCompanion } from "./accuracyFirstCandidates";
 import { addObservedFlatNineDominantCandidate } from "./observedFlatNineCandidate";
+import { chordPitchSet } from "./candidateDiversity";
+import { evaluateUnionChimeraWindow, UNION_CHIMERA_DEFAULT_MIN_BUCKET_PCS } from "./unionChimera";
 
 export const analyzerVersion = "legacy-v1";
 
@@ -182,8 +184,18 @@ export function analyzeMidiWithRankingScores(
       scoring,
     ));
   }
+  // P5.37 union-chimera partition (frozen policy v1). Default ON (approved in
+  // P5.37-05); set `enableUnionChimeraPartition: false` for the exact-legacy
+  // rollback. A fixed 2-beat window whose top-1 candidate is supported by neither
+  // beat (two materially different coherent local harmonies merged) is partitioned
+  // into its two beats' coherent candidates BEFORE smoothing. No scorer/vocabulary
+  // change; the trigger uses the default (non-quality) scoring the policy was frozen
+  // on, and the smoother consolidates as usual.
+  const partitionedTimeline = options.enableUnionChimeraPartition !== false
+    ? partitionUnionChimeras(rankedTimeline, windows, analysisData, roles)
+    : rankedTimeline;
   const smoothedTimeline = smoothTimelineWithRankingScores(
-    rankedTimeline,
+    partitionedTimeline,
     barLengthBeats,
     scoring.preserveHarmonicStateBoundaries === true,
   );
@@ -502,6 +514,73 @@ function rankWindowCandidates(
   const bassPc = maxIndex(window.bassHistogram);
   return scoreTemplates(window.histogram, bassPc, previous, scoring)
     .sort((a, b) => b.confidence - a.confidence || a.chord.label.localeCompare(b.chord.label));
+}
+
+function nonZeroPitchClassSet(window: WeightedWindow | undefined): Set<number> {
+  const set = new Set<number>();
+  if (window === undefined) return set;
+  window.histogram.forEach((value, pc) => { if (value > 0) set.add(pc); });
+  return set;
+}
+
+/**
+ * P5.37 union-chimera partition (frozen policy v1). For each 2-beat window whose
+ * top-1 candidate is a union chimera, replaces its single ranked item with its two
+ * beats' coherent candidates, so the smoother sees two local states. The trigger is
+ * evaluated on the default (non-quality) scoring the policy was frozen on; every
+ * other window is passed through unchanged. Pure of source data; no scorer change.
+ */
+function partitionUnionChimeras(
+  rankedTimeline: readonly RankedTimelineItem[],
+  windows: readonly WeightedWindow[],
+  analysisData: MidiSongData,
+  roles: Map<number, TrackRole>,
+): RankedTimelineItem[] {
+  const barLengthBeats = beatsPerBar(analysisData.timeSignature);
+  const oneBeatWindows = buildWeightedWindows(analysisData, roles, 1);
+  const out: RankedTimelineItem[] = [];
+  windows.forEach((window, index) => {
+    const ranked = rankedTimeline[index];
+    if (ranked === undefined) return;
+    if (window.durationBeats !== 2) { out.push(ranked); return; }
+    const beat0 = oneBeatWindows[2 * index];
+    const beat1 = oneBeatWindows[2 * index + 1];
+    const w2Top = rankWindowCandidates(window)[0];
+    const beat0Top = beat0 ? rankWindowCandidates(beat0)[0] : undefined;
+    const beat1Top = beat1 ? rankWindowCandidates(beat1)[0] : undefined;
+    const decision = w2Top === undefined ? undefined : evaluateUnionChimeraWindow({
+      w2WinnerLabel: w2Top.chord.label,
+      w2WinnerRoot: w2Top.chord.root,
+      w2WinnerPcs: chordPitchSet(w2Top.chord),
+      b0WinnerLabel: beat0Top?.chord.label ?? null,
+      b0WinnerRoot: beat0Top?.chord.root ?? null,
+      b0Pcs: nonZeroPitchClassSet(beat0),
+      b0HasEvidence: (beat0?.totalWeight ?? 0) > 0,
+      b1WinnerLabel: beat1Top?.chord.label ?? null,
+      b1WinnerRoot: beat1Top?.chord.root ?? null,
+      b1Pcs: nonZeroPitchClassSet(beat1),
+      b1HasEvidence: (beat1?.totalWeight ?? 0) > 0,
+    }, UNION_CHIMERA_DEFAULT_MIN_BUCKET_PCS);
+    if (decision?.triggered && beat0Top !== undefined && beat1Top !== undefined) {
+      const startBeat = (ranked.item.bar - 1) * barLengthBeats + (ranked.item.beat - 1);
+      const partitionItem = (absoluteBeat: number, top: { chord: ChordSymbol; confidence: number }): RankedTimelineItem => ({
+        item: {
+          bar: Math.floor(absoluteBeat / barLengthBeats) + 1,
+          beat: (absoluteBeat % barLengthBeats) + 1,
+          durationBeats: 1,
+          chord: top.chord,
+          confidence: clamp(top.confidence),
+          alternatives: [],
+          warnings: [],
+        },
+        rankingScore: rankingScoreFor(top.confidence),
+      });
+      out.push(partitionItem(startBeat, beat0Top), partitionItem(startBeat + 1, beat1Top));
+    } else {
+      out.push(ranked);
+    }
+  });
+  return out;
 }
 
 export function smoothTimeline(items: ChordTimelineItem[], barLengthBeats = 4): ChordTimelineItem[] {

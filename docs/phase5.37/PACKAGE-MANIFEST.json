@@ -1,0 +1,51 @@
+{
+  "package": "Loop Vault P5.37 Production Fix / Integration",
+  "phaseIdAssumption": "5.37; stop if already allocated",
+  "dependsOn": "P5.36 closed with P5.37 TARGET READY",
+  "primaryTarget": "Generalize existing local-harmonic-state path from 4/4-only to meter-independent operation, preserving source meter and existing scorer/vocabulary where possible",
+  "familyA": "Optional independent downstream-fragmentation workstream",
+  "workflow": [
+    "P5.37-00 audit/gate freeze",
+    "P5.37-01 meter-independent shadow",
+    "P5.37-02 promotion evaluation",
+    "P5.37-03 production semantic integration only after PASS",
+    "P5.37-04 optional Family A workstream",
+    "P5.37-05 hardening/acceptance",
+    "P5.37-06 closeout"
+  ],
+  "privateFixtureId": "LF-MIDI-001",
+  "productionIntegrationRequiresPromotionPass": true,
+  "naiveFixesRejected": [
+    "global 1-beat windows",
+    "semantic 1/4->4/4 rewrite",
+    "global broad-chord penalties",
+    "force bass=root",
+    "hard-coded label rewrite",
+    "P5.35 carryover attenuation promotion"
+  ],
+  "files": [
+    "00-START-HERE.md",
+    "README.md",
+    "acceptance/P5.37-acceptance-checklist.md",
+    "contracts/01-scope-and-authority.md",
+    "contracts/02-semantic-fix-contract.md",
+    "contracts/03-shadow-parity-and-rollback.md",
+    "contracts/04-promotion-gates.md",
+    "contracts/05-family-a-fragmentation.md",
+    "contracts/06-private-fixture-and-whole-file.md",
+    "contracts/07-performance-and-determinism.md",
+    "contracts/08-p537-success-and-failure.md",
+    "execution-state.json",
+    "reports/templates/P5.37-integration-diff-template.md",
+    "reports/templates/P5.37-private-whole-file-template.md",
+    "reports/templates/P5.37-promotion-table-template.md",
+    "stages/P5.37-00-audit-gate-freeze.md",
+    "stages/P5.37-01-meter-independent-shadow.md",
+    "stages/P5.37-02-promotion-evaluation.md",
+    "stages/P5.37-03-production-semantic-integration.md",
+    "stages/P5.37-04-family-a-fragmentation.md",
+    "stages/P5.37-05-hardening-acceptance.md",
+    "stages/P5.37-06-closeout.md",
+    "work-instructions.md"
+  ]
+}

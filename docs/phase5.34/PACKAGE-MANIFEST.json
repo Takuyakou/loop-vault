@@ -1,0 +1,26 @@
+{
+  "package": "Loop Vault P5.34 MIDI Import Failure Isolation",
+  "purpose": "Controlled diagnostic phase for LF-MIDI-001 before any production fix",
+  "phaseIdAssumption": "5.34; stop if already allocated in current Git",
+  "productionBehaviorChangesAuthorized": false,
+  "files": [
+    "00-START-HERE.md",
+    "README.md",
+    "acceptance/P5.34-acceptance-checklist.md",
+    "contracts/01-scope-and-stop-boundary.md",
+    "contracts/02-evidence-classification.md",
+    "contracts/03-experiment-matrix.md",
+    "contracts/04-source-truth-protection.md",
+    "contracts/05-privacy-and-fixtures.md",
+    "execution-state.json",
+    "reports/templates/P5.34-ABCD-report-template.md",
+    "reports/templates/P5.34-causal-report-template.md",
+    "stages/P5.34-00-audit-baseline.md",
+    "stages/P5.34-01-build-isolation-harness.md",
+    "stages/P5.34-02-run-abcd-experiment.md",
+    "stages/P5.34-03-semantic-regression-fixtures.md",
+    "stages/P5.34-04-root-cause-report-and-next-plan.md",
+    "stages/P5.34-05-hardening-closeout.md",
+    "work-instructions.md"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "package": "Loop Vault P5.35 Context-Aware Harmonic Evidence / Carryover-Resistant Ranking",
+  "phaseIdAssumption": "5.35; stop if already allocated",
+  "dependsOn": "P5.34 closed",
+  "strategy": "shadow-first; production only after frozen promotion gates",
+  "productionBehaviorChangesAuthorizedInitially": false,
+  "files": [
+    "00-START-HERE.md",
+    "PACKAGE-MANIFEST.json",
+    "README.md",
+    "acceptance/P5.35-human-acceptance-checklist.md",
+    "contracts/01-scope-and-protected-surfaces.md",
+    "contracts/02-temporal-evidence-model.md",
+    "contracts/03-shadow-scoring.md",
+    "contracts/04-promotion-gates.md",
+    "contracts/05-private-evidence-and-privacy.md",
+    "contracts/06-production-integration-if-promoted.md",
+    "execution-state.json",
+    "reports/templates/P5.35-promotion-report-template.md",
+    "reports/templates/P5.35-shadow-window-template.md",
+    "stages/P5.35-00-audit-baseline.md",
+    "stages/P5.35-01-shadow-temporal-evidence.md",
+    "stages/P5.35-02-shadow-carryover-resistant-ranking.md",
+    "stages/P5.35-03-promotion-evaluation.md",
+    "stages/P5.35-04-production-integration.md",
+    "stages/P5.35-05-hardening-product-acceptance.md",
+    "work-instructions.md"
+  ]
+}
