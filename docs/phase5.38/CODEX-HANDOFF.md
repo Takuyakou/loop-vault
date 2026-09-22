@@ -1,56 +1,66 @@
-# Codex Handoff — P5.38
+# Codex Handoff — P5.38 (Closed)
 
-## Why Codex can continue from Git alone
+## Final product truth
 
-The repository AI handoff should contain the complete causal history. This file adds only the P5.38 execution focus.
-
-## Current product truth to verify in Git
-
-Expected after P5.37:
+P5.38 is complete:
 
 ```text
+Family A cause: CONFIRMED
+Family A production fix: implemented, promoted, hardened, DEFAULT ON
+feature: enablePresentationGrouping
+omitted / true: promoted p538-presentation-grouping-shadow-v2
+false: exact-legacy downstream presentation
+
 Family B cause: CONFIRMED
-Family B production fix: implemented
-union-chimera policy: v1
-feature: enableUnionChimeraPartition
-expected default: ON
-false: exact-legacy rollback
-Family A: CONFIRMED / DEFERRED
+Family B production fix: implemented, DEFAULT ON
+enableUnionChimeraPartition false: exact-legacy rollback
+
 Family C: OPEN / separate
 ```
 
-Do not trust these lines over Git; verify them.
+Verify these statements against Git; documents never outrank code/tests.
 
-## P5.38 target
-
-Fix Family A only:
+## Architecture contract
 
 ```text
-1/4 source meter
-→ 1-beat source bars
-→ downstream bar/block/text fragmentation
+source MIDI / meter
+↓
+harmonic analysis
+↓
+P5.37 Family B correction
+↓
+resolved fullTimeline
+↓
+P5.38 Family A Presentation Projection
+↓
+presentation-facing consumers
 ```
-
-Keep:
 
 ```text
-source timeSignature = 1/4
+PresentationGroup != source bar
+PresentationGroup != rewritten meter bar
 ```
 
-Do not fake 4/4 metadata.
+PresentationGroups are variable-duration, harmonic-event-oriented spans.
+Source meter, source bars, timeline coordinates, persistence, and export
+provenance remain source truth.
 
-## Work style
+Current presentation consumers are formatted progression presentation,
+candidate-card summaries, and visible card topology/count. `SongMiniMap` and
+`ProgressionGrid` remain source-bar consumers.
 
-- quality > speed;
-- automated tests over manual inspection;
-- private fixture remains ignored-local;
-- no broad refactors;
-- no candidate vocabulary/scorer changes;
-- no Family B policy changes;
-- no Family C work;
-- explicit-path staging only;
-- stop at every stage boundary.
+## Historical record
 
-## Important historical correction
+- Shadow v1: `PROMOTION = FAIL`; its frozen 0.5 multi-source-group span-ratio
+  condition was too conservative on private Gate A.
+- Shadow v2: structural source/event relation plus counterfactual improvement
+  guard; not threshold retuning; `PROMOTION = PASS`.
+- P5.38-03 production integration → P5.38-04 hardening/default-ON approval →
+  P5.38-05 closeout.
 
-P5.36 proved that the diagnostic 4/4 view changed downstream bars/blocks/text but **did not change fixed-2-beat harmonic ranking** except for a score-neutral scalar. Therefore a Family A fix should be located downstream of source parsing/harmonic identity whenever possible.
+## Resume boundary
+
+Do not reopen or retune Family A or Family B without explicit authorization.
+Do not delete either rollback flag. Do not treat PresentationGroups as bars.
+Family C vocabulary/representability is the next separate open issue, but no
+next phase may start automatically.

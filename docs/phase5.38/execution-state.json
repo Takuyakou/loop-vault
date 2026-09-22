@@ -1,19 +1,20 @@
 {
   "schemaVersion": 1,
   "phaseId": "5.38",
-  "status": "blocked",
+  "status": "completed",
   "activeStage": null,
   "completedStages": [
     "P5.38-00",
     "P5.38-01",
     "P5.38-02",
     "P5.38-03",
-    "P5.38-04"
+    "P5.38-04",
+    "P5.38-05"
   ],
-  "blocked": true,
-  "blockerReason": "P5.38-04 hardening / acceptance is complete with DEFAULT-ON = APPROVED and explicit false as exact legacy rollback. P5.38-05 closeout requires explicit human authorization.",
+  "blocked": false,
+  "blockerReason": null,
   "baseCommit": "50b0a5a",
-  "lastVerifiedCommit": "00a2c849b044a7ed7673f2027a6fa426c555afa1",
+  "lastVerifiedCommit": "273f6d3f796410da05c650af1f5ca9a501a72e2a",
   "currentBranch": "feat/p538-family-a-downstream",
   "requiredGates": {
     "P5.38-00": [
@@ -127,6 +128,26 @@
       "validate-ai-handoff-stage04",
       "git-diff-check-clean-stage04",
       "privacy-clean-stage04"
+    ],
+    "P5.38-05": [
+      "closeout-report-complete-stage05",
+      "final-status-recorded-stage05",
+      "default-on-final-stage05",
+      "explicit-off-exact-legacy-stage05",
+      "source-presentation-boundary-stage05",
+      "persistence-unchanged-stage05",
+      "family-b-protected-stage05",
+      "family-c-not-started-stage05",
+      "focused-stage05",
+      "official-clean-suite-stage05",
+      "typecheck-build-stage05",
+      "changed-scope-eslint-stage05",
+      "class-source-contract-lint-stage05",
+      "repository-eslint-baseline-unchanged-stage05",
+      "validate-phase-docs-stage05",
+      "validate-ai-handoff-stage05",
+      "git-diff-check-clean-stage05",
+      "privacy-clean-stage05"
     ]
   },
   "gateResults": {
@@ -268,8 +289,26 @@
     "validate-ai-handoff-stage04": "pass",
     "git-diff-check-clean-stage04": "pass",
     "privacy-clean-stage04": "pass",
-    "DEFAULT-ON": "APPROVED"
+    "DEFAULT-ON": "APPROVED",
+    "closeout-report-complete-stage05": "pass",
+    "final-status-recorded-stage05": "pass",
+    "default-on-final-stage05": "pass",
+    "explicit-off-exact-legacy-stage05": "pass",
+    "source-presentation-boundary-stage05": "pass",
+    "persistence-unchanged-stage05": "pass",
+    "family-b-protected-stage05": "pass",
+    "family-c-not-started-stage05": "pass",
+    "focused-stage05": "pass",
+    "official-clean-suite-stage05": "pass",
+    "typecheck-build-stage05": "pass",
+    "changed-scope-eslint-stage05": "pass",
+    "class-source-contract-lint-stage05": "pass",
+    "repository-eslint-baseline-unchanged-stage05": "pass",
+    "validate-phase-docs-stage05": "pass",
+    "validate-ai-handoff-stage05": "pass",
+    "git-diff-check-clean-stage05": "pass",
+    "privacy-clean-stage05": "pass"
   },
-  "nextAction": "P5.38-04 is complete at 00a2c849b044a7ed7673f2027a6fa426c555afa1 with DEFAULT-ON = APPROVED. STOP and await explicit human authorization before P5.38-05 closeout, Family C, merge, or push.",
+  "nextAction": "P5.38 is closed. Family A presentation fragmentation and Family B union-chimera identity correction are enabled by default with exact-legacy rollback flags retained. Family C remains the next separate open issue. No next phase, merge, push, tag, release, or executable build was started.",
   "updatedAt": "2026-09-23"
 }

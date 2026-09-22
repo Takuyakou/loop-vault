@@ -56,6 +56,27 @@ Source Truth → Harmony Interpretation → Practice Rendering
 - Modes: `legacy`, `hybrid-v1`, `legacy-boundary-rerank`, `voice-aware-rerank-v1`, `phase4-v1` (default), `phase4.1-v1`, `phase4.1.2-v1`, `phase4.1.2-core-v1`, `phase4.1.2-g2-v1`, `phase4.1.2-core-g2-v1`.
 - Protected: do not change detection / ranking incidentally.
 
+## 4a. Presentation grouping (P5.38 Family A projection)
+
+- Paths: `src/domain/midi/presentationGrouping.ts`,
+  `src/domain/midi/presentationGroupingCore.ts`, `src/domain/midi/analysis.ts`,
+  `src/views/CaptureView.tsx`.
+- Pipeline position: source MIDI/meter → harmonic analysis → P5.37 Family B
+  correction → resolved `fullTimeline` → P5.38 presentation projection →
+  presentation-facing consumers.
+- Responsibilities: derive variable-duration PresentationGroups for formatted
+  progression, candidate-card summaries, and visible card topology/count while
+  retaining exact references to original source candidates.
+- Default/rollback: `enablePresentationGrouping` omitted/`true` uses promoted
+  `p538-presentation-grouping-shadow-v2`; literal `false` is exact legacy.
+- Source-truth boundary: `PresentationGroup != source bar != rewritten meter
+  bar`. Meter, `totalBars`, timeline bar/beat, persistence/export,
+  `SongMiniMap`, and `ProgressionGrid` remain source truth.
+- Persistence: projection and policy id are runtime-only; Vault schema,
+  `fileVersion`, and migrations are unchanged.
+- Protected: do not feed variable-duration PresentationGroups into equal-width
+  source-bar surfaces; do not mutate harmonic identity or Family B behavior.
+
 ## 5. Voice Roles
 
 - Paths: `src/domain/midi/types.ts` (`Voice`, `VoiceRole`, `VoiceRoleInference`), `src/domain/midi/voices.ts`

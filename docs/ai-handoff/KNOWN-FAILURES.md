@@ -14,7 +14,7 @@ note dumps. Synthetic pitch examples are allowed.
 ## LF-MIDI-001 — Clean structured chord MIDI may be degraded by analyzer interpretation
 
 - ID: LF-MIDI-001
-- Status: CAUSE CONFIRMED (P5.36); **Family-B production fix IMPLEMENTED, PROMOTED, HARDENED, DEFAULT ON (P5.37)**; Family A (meter-derived downstream fragmentation) and vocabulary/representability remain **separate open work**
+- Status: CAUSE CONFIRMED (P5.36); **Family A presentation fix DEFAULT ON (P5.38)**; **Family B identity fix DEFAULT ON (P5.37)**; Family C vocabulary/representability remains **separate open work**
 - Observed facts (USER-REPORTED — not reproducible from committed repo alone):
   - meter metadata reads 1/4 (privacy-safe PPQ metadata);
   - approximately 65 quarter-note beats;
@@ -60,7 +60,8 @@ Two independent, co-occurring causes (see `docs/phase5.36/reports/` and
   (REJECTED — Case B); simple note density (REJECTED — P5.36-01); candidate
   generation (REJECTED for observed real cases — the candidate set is constant).
 - **Separate family:** vocabulary/representability limits (S02/S04) are a distinct
-  known issue; the P5.37 fix does not address them.
+  known issue; neither the P5.37 identity fix nor the P5.38 presentation fix
+  addresses them.
 
 ### Implemented fix (P5.37 — union-chimera partition, DEFAULT ON)
 
@@ -84,14 +85,33 @@ unchanged. The source meter fact is preserved (no 1/4→4/4 rewrite).
   from the corrected final timeline and do not reappear after smoothing.
 - Full history: `docs/phase5.37/reports/` (see `P5.37-06-closeout.md`).
 
+### Implemented fix (P5.38 — presentation grouping, DEFAULT ON)
+
+A separate, runtime-only presentation projection now runs after the resolved
+`fullTimeline` and after the P5.37 Family B correction. The promoted
+`p538-presentation-grouping-shadow-v2` policy groups fragmented source-meter
+cells into variable-duration harmonic presentation spans without rewriting
+meter or harmonic identity.
+
+- Flag `enablePresentationGrouping`: omitted / `true` → promoted projection
+  (DEFAULT ON); `false` → exact-legacy presentation.
+- Presentation consumers: formatted progression, candidate-card summaries, and
+  visible candidate-card block topology/count.
+- Source truth remains: meter, `totalBars`, timeline bar/beat, persisted chord
+  events/source coordinates, export, `SongMiniMap`, and `ProgressionGrid`.
+- No projection or policy id is persisted; Vault schema, `fileVersion`, and
+  migration state are unchanged.
+- Privacy-safe aggregate: 65/40/10 legacy groups/dashes/blocks becomes 25/0/8,
+  with harmonic identity, source truth, and source candidates unchanged.
+- Full history: `docs/phase5.38/reports/` (see `P5.38-05-closeout.md`).
+
 ### Relationship to current source-preserving building blocks
 
 Existing source-preserving building blocks include per-chord `sourceVoicing`
 (pitch/octave) and selected-bass `Source Bassline` capture (exact beats, 4/4).
 They do **not**, by themselves, establish a general exact full-polyphonic
-source-performance preservation path, and they do not resolve the analyzer-based
-degradation above (the default analyzer remains `phase4-v1`). Treat LF-MIDI-001
-as still open.
+source-performance preservation path. LF-MIDI-001 Families A and B are closed
+by their separate default-on fixes; Family C representability remains open.
 
 ### Synthetic semantic examples (privacy-safe)
 
@@ -114,6 +134,10 @@ publishing any real material.
 
 ## Cause discipline
 
-- Do not write "1/4 is the root cause" anywhere.
-- 1/4 meter is a leading hypothesis only; a chord-identity misread may exist independently.
-- Promotion to CONFIRMED requires a reproducible committed fixture + experiment result.
+- `1/4` source meter is the confirmed upstream condition for Family A's
+  downstream presentation fragmentation; it is not the cause of Family B's
+  harmonic-identity misread.
+- Keep Family A presentation, Family B identity, and Family C representability
+  separate in diagnosis and claims.
+- Do not rewrite source meter to obtain presentation grouping, and do not claim
+  Families A/B fixes resolve Family C.

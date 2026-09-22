@@ -99,9 +99,34 @@ code/tests; `PROPOSED` items are direction only.
   Coherent windows are unchanged; source notes/meter/vocabulary/scorer are unchanged.
   Rollback stays trivial via the flag.
 - Do not: delete the flag; change frozen policy v1 (trigger/threshold/scorer/
-  heuristic) without a new authorized stage; claim Family A or representability is
-  fixed. A future performance optimization (reuse main-loop ranking) must not change
-  policy v1.
+  heuristic) without a new authorized stage; claim this Family B policy itself
+  fixes Family A or representability. Family A is fixed independently by P5.38;
+  Family C remains open. A future performance optimization (reuse main-loop
+  ranking) must not change policy v1.
+
+## ADR-009 — Presentation grouping is default ON (Family A fix)
+
+- ID: ADR-009
+- Title: `enablePresentationGrouping` default ON, `false` = exact-legacy presentation
+- Status: CONFIRMED (P5.38)
+- Decision: Omitting `enablePresentationGrouping` or setting it to `true` applies
+  the promoted `p538-presentation-grouping-shadow-v2` runtime projection after
+  the resolved `fullTimeline`; only literal `false` restores exact-legacy
+  downstream presentation. The flag is retained.
+- Reason: Source-meter bars and presentation spans are different concepts.
+  Reusing truthful 1/4 source bars for formatted progression and cards caused
+  downstream fragmentation; rewriting meter would corrupt source truth.
+- Evidence: `src/domain/midi/presentationGrouping.ts`,
+  `src/domain/midi/analysis.ts`, `src/views/CaptureView.tsx`, and
+  `docs/phase5.38/reports/P5.38-05-closeout.md`.
+- Consequences: formatted progression, candidate-card summaries, and visible
+  card topology/count use variable-duration PresentationGroups. Source meter,
+  `totalBars`, timeline bar/beat, persistence/export, `SongMiniMap`, and
+  `ProgressionGrid` remain source truth. No projection/policy is persisted;
+  schema, `fileVersion`, and migrations are unchanged.
+- Do not: treat a PresentationGroup as a source bar or rewritten meter bar;
+  persist the projection; delete the rollback flag; change frozen v2 policy
+  without new authorization; claim this fixes Family C representability.
 
 ## ADR-007 — Source Bassline is a selected-bass contract
 

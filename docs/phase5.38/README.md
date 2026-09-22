@@ -4,10 +4,10 @@
 
 ## Status
 
-- **Status:** blocked after P5.38-04 hardening / acceptance; promoted v2 is
-  default ON with an explicit-false exact-legacy rollback
-- **Active stage:** none; P5.38-05 closeout requires explicit authorization
-- **Completed stages:** P5.38-00 ([`reports/P5.38-00-audit-baseline-gate-freeze.md`](reports/P5.38-00-audit-baseline-gate-freeze.md)), P5.38-01 ([`reports/P5.38-01-presentation-grouping-shadow.md`](reports/P5.38-01-presentation-grouping-shadow.md)), P5.38-02 ([`reports/P5.38-02-promotion-evaluation.md`](reports/P5.38-02-promotion-evaluation.md)), P5.38-03 ([`reports/P5.38-03-production-integration.md`](reports/P5.38-03-production-integration.md)), P5.38-04 ([`reports/P5.38-04-hardening-acceptance.md`](reports/P5.38-04-hardening-acceptance.md))
+- **Status:** completed — `PASS — FAMILY A PRESENTATION FRAGMENTATION FIX
+  INTEGRATED, HARDENED, AND ENABLED BY DEFAULT`
+- **Active stage:** none; P5.38 is closed
+- **Completed stages:** P5.38-00 ([`reports/P5.38-00-audit-baseline-gate-freeze.md`](reports/P5.38-00-audit-baseline-gate-freeze.md)), P5.38-01 ([`reports/P5.38-01-presentation-grouping-shadow.md`](reports/P5.38-01-presentation-grouping-shadow.md)), P5.38-02 ([`reports/P5.38-02-promotion-evaluation.md`](reports/P5.38-02-promotion-evaluation.md)), P5.38-03 ([`reports/P5.38-03-production-integration.md`](reports/P5.38-03-production-integration.md)), P5.38-04 ([`reports/P5.38-04-hardening-acceptance.md`](reports/P5.38-04-hardening-acceptance.md)), P5.38-05 ([`reports/P5.38-05-closeout.md`](reports/P5.38-05-closeout.md))
 - **Base:** local `master` at `50b0a5a`, which contains the P5.37 closeout and default-on Family-B integration
 - **Current branch:** `feat/p538-family-a-downstream`
 - **P5.38-01 result:** runtime-only source/presentation separation, meter parity,
@@ -35,8 +35,14 @@
   topology while all edit/save/playback operations retain source candidates.
   Private aggregate reproduces 65/40/10 -> 25/0/8 with source truth unchanged;
   explicit false remains exact legacy rollback.
-- **Stop boundary:** await explicit human authorization for P5.38-05; do not
-  start closeout, Family C, merge, or push automatically
+- **P5.38-05 result:** Family A presentation fragmentation is closed. Omitted
+  `enablePresentationGrouping` and explicit `true` use the promoted
+  `p538-presentation-grouping-shadow-v2`; explicit `false` remains exact legacy.
+  Presentation grouping is runtime-only and does not rewrite source meter,
+  timeline coordinates, persistence, or export. Family B remains protected and
+  Family C remains a separate open issue.
+- **Stop boundary:** P5.38 is closed. Do not start Family C, another phase,
+  merge, or push automatically.
 
 ## Required Reading Order
 
