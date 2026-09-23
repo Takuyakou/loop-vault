@@ -140,9 +140,10 @@ function main(): void {
       && JSON.stringify(projectStage03bTimeline(again.data, again.windows, "model-a"))
         === JSON.stringify(shadowFinal);
   });
-  const sourceUnchanged = bytes.length === originalBytes.length
-    && bytes.every((value, index) => value === originalBytes[index])
-    && JSON.stringify(parseMidi(bytes)) === originalParsed;
+  const afterBytes = new Uint8Array(readFileSync(source));
+  const sourceUnchanged = afterBytes.length === originalBytes.length
+    && afterBytes.every((value, index) => value === originalBytes[index])
+    && JSON.stringify(parseMidi(afterBytes)) === originalParsed;
   if (visits.some((value) => value < 276 || value > 300)
     || !repeated.every(Boolean) || !sourceUnchanged) {
     throw new Error("Bound, determinism, or source fidelity failed");
