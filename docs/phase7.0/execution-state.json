@@ -10,7 +10,7 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "362e0df3d0cd21ab7d697f792553974703d44a8b",
-  "lastVerifiedCommit": "afe5647cadb662d4957145c125373c5c6b92bf27",
+  "lastVerifiedCommit": "2ab5189c9056ae10bca965187085703e3491fbde",
   "currentBranch": "research/phase7-core-v2",
   "requiredGates": {
     "P7.0-00": [
@@ -49,7 +49,12 @@
     "script-typecheck-and-lint": "pass",
     "stage01-phase-docs-valid": "pass",
     "stage01-production-diff-zero": "pass",
-    "stage01-privacy-and-diff-clean": "pass"
+    "stage01-privacy-and-diff-clean": "pass",
+    "temporal-gold-contract-valid": "pass",
+    "synthetic-taxonomy-covered": "pass",
+    "stage02-focused-tests-and-types": "pass",
+    "stage02-phase-docs-valid": "pass",
+    "stage02-production-diff-zero": "pass"
   },
   "nextAction": "P7.0-02: complete anonymous local regression-witness mapping when independent truth is available; keep the stage active until its gate is resolved.",
   "updatedAt": "2026-09-24"
