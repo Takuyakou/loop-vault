@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "7.0",
+  "status": "in-progress",
+  "activeStage": "P7.0-00",
+  "completedStages": [],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "362e0df3d0cd21ab7d697f792553974703d44a8b",
+  "lastVerifiedCommit": "",
+  "currentBranch": "research/phase7-core-v2",
+  "requiredGates": {
+    "P7.0-00": [
+      "audit-complete",
+      "phase-docs-valid",
+      "production-diff-zero",
+      "privacy-and-diff-clean"
+    ]
+  },
+  "gateResults": {},
+  "nextAction": "Complete P7.0-00 repository, evidence, corpus, Gold, and protected-path audit.",
+  "updatedAt": "2026-09-24"
+}
