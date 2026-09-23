@@ -42,6 +42,10 @@ export interface ProjectedStage03bSpan {
   familyC: boolean;
 }
 
+export interface PlannedStage03bSpan extends ProjectedStage03bSpan {
+  confidence: number;
+}
+
 export type Stage03bProjectionMode = "control" | "model-a" | "model-b";
 
 function maxIndex(values: readonly number[]): number {
@@ -173,6 +177,14 @@ export function projectStage03bTimeline(
     }
     return [toPlan(window.w2[selected], window.index * 2, 2)];
   });
+  return smoothStage03bPlannedTimeline(data, planned);
+}
+
+/** Shared evaluation-only adapter into the unchanged production smoother. */
+export function smoothStage03bPlannedTimeline(
+  data: MidiSongData,
+  planned: readonly PlannedStage03bSpan[],
+): ProjectedStage03bSpan[] {
   const uniqueKeys = [...new Set(planned.map((span) => span.identityKey))].sort();
   const aliases = Array.from({ length: 12 }, (_, root) => (
     detectorQualities.map((quality) => makeChordSymbol(root, quality))

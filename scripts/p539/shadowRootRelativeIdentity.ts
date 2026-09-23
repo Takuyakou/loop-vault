@@ -68,6 +68,24 @@ export interface ShadowAlterationNeighborArchetype {
   descriptor: Omit<ShadowRootRelativeIdentity, "rootPitchClass" | "bassPitchClass">;
 }
 
+/** P5.40-02b fixed semantic neighbors; excluded from the frozen Stage01 catalog. */
+export const STAGE02B_FIXED_ARCHETYPES = [
+  {
+    id: "explicit-minor-nine-eleven",
+    descriptor: {
+      triad: "minor", seventh: "minor7", extensions: ["9", "11"],
+      alterations: [], omissions: [],
+    },
+  },
+  {
+    id: "dual-upper-alteration-no5",
+    descriptor: {
+      triad: "major", seventh: "minor7", extensions: [],
+      alterations: ["#11", "b13"], omissions: ["no5"],
+    },
+  },
+] as const;
+
 export interface ShadowMetamorphicVariant {
   id:
     | "close"
@@ -370,6 +388,15 @@ export function isBoundedShadowGrammarIdentity(identity: ShadowRootRelativeIdent
   ));
 }
 
+/** Opt-in grammar extension; frozen Stage01 representability stays unchanged. */
+export function isStage02bShadowGrammarIdentity(identity: ShadowRootRelativeIdentity): boolean {
+  if (isBoundedShadowGrammarIdentity(identity)) return true;
+  const key = shadowRootRelativeKey(identity);
+  return key !== null && STAGE02B_FIXED_ARCHETYPES.some(({ descriptor }) => (
+    shadowRootRelativeKey({ rootPitchClass: 0, ...descriptor }) === key
+  ));
+}
+
 function removeOmittedStructuralIntervals(
   identity: ShadowRootRelativeIdentity,
   intervals: Set<number>,
@@ -461,9 +488,14 @@ function addOmissionsToLabel(label: string, omissions: readonly ShadowOmission[]
 }
 
 /** Deterministic, explicit Shadow notation. Never emits the ambiguous `alt` token. */
-export function formatShadowIdentity(identity: ShadowRootRelativeIdentity): string | null {
+export function formatShadowIdentity(
+  identity: ShadowRootRelativeIdentity,
+  allowStage02b = false,
+): string | null {
   const normalized = normalizeShadowIdentity(identity);
-  if (!normalized || !isBoundedShadowGrammarIdentity(normalized)) return null;
+  if (!normalized || !(allowStage02b
+    ? isStage02bShadowGrammarIdentity(normalized)
+    : isBoundedShadowGrammarIdentity(normalized))) return null;
 
   const root = noteNameFromPitchClass(normalized.rootPitchClass);
   const bass = normalized.bassPitchClass === undefined
@@ -493,7 +525,7 @@ const SHADOW_MODIFIER = new Set<string>([
 ]);
 
 /** Parses bounded Shadow notation without widening the production parser. */
-export function parseShadowChordLabel(label: string): ShadowRootRelativeIdentity | null {
+export function parseShadowChordLabel(label: string, allowStage02b = false): ShadowRootRelativeIdentity | null {
   const trimmed = label.trim();
   if (/alt/i.test(trimmed)) return null;
 
@@ -536,7 +568,9 @@ export function parseShadowChordLabel(label: string): ShadowRootRelativeIdentity
       ...(bassPitchClass !== undefined ? { bassPitchClass } : {}),
     };
     const normalized = normalizeShadowIdentity(descriptor);
-    return normalized && isBoundedShadowGrammarIdentity(normalized) ? normalized : null;
+    return normalized && (allowStage02b
+      ? isStage02bShadowGrammarIdentity(normalized)
+      : isBoundedShadowGrammarIdentity(normalized)) ? normalized : null;
   }
 
   const productionLabel = `${rootMatch[1]}${qualitySurface}${writtenTensions.length
@@ -544,11 +578,22 @@ export function parseShadowChordLabel(label: string): ShadowRootRelativeIdentity
     : ""}${bassMatch?.[0] ?? ""}`;
   const symbol = parseChordLabel(productionLabel);
   if (!symbol) return null;
+  const parsed = shadowIdentityFromChordSymbol(symbol);
   const normalized = normalizeShadowIdentity({
-    ...shadowIdentityFromChordSymbol(symbol),
+    ...parsed,
+    ...(allowStage02b ? {
+      extensions: [...parsed.extensions, ...writtenTensions.filter(
+        (token): token is ShadowExtension => EXTENSION_ORDER.includes(token as ShadowExtension),
+      )],
+      alterations: [...parsed.alterations, ...writtenTensions.filter(
+        (token): token is ShadowAlteration => ALTERATION_ORDER.includes(token as ShadowAlteration),
+      )],
+    } : {}),
     omissions,
   });
-  return normalized && isBoundedShadowGrammarIdentity(normalized) ? normalized : null;
+  return normalized && (allowStage02b
+    ? isStage02bShadowGrammarIdentity(normalized)
+    : isBoundedShadowGrammarIdentity(normalized)) ? normalized : null;
 }
 
 export function buildFamilyCTargetIdentities(): Array<{

@@ -29,7 +29,9 @@ export type ShadowCandidateGenerationReason =
   | "production-base-candidate"
   | "family-c-target-a"
   | "family-c-target-b"
-  | "individual-alteration-neighbor";
+  | "individual-alteration-neighbor"
+  | "stage02b-explicit-minor"
+  | "stage02b-dual-upper-alteration";
 
 export type ShadowTargetRankingClassification =
   | "GENERATION_FAILURE"
@@ -262,7 +264,8 @@ function scoreCandidate(
   evidence: ShadowRankingEvidence,
 ): Omit<ShadowRankedCandidate, "rank"> {
   const hasShadowExplicitFacts = sourceCandidate.targetArchetypeId !== undefined
-    || sourceCandidate.generationReason === "individual-alteration-neighbor";
+    || sourceCandidate.generationReason === "individual-alteration-neighbor"
+    || sourceCandidate.generationReason.startsWith("stage02b-");
   const histogram = Array.from({ length: 12 }, (_, pc) => (
     Math.max(0, evidence.histogram[pc] ?? 0)
   ));
@@ -361,7 +364,9 @@ function scoreCandidate(
     ? sourceCandidate.identity
     : { ...sourceCandidate.identity, bassPitchClass: bass };
   const identityKey = shadowIdentityKey(identity);
-  const canonicalLabel = formatShadowIdentity(identity);
+  const canonicalLabel = formatShadowIdentity(
+    identity, sourceCandidate.generationReason.startsWith("stage02b-"),
+  );
   if (!identityKey || !canonicalLabel) {
     throw new Error("Ranked candidate lost its frozen Stage01 identity");
   }
@@ -445,10 +450,13 @@ export function rankShadowCandidatesWithAdditions(
   const known = new Set(base.map((entry) => entry.identityKey));
   additions.forEach((entry, index) => {
     if (entry.generationReason !== "individual-alteration-neighbor"
-      || entry.enumerationIndex !== base.length + index
+      && !entry.generationReason.startsWith("stage02b-")) {
+      throw new Error("Invalid Shadow addition reason");
+    }
+    if (entry.enumerationIndex !== base.length + index
       || known.has(entry.identityKey)
       || shadowIdentityKey(entry.identity) !== entry.identityKey
-      || formatShadowIdentity(entry.identity) !== entry.canonicalLabel) {
+      || formatShadowIdentity(entry.identity, entry.generationReason.startsWith("stage02b-")) !== entry.canonicalLabel) {
       throw new Error("Invalid Stage01 candidate addition");
     }
     known.add(entry.identityKey);
