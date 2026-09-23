@@ -7,11 +7,11 @@ Read root `AGENTS.md` first. This README is the phase entry point; Git and curre
 ## Status
 
 - **Status:** in-progress
-- **Active stage:** P7.0-00
-- **Completed stages:** none
+- **Active stage:** P7.0-01
+- **Completed stages:** P7.0-00 (`d9567779e37118899d85fcfcb71abc03903de93c`)
 - **Base commit:** `362e0df3d0cd21ab7d697f792553974703d44a8b`
 - **Branch:** `research/phase7-core-v2`
-- **Next action:** audit repository, evidence, and contracts before any experiment.
+- **Next action:** verify Gold availability and run the P7.0-01 boundary × role oracle ablation.
 
 ## Required Reading Order
 

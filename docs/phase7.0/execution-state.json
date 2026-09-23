@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "7.0",
   "status": "in-progress",
-  "activeStage": "P7.0-00",
-  "completedStages": [],
+  "activeStage": "P7.0-01",
+  "completedStages": ["P7.0-00"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "362e0df3d0cd21ab7d697f792553974703d44a8b",
-  "lastVerifiedCommit": "",
+  "lastVerifiedCommit": "d9567779e37118899d85fcfcb71abc03903de93c",
   "currentBranch": "research/phase7-core-v2",
   "requiredGates": {
     "P7.0-00": [
@@ -17,7 +17,12 @@
       "privacy-and-diff-clean"
     ]
   },
-  "gateResults": {},
-  "nextAction": "Complete P7.0-00 repository, evidence, corpus, Gold, and protected-path audit.",
+  "gateResults": {
+    "audit-complete": "pass",
+    "phase-docs-valid": "pass",
+    "production-diff-zero": "pass",
+    "privacy-and-diff-clean": "pass"
+  },
+  "nextAction": "P7.0-01: audit exact Gold boundary and role availability, then run the frozen 2x2 oracle ablation on chord-focused and melody-containing data.",
   "updatedAt": "2026-09-24"
 }
