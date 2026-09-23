@@ -7,7 +7,7 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "77e0458a6893057b7ca6da125ad7875fd01e4605",
-  "lastVerifiedCommit": "9f64b07d11cd23c1128ee4c768c8ed8a81c026aa",
+  "lastVerifiedCommit": "ea197bd43cce5956e295cb1de1817d688064206e",
   "currentBranch": "feat/p540-local-harmonic-identity-ranking",
   "requiredGates": {
     "P5.40-00": [
@@ -45,6 +45,17 @@
       "stage02-phase-and-handoff-validators-passed",
       "stage02-privacy-and-production-diff-checked",
       "stage02-fail-verdict-and-stop-recorded"
+    ],
+    "P5.40-02a": [
+      "stage02a-frozen-failure-input-conserved",
+      "stage02a-local-ranking-and-partition-causes-isolated",
+      "stage02a-unreviewed-source-only-packet-sealed",
+      "stage02a-determinism-bound-and-source-fidelity-checked",
+      "stage02a-focused-and-full-regression-passed",
+      "stage02a-typecheck-build-and-lints-passed",
+      "stage02a-phase-and-handoff-validators-passed",
+      "stage02a-privacy-and-production-diff-checked",
+      "stage02a-sufficient-diagnosis-and-stop-recorded"
     ]
   },
   "gateResults": {
@@ -77,8 +88,17 @@
     "stage02-typecheck-build-and-lints-passed": "pass",
     "stage02-phase-and-handoff-validators-passed": "pass",
     "stage02-privacy-and-production-diff-checked": "pass",
-    "stage02-fail-verdict-and-stop-recorded": "pass"
+    "stage02-fail-verdict-and-stop-recorded": "pass",
+    "stage02a-frozen-failure-input-conserved": "pass",
+    "stage02a-local-ranking-and-partition-causes-isolated": "pass",
+    "stage02a-unreviewed-source-only-packet-sealed": "pass",
+    "stage02a-determinism-bound-and-source-fidelity-checked": "pass",
+    "stage02a-focused-and-full-regression-passed": "pass",
+    "stage02a-typecheck-build-and-lints-passed": "pass",
+    "stage02a-phase-and-handoff-validators-passed": "pass",
+    "stage02a-privacy-and-production-diff-checked": "pass",
+    "stage02a-sufficient-diagnosis-and-stop-recorded": "pass"
   },
-  "nextAction": "STOP. Stage02 Shadow safety FAIL; no retune, Stage03 Promotion evaluation, or production change. Await separate human authorization for any next work.",
-  "updatedAt": "2026-09-23"
+  "nextAction": "STOP. Stage02a diagnosis sufficient and recorded in its report/gates; the existing numeric-only completedStages schema cannot encode the 02a suffix without a forbidden schema change. Stage02 Shadow safety remains FAIL. Await independent source-only human classification of the new unreviewed region before unsealing candidate origin. No Stage03, retune, or production change.",
+  "updatedAt": "2026-09-24"
 }

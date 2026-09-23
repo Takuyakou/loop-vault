@@ -4,12 +4,12 @@
 
 ## Status
 
-- **Status:** Stage02 Shadow safety evaluation closed with FAIL; STOP before Stage03
+- **Status:** Stage02a failure isolation closed with SUFFICIENT diagnosis; blind review pending
 - **Active stage:** none
-- **Completed stages:** P5.40-00, P5.40-01, P5.40-02
+- **Completed stages:** P5.40-00, P5.40-01, P5.40-02, P5.40-02a
 - **Base:** P5.39 failed-promotion Closeout at `77e0458a6893057b7ca6da125ad7875fd01e4605`
 - **Current branch:** `feat/p540-local-harmonic-identity-ranking`
-- **Stop boundary:** Stage02 safety failed; do not retune, begin Stage03, or modify production
+- **Stop boundary:** Await independent source-only review; do not retune, begin Stage03, or modify production
 
 ## Required Reading Order
 
@@ -41,6 +41,13 @@ candidate reachability. See [`Stage01 report`](reports/P5.40-01-shadow-generatio
 Separately authorized and completed. **SHADOW SAFETY = FAIL.** See the
 [`Stage02 report`](reports/P5.40-02-shadow-safety.md). This is not a Stage03
 Promotion verdict.
+
+### P5.40-02a — Shadow safety failure isolation
+
+Separately authorized and completed as diagnosis only. **DIAGNOSIS =
+SUFFICIENT** for the known failures; one new anonymous region awaits independent
+source-only classification. See the [`Stage02a report`](reports/P5.40-02a-failure-isolation.md).
+No policy correction or Promotion evaluation followed.
 
 ### P5.40-03 — Promotion evaluation
 
