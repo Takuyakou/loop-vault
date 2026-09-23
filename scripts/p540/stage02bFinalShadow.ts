@@ -9,12 +9,13 @@ import {
   type ProjectedStage03bSpan,
   type Stage03bWindowInteraction,
 } from "../p539/stage03bInteraction";
-import type { ShadowRankedCandidate, ShadowRankingResult } from "../p539/shadowCandidateRanking";
+import type { ShadowRankedCandidate, ShadowRankingEvidence, ShadowRankingResult } from "../p539/shadowCandidateRanking";
 import { rankStage02bShadowCandidates } from "./stage02bShadowRanking";
 
-interface HalfBeatState {
+export interface Stage02bHalfBeatState {
   startBeat: number;
   evidencePcs: ReadonlySet<number>;
+  evidence: ShadowRankingEvidence;
   ranking: ShadowRankingResult;
   coherent: boolean;
 }
@@ -42,7 +43,7 @@ function overlapTicks(note: TimedNote, startTick: number, endTick: number): numb
   return Math.max(0, Math.min(note.startTick + note.durationTick, endTick) - Math.max(note.startTick, startTick));
 }
 
-function halfBeatState(data: MidiSongData, startBeat: number): HalfBeatState | null {
+export function inspectStage02bHalfBeatState(data: MidiSongData, startBeat: number): Stage02bHalfBeatState | null {
   const startTick = startBeat * data.ticksPerBeat;
   const endTick = startTick + data.ticksPerBeat / 2;
   const active = data.notes.filter((note) => overlapTicks(note, startTick, endTick) > 0);
@@ -59,11 +60,13 @@ function halfBeatState(data: MidiSongData, startBeat: number): HalfBeatState | n
   const materialNotes = active.filter((note) => evidencePcs.has(normalizePc(note.pitch)));
   if (materialNotes.length === 0) return null;
   const lowest = Math.min(...materialNotes.map((note) => note.pitch));
-  const ranking = rankStage02bShadowCandidates({ histogram, bassPitchClass: normalizePc(lowest) });
+  const evidence = { histogram, bassPitchClass: normalizePc(lowest) };
+  const ranking = rankStage02bShadowCandidates(evidence);
   const winner = ranking.topCandidate;
   return {
     startBeat,
     evidencePcs,
+    evidence,
     ranking,
     coherent: evidencePcs.size >= 3
       && winner.explanation.hitRatio >= 0.85
@@ -78,7 +81,7 @@ function symmetricPitchDifference(left: readonly number[], right: readonly numbe
   return [...a].filter((pc) => !b.has(pc)).length + [...b].filter((pc) => !a.has(pc)).length;
 }
 
-function sourceBoundary(data: MidiSongData, prior: HalfBeatState, next: HalfBeatState): boolean {
+function sourceBoundary(data: MidiSongData, prior: Stage02bHalfBeatState, next: Stage02bHalfBeatState): boolean {
   const tick = next.startBeat * data.ticksPerBeat;
   const hasOnset = data.notes.some((note) => note.startTick === tick);
   const endedPc = [...prior.evidencePcs].some((pc) => !next.evidencePcs.has(pc));
@@ -96,10 +99,10 @@ function halfBeatRefinement(
   index: number,
   coarse: PlannedStage03bSpan,
 ): { spans: readonly PlannedStage03bSpan[]; rankings: readonly ShadowRankingResult[] } {
-  const halves = Array.from({ length: 4 }, (_, half) => halfBeatState(data, index * 2 + half / 2));
+  const halves = Array.from({ length: 4 }, (_, half) => inspectStage02bHalfBeatState(data, index * 2 + half / 2));
   const rankings = halves.flatMap((half) => half ? [half.ranking] : []);
   if (halves.some((half) => !half || !half.coherent)) return { spans: [coarse], rankings };
-  const states = halves as HalfBeatState[];
+  const states = halves as Stage02bHalfBeatState[];
   const boundaries = [1, 2, 3].filter((half) => sourceBoundary(data, states[half - 1]!, states[half]!));
   if (boundaries.length === 0) return { spans: [coarse], rankings };
   const spans = [...boundaries, 4].map((endHalf, indexInPlan) => {

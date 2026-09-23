@@ -20,6 +20,7 @@ import {
 export type ShadowWindowRanker = (evidence: ShadowRankingEvidence) => ShadowRankingResult;
 
 export interface RankedWindowPair {
+  evidence: ShadowRankingEvidence;
   control: ShadowRankedCandidate;
   expanded: ShadowRankedCandidate;
   result: ShadowRankingResult;
@@ -54,17 +55,18 @@ function maxIndex(values: readonly number[]): number {
 
 function ranked(window: WeightedWindow | undefined, ranker: ShadowWindowRanker): RankedWindowPair | null {
   if (!window || window.totalWeight <= 0) return null;
-  const result = ranker({
+  const evidence = {
     histogram: window.histogram,
     bassPitchClass: maxIndex(window.bassHistogram),
-  });
+  };
+  const result = ranker(evidence);
   const control = result.rankedCandidates.find((candidate) => (
     candidate.generationReason === "production-base-candidate"
   ));
   if (!control || result.candidateVisits < 276 || result.candidateVisits > 300) {
     throw new Error("Bounded Shadow ranking or production control unavailable");
   }
-  return { control, expanded: result.topCandidate, result };
+  return { evidence, control, expanded: result.topCandidate, result };
 }
 
 function pitchClasses(winner: ShadowRankedCandidate): number[] {
