@@ -5,7 +5,7 @@
   "activeStage": "P5.39-03",
   "completedStages": ["P5.39-00", "P5.39-01", "P5.39-02"],
   "blocked": true,
-  "blockerReason": "P5.39-03c independent ground truth is frozen for three end-to-end changes (two confirmed Family C, one temporal mixture). Historical P5.39-03 and 03b PROMOTION = FAIL remain unchanged. Further Promotion re-evaluation and P5.39-04 integration require separate authorization.",
+  "blockerReason": "P5.39-03d final PROMOTION = FAIL: Gate H and Gate J fail because FC-SAFETY-03 retains a temporal split but its exact Model A two-beat interpretation was rejected by independent blind review. Historical P5.39-03/03b failures remain unchanged. P5.39-04 integration is not authorized.",
   "baseCommit": "0eedf268a6231967409d2aa08e51ebed590501c2",
   "lastVerifiedCommit": "c855a14ab8a3a94f4dfd1d3c2ebc355f363497a2",
   "currentBranch": "feat/p539-family-c-representability",
@@ -161,6 +161,17 @@
       "git-diff-check-clean-stage03c",
       "privacy-clean-stage03c",
       "production-diff-zero-stage03c"
+    ],
+    "P5.39-03d": [
+      "frozen-policy-and-ground-truth-stage03d",
+      "model-a-five-targets-stage03d",
+      "whole-file-33-regions-stage03d",
+      "gate-a-l-stage03d",
+      "focused-and-full-regression-stage03d",
+      "typecheck-build-and-lints-stage03d",
+      "validators-and-diff-check-stage03d",
+      "source-fidelity-and-privacy-stage03d",
+      "production-diff-zero-stage03d"
     ]
   },
   "gateResults": {
@@ -303,8 +314,18 @@
     "validate-ai-handoff-stage03c": "pass",
     "git-diff-check-clean-stage03c": "pass",
     "privacy-clean-stage03c": "pass",
-    "production-diff-zero-stage03c": "pass"
+    "production-diff-zero-stage03c": "pass",
+    "frozen-policy-and-ground-truth-stage03d": "pass",
+    "model-a-five-targets-stage03d": "fail",
+    "whole-file-33-regions-stage03d": "fail",
+    "gate-a-l-stage03d": "fail",
+    "focused-and-full-regression-stage03d": "pass",
+    "typecheck-build-and-lints-stage03d": "pass-baseline-eslint-exception",
+    "validators-and-diff-check-stage03d": "pass",
+    "source-fidelity-and-privacy-stage03d": "pass",
+    "production-diff-zero-stage03d": "pass",
+    "PROMOTION-03d": "FAIL"
   },
-  "nextAction": "STOP. Three anonymous human classifications are frozen in the P5.39-03c report. Await separate human authorization before any Promotion re-evaluation; historical PROMOTION remains FAIL and P5.39-04 is not authorized.",
+  "nextAction": "STOP. P5.39-03d final PROMOTION = FAIL; do not retune or start P5.39-04. Further investigation of the rejected local identity requires separate human authorization.",
   "updatedAt": "2026-09-23"
 }
