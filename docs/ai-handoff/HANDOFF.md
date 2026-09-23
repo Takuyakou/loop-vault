@@ -8,7 +8,7 @@ This is a short navigation summary. Read ARCHITECTURE-MAP / DECISIONS / KNOWN-FA
 
 ## Last verified against
 
-- commit: 273f6d3f796410da05c650af1f5ca9a501a72e2a
+- commit: 400f2ef58211cd995bfd0b41685abc944cafdcc6
 - date: 2026-09-23
 
 Freshness note: the verified commit is the code/docs state this handoff was
@@ -62,7 +62,7 @@ progression vocabulary. It is **not** a chord detector.
 15. Security (intake budgets / CSP)
 16. i18n
 
-## Current concern (LF-MIDI-001 — Families A/B fixed; Family C open)
+## Current concern (LF-MIDI-001 — Families A/B fixed; Family C unpromoted)
 
 The original clean-MIDI failure split into independent cause families. Current
 product truth is:
@@ -79,8 +79,13 @@ product truth is:
   persisted events/coordinates, export, `SongMiniMap`, and `ProgressionGrid`
   remain source truth.
 - **Family C (extended/altered/omission-sensitive vocabulary and
-  representability, e.g. S02/S04) — OPEN, SEPARATE.** It was not started by
-  P5.38.
+  representability) — P5.39 CLOSED, `PROMOTION = FAIL`, NOT IN PRODUCTION.**
+  The frozen Shadow policy passed representability and synthetic ranking but
+  failed whole-file safety and Family B interaction (Gates H/J). A necessary
+  temporal split survives, yet one reviewed local identity sequence disagrees
+  with independent ground truth. See
+  [`P5.39-closeout.md`](../phase5.39/P5.39-closeout.md). Further local
+  identity/ranking research belongs to a separately authorized phase.
 
 The architectural ordering is:
 
@@ -95,7 +100,8 @@ source MIDI / meter
 
 `PresentationGroup` is a variable-duration harmonic presentation span; it is
 neither a source bar nor a rewritten meter bar. Do not claim every MIDI-import
-issue is solved: Families A and B are fixed, while Family C remains open.
+issue is solved: Families A and B are fixed, while Family C is unpromoted and
+its remaining local identity/ranking blocker is open.
 
 ## Confirmed building blocks
 

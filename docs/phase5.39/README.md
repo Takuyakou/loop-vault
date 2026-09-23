@@ -4,12 +4,12 @@
 
 ## Status
 
-- **Status:** blocked (P5.39-03d final `PROMOTION = FAIL`; Gates H/J fail)
-- **Active stage:** P5.39-03 (03d final Promotion re-evaluation complete)
-- **Completed stages:** P5.39-00 ([`reports/P5.39-00-audit-baseline-gate-freeze.md`](reports/P5.39-00-audit-baseline-gate-freeze.md)); P5.39-01 ([`reports/P5.39-01-root-relative-identity-grammar.md`](reports/P5.39-01-root-relative-identity-grammar.md)); P5.39-02 ([`reports/P5.39-02-generalized-candidate-ranking-shadow.md`](reports/P5.39-02-generalized-candidate-ranking-shadow.md))
+- **Status:** completed / closed with final `PROMOTION = FAIL` (Gates H/J fail; `SUSPICIOUS = 1`)
+- **Active stage:** none
+- **Completed stages:** P5.39-00 ([`reports/P5.39-00-audit-baseline-gate-freeze.md`](reports/P5.39-00-audit-baseline-gate-freeze.md)); P5.39-01 ([`reports/P5.39-01-root-relative-identity-grammar.md`](reports/P5.39-01-root-relative-identity-grammar.md)); P5.39-02 ([`reports/P5.39-02-generalized-candidate-ranking-shadow.md`](reports/P5.39-02-generalized-candidate-ranking-shadow.md)); P5.39-06 ([`P5.39-closeout.md`](P5.39-closeout.md)). Promotion-evaluation stages retain their failed gates as historical evidence, not completed PASS stages.
 - **Base:** local `master` at `0eedf26`, containing the P5.38 closeout and the default-on Family A/B fixes
 - **Current branch:** `feat/p539-family-c-representability`
-- **Stop boundary:** stop after [P5.39-03d final Promotion re-evaluation](P5.39-03d-final-promotion-reevaluation.md); P5.39-04 integration is not authorized
+- **Stop boundary:** [P5.39-03d final Promotion re-evaluation](P5.39-03d-final-promotion-reevaluation.md) is FAIL; [Closeout](P5.39-closeout.md) ends this phase. P5.39-04/05 were not executed; production promotion is not authorized.
 
 ## Required Reading Order
 
@@ -32,9 +32,9 @@
 6. `P5.39-03b` — same frozen Shadow policy re-evaluated with independent ground truth and Family B interaction
 7. `P5.39-03c` — independent ground-truth acquisition for three additional end-to-end changes
 8. `P5.39-03d` — final frozen-policy Promotion re-evaluation against all five reviewed regions
-9. `P5.39-04` — production integration only after Promotion PASS
-10. `P5.39-05` — hardening / acceptance
-11. `P5.39-06` — closeout
+9. `P5.39-04` — not executed (Promotion FAIL)
+10. `P5.39-05` — not executed (no production integration)
+11. `P5.39-06` — failed-promotion research closeout
 
 ## Goal
 
@@ -94,3 +94,6 @@ P5.39 does not:
 5. promote only after frozen gates pass;
 6. integrate minimally;
 7. harden and close.
+
+Because final Promotion failed, steps 5–6 were not performed. P5.39 was
+instead closed as research without changing production.

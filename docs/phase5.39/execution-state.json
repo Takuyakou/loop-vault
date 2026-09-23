@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "phaseId": "5.39",
-  "status": "blocked",
-  "activeStage": "P5.39-03",
-  "completedStages": ["P5.39-00", "P5.39-01", "P5.39-02"],
-  "blocked": true,
-  "blockerReason": "P5.39-03d final PROMOTION = FAIL: Gate H and Gate J fail because FC-SAFETY-03 retains a temporal split but its exact Model A two-beat interpretation was rejected by independent blind review. Historical P5.39-03/03b failures remain unchanged. P5.39-04 integration is not authorized.",
+  "status": "completed",
+  "activeStage": null,
+  "completedStages": ["P5.39-00", "P5.39-01", "P5.39-02", "P5.39-06"],
+  "blocked": false,
+  "blockerReason": null,
   "baseCommit": "0eedf268a6231967409d2aa08e51ebed590501c2",
-  "lastVerifiedCommit": "c855a14ab8a3a94f4dfd1d3c2ebc355f363497a2",
+  "lastVerifiedCommit": "400f2ef58211cd995bfd0b41685abc944cafdcc6",
   "currentBranch": "feat/p539-family-c-representability",
   "requiredGates": {
     "P5.39-00": [
@@ -172,6 +172,17 @@
       "validators-and-diff-check-stage03d",
       "source-fidelity-and-privacy-stage03d",
       "production-diff-zero-stage03d"
+    ],
+    "P5.39-06": [
+      "final-promotion-fail-preserved-closeout",
+      "historical-evidence-preserved-closeout",
+      "next-phase-collision-audited-closeout",
+      "focused-family-a-b-c-closeout",
+      "phase-docs-validated-closeout",
+      "ai-handoff-validated-closeout",
+      "production-diff-zero-closeout",
+      "git-diff-check-clean-closeout",
+      "privacy-path-clean-closeout"
     ]
   },
   "gateResults": {
@@ -324,8 +335,18 @@
     "validators-and-diff-check-stage03d": "pass",
     "source-fidelity-and-privacy-stage03d": "pass",
     "production-diff-zero-stage03d": "pass",
-    "PROMOTION-03d": "FAIL"
+    "PROMOTION-03d": "FAIL",
+    "final-promotion-fail-preserved-closeout": "pass",
+    "historical-evidence-preserved-closeout": "pass",
+    "next-phase-collision-audited-closeout": "pass",
+    "focused-family-a-b-c-closeout": "pass",
+    "phase-docs-validated-closeout": "pass",
+    "ai-handoff-validated-closeout": "pass",
+    "production-diff-zero-closeout": "pass",
+    "git-diff-check-clean-closeout": "pass",
+    "privacy-path-clean-closeout": "pass",
+    "P5.39": "CLOSED"
   },
-  "nextAction": "STOP. P5.39-03d final PROMOTION = FAIL; do not retune or start P5.39-04. Further investigation of the rejected local identity requires separate human authorization.",
+  "nextAction": "STOP. P5.39 is closed with final PROMOTION = FAIL. Family C production promotion is not authorized. Investigate FC-SAFETY-03 local identity/ranking only in a separately authorized follow-up phase; no P5.39-04/05 or P5.40 implementation.",
   "updatedAt": "2026-09-23"
 }
