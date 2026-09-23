@@ -4,7 +4,7 @@
 
 ## Status
 
-- **Status:** blocked on independent human local-state review (research only)
+- **Status:** blocked on privacy-safe report scope confirmation (research only)
 - **Active stage:** P5.40-00
 - **Completed stages:** none
 - **Base:** P5.39 failed-promotion Closeout at `77e0458a6893057b7ca6da125ad7875fd01e4605`

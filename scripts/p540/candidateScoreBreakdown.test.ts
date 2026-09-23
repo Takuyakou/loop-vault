@@ -7,6 +7,7 @@ import {
 } from "../p539/shadowCandidateRanking";
 import {
   buildCandidateScoreBreakdown,
+  compareWinnerWithCandidate,
   compareWinnerWithCorrect,
   sumContributions,
 } from "./candidateScoreBreakdown";
@@ -70,6 +71,9 @@ describe("P5.40-00 evaluation-only score breakdown", () => {
     );
     expect(sumContributions(comparison!.contributionDeltas))
       .toBeCloseTo(comparison!.winnerAdvantage, 12);
+    const neutralComparator = compareWinnerWithCandidate(breakdown, correct.identityKey);
+    expect(neutralComparator?.candidateRank).toBe(5);
+    expect(neutralComparator?.candidateScore).toBe(correct.totalScore);
     expect(compareWinnerWithCorrect(breakdown, "not-generated")).toBeNull();
   });
 });

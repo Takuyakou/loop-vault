@@ -62,6 +62,16 @@ export interface WinnerVsCorrectComparison {
   largestPositiveAdvantage: keyof ScoreContributions | null;
 }
 
+export interface WinnerVsCandidateComparison {
+  winnerRank: 1;
+  candidateRank: number;
+  winnerScore: number;
+  candidateScore: number;
+  winnerAdvantage: number;
+  contributionDeltas: ScoreContributions;
+  largestPositiveAdvantage: keyof ScoreContributions | null;
+}
+
 export function sumContributions(contributions: ScoreContributions): number {
   return Object.values(contributions).reduce((sum, value) => sum + value, 0);
 }
@@ -127,13 +137,13 @@ export function buildCandidateScoreBreakdown(
   return { stateId, candidateVisits: result.candidateVisits, rows };
 }
 
-/** Only call with a source-first, independently frozen semantic identity key. */
-export function compareWinnerWithCorrect(
+/** Compare a frozen eligible candidate with the winner; never inserts a candidate. */
+export function compareWinnerWithCandidate(
   breakdown: CandidateScoreBreakdown,
-  correctIdentityKey: string,
-): WinnerVsCorrectComparison | null {
+  candidateIdentityKey: string,
+): WinnerVsCandidateComparison | null {
   const winner = breakdown.rows[0];
-  const correct = breakdown.rows.find((row) => row.identityKey === correctIdentityKey);
+  const correct = breakdown.rows.find((row) => row.identityKey === candidateIdentityKey);
   if (!winner || !correct) return null;
   const contributionDeltas = Object.fromEntries(
     (Object.keys(winner.contributions) as Array<keyof ScoreContributions>).map((key) => (
@@ -149,11 +159,24 @@ export function compareWinnerWithCorrect(
   }
   return {
     winnerRank: 1,
-    correctRank: correct.rank,
+    candidateRank: correct.rank,
     winnerScore: winner.totalScore,
-    correctScore: correct.totalScore,
+    candidateScore: correct.totalScore,
     winnerAdvantage,
     contributionDeltas,
     largestPositiveAdvantage,
+  };
+}
+
+/** Only call with a source-first, independently frozen correct semantic key. */
+export function compareWinnerWithCorrect(
+  breakdown: CandidateScoreBreakdown,
+  correctIdentityKey: string,
+): WinnerVsCorrectComparison | null {
+  const comparison = compareWinnerWithCandidate(breakdown, correctIdentityKey);
+  return comparison && {
+    ...comparison,
+    correctRank: comparison.candidateRank,
+    correctScore: comparison.candidateScore,
   };
 }

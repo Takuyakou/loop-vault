@@ -13,8 +13,10 @@ import { evaluateStage03bInteractions } from "../p539/stage03bInteraction";
 import { shadowIdentityKey, type ShadowRootRelativeIdentity } from "../p539/shadowRootRelativeIdentity";
 import {
   buildCandidateScoreBreakdown,
+  compareWinnerWithCandidate,
   compareWinnerWithCorrect,
 } from "./candidateScoreBreakdown";
+import { diagnoseGroundTruthCoverage } from "./groundTruthCoverage";
 
 const ENTRYPOINT = /(?:^|\/)run-stage00-private-diagnosis\.(?:[cm]?js|ts)$/;
 const IDS = ["FC-SAFETY-03-L0", "FC-SAFETY-03-L1"] as const;
@@ -112,6 +114,54 @@ function maxIndex(values: readonly number[]): number {
   return values.reduce((best, value, index) => value > values[best] ? index : best, 0);
 }
 
+function renderPrivateAppendix(diagnostics: readonly {
+  id: string;
+  coverage: ReturnType<typeof diagnoseGroundTruthCoverage> | null;
+  top10: ReturnType<typeof buildCandidateScoreBreakdown>["rows"];
+  comparison: ReturnType<typeof compareWinnerWithCorrect>;
+  pitchEquivalentComparison: ReturnType<typeof compareWinnerWithCandidate>;
+  sameRootBassComparison: ReturnType<typeof compareWinnerWithCandidate>;
+}[]): string {
+  const number = (value: number): string => value.toFixed(9);
+  return [
+    "# P5.40-00 private numerical appendix",
+    "Ignored-local research evidence. Never commit or paste source-derived identities into tracked reports.",
+    ...diagnostics.flatMap((item) => {
+      const candidateTable = [
+        "| Rank | Canonical identity | Generation | Score | Missing | Conflicting |",
+        "|---:|---|---|---:|---:|---:|",
+        ...item.top10.map((row) => (
+          `| ${row.rank} | ${row.canonicalIdentity} | ${row.generationReason} | ${number(row.totalScore)} | ${row.missingExpectedTones.length} | ${row.conflictingPresentTones.length} |`
+        )),
+      ];
+      const comparisons = [
+        ["Literal exact candidate", item.comparison],
+        ["Pitch-content equivalent (not semantic proof)", item.pitchEquivalentComparison],
+        ["Same-root/bass partial comparator (not correct)", item.sameRootBassComparison],
+      ] as const;
+      const deltas = comparisons.flatMap(([name, comparison]) => comparison
+        ? [
+          `### ${name}: rank ${"correctRank" in comparison ? comparison.correctRank : comparison.candidateRank}`,
+          `Winner advantage: ${number(comparison.winnerAdvantage)}`,
+          "| Contribution | Winner minus comparator |",
+          "|---|---:|",
+          ...Object.entries(comparison.contributionDeltas).map(([term, value]) => (
+            `| ${term} | ${number(value)} |`
+          )),
+        ]
+        : [`### ${name}: unavailable in frozen 276 candidates`]);
+      return [
+        `## ${item.id}`,
+        `Literal bounded grammar: ${item.coverage?.literalIdentityInBoundedGrammar ?? "undetermined"}`,
+        `Literal rank: ${item.coverage?.literalSemanticRank ?? "not generated"}`,
+        `Pitch-content equivalent ranks: ${item.coverage?.pitchContentEquivalentRanks.join(",") || "none"}`,
+        ...candidateTable,
+        ...deltas,
+      ];
+    }),
+  ].join("\n") + "\n";
+}
+
 function main(): void {
   const groundTruth = readFrozenTruth();
   const windowIndex = frozenWindowIndex();
@@ -145,14 +195,26 @@ function main(): void {
     const decision = groundTruth.decisions[id];
     const correctKey = decision.classification === "CONFIRMED-IDENTITY"
       ? shadowIdentityKey(decision.identity!) : null;
+    const coverage = decision.classification === "CONFIRMED-IDENTITY"
+      ? diagnoseGroundTruthCoverage(full, decision.identity!) : null;
     const comparison = correctKey ? compareWinnerWithCorrect(full, correctKey) : null;
+    const pitchEquivalent = coverage?.pitchContentEquivalentRanks[0]
+      ? full.rows[coverage.pitchContentEquivalentRanks[0] - 1] : null;
+    const pitchEquivalentComparison = pitchEquivalent
+      ? compareWinnerWithCandidate(full, pitchEquivalent.identityKey) : null;
+    const expectedBass = decision.identity?.bassPitchClass === undefined
+      || decision.identity.bassPitchClass === decision.identity.rootPitchClass
+      ? null : decision.identity.bassPitchClass;
+    const sameRootBass = decision.identity && full.rows.find((row) => (
+      row.rootPitchClass === decision.identity!.rootPitchClass
+      && row.resolvedSlashBassPitchClass === expectedBass
+    ));
+    const sameRootBassComparison = sameRootBass
+      ? compareWinnerWithCandidate(full, sameRootBass.identityKey) : null;
     return {
-      id, human: decision,
-      correctRepresentableByGrammar: decision.classification === "CONFIRMED-IDENTITY"
-        ? correctKey !== null : null,
-      correctGenerated: decision.classification === "CONFIRMED-IDENTITY"
-        ? comparison !== null : null,
-      top10: full.rows.slice(0, 10), comparison, full,
+      id, human: decision, coverage,
+      top10: full.rows.slice(0, 10), comparison, pitchEquivalentComparison,
+      sameRootBassComparison, full,
     };
   });
   const after = new Uint8Array(readFileSync(source));
@@ -165,6 +227,9 @@ function main(): void {
   ignored(artifact);
   writeFileSync(artifact, `${JSON.stringify({ schemaVersion: 1,
     priorCandidateExposure: groundTruth.priorCandidateExposure, diagnostics }, null, 2)}\n`);
+  const appendix = resolve(output, "score-appendix.private.md");
+  ignored(appendix);
+  writeFileSync(appendix, renderPrivateAppendix(diagnostics));
   stdout.write(`localStates=${diagnostics.length}\n`);
   stdout.write("candidateVisitsPerState=276\n");
   stdout.write(`sourceUnchanged=${sourceUnchanged}\n`);
