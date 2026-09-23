@@ -99,6 +99,6 @@
     "stage02a-privacy-and-production-diff-checked": "pass",
     "stage02a-sufficient-diagnosis-and-stop-recorded": "pass"
   },
-  "nextAction": "STOP. Stage02a diagnosis sufficient and recorded in its report/gates; the existing numeric-only completedStages schema cannot encode the 02a suffix without a forbidden schema change. Stage02 Shadow safety remains FAIL. Await independent source-only human classification of the new unreviewed region before unsealing candidate origin. No Stage03, retune, or production change.",
+  "nextAction": "STOP. Stage02a diagnosis sufficient; the existing numeric-only completedStages schema cannot encode the 02a suffix without a forbidden schema change. The new region's independent source-first human classification is frozen in Git-ignored local evidence, with an anonymous tracked receipt. Candidate origin remains sealed. Stage02 Shadow safety remains FAIL. Further comparison/unsealing needs separate authorization; no Stage03, retune, or production change.",
   "updatedAt": "2026-09-24"
 }

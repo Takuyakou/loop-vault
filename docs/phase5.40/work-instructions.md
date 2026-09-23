@@ -6,8 +6,9 @@
 
 P5.40-00, P5.40-01, P5.40-02 and the separately authorized P5.40-02a are
 complete. Stage02a isolated the Shadow safety failures without retuning.
-The new anonymous region remains unclassified; stop before Stage03 and
-production.
+The new anonymous region's source-first human classification is frozen in
+ignored-local evidence; candidate origin remains sealed. Stop before Stage03
+and production.
 
 ## Scope
 

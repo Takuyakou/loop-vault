@@ -4,12 +4,12 @@
 
 ## Status
 
-- **Status:** Stage02a failure isolation closed with SUFFICIENT diagnosis; blind review pending
+- **Status:** Stage02a failure isolation closed with SUFFICIENT diagnosis; source-first human classification frozen, candidate origin sealed
 - **Active stage:** none
 - **Completed stages:** P5.40-00, P5.40-01, P5.40-02, P5.40-02a
 - **Base:** P5.39 failed-promotion Closeout at `77e0458a6893057b7ca6da125ad7875fd01e4605`
 - **Current branch:** `feat/p540-local-harmonic-identity-ranking`
-- **Stop boundary:** Await independent source-only review; do not retune, begin Stage03, or modify production
+- **Stop boundary:** Await separate authorization before candidate unsealing or further evaluation; do not retune, begin Stage03, or modify production
 
 ## Required Reading Order
 
@@ -45,9 +45,12 @@ Promotion verdict.
 ### P5.40-02a — Shadow safety failure isolation
 
 Separately authorized and completed as diagnosis only. **DIAGNOSIS =
-SUFFICIENT** for the known failures; one new anonymous region awaits independent
-source-only classification. See the [`Stage02a report`](reports/P5.40-02a-failure-isolation.md).
-No policy correction or Promotion evaluation followed.
+SUFFICIENT** for the known failures; at closeout, one new anonymous region
+awaited independent source-only classification. See the [`Stage02a report`](reports/P5.40-02a-failure-isolation.md).
+The subsequent source-first human classification is documented by an
+[`anonymous review receipt`](reports/P5.40-02a-source-review-receipt.md); the
+candidate origin remains sealed. No policy correction or Promotion evaluation
+followed.
 
 ### P5.40-03 — Promotion evaluation
 

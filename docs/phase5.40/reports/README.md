@@ -11,3 +11,4 @@ exact private positions.
 - [P5.40-01 Shadow generation (closed)](P5.40-01-shadow-generation.md)
 - [P5.40-02 Shadow safety evaluation (FAIL)](P5.40-02-shadow-safety.md)
 - [P5.40-02a failure isolation (SUFFICIENT)](P5.40-02a-failure-isolation.md)
+- [P5.40-02a independent source-first review receipt](P5.40-02a-source-review-receipt.md)
