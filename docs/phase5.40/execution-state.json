@@ -7,7 +7,7 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "77e0458a6893057b7ca6da125ad7875fd01e4605",
-  "lastVerifiedCommit": "ea197bd43cce5956e295cb1de1817d688064206e",
+  "lastVerifiedCommit": "b9fb05af9083c7d8218512e63addbe7de326b5a2",
   "currentBranch": "feat/p540-local-harmonic-identity-ranking",
   "requiredGates": {
     "P5.40-00": [
@@ -56,6 +56,17 @@
       "stage02a-phase-and-handoff-validators-passed",
       "stage02a-privacy-and-production-diff-checked",
       "stage02a-sufficient-diagnosis-and-stop-recorded"
+    ],
+    "P5.40-02b": [
+      "stage02b-source-first-freeze-and-unseal",
+      "stage02b-pre-implementation-design-lock",
+      "stage02b-final-private-whole-file-safety-evaluated",
+      "stage02b-determinism-bound-and-source-fidelity-checked",
+      "stage02b-focused-and-full-regression-passed",
+      "stage02b-typecheck-build-and-lints-passed",
+      "stage02b-phase-and-handoff-validators-passed",
+      "stage02b-privacy-and-production-diff-checked",
+      "stage02b-fail-verdict-and-stop-recorded"
     ]
   },
   "gateResults": {
@@ -97,8 +108,17 @@
     "stage02a-typecheck-build-and-lints-passed": "pass",
     "stage02a-phase-and-handoff-validators-passed": "pass",
     "stage02a-privacy-and-production-diff-checked": "pass",
-    "stage02a-sufficient-diagnosis-and-stop-recorded": "pass"
+    "stage02a-sufficient-diagnosis-and-stop-recorded": "pass",
+    "stage02b-source-first-freeze-and-unseal": "pass",
+    "stage02b-pre-implementation-design-lock": "pass",
+    "stage02b-final-private-whole-file-safety-evaluated": "pass",
+    "stage02b-determinism-bound-and-source-fidelity-checked": "pass",
+    "stage02b-focused-and-full-regression-passed": "pass",
+    "stage02b-typecheck-build-and-lints-passed": "pass",
+    "stage02b-phase-and-handoff-validators-passed": "pass",
+    "stage02b-privacy-and-production-diff-checked": "pass",
+    "stage02b-fail-verdict-and-stop-recorded": "pass"
   },
-  "nextAction": "STOP. Stage02a diagnosis sufficient; the existing numeric-only completedStages schema cannot encode the 02a suffix without a forbidden schema change. The new region's independent source-first human classification is frozen in Git-ignored local evidence, with an anonymous tracked receipt. Candidate origin remains sealed. Stage02 Shadow safety remains FAIL. Further comparison/unsealing needs separate authorization; no Stage03, retune, or production change.",
+  "nextAction": "STOP. The existing numeric-only completedStages schema cannot encode the 02a/02b suffixes without a forbidden schema change; their reports and gate results are authoritative. Final Shadow safety FAIL with newly changed unreviewed regions and unresolved reviewed divergences. P5.40 is a Closeout candidate; no Stage03, retune, or production change.",
   "updatedAt": "2026-09-24"
 }

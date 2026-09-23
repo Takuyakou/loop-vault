@@ -4,12 +4,12 @@
 
 ## Status
 
-- **Status:** Stage02a failure isolation closed with SUFFICIENT diagnosis; source-first human classification frozen, candidate origin sealed
+- **Status:** Stage02b final Shadow safety FAIL; P5.40 Closeout candidate
 - **Active stage:** none
-- **Completed stages:** P5.40-00, P5.40-01, P5.40-02, P5.40-02a
+- **Completed stages:** P5.40-00, P5.40-01, P5.40-02, P5.40-02a, P5.40-02b
 - **Base:** P5.39 failed-promotion Closeout at `77e0458a6893057b7ca6da125ad7875fd01e4605`
 - **Current branch:** `feat/p540-local-harmonic-identity-ranking`
-- **Stop boundary:** Await separate authorization before candidate unsealing or further evaluation; do not retune, begin Stage03, or modify production
+- **Stop boundary:** Final Shadow safety FAIL; do not retune, begin Stage03, or modify production
 
 ## Required Reading Order
 
@@ -48,9 +48,18 @@ Separately authorized and completed as diagnosis only. **DIAGNOSIS =
 SUFFICIENT** for the known failures; at closeout, one new anonymous region
 awaited independent source-only classification. See the [`Stage02a report`](reports/P5.40-02a-failure-isolation.md).
 The subsequent source-first human classification is documented by an
-[`anonymous review receipt`](reports/P5.40-02a-source-review-receipt.md); the
-candidate origin remains sealed. No policy correction or Promotion evaluation
-followed.
+[`anonymous review receipt`](reports/P5.40-02a-source-review-receipt.md).
+Candidate origin was unsealed only after that freeze, under the separate
+Stage02b authorization.
+
+### P5.40-02b — Final Shadow correction and safety re-evaluation
+
+The separately authorized final Shadow-only correction round is complete.
+**SHADOW SAFETY = FAIL.** See the
+[`Stage02b report`](reports/P5.40-02b-final-shadow-safety.md) and the
+pre-implementation [`design lock`](P5.40-02b-design-lock.md). The independent
+classification remained frozen, production is unchanged, and the pre-locked
+FAIL stop boundary was applied without another retune.
 
 ### P5.40-03 — Promotion evaluation
 

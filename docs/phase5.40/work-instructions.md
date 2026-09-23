@@ -4,31 +4,25 @@
 
 ## Goal
 
-P5.40-00, P5.40-01, P5.40-02 and the separately authorized P5.40-02a are
-complete. Stage02a isolated the Shadow safety failures without retuning.
-The new anonymous region's source-first human classification is frozen in
-ignored-local evidence; candidate origin remains sealed. Stop before Stage03
-and production.
+P5.40-00 through the separately authorized P5.40-02b are complete. Stage02b
+was the final Shadow correction round and ended `SHADOW SAFETY = FAIL`.
+The new anonymous region's source-first human classification was frozen
+before candidate-origin unsealing; the private whole-file evaluation remains
+Git ignored. Stop before Stage03 and production.
 
 ## Scope
 
-- Follow the pre-implementation [`P5.40-01 design lock`](P5.40-01-design-lock.md).
-- Preserve the frozen Stage02 276-candidate baseline and score/tie-break.
-- Add one bounded evidence-derived Shadow candidate-generation path and
-  privacy-safe synthetic/generalization, anti-overfit, bound, determinism,
-  and source-fidelity tests.
-- Evaluate the frozen Stage01 Shadow path against synthetic, protected and
-  private whole-file evidence; record only anonymous Stage02 aggregates under
-  [`reports/`](reports/README.md).
-- Compare frozen and opt-in ranking through Family B and smoothing, keep
-  numerical diagnosis ignored-local, and prepare source-only blind review for
-  the newly changed region without guessing its correctness.
+- Preserve the pre-implementation [`P5.40-01 design lock`](P5.40-01-design-lock.md)
+  and [`P5.40-02b design lock`](P5.40-02b-design-lock.md) as historical evidence.
+- Preserve all frozen stage results and anonymous reports under
+  [`reports/`](reports/README.md). No further correction is authorized in
+  P5.40-02b after its one-time private safety FAIL.
 
 ## Non-goals
 
-No score/weight/penalty/tie-break retune, Family B or smoothing change,
-production integration, parser/schema/fileVersion change, migration, UI work,
-Stage03 Promotion evaluation, merge, or push.
+No further retune, Family B or smoothing change, production integration,
+parser/schema/fileVersion change, migration, UI work, Stage03 Promotion
+evaluation, merge, or push.
 
 ## Contracts
 
@@ -38,16 +32,16 @@ P5.39 final FAIL is immutable historical evidence.
 
 ## Stages
 
-P5.40-00, P5.40-01, P5.40-02 and P5.40-02a are closed. No stage is active.
+P5.40-00, P5.40-01, P5.40-02, P5.40-02a and P5.40-02b are closed.
+No stage is active; P5.40 is a Closeout candidate.
 Stage03 and Stage04 remain unauthorized proposals.
 
 ## Definition of Done
 
-Stage02a requires a frozen-input local diagnosis, first-divergence and
-interaction matrix, source-only blind packet for the new region, deterministic
-bounded source-immutable evaluation, focused and full regression, validators,
-a privacy-safe report, and a clean production diff. A sufficient diagnosis
-does not resolve the new region's ground truth or authorize a correction.
+Stage02b's final FAIL is recorded with the one-time private safety aggregate,
+deterministic bounded source-immutable evaluation, relevant and full regression,
+validators, privacy-safe report and clean production diff. A safety FAIL does
+not authorize Stage03 or a second correction round.
 
 ## Safety
 

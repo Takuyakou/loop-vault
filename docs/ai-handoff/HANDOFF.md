@@ -87,6 +87,12 @@ product truth is:
   [`P5.39-closeout.md`](../phase5.39/P5.39-closeout.md). Further local
   identity/ranking research belongs to a separately authorized phase.
 
+P5.40's final Shadow correction re-evaluation (Stage02b) ended
+`SHADOW SAFETY = FAIL`: newly changed unreviewed regions and unresolved
+reviewed divergences block Promotion. See the
+[`anonymous Stage02b report`](../phase5.40/reports/P5.40-02b-final-shadow-safety.md).
+No production Family C integration or Stage03 is authorized.
+
 The architectural ordering is:
 
 ```text
