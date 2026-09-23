@@ -11,7 +11,8 @@ import {
 } from "./shadowRootRelativeIdentity";
 import { rankStage02ShadowCandidates } from "./shadowCandidateRanking";
 
-export type AnonymousRegionId = "FC-REAL-01" | "FC-REAL-02";
+export type AnonymousRegionId = "FC-REAL-01" | "FC-REAL-02"
+  | "FC-SAFETY-01" | "FC-SAFETY-02" | "FC-SAFETY-03";
 
 export interface BlindNoteEvidence {
   midiPitch: number;
@@ -157,7 +158,7 @@ export function buildBlindRegionEvidence(
   };
 }
 
-function excerptMidi(region: BlindRegionEvidence, bpm: number): Uint8Array {
+export function buildBlindExcerptMidi(region: BlindRegionEvidence, bpm: number): Uint8Array {
   const midi = new Midi();
   midi.header.setTempo(bpm);
   const track = midi.addTrack();
@@ -199,7 +200,7 @@ export function buildGroundTruthPacket(bytes: Uint8Array): GroundTruthPacket {
   }
   const excerpts = blindRegions.map((region) => ({
     id: region.id,
-    bytes: excerptMidi(region, data.tempo ?? 120),
+    bytes: buildBlindExcerptMidi(region, data.tempo ?? 120),
   }));
   return { blindRegions, localBindings, excerpts };
 }
@@ -213,7 +214,7 @@ export function renderBlindReview(regions: readonly BlindRegionEvidence[]): stri
     const slices = region.slices.map((slice) => `<tr><td>${escape(slice.relativeBeat)}</td><td>${escape(slice.pitchClassesAboveLowestTarget.join(", "))}</td><td>${escape(slice.lowestMidiPitch ?? "—")}</td><td>${escape(slice.attackCount)}</td></tr>`).join("");
     return `<section><h2>${escape(region.id)}</h2><p>Target: beat 0–2. Context: ${escape(region.contextBeforeBeats)} beat before and ${escape(region.contextAfterBeats)} beat after. <a href="${escape(region.id)}.mid">Listen to the short MIDI excerpt</a>.</p><p>Pitch-class offsets are relative to the lowest target pitch class, not an assumed chord root.</p><h3>Half-beat evidence</h3><table><thead><tr><th>Beat</th><th>PC offsets</th><th>Lowest MIDI pitch</th><th>Attacks</th></tr></thead><tbody>${slices}</tbody></table><h3>Source notes</h3><table><thead><tr><th>Onset</th><th>Duration</th><th>MIDI pitch</th><th>Voice</th><th>Velocity</th><th>Carried in</th></tr></thead><tbody>${notes}</tbody></table><p>Write your own chord interpretation and confidence before opening the separate candidate-choices page.</p></section>`;
   }).join("");
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Blind Family-C review</title><style>body{font:16px system-ui;background:#101923;color:#edf5fb;margin:0}main{max-width:1000px;margin:auto;padding:24px}section{border:1px solid #426070;border-radius:8px;padding:16px;margin:20px 0;overflow:auto}a{color:#6de0d5}table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid #354858;padding:6px;text-align:left}</style></head><body><main><h1>Independent source review</h1><p>These two anonymous excerpts contain only source note evidence. Listen and note a free-form interpretation before opening the separate candidate-choices page.</p>${sections}</main></body></html>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Blind Family-C review</title><style>body{font:16px system-ui;background:#101923;color:#edf5fb;margin:0}main{max-width:1000px;margin:auto;padding:24px}section{border:1px solid #426070;border-radius:8px;padding:16px;margin:20px 0;overflow:auto}a{color:#6de0d5}table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid #354858;padding:6px;text-align:left}</style></head><body><main><h1>Independent source review</h1><p>These anonymous excerpts contain only source note evidence. Listen and note a free-form interpretation before opening the separate candidate-choices page.</p>${sections}</main></body></html>`;
 }
 
 export function renderBlindChoices(bindings: readonly LocalRegionBinding[]): string {
