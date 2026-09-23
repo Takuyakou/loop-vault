@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "phaseId": "5.40",
   "status": "in-progress",
-  "activeStage": null,
+  "activeStage": "P5.40-01",
   "completedStages": ["P5.40-00"],
   "blocked": false,
   "blockerReason": null,
@@ -22,6 +22,18 @@
       "source-fidelity-and-determinism",
       "production-diff-zero",
       "privacy-and-diff-check-clean"
+    ],
+    "P5.40-01": [
+      "stage01-design-rule-frozen",
+      "stage01-candidate-reachability-and-bound",
+      "stage01-frozen-score-and-stage02-parity",
+      "stage01-synthetic-generalization-and-anti-overfit",
+      "stage01-determinism-and-source-fidelity",
+      "stage01-focused-shadow-regression",
+      "stage01-typecheck-and-changed-scope-lints",
+      "stage01-phase-and-handoff-validators",
+      "stage01-production-diff-zero",
+      "stage01-privacy-and-diff-check-clean"
     ]
   },
   "gateResults": {
@@ -37,6 +49,6 @@
     "production-diff-zero": "pass",
     "privacy-and-diff-check-clean": "pass"
   },
-  "nextAction": "STOP after Stage00 diagnosis. Await separate human authorization before P5.40-01; no policy correction, Promotion, or production change.",
+  "nextAction": "Implement only the frozen Stage01 Shadow candidate-generation rule; stop after focused validation, without Stage02 or Promotion.",
   "updatedAt": "2026-09-23"
 }

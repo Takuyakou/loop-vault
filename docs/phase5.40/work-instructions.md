@@ -4,25 +4,24 @@
 
 ## Goal
 
-Complete only P5.40-00: acquire independent local-state ground truth, reproduce
-the frozen 276-candidate ranking with numerical contribution accounting, and
-classify the failure mechanism. A diagnosis may be insufficient evidence; do
-not invent an exact answer.
+P5.40-00 is complete. The separately authorized P5.40-01 implements one
+bounded Shadow-only candidate-generation correction for its diagnosed general
+mechanism. Stop after focused validation; no Stage02 evaluation or Promotion.
 
 ## Scope
 
-- Use the checksum-verified [`package/`](package/) as the stage-specific
-  research specification, especially its Stage00 document.
-- Create ignored-local source-only review packets before exposing local
-  candidate identities, scores, or ranks.
-- Add evaluation-only score diagnostics and privacy-safe synthetic tests.
-- Write one anonymous Stage00 report under [`reports/`](reports/README.md).
+- Follow the pre-implementation [`P5.40-01 design lock`](P5.40-01-design-lock.md).
+- Preserve the frozen Stage02 276-candidate baseline and score/tie-break.
+- Add one bounded evidence-derived Shadow candidate-generation path and
+  privacy-safe synthetic/generalization, anti-overfit, bound, determinism,
+  and source-fidelity tests.
+- Write an anonymous Stage01 report under [`reports/`](reports/README.md).
 
 ## Non-goals
 
-No policy correction, retune, candidate change, Family B or smoothing change,
+No score/weight/penalty/tie-break retune, Family B or smoothing change,
 production integration, parser/schema/fileVersion change, migration, UI work,
-or Stage01 execution.
+Stage02 execution, merge, or push.
 
 ## Contracts
 
@@ -32,16 +31,16 @@ P5.39 final FAIL is immutable historical evidence.
 
 ## Stages
 
-Only P5.40-00 is active. P5.40-01 through 04 remain proposals and cannot be
-started without separate authorization.
+P5.40-00 is closed; only P5.40-01 is active. P5.40-02 through 04 remain
+unauthorized proposals.
 
 ## Definition of Done
 
-Stage00 requires independently frozen local-state classifications, all current
-candidate scores and decomposition, root-cause/generalization analysis,
-required focused tests and validators, a privacy-safe report, and a clean
-production diff. If independent truth cannot be obtained, record that honestly
-and stop without asserting a completed diagnosis.
+Stage01 requires the frozen design rule, bounded reachability across all
+roots, negative/protected controls, deterministic and source-immutable output,
+frozen Stage02 parity, focused tests and validators, a privacy-safe report, and
+a clean production diff. A generated correct candidate does not prove that it
+ranks first or that Promotion is safe.
 
 ## Safety
 

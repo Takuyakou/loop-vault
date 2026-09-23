@@ -4,12 +4,12 @@
 
 ## Status
 
-- **Status:** Stage00 closed; research-only phase awaiting separate Stage01 authorization
-- **Active stage:** none
+- **Status:** Stage01 authorized, Shadow-only candidate-generation correction
+- **Active stage:** P5.40-01
 - **Completed stages:** P5.40-00
 - **Base:** P5.39 failed-promotion Closeout at `77e0458a6893057b7ca6da125ad7875fd01e4605`
 - **Current branch:** `feat/p540-local-harmonic-identity-ranking`
-- **Stop boundary:** Stage00 diagnosis is complete; do not begin Stage01 or modify production
+- **Stop boundary:** stop after focused Stage01 Shadow validation; do not begin Stage02 or modify production
 
 ## Required Reading Order
 
@@ -19,6 +19,7 @@
 4. [`package/00-phase-contract.md`](package/00-phase-contract.md) through [`package/09-stop-boundaries.md`](package/09-stop-boundaries.md)
 5. [`package/P5.40-00-audit-ground-truth-ranking-diagnosis.md`](package/P5.40-00-audit-ground-truth-ranking-diagnosis.md)
 6. [`work-instructions.md`](work-instructions.md), [`execution-state.json`](execution-state.json), and [`reports/README.md`](reports/README.md)
+7. For the separately authorized Stage01, read [`P5.40-01-design-lock.md`](P5.40-01-design-lock.md) and [`package/P5.40-01-shadow-correction-design.md`](package/P5.40-01-shadow-correction-design.md)
 
 The user-supplied package is preserved byte-for-byte under `package/`; its
 checksum manifest is retained. Git and the current source/tests outrank stale
@@ -30,9 +31,9 @@ package assumptions.
 
 Evaluation-only instrumentation and report. No correction or Promotion verdict.
 
-### P5.40-01 — Generalized Shadow correction design
+### P5.40-01 — Shadow candidate-generation correction
 
-Not authorized in this task. Requires separate human approval after Stage00.
+Separately authorized after Stage00 PASS. Shadow-only; stop after focused validation.
 
 ### P5.40-02 — Shadow safety evaluation
 
