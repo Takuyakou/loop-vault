@@ -4,8 +4,8 @@
 
 ## Status
 
-- **Status:** blocked (P5.39-03c blind safety review awaiting three independent classifications; `PROMOTION = FAIL` remains)
-- **Active stage:** P5.39-03 (03c ground-truth research addendum authorized; no Promotion re-evaluation)
+- **Status:** blocked (P5.39-03c independent safety ground truth frozen; historical `PROMOTION = FAIL` remains)
+- **Active stage:** P5.39-03 (03c research addendum complete; no Promotion re-evaluation authorized)
 - **Completed stages:** P5.39-00 ([`reports/P5.39-00-audit-baseline-gate-freeze.md`](reports/P5.39-00-audit-baseline-gate-freeze.md)); P5.39-01 ([`reports/P5.39-01-root-relative-identity-grammar.md`](reports/P5.39-01-root-relative-identity-grammar.md)); P5.39-02 ([`reports/P5.39-02-generalized-candidate-ranking-shadow.md`](reports/P5.39-02-generalized-candidate-ranking-shadow.md))
 - **Base:** local `master` at `0eedf26`, containing the P5.38 closeout and the default-on Family A/B fixes
 - **Current branch:** `feat/p539-family-c-representability`

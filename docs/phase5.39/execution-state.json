@@ -5,9 +5,9 @@
   "activeStage": "P5.39-03",
   "completedStages": ["P5.39-00", "P5.39-01", "P5.39-02"],
   "blocked": true,
-  "blockerReason": "P5.39-03c blind packets for the three unreviewed end-to-end changes are prepared; independent human classifications are pending. Historical P5.39-03 and 03b PROMOTION = FAIL remain unchanged. No re-evaluation or P5.39-04 integration is authorized.",
+  "blockerReason": "P5.39-03c independent ground truth is frozen for three end-to-end changes (two confirmed Family C, one temporal mixture). Historical P5.39-03 and 03b PROMOTION = FAIL remain unchanged. Further Promotion re-evaluation and P5.39-04 integration require separate authorization.",
   "baseCommit": "0eedf268a6231967409d2aa08e51ebed590501c2",
-  "lastVerifiedCommit": "ffcff7ee6cdb627a04addcef9ef4e40e51b727ed",
+  "lastVerifiedCommit": "c855a14ab8a3a94f4dfd1d3c2ebc355f363497a2",
   "currentBranch": "feat/p539-family-c-representability",
   "requiredGates": {
     "P5.39-00": [
@@ -295,15 +295,16 @@
     "three-end-to-end-regions-selected-stage03c": "pass",
     "blind-packets-ignored-and-separated-stage03c": "pass",
     "source-fidelity-stage03c": "pass",
-    "independent-human-ground-truth-stage03c": "pending",
-    "ground-truth-frozen-before-repromotion-stage03c": "pending",
+    "independent-human-ground-truth-stage03c": "pass",
+    "ground-truth-frozen-before-repromotion-stage03c": "pass",
     "focused-p539-p538-p537-stage03c": "pass",
     "typecheck-and-changed-scope-eslint-stage03c": "pass",
     "validate-phase-docs-stage03c": "pass",
     "validate-ai-handoff-stage03c": "pass",
     "git-diff-check-clean-stage03c": "pass",
+    "privacy-clean-stage03c": "pass",
     "production-diff-zero-stage03c": "pass"
   },
-  "nextAction": "Await one human blind classification for each FC-SAFETY-01/02/03, then freeze those classifications in the tracked 03c report before any later, separately authorized Promotion re-evaluation. PROMOTION remains FAIL; P5.39-04 is not authorized.",
+  "nextAction": "STOP. Three anonymous human classifications are frozen in the P5.39-03c report. Await separate human authorization before any Promotion re-evaluation; historical PROMOTION remains FAIL and P5.39-04 is not authorized.",
   "updatedAt": "2026-09-23"
 }
