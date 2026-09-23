@@ -4,12 +4,12 @@
 
 ## Status
 
-- **Status:** in-progress (P5.39-03a independent ground-truth review authorized; P5.39-03 Promotion remains FAIL)
-- **Active stage:** P5.39-03 (03a independent-review addendum; two anonymous private-region reviews pending)
+- **Status:** blocked (P5.39-03a independent ground truth frozen; P5.39-03 Promotion remains FAIL)
+- **Active stage:** P5.39-03 (03a independent-review addendum complete; Promotion re-evaluation awaits authorization)
 - **Completed stages:** P5.39-00 ([`reports/P5.39-00-audit-baseline-gate-freeze.md`](reports/P5.39-00-audit-baseline-gate-freeze.md)); P5.39-01 ([`reports/P5.39-01-root-relative-identity-grammar.md`](reports/P5.39-01-root-relative-identity-grammar.md)); P5.39-02 ([`reports/P5.39-02-generalized-candidate-ranking-shadow.md`](reports/P5.39-02-generalized-candidate-ranking-shadow.md))
 - **Base:** local `master` at `0eedf26`, containing the P5.38 closeout and the default-on Family A/B fixes
 - **Current branch:** `feat/p539-family-c-representability`
-- **Stop boundary:** freeze P5.39-03a ground truth in a separate commit, then stop before any Promotion re-evaluation or P5.39-04 integration
+- **Stop boundary:** stop after the P5.39-03a ground-truth commit; no Promotion re-evaluation or P5.39-04 integration is authorized
 
 ## Required Reading Order
 

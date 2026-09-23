@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "phaseId": "5.39",
-  "status": "in-progress",
+  "status": "blocked",
   "activeStage": "P5.39-03",
   "completedStages": ["P5.39-00", "P5.39-01", "P5.39-02"],
-  "blocked": false,
-  "blockerReason": null,
+  "blocked": true,
+  "blockerReason": "P5.39-03 PROMOTION remains FAIL after independent P5.39-03a ground-truth acquisition; one of two changed regions is insufficient for a single whole-window identity. Promotion re-evaluation and P5.39-04 integration require explicit human authorization.",
   "baseCommit": "0eedf268a6231967409d2aa08e51ebed590501c2",
-  "lastVerifiedCommit": "8f74e5dc8f1faa2505e0d0db41f14fc59b53f70e",
+  "lastVerifiedCommit": "6a9bcb54dbaaa3a374851f21f61cf41c29948215",
   "currentBranch": "feat/p539-family-c-representability",
   "requiredGates": {
     "P5.39-00": [
@@ -223,17 +223,17 @@
     "frozen-shadow-policy-unchanged-stage03a": "pass",
     "two-anonymous-regions-bound-stage03a": "pass",
     "blind-source-packets-ignored-stage03a": "pass",
-    "independent-ground-truth-frozen-stage03a": "pending-review",
+    "independent-ground-truth-frozen-stage03a": "pass",
     "source-fidelity-stage03a": "pass",
-    "focused-p539-stage03a": "pending-final-verification",
-    "family-a-b-regression-stage03a": "pending-final-verification",
-    "official-regression-stage03a": "pending-final-verification",
-    "validate-phase-docs-stage03a": "pending-final-verification",
-    "validate-ai-handoff-stage03a": "pending-final-verification",
-    "git-diff-check-clean-stage03a": "pending-final-verification",
-    "privacy-clean-stage03a": "pending-final-verification",
-    "production-diff-zero-stage03a": "pending-final-verification"
+    "focused-p539-stage03a": "pass",
+    "family-a-b-regression-stage03a": "pass",
+    "official-regression-stage03a": "pass",
+    "validate-phase-docs-stage03a": "pass",
+    "validate-ai-handoff-stage03a": "pass",
+    "git-diff-check-clean-stage03a": "pass",
+    "privacy-clean-stage03a": "pass",
+    "production-diff-zero-stage03a": "pass"
   },
-  "nextAction": "Obtain independent review for FC-REAL-01 and FC-REAL-02, freeze their classifications in the P5.39-03a report and commit before any new Promotion evaluation; then STOP. P5.39-04 is not authorized.",
+  "nextAction": "STOP. Independent ground truth is frozen, but PROMOTION remains FAIL. Await explicit human review and authorization before any Promotion re-evaluation; P5.39-04 is not authorized.",
   "updatedAt": "2026-09-23"
 }
