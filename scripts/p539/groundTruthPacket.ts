@@ -158,7 +158,10 @@ export function buildBlindRegionEvidence(
   };
 }
 
-export function buildBlindExcerptMidi(region: BlindRegionEvidence, bpm: number): Uint8Array {
+export function buildBlindExcerptMidi(
+  region: Pick<BlindRegionEvidence, "contextBeforeBeats" | "notes">,
+  bpm: number,
+): Uint8Array {
   const midi = new Midi();
   midi.header.setTempo(bpm);
   const track = midi.addTrack();

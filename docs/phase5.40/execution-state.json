@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "5.40",
+  "status": "blocked",
+  "activeStage": "P5.40-00",
+  "completedStages": [],
+  "blocked": true,
+  "blockerReason": "P5.40-00 requires source-first independent human classifications for both FC-SAFETY-03 local states before private candidate scores may be inspected.",
+  "baseCommit": "77e0458a6893057b7ca6da125ad7875fd01e4605",
+  "lastVerifiedCommit": "77e0458a6893057b7ca6da125ad7875fd01e4605",
+  "currentBranch": "feat/p540-local-harmonic-identity-ranking",
+  "requiredGates": {
+    "P5.40-00": [
+      "independent-local-ground-truth-frozen",
+      "all-candidates-diagnosed",
+      "score-recomposition-exact",
+      "root-cause-classified",
+      "synthetic-generalization-evidence",
+      "focused-regression",
+      "typecheck-and-changed-scope-lints",
+      "phase-and-handoff-validators",
+      "source-fidelity-and-determinism",
+      "production-diff-zero",
+      "privacy-and-diff-check-clean"
+    ]
+  },
+  "gateResults": {},
+  "nextAction": "Obtain and freeze human source-first classifications for L0 and L1; only then run ignored-local all-candidate diagnosis and complete Stage00 gates.",
+  "updatedAt": "2026-09-23"
+}

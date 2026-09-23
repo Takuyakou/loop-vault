@@ -55,6 +55,15 @@ export interface ShadowRankingCandidate {
 }
 
 export interface ShadowRankingExplanation {
+  /** Diagnostic-only fields; no ranking decision consumes these values. */
+  scoreTemplatePcs: readonly number[];
+  observedMaterialPcs: readonly number[];
+  explicitModifierPcs: readonly number[];
+  omittedPcs: readonly number[];
+  rawBassCompatibility: number;
+  bassAttenuation: number;
+  qualityEvidenceCoverage: number;
+  semanticTemplateSize: number;
   matchedStructuralPcs: readonly number[];
   matchedExplicitModifiers: readonly number[];
   missingExpectedTones: readonly number[];
@@ -360,6 +369,14 @@ function scoreCandidate(
     canonicalLabel,
     score: totalScore,
     explanation: {
+      scoreTemplatePcs: allowed,
+      observedMaterialPcs: histogram.flatMap((weight, pc) => weight > defaultPresenceThreshold * normalizedTotal ? [pc] : []),
+      explicitModifierPcs: explicitPcs,
+      omittedPcs,
+      rawBassCompatibility,
+      bassAttenuation: rawBassCompatibility - bassCompatibility,
+      qualityEvidenceCoverage: qualityEvidence.coverage,
+      semanticTemplateSize,
       matchedStructuralPcs: presentAllowed,
       matchedExplicitModifiers,
       missingExpectedTones,
