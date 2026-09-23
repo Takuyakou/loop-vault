@@ -13,8 +13,11 @@ import { analyzeUnionChimera } from "../p537/unionChimera";
 import {
   rankStage02ShadowCandidates,
   type ShadowRankedCandidate,
+  type ShadowRankingEvidence,
   type ShadowRankingResult,
 } from "./shadowCandidateRanking";
+
+export type ShadowWindowRanker = (evidence: ShadowRankingEvidence) => ShadowRankingResult;
 
 export interface RankedWindowPair {
   control: ShadowRankedCandidate;
@@ -45,17 +48,17 @@ function maxIndex(values: readonly number[]): number {
   return values.reduce((best, value, index) => value > values[best] ? index : best, 0);
 }
 
-function ranked(window: WeightedWindow | undefined): RankedWindowPair | null {
+function ranked(window: WeightedWindow | undefined, ranker: ShadowWindowRanker): RankedWindowPair | null {
   if (!window || window.totalWeight <= 0) return null;
-  const result = rankStage02ShadowCandidates({
+  const result = ranker({
     histogram: window.histogram,
     bassPitchClass: maxIndex(window.bassHistogram),
   });
   const control = result.rankedCandidates.find((candidate) => (
     candidate.generationReason === "production-base-candidate"
   ));
-  if (!control || result.candidateVisits !== 276) {
-    throw new Error("Frozen Stage02 ranking or candidate count unavailable");
+  if (!control || result.candidateVisits < 276 || result.candidateVisits > 300) {
+    throw new Error("Bounded Shadow ranking or production control unavailable");
   }
   return { control, expanded: result.topCandidate, result };
 }
@@ -100,7 +103,10 @@ function decision(
 }
 
 /** Same weighted W2/B0/B1 evidence, same Family B trigger, fixed Stage02 ranking. */
-export function evaluateStage03bInteractions(bytes: Uint8Array): {
+export function evaluateStage03bInteractions(
+  bytes: Uint8Array,
+  ranker: ShadowWindowRanker = rankStage02ShadowCandidates,
+): {
   data: MidiSongData;
   windows: Stage03bWindowInteraction[];
 } {
@@ -114,12 +120,12 @@ export function evaluateStage03bInteractions(bytes: Uint8Array): {
   )));
   const windows: Stage03bWindowInteraction[] = [];
   w2Windows.forEach((window, index) => {
-    const w2 = ranked(window);
+    const w2 = ranked(window, ranker);
     if (!w2) return;
     const b0Window = oneBeatWindows[2 * index];
     const b1Window = oneBeatWindows[2 * index + 1];
-    const b0 = ranked(b0Window);
-    const b1 = ranked(b1Window);
+    const b0 = ranked(b0Window, ranker);
+    const b1 = ranked(b1Window, ranker);
     windows.push({
       index,
       productionTriggered: production.get(index) ?? false,
