@@ -4,9 +4,9 @@
 
 ## Goal
 
-P5.40-00 and the separately authorized P5.40-01 are complete. Stage01
-implemented one bounded Shadow-only candidate-generation correction for the
-diagnosed general mechanism. Stop here; no Stage02 evaluation or Promotion.
+P5.40-00, P5.40-01 and the separately authorized P5.40-02 are complete.
+Stage02 evaluated the frozen bounded Shadow candidate-generation correction
+without retuning. Shadow safety failed; stop before Stage03 and production.
 
 ## Scope
 
@@ -15,13 +15,15 @@ diagnosed general mechanism. Stop here; no Stage02 evaluation or Promotion.
 - Add one bounded evidence-derived Shadow candidate-generation path and
   privacy-safe synthetic/generalization, anti-overfit, bound, determinism,
   and source-fidelity tests.
-- Write an anonymous Stage01 report under [`reports/`](reports/README.md).
+- Evaluate the frozen Stage01 Shadow path against synthetic, protected and
+  private whole-file evidence; record only anonymous Stage02 aggregates under
+  [`reports/`](reports/README.md).
 
 ## Non-goals
 
 No score/weight/penalty/tie-break retune, Family B or smoothing change,
 production integration, parser/schema/fileVersion change, migration, UI work,
-Stage02 execution, merge, or push.
+Stage03 Promotion evaluation, merge, or push.
 
 ## Contracts
 
@@ -31,16 +33,16 @@ P5.39 final FAIL is immutable historical evidence.
 
 ## Stages
 
-P5.40-00 and P5.40-01 are closed. No stage is active. P5.40-02 through 04
-remain unauthorized proposals.
+P5.40-00, P5.40-01 and P5.40-02 are closed. No stage is active. Stage03 and
+Stage04 remain unauthorized proposals.
 
 ## Definition of Done
 
-Stage01 requires the frozen design rule, bounded reachability across all
-roots, negative/protected controls, deterministic and source-immutable output,
-frozen Stage02 parity, focused tests and validators, a privacy-safe report, and
-a clean production diff. A generated correct candidate does not prove that it
-ranks first or that Promotion is safe.
+Stage02 requires an evaluation-only connection to the frozen Stage01 ranker,
+synthetic/protected and private whole-file checks, deterministic bounded source-
+immutable output, focused and full regression, validators, a privacy-safe
+report, and a clean production diff. The Stage02 safety verdict may be FAIL;
+completion does not imply Promotion authorization.
 
 ## Safety
 

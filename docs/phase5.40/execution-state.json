@@ -3,11 +3,11 @@
   "phaseId": "5.40",
   "status": "in-progress",
   "activeStage": null,
-  "completedStages": ["P5.40-00", "P5.40-01"],
+  "completedStages": ["P5.40-00", "P5.40-01", "P5.40-02"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "77e0458a6893057b7ca6da125ad7875fd01e4605",
-  "lastVerifiedCommit": "e44f07d94236a71187eb453291be8a2cab42cd18",
+  "lastVerifiedCommit": "a2d5d07614bb64d768cd716276be66dabeb7fbf7",
   "currentBranch": "feat/p540-local-harmonic-identity-ranking",
   "requiredGates": {
     "P5.40-00": [
@@ -34,6 +34,17 @@
       "stage01-phase-and-handoff-validators",
       "stage01-production-diff-zero",
       "stage01-privacy-and-diff-check-clean"
+    ],
+    "P5.40-02": [
+      "stage02-frozen-policy-and-bindings-checked",
+      "stage02-synthetic-protected-regression-executed",
+      "stage02-private-whole-file-safety-evaluated",
+      "stage02-determinism-bound-and-source-fidelity-checked",
+      "stage02-focused-and-full-regression-passed",
+      "stage02-typecheck-build-and-lints-passed",
+      "stage02-phase-and-handoff-validators-passed",
+      "stage02-privacy-and-production-diff-checked",
+      "stage02-fail-verdict-and-stop-recorded"
     ]
   },
   "gateResults": {
@@ -57,8 +68,17 @@
     "stage01-typecheck-and-changed-scope-lints": "pass",
     "stage01-phase-and-handoff-validators": "pass",
     "stage01-production-diff-zero": "pass",
-    "stage01-privacy-and-diff-check-clean": "pass"
+    "stage01-privacy-and-diff-check-clean": "pass",
+    "stage02-frozen-policy-and-bindings-checked": "pass",
+    "stage02-synthetic-protected-regression-executed": "pass",
+    "stage02-private-whole-file-safety-evaluated": "pass",
+    "stage02-determinism-bound-and-source-fidelity-checked": "pass",
+    "stage02-focused-and-full-regression-passed": "pass",
+    "stage02-typecheck-build-and-lints-passed": "pass",
+    "stage02-phase-and-handoff-validators-passed": "pass",
+    "stage02-privacy-and-production-diff-checked": "pass",
+    "stage02-fail-verdict-and-stop-recorded": "pass"
   },
-  "nextAction": "STOP. Stage01 closed; await separate authorization for Stage02 Shadow safety evaluation. No Promotion or production change.",
+  "nextAction": "STOP. Stage02 Shadow safety FAIL; no retune, Stage03 Promotion evaluation, or production change. Await separate human authorization for any next work.",
   "updatedAt": "2026-09-23"
 }

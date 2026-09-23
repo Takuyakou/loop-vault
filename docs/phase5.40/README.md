@@ -4,12 +4,12 @@
 
 ## Status
 
-- **Status:** Stage01 closed; awaiting separate Stage02 authorization
+- **Status:** Stage02 Shadow safety evaluation closed with FAIL; STOP before Stage03
 - **Active stage:** none
-- **Completed stages:** P5.40-00, P5.40-01
+- **Completed stages:** P5.40-00, P5.40-01, P5.40-02
 - **Base:** P5.39 failed-promotion Closeout at `77e0458a6893057b7ca6da125ad7875fd01e4605`
 - **Current branch:** `feat/p540-local-harmonic-identity-ranking`
-- **Stop boundary:** Stage01 focused validation is complete; do not begin Stage02 or modify production
+- **Stop boundary:** Stage02 safety failed; do not retune, begin Stage03, or modify production
 
 ## Required Reading Order
 
@@ -38,7 +38,9 @@ candidate reachability. See [`Stage01 report`](reports/P5.40-01-shadow-generatio
 
 ### P5.40-02 — Shadow safety evaluation
 
-Not authorized in this task.
+Separately authorized and completed. **SHADOW SAFETY = FAIL.** See the
+[`Stage02 report`](reports/P5.40-02-shadow-safety.md). This is not a Stage03
+Promotion verdict.
 
 ### P5.40-03 — Promotion evaluation
 
