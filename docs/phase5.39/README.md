@@ -4,12 +4,12 @@
 
 ## Status
 
-- **Status:** in-progress (Stage 00 complete; production behavior unchanged)
-- **Active stage:** P5.39-01 (shadow identity/oracle; not started/authorized)
-- **Completed stages:** P5.39-00 ([`reports/P5.39-00-audit-baseline-gate-freeze.md`](reports/P5.39-00-audit-baseline-gate-freeze.md))
+- **Status:** in-progress (Stages 00-01 complete; production behavior unchanged)
+- **Active stage:** P5.39-02 (generalized candidate Shadow; not started/authorized)
+- **Completed stages:** P5.39-00 ([`reports/P5.39-00-audit-baseline-gate-freeze.md`](reports/P5.39-00-audit-baseline-gate-freeze.md)); P5.39-01 ([`reports/P5.39-01-root-relative-identity-grammar.md`](reports/P5.39-01-root-relative-identity-grammar.md))
 - **Base:** local `master` at `0eedf26`, containing the P5.38 closeout and the default-on Family A/B fixes
 - **Current branch:** `feat/p539-family-c-representability`
-- **Stop boundary:** P5.39-00 complete; await explicit continuation before P5.39-01
+- **Stop boundary:** P5.39-01 complete; await explicit review before P5.39-02
 
 ## Required Reading Order
 
