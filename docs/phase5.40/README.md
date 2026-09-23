@@ -4,12 +4,12 @@
 
 ## Status
 
-- **Status:** Stage01 authorized, Shadow-only candidate-generation correction
-- **Active stage:** P5.40-01
-- **Completed stages:** P5.40-00
+- **Status:** Stage01 closed; awaiting separate Stage02 authorization
+- **Active stage:** none
+- **Completed stages:** P5.40-00, P5.40-01
 - **Base:** P5.39 failed-promotion Closeout at `77e0458a6893057b7ca6da125ad7875fd01e4605`
 - **Current branch:** `feat/p540-local-harmonic-identity-ranking`
-- **Stop boundary:** stop after focused Stage01 Shadow validation; do not begin Stage02 or modify production
+- **Stop boundary:** Stage01 focused validation is complete; do not begin Stage02 or modify production
 
 ## Required Reading Order
 
@@ -33,7 +33,8 @@ Evaluation-only instrumentation and report. No correction or Promotion verdict.
 
 ### P5.40-01 — Shadow candidate-generation correction
 
-Separately authorized after Stage00 PASS. Shadow-only; stop after focused validation.
+Separately authorized after Stage00 PASS and completed as Shadow-only
+candidate reachability. See [`Stage01 report`](reports/P5.40-01-shadow-generation.md).
 
 ### P5.40-02 — Shadow safety evaluation
 

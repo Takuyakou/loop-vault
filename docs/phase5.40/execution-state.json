@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "5.40",
   "status": "in-progress",
-  "activeStage": "P5.40-01",
-  "completedStages": ["P5.40-00"],
+  "activeStage": null,
+  "completedStages": ["P5.40-00", "P5.40-01"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "77e0458a6893057b7ca6da125ad7875fd01e4605",
-  "lastVerifiedCommit": "7d2f0495ad73f1316aa69b31cf6a977afa1b0b4c",
+  "lastVerifiedCommit": "e44f07d94236a71187eb453291be8a2cab42cd18",
   "currentBranch": "feat/p540-local-harmonic-identity-ranking",
   "requiredGates": {
     "P5.40-00": [
@@ -47,8 +47,18 @@
     "phase-and-handoff-validators": "pass",
     "source-fidelity-and-determinism": "pass",
     "production-diff-zero": "pass",
-    "privacy-and-diff-check-clean": "pass"
+    "privacy-and-diff-check-clean": "pass",
+    "stage01-design-rule-frozen": "pass",
+    "stage01-candidate-reachability-and-bound": "pass",
+    "stage01-frozen-score-and-stage02-parity": "pass",
+    "stage01-synthetic-generalization-and-anti-overfit": "pass",
+    "stage01-determinism-and-source-fidelity": "pass",
+    "stage01-focused-shadow-regression": "pass",
+    "stage01-typecheck-and-changed-scope-lints": "pass",
+    "stage01-phase-and-handoff-validators": "pass",
+    "stage01-production-diff-zero": "pass",
+    "stage01-privacy-and-diff-check-clean": "pass"
   },
-  "nextAction": "Implement only the frozen Stage01 Shadow candidate-generation rule; stop after focused validation, without Stage02 or Promotion.",
+  "nextAction": "STOP. Stage01 closed; await separate authorization for Stage02 Shadow safety evaluation. No Promotion or production change.",
   "updatedAt": "2026-09-23"
 }

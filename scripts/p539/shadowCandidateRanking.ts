@@ -28,7 +28,8 @@ import {
 export type ShadowCandidateGenerationReason =
   | "production-base-candidate"
   | "family-c-target-a"
-  | "family-c-target-b";
+  | "family-c-target-b"
+  | "individual-alteration-neighbor";
 
 export type ShadowTargetRankingClassification =
   | "GENERATION_FAILURE"
@@ -260,6 +261,8 @@ function scoreCandidate(
   sourceCandidate: ShadowRankingCandidate,
   evidence: ShadowRankingEvidence,
 ): Omit<ShadowRankedCandidate, "rank"> {
+  const hasShadowExplicitFacts = sourceCandidate.targetArchetypeId !== undefined
+    || sourceCandidate.generationReason === "individual-alteration-neighbor";
   const histogram = Array.from({ length: 12 }, (_, pc) => (
     Math.max(0, evidence.histogram[pc] ?? 0)
   ));
@@ -300,7 +303,7 @@ function scoreCandidate(
 
   const normalized = normalizeShadowIdentity(sourceCandidate.identity);
   if (!normalized) throw new Error("Invalid normalized Stage02 candidate");
-  const explicitIntervals = sourceCandidate.targetArchetypeId
+  const explicitIntervals = hasShadowExplicitFacts
     ? [
       ...normalized.extensions.map((extension) => EXTENSION_INTERVAL[extension]),
       ...normalized.alterations.map((alteration) => ALTERATION_INTERVAL[alteration]),
@@ -320,7 +323,7 @@ function scoreCandidate(
     ...missingQualityTones,
     ...missingExplicitModifiers,
   ])].sort((left, right) => left - right);
-  const omittedPcs = sourceCandidate.targetArchetypeId
+  const omittedPcs = hasShadowExplicitFacts
     ? absolutePcs(root, normalized.omissions.map((omission) => OMITTED_INTERVAL[omission]))
     : [];
   const omissionConflicts = omittedPcs.filter(
@@ -333,10 +336,10 @@ function scoreCandidate(
   const semanticTemplateSize = legacyTemplate?.intervals.length
     ?? allowed.length + omittedPcs.length;
   const extensionPenalty = Math.max(0, semanticTemplateSize - 4) * 0.015;
-  const explicitModifierPenalty = sourceCandidate.targetArchetypeId
+  const explicitModifierPenalty = hasShadowExplicitFacts
     ? missingExplicitModifiers.length * STAGE02_MISSING_EXPLICIT_FACT_PENALTY
     : 0;
-  const omissionConflictPenalty = sourceCandidate.targetArchetypeId
+  const omissionConflictPenalty = hasShadowExplicitFacts
     ? omissionConflicts.length * STAGE02_OMISSION_CONFLICT_PENALTY
     : 0;
   const hitRatio = hit / normalizedTotal;
@@ -395,14 +398,13 @@ function scoreCandidate(
   };
 }
 
-/** Pure deterministic ranking adapter over the fixed 276-candidate Shadow set. */
-export function rankStage02ShadowCandidates(
+function rankCandidateSet(
   evidence: ShadowRankingEvidence,
+  generatedCandidates: readonly ShadowRankingCandidate[],
 ): ShadowRankingResult {
   if (evidence.histogram.length !== 12) {
     throw new Error(`Stage02 evidence must contain 12 pitch classes, got ${evidence.histogram.length}`);
   }
-  const generatedCandidates = buildStage02ShadowCandidates();
   if (generatedCandidates.length > STAGE02_MAX_CANDIDATE_VISITS) {
     throw new Error(`Stage02 candidate visit bound exceeded: ${generatedCandidates.length}`);
   }
@@ -422,6 +424,39 @@ export function rankStage02ShadowCandidates(
     rankedCandidates,
     topCandidate,
   };
+}
+
+/** Pure deterministic ranking adapter over the frozen 276-candidate Shadow set. */
+export function rankStage02ShadowCandidates(
+  evidence: ShadowRankingEvidence,
+): ShadowRankingResult {
+  return rankCandidateSet(evidence, buildStage02ShadowCandidates());
+}
+
+/** Stage01-only opt-in: append at most 24 candidates without changing Stage02. */
+export function rankShadowCandidatesWithAdditions(
+  evidence: ShadowRankingEvidence,
+  additions: readonly ShadowRankingCandidate[],
+): ShadowRankingResult {
+  const base = buildStage02ShadowCandidates();
+  if (additions.length > STAGE02_MAX_CANDIDATE_VISITS - base.length) {
+    throw new Error("Stage01 candidate visit bound exceeded");
+  }
+  const known = new Set(base.map((entry) => entry.identityKey));
+  additions.forEach((entry, index) => {
+    if (entry.generationReason !== "individual-alteration-neighbor"
+      || entry.enumerationIndex !== base.length + index
+      || known.has(entry.identityKey)
+      || shadowIdentityKey(entry.identity) !== entry.identityKey
+      || formatShadowIdentity(entry.identity) !== entry.canonicalLabel) {
+      throw new Error("Invalid Stage01 candidate addition");
+    }
+    known.add(entry.identityKey);
+  });
+  return rankCandidateSet(evidence, Object.freeze([
+    ...base,
+    ...additions.map(freezeCandidate),
+  ]));
 }
 
 export function diagnoseStage02Target(

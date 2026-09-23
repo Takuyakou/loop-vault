@@ -4,9 +4,9 @@
 
 ## Goal
 
-P5.40-00 is complete. The separately authorized P5.40-01 implements one
-bounded Shadow-only candidate-generation correction for its diagnosed general
-mechanism. Stop after focused validation; no Stage02 evaluation or Promotion.
+P5.40-00 and the separately authorized P5.40-01 are complete. Stage01
+implemented one bounded Shadow-only candidate-generation correction for the
+diagnosed general mechanism. Stop here; no Stage02 evaluation or Promotion.
 
 ## Scope
 
@@ -31,8 +31,8 @@ P5.39 final FAIL is immutable historical evidence.
 
 ## Stages
 
-P5.40-00 is closed; only P5.40-01 is active. P5.40-02 through 04 remain
-unauthorized proposals.
+P5.40-00 and P5.40-01 are closed. No stage is active. P5.40-02 through 04
+remain unauthorized proposals.
 
 ## Definition of Done
 
