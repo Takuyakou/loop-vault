@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "phaseId": "5.40",
-  "status": "blocked",
-  "activeStage": "P5.40-00",
-  "completedStages": [],
-  "blocked": true,
-  "blockerReason": "Source-first human classifications and ignored-local diagnostics are complete; tracked closeout waits for privacy-safe reporting scope confirmation.",
+  "status": "in-progress",
+  "activeStage": null,
+  "completedStages": ["P5.40-00"],
+  "blocked": false,
+  "blockerReason": null,
   "baseCommit": "77e0458a6893057b7ca6da125ad7875fd01e4605",
-  "lastVerifiedCommit": "77e0458a6893057b7ca6da125ad7875fd01e4605",
+  "lastVerifiedCommit": "7d2f0495ad73f1316aa69b31cf6a977afa1b0b4c",
   "currentBranch": "feat/p540-local-harmonic-identity-ranking",
   "requiredGates": {
     "P5.40-00": [
@@ -24,7 +24,19 @@
       "privacy-and-diff-check-clean"
     ]
   },
-  "gateResults": {},
-  "nextAction": "Confirm privacy-safe reporting scope, then finalize anonymous Stage00 diagnosis and required gates without copying private identities or scores into Git.",
+  "gateResults": {
+    "independent-local-ground-truth-frozen": "pass",
+    "all-candidates-diagnosed": "pass",
+    "score-recomposition-exact": "pass",
+    "root-cause-classified": "pass",
+    "synthetic-generalization-evidence": "pass",
+    "focused-regression": "pass",
+    "typecheck-and-changed-scope-lints": "pass",
+    "phase-and-handoff-validators": "pass",
+    "source-fidelity-and-determinism": "pass",
+    "production-diff-zero": "pass",
+    "privacy-and-diff-check-clean": "pass"
+  },
+  "nextAction": "STOP after Stage00 diagnosis. Await separate human authorization before P5.40-01; no policy correction, Promotion, or production change.",
   "updatedAt": "2026-09-23"
 }

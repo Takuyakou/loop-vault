@@ -4,12 +4,12 @@
 
 ## Status
 
-- **Status:** blocked on privacy-safe report scope confirmation (research only)
-- **Active stage:** P5.40-00
-- **Completed stages:** none
+- **Status:** Stage00 closed; research-only phase awaiting separate Stage01 authorization
+- **Active stage:** none
+- **Completed stages:** P5.40-00
 - **Base:** P5.39 failed-promotion Closeout at `77e0458a6893057b7ca6da125ad7875fd01e4605`
 - **Current branch:** `feat/p540-local-harmonic-identity-ranking`
-- **Stop boundary:** finish only Stage00 diagnosis; do not begin Stage01 or modify production
+- **Stop boundary:** Stage00 diagnosis is complete; do not begin Stage01 or modify production
 
 ## Required Reading Order
 
