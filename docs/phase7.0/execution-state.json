@@ -3,7 +3,9 @@
   "phaseId": "7.0",
   "status": "in-progress",
   "activeStage": "P7.0-01",
-  "completedStages": ["P7.0-00"],
+  "completedStages": [
+    "P7.0-00"
+  ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "362e0df3d0cd21ab7d697f792553974703d44a8b",
@@ -15,6 +17,15 @@
       "phase-docs-valid",
       "production-diff-zero",
       "privacy-and-diff-clean"
+    ],
+    "P7.0-01": [
+      "gold-role-and-boundary-audited",
+      "four-cell-dev-validation-executed",
+      "aggregate-only-deterministic",
+      "script-typecheck-and-lint",
+      "stage01-phase-docs-valid",
+      "stage01-production-diff-zero",
+      "stage01-privacy-and-diff-clean"
     ]
   },
   "gateResults": {
@@ -23,6 +34,6 @@
     "production-diff-zero": "pass",
     "privacy-and-diff-clean": "pass"
   },
-  "nextAction": "P7.0-01: audit exact Gold boundary and role availability, then run the frozen 2x2 oracle ablation on chord-focused and melody-containing data.",
+  "nextAction": "Verify P7.0-01 evaluator and reports on their committed HEAD, then close the stage.",
   "updatedAt": "2026-09-24"
 }
