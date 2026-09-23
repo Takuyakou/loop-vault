@@ -2,14 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "7.0",
   "status": "in-progress",
-  "activeStage": "P7.0-01",
-  "completedStages": [
-    "P7.0-00"
-  ],
+  "activeStage": "P7.0-02",
+  "completedStages": ["P7.0-00", "P7.0-01"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "362e0df3d0cd21ab7d697f792553974703d44a8b",
-  "lastVerifiedCommit": "d9567779e37118899d85fcfcb71abc03903de93c",
+  "lastVerifiedCommit": "afe5647cadb662d4957145c125373c5c6b92bf27",
   "currentBranch": "research/phase7-core-v2",
   "requiredGates": {
     "P7.0-00": [
@@ -32,8 +30,15 @@
     "audit-complete": "pass",
     "phase-docs-valid": "pass",
     "production-diff-zero": "pass",
-    "privacy-and-diff-clean": "pass"
+    "privacy-and-diff-clean": "pass",
+    "gold-role-and-boundary-audited": "pass",
+    "four-cell-dev-validation-executed": "pass",
+    "aggregate-only-deterministic": "pass",
+    "script-typecheck-and-lint": "pass",
+    "stage01-phase-docs-valid": "pass",
+    "stage01-production-diff-zero": "pass",
+    "stage01-privacy-and-diff-clean": "pass"
   },
-  "nextAction": "Verify P7.0-01 evaluator and reports on their committed HEAD, then close the stage.",
+  "nextAction": "P7.0-02: define versioned Gold for harmonic boundary, voicing boundary, and ornament/note events before further model experiments.",
   "updatedAt": "2026-09-24"
 }
