@@ -4,12 +4,12 @@
 
 ## Status
 
-- **Status:** in-progress (Stages 00-02 complete; P5.39-03 not started or authorized)
-- **Active stage:** P5.39-03 (Promotion Evaluation; awaiting explicit authorization)
+- **Status:** blocked (Stages 00-02 committed; P5.39-03 hard Promotion gate failed)
+- **Active stage:** P5.39-03 (Promotion Evaluation complete; hard Gate G failed; production integration not authorized)
 - **Completed stages:** P5.39-00 ([`reports/P5.39-00-audit-baseline-gate-freeze.md`](reports/P5.39-00-audit-baseline-gate-freeze.md)); P5.39-01 ([`reports/P5.39-01-root-relative-identity-grammar.md`](reports/P5.39-01-root-relative-identity-grammar.md)); P5.39-02 ([`reports/P5.39-02-generalized-candidate-ranking-shadow.md`](reports/P5.39-02-generalized-candidate-ranking-shadow.md))
 - **Base:** local `master` at `0eedf26`, containing the P5.38 closeout and the default-on Family A/B fixes
 - **Current branch:** `feat/p539-family-c-representability`
-- **Stop boundary:** P5.39-02 is complete; do not begin P5.39-03 Promotion Evaluation without explicit authorization
+- **Stop boundary:** commit P5.39-03 `PROMOTION = FAIL`, then stop; P5.39-04 is not authorized
 
 ## Required Reading Order
 

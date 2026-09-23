@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "phaseId": "5.39",
-  "status": "in-progress",
+  "status": "blocked",
   "activeStage": "P5.39-03",
   "completedStages": ["P5.39-00", "P5.39-01", "P5.39-02"],
-  "blocked": false,
-  "blockerReason": null,
+  "blocked": true,
+  "blockerReason": "PROMOTION = FAIL: Gate G cannot be satisfied because no tracked privacy-safe ground-truth binding independently identifies the private Family-C target windows; Gate H also retains one unresolved changed identity.",
   "baseCommit": "0eedf268a6231967409d2aa08e51ebed590501c2",
-  "lastVerifiedCommit": "9317b2c1ad4c1ba4f651174762a12770de82e4f8",
+  "lastVerifiedCommit": "122c7456c2692d2fdd318d88738022b6e0f8256d",
   "currentBranch": "feat/p539-family-c-representability",
   "requiredGates": {
     "P5.39-00": [
@@ -92,6 +92,23 @@
       "validate-ai-handoff-stage02",
       "git-diff-check-clean-stage02",
       "privacy-clean-stage02"
+    ],
+    "P5.39-03": [
+      "promotion-gates-a-l-stage03",
+      "private-known-targets-stage03",
+      "private-whole-file-safety-stage03",
+      "production-representation-proposal-stage03",
+      "production-diff-zero-stage03",
+      "schema-fileversion-diff-zero-stage03",
+      "official-clean-suite-stage03",
+      "typecheck-build-stage03",
+      "changed-scope-eslint-stage03",
+      "class-source-contract-lint-stage03",
+      "repository-eslint-baseline-unchanged-stage03",
+      "validate-phase-docs-stage03",
+      "validate-ai-handoff-stage03",
+      "git-diff-check-clean-stage03",
+      "privacy-clean-stage03"
     ]
   },
   "gateResults": {
@@ -171,8 +188,24 @@
     "validate-phase-docs-stage02": "pass",
     "validate-ai-handoff-stage02": "pass",
     "git-diff-check-clean-stage02": "pass",
-    "privacy-clean-stage02": "pass"
+    "privacy-clean-stage02": "pass",
+    "promotion-gates-a-l-stage03": "fail",
+    "private-known-targets-stage03": "fail",
+    "private-whole-file-safety-stage03": "fail",
+    "production-representation-proposal-stage03": "skipped-not-authorized",
+    "production-diff-zero-stage03": "pass",
+    "schema-fileversion-diff-zero-stage03": "pass",
+    "official-clean-suite-stage03": "pass",
+    "typecheck-build-stage03": "pass",
+    "changed-scope-eslint-stage03": "pass",
+    "class-source-contract-lint-stage03": "pass",
+    "repository-eslint-baseline-unchanged-stage03": "pass",
+    "validate-phase-docs-stage03": "pass",
+    "validate-ai-handoff-stage03": "pass",
+    "git-diff-check-clean-stage03": "pass",
+    "privacy-clean-stage03": "pass",
+    "PROMOTION": "FAIL"
   },
-  "nextAction": "STOP. P5.39-02 is complete. Await explicit human authorization before beginning P5.39-03 Promotion Evaluation.",
+  "nextAction": "Commit P5.39-03 PROMOTION = FAIL and STOP. P5.39-04 Production Integration is not authorized. Await explicit human authorization for any follow-up.",
   "updatedAt": "2026-09-23"
 }
