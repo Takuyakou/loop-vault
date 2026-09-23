@@ -8,8 +8,8 @@ This is a short navigation summary. Read ARCHITECTURE-MAP / DECISIONS / KNOWN-FA
 
 ## Last verified against
 
-- commit: 273f6d3f796410da05c650af1f5ca9a501a72e2a
-- date: 2026-09-23
+- commit: 0a536dbcdbc371e05cd506f14cfe5e154c95a082
+- date: 2026-09-24
 
 Freshness note: the verified commit is the code/docs state this handoff was
 checked against. It is expected to be behind HEAD after later handoff-only
@@ -62,7 +62,7 @@ progression vocabulary. It is **not** a chord detector.
 15. Security (intake budgets / CSP)
 16. i18n
 
-## Current concern (LF-MIDI-001 — Families A/B fixed; Family C open)
+## Current concern (LF-MIDI-001 — Families A/B fixed; Family C unpromoted)
 
 The original clean-MIDI failure split into independent cause families. Current
 product truth is:
@@ -79,8 +79,30 @@ product truth is:
   persisted events/coordinates, export, `SongMiniMap`, and `ProgressionGrid`
   remain source truth.
 - **Family C (extended/altered/omission-sensitive vocabulary and
-  representability, e.g. S02/S04) — OPEN, SEPARATE.** It was not started by
-  P5.38.
+  representability) — P5.39 CLOSED, `PROMOTION = FAIL`, NOT IN PRODUCTION.**
+  The frozen Shadow policy passed representability and synthetic ranking but
+  failed whole-file safety and Family B interaction (Gates H/J). A necessary
+  temporal split survives, yet one reviewed local identity sequence disagrees
+  with independent ground truth. See
+  [`P5.39-closeout.md`](../phase5.39/P5.39-closeout.md). Further local
+  identity/ranking research belongs to a separately authorized phase.
+
+P5.40's final Shadow correction re-evaluation (Stage02b) ended
+`SHADOW SAFETY = FAIL`: newly changed unreviewed regions and unresolved
+reviewed divergences block Promotion. See the
+[`anonymous Stage02b report`](../phase5.40/reports/P5.40-02b-final-shadow-safety.md).
+No production Family C integration or Stage03 is authorized.
+
+P5.40 is **CLOSED** with final `SHADOW SAFETY = FAIL` and **no production
+Promotion**. The final Stage02c safe-activation attempt generated and
+top-ranked both independently established local identities, but activation
+scope and temporal arbitration failed whole-file safety. The existing
+`phase4-v1` production Core remains active and available for regression and
+rollback; normal advanced-analyzer feature expansion on it is frozen, with
+critical bugfixes only. The next analyzer direction is a separately authorized
+**Analyzer Core v2 architecture redesign**, not another P5.40 patch; Core v2
+implementation has not started. See the
+[`P5.40 Closeout`](../phase5.40/reports/P5.40-closeout.md).
 
 The architectural ordering is:
 
@@ -95,7 +117,9 @@ source MIDI / meter
 
 `PresentationGroup` is a variable-duration harmonic presentation span; it is
 neither a source bar nor a rewritten meter bar. Do not claim every MIDI-import
-issue is solved: Families A and B are fixed, while Family C remains open.
+issue is solved: Families A and B are fixed, while Family C remains unpromoted.
+Local representability/ranking research succeeded, but safe activation and
+temporal arbitration in the current pipeline did not converge.
 
 ## Confirmed building blocks
 

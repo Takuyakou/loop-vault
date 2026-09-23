@@ -14,7 +14,7 @@ note dumps. Synthetic pitch examples are allowed.
 ## LF-MIDI-001 — Clean structured chord MIDI may be degraded by analyzer interpretation
 
 - ID: LF-MIDI-001
-- Status: CAUSE CONFIRMED (P5.36); **Family A presentation fix DEFAULT ON (P5.38)**; **Family B identity fix DEFAULT ON (P5.37)**; Family C vocabulary/representability remains **separate open work**
+- Status: CAUSE CONFIRMED (P5.36); **Family A presentation fix DEFAULT ON (P5.38)**; **Family B identity fix DEFAULT ON (P5.37)**; **P5.39 Family C research CLOSED with `PROMOTION = FAIL`**, production blocker remains open
 - Observed facts (USER-REPORTED — not reproducible from committed repo alone):
   - meter metadata reads 1/4 (privacy-safe PPQ metadata);
   - approximately 65 quarter-note beats;
@@ -111,7 +111,10 @@ Existing source-preserving building blocks include per-chord `sourceVoicing`
 (pitch/octave) and selected-bass `Source Bassline` capture (exact beats, 4/4).
 They do **not**, by themselves, establish a general exact full-polyphonic
 source-performance preservation path. LF-MIDI-001 Families A and B are closed
-by their separate default-on fixes; Family C representability remains open.
+by their separate default-on fixes. Family C was studied in P5.39 but was not
+promoted: its final `SUSPICIOUS = 1` is a local harmonic identity/ranking
+mismatch after a necessary temporal split. The separate follow-up research
+boundary is in [`P5.39-closeout.md`](../phase5.39/P5.39-closeout.md).
 
 ### Synthetic semantic examples (privacy-safe)
 

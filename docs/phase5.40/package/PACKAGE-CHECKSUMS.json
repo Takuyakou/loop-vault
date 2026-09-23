@@ -1,0 +1,91 @@
+{
+  "package": "P5.40-local-harmonic-identity-ranking-correction",
+  "manifestVersion": 1,
+  "files": [
+    {
+      "file": "00-phase-contract.md",
+      "bytes": 2853,
+      "sha256": "befd3cdfc7c95f556852733d4bdf2acedb9f6db235950f2bf71c86bd91809e67"
+    },
+    {
+      "file": "01-current-state-and-p539-handoff.md",
+      "bytes": 2067,
+      "sha256": "09390a6173b962d0cd6428213dc6bed54fc1671ac9000dd78e6e2f39f1f2c280"
+    },
+    {
+      "file": "02-protected-contracts.md",
+      "bytes": 1547,
+      "sha256": "02c5c6b7023ffd2abbbd866590d0ba12c552762cc09fd37b570cb4f5296d8453"
+    },
+    {
+      "file": "03-ground-truth-protocol.md",
+      "bytes": 1835,
+      "sha256": "bd27bb870c556f4ab65dfedc1b0aa2f9f37444ecf1f6c10099ed7aa888c7c26a"
+    },
+    {
+      "file": "04-score-breakdown-spec.md",
+      "bytes": 2075,
+      "sha256": "1efbcb1b6276dc9c30a7bde938f8384bcf71fc132a786ec27fb6939321545277"
+    },
+    {
+      "file": "05-generalization-and-anti-overfit.md",
+      "bytes": 1322,
+      "sha256": "2c06d4adbfe45115a14766c6570bb720b1515ec3b97c951a7603019812a4b90a"
+    },
+    {
+      "file": "06-promotion-gates.md",
+      "bytes": 2237,
+      "sha256": "b26dcce2d2583f10461917df7293f58211af97dcc6d9f213682adac5da0aa9c2"
+    },
+    {
+      "file": "07-test-strategy.md",
+      "bytes": 1691,
+      "sha256": "fc8cdaf37a2dc000700bf94ac02388e11be9da196491553882fbf3e847fe5ddf"
+    },
+    {
+      "file": "08-privacy-contract.md",
+      "bytes": 992,
+      "sha256": "ccea282a7e30f2303fb20c62e19ddaa77e2401d0e1f1e1fb0339508a10f46d52"
+    },
+    {
+      "file": "09-stop-boundaries.md",
+      "bytes": 1047,
+      "sha256": "168500c363f0fd7b48f7ddef0e8da11729d8d97f584bb23ae3d5439fed8502c0"
+    },
+    {
+      "file": "CODEX-START-HERE.md",
+      "bytes": 1408,
+      "sha256": "b30fa8324c571e857a73a0c5d63142112e7650154fb6cf5b98b4356e396dafa8"
+    },
+    {
+      "file": "P5.40-00-audit-ground-truth-ranking-diagnosis.md",
+      "bytes": 3897,
+      "sha256": "45158044ef3b8cd727649bd2857dbdf65792d7873628915d0993c4a7c61e58af"
+    },
+    {
+      "file": "P5.40-01-shadow-correction-design.md",
+      "bytes": 916,
+      "sha256": "da88880a81fc9754b90ca975624c972518a591680b59c7ae6afc56d19c818385"
+    },
+    {
+      "file": "P5.40-02-shadow-evaluation.md",
+      "bytes": 811,
+      "sha256": "51fcc20f6dfbd7ed84f1b3831a20061a9686124c1ac0ab5648622f5be2a29b90"
+    },
+    {
+      "file": "P5.40-03-promotion-evaluation.md",
+      "bytes": 587,
+      "sha256": "fd8ba329e2011790faf5528556eb45cb639a0086c1514d2fb0aa40670388b441"
+    },
+    {
+      "file": "P5.40-04-production-integration.md",
+      "bytes": 855,
+      "sha256": "d1cead64274177d6c3eb824fb9264257ac6e8abfd206bc727f8591fad3e3287b"
+    },
+    {
+      "file": "README.md",
+      "bytes": 1929,
+      "sha256": "154a65ccbe2752855a55caac46204256ccedc03dedd4929054692f8c68f2e533"
+    }
+  ]
+}

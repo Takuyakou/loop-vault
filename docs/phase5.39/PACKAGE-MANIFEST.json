@@ -1,0 +1,42 @@
+{
+  "package": "Loop Vault P5.39 — Family C Vocabulary / Representability Generalization",
+  "phaseIdAssumption": "5.39; stop if already allocated",
+  "dependsOn": "P5.38 closed with Family A default-on; P5.37 Family B default-on",
+  "corePrinciples": [
+    "root-relative interval structure",
+    "12-root transposition invariance",
+    "voicing/octave/doubling invariance",
+    "slash bass separate",
+    "explicit alterations/omissions",
+    "no private/root-specific patching",
+    "bounded grammar/candidate count",
+    "anti-overlabel hard negatives",
+    "shadow -> promotion -> production"
+  ],
+  "privateFixtureId": "LF-MIDI-001",
+  "files": [
+    "00-START-HERE.md",
+    "CODEX-HANDOFF.md",
+    "README.md",
+    "acceptance/P5.39-acceptance-checklist.md",
+    "contracts/01-scope-and-non-goals.md",
+    "contracts/02-generalization-invariants.md",
+    "contracts/03-bounded-chord-grammar.md",
+    "contracts/04-canonical-notation.md",
+    "contracts/05-anti-overlabel-hard-negatives.md",
+    "contracts/06-representability-oracle.md",
+    "contracts/07-private-fixture-and-ground-truth.md",
+    "contracts/08-promotion-and-success.md",
+    "execution-state.json",
+    "reports/templates/P5.39-family-matrix-template.md",
+    "reports/templates/P5.39-promotion-gates-template.md",
+    "stages/P5.39-00-audit-baseline-gate-freeze.md",
+    "stages/P5.39-01-root-relative-identity-oracle.md",
+    "stages/P5.39-02-generalized-candidate-shadow.md",
+    "stages/P5.39-03-promotion-evaluation.md",
+    "stages/P5.39-04-production-integration.md",
+    "stages/P5.39-05-hardening-acceptance.md",
+    "stages/P5.39-06-closeout.md",
+    "work-instructions.md"
+  ]
+}
