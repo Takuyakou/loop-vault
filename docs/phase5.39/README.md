@@ -4,12 +4,12 @@
 
 ## Status
 
-- **Status:** blocked (Stages 00-02 committed; P5.39-03 hard Promotion gate failed)
-- **Active stage:** P5.39-03 (Promotion Evaluation complete; hard Gate G failed; production integration not authorized)
+- **Status:** in-progress (P5.39-03a independent ground-truth review authorized; P5.39-03 Promotion remains FAIL)
+- **Active stage:** P5.39-03 (03a independent-review addendum; two anonymous private-region reviews pending)
 - **Completed stages:** P5.39-00 ([`reports/P5.39-00-audit-baseline-gate-freeze.md`](reports/P5.39-00-audit-baseline-gate-freeze.md)); P5.39-01 ([`reports/P5.39-01-root-relative-identity-grammar.md`](reports/P5.39-01-root-relative-identity-grammar.md)); P5.39-02 ([`reports/P5.39-02-generalized-candidate-ranking-shadow.md`](reports/P5.39-02-generalized-candidate-ranking-shadow.md))
 - **Base:** local `master` at `0eedf26`, containing the P5.38 closeout and the default-on Family A/B fixes
 - **Current branch:** `feat/p539-family-c-representability`
-- **Stop boundary:** commit P5.39-03 `PROMOTION = FAIL`, then stop; P5.39-04 is not authorized
+- **Stop boundary:** freeze P5.39-03a ground truth in a separate commit, then stop before any Promotion re-evaluation or P5.39-04 integration
 
 ## Required Reading Order
 
@@ -28,9 +28,10 @@
 2. `P5.39-01` — root-relative identity grammar + representability oracle (shadow)
 3. `P5.39-02` — generalized candidate/notation shadow + metamorphic corpus
 4. `P5.39-03` — promotion evaluation
-5. `P5.39-04` — production integration only after Promotion PASS
-6. `P5.39-05` — hardening / acceptance
-7. `P5.39-06` — closeout
+5. `P5.39-03a` — independent ground-truth acquisition for two anonymous changed regions
+6. `P5.39-04` — production integration only after Promotion PASS
+7. `P5.39-05` — hardening / acceptance
+8. `P5.39-06` — closeout
 
 ## Goal
 
