@@ -4,12 +4,12 @@
 
 ## Status
 
-- **Status:** Stage02b final Shadow safety FAIL; P5.40 Closeout candidate
+- **Status:** Stage02c safe activation safety FAIL; P5.40 Closeout candidate
 - **Active stage:** none
-- **Completed stages:** P5.40-00, P5.40-01, P5.40-02, P5.40-02a, P5.40-02b
+- **Completed stages:** P5.40-00, P5.40-01, P5.40-02, P5.40-02a, P5.40-02b, P5.40-02c
 - **Base:** P5.39 failed-promotion Closeout at `77e0458a6893057b7ca6da125ad7875fd01e4605`
 - **Current branch:** `feat/p540-local-harmonic-identity-ranking`
-- **Stop boundary:** Final Shadow safety FAIL; do not retune, begin Stage03, or modify production
+- **Stop boundary:** Stage02c Shadow safety FAIL; do not retune, begin Stage03, or modify production
 
 ## Required Reading Order
 
@@ -60,6 +60,16 @@ The separately authorized final Shadow-only correction round is complete.
 pre-implementation [`design lock`](P5.40-02b-design-lock.md). The independent
 classification remained frozen, production is unchanged, and the pre-locked
 FAIL stop boundary was applied without another retune.
+
+### P5.40-02c — Safe activation gate and final Shadow safety
+
+Separately authorized after Stage02b FAIL. A source-evidence activation
+certificate was locked before code and private evaluation. The one-time
+whole-file result is **SHADOW SAFETY = FAIL**. See the
+[`Stage02c report`](reports/P5.40-02c-safe-activation-safety.md) and
+[`design lock`](P5.40-02c-design-lock.md). The local candidate correction
+remains reachable, but activation/temporal arbitration is not safe
+end-to-end. No post-result retune was made.
 
 ### P5.40-03 — Promotion evaluation
 

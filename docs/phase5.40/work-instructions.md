@@ -4,8 +4,8 @@
 
 ## Goal
 
-P5.40-00 through the separately authorized P5.40-02b are complete. Stage02b
-was the final Shadow correction round and ended `SHADOW SAFETY = FAIL`.
+P5.40-00 through the separately authorized P5.40-02c are complete. Stage02c
+was a final safe-activation Shadow gate and ended `SHADOW SAFETY = FAIL`.
 The new anonymous region's source-first human classification was frozen
 before candidate-origin unsealing; the private whole-file evaluation remains
 Git ignored. Stop before Stage03 and production.
@@ -13,10 +13,11 @@ Git ignored. Stop before Stage03 and production.
 ## Scope
 
 - Preserve the pre-implementation [`P5.40-01 design lock`](P5.40-01-design-lock.md)
-  and [`P5.40-02b design lock`](P5.40-02b-design-lock.md) as historical evidence.
+  [`P5.40-02b design lock`](P5.40-02b-design-lock.md) and
+  [`P5.40-02c design lock`](P5.40-02c-design-lock.md) as historical evidence.
 - Preserve all frozen stage results and anonymous reports under
   [`reports/`](reports/README.md). No further correction is authorized in
-  P5.40-02b after its one-time private safety FAIL.
+  P5.40-02c after its one-time private safety FAIL.
 
 ## Non-goals
 
@@ -32,13 +33,13 @@ P5.39 final FAIL is immutable historical evidence.
 
 ## Stages
 
-P5.40-00, P5.40-01, P5.40-02, P5.40-02a and P5.40-02b are closed.
+P5.40-00, P5.40-01, P5.40-02, P5.40-02a, P5.40-02b and P5.40-02c are closed.
 No stage is active; P5.40 is a Closeout candidate.
 Stage03 and Stage04 remain unauthorized proposals.
 
 ## Definition of Done
 
-Stage02b's final FAIL is recorded with the one-time private safety aggregate,
+Stage02c's final FAIL is recorded with the one-time private safety aggregate,
 deterministic bounded source-immutable evaluation, relevant and full regression,
 validators, privacy-safe report and clean production diff. A safety FAIL does
 not authorize Stage03 or a second correction round.

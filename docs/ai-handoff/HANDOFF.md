@@ -93,6 +93,11 @@ reviewed divergences block Promotion. See the
 [`anonymous Stage02b report`](../phase5.40/reports/P5.40-02b-final-shadow-safety.md).
 No production Family C integration or Stage03 is authorized.
 
+The separately authorized Stage02c safe-activation attempt also ended
+`SHADOW SAFETY = FAIL`: local candidate ranking succeeded, but activation
+scope and temporal arbitration still failed whole-file safety. See the
+[`anonymous Stage02c report`](../phase5.40/reports/P5.40-02c-safe-activation-safety.md).
+
 The architectural ordering is:
 
 ```text
