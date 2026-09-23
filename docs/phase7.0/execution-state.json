@@ -3,7 +3,10 @@
   "phaseId": "7.0",
   "status": "in-progress",
   "activeStage": "P7.0-02",
-  "completedStages": ["P7.0-00", "P7.0-01"],
+  "completedStages": [
+    "P7.0-00",
+    "P7.0-01"
+  ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "362e0df3d0cd21ab7d697f792553974703d44a8b",
@@ -24,6 +27,15 @@
       "stage01-phase-docs-valid",
       "stage01-production-diff-zero",
       "stage01-privacy-and-diff-clean"
+    ],
+    "P7.0-02": [
+      "temporal-gold-contract-valid",
+      "synthetic-taxonomy-covered",
+      "local-witness-anonymized-mapping",
+      "stage02-focused-tests-and-types",
+      "stage02-phase-docs-valid",
+      "stage02-production-diff-zero",
+      "stage02-privacy-and-diff-clean"
     ]
   },
   "gateResults": {
@@ -39,6 +51,6 @@
     "stage01-production-diff-zero": "pass",
     "stage01-privacy-and-diff-clean": "pass"
   },
-  "nextAction": "P7.0-02: define versioned Gold for harmonic boundary, voicing boundary, and ornament/note events before further model experiments.",
+  "nextAction": "P7.0-02: complete anonymous local regression-witness mapping when independent truth is available; keep the stage active until its gate is resolved.",
   "updatedAt": "2026-09-24"
 }
