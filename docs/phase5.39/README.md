@@ -4,12 +4,12 @@
 
 ## Status
 
-- **Status:** in-progress (Stages 00-01 complete; production behavior unchanged)
-- **Active stage:** P5.39-02 (generalized candidate Shadow; not started/authorized)
-- **Completed stages:** P5.39-00 ([`reports/P5.39-00-audit-baseline-gate-freeze.md`](reports/P5.39-00-audit-baseline-gate-freeze.md)); P5.39-01 ([`reports/P5.39-01-root-relative-identity-grammar.md`](reports/P5.39-01-root-relative-identity-grammar.md))
+- **Status:** in-progress (Stages 00-02 complete; P5.39-03 not started or authorized)
+- **Active stage:** P5.39-03 (Promotion Evaluation; awaiting explicit authorization)
+- **Completed stages:** P5.39-00 ([`reports/P5.39-00-audit-baseline-gate-freeze.md`](reports/P5.39-00-audit-baseline-gate-freeze.md)); P5.39-01 ([`reports/P5.39-01-root-relative-identity-grammar.md`](reports/P5.39-01-root-relative-identity-grammar.md)); P5.39-02 ([`reports/P5.39-02-generalized-candidate-ranking-shadow.md`](reports/P5.39-02-generalized-candidate-ranking-shadow.md))
 - **Base:** local `master` at `0eedf26`, containing the P5.38 closeout and the default-on Family A/B fixes
 - **Current branch:** `feat/p539-family-c-representability`
-- **Stop boundary:** P5.39-01 complete; await explicit review before P5.39-02
+- **Stop boundary:** P5.39-02 is complete; do not begin P5.39-03 Promotion Evaluation without explicit authorization
 
 ## Required Reading Order
 
