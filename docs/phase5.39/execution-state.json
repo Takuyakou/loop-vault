@@ -5,9 +5,9 @@
   "activeStage": "P5.39-03",
   "completedStages": ["P5.39-00", "P5.39-01", "P5.39-02"],
   "blocked": true,
-  "blockerReason": "P5.39-03 PROMOTION remains FAIL after independent P5.39-03a ground-truth acquisition; one of two changed regions is insufficient for a single whole-window identity. Promotion re-evaluation and P5.39-04 integration require explicit human authorization.",
+  "blockerReason": "P5.39-03b re-evaluation of the frozen Shadow policy passes Gate G but fails Gates H/J: three unreviewed regions change after expanded beat-level ranking, Family B, and smoothing. Historical P5.39-03 PROMOTION = FAIL is preserved. P5.39-04 integration is not authorized.",
   "baseCommit": "0eedf268a6231967409d2aa08e51ebed590501c2",
-  "lastVerifiedCommit": "6a9bcb54dbaaa3a374851f21f61cf41c29948215",
+  "lastVerifiedCommit": "d5773686515ca1ae73f3be242af5e19277962509",
   "currentBranch": "feat/p539-family-c-representability",
   "requiredGates": {
     "P5.39-00": [
@@ -124,6 +124,28 @@
       "git-diff-check-clean-stage03a",
       "privacy-clean-stage03a",
       "production-diff-zero-stage03a"
+    ],
+    "P5.39-03b": [
+      "frozen-policy-unchanged-stage03b",
+      "frozen-ground-truth-unchanged-stage03b",
+      "gate-a-f-stage03b",
+      "gate-g-stage03b",
+      "gate-h-stage03b",
+      "gate-i-stage03b",
+      "gate-j-stage03b",
+      "gate-k-stage03b",
+      "gate-l-stage03b",
+      "private-33-region-interaction-stage03b",
+      "production-schema-parser-diff-zero-stage03b",
+      "focused-and-related-regression-stage03b",
+      "official-full-regression-stage03b",
+      "typecheck-build-stage03b",
+      "changed-scope-and-contract-lint-stage03b",
+      "repository-eslint-baseline-unchanged-stage03b",
+      "validate-phase-docs-stage03b",
+      "validate-ai-handoff-stage03b",
+      "git-diff-check-clean-stage03b",
+      "privacy-clean-stage03b"
     ]
   },
   "gateResults": {
@@ -232,8 +254,29 @@
     "validate-ai-handoff-stage03a": "pass",
     "git-diff-check-clean-stage03a": "pass",
     "privacy-clean-stage03a": "pass",
-    "production-diff-zero-stage03a": "pass"
+    "production-diff-zero-stage03a": "pass",
+    "frozen-policy-unchanged-stage03b": "pass",
+    "frozen-ground-truth-unchanged-stage03b": "pass",
+    "gate-a-f-stage03b": "pass",
+    "gate-g-stage03b": "pass",
+    "gate-h-stage03b": "fail",
+    "gate-i-stage03b": "pass",
+    "gate-j-stage03b": "fail",
+    "gate-k-stage03b": "pass",
+    "gate-l-stage03b": "pass",
+    "private-33-region-interaction-stage03b": "fail",
+    "production-schema-parser-diff-zero-stage03b": "pass",
+    "focused-and-related-regression-stage03b": "pass",
+    "official-full-regression-stage03b": "pass",
+    "typecheck-build-stage03b": "pass",
+    "changed-scope-and-contract-lint-stage03b": "pass",
+    "repository-eslint-baseline-unchanged-stage03b": "pass",
+    "validate-phase-docs-stage03b": "pass",
+    "validate-ai-handoff-stage03b": "pass",
+    "git-diff-check-clean-stage03b": "pass",
+    "privacy-clean-stage03b": "pass",
+    "PROMOTION-03b": "FAIL"
   },
-  "nextAction": "STOP. Independent ground truth is frozen, but PROMOTION remains FAIL. Await explicit human review and authorization before any Promotion re-evaluation; P5.39-04 is not authorized.",
+  "nextAction": "STOP. P5.39-03b re-evaluation is complete; PROMOTION remains FAIL because whole-file Family B interaction safety is unproven. Await explicit human authorization before further work; P5.39-04 is not authorized.",
   "updatedAt": "2026-09-23"
 }

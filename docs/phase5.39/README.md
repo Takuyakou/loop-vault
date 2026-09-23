@@ -4,12 +4,12 @@
 
 ## Status
 
-- **Status:** blocked (P5.39-03a independent ground truth frozen; P5.39-03 Promotion remains FAIL)
-- **Active stage:** P5.39-03 (03a independent-review addendum complete; Promotion re-evaluation awaits authorization)
+- **Status:** blocked (P5.39-03b re-evaluation complete; `PROMOTION = FAIL` on whole-file Family B interaction safety)
+- **Active stage:** P5.39-03 (03a ground truth and 03b re-evaluation addenda complete; Promotion remains FAIL)
 - **Completed stages:** P5.39-00 ([`reports/P5.39-00-audit-baseline-gate-freeze.md`](reports/P5.39-00-audit-baseline-gate-freeze.md)); P5.39-01 ([`reports/P5.39-01-root-relative-identity-grammar.md`](reports/P5.39-01-root-relative-identity-grammar.md)); P5.39-02 ([`reports/P5.39-02-generalized-candidate-ranking-shadow.md`](reports/P5.39-02-generalized-candidate-ranking-shadow.md))
 - **Base:** local `master` at `0eedf26`, containing the P5.38 closeout and the default-on Family A/B fixes
 - **Current branch:** `feat/p539-family-c-representability`
-- **Stop boundary:** stop after the P5.39-03a ground-truth commit; no Promotion re-evaluation or P5.39-04 integration is authorized
+- **Stop boundary:** stop after the P5.39-03b re-evaluation; no P5.39-04 integration is authorized
 
 ## Required Reading Order
 
@@ -29,9 +29,10 @@
 3. `P5.39-02` — generalized candidate/notation shadow + metamorphic corpus
 4. `P5.39-03` — promotion evaluation
 5. `P5.39-03a` — independent ground-truth acquisition for two anonymous changed regions
-6. `P5.39-04` — production integration only after Promotion PASS
-7. `P5.39-05` — hardening / acceptance
-8. `P5.39-06` — closeout
+6. `P5.39-03b` — same frozen Shadow policy re-evaluated with independent ground truth and Family B interaction
+7. `P5.39-04` — production integration only after Promotion PASS
+8. `P5.39-05` — hardening / acceptance
+9. `P5.39-06` — closeout
 
 ## Goal
 

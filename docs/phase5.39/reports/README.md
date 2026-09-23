@@ -7,6 +7,7 @@ Stage reports are evidence records. Git remains the source of truth.
 - [`P5.39-02-generalized-candidate-ranking-shadow.md`](P5.39-02-generalized-candidate-ranking-shadow.md)
 - [`P5.39-03-promotion-evaluation.md`](P5.39-03-promotion-evaluation.md)
 - [`P5.39-03a-ground-truth-acquisition.md`](P5.39-03a-ground-truth-acquisition.md) — independent classifications frozen; Promotion remains FAIL
+- [`P5.39-03b-promotion-reevaluation.md`](P5.39-03b-promotion-reevaluation.md) — frozen policy re-evaluated; whole-file Family B interaction blocks Promotion
 
 Do not place private MIDI, audio, paths, raw notes, fingerprints, or private
 transcriptions in tracked reports.
