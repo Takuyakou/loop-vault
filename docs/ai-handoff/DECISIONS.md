@@ -138,3 +138,14 @@ code/tests; `PROPOSED` items are direction only.
 - Evidence: `src/domain/sourceBassline/types.ts`, `src/domain/sourceBassline/snapshot.ts`.
 - Consequences: It is a bass-specific contract, not a general polyphonic Source Truth container.
 - Do not: extend source bassline to all polyphonic voices without a separate decision.
+
+## ADR-010 — P5.40 failed Shadow safety and old Core freeze
+
+- ID: ADR-010
+- Title: Do not promote P5.40 Shadow correction; freeze normal old-Core expansion
+- Status: CONFIRMED (P5.40 Closeout)
+- Decision: `phase4-v1` remains the active production Core and is retained for regression/rollback. P5.40 Family C/safe-activation Shadow correction is not promoted. Normal advanced-analyzer feature expansion on the old Core stops; critical bugfixes alone remain permitted. Analyzer Core v2 is a separate architecture direction, not an implementation started by P5.40.
+- Reason: Local generation and top ranking succeeded, but activation scope and temporal arbitration failed whole-file safety. The current ranking / Family B / smoothing coupling did not yield a safe generalization.
+- Evidence: `docs/phase5.40/reports/P5.40-closeout.md` and the frozen P5.40-02c safety report; production default in `src/domain/midi/analysis.ts`.
+- Consequences: Preserve the independent source-first reviews, anonymous safety corpus, Shadow diagnostics, and deterministic/source-fidelity harness for a future Core v2 acceptance corpus; keep private artifacts Git ignored.
+- Do not: treat a local ranking PASS as Promotion; retune P5.40, stack another advanced-analysis patch on the old Core, remove the old Core before replacement, or claim Core v2 exists.

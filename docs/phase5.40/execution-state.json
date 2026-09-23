@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "phaseId": "5.40",
-  "status": "in-progress",
+  "status": "completed",
   "activeStage": null,
   "completedStages": ["P5.40-00", "P5.40-01", "P5.40-02"],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "77e0458a6893057b7ca6da125ad7875fd01e4605",
-  "lastVerifiedCommit": "e40e2b0915a3aa2ad8fb42a94815ed72da726dcf",
+  "lastVerifiedCommit": "0a536dbcdbc371e05cd506f14cfe5e154c95a082",
   "currentBranch": "feat/p540-local-harmonic-identity-ranking",
   "requiredGates": {
     "P5.40-00": [
@@ -139,6 +139,6 @@
     "stage02c-privacy-and-production-diff-checked": "pass",
     "stage02c-fail-verdict-and-stop-recorded": "pass"
   },
-  "nextAction": "STOP. The numeric-only completedStages schema cannot encode 02a/02b/02c suffixes; their reports and gate results are authoritative. Stage02c Shadow safety FAIL: activation scope and temporal arbitration remain unsafe. P5.40 is a Closeout candidate; no Stage03, retune, or production change.",
+  "nextAction": "STOP. P5.40 CLOSED with final Shadow Safety FAIL; production Promotion not authorized. The numeric-only completedStages schema cannot encode 02a/02b/02c suffixes; their reports and gate results remain authoritative. Old Core normal feature expansion frozen; separate Core v2 architecture redesign only after new authorization.",
   "updatedAt": "2026-09-24"
 }

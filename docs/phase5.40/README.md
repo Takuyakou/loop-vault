@@ -4,12 +4,12 @@
 
 ## Status
 
-- **Status:** Stage02c safe activation safety FAIL; P5.40 Closeout candidate
+- **Status:** CLOSED; final Shadow Safety FAIL; production Promotion not authorized
 - **Active stage:** none
 - **Completed stages:** P5.40-00, P5.40-01, P5.40-02, P5.40-02a, P5.40-02b, P5.40-02c
 - **Base:** P5.39 failed-promotion Closeout at `77e0458a6893057b7ca6da125ad7875fd01e4605`
 - **Current branch:** `feat/p540-local-harmonic-identity-ranking`
-- **Stop boundary:** Stage02c Shadow safety FAIL; do not retune, begin Stage03, or modify production
+- **Stop boundary:** Closeout complete; do not retune, begin Stage03, or modify production
 
 ## Required Reading Order
 
@@ -24,6 +24,8 @@
 The user-supplied package is preserved byte-for-byte under `package/`; its
 checksum manifest is retained. Git and the current source/tests outrank stale
 package assumptions.
+
+Final decision and Core v2 handoff: [`P5.40-closeout.md`](reports/P5.40-closeout.md).
 
 ## Stages
 
@@ -73,15 +75,17 @@ end-to-end. No post-result retune was made.
 
 ### P5.40-03 — Promotion evaluation
 
-Not authorized in this task.
+Not started; P5.40 is closed without Promotion evaluation.
 
 ### P5.40-04 — Production integration
 
-Not authorized in this task; would require Promotion PASS and separate approval.
+Not started; P5.40 is closed without production integration.
 
 ## Goal
 
-Diagnose why the rejected local identity wins after an otherwise necessary
-temporal partition, without changing the frozen P5.39 Shadow policy or
-production. Independent local-state truth must precede any private-score
-comparison.
+The local candidate-generation/ranking diagnosis and bounded Shadow correction
+are complete. Whole-file safety failed: activation scope and temporal
+arbitration remain unresolved. The existing production Core is retained, with
+normal feature expansion frozen and critical bugfixes only. A separate
+Analyzer Core v2 architecture redesign is the next direction, not work in
+P5.40.

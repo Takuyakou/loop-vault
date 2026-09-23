@@ -8,8 +8,8 @@ This is a short navigation summary. Read ARCHITECTURE-MAP / DECISIONS / KNOWN-FA
 
 ## Last verified against
 
-- commit: 400f2ef58211cd995bfd0b41685abc944cafdcc6
-- date: 2026-09-23
+- commit: 0a536dbcdbc371e05cd506f14cfe5e154c95a082
+- date: 2026-09-24
 
 Freshness note: the verified commit is the code/docs state this handoff was
 checked against. It is expected to be behind HEAD after later handoff-only
@@ -93,10 +93,16 @@ reviewed divergences block Promotion. See the
 [`anonymous Stage02b report`](../phase5.40/reports/P5.40-02b-final-shadow-safety.md).
 No production Family C integration or Stage03 is authorized.
 
-The separately authorized Stage02c safe-activation attempt also ended
-`SHADOW SAFETY = FAIL`: local candidate ranking succeeded, but activation
-scope and temporal arbitration still failed whole-file safety. See the
-[`anonymous Stage02c report`](../phase5.40/reports/P5.40-02c-safe-activation-safety.md).
+P5.40 is **CLOSED** with final `SHADOW SAFETY = FAIL` and **no production
+Promotion**. The final Stage02c safe-activation attempt generated and
+top-ranked both independently established local identities, but activation
+scope and temporal arbitration failed whole-file safety. The existing
+`phase4-v1` production Core remains active and available for regression and
+rollback; normal advanced-analyzer feature expansion on it is frozen, with
+critical bugfixes only. The next analyzer direction is a separately authorized
+**Analyzer Core v2 architecture redesign**, not another P5.40 patch; Core v2
+implementation has not started. See the
+[`P5.40 Closeout`](../phase5.40/reports/P5.40-closeout.md).
 
 The architectural ordering is:
 
@@ -111,8 +117,9 @@ source MIDI / meter
 
 `PresentationGroup` is a variable-duration harmonic presentation span; it is
 neither a source bar nor a rewritten meter bar. Do not claim every MIDI-import
-issue is solved: Families A and B are fixed, while Family C is unpromoted and
-its remaining local identity/ranking blocker is open.
+issue is solved: Families A and B are fixed, while Family C remains unpromoted.
+Local representability/ranking research succeeded, but safe activation and
+temporal arbitration in the current pipeline did not converge.
 
 ## Confirmed building blocks
 

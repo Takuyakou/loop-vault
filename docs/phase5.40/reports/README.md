@@ -3,7 +3,7 @@
 # P5.40 Reports
 
 Stage reports contain only anonymous, privacy-safe evidence. P5.40-00 through
-P5.40-02c are closed; Stage03 is not authorized. Do not track
+P5.40-02c and the phase Closeout are closed; Stage03 was not started. Do not track
 source packets, MIDI, private candidate transcriptions, personal paths, or
 exact private positions.
 
@@ -14,3 +14,4 @@ exact private positions.
 - [P5.40-02a independent source-first review receipt](P5.40-02a-source-review-receipt.md)
 - [P5.40-02b final Shadow safety (FAIL)](P5.40-02b-final-shadow-safety.md)
 - [P5.40-02c safe activation safety (FAIL)](P5.40-02c-safe-activation-safety.md)
+- [P5.40 final Closeout (CLOSED; Shadow Safety FAIL)](P5.40-closeout.md)

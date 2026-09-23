@@ -4,8 +4,9 @@
 
 ## Goal
 
-P5.40-00 through the separately authorized P5.40-02c are complete. Stage02c
-was a final safe-activation Shadow gate and ended `SHADOW SAFETY = FAIL`.
+P5.40 is CLOSED. P5.40-00 through the separately authorized P5.40-02c are
+complete. Stage02c was a final safe-activation Shadow gate and ended
+`SHADOW SAFETY = FAIL`.
 The new anonymous region's source-first human classification was frozen
 before candidate-origin unsealing; the private whole-file evaluation remains
 Git ignored. Stop before Stage03 and production.
@@ -34,8 +35,9 @@ P5.39 final FAIL is immutable historical evidence.
 ## Stages
 
 P5.40-00, P5.40-01, P5.40-02, P5.40-02a, P5.40-02b and P5.40-02c are closed.
-No stage is active; P5.40 is a Closeout candidate.
-Stage03 and Stage04 remain unauthorized proposals.
+No stage is active; P5.40 is closed. Stage03 and Stage04 were not started.
+The final decision and old-Core freeze/Core v2 handoff are in
+[`P5.40-closeout.md`](reports/P5.40-closeout.md).
 
 ## Definition of Done
 
