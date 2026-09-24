@@ -1,0 +1,6 @@
+{"group":"synthetic","arm":"Copy-Oracle","events":22,"exact":22,"truePositive":83,"predicted":83,"gold":83,"boundaryHits":9,"boundaries":9,"goldBoundaries":9}
+{"group":"synthetic","arm":"Copy-Simple","events":22,"exact":20,"truePositive":83,"predicted":86,"gold":83,"boundaryHits":7,"boundaries":39,"goldBoundaries":9}
+{"group":"synthetic","arm":"Copy-ProductBoundary","events":22,"exact":13,"truePositive":83,"predicted":98,"gold":83,"boundaryHits":5,"boundaries":8,"goldBoundaries":9}
+{"group":"harmony-dev","arm":"Copy-Oracle","events":160,"exact":160,"truePositive":752,"predicted":752,"gold":752,"boundaryHits":140,"boundaries":140,"goldBoundaries":140}
+{"group":"harmony-dev","arm":"Copy-Simple","events":160,"exact":0,"truePositive":355,"predicted":355,"gold":752,"boundaryHits":140,"boundaries":620,"goldBoundaries":140}
+{"group":"harmony-dev","arm":"Copy-ProductBoundary","events":160,"exact":0,"truePositive":355,"predicted":386,"gold":752,"boundaryHits":140,"boundaries":300,"goldBoundaries":140}

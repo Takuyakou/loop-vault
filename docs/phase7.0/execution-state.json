@@ -65,6 +65,15 @@
       "stage05-phase-docs-valid",
       "stage05-production-diff-zero",
       "stage05-privacy-and-diff-clean"
+    ],
+    "P7.0-06": [
+      "corpus-splits-frozen",
+      "new-sealed-synthetic-holdout",
+      "three-copy-baselines-frozen",
+      "stage06-script-typecheck-and-lint",
+      "stage06-phase-docs-valid",
+      "stage06-production-diff-zero",
+      "stage06-privacy-and-diff-clean"
     ]
   },
   "gateResults": {
@@ -106,6 +115,6 @@
     "stage05-production-diff-zero": "pass",
     "stage05-privacy-and-diff-clean": "pass"
   },
-  "nextAction": "P7.0-06: freeze dev, validation, regression, sealed synthetic holdout, and copy baselines.",
+  "nextAction": "P7.0-06: verify sealed holdout and frozen copy controls; then compare candidate representations.",
   "updatedAt": "2026-09-24"
 }
