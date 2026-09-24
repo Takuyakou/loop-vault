@@ -6,7 +6,7 @@ Status: COMPLETE. Base: `de298b9283cf9f279d17df1d8c87b9061780e420` on local `mas
 
 - P8.1 source-first playback and P8.2 meter-neutral Voicing Loop are present in the base merge. The Product analyzer remains `phase4-v1`; P8.4 is not promoted. Vault remains fileVersion 2.
 - The attached three-page PDF was read. Page 3, **C — タイムライン統合案 v3**, is the structural reference. Its local render is ignored under `.local-evaluation/voicing-loop-v2/reference/` and must never be tracked.
-- Primary acceptance viewport: 1440 × 900. The top toolbar, large Current/smaller Next/one-row Then Next, timeline, 88-key keyboard, and one-row transport must fit without page scrolling. Amber left hand, cyan right hand, and dark density are protected.
+- Visual contract clarification: 1440 × 900 was a mock reference viewport, not a minimum or required product resolution. Preserve the page-3 hierarchy and approximate area ratios, readable Current/Next/Then Next, timeline, 88-key keyboard, and one-line transport. Avoid unnecessary vertical scrolling without clipping or shrinking essential regions. The final responsive audit selects 1600 × 900 as its primary comparison viewport. Amber left hand, cyan right hand, and dark density are protected.
 
 ## Transport audit and decision
 

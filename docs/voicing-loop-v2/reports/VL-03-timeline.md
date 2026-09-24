@@ -10,4 +10,4 @@ Space toggles Start/Pause/Resume, arrows move by chord, Home/End seek the first/
 
 ## Visual and gate
 
-A local-only 1440×900 screenshot was checked against page 3 of the supplied PDF: the C v3 vertical order remains toolbar → Current/Next/Then Next → timeline → 88-key keyboard → one-line transport. The workspace has `scrollHeight = clientHeight = 816px` and no horizontal overflow at this size. Focused timeline, transport, and view tests 79/79 and app TypeScript PASS. The PDF and screenshot remain local-only.
+A local-only 1440×900 sample screenshot was checked against page 3 of the supplied PDF; this size is not a product requirement: the C v3 vertical order remains toolbar → Current/Next/Then Next → timeline → 88-key keyboard → one-line transport. The workspace has `scrollHeight = clientHeight = 816px` and no horizontal overflow at this size. Focused timeline, transport, and view tests 79/79 and app TypeScript PASS. The PDF and screenshot remain local-only.

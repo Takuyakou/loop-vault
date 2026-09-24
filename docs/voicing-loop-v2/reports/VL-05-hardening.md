@@ -31,7 +31,17 @@ The standard 5-second Vitest timeout was too short for unrelated public syntheti
 - Epoch invalidation, WebAudio ledger cleanup, stopped/running/paused/count-in seek, loop count preservation, restart, 128-event/128-group scheduler bound: PASS in instrumented tests.
 - SOURCE/GENERATED/CUSTOM, bulk SOURCE confirmation and CUSTOM skip, source meter 1/4–12/4, absolute timing, Vault compatibility: PASS in focused/full regression.
 - Card/ruler/overview seek, separate preview, shortcuts, scale 8/12/16, manual follow and F resume, 128-event timeline, rollback OFF: PASS in browser tests.
-- 1440×900 visual comparison with the provided PDF page 3: structure matches; workspace measured 816px scrollHeight and clientHeight with no horizontal overflow. 1920×1080, 1280×720, 320px, 200% effective scale, reduced motion, and axe severe/critical violations: PASS.
+- The earlier 1440×900 PDF comparison was a sample viewport; it measured 816px scrollHeight and clientHeight before the responsive clarification. 1600×900 is the primary visual comparison size for the current desktop shell. 1280×720, 1920×1080, 320px, effective 200% scale, reduced motion, and axe severe/critical violations are secondary checks. The responsive hierarchy test covers 1280×720, 1600×900, and 1920×1080. At each size Current remains larger than Next, Then Next is present, the region order matches PDF page 3, the Current title is at least 48px, and the 88-key graphic is at least 144px high.
+
+## Fixed-viewport dependency audit
+
+The product shell reserves 212px for an expanded sidebar, 68px when collapsed, and 68px for the top bar; it initially collapses the sidebar at widths of 1100px or less. The app uses the existing `lg` layout breakpoint, and the content has a 1680px maximum width. A 1600×900 visual baseline gives the practice view useful width with the regular sidebar; 1280×720 checks a compact desktop, and 1920×1080 checks a larger display. The 1440×900 mock remains only an optional sample. Windows scaling is covered by the effective 200% browser check.
+
+**1440×900 fixed dependency: none remains in the Voicing Loop product path.** The 900px-height overflow cutoff was removed from both the app main region and the Voicing Loop workspace. The 88-key display now uses a bounded responsive height (`clamp(144px, 17vh, 188px)`) so it can grow on larger screens without being forced into a reference height. Shorter screens can scroll to the transport rather than clipping Current, timeline, keyboard, or text. The unrelated Bass Practice height rule was left untouched. No CSS/layout condition uses 1440px as a Voicing Loop breakpoint.
+
+## Responsive clarification on code commit `6d1db55`
+
+The follow-up removes the fixed 900px overflow cutoff, enlarges the 88-key display within a bounded viewport-relative range, and verifies the page-3 hierarchy across desktop widths. The old P5.27 browser test selectors were aligned with the current sidebar and header. The full Vitest suite passed 3451/3451 in 428 files; app TypeScript and the production build passed; E2E TypeScript, repository lint, phase docs, AI handoff, `git diff --check`, and a changed-path privacy/media scan passed with zero issues. The fixture-backed related Playwright suite passed 20/20. The primary responsive regression viewport is 1600×900, with 1280×720 and 1920×1080 also checked. 1440×900 remains a sample only.
 
 ## Remaining gate
 
