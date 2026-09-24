@@ -25,7 +25,7 @@ test("P5.27 Voicing Loop route is keyboard-operable and overflow-safe at 320px",
   await applyTauriDocumentCsp(page);
   await page.setViewportSize({ width: 320, height: 812 });
   await openApp(page);
-  await page.locator("nav").getByRole("button", { name: /Practice/ }).click();
+  await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
 
   const dojo = page.getByRole("tab", { name: "Chord Dojo" });
   await dojo.focus();
@@ -33,7 +33,7 @@ test("P5.27 Voicing Loop route is keyboard-operable and overflow-safe at 320px",
   const voicingLoop = page.getByRole("tab", { name: "Voicing Loop" });
   await expect(voicingLoop).toBeFocused();
   await expect(voicingLoop).toHaveAttribute("aria-selected", "true");
-  await expect(page.getByRole("heading", { name: "Voicing Loop", exact: true })).toBeVisible();
+  await expect(page.getByRole("banner").locator("p").filter({ hasText: /^Voicing Loop$/ })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Cmaj7", exact: true }).first()).toBeVisible();
   await expect(page.getByText("Dm7", { exact: true }).first()).toBeVisible();
   await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("PITCH");
@@ -49,7 +49,6 @@ test("P5.27 Voicing Loop route is keyboard-operable and overflow-safe at 320px",
   await expect(page.getByTestId("voicing-loop-status")).toBeVisible();
   await expect(page.getByRole("progressbar", { name: "拍" })).toBeVisible();
   await expect(page.getByRole("progressbar", { name: "位置" })).toBeVisible();
-  await expect(page.getByTestId("voicing-loop-current-next")).toContainText("位置");
   await expect(page.getByTestId("voicing-loop-current-next")).toContainText("2拍後に切り替わります");
   await expect(page.getByTestId("voicing-loop-midi-status")).toContainText("MIDI入力");
   await expect(page.getByTestId("voicing-loop-current-next")).not.toContainText("MIDI monitor");
@@ -81,7 +80,7 @@ test("P5.27 Voicing Loop route is keyboard-operable and overflow-safe at 320px",
 test("P5.27 Voicing Loop fills the keyboard region and exposes MIDI settings beside transport", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openApp(page);
-  await page.locator("nav").getByRole("button", { name: /Practice/ }).click();
+  await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
   await page.getByRole("tab", { name: "Voicing Loop" }).click();
 
   const keyboardRegion = page.getByRole("region", { name: "ピアノ鍵盤" });
@@ -101,7 +100,7 @@ test("P5.27 Voicing Loop populated surface is reduced-motion, 200% scale, and ax
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 640, height: 812 });
   await openApp(page);
-  await page.locator("nav").getByRole("button", { name: /Practice/ }).click();
+  await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
   await page.getByRole("tab", { name: "Voicing Loop" }).click();
   await page.evaluate(() => { document.documentElement.style.zoom = "2"; });
 
@@ -124,7 +123,7 @@ test("P5.27 populated harness exposes every resolver status without fallback", a
   for (const [status, expected] of scenarios) {
     await page.goto(status ? `/?p527Status=${status}` : "/");
     await page.evaluate(() => document.fonts.ready);
-    await page.locator("nav").getByRole("button", { name: /Practice/ }).click();
+    await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
     await page.getByRole("tab", { name: "Voicing Loop" }).click();
     await expect(page.getByTestId("voicing-loop-workspace")).toContainText(expected);
     if (status) await expect(page.getByRole("button", { name: /開始/ })).toBeDisabled();

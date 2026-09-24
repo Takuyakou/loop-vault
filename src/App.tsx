@@ -824,7 +824,7 @@ async function analyzeMidiPath(path: string) {
           aria-label={viewLabel(view, copy)}
           className={`min-h-0 min-w-0 flex-1 px-4 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--lv-accent)] lg:px-6 ${
             view === "practice" && practiceMode === "voicing-loop"
-              ? "overflow-x-hidden overflow-y-auto py-2 [@media(min-height:900px)]:overflow-y-hidden"
+              ? "overflow-x-hidden overflow-y-auto py-2"
               : "overflow-y-auto py-5"
           }`}
         >

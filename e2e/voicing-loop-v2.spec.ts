@@ -65,3 +65,44 @@ test("VL-05 keeps the transport reachable at 1280x720 and effective 200%", async
   await assertNoHorizontalOverflow(page);
   await expect(workspace.getByTestId("voicing-loop-timeline")).toBeVisible();
 });
+
+
+test("VL-05 preserves the C v3 hierarchy across desktop sizes without a height cutoff", async ({ page }) => {
+  for (const viewport of [
+    { width: 1280, height: 720 },
+    { width: 1600, height: 900 },
+    { width: 1920, height: 1080 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const workspace = await openLoop(page);
+    const currentNext = workspace.getByTestId("voicing-loop-current-next");
+    const current = currentNext.locator("section").first();
+    const next = currentNext.locator("section").nth(1);
+    const timeline = workspace.getByTestId("voicing-loop-timeline");
+    const keyboard = workspace.getByTestId("voicing-loop-detail");
+    const transport = workspace.getByTestId("voicing-loop-transport");
+    const [currentBox, nextBox, thenBox, timelineBox, keyboardBox, transportBox] = await Promise.all([
+      current.boundingBox(), next.boundingBox(),
+      workspace.getByTestId("voicing-loop-then-next").boundingBox(),
+      timeline.boundingBox(), keyboard.boundingBox(), transport.boundingBox(),
+    ]);
+    expect(currentBox && nextBox && thenBox && timelineBox && keyboardBox && transportBox).toBeTruthy();
+    expect(currentBox!.width * currentBox!.height).toBeGreaterThan(nextBox!.width * nextBox!.height);
+    expect(currentBox!.y).toBeLessThan(timelineBox!.y);
+    expect(nextBox!.y).toBeLessThan(timelineBox!.y);
+    expect(thenBox!.y).toBeLessThan(timelineBox!.y);
+    expect(timelineBox!.y).toBeLessThan(keyboardBox!.y);
+    expect(keyboardBox!.y).toBeLessThan(transportBox!.y);
+    const metrics = await workspace.evaluate((element) => ({
+      overflowY: getComputedStyle(element).overflowY,
+      currentFontSize: parseFloat(getComputedStyle(element.querySelector("h2")!).fontSize),
+      keyboardHeight: element.querySelector("[data-keyboard-layout='wide-88'] svg")!.getBoundingClientRect().height,
+    }));
+    expect(metrics.overflowY).toBe("auto");
+    expect(metrics.currentFontSize).toBeGreaterThanOrEqual(48);
+    expect(metrics.keyboardHeight).toBeGreaterThanOrEqual(144);
+    await transport.scrollIntoViewIfNeeded();
+    await expect(transport).toBeVisible();
+    await assertNoHorizontalOverflow(page);
+  }
+});

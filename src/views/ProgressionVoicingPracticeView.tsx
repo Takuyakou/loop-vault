@@ -1136,7 +1136,7 @@ export function ProgressionVoicingPracticeView({
   }
 
   return (
-    <div className="flex h-full min-h-0 min-w-0 flex-col gap-[7px] overflow-x-hidden overflow-y-auto [@media(min-height:900px)]:overflow-y-hidden" data-testid="voicing-loop-workspace">
+    <div className="flex h-full min-h-0 min-w-0 flex-col gap-[7px] overflow-x-hidden overflow-y-auto" data-testid="voicing-loop-workspace">
       <Surface className="shrink-0 px-3 py-1" data-testid="voicing-loop-controls">
         <div className="flex min-w-0 items-center gap-x-4 gap-y-2 overflow-x-auto whitespace-nowrap">
           <fieldset className="flex shrink-0 items-center gap-2" aria-describedby="voicing-loop-source-help">
