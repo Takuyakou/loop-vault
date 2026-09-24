@@ -112,7 +112,7 @@ interface PracticeVoicingGuide {
   midiNotes: number[];
   leftHandNotes: number[];
   rightHandNotes: number[];
-  origin?: "practice-override" | "source-verified" | "source-auto" | "generated";
+  origin?: "practice-override" | "source-verified" | "source-auto" | "source-explicit" | "generated";
   styleId?: GeneratedStyleVoicing["styleId"];
   variant?: string;
   addedColorIntervals: string[];

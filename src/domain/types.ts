@@ -79,6 +79,8 @@ export interface VoicingSnapshot {
 export interface ChordVoicingMemory {
   sourceVoicing?: VoicingSnapshot;
   practiceVoicingOverride?: VoicingSnapshot;
+  /** Explicit playback intent. Missing means the legacy policy. */
+  playbackChoice?: "SOURCE" | "GENERATED" | "CUSTOM";
 }
 
 export interface SuppressedAutoTag {

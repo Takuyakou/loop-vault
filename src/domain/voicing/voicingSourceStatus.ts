@@ -39,7 +39,8 @@ export function voicingSourceStatus(
     return { status: "review", reason: "source-aggregated" };
   }
   if (
-    !source.userVerified
+    memory?.playbackChoice !== "SOURCE"
+    && !source.userVerified
     && (source.confidence ?? 0) < VOICING_AUTO_USE_CONFIDENCE
   ) {
     return { status: "review", reason: "source-low-confidence" };

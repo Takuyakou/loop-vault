@@ -2,6 +2,7 @@ import type { ChordTimelineItem, MidiProgressionAnalysis } from "../types";
 import type { MidiSongData, Voice } from "../midi/types";
 import { beatsPerBar } from "../midi/timing";
 import { extractVoicing } from "./extractVoicing";
+import { voicingCompatibility } from "./compatibility";
 import { filterRelativeSupportMelodyContamination } from "./relativeSupportMelodyFilter";
 
 export const phase5MelodyFilterOptions = {
@@ -89,7 +90,14 @@ export function attachSourceVoicing<T extends ChordTimelineItem>(
     return item;
   }
 
-  const voicingMemory = { ...item.voicingMemory, sourceVoicing: result.snapshot };
+  const voicingMemory = {
+    ...item.voicingMemory,
+    sourceVoicing: result.snapshot,
+    ...(item.voicingMemory?.playbackChoice === undefined
+      && voicingCompatibility(result.snapshot, item.chord) === "compatible"
+      ? { playbackChoice: "SOURCE" as const }
+      : {}),
+  };
   if (key) cache?.set(key, voicingMemory);
   return { ...item, voicingMemory };
 }

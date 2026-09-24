@@ -12,6 +12,20 @@ export function resolveVoicingForUse(
   options: VoicingResolveOptions = {},
 ): ResolvedVoicing {
   const practice = memory?.practiceVoicingOverride;
+  const source = memory?.sourceVoicing;
+  if (memory?.playbackChoice === "GENERATED") {
+    return { midiNotes: [...generatedFallback], origin: "generated" };
+  }
+  if (memory?.playbackChoice === "CUSTOM") {
+    return practice && voicingCompatibility(practice, chord) === "compatible"
+      ? { midiNotes: [...practice.midiNotes], origin: "practice-override", representation: practice.representation }
+      : { midiNotes: [...generatedFallback], origin: "generated" };
+  }
+  if (memory?.playbackChoice === "SOURCE") {
+    return source && voicingCompatibility(source, chord) === "compatible"
+      ? { midiNotes: [...source.midiNotes], origin: "source-explicit", representation: source.representation }
+      : { midiNotes: [...generatedFallback], origin: "generated" };
+  }
   if (practice && voicingCompatibility(practice, chord) === "compatible") {
     return {
       midiNotes: [...practice.midiNotes],
@@ -20,7 +34,6 @@ export function resolveVoicingForUse(
     };
   }
 
-  const source = memory?.sourceVoicing;
   if (source && voicingCompatibility(source, chord) === "compatible") {
     if (source.userVerified) {
       return {

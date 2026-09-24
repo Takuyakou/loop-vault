@@ -42,6 +42,11 @@ interface VoicingPanelProps {
 const copy = {
   ja: {
     title: "ボイシング",
+    playbackChoice: "再生に使う音",
+    choiceLegacy: "従来の自動選択",
+    choiceSource: "元MIDI",
+    choiceGenerated: "自動生成",
+    choiceCustom: "鍵盤で記録した音",
     used: "使用中",
     practice: "鍵盤で記録",
     selectedStyle: "選択スタイル",
@@ -71,6 +76,11 @@ const copy = {
   },
   en: {
     title: "Voicing",
+    playbackChoice: "Playback notes",
+    choiceLegacy: "Legacy automatic",
+    choiceSource: "Source MIDI",
+    choiceGenerated: "Generated",
+    choiceCustom: "Keyboard capture",
     used: "In use",
     practice: "Keyboard capture",
     selectedStyle: "Selected style",
@@ -310,6 +320,24 @@ export function VoicingPanel({
           </span>
         </div>
       </div>
+      <label className="mt-3 block text-sm">
+        {text.playbackChoice}
+        <select
+          className="mt-1 block w-full border border-[var(--lv-border)] bg-[var(--lv-bg)] p-2"
+          value={memory?.playbackChoice ?? "LEGACY"}
+          onChange={(event) => onMemoryChange({
+            ...memory,
+            playbackChoice: event.target.value === "LEGACY"
+              ? undefined
+              : event.target.value as NonNullable<ChordVoicingMemory["playbackChoice"]>,
+          })}
+        >
+          <option value="LEGACY">{text.choiceLegacy}</option>
+          <option value="SOURCE" disabled={sourceCompatibility !== "compatible"}>{text.choiceSource}</option>
+          <option value="GENERATED">{text.choiceGenerated}</option>
+          <option value="CUSTOM" disabled={!memory?.practiceVoicingOverride}>{text.choiceCustom}</option>
+        </select>
+      </label>
       <div className="mt-3 border border-[var(--lv-border)] bg-[var(--lv-bg)]/60 p-3" data-testid="voicing-saved-notes">
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--lv-accent)]">{text.savedNotes}</p>
         <p className="mt-2 text-sm font-semibold text-[var(--lv-text)]">
