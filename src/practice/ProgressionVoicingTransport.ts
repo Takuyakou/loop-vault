@@ -43,6 +43,7 @@ export interface ProgressionVoicingTransportPort {
   setMetronomeEnabled(enabled: boolean): void;
   setReferenceSoundEnabled(enabled: boolean): void;
   audition(midiNotes: readonly number[], sound?: PreviewSound): Promise<void>;
+  readonly supportsSeek?: boolean;
   seek?(eventIndex: number): { readonly status: "running" | "paused" | "count-in"; readonly absoluteBeat: number } | undefined;
 }
 
@@ -92,6 +93,8 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
   constructor(v2 = false) {
     this.v2 = v2;
   }
+
+  get supportsSeek(): boolean { return this.v2; }
 
   async start(options: ProgressionVoicingTransportStartOptions): Promise<void> {
     const generation = this.invalidateAndClear();

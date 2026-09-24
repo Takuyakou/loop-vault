@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight, GripVertical, Minus, Pause, Play, Plus, RefreshCw, Search, Settings, Square, Volume2 } from "lucide-react";
 import { useStore } from "zustand";
 import {
@@ -31,6 +31,7 @@ import {
   type ProgressionPracticeSourceReference,
   type VoicingLoopVaultCandidate,
 } from "../domain/progressionVoicingPractice";
+import { chordIndexAtTimelineBeat } from "../domain/progressionVoicingPractice/timelineNavigation";
 import type { AppLanguage } from "../domain/types";
 import type {
   VoicingCoverage,
@@ -484,6 +485,7 @@ export function ProgressionVoicingPracticeView({
   );
   const [displayMode, setDisplayMode] = useState<"learn" | "recall">("learn");
   const [timelineScale, setTimelineScale] = useState<8 | 12 | 16>(8);
+  const [followEnabled, setFollowEnabled] = useState(true);
   const [showFingering, setShowFingering] = useState(true);
   const [fingeringPreferences, setFingeringPreferences] = useState(loadFingeringPreferences);
   const [draftFingers, setDraftFingers] = useState<Readonly<Record<FingeringHand, readonly FingerNumber[]>>>({
@@ -506,6 +508,7 @@ export function ProgressionVoicingPracticeView({
   const midiLeaseRef = useRef<LiveMidiActivationLease>();
   const timelineViewportRef = useRef<HTMLDivElement | null>(null);
   const timelineEventRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const programmaticScrollRef = useRef(false);
   if (!transportRef.current) transportRef.current = transportFactory();
   const midiStatus = useStore(defaultLiveMidiStore, (state) => state.status);
   const selectedMidiDevice = useStore(defaultLiveMidiStore, (state) => state.selected);
@@ -682,14 +685,14 @@ export function ProgressionVoicingPracticeView({
   useEffect(() => {
     const viewport = timelineViewportRef.current;
     const eventElement = timelineEventRefs.current[transportCurrentSpanIndex];
-    if (!viewport || !eventElement || viewport.clientWidth <= 0) return;
-    const eventLeft = eventElement.offsetLeft;
-    const eventRight = eventLeft + eventElement.offsetWidth;
-    if (eventLeft < viewport.scrollLeft) viewport.scrollLeft = eventLeft;
-    else if (eventRight > viewport.scrollLeft + viewport.clientWidth) {
-      viewport.scrollLeft = eventRight - viewport.clientWidth;
+    if (!followEnabled || !viewport || !eventElement || viewport.clientWidth <= 0) return;
+    const target = Math.max(0, eventElement.offsetLeft - viewport.clientWidth * 0.25);
+    if (Math.abs(viewport.scrollLeft - target) > 2) {
+      programmaticScrollRef.current = true;
+      viewport.scrollLeft = target;
+      window.requestAnimationFrame(() => { programmaticScrollRef.current = false; });
     }
-  }, [snapshot, transportCurrentSpanIndex]);
+  }, [followEnabled, snapshot, transportCurrentSpanIndex]);
   function changeSelection(next: ProgressionVoicingSelection) {
     runtimeRequestRef.current += 1;
     auditionRequestRef.current += 1;
@@ -825,6 +828,25 @@ export function ProgressionVoicingPracticeView({
     }) : state);
   }
 
+  function seekToBeat(beat: number) {
+    if (!snapshot) return;
+    const eventIndex = chordIndexAtTimelineBeat(snapshot, beat);
+    if (eventIndex !== undefined) seekToEvent(eventIndex);
+  }
+
+  function seekFromTimelineClick(event: MouseEvent<HTMLElement>) {
+    if (!snapshot || !timelineViewportRef.current) return;
+    const viewport = timelineViewportRef.current;
+    const beat = (event.clientX - viewport.getBoundingClientRect().left + viewport.scrollLeft) / timelinePixelsPerBeat;
+    seekToBeat(beat);
+  }
+
+  function seekFromOverviewClick(event: MouseEvent<HTMLElement>) {
+    if (!snapshot) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    seekToBeat(((event.clientX - rect.left) / Math.max(1, rect.width)) * snapshot.lengthBeats);
+  }
+
   function pause() {
     if (!snapshot) return;
     const pausedRuntime = transportRef.current?.pause() ?? false;
@@ -880,7 +902,7 @@ export function ProgressionVoicingPracticeView({
   }
 
   async function reconnectMidi() {
-    if (transportRef.current?.seek && snapshot) {
+    if (transportRef.current?.supportsSeek && snapshot) {
       runtimeRequestRef.current += 1;
       transportRef.current.stop();
       setSeekAnchorIndex(0);
@@ -907,7 +929,7 @@ export function ProgressionVoicingPracticeView({
 
   function stop() {
     if (!snapshot) return;
-    const v2 = Boolean(transportRef.current?.seek);
+    const v2 = Boolean(transportRef.current?.supportsSeek);
     if (v2) setSeekAnchorIndex(0);
     runtimeRequestRef.current += 1;
     auditionRequestRef.current += 1;
@@ -1009,6 +1031,33 @@ export function ProgressionVoicingPracticeView({
       right: currentRightSuggested?.status === "supported" ? currentRightSuggested.fingers : [],
     });
   }
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.defaultPrevented || event.isComposing || !progressionLoaded || !snapshot || bulkSourceOpen || fingeringEditorOpen) return;
+      const target = event.target;
+      if (target instanceof Element && target.closest("input, select, textarea, [contenteditable='true'], [role='dialog']")) return;
+      const key = event.key.toLowerCase();
+      if (![" ", "arrowleft", "arrowright", "home", "end", "f", "m", "r", "escape"].includes(key)) return;
+      event.preventDefault();
+      if (key === " ") {
+        if (active) pause();
+        else if (paused) void resume();
+        else void start();
+      } else if (key === "escape") stop();
+      else if (key === "f") setFollowEnabled(true);
+      else if (key === "m") toggleMetronome();
+      else if (key === "r") changeReferenceSound(!referenceSoundEnabled);
+      else if (snapshot.events.length) {
+        const current = projection?.currentEventIndex ?? seekAnchorIndex;
+        if (key === "home") seekToEvent(0);
+        else if (key === "end") seekToEvent(snapshot.events.length - 1);
+        else seekToEvent(Math.max(0, Math.min(snapshot.events.length - 1, current + (key === "arrowright" ? 1 : -1))));
+      }
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  });
 
   if (!progressionLoaded) {
     return (
@@ -1330,9 +1379,9 @@ export function ProgressionVoicingPracticeView({
                 </Metric>
                 <Metric compact label={text.loop} value={text.loopLabel(projection?.loopCount ?? 0)} />
               </div>
-              <div className="flex items-center gap-2 text-[var(--lv-text-muted)]">
-                <span>{currentGroup} / {totalGroups}</span>
-                <span>{text.loopLabel(projection?.loopCount ?? 0)}</span>
+              <div className="flex items-center gap-1 text-[var(--lv-text-muted)]">
+                <button type="button" className={`rounded px-1.5 py-0.5 ${followEnabled ? "text-[var(--lv-accent)]" : "text-amber-200"}`}
+                  aria-pressed={followEnabled} onClick={() => setFollowEnabled(true)} data-testid="voicing-loop-follow">{followEnabled ? "FOLLOW" : "MANUAL · F"}</button>
                 <span data-testid="voicing-loop-source-meter">{language === "ja" ? "元の拍子" : "Source meter"} {snapshot.meter.numerator}/{snapshot.meter.denominator}</span>
                 <span className="ml-2">{language === "ja" ? "表示" : "View"}</span>
                 {([8, 12, 16] as const).map((scale) => (
@@ -1341,7 +1390,9 @@ export function ProgressionVoicingPracticeView({
                 ))}
               </div>
             </div>
-            <div className="relative mt-1 flex h-3 overflow-hidden rounded bg-[var(--lv-bg)]" data-testid="voicing-loop-overview" aria-label={language === "ja" ? "進行の全体図" : "Progression overview"}>
+            <div className="relative mt-1 flex h-3 cursor-pointer overflow-hidden rounded bg-[var(--lv-bg)]" data-testid="voicing-loop-overview"
+              role="button" tabIndex={0} aria-label={language === "ja" ? "進行の全体図から移動" : "Seek from progression overview"}
+              onClick={seekFromOverviewClick} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); seekToBeat((projection?.progressionBeat ?? 0)); } }}>
               {Array.from({ length: totalGroups }, (_, index) => (
                 <span key={index} className={`h-full flex-1 border-r border-[var(--lv-bg)] ${index < currentGroup - 1 ? "bg-teal-700" : index === currentGroup - 1 ? "bg-[var(--lv-accent)]" : "bg-slate-700"}`} />
               ))}
@@ -1352,9 +1403,12 @@ export function ProgressionVoicingPracticeView({
               data-testid="voicing-loop-timeline-viewport"
               tabIndex={0}
               aria-label={text.timeline}
+              onScroll={() => { if (!programmaticScrollRef.current) setFollowEnabled(false); }}
             >
               <div className="relative" style={{ width: `${snapshot.lengthBeats * timelinePixelsPerBeat}px` }}>
-                <div className="flex h-5 border-b border-[var(--lv-border)] text-[10px] text-[var(--lv-text-muted)]" data-testid="voicing-loop-ruler">
+                <div className="flex h-5 cursor-pointer border-b border-[var(--lv-border)] text-[10px] text-[var(--lv-text-muted)]" data-testid="voicing-loop-ruler"
+                  role="button" tabIndex={0} aria-label={language === "ja" ? "目盛りから移動" : "Seek from ruler"}
+                  onClick={seekFromTimelineClick} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); seekToBeat(projection?.progressionBeat ?? 0); } }}>
                   {Array.from({ length: totalGroups }, (_, index) => (
                     <span key={index} className="shrink-0 border-l border-[var(--lv-border)] pl-1" style={{ width: `${practiceGroupBeats * timelinePixelsPerBeat}px` }}>{index + 1}</span>
                   ))}
@@ -1382,20 +1436,24 @@ export function ProgressionVoicingPracticeView({
                   const auditioned = eventIndex >= 0 && eventIndex === auditionedIndex;
                   const degree = progressionPracticeDegreeLabel(event?.chord, targetKey);
                   return (
+                    <div key={event?.id ?? `rest-${span.startBeat}`} className="relative flex-none" style={{ width: `${span.durationBeats * timelinePixelsPerBeat}px` }}>
                     <button
-                      key={event?.id ?? `rest-${span.startBeat}`}
                       ref={(element) => { timelineEventRefs.current[index] = element; }}
                       type="button"
                       data-testid="voicing-loop-event"
                       data-duration-beats={span.durationBeats}
                       data-span-kind={span.kind}
                       style={{ width: `${span.durationBeats * timelinePixelsPerBeat}px` }}
-                      className={`relative flex h-[54px] min-h-[54px] flex-none flex-col justify-start overflow-hidden rounded-[var(--lv-radius-sm)] border px-2 pb-3 pt-1.5 text-left text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-60 ${selected ? "border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)] shadow-[inset_0_0_0_1px_rgba(59,224,206,0.12)]" : auditioned ? "border-[var(--lv-accent)] bg-[var(--lv-surface-raised)] text-[var(--lv-text)]" : "border-[var(--lv-border)] bg-transparent text-[var(--lv-text-secondary)]"}`}
+                      className={`relative flex h-[54px] w-full min-h-[54px] flex-none flex-col justify-start overflow-hidden rounded-[var(--lv-radius-sm)] border px-2 pb-3 pt-1.5 text-left text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-60 ${selected ? "border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)] shadow-[inset_0_0_0_1px_rgba(59,224,206,0.12)]" : auditioned ? "border-[var(--lv-accent)] bg-[var(--lv-surface-raised)] text-[var(--lv-text)]" : "border-[var(--lv-border)] bg-transparent text-[var(--lv-text-secondary)]"}`}
                       aria-current={selected ? "step" : undefined}
                       aria-pressed={auditioned}
                       aria-label={`${index + 1}/${snapshot.spans.length}: ${event?.chord.label ?? restLabel}${degree ? `, ${degree}` : ""}, ${practiceTimingLabel(span, snapshot.practiceGroupBeats ?? snapshot.meter.numerator, language)}.${event ? ` ${text.auditionCard}` : ""}`}
-                      disabled={!playable}
-                      onClick={() => void auditionResolved(eventIndex)}
+                      disabled={!playable && !transportRef.current?.supportsSeek}
+                      onClick={() => {
+                        if (!transportRef.current?.supportsSeek) { void auditionResolved(eventIndex); return; }
+                        if (span.kind === "rest") seekToBeat(span.startBeat + 1e-6);
+                        else seekToEvent(eventIndex);
+                      }}
                     >
                       <span className="flex min-w-0 items-baseline gap-1.5">
                         <span className="shrink-0 text-[10px] font-normal text-[var(--lv-text-muted)]">{index + 1}</span>
@@ -1421,6 +1479,10 @@ export function ProgressionVoicingPracticeView({
                         ))}
                       </span>
                     </button>
+                    {playable ? <button type="button" className="absolute right-1 top-1 z-20 rounded bg-[var(--lv-surface-raised)] p-1 text-[var(--lv-accent)] disabled:opacity-40"
+                      data-testid="voicing-loop-event-preview" aria-label={`${event?.chord.label}: ${text.auditionCard}`}
+                      disabled={active || paused} onClick={() => void auditionResolved(eventIndex)}><Play aria-hidden="true" size={12} /></button> : null}
+                    </div>
                   );
                 })}
                 </div>

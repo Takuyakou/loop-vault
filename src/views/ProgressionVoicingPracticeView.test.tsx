@@ -1259,6 +1259,25 @@ describe("ProgressionVoicingPracticeView", () => {
       .toContain("CHORD TONE");
     expect(container.querySelector("[data-finger-label]")).toBeNull();
   });
+  it("v2 card click seeks, preview stays separate, and keyboard moves by chord", async () => {
+    const runtime = new SeekingTransport();
+    const container = await renderView(runtime, { "source-midi": snapshot("source-midi") }, "source-midi");
+    const cards = container.querySelectorAll<HTMLButtonElement>("[data-testid='voicing-loop-event']");
+    const previews = container.querySelectorAll<HTMLButtonElement>("[data-testid='voicing-loop-event-preview']");
+    await act(async () => previews[1]!.click());
+    expect(runtime.audition).toHaveBeenLastCalledWith([50, 57, 60], "piano");
+    expect(runtime.seek).not.toHaveBeenCalled();
+    await act(async () => cards[1]!.click());
+    expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent).toBe("Dm7");
+    await act(async () => button(container, "開始").click());
+    expect(runtime.options?.startBeat).toBe(2);
+    await act(async () => cards[0]!.click());
+    expect(runtime.seek).toHaveBeenLastCalledWith(0);
+    expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent).toBe("Cmaj7");
+    await act(async () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true })));
+    expect(runtime.seek).toHaveBeenLastCalledWith(1);
+    expect(previews[1]!.disabled).toBe(true);
+  });
 });
 
 async function renderView(
@@ -1390,6 +1409,15 @@ class FakeTransport implements ProgressionVoicingTransportPort {
   setMetronomeEnabled = vi.fn();
   setReferenceSoundEnabled = vi.fn();
   audition = vi.fn(async () => undefined);
+}
+
+class SeekingTransport extends FakeTransport {
+  readonly supportsSeek = true;
+  seek = vi.fn((eventIndex: number) => this.options ? {
+    status: "running" as const,
+    absoluteBeat: (this.options.countInBars * (this.options.snapshot.practiceGroupBeats ?? this.options.snapshot.meter.numerator))
+      + this.options.snapshot.events[eventIndex]!.startBeat,
+  } : undefined);
 }
 
 class PendingTransport extends FakeTransport {
