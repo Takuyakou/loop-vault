@@ -2,16 +2,17 @@
   "schemaVersion": 1,
   "phaseId": "7.0",
   "status": "in-progress",
-  "activeStage": "P7.0-03",
+  "activeStage": "P7.0-04",
   "completedStages": [
     "P7.0-00",
     "P7.0-01",
-    "P7.0-02"
+    "P7.0-02",
+    "P7.0-03"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "362e0df3d0cd21ab7d697f792553974703d44a8b",
-  "lastVerifiedCommit": "b935d31cf54660a3cc18d1fffc71bb84f9db0a70",
+  "lastVerifiedCommit": "e88aaf82b6cb1d952f56f84489d5d2ea5472a880",
   "currentBranch": "research/phase7-core-v2",
   "requiredGates": {
     "P7.0-00": [
@@ -66,8 +67,15 @@
     "stage02-phase-docs-valid": "pass",
     "stage02-production-diff-zero": "pass",
     "local-source-review-infrastructure": "pass",
-    "stage02-privacy-and-diff-clean": "pass"
+    "stage02-privacy-and-diff-clean": "pass",
+    "tier1-checkpoints-executed": "pass",
+    "copy-oracle-endpoints-verified": "pass",
+    "dev-validation-aggregate-only": "pass",
+    "stage03-script-typecheck-and-lint": "pass",
+    "stage03-phase-docs-valid": "pass",
+    "stage03-production-diff-zero": "pass",
+    "stage03-privacy-and-diff-clean": "pass"
   },
-  "nextAction": "P7.0-03: build independent Tier 1 checkpoint and Copy-Oracle harness on available versioned Gold; local human review is non-blocking.",
+  "nextAction": "P7.0-04: freeze versioned Tier 2 harmonic identity, playback equivalence, and renderer-only mismatch contract.",
   "updatedAt": "2026-09-24"
 }
