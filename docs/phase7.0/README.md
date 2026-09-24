@@ -7,11 +7,11 @@ Read root `AGENTS.md` first. This README is the phase entry point; Git and curre
 ## Status
 
 - **Status:** in-progress
-- **Active stage:** P7.0-05
-- **Completed stages:** P7.0-00 (`d9567779e37118899d85fcfcb71abc03903de93c`), P7.0-01 (`afe5647cadb662d4957145c125373c5c6b92bf27`), P7.0-02 (`b935d31cf54660a3cc18d1fffc71bb84f9db0a70`), P7.0-03 (`e88aaf82b6cb1d952f56f84489d5d2ea5472a880`), P7.0-04 (`2014664b27025cf1333c0cdc8e1aa7b0e0cb5d7c`)
+- **Active stage:** P7.0-06
+- **Completed stages:** P7.0-00 (`d9567779e37118899d85fcfcb71abc03903de93c`), P7.0-01 (`afe5647cadb662d4957145c125373c5c6b92bf27`), P7.0-02 (`b935d31cf54660a3cc18d1fffc71bb84f9db0a70`), P7.0-03 (`e88aaf82b6cb1d952f56f84489d5d2ea5472a880`), P7.0-04 (`2014664b27025cf1333c0cdc8e1aa7b0e0cb5d7c`), P7.0-05 (`5dba8601a11829057b1be96b7b25087d7064238d`)
 - **Base commit:** `362e0df3d0cd21ab7d697f792553974703d44a8b`
 - **Branch:** `research/phase7-core-v2`
-- **Next action:** decompose failures and correction cost with independent Gold. Local human review remains non-blocking.
+- **Next action:** freeze corpus splits, sealed synthetic holdout, and copy baselines. Local human review remains non-blocking.
 
 ## Required Reading Order
 
