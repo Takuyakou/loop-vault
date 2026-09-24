@@ -3,6 +3,7 @@ export * from "./extractionConfig";
 export * from "./normalizeVoicing";
 export * from "./compatibility";
 export * from "./resolveVoicing";
+export * from "./playbackChoice";
 export * from "./scoreVoicingCandidate";
 export * from "./extractSimultaneousVoicing";
 export * from "./extractAggregatedNoteSet";

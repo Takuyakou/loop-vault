@@ -65,7 +65,7 @@ import { formatProgressionText } from "../domain/progressionText";
 import type { SavedProgressionBlock, SongIdea } from "../domain/types";
 import { sourceBasslineNoteFacts } from "../domain/sourceBassline";
 import { buildVaultChordContextSnapshot, selectVaultChordContextSections, type VaultChordContextSnapshot } from "../features/bass-practice/domain";
-import { extractVoicing, resolveVoicingForUse } from "../domain/voicing";
+import { extractVoicing, resolveVoicingForUse, setAllEligibleCardsToSource } from "../domain/voicing";
 import { advisorSuggestionToCandidate, appendAdvisorSuggestionToEditableProgression, selectAdvisorReferenceContexts } from "../domain/progressionAdvisor";
 import { appendAnalysisFeedback } from "../storage/analysisFeedbackStorage";
 import { isProgressionMidiExportEnabled } from "../midiExport/featureFlag";
@@ -473,6 +473,31 @@ export function ProgressionDetailView({
             onOpenInspector: (slotId) => setEditable((current) => selectEditableSlot(current, slotId)),
           }}
         />
+        <button
+          type="button"
+          className="lv-button-secondary mt-3 px-3 py-2 text-sm"
+          onClick={() => {
+            const candidates = editable.slots.map((slot) => ({
+              id: slot.id,
+              chord: slot.currentChord,
+              voicingMemory: slot.voicingMemory,
+            }));
+            const result = setAllEligibleCardsToSource(candidates);
+            if (result.changedCount > 0) {
+              setEditable((current) => setEditableVoicingMemories(current,
+                result.cards.filter((card, index) => card !== candidates[index]).map((card) => ({
+                  slotId: card.id,
+                  memory: card.voicingMemory,
+                })),
+              ));
+            }
+            setToast(language === "ja"
+              ? `元MIDI再生に変更: ${result.changedCount}件`
+              : `Changed to source playback: ${result.changedCount} cards`);
+          }}
+        >
+          {language === "ja" ? "対象カードを元MIDI再生に変更" : "Set eligible cards to source playback"}
+        </button>
       </section>
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--lv-border)] py-3">
         <div className="min-w-0">

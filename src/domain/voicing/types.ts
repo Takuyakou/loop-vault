@@ -14,7 +14,7 @@ export interface VoicingResolveOptions {
 
 export interface ResolvedVoicing {
   midiNotes: number[];
-  origin: "practice-override" | "source-verified" | "source-auto" | "generated";
+  origin: "practice-override" | "source-verified" | "source-auto" | "source-explicit" | "generated";
   representation?: VoicingRepresentation;
 }
 

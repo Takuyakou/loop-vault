@@ -24,6 +24,14 @@ const supportedSelections = new Set<ProgressionVoicingSelection>([
   "source-midi", "custom", "basic-shell", "basic-full", "rootless-shell", "full-shell", "left-hand",
 ]);
 const TIMING_EPSILON = 1e-6;
+/** Prelocked after the public 3/5/10-minute and 2,400-event benchmark. */
+export const METER_NEUTRAL_BUDGET = Object.freeze({
+  maxSourceBeats: 2400,
+  maxSourceDurationSeconds: 600,
+  maxPracticeGroups: 600,
+  maxSourceEvents: 2400,
+  practiceGroupBeats: 4,
+});
 
 export interface BuildProgressionVoicingPracticeSnapshotInput {
   readonly sourceReference: ProgressionPracticeSourceReference;
@@ -53,8 +61,9 @@ export function buildProgressionVoicingPracticeSnapshot(
   if (!isSupportedBpm(input.block.bpm)) {
     return failure("invalid-bpm", "Voicing Loop BPM must be between 30 and 240.");
   }
-  if (normalizeMeter(input.block.timeSignature) !== "4/4") {
-    return failure("unsupported-meter", "Voicing Loop currently requires an explicit 4/4 meter.");
+  const sourceMeter = parseSourceMeter(input.block.timeSignature);
+  if (!sourceMeter) {
+    return failure("unsupported-meter", "Voicing Loop requires a supported source meter.");
   }
   if (input.block.detectedKey !== undefined && !isSafeKey(input.block.detectedKey)) {
     return failure("invalid-key", "Voicing Loop key metadata is not supported.");
@@ -64,9 +73,18 @@ export function buildProgressionVoicingPracticeSnapshot(
     return failure("empty-progression", "Voicing Loop requires at least one chord.");
   }
 
+  if (input.block.chords.length > METER_NEUTRAL_BUDGET.maxSourceEvents) {
+    return failure("resource-budget", "Voicing Loop has too many source events.");
+  }
   const normalizedKey = input.block.detectedKey?.trim();
-  const normalized = normalizeEvents(input.block.chords, input.selection, input.block.sourceStartBeat, input.block.sourceEndBeat);
+  const normalized = normalizeEvents(input.block.chords, input.selection, sourceMeter.numerator, input.block.sourceStartBeat, input.block.sourceEndBeat);
   if (!normalized.ok) return normalized;
+  if (normalized.lengthBeats > METER_NEUTRAL_BUDGET.maxSourceBeats
+    || normalized.lengthBeats * 60 / input.block.bpm > METER_NEUTRAL_BUDGET.maxSourceDurationSeconds
+    || Math.ceil(normalized.lengthBeats / METER_NEUTRAL_BUDGET.practiceGroupBeats)
+      > METER_NEUTRAL_BUDGET.maxPracticeGroups) {
+    return failure("resource-budget", "Voicing Loop exceeds its measured source duration budget.");
+  }
   const source = Object.freeze({
     kind: "vault" as const,
     reference: Object.freeze({
@@ -80,7 +98,8 @@ export function buildProgressionVoicingPracticeSnapshot(
     selection: input.selection,
     ...(normalizedKey === undefined ? {} : { key: normalizedKey }),
     bpm: input.block.bpm,
-    meter: Object.freeze({ numerator: 4 as const, denominator: 4 as const }),
+    meter: Object.freeze(sourceMeter),
+    practiceGroupBeats: METER_NEUTRAL_BUDGET.practiceGroupBeats,
     lengthBeats: normalized.lengthBeats,
     events: normalized.events,
     spans: normalized.spans,
@@ -92,6 +111,7 @@ export function buildProgressionVoicingPracticeSnapshot(
 function normalizeEvents(
   sourceEvents: readonly SavedProgressionBlock["chords"][number][],
   selection: ProgressionVoicingSelection,
+  sourceBeatsPerBar: number,
   explicitStart?: number,
   explicitEnd?: number,
 ):
@@ -100,7 +120,7 @@ function normalizeEvents(
   const candidates = sourceEvents.map((event, sourceIndex) => ({
     event,
     sourceIndex,
-    absoluteBeat: absoluteBeat(event.bar, event.beat),
+    absoluteBeat: absoluteBeat(event.bar, event.beat, sourceBeatsPerBar),
   }));
   for (const candidate of candidates) {
     if (!Number.isFinite(candidate.event.durationBeats)
@@ -247,11 +267,12 @@ function isChordSymbol(value: ChordSymbol): boolean {
       || (Number.isInteger(value.bass) && value.bass >= 0 && value.bass <= 11));
 }
 
-function absoluteBeat(bar: number, beat: number): number {
-  if (!Number.isSafeInteger(bar) || bar < 1 || !Number.isFinite(beat) || beat < 1 || beat > 4) {
+function absoluteBeat(bar: number, beat: number, sourceBeatsPerBar: number): number {
+  if (!Number.isSafeInteger(bar) || bar < 1 || !Number.isFinite(beat)
+    || beat < 1 || beat >= sourceBeatsPerBar + 1) {
     return Number.NaN;
   }
-  const value = (bar - 1) * 4 + beat - 1;
+  const value = (bar - 1) * sourceBeatsPerBar + beat - 1;
   try {
     progressionPracticeTicksAtBeat(value);
     return value;
@@ -260,8 +281,14 @@ function absoluteBeat(bar: number, beat: number): number {
   }
 }
 
-function normalizeMeter(value: unknown): string | undefined {
-  return typeof value === "string" ? value.replace(/\s/g, "") : undefined;
+function parseSourceMeter(value: unknown): { numerator: number; denominator: 4 } | undefined {
+  if (typeof value !== "string") return undefined;
+  const match = /^(\d{1,2})\s*\/\s*4$/.exec(value);
+  if (!match) return undefined;
+  const numerator = Number(match[1]);
+  return Number.isInteger(numerator) && numerator >= 1 && numerator <= 12
+    ? { numerator, denominator: 4 }
+    : undefined;
 }
 function isSupportedBpm(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value) && value >= 30 && value <= 240;

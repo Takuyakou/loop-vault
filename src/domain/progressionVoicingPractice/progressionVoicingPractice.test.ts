@@ -47,6 +47,7 @@ describe("P5.27 detached practice snapshot", () => {
       key: "C major",
       bpm: 80,
       meter: { numerator: 4, denominator: 4 },
+      practiceGroupBeats: 4,
       lengthBeats: 4,
       events: [{
         id: "event-1",
@@ -59,7 +60,7 @@ describe("P5.27 detached practice snapshot", () => {
     expect([...collectKeys(snapshot)].sort()).toEqual([
       "bassNote", "blockId", "bpm", "chord", "denominator", "durationBeats", "eventIndex", "events",
       "fingerprint", "id", "ideaId", "key", "kind", "label", "lengthBeats", "meter",
-      "midiNotes", "numerator", "quality", "reference", "root", "selection", "source",
+      "midiNotes", "numerator", "practiceGroupBeats", "quality", "reference", "root", "selection", "source",
       "spans", "startBeat", "tensions", "version", "voicing",
     ]);
     const serialized = JSON.stringify(snapshot);
@@ -204,7 +205,7 @@ describe("P5.27 detached practice snapshot", () => {
     })).toMatchObject({ ok: false, error: { code: "invalid-timing" } });
     expect(buildProgressionVoicingPracticeSnapshot({
       sourceReference: { ideaId: "idea", blockId: "block" },
-      block: { ...progression([event(1, 1, 4, 0)]), id: "block", timeSignature: "3/4" },
+      block: { ...progression([event(1, 1, 4, 0)]), id: "block", timeSignature: "5/8" },
       selection: "basic-shell",
     })).toMatchObject({ ok: false, error: { code: "unsupported-meter" } });
   });

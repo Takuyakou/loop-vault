@@ -72,7 +72,7 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent).toBe("Dm7");
     expect(container.querySelector("[aria-current='step']")?.textContent).toContain("休符");
     await act(async () => runtime.options?.onTransportBeat(8));
-    expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent).toContain("位置2 / 2 小節");
+    expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent).toContain("位置2 / 2 練習グループ");
   });
 
   it("can run a 32-bar all-rest score with bounded progress indicators and no fake chord or audition", async () => {
@@ -89,7 +89,7 @@ describe("ProgressionVoicingPracticeView", () => {
     const positionIndicator = container.querySelector("[role='progressbar'][aria-label='位置']")!;
     expect(beatIndicator.getAttribute("aria-valuenow")).toBe("52");
     expect(positionIndicator.getAttribute("aria-valuenow")).toBe("52");
-    expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent).toContain("位置17 / 32 小節");
+    expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent).toContain("位置17 / 32 練習グループ");
     expect(runtime.audition).not.toHaveBeenCalled();
     await act(async () => runtime.options?.onTransportBeat(132));
     expect(container.textContent).toContain("1 周完了");
@@ -302,7 +302,7 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(beatMetric.children[2]?.textContent).toBe("1 / 2 拍");
     expect(positionMetric.children[0]?.textContent).toBe("位置");
     expect(positionMetric.children[1]?.querySelector("[role='progressbar']")).not.toBeNull();
-    expect(positionMetric.children[2]?.textContent).toBe("1 / 2 小節");
+    expect(positionMetric.children[2]?.textContent).toBe("1 / 2 練習グループ");
 
     const beatFill = container.querySelector<HTMLElement>("[data-testid='voicing-loop-beat-progress-fill']")!;
     const positionFill = container.querySelector<HTMLElement>("[data-testid='voicing-loop-position-progress-fill']")!;
@@ -316,7 +316,7 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(beatFill.style.transform).toBe("scaleX(0.5)");
     expect(positionFill.style.transform).toBe("scaleX(0.125)");
     await act(async () => runtime.options?.onTransportBeat(8));
-    expect(positionMetric.children[2]?.textContent).toBe("2 / 2 小節");
+    expect(positionMetric.children[2]?.textContent).toBe("2 / 2 練習グループ");
     expect(positionFill.style.transform).toBe("scaleX(0.5)");
   });
 
@@ -405,7 +405,7 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("[data-testid='voicing-loop-next-degree']")?.textContent).toBe("Ⅱ");
     expect(Array.from(container.querySelectorAll("[data-testid='voicing-loop-event-degree']")).map((node) => node.textContent)).toEqual(["Ⅰ", "Ⅱ"]);
     expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent)
-      .toContain("位置1 / 1 小節");
+      .toContain("位置1 / 1 練習グループ");
     expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent)
       .toContain("次Dm7");
     expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)

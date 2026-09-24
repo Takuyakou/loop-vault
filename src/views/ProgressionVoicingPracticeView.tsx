@@ -227,7 +227,7 @@ const copy = {
     reconnect: "再接続",
     settings: "設定",
     midiActivationFailed: "MIDI入力を開始できませんでした。",
-    positionLabel: (bar: number, total: number) => `${bar} / ${total} 小節`,
+    positionLabel: (group: number, total: number) => `${group} / ${total} 練習グループ`,
     nextSwitch: (beats: string) => `${beats}拍後に切り替わります`,
     beatLabel: (beat: number, total: number) => `${beat} / ${total} 拍`,
     loopLabel: (count: number) => `${count} 周完了`,
@@ -351,7 +351,7 @@ const copy = {
     reconnect: "Reconnect",
     settings: "Settings",
     midiActivationFailed: "MIDI input could not be activated.",
-    positionLabel: (bar: number, total: number) => `Bar ${bar} / ${total}`,
+    positionLabel: (group: number, total: number) => `Practice group ${group} / ${total}`,
     nextSwitch: (beats: string) => `Changes after ${beats} ${beats === "1" ? "beat" : "beats"}`,
     beatLabel: (beat: number, total: number) => `Beat ${beat} of ${total}`,
     loopLabel: (count: number) => `${count} completed`,
@@ -522,7 +522,7 @@ export function ProgressionVoicingPracticeView({
     const state = clockStateRef.current;
     const applyAtBeat = boundarySessionUpdateRef.current
       && (state?.status === "running" || state?.status === "count-in")
-      ? nextPracticeBarBoundary(state.transportBeat, snapshot.meter.numerator)
+      ? nextPracticeBarBoundary(state.transportBeat, snapshot.practiceGroupBeats ?? snapshot.meter.numerator)
       : undefined;
     boundarySessionUpdateRef.current = false;
     transportRef.current?.updatePlan(plan, { snapshot, applyAtBeat });
@@ -647,11 +647,11 @@ export function ProgressionVoicingPracticeView({
   );
   const allEventsPlayable = Boolean(plan && snapshot?.spans.length)
     && plan!.events.every((resolution) => resolution.status === "SUPPORTED");
-  const beatsPerBar = snapshot?.meter.numerator ?? 4;
-  const currentBar = Math.floor((projection?.progressionBeat ?? 0) / beatsPerBar) + 1;
-  const totalBars = Math.max(1, Math.ceil((snapshot?.lengthBeats ?? 1) / beatsPerBar));
+  const practiceGroupBeats = snapshot?.practiceGroupBeats ?? 4;
+  const currentGroup = Math.floor((projection?.progressionBeat ?? 0) / practiceGroupBeats) + 1;
+  const totalGroups = Math.max(1, Math.ceil((snapshot?.lengthBeats ?? 1) / practiceGroupBeats));
   const beatProgress = projection?.inCountIn
-    ? ((clockState?.transportBeat ?? 0) % beatsPerBar) / beatsPerBar
+    ? ((clockState?.transportBeat ?? 0) % practiceGroupBeats) / practiceGroupBeats
     : projection?.chordProgress ?? 0;
   const positionProgress = projection?.progressionProgress ?? 0;
 
@@ -1251,12 +1251,17 @@ export function ProgressionVoicingPracticeView({
             </Surface>
             </div>
 
+            <p className="mb-2 text-xs text-[var(--lv-text-muted)]" data-testid="voicing-loop-source-meter">
+              {language === "ja"
+                ? `元の拍子: ${snapshot.meter.numerator}/${snapshot.meter.denominator} · 練習グループ: ${snapshot.practiceGroupBeats ?? 4}拍`
+                : `Source meter: ${snapshot.meter.numerator}/${snapshot.meter.denominator} · Practice group: ${snapshot.practiceGroupBeats ?? 4} beats`}
+            </p>
             <div className="grid min-w-0 grid-cols-3 gap-2" data-testid="voicing-loop-status">
               <Metric
                 label={projection?.inCountIn ? text.countIn : text.beat}
                 testId="voicing-loop-beat-metric"
                 value={projection?.inCountIn
-                  ? text.beatLabel(projection.countInBeat ?? 1, snapshot.meter.numerator)
+                  ? text.beatLabel(projection.countInBeat ?? 1, snapshot.practiceGroupBeats ?? snapshot.meter.numerator)
                   : text.beatLabel(projection?.beatInChord ?? 1, projection?.beatsInChord ?? Math.ceil(currentEvent?.durationBeats ?? 1))}
               >
                 <ProgressMeter
@@ -1267,7 +1272,7 @@ export function ProgressionVoicingPracticeView({
                   value={beatProgress}
                 />
               </Metric>
-              <Metric label={text.position} testId="voicing-loop-position-metric" value={text.positionLabel(currentBar, totalBars)}>
+              <Metric label={text.position} testId="voicing-loop-position-metric" value={text.positionLabel(currentGroup, totalGroups)}>
                 <ProgressMeter
                   active={active}
                   label={text.position}
@@ -1325,7 +1330,7 @@ export function ProgressionVoicingPracticeView({
                       className={`relative flex h-[46px] max-h-[46px] min-h-[46px] w-[92px] min-w-[92px] max-w-[92px] flex-none flex-col justify-start overflow-hidden rounded-[var(--lv-radius-sm)] border px-2 pb-3 pt-1.5 text-left text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-60 ${selected ? "border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)] shadow-[inset_0_0_0_1px_rgba(59,224,206,0.12)]" : auditioned ? "border-[var(--lv-accent)] bg-[var(--lv-surface-raised)] text-[var(--lv-text)]" : "border-[var(--lv-border)] bg-transparent text-[var(--lv-text-secondary)]"}`}
                       aria-current={selected ? "step" : undefined}
                       aria-pressed={auditioned}
-                      aria-label={`${index + 1}/${snapshot.spans.length}: ${event?.chord.label ?? restLabel}${degree ? `, ${degree}` : ""}, ${practiceTimingLabel(span, snapshot.meter.numerator, language)}.${event ? ` ${text.auditionCard}` : ""}`}
+                      aria-label={`${index + 1}/${snapshot.spans.length}: ${event?.chord.label ?? restLabel}${degree ? `, ${degree}` : ""}, ${practiceTimingLabel(span, snapshot.practiceGroupBeats ?? snapshot.meter.numerator, language)}.${event ? ` ${text.auditionCard}` : ""}`}
                       disabled={!playable}
                       onClick={() => void auditionResolved(eventIndex)}
                     >
@@ -1602,16 +1607,16 @@ function BpmDragControl({
 
 function practiceTimingLabel(
   event: Pick<ProgressionPracticeEvent, "startBeat" | "durationBeats">,
-  beatsPerBar: number,
+  practiceGroupBeats: number,
   language: AppLanguage,
 ): string {
-  const bar = Math.floor(event.startBeat / beatsPerBar) + 1;
-  const beat = (event.startBeat % beatsPerBar) + 1;
+  const group = Math.floor(event.startBeat / practiceGroupBeats) + 1;
+  const beat = (event.startBeat % practiceGroupBeats) + 1;
   const beatLabel = formatPracticeBeat(beat);
   const durationLabel = formatPracticeBeat(event.durationBeats);
   return language === "ja"
-    ? `${bar}小節・${beatLabel}拍目・${durationLabel}拍`
-    : `Bar ${bar} · beat ${beatLabel} · ${durationLabel} ${event.durationBeats === 1 ? "beat" : "beats"}`;
+    ? `${group}練習グループ・${beatLabel}拍目・${durationLabel}拍`
+    : `Practice group ${group} · beat ${beatLabel} · ${durationLabel} ${event.durationBeats === 1 ? "beat" : "beats"}`;
 }
 
 function rankFingeringsForHand(

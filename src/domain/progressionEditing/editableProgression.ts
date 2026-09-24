@@ -305,6 +305,7 @@ export function cloneVoicingMemory(
   memory: NonNullable<ChordTimelineItem["voicingMemory"]>,
 ): NonNullable<ChordTimelineItem["voicingMemory"]> {
   return {
+    ...(memory.playbackChoice ? { playbackChoice: memory.playbackChoice } : {}),
     ...(memory.sourceVoicing
       ? { sourceVoicing: { ...memory.sourceVoicing, midiNotes: [...memory.sourceVoicing.midiNotes] } }
       : {}),

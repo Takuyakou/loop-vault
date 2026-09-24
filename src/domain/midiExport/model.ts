@@ -227,7 +227,7 @@ function voicingSourceForOrigin(
   origin: ReturnType<typeof resolveVoicingForUse>["origin"],
 ): MidiExportVoicingSource {
   if (origin === "practice-override") return "edited";
-  if (origin === "source-verified" || origin === "source-auto") return "saved";
+  if (origin === "source-verified" || origin === "source-auto" || origin === "source-explicit") return "saved";
   return "generated";
 }
 

@@ -188,7 +188,7 @@ describe("P5.27 saved Vault handoff", () => {
     expect(buildProgressionVoicingPracticeHandoffFromVault([idea], {
       ideaId: idea.id, blockId: "deleted-block",
     })).toEqual({ ok: false, error: { code: "source-unavailable" } });
-    block.timeSignature = "3/4";
+    block.timeSignature = "5/8";
     expect(buildProgressionVoicingPracticeHandoffFromVault([idea], {
       ideaId: idea.id, blockId: block.id,
     })).toEqual({

@@ -678,6 +678,7 @@ export function createVaultStore(
             ...(item.voicingMemory
               ? {
                   voicingMemory: {
+                    ...(item.voicingMemory.playbackChoice ? { playbackChoice: item.voicingMemory.playbackChoice } : {}),
                     ...(item.voicingMemory.sourceVoicing
                       ? {
                           sourceVoicing: {
@@ -1497,7 +1498,11 @@ function attachExtractedVoicing(
   sourceData: MidiSongData | undefined,
   sourceVoices: Voice[] | undefined,
 ): SavedProgressionBlock["chords"][number] {
-  if (item.voicingMemory?.sourceVoicing) return item;
+  if (item.voicingMemory?.sourceVoicing) {
+    return item.voicingMemory.playbackChoice === undefined
+      ? { ...item, voicingMemory: { ...item.voicingMemory, playbackChoice: "SOURCE" } }
+      : item;
+  }
   return attachSourceVoicing(item, { analysis, sourceData, sourceVoices });
 }
 

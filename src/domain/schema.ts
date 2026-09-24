@@ -139,6 +139,7 @@ export const chordVoicingMemorySchema = z
   .object({
     sourceVoicing: voicingSnapshotSchema.optional(),
     practiceVoicingOverride: voicingSnapshotSchema.optional(),
+    playbackChoice: z.enum(["SOURCE", "GENERATED", "CUSTOM"]).optional(),
   })
   .strict();
 

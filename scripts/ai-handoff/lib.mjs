@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 
 /**
@@ -89,7 +89,7 @@ function extractBacktickTokens(markdown) {
 }
 
 function looksLikeGlobOrPlaceholder(token) {
-  return /[*?\[\]]/.test(token) || /\s/.test(token) || token.includes("$");
+  return ["*", "?", "[", "]"].some(char => token.includes(char)) || /\s/.test(token) || token.includes("$");
 }
 
 function classifyPathToken(token) {
