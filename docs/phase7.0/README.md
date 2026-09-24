@@ -7,11 +7,11 @@ Read root `AGENTS.md` first. This README is the phase entry point; Git and curre
 ## Status
 
 - **Status:** in-progress
-- **Active stage:** P7.0-09
-- **Completed stages:** P7.0-00 (`d9567779e37118899d85fcfcb71abc03903de93c`), P7.0-01 (`afe5647cadb662d4957145c125373c5c6b92bf27`), P7.0-02 (`b935d31cf54660a3cc18d1fffc71bb84f9db0a70`), P7.0-03 (`e88aaf82b6cb1d952f56f84489d5d2ea5472a880`), P7.0-04 (`2014664b27025cf1333c0cdc8e1aa7b0e0cb5d7c`), P7.0-05 (`5dba8601a11829057b1be96b7b25087d7064238d`), P7.0-06 (`e654dc60e2447c1d8af81fa21b5f8ac4e757c753`), P7.0-07 (`75a9b5a3a7d4d7c5eb41d63ea6c3dbda502042db`), P7.0-08 (`89e2e3b787f1fac3d55261ece91b436705ef8402`)
+- **Active stage:** P7.0-10
+- **Completed stages:** P7.0-00 (`d9567779e37118899d85fcfcb71abc03903de93c`), P7.0-01 (`afe5647cadb662d4957145c125373c5c6b92bf27`), P7.0-02 (`b935d31cf54660a3cc18d1fffc71bb84f9db0a70`), P7.0-03 (`e88aaf82b6cb1d952f56f84489d5d2ea5472a880`), P7.0-04 (`2014664b27025cf1333c0cdc8e1aa7b0e0cb5d7c`), P7.0-05 (`5dba8601a11829057b1be96b7b25087d7064238d`), P7.0-06 (`e654dc60e2447c1d8af81fa21b5f8ac4e757c753`), P7.0-07 (`75a9b5a3a7d4d7c5eb41d63ea6c3dbda502042db`), P7.0-08 (`89e2e3b787f1fac3d55261ece91b436705ef8402`), P7.0-09 (`71f4efeb778501a48f1b6875f136bf1126b0a7a6`)
 - **Base commit:** `362e0df3d0cd21ab7d697f792553974703d44a8b`
 - **Branch:** `research/phase7-core-v2`
-- **Next action:** run the modular tournament and interaction matrix. Local human review remains non-blocking.
+- **Next action:** assess external baseline feasibility, Live MIDI seams, vocabulary, and shortlist. Local human review remains non-blocking.
 
 ## Required Reading Order
 

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "phaseId": "7.0",
   "status": "in-progress",
-  "activeStage": "P7.0-09",
+  "activeStage": "P7.0-10",
   "completedStages": [
     "P7.0-00",
     "P7.0-01",
@@ -12,12 +12,13 @@
     "P7.0-05",
     "P7.0-06",
     "P7.0-07",
-    "P7.0-08"
+    "P7.0-08",
+    "P7.0-09"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "362e0df3d0cd21ab7d697f792553974703d44a8b",
-  "lastVerifiedCommit": "89e2e3b787f1fac3d55261ece91b436705ef8402",
+  "lastVerifiedCommit": "71f4efeb778501a48f1b6875f136bf1126b0a7a6",
   "currentBranch": "research/phase7-core-v2",
   "requiredGates": {
     "P7.0-00": [
@@ -98,7 +99,7 @@
     "P7.0-09": [
       "twenty-three-configurations-executed",
       "copy-and-identity-decoder-interactions",
-      "tier1-tier2-correction-performance-reported",
+      "tier1-structural-proxy-correction-performance-reported",
       "stage09-focused-tests-types-lint",
       "stage09-phase-docs-valid",
       "stage09-production-diff-zero",
@@ -162,8 +163,15 @@
     "stage08-script-typecheck-and-lint": "pass",
     "stage08-phase-docs-valid": "pass",
     "stage08-production-diff-zero": "pass",
-    "stage08-privacy-and-diff-clean": "pass"
+    "stage08-privacy-and-diff-clean": "pass",
+    "twenty-three-configurations-executed": "pass",
+    "copy-and-identity-decoder-interactions": "pass",
+    "tier1-structural-proxy-correction-performance-reported": "pass",
+    "stage09-focused-tests-types-lint": "pass",
+    "stage09-phase-docs-valid": "pass",
+    "stage09-production-diff-zero": "pass",
+    "stage09-privacy-and-diff-clean": "pass"
   },
-  "nextAction": "P7.0-09: verify all 23 tournament configurations and interaction report before external baseline and architecture shortlist.",
+  "nextAction": "P7.0-10: assess official BACHI baseline, Live MIDI seams, Vault vocabulary, and architecture shortlist without opening sealed holdout.",
   "updatedAt": "2026-09-24"
 }
