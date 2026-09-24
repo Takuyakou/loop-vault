@@ -2,10 +2,11 @@
   "schemaVersion": 1,
   "phaseId": "7.0",
   "status": "in-progress",
-  "activeStage": "P7.0-02",
+  "activeStage": "P7.0-03",
   "completedStages": [
     "P7.0-00",
-    "P7.0-01"
+    "P7.0-01",
+    "P7.0-02"
   ],
   "blocked": false,
   "blockerReason": null,
@@ -32,7 +33,6 @@
       "temporal-gold-contract-valid",
       "synthetic-taxonomy-covered",
       "local-source-review-infrastructure",
-      "local-witness-anonymized-mapping",
       "stage02-focused-tests-and-types",
       "stage02-phase-docs-valid",
       "stage02-production-diff-zero",
@@ -59,6 +59,6 @@
     "local-source-review-infrastructure": "pass",
     "stage02-privacy-and-diff-clean": "pass"
   },
-  "nextAction": "P7.0-02: collect independent human review on the generated source-only local pack and validate the anonymous Gold; keep the stage active.",
+  "nextAction": "P7.0-03: build independent Tier 1 checkpoint and Copy-Oracle harness on available versioned Gold; local human review is non-blocking.",
   "updatedAt": "2026-09-24"
 }

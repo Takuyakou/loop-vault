@@ -7,11 +7,11 @@ Read root `AGENTS.md` first. This README is the phase entry point; Git and curre
 ## Status
 
 - **Status:** in-progress
-- **Active stage:** P7.0-02
-- **Completed stages:** P7.0-00 (`d9567779e37118899d85fcfcb71abc03903de93c`), P7.0-01 (`afe5647cadb662d4957145c125373c5c6b92bf27`)
+- **Active stage:** P7.0-03
+- **Completed stages:** P7.0-00 (`d9567779e37118899d85fcfcb71abc03903de93c`), P7.0-01 (`afe5647cadb662d4957145c125373c5c6b92bf27`), P7.0-02 (`b935d31cf54660a3cc18d1fffc71bb84f9db0a70`)
 - **Base commit:** `362e0df3d0cd21ab7d697f792553974703d44a8b`
 - **Branch:** `research/phase7-core-v2`
-- **Next action:** define versioned temporal Gold for P7.0-02.
+- **Next action:** build Tier 1 end-to-end fidelity harness and Copy-Oracle using available independent Gold. Local human review remains non-blocking.
 
 ## Required Reading Order
 
