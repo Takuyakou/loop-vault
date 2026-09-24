@@ -1447,7 +1447,7 @@ export function ProgressionVoicingPracticeView({
                       className={`relative flex h-[54px] w-full min-h-[54px] flex-none flex-col justify-start overflow-hidden rounded-[var(--lv-radius-sm)] border px-2 pb-3 pt-1.5 text-left text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-60 ${selected ? "border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)] shadow-[inset_0_0_0_1px_rgba(59,224,206,0.12)]" : auditioned ? "border-[var(--lv-accent)] bg-[var(--lv-surface-raised)] text-[var(--lv-text)]" : "border-[var(--lv-border)] bg-transparent text-[var(--lv-text-secondary)]"}`}
                       aria-current={selected ? "step" : undefined}
                       aria-pressed={auditioned}
-                      aria-label={`${index + 1}/${snapshot.spans.length}: ${event?.chord.label ?? restLabel}${degree ? `, ${degree}` : ""}, ${practiceTimingLabel(span, snapshot.practiceGroupBeats ?? snapshot.meter.numerator, language)}.${event ? ` ${text.auditionCard}` : ""}`}
+                      aria-label={`${index + 1}/${snapshot.spans.length}: ${event?.chord.label ?? restLabel}${degree ? `, ${degree}` : ""}, ${practiceTimingLabel(span, snapshot.practiceGroupBeats ?? snapshot.meter.numerator, language)}.${event ? ` ${transportRef.current?.supportsSeek ? (language === "ja" ? "ここへ移動" : "Seek here") : text.auditionCard}` : ""}`}
                       disabled={!playable && !transportRef.current?.supportsSeek}
                       onClick={() => {
                         if (!transportRef.current?.supportsSeek) { void auditionResolved(eventIndex); return; }
@@ -1481,7 +1481,7 @@ export function ProgressionVoicingPracticeView({
                     </button>
                     {playable ? <button type="button" className="absolute right-1 top-1 z-20 rounded bg-[var(--lv-surface-raised)] p-1 text-[var(--lv-accent)] disabled:opacity-40"
                       data-testid="voicing-loop-event-preview" aria-label={`${event?.chord.label}: ${text.auditionCard}`}
-                      disabled={active || paused} onClick={() => void auditionResolved(eventIndex)}><Play aria-hidden="true" size={12} /></button> : null}
+                      disabled={active || paused} onClick={() => void auditionResolved(eventIndex)}><Play aria-hidden="true" size={16} /></button> : null}
                     </div>
                   );
                 })}
