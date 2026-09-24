@@ -13,7 +13,7 @@ interface KeyboardGeometry {
 async function openRuleFixture(page: Page): Promise<Locator> {
   await page.goto("/?p527Status=p533-rules");
   await page.evaluate(() => document.fonts.ready);
-  await page.locator("nav").getByRole("button", { name: /Practice/ }).click();
+  await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
   await page.getByRole("tab", { name: "Voicing Loop" }).click();
   return page.getByTestId("voicing-loop-workspace");
 }
@@ -21,7 +21,7 @@ async function openRuleFixture(page: Page): Promise<Locator> {
 async function openExtendedReductionFixture(page: Page): Promise<Locator> {
   await page.goto("/?p527Status=p533-extended-reductions");
   await page.evaluate(() => document.fonts.ready);
-  await page.locator("nav").getByRole("button", { name: /Practice/ }).click();
+  await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
   await page.getByRole("tab", { name: "Voicing Loop" }).click();
   return page.getByTestId("voicing-loop-workspace");
 }
@@ -271,11 +271,10 @@ test("P5.33 remains usable at 320px/effective 200%, reduced motion, and axe clea
   await assertNoHorizontalOverflow(page);
 });
 
-test("P5.33 card audition updates Current/Next without seeking resume and keeps MIDI on row two", async ({ page }) => {
+test("P5.33 paused card seek persists through resume and keeps MIDI on the transport row", async ({ page }) => {
   await page.setViewportSize({ width: 1920, height: 1080 });
   const workspace = await openRuleFixture(page);
   const transport = workspace.getByTestId("voicing-loop-transport");
-  const firstCard = workspace.getByTestId("voicing-loop-event").first();
   const lastCard = workspace.getByTestId("voicing-loop-event").last();
 
   await transport.getByRole("button", { name: "開始", exact: true }).click();
@@ -283,14 +282,14 @@ test("P5.33 card audition updates Current/Next without seeking resume and keeps 
   await lastCard.click();
   await expect(workspace.getByTestId("voicing-loop-current-next").locator("h2")).toHaveText("Gmaj9/A");
   await expect(workspace.getByTestId("voicing-loop-current-next")).toContainText("次Dmaj7");
-  await expect(firstCard).toHaveAttribute("aria-current", "step");
+  await expect(lastCard).toHaveAttribute("aria-current", "step");
   await transport.getByRole("button", { name: "再開", exact: true }).click();
-  await expect(workspace.getByTestId("voicing-loop-current-next").locator("h2")).toHaveText("Dmaj7");
+  await expect(workspace.getByTestId("voicing-loop-current-next").locator("h2")).toHaveText("Gmaj9/A");
 
   await transport.getByRole("button", { name: "停止", exact: true }).click();
   await transport.getByRole("button", { name: "1オクターブ上げる", exact: true }).click();
   await expect(transport.getByTestId("voicing-loop-transport-primary")).toContainText("OCT+1");
   const primaryBox = await transport.getByTestId("voicing-loop-transport-primary").boundingBox();
   const midiBox = await transport.getByTestId("voicing-loop-transport-midi-row").boundingBox();
-  expect(primaryBox && midiBox && midiBox.y).toBeGreaterThan(primaryBox?.y ?? 0);
+  expect(primaryBox && midiBox && Math.abs(midiBox.y - primaryBox.y)).toBeLessThan(3);
 });

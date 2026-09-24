@@ -59,18 +59,23 @@ describe("P8.2 meter-neutral Voicing Loop", () => {
       practiceGroupBeats: 4,
     });
   });
-  it("rejects duration and event budgets rather than counting source bars", () => {
+  it("enforces the 128 PracticeGroup and event budgets independently of source bars", () => {
     const tooLong = block(1, 1201);
     const duration = buildProgressionVoicingPracticeSnapshot({
       sourceReference: { ideaId: "public-idea", blockId: tooLong.id },
       block: tooLong, selection: "source-midi",
     });
     expect(duration).toMatchObject({ ok: false, error: { code: "resource-budget" } });
-    const tenMinutes = block(1, 1200);
+    const withinGroups = block(1, 512);
     expect(buildProgressionVoicingPracticeSnapshot({
-      sourceReference: { ideaId: "public-idea", blockId: tenMinutes.id },
-      block: tenMinutes, selection: "source-midi",
+      sourceReference: { ideaId: "public-idea", blockId: withinGroups.id },
+      block: withinGroups, selection: "source-midi",
     }).ok).toBe(true);
+    const outsideGroups = block(1, 513);
+    expect(buildProgressionVoicingPracticeSnapshot({
+      sourceReference: { ideaId: "public-idea", blockId: outsideGroups.id },
+      block: outsideGroups, selection: "source-midi",
+    })).toMatchObject({ ok: false, error: { code: "resource-budget" } });
     const tooMany = block(1, 2401);
     tooMany.bpm = 240;
     expect(buildProgressionVoicingPracticeSnapshot({

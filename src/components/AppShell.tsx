@@ -40,7 +40,11 @@ interface AppShellProps {
   openLiveMidi: () => void;
   openSettings: () => void;
   openVoicingLoop: () => void;
+  openChordDojo?: () => void;
+  openBassPractice?: () => void;
   voicingLoopActive?: boolean;
+  bassPracticeActive?: boolean;
+  bassPracticeAvailable?: boolean;
   settingsOpen?: boolean;
   copy: AppCopy;
   saveStatus: SaveStatus;
@@ -70,6 +74,8 @@ export function AppShell({
   openLiveMidi,
   openSettings,
   openVoicingLoop,
+  openChordDojo,
+  openBassPractice,
   pageContext,
   pageNavigation,
   pageTitle,
@@ -78,6 +84,8 @@ export function AppShell({
   setView,
   view,
   voicingLoopActive = false,
+  bassPracticeActive = false,
+  bassPracticeAvailable = true,
 }: AppShellProps) {
   const playback = usePlaybackState(controller);
   const saveLabel = copy.save[saveStatus];
@@ -113,22 +121,36 @@ export function AppShell({
             {workspaceItems.map((item) => (
               <SidebarItem
                 key={item.view}
-                active={!settingsOpen
-                  && isRouteActive(view, item.view)
-                  && (item.view !== "practice" || !voicingLoopActive)}
+                active={!settingsOpen && isRouteActive(view, item.view)}
                 collapsed={collapsed}
                 icon={item.icon}
                 label={item.label}
                 onClick={() => setView(item.view)}
               />
             ))}
-            <SidebarItem
-              active={!settingsOpen && voicingLoopActive}
-              collapsed={collapsed}
-              icon={Repeat2}
-              label="Voicing Loop"
-              onClick={openVoicingLoop}
-            />
+            <div className={`ml-5 border-l border-[var(--lv-border)] pl-2 ${collapsed ? "hidden" : ""}`} data-testid="practice-sidebar-children">
+              <SidebarItem
+                active={!settingsOpen && view === "practice" && !voicingLoopActive && !bassPracticeActive}
+                collapsed={false}
+                icon={Piano}
+                label="Chord Dojo"
+                onClick={openChordDojo ?? (() => setView("practice"))}
+              />
+              <SidebarItem
+                active={!settingsOpen && voicingLoopActive}
+                collapsed={false}
+                icon={Repeat2}
+                label="Voicing Loop"
+                onClick={openVoicingLoop}
+              />
+              {bassPracticeAvailable ? <SidebarItem
+                active={!settingsOpen && bassPracticeActive}
+                collapsed={false}
+                icon={Dumbbell}
+                label="Bass Practice"
+                onClick={openBassPractice ?? (() => setView("practice"))}
+              /> : null}
+            </div>
             <SidebarItem
               active={false}
               collapsed={collapsed}

@@ -15,6 +15,34 @@ import {
 } from ".";
 
 describe("P5.27 detached practice snapshot", () => {
+  it("keeps source meters 1/4 through 12/4 with a separate four-beat PracticeGroup", () => {
+    for (let numerator = 1; numerator <= 12; numerator += 1) {
+      const block = { ...progression([event(1, 1, numerator, 0)]), timeSignature: `${numerator}/4` };
+      const result = buildProgressionVoicingPracticeSnapshot({
+        sourceReference: { ideaId: "idea-1", blockId: block.id }, block, selection: "source-midi",
+      });
+      expect(result.ok).toBe(true);
+      if (!result.ok) continue;
+      expect(result.snapshot.meter).toEqual({ numerator, denominator: 4 });
+      expect(result.snapshot.practiceGroupBeats).toBe(4);
+      expect(result.snapshot.lengthBeats).toBe(numerator);
+      expect(result.snapshot.events[0]).toMatchObject({ startBeat: 0, durationBeats: numerator });
+    }
+  });
+
+  it("accepts exactly 128 PracticeGroups and rejects the 129th without shortening source timing", () => {
+    const build = (beats: number) => {
+      const block = progression([event(1, 1, beats, 0)]);
+      return buildProgressionVoicingPracticeSnapshot({
+        sourceReference: { ideaId: "idea-1", blockId: block.id }, block, selection: "source-midi",
+      });
+    };
+    const accepted = build(512);
+    expect(accepted.ok).toBe(true);
+    if (accepted.ok) expect(accepted.snapshot).toMatchObject({ lengthBeats: 512, practiceGroupBeats: 4 });
+    expect(build(516)).toMatchObject({ ok: false, error: { code: "resource-budget" } });
+  });
+
   it("owns a strict allowlist of canonical facts and the selected exact Source pitches only", () => {
     const block = progression([event(18, 1, 4, 0, "maj7", [48, 55, 59])]);
     Object.assign(block, {
@@ -505,6 +533,21 @@ describe("P5.27 single non-scoring clock", () => {
       currentEventIndex: 0,
       nextEventIndex: 1,
     });
+  });
+
+  it("keeps a stopped chord anchor through count-in and accepts backward seek explicitly", () => {
+    const snapshot = snapshotFrom(progression([event(1, 1, 2, 0), event(1, 3, 2, 2)]));
+    let state = createProgressionPracticeClockState(snapshot, { countInBars: 1 });
+    state = reduceProgressionPracticeClock(snapshot, state, { type: "SEEK", status: "stopped", absoluteBeat: 6, anchorBeat: 2 });
+    expect(projectProgressionPracticeClock(snapshot, state).currentEventIndex).toBe(1);
+    state = reduceProgressionPracticeClock(snapshot, state, { type: "START" });
+    expect(projectProgressionPracticeClock(snapshot, state)).toMatchObject({ inCountIn: true, currentEventIndex: 1 });
+    state = reduceProgressionPracticeClock(snapshot, state, { type: "SYNC_TRANSPORT", absoluteBeat: 6 });
+    expect(projectProgressionPracticeClock(snapshot, state).currentEventIndex).toBe(1);
+    state = reduceProgressionPracticeClock(snapshot, state, { type: "SEEK", status: "running", absoluteBeat: 4, anchorBeat: 0 });
+    expect(projectProgressionPracticeClock(snapshot, state).currentEventIndex).toBe(0);
+    state = reduceProgressionPracticeClock(snapshot, state, { type: "STOP_RESET" });
+    expect(projectProgressionPracticeClock(snapshot, state)).toMatchObject({ status: "stopped", currentEventIndex: 0, loopCount: 0 });
   });
 
   it("stops only on the explicit user stop action", () => {

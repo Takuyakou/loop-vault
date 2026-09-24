@@ -91,7 +91,9 @@ describe("AppShell", () => {
       "Chord Capture",
       "Vault",
       "Practice",
+      "Chord Dojo",
       "Voicing Loop",
+      "Bass Practice",
       "Live MIDI",
       "History",
       "Settings",
@@ -123,9 +125,9 @@ describe("AppShell", () => {
     const voicingLoop = [...container.querySelectorAll<HTMLButtonElement>("nav button")]
       .find((button) => button.textContent === "Voicing Loop");
 
-    expect(practice?.getAttribute("aria-current")).toBeNull();
+    expect(practice?.getAttribute("aria-current")).toBe("page");
     expect(voicingLoop?.getAttribute("aria-current")).toBe("page");
-    expect(voicingLoop?.previousElementSibling).toBe(practice);
+    expect(voicingLoop?.closest("[data-testid='practice-sidebar-children']")).not.toBeNull();
     await act(async () => voicingLoop?.click());
     expect(openVoicingLoop).toHaveBeenCalledOnce();
 

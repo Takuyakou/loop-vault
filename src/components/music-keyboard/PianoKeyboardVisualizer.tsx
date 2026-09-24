@@ -170,7 +170,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
         ) : null}
         <div
           className={wideLayout
-            ? `w-full ${layout === "wide-88" ? "min-w-[78rem]" : "min-w-[72rem]"}`
+            ? `w-full ${layout === "wide-88" ? "min-w-[72rem]" : "min-w-[72rem]"}`
             : centerWhenFitted ? "w-max min-w-full" : "w-max"}
           data-keyboard-alignment={centerWhenFitted ? "center-when-fitted" : "start"}
           data-keyboard-layout={layout}
@@ -181,11 +181,12 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
             viewBox={`0 0 ${geometry.width} ${KEYBOARD_HEIGHT}`}
             width={wideLayout ? "100%" : geometry.width}
             height={KEYBOARD_HEIGHT}
-            className={wideLayout
-              ? "block h-auto w-full max-w-none"
-              : `block h-[clamp(6rem,13vw,8rem)] max-w-none ${centerWhenFitted ? "mx-auto" : ""}`}
+            className={layout === "wide-88"
+              ? "block h-[clamp(144px,17vh,188px)] w-full max-w-none"
+              : wideLayout ? "block h-auto w-full max-w-none"
+                : `block h-[clamp(6rem,13vw,8rem)] max-w-none ${centerWhenFitted ? "mx-auto" : ""}`}
             style={wideLayout ? undefined : { minWidth: `${geometry.width}px` }}
-            preserveAspectRatio={wideLayout ? "xMidYMid meet" : "none"}
+            preserveAspectRatio={layout === "wide-88" ? "none" : wideLayout ? "xMidYMid meet" : "none"}
           >
           <g data-key-layer="white">
             {visibleKeys.map((key) => (

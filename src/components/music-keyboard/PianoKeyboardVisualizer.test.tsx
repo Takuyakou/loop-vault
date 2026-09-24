@@ -70,7 +70,7 @@ describe("PianoKeyboardVisualizer", () => {
     expect(svg?.getAttribute("preserveAspectRatio")).toBe("xMidYMid meet");
   });
 
-  it("renders the full 88-key A0-C8 piano with proportional scaling", () => {
+  it("renders the full 88-key A0-C8 piano in the compact Voicing Loop slot", () => {
     const container = renderKeyboard({
       minMidiNote: 9,
       maxMidiNote: 96,
@@ -79,7 +79,7 @@ describe("PianoKeyboardVisualizer", () => {
     expect(container.querySelectorAll("[data-midi-note]")).toHaveLength(88);
     expect(container.querySelector('[data-midi-note="9"]')).not.toBeNull();
     expect(container.querySelector('[data-midi-note="96"]')).not.toBeNull();
-    expect(container.querySelector("svg")?.getAttribute("preserveAspectRatio")).toBe("xMidYMid meet");
+    expect(container.querySelector("svg")?.getAttribute("preserveAspectRatio")).toBe("none");
   });
 
   it("keeps a black-key finger label clear of the separate bass marker", () => {

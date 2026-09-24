@@ -9,11 +9,12 @@ import {
   progressionPracticeTicksAtBeat,
 } from "../domain/progressionVoicingPractice";
 import { createPreviewInstrument } from "../audio/chordPreview";
-import { ProgressionVoicingTransport } from "./ProgressionVoicingTransport";
+import { ProgressionVoicingTransport, ProgressionVoicingTransportV2 } from "./ProgressionVoicingTransport";
 
 const toneMock = vi.hoisted(() => {
   const scheduled: Array<{ callback: (time: number) => void; interval: string; start?: string | number }> = [];
   const drawCallbacks: Array<() => void> = [];
+  const oneShots: Array<{ id: number; callback: (time: number) => void; at: string | number }> = [];
   const instruments: PolySynth[] = [];
   const gains: Gain[] = [];
   class Gain {
@@ -40,6 +41,12 @@ const toneMock = vi.hoisted(() => {
       activeScheduleIds.add(id);
       return id;
     }),
+    scheduleOnce: vi.fn((callback: (time: number) => void, at: string | number) => {
+      const id = scheduled.length + oneShots.length + 1;
+      oneShots.push({ id, callback, at });
+      activeScheduleIds.add(id);
+      return id;
+    }),
   };
   class PolySynth {
     volume = { value: 0 };
@@ -58,6 +65,7 @@ const toneMock = vi.hoisted(() => {
     gains,
     Gain,
     scheduled,
+    oneShots,
     instruments,
     activeScheduleIds,
     activeInstruments,
@@ -88,6 +96,7 @@ vi.mock("../audio/chordPreview", () => ({
 beforeEach(() => {
   vi.clearAllMocks();
   toneMock.scheduled.length = 0;
+  toneMock.oneShots.length = 0;
   toneMock.drawCallbacks.length = 0;
   toneMock.instruments.length = 0;
   toneMock.gains.length = 0;
@@ -101,6 +110,125 @@ beforeEach(() => {
 });
 
 describe("ProgressionVoicingTransport", () => {
+  it("v2 registers bounded rolling work and invalidates old chord callbacks on seek", async () => {
+    const runtime = new ProgressionVoicingTransportV2();
+    const onTransportBeat = vi.fn();
+    await runtime.start({ snapshot, plan, bpm: 80, countInBars: 0, metronomeEnabled: false, onTransportBeat });
+    expect(toneMock.scheduled).toHaveLength(3);
+    toneMock.scheduled[0]!.callback(1);
+    expect(toneMock.oneShots.length).toBeGreaterThan(0);
+    expect(toneMock.oneShots.length).toBeLessThanOrEqual(128);
+    const stale = toneMock.oneShots[0]!;
+    const attacksBefore = toneMock.instruments.reduce((count, instrument) => count + instrument.triggerAttackRelease.mock.calls.length, 0);
+    const result = runtime.seek(1);
+    expect(result).toEqual({ status: "running", absoluteBeat: snapshot.events[1]!.startBeat });
+    stale.callback(2);
+    const attacksAfter = toneMock.instruments.reduce((count, instrument) => count + instrument.triggerAttackRelease.mock.calls.length, 0);
+    expect(attacksAfter).toBe(attacksBefore + 1);
+    expect(onTransportBeat).toHaveBeenLastCalledWith(snapshot.events[1]!.startBeat);
+    runtime.stop();
+    expect(toneMock.activeScheduleIds.size).toBe(0);
+  });
+
+  it("keeps silence and the chosen anchor when seeking while paused in count-in", async () => {
+    const runtime = new ProgressionVoicingTransportV2();
+    await runtime.start({ snapshot, plan, bpm: 80, countInBars: 1,
+      metronomeEnabled: true, onTransportBeat: vi.fn() });
+    expect(runtime.pause()).toBe(true);
+    const starts = toneMock.transport.start.mock.calls.length;
+    expect(runtime.seek(1)).toEqual({ status: "paused", absoluteBeat: 0 });
+    expect(toneMock.transport.start).toHaveBeenCalledTimes(starts);
+    await expect(runtime.resume()).resolves.toBe(true);
+    expect(toneMock.transport.start).toHaveBeenCalledTimes(starts + 1);
+    runtime.stop();
+    expect(toneMock.activeScheduleIds.size).toBe(0);
+  });
+
+  it("empties the WebAudio active-note ledger on pause and stop", async () => {
+    const runtime = new ProgressionVoicingTransportV2();
+    await runtime.start({ snapshot, plan, bpm: 80, countInBars: 0,
+      metronomeEnabled: false, onTransportBeat: vi.fn() });
+    toneMock.scheduled[0]!.callback(1);
+    toneMock.oneShots[0]!.callback(1);
+    expect(runtime.activeNoteCount).toBe(3);
+    expect(runtime.pause()).toBe(true);
+    expect(runtime.activeNoteCount).toBe(0);
+    await runtime.resume();
+    expect(runtime.activeNoteCount).toBe(3);
+    runtime.seek(1);
+    expect(runtime.activeNoteCount).toBe(3);
+    runtime.stop();
+    expect(runtime.activeNoteCount).toBe(0);
+    expect(toneMock.activeInstruments.size).toBe(0);
+  });
+
+  it("preserves loop count when seeking from a later loop", async () => {
+    const runtime = new ProgressionVoicingTransportV2();
+    const onTransportBeat = vi.fn();
+    await runtime.start({ snapshot, plan, bpm: 80, countInBars: 0,
+      metronomeEnabled: false, onTransportBeat });
+    toneMock.transport.ticks = (3 * snapshot.lengthBeats + 1) * toneMock.transport.PPQ;
+    expect(runtime.seek(1)).toEqual({ status: "running", absoluteBeat: 3 * snapshot.lengthBeats + 2 });
+    expect(onTransportBeat).toHaveBeenLastCalledWith(3 * snapshot.lengthBeats + 2);
+    runtime.stop();
+  });
+
+  it("keeps schedules and voices bounded through fixed-seed mixed actions", async () => {
+    for (const seed of [0x10203, 0x52917, 0x73451]) {
+      let random = seed;
+      const next = () => { random ^= random << 13; random ^= random >>> 17; random ^= random << 5; return random >>> 0; };
+      const runtime = new ProgressionVoicingTransportV2();
+      for (let step = 0; step < 320; step += 1) {
+        const action = next() % 11;
+        if (action === 0 || action === 9 || action === 10) {
+          runtime.stop();
+          toneMock.transport.ticks = 0;
+          await runtime.start({ snapshot, plan, bpm: 80, countInBars: 0,
+            metronomeEnabled: false, onTransportBeat: vi.fn() });
+        } else if (action === 1) runtime.pause();
+        else if (action === 2) await runtime.resume();
+        else if (action === 3) runtime.seek(next() % snapshot.events.length);
+        else if (action === 4) await runtime.restart();
+        else if (action === 5) runtime.setMetronomeEnabled((next() & 1) === 0);
+        else if (action === 6) await runtime.audition([48, 55, 59]);
+        else if (action === 7) {
+          const worker = toneMock.scheduled[toneMock.scheduled.length - 3];
+          worker?.callback(1);
+        } else runtime.stop();
+        expect(toneMock.activeScheduleIds.size).toBeLessThanOrEqual(131);
+        expect(toneMock.activeInstruments.size).toBeLessThanOrEqual(3);
+      }
+      runtime.stop();
+      expect(toneMock.activeScheduleIds.size).toBe(0);
+      expect(toneMock.activeInstruments.size).toBe(0);
+    }
+  });
+
+  it("keeps registered work fixed for 128 PracticeGroups and clears it after stop", async () => {
+    const events = Array.from({ length: 128 }, (_, index) => ({
+      ...snapshot.events[0]!, id: `event-${index}`, startBeat: index * 4, durationBeats: 4,
+    }));
+    const longSnapshot: ProgressionVoicingPracticeSnapshot = {
+      ...snapshot, lengthBeats: 512, events,
+      spans: events.map((event, eventIndex) => ({
+        kind: "chord" as const, eventIndex, startBeat: event.startBeat, durationBeats: event.durationBeats,
+      })),
+    };
+    const longPlan: ProgressionPracticeVoicingPlan = {
+      ...plan, events: events.map((event) => ({ ...plan.events[0]!, eventId: event.id })),
+    };
+    const runtime = new ProgressionVoicingTransportV2();
+    await runtime.start({ snapshot: longSnapshot, plan: longPlan, bpm: 80, countInBars: 0,
+      metronomeEnabled: false, onTransportBeat: vi.fn() });
+    expect(toneMock.scheduled).toHaveLength(3);
+    toneMock.scheduled[0]!.callback(1);
+    expect(toneMock.oneShots.length).toBeLessThanOrEqual(128);
+    expect(toneMock.oneShots.length).toBeGreaterThan(0);
+    runtime.stop();
+    expect(toneMock.activeScheduleIds.size).toBe(0);
+    expect(toneMock.activeInstruments.size).toBe(0);
+  });
+
   it("hot-swaps a compatible plan at the next chord boundary without stopping the clock", async () => {
     const sustained = Object.assign(new toneMock.PolySynth(), { triggerAttack: vi.fn() });
     vi.mocked(createPreviewInstrument).mockResolvedValueOnce(sustained);

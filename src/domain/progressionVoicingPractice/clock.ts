@@ -15,6 +15,8 @@ export interface ProgressionPracticeClockState {
   readonly countInBars: 0 | 1 | 2;
   /** Absolute Tone Transport beat since the latest Start/Restart. */
   readonly transportBeat: number;
+  /** Chord onset selected while stopped or during count-in. */
+  readonly anchorBeat?: number;
 }
 
 export type ProgressionPracticeClockAction =
@@ -24,7 +26,9 @@ export type ProgressionPracticeClockAction =
   | { readonly type: "RESUME" }
   | { readonly type: "RESTART" }
   | { readonly type: "SET_BPM"; readonly bpm: number }
-  | { readonly type: "STOP" };
+  | { readonly type: "STOP" }
+  | { readonly type: "STOP_RESET" }
+  | { readonly type: "SEEK"; readonly absoluteBeat: number; readonly status: "stopped" | "paused" | "running" | "count-in"; readonly anchorBeat: number };
 
 export interface ProgressionPracticeClockProjection {
   readonly status: ProgressionPracticeClockStatus;
@@ -102,7 +106,13 @@ export function reduceProgressionPracticeClock(
         state.transportBeat,
       );
     case "RESTART":
-      return freezeState(state, schedule.countInBeats > 0 ? "count-in" : "running", 0);
+      return Object.freeze({ ...state, status: schedule.countInBeats > 0 ? "count-in" : "running", transportBeat: 0, anchorBeat: 0 });
+    case "SEEK":
+      if (!Number.isFinite(action.absoluteBeat) || !Number.isFinite(action.anchorBeat)
+        || action.anchorBeat < 0 || action.anchorBeat >= snapshot.lengthBeats) return state;
+      return Object.freeze({ ...state, status: action.status, transportBeat: action.absoluteBeat, anchorBeat: action.anchorBeat });
+    case "STOP_RESET":
+      return Object.freeze({ ...state, status: "stopped", transportBeat: 0, anchorBeat: 0 });
     case "SET_BPM":
       assertBpm(action.bpm);
       if (action.bpm === state.bpm) return state;
@@ -119,7 +129,9 @@ export function projectProgressionPracticeClock(
   const schedule = buildProgressionPracticeClockSchedule(snapshot, state.countInBars);
   const beforeProgression = state.transportBeat < schedule.progressionStartBeat;
   const inCountIn = (state.status === "count-in" || state.status === "paused") && beforeProgression;
-  const elapsed = Math.max(0, state.transportBeat - schedule.progressionStartBeat);
+  const elapsed = beforeProgression
+    ? Math.max(0, state.anchorBeat ?? 0)
+    : Math.max(0, state.transportBeat - schedule.progressionStartBeat);
   const { loopCount, progressionBeat } = splitLoopPosition(elapsed, schedule.loopBeats);
   const currentSpanIndex = findCurrentSpanIndex(snapshot, progressionBeat);
   const current = snapshot.spans[currentSpanIndex]!;

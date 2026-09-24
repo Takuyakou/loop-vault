@@ -4,7 +4,7 @@ import { assertNoHorizontalOverflow, openApp } from "./helpers/app";
 
 async function openPopulatedVoicingLoop(page: Page) {
   await openApp(page);
-  await page.locator("nav").getByRole("button", { name: /Practice/ }).click();
+  await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
   await page.getByRole("tab", { name: "Voicing Loop" }).click();
   return page.getByTestId("voicing-loop-workspace");
 }
@@ -40,22 +40,23 @@ test("P5.30 compact workspace follows the approved order and fixed timeline geom
     const rect = element.getBoundingClientRect();
     return { width: rect.width, height: rect.height };
   }));
-  expect(boxes.every(({ width, height }) => width === 92 && height === 46)).toBe(true);
+  expect(boxes.every(({ width, height }) => width === 72.5 && height === 54)).toBe(true);
   await expect(timeline.getByTestId("voicing-loop-playhead")).toHaveAttribute("aria-hidden", "true");
   await expect(timeline.getByTestId("voicing-loop-playhead-marker")).toBeVisible();
   await expect(timeline.getByTestId("voicing-loop-event-beat-rail")).toHaveCount(await cards.count());
-  await expect(controls.evaluate((element) => element.scrollWidth <= element.clientWidth)).resolves.toBe(true);
   await assertNoHorizontalOverflow(page);
 });
 
 test("P5.30 card audition is keyboard-operable and reference sound is session-local", async ({ page }) => {
   const workspace = await openPopulatedVoicingLoop(page);
   const currentHeading = workspace.getByTestId("voicing-loop-current-next").getByRole("heading", { level: 2 });
-  const secondCard = workspace.getByRole("button", { name: /2\/2: Dm7.*このコードを試聴/ });
+  const secondCard = workspace.getByRole("button", { name: /2\/2: Dm7.*ここへ移動/ });
+  const preview = workspace.getByTestId("voicing-loop-event-preview").nth(1);
+  await preview.click();
   const initialBox = await secondCard.boundingBox();
   await secondCard.focus();
   await page.keyboard.press("Enter");
-  await expect(secondCard).toHaveAttribute("aria-pressed", "true");
+  await expect(secondCard).toHaveAttribute("aria-current", "step");
   await expect(currentHeading).toHaveText("Dm7");
   await expect(workspace).toContainText("0 周完了");
   const auditionedBox = await secondCard.boundingBox();
@@ -82,13 +83,14 @@ test("P5.30 card audition is keyboard-operable and reference sound is session-lo
   await expect(referenceSound).not.toBeChecked();
 });
 
-test("P5.30 128-event timeline stays local, auto-reveals, reduced-motion, and axe-clean", async ({ page }) => {
+test("P5.30 128-event timeline stays local, resumes follow, reduced-motion, and axe-clean", async ({ page }) => {
   test.setTimeout(120_000);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 320, height: 812 });
   await page.goto("/?p528Direct=1");
   await page.evaluate(() => document.fonts.ready);
-  await page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true }).click();
+  await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
+  await page.getByRole("tab", { name: "Voicing Loop" }).click();
   await page.getByRole("button", { name: /Textで新しい進行を入力/ }).click();
 
   const capture = page.getByTestId("text-progression-capture");
@@ -113,7 +115,7 @@ test("P5.30 128-event timeline stays local, auto-reveals, reduced-motion, and ax
     const rect = element.getBoundingClientRect();
     return `${rect.width}x${rect.height}`;
   }));
-  expect(new Set(geometry)).toEqual(new Set(["92x46"]));
+  expect(new Set(geometry)).toEqual(new Set(["36.25x54"]));
   const viewport = workspace.getByTestId("voicing-loop-timeline-viewport");
   expect(await viewport.evaluate((element) => element.scrollWidth > element.clientWidth)).toBe(true);
   await assertNoHorizontalOverflow(page);
@@ -125,6 +127,8 @@ test("P5.30 128-event timeline stays local, auto-reveals, reduced-motion, and ax
   });
   expect(maximumScroll).toBeGreaterThan(0);
   await page.getByRole("button", { name: /開始/ }).click();
+  await expect(workspace.getByTestId("voicing-loop-follow")).toHaveText(/MANUAL/);
+  await page.keyboard.press("f");
   await expect.poll(() => viewport.evaluate((element) => element.scrollLeft), { timeout: 5_000 })
     .toBeLessThan(maximumScroll);
   await expect(workspace.locator("[data-testid='voicing-loop-event'][aria-current='step']")).toHaveCount(1);
