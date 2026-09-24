@@ -94,6 +94,15 @@
       "stage08-phase-docs-valid",
       "stage08-production-diff-zero",
       "stage08-privacy-and-diff-clean"
+    ],
+    "P7.0-09": [
+      "twenty-three-configurations-executed",
+      "copy-and-identity-decoder-interactions",
+      "tier1-tier2-correction-performance-reported",
+      "stage09-focused-tests-types-lint",
+      "stage09-phase-docs-valid",
+      "stage09-production-diff-zero",
+      "stage09-privacy-and-diff-clean"
     ]
   },
   "gateResults": {
@@ -155,6 +164,6 @@
     "stage08-production-diff-zero": "pass",
     "stage08-privacy-and-diff-clean": "pass"
   },
-  "nextAction": "P7.0-09: run at most 24 modular configurations including all copy baselines and old/new identity \u00d7 decoder interactions.",
+  "nextAction": "P7.0-09: verify all 23 tournament configurations and interaction report before external baseline and architecture shortlist.",
   "updatedAt": "2026-09-24"
 }
