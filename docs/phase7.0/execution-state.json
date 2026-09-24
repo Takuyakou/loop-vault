@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "phaseId": "7.0",
-  "status": "in-progress",
-  "activeStage": "P7.0-11",
+  "status": "completed",
+  "activeStage": null,
   "completedStages": [
     "P7.0-00",
     "P7.0-01",
@@ -14,12 +14,13 @@
     "P7.0-07",
     "P7.0-08",
     "P7.0-09",
-    "P7.0-10"
+    "P7.0-10",
+    "P7.0-11"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "362e0df3d0cd21ab7d697f792553974703d44a8b",
-  "lastVerifiedCommit": "6ad085f838b4674039e0c14536773adf03fbcd01",
+  "lastVerifiedCommit": "c3039c4dec75ebf4f622ce30d96b452c2eee23e8",
   "currentBranch": "research/phase7-core-v2",
   "requiredGates": {
     "P7.0-00": [
@@ -195,8 +196,14 @@
     "stage10-script-types-lint-and-live-tests": "pass",
     "stage10-phase-docs-valid": "pass",
     "stage10-production-diff-zero": "pass",
-    "stage10-privacy-and-diff-clean": "pass"
+    "stage10-privacy-and-diff-clean": "pass",
+    "single-sealed-final-aggregate": "pass",
+    "no-post-holdout-retune": "pass",
+    "architecture-decision-and-phase8-handoff": "pass",
+    "final-regression-types-and-docs": "pass",
+    "stage11-production-diff-zero": "pass",
+    "stage11-privacy-and-diff-clean": "pass"
   },
-  "nextAction": "P7.0-11: verify final aggregate, regression, privacy, and architecture handoff; stop before production integration.",
+  "nextAction": "STOP. Phase 7 research complete with Architecture A direction and Phase 8 handoff; local human Gold remains non-blocking and unavailable. No production integration, merge, push, tag, or release.",
   "updatedAt": "2026-09-24"
 }
