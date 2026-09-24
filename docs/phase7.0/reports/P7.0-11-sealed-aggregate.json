@@ -1,0 +1,448 @@
+{
+  "schemaVersion": 1,
+  "cohort": "sealed-synthetic-v1",
+  "files": 26,
+  "categories": 13,
+  "configurationsEvaluated": 23,
+  "overall": {
+    "Copy-Oracle": {
+      "events": 44,
+      "exact": 44,
+      "noteF1": 1,
+      "missing": 0,
+      "extra": 0,
+      "structuralTop1": 0,
+      "candidateRecall": 0,
+      "boundaryHits": 18,
+      "boundaryGold": 18,
+      "boundaryProposed": 18,
+      "passingPreserved": 0,
+      "passingTotal": 0,
+      "cardCountDelta": 0,
+      "wallMs": 0,
+      "maxCandidates": 0
+    },
+    "Copy-Simple": {
+      "events": 44,
+      "exact": 40,
+      "noteF1": 0.9822485207100592,
+      "missing": 0,
+      "extra": 6,
+      "structuralTop1": 0,
+      "candidateRecall": 0,
+      "boundaryHits": 14,
+      "boundaryGold": 18,
+      "boundaryProposed": 78,
+      "passingPreserved": 0,
+      "passingTotal": 0,
+      "cardCountDelta": 0,
+      "wallMs": 0,
+      "maxCandidates": 0
+    },
+    "Copy-ProductBoundary": {
+      "events": 44,
+      "exact": 27,
+      "noteF1": 0.9196675900277008,
+      "missing": 0,
+      "extra": 29,
+      "structuralTop1": 0,
+      "candidateRecall": 0,
+      "boundaryHits": 10,
+      "boundaryGold": 18,
+      "boundaryProposed": 17,
+      "passingPreserved": 0,
+      "passingTotal": 0,
+      "cardCountDelta": 0,
+      "wallMs": 0,
+      "maxCandidates": 0
+    },
+    "product/product-hard/old/old": {
+      "events": 44,
+      "exact": 27,
+      "noteF1": 0.9196675900277008,
+      "missing": 0,
+      "extra": 29,
+      "structuralTop1": 35,
+      "candidateRecall": 38,
+      "boundaryHits": 10,
+      "boundaryGold": 18,
+      "boundaryProposed": 17,
+      "passingPreserved": 0,
+      "passingTotal": 4,
+      "cardCountDelta": 11,
+      "wallMs": 138.20949999998993,
+      "maxCandidates": 6
+    },
+    "product/product-hard/old/C2": {
+      "events": 44,
+      "exact": 27,
+      "noteF1": 0.9196675900277008,
+      "missing": 0,
+      "extra": 29,
+      "structuralTop1": 35,
+      "candidateRecall": 38,
+      "boundaryHits": 10,
+      "boundaryGold": 18,
+      "boundaryProposed": 17,
+      "passingPreserved": 0,
+      "passingTotal": 4,
+      "cardCountDelta": 11,
+      "wallMs": 109.83450000000812,
+      "maxCandidates": 6
+    },
+    "product/product-hard/new/C2": {
+      "events": 44,
+      "exact": 27,
+      "noteF1": 0.9196675900277008,
+      "missing": 0,
+      "extra": 29,
+      "structuralTop1": 31,
+      "candidateRecall": 38,
+      "boundaryHits": 10,
+      "boundaryGold": 18,
+      "boundaryProposed": 17,
+      "passingPreserved": 0,
+      "passingTotal": 4,
+      "cardCountDelta": 11,
+      "wallMs": 115.48959999999715,
+      "maxCandidates": 240
+    },
+    "lattice/product-hard/old/C2": {
+      "events": 44,
+      "exact": 42,
+      "noteF1": 0.9940119760479041,
+      "missing": 0,
+      "extra": 2,
+      "structuralTop1": 35,
+      "candidateRecall": 38,
+      "boundaryHits": 18,
+      "boundaryGold": 18,
+      "boundaryProposed": 82,
+      "passingPreserved": 4,
+      "passingTotal": 4,
+      "cardCountDelta": 64,
+      "wallMs": 56.71189999999842,
+      "maxCandidates": 6
+    },
+    "lattice/soft-role/new/C2": {
+      "events": 44,
+      "exact": 42,
+      "noteF1": 0.9940119760479041,
+      "missing": 0,
+      "extra": 2,
+      "structuralTop1": 42,
+      "candidateRecall": 42,
+      "boundaryHits": 18,
+      "boundaryGold": 18,
+      "boundaryProposed": 82,
+      "passingPreserved": 4,
+      "passingTotal": 4,
+      "cardCountDelta": 64,
+      "wallMs": 71.23720000000685,
+      "maxCandidates": 240
+    },
+    "fixed-beat/soft-role/new/C2": {
+      "events": 44,
+      "exact": 40,
+      "noteF1": 0.9822485207100592,
+      "missing": 0,
+      "extra": 6,
+      "structuralTop1": 40,
+      "candidateRecall": 42,
+      "boundaryHits": 14,
+      "boundaryGold": 18,
+      "boundaryProposed": 78,
+      "passingPreserved": 2,
+      "passingTotal": 4,
+      "cardCountDelta": 60,
+      "wallMs": 69.55059999999139,
+      "maxCandidates": 240
+    }
+  },
+  "categoryAggregates": {
+    "ordinary-sustained-chord": {
+      "Copy-Simple": {
+        "events": 2,
+        "exact": 2,
+        "boundaryHits": 0,
+        "boundaryGold": 0
+      },
+      "product/product-hard/old/old": {
+        "events": 2,
+        "exact": 2,
+        "boundaryHits": 0,
+        "boundaryGold": 0
+      },
+      "lattice/soft-role/new/C2": {
+        "events": 2,
+        "exact": 2,
+        "boundaryHits": 0,
+        "boundaryGold": 0
+      }
+    },
+    "single-voice-passing-note": {
+      "Copy-Simple": {
+        "events": 2,
+        "exact": 2,
+        "boundaryHits": 0,
+        "boundaryGold": 0
+      },
+      "product/product-hard/old/old": {
+        "events": 2,
+        "exact": 2,
+        "boundaryHits": 0,
+        "boundaryGold": 0
+      },
+      "lattice/soft-role/new/C2": {
+        "events": 2,
+        "exact": 2,
+        "boundaryHits": 0,
+        "boundaryGold": 0
+      }
+    },
+    "neighbor-note": {
+      "Copy-Simple": {
+        "events": 2,
+        "exact": 2,
+        "boundaryHits": 0,
+        "boundaryGold": 0
+      },
+      "product/product-hard/old/old": {
+        "events": 2,
+        "exact": 1,
+        "boundaryHits": 0,
+        "boundaryGold": 0
+      },
+      "lattice/soft-role/new/C2": {
+        "events": 2,
+        "exact": 2,
+        "boundaryHits": 0,
+        "boundaryGold": 0
+      }
+    },
+    "appoggiatura-like-note": {
+      "Copy-Simple": {
+        "events": 2,
+        "exact": 2,
+        "boundaryHits": 0,
+        "boundaryGold": 0
+      },
+      "product/product-hard/old/old": {
+        "events": 2,
+        "exact": 2,
+        "boundaryHits": 0,
+        "boundaryGold": 0
+      },
+      "lattice/soft-role/new/C2": {
+        "events": 2,
+        "exact": 2,
+        "boundaryHits": 0,
+        "boundaryGold": 0
+      }
+    },
+    "same-voicing-restrike": {
+      "Copy-Simple": {
+        "events": 2,
+        "exact": 2,
+        "boundaryHits": 0,
+        "boundaryGold": 0
+      },
+      "product/product-hard/old/old": {
+        "events": 2,
+        "exact": 2,
+        "boundaryHits": 0,
+        "boundaryGold": 0
+      },
+      "lattice/soft-role/new/C2": {
+        "events": 2,
+        "exact": 2,
+        "boundaryHits": 0,
+        "boundaryGold": 0
+      }
+    },
+    "same-voicing-arpeggio": {
+      "Copy-Simple": {
+        "events": 2,
+        "exact": 2,
+        "boundaryHits": 0,
+        "boundaryGold": 0
+      },
+      "product/product-hard/old/old": {
+        "events": 2,
+        "exact": 2,
+        "boundaryHits": 0,
+        "boundaryGold": 0
+      },
+      "lattice/soft-role/new/C2": {
+        "events": 2,
+        "exact": 2,
+        "boundaryHits": 0,
+        "boundaryGold": 0
+      }
+    },
+    "voicing-only-change": {
+      "Copy-Simple": {
+        "events": 4,
+        "exact": 4,
+        "boundaryHits": 2,
+        "boundaryGold": 2
+      },
+      "product/product-hard/old/old": {
+        "events": 4,
+        "exact": 0,
+        "boundaryHits": 0,
+        "boundaryGold": 2
+      },
+      "lattice/soft-role/new/C2": {
+        "events": 4,
+        "exact": 4,
+        "boundaryHits": 2,
+        "boundaryGold": 2
+      }
+    },
+    "one-beat-passing-chord": {
+      "Copy-Simple": {
+        "events": 6,
+        "exact": 6,
+        "boundaryHits": 4,
+        "boundaryGold": 4
+      },
+      "product/product-hard/old/old": {
+        "events": 6,
+        "exact": 2,
+        "boundaryHits": 2,
+        "boundaryGold": 4
+      },
+      "lattice/soft-role/new/C2": {
+        "events": 6,
+        "exact": 6,
+        "boundaryHits": 4,
+        "boundaryGold": 4
+      }
+    },
+    "half-beat-passing-chord": {
+      "Copy-Simple": {
+        "events": 6,
+        "exact": 4,
+        "boundaryHits": 2,
+        "boundaryGold": 4
+      },
+      "product/product-hard/old/old": {
+        "events": 6,
+        "exact": 2,
+        "boundaryHits": 2,
+        "boundaryGold": 4
+      },
+      "lattice/soft-role/new/C2": {
+        "events": 6,
+        "exact": 6,
+        "boundaryHits": 4,
+        "boundaryGold": 4
+      }
+    },
+    "true-harmonic-change": {
+      "Copy-Simple": {
+        "events": 4,
+        "exact": 4,
+        "boundaryHits": 2,
+        "boundaryGold": 2
+      },
+      "product/product-hard/old/old": {
+        "events": 4,
+        "exact": 4,
+        "boundaryHits": 2,
+        "boundaryGold": 2
+      },
+      "lattice/soft-role/new/C2": {
+        "events": 4,
+        "exact": 4,
+        "boundaryHits": 2,
+        "boundaryGold": 2
+      }
+    },
+    "sustained-pedal-residual": {
+      "Copy-Simple": {
+        "events": 4,
+        "exact": 2,
+        "boundaryHits": 2,
+        "boundaryGold": 2
+      },
+      "product/product-hard/old/old": {
+        "events": 4,
+        "exact": 2,
+        "boundaryHits": 2,
+        "boundaryGold": 2
+      },
+      "lattice/soft-role/new/C2": {
+        "events": 4,
+        "exact": 2,
+        "boundaryHits": 2,
+        "boundaryGold": 2
+      }
+    },
+    "bass-pedal-point": {
+      "Copy-Simple": {
+        "events": 4,
+        "exact": 4,
+        "boundaryHits": 2,
+        "boundaryGold": 2
+      },
+      "product/product-hard/old/old": {
+        "events": 4,
+        "exact": 4,
+        "boundaryHits": 2,
+        "boundaryGold": 2
+      },
+      "lattice/soft-role/new/C2": {
+        "events": 4,
+        "exact": 4,
+        "boundaryHits": 2,
+        "boundaryGold": 2
+      }
+    },
+    "syncopated-harmonic-change": {
+      "Copy-Simple": {
+        "events": 4,
+        "exact": 4,
+        "boundaryHits": 0,
+        "boundaryGold": 2
+      },
+      "product/product-hard/old/old": {
+        "events": 4,
+        "exact": 2,
+        "boundaryHits": 0,
+        "boundaryGold": 2
+      },
+      "lattice/soft-role/new/C2": {
+        "events": 4,
+        "exact": 4,
+        "boundaryHits": 2,
+        "boundaryGold": 2
+      }
+    }
+  },
+  "paired": {
+    "product/product-hard/old/old": {
+      "pieces": 26,
+      "wins": 0,
+      "ties": 17,
+      "losses": 9,
+      "meanExactRateDeltaVsCopySimple": -0.23076923076923078,
+      "normalApprox95CI": [
+        -0.36886009262311187,
+        -0.0926783689153497
+      ]
+    },
+    "lattice/soft-role/new/C2": {
+      "pieces": 26,
+      "wins": 2,
+      "ties": 24,
+      "losses": 0,
+      "meanExactRateDeltaVsCopySimple": 0.025641025641025644,
+      "normalApprox95CI": [
+        -0.009177636747025642,
+        0.06045968802907693
+      ]
+    }
+  }
+}

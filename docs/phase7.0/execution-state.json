@@ -114,6 +114,14 @@
       "stage10-phase-docs-valid",
       "stage10-production-diff-zero",
       "stage10-privacy-and-diff-clean"
+    ],
+    "P7.0-11": [
+      "single-sealed-final-aggregate",
+      "no-post-holdout-retune",
+      "architecture-decision-and-phase8-handoff",
+      "final-regression-types-and-docs",
+      "stage11-production-diff-zero",
+      "stage11-privacy-and-diff-clean"
     ]
   },
   "gateResults": {
@@ -189,6 +197,6 @@
     "stage10-production-diff-zero": "pass",
     "stage10-privacy-and-diff-clean": "pass"
   },
-  "nextAction": "P7.0-11: run the single sealed synthetic final evaluation; do not retune; write architecture decision and Phase 8 handoff.",
+  "nextAction": "P7.0-11: verify final aggregate, regression, privacy, and architecture handoff; stop before production integration.",
   "updatedAt": "2026-09-24"
 }
