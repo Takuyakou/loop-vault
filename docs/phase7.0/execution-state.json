@@ -75,6 +75,14 @@
       "stage06-phase-docs-valid",
       "stage06-production-diff-zero",
       "stage06-privacy-and-diff-clean"
+    ],
+    "P7.0-07": [
+      "four-candidate-vocabularies-compared",
+      "recall-before-top1-and-bounds-measured",
+      "stage07-script-typecheck-and-lint",
+      "stage07-phase-docs-valid",
+      "stage07-production-diff-zero",
+      "stage07-privacy-and-diff-clean"
     ]
   },
   "gateResults": {
@@ -123,6 +131,6 @@
     "stage06-production-diff-zero": "pass",
     "stage06-privacy-and-diff-clean": "pass"
   },
-  "nextAction": "P7.0-07: compare legacy, expanded bounded, factorized, and shortcut-plus-factorized candidate representations.",
+  "nextAction": "P7.0-07: verify source-conditioned candidate representation experiment and close gates.",
   "updatedAt": "2026-09-24"
 }
