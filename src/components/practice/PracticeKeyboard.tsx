@@ -31,6 +31,7 @@ interface PracticeKeyboardProps {
   centerWhenFitted?: boolean;
   fingerLabels?: ReadonlyMap<number, string>;
   keyboardLayout?: "default" | "wide-61" | "wide-88";
+  compactSummary?: boolean;
 }
 
 const copy = {
@@ -68,6 +69,7 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
   centerWhenFitted = false,
   fingerLabels,
   keyboardLayout = "default",
+  compactSummary = false,
 }: PracticeKeyboardProps) {
   const liveNoteState = useStore(defaultLiveMidiStore, (state) => state.notes);
   const currentHeldNotes = useMemo(() => heldNotes(liveNoteState), [liveNoteState]);
@@ -125,7 +127,7 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
         </p>
       ) : null}
       <p
-        className={`${compactWideLayout ? "mt-1 min-h-4 text-xs" : "mt-3 min-h-5 text-sm"} ${
+        className={`${compactSummary ? "sr-only" : compactWideLayout ? "mt-1 min-h-4 text-xs" : "mt-3 min-h-5 text-sm"} ${
           foreignNotes.length > 0 ? "text-amber-200" : "text-[var(--lv-text-muted)]"
         }`}
         aria-live="polite"

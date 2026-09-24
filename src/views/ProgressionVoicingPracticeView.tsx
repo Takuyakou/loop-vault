@@ -72,8 +72,6 @@ const ALL_PITCH_CLASSES = Object.freeze(Array.from({ length: 12 }, (_, index) =>
 const EMPTY_NOTES: readonly number[] = Object.freeze([]);
 const EMPTY_VAULT_PROGRESSIONS: readonly VoicingLoopVaultCandidate[] = Object.freeze([]);
 const VOICING_LOOP_KEYBOARD_RANGE = Object.freeze({ minMidiNote: 9, maxMidiNote: 96 });
-const TIMELINE_CARD_WIDTH_PX = 92;
-const TIMELINE_CARD_GAP_PX = 6;
 
 export interface ProgressionVoicingPracticeViewProps {
   readonly language: AppLanguage;
@@ -81,6 +79,13 @@ export interface ProgressionVoicingPracticeViewProps {
   readonly initialSelection?: ProgressionVoicingSelection;
   readonly monitorMidi?: boolean;
   readonly vaultProgressions?: readonly VoicingLoopVaultCandidate[];
+  readonly bulkSourcePreview?: {
+    readonly eligible: number;
+    readonly changed: number;
+    readonly skippedCustom: number;
+    readonly skippedMissingSource: number;
+  };
+  readonly onBulkSourceApply?: () => boolean;
   readonly onSelectProgression: (reference: ProgressionPracticeSourceReference) => boolean;
   readonly onEnterText: () => void;
   readonly openMidiSettings?: () => void;
@@ -364,6 +369,8 @@ export function ProgressionVoicingPracticeView({
   monitorMidi = true,
   onSelectProgression,
   onEnterText,
+  bulkSourcePreview,
+  onBulkSourceApply,
   openMidiSettings,
   resolutionOptions,
   snapshots,
@@ -474,6 +481,7 @@ export function ProgressionVoicingPracticeView({
     () => snapshot ? createProgressionPracticeClockState(snapshot, { countInBars }) : undefined,
   );
   const [displayMode, setDisplayMode] = useState<"learn" | "recall">("learn");
+  const [timelineScale, setTimelineScale] = useState<8 | 12 | 16>(8);
   const [showFingering, setShowFingering] = useState(true);
   const [fingeringPreferences, setFingeringPreferences] = useState(loadFingeringPreferences);
   const [draftFingers, setDraftFingers] = useState<Readonly<Record<FingeringHand, readonly FingerNumber[]>>>({
@@ -481,6 +489,7 @@ export function ProgressionVoicingPracticeView({
     right: [],
   });
   const [fingeringEditorOpen, setFingeringEditorOpen] = useState(false);
+  const [bulkSourceOpen, setBulkSourceOpen] = useState(false);
   const [metronomeEnabled, setMetronomeEnabled] = useState(true);
   const [referenceSoundEnabled, setReferenceSoundEnabled] = useState(true);
   const [auditionedIndex, setAuditionedIndex] = useState<number>();
@@ -566,8 +575,12 @@ export function ProgressionVoicingPracticeView({
     : snapshot?.events.length ? (auditionedIndex + 1) % snapshot.events.length : 0;
   const currentEvent = snapshot?.events[currentIndex];
   const nextEvent = snapshot?.events[nextIndex];
+  const thenNextIndex = snapshot?.events.length ? (nextIndex + 1) % snapshot.events.length : 0;
+  const thenNextEvent = snapshot?.events[thenNextIndex];
+  const thenNextDegree = progressionPracticeDegreeLabel(thenNextEvent?.chord, targetKey);
   const currentResolution = plan?.events[currentIndex];
   const nextResolution = plan?.events[nextIndex];
+  const thenNextResolution = plan?.events[thenNextIndex];
   const currentDegree = progressionPracticeDegreeLabel(currentEvent?.chord, targetKey);
   const nextDegree = progressionPracticeDegreeLabel(nextEvent?.chord, targetKey);
   const currentVoicing = currentResolution?.status === "SUPPORTED" ? currentResolution.voicing : undefined;
@@ -639,15 +652,15 @@ export function ProgressionVoicingPracticeView({
   }, [displayMode, keyboardLeftFingering, keyboardRightFingering, showFingering]);
   const active = clockState?.status === "running" || clockState?.status === "count-in";
   const paused = clockState?.status === "paused";
-  const playheadX = transportCurrentSpanIndex * (TIMELINE_CARD_WIDTH_PX + TIMELINE_CARD_GAP_PX)
-    + (projection?.chordProgress ?? 0) * TIMELINE_CARD_WIDTH_PX;
+  const practiceGroupBeats = snapshot?.practiceGroupBeats ?? 4;
+  const timelinePixelsPerBeat = 145 * 8 / (practiceGroupBeats * timelineScale);
+  const playheadX = (projection?.progressionBeat ?? 0) * timelinePixelsPerBeat;
   const visualStepMilliseconds = Math.max(
     16,
     Math.min(140, 60_000 / (clockState?.bpm ?? snapshot?.bpm ?? 120) / 16),
   );
   const allEventsPlayable = Boolean(plan && snapshot?.spans.length)
     && plan!.events.every((resolution) => resolution.status === "SUPPORTED");
-  const practiceGroupBeats = snapshot?.practiceGroupBeats ?? 4;
   const currentGroup = Math.floor((projection?.progressionBeat ?? 0) / practiceGroupBeats) + 1;
   const totalGroups = Math.max(1, Math.ceil((snapshot?.lengthBeats ?? 1) / practiceGroupBeats));
   const beatProgress = projection?.inCountIn
@@ -1038,16 +1051,10 @@ export function ProgressionVoicingPracticeView({
   }
 
   return (
-    <div className="flex h-full min-h-0 min-w-0 flex-col gap-2 overflow-x-hidden overflow-y-auto [@media(min-height:900px)]:overflow-y-hidden" data-testid="voicing-loop-workspace">
-      <SectionHeading
-        title={text.title}
-        description={text.description}
-        className="shrink-0"
-      />
-
-      <Surface className="shrink-0 px-3 py-2" data-testid="voicing-loop-controls">
-        <div className="flex min-w-0 flex-wrap items-center gap-x-5 gap-y-2">
-          <fieldset className="flex min-w-0 flex-wrap items-center gap-2" aria-describedby="voicing-loop-source-help">
+    <div className="flex h-full min-h-0 min-w-0 flex-col gap-[7px] overflow-x-hidden overflow-y-auto [@media(min-height:900px)]:overflow-y-hidden" data-testid="voicing-loop-workspace">
+      <Surface className="shrink-0 px-3 py-1" data-testid="voicing-loop-controls">
+        <div className="flex min-w-0 items-center gap-x-4 gap-y-2 overflow-x-auto whitespace-nowrap">
+          <fieldset className="flex shrink-0 items-center gap-2" aria-describedby="voicing-loop-source-help">
             <legend className="lv-section-kicker mr-1 float-left">SOURCE</legend>
             <p id="voicing-loop-source-help" className="sr-only">{text.sourceHelp}</p>
             {sourceSelections.map((item) => {
@@ -1065,7 +1072,7 @@ export function ProgressionVoicingPracticeView({
               );
             })}
           </fieldset>
-          <fieldset className="flex min-w-0 flex-wrap items-center gap-2" aria-describedby="voicing-loop-study-help">
+          <fieldset className="flex shrink-0 items-center gap-2" aria-describedby="voicing-loop-study-help">
             <legend className="lv-section-kicker mr-1 float-left">STUDY</legend>
             <p id="voicing-loop-study-help" className="sr-only">{text.studyHelp}</p>
             {studySelections.map((item) => (
@@ -1117,7 +1124,7 @@ export function ProgressionVoicingPracticeView({
             </label>
             <span id="voicing-loop-open-help" className="sr-only">{text.openHelp}</span>
           </fieldset>
-          <fieldset className="flex min-w-0 flex-wrap items-center gap-2">
+          <fieldset className="flex shrink-0 items-center gap-2">
             <legend className="lv-section-kicker mr-1 float-left">DISPLAY</legend>
             <div className="flex min-w-0 flex-wrap gap-2" role="group" aria-label={text.displayMode}>
               <Button size="sm" variant={displayMode === "learn" ? "primary" : "secondary"} aria-pressed={displayMode === "learn"} onClick={() => setDisplayMode("learn")}>{text.learn}</Button>
@@ -1162,25 +1169,32 @@ export function ProgressionVoicingPracticeView({
       ) : (
         <>
           <div className="shrink-0 space-y-2" data-testid="voicing-loop-current-next">
-            <div className="grid min-w-0 gap-2 lg:grid-cols-[minmax(0,1.65fr)_minmax(16rem,0.55fr)]">
-            <Surface variant="primary" className="min-w-0 p-3">
+            <div className="grid min-w-0 gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,440px)]">
+            <Surface variant="primary" className="min-w-0 p-2">
               <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="lv-section-kicker">{text.current} · {currentSpanIndex + 1}/{snapshot.spans.length}</p>
                   <div className="mt-1 flex min-w-0 items-baseline gap-2">
-                    <h2 className="break-words text-3xl font-bold tracking-tight text-[var(--lv-text)] sm:text-4xl">
+                    <h2 className="break-words text-4xl font-bold tracking-tight text-[var(--lv-text)] sm:text-[52px] sm:leading-[1.08]">
                       {currentEvent?.chord.label ?? restLabel}
                     </h2>
                     {currentDegree ? <span className="shrink-0 text-sm font-bold text-[var(--lv-accent)]" data-testid="voicing-loop-current-degree">{currentDegree}</span> : null}
                   </div>
                   <p className="sr-only" aria-live="polite" aria-atomic="true">{currentEvent?.chord.label ?? restLabel}</p>
                 </div>
-                {displayMode === "learn" && showFingering
-                  && (currentLeftFingering || currentRightFingering) ? (
-                    <Button size="sm" variant="secondary" onClick={openFingeringEditor}>
-                      {text.editFingering}
+                <div className="flex items-center gap-2">
+                  {bulkSourcePreview && onBulkSourceApply ? (
+                    <Button size="sm" variant="secondary" onClick={() => setBulkSourceOpen(true)}>
+                      {language === "ja" ? "この進行をSOURCEに" : "Use SOURCE for progression"}
                     </Button>
                   ) : null}
+                  {displayMode === "learn" && showFingering
+                    && (currentLeftFingering || currentRightFingering) ? (
+                      <Button size="sm" variant="secondary" onClick={openFingeringEditor}>
+                        {text.editFingering}
+                      </Button>
+                    ) : null}
+                </div>
               </div>
 
               {displayMode === "learn" && currentVoicing ? (
@@ -1219,7 +1233,7 @@ export function ProgressionVoicingPracticeView({
 
             </Surface>
 
-            <Surface className="min-w-0 p-3">
+            <Surface className="min-w-0 p-2">
               <p className="lv-section-kicker">{text.next}</p>
               <div className="mt-1 flex min-w-0 items-baseline gap-2">
                 <p className="break-words text-xl font-bold text-[var(--lv-text)]">{nextEvent?.chord.label ?? restLabel}</p>
@@ -1234,6 +1248,7 @@ export function ProgressionVoicingPracticeView({
                     pitches={nextHandTargets.left}
                     showFingering={showFingering}
                     text={text}
+                    voicing={nextVoicing}
                   />
                   <CompactHandVoicing
                     accidentalStyle={accidentalStyle}
@@ -1242,6 +1257,7 @@ export function ProgressionVoicingPracticeView({
                     pitches={nextHandTargets.right}
                     showFingering={showFingering}
                     text={text}
+                    voicing={nextVoicing}
                   />
                 </div>
               ) : null}
@@ -1250,45 +1266,49 @@ export function ProgressionVoicingPracticeView({
               </p>
             </Surface>
             </div>
+            <Surface className="flex min-h-11 items-center gap-3 px-3 py-1.5" data-testid="voicing-loop-then-next">
+              <span className="lv-section-kicker">{language === "ja" ? "その次" : "Then next"}</span>
+              <strong className="truncate text-lg text-[var(--lv-text)]">{thenNextEvent?.chord.label ?? restLabel}</strong>
+              {thenNextDegree ? <span className="text-xs font-bold text-[var(--lv-accent)]">{thenNextDegree}</span> : null}
+              {thenNextResolution?.status === "SUPPORTED" ? <span className="ml-auto truncate text-xs text-[var(--lv-text-secondary)]">
+                {formatPitchList(thenNextResolution.voicing.midiNotes, accidentalStyle)}
+              </span> : null}
+            </Surface>
 
-            <p className="mb-2 text-xs text-[var(--lv-text-muted)]" data-testid="voicing-loop-source-meter">
-              {language === "ja"
-                ? `元の拍子: ${snapshot.meter.numerator}/${snapshot.meter.denominator} · 練習グループ: ${snapshot.practiceGroupBeats ?? 4}拍`
-                : `Source meter: ${snapshot.meter.numerator}/${snapshot.meter.denominator} · Practice group: ${snapshot.practiceGroupBeats ?? 4} beats`}
-            </p>
-            <div className="grid min-w-0 grid-cols-3 gap-2" data-testid="voicing-loop-status">
-              <Metric
-                label={projection?.inCountIn ? text.countIn : text.beat}
-                testId="voicing-loop-beat-metric"
-                value={projection?.inCountIn
-                  ? text.beatLabel(projection.countInBeat ?? 1, snapshot.practiceGroupBeats ?? snapshot.meter.numerator)
-                  : text.beatLabel(projection?.beatInChord ?? 1, projection?.beatsInChord ?? Math.ceil(currentEvent?.durationBeats ?? 1))}
-              >
-                <ProgressMeter
-                  active={active}
-                  label={projection?.inCountIn ? text.countIn : text.beat}
-                  testId="voicing-loop-beat-progress-fill"
-                  transitionMilliseconds={visualStepMilliseconds}
-                  value={beatProgress}
-                />
-              </Metric>
-              <Metric label={text.position} testId="voicing-loop-position-metric" value={text.positionLabel(currentGroup, totalGroups)}>
-                <ProgressMeter
-                  active={active}
-                  label={text.position}
-                  testId="voicing-loop-position-progress-fill"
-                  transitionMilliseconds={visualStepMilliseconds}
-                  value={positionProgress}
-                />
-              </Metric>
-              <Metric label={text.loop} value={text.loopLabel(projection?.loopCount ?? 0)} />
-            </div>
           </div>
 
-          <Surface className="min-w-0 shrink-0 overflow-hidden px-2 py-1.5" aria-label={text.timeline} data-testid="voicing-loop-timeline">
+          <Surface className="min-w-0 min-h-[160px] shrink-0 overflow-hidden px-2 py-1.5" aria-label={text.timeline} data-testid="voicing-loop-timeline">
             <div className="flex min-w-0 items-center justify-between gap-3 px-1 text-[10px]">
-              <span className="font-bold tracking-[0.1em] text-[var(--lv-text-secondary)]">{text.progressionSection}</span>
-              <span className="text-[var(--lv-text-muted)]">{text.cardAuditionOnly}</span>
+              <span className="font-bold tracking-[0.1em] text-[var(--lv-text-secondary)]">{text.timeline}</span>
+              <div className="flex items-center gap-1" data-testid="voicing-loop-status">
+                <Metric compact label={projection?.inCountIn ? text.countIn : text.beat} testId="voicing-loop-beat-metric"
+                  value={projection?.inCountIn
+                    ? text.beatLabel(projection.countInBeat ?? 1, practiceGroupBeats)
+                    : text.beatLabel(projection?.beatInChord ?? 1, projection?.beatsInChord ?? Math.ceil(currentEvent?.durationBeats ?? 1))}>
+                  <ProgressMeter active={active} label={projection?.inCountIn ? text.countIn : text.beat}
+                    testId="voicing-loop-beat-progress-fill" transitionMilliseconds={visualStepMilliseconds} value={beatProgress} />
+                </Metric>
+                <Metric compact label={text.position} testId="voicing-loop-position-metric" value={`${currentGroup} / ${totalGroups}`}>
+                  <ProgressMeter active={active} label={text.position}
+                    testId="voicing-loop-position-progress-fill" transitionMilliseconds={visualStepMilliseconds} value={positionProgress} />
+                </Metric>
+                <Metric compact label={text.loop} value={text.loopLabel(projection?.loopCount ?? 0)} />
+              </div>
+              <div className="flex items-center gap-2 text-[var(--lv-text-muted)]">
+                <span>{currentGroup} / {totalGroups}</span>
+                <span>{text.loopLabel(projection?.loopCount ?? 0)}</span>
+                <span data-testid="voicing-loop-source-meter">{language === "ja" ? "元の拍子" : "Source meter"} {snapshot.meter.numerator}/{snapshot.meter.denominator}</span>
+                <span className="ml-2">{language === "ja" ? "表示" : "View"}</span>
+                {([8, 12, 16] as const).map((scale) => (
+                  <button key={scale} type="button" className={`rounded px-2 py-1 ${timelineScale === scale ? "bg-[var(--lv-accent-soft)] text-[var(--lv-accent)]" : ""}`}
+                    aria-pressed={timelineScale === scale} onClick={() => setTimelineScale(scale)}>{scale}</button>
+                ))}
+              </div>
+            </div>
+            <div className="relative mt-1 flex h-3 overflow-hidden rounded bg-[var(--lv-bg)]" data-testid="voicing-loop-overview" aria-label={language === "ja" ? "進行の全体図" : "Progression overview"}>
+              {Array.from({ length: totalGroups }, (_, index) => (
+                <span key={index} className={`h-full flex-1 border-r border-[var(--lv-bg)] ${index < currentGroup - 1 ? "bg-teal-700" : index === currentGroup - 1 ? "bg-[var(--lv-accent)]" : "bg-slate-700"}`} />
+              ))}
             </div>
             <div
               ref={timelineViewportRef}
@@ -1297,7 +1317,13 @@ export function ProgressionVoicingPracticeView({
               tabIndex={0}
               aria-label={text.timeline}
             >
-              <div className="relative flex w-max gap-1.5 py-1">
+              <div className="relative" style={{ width: `${snapshot.lengthBeats * timelinePixelsPerBeat}px` }}>
+                <div className="flex h-5 border-b border-[var(--lv-border)] text-[10px] text-[var(--lv-text-muted)]" data-testid="voicing-loop-ruler">
+                  {Array.from({ length: totalGroups }, (_, index) => (
+                    <span key={index} className="shrink-0 border-l border-[var(--lv-border)] pl-1" style={{ width: `${practiceGroupBeats * timelinePixelsPerBeat}px` }}>{index + 1}</span>
+                  ))}
+                </div>
+                <div className="relative flex gap-0 py-1">
                 <span
                   aria-hidden="true"
                   data-testid="voicing-loop-playhead"
@@ -1327,7 +1353,8 @@ export function ProgressionVoicingPracticeView({
                       data-testid="voicing-loop-event"
                       data-duration-beats={span.durationBeats}
                       data-span-kind={span.kind}
-                      className={`relative flex h-[46px] max-h-[46px] min-h-[46px] w-[92px] min-w-[92px] max-w-[92px] flex-none flex-col justify-start overflow-hidden rounded-[var(--lv-radius-sm)] border px-2 pb-3 pt-1.5 text-left text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-60 ${selected ? "border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)] shadow-[inset_0_0_0_1px_rgba(59,224,206,0.12)]" : auditioned ? "border-[var(--lv-accent)] bg-[var(--lv-surface-raised)] text-[var(--lv-text)]" : "border-[var(--lv-border)] bg-transparent text-[var(--lv-text-secondary)]"}`}
+                      style={{ width: `${span.durationBeats * timelinePixelsPerBeat}px` }}
+                      className={`relative flex h-[54px] min-h-[54px] flex-none flex-col justify-start overflow-hidden rounded-[var(--lv-radius-sm)] border px-2 pb-3 pt-1.5 text-left text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-60 ${selected ? "border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)] shadow-[inset_0_0_0_1px_rgba(59,224,206,0.12)]" : auditioned ? "border-[var(--lv-accent)] bg-[var(--lv-surface-raised)] text-[var(--lv-text)]" : "border-[var(--lv-border)] bg-transparent text-[var(--lv-text-secondary)]"}`}
                       aria-current={selected ? "step" : undefined}
                       aria-pressed={auditioned}
                       aria-label={`${index + 1}/${snapshot.spans.length}: ${event?.chord.label ?? restLabel}${degree ? `, ${degree}` : ""}, ${practiceTimingLabel(span, snapshot.practiceGroupBeats ?? snapshot.meter.numerator, language)}.${event ? ` ${text.auditionCard}` : ""}`}
@@ -1360,6 +1387,7 @@ export function ProgressionVoicingPracticeView({
                     </button>
                   );
                 })}
+                </div>
               </div>
             </div>
           </Surface>
@@ -1399,10 +1427,33 @@ export function ProgressionVoicingPracticeView({
                 interactionMode="neutral-monitor"
                 fingerLabels={keyboardFingerLabels}
                 keyboardLayout="wide-88"
+                compactSummary
               />
             </div>
           </Surface>
 
+          {bulkSourceOpen && bulkSourcePreview && onBulkSourceApply ? (
+            <Modal
+              ariaLabel={language === "ja" ? "SOURCEへの一括切り替え" : "Switch cards to SOURCE"}
+              onClose={() => setBulkSourceOpen(false)}
+              panelClassName="w-full max-w-md"
+            >
+              <div className="space-y-3 p-4">
+                <h2 className="text-lg font-bold">{language === "ja" ? "この進行のカードをまとめてSOURCEにする" : "Switch eligible cards to SOURCE"}</h2>
+                <p className="text-sm text-[var(--lv-text-secondary)]">
+                  {language === "ja"
+                    ? `対象 ${bulkSourcePreview.eligible}・変更 ${bulkSourcePreview.changed}・CUSTOM維持 ${bulkSourcePreview.skippedCustom}・元の音なし ${bulkSourcePreview.skippedMissingSource}`
+                    : `Eligible ${bulkSourcePreview.eligible} · Changed ${bulkSourcePreview.changed} · CUSTOM preserved ${bulkSourcePreview.skippedCustom} · No source ${bulkSourcePreview.skippedMissingSource}`}
+                </p>
+                <div className="flex justify-end gap-2">
+                  <Button variant="secondary" onClick={() => setBulkSourceOpen(false)}>{language === "ja" ? "戻る" : "Cancel"}</Button>
+                  <Button variant="primary" disabled={bulkSourcePreview.changed === 0} onClick={() => {
+                    if (onBulkSourceApply()) setBulkSourceOpen(false);
+                  }}>{language === "ja" ? "切り替える" : "Apply"}</Button>
+                </div>
+              </div>
+            </Modal>
+          ) : null}
           {fingeringEditorOpen ? (
             <Modal
               ariaLabel={text.editFingering}
@@ -1423,9 +1474,9 @@ export function ProgressionVoicingPracticeView({
             </Modal>
           ) : null}
 
-          <Surface className="min-h-16 shrink-0 px-2 py-1.5" data-testid="voicing-loop-transport">
-            <div className="grid min-w-0 gap-1.5">
-              <div className="flex min-w-0 flex-wrap items-center gap-2" data-testid="voicing-loop-transport-primary">
+          <Surface className="min-h-12 shrink-0 overflow-hidden px-2 py-1" data-testid="voicing-loop-transport">
+            <div className="flex min-w-0 items-center gap-2 overflow-x-auto whitespace-nowrap">
+              <div className="flex shrink-0 items-center gap-2" data-testid="voicing-loop-transport-primary">
               <BpmDragControl
                 label={text.bpm}
                 dragLabel={text.bpmDrag}
@@ -1506,7 +1557,7 @@ export function ProgressionVoicingPracticeView({
               </label>
               <Button size="sm" variant={metronomeEnabled ? "secondary" : "ghost"} aria-pressed={metronomeEnabled} onClick={toggleMetronome}>{text.metronome}: {metronomeEnabled ? "ON" : "OFF"}</Button>
               </div>
-              <div className="flex min-w-0 flex-wrap items-center gap-2 border-t border-[var(--lv-border)] pt-1" data-testid="voicing-loop-transport-midi-row">
+              <div className="flex shrink-0 items-center gap-2 border-l border-[var(--lv-border)] pl-2" data-testid="voicing-loop-transport-midi-row">
               <span className={`inline-flex min-h-8 items-center gap-1.5 px-1 text-xs ${midiStatus === "connected" ? "text-teal-200" : "text-amber-200"}`} data-testid="voicing-loop-midi-status">
                 <span aria-hidden="true" className={`h-2 w-2 rounded-full ${midiStatus === "connected" ? "bg-teal-300" : "bg-amber-300"}`} />
                 <span className="font-semibold">{text.midi}</span>
@@ -1697,8 +1748,6 @@ function HandVoicingSummary({
         {hand === "left" ? text.leftHandDisplay : text.rightHandDisplay}
       </p>
       <dl className="mt-1 grid min-w-0 gap-0.5 text-xs leading-4">
-        <HandFact label={text.pitches} value={formatPitchList(pitches, accidentalStyle)} />
-        <HandFact label={text.chordTone} value={formatChordToneList(voicing, pitches)} />
         {showFingering ? (
           <HandFact
             label={text.finger}
@@ -1708,12 +1757,15 @@ function HandVoicingSummary({
             emphasize={Boolean(fingering)}
           />
         ) : null}
+        <HandFact label={text.pitches} value={formatPitchList(pitches, accidentalStyle)} />
+        <HandFact label={text.chordTone} value={formatChordToneList(voicing, pitches)} />
       </dl>
     </section>
   );
 }
 
 function CompactHandVoicing({
+  voicing,
   accidentalStyle,
   fingering,
   hand,
@@ -1721,6 +1773,7 @@ function CompactHandVoicing({
   showFingering,
   text,
 }: {
+  readonly voicing: ResolvedProgressionPracticeVoicing;
   readonly accidentalStyle: NoteAccidentalStyle;
   readonly fingering?: RankedFingering;
   readonly hand: FingeringHand;
@@ -1740,6 +1793,7 @@ function CompactHandVoicing({
         {hand === "left" ? text.leftHandDisplay : text.rightHandDisplay}
       </p>
       <p className="mt-0.5 break-words">{formatPitchList(pitches, accidentalStyle)}</p>
+      <p className="mt-0.5 break-words">{text.chordTone}: {formatChordToneList(voicing, pitches)}</p>
       {showFingering ? (
         <p className={`break-words font-semibold ${handText}`}>
           {fingering
@@ -1763,7 +1817,7 @@ function HandFact({
   return (
     <div className="grid min-w-0 grid-cols-[4.75rem_minmax(0,1fr)] gap-1">
       <dt className="text-xs font-semibold text-[var(--lv-text-secondary)]">{label}</dt>
-      <dd className={`min-w-0 break-words ${emphasize ? "font-semibold text-teal-200" : "text-[var(--lv-text-secondary)]"}`}>{value}</dd>
+      <dd className={`min-w-0 break-words ${emphasize ? "text-2xl font-bold text-teal-200" : "text-[var(--lv-text-secondary)]"}`}>{value}</dd>
     </div>
   );
 }
@@ -2037,18 +2091,22 @@ function topRoleLabel(role: VoicingTopContext | undefined, language: AppLanguage
 }
 function Metric({
   children,
+  compact = false,
   label,
   testId,
   value,
 }: {
   readonly children?: ReactNode;
+  readonly compact?: boolean;
   readonly label: string;
   readonly testId?: string;
   readonly value: string;
 }) {
   return (
     <div
-      className="grid min-w-0 grid-cols-[auto_minmax(2rem,1fr)_auto] items-center gap-2 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] bg-[var(--lv-bg-subtle)] px-3 py-1.5"
+      className={compact
+        ? "grid min-w-0 grid-cols-[auto_minmax(2rem,1fr)_auto] items-center gap-1 px-1"
+        : "grid min-w-0 grid-cols-[auto_minmax(2rem,1fr)_auto] items-center gap-2 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] bg-[var(--lv-bg-subtle)] px-3 py-1.5"}
       data-testid={testId}
     >
       <p className="text-[10px] font-semibold tracking-[0.08em] text-[var(--lv-text-muted)]">{label}</p>

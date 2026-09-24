@@ -62,6 +62,7 @@ import { LiveMidiImportDialog, type LiveMidiImportRequest } from "./components/L
 import { UndoToast } from "./components/UndoToast";
 import { statusLabel } from "./domain/displayLabels";
 import { parseMidi } from "./domain/midi";
+import { canChooseSource, setAllEligibleCardsToSource } from "./domain/voicing";
 import type { SavedProgressionBlock, SongIdea, Status } from "./domain/types";
 import {
   buildVoicingLoopVaultCandidates,
@@ -354,6 +355,31 @@ function App() {
     () => Object.freeze(vaultPickerCandidates.map((candidate) => candidate.safeSnapshot)),
     [vaultPickerCandidates],
   );
+  const voicingLoopSourceBlock = voicingPracticeHandoff
+    ? visibleIdeas.find((idea) => idea.id === voicingPracticeHandoff.sourceReference.ideaId)
+      ?.progressionBlocks?.find((block) => block.id === voicingPracticeHandoff.sourceReference.blockId)
+    : undefined;
+  const bulkSourcePreview = voicingLoopSourceBlock ? (() => {
+    const cards = voicingLoopSourceBlock.chords;
+    const changed = setAllEligibleCardsToSource(cards).changedCount;
+    return {
+      eligible: cards.filter(canChooseSource).length,
+      changed,
+      skippedCustom: cards.filter((card) => card.voicingMemory?.playbackChoice === "CUSTOM").length,
+      skippedMissingSource: cards.filter((card) => !canChooseSource(card)).length,
+    };
+  })() : undefined;
+  function applyBulkSource(): boolean {
+    if (!voicingPracticeHandoff || !voicingLoopSourceBlock) return false;
+    const result = setAllEligibleCardsToSource(voicingLoopSourceBlock.chords);
+    if (result.changedCount === 0) return true;
+    const reference = voicingPracticeHandoff.sourceReference;
+    if (!updateProgressionBlock(reference.ideaId, reference.blockId, { chords: result.cards })) return false;
+    const handoff = buildProgressionVoicingPracticeHandoffFromVault(defaultVaultStore.getState().ideas, reference);
+    if (handoff.ok) setVoicingPracticeHandoff(handoff.handoff);
+    return handoff.ok;
+  }
+
   const selectedIdea = visibleIdeas.find((idea) => idea.id === selectedId) ?? visibleIdeas[0];
   const storedSelectedIdea = ideas.find((idea) => idea.id === selectedIdea?.id);
   const progressionIdea = selectedProgression
@@ -764,6 +790,10 @@ async function analyzeMidiPath(path: string) {
         openCreate={() => setCreateOpen(true)}
         openLiveMidi={() => requestProgressionLeave(() => { void enterLiveMidiMode(); })}
         openVoicingLoop={openDirectVoicingLoop}
+        openChordDojo={() => { navigateTo("practice"); setPracticeMode("chord-dojo"); }}
+        openBassPractice={() => { navigateTo("practice"); openBassPractice(); }}
+        bassPracticeAvailable={bassPracticeEnabled}
+        bassPracticeActive={view === "practice" && practiceMode === "bass-practice"}
         openSettings={() => {
           setSettingsOpen(true);
           void refreshBackups();
@@ -774,7 +804,7 @@ async function analyzeMidiPath(path: string) {
         saveStatus={saving ? "saving" : unsaved ? "unsaved" : "saved"}
         masterVolume={masterVolume}
         onMasterVolumeChange={changeMasterVolume}
-        pageTitle={viewLabel(view, copy)}
+        pageTitle={view === "practice" && practiceMode === "voicing-loop" ? "Voicing Loop" : viewLabel(view, copy)}
         pageContext={viewContext(view, language)}
         pageNavigation={view === "practice" ? (
           <PracticeModeTabs
@@ -1072,6 +1102,8 @@ async function analyzeMidiPath(path: string) {
                       initialSelection={voicingPracticeHandoff?.initialSelection ?? P527_E2E_FIXTURE?.initialSelection}
                       resolutionOptions={P527_E2E_FIXTURE?.resolutionOptions}
                       vaultProgressions={voicingLoopVaultCandidates}
+                      bulkSourcePreview={bulkSourcePreview}
+                      onBulkSourceApply={applyBulkSource}
                       onSelectProgression={openProgressionVoicingPractice}
                       onEnterText={openTextProgressionInput}
                       openMidiSettings={() => {
