@@ -15,6 +15,34 @@ import {
 } from ".";
 
 describe("P5.27 detached practice snapshot", () => {
+  it("keeps source meters 1/4 through 12/4 with a separate four-beat PracticeGroup", () => {
+    for (let numerator = 1; numerator <= 12; numerator += 1) {
+      const block = { ...progression([event(1, 1, numerator, 0)]), timeSignature: `${numerator}/4` };
+      const result = buildProgressionVoicingPracticeSnapshot({
+        sourceReference: { ideaId: "idea-1", blockId: block.id }, block, selection: "source-midi",
+      });
+      expect(result.ok).toBe(true);
+      if (!result.ok) continue;
+      expect(result.snapshot.meter).toEqual({ numerator, denominator: 4 });
+      expect(result.snapshot.practiceGroupBeats).toBe(4);
+      expect(result.snapshot.lengthBeats).toBe(numerator);
+      expect(result.snapshot.events[0]).toMatchObject({ startBeat: 0, durationBeats: numerator });
+    }
+  });
+
+  it("accepts exactly 128 PracticeGroups and rejects the 129th without shortening source timing", () => {
+    const build = (beats: number) => {
+      const block = progression([event(1, 1, beats, 0)]);
+      return buildProgressionVoicingPracticeSnapshot({
+        sourceReference: { ideaId: "idea-1", blockId: block.id }, block, selection: "source-midi",
+      });
+    };
+    const accepted = build(512);
+    expect(accepted.ok).toBe(true);
+    if (accepted.ok) expect(accepted.snapshot).toMatchObject({ lengthBeats: 512, practiceGroupBeats: 4 });
+    expect(build(516)).toMatchObject({ ok: false, error: { code: "resource-budget" } });
+  });
+
   it("owns a strict allowlist of canonical facts and the selected exact Source pitches only", () => {
     const block = progression([event(18, 1, 4, 0, "maj7", [48, 55, 59])]);
     Object.assign(block, {

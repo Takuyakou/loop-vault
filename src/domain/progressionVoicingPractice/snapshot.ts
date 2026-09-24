@@ -28,7 +28,7 @@ const TIMING_EPSILON = 1e-6;
 export const METER_NEUTRAL_BUDGET = Object.freeze({
   maxSourceBeats: 2400,
   maxSourceDurationSeconds: 600,
-  maxPracticeGroups: 600,
+  maxPracticeGroups: 128,
   maxSourceEvents: 2400,
   practiceGroupBeats: 4,
 });

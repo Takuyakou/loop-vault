@@ -130,6 +130,31 @@ describe("ProgressionVoicingTransport", () => {
     expect(toneMock.activeScheduleIds.size).toBe(0);
   });
 
+  it("keeps registered work fixed for 128 PracticeGroups and clears it after stop", async () => {
+    const events = Array.from({ length: 128 }, (_, index) => ({
+      ...snapshot.events[0]!, id: `event-${index}`, startBeat: index * 4, durationBeats: 4,
+    }));
+    const longSnapshot: ProgressionVoicingPracticeSnapshot = {
+      ...snapshot, lengthBeats: 512, events,
+      spans: events.map((event, eventIndex) => ({
+        kind: "chord" as const, eventIndex, startBeat: event.startBeat, durationBeats: event.durationBeats,
+      })),
+    };
+    const longPlan: ProgressionPracticeVoicingPlan = {
+      ...plan, events: events.map((event) => ({ ...plan.events[0]!, eventId: event.id })),
+    };
+    const runtime = new ProgressionVoicingTransportV2();
+    await runtime.start({ snapshot: longSnapshot, plan: longPlan, bpm: 80, countInBars: 0,
+      metronomeEnabled: false, onTransportBeat: vi.fn() });
+    expect(toneMock.scheduled).toHaveLength(3);
+    toneMock.scheduled[0]!.callback(1);
+    expect(toneMock.oneShots.length).toBeLessThanOrEqual(128);
+    expect(toneMock.oneShots.length).toBeGreaterThan(0);
+    runtime.stop();
+    expect(toneMock.activeScheduleIds.size).toBe(0);
+    expect(toneMock.activeInstruments.size).toBe(0);
+  });
+
   it("hot-swaps a compatible plan at the next chord boundary without stopping the clock", async () => {
     const sustained = Object.assign(new toneMock.PolySynth(), { triggerAttack: vi.fn() });
     vi.mocked(createPreviewInstrument).mockResolvedValueOnce(sustained);
