@@ -2,17 +2,18 @@
   "schemaVersion": 1,
   "phaseId": "7.0",
   "status": "in-progress",
-  "activeStage": "P7.0-04",
+  "activeStage": "P7.0-05",
   "completedStages": [
     "P7.0-00",
     "P7.0-01",
     "P7.0-02",
-    "P7.0-03"
+    "P7.0-03",
+    "P7.0-04"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "362e0df3d0cd21ab7d697f792553974703d44a8b",
-  "lastVerifiedCommit": "e88aaf82b6cb1d952f56f84489d5d2ea5472a880",
+  "lastVerifiedCommit": "2014664b27025cf1333c0cdc8e1aa7b0e0cb5d7c",
   "currentBranch": "research/phase7-core-v2",
   "requiredGates": {
     "P7.0-00": [
@@ -82,8 +83,14 @@
     "stage03-script-typecheck-and-lint": "pass",
     "stage03-phase-docs-valid": "pass",
     "stage03-production-diff-zero": "pass",
-    "stage03-privacy-and-diff-clean": "pass"
+    "stage03-privacy-and-diff-clean": "pass",
+    "versioned-harmonic-truth-valid": "pass",
+    "equivalence-and-rendering-separation-tested": "pass",
+    "stage04-script-typecheck-and-lint": "pass",
+    "stage04-phase-docs-valid": "pass",
+    "stage04-production-diff-zero": "pass",
+    "stage04-privacy-and-diff-clean": "pass"
   },
-  "nextAction": "P7.0-04: freeze versioned Tier 2 harmonic identity, playback equivalence, and renderer-only mismatch contract.",
+  "nextAction": "P7.0-05: decompose checkpoint, candidate, role, boundary, and correction-cost failures using independent Gold.",
   "updatedAt": "2026-09-24"
 }
