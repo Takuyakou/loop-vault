@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "phaseId": "7.0",
   "status": "in-progress",
-  "activeStage": "P7.0-08",
+  "activeStage": "P7.0-09",
   "completedStages": [
     "P7.0-00",
     "P7.0-01",
@@ -11,12 +11,13 @@
     "P7.0-04",
     "P7.0-05",
     "P7.0-06",
-    "P7.0-07"
+    "P7.0-07",
+    "P7.0-08"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "362e0df3d0cd21ab7d697f792553974703d44a8b",
-  "lastVerifiedCommit": "75a9b5a3a7d4d7c5eb41d63ea6c3dbda502042db",
+  "lastVerifiedCommit": "89e2e3b787f1fac3d55261ece91b436705ef8402",
   "currentBranch": "research/phase7-core-v2",
   "requiredGates": {
     "P7.0-00": [
@@ -145,8 +146,15 @@
     "stage07-script-typecheck-and-lint": "pass",
     "stage07-phase-docs-valid": "pass",
     "stage07-production-diff-zero": "pass",
-    "stage07-privacy-and-diff-clean": "pass"
+    "stage07-privacy-and-diff-clean": "pass",
+    "five-boundary-proposals-compared": "pass",
+    "role-and-local-scorer-compared": "pass",
+    "short-passing-chord-test": "pass",
+    "stage08-script-typecheck-and-lint": "pass",
+    "stage08-phase-docs-valid": "pass",
+    "stage08-production-diff-zero": "pass",
+    "stage08-privacy-and-diff-clean": "pass"
   },
-  "nextAction": "P7.0-08: verify temporal, role, and local scorer experiments before the modular tournament.",
+  "nextAction": "P7.0-09: run at most 24 modular configurations including all copy baselines and old/new identity \u00d7 decoder interactions.",
   "updatedAt": "2026-09-24"
 }
