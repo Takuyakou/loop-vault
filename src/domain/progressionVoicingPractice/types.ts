@@ -36,6 +36,9 @@ export interface ProgressionPracticeEvent {
   readonly startBeat: number;
   readonly durationBeats: number;
   readonly chord: ProgressionPracticeChord;
+  /** Saved P8.1 card intent, kept as display metadata without changing Vault data. */
+  readonly playbackChoice?: "SOURCE" | "GENERATED" | "CUSTOM";
+  readonly sourceNeedsReview?: boolean;
   /** Exact selected MY voicing only. Lesson selections resolve later. */
   readonly voicing?: DetachedPracticeVoicing;
 }

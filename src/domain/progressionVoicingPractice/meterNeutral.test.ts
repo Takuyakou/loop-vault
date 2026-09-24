@@ -40,6 +40,7 @@ describe("P8.2 meter-neutral Voicing Loop", () => {
     expect(value.practiceGroupBeats).toBe(4);
     expect(value.events.map(event => event.startBeat)).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
     expect(value.events.every(event => event.voicing?.midiNotes.join() === "48,55,59,64")).toBe(true);
+    expect(value.events.every(event => event.playbackChoice === "SOURCE" && event.sourceNeedsReview === true)).toBe(true);
     expect(buildProgressionPracticeClockSchedule(value, 1).countInBeats).toBe(4);
   });
   it("rejects unsupported meter while keeping source meter separate from practice grouping", () => {

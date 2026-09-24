@@ -96,7 +96,7 @@ export function AppShell({
   );
 
   return (
-    <div className="flex h-full min-h-0 min-w-0 overflow-hidden bg-[var(--lv-bg)] text-[var(--lv-text)]">
+    <div className="flex h-full min-h-0 min-w-0 overflow-hidden bg-[var(--lv-bg)] text-[var(--lv-text)]" data-sidebar-collapsed={collapsed}>
       <aside
         className={`flex shrink-0 flex-col border-r border-[var(--lv-border)] bg-[var(--lv-sidebar)] transition-[width] duration-150 ${
           collapsed ? "w-[var(--lv-sidebar-collapsed)]" : "w-[var(--lv-sidebar-expanded)]"
@@ -205,7 +205,7 @@ export function AppShell({
                 <p className="truncate text-xs text-[var(--lv-text-muted)]">{pageContext}</p>
               ) : null}
             </div>
-            {pageNavigation ? <div className="hidden min-w-0 lg:block">{pageNavigation}</div> : null}
+            {pageNavigation && collapsed ? <div className="hidden min-w-0 lg:block">{pageNavigation}</div> : null}
           </div>
           <div className="flex min-w-0 shrink-0 items-center justify-end gap-1.5" data-global-actions>
             <PlaybackLevelMeter

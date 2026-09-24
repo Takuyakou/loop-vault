@@ -31,6 +31,19 @@ describe("Voicing Loop Vault candidates", () => {
     });
   });
 
+  it("lists a stored over-budget progression as unavailable instead of silently hiding it", () => {
+    const unit = block("long", "2026-02-02T00:00:00.000Z").chords[0]!;
+    const long = { ...block("long", "2026-02-02T00:00:00.000Z"), bpm: 120,
+      chords: Array.from({ length: 129 }, (_, index) => ({ ...unit, bar: index + 1, beat: 1, durationBeats: 4 })),
+    };
+    const candidates = buildVoicingLoopVaultCandidates([
+      makeIdea({ id: "long-idea", title: "Public long progression", bpm: 120, progressionBlocks: [long] }),
+    ], "Untitled progression");
+    expect(candidates).toHaveLength(1);
+    expect(candidates[0]).toMatchObject({ unavailableReason: "resource-budget", chordLabels: expect.any(Array) });
+    expect(candidates[0]!.chordLabels).toHaveLength(129);
+  });
+
   it("sorts deterministically and searches only safe title, chord-label, and key facts", () => {
     const candidates = buildVoicingLoopVaultCandidates([
       makeIdea({ id: "older", title: "Favorite DNA", key: "F major", progressionBlocks: [block("one", "2026-02-01T00:00:00.000Z")] }),

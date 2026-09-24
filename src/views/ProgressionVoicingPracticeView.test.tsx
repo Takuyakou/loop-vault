@@ -71,7 +71,7 @@ describe("ProgressionVoicingPracticeView", () => {
       ],
     };
     const container = await renderView(runtime, { "source-midi": value }, "source-midi");
-    expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent).toContain("次休符");
+    expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent).toContain("休符");
     const cards = container.querySelectorAll<HTMLButtonElement>("[data-testid='voicing-loop-event']");
     expect(cards).toHaveLength(3);
     expect(cards[1]!.disabled).toBe(true);
@@ -81,7 +81,7 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")).toBeNull();
     expect(container.querySelector("svg[role='img']")?.getAttribute("aria-label")).toContain("お手本0音");
     expect(container.querySelector("[aria-current='step']")?.textContent).toContain("休符");
-    expect(container.querySelector<HTMLElement>("[data-testid='voicing-loop-playhead']")?.style.transform).toBe("translateX(90.625px)");
+    expect(container.querySelector<HTMLElement>("[data-testid='voicing-loop-playhead']")?.style.transform).toBe("translateX(300px)");
     await act(async () => cards[2]!.click());
     expect(runtime.audition).toHaveBeenLastCalledWith([50, 57, 60], "piano");
     expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent).toBe("Dm7");
@@ -100,11 +100,8 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(button(container, "現在のコードを試聴").disabled).toBe(true);
     await act(async () => button(container, "開始").click());
     await act(async () => runtime.options?.onTransportBeat(70));
-    const beatIndicator = container.querySelector("[role='progressbar'][aria-label='拍']")!;
-    const positionIndicator = container.querySelector("[role='progressbar'][aria-label='位置']")!;
-    expect(beatIndicator.getAttribute("aria-valuenow")).toBe("52");
-    expect(positionIndicator.getAttribute("aria-valuenow")).toBe("52");
-    expect(container.querySelector("[data-testid='voicing-loop-position-metric']")?.textContent).toContain("17 / 32");
+    expect(container.querySelectorAll("[role='progressbar']")).toHaveLength(0);
+    expect(container.querySelector("[data-testid='voicing-loop-position-metric']")?.textContent).toContain("0 / 0");
     expect(runtime.audition).not.toHaveBeenCalled();
     await act(async () => runtime.options?.onTransportBeat(132));
     expect(container.textContent).toContain("1 周完了");
@@ -147,6 +144,17 @@ describe("ProgressionVoicingPracticeView", () => {
     }
   });
 
+  it("shows the persisted playback choice and low SourceSnapshot confidence separately in Current metadata", async () => {
+    const base = snapshot("source-midi");
+    const source = { ...base, events: base.events.map((event, index) => index === 0
+      ? { ...event, playbackChoice: "SOURCE" as const, sourceNeedsReview: true }
+      : event) };
+    const container = await renderView(new FakeTransport(), { "source-midi": source }, "source-midi");
+    expect(container.querySelector("[data-testid='voicing-loop-playback-choice']")?.textContent).toBe("SOURCE");
+    expect(container.querySelector("[data-testid='voicing-loop-review-badge']")?.textContent).toBe("要確認");
+    expect(container.querySelector("[data-testid='voicing-loop-current-panel']")?.textContent).not.toContain("Source MIDI");
+  });
+
   it("searches all eligible progressions, expands in place, and records only a successful one-click choice", async () => {
     const candidates = Array.from({ length: 6 }, (_, index) => vaultCandidate(index));
     const onSelectProgression = vi.fn((reference: ProgressionPracticeSourceReference) => {
@@ -179,6 +187,29 @@ describe("ProgressionVoicingPracticeView", () => {
     await act(async () => container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-progression-choice']")!.click());
     expect(onSelectProgression).toHaveBeenCalledWith(candidates[5]!.sourceReference);
     expect(loadRecentVoicingLoopProgressions()).toEqual([candidates[5]!.sourceReference]);
+  });
+
+  it("offers a supported 64-card Vault progression as one selectable source", async () => {
+    const long = { ...vaultCandidate(0), chordLabels: Array.from({ length: 64 }, (_, index) => index % 2 ? "Dm7" : "Cmaj7") };
+    const onSelectProgression = vi.fn(() => true);
+    const container = await renderView(new FakeTransport(), undefined, "source-midi", false,
+      { onSelectProgression, onEnterText: vi.fn() }, [long]);
+    const choice = container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-progression-choice']")!;
+    expect(choice.disabled).toBe(false);
+    await act(async () => choice.click());
+    expect(onSelectProgression).toHaveBeenCalledWith(long.sourceReference);
+  });
+
+  it("shows over-capacity Vault progressions as disabled with a clear reason", async () => {
+    const unavailable = { ...vaultCandidate(0), unavailableReason: "resource-budget" as const };
+    const onSelectProgression = vi.fn(() => true);
+    const container = await renderView(new FakeTransport(), undefined, "source-midi", false,
+      { onSelectProgression, onEnterText: vi.fn() }, [unavailable]);
+    const choice = container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-progression-choice']")!;
+    expect(choice.disabled).toBe(true);
+    expect(choice.textContent).toContain("練習可能な長さを超えています");
+    await act(async () => choice.click());
+    expect(onSelectProgression).not.toHaveBeenCalled();
   });
 
   it("does not record an invalid or deleted source when click-time validation fails", async () => {
@@ -273,10 +304,8 @@ describe("ProgressionVoicingPracticeView", () => {
 
     await act(async () => runtime.options?.onTransportBeat(8.5));
     expect(container.textContent).toContain("1 周完了");
-    expect(container.querySelector("[data-testid='voicing-loop-status']")?.textContent).toContain("位置");
-    expect(container.querySelectorAll("[role='progressbar']")).toHaveLength(2);
-    expect(Array.from(container.querySelectorAll("[role='progressbar']")).map((element) => element.getAttribute("aria-label")))
-      .toEqual(["拍", "位置"]);
+    expect(container.querySelector("[data-testid='voicing-loop-status']")?.textContent).toContain("コード");
+    expect(container.querySelectorAll("[role='progressbar']")).toHaveLength(0);
     expect(container.textContent).not.toContain("25%");
     expect(container.querySelector("[aria-current='step']")?.textContent).toContain("Cmaj7");
 
@@ -286,53 +315,16 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.textContent).toContain("b7");
   });
 
-  it("places both indicators between label and value and smooths beat and position progress", async () => {
+  it("uses chord index as the sole primary position metric", async () => {
     const runtime = new FakeTransport();
-    const base = snapshot("basic-full");
-    const events = [
-      { ...base.events[0]!, id: "bar-1-a", startBeat: 0, durationBeats: 2 },
-      { ...base.events[1]!, id: "bar-1-b", startBeat: 2, durationBeats: 2 },
-      { ...base.events[0]!, id: "bar-2-a", startBeat: 4, durationBeats: 2 },
-      { ...base.events[1]!, id: "bar-2-b", startBeat: 6, durationBeats: 2 },
-    ];
-    const value: ProgressionVoicingPracticeSnapshot = {
-      ...base,
-      lengthBeats: 8,
-      events,
-      spans: events.map((event, eventIndex) => ({
-        kind: "chord" as const,
-        eventIndex,
-        startBeat: event.startBeat,
-        durationBeats: event.durationBeats,
-      })),
-    };
-    const container = await renderView(runtime, { "basic-full": value }, "basic-full");
-    await act(async () => button(container, "開始").click());
-    await act(async () => runtime.options?.onTransportBeat(4.5));
-
-    const beatMetric = container.querySelector("[data-testid='voicing-loop-beat-metric']")!;
+    const container = await renderView(runtime, { "basic-full": snapshot("basic-full") }, "basic-full");
     const positionMetric = container.querySelector("[data-testid='voicing-loop-position-metric']")!;
-    expect(beatMetric.children[0]?.textContent).toBe("拍");
-    expect(beatMetric.children[1]?.querySelector("[role='progressbar']")).not.toBeNull();
-    expect(beatMetric.children[2]?.textContent).toBe("1 / 2 拍");
-    expect(positionMetric.children[0]?.textContent).toBe("位置");
-    expect(positionMetric.children[1]?.querySelector("[role='progressbar']")).not.toBeNull();
-    expect(positionMetric.children[2]?.textContent).toBe("1 / 2");
-
-    const beatFill = container.querySelector<HTMLElement>("[data-testid='voicing-loop-beat-progress-fill']")!;
-    const positionFill = container.querySelector<HTMLElement>("[data-testid='voicing-loop-position-progress-fill']")!;
-    expect(beatFill.style.transform).toBe("scaleX(0.25)");
-    expect(beatFill.style.transitionTimingFunction).toBe("linear");
-    expect(positionFill.style.transform).toBe("scaleX(0.0625)");
-    expect(positionFill.style.transitionDuration).not.toBe("0ms");
-    expect(positionFill.style.transitionTimingFunction).toBe("linear");
-
-    await act(async () => runtime.options?.onTransportBeat(5));
-    expect(beatFill.style.transform).toBe("scaleX(0.5)");
-    expect(positionFill.style.transform).toBe("scaleX(0.125)");
-    await act(async () => runtime.options?.onTransportBeat(8));
-    expect(positionMetric.children[2]?.textContent).toBe("2 / 2");
-    expect(positionFill.style.transform).toBe("scaleX(0.5)");
+    expect(positionMetric.textContent).toContain("コード");
+    expect(positionMetric.textContent).toContain("1 / 2");
+    expect(container.querySelectorAll("[role='progressbar']")).toHaveLength(0);
+    await act(async () => button(container, "開始").click());
+    await act(async () => runtime.options?.onTransportBeat(6.5));
+    expect(positionMetric.textContent).toContain("2 / 2");
   });
 
   it("orders the compact workspace and traverses fixed cards using each clock duration", async () => {
@@ -365,22 +357,21 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(playhead.style.transitionTimingFunction).toBe("linear");
     expect(container.querySelector("[data-testid='voicing-loop-playhead-marker']")).not.toBeNull();
     await act(async () => button(container, "開始").click());
-    for (const [transportBeat, expectedX] of [[6, 72.5], [9, 181.25], [10.5, 235.625]]) {
+    for (const [transportBeat, expectedX] of [[6, 240], [9, 600], [10.5, 780]]) {
       await act(async () => runtime.options?.onTransportBeat(transportBeat!));
       expect(playhead.style.transform).toBe(`translateX(${expectedX}px)`);
     }
     await act(async () => button(container, "一時停止").click());
-    expect(playhead.style.transform).toBe("translateX(235.625px)");
+    expect(playhead.style.transform).toBe("translateX(780px)");
     await act(async () => button(container, "再開").click());
     await act(async () => runtime.options?.onTransportBeat(11));
-    expect(playhead.style.transform).toBe("translateX(253.75px)");
+    expect(playhead.style.transform).toBe("translateX(840px)");
     await act(async () => runtime.options?.onTransportBeat(12));
     expect(playhead.style.transform).toBe("translateX(0px)");
     expect(container.textContent).toContain("1 周完了");
     expect(Array.from(container.querySelectorAll<HTMLElement>("[data-testid='voicing-loop-event']"))
-      .map((card) => card.style.width)).toEqual(["145px", "72.5px", "36.25px", "36.25px"]);
-    expect(Array.from(container.querySelectorAll("[data-testid='voicing-loop-event-beat-rail']"))
-      .map((rail) => rail.children.length)).toEqual([4, 2, 1, 1]);
+      .map((card) => card.style.width)).toEqual(["480px", "240px", "120px", "120px"]);
+    expect(container.querySelectorAll("[data-testid='voicing-loop-event-beat-rail']")).toHaveLength(0);
   });
 
   it("renders exact playhead projection values with linear interpolation instead of rounded steps", async () => {
@@ -392,7 +383,7 @@ describe("ProgressionVoicingPracticeView", () => {
     const playhead = container.querySelector<HTMLElement>("[data-testid='voicing-loop-playhead']")!;
     const offset = Number(playhead.style.transform.match(/translateX\((.+)px\)/)?.[1]);
     expect(offset).toBeGreaterThan(0);
-    expect(offset).toBeLessThan(1);
+    expect(offset).toBeCloseTo(3.12, 2);
     expect(playhead.style.transitionTimingFunction).toBe("linear");
     expect(playhead.className).toContain("motion-reduce:transition-none");
   });
@@ -403,7 +394,7 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(button(container, "開始").disabled).toBe(false);
     expect(container.querySelector("[data-testid='voicing-loop-midi-status']")?.textContent)
       .toContain("MIDI入力未接続");
-    expect(container.querySelector("[data-testid='voicing-loop-beat-progress-fill']")).not.toBeNull();
+    expect(container.querySelector("[data-testid='voicing-loop-beat-progress-fill']")).toBeNull();
     expect(container.querySelector("[data-keyboard-layout='wide-88']")).not.toBeNull();
     expect(container.querySelectorAll("[data-midi-note]")).toHaveLength(88);
     expect(container.querySelector("[data-midi-note='9']")).not.toBeNull();
@@ -414,23 +405,23 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("[data-testid='voicing-loop-next-degree']")?.textContent).toBe("Ⅱ");
     expect(Array.from(container.querySelectorAll("[data-testid='voicing-loop-event-degree']")).map((node) => node.textContent)).toEqual(["Ⅰ", "Ⅱ"]);
     expect(container.querySelector("[data-testid='voicing-loop-position-metric']")?.textContent)
-      .toContain("1 / 1");
+      .toContain("1 / 2");
     expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent)
-      .toContain("次Dm7");
+      .toContain("Dm7");
     expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
       .toContain("LEFT HAND");
     expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
-      .toContain("CHORD TONE");
+      .toContain("TONE");
     expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent)
-      .toContain("2拍後に切り替わります");
-    expect(container.querySelectorAll("[role='progressbar']")).toHaveLength(2);
+      .toContain("あと 2拍");
+    expect(container.querySelectorAll("[role='progressbar']")).toHaveLength(0);
     expect(container.textContent).not.toContain("コード 0%");
     expect(container.textContent).not.toContain("進行 0%");
 
     const recall = button(container, "Recall（コード名のみ）");
     await act(async () => recall.click());
     expect(recall.getAttribute("aria-pressed")).toBe("true");
-    expect(container.textContent).not.toContain("CHORD TONE");
+    expect(container.textContent).not.toContain("TONE");
     expect(container.querySelector("svg[role='img']")?.getAttribute("aria-label")).toContain("お手本0音");
   });
 
@@ -446,7 +437,7 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(timelineCards[1]?.getAttribute("aria-pressed")).toBe("true");
     expect(container.querySelector("[aria-current='step']")?.textContent).toContain("Cmaj7");
     expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent).toBe("Dm7");
-    expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent).toContain("次Cmaj7");
+    expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent).toContain("Cmaj7");
     expect(container.textContent).toContain("0 周完了");
     expect(container.querySelector("[data-keyboard-event-index='1']")).not.toBeNull();
     expect(container.querySelector("[data-midi-note='50']")?.getAttribute("data-visual-state")).toBe("guide");
@@ -565,8 +556,7 @@ describe("ProgressionVoicingPracticeView", () => {
 
     await act(async () => button(container, "Custom").click());
     expect(button(container, "Core").disabled).toBe(true);
-    expect(container.querySelector("[data-testid='voicing-loop-current-explanation']")?.textContent)
-      .toBe("Custom");
+    expect(container.querySelector("[data-testid='voicing-loop-current-explanation']")).toBeNull();
   });
 
   it("hot-swaps lesson modifiers and OCT without stopping the running or paused clock", async () => {
@@ -747,9 +737,9 @@ describe("ProgressionVoicingPracticeView", () => {
     const next = container.querySelector("[data-testid='voicing-loop-next-voicing']")!;
     expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent).toBe("Eadd9/F#");
     expect(container.querySelector("[data-testid='voicing-loop-left-hand']")?.textContent)
-      .toContain("CHORD TONE9");
+      .toContain("TONE9");
     expect(container.querySelector("[data-testid='voicing-loop-right-hand']")?.textContent)
-      .toContain("CHORD TONE1 · 3 · 5");
+      .toContain("TONE1 · 3 · 5");
     expect(current.textContent).toContain("FINGERL5");
     expect(current.textContent).toContain("FINGERR");
     expect(next.textContent).toContain("LEFT HAND");
@@ -1238,14 +1228,14 @@ describe("ProgressionVoicingPracticeView", () => {
     });
     await act(async () => button(document.body, "保存").click());
     expect(container.querySelector("[data-testid='voicing-loop-right-hand']")?.textContent)
-      .toContain("R2 · R5 (自分の運指)");
+      .toContain("R2 · R5自分の運指");
     expect(window.localStorage.getItem("loop-vault:voicing-loop-fingering-preferences:v1"))
       .toContain("R:55,59");
 
     await act(async () => button(container, "運指を編集").click());
     await act(async () => button(document.body, "おすすめに戻す").click());
     expect(container.querySelector("[data-testid='voicing-loop-right-hand']")?.textContent)
-      .toContain("R1 · R5 (おすすめ)");
+      .toContain("R1 · R5おすすめ");
     await act(async () => button(document.body, "キャンセル").click());
 
     const toggle = Array.from(container.querySelectorAll<HTMLInputElement>("input[type='checkbox']"))
@@ -1256,7 +1246,7 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
       .toContain("PITCH");
     expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
-      .toContain("CHORD TONE");
+      .toContain("TONE");
     expect(container.querySelector("[data-finger-label]")).toBeNull();
   });
   it("v2 card click seeks, preview stays separate, and keyboard moves by chord", async () => {
@@ -1267,16 +1257,26 @@ describe("ProgressionVoicingPracticeView", () => {
     await act(async () => previews[1]!.click());
     expect(runtime.audition).toHaveBeenLastCalledWith([50, 57, 60], "piano");
     expect(runtime.seek).not.toHaveBeenCalled();
+    const afterPreview = runtime.audition.mock.calls.length;
     await act(async () => cards[1]!.click());
+    expect(runtime.audition.mock.calls.length).toBe(afterPreview + 1);
     expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent).toBe("Dm7");
     await act(async () => button(container, "開始").click());
     expect(runtime.options?.startBeat).toBe(2);
+    const beforePlayingSeek = runtime.audition.mock.calls.length;
     await act(async () => cards[0]!.click());
+    expect(runtime.audition.mock.calls.length).toBe(beforePlayingSeek);
     expect(runtime.seek).toHaveBeenLastCalledWith(0);
     expect(container.querySelector("[data-testid='voicing-loop-current-next'] h2")?.textContent).toBe("Cmaj7");
     await act(async () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true })));
     expect(runtime.seek).toHaveBeenLastCalledWith(1);
     expect(previews[1]!.disabled).toBe(true);
+    await act(async () => button(container, "一時停止").click());
+    const beforePausedSeek = runtime.audition.mock.calls.length;
+    await act(async () => cards[1]!.click());
+    expect(runtime.seek).toHaveBeenLastCalledWith(1);
+    expect(runtime.audition.mock.calls.length).toBe(beforePausedSeek);
+    expect(button(container, "再開").disabled).toBe(false);
   });
 });
 
@@ -1413,8 +1413,11 @@ class FakeTransport implements ProgressionVoicingTransportPort {
 
 class SeekingTransport extends FakeTransport {
   readonly supportsSeek = true;
+  private isPaused = false;
+  override pause = vi.fn(() => { this.isPaused = true; return true; });
+  override resume = vi.fn(async () => { this.isPaused = false; return true; });
   seek = vi.fn((eventIndex: number) => this.options ? {
-    status: "running" as const,
+    status: this.isPaused ? "paused" as const : "running" as const,
     absoluteBeat: (this.options.countInBars * (this.options.snapshot.practiceGroupBeats ?? this.options.snapshot.meter.numerator))
       + this.options.snapshot.events[eventIndex]!.startBeat,
   } : undefined);

@@ -287,3 +287,8 @@ button {
     max-height: calc(100vh - 2rem);
   }
 }
+
+/* The expanded sidebar is the canonical desktop Practice navigation. */
+[data-sidebar-collapsed="false"] [data-practice-workspace-tabs] {
+  display: none;
+}

@@ -10,11 +10,18 @@ async function openEmptyApp(page: Page) {
 
 async function openDirectVoicingLoopWithKeyboard(page: Page) {
   const directItem = page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true });
-  await directItem.focus();
-  await page.keyboard.press("Enter");
-  await expect(directItem).toHaveAttribute("aria-current", "page");
+  if (await directItem.isVisible()) {
+    await directItem.focus();
+    await page.keyboard.press("Enter");
+    await expect(directItem).toHaveAttribute("aria-current", "page");
+  } else {
+    await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
+    const tab = page.getByRole("tab", { name: "Voicing Loop" });
+    await tab.focus();
+    await page.keyboard.press("Enter");
+    await expect(tab).toHaveAttribute("aria-selected", "true");
+  }
   await expect(page.getByRole("heading", { name: "Voicing Loop", exact: true })).toBeVisible();
-  return directItem;
 }
 
 test("P5.28 direct sidebar entry shows the inline Vault selector and Text fallback at 320px", async ({ page }) => {
@@ -97,14 +104,14 @@ test("P5.28 Text handoff becomes a recent one-click Vault source without picker 
     return raw ? JSON.parse(raw).references.length : 0;
   })).toBe(1);
 
-  const chordDojo = page.getByRole("tab", { name: "Chord Dojo" });
+  const chordDojo = page.locator("nav").getByRole("button", { name: "Chord Dojo", exact: true });
   await chordDojo.click();
-  await expect(chordDojo).toHaveAttribute("aria-selected", "true");
+  await expect(chordDojo).toHaveAttribute("aria-current", "page");
   await expect(page.getByTestId("practice-start")).toBeVisible();
-  const bassPractice = page.getByRole("tab", { name: "Bass Practice" });
+  const bassPractice = page.locator("nav").getByRole("button", { name: "Bass Practice", exact: true });
   if (await bassPractice.isEnabled()) {
     await bassPractice.click();
-    await expect(bassPractice).toHaveAttribute("aria-selected", "true");
+    await expect(bassPractice).toHaveAttribute("aria-current", "page");
   }
 });
 
