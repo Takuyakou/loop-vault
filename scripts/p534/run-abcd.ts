@@ -15,8 +15,6 @@ import {
   semanticKey,
   snapOnsets,
   withMeterView,
-  type IsolationCounts,
-  type IsolationResult,
 } from "./isolationCore";
 
 type Data = ReturnType<typeof parseMidi>;

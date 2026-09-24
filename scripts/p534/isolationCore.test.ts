@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseMidi } from "../../src/domain/midi/parser";
 import { inferTrackRoles } from "../../src/domain/midi/legacy";
-import { buildMidi, chordFixture, semanticPitchSets, timingFixtures } from "./fixtures";
+import { buildMidi, chordFixture, timingFixtures } from "./fixtures";
 import {
   buildMeterIndependentWindows,
   instrument,
