@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Phase 7 source-only Gold review</title>
+<style>
+body{font:14px/1.5 system-ui,sans-serif;max-width:1200px;margin:auto;padding:20px;background:#f8f8f6;color:#222} h1,h2{line-height:1.2} table{border-collapse:collapse;width:100%;margin:12px 0}th,td{border:1px solid #bbb;padding:4px 7px;text-align:left}th{position:sticky;top:0;background:#eee}select,input,textarea,button{font:inherit}textarea{width:100%;min-height:100px;box-sizing:border-box}button{padding:7px 12px;margin:4px} .scroll{max-height:460px;overflow:auto} .warn{background:#fff1d5;padding:10px} .small{color:#555;font-size:12px}
+</style></head><body>
+<h1>Phase 7 — source-only review</h1>
+<p class="warn">これは raw MIDI の観測事実だけです。境界・役割・装飾・和音名は未判定です。短い状態を長さだけで除外しないでください。Analyzer の予測や過去評価は含みません。</p>
+<p id="meta"></p><div id="timing"></div>
+<h2>Source note timeline</h2><p>横軸は四分音符拍、縦軸は raw MIDI note number です。矩形は観測 onset から offset までを示します。</p>
+<p><label>開始拍 <input id="viewStart" type="number" min="0" step="0.5" value="0"></label> <label>表示幅（拍） <input id="viewBeats" type="number" min="1" step="1" value="16"></label> <button id="draw">表示更新</button></p>
+<canvas id="roll" width="1150" height="330" style="max-width:100%;border:1px solid #aaa;background:white" aria-label="Source MIDI note timeline"></canvas><details><summary>Controller events (raw MIDI)</summary><pre id="controllers"></pre></details>
+<p><label>既存のローカル review.json を読み込む <input id="load" type="file" accept="application/json,.json"></label> <button id="save">review.json を保存</button></p>
+<p class="small">保存先はローカル専用の無視対象ディレクトリにしてください。ブラウザーのダウンロード先に残した場合も Git に追加しないでください。source の SHA と匿名 ID は照合用です。</p>
+<h2>観測 onset クラスタ</h2><p>同時 onset は事実です。境界は人間が判断します。クラスタ以外の tick に境界が必要なら追加してください。</p>
+<p><button id="allNo">確認済み onset をすべて No に設定</button></p>
+<p><label>追加 tick <input id="newTick" type="number" min="1" step="1"></label><button id="addTick">レビュー時点を追加</button></p><div class="scroll"><table><thead><tr><th>tick / 四分音符拍</th><th>onset note ID</th><th>Harmonic Boundary</th><th>Voicing Boundary</th><th>Passing Chord</th></tr></thead><tbody id="boundaries"></tbody></table></div>
+<h2>観測ノート</h2><p>ロールや note event はすべて未判定から始まります。トラック単位の一括入力は人間が source を確認してから明示的に実行します。</p>
+<p><label>track/channel <select id="group"></select></label> <label>role <select id="groupRole"></select></label> <label>event <select id="groupEvent"></select></label> <button id="applyGroup">この組を確認して適用</button></p><div class="scroll"><table><thead><tr><th>ID</th><th>MIDI note</th><th>onset / offset / duration (tick)</th><th>track / channel</th><th>role</th><th>note event</th></tr></thead><tbody id="notes"></tbody></table></div>
+<h2>独立 Gold span</h2><p>以下は人間が source のみを見て記入します。全期間を連続的に覆ってください。voicing の targetNoteIds は上表の note ID を使います。和音名が未判断なら draft のままにします。</p>
+<label>Harmonic spans (JSON array)<textarea id="harmonic" spellcheck="false">[]</textarea></label>
+<label>Voicing spans (JSON array)<textarea id="voicing" spellcheck="false">[]</textarea></label>
+<label>レビュー注記<textarea id="comments"></textarea></label>
+<p><label>状態 <select id="status"><option value="draft">draft（未完了）</option><option value="reviewed">reviewed（要 CLI 検証）</option></select></label></p>
+<p id="message" role="status"></p>
+<script id="source-facts" type="application/json">__SOURCE_FACTS_JSON__</script>
+<script>
+'use strict';
+const facts = JSON.parse(document.getElementById('source-facts').textContent);
+const $ = id => document.getElementById(id);
+const options = (values, selected) => {
+  const select = document.createElement('select');
+  for (const value of values) { const option = document.createElement('option'); option.value=value; option.textContent=value; select.append(option); }
+  select.value = selected; return select;
+};
+const cell = (row, value) => { const td=document.createElement('td'); if (value instanceof Node) td.append(value); else td.textContent=String(value); row.append(td); return td; };
+let review = {
+  schemaVersion:1,reviewVersion:facts.reviewVersion,anonymousId:facts.anonymousId,sourceSha256:facts.sourceSha256,status:'draft',
+  boundaryDecisions:facts.onsetClusters.filter(c=>c.tick>0).map(c=>({tick:c.tick,harmonic:'unknown',voicing:'unknown',passingChord:'unknown'})),
+  noteDecisions:facts.notes.map(n=>({noteId:n.id,role:'unknown',event:'unknown'})),harmonicSpans:[],voicingSpans:[],comments:''
+};
+$('meta').textContent='匿名ID: '+facts.anonymousId+' | PPQ: '+facts.ppq+' | 終了 tick: '+facts.endTick+' | notes: '+facts.notes.length+' | onset clusters: '+facts.onsetClusters.length;
+$('controllers').textContent=JSON.stringify(facts.controllerEvents,null,2);
+$('timing').textContent='Tempo (tick, microseconds/beat): '+JSON.stringify(facts.tempoEvents)+' | Time signature (tick, numerator/denominator): '+JSON.stringify(facts.meterEvents.length?facts.meterEvents:[{tick:0,numerator:4,denominator:4,implicit:true}]);
+function drawRoll() {
+  const canvas=$('roll'),ctx=canvas.getContext('2d');
+  const start=Math.max(0,Number($('viewStart').value)||0)*facts.ppq;
+  const width=Math.max(1,Number($('viewBeats').value)||16)*facts.ppq;
+  const visible=facts.notes.filter(n=>n.offsetTick>start&&n.onsetTick<start+width);
+  const low=Math.max(0,Math.min(127,...visible.map(n=>n.pitch))-2);
+  const high=Math.min(127,Math.max(0,...visible.map(n=>n.pitch))+2);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const left=42,right=canvas.width-10,top=15,bottom=canvas.height-30;
+  const x=t=>left+(t-start)/width*(right-left);
+  const y=p=>bottom-(p-low)/Math.max(1,high-low)*(bottom-top);
+  ctx.strokeStyle='#ddd';ctx.fillStyle='#444';ctx.font='11px system-ui';
+  for(let tick=Math.ceil(start/facts.ppq)*facts.ppq;tick<=start+width;tick+=facts.ppq){
+    const px=x(tick);ctx.beginPath();ctx.moveTo(px,top);ctx.lineTo(px,bottom);ctx.stroke();ctx.fillText(String(tick/facts.ppq),px+2,canvas.height-8);
+  }
+  for(const note of visible){
+    const px=Math.max(left,x(note.onsetTick)),ex=Math.min(right,x(note.offsetTick));
+    const py=y(note.pitch);ctx.fillStyle='#176b83';ctx.fillRect(px,py-3,Math.max(2,ex-px),6);
+  }
+  ctx.fillStyle='#222';ctx.fillText('MIDI '+low+'–'+high,4,12);
+}
+const groupKeys=[...new Set(facts.notes.map(n=>n.track+'/'+n.channel))];
+for(const key of groupKeys){const option=document.createElement('option');option.value=key;option.textContent=key;$('group').append(option);}
+for(const [id,values] of [['groupRole',['unknown','harmony','melody','bass','percussion','other']],['groupEvent',['unknown','none','passing','neighbor','appoggiatura','restrike','arpeggio','residual']]]){
+  for(const value of values){const option=document.createElement('option');option.value=value;option.textContent=value;$(id).append(option);}
+}
+$('draw').addEventListener('click',drawRoll);
+$('allNo').addEventListener('click',()=>{
+  if(!confirm('raw source を確認しましたか？全 onset の3項目を No にします。必要な Yes は個別に変更してください。')) return;
+  for(const item of review.boundaryDecisions){item.harmonic='no';item.voicing='no';item.passingChord='no';}
+  render();$('message').textContent='人間の確認操作により No を一括設定しました。';
+});
+$('applyGroup').addEventListener('click',()=>{
+  const key=$('group').value,role=$('groupRole').value,event=$('groupEvent').value;
+  if(!confirm('track/channel '+key+' の全ノートに role='+role+', event='+event+' を適用しますか？')) return;
+  const ids=new Set(facts.notes.filter(n=>n.track+'/'+n.channel===key).map(n=>n.id));
+  for(const item of review.noteDecisions){if(ids.has(item.noteId)){item.role=role;item.event=event;}}
+  render();$('message').textContent='人間の確認操作により track/channel の判断を適用しました。';
+});
+function render(resetForm=false) {
+  $('boundaries').replaceChildren();
+  const clusters = new Map(facts.onsetClusters.map(c=>[c.tick,c.noteIds]));
+  for (const item of review.boundaryDecisions.sort((a,b)=>a.tick-b.tick)) {
+    const tr=document.createElement('tr');
+    cell(tr,item.tick+' / '+(item.tick/facts.ppq)); cell(tr,(clusters.get(item.tick)||[]).join(', ')||'追加時点');
+    for (const key of ['harmonic','voicing','passingChord']) {
+      const select=options(['unknown','yes','no'],item[key]); select.addEventListener('change',()=>{item[key]=select.value;}); cell(tr,select);
+    }
+    $('boundaries').append(tr);
+  }
+  $('notes').replaceChildren();
+  const byId=new Map(review.noteDecisions.map(d=>[d.noteId,d]));
+  for (const note of facts.notes) {
+    const decision=byId.get(note.id); if(!decision) continue;
+    const tr=document.createElement('tr'); cell(tr,note.id);cell(tr,note.pitch);
+    cell(tr,note.onsetTick+' / '+note.offsetTick+' / '+note.durationTick);cell(tr,note.track+' / '+note.channel);
+    for(const [key,values] of [['role',['unknown','harmony','melody','bass','percussion','other']],['event',['unknown','none','passing','neighbor','appoggiatura','restrike','arpeggio','residual']]]){
+      const select=options(values,decision[key]);select.addEventListener('change',()=>{decision[key]=select.value;});cell(tr,select);
+    }
+    $('notes').append(tr);
+  }
+  if(resetForm){
+    $('harmonic').value=JSON.stringify(review.harmonicSpans,null,2);
+    $('voicing').value=JSON.stringify(review.voicingSpans,null,2);
+    $('comments').value=review.comments;
+    $('status').value=review.status;
+  }
+  drawRoll();
+}
+function collect() {
+  review.harmonicSpans=JSON.parse($('harmonic').value);
+  review.voicingSpans=JSON.parse($('voicing').value);
+  if(!Array.isArray(review.harmonicSpans)||!Array.isArray(review.voicingSpans)) throw new Error('spans は JSON array にしてください');
+  review.comments=$('comments').value; review.status=$('status').value;
+  return review;
+}
+$('addTick').addEventListener('click',()=>{
+  const tick=Number($('newTick').value);
+  if(!Number.isSafeInteger(tick)||tick<=0||tick>=facts.endTick||review.boundaryDecisions.some(d=>d.tick===tick)) { $('message').textContent='追加 tick は範囲内の未登録整数を指定してください。';return; }
+  review.boundaryDecisions.push({tick,harmonic:'unknown',voicing:'unknown',passingChord:'unknown'});render();$('message').textContent='レビュー時点を追加しました。';
+});
+$('load').addEventListener('change',async event=>{
+  try { const input=JSON.parse(await event.target.files[0].text());
+    if(input.sourceSha256!==facts.sourceSha256||input.anonymousId!==facts.anonymousId||input.reviewVersion!==facts.reviewVersion) throw new Error('source の照合に失敗しました');
+    review=input;render(true);$('message').textContent='読み込みました。';
+  } catch(error) { $('message').textContent='読み込み失敗: '+error.message; }
+});
+$('save').addEventListener('click',()=>{
+  try {const data=JSON.stringify(collect(),null,2)+'\n';const blob=new Blob([data],{type:'application/json'});
+    const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=facts.anonymousId+'-review.json';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);
+    $('message').textContent='ローカル JSON をダウンロードしました。CLI で検証してください。';
+  } catch(error) { $('message').textContent='保存失敗: '+error.message; }
+});
+render(true);
+</script></body></html>

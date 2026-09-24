@@ -31,6 +31,7 @@
     "P7.0-02": [
       "temporal-gold-contract-valid",
       "synthetic-taxonomy-covered",
+      "local-source-review-infrastructure",
       "local-witness-anonymized-mapping",
       "stage02-focused-tests-and-types",
       "stage02-phase-docs-valid",
@@ -56,6 +57,6 @@
     "stage02-phase-docs-valid": "pass",
     "stage02-production-diff-zero": "pass"
   },
-  "nextAction": "P7.0-02: complete anonymous local regression-witness mapping when independent truth is available; keep the stage active until its gate is resolved.",
+  "nextAction": "P7.0-02: collect independent human review on the generated source-only local pack and validate the anonymous Gold; keep the stage active.",
   "updatedAt": "2026-09-24"
 }
