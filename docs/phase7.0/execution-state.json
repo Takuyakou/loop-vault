@@ -47,6 +47,14 @@
       "stage03-phase-docs-valid",
       "stage03-production-diff-zero",
       "stage03-privacy-and-diff-clean"
+    ],
+    "P7.0-04": [
+      "versioned-harmonic-truth-valid",
+      "equivalence-and-rendering-separation-tested",
+      "stage04-script-typecheck-and-lint",
+      "stage04-phase-docs-valid",
+      "stage04-production-diff-zero",
+      "stage04-privacy-and-diff-clean"
     ]
   },
   "gateResults": {
