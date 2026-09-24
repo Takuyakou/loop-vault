@@ -507,6 +507,21 @@ describe("P5.27 single non-scoring clock", () => {
     });
   });
 
+  it("keeps a stopped chord anchor through count-in and accepts backward seek explicitly", () => {
+    const snapshot = snapshotFrom(progression([event(1, 1, 2, 0), event(1, 3, 2, 2)]));
+    let state = createProgressionPracticeClockState(snapshot, { countInBars: 1 });
+    state = reduceProgressionPracticeClock(snapshot, state, { type: "SEEK", status: "stopped", absoluteBeat: 6, anchorBeat: 2 });
+    expect(projectProgressionPracticeClock(snapshot, state).currentEventIndex).toBe(1);
+    state = reduceProgressionPracticeClock(snapshot, state, { type: "START" });
+    expect(projectProgressionPracticeClock(snapshot, state)).toMatchObject({ inCountIn: true, currentEventIndex: 1 });
+    state = reduceProgressionPracticeClock(snapshot, state, { type: "SYNC_TRANSPORT", absoluteBeat: 6 });
+    expect(projectProgressionPracticeClock(snapshot, state).currentEventIndex).toBe(1);
+    state = reduceProgressionPracticeClock(snapshot, state, { type: "SEEK", status: "running", absoluteBeat: 4, anchorBeat: 0 });
+    expect(projectProgressionPracticeClock(snapshot, state).currentEventIndex).toBe(0);
+    state = reduceProgressionPracticeClock(snapshot, state, { type: "STOP_RESET" });
+    expect(projectProgressionPracticeClock(snapshot, state)).toMatchObject({ status: "stopped", currentEventIndex: 0, loopCount: 0 });
+  });
+
   it("stops only on the explicit user stop action", () => {
     const snapshot = snapshotFrom(progression([event(1, 1, 4, 0)]));
     let state = createProgressionPracticeClockState(snapshot, { countInBars: 0 });

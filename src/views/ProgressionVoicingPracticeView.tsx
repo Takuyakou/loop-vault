@@ -51,6 +51,7 @@ import { defaultLiveMidiStore } from "../liveMidi/defaultLiveMidiStore";
 import { liveMidiActivation, type LiveMidiActivationLease } from "../liveMidi/activationLease";
 import {
   ProgressionVoicingTransport,
+  ProgressionVoicingTransportV2,
   type ProgressionVoicingTransportPort,
 } from "../practice/ProgressionVoicingTransport";
 import {
@@ -477,6 +478,7 @@ export function ProgressionVoicingPracticeView({
     [effectiveResolutionOptions, snapshot],
   );
   const [countInBars, setCountInBars] = useState<0 | 1 | 2>(1);
+  const [seekAnchorIndex, setSeekAnchorIndex] = useState(0);
   const [clockState, setClockState] = useState(
     () => snapshot ? createProgressionPracticeClockState(snapshot, { countInBars }) : undefined,
   );
@@ -516,6 +518,7 @@ export function ProgressionVoicingPracticeView({
     transport?.stop();
     setRuntimeError(undefined);
     setAuditionedIndex(undefined);
+    setSeekAnchorIndex(0);
     setClockState(sourceSnapshot
       ? createProgressionPracticeClockState(sourceSnapshot, { countInBars })
       : undefined);
@@ -759,8 +762,14 @@ export function ProgressionVoicingPracticeView({
       countInBars: runtimeCountInBars,
     });
     setRuntimeError(undefined);
-    setClockState(reduceProgressionPracticeClock(snapshot, ready, { type: "START" }));
-    await launchRuntime(0, clockState.bpm, runtimeCountInBars);
+    const anchorBeat = snapshot.events[seekAnchorIndex]?.startBeat ?? 0;
+    const anchored = anchorBeat > 0
+      ? reduceProgressionPracticeClock(snapshot, ready, {
+        type: "SEEK", status: "stopped", absoluteBeat: runtimeCountInBars * practiceGroupBeats + anchorBeat, anchorBeat,
+      })
+      : ready;
+    setClockState(reduceProgressionPracticeClock(snapshot, anchored, { type: "START" }));
+    await launchRuntime(anchorBeat, clockState.bpm, runtimeCountInBars);
   }
 
   async function launchRuntime(
@@ -795,6 +804,25 @@ export function ProgressionVoicingPracticeView({
         : state);
       setRuntimeError(text.playbackErrorBody);
     }
+  }
+
+  function seekToEvent(eventIndex: number) {
+    if (!snapshot || !clockState || !snapshot.events[eventIndex]) return;
+    const anchorBeat = snapshot.events[eventIndex]!.startBeat;
+    auditionRequestRef.current += 1;
+    setAuditionedIndex(undefined);
+    const result = transportRef.current?.seek?.(eventIndex);
+    if (result) {
+      setClockState((state) => state ? reduceProgressionPracticeClock(snapshot, state, {
+        type: "SEEK", status: result.status, absoluteBeat: result.absoluteBeat, anchorBeat,
+      }) : state);
+      return;
+    }
+    if (clockState.status !== "ready" && clockState.status !== "stopped") return;
+    setSeekAnchorIndex(eventIndex);
+    setClockState((state) => state ? reduceProgressionPracticeClock(snapshot, state, {
+      type: "SEEK", status: "stopped", absoluteBeat: state.countInBars * practiceGroupBeats + anchorBeat, anchorBeat,
+    }) : state);
   }
 
   function pause() {
@@ -852,6 +880,12 @@ export function ProgressionVoicingPracticeView({
   }
 
   async function reconnectMidi() {
+    if (transportRef.current?.seek && snapshot) {
+      runtimeRequestRef.current += 1;
+      transportRef.current.stop();
+      setSeekAnchorIndex(0);
+      setClockState((state) => state ? reduceProgressionPracticeClock(snapshot, state, { type: "STOP_RESET" }) : state);
+    }
     setMidiReconnectError(undefined);
     const store = defaultLiveMidiStore.getState();
     try {
@@ -873,11 +907,13 @@ export function ProgressionVoicingPracticeView({
 
   function stop() {
     if (!snapshot) return;
+    const v2 = Boolean(transportRef.current?.seek);
+    if (v2) setSeekAnchorIndex(0);
     runtimeRequestRef.current += 1;
     auditionRequestRef.current += 1;
     transportRef.current?.stop();
     setClockState((state) => state
-      ? reduceProgressionPracticeClock(snapshot, state, { type: "STOP" })
+      ? reduceProgressionPracticeClock(snapshot, state, { type: v2 ? "STOP_RESET" : "STOP" })
       : state);
   }
 
@@ -2245,5 +2281,8 @@ function resolutionStatusLabel(
 }
 
 function createDefaultTransport(): ProgressionVoicingTransportPort {
-  return new ProgressionVoicingTransport();
+  try {
+    if (window.localStorage.getItem("lv-voicing-loop-v2") === "off") return new ProgressionVoicingTransport();
+  } catch { /* non-persistent mode still uses the candidate */ }
+  return new ProgressionVoicingTransportV2();
 }

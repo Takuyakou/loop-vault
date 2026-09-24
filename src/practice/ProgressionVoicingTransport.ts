@@ -43,6 +43,7 @@ export interface ProgressionVoicingTransportPort {
   setMetronomeEnabled(enabled: boolean): void;
   setReferenceSoundEnabled(enabled: boolean): void;
   audition(midiNotes: readonly number[], sound?: PreviewSound): Promise<void>;
+  seek?(eventIndex: number): { readonly status: "running" | "paused" | "count-in"; readonly absoluteBeat: number } | undefined;
 }
 
 const AUDITION_RETRIGGER_DELAY_SECONDS = 0.012;
@@ -54,6 +55,15 @@ const AUDITION_RETRIGGER_DELAY_SECONDS = 0.012;
 export class ProgressionVoicingTransport implements ProgressionVoicingTransportPort {
   private readonly transport = Tone.getTransport();
   private scheduleIds: number[] = [];
+  private readonly pendingIds = new Set<number>();
+  private readonly v2: boolean;
+  private rollingCursor = 0;
+  private rollingLoop = 0;
+  private rollingItems: readonly { readonly startBeat: number; readonly eventIndex: number }[] = [];
+  private originToneBeat = 0;
+  private originProgressionBeat = 0;
+  private loopBaseCount = 0;
+  private countInBeats = 0;
   private voicingInstrument?: PreviewInstrument;
   // After all instrument effects: release envelopes/reverb must not fill rests.
   private referenceOutput?: Tone.Gain;
@@ -78,6 +88,10 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     readonly plan: ProgressionPracticeVoicingPlan;
     readonly applyAtBeat: number;
   };
+
+  constructor(v2 = false) {
+    this.v2 = v2;
+  }
 
   async start(options: ProgressionVoicingTransportStartOptions): Promise<void> {
     const generation = this.invalidateAndClear();
@@ -107,16 +121,29 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     const voicingInstrumentPromise = createPreviewInstrument(sound, this.referenceOutput);
     this.startingGeneration = undefined;
 
-    const countInBeats = options.countInBars * options.snapshot.meter.numerator;
+    const countInBeats = options.countInBars * (this.v2
+      ? options.snapshot.practiceGroupBeats ?? options.snapshot.meter.numerator
+      : options.snapshot.meter.numerator);
     const loopTicks = Math.max(1, runtimeTickAtPracticeBeat(options.snapshot.lengthBeats, ppq));
     const startBeat = Math.max(0, options.startBeat ?? 0);
     this.ownsTransport = true;
     this.transport.stop();
-    this.transport.position = `${Math.round(startBeat * ppq)}i`;
+    this.transport.position = `${Math.round((this.v2 ? 0 : startBeat) * ppq)}i`;
+    this.countInBeats = countInBeats;
+    this.originToneBeat = countInBeats;
+    this.originProgressionBeat = this.v2 ? startBeat : 0;
+    this.loopBaseCount = 0;
     this.transport.bpm.value = this.desiredBpm;
     this.voicingSound = sound;
     this.clickSynth = createClickSynth();
 
+    if (this.v2) {
+      this.resetRollingCursor(startBeat);
+      this.scheduleIds.push(this.transport.scheduleRepeat((time) => {
+        if (!this.acceptsCallback(generation)) return;
+        this.refillRolling(time, ppq, generation);
+      }, "16n", 0));
+    } else {
     options.snapshot.events.forEach((event, eventIndex) => {
       const startTicks = runtimeTickAtPracticeBeat(countInBeats + event.startBeat, ppq);
       this.scheduleIds.push(this.transport.scheduleRepeat((time) => {
@@ -137,10 +164,14 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
       }, `${loopTicks}i`, `${startTicks}i`));
     });
 
+    }
+
     this.scheduleIds.push(this.transport.scheduleRepeat((time) => {
       if (!this.acceptsCallback(generation)) return;
       const absoluteBeat = this.absoluteBeatAtTime(time, ppq);
-      const beatInBar = Math.floor(absoluteBeat) % options.snapshot.meter.numerator;
+      const beatInBar = Math.floor(absoluteBeat) % (this.v2
+        ? options.snapshot.practiceGroupBeats ?? options.snapshot.meter.numerator
+        : options.snapshot.meter.numerator);
       const applied = beatInBar === 0 && this.applyPendingSessionUpdate(absoluteBeat);
       if (applied && !this.hasEventAttackAt(absoluteBeat)) {
         this.attackCurrentVoicing(absoluteBeat, time);
@@ -163,9 +194,9 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
 
     this.running = true;
     this.paused = false;
-    options.onTransportBeat(startBeat);
+    options.onTransportBeat(this.v2 && countInBeats > 0 ? 0 : startBeat);
     const transportStartAudioTime = Tone.now() + 0.05;
-    this.transport.start("+0.05");
+    if (!this.v2) this.transport.start("+0.05");
 
     try {
       const voicingInstrument = await voicingInstrumentPromise;
@@ -174,6 +205,10 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
         return;
       }
       this.voicingInstrument = voicingInstrument;
+      if (this.v2) {
+        this.transport.start("+0.05");
+        return;
+      }
       const currentBeat = this.transport.ticks / ppq;
       const missedImmediateAttack = countInBeats === 0 && Tone.now() >= transportStartAudioTime;
       if (!this.paused && (
@@ -205,7 +240,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
       || !isCompatiblePlan(nextSnapshot, plan)) return false;
     const applyAtBeat = options.applyAtBeat ?? pending?.applyAtBeat;
     if (applyAtBeat !== undefined && Number.isFinite(applyAtBeat)
-      && applyAtBeat > this.transport.ticks / this.transport.PPQ) {
+      && applyAtBeat > (this.v2 ? this.logicalBeat(this.transport.ticks / this.transport.PPQ) : this.transport.ticks / this.transport.PPQ)) {
       this.pendingSessionUpdate = { snapshot: nextSnapshot, plan, applyAtBeat };
       return true;
     }
@@ -224,6 +259,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     }
     if (!this.running || this.paused || !this.ownsTransport) return false;
     this.projectionEpoch += 1;
+    if (this.v2) this.clearPending();
     this.paused = true;
     this.transport.pause();
     this.closeReferenceOutput(Tone.now(), true);
@@ -238,7 +274,11 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     if (generation !== this.generation || !this.running || !this.paused || !this.ownsTransport) return false;
     this.projectionEpoch += 1;
     this.paused = false;
-    this.attackCurrentVoicing(this.transport.ticks / this.transport.PPQ, Tone.now());
+    if (this.v2) {
+      this.resetRollingCursor(this.currentProgressionBeat());
+      if (this.transport.ticks / this.transport.PPQ >= this.countInBeats) this.skipCurrentRollingAttack();
+    }
+    this.attackCurrentVoicing(this.v2 ? this.logicalBeat(this.transport.ticks / this.transport.PPQ) : this.transport.ticks / this.transport.PPQ, Tone.now());
     this.transport.start();
     return true;
   }
@@ -256,10 +296,17 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     await Tone.start();
     if (generation !== this.generation || !this.running || !this.ownsTransport) return false;
     this.projectionEpoch += 1;
+    if (this.v2) this.clearPending();
     this.closeReferenceOutput(Tone.now(), true);
     this.voicingInstrument?.releaseAll();
     if (!this.paused) this.transport.pause();
     this.transport.position = "0i";
+    if (this.v2) {
+      this.originToneBeat = this.countInBeats;
+      this.originProgressionBeat = 0;
+      this.loopBaseCount = 0;
+      this.resetRollingCursor(0);
+    }
     this.paused = false;
     this.transport.start("+0.05");
     return true;
@@ -295,7 +342,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
   }
 
   async audition(midiNotes: readonly number[], sound: PreviewSound = "electric-piano"): Promise<void> {
-    if (midiNotes.length === 0 || this.startingGeneration !== undefined) return;
+    if (midiNotes.length === 0 || this.startingGeneration !== undefined || (this.v2 && this.running && !this.paused)) return;
     const generation = ++this.auditionGeneration;
     await Tone.start();
     if (generation !== this.auditionGeneration || this.startingGeneration !== undefined) return;
@@ -322,6 +369,125 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     );
   }
 
+  seek(eventIndex: number): { readonly status: "running" | "paused" | "count-in"; readonly absoluteBeat: number } | undefined {
+    const options = this.activeOptions;
+    if (!this.v2 || !options || !this.ownsTransport || !Number.isInteger(eventIndex)
+      || eventIndex < 0 || eventIndex >= options.snapshot.events.length) return;
+    const target = options.snapshot.events[eventIndex]!.startBeat;
+    const wasCountIn = this.transport.ticks / this.transport.PPQ < this.countInBeats;
+    const toneBeat = this.transport.ticks / this.transport.PPQ;
+    const logical = this.logicalBeat(toneBeat);
+    const previousLoop = Math.floor(Math.max(0, logical - this.countInBeats) / options.snapshot.lengthBeats);
+    this.projectionEpoch += 1;
+    this.clearPending();
+    this.closeReferenceOutput(Tone.now(), true);
+    this.voicingInstrument?.releaseAll();
+    this.auditionGeneration += 1;
+    this.disposeAuditionInstrument();
+    if (wasCountIn) {
+      this.transport.pause();
+      this.transport.position = "0i";
+      this.originToneBeat = this.countInBeats;
+      this.originProgressionBeat = target;
+      this.loopBaseCount = 0;
+      this.resetRollingCursor(target);
+      this.paused = false;
+      this.transport.start("+0.05");
+      options.onTransportBeat(0);
+      return { status: "count-in", absoluteBeat: 0 };
+    }
+    this.originToneBeat = toneBeat;
+    this.originProgressionBeat = target;
+    this.loopBaseCount = previousLoop;
+    this.resetRollingCursor(target);
+    this.skipCurrentRollingAttack(eventIndex);
+    const absoluteBeat = this.countInBeats + previousLoop * options.snapshot.lengthBeats + target;
+    options.onTransportBeat(absoluteBeat);
+    if (!this.paused) this.attackCurrentVoicing(absoluteBeat, Tone.now() + 0.01);
+    return { status: this.paused ? "paused" : "running", absoluteBeat };
+  }
+
+  private logicalBeat(toneBeat: number): number {
+    const options = this.activeOptions;
+    if (!options || toneBeat < this.countInBeats) return toneBeat;
+    return this.countInBeats + this.loopBaseCount * options.snapshot.lengthBeats
+      + this.originProgressionBeat + Math.max(0, toneBeat - this.originToneBeat);
+  }
+
+  private currentProgressionBeat(): number {
+    const options = this.activeOptions;
+    if (!options) return 0;
+    return Math.max(0, this.logicalBeat(this.transport.ticks / this.transport.PPQ) - this.countInBeats) % options.snapshot.lengthBeats;
+  }
+
+  private clearPending(): void {
+    for (const id of this.pendingIds) this.transport.clear(id);
+    this.pendingIds.clear();
+  }
+
+  private resetRollingCursor(targetBeat: number): void {
+    const options = this.activeOptions;
+    if (!options) return;
+    this.rollingItems = [
+      ...options.snapshot.events.map((event, eventIndex) => ({ startBeat: event.startBeat, eventIndex })),
+      ...options.snapshot.spans.filter((span) => span.kind === "rest")
+        .map((span) => ({ startBeat: span.startBeat, eventIndex: -1 })),
+    ].sort((a, b) => a.startBeat - b.startBeat || a.eventIndex - b.eventIndex);
+    this.rollingCursor = this.rollingItems.findIndex((item) => item.startBeat + 1e-9 >= targetBeat);
+    if (this.rollingCursor < 0) this.rollingCursor = 0;
+    const currentLoop = Math.floor(Math.max(0, this.logicalBeat(this.transport.ticks / this.transport.PPQ) - this.countInBeats)
+      / options.snapshot.lengthBeats);
+    this.rollingLoop = currentLoop + (this.rollingItems[this.rollingCursor]!.startBeat < targetBeat ? 1 : 0);
+  }
+
+  private skipCurrentRollingAttack(eventIndex?: number): void {
+    const options = this.activeOptions;
+    if (!options || this.rollingItems.length === 0) return;
+    const nextItem = this.rollingItems[this.rollingCursor];
+    const currentBeat = this.currentProgressionBeat();
+    if (nextItem?.eventIndex !== (eventIndex ?? nextItem?.eventIndex)
+      || nextItem.eventIndex < 0 || Math.abs(nextItem.startBeat - currentBeat) > 1e-6) return;
+    this.rollingCursor += 1;
+    if (this.rollingCursor >= this.rollingItems.length) {
+      this.rollingCursor = 0;
+      this.rollingLoop += 1;
+    }
+  }
+
+  private refillRolling(time: number, ppq: number, generation: number): void {
+    const options = this.activeOptions;
+    if (!options || this.rollingItems.length === 0) return;
+    const toneBeat = this.transport.getTicksAtTime(time) / ppq;
+    const horizon = toneBeat + Math.max(0.75, this.desiredBpm * 1.5 / 60);
+    while (this.pendingIds.size < 128) {
+      const item = this.rollingItems[this.rollingCursor]!;
+      const logicalDue = this.countInBeats + this.rollingLoop * options.snapshot.lengthBeats + item.startBeat;
+      const toneDue = this.originToneBeat + logicalDue
+        - (this.countInBeats + this.loopBaseCount * options.snapshot.lengthBeats + this.originProgressionBeat);
+      if (toneDue > horizon) break;
+      this.rollingCursor += 1;
+      if (this.rollingCursor >= this.rollingItems.length) {
+        this.rollingCursor = 0;
+        this.rollingLoop += 1;
+      }
+      if (toneDue < toneBeat - 1 / ppq) continue;
+      const epoch = this.projectionEpoch;
+      let id = 0;
+      id = this.transport.scheduleOnce((scheduledTime) => {
+        this.pendingIds.delete(id);
+        if (!this.acceptsCallback(generation) || epoch !== this.projectionEpoch) return;
+        if (item.eventIndex < 0) {
+          this.closeReferenceOutput(scheduledTime);
+          this.voicingInstrument?.releaseAll(scheduledTime);
+        } else {
+          this.applyPendingSessionUpdate(logicalDue);
+          this.attackVoicing(item.eventIndex, 0, scheduledTime);
+        }
+      }, `${Math.round(toneDue * ppq)}i`);
+      this.pendingIds.add(id);
+    }
+  }
+
   private invalidateAndClear(): number {
     this.generation += 1;
     this.auditionGeneration += 1;
@@ -332,6 +498,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
       for (const id of this.scheduleIds) this.transport.clear(id);
     }
     this.scheduleIds = [];
+    this.clearPending();
     this.disposeInstruments();
     this.ownsTransport = false;
     this.running = false;
@@ -347,7 +514,8 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
 
   private absoluteBeatAtTime(time: number, ppq: number): number {
     this.latestScheduledAudioTime = Math.max(this.latestScheduledAudioTime, time);
-    return Math.max(0, this.transport.getTicksAtTime(time) / ppq);
+    const toneBeat = Math.max(0, this.transport.getTicksAtTime(time) / ppq);
+    return this.v2 ? this.logicalBeat(toneBeat) : toneBeat;
   }
 
   private disposeInstruments(): void {
@@ -395,7 +563,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
   private hasEventAttackAt(absoluteBeat: number): boolean {
     const options = this.activeOptions;
     if (!options) return false;
-    const countInBeats = options.countInBars * options.snapshot.meter.numerator;
+    const countInBeats = this.v2 ? this.countInBeats : options.countInBars * options.snapshot.meter.numerator;
     if (absoluteBeat < countInBeats) return false;
     const progressionBeat = (absoluteBeat - countInBeats) % options.snapshot.lengthBeats;
     return options.snapshot.events.some((event) => (
@@ -406,7 +574,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
   private currentSoundingEvent(absoluteBeat: number): { eventIndex: number; elapsedBeats: number } | undefined {
     const options = this.activeOptions;
     if (!options) return;
-    const countInBeats = options.countInBars * options.snapshot.meter.numerator;
+    const countInBeats = this.v2 ? this.countInBeats : options.countInBars * options.snapshot.meter.numerator;
     if (absoluteBeat < countInBeats) return;
     const progressionBeat = (absoluteBeat - countInBeats) % options.snapshot.lengthBeats;
     const eventIndex = options.snapshot.events.findIndex((event) => progressionBeat >= event.startBeat
@@ -525,4 +693,9 @@ function assertCompatibleRuntimePpq(runtimePpq: number): void {
     || runtimePpq % PROGRESSION_VOICING_PRACTICE_PPQ !== 0) {
     throw new RangeError("Voicing Loop requires a Tone PPQ that exactly represents its practice grid.");
   }
+}
+
+/** Candidate transport with bounded chord scheduling; legacy constructor remains the rollback path. */
+export class ProgressionVoicingTransportV2 extends ProgressionVoicingTransport {
+  constructor() { super(true); }
 }

@@ -9,11 +9,12 @@ import {
   progressionPracticeTicksAtBeat,
 } from "../domain/progressionVoicingPractice";
 import { createPreviewInstrument } from "../audio/chordPreview";
-import { ProgressionVoicingTransport } from "./ProgressionVoicingTransport";
+import { ProgressionVoicingTransport, ProgressionVoicingTransportV2 } from "./ProgressionVoicingTransport";
 
 const toneMock = vi.hoisted(() => {
   const scheduled: Array<{ callback: (time: number) => void; interval: string; start?: string | number }> = [];
   const drawCallbacks: Array<() => void> = [];
+  const oneShots: Array<{ id: number; callback: (time: number) => void; at: string | number }> = [];
   const instruments: PolySynth[] = [];
   const gains: Gain[] = [];
   class Gain {
@@ -40,6 +41,12 @@ const toneMock = vi.hoisted(() => {
       activeScheduleIds.add(id);
       return id;
     }),
+    scheduleOnce: vi.fn((callback: (time: number) => void, at: string | number) => {
+      const id = scheduled.length + oneShots.length + 1;
+      oneShots.push({ id, callback, at });
+      activeScheduleIds.add(id);
+      return id;
+    }),
   };
   class PolySynth {
     volume = { value: 0 };
@@ -58,6 +65,7 @@ const toneMock = vi.hoisted(() => {
     gains,
     Gain,
     scheduled,
+    oneShots,
     instruments,
     activeScheduleIds,
     activeInstruments,
@@ -88,6 +96,7 @@ vi.mock("../audio/chordPreview", () => ({
 beforeEach(() => {
   vi.clearAllMocks();
   toneMock.scheduled.length = 0;
+  toneMock.oneShots.length = 0;
   toneMock.drawCallbacks.length = 0;
   toneMock.instruments.length = 0;
   toneMock.gains.length = 0;
@@ -101,6 +110,26 @@ beforeEach(() => {
 });
 
 describe("ProgressionVoicingTransport", () => {
+  it("v2 registers bounded rolling work and invalidates old chord callbacks on seek", async () => {
+    const runtime = new ProgressionVoicingTransportV2();
+    const onTransportBeat = vi.fn();
+    await runtime.start({ snapshot, plan, bpm: 80, countInBars: 0, metronomeEnabled: false, onTransportBeat });
+    expect(toneMock.scheduled).toHaveLength(3);
+    toneMock.scheduled[0]!.callback(1);
+    expect(toneMock.oneShots.length).toBeGreaterThan(0);
+    expect(toneMock.oneShots.length).toBeLessThanOrEqual(128);
+    const stale = toneMock.oneShots[0]!;
+    const attacksBefore = toneMock.instruments.reduce((count, instrument) => count + instrument.triggerAttackRelease.mock.calls.length, 0);
+    const result = runtime.seek(1);
+    expect(result).toEqual({ status: "running", absoluteBeat: snapshot.events[1]!.startBeat });
+    stale.callback(2);
+    const attacksAfter = toneMock.instruments.reduce((count, instrument) => count + instrument.triggerAttackRelease.mock.calls.length, 0);
+    expect(attacksAfter).toBe(attacksBefore + 1);
+    expect(onTransportBeat).toHaveBeenLastCalledWith(snapshot.events[1]!.startBeat);
+    runtime.stop();
+    expect(toneMock.activeScheduleIds.size).toBe(0);
+  });
+
   it("hot-swaps a compatible plan at the next chord boundary without stopping the clock", async () => {
     const sustained = Object.assign(new toneMock.PolySynth(), { triggerAttack: vi.fn() });
     vi.mocked(createPreviewInstrument).mockResolvedValueOnce(sustained);
