@@ -84,6 +84,15 @@
       "stage07-phase-docs-valid",
       "stage07-production-diff-zero",
       "stage07-privacy-and-diff-clean"
+    ],
+    "P7.0-08": [
+      "five-boundary-proposals-compared",
+      "role-and-local-scorer-compared",
+      "short-passing-chord-test",
+      "stage08-script-typecheck-and-lint",
+      "stage08-phase-docs-valid",
+      "stage08-production-diff-zero",
+      "stage08-privacy-and-diff-clean"
     ]
   },
   "gateResults": {
@@ -138,6 +147,6 @@
     "stage07-production-diff-zero": "pass",
     "stage07-privacy-and-diff-clean": "pass"
   },
-  "nextAction": "P7.0-08: compare fixed, change-point, lattice boundary proposals, product/soft role, and local scoring.",
+  "nextAction": "P7.0-08: verify temporal, role, and local scorer experiments before the modular tournament.",
   "updatedAt": "2026-09-24"
 }
