@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "phaseId": "7.0",
   "status": "in-progress",
-  "activeStage": "P7.0-07",
+  "activeStage": "P7.0-08",
   "completedStages": [
     "P7.0-00",
     "P7.0-01",
@@ -10,12 +10,13 @@
     "P7.0-03",
     "P7.0-04",
     "P7.0-05",
-    "P7.0-06"
+    "P7.0-06",
+    "P7.0-07"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "362e0df3d0cd21ab7d697f792553974703d44a8b",
-  "lastVerifiedCommit": "e654dc60e2447c1d8af81fa21b5f8ac4e757c753",
+  "lastVerifiedCommit": "75a9b5a3a7d4d7c5eb41d63ea6c3dbda502042db",
   "currentBranch": "research/phase7-core-v2",
   "requiredGates": {
     "P7.0-00": [
@@ -129,8 +130,14 @@
     "stage06-script-typecheck-and-lint": "pass",
     "stage06-phase-docs-valid": "pass",
     "stage06-production-diff-zero": "pass",
-    "stage06-privacy-and-diff-clean": "pass"
+    "stage06-privacy-and-diff-clean": "pass",
+    "four-candidate-vocabularies-compared": "pass",
+    "recall-before-top1-and-bounds-measured": "pass",
+    "stage07-script-typecheck-and-lint": "pass",
+    "stage07-phase-docs-valid": "pass",
+    "stage07-production-diff-zero": "pass",
+    "stage07-privacy-and-diff-clean": "pass"
   },
-  "nextAction": "P7.0-07: verify source-conditioned candidate representation experiment and close gates.",
+  "nextAction": "P7.0-08: compare fixed, change-point, lattice boundary proposals, product/soft role, and local scoring.",
   "updatedAt": "2026-09-24"
 }
