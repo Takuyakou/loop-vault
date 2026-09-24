@@ -56,6 +56,14 @@
       "stage04-phase-docs-valid",
       "stage04-production-diff-zero",
       "stage04-privacy-and-diff-clean"
+    ],
+    "P7.0-05": [
+      "failure-vector-measured",
+      "candidate-and-boundary-dev-validation",
+      "stage05-script-typecheck-and-lint",
+      "stage05-phase-docs-valid",
+      "stage05-production-diff-zero",
+      "stage05-privacy-and-diff-clean"
     ]
   },
   "gateResults": {
@@ -91,6 +99,6 @@
     "stage04-production-diff-zero": "pass",
     "stage04-privacy-and-diff-clean": "pass"
   },
-  "nextAction": "P7.0-05: decompose checkpoint, candidate, role, boundary, and correction-cost failures using independent Gold.",
+  "nextAction": "P7.0-05: review independent-Gold failure decomposition and close gates before freezing corpora.",
   "updatedAt": "2026-09-24"
 }
