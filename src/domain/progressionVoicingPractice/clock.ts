@@ -51,7 +51,7 @@ export function buildProgressionPracticeClockSchedule(
   snapshot: ProgressionVoicingPracticeSnapshot,
   countInBars: 0 | 1 | 2,
 ): ProgressionPracticeClockSchedule {
-  const countInBeats = countInBars * snapshot.meter.numerator;
+  const countInBeats = countInBars * (snapshot.practiceGroupBeats ?? snapshot.meter.numerator);
   return Object.freeze({
     countInBeats,
     progressionStartBeat: countInBeats,
@@ -131,7 +131,7 @@ export function projectProgressionPracticeClock(
   return Object.freeze({
     status: state.status,
     inCountIn,
-    ...(inCountIn ? { countInBeat: Math.floor(state.transportBeat % snapshot.meter.numerator) + 1 } : {}),
+    ...(inCountIn ? { countInBeat: Math.floor(state.transportBeat % (snapshot.practiceGroupBeats ?? snapshot.meter.numerator)) + 1 } : {}),
     currentEventIndex,
     nextEventIndex: next.kind === "chord" ? next.eventIndex : -1,
     currentSpanIndex,

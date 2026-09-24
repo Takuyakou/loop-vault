@@ -54,7 +54,10 @@ export interface ProgressionVoicingPracticeSnapshot {
   readonly selection: ProgressionVoicingSelection;
   readonly key?: string;
   readonly bpm: number;
-  readonly meter: { readonly numerator: 4; readonly denominator: 4 };
+  /** Source time signature; never rewritten for presentation. */
+  readonly meter: { readonly numerator: number; readonly denominator: 4 };
+  /** Visual/count-in grouping in quarter-note beats, independent of source bars. */
+  readonly practiceGroupBeats?: number;
   readonly lengthBeats: number;
   readonly events: readonly ProgressionPracticeEvent[];
   /** Continuous clock coverage; sounding event indices remain stable. */
@@ -150,7 +153,8 @@ export type ProgressionPracticeSnapshotErrorCode =
   | "invalid-key"
   | "empty-progression"
   | "invalid-chord"
-  | "invalid-timing";
+  | "invalid-timing"
+  | "resource-budget";
 
 export interface ProgressionPracticeSnapshotError {
   readonly code: ProgressionPracticeSnapshotErrorCode;
