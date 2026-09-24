@@ -1,0 +1,313 @@
+{
+  "version": "p7-tier1-checkpoints-v1",
+  "result": {
+    "synthetic": {
+      "files": 13,
+      "events": 22,
+      "checkpoints": {
+        "product-extractor": {
+          "extraction": {
+            "events": 22,
+            "exact": 21,
+            "truePositive": 83,
+            "predicted": 84,
+            "gold": 83,
+            "missing": 0,
+            "extra": 1,
+            "unavailable": 0,
+            "durationBeats": 52,
+            "exactDurationBeats": 50
+          },
+          "representation": {
+            "events": 22,
+            "exact": 21,
+            "truePositive": 83,
+            "predicted": 84,
+            "gold": 83,
+            "missing": 0,
+            "extra": 1,
+            "unavailable": 0,
+            "durationBeats": 52,
+            "exactDurationBeats": 50
+          },
+          "persistence": {
+            "events": 22,
+            "exact": 21,
+            "truePositive": 83,
+            "predicted": 84,
+            "gold": 83,
+            "missing": 0,
+            "extra": 1,
+            "unavailable": 0,
+            "durationBeats": 52,
+            "exactDurationBeats": 50
+          },
+          "cardPlayback": {
+            "events": 22,
+            "exact": 21,
+            "truePositive": 83,
+            "predicted": 84,
+            "gold": 83,
+            "missing": 0,
+            "extra": 1,
+            "unavailable": 0,
+            "durationBeats": 52,
+            "exactDurationBeats": 50
+          },
+          "capturePlayback": {
+            "events": 22,
+            "exact": 21,
+            "truePositive": 83,
+            "predicted": 84,
+            "gold": 83,
+            "missing": 0,
+            "extra": 1,
+            "unavailable": 0,
+            "durationBeats": 52,
+            "exactDurationBeats": 50
+          },
+          "wholePlayback": {
+            "events": 22,
+            "exact": 21,
+            "truePositive": 83,
+            "predicted": 84,
+            "gold": 83,
+            "missing": 0,
+            "extra": 1,
+            "unavailable": 0,
+            "durationBeats": 52,
+            "exactDurationBeats": 50
+          }
+        },
+        "copy-oracle": {
+          "extraction": {
+            "events": 22,
+            "exact": 22,
+            "truePositive": 83,
+            "predicted": 83,
+            "gold": 83,
+            "missing": 0,
+            "extra": 0,
+            "unavailable": 0,
+            "durationBeats": 52,
+            "exactDurationBeats": 52
+          },
+          "representation": {
+            "events": 22,
+            "exact": 22,
+            "truePositive": 83,
+            "predicted": 83,
+            "gold": 83,
+            "missing": 0,
+            "extra": 0,
+            "unavailable": 0,
+            "durationBeats": 52,
+            "exactDurationBeats": 52
+          },
+          "persistence": {
+            "events": 22,
+            "exact": 22,
+            "truePositive": 83,
+            "predicted": 83,
+            "gold": 83,
+            "missing": 0,
+            "extra": 0,
+            "unavailable": 0,
+            "durationBeats": 52,
+            "exactDurationBeats": 52
+          },
+          "cardPlayback": {
+            "events": 22,
+            "exact": 22,
+            "truePositive": 83,
+            "predicted": 83,
+            "gold": 83,
+            "missing": 0,
+            "extra": 0,
+            "unavailable": 0,
+            "durationBeats": 52,
+            "exactDurationBeats": 52
+          },
+          "capturePlayback": {
+            "events": 22,
+            "exact": 22,
+            "truePositive": 83,
+            "predicted": 83,
+            "gold": 83,
+            "missing": 0,
+            "extra": 0,
+            "unavailable": 0,
+            "durationBeats": 52,
+            "exactDurationBeats": 52
+          },
+          "wholePlayback": {
+            "events": 22,
+            "exact": 22,
+            "truePositive": 83,
+            "predicted": 83,
+            "gold": 83,
+            "missing": 0,
+            "extra": 0,
+            "unavailable": 0,
+            "durationBeats": 52,
+            "exactDurationBeats": 52
+          }
+        }
+      }
+    },
+    "harmony-support-dev": {
+      "files": 20,
+      "events": 160,
+      "checkpoints": {
+        "product-extractor": {
+          "extraction": {
+            "events": 160,
+            "exact": 31,
+            "truePositive": 588,
+            "predicted": 642,
+            "gold": 752,
+            "missing": 164,
+            "extra": 54,
+            "unavailable": 0,
+            "durationBeats": 640,
+            "exactDurationBeats": 124
+          },
+          "representation": {
+            "events": 160,
+            "exact": 31,
+            "truePositive": 588,
+            "predicted": 642,
+            "gold": 752,
+            "missing": 164,
+            "extra": 54,
+            "unavailable": 0,
+            "durationBeats": 640,
+            "exactDurationBeats": 124
+          },
+          "persistence": {
+            "events": 160,
+            "exact": 31,
+            "truePositive": 588,
+            "predicted": 642,
+            "gold": 752,
+            "missing": 164,
+            "extra": 54,
+            "unavailable": 0,
+            "durationBeats": 640,
+            "exactDurationBeats": 124
+          },
+          "cardPlayback": {
+            "events": 160,
+            "exact": 25,
+            "truePositive": 575,
+            "predicted": 784,
+            "gold": 752,
+            "missing": 177,
+            "extra": 209,
+            "unavailable": 0,
+            "durationBeats": 640,
+            "exactDurationBeats": 100
+          },
+          "capturePlayback": {
+            "events": 160,
+            "exact": 25,
+            "truePositive": 575,
+            "predicted": 784,
+            "gold": 752,
+            "missing": 177,
+            "extra": 209,
+            "unavailable": 0,
+            "durationBeats": 640,
+            "exactDurationBeats": 100
+          },
+          "wholePlayback": {
+            "events": 160,
+            "exact": 31,
+            "truePositive": 588,
+            "predicted": 642,
+            "gold": 752,
+            "missing": 164,
+            "extra": 54,
+            "unavailable": 0,
+            "durationBeats": 640,
+            "exactDurationBeats": 124
+          }
+        },
+        "copy-oracle": {
+          "extraction": {
+            "events": 160,
+            "exact": 160,
+            "truePositive": 752,
+            "predicted": 752,
+            "gold": 752,
+            "missing": 0,
+            "extra": 0,
+            "unavailable": 0,
+            "durationBeats": 640,
+            "exactDurationBeats": 640
+          },
+          "representation": {
+            "events": 160,
+            "exact": 160,
+            "truePositive": 752,
+            "predicted": 752,
+            "gold": 752,
+            "missing": 0,
+            "extra": 0,
+            "unavailable": 0,
+            "durationBeats": 640,
+            "exactDurationBeats": 640
+          },
+          "persistence": {
+            "events": 160,
+            "exact": 160,
+            "truePositive": 752,
+            "predicted": 752,
+            "gold": 752,
+            "missing": 0,
+            "extra": 0,
+            "unavailable": 0,
+            "durationBeats": 640,
+            "exactDurationBeats": 640
+          },
+          "cardPlayback": {
+            "events": 160,
+            "exact": 160,
+            "truePositive": 752,
+            "predicted": 752,
+            "gold": 752,
+            "missing": 0,
+            "extra": 0,
+            "unavailable": 0,
+            "durationBeats": 640,
+            "exactDurationBeats": 640
+          },
+          "capturePlayback": {
+            "events": 160,
+            "exact": 160,
+            "truePositive": 752,
+            "predicted": 752,
+            "gold": 752,
+            "missing": 0,
+            "extra": 0,
+            "unavailable": 0,
+            "durationBeats": 640,
+            "exactDurationBeats": 640
+          },
+          "wholePlayback": {
+            "events": 160,
+            "exact": 160,
+            "truePositive": 752,
+            "predicted": 752,
+            "gold": 752,
+            "missing": 0,
+            "extra": 0,
+            "unavailable": 0,
+            "durationBeats": 640,
+            "exactDurationBeats": 640
+          }
+        }
+      }
+    }
+  }
+}

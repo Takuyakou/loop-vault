@@ -1,0 +1,7 @@
+/** Public-safe 3/5/10-minute MIDI resource workload; not a sealed-holdout tuning run. */
+import { performance } from "node:perf_hooks";
+import { Midi } from "@tonejs/midi";
+import { analyzeMidi } from "../../src/domain/midi/analysis";
+import { generateCandidates } from "./candidateRepresentations";
+function workload(minutes:number):Uint8Array{const midi=new Midi();midi.header.setTempo(120);midi.header.timeSignatures.push({ticks:0,timeSignature:[4,4],measures:0});const track=midi.addTrack(),chords=[[48,55,59,64],[50,57,60,65],[53,60,64,69]];const beats=minutes*120;for(let start=0;start<beats;start+=4)for(const pitch of chords[(start/4)%chords.length]!)track.addNote({midi:pitch,ticks:start*480,durationTicks:4*480,velocity:.8});return new Uint8Array(midi.toArray());}
+for(const minutes of [3,5,10]){const bytes=workload(minutes),a=performance.now(),analysis=analyzeMidi(bytes,{enablePresentationGrouping:false}),productMs=performance.now()-a,b=performance.now();let maxCandidates=0;for(let beat=0;beat<minutes*120;beat+=4)maxCandidates=Math.max(maxCandidates,generateCandidates([48,55,59,64],"factorized").length);const candidateMs=performance.now()-b;process.stdout.write(JSON.stringify({minutes,sourceBytes:bytes.length,productSegments:analysis.fullTimeline.length,productWallMs:productMs,factorizedMaxCandidates:maxCandidates,factorizedWallMs:candidateMs,heapBytes:process.memoryUsage().heapUsed})+"\n");}

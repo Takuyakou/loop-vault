@@ -1,0 +1,3 @@
+{"minutes":3,"sourceBytes":3034,"productSegments":90,"productWallMs":206.40560000000187,"factorizedMaxCandidates":240,"factorizedWallMs":15.436600000000908,"heapBytes":195641736}
+{"minutes":5,"sourceBytes":5014,"productSegments":150,"productWallMs":303.1346999999987,"factorizedMaxCandidates":240,"factorizedWallMs":20.467000000000553,"heapBytes":235345232}
+{"minutes":10,"sourceBytes":9964,"productSegments":300,"productWallMs":606.5701000000008,"factorizedMaxCandidates":240,"factorizedWallMs":35.777900000000955,"heapBytes":209814864}

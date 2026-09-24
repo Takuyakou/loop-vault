@@ -1,0 +1,6 @@
+{"group":"synthetic","arm":"Copy-Oracle","events":22,"exact":22,"truePositive":83,"predicted":83,"gold":83,"boundaryHits":9,"boundaries":9,"goldBoundaries":9}
+{"group":"synthetic","arm":"Copy-Simple","events":22,"exact":20,"truePositive":83,"predicted":86,"gold":83,"boundaryHits":7,"boundaries":39,"goldBoundaries":9}
+{"group":"synthetic","arm":"Copy-ProductBoundary","events":22,"exact":13,"truePositive":83,"predicted":98,"gold":83,"boundaryHits":5,"boundaries":8,"goldBoundaries":9}
+{"group":"harmony-validation","arm":"Copy-Oracle","events":48,"exact":48,"truePositive":192,"predicted":192,"gold":192,"boundaryHits":42,"boundaries":42,"goldBoundaries":42}
+{"group":"harmony-validation","arm":"Copy-Simple","events":48,"exact":0,"truePositive":48,"predicted":48,"gold":192,"boundaryHits":42,"boundaries":186,"goldBoundaries":42}
+{"group":"harmony-validation","arm":"Copy-ProductBoundary","events":48,"exact":0,"truePositive":54,"predicted":68,"gold":192,"boundaryHits":42,"boundaries":88,"goldBoundaries":42}
