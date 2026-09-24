@@ -10,7 +10,7 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "362e0df3d0cd21ab7d697f792553974703d44a8b",
-  "lastVerifiedCommit": "2ab5189c9056ae10bca965187085703e3491fbde",
+  "lastVerifiedCommit": "b935d31cf54660a3cc18d1fffc71bb84f9db0a70",
   "currentBranch": "research/phase7-core-v2",
   "requiredGates": {
     "P7.0-00": [
@@ -55,7 +55,9 @@
     "synthetic-taxonomy-covered": "pass",
     "stage02-focused-tests-and-types": "pass",
     "stage02-phase-docs-valid": "pass",
-    "stage02-production-diff-zero": "pass"
+    "stage02-production-diff-zero": "pass",
+    "local-source-review-infrastructure": "pass",
+    "stage02-privacy-and-diff-clean": "pass"
   },
   "nextAction": "P7.0-02: collect independent human review on the generated source-only local pack and validate the anonymous Gold; keep the stage active.",
   "updatedAt": "2026-09-24"
