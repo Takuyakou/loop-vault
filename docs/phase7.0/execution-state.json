@@ -37,6 +37,15 @@
       "stage02-phase-docs-valid",
       "stage02-production-diff-zero",
       "stage02-privacy-and-diff-clean"
+    ],
+    "P7.0-03": [
+      "tier1-checkpoints-executed",
+      "copy-oracle-endpoints-verified",
+      "dev-validation-aggregate-only",
+      "stage03-script-typecheck-and-lint",
+      "stage03-phase-docs-valid",
+      "stage03-production-diff-zero",
+      "stage03-privacy-and-diff-clean"
     ]
   },
   "gateResults": {
