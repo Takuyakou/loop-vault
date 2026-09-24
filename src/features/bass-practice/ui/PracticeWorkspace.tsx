@@ -21,7 +21,7 @@ export function PracticeWorkspace({
 
   return (
     <div className={compact ? "flex h-full min-h-0 min-w-0 flex-col gap-2" : "min-w-0 space-y-4"}>
-      <div className="shrink-0 lg:hidden">
+      <div className="shrink-0 lg:hidden" data-practice-workspace-tabs>
         <PracticeModeTabs
           bassPracticeAvailable={bassPracticeAvailable}
           idPrefix="practice-workspace-tab"
@@ -34,7 +34,7 @@ export function PracticeWorkspace({
         aria-label="Practice workspace"
         role="tabpanel"
         tabIndex={-1}
-        className={`min-w-0 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-focus)] ${compact ? "min-h-0 flex-1 overflow-x-hidden overflow-y-auto [@media(min-height:900px)]:overflow-y-hidden" : ""}`}
+        className={`min-w-0 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-focus)] ${compact ? "min-h-0 flex-1 overflow-x-hidden overflow-y-auto" : ""}`}
       >
         {mode === "bass-practice"
           ? bassPractice

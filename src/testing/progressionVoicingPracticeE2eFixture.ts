@@ -15,6 +15,7 @@ export interface ProgressionVoicingPracticeE2eFixture {
 /** Deterministic, privacy-safe fixture compiled only by the Playwright runner. */
 export function progressionVoicingPracticeE2eFixture(search: string): ProgressionVoicingPracticeE2eFixture {
   const status = new URLSearchParams(search).get("p527Status");
+  if (status === "selector") return { snapshots: {}, initialSelection: "source-midi" };
   if (status === "unavailable") {
     return oneSelection("custom", snapshot("custom", "maj7", false));
   }
@@ -32,6 +33,9 @@ export function progressionVoicingPracticeE2eFixture(search: string): Progressio
   }
   if (status === "both-hands-long") {
     return oneSelection("source-midi", snapshot("source-midi", "maj7", true, true, 12));
+  }
+  if (status === "long-song") {
+    return oneSelection("source-midi", snapshot("source-midi", "maj7", true, true, 128));
   }
   if (status === "p533-rules") {
     return {
@@ -182,7 +186,8 @@ function snapshot(
               label: secondLabel,
             }),
         ...(mySelection && includeVoicing
-          ? { voicing: Object.freeze({
+          ? { playbackChoice: selection === "source-midi" ? "SOURCE" as const : "CUSTOM" as const,
+              voicing: Object.freeze({
               kind: selection as "source-midi" | "custom",
               midiNotes: Object.freeze(first ? [48, 55, 59] : [50, 57, 60]),
               ...(includeBassRole ? { bassNote } : {}),

@@ -11,6 +11,8 @@ export interface VoicingLoopVaultCandidate {
   readonly bpm: number;
   readonly chordLabels: readonly string[];
   readonly capturedAt: string;
+  /** Stored safely in Vault, but outside the bounded Voicing Loop practice capacity. */
+  readonly unavailableReason?: "resource-budget";
 }
 
 export function buildVoicingLoopVaultCandidates(
@@ -22,7 +24,18 @@ export function buildVoicingLoopVaultCandidates(
     for (const block of idea.progressionBlocks ?? []) {
       const sourceReference = Object.freeze({ ideaId: idea.id, blockId: block.id });
       const result = buildProgressionVoicingPracticeHandoffFromVault([idea], sourceReference);
-      if (!result.ok) continue;
+      if (!result.ok) {
+        if (result.error.cause === "resource-budget") {
+          candidates.push(Object.freeze({
+            id: voicingLoopSourceId(sourceReference), sourceReference,
+            title: normalizedTitle(idea.title, fallbackTitle),
+            ...(isFiniteBpm(block.bpm ?? idea.bpm) ? { bpm: (block.bpm ?? idea.bpm)! } : { bpm: 0 }),
+            chordLabels: Object.freeze(block.chords.map(({ chord }) => chord.label)),
+            capturedAt: block.capturedAt, unavailableReason: "resource-budget" as const,
+          }));
+        }
+        continue;
+      }
       const snapshot = result.handoff.snapshots[result.handoff.initialSelection];
       if (!snapshot) continue;
       candidates.push(Object.freeze({
@@ -84,4 +97,8 @@ function normalizedTitle(value: string, fallback: string): string {
 
 function normalizeText(value: string): string {
   return value.normalize("NFC").trim().toLowerCase();
+}
+
+function isFiniteBpm(value: number | undefined): value is number {
+  return value !== undefined && Number.isFinite(value) && value > 0;
 }

@@ -1,3 +1,4 @@
+import { VOICING_AUTO_USE_CONFIDENCE } from "../voicing/extractionConfig";
 import { parseChordLabel } from "../chords";
 import { explicitSlashLabel } from "../explicitSlashLabel";
 import type { ChordQuality, ChordSymbol, ChordTimelineItem, SavedProgressionBlock, Tension, VoicingSnapshot } from "../types";
@@ -178,6 +179,10 @@ function normalizeEvents(
       startBeat: progressionPracticeBeatAtTick(startTick),
       durationBeats: progressionPracticeBeatAtTick(endTick - startTick),
       chord,
+      ...(event.voicingMemory?.playbackChoice === undefined ? {} : { playbackChoice: event.voicingMemory.playbackChoice }),
+      ...(event.voicingMemory?.sourceVoicing?.confidence !== undefined
+        && event.voicingMemory.sourceVoicing.confidence < VOICING_AUTO_USE_CONFIDENCE
+        ? { sourceNeedsReview: true } : {}),
       ...(selectedVoicing === undefined ? {} : { voicing: selectedVoicing }),
     }));
     sourceCursor = onset + event.durationBeats;

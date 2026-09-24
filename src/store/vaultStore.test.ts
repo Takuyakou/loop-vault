@@ -11,9 +11,13 @@ import {
 import { pickFocus } from "../domain/focus";
 import { parseChordLabel } from "../domain/chords";
 import { analyzeMidi } from "../domain/midi/analysis";
+import { createManualDraft } from "../domain/midi/manualDraft";
+import { draftToCandidate } from "../domain/midi/manualDraftEditing";
 import { parseVaultFileJson } from "../domain/schema";
 import { progressionFixture } from "../../scripts/p534/fixtures";
 import { buildProgressionVoicingPracticeHandoffFromVault } from "../domain/progressionVoicingPractice";
+import { buildVoicingLoopVaultCandidates } from "../domain/progressionVoicingPractice/library";
+import { normalizedChordKey } from "../domain/voicing";
 import {
   TEXT_PROGRESSION_ANALYZER_VERSION,
   TEXT_PROGRESSION_MAX_BARS,
@@ -1276,6 +1280,62 @@ describe("vault store", () => {
       expect(saved?.voicingMemory).toBeUndefined();
     }
   });
+  it("carries a 64-bar manual Capture range through Vault v2 reload into a full Voicing Loop timeline", async () => {
+    const chord = parseChordLabel("Cmaj7")!;
+    const notes = [48, 55, 59, 64];
+    const timeline: ChordTimelineItem[] = Array.from({ length: 64 }, (_, index) => ({
+      bar: index + 1, beat: 1, durationBeats: 4, chord, confidence: 1,
+      alternatives: [], warnings: [],
+      voicingMemory: { playbackChoice: "SOURCE", sourceVoicing: {
+        schemaVersion: 1, source: "midi-extracted", representation: "simultaneous-voicing",
+        midiNotes: notes, capturedForChordKey: normalizedChordKey(chord), confidence: 1,
+      } },
+    }));
+    const draft = createManualDraft({
+      timeline, range: { startBar: 1, startBeat: 1, endBar: 64, endBeat: 4 },
+      now: "2026-01-01T00:00:00.000Z", draftId: "public-long-range",
+    });
+    const candidate = draftToCandidate(draft);
+    expect(candidate.chords).toHaveLength(64);
+    let sequence = 0;
+    const repository = new FakeRepository();
+    const store = createVaultStore({ repository,
+      idFactory: () => `bbbbbbbb-bbbb-4bbb-8bbb-${(++sequence).toString(16).padStart(12, "0")}`,
+      now: () => now,
+    });
+    await store.getState().initialize();
+    const ideaId = store.getState().createIdeaFromDraft({
+      title: "Public synthetic long progression", status: "idea", bpm: 120,
+      progressionBlock: candidate,
+      progressionAnalysis: {
+        fileName: "public-synthetic.mid", totalBars: 64, bpm: 120, timeSignature: "4/4",
+        fullTimeline: timeline, blockCandidates: [candidate], analyzedAt: "2026-01-01T00:00:00.000Z",
+        analyzerVersion: "public-fixture",
+      },
+    });
+    expect(ideaId).toBeDefined();
+    await store.getState().flush();
+    const parsed = parseVaultFileJson(serializeVault(repository.saved[repository.saved.length - 1]!));
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(parsed.quarantine).toHaveLength(0);
+    expect(parsed.vault.fileVersion).toBe(2);
+    const choices = buildVoicingLoopVaultCandidates(parsed.vault.ideas, "Untitled");
+    expect(choices).toHaveLength(1);
+    const handoff = buildProgressionVoicingPracticeHandoffFromVault(parsed.vault.ideas, choices[0]!.sourceReference);
+    expect(handoff.ok).toBe(true);
+    if (!handoff.ok) return;
+    const practice = handoff.handoff.snapshots["source-midi"]!;
+    expect(practice.events).toHaveLength(64);
+    expect(practice.spans).toHaveLength(64);
+    expect(practice.lengthBeats).toBe(256);
+    expect(practice.events.map((event) => event.startBeat)).toEqual(Array.from({ length: 64 }, (_, index) => index * 4));
+    expect(practice.events.every((event) => event.durationBeats === 4
+      && event.voicing?.midiNotes.join() === notes.join()
+      && event.playbackChoice === "SOURCE")).toBe(true);
+    expect(practice.meter).toEqual({ numerator: 4, denominator: 4 });
+  });
+
   it("fails closed for direct text saves that do not satisfy the text grammar", async () => {
     const repository = new FakeRepository();
     const store = createVaultStore({ repository, now: () => now });

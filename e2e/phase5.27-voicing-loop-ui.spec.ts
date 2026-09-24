@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { readFileSync } from "node:fs";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { assertNoHorizontalOverflow, openApp } from "./helpers/app";
 
 const tauriCsp = (JSON.parse(readFileSync(
@@ -21,6 +21,13 @@ async function applyTauriDocumentCsp(page: import("@playwright/test").Page) {
   });
 }
 
+async function chooseVoicingLoop(page: Page) {
+  const sidebar = page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true });
+  if (await sidebar.isVisible()) { await sidebar.click(); return; }
+  await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
+  await page.getByRole("tab", { name: "Voicing Loop" }).click();
+}
+
 test("P5.27 Voicing Loop route is keyboard-operable and overflow-safe at 320px", async ({ page }) => {
   await applyTauriDocumentCsp(page);
   await page.setViewportSize({ width: 320, height: 812 });
@@ -38,18 +45,16 @@ test("P5.27 Voicing Loop route is keyboard-operable and overflow-safe at 320px",
   await expect(page.getByText("Dm7", { exact: true }).first()).toBeVisible();
   await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("PITCH");
   await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("C4 · G4 · B4");
-  await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("CHORD TONE");
+  await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("TONE");
   await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("1 · 5 · 7");
   await expect(page.getByTestId("voicing-loop-event-timing")).toHaveText([
     "2拍",
     "2拍",
   ]);
   await expect(page.getByRole("group", { name: "Voicing表示モード" })).toBeVisible();
-  await expect(page.getByRole("progressbar")).toHaveCount(2);
+  await expect(page.getByRole("progressbar")).toHaveCount(0);
   await expect(page.getByTestId("voicing-loop-status")).toBeVisible();
-  await expect(page.getByRole("progressbar", { name: "拍" })).toBeVisible();
-  await expect(page.getByRole("progressbar", { name: "位置" })).toBeVisible();
-  await expect(page.getByTestId("voicing-loop-current-next")).toContainText("2拍後に切り替わります");
+  await expect(page.getByTestId("voicing-loop-current-next")).toContainText("あと 2拍");
   await expect(page.getByTestId("voicing-loop-midi-status")).toContainText("MIDI入力");
   await expect(page.getByTestId("voicing-loop-current-next")).not.toContainText("MIDI monitor");
   await expect(page.getByRole("button", { name: "Source MIDI" })).toBeVisible();
@@ -80,8 +85,7 @@ test("P5.27 Voicing Loop route is keyboard-operable and overflow-safe at 320px",
 test("P5.27 Voicing Loop fills the keyboard region and exposes MIDI settings beside transport", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openApp(page);
-  await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
-  await page.getByRole("tab", { name: "Voicing Loop" }).click();
+  await chooseVoicingLoop(page);
 
   const keyboardRegion = page.getByRole("region", { name: "ピアノ鍵盤" });
   const keyboard = keyboardRegion.locator("svg");
@@ -100,8 +104,7 @@ test("P5.27 Voicing Loop populated surface is reduced-motion, 200% scale, and ax
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 640, height: 812 });
   await openApp(page);
-  await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
-  await page.getByRole("tab", { name: "Voicing Loop" }).click();
+  await chooseVoicingLoop(page);
   await page.evaluate(() => { document.documentElement.style.zoom = "2"; });
 
   const workspace = page.getByTestId("voicing-loop-workspace");
@@ -123,8 +126,7 @@ test("P5.27 populated harness exposes every resolver status without fallback", a
   for (const [status, expected] of scenarios) {
     await page.goto(status ? `/?p527Status=${status}` : "/");
     await page.evaluate(() => document.fonts.ready);
-    await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
-    await page.getByRole("tab", { name: "Voicing Loop" }).click();
+    await chooseVoicingLoop(page);
     await expect(page.getByTestId("voicing-loop-workspace")).toContainText(expected);
     if (status) await expect(page.getByRole("button", { name: /開始/ })).toBeDisabled();
   }

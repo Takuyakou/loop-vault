@@ -4,8 +4,7 @@ import { assertNoHorizontalOverflow, openApp } from "./helpers/app";
 
 async function openPopulatedVoicingLoop(page: Page) {
   await openApp(page);
-  await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
-  await page.getByRole("tab", { name: "Voicing Loop" }).click();
+  await chooseVoicingLoop(page);
   return page.getByTestId("voicing-loop-workspace");
 }
 
@@ -17,7 +16,14 @@ async function expectBefore(left: Locator, right: Locator) {
   ), rightHandle)).toBe(true);
 }
 
-test("P5.30 compact workspace follows the approved order and fixed timeline geometry", async ({ page }) => {
+async function chooseVoicingLoop(page: Page) {
+  const sidebar = page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true });
+  if (await sidebar.isVisible()) { await sidebar.click(); return; }
+  await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
+  await page.getByRole("tab", { name: "Voicing Loop" }).click();
+}
+
+test("P5.30 compact workspace follows the approved order and proportional timeline geometry", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 812 });
   const workspace = await openPopulatedVoicingLoop(page);
   const controls = workspace.getByTestId("voicing-loop-controls");
@@ -40,10 +46,10 @@ test("P5.30 compact workspace follows the approved order and fixed timeline geom
     const rect = element.getBoundingClientRect();
     return { width: rect.width, height: rect.height };
   }));
-  expect(boxes.every(({ width, height }) => width === 72.5 && height === 54)).toBe(true);
+  expect(boxes.every(({ width, height }) => width > 0 && height === 54)).toBe(true);
   await expect(timeline.getByTestId("voicing-loop-playhead")).toHaveAttribute("aria-hidden", "true");
   await expect(timeline.getByTestId("voicing-loop-playhead-marker")).toBeVisible();
-  await expect(timeline.getByTestId("voicing-loop-event-beat-rail")).toHaveCount(await cards.count());
+  await expect(timeline.getByTestId("voicing-loop-event-beat-rail")).toHaveCount(0);
   await assertNoHorizontalOverflow(page);
 });
 
@@ -89,8 +95,7 @@ test("P5.30 128-event timeline stays local, resumes follow, reduced-motion, and 
   await page.setViewportSize({ width: 320, height: 812 });
   await page.goto("/?p528Direct=1");
   await page.evaluate(() => document.fonts.ready);
-  await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
-  await page.getByRole("tab", { name: "Voicing Loop" }).click();
+  await chooseVoicingLoop(page);
   await page.getByRole("button", { name: /Textで新しい進行を入力/ }).click();
 
   const capture = page.getByTestId("text-progression-capture");
@@ -115,7 +120,8 @@ test("P5.30 128-event timeline stays local, resumes follow, reduced-motion, and 
     const rect = element.getBoundingClientRect();
     return `${rect.width}x${rect.height}`;
   }));
-  expect(new Set(geometry)).toEqual(new Set(["36.25x54"]));
+  expect(new Set(geometry).size).toBe(1);
+  expect(geometry[0]).toMatch(/^[0-9.]+x54$/);
   const viewport = workspace.getByTestId("voicing-loop-timeline-viewport");
   expect(await viewport.evaluate((element) => element.scrollWidth > element.clientWidth)).toBe(true);
   await assertNoHorizontalOverflow(page);

@@ -8,7 +8,12 @@ const suppliedFixture = (name: string) => readFileSync(`docs/phase5.31/fixtures/
 async function saveTextToLoop(page: Page, input: string) {
   await page.goto("/?p528Direct=1");
   await page.evaluate(() => document.fonts.ready);
-  await page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true }).click();
+  const sidebar = page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true });
+  if (await sidebar.isVisible()) await sidebar.click();
+  else {
+    await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
+    await page.getByRole("tab", { name: "Voicing Loop" }).click();
+  }
   await page.getByRole("button", { name: /Textで新しい進行を入力/ }).click();
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-progression-input").fill(input);
@@ -78,7 +83,7 @@ test("P5.31 exact official control score saves timing with generalized G triad s
   await cards.nth(1).focus();
   await page.keyboard.press("Enter");
   await expect(cards.nth(1)).toHaveAttribute("aria-pressed", "true");
-  await expect(cards.nth(0)).toHaveAttribute("aria-current", "step");
+  await expect(cards.nth(1)).toHaveAttribute("aria-current", "step");
 });
 
 test("P5.31 Text rest/repeat/hold reaches the real single-clock practice transport", async ({ page }) => {
@@ -88,8 +93,8 @@ test("P5.31 Text rest/repeat/hold reaches the real single-clock practice transpo
   await expect(cards).toHaveCount(3);
   expect(await cards.evaluateAll((items) => items.map((item) => item.getAttribute("data-duration-beats"))))
     .toEqual(["2", "2", "4"]);
-  await expect(cards.nth(1)).toBeDisabled();
-  await expect(workspace.getByTestId("voicing-loop-current-next")).toContainText("次休符");
+  await expect(cards.nth(1)).toBeEnabled();
+  await expect(workspace.getByTestId("voicing-loop-current-next")).toContainText("休符");
   await page.getByLabel("カウントイン").selectOption("0");
   await workspace.getByRole("button", { name: /開始/ }).click();
   const heading = workspace.getByTestId("voicing-loop-current-next").getByRole("heading", { level: 2 });
@@ -101,11 +106,11 @@ test("P5.31 Text rest/repeat/hold reaches the real single-clock practice transpo
   await expect(workspace.getByRole("button", { name: "現在のコードを試聴", exact: true })).toBeDisabled();
   await cards.nth(2).focus();
   await page.keyboard.press("Enter");
-  await expect(cards.nth(2)).toHaveAttribute("aria-pressed", "true");
+  await expect(cards.nth(2)).toHaveAttribute("aria-pressed", "false");
+  await expect(cards.nth(2)).toHaveAttribute("aria-current", "step");
   await expect(heading).toHaveText("Cmaj7");
   await page.getByRole("button", { name: "再開", exact: true }).click();
-  await expect(heading).toHaveText("休符");
-  await expect(cards.nth(2)).toHaveAttribute("aria-current", "step");
+  await expect(heading).toHaveText("Cmaj7");
   await expect(workspace).toContainText("1 周完了");
   await page.getByRole("button", { name: "停止", exact: true }).click();
 });
@@ -151,8 +156,8 @@ test("P5.31 all-rest maximum score is saveable and honest at 320px, 200% and red
   await page.getByLabel("カウントイン").selectOption("0");
   await workspace.getByRole("button", { name: /開始/ }).click();
   await expect(workspace).toContainText("自動送り中");
-  await expect(workspace.getByRole("progressbar", { name: "拍" })).toBeVisible();
-  await expect(workspace.getByRole("progressbar", { name: "位置" })).toBeVisible();
+  await expect(workspace.getByRole("progressbar", { name: "拍" })).toHaveCount(0);
+  await expect(workspace.getByRole("progressbar", { name: "位置" })).toHaveCount(0);
   await assertNoHorizontalOverflow(page);
   await page.getByRole("button", { name: "一時停止", exact: true }).click();
   const axe = await new AxeBuilder({ page: page as never }).include("[data-testid='voicing-loop-workspace']").analyze();

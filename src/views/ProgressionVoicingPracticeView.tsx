@@ -32,6 +32,7 @@ import {
   type VoicingLoopVaultCandidate,
 } from "../domain/progressionVoicingPractice";
 import { chordIndexAtTimelineBeat } from "../domain/progressionVoicingPractice/timelineNavigation";
+import { clampTimelineScale, compactTimelineCard, timelinePixelsPerBeat as pixelsPerBeatForTimeline } from "../domain/progressionVoicingPractice/timelineLayout";
 import type { AppLanguage } from "../domain/types";
 import type {
   VoicingCoverage,
@@ -152,7 +153,7 @@ const copy = {
     keyboardTitle: "KEYBOARD — 88 KEYS / A0–C8",
     loop: "Loop",
     pitches: "PITCH",
-    chordTone: "CHORD TONE",
+    chordTone: "TONE",
     suggestedFingering: "おすすめ運指",
     finger: "FINGER",
     showFingering: "おすすめ運指を表示",
@@ -235,7 +236,6 @@ const copy = {
     settings: "設定",
     midiActivationFailed: "MIDI入力を開始できませんでした。",
     positionLabel: (group: number, total: number) => `${group} / ${total} 練習グループ`,
-    nextSwitch: (beats: string) => `${beats}拍後に切り替わります`,
     beatLabel: (beat: number, total: number) => `${beat} / ${total} 拍`,
     loopLabel: (count: number) => `${count} 周完了`,
   },
@@ -276,7 +276,7 @@ const copy = {
     keyboardTitle: "KEYBOARD — 88 KEYS / A0–C8",
     loop: "Loop",
     pitches: "PITCH",
-    chordTone: "CHORD TONE",
+    chordTone: "TONE",
     suggestedFingering: "Suggested Fingering",
     finger: "FINGER",
     showFingering: "Show Suggested Fingering",
@@ -359,7 +359,6 @@ const copy = {
     settings: "Settings",
     midiActivationFailed: "MIDI input could not be activated.",
     positionLabel: (group: number, total: number) => `Practice group ${group} / ${total}`,
-    nextSwitch: (beats: string) => `Changes after ${beats} ${beats === "1" ? "beat" : "beats"}`,
     beatLabel: (beat: number, total: number) => `Beat ${beat} of ${total}`,
     loopLabel: (count: number) => `${count} completed`,
   },
@@ -485,6 +484,7 @@ export function ProgressionVoicingPracticeView({
   );
   const [displayMode, setDisplayMode] = useState<"learn" | "recall">("learn");
   const [timelineScale, setTimelineScale] = useState<8 | 12 | 16>(8);
+  const [timelineInnerWidth, setTimelineInnerWidth] = useState(0);
   const [followEnabled, setFollowEnabled] = useState(true);
   const [showFingering, setShowFingering] = useState(true);
   const [fingeringPreferences, setFingeringPreferences] = useState(loadFingeringPreferences);
@@ -507,6 +507,19 @@ export function ProgressionVoicingPracticeView({
   clockStateRef.current = clockState;
   const midiLeaseRef = useRef<LiveMidiActivationLease>();
   const timelineViewportRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const viewport = timelineViewportRef.current;
+    if (!viewport) return;
+    const measure = () => setTimelineInnerWidth(viewport.clientWidth);
+    measure();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", measure);
+      return () => window.removeEventListener("resize", measure);
+    }
+    const observer = new ResizeObserver(measure);
+    observer.observe(viewport);
+    return () => observer.disconnect();
+  }, [snapshot]);
   const timelineEventRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const programmaticScrollRef = useRef(false);
   if (!transportRef.current) transportRef.current = transportFactory();
@@ -568,13 +581,6 @@ export function ProgressionVoicingPracticeView({
   const transportCurrentIndex = projection?.currentEventIndex ?? 0;
   const transportCurrentSpanIndex = projection?.currentSpanIndex ?? 0;
   const currentIndex = auditionedIndex ?? transportCurrentIndex;
-  const auditionedSpanIndex = auditionedIndex === undefined
-    ? -1
-    : snapshot?.spans.findIndex((span) => span.kind === "chord" && span.eventIndex === auditionedIndex) ?? -1;
-  const currentSpanIndex = auditionedSpanIndex >= 0
-    ? auditionedSpanIndex
-    : transportCurrentSpanIndex;
-  const currentSpan = snapshot?.spans[currentSpanIndex];
   const restLabel = language === "ja" ? "休符" : "Rest";
   const nextIndex = auditionedIndex === undefined
     ? projection?.nextEventIndex ?? (snapshot && snapshot.events.length > 1 ? 1 : 0)
@@ -583,6 +589,9 @@ export function ProgressionVoicingPracticeView({
   const nextEvent = snapshot?.events[nextIndex];
   const thenNextIndex = snapshot?.events.length ? (nextIndex + 1) % snapshot.events.length : 0;
   const thenNextEvent = snapshot?.events[thenNextIndex];
+  const nextWaitBeats = currentEvent
+    ? Math.max(0, currentEvent.startBeat + currentEvent.durationBeats - (projection?.progressionBeat ?? currentEvent.startBeat))
+    : 0;
   const thenNextDegree = progressionPracticeDegreeLabel(thenNextEvent?.chord, targetKey);
   const currentResolution = plan?.events[currentIndex];
   const nextResolution = plan?.events[nextIndex];
@@ -596,6 +605,9 @@ export function ProgressionVoicingPracticeView({
     : { left: EMPTY_NOTES, right: EMPTY_NOTES };
   const nextHandTargets = nextVoicing
     ? progressionFingeringHandTargets(selection, nextVoicing)
+    : { left: EMPTY_NOTES, right: EMPTY_NOTES };
+  const thenNextHandTargets = thenNextResolution?.status === "SUPPORTED"
+    ? progressionFingeringHandTargets(selection, thenNextResolution.voicing)
     : { left: EMPTY_NOTES, right: EMPTY_NOTES };
   const leftFingeringById = useMemo(
     () => new Map(rankFingeringsForHand(snapshot, plan, selection, "left").map((entry) => [entry.id, entry])),
@@ -659,7 +671,14 @@ export function ProgressionVoicingPracticeView({
   const active = clockState?.status === "running" || clockState?.status === "count-in";
   const paused = clockState?.status === "paused";
   const practiceGroupBeats = snapshot?.practiceGroupBeats ?? 4;
-  const timelinePixelsPerBeat = 145 * 8 / (practiceGroupBeats * timelineScale);
+  const totalGroups = Math.max(1, Math.ceil((snapshot?.lengthBeats ?? 1) / practiceGroupBeats));
+  const effectiveTimelineScale = clampTimelineScale(timelineScale, totalGroups);
+  const timelinePixelsPerBeat = pixelsPerBeatForTimeline(
+    timelineInnerWidth || 960, snapshot?.lengthBeats ?? 1, practiceGroupBeats, effectiveTimelineScale,
+  );
+  useEffect(() => {
+    if (timelineScale !== effectiveTimelineScale) setTimelineScale(effectiveTimelineScale);
+  }, [effectiveTimelineScale, timelineScale]);
   const playheadX = (projection?.progressionBeat ?? 0) * timelinePixelsPerBeat;
   const visualStepMilliseconds = Math.max(
     16,
@@ -668,11 +687,6 @@ export function ProgressionVoicingPracticeView({
   const allEventsPlayable = Boolean(plan && snapshot?.spans.length)
     && plan!.events.every((resolution) => resolution.status === "SUPPORTED");
   const currentGroup = Math.floor((projection?.progressionBeat ?? 0) / practiceGroupBeats) + 1;
-  const totalGroups = Math.max(1, Math.ceil((snapshot?.lengthBeats ?? 1) / practiceGroupBeats));
-  const beatProgress = projection?.inCountIn
-    ? ((clockState?.transportBeat ?? 0) % practiceGroupBeats) / practiceGroupBeats
-    : projection?.chordProgress ?? 0;
-  const positionProgress = projection?.progressionProgress ?? 0;
 
   useEffect(() => {
     setFingeringEditorOpen(false);
@@ -826,6 +840,13 @@ export function ProgressionVoicingPracticeView({
     setClockState((state) => state ? reduceProgressionPracticeClock(snapshot, state, {
       type: "SEEK", status: "stopped", absoluteBeat: state.countInBars * practiceGroupBeats + anchorBeat, anchorBeat,
     }) : state);
+  }
+
+  function selectTimelineCard(eventIndex: number) {
+    if (!transportRef.current?.supportsSeek) { void auditionResolved(eventIndex); return; }
+    const stopped = clockStateRef.current?.status === "ready" || clockStateRef.current?.status === "stopped";
+    seekToEvent(eventIndex);
+    if (stopped) void auditionResolved(eventIndex);
   }
 
   function seekToBeat(beat: number) {
@@ -1253,130 +1274,95 @@ export function ProgressionVoicingPracticeView({
         </StatusMessage>
       ) : (
         <>
-          <div className="shrink-0 space-y-2" data-testid="voicing-loop-current-next">
-            <div className="grid min-w-0 gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,440px)]">
-            <Surface variant="primary" className="min-w-0 p-2">
-              <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="lv-section-kicker">{text.current} · {currentSpanIndex + 1}/{snapshot.spans.length}</p>
-                  <div className="mt-1 flex min-w-0 items-baseline gap-2">
-                    <h2 className="break-words text-4xl font-bold tracking-tight text-[var(--lv-text)] sm:text-[52px] sm:leading-[1.08]">
-                      {currentEvent?.chord.label ?? restLabel}
-                    </h2>
-                    {currentDegree ? <span className="shrink-0 text-sm font-bold text-[var(--lv-accent)]" data-testid="voicing-loop-current-degree">{currentDegree}</span> : null}
+          <div className="flex min-w-0 flex-[1_0_auto] flex-col" data-testid="voicing-loop-current-next">
+            <div className="grid min-w-0 flex-1 gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,440px)]">
+              <Surface variant="primary" className="flex min-w-0 flex-col p-4" data-testid="voicing-loop-current-panel">
+                <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <p className="lv-section-kicker">{text.current} · {currentIndex + 1}/{snapshot.events.length}</p>
+                    <span className="rounded border border-[var(--lv-border)] px-2 py-0.5 text-[11px] font-semibold text-[var(--lv-text-secondary)]" data-testid="voicing-loop-playback-choice">
+                      {currentEvent?.playbackChoice ?? "LEGACY"}
+                    </span>
+                    {currentEvent?.sourceNeedsReview
+                      ? <span className="rounded border border-amber-400/40 px-2 py-0.5 text-[11px] text-amber-200" data-testid="voicing-loop-review-badge">{language === "ja" ? "要確認" : "Review"}</span>
+                      : null}
                   </div>
-                  <p className="sr-only" aria-live="polite" aria-atomic="true">{currentEvent?.chord.label ?? restLabel}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {bulkSourcePreview && onBulkSourceApply ? (
-                    <Button size="sm" variant="secondary" onClick={() => setBulkSourceOpen(true)}>
-                      {language === "ja" ? "この進行をSOURCEに" : "Use SOURCE for progression"}
-                    </Button>
-                  ) : null}
-                  {displayMode === "learn" && showFingering
-                    && (currentLeftFingering || currentRightFingering) ? (
-                      <Button size="sm" variant="secondary" onClick={openFingeringEditor}>
-                        {text.editFingering}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {bulkSourcePreview && onBulkSourceApply ? (
+                      <Button size="sm" variant="ghost" onClick={() => setBulkSourceOpen(true)}>
+                        {language === "ja" ? "この進行をSOURCEに" : "Use SOURCE for progression"}
                       </Button>
                     ) : null}
+                    {displayMode === "learn" && showFingering && (currentLeftFingering || currentRightFingering) ? (
+                      <Button size="sm" variant="secondary" onClick={openFingeringEditor}>{text.editFingering}</Button>
+                    ) : null}
+                  </div>
                 </div>
+                <div className="mt-3 flex min-w-0 items-baseline gap-3">
+                  <h2 className="min-w-0 break-words text-4xl font-bold tracking-tight text-[var(--lv-text)] sm:text-[56px] sm:leading-[1.08]">
+                    {currentEvent?.chord.label ?? restLabel}
+                  </h2>
+                  {currentDegree ? <span className="shrink-0 text-lg font-bold text-[var(--lv-accent)]" data-testid="voicing-loop-current-degree">{currentDegree}</span> : null}
+                </div>
+                <p className="sr-only" aria-live="polite" aria-atomic="true">{currentEvent?.chord.label ?? restLabel}</p>
+                {displayMode === "learn" && currentVoicing ? (
+                  <div className="mt-4 grid min-w-0 grid-cols-2 gap-3" data-testid="voicing-loop-current-voicing">
+                    <HandVoicingSummary accidentalStyle={accidentalStyle} fingering={currentLeftFingering}
+                      hand="left" isPersonal={Boolean(currentLeftPersonal)} pitches={currentHandTargets.left}
+                      text={text} voicing={currentVoicing} showFingering={showFingering} />
+                    <HandVoicingSummary accidentalStyle={accidentalStyle} fingering={currentRightFingering}
+                      hand="right" isPersonal={Boolean(currentRightPersonal)} pitches={currentHandTargets.right}
+                      text={text} voicing={currentVoicing} showFingering={showFingering} />
+                  </div>
+                ) : null}
+                {displayMode === "learn" && currentVoicing ? (
+                  <CurrentRuleExplanation explanation={currentVoicing.explanation} language={language}
+                    onNextCandidate={() => changeCurrentCandidate(1)} onPreviousCandidate={() => changeCurrentCandidate(-1)} text={text} />
+                ) : null}
+              </Surface>
+              <div className="flex min-w-0 flex-col gap-2">
+                <Surface className="min-w-0 flex-1 p-3" data-testid="voicing-loop-next-panel">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="lv-section-kicker">{text.next}</p>
+                    <span className="text-xs font-semibold text-[var(--lv-text-muted)]" data-testid="voicing-loop-next-wait">
+                      {language === "ja" ? `あと ${formatPracticeBeat(nextWaitBeats)}拍` : `In ${formatPracticeBeat(nextWaitBeats)} ${nextWaitBeats === 1 ? "beat" : "beats"}`}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex min-w-0 items-baseline gap-2">
+                    <p className="break-words text-2xl font-bold text-[var(--lv-text)]">{nextEvent?.chord.label ?? restLabel}</p>
+                    {nextDegree ? <span className="shrink-0 text-sm font-bold text-[var(--lv-accent)]" data-testid="voicing-loop-next-degree">{nextDegree}</span> : null}
+                  </div>
+                  {displayMode === "learn" && nextVoicing ? (
+                    <div className={`mt-3 grid gap-2 ${nextHandTargets.left.length > 0 && nextHandTargets.right.length > 0 ? "grid-cols-2" : "grid-cols-1"}`} data-testid="voicing-loop-next-voicing">
+                      <CompactHandVoicing accidentalStyle={accidentalStyle} fingering={nextLeftFingering} hand="left"
+                        pitches={nextHandTargets.left} showFingering={showFingering} text={text} voicing={nextVoicing} />
+                      <CompactHandVoicing accidentalStyle={accidentalStyle} fingering={nextRightFingering} hand="right"
+                        pitches={nextHandTargets.right} showFingering={showFingering} text={text} voicing={nextVoicing} />
+                    </div>
+                  ) : null}
+                </Surface>
+                <Surface className="min-w-0 p-3" data-testid="voicing-loop-then-next">
+                  <div className="flex min-w-0 items-baseline gap-2">
+                    <span className="lv-section-kicker">{language === "ja" ? "その次" : "Then next"}</span>
+                    <strong className="min-w-0 break-words text-lg text-[var(--lv-text)]">{thenNextEvent?.chord.label ?? restLabel}</strong>
+                    {thenNextDegree ? <span className="text-xs font-bold text-[var(--lv-accent)]">{thenNextDegree}</span> : null}
+                  </div>
+                  {displayMode === "learn" && showFingering ? (
+                    <div className="mt-1 flex min-w-0 flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--lv-text-secondary)]">
+                      <span>{text.leftHandDisplay}: <strong className="text-amber-200">{fingerSummary(effectiveFingering(thenNextEvent ? leftFingeringById.get(thenNextEvent.id) : undefined, fingeringPreferences), "L", thenNextHandTargets.left.length, text.fingeringUnavailable)}</strong></span>
+                      <span>{text.rightHandDisplay}: <strong className="text-teal-200">{fingerSummary(effectiveFingering(thenNextEvent ? rightFingeringById.get(thenNextEvent.id) : undefined, fingeringPreferences), "R", thenNextHandTargets.right.length, text.fingeringUnavailable)}</strong></span>
+                    </div>
+                  ) : null}
+                </Surface>
               </div>
-
-              {displayMode === "learn" && currentVoicing ? (
-                <div className="mt-2 grid min-w-0 grid-cols-2 gap-2" data-testid="voicing-loop-current-voicing">
-                  <HandVoicingSummary
-                    accidentalStyle={accidentalStyle}
-                    fingering={currentLeftFingering}
-                    hand="left"
-                    isPersonal={Boolean(currentLeftPersonal)}
-                    pitches={currentHandTargets.left}
-                    text={text}
-                    voicing={currentVoicing}
-                    showFingering={showFingering}
-                  />
-                  <HandVoicingSummary
-                    accidentalStyle={accidentalStyle}
-                    fingering={currentRightFingering}
-                    hand="right"
-                    isPersonal={Boolean(currentRightPersonal)}
-                    pitches={currentHandTargets.right}
-                    text={text}
-                    voicing={currentVoicing}
-                    showFingering={showFingering}
-                  />
-                </div>
-              ) : null}
-              {displayMode === "learn" && currentVoicing ? (
-                <CurrentRuleExplanation
-                  explanation={currentVoicing.explanation}
-                  language={language}
-                  onNextCandidate={() => changeCurrentCandidate(1)}
-                  onPreviousCandidate={() => changeCurrentCandidate(-1)}
-                  text={text}
-                />
-              ) : null}
-
-            </Surface>
-
-            <Surface className="min-w-0 p-2">
-              <p className="lv-section-kicker">{text.next}</p>
-              <div className="mt-1 flex min-w-0 items-baseline gap-2">
-                <p className="break-words text-xl font-bold text-[var(--lv-text)]">{nextEvent?.chord.label ?? restLabel}</p>
-                {nextDegree ? <span className="shrink-0 text-xs font-bold text-[var(--lv-accent)]" data-testid="voicing-loop-next-degree">{nextDegree}</span> : null}
-              </div>
-              {displayMode === "learn" && nextVoicing ? (
-                <div className={`mt-2 grid gap-2 text-xs leading-4 text-[var(--lv-text-secondary)] ${nextHandTargets.left.length > 0 && nextHandTargets.right.length > 0 ? "grid-cols-2" : "grid-cols-1"}`} data-testid="voicing-loop-next-voicing">
-                  <CompactHandVoicing
-                    accidentalStyle={accidentalStyle}
-                    fingering={nextLeftFingering}
-                    hand="left"
-                    pitches={nextHandTargets.left}
-                    showFingering={showFingering}
-                    text={text}
-                    voicing={nextVoicing}
-                  />
-                  <CompactHandVoicing
-                    accidentalStyle={accidentalStyle}
-                    fingering={nextRightFingering}
-                    hand="right"
-                    pitches={nextHandTargets.right}
-                    showFingering={showFingering}
-                    text={text}
-                    voicing={nextVoicing}
-                  />
-                </div>
-              ) : null}
-              <p className="mt-2 border-t border-[var(--lv-border)] pt-2 text-[10px] text-[var(--lv-text-muted)]">
-                {text.nextSwitch(formatPracticeBeat(currentSpan?.durationBeats ?? 1))}
-              </p>
-            </Surface>
             </div>
-            <Surface className="flex min-h-11 items-center gap-3 px-3 py-1.5" data-testid="voicing-loop-then-next">
-              <span className="lv-section-kicker">{language === "ja" ? "その次" : "Then next"}</span>
-              <strong className="truncate text-lg text-[var(--lv-text)]">{thenNextEvent?.chord.label ?? restLabel}</strong>
-              {thenNextDegree ? <span className="text-xs font-bold text-[var(--lv-accent)]">{thenNextDegree}</span> : null}
-              {thenNextResolution?.status === "SUPPORTED" ? <span className="ml-auto truncate text-xs text-[var(--lv-text-secondary)]">
-                {formatPitchList(thenNextResolution.voicing.midiNotes, accidentalStyle)}
-              </span> : null}
-            </Surface>
-
           </div>
 
-          <Surface className="min-w-0 min-h-[160px] shrink-0 overflow-hidden px-2 py-1.5" aria-label={text.timeline} data-testid="voicing-loop-timeline">
+          <Surface className="min-w-0 shrink-0 overflow-hidden px-2 py-1.5" aria-label={text.timeline} data-testid="voicing-loop-timeline">
             <div className="flex min-w-0 items-center justify-between gap-3 px-1 text-[10px]">
               <span className="font-bold tracking-[0.1em] text-[var(--lv-text-secondary)]">{text.timeline}</span>
-              <div className="flex items-center gap-1" data-testid="voicing-loop-status">
-                <Metric compact label={projection?.inCountIn ? text.countIn : text.beat} testId="voicing-loop-beat-metric"
-                  value={projection?.inCountIn
-                    ? text.beatLabel(projection.countInBeat ?? 1, practiceGroupBeats)
-                    : text.beatLabel(projection?.beatInChord ?? 1, projection?.beatsInChord ?? Math.ceil(currentEvent?.durationBeats ?? 1))}>
-                  <ProgressMeter active={active} label={projection?.inCountIn ? text.countIn : text.beat}
-                    testId="voicing-loop-beat-progress-fill" transitionMilliseconds={visualStepMilliseconds} value={beatProgress} />
-                </Metric>
-                <Metric compact label={text.position} testId="voicing-loop-position-metric" value={`${currentGroup} / ${totalGroups}`}>
-                  <ProgressMeter active={active} label={text.position}
-                    testId="voicing-loop-position-progress-fill" transitionMilliseconds={visualStepMilliseconds} value={positionProgress} />
-                </Metric>
+              <div className="flex items-center gap-2" data-testid="voicing-loop-status">
+                <Metric compact label={language === "ja" ? "コード" : "Chord"} testId="voicing-loop-position-metric" value={`${currentIndex + 1} / ${snapshot.events.length}`} />
                 <Metric compact label={text.loop} value={text.loopLabel(projection?.loopCount ?? 0)} />
               </div>
               <div className="flex items-center gap-1 text-[var(--lv-text-muted)]">
@@ -1386,16 +1372,10 @@ export function ProgressionVoicingPracticeView({
                 <span className="ml-2">{language === "ja" ? "表示" : "View"}</span>
                 {([8, 12, 16] as const).map((scale) => (
                   <button key={scale} type="button" className={`rounded px-2 py-1 ${timelineScale === scale ? "bg-[var(--lv-accent-soft)] text-[var(--lv-accent)]" : ""}`}
-                    aria-pressed={timelineScale === scale} onClick={() => setTimelineScale(scale)}>{scale}</button>
+                    aria-pressed={effectiveTimelineScale === scale} disabled={scale > 8 && totalGroups < scale}
+                    onClick={() => setTimelineScale(scale)}>{scale}</button>
                 ))}
               </div>
-            </div>
-            <div className="relative mt-1 flex h-3 cursor-pointer overflow-hidden rounded bg-[var(--lv-bg)]" data-testid="voicing-loop-overview"
-              role="button" tabIndex={0} aria-label={language === "ja" ? "進行の全体図から移動" : "Seek from progression overview"}
-              onClick={seekFromOverviewClick} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); seekToBeat((projection?.progressionBeat ?? 0)); } }}>
-              {Array.from({ length: totalGroups }, (_, index) => (
-                <span key={index} className={`h-full flex-1 border-r border-[var(--lv-bg)] ${index < currentGroup - 1 ? "bg-teal-700" : index === currentGroup - 1 ? "bg-[var(--lv-accent)]" : "bg-slate-700"}`} />
-              ))}
             </div>
             <div
               ref={timelineViewportRef}
@@ -1406,11 +1386,18 @@ export function ProgressionVoicingPracticeView({
               onScroll={() => { if (!programmaticScrollRef.current) setFollowEnabled(false); }}
             >
               <div className="relative" style={{ width: `${snapshot.lengthBeats * timelinePixelsPerBeat}px` }}>
+                <div className="relative mt-1 flex h-3 cursor-pointer overflow-hidden rounded bg-[var(--lv-bg)]" data-testid="voicing-loop-overview"
+              role="button" tabIndex={0} aria-label={language === "ja" ? "進行の全体図から移動" : "Seek from progression overview"}
+              onClick={seekFromOverviewClick} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); seekToBeat((projection?.progressionBeat ?? 0)); } }}>
+              {Array.from({ length: totalGroups }, (_, index) => (
+                <span key={index} className={`h-full flex-1 border-r border-[var(--lv-bg)] ${index < currentGroup - 1 ? "bg-teal-700" : index === currentGroup - 1 ? "bg-[var(--lv-accent)]" : "bg-slate-700"}`} />
+              ))}
+                </div>
                 <div className="flex h-5 cursor-pointer border-b border-[var(--lv-border)] text-[10px] text-[var(--lv-text-muted)]" data-testid="voicing-loop-ruler"
                   role="button" tabIndex={0} aria-label={language === "ja" ? "目盛りから移動" : "Seek from ruler"}
                   onClick={seekFromTimelineClick} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); seekToBeat(projection?.progressionBeat ?? 0); } }}>
                   {Array.from({ length: totalGroups }, (_, index) => (
-                    <span key={index} className="shrink-0 border-l border-[var(--lv-border)] pl-1" style={{ width: `${practiceGroupBeats * timelinePixelsPerBeat}px` }}>{index + 1}</span>
+                    <span key={index} className="shrink-0 border-l border-[var(--lv-border)] pl-1" style={{ width: `${Math.min(practiceGroupBeats, snapshot.lengthBeats - index * practiceGroupBeats) * timelinePixelsPerBeat}px` }}>{index + 1}</span>
                   ))}
                 </div>
                 <div className="relative flex gap-0 py-1">
@@ -1435,6 +1422,9 @@ export function ProgressionVoicingPracticeView({
                   const selected = index === transportCurrentSpanIndex;
                   const auditioned = eventIndex >= 0 && eventIndex === auditionedIndex;
                   const degree = progressionPracticeDegreeLabel(event?.chord, targetKey);
+                  const cardWidth = span.durationBeats * timelinePixelsPerBeat;
+                  const compact = compactTimelineCard(cardWidth);
+                  const showPreview = playable && cardWidth >= 96;
                   return (
                     <div key={event?.id ?? `rest-${span.startBeat}`} className="relative flex-none" style={{ width: `${span.durationBeats * timelinePixelsPerBeat}px` }}>
                     <button
@@ -1443,45 +1433,35 @@ export function ProgressionVoicingPracticeView({
                       data-testid="voicing-loop-event"
                       data-duration-beats={span.durationBeats}
                       data-span-kind={span.kind}
-                      style={{ width: `${span.durationBeats * timelinePixelsPerBeat}px` }}
-                      className={`relative flex h-[54px] w-full min-h-[54px] flex-none flex-col justify-start overflow-hidden rounded-[var(--lv-radius-sm)] border px-2 pb-3 pt-1.5 text-left text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-60 ${selected ? "border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)] shadow-[inset_0_0_0_1px_rgba(59,224,206,0.12)]" : auditioned ? "border-[var(--lv-accent)] bg-[var(--lv-surface-raised)] text-[var(--lv-text)]" : "border-[var(--lv-border)] bg-transparent text-[var(--lv-text-secondary)]"}`}
+                      data-compact={compact}
+                      title={event?.chord.label ?? restLabel}
+                      style={{ width: `${cardWidth}px` }}
+                      className={`relative flex h-[54px] w-full min-h-[54px] flex-none flex-col justify-start overflow-hidden rounded-[var(--lv-radius-sm)] border ${compact ? "px-0.5 pb-1 pt-1" : "px-2 pb-3 pt-1.5"} text-left text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-60 ${selected ? "border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)] shadow-[inset_0_0_0_1px_rgba(59,224,206,0.12)]" : auditioned ? "border-[var(--lv-accent)] bg-[var(--lv-surface-raised)] text-[var(--lv-text)]" : "border-[var(--lv-border)] bg-transparent text-[var(--lv-text-secondary)]"}`}
                       aria-current={selected ? "step" : undefined}
                       aria-pressed={auditioned}
                       aria-label={`${index + 1}/${snapshot.spans.length}: ${event?.chord.label ?? restLabel}${degree ? `, ${degree}` : ""}, ${practiceTimingLabel(span, snapshot.practiceGroupBeats ?? snapshot.meter.numerator, language)}.${event ? ` ${transportRef.current?.supportsSeek ? (language === "ja" ? "ここへ移動" : "Seek here") : text.auditionCard}` : ""}`}
                       disabled={!playable && !transportRef.current?.supportsSeek}
                       onClick={() => {
-                        if (!transportRef.current?.supportsSeek) { void auditionResolved(eventIndex); return; }
                         if (span.kind === "rest") seekToBeat(span.startBeat + 1e-6);
-                        else seekToEvent(eventIndex);
+                        else selectTimelineCard(eventIndex);
                       }}
                     >
-                      <span className="flex min-w-0 items-baseline gap-1.5">
-                        <span className="shrink-0 text-[10px] font-normal text-[var(--lv-text-muted)]">{index + 1}</span>
-                        <span className="min-w-0 truncate">{event?.chord.label ?? restLabel}</span>
+                      <span className="flex min-w-0 items-baseline gap-1">
+                        {!compact ? <span className="shrink-0 text-[10px] font-normal text-[var(--lv-text-muted)]">{index + 1}</span> : null}
+                        <span className={`min-w-0 leading-tight ${compact ? "block overflow-hidden text-ellipsis whitespace-nowrap text-[9px] tracking-tight" : "break-all text-sm"}`}>{event?.chord.label ?? restLabel}</span>
                       </span>
-                      <span
-                        data-testid="voicing-loop-event-timing"
-                        className={`mt-0.5 block truncate whitespace-nowrap text-[10px] font-normal leading-3 ${selected ? "text-teal-200" : "text-[var(--lv-text-muted)]"}`}
-                      >
-                        {compactDurationLabel(span.durationBeats, language)}
-                      </span>
-                      {degree ? (
-                        <span className="absolute bottom-0.5 right-1.5 text-[9px] font-bold leading-none text-[var(--lv-accent)]" data-testid="voicing-loop-event-degree">
-                          {degree}
-                        </span>
+                      {!compact ? (
+                        <>
+                          <span data-testid="voicing-loop-event-timing" className={`absolute bottom-1 left-2 text-[10px] font-normal leading-3 ${selected ? "text-teal-200" : "text-[var(--lv-text-muted)]"}`}>
+                            {compactDurationLabel(span.durationBeats, language)}
+                          </span>
+                          {degree ? <span className={`absolute bottom-1 text-[10px] font-bold leading-3 text-[var(--lv-accent)] ${showPreview ? "right-8" : "right-2"}`} data-testid="voicing-loop-event-degree">{degree}</span> : null}
+                        </>
                       ) : null}
-                      <span aria-hidden="true" data-testid="voicing-loop-event-beat-rail" className={`absolute bottom-1 left-2 flex h-0.5 gap-0.5 opacity-60 ${degree ? "right-7" : "right-2"}`}>
-                        {Array.from({ length: Math.max(1, Math.min(16, Math.ceil(span.durationBeats))) }, (_, beatIndex) => (
-                          <span
-                            key={beatIndex}
-                            className={`h-0.5 min-w-0 flex-1 rounded-full ${selected ? "bg-[var(--lv-accent)]" : "bg-slate-600"}`}
-                          />
-                        ))}
-                      </span>
                     </button>
-                    {playable ? <button type="button" className="absolute right-1 top-1 z-20 rounded bg-[var(--lv-surface-raised)] p-1 text-[var(--lv-accent)] disabled:opacity-40"
+                    {showPreview ? <button type="button" className="absolute bottom-1 right-1 z-20 rounded bg-[var(--lv-surface-raised)] p-1 text-[var(--lv-accent)] disabled:opacity-40"
                       data-testid="voicing-loop-event-preview" aria-label={`${event?.chord.label}: ${text.auditionCard}`}
-                      disabled={active || paused} onClick={() => void auditionResolved(eventIndex)}><Play aria-hidden="true" size={16} /></button> : null}
+                      disabled={active} onClick={() => void auditionResolved(eventIndex)}><Play aria-hidden="true" size={16} /></button> : null}
                     </div>
                   );
                 })}
@@ -1812,15 +1792,18 @@ function addKeyboardFingerLabels(
   });
 }
 
+function fingerSummary(
+  fingering: RankedFingering | undefined,
+  prefix: "L" | "R",
+  noteCount: number,
+  unavailable: string,
+): string {
+  if (!noteCount) return "—";
+  return fingering ? fingering.fingers.map((finger) => `${prefix}${finger}`).join(" · ") : unavailable;
+}
+
 function HandVoicingSummary({
-  accidentalStyle,
-  fingering,
-  hand,
-  isPersonal,
-  pitches,
-  showFingering,
-  text,
-  voicing,
+  accidentalStyle, fingering, hand, isPersonal, pitches, showFingering, text, voicing,
 }: {
   readonly accidentalStyle: NoteAccidentalStyle;
   readonly fingering?: RankedFingering;
@@ -1833,27 +1816,22 @@ function HandVoicingSummary({
 }) {
   if (!pitches.length) return null;
   const prefix = hand === "left" ? "L" : "R";
-  const handBorder = hand === "left"
-    ? "border-amber-400/50 bg-amber-400/[0.08]"
-    : "border-teal-300/50 bg-teal-300/[0.08]";
+  const handBorder = hand === "left" ? "border-amber-400/50 bg-amber-400/[0.08]" : "border-teal-300/50 bg-teal-300/[0.08]";
   const handText = hand === "left" ? "text-amber-200" : "text-teal-200";
   return (
-    <section
-      className={`min-w-0 rounded-[var(--lv-radius-sm)] border p-2 ${handBorder}`}
-      data-testid={`voicing-loop-${hand}-hand`}
-    >
-      <p className={`text-xs font-bold tracking-[0.12em] ${handText}`}>
-        {hand === "left" ? text.leftHandDisplay : text.rightHandDisplay}
-      </p>
-      <dl className="mt-1 grid min-w-0 gap-0.5 text-xs leading-4">
+    <section className={`min-w-0 rounded-[var(--lv-radius-sm)] border p-2.5 ${handBorder}`} data-testid={`voicing-loop-${hand}-hand`}>
+      <p className={`text-xs font-bold tracking-[0.12em] ${handText}`}>{hand === "left" ? text.leftHandDisplay : text.rightHandDisplay}</p>
+      <dl className="mt-2 space-y-2">
         {showFingering ? (
-          <HandFact
-            label={text.finger}
-            value={fingering
-              ? `${fingering.fingers.map((finger) => `${prefix}${finger}`).join(" · ")} (${isPersonal ? text.personal : text.automatic})`
-              : text.fingeringUnavailable}
-            emphasize={Boolean(fingering)}
-          />
+          <div className="min-w-0">
+            <dt className="text-[11px] font-bold tracking-[0.12em] text-[var(--lv-text-secondary)]">{text.finger}</dt>
+            <dd className="mt-1 flex min-w-0 flex-wrap items-baseline gap-2">
+              <strong className={`min-w-0 break-words text-2xl leading-tight ${handText}`}>
+                {fingerSummary(fingering, prefix, pitches.length, text.fingeringUnavailable)}
+              </strong>
+              {fingering ? <span className="rounded border border-[var(--lv-border)] px-1.5 py-0.5 text-[11px] text-[var(--lv-text-secondary)]">{isPersonal ? text.personal : text.automatic}</span> : null}
+            </dd>
+          </div>
         ) : null}
         <HandFact label={text.pitches} value={formatPitchList(pitches, accidentalStyle)} />
         <HandFact label={text.chordTone} value={formatChordToneList(voicing, pitches)} />
@@ -1862,15 +1840,7 @@ function HandVoicingSummary({
   );
 }
 
-function CompactHandVoicing({
-  voicing,
-  accidentalStyle,
-  fingering,
-  hand,
-  pitches,
-  showFingering,
-  text,
-}: {
+function CompactHandVoicing({ voicing, accidentalStyle, fingering, hand, pitches, showFingering, text }: {
   readonly voicing: ResolvedProgressionPracticeVoicing;
   readonly accidentalStyle: NoteAccidentalStyle;
   readonly fingering?: RankedFingering;
@@ -1881,41 +1851,33 @@ function CompactHandVoicing({
 }) {
   if (!pitches.length) return null;
   const prefix = hand === "left" ? "L" : "R";
-  const handBorder = hand === "left"
-    ? "border-amber-400/60 bg-amber-400/[0.08]"
-    : "border-[var(--lv-accent)] bg-teal-300/[0.08]";
+  const handBorder = hand === "left" ? "border-amber-400/60 bg-amber-400/[0.08]" : "border-[var(--lv-accent)] bg-teal-300/[0.08]";
   const handText = hand === "left" ? "text-amber-200" : "text-[var(--lv-accent)]";
   return (
-    <div className={`min-w-0 rounded-[var(--lv-radius-sm)] border px-2 py-1.5 ${handBorder}`} data-testid={`voicing-loop-next-${hand}-hand`}>
-      <p className={`text-xs font-bold tracking-[0.1em] ${handText}`}>
-        {hand === "left" ? text.leftHandDisplay : text.rightHandDisplay}
-      </p>
-      <p className="mt-0.5 break-words">{formatPitchList(pitches, accidentalStyle)}</p>
-      <p className="mt-0.5 break-words">{text.chordTone}: {formatChordToneList(voicing, pitches)}</p>
-      {showFingering ? (
-        <p className={`break-words font-semibold ${handText}`}>
-          {fingering
-            ? fingering.fingers.map((finger) => `${prefix}${finger}`).join(" · ")
-            : text.fingeringUnavailable}
-        </p>
-      ) : null}
+    <div className={`min-w-0 rounded-[var(--lv-radius-sm)] border px-3 py-2 ${handBorder}`} data-testid={`voicing-loop-next-${hand}-hand`}>
+      <p className={`text-xs font-bold tracking-[0.1em] ${handText}`}>{hand === "left" ? text.leftHandDisplay : text.rightHandDisplay}</p>
+      <dl className="mt-2 space-y-2">
+        {showFingering ? (
+          <div><dt className="text-[10px] font-bold tracking-[0.1em] text-[var(--lv-text-secondary)]">{text.finger}</dt>
+            <dd className={`mt-0.5 break-words text-lg font-bold ${handText}`}>{fingerSummary(fingering, prefix, pitches.length, text.fingeringUnavailable)}</dd>
+          </div>
+        ) : null}
+        <HandFact label={text.pitches} value={formatPitchList(pitches, accidentalStyle)} compact />
+        <HandFact label={text.chordTone} value={formatChordToneList(voicing, pitches)} compact />
+      </dl>
     </div>
   );
 }
 
-function HandFact({
-  emphasize = false,
-  label,
-  value,
-}: {
-  readonly emphasize?: boolean;
+function HandFact({ label, value, compact = false }: {
   readonly label: string;
   readonly value: string;
+  readonly compact?: boolean;
 }) {
   return (
-    <div className="grid min-w-0 grid-cols-[4.75rem_minmax(0,1fr)] gap-1">
-      <dt className="text-xs font-semibold text-[var(--lv-text-secondary)]">{label}</dt>
-      <dd className={`min-w-0 break-words ${emphasize ? "text-2xl font-bold text-teal-200" : "text-[var(--lv-text-secondary)]"}`}>{value}</dd>
+    <div className="min-w-0">
+      <dt className="text-[11px] font-bold tracking-[0.12em] text-[var(--lv-text-secondary)]">{label}</dt>
+      <dd className={`mt-0.5 min-w-0 break-words text-[var(--lv-text-secondary)] ${compact ? "text-xs leading-4" : "text-sm leading-5"}`}>{value}</dd>
     </div>
   );
 }
@@ -1963,7 +1925,7 @@ function FingeringEditor({
   return (
     <div className="min-w-0 p-4 sm:p-6" data-testid="voicing-loop-fingering-editor">
       <h2 className="text-xl font-bold text-[var(--lv-text)]">{text.editFingering}</h2>
-      <p className="mt-2 text-xs leading-5 text-[var(--lv-text-muted)]">
+      <p className="mt-2 text-xs leading-5 text-[var(--lv-text-secondary)]">
         {language === "ja" ? "音の低い順。Voicingの音程・オクターブは変わりません。" : "Low to high. Pitch and octave never change."}
       </p>
       <div className="mt-5 grid min-w-0 gap-4 sm:grid-cols-2">
@@ -2012,7 +1974,7 @@ function FingeringEditorHand({
         {fingering.pitches.map((pitch, index) => {
           const note = formatMidiNoteForDisplay(pitch, "fl-studio", accidentalStyle);
           return (
-            <label key={pitch} className="min-w-[4.5rem] flex-1 text-xs text-[var(--lv-text-muted)]">
+            <label key={pitch} className="min-w-[4.5rem] flex-1 text-xs text-[var(--lv-text-secondary)]">
               <span className="block truncate">{note}</span>
               <select
                 className="lv-field-control mt-1 min-h-9 w-full px-2"
@@ -2058,15 +2020,18 @@ function ProgressionChoice({
       type="button"
       data-testid="voicing-loop-progression-choice"
       className="w-full min-w-0 rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] bg-[var(--lv-bg-subtle)] p-3 text-left hover:border-[var(--lv-accent)] hover:bg-[var(--lv-surface-raised)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)]"
-      aria-label={`${candidate.title}. ${facts}. ${chords}. ${practiceLabel}`}
+      aria-label={`${candidate.title}. ${facts}. ${chords}. ${candidate.unavailableReason ? (language === "ja" ? "練習可能な長さを超えています" : "Exceeds practice length limit") : practiceLabel}`}
+      disabled={Boolean(candidate.unavailableReason)}
       onClick={onChoose}
     >
       <span className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <span className="min-w-0 break-words text-sm font-semibold text-[var(--lv-text)]">{candidate.title}</span>
-        <span className="shrink-0 text-xs text-[var(--lv-text-muted)]">{facts}</span>
+        <span className="shrink-0 text-xs text-[var(--lv-text-secondary)]">{facts}</span>
       </span>
       <span className="mt-1 line-clamp-2 break-words text-xs leading-5 text-[var(--lv-text-secondary)]">{chords}</span>
-      <span className="mt-2 block text-xs font-semibold text-[var(--lv-accent)]">{practiceLabel}</span>
+      <span className="mt-2 block text-xs font-semibold text-[var(--lv-accent)]">{candidate.unavailableReason
+        ? (language === "ja" ? "練習可能な長さを超えています。Vaultの保存データは保持されます。" : "Exceeds the supported practice length. Saved Vault data is retained.")
+        : practiceLabel}</span>
     </button>
   );
 }
@@ -2092,7 +2057,7 @@ function CurrentRuleExplanation({
   readonly onPreviousCandidate: () => void;
   readonly text: typeof copy.ja | typeof copy.en;
 }) {
-  if (!explanation) return null;
+  if (!explanation || (!explanation.identity && !explanation.coverage && !explanation.candidateCount)) return null;
   const family = explanation.identity
     ? ruleFamilyLabel(explanation.identity.family, language)
     : sourceLabel(explanation.source);
@@ -2210,44 +2175,6 @@ function Metric({
       <p className="text-[10px] font-semibold tracking-[0.08em] text-[var(--lv-text-muted)]">{label}</p>
       <div className="min-w-0">{children}</div>
       <p className="whitespace-nowrap text-sm font-semibold text-[var(--lv-text)]">{value}</p>
-    </div>
-  );
-}
-
-function ProgressMeter({
-  active,
-  label,
-  testId,
-  transitionMilliseconds,
-  value,
-}: {
-  readonly active: boolean;
-  readonly label: string;
-  readonly testId: string;
-  readonly transitionMilliseconds: number;
-  readonly value: number;
-}) {
-  const normalized = Math.max(0, Math.min(1, value));
-  const percent = Math.round(normalized * 100);
-  return (
-    <div
-      className="h-1.5 w-full min-w-8 overflow-hidden rounded-full bg-[var(--lv-border)]"
-      role="progressbar"
-      aria-label={label}
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-valuenow={percent}
-    >
-      <div
-        className="h-full origin-left bg-[var(--lv-accent)] motion-reduce:transition-none"
-        data-testid={testId}
-        style={{
-          transform: `scaleX(${normalized})`,
-          transitionDuration: active ? `${transitionMilliseconds}ms` : "0ms",
-          transitionProperty: "transform",
-          transitionTimingFunction: "linear",
-        }}
-      />
     </div>
   );
 }

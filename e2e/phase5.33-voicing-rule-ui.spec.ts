@@ -13,16 +13,14 @@ interface KeyboardGeometry {
 async function openRuleFixture(page: Page): Promise<Locator> {
   await page.goto("/?p527Status=p533-rules");
   await page.evaluate(() => document.fonts.ready);
-  await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
-  await page.getByRole("tab", { name: "Voicing Loop" }).click();
+  await chooseVoicingLoop(page);
   return page.getByTestId("voicing-loop-workspace");
 }
 
 async function openExtendedReductionFixture(page: Page): Promise<Locator> {
   await page.goto("/?p527Status=p533-extended-reductions");
   await page.evaluate(() => document.fonts.ready);
-  await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
-  await page.getByRole("tab", { name: "Voicing Loop" }).click();
+  await chooseVoicingLoop(page);
   return page.getByTestId("voicing-loop-workspace");
 }
 
@@ -53,6 +51,13 @@ function expectStableKeyboard(actual: KeyboardGeometry, expected: KeyboardGeomet
   expect(Math.abs(actual.c4X - expected.c4X)).toBeLessThanOrEqual(1);
 }
 
+async function chooseVoicingLoop(page: Page) {
+  const sidebar = page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true });
+  if (await sidebar.isVisible()) { await sidebar.click(); return; }
+  await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
+  await page.getByRole("tab", { name: "Voicing Loop" }).click();
+}
+
 test("P5.33 exposes independent source/study axes and explains the active rule", async ({ page }) => {
   await page.setViewportSize({ width: 1920, height: 1080 });
   const workspace = await openRuleFixture(page);
@@ -77,7 +82,7 @@ test("P5.33 exposes independent source/study axes and explains the active rule",
   await expect(explanation).toContainText("RULEP5.33-GEN-CORE-MAJ7");
 
   await controls.getByRole("button", { name: "Source MIDI", exact: true }).click();
-  await expect(explanation).toHaveText("Source MIDI");
+  await expect(explanation).toHaveCount(0);
   for (const label of ["Teacher", "Core"]) {
     await expect(controls.getByRole("button", { name: label, exact: true })).toBeDisabled();
   }
@@ -85,7 +90,7 @@ test("P5.33 exposes independent source/study axes and explains the active rule",
     await expect(controls.getByRole("checkbox", { name: label, exact: true })).toBeDisabled();
   }
   await controls.getByRole("button", { name: "Custom", exact: true }).click();
-  await expect(explanation).toHaveText("Custom");
+  await expect(explanation).toHaveCount(0);
 });
 
 test("P5.33 switches the current voicing candidate without moving the practice position", async ({ page }) => {
@@ -194,9 +199,8 @@ test("P5.33 fits desktop without page scroll and keeps Transport keyboard-operab
   const start = transport.getByRole("button", { name: "開始", exact: true });
 
   await expect(transport).toBeInViewport();
-  const tabHeights = await page.locator("header").getByRole("tab").evaluateAll((tabs) =>
-    tabs.map((tab) => Math.round(tab.getBoundingClientRect().height)));
-  expect(new Set(tabHeights).size).toBe(1);
+  await expect(page.locator("header").getByRole("tab")).toHaveCount(0);
+  await expect(page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true })).toBeVisible();
   await expect(start).toBeEnabled();
   const startBox = await start.boundingBox();
   expect(startBox?.height).toBeGreaterThanOrEqual(38);
@@ -240,7 +244,7 @@ test("P5.33 applies lesson modifiers and OCT live without pausing playback", asy
   await expect(key).toBeEnabled();
   await key.selectOption("2");
   await expect(pause).toBeVisible();
-  await expect(workspace.getByRole("progressbar", { name: "位置" })).toBeVisible();
+  await expect(workspace.getByRole("progressbar", { name: "位置" })).toHaveCount(0);
 
   await pause.click();
   await expect(transport.getByRole("button", { name: "再開", exact: true })).toBeVisible();
@@ -281,7 +285,7 @@ test("P5.33 paused card seek persists through resume and keeps MIDI on the trans
   await transport.getByRole("button", { name: "一時停止", exact: true }).click();
   await lastCard.click();
   await expect(workspace.getByTestId("voicing-loop-current-next").locator("h2")).toHaveText("Gmaj9/A");
-  await expect(workspace.getByTestId("voicing-loop-current-next")).toContainText("次Dmaj7");
+  await expect(workspace.getByTestId("voicing-loop-current-next")).toContainText("Dmaj7");
   await expect(lastCard).toHaveAttribute("aria-current", "step");
   await transport.getByRole("button", { name: "再開", exact: true }).click();
   await expect(workspace.getByTestId("voicing-loop-current-next").locator("h2")).toHaveText("Gmaj9/A");
