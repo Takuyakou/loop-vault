@@ -1,0 +1,3 @@
+{"group":"synthetic","files":13,"events":22,"boundaryGold":9,"boundaryPredicted":10,"boundaryHit":5,"rootExact":21,"qualityExact":17,"bassExact":21,"fullExact":16,"unknownQuality":0,"unavailable":0}
+{"group":"harmony-dev","files":20,"events":160,"boundaryGold":140,"boundaryPredicted":383,"boundaryHit":104,"rootExact":121,"qualityExact":22,"bassExact":147,"fullExact":22,"unknownQuality":11,"unavailable":0}
+{"group":"harmony-validation","files":6,"events":48,"boundaryGold":42,"boundaryPredicted":108,"boundaryHit":21,"rootExact":28,"qualityExact":4,"bassExact":35,"fullExact":4,"unknownQuality":11,"unavailable":0}

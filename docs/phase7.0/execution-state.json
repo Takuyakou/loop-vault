@@ -104,6 +104,15 @@
       "stage09-phase-docs-valid",
       "stage09-production-diff-zero",
       "stage09-privacy-and-diff-clean"
+    ],
+    "P7.0-10": [
+      "official-bachi-executed-and-aggregated",
+      "live-midi-and-vault-seams-audited",
+      "two-to-three-architecture-shortlist",
+      "stage10-script-types-lint-and-live-tests",
+      "stage10-phase-docs-valid",
+      "stage10-production-diff-zero",
+      "stage10-privacy-and-diff-clean"
     ]
   },
   "gateResults": {
@@ -172,6 +181,6 @@
     "stage09-production-diff-zero": "pass",
     "stage09-privacy-and-diff-clean": "pass"
   },
-  "nextAction": "P7.0-10: assess official BACHI baseline, Live MIDI seams, Vault vocabulary, and architecture shortlist without opening sealed holdout.",
+  "nextAction": "P7.0-10: verify official external baseline, Live MIDI/Vault decisions, and frozen shortlist before one final sealed run.",
   "updatedAt": "2026-09-24"
 }
