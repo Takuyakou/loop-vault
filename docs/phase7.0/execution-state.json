@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "phaseId": "7.0",
   "status": "in-progress",
-  "activeStage": "P7.0-10",
+  "activeStage": "P7.0-11",
   "completedStages": [
     "P7.0-00",
     "P7.0-01",
@@ -13,12 +13,13 @@
     "P7.0-06",
     "P7.0-07",
     "P7.0-08",
-    "P7.0-09"
+    "P7.0-09",
+    "P7.0-10"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "362e0df3d0cd21ab7d697f792553974703d44a8b",
-  "lastVerifiedCommit": "71f4efeb778501a48f1b6875f136bf1126b0a7a6",
+  "lastVerifiedCommit": "6ad085f838b4674039e0c14536773adf03fbcd01",
   "currentBranch": "research/phase7-core-v2",
   "requiredGates": {
     "P7.0-00": [
@@ -179,8 +180,15 @@
     "stage09-focused-tests-types-lint": "pass",
     "stage09-phase-docs-valid": "pass",
     "stage09-production-diff-zero": "pass",
-    "stage09-privacy-and-diff-clean": "pass"
+    "stage09-privacy-and-diff-clean": "pass",
+    "official-bachi-executed-and-aggregated": "pass",
+    "live-midi-and-vault-seams-audited": "pass",
+    "two-to-three-architecture-shortlist": "pass",
+    "stage10-script-types-lint-and-live-tests": "pass",
+    "stage10-phase-docs-valid": "pass",
+    "stage10-production-diff-zero": "pass",
+    "stage10-privacy-and-diff-clean": "pass"
   },
-  "nextAction": "P7.0-10: verify official external baseline, Live MIDI/Vault decisions, and frozen shortlist before one final sealed run.",
+  "nextAction": "P7.0-11: run the single sealed synthetic final evaluation; do not retune; write architecture decision and Phase 8 handoff.",
   "updatedAt": "2026-09-24"
 }
