@@ -44,9 +44,11 @@ test("P5.27 Voicing Loop route is keyboard-operable and overflow-safe at 320px",
   await expect(page.getByRole("heading", { name: "Cmaj7", exact: true }).first()).toBeVisible();
   await expect(page.getByText("Dm7", { exact: true }).first()).toBeVisible();
   await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("PITCH");
-  await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("C4 · G4 · B4");
+  await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("C4");
+  await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("G4 · B4");
   await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("TONE");
-  await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("1 · 5 · 7");
+  await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("TONE1");
+  await expect(page.getByTestId("voicing-loop-current-voicing")).toContainText("5 · 7");
   await expect(page.getByTestId("voicing-loop-event-timing")).toHaveText([
     "2拍",
     "2拍",

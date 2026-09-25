@@ -184,7 +184,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
             width={wideLayout ? "100%" : geometry.width}
             height={KEYBOARD_HEIGHT}
             className={layout === "wide-88"
-              ? "block h-[clamp(144px,17vh,188px)] w-full max-w-none"
+              ? "block h-[clamp(160px,19dvh,200px)] w-full max-w-none"
               : wideLayout ? "block h-auto w-full max-w-none"
                 : `block h-[clamp(6rem,13vw,8rem)] max-w-none ${centerWhenFitted ? "mx-auto" : ""}`}
             style={wideLayout ? undefined : { minWidth: `${geometry.width}px` }}

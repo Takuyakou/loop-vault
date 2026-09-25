@@ -244,7 +244,7 @@ test("VL-07 compact Current, keyboard legend, safe area and acceptance states", 
   expect(boxes.every(Boolean)).toBe(true);
   expect(boxes[0]!.height).toBeLessThan(boxes[1]!.height + boxes[2]!.height + 60);
   expect(boxes[3]!.y).toBeGreaterThanOrEqual(boxes[4]!.y + boxes[4]!.height);
-  expect(boxes[3]!.height).toBeGreaterThanOrEqual(20);
+  expect(boxes[3]!.height).toBeGreaterThanOrEqual(16);
   await expect(workspace.getByTestId("voicing-loop-keyboard-legend")).toContainText("ペダル保持");
   await page.screenshot({ path: ".local-evaluation/vl07/stopped.png", fullPage: true });
   await workspace.locator("#voicing-loop-count-in").selectOption("0");

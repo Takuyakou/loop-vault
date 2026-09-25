@@ -97,6 +97,7 @@ import type { UndoRequest } from "./hooks/useUndoQueue";
 import { defaultLiveMidiStore } from "./liveMidi/defaultLiveMidiStore";
 import { LiveMidiOpenGate, liveMidiActivation, type LiveMidiActivationLease } from "./liveMidi/activationLease";
 import { createTauriMiniWindowAdapter, MiniWindowController } from "./liveMidi/miniWindowController";
+import { recoverMainWindowIfOffscreen } from "./voicingPractice/mainWindowWorkArea";
 import { loadLiveMidiPreferences, saveLiveMidiPreferences, type WindowBounds } from "./liveMidi/preferences";
 import { historyToSavedProgressionBlock, type LiveChordHistoryEntry } from "./domain/liveMidi";
 import {
@@ -269,6 +270,7 @@ function App() {
   const mainContentRef = useRef<HTMLElement>(null);
   const previousViewRef = useRef(view);
   const miniWindowControllerRef = useRef<MiniWindowController | undefined>(undefined);
+  useEffect(() => { void recoverMainWindowIfOffscreen().catch(() => undefined); }, []);
   const liveMidiClosingRef = useRef(false);
   const liveMidiLeaseRef = useRef<LiveMidiActivationLease>();
   const liveMidiOpenGateRef = useRef<LiveMidiOpenGate>();
