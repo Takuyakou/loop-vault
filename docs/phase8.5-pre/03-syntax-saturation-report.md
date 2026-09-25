@@ -41,7 +41,7 @@ Across 140 public scores, the screening script found ASCII pipes in 127, slash-l
 
 | Pass | Independent material | New syntax families | New chord families | New structural patterns | New whitespace patterns | New metadata patterns |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| 1 | current official sample, current source, tests/release history | 18 | 15 | 10 | 5 | 4 |
+| 1 | current official sample, current source, tests/release history | 18 | 18 | 10 | 5 | 4 |
 | 2 | public scores 1–60 | 0 | 0 | 3 | 1 | 0 |
 | 3 | public scores 61–80 | 0 | 0 | 2 | 0 | 0 |
 | 4 | public scores 81–100 | 0 | 0 | 0 | 0 | 0 |
@@ -63,3 +63,4 @@ Across 140 public scores, the screening script found ASCII pipes in 127, slash-l
 | U07 | AMBIGUOUS | Visually similar Unicode punctuation and dash variants are not automatically equivalent. |
 
 No unrecognized token, bar, comment, or metadata may be silently discarded. A known external lexical form with unsupported musical semantics is a semantic gap, not a successful chord import.
+
