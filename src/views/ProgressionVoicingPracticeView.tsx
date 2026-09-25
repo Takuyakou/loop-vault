@@ -72,7 +72,7 @@ import {
 import { assignPracticeHandsAcrossProgression, isPracticeHandAssignmentPlayable, type ProgressionFingeringHandTargets } from "../voicingPractice/fingeringDisplay";
 import { easeOutCubic, pageTurnTarget, playheadSafetyTarget, shouldHoldCardPageTurn, type TimelineSeekOrigin } from "../voicingPractice/timelineFollow";
 import { cardAuditionResolution } from "../voicingPractice/cardAudition";
-import { computeNextMoves, prioritizedMoves, type FingerMovement } from "../voicingPractice/nextMove";
+import { computeNextMoves, fixedFingerSlots, handMoveSummary, movementInterval, type FingerMovement } from "../voicingPractice/nextMove";
 import { isBlack, nextShapeRanges, type MiniKeyboardRange } from "../voicingPractice/nextShape";
 
 const ALL_PITCH_CLASSES = Object.freeze(Array.from({ length: 12 }, (_, index) => index));
@@ -1975,7 +1975,7 @@ function moveText(move: FingerMovement, accidentalStyle: NoteAccidentalStyle, la
   if (move.kind === "ADD") return `${finger} ${note(move.to!)} ${language === "ja" ? "追加" : "add"}`;
   if (move.kind === "RELEASE") return `${finger} ${language === "ja" ? "離す" : "release"} ${note(move.from!)}`;
   if (move.kind === "KEEP") return `${finger} ${language === "ja" ? "維持" : "keep"} ${note(move.from!)}`;
-  return `${finger} ${note(move.from!)} → ${note(move.to!)} ${move.semitones! > 0 ? "↑" : "↓"}${Math.abs(move.semitones!)}`;
+  return `${finger} ${note(move.from!)} → ${note(move.to!)} ${movementInterval(move.semitones!, language)}`;
 }
 
 const NextMovePreview = memo(function NextMovePreview({ moves, loopWrap, hasNext, accidentalStyle, language }: {
@@ -1985,25 +1985,42 @@ const NextMovePreview = memo(function NextMovePreview({ moves, loopWrap, hasNext
   readonly accidentalStyle: NoteAccidentalStyle;
   readonly language: AppLanguage;
 }) {
-  const { visible, omitted } = prioritizedMoves(moves, 5);
-  const allText = moves.map((move) => moveText(move, accidentalStyle, language)).join(" · ");
+  const slots = fixedFingerSlots(hasNext ? moves : []);
+  const note = (pitch: number) => formatMidiNoteForDisplay(pitch, "fl-studio", accidentalStyle);
   return (
-    <section className="mt-2 h-[68px] min-h-[68px] min-w-0 shrink-0 overflow-hidden border-t border-[var(--lv-border)] pt-1.5" data-testid="voicing-loop-next-move" aria-label={language === "ja" ? "次への動き" : "Next move"}>
-      <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.1em] text-[var(--lv-text-secondary)]">
-        <span>{language === "ja" ? "次への動き" : "NEXT MOVE"}</span>
-        {loopWrap ? <span className="font-normal tracking-normal text-[var(--lv-accent)]">{language === "ja" ? "ループ先" : "Loop to start"}</span> : null}
-        {moves.some((move) => move.estimated) ? <span className="font-normal tracking-normal text-amber-200">{language === "ja" ? "推定" : "Estimated"}</span> : null}
+    <section className="mt-2 h-[68px] min-h-[68px] min-w-0 shrink-0 overflow-hidden border-t border-[var(--lv-border)] pt-1" data-testid="voicing-loop-next-move" aria-label={language === "ja" ? "次への動き" : "Next move"}>
+      <div className="flex min-w-0 items-center justify-between gap-2 text-[10px] font-bold tracking-[0.04em] text-[var(--lv-text-secondary)]">
+        <span className="min-w-0 truncate">{language === "ja" ? "次への動き" : "NEXT MOVE"}{loopWrap ? ` · ${language === "ja" ? "ループ先" : "Loop to start"}` : ""}</span>
+        <span className="min-w-0 truncate text-amber-200">LEFT · {handMoveSummary(moves.filter((move) => move.hand === "left"), language)}</span>
+        <span className="min-w-0 truncate text-cyan-200">RIGHT · {handMoveSummary(moves.filter((move) => move.hand === "right"), language)}</span>
+        {moves.some((move) => move.estimated) ? <span className="shrink-0 text-[var(--lv-text-muted)]">{language === "ja" ? "推定" : "Estimated"}</span> : null}
       </div>
-      {hasNext && moves.length ? (
-        <div className="mt-1 flex min-w-0 items-center gap-1 overflow-hidden whitespace-nowrap" title={allText}>
-          {visible.map((move, index) => <span key={`${move.hand}-${move.finger ?? index}-${index}`}
-            className={`min-w-0 shrink-0 rounded border px-1.5 py-1 text-[11px] font-semibold ${move.hand === "left" ? "border-amber-400/40 text-amber-200" : "border-cyan-300/40 text-cyan-200"}`}
-            title={moveText(move, accidentalStyle, language)}>{moveText(move, accidentalStyle, language)}</span>)}
-          {omitted ? <span className="shrink-0 rounded border border-[var(--lv-border)] px-1.5 py-1 text-[11px]" tabIndex={0}
-            title={allText} aria-label={allText}>+{omitted}</span> : null}
-          <span className="sr-only">{allText}</span>
-        </div>
-      ) : <p className="mt-1 text-xs text-[var(--lv-text-muted)]">{language === "ja" ? "次の形はありません" : "No next shape"}</p>}
+      <div className="mt-0.5 grid min-w-0 grid-cols-10 gap-0.5" role="list" aria-label={language === "ja" ? "左手5番から1番、右手1番から5番" : "Left 5 to 1, right 1 to 5"}>
+        {slots.map((slot) => {
+          const id = `${slot.hand === "left" ? "L" : "R"}${slot.finger}`;
+          const strongest = slot.moves.some((move) => move.kind === "LARGE") ? "LARGE"
+            : slot.moves.some((move) => move.kind === "MEDIUM" || move.kind === "ADD" || move.kind === "RELEASE") ? "MEDIUM"
+              : slot.moves.some((move) => move.kind === "SMALL") ? "SMALL" : slot.moves.length ? "KEEP" : "EMPTY";
+          const action = slot.moves.map((move) => move.kind === "ADD" ? "+押す" : move.kind === "RELEASE" ? "×離す"
+            : move.kind === "KEEP" ? "•" : movementInterval(move.semitones!, language)).join("/") || "·";
+          const next = slot.moves.reduce<number | undefined>((value, move) => move.to ?? value, undefined);
+          const description = slot.moves.length
+            ? slot.moves.map((move) => moveText(move, accidentalStyle, language)).join("; ")
+            : `${id} ${language === "ja" ? "使用しない" : "unused"}`;
+          const strength = strongest === "LARGE" ? "border-current bg-current/15 font-extrabold"
+            : strongest === "MEDIUM" ? "border-current/70 bg-current/10 font-bold"
+              : strongest === "SMALL" ? "border-current/40 font-semibold"
+                : strongest === "KEEP" ? "border-current/20 opacity-60" : "border-dashed border-current/20 opacity-40";
+          return <div key={id} role="listitem" data-testid="voicing-loop-finger-slot" data-finger={id} data-strength={strongest}
+            className={`flex h-[43px] min-w-0 flex-col items-center justify-center overflow-hidden rounded border leading-none ${slot.hand === "left" ? "text-amber-200" : "text-cyan-200"} ${strength} ${id === "R1" ? "ml-0.5" : ""}`}
+            aria-label={`${id}: ${description}${slot.moves.some((move) => move.estimated) ? ` (${language === "ja" ? "推定" : "estimated"})` : ""}`}
+            title={`${id}: ${description}`}>
+            <span className="text-[10px] font-bold">{id}</span>
+            <span className="mt-0.5 w-full truncate px-0.5 text-center text-[10px]">{action}</span>
+            <span className="mt-0.5 text-[9px]">{next === undefined ? "·" : note(next)}</span>
+          </div>;
+        })}
+      </div>
     </section>
   );
 });

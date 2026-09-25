@@ -100,7 +100,7 @@ test("VL-10 Next Move and Next Shape stay fixed at different cards and viewports
       await page.screenshot({ path: ".local-evaluation/vl10/next-move.png", fullPage: true });
       await page.screenshot({ path: ".local-evaluation/vl10/next-shape.png", fullPage: true });
       const keepWorkspace = await openLoop(page, "vl10-keep");
-      await expect(keepWorkspace.getByTestId("voicing-loop-next-move")).toContainText("維持");
+      await expect(keepWorkspace.getByTestId("voicing-loop-next-move")).toContainText("そのまま");
       await page.screenshot({ path: ".local-evaluation/vl10/keep-transition.png", fullPage: true });
     }
     if (width === 1280 && zoom === 1) await page.screenshot({ path: ".local-evaluation/vl10/medium-window.png", fullPage: true });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { RankedFingering } from "../domain/progressionFingering";
-import { computeNextMoves, nextMoveIndex, prioritizedMoves } from "./nextMove";
+import { computeNextMoves, fixedFingerSlots, handMoveSummary, movementInterval, nextMoveIndex, prioritizedMoves } from "./nextMove";
 
 const hand = (left: number[], right: number[]) => ({ left, right });
 const fingering = (id: string, pitches: number[], fingers: (1|2|3|4|5)[]): RankedFingering =>
@@ -66,5 +66,40 @@ describe("Next Move from resolved playback notes", () => {
     expect(nextMoveIndex(2,3,true)).toBe(0);
     expect(nextMoveIndex(2,3,false)).toBeUndefined();
     expect(nextMoveIndex(1,3,false)).toBe(2);
+  });
+});
+
+
+describe("VL-11 fixed finger presentation", () => {
+  it("maps signed distances to player-readable intervals", () => {
+    expect([1,-2,7,-12,-13,14,15].map((delta) => movementInterval(delta)))
+      .toEqual(["↑ 半音", "↓ 全音", "↑ 5度", "↓ 1oct", "↓ 1oct+半音", "↑ 1oct+全音", "↑ 1oct+短3"]);
+    expect(movementInterval(0)).toBe("そのまま");
+  });
+  it("keeps ten positions in physical left/right order, including empty and formal actions", () => {
+    const moves = computeNextMoves(hand([48], [60,64]), hand([47], [64,67]),
+      { left: fingering("l", [48], [5]), right: fingering("r", [60,64], [1,3]) },
+      { left: fingering("ln", [47], [5]), right: fingering("rn", [64,67], [3,5]) });
+    const slots = fixedFingerSlots(moves);
+    expect(slots.map((slot) => `${slot.hand[0]}${slot.finger}`))
+      .toEqual(["l5","l4","l3","l2","l1","r1","r2","r3","r4","r5"]);
+    expect(slots[0]!.moves[0]).toMatchObject({ semitones: -1, estimated: false });
+    expect(slots[1]!.moves).toEqual([]);
+    expect(slots[5]!.moves[0]?.kind).toBe("RELEASE");
+    expect(slots[7]!.moves[0]?.kind).toBe("KEEP");
+    expect(slots[9]!.moves[0]?.kind).toBe("ADD");
+  });
+  it("projects estimated non-crossing movement into fixed slots and marks it estimated", () => {
+    const slots = fixedFingerSlots(computeNextMoves(hand([48,52], [60]), hand([49,53], [61])));
+    expect(slots[0]!.moves[0]).toMatchObject({ from: 48, to: 49, estimated: true });
+    expect(slots[1]!.moves[0]).toMatchObject({ from: 52, to: 53, estimated: true });
+    expect(slots[5]!.moves[0]).toMatchObject({ from: 60, to: 61, estimated: true });
+  });
+  it("summarizes unchanged, one finger, shape changes and whole-hand direction", () => {
+    expect(handMoveSummary([])).toBe("そのまま");
+    expect(handMoveSummary(computeNextMoves(hand([48], []), hand([49], [])).filter((move) => move.hand === "left"))).toBe("指だけ");
+    expect(handMoveSummary(computeNextMoves(hand([48,52], []), hand([50,55], [])).filter((move) => move.hand === "left"))).toBe("少し動く");
+    expect(handMoveSummary(computeNextMoves(hand([48,52,55], []), hand([36,40,43], []),
+      { left: fingering("wide-a", [48,52,55], [5,3,1]) }, { left: fingering("wide-b", [36,40,43], [5,3,1]) }).filter((move) => move.hand === "left"))).toBe("手ごと ↓ 約1oct");
   });
 });

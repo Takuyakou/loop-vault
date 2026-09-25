@@ -88,3 +88,73 @@ export function prioritizedMoves(moves: readonly FingerMovement[], limit: number
     || (a.finger ?? 0) - (b.finger ?? 0)).slice(0, limit);
   return { visible, omitted: moves.length - visible.length };
 }
+
+
+export interface FixedFingerSlot {
+  readonly hand: FingeringHand;
+  readonly finger: FingerNumber;
+  readonly moves: readonly FingerMovement[];
+}
+
+/** Visual projection only. Formal finger IDs win; estimated alignment remains order-preserving. */
+export function fixedFingerSlots(moves: readonly FingerMovement[]): readonly FixedFingerSlot[] {
+  return (["left", "right"] as const).flatMap((hand) => {
+    const handMoves = moves.filter((move) => move.hand === hand);
+    const byFinger = new Map<FingerNumber, FingerMovement[]>();
+    let sourceIndex = 0;
+    let destinationIndex = 0;
+    for (const move of handMoves) {
+      let finger = move.finger;
+      if (finger === undefined) {
+        // An insertion and a removal can share one estimated position. Keep both actions in its slot.
+        const position = move.to === undefined ? sourceIndex : destinationIndex;
+        finger = (hand === "left" ? 5 - position : 1 + position) as FingerNumber;
+        if (move.from !== undefined) sourceIndex++;
+        if (move.to !== undefined) destinationIndex++;
+      }
+      const group = byFinger.get(finger) ?? [];
+      group.push(move);
+      byFinger.set(finger, group);
+    }
+    const order: FingerNumber[] = hand === "left" ? [5, 4, 3, 2, 1] : [1, 2, 3, 4, 5];
+    return order.map((finger) => ({ hand, finger, moves: byFinger.get(finger) ?? [] }));
+  });
+}
+
+const JA_INTERVALS = ["", "半音", "全音", "短3", "長3", "4度", "増4", "5度", "短6", "長6", "短7", "長7"] as const;
+const EN_INTERVALS = ["", "semitone", "whole tone", "minor 3rd", "major 3rd", "4th", "tritone", "5th", "minor 6th", "major 6th", "minor 7th", "major 7th"] as const;
+
+/** Chromatic distance label; it makes no enharmonic or harmonic-identity claim. */
+export function movementInterval(delta: number, language: "ja" | "en" = "ja"): string {
+  if (!Number.isInteger(delta)) return "—";
+  if (delta === 0) return language === "ja" ? "そのまま" : "same";
+  const distance = Math.abs(delta);
+  const octaves = Math.floor(distance / 12);
+  const remainder = distance % 12;
+  const intervals = language === "ja" ? JA_INTERVALS : EN_INTERVALS;
+  const octave = language === "ja" ? `${octaves}oct` : `${octaves} oct`;
+  const label = octaves
+    ? `${octave}${remainder ? `+${intervals[remainder]}` : ""}`
+    : intervals[remainder];
+  return `${delta > 0 ? "↑" : "↓"} ${label}`;
+}
+
+export function handMoveSummary(moves: readonly FingerMovement[], language: "ja" | "en" = "ja"): string {
+  const moving = moves.filter((move) => move.semitones !== undefined && move.semitones !== 0);
+  const additions = moves.some((move) => move.kind === "ADD" || move.kind === "RELEASE");
+  if (!moving.length && !additions) return language === "ja" ? "そのまま" : "Same";
+  const directions = moving.map((move) => Math.sign(move.semitones!));
+  const up = directions.filter((direction) => direction > 0).length;
+  const down = directions.length - up;
+  const majority = Math.max(up, down) > moving.length / 2;
+  const distances = moving.map((move) => Math.abs(move.semitones!)).sort((a, b) => a - b);
+  const middle = Math.floor(distances.length / 2);
+  const median = distances.length % 2 ? distances[middle]! : (distances[middle - 1]! + distances[middle]!) / 2;
+  if (majority && median >= 6) {
+    const label = movementInterval(Math.round(median) * (up > down ? 1 : -1), language);
+    return language === "ja" ? `手ごと ${label.replace(" ", " 約")}` : `Whole hand ${label}`;
+  }
+  if (moving.length <= 1 && !additions && moving.every((move) => Math.abs(move.semitones!) <= 2))
+    return language === "ja" ? "指だけ" : "One finger";
+  return language === "ja" ? "少し動く" : "Adjust shape";
+}
