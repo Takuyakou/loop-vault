@@ -474,7 +474,8 @@ export function createVaultStore(
         const idea: SongIdea = {
           id,
           title: trimmedTitle.slice(0, 80),
-          ...(draft.bpm ? { bpm: draft.bpm } : {}),
+          ...(draft.bpm && progressionAnalysis?.tempoDiagnostics?.provenance !== "SMF_DEFAULT"
+            ? { bpm: draft.bpm } : {}),
           ...(draft.key ? { key: draft.key } : {}),
           ...(draft.genre ? { genre: draft.genre } : {}),
           moods: draft.moods ?? [],
@@ -557,6 +558,10 @@ export function createVaultStore(
         }));
       },
       updateIdea(id, changes) {
+        if (Object.prototype.hasOwnProperty.call(changes, "progressionBlocks")) {
+          set({ error: "Update a progression block by its ID; idea metadata cannot replace the block list." });
+          return false;
+        }
         const updatedAt = now().toISOString();
         return applyVaultChange((vault) => ({
           ...vault,
@@ -1427,7 +1432,8 @@ function toSavedProgressionBlock(
       context.idFactory,
     ),
     ...(analysis?.detectedKey ? { detectedKey: analysis.detectedKey } : {}),
-    ...(analysis?.bpm ? { bpm: analysis.bpm } : {}),
+    ...(analysis?.bpm && analysis.tempoDiagnostics?.provenance !== "SMF_DEFAULT"
+      ? { bpm: analysis.bpm } : {}),
     ...(analysis?.timeSignature ? { timeSignature: analysis.timeSignature } : {}),
     memo: block.warnings.length > 0 ? block.warnings.join("; ") : undefined,
     tags: [],

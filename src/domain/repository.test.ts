@@ -156,6 +156,44 @@ describe("JsonVaultRepository", () => {
     ))).toEqual([]);
   });
 
+  it("preserves a valid BPM-less incompatible progression across load, unrelated save, and atomic reload", async () => {
+    const storage = new MemoryVaultStorage();
+    const block: SavedProgressionBlock = {
+      id: "cccc0000-0000-4000-8000-000000000001", summaryText: "Public unsupported source",
+      chords: [], tags: [], capturedAt: "2026-01-01T00:00:00.000Z",
+      analyzerVersion: "phase4-symbolic-v1", timeSignature: "6/8",
+      sourceStartBeat: 0, sourceEndBeat: 6,
+    };
+    const idea = makeIdea({ id: "cccc0000-0000-4000-8000-000000000002", progressionBlocks: [block] });
+    storage.files.set(DATA_PATH, serializeVault({ ...createEmptyVault(), ideas: [idea] }));
+    const repo = new JsonVaultRepository(storage);
+    const loaded = await repo.load();
+    const preserved = loaded.vault.ideas[0]!.progressionBlocks![0]!;
+    expect(preserved).not.toHaveProperty("bpm");
+    await repo.save({ ...loaded.vault, ideas: [...loaded.vault.ideas,
+      makeIdea({ id: "cccc0000-0000-4000-8000-000000000003", title: "Unrelated public idea" })] });
+    const reloaded = await repo.load();
+    expect(reloaded.quarantine).toHaveLength(0);
+    expect(reloaded.vault.ideas[0]!.progressionBlocks![0]).toEqual(preserved);
+    expect(reloaded.vault.ideas).toHaveLength(2);
+    expect(storage.files.has(TEMP_DATA_PATH)).toBe(false);
+  });
+
+  it("keeps unknown future idea metadata quarantined and leaves source bytes untouched", async () => {
+    const storage = new MemoryVaultStorage();
+    const raw = JSON.stringify({ ...createEmptyVault(), ideas: [{
+      ...makeIdea({ id: "cccc0000-0000-4000-8000-000000000004" }),
+      futureTempoMetadata: { origin: "future" },
+    }] });
+    storage.files.set(DATA_PATH, raw);
+    const repo = new JsonVaultRepository(storage);
+    const loaded = await repo.load();
+    expect(loaded.quarantine).toHaveLength(1);
+    expect(loaded.vault.ideas).toHaveLength(0);
+    expect(storage.files.get(DATA_PATH)).toBe(raw);
+    expect(storage.operations.some((operation) => operation.type === "writeText")).toBe(false);
+  });
+
   it("creates a startup backup and keeps only the latest 20 generations", async () => {
     const storage = new MemoryVaultStorage();
     const vault = createEmptyVault();

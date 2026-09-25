@@ -303,6 +303,20 @@ describe("Phase 5.1 analyzer input", () => {
     ]);
   });
 
+  it("keeps the default tempo provenance through selected-voice analysis", () => {
+    const bytes = chordMidi(480, 0, [48, 60, 64, 67]);
+    const base = createAnalysisSession([{
+      sourceId: "master", displayName: "public-no-tempo.mid", bytes,
+    }]).session!;
+    const request = buildSessionAnalysisRequest({ ...base, preset: "custom" });
+    const analysis = analyzeMidi(request.bytes, { ...phase5Options, ...request.options });
+    expect(base.sources[0]?.representativeBpm).toBe(120);
+    expect(base.sources[0]?.tempoDiagnostics?.provenance).toBe("SMF_DEFAULT");
+    expect(request.options.preparedData?.tempo).toBe(120);
+    expect(analysis.bpm).toBe(120);
+    expect(analysis.tempoDiagnostics?.provenance).toBe("SMF_DEFAULT");
+  });
+
   it("uses the same weighted representative BPM for pre-analysis, prepared analysis, and capture output", () => {
     const bytes = midi(480, [[
       setTempo(372_000),

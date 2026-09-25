@@ -3,7 +3,11 @@ export interface TempoChangePoint {
   readonly bpm: number;
 }
 
+export type SmfTempoProvenance = "SMF_META" | "SMF_DEFAULT";
+
 export interface MidiTempoDiagnostics {
+  /** Runtime-only source fact; no Vault v2 field is added for this value. */
+  readonly provenance?: SmfTempoProvenance;
   readonly effectiveTempoEventCount: number;
   readonly effectiveTempoSegmentCount: number;
   readonly rawMinBpm?: number;
@@ -39,7 +43,9 @@ export function analyzeMidiTempo(input: {
     .sort((left, right) => left.change.tick - right.change.tick || left.index - right.index);
   if (!valid.length) {
     return {
+      ...(input.tempoChanges.length === 0 ? { representativeBpm: MIDI_DEFAULT_BPM } : {}),
       diagnostics: {
+        provenance: input.tempoChanges.length === 0 ? "SMF_DEFAULT" : "SMF_META",
         effectiveTempoEventCount: 0,
         effectiveTempoSegmentCount: 0,
       },
@@ -67,6 +73,7 @@ export function analyzeMidiTempo(input: {
   if (!sameTickResolved.length) {
     return {
       diagnostics: {
+        provenance: "SMF_META",
         effectiveTempoEventCount: 0,
         effectiveTempoSegmentCount: 0,
         rawMinBpm,
@@ -93,6 +100,7 @@ export function analyzeMidiTempo(input: {
     return {
       representativeBpm: bpm,
       diagnostics: {
+        provenance: "SMF_META",
         effectiveTempoEventCount: 1,
         effectiveTempoSegmentCount: hasDuration ? 1 : 0,
         rawMinBpm,
@@ -135,6 +143,7 @@ export function analyzeMidiTempo(input: {
   return {
     representativeBpm: weightedMedianBpm,
     diagnostics: {
+      provenance: "SMF_META",
       effectiveTempoEventCount: effectiveEvents.length,
       effectiveTempoSegmentCount: weightedTempos.length,
       rawMinBpm,

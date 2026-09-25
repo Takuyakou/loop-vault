@@ -947,7 +947,8 @@ export function CaptureView(props: CaptureViewProps) {
     const id = createIdeaFromDraft({
       title,
       status: "idea",
-      bpm: analysis.result?.bpm,
+      bpm: analysis.result?.tempoDiagnostics?.provenance === "SMF_DEFAULT"
+        ? undefined : analysis.result?.bpm,
       key: analysis.result?.detectedKey,
       chordMemo: candidate.summaryText,
       nextAction,

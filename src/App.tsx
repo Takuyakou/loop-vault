@@ -343,13 +343,13 @@ function App() {
     [practiceMode, settings.language, view, visibleIdeas],
   );
   const voicingLoopVaultCandidates = useMemo(
-    () => view === "practice" && practiceMode === "voicing-loop" && !voicingPracticeHandoff
+    () => view === "practice" && practiceMode === "voicing-loop"
       ? buildVoicingLoopVaultCandidates(
         visibleIdeas,
         settings.language === "ja" ? "無題の進行" : "Untitled progression",
       )
       : EMPTY_VOICING_LOOP_VAULT_CANDIDATES,
-    [practiceMode, settings.language, view, visibleIdeas, voicingPracticeHandoff],
+    [practiceMode, settings.language, view, visibleIdeas],
   );
   const chordContextSnapshots = useMemo(
     () => Object.freeze(vaultPickerCandidates.map((candidate) => candidate.safeSnapshot)),
@@ -870,6 +870,7 @@ async function analyzeMidiPath(path: string) {
                 openCreate={() => setCreateOpen(true)}
                 openCapture={() => navigateTo("capture")}
                 updateIdea={updateIdea}
+                updateProgressionBlock={updateProgressionBlock}
                 setToast={setToast}
                 copy={copy}
                 language={language}

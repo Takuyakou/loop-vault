@@ -427,6 +427,9 @@ export function ProgressionVoicingPracticeView({
   const targetKey = transposition?.ok ? transposition.targetKey : sourceKey;
   const keyOptions = sourceKey ? keyCatalogForMode(sourceKey.mode) : [];
   const progressionLoaded = Boolean(snapshots && Object.values(snapshots).some(Boolean));
+  const activeTempoOrigin = sourceSnapshot && vaultProgressions.find((candidate) =>
+    candidate.sourceReference.ideaId === sourceSnapshot.source.reference.ideaId
+    && candidate.sourceReference.blockId === sourceSnapshot.source.reference.blockId)?.tempoOrigin;
   const [query, setQuery] = useState("");
   const [showAllProgressions, setShowAllProgressions] = useState(false);
   const [recentReferences, setRecentReferences] = useState(loadRecentVoicingLoopProgressions);
@@ -1590,6 +1593,11 @@ export function ProgressionVoicingPracticeView({
                 value={clockState?.bpm ?? snapshot.bpm}
                 onChange={changeBpm}
               />
+              {activeTempoOrigin === "SMF_DEFAULT" || activeTempoOrigin === "PRACTICE_INITIAL" ? (
+                <span className="shrink-0 text-[10px] text-[var(--lv-text-secondary)]" data-testid="voicing-loop-tempo-origin">
+                  {tempoOriginLabel(activeTempoOrigin, language)}
+                </span>
+              ) : null}
               {sourceKey && targetTonicPitchClass !== undefined ? (
                 <label className="inline-flex min-h-8 items-center gap-2 text-[10px] font-bold tracking-[0.08em] text-[var(--lv-text-muted)]" htmlFor="voicing-loop-key">
                   {text.key}
@@ -2044,7 +2052,9 @@ function ProgressionChoice({
   readonly onChoose: () => void;
   readonly practiceLabel: string;
 }) {
-  const facts = [candidate.key, candidate.bpm === undefined ? undefined : `${candidate.bpm} BPM`].filter(Boolean).join(" · ");
+  const facts = [candidate.key, candidate.bpm === undefined ? undefined
+    : `${candidate.bpm} BPM${candidate.tempoOrigin === "SMF_DEFAULT" || candidate.tempoOrigin === "PRACTICE_INITIAL"
+      ? `（${tempoOriginLabel(candidate.tempoOrigin, language)}）` : ""}`].filter(Boolean).join(" · ");
   const unavailable = candidate.unavailableReason ? unavailableReasonLabel(candidate.unavailableReason, language) : undefined;
   const chords = candidate.chordLabels.join(" → ") || (language === "ja" ? "休符のみ" : "Rests only");
   return (
@@ -2066,12 +2076,17 @@ function ProgressionChoice({
   );
 }
 
+function tempoOriginLabel(origin: "SMF_DEFAULT" | "PRACTICE_INITIAL", language: AppLanguage): string {
+  if (origin === "SMF_DEFAULT") return language === "ja" ? "SMF既定" : "SMF default";
+  return language === "ja" ? "練習初期値" : "Practice initial value";
+}
+
 function unavailableReasonLabel(reason: NonNullable<VoicingLoopVaultCandidate["unavailableReason"]>, language: AppLanguage): string {
   const ja: Record<NonNullable<VoicingLoopVaultCandidate["unavailableReason"]>, string> = {
     "practice-capacity": "練習グループ数が256を超えています。Vaultの保存データは保持されます。",
     "resource-budget": "再生時間・拍数・イベント数の安全上限を超えています。Vaultの保存データは保持されます。",
     "unsupported-meter": "この拍子はVoicing Loopで練習できません。",
-    "invalid-bpm": "BPMが未設定か対応範囲外です。",
+    "invalid-bpm": "BPMが対応範囲外です。",
     "invalid-key": "キー情報を練習用に解釈できません。",
     "empty-progression": "練習できるコードがありません。",
     "invalid-chord": "対応していないコード構造が含まれます。",
@@ -2084,7 +2099,7 @@ function unavailableReasonLabel(reason: NonNullable<VoicingLoopVaultCandidate["u
     "practice-capacity": "More than 256 practice groups. The saved Vault progression is retained.",
     "resource-budget": "Playback duration, beats, or events exceed the safety budget. The saved Vault progression is retained.",
     "unsupported-meter": "This meter is not supported in Voicing Loop.",
-    "invalid-bpm": "BPM is missing or outside the supported range.",
+    "invalid-bpm": "BPM is outside the supported range.",
     "invalid-key": "The key metadata cannot be used for practice.",
     "empty-progression": "No playable chords are available.",
     "invalid-chord": "An unsupported chord structure is present.",

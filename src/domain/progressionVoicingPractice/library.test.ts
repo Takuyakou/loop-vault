@@ -45,7 +45,7 @@ describe("Voicing Loop Vault candidates", () => {
     expect(candidates[0]!.chordLabels).toHaveLength(257);
   });
 
-  it("retains an exact 65-bar saved progression with missing BPM as a disabled diagnostic entry", () => {
+  it("offers an exact 65-bar legacy progression with missing BPM at a changeable practice initial 120", () => {
     const unit = block("sixty-five", "2026-02-02T00:00:00.000Z").chords[0]!;
     const long = { ...block("sixty-five", "2026-02-02T00:00:00.000Z"),
       chords: Array.from({ length: 65 }, (_, index) => ({ ...unit, bar: index + 1, beat: 1, durationBeats: 4 })),
@@ -54,8 +54,18 @@ describe("Voicing Loop Vault candidates", () => {
       { ...makeIdea({ id: "missing-tempo", title: "Public 65-bar range", progressionBlocks: [long] }), bpm: undefined },
     ], "Untitled");
     expect(candidates).toHaveLength(1);
-    expect(candidates[0]).toMatchObject({ unavailableReason: "invalid-bpm", chordLabels: expect.any(Array) });
+    expect(candidates[0]).toMatchObject({ bpm: 120, tempoOrigin: "PRACTICE_INITIAL", chordLabels: expect.any(Array) });
+    expect(candidates[0]!.unavailableReason).toBeUndefined();
     expect(candidates[0]!.chordLabels).toHaveLength(65);
+  });
+
+  it("labels a linked MIDI asset with missing BPM as the SMF default", () => {
+    const source = block("smf-default", "2026-02-02T00:00:00.000Z");
+    source.sourceAssetId = "linked-midi";
+    const idea = makeIdea({ id: "smf-idea", bpm: 132, assets: [{ id: "linked-midi", type: "midi" }], progressionBlocks: [source] });
+    const candidates = buildVoicingLoopVaultCandidates([idea], "Untitled");
+    expect(candidates).toMatchObject([{ bpm: 120, tempoOrigin: "SMF_DEFAULT" }]);
+    expect(candidates[0]!.unavailableReason).toBeUndefined();
   });
 
   it("keeps unsupported meters and other readable incompatibilities visible", () => {

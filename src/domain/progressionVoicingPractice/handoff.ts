@@ -40,11 +40,7 @@ export function buildProgressionVoicingPracticeHandoffFromVault(
     return { ok: false, error: { code: "source-unavailable" } };
   }
 
-  const effectiveBpm = block.bpm
-    ?? idea.bpm
-    ?? (block.analyzerVersion === TEXT_PROGRESSION_ANALYZER_VERSION
-      ? TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM
-      : undefined);
+  const effectiveBpm = resolveVaultPracticeTempo(idea, block).bpm;
   const effectiveBlock: SavedProgressionBlock = {
     ...block,
     chords: block.chords,
@@ -77,6 +73,27 @@ export function buildProgressionVoicingPracticeHandoffFromVault(
       snapshots: detachedSnapshots,
       initialSelection: preferredInitialSelection(detachedSnapshots, effectiveBlock),
     }),
+  };
+}
+
+export type VaultPracticeTempoOrigin = "SMF_DEFAULT" | "PRACTICE_INITIAL" | "SAVED_BPM";
+
+/** Never mutates the saved source BPM. A linked MIDI asset is positive SMF provenance. */
+export function resolveVaultPracticeTempo(
+  idea: SongIdea,
+  block: SavedProgressionBlock,
+): { readonly bpm: number; readonly origin: VaultPracticeTempoOrigin } {
+  const knownSmf = block.sourceAssetId !== undefined
+    && idea.assets.some((asset) => asset.id === block.sourceAssetId && asset.type === "midi");
+  if (block.bpm !== undefined) {
+    return { bpm: block.bpm, origin: "SAVED_BPM" };
+  }
+  if (knownSmf) return { bpm: 120, origin: "SMF_DEFAULT" };
+  if (idea.bpm !== undefined) return { bpm: idea.bpm, origin: "SAVED_BPM" };
+  return {
+    bpm: block.analyzerVersion === TEXT_PROGRESSION_ANALYZER_VERSION
+      ? TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM : 120,
+    origin: "PRACTICE_INITIAL",
   };
 }
 

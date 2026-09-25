@@ -1,6 +1,6 @@
 import { normalizeQuery } from "../harmony/degrees";
 import type { SongIdea } from "../types";
-import { buildProgressionVoicingPracticeHandoffFromVault } from "./handoff";
+import { buildProgressionVoicingPracticeHandoffFromVault, resolveVaultPracticeTempo, type VaultPracticeTempoOrigin } from "./handoff";
 import type { ProgressionPracticeSnapshotErrorCode, ProgressionPracticeSourceReference } from "./types";
 
 export interface VoicingLoopVaultCandidate {
@@ -9,6 +9,7 @@ export interface VoicingLoopVaultCandidate {
   readonly title: string;
   readonly key?: string;
   readonly bpm?: number;
+  readonly tempoOrigin?: VaultPracticeTempoOrigin;
   readonly chordLabels: readonly string[];
   readonly capturedAt: string;
   /** Stored safely in Vault, but outside the bounded Voicing Loop practice capacity. */
@@ -24,12 +25,14 @@ export function buildVoicingLoopVaultCandidates(
     for (const block of idea.progressionBlocks ?? []) {
       const sourceReference = Object.freeze({ ideaId: idea.id, blockId: block.id });
       const result = buildProgressionVoicingPracticeHandoffFromVault([idea], sourceReference);
+      const tempo = resolveVaultPracticeTempo(idea, block);
       if (!result.ok) {
-        const bpm = block.bpm ?? idea.bpm;
+        const bpm = tempo.bpm;
         candidates.push(Object.freeze({
           id: voicingLoopSourceId(sourceReference), sourceReference,
           title: normalizedTitle(idea.title, fallbackTitle),
           ...(isFiniteBpm(bpm) ? { bpm } : {}),
+          tempoOrigin: tempo.origin,
           chordLabels: Object.freeze(block.chords.map(({ chord }) => chord.label)),
           capturedAt: block.capturedAt,
           unavailableReason: result.error.code === "invalid-source"
@@ -53,6 +56,7 @@ export function buildVoicingLoopVaultCandidates(
         title: normalizedTitle(idea.title, fallbackTitle),
         ...(snapshot.key ? { key: snapshot.key } : {}),
         bpm: snapshot.bpm,
+        tempoOrigin: tempo.origin,
         chordLabels: Object.freeze(snapshot.events.map(({ chord }) => chord.label)),
         capturedAt: block.capturedAt,
       }));

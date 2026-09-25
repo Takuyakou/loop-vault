@@ -41,7 +41,7 @@ const progressionVirtualizationThreshold = 50;
 const progressionPreviewChordLimit = 8;
 
 export function VaultView({
-  ideas, storedIdeas = ideas, openDetail, openProgression, openCreate, openCapture, updateIdea, setToast, copy, language, showRomanNumerals,
+  ideas, storedIdeas = ideas, openDetail, openProgression, openCreate, openCapture, updateProgressionBlock, setToast, copy, language, showRomanNumerals,
 }: {
   ideas: SongIdea[];
   storedIdeas?: SongIdea[];
@@ -50,6 +50,7 @@ export function VaultView({
   openCreate: () => void;
   openCapture: () => void;
   updateIdea: (id: string, changes: Partial<SongIdea>) => boolean | "pending";
+  updateProgressionBlock: (ideaId: string, blockId: string, changes: Partial<SavedProgressionBlock>) => boolean | "pending";
   setToast: (toast: string) => void;
   copy: AppCopy;
   language: AppLanguage;
@@ -144,11 +145,10 @@ export function VaultView({
   const togglePin = useCallback((entry: ProgressionEntry) => {
     const storedIdea = storedIdeas.find((idea) => idea.id === entry.idea.id);
     if (!storedIdea) return;
-    updateIdea(entry.idea.id, {
-      progressionBlocks: (storedIdea.progressionBlocks ?? []).map((block) =>
-        block.id === entry.block.id ? { ...block, pinned: !block.pinned } : block),
-    });
-  }, [storedIdeas, updateIdea]);
+    const block = storedIdea.progressionBlocks?.find((candidate) => candidate.id === entry.block.id);
+    if (!block) return;
+    updateProgressionBlock(entry.idea.id, block.id, { pinned: !block.pinned });
+  }, [storedIdeas, updateProgressionBlock]);
 
   const copyProgression = useCallback(async (block: SavedProgressionBlock) => {
     if (!navigator.clipboard?.writeText) {
