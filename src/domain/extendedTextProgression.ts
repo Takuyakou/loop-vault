@@ -135,6 +135,9 @@ export function parseExtendedTextProgression(
       mask(masked, line.start, line.end);
     }
   }
+  if (sections.length > 128) {
+    diagnostics.push(issue(source, "SECTION_LIMIT", "Too many comment or playback marker lines.", { start: 0, end: source.length }));
+  }
   const score = masked.join("");
   const ranges = barRanges(score, source, diagnostics);
   if (ranges.length > TEXT_PROGRESSION_MAX_BARS) {

@@ -29,7 +29,7 @@ export default defineConfig({
     sourcemap: Boolean(process.env.TAURI_ENV_DEBUG),
   },
   test: {
-    exclude: ["e2e/**", "node_modules/**", "dist/**"],
+    exclude: ["e2e/**", "node_modules/**", "dist/**", ".local-evaluation/**", ".codex-staging/**"],
   },
 });
 

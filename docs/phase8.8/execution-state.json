@@ -2,14 +2,15 @@
   "schemaVersion": 1,
   "phaseId": "8.8",
   "status": "in-progress",
-  "activeStage": "P8.8-06",
+  "activeStage": "P8.8-07",
   "completedStages": [
     "P8.8-00",
     "P8.8-01",
     "P8.8-02",
     "P8.8-03",
     "P8.8-04",
-    "P8.8-05"
+    "P8.8-05",
+    "P8.8-06"
   ],
   "blocked": false,
   "blockerReason": null,
@@ -40,8 +41,11 @@
     "diff-check": "pass",
     "focused-semantic": "pass",
     "typescript": "pass",
-    "changed-scope-eslint": "pass"
+    "changed-scope-eslint": "pass",
+    "p8.8-06-full-vitest": "pass",
+    "p8.8-06-playwright": "pass",
+    "p8.8-06-privacy": "pass"
   },
-  "nextAction": "Run hardening matrix, isolate and fix gates, protect D-only generated outputs.",
+  "nextAction": "Run final candidate gates, write handoff, review ancestry/privacy, merge local master, rerun gates, and build D-drive Windows EXE.",
   "updatedAt": "2026-09-26"
 }
