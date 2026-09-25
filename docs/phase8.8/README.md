@@ -4,7 +4,7 @@
 
 ## Status
 
-Active on `feat/phase8.8-extended-text` from local master `448d2ad5`.
+Completed on local master. Base: `448d2ad5`; merge: `1752edf`.
 The Phase 8.5 PRE research corpus remains frozen. Phase 8.8 implements text
 intake and its Vault/Voicing Loop path; Phase 8.9 and Phase 9 are separate.
 

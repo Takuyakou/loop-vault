@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "phaseId": "8.8",
-  "status": "in-progress",
-  "activeStage": "P8.8-07",
+  "status": "completed",
+  "activeStage": null,
   "completedStages": [
     "P8.8-00",
     "P8.8-01",
@@ -10,13 +10,14 @@
     "P8.8-03",
     "P8.8-04",
     "P8.8-05",
-    "P8.8-06"
+    "P8.8-06",
+    "P8.8-07"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "448d2ad5b620826abb34d4fd7f961336cb5ca49d",
-  "lastVerifiedCommit": "4477038",
-  "currentBranch": "feat/phase8.8-extended-text",
+  "lastVerifiedCommit": "1752edf84eb8a26832c934ef37572ee697cdab39",
+  "currentBranch": "master",
   "requiredGates": {
     "P8.8-00": [
       "fixture-integrity",
@@ -31,6 +32,19 @@
       "changed-scope-eslint",
       "validate-phase-docs",
       "diff-check"
+    ],
+    "P8.8-07": [
+      "focused-regression",
+      "full-vitest",
+      "typescript",
+      "repository-lint",
+      "production-build",
+      "related-playwright",
+      "phase-docs",
+      "ai-handoff",
+      "privacy-scan",
+      "diff-check",
+      "windows-exe"
     ]
   },
   "gateResults": {
@@ -38,14 +52,23 @@
     "focused-baseline": "pass",
     "vault-v2-audit": "pass",
     "validate-phase-docs": "pass",
-    "diff-check": "pass",
     "focused-semantic": "pass",
-    "typescript": "pass",
     "changed-scope-eslint": "pass",
     "p8.8-06-full-vitest": "pass",
     "p8.8-06-playwright": "pass",
-    "p8.8-06-privacy": "pass"
+    "p8.8-06-privacy": "pass",
+    "focused-regression": "pass",
+    "full-vitest": "pass",
+    "typescript": "pass",
+    "repository-lint": "pass",
+    "production-build": "pass",
+    "related-playwright": "pass",
+    "phase-docs": "pass",
+    "ai-handoff": "pass",
+    "privacy-scan": "pass",
+    "diff-check": "pass",
+    "windows-exe": "pass"
   },
-  "nextAction": "Candidate gates passed. Review closeout diff, merge local master, run fresh post-merge gates, then build Windows EXE on D.",
+  "nextAction": "Phase 8.8 closed on local master; optional human EXE check, then separately authorize Phase 8.9.",
   "updatedAt": "2026-09-26"
 }
