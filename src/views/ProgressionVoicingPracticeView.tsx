@@ -70,7 +70,7 @@ import {
   type FingeringPreferenceCollection,
 } from "../voicingPractice/fingeringPreferences";
 import { assignPracticeHandsAcrossProgression, isPracticeHandAssignmentPlayable, type ProgressionFingeringHandTargets } from "../voicingPractice/fingeringDisplay";
-import { isFollowScrollPosition, pageTurnTarget } from "../voicingPractice/timelineFollow";
+import { easeOutCubic, pageTurnTarget } from "../voicingPractice/timelineFollow";
 import { cardAuditionResolution } from "../voicingPractice/cardAudition";
 
 const ALL_PITCH_CLASSES = Object.freeze(Array.from({ length: 12 }, (_, index) => index));
@@ -542,8 +542,14 @@ export function ProgressionVoicingPracticeView({
     return () => observer.disconnect();
   }, [snapshot]);
   const timelineEventRefs = useRef<Array<HTMLButtonElement | null>>([]);
-  const programmaticScrollRef = useRef<number | undefined>(undefined);
+  const pageTurnFrameRef = useRef<number>();
+  const pageTurnHighlightTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const [pageTurnHighlightIndex, setPageTurnHighlightIndex] = useState<number>();
   const forceFollowRef = useRef(false);
+  useEffect(() => () => {
+    if (pageTurnFrameRef.current !== undefined) cancelAnimationFrame(pageTurnFrameRef.current);
+    if (pageTurnHighlightTimerRef.current !== undefined) clearTimeout(pageTurnHighlightTimerRef.current);
+  }, []);
   if (!transportRef.current) transportRef.current = transportFactory();
   const midiStatus = useStore(defaultLiveMidiStore, (state) => state.status);
   const selectedMidiDevice = useStore(defaultLiveMidiStore, (state) => state.selected);
@@ -745,10 +751,26 @@ export function ProgressionVoicingPracticeView({
       contentWidth: snapshot.lengthBeats * timelinePixelsPerBeat,
     }, forceFollowRef.current);
     forceFollowRef.current = false;
-    if (target !== undefined && Math.abs(viewport.scrollLeft - target) > 2) {
-      programmaticScrollRef.current = target;
+    if (pageTurnFrameRef.current !== undefined) cancelAnimationFrame(pageTurnFrameRef.current);
+    pageTurnFrameRef.current = undefined;
+    if (target === undefined || Math.abs(viewport.scrollLeft - target) <= 2) return;
+    const start = viewport.scrollLeft;
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    if (reducedMotion || typeof requestAnimationFrame !== "function") {
       viewport.scrollLeft = target;
+    } else {
+      const startedAt = performance.now();
+      const tick = (now: number) => {
+        const progress = Math.min(1, (now - startedAt) / 250);
+        viewport.scrollLeft = start + (target - start) * easeOutCubic(progress);
+        if (progress < 1) pageTurnFrameRef.current = requestAnimationFrame(tick);
+        else pageTurnFrameRef.current = undefined;
+      };
+      pageTurnFrameRef.current = requestAnimationFrame(tick);
     }
+    setPageTurnHighlightIndex(transportCurrentSpanIndex);
+    if (pageTurnHighlightTimerRef.current !== undefined) clearTimeout(pageTurnHighlightTimerRef.current);
+    pageTurnHighlightTimerRef.current = setTimeout(() => setPageTurnHighlightIndex(undefined), 350);
   }, [followEnabled, followResumeRevision, snapshot, timelinePixelsPerBeat, transportCurrentSpanIndex]);
 
   function resumeTimelineFollow() {
@@ -757,14 +779,11 @@ export function ProgressionVoicingPracticeView({
     setFollowResumeRevision((revision) => revision + 1);
   }
 
-  function onTimelineScroll() {
-    const position = timelineViewportRef.current?.scrollLeft;
-    if (position === undefined) return;
-    if (isFollowScrollPosition(position, programmaticScrollRef.current)) {
-      programmaticScrollRef.current = undefined;
-      return;
-    }
-    programmaticScrollRef.current = undefined;
+  function setTimelineManual(reason: "wheel" | "pointer" | "keyboard") {
+    if (import.meta.env.DEV) console.debug(`[Voicing Loop Follow] manual: ${reason}`);
+    if (pageTurnFrameRef.current !== undefined) cancelAnimationFrame(pageTurnFrameRef.current);
+    pageTurnFrameRef.current = undefined;
+    forceFollowRef.current = false;
     setFollowEnabled(false);
   }
   function changeSelection(next: ProgressionVoicingSelection) {
@@ -846,6 +865,7 @@ export function ProgressionVoicingPracticeView({
       })
       : ready;
     setClockState(reduceProgressionPracticeClock(snapshot, anchored, { type: "START" }));
+    resumeTimelineFollow();
     await launchRuntime(anchorBeat, clockState.bpm, runtimeCountInBars);
   }
 
@@ -885,6 +905,7 @@ export function ProgressionVoicingPracticeView({
 
   function seekToEvent(eventIndex: number) {
     if (!snapshot || !clockState || !snapshot.events[eventIndex]) return;
+    resumeTimelineFollow();
     const anchorBeat = snapshot.events[eventIndex]!.startBeat;
     auditionRequestRef.current += 1;
     setAuditionedIndex(undefined);
@@ -942,6 +963,7 @@ export function ProgressionVoicingPracticeView({
 
   async function resume() {
     if (!snapshot || !clockState) return;
+    resumeTimelineFollow();
     const request = runtimeRequestRef.current;
     try {
       const resumed = await transportRef.current?.resume() ?? false;
@@ -1122,6 +1144,7 @@ export function ProgressionVoicingPracticeView({
     function onKeyDown(event: KeyboardEvent) {
       if (event.defaultPrevented || event.isComposing || !progressionLoaded || !snapshot || bulkSourceOpen || fingeringEditorOpen) return;
       const target = event.target;
+      if (target === timelineViewportRef.current && ["ArrowLeft", "ArrowRight", "PageUp", "PageDown", "Home", "End"].includes(event.key)) return;
       if (target instanceof Element && target.closest("input, select, textarea, [contenteditable='true'], [role='dialog']")) return;
       const key = event.key.toLowerCase();
       if (![" ", "arrowleft", "arrowright", "home", "end", "f", "m", "r", "escape"].includes(key)) return;
@@ -1458,7 +1481,13 @@ export function ProgressionVoicingPracticeView({
               data-testid="voicing-loop-timeline-viewport"
               tabIndex={0}
               aria-label={text.timeline}
-              onScroll={onTimelineScroll}
+              onWheel={() => setTimelineManual("wheel")}
+              onPointerDown={(event) => { if (event.target === event.currentTarget) setTimelineManual("pointer"); }}
+              onKeyDown={(event) => {
+                if (event.target === event.currentTarget && ["ArrowLeft", "ArrowRight", "PageUp", "PageDown", "Home", "End"].includes(event.key)) {
+                  setTimelineManual("keyboard");
+                }
+              }}
             >
               <div className="relative" style={{ width: `${snapshot.lengthBeats * timelinePixelsPerBeat}px` }}>
                 <div className="relative mt-1 flex h-3 cursor-pointer overflow-hidden rounded bg-[var(--lv-bg)]" data-testid="voicing-loop-overview"
@@ -1506,11 +1535,12 @@ export function ProgressionVoicingPracticeView({
                       data-compact={compact}
                       title={event?.chord.label ?? restLabel}
                       style={{ width: `${cardWidth}px` }}
-                      className={`relative flex h-[54px] w-full min-h-[54px] flex-none flex-col justify-start overflow-hidden rounded-[var(--lv-radius-sm)] border ${compact ? "px-0.5 pb-1 pt-1" : "px-2 pb-3 pt-1.5"} text-left text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-60 ${selected ? "border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)] shadow-[inset_0_0_0_1px_rgba(59,224,206,0.12)]" : auditioned ? "border-[var(--lv-accent)] bg-[var(--lv-surface-raised)] text-[var(--lv-text)]" : "border-[var(--lv-border)] bg-transparent text-[var(--lv-text-secondary)]"}`}
+                      className={`relative flex h-[54px] w-full min-h-[54px] flex-none flex-col justify-start overflow-hidden rounded-[var(--lv-radius-sm)] border ${compact ? "px-0.5 pb-1 pt-1" : "px-2 pb-3 pt-1.5"} text-left text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-60 ${selected ? `border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)] shadow-[inset_0_0_0_1px_rgba(59,224,206,0.12)] ${pageTurnHighlightIndex === index ? "ring-2 ring-[var(--lv-accent)]" : ""}` : auditioned ? "border-[var(--lv-accent)] bg-[var(--lv-surface-raised)] text-[var(--lv-text)]" : "border-[var(--lv-border)] bg-transparent text-[var(--lv-text-secondary)]"}`}
                       aria-current={selected ? "step" : undefined}
                       aria-pressed={auditioned}
                       aria-label={`${index + 1}/${snapshot.spans.length}: ${event?.chord.label ?? restLabel}${degree ? `, ${degree}` : ""}, ${practiceTimingLabel(span, snapshot.practiceGroupBeats ?? snapshot.meter.numerator, language)}.${event ? ` ${transportRef.current?.supportsSeek ? (language === "ja" ? "ここへ移動して試聴" : "Seek and audition") : text.auditionCard}` : ""}`}
                       disabled={!playable && !transportRef.current?.supportsSeek}
+                      onMouseDown={(event) => event.preventDefault()}
                       onClick={() => {
                         if (span.kind === "rest") seekToBeat(span.startBeat + 1e-6);
                         else selectTimelineCard(eventIndex);

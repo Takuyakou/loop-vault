@@ -76,12 +76,19 @@ test("VL-09 timeline page turns, manual scrolling stays manual, and F restores f
     const scrollable = await viewport.evaluate((element) => element.scrollWidth > element.clientWidth + 2);
     if (!scrollable) continue;
     await expect.poll(() => viewport.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
+    await expect.poll(async () => {
+      const last = await workspace.getByTestId("voicing-loop-event").last().boundingBox();
+      const view = await viewport.boundingBox();
+      return last!.x + last!.width - (view!.x + view!.width);
+    }).toBeLessThanOrEqual(2);
     const last = await workspace.getByTestId("voicing-loop-event").last().boundingBox();
     const view = await viewport.boundingBox();
     expect(last!.x).toBeGreaterThanOrEqual(view!.x - 2);
-    expect(last!.x + last!.width).toBeLessThanOrEqual(view!.x + view!.width + 2);
     if (scale === 8) await page.screenshot({ path: ".local-evaluation/vl09/right-edge-page-turn.png", fullPage: true });
     await viewport.evaluate((element) => { element.scrollLeft = 0; });
+    await expect(workspace.getByTestId("voicing-loop-follow")).toHaveAttribute("aria-pressed", "true");
+    await viewport.hover();
+    await page.mouse.wheel(150, 0);
     await expect(workspace.getByTestId("voicing-loop-follow")).toHaveAttribute("aria-pressed", "false");
     await page.keyboard.press("f");
     await expect(workspace.getByTestId("voicing-loop-follow")).toHaveAttribute("aria-pressed", "true");
