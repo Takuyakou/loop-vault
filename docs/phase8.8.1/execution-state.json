@@ -2,19 +2,20 @@
   "schemaVersion": 1,
   "phaseId": "8.8.1",
   "status": "in-progress",
-  "activeStage": "P8.8.1-06",
+  "activeStage": "P8.8.1-07",
   "completedStages": [
     "P8.8.1-00",
     "P8.8.1-01",
     "P8.8.1-02",
     "P8.8.1-03",
     "P8.8.1-04",
-    "P8.8.1-05"
+    "P8.8.1-05",
+    "P8.8.1-06"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "40d8b8ee9261e9c5585f25eb3d0e9a259520b1f7",
-  "lastVerifiedCommit": "ce98baf",
+  "lastVerifiedCommit": "ec4156d",
   "currentBranch": "feat/phase8.8.1-realworld-fix",
   "requiredGates": {
     "P8.8.1-00": [
@@ -66,6 +67,20 @@
       "changed-scope-eslint",
       "phase-docs",
       "diff-check"
+    ],
+    "P8.8.1-06": [
+      "focused-regression",
+      "full-vitest",
+      "app-typescript",
+      "e2e-typescript",
+      "repository-lint",
+      "class-source-contract-lint",
+      "production-build",
+      "product-path-playwright",
+      "phase-docs",
+      "ai-handoff",
+      "privacy-path-media",
+      "diff-check"
     ]
   },
   "gateResults": {
@@ -87,8 +102,18 @@
     "ui-paste-preview-save": "pass",
     "vault-practice-roundtrip": "pass",
     "performance-trend": "pass",
-    "local-witness-availability-audit": "pass"
+    "local-witness-availability-audit": "pass",
+    "focused-regression": "pass",
+    "full-vitest": "pass",
+    "app-typescript": "pass",
+    "e2e-typescript": "pass",
+    "repository-lint": "pass",
+    "class-source-contract-lint": "pass",
+    "production-build": "pass",
+    "product-path-playwright": "pass",
+    "ai-handoff": "pass",
+    "privacy-path-media": "pass"
   },
-  "nextAction": "Run frozen PRE, focused and full candidate gates; isolate any failures before final closeout.",
+  "nextAction": "Prepare closeout and candidate review; obtain direct chat approval before merging to local master, then run post-merge gates and build D-drive EXE.",
   "updatedAt": "2026-09-26"
 }

@@ -106,7 +106,8 @@ test("P5.31 Text rest/repeat/hold reaches the real single-clock practice transpo
   await expect(workspace.getByRole("button", { name: "現在のコードを試聴", exact: true })).toBeDisabled();
   await cards.nth(2).focus();
   await page.keyboard.press("Enter");
-  await expect(cards.nth(2)).toHaveAttribute("aria-pressed", "false");
+  // Current Voicing Loop auditions a keyboard-selected card while paused.
+  await expect(cards.nth(2)).toHaveAttribute("aria-pressed", "true");
   await expect(cards.nth(2)).toHaveAttribute("aria-current", "step");
   await expect(heading).toHaveText("Cmaj7");
   await page.getByRole("button", { name: "再開", exact: true }).click();
