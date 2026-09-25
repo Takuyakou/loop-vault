@@ -2,16 +2,17 @@
   "schemaVersion": 1,
   "phaseId": "8.8.1",
   "status": "in-progress",
-  "activeStage": "P8.8.1-03",
+  "activeStage": "P8.8.1-04",
   "completedStages": [
     "P8.8.1-00",
     "P8.8.1-01",
-    "P8.8.1-02"
+    "P8.8.1-02",
+    "P8.8.1-03"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "40d8b8ee9261e9c5585f25eb3d0e9a259520b1f7",
-  "lastVerifiedCommit": "e264e11",
+  "lastVerifiedCommit": "a615378",
   "currentBranch": "feat/phase8.8.1-realworld-fix",
   "requiredGates": {
     "P8.8.1-00": [
@@ -35,6 +36,14 @@
       "changed-scope-eslint",
       "phase-docs",
       "diff-check"
+    ],
+    "P8.8.1-03": [
+      "alias-semantics",
+      "written-spelling-vault",
+      "typescript",
+      "changed-scope-eslint",
+      "phase-docs",
+      "diff-check"
     ]
   },
   "gateResults": {
@@ -47,8 +56,10 @@
     "diff-check": "pass",
     "extended-hardening": "pass",
     "long-chart-vault-roundtrip": "pass",
-    "practice-grid-boundary": "pass"
+    "practice-grid-boundary": "pass",
+    "alias-semantics": "pass",
+    "written-spelling-vault": "pass"
   },
-  "nextAction": "Implement grammar-aware altered aliases and preserve written chord spelling across preview and Vault save.",
+  "nextAction": "Separate parser diagnostics by reason and display Japanese messages while retaining malformed source bars.",
   "updatedAt": "2026-09-26"
 }

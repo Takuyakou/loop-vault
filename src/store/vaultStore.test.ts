@@ -1178,6 +1178,26 @@ describe("vault store", () => {
     expect(handoff.handoff.initialSelection).toBe("basic-full");
   });
 
+  it("retains written alias and slash spelling in a saved Extended card", async () => {
+    const repository = new FakeRepository();
+    const store = createVaultStore({ repository, now: () => now });
+    await store.getState().initialize();
+    const parsed = parseExtendedTextProgression("| G#m7/C# F7-5 Fm7-5 F7+5 |", { beat: "4/4", bpm: 120 });
+    expect(parsed.state).toBe("VALID");
+    const ideaId = store.getState().createIdeaFromTextProgression(extendedTextSaveData(parsed));
+    expect(ideaId).toBeDefined();
+    await store.getState().flush();
+    const loaded = parseVaultFileJson(serializeVault(repository.saved[repository.saved.length - 1]!));
+    expect(loaded.ok).toBe(true);
+    if (!loaded.ok) return;
+    const block = loaded.vault.ideas.find(idea => idea.id === ideaId)?.progressionBlocks?.[0];
+    expect(block?.chords.map(item => item.chord.label))
+      .toEqual(["G#m7/C#", "F7-5", "Fm7-5", "F7+5"]);
+    expect(block?.textSource?.harmonicSpans.map(span => span.writtenChord))
+      .toEqual(["G#m7/C#", "F7-5", "Fm7-5", "F7+5"]);
+    expect(block?.textSource?.harmonicSpans[1]?.semanticAlterations).toEqual(["b5"]);
+  });
+
   it("round-trips an authored 150-bar eight-slot chart through Vault v2 and practice", async () => {
     const repository = new FakeRepository();
     const store = createVaultStore({ repository, now: () => now });

@@ -25,7 +25,7 @@ import {
   TEXT_PROGRESSION_MAX_TOKENS,
 } from "../domain/textProgression";
 import { isTextProgressionStyleSnapshot } from "../domain/textProgressionVoicing";
-import { parseExtendedTextProgression } from "../domain/extendedTextProgression";
+import { parseExtendedTextProgression, parseExtendedTextChordLabel } from "../domain/extendedTextProgression";
 import { EXTENDED_TEXT_LIMITS } from "../domain/extendedTextBudgets";
 import { buildSavedTextSource, type SavedTextSourceV1 } from "../domain/textSource";
 import { parseChordLabel, parseTextChordLabel } from "../domain/chords";
@@ -1202,7 +1202,7 @@ function normalizeTextProgressionIdeaDraft(
   // Deliberately discard every incoming MIDI-like field. The public adapter is
   // fail-closed: only text-safe timing, chord identity, and Live MIDI practice
   // overrides are copied into the normal SavedProgressionBlock shape.
-  const convertedChords = draft.chords.map(textProgressionChordForSave);
+  const convertedChords = draft.chords.map(item => textProgressionChordForSave(item, draft.textSource !== undefined));
   if (convertedChords.some((chord) => chord === undefined)) return undefined;
   const chords = convertedChords.filter((chord): chord is ChordTimelineItem => chord !== undefined);
   if (chords.length !== draft.chords.length || !isSaveSafeTextProgressionTimeline(chords, draft.scoreLengthBeats, draft.beatsPerBar, draft.textSource !== undefined)) return undefined;
@@ -1252,7 +1252,8 @@ function validateSavedTextSource(
     const span = parsed.harmonicSpans[index]!;
     if (Math.abs(textAbsoluteBeat(item, parsed.beatsPerBar) - span.startBeat) > 1e-9
       || Math.abs(item.durationBeats - span.durationBeats) > 1e-9
-      || !sameTextProgressionChord(span.chord, item.chord)) return undefined;
+      || !sameTextProgressionChord(span.chord, item.chord)
+      || item.chord.label !== span.chord.label) return undefined;
   }
   return checked.data;
 }
@@ -1294,8 +1295,8 @@ function createSavedTextProgressionBlock(
   };
 }
 
-function textProgressionChordForSave(item: ChordTimelineItem): ChordTimelineItem | undefined {
-  const canonical = parseTextChordLabel(item.chord.label);
+function textProgressionChordForSave(item: ChordTimelineItem, extended = false): ChordTimelineItem | undefined {
+  const canonical = extended ? parseExtendedTextChordLabel(item.chord.label) : parseTextChordLabel(item.chord.label);
   // Validate the supplied structural fields before canonicalising the label, so
   // a direct caller cannot smuggle a mismatched chord object through this API.
   if (!canonical || !sameTextProgressionChord(canonical, item.chord)) return undefined;
@@ -1304,7 +1305,7 @@ function textProgressionChordForSave(item: ChordTimelineItem): ChordTimelineItem
     bar: item.bar,
     beat: item.beat,
     durationBeats: item.durationBeats,
-    chord: { ...canonical, label: explicitSlashLabel(canonical), tensions: [...canonical.tensions] },
+    chord: { ...canonical, label: extended ? item.chord.label : explicitSlashLabel(canonical), tensions: [...canonical.tensions] },
     // Text entry never supplies MIDI analyzer confidence or alternatives.
     confidence: 0,
     alternatives: [],

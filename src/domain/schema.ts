@@ -275,6 +275,7 @@ export const savedTextSourceSchema: z.ZodType<SavedTextSourceV1> = z.object({
   }).strict()).max(EXTENDED_TEXT_LIMITS.maxScoreTokens),
   harmonicSpans: z.array(z.object({
     writtenChord: z.string().min(1).max(EXTENDED_TEXT_LIMITS.maxInputCodeUnits),
+    semanticAlterations: z.array(z.literal("b5")).length(1).optional(),
     chordLabel: z.string().min(1).max(EXTENDED_TEXT_LIMITS.maxInputCodeUnits),
     startBeat: z.number().finite().nonnegative().max(EXTENDED_TEXT_LIMITS.maxScoreBeats),
     durationBeats: z.number().finite().positive().max(EXTENDED_TEXT_LIMITS.maxScoreBeats),

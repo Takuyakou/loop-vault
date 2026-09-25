@@ -38,6 +38,7 @@ export interface SavedTextSourceV1 {
   }[];
   readonly harmonicSpans: readonly {
     readonly writtenChord: string;
+    readonly semanticAlterations?: readonly ("b5")[];
     readonly chordLabel: string;
     readonly startBeat: number;
     readonly durationBeats: number;
@@ -78,6 +79,7 @@ export function buildSavedTextSource(result: ExtendedTextResult): SavedTextSourc
     })),
     harmonicSpans: result.harmonicSpans.map(span => ({
       writtenChord: span.writtenChord,
+      ...(span.semanticAlterations === undefined ? {} : { semanticAlterations: [...span.semanticAlterations] }),
       chordLabel: span.chord.label,
       startBeat: span.startBeat,
       durationBeats: span.durationBeats,

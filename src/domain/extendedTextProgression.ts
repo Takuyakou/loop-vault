@@ -53,6 +53,8 @@ export interface TextAttackEvent {
 export interface TextHarmonicSpan {
   readonly chord: ChordSymbol;
   readonly writtenChord: string;
+  /** Source semantics distinct from an enharmonic playback projection. */
+  readonly semanticAlterations?: readonly ("b5")[];
   readonly startBeat: number;
   readonly durationBeats: number;
   readonly startTick: number;
@@ -78,6 +80,7 @@ interface BarRange { readonly start: number; readonly end: number }
 interface MutableSpan {
   chord: ChordSymbol;
   writtenChord: string;
+  semanticAlterations?: ("b5")[];
   startBeat: number;
   durationBeats: number;
   startTick: number;
@@ -153,6 +156,7 @@ export function parseExtendedTextProgression(
     diagnostics.push(issue(source, "BAR_LIMIT", "Too many bars.", { start: 0, end: source.length }));
   }
   let previousChord: ChordSymbol | undefined;
+  let previousAlterations: ("b5")[] | undefined;
   let active: MutableSpan | undefined;
   let totalTokens = 0;
   for (const range of ranges.slice(0, EXTENDED_TEXT_LIMITS.maxBars)) {
@@ -220,21 +224,28 @@ export function parseExtendedTextProgression(
         active = undefined;
         continue;
       }
+      const semanticAlterations: ("b5")[] | undefined =
+        !repeat ? (isFlatFifthAlias(token.raw) ? ["b5"] : undefined) : previousAlterations;
       const kind = repeat ? "reattack" : "attack";
       slots.push({ ...token, bar: barNumber, slot: index + 1, startBeat, durationBeats: duration, startTick, durationTicks, kind, chord });
-      const sameHarmony = active && sameChord(active.chord, chord) && active.startTick + active.durationTicks === absoluteTick;
+      const sameHarmony = active && sameChord(active.chord, chord)
+        && (active.semanticAlterations ?? []).join("|") === (semanticAlterations ?? []).join("|")
+        && active.startTick + active.durationTicks === absoluteTick;
       if (sameHarmony) {
         active!.durationTicks += durationTicks;
         active!.durationBeats = active!.durationTicks / EXTENDED_TEXT_TIMING_PPQ;
         active!.attacks.push({ beat: absolute, tick: absoluteTick, kind: repeat ? "repeat" : "written", span: token.span });
         active!.sourceSpan = { start: active!.sourceSpan.start, end: token.span.end };
       } else {
-        active = { chord, writtenChord: token.raw, startBeat: absolute, durationBeats: duration,
+        active = { chord, writtenChord: token.raw,
+          ...(semanticAlterations === undefined ? {} : { semanticAlterations }),
+          startBeat: absolute, durationBeats: duration,
           startTick: absoluteTick, durationTicks,
           attacks: [{ beat: absolute, tick: absoluteTick, kind: repeat ? "repeat" : "written", span: token.span }], sourceSpan: token.span };
         spans.push(active);
       }
       previousChord = chord;
+      previousAlterations = semanticAlterations;
     }
   }
   if (spans.length > EXTENDED_TEXT_LIMITS.maxHarmonicSpans) {
@@ -255,13 +266,41 @@ export function parseExtendedTextProgression(
   }
 }
 
-function parseExtendedChordToken(raw: string): ChordSymbol | undefined {
+/**
+ * Extended-only alias grammar. The written spelling remains in the label and
+ * source; the existing structural vocabulary is used for sound and storage.
+ * A flat fifth is encoded as an absent natural fifth plus its enharmonic pitch
+ * class (#11), with the written -5 retained for display/provenance.
+ */
+export function parseExtendedTextChordLabel(raw: string): ChordSymbol | undefined {
   const normalized = normalizeScoreChord(normalizeSourceLengthPreserving(raw));
-  const direct = parseTextChordLabel(normalized);
-  if (direct) return direct;
   const onBass = /^(.*)on([A-G](?:#|b)*)$/.exec(normalized);
-  return onBass ? parseTextChordLabel(`${onBass[1]}/${onBass[2]}`) ?? undefined : undefined;
+  const bassNormalized = onBass ? onBass[1] + "/" + onBass[2] : normalized;
+  const bass = /\/([A-G](?:#|b)*)$/.exec(bassNormalized);
+  const suffix = bass ? bass[0] : "";
+  const body = bassNormalized.slice(0, bassNormalized.length - suffix.length);
+  const alteration = /^(.*?)(-5|\+5|\+9|\+11)$/.exec(body);
+  let semantic = bassNormalized;
+  if (alteration) {
+    const base = alteration[1]!;
+    const mark = alteration[2]!;
+    const baseline = parseTextChordLabel(base + suffix);
+    if (!baseline || (mark === "-5" || mark === "+9" || mark === "+11")
+      && baseline.quality !== "dom7" && !(mark === "-5" && baseline.quality === "min7")) return undefined;
+    semantic = mark === "-5" && baseline.quality === "min7"
+      ? base + "b5" + suffix
+      : base + "(" + (mark === "-5" ? "#11,omit5" : mark === "+5" ? "#5" : mark === "+9" ? "#9" : "#11") + ")" + suffix;
+  }
+  const parsed = parseTextChordLabel(semantic);
+  return parsed ? { ...parsed, label: normalized } : undefined;
 }
+
+function isFlatFifthAlias(raw: string): boolean {
+  const normalized = normalizeScoreChord(normalizeSourceLengthPreserving(raw));
+  return /^[A-G](?:#|b)*7-5(?:\/[A-G](?:#|b)*)?$/.test(normalized);
+}
+
+const parseExtendedChordToken = parseExtendedTextChordLabel;
 
 function normalizeSourceLengthPreserving(source: string): string {
   return [...source].map(char => {
