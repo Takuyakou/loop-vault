@@ -133,6 +133,9 @@ test("P5.30 128-event timeline stays local, resumes follow, reduced-motion, and 
   });
   expect(maximumScroll).toBeGreaterThan(0);
   await page.getByRole("button", { name: /開始/ }).click();
+  await expect(workspace.getByTestId("voicing-loop-follow")).toHaveText(/FOLLOW/);
+  await viewport.hover();
+  await page.mouse.wheel(0, 200);
   await expect(workspace.getByTestId("voicing-loop-follow")).toHaveText(/MANUAL/);
   await page.keyboard.press("f");
   await expect.poll(() => viewport.evaluate((element) => element.scrollLeft), { timeout: 5_000 })

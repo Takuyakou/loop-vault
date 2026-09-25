@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
+import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight, GripVertical, Minus, Pause, Play, Plus, RefreshCw, Search, Settings, Square, Volume2 } from "lucide-react";
 import { useStore } from "zustand";
 import {
@@ -1373,7 +1373,8 @@ export function ProgressionVoicingPracticeView({
           <div className="h-[clamp(560px,72dvh,760px)] min-w-0 shrink-0 lg:h-[clamp(300px,36dvh,380px)]" data-testid="voicing-loop-current-next">
             <div className="grid h-full min-h-0 min-w-0 grid-rows-2 gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,440px)] lg:grid-rows-1">
               <Surface variant="primary" className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden p-3" data-testid="voicing-loop-current-panel" tabIndex={0} aria-label={language === "ja" ? "現在のコード詳細" : "Current chord details"}>
-                <div className="min-h-0 min-w-0 flex-1 overflow-y-auto">
+                <div className="min-h-0 min-w-0 flex-1 overflow-y-auto" tabIndex={0}
+                  aria-label={language === "ja" ? "現在のコードの詳細をスクロール" : "Scroll current chord details"}>
                 <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
                   <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <p className="lv-section-kicker">{text.current} · {currentIndex + 1}/{snapshot.events.length}</p>
@@ -1432,7 +1433,8 @@ export function ProgressionVoicingPracticeView({
               </Surface>
               <div className="flex h-full min-h-0 min-w-0 flex-col gap-2">
                 <Surface className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-3" data-testid="voicing-loop-next-panel" tabIndex={0} aria-label={language === "ja" ? "次のコード詳細" : "Next chord details"}>
-                  <div className="min-h-0 min-w-0 flex-1 overflow-y-auto">
+                  <div className="min-h-0 min-w-0 flex-1 overflow-y-auto" tabIndex={0}
+                    aria-label={language === "ja" ? "次のコードの詳細をスクロール" : "Scroll next chord details"}>
                   <div className="flex items-center justify-between gap-2">
                     <p className="lv-section-kicker">{text.next}</p>
                     <span className="text-xs font-semibold text-[var(--lv-text-muted)]" data-testid="voicing-loop-next-wait">
@@ -1940,7 +1942,7 @@ function moveText(move: FingerMovement, accidentalStyle: NoteAccidentalStyle, la
   return `${finger} ${note(move.from!)} → ${note(move.to!)} ${move.semitones! > 0 ? "↑" : "↓"}${Math.abs(move.semitones!)}`;
 }
 
-function NextMovePreview({ moves, loopWrap, hasNext, accidentalStyle, language }: {
+const NextMovePreview = memo(function NextMovePreview({ moves, loopWrap, hasNext, accidentalStyle, language }: {
   readonly moves: readonly FingerMovement[];
   readonly loopWrap: boolean;
   readonly hasNext: boolean;
@@ -1968,9 +1970,9 @@ function NextMovePreview({ moves, loopWrap, hasNext, accidentalStyle, language }
       ) : <p className="mt-1 text-xs text-[var(--lv-text-muted)]">{language === "ja" ? "次の形はありません" : "No next shape"}</p>}
     </section>
   );
-}
+});
 
-function MiniKeyboard({ range, hands, labels, accidentalStyle }: {
+const MiniKeyboard = memo(function MiniKeyboard({ range, hands, labels, accidentalStyle }: {
   readonly range: MiniKeyboardRange;
   readonly hands: ProgressionFingeringHandTargets;
   readonly labels: ReadonlyMap<number, string>;
@@ -1997,9 +1999,9 @@ function MiniKeyboard({ range, hands, labels, accidentalStyle }: {
       })}
     </div>
   );
-}
+});
 
-function NextShapePreview({ hands, nextVoicing, leftFingering, rightFingering, chordLabel, accidentalStyle, language }: {
+const NextShapePreview = memo(function NextShapePreview({ hands, nextVoicing, leftFingering, rightFingering, chordLabel, accidentalStyle, language }: {
   readonly hands: ProgressionFingeringHandTargets;
   readonly nextVoicing?: ResolvedProgressionPracticeVoicing;
   readonly leftFingering?: RankedFingering;
@@ -2028,7 +2030,7 @@ function NextShapePreview({ hands, nextVoicing, leftFingering, rightFingering, c
       </div> : <p className="mt-2 text-xs text-[var(--lv-text-muted)]">—</p>}
     </section>
   );
-}
+});
 
 function HandVoicingSummary({
   accidentalStyle, fingering, hand, isPersonal, pitches, showFingering, text, voicing,
