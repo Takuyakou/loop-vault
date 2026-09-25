@@ -73,6 +73,7 @@ import { assignPracticeHandsAcrossProgression, isPracticeHandAssignmentPlayable,
 import { easeOutCubic, pageTurnTarget } from "../voicingPractice/timelineFollow";
 import { cardAuditionResolution } from "../voicingPractice/cardAudition";
 import { computeNextMoves, prioritizedMoves, type FingerMovement } from "../voicingPractice/nextMove";
+import { isBlack, nextShapeRanges, type MiniKeyboardRange } from "../voicingPractice/nextShape";
 
 const ALL_PITCH_CLASSES = Object.freeze(Array.from({ length: 12 }, (_, index) => index));
 const EMPTY_NOTES: readonly number[] = Object.freeze([]);
@@ -1430,7 +1431,8 @@ export function ProgressionVoicingPracticeView({
                   hasNext={Boolean(currentVoicing && nextVoicing)} accidentalStyle={accidentalStyle} language={language} />
               </Surface>
               <div className="flex h-full min-h-0 min-w-0 flex-col gap-2">
-                <Surface className="min-h-0 min-w-0 flex-1 overflow-y-auto p-3" data-testid="voicing-loop-next-panel" tabIndex={0} aria-label={language === "ja" ? "次のコード詳細" : "Next chord details"}>
+                <Surface className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-3" data-testid="voicing-loop-next-panel" tabIndex={0} aria-label={language === "ja" ? "次のコード詳細" : "Next chord details"}>
+                  <div className="min-h-0 min-w-0 flex-1 overflow-y-auto">
                   <div className="flex items-center justify-between gap-2">
                     <p className="lv-section-kicker">{text.next}</p>
                     <span className="text-xs font-semibold text-[var(--lv-text-muted)]" data-testid="voicing-loop-next-wait">
@@ -1449,6 +1451,10 @@ export function ProgressionVoicingPracticeView({
                         pitches={nextHandTargets.right} showFingering={showFingering} text={text} voicing={nextVoicing} />
                     </div>
                   ) : null}
+                  </div>
+                  <NextShapePreview hands={nextHandTargets} nextVoicing={nextVoicing}
+                    leftFingering={nextLeftFingering} rightFingering={nextRightFingering}
+                    chordLabel={nextEvent?.chord.label ?? restLabel} accidentalStyle={accidentalStyle} language={language} />
                 </Surface>
                 <Surface className="h-[72px] min-w-0 shrink-0 overflow-hidden p-3" data-testid="voicing-loop-then-next">
                   <div className="flex min-w-0 items-baseline gap-2">
@@ -1960,6 +1966,66 @@ function NextMovePreview({ moves, loopWrap, hasNext, accidentalStyle, language }
           <span className="sr-only">{allText}</span>
         </div>
       ) : <p className="mt-1 text-xs text-[var(--lv-text-muted)]">{language === "ja" ? "次の形はありません" : "No next shape"}</p>}
+    </section>
+  );
+}
+
+function MiniKeyboard({ range, hands, labels, accidentalStyle }: {
+  readonly range: MiniKeyboardRange;
+  readonly hands: ProgressionFingeringHandTargets;
+  readonly labels: ReadonlyMap<number, string>;
+  readonly accidentalStyle: NoteAccidentalStyle;
+}) {
+  const notes = Array.from({ length: range.max - range.min + 1 }, (_, index) => range.min + index);
+  const whites = notes.filter((note) => !isBlack(note));
+  const blacks = notes.filter(isBlack);
+  const keyClass = (note: number, black: boolean) => {
+    const selected = hands.left.includes(note) ? "left" : hands.right.includes(note) ? "right" : undefined;
+    if (selected === "left") return black ? "border-amber-200 bg-amber-500 text-slate-950" : "border-amber-300 bg-amber-200 text-slate-950";
+    if (selected === "right") return black ? "border-cyan-200 bg-cyan-500 text-slate-950" : "border-cyan-300 bg-cyan-200 text-slate-950";
+    return black ? "border-slate-600 bg-slate-800 text-slate-100" : "border-slate-400 bg-slate-100 text-slate-950";
+  };
+  return (
+    <div className="relative flex h-[42px] min-w-0 flex-1 overflow-hidden rounded border border-[var(--lv-border)] bg-slate-900" data-testid="voicing-loop-next-shape-keyboard">
+      {whites.map((note) => <span key={note} className={`relative flex h-full min-w-0 flex-1 items-end justify-center border-r pb-0.5 text-[9px] font-bold ${keyClass(note, false)}`}
+        title={formatMidiNoteForDisplay(note, "fl-studio", accidentalStyle)}>{labels.get(note) ?? ""}</span>)}
+      {blacks.map((note) => {
+        const before = whites.filter((white) => white < note).length;
+        return <span key={note} className={`absolute top-0 z-10 flex h-[26px] items-end justify-center rounded-b border pb-0.5 text-[8px] font-bold ${keyClass(note, true)}`}
+          style={{ left: `${(before - 0.35) * 100 / whites.length}%`, width: `${70 / whites.length}%` }}
+          title={formatMidiNoteForDisplay(note, "fl-studio", accidentalStyle)}>{labels.get(note) ?? ""}</span>;
+      })}
+    </div>
+  );
+}
+
+function NextShapePreview({ hands, nextVoicing, leftFingering, rightFingering, chordLabel, accidentalStyle, language }: {
+  readonly hands: ProgressionFingeringHandTargets;
+  readonly nextVoicing?: ResolvedProgressionPracticeVoicing;
+  readonly leftFingering?: RankedFingering;
+  readonly rightFingering?: RankedFingering;
+  readonly chordLabel: string;
+  readonly accidentalStyle: NoteAccidentalStyle;
+  readonly language: AppLanguage;
+}) {
+  const displayHands = useMemo(() => hands.left.length || hands.right.length || !nextVoicing
+    ? hands : { left: EMPTY_NOTES, right: nextVoicing.midiNotes }, [hands, nextVoicing]);
+  const shape = useMemo(() => nextShapeRanges(displayHands), [displayHands]);
+  const labels = useMemo(() => {
+    const result = new Map<number, string>();
+    addKeyboardFingerLabels(result, leftFingering, "L");
+    addKeyboardFingerLabels(result, rightFingering, "R");
+    return result;
+  }, [leftFingering, rightFingering]);
+  const noteList = (notes: readonly number[]) => notes.map((note) => `${formatMidiNoteForDisplay(note, "fl-studio", accidentalStyle)} ${labels.get(note) ?? ""}`).join(", ");
+  const ariaLabel = `${language === "ja" ? "次の手の形" : "Next shape"}: ${chordLabel}. ${language === "ja" ? "左手" : "Left"}: ${noteList(displayHands.left)}. ${language === "ja" ? "右手" : "Right"}: ${noteList(displayHands.right)}.`;
+  return (
+    <section className="mt-2 h-[72px] min-h-[72px] min-w-0 shrink-0 overflow-hidden border-t border-[var(--lv-border)] pt-1" data-testid="voicing-loop-next-shape" role="img" aria-label={ariaLabel}>
+      <p className="text-[10px] font-bold tracking-[0.1em] text-[var(--lv-text-secondary)]">{language === "ja" ? "次の手の形" : "NEXT SHAPE"}</p>
+      {nextVoicing && shape.ranges.length ? <div className="mt-1 flex min-w-0 items-center gap-1">
+        {shape.ranges.map((range, index) => <MiniKeyboard key={`${range.min}-${range.max}-${index}`} range={range} hands={displayHands} labels={labels} accidentalStyle={accidentalStyle} />)
+          .reduce<ReactNode[]>((items, keyboard, index) => index ? [...items, <span key={`gap-${index}`} aria-hidden="true" className="text-xs text-[var(--lv-text-muted)]">…</span>, keyboard] : [keyboard], [])}
+      </div> : <p className="mt-2 text-xs text-[var(--lv-text-muted)]">—</p>}
     </section>
   );
 }
