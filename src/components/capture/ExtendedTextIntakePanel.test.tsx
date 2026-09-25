@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import { describe, expect, it, vi } from "vitest";
 import { TextProgressionCapturePanel } from "./TextProgressionCapturePanel";
 import type { ExtendedTextResult } from "../../domain/extendedTextProgression";
+import { extendedTextSyntheticChart } from "../../domain/__fixtures__/extendedTextSyntheticChart";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -78,6 +79,26 @@ describe("P8.8 extended Capture intake", () => {
     expect(diagnostic?.getAttribute("data-span-start")).not.toBeNull();
     expect(diagnostic?.getAttribute("data-span-end")).not.toBeNull();
     expect(container.querySelector<HTMLButtonElement>('[data-testid="extended-text-save"]')?.disabled).toBe(true);
+    await act(async () => root.unmount());
+    container.remove();
+  });
+
+  it("previews and submits all 150 authored synthetic bars without a partial-save state", async () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const onSaveExtended = vi.fn((_result: ExtendedTextResult) => true);
+    await act(async () => root.render(<TextProgressionCapturePanel language="ja" showRomanNumerals={false}
+      onConvert={vi.fn()} onPreview={vi.fn()} onStop={vi.fn()} onSaveExtended={onSaveExtended} />));
+    await press(container.querySelector<HTMLButtonElement>('[data-testid="text-mode-extended"]')!);
+    const chart = extendedTextSyntheticChart(150);
+    await write(container.querySelector<HTMLTextAreaElement>('[data-testid="extended-text-input"]')!, chart.source);
+    expect(container.querySelectorAll('[data-testid="extended-text-bar"]')).toHaveLength(150);
+    expect(container.querySelectorAll('[data-testid="extended-text-slot"]')).toHaveLength(chart.expectedSlots);
+    expect(container.querySelector<HTMLButtonElement>('[data-testid="extended-text-save"]')?.disabled).toBe(false);
+    await press(container.querySelector<HTMLButtonElement>('[data-testid="extended-text-save"]')!);
+    expect(onSaveExtended).toHaveBeenCalledOnce();
+    expect(onSaveExtended.mock.calls[0]?.[0].slots).toHaveLength(chart.expectedSlots);
     await act(async () => root.unmount());
     container.remove();
   });

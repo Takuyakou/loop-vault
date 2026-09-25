@@ -69,6 +69,23 @@ describe("P8.8 fixed-seed runtime hardening", () => {
     expect(result.diagnostics.map(diagnostic => diagnostic.code)).toContain("INPUT_LIMIT");
   });
 
+  it("rejects over-budget bars and harmonic spans without truncation to a saveable chart", () => {
+    const excessiveBars = Array.from({ length: EXTENDED_TEXT_LIMITS.maxBars + 1 }, () => "C").join("|");
+    const barResult = parseExtendedTextProgression(excessiveBars);
+    expect(barResult.state).toBe("INVALID");
+    expect(barResult.canConvert).toBe(false);
+    expect(barResult.source).toBe(excessiveBars);
+    expect(barResult.diagnostics.map(d => d.reasonCode)).toContain("INPUT_LIMIT_EXCEEDED");
+
+    const denseBar = "C D E F G A B C# D# F# G# Bb Cm Dm Em Fm";
+    const denseSource = Array.from({ length: EXTENDED_TEXT_LIMITS.maxBars }, () => denseBar).join("|");
+    const denseResult = parseExtendedTextProgression(denseSource);
+    expect(denseResult.state).toBe("INVALID");
+    expect(denseResult.canConvert).toBe(false);
+    expect(denseResult.slots).toHaveLength(EXTENDED_TEXT_LIMITS.maxScoreTokens);
+    expect(denseResult.diagnostics.map(d => d.reasonCode)).toContain("INPUT_LIMIT_EXCEEDED");
+  });
+
   it("keeps explicit rest silent and reattacks after it", () => {
     const result = parseExtendedTextProgression("| C _ C % |", { beat: "4/4" });
     expect(result.state).toBe("VALID");

@@ -2,18 +2,19 @@
   "schemaVersion": 1,
   "phaseId": "8.8.1",
   "status": "in-progress",
-  "activeStage": "P8.8.1-05",
+  "activeStage": "P8.8.1-06",
   "completedStages": [
     "P8.8.1-00",
     "P8.8.1-01",
     "P8.8.1-02",
     "P8.8.1-03",
-    "P8.8.1-04"
+    "P8.8.1-04",
+    "P8.8.1-05"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "40d8b8ee9261e9c5585f25eb3d0e9a259520b1f7",
-  "lastVerifiedCommit": "6e5c52d",
+  "lastVerifiedCommit": "ce98baf",
   "currentBranch": "feat/phase8.8.1-realworld-fix",
   "requiredGates": {
     "P8.8.1-00": [
@@ -54,6 +55,17 @@
       "changed-scope-eslint",
       "phase-docs",
       "diff-check"
+    ],
+    "P8.8.1-05": [
+      "synthetic-70-150-200",
+      "ui-paste-preview-save",
+      "vault-practice-roundtrip",
+      "local-witness-availability-audit",
+      "performance-trend",
+      "typescript",
+      "changed-scope-eslint",
+      "phase-docs",
+      "diff-check"
     ]
   },
   "gateResults": {
@@ -70,8 +82,13 @@
     "alias-semantics": "pass",
     "written-spelling-vault": "pass",
     "diagnostic-reasons": "pass",
-    "japanese-ui": "pass"
+    "japanese-ui": "pass",
+    "synthetic-70-150-200": "pass",
+    "ui-paste-preview-save": "pass",
+    "vault-practice-roundtrip": "pass",
+    "performance-trend": "pass",
+    "local-witness-availability-audit": "pass"
   },
-  "nextAction": "Build deterministic 150-bar compound acceptance and aggregate-only local real witness harness.",
+  "nextAction": "Run frozen PRE, focused and full candidate gates; isolate any failures before final closeout.",
   "updatedAt": "2026-09-26"
 }
