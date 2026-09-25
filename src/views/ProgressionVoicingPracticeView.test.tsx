@@ -399,7 +399,7 @@ describe("ProgressionVoicingPracticeView", () => {
       expect(sections[index - 1]!.compareDocumentPosition(sections[index]!)
         & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     }
-    expect(sections[1]!.querySelector("[role='group']")).toBeNull();
+    expect(sections[1]!.querySelectorAll("[data-testid='voicing-loop-next-move-hand-group']")).toHaveLength(2);
     const playhead = container.querySelector<HTMLElement>("[data-testid='voicing-loop-playhead']")!;
     expect(playhead.style.transform).toBe("translateX(0px)");
     expect(playhead.style.transitionTimingFunction).toBe("");

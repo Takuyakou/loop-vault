@@ -118,3 +118,42 @@ test("VL-12 transport rows fit vertically at desktop viewports and scaling", asy
     }
   }
 });
+
+test("VL-12 Next Move groups each hand above five slots and distinguishes KEEP from unused", async ({ page }) => {
+  for (const { width, height, zoom } of [
+    { width: 1920, height: 1080, zoom: 1 },
+    { width: 1280, height: 800, zoom: 1 },
+    { width: 1280, height: 800, zoom: 1.5 },
+  ]) {
+    await page.setViewportSize({ width, height });
+    await page.goto("/?p527Status=vl09-layout");
+    const nav = page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true });
+    if (await nav.isVisible()) await nav.click();
+    else {
+      await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
+      await page.getByRole("tab", { name: "Voicing Loop" }).click();
+    }
+    await page.evaluate((scale) => { document.documentElement.style.zoom = String(scale); }, zoom);
+    const strip = page.getByTestId("voicing-loop-next-move");
+    const groups = strip.getByTestId("voicing-loop-next-move-hand-group");
+    await expect(groups).toHaveCount(2);
+    for (const [index, hand] of ["left", "right"].entries()) {
+      const group = groups.nth(index);
+      await expect(group).toHaveAttribute("data-hand", hand);
+      await expect(group.getByTestId("voicing-loop-finger-slot")).toHaveCount(5);
+      const groupBox = await group.boundingBox();
+      const summaryBox = await group.getByTestId("voicing-loop-next-move-summary").boundingBox();
+      expect(Math.abs((summaryBox!.x + summaryBox!.width / 2) - (groupBox!.x + groupBox!.width / 2))).toBeLessThan(2);
+    }
+    const empty = strip.locator('[data-strength="EMPTY"]');
+    for (let index = 0; index < await empty.count(); index += 1) {
+      await expect(empty.nth(index)).toHaveText(/^[LR][1-5]$/);
+      await expect(empty.nth(index).getByTestId("voicing-loop-keep-band")).toHaveCount(0);
+    }
+    const keep = strip.locator('[data-strength="KEEP"]');
+    for (let index = 0; index < await keep.count(); index += 1) {
+      await expect(keep.nth(index).getByTestId("voicing-loop-keep-band")).toHaveCount(1);
+      await expect(keep.nth(index)).toHaveAttribute("aria-label", /押さえたまま/);
+    }
+  }
+});
