@@ -5,6 +5,7 @@
 ## Status
 
 Completed on local master. Base: `448d2ad5`; merge: `1752edf`.
+実装と最終検証の概要: [実装報告書](reports/P8.8-implementation-report.md)。
 The Phase 8.5 PRE research corpus remains frozen. Phase 8.8 implements text
 intake and its Vault/Voicing Loop path; Phase 8.9 and Phase 9 are separate.
 
