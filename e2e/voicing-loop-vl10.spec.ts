@@ -126,3 +126,19 @@ test("VL-10 source preview is accessible and Follow page turns at scaling sample
     await expect(workspace.getByTestId("voicing-loop-follow")).toHaveAttribute("aria-pressed", "true");
   }
 });
+
+test("VL-10 reduced motion keeps Follow and skips page-turn animation", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const workspace = await openLoop(page);
+  const viewport = workspace.getByTestId("voicing-loop-timeline-viewport");
+  const card = workspace.getByTestId("voicing-loop-event").nth(6);
+  await card.click();
+  await expect(workspace.getByTestId("voicing-loop-follow")).toHaveAttribute("aria-pressed", "true");
+  const positions = await Promise.all([viewport.evaluate((element) => element.scrollLeft),
+    card.evaluate((element) => element.getBoundingClientRect().left)]);
+  const frame = await viewport.boundingBox();
+  expect(positions[1]).toBeGreaterThanOrEqual(frame!.x - 2);
+  expect(positions[1]).toBeLessThanOrEqual(frame!.x + 18);
+  await page.waitForTimeout(300);
+  expect(await position(page)).toBeCloseTo(positions[0], 0);
+});
