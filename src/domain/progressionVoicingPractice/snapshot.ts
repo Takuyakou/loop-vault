@@ -29,7 +29,7 @@ const TIMING_EPSILON = 1e-6;
 export const METER_NEUTRAL_BUDGET = Object.freeze({
   maxSourceBeats: 2400,
   maxSourceDurationSeconds: 600,
-  maxPracticeGroups: 128,
+  maxPracticeGroups: 256,
   maxSourceEvents: 2400,
   practiceGroupBeats: 4,
 });
@@ -81,10 +81,12 @@ export function buildProgressionVoicingPracticeSnapshot(
   const normalized = normalizeEvents(input.block.chords, input.selection, sourceMeter.numerator, input.block.sourceStartBeat, input.block.sourceEndBeat);
   if (!normalized.ok) return normalized;
   if (normalized.lengthBeats > METER_NEUTRAL_BUDGET.maxSourceBeats
-    || normalized.lengthBeats * 60 / input.block.bpm > METER_NEUTRAL_BUDGET.maxSourceDurationSeconds
-    || Math.ceil(normalized.lengthBeats / METER_NEUTRAL_BUDGET.practiceGroupBeats)
+    || normalized.lengthBeats * 60 / input.block.bpm > METER_NEUTRAL_BUDGET.maxSourceDurationSeconds) {
+    return failure("resource-budget", "Voicing Loop exceeds its measured source beat or duration budget.");
+  }
+  if (Math.ceil(normalized.lengthBeats / METER_NEUTRAL_BUDGET.practiceGroupBeats)
       > METER_NEUTRAL_BUDGET.maxPracticeGroups) {
-    return failure("resource-budget", "Voicing Loop exceeds its measured source duration budget.");
+    return failure("practice-capacity", "Voicing Loop exceeds its 256 PracticeGroup display capacity.");
   }
   const source = Object.freeze({
     kind: "vault" as const,

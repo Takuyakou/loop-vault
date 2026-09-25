@@ -207,9 +207,30 @@ describe("ProgressionVoicingPracticeView", () => {
       { onSelectProgression, onEnterText: vi.fn() }, [unavailable]);
     const choice = container.querySelector<HTMLButtonElement>("[data-testid='voicing-loop-progression-choice']")!;
     expect(choice.disabled).toBe(true);
-    expect(choice.textContent).toContain("練習可能な長さを超えています");
+    expect(choice.textContent).toContain("再生時間・拍数・イベント数の安全上限");
     await act(async () => choice.click());
     expect(onSelectProgression).not.toHaveBeenCalled();
+  });
+
+  it("shows unspecific legacy playback as automatic without changing stored intent", async () => {
+    const container = await renderView(new FakeTransport(), { "basic-full": snapshot("basic-full") }, "basic-full");
+    expect(container.querySelector("[data-testid='voicing-loop-playback-choice']")?.textContent).toBe("未設定（自動）");
+    expect(container.querySelector("[data-testid='voicing-loop-playback-choice']")?.getAttribute("title"))
+      .toContain("保存時に再生方法");
+  });
+
+  it("shows missing BPM and unsupported meter reasons on disabled Vault entries", async () => {
+    const candidates = [
+      { ...vaultCandidate(0), unavailableReason: "invalid-bpm" as const },
+      { ...vaultCandidate(1), unavailableReason: "unsupported-meter" as const },
+    ];
+    const container = await renderView(new FakeTransport(), undefined, "source-midi", false,
+      { onSelectProgression: vi.fn(), onEnterText: vi.fn() }, candidates);
+    const choices = Array.from(container.querySelectorAll<HTMLButtonElement>("[data-testid='voicing-loop-progression-choice']"));
+    expect(choices).toHaveLength(2);
+    expect(choices.every((choice) => choice.disabled)).toBe(true);
+    expect(choices.map((choice) => choice.textContent).join(" ")).toContain("BPMが未設定");
+    expect(choices.map((choice) => choice.textContent).join(" ")).toContain("この拍子");
   });
 
   it("does not record an invalid or deleted source when click-time validation fails", async () => {
@@ -354,7 +375,7 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(sections[1]!.querySelector("[role='group']")).toBeNull();
     const playhead = container.querySelector<HTMLElement>("[data-testid='voicing-loop-playhead']")!;
     expect(playhead.style.transform).toBe("translateX(0px)");
-    expect(playhead.style.transitionTimingFunction).toBe("linear");
+    expect(playhead.style.transitionTimingFunction).toBe("");
     expect(container.querySelector("[data-testid='voicing-loop-playhead-marker']")).not.toBeNull();
     await act(async () => button(container, "開始").click());
     for (const [transportBeat, expectedX] of [[6, 240], [9, 600], [10.5, 780]]) {
@@ -384,8 +405,8 @@ describe("ProgressionVoicingPracticeView", () => {
     const offset = Number(playhead.style.transform.match(/translateX\((.+)px\)/)?.[1]);
     expect(offset).toBeGreaterThan(0);
     expect(offset).toBeCloseTo(3.12, 2);
-    expect(playhead.style.transitionTimingFunction).toBe("linear");
-    expect(playhead.className).toContain("motion-reduce:transition-none");
+    expect(playhead.style.transitionTimingFunction).toBe("");
+    expect(playhead.className).not.toContain("transition");
   });
 
   it("keeps Learn/Recall explicit, provides accessible controls, and never gates Start on MIDI", async () => {
@@ -413,7 +434,7 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(container.querySelector("[data-testid='voicing-loop-current-voicing']")?.textContent)
       .toContain("TONE");
     expect(container.querySelector("[data-testid='voicing-loop-current-next']")?.textContent)
-      .toContain("あと 2拍");
+      .toContain("あと2拍");
     expect(container.querySelectorAll("[role='progressbar']")).toHaveLength(0);
     expect(container.textContent).not.toContain("コード 0%");
     expect(container.textContent).not.toContain("進行 0%");

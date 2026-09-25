@@ -1280,10 +1280,10 @@ describe("vault store", () => {
       expect(saved?.voicingMemory).toBeUndefined();
     }
   });
-  it("carries a 64-bar manual Capture range through Vault v2 reload into a full Voicing Loop timeline", async () => {
+  it.each([64, 65, 256])("carries a %i-bar manual Capture range through Vault v2 reload into a full Voicing Loop timeline", async (bars) => {
     const chord = parseChordLabel("Cmaj7")!;
     const notes = [48, 55, 59, 64];
-    const timeline: ChordTimelineItem[] = Array.from({ length: 64 }, (_, index) => ({
+    const timeline: ChordTimelineItem[] = Array.from({ length: bars }, (_, index) => ({
       bar: index + 1, beat: 1, durationBeats: 4, chord, confidence: 1,
       alternatives: [], warnings: [],
       voicingMemory: { playbackChoice: "SOURCE", sourceVoicing: {
@@ -1292,11 +1292,11 @@ describe("vault store", () => {
       } },
     }));
     const draft = createManualDraft({
-      timeline, range: { startBar: 1, startBeat: 1, endBar: 64, endBeat: 4 },
+      timeline, range: { startBar: 1, startBeat: 1, endBar: bars, endBeat: 4 },
       now: "2026-01-01T00:00:00.000Z", draftId: "public-long-range",
     });
     const candidate = draftToCandidate(draft);
-    expect(candidate.chords).toHaveLength(64);
+    expect(candidate.chords).toHaveLength(bars);
     let sequence = 0;
     const repository = new FakeRepository();
     const store = createVaultStore({ repository,
@@ -1308,7 +1308,7 @@ describe("vault store", () => {
       title: "Public synthetic long progression", status: "idea", bpm: 120,
       progressionBlock: candidate,
       progressionAnalysis: {
-        fileName: "public-synthetic.mid", totalBars: 64, bpm: 120, timeSignature: "4/4",
+        fileName: "public-synthetic.mid", totalBars: bars, bpm: 120, timeSignature: "4/4",
         fullTimeline: timeline, blockCandidates: [candidate], analyzedAt: "2026-01-01T00:00:00.000Z",
         analyzerVersion: "public-fixture",
       },
@@ -1326,10 +1326,10 @@ describe("vault store", () => {
     expect(handoff.ok).toBe(true);
     if (!handoff.ok) return;
     const practice = handoff.handoff.snapshots["source-midi"]!;
-    expect(practice.events).toHaveLength(64);
-    expect(practice.spans).toHaveLength(64);
-    expect(practice.lengthBeats).toBe(256);
-    expect(practice.events.map((event) => event.startBeat)).toEqual(Array.from({ length: 64 }, (_, index) => index * 4));
+    expect(practice.events).toHaveLength(bars);
+    expect(practice.spans).toHaveLength(bars);
+    expect(practice.lengthBeats).toBe(bars * 4);
+    expect(practice.events.map((event) => event.startBeat)).toEqual(Array.from({ length: bars }, (_, index) => index * 4));
     expect(practice.events.every((event) => event.durationBeats === 4
       && event.voicing?.midiNotes.join() === notes.join()
       && event.playbackChoice === "SOURCE")).toBe(true);

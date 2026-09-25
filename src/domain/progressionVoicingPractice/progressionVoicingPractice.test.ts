@@ -30,17 +30,18 @@ describe("P5.27 detached practice snapshot", () => {
     }
   });
 
-  it("accepts exactly 128 PracticeGroups and rejects the 129th without shortening source timing", () => {
+  it("accepts exactly 256 PracticeGroups and rejects the 257th without shortening source timing", () => {
     const build = (beats: number) => {
       const block = progression([event(1, 1, beats, 0)]);
+      block.bpm = 120;
       return buildProgressionVoicingPracticeSnapshot({
         sourceReference: { ideaId: "idea-1", blockId: block.id }, block, selection: "source-midi",
       });
     };
-    const accepted = build(512);
+    const accepted = build(1024);
     expect(accepted.ok).toBe(true);
-    if (accepted.ok) expect(accepted.snapshot).toMatchObject({ lengthBeats: 512, practiceGroupBeats: 4 });
-    expect(build(516)).toMatchObject({ ok: false, error: { code: "resource-budget" } });
+    if (accepted.ok) expect(accepted.snapshot).toMatchObject({ lengthBeats: 1024, practiceGroupBeats: 4 });
+    expect(build(1028)).toMatchObject({ ok: false, error: { code: "practice-capacity" } });
   });
 
   it("owns a strict allowlist of canonical facts and the selected exact Source pitches only", () => {

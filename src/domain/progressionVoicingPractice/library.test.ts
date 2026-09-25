@@ -8,7 +8,7 @@ import {
 } from "./library";
 
 describe("Voicing Loop Vault candidates", () => {
-  it("projects only valid P5.27 handoff sources with effective title, timing, key, BPM, and chords", () => {
+  it("shows readable Vault blocks and diagnoses incompatible handoffs", () => {
     const valid = block("valid", "2026-02-02T00:00:00.000Z");
     const invalid = { ...block("invalid", "2026-02-03T00:00:00.000Z"), chords: [] };
     const candidates = buildVoicingLoopVaultCandidates([
@@ -21,27 +21,50 @@ describe("Voicing Loop Vault candidates", () => {
       }),
     ], "Untitled progression");
 
-    expect(candidates).toHaveLength(1);
-    expect(candidates[0]).toMatchObject({
+    expect(candidates).toHaveLength(2);
+    expect(candidates.find((candidate) => candidate.sourceReference.blockId === "valid")).toMatchObject({
       title: "Aqua Bossa",
       key: "E major",
       bpm: 122,
       chordLabels: ["E6/9", "Ab7"],
       sourceReference: { ideaId: "idea-aqua", blockId: "valid" },
     });
+    expect(candidates.find((candidate) => candidate.sourceReference.blockId === "invalid")).toMatchObject({ unavailableReason: "empty-progression", sourceReference: { blockId: "invalid" } });
   });
 
   it("lists a stored over-budget progression as unavailable instead of silently hiding it", () => {
     const unit = block("long", "2026-02-02T00:00:00.000Z").chords[0]!;
     const long = { ...block("long", "2026-02-02T00:00:00.000Z"), bpm: 120,
-      chords: Array.from({ length: 129 }, (_, index) => ({ ...unit, bar: index + 1, beat: 1, durationBeats: 4 })),
+      chords: Array.from({ length: 257 }, (_, index) => ({ ...unit, bar: index + 1, beat: 1, durationBeats: 4 })),
     };
     const candidates = buildVoicingLoopVaultCandidates([
       makeIdea({ id: "long-idea", title: "Public long progression", bpm: 120, progressionBlocks: [long] }),
     ], "Untitled progression");
     expect(candidates).toHaveLength(1);
-    expect(candidates[0]).toMatchObject({ unavailableReason: "resource-budget", chordLabels: expect.any(Array) });
-    expect(candidates[0]!.chordLabels).toHaveLength(129);
+    expect(candidates[0]).toMatchObject({ unavailableReason: "practice-capacity", chordLabels: expect.any(Array) });
+    expect(candidates[0]!.chordLabels).toHaveLength(257);
+  });
+
+  it("retains an exact 65-bar saved progression with missing BPM as a disabled diagnostic entry", () => {
+    const unit = block("sixty-five", "2026-02-02T00:00:00.000Z").chords[0]!;
+    const long = { ...block("sixty-five", "2026-02-02T00:00:00.000Z"),
+      chords: Array.from({ length: 65 }, (_, index) => ({ ...unit, bar: index + 1, beat: 1, durationBeats: 4 })),
+    };
+    const candidates = buildVoicingLoopVaultCandidates([
+      { ...makeIdea({ id: "missing-tempo", title: "Public 65-bar range", progressionBlocks: [long] }), bpm: undefined },
+    ], "Untitled");
+    expect(candidates).toHaveLength(1);
+    expect(candidates[0]).toMatchObject({ unavailableReason: "invalid-bpm", chordLabels: expect.any(Array) });
+    expect(candidates[0]!.chordLabels).toHaveLength(65);
+  });
+
+  it("keeps unsupported meters and other readable incompatibilities visible", () => {
+    const source = block("compound", "2026-02-02T00:00:00.000Z");
+    source.timeSignature = "6/8";
+    const candidates = buildVoicingLoopVaultCandidates([
+      makeIdea({ id: "compound-idea", title: "Public compound meter", bpm: 120, progressionBlocks: [source] }),
+    ], "Untitled");
+    expect(candidates).toMatchObject([{ unavailableReason: "unsupported-meter" }]);
   });
 
   it("sorts deterministically and searches only safe title, chord-label, and key facts", () => {

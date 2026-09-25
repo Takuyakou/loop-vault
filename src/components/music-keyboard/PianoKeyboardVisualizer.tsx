@@ -35,6 +35,7 @@ export interface PianoKeyboardVisualizerProps {
   centerWhenFitted?: boolean;
   fingerLabels?: ReadonlyMap<number, string>;
   layout?: "default" | "wide-61" | "wide-88";
+  hideLegend?: boolean;
 }
 
 const copy = {
@@ -93,6 +94,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
   centerWhenFitted = false,
   fingerLabels,
   layout = "default",
+  hideLegend = false,
 }: PianoKeyboardVisualizerProps) {
   const text = copy[language];
   const range = useMemo(
@@ -245,7 +247,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
           </svg>
         </div>
       </div>
-      <div className={`${wideLayout ? "mt-1 gap-y-1" : "mt-2 gap-y-2"} flex flex-wrap gap-x-4 text-xs text-[var(--lv-text-muted)]`}>
+      {!hideLegend ? <div className={`${wideLayout ? "mt-1 gap-y-1" : "mt-2 gap-y-2"} flex flex-wrap gap-x-4 text-xs text-[var(--lv-text-muted)]`}>
         {showGuide && (leftHandGuideNotes.length > 0 || rightHandGuideNotes.length > 0) ? (
           <>
             {leftHandGuideNotes.length > 0 ? (
@@ -261,7 +263,7 @@ export const PianoKeyboardVisualizer = memo(function PianoKeyboardVisualizer({
         <Legend visualState="held-correct" label={text.held} />
         {interactionMode === "practice" ? <Legend visualState="held-foreign" label={text.foreign} /> : null}
         <Legend visualState="sustained" label={text.sustain} />
-      </div>
+      </div> : null}
     </div>
   );
 });

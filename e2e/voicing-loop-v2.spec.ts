@@ -185,3 +185,86 @@ test("VL-06 acceptance screenshots for short progression and playback states", a
   await expect(workspace.getByRole("button", { name: "一時停止" })).toBeVisible();
   await page.screenshot({ path: ".local-evaluation/vl06/playing.png", fullPage: true });
 });
+
+
+test("VL-07 256 PracticeGroups keep every chord, precise seek, and smooth visual progress", async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  const started = Date.now();
+  const workspace = await openLoop(page, "long-256");
+  const mountMilliseconds = Date.now() - started;
+  console.log(`VL07_256_UI_MOUNT_MS=${mountMilliseconds}`);
+  const cards = workspace.getByTestId("voicing-loop-event");
+  await expect(cards).toHaveCount(256);
+  await expect(workspace.getByTestId("voicing-loop-overview").locator("span")).toHaveCount(256);
+  await expect(workspace.getByTestId("voicing-loop-ruler").locator("span")).toHaveCount(256);
+  expect(mountMilliseconds).toBeLessThan(10000);
+  await cards.last().scrollIntoViewIfNeeded();
+  await cards.last().click();
+  await expect(cards.last()).toHaveAttribute("aria-current", "step");
+  await expect(workspace.getByTestId("voicing-loop-position-metric")).toContainText("256 / 256");
+  await expect(workspace.getByTestId("voicing-loop-current-panel")).toContainText("Dm7");
+  await page.screenshot({ path: ".local-evaluation/vl07/long-progression.png", fullPage: true });
+  await page.keyboard.press("Home");
+  await expect(cards.first()).toHaveAttribute("aria-current", "step");
+  await workspace.locator("#voicing-loop-count-in").selectOption("0");
+  await workspace.getByRole("button", { name: "開始" }).click();
+  await expect(workspace.getByRole("button", { name: "一時停止" })).toBeVisible();
+  const playhead = workspace.getByTestId("voicing-loop-playhead");
+  const x1 = await playhead.evaluate((element) => Number((element as HTMLElement).style.transform.match(/translateX\((.+)px\)/)?.[1]));
+  await page.waitForTimeout(220);
+  const x2 = await playhead.evaluate((element) => Number((element as HTMLElement).style.transform.match(/translateX\((.+)px\)/)?.[1]));
+  expect(x2).toBeGreaterThan(x1);
+  await workspace.getByRole("button", { name: "一時停止" }).click();
+  const paused = await playhead.evaluate((element) => (element as HTMLElement).style.transform);
+  await page.waitForTimeout(100);
+  expect(await playhead.evaluate((element) => (element as HTMLElement).style.transform)).toBe(paused);
+  await cards.last().scrollIntoViewIfNeeded();
+  await cards.last().click();
+  await expect(cards.last()).toHaveAttribute("aria-current", "step");
+  const seekX = await playhead.evaluate((element) => Number((element as HTMLElement).style.transform.match(/translateX\((.+)px\)/)?.[1]));
+  expect(seekX).toBeGreaterThan(x2 + 1000);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await workspace.getByRole("button", { name: "再開" }).click();
+  await page.waitForTimeout(180);
+  const resumedX = await playhead.evaluate((element) => Number((element as HTMLElement).style.transform.match(/translateX\((.+)px\)/)?.[1]));
+  expect(resumedX).toBeGreaterThan(seekX);
+  await workspace.getByRole("button", { name: "停止", exact: true }).click();
+  await expect(playhead).toHaveAttribute("style", /translateX\(0px\)/);
+});
+
+test("VL-07 compact Current, keyboard legend, safe area and acceptance states", async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  const workspace = await openLoop(page, "both-hands");
+  const current = workspace.getByTestId("voicing-loop-current-panel");
+  const next = workspace.getByTestId("voicing-loop-next-panel");
+  const then = workspace.getByTestId("voicing-loop-then-next");
+  const safe = workspace.getByTestId("voicing-loop-bottom-safe-area");
+  const transport = workspace.getByTestId("voicing-loop-transport");
+  const boxes = await Promise.all([current.boundingBox(), next.boundingBox(), then.boundingBox(), safe.boundingBox(), transport.boundingBox()]);
+  expect(boxes.every(Boolean)).toBe(true);
+  expect(boxes[0]!.height).toBeLessThan(boxes[1]!.height + boxes[2]!.height + 60);
+  expect(boxes[3]!.y).toBeGreaterThanOrEqual(boxes[4]!.y + boxes[4]!.height);
+  expect(boxes[3]!.height).toBeGreaterThanOrEqual(20);
+  await expect(workspace.getByTestId("voicing-loop-keyboard-legend")).toContainText("ペダル保持");
+  await page.screenshot({ path: ".local-evaluation/vl07/stopped.png", fullPage: true });
+  await workspace.locator("#voicing-loop-count-in").selectOption("0");
+  await workspace.getByRole("button", { name: "開始" }).click();
+  await expect(workspace.getByRole("button", { name: "一時停止" })).toBeVisible();
+  await page.waitForTimeout(250);
+  await page.screenshot({ path: ".local-evaluation/vl07/playing.png", fullPage: true });
+});
+
+test("VL-07 selector clipping remains absent at 200 percent", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto("/?p527Status=selector-vl07");
+  await page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true }).click();
+  const choices = page.getByTestId("voicing-loop-progression-choice");
+  await expect(choices).toHaveCount(3);
+  await expect(choices.filter({ hasText: "Public ready progression" })).toBeEnabled();
+  await expect(choices.filter({ hasText: "Public missing BPM" })).toBeDisabled();
+  await expect(choices.filter({ hasText: "Public missing BPM" })).toContainText("BPMが未設定");
+  await expect(choices.filter({ hasText: "Public capacity case" })).toContainText("256");
+  await page.screenshot({ path: ".local-evaluation/vl07/selector.png", fullPage: true });
+  await page.evaluate(() => { document.documentElement.style.zoom = "2"; });
+  await assertNoHorizontalOverflow(page);
+});

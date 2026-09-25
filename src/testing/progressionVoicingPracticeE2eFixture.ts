@@ -4,18 +4,31 @@ import type {
   ProgressionVoicingPracticeSnapshot,
   ProgressionVoicingSelection,
   ResolveProgressionPracticeVoicingsOptions,
+  VoicingLoopVaultCandidate,
 } from "../domain/progressionVoicingPractice";
 
 export interface ProgressionVoicingPracticeE2eFixture {
   readonly snapshots: ProgressionVoicingPracticeSnapshots;
   readonly initialSelection: ProgressionVoicingSelection;
   readonly resolutionOptions?: ResolveProgressionPracticeVoicingsOptions;
+  readonly vaultProgressions?: readonly VoicingLoopVaultCandidate[];
 }
 
 /** Deterministic, privacy-safe fixture compiled only by the Playwright runner. */
 export function progressionVoicingPracticeE2eFixture(search: string): ProgressionVoicingPracticeE2eFixture {
   const status = new URLSearchParams(search).get("p527Status");
   if (status === "selector") return { snapshots: {}, initialSelection: "source-midi" };
+  if (status === "selector-vl07") return {
+    snapshots: {}, initialSelection: "source-midi",
+    vaultProgressions: [
+      { id: "public-ready", sourceReference: { ideaId: "public-ready", blockId: "ready" },
+        title: "Public ready progression", bpm: 120, chordLabels: ["Cmaj7", "Dm7"], capturedAt: "2026-01-01T00:00:00.000Z" },
+      { id: "public-bpm", sourceReference: { ideaId: "public-bpm", blockId: "missing-bpm" },
+        title: "Public missing BPM", chordLabels: ["Cmaj7"], capturedAt: "2026-01-02T00:00:00.000Z", unavailableReason: "invalid-bpm" },
+      { id: "public-capacity", sourceReference: { ideaId: "public-capacity", blockId: "too-many-groups" },
+        title: "Public capacity case", bpm: 120, chordLabels: ["Cmaj7"], capturedAt: "2026-01-03T00:00:00.000Z", unavailableReason: "practice-capacity" },
+    ],
+  };
   if (status === "unavailable") {
     return oneSelection("custom", snapshot("custom", "maj7", false));
   }
@@ -36,6 +49,9 @@ export function progressionVoicingPracticeE2eFixture(search: string): Progressio
   }
   if (status === "long-song") {
     return oneSelection("source-midi", snapshot("source-midi", "maj7", true, true, 128));
+  }
+  if (status === "long-256") {
+    return oneSelection("source-midi", snapshot("source-midi", "maj7", true, true, 256, 4, 120));
   }
   if (status === "p533-rules") {
     return {
@@ -151,6 +167,8 @@ function snapshot(
   includeVoicing: boolean,
   includeBassRole = false,
   eventCount = 2,
+  eventBeats = 2,
+  bpm = 96,
 ): ProgressionVoicingPracticeSnapshot {
   const mySelection = selection === "source-midi" || selection === "custom";
   const firstLabel = quality === "dim" ? "Cdim" : "Cmaj7";
@@ -161,22 +179,22 @@ function snapshot(
     source: { kind: "vault" as const, reference: { ideaId: "e2e-idea", blockId: "e2e-block" } },
     selection,
     key: "C major",
-    bpm: 96,
+    bpm,
     meter: { numerator: 4 as const, denominator: 4 as const },
-    lengthBeats: eventCount * 2,
+    lengthBeats: eventCount * eventBeats,
     spans: Object.freeze(Array.from({ length: eventCount }, (_, eventIndex) => ({
       kind: "chord" as const,
       eventIndex,
-      startBeat: eventIndex * 2,
-      durationBeats: 2,
+      startBeat: eventIndex * eventBeats,
+      durationBeats: eventBeats,
     }))),
     events: Object.freeze(Array.from({ length: eventCount }, (_, eventIndex) => {
       const first = eventIndex % 2 === 0;
       const bassNote = first ? 48 : 50;
       return Object.freeze({
         id: `e2e-event-${eventIndex + 1}`,
-        startBeat: eventIndex * 2,
-        durationBeats: 2,
+        startBeat: eventIndex * eventBeats,
+        durationBeats: eventBeats,
         chord: first
           ? Object.freeze({ root: 0, quality, tensions: Object.freeze([]), label: firstLabel })
           : Object.freeze({
