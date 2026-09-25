@@ -1323,7 +1323,8 @@ describe("ProgressionVoicingPracticeView", () => {
     const beforePausedSeek = runtime.audition.mock.calls.length;
     await act(async () => cards[1]!.click());
     expect(runtime.seek).toHaveBeenLastCalledWith(1);
-    expect(runtime.audition.mock.calls.length).toBe(beforePausedSeek);
+    expect(runtime.audition.mock.calls.length).toBe(beforePausedSeek + 1);
+    expect(runtime.audition).toHaveBeenLastCalledWith([50, 57, 60], "piano");
     expect(button(container, "再開").disabled).toBe(false);
   });
 });

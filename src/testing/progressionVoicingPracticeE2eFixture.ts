@@ -47,6 +47,9 @@ export function progressionVoicingPracticeE2eFixture(search: string): Progressio
   if (status === "both-hands-long") {
     return oneSelection("source-midi", snapshot("source-midi", "maj7", true, true, 12));
   }
+  if (status === "vl09-layout") {
+    return oneSelection("source-midi", vl09LayoutSnapshot());
+  }
   if (status === "long-song") {
     return oneSelection("source-midi", snapshot("source-midi", "maj7", true, true, 128));
   }
@@ -67,6 +70,35 @@ export function progressionVoicingPracticeE2eFixture(search: string): Progressio
     return oneSelection("basic-full", p533ExtendedReductionSnapshot());
   }
   return oneSelection("source-midi", snapshot("source-midi", "maj7", true));
+}
+
+function vl09LayoutSnapshot(): ProgressionVoicingPracticeSnapshot {
+  const labels = ["F9/A", "Cmaj7", "Eadd9/F#", "Dm7", "C13(b9)", "G13", "Am11", "Bm11",
+    "F9/A", "Cmaj7", "Eadd9/F#", "Dm7", "C13(b9)", "G13", "Am11", "Bm11"];
+  const notes = [
+    [57, 65, 72, 75, 77, 79, 84], [48, 55, 59], [42, 52, 56, 59], [50, 57, 60],
+    [36, 47, 64, 70, 74, 77], [43, 53, 59, 65, 69, 76], [45, 52, 60, 67, 71], [47, 54, 59],
+  ];
+  return Object.freeze({
+    version: 1, fingerprint: "public-vl09-layout",
+    source: { kind: "vault" as const, reference: { ideaId: "public-vl09", blockId: "layout" } },
+    selection: "source-midi" as const, key: "C major", bpm: 120,
+    meter: { numerator: 4 as const, denominator: 4 as const }, lengthBeats: labels.length * 4,
+    spans: Object.freeze(labels.map((_, eventIndex) => Object.freeze({
+      kind: "chord" as const, eventIndex, startBeat: eventIndex * 4, durationBeats: 4,
+    }))),
+    events: Object.freeze(labels.map((label, index) => {
+      const chord = parseChordLabel(label);
+      if (!chord) throw new Error(`Public VL09 fixture did not parse: ${label}`);
+      const midiNotes = notes[index % notes.length]!;
+      return Object.freeze({
+        id: `public-vl09-${index + 1}`, startBeat: index * 4, durationBeats: 4,
+        chord: Object.freeze(chord), playbackChoice: "SOURCE" as const,
+        ...(index % 4 === 0 ? { sourceNeedsReview: true } : {}),
+        voicing: Object.freeze({ kind: "source-midi" as const, midiNotes: Object.freeze([...midiNotes]) }),
+      });
+    })),
+  });
 }
 
 function p533ExtendedReductionSnapshot(): ProgressionVoicingPracticeSnapshot {

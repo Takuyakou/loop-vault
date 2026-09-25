@@ -275,7 +275,7 @@ test("P5.33 remains usable at 320px/effective 200%, reduced motion, and axe clea
   await assertNoHorizontalOverflow(page);
 });
 
-test("P5.33 paused card seek persists through resume and keeps MIDI on the transport row", async ({ page }) => {
+test("P5.33 paused card seek persists through resume and keeps MIDI on the second transport row", async ({ page }) => {
   await page.setViewportSize({ width: 1920, height: 1080 });
   const workspace = await openRuleFixture(page);
   const transport = workspace.getByTestId("voicing-loop-transport");
@@ -295,5 +295,7 @@ test("P5.33 paused card seek persists through resume and keeps MIDI on the trans
   await expect(transport.getByTestId("voicing-loop-transport-primary")).toContainText("OCT+1");
   const primaryBox = await transport.getByTestId("voicing-loop-transport-primary").boundingBox();
   const midiBox = await transport.getByTestId("voicing-loop-transport-midi-row").boundingBox();
-  expect(primaryBox && midiBox && Math.abs(midiBox.y - primaryBox.y)).toBeLessThan(3);
+  expect(primaryBox && midiBox).toBeTruthy();
+  expect(midiBox!.y).toBeGreaterThanOrEqual(primaryBox!.y + primaryBox!.height);
+  expect(midiBox!.y + midiBox!.height).toBeLessThanOrEqual((await transport.boundingBox())!.y + (await transport.boundingBox())!.height + 2);
 });
