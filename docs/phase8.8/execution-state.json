@@ -2,10 +2,11 @@
   "schemaVersion": 1,
   "phaseId": "8.8",
   "status": "in-progress",
-  "activeStage": "P8.8-02",
+  "activeStage": "P8.8-03",
   "completedStages": [
     "P8.8-00",
-    "P8.8-01"
+    "P8.8-01",
+    "P8.8-02"
   ],
   "blocked": false,
   "blockerReason": null,
@@ -38,6 +39,6 @@
     "typescript": "pass",
     "changed-scope-eslint": "pass"
   },
-  "nextAction": "Implement P8.8-02 extended structure and exact timing adapter.",
+  "nextAction": "Implement explicit text mode, live preview and save flow.",
   "updatedAt": "2026-09-26"
 }
