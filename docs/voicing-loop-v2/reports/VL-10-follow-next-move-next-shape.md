@@ -34,10 +34,10 @@ Transition and range selection are pure functions. `useMemo` limits transition/r
 
 - New Follow/transition/shape unit tests: PASS (27 tests).
 - Full Vitest: PASS (434 files, 3533 tests) with a 15s per-test timeout. A concurrent run with Playwright hit four unrelated 5s timeouts; the isolated full rerun passed.
-- VL-09/VL-10 Playwright: PASS (6 tests).
-- Legacy VL UI/accessibility/follow Playwright: PASS after updating assertions to the new explicit-input Follow contract.
+- VL-09/VL-10 Playwright: PASS (7 tests, including reduced-motion).
+- Full related VL, legacy UI, responsive and accessibility Playwright: PASS (34 tests), including 256 PracticeGroups and the new explicit-input Follow contract.
 - App and E2E TypeScript, repository lint, class/source-contract lint, production build: PASS.
-- Phase docs, AI handoff, privacy/media scan, `git diff --check`: final-HEAD checks recorded in the task closeout.
+- Phase docs, AI handoff, privacy/media scan, `git diff --check`: PASS.
 
 Nine public-fixture screenshots are kept locally under `.local-evaluation/vl10/`: Next Move, KEEP, large movement, normal/split Next Shape, before/after page turn, maximized, and medium window. Generated images are ignored by Git. No private MIDI, audio, or personal path is in this report or the candidate.
 
