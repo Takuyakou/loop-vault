@@ -77,6 +77,10 @@ const definingIntervals: Record<ChordQuality, readonly number[]> = {
   six: [4],
   min6: [3],
   sixNine: [4],
+  add13: [4],
+  minMaj7: [3, 11],
+  power: [7],
+  dom11: [4, 10],
 };
 
 /**

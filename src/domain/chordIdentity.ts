@@ -15,6 +15,7 @@ export interface NormalizedChordIdentity {
   seventh?: ChordSeventh;
   extensions: number[];
   alterations: string[];
+  omissions?: ("3" | "5")[];
   bassPitchClass?: number;
   noChord?: boolean;
 }
@@ -52,6 +53,10 @@ const qualityStructures: Record<ChordQuality, QualityStructure> = {
   six: { triad: "major", extensions: [6] },
   min6: { triad: "minor", extensions: [6] },
   sixNine: { triad: "major", extensions: [6, 9] },
+  add13: { triad: "major", extensions: [13] },
+  minMaj7: { triad: "minor", seventh: "major7", extensions: [] },
+  power: { triad: "power", extensions: [] },
+  dom11: { triad: "major", seventh: "minor7", extensions: [9, 11] },
 };
 
 const naturalTensions: Partial<Record<Tension, number>> = { "9": 9, "11": 11, "13": 13 };
@@ -76,6 +81,7 @@ export function normalizeChordSymbol(symbol: ChordSymbol): NormalizedChordIdenti
     ...(structure.seventh ? { seventh: structure.seventh } : {}),
     extensions: [...extensions].sort((left, right) => left - right),
     alterations: [...alterations].sort(),
+    ...(symbol.omissions?.length ? { omissions: [...symbol.omissions].sort() as ("3" | "5")[] } : {}),
     ...(bassPitchClass !== undefined && bassPitchClass !== rootPitchClass
       ? { bassPitchClass }
       : {}),
@@ -105,6 +111,7 @@ export function chordIdentityKey(identity: NormalizedChordIdentity): string {
     identity.extensions.join("."),
     identity.alterations.join("."),
     identity.bassPitchClass ?? "-",
+    ...(identity.omissions?.length ? [identity.omissions.join(".")] : []),
   ].join("|");
 }
 

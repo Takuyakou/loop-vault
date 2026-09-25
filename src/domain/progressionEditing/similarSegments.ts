@@ -63,6 +63,10 @@ const qualityIntervals: Record<ChordQuality, readonly number[]> = {
   six: [0, 4, 7, 9],
   min6: [0, 3, 7, 9],
   sixNine: [0, 2, 4, 7, 9],
+  add13: [0, 4, 7, 9],
+  minMaj7: [0, 3, 7, 11],
+  power: [0, 7],
+  dom11: [0, 2, 4, 5, 7, 10],
 };
 
 const tensionIntervals = {

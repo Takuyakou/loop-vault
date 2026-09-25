@@ -89,9 +89,11 @@ export function progressionPracticeDegreeLabel(
 }
 
 function mutableChord(chord: ProgressionPracticeChord): ChordSymbol {
+  const { omissions, ...rest } = chord;
   return {
-    ...chord,
+    ...rest,
     tensions: [...chord.tensions],
+    ...(omissions?.length ? { omissions: [...omissions] } : {}),
   };
 }
 

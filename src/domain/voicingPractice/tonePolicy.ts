@@ -55,6 +55,10 @@ const qualityIntervals: Record<ChordQuality, ReadonlyArray<readonly [number, Deg
   six: [[0, "R"], [4, "3"], [7, "5"], [9, "6"]],
   min6: [[0, "R"], [3, "b3"], [7, "5"], [9, "6"]],
   sixNine: [[0, "R"], [4, "3"], [7, "5"], [9, "6"], [14, "9"]],
+  add13: [[0, "R"], [4, "3"], [7, "5"], [21, "13"]],
+  minMaj7: [[0, "R"], [3, "b3"], [7, "5"], [11, "7"]],
+  power: [[0, "R"], [7, "5"]],
+  dom11: [[0, "R"], [4, "3"], [7, "5"], [10, "b7"], [14, "9"], [17, "11"]],
 };
 
 const thirdOrSus = new Set(["3", "b3", "2", "4"]);
@@ -64,7 +68,9 @@ const characteristicExtensions = new Set(["6", "9", "b9", "#9", "11", "#11", "13
 
 export function chordToneDescriptors(chord: ChordSymbol): ChordToneDescriptor[] {
   const qualityTones = qualityIntervals[chord.quality]
-    .filter(([, label]) => !chord.tensions.includes("#5") || label !== "5")
+    .filter(([, label]) => (!chord.tensions.includes("#5") || label !== "5")
+      && !(chord.omissions?.includes("3") && (label === "3" || label === "b3"))
+      && !(chord.omissions?.includes("5") && (label === "5" || label === "b5" || label === "#5")))
     .map(([interval, label]) => ({
     interval,
     label,

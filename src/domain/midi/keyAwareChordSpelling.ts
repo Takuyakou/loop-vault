@@ -63,6 +63,10 @@ const qualityDegrees: Readonly<Record<ChordQuality, readonly GenericDegree[]>> =
   six: degrees([0, 0], [4, 2], [7, 4], [9, 5]),
   min6: degrees([0, 0], [3, 2], [7, 4], [9, 5]),
   sixNine: degrees([0, 0], [4, 2], [7, 4], [9, 5], [14, 1]),
+  add13: degrees([0, 0], [4, 2], [7, 4], [21, 5]),
+  minMaj7: degrees([0, 0], [3, 2], [7, 4], [11, 6]),
+  power: degrees([0, 0], [7, 4]),
+  dom11: degrees([0, 0], [4, 2], [7, 4], [10, 6], [14, 1], [17, 3]),
 };
 
 const tensionDegrees: Readonly<Record<Tension, GenericDegree>> = {

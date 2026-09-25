@@ -27,6 +27,10 @@ const qualityIntervals: Record<ChordQuality, number[]> = {
   six: [0, 4, 7, 9],
   min6: [0, 3, 7, 9],
   sixNine: [0, 4, 7, 9, 14],
+  add13: [0, 4, 7, 21],
+  minMaj7: [0, 3, 7, 11],
+  power: [0, 7],
+  dom11: [0, 4, 7, 10, 14, 17],
 };
 
 const tensionIntervals: Record<Tension, number> = {
@@ -44,7 +48,7 @@ export function voiceChordForPreview(symbol: ChordSymbol): PreviewVoicing {
   const bassPc = symbol.bass ?? symbol.root;
   const bassNote = nearestMidiForPc(bassPc, 43, 55);
   const pcs = uniquePitchClasses([
-    ...qualityIntervals[symbol.quality].filter((interval) => !symbol.tensions.includes("#5") || interval !== 7),
+    ...qualityIntervals[symbol.quality].filter((interval) => (!symbol.tensions.includes("#5") || interval !== 7) && !omittedInterval(symbol, interval)),
     ...symbol.tensions.map((tension) => tensionIntervals[tension]),
   ].map((interval) => symbol.root + interval));
   const upper = pcs
@@ -61,9 +65,14 @@ export function voiceChordForPreview(symbol: ChordSymbol): PreviewVoicing {
 
 export function chordPitchClasses(symbol: ChordSymbol): number[] {
   return uniquePitchClasses([
-    ...qualityIntervals[symbol.quality].filter((interval) => !symbol.tensions.includes("#5") || interval !== 7),
+    ...qualityIntervals[symbol.quality].filter((interval) => (!symbol.tensions.includes("#5") || interval !== 7) && !omittedInterval(symbol, interval)),
     ...symbol.tensions.map((tension) => tensionIntervals[tension]),
   ].map((interval) => symbol.root + interval));
+}
+
+function omittedInterval(symbol: ChordSymbol, interval: number): boolean {
+  return (symbol.omissions?.includes("3") && (interval === 3 || interval === 4))
+    || (symbol.omissions?.includes("5") && (interval === 6 || interval === 7 || interval === 8)) || false;
 }
 
 function uniquePitchClasses(values: number[]): number[] {

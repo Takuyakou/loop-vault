@@ -25,7 +25,7 @@ import {
   TEXT_PROGRESSION_MAX_TOKENS,
 } from "../domain/textProgression";
 import { isTextProgressionStyleSnapshot } from "../domain/textProgressionVoicing";
-import { parseChordLabel } from "../domain/chords";
+import { parseChordLabel, parseTextChordLabel } from "../domain/chords";
 import { attachSourceVoicing, attachSourceVoicings, isValidVoicingSnapshot, voicingCompatibility } from "../domain/voicing";
 import {
   transition,
@@ -1245,7 +1245,7 @@ function createSavedTextProgressionBlock(
 }
 
 function textProgressionChordForSave(item: ChordTimelineItem): ChordTimelineItem | undefined {
-  const canonical = parseChordLabel(item.chord.label);
+  const canonical = parseTextChordLabel(item.chord.label);
   // Validate the supplied structural fields before canonicalising the label, so
   // a direct caller cannot smuggle a mismatched chord object through this API.
   if (!canonical || !sameTextProgressionChord(canonical, item.chord)) return undefined;
@@ -1310,7 +1310,7 @@ function isSaveSafeTextProgressionTimeline(chords: readonly ChordTimelineItem[],
   let cursor: number | undefined;
   for (const chord of chords) {
     if (!isValidTextProgressionChord(chord)) return false;
-    const parsed = parseChordLabel(chord.chord.label);
+    const parsed = parseTextChordLabel(chord.chord.label);
     if (!parsed || !sameTextProgressionChord(parsed, chord.chord)) return false;
     const start = textAbsoluteBeat(chord);
     const end = start + chord.durationBeats;
@@ -1356,7 +1356,8 @@ function sameTextProgressionChord(
     && parsed.quality === supplied.quality
     && parsed.bass === supplied.bass
     && parsed.tensions.length === supplied.tensions.length
-    && parsed.tensions.every((tension, index) => tension === supplied.tensions[index]);
+    && parsed.tensions.every((tension, index) => tension === supplied.tensions[index])
+    && (parsed.omissions ?? []).join("|") === (supplied.omissions ?? []).join("|");
 }
 
 function textProgressionSummary(chords: readonly ChordTimelineItem[]): string {

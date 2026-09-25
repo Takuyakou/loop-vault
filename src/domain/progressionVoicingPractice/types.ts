@@ -27,6 +27,7 @@ export interface ProgressionPracticeChord {
   readonly root: number;
   readonly quality: ChordQuality;
   readonly tensions: readonly Tension[];
+  readonly omissions?: readonly ("3" | "5")[];
   readonly bass?: number;
   readonly label: string;
 }

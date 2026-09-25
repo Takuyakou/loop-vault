@@ -26,6 +26,10 @@ const thirdOrSusIntervals: Record<ChordQuality, number[]> = {
   six: [4],
   min6: [3],
   sixNine: [4],
+  add13: [4],
+  minMaj7: [3],
+  power: [],
+  dom11: [4],
 };
 
 const seventhIntervals: Partial<Record<ChordQuality, number>> = {

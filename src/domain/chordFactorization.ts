@@ -1,4 +1,4 @@
-import { makeChordSymbol, normalizePc, parseChordLabel } from "./chords";
+import { labelFromSymbol, makeChordSymbol, normalizePc, parseChordLabel } from "./chords";
 import {
   chordIdentityKey,
   normalizeChordLabel,
@@ -43,6 +43,7 @@ export interface FactorizedChordIdentity {
   triad: CoreTriad;
   seventh: SeventhKind | null;
   tensions: TensionKind[];
+  omissions?: ("3" | "5")[];
   /** Equal to `root` when the chord is in root position. */
   bass: number;
   noChord?: boolean;
@@ -97,6 +98,10 @@ const QUALITY_PARTS: Record<ChordQuality, {
   six: { triad: "major", seventh: null, tensions: ["6"] },
   min6: { triad: "minor", seventh: null, tensions: ["6"] },
   sixNine: { triad: "major", seventh: null, tensions: ["6", "9"] },
+  add13: { triad: "major", seventh: null, tensions: ["13"] },
+  minMaj7: { triad: "minor", seventh: "major7", tensions: [] },
+  power: { triad: "power", seventh: null, tensions: [] },
+  dom11: { triad: "major", seventh: "minor7", tensions: ["9", "11"] },
 };
 
 const partsKey = (
@@ -136,6 +141,7 @@ export function factorizeChordSymbol(symbol: ChordSymbol): FactorizedChordIdenti
     triad: parts.triad,
     seventh: parts.seventh,
     tensions: sortTensions([...parts.tensions, ...written]),
+    ...(symbol.omissions?.length ? { omissions: [...symbol.omissions] } : {}),
     bass: normalizePc(symbol.bass ?? symbol.root),
   };
 }
@@ -186,6 +192,7 @@ export function canonicalIdentityFromFactorized(
     ...(factorized.seventh ? { seventh: factorized.seventh } : {}),
     extensions: [...new Set(extensions)].sort((left, right) => left - right),
     alterations: [...new Set(alterations)].sort(),
+    ...(factorized.omissions?.length ? { omissions: [...factorized.omissions] } : {}),
     ...(bassPitchClass !== rootPitchClass ? { bassPitchClass } : {}),
   };
 }
@@ -208,10 +215,10 @@ export function symbolFromFactorized(
   // as `maj9` rather than as `maj7` with a `9` written after it.
   const whole = qualityFromParts(factorized.triad, factorized.seventh, factorized.tensions);
   if (whole !== undefined) {
-    return makeChordSymbol(
+    return withFactorizedOmissions(makeChordSymbol(
       factorized.root, whole, [],
       factorized.bass === factorized.root ? undefined : factorized.bass,
-    );
+    ), factorized);
   }
 
   const base = qualityFromParts(factorized.triad, factorized.seventh, []);
@@ -221,10 +228,10 @@ export function symbolFromFactorized(
   );
   if (written.length !== factorized.tensions.length) return undefined;
 
-  return makeChordSymbol(
+  return withFactorizedOmissions(makeChordSymbol(
     factorized.root, base, written as Tension[],
     factorized.bass === factorized.root ? undefined : factorized.bass,
-  );
+  ), factorized);
 }
 
 /**
@@ -251,6 +258,7 @@ export function factorizedKey(factorized: FactorizedChordIdentity): string {
     factorized.seventh ?? "-",
     factorized.tensions.join("."),
     factorized.bass,
+    ...(factorized.omissions?.length ? [factorized.omissions.join(".")] : []),
   ].join("|");
 }
 
@@ -264,4 +272,10 @@ export function identityFromSymbolViaFactorization(
 /** The identity the product would produce, for the same symbol. */
 export function identityFromSymbolDirectly(symbol: ChordSymbol): NormalizedChordIdentity {
   return normalizeChordSymbol(symbol);
+}
+
+function withFactorizedOmissions(symbol: ChordSymbol, factorized: FactorizedChordIdentity): ChordSymbol {
+  if (!factorized.omissions?.length) return symbol;
+  const withOmissions: ChordSymbol = { ...symbol, omissions: [...factorized.omissions] };
+  return { ...withOmissions, label: labelFromSymbol(withOmissions) };
 }

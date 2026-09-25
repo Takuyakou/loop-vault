@@ -35,6 +35,10 @@ export const chordQualitySchema = z.enum([
   "sus4",
   "dom7sus4",
   "add9",
+  "add13",
+  "minMaj7",
+  "power",
+  "dom11",
   "six",
   "min6",
   "sixNine",
@@ -88,6 +92,7 @@ export const chordSymbolSchema = z
     root: z.number().int().min(0).max(11),
     quality: chordQualitySchema,
     tensions: z.array(tensionSchema),
+    omissions: z.array(z.enum(["3", "5"])).max(2).refine(values => new Set(values).size === values.length).optional(),
     bass: z.number().int().min(0).max(11).optional(),
     label: z.string().min(1),
   })

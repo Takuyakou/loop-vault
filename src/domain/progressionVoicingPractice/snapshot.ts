@@ -1,5 +1,5 @@
 import { VOICING_AUTO_USE_CONFIDENCE } from "../voicing/extractionConfig";
-import { parseChordLabel } from "../chords";
+import { parseTextChordLabel } from "../chords";
 import { explicitSlashLabel } from "../explicitSlashLabel";
 import type { ChordQuality, ChordSymbol, ChordTimelineItem, SavedProgressionBlock, Tension, VoicingSnapshot } from "../types";
 import { isExplicitSourceMidiVoicingAvailable, voicingCompatibility } from "../voicing";
@@ -18,7 +18,7 @@ import { progressionPracticeBeatAtTick, progressionPracticeTicksAtBeat } from ".
 const supportedQualities = new Set<ChordQuality>([
   "maj", "min", "dim", "aug", "maj7", "min7", "dom7", "min7b5", "dim7",
   "maj9", "min9", "dom9", "min11", "dom13", "sus2", "sus4", "dom7sus4",
-  "add9", "six", "min6", "sixNine",
+  "add9", "add13", "minMaj7", "power", "dom11", "six", "min6", "sixNine",
 ]);
 const supportedTensions = new Set<Tension>(["9", "b9", "#9", "11", "#11", "13", "b13", "#5"]);
 const supportedSelections = new Set<ProgressionVoicingSelection>([
@@ -210,6 +210,7 @@ function cloneChord(chord: ChordSymbol): ProgressionPracticeEvent["chord"] {
     root: chord.root,
     quality: chord.quality,
     tensions: [...chord.tensions],
+    ...(chord.omissions?.length ? { omissions: [...chord.omissions] } : {}),
     ...(chord.bass === undefined ? {} : { bass: chord.bass }),
     label: "",
   };
@@ -217,6 +218,7 @@ function cloneChord(chord: ChordSymbol): ProgressionPracticeEvent["chord"] {
     root: canonical.root,
     quality: canonical.quality,
     tensions: Object.freeze([...canonical.tensions]),
+    ...(canonical.omissions?.length ? { omissions: Object.freeze([...canonical.omissions]) } : {}),
     ...(canonical.bass === undefined ? {} : { bass: canonical.bass }),
     label: validatedSavedChordLabel(chord, canonical) ?? explicitSlashLabel(canonical),
   });
@@ -226,7 +228,7 @@ function validatedSavedChordLabel(source: ChordSymbol, canonical: ChordSymbol): 
   if (typeof source.label !== "string") return undefined;
   const label = source.label.trim();
   if (label.length === 0 || label.length > 64) return undefined;
-  const parsed = parseChordLabel(label);
+  const parsed = parseTextChordLabel(label);
   if (!parsed || !sameChordSemantics(parsed, canonical)) return undefined;
   return label;
 }
@@ -235,7 +237,8 @@ function sameChordSemantics(left: ChordSymbol, right: ChordSymbol): boolean {
   return left.root === right.root
     && left.quality === right.quality
     && left.bass === right.bass
-    && [...left.tensions].sort().join("|") === [...right.tensions].sort().join("|");
+    && [...left.tensions].sort().join("|") === [...right.tensions].sort().join("|")
+    && [...(left.omissions ?? [])].sort().join("|") === [...(right.omissions ?? [])].sort().join("|");
 }
 
 function selectVoicing(
