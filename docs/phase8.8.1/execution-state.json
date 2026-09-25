@@ -2,27 +2,40 @@
   "schemaVersion": 1,
   "phaseId": "8.8.1",
   "status": "in-progress",
-  "activeStage": "P8.8.1-01",
+  "activeStage": "P8.8.1-02",
   "completedStages": [
-    "P8.8.1-00"
+    "P8.8.1-00",
+    "P8.8.1-01"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "40d8b8ee9261e9c5585f25eb3d0e9a259520b1f7",
-  "lastVerifiedCommit": "40d8b8ee9261e9c5585f25eb3d0e9a259520b1f7",
+  "lastVerifiedCommit": "1697cf5",
   "currentBranch": "feat/phase8.8.1-realworld-fix",
   "requiredGates": {
     "P8.8.1-00": [
       "synthetic-reproduction",
       "phase-docs",
       "diff-check"
+    ],
+    "P8.8.1-01": [
+      "frozen-pre",
+      "exact-timing",
+      "typescript",
+      "changed-scope-eslint",
+      "phase-docs",
+      "diff-check"
     ]
   },
   "gateResults": {
     "synthetic-reproduction": "pass",
+    "frozen-pre": "pass",
+    "exact-timing": "pass",
+    "typescript": "pass",
+    "changed-scope-eslint": "pass",
     "phase-docs": "pass",
     "diff-check": "pass"
   },
-  "nextAction": "Implement exact Extended subdivision timing while preserving Standard and source semantics.",
+  "nextAction": "Expand independent Extended budgets and update Vault v2 save validation without changing Standard caps.",
   "updatedAt": "2026-09-26"
 }

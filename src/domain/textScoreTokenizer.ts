@@ -15,6 +15,7 @@ export function segmentScoreBar(
   end: number,
   parse: (raw: string) => ChordSymbol | undefined,
   allowNoChord = false,
+  maxCompactTokens = 4,
 ): ScoreSegmentation {
   const source = input.slice(start, end);
   const parsed = new Map<string, ChordSymbol | "%" | "_" | "=" | undefined>();
@@ -76,7 +77,7 @@ export function segmentScoreBar(
     memo.set(key, results);
     return results;
   };
-  const complete = search(0, 4);
+  const complete = search(0, maxCompactTokens);
   if (!complete.length) return { kind: "invalid" };
   if (complete.length > 1) return { kind: "ambiguous" };
   return { kind: "ok", tokens: complete[0]! };

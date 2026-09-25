@@ -10,6 +10,8 @@ import {
 
 export const EXTENDED_TEXT_PARSER_VERSION = "extended-text-v1";
 export const EXTENDED_TEXT_SEMANTIC_POLICY = "p8.8-explicit-factors-v1";
+export const EXTENDED_TEXT_TIMING_PPQ = 960;
+export const EXTENDED_TEXT_MAX_SLOTS_PER_BAR = 16;
 
 export interface TextSourceRange { readonly start: number; readonly end: number }
 export interface ExtendedTextMetadata {
@@ -41,11 +43,14 @@ export interface ExtendedTextSlot {
   readonly slot: number;
   readonly startBeat: number;
   readonly durationBeats: number;
+  readonly startTick: number;
+  readonly durationTicks: number;
   readonly kind: "attack" | "reattack" | "hold" | "rest";
   readonly chord?: ChordSymbol;
 }
 export interface TextAttackEvent {
   readonly beat: number;
+  readonly tick: number;
   readonly kind: "written" | "repeat";
   readonly span: TextSourceRange;
 }
@@ -54,6 +59,8 @@ export interface TextHarmonicSpan {
   readonly writtenChord: string;
   readonly startBeat: number;
   readonly durationBeats: number;
+  readonly startTick: number;
+  readonly durationTicks: number;
   readonly attacks: readonly TextAttackEvent[];
   readonly sourceSpan: TextSourceRange;
 }
@@ -77,6 +84,8 @@ interface MutableSpan {
   writtenChord: string;
   startBeat: number;
   durationBeats: number;
+  startTick: number;
+  durationTicks: number;
   attacks: TextAttackEvent[];
   sourceSpan: TextSourceRange;
 }
@@ -148,7 +157,7 @@ export function parseExtendedTextProgression(
   let totalTokens = 0;
   for (const range of ranges.slice(0, TEXT_PROGRESSION_MAX_BARS)) {
     const barNumber = bars.length + 1;
-    const segmented = segmentScoreBar(score, range.start, range.end, parseExtendedChordToken, true);
+    const segmented = segmentScoreBar(score, range.start, range.end, parseExtendedChordToken, true, EXTENDED_TEXT_MAX_SLOTS_PER_BAR);
     if (segmented.kind !== "ok") {
       const code = segmented.kind === "ambiguous" ? "AMBIGUOUS_SEGMENTATION" : classifyInvalid(source.slice(range.start, range.end));
       diagnostics.push(issue(source, code, "This bar needs an unambiguous supported chord or control.", range));
@@ -174,26 +183,32 @@ export function parseExtendedTextProgression(
       ((index === 0 && !active) || (index > 0 && (tokens[index - 1]!.raw === "_" || /^N\.C\.$/i.test(tokens[index - 1]!.raw)))))) {
       diagnostics.push(issue(source, "INVALID_CONTROL_PREDECESSOR", "Hold needs immediately sounding harmony.", range));
     }
-    if (!tokens.length || beatsPerBar % tokens.length !== 0) {
-      diagnostics.push(issue(source, "UNSUPPORTED_RHYTHM", "Bar slots must divide the selected meter exactly on whole beats.", range));
+    const barTicks = beatsPerBar * EXTENDED_TEXT_TIMING_PPQ;
+    if (!tokens.length || tokens.length > EXTENDED_TEXT_MAX_SLOTS_PER_BAR
+      || barTicks % tokens.length !== 0) {
+      diagnostics.push(issue(source, "UNSUPPORTED_SUBDIVISION", "This equal subdivision cannot be represented exactly.", range));
       continue;
     }
-    const duration = beatsPerBar / tokens.length;
+    const durationTicks = barTicks / tokens.length;
+    const duration = durationTicks / EXTENDED_TEXT_TIMING_PPQ;
     for (let index = 0; index < tokens.length; index += 1) {
       const token = tokens[index]!;
-      const absolute = (barNumber - 1) * beatsPerBar + index * duration;
-      const startBeat = index * duration + 1;
+      const absoluteTick = (barNumber - 1) * barTicks + index * durationTicks;
+      const absolute = absoluteTick / EXTENDED_TEXT_TIMING_PPQ;
+      const startTick = index * durationTicks;
+      const startBeat = startTick / EXTENDED_TEXT_TIMING_PPQ + 1;
       if (token.raw === "_" || /^N\.C\.$/i.test(token.raw)) {
-        slots.push({ ...token, bar: barNumber, slot: index + 1, startBeat, durationBeats: duration, kind: "rest" });
+        slots.push({ ...token, bar: barNumber, slot: index + 1, startBeat, durationBeats: duration, startTick, durationTicks, kind: "rest" });
         active = undefined;
         continue;
       }
       if (token.raw === "=") {
         if (!active) diagnostics.push(issue(source, "INVALID_CONTROL_PREDECESSOR", "Hold needs immediately sounding harmony.", token.span));
         else {
-          active.durationBeats += duration;
+          active.durationTicks += durationTicks;
+          active.durationBeats = active.durationTicks / EXTENDED_TEXT_TIMING_PPQ;
           active.sourceSpan = { start: active.sourceSpan.start, end: token.span.end };
-          slots.push({ ...token, bar: barNumber, slot: index + 1, startBeat, durationBeats: duration, kind: "hold", chord: active.chord });
+          slots.push({ ...token, bar: barNumber, slot: index + 1, startBeat, durationBeats: duration, startTick, durationTicks, kind: "hold", chord: active.chord });
         }
         continue;
       }
@@ -206,15 +221,17 @@ export function parseExtendedTextProgression(
         continue;
       }
       const kind = repeat ? "reattack" : "attack";
-      slots.push({ ...token, bar: barNumber, slot: index + 1, startBeat, durationBeats: duration, kind, chord });
-      const sameHarmony = active && sameChord(active.chord, chord) && active.startBeat + active.durationBeats === absolute;
+      slots.push({ ...token, bar: barNumber, slot: index + 1, startBeat, durationBeats: duration, startTick, durationTicks, kind, chord });
+      const sameHarmony = active && sameChord(active.chord, chord) && active.startTick + active.durationTicks === absoluteTick;
       if (sameHarmony) {
-        active!.durationBeats += duration;
-        active!.attacks.push({ beat: absolute, kind: repeat ? "repeat" : "written", span: token.span });
+        active!.durationTicks += durationTicks;
+        active!.durationBeats = active!.durationTicks / EXTENDED_TEXT_TIMING_PPQ;
+        active!.attacks.push({ beat: absolute, tick: absoluteTick, kind: repeat ? "repeat" : "written", span: token.span });
         active!.sourceSpan = { start: active!.sourceSpan.start, end: token.span.end };
       } else {
         active = { chord, writtenChord: token.raw, startBeat: absolute, durationBeats: duration,
-          attacks: [{ beat: absolute, kind: repeat ? "repeat" : "written", span: token.span }], sourceSpan: token.span };
+          startTick: absoluteTick, durationTicks,
+          attacks: [{ beat: absolute, tick: absoluteTick, kind: repeat ? "repeat" : "written", span: token.span }], sourceSpan: token.span };
         spans.push(active);
       }
       previousChord = chord;
@@ -271,7 +288,7 @@ function barRanges(score: string, source: string, diagnostics: ExtendedTextDiagn
     const text = score.slice(line.start, line.end);
     if (!text.trim()) continue;
     if (!text.includes("|")) {
-      const bare = segmentScoreBar(score, line.start, line.end, parseExtendedChordToken, true);
+      const bare = segmentScoreBar(score, line.start, line.end, parseExtendedChordToken, true, EXTENDED_TEXT_MAX_SLOTS_PER_BAR);
       if (bare.kind === "ok" && bare.tokens.length > 1 && bare.tokens.every((token, index) =>
         (index === 0 || /\s/u.test(source.slice(bare.tokens[index - 1]!.range.end, token.range.start))) &&
         parseExtendedChordToken(score.slice(token.range.start, token.range.end)) !== undefined)) {
