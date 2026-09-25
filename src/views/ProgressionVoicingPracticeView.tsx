@@ -1183,7 +1183,7 @@ export function ProgressionVoicingPracticeView({
       if (event.defaultPrevented || event.isComposing || !progressionLoaded || !snapshot || bulkSourceOpen || fingeringEditorOpen) return;
       const target = event.target;
       if (target === timelineViewportRef.current && ["ArrowLeft", "ArrowRight", "PageUp", "PageDown", "Home", "End"].includes(event.key)) return;
-      if (target instanceof Element && target.closest("input, select, textarea, [contenteditable='true'], [role='dialog']")) return;
+      if (target instanceof Element && target.closest("button, [role='button'], input, select, textarea, [contenteditable], [role='textbox'], [role='dialog']")) return;
       const key = event.key.toLowerCase();
       if (![" ", "arrowleft", "arrowright", "home", "end", "f", "m", "r", "escape"].includes(key)) return;
       event.preventDefault();
@@ -1402,7 +1402,7 @@ export function ProgressionVoicingPracticeView({
         <>
           <div className="h-[clamp(560px,72dvh,760px)] min-w-0 shrink-0 lg:h-[clamp(300px,36dvh,380px)]" data-testid="voicing-loop-current-next">
             <div className="grid h-full min-h-0 min-w-0 grid-rows-2 gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,440px)] lg:grid-rows-1">
-              <Surface variant="primary" className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden p-3" data-testid="voicing-loop-current-panel" tabIndex={0} aria-label={language === "ja" ? "現在のコード詳細" : "Current chord details"}>
+              <Surface variant="primary" className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden p-3" data-testid="voicing-loop-current-panel" aria-label={language === "ja" ? "現在のコード詳細" : "Current chord details"}>
                 <div className="min-h-0 min-w-0 flex-1 overflow-y-auto" tabIndex={0}
                   aria-label={language === "ja" ? "現在のコードの詳細をスクロール" : "Scroll current chord details"}>
                 <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
@@ -1462,7 +1462,7 @@ export function ProgressionVoicingPracticeView({
                   hasNext={Boolean(currentVoicing && nextVoicing)} accidentalStyle={accidentalStyle} language={language} />
               </Surface>
               <div className="flex h-full min-h-0 min-w-0 flex-col gap-2">
-                <Surface className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-3" data-testid="voicing-loop-next-panel" tabIndex={0} aria-label={language === "ja" ? "次のコード詳細" : "Next chord details"}>
+                <Surface className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-3" data-testid="voicing-loop-next-panel" aria-label={language === "ja" ? "次のコード詳細" : "Next chord details"}>
                   <div className="min-h-0 min-w-0 flex-1 overflow-y-auto" tabIndex={0}
                     aria-label={language === "ja" ? "次のコードの詳細をスクロール" : "Scroll next chord details"}>
                   <div className="flex items-center justify-between gap-2">
