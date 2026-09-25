@@ -1,5 +1,6 @@
 import type { ChordTimelineItem } from "./types";
 import type { ExtendedTextResult } from "./extendedTextProgression";
+import { buildSavedTextSource, type SavedTextSourceV1 } from "./textSource";
 
 export interface ExtendedTextSaveData {
   readonly title: string;
@@ -7,6 +8,7 @@ export interface ExtendedTextSaveData {
   readonly chords: readonly ChordTimelineItem[];
   readonly scoreLengthBeats: number;
   readonly beatsPerBar: number;
+  readonly textSource: SavedTextSourceV1;
   readonly bpm?: number;
   readonly confirmedKey?: string;
 }
@@ -33,6 +35,7 @@ export function extendedTextSaveData(result: ExtendedTextResult): ExtendedTextSa
     chords,
     scoreLengthBeats: result.scoreLengthBeats,
     beatsPerBar,
+    textSource: buildSavedTextSource(result),
     ...(result.metadata.bpm === undefined ? {} : { bpm: result.metadata.bpm }),
     ...(result.metadata.confirmed && result.metadata.key ? { confirmedKey: result.metadata.key } : {}),
   };

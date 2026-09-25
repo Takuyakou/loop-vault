@@ -6,6 +6,7 @@ import type { Section } from "./midi/sections";
 import type { CandidateChordEvent, CandidateChordStats } from "./midi/candidateBlock";
 import type { ProgressionPracticeProgress } from "./practice/types";
 import type { SourceBasslineSnapshotV1 } from "./sourceBassline";
+import type { SavedTextSourceV1 } from "./textSource";
 import type { MidiTempoDiagnostics } from "./midi/tempoAnalysis";
 import type { PresentationGroupingResult } from "./midi/presentationGrouping";
 
@@ -119,6 +120,7 @@ export interface SavedProgressionBlock {
   userVerified?: boolean;
   practice?: ProgressionPracticeProgress;
   sourceBassline?: SourceBasslineSnapshotV1;
+  textSource?: SavedTextSourceV1;
 }
 
 export interface ProgressionBlockCandidate {

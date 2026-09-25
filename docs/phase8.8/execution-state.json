@@ -2,17 +2,18 @@
   "schemaVersion": 1,
   "phaseId": "8.8",
   "status": "in-progress",
-  "activeStage": "P8.8-04",
+  "activeStage": "P8.8-05",
   "completedStages": [
     "P8.8-00",
     "P8.8-01",
     "P8.8-02",
-    "P8.8-03"
+    "P8.8-03",
+    "P8.8-04"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "448d2ad5b620826abb34d4fd7f961336cb5ca49d",
-  "lastVerifiedCommit": "2fc64f7",
+  "lastVerifiedCommit": "6b5a031",
   "currentBranch": "feat/phase8.8-extended-text",
   "requiredGates": {
     "P8.8-00": [
@@ -40,6 +41,6 @@
     "typescript": "pass",
     "changed-scope-eslint": "pass"
   },
-  "nextAction": "Persist exact raw source and attack model in Vault v2, prove round-trip preservation.",
+  "nextAction": "Integrate saved text attack intent into Generated Voicing Loop without changing SOURCE MIDI.",
   "updatedAt": "2026-09-26"
 }

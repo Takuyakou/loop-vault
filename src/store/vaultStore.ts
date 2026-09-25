@@ -25,6 +25,8 @@ import {
   TEXT_PROGRESSION_MAX_TOKENS,
 } from "../domain/textProgression";
 import { isTextProgressionStyleSnapshot } from "../domain/textProgressionVoicing";
+import { parseExtendedTextProgression } from "../domain/extendedTextProgression";
+import { buildSavedTextSource, type SavedTextSourceV1 } from "../domain/textSource";
 import { parseChordLabel, parseTextChordLabel } from "../domain/chords";
 import { attachSourceVoicing, attachSourceVoicings, isValidVoicingSnapshot, voicingCompatibility } from "../domain/voicing";
 import {
@@ -34,6 +36,7 @@ import {
 } from "../domain/transition";
 import {
   MAX_PERSISTED_CHORD_ALTERNATIVES,
+  savedTextSourceSchema,
   type QuarantinedRecord,
 } from "../domain/schema";
 import { sourceBasslineSnapshotSchema, type SourceBasslineSnapshotV1 } from "../domain/sourceBassline";
@@ -125,6 +128,8 @@ export interface TextProgressionIdeaDraft {
   scoreLengthBeats?: number;
   /** Extended text's explicit n/4 grid; legacy text remains 4/4. */
   beatsPerBar?: number;
+  /** Exact extended source and structurally validated attack intent. */
+  textSource?: SavedTextSourceV1;
 }
 export interface ProgressionSaveMetadata {
   sourcePath?: string;
@@ -707,6 +712,7 @@ export function createVaultStore(
               : {}),
           })),
           tags: [...block.tags],
+          ...(block.textSource ? { textSource: savedTextSourceSchema.parse(block.textSource) } : {}),
           suppressedAutoTags: block.suppressedAutoTags?.map((tag) => ({ ...tag })),
           ...(block.sourceBassline
             ? { sourceBassline: cloneSourceBassline(block.sourceBassline) }
@@ -1199,6 +1205,11 @@ function normalizeTextProgressionIdeaDraft(
   if (convertedChords.some((chord) => chord === undefined)) return undefined;
   const chords = convertedChords.filter((chord): chord is ChordTimelineItem => chord !== undefined);
   if (chords.length !== draft.chords.length || !isSaveSafeTextProgressionTimeline(chords, draft.scoreLengthBeats, draft.beatsPerBar)) return undefined;
+  const textSource = draft.textSource === undefined ? undefined : validateSavedTextSource(
+    draft.textSource, chords, draft.beatsPerBar, draft.scoreLengthBeats,
+    keyState.kind === "confirmed" ? keyState.key : undefined, draft.bpm,
+  );
+  if (draft.textSource !== undefined && textSource === undefined) return undefined;
 
   return {
     ...draft,
@@ -1206,9 +1217,43 @@ function normalizeTextProgressionIdeaDraft(
     summaryText: textProgressionSummary(chords, draft.beatsPerBar ?? 4),
     nextAction: draft.nextAction ?? "",
     chords,
+    ...(textSource === undefined ? {} : { textSource }),
     ...(draft.bpm === undefined ? {} : { bpm: draft.bpm }),
     ...(keyState.kind === "confirmed" ? { confirmedKey: keyState.key } : {}),
   };
+}
+
+function validateSavedTextSource(
+  source: SavedTextSourceV1,
+  chords: readonly ChordTimelineItem[],
+  beatsPerBar: number | undefined,
+  scoreLengthBeats: number | undefined,
+  confirmedKey: string | undefined,
+  bpm: number | undefined,
+): SavedTextSourceV1 | undefined {
+  const checked = savedTextSourceSchema.safeParse(source);
+  if (!checked.success) return undefined;
+  const metadata = checked.data.metadata;
+  if (metadata.key !== confirmedKey || metadata.bpm !== bpm) return undefined;
+  const parsed = parseExtendedTextProgression(checked.data.rawText, {
+    beat: metadata.beat,
+    ...(metadata.key === undefined ? {} : { key: metadata.key, confirmed: true }),
+    ...(metadata.bpm === undefined ? {} : { bpm: metadata.bpm }),
+    ...(metadata.capo === undefined ? {} : { capo: metadata.capo }),
+  });
+  if (!parsed.canConvert
+    || beatsPerBar !== parsed.beatsPerBar
+    || scoreLengthBeats !== parsed.scoreLengthBeats
+    || chords.length !== parsed.harmonicSpans.length
+    || JSON.stringify(checked.data) !== JSON.stringify(buildSavedTextSource(parsed))) return undefined;
+  for (let index = 0; index < chords.length; index += 1) {
+    const item = chords[index]!;
+    const span = parsed.harmonicSpans[index]!;
+    if (textAbsoluteBeat(item, parsed.beatsPerBar) !== span.startBeat
+      || item.durationBeats !== span.durationBeats
+      || !sameTextProgressionChord(span.chord, item.chord)) return undefined;
+  }
+  return checked.data;
 }
 
 function createSavedTextProgressionBlock(
@@ -1234,6 +1279,7 @@ function createSavedTextProgressionBlock(
     ...(draft.scoreLengthBeats === undefined ? {} : { sourceStartBeat: start, sourceEndBeat: end }),
     summaryText: draft.summaryText,
     chords: persistChordEvents(draft.chords, context.idFactory),
+    ...(draft.textSource === undefined ? {} : { textSource: draft.textSource }),
     ...(draft.confirmedKey === undefined ? {} : { detectedKey: draft.confirmedKey }),
     ...(draft.bpm === undefined ? {} : { bpm: draft.bpm }),
     timeSignature: `${beatsPerBar}/4`,

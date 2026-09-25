@@ -2,6 +2,7 @@ import { z } from "zod";
 import { normalizeVaultPracticeCompatibility } from "./practiceCompatibility";
 import type { SongIdea, VaultFile } from "./types";
 import { sourceBasslineSnapshotSchema } from "./sourceBassline";
+import type { SavedTextSourceV1 } from "./textSource";
 
 export const statusSchema = z.enum([
   "idea",
@@ -237,6 +238,54 @@ export const progressionPracticeProgressSchema = z
   })
   .strict();
 
+const textSourceRangeSchema = z.object({
+  start: z.number().int().nonnegative(),
+  end: z.number().int().nonnegative(),
+}).strict();
+
+export const savedTextSourceSchema: z.ZodType<SavedTextSourceV1> = z.object({
+  schemaVersion: z.literal(1),
+  dialect: z.literal("extended-v1"),
+  rawText: z.string().max(8192),
+  parserVersion: z.string().min(1).max(80),
+  semanticPolicyVersion: z.string().min(1).max(80),
+  generatedVoicingPolicyId: z.string().min(1).max(80),
+  metadata: z.object({
+    beat: z.string().regex(/^([1-9]|1[0-2])\/4$/),
+    key: z.string().max(80).optional(),
+    bpm: z.number().min(30).max(240).optional(),
+    capo: z.number().int().min(0).max(12).optional(),
+  }).strict(),
+  sections: z.array(z.object({
+    kind: z.enum(["comment", "playback-start", "playback-end"]),
+    line: z.number().int().positive(),
+    span: textSourceRangeSchema,
+    raw: z.string().max(8192),
+  }).strict()).max(128),
+  slots: z.array(z.object({
+    raw: z.string().max(8192),
+    span: textSourceRangeSchema,
+    bar: z.number().int().min(1).max(32),
+    slot: z.number().int().min(1).max(12),
+    startBeat: z.number().int().min(1).max(12),
+    durationBeats: z.number().int().min(1).max(12),
+    kind: z.enum(["attack", "reattack", "hold", "rest"]),
+    chordLabel: z.string().min(1).max(100).optional(),
+  }).strict()).max(128),
+  harmonicSpans: z.array(z.object({
+    writtenChord: z.string().min(1).max(100),
+    chordLabel: z.string().min(1).max(100),
+    startBeat: z.number().int().nonnegative().max(384),
+    durationBeats: z.number().int().positive().max(384),
+    sourceSpan: textSourceRangeSchema,
+    attacks: z.array(z.object({
+      beat: z.number().int().nonnegative().max(384),
+      kind: z.enum(["written", "repeat"]),
+      span: textSourceRangeSchema,
+    }).strict()).min(1).max(128),
+  }).strict()).min(1).max(128),
+}).strict();
+
 export const savedProgressionBlockSchema = z
   .object({
     id: z.string().uuid(),
@@ -270,6 +319,7 @@ export const savedProgressionBlockSchema = z
     userVerified: z.boolean().optional(),
     practice: progressionPracticeProgressSchema.optional(),
     sourceBassline: sourceBasslineSnapshotSchema.optional(),
+    textSource: savedTextSourceSchema.optional(),
   })
   .strict();
 
