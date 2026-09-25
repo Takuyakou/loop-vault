@@ -1165,6 +1165,17 @@ describe("vault store", () => {
     expect(afterEdit.ok).toBe(true);
     if (!afterEdit.ok) throw new Error("Vault reload after unrelated edit failed");
     expect(afterEdit.vault.ideas.find(idea => idea.id === ideaId)?.progressionBlocks?.[0]?.textSource).toEqual(data.textSource);
+    const reloadedBlock = afterEdit.vault.ideas.find(idea => idea.id === ideaId)?.progressionBlocks?.[0];
+    const handoff = buildProgressionVoicingPracticeHandoffFromVault(afterEdit.vault.ideas, {
+      ideaId: ideaId!, blockId: reloadedBlock!.id,
+    });
+    expect(handoff.ok).toBe(true);
+    if (!handoff.ok) throw new Error("Voicing Loop handoff failed");
+    const practice = handoff.handoff.snapshots["basic-full"]!;
+    expect(practice.meter).toEqual({ numerator: 3, denominator: 4 });
+    expect(practice.events.map(event => event.attackBeats)).toEqual([[0, 1], [4], [5]]);
+    expect(practice.spans.map(span => span.kind)).toEqual(["chord", "rest", "chord", "chord"]);
+    expect(handoff.handoff.initialSelection).toBe("basic-full");
   });
 
   it("hands off created and appended BPM-less Text saves with the runtime default only", async () => {

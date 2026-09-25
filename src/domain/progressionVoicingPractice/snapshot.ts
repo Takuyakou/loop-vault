@@ -88,6 +88,25 @@ export function buildProgressionVoicingPracticeSnapshot(
       > METER_NEUTRAL_BUDGET.maxPracticeGroups) {
     return failure("practice-capacity", "Voicing Loop exceeds its 256 PracticeGroup display capacity.");
   }
+  const textAttacks = input.block.textSource?.harmonicSpans;
+  if (textAttacks && textAttacks.length !== normalized.events.length) {
+    return failure("invalid-timing", "Text attack spans do not match saved harmony.");
+  }
+  const practiceEvents = textAttacks
+    ? Object.freeze(normalized.events.map((event, index) => {
+      const span = textAttacks[index]!;
+      const attackBeats = span.attacks.map(attack => attack.beat);
+      if (span.startBeat !== event.startBeat || span.durationBeats !== event.durationBeats
+        || attackBeats.length === 0 || attackBeats[0] !== event.startBeat
+        || attackBeats.some((beat, attackIndex) => beat < event.startBeat
+          || beat >= event.startBeat + event.durationBeats
+          || attackIndex > 0 && beat <= attackBeats[attackIndex - 1]!)) return undefined;
+      return Object.freeze({ ...event, attackBeats: Object.freeze(attackBeats) });
+    }))
+    : normalized.events;
+  if (practiceEvents.some(event => event === undefined)) {
+    return failure("invalid-timing", "Text attacks lie outside their harmonic spans.");
+  }
   const source = Object.freeze({
     kind: "vault" as const,
     reference: Object.freeze({
@@ -104,7 +123,7 @@ export function buildProgressionVoicingPracticeSnapshot(
     meter: Object.freeze(sourceMeter),
     practiceGroupBeats: METER_NEUTRAL_BUDGET.practiceGroupBeats,
     lengthBeats: normalized.lengthBeats,
-    events: normalized.events,
+    events: practiceEvents as readonly ProgressionPracticeEvent[],
     spans: normalized.spans,
   });
   const fingerprint = `p527-snapshot-v1-${fnv1a(JSON.stringify(withoutFingerprint))}`;

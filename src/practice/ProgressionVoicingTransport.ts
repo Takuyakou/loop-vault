@@ -159,14 +159,16 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
       }, "16n", 0));
     } else {
     options.snapshot.events.forEach((event, eventIndex) => {
-      const startTicks = runtimeTickAtPracticeBeat(countInBeats + event.startBeat, ppq);
-      this.scheduleIds.push(this.transport.scheduleRepeat((time) => {
-        if (!this.acceptsCallback(generation)) return;
-        const absoluteBeat = this.absoluteBeatAtTime(time, ppq);
-        if (absoluteBeat + 1 / ppq < countInBeats) return;
-        this.applyPendingSessionUpdate(absoluteBeat);
-        this.attackVoicing(eventIndex, 0, time);
-      }, `${loopTicks}i`, `${startTicks}i`));
+      for (const attackBeat of event.attackBeats ?? [event.startBeat]) {
+        const startTicks = runtimeTickAtPracticeBeat(countInBeats + attackBeat, ppq);
+        this.scheduleIds.push(this.transport.scheduleRepeat((time) => {
+          if (!this.acceptsCallback(generation)) return;
+          const absoluteBeat = this.absoluteBeatAtTime(time, ppq);
+          if (absoluteBeat + 1 / ppq < countInBeats) return;
+          this.applyPendingSessionUpdate(absoluteBeat);
+          this.attackVoicing(eventIndex, attackBeat - event.startBeat, time);
+        }, `${loopTicks}i`, `${startTicks}i`));
+      }
     });
 
     options.snapshot.spans.filter((span) => span.kind === "rest").forEach((span) => {
@@ -467,7 +469,8 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     const options = this.activeOptions;
     if (!options) return;
     this.rollingItems = [
-      ...options.snapshot.events.map((event, eventIndex) => ({ startBeat: event.startBeat, eventIndex })),
+      ...options.snapshot.events.flatMap((event, eventIndex) =>
+        (event.attackBeats ?? [event.startBeat]).map(startBeat => ({ startBeat, eventIndex }))),
       ...options.snapshot.spans.filter((span) => span.kind === "rest")
         .map((span) => ({ startBeat: span.startBeat, eventIndex: -1 })),
     ].sort((a, b) => a.startBeat - b.startBeat || a.eventIndex - b.eventIndex);
@@ -519,7 +522,8 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
           this.releaseVoices(scheduledTime);
         } else {
           this.applyPendingSessionUpdate(logicalDue);
-          this.attackVoicing(item.eventIndex, 0, scheduledTime);
+          const eventStart = this.activeOptions?.snapshot.events[item.eventIndex]?.startBeat ?? item.startBeat;
+          this.attackVoicing(item.eventIndex, item.startBeat - eventStart, scheduledTime);
         }
       }, `${Math.round(toneDue * ppq)}i`);
       this.pendingIds.add(id);
@@ -635,9 +639,9 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     const countInBeats = this.v2 ? this.countInBeats : options.countInBars * options.snapshot.meter.numerator;
     if (absoluteBeat < countInBeats) return false;
     const progressionBeat = (absoluteBeat - countInBeats) % options.snapshot.lengthBeats;
-    return options.snapshot.events.some((event) => (
-      Math.abs(event.startBeat - progressionBeat) <= 1 / this.transport.PPQ
-    ));
+    return options.snapshot.events.some((event) =>
+      (event.attackBeats ?? [event.startBeat]).some(beat =>
+        Math.abs(beat - progressionBeat) <= 1 / this.transport.PPQ));
   }
 
   private currentSoundingEvent(absoluteBeat: number): { eventIndex: number; elapsedBeats: number } | undefined {
@@ -696,7 +700,9 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
       for (const note of midiNotes) this.activeNotes.add(note);
       return;
     }
-    const remainingBeats = Math.max(0.05, event.durationBeats - elapsedBeats);
+    const currentBeat = event.startBeat + elapsedBeats;
+    const nextAttack = event.attackBeats?.find(beat => beat > currentBeat + 1e-6);
+    const remainingBeats = Math.max(0.05, (nextAttack ?? event.startBeat + event.durationBeats) - currentBeat);
     const durationSeconds = Math.max(0.05, remainingBeats * 60 / this.desiredBpm);
     if (this.v2) this.releaseVoices(time);
     this.voicingInstrument.triggerAttackRelease(
@@ -732,7 +738,9 @@ function isCompatibleSessionTiming(
       const candidate = next.events[index];
       return candidate?.id === event.id
         && candidate.startBeat === event.startBeat
-        && candidate.durationBeats === event.durationBeats;
+        && candidate.durationBeats === event.durationBeats
+        && JSON.stringify(candidate.attackBeats ?? [candidate.startBeat])
+          === JSON.stringify(event.attackBeats ?? [event.startBeat]);
     })
     && active.spans.length === next.spans.length
     && active.spans.every((span, index) => {

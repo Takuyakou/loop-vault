@@ -2,18 +2,19 @@
   "schemaVersion": 1,
   "phaseId": "8.8",
   "status": "in-progress",
-  "activeStage": "P8.8-05",
+  "activeStage": "P8.8-06",
   "completedStages": [
     "P8.8-00",
     "P8.8-01",
     "P8.8-02",
     "P8.8-03",
-    "P8.8-04"
+    "P8.8-04",
+    "P8.8-05"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "448d2ad5b620826abb34d4fd7f961336cb5ca49d",
-  "lastVerifiedCommit": "6b5a031",
+  "lastVerifiedCommit": "c9ca5a0",
   "currentBranch": "feat/phase8.8-extended-text",
   "requiredGates": {
     "P8.8-00": [
@@ -41,6 +42,6 @@
     "typescript": "pass",
     "changed-scope-eslint": "pass"
   },
-  "nextAction": "Integrate saved text attack intent into Generated Voicing Loop without changing SOURCE MIDI.",
+  "nextAction": "Run hardening matrix, isolate and fix gates, protect D-only generated outputs.",
   "updatedAt": "2026-09-26"
 }
