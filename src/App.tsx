@@ -1101,7 +1101,7 @@ async function analyzeMidiPath(path: string) {
                       snapshots={voicingPracticeHandoff?.snapshots ?? P527_E2E_FIXTURE?.snapshots}
                       initialSelection={voicingPracticeHandoff?.initialSelection ?? P527_E2E_FIXTURE?.initialSelection}
                       resolutionOptions={P527_E2E_FIXTURE?.resolutionOptions}
-                      vaultProgressions={voicingLoopVaultCandidates}
+                      vaultProgressions={P527_E2E_FIXTURE?.vaultProgressions ?? voicingLoopVaultCandidates}
                       bulkSourcePreview={bulkSourcePreview}
                       onBulkSourceApply={applyBulkSource}
                       onSelectProgression={openProgressionVoicingPractice}

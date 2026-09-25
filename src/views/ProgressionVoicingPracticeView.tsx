@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight, GripVertical, Minus, Pause, Play, Plus, RefreshCw, Search, Settings, Square, Volume2 } from "lucide-react";
 import { useStore } from "zustand";
 import {
@@ -32,7 +32,7 @@ import {
   type VoicingLoopVaultCandidate,
 } from "../domain/progressionVoicingPractice";
 import { chordIndexAtTimelineBeat } from "../domain/progressionVoicingPractice/timelineNavigation";
-import { clampTimelineScale, compactTimelineCard, timelinePixelsPerBeat as pixelsPerBeatForTimeline } from "../domain/progressionVoicingPractice/timelineLayout";
+import { clampTimelineScale, compactTimelineCard, remainingBeatsLabel, visualTransportBeat, timelinePixelsPerBeat as pixelsPerBeatForTimeline } from "../domain/progressionVoicingPractice/timelineLayout";
 import type { AppLanguage } from "../domain/types";
 import type {
   VoicingCoverage,
@@ -448,9 +448,11 @@ export function ProgressionVoicingPracticeView({
     () => filterVoicingLoopVaultCandidates(vaultProgressions, query),
     [query, vaultProgressions],
   );
-  const defaultProgressions = recentProgressions.length
-    ? recentProgressions
-    : vaultProgressions.slice(0, 5);
+  const defaultProgressions = Array.from(new Map([
+    ...recentProgressions,
+    ...vaultProgressions.slice(0, 5),
+    ...vaultProgressions.filter((candidate) => candidate.unavailableReason),
+  ].map((candidate) => [candidate.id, candidate])).values());
   const visibleProgressions = query.trim()
     ? filteredProgressions
     : showAllProgressions ? vaultProgressions : defaultProgressions;
@@ -507,6 +509,8 @@ export function ProgressionVoicingPracticeView({
   clockStateRef.current = clockState;
   const midiLeaseRef = useRef<LiveMidiActivationLease>();
   const timelineViewportRef = useRef<HTMLDivElement | null>(null);
+  const playheadRef = useRef<HTMLSpanElement>(null);
+  const currentProgressRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const viewport = timelineViewportRef.current;
     if (!viewport) return;
@@ -680,10 +684,27 @@ export function ProgressionVoicingPracticeView({
     if (timelineScale !== effectiveTimelineScale) setTimelineScale(effectiveTimelineScale);
   }, [effectiveTimelineScale, timelineScale]);
   const playheadX = (projection?.progressionBeat ?? 0) * timelinePixelsPerBeat;
-  const visualStepMilliseconds = Math.max(
-    16,
-    Math.min(140, 60_000 / (clockState?.bpm ?? snapshot?.bpm ?? 120) / 16),
-  );
+  useLayoutEffect(() => {
+    if (!snapshot || !clockState || !playheadRef.current) return;
+    const state = clockState;
+    const startedAt = performance.now();
+    const request = runtimeRequestRef.current;
+    const paint = (absoluteBeat: number) => {
+      const position = projectProgressionPracticeClock(snapshot, { ...state, transportBeat: absoluteBeat });
+      if (playheadRef.current) playheadRef.current.style.transform = `translateX(${position.progressionBeat * timelinePixelsPerBeat}px)`;
+      if (currentProgressRef.current) currentProgressRef.current.style.width = `${position.chordProgress * 100}%`;
+    };
+    paint(state.transportBeat);
+    if (state.status !== "running" && state.status !== "count-in" || typeof requestAnimationFrame !== "function") return;
+    let frame = 0;
+    const tick = (now: number) => {
+      if (request !== runtimeRequestRef.current) return;
+      paint(visualTransportBeat(state.transportBeat, now - startedAt, state.bpm));
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [clockState, snapshot, timelinePixelsPerBeat]);
   const allEventsPlayable = Boolean(plan && snapshot?.spans.length)
     && plan!.events.every((resolution) => resolution.status === "SUPPORTED");
   const currentGroup = Math.floor((projection?.progressionBeat ?? 0) / practiceGroupBeats) + 1;
@@ -1274,14 +1295,14 @@ export function ProgressionVoicingPracticeView({
         </StatusMessage>
       ) : (
         <>
-          <div className="flex min-w-0 flex-[1_0_auto] flex-col" data-testid="voicing-loop-current-next">
-            <div className="grid min-w-0 flex-1 gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,440px)]">
-              <Surface variant="primary" className="flex min-w-0 flex-col p-4" data-testid="voicing-loop-current-panel">
+          <div className="min-w-0" data-testid="voicing-loop-current-next">
+            <div className="grid min-w-0 items-start gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,440px)]">
+              <Surface variant="primary" className="min-w-0 p-4" data-testid="voicing-loop-current-panel">
                 <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
                   <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <p className="lv-section-kicker">{text.current} · {currentIndex + 1}/{snapshot.events.length}</p>
-                    <span className="rounded border border-[var(--lv-border)] px-2 py-0.5 text-[11px] font-semibold text-[var(--lv-text-secondary)]" data-testid="voicing-loop-playback-choice">
-                      {currentEvent?.playbackChoice ?? "LEGACY"}
+                    <span className="rounded border border-[var(--lv-border)] px-2 py-0.5 text-[11px] font-semibold text-[var(--lv-text-secondary)]" data-testid="voicing-loop-playback-choice" title={currentEvent?.playbackChoice ? undefined : (language === "ja" ? "保存時に再生方法が指定されていないカードです" : "Playback choice was not set when this card was saved")}>
+                      {currentEvent?.playbackChoice ?? (language === "ja" ? "未設定（自動）" : "Auto (unspecified)")}
                     </span>
                     {currentEvent?.sourceNeedsReview
                       ? <span className="rounded border border-amber-400/40 px-2 py-0.5 text-[11px] text-amber-200" data-testid="voicing-loop-review-badge">{language === "ja" ? "要確認" : "Review"}</span>
@@ -1305,6 +1326,9 @@ export function ProgressionVoicingPracticeView({
                   {currentDegree ? <span className="shrink-0 text-lg font-bold text-[var(--lv-accent)]" data-testid="voicing-loop-current-degree">{currentDegree}</span> : null}
                 </div>
                 <p className="sr-only" aria-live="polite" aria-atomic="true">{currentEvent?.chord.label ?? restLabel}</p>
+                <div className="mt-2 h-1 overflow-hidden rounded bg-[var(--lv-border)]" aria-hidden="true">
+                  <div ref={currentProgressRef} data-testid="voicing-loop-current-progress" className="h-full bg-[var(--lv-accent)]" style={{ width: `${Math.round((projection?.chordProgress ?? 0) * 100)}%` }} />
+                </div>
                 {displayMode === "learn" && currentVoicing ? (
                   <div className="mt-4 grid min-w-0 grid-cols-2 gap-3" data-testid="voicing-loop-current-voicing">
                     <HandVoicingSummary accidentalStyle={accidentalStyle} fingering={currentLeftFingering}
@@ -1321,11 +1345,11 @@ export function ProgressionVoicingPracticeView({
                 ) : null}
               </Surface>
               <div className="flex min-w-0 flex-col gap-2">
-                <Surface className="min-w-0 flex-1 p-3" data-testid="voicing-loop-next-panel">
+                <Surface className="min-w-0 p-3" data-testid="voicing-loop-next-panel">
                   <div className="flex items-center justify-between gap-2">
                     <p className="lv-section-kicker">{text.next}</p>
                     <span className="text-xs font-semibold text-[var(--lv-text-muted)]" data-testid="voicing-loop-next-wait">
-                      {language === "ja" ? `あと ${formatPracticeBeat(nextWaitBeats)}拍` : `In ${formatPracticeBeat(nextWaitBeats)} ${nextWaitBeats === 1 ? "beat" : "beats"}`}
+                      {remainingBeatsLabel(nextWaitBeats, language)}
                     </span>
                   </div>
                   <div className="mt-2 flex min-w-0 items-baseline gap-2">
@@ -1333,7 +1357,7 @@ export function ProgressionVoicingPracticeView({
                     {nextDegree ? <span className="shrink-0 text-sm font-bold text-[var(--lv-accent)]" data-testid="voicing-loop-next-degree">{nextDegree}</span> : null}
                   </div>
                   {displayMode === "learn" && nextVoicing ? (
-                    <div className={`mt-3 grid gap-2 ${nextHandTargets.left.length > 0 && nextHandTargets.right.length > 0 ? "grid-cols-2" : "grid-cols-1"}`} data-testid="voicing-loop-next-voicing">
+                    <div className={`mt-2 grid gap-2 ${nextHandTargets.left.length > 0 && nextHandTargets.right.length > 0 ? "grid-cols-2" : "grid-cols-1"}`} data-testid="voicing-loop-next-voicing">
                       <CompactHandVoicing accidentalStyle={accidentalStyle} fingering={nextLeftFingering} hand="left"
                         pitches={nextHandTargets.left} showFingering={showFingering} text={text} voicing={nextVoicing} />
                       <CompactHandVoicing accidentalStyle={accidentalStyle} fingering={nextRightFingering} hand="right"
@@ -1404,13 +1428,9 @@ export function ProgressionVoicingPracticeView({
                 <span
                   aria-hidden="true"
                   data-testid="voicing-loop-playhead"
-                  className="pointer-events-none absolute inset-y-1 left-0 z-10 w-0.5 bg-[var(--lv-accent)] shadow-[0_0_12px_rgba(59,224,206,0.75)] motion-reduce:transition-none"
-                  style={{
-                    transform: `translateX(${playheadX}px)`,
-                    transitionDuration: active ? `${visualStepMilliseconds}ms` : "0ms",
-                    transitionProperty: "transform",
-                    transitionTimingFunction: "linear",
-                  }}
+                  ref={playheadRef}
+                  className="pointer-events-none absolute inset-y-1 left-0 z-10 w-0.5 bg-[var(--lv-accent)] shadow-[0_0_12px_rgba(59,224,206,0.75)]"
+                  style={{ transform: `translateX(${playheadX}px)` }}
                 >
                   <span data-testid="voicing-loop-playhead-marker" className="absolute left-1/2 top-0 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--lv-accent)] shadow-[0_0_10px_rgba(59,224,206,0.85)]" />
                 </span>
@@ -1475,8 +1495,16 @@ export function ProgressionVoicingPracticeView({
           <ResolutionStatus resolution={currentResolution} language={language} />
 
           <Surface className="min-w-0 shrink-0 overflow-hidden p-2" data-testid="voicing-loop-detail">
-            <div className="flex min-w-0 shrink-0 items-center justify-between gap-3 pb-1">
+            <div className="flex min-w-0 shrink-0 flex-wrap items-center gap-x-4 gap-y-1 pb-1">
               <h3 className="text-[10px] font-bold tracking-[0.1em] text-[var(--lv-text-secondary)]">{text.keyboardTitle}</h3>
+              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-[var(--lv-text-secondary)]" data-testid="voicing-loop-keyboard-legend">
+                {[
+                  { label: language === "ja" ? "左手の目安" : "Left-hand guide", color: "border-amber-400 bg-amber-400/30" },
+                  { label: language === "ja" ? "右手の目安" : "Right-hand guide", color: "border-cyan-300 bg-cyan-300/30" },
+                  { label: language === "ja" ? "押鍵中" : "Held", color: "border-teal-100 bg-teal-300" },
+                  { label: language === "ja" ? "ペダル保持" : "Sustain", color: "border-sky-200 bg-sky-600" },
+                ].map(({ label, color }) => <span key={label} className="inline-flex items-center gap-1"><span aria-hidden="true" className={`h-2.5 w-2.5 border ${color}`} />{label}</span>)}
+              </div>
               {(
                 <Button
                   size="sm"
@@ -1505,6 +1533,7 @@ export function ProgressionVoicingPracticeView({
                 interactionMode="neutral-monitor"
                 fingerLabels={keyboardFingerLabels}
                 keyboardLayout="wide-88"
+                hideLegend
                 compactSummary
               />
             </div>
@@ -1650,7 +1679,7 @@ export function ProgressionVoicingPracticeView({
               </div>
             </div>
           </Surface>
-
+          <div aria-hidden="true" className="h-[clamp(1.25rem,3vh,2.5rem)] shrink-0" data-testid="voicing-loop-bottom-safe-area" />
         </>
       )}
     </div>
@@ -1821,11 +1850,11 @@ function HandVoicingSummary({
   return (
     <section className={`min-w-0 rounded-[var(--lv-radius-sm)] border p-2.5 ${handBorder}`} data-testid={`voicing-loop-${hand}-hand`}>
       <p className={`text-xs font-bold tracking-[0.12em] ${handText}`}>{hand === "left" ? text.leftHandDisplay : text.rightHandDisplay}</p>
-      <dl className="mt-2 space-y-2">
+      <dl className="mt-2 space-y-1.5">
         {showFingering ? (
-          <div className="min-w-0">
+          <div className="grid min-w-0 grid-cols-[4.5rem_minmax(0,1fr)] items-center gap-2">
             <dt className="text-[11px] font-bold tracking-[0.12em] text-[var(--lv-text-secondary)]">{text.finger}</dt>
-            <dd className="mt-1 flex min-w-0 flex-wrap items-baseline gap-2">
+            <dd className="flex min-w-0 flex-wrap items-baseline gap-2">
               <strong className={`min-w-0 break-words text-2xl leading-tight ${handText}`}>
                 {fingerSummary(fingering, prefix, pitches.length, text.fingeringUnavailable)}
               </strong>
@@ -1833,8 +1862,8 @@ function HandVoicingSummary({
             </dd>
           </div>
         ) : null}
-        <HandFact label={text.pitches} value={formatPitchList(pitches, accidentalStyle)} />
-        <HandFact label={text.chordTone} value={formatChordToneList(voicing, pitches)} />
+        <HandFact label={text.pitches} value={formatPitchList(pitches, accidentalStyle)} inline />
+        <HandFact label={text.chordTone} value={formatChordToneList(voicing, pitches)} inline />
       </dl>
     </section>
   );
@@ -1856,28 +1885,30 @@ function CompactHandVoicing({ voicing, accidentalStyle, fingering, hand, pitches
   return (
     <div className={`min-w-0 rounded-[var(--lv-radius-sm)] border px-3 py-2 ${handBorder}`} data-testid={`voicing-loop-next-${hand}-hand`}>
       <p className={`text-xs font-bold tracking-[0.1em] ${handText}`}>{hand === "left" ? text.leftHandDisplay : text.rightHandDisplay}</p>
-      <dl className="mt-2 space-y-2">
+      <dl className="mt-1 space-y-1">
         {showFingering ? (
-          <div><dt className="text-[10px] font-bold tracking-[0.1em] text-[var(--lv-text-secondary)]">{text.finger}</dt>
-            <dd className={`mt-0.5 break-words text-lg font-bold ${handText}`}>{fingerSummary(fingering, prefix, pitches.length, text.fingeringUnavailable)}</dd>
+          <div className="grid min-w-0 grid-cols-[3.5rem_minmax(0,1fr)] items-center gap-1">
+            <dt className="text-[10px] font-bold tracking-[0.1em] text-[var(--lv-text-secondary)]">{text.finger}</dt>
+            <dd className={`min-w-0 break-words text-lg font-bold ${handText}`}>{fingerSummary(fingering, prefix, pitches.length, text.fingeringUnavailable)}</dd>
           </div>
         ) : null}
-        <HandFact label={text.pitches} value={formatPitchList(pitches, accidentalStyle)} compact />
-        <HandFact label={text.chordTone} value={formatChordToneList(voicing, pitches)} compact />
+        <HandFact label={text.pitches} value={formatPitchList(pitches, accidentalStyle)} compact inline />
+        <HandFact label={text.chordTone} value={formatChordToneList(voicing, pitches)} compact inline />
       </dl>
     </div>
   );
 }
 
-function HandFact({ label, value, compact = false }: {
+function HandFact({ label, value, compact = false, inline = false }: {
   readonly label: string;
   readonly value: string;
   readonly compact?: boolean;
+  readonly inline?: boolean;
 }) {
   return (
-    <div className="min-w-0">
+    <div className={inline ? "grid min-w-0 grid-cols-[4.5rem_minmax(0,1fr)] items-center gap-2" : "min-w-0"}>
       <dt className="text-[11px] font-bold tracking-[0.12em] text-[var(--lv-text-secondary)]">{label}</dt>
-      <dd className={`mt-0.5 min-w-0 break-words text-[var(--lv-text-secondary)] ${compact ? "text-xs leading-4" : "text-sm leading-5"}`}>{value}</dd>
+      <dd className={`${inline ? "" : "mt-0.5"} min-w-0 break-words text-[var(--lv-text-secondary)] ${compact ? "text-xs leading-4" : "text-sm leading-5"}`}>{value}</dd>
     </div>
   );
 }
@@ -2013,14 +2044,15 @@ function ProgressionChoice({
   readonly onChoose: () => void;
   readonly practiceLabel: string;
 }) {
-  const facts = [candidate.key, `${candidate.bpm} BPM`].filter(Boolean).join(" · ");
+  const facts = [candidate.key, candidate.bpm === undefined ? undefined : `${candidate.bpm} BPM`].filter(Boolean).join(" · ");
+  const unavailable = candidate.unavailableReason ? unavailableReasonLabel(candidate.unavailableReason, language) : undefined;
   const chords = candidate.chordLabels.join(" → ") || (language === "ja" ? "休符のみ" : "Rests only");
   return (
     <button
       type="button"
       data-testid="voicing-loop-progression-choice"
-      className="w-full min-w-0 rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] bg-[var(--lv-bg-subtle)] p-3 text-left hover:border-[var(--lv-accent)] hover:bg-[var(--lv-surface-raised)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)]"
-      aria-label={`${candidate.title}. ${facts}. ${chords}. ${candidate.unavailableReason ? (language === "ja" ? "練習可能な長さを超えています" : "Exceeds practice length limit") : practiceLabel}`}
+      className="w-full min-w-0 rounded-[var(--lv-radius-md)] border border-[var(--lv-border)] bg-[var(--lv-bg-subtle)] p-3 text-left hover:border-[var(--lv-accent)] hover:bg-[var(--lv-surface-raised)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-75"
+      aria-label={`${candidate.title}. ${facts}. ${chords}. ${unavailable ?? practiceLabel}`}
       disabled={Boolean(candidate.unavailableReason)}
       onClick={onChoose}
     >
@@ -2029,11 +2061,39 @@ function ProgressionChoice({
         <span className="shrink-0 text-xs text-[var(--lv-text-secondary)]">{facts}</span>
       </span>
       <span className="mt-1 line-clamp-2 break-words text-xs leading-5 text-[var(--lv-text-secondary)]">{chords}</span>
-      <span className="mt-2 block text-xs font-semibold text-[var(--lv-accent)]">{candidate.unavailableReason
-        ? (language === "ja" ? "練習可能な長さを超えています。Vaultの保存データは保持されます。" : "Exceeds the supported practice length. Saved Vault data is retained.")
-        : practiceLabel}</span>
+      <span className={`mt-2 block text-xs font-semibold ${unavailable ? "text-amber-200" : "text-[var(--lv-accent)]"}`}>{unavailable ?? practiceLabel}</span>
     </button>
   );
+}
+
+function unavailableReasonLabel(reason: NonNullable<VoicingLoopVaultCandidate["unavailableReason"]>, language: AppLanguage): string {
+  const ja: Record<NonNullable<VoicingLoopVaultCandidate["unavailableReason"]>, string> = {
+    "practice-capacity": "練習グループ数が256を超えています。Vaultの保存データは保持されます。",
+    "resource-budget": "再生時間・拍数・イベント数の安全上限を超えています。Vaultの保存データは保持されます。",
+    "unsupported-meter": "この拍子はVoicing Loopで練習できません。",
+    "invalid-bpm": "BPMが未設定か対応範囲外です。",
+    "invalid-key": "キー情報を練習用に解釈できません。",
+    "empty-progression": "練習できるコードがありません。",
+    "invalid-chord": "対応していないコード構造が含まれます。",
+    "invalid-timing": "進行の時間配置を練習用に解釈できません。",
+    "invalid-reference": "Vaultの参照情報を確認できません。",
+    "invalid-selection": "練習方法を選択できません。",
+    "source-unavailable": "保存済み進行を読み込めません。",
+  };
+  const en: typeof ja = {
+    "practice-capacity": "More than 256 practice groups. The saved Vault progression is retained.",
+    "resource-budget": "Playback duration, beats, or events exceed the safety budget. The saved Vault progression is retained.",
+    "unsupported-meter": "This meter is not supported in Voicing Loop.",
+    "invalid-bpm": "BPM is missing or outside the supported range.",
+    "invalid-key": "The key metadata cannot be used for practice.",
+    "empty-progression": "No playable chords are available.",
+    "invalid-chord": "An unsupported chord structure is present.",
+    "invalid-timing": "The progression timing cannot be used for practice.",
+    "invalid-reference": "The Vault reference is unavailable.",
+    "invalid-selection": "A practice mode cannot be selected.",
+    "source-unavailable": "The saved progression could not be read.",
+  };
+  return (language === "ja" ? ja : en)[reason];
 }
 
 function sameReferences(

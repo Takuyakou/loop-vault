@@ -32,6 +32,7 @@ interface PracticeKeyboardProps {
   fingerLabels?: ReadonlyMap<number, string>;
   keyboardLayout?: "default" | "wide-61" | "wide-88";
   compactSummary?: boolean;
+  hideLegend?: boolean;
 }
 
 const copy = {
@@ -70,6 +71,7 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
   fingerLabels,
   keyboardLayout = "default",
   compactSummary = false,
+  hideLegend = false,
 }: PracticeKeyboardProps) {
   const liveNoteState = useStore(defaultLiveMidiStore, (state) => state.notes);
   const currentHeldNotes = useMemo(() => heldNotes(liveNoteState), [liveNoteState]);
@@ -119,6 +121,7 @@ export const PracticeKeyboard = memo(function PracticeKeyboard({
         centerWhenFitted={centerWhenFitted}
         fingerLabels={fingerLabels}
         layout={keyboardLayout}
+        hideLegend={hideLegend}
       />
       {level === 1 && referenceBassNote !== undefined ? (
         <p className={`${compactWideLayout ? "mt-1" : "mt-2"} text-xs text-[var(--lv-text-muted)]`} data-testid="slash-bass-reference">

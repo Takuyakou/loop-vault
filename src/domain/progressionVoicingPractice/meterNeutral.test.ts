@@ -60,28 +60,31 @@ describe("P8.2 meter-neutral Voicing Loop", () => {
       practiceGroupBeats: 4,
     });
   });
-  it("enforces the 128 PracticeGroup and event budgets independently of source bars", () => {
-    const tooLong = block(1, 1201);
-    const duration = buildProgressionVoicingPracticeSnapshot({
-      sourceReference: { ideaId: "public-idea", blockId: tooLong.id },
-      block: tooLong, selection: "source-midi",
+  it.each([128, 129, 255, 256])("accepts %i PracticeGroups without changing source beats", (groups) => {
+    const source = block(1, 1);
+    source.chords[0]!.durationBeats = groups * 4;
+    const result = buildProgressionVoicingPracticeSnapshot({
+      sourceReference: { ideaId: "public-idea", blockId: source.id }, block: source, selection: "source-midi",
     });
-    expect(duration).toMatchObject({ ok: false, error: { code: "resource-budget" } });
-    const withinGroups = block(1, 512);
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.snapshot).toMatchObject({ lengthBeats: groups * 4, practiceGroupBeats: 4 });
+  });
+  it("separates 257 PracticeGroups from independent source/event/duration budgets", () => {
+    const outside = block(1, 1);
+    outside.chords[0]!.durationBeats = 257 * 4;
     expect(buildProgressionVoicingPracticeSnapshot({
-      sourceReference: { ideaId: "public-idea", blockId: withinGroups.id },
-      block: withinGroups, selection: "source-midi",
-    }).ok).toBe(true);
-    const outsideGroups = block(1, 513);
+      sourceReference: { ideaId: "public-idea", blockId: outside.id }, block: outside, selection: "source-midi",
+    })).toMatchObject({ ok: false, error: { code: "practice-capacity" } });
+    const duration = block(1, 1);
+    duration.bpm = 30;
+    duration.chords[0]!.durationBeats = 255 * 4;
     expect(buildProgressionVoicingPracticeSnapshot({
-      sourceReference: { ideaId: "public-idea", blockId: outsideGroups.id },
-      block: outsideGroups, selection: "source-midi",
+      sourceReference: { ideaId: "public-idea", blockId: duration.id }, block: duration, selection: "source-midi",
     })).toMatchObject({ ok: false, error: { code: "resource-budget" } });
     const tooMany = block(1, 2401);
     tooMany.bpm = 240;
     expect(buildProgressionVoicingPracticeSnapshot({
-      sourceReference: { ideaId: "public-idea", blockId: tooMany.id },
-      block: tooMany, selection: "source-midi",
+      sourceReference: { ideaId: "public-idea", blockId: tooMany.id }, block: tooMany, selection: "source-midi",
     })).toMatchObject({ ok: false, error: { code: "resource-budget" } });
   });
   it("keeps equal musical duration across 1/4 and 4/4 representations", () => {

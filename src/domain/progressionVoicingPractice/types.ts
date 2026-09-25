@@ -157,7 +157,8 @@ export type ProgressionPracticeSnapshotErrorCode =
   | "empty-progression"
   | "invalid-chord"
   | "invalid-timing"
-  | "resource-budget";
+  | "resource-budget"
+  | "practice-capacity";
 
 export interface ProgressionPracticeSnapshotError {
   readonly code: ProgressionPracticeSnapshotErrorCode;

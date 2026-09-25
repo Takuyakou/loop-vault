@@ -1,18 +1,18 @@
 import { normalizeQuery } from "../harmony/degrees";
 import type { SongIdea } from "../types";
 import { buildProgressionVoicingPracticeHandoffFromVault } from "./handoff";
-import type { ProgressionPracticeSourceReference } from "./types";
+import type { ProgressionPracticeSnapshotErrorCode, ProgressionPracticeSourceReference } from "./types";
 
 export interface VoicingLoopVaultCandidate {
   readonly id: string;
   readonly sourceReference: ProgressionPracticeSourceReference;
   readonly title: string;
   readonly key?: string;
-  readonly bpm: number;
+  readonly bpm?: number;
   readonly chordLabels: readonly string[];
   readonly capturedAt: string;
   /** Stored safely in Vault, but outside the bounded Voicing Loop practice capacity. */
-  readonly unavailableReason?: "resource-budget";
+  readonly unavailableReason?: ProgressionPracticeSnapshotErrorCode | "source-unavailable";
 }
 
 export function buildVoicingLoopVaultCandidates(
@@ -25,19 +25,28 @@ export function buildVoicingLoopVaultCandidates(
       const sourceReference = Object.freeze({ ideaId: idea.id, blockId: block.id });
       const result = buildProgressionVoicingPracticeHandoffFromVault([idea], sourceReference);
       if (!result.ok) {
-        if (result.error.cause === "resource-budget") {
-          candidates.push(Object.freeze({
-            id: voicingLoopSourceId(sourceReference), sourceReference,
-            title: normalizedTitle(idea.title, fallbackTitle),
-            ...(isFiniteBpm(block.bpm ?? idea.bpm) ? { bpm: (block.bpm ?? idea.bpm)! } : { bpm: 0 }),
-            chordLabels: Object.freeze(block.chords.map(({ chord }) => chord.label)),
-            capturedAt: block.capturedAt, unavailableReason: "resource-budget" as const,
-          }));
-        }
+        const bpm = block.bpm ?? idea.bpm;
+        candidates.push(Object.freeze({
+          id: voicingLoopSourceId(sourceReference), sourceReference,
+          title: normalizedTitle(idea.title, fallbackTitle),
+          ...(isFiniteBpm(bpm) ? { bpm } : {}),
+          chordLabels: Object.freeze(block.chords.map(({ chord }) => chord.label)),
+          capturedAt: block.capturedAt,
+          unavailableReason: result.error.code === "invalid-source"
+            ? result.error.cause ?? "invalid-reference" : result.error.code,
+        }));
         continue;
       }
       const snapshot = result.handoff.snapshots[result.handoff.initialSelection];
-      if (!snapshot) continue;
+      if (!snapshot) {
+        candidates.push(Object.freeze({
+          id: voicingLoopSourceId(sourceReference), sourceReference,
+          title: normalizedTitle(idea.title, fallbackTitle),
+          chordLabels: Object.freeze(block.chords.map(({ chord }) => chord.label)),
+          capturedAt: block.capturedAt, unavailableReason: "invalid-selection" as const,
+        }));
+        continue;
+      }
       candidates.push(Object.freeze({
         id: voicingLoopSourceId(sourceReference),
         sourceReference,
