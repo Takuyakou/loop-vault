@@ -1183,8 +1183,9 @@ export function ProgressionVoicingPracticeView({
       if (event.defaultPrevented || event.isComposing || !progressionLoaded || !snapshot || bulkSourceOpen || fingeringEditorOpen) return;
       const target = event.target;
       if (target === timelineViewportRef.current && ["ArrowLeft", "ArrowRight", "PageUp", "PageDown", "Home", "End"].includes(event.key)) return;
-      if (target instanceof Element && target.closest("button, [role='button'], input, select, textarea, [contenteditable], [role='textbox'], [role='dialog']")) return;
+      if (target instanceof Element && target.closest("input, select, textarea, [contenteditable], [role='textbox'], [role='dialog']")) return;
       const key = event.key.toLowerCase();
+      if (key === " " && target instanceof Element && target.closest("button, [role='button']")) return;
       if (![" ", "arrowleft", "arrowright", "home", "end", "f", "m", "r", "escape"].includes(key)) return;
       event.preventDefault();
       if (key === " ") {
@@ -2098,12 +2099,12 @@ export const NextMovePreview = memo(function NextMovePreview({ moves, loopWrap, 
                 const strength = strongest === "LARGE" ? "border-current bg-current/15 font-extrabold"
                   : strongest === "MEDIUM" ? "border-current/70 bg-current/10 font-bold"
                     : strongest === "SMALL" ? "border-current/40 font-semibold"
-                      : strongest === "KEEP" ? "border-current/50 bg-current/[0.04] font-semibold" : "border-dashed border-current/20 opacity-35";
+                      : strongest === "KEEP" ? "border-current/50 bg-current/[0.04] font-semibold" : "border-dashed border-current/20";
                 return <div key={id} role="listitem" data-testid="voicing-loop-finger-slot" data-finger={id} data-strength={strongest}
                   className={`flex h-[43px] min-w-0 flex-col items-center justify-center overflow-hidden rounded border leading-none ${slot.hand === "left" ? "text-amber-200" : "text-cyan-200"} ${strength}`}
                   aria-label={`${id}: ${description}${slot.moves.some((move) => move.estimated) ? ` (${language === "ja" ? "推定" : "estimated"})` : ""}`}
                   title={`${id}: ${description}`}>
-                  <span className="text-[10px] font-bold">{id}</span>
+                  <span className={`text-[10px] font-bold ${strongest === "EMPTY" ? "text-[var(--lv-text-muted)]" : ""}`}>{id}</span>
                   {strongest === "KEEP" ? (
                     <span aria-hidden="true" className="my-1 h-1 w-[70%] rounded-full bg-current/70" data-testid="voicing-loop-keep-band" />
                   ) : strongest !== "EMPTY" ? <span className="mt-0.5 w-full truncate px-0.5 text-center text-[10px]">{action}</span> : null}

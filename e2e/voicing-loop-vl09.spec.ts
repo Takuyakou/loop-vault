@@ -41,7 +41,7 @@ test("VL-09 keeps major region geometry fixed across chord content and viewport 
     await page.setViewportSize({ width, height });
     const workspace = await openVl09(page);
     await page.evaluate((value) => { document.documentElement.style.zoom = String(value); }, zoom);
-    await workspace.getByTestId("voicing-loop-current-panel").focus();
+    await workspace.getByTestId("voicing-loop-current-panel").locator("[tabindex='0']").first().focus();
     const first = await majorGeometry(page);
     if (width === 1920 && zoom === 1) await page.screenshot({ path: ".local-evaluation/vl09/normal-maximized.png", fullPage: true });
     if (width === 1280 && zoom === 1) await page.screenshot({ path: ".local-evaluation/vl09/medium-window.png", fullPage: true });
