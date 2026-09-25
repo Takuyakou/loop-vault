@@ -1,0 +1,4517 @@
+{
+  "fixtureVersion": "extended-v1-canonical-v1",
+  "sourceKind": "authored-synthetic",
+  "normalization": "hand-reviewed contract, no implementation-derived expected output",
+  "fixtures": [
+    {
+      "fixtureId": "EV1-001",
+      "category": "simple",
+      "disposition": "positive",
+      "rawText": "C",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "C"
+      ],
+      "expectedBars": [
+        [
+          "C"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "C"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 1,
+        "eventSequence": [
+          "attack:C"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S01"
+      ]
+    },
+    {
+      "fixtureId": "EV1-002",
+      "category": "simple",
+      "disposition": "positive",
+      "rawText": "Dm",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "Dm"
+      ],
+      "expectedBars": [
+        [
+          "Dm"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Dm"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 1,
+        "eventSequence": [
+          "attack:Dm"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S01"
+      ]
+    },
+    {
+      "fixtureId": "EV1-003",
+      "category": "simple",
+      "disposition": "positive",
+      "rawText": "G7",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "G7"
+      ],
+      "expectedBars": [
+        [
+          "G7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "G7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 1,
+        "eventSequence": [
+          "attack:G7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S01"
+      ]
+    },
+    {
+      "fixtureId": "EV1-004",
+      "category": "simple",
+      "disposition": "positive",
+      "rawText": "Asus4",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "Asus4"
+      ],
+      "expectedBars": [
+        [
+          "Asus4"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Asus4"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 1,
+        "eventSequence": [
+          "attack:Asus4"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S01"
+      ]
+    },
+    {
+      "fixtureId": "EV1-005",
+      "category": "simple",
+      "disposition": "positive",
+      "rawText": "Dadd9",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "Dadd9"
+      ],
+      "expectedBars": [
+        [
+          "Dadd9"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Dadd9"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 1,
+        "eventSequence": [
+          "attack:Dadd9"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S01"
+      ]
+    },
+    {
+      "fixtureId": "EV1-006",
+      "category": "bars",
+      "disposition": "positive",
+      "rawText": "C|Ebm|A7",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "C",
+        "Ebm",
+        "A7"
+      ],
+      "expectedBars": [
+        [
+          "C"
+        ],
+        [
+          "Ebm"
+        ],
+        [
+          "A7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "C"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Ebm"
+        },
+        {
+          "bar": 3,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "A7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 3,
+        "eventSequence": [
+          "attack:C",
+          "attack:Ebm",
+          "attack:A7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S01"
+      ]
+    },
+    {
+      "fixtureId": "EV1-007",
+      "category": "bars",
+      "disposition": "positive",
+      "rawText": "| Dm7 | G7 |",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "Dm7",
+        "G7"
+      ],
+      "expectedBars": [
+        [
+          "Dm7"
+        ],
+        [
+          "G7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Dm7"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "G7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:Dm7",
+          "attack:G7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S01",
+        "S15"
+      ]
+    },
+    {
+      "fixtureId": "EV1-008",
+      "category": "bars",
+      "disposition": "positive",
+      "rawText": "  |F#dim|C7|  ",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "F#dim",
+        "C7"
+      ],
+      "expectedBars": [
+        [
+          "F#dim"
+        ],
+        [
+          "C7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "F#dim"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "C7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:F#dim",
+          "attack:C7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S01",
+        "S15"
+      ]
+    },
+    {
+      "fixtureId": "EV1-009",
+      "category": "bars",
+      "disposition": "positive",
+      "rawText": "Am|D7\nGm|C7",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "Am",
+        "D7",
+        "Gm",
+        "C7"
+      ],
+      "expectedBars": [
+        [
+          "Am"
+        ],
+        [
+          "D7"
+        ],
+        [
+          "Gm"
+        ],
+        [
+          "C7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Am"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "D7"
+        },
+        {
+          "bar": 3,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Gm"
+        },
+        {
+          "bar": 4,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "C7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 4,
+        "eventSequence": [
+          "attack:Am",
+          "attack:D7",
+          "attack:Gm",
+          "attack:C7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S01",
+        "S16"
+      ]
+    },
+    {
+      "fixtureId": "EV1-010",
+      "category": "bars",
+      "disposition": "positive",
+      "rawText": "C|D7|Ebm|F7|",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "C",
+        "D7",
+        "Ebm",
+        "F7"
+      ],
+      "expectedBars": [
+        [
+          "C"
+        ],
+        [
+          "D7"
+        ],
+        [
+          "Ebm"
+        ],
+        [
+          "F7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "C"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "D7"
+        },
+        {
+          "bar": 3,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Ebm"
+        },
+        {
+          "bar": 4,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "F7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 4,
+        "eventSequence": [
+          "attack:C",
+          "attack:D7",
+          "attack:Ebm",
+          "attack:F7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S01",
+        "S15"
+      ]
+    },
+    {
+      "fixtureId": "EV1-011",
+      "category": "bars",
+      "disposition": "positive",
+      "rawText": "C｜Dm7｜G7",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "C",
+        "Dm7",
+        "G7"
+      ],
+      "expectedBars": [
+        [
+          "C"
+        ],
+        [
+          "Dm7"
+        ],
+        [
+          "G7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "C"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Dm7"
+        },
+        {
+          "bar": 3,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "G7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 3,
+        "eventSequence": [
+          "attack:C",
+          "attack:Dm7",
+          "attack:G7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S02"
+      ]
+    },
+    {
+      "fixtureId": "EV1-012",
+      "category": "bars",
+      "disposition": "positive",
+      "rawText": "F7\r\nBbmaj7",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "F7",
+        "Bbmaj7"
+      ],
+      "expectedBars": [
+        [
+          "F7"
+        ],
+        [
+          "Bbmaj7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "F7"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Bbmaj7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:F7",
+          "attack:Bbmaj7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S16"
+      ]
+    },
+    {
+      "fixtureId": "EV1-013",
+      "category": "multi-event",
+      "disposition": "positive",
+      "rawText": "C Dm|G7 Am",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "C",
+        "Dm",
+        "G7",
+        "Am"
+      ],
+      "expectedBars": [
+        [
+          "C",
+          "Dm"
+        ],
+        [
+          "G7",
+          "Am"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 2.0,
+          "kind": "attack",
+          "chord": "C"
+        },
+        {
+          "bar": 1,
+          "slot": 2,
+          "startBeat": 3.0,
+          "durationBeats": 2.0,
+          "kind": "attack",
+          "chord": "Dm"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 2.0,
+          "kind": "attack",
+          "chord": "G7"
+        },
+        {
+          "bar": 2,
+          "slot": 2,
+          "startBeat": 3.0,
+          "durationBeats": 2.0,
+          "kind": "attack",
+          "chord": "Am"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:C",
+          "attack:Dm",
+          "attack:G7",
+          "attack:Am"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S01"
+      ]
+    },
+    {
+      "fixtureId": "EV1-014",
+      "category": "multi-event",
+      "disposition": "positive",
+      "rawText": "C Dm Em F",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "C",
+        "Dm",
+        "Em",
+        "F"
+      ],
+      "expectedBars": [
+        [
+          "C"
+        ],
+        [
+          "Dm"
+        ],
+        [
+          "Em"
+        ],
+        [
+          "F"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "C"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Dm"
+        },
+        {
+          "bar": 3,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Em"
+        },
+        {
+          "bar": 4,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "F"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 4,
+        "eventSequence": [
+          "attack:C",
+          "attack:Dm",
+          "attack:Em",
+          "attack:F"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S01"
+      ]
+    },
+    {
+      "fixtureId": "EV1-015",
+      "category": "multi-event",
+      "disposition": "positive",
+      "rawText": "C Dm Em F|G7 Am Bb C7",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "C",
+        "Dm",
+        "Em",
+        "F",
+        "G7",
+        "Am",
+        "Bb",
+        "C7"
+      ],
+      "expectedBars": [
+        [
+          "C",
+          "Dm",
+          "Em",
+          "F"
+        ],
+        [
+          "G7",
+          "Am",
+          "Bb",
+          "C7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 1.0,
+          "kind": "attack",
+          "chord": "C"
+        },
+        {
+          "bar": 1,
+          "slot": 2,
+          "startBeat": 2.0,
+          "durationBeats": 1.0,
+          "kind": "attack",
+          "chord": "Dm"
+        },
+        {
+          "bar": 1,
+          "slot": 3,
+          "startBeat": 3.0,
+          "durationBeats": 1.0,
+          "kind": "attack",
+          "chord": "Em"
+        },
+        {
+          "bar": 1,
+          "slot": 4,
+          "startBeat": 4.0,
+          "durationBeats": 1.0,
+          "kind": "attack",
+          "chord": "F"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 1.0,
+          "kind": "attack",
+          "chord": "G7"
+        },
+        {
+          "bar": 2,
+          "slot": 2,
+          "startBeat": 2.0,
+          "durationBeats": 1.0,
+          "kind": "attack",
+          "chord": "Am"
+        },
+        {
+          "bar": 2,
+          "slot": 3,
+          "startBeat": 3.0,
+          "durationBeats": 1.0,
+          "kind": "attack",
+          "chord": "Bb"
+        },
+        {
+          "bar": 2,
+          "slot": 4,
+          "startBeat": 4.0,
+          "durationBeats": 1.0,
+          "kind": "attack",
+          "chord": "C7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:C",
+          "attack:Dm",
+          "attack:Em",
+          "attack:F",
+          "attack:G7",
+          "attack:Am",
+          "attack:Bb",
+          "attack:C7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S01"
+      ]
+    },
+    {
+      "fixtureId": "EV1-016",
+      "category": "multi-event",
+      "disposition": "positive",
+      "rawText": "F#m7  B7 | Emaj7",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "F#m7",
+        "B7",
+        "Emaj7"
+      ],
+      "expectedBars": [
+        [
+          "F#m7",
+          "B7"
+        ],
+        [
+          "Emaj7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 2.0,
+          "kind": "attack",
+          "chord": "F#m7"
+        },
+        {
+          "bar": 1,
+          "slot": 2,
+          "startBeat": 3.0,
+          "durationBeats": 2.0,
+          "kind": "attack",
+          "chord": "B7"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Emaj7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:F#m7",
+          "attack:B7",
+          "attack:Emaj7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S01"
+      ]
+    },
+    {
+      "fixtureId": "EV1-017",
+      "category": "multi-event",
+      "disposition": "positive",
+      "rawText": "|C Dm|G7 C7|",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "C",
+        "Dm",
+        "G7",
+        "C7"
+      ],
+      "expectedBars": [
+        [
+          "C",
+          "Dm"
+        ],
+        [
+          "G7",
+          "C7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 2.0,
+          "kind": "attack",
+          "chord": "C"
+        },
+        {
+          "bar": 1,
+          "slot": 2,
+          "startBeat": 3.0,
+          "durationBeats": 2.0,
+          "kind": "attack",
+          "chord": "Dm"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 2.0,
+          "kind": "attack",
+          "chord": "G7"
+        },
+        {
+          "bar": 2,
+          "slot": 2,
+          "startBeat": 3.0,
+          "durationBeats": 2.0,
+          "kind": "attack",
+          "chord": "C7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:C",
+          "attack:Dm",
+          "attack:G7",
+          "attack:C7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S01",
+        "S15"
+      ]
+    },
+    {
+      "fixtureId": "EV1-018",
+      "category": "compact-adjacent",
+      "disposition": "positive",
+      "rawText": "Cm7F7|Bbmaj7",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "Cm7",
+        "F7",
+        "Bbmaj7"
+      ],
+      "expectedBars": [
+        [
+          "Cm7",
+          "F7"
+        ],
+        [
+          "Bbmaj7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 2.0,
+          "kind": "attack",
+          "chord": "Cm7"
+        },
+        {
+          "bar": 1,
+          "slot": 2,
+          "startBeat": 3.0,
+          "durationBeats": 2.0,
+          "kind": "attack",
+          "chord": "F7"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Bbmaj7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:Cm7",
+          "attack:F7",
+          "attack:Bbmaj7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S09"
+      ]
+    },
+    {
+      "fixtureId": "EV1-019",
+      "category": "compact-adjacent",
+      "disposition": "positive",
+      "rawText": "F#dimG7|C",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "F#dim",
+        "G7",
+        "C"
+      ],
+      "expectedBars": [
+        [
+          "F#dim",
+          "G7"
+        ],
+        [
+          "C"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 2.0,
+          "kind": "attack",
+          "chord": "F#dim"
+        },
+        {
+          "bar": 1,
+          "slot": 2,
+          "startBeat": 3.0,
+          "durationBeats": 2.0,
+          "kind": "attack",
+          "chord": "G7"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "C"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:F#dim",
+          "attack:G7",
+          "attack:C"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S09"
+      ]
+    },
+    {
+      "fixtureId": "EV1-020",
+      "category": "compact-adjacent",
+      "disposition": "positive",
+      "rawText": "Ebm7Ab7|Dbmaj7",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "Ebm7",
+        "Ab7",
+        "Dbmaj7"
+      ],
+      "expectedBars": [
+        [
+          "Ebm7",
+          "Ab7"
+        ],
+        [
+          "Dbmaj7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 2.0,
+          "kind": "attack",
+          "chord": "Ebm7"
+        },
+        {
+          "bar": 1,
+          "slot": 2,
+          "startBeat": 3.0,
+          "durationBeats": 2.0,
+          "kind": "attack",
+          "chord": "Ab7"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Dbmaj7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:Ebm7",
+          "attack:Ab7",
+          "attack:Dbmaj7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S09"
+      ]
+    },
+    {
+      "fixtureId": "EV1-021",
+      "category": "compact-adjacent",
+      "disposition": "positive",
+      "rawText": "Am7D7|Gmaj7",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "Am7",
+        "D7",
+        "Gmaj7"
+      ],
+      "expectedBars": [
+        [
+          "Am7",
+          "D7"
+        ],
+        [
+          "Gmaj7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 2.0,
+          "kind": "attack",
+          "chord": "Am7"
+        },
+        {
+          "bar": 1,
+          "slot": 2,
+          "startBeat": 3.0,
+          "durationBeats": 2.0,
+          "kind": "attack",
+          "chord": "D7"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Gmaj7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:Am7",
+          "attack:D7",
+          "attack:Gmaj7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S09"
+      ]
+    },
+    {
+      "fixtureId": "EV1-022",
+      "category": "compact-adjacent",
+      "disposition": "positive",
+      "rawText": "DmG7CAm",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "Dm",
+        "G7",
+        "C",
+        "Am"
+      ],
+      "expectedBars": [
+        [
+          "Dm",
+          "G7",
+          "C",
+          "Am"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 1.0,
+          "kind": "attack",
+          "chord": "Dm"
+        },
+        {
+          "bar": 1,
+          "slot": 2,
+          "startBeat": 2.0,
+          "durationBeats": 1.0,
+          "kind": "attack",
+          "chord": "G7"
+        },
+        {
+          "bar": 1,
+          "slot": 3,
+          "startBeat": 3.0,
+          "durationBeats": 1.0,
+          "kind": "attack",
+          "chord": "C"
+        },
+        {
+          "bar": 1,
+          "slot": 4,
+          "startBeat": 4.0,
+          "durationBeats": 1.0,
+          "kind": "attack",
+          "chord": "Am"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 1,
+        "eventSequence": [
+          "attack:Dm",
+          "attack:G7",
+          "attack:C",
+          "attack:Am"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S09"
+      ]
+    },
+    {
+      "fixtureId": "EV1-023",
+      "category": "internal-whitespace",
+      "disposition": "positive",
+      "rawText": "F M7|G7",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "F M7",
+        "G7"
+      ],
+      "expectedBars": [
+        [
+          "F M7"
+        ],
+        [
+          "G7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Fmaj7"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "G7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:Fmaj7",
+          "attack:G7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S10"
+      ]
+    },
+    {
+      "fixtureId": "EV1-024",
+      "category": "internal-whitespace",
+      "disposition": "positive",
+      "rawText": "A m7|D7",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "A m7",
+        "D7"
+      ],
+      "expectedBars": [
+        [
+          "A m7"
+        ],
+        [
+          "D7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Am7"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "D7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:Am7",
+          "attack:D7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S10"
+      ]
+    },
+    {
+      "fixtureId": "EV1-025",
+      "category": "internal-whitespace",
+      "disposition": "positive",
+      "rawText": "C add9|F",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "C add9",
+        "F"
+      ],
+      "expectedBars": [
+        [
+          "C add9"
+        ],
+        [
+          "F"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Cadd9"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "F"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:Cadd9",
+          "attack:F"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S10"
+      ]
+    },
+    {
+      "fixtureId": "EV1-026",
+      "category": "internal-whitespace",
+      "disposition": "positive",
+      "rawText": "Bb  m7 | Eb7",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "Bb  m7",
+        "Eb7"
+      ],
+      "expectedBars": [
+        [
+          "Bb  m7"
+        ],
+        [
+          "Eb7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Bbm7"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Eb7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:Bbm7",
+          "attack:Eb7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S10"
+      ]
+    },
+    {
+      "fixtureId": "EV1-027",
+      "category": "slash-bass",
+      "disposition": "positive",
+      "rawText": "C/E|F",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "C/E",
+        "F"
+      ],
+      "expectedBars": [
+        [
+          "C/E"
+        ],
+        [
+          "F"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "C/E"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "F"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:C/E",
+          "attack:F"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S07"
+      ]
+    },
+    {
+      "fixtureId": "EV1-028",
+      "category": "slash-bass",
+      "disposition": "positive",
+      "rawText": "G7/B|Cm",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "G7/B",
+        "Cm"
+      ],
+      "expectedBars": [
+        [
+          "G7/B"
+        ],
+        [
+          "Cm"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "G7/B"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Cm"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:G7/B",
+          "attack:Cm"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S07"
+      ]
+    },
+    {
+      "fixtureId": "EV1-029",
+      "category": "slash-bass",
+      "disposition": "positive",
+      "rawText": "Bb6/9/F|Eb",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "Bb6/9/F",
+        "Eb"
+      ],
+      "expectedBars": [
+        [
+          "Bb6/9/F"
+        ],
+        [
+          "Eb"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Bb6/9/F"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Eb"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:Bb6/9/F",
+          "attack:Eb"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S07"
+      ]
+    },
+    {
+      "fixtureId": "EV1-030",
+      "category": "slash-bass",
+      "disposition": "positive",
+      "rawText": "C6/9|F",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "C6/9",
+        "F"
+      ],
+      "expectedBars": [
+        [
+          "C6/9"
+        ],
+        [
+          "F"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "C6/9"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "F"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:C6/9",
+          "attack:F"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S07"
+      ]
+    },
+    {
+      "fixtureId": "EV1-031",
+      "category": "slash-bass",
+      "disposition": "positive",
+      "rawText": "D7/F# Gm",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "D7/F#",
+        "Gm"
+      ],
+      "expectedBars": [
+        [
+          "D7/F#"
+        ],
+        [
+          "Gm"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "D7/F#"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Gm"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:D7/F#",
+          "attack:Gm"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S07"
+      ]
+    },
+    {
+      "fixtureId": "EV1-032",
+      "category": "slash-bass",
+      "disposition": "positive",
+      "rawText": "A7onC#|Dm",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "A7onC#",
+        "Dm"
+      ],
+      "expectedBars": [
+        [
+          "A7onC#"
+        ],
+        [
+          "Dm"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "A7/C#"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Dm"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:A7/C#",
+          "attack:Dm"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S07",
+        "S08"
+      ]
+    },
+    {
+      "fixtureId": "EV1-033",
+      "category": "slash-bass",
+      "disposition": "positive",
+      "rawText": "C／E|F",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "C／E",
+        "F"
+      ],
+      "expectedBars": [
+        [
+          "C／E"
+        ],
+        [
+          "F"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "C/E"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "F"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:C/E",
+          "attack:F"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S07",
+        "S08"
+      ]
+    },
+    {
+      "fixtureId": "EV1-034",
+      "category": "repeat",
+      "disposition": "positive",
+      "rawText": "C %|Dm",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "C",
+        "%",
+        "Dm"
+      ],
+      "expectedBars": [
+        [
+          "C",
+          "%"
+        ],
+        [
+          "Dm"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 2.0,
+          "kind": "attack",
+          "chord": "C"
+        },
+        {
+          "bar": 1,
+          "slot": 2,
+          "startBeat": 3.0,
+          "durationBeats": 2.0,
+          "kind": "reattack",
+          "chord": "C"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Dm"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:C",
+          "reattack:C",
+          "attack:Dm"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S03"
+      ]
+    },
+    {
+      "fixtureId": "EV1-035",
+      "category": "repeat",
+      "disposition": "positive",
+      "rawText": "F7|%|Bb",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "F7",
+        "%",
+        "Bb"
+      ],
+      "expectedBars": [
+        [
+          "F7"
+        ],
+        [
+          "%"
+        ],
+        [
+          "Bb"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "F7"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "reattack",
+          "chord": "F7"
+        },
+        {
+          "bar": 3,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Bb"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 3,
+        "eventSequence": [
+          "attack:F7",
+          "reattack:F7",
+          "attack:Bb"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S03"
+      ]
+    },
+    {
+      "fixtureId": "EV1-036",
+      "category": "repeat",
+      "disposition": "positive",
+      "rawText": "Am % Dm %",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "Am",
+        "%",
+        "Dm",
+        "%"
+      ],
+      "expectedBars": [
+        [
+          "Am",
+          "%",
+          "Dm",
+          "%"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 1.0,
+          "kind": "attack",
+          "chord": "Am"
+        },
+        {
+          "bar": 1,
+          "slot": 2,
+          "startBeat": 2.0,
+          "durationBeats": 1.0,
+          "kind": "reattack",
+          "chord": "Am"
+        },
+        {
+          "bar": 1,
+          "slot": 3,
+          "startBeat": 3.0,
+          "durationBeats": 1.0,
+          "kind": "attack",
+          "chord": "Dm"
+        },
+        {
+          "bar": 1,
+          "slot": 4,
+          "startBeat": 4.0,
+          "durationBeats": 1.0,
+          "kind": "reattack",
+          "chord": "Dm"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 1,
+        "eventSequence": [
+          "attack:Am",
+          "reattack:Am",
+          "attack:Dm",
+          "reattack:Dm"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S03"
+      ]
+    },
+    {
+      "fixtureId": "EV1-037",
+      "category": "repeat",
+      "disposition": "positive",
+      "rawText": "G7%|C",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "G7",
+        "%",
+        "C"
+      ],
+      "expectedBars": [
+        [
+          "G7",
+          "%"
+        ],
+        [
+          "C"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 2.0,
+          "kind": "attack",
+          "chord": "G7"
+        },
+        {
+          "bar": 1,
+          "slot": 2,
+          "startBeat": 3.0,
+          "durationBeats": 2.0,
+          "kind": "reattack",
+          "chord": "G7"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "C"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:G7",
+          "reattack:G7",
+          "attack:C"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S03",
+        "S09"
+      ]
+    },
+    {
+      "fixtureId": "EV1-038",
+      "category": "rest",
+      "disposition": "positive",
+      "rawText": "C _|G7",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "C",
+        "_",
+        "G7"
+      ],
+      "expectedBars": [
+        [
+          "C",
+          "_"
+        ],
+        [
+          "G7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 2.0,
+          "kind": "attack",
+          "chord": "C"
+        },
+        {
+          "bar": 1,
+          "slot": 2,
+          "startBeat": 3.0,
+          "durationBeats": 2.0,
+          "kind": "rest"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "G7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:C",
+          "rest:silence",
+          "attack:G7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S04"
+      ]
+    },
+    {
+      "fixtureId": "EV1-039",
+      "category": "rest",
+      "disposition": "positive",
+      "rawText": "Dm N.C.|G7",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "Dm",
+        "N.C.",
+        "G7"
+      ],
+      "expectedBars": [
+        [
+          "Dm",
+          "N.C."
+        ],
+        [
+          "G7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 2.0,
+          "kind": "attack",
+          "chord": "Dm"
+        },
+        {
+          "bar": 1,
+          "slot": 2,
+          "startBeat": 3.0,
+          "durationBeats": 2.0,
+          "kind": "rest"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "G7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:Dm",
+          "rest:silence",
+          "attack:G7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S04"
+      ]
+    },
+    {
+      "fixtureId": "EV1-040",
+      "category": "rest",
+      "disposition": "positive",
+      "rawText": "_ C|F",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "_",
+        "C",
+        "F"
+      ],
+      "expectedBars": [
+        [
+          "_",
+          "C"
+        ],
+        [
+          "F"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 2.0,
+          "kind": "rest"
+        },
+        {
+          "bar": 1,
+          "slot": 2,
+          "startBeat": 3.0,
+          "durationBeats": 2.0,
+          "kind": "attack",
+          "chord": "C"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "F"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "rest:silence",
+          "attack:C",
+          "attack:F"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S04"
+      ]
+    },
+    {
+      "fixtureId": "EV1-041",
+      "category": "rest",
+      "disposition": "positive",
+      "rawText": "G7 _ _ C7",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "G7",
+        "_",
+        "_",
+        "C7"
+      ],
+      "expectedBars": [
+        [
+          "G7",
+          "_",
+          "_",
+          "C7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 1.0,
+          "kind": "attack",
+          "chord": "G7"
+        },
+        {
+          "bar": 1,
+          "slot": 2,
+          "startBeat": 2.0,
+          "durationBeats": 1.0,
+          "kind": "rest"
+        },
+        {
+          "bar": 1,
+          "slot": 3,
+          "startBeat": 3.0,
+          "durationBeats": 1.0,
+          "kind": "rest"
+        },
+        {
+          "bar": 1,
+          "slot": 4,
+          "startBeat": 4.0,
+          "durationBeats": 1.0,
+          "kind": "attack",
+          "chord": "C7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 1,
+        "eventSequence": [
+          "attack:G7",
+          "rest:silence",
+          "rest:silence",
+          "attack:C7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S04"
+      ]
+    },
+    {
+      "fixtureId": "EV1-042",
+      "category": "sustain",
+      "disposition": "positive",
+      "rawText": "C =|Dm",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "C",
+        "=",
+        "Dm"
+      ],
+      "expectedBars": [
+        [
+          "C",
+          "="
+        ],
+        [
+          "Dm"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 2.0,
+          "kind": "attack",
+          "chord": "C"
+        },
+        {
+          "bar": 1,
+          "slot": 2,
+          "startBeat": 3.0,
+          "durationBeats": 2.0,
+          "kind": "hold",
+          "chord": "C"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Dm"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:C",
+          "hold:C",
+          "attack:Dm"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S05"
+      ]
+    },
+    {
+      "fixtureId": "EV1-043",
+      "category": "sustain",
+      "disposition": "positive",
+      "rawText": "F7|=|Bb",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "F7",
+        "=",
+        "Bb"
+      ],
+      "expectedBars": [
+        [
+          "F7"
+        ],
+        [
+          "="
+        ],
+        [
+          "Bb"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "F7"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "hold",
+          "chord": "F7"
+        },
+        {
+          "bar": 3,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Bb"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 3,
+        "eventSequence": [
+          "attack:F7",
+          "hold:F7",
+          "attack:Bb"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S05"
+      ]
+    },
+    {
+      "fixtureId": "EV1-044",
+      "category": "sustain",
+      "disposition": "positive",
+      "rawText": "Am = = =",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "Am",
+        "=",
+        "=",
+        "="
+      ],
+      "expectedBars": [
+        [
+          "Am",
+          "=",
+          "=",
+          "="
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 1.0,
+          "kind": "attack",
+          "chord": "Am"
+        },
+        {
+          "bar": 1,
+          "slot": 2,
+          "startBeat": 2.0,
+          "durationBeats": 1.0,
+          "kind": "hold",
+          "chord": "Am"
+        },
+        {
+          "bar": 1,
+          "slot": 3,
+          "startBeat": 3.0,
+          "durationBeats": 1.0,
+          "kind": "hold",
+          "chord": "Am"
+        },
+        {
+          "bar": 1,
+          "slot": 4,
+          "startBeat": 4.0,
+          "durationBeats": 1.0,
+          "kind": "hold",
+          "chord": "Am"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 1,
+        "eventSequence": [
+          "attack:Am",
+          "hold:Am",
+          "hold:Am",
+          "hold:Am"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S05"
+      ]
+    },
+    {
+      "fixtureId": "EV1-045",
+      "category": "sustain",
+      "disposition": "positive",
+      "rawText": "C =|G7 =",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "C",
+        "=",
+        "G7",
+        "="
+      ],
+      "expectedBars": [
+        [
+          "C",
+          "="
+        ],
+        [
+          "G7",
+          "="
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 2.0,
+          "kind": "attack",
+          "chord": "C"
+        },
+        {
+          "bar": 1,
+          "slot": 2,
+          "startBeat": 3.0,
+          "durationBeats": 2.0,
+          "kind": "hold",
+          "chord": "C"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 2.0,
+          "kind": "attack",
+          "chord": "G7"
+        },
+        {
+          "bar": 2,
+          "slot": 2,
+          "startBeat": 3.0,
+          "durationBeats": 2.0,
+          "kind": "hold",
+          "chord": "G7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:C",
+          "hold:C",
+          "attack:G7",
+          "hold:G7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S05"
+      ]
+    },
+    {
+      "fixtureId": "EV1-046",
+      "category": "comment",
+      "disposition": "positive",
+      "rawText": "# synthetic note\nDm|G7",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "Dm",
+        "G7"
+      ],
+      "expectedBars": [
+        [
+          "Dm"
+        ],
+        [
+          "G7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Dm"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "G7"
+        }
+      ],
+      "expectedSections": [
+        {
+          "kind": "comment",
+          "line": 1
+        }
+      ],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:Dm",
+          "attack:G7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S06"
+      ]
+    },
+    {
+      "fixtureId": "EV1-047",
+      "category": "comment",
+      "disposition": "positive",
+      "rawText": "Am|D7\n# second note\nGmaj7",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "Am",
+        "D7",
+        "Gmaj7"
+      ],
+      "expectedBars": [
+        [
+          "Am"
+        ],
+        [
+          "D7"
+        ],
+        [
+          "Gmaj7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Am"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "D7"
+        },
+        {
+          "bar": 3,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Gmaj7"
+        }
+      ],
+      "expectedSections": [
+        {
+          "kind": "comment",
+          "line": 2
+        }
+      ],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 3,
+        "eventSequence": [
+          "attack:Am",
+          "attack:D7",
+          "attack:Gmaj7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S06",
+        "S16"
+      ]
+    },
+    {
+      "fixtureId": "EV1-048",
+      "category": "comment",
+      "disposition": "positive",
+      "rawText": "# a\n# b\nF7|Bb",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "F7",
+        "Bb"
+      ],
+      "expectedBars": [
+        [
+          "F7"
+        ],
+        [
+          "Bb"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "F7"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Bb"
+        }
+      ],
+      "expectedSections": [
+        {
+          "kind": "comment",
+          "line": 1
+        },
+        {
+          "kind": "comment",
+          "line": 2
+        }
+      ],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:F7",
+          "attack:Bb"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S06"
+      ]
+    },
+    {
+      "fixtureId": "EV1-049",
+      "category": "comment",
+      "disposition": "positive",
+      "rawText": "C#7|F#m",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "C#7",
+        "F#m"
+      ],
+      "expectedBars": [
+        [
+          "C#7"
+        ],
+        [
+          "F#m"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "C#7"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "F#m"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:C#7",
+          "attack:F#m"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S06",
+        "S13"
+      ]
+    },
+    {
+      "fixtureId": "EV1-050",
+      "category": "metadata",
+      "disposition": "positive",
+      "rawText": "Ebmaj7|Ab",
+      "inputMetadata": {
+        "beat": "4/4"
+      },
+      "expectedTokens": [
+        "Ebmaj7",
+        "Ab"
+      ],
+      "expectedBars": [
+        [
+          "Ebmaj7"
+        ],
+        [
+          "Ab"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Ebmaj7"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Ab"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {
+        "beat": "4/4"
+      },
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:Ebmaj7",
+          "attack:Ab"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S18"
+      ]
+    },
+    {
+      "fixtureId": "EV1-051",
+      "category": "key",
+      "disposition": "positive",
+      "rawText": "F#m|B7",
+      "inputMetadata": {
+        "key": "E major",
+        "confirmed": true
+      },
+      "expectedTokens": [
+        "F#m",
+        "B7"
+      ],
+      "expectedBars": [
+        [
+          "F#m"
+        ],
+        [
+          "B7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "F#m"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "B7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {
+        "key": "E major",
+        "confirmed": true
+      },
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:F#m",
+          "attack:B7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S18"
+      ]
+    },
+    {
+      "fixtureId": "EV1-052",
+      "category": "bpm",
+      "disposition": "positive",
+      "rawText": "Dm7|G7",
+      "inputMetadata": {
+        "bpm": 96
+      },
+      "expectedTokens": [
+        "Dm7",
+        "G7"
+      ],
+      "expectedBars": [
+        [
+          "Dm7"
+        ],
+        [
+          "G7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Dm7"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "G7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {
+        "bpm": 96
+      },
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:Dm7",
+          "attack:G7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S18"
+      ]
+    },
+    {
+      "fixtureId": "EV1-053",
+      "category": "capo",
+      "disposition": "positive",
+      "rawText": "C|G7",
+      "inputMetadata": {
+        "capo": 2
+      },
+      "expectedTokens": [
+        "C",
+        "G7"
+      ],
+      "expectedBars": [
+        [
+          "C"
+        ],
+        [
+          "G7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "C"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "G7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {
+        "capo": 2
+      },
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:C",
+          "attack:G7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S18"
+      ]
+    },
+    {
+      "fixtureId": "EV1-054",
+      "category": "metadata",
+      "disposition": "positive",
+      "rawText": "Bb|Eb",
+      "inputMetadata": {
+        "beat": "3/4",
+        "bpm": 108,
+        "capo": 0
+      },
+      "expectedTokens": [
+        "Bb",
+        "Eb"
+      ],
+      "expectedBars": [
+        [
+          "Bb"
+        ],
+        [
+          "Eb"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 3.0,
+          "kind": "attack",
+          "chord": "Bb"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 3.0,
+          "kind": "attack",
+          "chord": "Eb"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {
+        "beat": "3/4",
+        "bpm": 108,
+        "capo": 0
+      },
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:Bb",
+          "attack:Eb"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S18"
+      ]
+    },
+    {
+      "fixtureId": "EV1-055",
+      "category": "Unicode",
+      "disposition": "positive",
+      "rawText": "B♭m7|E♭7",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "B♭m7",
+        "E♭7"
+      ],
+      "expectedBars": [
+        [
+          "B♭m7"
+        ],
+        [
+          "E♭7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Bbm7"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Eb7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:Bbm7",
+          "attack:Eb7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S11"
+      ]
+    },
+    {
+      "fixtureId": "EV1-056",
+      "category": "Unicode",
+      "disposition": "positive",
+      "rawText": "F♯m|B7",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "F♯m",
+        "B7"
+      ],
+      "expectedBars": [
+        [
+          "F♯m"
+        ],
+        [
+          "B7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "F#m"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "B7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:F#m",
+          "attack:B7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S11"
+      ]
+    },
+    {
+      "fixtureId": "EV1-057",
+      "category": "Unicode",
+      "disposition": "positive",
+      "rawText": "C△7|Dm7",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "C△7",
+        "Dm7"
+      ],
+      "expectedBars": [
+        [
+          "C△7"
+        ],
+        [
+          "Dm7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Cmaj7"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Dm7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:Cmaj7",
+          "attack:Dm7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S12"
+      ]
+    },
+    {
+      "fixtureId": "EV1-058",
+      "category": "Unicode",
+      "disposition": "positive",
+      "rawText": "GΔ7|Am",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "GΔ7",
+        "Am"
+      ],
+      "expectedBars": [
+        [
+          "GΔ7"
+        ],
+        [
+          "Am"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Gmaj7"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Am"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:Gmaj7",
+          "attack:Am"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S12"
+      ]
+    },
+    {
+      "fixtureId": "EV1-059",
+      "category": "Unicode",
+      "disposition": "positive",
+      "rawText": "F#ø|B7",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "F#ø",
+        "B7"
+      ],
+      "expectedBars": [
+        [
+          "F#ø"
+        ],
+        [
+          "B7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "F#m7b5"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "B7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:F#m7b5",
+          "attack:B7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S12"
+      ]
+    },
+    {
+      "fixtureId": "EV1-060",
+      "category": "Unicode",
+      "disposition": "positive",
+      "rawText": "Ｃｍ７｜Ｆ７",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "Ｃｍ７",
+        "Ｆ７"
+      ],
+      "expectedBars": [
+        [
+          "Ｃｍ７"
+        ],
+        [
+          "Ｆ７"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Cm7"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "F7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:Cm7",
+          "attack:F7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S02",
+        "S11"
+      ]
+    },
+    {
+      "fixtureId": "EV1-061",
+      "category": "complex-chord",
+      "disposition": "positive",
+      "rawText": "Bbm7b5",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "Bbm7b5"
+      ],
+      "expectedBars": [
+        [
+          "Bbm7b5"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Bbm7b5"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 1,
+        "eventSequence": [
+          "attack:Bbm7b5"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S12",
+        "S13"
+      ]
+    },
+    {
+      "fixtureId": "EV1-062",
+      "category": "complex-chord",
+      "disposition": "positive",
+      "rawText": "Fdim7",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "Fdim7"
+      ],
+      "expectedBars": [
+        [
+          "Fdim7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Fdim7"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 1,
+        "eventSequence": [
+          "attack:Fdim7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S12",
+        "S13"
+      ]
+    },
+    {
+      "fixtureId": "EV1-063",
+      "category": "complex-chord",
+      "disposition": "positive",
+      "rawText": "Eaug",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "Eaug"
+      ],
+      "expectedBars": [
+        [
+          "Eaug"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Eaug"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 1,
+        "eventSequence": [
+          "attack:Eaug"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S12",
+        "S13"
+      ]
+    },
+    {
+      "fixtureId": "EV1-064",
+      "category": "complex-chord",
+      "disposition": "positive",
+      "rawText": "D6/9",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "D6/9"
+      ],
+      "expectedBars": [
+        [
+          "D6/9"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "D6/9"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 1,
+        "eventSequence": [
+          "attack:D6/9"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S12",
+        "S13"
+      ]
+    },
+    {
+      "fixtureId": "EV1-065",
+      "category": "complex-chord",
+      "disposition": "positive",
+      "rawText": "F#M9",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "F#M9"
+      ],
+      "expectedBars": [
+        [
+          "F#M9"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "F#M9"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 1,
+        "eventSequence": [
+          "attack:F#M9"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S12",
+        "S13"
+      ]
+    },
+    {
+      "fixtureId": "EV1-066",
+      "category": "altered",
+      "disposition": "positive",
+      "rawText": "G7(b9)",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "G7(b9)"
+      ],
+      "expectedBars": [
+        [
+          "G7(b9)"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "G7(b9)"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 1,
+        "eventSequence": [
+          "attack:G7(b9)"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S13"
+      ]
+    },
+    {
+      "fixtureId": "EV1-067",
+      "category": "altered",
+      "disposition": "positive",
+      "rawText": "D7(#9)",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "D7(#9)"
+      ],
+      "expectedBars": [
+        [
+          "D7(#9)"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "D7(#9)"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 1,
+        "eventSequence": [
+          "attack:D7(#9)"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S13"
+      ]
+    },
+    {
+      "fixtureId": "EV1-068",
+      "category": "altered",
+      "disposition": "positive",
+      "rawText": "A7(#11)",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "A7(#11)"
+      ],
+      "expectedBars": [
+        [
+          "A7(#11)"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "A7(#11)"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 1,
+        "eventSequence": [
+          "attack:A7(#11)"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S13"
+      ]
+    },
+    {
+      "fixtureId": "EV1-069",
+      "category": "altered",
+      "disposition": "positive",
+      "rawText": "C7(b13)",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "C7(b13)"
+      ],
+      "expectedBars": [
+        [
+          "C7(b13)"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "C7(b13)"
+        }
+      ],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 1,
+        "eventSequence": [
+          "attack:C7(b13)"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S13"
+      ]
+    },
+    {
+      "fixtureId": "EV1-070",
+      "category": "altered",
+      "disposition": "negative",
+      "rawText": "E7(b9,#11,b13)",
+      "inputMetadata": {},
+      "expectedTokens": [],
+      "expectedBars": [],
+      "expectedEvents": [],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [
+        "SEMANTIC_GAP"
+      ],
+      "expectedNormalizedMeaning": {
+        "barCount": 0,
+        "eventSequence": []
+      },
+      "sourceFeatureIds": [
+        "S13"
+      ]
+    },
+    {
+      "fixtureId": "EV1-071",
+      "category": "complex-chord",
+      "disposition": "negative",
+      "rawText": "CmMaj7",
+      "inputMetadata": {},
+      "expectedTokens": [],
+      "expectedBars": [],
+      "expectedEvents": [],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [
+        "SEMANTIC_GAP"
+      ],
+      "expectedNormalizedMeaning": {
+        "barCount": 0,
+        "eventSequence": []
+      },
+      "sourceFeatureIds": [
+        "S12",
+        "S13"
+      ]
+    },
+    {
+      "fixtureId": "EV1-072",
+      "category": "complex-chord",
+      "disposition": "negative",
+      "rawText": "G13",
+      "inputMetadata": {},
+      "expectedTokens": [],
+      "expectedBars": [],
+      "expectedEvents": [],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [
+        "SEMANTIC_GAP"
+      ],
+      "expectedNormalizedMeaning": {
+        "barCount": 0,
+        "eventSequence": []
+      },
+      "sourceFeatureIds": [
+        "S12",
+        "S13"
+      ]
+    },
+    {
+      "fixtureId": "EV1-073",
+      "category": "complex-chord",
+      "disposition": "negative",
+      "rawText": "D11",
+      "inputMetadata": {},
+      "expectedTokens": [],
+      "expectedBars": [],
+      "expectedEvents": [],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [
+        "SEMANTIC_GAP"
+      ],
+      "expectedNormalizedMeaning": {
+        "barCount": 0,
+        "eventSequence": []
+      },
+      "sourceFeatureIds": [
+        "S12",
+        "S13"
+      ]
+    },
+    {
+      "fixtureId": "EV1-074",
+      "category": "omit",
+      "disposition": "negative",
+      "rawText": "C(omit3)",
+      "inputMetadata": {},
+      "expectedTokens": [],
+      "expectedBars": [],
+      "expectedEvents": [],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [
+        "SEMANTIC_GAP"
+      ],
+      "expectedNormalizedMeaning": {
+        "barCount": 0,
+        "eventSequence": []
+      },
+      "sourceFeatureIds": [
+        "S14"
+      ]
+    },
+    {
+      "fixtureId": "EV1-075",
+      "category": "omit",
+      "disposition": "negative",
+      "rawText": "F7(no5)",
+      "inputMetadata": {},
+      "expectedTokens": [],
+      "expectedBars": [],
+      "expectedEvents": [],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [
+        "SEMANTIC_GAP"
+      ],
+      "expectedNormalizedMeaning": {
+        "barCount": 0,
+        "eventSequence": []
+      },
+      "sourceFeatureIds": [
+        "S14"
+      ]
+    },
+    {
+      "fixtureId": "EV1-076",
+      "category": "omit",
+      "disposition": "negative",
+      "rawText": "A5",
+      "inputMetadata": {},
+      "expectedTokens": [],
+      "expectedBars": [],
+      "expectedEvents": [],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [
+        "SEMANTIC_GAP"
+      ],
+      "expectedNormalizedMeaning": {
+        "barCount": 0,
+        "eventSequence": []
+      },
+      "sourceFeatureIds": [
+        "S14"
+      ]
+    },
+    {
+      "fixtureId": "EV1-077",
+      "category": "omit",
+      "disposition": "negative",
+      "rawText": "Dm11(omit3)",
+      "inputMetadata": {},
+      "expectedTokens": [],
+      "expectedBars": [],
+      "expectedEvents": [],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [
+        "SEMANTIC_GAP"
+      ],
+      "expectedNormalizedMeaning": {
+        "barCount": 0,
+        "eventSequence": []
+      },
+      "sourceFeatureIds": [
+        "S14"
+      ]
+    },
+    {
+      "fixtureId": "EV1-078",
+      "category": "header",
+      "disposition": "negative",
+      "rawText": "[Verse]\nC|G7",
+      "inputMetadata": {},
+      "expectedTokens": [],
+      "expectedBars": [],
+      "expectedEvents": [],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [
+        "UNSUPPORTED_HEADER"
+      ],
+      "expectedNormalizedMeaning": {
+        "barCount": 0,
+        "eventSequence": []
+      },
+      "sourceFeatureIds": [
+        "S17"
+      ]
+    },
+    {
+      "fixtureId": "EV1-079",
+      "category": "header",
+      "disposition": "negative",
+      "rawText": "Chorus:\nAm|D7",
+      "inputMetadata": {},
+      "expectedTokens": [],
+      "expectedBars": [],
+      "expectedEvents": [],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [
+        "UNSUPPORTED_HEADER"
+      ],
+      "expectedNormalizedMeaning": {
+        "barCount": 0,
+        "eventSequence": []
+      },
+      "sourceFeatureIds": [
+        "S17"
+      ]
+    },
+    {
+      "fixtureId": "EV1-080",
+      "category": "header",
+      "disposition": "positive",
+      "rawText": "<\nC|G7\n>",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "C",
+        "G7"
+      ],
+      "expectedBars": [
+        [
+          "C"
+        ],
+        [
+          "G7"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "C"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "G7"
+        }
+      ],
+      "expectedSections": [
+        {
+          "kind": "playback-start",
+          "line": 1
+        },
+        {
+          "kind": "playback-end",
+          "line": 3
+        }
+      ],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:C",
+          "attack:G7"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S17"
+      ]
+    },
+    {
+      "fixtureId": "EV1-081",
+      "category": "header",
+      "disposition": "positive",
+      "rawText": "<\nF7|Bb",
+      "inputMetadata": {},
+      "expectedTokens": [
+        "F7",
+        "Bb"
+      ],
+      "expectedBars": [
+        [
+          "F7"
+        ],
+        [
+          "Bb"
+        ]
+      ],
+      "expectedEvents": [
+        {
+          "bar": 1,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "F7"
+        },
+        {
+          "bar": 2,
+          "slot": 1,
+          "startBeat": 1.0,
+          "durationBeats": 4.0,
+          "kind": "attack",
+          "chord": "Bb"
+        }
+      ],
+      "expectedSections": [
+        {
+          "kind": "playback-start",
+          "line": 1
+        }
+      ],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 2,
+        "eventSequence": [
+          "attack:F7",
+          "attack:Bb"
+        ]
+      },
+      "sourceFeatureIds": [
+        "S17"
+      ]
+    },
+    {
+      "fixtureId": "EV1-082",
+      "category": "malformed",
+      "disposition": "negative",
+      "rawText": "|C||G7|",
+      "inputMetadata": {},
+      "expectedTokens": [],
+      "expectedBars": [],
+      "expectedEvents": [],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [
+        "EMPTY_INTERIOR_BAR"
+      ],
+      "expectedNormalizedMeaning": {
+        "barCount": 0,
+        "eventSequence": []
+      },
+      "sourceFeatureIds": [
+        "S15"
+      ]
+    },
+    {
+      "fixtureId": "EV1-083",
+      "category": "malformed",
+      "disposition": "negative",
+      "rawText": "C///E|F",
+      "inputMetadata": {},
+      "expectedTokens": [],
+      "expectedBars": [],
+      "expectedEvents": [],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [
+        "MALFORMED_SLASH"
+      ],
+      "expectedNormalizedMeaning": {
+        "barCount": 0,
+        "eventSequence": []
+      },
+      "sourceFeatureIds": [
+        "S15"
+      ]
+    },
+    {
+      "fixtureId": "EV1-084",
+      "category": "malformed",
+      "disposition": "negative",
+      "rawText": "%|Dm",
+      "inputMetadata": {},
+      "expectedTokens": [],
+      "expectedBars": [],
+      "expectedEvents": [],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [
+        "INVALID_CONTROL_PREDECESSOR"
+      ],
+      "expectedNormalizedMeaning": {
+        "barCount": 0,
+        "eventSequence": []
+      },
+      "sourceFeatureIds": [
+        "S15"
+      ]
+    },
+    {
+      "fixtureId": "EV1-085",
+      "category": "malformed",
+      "disposition": "negative",
+      "rawText": "=|C",
+      "inputMetadata": {},
+      "expectedTokens": [],
+      "expectedBars": [],
+      "expectedEvents": [],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [
+        "INVALID_CONTROL_PREDECESSOR"
+      ],
+      "expectedNormalizedMeaning": {
+        "barCount": 0,
+        "eventSequence": []
+      },
+      "sourceFeatureIds": [
+        "S15"
+      ]
+    },
+    {
+      "fixtureId": "EV1-086",
+      "category": "malformed",
+      "disposition": "negative",
+      "rawText": "C _ =|F",
+      "inputMetadata": {},
+      "expectedTokens": [],
+      "expectedBars": [],
+      "expectedEvents": [],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [
+        "INVALID_CONTROL_PREDECESSOR"
+      ],
+      "expectedNormalizedMeaning": {
+        "barCount": 0,
+        "eventSequence": []
+      },
+      "sourceFeatureIds": [
+        "S15"
+      ]
+    },
+    {
+      "fixtureId": "EV1-087",
+      "category": "malformed",
+      "disposition": "negative",
+      "rawText": "C Dm G7|F",
+      "inputMetadata": {},
+      "expectedTokens": [],
+      "expectedBars": [],
+      "expectedEvents": [],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [
+        "UNSUPPORTED_RHYTHM"
+      ],
+      "expectedNormalizedMeaning": {
+        "barCount": 0,
+        "eventSequence": []
+      },
+      "sourceFeatureIds": [
+        "S15"
+      ]
+    },
+    {
+      "fixtureId": "EV1-088",
+      "category": "malformed",
+      "disposition": "negative",
+      "rawText": "BPM: 90\nC|F",
+      "inputMetadata": {},
+      "expectedTokens": [],
+      "expectedBars": [],
+      "expectedEvents": [],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [
+        "UNSUPPORTED_INLINE_DIRECTIVE"
+      ],
+      "expectedNormalizedMeaning": {
+        "barCount": 0,
+        "eventSequence": []
+      },
+      "sourceFeatureIds": [
+        "S15"
+      ]
+    },
+    {
+      "fixtureId": "EV1-089",
+      "category": "malformed",
+      "disposition": "negative",
+      "rawText": "C|Qm|G7",
+      "inputMetadata": {},
+      "expectedTokens": [],
+      "expectedBars": [],
+      "expectedEvents": [],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [
+        "INVALID_CHORD"
+      ],
+      "expectedNormalizedMeaning": {
+        "barCount": 0,
+        "eventSequence": []
+      },
+      "sourceFeatureIds": [
+        "S15"
+      ]
+    },
+    {
+      "fixtureId": "EV1-090",
+      "category": "malformed",
+      "disposition": "negative",
+      "rawText": "C7(foo)|F",
+      "inputMetadata": {},
+      "expectedTokens": [],
+      "expectedBars": [],
+      "expectedEvents": [],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [
+        "INVALID_CHORD"
+      ],
+      "expectedNormalizedMeaning": {
+        "barCount": 0,
+        "eventSequence": []
+      },
+      "sourceFeatureIds": [
+        "S15"
+      ]
+    },
+    {
+      "fixtureId": "EV1-091",
+      "category": "malformed",
+      "disposition": "negative",
+      "rawText": "C|F|G7🙂",
+      "inputMetadata": {},
+      "expectedTokens": [],
+      "expectedBars": [],
+      "expectedEvents": [],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [
+        "UNKNOWN_CHARACTER"
+      ],
+      "expectedNormalizedMeaning": {
+        "barCount": 0,
+        "eventSequence": []
+      },
+      "sourceFeatureIds": [
+        "S15"
+      ]
+    },
+    {
+      "fixtureId": "EV1-092",
+      "category": "ambiguous",
+      "disposition": "ambiguous",
+      "rawText": "| CADD9(#9,#5) |",
+      "inputMetadata": {},
+      "expectedTokens": [],
+      "expectedBars": [],
+      "expectedEvents": [],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [
+        "AMBIGUOUS_SEGMENTATION"
+      ],
+      "expectedNormalizedMeaning": {
+        "barCount": 0,
+        "eventSequence": []
+      },
+      "sourceFeatureIds": [
+        "S09",
+        "S10"
+      ]
+    },
+    {
+      "fixtureId": "EV1-093",
+      "category": "ambiguous",
+      "disposition": "ambiguous",
+      "rawText": "| FADD9(#9,#5) |",
+      "inputMetadata": {},
+      "expectedTokens": [],
+      "expectedBars": [],
+      "expectedEvents": [],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [
+        "AMBIGUOUS_SEGMENTATION"
+      ],
+      "expectedNormalizedMeaning": {
+        "barCount": 0,
+        "eventSequence": []
+      },
+      "sourceFeatureIds": [
+        "S09",
+        "S10"
+      ]
+    },
+    {
+      "fixtureId": "EV1-094",
+      "category": "malformed",
+      "disposition": "negative",
+      "rawText": "C—7|F",
+      "inputMetadata": {},
+      "expectedTokens": [],
+      "expectedBars": [],
+      "expectedEvents": [],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [
+        "UNRECOGNIZED_PUNCTUATION"
+      ],
+      "expectedNormalizedMeaning": {
+        "barCount": 0,
+        "eventSequence": []
+      },
+      "sourceFeatureIds": [
+        "S11"
+      ]
+    },
+    {
+      "fixtureId": "EV1-095",
+      "category": "complex-chord",
+      "disposition": "negative",
+      "rawText": "C7(b9)(#11)|F",
+      "inputMetadata": {},
+      "expectedTokens": [],
+      "expectedBars": [],
+      "expectedEvents": [],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [
+        "SEMANTIC_GAP"
+      ],
+      "expectedNormalizedMeaning": {
+        "barCount": 0,
+        "eventSequence": []
+      },
+      "sourceFeatureIds": [
+        "S13"
+      ]
+    },
+    {
+      "fixtureId": "EV1-096",
+      "category": "empty",
+      "disposition": "empty",
+      "rawText": "",
+      "inputMetadata": {},
+      "expectedTokens": [],
+      "expectedBars": [],
+      "expectedEvents": [],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 0,
+        "eventSequence": []
+      },
+      "sourceFeatureIds": []
+    },
+    {
+      "fixtureId": "EV1-097",
+      "category": "whitespace-only",
+      "disposition": "empty",
+      "rawText": " \t \r\n ",
+      "inputMetadata": {},
+      "expectedTokens": [],
+      "expectedBars": [],
+      "expectedEvents": [],
+      "expectedSections": [],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 0,
+        "eventSequence": []
+      },
+      "sourceFeatureIds": [
+        "S16"
+      ]
+    },
+    {
+      "fixtureId": "EV1-098",
+      "category": "empty",
+      "disposition": "empty",
+      "rawText": "# only a comment",
+      "inputMetadata": {},
+      "expectedTokens": [],
+      "expectedBars": [],
+      "expectedEvents": [],
+      "expectedSections": [
+        {
+          "kind": "comment",
+          "line": 1
+        }
+      ],
+      "expectedMetadata": {},
+      "expectedDiagnostics": [],
+      "expectedNormalizedMeaning": {
+        "barCount": 0,
+        "eventSequence": []
+      },
+      "sourceFeatureIds": [
+        "S06"
+      ]
+    }
+  ]
+}
