@@ -1,3 +1,19 @@
+export type TimelineSeekOrigin = "card" | "ruler" | "overview" | "keyboard" | "transport";
+
+/** Card mouse activation keeps the card beneath the pointer until playback advances. */
+export function shouldHoldCardPageTurn(origin: TimelineSeekOrigin): boolean {
+  return origin === "card";
+}
+
+/** A long chord may outlive the visible page; keep its moving playhead in view. */
+export function playheadSafetyTarget(playheadPx: number, viewportWidth: number,
+  scrollLeft: number, contentWidth: number, margin = 12): number | undefined {
+  if (viewportWidth <= 0 || !Number.isFinite(playheadPx)) return undefined;
+  if (playheadPx >= scrollLeft + margin && playheadPx <= scrollLeft + viewportWidth - margin) return undefined;
+  const target = playheadPx < scrollLeft + margin ? playheadPx - margin : playheadPx - viewportWidth / 4;
+  return Math.max(0, Math.min(Math.max(0, contentWidth - viewportWidth), target));
+}
+
 export interface TimelineFollowGeometry {
   readonly chordStartBeat: number;
   readonly chordDurationBeats: number;

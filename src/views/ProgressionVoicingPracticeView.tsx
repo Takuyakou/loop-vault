@@ -70,7 +70,7 @@ import {
   type FingeringPreferenceCollection,
 } from "../voicingPractice/fingeringPreferences";
 import { assignPracticeHandsAcrossProgression, isPracticeHandAssignmentPlayable, type ProgressionFingeringHandTargets } from "../voicingPractice/fingeringDisplay";
-import { easeOutCubic, pageTurnTarget } from "../voicingPractice/timelineFollow";
+import { easeOutCubic, pageTurnTarget, playheadSafetyTarget, shouldHoldCardPageTurn, type TimelineSeekOrigin } from "../voicingPractice/timelineFollow";
 import { cardAuditionResolution } from "../voicingPractice/cardAudition";
 import { computeNextMoves, prioritizedMoves, type FingerMovement } from "../voicingPractice/nextMove";
 import { isBlack, nextShapeRanges, type MiniKeyboardRange } from "../voicingPractice/nextShape";
@@ -548,6 +548,9 @@ export function ProgressionVoicingPracticeView({
   const pageTurnHighlightTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const [pageTurnHighlightIndex, setPageTurnHighlightIndex] = useState<number>();
   const forceFollowRef = useRef(false);
+  const cardHeldSpanRef = useRef<number>();
+  const followEnabledRef = useRef(followEnabled);
+  followEnabledRef.current = followEnabled;
   useEffect(() => () => {
     if (pageTurnFrameRef.current !== undefined) cancelAnimationFrame(pageTurnFrameRef.current);
     if (pageTurnHighlightTimerRef.current !== undefined) clearTimeout(pageTurnHighlightTimerRef.current);
@@ -564,6 +567,7 @@ export function ProgressionVoicingPracticeView({
     transport?.stop();
     setRuntimeError(undefined);
     setAuditionedIndex(undefined);
+    cardHeldSpanRef.current = undefined;
     setSeekAnchorIndex(0);
     setClockState(sourceSnapshot
       ? createProgressionPracticeClockState(sourceSnapshot, { countInBars })
@@ -713,6 +717,29 @@ export function ProgressionVoicingPracticeView({
     if (timelineScale !== effectiveTimelineScale) setTimelineScale(effectiveTimelineScale);
   }, [effectiveTimelineScale, timelineScale]);
   const playheadX = (projection?.progressionBeat ?? 0) * timelinePixelsPerBeat;
+  function animateTimelinePageTurn(target: number, spanIndex: number) {
+    const viewport = timelineViewportRef.current;
+    if (!viewport || Math.abs(viewport.scrollLeft - target) <= 2) return;
+    if (pageTurnFrameRef.current !== undefined) cancelAnimationFrame(pageTurnFrameRef.current);
+    const start = viewport.scrollLeft;
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    if (reducedMotion || typeof requestAnimationFrame !== "function") {
+      viewport.scrollLeft = target;
+      pageTurnFrameRef.current = undefined;
+    } else {
+      const startedAt = performance.now();
+      const tick = (now: number) => {
+        const progress = Math.min(1, (now - startedAt) / 250);
+        viewport.scrollLeft = start + (target - start) * easeOutCubic(progress);
+        if (progress < 1) pageTurnFrameRef.current = requestAnimationFrame(tick);
+        else pageTurnFrameRef.current = undefined;
+      };
+      pageTurnFrameRef.current = requestAnimationFrame(tick);
+    }
+    setPageTurnHighlightIndex(spanIndex);
+    if (pageTurnHighlightTimerRef.current !== undefined) clearTimeout(pageTurnHighlightTimerRef.current);
+    pageTurnHighlightTimerRef.current = setTimeout(() => setPageTurnHighlightIndex(undefined), 350);
+  }
   useLayoutEffect(() => {
     if (!snapshot || !clockState || !playheadRef.current) return;
     const state = clockState;
@@ -720,8 +747,15 @@ export function ProgressionVoicingPracticeView({
     const request = runtimeRequestRef.current;
     const paint = (absoluteBeat: number) => {
       const position = projectProgressionPracticeClock(snapshot, { ...state, transportBeat: absoluteBeat });
-      if (playheadRef.current) playheadRef.current.style.transform = `translateX(${position.progressionBeat * timelinePixelsPerBeat}px)`;
+      const playheadPx = position.progressionBeat * timelinePixelsPerBeat;
+      if (playheadRef.current) playheadRef.current.style.transform = `translateX(${playheadPx}px)`;
       if (currentProgressRef.current) currentProgressRef.current.style.width = `${position.chordProgress * 100}%`;
+      const viewport = timelineViewportRef.current;
+      if (followEnabledRef.current && viewport && state.status === "running" && pageTurnFrameRef.current === undefined) {
+        const target = playheadSafetyTarget(playheadPx, viewport.clientWidth, viewport.scrollLeft,
+          snapshot.lengthBeats * timelinePixelsPerBeat);
+        if (target !== undefined) animateTimelinePageTurn(target, position.currentSpanIndex);
+      }
     };
     paint(state.transportBeat);
     if (state.status !== "running" && state.status !== "count-in" || typeof requestAnimationFrame !== "function") return;
@@ -750,6 +784,13 @@ export function ProgressionVoicingPracticeView({
     const viewport = timelineViewportRef.current;
     const span = snapshot?.spans[transportCurrentSpanIndex];
     if (!followEnabled || !viewport || !span) return;
+    if (cardHeldSpanRef.current === transportCurrentSpanIndex) {
+      if (pageTurnFrameRef.current !== undefined) cancelAnimationFrame(pageTurnFrameRef.current);
+      pageTurnFrameRef.current = undefined;
+      forceFollowRef.current = false;
+      return;
+    }
+    cardHeldSpanRef.current = undefined;
     const target = pageTurnTarget({
       chordStartBeat: span.startBeat,
       chordDurationBeats: span.durationBeats,
@@ -761,28 +802,11 @@ export function ProgressionVoicingPracticeView({
     forceFollowRef.current = false;
     if (pageTurnFrameRef.current !== undefined) cancelAnimationFrame(pageTurnFrameRef.current);
     pageTurnFrameRef.current = undefined;
-    if (target === undefined || Math.abs(viewport.scrollLeft - target) <= 2) return;
-    const start = viewport.scrollLeft;
-    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
-    if (reducedMotion || typeof requestAnimationFrame !== "function") {
-      viewport.scrollLeft = target;
-    } else {
-      const startedAt = performance.now();
-      const tick = (now: number) => {
-        const progress = Math.min(1, (now - startedAt) / 250);
-        viewport.scrollLeft = start + (target - start) * easeOutCubic(progress);
-        if (progress < 1) pageTurnFrameRef.current = requestAnimationFrame(tick);
-        else pageTurnFrameRef.current = undefined;
-      };
-      pageTurnFrameRef.current = requestAnimationFrame(tick);
-    }
-    setPageTurnHighlightIndex(transportCurrentSpanIndex);
-    if (pageTurnHighlightTimerRef.current !== undefined) clearTimeout(pageTurnHighlightTimerRef.current);
-    pageTurnHighlightTimerRef.current = setTimeout(() => setPageTurnHighlightIndex(undefined), 350);
+    if (target !== undefined) animateTimelinePageTurn(target, transportCurrentSpanIndex);
   }, [followEnabled, followResumeRevision, snapshot, timelinePixelsPerBeat, transportCurrentSpanIndex]);
 
-  function resumeTimelineFollow() {
-    forceFollowRef.current = true;
+  function resumeTimelineFollow(force = false) {
+    forceFollowRef.current = force;
     setFollowEnabled(true);
     setFollowResumeRevision((revision) => revision + 1);
   }
@@ -792,6 +816,7 @@ export function ProgressionVoicingPracticeView({
     if (pageTurnFrameRef.current !== undefined) cancelAnimationFrame(pageTurnFrameRef.current);
     pageTurnFrameRef.current = undefined;
     forceFollowRef.current = false;
+    cardHeldSpanRef.current = undefined;
     setFollowEnabled(false);
   }
   function changeSelection(next: ProgressionVoicingSelection) {
@@ -867,12 +892,14 @@ export function ProgressionVoicingPracticeView({
     });
     setRuntimeError(undefined);
     const anchorBeat = snapshot.events[seekAnchorIndex]?.startBeat ?? 0;
-    const anchored = anchorBeat > 0
-      ? reduceProgressionPracticeClock(snapshot, ready, {
-        type: "SEEK", status: "stopped", absoluteBeat: runtimeCountInBars * practiceGroupBeats + anchorBeat, anchorBeat,
+    const started = reduceProgressionPracticeClock(snapshot, ready, { type: "START" });
+    // START resets the clock to zero; apply the selected card anchor afterwards.
+    setClockState(anchorBeat > 0
+      ? reduceProgressionPracticeClock(snapshot, started, {
+        type: "SEEK", status: runtimeCountInBars > 0 ? "count-in" : "running",
+        absoluteBeat: runtimeCountInBars > 0 ? 0 : anchorBeat, anchorBeat,
       })
-      : ready;
-    setClockState(reduceProgressionPracticeClock(snapshot, anchored, { type: "START" }));
+      : started);
     resumeTimelineFollow();
     await launchRuntime(anchorBeat, clockState.bpm, runtimeCountInBars);
   }
@@ -911,10 +938,14 @@ export function ProgressionVoicingPracticeView({
     }
   }
 
-  function seekToEvent(eventIndex: number) {
+  function seekToEvent(eventIndex: number, origin: TimelineSeekOrigin = "keyboard") {
     if (!snapshot || !clockState || !snapshot.events[eventIndex]) return;
-    resumeTimelineFollow();
+    cardHeldSpanRef.current = shouldHoldCardPageTurn(origin)
+      ? snapshot.spans.findIndex((span) => span.kind === "chord" && span.eventIndex === eventIndex)
+      : undefined;
+    resumeTimelineFollow(origin === "ruler" || origin === "overview" || origin === "keyboard");
     const anchorBeat = snapshot.events[eventIndex]!.startBeat;
+    setSeekAnchorIndex(eventIndex);
     auditionRequestRef.current += 1;
     setAuditionedIndex(undefined);
     const result = transportRef.current?.seek?.(eventIndex);
@@ -925,39 +956,38 @@ export function ProgressionVoicingPracticeView({
       return;
     }
     if (clockState.status !== "ready" && clockState.status !== "stopped") return;
-    setSeekAnchorIndex(eventIndex);
     setClockState((state) => state ? reduceProgressionPracticeClock(snapshot, state, {
       type: "SEEK", status: "stopped", absoluteBeat: state.countInBars * practiceGroupBeats + anchorBeat, anchorBeat,
     }) : state);
   }
 
-  function selectTimelineCard(eventIndex: number) {
+  function selectTimelineCard(eventIndex: number, origin: TimelineSeekOrigin) {
     if (!transportRef.current?.supportsSeek) { void auditionResolved(eventIndex, true); return; }
     const status = clockStateRef.current?.status;
-    seekToEvent(eventIndex);
+    seekToEvent(eventIndex, origin);
     if (status === "ready" || status === "stopped" || status === "paused") {
       // The clicked event index is passed directly; never resolve from asynchronously updated Current state.
       void auditionResolved(eventIndex, true);
     }
   }
 
-  function seekToBeat(beat: number) {
+  function seekToBeat(beat: number, origin: TimelineSeekOrigin) {
     if (!snapshot) return;
     const eventIndex = chordIndexAtTimelineBeat(snapshot, beat);
-    if (eventIndex !== undefined) seekToEvent(eventIndex);
+    if (eventIndex !== undefined) seekToEvent(eventIndex, origin);
   }
 
   function seekFromTimelineClick(event: MouseEvent<HTMLElement>) {
     if (!snapshot || !timelineViewportRef.current) return;
     const viewport = timelineViewportRef.current;
     const beat = (event.clientX - viewport.getBoundingClientRect().left + viewport.scrollLeft) / timelinePixelsPerBeat;
-    seekToBeat(beat);
+    seekToBeat(beat, "ruler");
   }
 
   function seekFromOverviewClick(event: MouseEvent<HTMLElement>) {
     if (!snapshot) return;
     const rect = event.currentTarget.getBoundingClientRect();
-    seekToBeat(((event.clientX - rect.left) / Math.max(1, rect.width)) * snapshot.lengthBeats);
+    seekToBeat(((event.clientX - rect.left) / Math.max(1, rect.width)) * snapshot.lengthBeats, "overview");
   }
 
   function pause() {
@@ -1162,7 +1192,7 @@ export function ProgressionVoicingPracticeView({
         else if (paused) void resume();
         else void start();
       } else if (key === "escape") stop();
-      else if (key === "f") resumeTimelineFollow();
+      else if (key === "f") resumeTimelineFollow(true);
       else if (key === "m") toggleMetronome();
       else if (key === "r") changeReferenceSound(!referenceSoundEnabled);
       else if (snapshot.events.length) {
@@ -1484,7 +1514,7 @@ export function ProgressionVoicingPracticeView({
               </div>
               <div className="flex items-center gap-1 text-[var(--lv-text-muted)]">
                 <button type="button" className={`rounded px-1.5 py-0.5 ${followEnabled ? "text-[var(--lv-accent)]" : "text-amber-200"}`}
-                  aria-pressed={followEnabled} onClick={resumeTimelineFollow} data-testid="voicing-loop-follow">{followEnabled ? "FOLLOW" : "MANUAL · F"}</button>
+                  aria-pressed={followEnabled} onClick={() => resumeTimelineFollow(true)} data-testid="voicing-loop-follow">{followEnabled ? "FOLLOW" : "MANUAL · F"}</button>
                 <span data-testid="voicing-loop-source-meter">{language === "ja" ? "元の拍子" : "Source meter"} {snapshot.meter.numerator}/{snapshot.meter.denominator}</span>
                 <span className="ml-2">{language === "ja" ? "表示" : "View"}</span>
                 {([8, 12, 16] as const).map((scale) => (
@@ -1511,14 +1541,14 @@ export function ProgressionVoicingPracticeView({
               <div className="relative" style={{ width: `${snapshot.lengthBeats * timelinePixelsPerBeat}px` }}>
                 <div className="relative mt-1 flex h-3 cursor-pointer overflow-hidden rounded bg-[var(--lv-bg)]" data-testid="voicing-loop-overview"
               role="button" tabIndex={0} aria-label={language === "ja" ? "進行の全体図から移動" : "Seek from progression overview"}
-              onClick={seekFromOverviewClick} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); seekToBeat((projection?.progressionBeat ?? 0)); } }}>
+              onClick={seekFromOverviewClick} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); seekToBeat((projection?.progressionBeat ?? 0), "overview"); } }}>
               {Array.from({ length: totalGroups }, (_, index) => (
                 <span key={index} className={`h-full flex-1 border-r border-[var(--lv-bg)] ${index < currentGroup - 1 ? "bg-teal-700" : index === currentGroup - 1 ? "bg-[var(--lv-accent)]" : "bg-slate-700"}`} />
               ))}
                 </div>
                 <div className="flex h-5 cursor-pointer border-b border-[var(--lv-border)] text-[10px] text-[var(--lv-text-muted)]" data-testid="voicing-loop-ruler"
                   role="button" tabIndex={0} aria-label={language === "ja" ? "目盛りから移動" : "Seek from ruler"}
-                  onClick={seekFromTimelineClick} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); seekToBeat(projection?.progressionBeat ?? 0); } }}>
+                  onClick={seekFromTimelineClick} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); seekToBeat(projection?.progressionBeat ?? 0, "ruler"); } }}>
                   {Array.from({ length: totalGroups }, (_, index) => (
                     <span key={index} className="shrink-0 border-l border-[var(--lv-border)] pl-1" style={{ width: `${Math.min(practiceGroupBeats, snapshot.lengthBeats - index * practiceGroupBeats) * timelinePixelsPerBeat}px` }}>{index + 1}</span>
                   ))}
@@ -1560,9 +1590,15 @@ export function ProgressionVoicingPracticeView({
                       aria-label={`${index + 1}/${snapshot.spans.length}: ${event?.chord.label ?? restLabel}${degree ? `, ${degree}` : ""}, ${practiceTimingLabel(span, snapshot.practiceGroupBeats ?? snapshot.meter.numerator, language)}.${event ? ` ${transportRef.current?.supportsSeek ? (language === "ja" ? "ここへ移動して試聴" : "Seek and audition") : text.auditionCard}` : ""}`}
                       disabled={!playable && !transportRef.current?.supportsSeek}
                       onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => {
-                        if (span.kind === "rest") seekToBeat(span.startBeat + 1e-6);
-                        else selectTimelineCard(eventIndex);
+                      onFocus={(event) => {
+                        if (pageTurnFrameRef.current !== undefined) cancelAnimationFrame(pageTurnFrameRef.current);
+                        pageTurnFrameRef.current = undefined;
+                        event.currentTarget.scrollIntoView({ block: "nearest", inline: "nearest" });
+                      }}
+                      onClick={(event) => {
+                        const origin: TimelineSeekOrigin = event.detail === 0 ? "keyboard" : "card";
+                        if (span.kind === "rest") seekToBeat(span.startBeat + 1e-6, origin);
+                        else selectTimelineCard(eventIndex, origin);
                       }}
                     >
                       <span className="flex min-w-0 items-baseline gap-1">
