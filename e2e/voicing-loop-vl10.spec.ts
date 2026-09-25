@@ -23,7 +23,7 @@ async function geometry(page: Page) {
     }));
 }
 
-test("VL-10 Follow changes only on manual input and seek restores page turn", async ({ page }) => {
+test("VL-10 Follow changes only on manual input and navigation restores page turn", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   const workspace = await openLoop(page);
   const viewport = workspace.getByTestId("voicing-loop-timeline-viewport");
@@ -35,15 +35,13 @@ test("VL-10 Follow changes only on manual input and seek restores page turn", as
   await viewport.hover();
   await page.mouse.wheel(120, 0);
   await expect(follow).toHaveAttribute("aria-pressed", "false");
+  await cards.nth(6).scrollIntoViewIfNeeded();
+  const beforeCard = await position(page);
   await cards.nth(6).click();
   await expect(follow).toHaveAttribute("aria-pressed", "true");
-  await expect.poll(() => position(page)).toBeGreaterThan(0);
   await page.waitForTimeout(300);
+  expect(await position(page)).toBeCloseTo(beforeCard, 0);
   await page.screenshot({ path: ".local-evaluation/vl10/page-turn-after.png", fullPage: true });
-  const card = await cards.nth(6).boundingBox();
-  const frame = await viewport.boundingBox();
-  expect(card!.x).toBeGreaterThanOrEqual(frame!.x - 3);
-  expect(card!.x).toBeLessThanOrEqual(frame!.x + 18);
   await viewport.focus();
   await page.keyboard.press("PageDown");
   await expect(follow).toHaveAttribute("aria-pressed", "false");
@@ -102,7 +100,7 @@ test("VL-10 Next Move and Next Shape stay fixed at different cards and viewports
       await page.screenshot({ path: ".local-evaluation/vl10/next-move.png", fullPage: true });
       await page.screenshot({ path: ".local-evaluation/vl10/next-shape.png", fullPage: true });
       const keepWorkspace = await openLoop(page, "vl10-keep");
-      await expect(keepWorkspace.getByTestId("voicing-loop-next-move")).toContainText("維持");
+      await expect(keepWorkspace.getByTestId("voicing-loop-next-move")).toContainText("そのまま");
       await page.screenshot({ path: ".local-evaluation/vl10/keep-transition.png", fullPage: true });
     }
     if (width === 1280 && zoom === 1) await page.screenshot({ path: ".local-evaluation/vl10/medium-window.png", fullPage: true });
@@ -130,15 +128,11 @@ test("VL-10 source preview is accessible and Follow page turns at scaling sample
 test("VL-10 reduced motion keeps Follow and skips page-turn animation", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   const workspace = await openLoop(page);
-  const viewport = workspace.getByTestId("voicing-loop-timeline-viewport");
   const card = workspace.getByTestId("voicing-loop-event").nth(6);
+  await card.scrollIntoViewIfNeeded();
+  const beforeCard = await position(page);
   await card.click();
   await expect(workspace.getByTestId("voicing-loop-follow")).toHaveAttribute("aria-pressed", "true");
-  const positions = await Promise.all([viewport.evaluate((element) => element.scrollLeft),
-    card.evaluate((element) => element.getBoundingClientRect().left)]);
-  const frame = await viewport.boundingBox();
-  expect(positions[1]).toBeGreaterThanOrEqual(frame!.x - 2);
-  expect(positions[1]).toBeLessThanOrEqual(frame!.x + 18);
   await page.waitForTimeout(300);
-  expect(await position(page)).toBeCloseTo(positions[0], 0);
+  expect(await position(page)).toBeCloseTo(beforeCard, 0);
 });

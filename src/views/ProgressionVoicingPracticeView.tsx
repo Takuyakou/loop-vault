@@ -70,9 +70,9 @@ import {
   type FingeringPreferenceCollection,
 } from "../voicingPractice/fingeringPreferences";
 import { assignPracticeHandsAcrossProgression, isPracticeHandAssignmentPlayable, type ProgressionFingeringHandTargets } from "../voicingPractice/fingeringDisplay";
-import { easeOutCubic, pageTurnTarget } from "../voicingPractice/timelineFollow";
+import { easeOutCubic, pageTurnTarget, playheadSafetyTarget, shouldHoldCardPageTurn, type TimelineSeekOrigin } from "../voicingPractice/timelineFollow";
 import { cardAuditionResolution } from "../voicingPractice/cardAudition";
-import { computeNextMoves, prioritizedMoves, type FingerMovement } from "../voicingPractice/nextMove";
+import { computeNextMoves, fixedFingerSlots, handMoveSummary, movementInterval, type FingerMovement } from "../voicingPractice/nextMove";
 import { isBlack, nextShapeRanges, type MiniKeyboardRange } from "../voicingPractice/nextShape";
 
 const ALL_PITCH_CLASSES = Object.freeze(Array.from({ length: 12 }, (_, index) => index));
@@ -548,6 +548,9 @@ export function ProgressionVoicingPracticeView({
   const pageTurnHighlightTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const [pageTurnHighlightIndex, setPageTurnHighlightIndex] = useState<number>();
   const forceFollowRef = useRef(false);
+  const cardHeldSpanRef = useRef<number>();
+  const followEnabledRef = useRef(followEnabled);
+  followEnabledRef.current = followEnabled;
   useEffect(() => () => {
     if (pageTurnFrameRef.current !== undefined) cancelAnimationFrame(pageTurnFrameRef.current);
     if (pageTurnHighlightTimerRef.current !== undefined) clearTimeout(pageTurnHighlightTimerRef.current);
@@ -564,6 +567,7 @@ export function ProgressionVoicingPracticeView({
     transport?.stop();
     setRuntimeError(undefined);
     setAuditionedIndex(undefined);
+    cardHeldSpanRef.current = undefined;
     setSeekAnchorIndex(0);
     setClockState(sourceSnapshot
       ? createProgressionPracticeClockState(sourceSnapshot, { countInBars })
@@ -713,6 +717,29 @@ export function ProgressionVoicingPracticeView({
     if (timelineScale !== effectiveTimelineScale) setTimelineScale(effectiveTimelineScale);
   }, [effectiveTimelineScale, timelineScale]);
   const playheadX = (projection?.progressionBeat ?? 0) * timelinePixelsPerBeat;
+  function animateTimelinePageTurn(target: number, spanIndex: number) {
+    const viewport = timelineViewportRef.current;
+    if (!viewport || Math.abs(viewport.scrollLeft - target) <= 2) return;
+    if (pageTurnFrameRef.current !== undefined) cancelAnimationFrame(pageTurnFrameRef.current);
+    const start = viewport.scrollLeft;
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    if (reducedMotion || typeof requestAnimationFrame !== "function") {
+      viewport.scrollLeft = target;
+      pageTurnFrameRef.current = undefined;
+    } else {
+      const startedAt = performance.now();
+      const tick = (now: number) => {
+        const progress = Math.min(1, (now - startedAt) / 250);
+        viewport.scrollLeft = start + (target - start) * easeOutCubic(progress);
+        if (progress < 1) pageTurnFrameRef.current = requestAnimationFrame(tick);
+        else pageTurnFrameRef.current = undefined;
+      };
+      pageTurnFrameRef.current = requestAnimationFrame(tick);
+    }
+    setPageTurnHighlightIndex(spanIndex);
+    if (pageTurnHighlightTimerRef.current !== undefined) clearTimeout(pageTurnHighlightTimerRef.current);
+    pageTurnHighlightTimerRef.current = setTimeout(() => setPageTurnHighlightIndex(undefined), 350);
+  }
   useLayoutEffect(() => {
     if (!snapshot || !clockState || !playheadRef.current) return;
     const state = clockState;
@@ -720,8 +747,15 @@ export function ProgressionVoicingPracticeView({
     const request = runtimeRequestRef.current;
     const paint = (absoluteBeat: number) => {
       const position = projectProgressionPracticeClock(snapshot, { ...state, transportBeat: absoluteBeat });
-      if (playheadRef.current) playheadRef.current.style.transform = `translateX(${position.progressionBeat * timelinePixelsPerBeat}px)`;
+      const playheadPx = position.progressionBeat * timelinePixelsPerBeat;
+      if (playheadRef.current) playheadRef.current.style.transform = `translateX(${playheadPx}px)`;
       if (currentProgressRef.current) currentProgressRef.current.style.width = `${position.chordProgress * 100}%`;
+      const viewport = timelineViewportRef.current;
+      if (followEnabledRef.current && viewport && state.status === "running" && pageTurnFrameRef.current === undefined) {
+        const target = playheadSafetyTarget(playheadPx, viewport.clientWidth, viewport.scrollLeft,
+          snapshot.lengthBeats * timelinePixelsPerBeat);
+        if (target !== undefined) animateTimelinePageTurn(target, position.currentSpanIndex);
+      }
     };
     paint(state.transportBeat);
     if (state.status !== "running" && state.status !== "count-in" || typeof requestAnimationFrame !== "function") return;
@@ -750,6 +784,13 @@ export function ProgressionVoicingPracticeView({
     const viewport = timelineViewportRef.current;
     const span = snapshot?.spans[transportCurrentSpanIndex];
     if (!followEnabled || !viewport || !span) return;
+    if (cardHeldSpanRef.current === transportCurrentSpanIndex) {
+      if (pageTurnFrameRef.current !== undefined) cancelAnimationFrame(pageTurnFrameRef.current);
+      pageTurnFrameRef.current = undefined;
+      forceFollowRef.current = false;
+      return;
+    }
+    cardHeldSpanRef.current = undefined;
     const target = pageTurnTarget({
       chordStartBeat: span.startBeat,
       chordDurationBeats: span.durationBeats,
@@ -761,28 +802,11 @@ export function ProgressionVoicingPracticeView({
     forceFollowRef.current = false;
     if (pageTurnFrameRef.current !== undefined) cancelAnimationFrame(pageTurnFrameRef.current);
     pageTurnFrameRef.current = undefined;
-    if (target === undefined || Math.abs(viewport.scrollLeft - target) <= 2) return;
-    const start = viewport.scrollLeft;
-    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
-    if (reducedMotion || typeof requestAnimationFrame !== "function") {
-      viewport.scrollLeft = target;
-    } else {
-      const startedAt = performance.now();
-      const tick = (now: number) => {
-        const progress = Math.min(1, (now - startedAt) / 250);
-        viewport.scrollLeft = start + (target - start) * easeOutCubic(progress);
-        if (progress < 1) pageTurnFrameRef.current = requestAnimationFrame(tick);
-        else pageTurnFrameRef.current = undefined;
-      };
-      pageTurnFrameRef.current = requestAnimationFrame(tick);
-    }
-    setPageTurnHighlightIndex(transportCurrentSpanIndex);
-    if (pageTurnHighlightTimerRef.current !== undefined) clearTimeout(pageTurnHighlightTimerRef.current);
-    pageTurnHighlightTimerRef.current = setTimeout(() => setPageTurnHighlightIndex(undefined), 350);
+    if (target !== undefined) animateTimelinePageTurn(target, transportCurrentSpanIndex);
   }, [followEnabled, followResumeRevision, snapshot, timelinePixelsPerBeat, transportCurrentSpanIndex]);
 
-  function resumeTimelineFollow() {
-    forceFollowRef.current = true;
+  function resumeTimelineFollow(force = false) {
+    forceFollowRef.current = force;
     setFollowEnabled(true);
     setFollowResumeRevision((revision) => revision + 1);
   }
@@ -792,6 +816,7 @@ export function ProgressionVoicingPracticeView({
     if (pageTurnFrameRef.current !== undefined) cancelAnimationFrame(pageTurnFrameRef.current);
     pageTurnFrameRef.current = undefined;
     forceFollowRef.current = false;
+    cardHeldSpanRef.current = undefined;
     setFollowEnabled(false);
   }
   function changeSelection(next: ProgressionVoicingSelection) {
@@ -867,12 +892,14 @@ export function ProgressionVoicingPracticeView({
     });
     setRuntimeError(undefined);
     const anchorBeat = snapshot.events[seekAnchorIndex]?.startBeat ?? 0;
-    const anchored = anchorBeat > 0
-      ? reduceProgressionPracticeClock(snapshot, ready, {
-        type: "SEEK", status: "stopped", absoluteBeat: runtimeCountInBars * practiceGroupBeats + anchorBeat, anchorBeat,
+    const started = reduceProgressionPracticeClock(snapshot, ready, { type: "START" });
+    // START resets the clock to zero; apply the selected card anchor afterwards.
+    setClockState(anchorBeat > 0
+      ? reduceProgressionPracticeClock(snapshot, started, {
+        type: "SEEK", status: runtimeCountInBars > 0 ? "count-in" : "running",
+        absoluteBeat: runtimeCountInBars > 0 ? 0 : anchorBeat, anchorBeat,
       })
-      : ready;
-    setClockState(reduceProgressionPracticeClock(snapshot, anchored, { type: "START" }));
+      : started);
     resumeTimelineFollow();
     await launchRuntime(anchorBeat, clockState.bpm, runtimeCountInBars);
   }
@@ -911,10 +938,14 @@ export function ProgressionVoicingPracticeView({
     }
   }
 
-  function seekToEvent(eventIndex: number) {
+  function seekToEvent(eventIndex: number, origin: TimelineSeekOrigin = "keyboard") {
     if (!snapshot || !clockState || !snapshot.events[eventIndex]) return;
-    resumeTimelineFollow();
+    cardHeldSpanRef.current = shouldHoldCardPageTurn(origin)
+      ? snapshot.spans.findIndex((span) => span.kind === "chord" && span.eventIndex === eventIndex)
+      : undefined;
+    resumeTimelineFollow(origin === "ruler" || origin === "overview" || origin === "keyboard");
     const anchorBeat = snapshot.events[eventIndex]!.startBeat;
+    setSeekAnchorIndex(eventIndex);
     auditionRequestRef.current += 1;
     setAuditionedIndex(undefined);
     const result = transportRef.current?.seek?.(eventIndex);
@@ -925,39 +956,38 @@ export function ProgressionVoicingPracticeView({
       return;
     }
     if (clockState.status !== "ready" && clockState.status !== "stopped") return;
-    setSeekAnchorIndex(eventIndex);
     setClockState((state) => state ? reduceProgressionPracticeClock(snapshot, state, {
       type: "SEEK", status: "stopped", absoluteBeat: state.countInBars * practiceGroupBeats + anchorBeat, anchorBeat,
     }) : state);
   }
 
-  function selectTimelineCard(eventIndex: number) {
+  function selectTimelineCard(eventIndex: number, origin: TimelineSeekOrigin) {
     if (!transportRef.current?.supportsSeek) { void auditionResolved(eventIndex, true); return; }
     const status = clockStateRef.current?.status;
-    seekToEvent(eventIndex);
+    seekToEvent(eventIndex, origin);
     if (status === "ready" || status === "stopped" || status === "paused") {
       // The clicked event index is passed directly; never resolve from asynchronously updated Current state.
       void auditionResolved(eventIndex, true);
     }
   }
 
-  function seekToBeat(beat: number) {
+  function seekToBeat(beat: number, origin: TimelineSeekOrigin) {
     if (!snapshot) return;
     const eventIndex = chordIndexAtTimelineBeat(snapshot, beat);
-    if (eventIndex !== undefined) seekToEvent(eventIndex);
+    if (eventIndex !== undefined) seekToEvent(eventIndex, origin);
   }
 
   function seekFromTimelineClick(event: MouseEvent<HTMLElement>) {
     if (!snapshot || !timelineViewportRef.current) return;
     const viewport = timelineViewportRef.current;
     const beat = (event.clientX - viewport.getBoundingClientRect().left + viewport.scrollLeft) / timelinePixelsPerBeat;
-    seekToBeat(beat);
+    seekToBeat(beat, "ruler");
   }
 
   function seekFromOverviewClick(event: MouseEvent<HTMLElement>) {
     if (!snapshot) return;
     const rect = event.currentTarget.getBoundingClientRect();
-    seekToBeat(((event.clientX - rect.left) / Math.max(1, rect.width)) * snapshot.lengthBeats);
+    seekToBeat(((event.clientX - rect.left) / Math.max(1, rect.width)) * snapshot.lengthBeats, "overview");
   }
 
   function pause() {
@@ -1162,7 +1192,7 @@ export function ProgressionVoicingPracticeView({
         else if (paused) void resume();
         else void start();
       } else if (key === "escape") stop();
-      else if (key === "f") resumeTimelineFollow();
+      else if (key === "f") resumeTimelineFollow(true);
       else if (key === "m") toggleMetronome();
       else if (key === "r") changeReferenceSound(!referenceSoundEnabled);
       else if (snapshot.events.length) {
@@ -1484,7 +1514,7 @@ export function ProgressionVoicingPracticeView({
               </div>
               <div className="flex items-center gap-1 text-[var(--lv-text-muted)]">
                 <button type="button" className={`rounded px-1.5 py-0.5 ${followEnabled ? "text-[var(--lv-accent)]" : "text-amber-200"}`}
-                  aria-pressed={followEnabled} onClick={resumeTimelineFollow} data-testid="voicing-loop-follow">{followEnabled ? "FOLLOW" : "MANUAL · F"}</button>
+                  aria-pressed={followEnabled} onClick={() => resumeTimelineFollow(true)} data-testid="voicing-loop-follow">{followEnabled ? "FOLLOW" : "MANUAL · F"}</button>
                 <span data-testid="voicing-loop-source-meter">{language === "ja" ? "元の拍子" : "Source meter"} {snapshot.meter.numerator}/{snapshot.meter.denominator}</span>
                 <span className="ml-2">{language === "ja" ? "表示" : "View"}</span>
                 {([8, 12, 16] as const).map((scale) => (
@@ -1511,14 +1541,14 @@ export function ProgressionVoicingPracticeView({
               <div className="relative" style={{ width: `${snapshot.lengthBeats * timelinePixelsPerBeat}px` }}>
                 <div className="relative mt-1 flex h-3 cursor-pointer overflow-hidden rounded bg-[var(--lv-bg)]" data-testid="voicing-loop-overview"
               role="button" tabIndex={0} aria-label={language === "ja" ? "進行の全体図から移動" : "Seek from progression overview"}
-              onClick={seekFromOverviewClick} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); seekToBeat((projection?.progressionBeat ?? 0)); } }}>
+              onClick={seekFromOverviewClick} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); seekToBeat((projection?.progressionBeat ?? 0), "overview"); } }}>
               {Array.from({ length: totalGroups }, (_, index) => (
                 <span key={index} className={`h-full flex-1 border-r border-[var(--lv-bg)] ${index < currentGroup - 1 ? "bg-teal-700" : index === currentGroup - 1 ? "bg-[var(--lv-accent)]" : "bg-slate-700"}`} />
               ))}
                 </div>
                 <div className="flex h-5 cursor-pointer border-b border-[var(--lv-border)] text-[10px] text-[var(--lv-text-muted)]" data-testid="voicing-loop-ruler"
                   role="button" tabIndex={0} aria-label={language === "ja" ? "目盛りから移動" : "Seek from ruler"}
-                  onClick={seekFromTimelineClick} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); seekToBeat(projection?.progressionBeat ?? 0); } }}>
+                  onClick={seekFromTimelineClick} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); seekToBeat(projection?.progressionBeat ?? 0, "ruler"); } }}>
                   {Array.from({ length: totalGroups }, (_, index) => (
                     <span key={index} className="shrink-0 border-l border-[var(--lv-border)] pl-1" style={{ width: `${Math.min(practiceGroupBeats, snapshot.lengthBeats - index * practiceGroupBeats) * timelinePixelsPerBeat}px` }}>{index + 1}</span>
                   ))}
@@ -1560,9 +1590,15 @@ export function ProgressionVoicingPracticeView({
                       aria-label={`${index + 1}/${snapshot.spans.length}: ${event?.chord.label ?? restLabel}${degree ? `, ${degree}` : ""}, ${practiceTimingLabel(span, snapshot.practiceGroupBeats ?? snapshot.meter.numerator, language)}.${event ? ` ${transportRef.current?.supportsSeek ? (language === "ja" ? "ここへ移動して試聴" : "Seek and audition") : text.auditionCard}` : ""}`}
                       disabled={!playable && !transportRef.current?.supportsSeek}
                       onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => {
-                        if (span.kind === "rest") seekToBeat(span.startBeat + 1e-6);
-                        else selectTimelineCard(eventIndex);
+                      onFocus={(event) => {
+                        if (pageTurnFrameRef.current !== undefined) cancelAnimationFrame(pageTurnFrameRef.current);
+                        pageTurnFrameRef.current = undefined;
+                        event.currentTarget.scrollIntoView({ block: "nearest", inline: "nearest" });
+                      }}
+                      onClick={(event) => {
+                        const origin: TimelineSeekOrigin = event.detail === 0 ? "keyboard" : "card";
+                        if (span.kind === "rest") seekToBeat(span.startBeat + 1e-6, origin);
+                        else selectTimelineCard(eventIndex, origin);
                       }}
                     >
                       <span className="flex min-w-0 items-baseline gap-1">
@@ -1939,7 +1975,7 @@ function moveText(move: FingerMovement, accidentalStyle: NoteAccidentalStyle, la
   if (move.kind === "ADD") return `${finger} ${note(move.to!)} ${language === "ja" ? "追加" : "add"}`;
   if (move.kind === "RELEASE") return `${finger} ${language === "ja" ? "離す" : "release"} ${note(move.from!)}`;
   if (move.kind === "KEEP") return `${finger} ${language === "ja" ? "維持" : "keep"} ${note(move.from!)}`;
-  return `${finger} ${note(move.from!)} → ${note(move.to!)} ${move.semitones! > 0 ? "↑" : "↓"}${Math.abs(move.semitones!)}`;
+  return `${finger} ${note(move.from!)} → ${note(move.to!)} ${movementInterval(move.semitones!, language)}`;
 }
 
 const NextMovePreview = memo(function NextMovePreview({ moves, loopWrap, hasNext, accidentalStyle, language }: {
@@ -1949,25 +1985,42 @@ const NextMovePreview = memo(function NextMovePreview({ moves, loopWrap, hasNext
   readonly accidentalStyle: NoteAccidentalStyle;
   readonly language: AppLanguage;
 }) {
-  const { visible, omitted } = prioritizedMoves(moves, 5);
-  const allText = moves.map((move) => moveText(move, accidentalStyle, language)).join(" · ");
+  const slots = fixedFingerSlots(hasNext ? moves : []);
+  const note = (pitch: number) => formatMidiNoteForDisplay(pitch, "fl-studio", accidentalStyle);
   return (
-    <section className="mt-2 h-[68px] min-h-[68px] min-w-0 shrink-0 overflow-hidden border-t border-[var(--lv-border)] pt-1.5" data-testid="voicing-loop-next-move" aria-label={language === "ja" ? "次への動き" : "Next move"}>
-      <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.1em] text-[var(--lv-text-secondary)]">
-        <span>{language === "ja" ? "次への動き" : "NEXT MOVE"}</span>
-        {loopWrap ? <span className="font-normal tracking-normal text-[var(--lv-accent)]">{language === "ja" ? "ループ先" : "Loop to start"}</span> : null}
-        {moves.some((move) => move.estimated) ? <span className="font-normal tracking-normal text-amber-200">{language === "ja" ? "推定" : "Estimated"}</span> : null}
+    <section className="mt-2 h-[68px] min-h-[68px] min-w-0 shrink-0 overflow-hidden border-t border-[var(--lv-border)] pt-1" data-testid="voicing-loop-next-move" aria-label={language === "ja" ? "次への動き" : "Next move"}>
+      <div className="flex min-w-0 items-center justify-between gap-2 text-[10px] font-bold tracking-[0.04em] text-[var(--lv-text-secondary)]">
+        <span className="min-w-0 truncate">{language === "ja" ? "次への動き" : "NEXT MOVE"}{loopWrap ? ` · ${language === "ja" ? "ループ先" : "Loop to start"}` : ""}</span>
+        <span className="min-w-0 truncate text-amber-200">LEFT · {handMoveSummary(moves.filter((move) => move.hand === "left"), language)}</span>
+        <span className="min-w-0 truncate text-cyan-200">RIGHT · {handMoveSummary(moves.filter((move) => move.hand === "right"), language)}</span>
+        {moves.some((move) => move.estimated) ? <span className="shrink-0 text-[var(--lv-text-muted)]">{language === "ja" ? "推定" : "Estimated"}</span> : null}
       </div>
-      {hasNext && moves.length ? (
-        <div className="mt-1 flex min-w-0 items-center gap-1 overflow-hidden whitespace-nowrap" title={allText}>
-          {visible.map((move, index) => <span key={`${move.hand}-${move.finger ?? index}-${index}`}
-            className={`min-w-0 shrink-0 rounded border px-1.5 py-1 text-[11px] font-semibold ${move.hand === "left" ? "border-amber-400/40 text-amber-200" : "border-cyan-300/40 text-cyan-200"}`}
-            title={moveText(move, accidentalStyle, language)}>{moveText(move, accidentalStyle, language)}</span>)}
-          {omitted ? <span className="shrink-0 rounded border border-[var(--lv-border)] px-1.5 py-1 text-[11px]" tabIndex={0}
-            title={allText} aria-label={allText}>+{omitted}</span> : null}
-          <span className="sr-only">{allText}</span>
-        </div>
-      ) : <p className="mt-1 text-xs text-[var(--lv-text-muted)]">{language === "ja" ? "次の形はありません" : "No next shape"}</p>}
+      <div className="mt-0.5 grid min-w-0 grid-cols-10 gap-0.5" role="list" aria-label={language === "ja" ? "左手5番から1番、右手1番から5番" : "Left 5 to 1, right 1 to 5"}>
+        {slots.map((slot) => {
+          const id = `${slot.hand === "left" ? "L" : "R"}${slot.finger}`;
+          const strongest = slot.moves.some((move) => move.kind === "LARGE") ? "LARGE"
+            : slot.moves.some((move) => move.kind === "MEDIUM" || move.kind === "ADD" || move.kind === "RELEASE") ? "MEDIUM"
+              : slot.moves.some((move) => move.kind === "SMALL") ? "SMALL" : slot.moves.length ? "KEEP" : "EMPTY";
+          const action = slot.moves.map((move) => move.kind === "ADD" ? "+押す" : move.kind === "RELEASE" ? "×離す"
+            : move.kind === "KEEP" ? "•" : movementInterval(move.semitones!, language)).join("/") || "·";
+          const next = slot.moves.reduce<number | undefined>((value, move) => move.to ?? value, undefined);
+          const description = slot.moves.length
+            ? slot.moves.map((move) => moveText(move, accidentalStyle, language)).join("; ")
+            : `${id} ${language === "ja" ? "使用しない" : "unused"}`;
+          const strength = strongest === "LARGE" ? "border-current bg-current/15 font-extrabold"
+            : strongest === "MEDIUM" ? "border-current/70 bg-current/10 font-bold"
+              : strongest === "SMALL" ? "border-current/40 font-semibold"
+                : strongest === "KEEP" ? "border-current/20 opacity-60" : "border-dashed border-current/20 opacity-40";
+          return <div key={id} role="listitem" data-testid="voicing-loop-finger-slot" data-finger={id} data-strength={strongest}
+            className={`flex h-[43px] min-w-0 flex-col items-center justify-center overflow-hidden rounded border leading-none ${slot.hand === "left" ? "text-amber-200" : "text-cyan-200"} ${strength} ${id === "R1" ? "ml-0.5" : ""}`}
+            aria-label={`${id}: ${description}${slot.moves.some((move) => move.estimated) ? ` (${language === "ja" ? "推定" : "estimated"})` : ""}`}
+            title={`${id}: ${description}`}>
+            <span className="text-[10px] font-bold">{id}</span>
+            <span className="mt-0.5 w-full truncate px-0.5 text-center text-[10px]">{action}</span>
+            <span className="mt-0.5 text-[9px]">{next === undefined ? "·" : note(next)}</span>
+          </div>;
+        })}
+      </div>
     </section>
   );
 });
@@ -2046,7 +2099,7 @@ function HandVoicingSummary({
 }) {
   if (!pitches.length) return null;
   const prefix = hand === "left" ? "L" : "R";
-  const handBorder = hand === "left" ? "border-amber-400/50 bg-amber-400/[0.08]" : "border-teal-300/50 bg-teal-300/[0.08]";
+  const handBorder = hand === "left" ? "border-amber-300/75 bg-amber-400/[0.17]" : "border-teal-300/50 bg-teal-300/[0.08]";
   const handText = hand === "left" ? "text-amber-200" : "text-teal-200";
   return (
     <section className={`min-w-0 rounded-[var(--lv-radius-sm)] border p-2.5 ${handBorder}`} data-testid={`voicing-loop-${hand}-hand`}>
@@ -2081,7 +2134,7 @@ function CompactHandVoicing({ voicing, accidentalStyle, fingering, hand, pitches
 }) {
   if (!pitches.length) return null;
   const prefix = hand === "left" ? "L" : "R";
-  const handBorder = hand === "left" ? "border-amber-400/60 bg-amber-400/[0.08]" : "border-[var(--lv-accent)] bg-teal-300/[0.08]";
+  const handBorder = hand === "left" ? "border-amber-300/55 bg-amber-400/[0.12]" : "border-[var(--lv-accent)] bg-teal-300/[0.08]";
   const handText = hand === "left" ? "text-amber-200" : "text-[var(--lv-accent)]";
   return (
     <div className={`min-w-0 rounded-[var(--lv-radius-sm)] border px-3 py-2 ${handBorder}`} data-testid={`voicing-loop-next-${hand}-hand`}>

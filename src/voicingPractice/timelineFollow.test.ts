@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { easeOutCubic, pageTurnTarget } from "./timelineFollow";
+import { easeOutCubic, pageTurnTarget, playheadSafetyTarget, shouldHoldCardPageTurn } from "./timelineFollow";
 
 describe("timeline page-turn follow", () => {
   it.each([8, 12, 16])("keeps a fully visible chord steady at display %i", (scale) => {
@@ -51,5 +51,20 @@ describe("timeline page-turn follow", () => {
     expect(easeOutCubic(-1)).toBe(0);
     expect(easeOutCubic(0.5)).toBe(0.875);
     expect(easeOutCubic(2)).toBe(1);
+  });
+});
+
+
+describe("VL-11 seek origin and playhead safety", () => {
+  it("holds only mouse card seek; navigation and transport can page turn", () => {
+    expect(shouldHoldCardPageTurn("card")).toBe(true);
+    for (const origin of ["ruler", "overview", "keyboard", "transport"] as const)
+      expect(shouldHoldCardPageTurn(origin)).toBe(false);
+  });
+  it("turns only when the playhead leaves a 12px safe area", () => {
+    expect(playheadSafetyTarget(12, 400, 0, 2000)).toBeUndefined();
+    expect(playheadSafetyTarget(388, 400, 0, 2000)).toBeUndefined();
+    expect(playheadSafetyTarget(389, 400, 0, 2000)).toBe(289);
+    expect(playheadSafetyTarget(99, 400, 100, 2000)).toBe(87);
   });
 });
