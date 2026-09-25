@@ -2099,7 +2099,7 @@ function HandVoicingSummary({
 }) {
   if (!pitches.length) return null;
   const prefix = hand === "left" ? "L" : "R";
-  const handBorder = hand === "left" ? "border-amber-400/50 bg-amber-400/[0.08]" : "border-teal-300/50 bg-teal-300/[0.08]";
+  const handBorder = hand === "left" ? "border-amber-300/75 bg-amber-400/[0.17]" : "border-teal-300/50 bg-teal-300/[0.08]";
   const handText = hand === "left" ? "text-amber-200" : "text-teal-200";
   return (
     <section className={`min-w-0 rounded-[var(--lv-radius-sm)] border p-2.5 ${handBorder}`} data-testid={`voicing-loop-${hand}-hand`}>
@@ -2134,7 +2134,7 @@ function CompactHandVoicing({ voicing, accidentalStyle, fingering, hand, pitches
 }) {
   if (!pitches.length) return null;
   const prefix = hand === "left" ? "L" : "R";
-  const handBorder = hand === "left" ? "border-amber-400/60 bg-amber-400/[0.08]" : "border-[var(--lv-accent)] bg-teal-300/[0.08]";
+  const handBorder = hand === "left" ? "border-amber-300/55 bg-amber-400/[0.12]" : "border-[var(--lv-accent)] bg-teal-300/[0.08]";
   const handText = hand === "left" ? "text-amber-200" : "text-[var(--lv-accent)]";
   return (
     <div className={`min-w-0 rounded-[var(--lv-radius-sm)] border px-3 py-2 ${handBorder}`} data-testid={`voicing-loop-next-${hand}-hand`}>
