@@ -58,7 +58,7 @@ test("P5.32 shows the resolved two-hand plan, edits personal fingering, and pres
   await page.mouse.down();
   await page.mouse.move(bpmBox!.x + bpmBox!.width / 2, bpmBox!.y + bpmBox!.height / 2 - 30, { steps: 5 });
   await page.mouse.up();
-  await expect(workspace.locator("#voicing-loop-bpm")).toHaveValue("106");
+  await expect(workspace.locator("#voicing-loop-bpm")).toHaveValue("104");
 
   await workspace.getByRole("button", { name: "運指を編集", exact: true }).click();
   const editor = page.getByRole("dialog", { name: "運指を編集" });

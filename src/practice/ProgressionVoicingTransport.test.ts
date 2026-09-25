@@ -196,10 +196,11 @@ describe("ProgressionVoicingTransport", () => {
           worker?.callback(1);
         } else runtime.stop();
         expect(toneMock.activeScheduleIds.size).toBeLessThanOrEqual(131);
-        expect(toneMock.activeInstruments.size).toBeLessThanOrEqual(3);
+        expect(toneMock.activeInstruments.size).toBeLessThanOrEqual(6);
       }
       runtime.stop();
       expect(toneMock.activeScheduleIds.size).toBe(0);
+      await new Promise((resolve) => globalThis.setTimeout(resolve, 30));
       expect(toneMock.activeInstruments.size).toBe(0);
     }
   });
@@ -360,7 +361,7 @@ describe("ProgressionVoicingTransport", () => {
     await runtime.resume();
     expect(sustained.triggerAttack).toHaveBeenCalledTimes(1);
     await runtime.audition([60, 64, 67], "piano");
-    expect(toneMock.instruments[toneMock.instruments.length - 1]!.triggerAttackRelease).toHaveBeenCalledWith(["C4", "E4", "G4"], 2, 1.012, 0.72);
+    expect(toneMock.instruments[toneMock.instruments.length - 1]!.triggerAttackRelease).toHaveBeenCalledWith(["C4", "E4", "G4"], 2, 1.005, 0.72);
     runtime.setReferenceSoundEnabled(false);
     expect(toneMock.instruments[toneMock.instruments.length - 1]!.releaseAll).toHaveBeenCalledTimes(1);
     runtime.setReferenceSoundEnabled(true);
@@ -600,10 +601,11 @@ describe("ProgressionVoicingTransport", () => {
     expect(toneMock.instruments[toneMock.instruments.length - 1]?.triggerAttackRelease).toHaveBeenCalledWith(
       ["C4", "E4", "G4"],
       2,
-      1.012,
+      1.005,
       0.72,
     );
     runtime.stop();
+    await new Promise((resolve) => globalThis.setTimeout(resolve, 30));
     expect(toneMock.activeInstruments.size).toBe(0);
   });
 
@@ -632,7 +634,7 @@ describe("ProgressionVoicingTransport", () => {
     expect(toneMock.instruments[2]?.triggerAttackRelease).toHaveBeenCalledWith(
       ["C4", "E4", "G4"],
       2,
-      1.012,
+      1.005,
       0.72,
     );
     boundary.callback(1);
@@ -652,6 +654,7 @@ describe("ProgressionVoicingTransport", () => {
     expect(toneMock.transport.bpm.rampTo).toHaveBeenCalledWith(122, 0.1, expect.any(Number));
     runtime.stop();
     expect(toneMock.transport.clear).toHaveBeenCalledTimes(scheduleCount);
+    await new Promise((resolve) => globalThis.setTimeout(resolve, 30));
     expect(toneMock.activeInstruments.size).toBe(0);
   });
 
@@ -665,23 +668,25 @@ describe("ProgressionVoicingTransport", () => {
     expect(auditionInstrument.triggerAttackRelease).toHaveBeenLastCalledWith(
       ["C4", "E4", "G4"],
       2,
-      1.012,
+      1.005,
       0.72,
     );
     await runtime.audition([62, 65, 69]);
+    const secondBank = toneMock.instruments[3]!;
     expect(auditionInstrument.releaseAll).toHaveBeenCalledTimes(2);
-    expect(auditionInstrument.triggerAttackRelease).toHaveBeenLastCalledWith(
+    expect(secondBank.triggerAttackRelease).toHaveBeenLastCalledWith(
       ["D4", "F4", "A4"],
       2,
-      1.012,
+      1.005,
       0.72,
     );
 
     await runtime.audition([45, 54, 59, 62, 66]);
+    expect(toneMock.instruments).toHaveLength(4);
     expect(auditionInstrument.triggerAttackRelease).toHaveBeenLastCalledWith(
       ["A2", "F#3", "B3", "D4", "F#4"],
       2,
-      1.012,
+      1.005,
       0.72,
     );
 
@@ -690,6 +695,25 @@ describe("ProgressionVoicingTransport", () => {
     toneMock.drawCallbacks.shift()?.();
     expect(onTransportBeat).toHaveBeenLastCalledWith(1);
     expect(toneMock.transport.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it("reuses two bounded audition banks through rapid alternating card clicks and fades before cleanup", async () => {
+    const runtime = new ProgressionVoicingTransport();
+    for (let index = 0; index < 10; index += 1) {
+      await runtime.audition(index % 2 ? [62, 65, 69] : [60, 64, 67], index % 2 ? "piano" : "electric-piano");
+    }
+    expect(toneMock.instruments).toHaveLength(2);
+    expect(toneMock.activeInstruments.size).toBe(2);
+    expect(toneMock.gains).toHaveLength(2);
+    for (const gain of toneMock.gains) {
+      expect(gain.gain.linearRampToValueAtTime).toHaveBeenCalledWith(0, 1.012);
+      expect(gain.gain.linearRampToValueAtTime).toHaveBeenCalledWith(1, 1.017);
+    }
+    runtime.stop();
+    expect(toneMock.activeInstruments.size).toBe(2);
+    await new Promise((resolve) => globalThis.setTimeout(resolve, 30));
+    expect(toneMock.activeInstruments.size).toBe(0);
+    expect(toneMock.gains.every((gain) => gain.dispose.mock.calls.length === 1)).toBe(true);
   });
 
   it("resumes the audio context before resuming or restarting progression and reference audio", async () => {

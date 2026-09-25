@@ -1183,8 +1183,9 @@ export function ProgressionVoicingPracticeView({
       if (event.defaultPrevented || event.isComposing || !progressionLoaded || !snapshot || bulkSourceOpen || fingeringEditorOpen) return;
       const target = event.target;
       if (target === timelineViewportRef.current && ["ArrowLeft", "ArrowRight", "PageUp", "PageDown", "Home", "End"].includes(event.key)) return;
-      if (target instanceof Element && target.closest("input, select, textarea, [contenteditable='true'], [role='dialog']")) return;
+      if (target instanceof Element && target.closest("input, select, textarea, [contenteditable], [role='textbox'], [role='dialog']")) return;
       const key = event.key.toLowerCase();
+      if (key === " " && target instanceof Element && target.closest("button, [role='button']")) return;
       if (![" ", "arrowleft", "arrowright", "home", "end", "f", "m", "r", "escape"].includes(key)) return;
       event.preventDefault();
       if (key === " ") {
@@ -1402,7 +1403,7 @@ export function ProgressionVoicingPracticeView({
         <>
           <div className="h-[clamp(560px,72dvh,760px)] min-w-0 shrink-0 lg:h-[clamp(300px,36dvh,380px)]" data-testid="voicing-loop-current-next">
             <div className="grid h-full min-h-0 min-w-0 grid-rows-2 gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,440px)] lg:grid-rows-1">
-              <Surface variant="primary" className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden p-3" data-testid="voicing-loop-current-panel" tabIndex={0} aria-label={language === "ja" ? "現在のコード詳細" : "Current chord details"}>
+              <Surface variant="primary" className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden p-3" data-testid="voicing-loop-current-panel" aria-label={language === "ja" ? "現在のコード詳細" : "Current chord details"}>
                 <div className="min-h-0 min-w-0 flex-1 overflow-y-auto" tabIndex={0}
                   aria-label={language === "ja" ? "現在のコードの詳細をスクロール" : "Scroll current chord details"}>
                 <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
@@ -1462,7 +1463,7 @@ export function ProgressionVoicingPracticeView({
                   hasNext={Boolean(currentVoicing && nextVoicing)} accidentalStyle={accidentalStyle} language={language} />
               </Surface>
               <div className="flex h-full min-h-0 min-w-0 flex-col gap-2">
-                <Surface className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-3" data-testid="voicing-loop-next-panel" tabIndex={0} aria-label={language === "ja" ? "次のコード詳細" : "Next chord details"}>
+                <Surface className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-3" data-testid="voicing-loop-next-panel" aria-label={language === "ja" ? "次のコード詳細" : "Next chord details"}>
                   <div className="min-h-0 min-w-0 flex-1 overflow-y-auto" tabIndex={0}
                     aria-label={language === "ja" ? "次のコードの詳細をスクロール" : "Scroll next chord details"}>
                   <div className="flex items-center justify-between gap-2">
@@ -1712,9 +1713,9 @@ export function ProgressionVoicingPracticeView({
             </Modal>
           ) : null}
 
-          <Surface className="h-[92px] min-w-0 shrink-0 overflow-hidden px-2 py-1" data-testid="voicing-loop-transport">
-            <div className="grid h-full min-w-0 grid-rows-2 gap-1">
-              <div className="flex min-w-0 items-center gap-2 overflow-x-auto whitespace-nowrap" data-testid="voicing-loop-transport-primary">
+          <Surface className="h-[92px] min-w-0 shrink-0 overflow-hidden px-2 py-0.5" data-testid="voicing-loop-transport">
+            <div className="grid h-full min-w-0 grid-rows-[minmax(0,1fr)_minmax(0,1fr)] gap-1">
+              <div className="lv-transport-row flex min-h-0 min-w-0 items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap" data-testid="voicing-loop-transport-primary">
               <BpmDragControl
                 label={text.bpm}
                 dragLabel={text.bpmDrag}
@@ -1800,7 +1801,7 @@ export function ProgressionVoicingPracticeView({
               </label>
               <Button size="sm" variant={metronomeEnabled ? "secondary" : "ghost"} aria-pressed={metronomeEnabled} onClick={toggleMetronome}>{text.metronome}: {metronomeEnabled ? "ON" : "OFF"}</Button>
               </div>
-              <div className="flex min-w-0 items-center gap-2 overflow-x-auto whitespace-nowrap border-t border-[var(--lv-border)] pt-1" data-testid="voicing-loop-transport-midi-row">
+              <div className="lv-transport-row flex min-h-0 min-w-0 items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap border-t border-[var(--lv-border)] pt-0.5" data-testid="voicing-loop-transport-midi-row">
               <span className={`inline-flex min-h-8 items-center gap-1.5 px-1 text-xs ${midiStatus === "connected" ? "text-teal-200" : "text-amber-200"}`} data-testid="voicing-loop-midi-status">
                 <span aria-hidden="true" className={`h-2 w-2 rounded-full ${midiStatus === "connected" ? "bg-teal-300" : "bg-amber-300"}`} />
                 <span className="font-semibold">{text.midi}</span>
@@ -1836,63 +1837,145 @@ function BpmDragControl({
   readonly onChange: (value: number) => void;
   readonly value: number;
 }) {
-  const dragCleanup = useRef<() => void>();
+  const fieldRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const gestureRef = useRef<{
+    pointerId: number;
+    startY: number;
+    startValue: number;
+    lastValue: number;
+    dragging: boolean;
+  }>();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(String(value));
+  const valueRef = useRef(value);
+  valueRef.current = value;
 
-  useEffect(() => () => dragCleanup.current?.(), []);
+  function apply(next: number) {
+    if (!Number.isFinite(next)) return;
+    const clamped = Math.max(30, Math.min(240, Math.round(next)));
+    const gesture = gestureRef.current;
+    if (gesture ? clamped === gesture.lastValue : clamped === valueRef.current) return;
+    if (gesture) gesture.lastValue = clamped;
+    onChange(clamped);
+  }
 
-  function startDrag(event: React.PointerEvent<HTMLSpanElement>) {
+  function finishEdit() {
+    const parsed = Number(draft);
+    if (draft.trim() && Number.isFinite(parsed)) apply(parsed);
+    setEditing(false);
+  }
+
+  useEffect(() => {
+    const field = fieldRef.current;
+    if (!field) return;
+    const wheel = (event: WheelEvent) => {
+      if (!event.deltaY) return;
+      event.preventDefault();
+      apply(valueRef.current + (event.deltaY < 0 ? 1 : -1));
+    };
+    field.addEventListener("wheel", wheel, { passive: false });
+    return () => field.removeEventListener("wheel", wheel);
+  });
+
+  function startDrag(event: React.PointerEvent<HTMLDivElement>) {
     if (event.button !== 0) return;
+    gestureRef.current = {
+      pointerId: event.pointerId,
+      startY: event.clientY,
+      startValue: value,
+      lastValue: value,
+      dragging: false,
+    };
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+  }
+
+  function moveDrag(event: React.PointerEvent<HTMLDivElement>) {
+    const gesture = gestureRef.current;
+    if (!gesture || event.pointerId !== gesture.pointerId) return;
+    const distance = gesture.startY - event.clientY;
+    if (!gesture.dragging && Math.abs(distance) < 3) return;
+    if (!gesture.dragging) {
+      gesture.dragging = true;
+      setEditing(false);
+      inputRef.current?.blur();
+    }
     event.preventDefault();
-    dragCleanup.current?.();
-    const pointerId = event.pointerId;
-    const startValue = value;
-    const startY = event.clientY;
-    let lastValue = value;
-    const cleanup = () => {
-      window.removeEventListener("pointermove", moveDrag);
-      window.removeEventListener("pointerup", endDrag);
-      window.removeEventListener("pointercancel", endDrag);
-      if (dragCleanup.current === cleanup) dragCleanup.current = undefined;
-    };
-    const moveDrag = (moveEvent: PointerEvent) => {
-      if (moveEvent.pointerId !== pointerId) return;
-      const next = Math.max(30, Math.min(240, startValue + Math.round((startY - moveEvent.clientY) / 3)));
-      if (next === lastValue) return;
-      lastValue = next;
-      moveEvent.preventDefault();
-      onChange(next);
-    };
-    const endDrag = (endEvent: PointerEvent) => {
-      if (endEvent.pointerId === pointerId) cleanup();
-    };
-    dragCleanup.current = cleanup;
-    window.addEventListener("pointermove", moveDrag, { passive: false });
-    window.addEventListener("pointerup", endDrag);
-    window.addEventListener("pointercancel", endDrag);
+    const pixelsPerBpm = event.shiftKey ? 10 : 4;
+    const multiplier = event.ctrlKey ? 5 : 1;
+    apply(gesture.startValue + Math.round(distance / pixelsPerBpm) * multiplier);
+  }
+
+  function endDrag(event: React.PointerEvent<HTMLDivElement>) {
+    const gesture = gestureRef.current;
+    if (!gesture || event.pointerId !== gesture.pointerId) return;
+    gestureRef.current = undefined;
+    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    if (!gesture.dragging && event.type === "pointerup") {
+      setDraft(String(value));
+      setEditing(true);
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
   }
 
   return (
     <div className="inline-flex min-h-8 items-center gap-2 text-[10px] font-bold tracking-[0.08em] text-[var(--lv-text-muted)]">
       <label htmlFor="voicing-loop-bpm">{label}</label>
       <div
-        className="relative"
+        ref={fieldRef}
+        className={`relative touch-none select-none ${editing ? "cursor-text" : "cursor-ns-resize"}`}
+        data-testid="voicing-loop-bpm-field"
+        onPointerDown={startDrag}
+        onPointerMove={moveDrag}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onLostPointerCapture={() => { gestureRef.current = undefined; }}
+        onDoubleClick={() => {
+          setDraft(String(value));
+          setEditing(true);
+          inputRef.current?.focus();
+          inputRef.current?.select();
+        }}
       >
         <input
+          ref={inputRef}
           id="voicing-loop-bpm"
           aria-describedby="voicing-loop-bpm-drag-help"
-          className="lv-field-control min-h-8 w-20 px-2 pr-6 text-sm"
-          type="number"
-          min={30}
-          max={240}
-          value={value}
-          onChange={(event) => onChange(event.currentTarget.valueAsNumber)}
+          className={`lv-field-control min-h-8 w-20 px-2 pr-6 text-sm ${editing ? "cursor-text" : "cursor-ns-resize"}`}
+          type="text"
+          inputMode="numeric"
+          role="spinbutton"
+          aria-valuemin={30}
+          aria-valuemax={240}
+          aria-valuenow={value}
+          value={editing ? draft : value}
+          onFocus={() => { setDraft(String(value)); setEditing(true); }}
+          onChange={(event) => {
+            setDraft(event.currentTarget.value);
+            if (!editing) apply(Number(event.currentTarget.value));
+          }}
+          onBlur={finishEdit}
+          onKeyDown={(event) => {
+            if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+              event.preventDefault();
+              apply(value + (event.key === "ArrowUp" ? 1 : -1) * (event.shiftKey ? 10 : 1));
+              setDraft(String(Math.max(30, Math.min(240, value + (event.key === "ArrowUp" ? 1 : -1) * (event.shiftKey ? 10 : 1)))));
+            } else if (event.key === "Enter") {
+              finishEdit();
+              inputRef.current?.blur();
+            } else if (event.key === "Escape") {
+              setDraft(String(value));
+              setEditing(false);
+              inputRef.current?.blur();
+            }
+          }}
         />
         <span
           aria-hidden="true"
-          className="absolute inset-y-0 right-0 flex w-6 touch-none select-none items-center justify-center text-[var(--lv-text-muted)] cursor-ns-resize"
+          className="pointer-events-none absolute inset-y-0 right-0 flex w-6 items-center justify-center text-[var(--lv-text-muted)]"
           data-testid="voicing-loop-bpm-drag"
           title={dragLabel}
-          onPointerDown={startDrag}
         >
           <GripVertical size={16} />
         </span>
@@ -1974,11 +2057,11 @@ function moveText(move: FingerMovement, accidentalStyle: NoteAccidentalStyle, la
   const note = (pitch: number) => formatMidiNoteForDisplay(pitch, "fl-studio", accidentalStyle);
   if (move.kind === "ADD") return `${finger} ${note(move.to!)} ${language === "ja" ? "追加" : "add"}`;
   if (move.kind === "RELEASE") return `${finger} ${language === "ja" ? "離す" : "release"} ${note(move.from!)}`;
-  if (move.kind === "KEEP") return `${finger} ${language === "ja" ? "維持" : "keep"} ${note(move.from!)}`;
+  if (move.kind === "KEEP") return language === "ja" ? `${finger} ${note(move.from!)}を押さえたまま` : `${finger} keep holding ${note(move.from!)}`;
   return `${finger} ${note(move.from!)} → ${note(move.to!)} ${movementInterval(move.semitones!, language)}`;
 }
 
-const NextMovePreview = memo(function NextMovePreview({ moves, loopWrap, hasNext, accidentalStyle, language }: {
+export const NextMovePreview = memo(function NextMovePreview({ moves, loopWrap, hasNext, accidentalStyle, language }: {
   readonly moves: readonly FingerMovement[];
   readonly loopWrap: boolean;
   readonly hasNext: boolean;
@@ -1988,38 +2071,49 @@ const NextMovePreview = memo(function NextMovePreview({ moves, loopWrap, hasNext
   const slots = fixedFingerSlots(hasNext ? moves : []);
   const note = (pitch: number) => formatMidiNoteForDisplay(pitch, "fl-studio", accidentalStyle);
   return (
-    <section className="mt-2 h-[68px] min-h-[68px] min-w-0 shrink-0 overflow-hidden border-t border-[var(--lv-border)] pt-1" data-testid="voicing-loop-next-move" aria-label={language === "ja" ? "次への動き" : "Next move"}>
-      <div className="flex min-w-0 items-center justify-between gap-2 text-[10px] font-bold tracking-[0.04em] text-[var(--lv-text-secondary)]">
-        <span className="min-w-0 truncate">{language === "ja" ? "次への動き" : "NEXT MOVE"}{loopWrap ? ` · ${language === "ja" ? "ループ先" : "Loop to start"}` : ""}</span>
-        <span className="min-w-0 truncate text-amber-200">LEFT · {handMoveSummary(moves.filter((move) => move.hand === "left"), language)}</span>
-        <span className="min-w-0 truncate text-cyan-200">RIGHT · {handMoveSummary(moves.filter((move) => move.hand === "right"), language)}</span>
-        {moves.some((move) => move.estimated) ? <span className="shrink-0 text-[var(--lv-text-muted)]">{language === "ja" ? "推定" : "Estimated"}</span> : null}
-      </div>
-      <div className="mt-0.5 grid min-w-0 grid-cols-10 gap-0.5" role="list" aria-label={language === "ja" ? "左手5番から1番、右手1番から5番" : "Left 5 to 1, right 1 to 5"}>
-        {slots.map((slot) => {
-          const id = `${slot.hand === "left" ? "L" : "R"}${slot.finger}`;
-          const strongest = slot.moves.some((move) => move.kind === "LARGE") ? "LARGE"
-            : slot.moves.some((move) => move.kind === "MEDIUM" || move.kind === "ADD" || move.kind === "RELEASE") ? "MEDIUM"
-              : slot.moves.some((move) => move.kind === "SMALL") ? "SMALL" : slot.moves.length ? "KEEP" : "EMPTY";
-          const action = slot.moves.map((move) => move.kind === "ADD" ? "+押す" : move.kind === "RELEASE" ? "×離す"
-            : move.kind === "KEEP" ? "•" : movementInterval(move.semitones!, language)).join("/") || "·";
-          const next = slot.moves.reduce<number | undefined>((value, move) => move.to ?? value, undefined);
-          const description = slot.moves.length
-            ? slot.moves.map((move) => moveText(move, accidentalStyle, language)).join("; ")
-            : `${id} ${language === "ja" ? "使用しない" : "unused"}`;
-          const strength = strongest === "LARGE" ? "border-current bg-current/15 font-extrabold"
-            : strongest === "MEDIUM" ? "border-current/70 bg-current/10 font-bold"
-              : strongest === "SMALL" ? "border-current/40 font-semibold"
-                : strongest === "KEEP" ? "border-current/20 opacity-60" : "border-dashed border-current/20 opacity-40";
-          return <div key={id} role="listitem" data-testid="voicing-loop-finger-slot" data-finger={id} data-strength={strongest}
-            className={`flex h-[43px] min-w-0 flex-col items-center justify-center overflow-hidden rounded border leading-none ${slot.hand === "left" ? "text-amber-200" : "text-cyan-200"} ${strength} ${id === "R1" ? "ml-0.5" : ""}`}
-            aria-label={`${id}: ${description}${slot.moves.some((move) => move.estimated) ? ` (${language === "ja" ? "推定" : "estimated"})` : ""}`}
-            title={`${id}: ${description}`}>
-            <span className="text-[10px] font-bold">{id}</span>
-            <span className="mt-0.5 w-full truncate px-0.5 text-center text-[10px]">{action}</span>
-            <span className="mt-0.5 text-[9px]">{next === undefined ? "·" : note(next)}</span>
-          </div>;
-        })}
+    <section className="relative mt-2 h-[68px] min-h-[68px] min-w-0 shrink-0 overflow-hidden border-t border-[var(--lv-border)] pt-1" data-testid="voicing-loop-next-move" aria-label={language === "ja" ? "次への動き" : "Next move"}>
+      <span className="absolute left-0 top-1 max-w-[24%] truncate text-[9px] font-bold tracking-[0.04em] text-[var(--lv-text-muted)]">{language === "ja" ? "次への動き" : "NEXT MOVE"}</span>
+      <div className="grid min-w-0 grid-cols-2 gap-1">
+        {(["left", "right"] as const).map((hand) => (
+          <div key={hand} className="min-w-0" role="group" data-testid="voicing-loop-next-move-hand-group" data-hand={hand}
+            aria-label={hand === "left" ? (language === "ja" ? "左手" : "Left hand") : (language === "ja" ? "右手" : "Right hand")}>
+            <div className={`flex h-[14px] min-w-0 items-center justify-center gap-1 truncate text-[10px] font-bold tracking-[0.04em] ${hand === "left" ? "text-amber-200" : "text-cyan-200"}`}
+              data-testid="voicing-loop-next-move-summary">
+              <span>{hand === "left" ? (language === "ja" ? "左手" : "LEFT HAND") : (language === "ja" ? "右手" : "RIGHT HAND")}</span>
+              <span className="min-w-0 truncate font-extrabold">{handMoveSummary(moves.filter((move) => move.hand === hand), language)}</span>
+              {loopWrap && hand === "right" ? <span className="truncate text-[var(--lv-text-muted)]">{language === "ja" ? "ループ先" : "Loop"}</span> : null}
+              {moves.some((move) => move.hand === hand && move.estimated) ? <span className="sr-only">{language === "ja" ? "推定" : "Estimated"}</span> : null}
+            </div>
+            <div className="mt-0.5 grid min-w-0 grid-cols-5 gap-0.5" role="list">
+              {slots.filter((slot) => slot.hand === hand).map((slot) => {
+                const id = `${slot.hand === "left" ? "L" : "R"}${slot.finger}`;
+                const strongest = slot.moves.some((move) => move.kind === "LARGE") ? "LARGE"
+                  : slot.moves.some((move) => move.kind === "MEDIUM" || move.kind === "ADD" || move.kind === "RELEASE") ? "MEDIUM"
+                    : slot.moves.some((move) => move.kind === "SMALL") ? "SMALL" : slot.moves.length ? "KEEP" : "EMPTY";
+                const action = slot.moves.map((move) => move.kind === "ADD" ? "+押す" : move.kind === "RELEASE" ? "×離す"
+                  : movementInterval(move.semitones!, language)).join("/");
+                const next = slot.moves.reduce<number | undefined>((pitch, move) => move.to ?? pitch, undefined);
+                const description = slot.moves.length
+                  ? slot.moves.map((move) => moveText(move, accidentalStyle, language)).join("; ")
+                  : `${id} ${language === "ja" ? "使用しない" : "unused"}`;
+                const strength = strongest === "LARGE" ? "border-current bg-current/15 font-extrabold"
+                  : strongest === "MEDIUM" ? "border-current/70 bg-current/10 font-bold"
+                    : strongest === "SMALL" ? "border-current/40 font-semibold"
+                      : strongest === "KEEP" ? "border-current/50 bg-current/[0.04] font-semibold" : "border-dashed border-current/20";
+                return <div key={id} role="listitem" data-testid="voicing-loop-finger-slot" data-finger={id} data-strength={strongest}
+                  className={`flex h-[43px] min-w-0 flex-col items-center justify-center overflow-hidden rounded border leading-none ${slot.hand === "left" ? "text-amber-200" : "text-cyan-200"} ${strength}`}
+                  aria-label={`${id}: ${description}${slot.moves.some((move) => move.estimated) ? ` (${language === "ja" ? "推定" : "estimated"})` : ""}`}
+                  title={`${id}: ${description}`}>
+                  <span className={`text-[10px] font-bold ${strongest === "EMPTY" ? "text-[var(--lv-text-muted)]" : ""}`}>{id}</span>
+                  {strongest === "KEEP" ? (
+                    <span aria-hidden="true" className="my-1 h-1 w-[70%] rounded-full bg-current/70" data-testid="voicing-loop-keep-band" />
+                  ) : strongest !== "EMPTY" ? <span className="mt-0.5 w-full truncate px-0.5 text-center text-[10px]">{action}</span> : null}
+                  {strongest !== "EMPTY" && next !== undefined ? <span className="mt-0.5 text-[9px]">{note(next)}</span> : null}
+                </div>;
+              })}
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );
