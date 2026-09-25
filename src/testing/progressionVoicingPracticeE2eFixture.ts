@@ -24,7 +24,7 @@ export function progressionVoicingPracticeE2eFixture(search: string): Progressio
       { id: "public-ready", sourceReference: { ideaId: "public-ready", blockId: "ready" },
         title: "Public ready progression", bpm: 120, chordLabels: ["Cmaj7", "Dm7"], capturedAt: "2026-01-01T00:00:00.000Z" },
       { id: "public-bpm", sourceReference: { ideaId: "public-bpm", blockId: "missing-bpm" },
-        title: "Public missing BPM", chordLabels: ["Cmaj7"], capturedAt: "2026-01-02T00:00:00.000Z", unavailableReason: "invalid-bpm" },
+        title: "Public missing BPM", bpm: 120, tempoOrigin: "PRACTICE_INITIAL", chordLabels: ["Cmaj7"], capturedAt: "2026-01-02T00:00:00.000Z" },
       { id: "public-capacity", sourceReference: { ideaId: "public-capacity", blockId: "too-many-groups" },
         title: "Public capacity case", bpm: 120, chordLabels: ["Cmaj7"], capturedAt: "2026-01-03T00:00:00.000Z", unavailableReason: "practice-capacity" },
     ],

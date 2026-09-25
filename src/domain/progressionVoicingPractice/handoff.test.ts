@@ -4,7 +4,8 @@ import { makeIdea } from "../testFactory";
 import { TEXT_PROGRESSION_ANALYZER_VERSION } from "../textProgression";
 import type { ChordTimelineItem, SavedProgressionBlock, VoicingSnapshot } from "../types";
 import { normalizedChordKey, VOICING_AUTO_USE_CONFIDENCE } from "../voicing";
-import { buildProgressionVoicingPracticeHandoffFromVault } from "./handoff";
+import { buildProgressionVoicingPracticeHandoffFromVault, resolveVaultPracticeTempo } from "./handoff";
+import { createProgressionPracticeClockState, reduceProgressionPracticeClock } from "./clock";
 import { resolveProgressionPracticeVoicings } from "./voicingResolution";
 
 describe("P5.27 saved Vault handoff", () => {
@@ -177,6 +178,34 @@ describe("P5.27 saved Vault handoff", () => {
       { root: 8, bass: undefined, tensions: ["b13"] },
       { root: 4, bass: 8, tensions: [] },
     ]);
+  });
+
+  it("uses 120 for a proven SMF with missing source BPM even when its Idea has another BPM", () => {
+    const block = progression([event(1, 1, 4, 0)]);
+    delete block.bpm;
+    block.sourceAssetId = "midi-asset";
+    const idea = makeIdea({ id: "smf-default", bpm: 132, assets: [{ id: "midi-asset", type: "midi" }], progressionBlocks: [block] });
+    expect(resolveVaultPracticeTempo(idea, block)).toEqual({ bpm: 120, origin: "SMF_DEFAULT" });
+    const handoff = buildProgressionVoicingPracticeHandoffFromVault([idea], { ideaId: idea.id, blockId: block.id });
+    expect(handoff.ok).toBe(true);
+    if (!handoff.ok) return;
+    const snapshot = handoff.handoff.snapshots["basic-full"]!;
+    expect(snapshot.bpm).toBe(120);
+    const overridden = reduceProgressionPracticeClock(snapshot, createProgressionPracticeClockState(snapshot), { type: "SET_BPM", bpm: 144 });
+    expect(overridden.bpm).toBe(144);
+    expect(snapshot.bpm).toBe(120);
+    expect(block).not.toHaveProperty("bpm");
+    expect(idea.bpm).toBe(132);
+  });
+
+  it("uses a changeable 120 practice initial value for a legacy block with unknown tempo origin", () => {
+    const block = progression([event(1, 1, 4, 0)]);
+    delete block.bpm;
+    const idea = makeIdea({ id: "unknown-origin", progressionBlocks: [block] });
+    delete idea.bpm;
+    expect(resolveVaultPracticeTempo(idea, block)).toEqual({ bpm: 120, origin: "PRACTICE_INITIAL" });
+    const handoff = buildProgressionVoicingPracticeHandoffFromVault([idea], { ideaId: idea.id, blockId: block.id });
+    expect(handoff.ok && handoff.handoff.snapshots["basic-full"]?.bpm).toBe(120);
   });
 
   it("fails closed when the saved source is missing, deleted, or invalid", () => {

@@ -181,12 +181,13 @@ test("P5.20 production Text Progression Entry saves and reaches its supported do
   await expect(bassline.getByTestId("bassline-source-summary")).toContainText("120 BPM");
   await expect(bassline.getByTestId("chord-context-controls")).toBeVisible();
 
-  const chordDojo = page.getByRole("tab", { name: "Chord Dojo" });
+  const chordDojo = page.locator("nav").getByRole("button", { name: "Chord Dojo", exact: true });
   await chordDojo.click();
-  await expect(chordDojo).toHaveAttribute("aria-selected", "true");
+  await expect(chordDojo).toHaveAttribute("aria-current", "page");
   await expect(page.getByTestId("practice-start")).toBeVisible();
 
-  await page.getByRole("tab", { name: "Bass Practice" }).click();
+  await page.locator("nav").getByRole("button", { name: "Bass Practice", exact: true }).click();
+  await page.getByRole("tab", { name: "Bassline Echo" }).click();
   await expect(bassline).toBeVisible();
   await page.getByRole("tab", { name: "Root Motion Echo" }).click();
   const rootMotion = page.getByTestId("root-motion-echo-view");

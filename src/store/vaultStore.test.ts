@@ -1280,6 +1280,110 @@ describe("vault store", () => {
       expect(saved?.voicingMemory).toBeUndefined();
     }
   });
+  it("blocks unrelated writes while unknown future metadata is quarantined", async () => {
+    const raw = JSON.stringify({ ...createEmptyVault(), ideas: [{
+      ...makeIdea({ id: "dddd0000-0000-4000-8000-000000000001" }),
+      futureTempoMetadata: { origin: "future" },
+    }] });
+    const parsed = parseVaultFileJson(raw);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(parsed.quarantine).toHaveLength(1);
+    const repository = new FakeRepository();
+    repository.loadResult = { vault: parsed.vault, quarantine: parsed.quarantine, created: false };
+    const store = createVaultStore({ repository, now: () => now });
+    await store.getState().initialize();
+    expect(store.getState().createIdea("Unrelated public idea")).toBeUndefined();
+    await store.getState().flush();
+    expect(repository.saved).toHaveLength(0);
+  });
+
+  it("keeps no-tempo SMF source BPM absent while explicit 120 BPM remains persisted", async () => {
+    const chord = parseChordLabel("Cmaj7")!;
+    const timeline: ChordTimelineItem[] = Array.from({ length: 4 }, (_, index) => ({
+      bar: index + 1, beat: 1, durationBeats: 4, chord, confidence: 1,
+      alternatives: [], warnings: [],
+    }));
+    const draft = createManualDraft({
+      timeline, range: { startBar: 1, startBeat: 1, endBar: 4, endBeat: 4 },
+      now: "2026-01-01T00:00:00.000Z", draftId: "tempo-source-fact",
+    });
+    const candidate = draftToCandidate(draft);
+    let sequence = 0;
+    const repository = new FakeRepository();
+    const store = createVaultStore({ repository,
+      idFactory: () => `aaaa0000-0000-4000-8000-${(++sequence).toString(16).padStart(12, "0")}`,
+      now: () => now,
+    });
+    await store.getState().initialize();
+    for (const provenance of ["SMF_DEFAULT", "SMF_META"] as const) {
+      expect(store.getState().createIdeaFromDraft({
+        title: `Public ${provenance}`, status: "idea", bpm: 120,
+        progressionBlock: candidate,
+        progressionAnalysis: {
+          fileName: "public-synthetic.mid", totalBars: 4, bpm: 120, timeSignature: "4/4",
+          tempoDiagnostics: { provenance, effectiveTempoEventCount: provenance === "SMF_META" ? 1 : 0, effectiveTempoSegmentCount: provenance === "SMF_META" ? 1 : 0 },
+          fullTimeline: timeline, blockCandidates: [candidate], analyzedAt: "2026-01-01T00:00:00.000Z",
+          analyzerVersion: "phase4-symbolic-v1",
+        },
+        progressionMetadata: { sourcePath: "public-synthetic.mid" },
+      })).toBeDefined();
+    }
+    await store.getState().flush();
+    const parsed = parseVaultFileJson(serializeVault(repository.saved[repository.saved.length - 1]!));
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(parsed.quarantine).toHaveLength(0);
+    const [defaultIdea, explicitIdea] = parsed.vault.ideas;
+    expect(defaultIdea).not.toHaveProperty("bpm");
+    expect(defaultIdea!.progressionBlocks![0]).not.toHaveProperty("bpm");
+    expect(explicitIdea!.bpm).toBe(120);
+    expect(explicitIdea!.progressionBlocks![0]!.bpm).toBe(120);
+    const choices = buildVoicingLoopVaultCandidates(parsed.vault.ideas, "Untitled");
+    expect(choices.find((choice) => choice.sourceReference.ideaId === defaultIdea!.id))
+      .toMatchObject({ bpm: 120, tempoOrigin: "SMF_DEFAULT" });
+    expect(choices.find((choice) => choice.sourceReference.ideaId === explicitIdea!.id))
+      .toMatchObject({ bpm: 120, tempoOrigin: "SAVED_BPM" });
+    expect(choices.every((choice) => !choice.unavailableReason)).toBe(true);
+  });
+
+  it("retains missing-BPM and practice-incompatible blocks after unrelated create/edit/save/reload", async () => {
+    const chord = parseChordLabel("Cmaj7")!;
+    const event: ChordTimelineItem = { bar: 1, beat: 1, durationBeats: 4, chord, confidence: 1,
+      alternatives: [], warnings: [] };
+    const missing: SavedProgressionBlock = { id: "bbbb0000-0000-4000-8000-000000000001", summaryText: "Public SMF",
+      chords: [event], tags: [], capturedAt: now.toISOString(), analyzerVersion: "phase4-symbolic-v1",
+      sourceAssetId: "bbbb0000-0000-4000-8000-000000000003", timeSignature: "4/4" };
+    const unsupported: SavedProgressionBlock = { ...missing, id: "bbbb0000-0000-4000-8000-000000000002",
+      summaryText: "Public unsupported meter", timeSignature: "6/8" };
+    const sourceIdea = makeIdea({ id: "bbbb0000-0000-4000-8000-000000000004",
+      assets: [{ id: missing.sourceAssetId!, type: "midi" }], progressionBlocks: [missing, unsupported] });
+    const source = parseVaultFileJson(serializeVault({ ...createEmptyVault(), ideas: [sourceIdea] }));
+    expect(source.ok).toBe(true);
+    if (!source.ok) return;
+    const repository = new FakeRepository();
+    repository.loadResult = { vault: source.vault, quarantine: [], created: false };
+    const store = createVaultStore({ repository, debounceMs: 60_000,
+      idFactory: () => "bbbb0000-0000-4000-8000-000000000005", now: () => now });
+    await store.getState().initialize();
+    expect(store.getState().updateIdea(sourceIdea.id, { progressionBlocks: [] })).toBe(false);
+    expect(store.getState().createIdea("Unrelated public record")).toBeDefined();
+    const unrelated = store.getState().ideas[store.getState().ideas.length - 1]!;
+    expect(store.getState().updateIdea(unrelated.id, { chordMemo: "Unrelated edit" })).toBe(true);
+    await store.getState().flush();
+    const loaded = parseVaultFileJson(serializeVault(repository.saved[repository.saved.length - 1]!));
+    expect(loaded.ok).toBe(true);
+    if (!loaded.ok) return;
+    expect(loaded.quarantine).toHaveLength(0);
+    expect(loaded.vault.ideas[0]?.progressionBlocks).toEqual(source.vault.ideas[0]?.progressionBlocks);
+    expect(loaded.vault.ideas[1]?.chordMemo).toBe("Unrelated edit");
+    const choices = buildVoicingLoopVaultCandidates(loaded.vault.ideas, "Untitled");
+    expect(choices.find((choice) => choice.sourceReference.blockId === missing.id))
+      .toMatchObject({ bpm: 120, tempoOrigin: "SMF_DEFAULT" });
+    expect(choices.find((choice) => choice.sourceReference.blockId === unsupported.id))
+      .toMatchObject({ unavailableReason: "unsupported-meter" });
+  });
+
   it.each([64, 65, 256])("carries a %i-bar manual Capture range through Vault v2 reload into a full Voicing Loop timeline", async (bars) => {
     const chord = parseChordLabel("Cmaj7")!;
     const notes = [48, 55, 59, 64];

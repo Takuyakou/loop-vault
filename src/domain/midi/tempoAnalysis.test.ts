@@ -4,9 +4,19 @@ import { analyzeMidiTempo, hasRobustTempoVariation } from "./tempoAnalysis";
 const ppq = 480;
 
 describe("MIDI representative tempo", () => {
-  it("keeps the current fallback authority when no tempo event exists", () => {
+  it("uses the SMF 120 BPM default only when no Set Tempo event exists", () => {
     expect(analyzeMidiTempo({ tempoChanges: [], ticksPerBeat: ppq, durationTick: ppq * 8 }))
-      .toEqual({ diagnostics: { effectiveTempoEventCount: 0, effectiveTempoSegmentCount: 0 } });
+      .toEqual({ representativeBpm: 120, diagnostics: {
+        provenance: "SMF_DEFAULT", effectiveTempoEventCount: 0, effectiveTempoSegmentCount: 0,
+      } });
+    expect(analyzeMidiTempo({ tempoChanges: [{ tick: 0, bpm: Number.NaN }], ticksPerBeat: ppq, durationTick: ppq * 8 }))
+      .toMatchObject({ diagnostics: { provenance: "SMF_META", effectiveTempoEventCount: 0 } });
+  });
+
+  it.each([120, 96])("keeps an explicit Set Tempo at %i BPM distinct from the default", (bpm) => {
+    const result = analyzeMidiTempo({ tempoChanges: [{ tick: 0, bpm }], ticksPerBeat: ppq, durationTick: ppq * 8 });
+    expect(result.representativeBpm).toBe(bpm);
+    expect(result.diagnostics.provenance).toBe("SMF_META");
   });
 
   it("uses one effective tempo directly", () => {

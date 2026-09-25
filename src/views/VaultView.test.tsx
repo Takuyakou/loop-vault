@@ -78,6 +78,7 @@ describe("VaultView keyboard shortcuts", () => {
         openCreate={vi.fn()}
         openCapture={vi.fn()}
         updateIdea={vi.fn()}
+        updateProgressionBlock={vi.fn()}
         setToast={vi.fn()}
         copy={appCopy.ja}
         language="ja"
@@ -124,6 +125,7 @@ describe("VaultView keyboard shortcuts", () => {
             openCreate={vi.fn()}
             openCapture={vi.fn()}
             updateIdea={vi.fn()}
+            updateProgressionBlock={vi.fn()}
             setToast={vi.fn()}
             copy={appCopy.en}
             language="en"
@@ -158,6 +160,7 @@ describe("VaultView keyboard shortcuts", () => {
           openCreate={vi.fn()}
           openCapture={vi.fn()}
           updateIdea={vi.fn()}
+          updateProgressionBlock={vi.fn()}
           setToast={vi.fn()}
           copy={appCopy.en}
           language="en"
@@ -179,6 +182,7 @@ describe("VaultView keyboard shortcuts", () => {
       progressionBlocks: [pendingBlock, visibleBlock],
     });
     const updateIdea = vi.fn();
+    const updateProgressionBlock = vi.fn();
     const container = document.createElement("div");
     document.body.append(container);
     const root = createRoot(container);
@@ -192,6 +196,7 @@ describe("VaultView keyboard shortcuts", () => {
           openCreate={vi.fn()}
           openCapture={vi.fn()}
           updateIdea={updateIdea}
+          updateProgressionBlock={updateProgressionBlock}
           setToast={vi.fn()}
           copy={appCopy.en}
           language="en"
@@ -204,9 +209,8 @@ describe("VaultView keyboard shortcuts", () => {
       container.querySelector<HTMLButtonElement>(`[aria-label="${appCopy.en.library.addFavorite}"]`)?.click();
     });
 
-    expect(updateIdea).toHaveBeenCalledWith(visibleIdea.id, {
-      progressionBlocks: [pendingBlock, { ...visibleBlock, pinned: true }],
-    });
+    expect(updateProgressionBlock).toHaveBeenCalledWith(visibleIdea.id, visibleBlock.id, { pinned: true });
+    expect(updateIdea).not.toHaveBeenCalled();
     await act(async () => root.unmount());
   });
 
@@ -234,6 +238,7 @@ describe("VaultView keyboard shortcuts", () => {
           openCreate={vi.fn()}
           openCapture={vi.fn()}
           updateIdea={vi.fn()}
+          updateProgressionBlock={vi.fn()}
           setToast={vi.fn()}
           copy={appCopy.en}
           language="en"
@@ -264,6 +269,7 @@ describe("VaultView keyboard shortcuts", () => {
           openCreate={vi.fn()}
           openCapture={vi.fn()}
           updateIdea={vi.fn()}
+          updateProgressionBlock={vi.fn()}
           setToast={vi.fn()}
           copy={appCopy.ja}
           language="ja"
@@ -294,6 +300,7 @@ describe("VaultView keyboard shortcuts", () => {
           openCreate={vi.fn()}
           openCapture={vi.fn()}
           updateIdea={vi.fn()}
+          updateProgressionBlock={vi.fn()}
           setToast={vi.fn()}
           copy={appCopy.en}
           language="en"
@@ -345,6 +352,7 @@ describe("VaultView keyboard shortcuts", () => {
     });
     const openDetail = vi.fn();
     const updateIdea = vi.fn();
+    const updateProgressionBlock = vi.fn();
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
@@ -363,6 +371,7 @@ describe("VaultView keyboard shortcuts", () => {
             openCreate={vi.fn()}
             openCapture={vi.fn()}
             updateIdea={updateIdea}
+            updateProgressionBlock={updateProgressionBlock}
             setToast={vi.fn()}
             copy={appCopy[language]}
             language={language}
@@ -398,9 +407,8 @@ describe("VaultView keyboard shortcuts", () => {
       favorite.click();
       copyButton.click();
     });
-    expect(updateIdea).toHaveBeenCalledWith(secondIdea.id, {
-      progressionBlocks: [{ ...secondIdea.progressionBlocks![0], pinned: true }],
-    });
+    expect(updateProgressionBlock).toHaveBeenCalledWith(secondIdea.id, "block-actions", { pinned: true });
+    expect(updateIdea).not.toHaveBeenCalled();
     expect(writeText).toHaveBeenCalledWith("| Cmaj7 |");
 
     await act(async () => {
@@ -444,6 +452,7 @@ describe("VaultView keyboard shortcuts", () => {
           openCreate={vi.fn()}
           openCapture={vi.fn()}
           updateIdea={vi.fn()}
+          updateProgressionBlock={vi.fn()}
           setToast={vi.fn()}
           copy={appCopy.en}
           language="en"
@@ -501,6 +510,7 @@ describe("VaultView keyboard shortcuts", () => {
           openCreate={vi.fn()}
           openCapture={vi.fn()}
           updateIdea={vi.fn()}
+          updateProgressionBlock={vi.fn()}
           setToast={vi.fn()}
           copy={appCopy.en}
           language="en"
@@ -539,6 +549,7 @@ describe("VaultView keyboard shortcuts", () => {
             openCreate={vi.fn()}
             openCapture={vi.fn()}
             updateIdea={vi.fn()}
+            updateProgressionBlock={vi.fn()}
             setToast={setToast}
             copy={appCopy[language]}
             language={language}
@@ -578,6 +589,7 @@ describe("VaultView keyboard shortcuts", () => {
             openCreate={vi.fn()}
             openCapture={vi.fn()}
             updateIdea={vi.fn()}
+            updateProgressionBlock={vi.fn()}
             setToast={vi.fn()}
             copy={appCopy.en}
             language="en"
@@ -619,6 +631,7 @@ describe("VaultView keyboard shortcuts", () => {
           openCreate={vi.fn()}
           openCapture={vi.fn()}
           updateIdea={vi.fn()}
+          updateProgressionBlock={vi.fn()}
           setToast={setToast}
           copy={appCopy.ja}
           language="ja"
@@ -657,6 +670,7 @@ describe("VaultView keyboard shortcuts", () => {
           openCreate={vi.fn()}
           openCapture={vi.fn()}
           updateIdea={vi.fn()}
+          updateProgressionBlock={vi.fn()}
           setToast={vi.fn()}
           copy={appCopy.en}
           language="en"
@@ -703,6 +717,7 @@ describe("VaultView keyboard shortcuts", () => {
           openCreate={vi.fn()}
           openCapture={vi.fn()}
           updateIdea={vi.fn()}
+          updateProgressionBlock={vi.fn()}
           setToast={vi.fn()}
           copy={appCopy.en}
           language="en"

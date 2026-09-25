@@ -229,8 +229,35 @@ describe("ProgressionVoicingPracticeView", () => {
     const choices = Array.from(container.querySelectorAll<HTMLButtonElement>("[data-testid='voicing-loop-progression-choice']"));
     expect(choices).toHaveLength(2);
     expect(choices.every((choice) => choice.disabled)).toBe(true);
-    expect(choices.map((choice) => choice.textContent).join(" ")).toContain("BPMが未設定");
+    expect(choices.map((choice) => choice.textContent).join(" ")).toContain("BPMが対応範囲外");
     expect(choices.map((choice) => choice.textContent).join(" ")).toContain("この拍子");
+  });
+
+  it("shows SMF default and practice initial BPM without asserting a missing source tempo", async () => {
+    const candidates = [
+      { ...vaultCandidate(0), bpm: 120, tempoOrigin: "SMF_DEFAULT" as const },
+      { ...vaultCandidate(1), bpm: 120, tempoOrigin: "PRACTICE_INITIAL" as const },
+    ];
+    const container = await renderView(new FakeTransport(), undefined, "source-midi", false,
+      { onSelectProgression: vi.fn(), onEnterText: vi.fn() }, candidates);
+    const labels = Array.from(container.querySelectorAll<HTMLButtonElement>("[data-testid='voicing-loop-progression-choice']"));
+    expect(labels[0]?.textContent).toContain("120 BPM（SMF既定）");
+    expect(labels[1]?.textContent).toContain("120 BPM（練習初期値）");
+    expect(labels.every((choice) => !choice.disabled)).toBe(true);
+  });
+
+  it("shows the SMF default origin after a Vault progression is loaded", async () => {
+    const loaded = snapshot("source-midi");
+    const candidate = {
+      ...vaultCandidate(0),
+      sourceReference: loaded.source.reference,
+      bpm: 120,
+      tempoOrigin: "SMF_DEFAULT" as const,
+    };
+    const container = await renderView(new FakeTransport(), { "source-midi": loaded }, "source-midi", false,
+      { onSelectProgression: vi.fn(), onEnterText: vi.fn() }, [candidate]);
+    expect(container.querySelector("[data-testid='voicing-loop-tempo-origin']")?.textContent)
+      .toBe("SMF既定");
   });
 
   it("does not record an invalid or deleted source when click-time validation fails", async () => {
