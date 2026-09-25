@@ -11,8 +11,16 @@ export default tseslint.config(
       "playwright-report/**",
       "test-results/**",
       "blob-report/**",
+      ".local-evaluation/**",
+      ".codex-staging/**",
       "*.config.js",
     ],
+  },
+  {
+    files: ["scripts/phase85-pre/**/*.mjs"],
+    languageOptions: {
+      globals: { URL: "readonly", console: "readonly" },
+    },
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

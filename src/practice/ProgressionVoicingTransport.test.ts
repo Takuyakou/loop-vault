@@ -130,6 +130,27 @@ describe("ProgressionVoicingTransport", () => {
     expect(toneMock.activeScheduleIds.size).toBe(0);
   });
 
+  it("reattacks within one harmonic card without adding a display event", async () => {
+    const textSnapshot: ProgressionVoicingPracticeSnapshot = {
+      ...snapshot,
+      events: [{ ...snapshot.events[0]!, attackBeats: [0, 1] }, snapshot.events[1]!],
+    };
+    const runtime = new ProgressionVoicingTransportV2();
+    await runtime.start({ snapshot: textSnapshot, plan, bpm: 80, countInBars: 0,
+      metronomeEnabled: false, onTransportBeat: vi.fn() });
+    expect(textSnapshot.events).toHaveLength(2);
+    toneMock.scheduled[0]!.callback(1);
+    expect(toneMock.oneShots.slice(0, 3).map(item => item.at)).toEqual(["0i", "192i", "384i"]);
+    const instrument = toneMock.instruments[0]!;
+    toneMock.oneShots[0]!.callback(1);
+    toneMock.oneShots[1]!.callback(1.75);
+    toneMock.oneShots[2]!.callback(2.5);
+    expect(instrument.triggerAttackRelease).toHaveBeenCalledTimes(3);
+    expect(instrument.triggerAttackRelease.mock.calls.map(call => call[1])).toEqual([0.75, 0.75, 4.5]);
+    runtime.stop();
+    expect(runtime.activeNoteCount).toBe(0);
+  });
+
   it("keeps silence and the chosen anchor when seeking while paused in count-in", async () => {
     const runtime = new ProgressionVoicingTransportV2();
     await runtime.start({ snapshot, plan, bpm: 80, countInBars: 1,

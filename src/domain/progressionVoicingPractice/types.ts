@@ -27,6 +27,7 @@ export interface ProgressionPracticeChord {
   readonly root: number;
   readonly quality: ChordQuality;
   readonly tensions: readonly Tension[];
+  readonly omissions?: readonly ("3" | "5")[];
   readonly bass?: number;
   readonly label: string;
 }
@@ -35,6 +36,8 @@ export interface ProgressionPracticeEvent {
   readonly id: string;
   readonly startBeat: number;
   readonly durationBeats: number;
+  /** Text-only rearticulation grid; absence means one attack at startBeat. */
+  readonly attackBeats?: readonly number[];
   readonly chord: ProgressionPracticeChord;
   /** Saved P8.1 card intent, kept as display metadata without changing Vault data. */
   readonly playbackChoice?: "SOURCE" | "GENERATED" | "CUSTOM";

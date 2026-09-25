@@ -14,11 +14,13 @@ export function segmentScoreBar(
   start: number,
   end: number,
   parse: (raw: string) => ChordSymbol | undefined,
+  allowNoChord = false,
 ): ScoreSegmentation {
   const source = input.slice(start, end);
   const parsed = new Map<string, ChordSymbol | "%" | "_" | "=" | undefined>();
   const parseCached = (raw: string) => {
-    if (!parsed.has(raw)) parsed.set(raw, raw === "%" || raw === "_" || raw === "=" ? raw : parse(raw));
+    if (!parsed.has(raw)) parsed.set(raw, raw === "%" || raw === "_" || raw === "=" ? raw
+      : allowNoChord && /^N\.C\.$/i.test(raw) ? "_" : parse(raw));
     return parsed.get(raw);
   };
   // Preserve valid legacy whitespace-token grammar, including arbitrary long

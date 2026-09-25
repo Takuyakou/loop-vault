@@ -660,6 +660,7 @@ function asChordSymbol(chord: ProgressionPracticeChord): ChordSymbol {
     root: chord.root,
     quality: chord.quality,
     tensions: [...chord.tensions],
+    ...(chord.omissions?.length ? { omissions: [...chord.omissions] } : {}),
     ...(chord.bass === undefined ? {} : { bass: chord.bass }),
     label: chord.label,
   };

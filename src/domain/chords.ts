@@ -34,6 +34,10 @@ const qualityLabels: Record<ChordQuality, string> = {
   sus4: "sus4",
   dom7sus4: "7sus4",
   add9: "add9",
+  add13: "add13",
+  minMaj7: "mMaj7",
+  power: "5",
+  dom11: "11",
   six: "6",
   min6: "m6",
   sixNine: "6/9",
@@ -41,6 +45,10 @@ const qualityLabels: Record<ChordQuality, string> = {
 
 const labelQualities: Array<[RegExp, ChordQuality]> = [
   [/^maj9$/i, "maj9"],
+  [/^(mMaj7|minMaj7)$/i, "minMaj7"],
+  [/^11$/, "dom11"],
+  [/^5$/, "power"],
+  [/^add13$/i, "add13"],
   [/^M9$/, "maj9"],
   [/^maj7$/i, "maj7"],
   [/^(M7|△7|Δ7)$/, "maj7"],
@@ -182,28 +190,28 @@ function orderTensions(tensions: readonly Tension[]): Tension[] {
  * parentheses, and suspended dominants promote their highest natural extension
  * into the quality itself so `dom7sus4` + `13` reads `13sus4`, never `sus413`.
  */
-function qualityDisplay(quality: ChordQuality, tensions: readonly Tension[]): string {
+function qualityDisplay(quality: ChordQuality, tensions: readonly Tension[], omissions: readonly ("3" | "5")[] = []): string {
   const ordered = orderTensions(tensions);
-  if (ordered.length === 0) return qualityLabels[quality];
+  if (ordered.length === 0 && omissions.length === 0) return qualityLabels[quality];
 
   if (quality === "dom7sus4") {
     const promoted = suspendedExtensions.find((tension) => ordered.includes(tension));
-    const remaining = ordered.filter((tension) => tension !== promoted);
+    const remaining = [...ordered.filter((tension) => tension !== promoted), ...omissions.map(omission => `omit${omission}`)];
     const base = promoted ? `${promoted}sus4` : qualityLabels[quality];
     return `${base}${parenthesize(remaining)}`;
   }
 
-  return `${qualityLabels[quality]}${parenthesize(ordered)}`;
+  return `${qualityLabels[quality]}${parenthesize([...ordered, ...omissions.map(omission => `omit${omission}`)])}`;
 }
 
-function parenthesize(tensions: readonly Tension[]): string {
+function parenthesize(tensions: readonly string[]): string {
   return tensions.length ? `(${tensions.join(",")})` : "";
 }
 
 export function formatChordSymbol(symbol: ChordSymbol, options?: ChordFormatOptions): string {
   const preference = accidentalPreferenceFor(options);
   const root = spell(symbol.root, preference);
-  const quality = qualityDisplay(symbol.quality, symbol.tensions);
+  const quality = qualityDisplay(symbol.quality, symbol.tensions, symbol.omissions);
   const bass =
     symbol.bass === undefined || normalizePc(symbol.bass) === normalizePc(symbol.root)
       ? ""
@@ -216,18 +224,27 @@ export function labelFromSymbol(symbol: ChordSymbol): string {
   return formatChordSymbol(symbol);
 }
 
-function extractParenthesizedTensions(text: string): { rest: string; tensions: Tension[] } {
-  const match = /\(([^)]*)\)/.exec(text);
-  if (!match) return { rest: text, tensions: [] };
+function extractParenthesizedFactors(text: string): { rest: string; tensions: Tension[]; omissions: ("3" | "5")[]; valid: boolean } {
+  const match = /\(([^()]*)\)/.exec(text);
+  if (!match) return { rest: text, tensions: [], omissions: [], valid: true };
   const tensions: Tension[] = [];
+  const omissions: ("3" | "5")[] = [];
   for (const token of match[1].split(/[,\s]+/)) {
     const normalized = token.trim();
     if (!normalized) continue;
-    const tension = tensionTokens.find((candidate) => candidate === normalized);
-    if (!tension) return { rest: text, tensions: [] };
-    tensions.push(tension);
+    if (/^(?:omit|no)(?:3|5)$/i.test(normalized)) {
+      omissions.push(normalized.endsWith("3") ? "3" : "5");
+    } else {
+      const tension = tensionTokens.find(candidate => candidate === normalized);
+      if (!tension) return { rest: text, tensions: [], omissions: [], valid: false };
+      tensions.push(tension);
+    }
   }
-  return { rest: `${text.slice(0, match.index)}${text.slice(match.index + match[0].length)}`, tensions };
+  if (new Set(omissions).size !== omissions.length) return { rest: text, tensions: [], omissions: [], valid: false };
+  return {
+    rest: `${text.slice(0, match.index)}${text.slice(match.index + match[0].length)}`,
+    tensions, omissions, valid: true,
+  };
 }
 
 function extractTrailingTensions(text: string): { rest: string; tensions: Tension[] } {
@@ -257,7 +274,17 @@ function foldTensions(quality: ChordQuality, tensions: readonly Tension[]): {
   };
 }
 
+/** Legacy product/MIDI label vocabulary. Kept stable for detector baselines. */
 export function parseChordLabel(label: string): ChordSymbol | null {
+  return parseChordLabelWithPolicy(label, false);
+}
+
+/** Phase 8.8 text-only semantics; both text dialects share this core. */
+export function parseTextChordLabel(label: string): ChordSymbol | null {
+  return parseChordLabelWithPolicy(label, true);
+}
+
+function parseChordLabelWithPolicy(label: string, allowExtendedText: boolean): ChordSymbol | null {
   const trimmed = label.trim();
   const rootMatch = new RegExp(`^(${noteTokenPattern})`).exec(trimmed);
   if (!rootMatch) return null;
@@ -276,7 +303,8 @@ export function parseChordLabel(label: string): ChordSymbol | null {
     rest = rest.slice(0, rest.length - bassMatch[0].length);
   }
 
-  const parenthesized = extractParenthesizedTensions(rest);
+  const parenthesized = extractParenthesizedFactors(rest);
+  if (!parenthesized.valid) return null;
   rest = parenthesized.rest;
   let tensions: Tension[] = parenthesized.tensions;
 
@@ -292,6 +320,8 @@ export function parseChordLabel(label: string): ChordSymbol | null {
     quality = parseQuality(trailing.rest);
   }
   if (!quality) return null;
+  if (!allowExtendedText && (parenthesized.omissions.length > 0
+    || quality === "add13" || quality === "minMaj7" || quality === "power" || quality === "dom11")) return null;
 
   // `13sus` and `b13sus` are dominant suspended chords, not a plain sus4 triad.
   if (quality === "sus4" && tensions.length > 0) quality = "dom7sus4";
@@ -303,6 +333,7 @@ export function parseChordLabel(label: string): ChordSymbol | null {
     root,
     quality: folded.quality,
     tensions: orderTensions(folded.tensions.filter((tension) => !implied.includes(tension))),
+    ...(parenthesized.omissions.length ? { omissions: [...parenthesized.omissions].sort() as ("3" | "5")[] } : {}),
     ...(bass !== undefined ? { bass } : {}),
     label: "",
   };

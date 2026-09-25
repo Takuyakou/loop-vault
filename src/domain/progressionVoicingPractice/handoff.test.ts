@@ -4,6 +4,8 @@ import { makeIdea } from "../testFactory";
 import { TEXT_PROGRESSION_ANALYZER_VERSION } from "../textProgression";
 import type { ChordTimelineItem, SavedProgressionBlock, VoicingSnapshot } from "../types";
 import { normalizedChordKey, VOICING_AUTO_USE_CONFIDENCE } from "../voicing";
+import { parseExtendedTextProgression } from "../extendedTextProgression";
+import { extendedTextSaveData } from "../extendedTextSave";
 import { buildProgressionVoicingPracticeHandoffFromVault, resolveVaultPracticeTempo } from "./handoff";
 import { createProgressionPracticeClockState, reduceProgressionPracticeClock } from "./clock";
 import { resolveProgressionPracticeVoicings } from "./voicingResolution";
@@ -178,6 +180,31 @@ describe("P5.27 saved Vault handoff", () => {
       { root: 8, bass: undefined, tensions: ["b13"] },
       { root: 4, bass: 8, tensions: [] },
     ]);
+  });
+
+  it("detaches extended text attacks while keeping harmonic cards and rests", () => {
+    const parsed = parseExtendedTextProgression("Cm % = =|_ G7/B G7/B _");
+    expect(parsed.state).toBe("VALID");
+    const data = extendedTextSaveData(parsed);
+    const block = progression(data.chords.map(chord => ({ ...chord })));
+    block.sourceStartBeat = 0;
+    block.sourceEndBeat = data.scoreLengthBeats;
+    block.timeSignature = "4/4";
+    block.textSource = data.textSource;
+    const idea = makeIdea({ id: "text-attacks", progressionBlocks: [block] });
+    const result = buildProgressionVoicingPracticeHandoffFromVault([idea], {
+      ideaId: idea.id, blockId: block.id,
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const generated = result.handoff.snapshots["basic-full"]!;
+    expect(generated.events).toHaveLength(2);
+    expect(generated.events.map(event => event.attackBeats)).toEqual([[0, 1], [5, 6]]);
+    expect(generated.events[1]?.chord.label).toBe("G7/B");
+    expect(generated.spans.map(span => [span.kind, span.startBeat, span.durationBeats]))
+      .toEqual([["chord", 0, 4], ["rest", 4, 1], ["chord", 5, 2], ["rest", 7, 1]]);
+    expect(result.handoff.snapshots["source-midi"]?.events.every(event => event.voicing === undefined)).toBe(true);
+    expect(block.textSource?.rawText).toBe("Cm % = =|_ G7/B G7/B _");
   });
 
   it("uses 120 for a proven SMF with missing source BPM even when its Idea has another BPM", () => {

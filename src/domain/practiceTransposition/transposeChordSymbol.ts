@@ -50,6 +50,10 @@ const qualityLabels: Record<ChordQuality, string> = {
   six: "6",
   min6: "m6",
   sixNine: "6/9",
+  add13: "add13",
+  minMaj7: "mMaj7",
+  power: "5",
+  dom11: "11",
 };
 
 export function transposeChordSymbol(
@@ -92,6 +96,7 @@ export function transposeChordSymbol(
     root,
     quality: source.quality,
     tensions: [...source.tensions],
+    ...(source.omissions?.length ? { omissions: [...source.omissions] } : {}),
     ...(bass === undefined ? {} : { bass }),
     label: "",
   };
@@ -177,5 +182,6 @@ function formatChordLabel(
   const quality = qualityLabels[chord.quality];
   const tensions = chord.tensions.join("");
   const bass = bassName ? `/${bassName}` : "";
-  return `${rootName}${quality}${tensions}${bass}`;
+  const omissions = chord.omissions?.length ? `(${chord.omissions.map(value => `omit${value}`).join(",")})` : "";
+  return `${rootName}${quality}${tensions}${omissions}${bass}`;
 }

@@ -1,0 +1,50 @@
+import AxeBuilder from "@axe-core/playwright";
+import { expect, test } from "@playwright/test";
+import { assertNoHorizontalOverflow, capturePageErrors, openApp } from "./helpers/app";
+
+test("P8.8 Extended Text saves a public synthetic score and opens Voicing Loop", async ({ page }) => {
+  const errors = await capturePageErrors(page);
+  await openApp(page);
+  await page.locator("nav").getByRole("button", { name: /コード採集|Capture/ }).click();
+  await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
+  const capture = page.getByTestId("text-progression-capture");
+  await capture.getByTestId("text-mode-extended").click();
+  const intake = capture.getByTestId("extended-text-intake");
+  const input = intake.getByTestId("extended-text-input");
+  const raw = "# Key: C major\r\n# BPM: 120\r\n| C % = _ | F/C |";
+  await input.fill(raw);
+  await expect(intake.getByTestId("extended-text-bar")).toHaveCount(2);
+  await expect(intake.getByTestId("extended-text-slot")).toHaveCount(5);
+  await expect(intake.getByTestId("extended-text-metadata")).toHaveCount(0);
+  await intake.getByRole("button", { name: /Key: C major/ }).click();
+  await intake.getByRole("button", { name: /120 BPM/ }).click();
+  await expect(intake.getByTestId("extended-text-metadata")).toContainText("120 BPM");
+  await expect(input).toHaveValue(raw);
+  await intake.getByTestId("extended-text-save").click();
+  await expect(page.locator("#main-content").getByRole("button", { name: "Voicing Loop", exact: true })).toBeVisible();
+  await page.locator("#main-content").getByRole("button", { name: "Voicing Loop", exact: true }).click();
+  await expect(page.getByTestId("voicing-loop-workspace")).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test("P8.8 Extended Text blocks ambiguous input and remains accessible at narrow width", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 720 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await openApp(page);
+  await page.locator("nav").getByRole("button", { name: /コード採集|Capture/ }).click();
+  await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
+  const capture = page.getByTestId("text-progression-capture");
+  await capture.getByTestId("text-mode-extended").focus();
+  await page.keyboard.press("Enter");
+  const intake = capture.getByTestId("extended-text-intake");
+  const input = intake.getByTestId("extended-text-input");
+  await input.fill("| C _ = F |");
+  await expect(input).toHaveAttribute("aria-invalid", "true");
+  await expect(intake.getByTestId("extended-text-save")).toBeDisabled();
+  await expect(intake.getByTestId("extended-text-diagnostics")).toContainText("ERROR");
+  await input.fill("| C % = _ | F/C |");
+  await expect(intake.getByTestId("extended-text-save")).toBeEnabled();
+  await assertNoHorizontalOverflow(page);
+  const audit = await new AxeBuilder({ page: page as never }).include("[data-testid='extended-text-intake']").analyze();
+  expect(audit.violations).toEqual([]);
+});

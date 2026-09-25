@@ -1,5 +1,5 @@
 import { VOICING_AUTO_USE_CONFIDENCE } from "../voicing/extractionConfig";
-import { parseChordLabel } from "../chords";
+import { parseTextChordLabel } from "../chords";
 import { explicitSlashLabel } from "../explicitSlashLabel";
 import type { ChordQuality, ChordSymbol, ChordTimelineItem, SavedProgressionBlock, Tension, VoicingSnapshot } from "../types";
 import { isExplicitSourceMidiVoicingAvailable, voicingCompatibility } from "../voicing";
@@ -18,7 +18,7 @@ import { progressionPracticeBeatAtTick, progressionPracticeTicksAtBeat } from ".
 const supportedQualities = new Set<ChordQuality>([
   "maj", "min", "dim", "aug", "maj7", "min7", "dom7", "min7b5", "dim7",
   "maj9", "min9", "dom9", "min11", "dom13", "sus2", "sus4", "dom7sus4",
-  "add9", "six", "min6", "sixNine",
+  "add9", "add13", "minMaj7", "power", "dom11", "six", "min6", "sixNine",
 ]);
 const supportedTensions = new Set<Tension>(["9", "b9", "#9", "11", "#11", "13", "b13", "#5"]);
 const supportedSelections = new Set<ProgressionVoicingSelection>([
@@ -88,6 +88,25 @@ export function buildProgressionVoicingPracticeSnapshot(
       > METER_NEUTRAL_BUDGET.maxPracticeGroups) {
     return failure("practice-capacity", "Voicing Loop exceeds its 256 PracticeGroup display capacity.");
   }
+  const textAttacks = input.block.textSource?.harmonicSpans;
+  if (textAttacks && textAttacks.length !== normalized.events.length) {
+    return failure("invalid-timing", "Text attack spans do not match saved harmony.");
+  }
+  const practiceEvents = textAttacks
+    ? Object.freeze(normalized.events.map((event, index) => {
+      const span = textAttacks[index]!;
+      const attackBeats = span.attacks.map(attack => attack.beat);
+      if (span.startBeat !== event.startBeat || span.durationBeats !== event.durationBeats
+        || attackBeats.length === 0 || attackBeats[0] !== event.startBeat
+        || attackBeats.some((beat, attackIndex) => beat < event.startBeat
+          || beat >= event.startBeat + event.durationBeats
+          || attackIndex > 0 && beat <= attackBeats[attackIndex - 1]!)) return undefined;
+      return Object.freeze({ ...event, attackBeats: Object.freeze(attackBeats) });
+    }))
+    : normalized.events;
+  if (practiceEvents.some(event => event === undefined)) {
+    return failure("invalid-timing", "Text attacks lie outside their harmonic spans.");
+  }
   const source = Object.freeze({
     kind: "vault" as const,
     reference: Object.freeze({
@@ -104,7 +123,7 @@ export function buildProgressionVoicingPracticeSnapshot(
     meter: Object.freeze(sourceMeter),
     practiceGroupBeats: METER_NEUTRAL_BUDGET.practiceGroupBeats,
     lengthBeats: normalized.lengthBeats,
-    events: normalized.events,
+    events: practiceEvents as readonly ProgressionPracticeEvent[],
     spans: normalized.spans,
   });
   const fingerprint = `p527-snapshot-v1-${fnv1a(JSON.stringify(withoutFingerprint))}`;
@@ -210,6 +229,7 @@ function cloneChord(chord: ChordSymbol): ProgressionPracticeEvent["chord"] {
     root: chord.root,
     quality: chord.quality,
     tensions: [...chord.tensions],
+    ...(chord.omissions?.length ? { omissions: [...chord.omissions] } : {}),
     ...(chord.bass === undefined ? {} : { bass: chord.bass }),
     label: "",
   };
@@ -217,6 +237,7 @@ function cloneChord(chord: ChordSymbol): ProgressionPracticeEvent["chord"] {
     root: canonical.root,
     quality: canonical.quality,
     tensions: Object.freeze([...canonical.tensions]),
+    ...(canonical.omissions?.length ? { omissions: Object.freeze([...canonical.omissions]) } : {}),
     ...(canonical.bass === undefined ? {} : { bass: canonical.bass }),
     label: validatedSavedChordLabel(chord, canonical) ?? explicitSlashLabel(canonical),
   });
@@ -226,7 +247,7 @@ function validatedSavedChordLabel(source: ChordSymbol, canonical: ChordSymbol): 
   if (typeof source.label !== "string") return undefined;
   const label = source.label.trim();
   if (label.length === 0 || label.length > 64) return undefined;
-  const parsed = parseChordLabel(label);
+  const parsed = parseTextChordLabel(label);
   if (!parsed || !sameChordSemantics(parsed, canonical)) return undefined;
   return label;
 }
@@ -235,7 +256,8 @@ function sameChordSemantics(left: ChordSymbol, right: ChordSymbol): boolean {
   return left.root === right.root
     && left.quality === right.quality
     && left.bass === right.bass
-    && [...left.tensions].sort().join("|") === [...right.tensions].sort().join("|");
+    && [...left.tensions].sort().join("|") === [...right.tensions].sort().join("|")
+    && [...(left.omissions ?? [])].sort().join("|") === [...(right.omissions ?? [])].sort().join("|");
 }
 
 function selectVoicing(

@@ -477,6 +477,10 @@ function coreDegreesForChord(
     six: ["1", "3", "6"],
     min6: ["1", "b3", "6"],
     sixNine: ["1", "3", "6", "9"],
+    add13: ["1", "3", "5", "13"],
+    minMaj7: ["1", "b3", "7"],
+    power: ["1", "5"],
+    dom11: ["1", "3", "b7", "9", "11"],
   };
   const requested = unique([...byQuality[chord.quality], ...chord.tensions]);
   return requested.filter((degree) => literalDegrees.includes(degree));
@@ -504,6 +508,7 @@ function colorCandidatesForQuality(quality: ChordQuality): readonly string[] {
     case "maj7":
     case "maj9":
     case "add9":
+    case "add13":
     case "six":
     case "sixNine":
     case "aug":
@@ -512,11 +517,13 @@ function colorCandidatesForQuality(quality: ChordQuality): readonly string[] {
     case "min7":
     case "min9":
     case "min11":
+    case "minMaj7":
     case "min6":
       return ["9", "11", "13"];
     case "dom7":
     case "dom9":
     case "dom13":
+    case "dom11":
       return ["9", "13", "#11"];
     case "sus2":
     case "sus4":
@@ -526,6 +533,7 @@ function colorCandidatesForQuality(quality: ChordQuality): readonly string[] {
       return ["11"];
     case "dim":
     case "dim7":
+    case "power":
       return [];
   }
 }

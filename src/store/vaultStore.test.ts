@@ -24,6 +24,8 @@ import {
   TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM,
 } from "../domain/textProgression";
 import { createTextProgressionStyleSnapshot } from "../domain/textProgressionVoicing";
+import { parseExtendedTextProgression } from "../domain/extendedTextProgression";
+import { extendedTextSaveData } from "../domain/extendedTextSave";
 import type {
   ChordTimelineItem,
   ProgressionBlockCandidate,
@@ -1113,6 +1115,67 @@ describe("vault store", () => {
       lengthBars: TEXT_PROGRESSION_MAX_BARS,
     });
     expect(maximumBar?.chords).toHaveLength(TEXT_PROGRESSION_MAX_BARS);
+  });
+
+  it("saves a three-quarter extended score without duplicating harmonic cards for reattacks", async () => {
+    const repository = new FakeRepository();
+    const store = createVaultStore({ repository, now: () => now });
+    await store.getState().initialize();
+    const rawText = "# Verse\r\nC % =|_ Dm G7";
+    const parsed = parseExtendedTextProgression(rawText, { beat: "3/4" });
+    expect(parsed.state).toBe("VALID");
+    const data = extendedTextSaveData(parsed);
+    expect(store.getState().createIdeaFromTextProgression({
+      ...data,
+      textSource: { ...data.textSource, rawText: "C|Dm" },
+    })).toBeUndefined();
+    const ideaId = store.getState().createIdeaFromTextProgression(data);
+    expect(ideaId).toBeDefined();
+    const block = store.getState().ideas.find(idea => idea.id === ideaId)?.progressionBlocks?.[0];
+    expect(block).toMatchObject({ timeSignature: "3/4", sourceStartBeat: 0, sourceEndBeat: 6 });
+    expect(block?.chords).toHaveLength(3);
+    expect(block?.chords[0]).toMatchObject({ bar: 1, beat: 1, durationBeats: 3 });
+    expect(parsed.harmonicSpans[0]?.attacks).toHaveLength(2);
+    expect(block?.textSource).toMatchObject({
+      dialect: "extended-v1",
+      rawText,
+      parserVersion: "extended-text-v1",
+      semanticPolicyVersion: "p8.8-explicit-factors-v1",
+      metadata: { beat: "3/4" },
+    });
+    expect(block?.textSource?.sections).toEqual(data.textSource.sections);
+    expect(block?.textSource?.slots).toEqual(data.textSource.slots);
+    expect(block?.textSource?.harmonicSpans).toEqual(data.textSource.harmonicSpans);
+    expect(block?.textSource?.harmonicSpans[0]?.attacks).toHaveLength(2);
+    const reloaded = parseVaultFileJson(serializeVault({
+      ...createEmptyVault(), ideas: store.getState().ideas,
+    }));
+    expect(reloaded.ok).toBe(true);
+    if (reloaded.ok) expect(reloaded.vault.fileVersion).toBe(2);
+    if (!reloaded.ok) throw new Error("Vault reload failed");
+    expect(reloaded.vault.ideas.find(idea => idea.id === ideaId)?.progressionBlocks?.[0]?.timeSignature).toBe("3/4");
+    expect(reloaded.vault.ideas.find(idea => idea.id === ideaId)?.progressionBlocks?.[0]?.textSource).toEqual(data.textSource);
+    const unrelatedId = store.getState().createIdeaFromTextProgression({
+      title: "Unrelated text", summaryText: "ignored", chords: [textTimelineChord("F", 1)],
+    });
+    expect(unrelatedId).toBeDefined();
+    expect(store.getState().updateIdea(unrelatedId!, { title: "Edited unrelated idea" })).toBe(true);
+    await store.getState().flush();
+    const afterEdit = parseVaultFileJson(serializeVault(repository.saved[repository.saved.length - 1]!));
+    expect(afterEdit.ok).toBe(true);
+    if (!afterEdit.ok) throw new Error("Vault reload after unrelated edit failed");
+    expect(afterEdit.vault.ideas.find(idea => idea.id === ideaId)?.progressionBlocks?.[0]?.textSource).toEqual(data.textSource);
+    const reloadedBlock = afterEdit.vault.ideas.find(idea => idea.id === ideaId)?.progressionBlocks?.[0];
+    const handoff = buildProgressionVoicingPracticeHandoffFromVault(afterEdit.vault.ideas, {
+      ideaId: ideaId!, blockId: reloadedBlock!.id,
+    });
+    expect(handoff.ok).toBe(true);
+    if (!handoff.ok) throw new Error("Voicing Loop handoff failed");
+    const practice = handoff.handoff.snapshots["basic-full"]!;
+    expect(practice.meter).toEqual({ numerator: 3, denominator: 4 });
+    expect(practice.events.map(event => event.attackBeats)).toEqual([[0, 1], [4], [5]]);
+    expect(practice.spans.map(span => span.kind)).toEqual(["chord", "rest", "chord", "chord"]);
+    expect(handoff.handoff.initialSelection).toBe("basic-full");
   });
 
   it("hands off created and appended BPM-less Text saves with the runtime default only", async () => {

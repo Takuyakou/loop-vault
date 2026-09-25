@@ -6,6 +6,7 @@ import type { Section } from "./midi/sections";
 import type { CandidateChordEvent, CandidateChordStats } from "./midi/candidateBlock";
 import type { ProgressionPracticeProgress } from "./practice/types";
 import type { SourceBasslineSnapshotV1 } from "./sourceBassline";
+import type { SavedTextSourceV1 } from "./textSource";
 import type { MidiTempoDiagnostics } from "./midi/tempoAnalysis";
 import type { PresentationGroupingResult } from "./midi/presentationGrouping";
 
@@ -30,13 +31,15 @@ export interface StatusHistoryEntry {
 export type ChordQuality =
   | "maj" | "min" | "dim" | "aug" | "maj7" | "min7" | "dom7" | "min7b5" | "dim7"
   | "maj9" | "min9" | "dom9" | "min11" | "dom13" | "sus2" | "sus4" | "dom7sus4"
-  | "add9" | "six" | "min6" | "sixNine";
+  | "add9" | "add13" | "six" | "min6" | "sixNine" | "minMaj7" | "power" | "dom11";
 export type Tension = "9" | "b9" | "#9" | "11" | "#11" | "13" | "b13" | "#5";
 
 export interface ChordSymbol {
   root: number;
   quality: ChordQuality;
   tensions: Tension[];
+  /** Explicit written omissions; an absent field keeps legacy identities unchanged. */
+  omissions?: ("3" | "5")[];
   bass?: number;
   label: string;
 }
@@ -117,6 +120,7 @@ export interface SavedProgressionBlock {
   userVerified?: boolean;
   practice?: ProgressionPracticeProgress;
   sourceBassline?: SourceBasslineSnapshotV1;
+  textSource?: SavedTextSourceV1;
 }
 
 export interface ProgressionBlockCandidate {

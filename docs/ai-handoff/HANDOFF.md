@@ -155,6 +155,11 @@ It is **not** an exact MIDI performance representation: it does not recover the
 original pitch voicing, octave, doubling, hand allocation, or exact note timing /
 articulation.
 
+Phase 8.8 adds an explicit Extended Text dialect with source-text provenance,
+written attack/hold/rest timing, and Generated Voicing handoff in Vault v2.
+It remains separate from MIDI extraction and exact source-note playback. See
+[Phase 8.8 handoff](../phase8.8/P8.8-final-handoff.md).
+
 ## Protected contracts
 
 Repository safety rules: see root `AGENTS.md` (canonical; do not duplicate here).

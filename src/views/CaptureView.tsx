@@ -92,6 +92,8 @@ import type {
 import type { AnalysisState, ProgressionSaveMetadata, TextProgressionIdeaDraft } from "../store/vaultStore";
 import { selectInitialTimelineCandidate } from "../domain/timelineCandidateGrouping";
 import type { TextProgressionEvent } from "../domain/textProgression";
+import type { ExtendedTextResult } from "../domain/extendedTextProgression";
+import { extendedTextSaveData } from "../domain/extendedTextSave";
 import { progressionEditorCopy, type AppCopy, type AppLanguage } from "../i18n";
 import { ProgressionGrid, timelineStartBeat } from "../ui/ProgressionGrid";
 import { chordProgressFraction } from "../ui/playbackProgress";
@@ -1205,6 +1207,24 @@ export function CaptureView(props: CaptureViewProps) {
     setCaptureInputMode(nextMode);
   }
 
+  function saveExtendedTextProgression(result: ExtendedTextResult): boolean {
+    if (!result.canConvert || !createIdeaFromTextProgression) return false;
+    const data = extendedTextSaveData(result);
+    const saved = createIdeaFromTextProgression({
+      ...data,
+      nextAction: copy.capture.defaultNextAction,
+      userEdited: false,
+      userVerified: true,
+    });
+    if (!saved) {
+      setToast(copy.capture.createFailed);
+      return false;
+    }
+    if (typeof saved === "object") setSavedTextProgressionTarget(saved);
+    setToast(copy.capture.savedToVault);
+    return true;
+  }
+
   function openTextProgressionDraft(converted: TextProgressionConvertedDraft) {
     stopTextPlayback();
     setSavedTextProgressionTarget(undefined);
@@ -1377,6 +1397,7 @@ export function CaptureView(props: CaptureViewProps) {
             showRomanNumerals={showRomanNumerals}
             draftActive={textDraft !== null}
             onConvert={openTextProgressionDraft}
+            onSaveExtended={saveExtendedTextProgression}
             onPreview={(event, memory, bpm) => void previewTextProgressionEvent(event, memory, bpm)}
             onStop={stopTextPlayback}
           />

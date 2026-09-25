@@ -1,4 +1,4 @@
-import { parseChordLabel } from "./chords";
+import { parseTextChordLabel } from "./chords";
 import { explicitSlashLabel } from "./explicitSlashLabel";
 import { parseFastChordEntry } from "./progressionEditing/fastLabelEntry";
 import { parseKeySignature } from "./progressionEditing/chordSuggestions";
@@ -638,14 +638,14 @@ function isControlToken(raw: string): boolean { return raw === "%" || raw === "_
 
 function parseAbsoluteChordToken(raw: string): ChordSymbol | undefined {
   const normalized = normalizeScoreChord(raw);
-  const direct = parseChordLabel(normalized);
+  const direct = parseTextChordLabel(normalized);
   if (direct) return direct;
   // Existing Fast Label Entry accepts the normal `m` spelling. This local alias
   // keeps `C-7` in the text grammar as the documented shorthand without
   // widening the global chord parser contract.
   const minorHyphen = /^([A-G](?:#|b)*?)-(.*)$/.exec(normalized);
   if (!minorHyphen) return undefined;
-  return parseChordLabel(`${minorHyphen[1]}m${minorHyphen[2]}`) ?? undefined;
+  return parseTextChordLabel(`${minorHyphen[1]}m${minorHyphen[2]}`) ?? undefined;
 }
 
 function unsupportedTokenDiagnostic(rawToken: RawToken, bar: number): TextProgressionDiagnostic | undefined {
@@ -840,7 +840,8 @@ function isFourFour(meter: TextProgressionMeter): boolean {
 }
 
 function cloneChord(chord: ChordSymbol): ChordSymbol {
-  return { ...chord, label: explicitSlashLabel(chord), tensions: [...chord.tensions] };
+  return { ...chord, label: explicitSlashLabel(chord), tensions: [...chord.tensions],
+    ...(chord.omissions?.length ? { omissions: [...chord.omissions] } : {}) };
 }
 
 function cloneDiagnostic(value: TextProgressionDiagnostic): TextProgressionDiagnostic {

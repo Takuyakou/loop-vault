@@ -71,7 +71,7 @@ describe("P5.31 bounded score intake", () => {
   });
 
   it("fails closed for incomplete tokens and malformed protected punctuation deterministically at capacity", () => {
-    for (const input of ["C#5","C9B7(#9,#5)garbage","C/E/Am7","C7(#9G)","C7((#9))","C7(#9","C||G","CDE|"]) {
+    for (const input of ["C#5junk","C9B7(#9,#5)garbage","C/E/Am7","C7(#9G)","C7((#9))","C7(#9","C||G","CDE|"]) {
       expect(parseTextProgression(input).canConvert, input).toBe(false);
     }
     for (const input of ["C".repeat(8192), "(" + "C".repeat(8190) + ")", "| " + "C#".repeat(2000) + "X |"]) {

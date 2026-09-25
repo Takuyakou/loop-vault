@@ -155,6 +155,10 @@ function qualitySuffix(quality: ChordQuality): string {
     six: "6",
     min6: "6",
     sixNine: "6/9",
+    add13: "add13",
+    minMaj7: "mMaj7",
+    power: "5",
+    dom11: "11",
   };
   return suffixes[quality];
 }
