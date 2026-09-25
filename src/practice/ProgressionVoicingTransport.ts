@@ -47,7 +47,15 @@ export interface ProgressionVoicingTransportPort {
   seek?(eventIndex: number): { readonly status: "running" | "paused" | "count-in"; readonly absoluteBeat: number } | undefined;
 }
 
-const AUDITION_RETRIGGER_DELAY_SECONDS = 0.012;
+const AUDITION_FADE_SECONDS = 0.012;
+const AUDITION_ATTACK_SECONDS = 0.005;
+const AUDITION_RETIRE_MS = 24;
+
+interface AuditionVoice {
+  readonly instrument: PreviewInstrument;
+  readonly output: Tone.Gain;
+  readonly sound: PreviewSound;
+}
 
 /**
  * Runtime adapter for P5.27. Tone.Transport is the only musical clock: the
@@ -71,9 +79,10 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
   private referenceOutput?: Tone.Gain;
   private latestScheduledAudioTime = 0;
   private voicingSound?: PreviewSound;
-  private auditionInstrument?: PreviewInstrument;
-  private auditionSound?: PreviewSound;
+  private readonly auditionVoices: Array<AuditionVoice | undefined> = [undefined, undefined];
+  private auditionVoiceIndex = -1;
   private auditionGeneration = 0;
+  private readonly retiringAuditions: Array<{ voice: AuditionVoice; timer: ReturnType<typeof globalThis.setTimeout> }> = [];
   private clickSynth?: Tone.Synth;
   private generation = 0;
   private projectionEpoch = 0;
@@ -352,27 +361,49 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     const generation = ++this.auditionGeneration;
     await Tone.start();
     if (generation !== this.auditionGeneration || this.startingGeneration !== undefined) return;
-    if (!this.auditionInstrument || this.auditionSound !== sound) {
-      this.disposeAuditionInstrument();
-      const instrument = await createPreviewInstrument(sound);
-      if (generation !== this.auditionGeneration || this.startingGeneration !== undefined) {
-        instrument.dispose();
-        return;
+
+    // Two reusable voice groups isolate the outgoing chord from the next
+    // attack. Each group has its own gain envelope; rapid clicks cannot pile
+    // up an unbounded number of instrument graphs.
+    const nextIndex = (this.auditionVoiceIndex + 1) % this.auditionVoices.length;
+    let voice = this.auditionVoices[nextIndex];
+    if (!voice || voice.sound !== sound) {
+      if (voice) this.retireAuditionVoice(voice);
+      this.auditionVoices[nextIndex] = undefined;
+      const output = new Tone.Gain(0).toDestination();
+      try {
+        const instrument = await createPreviewInstrument(sound, output);
+        if (generation !== this.auditionGeneration || this.startingGeneration !== undefined) {
+          instrument.dispose();
+          output.dispose();
+          return;
+        }
+        voice = { instrument, output, sound };
+        this.auditionVoices[nextIndex] = voice;
+      } catch (error) {
+        output.dispose();
+        throw error;
       }
-      this.auditionInstrument = instrument;
-      this.auditionSound = sound;
     }
-    const releaseTime = Tone.now();
-    this.auditionInstrument.releaseAll(releaseTime);
-    // Keep the old chord's release and the new polyphonic attack on distinct
-    // audio instants. Some hardware/browser combinations otherwise apply the
-    // release to voices allocated by the same-timestamp attack (often the top).
-    this.auditionInstrument.triggerAttackRelease(
+    if (generation !== this.auditionGeneration) return;
+    const now = Tone.now();
+    const previous = this.auditionVoices[this.auditionVoiceIndex];
+    if (previous && previous !== voice) this.fadeAuditionVoice(previous, now);
+    // The selected bank may still be finishing its fade from two clicks ago.
+    // Bring it down smoothly before its new attack instead of snapping gain.
+    const gain = voice.output.gain;
+    gain.cancelScheduledValues(now);
+    gain.setValueAtTime(gain.getValueAtTime(now), now);
+    gain.linearRampToValueAtTime(0, now + AUDITION_ATTACK_SECONDS);
+    voice.instrument.releaseAll(now);
+    voice.instrument.triggerAttackRelease(
       midiNotes.map(midiToNoteName),
       2,
-      releaseTime + AUDITION_RETRIGGER_DELAY_SECONDS,
+      now + AUDITION_ATTACK_SECONDS,
       0.72,
     );
+    gain.linearRampToValueAtTime(1, now + AUDITION_ATTACK_SECONDS + AUDITION_FADE_SECONDS);
+    this.auditionVoiceIndex = nextIndex;
   }
 
   seek(eventIndex: number): { readonly status: "running" | "paused" | "count-in"; readonly absoluteBeat: number } | undefined {
@@ -538,11 +569,42 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.disposeAuditionInstrument();
   }
 
+  private fadeAuditionVoice(voice: AuditionVoice, time: number): void {
+    const gain = voice.output.gain;
+    gain.cancelScheduledValues(time);
+    gain.setValueAtTime(gain.getValueAtTime(time), time);
+    gain.linearRampToValueAtTime(0, time + AUDITION_FADE_SECONDS);
+    voice.instrument.releaseAll(time);
+  }
+
+  private retireAuditionVoice(voice: AuditionVoice): void {
+    this.fadeAuditionVoice(voice, Tone.now());
+    const retirement = {
+      voice,
+      timer: globalThis.setTimeout(() => {
+        this.disposeRetiredAudition(retirement);
+      }, AUDITION_RETIRE_MS),
+    };
+    this.retiringAuditions.push(retirement);
+    // At most two fading banks can survive a burst of stop/seek operations.
+    if (this.retiringAuditions.length > 2) this.disposeRetiredAudition(this.retiringAuditions[0]!);
+  }
+
+  private disposeRetiredAudition(retirement: { voice: AuditionVoice; timer: ReturnType<typeof globalThis.setTimeout> }): void {
+    globalThis.clearTimeout(retirement.timer);
+    const index = this.retiringAuditions.indexOf(retirement);
+    if (index >= 0) this.retiringAuditions.splice(index, 1);
+    retirement.voice.instrument.dispose();
+    retirement.voice.output.dispose();
+  }
+
   private disposeAuditionInstrument(): void {
-    this.auditionInstrument?.releaseAll();
-    this.auditionInstrument?.dispose();
-    this.auditionInstrument = undefined;
-    this.auditionSound = undefined;
+    for (let index = 0; index < this.auditionVoices.length; index += 1) {
+      const voice = this.auditionVoices[index];
+      if (voice) this.retireAuditionVoice(voice);
+      this.auditionVoices[index] = undefined;
+    }
+    this.auditionVoiceIndex = -1;
   }
 
   private attackCurrentVoicing(absoluteBeat: number, time: number): void {
