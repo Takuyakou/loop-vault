@@ -1836,63 +1836,145 @@ function BpmDragControl({
   readonly onChange: (value: number) => void;
   readonly value: number;
 }) {
-  const dragCleanup = useRef<() => void>();
+  const fieldRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const gestureRef = useRef<{
+    pointerId: number;
+    startY: number;
+    startValue: number;
+    lastValue: number;
+    dragging: boolean;
+  }>();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(String(value));
+  const valueRef = useRef(value);
+  valueRef.current = value;
 
-  useEffect(() => () => dragCleanup.current?.(), []);
+  function apply(next: number) {
+    if (!Number.isFinite(next)) return;
+    const clamped = Math.max(30, Math.min(240, Math.round(next)));
+    const gesture = gestureRef.current;
+    if (gesture ? clamped === gesture.lastValue : clamped === valueRef.current) return;
+    if (gesture) gesture.lastValue = clamped;
+    onChange(clamped);
+  }
 
-  function startDrag(event: React.PointerEvent<HTMLSpanElement>) {
+  function finishEdit() {
+    const parsed = Number(draft);
+    if (draft.trim() && Number.isFinite(parsed)) apply(parsed);
+    setEditing(false);
+  }
+
+  useEffect(() => {
+    const field = fieldRef.current;
+    if (!field) return;
+    const wheel = (event: WheelEvent) => {
+      if (!event.deltaY) return;
+      event.preventDefault();
+      apply(valueRef.current + (event.deltaY < 0 ? 1 : -1));
+    };
+    field.addEventListener("wheel", wheel, { passive: false });
+    return () => field.removeEventListener("wheel", wheel);
+  });
+
+  function startDrag(event: React.PointerEvent<HTMLDivElement>) {
     if (event.button !== 0) return;
+    gestureRef.current = {
+      pointerId: event.pointerId,
+      startY: event.clientY,
+      startValue: value,
+      lastValue: value,
+      dragging: false,
+    };
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+  }
+
+  function moveDrag(event: React.PointerEvent<HTMLDivElement>) {
+    const gesture = gestureRef.current;
+    if (!gesture || event.pointerId !== gesture.pointerId) return;
+    const distance = gesture.startY - event.clientY;
+    if (!gesture.dragging && Math.abs(distance) < 3) return;
+    if (!gesture.dragging) {
+      gesture.dragging = true;
+      setEditing(false);
+      inputRef.current?.blur();
+    }
     event.preventDefault();
-    dragCleanup.current?.();
-    const pointerId = event.pointerId;
-    const startValue = value;
-    const startY = event.clientY;
-    let lastValue = value;
-    const cleanup = () => {
-      window.removeEventListener("pointermove", moveDrag);
-      window.removeEventListener("pointerup", endDrag);
-      window.removeEventListener("pointercancel", endDrag);
-      if (dragCleanup.current === cleanup) dragCleanup.current = undefined;
-    };
-    const moveDrag = (moveEvent: PointerEvent) => {
-      if (moveEvent.pointerId !== pointerId) return;
-      const next = Math.max(30, Math.min(240, startValue + Math.round((startY - moveEvent.clientY) / 3)));
-      if (next === lastValue) return;
-      lastValue = next;
-      moveEvent.preventDefault();
-      onChange(next);
-    };
-    const endDrag = (endEvent: PointerEvent) => {
-      if (endEvent.pointerId === pointerId) cleanup();
-    };
-    dragCleanup.current = cleanup;
-    window.addEventListener("pointermove", moveDrag, { passive: false });
-    window.addEventListener("pointerup", endDrag);
-    window.addEventListener("pointercancel", endDrag);
+    const pixelsPerBpm = event.shiftKey ? 10 : 4;
+    const multiplier = event.ctrlKey ? 5 : 1;
+    apply(gesture.startValue + Math.round(distance / pixelsPerBpm) * multiplier);
+  }
+
+  function endDrag(event: React.PointerEvent<HTMLDivElement>) {
+    const gesture = gestureRef.current;
+    if (!gesture || event.pointerId !== gesture.pointerId) return;
+    gestureRef.current = undefined;
+    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    if (!gesture.dragging && event.type === "pointerup") {
+      setDraft(String(value));
+      setEditing(true);
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
   }
 
   return (
     <div className="inline-flex min-h-8 items-center gap-2 text-[10px] font-bold tracking-[0.08em] text-[var(--lv-text-muted)]">
       <label htmlFor="voicing-loop-bpm">{label}</label>
       <div
-        className="relative"
+        ref={fieldRef}
+        className={`relative touch-none select-none ${editing ? "cursor-text" : "cursor-ns-resize"}`}
+        data-testid="voicing-loop-bpm-field"
+        onPointerDown={startDrag}
+        onPointerMove={moveDrag}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onLostPointerCapture={() => { gestureRef.current = undefined; }}
+        onDoubleClick={() => {
+          setDraft(String(value));
+          setEditing(true);
+          inputRef.current?.focus();
+          inputRef.current?.select();
+        }}
       >
         <input
+          ref={inputRef}
           id="voicing-loop-bpm"
           aria-describedby="voicing-loop-bpm-drag-help"
-          className="lv-field-control min-h-8 w-20 px-2 pr-6 text-sm"
-          type="number"
-          min={30}
-          max={240}
-          value={value}
-          onChange={(event) => onChange(event.currentTarget.valueAsNumber)}
+          className={`lv-field-control min-h-8 w-20 px-2 pr-6 text-sm ${editing ? "cursor-text" : "cursor-ns-resize"}`}
+          type="text"
+          inputMode="numeric"
+          role="spinbutton"
+          aria-valuemin={30}
+          aria-valuemax={240}
+          aria-valuenow={value}
+          value={editing ? draft : value}
+          onFocus={() => { setDraft(String(value)); setEditing(true); }}
+          onChange={(event) => {
+            setDraft(event.currentTarget.value);
+            if (!editing) apply(Number(event.currentTarget.value));
+          }}
+          onBlur={finishEdit}
+          onKeyDown={(event) => {
+            if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+              event.preventDefault();
+              apply(value + (event.key === "ArrowUp" ? 1 : -1) * (event.shiftKey ? 10 : 1));
+              setDraft(String(Math.max(30, Math.min(240, value + (event.key === "ArrowUp" ? 1 : -1) * (event.shiftKey ? 10 : 1)))));
+            } else if (event.key === "Enter") {
+              finishEdit();
+              inputRef.current?.blur();
+            } else if (event.key === "Escape") {
+              setDraft(String(value));
+              setEditing(false);
+              inputRef.current?.blur();
+            }
+          }}
         />
         <span
           aria-hidden="true"
-          className="absolute inset-y-0 right-0 flex w-6 touch-none select-none items-center justify-center text-[var(--lv-text-muted)] cursor-ns-resize"
+          className="pointer-events-none absolute inset-y-0 right-0 flex w-6 items-center justify-center text-[var(--lv-text-muted)]"
           data-testid="voicing-loop-bpm-drag"
           title={dragLabel}
-          onPointerDown={startDrag}
         >
           <GripVertical size={16} />
         </span>

@@ -556,8 +556,8 @@ describe("ProgressionVoicingPracticeView", () => {
       dispatchPointer(drag, "pointermove", { button: 0, clientY: 70, pointerId: 7 });
       dispatchPointer(drag, "pointerup", { button: 0, clientY: 70, pointerId: 7 });
     });
-    expect(container.querySelector<HTMLInputElement>("#voicing-loop-bpm")?.value).toBe("90");
-    expect(runtime.setBpm).toHaveBeenLastCalledWith(90);
+    expect(container.querySelector<HTMLInputElement>("#voicing-loop-bpm")?.value).toBe("88");
+    expect(runtime.setBpm).toHaveBeenLastCalledWith(88);
   });
 
   it("separates SOURCE, STUDY, and DISPLAY while keeping exact sources independent from study", async () => {
