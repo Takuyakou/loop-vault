@@ -261,8 +261,8 @@ test("VL-07 selector clipping remains absent at 200 percent", async ({ page }) =
   const choices = page.getByTestId("voicing-loop-progression-choice");
   await expect(choices).toHaveCount(3);
   await expect(choices.filter({ hasText: "Public ready progression" })).toBeEnabled();
-  await expect(choices.filter({ hasText: "Public missing BPM" })).toBeDisabled();
-  await expect(choices.filter({ hasText: "Public missing BPM" })).toContainText("BPMが未設定");
+  await expect(choices.filter({ hasText: "Public missing BPM" })).toBeEnabled();
+  await expect(choices.filter({ hasText: "Public missing BPM" })).toContainText("120 BPM（練習初期値）");
   await expect(choices.filter({ hasText: "Public capacity case" })).toContainText("256");
   await page.screenshot({ path: ".local-evaluation/vl07/selector.png", fullPage: true });
   await page.evaluate(() => { document.documentElement.style.zoom = "2"; });
