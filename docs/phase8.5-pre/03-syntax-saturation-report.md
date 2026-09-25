@@ -63,4 +63,3 @@ Across 140 public scores, the screening script found ASCII pipes in 127, slash-l
 | U07 | AMBIGUOUS | Visually similar Unicode punctuation and dash variants are not automatically equivalent. |
 
 No unrecognized token, bar, comment, or metadata may be silently discarded. A known external lexical form with unsupported musical semantics is a semantic gap, not a successful chord import.
-

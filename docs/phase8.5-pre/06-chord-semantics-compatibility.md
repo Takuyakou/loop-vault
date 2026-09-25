@@ -38,4 +38,3 @@ Current `ChordQuality` and `Tension` are closed vocabularies. A label that lexic
 - `src/domain/textProgressionDraft.ts` saves canonical events, so a wrong or approximated identity would be persisted. Conversion must fail before Draft creation when meaning is unresolved.
 
 The research-only local audit records each synthetic label's root, quality, tensions, bass, pitch classes, generated profiles, and hand arrays. No external song or raw external implementation appears in this report.
-
