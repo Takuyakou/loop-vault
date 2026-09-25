@@ -2,17 +2,18 @@
   "schemaVersion": 1,
   "phaseId": "8.8.1",
   "status": "in-progress",
-  "activeStage": "P8.8.1-04",
+  "activeStage": "P8.8.1-05",
   "completedStages": [
     "P8.8.1-00",
     "P8.8.1-01",
     "P8.8.1-02",
-    "P8.8.1-03"
+    "P8.8.1-03",
+    "P8.8.1-04"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "40d8b8ee9261e9c5585f25eb3d0e9a259520b1f7",
-  "lastVerifiedCommit": "a615378",
+  "lastVerifiedCommit": "6e5c52d",
   "currentBranch": "feat/phase8.8.1-realworld-fix",
   "requiredGates": {
     "P8.8.1-00": [
@@ -44,6 +45,15 @@
       "changed-scope-eslint",
       "phase-docs",
       "diff-check"
+    ],
+    "P8.8.1-04": [
+      "diagnostic-reasons",
+      "japanese-ui",
+      "frozen-pre",
+      "typescript",
+      "changed-scope-eslint",
+      "phase-docs",
+      "diff-check"
     ]
   },
   "gateResults": {
@@ -58,8 +68,10 @@
     "long-chart-vault-roundtrip": "pass",
     "practice-grid-boundary": "pass",
     "alias-semantics": "pass",
-    "written-spelling-vault": "pass"
+    "written-spelling-vault": "pass",
+    "diagnostic-reasons": "pass",
+    "japanese-ui": "pass"
   },
-  "nextAction": "Separate parser diagnostics by reason and display Japanese messages while retaining malformed source bars.",
+  "nextAction": "Build deterministic 150-bar compound acceptance and aggregate-only local real witness harness.",
   "updatedAt": "2026-09-26"
 }

@@ -17,8 +17,15 @@ export interface ExtendedTextMetadata {
   readonly bpm?: number;
   readonly capo?: number;
 }
+export type ExtendedTextReasonCode =
+  | "UNKNOWN_TOKEN" | "UNKNOWN_CHORD" | "AMBIGUOUS_TOKENIZATION"
+  | "INVALID_STRUCTURE" | "UNSUPPORTED_SUBDIVISION"
+  | "INPUT_LIMIT_EXCEEDED" | "UNSUPPORTED_METER" | "INVALID_METADATA";
+
 export interface ExtendedTextDiagnostic {
+  /** Legacy diagnostic code retained for frozen PRE fixtures. */
   readonly code: string;
+  readonly reasonCode: ExtendedTextReasonCode;
   readonly severity: "ERROR" | "WARNING" | "INFO";
   readonly message: string;
   readonly span: TextSourceRange;
@@ -115,7 +122,7 @@ export function parseExtendedTextProgression(
     diagnostics.push(issue(source, "INVALID_KEY", "Confirmed key is not supported.", { start: 0, end: 0 }));
   }
   if (source.length > EXTENDED_TEXT_LIMITS.maxInputCodeUnits) {
-    diagnostics.push(issue(source, "INPUT_LIMIT", "Text is longer than the supported input budget.", { start: 0, end: source.length }));
+    diagnostics.push(issue(source, "INPUT_LIMIT", "Text exceeds the supported input length.", { start: 0, end: source.length }));
     return result("INVALID");
   }
 
@@ -164,8 +171,9 @@ export function parseExtendedTextProgression(
     const segmented = segmentScoreBar(score, range.start, range.end, parseExtendedChordToken, true, EXTENDED_TEXT_MAX_SLOTS_PER_BAR);
     if (segmented.kind !== "ok") {
       const code = segmented.kind === "ambiguous" ? "AMBIGUOUS_SEGMENTATION" : classifyInvalid(source.slice(range.start, range.end));
-      diagnostics.push(issue(source, code, "This bar needs an unambiguous supported chord or control.", range));
-      bars.push([]);
+      diagnostics.push(issue(source, code,
+        englishReasonMessage(reasonForDiagnostic(code, source.slice(range.start, range.end))), range));
+      bars.push([source.slice(range.start, range.end)]);
       continue;
     }
     const tokens = segmented.tokens.map(token => ({
@@ -382,7 +390,37 @@ function location(source: string, offset: number): { line: number; column: numbe
   return { line: prefix.split("\n").length, column: offset - lastNewline };
 }
 
+function reasonForDiagnostic(code: string, raw: string): ExtendedTextReasonCode {
+  if (code === "UNSUPPORTED_METER") return "UNSUPPORTED_METER";
+  if (code === "UNSUPPORTED_SUBDIVISION" || code === "UNSUPPORTED_RHYTHM") return "UNSUPPORTED_SUBDIVISION";
+  if (code === "AMBIGUOUS_SEGMENTATION") return "AMBIGUOUS_TOKENIZATION";
+  if (code === "INPUT_LIMIT" || code === "INPUT_LIMIT_EXCEEDED"
+    || code === "BAR_LIMIT" || code === "TOKEN_LIMIT" || code === "SECTION_LIMIT") return "INPUT_LIMIT_EXCEEDED";
+  if (code === "INVALID_CHORD") {
+    const trimmed = raw.trim();
+    if (/^[A-G](?:#|b)*/.test(trimmed)) return "UNKNOWN_CHORD";
+    return "UNKNOWN_TOKEN";
+  }
+  if (code === "UNKNOWN_CHARACTER" || code === "UNRECOGNIZED_PUNCTUATION") return "UNKNOWN_TOKEN";
+  if (code === "UNSUPPORTED_BPM" || code === "INVALID_KEY" || code === "UNSUPPORTED_CAPO") return "INVALID_METADATA";
+  return "INVALID_STRUCTURE";
+}
+
+function englishReasonMessage(reason: ExtendedTextReasonCode): string {
+  switch (reason) {
+    case "UNKNOWN_TOKEN": return "This bar contains an unknown score token.";
+    case "UNKNOWN_CHORD": return "This bar contains a chord label outside the confirmed grammar.";
+    case "AMBIGUOUS_TOKENIZATION": return "This bar has more than one possible tokenization.";
+    case "INVALID_STRUCTURE": return "This bar has invalid score structure.";
+    case "UNSUPPORTED_SUBDIVISION": return "This bar cannot be divided exactly on the source timing grid.";
+    case "INPUT_LIMIT_EXCEEDED": return "The score exceeds a supported resource limit.";
+    case "UNSUPPORTED_METER": return "This meter is not supported.";
+    case "INVALID_METADATA": return "The score metadata is not supported.";
+  }
+}
+
 function issue(source: string, code: string, message: string, span: TextSourceRange): ExtendedTextDiagnostic {
-  return { code, severity: "ERROR", message, span, ...location(source, span.start),
+  return { code, reasonCode: reasonForDiagnostic(code, source.slice(span.start, span.end)),
+    severity: "ERROR", message, span, ...location(source, span.start),
     rawToken: source.slice(span.start, span.end) };
 }

@@ -61,4 +61,24 @@ describe("P8.8 extended Capture intake", () => {
     await act(async () => root.unmount());
     container.remove();
   });
+
+  it("explains an invalid raw bar in Japanese with a reason and source span", async () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => root.render(<TextProgressionCapturePanel language="ja" showRomanNumerals={false}
+      onConvert={vi.fn()} onPreview={vi.fn()} onStop={vi.fn()} onSaveExtended={vi.fn()} />));
+    await press(container.querySelector<HTMLButtonElement>('[data-testid="text-mode-extended"]')!);
+    await write(container.querySelector<HTMLTextAreaElement>('[data-testid="extended-text-input"]')!, "| C///E | F |");
+    const bar = container.querySelector('[data-testid="extended-text-bar"][data-state="error"]');
+    expect(bar?.textContent).toContain("C///E");
+    expect(bar?.textContent).toContain("解析できない元テキスト");
+    const diagnostic = container.querySelector('[data-testid="extended-text-diagnostics"] [data-reason="INVALID_STRUCTURE"]');
+    expect(diagnostic?.textContent).toContain("書式を確認してください");
+    expect(diagnostic?.getAttribute("data-span-start")).not.toBeNull();
+    expect(diagnostic?.getAttribute("data-span-end")).not.toBeNull();
+    expect(container.querySelector<HTMLButtonElement>('[data-testid="extended-text-save"]')?.disabled).toBe(true);
+    await act(async () => root.unmount());
+    container.remove();
+  });
 });
