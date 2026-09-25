@@ -1712,9 +1712,9 @@ export function ProgressionVoicingPracticeView({
             </Modal>
           ) : null}
 
-          <Surface className="h-[92px] min-w-0 shrink-0 overflow-hidden px-2 py-1" data-testid="voicing-loop-transport">
-            <div className="grid h-full min-w-0 grid-rows-2 gap-1">
-              <div className="flex min-w-0 items-center gap-2 overflow-x-auto whitespace-nowrap" data-testid="voicing-loop-transport-primary">
+          <Surface className="h-[92px] min-w-0 shrink-0 overflow-hidden px-2 py-0.5" data-testid="voicing-loop-transport">
+            <div className="grid h-full min-w-0 grid-rows-[minmax(0,1fr)_minmax(0,1fr)] gap-1">
+              <div className="lv-transport-row flex min-h-0 min-w-0 items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap" data-testid="voicing-loop-transport-primary">
               <BpmDragControl
                 label={text.bpm}
                 dragLabel={text.bpmDrag}
@@ -1800,7 +1800,7 @@ export function ProgressionVoicingPracticeView({
               </label>
               <Button size="sm" variant={metronomeEnabled ? "secondary" : "ghost"} aria-pressed={metronomeEnabled} onClick={toggleMetronome}>{text.metronome}: {metronomeEnabled ? "ON" : "OFF"}</Button>
               </div>
-              <div className="flex min-w-0 items-center gap-2 overflow-x-auto whitespace-nowrap border-t border-[var(--lv-border)] pt-1" data-testid="voicing-loop-transport-midi-row">
+              <div className="lv-transport-row flex min-h-0 min-w-0 items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap border-t border-[var(--lv-border)] pt-0.5" data-testid="voicing-loop-transport-midi-row">
               <span className={`inline-flex min-h-8 items-center gap-1.5 px-1 text-xs ${midiStatus === "connected" ? "text-teal-200" : "text-amber-200"}`} data-testid="voicing-loop-midi-status">
                 <span aria-hidden="true" className={`h-2 w-2 rounded-full ${midiStatus === "connected" ? "bg-teal-300" : "bg-amber-300"}`} />
                 <span className="font-semibold">{text.midi}</span>

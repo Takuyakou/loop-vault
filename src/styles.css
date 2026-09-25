@@ -112,6 +112,11 @@ button {
   outline-offset: 2px;
 }
 
+/* Keep the teal keyboard ring inside vertically clipped transport rows. */
+.lv-transport-row :focus-visible {
+  outline-offset: -2px;
+}
+
 .lv-skip-link {
   position: fixed;
   top: 0.75rem;

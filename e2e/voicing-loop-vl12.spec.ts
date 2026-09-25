@@ -85,3 +85,36 @@ test("VL-12 BPM scrub works from the full field and keeps direct input, wheel, a
     return input.selectionStart === 0 && input.selectionEnd === input.value.length;
   })).toBe(true);
 });
+
+test("VL-12 transport rows fit vertically at desktop viewports and scaling", async ({ page }) => {
+  test.setTimeout(90_000);
+  for (const { width, height, zoom } of [
+    { width: 1920, height: 1080, zoom: 1 },
+    { width: 1440, height: 900, zoom: 1 },
+    { width: 1280, height: 800, zoom: 1 },
+    { width: 1280, height: 720, zoom: 1 },
+    { width: 1536, height: 864, zoom: 1.25 },
+    { width: 1280, height: 800, zoom: 1.5 },
+    { width: 1280, height: 800, zoom: 2 },
+  ]) {
+    await page.setViewportSize({ width, height });
+    await page.goto("/?p527Status=vl09-layout");
+    const nav = page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true });
+    if (await nav.isVisible()) await nav.click();
+    else {
+      await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
+      await page.getByRole("tab", { name: "Voicing Loop" }).click();
+    }
+    await page.evaluate((scale) => { document.documentElement.style.zoom = String(scale); }, zoom);
+    for (const id of ["voicing-loop-transport-primary", "voicing-loop-transport-midi-row"]) {
+      const row = page.getByTestId(id);
+      const measure = await row.evaluate((element) => ({
+        client: element.clientHeight,
+        scroll: element.scrollHeight,
+        overflowY: getComputedStyle(element).overflowY,
+      }));
+      expect(measure.scroll).toBeLessThanOrEqual(measure.client);
+      expect(measure.overflowY).toBe("hidden");
+    }
+  }
+});
