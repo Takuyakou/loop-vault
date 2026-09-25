@@ -207,6 +207,24 @@ describe("P5.27 saved Vault handoff", () => {
     expect(block.textSource?.rawText).toBe("Cm % = =|_ G7/B G7/B _");
   });
 
+  it("keeps fifth subdivisions in source while refusing practice-grid rounding", () => {
+    const parsed = parseExtendedTextProgression("| C Dm Em F G |", { beat: "4/4", bpm: 120 });
+    expect(parsed.state).toBe("VALID");
+    const data = extendedTextSaveData(parsed);
+    expect(data.textSource.slots[1]?.startBeat).toBe(1.8);
+    const block = progression(data.chords.map(chord => ({ ...chord })));
+    block.sourceStartBeat = 0;
+    block.sourceEndBeat = data.scoreLengthBeats;
+    block.timeSignature = "4/4";
+    block.textSource = data.textSource;
+    const idea = makeIdea({ id: "fifths-source", progressionBlocks: [block] });
+    const result = buildProgressionVoicingPracticeHandoffFromVault([idea], {
+      ideaId: idea.id, blockId: block.id,
+    });
+    expect(result).toMatchObject({ ok: false, error: { code: "invalid-source", cause: "invalid-timing" } });
+    expect(block.textSource.slots[1]?.startBeat).toBe(1.8);
+  });
+
   it("uses 120 for a proven SMF with missing source BPM even when its Idea has another BPM", () => {
     const block = progression([event(1, 1, 4, 0)]);
     delete block.bpm;

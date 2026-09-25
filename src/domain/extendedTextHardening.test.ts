@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseExtendedTextProgression } from "./extendedTextProgression";
+import { EXTENDED_TEXT_LIMITS } from "./extendedTextBudgets";
 
 function seeded(seed: number): () => number {
   let state = seed >>> 0;
@@ -51,16 +52,16 @@ describe("P8.8 fixed-seed runtime hardening", () => {
   });
 
   it("rejects excessive sections before Vault serialization and preserves the source", () => {
-    const source = "# public synthetic comment\r\n".repeat(129) + "| C |";
+    const source = "# public synthetic comment\r\n".repeat(EXTENDED_TEXT_LIMITS.maxComments + 1) + "| C |";
     const result = parseExtendedTextProgression(source);
     expect(result.state).toBe("INVALID");
     expect(result.canConvert).toBe(false);
     expect(result.source).toBe(source);
-    expect(result.diagnostics.map(diagnostic => diagnostic.code)).toContain("SECTION_LIMIT");
+    expect(result.diagnostics.map(diagnostic => diagnostic.code)).toContain("INPUT_LIMIT_EXCEEDED");
   });
 
   it("bounds long input without dropping the original text", () => {
-    const source = "C".repeat(8193);
+    const source = "C".repeat(EXTENDED_TEXT_LIMITS.maxInputCodeUnits + 1);
     const result = parseExtendedTextProgression(source);
     expect(result.state).toBe("INVALID");
     expect(result.canConvert).toBe(false);

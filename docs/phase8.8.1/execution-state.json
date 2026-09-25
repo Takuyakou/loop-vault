@@ -2,15 +2,16 @@
   "schemaVersion": 1,
   "phaseId": "8.8.1",
   "status": "in-progress",
-  "activeStage": "P8.8.1-02",
+  "activeStage": "P8.8.1-03",
   "completedStages": [
     "P8.8.1-00",
-    "P8.8.1-01"
+    "P8.8.1-01",
+    "P8.8.1-02"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "40d8b8ee9261e9c5585f25eb3d0e9a259520b1f7",
-  "lastVerifiedCommit": "1697cf5",
+  "lastVerifiedCommit": "e264e11",
   "currentBranch": "feat/phase8.8.1-realworld-fix",
   "requiredGates": {
     "P8.8.1-00": [
@@ -25,6 +26,15 @@
       "changed-scope-eslint",
       "phase-docs",
       "diff-check"
+    ],
+    "P8.8.1-02": [
+      "extended-hardening",
+      "long-chart-vault-roundtrip",
+      "practice-grid-boundary",
+      "typescript",
+      "changed-scope-eslint",
+      "phase-docs",
+      "diff-check"
     ]
   },
   "gateResults": {
@@ -34,8 +44,11 @@
     "typescript": "pass",
     "changed-scope-eslint": "pass",
     "phase-docs": "pass",
-    "diff-check": "pass"
+    "diff-check": "pass",
+    "extended-hardening": "pass",
+    "long-chart-vault-roundtrip": "pass",
+    "practice-grid-boundary": "pass"
   },
-  "nextAction": "Expand independent Extended budgets and update Vault v2 save validation without changing Standard caps.",
+  "nextAction": "Implement grammar-aware altered aliases and preserve written chord spelling across preview and Vault save.",
   "updatedAt": "2026-09-26"
 }

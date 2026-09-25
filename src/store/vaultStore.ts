@@ -26,6 +26,7 @@ import {
 } from "../domain/textProgression";
 import { isTextProgressionStyleSnapshot } from "../domain/textProgressionVoicing";
 import { parseExtendedTextProgression } from "../domain/extendedTextProgression";
+import { EXTENDED_TEXT_LIMITS } from "../domain/extendedTextBudgets";
 import { buildSavedTextSource, type SavedTextSourceV1 } from "../domain/textSource";
 import { parseChordLabel, parseTextChordLabel } from "../domain/chords";
 import { attachSourceVoicing, attachSourceVoicings, isValidVoicingSnapshot, voicingCompatibility } from "../domain/voicing";
@@ -1204,7 +1205,7 @@ function normalizeTextProgressionIdeaDraft(
   const convertedChords = draft.chords.map(textProgressionChordForSave);
   if (convertedChords.some((chord) => chord === undefined)) return undefined;
   const chords = convertedChords.filter((chord): chord is ChordTimelineItem => chord !== undefined);
-  if (chords.length !== draft.chords.length || !isSaveSafeTextProgressionTimeline(chords, draft.scoreLengthBeats, draft.beatsPerBar)) return undefined;
+  if (chords.length !== draft.chords.length || !isSaveSafeTextProgressionTimeline(chords, draft.scoreLengthBeats, draft.beatsPerBar, draft.textSource !== undefined)) return undefined;
   const textSource = draft.textSource === undefined ? undefined : validateSavedTextSource(
     draft.textSource, chords, draft.beatsPerBar, draft.scoreLengthBeats,
     keyState.kind === "confirmed" ? keyState.key : undefined, draft.bpm,
@@ -1249,8 +1250,8 @@ function validateSavedTextSource(
   for (let index = 0; index < chords.length; index += 1) {
     const item = chords[index]!;
     const span = parsed.harmonicSpans[index]!;
-    if (textAbsoluteBeat(item, parsed.beatsPerBar) !== span.startBeat
-      || item.durationBeats !== span.durationBeats
+    if (Math.abs(textAbsoluteBeat(item, parsed.beatsPerBar) - span.startBeat) > 1e-9
+      || Math.abs(item.durationBeats - span.durationBeats) > 1e-9
       || !sameTextProgressionChord(span.chord, item.chord)) return undefined;
   }
   return checked.data;
@@ -1341,18 +1342,20 @@ function textPracticeVoicingForSave(
  * overlaps. Legacy callers retain contiguous 1/2/4-cell bar validation.
  */
 function isSaveSafeTextProgressionTimeline(
-  chords: readonly ChordTimelineItem[], scoreLengthBeats?: number, beatsPerBar = 4,
+  chords: readonly ChordTimelineItem[], scoreLengthBeats?: number, beatsPerBar = 4, extended = false,
 ): boolean {
   if (!Number.isInteger(beatsPerBar) || beatsPerBar < 1 || beatsPerBar > 12) return false;
   if (scoreLengthBeats !== undefined) {
+    const maxBars = extended ? EXTENDED_TEXT_LIMITS.maxBars : TEXT_PROGRESSION_MAX_BARS;
+    const maxEvents = extended ? EXTENDED_TEXT_LIMITS.maxHarmonicSpans : TEXT_PROGRESSION_MAX_TOKENS;
     if (!Number.isSafeInteger(scoreLengthBeats) || scoreLengthBeats < beatsPerBar
-      || scoreLengthBeats > TEXT_PROGRESSION_MAX_BARS * beatsPerBar || scoreLengthBeats % beatsPerBar !== 0
-      || chords.length > TEXT_PROGRESSION_MAX_TOKENS) return false;
+      || scoreLengthBeats > maxBars * beatsPerBar || scoreLengthBeats % beatsPerBar !== 0
+      || chords.length > maxEvents) return false;
     let end = 0;
     for (const event of chords) {
-      if (!isValidTextProgressionChord(event, beatsPerBar)) return false;
+      if (!isValidTextProgressionChord(event, beatsPerBar, maxBars, extended)) return false;
       const onset = textAbsoluteBeat(event, beatsPerBar);
-      if (onset < end || onset + event.durationBeats > scoreLengthBeats) return false;
+      if (onset < end - 1e-9 || onset + event.durationBeats > scoreLengthBeats + 1e-9) return false;
       end = onset + event.durationBeats;
     }
     return true;
@@ -1388,16 +1391,21 @@ function isSaveSafeTextProgressionTimeline(
   });
 }
 
-function isValidTextProgressionChord(item: ChordTimelineItem, beatsPerBar = 4): boolean {
+function isValidTextProgressionChord(
+  item: ChordTimelineItem, beatsPerBar = 4,
+  maxBars = TEXT_PROGRESSION_MAX_BARS, fractional = false,
+): boolean {
   return Number.isInteger(item.bar)
     && item.bar >= 1
-    && item.bar <= TEXT_PROGRESSION_MAX_BARS
-    && Number.isInteger(item.beat)
+    && item.bar <= maxBars
+    && Number.isFinite(item.beat)
+    && (fractional || Number.isInteger(item.beat))
     && item.beat >= 1
-    && item.beat <= beatsPerBar
-    && Number.isInteger(item.durationBeats)
+    && item.beat < beatsPerBar + 1
+    && Number.isFinite(item.durationBeats)
+    && (fractional || Number.isInteger(item.durationBeats))
     && item.durationBeats > 0
-    && item.durationBeats <= TEXT_PROGRESSION_MAX_BARS * beatsPerBar;
+    && item.durationBeats <= maxBars * beatsPerBar;
 }
 
 function sameTextProgressionChord(

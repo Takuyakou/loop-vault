@@ -1,17 +1,13 @@
 import { parseTextChordLabel } from "./chords";
 import { segmentScoreBar, normalizeScoreChord } from "./textScoreTokenizer";
 import type { ChordSymbol } from "./types";
-import {
-  confirmedTextProgressionKeyState,
-  TEXT_PROGRESSION_MAX_BARS,
-  TEXT_PROGRESSION_MAX_INPUT_CODE_UNITS,
-  TEXT_PROGRESSION_MAX_TOKENS,
-} from "./textProgression";
+import { confirmedTextProgressionKeyState } from "./textProgression";
+import { EXTENDED_TEXT_LIMITS } from "./extendedTextBudgets";
 
 export const EXTENDED_TEXT_PARSER_VERSION = "extended-text-v1";
 export const EXTENDED_TEXT_SEMANTIC_POLICY = "p8.8-explicit-factors-v1";
-export const EXTENDED_TEXT_TIMING_PPQ = 960;
-export const EXTENDED_TEXT_MAX_SLOTS_PER_BAR = 16;
+export const EXTENDED_TEXT_TIMING_PPQ = EXTENDED_TEXT_LIMITS.timingPpq;
+export const EXTENDED_TEXT_MAX_SLOTS_PER_BAR = EXTENDED_TEXT_LIMITS.maxSlotsPerBar;
 
 export interface TextSourceRange { readonly start: number; readonly end: number }
 export interface ExtendedTextMetadata {
@@ -115,13 +111,14 @@ export function parseExtendedTextProgression(
   if (metadata.confirmed && confirmedTextProgressionKeyState(metadata.key).kind !== "confirmed") {
     diagnostics.push(issue(source, "INVALID_KEY", "Confirmed key is not supported.", { start: 0, end: 0 }));
   }
-  if (source.length > TEXT_PROGRESSION_MAX_INPUT_CODE_UNITS) {
+  if (source.length > EXTENDED_TEXT_LIMITS.maxInputCodeUnits) {
     diagnostics.push(issue(source, "INPUT_LIMIT", "Text is longer than the supported input budget.", { start: 0, end: source.length }));
     return result("INVALID");
   }
 
   const normalized = normalizeSourceLengthPreserving(source);
   const masked = normalized.split("");
+  let commentCount = 0;
   for (const line of lineRanges(source)) {
     const raw = source.slice(line.start, line.end);
     const trimmed = raw.trim();
@@ -130,6 +127,7 @@ export function parseExtendedTextProgression(
     const start = line.start + position;
     const span = { start, end: line.end };
     if (trimmed.startsWith("#")) {
+      commentCount += 1;
       sections.push({ kind: "comment", line: location(source, start).line, span, raw });
       mask(masked, line.start, line.end);
     } else if (trimmed === "<" || trimmed === ">") {
@@ -143,19 +141,21 @@ export function parseExtendedTextProgression(
       diagnostics.push(issue(source, "UNSUPPORTED_INLINE_DIRECTIVE", "Set BPM outside the score text.", span));
       mask(masked, line.start, line.end);
     }
-  }
-  if (sections.length > 128) {
-    diagnostics.push(issue(source, "SECTION_LIMIT", "Too many comment or playback marker lines.", { start: 0, end: source.length }));
+    if (commentCount > EXTENDED_TEXT_LIMITS.maxComments
+      || sections.length > EXTENDED_TEXT_LIMITS.maxSections) {
+      diagnostics.push(issue(source, "INPUT_LIMIT_EXCEEDED", "Text has too many comment or marker lines.", span));
+      return result("INVALID");
+    }
   }
   const score = masked.join("");
   const ranges = barRanges(score, source, diagnostics);
-  if (ranges.length > TEXT_PROGRESSION_MAX_BARS) {
+  if (ranges.length > EXTENDED_TEXT_LIMITS.maxBars) {
     diagnostics.push(issue(source, "BAR_LIMIT", "Too many bars.", { start: 0, end: source.length }));
   }
   let previousChord: ChordSymbol | undefined;
   let active: MutableSpan | undefined;
   let totalTokens = 0;
-  for (const range of ranges.slice(0, TEXT_PROGRESSION_MAX_BARS)) {
+  for (const range of ranges.slice(0, EXTENDED_TEXT_LIMITS.maxBars)) {
     const barNumber = bars.length + 1;
     const segmented = segmentScoreBar(score, range.start, range.end, parseExtendedChordToken, true, EXTENDED_TEXT_MAX_SLOTS_PER_BAR);
     if (segmented.kind !== "ok") {
@@ -175,7 +175,7 @@ export function parseExtendedTextProgression(
     }
     bars.push(tokens.map(token => token.raw));
     totalTokens += tokens.length;
-    if (totalTokens > TEXT_PROGRESSION_MAX_TOKENS) {
+    if (totalTokens > EXTENDED_TEXT_LIMITS.maxScoreTokens) {
       diagnostics.push(issue(source, "TOKEN_LIMIT", "Too many score tokens.", range));
       break;
     }
@@ -236,6 +236,12 @@ export function parseExtendedTextProgression(
       }
       previousChord = chord;
     }
+  }
+  if (spans.length > EXTENDED_TEXT_LIMITS.maxHarmonicSpans) {
+    diagnostics.push(issue(source, "INPUT_LIMIT_EXCEEDED", "Too many harmonic spans.", { start: 0, end: source.length }));
+  }
+  if (spans.reduce((total, span) => total + span.attacks.length, 0) > EXTENDED_TEXT_LIMITS.maxAttacks) {
+    diagnostics.push(issue(source, "INPUT_LIMIT_EXCEEDED", "Too many attacks.", { start: 0, end: source.length }));
   }
   const state = diagnostics.some(d => d.code === "AMBIGUOUS_SEGMENTATION") ? "AMBIGUOUS"
     : diagnostics.some(d => d.severity === "ERROR") ? "INVALID"

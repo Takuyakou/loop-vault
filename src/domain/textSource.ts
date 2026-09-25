@@ -82,7 +82,7 @@ export function buildSavedTextSource(result: ExtendedTextResult): SavedTextSourc
       startBeat: span.startBeat,
       durationBeats: span.durationBeats,
       sourceSpan: { ...span.sourceSpan },
-      attacks: span.attacks.map(attack => ({ ...attack, span: { ...attack.span } })),
+      attacks: span.attacks.map(attack => ({ beat: attack.beat, kind: attack.kind, span: { ...attack.span } })),
     })),
   };
 }
