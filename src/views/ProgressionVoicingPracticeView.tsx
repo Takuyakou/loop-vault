@@ -72,6 +72,7 @@ import {
 import { assignPracticeHandsAcrossProgression, isPracticeHandAssignmentPlayable, type ProgressionFingeringHandTargets } from "../voicingPractice/fingeringDisplay";
 import { easeOutCubic, pageTurnTarget } from "../voicingPractice/timelineFollow";
 import { cardAuditionResolution } from "../voicingPractice/cardAudition";
+import { computeNextMoves, prioritizedMoves, type FingerMovement } from "../voicingPractice/nextMove";
 
 const ALL_PITCH_CLASSES = Object.freeze(Array.from({ length: 12 }, (_, index) => index));
 const EMPTY_NOTES: readonly number[] = Object.freeze([]);
@@ -664,6 +665,12 @@ export function ProgressionVoicingPracticeView({
     () => effectiveFingering(nextRightSuggested, fingeringPreferences),
     [nextRightSuggested, fingeringPreferences],
   );
+  const nextMoves = useMemo(() => currentVoicing && nextVoicing
+    ? computeNextMoves(currentHandTargets, nextHandTargets,
+      { left: currentLeftFingering, right: currentRightFingering },
+      { left: nextLeftFingering, right: nextRightFingering }) : [],
+    [currentVoicing, nextVoicing, currentHandTargets, nextHandTargets,
+      currentLeftFingering, currentRightFingering, nextLeftFingering, nextRightFingering]);
   const keyboardEventIndex = currentIndex;
   const keyboardEvent = snapshot?.events[keyboardEventIndex];
   const keyboardResolution = plan?.events[keyboardEventIndex];
@@ -1364,7 +1371,8 @@ export function ProgressionVoicingPracticeView({
         <>
           <div className="h-[clamp(560px,72dvh,760px)] min-w-0 shrink-0 lg:h-[clamp(300px,36dvh,380px)]" data-testid="voicing-loop-current-next">
             <div className="grid h-full min-h-0 min-w-0 grid-rows-2 gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,440px)] lg:grid-rows-1">
-              <Surface variant="primary" className="h-full min-h-0 min-w-0 overflow-y-auto p-3" data-testid="voicing-loop-current-panel" tabIndex={0} aria-label={language === "ja" ? "現在のコード詳細" : "Current chord details"}>
+              <Surface variant="primary" className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden p-3" data-testid="voicing-loop-current-panel" tabIndex={0} aria-label={language === "ja" ? "現在のコード詳細" : "Current chord details"}>
+                <div className="min-h-0 min-w-0 flex-1 overflow-y-auto">
                 <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
                   <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <p className="lv-section-kicker">{text.current} · {currentIndex + 1}/{snapshot.events.length}</p>
@@ -1417,6 +1425,9 @@ export function ProgressionVoicingPracticeView({
                   <CurrentRuleExplanation explanation={currentVoicing.explanation} language={language}
                     onNextCandidate={() => changeCurrentCandidate(1)} onPreviousCandidate={() => changeCurrentCandidate(-1)} text={text} />
                 ) : null}
+                </div>
+                <NextMovePreview moves={nextMoves} loopWrap={currentIndex === snapshot.events.length - 1}
+                  hasNext={Boolean(currentVoicing && nextVoicing)} accidentalStyle={accidentalStyle} language={language} />
               </Surface>
               <div className="flex h-full min-h-0 min-w-0 flex-col gap-2">
                 <Surface className="min-h-0 min-w-0 flex-1 overflow-y-auto p-3" data-testid="voicing-loop-next-panel" tabIndex={0} aria-label={language === "ja" ? "次のコード詳細" : "Next chord details"}>
@@ -1911,6 +1922,46 @@ function fingerSummary(
 ): string {
   if (!noteCount) return "—";
   return fingering ? fingering.fingers.map((finger) => `${prefix}${finger}`).join(" · ") : unavailable;
+}
+
+function moveText(move: FingerMovement, accidentalStyle: NoteAccidentalStyle, language: AppLanguage): string {
+  const hand = move.hand === "left" ? "L" : "R";
+  const finger = move.finger === undefined ? hand : `${hand}${move.finger}`;
+  const note = (pitch: number) => formatMidiNoteForDisplay(pitch, "fl-studio", accidentalStyle);
+  if (move.kind === "ADD") return `${finger} ${note(move.to!)} ${language === "ja" ? "追加" : "add"}`;
+  if (move.kind === "RELEASE") return `${finger} ${language === "ja" ? "離す" : "release"} ${note(move.from!)}`;
+  if (move.kind === "KEEP") return `${finger} ${language === "ja" ? "維持" : "keep"} ${note(move.from!)}`;
+  return `${finger} ${note(move.from!)} → ${note(move.to!)} ${move.semitones! > 0 ? "↑" : "↓"}${Math.abs(move.semitones!)}`;
+}
+
+function NextMovePreview({ moves, loopWrap, hasNext, accidentalStyle, language }: {
+  readonly moves: readonly FingerMovement[];
+  readonly loopWrap: boolean;
+  readonly hasNext: boolean;
+  readonly accidentalStyle: NoteAccidentalStyle;
+  readonly language: AppLanguage;
+}) {
+  const { visible, omitted } = prioritizedMoves(moves, 5);
+  const allText = moves.map((move) => moveText(move, accidentalStyle, language)).join(" · ");
+  return (
+    <section className="mt-2 h-[68px] min-h-[68px] min-w-0 shrink-0 overflow-hidden border-t border-[var(--lv-border)] pt-1.5" data-testid="voicing-loop-next-move" aria-label={language === "ja" ? "次への動き" : "Next move"}>
+      <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.1em] text-[var(--lv-text-secondary)]">
+        <span>{language === "ja" ? "次への動き" : "NEXT MOVE"}</span>
+        {loopWrap ? <span className="font-normal tracking-normal text-[var(--lv-accent)]">{language === "ja" ? "ループ先" : "Loop to start"}</span> : null}
+        {moves.some((move) => move.estimated) ? <span className="font-normal tracking-normal text-amber-200">{language === "ja" ? "推定" : "Estimated"}</span> : null}
+      </div>
+      {hasNext && moves.length ? (
+        <div className="mt-1 flex min-w-0 items-center gap-1 overflow-hidden whitespace-nowrap" title={allText}>
+          {visible.map((move, index) => <span key={`${move.hand}-${move.finger ?? index}-${index}`}
+            className={`min-w-0 shrink-0 rounded border px-1.5 py-1 text-[11px] font-semibold ${move.hand === "left" ? "border-amber-400/40 text-amber-200" : "border-cyan-300/40 text-cyan-200"}`}
+            title={moveText(move, accidentalStyle, language)}>{moveText(move, accidentalStyle, language)}</span>)}
+          {omitted ? <span className="shrink-0 rounded border border-[var(--lv-border)] px-1.5 py-1 text-[11px]" tabIndex={0}
+            title={allText} aria-label={allText}>+{omitted}</span> : null}
+          <span className="sr-only">{allText}</span>
+        </div>
+      ) : <p className="mt-1 text-xs text-[var(--lv-text-muted)]">{language === "ja" ? "次の形はありません" : "No next shape"}</p>}
+    </section>
+  );
 }
 
 function HandVoicingSummary({
