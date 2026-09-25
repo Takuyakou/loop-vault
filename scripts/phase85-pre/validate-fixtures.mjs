@@ -44,6 +44,12 @@ const counts = { canonicalFixtureCount: corpus.fixtures.length, positiveCount: d
   emptyCount: dispositionCounts.empty, categoryCount: categories.size, canonicalFixtureDigest };
 try {
   const manifest = JSON.parse(readFileSync(new URL('../../docs/phase8.5-pre/extended-v1-manifest.json', import.meta.url),'utf8'));
+  for (const key of ['specVersion','fixtureVersion','canonicalFixtureCount','syntaxFamilyCount','chordFamilyCount','positiveCount','negativeCount','ambiguousCount','researchPassCount','saturationReached','unresolvedSyntaxCount','semanticGapCount','voicingComplexityClassification','referenceVoicingSampleCount','canonicalFixtureDigest']) {
+    if (!Object.hasOwn(manifest,key)) fail(`manifest missing ${key}`);
+  }
+  if (manifest.specVersion !== 'extended-v1' || manifest.fixtureVersion !== corpus.fixtureVersion) fail('manifest version mismatch');
+  if (!['SIMPLE_CHORD_LOCAL','CONTEXT_AWARE','UNRESOLVED'].includes(manifest.voicingComplexityClassification)) fail('bad voicing classification');
+  if (manifest.productionCodeChanged !== false || manifest.rawExternalExamplesTracked !== false || manifest.privateMediaTracked !== false) fail('privacy/scope assertion mismatch');
   for (const [key,value] of Object.entries(counts)) if (manifest[key] !== undefined && manifest[key] !== value) fail(`manifest mismatch: ${key}`);
-} catch (error) { if (error.code !== 'ENOENT') throw error; }
+} catch (error) { if (error.code === 'ENOENT') fail('manifest missing'); else throw error; }
 console.log(JSON.stringify(counts));
