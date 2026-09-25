@@ -14,10 +14,11 @@ export function pageTurnTarget(geometry: TimelineFollowGeometry, force = false):
   const start = chordStartBeat * pixelsPerBeat;
   const end = (chordStartBeat + chordDurationBeats) * pixelsPerBeat;
   if (!force && start >= scrollLeft - 1 && end <= scrollLeft + viewportWidth + 1) return undefined;
-  return Math.max(0, Math.min(Math.max(0, contentWidth - viewportWidth), start - viewportWidth * 0.25));
+  return Math.max(0, Math.min(Math.max(0, contentWidth - viewportWidth), start - 12));
 }
 
-/** Matches a scroll event to the exact programmatic destination, without a timer. */
-export function isFollowScrollPosition(actual: number, requested: number | undefined): boolean {
-  return requested !== undefined && Math.abs(actual - requested) <= 2;
+/** Keep animation semantics independent of scroll events: only explicit user input disables Follow. */
+export function easeOutCubic(progress: number): number {
+  const bounded = Math.max(0, Math.min(1, progress));
+  return 1 - (1 - bounded) ** 3;
 }

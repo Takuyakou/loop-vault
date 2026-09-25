@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
+import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight, GripVertical, Minus, Pause, Play, Plus, RefreshCw, Search, Settings, Square, Volume2 } from "lucide-react";
 import { useStore } from "zustand";
 import {
@@ -70,8 +70,10 @@ import {
   type FingeringPreferenceCollection,
 } from "../voicingPractice/fingeringPreferences";
 import { assignPracticeHandsAcrossProgression, isPracticeHandAssignmentPlayable, type ProgressionFingeringHandTargets } from "../voicingPractice/fingeringDisplay";
-import { isFollowScrollPosition, pageTurnTarget } from "../voicingPractice/timelineFollow";
+import { easeOutCubic, pageTurnTarget } from "../voicingPractice/timelineFollow";
 import { cardAuditionResolution } from "../voicingPractice/cardAudition";
+import { computeNextMoves, prioritizedMoves, type FingerMovement } from "../voicingPractice/nextMove";
+import { isBlack, nextShapeRanges, type MiniKeyboardRange } from "../voicingPractice/nextShape";
 
 const ALL_PITCH_CLASSES = Object.freeze(Array.from({ length: 12 }, (_, index) => index));
 const EMPTY_NOTES: readonly number[] = Object.freeze([]);
@@ -542,8 +544,14 @@ export function ProgressionVoicingPracticeView({
     return () => observer.disconnect();
   }, [snapshot]);
   const timelineEventRefs = useRef<Array<HTMLButtonElement | null>>([]);
-  const programmaticScrollRef = useRef<number | undefined>(undefined);
+  const pageTurnFrameRef = useRef<number>();
+  const pageTurnHighlightTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const [pageTurnHighlightIndex, setPageTurnHighlightIndex] = useState<number>();
   const forceFollowRef = useRef(false);
+  useEffect(() => () => {
+    if (pageTurnFrameRef.current !== undefined) cancelAnimationFrame(pageTurnFrameRef.current);
+    if (pageTurnHighlightTimerRef.current !== undefined) clearTimeout(pageTurnHighlightTimerRef.current);
+  }, []);
   if (!transportRef.current) transportRef.current = transportFactory();
   const midiStatus = useStore(defaultLiveMidiStore, (state) => state.status);
   const selectedMidiDevice = useStore(defaultLiveMidiStore, (state) => state.selected);
@@ -658,6 +666,12 @@ export function ProgressionVoicingPracticeView({
     () => effectiveFingering(nextRightSuggested, fingeringPreferences),
     [nextRightSuggested, fingeringPreferences],
   );
+  const nextMoves = useMemo(() => currentVoicing && nextVoicing
+    ? computeNextMoves(currentHandTargets, nextHandTargets,
+      { left: currentLeftFingering, right: currentRightFingering },
+      { left: nextLeftFingering, right: nextRightFingering }) : [],
+    [currentVoicing, nextVoicing, currentHandTargets, nextHandTargets,
+      currentLeftFingering, currentRightFingering, nextLeftFingering, nextRightFingering]);
   const keyboardEventIndex = currentIndex;
   const keyboardEvent = snapshot?.events[keyboardEventIndex];
   const keyboardResolution = plan?.events[keyboardEventIndex];
@@ -745,10 +759,26 @@ export function ProgressionVoicingPracticeView({
       contentWidth: snapshot.lengthBeats * timelinePixelsPerBeat,
     }, forceFollowRef.current);
     forceFollowRef.current = false;
-    if (target !== undefined && Math.abs(viewport.scrollLeft - target) > 2) {
-      programmaticScrollRef.current = target;
+    if (pageTurnFrameRef.current !== undefined) cancelAnimationFrame(pageTurnFrameRef.current);
+    pageTurnFrameRef.current = undefined;
+    if (target === undefined || Math.abs(viewport.scrollLeft - target) <= 2) return;
+    const start = viewport.scrollLeft;
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    if (reducedMotion || typeof requestAnimationFrame !== "function") {
       viewport.scrollLeft = target;
+    } else {
+      const startedAt = performance.now();
+      const tick = (now: number) => {
+        const progress = Math.min(1, (now - startedAt) / 250);
+        viewport.scrollLeft = start + (target - start) * easeOutCubic(progress);
+        if (progress < 1) pageTurnFrameRef.current = requestAnimationFrame(tick);
+        else pageTurnFrameRef.current = undefined;
+      };
+      pageTurnFrameRef.current = requestAnimationFrame(tick);
     }
+    setPageTurnHighlightIndex(transportCurrentSpanIndex);
+    if (pageTurnHighlightTimerRef.current !== undefined) clearTimeout(pageTurnHighlightTimerRef.current);
+    pageTurnHighlightTimerRef.current = setTimeout(() => setPageTurnHighlightIndex(undefined), 350);
   }, [followEnabled, followResumeRevision, snapshot, timelinePixelsPerBeat, transportCurrentSpanIndex]);
 
   function resumeTimelineFollow() {
@@ -757,14 +787,11 @@ export function ProgressionVoicingPracticeView({
     setFollowResumeRevision((revision) => revision + 1);
   }
 
-  function onTimelineScroll() {
-    const position = timelineViewportRef.current?.scrollLeft;
-    if (position === undefined) return;
-    if (isFollowScrollPosition(position, programmaticScrollRef.current)) {
-      programmaticScrollRef.current = undefined;
-      return;
-    }
-    programmaticScrollRef.current = undefined;
+  function setTimelineManual(reason: "wheel" | "pointer" | "keyboard") {
+    if (import.meta.env.DEV) console.debug(`[Voicing Loop Follow] manual: ${reason}`);
+    if (pageTurnFrameRef.current !== undefined) cancelAnimationFrame(pageTurnFrameRef.current);
+    pageTurnFrameRef.current = undefined;
+    forceFollowRef.current = false;
     setFollowEnabled(false);
   }
   function changeSelection(next: ProgressionVoicingSelection) {
@@ -846,6 +873,7 @@ export function ProgressionVoicingPracticeView({
       })
       : ready;
     setClockState(reduceProgressionPracticeClock(snapshot, anchored, { type: "START" }));
+    resumeTimelineFollow();
     await launchRuntime(anchorBeat, clockState.bpm, runtimeCountInBars);
   }
 
@@ -885,6 +913,7 @@ export function ProgressionVoicingPracticeView({
 
   function seekToEvent(eventIndex: number) {
     if (!snapshot || !clockState || !snapshot.events[eventIndex]) return;
+    resumeTimelineFollow();
     const anchorBeat = snapshot.events[eventIndex]!.startBeat;
     auditionRequestRef.current += 1;
     setAuditionedIndex(undefined);
@@ -942,6 +971,7 @@ export function ProgressionVoicingPracticeView({
 
   async function resume() {
     if (!snapshot || !clockState) return;
+    resumeTimelineFollow();
     const request = runtimeRequestRef.current;
     try {
       const resumed = await transportRef.current?.resume() ?? false;
@@ -1122,6 +1152,7 @@ export function ProgressionVoicingPracticeView({
     function onKeyDown(event: KeyboardEvent) {
       if (event.defaultPrevented || event.isComposing || !progressionLoaded || !snapshot || bulkSourceOpen || fingeringEditorOpen) return;
       const target = event.target;
+      if (target === timelineViewportRef.current && ["ArrowLeft", "ArrowRight", "PageUp", "PageDown", "Home", "End"].includes(event.key)) return;
       if (target instanceof Element && target.closest("input, select, textarea, [contenteditable='true'], [role='dialog']")) return;
       const key = event.key.toLowerCase();
       if (![" ", "arrowleft", "arrowright", "home", "end", "f", "m", "r", "escape"].includes(key)) return;
@@ -1341,7 +1372,9 @@ export function ProgressionVoicingPracticeView({
         <>
           <div className="h-[clamp(560px,72dvh,760px)] min-w-0 shrink-0 lg:h-[clamp(300px,36dvh,380px)]" data-testid="voicing-loop-current-next">
             <div className="grid h-full min-h-0 min-w-0 grid-rows-2 gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,440px)] lg:grid-rows-1">
-              <Surface variant="primary" className="h-full min-h-0 min-w-0 overflow-y-auto p-3" data-testid="voicing-loop-current-panel" tabIndex={0} aria-label={language === "ja" ? "現在のコード詳細" : "Current chord details"}>
+              <Surface variant="primary" className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden p-3" data-testid="voicing-loop-current-panel" tabIndex={0} aria-label={language === "ja" ? "現在のコード詳細" : "Current chord details"}>
+                <div className="min-h-0 min-w-0 flex-1 overflow-y-auto" tabIndex={0}
+                  aria-label={language === "ja" ? "現在のコードの詳細をスクロール" : "Scroll current chord details"}>
                 <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
                   <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <p className="lv-section-kicker">{text.current} · {currentIndex + 1}/{snapshot.events.length}</p>
@@ -1394,9 +1427,14 @@ export function ProgressionVoicingPracticeView({
                   <CurrentRuleExplanation explanation={currentVoicing.explanation} language={language}
                     onNextCandidate={() => changeCurrentCandidate(1)} onPreviousCandidate={() => changeCurrentCandidate(-1)} text={text} />
                 ) : null}
+                </div>
+                <NextMovePreview moves={nextMoves} loopWrap={currentIndex === snapshot.events.length - 1}
+                  hasNext={Boolean(currentVoicing && nextVoicing)} accidentalStyle={accidentalStyle} language={language} />
               </Surface>
               <div className="flex h-full min-h-0 min-w-0 flex-col gap-2">
-                <Surface className="min-h-0 min-w-0 flex-1 overflow-y-auto p-3" data-testid="voicing-loop-next-panel" tabIndex={0} aria-label={language === "ja" ? "次のコード詳細" : "Next chord details"}>
+                <Surface className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-3" data-testid="voicing-loop-next-panel" tabIndex={0} aria-label={language === "ja" ? "次のコード詳細" : "Next chord details"}>
+                  <div className="min-h-0 min-w-0 flex-1 overflow-y-auto" tabIndex={0}
+                    aria-label={language === "ja" ? "次のコードの詳細をスクロール" : "Scroll next chord details"}>
                   <div className="flex items-center justify-between gap-2">
                     <p className="lv-section-kicker">{text.next}</p>
                     <span className="text-xs font-semibold text-[var(--lv-text-muted)]" data-testid="voicing-loop-next-wait">
@@ -1415,6 +1453,10 @@ export function ProgressionVoicingPracticeView({
                         pitches={nextHandTargets.right} showFingering={showFingering} text={text} voicing={nextVoicing} />
                     </div>
                   ) : null}
+                  </div>
+                  <NextShapePreview hands={nextHandTargets} nextVoicing={nextVoicing}
+                    leftFingering={nextLeftFingering} rightFingering={nextRightFingering}
+                    chordLabel={nextEvent?.chord.label ?? restLabel} accidentalStyle={accidentalStyle} language={language} />
                 </Surface>
                 <Surface className="h-[72px] min-w-0 shrink-0 overflow-hidden p-3" data-testid="voicing-loop-then-next">
                   <div className="flex min-w-0 items-baseline gap-2">
@@ -1458,7 +1500,13 @@ export function ProgressionVoicingPracticeView({
               data-testid="voicing-loop-timeline-viewport"
               tabIndex={0}
               aria-label={text.timeline}
-              onScroll={onTimelineScroll}
+              onWheel={() => setTimelineManual("wheel")}
+              onPointerDown={(event) => { if (event.target === event.currentTarget) setTimelineManual("pointer"); }}
+              onKeyDown={(event) => {
+                if (event.target === event.currentTarget && ["ArrowLeft", "ArrowRight", "PageUp", "PageDown", "Home", "End"].includes(event.key)) {
+                  setTimelineManual("keyboard");
+                }
+              }}
             >
               <div className="relative" style={{ width: `${snapshot.lengthBeats * timelinePixelsPerBeat}px` }}>
                 <div className="relative mt-1 flex h-3 cursor-pointer overflow-hidden rounded bg-[var(--lv-bg)]" data-testid="voicing-loop-overview"
@@ -1506,11 +1554,12 @@ export function ProgressionVoicingPracticeView({
                       data-compact={compact}
                       title={event?.chord.label ?? restLabel}
                       style={{ width: `${cardWidth}px` }}
-                      className={`relative flex h-[54px] w-full min-h-[54px] flex-none flex-col justify-start overflow-hidden rounded-[var(--lv-radius-sm)] border ${compact ? "px-0.5 pb-1 pt-1" : "px-2 pb-3 pt-1.5"} text-left text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-60 ${selected ? "border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)] shadow-[inset_0_0_0_1px_rgba(59,224,206,0.12)]" : auditioned ? "border-[var(--lv-accent)] bg-[var(--lv-surface-raised)] text-[var(--lv-text)]" : "border-[var(--lv-border)] bg-transparent text-[var(--lv-text-secondary)]"}`}
+                      className={`relative flex h-[54px] w-full min-h-[54px] flex-none flex-col justify-start overflow-hidden rounded-[var(--lv-radius-sm)] border ${compact ? "px-0.5 pb-1 pt-1" : "px-2 pb-3 pt-1.5"} text-left text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lv-accent)] disabled:cursor-not-allowed disabled:opacity-60 ${selected ? `border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-accent)] shadow-[inset_0_0_0_1px_rgba(59,224,206,0.12)] ${pageTurnHighlightIndex === index ? "ring-2 ring-[var(--lv-accent)]" : ""}` : auditioned ? "border-[var(--lv-accent)] bg-[var(--lv-surface-raised)] text-[var(--lv-text)]" : "border-[var(--lv-border)] bg-transparent text-[var(--lv-text-secondary)]"}`}
                       aria-current={selected ? "step" : undefined}
                       aria-pressed={auditioned}
                       aria-label={`${index + 1}/${snapshot.spans.length}: ${event?.chord.label ?? restLabel}${degree ? `, ${degree}` : ""}, ${practiceTimingLabel(span, snapshot.practiceGroupBeats ?? snapshot.meter.numerator, language)}.${event ? ` ${transportRef.current?.supportsSeek ? (language === "ja" ? "ここへ移動して試聴" : "Seek and audition") : text.auditionCard}` : ""}`}
                       disabled={!playable && !transportRef.current?.supportsSeek}
+                      onMouseDown={(event) => event.preventDefault()}
                       onClick={() => {
                         if (span.kind === "rest") seekToBeat(span.startBeat + 1e-6);
                         else selectTimelineCard(eventIndex);
@@ -1882,6 +1931,106 @@ function fingerSummary(
   if (!noteCount) return "—";
   return fingering ? fingering.fingers.map((finger) => `${prefix}${finger}`).join(" · ") : unavailable;
 }
+
+function moveText(move: FingerMovement, accidentalStyle: NoteAccidentalStyle, language: AppLanguage): string {
+  const hand = move.hand === "left" ? "L" : "R";
+  const finger = move.finger === undefined ? hand : `${hand}${move.finger}`;
+  const note = (pitch: number) => formatMidiNoteForDisplay(pitch, "fl-studio", accidentalStyle);
+  if (move.kind === "ADD") return `${finger} ${note(move.to!)} ${language === "ja" ? "追加" : "add"}`;
+  if (move.kind === "RELEASE") return `${finger} ${language === "ja" ? "離す" : "release"} ${note(move.from!)}`;
+  if (move.kind === "KEEP") return `${finger} ${language === "ja" ? "維持" : "keep"} ${note(move.from!)}`;
+  return `${finger} ${note(move.from!)} → ${note(move.to!)} ${move.semitones! > 0 ? "↑" : "↓"}${Math.abs(move.semitones!)}`;
+}
+
+const NextMovePreview = memo(function NextMovePreview({ moves, loopWrap, hasNext, accidentalStyle, language }: {
+  readonly moves: readonly FingerMovement[];
+  readonly loopWrap: boolean;
+  readonly hasNext: boolean;
+  readonly accidentalStyle: NoteAccidentalStyle;
+  readonly language: AppLanguage;
+}) {
+  const { visible, omitted } = prioritizedMoves(moves, 5);
+  const allText = moves.map((move) => moveText(move, accidentalStyle, language)).join(" · ");
+  return (
+    <section className="mt-2 h-[68px] min-h-[68px] min-w-0 shrink-0 overflow-hidden border-t border-[var(--lv-border)] pt-1.5" data-testid="voicing-loop-next-move" aria-label={language === "ja" ? "次への動き" : "Next move"}>
+      <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.1em] text-[var(--lv-text-secondary)]">
+        <span>{language === "ja" ? "次への動き" : "NEXT MOVE"}</span>
+        {loopWrap ? <span className="font-normal tracking-normal text-[var(--lv-accent)]">{language === "ja" ? "ループ先" : "Loop to start"}</span> : null}
+        {moves.some((move) => move.estimated) ? <span className="font-normal tracking-normal text-amber-200">{language === "ja" ? "推定" : "Estimated"}</span> : null}
+      </div>
+      {hasNext && moves.length ? (
+        <div className="mt-1 flex min-w-0 items-center gap-1 overflow-hidden whitespace-nowrap" title={allText}>
+          {visible.map((move, index) => <span key={`${move.hand}-${move.finger ?? index}-${index}`}
+            className={`min-w-0 shrink-0 rounded border px-1.5 py-1 text-[11px] font-semibold ${move.hand === "left" ? "border-amber-400/40 text-amber-200" : "border-cyan-300/40 text-cyan-200"}`}
+            title={moveText(move, accidentalStyle, language)}>{moveText(move, accidentalStyle, language)}</span>)}
+          {omitted ? <span className="shrink-0 rounded border border-[var(--lv-border)] px-1.5 py-1 text-[11px]" tabIndex={0}
+            title={allText} aria-label={allText}>+{omitted}</span> : null}
+          <span className="sr-only">{allText}</span>
+        </div>
+      ) : <p className="mt-1 text-xs text-[var(--lv-text-muted)]">{language === "ja" ? "次の形はありません" : "No next shape"}</p>}
+    </section>
+  );
+});
+
+const MiniKeyboard = memo(function MiniKeyboard({ range, hands, labels, accidentalStyle }: {
+  readonly range: MiniKeyboardRange;
+  readonly hands: ProgressionFingeringHandTargets;
+  readonly labels: ReadonlyMap<number, string>;
+  readonly accidentalStyle: NoteAccidentalStyle;
+}) {
+  const notes = Array.from({ length: range.max - range.min + 1 }, (_, index) => range.min + index);
+  const whites = notes.filter((note) => !isBlack(note));
+  const blacks = notes.filter(isBlack);
+  const keyClass = (note: number, black: boolean) => {
+    const selected = hands.left.includes(note) ? "left" : hands.right.includes(note) ? "right" : undefined;
+    if (selected === "left") return black ? "border-amber-200 bg-amber-500 text-slate-950" : "border-amber-300 bg-amber-200 text-slate-950";
+    if (selected === "right") return black ? "border-cyan-200 bg-cyan-500 text-slate-950" : "border-cyan-300 bg-cyan-200 text-slate-950";
+    return black ? "border-slate-600 bg-slate-800 text-slate-100" : "border-slate-400 bg-slate-100 text-slate-950";
+  };
+  return (
+    <div className="relative flex h-[42px] min-w-0 flex-1 overflow-hidden rounded border border-[var(--lv-border)] bg-slate-900" data-testid="voicing-loop-next-shape-keyboard">
+      {whites.map((note) => <span key={note} className={`relative flex h-full min-w-0 flex-1 items-end justify-center border-r pb-0.5 text-[9px] font-bold ${keyClass(note, false)}`}
+        title={formatMidiNoteForDisplay(note, "fl-studio", accidentalStyle)}>{labels.get(note) ?? ""}</span>)}
+      {blacks.map((note) => {
+        const before = whites.filter((white) => white < note).length;
+        return <span key={note} className={`absolute top-0 z-10 flex h-[26px] items-end justify-center rounded-b border pb-0.5 text-[8px] font-bold ${keyClass(note, true)}`}
+          style={{ left: `${(before - 0.35) * 100 / whites.length}%`, width: `${70 / whites.length}%` }}
+          title={formatMidiNoteForDisplay(note, "fl-studio", accidentalStyle)}>{labels.get(note) ?? ""}</span>;
+      })}
+    </div>
+  );
+});
+
+const NextShapePreview = memo(function NextShapePreview({ hands, nextVoicing, leftFingering, rightFingering, chordLabel, accidentalStyle, language }: {
+  readonly hands: ProgressionFingeringHandTargets;
+  readonly nextVoicing?: ResolvedProgressionPracticeVoicing;
+  readonly leftFingering?: RankedFingering;
+  readonly rightFingering?: RankedFingering;
+  readonly chordLabel: string;
+  readonly accidentalStyle: NoteAccidentalStyle;
+  readonly language: AppLanguage;
+}) {
+  const displayHands = useMemo(() => hands.left.length || hands.right.length || !nextVoicing
+    ? hands : { left: EMPTY_NOTES, right: nextVoicing.midiNotes }, [hands, nextVoicing]);
+  const shape = useMemo(() => nextShapeRanges(displayHands), [displayHands]);
+  const labels = useMemo(() => {
+    const result = new Map<number, string>();
+    addKeyboardFingerLabels(result, leftFingering, "L");
+    addKeyboardFingerLabels(result, rightFingering, "R");
+    return result;
+  }, [leftFingering, rightFingering]);
+  const noteList = (notes: readonly number[]) => notes.map((note) => `${formatMidiNoteForDisplay(note, "fl-studio", accidentalStyle)} ${labels.get(note) ?? ""}`).join(", ");
+  const ariaLabel = `${language === "ja" ? "次の手の形" : "Next shape"}: ${chordLabel}. ${language === "ja" ? "左手" : "Left"}: ${noteList(displayHands.left)}. ${language === "ja" ? "右手" : "Right"}: ${noteList(displayHands.right)}.`;
+  return (
+    <section className="mt-2 h-[72px] min-h-[72px] min-w-0 shrink-0 overflow-hidden border-t border-[var(--lv-border)] pt-1" data-testid="voicing-loop-next-shape" role="img" aria-label={ariaLabel}>
+      <p className="text-[10px] font-bold tracking-[0.1em] text-[var(--lv-text-secondary)]">{language === "ja" ? "次の手の形" : "NEXT SHAPE"}</p>
+      {nextVoicing && shape.ranges.length ? <div className="mt-1 flex min-w-0 items-center gap-1">
+        {shape.ranges.map((range, index) => <MiniKeyboard key={`${range.min}-${range.max}-${index}`} range={range} hands={displayHands} labels={labels} accidentalStyle={accidentalStyle} />)
+          .reduce<ReactNode[]>((items, keyboard, index) => index ? [...items, <span key={`gap-${index}`} aria-hidden="true" className="text-xs text-[var(--lv-text-muted)]">…</span>, keyboard] : [keyboard], [])}
+      </div> : <p className="mt-2 text-xs text-[var(--lv-text-muted)]">—</p>}
+    </section>
+  );
+});
 
 function HandVoicingSummary({
   accidentalStyle, fingering, hand, isPersonal, pitches, showFingering, text, voicing,

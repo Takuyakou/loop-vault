@@ -50,6 +50,19 @@ export function progressionVoicingPracticeE2eFixture(search: string): Progressio
   if (status === "vl09-layout") {
     return oneSelection("source-midi", vl09LayoutSnapshot());
   }
+  if (status === "vl10-keep") {
+    const base = vl09LayoutSnapshot();
+    const first = base.events[0]!;
+    const second = base.events[1]!;
+    return oneSelection("source-midi", { ...base, fingerprint: "public-vl10-keep",
+      events: [first, { ...second, voicing: first.voicing }, ...base.events.slice(2)] });
+  }
+  if (status === "vl10-distant") {
+    const base = vl09LayoutSnapshot();
+    const first = base.events[0]!;
+    return oneSelection("source-midi", { ...base, fingerprint: "public-vl10-distant",
+      events: [{ ...first, voicing: { kind: "source-midi", midiNotes: [36, 40, 84, 88] } }, ...base.events.slice(1)] });
+  }
   if (status === "long-song") {
     return oneSelection("source-midi", snapshot("source-midi", "maj7", true, true, 128));
   }
