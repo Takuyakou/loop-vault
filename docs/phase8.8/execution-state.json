@@ -15,7 +15,7 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "448d2ad5b620826abb34d4fd7f961336cb5ca49d",
-  "lastVerifiedCommit": "c9ca5a0",
+  "lastVerifiedCommit": "4477038",
   "currentBranch": "feat/phase8.8-extended-text",
   "requiredGates": {
     "P8.8-00": [
@@ -46,6 +46,6 @@
     "p8.8-06-playwright": "pass",
     "p8.8-06-privacy": "pass"
   },
-  "nextAction": "Run final candidate gates, write handoff, review ancestry/privacy, merge local master, rerun gates, and build D-drive Windows EXE.",
+  "nextAction": "Candidate gates passed. Review closeout diff, merge local master, run fresh post-merge gates, then build Windows EXE on D.",
   "updatedAt": "2026-09-26"
 }
