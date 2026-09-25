@@ -24,6 +24,8 @@ import {
   TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM,
 } from "../domain/textProgression";
 import { createTextProgressionStyleSnapshot } from "../domain/textProgressionVoicing";
+import { parseExtendedTextProgression } from "../domain/extendedTextProgression";
+import { extendedTextSaveData } from "../domain/extendedTextSave";
 import type {
   ChordTimelineItem,
   ProgressionBlockCandidate,
@@ -1113,6 +1115,28 @@ describe("vault store", () => {
       lengthBars: TEXT_PROGRESSION_MAX_BARS,
     });
     expect(maximumBar?.chords).toHaveLength(TEXT_PROGRESSION_MAX_BARS);
+  });
+
+  it("saves a three-quarter extended score without duplicating harmonic cards for reattacks", async () => {
+    const repository = new FakeRepository();
+    const store = createVaultStore({ repository, now: () => now });
+    await store.getState().initialize();
+    const parsed = parseExtendedTextProgression("C % =|_ Dm G7", { beat: "3/4" });
+    expect(parsed.state).toBe("VALID");
+    const data = extendedTextSaveData(parsed);
+    const ideaId = store.getState().createIdeaFromTextProgression(data);
+    expect(ideaId).toBeDefined();
+    const block = store.getState().ideas.find(idea => idea.id === ideaId)?.progressionBlocks?.[0];
+    expect(block).toMatchObject({ timeSignature: "3/4", sourceStartBeat: 0, sourceEndBeat: 6 });
+    expect(block?.chords).toHaveLength(3);
+    expect(block?.chords[0]).toMatchObject({ bar: 1, beat: 1, durationBeats: 3 });
+    expect(parsed.harmonicSpans[0]?.attacks).toHaveLength(2);
+    const reloaded = parseVaultFileJson(serializeVault({
+      ...createEmptyVault(), ideas: store.getState().ideas,
+    }));
+    expect(reloaded.ok).toBe(true);
+    if (!reloaded.ok) throw new Error("Vault reload failed");
+    expect(reloaded.vault.ideas.find(idea => idea.id === ideaId)?.progressionBlocks?.[0]?.timeSignature).toBe("3/4");
   });
 
   it("hands off created and appended BPM-less Text saves with the runtime default only", async () => {

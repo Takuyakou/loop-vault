@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { romanNumeralHint } from "../../domain/harmony/romanNumerals";
+import type { ExtendedTextResult } from "../../domain/extendedTextProgression";
+import { ExtendedTextIntakePanel } from "./ExtendedTextIntakePanel";
 import {
   confirmedTextProgressionKeyState,
   evaluateTextProgressionCapabilities,
@@ -45,6 +47,7 @@ interface TextProgressionCapturePanelProps {
   /** Once converted, the existing ManualCandidateDraft is authoritative. */
   readonly draftActive?: boolean;
   readonly onConvert: (converted: TextProgressionConvertedDraft) => void;
+  readonly onSaveExtended?: (result: ExtendedTextResult) => boolean;
   readonly onPreview: (
     event: TextProgressionEvent,
     memory: ChordVoicingMemory | undefined,
@@ -62,10 +65,12 @@ export function TextProgressionCapturePanel({
   showRomanNumerals,
   draftActive = false,
   onConvert,
+  onSaveExtended,
   onPreview,
   onStop,
 }: TextProgressionCapturePanelProps) {
   const [input, setInput] = useState("");
+  const [dialect, setDialect] = useState<"standard" | "extended">("standard");
   const [keyInput, setKeyInput] = useState("");
   const [confirmedKey, setConfirmedKey] = useState<string>();
   const [keyError, setKeyError] = useState<string>();
@@ -248,6 +253,31 @@ export function TextProgressionCapturePanel({
   const confirmed = result.keyState.kind === "confirmed";
   const suggestions = result.keyState.kind === "inferred" ? result.keyState.candidates : [];
   const disabled = draftActive;
+  const modeSelector = (
+    <div className="mt-4 flex gap-2" role="group" aria-label={text(language, "Text syntax", "テキスト記法")}>
+      <button type="button" className={dialect === "standard" ? "lv-button-primary px-3 py-2 text-sm" : "lv-button-secondary px-3 py-2 text-sm"}
+        aria-pressed={dialect === "standard"} disabled={disabled} data-testid="text-mode-standard"
+        onClick={() => { onStop(); setDialect("standard"); }}>
+        {text(language, "Standard", "通常")}
+      </button>
+      <button type="button" className={dialect === "extended" ? "lv-button-primary px-3 py-2 text-sm" : "lv-button-secondary px-3 py-2 text-sm"}
+        aria-pressed={dialect === "extended"} disabled={disabled} data-testid="text-mode-extended"
+        onClick={() => { onStop(); setDialect("extended"); }}>
+        {text(language, "Extended", "拡張")}
+      </button>
+    </div>
+  );
+  if (dialect === "extended") {
+    return (
+      <section className="border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-5" data-testid="text-progression-capture">
+        <h2 className="text-2xl font-semibold">{text(language, "Extended text progression", "拡張テキスト進行")}</h2>
+        {modeSelector}
+        <ExtendedTextIntakePanel language={language} input={input} disabled={disabled}
+          onInput={(value) => { onStop(); setInput(value); }}
+          onSave={(extended) => onSaveExtended?.(extended) ?? false} />
+      </section>
+    );
+  }
 
   return (
     <section className="border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-5" data-testid="text-progression-capture">
@@ -268,6 +298,16 @@ export function TextProgressionCapturePanel({
         ) : null}
       </div>
 
+      {modeSelector}
+      {/^(?:\s*#|\s*[<>]\s*$)/m.test(input) || /N\.C\./i.test(input) ? (
+        <div className="mt-3 flex items-center gap-2 text-sm" data-testid="text-extended-suggestion">
+          <span>{text(language, "This looks like extended notation.", "拡張記法の形式に見えます。")}</span>
+          <button type="button" className="lv-button-secondary px-2 py-1" disabled={disabled}
+            onClick={() => { onStop(); setDialect("extended"); }}>
+            {text(language, "Read as Extended", "拡張で読む")}
+          </button>
+        </div>
+      ) : null}
       <label className="mt-5 block text-sm font-semibold text-[var(--lv-text)]" htmlFor="text-progression-input">
         {text(language, "Chord progression", "コード進行")}
       </label>

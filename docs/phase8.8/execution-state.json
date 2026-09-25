@@ -2,16 +2,17 @@
   "schemaVersion": 1,
   "phaseId": "8.8",
   "status": "in-progress",
-  "activeStage": "P8.8-03",
+  "activeStage": "P8.8-04",
   "completedStages": [
     "P8.8-00",
     "P8.8-01",
-    "P8.8-02"
+    "P8.8-02",
+    "P8.8-03"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "448d2ad5b620826abb34d4fd7f961336cb5ca49d",
-  "lastVerifiedCommit": "6df840f",
+  "lastVerifiedCommit": "2fc64f7",
   "currentBranch": "feat/phase8.8-extended-text",
   "requiredGates": {
     "P8.8-00": [
@@ -39,6 +40,6 @@
     "typescript": "pass",
     "changed-scope-eslint": "pass"
   },
-  "nextAction": "Implement explicit text mode, live preview and save flow.",
+  "nextAction": "Persist exact raw source and attack model in Vault v2, prove round-trip preservation.",
   "updatedAt": "2026-09-26"
 }
