@@ -1,7 +1,8 @@
 // Validates the frozen synthetic research artifacts without touching private witnesses.
 const fs=require('fs');const crypto=require('crypto');const {execFileSync}=require('child_process');
 const base='docs/phase8.8.3-r';const read=p=>fs.readFileSync(`${base}/${p}`);const json=p=>JSON.parse(read(p));
-const sha=b=>crypto.createHash('sha256').update(b).digest('hex');const failures=[];
+const canonical=b=>Buffer.from(b.toString('utf8').replace(/\r\n/g,'\n'));
+const sha=b=>crypto.createHash('sha256').update(canonical(b)).digest('hex');const failures=[];
 const requireCheck=(value,message)=>{if(!value)failures.push(message)};
 const plan=json('matrix-plan.json'),manifest=json('current-site-vocabulary.json');
 const manifestSha=sha(read('current-site-vocabulary.json'));
@@ -11,6 +12,7 @@ for(const part of plan.partitions)requireCheck(sha(read(part.siteOnlyEvidenceFil
 requireCheck(plan.partitions.reduce((n,p)=>n+p.count,0)===plan.plannedRowCount,'partition count differs');
 const rows=read('compatibility-matrix.jsonl').toString().trimEnd().split('\n').map(JSON.parse);
 requireCheck(rows.length===plan.plannedRowCount,'matrix row count differs');
+requireCheck(sha(read('compatibility-matrix.jsonl'))==='5255ebb8525735ada1918ad99d2a056d225300a85b6b0d9f82acd44d8b9966b0','matrix canonical digest differs');
 requireCheck(new Set(rows.map(r=>r.rowId)).size===rows.length,'duplicate row ID');
 requireCheck(rows.every(r=>r.siteAccepted),'unmeasured/rejected site row in frozen accepted matrix');
 requireCheck(rows.every(r=>r.mismatchClasses.length>0),'unclassified accepted row');
