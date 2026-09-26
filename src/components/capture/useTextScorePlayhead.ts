@@ -48,8 +48,8 @@ export function useTextScorePlayhead(
         activeBand = nextBand;
       }
       if (activeBand) activeBand.dataset.playbackActive = state.status === "playing" ? "true" : "false";
-      if (positionLabel && activeBand?.getAttribute("aria-label")) {
-        positionLabel.textContent += ` · ${activeBand.getAttribute("aria-label")}`;
+      if (positionLabel && activeBand?.dataset.chord) {
+        positionLabel.textContent += ` · ${activeBand.dataset.chord}`;
       }
     };
     const tick = () => { paint(); frame = requestAnimationFrame(tick); };

@@ -39,20 +39,18 @@ function DurationBand({ band, selected, language, onSelect, onAudition }: {
   readonly onSelect: (sourceSpan: TextSourceRange) => void;
   readonly onAudition?: (sourceSpan: TextSourceRange) => void;
 }) {
-  return <div role="button" tabIndex={0} data-testid="text-preview-band"
+  return <div data-testid="text-preview-band"
     data-source-start={band.sourceSpan.start} data-source-end={band.sourceSpan.end}
-    data-selected={selected}
-    aria-label={band.writtenChord}
+    data-selected={selected} data-chord={band.writtenChord}
     className={"absolute inset-y-0 min-w-0 overflow-hidden rounded border border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-text)]" +
       (selected ? " outline outline-2 outline-[var(--lv-accent)]" : "")}
     style={{ left: String(band.left) + "%", width: String(band.width) + "%" }}
-    onClick={() => { onSelect(band.sourceSpan); onAudition?.(band.sourceSpan); }}
-    onKeyDown={event => {
-      if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
-        event.preventDefault(); onSelect(band.sourceSpan); onAudition?.(band.sourceSpan);
-      }
-    }}>
-    <ChordLabel value={band.writtenChord} />
+    onClick={() => { onSelect(band.sourceSpan); onAudition?.(band.sourceSpan); }}>
+    <button type="button" className="absolute inset-0 min-w-0 w-full"
+      aria-label={band.writtenChord}
+      onClick={event => { event.stopPropagation(); onSelect(band.sourceSpan); onAudition?.(band.sourceSpan); }}>
+      <ChordLabel value={band.writtenChord} />
+    </button>
     <AttackMarkers band={band} language={language}
       onSeek={span => { onSelect(span); onAudition?.(span); }} />
   </div>;

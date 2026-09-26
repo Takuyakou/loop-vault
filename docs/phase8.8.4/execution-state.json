@@ -2,14 +2,15 @@
   "schemaVersion": 1,
   "phaseId": "8.8.4",
   "status": "in-progress",
-  "activeStage": "P8.8.4-06",
+  "activeStage": "P8.8.4-07",
   "completedStages": [
     "P8.8.4-00",
     "P8.8.4-01",
     "P8.8.4-02",
     "P8.8.4-03",
     "P8.8.4-04",
-    "P8.8.4-05"
+    "P8.8.4-05",
+    "P8.8.4-06"
   ],
   "blocked": false,
   "blockerReason": null,
@@ -48,8 +49,9 @@
     "standard-preview": "pass",
     "transport-state": "pass",
     "exact-seek": "pass",
-    "live-transport": "pass"
+    "live-transport": "pass",
+    "hardening": "pass"
   },
-  "nextAction": "Harden long-chart performance, responsive/accessibility and product-path tests",
+  "nextAction": "Run fresh complete candidate gates and stop for the per-merge human authorization",
   "updatedAt": "2026-09-26"
 }
