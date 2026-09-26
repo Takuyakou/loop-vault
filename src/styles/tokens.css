@@ -1,4 +1,6 @@
 :root {
+  --font-sans: "IBM Plex Sans JP", "Yu Gothic UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
   --lv-bg: #0a1019;
   --lv-bg-subtle: #0d1522;
   --lv-sidebar: #0d1522;
@@ -77,6 +79,8 @@
     background: var(--lv-bg);
     color: var(--lv-text);
     line-height: var(--lv-line-body);
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
   }
 
   button,
@@ -247,6 +251,8 @@
     color: var(--lv-text-secondary);
     font-size: var(--lv-font-sm);
     line-height: var(--lv-line-body);
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
     text-wrap: pretty;
   }
 

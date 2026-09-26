@@ -198,17 +198,18 @@ export function AppShell({
       </aside>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <header className="flex min-h-[var(--lv-topbar-height)] shrink-0 items-center gap-3 border-b border-[var(--lv-border)] bg-[var(--lv-topbar)] px-4 lg:px-6">
-          <div className="flex min-w-0 flex-1 items-center gap-4">
+        <header className="lv-app-topbar flex min-h-[var(--lv-topbar-height)] shrink-0 items-center gap-3 border-b border-[var(--lv-border)] bg-[var(--lv-topbar)] px-4 lg:px-6">
+          <div className="lv-app-topbar-leading flex min-w-0 flex-1 items-center gap-2">
             <div className="min-w-0 shrink-0">
               <p className="truncate text-lg font-bold text-[var(--lv-text)]">{pageTitle}</p>
               {pageContext ? (
                 <p className="truncate text-xs text-[var(--lv-text-muted)]">{pageContext}</p>
               ) : null}
             </div>
+            {view === "capture" ? <div id="capture-mode-tabs-host" data-testid="capture-mode-tabs-frame" className="ml-1 shrink-0" /> : null}
             {pageNavigation && collapsed ? <div className="hidden min-w-0 lg:block">{pageNavigation}</div> : null}
           </div>
-          <div className="flex min-w-0 shrink-0 items-center justify-end gap-1.5" data-global-actions>
+          <div className="lv-app-topbar-actions flex min-w-0 shrink-0 items-center justify-end gap-1.5" data-global-actions>
             <PlaybackLevelMeter
               label={copy.nav.previewLevel}
               masterVolume={masterVolume}

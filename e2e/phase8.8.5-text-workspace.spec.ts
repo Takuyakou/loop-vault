@@ -30,6 +30,7 @@ test("key remains unconfirmed until explicit confirmation and all 24 keys are of
   await expect(capture.getByTestId("text-progression-key-state")).toContainText(/明示的|explicitly/);
   await expect(page.locator("#text-progression-key-options option")).toHaveCount(24);
   await expect(capture.getByTestId("text-progression-bpm")).toHaveValue("");
+  await capture.getByTestId("text-key-picker").click();
   await capture.getByTestId("text-progression-key").fill("F# minor");
   await expect(capture.getByTestId("text-progression-key-state")).toContainText(/明示的|explicitly/);
   await capture.getByRole("button", { name: /キーを確定|Confirm key/ }).click();
@@ -55,8 +56,9 @@ test("toolbar wraps by content width and keeps the Save cluster fixed during tra
     expect(before.primary).not.toBeNull();
     expect(before.name).not.toBeNull();
     expect(before.save).not.toBeNull();
-    const contentWidth = (await capture.boundingBox())!.width - 32;
-    if (contentWidth >= 1370) {
+    expect(before.save!.x + before.save!.width).toBeLessThanOrEqual(before.group!.x + before.group!.width + 1);
+    const contentWidth = before.group!.width;
+    if (contentWidth >= 1180) {
       const mode = (await capture.getByTestId("text-mode-standard").boundingBox())!;
       expect(Math.abs(mode.y - before.primary!.y)).toBeLessThanOrEqual(1);
       expect(Math.abs(before.name!.y - before.primary!.y)).toBeLessThanOrEqual(1);

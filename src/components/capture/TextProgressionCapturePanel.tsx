@@ -301,11 +301,20 @@ export function TextProgressionCapturePanel({
     onPreview(selectedEvent, selectedMemory, explicitBpm ?? TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM);
   }
 
+  const visibleDiagnostics = input.trim() ? result.diagnostics : [];
+  const saveReason = !input.trim()
+    ? text(language, "Enter a progression to save it", "コード進行を入れると保存できます")
+    : visibleDiagnostics.length
+      ? text(language, `Fix ${visibleDiagnostics.length} errors before saving`, `エラー${visibleDiagnostics.length}件を修正すると保存できます`)
+      : !confirmedKey
+        ? text(language, "Set a key after saving to use Bass Practice and Chord Context", "Bass Practice・Chord Context は保存後にキーを決めると使えます")
+        : text(language, "Ready to save", "保存できます");
   const confirmed = result.keyState.kind === "confirmed";
   const suggestions = result.keyState.kind === "inferred" ? result.keyState.candidates : [];
   const disabled = draftActive;
   const modeSelector = (
-    <div className="flex gap-2" role="group" aria-label={text(language, "Text syntax", "テキスト記法")}>
+    <div className="flex shrink-0 items-center gap-1" role="group" aria-label={text(language, "Text syntax", "テキスト記法")}>
+      <span className="text-xs text-[var(--lv-text-muted)]">{text(language, "Reading", "読み方")}</span>
       <button type="button" className={dialect === "standard" ? "lv-button-primary px-3 py-2 text-sm" : "lv-button-secondary px-3 py-2 text-sm"}
         aria-pressed={dialect === "standard"} disabled={disabled} data-testid="text-mode-standard"
         onClick={() => switchDialect("standard")}>
@@ -339,24 +348,37 @@ export function TextProgressionCapturePanel({
           </button>
         </div>
       ) : null}
-      <div className="lv-text-capture-toolbar mt-3 flex items-center gap-2 border-y border-[var(--lv-border)] py-2" data-testid="text-capture-toolbar">
+      <div className="lv-text-capture-toolbar lv-text-control-row flex items-center gap-2 border-b border-[var(--lv-border)] py-2" data-testid="text-capture-toolbar">
         {modeSelector}
         <label className="lv-text-toolbar-meter text-xs" title={text(language, "Standard syntax supports 4/4 only", "通常モードは4/4のみ")}>
           {text(language, "Meter", "拍子")}
           <select disabled aria-label={text(language, "Meter", "拍子")} title={text(language, "Standard syntax supports 4/4 only", "通常モードは4/4のみ")} value="4/4" onChange={() => undefined}><option>4/4</option></select>
         </label>
         <div className="lv-text-toolbar-key">
-          <label htmlFor="text-progression-key" className="text-xs">{text(language, "Key", "キー")}</label>
-          <input id="text-progression-key" list="text-progression-key-options" data-testid="text-progression-key"
-            className="lv-field-control min-h-9 w-24 px-2 text-xs" value={keyInput} disabled={disabled}
-            onChange={event => { onStop(); setKeyInput(event.target.value); }}
-            placeholder={text(language, "Unset", "未確定")} />
-          <datalist id="text-progression-key-options">{["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"].flatMap(root => ["major", "minor"].map(mode =>
-            <option key={root + mode} value={root + " " + mode} />))}</datalist>
-          <button type="button" className="lv-button-secondary min-h-9 px-2 text-xs" disabled={disabled} aria-label={text(language, "Confirm key", "キーを確定")} onClick={confirmKey}>
-            {text(language, "Set", "確定")}</button>
-          <button type="button" className="lv-button-ghost min-h-9 px-1 text-xs" disabled={disabled || !confirmedKey} onClick={clearKey}
-            title={text(language, "Clear key", "キーをクリア")} aria-label={text(language, "Clear key", "キーをクリア")}>×</button>
+          <span className="text-xs">{text(language, "Key", "キー")}</span>
+          <details className="lv-text-key-picker relative">
+            <summary className="lv-field-control flex min-h-9 min-w-24 cursor-pointer list-none items-center justify-between gap-2 px-2 text-xs"
+              data-testid="text-key-picker">{confirmedKey ?? text(language, "Unset", "未確定")} <span aria-hidden="true">▾</span></summary>
+            <div className="lv-text-key-menu absolute left-0 top-full z-40 min-w-64 border border-[var(--lv-border)] bg-[var(--lv-surface)] p-2 shadow-lg">
+              <label htmlFor="text-progression-key" className="sr-only">{text(language, "Key", "キー")}</label>
+              <input id="text-progression-key" list="text-progression-key-options" data-testid="text-progression-key"
+                className="lv-field-control min-h-9 w-36 px-2 text-xs" value={keyInput} disabled={disabled}
+                onChange={event => { onStop(); setKeyInput(event.target.value); }}
+                placeholder={text(language, "Unset", "未確定")} />
+              <datalist id="text-progression-key-options">{["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"].flatMap(root => ["major", "minor"].map(mode =>
+                <option key={root + mode} value={root + " " + mode} />))}</datalist>
+              <button type="button" className="lv-button-secondary ml-1 min-h-9 px-2 text-xs" disabled={disabled}
+                aria-label={text(language, "Confirm key", "キーを確定")} onClick={confirmKey}>
+                {text(language, "Set", "確定")}</button>
+              <button type="button" className="lv-button-ghost ml-1 min-h-9 px-1 text-xs" disabled={disabled || !confirmedKey}
+                onClick={clearKey} title={text(language, "Clear key", "キーをクリア")}
+                aria-label={text(language, "Clear key", "キーをクリア")}>×</button>
+              {suggestions.length ? <div className="mt-2 flex flex-wrap gap-1" data-testid="text-progression-key-suggestions">
+                {suggestions.map(candidate => <button key={candidate.key} type="button" className="lv-button-secondary px-2 py-1 text-xs"
+                  disabled={disabled} onClick={() => chooseSuggestedKey(candidate.key)}>{candidate.key}</button>)}
+              </div> : null}
+            </div>
+          </details>
         </div>
         <div className="lv-text-toolbar-bpm">
           <BpmScrubField idPrefix="text-progression-bpm" inputTestId="text-progression-bpm"
@@ -381,11 +403,11 @@ export function TextProgressionCapturePanel({
           </label>
           <button type="button" className="lv-button-primary min-h-9 whitespace-nowrap px-2 text-xs"
             data-testid="text-progression-save" disabled={disabled || !result.canConvert}
-            title={!result.canConvert ? text(language, "Fix diagnostics before saving", "保存前に診断を修正してください") : undefined}
+            title={!result.canConvert ? saveReason : undefined}
             aria-describedby={!result.canConvert ? "text-progression-save-reason" : undefined}
             onClick={saveStandard}>{text(language, "Save", "Vaultに保存")}</button>
           {!result.canConvert ? <span tabIndex={0} role="note" aria-describedby="text-progression-save-reason"
-            title={text(language, "Fix diagnostics before saving", "保存前に診断を修正してください")}
+            title={saveReason}
             className="cursor-help text-xs text-[var(--lv-text-secondary)]" data-testid="text-save-blocked-hint">ⓘ</span> : null}
         </div> : null}
       </div>
@@ -396,7 +418,7 @@ export function TextProgressionCapturePanel({
         onInput={value => { if (transportState.status === "stopped") onStop();
           setSaved(false); setSaveFailed(false); setInput(value); }} onSelectEvent={selectEvent}
         onSeekBar={bar => transport.seek((bar - 1) * 4)} />
-      <p id="text-progression-format" className="mt-2 text-xs text-[var(--lv-text-muted)]">
+      <p id="text-progression-format" className="sr-only text-[var(--lv-text-muted)]">
         {text(
           language,
           `4/4 only; each bar has 1, 2, or 4 cells; maximum ${TEXT_PROGRESSION_MAX_BARS} bars / ${TEXT_PROGRESSION_MAX_TOKENS} cells. % repeats, _ rests, = holds without re-attack.`,
@@ -404,134 +426,110 @@ export function TextProgressionCapturePanel({
         )}
       </p>
 
-      <details className="mt-3 rounded border border-[var(--lv-border)] p-2" data-testid="standard-text-card-details">
-        <summary className="cursor-pointer text-xs text-[var(--lv-text-muted)]">
-          {text(language, "Card list and saved voicing details", "カード一覧と保存音の詳細")}
-        </summary>
-      <TextProgressionCards
-        events={result.events}
-        valid={result.canConvert}
-        tokens={result.tokens}
-        voicingOverrides={voicingOverrides}
-        selectedKey={selectedKey}
-        confirmedKey={confirmed ? result.keyState.key : undefined}
-        showRomanNumerals={showRomanNumerals}
-        language={language}
-        disabled={disabled}
-        onSelect={selectEvent}
-      />
+      <span className="sr-only" data-testid="text-progression-key-state">
+        {confirmed ? text(language, `Confirmed: ${result.keyState.key}`, `確定: ${result.keyState.key}`)
+          : text(language, "Only an explicitly confirmed key enables Roman/numeric input and degree display.", "明示的に確定したキーだけがローマ数字・数字入力と度数表示に使われます。")}
+      </span>
+      {keyError ? <p role="alert" className="mt-1 text-xs text-[var(--lv-danger)]">{keyError}</p> : null}
 
-      </details>
+      <TextDiagnostics diagnostics={visibleDiagnostics} language={language} />
 
-      <section className="mt-3 border-t border-[var(--lv-border)] pt-3" aria-label={text(language, "Key and tempo", "キーとテンポ")}>
-        <p className="text-xs text-[var(--lv-text-muted)]" data-testid="text-progression-key-state">
-          {confirmed ? text(language, `Confirmed: ${result.keyState.key}`, `確定: ${result.keyState.key}`)
-            : text(language, "Only an explicitly confirmed key enables Roman/numeric input and degree display.", "明示的に確定したキーだけがローマ数字・数字入力と度数表示に使われます。")}
-        </p>
-        {keyError ? <p role="alert" className="mt-2 text-xs text-[var(--lv-warning)]">{keyError}</p> : null}
-        {suggestions.length ? <div className="mt-2" data-testid="text-progression-key-suggestions">
-          <p className="text-xs text-[var(--lv-text-muted)]">{text(language, "Suggestions only — choose one, then confirm it yourself.", "候補です。選択後にご自身で確定してください。")}</p>
-          <div className="mt-1 flex flex-wrap gap-2">{suggestions.map(candidate =>
-            <button key={candidate.key} type="button" className="lv-button-secondary px-2 py-1 text-xs"
-              disabled={disabled} onClick={() => chooseSuggestedKey(candidate.key)}>{candidate.key}</button>)}</div>
-        </div> : null}
-        <p className="mt-2 text-xs text-[var(--lv-text-muted)]">
-          {explicitBpm === undefined ? text(language, "BPM unset; audition uses 120.", "BPM未設定。試聴は120です。")
-            : text(language, `BPM ${explicitBpm} confirmed.`, `BPM ${explicitBpm} を使用します。`)}
-        </p>
-      </section>
-
-      <TextDiagnostics diagnostics={result.diagnostics} language={language} />
-
-      {selectedEvent && !draftActive ? (
-        <section className="mt-5 border border-[var(--lv-border)] bg-[var(--lv-surface)]/60 p-4" data-testid="text-progression-inspector">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--lv-accent)]">
-                {text(language, "Selected chord", "選択中のコード")}
-              </p>
-              <h3 className="mt-1 text-xl font-semibold">{selectedEvent.canonical}</h3>
-              <p className="mt-1 text-sm text-[var(--lv-text-muted)]">
-                {timingLabel(selectedEvent, language)}
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                className="lv-button-primary px-3 py-2 text-sm"
-                data-testid="text-progression-preview"
-                disabled={disabled}
-                onClick={previewSelected}
-              >
-                {text(language, "Play notes to save", "保存予定音を再生")}
-              </button>
-              <button
-                type="button"
-                className="lv-button-ghost px-3 py-2 text-sm"
-                disabled={disabled}
-                onClick={onStop}
-              >
-                {text(language, "Stop", "停止")}
-              </button>
-            </div>
-          </div>
-          <p className="mt-3 text-xs text-[var(--lv-text-muted)]" data-testid="text-progression-auto-generated">
-            {text(
-              language,
-              `Generated style: ${voicingStyleLabel(selectedStyle, language)}. It is not source MIDI.`,
-              `生成スタイル: ${voicingStyleLabel(selectedStyle, language)}。元MIDIではありません。`,
-            )}
-          </p>
-          <details className="mt-3" data-testid="text-progression-detail-expander">
-            <summary className="cursor-pointer text-sm">{text(language, "Chord details", "コード詳細")}</summary>
-          <VoicingPanel
-            key={selectedKey}
-            chord={selectedEvent.chord}
-            memory={selectedMemory}
-            generatedNotes={selectedGeneratedNotes}
-            language={language}
-            sourceAvailable={false}
-            sourceApplicable={false}
-            onMemoryChange={updateVoicing}
-            onReextract={() => undefined}
-            styleSelector={{
-              value: selectedStyleValue,
-              label: text(language, "Generated style", "生成スタイル"),
-              options: selectedStyleOptions,
-              onChange: selectVoicingStyle,
-            }}
-          />
-          </details>
-        </section>
-      ) : null}
-
-      <div className="lv-text-intake-savebar sticky bottom-0 z-10 mt-3 flex flex-wrap items-center gap-3 border-t border-[var(--lv-border)] bg-[var(--lv-surface)] p-3">
-        <span className="min-w-0 flex-1 text-xs text-[var(--lv-text-muted)]" data-testid="text-progression-capability-summary">
-          {result.bars} {text(language, "bars", "小節")} · 4/4 · {explicitBpm ?? TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM} BPM
-          {" · " + result.diagnostics.length + " " + text(language, "errors", "エラー")}
-          {!confirmed ? " · " + text(language, "Confirm a key for Bass Practice / Chord Context / Root Motion", "キーを確定するとBass Practice / Chord Context / Root Motionを利用できます") : ""}
+      <footer className="lv-text-intake-savebar lv-text-status-bar flex items-center gap-3 border-t border-[var(--lv-border)] px-2 text-xs">
+        <span className="min-w-0 font-mono text-[var(--lv-text-muted)]" data-testid="text-progression-capability-summary">
+          {result.bars} {text(language, "bars", "小節")} · 4/4 · BPM {explicitBpm ?? "—"} · {confirmedKey ?? text(language, "Key unset", "キー未確定")}
         </span>
-        <details className="relative" data-testid="text-progression-capability-details">
-          <summary className="cursor-pointer text-xs">{text(language, "Availability details", "利用条件の詳細")}</summary>
+        {result.tokens.length ? <details name="capture-details" className="lv-text-detail-popover" data-testid="standard-text-card-details">
+          <summary className="cursor-pointer text-xs text-[var(--lv-text-muted)]">
+            {text(language, "Cards", "カード一覧")}
+          </summary>
+          <TextProgressionCards
+            events={result.events}
+            valid={result.canConvert}
+            tokens={result.tokens}
+            voicingOverrides={voicingOverrides}
+            selectedKey={selectedKey}
+            confirmedKey={confirmed ? result.keyState.key : undefined}
+            showRomanNumerals={showRomanNumerals}
+            language={language}
+            disabled={disabled}
+            onSelect={selectEvent}
+          />
+        </details> : null}
+        {selectedEvent && !draftActive ? (
+          <details name="capture-details" className="lv-text-detail-popover" data-testid="text-progression-inspector">
+            <summary className="cursor-pointer whitespace-nowrap text-[var(--lv-text-muted)]">{text(language, "Selected chord", "選択音")}: <span className="font-mono">{selectedEvent.canonical}</span></summary>
+            <div className="lv-text-inspector-content border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--lv-accent)]">
+                  {text(language, "Selected chord", "選択中のコード")}
+                </p>
+                <h3 className="mt-1 font-mono text-xl font-semibold">{selectedEvent.canonical}</h3>
+                <p className="mt-1 text-sm text-[var(--lv-text-muted)]">
+                  {timingLabel(selectedEvent, language)}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className="lv-button-primary px-3 py-2 text-sm"
+                  data-testid="text-progression-preview"
+                  disabled={disabled}
+                  onClick={previewSelected}
+                >
+                  {text(language, "Play notes to save", "保存予定音を再生")}
+                </button>
+                <button
+                  type="button"
+                  className="lv-button-ghost px-3 py-2 text-sm"
+                  disabled={disabled}
+                  onClick={onStop}
+                >
+                  {text(language, "Stop", "停止")}
+                </button>
+              </div>
+            </div>
+            <p className="mt-3 text-xs text-[var(--lv-text-muted)]" data-testid="text-progression-auto-generated">
+              {text(
+                language,
+                `Generated style: ${voicingStyleLabel(selectedStyle, language)}. It is not source MIDI.`,
+                `生成スタイル: ${voicingStyleLabel(selectedStyle, language)}。元MIDIではありません。`,
+              )}
+            </p>
+            <details className="mt-3" data-testid="text-progression-detail-expander">
+              <summary className="cursor-pointer text-sm">{text(language, "Chord details", "コード詳細")}</summary>
+            <VoicingPanel
+              key={selectedKey}
+              chord={selectedEvent.chord}
+              memory={selectedMemory}
+              generatedNotes={selectedGeneratedNotes}
+              language={language}
+              sourceAvailable={false}
+              sourceApplicable={false}
+              onMemoryChange={updateVoicing}
+              onReextract={() => undefined}
+              styleSelector={{
+                value: selectedStyleValue,
+                label: text(language, "Generated style", "生成スタイル"),
+                options: selectedStyleOptions,
+                onChange: selectVoicingStyle,
+              }}
+            />
+            </details>
+            </div>
+          </details>
+        ) : null}
+        <details name="capture-details" className="relative ml-auto" data-testid="text-progression-capability-details">
+          <summary className="cursor-pointer whitespace-nowrap text-[var(--lv-text-muted)]">{text(language, "Availability", "利用条件")}</summary>
           <TextCapabilityList capabilities={capabilities} language={language} />
         </details>
-        <button
-          type="button"
-          className="lv-button-secondary px-4 py-2 text-sm"
-          data-testid="text-progression-convert"
-          disabled={disabled || !result.canConvert}
-          onClick={convert}
-        >
-          {text(language, "Advanced edit", "詳細編集")}
-        </button>
-        {saved ? <span role="status" className="text-xs text-[var(--lv-accent)]">
-          {text(language, "Saved", "保存しました")}</span> : null}
-        {saveFailed ? <span role="alert" className="text-xs text-[var(--lv-warning)]">
+        <button type="button" className="lv-button-ghost whitespace-nowrap text-xs" data-testid="text-progression-convert"
+          disabled={disabled || !result.canConvert} onClick={convert}>{text(language, "Advanced edit", "詳細編集")}</button>
+        {saved ? <span role="status" className="text-[var(--lv-accent)]">{text(language, "Saved", "保存しました")}</span> : null}
+        {saveFailed ? <span role="alert" className="text-[var(--lv-danger)]">
           {text(language, "Save failed. Your text is still here.", "保存できませんでした。入力内容は保持されています。")}</span> : null}
-        {!result.canConvert ? <p id="text-progression-save-reason" className="text-xs text-[var(--lv-text-muted)]">
-          {text(language, "Fix every diagnostic before saving. No partial progression is created.", "保存前にすべての診断を修正してください。部分進行は作成しません。")}
-        </p> : null}
-      </div>
+        <span id="text-progression-save-reason" className="lv-text-save-reason min-w-0 truncate text-[var(--lv-text-muted)]">{saveReason}</span>
+      </footer>
     </TextCaptureShell>
   );
 }
@@ -634,7 +632,7 @@ function TextProgressionCards({
                     disabled={disabled}
                     onClick={() => onSelect(event)}
                   >
-                    <span className="block font-semibold text-[var(--lv-text)]">{event.canonical}</span>
+                    <span className="block font-mono font-semibold text-[var(--lv-text)]">{event.canonical}</span>
                     <span className="mt-1 block text-xs text-[var(--lv-text-muted)]">{timingLabel(event, language)}</span>
                     {degree ? <span className="mt-1 block text-xs text-teal-200">{degree}</span> : null}
                     <span className="mt-1 block text-xs text-[var(--lv-text-muted)]" data-testid="text-progression-voicing-state">
@@ -658,9 +656,9 @@ function TextDiagnostics({
 }) {
   if (!diagnostics.length) return null;
   return (
-    <section id="text-progression-diagnostics" className="mt-5 border border-amber-400/50 bg-amber-950/20 p-4" role="status" aria-live="polite" data-testid="text-progression-diagnostics">
-      <h3 className="text-sm font-semibold text-amber-100">{text(language, "Fix before converting", "変換前に修正")}</h3>
-      <ul className="mt-2 space-y-1 text-sm text-amber-50">
+    <section id="text-progression-diagnostics" className="mt-2 border-l-2 border-[var(--lv-danger)] px-3 py-1 text-xs" role="status" aria-live="polite" data-testid="text-progression-diagnostics">
+      <h3 className="font-semibold text-[var(--lv-danger)]">{text(language, "Fix before converting", "変換前に修正")}</h3>
+      <ul className="mt-1 space-y-1 text-[var(--lv-text-secondary)]">
         {diagnostics.map((diagnostic, index) => (
           <li key={`${diagnostic.code}:${diagnostic.range.start}:${index}`} className="min-w-0 break-words [overflow-wrap:anywhere]">
             <span className="font-medium">{diagnosticLocation(diagnostic, language)}: </span>

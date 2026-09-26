@@ -16,7 +16,7 @@ import {
   resolveTimelineItemVoicing,
   timelineVoicingSourceStatus,
 } from "../domain/voicing";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { DragEvent, ReactNode } from "react";
 import { assertMidiTotalBytes } from "../security/intakeBudgets";
 import { readBoundedMidiPaths } from "../storage/boundedMidiReader";
@@ -2268,12 +2268,12 @@ function CaptureModeFrame({ stage, value, language, disabled, onChange, children
   onChange: (mode: CaptureInputMode) => void;
   children: ReactNode;
 }) {
-  return <div className="py-5" data-capture-view-root data-capture-stage={stage}>
-    <div className="mb-4 border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-3"
-      data-testid="capture-mode-tabs-frame">
-      <CaptureInputModeSelector value={value} language={language}
-        disabled={disabled} onChange={onChange} />
-    </div>
+  const [headerHost, setHeaderHost] = useState<HTMLElement | null>(null);
+  useLayoutEffect(() => { setHeaderHost(document.getElementById("capture-mode-tabs-host")); }, []);
+  const selector = <CaptureInputModeSelector value={value} language={language}
+    disabled={disabled} onChange={onChange} />;
+  return <div className="lv-capture-mode-content" data-capture-view-root data-capture-stage={stage}>
+    {headerHost ? createPortal(selector, headerHost) : <div data-testid="capture-mode-tabs-fallback">{selector}</div>}
     {children}
   </div>;
 }

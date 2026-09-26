@@ -109,3 +109,120 @@
 .lv-text-toolbar-bpm .lv-field-control { width: 3.5rem; }
 .lv-text-toolbar-bpm > small, .lv-text-toolbar-bpm > span { font-size: 0.6875rem; }
 .lv-text-transport-position { width: 4.5rem; overflow: hidden; text-overflow: ellipsis; }
+
+/* Final Capture visual contract: transport states use a single teal/neutral language. */
+.lv-text-transport .lv-transport-primary {
+  border-color: var(--lv-accent);
+  background: var(--lv-accent-soft);
+  color: var(--lv-accent);
+}
+.lv-text-transport .lv-transport-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--lv-accent) 18%, var(--lv-bg));
+}
+.lv-text-transport .lv-transport-loop-on {
+  border-color: var(--lv-accent);
+  background: var(--lv-accent-soft);
+  color: var(--lv-accent);
+}
+.lv-text-transport .lv-transport-loop-on:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--lv-accent) 18%, var(--lv-bg));
+}
+
+/* Flat shared Editor / Preview surface. */
+.lv-text-capture-root { background: var(--lv-surface); }
+.lv-text-intake-shell { margin-top: 0; border: 0; border-radius: 0; }
+.lv-text-intake-editor { border: 0; border-radius: 0; background: var(--lv-surface); }
+.lv-text-intake-grid { border-top: 1px solid var(--lv-border); }
+.lv-text-intake-pane { background: var(--lv-surface); }
+.lv-text-status-bar { min-height: 34px; flex-wrap: nowrap; background: var(--lv-bg-subtle); }
+.lv-text-save-reason { margin-left: auto; text-align: right; }
+.lv-text-control-row { padding-inline: 8px; }
+.lv-text-control-row .lv-text-toolbar-save { margin-left: auto; white-space: nowrap; }
+.lv-text-control-row .lv-text-toolbar-save label { white-space: nowrap; }
+.lv-text-control-row .lv-text-toolbar-save input { width: 6.5rem; }
+.lv-text-control-row .lv-text-toolbar-key input { width: 6.25rem; }
+.lv-text-control-row .lv-transport-button { padding-inline: 0.45rem; }
+.lv-text-control-row .lv-text-transport-position { width: 4.25rem; }
+@container (min-width: 1180px) {
+  .lv-text-control-row { flex-wrap: nowrap; }
+}
+@container (max-width: 1179px) {
+  .lv-text-control-row .lv-text-toolbar-save { margin-left: auto; }
+}
+@container (max-width: 800px) {
+  .lv-text-control-row .lv-text-toolbar-save { width: 100%; justify-content: flex-end; }
+  .lv-text-status-bar { flex-wrap: wrap; padding-block: 6px; }
+}
+
+/* Keep the Capture title/tabs together and preserve every global action at compact desktop widths. */
+@media (max-width: 1300px) {
+  .lv-app-topbar { flex-wrap: wrap; padding-block: 6px; row-gap: 4px; }
+  .lv-app-topbar-leading { width: 100%; flex: 1 0 100%; }
+  .lv-app-topbar-actions { width: 100%; flex: 1 0 100%; }
+}
+.lv-text-key-picker summary::-webkit-details-marker { display: none; }
+.lv-text-key-menu { white-space: normal; }
+
+/* Optional card/voicing/capability details float above the single bottom status line. */
+.lv-text-status-bar { position: relative; z-index: 10; }
+.lv-text-status-bar details > summary { list-style: none; }
+.lv-text-status-bar details > summary::-webkit-details-marker { display: none; }
+.lv-text-detail-popover { position: relative; flex: 0 0 auto; }
+.lv-text-detail-popover[open] > section,
+.lv-text-detail-popover[open] > .lv-text-inspector-content,
+.lv-text-status-bar [data-testid="text-progression-capability-details"][open] > dl {
+  position: absolute;
+  bottom: calc(100% + 7px);
+  left: 0;
+  z-index: 50;
+  width: min(42rem, calc(100vw - 18rem));
+  max-height: min(65dvh, 36rem);
+  overflow: auto;
+  border: 1px solid var(--lv-border);
+  background: var(--lv-surface);
+  box-shadow: var(--lv-shadow-overlay);
+}
+.lv-text-status-bar [data-testid="text-progression-capability-details"][open] > dl {
+  left: auto; right: 0; padding: 0.5rem;
+}
+@media (max-width: 899px) {
+  .lv-text-detail-popover[open] > section,
+  .lv-text-detail-popover[open] > .lv-text-inspector-content,
+  .lv-text-status-bar [data-testid="text-progression-capability-details"][open] > dl {
+    width: min(35rem, calc(100vw - 6rem));
+  }
+}
+@container (min-width: 1180px) and (max-width: 1299px) {
+  .lv-text-control-row { gap: 1px; }
+  .lv-text-control-row .lv-text-toolbar-save input { width: 4rem; }
+  .lv-text-control-row .lv-text-transport-position { width: 2.25rem; }
+  .lv-text-control-row .lv-transport-primary-fixed { width: 6.5rem; }
+  .lv-text-control-row .lv-transport-button { padding-inline: 0.3rem; }
+}
+
+
+/* Let the flat workspace use the remaining desktop height like the approved timeline mock. */
+@media (min-width: 1001px) {
+  .lv-text-capture-root {
+    display: flex;
+    min-height: calc(100dvh - var(--lv-topbar-height) - 40px);
+    flex-direction: column;
+  }
+  .lv-text-capture-root > .lv-text-intake-shell,
+  .lv-text-capture-root > .lv-text-intake-grid {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+    flex-direction: column;
+  }
+  .lv-text-capture-root .lv-text-intake-grid {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .lv-text-capture-root .lv-text-intake-pane { max-height: none; }
+  .lv-text-capture-root .lv-text-intake-grid > section { display: flex; flex-direction: column; }
+  .lv-text-capture-root .lv-text-intake-editor { flex: 1 1 auto; height: auto; min-height: 300px; }
+}
+@media (min-width: 1001px) and (max-width: 1300px) {
+  .lv-text-capture-root { min-height: calc(100dvh - var(--lv-topbar-height) - 84px); }
+}

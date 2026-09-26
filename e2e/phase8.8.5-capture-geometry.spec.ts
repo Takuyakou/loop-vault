@@ -2,14 +2,17 @@ import { expect, test } from "@playwright/test";
 import { assertNoHorizontalOverflow, openApp } from "./helpers/app";
 
 test("P8.8.5 Capture MIDI/Text tabs keep one DOM node and identical geometry", async ({ page }) => {
+  test.setTimeout(90_000);
   await openApp(page);
   await page.locator("nav").getByRole("button", { name: /コード採集|Capture/ }).click();
-  for (const width of [1920, 1440, 1280, 1024, 899, 768]) {
+  for (const width of [1920, 1600, 1440, 1366, 1280, 1024, 899, 768]) {
     await page.setViewportSize({ width, height: 900 });
     const frame = page.getByTestId("capture-mode-tabs-frame");
     const tabs = page.getByTestId("capture-input-mode");
     await expect(tabs).toHaveCount(1);
     await frame.evaluate(element => element.setAttribute("data-stability-token", "same-node"));
+    await tabs.getByRole("button", { name: "MIDI" }).evaluate(element => element.setAttribute("data-stability-token", "midi"));
+    await tabs.getByRole("button", { name: /テキスト|Text/ }).evaluate(element => element.setAttribute("data-stability-token", "text"));
     const before = {
       frame: await frame.boundingBox(),
       midi: await tabs.getByRole("button", { name: "MIDI" }).boundingBox(),
@@ -18,6 +21,8 @@ test("P8.8.5 Capture MIDI/Text tabs keep one DOM node and identical geometry", a
     await tabs.getByRole("button", { name: /テキスト|Text/ }).click();
     await expect(tabs).toHaveCount(1);
     await expect(frame).toHaveAttribute("data-stability-token", "same-node");
+    await expect(tabs.getByRole("button", { name: "MIDI" })).toHaveAttribute("data-stability-token", "midi");
+    await expect(tabs.getByRole("button", { name: /テキスト|Text/ })).toHaveAttribute("data-stability-token", "text");
     for (const [name, locator] of [
       ["frame", frame],
       ["midi", tabs.getByRole("button", { name: "MIDI" })],
@@ -33,6 +38,8 @@ test("P8.8.5 Capture MIDI/Text tabs keep one DOM node and identical geometry", a
     }
     await tabs.getByRole("button", { name: "MIDI" }).click();
     await expect(frame).toHaveAttribute("data-stability-token", "same-node");
+    await expect(tabs.getByRole("button", { name: "MIDI" })).toHaveAttribute("data-stability-token", "midi");
+    await expect(tabs.getByRole("button", { name: /テキスト|Text/ })).toHaveAttribute("data-stability-token", "text");
     await assertNoHorizontalOverflow(page);
   }
 });

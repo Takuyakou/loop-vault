@@ -57,7 +57,7 @@ export function StandardTextScoreWorkspace({ language, input, result, disabled, 
       ?.scrollIntoView?.({ block: "nearest" });
   }
 
-  return <div className="lv-text-intake-shell mt-4 overflow-hidden rounded-xl border border-[var(--lv-border)] bg-[var(--lv-surface)]"
+  return <div className="lv-text-intake-shell overflow-hidden bg-[var(--lv-surface)]"
     data-testid="standard-text-workspace">
     <div className="lv-text-intake-tabs border-b border-[var(--lv-border)] p-2" role="tablist"
       aria-label={ja ? "テキスト作業領域" : "Text workspace"}>
@@ -75,13 +75,13 @@ export function StandardTextScoreWorkspace({ language, input, result, disabled, 
         <label className="mb-2 block text-sm font-semibold" htmlFor="text-progression-input">
           {ja ? "進行テキスト" : "Score text"}
         </label>
-        <div className="lv-text-intake-editor relative flex min-h-64 overflow-hidden rounded border border-[var(--lv-border)] bg-[var(--lv-bg)]">
+        <div className="lv-text-intake-editor relative flex min-h-64 overflow-hidden bg-[var(--lv-surface)]">
           <div aria-hidden="true" className="lv-text-intake-gutter shrink-0 overflow-hidden border-r border-[var(--lv-border)] text-right font-mono text-xs text-[var(--lv-text-muted)]">
             {lines.map((_line, index) => <div key={index}>{index + 1}</div>)}
           </div>
           <textarea id="text-progression-input" data-testid="text-progression-input" ref={textareaRef}
             value={input} disabled={disabled} spellCheck={false}
-            aria-invalid={result.diagnostics.length > 0}
+            aria-invalid={Boolean(input.trim()) && result.diagnostics.length > 0}
             aria-describedby={result.diagnostics.length ? "text-progression-format text-progression-diagnostics" : "text-progression-format"}
             {...(result.diagnostics.length ? { "aria-errormessage": "text-progression-diagnostics" } : {})}
             onSelect={event => { onEditorSelection(event.currentTarget.selectionStart, event.currentTarget.selectionEnd);
@@ -97,8 +97,9 @@ export function StandardTextScoreWorkspace({ language, input, result, disabled, 
         <div className="mb-2 flex flex-wrap items-center gap-2">
           <h3 className="text-sm font-semibold">{ja ? "プレビュー" : "Preview"}</h3>
           <span className="text-xs text-[var(--lv-text-muted)]">{result.bars} {ja ? "小節" : "bars"}</span>
-          {result.diagnostics.length ? <span className="text-xs text-[var(--lv-danger)]">
-            {ja ? "エラー" : "Errors"} {result.diagnostics.length}</span> : null}
+          {input.trim() && result.diagnostics.length ? <span className="text-xs text-[var(--lv-danger)]">
+            {ja ? "エラー" : "Errors"} {result.diagnostics.length}</span>
+            : <span className="text-xs text-[var(--lv-text-muted)]">{ja ? "エラーなし" : "No errors"}</span>}
         </div>
         {scoreItems.map((item, row) => item.kind === "row" ?
           <div key={row} className="lv-text-intake-bars mt-2" data-testid="text-preview-row">
@@ -109,8 +110,8 @@ export function StandardTextScoreWorkspace({ language, input, result, disabled, 
                 || transportState.snapshot?.sourceText === input) onSeekBar(bar.number); }}
               errorLabel={result.diagnostics.find(issue => issue.bar === bar.number)?.message} />)}
           </div> : null)}
-        {!scoreItems.length ? <p className="text-sm text-[var(--lv-text-muted)]">
-          {ja ? "進行を入力するとここに表示されます。" : "Enter a progression to preview it."}</p> : null}
+        {!scoreItems.length ? <p className="grid min-h-64 place-items-center text-center text-sm text-[var(--lv-text-muted)]">
+          {ja ? "コード進行を入力すると、ここに譜面が表示されます" : "Enter a progression to see the score here."}</p> : null}
       </section>
     </div>
   </div>;

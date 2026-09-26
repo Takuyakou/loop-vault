@@ -15,7 +15,7 @@ interface Props {
 }
 
 function ChordLabel({ value }: { readonly value: string }) {
-  return <span className="block truncate px-2 pt-1 text-left text-xs font-bold" title={value}>{value}</span>;
+  return <span className="block truncate px-2 pt-1 text-left font-mono text-xs font-bold" title={value}>{value}</span>;
 }
 function AttackMarkers({ band, language, onSeek }: {
   readonly band: TextPreviewBand;
@@ -81,7 +81,7 @@ export function TextPreviewBar({ bar, language, selectedStart, errorLabel, onSel
     data-bar={bar.number} data-selected={selected}
     className={"min-w-0 rounded-lg border bg-[var(--lv-bg)] p-2" +
       (bar.error ? " border-[var(--lv-danger)]" : selected ? " border-[var(--lv-accent)]" : " border-[var(--lv-border)]")}>
-    <button type="button" className="mb-2 text-xs text-[var(--lv-text-muted)]"
+    <button type="button" className="mb-2 font-mono text-xs text-[var(--lv-text-muted)]"
       data-testid="text-preview-bar-select" data-source-start={bar.sourceSpan.start}
       onClick={() => (onBarSelect ?? onSelect)(bar.sourceSpan)}>
       {language === "ja" ? String(bar.number) + "小節目" : "Bar " + String(bar.number)}
