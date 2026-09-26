@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "8.8.3",
+  "status": "in-progress",
+  "activeStage": "P8.8.3-00",
+  "completedStages": [],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "d37177368f05b9bf70526582e07f754e93df3d02",
+  "lastVerifiedCommit": "d37177368f05b9bf70526582e07f754e93df3d02",
+  "currentBranch": "feat/phase8.8.3-defining-tone-correctness",
+  "requiredGates": {
+    "P8.8.3-00": [
+      "matrix-freeze",
+      "validate:phase-docs"
+    ],
+    "P8.8.3-01": [
+      "focused-semantic"
+    ],
+    "P8.8.3-02": [
+      "focused-audition"
+    ],
+    "P8.8.3-03": [
+      "focused-practice"
+    ],
+    "P8.8.3-04": [
+      "matrix-regression"
+    ],
+    "P8.8.3-05": [
+      "local-witness"
+    ],
+    "P8.8.3-06": [
+      "full-gates"
+    ],
+    "P8.8.3-07": [
+      "post-merge-gates"
+    ]
+  },
+  "gateResults": {
+    "matrix-freeze": "pass",
+    "validate:phase-docs": "pass"
+  },
+  "nextAction": "Run Stage 00 gates, then implement semantic fixes",
+  "updatedAt": "2026-09-26"
+}
