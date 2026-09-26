@@ -4,7 +4,7 @@
 
 ## Status
 
-Active on feat/phase8.8.2-text-intake-ux from local master 8cf4902. Phase 8.8.1 is completed in Git; its README status sentence is historical. No Phase 8.9 or Phase 9 work is included.
+Candidate READY_FOR_MERGE_REVIEW on feat/phase8.8.2-text-intake-ux from local master 8cf4902. Phase 8.8.1 is completed in Git; its README status sentence is historical. No Phase 8.9 or Phase 9 work is included.
 
 ## Required Reading Order
 

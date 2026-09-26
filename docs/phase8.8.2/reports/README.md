@@ -7,3 +7,5 @@
 - [Stage 04 score preview](P8.8.2-04-score-preview.md)
 - [Stage 05 playback and save](P8.8.2-05-playback-save.md)
 - [Stage 06 long chart](P8.8.2-06-long-chart.md)
+- [Stage 07 candidate gates](P8.8.2-07-candidate-gates.md)
+- [Implementation report](P8.8.2-implementation-report.md)
