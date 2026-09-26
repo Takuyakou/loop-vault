@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "phaseId": "8.8.1",
-  "status": "in-progress",
-  "activeStage": "P8.8.1-07",
+  "status": "complete",
+  "activeStage": null,
   "completedStages": [
     "P8.8.1-00",
     "P8.8.1-01",
@@ -10,13 +10,14 @@
     "P8.8.1-03",
     "P8.8.1-04",
     "P8.8.1-05",
-    "P8.8.1-06"
+    "P8.8.1-06",
+    "P8.8.1-07"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "40d8b8ee9261e9c5585f25eb3d0e9a259520b1f7",
-  "lastVerifiedCommit": "ec4156d",
-  "currentBranch": "feat/phase8.8.1-realworld-fix",
+  "lastVerifiedCommit": "7cdccb5ee3281c41efb2eef389ee5d07754f3c91",
+  "currentBranch": "master",
   "requiredGates": {
     "P8.8.1-00": [
       "synthetic-reproduction",
@@ -81,6 +82,20 @@
       "ai-handoff",
       "privacy-path-media",
       "diff-check"
+    ],
+    "P8.8.1-07": [
+      "local-master-merge",
+      "postmerge-focused-regression",
+      "postmerge-full-vitest",
+      "postmerge-app-e2e-typescript",
+      "postmerge-repository-lint",
+      "postmerge-production-build",
+      "postmerge-product-path-playwright",
+      "postmerge-phase-docs",
+      "postmerge-ai-handoff",
+      "postmerge-privacy-path-media",
+      "postmerge-diff-check",
+      "windows-exe"
     ]
   },
   "gateResults": {
@@ -112,8 +127,20 @@
     "production-build": "pass",
     "product-path-playwright": "pass",
     "ai-handoff": "pass",
-    "privacy-path-media": "pass"
+    "privacy-path-media": "pass",
+    "local-master-merge": "pass",
+    "postmerge-focused-regression": "pass",
+    "postmerge-full-vitest": "pass",
+    "postmerge-app-e2e-typescript": "pass",
+    "postmerge-repository-lint": "pass",
+    "postmerge-production-build": "pass",
+    "postmerge-product-path-playwright": "pass",
+    "postmerge-phase-docs": "pass",
+    "postmerge-ai-handoff": "pass",
+    "postmerge-privacy-path-media": "pass",
+    "postmerge-diff-check": "pass",
+    "windows-exe": "pass"
   },
-  "nextAction": "Prepare closeout and candidate review; obtain direct chat approval before merging to local master, then run post-merge gates and build D-drive EXE.",
+  "nextAction": "Phase 8.8.1 closed on local master; Phase 8.9 requires a separate human instruction. No push, tag, or release.",
   "updatedAt": "2026-09-26"
 }
