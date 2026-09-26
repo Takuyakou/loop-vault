@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "phaseId": "8.8.6",
-  "status": "in-progress",
+  "status": "blocked",
   "activeStage": "P8.8.6-06",
   "completedStages": [
     "P8.8.6-00",
@@ -11,10 +11,10 @@
     "P8.8.6-04",
     "P8.8.6-05"
   ],
-  "blocked": false,
-  "blockerReason": null,
+  "blocked": true,
+  "blockerReason": "Full repository Playwright: six inherited failures reproduced on base local master; 118 passed, six failed, five not run. Required full-gates cannot be marked pass.",
   "baseCommit": "feb2b51423e22f07cc26a00cf8819aa3fbe7490b",
-  "lastVerifiedCommit": "b7da398",
+  "lastVerifiedCommit": "00952ab",
   "currentBranch": "feat/phase8.8.6-final-capture-closure",
   "requiredGates": {
     "P8.8.6-00": [
@@ -48,8 +48,9 @@
     "height-ownership": "pass",
     "visual-parity": "pass",
     "status-regression": "pass",
-    "overflow-regression": "pass"
+    "overflow-regression": "pass",
+    "full-gates": "fail"
   },
-  "nextAction": "Run fresh full gates and capture local screenshots",
+  "nextAction": "Disposition the six inherited Playwright failures outside P8.8.6 scope, rerun full gate, then complete P8.8.6-06/07 and request separate merge authorization",
   "updatedAt": "2026-09-27"
 }

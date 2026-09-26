@@ -4,9 +4,10 @@
 
 ## Status
 
-- Status: implementation in progress on `feat/phase8.8.6-final-capture-closure`.
+- Status: P8.8.6-06 blocked by inherited repository-wide Playwright failures on `feat/phase8.8.6-final-capture-closure`.
 - Base: local `master` at `feb2b51`.
-- Merge remains a separate human-authorized action.
+- [Gate and implementation report](reports/P8.8.6-06-gate-and-closeout.md).
+- Merge remains a separate human-authorized action after required gates pass.
 
 ## Required Reading Order
 
