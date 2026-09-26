@@ -1,5 +1,5 @@
 import type { MidiPreviewNote } from "../audio/chordPreview";
-import { voiceChordForPreview } from "./chordVoicing";
+import { voiceTextChordForAudition } from "./textChordTones";
 import type { ExtendedTextResult } from "./extendedTextProgression";
 
 /** Immutable note-event plan from authored attacks; = sustains and _ stays silent. */
@@ -7,7 +7,7 @@ export function extendedTextPlaybackNotes(result: ExtendedTextResult, metronome 
   if (!result.canConvert) return [];
   const notes: MidiPreviewNote[] = [];
   for (const span of result.harmonicSpans) {
-    const pitches = voiceChordForPreview(span.chord).notes;
+    const pitches = voiceTextChordForAudition(span.chord);
     const end = span.startBeat + span.durationBeats;
     for (let index = 0; index < span.attacks.length; index += 1) {
       const attack = span.attacks[index]!;

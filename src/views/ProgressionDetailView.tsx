@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { voiceChordForPreview } from "../domain/chordVoicing";
+import { voiceTextChordForAudition } from "../domain/textChordTones";
 import {
   playbackController,
   type PlaybackController,
@@ -242,11 +243,11 @@ export function ProgressionDetailView({
         resolveVoicingForUse(
           item.chord,
           item.voicingMemory,
-          voiceChordForPreview(item.chord).notes,
+          (block.textSource ? [...voiceTextChordForAudition(item.chord)] : voiceChordForPreview(item.chord).notes),
         ).midiNotes,
       ]];
     }),
-  ), [editingBlock.chords]);
+  ), [editingBlock.chords, block.textSource]);
   const midiExport = useMemo(() => {
     if (!showMidiExport) return {};
     try {
@@ -357,9 +358,9 @@ export function ProgressionDetailView({
       ? resolveVoicingForUse(
           chord,
           slot.voicingMemory,
-          voiceChordForPreview(chord).notes,
+          (block.textSource ? [...voiceTextChordForAudition(chord)] : voiceChordForPreview(chord).notes),
         ).midiNotes
-      : undefined;
+      : block.textSource ? [...voiceTextChordForAudition(chord)] : undefined;
     try {
       await controller.toggle(
         { kind: "detail", id: `${playbackSource.id}:chord:${slotId}:${chordPreviewKey(chord)}` },
@@ -739,7 +740,7 @@ export function ProgressionDetailView({
               ? resolveVoicingForUse(
                   selectedSlot.currentChord,
                   selectedSlot.voicingMemory,
-                  voiceChordForPreview(selectedSlot.currentChord).notes,
+                  (block.textSource ? [...voiceTextChordForAudition(selectedSlot.currentChord)] : voiceChordForPreview(selectedSlot.currentChord).notes),
                 ).midiNotes
               : undefined}
             keySignature={keySignature}
@@ -768,7 +769,7 @@ export function ProgressionDetailView({
               <VoicingPanel
                 chord={selectedSlot.currentChord}
                 memory={selectedSlot.voicingMemory}
-                generatedNotes={voiceChordForPreview(selectedSlot.currentChord).notes}
+                generatedNotes={(block.textSource ? [...voiceTextChordForAudition(selectedSlot.currentChord)] : voiceChordForPreview(selectedSlot.currentChord).notes)}
                 language={language}
                 sourceAvailable={Boolean(sourceAsset?.path && loadMidiSource)}
                 reextracting={reextracting}

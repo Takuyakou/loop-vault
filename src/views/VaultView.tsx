@@ -626,7 +626,7 @@ function requestOf(entry: ProgressionEntry, sound: PreviewSound) {
     bpm: entry.block.bpm ?? entry.idea.bpm,
     sound,
     beatsPerBar: beatsPerBar(entry.block.timeSignature),
-    explicitMidiNotesByEventId: resolveTimelineVoicings(entry.block.chords),
+    explicitMidiNotesByEventId: resolveTimelineVoicings(entry.block.chords, Boolean(entry.block.textSource)),
   };
 }
 

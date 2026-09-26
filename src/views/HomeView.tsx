@@ -9,6 +9,7 @@ import { PlayToggle } from "../components/PlayToggle";
 import { usePreviewSound } from "../components/PreviewSoundProvider";
 import { Badge, Button, Surface } from "../components/ui";
 import { voiceChordForPreview } from "../domain/chordVoicing";
+import { voiceTextChordForAudition } from "../domain/textChordTones";
 import { displayKey, statusLabel } from "../domain/displayLabels";
 import { pickFocus } from "../domain/focus";
 import { degreeSequence } from "../domain/harmony/degrees";
@@ -148,7 +149,7 @@ export function HomeView({
                       bpm: focusBlock.bpm ?? focus.focus.bpm,
                       sound: previewSound,
                       beatsPerBar: beatsPerBar(focusBlock.timeSignature),
-                      explicitMidiNotesByEventId: resolveTimelineVoicings(focusBlock.chords),
+                      explicitMidiNotesByEventId: resolveTimelineVoicings(focusBlock.chords, Boolean(focusBlock.textSource)),
                     }}
                     playLabel={copy.common.preview}
                     stopLabel={copy.common.stop}
@@ -233,7 +234,7 @@ export function HomeView({
                         bpm: block.bpm ?? idea.bpm,
                         sound: previewSound,
                         beatsPerBar: beatsPerBar(block.timeSignature),
-                        explicitMidiNotesByEventId: resolveTimelineVoicings(block.chords),
+                        explicitMidiNotesByEventId: resolveTimelineVoicings(block.chords, Boolean(block.textSource)),
                       }}
                       playLabel={copy.common.preview}
                       stopLabel={copy.common.stop}
@@ -348,6 +349,7 @@ function FocusChordCards({
         <FocusChordCard
           key={`${event.bar}:${event.beat}:${index}`}
           blockId={block.id}
+          textDerived={Boolean(block.textSource)}
           event={event}
           ideaId={ideaId}
           index={index}
@@ -371,6 +373,7 @@ function FocusChordCards({
 
 function FocusChordCard({
   blockId,
+  textDerived,
   event,
   ideaId,
   index,
@@ -381,6 +384,7 @@ function FocusChordCard({
   children,
 }: {
   blockId: string;
+  textDerived: boolean;
   event: SavedProgressionBlock["chords"][number];
   ideaId: string;
   index: number;
@@ -401,7 +405,7 @@ function FocusChordCard({
   const explicitMidiNotes = resolveVoicingForUse(
     event.chord,
     event.voicingMemory,
-    voiceChordForPreview(event.chord).notes,
+    textDerived ? [...voiceTextChordForAudition(event.chord)] : voiceChordForPreview(event.chord).notes,
   ).midiNotes;
 
   return (

@@ -89,7 +89,7 @@ function ProgressionBlockCard({
             />
           </span>
         </button>
-        <PlayToggle source={source} request={{ type: "timeline", timeline: block.chords, bpm, sound: previewSound, beatsPerBar: beatsPerBar(block.timeSignature), explicitMidiNotesByEventId: resolveTimelineVoicings(block.chords) }} playLabel={copy.common.preview} stopLabel={copy.common.stop} className="rounded border border-cyan-500/60 px-2 py-1 text-cyan-100" onError={onPreviewError} />
+        <PlayToggle source={source} request={{ type: "timeline", timeline: block.chords, bpm, sound: previewSound, beatsPerBar: beatsPerBar(block.timeSignature), explicitMidiNotesByEventId: resolveTimelineVoicings(block.chords, Boolean(block.textSource)) }} playLabel={copy.common.preview} stopLabel={copy.common.stop} className="rounded border border-cyan-500/60 px-2 py-1 text-cyan-100" onError={onPreviewError} />
         <button className="inline-flex items-center gap-2 rounded border border-teal-500/60 px-2 py-1 text-teal-100" onClick={onCopyProgression}>
           <Copy aria-hidden="true" size={16} />
           {copy.capture.copyProgression}
