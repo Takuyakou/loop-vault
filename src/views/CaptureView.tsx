@@ -1395,16 +1395,9 @@ export function CaptureView(props: CaptureViewProps) {
   if (captureInputMode === "text") {
     const textDraft = activeDraft?.source.type === "text-progression" ? activeDraft : null;
     return (
-      <div className="py-5" data-capture-view-root data-capture-stage="text">
+      <CaptureModeFrame stage="text" value={captureInputMode} language={language}
+        disabled={textDraft !== null} onChange={changeCaptureInputMode}>
         <div className="lv-capture-content grid gap-5">
-          <section className="flex flex-wrap items-center justify-between gap-3 border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-4">
-            <CaptureInputModeSelector
-              value={captureInputMode}
-              language={language}
-              disabled={textDraft !== null}
-              onChange={changeCaptureInputMode}
-            />
-          </section>
           <TextProgressionCapturePanel
             language={language}
             showRomanNumerals={showRomanNumerals}
@@ -1503,7 +1496,7 @@ export function CaptureView(props: CaptureViewProps) {
             />
           ) : null}
         </div>
-      </div>
+      </CaptureModeFrame>
     );
   }
   if (!result) {
@@ -1512,19 +1505,9 @@ export function CaptureView(props: CaptureViewProps) {
         source.id === preAnalysisSession.masterSourceId)
         ?? preAnalysisSession.sources[0];
       return (
-        <div
-          data-capture-stage="pre-analysis"
-          data-capture-midi-drop-zone
-          {...dropHandlers}
-        >
-          <div className="mb-4">
-            <CaptureInputModeSelector
-              value={captureInputMode}
-              language={language}
-              disabled={activeDraft !== null}
-              onChange={changeCaptureInputMode}
-            />
-          </div>
+        <CaptureModeFrame stage="pre-analysis" value={captureInputMode} language={language}
+          disabled={activeDraft !== null} onChange={changeCaptureInputMode}>
+          <div data-capture-midi-drop-zone {...dropHandlers}>
           {isDraggingMidi ? <DropOverlay copy={copy} /> : null}
           <PreAnalysisWorkspace
             session={preAnalysisSession}
@@ -1565,24 +1548,14 @@ export function CaptureView(props: CaptureViewProps) {
               }
             }}
           />
-        </div>
+          </div>
+        </CaptureModeFrame>
       );
     }
     return (
-      <div
-        className="py-5"
-        data-capture-stage="empty"
-        data-capture-midi-drop-zone
-        {...dropHandlers}
-      >
-        <div className="mb-4">
-          <CaptureInputModeSelector
-            value={captureInputMode}
-            language={language}
-            disabled={activeDraft !== null}
-            onChange={changeCaptureInputMode}
-          />
-        </div>
+      <CaptureModeFrame stage="empty" value={captureInputMode} language={language}
+        disabled={activeDraft !== null} onChange={changeCaptureInputMode}>
+        <div data-capture-midi-drop-zone {...dropHandlers}>
         <CaptureEmptyState
           status={intakeError ? "error" : analysis.status}
           error={intakeError ?? analysis.error}
@@ -1591,7 +1564,8 @@ export function CaptureView(props: CaptureViewProps) {
           copy={copy}
           progressStage={analysisProgress}
         />
-      </div>
+        </div>
+      </CaptureModeFrame>
     );
   }
 
@@ -1824,7 +1798,8 @@ export function CaptureView(props: CaptureViewProps) {
   }
 
   return (
-    <div data-capture-view-root data-capture-stage="result">
+    <CaptureModeFrame stage="result" value={captureInputMode} language={language}
+      disabled={activeDraft !== null} onChange={changeCaptureInputMode}>
       {persistenceError ? (
         <p className="mb-4 border border-red-400/60 bg-red-950/20 p-3 text-sm text-red-100" role="alert">
           {persistenceError}
@@ -1833,16 +1808,8 @@ export function CaptureView(props: CaptureViewProps) {
       {analysisProgress ? (
         <CaptureAnalysisProgress stage={analysisProgress} copy={copy} />
       ) : null}
-      <div className="mb-4">
-        <CaptureInputModeSelector
-          value={captureInputMode}
-          language={language}
-          disabled={activeDraft !== null}
-          onChange={changeCaptureInputMode}
-        />
-      </div>
       <div
-        className="lv-capture-content grid gap-5 py-5"
+        className="lv-capture-content grid gap-5"
         data-capture-midi-drop-zone
         {...dropHandlers}
       >
@@ -2289,8 +2256,26 @@ export function CaptureView(props: CaptureViewProps) {
         onConfirm={applyPendingDraftSelection}
         tone="danger"
       />
-    </div>
+    </CaptureModeFrame>
   );
+}
+
+function CaptureModeFrame({ stage, value, language, disabled, onChange, children }: {
+  stage: string;
+  value: CaptureInputMode;
+  language: AppLanguage;
+  disabled: boolean;
+  onChange: (mode: CaptureInputMode) => void;
+  children: ReactNode;
+}) {
+  return <div className="py-5" data-capture-view-root data-capture-stage={stage}>
+    <div className="mb-4 border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-3"
+      data-testid="capture-mode-tabs-frame">
+      <CaptureInputModeSelector value={value} language={language}
+        disabled={disabled} onChange={onChange} />
+    </div>
+    {children}
+  </div>;
 }
 
 function CaptureEmptyState({
