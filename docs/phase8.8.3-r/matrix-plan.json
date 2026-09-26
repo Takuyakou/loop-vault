@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 2,
+  "plannedAt": "2026-09-26T07:25:11.7430655Z",
+  "vocabularyManifestSha256": "2e4cc38d421ea0b9ff5ff199730ca684b0c66f0922fc53f7a091df3dadc469ba",
+  "matrixSchemaVersion": "1",
+  "rowModel": "factorized-site-grammar-v1",
+  "partitions": [
+    {
+      "kind": "SEMANTIC_VECTOR",
+      "count": 21612,
+      "siteOnlyEvidenceFile": "site-vector-plan.json",
+      "sha256": "6b12051de6f93d3b00dcd2630f7a57bac5993fbd0a9f035edac8358a5c8d3a48"
+    },
+    {
+      "kind": "OPERATOR_SIGNATURE",
+      "count": 8192,
+      "siteOnlyEvidenceFile": "operator-subsets.json",
+      "sha256": "6e93c859da4605414af0e8a19fb2ab5a0b1209d82c4405ae8d5afd207bbe5eab"
+    },
+    {
+      "kind": "ROOT_BASS_STRATUM",
+      "count": 38,
+      "siteOnlyEvidenceFile": "root-bass-strata.json",
+      "sha256": "8a7a8273837cf5599c22f3e56643d2faa2dc402c2795055637cf059d7e7c946c"
+    },
+    {
+      "kind": "DIRECT_RISK_WITNESS",
+      "count": 6,
+      "siteOnlyEvidenceFile": "risk-witness.json",
+      "sha256": "61541bcf5add897589c8e7e6f522d834bd63babc2b302f5a803aae6992174a36"
+    }
+  ],
+  "plannedRowCount": 29848,
+  "siteAcceptedPlannedRowCount": 29848,
+  "productResultUsedInGeneration": false,
+  "notes": "Site-only matrix planning fixes row partitions before bulk Loop Vault comparison. Rows are equivalence classes and operator signatures, not every lexical spelling.",
+  "revisionReason": "Six contract-required synthetic risk representatives were missing as direct label rows in the factorized quotient; added from live UI before bulk Product evaluation."
+}

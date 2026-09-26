@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "policyId": "p8.8.3-r-literal-degree-v1",
+  "comparisonUnit": "pitch-class-with-written-degree-provenance",
+  "root": "required-unless-explicit-omit1",
+  "slashBass": "required-lowest-sounded-note",
+  "qualityThird": "required-for-major-minor-diminished-augmented; suspended-degree-replaces-third",
+  "naturalFifth": "optional-in-seventh-and-extended-families; required-in-simple-triad-or-power",
+  "writtenAlteredFifth": "required-and-replaces-unwritten-natural-fifth",
+  "writtenExtensions": "required",
+  "impliedNinthInEleventhOrThirteenth": "optional",
+  "dominantThirteenthNaturalEleventh": "optional",
+  "minorEleventh": "minor-third-minor-seventh-and-eleventh-required; fifth-and-ninth-optional",
+  "sameDegreeMultipleAlterations": "all-distinct-written-pitch-classes-required",
+  "explicitOmission": "removes-degree",
+  "unadjudicated": "mark-F-only-when-evidence-insufficient",
+  "unsupportedComposite": "explicit-theory-rejection-and-site-policy-difference"
+}
