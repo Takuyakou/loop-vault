@@ -2,17 +2,18 @@
   "schemaVersion": 1,
   "phaseId": "8.8.6",
   "status": "in-progress",
-  "activeStage": "P8.8.6-04",
+  "activeStage": "P8.8.6-05",
   "completedStages": [
     "P8.8.6-00",
     "P8.8.6-01",
     "P8.8.6-02",
-    "P8.8.6-03"
+    "P8.8.6-03",
+    "P8.8.6-04"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "feb2b51423e22f07cc26a00cf8819aa3fbe7490b",
-  "lastVerifiedCommit": "e492a43",
+  "lastVerifiedCommit": "e4ac415",
   "currentBranch": "feat/phase8.8.6-final-capture-closure",
   "requiredGates": {
     "P8.8.6-00": [
@@ -44,8 +45,9 @@
     "baseline-audit": "pass",
     "shared-status": "pass",
     "height-ownership": "pass",
-    "visual-parity": "pass"
+    "visual-parity": "pass",
+    "status-regression": "pass"
   },
-  "nextAction": "Add status, overflow, and long-scroll browser regression tests",
+  "nextAction": "Freeze long-chart internal-scroll regression",
   "updatedAt": "2026-09-27"
 }

@@ -125,3 +125,28 @@ test("P8.8.6 70/150/200-bar Extended charts scroll inside Preview and Editor", a
     expect(overflow.editor).toBeGreaterThan(0);
   }
 });
+test("P8.8.6 long charts keep outer shell fixed at every required viewport", async ({ page }) => {
+  test.setTimeout(120_000);
+  await openText(page);
+  const capture = await choose(page, "extended");
+  for (const [width, height] of [[1920, 1080], [1600, 900], [1440, 900], [1366, 768]]) {
+    await page.setViewportSize({ width, height });
+    for (const barCount of [70, 150, 200]) {
+      await capture.getByTestId("extended-text-input").fill(Array.from({ length: barCount }, () => "| C Dm F G |").join("\n"));
+      await expect(capture.locator("[data-text-status-summary]")).toContainText(`${barCount}小節`);
+      await assertCaptureNoPageOverflow(page);
+      const scroller = capture.getByTestId("extended-text-preview-scroll");
+      const dimensions = await scroller.evaluate(element => ({ client: element.clientHeight, scroll: element.scrollHeight }));
+      expect(dimensions.scroll).toBeGreaterThan(dimensions.client);
+      await scroller.evaluate(element => { element.scrollTop = element.scrollHeight; });
+      expect(await scroller.evaluate(element => element.scrollTop)).toBeGreaterThan(0);
+      await assertCaptureNoPageOverflow(page);
+    }
+  }
+  // Standard's published 32-bar input limit is unchanged; an over-limit source stays visible with a diagnostic.
+  await choose(page, "standard");
+  await capture.getByTestId("text-progression-input").fill(Array.from({ length: 70 }, () => "| C Dm F G |").join("\n"));
+  await expect(capture.getByTestId("text-progression-save")).toBeDisabled();
+  await expect(capture.locator(".lv-text-save-reason")).toContainText("エラー");
+  await assertCaptureNoPageOverflow(page);
+});
