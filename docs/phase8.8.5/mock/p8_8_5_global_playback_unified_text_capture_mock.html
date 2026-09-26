@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Loop Vault P8.8.5 Mock — Global Playback + Unified Text Capture</title>
+<style>
+:root{
+  --bg:#07111d;--panel:#0d1a2a;--panel2:#101f31;--panel3:#132338;
+  --border:#29425d;--border-strong:#3d6387;--text:#edf4fb;--muted:#8da4bc;
+
+  /* Transport shared tokens — Text Capture / Voicing Loop 共通想定 */
+  --transport-primary:#39d6c9;
+  --transport-primary-bg:rgba(57,214,201,.16);
+  --transport-primary-hover:rgba(57,214,201,.25);
+
+  --transport-neutral:#9fb0c2;
+  --transport-neutral-bg:#0a1625;
+  --transport-neutral-hover:rgba(159,176,194,.12);
+
+  --transport-loop:#9b82ff;
+  --transport-loop-bg:rgba(155,130,255,.16);
+  --transport-loop-hover:rgba(155,130,255,.26);
+
+  --warning:#edc86e;--warning-bg:rgba(237,200,110,.10);
+  --error:#ff7e88;--error-bg:rgba(255,126,136,.10);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.app{min-height:100vh}
+
+/* Global header */
+.globalHeader{
+  min-height:64px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:16px;padding:10px 18px;background:#081320;
+  position:sticky;top:0;z-index:50
+}
+.brand h1{margin:0 0 2px;font-size:20px}
+.brand p{margin:0;font-size:11px;color:var(--muted)}
+.globalPlayback{margin-left:auto;display:flex;align-items:center;gap:8px}
+.globalLabel,.smallLabel{font-size:11px;color:var(--muted)}
+
+.btn{
+  height:36px;border:1px solid var(--border);border-radius:8px;padding:0 12px;
+  background:#0a1625;color:var(--text);display:inline-flex;align-items:center;justify-content:center;
+  gap:6px;white-space:nowrap;transition:background .12s,border-color .12s,box-shadow .12s,color .12s
+}
+.btn:hover{border-color:#4d789f;background:#102036}
+.btn:focus-visible{outline:2px solid #79e8df;outline-offset:2px}
+.btn.activeTab,.btn.primary{
+  background:var(--transport-primary);border-color:var(--transport-primary);color:#052321;font-weight:800
+}
+.btn.activeTab:hover,.btn.primary:hover{background:#45e0d3;border-color:#45e0d3}
+.btn.iconOnly{width:38px;min-width:38px;padding:0}
+
+/* Global metronome */
+.metroIcon{width:18px;height:19px;position:relative;display:inline-block}
+.metroIcon:before{
+  content:"";position:absolute;left:4px;right:4px;bottom:1px;height:15px;
+  border:2px solid currentColor;border-bottom-width:3px;
+  clip-path:polygon(25% 0,75% 0,100% 100%,0 100%)
+}
+.metroIcon:after{
+  content:"";position:absolute;width:2px;height:11px;background:currentColor;
+  left:8px;top:3px;transform-origin:bottom center;transform:rotate(18deg);border-radius:2px
+}
+.metronomeOff{color:var(--muted)}
+.metronomeOff:hover{color:var(--text);background:var(--transport-neutral-hover);border-color:var(--transport-neutral)}
+.metronomeOn{
+  background:var(--transport-primary-bg);border-color:var(--transport-primary);
+  color:#8efff7;font-weight:800
+}
+.metronomeOn:hover{background:var(--transport-primary-hover);border-color:var(--transport-primary)}
+
+.hasTooltip{position:relative}
+.hasTooltip .tooltip{
+  pointer-events:none;opacity:0;position:absolute;z-index:100;top:44px;left:50%;
+  transform:translateX(-50%) translateY(-3px);padding:6px 8px;border:1px solid var(--border-strong);
+  border-radius:7px;background:#0a1727;color:var(--text);font-size:11px;white-space:nowrap;
+  box-shadow:0 8px 20px rgba(0,0,0,.28);transition:.12s
+}
+.hasTooltip:hover .tooltip,.hasTooltip:focus-within .tooltip{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.main{max-width:1740px;margin:0 auto;padding:24px 18px 18px}
+.captureModeTabs{display:flex;gap:8px;margin-bottom:14px}
+.shell{border:1px solid var(--border);border-radius:13px;overflow:hidden;background:var(--panel)}
+
+/* Toolbar: one line at normal desktop */
+.toolbar{
+  display:flex;align-items:center;gap:8px;flex-wrap:nowrap;padding:10px 12px;
+  border-bottom:1px solid var(--border);background:#0e1c2e
+}
+.modeGroup,.controlGroup,.transportGroup,.saveGroup{display:flex;align-items:center;gap:6px;white-space:nowrap;flex:0 0 auto}
+.toolbarDivider{height:22px;width:1px;background:var(--border);flex:0 0 1px}
+.field{height:36px;border:1px solid var(--border);border-radius:8px;background:#0a1625;padding:0 10px}
+.field:disabled{opacity:.72;color:var(--muted)}
+.keyButton{min-width:124px;justify-content:space-between}
+.bpmValue{width:64px;min-width:64px;text-align:center;font-weight:800;cursor:ns-resize}
+.bpmValue.unset{color:var(--muted);font-weight:700}
+.bpmHint{font-size:9px;color:var(--muted);margin-left:-2px}
+
+/* Shared TransportButton variants
+   IMPORTANT:
+   - Play / Pause / Resume = SAME teal family
+   - Stop / Beginning = neutral family
+   - Loop = neutral OFF, purple ON
+   Hover MUST follow each family; do not make all hovers teal.
+*/
+.playPauseFixed{width:108px;min-width:108px;max-width:108px;flex:0 0 108px}
+
+.trPrimary{
+  background:var(--transport-primary-bg);
+  border-color:var(--transport-primary);
+  color:#8efff7;
+  font-weight:800
+}
+.trPrimary:hover{
+  background:var(--transport-primary-hover);
+  border-color:var(--transport-primary);
+  color:#bafffb;
+  box-shadow:0 0 0 2px rgba(57,214,201,.12)
+}
+.trNeutral{
+  background:var(--transport-neutral-bg);
+  border-color:var(--border);
+  color:var(--transport-neutral);
+  font-weight:700
+}
+.trNeutral:hover{
+  background:var(--transport-neutral-hover);
+  border-color:var(--transport-neutral);
+  color:var(--text)
+}
+.trLoopOff{
+  background:var(--transport-neutral-bg);
+  border-color:var(--border);
+  color:var(--muted)
+}
+.trLoopOff:hover{
+  background:var(--transport-neutral-hover);
+  border-color:var(--transport-neutral);
+  color:var(--text)
+}
+.trLoopOn{
+  background:var(--transport-loop-bg);
+  border-color:var(--transport-loop);
+  color:#d7ceff;
+  font-weight:800
+}
+.trLoopOn:hover{
+  background:var(--transport-loop-hover);
+  border-color:var(--transport-loop);
+  color:#eee9ff
+}
+.transportState{
+  width:112px;min-width:112px;max-width:112px;overflow:hidden;text-overflow:ellipsis;
+  font-size:11px;color:var(--muted);flex:0 0 112px
+}
+.transportState b{color:var(--transport-primary)}
+
+.saveGroup{margin-left:auto}
+.nameInput{width:180px}
+.saveButton{
+  background:var(--transport-primary);border-color:var(--transport-primary);color:#052321;font-weight:800
+}
+.saveButton:hover{background:#45e0d3;border-color:#45e0d3}
+
+/* Key menu */
+.keyWrap{position:relative}
+.keyMenu{
+  display:none;position:absolute;z-index:40;top:42px;left:0;width:280px;padding:8px;
+  border:1px solid var(--border-strong);border-radius:10px;background:#0a1727;
+  box-shadow:0 15px 36px rgba(0,0,0,.35)
+}
+.keyMenu.open{display:block}
+.keySectionTitle{padding:4px 5px;font-size:10px;color:var(--muted)}
+.keyChoices,.allKeys{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.allKeys{max-height:155px;overflow:auto}
+.keyChoice{
+  min-height:30px;border:1px solid var(--border);border-radius:7px;
+  background:#0d1d30;color:var(--text);font-size:11px;cursor:pointer
+}
+.keyChoice:hover{border-color:var(--transport-primary);background:var(--transport-primary-bg)}
+.keyDivider{height:1px;background:var(--border);margin:8px 0}
+
+/* Workspace */
+.workspace{display:grid;grid-template-columns:minmax(360px,40%) minmax(0,60%);min-height:570px}
+.editorPane{border-right:1px solid var(--border);padding:12px;min-width:0}
+.previewPane{padding:12px;min-width:0;overflow:auto;max-height:625px}
+.paneHead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px}
+.paneTitle{font-size:13px;font-weight:800}
+.modeInfo{margin-left:auto;font-size:10px;color:var(--muted)}
+
+.editorWrap{
+  display:grid;grid-template-columns:42px 1fr;border:1px solid var(--border);
+  border-radius:9px;overflow:hidden;background:#081421
+}
+.lineNums{
+  padding:10px 7px;background:#091728;color:#607c97;text-align:right;white-space:pre;
+  font:12px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace;user-select:none
+}
+textarea{
+  width:100%;height:520px;resize:none;border:0;outline:0;background:transparent;
+  color:var(--text);padding:10px 12px;
+  font:12px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace
+}
+.legend{margin-top:8px;font-size:11px;color:var(--muted)}
+
+/* Preview */
+.previewTop{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:9px}
+.badge{font-size:11px;border:1px solid var(--border);border-radius:999px;padding:3px 7px;color:var(--muted)}
+.badge.error{border-color:#8b4b51;background:var(--error-bg);color:#ffb0b6}
+.badge.warning{border-color:#7b672f;background:var(--warn-bg);color:#f4d685}
+.annotation{
+  margin:10px 0 7px;padding:7px 9px;border-left:3px solid var(--transport-primary);
+  border-radius:7px;background:rgba(57,214,201,.055);font-size:12px;font-weight:750
+}
+.annotation small{color:var(--transport-primary);margin-right:6px}
+.barGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px}
+.bar{
+  position:relative;min-height:88px;padding:23px 7px 8px;border:1px solid var(--border);
+  border-radius:9px;background:var(--panel3);overflow:hidden
+}
+.bar.current{border-color:var(--transport-primary);box-shadow:0 0 0 1px rgba(57,214,201,.12),0 0 16px rgba(57,214,201,.08)}
+.barNum{position:absolute;top:5px;left:7px;padding:1px 3px;border-radius:4px;font-size:10px;color:var(--muted);cursor:pointer}
+.barNum:hover{background:rgba(255,255,255,.06);color:var(--text)}
+.track{position:relative;height:38px;border-radius:6px;background:rgba(4,12,20,.38);overflow:hidden}
+.band{
+  position:absolute;top:4px;height:30px;border:1px solid rgba(57,214,201,.50);
+  border-radius:5px;background:var(--transport-primary-bg);overflow:hidden;cursor:pointer;
+  transition:background .11s,border-color .11s,box-shadow .11s,transform .11s
+}
+.band:hover{
+  background:rgba(57,214,201,.26);border-color:var(--transport-primary);
+  box-shadow:0 0 0 2px rgba(57,214,201,.20),0 5px 14px rgba(0,0,0,.18);
+  transform:translateY(-1px)
+}
+.band.selected{
+  background:rgba(57,214,201,.31);border-color:#73eee5;
+  box-shadow:0 0 0 2px rgba(57,214,201,.24)
+}
+.bandName{position:absolute;left:7px;right:5px;top:5px;font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.attack{position:absolute;top:0;bottom:0;width:2px;background:var(--transport-primary)}
+.holdMark{position:absolute;right:5px;top:6px;font-size:9px;color:#a8ccc9}
+.rest{
+  position:absolute;top:4px;height:30px;border:1px dashed #536f89;border-radius:5px;
+  background:repeating-linear-gradient(-45deg,transparent,transparent 5px,rgba(141,164,188,.11) 5px,rgba(141,164,188,.11) 8px)
+}
+.restLabel{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:9px}
+.playhead{position:absolute;top:0;bottom:0;width:2px;background:#fff;box-shadow:0 0 7px rgba(255,255,255,.8);pointer-events:none;z-index:5}
+
+.details{border-top:1px solid var(--border);padding:8px 13px;background:#0b1727}
+.details summary{cursor:pointer;color:var(--muted);font-size:12px}
+.statusFooter{border-top:1px solid var(--border);background:#0b1727;padding:9px 13px}
+.summary{font-size:11px;color:var(--muted)}
+.capability{margin-top:5px;font-size:11px;color:var(--muted)}
+.toast{
+  position:fixed;right:18px;bottom:18px;z-index:80;opacity:0;transform:translateY(8px);
+  pointer-events:none;padding:10px 12px;border:1px solid var(--border-strong);border-radius:9px;
+  background:#0b1929;font-size:12px;transition:.16s
+}
+.toast.show{opacity:1;transform:none}
+
+/* Normal desktop: keep one row. Narrow widths may wrap. */
+@media(max-width:1180px){
+  .toolbar{flex-wrap:wrap}
+  .saveGroup{margin-left:auto}
+}
+@media(max-width:1000px){
+  .workspace{grid-template-columns:1fr}
+  .editorPane{border-right:0;border-bottom:1px solid var(--border)}
+}
+@media(max-width:760px){
+  .barGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .transportGroup{flex-wrap:wrap}
+  .saveGroup{width:100%;margin-left:0}
+  .nameInput{flex:1;min-width:150px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="globalHeader">
+    <div class="brand">
+      <h1>コード採集</h1>
+      <p>MIDIやテキストからコード進行を採集</p>
+    </div>
+
+    <div class="globalPlayback">
+      <span class="globalLabel">試聴音色</span>
+      <button id="pianoBtn" class="btn activeTab" type="button">ピアノ</button>
+      <button id="epBtn" class="btn" type="button">エレピ</button>
+
+      <div class="hasTooltip">
+        <button id="metronomeBtn" class="btn iconOnly metronomeOff"
+                type="button" aria-label="メトロノーム：OFF" aria-pressed="false">
+          <span class="metroIcon" aria-hidden="true"></span>
+        </button>
+        <div id="metroTooltip" class="tooltip">メトロノーム：OFF</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <!-- Shared capture tabs. Same DOM/position for MIDI and Text. -->
+    <div id="captureModeTabs" class="captureModeTabs">
+      <button class="btn" type="button">MIDI</button>
+      <button class="btn activeTab" type="button">テキスト</button>
+    </div>
+
+    <section class="shell">
+      <div class="toolbar">
+        <div class="modeGroup">
+          <button id="standardBtn" class="btn activeTab" type="button">通常</button>
+          <button id="extendedBtn" class="btn" type="button">拡張</button>
+        </div>
+
+        <span class="toolbarDivider"></span>
+
+        <div class="controlGroup">
+          <span class="smallLabel">拍子</span>
+          <select id="meter" class="field" title="通常モードは4/4のみ">
+            <option>4/4</option><option>3/4</option><option>6/4</option>
+          </select>
+        </div>
+
+        <div class="controlGroup keyWrap">
+          <span class="smallLabel">キー</span>
+          <button id="keyButton" class="btn keyButton" type="button">
+            <span id="keyValue">未確定</span><span>▾</span>
+          </button>
+          <div id="keyMenu" class="keyMenu">
+            <div class="keySectionTitle">推定候補</div>
+            <div class="keyChoices">
+              <button class="keyChoice" data-key="E minor">E minor</button>
+              <button class="keyChoice" data-key="F major">F major</button>
+              <button class="keyChoice" data-key="C major">C major</button>
+            </div>
+            <div class="keyDivider"></div>
+            <div class="keySectionTitle">24キーすべて</div>
+            <div id="allKeys" class="allKeys"></div>
+          </div>
+        </div>
+
+        <div class="controlGroup">
+          <span class="smallLabel">BPM</span>
+          <button id="bpmMinus" class="btn iconOnly" type="button">−</button>
+          <button id="bpmValue" class="btn bpmValue unset" type="button">—</button>
+          <button id="bpmPlus" class="btn iconOnly" type="button">＋</button>
+          <span id="bpmHint" class="bpmHint">試聴120</span>
+        </div>
+
+        <span class="toolbarDivider"></span>
+
+        <div class="transportGroup">
+          <button id="playPauseBtn" class="btn playPauseFixed trPrimary" type="button">▶ 再生</button>
+          <button id="stopBtn" class="btn trNeutral" type="button">■ 停止</button>
+          <button id="beginningBtn" class="btn trNeutral" type="button">|◀ 最初から</button>
+          <button id="loopBtn" class="btn trLoopOff" type="button">↻ 全体ループ OFF</button>
+        </div>
+
+        <span id="transportState" class="transportState" aria-live="polite">
+          停止中 · <b>1小節</b>
+        </span>
+
+        <div class="saveGroup">
+          <input class="field nameInput" value="テキスト進行 9/26" aria-label="進行名">
+          <button class="btn saveButton" type="button">Vaultに保存</button>
+        </div>
+      </div>
+
+      <div class="workspace">
+        <section class="editorPane">
+          <div class="paneHead">
+            <div class="paneTitle">進行テキスト</div>
+            <span id="modeInfo" class="modeInfo">通常は4/4のみ</span>
+          </div>
+
+          <div class="editorWrap">
+            <div id="lineNums" class="lineNums"></div>
+            <textarea id="source" spellcheck="false">| Cmaj7 G7 | Am7 Fmaj7 |
+| Dm7 G7 | Cmaj7 Fmaj7 |</textarea>
+          </div>
+
+          <div id="legend" class="legend">
+            通常: 4/4・1小節1/2/4コード。切替えても入力は残ります。
+          </div>
+        </section>
+
+        <section class="previewPane">
+          <div class="previewTop">
+            <div class="paneTitle">プレビュー</div>
+            <span id="barsBadge" class="badge">0小節</span>
+            <span id="errorBadge" class="badge error">エラー 0</span>
+            <span id="warningBadge" class="badge warning">注意 0</span>
+            <span id="practiceBadge" class="badge">練習制限 0</span>
+          </div>
+          <div id="preview"></div>
+        </section>
+      </div>
+
+      <details class="details">
+        <summary>コード詳細・保存予定音・鍵盤入力</summary>
+        <div style="padding:10px 0 4px;color:var(--muted);font-size:12px">
+          選択したコードの詳細は必要な時だけ表示します。
+        </div>
+      </details>
+
+      <footer class="statusFooter">
+        <div id="summary" class="summary"></div>
+        <div id="capability" class="capability">
+          キー未確定でも保存できます。キー依存機能は確定後に利用できます。
+        </div>
+      </footer>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+</div>
+
+<script>
+(() => {
+  const $=s=>document.querySelector(s);
+  const source=$('#source'),preview=$('#preview'),lineNums=$('#lineNums');
+  let mode='standard',timbre='piano',metronome=false,key=null,bpm=null,loopOn=false;
+  let transport='stopped',activeBar=0,selectedBand=null,drag=null;
+
+  const standardBtn=$('#standardBtn'),extendedBtn=$('#extendedBtn'),meter=$('#meter');
+  const modeInfo=$('#modeInfo'),legend=$('#legend');
+  const pianoBtn=$('#pianoBtn'),epBtn=$('#epBtn'),metronomeBtn=$('#metronomeBtn'),metroTooltip=$('#metroTooltip');
+  const keyButton=$('#keyButton'),keyMenu=$('#keyMenu'),keyValue=$('#keyValue'),allKeys=$('#allKeys');
+  const bpmValue=$('#bpmValue'),bpmHint=$('#bpmHint');
+  const playPauseBtn=$('#playPauseBtn'),stopBtn=$('#stopBtn'),beginningBtn=$('#beginningBtn'),loopBtn=$('#loopBtn'),transportState=$('#transportState');
+  const toast=$('#toast');
+
+  for(const root of ['C','Db','D','Eb','E','F','F#','G','Ab','A','Bb','B']){
+    for(const q of ['major','minor']){
+      const k=`${root} ${q}`,b=document.createElement('button');
+      b.type='button';b.className='keyChoice';b.dataset.key=k;b.textContent=k;allKeys.appendChild(b);
+    }
+  }
+  function toastMsg(msg){
+    toast.textContent=msg;toast.classList.add('show');
+    clearTimeout(toastMsg.t);toastMsg.t=setTimeout(()=>toast.classList.remove('show'),900)
+  }
+  pianoBtn.onclick=()=>{timbre='piano';pianoBtn.classList.add('activeTab');epBtn.classList.remove('activeTab');toastMsg('試聴音色: ピアノ');render()};
+  epBtn.onclick=()=>{timbre='ep';epBtn.classList.add('activeTab');pianoBtn.classList.remove('activeTab');toastMsg('試聴音色: エレピ');render()};
+
+  metronomeBtn.onclick=()=>{
+    metronome=!metronome;
+    metronomeBtn.classList.toggle('metronomeOn',metronome);
+    metronomeBtn.classList.toggle('metronomeOff',!metronome);
+    const text=`メトロノーム：${metronome?'ON':'OFF'}`;
+    metronomeBtn.setAttribute('aria-label',text);
+    metronomeBtn.setAttribute('aria-pressed',metronome?'true':'false');
+    metroTooltip.textContent=text;toastMsg(text)
+  };
+
+  function setMode(next){
+    mode=next; /* NEVER change source.value */
+    standardBtn.classList.toggle('activeTab',next==='standard');
+    extendedBtn.classList.toggle('activeTab',next==='extended');
+    if(next==='standard'){
+      meter.value='4/4';meter.disabled=true;modeInfo.textContent='通常は4/4のみ';
+      legend.textContent='通常: 4/4・1小節1/2/4コード。切替えても入力は残ります。'
+    }else{
+      meter.disabled=false;modeInfo.textContent='拡張記法';
+      legend.textContent='拡張: | 小節 · % 再発音 · = 保持 · _ 休符 · N.C. 無音 · # 注記。切替えても入力は残ります。'
+    }
+    render()
+  }
+  standardBtn.onclick=()=>setMode('standard');extendedBtn.onclick=()=>setMode('extended');
+
+  keyButton.onclick=()=>keyMenu.classList.toggle('open');
+  keyMenu.addEventListener('click',e=>{
+    const b=e.target.closest('[data-key]');if(!b)return;
+    key=b.dataset.key;keyValue.textContent=key;keyMenu.classList.remove('open');toastMsg(`キー: ${key}`);renderSummary()
+  });
+
+  function setBpm(v){
+    bpm=Math.max(30,Math.min(240,Math.round(v)));
+    bpmValue.textContent=String(bpm);bpmValue.classList.remove('unset');bpmHint.textContent='設定済み';renderSummary()
+  }
+  $('#bpmMinus').onclick=()=>setBpm((bpm??120)-1);$('#bpmPlus').onclick=()=>setBpm((bpm??120)+1);
+  bpmValue.addEventListener('pointerdown',e=>{drag={y:e.clientY,start:bpm??120,id:e.pointerId};bpmValue.setPointerCapture(e.pointerId)});
+  bpmValue.addEventListener('pointermove',e=>{
+    if(!drag)return;const dy=drag.y-e.clientY;if(Math.abs(dy)<3)return;
+    setBpm(drag.start+(dy/(e.shiftKey?10:4))*(e.ctrlKey?5:1))
+  });
+  bpmValue.addEventListener('pointerup',e=>{try{bpmValue.releasePointerCapture(e.pointerId)}catch{}drag=null});
+
+  function syncTransport(){
+    playPauseBtn.className='btn playPauseFixed trPrimary';
+    if(transport==='playing')playPauseBtn.textContent='Ⅱ 一時停止';
+    else if(transport==='paused')playPauseBtn.textContent='▶ 再開';
+    else playPauseBtn.textContent='▶ 再生';
+    const label=transport==='playing'?'再生中':transport==='paused'?'一時停止中':'停止中';
+    transportState.innerHTML=`${label} · <b>${activeBar+1}小節</b>`
+  }
+  playPauseBtn.onclick=()=>{
+    transport=transport==='stopped'?'playing':transport==='playing'?'paused':'playing';syncTransport()
+  };
+  stopBtn.onclick=()=>{transport='stopped';syncTransport();toastMsg('停止')};
+  beginningBtn.onclick=()=>{activeBar=0;selectedBand=null;render();syncTransport();toastMsg('先頭へ移動')};
+  loopBtn.onclick=()=>{
+    loopOn=!loopOn;loopBtn.classList.toggle('trLoopOn',loopOn);loopBtn.classList.toggle('trLoopOff',!loopOn);
+    loopBtn.textContent=`↻ 全体ループ ${loopOn?'ON':'OFF'}`
+  };
+
+  function parseStandard(){
+    const items=[];let annotations=0,errors=0;
+    source.value.split(/\r?\n/).forEach((raw,lineIndex)=>{
+      const t=raw.trim();if(!t)return;if(t.startsWith('#')){annotations++;return}
+      for(const barText of t.split('|').map(x=>x.trim()).filter(Boolean)){
+        const chords=barText.split(/\s+/).filter(Boolean),ok=[1,2,4].includes(chords.length);
+        if(!ok)errors++;
+        items.push({type:'bar',line:lineIndex+1,text:barText,error:ok?null:`通常モードは1小節1/2/4コードです（${chords.length}コード）`,
+          spans:ok?chords.map((label,i)=>({label,start:i/chords.length,width:1/chords.length,attacks:[0],hold:false})):[]})
+      }
+    });
+    return {items,annotations,errors,warnings:0,practice:0}
+  }
+  function parseExtended(){
+    const items=[];let annotations=0;
+    source.value.split(/\r?\n/).forEach((raw,lineIndex)=>{
+      const t=raw.trim();if(!t)return;
+      if(t.startsWith('#')){annotations++;items.push({type:'annotation',text:t.slice(1).trim()||'注記',line:lineIndex+1});return}
+      for(const barText of t.split('|').map(x=>x.trim()).filter(Boolean)){
+        let tokens=barText.includes('_')?barText.split('_'):barText.split(/\s+/);
+        const n=Math.max(1,tokens.length),spans=[];let current=null;
+        for(let i=0;i<tokens.length;i++){
+          const tok=(tokens[i]??'').trim();
+          if(tok===''||tok==='_'||tok==='N.C.'){spans.push({rest:true,start:i/n,width:1/n});current=null;continue}
+          if(/^=+$/.test(tok)){if(current){current.width+=1/n;current.hold=true}else spans.push({rest:true,start:i/n,width:1/n});continue}
+          if(/^%+$/.test(tok)){if(current){current.width+=1/n;current.attacks.push((i/n)-current.start)}else spans.push({rest:true,start:i/n,width:1/n});continue}
+          const label=tok.replace(/[=%]+$/g,''),span={label,start:i/n,width:1/n,attacks:[0],hold:/=/.test(tok)};
+          spans.push(span);current=span
+        }
+        items.push({type:'bar',line:lineIndex+1,text:barText,error:null,spans})
+      }
+    });
+    return {items,annotations,errors:0,warnings:0,practice:0}
+  }
+  function parse(){return mode==='standard'?parseStandard():parseExtended()}
+  function esc(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+  function render(){
+    const parsed=parse();lineNums.textContent=Array.from({length:source.value.split(/\r?\n/).length},(_,i)=>i+1).join('\n');
+    preview.innerHTML='';let barIndex=0,row=[];
+    const flush=()=>{if(!row.length)return;const grid=document.createElement('div');grid.className='barGrid';
+      row.forEach(x=>grid.appendChild(makeBar(x.item,x.index)));preview.appendChild(grid);row=[]};
+    for(const item of parsed.items){
+      if(item.type==='annotation'){flush();const a=document.createElement('div');a.className='annotation';a.innerHTML=`<small>注記</small>${esc(item.text)}`;preview.appendChild(a)}
+      else{row.push({item,index:barIndex++});if(row.length===4)flush()}
+    }
+    flush();$('#barsBadge').textContent=`${barIndex}小節`;$('#errorBadge').textContent=`エラー ${parsed.errors}`;
+    $('#warningBadge').textContent=`注意 ${parsed.warnings}`;$('#practiceBadge').textContent=`練習制限 ${parsed.practice}`;renderSummary(parsed,barIndex)
+  }
+  function makeBar(item,index){
+    const b=document.createElement('div');b.className='bar'+(index===activeBar?' current':'');
+    const num=document.createElement('span');num.className='barNum';num.textContent=`${index+1}小節`;
+    num.onclick=()=>{activeBar=index;selectedBand=null;render();syncTransport()};b.appendChild(num);
+    if(item.error){const e=document.createElement('div');e.style.cssText='font-size:11px;color:#ffb0b6;padding-top:10px';e.textContent=item.error;b.appendChild(e);return b}
+    const track=document.createElement('div');track.className='track';
+    item.spans.forEach((span,si)=>{
+      if(span.rest){const r=document.createElement('div');r.className='rest';r.style.left=`${span.start*100}%`;r.style.width=`${span.width*100}%`;
+        r.innerHTML='<span class="restLabel">REST</span>';track.appendChild(r);return}
+      const band=document.createElement('div'),id=`${index}:${si}`;band.className='band'+(selectedBand===id?' selected':'');
+      band.style.left=`${span.start*100}%`;band.style.width=`${span.width*100}%`;band.innerHTML=`<span class="bandName">${esc(span.label)}</span>`;
+      for(const attack of span.attacks){const a=document.createElement('span');a.className='attack';a.style.left=`${Math.min(95,(attack/span.width)*100)}%`;band.appendChild(a)}
+      if(span.hold){const h=document.createElement('span');h.className='holdMark';h.textContent='HOLD';band.appendChild(h)}
+      band.title=`${span.label} を${timbre==='piano'?'ピアノ':'エレピ'}で試聴`;
+      band.onclick=()=>{selectedBand=id;activeBar=index;render();syncTransport();toastMsg(`${span.label} を${timbre==='piano'?'ピアノ':'エレピ'}で試聴`)};
+      track.appendChild(band)
+    });
+    const ph=document.createElement('span');ph.className='playhead';ph.style.left=index===activeBar?'36%':'-10px';track.appendChild(ph);b.appendChild(track);return b
+  }
+  function renderSummary(p,bars){
+    const parsed=p||parse(),count=bars??parsed.items.filter(x=>x.type==='bar').length;
+    const bpmText=bpm===null?'BPM未設定（試聴120）':`${bpm} BPM`;
+    $('#summary').textContent=`${count}小節 · ${parsed.annotations}注記 · ${meter.value} · ${bpmText} · エラー${parsed.errors} · 注意${parsed.warnings} · 練習制限${parsed.practice}`;
+    $('#capability').textContent=key?`キー ${key} 確定済み。キー依存機能を利用できます。`:'キー未確定でも保存できます。キー依存機能は確定後に利用できます。'
+  }
+  source.addEventListener('input',render);meter.addEventListener('change',()=>renderSummary());
+
+  setMode('standard');syncTransport()
+})();
+</script>
+</body>
+</html>
