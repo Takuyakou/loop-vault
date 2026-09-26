@@ -41,7 +41,7 @@ export function TextTransportBar({ language, transport, state, snapshot, disable
     : state.status === "paused" ? (ja ? "▶ 再開" : "▶ Resume") : (ja ? "▶ 再生" : "▶ Play");
   return <div className="flex flex-wrap items-center gap-2" data-testid="text-transport">
     <button type="button" data-testid={primaryTestId} className="lv-button-primary min-h-9 px-3 text-sm"
-      disabled={disabled || (state.status === "stopped" && !snapshot.notes.length)} onClick={primary}>{primaryLabel}</button>
+      disabled={disabled || (state.status === "stopped" && snapshot.lengthBeats <= 0)} onClick={primary}>{primaryLabel}</button>
     <button type="button" data-testid="text-transport-stop" className="lv-button-secondary min-h-9 px-3 text-sm"
       disabled={disabled || state.status === "stopped"} onClick={() => transport.stop()}>{ja ? "■ 停止" : "■ Stop"}</button>
     <button type="button" data-testid="text-transport-beginning" className="lv-button-secondary min-h-9 px-3 text-sm"

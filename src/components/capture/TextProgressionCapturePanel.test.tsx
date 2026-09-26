@@ -165,6 +165,7 @@ describe("TextProgressionCapturePanel", () => {
     expect(harness.container.querySelector('[data-testid="text-progression-inspector"]')).toBeNull();
     const convert = harness.container.querySelector<HTMLButtonElement>('[data-testid="text-progression-convert"]')!;
     expect(convert.disabled).toBe(false);
+    expect(harness.container.querySelector<HTMLButtonElement>("[data-testid='text-transport-primary']")?.disabled).toBe(false);
     await click(convert);
     expect(harness.onConvert).toHaveBeenCalledOnce();
     await changeValue(input(harness), "| _ = |");

@@ -99,6 +99,21 @@ describe("Text transport", () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
+  it("advances a valid rest-only score without sending audio notes", () => {
+    vi.useFakeTimers();
+    const { transport, played, advance } = setup();
+    transport.play({ sourceText: "| _ |", notes: [], beatsPerBar: 4, lengthBeats: 4 });
+    expect(transport.getState().status).toBe("playing");
+    advance(500);
+    expect(transport.position()).toBe(1);
+    transport.pause();
+    expect(transport.getState()).toMatchObject({ status: "paused", positionBeats: 1 });
+    transport.play();
+    expect(played).toHaveLength(0);
+    transport.stop();
+    expect(transport.position()).toBe(0);
+  });
+
   it("trims held notes only for Pause/Seek and preserves a frozen copy", () => {
     const sourceNotes = [{ pitch: 60, startBeat: 0, durationBeats: 4, velocity: 80 }];
     expect(sliceTextNotes(sourceNotes, 1, true)).toMatchObject([{ startBeat: 0, durationBeats: 3 }]);

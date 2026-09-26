@@ -123,7 +123,7 @@ export function createTextTransport(
     play(snapshot) {
       if (state.status === "playing") return;
       if (state.status === "stopped") {
-        if (!snapshot || !snapshot.notes.length || snapshot.lengthBeats <= 0) return;
+        if (!snapshot || snapshot.lengthBeats <= 0) return;
         const frozen = { ...snapshot, notes: snapshot.notes.map(note => ({ ...note })) };
         const position = clamp(state.positionBeats, frozen.lengthBeats);
         state = { ...state, snapshot: frozen, playAnchor: position, positionBeats: position };
