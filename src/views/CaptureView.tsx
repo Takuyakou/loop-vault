@@ -1207,9 +1207,9 @@ export function CaptureView(props: CaptureViewProps) {
     setCaptureInputMode(nextMode);
   }
 
-  function saveExtendedTextProgression(result: ExtendedTextResult): boolean {
+  function saveExtendedTextProgression(result: ExtendedTextResult, title: string): boolean {
     if (!result.canConvert || !createIdeaFromTextProgression) return false;
-    const data = extendedTextSaveData(result);
+    const data = { ...extendedTextSaveData(result), title };
     const saved = createIdeaFromTextProgression({
       ...data,
       nextAction: copy.capture.defaultNextAction,

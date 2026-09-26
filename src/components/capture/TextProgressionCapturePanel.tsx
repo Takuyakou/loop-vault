@@ -47,7 +47,7 @@ interface TextProgressionCapturePanelProps {
   /** Once converted, the existing ManualCandidateDraft is authoritative. */
   readonly draftActive?: boolean;
   readonly onConvert: (converted: TextProgressionConvertedDraft) => void;
-  readonly onSaveExtended?: (result: ExtendedTextResult) => boolean;
+  readonly onSaveExtended?: (result: ExtendedTextResult, title: string) => boolean;
   readonly onPreview: (
     event: TextProgressionEvent,
     memory: ChordVoicingMemory | undefined,
@@ -271,10 +271,9 @@ export function TextProgressionCapturePanel({
     return (
       <section className="border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-5" data-testid="text-progression-capture">
         <h2 className="text-2xl font-semibold">{text(language, "Extended text progression", "拡張テキスト進行")}</h2>
-        {modeSelector}
-        <ExtendedTextIntakePanel language={language} input={input} disabled={disabled}
+        <ExtendedTextIntakePanel language={language} input={input} disabled={disabled} modeSelector={modeSelector}
           onInput={(value) => { onStop(); setInput(value); }}
-          onSave={(extended) => onSaveExtended?.(extended) ?? false} />
+          onSave={(extended, title) => onSaveExtended?.(extended, title) ?? false} />
       </section>
     );
   }

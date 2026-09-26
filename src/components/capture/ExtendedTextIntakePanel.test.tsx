@@ -25,7 +25,7 @@ describe("P8.8 extended Capture intake", () => {
     const container = document.createElement("div");
     document.body.append(container);
     const root = createRoot(container);
-    const onSaveExtended = vi.fn((_result: ExtendedTextResult) => true);
+    const onSaveExtended = vi.fn((_result: ExtendedTextResult, _title: string) => true);
     await act(async () => root.render(<TextProgressionCapturePanel language="ja" showRomanNumerals={false}
       onConvert={vi.fn()} onPreview={vi.fn()} onStop={vi.fn()} onSaveExtended={onSaveExtended} />));
     expect(container.querySelector('[data-testid="text-mode-standard"]')?.getAttribute("aria-pressed")).toBe("true");
@@ -35,14 +35,24 @@ describe("P8.8 extended Capture intake", () => {
     await press(container.querySelector<HTMLButtonElement>('[data-testid="text-mode-extended"]')!);
     expect(container.querySelector<HTMLTextAreaElement>('[data-testid="extended-text-input"]')?.value).toBe("# Key: C major\nC %|= =");
     expect(container.querySelectorAll('[data-testid="extended-text-bar"]')).toHaveLength(2);
+    expect(container.querySelector(".lv-text-intake-grid")).not.toBeNull();
+    expect(container.querySelector(".lv-text-intake-savebar")).not.toBeNull();
+    expect(container.querySelector(".lv-text-intake-gutter")?.textContent).toContain("2");
     expect(container.querySelector('[data-testid="extended-text-section"]')?.textContent).toContain("Key: C major");
     expect(container.querySelector('[data-testid="extended-text-metadata"]')).toBeNull();
     expect(container.querySelector('[data-testid="text-intake-bpm-field"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="text-intake-bpm-drag"]')).not.toBeNull();
     await press([...container.querySelectorAll<HTMLButtonElement>("button")].find(button => button.textContent?.includes("キー C majorを使う"))!);
     expect(container.querySelector('[data-testid="extended-text-metadata"]')?.textContent).toContain("C major");
+    const title = container.querySelector<HTMLInputElement>('[data-testid="extended-text-name"]')!;
+    await act(async () => {
+      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+      setter?.call(title, "練習用の進行");
+      title.dispatchEvent(new InputEvent("input", { bubbles: true }));
+    });
     await press(container.querySelector<HTMLButtonElement>('[data-testid="extended-text-save"]')!);
     expect(onSaveExtended).toHaveBeenCalledOnce();
+    expect(onSaveExtended.mock.calls[0]?.[1]).toBe("練習用の進行");
     expect(onSaveExtended.mock.calls[0]?.[0].harmonicSpans[0].attacks).toHaveLength(2);
     await act(async () => root.unmount());
     container.remove();

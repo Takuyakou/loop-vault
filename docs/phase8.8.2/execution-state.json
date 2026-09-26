@@ -2,16 +2,17 @@
   "schemaVersion": 1,
   "phaseId": "8.8.2",
   "status": "in-progress",
-  "activeStage": "P8.8.2-03",
+  "activeStage": "P8.8.2-04",
   "completedStages": [
     "P8.8.2-00",
     "P8.8.2-01",
-    "P8.8.2-02"
+    "P8.8.2-02",
+    "P8.8.2-03"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "8cf49029eb6298d92a73affea05472ae229ce910",
-  "lastVerifiedCommit": "c3bc1ec",
+  "lastVerifiedCommit": "1478d30",
   "currentBranch": "feat/phase8.8.2-text-intake-ux",
   "requiredGates": {
     "P8.8.2-00": [
@@ -35,6 +36,15 @@
       "changed-scope-eslint",
       "phase-docs",
       "diff-check"
+    ],
+    "P8.8.2-03": [
+      "editor-preview-shell",
+      "named-vault-save",
+      "standard-mode-regression",
+      "typescript",
+      "changed-scope-eslint",
+      "phase-docs",
+      "diff-check"
     ]
   },
   "gateResults": {
@@ -47,8 +57,11 @@
     "changed-scope-eslint": "pass",
     "text-review-state": "pass",
     "generated-card-audition": "pass",
-    "midi-review-regression": "pass"
+    "midi-review-regression": "pass",
+    "editor-preview-shell": "pass",
+    "named-vault-save": "pass",
+    "standard-mode-regression": "pass"
   },
-  "nextAction": "Build responsive Text Capture editor/preview shell and sticky save summary.",
+  "nextAction": "Replace slot chips with duration bands, annotations, and bidirectional parser-span navigation.",
   "updatedAt": "2026-09-26"
 }
