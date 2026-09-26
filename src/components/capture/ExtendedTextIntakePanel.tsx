@@ -13,6 +13,7 @@ import { playbackController, type PlaybackController } from "../../audio/playbac
 import type { PreviewSound } from "../../audio/chordPreview";
 import { useTextTransport } from "./useTextTransport";
 import { TextTransportBar } from "./TextTransportBar";
+import { useTextScorePlayhead } from "./useTextScorePlayhead";
 import type { AppLanguage } from "../../i18n";
 import { BpmScrubField } from "../BpmScrubField";
 import { TextPreviewBar } from "./TextPreviewBar";
@@ -84,6 +85,8 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
   }), [input, metronome, result]);
   const sourceMatches = transportState.snapshot?.sourceText === undefined
     || transportState.snapshot.sourceText === input;
+  useTextScorePlayhead(previewRef, transport, transportState,
+    result.beatsPerBar, result.bars.length, sourceMatches, language);
   const practiceStatus = useMemo(() => result.canConvert
     ? evaluateExtendedTextPractice(result, practiceBpm) : undefined, [result, practiceBpm]);
   const errors = result.diagnostics.filter(issue => issue.severity === "ERROR");

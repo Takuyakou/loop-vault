@@ -5,6 +5,7 @@ import type { TextProgressionEvent, TextProgressionParseResult } from "../../dom
 import type { TextSourceRange } from "../../domain/extendedTextProgression";
 import { buildStandardTextPreviewScore } from "../../domain/standardTextPreviewScore";
 import { TextPreviewBar } from "./TextPreviewBar";
+import { useTextScorePlayhead } from "./useTextScorePlayhead";
 
 interface Props {
   readonly language: AppLanguage;
@@ -28,7 +29,8 @@ export function StandardTextScoreWorkspace({ language, input, result, disabled, 
   const scoreItems = useMemo(() => buildStandardTextPreviewScore(result), [result]);
   const lines = input.split(/\r\n|\r|\n/);
   const ja = language === "ja";
-  void transport; // The playhead attachment in Stage 05 consumes the same transport instance.
+  useTextScorePlayhead(previewRef, transport, transportState, 4, result.bars,
+    transportState.snapshot?.sourceText === undefined || transportState.snapshot.sourceText === input, language);
 
   function selectSource(span: TextSourceRange, audition: boolean) {
     setSelectedStart(span.start);

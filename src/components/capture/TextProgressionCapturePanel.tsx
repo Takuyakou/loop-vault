@@ -98,9 +98,9 @@ export function TextProgressionCapturePanel({
   const { transport, state: transportState } = useTextTransport(
     controller ?? playbackController, previewSound ?? "electric-piano", "standard-text-whole");
   const playbackSnapshot = useMemo(() => ({
-    notes: standardTextPlaybackNotes(result), lengthBeats: result.scoreLengthBeats,
+    notes: standardTextPlaybackNotes(result, voicingOverrides), lengthBeats: result.scoreLengthBeats,
     beatsPerBar: 4, sourceText: input,
-  }), [input, result]);
+  }), [input, result, voicingOverrides]);
   const capabilities = useMemo(
     () => evaluateTextProgressionCapabilities({ result, ...(explicitBpm === undefined ? {} : { bpm: explicitBpm }) }),
     [explicitBpm, result],

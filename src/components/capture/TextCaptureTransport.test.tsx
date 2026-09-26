@@ -41,7 +41,9 @@ describe("Text Capture exact seek", () => {
     const bands = h.container.querySelectorAll<HTMLElement>("[data-testid='standard-text-preview'] [data-testid='text-preview-band']");
     await press(bands[1]!);
     expect(input.value.slice(input.selectionStart, input.selectionEnd)).toBe("Dm");
+    expect(h.container.querySelector<HTMLElement>("[data-testid='text-smooth-playhead']")?.style.left).toBe("50%");
     await press(h.container.querySelector<HTMLElement>("[data-testid='text-transport-primary']")!);
+    expect(h.container.querySelector<HTMLElement>("[data-testid='extended-text-bar'][data-bar='1']")?.dataset.playbackActive).toBe("true");
     const request = h.controller.getState().request;
     expect(request?.type).toBe("notes");
     if (request?.type === "notes") expect(request.notes.every(note => note.startBeat >= 0)).toBe(true);
@@ -68,6 +70,9 @@ describe("Text Capture exact seek", () => {
     const request = h.controller.getState().request;
     expect(request?.type).toBe("notes");
     if (request?.type === "notes") expect(request.notes[0]?.startBeat).toBe(0);
+    await write(input, "| Dm % = _ | G |");
+    expect(h.container.querySelector("[data-testid='extended-text-frozen-playback']")).not.toBeNull();
+    expect(h.container.querySelector<HTMLElement>("[data-testid='extended-text-bar'][data-bar='1']")?.dataset.playheadVisible).toBe("false");
     await h.unmount();
   });
 });

@@ -78,6 +78,27 @@ describe("Text transport", () => {
     transport.stop();
   });
 
+  it("handles repeated live BPM changes with one end timer and a stable beat", () => {
+    vi.useFakeTimers();
+    const { transport, played, advance } = setup();
+    transport.play(snapshot);
+    advance(500);
+    for (const bpm of [90, 140, 75, 180, 100]) {
+      const before = transport.position();
+      transport.setBpm(bpm);
+      expect(transport.position()).toBeCloseTo(before, 8);
+      expect(vi.getTimerCount()).toBeLessThanOrEqual(1);
+    }
+    expect(played.map(item => item.bpm)).toEqual([120, 90, 140, 75, 180, 100]);
+    transport.pause();
+    expect(vi.getTimerCount()).toBe(0);
+    transport.setBpm(110);
+    transport.play();
+    expect(played[played.length - 1]!.bpm).toBe(110);
+    transport.stop();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
   it("trims held notes only for Pause/Seek and preserves a frozen copy", () => {
     const sourceNotes = [{ pitch: 60, startBeat: 0, durationBeats: 4, velocity: 80 }];
     expect(sliceTextNotes(sourceNotes, 1, true)).toMatchObject([{ startBeat: 0, durationBeats: 3 }]);

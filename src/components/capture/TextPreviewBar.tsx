@@ -97,6 +97,7 @@ export function TextPreviewBar({ bar, language, selectedStart, errorLabel, onSel
       {bar.bands.map((band, index) => <DurationBand key={index} band={band}
         selected={selectedStart === band.sourceSpan.start} language={language}
         onSelect={onSelect} onAudition={onAudition} />)}
+      <span aria-hidden="true" data-testid="text-smooth-playhead" className="lv-text-smooth-playhead" />
       {playing ? <PlaybackHighlight progress={progress} /> : null}
     </div>}
   </article>;

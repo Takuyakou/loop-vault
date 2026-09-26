@@ -2,13 +2,14 @@
   "schemaVersion": 1,
   "phaseId": "8.8.4",
   "status": "in-progress",
-  "activeStage": "P8.8.4-05",
+  "activeStage": "P8.8.4-06",
   "completedStages": [
     "P8.8.4-00",
     "P8.8.4-01",
     "P8.8.4-02",
     "P8.8.4-03",
-    "P8.8.4-04"
+    "P8.8.4-04",
+    "P8.8.4-05"
   ],
   "blocked": false,
   "blockerReason": null,
@@ -46,8 +47,9 @@
     "shared-shell": "pass",
     "standard-preview": "pass",
     "transport-state": "pass",
-    "exact-seek": "pass"
+    "exact-seek": "pass",
+    "live-transport": "pass"
   },
-  "nextAction": "Add smooth rAF playhead, live BPM and long-chart snapshot tests",
+  "nextAction": "Harden long-chart performance, responsive/accessibility and product-path tests",
   "updatedAt": "2026-09-26"
 }
