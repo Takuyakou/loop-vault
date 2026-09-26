@@ -114,6 +114,13 @@ describe("P8.8 extended Capture intake", () => {
     expect(editor.selectionEnd).toBe(end);
     expect(editor.value.slice(start, end)).toBe("C % =");
     expect(container.querySelector('[data-testid="extended-text-section"]')?.textContent).toBe("メモ");
+    const later = editor.value.indexOf("F/C");
+    await act(async () => {
+      editor.setSelectionRange(later, later);
+      editor.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true, key: "ArrowRight" }));
+    });
+    expect(container.querySelector<HTMLButtonElement>('[data-testid="text-preview-band"][data-selected="true"]')
+      ?.textContent).toContain("F/C");
     await act(async () => root.unmount());
     container.remove();
   });

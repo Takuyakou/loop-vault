@@ -15,11 +15,11 @@ test("P8.8 Extended Text saves a public synthetic score and opens Voicing Loop",
   await input.fill(raw);
   await expect(intake.getByTestId("extended-text-bar")).toHaveCount(2);
   await expect(intake.getByTestId("text-preview-band")).toHaveCount(2);
-  await expect(intake.getByTestId("text-preview-attack")).toHaveCount(2);
+  await expect(intake.getByTestId("text-preview-attack")).toHaveCount(3);
   await expect(intake.getByTestId("text-preview-rest")).toHaveCount(1);
   await expect(intake.getByTestId("extended-text-metadata")).toHaveCount(0);
-  await intake.getByRole("button", { name: /Key: C major/ }).click();
-  await intake.getByRole("button", { name: /120 BPM/ }).click();
+  await intake.getByRole("button", { name: /キー C majorを使う|Use Key: C major/ }).click();
+  await intake.getByRole("button", { name: /BPM 120を使う|Use BPM 120/ }).click();
   await expect(intake.getByTestId("extended-text-metadata")).toContainText("120 BPM");
   await expect(input).toHaveValue(raw);
   await intake.getByTestId("extended-text-save").click();
@@ -49,4 +49,33 @@ test("P8.8 Extended Text blocks ambiguous input and remains accessible at narrow
   await assertNoHorizontalOverflow(page);
   const audit = await new AxeBuilder({ page: page as never }).include("[data-testid='extended-text-intake']").analyze();
   expect(audit.violations).toEqual([]);
+});
+
+test("P8.8.2 renders 70/150/200 public bars and keeps both panes usable across breakpoints", async ({ page }) => {
+  await openApp(page);
+  await page.locator("nav").getByRole("button", { name: /コード採集|Capture/ }).click();
+  await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
+  await page.getByTestId("text-mode-extended").click();
+  const intake = page.getByTestId("extended-text-intake");
+  const input = intake.getByTestId("extended-text-input");
+  for (const count of [70, 150, 200]) {
+    const bars = Array.from({ length: count }, (_, index) => index % 2 ? "G7" : "C");
+    const started = Date.now();
+    await input.fill("| " + bars.join(" | ") + " |");
+    await expect(intake.getByTestId("extended-text-bar")).toHaveCount(count);
+    await expect(intake.getByTestId("text-preview-row")).toHaveCount(Math.ceil(count / 4));
+    await expect(intake.getByTestId("extended-text-save")).toBeEnabled();
+    expect(Date.now() - started).toBeLessThan(7000);
+  }
+  await page.setViewportSize({ width: 899, height: 720 });
+  await expect(intake.getByRole("tab", { name: /入力|Input/ })).toBeVisible();
+  await intake.getByRole("tab", { name: /プレビュー|Preview/ }).click();
+  await expect(intake.getByTestId("extended-text-preview")).toBeVisible();
+  await expect(intake.getByTestId("extended-text-editor")).toBeHidden();
+  await page.setViewportSize({ width: 768, height: 720 });
+  await assertNoHorizontalOverflow(page);
+  await page.setViewportSize({ width: 320, height: 720 });
+  await assertNoHorizontalOverflow(page);
+  await intake.getByRole("tab", { name: /入力|Input/ }).click();
+  await expect(input).toBeVisible();
 });

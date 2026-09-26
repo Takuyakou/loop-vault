@@ -2,19 +2,20 @@
   "schemaVersion": 1,
   "phaseId": "8.8.2",
   "status": "in-progress",
-  "activeStage": "P8.8.2-06",
+  "activeStage": "P8.8.2-07",
   "completedStages": [
     "P8.8.2-00",
     "P8.8.2-01",
     "P8.8.2-02",
     "P8.8.2-03",
     "P8.8.2-04",
-    "P8.8.2-05"
+    "P8.8.2-05",
+    "P8.8.2-06"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "8cf49029eb6298d92a73affea05472ae229ce910",
-  "lastVerifiedCommit": "9264ef8",
+  "lastVerifiedCommit": "f7aafd9",
   "currentBranch": "feat/phase8.8.2-text-intake-ux",
   "requiredGates": {
     "P8.8.2-00": [
@@ -63,6 +64,17 @@
       "changed-scope-eslint",
       "phase-docs",
       "diff-check"
+    ],
+    "P8.8.2-06": [
+      "long-chart-browser-regression",
+      "responsive-accessibility",
+      "editor-preview-navigation",
+      "typescript",
+      "e2e-typescript",
+      "changed-scope-eslint",
+      "production-build",
+      "phase-docs",
+      "diff-check"
     ]
   },
   "gateResults": {
@@ -82,8 +94,13 @@
     "score-preview-regression": "pass",
     "source-span-navigation": "pass",
     "frozen-playback-regression": "pass",
-    "practice-limit-save-regression": "pass"
+    "practice-limit-save-regression": "pass",
+    "long-chart-browser-regression": "pass",
+    "responsive-accessibility": "pass",
+    "editor-preview-navigation": "pass",
+    "e2e-typescript": "pass",
+    "production-build": "pass"
   },
-  "nextAction": "Run 70/150/200-bar, responsive, accessibility and performance checks; isolate failures before candidate gates.",
+  "nextAction": "Run full candidate gates on the final branch HEAD, record implementation report, and stop for explicit master-merge authorization.",
   "updatedAt": "2026-09-26"
 }

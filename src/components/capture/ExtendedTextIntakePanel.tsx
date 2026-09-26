@@ -264,6 +264,8 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
               aria-describedby="extended-text-diagnostics"
               onScroll={event => { if (gutterRef.current) gutterRef.current.scrollTop = event.currentTarget.scrollTop; }}
               onSelect={event => selectPreviewAtCaret(event.currentTarget.selectionStart)}
+              onClick={event => selectPreviewAtCaret(event.currentTarget.selectionStart)}
+              onKeyUp={event => selectPreviewAtCaret(event.currentTarget.selectionStart)}
               onChange={event => { setSaveFailed(false); setSaved(false); onInput(event.currentTarget.value); }}
               className="lv-text-intake-textarea min-h-64 min-w-0 flex-1 resize-none overflow-auto bg-transparent p-2 font-mono text-sm outline-none" />
           </div>
