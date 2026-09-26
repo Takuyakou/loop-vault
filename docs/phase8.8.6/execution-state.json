@@ -2,14 +2,15 @@
   "schemaVersion": 1,
   "phaseId": "8.8.6",
   "status": "in-progress",
-  "activeStage": "P8.8.6-01",
+  "activeStage": "P8.8.6-02",
   "completedStages": [
-    "P8.8.6-00"
+    "P8.8.6-00",
+    "P8.8.6-01"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "feb2b51423e22f07cc26a00cf8819aa3fbe7490b",
-  "lastVerifiedCommit": "29d59e3",
+  "lastVerifiedCommit": "dab5134",
   "currentBranch": "feat/phase8.8.6-final-capture-closure",
   "requiredGates": {
     "P8.8.6-00": [
@@ -38,8 +39,9 @@
     ]
   },
   "gateResults": {
-    "baseline-audit": "pass"
+    "baseline-audit": "pass",
+    "shared-status": "pass"
   },
-  "nextAction": "Complete shared status model and focused test",
+  "nextAction": "Commit app-shell height ownership and shared Capture shell",
   "updatedAt": "2026-09-27"
 }

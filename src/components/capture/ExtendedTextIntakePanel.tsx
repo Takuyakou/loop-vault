@@ -19,6 +19,8 @@ import { BpmScrubField } from "../BpmScrubField";
 import { TextPreviewBar } from "./TextPreviewBar";
 import { usePreviewSound } from "../PreviewSoundProvider";
 import { useMetronome } from "../MetronomeProvider";
+import { textCaptureStatus, textCaptureSummary, textCaptureSaveReason } from "./textCaptureStatus";
+import { TextCapturePreviewStatus } from "./TextCapturePreviewStatus";
 
 interface Props {
   readonly language: AppLanguage;
@@ -101,6 +103,13 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
   const warnings = result.diagnostics.filter(issue => issue.severity === "WARNING");
   const annotationCount = result.sections.filter(section => section.kind === "comment"
     && !/^\s*#\s*(Key|BPM)\s*:/i.test(section.raw)).length;
+  const statusModel = textCaptureStatus({
+    bars: result.bars.length, annotations: annotationCount, meterLabel: beat, bpm: bpm ?? null,
+    keyLabel: key ?? null, errors: input.trim() ? errors.length : 0,
+    warnings: input.trim() ? warnings.length : 0,
+    practiceLimits: practiceStatus?.ready === false ? 1 : 0, hasSource: Boolean(input.trim()),
+  });
+  const saveReason = textCaptureSaveReason(statusModel, language);
   const lines = input.split(/\r\n|\r|\n/);
   const diagnosticLines = new Map<number, "ERROR" | "WARNING">();
   for (const issue of result.diagnostics) if (issue.severity !== "INFO") {
@@ -240,7 +249,7 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
               </button> : null}
             </div>
           </div>
-          <div className="lv-text-intake-editor relative flex min-h-64 overflow-hidden bg-[var(--lv-surface)]">
+          <div className="lv-text-intake-editor relative flex overflow-hidden bg-[var(--lv-surface)]">
             <div ref={gutterRef} aria-hidden="true" className="lv-text-intake-gutter shrink-0 overflow-hidden border-r border-[var(--lv-border)] text-right font-mono text-xs text-[var(--lv-text-muted)]">
               {lines.map((line, index) => <div key={index}
                 className={/^\s*#/.test(line) ? "text-[var(--lv-accent)]" : ""}
@@ -261,7 +270,7 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
               onClick={event => selectPreviewAtCaret(event.currentTarget.selectionStart)}
               onKeyUp={event => selectPreviewAtCaret(event.currentTarget.selectionStart)}
               onChange={event => { setSaveFailed(false); setSaved(false); onInput(event.currentTarget.value); }}
-              className="lv-text-intake-textarea min-h-64 min-w-0 flex-1 resize-none overflow-auto bg-transparent p-2 font-mono text-sm outline-none" />
+              className="lv-text-intake-textarea min-w-0 flex-1 resize-none overflow-auto bg-transparent p-2 font-mono text-sm outline-none" />
           </div>
           {(key || bpm !== undefined) ? <p className="mt-2 text-xs text-[var(--lv-text-muted)]" data-testid="extended-text-metadata">
             {key ? "Key: " + key : ""}{key && bpm !== undefined ? " · " : ""}{bpm !== undefined ? String(bpm) + " BPM" : ""}
@@ -273,11 +282,9 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <h3 className="text-sm font-semibold">{label(language, "Live preview", "プレビュー")}</h3>
             <span className="text-xs text-[var(--lv-text-muted)]">{result.bars.length} {label(language, "bars", "小節")}</span>
-            {!errors.length && !warnings.length ? <span className="text-xs text-[var(--lv-text-muted)]">{label(language, "No errors", "エラーなし")}</span> : null}
-            {errors.length ? <span className="rounded border border-[var(--lv-danger)] px-2 py-1 text-xs text-[var(--lv-danger)]">{label(language, "Errors", "エラー")} {errors.length}</span> : null}
-            {warnings.length ? <span className="rounded border border-[var(--lv-warning)] px-2 py-1 text-xs text-[var(--lv-warning)]">{label(language, "Warnings", "注意")} {warnings.length}</span> : null}
-            {practiceStatus?.ready === false ? <span className="rounded border border-[var(--lv-border)] px-2 py-1 text-xs">{label(language, "Practice limited", "練習制限あり")}</span> : null}
+            <TextCapturePreviewStatus model={statusModel} language={language} />
           </div>
+          <div className="lv-text-preview-scroll" data-testid="extended-text-preview-scroll">
           {practiceStatus?.ready === false ? <p data-testid="extended-text-practice-limit"
             className="mb-2 text-sm text-[var(--lv-warning)]">
             {label(language, "Save is available; Voicing Loop cannot use this exact timing: ",
@@ -310,23 +317,20 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
               {diagnostic.severity} {diagnostic.line}:{diagnostic.column} [{diagnostic.span.start}-{diagnostic.span.end}] · {language === "ja" ? japaneseDiagnostic[diagnostic.reasonCode] : diagnostic.message}
             </p>)}
           </div>
+          </div>
         </section>
       </div>
 
       <footer className="lv-text-intake-savebar lv-text-status-bar flex items-center gap-3 border-t border-[var(--lv-border)] px-2 text-xs">
         <span className="min-w-0 font-mono text-[var(--lv-text-muted)]">
-          {result.bars.length} {label(language, "bars", "小節")} · {annotationCount} {label(language, "annotations", "注記")}
-          {" · " + beat + " · BPM " + (bpm ?? "—") + " · " + (key ?? label(language, "Key unset", "キー未確定"))}
+          {textCaptureSummary(statusModel, language)}
         </span>
         {saved ? <span role="status" className="ml-auto text-[var(--lv-accent)]">{label(language, "Saved", "保存しました")}</span> : null}
         {saveFailed ? <span role="alert" className="ml-auto text-[var(--lv-danger)]">
           {label(language, "Save failed. Your text is still here.", "保存できませんでした。入力内容は保持されています。")}
         </span> : null}
         <span id="extended-text-save-reason" className="lv-text-save-reason ml-auto min-w-0 truncate text-[var(--lv-text-muted)]">
-          {!input.trim() ? label(language, "Enter a progression to save it", "コード進行を入れると保存できます")
-            : errors.length ? label(language, `Fix ${errors.length} errors before saving`, `エラー${errors.length}件を修正すると保存できます`)
-              : !key ? label(language, "Set a key after saving to use Bass Practice and Chord Context", "Bass Practice・Chord Context は保存後にキーを決めると使えます")
-                : label(language, "Ready to save", "保存できます")}
+          {saveReason}
         </span>
       </footer>
     </div>

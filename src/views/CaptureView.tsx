@@ -1397,7 +1397,7 @@ export function CaptureView(props: CaptureViewProps) {
     return (
       <CaptureModeFrame stage="text" value={captureInputMode} language={language}
         disabled={textDraft !== null} onChange={changeCaptureInputMode}>
-        <div className="lv-capture-content grid gap-5">
+        <div className="lv-capture-content lv-capture-text-content grid gap-5">
           <TextProgressionCapturePanel
             language={language}
             showRomanNumerals={showRomanNumerals}
