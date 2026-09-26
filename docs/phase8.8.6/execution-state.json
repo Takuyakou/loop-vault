@@ -2,18 +2,19 @@
   "schemaVersion": 1,
   "phaseId": "8.8.6",
   "status": "in-progress",
-  "activeStage": "P8.8.6-05",
+  "activeStage": "P8.8.6-06",
   "completedStages": [
     "P8.8.6-00",
     "P8.8.6-01",
     "P8.8.6-02",
     "P8.8.6-03",
-    "P8.8.6-04"
+    "P8.8.6-04",
+    "P8.8.6-05"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "feb2b51423e22f07cc26a00cf8819aa3fbe7490b",
-  "lastVerifiedCommit": "e4ac415",
+  "lastVerifiedCommit": "b7da398",
   "currentBranch": "feat/phase8.8.6-final-capture-closure",
   "requiredGates": {
     "P8.8.6-00": [
@@ -46,8 +47,9 @@
     "shared-status": "pass",
     "height-ownership": "pass",
     "visual-parity": "pass",
-    "status-regression": "pass"
+    "status-regression": "pass",
+    "overflow-regression": "pass"
   },
-  "nextAction": "Freeze long-chart internal-scroll regression",
+  "nextAction": "Run fresh full gates and capture local screenshots",
   "updatedAt": "2026-09-27"
 }

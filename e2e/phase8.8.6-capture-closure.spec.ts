@@ -70,7 +70,7 @@ test("P8.8.6 shared shell and old Standard UI negative assertions", async ({ pag
     const common = ["[data-testid='text-capture-toolbar']", ".lv-text-intake-grid",
       ".lv-text-intake-editor", ".lv-text-intake-pane:last-child", ".lv-text-status-bar",
       ".lv-text-toolbar-save input", ".lv-text-toolbar-save button"];
-    const boxes = [];
+    const boxes: Array<Array<{ x: number; y: number; width: number; height: number } | null>> = [];
     for (const dialect of ["standard", "extended"] as const) {
       const capture = await choose(page, dialect);
       boxes.push(await Promise.all(common.map(selector => bounds(page, selector))));
