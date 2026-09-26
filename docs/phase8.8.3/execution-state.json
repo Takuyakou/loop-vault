@@ -2,16 +2,17 @@
   "schemaVersion": 1,
   "phaseId": "8.8.3",
   "status": "in-progress",
-  "activeStage": "P8.8.3-03",
+  "activeStage": "P8.8.3-04",
   "completedStages": [
     "P8.8.3-00",
     "P8.8.3-01",
-    "P8.8.3-02"
+    "P8.8.3-02",
+    "P8.8.3-03"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "d37177368f05b9bf70526582e07f754e93df3d02",
-  "lastVerifiedCommit": "52ae597",
+  "lastVerifiedCommit": "063442c",
   "currentBranch": "feat/phase8.8.3-defining-tone-correctness",
   "requiredGates": {
     "P8.8.3-00": [
@@ -45,8 +46,9 @@
     "validate:phase-docs": "pass",
     "focused-semantic": "pass",
     "focused-audition": "pass",
-    "focused-practice": "pass"
+    "focused-practice": "pass",
+    "matrix-regression": "pass"
   },
-  "nextAction": "Commit text-derived basic-full protection, then consolidate permanent matrix regression",
+  "nextAction": "Commit permanent regression; audit the local witness without tracking private media",
   "updatedAt": "2026-09-26"
 }
