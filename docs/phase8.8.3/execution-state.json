@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "phaseId": "8.8.3",
-  "status": "in-progress",
-  "activeStage": "P8.8.3-07",
+  "status": "completed",
+  "activeStage": null,
   "completedStages": [
     "P8.8.3-00",
     "P8.8.3-01",
@@ -10,13 +10,14 @@
     "P8.8.3-03",
     "P8.8.3-04",
     "P8.8.3-05",
-    "P8.8.3-06"
+    "P8.8.3-06",
+    "P8.8.3-07"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "d37177368f05b9bf70526582e07f754e93df3d02",
-  "lastVerifiedCommit": "1dc8e1e",
-  "currentBranch": "feat/phase8.8.3-defining-tone-correctness",
+  "lastVerifiedCommit": "39d06aa",
+  "currentBranch": "master",
   "requiredGates": {
     "P8.8.3-00": [
       "matrix-freeze",
@@ -52,8 +53,9 @@
     "focused-practice": "pass",
     "matrix-regression": "pass",
     "local-witness": "pass",
-    "full-gates": "pass"
+    "full-gates": "pass",
+    "post-merge-gates": "pass"
   },
-  "nextAction": "Explicit human authorization for local master merge, then Stage 07 post-merge gates and final raw EXE",
+  "nextAction": "Human product acceptance with the local raw Windows EXE; no push, tag, release or next phase",
   "updatedAt": "2026-09-26"
 }
