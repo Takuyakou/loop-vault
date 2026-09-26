@@ -4,7 +4,7 @@
 
 ## Status
 
-- Status: in progress on `feat/phase8.8.5-global-playback-text-polish`.
+- Status: ready for merge review on `feat/phase8.8.5-global-playback-text-polish`.
 - Base: local `master` at `340e454`.
 
 ## Required Reading Order
