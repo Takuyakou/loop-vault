@@ -168,7 +168,6 @@ export function createTextTransport(
       if (state.status === "playing") {
         if (controller.updateNotesBpm?.(source, value)) {
           startBeat = position; startedAt = now();
-          generation += 1;
           const epoch = generation;
           clearEnd();
           if (state.snapshot) endTimer = setTimeout(() => finish(epoch),

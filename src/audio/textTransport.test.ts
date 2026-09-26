@@ -81,7 +81,7 @@ describe("Text transport", () => {
 
   it("keeps the active audio session and held notes on a supported live tempo update", () => {
     vi.useFakeTimers();
-    const { transport, played, advance, driver } = setup(true);
+    const { transport, played, advance, driver, controller } = setup(true);
     transport.play(snapshot);
     advance(500);
     const beat = transport.position();
@@ -91,7 +91,8 @@ describe("Text transport", () => {
     expect(played).toHaveLength(1);
     expect(vi.mocked(driver.stop).mock.calls.length).toBe(stopsBefore);
     expect(driver.updateNotesBpm).toHaveBeenCalledWith(90);
-    transport.stop();
+    controller.stop();
+    expect(transport.getState().status).toBe("stopped");
   });
 
   it("handles repeated live BPM changes with one end timer and a stable beat", () => {
