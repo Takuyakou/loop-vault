@@ -3,6 +3,9 @@ import { GripVertical } from "lucide-react";
 
 export function BpmScrubField({
   idPrefix,
+  inputTestId,
+  onExplicitInput,
+  emptyWhenUnset = false,
   disabled = false,
   dragLabel,
   label,
@@ -10,6 +13,9 @@ export function BpmScrubField({
   value,
 }: {
   readonly idPrefix: string;
+  readonly inputTestId?: string;
+  readonly onExplicitInput?: (value: number) => void;
+  readonly emptyWhenUnset?: boolean;
   readonly disabled?: boolean;
   readonly dragLabel: string;
   readonly label: string;
@@ -91,7 +97,7 @@ export function BpmScrubField({
     gestureRef.current = undefined;
     if (event.currentTarget.hasPointerCapture?.(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
     if (!gesture.dragging && event.type === "pointerup") {
-      setDraft(String(value));
+      setDraft(emptyWhenUnset ? "" : String(value));
       setEditing(true);
       inputRef.current?.focus();
       inputRef.current?.select();
@@ -112,7 +118,7 @@ export function BpmScrubField({
         onPointerCancel={endDrag}
         onLostPointerCapture={() => { gestureRef.current = undefined; }}
         onDoubleClick={() => {
-          setDraft(String(value));
+          setDraft(emptyWhenUnset ? "" : String(value));
           setEditing(true);
           inputRef.current?.focus();
           inputRef.current?.select();
@@ -121,6 +127,7 @@ export function BpmScrubField({
         <input
           ref={inputRef}
           id={idPrefix}
+          data-testid={inputTestId}
           disabled={disabled}
           aria-describedby={`${idPrefix}-drag-help`}
           className={`lv-field-control min-h-8 w-20 px-2 pr-6 text-sm ${editing ? "cursor-text" : "cursor-ns-resize"}`}
@@ -130,11 +137,14 @@ export function BpmScrubField({
           aria-valuemin={30}
           aria-valuemax={240}
           aria-valuenow={value}
-          value={editing ? draft : value}
-          onFocus={() => { setDraft(String(value)); setEditing(true); }}
+          value={editing ? draft : emptyWhenUnset ? "" : value}
+          placeholder={emptyWhenUnset ? String(value) : undefined}
+          onFocus={() => { setDraft(emptyWhenUnset ? "" : String(value)); setEditing(true); }}
           onChange={(event) => {
+            const typed = Number(event.currentTarget.value);
             setDraft(event.currentTarget.value);
-            if (!editing) apply(Number(event.currentTarget.value));
+            if (event.currentTarget.value.trim() && Number.isFinite(typed) && typed === valueRef.current) onExplicitInput?.(typed);
+            if (!editing) apply(typed);
           }}
           onBlur={finishEdit}
           onKeyDown={(event) => {

@@ -32,3 +32,27 @@
   .lv-text-intake-pane-active { display: block; }
   .lv-text-intake-bars { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* The line is moved by requestAnimationFrame without rerendering long scores. */
+.lv-text-smooth-playhead {
+  display: none;
+  position: absolute;
+  z-index: 20;
+  inset-block: 0;
+  width: 2px;
+  background: var(--lv-text);
+  pointer-events: none;
+  will-change: left;
+}
+[data-testid="extended-text-bar"][data-playhead-visible="true"] .lv-text-smooth-playhead { display: block; }
+[data-testid="extended-text-bar"][data-playback-active="true"] {
+  border-color: var(--lv-accent);
+  box-shadow: inset 0 0 0 1px var(--lv-accent);
+}
+[data-testid="text-preview-band"][data-playback-active="true"] {
+  background: var(--lv-accent-soft);
+  outline: 2px solid var(--lv-accent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lv-text-smooth-playhead { will-change: auto; }
+}

@@ -1,9 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import type { PlaybackController } from "../../audio/playbackController";
+import { playbackController, type PlaybackController } from "../../audio/playbackController";
+import { standardTextPlaybackNotes } from "../../domain/standardTextPlayback";
+import { useTextTransport } from "./useTextTransport";
+import { TextTransportBar } from "./TextTransportBar";
 import type { PreviewSound } from "../../audio/chordPreview";
 import { romanNumeralHint } from "../../domain/harmony/romanNumerals";
 import type { ExtendedTextResult } from "../../domain/extendedTextProgression";
 import { ExtendedTextIntakePanel } from "./ExtendedTextIntakePanel";
+import { TextCaptureShell } from "./TextCaptureShell";
+import { StandardTextScoreWorkspace } from "./StandardTextScoreWorkspace";
 import {
   confirmedTextProgressionKeyState,
   evaluateTextProgressionCapabilities,
@@ -35,6 +40,7 @@ import type { ChordVoicingMemory } from "../../domain/types";
 import type { ManualCandidateDraft } from "../../domain/midi/manualDraft";
 import type { AppLanguage } from "../../i18n";
 import { VoicingPanel } from "../voicing/VoicingPanel";
+import { BpmScrubField } from "../BpmScrubField";
 
 export interface TextProgressionConvertedDraft {
   readonly draft: ManualCandidateDraft;
@@ -49,6 +55,7 @@ interface TextProgressionCapturePanelProps {
   /** Once converted, the existing ManualCandidateDraft is authoritative. */
   readonly draftActive?: boolean;
   readonly onConvert: (converted: TextProgressionConvertedDraft) => void;
+  readonly onSaveStandard?: (converted: TextProgressionConvertedDraft, title: string) => boolean;
   readonly onSaveExtended?: (result: ExtendedTextResult, title: string) => boolean;
   readonly onPreview: (
     event: TextProgressionEvent,
@@ -69,6 +76,7 @@ export function TextProgressionCapturePanel({
   showRomanNumerals,
   draftActive = false,
   onConvert,
+  onSaveStandard,
   onSaveExtended,
   onPreview,
   onStop,
@@ -81,6 +89,10 @@ export function TextProgressionCapturePanel({
   const [confirmedKey, setConfirmedKey] = useState<string>();
   const [keyError, setKeyError] = useState<string>();
   const [bpmInput, setBpmInput] = useState("");
+  const [saveTitle, setSaveTitle] = useState("");
+  const [titleEdited, setTitleEdited] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
   const [selectedEventKey, setSelectedEventKey] = useState<string>();
   const [voicingOverrides, setVoicingOverrides] = useState<TextProgressionVoicingOverrides>(new Map());
   const [voicingStyles, setVoicingStyles] = useState<ReadonlyMap<string, TextProgressionVoicingStyleId>>(new Map());
@@ -89,6 +101,12 @@ export function TextProgressionCapturePanel({
     keyState: confirmedTextProgressionKeyState(confirmedKey),
   }), [confirmedKey, input]);
   const explicitBpm = parseExplicitBpm(bpmInput);
+  const { transport, state: transportState } = useTextTransport(
+    controller ?? playbackController, previewSound ?? "electric-piano", "standard-text-whole");
+  const playbackSnapshot = useMemo(() => ({
+    notes: standardTextPlaybackNotes(result, voicingOverrides), lengthBeats: result.scoreLengthBeats,
+    beatsPerBar: 4, sourceText: input,
+  }), [input, result, voicingOverrides]);
   const capabilities = useMemo(
     () => evaluateTextProgressionCapabilities({ result, ...(explicitBpm === undefined ? {} : { bpm: explicitBpm }) }),
     [explicitBpm, result],
@@ -151,9 +169,13 @@ export function TextProgressionCapturePanel({
   function selectEvent(event: TextProgressionEvent) {
     if (draftActive) return;
     const key = textProgressionEventKey(event);
-    onStop();
+    const beat = (event.bar - 1) * 4 + event.startBeat - 1;
+    transport.seek(beat);
     setSelectedEventKey(key);
-    onPreview(event, voicingOverrides.get(key), explicitBpm ?? TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM);
+    if (transportState.status !== "playing") {
+      if (transportState.status === "stopped") onStop();
+      onPreview(event, voicingOverrides.get(key), explicitBpm ?? TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM);
+    }
   }
 
   function confirmKey() {
@@ -234,21 +256,30 @@ export function TextProgressionCapturePanel({
     });
   }
 
+  function convertedDraft(): TextProgressionConvertedDraft {
+    const draft = createTextProgressionDraft({ result, voicingOverrides });
+    const key = result.keyState.kind === "confirmed" ? result.keyState.key : undefined;
+    return {
+      draft, title: textProgressionDraftTitle(result),
+      ...(explicitBpm === undefined ? {} : { bpm: explicitBpm }),
+      ...(key === undefined ? {} : { confirmedKey: key }),
+    };
+  }
+
   function convert() {
     if (draftActive || !result.canConvert) return;
-    try {
-      const draft = createTextProgressionDraft({ result, voicingOverrides });
-      const key = result.keyState.kind === "confirmed" ? result.keyState.key : undefined;
-      onConvert({
-        draft,
-        title: textProgressionDraftTitle(result),
-        ...(explicitBpm === undefined ? {} : { bpm: explicitBpm }),
-        ...(key === undefined ? {} : { confirmedKey: key }),
-      });
-    } catch {
-      // canConvert is the stable contract. Keep the editor on this text if a
-      // future invariant rejects it instead of manufacturing a partial Draft.
+    try { onConvert(convertedDraft()); } catch {
+      // Keep the source text available if a future Draft invariant rejects it.
     }
+  }
+
+  function saveStandard() {
+    if (draftActive || !result.canConvert || !onSaveStandard) return;
+    try {
+      const converted = convertedDraft();
+      const success = onSaveStandard(converted, (titleEdited ? saveTitle : converted.title).trim());
+      setSaved(success); setSaveFailed(!success);
+    } catch { setSaved(false); setSaveFailed(true); }
   }
 
   function previewSelected() {
@@ -260,7 +291,7 @@ export function TextProgressionCapturePanel({
   const suggestions = result.keyState.kind === "inferred" ? result.keyState.candidates : [];
   const disabled = draftActive;
   const modeSelector = (
-    <div className="mt-4 flex gap-2" role="group" aria-label={text(language, "Text syntax", "テキスト記法")}>
+    <div className="flex gap-2" role="group" aria-label={text(language, "Text syntax", "テキスト記法")}>
       <button type="button" className={dialect === "standard" ? "lv-button-primary px-3 py-2 text-sm" : "lv-button-secondary px-3 py-2 text-sm"}
         aria-pressed={dialect === "standard"} disabled={disabled} data-testid="text-mode-standard"
         onClick={() => { onStop(); setDialect("standard"); }}>
@@ -274,37 +305,16 @@ export function TextProgressionCapturePanel({
     </div>
   );
   if (dialect === "extended") {
-    return (
-      <section className="border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-5" data-testid="text-progression-capture">
-        <h2 className="text-2xl font-semibold">{text(language, "Extended text progression", "拡張テキスト進行")}</h2>
-        <ExtendedTextIntakePanel language={language} input={input} disabled={disabled} modeSelector={modeSelector}
-          controller={controller} sound={previewSound}
-          onInput={setInput}
-          onSave={(extended, title) => onSaveExtended?.(extended, title) ?? false} />
-      </section>
-    );
+    return <TextCaptureShell language={language} dialect={dialect} draftActive={draftActive} modeSelector={modeSelector}>
+      <ExtendedTextIntakePanel language={language} input={input} disabled={disabled}
+        controller={controller} sound={previewSound}
+        onInput={setInput}
+        onSave={(extended, title) => onSaveExtended?.(extended, title) ?? false} />
+    </TextCaptureShell>;
   }
 
   return (
-    <section className="border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-5" data-testid="text-progression-capture">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--lv-accent)]">
-            {text(language, "Text progression", "テキスト進行")}
-          </p>
-          <h2 className="mt-2 text-2xl font-semibold">{text(language, "Enter chord progression", "コード進行を入力")}</h2>
-          <p className="mt-2 max-w-2xl text-sm text-[var(--lv-text-muted)]">
-            {text(language, "Use one chord per line, or exact 4/4 bars such as | Dm7 G7 | Cmaj7 |.", "1行に1コード、または | Dm7 G7 | Cmaj7 | のような正確な4/4小節で入力します。")}
-          </p>
-        </div>
-        {draftActive ? (
-          <p className="border border-[var(--lv-border)] px-3 py-2 text-xs text-[var(--lv-text-muted)]" data-testid="text-draft-authoritative">
-            {text(language, "The converted Draft is now authoritative. Save or discard it before changing this text.", "変換後のDraftが現在の正本です。テキストを変更する前に保存または破棄してください。")}
-          </p>
-        ) : null}
-      </div>
-
-      {modeSelector}
+    <TextCaptureShell language={language} dialect={dialect} draftActive={draftActive} modeSelector={modeSelector}>
       {/^(?:\s*#|\s*[<>]\s*$)/m.test(input) || /N\.C\./i.test(input) ? (
         <div className="mt-3 flex items-center gap-2 text-sm" data-testid="text-extended-suggestion">
           <span>{text(language, "This looks like extended notation.", "拡張記法の形式に見えます。")}</span>
@@ -314,22 +324,16 @@ export function TextProgressionCapturePanel({
           </button>
         </div>
       ) : null}
-      <label className="mt-5 block text-sm font-semibold text-[var(--lv-text)]" htmlFor="text-progression-input">
-        {text(language, "Chord progression", "コード進行")}
-      </label>
-      <textarea
-        id="text-progression-input"
-        data-testid="text-progression-input"
-        className="mt-2 min-h-32 w-full border border-[var(--lv-border)] bg-[var(--lv-surface)] p-3 font-mono text-sm text-[var(--lv-text)]"
-        value={input}
-        disabled={disabled}
-        aria-invalid={result.diagnostics.length > 0}
-        aria-describedby={result.diagnostics.length > 0
-          ? "text-progression-format text-progression-diagnostics"
-          : "text-progression-format"}
-        {...(result.diagnostics.length > 0 ? { "aria-errormessage": "text-progression-diagnostics" } : {})}
-        onChange={(event) => { onStop(); setInput(event.target.value); }}
-      />
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <TextTransportBar language={language} transport={transport} state={transportState}
+          snapshot={playbackSnapshot} disabled={disabled || (transportState.status === "stopped" && !result.canConvert)}
+          sourceMatches={transportState.snapshot?.sourceText === undefined || transportState.snapshot.sourceText === input} />
+      </div>
+      <StandardTextScoreWorkspace language={language} input={input} result={result} disabled={disabled}
+        transport={transport} transportState={transportState}
+        onInput={value => { if (transportState.status === "stopped") onStop();
+          setSaved(false); setSaveFailed(false); setInput(value); }} onSelectEvent={selectEvent}
+        onSeekBar={bar => transport.seek((bar - 1) * 4)} />
       <p id="text-progression-format" className="mt-2 text-xs text-[var(--lv-text-muted)]">
         {text(
           language,
@@ -338,6 +342,10 @@ export function TextProgressionCapturePanel({
         )}
       </p>
 
+      <details className="mt-3 rounded border border-[var(--lv-border)] p-2" data-testid="standard-text-card-details">
+        <summary className="cursor-pointer text-xs text-[var(--lv-text-muted)]">
+          {text(language, "Card list and saved voicing details", "カード一覧と保存音の詳細")}
+        </summary>
       <TextProgressionCards
         events={result.events}
         valid={result.canConvert}
@@ -350,6 +358,8 @@ export function TextProgressionCapturePanel({
         disabled={disabled}
         onSelect={selectEvent}
       />
+
+      </details>
 
       <section className="mt-5 grid gap-4 border-t border-[var(--lv-border)] pt-5 lg:grid-cols-2" aria-label={text(language, "Key and tempo", "キーとテンポ")}>
         <div>
@@ -401,19 +411,14 @@ export function TextProgressionCapturePanel({
           ) : null}
         </div>
         <div>
-          <label className="block text-sm font-semibold" htmlFor="text-progression-bpm">
-            {text(language, "Tempo (optional BPM)", "テンポ（任意BPM）")}
-          </label>
-          <input
-            id="text-progression-bpm"
-            data-testid="text-progression-bpm"
-            className="mt-2 min-h-10 w-full border border-[var(--lv-border)] bg-[var(--lv-surface)] px-3 text-sm"
-            inputMode="numeric"
-            value={bpmInput}
-            disabled={disabled}
-            onChange={(event) => { onStop(); setBpmInput(event.target.value); }}
-            placeholder="30–240"
-          />
+          <BpmScrubField idPrefix="text-progression-bpm" inputTestId="text-progression-bpm"
+            label="BPM" disabled={disabled} emptyWhenUnset={explicitBpm === undefined}
+            dragLabel={text(language, "Drag up or down to change BPM", "上下にドラッグしてBPMを変更")}
+            value={explicitBpm ?? TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM}
+            onChange={value => { if (transportState.status === "stopped") onStop();
+              transport.setBpm(value); setBpmInput(String(value)); }}
+            onExplicitInput={value => { if (transportState.status === "stopped") onStop();
+              transport.setBpm(value); setBpmInput(String(value)); }} />
           <p className="mt-2 text-xs text-[var(--lv-text-muted)]">
             {bpmInput && explicitBpm === undefined
               ? text(language, `Enter 30–240 BPM to change audition speed. Cards use ${TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM} BPM until then, and saving can still omit BPM.`, `試聴速度を変えるには30〜240 BPMを入力してください。それまではカードを${TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM} BPMで試聴し、保存時はBPMなしにもできます。`)
@@ -463,7 +468,8 @@ export function TextProgressionCapturePanel({
               `生成スタイル: ${voicingStyleLabel(selectedStyle, language)}。元MIDIではありません。`,
             )}
           </p>
-          <TextCapabilityList capabilities={capabilities} language={language} />
+          <details className="mt-3" data-testid="text-progression-detail-expander">
+            <summary className="cursor-pointer text-sm">{text(language, "Chord details", "コード詳細")}</summary>
           <VoicingPanel
             key={selectedKey}
             chord={selectedEvent.chord}
@@ -481,26 +487,47 @@ export function TextProgressionCapturePanel({
               onChange: selectVoicingStyle,
             }}
           />
+          </details>
         </section>
       ) : null}
 
-      <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-[var(--lv-border)] pt-5">
+      <div className="lv-text-intake-savebar sticky bottom-0 z-10 mt-3 flex flex-wrap items-center gap-3 border-t border-[var(--lv-border)] bg-[var(--lv-surface)] p-3">
+        <span className="min-w-0 flex-1 text-xs text-[var(--lv-text-muted)]" data-testid="text-progression-capability-summary">
+          {result.bars} {text(language, "bars", "小節")} · 4/4 · {explicitBpm ?? TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM} BPM
+          {" · " + result.diagnostics.length + " " + text(language, "errors", "エラー")}
+          {!confirmed ? " · " + text(language, "Confirm a key for Bass Practice / Chord Context / Root Motion", "キーを確定するとBass Practice / Chord Context / Root Motionを利用できます") : ""}
+        </span>
+        <details className="relative" data-testid="text-progression-capability-details">
+          <summary className="cursor-pointer text-xs">{text(language, "Availability details", "利用条件の詳細")}</summary>
+          <TextCapabilityList capabilities={capabilities} language={language} />
+        </details>
+        {onSaveStandard ? <label className="text-xs">{text(language, "Name", "名前")}
+          <input className="lv-field-control ml-2 min-h-9 w-44 px-2" maxLength={80}
+            data-testid="text-progression-name" value={titleEdited ? saveTitle : textProgressionDraftTitle(result)}
+            onChange={event => { setTitleEdited(true); setSaveTitle(event.target.value);
+              setSaved(false); setSaveFailed(false); }} />
+        </label> : null}
+        {onSaveStandard ? <button type="button" className="lv-button-primary min-h-9 px-4 text-sm"
+          data-testid="text-progression-save" disabled={disabled || !result.canConvert}
+          onClick={saveStandard}>{text(language, "Save to Vault", "Vaultに保存")}</button> : null}
         <button
           type="button"
-          className="lv-button-primary px-4 py-2 text-sm"
+          className="lv-button-secondary px-4 py-2 text-sm"
           data-testid="text-progression-convert"
           disabled={disabled || !result.canConvert}
           onClick={convert}
         >
-          {text(language, "Convert to Draft", "Draftへ変換")}
+          {text(language, "Advanced edit", "詳細編集")}
         </button>
-        <p className="text-xs text-[var(--lv-text-muted)]">
-          {result.canConvert
-            ? text(language, "Conversion is one-way: the existing Draft editor becomes authoritative.", "変換は一方向です。既存Draftエディターが正本になります。")
-            : text(language, "Fix every diagnostic before conversion. No partial progression is created.", "変換前にすべての診断を修正してください。部分進行は作成しません。")}
-        </p>
+        {saved ? <span role="status" className="text-xs text-[var(--lv-accent)]">
+          {text(language, "Saved", "保存しました")}</span> : null}
+        {saveFailed ? <span role="alert" className="text-xs text-[var(--lv-warning)]">
+          {text(language, "Save failed. Your text is still here.", "保存できませんでした。入力内容は保持されています。")}</span> : null}
+        {!result.canConvert ? <p className="text-xs text-[var(--lv-text-muted)]">
+          {text(language, "Fix every diagnostic before saving. No partial progression is created.", "保存前にすべての診断を修正してください。部分進行は作成しません。")}
+        </p> : null}
       </div>
-    </section>
+    </TextCaptureShell>
   );
 }
 

@@ -165,7 +165,7 @@ describe("P8.8 extended Capture intake", () => {
     container.remove();
   });
 
-  it("loops the frozen whole request and starts with metronome disabled", async () => {
+  it("keeps the frozen whole request until score end and starts with metronome disabled", async () => {
     const played: Array<readonly { readonly pitch: number; readonly velocity: number }[]> = [];
     const finish: Array<() => void> = [];
     const driver: PlaybackAudioDriver = {
@@ -195,9 +195,12 @@ describe("P8.8 extended Capture intake", () => {
     expect(played).toHaveLength(1);
     expect(played[0]?.every(note => note.velocity !== 46)).toBe(true);
     await act(async () => finish[0]?.());
-    expect(played).toHaveLength(2);
-    expect(played[1]).toEqual(played[0]);
-    await press(container.querySelector<HTMLButtonElement>('[data-testid="extended-text-play"]')!);
+    // Audio's release tail can complete before trailing score time; the score
+    // timer owns the loop boundary and must not restart early.
+    expect(played).toHaveLength(1);
+    expect(container.querySelector<HTMLButtonElement>('[data-testid="extended-text-play"]')?.textContent)
+      .toContain("Pause");
+    await press(container.querySelector<HTMLButtonElement>('[data-testid="text-transport-stop"]')!);
     await act(async () => root.unmount());
     container.remove();
   });

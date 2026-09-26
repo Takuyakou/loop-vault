@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   parseExtendedTextProgression,
   type ExtendedTextMetadata,
@@ -9,9 +9,11 @@ import {
 import { buildTextPreviewScore } from "../../domain/textPreviewScore";
 import { extendedTextPlaybackNotes } from "../../domain/extendedTextPlayback";
 import { evaluateExtendedTextPractice } from "../../domain/extendedTextPractice";
-import { playbackController, samePlaybackSource, type PlaybackController, type PlaybackRequest } from "../../audio/playbackController";
+import { playbackController, type PlaybackController } from "../../audio/playbackController";
 import type { PreviewSound } from "../../audio/chordPreview";
-import { usePlaybackState } from "../../hooks/usePlaybackState";
+import { useTextTransport } from "./useTextTransport";
+import { TextTransportBar } from "./TextTransportBar";
+import { useTextScorePlayhead } from "./useTextScorePlayhead";
 import type { AppLanguage } from "../../i18n";
 import { BpmScrubField } from "../BpmScrubField";
 import { TextPreviewBar } from "./TextPreviewBar";
@@ -22,7 +24,6 @@ interface Props {
   readonly disabled: boolean;
   readonly onInput: (value: string) => void;
   readonly onSave: (result: ExtendedTextResult, title: string) => boolean;
-  readonly modeSelector?: ReactNode;
   readonly controller?: PlaybackController;
   readonly sound?: PreviewSound;
 }
@@ -53,24 +54,15 @@ export function detectExtendedTextMetadataHints(input: string): { key?: string; 
   };
 }
 
-export function ExtendedTextIntakePanel({ language, input, disabled, onInput, onSave, modeSelector,
+export function ExtendedTextIntakePanel({ language, input, disabled, onInput, onSave,
   controller = playbackController, sound = "electric-piano" }: Props) {
   const [beat, setBeat] = useState("4/4");
   const [key, setKey] = useState<string>();
   const [bpm, setBpm] = useState<number>();
   const [practiceBpm, setPracticeBpm] = useState(120);
   const [metronome, setMetronome] = useState(false);
-  const [loop, setLoop] = useState(false);
   const [playError, setPlayError] = useState<string>();
-  const [progressBeat, setProgressBeat] = useState(0);
-  const [playingSourceText, setPlayingSourceText] = useState<string>();
-  const [playingExtent, setPlayingExtent] = useState<{ readonly bars: number; readonly beatsPerBar: number }>();
-  const playback = usePlaybackState(controller);
-  const wholeSource = useMemo(() => ({ kind: "capture" as const, id: "extended-text-whole" }), []);
-  const wholePlaying = samePlaybackSource(playback.source, wholeSource);
-  const loopRef = useRef(loop);
-  loopRef.current = loop;
-  const activeRequestRef = useRef<PlaybackRequest>();
+  const { transport, state: transportState } = useTextTransport(controller, sound, "extended-text-whole");
   const [name, setName] = useState(label(language, "Text progression", "テキスト進行"));
   const [saveFailed, setSaveFailed] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -87,6 +79,14 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
   }), [beat, key, bpm]);
   const result = useMemo(() => parseExtendedTextProgression(input, metadata), [input, metadata]);
   const scoreItems = useMemo(() => buildTextPreviewScore(result), [result]);
+  const playbackSnapshot = useMemo(() => ({
+    notes: extendedTextPlaybackNotes(result, metronome), lengthBeats: result.scoreLengthBeats,
+    beatsPerBar: result.beatsPerBar, sourceText: input,
+  }), [input, metronome, result]);
+  const sourceMatches = transportState.snapshot?.sourceText === undefined
+    || transportState.snapshot.sourceText === input;
+  useTextScorePlayhead(previewRef, transport, transportState,
+    result.beatsPerBar, result.bars.length, sourceMatches, language);
   const practiceStatus = useMemo(() => result.canConvert
     ? evaluateExtendedTextPractice(result, practiceBpm) : undefined, [result, practiceBpm]);
   const errors = result.diagnostics.filter(issue => issue.severity === "ERROR");
@@ -103,59 +103,15 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
   const pendingClass = "rounded border border-[var(--lv-warning)] bg-[var(--lv-warning-soft)] px-3 py-2 text-sm text-[var(--lv-warning)]";
   const appliedClass = "lv-button-secondary px-3 py-2 text-sm";
 
-  useEffect(() => {
-    if (!wholePlaying || playback.startedAt === undefined) return;
-    const startedAt = playback.startedAt;
-    const bpmAtPlay = playback.request?.type === "notes" ? playback.request.bpm : practiceBpm;
-    const timer = globalThis.setInterval(() => {
-      setProgressBeat(Math.max(0, (performance.now() - startedAt) * bpmAtPlay / 60000));
-    }, 100);
-    return () => globalThis.clearInterval(timer);
-  }, [wholePlaying, playback.startedAt, playback.request, practiceBpm]);
-
-  function launchWhole(request: PlaybackRequest) {
-    activeRequestRef.current = request;
-    void controller.play(wholeSource, request, {
-      onEnded(reason) {
-        if (reason === "completed" && loopRef.current && activeRequestRef.current === request) {
-          launchWhole(request);
-        } else if (activeRequestRef.current === request) {
-          activeRequestRef.current = undefined;
-          setProgressBeat(0);
-          setPlayingSourceText(undefined);
-          setPlayingExtent(undefined);
-        }
-      },
-    }).catch(error => {
-      activeRequestRef.current = undefined;
-      setPlayError(error instanceof Error ? error.message : String(error));
-    });
-  }
-
-  function toggleWhole() {
-    if (wholePlaying) {
-      activeRequestRef.current = undefined;
-      controller.stop();
-      setProgressBeat(0);
-      setPlayingSourceText(undefined);
-      setPlayingExtent(undefined);
-      return;
-    }
-    if (!result.canConvert) return;
-    const notes = extendedTextPlaybackNotes(result, metronome);
-    if (!notes.length) return;
-    setPlayError(undefined);
-    setProgressBeat(0);
-    setPlayingSourceText(result.source);
-    setPlayingExtent({ bars: result.bars.length, beatsPerBar: result.beatsPerBar });
-    launchWhole({ type: "notes", notes, bpm: practiceBpm, sound });
-  }
-
   function auditionSpan(span: TextSourceRange) {
-    const chord = result.harmonicSpans.find(item => item.sourceSpan.start === span.start)?.chord;
-    if (!chord) return;
+    const harmonic = result.harmonicSpans.find(item => item.sourceSpan.start === span.start
+      || item.attacks.some(attack => attack.span.start === span.start));
+    if (!harmonic || !sourceMatches) return;
+    const attack = harmonic.attacks.find(item => item.span.start === span.start);
+    transport.seek(attack?.beat ?? harmonic.startBeat);
+    if (transportState.status === "playing") return;
     void controller.toggle({ kind: "capture", id: "extended-text-band:" + span.start },
-      { type: "chord", chord, sound }).catch(error => {
+      { type: "chord", chord: harmonic.chord, sound }).catch(error => {
       setPlayError(error instanceof Error ? error.message : String(error));
     });
   }
@@ -195,7 +151,6 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
   return (
     <div data-testid="extended-text-intake" className="lv-text-intake-shell mt-4 overflow-hidden rounded-xl border border-[var(--lv-border)] bg-[var(--lv-surface)]">
       <div className="lv-text-intake-toolbar flex flex-wrap items-center gap-3 border-b border-[var(--lv-border)] p-3">
-        {modeSelector}
         <label className="flex items-center gap-2 text-sm">{label(language, "Meter", "拍子")}
           <select data-testid="extended-text-meter" value={beat} disabled={disabled}
             onChange={event => setBeat(event.target.value)}
@@ -207,25 +162,16 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
         </label>
         <BpmScrubField idPrefix="text-intake-bpm" label="BPM" disabled={disabled}
           dragLabel={label(language, "Drag up or down to change BPM", "上下にドラッグしてBPMを変更")}
-          value={practiceBpm} onChange={value => { setPracticeBpm(value); setBpm(value); }} />
+          value={practiceBpm} onChange={value => {
+            transport.setBpm(value); setPracticeBpm(value); setBpm(value);
+          }} />
         <button type="button" className="lv-button-secondary min-h-9 px-3 text-sm"
           disabled={disabled} aria-pressed={metronome} onClick={() => setMetronome(!metronome)}>
           {label(language, "Metronome", "メトロノーム")} {metronome ? "ON" : "OFF"}</button>
-        <button type="button" className="lv-button-secondary min-h-9 px-3 text-sm"
-          disabled={disabled} aria-pressed={loop} onClick={() => setLoop(!loop)}>
-          {label(language, "Loop", "ループ")} {loop ? "ON" : "OFF"}</button>
-        <button type="button" className="lv-button-primary min-h-9 px-3 text-sm"
-          disabled={disabled || (!wholePlaying && !result.canConvert)}
-          data-testid="extended-text-play" onClick={toggleWhole}>
-          {wholePlaying ? label(language, "Stop", "■ 停止") : label(language, "Play all", "▶ 全体を再生")}</button>
-        {wholePlaying ? <span data-testid="extended-text-play-position" className="text-xs" aria-live="off">
-          {label(language, "Bar ", "小節 ")}{Math.min(playingExtent?.bars ?? result.bars.length,
-            Math.floor(progressBeat / (playingExtent?.beatsPerBar ?? result.beatsPerBar)) + 1)}
-        </span> : null}
-        {wholePlaying && playingSourceText !== input
-          ? <span className="text-xs text-[var(--lv-warning)]" data-testid="extended-text-frozen-playback">
-            {label(language, "Edits apply on the next Play.", "編集は次の再生から反映されます。")}
-          </span> : null}
+        <TextTransportBar language={language} transport={transport} state={transportState}
+          snapshot={playbackSnapshot} disabled={disabled || (transportState.status === "stopped" && !result.canConvert)}
+          sourceMatches={sourceMatches} primaryTestId="extended-text-play"
+          frozenTestId="extended-text-frozen-playback" />
         {playError ? <span role="alert" className="text-xs text-[var(--lv-danger)]">{playError}</span> : null}
       </div>
 
@@ -253,7 +199,9 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
               </button> : null}
               {hints.bpm !== undefined ? <button type="button" className={bpm === hints.bpm ? appliedClass : pendingClass}
                 disabled={disabled || bpm === hints.bpm}
-                onClick={() => { if (hints.bpm !== undefined) { setBpm(hints.bpm); setPracticeBpm(hints.bpm); } }}>
+                onClick={() => { if (hints.bpm !== undefined) {
+                  transport.setBpm(hints.bpm); setBpm(hints.bpm); setPracticeBpm(hints.bpm);
+                } }}>
                 {bpm === hints.bpm
                   ? label(language, "BPM applied: " + hints.bpm, "BPM " + hints.bpm + " 使用中")
                   : label(language, "Use BPM " + hints.bpm, "BPM " + hints.bpm + "を使う")}
@@ -310,10 +258,9 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
             : <div key={index} className="lv-text-intake-bars mt-2" data-testid="text-preview-row">
                 {item.bars.map(bar => <TextPreviewBar key={bar.number} bar={bar} language={language}
                   selectedStart={selectedStart} onSelect={selectSource} onAudition={auditionSpan}
-                  playing={wholePlaying && playingSourceText === input
-                    && progressBeat >= (bar.number - 1) * result.beatsPerBar
-                    && progressBeat < bar.number * result.beatsPerBar}
-                  progress={(progressBeat - (bar.number - 1) * result.beatsPerBar) / result.beatsPerBar}
+                  onBarSelect={span => { selectSource(span); if (sourceMatches) {
+                    transport.seek((bar.number - 1) * result.beatsPerBar);
+                  } }}
                   errorLabel={bar.error ? label(language, bar.error, japaneseDiagnostic[bar.error]) : undefined} />)}
               </div>)}
           {errors[0] ? <button type="button" className="lv-button-secondary mt-2 px-2 py-1 text-xs"

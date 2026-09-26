@@ -77,6 +77,29 @@ describe("CaptureView text progression entry", () => {
     }
   });
 
+  it("saves Standard directly through the existing text Vault adapter without opening Draft", async () => {
+    const mounted = await renderCapture("text");
+    try {
+      await setInput(mounted.container.querySelector<HTMLTextAreaElement>("[data-testid='text-progression-input']"),
+        "| C Dm |");
+      await setInput(mounted.container.querySelector<HTMLInputElement>("[data-testid='text-progression-name']"),
+        "Authored progression");
+      await setInput(mounted.container.querySelector<HTMLInputElement>("[data-testid='text-progression-bpm']"), "121");
+      await setInput(mounted.container.querySelector<HTMLInputElement>("[data-testid='text-progression-bpm']"), "120");
+      const save = mounted.container.querySelector<HTMLButtonElement>("[data-testid='text-progression-save']");
+      expect(save?.disabled).toBe(false);
+      await act(async () => save?.click());
+      expect(mounted.createIdeaFromTextProgression).toHaveBeenCalledTimes(1);
+      expect(mounted.createIdeaFromDraft).not.toHaveBeenCalled();
+      expect(mounted.container.querySelector("[data-testid='manual-candidate-editor']")).toBeNull();
+      expect(mounted.savedTextDraft()).toMatchObject({
+        title: "Authored progression", bpm: 120, scoreLengthBeats: 4,
+        userEdited: false, userVerified: true,
+      });
+      expect(mounted.savedTextDraft()?.chords).toHaveLength(2);
+    } finally { await mounted.unmount(); }
+  });
+
   it("switches from the default MIDI input without MIDI analysis and previews one text chord through a 4/4 timeline", async () => {
     const mounted = await renderCapture();
 
@@ -172,10 +195,9 @@ describe("CaptureView text progression entry", () => {
         mounted.container.querySelector<HTMLTextAreaElement>("[data-testid='text-progression-input']"),
         "| Cmaj7 |",
       );
-      await setInput(
-        mounted.container.querySelector<HTMLInputElement>("[data-testid='text-progression-bpm']"),
-        "120",
-      );
+      // The scrub control displays a practice default of 120 before a BPM is authored.
+      await setInput(mounted.container.querySelector<HTMLInputElement>("[data-testid='text-progression-bpm']"), "121");
+      await setInput(mounted.container.querySelector<HTMLInputElement>("[data-testid='text-progression-bpm']"), "120");
       await act(async () => mounted.container.querySelector<HTMLButtonElement>(
         "[data-testid='text-progression-convert']",
       )?.click());
@@ -197,7 +219,8 @@ describe("CaptureView text progression entry", () => {
       expect(mounted.analyzeMidiBytes).not.toHaveBeenCalled();
       expect(mounted.clearAnalysis).not.toHaveBeenCalled();
 
-      const saveToVault = [...mounted.container.querySelectorAll<HTMLButtonElement>("button")]
+      const draftEditor = mounted.container.querySelector("[data-testid='manual-candidate-editor']");
+      const saveToVault = [...(draftEditor?.querySelectorAll<HTMLButtonElement>("button") ?? [])]
         .find((button) => button.textContent?.includes(appCopy.en.capture.saveToVault));
       await act(async () => saveToVault?.click());
 

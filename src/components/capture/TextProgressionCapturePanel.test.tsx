@@ -137,6 +137,24 @@ function buttonByText(harness: Harness, label: string) {
 }
 
 describe("TextProgressionCapturePanel", () => {
+  it("keeps one shared product heading and syntax switch in both modes", async () => {
+    const harness = await mount();
+    try {
+      const heading = () => [...harness.container.querySelectorAll("h2")].map(node => node.textContent);
+      expect(heading()).toEqual(["Enter chord progression"]);
+      expect(harness.container.querySelectorAll('[data-testid="text-mode-standard"]')).toHaveLength(1);
+      expect(harness.container.querySelector('[data-testid="text-mode-legend"]')?.textContent)
+        .toContain("Standard");
+      await act(async () => harness.container.querySelector<HTMLButtonElement>('[data-testid="text-mode-extended"]')?.click());
+      expect(heading()).toEqual(["Enter chord progression"]);
+      expect(harness.container.querySelectorAll('[data-testid="text-mode-extended"]')).toHaveLength(1);
+      expect(harness.container.querySelector('[data-testid="text-mode-legend"]')?.textContent)
+        .toContain("Extended");
+    } finally {
+      await harness.unmount();
+    }
+  });
+
   it("renders accepted rest/hold cells honestly and converts an all-rest score without a chord inspector", async () => {
     const harness = await mount();
     await changeValue(input(harness), "| Cmaj7 _ | % = |");
@@ -147,6 +165,7 @@ describe("TextProgressionCapturePanel", () => {
     expect(harness.container.querySelector('[data-testid="text-progression-inspector"]')).toBeNull();
     const convert = harness.container.querySelector<HTMLButtonElement>('[data-testid="text-progression-convert"]')!;
     expect(convert.disabled).toBe(false);
+    expect(harness.container.querySelector<HTMLButtonElement>("[data-testid='text-transport-primary']")?.disabled).toBe(false);
     await click(convert);
     expect(harness.onConvert).toHaveBeenCalledOnce();
     await changeValue(input(harness), "| _ = |");

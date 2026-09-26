@@ -2,6 +2,7 @@ import {
   previewChord,
   previewChordTimeline,
   previewMidiNotes,
+  setPreviewMidiNotesBpm,
   stopPreview,
   type MidiPreviewNote,
   type MidiPreviewSound,
@@ -37,6 +38,7 @@ export type PlaybackRequest =
       notes: readonly MidiPreviewNote[];
       bpm: number;
       sound: MidiPreviewSound;
+      dynamicTempo?: boolean;
     };
 
 export interface PlaybackLifecycleCallbacks {
@@ -63,6 +65,7 @@ export interface PlaybackController {
     lifecycle?: PlaybackLifecycleCallbacks,
   ): Promise<void>;
   stop(): void;
+  updateNotesBpm?(source: PlayingSource, bpm: number): boolean;
   toggle(source: PlayingSource, request: PlaybackRequest): Promise<void>;
   isPlaying(source: PlayingSource): boolean;
   subscribe(listener: () => void): () => void;
@@ -88,7 +91,9 @@ export interface PlaybackAudioDriver {
     bpm: number,
     sound: MidiPreviewSound,
     callbacks: PreviewLifecycleCallbacks,
+    dynamicTempo?: boolean,
   ): Promise<void>;
+  updateNotesBpm?(bpm: number): boolean;
   stop(): void;
 }
 
@@ -108,9 +113,10 @@ const defaultAudioDriver: PlaybackAudioDriver = {
       explicitMidiNotesByEventId,
     );
   },
-  playNotes(notes, bpm, sound, callbacks) {
-    return previewMidiNotes(notes, bpm, sound, callbacks);
+  playNotes(notes, bpm, sound, callbacks, dynamicTempo) {
+    return previewMidiNotes(notes, bpm, sound, callbacks, undefined, { dynamicTempo });
   },
+  updateNotesBpm: setPreviewMidiNotesBpm,
   stop: stopPreview,
 };
 
@@ -225,7 +231,9 @@ export function createPlaybackController(
         if (!driver.playNotes) {
           throw new Error("The playback driver does not support note-event requests.");
         }
-        await driver.playNotes(request.notes, request.bpm, request.sound, callbacks);
+        if (request.dynamicTempo) await driver.playNotes(request.notes, request.bpm,
+          request.sound, callbacks, true);
+        else await driver.playNotes(request.notes, request.bpm, request.sound, callbacks);
       }
     } catch (error) {
       if (generation !== requestGeneration) return;
@@ -242,6 +250,14 @@ export function createPlaybackController(
     getState: () => state,
     play,
     stop,
+    updateNotesBpm(source, bpm) {
+      if (state.status !== "playing" || state.request?.type !== "notes"
+        || !state.request.dynamicTempo || !samePlaybackSource(state.source, source)
+        || !Number.isFinite(bpm) || bpm <= 0) return false;
+      if (!driver.updateNotesBpm?.(bpm)) return false;
+      setState({ ...state, request: { ...state.request, bpm } });
+      return true;
+    },
     async toggle(source, request) {
       if (state.status !== "idle" && samePlaybackSource(state.source, source)) {
         stop();

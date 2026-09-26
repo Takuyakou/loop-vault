@@ -1228,6 +1228,21 @@ export function CaptureView(props: CaptureViewProps) {
     return true;
   }
 
+  function saveStandardTextProgression(converted: TextProgressionConvertedDraft, title: string): boolean {
+    if (!createIdeaFromTextProgression) return false;
+    const payload = textProgressionDraftSavePayload(converted.draft, {
+      title, nextAction: copy.capture.defaultNextAction, userVerified: true,
+      ...(converted.bpm === undefined ? {} : { bpm: converted.bpm }),
+      ...(converted.confirmedKey === undefined ? {} : { confirmedKey: converted.confirmedKey }),
+    });
+    const saved = createIdeaFromTextProgression(payload);
+    if (!saved) { setToast(copy.capture.createFailed); return false; }
+    if (typeof saved === "object") setSavedTextProgressionTarget(saved);
+    setSavedTextPracticeStatus(undefined);
+    setToast(copy.capture.savedToVault);
+    return true;
+  }
+
   function openTextProgressionDraft(converted: TextProgressionConvertedDraft) {
     stopTextPlayback();
     setSavedTextProgressionTarget(undefined);
@@ -1330,7 +1345,7 @@ export function CaptureView(props: CaptureViewProps) {
             eventId,
           }],
           bpm,
-          sound: previewSound,
+          sound: "electric-piano",
           beatsPerBar: 4,
           explicitMidiNotesByEventId: { [eventId]: notes },
         },
@@ -1389,23 +1404,16 @@ export function CaptureView(props: CaptureViewProps) {
               disabled={textDraft !== null}
               onChange={changeCaptureInputMode}
             />
-            <PreviewSoundSelector
-              value={previewSound}
-              onChange={(sound) => {
-                stopTextPlayback();
-                setPreviewSound(sound);
-              }}
-              copy={copy}
-            />
           </section>
           <TextProgressionCapturePanel
             language={language}
             showRomanNumerals={showRomanNumerals}
             draftActive={textDraft !== null}
             onConvert={openTextProgressionDraft}
+            onSaveStandard={saveStandardTextProgression}
             onSaveExtended={saveExtendedTextProgression}
             controller={controller}
-            previewSound={previewSound}
+            previewSound="electric-piano"
             onPreview={(event, memory, bpm) => void previewTextProgressionEvent(event, memory, bpm)}
             onStop={stopTextPlayback}
           />
