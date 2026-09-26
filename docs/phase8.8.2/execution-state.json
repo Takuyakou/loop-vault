@@ -2,18 +2,19 @@
   "schemaVersion": 1,
   "phaseId": "8.8.2",
   "status": "in-progress",
-  "activeStage": "P8.8.2-05",
+  "activeStage": "P8.8.2-06",
   "completedStages": [
     "P8.8.2-00",
     "P8.8.2-01",
     "P8.8.2-02",
     "P8.8.2-03",
-    "P8.8.2-04"
+    "P8.8.2-04",
+    "P8.8.2-05"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "8cf49029eb6298d92a73affea05472ae229ce910",
-  "lastVerifiedCommit": "1478d30",
+  "lastVerifiedCommit": "9264ef8",
   "currentBranch": "feat/phase8.8.2-text-intake-ux",
   "requiredGates": {
     "P8.8.2-00": [
@@ -54,6 +55,14 @@
       "changed-scope-eslint",
       "phase-docs",
       "diff-check"
+    ],
+    "P8.8.2-05": [
+      "frozen-playback-regression",
+      "practice-limit-save-regression",
+      "typescript",
+      "changed-scope-eslint",
+      "phase-docs",
+      "diff-check"
     ]
   },
   "gateResults": {
@@ -71,8 +80,10 @@
     "named-vault-save": "pass",
     "standard-mode-regression": "pass",
     "score-preview-regression": "pass",
-    "source-span-navigation": "pass"
+    "source-span-navigation": "pass",
+    "frozen-playback-regression": "pass",
+    "practice-limit-save-regression": "pass"
   },
-  "nextAction": "Wire frozen-snapshot playback, diagnostics and practice compatibility into the save flow.",
+  "nextAction": "Run 70/150/200-bar, responsive, accessibility and performance checks; isolate failures before candidate gates.",
   "updatedAt": "2026-09-26"
 }

@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { act } from "react";
+import { createPlaybackController, type PlaybackAudioDriver } from "../../audio/playbackController";
 import { createRoot } from "react-dom/client";
 import { describe, expect, it, vi } from "vitest";
 import { TextProgressionCapturePanel } from "./TextProgressionCapturePanel";
@@ -113,6 +114,61 @@ describe("P8.8 extended Capture intake", () => {
     expect(editor.selectionEnd).toBe(end);
     expect(editor.value.slice(start, end)).toBe("C % =");
     expect(container.querySelector('[data-testid="extended-text-section"]')?.textContent).toBe("メモ");
+    await act(async () => root.unmount());
+    container.remove();
+  });
+
+  it("freezes whole playback on Play and applies edits only on the next Play", async () => {
+    const calls: Array<{ readonly notes: readonly { readonly pitch: number; readonly startBeat: number }[]; readonly bpm: number }> = [];
+    const driver: PlaybackAudioDriver = {
+      playChord: vi.fn(async (_chord, _sound, lifecycle) => { lifecycle.onStarted?.(); }),
+      playTimeline: vi.fn(async (_timeline, _bpm, _sound, lifecycle) => { lifecycle.onStarted?.(); }),
+      playNotes: vi.fn(async (notes, bpm, _sound, lifecycle) => {
+        calls.push({ notes, bpm });
+        lifecycle.onStarted?.();
+      }),
+      stop: vi.fn(),
+    };
+    const controller = createPlaybackController(driver);
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => root.render(<TextProgressionCapturePanel language="ja" showRomanNumerals={false}
+      controller={controller} onConvert={vi.fn()} onPreview={vi.fn()} onStop={() => controller.stop()}
+      onSaveExtended={vi.fn()} />));
+    await press(container.querySelector<HTMLButtonElement>('[data-testid="text-mode-extended"]')!);
+    const editor = container.querySelector<HTMLTextAreaElement>('[data-testid="extended-text-input"]')!;
+    await write(editor, "| C % = _ | F |");
+    await press(container.querySelector<HTMLButtonElement>('[data-testid="extended-text-play"]')!);
+    expect(calls).toHaveLength(1);
+    const original = calls[0]!.notes;
+    await write(editor, "| Dm % = _ | G |");
+    expect(calls).toHaveLength(1);
+    expect(controller.getState().request?.type).toBe("notes");
+    expect(container.querySelector('[data-testid="extended-text-frozen-playback"]')).not.toBeNull();
+    await press(container.querySelector<HTMLButtonElement>('[data-testid="extended-text-play"]')!);
+    await press(container.querySelector<HTMLButtonElement>('[data-testid="extended-text-play"]')!);
+    expect(calls).toHaveLength(2);
+    expect(calls[1]!.notes).not.toEqual(original);
+    await act(async () => root.unmount());
+    container.remove();
+  });
+
+  it("allows save while showing a distinct practice limitation for exact unsupported grid", async () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    const onSaveExtended = vi.fn(() => true);
+    await act(async () => root.render(<TextProgressionCapturePanel language="ja" showRomanNumerals={false}
+      onConvert={vi.fn()} onPreview={vi.fn()} onStop={vi.fn()} onSaveExtended={onSaveExtended} />));
+    await press(container.querySelector<HTMLButtonElement>('[data-testid="text-mode-extended"]')!);
+    await write(container.querySelector<HTMLTextAreaElement>('[data-testid="extended-text-input"]')!,
+      "| C Dm G7 F Am |");
+    expect(container.querySelector('[data-testid="extended-text-practice-limit"]')?.textContent).toContain("invalid-timing");
+    const save = container.querySelector<HTMLButtonElement>('[data-testid="extended-text-save"]')!;
+    expect(save.disabled).toBe(false);
+    await press(save);
+    expect(onSaveExtended).toHaveBeenCalledOnce();
     await act(async () => root.unmount());
     container.remove();
   });

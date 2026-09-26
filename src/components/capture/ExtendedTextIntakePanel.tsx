@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   parseExtendedTextProgression,
   type ExtendedTextMetadata,
@@ -7,6 +7,11 @@ import {
   type TextSourceRange,
 } from "../../domain/extendedTextProgression";
 import { buildTextPreviewScore } from "../../domain/textPreviewScore";
+import { extendedTextPlaybackNotes } from "../../domain/extendedTextPlayback";
+import { evaluateExtendedTextPractice } from "../../domain/extendedTextPractice";
+import { playbackController, samePlaybackSource, type PlaybackController, type PlaybackRequest } from "../../audio/playbackController";
+import type { PreviewSound } from "../../audio/chordPreview";
+import { usePlaybackState } from "../../hooks/usePlaybackState";
 import type { AppLanguage } from "../../i18n";
 import { BpmScrubField } from "../BpmScrubField";
 import { TextPreviewBar } from "./TextPreviewBar";
@@ -18,6 +23,8 @@ interface Props {
   readonly onInput: (value: string) => void;
   readonly onSave: (result: ExtendedTextResult, title: string) => boolean;
   readonly modeSelector?: ReactNode;
+  readonly controller?: PlaybackController;
+  readonly sound?: PreviewSound;
 }
 
 function label(language: AppLanguage, english: string, japanese: string): string {
@@ -46,11 +53,24 @@ export function detectExtendedTextMetadataHints(input: string): { key?: string; 
   };
 }
 
-export function ExtendedTextIntakePanel({ language, input, disabled, onInput, onSave, modeSelector }: Props) {
+export function ExtendedTextIntakePanel({ language, input, disabled, onInput, onSave, modeSelector,
+  controller = playbackController, sound = "electric-piano" }: Props) {
   const [beat, setBeat] = useState("4/4");
   const [key, setKey] = useState<string>();
   const [bpm, setBpm] = useState<number>();
   const [practiceBpm, setPracticeBpm] = useState(120);
+  const [metronome, setMetronome] = useState(false);
+  const [loop, setLoop] = useState(false);
+  const [playError, setPlayError] = useState<string>();
+  const [progressBeat, setProgressBeat] = useState(0);
+  const [playingSourceText, setPlayingSourceText] = useState<string>();
+  const [playingExtent, setPlayingExtent] = useState<{ readonly bars: number; readonly beatsPerBar: number }>();
+  const playback = usePlaybackState(controller);
+  const wholeSource = useMemo(() => ({ kind: "capture" as const, id: "extended-text-whole" }), []);
+  const wholePlaying = samePlaybackSource(playback.source, wholeSource);
+  const loopRef = useRef(loop);
+  loopRef.current = loop;
+  const activeRequestRef = useRef<PlaybackRequest>();
   const [name, setName] = useState(label(language, "Text progression", "テキスト進行"));
   const [saveFailed, setSaveFailed] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -67,6 +87,8 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
   }), [beat, key, bpm]);
   const result = useMemo(() => parseExtendedTextProgression(input, metadata), [input, metadata]);
   const scoreItems = useMemo(() => buildTextPreviewScore(result), [result]);
+  const practiceStatus = useMemo(() => result.canConvert
+    ? evaluateExtendedTextPractice(result, practiceBpm) : undefined, [result, practiceBpm]);
   const errors = result.diagnostics.filter(issue => issue.severity === "ERROR");
   const warnings = result.diagnostics.filter(issue => issue.severity === "WARNING");
   const annotationCount = result.sections.filter(section => section.kind === "comment"
@@ -75,11 +97,73 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
   const pendingClass = "rounded border border-[var(--lv-warning)] bg-[var(--lv-warning-soft)] px-3 py-2 text-sm text-[var(--lv-warning)]";
   const appliedClass = "lv-button-secondary px-3 py-2 text-sm";
 
+  useEffect(() => {
+    if (!wholePlaying || playback.startedAt === undefined) return;
+    const startedAt = playback.startedAt;
+    const bpmAtPlay = playback.request?.type === "notes" ? playback.request.bpm : practiceBpm;
+    const timer = globalThis.setInterval(() => {
+      setProgressBeat(Math.max(0, (performance.now() - startedAt) * bpmAtPlay / 60000));
+    }, 100);
+    return () => globalThis.clearInterval(timer);
+  }, [wholePlaying, playback.startedAt, playback.request, practiceBpm]);
+
+  function launchWhole(request: PlaybackRequest) {
+    activeRequestRef.current = request;
+    void controller.play(wholeSource, request, {
+      onEnded(reason) {
+        if (reason === "completed" && loopRef.current && activeRequestRef.current === request) {
+          launchWhole(request);
+        } else if (activeRequestRef.current === request) {
+          activeRequestRef.current = undefined;
+          setProgressBeat(0);
+          setPlayingSourceText(undefined);
+          setPlayingExtent(undefined);
+        }
+      },
+    }).catch(error => {
+      activeRequestRef.current = undefined;
+      setPlayError(error instanceof Error ? error.message : String(error));
+    });
+  }
+
+  function toggleWhole() {
+    if (wholePlaying) {
+      activeRequestRef.current = undefined;
+      controller.stop();
+      setProgressBeat(0);
+      setPlayingSourceText(undefined);
+      setPlayingExtent(undefined);
+      return;
+    }
+    if (!result.canConvert) return;
+    const notes = extendedTextPlaybackNotes(result, metronome);
+    if (!notes.length) return;
+    setPlayError(undefined);
+    setProgressBeat(0);
+    setPlayingSourceText(result.source);
+    setPlayingExtent({ bars: result.bars.length, beatsPerBar: result.beatsPerBar });
+    launchWhole({ type: "notes", notes, bpm: practiceBpm, sound });
+  }
+
+  function auditionSpan(span: TextSourceRange) {
+    const chord = result.harmonicSpans.find(item => item.sourceSpan.start === span.start)?.chord;
+    if (!chord) return;
+    void controller.toggle({ kind: "capture", id: "extended-text-band:" + span.start },
+      { type: "chord", chord, sound }).catch(error => {
+      setPlayError(error instanceof Error ? error.message : String(error));
+    });
+  }
+
   function save() {
     if (disabled || !result.canConvert || !name.trim()) return;
-    const success = onSave(result, name.trim());
-    setSaveFailed(!success);
-    setSaved(success);
+    try {
+      const success = onSave(result, name.trim());
+      setSaveFailed(!success);
+      setSaved(success);
+    } catch {
+      setSaveFailed(true);
+      setSaved(false);
+    }
   }
 
   function selectSource(span: TextSourceRange) {
@@ -118,12 +202,25 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
         <BpmScrubField idPrefix="text-intake-bpm" label="BPM" disabled={disabled}
           dragLabel={label(language, "Drag up or down to change BPM", "上下にドラッグしてBPMを変更")}
           value={practiceBpm} onChange={value => { setPracticeBpm(value); setBpm(value); }} />
-        <button type="button" className="lv-button-secondary min-h-9 px-3 text-sm" disabled
-          aria-pressed={false}>{label(language, "Metronome OFF", "メトロノーム OFF")}</button>
-        <button type="button" className="lv-button-secondary min-h-9 px-3 text-sm" disabled
-          aria-pressed={false}>{label(language, "Loop OFF", "ループ OFF")}</button>
-        <button type="button" className="lv-button-primary min-h-9 px-3 text-sm" disabled
-          data-testid="extended-text-play">{label(language, "Play all", "▶ 全体を再生")}</button>
+        <button type="button" className="lv-button-secondary min-h-9 px-3 text-sm"
+          disabled={disabled} aria-pressed={metronome} onClick={() => setMetronome(!metronome)}>
+          {label(language, "Metronome", "メトロノーム")} {metronome ? "ON" : "OFF"}</button>
+        <button type="button" className="lv-button-secondary min-h-9 px-3 text-sm"
+          disabled={disabled} aria-pressed={loop} onClick={() => setLoop(!loop)}>
+          {label(language, "Loop", "ループ")} {loop ? "ON" : "OFF"}</button>
+        <button type="button" className="lv-button-primary min-h-9 px-3 text-sm"
+          disabled={disabled || (!wholePlaying && !result.canConvert)}
+          data-testid="extended-text-play" onClick={toggleWhole}>
+          {wholePlaying ? label(language, "Stop", "■ 停止") : label(language, "Play all", "▶ 全体を再生")}</button>
+        {wholePlaying ? <span data-testid="extended-text-play-position" className="text-xs" aria-live="off">
+          {label(language, "Bar ", "小節 ")}{Math.min(playingExtent?.bars ?? result.bars.length,
+            Math.floor(progressBeat / (playingExtent?.beatsPerBar ?? result.beatsPerBar)) + 1)}
+        </span> : null}
+        {wholePlaying && playingSourceText !== input
+          ? <span className="text-xs text-[var(--lv-warning)]" data-testid="extended-text-frozen-playback">
+            {label(language, "Edits apply on the next Play.", "編集は次の再生から反映されます。")}
+          </span> : null}
+        {playError ? <span role="alert" className="text-xs text-[var(--lv-danger)]">{playError}</span> : null}
       </div>
 
       <div className="lv-text-intake-tabs border-b border-[var(--lv-border)] p-2" role="tablist"
@@ -182,8 +279,13 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
             <span className="text-xs text-[var(--lv-text-muted)]">{result.bars.length} {label(language, "bars", "小節")}</span>
             <span className="rounded border border-[var(--lv-danger)] px-2 py-1 text-xs text-[var(--lv-danger)]">{label(language, "Errors", "エラー")} {errors.length}</span>
             <span className="rounded border border-[var(--lv-warning)] bg-[var(--lv-warning-soft)] px-2 py-1 text-xs text-[var(--lv-warning)]">{label(language, "Warnings", "注意")} {warnings.length}</span>
-            <span className="rounded border border-[var(--lv-border)] px-2 py-1 text-xs">{label(language, "Practice limits", "練習制限")} 0</span>
+            <span className="rounded border border-[var(--lv-border)] px-2 py-1 text-xs">{label(language, "Practice limits", "練習制限")} {practiceStatus?.ready === false ? 1 : 0}</span>
           </div>
+          {practiceStatus?.ready === false ? <p data-testid="extended-text-practice-limit"
+            className="mb-2 text-sm text-[var(--lv-warning)]">
+            {label(language, "Save is available; Voicing Loop cannot use this exact timing: ",
+              "保存できますが、Voicing Loopではこのタイミングを練習できません: ")}{practiceStatus.reason}
+          </p> : null}
           {result.state === "EMPTY" ? <p className="text-sm text-[var(--lv-text-muted)]">{label(language, "Enter a progression to preview it.", "進行を入力するとここに表示されます。")}</p> : null}
           {scoreItems.map((item, index) => item.kind === "annotation"
             ? <button type="button" key={index} data-testid="extended-text-section"
@@ -192,9 +294,17 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
                 onClick={() => selectSource(item.sourceSpan)}>{item.text}</button>
             : <div key={index} className="lv-text-intake-bars mt-2" data-testid="text-preview-row">
                 {item.bars.map(bar => <TextPreviewBar key={bar.number} bar={bar} language={language}
-                  selectedStart={selectedStart} onSelect={selectSource}
+                  selectedStart={selectedStart} onSelect={selectSource} onAudition={auditionSpan}
+                  playing={wholePlaying && playingSourceText === input
+                    && progressBeat >= (bar.number - 1) * result.beatsPerBar
+                    && progressBeat < bar.number * result.beatsPerBar}
+                  progress={(progressBeat - (bar.number - 1) * result.beatsPerBar) / result.beatsPerBar}
                   errorLabel={bar.error ? label(language, bar.error, japaneseDiagnostic[bar.error]) : undefined} />)}
               </div>)}
+          {errors[0] ? <button type="button" className="lv-button-secondary mt-2 px-2 py-1 text-xs"
+            onClick={() => selectSource(errors[0]!.span)}>
+            {label(language, "Go to first error", "最初のエラーへ")}
+          </button> : null}
           <div id="extended-text-diagnostics" role="status" aria-live="polite" className="mt-3"
             data-testid="extended-text-diagnostics">
             {result.diagnostics.map((diagnostic, index) => <p key={String(diagnostic.span.start) + ":" + String(index)}
@@ -217,7 +327,7 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
           {" · " + beat + " · " + String(practiceBpm) + " BPM"}
           {" · " + label(language, "Errors", "エラー") + " " + String(errors.length)}
           {" / " + label(language, "Warnings", "注意") + " " + String(warnings.length)}
-          {" / " + label(language, "Practice limits", "練習制限") + " 0"}
+          {" / " + label(language, "Practice limits", "練習制限") + " " + String(practiceStatus?.ready === false ? 1 : 0)}
         </span>
         <button type="button" data-testid="extended-text-save" className="lv-button-primary min-h-9 px-4 text-sm"
           disabled={disabled || !result.canConvert || !name.trim()} onClick={save}>
