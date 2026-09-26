@@ -13,5 +13,6 @@
   "minorEleventh": "minor-third-minor-seventh-and-eleventh-required; fifth-and-ninth-optional",
   "sameDegreeMultipleAlterations": "all-distinct-written-pitch-classes-required",
   "explicitOmission": "removes-degree",
-  "unadjudicated": "mark-F-and-block-proven-coverage"
+  "unadjudicated": "mark-F-only-when-evidence-insufficient",
+  "unsupportedComposite": "explicit-theory-rejection-and-site-policy-difference"
 }

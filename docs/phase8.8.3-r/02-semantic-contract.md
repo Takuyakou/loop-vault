@@ -13,7 +13,7 @@ Policy ID: `p8.8.3-r-literal-degree-v1`. This is an audit policy, not a Product 
 - An explicit `#9`, `b9`, `#11`, `b11`, `#13`, or `b13` is a required written degree. For a single altered degree, its unaltered version is prohibited unless it is separately and explicitly written. An explicit `omit`/`no` removes that degree, taking precedence over an implicit family tone.
 - When a label writes two different alterations of the **same** degree (for example `b9,#9` or `#5,b5`), both written pitch classes are required by this literal policy; the later token may not silently erase the earlier one. If the two spellings resolve to the same pitch class, the written-degree distinction is retained in provenance even though pitch-class comparison collapses it.
 
-The policy is intentionally narrow about exotic compositions of multiple quality words and contradictory base/omission operators. Such a row may be marked `F/UNKNOWN` with an explicit reason; it cannot be counted as semantic coverage until a separate theory policy adjudicates it. The external site's current single-slot overwrite is recorded on the site axis as `E/EXTERNAL_POLICY_DIFFERENCE`, never copied into this theory policy.
+The policy admits literal `add2`, `add4`, `add6`, `add9`, `add11`, and `add13` on a recognized base; `6sus2`, `6sus4`, `11sus2`, `11sus4`, `11o`, and `6o` have explicit family rules in the machine scorer. A written sixth in a 6-chord remains a sixth when `b13` is separately added. Exotic compositions of mutually competing quality words outside this finite grammar are **explicitly rejected by this policy**. An accepted site label in that class is a known `E/EXTERNAL_POLICY_DIFFERENCE` requiring an explicit Product diagnostic, not evidence for a guessed chord meaning. `F/UNKNOWN` is reserved for actual insufficient evidence or an unhandled parsing case. The external site's current single-slot overwrite is recorded on the site axis as `E`, never copied into this theory policy.
 
 ## Audition policy
 
@@ -22,3 +22,4 @@ For each supported label, required tones must be present on Text Preview, saved 
 ## Current-site separation
 
 The current site may sound every stacked degree of a thirteenth, omit one of two same-degree alterations, or produce an incomplete power-chord score. Those are measured current-site facts. `E` means the site's internally consistent policy differs from this audit policy, and does not grant Product permission to substitute a chord silently. Site notes are derived from its deployed runtime and checked against the UI for representative labels; Product notes come from Product functions at the frozen commit.
+
