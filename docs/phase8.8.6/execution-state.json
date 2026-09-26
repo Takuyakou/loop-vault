@@ -2,16 +2,17 @@
   "schemaVersion": 1,
   "phaseId": "8.8.6",
   "status": "in-progress",
-  "activeStage": "P8.8.6-03",
+  "activeStage": "P8.8.6-04",
   "completedStages": [
     "P8.8.6-00",
     "P8.8.6-01",
-    "P8.8.6-02"
+    "P8.8.6-02",
+    "P8.8.6-03"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "feb2b51423e22f07cc26a00cf8819aa3fbe7490b",
-  "lastVerifiedCommit": "5884a70",
+  "lastVerifiedCommit": "e492a43",
   "currentBranch": "feat/phase8.8.6-final-capture-closure",
   "requiredGates": {
     "P8.8.6-00": [
@@ -42,8 +43,9 @@
   "gateResults": {
     "baseline-audit": "pass",
     "shared-status": "pass",
-    "height-ownership": "pass"
+    "height-ownership": "pass",
+    "visual-parity": "pass"
   },
-  "nextAction": "Close toolbar parity and run negative legacy checks",
+  "nextAction": "Add status, overflow, and long-scroll browser regression tests",
   "updatedAt": "2026-09-27"
 }
