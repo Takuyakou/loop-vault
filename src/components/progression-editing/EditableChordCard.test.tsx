@@ -63,6 +63,16 @@ async function renderCard() {
 }
 
 describe("EditableChordCard", () => {
+  it("shows an explicit warning reason even when analyzer confidence review is suppressed", async () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => root.render(<EditableChordCard slot={{ ...slot, confidence: 0, warnings: ["入力内容を確認"] }}
+      selected={false} playing={false} onSelect={vi.fn()} showConfidenceReview={false} language="ja" />));
+    expect(container.querySelector("[data-chord-card]")?.textContent).toContain("要確認 · 入力内容を確認");
+    await act(async () => root.unmount());
+  });
+
   it("selects from the full card and opens actions with Enter, Shift+F10, or Menu", async () => {
     const { container, root, onSelect, onQuickEdit } = await renderCard();
     const option = container.querySelector<HTMLElement>("[data-chord-card]")!;

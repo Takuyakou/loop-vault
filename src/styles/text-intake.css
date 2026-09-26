@@ -1,0 +1,34 @@
+.lv-text-intake-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  min-height: 0;
+}
+.lv-text-intake-pane {
+  min-height: 0;
+  max-height: min(660px, 68dvh);
+  overflow: auto;
+}
+.lv-text-intake-editor {
+  height: clamp(300px, 52dvh, 560px);
+}
+.lv-text-intake-gutter,
+.lv-text-intake-textarea {
+  line-height: 1.5rem;
+}
+.lv-text-intake-gutter {
+  width: 3.5rem;
+  padding: 0.5rem;
+}
+.lv-text-intake-bars {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+.lv-text-intake-tabs { display: none; }
+@media (max-width: 899px) {
+  .lv-text-intake-grid { display: block; }
+  .lv-text-intake-tabs { display: flex; gap: 0.5rem; }
+  .lv-text-intake-pane { display: none; border-right: 0; max-height: min(66dvh, 660px); }
+  .lv-text-intake-pane-active { display: block; }
+  .lv-text-intake-bars { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

@@ -51,6 +51,32 @@ describe("CaptureView text progression entry", () => {
     }
   });
 
+  it("saves a practice-incompatible Extended score but disables the Voicing Loop action", async () => {
+    const mounted = await renderCapture("text");
+    try {
+      const extended = mounted.container.querySelector<HTMLButtonElement>('[data-testid="text-mode-extended"]');
+      await act(async () => extended?.click());
+      await setInput(mounted.container.querySelector<HTMLTextAreaElement>('[data-testid="extended-text-input"]'),
+        "| C Dm G7 F Am |");
+      const save = mounted.container.querySelector<HTMLButtonElement>('[data-testid="extended-text-save"]');
+      expect(save?.disabled).toBe(false);
+      await act(async () => save?.click());
+      expect(mounted.createIdeaFromTextProgression).toHaveBeenCalledOnce();
+      expect(mounted.container.textContent).toContain("Practice limit: invalid-timing");
+      const practice = [...mounted.container.querySelectorAll<HTMLButtonElement>("button")]
+        .find(button => button.textContent?.trim() === "Voicing Loop");
+      expect(practice).toBeUndefined();
+      const disabledPractice = [...mounted.container.querySelectorAll<HTMLButtonElement>("button")]
+        .find(button => button.textContent?.trim() === "Practice in Voicing Loop");
+      expect(disabledPractice?.disabled).toBe(true);
+      const view = [...mounted.container.querySelectorAll<HTMLButtonElement>("button")]
+        .find(button => button.textContent?.trim() === "Open progression");
+      expect(view?.disabled).toBe(false);
+    } finally {
+      await mounted.unmount();
+    }
+  });
+
   it("switches from the default MIDI input without MIDI analysis and previews one text chord through a 4/4 timeline", async () => {
     const mounted = await renderCapture();
 

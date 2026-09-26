@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import type { PlaybackController } from "../../audio/playbackController";
+import type { PreviewSound } from "../../audio/chordPreview";
 import { romanNumeralHint } from "../../domain/harmony/romanNumerals";
 import type { ExtendedTextResult } from "../../domain/extendedTextProgression";
 import { ExtendedTextIntakePanel } from "./ExtendedTextIntakePanel";
@@ -47,13 +49,15 @@ interface TextProgressionCapturePanelProps {
   /** Once converted, the existing ManualCandidateDraft is authoritative. */
   readonly draftActive?: boolean;
   readonly onConvert: (converted: TextProgressionConvertedDraft) => void;
-  readonly onSaveExtended?: (result: ExtendedTextResult) => boolean;
+  readonly onSaveExtended?: (result: ExtendedTextResult, title: string) => boolean;
   readonly onPreview: (
     event: TextProgressionEvent,
     memory: ChordVoicingMemory | undefined,
     bpm: number,
   ) => void;
   readonly onStop: () => void;
+  readonly controller?: PlaybackController;
+  readonly previewSound?: PreviewSound;
 }
 
 /**
@@ -68,6 +72,8 @@ export function TextProgressionCapturePanel({
   onSaveExtended,
   onPreview,
   onStop,
+  controller,
+  previewSound,
 }: TextProgressionCapturePanelProps) {
   const [input, setInput] = useState("");
   const [dialect, setDialect] = useState<"standard" | "extended">("standard");
@@ -271,10 +277,10 @@ export function TextProgressionCapturePanel({
     return (
       <section className="border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-5" data-testid="text-progression-capture">
         <h2 className="text-2xl font-semibold">{text(language, "Extended text progression", "拡張テキスト進行")}</h2>
-        {modeSelector}
-        <ExtendedTextIntakePanel language={language} input={input} disabled={disabled}
-          onInput={(value) => { onStop(); setInput(value); }}
-          onSave={(extended) => onSaveExtended?.(extended) ?? false} />
+        <ExtendedTextIntakePanel language={language} input={input} disabled={disabled} modeSelector={modeSelector}
+          controller={controller} sound={previewSound}
+          onInput={setInput}
+          onSave={(extended, title) => onSaveExtended?.(extended, title) ?? false} />
       </section>
     );
   }

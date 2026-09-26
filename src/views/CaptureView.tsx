@@ -94,6 +94,7 @@ import { selectInitialTimelineCandidate } from "../domain/timelineCandidateGroup
 import type { TextProgressionEvent } from "../domain/textProgression";
 import type { ExtendedTextResult } from "../domain/extendedTextProgression";
 import { extendedTextSaveData } from "../domain/extendedTextSave";
+import { evaluateExtendedTextPractice, type ExtendedTextPracticeStatus } from "../domain/extendedTextPractice";
 import { progressionEditorCopy, type AppCopy, type AppLanguage } from "../i18n";
 import { ProgressionGrid, timelineStartBeat } from "../ui/ProgressionGrid";
 import { chordProgressFraction } from "../ui/playbackProgress";
@@ -380,6 +381,7 @@ export function CaptureView(props: CaptureViewProps) {
   const [captureInputMode, setCaptureInputMode] = useState<CaptureInputMode>(initialInputMode);
   const [textDraftContext, setTextDraftContext] = useState<TextDraftContext>();
   const [savedTextProgressionTarget, setSavedTextProgressionTarget] = useState<SavedTextProgressionTarget>();
+  const [savedTextPracticeStatus, setSavedTextPracticeStatus] = useState<ExtendedTextPracticeStatus>();
   const [analysisProgress, setAnalysisProgress] = useState<CaptureAnalysisProgressStage>();
   const [analysisRunGeneration, setAnalysisRunGeneration] = useState(0);
   const captureViewMountedRef = useRef(true);
@@ -1207,9 +1209,9 @@ export function CaptureView(props: CaptureViewProps) {
     setCaptureInputMode(nextMode);
   }
 
-  function saveExtendedTextProgression(result: ExtendedTextResult): boolean {
+  function saveExtendedTextProgression(result: ExtendedTextResult, title: string): boolean {
     if (!result.canConvert || !createIdeaFromTextProgression) return false;
-    const data = extendedTextSaveData(result);
+    const data = { ...extendedTextSaveData(result), title };
     const saved = createIdeaFromTextProgression({
       ...data,
       nextAction: copy.capture.defaultNextAction,
@@ -1221,6 +1223,7 @@ export function CaptureView(props: CaptureViewProps) {
       return false;
     }
     if (typeof saved === "object") setSavedTextProgressionTarget(saved);
+    setSavedTextPracticeStatus(evaluateExtendedTextPractice(result, result.metadata.bpm ?? 120));
     setToast(copy.capture.savedToVault);
     return true;
   }
@@ -1228,6 +1231,7 @@ export function CaptureView(props: CaptureViewProps) {
   function openTextProgressionDraft(converted: TextProgressionConvertedDraft) {
     stopTextPlayback();
     setSavedTextProgressionTarget(undefined);
+    setSavedTextPracticeStatus(undefined);
     setActiveDraft(converted.draft);
     setTextDraftContext({
       initialTitle: converted.title,
@@ -1269,6 +1273,7 @@ export function CaptureView(props: CaptureViewProps) {
       return false;
     }
     if (typeof saved === "object") setSavedTextProgressionTarget(saved);
+    setSavedTextPracticeStatus(undefined);
     setToast(copy.capture.savedToVault);
     return true;
   }
@@ -1290,6 +1295,7 @@ export function CaptureView(props: CaptureViewProps) {
     }
     const appended = appendTextProgressionToIdea(ideaId, payload);
     if (typeof appended === "object") setSavedTextProgressionTarget(appended);
+    setSavedTextPracticeStatus(undefined);
     setToast(appended ? copy.toast.blockSaved : copy.capture.appendFailed);
     return Boolean(appended);
   }
@@ -1398,12 +1404,16 @@ export function CaptureView(props: CaptureViewProps) {
             draftActive={textDraft !== null}
             onConvert={openTextProgressionDraft}
             onSaveExtended={saveExtendedTextProgression}
+            controller={controller}
+            previewSound={previewSound}
             onPreview={(event, memory, bpm) => void previewTextProgressionEvent(event, memory, bpm)}
             onStop={stopTextPlayback}
           />
           {!textDraft && savedTextProgressionTarget ? (
             <StatusMessage
-              title={language === "ja" ? "保存した進行を練習できます" : "Your saved progression is ready to practice"}
+              title={savedTextPracticeStatus?.ready === false
+                ? (language === "ja" ? "保存しました。Voicing Loopには対応していません" : "Saved. Voicing Loop is unavailable")
+                : (language === "ja" ? "保存した進行を練習できます" : "Your saved progression is ready to practice")}
               tone="success"
               action={(
                 <div className="flex min-w-0 flex-wrap gap-2">
@@ -1413,9 +1423,13 @@ export function CaptureView(props: CaptureViewProps) {
                       variant="primary"
                       size="sm"
                       onClick={() => openSavedTextProgressionPractice(savedTextProgressionTarget)}
+                      disabled={savedTextPracticeStatus?.ready === false}
+                      title={savedTextPracticeStatus?.reason}
                     >
                       <Dumbbell aria-hidden="true" size={16} />
-                      Voicing Loop
+                      {savedTextPracticeStatus
+                        ? (language === "ja" ? "Voicing Loopで練習" : "Practice in Voicing Loop")
+                        : "Voicing Loop"}
                     </Button>
                   ) : null}
                   {openSavedTextProgression ? (
@@ -1426,15 +1440,19 @@ export function CaptureView(props: CaptureViewProps) {
                       onClick={() => openSavedTextProgression(savedTextProgressionTarget)}
                     >
                       <ExternalLink aria-hidden="true" size={16} />
-                      {language === "ja" ? "保存した進行を見る" : "View saved progression"}
+                      {savedTextPracticeStatus
+                        ? (language === "ja" ? "進行を開く" : "Open progression")
+                        : language === "ja" ? "保存した進行を見る" : "View saved progression"}
                     </Button>
                   ) : null}
                 </div>
               )}
             >
-              {language === "ja"
-                ? "Vaultへ保存した内容から安全な練習用snapshotを作成します。"
-                : "Voicing Loop will build a safe practice snapshot from the saved Vault block."}
+              {savedTextPracticeStatus?.ready === false
+                ? (language === "ja" ? "練習制限: " : "Practice limit: ") + savedTextPracticeStatus.reason
+                : language === "ja"
+                  ? "Vaultへ保存した内容から安全な練習用snapshotを作成します。"
+                  : "Voicing Loop will build a safe practice snapshot from the saved Vault block."}
             </StatusMessage>
           ) : null}
           {textDraft ? (
