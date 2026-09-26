@@ -5,7 +5,7 @@
 ## Status
 
 - Status: in progress
-- Active stage: P8.8.3-04
+- Active stage: P8.8.3-05
 - Product-supported matrix: 624 rows frozen from P8.8.3-R
 - Local master merge requires a separate human authorization under AGENTS.md.
 

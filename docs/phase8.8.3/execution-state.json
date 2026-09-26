@@ -2,17 +2,18 @@
   "schemaVersion": 1,
   "phaseId": "8.8.3",
   "status": "in-progress",
-  "activeStage": "P8.8.3-04",
+  "activeStage": "P8.8.3-05",
   "completedStages": [
     "P8.8.3-00",
     "P8.8.3-01",
     "P8.8.3-02",
-    "P8.8.3-03"
+    "P8.8.3-03",
+    "P8.8.3-04"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "d37177368f05b9bf70526582e07f754e93df3d02",
-  "lastVerifiedCommit": "063442c",
+  "lastVerifiedCommit": "d4b898c",
   "currentBranch": "feat/phase8.8.3-defining-tone-correctness",
   "requiredGates": {
     "P8.8.3-00": [
@@ -47,8 +48,9 @@
     "focused-semantic": "pass",
     "focused-audition": "pass",
     "focused-practice": "pass",
-    "matrix-regression": "pass"
+    "matrix-regression": "pass",
+    "local-witness": "pass"
   },
-  "nextAction": "Commit permanent regression; audit the local witness without tracking private media",
+  "nextAction": "Commit local witness aggregate, then run full candidate gates",
   "updatedAt": "2026-09-26"
 }
