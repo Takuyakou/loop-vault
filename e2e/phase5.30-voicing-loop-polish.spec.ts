@@ -101,6 +101,7 @@ test("P5.30 128-event timeline stays local, resumes follow, reduced-motion, and 
   const capture = page.getByTestId("text-progression-capture");
   const maximumInput = `| ${Array(32).fill("Cmaj7 Cmaj7 Cmaj7 Cmaj7").join(" | ")} |`;
   await capture.getByTestId("text-progression-input").fill(maximumInput);
+  await capture.getByTestId("text-key-picker").click();
   await capture.getByTestId("text-progression-key").fill("C major");
   await capture.getByRole("button", { name: /キーを確定|Confirm key/ }).click();
   await capture.getByTestId("text-progression-bpm").fill("240");

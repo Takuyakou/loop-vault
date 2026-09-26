@@ -1464,7 +1464,7 @@ function viewLabel(view: View, copy: AppCopy): string {
 
 function viewContext(view: View, language: AppLanguage): string {
   const ja = language === "ja";
-  if (view === "capture") return ja ? "MIDIからコード進行を採集" : "Capture progressions from MIDI";
+  if (view === "capture") return ja ? "MIDIやテキストからコード進行を採集" : "Capture progressions from MIDI or text";
   if (view === "library") return ja ? "保存進行をすばやく取り出す" : "Find saved progressions";
   if (view === "detail") return ja ? "Ideaの情報と次の一手" : "Idea details and next action";
   if (view === "progression-detail") return ja ? "コード進行を試聴・修正" : "Preview and edit progression";

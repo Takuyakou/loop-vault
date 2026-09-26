@@ -130,7 +130,7 @@ export function BpmScrubField({
           data-testid={inputTestId}
           disabled={disabled}
           aria-describedby={`${idPrefix}-drag-help`}
-          className={`lv-field-control min-h-8 w-20 px-2 pr-6 text-sm ${editing ? "cursor-text" : "cursor-ns-resize"}`}
+          className={`lv-field-control min-h-8 w-20 px-2 pr-6 font-mono text-sm ${editing ? "cursor-text" : "cursor-ns-resize"}`}
           type="text"
           inputMode="numeric"
           role="spinbutton"

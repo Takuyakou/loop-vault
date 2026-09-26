@@ -30,6 +30,7 @@ async function enterEligibleProgression(page: Page) {
   await capture.getByTestId("text-progression-input").fill("| C G | Am F |");
   await expect(capture.getByTestId("text-progression-card")).toHaveCount(4);
 
+  await capture.getByTestId("text-key-picker").click();
   await capture.getByTestId("text-progression-key").fill("C major");
   await capture.getByRole("button", { name: /\u30ad\u30fc\u3092\u78ba\u5b9a|Confirm key/ }).click();
   await expect(capture.getByTestId("text-progression-key-state")).toContainText("C major");
@@ -78,10 +79,11 @@ test("P5.20 production Text Progression Entry saves and reaches its supported do
   await expect(page.locator("[data-capture-midi-drop-zone]")).toHaveCount(0);
 
   await capture.getByTestId("standard-text-card-details").locator("summary").click();
-  await inspector.getByTestId("text-progression-detail-expander").locator("summary").click();
   const cards = capture.getByTestId("text-progression-card");
   await cards.first().focus();
   await page.keyboard.press("Enter");
+  await inspector.locator(":scope > summary").click();
+  await inspector.getByTestId("text-progression-detail-expander").locator("summary").click();
   await expect(inspector).toBeVisible();
   await expect(inspector.getByTestId("text-progression-auto-generated")).toContainText(/source MIDI|\u5143MIDI/);
 
@@ -111,8 +113,10 @@ test("P5.20 production Text Progression Entry saves and reaches its supported do
   }
 
   // Selecting a card auditions the exact voicing currently planned for save.
+  await capture.getByTestId("standard-text-card-details").locator(":scope > summary").click();
   await cards.nth(1).click();
   await cards.first().click();
+  await inspector.locator(":scope > summary").click();
   await inspector.getByTestId("text-progression-preview").click();
   await inspector.getByRole("button", { name: /\u505c\u6b62|Stop/ }).click();
 

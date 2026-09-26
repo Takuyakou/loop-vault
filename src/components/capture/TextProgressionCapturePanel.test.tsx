@@ -137,19 +137,19 @@ function buttonByText(harness: Harness, label: string) {
 }
 
 describe("TextProgressionCapturePanel", () => {
-  it("keeps one shared product heading and syntax switch in both modes", async () => {
+  it("keeps one shared syntax switch without duplicating the app heading", async () => {
     const harness = await mount();
     try {
       const heading = () => [...harness.container.querySelectorAll("h2")].map(node => node.textContent);
-      expect(heading()).toEqual(["Enter chord progression"]);
+      expect(heading()).toEqual([]);
       expect(harness.container.querySelectorAll('[data-testid="text-mode-standard"]')).toHaveLength(1);
-      expect(harness.container.querySelector('[data-testid="text-mode-legend"]')?.textContent)
-        .toContain("Standard");
+      expect(harness.container.querySelector('[data-testid="text-progression-capture"]')?.getAttribute("data-text-dialect"))
+        .toBe("standard");
       await act(async () => harness.container.querySelector<HTMLButtonElement>('[data-testid="text-mode-extended"]')?.click());
-      expect(heading()).toEqual(["Enter chord progression"]);
+      expect(heading()).toEqual([]);
       expect(harness.container.querySelectorAll('[data-testid="text-mode-extended"]')).toHaveLength(1);
-      expect(harness.container.querySelector('[data-testid="text-mode-legend"]')?.textContent)
-        .toContain("Extended");
+      expect(harness.container.querySelector('[data-testid="text-progression-capture"]')?.getAttribute("data-text-dialect"))
+        .toBe("extended");
     } finally {
       await harness.unmount();
     }

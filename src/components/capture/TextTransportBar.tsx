@@ -46,11 +46,11 @@ export function TextTransportBar({ language, transport, state, snapshot, disable
     <TransportButton variant="neutral" data-testid="text-transport-stop"
       disabled={disabled || state.status === "stopped"} onClick={() => transport.stop()}>{ja ? "■ 停止" : "■ Stop"}</TransportButton>
     <TransportButton variant="neutral" data-testid="text-transport-beginning"
-      disabled={disabled} aria-label={ja ? "最初から" : "Beginning"} title={ja ? "最初から" : "Beginning"} onClick={() => transport.beginning()}>|◀</TransportButton>
+      disabled={disabled} aria-label={ja ? "最初から" : "Beginning"} title={ja ? "最初から" : "Beginning"} onClick={() => transport.beginning()}>{ja ? "|◀ 最初から" : "|◀ Beginning"}</TransportButton>
     <TransportButton variant="loop" active={state.loop} data-testid="text-transport-loop"
       disabled={disabled} aria-pressed={state.loop} aria-label={(ja ? "全体ループ " : "Loop all ") + (state.loop ? "ON" : "OFF")} onClick={() => transport.setLoop(!state.loop)}>
-      {ja ? "ループ" : "Loop"} {state.loop ? "ON" : "OFF"}</TransportButton>
-    <span className="lv-text-transport-position text-xs text-[var(--lv-text-muted)]" data-testid="text-transport-position" aria-live="off" />
+      {ja ? "↻ ループ" : "↻ Loop"}</TransportButton>
+    <span className="lv-text-transport-position font-mono text-xs text-[var(--lv-text-muted)]" data-testid="text-transport-position" aria-live="off" />
     <span className="sr-only" role="status" aria-live="polite" data-testid="text-transport-status">
       {primaryLabel}{state.status === "stopped" ? (ja ? "・停止中" : " · stopped") : ""}
     </span>
