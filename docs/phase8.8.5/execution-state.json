@@ -2,14 +2,15 @@
   "schemaVersion": 1,
   "phaseId": "8.8.5",
   "status": "in-progress",
-  "activeStage": "P8.8.5-01",
+  "activeStage": "P8.8.5-02",
   "completedStages": [
-    "P8.8.5-00"
+    "P8.8.5-00",
+    "P8.8.5-01"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "340e45455cd8f7a91648db5ee2f92fe42c794d7c",
-  "lastVerifiedCommit": "a5cb5c9c820c8c37974a43d440c9119147ba8d6c",
+  "lastVerifiedCommit": "a5af6d936c8a97075c79027e941e13d91baf5824",
   "currentBranch": "feat/phase8.8.5-global-playback-text-polish",
   "requiredGates": {
     "P8.8.5-00": [
@@ -40,8 +41,9 @@
   },
   "gateResults": {
     "baseline-audit": "pass",
-    "phase-docs": "pass"
+    "phase-docs": "pass",
+    "capture-tabs": "pass"
   },
-  "nextAction": "Implement shared Capture input tabs and verify geometry",
+  "nextAction": "Unify global audition timbre and metronome preference",
   "updatedAt": "2026-09-26"
 }
