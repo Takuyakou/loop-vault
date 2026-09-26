@@ -2,15 +2,16 @@
   "schemaVersion": 1,
   "phaseId": "8.8.3",
   "status": "in-progress",
-  "activeStage": "P8.8.3-02",
+  "activeStage": "P8.8.3-03",
   "completedStages": [
     "P8.8.3-00",
-    "P8.8.3-01"
+    "P8.8.3-01",
+    "P8.8.3-02"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "d37177368f05b9bf70526582e07f754e93df3d02",
-  "lastVerifiedCommit": "71ec976",
+  "lastVerifiedCommit": "52ae597",
   "currentBranch": "feat/phase8.8.3-defining-tone-correctness",
   "requiredGates": {
     "P8.8.3-00": [
@@ -43,8 +44,9 @@
     "matrix-freeze": "pass",
     "validate:phase-docs": "pass",
     "focused-semantic": "pass",
-    "focused-audition": "pass"
+    "focused-audition": "pass",
+    "focused-practice": "pass"
   },
-  "nextAction": "Commit Text audition, then protect text-derived Voicing Loop Generated tones",
+  "nextAction": "Commit text-derived basic-full protection, then consolidate permanent matrix regression",
   "updatedAt": "2026-09-26"
 }

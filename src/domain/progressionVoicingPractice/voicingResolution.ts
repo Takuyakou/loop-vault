@@ -1,5 +1,6 @@
 import type { ChordSymbol } from "../types";
 import { labelFromSymbol } from "../chords";
+import { chordPitchClasses } from "../chordVoicing";
 import {
   generateStudyCandidates,
   type StudyGeneratedCandidate,
@@ -92,6 +93,10 @@ export function resolveProgressionPracticeVoicings(
     );
   }
 
+  if (selection === "basic-full" && snapshot.textDerivedPolicyId === "text-defining-basic-full-v1") {
+    return applyOctaveShift(resolveTextBasicFull(snapshot), options.octaveShift ?? 0);
+  }
+
   const resolutions: ProgressionPracticeVoicingResolution[] = [];
   const candidateGroups: StyleVoicingCandidate[][] = [];
   const candidateIndexes: number[] = [];
@@ -128,6 +133,55 @@ export function resolveProgressionPracticeVoicings(
   });
 
   return applyOctaveShift(freezePlan(snapshot, resolutions), options.octaveShift ?? 0);
+}
+
+/**
+ * Text-only Generated candidates retain all accepted chord pitch classes.
+ * Three bounded upper-register rotations feed the existing progression
+ * optimizer, so neighboring cards still influence voice leading.
+ */
+function resolveTextBasicFull(snapshot: ProgressionVoicingPracticeSnapshot): ProgressionPracticeVoicingPlan {
+  const groups = snapshot.events.map(event => {
+    const chord = asChordSymbol(event.chord);
+    const bassPc = pitchClass(chord.bass ?? chord.root);
+    const bassNote = 43 + ((bassPc - 43 + 120) % 12);
+    const upperPcs = chordPitchClasses(chord).filter(pc => pc !== bassPc);
+    return [60, 64, 67].map(start => {
+      const rightHandNotes = upperPcs.map(pc => start + ((pc - start % 12 + 12) % 12))
+        .sort((left, right) => left - right);
+      return {
+        styleId: "lesson-v2" as const,
+        leftHandNotes: [bassNote],
+        rightHandNotes,
+        allNotes: [bassNote, ...rightHandNotes],
+        requiredIntervals: [],
+        addedColorIntervals: [],
+        omittedIntervals: [],
+        warnings: [],
+      } satisfies StyleVoicingCandidate;
+    });
+  });
+  const optimized = optimizeCandidateGroups(groups);
+  const resolutions = snapshot.events.map((event, index) => {
+    const candidate = optimized[index];
+    if (!candidate) return generationError(event.id);
+    const midiNotes = Object.freeze([...candidate.allNotes]);
+    const bassNote = candidate.leftHandNotes[0]!;
+    return freezeResolution({
+      eventId: event.id,
+      status: "SUPPORTED" as const,
+      voicing: freezeVoicing({
+        origin: "basic-full",
+        midiNotes,
+        bassNote,
+        leftHandNotes: Object.freeze([...candidate.leftHandNotes]),
+        rightHandNotes: Object.freeze([...candidate.rightHandNotes]),
+        addedColorDegrees: Object.freeze([]),
+        notes: noteFacts(event.chord, midiNotes, [], bassNote),
+      }),
+    });
+  });
+  return freezePlan(snapshot, resolutions);
 }
 
 function resolveMyVoicing(

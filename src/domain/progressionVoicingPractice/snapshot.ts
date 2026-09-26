@@ -1,5 +1,6 @@
 import { VOICING_AUTO_USE_CONFIDENCE } from "../voicing/extractionConfig";
 import { parseTextChordLabel } from "../chords";
+import { TEXT_GENERATED_VOICING_POLICY } from "../textSource";
 import { explicitSlashLabel } from "../explicitSlashLabel";
 import type { ChordQuality, ChordSymbol, ChordTimelineItem, SavedProgressionBlock, Tension, VoicingSnapshot } from "../types";
 import { isExplicitSourceMidiVoicingAvailable, voicingCompatibility } from "../voicing";
@@ -127,6 +128,7 @@ export function buildProgressionVoicingPracticeSnapshot(
     version: PROGRESSION_VOICING_PRACTICE_SNAPSHOT_VERSION,
     source,
     selection: input.selection,
+    ...(input.block.textSource ? { textDerivedPolicyId: TEXT_GENERATED_VOICING_POLICY } : {}),
     ...(normalizedKey === undefined ? {} : { key: normalizedKey }),
     bpm: input.block.bpm,
     meter: Object.freeze(sourceMeter),

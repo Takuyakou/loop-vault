@@ -5,7 +5,7 @@ import {
   type TextSourceRange,
 } from "./extendedTextProgression";
 
-export const TEXT_GENERATED_VOICING_POLICY = "generated-close-v1";
+export const TEXT_GENERATED_VOICING_POLICY = "text-defining-basic-full-v1";
 
 export interface SavedTextSourceV1 {
   readonly schemaVersion: 1;
