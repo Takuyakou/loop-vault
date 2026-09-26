@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "phaseId": "8.8.1",
-  "status": "complete",
+  "status": "completed",
   "activeStage": null,
   "completedStages": [
     "P8.8.1-00",
