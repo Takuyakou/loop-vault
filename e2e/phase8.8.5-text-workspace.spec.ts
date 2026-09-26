@@ -77,3 +77,27 @@ test("toolbar wraps by content width and keeps the Save cluster fixed during tra
     await assertNoHorizontalOverflow(page);
   }
 });
+
+
+test("interactive chord bands show teal hover/focus and blocked save explains itself", async ({ page }) => {
+  await openApp(page);
+  await page.locator("nav").getByRole("button", { name: /コード採集|Capture/ }).click();
+  await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
+  const capture = page.getByTestId("text-progression-capture");
+  await capture.getByTestId("text-progression-input").fill("| C Dm F G |");
+  const band = capture.getByTestId("standard-text-preview").getByTestId("text-preview-band").first();
+  await expect(band).toHaveCSS("cursor", "pointer");
+  const initial = await band.evaluate(element => getComputedStyle(element).backgroundColor);
+  await band.hover();
+  const hovered = await band.evaluate(element => getComputedStyle(element).backgroundColor);
+  expect(hovered).not.toBe(initial);
+  const chordButton = band.getByRole("button", { name: "C", exact: true });
+  await capture.getByTestId("standard-text-preview").getByTestId("text-preview-bar-select").first().focus();
+  await page.keyboard.press("Tab");
+  await expect(chordButton).toBeFocused();
+  await expect(chordButton).toHaveCSS("outline-style", "solid");
+  await capture.getByTestId("text-progression-input").fill("| C ??? |");
+  await expect(capture.getByTestId("text-progression-save")).toBeDisabled();
+  await expect(capture.getByTestId("text-save-blocked-hint")).toHaveAttribute("aria-describedby", "text-progression-save-reason");
+  await expect(capture.locator("#text-progression-save-reason")).toBeVisible();
+});

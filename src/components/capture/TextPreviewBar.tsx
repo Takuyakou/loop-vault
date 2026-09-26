@@ -42,12 +42,12 @@ function DurationBand({ band, selected, language, onSelect, onAudition }: {
   return <div data-testid="text-preview-band"
     data-source-start={band.sourceSpan.start} data-source-end={band.sourceSpan.end}
     data-selected={selected} data-chord={band.writtenChord}
-    className={"absolute inset-y-0 min-w-0 overflow-hidden rounded border border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-text)]" +
+    className={"lv-text-preview-band absolute inset-y-0 min-w-0 overflow-hidden rounded border border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-text)]" +
       (selected ? " outline outline-2 outline-[var(--lv-accent)]" : "")}
     style={{ left: String(band.left) + "%", width: String(band.width) + "%" }}
     onClick={() => { onSelect(band.sourceSpan); onAudition?.(band.sourceSpan); }}>
-    <button type="button" className="absolute inset-0 min-w-0 w-full"
-      aria-label={band.writtenChord}
+    <button type="button" className="lv-text-preview-chord absolute inset-0 min-w-0 w-full cursor-pointer"
+      aria-label={band.writtenChord} title={band.writtenChord}
       onClick={event => { event.stopPropagation(); onSelect(band.sourceSpan); onAudition?.(band.sourceSpan); }}>
       <ChordLabel value={band.writtenChord} />
     </button>
@@ -62,7 +62,7 @@ function RestRegion({ rest, language, onSelect }: {
 }) {
   return <button type="button" data-testid="text-preview-rest"
     aria-label={language === "ja" ? "休符" : "Rest"}
-    className="absolute inset-y-0 overflow-hidden rounded border border-dashed border-[var(--lv-border-strong)] text-xs text-[var(--lv-text-muted)]"
+    className="absolute inset-y-0 cursor-pointer overflow-hidden rounded border border-dashed border-[var(--lv-border-strong)] text-xs text-[var(--lv-text-muted)]"
     style={{ left: String(rest.left) + "%", width: String(rest.width) + "%" }}
     onClick={() => onSelect(rest.sourceSpan)}>{language === "ja" ? "休" : "R"}</button>;
 }

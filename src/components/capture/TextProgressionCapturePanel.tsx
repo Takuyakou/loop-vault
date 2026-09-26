@@ -384,6 +384,9 @@ export function TextProgressionCapturePanel({
             title={!result.canConvert ? text(language, "Fix diagnostics before saving", "保存前に診断を修正してください") : undefined}
             aria-describedby={!result.canConvert ? "text-progression-save-reason" : undefined}
             onClick={saveStandard}>{text(language, "Save", "Vaultに保存")}</button>
+          {!result.canConvert ? <span tabIndex={0} role="note" aria-describedby="text-progression-save-reason"
+            title={text(language, "Fix diagnostics before saving", "保存前に診断を修正してください")}
+            className="cursor-help text-xs text-[var(--lv-text-secondary)]" data-testid="text-save-blocked-hint">ⓘ</span> : null}
         </div> : null}
       </div>
       <StandardTextScoreWorkspace language={language} input={input} result={result} disabled={disabled}

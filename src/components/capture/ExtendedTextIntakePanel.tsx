@@ -200,6 +200,9 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
             aria-describedby={!result.canConvert ? "extended-text-save-reason" : undefined}>
             {label(language, "Save", "Vaultに保存")}
           </button>
+          {!result.canConvert ? <span tabIndex={0} role="note" aria-describedby="extended-text-save-reason"
+            title={label(language, "Fix diagnostics before saving", "保存前に診断を修正してください")}
+            className="cursor-help text-xs text-[var(--lv-text-secondary)]" data-testid="text-save-blocked-hint">ⓘ</span> : null}
         </div>
         {playError ? <span role="alert" className="text-xs text-[var(--lv-danger)]">{playError}</span> : null}
       </div>
