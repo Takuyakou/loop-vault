@@ -38,7 +38,8 @@ describe("P8.8 extended Capture intake", () => {
     expect(container.querySelector(".lv-text-intake-grid")).not.toBeNull();
     expect(container.querySelector(".lv-text-intake-savebar")).not.toBeNull();
     expect(container.querySelector(".lv-text-intake-gutter")?.textContent).toContain("2");
-    expect(container.querySelector('[data-testid="extended-text-section"]')?.textContent).toContain("Key: C major");
+    expect(container.querySelector('[data-testid="extended-text-section"]')).toBeNull();
+    expect(container.querySelectorAll('[data-testid="text-preview-attack"]')).toHaveLength(2);
     expect(container.querySelector('[data-testid="extended-text-metadata"]')).toBeNull();
     expect(container.querySelector('[data-testid="text-intake-bpm-field"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="text-intake-bpm-drag"]')).not.toBeNull();
@@ -85,12 +86,33 @@ describe("P8.8 extended Capture intake", () => {
     await write(container.querySelector<HTMLTextAreaElement>('[data-testid="extended-text-input"]')!, "| C///E | F |");
     const bar = container.querySelector('[data-testid="extended-text-bar"][data-state="error"]');
     expect(bar?.textContent).toContain("C///E");
-    expect(bar?.textContent).toContain("解析できない元テキスト");
+    expect(bar?.textContent).toContain("書式を確認してください");
     const diagnostic = container.querySelector('[data-testid="extended-text-diagnostics"] [data-reason="INVALID_STRUCTURE"]');
     expect(diagnostic?.textContent).toContain("書式を確認してください");
     expect(diagnostic?.getAttribute("data-span-start")).not.toBeNull();
     expect(diagnostic?.getAttribute("data-span-end")).not.toBeNull();
     expect(container.querySelector<HTMLButtonElement>('[data-testid="extended-text-save"]')?.disabled).toBe(true);
+    await act(async () => root.unmount());
+    container.remove();
+  });
+
+  it("navigates from a preview band to its exact source span", async () => {
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => root.render(<TextProgressionCapturePanel language="ja" showRomanNumerals={false}
+      onConvert={vi.fn()} onPreview={vi.fn()} onStop={vi.fn()} onSaveExtended={vi.fn()} />));
+    await press(container.querySelector<HTMLButtonElement>('[data-testid="text-mode-extended"]')!);
+    const editor = container.querySelector<HTMLTextAreaElement>('[data-testid="extended-text-input"]')!;
+    await write(editor, "#メモ\n| C % = _ | F/C |");
+    const band = container.querySelector<HTMLButtonElement>('[data-testid="text-preview-band"]')!;
+    const start = Number(band.dataset.sourceStart);
+    const end = Number(band.dataset.sourceEnd);
+    await press(band);
+    expect(editor.selectionStart).toBe(start);
+    expect(editor.selectionEnd).toBe(end);
+    expect(editor.value.slice(start, end)).toBe("C % =");
+    expect(container.querySelector('[data-testid="extended-text-section"]')?.textContent).toBe("メモ");
     await act(async () => root.unmount());
     container.remove();
   });
@@ -106,7 +128,8 @@ describe("P8.8 extended Capture intake", () => {
     const chart = extendedTextSyntheticChart(150);
     await write(container.querySelector<HTMLTextAreaElement>('[data-testid="extended-text-input"]')!, chart.source);
     expect(container.querySelectorAll('[data-testid="extended-text-bar"]')).toHaveLength(150);
-    expect(container.querySelectorAll('[data-testid="extended-text-slot"]')).toHaveLength(chart.expectedSlots);
+    expect(container.querySelectorAll('[data-testid="text-preview-row"]').length).toBeGreaterThan(1);
+    expect(container.querySelectorAll('[data-testid="text-preview-band"]').length).toBeGreaterThan(0);
     expect(container.querySelector<HTMLButtonElement>('[data-testid="extended-text-save"]')?.disabled).toBe(false);
     await press(container.querySelector<HTMLButtonElement>('[data-testid="extended-text-save"]')!);
     expect(onSaveExtended).toHaveBeenCalledOnce();

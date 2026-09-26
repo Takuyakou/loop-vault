@@ -14,7 +14,9 @@ test("P8.8 Extended Text saves a public synthetic score and opens Voicing Loop",
   const raw = "# Key: C major\r\n# BPM: 120\r\n| C % = _ | F/C |";
   await input.fill(raw);
   await expect(intake.getByTestId("extended-text-bar")).toHaveCount(2);
-  await expect(intake.getByTestId("extended-text-slot")).toHaveCount(5);
+  await expect(intake.getByTestId("text-preview-band")).toHaveCount(2);
+  await expect(intake.getByTestId("text-preview-attack")).toHaveCount(2);
+  await expect(intake.getByTestId("text-preview-rest")).toHaveCount(1);
   await expect(intake.getByTestId("extended-text-metadata")).toHaveCount(0);
   await intake.getByRole("button", { name: /Key: C major/ }).click();
   await intake.getByRole("button", { name: /120 BPM/ }).click();

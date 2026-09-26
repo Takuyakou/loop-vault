@@ -2,12 +2,13 @@
   "schemaVersion": 1,
   "phaseId": "8.8.2",
   "status": "in-progress",
-  "activeStage": "P8.8.2-04",
+  "activeStage": "P8.8.2-05",
   "completedStages": [
     "P8.8.2-00",
     "P8.8.2-01",
     "P8.8.2-02",
-    "P8.8.2-03"
+    "P8.8.2-03",
+    "P8.8.2-04"
   ],
   "blocked": false,
   "blockerReason": null,
@@ -45,6 +46,14 @@
       "changed-scope-eslint",
       "phase-docs",
       "diff-check"
+    ],
+    "P8.8.2-04": [
+      "score-preview-regression",
+      "source-span-navigation",
+      "typescript",
+      "changed-scope-eslint",
+      "phase-docs",
+      "diff-check"
     ]
   },
   "gateResults": {
@@ -60,8 +69,10 @@
     "midi-review-regression": "pass",
     "editor-preview-shell": "pass",
     "named-vault-save": "pass",
-    "standard-mode-regression": "pass"
+    "standard-mode-regression": "pass",
+    "score-preview-regression": "pass",
+    "source-span-navigation": "pass"
   },
-  "nextAction": "Replace slot chips with duration bands, annotations, and bidirectional parser-span navigation.",
+  "nextAction": "Wire frozen-snapshot playback, diagnostics and practice compatibility into the save flow.",
   "updatedAt": "2026-09-26"
 }

@@ -73,6 +73,7 @@ export interface ExtendedTextResult {
   readonly source: string;
   readonly state: "EMPTY" | "VALID" | "INVALID" | "AMBIGUOUS";
   readonly bars: readonly (readonly string[])[];
+  readonly barSourceSpans: readonly TextSourceRange[];
   readonly slots: readonly ExtendedTextSlot[];
   readonly harmonicSpans: readonly TextHarmonicSpan[];
   readonly sections: readonly ExtendedTextSection[];
@@ -104,6 +105,7 @@ export function parseExtendedTextProgression(
   const sections: ExtendedTextSection[] = [];
   const diagnostics: ExtendedTextDiagnostic[] = [];
   const bars: string[][] = [];
+  const barSourceSpans: TextSourceRange[] = [];
   const slots: ExtendedTextSlot[] = [];
   const spans: MutableSpan[] = [];
   const copiedMetadata = { ...metadata };
@@ -167,6 +169,7 @@ export function parseExtendedTextProgression(
   let active: MutableSpan | undefined;
   let totalTokens = 0;
   for (const range of ranges.slice(0, EXTENDED_TEXT_LIMITS.maxBars)) {
+    barSourceSpans.push(range);
     const barNumber = bars.length + 1;
     const segmented = segmentScoreBar(score, range.start, range.end, parseExtendedChordToken, true, EXTENDED_TEXT_MAX_SLOTS_PER_BAR);
     if (segmented.kind !== "ok") {
@@ -268,7 +271,7 @@ export function parseExtendedTextProgression(
   return result(state);
 
   function result(state: ExtendedTextResult["state"]): ExtendedTextResult {
-    return { source, state, bars, slots, harmonicSpans: spans, sections, diagnostics,
+    return { source, state, bars, barSourceSpans, slots, harmonicSpans: spans, sections, diagnostics,
       metadata: copiedMetadata, beatsPerBar, scoreLengthBeats: bars.length * beatsPerBar,
       canConvert: state === "VALID" && spans.length > 0 };
   }

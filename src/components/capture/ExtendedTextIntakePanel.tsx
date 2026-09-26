@@ -4,9 +4,12 @@ import {
   type ExtendedTextMetadata,
   type ExtendedTextResult,
   type ExtendedTextReasonCode,
+  type TextSourceRange,
 } from "../../domain/extendedTextProgression";
+import { buildTextPreviewScore } from "../../domain/textPreviewScore";
 import type { AppLanguage } from "../../i18n";
 import { BpmScrubField } from "../BpmScrubField";
+import { TextPreviewBar } from "./TextPreviewBar";
 
 interface Props {
   readonly language: AppLanguage;
@@ -53,6 +56,9 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
   const [saved, setSaved] = useState(false);
   const [visiblePane, setVisiblePane] = useState<"input" | "preview">("input");
   const gutterRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const previewRef = useRef<HTMLElement>(null);
+  const [selectedStart, setSelectedStart] = useState<number>();
   const hints = useMemo(() => detectExtendedTextMetadataHints(input), [input]);
   const metadata: ExtendedTextMetadata = useMemo(() => ({
     beat,
@@ -60,11 +66,7 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
     ...(bpm === undefined ? {} : { bpm }),
   }), [beat, key, bpm]);
   const result = useMemo(() => parseExtendedTextProgression(input, metadata), [input, metadata]);
-  const slotsByBar = useMemo(() => {
-    const grouped = new Map<number, typeof result.slots>();
-    for (const slot of result.slots) grouped.set(slot.bar, [...(grouped.get(slot.bar) ?? []), slot]);
-    return grouped;
-  }, [result]);
+  const scoreItems = useMemo(() => buildTextPreviewScore(result), [result]);
   const errors = result.diagnostics.filter(issue => issue.severity === "ERROR");
   const warnings = result.diagnostics.filter(issue => issue.severity === "WARNING");
   const annotationCount = result.sections.filter(section => section.kind === "comment"
@@ -78,6 +80,26 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
     const success = onSave(result, name.trim());
     setSaveFailed(!success);
     setSaved(success);
+  }
+
+  function selectSource(span: TextSourceRange) {
+    setSelectedStart(span.start);
+    setVisiblePane("input");
+    const editor = textareaRef.current;
+    if (!editor) return;
+    editor.focus();
+    editor.setSelectionRange(span.start, span.end);
+    const line = input.slice(0, span.start).split(/\r\n|\r|\n/).length - 1;
+    editor.scrollTop = Math.max(0, line * 24 - editor.clientHeight / 3);
+    if (gutterRef.current) gutterRef.current.scrollTop = editor.scrollTop;
+  }
+
+  function selectPreviewAtCaret(position: number) {
+    const span = result.harmonicSpans.find(item => position >= item.sourceSpan.start && position < item.sourceSpan.end)?.sourceSpan
+      ?? result.barSourceSpans.find(item => position >= item.start && position <= item.end);
+    if (!span) return;
+    setSelectedStart(span.start);
+    previewRef.current?.querySelector<HTMLElement>('[data-source-start="' + span.start + '"]')?.scrollIntoView?.({ block: "nearest" });
   }
 
   return (
@@ -139,11 +161,12 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
             <div ref={gutterRef} aria-hidden="true" className="lv-text-intake-gutter shrink-0 overflow-hidden border-r border-[var(--lv-border)] text-right font-mono text-xs text-[var(--lv-text-muted)]">
               {lines.map((line, index) => <div key={index} className={/^\s*#/.test(line) ? "text-[var(--lv-accent)]" : ""}>{index + 1}</div>)}
             </div>
-            <textarea id="extended-text-input" data-testid="extended-text-input" value={input}
+            <textarea id="extended-text-input" data-testid="extended-text-input" value={input} ref={textareaRef}
               disabled={disabled} spellCheck={false}
               aria-invalid={errors.length > 0}
               aria-describedby="extended-text-diagnostics"
               onScroll={event => { if (gutterRef.current) gutterRef.current.scrollTop = event.currentTarget.scrollTop; }}
+              onSelect={event => selectPreviewAtCaret(event.currentTarget.selectionStart)}
               onChange={event => { setSaveFailed(false); setSaved(false); onInput(event.currentTarget.value); }}
               className="lv-text-intake-textarea min-h-64 min-w-0 flex-1 resize-none overflow-auto bg-transparent p-2 font-mono text-sm outline-none" />
           </div>
@@ -151,7 +174,7 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
             {key ? "Key: " + key : ""}{key && bpm !== undefined ? " · " : ""}{bpm !== undefined ? String(bpm) + " BPM" : ""}
           </p> : null}
         </section>
-        <section aria-label={label(language, "Live preview", "入力中のプレビュー")}
+        <section ref={previewRef} aria-label={label(language, "Live preview", "入力中のプレビュー")}
           className={"lv-text-intake-pane min-w-0 p-3" + (visiblePane === "preview" ? " lv-text-intake-pane-active" : "")}
           data-testid="extended-text-preview">
           <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -162,28 +185,16 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
             <span className="rounded border border-[var(--lv-border)] px-2 py-1 text-xs">{label(language, "Practice limits", "練習制限")} 0</span>
           </div>
           {result.state === "EMPTY" ? <p className="text-sm text-[var(--lv-text-muted)]">{label(language, "Enter a progression to preview it.", "進行を入力するとここに表示されます。")}</p> : null}
-          {result.sections.map(section => <p key={String(section.line) + ":" + String(section.span.start)}
-            className="mt-3 border-l-2 border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] p-2 text-xs"
-            data-testid="extended-text-section">{section.raw.trim()}</p>)}
-          <div className="lv-text-intake-bars">
-            {result.bars.map((bar, index) => <div key={index}
-              className="min-w-0 rounded border border-[var(--lv-border)] bg-[var(--lv-bg)] p-2"
-              data-testid="extended-text-bar" data-state={slotsByBar.has(index + 1) ? "parsed" : "error"}>
-              <p className="text-xs text-[var(--lv-text-muted)]">{label(language, "Bar " + String(index + 1), String(index + 1) + "小節目")}</p>
-              <div className="mt-1 flex flex-wrap gap-1">
-                {(slotsByBar.get(index + 1) ?? []).map(slot => <span key={slot.span.start}
-                  className="rounded border border-[var(--lv-border)] px-2 py-1 text-xs" data-testid="extended-text-slot">
-                  {slot.kind === "rest" ? label(language, "Rest", "休符")
-                    : slot.kind === "hold" ? label(language, "Hold", "保持")
-                      : slot.kind === "reattack" ? label(language, "Reattack", "再発音")
-                        : slot.chord?.label ?? slot.raw}
-                </span>)}
-                {!slotsByBar.has(index + 1) ? <span className="whitespace-pre-wrap text-sm text-[var(--lv-danger)]">
-                  {label(language, "Unparsed source: ", "解析できない元テキスト: ")}{bar.join(" ")}
-                </span> : null}
-              </div>
-            </div>)}
-          </div>
+          {scoreItems.map((item, index) => item.kind === "annotation"
+            ? <button type="button" key={index} data-testid="extended-text-section"
+                data-source-start={item.sourceSpan.start}
+                className="mt-3 block w-full border-l-2 border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] p-2 text-left text-xs"
+                onClick={() => selectSource(item.sourceSpan)}>{item.text}</button>
+            : <div key={index} className="lv-text-intake-bars mt-2" data-testid="text-preview-row">
+                {item.bars.map(bar => <TextPreviewBar key={bar.number} bar={bar} language={language}
+                  selectedStart={selectedStart} onSelect={selectSource}
+                  errorLabel={bar.error ? label(language, bar.error, japaneseDiagnostic[bar.error]) : undefined} />)}
+              </div>)}
           <div id="extended-text-diagnostics" role="status" aria-live="polite" className="mt-3"
             data-testid="extended-text-diagnostics">
             {result.diagnostics.map((diagnostic, index) => <p key={String(diagnostic.span.start) + ":" + String(index)}
