@@ -436,7 +436,7 @@ export function TextProgressionCapturePanel({
       <TextDiagnostics diagnostics={visibleDiagnostics} language={language} />
 
       <footer className="lv-text-intake-savebar lv-text-status-bar flex items-center gap-3 border-t border-[var(--lv-border)] px-2 text-xs">
-        <span className="min-w-0 font-mono text-[var(--lv-text-muted)]" data-testid="text-progression-capability-summary">
+        <span className="min-w-0 font-mono text-[var(--lv-text-muted)]" data-testid="text-progression-capability-summary" data-text-status-summary>
           {textCaptureSummary(statusModel, language)}
         </span>
         {result.tokens.length ? <details name="capture-details" className="lv-text-detail-popover" data-testid="standard-text-card-details">

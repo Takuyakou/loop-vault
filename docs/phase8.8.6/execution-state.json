@@ -2,15 +2,16 @@
   "schemaVersion": 1,
   "phaseId": "8.8.6",
   "status": "in-progress",
-  "activeStage": "P8.8.6-02",
+  "activeStage": "P8.8.6-03",
   "completedStages": [
     "P8.8.6-00",
-    "P8.8.6-01"
+    "P8.8.6-01",
+    "P8.8.6-02"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "feb2b51423e22f07cc26a00cf8819aa3fbe7490b",
-  "lastVerifiedCommit": "dab5134",
+  "lastVerifiedCommit": "5884a70",
   "currentBranch": "feat/phase8.8.6-final-capture-closure",
   "requiredGates": {
     "P8.8.6-00": [
@@ -40,8 +41,9 @@
   },
   "gateResults": {
     "baseline-audit": "pass",
-    "shared-status": "pass"
+    "shared-status": "pass",
+    "height-ownership": "pass"
   },
-  "nextAction": "Commit app-shell height ownership and shared Capture shell",
+  "nextAction": "Close toolbar parity and run negative legacy checks",
   "updatedAt": "2026-09-27"
 }

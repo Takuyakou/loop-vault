@@ -181,7 +181,7 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
           </select>
         </label>
         <label className="lv-text-toolbar-key text-xs">{label(language, "Key", "キー")}
-          <select data-testid="extended-text-key" className="lv-field-control min-h-9 w-28 px-1 text-xs"
+          <select data-testid="extended-text-key" className="lv-field-control min-h-9 w-24 px-1 text-xs"
             value={key ?? ""} disabled={disabled} onChange={event => setKey(event.target.value || undefined)}>
             <option value="">{label(language, "Unconfirmed", "未確定")}</option>
             {["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"].flatMap(root =>
@@ -191,6 +191,8 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
         <div className="lv-text-toolbar-bpm"><BpmScrubField idPrefix="text-intake-bpm" label="BPM" disabled={disabled} emptyWhenUnset={bpm === undefined}
           dragLabel={label(language, "Drag up or down to change BPM", "上下にドラッグしてBPMを変更")}
           value={practiceBpm} onChange={value => {
+            transport.setBpm(value); setPracticeBpm(value); setBpm(value);
+          }} onExplicitInput={value => {
             transport.setBpm(value); setPracticeBpm(value); setBpm(value);
           }} />
         {bpm === undefined ? <span className="text-xs text-[var(--lv-text-muted)]">{label(language, "audition 120", "試聴120")}</span> : null}</div>
@@ -322,7 +324,7 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
       </div>
 
       <footer className="lv-text-intake-savebar lv-text-status-bar flex items-center gap-3 border-t border-[var(--lv-border)] px-2 text-xs">
-        <span className="min-w-0 font-mono text-[var(--lv-text-muted)]">
+        <span className="min-w-0 font-mono text-[var(--lv-text-muted)]" data-text-status-summary>
           {textCaptureSummary(statusModel, language)}
         </span>
         {saved ? <span role="status" className="ml-auto text-[var(--lv-accent)]">{label(language, "Saved", "保存しました")}</span> : null}
