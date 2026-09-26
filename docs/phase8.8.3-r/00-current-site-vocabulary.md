@@ -1,0 +1,21 @@
+# R01 — current-site chord vocabulary
+
+## Site and provenance
+
+The current public target is [rechord.cc](https://rechord.cc/), reporting `v2.0.0` on 2026-09-26. The deployed `rechord-708aa5fa50c316046d70.js` bundle and its public source map are pinned by SHA-256 in [the manifest](current-site-vocabulary.json). The source map exposes the deployed lexical regex, score tokenizer, `scoreMaker`, `chord-translator/dist/index.js`, and SoundControl playback path. The older [public rechord source](https://github.com/comorebi-notes/rechord) at `11b21a2` matches the deployed `scoreMaker` and `scoreDecorator` paths after line-ending normalization; this is a path-level parity check, not a claim about the entire repository revision. A browser probe calls the translator in the deployed bundle and reads SoundControl's actual synthetic score plan. This distinguishes live behavior from historical-source inference.
+
+## Generative grammar inventory
+
+- Roots: `C D E F G A B`, followed by zero to two site-supported accidental glyphs; sharp/flat/full-width normalization is explicit. The actual accepted spelling set is governed by the deployed lexical regex and translator, not a generic theory parser.
+- Base quality and extension productions: major/minor, diminished and dim7, half-diminished, augmented, suspended second/fourth, power, sixth, seventh, ninth, eleventh, thirteenth, major extension, minor-major combinations, and additive degrees. The deployed parser accepts some unusual compositions; the 1,157 distinct quality/add semantic vectors and their synthetic representatives are preserved in the manifest.
+- Modifier slots: fifth `#5/b5`; seventh `M7/7`; ninth `#9/b9/9`; eleventh `#11/b11/11`; thirteenth `#13/b13/13`. One add operator and one `omit`/`no` operator can also be consumed. Parenthesized comma-separated and compact forms are accepted when the translator consumes the complete text. Multi-operator subsets on the same degree can be accepted; the last matching parser rule overwrites earlier written tones. These collision cases are part of the grammar and require separate classification.
+- Slash bass: `/`, full-width slash, and compact `on` spelling route through the deployed score parser; chord-tone and non-chord-tone bass are both possible. The site adds a low bass note if it differs from the root. `6/9` is rejected in the live site playback path, even though Loop Vault accepts it.
+- Structural controls include bar delimiters, repeat, sustain, rest, start/end markers, and comments. They are tracked for label-token isolation; this audit's matrix unit is a chord label, not a complete user score.
+
+## Saturation and independent runtime checks
+
+The quality/add closure began with 402 synthetic base strings and 107 semantic vectors. Successive source-runtime passes added 380, 429, 205, and 36 vectors, then zero: 1,157 total. A separate canonical modifier screen planned 107,856 labels, found 91,566 accepted, and reduced them to 6,384 site semantic vectors. Its one-omission screen planned 732,528 labels and found 732,516 accepted, collapsing to 15,228 vectors. These screens precede Product results; they are not yet the final Matrix row count.
+
+Two independent browser UI passes used synthetic natural, sharp, and flat roots and no user score. Each tested 145 labels, found 141 valid score plans, and added zero new modifier/operator categories. Direct UI checks also verified altered dominants, slash bass, symbolic aliases, signed fifths, Unicode accidentals, omissions, and explicit rejects. A power chord can be UI-valid while its score plan includes a `null` note; acceptance and actual audition fidelity are therefore separate columns. `C7(b9,#9)` and `C7(#5,b5)` are accepted but the site's single-degree slot discards one written alteration. This is a measured source-policy limitation, not evidence that a complete user chart has any specific notes.
+
+The manifest's SHA-256 is recorded in `current-site-vocabulary.sha256`. The matrix must use the frozen grammar and classify every semantic/operator class, including collisions; a result based only on the six high-risk examples is invalid.
