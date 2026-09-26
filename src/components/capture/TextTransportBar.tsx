@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { TransportButton } from "../TransportButton";
 import type { TextPlaybackSnapshot, TextTransport, TextTransportState } from "../../audio/textTransport";
 import type { AppLanguage } from "../../i18n";
 
@@ -39,17 +40,17 @@ export function TextTransportBar({ language, transport, state, snapshot, disable
   });
   const primaryLabel = state.status === "playing" ? (ja ? "Ⅱ 一時停止" : "Ⅱ Pause")
     : state.status === "paused" ? (ja ? "▶ 再開" : "▶ Resume") : (ja ? "▶ 再生" : "▶ Play");
-  return <div className="flex flex-wrap items-center gap-2" data-testid="text-transport">
-    <button type="button" data-testid={primaryTestId} className="lv-button-primary min-h-9 px-3 text-sm"
-      disabled={disabled || (state.status === "stopped" && snapshot.lengthBeats <= 0)} onClick={primary}>{primaryLabel}</button>
-    <button type="button" data-testid="text-transport-stop" className="lv-button-secondary min-h-9 px-3 text-sm"
-      disabled={disabled || state.status === "stopped"} onClick={() => transport.stop()}>{ja ? "■ 停止" : "■ Stop"}</button>
-    <button type="button" data-testid="text-transport-beginning" className="lv-button-secondary min-h-9 px-3 text-sm"
-      disabled={disabled} onClick={() => transport.beginning()}>{ja ? "|◀ 最初から" : "|◀ Beginning"}</button>
-    <button type="button" data-testid="text-transport-loop" className="lv-button-secondary min-h-9 px-3 text-sm"
-      disabled={disabled} aria-pressed={state.loop} onClick={() => transport.setLoop(!state.loop)}>
-      {ja ? "全体ループ" : "Loop all"} {state.loop ? "ON" : "OFF"}</button>
-    <span className="text-xs text-[var(--lv-text-muted)]" data-testid="text-transport-position" aria-live="off" />
+  return <div className="lv-text-transport flex items-center gap-1" data-testid="text-transport">
+    <TransportButton variant="primary" fixedPrimary data-testid={primaryTestId}
+      disabled={disabled || (state.status === "stopped" && snapshot.lengthBeats <= 0)} onClick={primary}>{primaryLabel}</TransportButton>
+    <TransportButton variant="neutral" data-testid="text-transport-stop"
+      disabled={disabled || state.status === "stopped"} onClick={() => transport.stop()}>{ja ? "■ 停止" : "■ Stop"}</TransportButton>
+    <TransportButton variant="neutral" data-testid="text-transport-beginning"
+      disabled={disabled} aria-label={ja ? "最初から" : "Beginning"} title={ja ? "最初から" : "Beginning"} onClick={() => transport.beginning()}>|◀</TransportButton>
+    <TransportButton variant="loop" active={state.loop} data-testid="text-transport-loop"
+      disabled={disabled} aria-pressed={state.loop} aria-label={(ja ? "全体ループ " : "Loop all ") + (state.loop ? "ON" : "OFF")} onClick={() => transport.setLoop(!state.loop)}>
+      {ja ? "ループ" : "Loop"} {state.loop ? "ON" : "OFF"}</TransportButton>
+    <span className="lv-text-transport-position text-xs text-[var(--lv-text-muted)]" data-testid="text-transport-position" aria-live="off" />
     <span className="sr-only" role="status" aria-live="polite" data-testid="text-transport-status">
       {primaryLabel}{state.status === "stopped" ? (ja ? "・停止中" : " · stopped") : ""}
     </span>

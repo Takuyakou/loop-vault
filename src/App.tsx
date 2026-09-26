@@ -58,6 +58,7 @@ import {
 import { Toast } from "./components/Toast";
 import { LiveMidiMiniMode } from "./components/LiveMidiMiniMode";
 import { PreviewSoundProvider } from "./components/PreviewSoundProvider";
+import { MetronomeProvider } from "./components/MetronomeProvider";
 import { LiveMidiImportDialog, type LiveMidiImportRequest } from "./components/LiveMidiImportDialog";
 import { UndoToast } from "./components/UndoToast";
 import { statusLabel } from "./domain/displayLabels";
@@ -782,6 +783,7 @@ async function analyzeMidiPath(path: string) {
   }
 
   return (
+    <MetronomeProvider>
     <PreviewSoundProvider>
       <a className="lv-skip-link" href="#main-content">
         {copy.common.skipToContent}
@@ -1242,6 +1244,7 @@ async function analyzeMidiPath(path: string) {
       ) : null}
       </AppShell>
     </PreviewSoundProvider>
+    </MetronomeProvider>
   );
 }
 

@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { MasterVolumeKnob } from "./MasterVolumeKnob";
 import { GlobalPreviewSoundSelector } from "./GlobalPreviewSoundSelector";
+import { GlobalMetronomeButton } from "./GlobalMetronomeButton";
 import { PlaybackLevelMeter } from "./PlaybackLevelMeter";
 import { Button, IconButton } from "./ui";
 
@@ -221,6 +222,7 @@ export function AppShell({
               label={copy.nav.masterVolume}
             />
             <GlobalPreviewSoundSelector copy={copy} />
+            <GlobalMetronomeButton />
             <Button
               variant="primary"
               className="h-10 whitespace-nowrap px-3"

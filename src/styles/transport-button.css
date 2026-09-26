@@ -1,0 +1,46 @@
+.lv-transport-button {
+  display: inline-flex;
+  min-height: 2.25rem;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: 1px solid transparent;
+  border-radius: var(--lv-radius-sm);
+  padding: 0.35rem 0.7rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--lv-motion-fast) var(--lv-ease-standard),
+    border-color var(--lv-motion-fast) var(--lv-ease-standard),
+    color var(--lv-motion-fast) var(--lv-ease-standard);
+}
+.lv-transport-primary-fixed { width: 7.1rem; }
+.lv-transport-primary {
+  background: var(--lv-accent);
+  color: var(--lv-text-on-accent);
+}
+.lv-transport-primary:hover:not(:disabled) { background: var(--lv-accent-strong); }
+.lv-transport-neutral, .lv-transport-loop-off {
+  border-color: var(--lv-border-strong);
+  background: var(--lv-surface);
+  color: var(--lv-text-secondary);
+}
+.lv-transport-neutral:hover:not(:disabled), .lv-transport-loop-off:hover:not(:disabled) {
+  border-color: var(--lv-border-strong);
+  background: var(--lv-surface-raised);
+  color: var(--lv-text);
+}
+.lv-transport-loop-on {
+  border-color: var(--lv-accent-secondary);
+  background: var(--lv-accent-secondary-soft);
+  color: var(--lv-accent-secondary);
+}
+.lv-transport-loop-on:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--lv-accent-secondary) 28%, var(--lv-surface));
+  color: var(--lv-text);
+}
+.lv-transport-button:focus-visible { outline: 2px solid var(--lv-accent); outline-offset: 2px; }
+.lv-transport-button:disabled { cursor: not-allowed; opacity: 0.48; }

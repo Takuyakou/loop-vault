@@ -131,7 +131,7 @@ function button(harness: Harness, testId: string) {
 
 function buttonByText(harness: Harness, label: string) {
   const element = [...harness.container.querySelectorAll<HTMLButtonElement>("button")]
-    .find((candidate) => candidate.textContent === label);
+    .find((candidate) => candidate.textContent === label || candidate.getAttribute("aria-label") === label);
   expect(element).toBeDefined();
   return element!;
 }

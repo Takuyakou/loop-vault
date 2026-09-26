@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "8.8.5",
+  "status": "completed",
+  "activeStage": null,
+  "completedStages": [
+    "P8.8.5-00",
+    "P8.8.5-01",
+    "P8.8.5-02",
+    "P8.8.5-03",
+    "P8.8.5-04",
+    "P8.8.5-05",
+    "P8.8.5-06",
+    "P8.8.5-07"
+  ],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "340e45455cd8f7a91648db5ee2f92fe42c794d7c",
+  "lastVerifiedCommit": "42b4c2b",
+  "currentBranch": "feat/phase8.8.5-global-playback-text-polish",
+  "requiredGates": {
+    "P8.8.5-00": [
+      "baseline-audit",
+      "phase-docs"
+    ],
+    "P8.8.5-01": [
+      "capture-tabs"
+    ],
+    "P8.8.5-02": [
+      "global-playback"
+    ],
+    "P8.8.5-03": [
+      "transport-visuals"
+    ],
+    "P8.8.5-04": [
+      "text-workspace"
+    ],
+    "P8.8.5-05": [
+      "preview-save-accessibility"
+    ],
+    "P8.8.5-06": [
+      "responsive-regression"
+    ],
+    "P8.8.5-07": [
+      "full-gates"
+    ]
+  },
+  "gateResults": {
+    "baseline-audit": "pass",
+    "phase-docs": "pass",
+    "capture-tabs": "pass",
+    "global-playback": "pass",
+    "transport-visuals": "pass",
+    "text-workspace": "pass",
+    "preview-save-accessibility": "pass",
+    "responsive-regression": "pass",
+    "full-gates": "pass"
+  },
+  "nextAction": "Stop at the separate human authorization for local master merge; then run post-merge gates and build the D-drive raw Windows EXE",
+  "updatedAt": "2026-09-26"
+}

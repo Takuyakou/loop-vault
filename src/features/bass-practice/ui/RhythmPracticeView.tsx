@@ -15,6 +15,7 @@ import { RecordCompareSection } from "../recording/ui/RecordCompareSection";
 import { createTargetPlayer } from "../recording/application/playback";
 import { previewMidiNotes, stopPreview } from "../../../audio/chordPreview";
 import { EchoPracticeHeader, EchoPracticeProgress } from "./EchoPracticeChrome";
+import { useMetronome } from "../../../components/MetronomeProvider";
 
 const RATINGS: readonly PracticeRating[] = ["again", "hard", "good", "easy"];
 const RHYTHM_STEPS = {
@@ -38,10 +39,10 @@ export function RhythmPracticeView({
   playbackController,
 }: RhythmPracticeViewProps) {
   const ja = language === "ja";
+  const { enabled: metronome } = useMetronome();
   const [tempo, setTempo] = useState(88);
   const [meter, setMeter] = useState<"3/4" | "4/4" | "6/8">("4/4");
   const [countInBars, setCountInBars] = useState<1 | 2>(1);
-  const [metronome, setMetronome] = useState(true);
   const [hintLevel, setHintLevel] = useState<0 | 1 | 2 | 3 | 4>(0);
   const [status, setStatus] = useState<Status>("ready");
   const [rating, setRating] = useState<PracticeRating>();
@@ -84,7 +85,6 @@ export function RhythmPracticeView({
     const onKey = (event: KeyboardEvent) => {
       if (event.repeat || event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement) return;
       const key = event.key.toLowerCase();
-      if (key === "m" && status !== "listening") setMetronome((value) => !value);
       if (key === "c" && status !== "listening") setCountInBars((value) => value === 1 ? 2 : 1);
       if (key === "h") setHintLevel((value) => Math.min(4, value + 1) as 0 | 1 | 2 | 3 | 4);
     };
@@ -235,15 +235,13 @@ export function RhythmPracticeView({
           <Field htmlFor="rhythm-count-in" label={ja ? "カウントイン" : "Count-in"}>
             <select id="rhythm-count-in" name="rhythm-count-in" aria-label={ja ? "カウントインの小節数" : "Rhythm count-in"} className="lv-input w-full" disabled={controlsLocked} value={countInBars} onChange={(event) => setCountInBars(Number(event.target.value) as 1 | 2)}><option value={1}>{ja ? "1小節" : "1 bar"}</option><option value={2}>{ja ? "2小節" : "2 bars"}</option></select>
           </Field>
-          <label className="flex min-h-10 items-center gap-2 self-end rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] px-3 text-sm text-[var(--lv-text-secondary)]">
-            <input name="rhythm-metronome" type="checkbox" disabled={controlsLocked} checked={metronome} onChange={(event) => setMetronome(event.target.checked)} />
-            {ja ? "メトロノーム" : "Metronome"} <kbd>M</kbd>
-          </label>
+          <p className="flex min-h-10 items-center self-end text-xs text-[var(--lv-text-muted)]" data-testid="rhythm-global-metronome">
+            {ja ? "ヘッダーのメトロノーム" : "Header metronome"}: {metronome ? "ON" : "OFF"}
+          </p>
         </div>
 
         <div className="mt-5 flex flex-wrap gap-2">
           <Button variant="ghost" onClick={() => setHintLevel((value) => Math.min(4, value + 1) as 0 | 1 | 2 | 3 | 4)} disabled={hintLevel === 4}><Lightbulb size={15} /> {ja ? "ヒント" : "Hint"} <kbd>H</kbd></Button>
-          <Button variant="ghost" onClick={() => setMetronome((value) => !value)} disabled={controlsLocked}>{ja ? "メトロノーム" : "Metronome"} <kbd>M</kbd></Button>
           <Button variant="ghost" onClick={() => setCountInBars((value) => value === 1 ? 2 : 1)} disabled={controlsLocked}>{ja ? "カウントイン" : "Count-in"} <kbd>C</kbd></Button>
         </div>
 

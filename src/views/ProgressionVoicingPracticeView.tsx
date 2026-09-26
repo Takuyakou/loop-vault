@@ -9,6 +9,8 @@ import { Modal } from "../components/Modal";
 import { BpmScrubField } from "../components/BpmScrubField";
 import { PracticeKeyboard } from "../components/practice/PracticeKeyboard";
 import { usePreviewSound } from "../components/PreviewSoundProvider";
+import { useMetronome } from "../components/MetronomeProvider";
+import { TransportButton } from "../components/TransportButton";
 import { Button, EmptyState, Field, SectionHeading, StatusMessage, Surface } from "../components/ui";
 import {
   createProgressionPracticeClockState,
@@ -385,6 +387,7 @@ export function ProgressionVoicingPracticeView({
 }: ProgressionVoicingPracticeViewProps) {
   const text = copy[language];
   const { sound: previewSound } = usePreviewSound();
+  const { enabled: metronomeEnabled, toggle: toggleGlobalMetronome } = useMetronome();
   const [selection, setSelection] = useState<ProgressionVoicingSelection>(initialSelection);
   const [studyCategory, setStudyCategory] = useState<VoicingBaseStudy>("teacher");
   const [colorEnabled, setColorEnabled] = useState(false);
@@ -516,7 +519,6 @@ export function ProgressionVoicingPracticeView({
   });
   const [fingeringEditorOpen, setFingeringEditorOpen] = useState(false);
   const [bulkSourceOpen, setBulkSourceOpen] = useState(false);
-  const [metronomeEnabled, setMetronomeEnabled] = useState(true);
   const [referenceSoundEnabled, setReferenceSoundEnabled] = useState(true);
   const [auditionedIndex, setAuditionedIndex] = useState<number>();
   const [runtimeError, setRuntimeError] = useState<string>();
@@ -1117,11 +1119,12 @@ export function ProgressionVoicingPracticeView({
     return auditionResolved(currentIndex);
   }
 
+  useEffect(() => {
+    transportRef.current?.setMetronomeEnabled(metronomeEnabled);
+  }, [metronomeEnabled]);
+
   function toggleMetronome() {
-    setMetronomeEnabled((enabled) => {
-      transportRef.current?.setMetronomeEnabled(!enabled);
-      return !enabled;
-    });
+    toggleGlobalMetronome();
   }
 
   function changeReferenceSound(enabled: boolean) {
@@ -1785,14 +1788,14 @@ export function ProgressionVoicingPracticeView({
                 </select>
               </label>
               {!active && !paused ? (
-                <Button size="md" variant="primary" disabled={!allEventsPlayable} onClick={() => void start()}><Play aria-hidden="true" size={16} />{text.start}</Button>
+                <TransportButton variant="primary" fixedPrimary disabled={!allEventsPlayable} onClick={() => void start()}><Play aria-hidden="true" size={16} />{text.start}</TransportButton>
               ) : active ? (
-                <Button size="md" variant="primary" onClick={pause}><Pause aria-hidden="true" size={16} />{text.pause}</Button>
+                <TransportButton variant="primary" fixedPrimary onClick={pause}><Pause aria-hidden="true" size={16} />{text.pause}</TransportButton>
               ) : (
-                <Button size="md" variant="primary" onClick={() => void resume()}><Play aria-hidden="true" size={16} />{text.resume}</Button>
+                <TransportButton variant="primary" fixedPrimary onClick={() => void resume()}><Play aria-hidden="true" size={16} />{text.resume}</TransportButton>
               )}
-              <Button size="sm" className="min-h-9" variant="secondary" disabled={!active && !paused} onClick={() => void restart()}><RefreshCw aria-hidden="true" size={16} />{text.restart}</Button>
-              <Button size="sm" className="min-h-9" variant="secondary" disabled={!active && !paused} onClick={stop}><Square aria-hidden="true" size={16} />{text.stop}</Button>
+              <TransportButton variant="neutral" disabled={!active && !paused} onClick={() => void restart()}><RefreshCw aria-hidden="true" size={16} />{text.restart}</TransportButton>
+              <TransportButton variant="neutral" disabled={!active && !paused} onClick={stop}><Square aria-hidden="true" size={16} />{text.stop}</TransportButton>
               <label className="inline-flex min-h-8 cursor-pointer items-center gap-2 rounded-[var(--lv-radius-sm)] border border-[var(--lv-border)] px-2 text-xs font-medium text-[var(--lv-text-secondary)] focus-within:text-[var(--lv-text)]">
                 <input
                   type="checkbox"
@@ -1801,7 +1804,6 @@ export function ProgressionVoicingPracticeView({
                 />
                 {text.referenceSound}
               </label>
-              <Button size="sm" variant={metronomeEnabled ? "secondary" : "ghost"} aria-pressed={metronomeEnabled} onClick={toggleMetronome}>{text.metronome}: {metronomeEnabled ? "ON" : "OFF"}</Button>
               </div>
               <div className="lv-transport-row flex min-h-0 min-w-0 items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap border-t border-[var(--lv-border)] pt-0.5" data-testid="voicing-loop-transport-midi-row">
               <span className={`inline-flex min-h-8 items-center gap-1.5 px-1 text-xs ${midiStatus === "connected" ? "text-teal-200" : "text-amber-200"}`} data-testid="voicing-loop-midi-status">

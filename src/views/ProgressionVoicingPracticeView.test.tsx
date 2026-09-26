@@ -17,6 +17,9 @@ import type {
 } from "../practice/ProgressionVoicingTransport";
 import { defaultLiveMidiStore } from "../liveMidi/defaultLiveMidiStore";
 import { PreviewSoundProvider } from "../components/PreviewSoundProvider";
+import { MetronomeProvider } from "../components/MetronomeProvider";
+import { GlobalMetronomeButton } from "../components/GlobalMetronomeButton";
+import { saveMetronomeEnabled } from "../audio/metronomePreference";
 import { savePreviewSound } from "../audio/previewSoundPreference";
 import { ProgressionVoicingPracticeView } from "./ProgressionVoicingPracticeView";
 import {
@@ -1087,7 +1090,7 @@ describe("ProgressionVoicingPracticeView", () => {
     expect(bpm.value).toBe("132");
     expect(runtime.setBpm).toHaveBeenCalledWith(132);
     expect(runtime.setMetronomeEnabled).toHaveBeenCalledWith(false);
-    expect(button(container, "メトロノーム").textContent).toContain("OFF");
+    expect(button(container, "メトロノーム").getAttribute("aria-label")).toContain("OFF");
     runtime.releaseFirstStart();
     await act(async () => Promise.resolve());
   });
@@ -1347,7 +1350,11 @@ async function renderView(
   const container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
+  // Legacy timing scenarios explicitly start with click ON; production default is OFF.
+  saveMetronomeEnabled(true);
   await act(async () => root?.render(
+    <MetronomeProvider>
+      <GlobalMetronomeButton />
     <PreviewSoundProvider>
       <ProgressionVoicingPracticeView
         language="ja"
@@ -1363,7 +1370,8 @@ async function renderView(
         transportFactory={() => runtime}
         resolutionOptions={resolutionOptions}
       />
-    </PreviewSoundProvider>,
+    </PreviewSoundProvider>
+    </MetronomeProvider>,
   ));
   return container;
 }
@@ -1382,7 +1390,7 @@ function vaultCandidate(index: number): VoicingLoopVaultCandidate {
 
 function button(container: HTMLElement, label: string): HTMLButtonElement {
   const found = Array.from(container.querySelectorAll("button"))
-    .find((entry) => entry.textContent?.includes(label));
+    .find((entry) => entry.textContent?.includes(label) || entry.getAttribute("aria-label")?.includes(label));
   if (!found) throw new Error(`Button not found: ${label}`);
   return found;
 }

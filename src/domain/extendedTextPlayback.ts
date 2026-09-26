@@ -1,6 +1,7 @@
 import type { MidiPreviewNote } from "../audio/chordPreview";
 import { voiceTextChordForAudition } from "./textChordTones";
 import type { ExtendedTextResult } from "./extendedTextProgression";
+import { textMetronomeNotes } from "./textMetronomeNotes";
 
 /** Immutable note-event plan from authored attacks; = sustains and _ stays silent. */
 export function extendedTextPlaybackNotes(result: ExtendedTextResult, metronome = false): readonly MidiPreviewNote[] {
@@ -19,11 +20,6 @@ export function extendedTextPlaybackNotes(result: ExtendedTextResult, metronome 
       });
     }
   }
-  if (metronome) for (let beat = 0; beat < result.scoreLengthBeats; beat += 1) {
-    notes.push({
-      pitch: beat % result.beatsPerBar === 0 ? 96 : 84,
-      startBeat: beat, durationBeats: 0.075, velocity: 46,
-    });
-  }
+  if (metronome) notes.push(...textMetronomeNotes(result.scoreLengthBeats, result.beatsPerBar));
   return notes;
 }

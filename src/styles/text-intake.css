@@ -56,3 +56,56 @@
 @media (prefers-reduced-motion: reduce) {
   .lv-text-smooth-playhead { will-change: auto; }
 }
+
+
+/* Intentional wrap follows the actual Capture content width, including the app sidebar. */
+.lv-text-capture-root { container-type: inline-size; }
+.lv-text-capture-toolbar { flex-wrap: wrap; }
+.lv-text-capture-toolbar > * { flex: none; }
+.lv-text-toolbar-key, .lv-text-toolbar-bpm, .lv-text-toolbar-meter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
+}
+.lv-text-toolbar-meter select {
+  min-height: 2.25rem;
+  width: 3.5rem;
+  border: 1px solid var(--lv-border);
+  border-radius: var(--lv-radius-sm);
+  background: var(--lv-surface);
+  color: var(--lv-text-secondary);
+}
+.lv-text-transport { flex-wrap: nowrap; white-space: nowrap; }
+.lv-text-transport-position { display: inline-block; width: 5.5rem; white-space: nowrap; }
+@container (min-width: 1370px) {
+  .lv-text-capture-toolbar { flex-wrap: nowrap; }
+}
+
+
+.lv-text-preview-band {
+  cursor: pointer;
+  transition: border-color var(--lv-motion-fast) var(--lv-ease-standard),
+    background-color var(--lv-motion-fast) var(--lv-ease-standard),
+    box-shadow var(--lv-motion-fast) var(--lv-ease-standard);
+}
+.lv-text-preview-band:hover,
+.lv-text-preview-band:focus-within {
+  border-color: var(--lv-accent-strong);
+  background: color-mix(in srgb, var(--lv-accent) 26%, var(--lv-bg));
+  box-shadow: inset 0 0 0 1px var(--lv-accent);
+}
+.lv-text-preview-band[data-selected="true"] {
+  border-color: var(--lv-accent);
+  background: color-mix(in srgb, var(--lv-accent) 34%, var(--lv-bg));
+  box-shadow: 0 0 0 2px var(--lv-accent);
+}
+.lv-text-preview-chord:focus-visible {
+  outline: 2px solid var(--lv-accent);
+  outline-offset: -2px;
+}
+
+
+.lv-text-toolbar-bpm .lv-field-control { width: 3.5rem; }
+.lv-text-toolbar-bpm > small, .lv-text-toolbar-bpm > span { font-size: 0.6875rem; }
+.lv-text-transport-position { width: 4.5rem; overflow: hidden; text-overflow: ellipsis; }

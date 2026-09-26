@@ -138,7 +138,7 @@ export function BpmScrubField({
           aria-valuemax={240}
           aria-valuenow={value}
           value={editing ? draft : emptyWhenUnset ? "" : value}
-          placeholder={emptyWhenUnset ? String(value) : undefined}
+          placeholder={emptyWhenUnset ? "—" : undefined}
           onFocus={() => { setDraft(emptyWhenUnset ? "" : String(value)); setEditing(true); }}
           onChange={(event) => {
             const typed = Number(event.currentTarget.value);
