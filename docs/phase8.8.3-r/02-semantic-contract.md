@@ -22,4 +22,3 @@ For each supported label, required tones must be present on Text Preview, saved 
 ## Current-site separation
 
 The current site may sound every stacked degree of a thirteenth, omit one of two same-degree alterations, or produce an incomplete power-chord score. Those are measured current-site facts. `E` means the site's internally consistent policy differs from this audit policy, and does not grant Product permission to substitute a chord silently. Site notes are derived from its deployed runtime and checked against the UI for representative labels; Product notes come from Product functions at the frozen commit.
-

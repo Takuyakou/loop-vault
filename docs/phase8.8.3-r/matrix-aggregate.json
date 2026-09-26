@@ -1,0 +1,63 @@
+{
+  "planned": 29848,
+  "emitted": 29848,
+  "siteAccepted": 29848,
+  "productAccepted": 624,
+  "theoryAdjudicated": 23464,
+  "classes": {
+    "A": 138,
+    "B": 451,
+    "C": 52,
+    "D": 311,
+    "E": 29447,
+    "F": 0
+  },
+  "highRiskDirectRows": [
+    {
+      "label": "F13",
+      "classes": [
+        "B"
+      ],
+      "action": "PRESERVE_DEFINING_TONE_IN_AUDITION"
+    },
+    {
+      "label": "Dm11",
+      "classes": [
+        "B",
+        "D"
+      ],
+      "action": "PRESERVE_DEFINING_TONE_IN_AUDITION"
+    },
+    {
+      "label": "B7(#9,#5)",
+      "classes": [
+        "D"
+      ],
+      "action": "ACCEPT_OR_SPECIFY_VOICING_POLICY"
+    },
+    {
+      "label": "Db7(#9)",
+      "classes": [
+        "C",
+        "D"
+      ],
+      "action": "ACCEPT_OPTIONAL_OMISSION"
+    },
+    {
+      "label": "E7(b9)",
+      "classes": [
+        "C"
+      ],
+      "action": "ACCEPT_OPTIONAL_OMISSION"
+    },
+    {
+      "label": "Am9/C",
+      "classes": [
+        "B",
+        "D"
+      ],
+      "action": "PRESERVE_DEFINING_TONE_IN_AUDITION"
+    }
+  ],
+  "families": 114
+}
