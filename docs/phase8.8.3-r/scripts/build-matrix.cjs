@@ -112,7 +112,6 @@ function pcs(notes){return [...new Set((notes??[]).filter(Number.isInteger).map(
 function same(a,b){return JSON.stringify(a)===JSON.stringify(b)}
 const now=JSON.parse(fs.readFileSync(base+'/current-site-vocabulary.json','utf8')).checkedAt;
 const commit='c618479b88ccc44f1d749ec30416058fa27d1e23';
-const source=JSON.parse(fs.readFileSync(`${base}/current-site-vocabulary.json`,'utf8'));
 const hash=crypto.createHash('sha256').update(fs.readFileSync(`${base}/current-site-vocabulary.json`)).digest('hex');
 const rows=[],families=new Map();
 for(let i=0;i<site.length;i++){

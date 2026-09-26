@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import process from "node:process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { resolve, dirname } from "node:path";
@@ -43,4 +44,4 @@ const classCounts = Object.fromEntries("ABCDEF".split("").map(key => [key, rows.
 if (rows.length !== 624 || classCounts.A !== 138 || classCounts.B !== 451 || classCounts.F !== 0) {
   throw new Error("Product-supported closure differs from frozen R evidence.");
 }
-console.log(JSON.stringify({ rows: rows.length, families: new Set(rows.map(row => row.familyId)).size, classCounts, rowManifestSha256 }));
+process.stdout.write(JSON.stringify({ rows: rows.length, families: new Set(rows.map(row => row.familyId)).size, classCounts, rowManifestSha256 }) + "\n");
