@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { playbackController, type PlaybackController } from "../../audio/playbackController";
 import { standardTextPlaybackNotes } from "../../domain/standardTextPlayback";
 import { useTextTransport } from "./useTextTransport";
@@ -89,6 +89,7 @@ export function TextProgressionCapturePanel({
   const { enabled: metronomeEnabled } = useMetronome();
   const selectedSound = previewSound ?? globalSound;
   const [input, setInput] = useState("");
+  const editorSelection = useRef({ start: 0, end: 0 });
   const [dialect, setDialect] = useState<"standard" | "extended">("standard");
   const [keyInput, setKeyInput] = useState("");
   const [confirmedKey, setConfirmedKey] = useState<string>();
@@ -287,6 +288,14 @@ export function TextProgressionCapturePanel({
     } catch { setSaved(false); setSaveFailed(true); }
   }
 
+  function switchDialect(next: "standard" | "extended") {
+    const editor = document.querySelector<HTMLTextAreaElement>(dialect === "standard"
+      ? "[data-testid='text-progression-input']" : "[data-testid='extended-text-input']");
+    if (editor) editorSelection.current = { start: editor.selectionStart, end: editor.selectionEnd };
+    onStop();
+    setDialect(next);
+  }
+
   function previewSelected() {
     if (draftActive || !selectedEvent) return;
     onPreview(selectedEvent, selectedMemory, explicitBpm ?? TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM);
@@ -299,42 +308,87 @@ export function TextProgressionCapturePanel({
     <div className="flex gap-2" role="group" aria-label={text(language, "Text syntax", "テキスト記法")}>
       <button type="button" className={dialect === "standard" ? "lv-button-primary px-3 py-2 text-sm" : "lv-button-secondary px-3 py-2 text-sm"}
         aria-pressed={dialect === "standard"} disabled={disabled} data-testid="text-mode-standard"
-        onClick={() => { onStop(); setDialect("standard"); }}>
+        onClick={() => switchDialect("standard")}>
         {text(language, "Standard", "通常")}
       </button>
       <button type="button" className={dialect === "extended" ? "lv-button-primary px-3 py-2 text-sm" : "lv-button-secondary px-3 py-2 text-sm"}
         aria-pressed={dialect === "extended"} disabled={disabled} data-testid="text-mode-extended"
-        onClick={() => { onStop(); setDialect("extended"); }}>
+        onClick={() => switchDialect("extended")}>
         {text(language, "Extended", "拡張")}
       </button>
     </div>
   );
   if (dialect === "extended") {
-    return <TextCaptureShell language={language} dialect={dialect} draftActive={draftActive} modeSelector={modeSelector}>
+    return <TextCaptureShell language={language} dialect={dialect} draftActive={draftActive}>
       <ExtendedTextIntakePanel language={language} input={input} disabled={disabled}
-        controller={controller} sound={selectedSound}
-        onInput={setInput}
+        controller={controller} sound={selectedSound} modeSelector={modeSelector}
+        onInput={setInput} editorSelection={editorSelection.current}
+        onEditorSelection={(start, end) => { editorSelection.current = { start, end }; }}
         onSave={(extended, title) => onSaveExtended?.(extended, title) ?? false} />
     </TextCaptureShell>;
   }
 
   return (
-    <TextCaptureShell language={language} dialect={dialect} draftActive={draftActive} modeSelector={modeSelector}>
+    <TextCaptureShell language={language} dialect={dialect} draftActive={draftActive}>
       {/^(?:\s*#|\s*[<>]\s*$)/m.test(input) || /N\.C\./i.test(input) ? (
         <div className="mt-3 flex items-center gap-2 text-sm" data-testid="text-extended-suggestion">
           <span>{text(language, "This looks like extended notation.", "拡張記法の形式に見えます。")}</span>
           <button type="button" className="lv-button-secondary px-2 py-1" disabled={disabled}
-            onClick={() => { onStop(); setDialect("extended"); }}>
+            onClick={() => switchDialect("extended")}>
             {text(language, "Read as Extended", "拡張で読む")}
           </button>
         </div>
       ) : null}
-      <div className="mt-3 flex flex-wrap items-center gap-3">
+      <div className="lv-text-capture-toolbar mt-3 flex items-center gap-2 border-y border-[var(--lv-border)] py-2" data-testid="text-capture-toolbar">
+        {modeSelector}
+        <label className="lv-text-toolbar-meter text-xs" title={text(language, "Standard syntax supports 4/4 only", "通常モードは4/4のみ")}>
+          {text(language, "Meter", "拍子")}
+          <select disabled aria-label={text(language, "Meter", "拍子")} title={text(language, "Standard syntax supports 4/4 only", "通常モードは4/4のみ")} value="4/4" onChange={() => undefined}><option>4/4</option></select>
+        </label>
+        <div className="lv-text-toolbar-key">
+          <label htmlFor="text-progression-key" className="text-xs">{text(language, "Key", "キー")}</label>
+          <input id="text-progression-key" list="text-progression-key-options" data-testid="text-progression-key"
+            className="lv-field-control min-h-9 w-24 px-2 text-xs" value={keyInput} disabled={disabled}
+            onChange={event => { onStop(); setKeyInput(event.target.value); }}
+            placeholder={text(language, "Unset", "未確定")} />
+          <datalist id="text-progression-key-options">{["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"].flatMap(root => ["major", "minor"].map(mode =>
+            <option key={root + mode} value={root + " " + mode} />))}</datalist>
+          <button type="button" className="lv-button-secondary min-h-9 px-2 text-xs" disabled={disabled} onClick={confirmKey}>
+            {text(language, "Confirm key", "キーを確定")}</button>
+          <button type="button" className="lv-button-ghost min-h-9 px-1 text-xs" disabled={disabled || !confirmedKey} onClick={clearKey}
+            title={text(language, "Clear key", "キーをクリア")} aria-label={text(language, "Clear key", "キーをクリア")}>×</button>
+        </div>
+        <div className="lv-text-toolbar-bpm">
+          <BpmScrubField idPrefix="text-progression-bpm" inputTestId="text-progression-bpm"
+            label="BPM" disabled={disabled} emptyWhenUnset={explicitBpm === undefined}
+            dragLabel={text(language, "Drag up or down to change BPM", "上下にドラッグしてBPMを変更")}
+            value={explicitBpm ?? TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM}
+            onChange={value => { if (transportState.status === "stopped") onStop();
+              transport.setBpm(value); setBpmInput(String(value)); }}
+            onExplicitInput={value => { if (transportState.status === "stopped") onStop();
+              transport.setBpm(value); setBpmInput(String(value)); }} />
+          {explicitBpm === undefined ? <small className="whitespace-nowrap text-[var(--lv-text-muted)]">{text(language, "audition 120", "試聴120")}</small> : null}
+        </div>
         <TextTransportBar language={language} transport={transport} state={transportState}
           snapshot={playbackSnapshot} disabled={disabled || (transportState.status === "stopped" && !result.canConvert)}
           sourceMatches={transportState.snapshot?.sourceText === undefined || transportState.snapshot.sourceText === input} />
+        {onSaveStandard ? <div className="lv-text-toolbar-save flex shrink-0 items-center gap-1.5">
+          <label className="text-xs">{text(language, "Name", "名前")}
+            <input className="lv-field-control ml-1 min-h-9 w-32 px-2" maxLength={80}
+              data-testid="text-progression-name" value={titleEdited ? saveTitle : textProgressionDraftTitle(result)}
+              onChange={event => { setTitleEdited(true); setSaveTitle(event.target.value);
+                setSaved(false); setSaveFailed(false); }} />
+          </label>
+          <button type="button" className="lv-button-primary min-h-9 whitespace-nowrap px-2 text-xs"
+            data-testid="text-progression-save" disabled={disabled || !result.canConvert}
+            title={!result.canConvert ? text(language, "Fix diagnostics before saving", "保存前に診断を修正してください") : undefined}
+            aria-describedby={!result.canConvert ? "text-progression-save-reason" : undefined}
+            onClick={saveStandard}>{text(language, "Save", "Vaultに保存")}</button>
+        </div> : null}
       </div>
       <StandardTextScoreWorkspace language={language} input={input} result={result} disabled={disabled}
+        editorSelection={editorSelection.current}
+        onEditorSelection={(start, end) => { editorSelection.current = { start, end }; }}
         transport={transport} transportState={transportState}
         onInput={value => { if (transportState.status === "stopped") onStop();
           setSaved(false); setSaveFailed(false); setInput(value); }} onSelectEvent={selectEvent}
@@ -366,70 +420,22 @@ export function TextProgressionCapturePanel({
 
       </details>
 
-      <section className="mt-5 grid gap-4 border-t border-[var(--lv-border)] pt-5 lg:grid-cols-2" aria-label={text(language, "Key and tempo", "キーとテンポ")}>
-        <div>
-          <label className="block text-sm font-semibold" htmlFor="text-progression-key">
-            {text(language, "Confirmed key", "確定キー")}
-          </label>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <input
-              id="text-progression-key"
-              data-testid="text-progression-key"
-              className="min-h-10 flex-1 border border-[var(--lv-border)] bg-[var(--lv-surface)] px-3 text-sm"
-              value={keyInput}
-              disabled={disabled}
-              onChange={(event) => { onStop(); setKeyInput(event.target.value); }}
-              placeholder="C major"
-            />
-            <button type="button" className="lv-button-secondary px-3 py-2 text-sm" disabled={disabled} onClick={confirmKey}>
-              {text(language, "Confirm key", "キーを確定")}
-            </button>
-            <button type="button" className="lv-button-ghost px-3 py-2 text-sm" disabled={disabled || !confirmedKey} onClick={clearKey}>
-              {text(language, "Clear key", "キーをクリア")}
-            </button>
-          </div>
-          <p className="mt-2 text-xs text-[var(--lv-text-muted)]" data-testid="text-progression-key-state">
-            {confirmed
-              ? text(language, `Confirmed: ${result.keyState.key}`, `確定: ${result.keyState.key}`)
-              : text(language, "Only an explicitly confirmed key enables Roman/numeric input and degree display.", "明示的に確定したキーだけがローマ数字・数字入力と度数表示に使われます。")}
-          </p>
-          {keyError ? <p role="alert" className="mt-2 text-xs text-amber-200">{keyError}</p> : null}
-          {suggestions.length ? (
-            <div className="mt-3" data-testid="text-progression-key-suggestions">
-              <p className="text-xs text-[var(--lv-text-muted)]">
-                {text(language, "Suggestions only — choose one, then confirm it yourself.", "候補です。選択後にご自身で確定してください。")}
-              </p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {suggestions.map((candidate) => (
-                  <button
-                    key={candidate.key}
-                    type="button"
-                    className="border border-[var(--lv-border)] px-2 py-1 text-xs text-[var(--lv-text)]"
-                    disabled={disabled}
-                    onClick={() => chooseSuggestedKey(candidate.key)}
-                  >
-                    {candidate.key}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : null}
-        </div>
-        <div>
-          <BpmScrubField idPrefix="text-progression-bpm" inputTestId="text-progression-bpm"
-            label="BPM" disabled={disabled} emptyWhenUnset={explicitBpm === undefined}
-            dragLabel={text(language, "Drag up or down to change BPM", "上下にドラッグしてBPMを変更")}
-            value={explicitBpm ?? TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM}
-            onChange={value => { if (transportState.status === "stopped") onStop();
-              transport.setBpm(value); setBpmInput(String(value)); }}
-            onExplicitInput={value => { if (transportState.status === "stopped") onStop();
-              transport.setBpm(value); setBpmInput(String(value)); }} />
-          <p className="mt-2 text-xs text-[var(--lv-text-muted)]">
-            {bpmInput && explicitBpm === undefined
-              ? text(language, `Enter 30–240 BPM to change audition speed. Cards use ${TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM} BPM until then, and saving can still omit BPM.`, `試聴速度を変えるには30〜240 BPMを入力してください。それまではカードを${TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM} BPMで試聴し、保存時はBPMなしにもできます。`)
-              : text(language, `Click a chord card to audition the exact notes currently planned for saving. Without BPM, audition uses ${TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM} BPM only.`, `コードカードをクリックすると、現在の保存予定音をそのまま試聴します。BPM未指定時は試聴だけ${TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM} BPMを使用します。`)}
-          </p>
-        </div>
+      <section className="mt-3 border-t border-[var(--lv-border)] pt-3" aria-label={text(language, "Key and tempo", "キーとテンポ")}>
+        <p className="text-xs text-[var(--lv-text-muted)]" data-testid="text-progression-key-state">
+          {confirmed ? text(language, `Confirmed: ${result.keyState.key}`, `確定: ${result.keyState.key}`)
+            : text(language, "Only an explicitly confirmed key enables Roman/numeric input and degree display.", "明示的に確定したキーだけがローマ数字・数字入力と度数表示に使われます。")}
+        </p>
+        {keyError ? <p role="alert" className="mt-2 text-xs text-[var(--lv-warning)]">{keyError}</p> : null}
+        {suggestions.length ? <div className="mt-2" data-testid="text-progression-key-suggestions">
+          <p className="text-xs text-[var(--lv-text-muted)]">{text(language, "Suggestions only — choose one, then confirm it yourself.", "候補です。選択後にご自身で確定してください。")}</p>
+          <div className="mt-1 flex flex-wrap gap-2">{suggestions.map(candidate =>
+            <button key={candidate.key} type="button" className="lv-button-secondary px-2 py-1 text-xs"
+              disabled={disabled} onClick={() => chooseSuggestedKey(candidate.key)}>{candidate.key}</button>)}</div>
+        </div> : null}
+        <p className="mt-2 text-xs text-[var(--lv-text-muted)]">
+          {explicitBpm === undefined ? text(language, "BPM unset; audition uses 120.", "BPM未設定。試聴は120です。")
+            : text(language, `BPM ${explicitBpm} confirmed.`, `BPM ${explicitBpm} を使用します。`)}
+        </p>
       </section>
 
       <TextDiagnostics diagnostics={result.diagnostics} language={language} />
@@ -506,15 +512,6 @@ export function TextProgressionCapturePanel({
           <summary className="cursor-pointer text-xs">{text(language, "Availability details", "利用条件の詳細")}</summary>
           <TextCapabilityList capabilities={capabilities} language={language} />
         </details>
-        {onSaveStandard ? <label className="text-xs">{text(language, "Name", "名前")}
-          <input className="lv-field-control ml-2 min-h-9 w-44 px-2" maxLength={80}
-            data-testid="text-progression-name" value={titleEdited ? saveTitle : textProgressionDraftTitle(result)}
-            onChange={event => { setTitleEdited(true); setSaveTitle(event.target.value);
-              setSaved(false); setSaveFailed(false); }} />
-        </label> : null}
-        {onSaveStandard ? <button type="button" className="lv-button-primary min-h-9 px-4 text-sm"
-          data-testid="text-progression-save" disabled={disabled || !result.canConvert}
-          onClick={saveStandard}>{text(language, "Save to Vault", "Vaultに保存")}</button> : null}
         <button
           type="button"
           className="lv-button-secondary px-4 py-2 text-sm"
@@ -528,7 +525,7 @@ export function TextProgressionCapturePanel({
           {text(language, "Saved", "保存しました")}</span> : null}
         {saveFailed ? <span role="alert" className="text-xs text-[var(--lv-warning)]">
           {text(language, "Save failed. Your text is still here.", "保存できませんでした。入力内容は保持されています。")}</span> : null}
-        {!result.canConvert ? <p className="text-xs text-[var(--lv-text-muted)]">
+        {!result.canConvert ? <p id="text-progression-save-reason" className="text-xs text-[var(--lv-text-muted)]">
           {text(language, "Fix every diagnostic before saving. No partial progression is created.", "保存前にすべての診断を修正してください。部分進行は作成しません。")}
         </p> : null}
       </div>

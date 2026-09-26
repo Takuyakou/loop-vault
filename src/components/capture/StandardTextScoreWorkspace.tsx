@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { TextTransport, TextTransportState } from "../../audio/textTransport";
 import type { AppLanguage } from "../../i18n";
 import type { TextProgressionEvent, TextProgressionParseResult } from "../../domain/textProgression";
@@ -10,6 +10,8 @@ import { useTextScorePlayhead } from "./useTextScorePlayhead";
 interface Props {
   readonly language: AppLanguage;
   readonly input: string;
+  readonly editorSelection: { readonly start: number; readonly end: number };
+  readonly onEditorSelection: (start: number, end: number) => void;
   readonly result: TextProgressionParseResult;
   readonly disabled: boolean;
   readonly onInput: (value: string) => void;
@@ -21,10 +23,11 @@ interface Props {
 
 /** Standard syntax retains its parser but shares the score workspace primitives. */
 export function StandardTextScoreWorkspace({ language, input, result, disabled, onInput, onSelectEvent,
-  onSeekBar, transport, transportState }: Props) {
+  onSeekBar, transport, transportState, editorSelection, onEditorSelection }: Props) {
   const [visiblePane, setVisiblePane] = useState<"input" | "preview">("input");
   const [selectedStart, setSelectedStart] = useState<number>();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  useLayoutEffect(() => { textareaRef.current?.setSelectionRange(editorSelection.start, editorSelection.end); }, []);
   const previewRef = useRef<HTMLElement>(null);
   const scoreItems = useMemo(() => buildStandardTextPreviewScore(result), [result]);
   const lines = input.split(/\r\n|\r|\n/);
@@ -41,6 +44,7 @@ export function StandardTextScoreWorkspace({ language, input, result, disabled, 
     if (!editor) return;
     editor.focus();
     editor.setSelectionRange(span.start, span.end);
+    onEditorSelection(span.start, span.end);
     const line = input.slice(0, span.start).split(/\r\n|\r|\n/).length - 1;
     editor.scrollTop = Math.max(0, line * 24 - editor.clientHeight / 3);
   }
@@ -80,7 +84,8 @@ export function StandardTextScoreWorkspace({ language, input, result, disabled, 
             aria-invalid={result.diagnostics.length > 0}
             aria-describedby={result.diagnostics.length ? "text-progression-format text-progression-diagnostics" : "text-progression-format"}
             {...(result.diagnostics.length ? { "aria-errormessage": "text-progression-diagnostics" } : {})}
-            onSelect={event => selectPreviewAtCaret(event.currentTarget.selectionStart)}
+            onSelect={event => { onEditorSelection(event.currentTarget.selectionStart, event.currentTarget.selectionEnd);
+              selectPreviewAtCaret(event.currentTarget.selectionStart); }}
             onClick={event => selectPreviewAtCaret(event.currentTarget.selectionStart)}
             onChange={event => onInput(event.currentTarget.value)}
             className="lv-text-intake-textarea min-h-64 min-w-0 flex-1 resize-none overflow-auto bg-transparent p-2 font-mono text-sm outline-none" />

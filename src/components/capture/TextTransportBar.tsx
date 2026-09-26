@@ -40,7 +40,7 @@ export function TextTransportBar({ language, transport, state, snapshot, disable
   });
   const primaryLabel = state.status === "playing" ? (ja ? "Ⅱ 一時停止" : "Ⅱ Pause")
     : state.status === "paused" ? (ja ? "▶ 再開" : "▶ Resume") : (ja ? "▶ 再生" : "▶ Play");
-  return <div className="flex flex-wrap items-center gap-2" data-testid="text-transport">
+  return <div className="lv-text-transport flex items-center gap-1" data-testid="text-transport">
     <TransportButton variant="primary" fixedPrimary data-testid={primaryTestId}
       disabled={disabled || (state.status === "stopped" && snapshot.lengthBeats <= 0)} onClick={primary}>{primaryLabel}</TransportButton>
     <TransportButton variant="neutral" data-testid="text-transport-stop"
@@ -50,7 +50,7 @@ export function TextTransportBar({ language, transport, state, snapshot, disable
     <TransportButton variant="loop" active={state.loop} data-testid="text-transport-loop"
       disabled={disabled} aria-pressed={state.loop} onClick={() => transport.setLoop(!state.loop)}>
       {ja ? "全体ループ" : "Loop all"} {state.loop ? "ON" : "OFF"}</TransportButton>
-    <span className="text-xs text-[var(--lv-text-muted)]" data-testid="text-transport-position" aria-live="off" />
+    <span className="lv-text-transport-position text-xs text-[var(--lv-text-muted)]" data-testid="text-transport-position" aria-live="off" />
     <span className="sr-only" role="status" aria-live="polite" data-testid="text-transport-status">
       {primaryLabel}{state.status === "stopped" ? (ja ? "・停止中" : " · stopped") : ""}
     </span>
