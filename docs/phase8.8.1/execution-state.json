@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "8.8.1",
+  "status": "in-progress",
+  "activeStage": "P8.8.1-07",
+  "completedStages": [
+    "P8.8.1-00",
+    "P8.8.1-01",
+    "P8.8.1-02",
+    "P8.8.1-03",
+    "P8.8.1-04",
+    "P8.8.1-05",
+    "P8.8.1-06"
+  ],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "40d8b8ee9261e9c5585f25eb3d0e9a259520b1f7",
+  "lastVerifiedCommit": "ec4156d",
+  "currentBranch": "feat/phase8.8.1-realworld-fix",
+  "requiredGates": {
+    "P8.8.1-00": [
+      "synthetic-reproduction",
+      "phase-docs",
+      "diff-check"
+    ],
+    "P8.8.1-01": [
+      "frozen-pre",
+      "exact-timing",
+      "typescript",
+      "changed-scope-eslint",
+      "phase-docs",
+      "diff-check"
+    ],
+    "P8.8.1-02": [
+      "extended-hardening",
+      "long-chart-vault-roundtrip",
+      "practice-grid-boundary",
+      "typescript",
+      "changed-scope-eslint",
+      "phase-docs",
+      "diff-check"
+    ],
+    "P8.8.1-03": [
+      "alias-semantics",
+      "written-spelling-vault",
+      "typescript",
+      "changed-scope-eslint",
+      "phase-docs",
+      "diff-check"
+    ],
+    "P8.8.1-04": [
+      "diagnostic-reasons",
+      "japanese-ui",
+      "frozen-pre",
+      "typescript",
+      "changed-scope-eslint",
+      "phase-docs",
+      "diff-check"
+    ],
+    "P8.8.1-05": [
+      "synthetic-70-150-200",
+      "ui-paste-preview-save",
+      "vault-practice-roundtrip",
+      "local-witness-availability-audit",
+      "performance-trend",
+      "typescript",
+      "changed-scope-eslint",
+      "phase-docs",
+      "diff-check"
+    ],
+    "P8.8.1-06": [
+      "focused-regression",
+      "full-vitest",
+      "app-typescript",
+      "e2e-typescript",
+      "repository-lint",
+      "class-source-contract-lint",
+      "production-build",
+      "product-path-playwright",
+      "phase-docs",
+      "ai-handoff",
+      "privacy-path-media",
+      "diff-check"
+    ]
+  },
+  "gateResults": {
+    "synthetic-reproduction": "pass",
+    "frozen-pre": "pass",
+    "exact-timing": "pass",
+    "typescript": "pass",
+    "changed-scope-eslint": "pass",
+    "phase-docs": "pass",
+    "diff-check": "pass",
+    "extended-hardening": "pass",
+    "long-chart-vault-roundtrip": "pass",
+    "practice-grid-boundary": "pass",
+    "alias-semantics": "pass",
+    "written-spelling-vault": "pass",
+    "diagnostic-reasons": "pass",
+    "japanese-ui": "pass",
+    "synthetic-70-150-200": "pass",
+    "ui-paste-preview-save": "pass",
+    "vault-practice-roundtrip": "pass",
+    "performance-trend": "pass",
+    "local-witness-availability-audit": "pass",
+    "focused-regression": "pass",
+    "full-vitest": "pass",
+    "app-typescript": "pass",
+    "e2e-typescript": "pass",
+    "repository-lint": "pass",
+    "class-source-contract-lint": "pass",
+    "production-build": "pass",
+    "product-path-playwright": "pass",
+    "ai-handoff": "pass",
+    "privacy-path-media": "pass"
+  },
+  "nextAction": "Prepare closeout and candidate review; obtain direct chat approval before merging to local master, then run post-merge gates and build D-drive EXE.",
+  "updatedAt": "2026-09-26"
+}

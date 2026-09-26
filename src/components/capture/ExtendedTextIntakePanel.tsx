@@ -3,6 +3,7 @@ import {
   parseExtendedTextProgression,
   type ExtendedTextMetadata,
   type ExtendedTextResult,
+  type ExtendedTextReasonCode,
 } from "../../domain/extendedTextProgression";
 import type { AppLanguage } from "../../i18n";
 
@@ -17,6 +18,17 @@ interface Props {
 function label(language: AppLanguage, english: string, japanese: string): string {
   return language === "ja" ? japanese : english;
 }
+
+const japaneseDiagnostic: Readonly<Record<ExtendedTextReasonCode, string>> = {
+  UNKNOWN_TOKEN: "読み取れない記号・トークンがあります。入力を確認してください。",
+  UNKNOWN_CHORD: "このコード表記は対応していません。表記を確認してください。",
+  AMBIGUOUS_TOKENIZATION: "コードの区切り方を一意に決められません。空白か小節線で区切ってください。",
+  INVALID_STRUCTURE: "小節内の区切り・保持・スラッシュ等の書式を確認してください。",
+  UNSUPPORTED_SUBDIVISION: "この等分割は正確なタイミングで表現できません。",
+  INPUT_LIMIT_EXCEEDED: "入力が対応する長さ・小節数・イベント数の上限を超えています。",
+  UNSUPPORTED_METER: "対応する拍子は1/4から12/4です。",
+  INVALID_METADATA: "拍子以外の設定値を確認してください。",
+};
 
 /** Comments remain source text. Their Key/BPM hints are only applied by explicit action. */
 export function detectExtendedTextMetadataHints(input: string): { key?: string; bpm?: number } {
@@ -121,7 +133,7 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
           </p>
         ))}
         {result.bars.map((bar, index) => (
-          <div key={index} className="mt-3 border-l-2 border-[var(--lv-border)] pl-3" data-testid="extended-text-bar">
+          <div key={index} className="mt-3 border-l-2 border-[var(--lv-border)] pl-3" data-testid="extended-text-bar" data-state={slotsByBar.has(index + 1) ? "parsed" : "error"}>
             <p className="text-xs text-[var(--lv-text-muted)]">{label(language, `Bar ${index + 1}`, `${index + 1}小節目`)}</p>
             <div className="mt-1 flex flex-wrap gap-2">
               {(slotsByBar.get(index + 1) ?? []).map(slot => (
@@ -133,14 +145,15 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
                   <span className="ml-2 text-xs text-[var(--lv-text-muted)]">{slot.durationBeats}♩</span>
                 </span>
               ))}
-              {!slotsByBar.has(index + 1) ? <span className="text-sm text-amber-200">{bar.join(" ")}</span> : null}
+              {!slotsByBar.has(index + 1) ? <span className="whitespace-pre-wrap text-sm text-amber-200">{label(language, "Unparsed source: ", "解析できない元テキスト: ")}{bar.join(" ")}</span> : null}
             </div>
           </div>
         ))}
         <div id="extended-text-diagnostics" role="status" aria-live="polite" className="mt-4" data-testid="extended-text-diagnostics">
           {result.diagnostics.map((diagnostic, index) => (
-            <p key={`${diagnostic.span.start}:${index}`} className="mt-1 text-sm text-amber-200">
-              {diagnostic.severity} {diagnostic.line}:{diagnostic.column} · {diagnostic.message}
+            <p key={`${diagnostic.span.start}:${index}`} className="mt-1 text-sm text-amber-200" data-reason={diagnostic.reasonCode}
+              data-span-start={diagnostic.span.start} data-span-end={diagnostic.span.end}>
+              {diagnostic.severity} {diagnostic.line}:{diagnostic.column} [{diagnostic.span.start}-{diagnostic.span.end}] · {language === "ja" ? japaneseDiagnostic[diagnostic.reasonCode] : diagnostic.message}
             </p>
           ))}
         </div>

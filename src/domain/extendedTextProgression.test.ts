@@ -6,6 +6,7 @@ const semanticErratum = new Set([
   "EV1-070", "EV1-071", "EV1-072", "EV1-073",
   "EV1-074", "EV1-075", "EV1-076", "EV1-077",
 ]);
+const exactTimingErratum = new Set(["EV1-087"]);
 
 describe("P8.8 extended-v1 frozen corpus", () => {
   it.each(corpus.fixtures)("$fixtureId $category", fixture => {
@@ -20,10 +21,10 @@ describe("P8.8 extended-v1 frozen corpus", () => {
       expect(diagnostic.line).toBeGreaterThanOrEqual(1);
       expect(diagnostic.column).toBeGreaterThanOrEqual(1);
     }
-    if (fixture.disposition === "positive" || semanticErratum.has(fixture.fixtureId)) {
+    if (fixture.disposition === "positive" || semanticErratum.has(fixture.fixtureId) || exactTimingErratum.has(fixture.fixtureId)) {
       expect(result.state, JSON.stringify(result.diagnostics)).toBe("VALID");
       expect(result.canConvert).toBe(true);
-      if (!semanticErratum.has(fixture.fixtureId)) {
+      if (!semanticErratum.has(fixture.fixtureId) && !exactTimingErratum.has(fixture.fixtureId)) {
         expect(result.bars).toEqual(fixture.expectedBars);
         expect(result.slots.map(slot => ({
           bar: slot.bar, slot: slot.slot, startBeat: slot.startBeat,

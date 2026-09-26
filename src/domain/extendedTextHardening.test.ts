@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseExtendedTextProgression } from "./extendedTextProgression";
+import { EXTENDED_TEXT_LIMITS } from "./extendedTextBudgets";
 
 function seeded(seed: number): () => number {
   let state = seed >>> 0;
@@ -51,21 +52,38 @@ describe("P8.8 fixed-seed runtime hardening", () => {
   });
 
   it("rejects excessive sections before Vault serialization and preserves the source", () => {
-    const source = "# public synthetic comment\r\n".repeat(129) + "| C |";
+    const source = "# public synthetic comment\r\n".repeat(EXTENDED_TEXT_LIMITS.maxComments + 1) + "| C |";
     const result = parseExtendedTextProgression(source);
     expect(result.state).toBe("INVALID");
     expect(result.canConvert).toBe(false);
     expect(result.source).toBe(source);
-    expect(result.diagnostics.map(diagnostic => diagnostic.code)).toContain("SECTION_LIMIT");
+    expect(result.diagnostics.map(diagnostic => diagnostic.code)).toContain("INPUT_LIMIT_EXCEEDED");
   });
 
   it("bounds long input without dropping the original text", () => {
-    const source = "C".repeat(8193);
+    const source = "C".repeat(EXTENDED_TEXT_LIMITS.maxInputCodeUnits + 1);
     const result = parseExtendedTextProgression(source);
     expect(result.state).toBe("INVALID");
     expect(result.canConvert).toBe(false);
     expect(result.source).toBe(source);
     expect(result.diagnostics.map(diagnostic => diagnostic.code)).toContain("INPUT_LIMIT");
+  });
+
+  it("rejects over-budget bars and harmonic spans without truncation to a saveable chart", () => {
+    const excessiveBars = Array.from({ length: EXTENDED_TEXT_LIMITS.maxBars + 1 }, () => "C").join("|");
+    const barResult = parseExtendedTextProgression(excessiveBars);
+    expect(barResult.state).toBe("INVALID");
+    expect(barResult.canConvert).toBe(false);
+    expect(barResult.source).toBe(excessiveBars);
+    expect(barResult.diagnostics.map(d => d.reasonCode)).toContain("INPUT_LIMIT_EXCEEDED");
+
+    const denseBar = "C D E F G A B C# D# F# G# Bb Cm Dm Em Fm";
+    const denseSource = Array.from({ length: EXTENDED_TEXT_LIMITS.maxBars }, () => denseBar).join("|");
+    const denseResult = parseExtendedTextProgression(denseSource);
+    expect(denseResult.state).toBe("INVALID");
+    expect(denseResult.canConvert).toBe(false);
+    expect(denseResult.slots).toHaveLength(EXTENDED_TEXT_LIMITS.maxScoreTokens);
+    expect(denseResult.diagnostics.map(d => d.reasonCode)).toContain("INPUT_LIMIT_EXCEEDED");
   });
 
   it("keeps explicit rest silent and reattacks after it", () => {

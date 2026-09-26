@@ -1178,6 +1178,58 @@ describe("vault store", () => {
     expect(handoff.handoff.initialSelection).toBe("basic-full");
   });
 
+  it("retains written alias and slash spelling in a saved Extended card", async () => {
+    const repository = new FakeRepository();
+    const store = createVaultStore({ repository, now: () => now });
+    await store.getState().initialize();
+    const parsed = parseExtendedTextProgression("| G#m7/C# F7-5 Fm7-5 F7+5 |", { beat: "4/4", bpm: 120 });
+    expect(parsed.state).toBe("VALID");
+    const ideaId = store.getState().createIdeaFromTextProgression(extendedTextSaveData(parsed));
+    expect(ideaId).toBeDefined();
+    await store.getState().flush();
+    const loaded = parseVaultFileJson(serializeVault(repository.saved[repository.saved.length - 1]!));
+    expect(loaded.ok).toBe(true);
+    if (!loaded.ok) return;
+    const block = loaded.vault.ideas.find(idea => idea.id === ideaId)?.progressionBlocks?.[0];
+    expect(block?.chords.map(item => item.chord.label))
+      .toEqual(["G#m7/C#", "F7-5", "Fm7-5", "F7+5"]);
+    expect(block?.textSource?.harmonicSpans.map(span => span.writtenChord))
+      .toEqual(["G#m7/C#", "F7-5", "Fm7-5", "F7+5"]);
+    expect(block?.textSource?.harmonicSpans[1]?.semanticAlterations).toEqual(["b5"]);
+  });
+
+  it("round-trips an authored 150-bar eight-slot chart through Vault v2 and practice", async () => {
+    const repository = new FakeRepository();
+    const store = createVaultStore({ repository, now: () => now });
+    await store.getState().initialize();
+    const rawText = Array.from({ length: 150 }, () =>
+      "C Dm7 Em F G7 Am Bb C").join("|");
+    const parsed = parseExtendedTextProgression(rawText, { beat: "4/4", bpm: 120 });
+    expect(parsed.state, JSON.stringify(parsed.diagnostics)).toBe("VALID");
+    expect(parsed.bars).toHaveLength(150);
+    expect(parsed.slots).toHaveLength(1200);
+    const data = extendedTextSaveData(parsed);
+    const ideaId = store.getState().createIdeaFromTextProgression(data);
+    expect(ideaId).toBeDefined();
+    await store.getState().flush();
+    const reloaded = parseVaultFileJson(serializeVault(repository.saved[repository.saved.length - 1]!));
+    expect(reloaded.ok).toBe(true);
+    if (!reloaded.ok) return;
+    expect(reloaded.vault.fileVersion).toBe(2);
+    const block = reloaded.vault.ideas.find(idea => idea.id === ideaId)?.progressionBlocks?.[0];
+    expect(block?.textSource?.rawText).toBe(rawText);
+    expect(block?.textSource?.slots).toHaveLength(1200);
+    expect(block?.chords).toHaveLength(parsed.harmonicSpans.length);
+    const handoff = buildProgressionVoicingPracticeHandoffFromVault(reloaded.vault.ideas, {
+      ideaId: ideaId!, blockId: block!.id,
+    });
+    expect(handoff.ok).toBe(true);
+    if (handoff.ok) {
+      expect(handoff.handoff.snapshots["basic-full"]?.events).toHaveLength(parsed.harmonicSpans.length);
+      expect(handoff.handoff.snapshots["basic-full"]?.lengthBeats).toBe(600);
+    }
+  });
+
   it("hands off created and appended BPM-less Text saves with the runtime default only", async () => {
     const repository = new FakeRepository();
     const store = createVaultStore({ repository, now: () => now });

@@ -13,7 +13,7 @@ import {
   type ProgressionPracticeSourceReference,
   type ProgressionVoicingSelection,
 } from "./types";
-import { progressionPracticeBeatAtTick, progressionPracticeTicksAtBeat } from "./timingGrid";
+import { PROGRESSION_VOICING_PRACTICE_PPQ, progressionPracticeBeatAtTick, progressionPracticeTicksAtBeat } from "./timingGrid";
 
 const supportedQualities = new Set<ChordQuality>([
   "maj", "min", "dim", "aug", "maj7", "min7", "dom7", "min7b5", "dim7",
@@ -76,6 +76,15 @@ export function buildProgressionVoicingPracticeSnapshot(
 
   if (input.block.chords.length > METER_NEUTRAL_BUDGET.maxSourceEvents) {
     return failure("resource-budget", "Voicing Loop has too many source events.");
+  }
+  // The parser/Vault retain the exact authored subdivision. Reject only at
+  // the practice boundary when the existing 192-tick playback grid cannot
+  // represent it without silently changing an onset or release.
+  if (input.block.textSource && input.block.textSource.slots.some(slot =>
+    !isExactPracticeGridBeat((slot.bar - 1) * sourceMeter.numerator + slot.startBeat - 1)
+    || !isExactPracticeGridBeat(slot.durationBeats)
+  )) {
+    return failure("invalid-timing", "Text subdivision cannot be represented exactly on the Voicing Loop playback grid.");
   }
   const normalizedKey = input.block.detectedKey?.trim();
   const normalized = normalizeEvents(input.block.chords, input.selection, sourceMeter.numerator, input.block.sourceStartBeat, input.block.sourceEndBeat);
@@ -343,4 +352,10 @@ function failure(
   message: string,
 ): { readonly ok: false; readonly error: ProgressionPracticeSnapshotError } {
   return { ok: false, error: { code, message } };
+}
+
+function isExactPracticeGridBeat(beat: number): boolean {
+  const ticks = beat * PROGRESSION_VOICING_PRACTICE_PPQ;
+  return Number.isSafeInteger(Math.round(ticks))
+    && Math.abs(ticks - Math.round(ticks)) < 1e-8;
 }

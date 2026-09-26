@@ -3,6 +3,7 @@ import { normalizeVaultPracticeCompatibility } from "./practiceCompatibility";
 import type { SongIdea, VaultFile } from "./types";
 import { sourceBasslineSnapshotSchema } from "./sourceBassline";
 import type { SavedTextSourceV1 } from "./textSource";
+import { EXTENDED_TEXT_LIMITS } from "./extendedTextBudgets";
 
 export const statusSchema = z.enum([
   "idea",
@@ -246,7 +247,7 @@ const textSourceRangeSchema = z.object({
 export const savedTextSourceSchema: z.ZodType<SavedTextSourceV1> = z.object({
   schemaVersion: z.literal(1),
   dialect: z.literal("extended-v1"),
-  rawText: z.string().max(8192),
+  rawText: z.string().max(EXTENDED_TEXT_LIMITS.maxInputCodeUnits),
   parserVersion: z.string().min(1).max(80),
   semanticPolicyVersion: z.string().min(1).max(80),
   generatedVoicingPolicyId: z.string().min(1).max(80),
@@ -260,30 +261,31 @@ export const savedTextSourceSchema: z.ZodType<SavedTextSourceV1> = z.object({
     kind: z.enum(["comment", "playback-start", "playback-end"]),
     line: z.number().int().positive(),
     span: textSourceRangeSchema,
-    raw: z.string().max(8192),
-  }).strict()).max(128),
+    raw: z.string().max(EXTENDED_TEXT_LIMITS.maxInputCodeUnits),
+  }).strict()).max(EXTENDED_TEXT_LIMITS.maxSections),
   slots: z.array(z.object({
-    raw: z.string().max(8192),
+    raw: z.string().max(EXTENDED_TEXT_LIMITS.maxInputCodeUnits),
     span: textSourceRangeSchema,
-    bar: z.number().int().min(1).max(32),
-    slot: z.number().int().min(1).max(12),
-    startBeat: z.number().int().min(1).max(12),
-    durationBeats: z.number().int().min(1).max(12),
+    bar: z.number().int().min(1).max(EXTENDED_TEXT_LIMITS.maxBars),
+    slot: z.number().int().min(1).max(EXTENDED_TEXT_LIMITS.maxSlotsPerBar),
+    startBeat: z.number().finite().min(1).lt(13),
+    durationBeats: z.number().finite().positive().max(12),
     kind: z.enum(["attack", "reattack", "hold", "rest"]),
-    chordLabel: z.string().min(1).max(8192).optional(),
-  }).strict()).max(128),
+    chordLabel: z.string().min(1).max(EXTENDED_TEXT_LIMITS.maxInputCodeUnits).optional(),
+  }).strict()).max(EXTENDED_TEXT_LIMITS.maxScoreTokens),
   harmonicSpans: z.array(z.object({
-    writtenChord: z.string().min(1).max(8192),
-    chordLabel: z.string().min(1).max(8192),
-    startBeat: z.number().int().nonnegative().max(384),
-    durationBeats: z.number().int().positive().max(384),
+    writtenChord: z.string().min(1).max(EXTENDED_TEXT_LIMITS.maxInputCodeUnits),
+    semanticAlterations: z.array(z.literal("b5")).length(1).optional(),
+    chordLabel: z.string().min(1).max(EXTENDED_TEXT_LIMITS.maxInputCodeUnits),
+    startBeat: z.number().finite().nonnegative().max(EXTENDED_TEXT_LIMITS.maxScoreBeats),
+    durationBeats: z.number().finite().positive().max(EXTENDED_TEXT_LIMITS.maxScoreBeats),
     sourceSpan: textSourceRangeSchema,
     attacks: z.array(z.object({
-      beat: z.number().int().nonnegative().max(384),
+      beat: z.number().finite().nonnegative().max(EXTENDED_TEXT_LIMITS.maxScoreBeats),
       kind: z.enum(["written", "repeat"]),
       span: textSourceRangeSchema,
-    }).strict()).min(1).max(128),
-  }).strict()).min(1).max(128),
+    }).strict()).min(1).max(EXTENDED_TEXT_LIMITS.maxAttacks),
+  }).strict()).min(1).max(EXTENDED_TEXT_LIMITS.maxHarmonicSpans),
 }).strict();
 
 export const savedProgressionBlockSchema = z
