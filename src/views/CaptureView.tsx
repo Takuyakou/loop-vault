@@ -1427,7 +1427,9 @@ export function CaptureView(props: CaptureViewProps) {
                       title={savedTextPracticeStatus?.reason}
                     >
                       <Dumbbell aria-hidden="true" size={16} />
-                      Voicing Loop
+                      {savedTextPracticeStatus
+                        ? (language === "ja" ? "Voicing Loopで練習" : "Practice in Voicing Loop")
+                        : "Voicing Loop"}
                     </Button>
                   ) : null}
                   {openSavedTextProgression ? (
@@ -1438,7 +1440,9 @@ export function CaptureView(props: CaptureViewProps) {
                       onClick={() => openSavedTextProgression(savedTextProgressionTarget)}
                     >
                       <ExternalLink aria-hidden="true" size={16} />
-                      {language === "ja" ? "保存した進行を見る" : "View saved progression"}
+                      {savedTextPracticeStatus
+                        ? (language === "ja" ? "進行を開く" : "Open progression")
+                        : language === "ja" ? "保存した進行を見る" : "View saved progression"}
                     </Button>
                   ) : null}
                 </div>

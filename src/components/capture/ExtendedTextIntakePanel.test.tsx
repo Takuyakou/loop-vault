@@ -88,6 +88,10 @@ describe("P8.8 extended Capture intake", () => {
     const bar = container.querySelector('[data-testid="extended-text-bar"][data-state="error"]');
     expect(bar?.textContent).toContain("C///E");
     expect(bar?.textContent).toContain("書式を確認してください");
+    expect(container.querySelector('.lv-text-intake-gutter [data-diagnostic="ERROR"]')).not.toBeNull();
+    await press(container.querySelector<HTMLButtonElement>('[data-testid="text-preview-error"]')!);
+    expect(container.querySelector<HTMLTextAreaElement>('[data-testid="extended-text-input"]')?.selectionStart)
+      .toBe(Number(container.querySelector('[data-testid="extended-text-bar"][data-state="error"] [data-source-start]')?.getAttribute("data-source-start")));
     const diagnostic = container.querySelector('[data-testid="extended-text-diagnostics"] [data-reason="INVALID_STRUCTURE"]');
     expect(diagnostic?.textContent).toContain("書式を確認してください");
     expect(diagnostic?.getAttribute("data-span-start")).not.toBeNull();
@@ -157,6 +161,43 @@ describe("P8.8 extended Capture intake", () => {
     await press(container.querySelector<HTMLButtonElement>('[data-testid="extended-text-play"]')!);
     expect(calls).toHaveLength(2);
     expect(calls[1]!.notes).not.toEqual(original);
+    await act(async () => root.unmount());
+    container.remove();
+  });
+
+  it("loops the frozen whole request and starts with metronome disabled", async () => {
+    const played: Array<readonly { readonly pitch: number; readonly velocity: number }[]> = [];
+    const finish: Array<() => void> = [];
+    const driver: PlaybackAudioDriver = {
+      playChord: vi.fn(async (_chord, _sound, lifecycle) => { lifecycle.onStarted?.(); }),
+      playTimeline: vi.fn(async (_timeline, _bpm, _sound, lifecycle) => { lifecycle.onStarted?.(); }),
+      playNotes: vi.fn(async (notes, _bpm, _sound, lifecycle) => {
+        played.push(notes);
+        finish.push(() => lifecycle.onEnded?.("completed"));
+        lifecycle.onStarted?.();
+      }),
+      stop: vi.fn(),
+    };
+    const controller = createPlaybackController(driver);
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => root.render(<TextProgressionCapturePanel language="en" showRomanNumerals={false}
+      controller={controller} onConvert={vi.fn()} onPreview={vi.fn()} onStop={() => controller.stop()}
+      onSaveExtended={vi.fn()} />));
+    await press(container.querySelector<HTMLButtonElement>('[data-testid="text-mode-extended"]')!);
+    await write(container.querySelector<HTMLTextAreaElement>('[data-testid="extended-text-input"]')!, "| C |");
+    expect([...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find(button => button.textContent?.includes("Metronome"))?.getAttribute("aria-pressed")).toBe("false");
+    await press([...container.querySelectorAll<HTMLButtonElement>("button")]
+      .find(button => button.textContent?.includes("Loop"))!);
+    await press(container.querySelector<HTMLButtonElement>('[data-testid="extended-text-play"]')!);
+    expect(played).toHaveLength(1);
+    expect(played[0]?.every(note => note.velocity !== 46)).toBe(true);
+    await act(async () => finish[0]?.());
+    expect(played).toHaveLength(2);
+    expect(played[1]).toEqual(played[0]);
+    await press(container.querySelector<HTMLButtonElement>('[data-testid="extended-text-play"]')!);
     await act(async () => root.unmount());
     container.remove();
   });

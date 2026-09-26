@@ -23,8 +23,8 @@ test("P8.8 Extended Text saves a public synthetic score and opens Voicing Loop",
   await expect(intake.getByTestId("extended-text-metadata")).toContainText("120 BPM");
   await expect(input).toHaveValue(raw);
   await intake.getByTestId("extended-text-save").click();
-  await expect(page.locator("#main-content").getByRole("button", { name: "Voicing Loop", exact: true })).toBeVisible();
-  await page.locator("#main-content").getByRole("button", { name: "Voicing Loop", exact: true }).click();
+  await expect(page.locator("#main-content").getByRole("button", { name: /Voicing Loopで練習|Practice in Voicing Loop/ })).toBeVisible();
+  await page.locator("#main-content").getByRole("button", { name: /Voicing Loopで練習|Practice in Voicing Loop/ }).click();
   await expect(page.getByTestId("voicing-loop-workspace")).toBeVisible();
   expect(errors).toEqual([]);
 });
@@ -65,15 +65,23 @@ test("P8.8.2 renders 70/150/200 public bars and keeps both panes usable across b
     await expect(intake.getByTestId("extended-text-bar")).toHaveCount(count);
     await expect(intake.getByTestId("text-preview-row")).toHaveCount(Math.ceil(count / 4));
     await expect(intake.getByTestId("extended-text-save")).toBeEnabled();
-    expect(Date.now() - started).toBeLessThan(7000);
+    const updateMs = Date.now() - started;
+    console.log("P8.8.2 public chart update", count, updateMs);
+    expect(updateMs).toBeLessThan(7000);
   }
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  await assertNoHorizontalOverflow(page);
+  await page.setViewportSize({ width: 1024, height: 720 });
+  await assertNoHorizontalOverflow(page);
   await page.setViewportSize({ width: 899, height: 720 });
   await expect(intake.getByRole("tab", { name: /入力|Input/ })).toBeVisible();
   await intake.getByRole("tab", { name: /プレビュー|Preview/ }).click();
   await expect(intake.getByTestId("extended-text-preview")).toBeVisible();
   await expect(intake.getByTestId("extended-text-editor")).toBeHidden();
-  await page.setViewportSize({ width: 768, height: 720 });
-  await assertNoHorizontalOverflow(page);
+  for (const width of [853, 768, 640]) {
+    await page.setViewportSize({ width, height: 720 });
+    await assertNoHorizontalOverflow(page);
+  }
   await page.setViewportSize({ width: 320, height: 720 });
   await assertNoHorizontalOverflow(page);
   await intake.getByRole("tab", { name: /入力|Input/ }).click();

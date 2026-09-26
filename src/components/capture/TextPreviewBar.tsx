@@ -54,7 +54,7 @@ function RestRegion({ rest, language, onSelect }: {
     onClick={() => onSelect(rest.sourceSpan)}>{language === "ja" ? "休" : "R"}</button>;
 }
 function DiagnosticOverlay({ label }: { readonly label: string }) {
-  return <p className="mt-2 whitespace-pre-wrap break-words text-xs text-[var(--lv-danger)]" role="note">{label}</p>;
+  return <span className="mt-2 block whitespace-pre-wrap break-words text-xs text-[var(--lv-danger)]" role="note">{label}</span>;
 }
 function PlaybackHighlight({ progress = 0 }: { readonly progress?: number }) {
   return <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 w-0.5 bg-white"
@@ -73,10 +73,11 @@ export function TextPreviewBar({ bar, language, selectedStart, errorLabel, onSel
       onClick={() => onSelect(bar.sourceSpan)}>
       {language === "ja" ? String(bar.number) + "小節目" : "Bar " + String(bar.number)}
     </button>
-    {bar.error ? <div data-testid="text-preview-error">
-      <p className="whitespace-pre-wrap break-words text-sm">{bar.raw}</p>
+    {bar.error ? <button type="button" data-testid="text-preview-error"
+      className="block w-full text-left" onClick={() => onSelect(bar.sourceSpan)}>
+      <span className="whitespace-pre-wrap break-words text-sm">{bar.raw}</span>
       <DiagnosticOverlay label={errorLabel ?? bar.error} />
-    </div> : <div className="relative h-9 min-w-0" data-testid="text-preview-track">
+    </button> : <div className="relative h-9 min-w-0" data-testid="text-preview-track">
       {bar.rests.map((rest, index) => <RestRegion key={index} rest={rest} language={language} onSelect={onSelect} />)}
       {bar.bands.map((band, index) => <DurationBand key={index} band={band}
         selected={selectedStart === band.sourceSpan.start} onSelect={onSelect} onAudition={onAudition} />)}

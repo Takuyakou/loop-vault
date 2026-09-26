@@ -94,6 +94,12 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
   const annotationCount = result.sections.filter(section => section.kind === "comment"
     && !/^\s*#\s*(Key|BPM)\s*:/i.test(section.raw)).length;
   const lines = input.split(/\r\n|\r|\n/);
+  const diagnosticLines = new Map<number, "ERROR" | "WARNING">();
+  for (const issue of result.diagnostics) if (issue.severity !== "INFO") {
+    if (issue.severity === "ERROR" || !diagnosticLines.has(issue.line)) {
+      diagnosticLines.set(issue.line, issue.severity);
+    }
+  }
   const pendingClass = "rounded border border-[var(--lv-warning)] bg-[var(--lv-warning-soft)] px-3 py-2 text-sm text-[var(--lv-warning)]";
   const appliedClass = "lv-button-secondary px-3 py-2 text-sm";
 
@@ -256,7 +262,14 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
           </div>
           <div className="lv-text-intake-editor relative flex min-h-64 overflow-hidden rounded border border-[var(--lv-border)] bg-[var(--lv-bg)]">
             <div ref={gutterRef} aria-hidden="true" className="lv-text-intake-gutter shrink-0 overflow-hidden border-r border-[var(--lv-border)] text-right font-mono text-xs text-[var(--lv-text-muted)]">
-              {lines.map((line, index) => <div key={index} className={/^\s*#/.test(line) ? "text-[var(--lv-accent)]" : ""}>{index + 1}</div>)}
+              {lines.map((line, index) => <div key={index}
+                className={/^\s*#/.test(line) ? "text-[var(--lv-accent)]" : ""}
+                data-diagnostic={diagnosticLines.get(index + 1) ?? ""}>
+                {index + 1}{diagnosticLines.get(index + 1)
+                  ? <span className={diagnosticLines.get(index + 1) === "ERROR"
+                    ? "ml-0.5 text-[var(--lv-danger)]" : "ml-0.5 text-[var(--lv-warning)]"}>!</span>
+                  : null}
+              </div>)}
             </div>
             <textarea id="extended-text-input" data-testid="extended-text-input" value={input} ref={textareaRef}
               disabled={disabled} spellCheck={false}

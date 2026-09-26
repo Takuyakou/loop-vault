@@ -65,9 +65,12 @@ describe("CaptureView text progression entry", () => {
       expect(mounted.container.textContent).toContain("Practice limit: invalid-timing");
       const practice = [...mounted.container.querySelectorAll<HTMLButtonElement>("button")]
         .find(button => button.textContent?.trim() === "Voicing Loop");
-      expect(practice?.disabled).toBe(true);
+      expect(practice).toBeUndefined();
+      const disabledPractice = [...mounted.container.querySelectorAll<HTMLButtonElement>("button")]
+        .find(button => button.textContent?.trim() === "Practice in Voicing Loop");
+      expect(disabledPractice?.disabled).toBe(true);
       const view = [...mounted.container.querySelectorAll<HTMLButtonElement>("button")]
-        .find(button => button.textContent?.trim() === "View saved progression");
+        .find(button => button.textContent?.trim() === "Open progression");
       expect(view?.disabled).toBe(false);
     } finally {
       await mounted.unmount();
