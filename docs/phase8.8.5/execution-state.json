@@ -2,18 +2,19 @@
   "schemaVersion": 1,
   "phaseId": "8.8.5",
   "status": "in-progress",
-  "activeStage": "P8.8.5-05",
+  "activeStage": "P8.8.5-06",
   "completedStages": [
     "P8.8.5-00",
     "P8.8.5-01",
     "P8.8.5-02",
     "P8.8.5-03",
-    "P8.8.5-04"
+    "P8.8.5-04",
+    "P8.8.5-05"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "340e45455cd8f7a91648db5ee2f92fe42c794d7c",
-  "lastVerifiedCommit": "4466929",
+  "lastVerifiedCommit": "791103d",
   "currentBranch": "feat/phase8.8.5-global-playback-text-polish",
   "requiredGates": {
     "P8.8.5-00": [
@@ -48,8 +49,9 @@
     "capture-tabs": "pass",
     "global-playback": "pass",
     "transport-visuals": "pass",
-    "text-workspace": "pass"
+    "text-workspace": "pass",
+    "preview-save-accessibility": "pass"
   },
-  "nextAction": "Polish source score interactions, hover and save/status accessibility",
+  "nextAction": "Run responsive, visual, performance and semantic regression gates",
   "updatedAt": "2026-09-26"
 }
