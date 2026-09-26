@@ -353,8 +353,8 @@ export function TextProgressionCapturePanel({
             placeholder={text(language, "Unset", "未確定")} />
           <datalist id="text-progression-key-options">{["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"].flatMap(root => ["major", "minor"].map(mode =>
             <option key={root + mode} value={root + " " + mode} />))}</datalist>
-          <button type="button" className="lv-button-secondary min-h-9 px-2 text-xs" disabled={disabled} onClick={confirmKey}>
-            {text(language, "Confirm key", "キーを確定")}</button>
+          <button type="button" className="lv-button-secondary min-h-9 px-2 text-xs" disabled={disabled} aria-label={text(language, "Confirm key", "キーを確定")} onClick={confirmKey}>
+            {text(language, "Set", "確定")}</button>
           <button type="button" className="lv-button-ghost min-h-9 px-1 text-xs" disabled={disabled || !confirmedKey} onClick={clearKey}
             title={text(language, "Clear key", "キーをクリア")} aria-label={text(language, "Clear key", "キーをクリア")}>×</button>
         </div>
@@ -374,7 +374,7 @@ export function TextProgressionCapturePanel({
           sourceMatches={transportState.snapshot?.sourceText === undefined || transportState.snapshot.sourceText === input} />
         {onSaveStandard ? <div className="lv-text-toolbar-save flex shrink-0 items-center gap-1.5">
           <label className="text-xs">{text(language, "Name", "名前")}
-            <input className="lv-field-control ml-1 min-h-9 w-32 px-2" maxLength={80}
+            <input className="lv-field-control ml-1 min-h-9 w-24 px-2" maxLength={80}
               data-testid="text-progression-name" value={titleEdited ? saveTitle : textProgressionDraftTitle(result)}
               onChange={event => { setTitleEdited(true); setSaveTitle(event.target.value);
                 setSaved(false); setSaveFailed(false); }} />

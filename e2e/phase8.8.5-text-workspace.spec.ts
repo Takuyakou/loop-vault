@@ -101,3 +101,24 @@ test("interactive chord bands show teal hover/focus and blocked save explains it
   await expect(capture.getByTestId("text-save-blocked-hint")).toHaveAttribute("aria-describedby", "text-progression-save-reason");
   await expect(capture.locator("#text-progression-save-reason")).toBeVisible();
 });
+
+
+test("Extended toolbar retains meter/key controls and Save cluster without page overflow", async ({ page }) => {
+  for (const width of [1920, 1600, 1440, 1366, 1280, 1024, 899, 768]) {
+    await page.setViewportSize({ width, height: 900 });
+    await openApp(page);
+    await page.locator("nav").getByRole("button", { name: /コード採集|Capture/ }).click();
+    await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
+    await page.getByTestId("text-mode-extended").click();
+    const intake = page.getByTestId("extended-text-intake");
+    await intake.getByTestId("extended-text-input").fill("| C % = _ | Dm |");
+    await expect(intake.getByTestId("extended-text-save")).toBeEnabled();
+    await expect(intake.getByTestId("extended-text-key").locator("option")).toHaveCount(25);
+    const name = (await intake.getByTestId("extended-text-name").boundingBox())!;
+    const save = (await intake.getByTestId("extended-text-save").boundingBox())!;
+    expect(Math.abs(name.y - save.y)).toBeLessThanOrEqual(1);
+    await intake.getByTestId("extended-text-meter").selectOption("3/4");
+    await expect(intake.getByTestId("extended-text-meter")).toHaveValue("3/4");
+    await assertNoHorizontalOverflow(page);
+  }
+});

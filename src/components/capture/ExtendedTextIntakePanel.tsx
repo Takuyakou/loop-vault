@@ -162,7 +162,7 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
       <div className="lv-text-capture-toolbar flex items-center gap-2 border-b border-[var(--lv-border)] p-2" data-testid="text-capture-toolbar">
         {modeSelector}
 
-        <label className="flex items-center gap-2 text-sm">{label(language, "Meter", "拍子")}
+        <label className="lv-text-toolbar-meter text-xs">{label(language, "Meter", "拍子")}
           <select data-testid="extended-text-meter" value={beat} disabled={disabled}
             onChange={event => setBeat(event.target.value)}
             className="lv-field-control min-h-9 px-2">
@@ -179,12 +179,12 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
               ["major", "minor"].map(mode => <option key={root + mode} value={root + " " + mode}>{root} {mode}</option>))}
           </select>
         </label>
-        <BpmScrubField idPrefix="text-intake-bpm" label="BPM" disabled={disabled} emptyWhenUnset={bpm === undefined}
+        <div className="lv-text-toolbar-bpm"><BpmScrubField idPrefix="text-intake-bpm" label="BPM" disabled={disabled} emptyWhenUnset={bpm === undefined}
           dragLabel={label(language, "Drag up or down to change BPM", "上下にドラッグしてBPMを変更")}
           value={practiceBpm} onChange={value => {
             transport.setBpm(value); setPracticeBpm(value); setBpm(value);
           }} />
-        {bpm === undefined ? <span className="text-xs text-[var(--lv-text-muted)]">{label(language, "audition 120", "試聴120")}</span> : null}
+        {bpm === undefined ? <span className="text-xs text-[var(--lv-text-muted)]">{label(language, "audition 120", "試聴120")}</span> : null}</div>
         <TextTransportBar language={language} transport={transport} state={transportState}
           snapshot={playbackSnapshot} disabled={disabled || (transportState.status === "stopped" && !result.canConvert)}
           sourceMatches={sourceMatches} primaryTestId="extended-text-play"
@@ -192,7 +192,7 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
         <div className="lv-text-toolbar-save flex shrink-0 items-center gap-1.5">
           <label className="text-xs">{label(language, "Name", "名前")}
             <input value={name} maxLength={80} onChange={event => setName(event.target.value)}
-              className="lv-field-control ml-1 min-h-9 w-32 px-2" data-testid="extended-text-name" />
+              className="lv-field-control ml-1 min-h-9 w-24 px-2" data-testid="extended-text-name" />
           </label>
           <button type="button" data-testid="extended-text-save" className="lv-button-primary min-h-9 whitespace-nowrap px-2 text-xs"
             disabled={disabled || !result.canConvert || !name.trim()} onClick={save}
