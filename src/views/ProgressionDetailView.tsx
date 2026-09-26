@@ -69,6 +69,7 @@ import { extractVoicing, resolveVoicingForUse, setAllEligibleCardsToSource } fro
 import { advisorSuggestionToCandidate, appendAdvisorSuggestionToEditableProgression, selectAdvisorReferenceContexts } from "../domain/progressionAdvisor";
 import { appendAnalysisFeedback } from "../storage/analysisFeedbackStorage";
 import { isProgressionMidiExportEnabled } from "../midiExport/featureFlag";
+import { TEXT_PROGRESSION_ANALYZER_VERSION } from "../domain/textProgression";
 import { registerCloseBlocker } from "../store/closeBlocker";
 import {
   progressionDetailCopy,
@@ -458,6 +459,7 @@ export function ProgressionDetailView({
           keySignature={keySignature}
           authorReferenceIndex={authorReferenceIndex}
           language={language}
+          showConfidenceReview={block.analyzerVersion !== TEXT_PROGRESSION_ANALYZER_VERSION}
           quickEditor={{
             onPreview: (slotId, chord) => void previewChord(chord, slotId),
             onApply: (slotId, chord, source, selection) => setEditable((current) => (

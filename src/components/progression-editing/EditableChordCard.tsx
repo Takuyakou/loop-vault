@@ -35,8 +35,8 @@ export function EditableChordCard({
   language,
 }: EditableChordCardProps) {
   const text = progressionEditorCopy[language];
-  const needsReview = showConfidenceReview
-    && ((slot.confidence ?? 1) < 0.7 || slot.warnings.length > 0);
+  const needsReview = slot.warnings.length > 0
+    || (showConfidenceReview && (slot.confidence ?? 1) < 0.7);
   return (
     <div
       className={`group relative min-h-20 overflow-hidden border text-left transition-colors ${
@@ -102,7 +102,7 @@ export function EditableChordCard({
         {needsReview ? (
           <span className="mt-2 inline-flex items-center gap-1.5 text-xs text-amber-200">
             <TriangleAlert aria-hidden="true" size={16} />
-            {text.review}
+            {text.review}{slot.warnings.length > 0 ? ` · ${slot.warnings.join(", ")}` : ""}
           </span>
         ) : null}
         {playing && playingProgress !== null && playingProgress !== undefined ? (

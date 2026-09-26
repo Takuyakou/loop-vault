@@ -6,6 +6,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { playbackController } from "../audio/playbackController";
 import type { PlaybackController } from "../audio/playbackController";
 import { progressionFingerprint } from "../domain/practice";
+import { voiceChordForPreview } from "../domain/chordVoicing";
+import { TEXT_PROGRESSION_ANALYZER_VERSION } from "../domain/textProgression";
 import { extractSourceBasslineSnapshot } from "../domain/sourceBassline";
 import { makeIdea } from "../domain/testFactory";
 import type { SavedProgressionBlock } from "../domain/types";
@@ -84,6 +86,48 @@ function practicedBlock(clearedOnLocalDate: string): SavedProgressionBlock {
 }
 
 describe("ProgressionDetailView", () => {
+  it("keeps low-confidence MIDI cards in review", async () => {
+    const midiBlock: SavedProgressionBlock = { ...block,
+      chords: [{ ...block.chords[0]!, confidence: 0, warnings: [] }] };
+    const idea = makeIdea({ id: "idea-midi-review", progressionBlocks: [midiBlock] });
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => root.render(<ProgressionDetailView
+      idea={idea} block={midiBlock} updateProgressionBlock={vi.fn(() => true)}
+      duplicateProgressionBlock={vi.fn()} openProgression={vi.fn()} openIdea={vi.fn()}
+      openVault={vi.fn()} requestDelete={vi.fn()} setToast={vi.fn()}
+      copy={appCopy.ja} language="ja" />));
+    expect(container.querySelector("[data-chord-card]")?.textContent).toContain("要確認");
+    await act(async () => root.unmount());
+  });
+
+  it("treats a valid text card as authored and auditions its Generated voicing", async () => {
+    const textBlock: SavedProgressionBlock = {
+      ...block,
+      id: "text-block",
+      sourceFileName: undefined,
+      analyzerVersion: TEXT_PROGRESSION_ANALYZER_VERSION,
+      chords: [{ ...block.chords[0]!, confidence: 0, alternatives: [], warnings: [] }],
+    };
+    const idea = makeIdea({ id: "idea-text", progressionBlocks: [textBlock] });
+    const toggle = vi.spyOn(playbackController, "toggle").mockResolvedValue();
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    await act(async () => root.render(<ProgressionDetailView
+      idea={idea} block={textBlock} updateProgressionBlock={vi.fn(() => true)}
+      duplicateProgressionBlock={vi.fn()} openProgression={vi.fn()} openIdea={vi.fn()}
+      openVault={vi.fn()} requestDelete={vi.fn()} setToast={vi.fn()}
+      copy={appCopy.ja} language="ja" />));
+    const card = container.querySelector<HTMLButtonElement>("[data-chord-card]")!;
+    expect(card.textContent).not.toContain("要確認");
+    await act(async () => card.click());
+    expect(toggle).toHaveBeenCalledWith(expect.objectContaining({ kind: "detail" }),
+      expect.objectContaining({ type: "chord", explicitMidiNotes: voiceChordForPreview(textBlock.chords[0]!.chord).notes }));
+    await act(async () => root.unmount());
+  });
+
   it("keeps chord cards above the enabled MIDI control and exports the current progression", async () => {
     const idea = makeIdea({
       id: "idea-midi-export",
