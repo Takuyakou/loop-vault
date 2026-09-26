@@ -4,7 +4,7 @@
 
 ## Status
 
-- Status: candidate ready for merge review on `feat/phase8.8.4-text-capture`.
+- Status: complete on local `master`; post-merge gates and D-drive raw Windows EXE passed.
 - Base: local `master` at `cc6fe23`; Phase 8.8.3 semantic/audition behavior is the accepted baseline.
 - Current P8.8.2/P8.8.3 UI is the visual baseline; the attached mock describes interactions only.
 

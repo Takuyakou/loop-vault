@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "phaseId": "8.8.4",
-  "status": "in-progress",
-  "activeStage": "P8.8.4-07",
+  "status": "completed",
+  "activeStage": null,
   "completedStages": [
     "P8.8.4-00",
     "P8.8.4-01",
@@ -10,13 +10,14 @@
     "P8.8.4-03",
     "P8.8.4-04",
     "P8.8.4-05",
-    "P8.8.4-06"
+    "P8.8.4-06",
+    "P8.8.4-07"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "cc6fe237b3c23a13b07c06976bd2197124046d34",
-  "lastVerifiedCommit": "294f93b",
-  "currentBranch": "feat/phase8.8.4-text-capture",
+  "lastVerifiedCommit": "1f1244d6b86d3c02dbb57d05b28d364f6baf901d",
+  "currentBranch": "master",
   "requiredGates": {
     "P8.8.4-00": [
       "baseline-audit"
@@ -53,6 +54,6 @@
     "hardening": "pass",
     "full-gates": "pass"
   },
-  "nextAction": "Refresh all gates on the final documentation HEAD, then wait for explicit per-merge human authorization",
+  "nextAction": "Human product acceptance with the D-drive raw Windows EXE; no Phase 8.9/9 work started",
   "updatedAt": "2026-09-26"
 }
