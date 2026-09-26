@@ -2,18 +2,27 @@
   "schemaVersion": 1,
   "phaseId": "8.8.2",
   "status": "in-progress",
-  "activeStage": "P8.8.2-01",
+  "activeStage": "P8.8.2-02",
   "completedStages": [
-    "P8.8.2-00"
+    "P8.8.2-00",
+    "P8.8.2-01"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "8cf49029eb6298d92a73affea05472ae229ce910",
-  "lastVerifiedCommit": "8cf49029eb6298d92a73affea05472ae229ce910",
+  "lastVerifiedCommit": "05f5c4e",
   "currentBranch": "feat/phase8.8.2-text-intake-ux",
   "requiredGates": {
     "P8.8.2-00": [
       "repo-audit",
+      "phase-docs",
+      "diff-check"
+    ],
+    "P8.8.2-01": [
+      "shared-bpm-regression",
+      "extended-metadata-ui",
+      "typescript",
+      "changed-scope-eslint",
       "phase-docs",
       "diff-check"
     ]
@@ -21,8 +30,12 @@
   "gateResults": {
     "repo-audit": "pass",
     "phase-docs": "pass",
-    "diff-check": "pass"
+    "diff-check": "pass",
+    "shared-bpm-regression": "pass",
+    "extended-metadata-ui": "pass",
+    "typescript": "pass",
+    "changed-scope-eslint": "pass"
   },
-  "nextAction": "Extract shared BPM scrub and implement amber metadata suggestions.",
+  "nextAction": "Separate text review state and confirm saved-card Generated audition without changing MIDI behavior.",
   "updatedAt": "2026-09-26"
 }

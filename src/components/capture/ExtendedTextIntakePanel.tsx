@@ -6,6 +6,7 @@ import {
   type ExtendedTextReasonCode,
 } from "../../domain/extendedTextProgression";
 import type { AppLanguage } from "../../i18n";
+import { BpmScrubField } from "../BpmScrubField";
 
 interface Props {
   readonly language: AppLanguage;
@@ -45,6 +46,7 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
   const [beat, setBeat] = useState("4/4");
   const [key, setKey] = useState<string>();
   const [bpm, setBpm] = useState<number>();
+  const [practiceBpm, setPracticeBpm] = useState(120);
   const [saveFailed, setSaveFailed] = useState(false);
   const hints = useMemo(() => detectExtendedTextMetadataHints(input), [input]);
   const metadata: ExtendedTextMetadata = useMemo(() => ({
@@ -90,16 +92,19 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
               ))}
             </select>
           </label>
+          <BpmScrubField idPrefix="text-intake-bpm" label="BPM" disabled={disabled}
+            dragLabel={label(language, "Drag up or down to change BPM", "上下にドラッグしてBPMを変更")}
+            value={practiceBpm} onChange={(value) => { setPracticeBpm(value); setBpm(value); }} />
           {hints.key ? (
-            <button type="button" className="lv-button-secondary px-3 py-2 text-sm" disabled={disabled || key === hints.key}
+            <button type="button" className={key === hints.key ? "lv-button-secondary px-3 py-2 text-sm" : "rounded border border-[var(--lv-warning)] bg-[var(--lv-warning-soft)] px-3 py-2 text-sm text-[var(--lv-warning)]"} disabled={disabled || key === hints.key}
               onClick={() => setKey(hints.key)}>
-              {label(language, `Use Key: ${hints.key}`, `Key: ${hints.key} を使う`)}
+              {label(language, `Use Key: ${hints.key}`, `キー ${hints.key}を使う`)}
             </button>
           ) : null}
           {hints.bpm !== undefined ? (
-            <button type="button" className="lv-button-secondary px-3 py-2 text-sm" disabled={disabled || bpm === hints.bpm}
-              onClick={() => setBpm(hints.bpm)}>
-              {label(language, `Use ${hints.bpm} BPM`, `${hints.bpm} BPM を使う`)}
+            <button type="button" className={bpm === hints.bpm ? "lv-button-secondary px-3 py-2 text-sm" : "rounded border border-[var(--lv-warning)] bg-[var(--lv-warning-soft)] px-3 py-2 text-sm text-[var(--lv-warning)]"} disabled={disabled || bpm === hints.bpm}
+              onClick={() => { if (hints.bpm !== undefined) { setBpm(hints.bpm); setPracticeBpm(hints.bpm); } }}>
+              {label(language, `Use ${hints.bpm} BPM`, `BPM ${hints.bpm}を使う`)}
             </button>
           ) : null}
         </div>

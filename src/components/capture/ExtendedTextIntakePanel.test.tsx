@@ -37,7 +37,9 @@ describe("P8.8 extended Capture intake", () => {
     expect(container.querySelectorAll('[data-testid="extended-text-bar"]')).toHaveLength(2);
     expect(container.querySelector('[data-testid="extended-text-section"]')?.textContent).toContain("Key: C major");
     expect(container.querySelector('[data-testid="extended-text-metadata"]')).toBeNull();
-    await press([...container.querySelectorAll<HTMLButtonElement>("button")].find(button => button.textContent?.includes("Key: C major を使う"))!);
+    expect(container.querySelector('[data-testid="text-intake-bpm-field"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="text-intake-bpm-drag"]')).not.toBeNull();
+    await press([...container.querySelectorAll<HTMLButtonElement>("button")].find(button => button.textContent?.includes("キー C majorを使う"))!);
     expect(container.querySelector('[data-testid="extended-text-metadata"]')?.textContent).toContain("C major");
     await press(container.querySelector<HTMLButtonElement>('[data-testid="extended-text-save"]')!);
     expect(onSaveExtended).toHaveBeenCalledOnce();
