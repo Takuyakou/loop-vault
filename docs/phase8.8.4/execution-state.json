@@ -15,7 +15,7 @@
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "cc6fe237b3c23a13b07c06976bd2197124046d34",
-  "lastVerifiedCommit": "0ba1209",
+  "lastVerifiedCommit": "294f93b",
   "currentBranch": "feat/phase8.8.4-text-capture",
   "requiredGates": {
     "P8.8.4-00": [
@@ -50,8 +50,9 @@
     "transport-state": "pass",
     "exact-seek": "pass",
     "live-transport": "pass",
-    "hardening": "pass"
+    "hardening": "pass",
+    "full-gates": "pass"
   },
-  "nextAction": "Run fresh complete candidate gates and stop for the per-merge human authorization",
+  "nextAction": "Refresh all gates on the final documentation HEAD, then wait for explicit per-merge human authorization",
   "updatedAt": "2026-09-26"
 }

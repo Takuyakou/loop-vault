@@ -4,7 +4,7 @@
 
 ## Status
 
-- Status: in progress on `feat/phase8.8.4-text-capture`.
+- Status: candidate ready for merge review on `feat/phase8.8.4-text-capture`.
 - Base: local `master` at `cc6fe23`; Phase 8.8.3 semantic/audition behavior is the accepted baseline.
 - Current P8.8.2/P8.8.3 UI is the visual baseline; the attached mock describes interactions only.
 
@@ -28,3 +28,5 @@
 ### P8.8.4-07 — Candidate gates and merge review
 
 A local master merge is a separate human-authorized action under root AGENTS.md. No Phase 8.9/9 work belongs here.
+
+Implementation summary: [P8.8.4 implementation report](reports/P8.8.4-implementation-report.md).
