@@ -2,11 +2,12 @@
   "schemaVersion": 1,
   "phaseId": "8.8.4",
   "status": "in-progress",
-  "activeStage": "P8.8.4-03",
+  "activeStage": "P8.8.4-04",
   "completedStages": [
     "P8.8.4-00",
     "P8.8.4-01",
-    "P8.8.4-02"
+    "P8.8.4-02",
+    "P8.8.4-03"
   ],
   "blocked": false,
   "blockerReason": null,
@@ -42,8 +43,9 @@
   "gateResults": {
     "baseline-audit": "pass",
     "shared-shell": "pass",
-    "standard-preview": "pass"
+    "standard-preview": "pass",
+    "transport-state": "pass"
   },
-  "nextAction": "Implement a Text-only playback state machine with pause, resume and stop anchor semantics",
+  "nextAction": "Wire both Text score surfaces to the transport and exact band/bar seek",
   "updatedAt": "2026-09-26"
 }
