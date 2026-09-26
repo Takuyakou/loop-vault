@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "phaseId": "8.8.2",
+  "status": "in-progress",
+  "activeStage": "P8.8.2-01",
+  "completedStages": [
+    "P8.8.2-00"
+  ],
+  "blocked": false,
+  "blockerReason": null,
+  "baseCommit": "8cf49029eb6298d92a73affea05472ae229ce910",
+  "lastVerifiedCommit": "8cf49029eb6298d92a73affea05472ae229ce910",
+  "currentBranch": "feat/phase8.8.2-text-intake-ux",
+  "requiredGates": {
+    "P8.8.2-00": [
+      "repo-audit",
+      "phase-docs",
+      "diff-check"
+    ]
+  },
+  "gateResults": {
+    "repo-audit": "pass",
+    "phase-docs": "pass",
+    "diff-check": "pass"
+  },
+  "nextAction": "Extract shared BPM scrub and implement amber metadata suggestions.",
+  "updatedAt": "2026-09-26"
+}
