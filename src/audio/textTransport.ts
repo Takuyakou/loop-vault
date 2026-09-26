@@ -86,7 +86,7 @@ export function createTextTransport(
     emit();
     const notes = sliceTextNotes(snapshot.notes, position, includeSustain);
     if (notes.length) {
-      void controller.play(source, { type: "notes", notes, bpm: state.bpm, sound }, {
+      void controller.play(source, { type: "notes", notes, bpm: state.bpm, sound, dynamicTempo: true }, {
         onStarted() {
           if (epoch !== generation) return;
           startedAt = now();
@@ -95,7 +95,9 @@ export function createTextTransport(
         },
         onEnded(reason) {
           if (epoch !== generation) return;
-          if (reason === "completed") finish(epoch);
+          // Audio can end before the score when the final bars are rests.
+          // The musical-length timer, not the last sounded note, owns completion.
+          if (reason === "completed") return;
           else {
             generation += 1;
             clearEnd();
@@ -163,8 +165,17 @@ export function createTextTransport(
       if (value === state.bpm) return;
       const position = currentPosition();
       state = { ...state, bpm: value, positionBeats: position };
-      if (state.status === "playing") launch(position, false);
-      else emit();
+      if (state.status === "playing") {
+        if (controller.updateNotesBpm?.(source, value)) {
+          startBeat = position; startedAt = now();
+          generation += 1;
+          const epoch = generation;
+          clearEnd();
+          if (state.snapshot) endTimer = setTimeout(() => finish(epoch),
+            (state.snapshot.lengthBeats - position) * 60000 / value);
+          emit();
+        } else launch(position, false);
+      } else emit();
     },
     setLoop(loop) { if (loop !== state.loop) { state = { ...state, loop }; emit(); } },
     subscribe(listener) { listeners.add(listener); return () => { listeners.delete(listener); }; },

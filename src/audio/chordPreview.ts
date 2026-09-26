@@ -15,6 +15,7 @@ const bundledPianoSamples = import.meta.glob(
 export interface PreviewInstrument {
   /** Optional sustained attack for a caller that owns musical release boundaries. */
   triggerAttack?(notes: string | string[], time?: number, velocity?: number): void;
+  triggerRelease?(notes: string | string[], time?: number): void;
   triggerAttackRelease(
     notes: string | string[],
     duration: number,
@@ -76,6 +77,7 @@ const retiringInstruments = new Map<
 let scheduledTimers: ReturnType<typeof globalThis.setTimeout>[] = [];
 let previewGeneration = 0;
 let activeSession: PreviewSession | undefined;
+let activeDynamicTempo: { session: PreviewSession; setBpm: (bpm: number) => void } | undefined;
 
 interface PreviewSession {
   id: number;
@@ -164,6 +166,7 @@ export async function previewMidiNotes(
   sound: MidiPreviewSound = "electric-piano",
   callbacks: PreviewLifecycleCallbacks = {},
   audioClock: PreviewAudioClock = toneAudioClock,
+  options: { readonly dynamicTempo?: boolean } = {},
 ): Promise<void> {
   const ordered = [...notes]
     .filter((note) =>
@@ -181,6 +184,10 @@ export async function previewMidiNotes(
   }
   const target = await preparePreviewAudio(sound, session);
   if (!target || !isActive(session)) return;
+  if (options.dynamicTempo) {
+    scheduleDynamicMidiNotes(ordered, bpm, target, session, callbacks, audioClock);
+    return;
+  }
 
   const beatSeconds = 60 / Math.max(1, bpm);
   const startedAt = audioClock.now();
@@ -229,7 +236,82 @@ export async function previewMidiNotes(
   scheduleWindow();
 }
 
+/** Text-only live BPM changes preserve the current instrument and sounding notes. */
+export function setPreviewMidiNotesBpm(bpm: number): boolean {
+  if (!Number.isFinite(bpm) || bpm <= 0 || !activeDynamicTempo
+    || !isActive(activeDynamicTempo.session)) return false;
+  activeDynamicTempo.setBpm(bpm);
+  return true;
+}
+
+function scheduleDynamicMidiNotes(
+  ordered: readonly MidiPreviewNote[], initialBpm: number, target: PreviewInstrument,
+  session: PreviewSession, callbacks: PreviewLifecycleCallbacks, audioClock: PreviewAudioClock,
+): void {
+  let bpm = Math.max(1, initialBpm);
+  let anchorSeconds = audioClock.now();
+  let anchorBeat = 0;
+  let nextIndex = 0;
+  const canReleaseByNote = Boolean(target.triggerAttack && target.triggerRelease);
+  const events = canReleaseByNote ? ordered.flatMap(note => [
+    { beat: note.startBeat, kind: "attack" as const, note },
+    { beat: note.startBeat + note.durationBeats, kind: "release" as const, note },
+  ]).sort((left, right) => left.beat - right.beat
+    || (left.kind === "release" ? -1 : 1) - (right.kind === "release" ? -1 : 1)
+    || left.note.pitch - right.note.pitch) : ordered.map(note => ({
+      beat: note.startBeat, kind: "attack" as const, note,
+    }));
+  const lastEndBeat = ordered.reduce((latest, note) => Math.max(latest,
+    note.startBeat + note.durationBeats), 0);
+  const beatAt = (seconds: number) => anchorBeat + Math.max(0, seconds - anchorSeconds) * bpm / 60;
+  activeDynamicTempo = {
+    session,
+    setBpm(next) {
+      const seconds = audioClock.now();
+      anchorBeat = beatAt(seconds);
+      anchorSeconds = seconds;
+      bpm = Math.max(1, next);
+    },
+  };
+  callbacks.onStarted?.();
+  const scheduleWindow = () => {
+    if (!isActive(session)) return;
+    const seconds = audioClock.now();
+    const currentBeat = beatAt(seconds);
+    const horizonBeat = currentBeat + 0.09 * bpm / 60;
+    while (nextIndex < events.length && events[nextIndex]!.beat <= horizonBeat) {
+      const event = events[nextIndex++]!;
+      const scheduledSeconds = anchorSeconds + (event.beat - anchorBeat) * 60 / bpm;
+      const noteName = midiToNoteName(event.note.pitch);
+      if (event.kind === "release") {
+        target.triggerRelease?.(noteName, scheduledSeconds);
+      } else if (canReleaseByNote) {
+        target.triggerAttack?.(noteName, scheduledSeconds, normalizeMidiVelocity(event.note.velocity));
+        instrumentHasScheduledAudioEvents = true;
+      } else {
+        target.triggerAttackRelease(noteName,
+          Math.max(0.05, event.note.durationBeats * 60 / bpm), scheduledSeconds,
+          normalizeMidiVelocity(event.note.velocity));
+        instrumentHasScheduledAudioEvents = true;
+      }
+    }
+    if (currentBeat >= lastEndBeat) {
+      scheduledTimers.push(globalThis.setTimeout(
+        () => finishPreview(session, "completed"), PREVIEW_RELEASE_TAIL_MS));
+      return;
+    }
+    const timer = globalThis.setTimeout(() => {
+      const index = scheduledTimers.indexOf(timer);
+      if (index >= 0) scheduledTimers.splice(index, 1);
+      scheduleWindow();
+    }, 30);
+    scheduledTimers.push(timer);
+  };
+  scheduleWindow();
+}
+
 export function stopPreview(): void {
+  activeDynamicTempo = undefined;
   previewGeneration += 1;
   clearScheduledTimers();
   if (instrumentHasScheduledAudioEvents) {
@@ -263,6 +345,7 @@ function finishPreview(
   if (session.ended || (!forced && !isActive(session))) {
     return;
   }
+  if (activeDynamicTempo?.session === session) activeDynamicTempo = undefined;
   if (reason === "completed") {
     clearScheduledTimers();
     disposePreviewInstrument();
@@ -387,6 +470,7 @@ async function createPianoInstrument(output?: Tone.ToneAudioNode): Promise<Previ
 
 function wrapInstrument(source: {
   triggerAttack?(notes: string | string[], time?: number, velocity?: number): unknown;
+  triggerRelease?(notes: string | string[], time?: number): unknown;
   triggerAttackRelease(
     notes: string | string[],
     duration: number,
@@ -398,6 +482,7 @@ function wrapInstrument(source: {
 }): PreviewInstrument {
   return {
     triggerAttack: source.triggerAttack ? (notes, time, velocity) => { source.triggerAttack!(notes, time, velocity); } : undefined,
+    triggerRelease: source.triggerRelease ? (notes, time) => { source.triggerRelease!(notes, time); } : undefined,
     triggerAttackRelease(notes, duration, time, velocity) {
       source.triggerAttackRelease(notes, duration, time, velocity);
     },
@@ -468,6 +553,9 @@ function createElectricPianoInstrument(output?: Tone.ToneAudioNode): PreviewInst
   return {
     triggerAttack(notes, time, velocity) {
       synth.triggerAttack(notes, time, velocity);
+    },
+    triggerRelease(notes, time) {
+      synth.triggerRelease(notes, time);
     },
     triggerAttackRelease(notes, duration, time, velocity) {
       synth.triggerAttackRelease(notes, duration, time, velocity);

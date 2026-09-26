@@ -133,6 +133,24 @@ describe("playbackController", () => {
     expect(controller.getState()).toEqual({ status: "idle" });
   });
 
+  it("routes opt-in Text tempo updates without replacing the active note session", async () => {
+    const { driver, sessions } = makeDriver();
+    driver.updateNotesBpm = vi.fn(() => true);
+    const controller = createPlaybackController(driver);
+    const textSource = { kind: "capture" as const, id: "text-live" };
+    await controller.play(textSource, { type: "notes", notes: [
+      { pitch: 60, startBeat: 0, durationBeats: 4, velocity: 88 },
+    ], bpm: 120, sound: "electric-piano", dynamicTempo: true });
+    sessions[0]!.onStarted?.();
+    const stopCount = vi.mocked(driver.stop).mock.calls.length;
+    expect(controller.updateNotesBpm?.(textSource, 90)).toBe(true);
+    expect(driver.updateNotesBpm).toHaveBeenCalledWith(90);
+    expect(vi.mocked(driver.stop).mock.calls.length).toBe(stopCount);
+    expect(controller.getState().request).toMatchObject({ bpm: 90, dynamicTempo: true });
+    expect(controller.updateNotesBpm?.(sourceB, 100)).toBe(false);
+    controller.stop();
+  });
+
   it("reports Top Bar stop once and suppresses stale natural completion", async () => {
     const { sessions, driver } = makeDriver();
     const controller = createPlaybackController(driver);

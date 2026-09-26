@@ -12,7 +12,7 @@ const snapshot: TextPlaybackSnapshot = {
   ],
 };
 
-function setup() {
+function setup(dynamic = false) {
   let clock = 0;
   const sessions: PreviewLifecycleCallbacks[] = [];
   const played: { notes: readonly { pitch: number; startBeat: number; durationBeats: number }[]; bpm: number }[] = [];
@@ -21,11 +21,12 @@ function setup() {
     playNotes: vi.fn(async (notes, bpm, _sound, callbacks) => {
       played.push({ notes, bpm }); sessions.push(callbacks); callbacks.onStarted?.();
     }),
+    updateNotesBpm: dynamic ? vi.fn(() => true) : undefined,
     stop: vi.fn(),
   };
   const controller = createPlaybackController(driver, () => clock);
   const transport = createTextTransport(controller, source, "electric-piano", () => clock);
-  return { transport, played, sessions, advance(ms: number) { clock += ms; }, controller };
+  return { transport, played, sessions, advance(ms: number) { clock += ms; }, controller, driver };
 }
 
 afterEach(() => vi.useRealTimers());
@@ -78,6 +79,21 @@ describe("Text transport", () => {
     transport.stop();
   });
 
+  it("keeps the active audio session and held notes on a supported live tempo update", () => {
+    vi.useFakeTimers();
+    const { transport, played, advance, driver } = setup(true);
+    transport.play(snapshot);
+    advance(500);
+    const beat = transport.position();
+    const stopsBefore = vi.mocked(driver.stop).mock.calls.length;
+    transport.setBpm(90);
+    expect(transport.position()).toBeCloseTo(beat, 8);
+    expect(played).toHaveLength(1);
+    expect(vi.mocked(driver.stop).mock.calls.length).toBe(stopsBefore);
+    expect(driver.updateNotesBpm).toHaveBeenCalledWith(90);
+    transport.stop();
+  });
+
   it("handles repeated live BPM changes with one end timer and a stable beat", () => {
     vi.useFakeTimers();
     const { transport, played, advance } = setup();
@@ -97,6 +113,17 @@ describe("Text transport", () => {
     expect(played[played.length - 1]!.bpm).toBe(110);
     transport.stop();
     expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("keeps trailing rests in the score after the audio session naturally ends", () => {
+    vi.useFakeTimers();
+    const { transport, sessions } = setup();
+    transport.play({ sourceText: "| C | _ |", beatsPerBar: 4, lengthBeats: 8,
+      notes: [{ pitch: 60, startBeat: 0, durationBeats: 1, velocity: 88 }] });
+    sessions[0]!.onEnded?.("completed");
+    expect(transport.getState().status).toBe("playing");
+    vi.advanceTimersByTime(4000);
+    expect(transport.getState().status).toBe("stopped");
   });
 
   it("advances a valid rest-only score without sending audio notes", () => {

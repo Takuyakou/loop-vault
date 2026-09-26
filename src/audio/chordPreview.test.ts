@@ -12,6 +12,7 @@ const tone = vi.hoisted(() => {
     releaseAll = vi.fn();
     triggerAttackRelease = vi.fn();
     triggerAttack = vi.fn();
+    triggerRelease = vi.fn();
     connect = vi.fn(() => this);
 
     chain = vi.fn((..._nodes: AudioNode[]) => this);
@@ -87,6 +88,7 @@ import {
   previewChord,
   previewChordTimeline,
   previewMidiNotes,
+  setPreviewMidiNotesBpm,
   stopPreview,
 } from "./chordPreview";
 import { voiceChordForPreview } from "../domain/chordVoicing";
@@ -303,6 +305,28 @@ describe("chord preview instruments", () => {
     const triggerCount = electric.triggerAttackRelease.mock.calls.length;
     await vi.advanceTimersByTimeAsync(5_000);
     expect(electric.triggerAttackRelease).toHaveBeenCalledTimes(triggerCount);
+  });
+
+  it("retimes future Text attacks and releases without disposing a sounding instrument", async () => {
+    tone.setAudioNow(0);
+    await previewMidiNotes([
+      { pitch: 60, startBeat: 0, durationBeats: 4, velocity: 100 },
+      { pitch: 64, startBeat: 4, durationBeats: 1, velocity: 100 },
+    ], 120, "electric-piano", {}, undefined, { dynamicTempo: true });
+    const electric = tone.polySynths[tone.polySynths.length - 1]!;
+    expect(electric.triggerAttack).toHaveBeenCalledWith("C4", 0, 100 / 127);
+    expect(electric.triggerRelease).not.toHaveBeenCalled();
+    tone.setAudioNow(1);
+    expect(setPreviewMidiNotesBpm(60)).toBe(true);
+    expect(electric.releaseAll).not.toHaveBeenCalled();
+    expect(electric.dispose).not.toHaveBeenCalled();
+    tone.setAudioNow(3);
+    await vi.advanceTimersByTimeAsync(30);
+    expect(electric.triggerRelease).toHaveBeenCalledWith("C4", 3);
+    expect(electric.triggerAttack).toHaveBeenCalledWith("E4", 3, 100 / 127);
+    expect(electric.triggerAttack).toHaveBeenCalledTimes(2);
+    stopPreview();
+    expect(setPreviewMidiNotesBpm(90)).toBe(false);
   });
 
   it("keeps note offsets on the audio clock when the rolling timer stalls", async () => {
