@@ -1345,7 +1345,7 @@ export function CaptureView(props: CaptureViewProps) {
             eventId,
           }],
           bpm,
-          sound: "electric-piano",
+          sound: previewSound,
           beatsPerBar: 4,
           explicitMidiNotesByEventId: { [eventId]: notes },
         },
@@ -1406,7 +1406,7 @@ export function CaptureView(props: CaptureViewProps) {
             onSaveStandard={saveStandardTextProgression}
             onSaveExtended={saveExtendedTextProgression}
             controller={controller}
-            previewSound="electric-piano"
+            previewSound={previewSound}
             onPreview={(event, memory, bpm) => void previewTextProgressionEvent(event, memory, bpm)}
             onStop={stopTextPlayback}
           />

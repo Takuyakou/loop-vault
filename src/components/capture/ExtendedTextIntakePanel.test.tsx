@@ -188,7 +188,7 @@ describe("P8.8 extended Capture intake", () => {
     await press(container.querySelector<HTMLButtonElement>('[data-testid="text-mode-extended"]')!);
     await write(container.querySelector<HTMLTextAreaElement>('[data-testid="extended-text-input"]')!, "| C |");
     expect([...container.querySelectorAll<HTMLButtonElement>("button")]
-      .find(button => button.textContent?.includes("Metronome"))?.getAttribute("aria-pressed")).toBe("false");
+      .find(button => button.textContent?.includes("Metronome"))).toBeUndefined();
     await press([...container.querySelectorAll<HTMLButtonElement>("button")]
       .find(button => button.textContent?.includes("Loop"))!);
     await press(container.querySelector<HTMLButtonElement>('[data-testid="extended-text-play"]')!);

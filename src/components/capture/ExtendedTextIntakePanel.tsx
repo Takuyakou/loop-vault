@@ -17,6 +17,8 @@ import { useTextScorePlayhead } from "./useTextScorePlayhead";
 import type { AppLanguage } from "../../i18n";
 import { BpmScrubField } from "../BpmScrubField";
 import { TextPreviewBar } from "./TextPreviewBar";
+import { usePreviewSound } from "../PreviewSoundProvider";
+import { useMetronome } from "../MetronomeProvider";
 
 interface Props {
   readonly language: AppLanguage;
@@ -55,14 +57,16 @@ export function detectExtendedTextMetadataHints(input: string): { key?: string; 
 }
 
 export function ExtendedTextIntakePanel({ language, input, disabled, onInput, onSave,
-  controller = playbackController, sound = "electric-piano" }: Props) {
+  controller = playbackController, sound }: Props) {
+  const { sound: globalSound } = usePreviewSound();
+  const { enabled: metronome } = useMetronome();
+  const selectedSound = sound ?? globalSound;
   const [beat, setBeat] = useState("4/4");
   const [key, setKey] = useState<string>();
   const [bpm, setBpm] = useState<number>();
   const [practiceBpm, setPracticeBpm] = useState(120);
-  const [metronome, setMetronome] = useState(false);
   const [playError, setPlayError] = useState<string>();
-  const { transport, state: transportState } = useTextTransport(controller, sound, "extended-text-whole");
+  const { transport, state: transportState } = useTextTransport(controller, selectedSound, "extended-text-whole");
   const [name, setName] = useState(label(language, "Text progression", "テキスト進行"));
   const [saveFailed, setSaveFailed] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -111,7 +115,7 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
     transport.seek(attack?.beat ?? harmonic.startBeat);
     if (transportState.status === "playing") return;
     void controller.toggle({ kind: "capture", id: "extended-text-band:" + span.start },
-      { type: "chord", chord: harmonic.chord, sound }).catch(error => {
+      { type: "chord", chord: harmonic.chord, sound: selectedSound }).catch(error => {
       setPlayError(error instanceof Error ? error.message : String(error));
     });
   }
@@ -165,9 +169,6 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
           value={practiceBpm} onChange={value => {
             transport.setBpm(value); setPracticeBpm(value); setBpm(value);
           }} />
-        <button type="button" className="lv-button-secondary min-h-9 px-3 text-sm"
-          disabled={disabled} aria-pressed={metronome} onClick={() => setMetronome(!metronome)}>
-          {label(language, "Metronome", "メトロノーム")} {metronome ? "ON" : "OFF"}</button>
         <TextTransportBar language={language} transport={transport} state={transportState}
           snapshot={playbackSnapshot} disabled={disabled || (transportState.status === "stopped" && !result.canConvert)}
           sourceMatches={sourceMatches} primaryTestId="extended-text-play"

@@ -41,6 +41,8 @@ import type { ManualCandidateDraft } from "../../domain/midi/manualDraft";
 import type { AppLanguage } from "../../i18n";
 import { VoicingPanel } from "../voicing/VoicingPanel";
 import { BpmScrubField } from "../BpmScrubField";
+import { usePreviewSound } from "../PreviewSoundProvider";
+import { useMetronome } from "../MetronomeProvider";
 
 export interface TextProgressionConvertedDraft {
   readonly draft: ManualCandidateDraft;
@@ -83,6 +85,9 @@ export function TextProgressionCapturePanel({
   controller,
   previewSound,
 }: TextProgressionCapturePanelProps) {
+  const { sound: globalSound } = usePreviewSound();
+  const { enabled: metronomeEnabled } = useMetronome();
+  const selectedSound = previewSound ?? globalSound;
   const [input, setInput] = useState("");
   const [dialect, setDialect] = useState<"standard" | "extended">("standard");
   const [keyInput, setKeyInput] = useState("");
@@ -102,11 +107,11 @@ export function TextProgressionCapturePanel({
   }), [confirmedKey, input]);
   const explicitBpm = parseExplicitBpm(bpmInput);
   const { transport, state: transportState } = useTextTransport(
-    controller ?? playbackController, previewSound ?? "electric-piano", "standard-text-whole");
+    controller ?? playbackController, selectedSound, "standard-text-whole");
   const playbackSnapshot = useMemo(() => ({
-    notes: standardTextPlaybackNotes(result, voicingOverrides), lengthBeats: result.scoreLengthBeats,
+    notes: standardTextPlaybackNotes(result, voicingOverrides, metronomeEnabled), lengthBeats: result.scoreLengthBeats,
     beatsPerBar: 4, sourceText: input,
-  }), [input, result, voicingOverrides]);
+  }), [input, metronomeEnabled, result, voicingOverrides]);
   const capabilities = useMemo(
     () => evaluateTextProgressionCapabilities({ result, ...(explicitBpm === undefined ? {} : { bpm: explicitBpm }) }),
     [explicitBpm, result],
@@ -307,7 +312,7 @@ export function TextProgressionCapturePanel({
   if (dialect === "extended") {
     return <TextCaptureShell language={language} dialect={dialect} draftActive={draftActive} modeSelector={modeSelector}>
       <ExtendedTextIntakePanel language={language} input={input} disabled={disabled}
-        controller={controller} sound={previewSound}
+        controller={controller} sound={selectedSound}
         onInput={setInput}
         onSave={(extended, title) => onSaveExtended?.(extended, title) ?? false} />
     </TextCaptureShell>;

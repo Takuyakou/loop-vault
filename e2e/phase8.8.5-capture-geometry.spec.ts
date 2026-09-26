@@ -36,3 +36,18 @@ test("P8.8.5 Capture MIDI/Text tabs keep one DOM node and identical geometry", a
     await assertNoHorizontalOverflow(page);
   }
 });
+
+test("P8.8.5 header owns persistent metronome ON/OFF across Capture modes", async ({ page }) => {
+  await openApp(page);
+  const global = page.getByTestId("global-metronome");
+  await expect(global).toHaveAttribute("aria-pressed", "false");
+  await global.click();
+  await expect(global).toHaveAttribute("aria-label", "メトロノーム：ON");
+  await page.locator("nav").getByRole("button", { name: /コード採集|Capture/ }).click();
+  await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
+  await page.getByTestId("text-mode-extended").click();
+  await expect(page.getByTestId("global-metronome")).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("extended-text-intake").getByRole("button", { name: /Metronome|メトロノーム/ })).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByTestId("global-metronome")).toHaveAttribute("aria-pressed", "true");
+});
