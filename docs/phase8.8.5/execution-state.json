@@ -2,16 +2,17 @@
   "schemaVersion": 1,
   "phaseId": "8.8.5",
   "status": "in-progress",
-  "activeStage": "P8.8.5-03",
+  "activeStage": "P8.8.5-04",
   "completedStages": [
     "P8.8.5-00",
     "P8.8.5-01",
-    "P8.8.5-02"
+    "P8.8.5-02",
+    "P8.8.5-03"
   ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "340e45455cd8f7a91648db5ee2f92fe42c794d7c",
-  "lastVerifiedCommit": "3b3541f6c4a487308c263b7280583d4aac0054ca",
+  "lastVerifiedCommit": "9a1b696",
   "currentBranch": "feat/phase8.8.5-global-playback-text-polish",
   "requiredGates": {
     "P8.8.5-00": [
@@ -44,8 +45,9 @@
     "baseline-audit": "pass",
     "phase-docs": "pass",
     "capture-tabs": "pass",
-    "global-playback": "pass"
+    "global-playback": "pass",
+    "transport-visuals": "pass"
   },
-  "nextAction": "Share TransportButton variants and stabilize primary button geometry",
+  "nextAction": "Unify Standard/Extended workspace and toolbar while preserving raw source",
   "updatedAt": "2026-09-26"
 }
