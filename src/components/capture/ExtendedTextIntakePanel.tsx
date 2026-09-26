@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   parseExtendedTextProgression,
   type ExtendedTextMetadata,
@@ -22,7 +22,6 @@ interface Props {
   readonly disabled: boolean;
   readonly onInput: (value: string) => void;
   readonly onSave: (result: ExtendedTextResult, title: string) => boolean;
-  readonly modeSelector?: ReactNode;
   readonly controller?: PlaybackController;
   readonly sound?: PreviewSound;
 }
@@ -53,7 +52,7 @@ export function detectExtendedTextMetadataHints(input: string): { key?: string; 
   };
 }
 
-export function ExtendedTextIntakePanel({ language, input, disabled, onInput, onSave, modeSelector,
+export function ExtendedTextIntakePanel({ language, input, disabled, onInput, onSave,
   controller = playbackController, sound = "electric-piano" }: Props) {
   const [beat, setBeat] = useState("4/4");
   const [key, setKey] = useState<string>();
@@ -195,7 +194,6 @@ export function ExtendedTextIntakePanel({ language, input, disabled, onInput, on
   return (
     <div data-testid="extended-text-intake" className="lv-text-intake-shell mt-4 overflow-hidden rounded-xl border border-[var(--lv-border)] bg-[var(--lv-surface)]">
       <div className="lv-text-intake-toolbar flex flex-wrap items-center gap-3 border-b border-[var(--lv-border)] p-3">
-        {modeSelector}
         <label className="flex items-center gap-2 text-sm">{label(language, "Meter", "拍子")}
           <select data-testid="extended-text-meter" value={beat} disabled={disabled}
             onChange={event => setBeat(event.target.value)}

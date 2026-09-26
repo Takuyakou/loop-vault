@@ -1330,7 +1330,7 @@ export function CaptureView(props: CaptureViewProps) {
             eventId,
           }],
           bpm,
-          sound: previewSound,
+          sound: "electric-piano",
           beatsPerBar: 4,
           explicitMidiNotesByEventId: { [eventId]: notes },
         },
@@ -1389,14 +1389,6 @@ export function CaptureView(props: CaptureViewProps) {
               disabled={textDraft !== null}
               onChange={changeCaptureInputMode}
             />
-            <PreviewSoundSelector
-              value={previewSound}
-              onChange={(sound) => {
-                stopTextPlayback();
-                setPreviewSound(sound);
-              }}
-              copy={copy}
-            />
           </section>
           <TextProgressionCapturePanel
             language={language}
@@ -1405,7 +1397,7 @@ export function CaptureView(props: CaptureViewProps) {
             onConvert={openTextProgressionDraft}
             onSaveExtended={saveExtendedTextProgression}
             controller={controller}
-            previewSound={previewSound}
+            previewSound="electric-piano"
             onPreview={(event, memory, bpm) => void previewTextProgressionEvent(event, memory, bpm)}
             onStop={stopTextPlayback}
           />

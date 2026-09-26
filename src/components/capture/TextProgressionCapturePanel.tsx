@@ -4,6 +4,7 @@ import type { PreviewSound } from "../../audio/chordPreview";
 import { romanNumeralHint } from "../../domain/harmony/romanNumerals";
 import type { ExtendedTextResult } from "../../domain/extendedTextProgression";
 import { ExtendedTextIntakePanel } from "./ExtendedTextIntakePanel";
+import { TextCaptureShell } from "./TextCaptureShell";
 import {
   confirmedTextProgressionKeyState,
   evaluateTextProgressionCapabilities,
@@ -260,7 +261,7 @@ export function TextProgressionCapturePanel({
   const suggestions = result.keyState.kind === "inferred" ? result.keyState.candidates : [];
   const disabled = draftActive;
   const modeSelector = (
-    <div className="mt-4 flex gap-2" role="group" aria-label={text(language, "Text syntax", "テキスト記法")}>
+    <div className="flex gap-2" role="group" aria-label={text(language, "Text syntax", "テキスト記法")}>
       <button type="button" className={dialect === "standard" ? "lv-button-primary px-3 py-2 text-sm" : "lv-button-secondary px-3 py-2 text-sm"}
         aria-pressed={dialect === "standard"} disabled={disabled} data-testid="text-mode-standard"
         onClick={() => { onStop(); setDialect("standard"); }}>
@@ -274,37 +275,16 @@ export function TextProgressionCapturePanel({
     </div>
   );
   if (dialect === "extended") {
-    return (
-      <section className="border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-5" data-testid="text-progression-capture">
-        <h2 className="text-2xl font-semibold">{text(language, "Extended text progression", "拡張テキスト進行")}</h2>
-        <ExtendedTextIntakePanel language={language} input={input} disabled={disabled} modeSelector={modeSelector}
-          controller={controller} sound={previewSound}
-          onInput={setInput}
-          onSave={(extended, title) => onSaveExtended?.(extended, title) ?? false} />
-      </section>
-    );
+    return <TextCaptureShell language={language} dialect={dialect} draftActive={draftActive} modeSelector={modeSelector}>
+      <ExtendedTextIntakePanel language={language} input={input} disabled={disabled}
+        controller={controller} sound={previewSound}
+        onInput={setInput}
+        onSave={(extended, title) => onSaveExtended?.(extended, title) ?? false} />
+    </TextCaptureShell>;
   }
 
   return (
-    <section className="border border-[var(--lv-border)] bg-[var(--lv-bg)]/70 p-5" data-testid="text-progression-capture">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--lv-accent)]">
-            {text(language, "Text progression", "テキスト進行")}
-          </p>
-          <h2 className="mt-2 text-2xl font-semibold">{text(language, "Enter chord progression", "コード進行を入力")}</h2>
-          <p className="mt-2 max-w-2xl text-sm text-[var(--lv-text-muted)]">
-            {text(language, "Use one chord per line, or exact 4/4 bars such as | Dm7 G7 | Cmaj7 |.", "1行に1コード、または | Dm7 G7 | Cmaj7 | のような正確な4/4小節で入力します。")}
-          </p>
-        </div>
-        {draftActive ? (
-          <p className="border border-[var(--lv-border)] px-3 py-2 text-xs text-[var(--lv-text-muted)]" data-testid="text-draft-authoritative">
-            {text(language, "The converted Draft is now authoritative. Save or discard it before changing this text.", "変換後のDraftが現在の正本です。テキストを変更する前に保存または破棄してください。")}
-          </p>
-        ) : null}
-      </div>
-
-      {modeSelector}
+    <TextCaptureShell language={language} dialect={dialect} draftActive={draftActive} modeSelector={modeSelector}>
       {/^(?:\s*#|\s*[<>]\s*$)/m.test(input) || /N\.C\./i.test(input) ? (
         <div className="mt-3 flex items-center gap-2 text-sm" data-testid="text-extended-suggestion">
           <span>{text(language, "This looks like extended notation.", "拡張記法の形式に見えます。")}</span>
@@ -500,7 +480,7 @@ export function TextProgressionCapturePanel({
             : text(language, "Fix every diagnostic before conversion. No partial progression is created.", "変換前にすべての診断を修正してください。部分進行は作成しません。")}
         </p>
       </div>
-    </section>
+    </TextCaptureShell>
   );
 }
 
