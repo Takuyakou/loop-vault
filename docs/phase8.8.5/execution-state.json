@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "phaseId": "8.8.5",
-  "status": "ready-for-merge-review",
+  "status": "completed",
   "activeStage": null,
   "completedStages": [
     "P8.8.5-00",
