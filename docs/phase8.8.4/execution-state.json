@@ -2,12 +2,13 @@
   "schemaVersion": 1,
   "phaseId": "8.8.4",
   "status": "in-progress",
-  "activeStage": "P8.8.4-04",
+  "activeStage": "P8.8.4-05",
   "completedStages": [
     "P8.8.4-00",
     "P8.8.4-01",
     "P8.8.4-02",
-    "P8.8.4-03"
+    "P8.8.4-03",
+    "P8.8.4-04"
   ],
   "blocked": false,
   "blockerReason": null,
@@ -44,8 +45,9 @@
     "baseline-audit": "pass",
     "shared-shell": "pass",
     "standard-preview": "pass",
-    "transport-state": "pass"
+    "transport-state": "pass",
+    "exact-seek": "pass"
   },
-  "nextAction": "Wire both Text score surfaces to the transport and exact band/bar seek",
+  "nextAction": "Add smooth rAF playhead, live BPM and long-chart snapshot tests",
   "updatedAt": "2026-09-26"
 }

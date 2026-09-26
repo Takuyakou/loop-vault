@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import type { TextTransport, TextTransportState } from "../../audio/textTransport";
 import type { AppLanguage } from "../../i18n";
 import type { TextProgressionEvent, TextProgressionParseResult } from "../../domain/textProgression";
 import type { TextSourceRange } from "../../domain/extendedTextProgression";
@@ -12,10 +13,14 @@ interface Props {
   readonly disabled: boolean;
   readonly onInput: (value: string) => void;
   readonly onSelectEvent: (event: TextProgressionEvent) => void;
+  readonly onSeekBar: (bar: number) => void;
+  readonly transport: TextTransport;
+  readonly transportState: TextTransportState;
 }
 
 /** Standard syntax retains its parser but shares the score workspace primitives. */
-export function StandardTextScoreWorkspace({ language, input, result, disabled, onInput, onSelectEvent }: Props) {
+export function StandardTextScoreWorkspace({ language, input, result, disabled, onInput, onSelectEvent,
+  onSeekBar, transport, transportState }: Props) {
   const [visiblePane, setVisiblePane] = useState<"input" | "preview">("input");
   const [selectedStart, setSelectedStart] = useState<number>();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -23,11 +28,12 @@ export function StandardTextScoreWorkspace({ language, input, result, disabled, 
   const scoreItems = useMemo(() => buildStandardTextPreviewScore(result), [result]);
   const lines = input.split(/\r\n|\r|\n/);
   const ja = language === "ja";
+  void transport; // The playhead attachment in Stage 05 consumes the same transport instance.
 
   function selectSource(span: TextSourceRange, audition: boolean) {
     setSelectedStart(span.start);
     const event = result.events.find(item => item.range.start === span.start && item.range.end === span.end);
-    if (audition && event) onSelectEvent(event);
+    if (audition && event && (transportState.status === "stopped" || transportState.snapshot?.sourceText === input)) onSelectEvent(event);
     if (visiblePane !== "input") setVisiblePane("input");
     const editor = textareaRef.current;
     if (!editor) return;
@@ -92,7 +98,8 @@ export function StandardTextScoreWorkspace({ language, input, result, disabled, 
             {item.bars.map(bar => <TextPreviewBar key={bar.number} bar={bar} language={language}
               selectedStart={selectedStart}
               onSelect={span => selectSource(span, true)}
-              onBarSelect={span => selectSource(span, false)}
+              onBarSelect={span => { selectSource(span, false); if (transportState.status === "stopped"
+                || transportState.snapshot?.sourceText === input) onSeekBar(bar.number); }}
               errorLabel={result.diagnostics.find(issue => issue.bar === bar.number)?.message} />)}
           </div> : null)}
         {!scoreItems.length ? <p className="text-sm text-[var(--lv-text-muted)]">

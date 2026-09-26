@@ -17,31 +17,45 @@ interface Props {
 function ChordLabel({ value }: { readonly value: string }) {
   return <span className="block truncate px-2 pt-1 text-left text-xs font-bold" title={value}>{value}</span>;
 }
-function AttackMarkers({ band }: { readonly band: TextPreviewBand }) {
-  return <span className="pointer-events-none absolute inset-0" aria-hidden="true">
-    {band.attacks.map((attack, index) => <span key={index}
-      className="absolute inset-y-0 w-0.5 bg-[var(--lv-accent)]"
+function AttackMarkers({ band, language, onSeek }: {
+  readonly band: TextPreviewBand;
+  readonly language: AppLanguage;
+  readonly onSeek: (sourceSpan: TextSourceRange) => void;
+}) {
+  return <span className="absolute inset-0" aria-hidden="false">
+    {band.attacks.map((attack, index) => <button key={index} type="button"
+      className="absolute inset-y-0 z-10 w-2 -translate-x-1/2 rounded-sm bg-[var(--lv-accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
       data-testid="text-preview-attack" data-kind={attack.kind}
-      style={{ left: String(attack.percent) + "%" }} />)}
+      aria-label={language === "ja" ? (attack.kind === "repeat" ? "この再発音位置へ" : "この発音位置へ")
+        : (attack.kind === "repeat" ? "Seek to reattack" : "Seek to attack")}
+      style={{ left: String(attack.percent) + "%" }}
+      onClick={event => { event.stopPropagation(); onSeek(attack.sourceSpan); }} />)}
   </span>;
 }
-function DurationBand({ band, selected, onSelect, onAudition }: {
+function DurationBand({ band, selected, language, onSelect, onAudition }: {
   readonly band: TextPreviewBand;
+  readonly language: AppLanguage;
   readonly selected: boolean;
   readonly onSelect: (sourceSpan: TextSourceRange) => void;
   readonly onAudition?: (sourceSpan: TextSourceRange) => void;
 }) {
-  return <button type="button" data-testid="text-preview-band"
+  return <div role="button" tabIndex={0} data-testid="text-preview-band"
     data-source-start={band.sourceSpan.start} data-source-end={band.sourceSpan.end}
     data-selected={selected}
     aria-label={band.writtenChord}
     className={"absolute inset-y-0 min-w-0 overflow-hidden rounded border border-[var(--lv-accent)] bg-[var(--lv-accent-soft)] text-[var(--lv-text)]" +
       (selected ? " outline outline-2 outline-[var(--lv-accent)]" : "")}
     style={{ left: String(band.left) + "%", width: String(band.width) + "%" }}
-    onClick={() => { onSelect(band.sourceSpan); onAudition?.(band.sourceSpan); }}>
+    onClick={() => { onSelect(band.sourceSpan); onAudition?.(band.sourceSpan); }}
+    onKeyDown={event => {
+      if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
+        event.preventDefault(); onSelect(band.sourceSpan); onAudition?.(band.sourceSpan);
+      }
+    }}>
     <ChordLabel value={band.writtenChord} />
-    <AttackMarkers band={band} />
-  </button>;
+    <AttackMarkers band={band} language={language}
+      onSeek={span => { onSelect(span); onAudition?.(span); }} />
+  </div>;
 }
 function RestRegion({ rest, language, onSelect }: {
   readonly rest: TextPreviewRest;
@@ -81,7 +95,8 @@ export function TextPreviewBar({ bar, language, selectedStart, errorLabel, onSel
     </button> : <div className="relative h-9 min-w-0" data-testid="text-preview-track">
       {bar.rests.map((rest, index) => <RestRegion key={index} rest={rest} language={language} onSelect={onSelect} />)}
       {bar.bands.map((band, index) => <DurationBand key={index} band={band}
-        selected={selectedStart === band.sourceSpan.start} onSelect={onSelect} onAudition={onAudition} />)}
+        selected={selectedStart === band.sourceSpan.start} language={language}
+        onSelect={onSelect} onAudition={onAudition} />)}
       {playing ? <PlaybackHighlight progress={progress} /> : null}
     </div>}
   </article>;

@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import type { PlaybackController } from "../../audio/playbackController";
+import { playbackController, type PlaybackController } from "../../audio/playbackController";
+import { standardTextPlaybackNotes } from "../../domain/standardTextPlayback";
+import { useTextTransport } from "./useTextTransport";
+import { TextTransportBar } from "./TextTransportBar";
 import type { PreviewSound } from "../../audio/chordPreview";
 import { romanNumeralHint } from "../../domain/harmony/romanNumerals";
 import type { ExtendedTextResult } from "../../domain/extendedTextProgression";
@@ -92,6 +95,12 @@ export function TextProgressionCapturePanel({
     keyState: confirmedTextProgressionKeyState(confirmedKey),
   }), [confirmedKey, input]);
   const explicitBpm = parseExplicitBpm(bpmInput);
+  const { transport, state: transportState } = useTextTransport(
+    controller ?? playbackController, previewSound ?? "electric-piano", "standard-text-whole");
+  const playbackSnapshot = useMemo(() => ({
+    notes: standardTextPlaybackNotes(result), lengthBeats: result.scoreLengthBeats,
+    beatsPerBar: 4, sourceText: input,
+  }), [input, result]);
   const capabilities = useMemo(
     () => evaluateTextProgressionCapabilities({ result, ...(explicitBpm === undefined ? {} : { bpm: explicitBpm }) }),
     [explicitBpm, result],
@@ -154,9 +163,13 @@ export function TextProgressionCapturePanel({
   function selectEvent(event: TextProgressionEvent) {
     if (draftActive) return;
     const key = textProgressionEventKey(event);
-    onStop();
+    const beat = (event.bar - 1) * 4 + event.startBeat - 1;
+    transport.seek(beat);
     setSelectedEventKey(key);
-    onPreview(event, voicingOverrides.get(key), explicitBpm ?? TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM);
+    if (transportState.status !== "playing") {
+      if (transportState.status === "stopped") onStop();
+      onPreview(event, voicingOverrides.get(key), explicitBpm ?? TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM);
+    }
   }
 
   function confirmKey() {
@@ -296,8 +309,15 @@ export function TextProgressionCapturePanel({
           </button>
         </div>
       ) : null}
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <TextTransportBar language={language} transport={transport} state={transportState}
+          snapshot={playbackSnapshot} disabled={disabled || (transportState.status === "stopped" && !result.canConvert)}
+          sourceMatches={transportState.snapshot?.sourceText === undefined || transportState.snapshot.sourceText === input} />
+      </div>
       <StandardTextScoreWorkspace language={language} input={input} result={result} disabled={disabled}
-        onInput={value => { onStop(); setInput(value); }} onSelectEvent={selectEvent} />
+        transport={transport} transportState={transportState}
+        onInput={value => { if (transportState.status === "stopped") onStop(); setInput(value); }} onSelectEvent={selectEvent}
+        onSeekBar={bar => transport.seek((bar - 1) * 4)} />
       <p id="text-progression-format" className="mt-2 text-xs text-[var(--lv-text-muted)]">
         {text(
           language,
@@ -379,8 +399,10 @@ export function TextProgressionCapturePanel({
             label="BPM" disabled={disabled}
             dragLabel={text(language, "Drag up or down to change BPM", "上下にドラッグしてBPMを変更")}
             value={explicitBpm ?? TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM}
-            onChange={value => { onStop(); setBpmInput(String(value)); }}
-            onExplicitInput={value => { onStop(); setBpmInput(String(value)); }} />
+            onChange={value => { if (transportState.status === "stopped") onStop();
+              transport.setBpm(value); setBpmInput(String(value)); }}
+            onExplicitInput={value => { if (transportState.status === "stopped") onStop();
+              transport.setBpm(value); setBpmInput(String(value)); }} />
           <p className="mt-2 text-xs text-[var(--lv-text-muted)]">
             {bpmInput && explicitBpm === undefined
               ? text(language, `Enter 30–240 BPM to change audition speed. Cards use ${TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM} BPM until then, and saving can still omit BPM.`, `試聴速度を変えるには30〜240 BPMを入力してください。それまではカードを${TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM} BPMで試聴し、保存時はBPMなしにもできます。`)
