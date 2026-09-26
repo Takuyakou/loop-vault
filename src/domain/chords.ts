@@ -308,6 +308,7 @@ function parseChordLabelWithPolicy(label: string, allowExtendedText: boolean): C
   rest = parenthesized.rest;
   let tensions: Tension[] = parenthesized.tensions;
 
+  const writtenQuality = rest;
   let quality = parseQuality(rest);
   const alias = quality ? undefined : qualityAliases.find(([pattern]) => pattern.test(rest));
   if (alias) {
@@ -338,7 +339,46 @@ function parseChordLabelWithPolicy(label: string, allowExtendedText: boolean): C
     label: "",
   };
 
-  return { ...symbol, label: labelFromSymbol(symbol) };
+  const semantic = allowExtendedText
+    ? applyTextSemanticPolicy(symbol, writtenQuality, parenthesized.tensions) : symbol;
+  return { ...semantic, label: labelFromSymbol(semantic) };
+}
+
+/** Text-only semantic repair; the legacy Product/MIDI parser is untouched. */
+function applyTextSemanticPolicy(
+  symbol: ChordSymbol,
+  writtenQuality: string,
+  writtenTensions: readonly Tension[],
+): ChordSymbol {
+  const next: ChordSymbol = { ...symbol, tensions: [...symbol.tensions],
+    ...(symbol.omissions ? { omissions: [...symbol.omissions] } : {}) };
+  // A written alteration replaces an implied natural degree. Both survive only
+  // when the natural degree was also written explicitly as a separate factor.
+  if (next.tensions.includes("#11") && !writtenTensions.includes("11")) {
+    next.tensions = next.tensions.filter(tension => tension !== "11");
+    if (next.quality === "dom11") next.quality = "dom7";
+  }
+  if (/^11o$/i.test(writtenQuality)) next.quality = "min7b5";
+  if (/^11sus2$/i.test(writtenQuality)) {
+    next.quality = "dom7";
+    next.omissions = [...new Set([...(next.omissions ?? []), "3" as const])];
+    if (!next.tensions.includes("9")
+      && ((!next.tensions.includes("#9") && !next.tensions.includes("b9")) || writtenTensions.includes("9"))) {
+      next.tensions = [...next.tensions, "9"];
+    }
+  }
+  if (/^11sus4$/i.test(writtenQuality) && next.tensions.includes("#11")) {
+    next.quality = "dom7";
+    next.omissions = [...new Set([...(next.omissions ?? []), "3" as const])];
+  }
+  if (next.quality === "dom13"
+    && (next.tensions.includes("#9") || next.tensions.includes("b9"))
+    && !writtenTensions.includes("9")) {
+    next.quality = "dom7";
+    next.tensions = [...next.tensions, "13"];
+  }
+  next.tensions = orderTensions(next.tensions);
+  return next;
 }
 
 export function makeChordSymbol(

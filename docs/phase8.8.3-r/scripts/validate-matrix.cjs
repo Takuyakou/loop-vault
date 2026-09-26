@@ -4,7 +4,7 @@ const base='docs/phase8.8.3-r';const read=p=>fs.readFileSync(`${base}/${p}`);con
 const canonical=b=>Buffer.from(b.toString('utf8').replace(/\r\n/g,'\n'));
 const sha=b=>crypto.createHash('sha256').update(canonical(b)).digest('hex');const failures=[];
 const requireCheck=(value,message)=>{if(!value)failures.push(message)};
-const plan=json('matrix-plan.json'),manifest=json('current-site-vocabulary.json');
+const plan=json('matrix-plan.json');
 const manifestSha=sha(read('current-site-vocabulary.json'));
 requireCheck(manifestSha===plan.vocabularyManifestSha256,'site manifest hash differs');
 requireCheck(read('current-site-vocabulary.sha256').toString().startsWith(manifestSha),'manifest digest file differs');

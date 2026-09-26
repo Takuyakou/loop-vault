@@ -25,6 +25,15 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    files: ["docs/phase8.8.3-r/scripts/**/*.cjs"],
+    languageOptions: {
+      globals: { require: "readonly", console: "readonly", Buffer: "readonly", process: "readonly" },
+    },
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
+  {
     files: ["src/**/*.{ts,tsx}"],
     languageOptions: {
       parserOptions: {

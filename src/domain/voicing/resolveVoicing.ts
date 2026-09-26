@@ -1,6 +1,7 @@
 import type { ChordSymbol, ChordVoicingMemory } from "../types";
 import type { ChordTimelineItem } from "../types";
 import { voiceChordForPreview } from "../chordVoicing";
+import { voiceTextChordForAudition } from "../textChordTones";
 import { voicingCompatibility } from "./compatibility";
 import { VOICING_AUTO_USE_CONFIDENCE } from "./extractionConfig";
 import type { ResolvedVoicing, VoicingResolveOptions } from "./types";
@@ -58,11 +59,11 @@ export function resolveVoicingForUse(
   return { midiNotes: [...generatedFallback], origin: "generated" };
 }
 
-export function resolveTimelineItemVoicing(item: ChordTimelineItem): ResolvedVoicing {
+export function resolveTimelineItemVoicing(item: ChordTimelineItem, textDerived = false): ResolvedVoicing {
   return resolveVoicingForUse(
     item.chord,
     item.voicingMemory,
-    voiceChordForPreview(item.chord).notes,
+    textDerived ? [...voiceTextChordForAudition(item.chord)] : voiceChordForPreview(item.chord).notes,
   );
 }
 
@@ -100,11 +101,12 @@ export function createTimelineVoicingPlaybackPlan(
 
 export function resolveTimelineVoicings(
   timeline: readonly ChordTimelineItem[],
+  textDerived = false,
 ): Record<string, readonly number[]> {
   return Object.fromEntries(timeline.flatMap((item) => item.eventId
     ? [[
         item.eventId,
-        resolveTimelineItemVoicing(item).midiNotes,
+        resolveTimelineItemVoicing(item, textDerived).midiNotes,
       ]]
     : []));
 }

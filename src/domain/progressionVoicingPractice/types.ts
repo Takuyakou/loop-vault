@@ -58,6 +58,8 @@ export interface ProgressionVoicingPracticeSnapshot {
     readonly reference: ProgressionPracticeSourceReference;
   };
   readonly selection: ProgressionVoicingSelection;
+  /** Session-only current text practice policy; absent for MIDI-derived blocks. */
+  readonly textDerivedPolicyId?: "text-defining-basic-full-v1";
   readonly key?: string;
   readonly bpm: number;
   /** Source time signature; never rewritten for presentation. */

@@ -5,7 +5,7 @@ import { confirmedTextProgressionKeyState } from "./textProgression";
 import { EXTENDED_TEXT_LIMITS } from "./extendedTextBudgets";
 
 export const EXTENDED_TEXT_PARSER_VERSION = "extended-text-v1";
-export const EXTENDED_TEXT_SEMANTIC_POLICY = "p8.8-explicit-factors-v1";
+export const EXTENDED_TEXT_SEMANTIC_POLICY = "p8.8.3-product-defining-v1";
 export const EXTENDED_TEXT_TIMING_PPQ = EXTENDED_TEXT_LIMITS.timingPpq;
 export const EXTENDED_TEXT_MAX_SLOTS_PER_BAR = EXTENDED_TEXT_LIMITS.maxSlotsPerBar;
 

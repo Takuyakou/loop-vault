@@ -1140,7 +1140,7 @@ describe("vault store", () => {
       dialect: "extended-v1",
       rawText,
       parserVersion: "extended-text-v1",
-      semanticPolicyVersion: "p8.8-explicit-factors-v1",
+      semanticPolicyVersion: "p8.8.3-product-defining-v1",
       metadata: { beat: "3/4" },
     });
     expect(block?.textSource?.sections).toEqual(data.textSource.sections);

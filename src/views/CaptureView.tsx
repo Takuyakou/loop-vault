@@ -2,7 +2,7 @@ import { getCurrentWebview } from "@tauri-apps/api/webview";
 import {
   open as openFileDialog,
 } from "@tauri-apps/plugin-dialog";
-import { voiceChordForPreview } from "../domain/chordVoicing";
+import { voiceTextChordForAudition } from "../domain/textChordTones";
 import { OccurrenceList } from "../components/OccurrenceList";
 import {
   buildCatalogView, catalogPageSize, laneCandidate, laneRenderPlan, type CatalogLaneKind,
@@ -1310,7 +1310,7 @@ export function CaptureView(props: CaptureViewProps) {
       const notes = resolveVoicingForUse(
         event.chord,
         memory,
-        voiceChordForPreview(event.chord).notes,
+        [...voiceTextChordForAudition(event.chord)],
       ).midiNotes;
       // A card audition is a one-event detached timeline. This makes the
       // explicit text BPM and 4/4 meter part of the controller request rather
@@ -1358,7 +1358,7 @@ export function CaptureView(props: CaptureViewProps) {
         resolveVoicingForUse(
           item.chord,
           item.voicingMemory,
-          voiceChordForPreview(item.chord).notes,
+          [...voiceTextChordForAudition(item.chord)],
         ).midiNotes,
       ]));
       await controller.toggle(
