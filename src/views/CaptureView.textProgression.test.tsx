@@ -172,10 +172,9 @@ describe("CaptureView text progression entry", () => {
         mounted.container.querySelector<HTMLTextAreaElement>("[data-testid='text-progression-input']"),
         "| Cmaj7 |",
       );
-      await setInput(
-        mounted.container.querySelector<HTMLInputElement>("[data-testid='text-progression-bpm']"),
-        "120",
-      );
+      // The scrub control displays a practice default of 120 before a BPM is authored.
+      await setInput(mounted.container.querySelector<HTMLInputElement>("[data-testid='text-progression-bpm']"), "121");
+      await setInput(mounted.container.querySelector<HTMLInputElement>("[data-testid='text-progression-bpm']"), "120");
       await act(async () => mounted.container.querySelector<HTMLButtonElement>(
         "[data-testid='text-progression-convert']",
       )?.click());

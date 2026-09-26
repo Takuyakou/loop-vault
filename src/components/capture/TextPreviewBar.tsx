@@ -8,6 +8,7 @@ interface Props {
   readonly selectedStart?: number;
   readonly errorLabel?: string;
   readonly onSelect: (sourceSpan: TextSourceRange) => void;
+  readonly onBarSelect?: (sourceSpan: TextSourceRange) => void;
   readonly onAudition?: (sourceSpan: TextSourceRange) => void;
   readonly playing?: boolean;
   readonly progress?: number;
@@ -61,7 +62,7 @@ function PlaybackHighlight({ progress = 0 }: { readonly progress?: number }) {
     style={{ left: String(Math.max(0, Math.min(100, progress * 100))) + "%" }} />;
 }
 
-export function TextPreviewBar({ bar, language, selectedStart, errorLabel, onSelect, onAudition,
+export function TextPreviewBar({ bar, language, selectedStart, errorLabel, onSelect, onBarSelect, onAudition,
   playing = false, progress }: Props) {
   const selected = selectedStart === bar.sourceSpan.start || bar.bands.some(band => band.sourceSpan.start === selectedStart);
   return <article data-testid="extended-text-bar" data-state={bar.error ? "error" : "parsed"}
@@ -70,7 +71,7 @@ export function TextPreviewBar({ bar, language, selectedStart, errorLabel, onSel
       (bar.error ? " border-[var(--lv-danger)]" : selected ? " border-[var(--lv-accent)]" : " border-[var(--lv-border)]")}>
     <button type="button" className="mb-2 text-xs text-[var(--lv-text-muted)]"
       data-testid="text-preview-bar-select" data-source-start={bar.sourceSpan.start}
-      onClick={() => onSelect(bar.sourceSpan)}>
+      onClick={() => (onBarSelect ?? onSelect)(bar.sourceSpan)}>
       {language === "ja" ? String(bar.number) + "小節目" : "Bar " + String(bar.number)}
     </button>
     {bar.error ? <button type="button" data-testid="text-preview-error"

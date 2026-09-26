@@ -77,6 +77,8 @@ test("P5.20 production Text Progression Entry saves and reaches its supported do
   await expect(page.getByTestId("pre-analysis-analyze")).toHaveCount(0);
   await expect(page.locator("[data-capture-midi-drop-zone]")).toHaveCount(0);
 
+  await capture.getByTestId("standard-text-card-details").locator("summary").click();
+  await inspector.getByTestId("text-progression-detail-expander").locator("summary").click();
   const cards = capture.getByTestId("text-progression-card");
   await cards.first().focus();
   await page.keyboard.press("Enter");

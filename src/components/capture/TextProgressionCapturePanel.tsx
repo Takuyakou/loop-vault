@@ -5,6 +5,7 @@ import { romanNumeralHint } from "../../domain/harmony/romanNumerals";
 import type { ExtendedTextResult } from "../../domain/extendedTextProgression";
 import { ExtendedTextIntakePanel } from "./ExtendedTextIntakePanel";
 import { TextCaptureShell } from "./TextCaptureShell";
+import { StandardTextScoreWorkspace } from "./StandardTextScoreWorkspace";
 import {
   confirmedTextProgressionKeyState,
   evaluateTextProgressionCapabilities,
@@ -36,6 +37,7 @@ import type { ChordVoicingMemory } from "../../domain/types";
 import type { ManualCandidateDraft } from "../../domain/midi/manualDraft";
 import type { AppLanguage } from "../../i18n";
 import { VoicingPanel } from "../voicing/VoicingPanel";
+import { BpmScrubField } from "../BpmScrubField";
 
 export interface TextProgressionConvertedDraft {
   readonly draft: ManualCandidateDraft;
@@ -294,22 +296,8 @@ export function TextProgressionCapturePanel({
           </button>
         </div>
       ) : null}
-      <label className="mt-5 block text-sm font-semibold text-[var(--lv-text)]" htmlFor="text-progression-input">
-        {text(language, "Chord progression", "コード進行")}
-      </label>
-      <textarea
-        id="text-progression-input"
-        data-testid="text-progression-input"
-        className="mt-2 min-h-32 w-full border border-[var(--lv-border)] bg-[var(--lv-surface)] p-3 font-mono text-sm text-[var(--lv-text)]"
-        value={input}
-        disabled={disabled}
-        aria-invalid={result.diagnostics.length > 0}
-        aria-describedby={result.diagnostics.length > 0
-          ? "text-progression-format text-progression-diagnostics"
-          : "text-progression-format"}
-        {...(result.diagnostics.length > 0 ? { "aria-errormessage": "text-progression-diagnostics" } : {})}
-        onChange={(event) => { onStop(); setInput(event.target.value); }}
-      />
+      <StandardTextScoreWorkspace language={language} input={input} result={result} disabled={disabled}
+        onInput={value => { onStop(); setInput(value); }} onSelectEvent={selectEvent} />
       <p id="text-progression-format" className="mt-2 text-xs text-[var(--lv-text-muted)]">
         {text(
           language,
@@ -318,6 +306,10 @@ export function TextProgressionCapturePanel({
         )}
       </p>
 
+      <details className="mt-3 rounded border border-[var(--lv-border)] p-2" data-testid="standard-text-card-details">
+        <summary className="cursor-pointer text-xs text-[var(--lv-text-muted)]">
+          {text(language, "Card list and saved voicing details", "カード一覧と保存音の詳細")}
+        </summary>
       <TextProgressionCards
         events={result.events}
         valid={result.canConvert}
@@ -330,6 +322,8 @@ export function TextProgressionCapturePanel({
         disabled={disabled}
         onSelect={selectEvent}
       />
+
+      </details>
 
       <section className="mt-5 grid gap-4 border-t border-[var(--lv-border)] pt-5 lg:grid-cols-2" aria-label={text(language, "Key and tempo", "キーとテンポ")}>
         <div>
@@ -381,19 +375,12 @@ export function TextProgressionCapturePanel({
           ) : null}
         </div>
         <div>
-          <label className="block text-sm font-semibold" htmlFor="text-progression-bpm">
-            {text(language, "Tempo (optional BPM)", "テンポ（任意BPM）")}
-          </label>
-          <input
-            id="text-progression-bpm"
-            data-testid="text-progression-bpm"
-            className="mt-2 min-h-10 w-full border border-[var(--lv-border)] bg-[var(--lv-surface)] px-3 text-sm"
-            inputMode="numeric"
-            value={bpmInput}
-            disabled={disabled}
-            onChange={(event) => { onStop(); setBpmInput(event.target.value); }}
-            placeholder="30–240"
-          />
+          <BpmScrubField idPrefix="text-progression-bpm" inputTestId="text-progression-bpm"
+            label="BPM" disabled={disabled}
+            dragLabel={text(language, "Drag up or down to change BPM", "上下にドラッグしてBPMを変更")}
+            value={explicitBpm ?? TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM}
+            onChange={value => { onStop(); setBpmInput(String(value)); }}
+            onExplicitInput={value => { onStop(); setBpmInput(String(value)); }} />
           <p className="mt-2 text-xs text-[var(--lv-text-muted)]">
             {bpmInput && explicitBpm === undefined
               ? text(language, `Enter 30–240 BPM to change audition speed. Cards use ${TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM} BPM until then, and saving can still omit BPM.`, `試聴速度を変えるには30〜240 BPMを入力してください。それまではカードを${TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM} BPMで試聴し、保存時はBPMなしにもできます。`)
@@ -443,7 +430,8 @@ export function TextProgressionCapturePanel({
               `生成スタイル: ${voicingStyleLabel(selectedStyle, language)}。元MIDIではありません。`,
             )}
           </p>
-          <TextCapabilityList capabilities={capabilities} language={language} />
+          <details className="mt-3" data-testid="text-progression-detail-expander">
+            <summary className="cursor-pointer text-sm">{text(language, "Chord details", "コード詳細")}</summary>
           <VoicingPanel
             key={selectedKey}
             chord={selectedEvent.chord}
@@ -461,10 +449,20 @@ export function TextProgressionCapturePanel({
               onChange: selectVoicingStyle,
             }}
           />
+          </details>
         </section>
       ) : null}
 
-      <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-[var(--lv-border)] pt-5">
+      <div className="lv-text-intake-savebar sticky bottom-0 z-10 mt-3 flex flex-wrap items-center gap-3 border-t border-[var(--lv-border)] bg-[var(--lv-surface)] p-3">
+        <span className="min-w-0 flex-1 text-xs text-[var(--lv-text-muted)]" data-testid="text-progression-capability-summary">
+          {result.bars} {text(language, "bars", "小節")} · 4/4 · {explicitBpm ?? TEXT_PROGRESSION_RUNTIME_DEFAULT_BPM} BPM
+          {" · " + result.diagnostics.length + " " + text(language, "errors", "エラー")}
+          {!confirmed ? " · " + text(language, "Confirm a key for Bass Practice / Chord Context / Root Motion", "キーを確定するとBass Practice / Chord Context / Root Motionを利用できます") : ""}
+        </span>
+        <details className="relative" data-testid="text-progression-capability-details">
+          <summary className="cursor-pointer text-xs">{text(language, "Availability details", "利用条件の詳細")}</summary>
+          <TextCapabilityList capabilities={capabilities} language={language} />
+        </details>
         <button
           type="button"
           className="lv-button-primary px-4 py-2 text-sm"

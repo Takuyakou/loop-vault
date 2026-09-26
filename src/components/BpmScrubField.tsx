@@ -3,6 +3,8 @@ import { GripVertical } from "lucide-react";
 
 export function BpmScrubField({
   idPrefix,
+  inputTestId,
+  onExplicitInput,
   disabled = false,
   dragLabel,
   label,
@@ -10,6 +12,8 @@ export function BpmScrubField({
   value,
 }: {
   readonly idPrefix: string;
+  readonly inputTestId?: string;
+  readonly onExplicitInput?: (value: number) => void;
   readonly disabled?: boolean;
   readonly dragLabel: string;
   readonly label: string;
@@ -121,6 +125,7 @@ export function BpmScrubField({
         <input
           ref={inputRef}
           id={idPrefix}
+          data-testid={inputTestId}
           disabled={disabled}
           aria-describedby={`${idPrefix}-drag-help`}
           className={`lv-field-control min-h-8 w-20 px-2 pr-6 text-sm ${editing ? "cursor-text" : "cursor-ns-resize"}`}
@@ -133,8 +138,10 @@ export function BpmScrubField({
           value={editing ? draft : value}
           onFocus={() => { setDraft(String(value)); setEditing(true); }}
           onChange={(event) => {
+            const typed = Number(event.currentTarget.value);
             setDraft(event.currentTarget.value);
-            if (!editing) apply(Number(event.currentTarget.value));
+            if (event.currentTarget.value.trim() && Number.isFinite(typed) && typed === valueRef.current) onExplicitInput?.(typed);
+            if (!editing) apply(typed);
           }}
           onBlur={finishEdit}
           onKeyDown={(event) => {

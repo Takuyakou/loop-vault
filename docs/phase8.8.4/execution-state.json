@@ -2,10 +2,11 @@
   "schemaVersion": 1,
   "phaseId": "8.8.4",
   "status": "in-progress",
-  "activeStage": "P8.8.4-02",
+  "activeStage": "P8.8.4-03",
   "completedStages": [
     "P8.8.4-00",
-    "P8.8.4-01"
+    "P8.8.4-01",
+    "P8.8.4-02"
   ],
   "blocked": false,
   "blockerReason": null,
@@ -40,8 +41,9 @@
   },
   "gateResults": {
     "baseline-audit": "pass",
-    "shared-shell": "pass"
+    "shared-shell": "pass",
+    "standard-preview": "pass"
   },
-  "nextAction": "Adapt Standard parser output to shared score preview while preserving written spelling and Draft paths",
+  "nextAction": "Implement a Text-only playback state machine with pause, resume and stop anchor semantics",
   "updatedAt": "2026-09-26"
 }
