@@ -150,7 +150,9 @@ describe("AppShell", () => {
     const soundSelector = container.querySelector('[role="group"][aria-label="Preview sound"]');
     expect(meter?.nextElementSibling).toBe(input?.closest("label"));
     expect(input?.closest("label")?.nextElementSibling).toBe(soundSelector);
-    expect(soundSelector?.nextElementSibling).toBe(createButton);
+    const metronome = container.querySelector("[data-testid=global-metronome]");
+    expect(soundSelector?.nextElementSibling).toBe(metronome);
+    expect(metronome?.nextElementSibling).toBe(createButton);
     expect(input?.closest("label")?.className).not.toContain("border");
     expect(input?.closest("label")?.className).toContain("bg-transparent");
     expect(
