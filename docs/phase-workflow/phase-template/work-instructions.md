@@ -41,5 +41,6 @@ complete. Every completed stage must have its required gates recorded as
 
 ## Safety
 
-Follow the root `AGENTS.md`. Never auto-merge, never push, never commit private
-audio, MIDI, `.local-evaluation`, or personal absolute paths.
+Follow the root `AGENTS.md` for standing local merge and EXE authorization.
+Never push or commit private audio, MIDI, `.local-evaluation`, or personal
+absolute paths.

@@ -180,4 +180,5 @@ Product-level invariants to never break without explicit authorization:
 5. Read only task-relevant contracts/reports.
 6. Inspect actual code and tests before editing.
 
-Do not preload all phase docs. Do not merge or push to master without a human.
+Do not preload all phase docs. Use the standing local merge and EXE
+authorization in root `AGENTS.md`; never push automatically.

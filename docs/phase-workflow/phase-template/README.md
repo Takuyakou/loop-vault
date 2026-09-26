@@ -47,11 +47,13 @@ Build the feature behind its flag.
 
 ### P0.0-02 — Release gates
 
-Run the full gate set. Do not merge or push automatically.
+Run the full gate set. Follow the standing local merge authorization in root
+`AGENTS.md` if the assigned task reaches integration; never push automatically.
 
 ## Rules recap
 
-- Do not merge or push to master automatically — a human authorizes that.
+- Local merge and EXE creation use the standing authorization in `AGENTS.md`;
+  explicit stops and failed gates still apply. Never push automatically.
 - Do not commit recordings, MIDI, `.local-evaluation`, or personal paths.
 - Do not revive `docs/CURRENT_STATE.md`.
 

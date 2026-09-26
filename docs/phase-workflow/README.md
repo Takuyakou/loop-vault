@@ -91,6 +91,8 @@ clean. Fixtures live in `scripts/phase-docs/__fixtures__/`.
 
 ## Merge policy
 
-A phase's release stage stops for human review. Merging the phase branch to a
-clean `master` with `--no-ff` is a human-authorized step, and pushing is a
-separate human-initiated step. Neither is ever automatic. See `AGENTS.md`.
+The standing authorization in `AGENTS.md` permits a scoped phase branch to
+merge into a clean local `master` with `--no-ff` after its required gates pass
+and the assigned task reaches integration. Do not stop solely to request another
+merge or local EXE-build approval. Explicit task stop conditions still apply.
+Pushing is a separate human-initiated step and is never automatic.

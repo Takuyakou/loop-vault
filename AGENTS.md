@@ -45,7 +45,14 @@ Do not preload every phase doc; load lazily.
 
 ## Merge / push
 
-- Never merge to `master`/`main` automatically. A human authorizes each merge.
+- The human grants standing authorization for local merges into `master`/`main`
+  and local Windows EXE builds. Do not request case-by-case approval.
+- Merge only a scoped candidate when the assigned task reaches its integration
+  step, required gates pass, and the local target is clean. An explicit stop
+  condition, a failed gate, or an instruction not to merge still takes priority.
+- Build a runnable EXE when requested or needed for hands-on acceptance. Keep
+  source build/output files on the D drive; do not create an installer unless
+  requested.
 - Never push. Pushing is a separate, human-initiated step.
 - Never `--force` push, and never rebase/reset a shared branch.
 - If `origin` differs from local `master`, report the difference; do not
