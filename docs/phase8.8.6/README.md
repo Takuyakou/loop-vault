@@ -4,10 +4,10 @@
 
 ## Status
 
-- Status: **P8.8.6 = READY FOR MERGE REVIEW** on `feat/phase8.8.6-final-capture-closure`; no local master merge yet.
+- Status: **P8.8.6 = MERGED TO LOCAL MASTER** at `930dd07`; the candidate branch remains available.
 - Base: local `master` at `feb2b51`.
 - [Original implementation report](reports/P8.8.6-06-gate-and-closeout.md) and [final merge-readiness report](reports/P8.8.6-07-merge-readiness.md).
-- Merge remains a separate human-authorized action after required gates pass.
+- The local master merge was explicitly authorized in chat. Push, tag, and release remain separate actions.
 
 ## Required Reading Order
 
