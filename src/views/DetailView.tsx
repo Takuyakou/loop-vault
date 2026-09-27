@@ -1,32 +1,24 @@
-import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
-import { openPath, revealItemInDir } from "@tauri-apps/plugin-opener";
-import { type FormEvent, useState } from "react";
 import { playbackController, type PlayingSource } from "../audio/playbackController";
 import { PlayToggle } from "../components/PlayToggle";
 import { usePreviewSound } from "../components/PreviewSoundProvider";
 import { PracticeProgressBadge } from "../components/practice/PracticeProgressBadge";
-import { canOpenAssetPath, openableAssetExtensions } from "../domain/assetSecurity";
 import { beatsPerBar } from "../domain/midi";
 import { resolveTimelineVoicings } from "../domain/voicing";
 import { formatProgressionText } from "../domain/progressionText";
-import type { AssetType, SavedProgressionBlock, SongIdea } from "../domain/types";
+import type { SavedProgressionBlock, SongIdea } from "../domain/types";
 import {
-  assetAnchor,
   createUndoSnapshot,
   progressionBlockAnchor,
-  type PendingAssetDeletion,
   type PendingProgressionBlockDeletion,
-  type PendingReferenceDeletion,
 } from "../domain/undoDeletion";
 import type { AppCopy, AppLanguage } from "../i18n";
 import { type DraftParseResult, useDraftSave } from "../hooks/useDraftSave";
 import type { UndoRequest } from "../hooks/useUndoQueue";
 import { ProgressionGrid } from "../ui/ProgressionGrid";
-import { Copy, ExternalLink, FolderOpen, Trash2, TriangleAlert } from "lucide-react";
+import { Copy, Trash2 } from "lucide-react";
 
-type Reference = SongIdea["references"][number]; type Asset = SongIdea["assets"][number];
 const keySuggestions = ["C", "Cm", "D", "Dm", "E", "Em", "F", "Fm", "G", "Gm", "A", "Am", "B", "Bm"]; const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
-function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <section className={"border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4 " + className}>{children}</section>; } function splitList(value: string): string[] { return value.split(",").map((entry) => entry.trim()).filter(Boolean); } const defaultAssetId = () => crypto.randomUUID(); async function writeClipboardText(text: string): Promise<boolean> { if (!navigator.clipboard?.writeText) return false; await navigator.clipboard.writeText(text); return true; }
+function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <section className={"border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4 " + className}>{children}</section>; } function splitList(value: string): string[] { return value.split(",").map((entry) => entry.trim()).filter(Boolean); } async function writeClipboardText(text: string): Promise<boolean> { if (!navigator.clipboard?.writeText) return false; await navigator.clipboard.writeText(text); return true; }
 function validDraft<T>(value: T, displayValue?: string): DraftParseResult<T> { return { ok: true, value, displayValue }; }
 function invalidDraft<T>(): DraftParseResult<T> { return { ok: false }; }
 function optionalTextDraft(value: string): DraftParseResult<string | undefined> { const trimmed = value.trim(); return validDraft(trimmed || undefined, trimmed); }
@@ -110,15 +102,11 @@ function ProgressionBlockCard({
 
 export function DetailView({
   idea,
-  storedIdea = idea,
   updateIdea,
   removeProgressionBlock,
   openProgression = () => undefined,
-  removeReference = () => false,
-  unlinkAsset = () => false,
   enqueueUndo = () => "",
   vaultEpoch = 0,
-  analyzeMidiPath,
   requestDelete,
   setToast,
   copy,
@@ -126,25 +114,19 @@ export function DetailView({
   recoveryPending = false,
 }: {
   idea: SongIdea;
-  storedIdea?: SongIdea;
   updateIdea: (id: string, changes: Partial<SongIdea>) => boolean | "pending";
   removeProgressionBlock: (
     deletion: PendingProgressionBlockDeletion,
   ) => boolean | "pending";
   openProgression?: (ideaId: string, blockId: string) => void;
-  removeReference?: (deletion: PendingReferenceDeletion) => boolean | "pending";
-  unlinkAsset?: (deletion: PendingAssetDeletion) => boolean | "pending";
   enqueueUndo?: <T>(request: UndoRequest<T>) => string;
   vaultEpoch?: number;
-  analyzeMidiPath: (path: string) => Promise<void>;
   requestDelete: (idea: SongIdea) => void;
   setToast: (toast: string) => void;
   copy: AppCopy;
   language: AppLanguage;
   recoveryPending?: boolean;
 }) {
-  const [referenceDraft, setReferenceDraft] = useState<Reference>({ title: "", url: "", memo: "" });
-  const [assetDraft, setAssetDraft] = useState<Asset>({ id: "", type: "flp", path: "", memo: "" });
 
   const titleField = useDraftSave<string>({
     scopeKey: idea.id,
@@ -208,149 +190,9 @@ export function DetailView({
     debounceMs: 500,
     flushOnUnmount: true,
   });
-  function updateMeta(changes: Partial<SongIdea>) {
-    return updateIdea(idea.id, changes);
-  }
-
-  function addReference(event: FormEvent) {
-    event.preventDefault();
-    if (!referenceDraft.title.trim()) return;
-    const updated = updateMeta({ references: [...storedIdea.references, { ...referenceDraft, title: referenceDraft.title.trim() }] });
-    if (updated === true) setReferenceDraft({ title: "", url: "", memo: "" });
-  }
-
-  function requestReferenceRemoval(index: number) {
-    stopPlaybackForIdea();
-    const snapshot = createUndoSnapshot(idea.references, index, idea.id);
-    if (!snapshot) return;
-    const deletion: PendingReferenceDeletion = {
-      kind: "reference",
-      vaultEpoch,
-      snapshot,
-    };
-    if (recoveryPending) {
-      removeReference(deletion);
-      return;
-    }
-    enqueueUndo({
-      label: copy.undo.referenceDeleted,
-      payload: deletion,
-      undo: () => true,
-      commit: () => removeReference(deletion) === true,
-    });
-  }
-
-  async function chooseAssetPath() {
-    if (!("__TAURI_INTERNALS__" in window)) {
-      setToast(copy.toast.fileChooseDesktopOnly);
-      return;
-    }
-    const path = await openFileDialog({
-      multiple: false,
-      filters: [{ name: "Music assets", extensions: openableAssetExtensions().map((extension) => extension.slice(1)) }],
-    });
-    if (typeof path === "string") setAssetDraft((draft) => ({ ...draft, path }));
-  }
-
-  function addAsset(event: FormEvent) {
-    event.preventDefault();
-    const asset: Asset = {
-      ...assetDraft,
-      id: defaultAssetId(),
-      path: assetDraft.path?.trim() || undefined,
-      memo: assetDraft.memo?.trim() || undefined,
-    };
-    const updated = updateMeta({ assets: [...storedIdea.assets, asset] });
-    if (updated === true) setAssetDraft({ id: "", type: "flp", path: "", memo: "" });
-  }
-
-  function requestAssetRemoval(id: string) {
-    stopPlaybackForIdea();
-    const snapshot = createUndoSnapshot(
-      idea.assets,
-      idea.assets.findIndex((asset) => asset.id === id),
-      idea.id,
-      assetAnchor,
-    );
-    if (!snapshot) return;
-    const deletion: PendingAssetDeletion = {
-      kind: "asset",
-      vaultEpoch,
-      snapshot,
-    };
-    if (recoveryPending) {
-      unlinkAsset(deletion);
-      return;
-    }
-    enqueueUndo({
-      label: copy.undo.assetUnlinked,
-      payload: deletion,
-      undo: () => true,
-      commit: () => unlinkAsset(deletion) === true,
-    });
-  }
-
-  function updateAsset(assetId: string, changes: Partial<Asset>) {
-    return updateMeta({
-      assets: storedIdea.assets.map((entry) =>
-        entry.id === assetId ? { ...entry, ...changes } : entry,
-      ),
-    });
-  }
-
   function stopPlaybackForIdea() {
     if (playbackController.getState().source?.id.startsWith(`idea:${idea.id}:`)) {
       playbackController.stop();
-    }
-  }
-
-  async function openAsset(asset: Asset) {
-    if (!asset.path) return;
-    if (!canOpenAssetPath(asset.path)) {
-      setToast(copy.detail.unsupportedExtension);
-      return;
-    }
-    if (!("__TAURI_INTERNALS__" in window)) {
-      setToast(copy.toast.fileOpenDesktopOnly);
-      return;
-    }
-    try {
-      await openPath(asset.path);
-    } catch {
-      updateMeta({ assets: storedIdea.assets.map((entry) => entry.id === asset.id ? { ...entry, missing: true } : entry) });
-      setToast(copy.toast.assetMissing);
-    }
-  }
-
-  async function showAsset(asset: Asset) {
-    if (!asset.path) return;
-    if (!("__TAURI_INTERNALS__" in window)) {
-      setToast(copy.toast.folderDesktopOnly);
-      return;
-    }
-    await revealItemInDir(asset.path);
-  }
-
-  async function replaceAssetPath(asset: Asset) {
-    if (!("__TAURI_INTERNALS__" in window)) {
-      setToast(copy.toast.fileChooseDesktopOnly);
-      return;
-    }
-
-    const path = await openFileDialog({
-      multiple: false,
-      filters: [
-        {
-          name: "Music assets",
-          extensions: openableAssetExtensions().map((extension) =>
-            extension.slice(1),
-          ),
-        },
-      ],
-    });
-    if (typeof path === "string") {
-      const updated = updateAsset(asset.id, { path, missing: false });
-      if (updated === true) setToast(copy.toast.assetPathUpdated);
     }
   }
 
@@ -369,7 +211,7 @@ export function DetailView({
 
   return (
     <>
-      <div className="grid gap-5 py-5 lg:grid-cols-[0.9fr_1.1fr]">
+      <div className="grid gap-5 py-5">
       <section className="space-y-5">
         <Panel>
           <div className="flex items-start justify-between gap-4">
@@ -474,99 +316,6 @@ export function DetailView({
         </Panel>
       </section>
 
-      <section className="space-y-5">
-        <Panel>
-          <h2 className="text-xl font-semibold">{copy.detail.references}</h2>
-          <form className="mt-3 grid gap-2" onSubmit={addReference}>
-            <label className="sr-only" htmlFor="reference-title">{copy.detail.placeholders.title}</label>
-            <input id="reference-title" name="reference-title" autoComplete="off" className={inputClass} value={referenceDraft.title} onChange={(event) => setReferenceDraft({ ...referenceDraft, title: event.target.value })} placeholder={copy.detail.placeholders.title} />
-            <label className="sr-only" htmlFor="reference-url">{copy.detail.placeholders.url}</label>
-            <input id="reference-url" name="reference-url" inputMode="url" autoComplete="url" className={inputClass} value={referenceDraft.url ?? ""} onChange={(event) => setReferenceDraft({ ...referenceDraft, url: event.target.value })} placeholder={copy.detail.placeholders.url} />
-            <label className="sr-only" htmlFor="reference-memo">{copy.detail.placeholders.memo}</label>
-            <input id="reference-memo" name="reference-memo" autoComplete="off" className={inputClass} value={referenceDraft.memo ?? ""} onChange={(event) => setReferenceDraft({ ...referenceDraft, memo: event.target.value })} placeholder={copy.detail.placeholders.memo} />
-            <button className="rounded bg-[var(--lv-surface-raised)] px-3 py-2 text-sm" type="submit">{copy.detail.addReference}</button>
-          </form>
-          <div className="mt-4 space-y-2">
-            {idea.references.map((reference, index) => (
-              <div key={`${reference.title}-${index}`} className="border border-[var(--lv-border)] p-3 text-sm">
-                <div className="flex justify-between gap-3">
-                  <p className="font-medium">{reference.title}</p>
-                  <button className="inline-flex items-center gap-1.5 text-[var(--lv-text-muted)]" onClick={() => requestReferenceRemoval(index)}>
-                    <Trash2 aria-hidden="true" size={16} />
-                    {copy.common.delete}
-                  </button>
-                </div>
-                {reference.url ? <p className="mt-1 break-all text-[var(--lv-text-muted)]">{reference.url}</p> : null}
-                {reference.memo ? <p className="mt-1 text-[var(--lv-text-secondary)]">{reference.memo}</p> : null}
-              </div>
-            ))}
-          </div>
-        </Panel>
-
-        <Panel>
-          <h2 className="text-xl font-semibold">{copy.detail.assets}</h2>
-          <form className="mt-3 grid gap-2" onSubmit={addAsset}>
-            <div className="grid gap-2 sm:grid-cols-[0.4fr_1fr_auto]">
-              <label className="sr-only" htmlFor="asset-type">{copy.detail.assetType}</label>
-              <select id="asset-type" name="asset-type" className={inputClass} value={assetDraft.type} onChange={(event) => setAssetDraft({ ...assetDraft, type: event.target.value as AssetType })}>
-                <option value="flp">FLP</option>
-                <option value="midi">MIDI</option>
-                <option value="audio">Audio</option>
-                <option value="other">Other</option>
-              </select>
-              <label className="sr-only" htmlFor="asset-path">{copy.detail.absolutePath}</label>
-              <input id="asset-path" name="asset-path" autoComplete="off" className={inputClass} value={assetDraft.path ?? ""} onChange={(event) => setAssetDraft({ ...assetDraft, path: event.target.value })} placeholder={copy.detail.absolutePath} />
-              <button className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm" type="button" onClick={() => void chooseAssetPath()}>{copy.common.choose}</button>
-            </div>
-            <label className="sr-only" htmlFor="asset-memo">{copy.detail.placeholders.memo}</label>
-            <input id="asset-memo" name="asset-memo" autoComplete="off" className={inputClass} value={assetDraft.memo ?? ""} onChange={(event) => setAssetDraft({ ...assetDraft, memo: event.target.value })} placeholder={copy.detail.placeholders.memo} />
-            <button className="rounded bg-[var(--lv-surface-raised)] px-3 py-2 text-sm" type="submit">{copy.detail.addAsset}</button>
-          </form>
-          <div className="mt-4 space-y-2">
-            {idea.assets.map((asset) => (
-              <div key={asset.id} className={`border p-3 text-sm ${asset.missing ? "border-red-500/60 bg-red-950/20" : "border-[var(--lv-border)]"}`}>
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="font-medium uppercase text-[var(--lv-text-secondary)]">{asset.type}</p>
-                  <div className="flex gap-2">
-                    {asset.type === "midi" && asset.path ? (
-                      <button className="rounded border border-cyan-500/60 px-2 py-1 text-cyan-100" onClick={() => void analyzeMidiPath(asset.path!)}>
-                        {copy.common.analyze}
-                      </button>
-                    ) : null}
-                    <button
-                      className="inline-flex items-center gap-1.5 rounded border border-[var(--lv-border-strong)] px-2 py-1 disabled:cursor-not-allowed disabled:opacity-50"
-                      disabled={!canOpenAssetPath(asset.path)}
-                      onClick={() => void openAsset(asset)}
-                    >
-                      <ExternalLink aria-hidden="true" size={16} />
-                      {copy.common.open}
-                    </button>
-                    <button className="inline-flex items-center gap-1.5 rounded border border-[var(--lv-border-strong)] px-2 py-1" onClick={() => void showAsset(asset)}>
-                      <FolderOpen aria-hidden="true" size={16} />
-                      {copy.common.folder}
-                    </button>
-                    {asset.missing ? (
-                      <button className="inline-flex items-center gap-1.5 rounded border border-amber-500/60 px-2 py-1 text-amber-100" onClick={() => void replaceAssetPath(asset)}>
-                        <TriangleAlert aria-hidden="true" size={16} />
-                        {copy.detail.fixPath}
-                      </button>
-                    ) : null}
-                    <button className="inline-flex items-center gap-1.5 rounded border border-[var(--lv-border-strong)] px-2 py-1" onClick={() => requestAssetRemoval(asset.id)}>
-                      <Trash2 aria-hidden="true" size={16} />
-                      {copy.common.delete}
-                    </button>
-                  </div>
-                </div>
-                <p className="mt-2 break-all text-[var(--lv-text-muted)]">{asset.path || copy.common.pathUnset}</p>
-                {!canOpenAssetPath(asset.path) && asset.path ? <p className="mt-2 flex items-center gap-1.5 text-xs text-amber-200"><TriangleAlert aria-hidden="true" size={16} />{copy.detail.unsupportedExtension}</p> : null}
-                {asset.missing ? <p className="mt-2 flex items-center gap-1.5 text-xs text-red-200"><TriangleAlert aria-hidden="true" size={16} />{copy.detail.missingAsset}</p> : null}
-                {asset.memo ? <p className="mt-2 text-[var(--lv-text-secondary)]">{asset.memo}</p> : null}
-              </div>
-            ))}
-          </div>
-        </Panel>
-
-      </section>
       </div>
     </>
   );

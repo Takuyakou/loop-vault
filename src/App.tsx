@@ -230,8 +230,6 @@ function App() {
   const updateProgressionBlock = useStore(defaultVaultStore, (state) => state.updateProgressionBlock);
   const duplicateProgressionBlock = useStore(defaultVaultStore, (state) => state.duplicateProgressionBlock);
   const removeProgressionBlock = useStore(defaultVaultStore, (state) => state.removeProgressionBlock);
-  const removeReference = useStore(defaultVaultStore, (state) => state.removeReference);
-  const unlinkAsset = useStore(defaultVaultStore, (state) => state.unlinkAsset);
   const analyzeMidiBytes = useStore(defaultVaultStore, (state) => state.analyzeMidiBytes);
   const clearAnalysis = useStore(defaultVaultStore, (state) => state.clearAnalysis);
 
@@ -400,7 +398,6 @@ function App() {
   }
 
   const selectedIdea = visibleIdeas.find((idea) => idea.id === selectedId) ?? visibleIdeas[0];
-  const storedSelectedIdea = ideas.find((idea) => idea.id === selectedIdea?.id);
   const progressionIdea = selectedProgression
     ? visibleIdeas.find((idea) => idea.id === selectedProgression.ideaId)
     : undefined;
@@ -577,23 +574,6 @@ function App() {
     setPracticeMode("voicing-loop");
     setView("practice");
     return true;
-  }
-
-async function analyzeMidiPath(path: string) {
-    if (!("__TAURI_INTERNALS__" in window)) {
-      setToast(copy.toast.desktopMidiOnly);
-      return;
-    }
-
-    try {
-      const bytes = await readBoundedMidiPath(path);
-      const result = analyzeMidiBytes(bytes, { fileName: fileNameFromPath(path) });
-      setCaptureInitialInputMode("midi");
-      setView("capture");
-      setToast(result ? copy.toast.midiAnalyzed : copy.toast.midiFailed);
-    } catch (error) {
-      setToast(error instanceof Error ? error.message : copy.toast.midiReadFailed);
-    }
   }
 
   async function loadMidiSource(path: string) {
@@ -916,15 +896,11 @@ async function analyzeMidiPath(path: string) {
             {view === "detail" && selectedIdea ? (
               <DetailView
                 idea={selectedIdea}
-                storedIdea={storedSelectedIdea}
                 updateIdea={updateIdea}
                 removeProgressionBlock={removeProgressionBlock}
                 openProgression={openProgression}
-                removeReference={removeReference}
-                unlinkAsset={unlinkAsset}
                 enqueueUndo={undoQueue.enqueue}
                 vaultEpoch={vaultEpoch}
-                analyzeMidiPath={analyzeMidiPath}
                 requestDelete={requestDelete}
                 setToast={setToast}
                 copy={copy}
@@ -1346,11 +1322,6 @@ function shellTitle(view: View, practiceMode: PracticeWorkspaceMode): string {
   }
   if (view === "history") return "履歴";
   return "ホーム";
-}
-
-function fileNameFromPath(path: string): string {
-  const normalized = path.replace(/\\/g, "/");
-  return normalized.split("/").pop() || "midi.mid";
 }
 
 export default App;
