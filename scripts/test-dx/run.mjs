@@ -6,16 +6,19 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { performance } from "node:perf_hooks";
 import { selectForFiles } from "./selection.mjs";
+import { cacheEnabled, cacheKey, fingerprint, readPass, writePass } from "./cache.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 process.chdir(root);
 const logRoot = join(root, ".local-evaluation", "test-logs");
+const cacheRoot = join(root, ".local-evaluation", "gate-cache");
 mkdirSync(logRoot, { recursive: true });
 const session = new Date().toISOString().replace(/[:.]/g, "-");
 const level = process.argv[2];
 const options = process.argv.slice(3).filter((arg) => arg !== "--");
 const explain = options.includes("--explain");
 const autoChanged = options.includes("--changed");
+const useCache = cacheEnabled(level, options.includes("--fresh"));
 const explicitFiles = options.filter((arg) => !arg.startsWith("--"));
 const env = { ...process.env, NO_COLOR: "1" };
 delete env.FORCE_COLOR;
@@ -63,6 +66,14 @@ function diagnostics(output) {
 }
 
 function runStep(label, args, kind = "static", extraEnv = {}) {
+  const before = useCache ? fingerprint(root) : null;
+  const key = before ? cacheKey(before, label, { args, extraEnv }) : null;
+  const cached = key ? readPass(cacheRoot, key) : null;
+  if (cached) {
+    console.log(`${label}: PASS (same-state cache)${cached.counts ? ` — ${cached.counts}` : ""} — ${cached.seconds}s saved`);
+    appendFileSync(combinedLog, `\n## ${label}: cached PASS\n`, "utf8");
+    return { cached: true, seconds: 0, bytes: 0 };
+  }
   const slug = label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
   const log = join(logRoot, `${session}-${slug}.log`);
   const begun = performance.now();
@@ -84,6 +95,11 @@ function runStep(label, args, kind = "static", extraEnv = {}) {
     throw new Error(`${label} exited ${result.status ?? "without status"}`);
   }
   const counts = summaryCounts(output, kind);
+  if (before && key) {
+    const after = fingerprint(root);
+    if (JSON.stringify(after) !== JSON.stringify(before)) throw new Error(`${label} changed tracked/config inputs while running; PASS not cached`);
+    writePass(cacheRoot, key, { status: "pass", counts, seconds: Number(seconds) });
+  }
   console.log(`${label}: PASS${counts ? ` — ${counts}` : ""} — ${seconds}s`);
   return { seconds: Number(seconds), bytes: Buffer.byteLength(output), output };
 }
