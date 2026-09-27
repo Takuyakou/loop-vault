@@ -5,9 +5,11 @@ import { assertNoHorizontalOverflow, openApp } from "./helpers/app";
 test("Final Capture empty and populated states follow the single-toolbar contract", async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await openApp(page);
-  await page.locator("nav").getByRole("button", { name: /コード採集|Capture/ }).click();
-  const header = page.locator("header.lv-app-topbar");
-  await expect(header).toContainText("MIDIやテキストからコード進行を採集");
+  await page.locator('[data-nav="capture"]').click();
+  const header = page.locator("header.lv-app-header");
+  // P8.9-02: the header shows the screen name only; the old context line is gone.
+  await expect(header.locator(".lv-app-header-title")).toHaveText("取り込む");
+  await expect(header).not.toContainText("MIDIやテキストからコード進行を採集");
   await expect(header.getByTestId("capture-input-mode")).toHaveCount(1);
   await expect(header.getByTestId("global-metronome")).toContainText("メトロノーム");
   await page.getByTestId("capture-input-mode").getByRole("button", { name: "テキスト" }).click();
@@ -48,7 +50,7 @@ test("Final Capture empty and populated states follow the single-toolbar contrac
 test("Final Capture keeps transport states, BPM provenance and offline font access clear", async ({ page }) => {
   await page.route(/^https?:\/\/(?!127\.0\.0\.1)/, route => route.abort());
   await openApp(page);
-  await page.locator("nav").getByRole("button", { name: /コード採集|Capture/ }).click();
+  await page.locator('[data-nav="capture"]').click();
   await page.getByTestId("capture-input-mode").getByRole("button", { name: "テキスト" }).click();
   const capture = page.getByTestId("text-progression-capture");
   await capture.getByTestId("text-progression-input").fill("| C Dm F G |");

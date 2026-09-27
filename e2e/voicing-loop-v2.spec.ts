@@ -4,7 +4,7 @@ import { assertNoHorizontalOverflow } from "./helpers/app";
 async function openLoop(page: Page, status = "both-hands-long") {
   await page.goto(`/?p527Status=${status}`);
   await page.evaluate(() => document.fonts.ready);
-  await page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true }).click();
+  await page.locator('[data-nav="voicing-loop"]').click();
   return page.getByTestId("voicing-loop-workspace");
 }
 
@@ -108,12 +108,12 @@ test("VL-06 selector heading stays inside its content area across sidebar and sc
   ]) {
     await page.setViewportSize(viewport);
     await page.goto("/?p527Status=selector");
-    const expand = page.getByRole("button", { name: "Expand sidebar" });
+    const expand = page.getByRole("button", { name: "サイドバーを広げる" });
     if (await expand.isVisible()) await expand.click();
-    await page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true }).click();
+    await page.locator('[data-nav="voicing-loop"]').click();
     const heading = page.getByRole("heading", { name: "Voicing Loop", exact: true, level: 2 });
     for (const collapsed of [false, true]) {
-      if (collapsed) await page.getByRole("button", { name: "Collapse sidebar" }).click();
+      if (collapsed) await page.getByRole("button", { name: "サイドバーを狭める" }).click();
       const bounds = await heading.boundingBox();
       const main = await page.getByRole("main").boundingBox();
       expect(bounds && main).toBeTruthy();
@@ -126,7 +126,7 @@ test("VL-06 selector heading stays inside its content area across sidebar and sc
   }
   await page.setViewportSize({ width: 640, height: 720 });
   await page.goto("/?p527Status=selector");
-  await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
+  await page.locator('[data-nav="chord-dojo"]').click();
   await page.getByRole("tab", { name: "Voicing Loop" }).click();
   await page.evaluate(() => { document.documentElement.style.zoom = "2"; });
   const heading = page.getByRole("heading", { name: "Voicing Loop", exact: true, level: 2 });
@@ -259,7 +259,7 @@ test("VL-07 compact Current, keyboard legend, safe area and acceptance states", 
 test("VL-07 selector clipping remains absent at 200 percent", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto("/?p527Status=selector-vl07");
-  await page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true }).click();
+  await page.locator('[data-nav="voicing-loop"]').click();
   const choices = page.getByTestId("voicing-loop-progression-choice");
   await expect(choices).toHaveCount(3);
   await expect(choices.filter({ hasText: "Public ready progression" })).toBeEnabled();

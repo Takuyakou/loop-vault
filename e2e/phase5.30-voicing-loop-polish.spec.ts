@@ -17,9 +17,9 @@ async function expectBefore(left: Locator, right: Locator) {
 }
 
 async function chooseVoicingLoop(page: Page) {
-  const sidebar = page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true });
+  const sidebar = page.locator('[data-nav="voicing-loop"]');
   if (await sidebar.isVisible()) { await sidebar.click(); return; }
-  await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
+  await page.locator('[data-nav="chord-dojo"]').click();
   await page.getByRole("tab", { name: "Voicing Loop" }).click();
 }
 

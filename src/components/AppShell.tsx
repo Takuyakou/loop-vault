@@ -133,9 +133,9 @@ export function AppShell({
   const chordDojoActive = practiceView && !voicingLoopActive && !bassPracticeActive;
 
   return (
-    <div className="lv-app-frame" data-standard-title-bar={standardTitleBar || undefined}>
+    <div className="lv-app-frame" data-standard-title-bar={standardTitleBar || undefined} data-sidebar-collapsed={collapsed}>
       {standardTitleBar ? null : <TitleBar onSearch={onSearch} />}
-      <div className="lv-app-body" data-sidebar-collapsed={collapsed}>
+      <div className="lv-app-body">
         <aside
           className="lv-sidebar"
           aria-label="サイドバー"

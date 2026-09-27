@@ -115,7 +115,7 @@ test("Vault save form stays visible with the sidebar expanded at the reported na
 
   const sidebar = page.locator("[data-sidebar]");
   if (await sidebar.getAttribute("data-sidebar") === "collapsed") {
-    await page.getByRole("button", { name: "Expand sidebar" }).click();
+    await page.getByRole("button", { name: "サイドバーを広げる" }).click();
   }
   await expect(sidebar).toHaveAttribute("data-sidebar", "expanded");
 

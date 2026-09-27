@@ -15,7 +15,7 @@ test("スキップリンク、主ナビゲーション、設定をキーボー�
   await page.keyboard.press("Enter");
   await expect(page.locator("#main-content")).toBeFocused();
 
-  const capture = page.locator("nav").getByRole("button", { name: /コード採集|Capture/ });
+  const capture = page.locator('[data-nav="capture"]');
   await capture.focus();
   await page.keyboard.press("Enter");
   await expect(page.locator('[data-capture-stage="empty"]')).toBeVisible();
@@ -107,7 +107,7 @@ test("保存、Vault検索、詳細、Dojo開始をキーボードで辿れる",
   await practice.focus();
   await page.keyboard.press("Enter");
   await expect(page.locator("#main-content")).toBeFocused();
-  const dojo = page.locator("nav").getByRole("button", { name: "Chord Dojo", exact: true });
+  const dojo = page.locator('[data-nav="chord-dojo"]');
   await dojo.focus();
   await expect(dojo).toBeFocused();
   await page.keyboard.press("Enter");

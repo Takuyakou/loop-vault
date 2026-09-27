@@ -9,13 +9,13 @@ async function openEmptyApp(page: Page) {
 }
 
 async function openDirectVoicingLoopWithKeyboard(page: Page) {
-  const directItem = page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true });
+  const directItem = page.locator('[data-nav="voicing-loop"]');
   if (await directItem.isVisible()) {
     await directItem.focus();
     await page.keyboard.press("Enter");
     await expect(directItem).toHaveAttribute("aria-current", "page");
   } else {
-    await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
+    await page.locator('[data-nav="chord-dojo"]').click();
     const tab = page.getByRole("tab", { name: "Voicing Loop" });
     await tab.focus();
     await page.keyboard.press("Enter");
@@ -43,8 +43,8 @@ test("P5.28 direct sidebar entry shows the inline Vault selector and Text fallba
   await expect(page.getByTestId("capture-input-mode").getByRole("button", { name: /Text|テキスト/ }))
     .toHaveAttribute("aria-pressed", "true");
 
-  await page.locator("nav").getByRole("button", { name: "Home", exact: true }).click();
-  await page.locator("nav").getByRole("button", { name: "Chord Capture", exact: true }).click();
+  await page.locator('[data-nav="home"]').click();
+  await page.locator('[data-nav="capture"]').click();
   await expect(page.locator("[data-capture-stage='empty']")).toBeVisible();
   await expect(page.getByTestId("capture-input-mode").getByRole("button", { name: "MIDI" }))
     .toHaveAttribute("aria-pressed", "true");
@@ -81,7 +81,7 @@ test("P5.28 Text handoff becomes a recent one-click Vault source without picker 
     .toHaveAttribute("aria-pressed", "true");
   await expect(workspace.locator("#voicing-loop-bpm")).toHaveValue("120");
 
-  await page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true }).click();
+  await page.locator('[data-nav="voicing-loop"]').click();
   await expect(page.getByRole("heading", { name: "最近使った進行" })).toBeVisible();
   await expect(workspace.getByRole("heading", { level: 2, name: "C", exact: true })).toHaveCount(0);
 
@@ -94,22 +94,22 @@ test("P5.28 Text handoff becomes a recent one-click Vault source without picker 
   await expect(workspace.getByRole("heading", { level: 2, name: "C", exact: true })).toBeVisible();
   await expect(workspace.locator("#voicing-loop-bpm")).toHaveValue("120");
 
-  await page.locator("nav").getByRole("button", { name: "Home", exact: true }).click();
-  await page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true }).click();
+  await page.locator('[data-nav="home"]').click();
+  await page.locator('[data-nav="voicing-loop"]').click();
   await expect(page.getByRole("heading", { name: "最近使った進行" })).toBeVisible();
   await expect(workspace.getByRole("heading", { level: 2, name: "C", exact: true })).toHaveCount(0);
   await page.getByTestId("voicing-loop-progression-choice").filter({ hasText: "P5.28 Direct Entry E2E" }).click();
-  await page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true }).click();
+  await page.locator('[data-nav="voicing-loop"]').click();
   expect(await page.evaluate(() => {
     const raw = localStorage.getItem("loop-vault:voicing-loop-recents:v1");
     return raw ? JSON.parse(raw).references.length : 0;
   })).toBe(1);
 
-  const chordDojo = page.locator("nav").getByRole("button", { name: "Chord Dojo", exact: true });
+  const chordDojo = page.locator('[data-nav="chord-dojo"]');
   await chordDojo.click();
   await expect(chordDojo).toHaveAttribute("aria-current", "page");
   await expect(page.getByTestId("practice-start")).toBeVisible();
-  const bassPractice = page.locator("nav").getByRole("button", { name: "Bass Practice", exact: true });
+  const bassPractice = page.locator('[data-nav="bass-practice"]');
   if (await bassPractice.isEnabled()) {
     await bassPractice.click();
     await expect(bassPractice).toHaveAttribute("aria-current", "page");

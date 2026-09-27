@@ -8,10 +8,10 @@ const suppliedFixture = (name: string) => readFileSync(`docs/phase5.31/fixtures/
 async function saveTextToLoop(page: Page, input: string) {
   await page.goto("/?p528Direct=1");
   await page.evaluate(() => document.fonts.ready);
-  const sidebar = page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true });
+  const sidebar = page.locator('[data-nav="voicing-loop"]');
   if (await sidebar.isVisible()) await sidebar.click();
   else {
-    await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
+    await page.locator('[data-nav="chord-dojo"]').click();
     await page.getByRole("tab", { name: "Voicing Loop" }).click();
   }
   await page.getByRole("button", { name: /Textで新しい進行を入力/ }).click();
@@ -39,7 +39,7 @@ test("P5.31 exact compact and expanded full scores keep timing with generalized 
   const observed: string[][] = [];
   for (const name of ["rechord-user-example.txt", "rechord-user-example-expanded.txt"]) {
     const workspace = await saveTextToLoop(page, suppliedFixture(name));
-    await page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true }).click();
+    await page.locator('[data-nav="voicing-loop"]').click();
     await page.getByRole("searchbox", { name: "進行を検索" }).fill("P5.31 control timing fixture");
     const choice = page.getByTestId("voicing-loop-progression-choice").filter({ hasText: "P5.31 control timing fixture" });
     await expect(choice).toHaveCount(1);

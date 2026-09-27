@@ -4,7 +4,7 @@ import { assertNoHorizontalOverflow, openApp } from "./helpers/app";
 test("P8.8.5 Capture MIDI/Text tabs keep one DOM node and identical geometry", async ({ page }) => {
   test.setTimeout(90_000);
   await openApp(page);
-  await page.locator("nav").getByRole("button", { name: /コード採集|Capture/ }).click();
+  await page.locator('[data-nav="capture"]').click();
   for (const width of [1920, 1600, 1440, 1366, 1280, 1024, 899, 768]) {
     await page.setViewportSize({ width, height: 900 });
     const frame = page.getByTestId("capture-mode-tabs-frame");
@@ -33,7 +33,7 @@ test("P8.8.5 Capture MIDI/Text tabs keep one DOM node and identical geometry", a
       expect(after).not.toBeNull();
       expect(initial).not.toBeNull();
       for (const key of ["x", "y", "width", "height"] as const) {
-        expect(Math.abs(after![key] - initial![key])).toBeLessThanOrEqual(1);
+        expect(Math.abs(after![key] - initial![key]), `${width}px ${name}.${key}`).toBeLessThanOrEqual(1);
       }
     }
     await tabs.getByRole("button", { name: "MIDI" }).click();
@@ -50,7 +50,7 @@ test("P8.8.5 header owns persistent metronome ON/OFF across Capture modes", asyn
   await expect(global).toHaveAttribute("aria-pressed", "false");
   await global.click();
   await expect(global).toHaveAttribute("aria-label", "メトロノーム：ON");
-  await page.locator("nav").getByRole("button", { name: /コード採集|Capture/ }).click();
+  await page.locator('[data-nav="capture"]').click();
   await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
   await page.getByTestId("text-mode-extended").click();
   await expect(page.getByTestId("global-metronome")).toHaveAttribute("aria-pressed", "true");

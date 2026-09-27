@@ -97,7 +97,7 @@ test.describe("Phase 5.13 visual evidence", () => {
 
     await page.locator("[data-progression-detail-view]")
       .getByRole("button", { name: /練習する|Practice/ }).click();
-    await page.locator("nav").getByRole("button", { name: "Chord Dojo", exact: true }).click();
+    await page.locator('[data-nav="chord-dojo"]').click();
     await expect(page.getByTestId("practice-layout")).toBeVisible();
     await evidence(page, testInfo, "practice");
     await expect(page).toHaveScreenshot("practice.png", { fullPage: true });
@@ -111,11 +111,11 @@ test.describe("Phase 5.13 visual evidence", () => {
       fileName: "history-visual-fixture.mid",
     });
 
-    await page.getByRole("button", { name: "Live MIDI" }).click();
+    await page.locator('[data-nav="live-midi"]').click();
     await evidence(page, testInfo, "live-midi");
     await page.getByRole("button", { name: /メイン画面を表示|Show main window/ }).click();
 
-    await page.getByRole("button", { name: "History", exact: true }).click();
+    await page.locator('[data-nav="history"]').click();
     await evidence(page, testInfo, "history");
     await expect(page).toHaveScreenshot("history.png", { fullPage: true });
 
@@ -139,7 +139,7 @@ test("Settings visual baseline", async ({ page }, testInfo) => {
   await createSavedProgression(page, "History visual fixture", {
     fileName: "history-visual-fixture.mid",
   });
-  await page.getByRole("button", { name: "History", exact: true }).click();
+  await page.locator('[data-nav="history"]').click();
   await page.getByRole("button", { name: /設定|Settings/ }).first().click();
   await expect(page.getByRole("dialog", { name: /設定|Settings/ })).toBeVisible();
   await evidence(page, testInfo, "settings");

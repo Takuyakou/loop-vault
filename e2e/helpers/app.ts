@@ -7,13 +7,13 @@ export async function openApp(page: Page): Promise<void> {
 }
 
 export async function openCapture(page: Page): Promise<void> {
-  await page.locator("nav").getByRole("button", { name: /コード採集|Capture/ }).click();
+  await page.locator('[data-nav="capture"]').click();
   await expect(page.locator("[data-capture-midi-drop-zone]")).toBeVisible();
 }
 
 export async function openTextCapture(page: Page) {
   await openApp(page);
-  await page.locator("nav").getByRole("button", { name: /コード採集|Capture/ }).click();
+  await page.locator('[data-nav="capture"]').click();
   await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
   const capture = page.getByTestId("text-progression-capture");
   await expect(capture).toBeVisible();
@@ -113,7 +113,7 @@ export async function createSavedProgression(
 }
 
 export async function openVault(page: Page): Promise<void> {
-  await page.locator("nav").getByRole("button", { name: "Vault", exact: true }).click();
+  await page.locator('[data-nav="vault"]').click();
   await expect(page.locator("#main-content")).toHaveAttribute("aria-label", "Vault");
 }
 

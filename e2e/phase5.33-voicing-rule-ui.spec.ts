@@ -52,9 +52,9 @@ function expectStableKeyboard(actual: KeyboardGeometry, expected: KeyboardGeomet
 }
 
 async function chooseVoicingLoop(page: Page) {
-  const sidebar = page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true });
+  const sidebar = page.locator('[data-nav="voicing-loop"]');
   if (await sidebar.isVisible()) { await sidebar.click(); return; }
-  await page.locator("nav").getByRole("button", { name: "Practice", exact: true }).click();
+  await page.locator('[data-nav="chord-dojo"]').click();
   await page.getByRole("tab", { name: "Voicing Loop" }).click();
 }
 
@@ -200,7 +200,7 @@ test("P5.33 fits desktop without page scroll and keeps Transport keyboard-operab
 
   await expect(transport).toBeInViewport();
   await expect(page.locator("header").getByRole("tab")).toHaveCount(0);
-  await expect(page.locator("nav").getByRole("button", { name: "Voicing Loop", exact: true })).toBeVisible();
+  await expect(page.locator('[data-nav="voicing-loop"]')).toBeVisible();
   await expect(start).toBeEnabled();
   const startBox = await start.boundingBox();
   // Shared TransportButton CSS specifies a 2.25rem (36px) minimum.

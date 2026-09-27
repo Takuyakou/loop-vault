@@ -57,6 +57,16 @@
     pointer-events: none;
   }
 
+  /* Compact (RHomeCompact): the brand area follows the icon-only sidebar. */
+  .lv-app-frame[data-sidebar-collapsed="true"] .lv-titlebar-brand {
+    width: var(--lv-sidebar-narrow);
+    padding-left: 22px;
+  }
+
+  .lv-app-frame[data-sidebar-collapsed="true"] .lv-titlebar-brand > span {
+    display: none;
+  }
+
   .lv-titlebar-center {
     display: flex;
     min-width: 0;
@@ -135,7 +145,7 @@
     flex-direction: column;
     border-right: 1px solid rgb(150 170 195 / 10%);
     background: var(--lv-topbar);
-    transition: width var(--lv-motion-normal) var(--lv-ease-standard);
+    /* No width animation: the content column would reflow for 0.18 s on every toggle. */
   }
 
   .lv-sidebar[data-sidebar="collapsed"] {
@@ -158,7 +168,7 @@
 
   .lv-sidebar-heading {
     padding: 14px 12px 6px;
-    color: #5f7089;
+    color: var(--lv-text-muted); /* mock #5f7089 fails WCAG AA (3.72:1) */
     font-size: var(--lv-text-11);
     font-weight: 600;
     letter-spacing: 0.12em;
@@ -273,7 +283,7 @@
   }
 
   .lv-app-header-title {
-    min-width: 0;
+    min-width: 4.5em;
     overflow: hidden;
     color: var(--lv-text);
     font-size: 18px;
@@ -410,6 +420,24 @@
   }
 }
 
+/* Very narrow (browser-only reflow; the desktop window is at least 768px): keep
+   the screen name and the essential actions. */
+@media (max-width: 639px) {
+  .lv-app-header .lv-midi-chip,
+  .lv-app-header [data-global-actions] > [role="group"]:not(.lv-volume-group) {
+    display: none;
+  }
+
+  .lv-titlebar-search-label,
+  .lv-titlebar-search kbd {
+    display: none;
+  }
+
+  .lv-titlebar-search {
+    width: auto;
+  }
+}
+
 /* One scrollbar look across the app: thin, blends into the dark ground. */
 * {
   scrollbar-color: rgb(150 170 195 / 28%) transparent;
@@ -417,7 +445,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lv-sidebar,
   .lv-nav-item,
   .lv-titlebar-button,
   .lv-titlebar-search {
