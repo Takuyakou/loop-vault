@@ -63,6 +63,16 @@ test("P8.9 shared component folders stay shared-ui (broad)", () => {
   }
 });
 
+test("progression page files have their own owner instead of expanding broadly", () => {
+  for (const file of ["src/views/ProgressionDetailView.tsx", "src/views/DetailView.tsx", "src/components/progression-editing/QuickChordEditor.tsx"]) {
+    const result = select([file], "feature");
+    assert.deepEqual(result.areas, ["progression"], file);
+    assert.equal(result.broad, false, file);
+    assert.ok(result.vitest.includes("src/views/ProgressionDetailView.test.tsx"), file);
+    assert.ok(result.browser.includes("e2e/vault-flow.spec.ts"), file);
+  }
+});
+
 test("P8.9 screenshot tool is evidence, not a product contract", () => {
   const owner = ownerForFile("scripts/p89/screens.mjs");
   assert.deepEqual(owner.areas, []);
