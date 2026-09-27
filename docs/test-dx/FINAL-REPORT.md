@@ -2,7 +2,7 @@
 
 ## Decision
 
-**DX-00–DX-07 complete on candidate branch. READY FOR MERGE REVIEW.** The final repository-wide FULL gate is mandatory and never reads the local PASS cache. This work changes test orchestration, documentation and the internal Playwright runner's duplicate TypeScript check only; no product `src/**` behavior or test expectation was changed.
+**TEST DX / TOKEN EFFICIENCY = COMPLETE / RELEASE COVERAGE PRESERVED / FINAL FRESH FULL PASS / READY FOR MERGE REVIEW.** The final repository-wide FULL gate is mandatory and never reads the local PASS cache. This work changes test orchestration, documentation and the internal Playwright runner's duplicate TypeScript check only; no product `src/**` behavior or test expectation was changed.
 
 Baseline was local `master` at `1d2c43d`; the implementation gate below ran at `45148c2`. Measurements are single local runs, so timing differences are directional. Complete logs are ignored under `.local-evaluation/`.
 
@@ -34,6 +34,29 @@ The bounded public 11-file/157-test Vitest benchmark was 8.4s at 2 workers, 5.6s
 
 ## Gates and scope
 
-At `45148c2`, fresh FULL passed repository ESLint, class/source lint, E2E/app TypeScript, phase-doc and AI-handoff validation, privacy scan, production build, 18 runner contracts, all 3,751 Vitest, all 129 Playwright, and `git diff --check`. The reported run took 210.4s. A final fresh FULL run on the report-inclusive HEAD is required before merge review completion and will be recorded in the task result.
+At `45148c2`, fresh FULL passed repository ESLint, class/source lint, E2E/app TypeScript, phase-doc and AI-handoff validation, privacy scan, production build, 18 runner contracts, all 3,751 Vitest, all 129 Playwright, and `git diff --check`. The reported run took 210.4s. That historical run preceded the local master integration. The final report-inclusive integration HEAD was tested separately below.
 
-No production `src/**` file, private input, or generated local log is in the candidate range. The pre-existing unrelated untracked `Claude outputs/` directory was left untouched. No merge, push, tag or release was performed.
+No production `src/**` file, private input, or generated local log is in the Test DX candidate range against current local `master`. The product Voicing Loop fix entered through the explicit local-master integration described below. The pre-existing unrelated untracked `Claude outputs/` directory was left untouched. At the time of the final candidate Gate, no merge into local `master`, push, tag or release had been performed.
+
+## Final integration and fresh FULL gate
+
+- Final tested HEAD: `238de2149f5982fc834e195f7cbc03af0408640c` on `chore/test-dx-token-efficiency`.
+- Latest local `master` (`9f1c791`, containing Voicing Loop restart fix `049e256`) was merged into the Test DX branch as `238de21`. The Test DX changes and product fix were both retained without conflict. Local `master` was not changed by this integration.
+- Focused smoke after integration: 18/18 runner contracts, including changed-file selection, PASS cache invalidation and FULL cache bypass; the 320px Voicing Loop restart Playwright path passed 1/1.
+- A single fresh `npm run test:full` ran at the final tested HEAD. FULL sets `cacheEnabled("full")` to false, so no PASS cache was read or written for this gate. No test was skipped, marked fixme, retried into PASS, or left unrun.
+
+| Final fresh FULL component | Result |
+| --- | --- |
+| Repository ESLint; class/source-contract lint | PASS |
+| App and E2E TypeScript | PASS |
+| Phase-doc and AI-handoff validation | PASS |
+| Privacy/security scan; production build | PASS |
+| Runner contracts | 18/18 PASS |
+| Full Vitest | 3,752/3,752 PASS |
+| Repository-wide Playwright | 129/129 PASS |
+| `git diff --check` | PASS |
+| FAIL / unrun | 0 / 0 |
+
+FULL wall time was **211.4s**. Its raw local step logs totaled **23,944 B**. The captured terminal output for `npm run test:full` was **596 B** when UTF-8 encoded with LF-normalized line endings, including the npm banner and final summary. Complete logs are local and ignored under `.local-evaluation/test-logs/`.
+
+This documentation-only report commit records the tested integration HEAD without changing product, test, runner or configuration files. The one required FULL run remains attached to the tested code HEAD `238de21`; no repository-wide FULL rerun is claimed for the report-only commit. Push, tag and release remain outside this stage.
