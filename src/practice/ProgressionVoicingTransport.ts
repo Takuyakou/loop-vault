@@ -86,6 +86,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
   private clickSynth?: Tone.Synth;
   private generation = 0;
   private projectionEpoch = 0;
+  private scheduleEpoch = 0;
   private startingGeneration?: number;
   private ownsTransport = false;
   private running = false;
@@ -138,7 +139,6 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     const countInBeats = options.countInBars * (this.v2
       ? options.snapshot.practiceGroupBeats ?? options.snapshot.meter.numerator
       : options.snapshot.meter.numerator);
-    const loopTicks = Math.max(1, runtimeTickAtPracticeBeat(options.snapshot.lengthBeats, ppq));
     const startBeat = Math.max(0, options.startBeat ?? 0);
     this.ownsTransport = true;
     this.transport.stop();
@@ -151,62 +151,8 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.voicingSound = sound;
     this.clickSynth = createClickSynth();
 
-    if (this.v2) {
-      this.resetRollingCursor(startBeat);
-      this.scheduleIds.push(this.transport.scheduleRepeat((time) => {
-        if (!this.acceptsCallback(generation)) return;
-        this.refillRolling(time, ppq, generation);
-      }, "16n", 0));
-    } else {
-    options.snapshot.events.forEach((event, eventIndex) => {
-      for (const attackBeat of event.attackBeats ?? [event.startBeat]) {
-        const startTicks = runtimeTickAtPracticeBeat(countInBeats + attackBeat, ppq);
-        this.scheduleIds.push(this.transport.scheduleRepeat((time) => {
-          if (!this.acceptsCallback(generation)) return;
-          const absoluteBeat = this.absoluteBeatAtTime(time, ppq);
-          if (absoluteBeat + 1 / ppq < countInBeats) return;
-          this.applyPendingSessionUpdate(absoluteBeat);
-          this.attackVoicing(eventIndex, attackBeat - event.startBeat, time);
-        }, `${loopTicks}i`, `${startTicks}i`));
-      }
-    });
-
-    options.snapshot.spans.filter((span) => span.kind === "rest").forEach((span) => {
-      const startTicks = runtimeTickAtPracticeBeat(countInBeats + span.startBeat, ppq);
-      this.scheduleIds.push(this.transport.scheduleRepeat((time) => {
-        if (!this.acceptsCallback(generation)) return;
-        this.closeReferenceOutput(time);
-        this.releaseVoices(time);
-      }, `${loopTicks}i`, `${startTicks}i`));
-    });
-
-    }
-
-    this.scheduleIds.push(this.transport.scheduleRepeat((time) => {
-      if (!this.acceptsCallback(generation)) return;
-      const absoluteBeat = this.absoluteBeatAtTime(time, ppq);
-      const beatInBar = Math.floor(absoluteBeat) % (this.v2
-        ? options.snapshot.practiceGroupBeats ?? options.snapshot.meter.numerator
-        : options.snapshot.meter.numerator);
-      const applied = beatInBar === 0 && this.applyPendingSessionUpdate(absoluteBeat);
-      if (applied && !this.hasEventAttackAt(absoluteBeat)) {
-        this.attackCurrentVoicing(absoluteBeat, time);
-      }
-      if (this.metronomeEnabled) {
-        this.clickSynth?.triggerAttackRelease(beatInBar === 0 ? "C6" : "C5", "32n", time);
-      }
-    }, "4n", 0));
-
-    this.scheduleIds.push(this.transport.scheduleRepeat((time) => {
-      if (!this.acceptsCallback(generation)) return;
-      const absoluteBeat = this.absoluteBeatAtTime(time, ppq);
-      const projectionEpoch = this.projectionEpoch;
-      Tone.getDraw().schedule(() => {
-        if (projectionEpoch === this.projectionEpoch && this.acceptsCallback(generation)) {
-          options.onTransportBeat(absoluteBeat);
-        }
-      }, time);
-    }, "64n", 0));
+    if (this.v2) this.resetRollingCursor(startBeat);
+    this.scheduleRuntimeCallbacks(options, generation, ppq, countInBeats);
 
     this.running = true;
     this.paused = false;
@@ -265,6 +211,70 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     return true;
   }
 
+  private scheduleRuntimeCallbacks(
+    options: ProgressionVoicingTransportStartOptions, generation: number, ppq: number, countInBeats: number,
+  ): void {
+    const scheduleEpoch = this.scheduleEpoch;
+    const loopTicks = Math.max(1, runtimeTickAtPracticeBeat(options.snapshot.lengthBeats, ppq));
+    if (this.v2) {
+      this.scheduleIds.push(this.transport.scheduleRepeat((time) => {
+        if (scheduleEpoch !== this.scheduleEpoch || !this.acceptsCallback(generation)) return;
+        this.refillRolling(time, ppq, generation);
+      }, "16n", 0));
+    } else {
+    options.snapshot.events.forEach((event, eventIndex) => {
+      for (const attackBeat of event.attackBeats ?? [event.startBeat]) {
+        const startTicks = runtimeTickAtPracticeBeat(countInBeats + attackBeat, ppq);
+        this.scheduleIds.push(this.transport.scheduleRepeat((time) => {
+          if (scheduleEpoch !== this.scheduleEpoch || !this.acceptsCallback(generation)) return;
+          const absoluteBeat = this.absoluteBeatAtTime(time, ppq);
+          if (absoluteBeat + 1 / ppq < countInBeats) return;
+          this.applyPendingSessionUpdate(absoluteBeat);
+          this.attackVoicing(eventIndex, attackBeat - event.startBeat, time);
+        }, `${loopTicks}i`, `${startTicks}i`));
+      }
+    });
+
+    options.snapshot.spans.filter((span) => span.kind === "rest").forEach((span) => {
+      const startTicks = runtimeTickAtPracticeBeat(countInBeats + span.startBeat, ppq);
+      this.scheduleIds.push(this.transport.scheduleRepeat((time) => {
+        if (scheduleEpoch !== this.scheduleEpoch || !this.acceptsCallback(generation)) return;
+        this.closeReferenceOutput(time);
+        this.releaseVoices(time);
+      }, `${loopTicks}i`, `${startTicks}i`));
+    });
+
+    }
+
+    this.scheduleIds.push(this.transport.scheduleRepeat((time) => {
+      if (scheduleEpoch !== this.scheduleEpoch || !this.acceptsCallback(generation)) return;
+      const absoluteBeat = this.absoluteBeatAtTime(time, ppq);
+      const beatInBar = Math.floor(absoluteBeat) % (this.v2
+        ? options.snapshot.practiceGroupBeats ?? options.snapshot.meter.numerator
+        : options.snapshot.meter.numerator);
+      const applied = beatInBar === 0 && this.applyPendingSessionUpdate(absoluteBeat);
+      if (applied && !this.hasEventAttackAt(absoluteBeat)) {
+        this.attackCurrentVoicing(absoluteBeat, time);
+      }
+      if (this.metronomeEnabled) {
+        this.clickSynth?.triggerAttackRelease(beatInBar === 0 ? "C6" : "C5", "32n", time);
+      }
+    }, "4n", 0));
+
+    this.scheduleIds.push(this.transport.scheduleRepeat((time) => {
+      if (scheduleEpoch !== this.scheduleEpoch || !this.acceptsCallback(generation)) return;
+      const absoluteBeat = this.absoluteBeatAtTime(time, ppq);
+      const projectionEpoch = this.projectionEpoch;
+      Tone.getDraw().schedule(() => {
+        if (scheduleEpoch === this.scheduleEpoch && projectionEpoch === this.projectionEpoch
+          && this.acceptsCallback(generation)) {
+          options.onTransportBeat(absoluteBeat);
+        }
+      }, time);
+    }, "64n", 0));
+
+  }
+
   pause(): boolean {
     if (this.startingGeneration !== undefined && !this.ownsTransport) {
       this.generation += 1;
@@ -308,15 +318,19 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
       this.activeOptions = undefined;
       return false;
     }
-    if (!this.running || !this.ownsTransport) return false;
+    const options = this.activeOptions;
+    if (!this.running || !this.ownsTransport || !options) return false;
     const generation = this.generation;
     await Tone.start();
     if (generation !== this.generation || !this.running || !this.ownsTransport) return false;
     this.projectionEpoch += 1;
+    this.scheduleEpoch += 1;
     if (this.v2) this.clearPending();
     this.closeReferenceOutput(Tone.now(), true);
     this.releaseVoices();
     if (!this.paused) this.transport.pause();
+    for (const id of this.scheduleIds) this.transport.clear(id);
+    this.scheduleIds = [];
     this.transport.position = "0i";
     if (this.v2) {
       this.originToneBeat = this.countInBeats;
@@ -324,6 +338,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
       this.loopBaseCount = 0;
       this.resetRollingCursor(0);
     }
+    this.scheduleRuntimeCallbacks(options, generation, this.transport.PPQ, this.countInBeats);
     this.paused = false;
     this.transport.start("+0.05");
     return true;
@@ -534,6 +549,7 @@ export class ProgressionVoicingTransport implements ProgressionVoicingTransportP
     this.generation += 1;
     this.auditionGeneration += 1;
     this.projectionEpoch += 1;
+    this.scheduleEpoch += 1;
     this.startingGeneration = undefined;
     if (this.ownsTransport) {
       this.transport.stop();
