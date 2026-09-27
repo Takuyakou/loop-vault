@@ -66,7 +66,6 @@ async function renderShell({
     <AppShell
       view={view}
       setView={setView}
-      openCreate={vi.fn()}
       openLiveMidi={openLiveMidi}
       openVoicingLoop={openVoicingLoop}
       openSettings={openSettings}
@@ -118,7 +117,7 @@ describe("AppShell (P8.9-02)", () => {
     expect(container.textContent).not.toMatch(/WORKSPACE|SYSTEM/);
     expect(container.querySelector('[aria-current="page"]')?.getAttribute("data-nav")).toBe("vault");
     const create = [...container.querySelectorAll<HTMLButtonElement>("button")].find((button) => button.title === "+ Idea");
-    expect(create?.className).toContain("lv-button-neutral");
+    expect(create).toBeUndefined();
     await act(async () => container.querySelector<HTMLButtonElement>('[data-nav="settings"]')?.click());
     expect(openSettings).toHaveBeenCalledOnce();
     await act(async () => root.unmount());
@@ -166,8 +165,7 @@ describe("AppShell (P8.9-02)", () => {
       : child.getAttribute("aria-label") === "Preview sound" ? "sound"
         : child.getAttribute("data-testid") === "global-metronome" ? "metronome"
           : child.classList.contains("lv-volume-group") ? "volume"
-            : child.getAttribute("title") === "+ Idea" ? "idea"
-              : child.getAttribute("data-save-status") ? "save" : "?")).toEqual(["midi", "sound", "metronome", "volume", "idea", "save"]);
+              : child.getAttribute("data-save-status") ? "save" : "?")).toEqual(["midi", "sound", "metronome", "volume", "save"]);
     expect(container.querySelector('input[aria-label="Master volume"]')).toBeNull();
     const trigger = container.querySelector<HTMLButtonElement>("[data-volume-trigger]");
     expect(trigger?.getAttribute("aria-label")).toBe("Master volume 72%");

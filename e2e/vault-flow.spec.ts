@@ -34,7 +34,8 @@ test("空Vaultは次の行動を示し、長いタイトルでも横にはみ出
   await openApp(page);
   await openVault(page);
   await expect(page.getByText(/条件に合う進行はありません|No matching progressions/)).toBeVisible();
-  await expect(page.getByRole("button", { name: /Idea|New idea/ }).last()).toBeVisible();
+  await expect(page.getByRole("button", { name: "コード採集", exact: true }).last()).toBeVisible();
+  await expect(page.locator('button[title="+ Idea"]')).toHaveCount(0);
 
   await createSavedProgression(
     page,

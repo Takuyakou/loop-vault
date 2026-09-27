@@ -14,7 +14,6 @@ import {
   HomeIcon,
   ImportIcon,
   LiveMidiIcon,
-  PlusIcon,
   SettingsIcon,
   VaultIcon,
   VoicingLoopIcon,
@@ -27,7 +26,7 @@ import { GlobalMetronomeButton } from "./GlobalMetronomeButton";
 import { PlaybackLevelMeter } from "./PlaybackLevelMeter";
 import { TitleBar } from "./shell/TitleBar";
 import { loadSidebarCollapsed, saveSidebarCollapsed } from "./shell/shellPreferences";
-import { Button, Popover } from "./ui";
+import { Popover } from "./ui";
 
 export type AppView =
   | "home"
@@ -45,7 +44,6 @@ export const SIDEBAR_NARROW_BELOW_PX = 1200;
 interface AppShellProps {
   view: AppView;
   setView: (view: AppView) => void;
-  openCreate: () => void;
   openLiveMidi: () => void;
   openSettings: () => void;
   openVoicingLoop: () => void;
@@ -81,7 +79,6 @@ export function AppShell({
   masterVolume,
   onMasterVolumeChange,
   onSearch = () => undefined,
-  openCreate,
   openLiveMidi,
   openSettings,
   openVoicingLoop,
@@ -209,10 +206,6 @@ export function AppShell({
                   onStop={() => controller.stop()}
                 />
               </div>
-              <Button variant="neutral" size="sm" className="whitespace-nowrap" onClick={openCreate} title={`+ ${copy.nav.new}`}>
-                <PlusIcon size={16} />
-                <span className="hidden sm:inline">{copy.nav.new}</span>
-              </Button>
               <SaveStatusMark status={saveStatus} copy={copy} />
             </div>
           </header>

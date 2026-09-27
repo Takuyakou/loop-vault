@@ -85,9 +85,9 @@ describe("HomeView hierarchy", () => {
     expect(container.querySelector("h2")?.textContent).toBe("今日のLoop");
     expect(buttonTexts(container)).toEqual(expect.arrayContaining([
       appCopy.ja.home.startCapture,
-      appCopy.ja.home.newIdea,
       appCopy.ja.home.openVault,
     ]));
+    expect(buttonTexts(container)).not.toContain(appCopy.ja.home.newIdea);
   });
 
   it("renders the primary heading, summary, and empty actions in English", async () => {
@@ -96,7 +96,6 @@ describe("HomeView hierarchy", () => {
     expect(container.querySelector("h2")?.textContent).toBe("Today's Loop");
     expect(buttonTexts(container)).toEqual(expect.arrayContaining([
       appCopy.en.home.startCapture,
-      appCopy.en.home.newIdea,
       appCopy.en.home.openVault,
     ]));
   });
@@ -175,7 +174,6 @@ async function renderHome(
         showRomanNumerals={false}
         openDetail={vi.fn()}
         openCapture={vi.fn()}
-        openCreate={vi.fn()}
         openVault={vi.fn()}
         setToast={overrides.setToast ?? vi.fn()}
       />,

@@ -2,7 +2,6 @@ import { isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { readBoundedMidiPath } from "./storage/boundedMidiReader";
 import {
-  FormEvent,
   lazy,
   ReactNode,
   Suspense,
@@ -21,7 +20,6 @@ import { AppShell, type AppView } from "./components/AppShell";
 import { CaptureRenderBoundary } from "./components/CaptureRenderBoundary";
 import { SizeRecoveryNotice } from "./components/SizeRecoveryNotice";
 import { ConfirmDialog } from "./components/ConfirmDialog";
-import { Modal } from "./components/Modal";
 import { DetailView } from "./views/DetailView";
 import { HomeView } from "./views/HomeView";
 import { SettingsDialog } from "./views/SettingsDialog";
@@ -59,10 +57,9 @@ import { useAppNavigation } from "./hooks/useAppNavigation";
 import { useMasterVolume } from "./hooks/useMasterVolume";
 import { loadUseStandardTitleBar } from "./components/shell/shellPreferences";
 import { prepareMainWindowFrame } from "./components/shell/windowControls";
-import { statusLabel } from "./domain/displayLabels";
 import { parseMidi } from "./domain/midi";
 import { canChooseSource, setAllEligibleCardsToSource } from "./domain/voicing";
-import type { SavedProgressionBlock, SongIdea, Status } from "./domain/types";
+import type { SavedProgressionBlock, SongIdea } from "./domain/types";
 import {
   buildVoicingLoopVaultCandidates,
   buildProgressionVoicingPracticeHandoffFromVault,
@@ -112,7 +109,6 @@ import {
 } from "./liveMidi/windowProtocol";
 
 type View = AppView;
-const pipeline: Status[] = ["idea", "loop", "arrange", "mix", "done"];
 const DISABLED_PRACTICE_DATA: PracticeDataSnapshot = { status: "disabled", quarantine: [] };
 const EMPTY_VAULT_PICKER_CANDIDATES: readonly VaultPickerCandidateView[] = Object.freeze([]);
 const EMPTY_VAULT_SOURCE_BASSLINES: readonly VaultSourceBasslineCandidateView[] = Object.freeze([]);
@@ -225,7 +221,6 @@ function App() {
   const refreshBackups = useStore(defaultVaultStore, (state) => state.refreshBackups);
   const exportVault = useStore(defaultVaultStore, (state) => state.exportVault);
   const importVault = useStore(defaultVaultStore, (state) => state.importVault);
-  const createIdea = useStore(defaultVaultStore, (state) => state.createIdea);
   const createIdeaFromDraft = useStore(defaultVaultStore, (state) => state.createIdeaFromDraft);
   const createIdeaFromTextProgression = useStore(defaultVaultStore, (state) => state.createIdeaFromTextProgression);
   const updateIdea = useStore(defaultVaultStore, (state) => state.updateIdea);
@@ -270,7 +265,6 @@ function App() {
   const [practiceTarget, setPracticeTarget] = useState<{ ideaId: string; blockId: string }>();
   const [chordContextSnapshot, setChordContextSnapshot] = useState<VaultChordContextSnapshot>();
   const [voicingPracticeHandoff, setVoicingPracticeHandoff] = useState<ProgressionVoicingPracticeHandoff>();
-  const [isCreateOpen, setCreateOpen] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [notifications] = useState(createNotificationStore);
   // P8.9: existing setToast(message) callers keep their shape; messages now go to
@@ -585,18 +579,6 @@ function App() {
     return true;
   }
 
-  function handleCreate(title: string, status: Status) {
-    requestProgressionLeave(() => {
-      const id = createIdea(title, status);
-      if (!id) {
-        return;
-      }
-
-      setCreateOpen(false);
-      openDetail(id);
-    });
-  }
-
 async function analyzeMidiPath(path: string) {
     if (!("__TAURI_INTERNALS__" in window)) {
       setToast(copy.toast.desktopMidiOnly);
@@ -776,7 +758,6 @@ async function analyzeMidiPath(path: string) {
       <AppShell
         view={view}
         setView={navigateTo}
-        openCreate={() => setCreateOpen(true)}
         openLiveMidi={() => requestProgressionLeave(() => { void enterLiveMidiMode(); })}
         openVoicingLoop={openDirectVoicingLoop}
         openChordDojo={() => { navigateTo("practice"); setPracticeMode("chord-dojo"); }}
@@ -851,7 +832,6 @@ async function analyzeMidiPath(path: string) {
                 showRomanNumerals={settings.showRomanNumerals ?? true}
                 openDetail={openDetail}
                 openCapture={() => navigateTo("capture")}
-                openCreate={() => setCreateOpen(true)}
                 openVault={() => setView("library")}
                 setToast={setToast}
               />
@@ -862,7 +842,6 @@ async function analyzeMidiPath(path: string) {
                 storedIdeas={ideas}
                 openDetail={openDetail}
                 openProgression={openProgression}
-                openCreate={() => setCreateOpen(true)}
                 openCapture={() => navigateTo("capture")}
                 updateIdea={updateIdea}
                 updateProgressionBlock={updateProgressionBlock}
@@ -1121,7 +1100,7 @@ async function analyzeMidiPath(path: string) {
               />
             ) : null}
             {view === "detail" && !selectedIdea ? (
-              <EmptyState openCreate={() => setCreateOpen(true)} copy={copy} />
+              <EmptyState openCapture={() => navigateTo("capture")} copy={copy} />
             ) : null}
           </>
         ) : (
@@ -1136,14 +1115,6 @@ async function analyzeMidiPath(path: string) {
         )}
         </div>
         </main>
-      {isCreateOpen ? (
-        <CreateDialog
-          onCreate={handleCreate}
-          onClose={() => setCreateOpen(false)}
-          copy={copy}
-          language={language}
-        />
-      ) : null}
       {isSettingsOpen ? (
         <SettingsDialog
           ideas={visibleIdeas}
@@ -1279,73 +1250,6 @@ export function deleteIdeaForUndo({
 
 
 
-export function CreateDialog({
-  onCreate,
-  onClose,
-  copy,
-  language,
-}: {
-  onCreate: (title: string, status: Status) => void;
-  onClose: () => void;
-  copy: AppCopy;
-  language: AppLanguage;
-}) {
-  const [title, setTitle] = useState("");
-  const [status, setStatus] = useState<Status>("idea");
-  const titleRef = useRef<HTMLInputElement>(null);
-  const dirty = title.length > 0 || status !== "idea";
-
-  function submit(event: FormEvent) {
-    event.preventDefault();
-    onCreate(title, status);
-  }
-
-  return (
-    <Modal
-      ariaLabelledBy="create-idea-title"
-      initialFocusRef={titleRef}
-      onClose={onClose}
-      closeOnBackdrop={!dirty}
-      panelClassName="w-full max-w-md p-5"
-    >
-      <form
-        onSubmit={submit}
-        onKeyDown={(event) => {
-          if (
-            event.key === "Enter"
-            && (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229)
-          ) event.preventDefault();
-        }}
-      >
-        <div className="flex items-center justify-between">
-          <h2 id="create-idea-title" className="text-xl font-semibold">{copy.create.title}</h2>
-          <button type="button" className="rounded px-2 py-1 text-[var(--lv-text-muted)]" onClick={onClose}>{copy.common.close}</button>
-        </div>
-        <label htmlFor="create-idea-name" className="mt-4 block text-sm font-medium text-[var(--lv-text-secondary)]">
-          {copy.common.title}
-        </label>
-        <input
-          id="create-idea-name"
-          ref={titleRef}
-          name="idea-title"
-          autoComplete="off"
-          className={`${inputClass} mt-1`}
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-          placeholder={copy.common.title}
-        />
-        <label htmlFor="create-idea-status" className="mt-3 block text-sm font-medium text-[var(--lv-text-secondary)]">
-          {copy.library.status}
-        </label>
-        <select id="create-idea-status" name="idea-status" className={`${inputClass} mt-1`} value={status} onChange={(event) => setStatus(event.target.value as Status)}>
-          {pipeline.map((entry) => <option key={entry} value={entry}>{labelStatus(entry, language)}</option>)}
-        </select>
-        <button className="mt-4 w-full rounded bg-[var(--lv-accent)] px-3 py-2 font-semibold text-stone-950" type="submit">{copy.create.submit}</button>
-      </form>
-    </Modal>
-  );
-}
-
 function StartupState({
   loadStatus,
   recovery,
@@ -1399,12 +1303,12 @@ function QuarantineNotice({ count, copy, language }: { count: number; copy: AppC
   );
 }
 
-function EmptyState({ openCreate, copy }: { openCreate: () => void; copy: AppCopy }) {
+function EmptyState({ openCapture, copy }: { openCapture: () => void; copy: AppCopy }) {
   return (
     <div className="grid min-h-96 place-items-center py-10">
       <div className="max-w-md text-center">
         <h2 className="text-2xl font-semibold">{copy.startup.emptyTitle}</h2>
-        <button className="mt-5 rounded bg-[var(--lv-accent)] px-4 py-2 font-semibold text-stone-950" onClick={openCreate}>{copy.startup.emptyButton}</button>
+        <button className="mt-5 rounded bg-[var(--lv-accent)] px-4 py-2 font-semibold text-stone-950" onClick={openCapture}>{copy.library.capture}</button>
       </div>
     </div>
   );
@@ -1421,10 +1325,6 @@ function StatusPanel({ title, body }: { title: string; body: string }) {
 
 function Panel({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <section className={`border border-[var(--lv-border)] bg-[var(--lv-surface)] p-4 ${className}`}>{children}</section>;
-}
-
-function labelStatus(status: Status, language: AppLanguage): string {
-  return statusLabel(status, language);
 }
 
 function viewLabel(view: View, copy: AppCopy): string {
@@ -1447,8 +1347,6 @@ function shellTitle(view: View, practiceMode: PracticeWorkspaceMode): string {
   if (view === "history") return "履歴";
   return "ホーム";
 }
-
-const inputClass = "w-full rounded border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] px-3 py-2 text-sm text-[var(--lv-text)] outline-none focus:border-teal-400";
 
 function fileNameFromPath(path: string): string {
   const normalized = path.replace(/\\/g, "/");

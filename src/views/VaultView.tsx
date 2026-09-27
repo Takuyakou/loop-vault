@@ -41,13 +41,12 @@ const progressionVirtualizationThreshold = 50;
 const progressionPreviewChordLimit = 8;
 
 export function VaultView({
-  ideas, storedIdeas = ideas, openDetail, openProgression, openCreate, openCapture, updateProgressionBlock, setToast, copy, language, showRomanNumerals,
+  ideas, storedIdeas = ideas, openDetail, openProgression, openCapture, updateProgressionBlock, setToast, copy, language, showRomanNumerals,
 }: {
   ideas: SongIdea[];
   storedIdeas?: SongIdea[];
   openDetail: (id: string) => void;
   openProgression?: (ideaId: string, blockId: string) => void;
-  openCreate: () => void;
   openCapture: () => void;
   updateIdea: (id: string, changes: Partial<SongIdea>) => boolean | "pending";
   updateProgressionBlock: (ideaId: string, blockId: string, changes: Partial<SavedProgressionBlock>) => boolean | "pending";
@@ -336,8 +335,8 @@ export function VaultView({
             onCopy={(entry) => void copyProgression(entry.block)}
             onPreviewError={(error) => setToast(error instanceof Error ? error.message : copy.toast.chordPreviewFailed)}
           />
-        ) : <EmptyState copy={copy} openCreate={openCreate} />}
-        {mode === "library" && visible.length === 0 ? <EmptyState copy={copy} openCreate={openCreate} /> : null}
+        ) : <EmptyState copy={copy} openCapture={openCapture} />}
+        {mode === "library" && visible.length === 0 ? <EmptyState copy={copy} openCapture={openCapture} /> : null}
         {libraryDrawerOpen ? (
           <div className="fixed inset-0 z-50 lg:hidden">
             <button
@@ -581,14 +580,14 @@ function IdeaList({ ideas, openDetail }: { ideas: SongIdea[]; openDetail: (id: s
   return <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-4">{ideas.map((idea) => <button key={idea.id} className="min-h-24 border border-[var(--lv-border)] bg-[var(--lv-surface)] p-3 text-left hover:border-[var(--lv-accent)]" onClick={() => openDetail(idea.id)}><p className="truncate font-semibold">{idea.title}</p><p className="mt-2 text-xs text-[var(--lv-text-muted)]">{idea.bpm ?? "-"} BPM · {idea.key ?? "Key -"}</p></button>)}</div>;
 }
 
-function EmptyState({ copy, openCreate }: { copy: AppCopy; openCreate: () => void }) {
+function EmptyState({ copy, openCapture }: { copy: AppCopy; openCapture: () => void }) {
   return (
     <UiEmptyState
       className="mt-4"
       icon={<SearchX aria-hidden="true" size={20} />}
       title={copy.library.noMatchingProgressions}
       description={copy.library.searchPlaceholder}
-      action={<Button onClick={openCreate}>{copy.library.newIdea}</Button>}
+      action={<Button onClick={openCapture}>{copy.library.capture}</Button>}
     />
   );
 }

@@ -120,8 +120,8 @@ test.describe("Phase 5.13 visual evidence", () => {
     await expect(page).toHaveScreenshot("history.png", { fullPage: true });
 
 
-    await page.getByRole("button", { name: "Idea", exact: true }).click();
-    await expect(page.getByRole("dialog", { name: /新しいIdea|Create idea/i })).toBeVisible();
+    await page.getByRole("button", { name: /設定|Settings/ }).first().click();
+    await expect(page.getByRole("dialog", { name: /設定|Settings/ })).toBeVisible();
     await evidence(page, testInfo, "dialog");
     await page.keyboard.press("Escape");
 

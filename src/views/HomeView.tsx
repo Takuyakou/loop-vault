@@ -32,7 +32,6 @@ export function HomeView({
   showRomanNumerals,
   openDetail,
   openCapture,
-  openCreate,
   openVault,
   setToast,
 }: {
@@ -43,7 +42,6 @@ export function HomeView({
   showRomanNumerals: boolean;
   openDetail: (id: string) => void;
   openCapture: () => void;
-  openCreate: () => void;
   openVault: () => void;
   setToast: (toast: string) => void;
 }) {
@@ -141,7 +139,6 @@ export function HomeView({
             <p className="text-sm leading-6 text-[var(--lv-text-secondary)]">{copy.home.noFocus}</p>
             <div className="mt-5 flex flex-wrap gap-2">
               <Button variant="primary" onClick={openCapture}>{copy.home.startCapture}</Button>
-              <Button variant="ghost" onClick={openCreate}>{copy.home.newIdea}</Button>
               <Button variant="ghost" onClick={openVault}>{copy.home.openVault}</Button>
             </div>
           </div>

@@ -32,21 +32,23 @@ test("スキップリンク、主ナビゲーション、設定をキーボー�
 
 test("ダイアログはフォーカスを閉じ込め、Escape後に起点へ戻す", async ({ page }) => {
   await openApp(page);
-  const ideaButton = page.getByRole("button", { name: "Idea", exact: true });
-  await ideaButton.focus();
+  // P8.9-03: the empty-Idea dialog is gone; the Settings dialog carries the focus-trap check.
+  const settings = page.getByRole("button", { name: /設定|Settings/ }).first();
+  await settings.focus();
   await page.keyboard.press("Enter");
 
-  const dialog = page.getByRole("dialog", { name: /新しいIdea|Create idea/i });
+  const dialog = page.getByRole("dialog", { name: /設定|Settings/ });
   await expect(dialog).toBeVisible();
-  const title = dialog.locator('input[name="idea-title"]');
-  await expect(title).toBeFocused();
+  const close = dialog.getByRole("button", { name: /閉じる|Close/ });
+  await expect(close).toBeFocused();
   await page.keyboard.press("Shift+Tab");
-  await expect(dialog.getByRole("button", { name: /閉じる|Close/ })).toBeFocused();
-  await page.keyboard.press("Shift+Tab");
-  await expect(dialog.getByRole("button", { name: /作成|Create/ })).toBeFocused();
+  await expect(dialog.locator(":focus")).toHaveCount(1);
+  await expect(close).not.toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(close).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
-  await expect(ideaButton).toBeFocused();
+  await expect(settings).toBeFocused();
 });
 
 test("Voice選択、プリセット、Solo、解析、候補選択をキーボード操作できる", async ({ page }) => {
