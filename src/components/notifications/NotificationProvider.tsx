@@ -11,6 +11,7 @@ import {
   type RefObject,
 } from "react";
 import type { UndoableAction } from "../../hooks/useUndoQueue";
+import { useReservedBottomSpace } from "./bottomReservations";
 import { CloseIcon, ErrorIcon, InfoIcon, SuccessIcon, UndoIcon, WarningIcon, type IconComponent } from "../icons";
 import type { NotificationItem, NotificationStore, NotificationTone, NotifyInput } from "./notificationStore";
 
@@ -58,6 +59,7 @@ function NotificationViewport({ closeLabel, store, undo }: { store: Notification
   const undoActions = undo?.actions ?? [];
   const announcement = useUndoFocusAndAnnouncement(undoActions, undo?.fallbackFocusRef);
   const buttonRefs = announcement.buttonRefs;
+  const reservedBottom = useReservedBottomSpace();
 
   return (
     <>
@@ -73,7 +75,7 @@ function NotificationViewport({ closeLabel, store, undo }: { store: Notification
         data-notification-stack
         className="lv-toast-stack overflow-y-auto overscroll-contain"
         style={{
-          bottom: "calc(var(--lv-toast-offset-bottom) + var(--lv-sticky-inspector-height, 0px) + env(safe-area-inset-bottom, 0px))",
+          bottom: `calc(var(--lv-toast-offset-bottom) + ${reservedBottom}px + var(--lv-sticky-inspector-height, 0px) + env(safe-area-inset-bottom, 0px))`,
           maxHeight: "calc(100vh - var(--lv-sticky-inspector-height, 0px) - env(safe-area-inset-bottom, 0px) - 2rem)",
         }}
       >

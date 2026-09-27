@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useReserveBottomSpace } from "../notifications";
 import { playbackController, type PlaybackController } from "../../audio/playbackController";
 import { standardTextPlaybackNotes } from "../../domain/standardTextPlayback";
 import { useTextTransport } from "./useTextTransport";
@@ -91,6 +92,8 @@ export function TextProgressionCapturePanel({
   const selectedSound = previewSound ?? globalSound;
   const [input, setInput] = useState("");
   const editorSelection = useRef({ start: 0, end: 0 });
+  const statusBarRef = useRef<HTMLElement>(null);
+  useReserveBottomSpace(statusBarRef);
   const [dialect, setDialect] = useState<"standard" | "extended">("standard");
   const [keyInput, setKeyInput] = useState("");
   const [confirmedKey, setConfirmedKey] = useState<string>();
@@ -435,7 +438,7 @@ export function TextProgressionCapturePanel({
 
       <TextDiagnostics diagnostics={visibleDiagnostics} language={language} />
 
-      <footer className="lv-text-intake-savebar lv-text-status-bar flex items-center gap-3 border-t border-[var(--lv-border)] px-2 text-xs">
+      <footer ref={statusBarRef} className="lv-text-intake-savebar lv-text-status-bar flex items-center gap-3 border-t border-[var(--lv-border)] px-2 text-xs">
         <span className="min-w-0 font-mono text-[var(--lv-text-muted)]" data-testid="text-progression-capability-summary" data-text-status-summary>
           {textCaptureSummary(statusModel, language)}
         </span>

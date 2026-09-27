@@ -54,7 +54,7 @@ import { LiveMidiMiniMode } from "./components/LiveMidiMiniMode";
 import { PreviewSoundProvider } from "./components/PreviewSoundProvider";
 import { MetronomeProvider } from "./components/MetronomeProvider";
 import { LiveMidiImportDialog, type LiveMidiImportRequest } from "./components/LiveMidiImportDialog";
-import { createNotificationStore, NotificationProvider } from "./components/notifications";
+import { createNotificationStore, NotificationProvider, useReserveBottomSpace } from "./components/notifications";
 import { useAppNavigation } from "./hooks/useAppNavigation";
 import { useMasterVolume } from "./hooks/useMasterVolume";
 import { loadUseStandardTitleBar } from "./components/shell/shellPreferences";
@@ -286,6 +286,8 @@ function App() {
   const [pendingLiveMidiHistory, setPendingLiveMidiHistory] = useState<LiveChordHistoryEntry[]>();
   const [startupRestoreName, setStartupRestoreName] = useState<string>();
   const undoFallbackFocusRef = useRef<HTMLHeadingElement>(null);
+  const webLiveMidiPreviewRef = useRef<HTMLDivElement>(null);
+  useReserveBottomSpace(webLiveMidiPreviewRef, webLiveMidiPreviewOpen);
   const mainContentRef = useRef<HTMLElement>(null);
   const previousViewRef = useRef(view);
   const miniWindowControllerRef = useRef<MiniWindowController | undefined>(undefined);
@@ -1217,7 +1219,7 @@ async function analyzeMidiPath(path: string) {
         tone="danger"
       />
       {webLiveMidiPreviewOpen ? (
-        <div className="lv-web-live-midi-preview fixed bottom-4 right-4 z-50 h-[260px] w-[420px] max-w-[calc(100vw-2rem)] border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] shadow-xl">
+        <div ref={webLiveMidiPreviewRef} className="fixed bottom-4 right-4 z-50 h-[260px] w-[420px] max-w-[calc(100vw-2rem)] border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] shadow-xl">
           <LiveMidiMiniMode
             copy={copy.liveMidi}
             onShowMain={() => { void leaveLiveMidiMode(); }}
