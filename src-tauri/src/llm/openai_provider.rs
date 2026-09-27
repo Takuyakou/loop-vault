@@ -1,6 +1,6 @@
 use super::{
     errors::LlmError,
-    local_provider::advisor_response_json_schema,
+    local_provider::{advisor_response_json_schema, advisor_system_prompt},
     provider::LlmProvider,
     retry::with_timeout_and_cancellation,
     types::{
@@ -151,7 +151,7 @@ fn openai_request_body(model: &str, request: &AdvisorRequest) -> Result<Value, L
     Ok(json!({
         "model": model,
         "store": false,
-        "instructions": "You are Loop Vault Progression Advisor. Return exactly three distinct, complete 8-bar 4/4 proposals. Follow the supplied strategy and taxonomy constraints.",
+        "instructions": advisor_system_prompt(),
         "input": input,
         "text": {
             "format": {
@@ -262,6 +262,7 @@ mod tests {
     fn requests_strict_structured_output_without_storage() {
         let body = openai_request_body("gpt-test", &request()).unwrap();
         assert_eq!(body["store"], false);
+        assert_eq!(body["instructions"], advisor_system_prompt());
         assert_eq!(body["text"]["format"]["type"], "json_schema");
         assert_eq!(body["text"]["format"]["strict"], true);
         assert_eq!(
