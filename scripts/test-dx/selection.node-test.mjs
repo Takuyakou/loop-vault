@@ -47,6 +47,22 @@ test("P8.9 data-retention round trip is a permanent persistence and Vault contra
   }
 });
 
+test("Vault parse/serialize and the retention test belong to persistence, not broad", () => {
+  for (const file of ["src/domain/repository.ts", "src/domain/schema.ts", "src/domain/repositoryBudget.test.ts", "src/domain/p89DataRetention.test.ts"]) {
+    const result = select([file], "feature");
+    assert.deepEqual(result.areas, ["persistence"], file);
+    assert.equal(result.broad, false, file);
+    assert.ok(result.vitest.includes("src/domain/p89DataRetention.test.ts"), file);
+  }
+});
+
+test("P8.9 shared component folders stay shared-ui (broad)", () => {
+  for (const file of ["src/components/icons/index.tsx", "src/components/notifications/NotificationProvider.tsx"]) {
+    assert.deepEqual(ownerForFile(file).areas, ["shared-ui"], file);
+    assert.equal(ownerForFile(file).broad, true, file);
+  }
+});
+
 test("P8.9 screenshot tool is evidence, not a product contract", () => {
   const owner = ownerForFile("scripts/p89/screens.mjs");
   assert.deepEqual(owner.areas, []);
