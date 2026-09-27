@@ -16,8 +16,6 @@ import { usePreviewSound } from "../components/PreviewSoundProvider";
 import { usePlaybackState } from "../hooks/usePlaybackState";
 import { ProgressionTagsEditor } from "../components/ProgressionTagsEditor";
 import { PracticeProgressBadge } from "../components/practice/PracticeProgressBadge";
-import { ProgressionAdvisorButton } from "../components/progression-advisor/ProgressionAdvisorButton";
-import { ProgressionAdvisorDrawer } from "../components/progression-advisor/ProgressionAdvisorDrawer";
 import { ChordInspector } from "../components/progression-editing/ChordInspector";
 import { EditableProgressionGrid } from "../components/progression-editing/EditableProgressionGrid";
 import { ProgressionEditorToolbar } from "../components/progression-editing/ProgressionEditorToolbar";
@@ -56,18 +54,15 @@ import {
   normalizeNotes,
 } from "../domain/midi";
 import type { MidiSongData } from "../domain/midi/types";
-import { degreeSequence } from "../domain/harmony/degrees";
 import {
   buildProgressionMidi,
   ProgressionMidiExportError,
 } from "../domain/midiExport";
-import { buildProgressionIndex } from "../domain/progressionClassification/mod";
 import { formatProgressionText } from "../domain/progressionText";
 import type { SavedProgressionBlock, SongIdea } from "../domain/types";
 import { sourceBasslineNoteFacts } from "../domain/sourceBassline";
 import { buildVaultChordContextSnapshot, selectVaultChordContextSections, type VaultChordContextSnapshot } from "../features/bass-practice/domain";
 import { extractVoicing, resolveVoicingForUse, setAllEligibleCardsToSource } from "../domain/voicing";
-import { advisorSuggestionToCandidate, appendAdvisorSuggestionToEditableProgression, selectAdvisorReferenceContexts } from "../domain/progressionAdvisor";
 import { appendAnalysisFeedback } from "../storage/analysisFeedbackStorage";
 import { isProgressionMidiExportEnabled } from "../midiExport/featureFlag";
 import { TEXT_PROGRESSION_ANALYZER_VERSION } from "../domain/textProgression";
@@ -96,12 +91,6 @@ interface ProgressionDetailViewProps {
     changes: Partial<SavedProgressionBlock>,
   ) => boolean | "pending";
   duplicateProgressionBlock: (ideaId: string, blockId: string) => string | undefined;
-  appendBlockToIdea?: (
-    ideaId: string,
-    block: ReturnType<typeof advisorSuggestionToCandidate>,
-    analysis?: undefined,
-    metadata?: { userEdited?: boolean; userVerified?: boolean },
-  ) => boolean;
   openProgression: (ideaId: string, blockId: string) => void;
   openIdea: (ideaId: string) => void;
   openVault: () => void;
@@ -125,7 +114,6 @@ export function ProgressionDetailView({
   block,
   updateProgressionBlock,
   duplicateProgressionBlock,
-  appendBlockToIdea,
   openProgression,
   openIdea,
   openVault,
@@ -146,7 +134,6 @@ export function ProgressionDetailView({
   const meter = beatsPerBar(block.timeSignature);
   const [editable, setEditable] = useState(() => createEditableProgression(block, meter));
   const { sound: previewSound, setSound: setPreviewSound } = usePreviewSound();
-  const [advisorOpen, setAdvisorOpen] = useState(false);
   const [reextracting, setReextracting] = useState(false);
   const [defaultMidiExportEnabled] = useState(
     () => isProgressionMidiExportEnabled(),
@@ -192,15 +179,6 @@ export function ProgressionDetailView({
   const selectedIndex = selectedEditableSlotIndex(editable);
   const keySignature = block.detectedKey ?? idea.key;
   const authorReferenceIndex = useMemo(() => buildAuthorReferenceIndex(ideas), [ideas]);
-  const progressionIndex = useMemo(() => buildProgressionIndex(ideas), [ideas]);
-  const currentIndexEntry = progressionIndex.find((entry) => entry.ideaId === idea.id && entry.blockId === block.id);
-  const advisorReferenceContext = useMemo(() => selectAdvisorReferenceContexts({
-    index: progressionIndex,
-    currentBlockId: block.id,
-    key: keySignature,
-    tagIds: currentIndexEntry?.effectiveTags ?? block.tags,
-    romanNumerals: degreeSequence(editingBlock),
-  }), [block.id, block.tags, currentIndexEntry?.effectiveTags, editingBlock, keySignature, progressionIndex]);
   const selectedSlot = selectedIndex === undefined
     ? undefined
     : editable.slots[selectedIndex];
@@ -577,7 +555,6 @@ export function ProgressionDetailView({
               </Button>
             </div>
           ) : null}
-          <ProgressionAdvisorButton language={language} onClick={() => setAdvisorOpen(true)} />
           <Button
             type="button"
             variant="ghost"
@@ -606,29 +583,6 @@ export function ProgressionDetailView({
           </IconButton>
         </div>
       </div>
-      <ProgressionAdvisorDrawer
-        open={advisorOpen}
-        block={editingBlock}
-        title={idea.title}
-        keySignature={keySignature}
-        bpm={block.bpm ?? idea.bpm}
-        language={language}
-        onClose={() => setAdvisorOpen(false)}
-        onAppend={(suggestion) => setEditable((current) => appendAdvisorSuggestionToEditableProgression(current, suggestion))}
-        onSave={(suggestion) => {
-          const saved = appendBlockToIdea?.(idea.id, advisorSuggestionToCandidate(suggestion), undefined, { userEdited: true, userVerified: false }) ?? false;
-          if (!saved) setToast(text.saveFailed);
-          return saved;
-        }}
-        onApplyTags={(tagIds) => {
-          const updated = updateProgressionBlock(idea.id, block.id, { tags: [...new Set([...editingBlock.tags, ...tagIds])] });
-          if (updated === false) setToast(text.saveFailed);
-          return updated === true;
-        }}
-        setToast={setToast}
-        referenceContext={advisorReferenceContext}
-        derivedTagIds={currentIndexEntry?.derivedTags.map((tag) => tag.tagId)}
-      />
 
       <div className="flex flex-wrap items-center gap-3 border-b border-[var(--lv-border)] py-4">
         <PlayToggle

@@ -95,6 +95,12 @@ describe("SettingsDialog sections", () => {
     expect(categoryNav?.querySelector('a[href="#settings-audio-midi"]')).not.toBeNull();
     expect(categoryNav?.querySelector('a[href="#settings-analysis"]')).not.toBeNull();
     expect(categoryNav?.querySelector('a[href="#settings-about"]')).not.toBeNull();
+    // P8.9-03: the AI settings are gone; only removing a stored API key stays, disabled without a key.
+    expect(categoryNav?.querySelector('a[href="#settings-ai"]')).toBeNull();
+    expect(dialogs()[0]?.querySelector("#settings-ai")).toBeNull();
+    const removeKey = findButton("保存した API キーを削除", dialogs()[0]);
+    expect(removeKey?.closest("#settings-analysis-content")).not.toBeNull();
+    expect(removeKey?.disabled).toBe(true);
     await mounted.unmount();
   });
 

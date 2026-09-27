@@ -913,7 +913,6 @@ function App() {
                 block={progressionBlock}
                 updateProgressionBlock={updateProgressionBlock}
                 duplicateProgressionBlock={duplicateProgressionBlock}
-                appendBlockToIdea={appendBlockToIdea}
                 openProgression={openProgression}
                 openIdea={openDetail}
                 openVault={() => setView("library")}
