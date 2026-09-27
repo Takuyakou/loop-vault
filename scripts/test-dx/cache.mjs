@@ -8,7 +8,7 @@ const configFiles = [
   "package.json", "package-lock.json", "node_modules/.package-lock.json", "tsconfig.json", "tsconfig.e2e.json",
   "playwright.config.ts", "vite.config.ts", "vite.config.js",
   "scripts/run-playwright-visual-tests.mjs", "scripts/playwright-web-server.js",
-  "scripts/test-dx/selection.mjs", "scripts/test-dx/run.mjs", "scripts/test-dx/cache.mjs",
+  "scripts/test-dx/selection.mjs", "scripts/test-dx/run.mjs", "scripts/test-dx/cache.mjs", "scripts/test-dx/reporting.mjs",
 ];
 
 export function sha256(value) {

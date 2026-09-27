@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { performance } from "node:perf_hooks";
 import { selectForFiles } from "./selection.mjs";
 import { cacheEnabled, cacheKey, fingerprint, readPass, writePass } from "./cache.mjs";
+import { diagnostics, summaryCounts } from "./reporting.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 process.chdir(root);
@@ -22,6 +23,7 @@ const useCache = cacheEnabled(level, options.includes("--fresh"));
 const explicitFiles = options.filter((arg) => !arg.startsWith("--"));
 const env = { ...process.env, NO_COLOR: "1" };
 delete env.FORCE_COLOR;
+delete env.LV_DX_PRECHECKED_TSC;
 let rawBytes = 0;
 const started = performance.now();
 const combinedLog = join(logRoot, `${session}-${level}.log`);
@@ -41,28 +43,6 @@ function changedFiles() {
   const untracked = git(["ls-files", "--others", "--exclude-standard", "-z"]).split("\0")
     .filter((path) => /^(src|e2e|scripts)\//.test(path) || /^(package(-lock)?\.json|.*config.*\.[cm]?[jt]s)$/.test(path));
   return [...new Set([...tracked, ...untracked].filter(Boolean))].sort();
-}
-
-function summaryCounts(output, kind) {
-  if (kind === "vitest") {
-    const match = output.match(/Tests\s+(\d+) passed \((\d+)\)/);
-    return match ? `${match[1]}/${match[2]}` : "PASS";
-  }
-  if (kind === "browser") {
-    const match = output.match(/\b(\d+) passed \(/);
-    return match ? `${match[1]}/${match[1]}` : "PASS";
-  }
-  if (kind === "node") {
-    const match = output.match(/[ℹ#]\s+pass\s+(\d+)/);
-    return match ? `${match[1]}/${match[1]}` : "PASS";
-  }
-  return "";
-}
-
-function diagnostics(output) {
-  const lines = output.split(/\r?\n/);
-  const relevant = lines.filter((line) => /FAIL |failed|Error:|AssertionError|Expected:|Received:|Timeout:|test-failed-|trace\.zip|\s+at .*:\d+/i.test(line));
-  return (relevant.length ? relevant.slice(-12) : lines.slice(-12)).join("\n");
 }
 
 function runStep(label, args, kind = "static", extraEnv = {}) {
@@ -154,6 +134,12 @@ function runFull() {
   nodeStep("Privacy scan", "scripts/security/trackedSecurityScan.mjs");
   nodeStep("App TypeScript", "node_modules/typescript/bin/tsc");
   nodeStep("Production build", "node_modules/vite/bin/vite.js", ["build"]);
+  nodeStep("Runner contracts", "--test", [
+    "scripts/test-dx/selection.node-test.mjs",
+    "scripts/test-dx/cache.node-test.mjs",
+    "scripts/test-dx/reporting.node-test.mjs",
+    "scripts/run-playwright-visual-tests.node-test.mjs",
+  ], "node");
   nodeStep("Vitest full", "node_modules/vitest/vitest.mjs", [
     "run", "--maxWorkers=4", "--testTimeout=30000", "--reporter=dot",
   ], "vitest");
