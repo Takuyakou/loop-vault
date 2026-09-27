@@ -57,7 +57,7 @@ test("Vault parse/serialize and the retention test belong to persistence, not br
 });
 
 test("P8.9 shared component folders stay shared-ui (broad)", () => {
-  for (const file of ["src/components/icons/index.tsx", "src/components/notifications/NotificationProvider.tsx"]) {
+  for (const file of ["src/components/icons/index.tsx", "src/components/notifications/NotificationProvider.tsx", "src/components/shell/TitleBar.tsx"]) {
     assert.deepEqual(ownerForFile(file).areas, ["shared-ui"], file);
     assert.equal(ownerForFile(file).broad, true, file);
   }

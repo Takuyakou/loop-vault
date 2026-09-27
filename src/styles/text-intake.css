@@ -154,12 +154,6 @@
   .lv-text-status-bar { flex-wrap: wrap; padding-block: 6px; }
 }
 
-/* Keep the Capture title/tabs together and preserve every global action at compact desktop widths. */
-@media (max-width: 1300px) {
-  .lv-app-topbar { flex-wrap: wrap; padding-block: 6px; row-gap: 4px; }
-  .lv-app-topbar-leading { width: 100%; flex: 1 0 100%; }
-  .lv-app-topbar-actions { width: 100%; flex: 1 0 100%; }
-}
 .lv-text-key-picker summary::-webkit-details-marker { display: none; }
 .lv-text-key-menu { white-space: normal; }
 

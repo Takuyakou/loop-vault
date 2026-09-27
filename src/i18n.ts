@@ -139,6 +139,7 @@ export const appCopy = {
       saving: "保存中…",
       unsaved: "未保存",
       saved: "保存済み",
+      error: "保存できません",
     },
     liveMidi: {
       back: "戻る",
@@ -715,6 +716,7 @@ export const appCopy = {
       saving: "Saving…",
       unsaved: "Unsaved",
       saved: "Saved",
+      error: "Save failed",
     },
     liveMidi: {
       back: "Back",
