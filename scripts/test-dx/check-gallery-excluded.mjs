@@ -1,4 +1,4 @@
-/* global process, console */
+/* global process, console, URL */
 // P8.9-02: the dev-only component gallery must never reach the production build.
 // The marker string lives once, in the gallery source (P89_GALLERY_MARKER); this
 // check fails if that string appears anywhere in dist/.
