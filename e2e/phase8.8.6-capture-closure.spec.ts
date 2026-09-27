@@ -1,11 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers/app";
-
-async function openText(page: Page) {
-  await openApp(page);
-  await page.locator("nav").getByRole("button", { name: /コード採集|Capture/ }).click();
-  await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
-}
+import { openTextCapture } from "./helpers/app";
 
 async function choose(page: Page, dialect: "standard" | "extended") {
   await page.getByTestId(dialect === "standard" ? "text-mode-standard" : "text-mode-extended").click();
@@ -37,7 +31,7 @@ function bounds(page: Page, selector: string) {
 }
 
 test("P8.8.6 shared status keeps empty, valid, invalid, and explicit BPM parity", async ({ page }) => {
-  await openText(page);
+  await openTextCapture(page);
   const emptySummary = "0小節 · 注記0 · 4/4 · BPM — · キー 未確定";
   for (const dialect of ["standard", "extended"] as const) {
     const capture = await choose(page, dialect);
@@ -64,7 +58,7 @@ test("P8.8.6 shared status keeps empty, valid, invalid, and explicit BPM parity"
 
 test("P8.8.6 shared shell and old Standard UI negative assertions", async ({ page }) => {
   test.setTimeout(90_000);
-  await openText(page);
+  await openTextCapture(page);
   for (const [width, height] of [[1920, 1080], [1600, 900], [1440, 900], [1366, 768]]) {
     await page.setViewportSize({ width, height });
     const common = ["[data-testid='text-capture-toolbar']", ".lv-text-intake-grid",
@@ -93,7 +87,7 @@ test("P8.8.6 shared shell and old Standard UI negative assertions", async ({ pag
 
 test("P8.8.6 Capture has zero outer overflow for empty and short input at desktop viewports", async ({ page }) => {
   test.setTimeout(90_000);
-  await openText(page);
+  await openTextCapture(page);
   for (const [width, height] of [[1920, 1080], [1600, 900], [1440, 900], [1366, 768]]) {
     await page.setViewportSize({ width, height });
     for (const dialect of ["standard", "extended"] as const) {
@@ -110,7 +104,7 @@ test("P8.8.6 Capture has zero outer overflow for empty and short input at deskto
 test("P8.8.6 70/150/200-bar Extended charts scroll inside Preview and Editor", async ({ page }) => {
   test.setTimeout(90_000);
   await page.setViewportSize({ width: 1366, height: 768 });
-  await openText(page);
+  await openTextCapture(page);
   const capture = await choose(page, "extended");
   for (const barCount of [70, 150, 200]) {
     await capture.getByTestId("extended-text-input").fill(Array.from({ length: barCount }, () => "| C Dm F G |").join("\n"));
@@ -127,7 +121,7 @@ test("P8.8.6 70/150/200-bar Extended charts scroll inside Preview and Editor", a
 });
 test("P8.8.6 long charts keep outer shell fixed at every required viewport", async ({ page }) => {
   test.setTimeout(120_000);
-  await openText(page);
+  await openTextCapture(page);
   const capture = await choose(page, "extended");
   for (const [width, height] of [[1920, 1080], [1600, 900], [1440, 900], [1366, 768]]) {
     await page.setViewportSize({ width, height });

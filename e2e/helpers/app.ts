@@ -11,6 +11,15 @@ export async function openCapture(page: Page): Promise<void> {
   await expect(page.locator("[data-capture-midi-drop-zone]")).toBeVisible();
 }
 
+export async function openTextCapture(page: Page) {
+  await openApp(page);
+  await page.locator("nav").getByRole("button", { name: /コード採集|Capture/ }).click();
+  await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
+  const capture = page.getByTestId("text-progression-capture");
+  await expect(capture).toBeVisible();
+  return capture;
+}
+
 export async function dropMidi(
   page: Page,
   bytes: Uint8Array,

@@ -1,17 +1,10 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
-import { assertNoHorizontalOverflow, capturePageErrors, openApp } from "./helpers/app";
-
-async function openText(page: Parameters<typeof openApp>[0]) {
-  await openApp(page);
-  await page.locator("nav").getByRole("button", { name: /コード採集|Capture/ }).click();
-  await page.getByTestId("capture-input-mode").getByRole("button", { name: /テキスト|Text/ }).click();
-  return page.getByTestId("text-progression-capture");
-}
+import { assertNoHorizontalOverflow, capturePageErrors, openTextCapture } from "./helpers/app";
 
 test("P8.8.4 Standard score seeks exact attacks and supports Pause/Resume/Stop anchor", async ({ page }) => {
   const errors = await capturePageErrors(page);
-  const capture = await openText(page);
+  const capture = await openTextCapture(page);
   const input = capture.getByTestId("text-progression-input");
   await input.fill("| C Dm F G |");
   const bands = capture.getByTestId("standard-text-preview").getByTestId("text-preview-band");
@@ -48,7 +41,7 @@ test("P8.8.4 Standard score seeks exact attacks and supports Pause/Resume/Stop a
 });
 
 test("P8.8.4 Standard primary Vault save retains the advanced Draft path", async ({ page }) => {
-  const capture = await openText(page);
+  const capture = await openTextCapture(page);
   await capture.getByTestId("text-progression-input").fill("| C Dm |");
   await expect(capture.getByTestId("text-progression-convert")).toBeEnabled();
   await capture.getByTestId("text-progression-name").fill("Public text chart");
@@ -58,7 +51,7 @@ test("P8.8.4 Standard primary Vault save retains the advanced Draft path", async
 });
 
 test("P8.8.4 Extended score exposes reattack and bar targets without an axe violation", async ({ page }) => {
-  const capture = await openText(page);
+  const capture = await openTextCapture(page);
   await capture.getByTestId("text-mode-extended").click();
   const intake = capture.getByTestId("extended-text-intake");
   const input = intake.getByTestId("extended-text-input");
@@ -73,7 +66,7 @@ test("P8.8.4 Extended score exposes reattack and bar targets without an axe viol
 });
 
 test("P8.8.4 200-bar score updates its playhead without rebuilding the score DOM", async ({ page }) => {
-  const capture = await openText(page);
+  const capture = await openTextCapture(page);
   await capture.getByTestId("text-mode-extended").click();
   const intake = capture.getByTestId("extended-text-intake");
   const bars = Array.from({ length: 200 }, (_, index) => index % 2 ? "G7" : "C");
