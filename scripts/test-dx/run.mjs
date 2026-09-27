@@ -118,6 +118,11 @@ function runSelected(selection, mode) {
   if (mode !== "ui") {
     nodeStep("App TypeScript", "node_modules/typescript/bin/tsc");
     nodeStep("Source contracts", "scripts/lint-source-contracts.mjs");
+    if (selection.documentation) {
+      nodeStep("Phase docs", "scripts/phase-docs/validate.mjs");
+      nodeStep("AI handoff", "scripts/ai-handoff/validate.mjs");
+    }
+    if (selection.areas.includes("privacy/security")) nodeStep("Privacy scan", "scripts/security/trackedSecurityScan.mjs");
     if (selection.browserChanged) nodeStep("Class lint", "scripts/lint-tailwind-classes.mjs");
     const lintable = selection.changed.filter((file) => /\.[cm]?[jt]sx?$/.test(file) && !file.endsWith(".json"));
     if (lintable.length) nodeStep("Changed ESLint", "node_modules/eslint/bin/eslint.js", lintable);

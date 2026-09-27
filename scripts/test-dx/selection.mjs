@@ -1,6 +1,10 @@
 import { existsSync } from "node:fs";
 
 const ownerContracts = Object.freeze({
+  "test-infrastructure": {
+    smoke: [], vitest: [], browser: [],
+    node: ["scripts/test-dx/selection.node-test.mjs", "scripts/test-dx/cache.node-test.mjs", "scripts/run-playwright-visual-tests.node-test.mjs"],
+  },
   "text-capture": {
     smoke: ["src/components/capture/textCaptureStatus.test.ts"],
     vitest: ["src/components/capture/textCaptureStatus.test.ts", "src/components/capture/TextProgressionCapturePanel.test.tsx", "src/views/CaptureView.textProgression.test.tsx"],
@@ -72,7 +76,10 @@ export function normalizePath(path) {
 export function ownerForFile(input) {
   const file = normalizePath(input);
   if (file.startsWith("docs/") || file.endsWith(".md")) return { areas: [], reason: "documentation" };
-  if (/^(package(-lock)?\.json|tsconfig.*\.json|vite\.config\.|vitest\.config\.|playwright\.config\.|scripts\/test-dx\/|scripts\/run-playwright-visual-tests\.)/.test(file)) {
+  if (/^scripts\/test-dx\//.test(file) || /^scripts\/run-playwright-visual-tests\./.test(file)) {
+    return { areas: ["test-infrastructure"], reason: "test runner contract" };
+  }
+  if (/^(package(-lock)?\.json|tsconfig.*\.json|vite\.config\.|vitest\.config\.|playwright\.config\.)/.test(file)) {
     return { areas: ["shared-ui"], reason: "test/build infrastructure", broad: true };
   }
   if (/^e2e\//.test(file)) {
@@ -127,6 +134,7 @@ export function selectForFiles(files, level, exists = existsSync) {
   for (const area of areas) {
     const contract = ownerContracts[area];
     for (const file of level === "fast" ? contract.smoke : contract.vitest) vitest.add(file);
+    (contract.node ?? []).forEach((file) => nodeTests.add(file));
     if (level === "ui" || (level === "feature" && browserChanged)) {
       const specs = level === "feature" ? contract.browser.slice(0, 1) : contract.browser;
       specs.forEach((file) => browser.add(file));
@@ -145,5 +153,6 @@ export function selectForFiles(files, level, exists = existsSync) {
     nodeTests: [...nodeTests].sort(),
     broad,
     browserChanged,
+    documentation: changed.some((file) => file.startsWith("docs/") || file.endsWith(".md")),
   };
 }

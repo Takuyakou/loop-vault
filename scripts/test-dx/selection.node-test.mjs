@@ -44,3 +44,12 @@ test("selection explains owner and normalizes Windows separators", () => {
 test("missing permanent contracts fail closed", () => {
   assert.throws(() => selectForFiles(["src/styles/text-intake.css"], "fast", () => false), /missing/);
 });
+
+
+test("runner and docs edits select their own validators", () => {
+  const runner = select(["scripts/test-dx/run.mjs"], "fast");
+  assert.deepEqual(runner.areas, ["test-infrastructure"]);
+  assert.equal(runner.broad, false);
+  assert.ok(runner.nodeTests.includes("scripts/test-dx/cache.node-test.mjs"));
+  assert.equal(select(["docs/test-dx/README.md"], "fast").documentation, true);
+});

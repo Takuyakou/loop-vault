@@ -1,5 +1,7 @@
 # Test execution and ownership
 
+Historical rationalization record. The current command behavior is documented in [Test DX](../test-dx/README.md).
+
 Use product-contract names to select tests; phase numbers on files remain provenance. See the [contract matrix](01-contract-matrix.md) and [per-file tier inventory](00-baseline-inventory.json). Keep existing phase fixture provenance. Test architecture changes must preserve assertions before moving them between layers.
 
 | Entry | Command | Intended use |
