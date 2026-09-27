@@ -2,12 +2,14 @@
   "schemaVersion": 1,
   "phaseId": "8.9",
   "status": "in-progress",
-  "activeStage": "P8.9-00",
-  "completedStages": [],
+  "activeStage": "P8.9-01",
+  "completedStages": [
+    "P8.9-00"
+  ],
   "blocked": false,
   "blockerReason": null,
   "baseCommit": "1710c84",
-  "lastVerifiedCommit": "",
+  "lastVerifiedCommit": "d363d6f",
   "currentBranch": "feat/p8.9-00-setup",
   "requiredGates": {
     "P8.9-00": [
@@ -67,7 +69,14 @@
       "p89-08-report"
     ]
   },
-  "gateResults": {},
-  "nextAction": "Run stages/P8.9-00.md end to end, then stop at the merge candidate.",
+  "gateResults": {
+    "p89-00-phase-docs": "pass",
+    "p89-00-data-retention": "pass",
+    "p89-00-screens-baseline": "pass",
+    "p89-00-audit": "pass",
+    "p89-00-full-fresh": "pass",
+    "p89-00-report": "pass"
+  },
+  "nextAction": "P8.9-00 complete; stopped at merge candidate feat/p8.9-00-setup (fresh FULL PASS @ d363d6f: Vitest 3755/3755, Playwright 129/129; later commit is docs only). Gate commits: phase-docs 1f10921, data-retention 58be9ed, screens-baseline 4207cbc, audit d363d6f, full-fresh d363d6f, report = the docs commit. P8.9-01 not started: the stage-1 zip merges this candidate into local master first. No push/tag/release.",
   "updatedAt": "2026-09-27"
 }

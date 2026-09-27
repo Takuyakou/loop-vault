@@ -8,11 +8,11 @@ Loop Vault の画面を、共通の外枠・デザインシステム・各画面
 
 ## Status
 
-- **Status:** in-progress
-- **Active stage:** P8.9-00
-- **Completed stages:** none
-- **Base:** local `master`（P8.8.6 と Test DX が取り込み済みであること）
-- **Next action:** [stages/P8.9-00.md](stages/P8.9-00.md) を最後まで実行する
+- **Status:** in-progress — P8.9-00 完了、merge 候補 `feat/p8.9-00-setup` で停止（master へは未取り込み）
+- **Active stage:** P8.9-01（未着手。段階1の zip を待つ）
+- **Completed stages:** P8.9-00（準備 — [reports/P8.9-00-setup.md](reports/P8.9-00-setup.md)、監査 [audit/P8.9-00-baseline.md](audit/P8.9-00-baseline.md)、fresh FULL PASS @ `d363d6f`）
+- **Base:** local `master` `1710c84`（P8.8.6 と Test DX を含む）
+- **Next action:** 段階1の zip の最初の手順で `feat/p8.9-00-setup` を master に取り込み、P8.9-01 を始める
 
 各段階の終わりに、この節・[`execution-state.json`](execution-state.json)・段階の報告を揃えて更新する。
 
