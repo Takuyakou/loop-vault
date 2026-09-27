@@ -62,3 +62,11 @@ test("Settings runner plans only the focused Playwright selection", () => {
     ["test", "e2e/visual.spec.ts"],
   );
 });
+
+test("prechecked DX FULL omits only duplicate TypeScript and retains fixture build", () => {
+  const plan = visualTestCommandPlan(["e2e/visual.spec.ts"], { LV_DX_PRECHECKED_TSC: "1" });
+  assert.deepEqual(plan, [
+    ["node_modules/vite/bin/vite.js", "build"],
+    ["node_modules/@playwright/test/cli.js", "test", "e2e/visual.spec.ts"],
+  ]);
+});

@@ -1,0 +1,55 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { ownerForFile, selectForFiles } from "./selection.mjs";
+
+const select = (files, level) => selectForFiles(files, level, () => true);
+
+test("Text Capture CSS selects a permanent contract instead of zero tests", () => {
+  const result = select(["src/styles/text-intake.css"], "feature");
+  assert.deepEqual(result.areas, ["text-capture"]);
+  assert.ok(result.vitest.includes("src/components/capture/textCaptureStatus.test.ts"));
+  assert.ok(result.browser.includes("e2e/phase8.8.6-capture-closure.spec.ts"));
+});
+
+test("parser source keeps related input and permanent semantic contracts", () => {
+  const result = select(["src/domain/textProgression.ts"], "feature");
+  assert.ok(result.vitest.includes("src/domain/textProgression.ts"));
+  assert.ok(result.vitest.includes("src/domain/textProgression.test.ts"));
+  assert.equal(result.browser.length, 0);
+});
+
+test("directly changed tests are selected", () => {
+  assert.ok(select(["src/views/HomeView.test.tsx"], "fast").vitest.includes("src/views/HomeView.test.tsx"));
+  assert.ok(select(["e2e/voicing-loop-v2.spec.ts"], "fast").browser.includes("e2e/voicing-loop-v2.spec.ts"));
+  assert.ok(select(["scripts/test-dx/selection.node-test.mjs"], "fast").nodeTests.includes("scripts/test-dx/selection.node-test.mjs"));
+});
+
+test("shared and unknown source expands selection", () => {
+  assert.equal(select(["src/styles/global.css"], "feature").broad, true);
+  assert.equal(ownerForFile("src/new-feature/unknown.ts").broad, true);
+});
+
+test("default UI retains current critical browser set", () => {
+  const result = select([], "ui");
+  assert.ok(result.browser.includes("e2e/accessibility.spec.ts"));
+  assert.ok(result.browser.includes("e2e/phase8.8.6-capture-closure.spec.ts"));
+});
+
+test("selection explains owner and normalizes Windows separators", () => {
+  const result = select(["src\\store\\vaultStore.ts"], "feature");
+  assert.deepEqual(result.areas, ["vault"]);
+  assert.match(result.reasons[0], /Vault owner/);
+});
+
+test("missing permanent contracts fail closed", () => {
+  assert.throws(() => selectForFiles(["src/styles/text-intake.css"], "fast", () => false), /missing/);
+});
+
+
+test("runner and docs edits select their own validators", () => {
+  const runner = select(["scripts/test-dx/run.mjs"], "fast");
+  assert.deepEqual(runner.areas, ["test-infrastructure"]);
+  assert.equal(runner.broad, false);
+  assert.ok(runner.nodeTests.includes("scripts/test-dx/cache.node-test.mjs"));
+  assert.equal(select(["docs/test-dx/README.md"], "fast").documentation, true);
+});
