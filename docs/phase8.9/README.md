@@ -8,11 +8,11 @@ Loop Vault の画面を、共通の外枠・デザインシステム・各画面
 
 ## Status
 
-- **Status:** in-progress — P8.9-01（土台と部品）を実行中。ブランチ `feat/p8.9-01-foundation`
-- **Active stage:** P8.9-01
-- **Completed stages:** P8.9-00（準備 — [reports/P8.9-00-setup.md](reports/P8.9-00-setup.md)、監査 [audit/P8.9-00-baseline.md](audit/P8.9-00-baseline.md)、fresh FULL PASS @ `d363d6f`。local `master` へ `232d21f` で取り込み済み）
+- **Status:** in-progress — P8.9-01 完了、merge 候補 `feat/p8.9-01-foundation` で停止（master へは未取り込み）
+- **Active stage:** P8.9-02（未着手。段階2の zip を待つ）
+- **Completed stages:** P8.9-00（準備 — [reports/P8.9-00-setup.md](reports/P8.9-00-setup.md)、監査 [audit/P8.9-00-baseline.md](audit/P8.9-00-baseline.md)、fresh FULL PASS @ `d363d6f`。local `master` へ `232d21f` で取り込み済み）、P8.9-01（土台と部品 — [reports/P8.9-01-foundation.md](reports/P8.9-01-foundation.md)、fresh FULL PASS @ `7b9de50`、EXE 作成済み）
 - **Base:** local `master` `232d21f`（段階0を取り込み済み）
-- **Next action:** [stages/P8.9-01.md](stages/P8.9-01.md) を最後まで実行する
+- **Next action:** 段階2の zip の最初の手順で `feat/p8.9-01-foundation` を master に取り込み、P8.9-02 を始める
 
 各段階の終わりに、この節・[`execution-state.json`](execution-state.json)・段階の報告を揃えて更新する。
 
