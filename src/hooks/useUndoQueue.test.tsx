@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 
-import { act, useRef } from "react";
+import { act, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { UndoToast } from "../components/UndoToast";
+import { createNotificationStore, NotificationProvider } from "../components/notifications";
 import { useUndoQueue } from "./useUndoQueue";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean })
@@ -97,7 +97,7 @@ describe("useUndoQueue", () => {
     await mounted.unmount();
   });
 
-  it("uses one live region, moves focus, stays below modals, and avoids the wide inspector", async () => {
+  it("uses one live region, moves focus, and sits bottom-right above the wide inspector", async () => {
     const mounted = await mountQueue(() => "positioned");
     await act(async () => {
       mounted.api().enqueue({
@@ -109,8 +109,11 @@ describe("useUndoQueue", () => {
 
     expect(mounted.container.querySelectorAll('[role="status"]')).toHaveLength(1);
     const stack = mounted.container.querySelector<HTMLElement>("[data-undo-toast-stack]");
-    expect(stack?.className).toContain("z-40");
-    expect(stack?.className).toContain("xl:left-4");
+    // P8.9: one bottom-right stack at the toast layer (above dialogs) replaces the
+    // bottom-left z-40 Undo stack; it still clears the Capture inspector.
+    expect(stack?.className).toContain("lv-toast-stack");
+    expect(stack?.style.bottom).toContain("--lv-toast-offset-bottom");
+    expect(stack?.style.bottom).toContain("--lv-sticky-inspector-height");
     expect(stack?.style.bottom).toContain("safe-area-inset-bottom");
     expect(stack?.className).toContain("overflow-y-auto");
     expect(stack?.style.maxHeight).toContain("100vh");
@@ -239,16 +242,15 @@ async function mountQueue(idFactory: () => string) {
   let latest: ReturnType<typeof useUndoQueue> | undefined;
   function Harness() {
     const fallbackFocusRef = useRef<HTMLHeadingElement>(null);
+    const [store] = useState(createNotificationStore);
     latest = useUndoQueue({ durationMs: 5000, now: () => 1000, idFactory });
-    return (<>
-      <h1 ref={fallbackFocusRef} tabIndex={-1} data-undo-fallback>Loop Vault</h1>
-      <UndoToast
-          actions={latest.actions}
-          undoLabel="Undo"
-          onUndo={latest.undo}
-          fallbackFocusRef={fallbackFocusRef}
-        />
-      </>
+    return (
+      <NotificationProvider
+        store={store}
+        undo={{ actions: latest.actions, label: "Undo", onUndo: latest.undo, fallbackFocusRef }}
+      >
+        <h1 ref={fallbackFocusRef} tabIndex={-1} data-undo-fallback>Loop Vault</h1>
+      </NotificationProvider>
     );
   }
   await act(async () => root.render(<Harness />));

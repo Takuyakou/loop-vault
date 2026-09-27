@@ -1,0 +1,27 @@
+/* P8.9 component gallery only (loaded with the gallery chunk). Forces the
+   hover / focus / open states so every state can be seen side by side. */
+.lv-gallery [data-force="hover"].lv-button-primary { background: var(--lv-accent-strong); }
+.lv-gallery [data-force="hover"]:is(.lv-button-secondary, .lv-button-neutral) {
+  border-color: color-mix(in srgb, var(--lv-accent) 58%, var(--lv-border-strong));
+  color: var(--lv-text);
+}
+.lv-gallery [data-force="hover"].lv-button-ghost { background: var(--lv-surface-raised); color: var(--lv-text); }
+.lv-gallery [data-force="hover"].lv-button-state { color: var(--lv-text); }
+.lv-gallery [data-force="hover"].lv-button-danger { background: var(--lv-danger-soft); color: #fff; }
+.lv-gallery [data-force="hover"].lv-segment { color: var(--lv-text); }
+.lv-gallery [data-force="hover"] > .lv-select select {
+  border-color: color-mix(in srgb, var(--lv-accent) 58%, var(--lv-border-strong));
+}
+.lv-gallery [data-force="hover"].lv-chip {
+  border-color: color-mix(in srgb, var(--lv-accent) 58%, var(--lv-border-strong));
+  color: var(--lv-text);
+}
+.lv-gallery [data-force="focus"]:not(span),
+.lv-gallery [data-force="focus"] > .lv-select select {
+  outline: 2px solid var(--lv-accent);
+  outline-offset: 2px;
+}
+.lv-gallery [data-force="open"] .lv-tooltip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}

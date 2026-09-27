@@ -96,8 +96,8 @@ for (const [width, height] of SIZES) {
         await expect(form).toBeHidden();
         // The save toast lasts 3.2 s (App.tsx), longer than the walk to the next screens,
         // and would cover the header on them.
-        const toast = page.locator("[data-toast-tone]");
-        if (await toast.isVisible()) await toast.getByRole("button").last().click();
+        const closeButtons = page.locator("[data-toast-tone] .lv-toast-close");
+        while (await closeButtons.count() > 0) await closeButtons.first().click();
       } catch (error) {
         result.unreachable.push({ screen: "(save synthetic progression)", reason: String(error).split("\n")[0].slice(0, 160) });
       }
@@ -145,6 +145,17 @@ for (const [width, height] of SIZES) {
       await shot("home", async () => {
         await nav(page, "Home");
       });
+      // Component gallery: full page (the app root normally clips scrolling).
+      try {
+        await page.goto("/?gallery");
+        await expect(page.getByTestId("p89-component-gallery")).toBeVisible();
+        await page.addStyleTag({ content: "html,body,#root,.lv-gallery{height:auto!important;overflow:visible!important}" });
+        await settle(page);
+        await page.screenshot({ path: join(OUT, `gallery@${size}.png`), fullPage: true, animations: "disabled", caret: "hide" });
+        result.captured.push("gallery");
+      } catch (error) {
+        result.unreachable.push({ screen: "gallery", reason: String(error).split("\n")[0].slice(0, 160) });
+      }
 
       expect(result.captured.length, `nothing captured @${size}`).toBeGreaterThan(0);
     });

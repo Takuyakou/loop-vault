@@ -42,6 +42,12 @@ README の段階一覧と同じ。各段階の詳しい作業と完了条件は 
 
 コード採集は分けない。App.tsx は段階2で、外枠と画面の切り替えを先に分ける。
 
+段階0のレビューで決まったこと：
+
+- 段階3の最初に「進行ページ」の担当（`ProgressionDetailView.tsx`・`DetailView.tsx`・`components/progression-editing/`）を `scripts/test-dx/selection.mjs` に作る。
+- 段階3の日本語化は、言語の切り替えを外して日本語に固定し、作り直さない画面（採集・Voicing Loop・外枠・共通部品）の英語を直すところまで。作り直す画面の英語は、その画面を作り直す段階で消す。
+- 段階7は、Rhythm と Root Motion の守りのテストを先に足してから、ロジックを分ける。
+
 ## Definition of Done
 
 段階の完了条件（全段階共通）：

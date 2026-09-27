@@ -98,12 +98,15 @@ export function ownerForFile(input) {
   if (/^src\/components\/capture\//.test(file) || /text-intake\.css/.test(file) || /CaptureView\.textProgression/.test(file)) return { areas: ["text-capture"], reason: "Text Capture owner" };
   if (/^src\/(voicingPractice\/|views\/ProgressionVoicingPracticeView)/.test(file)) return { areas: ["voicing-loop"], reason: "Voicing Loop owner" };
   if (/^src\/(store\/vault|views\/VaultView)/.test(file)) return { areas: ["vault"], reason: "Vault owner" };
+  if (/^src\/domain\/(repository|schema)[A-Za-z]*(\.test)?\.ts$/.test(file) || file === "src/domain/p89DataRetention.test.ts") {
+    return { areas: ["persistence"], reason: "Vault parse/serialize owner" };
+  }
   if (/^src\/storage\//.test(file) || /^src-tauri\//.test(file)) return { areas: ["persistence"], reason: "persistence owner" };
   if (/^src\/(practice\/|features\/bass-practice\/|views\/PracticeView)/.test(file)) return { areas: ["dojo/practice"], reason: "practice owner" };
   if (/^src\/views\/SettingsDialog/.test(file)) return { areas: ["settings"], reason: "Settings owner" };
   if (/^src\/views\/HomeView/.test(file)) return { areas: ["home"], reason: "Home owner" };
   if (/^src\/views\/CaptureView/.test(file)) return { areas: ["text-capture", "harmony/parser"], reason: "Capture shared seam" };
-  if (/^src\/(styles\/|components\/ui\/|App\.)/.test(file)) return { areas: ["shared-ui"], reason: "shared UI", broad: true };
+  if (/^src\/(styles\/|components\/(ui|icons|notifications)\/|App\.)/.test(file)) return { areas: ["shared-ui"], reason: "shared UI", broad: true };
   if (/^src\//.test(file) || /^scripts\//.test(file)) return { areas: ["shared-ui"], reason: "unknown source owner; expand safely", broad: true };
   return { areas: [], reason: "outside test selection" };
 }

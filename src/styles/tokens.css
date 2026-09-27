@@ -68,6 +68,26 @@
   --lv-sidebar-expanded: 212px;
   --lv-sidebar-collapsed: 68px;
   --lv-topbar-height: 68px;
+
+  /* P8.9 additions. Existing names above stay; new sizes are opt-in per rebuilt screen. */
+  --lv-record: #e6ae4a;
+  --lv-record-soft: #3a2d14;
+  --lv-text-11: 11px;
+  --lv-text-12: 12px;
+  --lv-text-13: 13px;
+  --lv-text-14: 14px;
+  --lv-text-16: 16px;
+  --lv-text-20: 20px;
+  --lv-text-28: 28px;
+  --lv-radius-pill: 999px;
+  --lv-titlebar-height: 36px;
+  --lv-header-height: 56px;
+  --lv-sidebar-wide: 232px;
+  --lv-sidebar-narrow: 64px;
+  --lv-toast-offset-bottom: 16px;
+  --lv-toast-surface: rgb(22 35 56 / 96%);
+  --lv-toast-border: rgb(150 170 195 / 18%);
+  --lv-toast-shadow: 0 16px 40px rgb(0 0 0 / 45%);
 }
 
 @layer base {

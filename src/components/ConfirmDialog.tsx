@@ -1,6 +1,7 @@
 import { useId, useRef } from "react";
 import { Modal } from "./Modal";
 import { TriangleAlert } from "lucide-react";
+import { Button } from "./ui";
 
 export interface ConfirmDialogProps {
   open: boolean;
@@ -38,9 +39,6 @@ export function ConfirmDialog({
 
   const titleId = `${id}-title`;
   const descriptionId = `${id}-description`;
-  const confirmClass = tone === "danger"
-    ? "bg-red-500 text-white hover:bg-red-400"
-    : "bg-[var(--lv-accent)] text-stone-950 hover:brightness-110";
 
   return (
     <Modal
@@ -60,32 +58,16 @@ export function ConfirmDialog({
         {description}
       </p>
       <div className="mt-6 flex justify-end gap-2">
-        <button
-          ref={cancelRef}
-          type="button"
-          className="rounded border border-[var(--lv-border-strong)] px-3 py-2 text-sm disabled:opacity-50"
-          disabled={busy}
-          onClick={onCancel}
-        >
+        <Button ref={cancelRef} variant="neutral" disabled={busy} onClick={onCancel}>
           {cancelLabel}
-        </button>
-        <button
-          type="button"
-          className={`rounded px-3 py-2 text-sm font-semibold disabled:opacity-50 ${confirmClass}`}
-          disabled={busy}
-          onClick={onConfirm}
-        >
+        </Button>
+        <Button variant={tone === "danger" ? "danger" : "primary"} className="font-semibold" disabled={busy} onClick={onConfirm}>
           {confirmLabel}
-        </button>
+        </Button>
         {secondaryLabel && onSecondary ? (
-          <button
-            type="button"
-            className="rounded border border-teal-300/60 px-3 py-2 text-sm text-teal-100 disabled:opacity-50"
-            disabled={busy}
-            onClick={onSecondary}
-          >
+          <Button variant="neutral" disabled={busy} onClick={onSecondary}>
             {secondaryLabel}
-          </button>
+          </Button>
         ) : null}
       </div>
     </Modal>

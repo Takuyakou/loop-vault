@@ -6,6 +6,7 @@ import {
   lazy,
   ReactNode,
   Suspense,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -55,12 +56,11 @@ import {
   PracticeWorkspace,
   type PracticeWorkspaceMode,
 } from "./features/bass-practice/ui/PracticeWorkspace";
-import { Toast } from "./components/Toast";
 import { LiveMidiMiniMode } from "./components/LiveMidiMiniMode";
 import { PreviewSoundProvider } from "./components/PreviewSoundProvider";
 import { MetronomeProvider } from "./components/MetronomeProvider";
 import { LiveMidiImportDialog, type LiveMidiImportRequest } from "./components/LiveMidiImportDialog";
-import { UndoToast } from "./components/UndoToast";
+import { createNotificationStore, NotificationProvider } from "./components/notifications";
 import { statusLabel } from "./domain/displayLabels";
 import { parseMidi } from "./domain/midi";
 import { canChooseSource, setAllEligibleCardsToSource } from "./domain/voicing";
@@ -260,7 +260,12 @@ function App() {
   const [voicingPracticeHandoff, setVoicingPracticeHandoff] = useState<ProgressionVoicingPracticeHandoff>();
   const [isCreateOpen, setCreateOpen] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
-  const [toast, setToast] = useState<string>();
+  const [notifications] = useState(createNotificationStore);
+  // P8.9: existing setToast(message) callers keep their shape; messages now go to
+  // the unified bottom-right stack (4 s, pauses on hover/focus).
+  const setToast = useCallback((message?: string) => {
+    if (message) notifications.notify({ message });
+  }, [notifications]);
   const [webLiveMidiPreviewOpen, setWebLiveMidiPreviewOpen] = useState(false);
   const [masterVolume, setMasterVolume] = useState(() => loadMasterVolume());
   const [pendingLiveMidiHistory, setPendingLiveMidiHistory] = useState<LiveChordHistoryEntry[]>();
@@ -428,15 +433,6 @@ function App() {
       setView("library");
     }
   }, [progressionBlock, progressionIdea, view]);
-
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => setToast(undefined), 3200);
-      return () => clearTimeout(timer);
-    }
-
-    return undefined;
-  }, [toast]);
 
   useEffect(() => {
     if (view !== "practice") setChordContextSnapshot(undefined);
@@ -783,6 +779,11 @@ async function analyzeMidiPath(path: string) {
   }
 
   return (
+    <NotificationProvider
+      store={notifications}
+      closeLabel={copy.common.close}
+      undo={{ actions: undoQueue.actions, onUndo: undoQueue.undo, label: copy.undo.action, fallbackFocusRef: undoFallbackFocusRef }}
+    >
     <MetronomeProvider>
     <PreviewSoundProvider>
       <a className="lv-skip-link" href="#main-content">
@@ -1221,21 +1222,8 @@ async function analyzeMidiPath(path: string) {
         }}
         tone="danger"
       />
-      <UndoToast
-        actions={undoQueue.actions}
-        undoLabel={copy.undo.action}
-        onUndo={undoQueue.undo}
-        fallbackFocusRef={undoFallbackFocusRef}
-      />
-      {toast ? (
-        <Toast
-          message={toast}
-          dismissLabel={copy.common.close}
-          onDismiss={() => setToast(undefined)}
-        />
-      ) : null}
       {webLiveMidiPreviewOpen ? (
-        <div className="fixed bottom-4 right-4 z-50 h-[260px] w-[420px] max-w-[calc(100vw-2rem)] border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] shadow-xl">
+        <div className="lv-web-live-midi-preview fixed bottom-4 right-4 z-50 h-[260px] w-[420px] max-w-[calc(100vw-2rem)] border border-[var(--lv-border-strong)] bg-[var(--lv-bg)] shadow-xl">
           <LiveMidiMiniMode
             copy={copy.liveMidi}
             onShowMain={() => { void leaveLiveMidiMode(); }}
@@ -1245,6 +1233,7 @@ async function analyzeMidiPath(path: string) {
       </AppShell>
     </PreviewSoundProvider>
     </MetronomeProvider>
+    </NotificationProvider>
   );
 }
 

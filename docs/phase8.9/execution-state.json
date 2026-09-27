@@ -2,15 +2,16 @@
   "schemaVersion": 1,
   "phaseId": "8.9",
   "status": "in-progress",
-  "activeStage": "P8.9-01",
+  "activeStage": "P8.9-02",
   "completedStages": [
-    "P8.9-00"
+    "P8.9-00",
+    "P8.9-01"
   ],
   "blocked": false,
   "blockerReason": null,
-  "baseCommit": "1710c84",
-  "lastVerifiedCommit": "d363d6f",
-  "currentBranch": "feat/p8.9-00-setup",
+  "baseCommit": "232d21f",
+  "lastVerifiedCommit": "7b9de50",
+  "currentBranch": "feat/p8.9-01-foundation",
   "requiredGates": {
     "P8.9-00": [
       "p89-00-phase-docs",
@@ -75,8 +76,12 @@
     "p89-00-screens-baseline": "pass",
     "p89-00-audit": "pass",
     "p89-00-full-fresh": "pass",
-    "p89-00-report": "pass"
+    "p89-00-report": "pass",
+    "p89-01-full-fresh": "pass",
+    "p89-01-screens": "pass",
+    "p89-01-exe": "pass",
+    "p89-01-report": "pass"
   },
-  "nextAction": "P8.9-00 complete; stopped at merge candidate feat/p8.9-00-setup (fresh FULL PASS @ d363d6f: Vitest 3755/3755, Playwright 129/129; later commit is docs only). Gate commits: phase-docs 1f10921, data-retention 58be9ed, screens-baseline 4207cbc, audit d363d6f, full-fresh d363d6f, report = the docs commit. P8.9-01 not started: the stage-1 zip merges this candidate into local master first. No push/tag/release.",
+  "nextAction": "P8.9-01 complete; stopped at merge candidate feat/p8.9-01-foundation (fresh FULL PASS @ 7b9de50: Vitest 3766/3766, Playwright 129/129; p89:screens P8.9-01 19 screens x 4 sizes; EXE built with tauri build --no-bundle; later commit is docs only). Stage 0 merged into local master at 232d21f. P8.9-02 not started: the stage-2 zip merges this candidate first. No push/tag/release.",
   "updatedAt": "2026-09-27"
 }

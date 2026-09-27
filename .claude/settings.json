@@ -77,7 +77,14 @@
       "Edit(./src/domain/textProgressionVoicing.ts)",
       "Edit(./src/audio/textTransport.ts)",
       "Edit(./src/audio/playbackController.ts)",
-      "Edit(./src/audio/chordPreview.ts)"
+      "Edit(./src/audio/chordPreview.ts)",
+      "Bash(npm run test:e2e:update:*)",
+      "Bash(git switch -f:*)",
+      "Bash(git switch --force:*)",
+      "Bash(git switch --discard-changes:*)",
+      "Bash(git checkout -f:*)",
+      "Bash(git checkout .:*)",
+      "Bash(rm -rf:*)"
     ]
   }
 }
