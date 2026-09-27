@@ -3295,7 +3295,7 @@ export function ProgressionCandidateCard({
       data-candidate-state={isExpanded ? "selected" : "idle"}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <button data-candidate-toggle data-candidate-id={candidate.id} className="min-w-0 flex-1 text-left" onClick={onSelect} aria-expanded={isExpanded}>
+        <button data-candidate-toggle data-candidate-id={candidate.id} className="min-w-40 basis-40 flex-1 text-left" onClick={onSelect} aria-expanded={isExpanded}>
           <span className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--lv-accent)]">
               {editorCopy.candidate(candidateIndex + 1)}
