@@ -143,6 +143,7 @@ export function selectForFiles(files, level, exists = existsSync) {
     broad ||= Boolean(owner.broad);
     browserChanged ||= /^e2e\//.test(file) || /\.(tsx|css)$/.test(file);
     reasons.push(`${file}: ${owner.areas.join(" + ") || "no test owner"} (${owner.reason})`);
+    if (!exists(file)) continue; // deleted in this change: owner still counts, the file itself cannot run
     if (isVitestTest(file)) vitest.add(file);
     else if (file.endsWith(".node-test.mjs")) nodeTests.add(file);
     else if (/^src\//.test(file)) vitest.add(file);

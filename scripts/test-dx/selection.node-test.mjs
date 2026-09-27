@@ -79,6 +79,13 @@ test("P8.9 screenshot tool is evidence, not a product contract", () => {
   assert.equal(Boolean(owner.broad), false);
 });
 
+test("deleted files keep their owner but are not selected to run", () => {
+  const result = selectForFiles(["src/views/HomeView.old.test.tsx"], "fast", (file) => file !== "src/views/HomeView.old.test.tsx");
+  assert.deepEqual(result.areas, ["home"]);
+  assert.ok(!result.vitest.includes("src/views/HomeView.old.test.tsx"));
+  assert.ok(result.vitest.includes("src/views/HomeView.test.tsx"));
+});
+
 test("missing permanent contracts fail closed", () => {
   assert.throws(() => selectForFiles(["src/styles/text-intake.css"], "fast", () => false), /missing/);
 });
