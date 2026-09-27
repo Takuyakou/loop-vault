@@ -220,7 +220,6 @@ function App() {
   const initialize = useStore(defaultVaultStore, (state) => state.initialize);
   const restoreBackup = useStore(defaultVaultStore, (state) => state.restoreBackup);
   const backups = useStore(defaultVaultStore, (state) => state.backups);
-  const setMonthlyGoal = useStore(defaultVaultStore, (state) => state.setMonthlyGoal);
   const setLanguage = useStore(defaultVaultStore, (state) => state.setLanguage);
   const setShowRomanNumerals = useStore(defaultVaultStore, (state) => state.setShowRomanNumerals);
   const refreshBackups = useStore(defaultVaultStore, (state) => state.refreshBackups);
@@ -848,7 +847,6 @@ async function analyzeMidiPath(path: string) {
                   <BassPracticeHomeCard onOpen={openBassPractice} summary={practiceHomeSummary} />
                 ) : undefined}
                 ideas={visibleIdeas}
-                monthlyGoal={settings.monthlyGoal}
                 copy={copy}
                 language={language}
                 showRomanNumerals={settings.showRomanNumerals ?? true}
@@ -1152,11 +1150,9 @@ async function analyzeMidiPath(path: string) {
       {isSettingsOpen ? (
         <SettingsDialog
           ideas={visibleIdeas}
-          monthlyGoal={settings.monthlyGoal}
           language={language}
           backups={backups}
           error={error}
-          setMonthlyGoal={setMonthlyGoal}
           setLanguage={setLanguage}
           showRomanNumerals={settings.showRomanNumerals ?? true}
           setShowRomanNumerals={setShowRomanNumerals ?? (() => undefined)}

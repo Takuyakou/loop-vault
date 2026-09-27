@@ -18,7 +18,6 @@ import {
   resolveTimelineVoicings,
   resolveVoicingForUse,
 } from "../domain/voicing";
-import { monthlyStats } from "../domain/monthlyStats";
 import { formatProgressionText } from "../domain/progressionText";
 import { usePlaybackState } from "../hooks/usePlaybackState";
 import type { SavedProgressionBlock, SongIdea } from "../domain/types";
@@ -28,7 +27,6 @@ import type { AppCopy, AppLanguage } from "../i18n";
 export function HomeView({
   bassPracticeCard,
   ideas,
-  monthlyGoal,
   copy,
   language,
   showRomanNumerals,
@@ -41,7 +39,6 @@ export function HomeView({
 }: {
   bassPracticeCard?: ReactNode;
   ideas: SongIdea[];
-  monthlyGoal: number;
   copy: AppCopy;
   language: AppLanguage;
   showRomanNumerals: boolean;
@@ -55,8 +52,6 @@ export function HomeView({
   const { sound: previewSound } = usePreviewSound();
   const [now, setNow] = useState(() => new Date());
   const focus = pickFocus(ideas, now);
-  const stats = monthlyStats(ideas, now, monthlyGoal);
-  const progress = Math.min(100, (stats.doneCount / stats.goal) * 100);
   const focusBlock = focus.focus?.progressionBlocks?.[0];
   const focusDegrees = focusBlock && showRomanNumerals ? degreeSequence(focusBlock) : [];
   const focusPreview = focusBlock
@@ -173,25 +168,6 @@ export function HomeView({
       </Surface>
 
       {bassPracticeCard}
-
-      <section aria-label={copy.home.overviewLabel} className="border-b border-[var(--lv-border)] pb-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p data-testid="home-overview-summary" className="text-sm font-medium text-[var(--lv-text-secondary)]">
-            {copy.home.overviewSummary(stats.doneCount, stats.goal, focus.needsNextAction.length, focus.stale.length)}
-          </p>
-          <span className="text-xs text-[var(--lv-text-muted)]">{copy.home.daysLeft(stats.remainingDays)}</span>
-        </div>
-        <div
-          aria-label={copy.home.monthlyFinish}
-          aria-valuemax={stats.goal}
-          aria-valuemin={0}
-          aria-valuenow={stats.doneCount}
-          className="mt-2 h-1.5 overflow-hidden rounded bg-[var(--lv-surface-raised)]"
-          role="progressbar"
-        >
-          <div className="h-full bg-[var(--lv-accent)]" style={{ width: `${progress}%` }} />
-        </div>
-      </section>
 
       <div className="grid min-h-0 gap-4">
         <Surface className="min-w-0 p-4">

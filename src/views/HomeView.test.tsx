@@ -28,7 +28,7 @@ afterEach(async () => {
 });
 
 describe("HomeView hierarchy", () => {
-  it("makes Today's Loop primary and condenses the three metrics into one summary", async () => {
+  it("makes Today's Loop primary without a monthly goal summary", async () => {
     const ideas = dashboardIdeas();
     const container = await renderHome(ideas);
 
@@ -36,13 +36,10 @@ describe("HomeView hierarchy", () => {
     expect(container.querySelector("[data-testid='home-focus-chords']")).not.toBeNull();
     expect(container.querySelectorAll("[data-testid='home-focus-chords'] > button")).toHaveLength(1);
     expect(container.textContent).not.toContain(appCopy.ja.home.headline);
+    expect(container.querySelector("[role='progressbar']")).toBeNull();
+    expect(container.textContent).not.toContain("今月");
     expect(container.querySelector(".md\\:grid-cols-3")).toBeNull();
 
-    const summary = container.querySelector<HTMLElement>("[data-testid='home-overview-summary']");
-    expect(summary?.textContent).toBe("今月 1/4 · 次の一手なし 1件 · 停滞 1件");
-    expect(container.querySelectorAll("[data-testid='home-overview-summary']")).toHaveLength(1);
-    expect(container.querySelector("[role='progressbar']")?.getAttribute("aria-valuenow")).toBe("1");
-    expect(container.textContent).toContain(appCopy.ja.home.daysLeft(15));
   });
 
   it("previews a focus chord card with the shared sound and resolved voicing", async () => {
@@ -95,8 +92,6 @@ describe("HomeView hierarchy", () => {
     const container = await renderHome([], "en");
 
     expect(container.querySelector("h2")?.textContent).toBe("Today's Loop");
-    expect(container.querySelector("[data-testid='home-overview-summary']")?.textContent)
-      .toBe("This month 0/4 · No next step 0 · Stale 0");
     expect(buttonTexts(container)).toEqual(expect.arrayContaining([
       appCopy.en.home.startCapture,
       appCopy.en.home.newIdea,
@@ -187,7 +182,6 @@ async function renderHome(
     root.render(
       <HomeView
         ideas={ideas}
-        monthlyGoal={4}
         copy={copy}
         language={language}
         showRomanNumerals={false}

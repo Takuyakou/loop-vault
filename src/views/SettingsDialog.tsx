@@ -74,13 +74,11 @@ interface PendingConfirmation {
 }
 
 interface SettingsDialogProps {
-  monthlyGoal: number;
   language: AppLanguage;
   showRomanNumerals: boolean;
   ideas: SongIdea[];
   backups: ReturnType<typeof defaultVaultStore.getState>["backups"];
   error?: string;
-  setMonthlyGoal: (goal: number) => void;
   setLanguage: (language: AppLanguage) => void;
   setShowRomanNumerals: (show: boolean) => void;
   refreshBackups: () => Promise<void>;
@@ -94,13 +92,11 @@ interface SettingsDialogProps {
 }
 
 export function SettingsDialog({
-  monthlyGoal,
   language,
   showRomanNumerals,
   ideas,
   backups,
   error,
-  setMonthlyGoal,
   setLanguage,
   setShowRomanNumerals,
   refreshBackups,
@@ -435,18 +431,6 @@ export function SettingsDialog({
                 <option value="ja">{ui.japanese}</option>
                 <option value="en">{ui.english}</option>
               </select>
-            </div>
-            <div>
-              <label className="font-semibold" htmlFor="settings-monthly-goal">{ui.monthlyGoal}</label>
-              <p className="mt-1 text-sm text-[var(--lv-text-muted)]">{ui.monthlyGoalHelp}</p>
-              <input
-                id="settings-monthly-goal"
-                className={`${inputClass} mt-3`}
-                min={1}
-                type="number"
-                value={monthlyGoal}
-                onChange={(event) => setMonthlyGoal(Number(event.target.value))}
-              />
             </div>
           </div>
           <label className="mt-5 flex cursor-pointer items-start gap-3 border-t border-[var(--lv-border)] pt-4 text-sm">

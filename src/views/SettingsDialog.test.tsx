@@ -105,7 +105,6 @@ describe("SettingsDialog sections", () => {
     expect(text).toContain(appCopy.en.settingsUi.liveMidiTitle);
     expect(text).toContain(appCopy.en.settingsUi.data);
     expect(text).toContain(appCopy.en.settingsUi.analysis);
-    expect(text).toContain(appCopy.en.settingsUi.monthlyGoal);
     expect(dialogs()[0]?.querySelector("[data-testid='piano-sample-attribution']")?.textContent)
       .toContain("Salamander Grand Piano V3 by Alexander Holm");
     await mounted.unmount();
@@ -156,17 +155,15 @@ describe("SettingsDialog sections", () => {
 
   it("keeps general setting callbacks connected", async () => {
     const setLanguage = vi.fn();
-    const setMonthlyGoal = vi.fn();
     const setShowRomanNumerals = vi.fn();
-    const mounted = await renderSettings({ setLanguage, setMonthlyGoal, setShowRomanNumerals });
+    const mounted = await renderSettings({ setLanguage, setShowRomanNumerals });
 
     await changeSelect(document.querySelector<HTMLSelectElement>("#settings-language"), "en");
-    await changeInput(document.querySelector<HTMLInputElement>("#settings-monthly-goal"), "4");
     const degreeToggle = document.querySelector<HTMLInputElement>('input[type="checkbox"]');
     await click(degreeToggle);
 
     expect(setLanguage).toHaveBeenCalledWith("en");
-    expect(setMonthlyGoal).toHaveBeenCalledWith(4);
+    expect(document.querySelector("#settings-monthly-goal")).toBeNull();
     expect(setShowRomanNumerals).toHaveBeenCalledWith(false);
     await mounted.unmount();
   });
@@ -324,12 +321,10 @@ async function renderSettings(overrides: Partial<React.ComponentProps<typeof Set
   await act(async () => {
     root.render(
       <SettingsDialog
-        monthlyGoal={1}
         language="ja"
         showRomanNumerals
         ideas={[]}
         backups={[{ name: "data-backup.json", path: "C:/LoopVault/data-backup.json", createdAt: "2026-07-15T00:00:00.000Z" }]}
-        setMonthlyGoal={vi.fn()}
         setLanguage={vi.fn()}
         setShowRomanNumerals={vi.fn()}
         refreshBackups={vi.fn(async () => undefined)}
@@ -405,14 +400,5 @@ async function changeSelect(select: HTMLSelectElement | undefined | null, value:
   await act(async () => {
     setter?.call(select, value);
     select?.dispatchEvent(new Event("change", { bubbles: true }));
-  });
-}
-
-async function changeInput(input: HTMLInputElement | undefined | null, value: string) {
-  expect(input).toBeDefined();
-  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
-  await act(async () => {
-    setter?.call(input, value);
-    input?.dispatchEvent(new Event("change", { bubbles: true }));
   });
 }
