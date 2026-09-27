@@ -142,11 +142,12 @@ export interface PopoverProps {
   children: ReactNode;
   label: string;
   className?: string;
+  defaultOpen?: boolean;
 }
 
 /** One button opens a small panel (e.g. volume). Esc or an outside click closes it and focus returns to the trigger. */
-export function Popover({ children, className = "", label, trigger }: PopoverProps) {
-  const [open, setOpen] = useState(false);
+export function Popover({ children, className = "", defaultOpen = false, label, trigger }: PopoverProps) {
+  const [open, setOpen] = useState(defaultOpen);
   const id = useId();
   const anchorRef = useRef<HTMLSpanElement>(null);
 

@@ -12,6 +12,8 @@ if (!name || !/^[A-Za-z0-9._-]+$/.test(name)) {
 }
 
 process.env.P89_SCREENS_NAME = name;
+// Only this build includes the dev-only component gallery (main.tsx, ?gallery).
+process.env.VITE_P89_GALLERY = "1";
 if (!runPlaywrightVisualTests(["--config", "scripts/p89/playwright.p89.config.ts"])) {
   process.exitCode ||= 1;
 }
